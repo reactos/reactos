@@ -1436,7 +1436,7 @@ uhci_submit_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 
 LBL_OUT2:
     pdev->ref_count--;
-    RemoveEntryList((PLIST_ENTRY) purb);
+    RemoveEntryList(&purb->urb_link);
 
 LBL_OUT:
     unlock_dev(pdev, TRUE);

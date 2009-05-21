@@ -20,15 +20,19 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE DISCARDABLE
 {
-	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	4 "Das angegebene Installationspaket konnte nicht ge√∂ffnet werden. Bitte √ºberpr√ºfen Sie den Pfadnamen und versuchen Sie es noch einmal."
 	5 "Der Pfad %s wurde nicht gefunden."
 	9 "Bitte Disk %s einlegen."
-	10 "schlechte Parameter"
-	11 "Geben Sie das Verzeichnis ein, dass %s enth‰lt."
-	12 "Die Installationsquelle f¸r das Feature fehlt."
-	13 "Das Netzwerklaufwerk f¸r das Feature fehlt."
+	10 "Falsche Parameter"
+	11 "Geben Sie das Verzeichnis ein, dass %s enth√§lt."
+	12 "Die Installationsquelle f√ºr das Feature fehlt."
+	13 "Das Netzwerklaufwerk f√ºr das Feature fehlt."
 	14 "Feature von:"
-	15 "W‰hlen Sie das Verzeichnis aus, dass %s enth‰lt."
+	15 "W√§hlen Sie das Verzeichnis aus, dass %s enth√§lt."
 }
+
+#pragma code_page(default)

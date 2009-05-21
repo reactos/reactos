@@ -28,7 +28,7 @@ static BOOL can_activate_window( HWND hwnd )
     LONG style;
 
     if (!hwnd) return FALSE;
-    style = GetWindowLongW( hwnd, GWL_STYLE );
+    style = GetWindowLongPtrW( hwnd, GWL_STYLE );
     if (!(style & WS_VISIBLE)) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
     return !(style & WS_DISABLED);
@@ -46,7 +46,7 @@ WinPosActivateOtherWindow(HWND hwnd)
 {
     HWND hwndTo, fg;
 
-    if ((GetWindowLongW( hwnd, GWL_STYLE ) & WS_POPUP) && (hwndTo = GetWindow( hwnd, GW_OWNER )))
+    if ((GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_POPUP) && (hwndTo = GetWindow( hwnd, GW_OWNER )))
     {
         hwndTo = GetAncestor( hwndTo, GA_ROOT );
         if (can_activate_window( hwndTo )) goto done;

@@ -170,26 +170,6 @@ NdisWriteEventLogEntry
  */
 VOID
 EXPORT
-NdisCompletePnPEvent(
-    IN  NDIS_STATUS     Status,
-    IN  NDIS_HANDLE     NdisBindingHandle,
-    IN  PNET_PNP_EVENT  NetPnPEvent)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
 NdisConvertStringToAtmAddress(
     OUT PNDIS_STATUS    Status,
     IN  PNDIS_STRING    String,
@@ -231,26 +211,6 @@ NdisGetReceivedPacket(
  */
 NDIS_STATUS
 EXPORT
-NdisMDeregisterDevice(
-    IN  NDIS_HANDLE NdisDeviceHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
 NdisMPromoteMiniport(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 /*
@@ -263,50 +223,6 @@ NdisMPromoteMiniport(
     UNIMPLEMENTED
 
     return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisMRegisterDevice(
-    IN  NDIS_HANDLE         NdisWrapperHandle,
-    IN  PNDIS_STRING        DeviceName,
-    IN  PNDIS_STRING        SymbolicName,
-    IN  PDRIVER_DISPATCH    MajorFunctions[],
-    OUT PDEVICE_OBJECT      *pDeviceObject,
-    OUT NDIS_HANDLE         *NdisDeviceHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisMRegisterUnloadHandler(
-    IN  NDIS_HANDLE     NdisWrapperHandle,
-    IN  PDRIVER_UNLOAD  UnloadHandler)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
 }
 
 
@@ -338,28 +254,6 @@ EXPORT
 NdisMSetMiniportSecondary(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_HANDLE PrimaryMiniportAdapterHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return NDIS_STATUS_FAILURE;
-}
-
-
-
-/*
- * @unimplemented
- */
-NDIS_STATUS
-EXPORT
-NdisQueryAdapterInstanceName(
-    OUT PNDIS_STRING    AdapterInstanceName,
-    IN  NDIS_HANDLE     NdisBindingHandle)
 /*
  * FUNCTION:
  * ARGUMENTS:
@@ -636,49 +530,4 @@ NdisMDeregisterIoPortRange(
  */
 {
    UNIMPLEMENTED
-}
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisCopyBuffer(
-    OUT PNDIS_STATUS    Status,
-    OUT PNDIS_BUFFER    *Buffer,
-    IN  NDIS_HANDLE     PoolHandle,
-    IN  PVOID           MemoryDescriptor,
-    IN  UINT            Offset,
-    IN  UINT            Length)
-/*
- * FUNCTION: Returns a new buffer descriptor for a (partial) buffer
- * ARGUMENTS:
- *     Status           = Address of a buffer to place status of operation
- *     Buffer           = Address of a buffer to place new buffer descriptor
- *     PoolHandle       = Handle returned by NdisAllocateBufferPool
- *     MemoryDescriptor = Pointer to a memory descriptor (possibly NDIS_BUFFER)
- *     Offset           = Offset in buffer to start copying
- *     Length           = Number of bytes to copy
- */
-{
-    UNIMPLEMENTED
-
-    *Status = NDIS_STATUS_FAILURE;
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisGetCurrentProcessorCpuUsage(
-    PULONG  pCpuUsage)
-/*
- * FUNCTION: Returns how busy the current processor is as a percentage
- * ARGUMENTS:
- *     pCpuUsage = Pointer to a buffer to place CPU usage
- */
-{
-    UNIMPLEMENTED
 }

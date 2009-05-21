@@ -330,6 +330,16 @@ RtlEncodePointer(IN PVOID Pointer)
 }
 
 /*
+ * @implemented
+ */
+PVOID
+NTAPI
+RtlDecodePointer(IN PVOID Pointer)
+{
+  return RtlEncodePointer(Pointer);
+}
+
+/*
  * @unimplemented
  */
 PVOID

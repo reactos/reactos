@@ -170,7 +170,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 /* keywords */
 %token kBREAK kCASE kCATCH kCONTINUE kDEFAULT kDELETE kDO kELSE kIF kFINALLY kFOR kIN
 %token kINSTANCEOF kNEW kNULL kUNDEFINED kRETURN kSWITCH kTHIS kTHROW kTRUE kFALSE kTRY kTYPEOF kVAR kVOID kWHILE kWITH
-%token tANDAND tOROR tINC tDEC
+%token tANDAND tOROR tINC tDEC tHTMLCOMMENT
 
 %token <srcptr> kFUNCTION '}'
 
@@ -251,7 +251,12 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 
 /* ECMA-262 3rd Edition    14 */
 Program
-       : SourceElements         { program_parsed(ctx, $1); }
+       : SourceElements HtmlComment
+                                { program_parsed(ctx, $1); }
+
+HtmlComment
+        : tHTMLCOMMENT          {}
+        | /* empty */           {}
 
 /* ECMA-262 3rd Edition    14 */
 SourceElements
@@ -1549,11 +1554,14 @@ void parser_release(parser_ctx_t *ctx)
     heap_free(ctx);
 }
 
-HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, parser_ctx_t **ret)
+HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, const WCHAR *delimiter,
+        parser_ctx_t **ret)
 {
     parser_ctx_t *parser_ctx;
     jsheap_t *mark;
     HRESULT hres;
+
+    const WCHAR html_tagW[] = {'<','/','s','c','r','i','p','t','>',0};
 
     parser_ctx = heap_alloc_zero(sizeof(parser_ctx_t));
     if(!parser_ctx)
@@ -1561,6 +1569,7 @@ HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, parser_ctx_t **ret)
 
     parser_ctx->ref = 1;
     parser_ctx->hres = E_FAIL;
+    parser_ctx->is_html = delimiter && !strcmpiW(delimiter, html_tagW);
 
     parser_ctx->begin = parser_ctx->ptr = code;
     parser_ctx->end = code + strlenW(code);

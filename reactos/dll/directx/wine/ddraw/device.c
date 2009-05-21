@@ -4356,8 +4356,6 @@ Thunk_IDirect3DDeviceImpl_3_DrawIndexedPrimitiveVB(IDirect3DDevice3 *iface,
  * The return value consist of a combination of D3DCLIP_* flags, or it's
  * 0 if the sphere is completely visible(according to the SDK, not checked)
  *
- * Sounds like an overdose of math ;)
- *
  * Version 3 and 7
  *
  * Params:
@@ -4368,7 +4366,7 @@ Thunk_IDirect3DDeviceImpl_3_DrawIndexedPrimitiveVB(IDirect3DDevice3 *iface,
  *  ReturnValues: Array to write the results to
  *
  * Returns:
- *  D3D_OK because it's a stub
+ *  D3D_OK
  *  (DDERR_INVALIDPARAMS if Centers, Radii or ReturnValues are NULL)
  *  (D3DERR_INVALIDMATRIX if the combined world, view and proj matrix
  *  is singular)

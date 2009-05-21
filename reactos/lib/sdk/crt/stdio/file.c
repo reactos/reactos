@@ -2439,8 +2439,35 @@ FILE* CDECL freopen(const char *path, const char *mode,FILE* file)
  */
 FILE* CDECL _wfreopen(const wchar_t *path, const wchar_t *mode,FILE* file)
 {
-    FIXME("UNIMPLEMENTED stub!\n");
-    return NULL;
+  int open_flags, stream_flags, fd;
+
+  TRACE(":path (%p) mode (%s) file (%p) fd (%d)\n", debugstr_w(path), debugstr_w(mode), file, file->_file);
+
+  LOCK_FILES();
+  if (!file || ((fd = file->_file) < 0) || fd > fdend)
+    file = NULL;
+  else
+  {
+    fclose(file);
+    /* map mode string to open() flags. "man fopen" for possibilities. */
+    if (get_flags((char*)mode, &open_flags, &stream_flags) == -1)
+      file = NULL;
+    else
+    {
+      fd = _wopen(path, open_flags, _S_IREAD | _S_IWRITE);
+      if (fd < 0)
+        file = NULL;
+      else if (init_fp(file, fd, stream_flags) == -1)
+      {
+          file->_flag = 0;
+          WARN(":failed-last error (%d)\n",GetLastError());
+          _dosmaperr(GetLastError());
+          file = NULL;
+      }
+    }
+  }
+  UNLOCK_FILES();
+  return file;
 }
 
 /*********************************************************************

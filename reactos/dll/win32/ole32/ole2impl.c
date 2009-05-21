@@ -32,6 +32,7 @@
 #include "wine/debug.h"
 #include "ole2.h"
 #include "olestd.h"
+#include "compobj_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -40,7 +41,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /******************************************************************************
  *		OleQueryCreateFromData [OLE32.@]
  *
- * Author   : Abey George
  * Checks whether an object can become an embedded object.
  * the clipboard or OLE drag and drop.
  * Returns  : S_OK - Format that supports Embedded object creation are present.
@@ -48,41 +48,58 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  *            S_FALSE - No acceptable format is available.
  */
 
-HRESULT WINAPI OleQueryCreateFromData(LPDATAOBJECT pSrcDataObject)
+HRESULT WINAPI OleQueryCreateFromData(IDataObject *data)
 {
-  IEnumFORMATETC *pfmt;
-  FORMATETC fmt;
-  CHAR szFmtName[MAX_CLIPFORMAT_NAME];
-  BOOL bFoundStatic = FALSE;
+    IEnumFORMATETC *enum_fmt;
+    FORMATETC fmt;
+    BOOL found_static = FALSE;
+    HRESULT hr;
 
-  HRESULT hr = IDataObject_EnumFormatEtc(pSrcDataObject, DATADIR_GET, &pfmt);
+    hr = IDataObject_EnumFormatEtc(data, DATADIR_GET, &enum_fmt);
 
-  if (hr == S_OK)
-    hr = IEnumFORMATETC_Next(pfmt, 1, &fmt, NULL);
+    if(FAILED(hr)) return hr;
 
-  while (hr == S_OK)
-  {
-    GetClipboardFormatNameA(fmt.cfFormat, szFmtName, MAX_CLIPFORMAT_NAME-1);
+    do
+    {
+        hr = IEnumFORMATETC_Next(enum_fmt, 1, &fmt, NULL);
+        if(hr == S_OK)
+        {
+            if(fmt.cfFormat == embedded_object_clipboard_format ||
+               fmt.cfFormat == embed_source_clipboard_format ||
+               fmt.cfFormat == filename_clipboard_format)
+            {
+                IEnumFORMATETC_Release(enum_fmt);
+                return S_OK;
+            }
 
-    /* first, Check for Embedded Object, Embed Source or Filename */
+            if(fmt.cfFormat == CF_METAFILEPICT ||
+               fmt.cfFormat == CF_BITMAP ||
+               fmt.cfFormat == CF_DIB)
+                found_static = TRUE;
+        }
+    } while (hr == S_OK);
 
-    if (!strcmp(szFmtName, CF_EMBEDDEDOBJECT) || !strcmp(szFmtName, CF_EMBEDSOURCE) || !strcmp(szFmtName, CF_FILENAME))
-      return S_OK;
+    IEnumFORMATETC_Release(enum_fmt);
 
-    /* Check for Metafile, Bitmap or DIB */
+    return found_static ? OLE_S_STATIC : S_FALSE;
+}
 
-    if (fmt.cfFormat == CF_METAFILEPICT || fmt.cfFormat == CF_BITMAP || fmt.cfFormat == CF_DIB)
-      bFoundStatic = TRUE;
+/******************************************************************************
+ *		OleCreateFromDataEx        [OLE32.@]
+ *
+ * Creates an embedded object from data transfer object retrieved from
+ * the clipboard or OLE drag and drop.
+ */
+HRESULT WINAPI OleCreateFromDataEx(IDataObject *data, REFIID iid, DWORD flags,
+                                   DWORD renderopt, ULONG num_fmts, DWORD *adv_flags, FORMATETC *fmts,
+                                   IAdviseSink *sink, DWORD *conns,
+                                   IOleClientSite *client_site, IStorage *stg, void **obj)
+{
+    FIXME("(%p, %s, %08x, %08x, %d, %p, %p, %p, %p, %p, %p, %p): stub\n",
+          data, debugstr_guid(iid), flags, renderopt, num_fmts, adv_flags, fmts,
+          sink, conns, client_site, stg, obj);
 
-    hr = IEnumFORMATETC_Next(pfmt, 1, &fmt, NULL);
-  }
-
-  /* Found a static format, but no embed format */
-
-  if (bFoundStatic)
-    return OLE_S_STATIC;
-
-  return S_FALSE;
+    return E_NOTIMPL;
 }
 
 /******************************************************************************

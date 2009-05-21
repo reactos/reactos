@@ -336,7 +336,7 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
         break;
 
       case SB_CTL:
-        Vertical = (GetWindowLongW(Wnd, GWL_STYLE) & SBS_VERT) != 0;
+        Vertical = (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_VERT) != 0;
         break;
 
       default:
@@ -498,7 +498,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
       ClientToScreen(Wnd, (LPPOINT) &ClientRect.right);
       GetWindowRect(Wnd, &WindowRect);
     }
-  Style = GetWindowLongW(Wnd, GWL_STYLE);
+  Style = GetWindowLongPtrW(Wnd, GWL_STYLE);
 
   switch (Bar)
     {
@@ -520,7 +520,7 @@ IntScrollGetScrollBarRect(HWND Wnd, INT Bar, RECT *Rect,
 	break;
 
       case SB_VERT:
-        ExStyle = GetWindowLongW(Wnd, GWL_EXSTYLE);
+        ExStyle = GetWindowLongPtrW(Wnd, GWL_EXSTYLE);
         if (0 != (ExStyle & WS_EX_LEFTSCROLLBAR))
           {
             Rect->left   = ClientRect.left - WindowRect.left - GetSystemMetrics(SM_CXVSCROLL);
@@ -769,7 +769,7 @@ IntScrollHandleKbdEvent(
     }
 
   SendMessageW(GetParent(Wnd),
-               (0 != (GetWindowLongW(Wnd, GWL_STYLE ) & SBS_VERT) ?
+               (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE ) & SBS_VERT) ?
                 WM_VSCROLL : WM_HSCROLL), wParam, (LPARAM) Wnd);
 }
 
@@ -810,7 +810,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
   memcpy(NewInfo.rgstate, ScrollBarInfo.rgstate, (CCHILDREN_SCROLLBAR + 1) * sizeof(DWORD));
 
   if (SB_CTL == SBType
-      && 0 != (GetWindowLongW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
+      && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & (SBS_SIZEGRIP | SBS_SIZEBOX)))
     {
       switch(Msg)
         {
@@ -850,7 +850,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
     }
   else
     {
-      Vertical = (0 != (GetWindowLongW(Wnd, GWL_STYLE) & SBS_VERT));
+      Vertical = (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_VERT));
     }
   WndOwner = (SB_CTL == SBType) ? GetParent(Wnd) : Wnd;
   WndCtl   = (SB_CTL == SBType) ? Wnd : NULL;
@@ -866,7 +866,7 @@ IntScrollHandleScrollEvent(HWND Wnd, INT SBType, UINT Msg, POINT Pt)
         LastMousePos  = LastClickPos;
         TrackThumbPos = ScrollBarInfo.xyThumbTop;
         PrevPt = Pt;
-        if (SB_CTL == SBType && 0 != (GetWindowLongW(Wnd, GWL_STYLE) & WS_TABSTOP))
+        if (SB_CTL == SBType && 0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & WS_TABSTOP))
           {
             SetFocus(Wnd);
           }
@@ -1376,11 +1376,11 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
 
           Dc = (0 != wParam ? (HDC) wParam : BeginPaint(Wnd, &Ps));
 
-          if (GetWindowLongW(Wnd, GWL_STYLE) & SBS_SIZEGRIP)
+          if (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_SIZEGRIP)
             {
               IntScrollDrawSizeGrip(Wnd, Dc);
             }
-          else if (0 != (GetWindowLongW(Wnd, GWL_STYLE) & SBS_SIZEBOX))
+          else if (0 != (GetWindowLongPtrW(Wnd, GWL_STYLE) & SBS_SIZEBOX))
             {
               RECT Rect;
               GetClientRect(Wnd, &Rect);

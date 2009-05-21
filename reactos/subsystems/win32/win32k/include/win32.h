@@ -38,16 +38,19 @@ typedef struct _THREADINFO
     PDESKTOPINFO        pDeskInfo;
     PCLIENTINFO         pClientInfo;
     FLONG               TIF_flags;
+    LONG                timeLast;
     HANDLE              hDesktop;
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
+    ULONG               fsHooks;
     LIST_ENTRY          PtiLink;
+
+    CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
 
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
-  ULONG Hooks;
   PW32THREADINFO ThreadInfo;
 } THREADINFO, *PTHREADINFO;
 

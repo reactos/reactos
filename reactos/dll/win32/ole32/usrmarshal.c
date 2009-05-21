@@ -2414,7 +2414,7 @@ HRESULT CALLBACK IStorage_OpenStream_Proxy(
 HRESULT __RPC_STUB IStorage_OpenStream_Stub(
     IStorage* This,
     LPCOLESTR pwcsName,
-    unsigned long cbReserved1,
+    ULONG cbReserved1,
     byte *reserved1,
     DWORD grfMode,
     DWORD reserved2,
@@ -2438,7 +2438,7 @@ HRESULT CALLBACK IStorage_EnumElements_Proxy(
 HRESULT __RPC_STUB IStorage_EnumElements_Stub(
     IStorage* This,
     DWORD reserved1,
-    unsigned long cbReserved2,
+    ULONG cbReserved2,
     byte *reserved2,
     DWORD reserved3,
     IEnumSTATSTG **ppenum)

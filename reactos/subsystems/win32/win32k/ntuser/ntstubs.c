@@ -305,25 +305,28 @@ NtUserGetMouseMovePointsEx(
    int nBufPoints,
    DWORD resolution)
 {
+   UserEnterExclusive();
+
+   if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return -1;
+   }
+
+   _SEH2_TRY
+   {
+      ProbeForRead(lppt, cbSize, 1);
+      ProbeForWrite(lpptBuf, cbSize, 1);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+       SetLastNtError(_SEH2_GetExceptionCode());
+       SetLastWin32Error(ERROR_NOACCESS);
+   }
+   _SEH2_END;
+
 /*
-   if (cbSize != sizeof (MOUSEMOVEPOINT)
-   {
-       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
-       return GMMP_ERR_POINT_NOT_FOUND;
-   }
-
-   if (!lppt)
-   {
-       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
-       return GMMP_ERR_POINT_NOT_FOUND;
-   }
-
-   if (!lpptBuf)
-   {
-       SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
-       return GMMP_ERR_POINT_NOT_FOUND;
-   }
-
+   Call a subfunction of GetMouseMovePointsEx!
    switch(resolution)
    {
      case GMMP_USE_DISPLAY_POINTS:
@@ -335,8 +338,8 @@ NtUserGetMouseMovePointsEx(
    }
   */
    UNIMPLEMENTED
-
-   return 0;
+   UserLeave();
+   return -1;
 }
 
 

@@ -19,7 +19,6 @@
 	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="__MINGW_IMPORT">extern</define>
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />

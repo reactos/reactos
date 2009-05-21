@@ -1503,14 +1503,25 @@ static void state_lastpixel(DWORD state, IWineD3DStateBlockImpl *stateblock, Win
 }
 
 static void state_pointsprite_w(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+    BOOL warned = FALSE;
     /* TODO: NV_POINT_SPRITE */
-    if (stateblock->renderState[WINED3DRS_POINTSPRITEENABLE]) {
-        TRACE("Point sprites not supported\n");
+    if (!warned && stateblock->renderState[WINED3DRS_POINTSPRITEENABLE]) {
+        /* A FIXME, not a WARN because point sprites should be software emulated if not supported by HW */
+        FIXME("Point sprites not supported\n");
+        warned = TRUE;
     }
 }
 
 static void state_pointsprite(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     if (stateblock->renderState[WINED3DRS_POINTSPRITEENABLE]) {
+        BOOL warned = FALSE;
+        if(GL_LIMITS(point_sprite_units) < GL_LIMITS(textures) && !warned) {
+            if(use_ps(stateblock) || stateblock->lowest_disabled_stage > GL_LIMITS(point_sprite_units)) {
+                FIXME("The app uses point sprite texture coordinates on more units than supported by the driver\n");
+                warned = TRUE;
+            }
+        }
+
         glEnable(GL_POINT_SPRITE_ARB);
         checkGLcall("glEnable(GL_POINT_SPRITE_ARB)");
     } else {
@@ -3913,7 +3924,7 @@ static inline void loadNumberedArrays(IWineD3DStateBlockImpl *stateblock,
             if (stream_info->elements[i].buffer_object)
             {
                 vb = (struct wined3d_buffer *)stateblock->streamSource[stream_info->elements[i].stream_idx];
-                ptr += (long) vb->resource.allocatedMemory;
+                ptr += (long) buffer_get_sysmem(vb);
             }
 
             if (context->numbered_array_mask & (1 << i)) unload_numbered_array(stateblock, context, i);

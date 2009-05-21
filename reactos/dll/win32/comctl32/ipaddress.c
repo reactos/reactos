@@ -77,6 +77,29 @@ static const WCHAR IP_SUBCLASS_PROP[] =
 static LRESULT CALLBACK
 IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+static void IPADDRESS_UpdateText (const IPADDRESS_INFO *infoPtr)
+{
+    static const WCHAR zero[2] = {'0', 0};
+    static const WCHAR dot[2]  = {'.', 0};
+    WCHAR field[4];
+    WCHAR ip[16];
+    INT i;
+
+    ip[0] = 0;
+
+    for (i = 0; i < 4; i++) {
+        if (GetWindowTextW (infoPtr->Part[i].EditHwnd, field, 4))
+            strcatW(ip, field);
+        else
+            /* empty edit treated as zero */
+            strcatW(ip, zero);
+        if (i != 3)
+            strcatW(ip, dot);
+    }
+
+    SetWindowTextW(infoPtr->Self, ip);
+}
+
 static LRESULT IPADDRESS_Notify (const IPADDRESS_INFO *infoPtr, UINT command)
 {
     HWND hwnd = infoPtr->Self;
@@ -218,6 +241,8 @@ static LRESULT IPADDRESS_Create (HWND hwnd, const CREATESTRUCTA *lpCreate)
 				(DWORD_PTR)IPADDRESS_SubclassProc);
         EnableWindow(part->EditHwnd, infoPtr->Enabled);
     }
+
+    IPADDRESS_UpdateText (infoPtr);
 
     return 0;
 }
@@ -483,7 +508,7 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		    return return_val;
 		} else if (len == 3 && startsel==endsel && endsel==len)
 		    IPADDRESS_GotoNextField (infoPtr, index, POS_SELALL);
-		else if (len < 3) break;
+		else if (len < 3 || startsel != endsel) break;
 	    } else if(c == '.' || c == ' ') {
 		if(len && startsel==endsel && startsel != 0) {
 		    IPADDRESS_GotoNextField(infoPtr, index, POS_SELALL);
@@ -561,6 +586,7 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
 	    switch(wParam >> 16) {
 		case EN_CHANGE:
+		    IPADDRESS_UpdateText(infoPtr);
 		    IPADDRESS_Notify(infoPtr, EN_CHANGE);
 		    break;
 		case EN_KILLFOCUS:

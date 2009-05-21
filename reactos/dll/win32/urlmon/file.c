@@ -92,7 +92,7 @@ static ULONG WINAPI FileProtocol_Release(IInternetProtocol *iface)
 
 static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     FileProtocol *This = PROTOCOL_THIS(iface);
     BINDINFO bindinfo;
@@ -106,7 +106,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
 
     static const WCHAR wszFile[]  = {'f','i','l','e',':'};
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     if(!szUrl || strlenW(szUrl) < sizeof(wszFile)/sizeof(WCHAR)

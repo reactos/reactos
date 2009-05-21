@@ -20,6 +20,14 @@
 #ifndef __FS_H
 #define __FS_H
 
+typedef struct tagDEVVTBL
+{
+  ARC_CLOSE Close;
+  ARC_GET_FILE_INFORMATION GetFileInformation;
+  ARC_OPEN Open;
+  ARC_READ Read;
+  ARC_SEEK Seek;
+} DEVVTBL;
 
 //#define	EOF				-1
 
@@ -32,6 +40,17 @@
 
 #define FILE			VOID
 #define PFILE			FILE *
+
+VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
+VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
+VOID* FsGetDeviceSpecific(ULONG FileId);
+VOID FsInit(VOID);
+
+LONG ArcClose(ULONG FileId);
+LONG ArcGetFileInformation(ULONG FileId, FILEINFORMATION* Information);
+LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId);
+LONG ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
+LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 
 VOID	FileSystemError(PCSTR ErrorString);
 BOOLEAN	FsOpenBootVolume();

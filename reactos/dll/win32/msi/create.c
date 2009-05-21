@@ -44,6 +44,7 @@ typedef struct tagMSICREATEVIEW
     MSIDATABASE     *db;
     LPWSTR           name;
     BOOL             bIsTemp;
+    BOOL             hold;
     column_info     *col_info;
 } MSICREATEVIEW;
 
@@ -60,11 +61,15 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
     MSITABLE *table;
+    BOOL persist = (cv->bIsTemp) ? MSICONDITION_FALSE : MSICONDITION_TRUE;
 
-    TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name), 
+    TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name),
           cv->bIsTemp?"temporary":"permanent");
 
-    return msi_create_table( cv->db, cv->name, cv->col_info, !cv->bIsTemp, &table);
+    if (cv->bIsTemp && !cv->hold)
+        return ERROR_SUCCESS;
+
+    return msi_create_table( cv->db, cv->name, cv->col_info, persist, &table);
 }
 
 static UINT CREATE_close( struct tagMSIVIEW *view )
@@ -86,11 +91,11 @@ static UINT CREATE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 }
 
 static UINT CREATE_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
 
-    TRACE("%p %d %p %p\n", cv, n, name, type );
+    TRACE("%p %d %p %p %p\n", cv, n, name, type, temporary );
 
     return ERROR_FUNCTION_FAILED;
 }
@@ -160,6 +165,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     UINT r;
     column_info *col;
     BOOL temp = TRUE;
+    BOOL tempprim = FALSE;
 
     TRACE("%p\n", cv );
 
@@ -178,6 +184,14 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
 
         if( !col->temporary )
             temp = FALSE;
+        else if ( col->type & MSITYPE_KEY )
+            tempprim = TRUE;
+    }
+
+    if ( !temp && tempprim )
+    {
+        msi_free( cv );
+        return ERROR_FUNCTION_FAILED;
     }
 
     /* fill the structure */
@@ -187,6 +201,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     cv->name = table;
     cv->col_info = col_info;
     cv->bIsTemp = temp;
+    cv->hold = hold;
     *view = (MSIVIEW*) cv;
 
     return ERROR_SUCCESS;

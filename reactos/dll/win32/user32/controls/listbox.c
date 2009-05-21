@@ -2159,7 +2159,7 @@ static LRESULT LISTBOX_HandleLButtonDown( LB_DESCR *descr, DWORD keys, INT x, IN
 
     if (!descr->lphc)
     {
-        if (GetWindowLongW( descr->self, GWL_EXSTYLE ) & WS_EX_DRAGDETECT)
+        if (GetWindowLongPtrW( descr->self, GWL_EXSTYLE ) & WS_EX_DRAGDETECT)
         {
             POINT pt;
 
@@ -2236,7 +2236,7 @@ static LRESULT LISTBOX_HandleLButtonDownCombo( LB_DESCR *descr, UINT msg, DWORD 
         {
             /* Check to see the NC is a scrollbar */
             INT nHitTestType=0;
-            LONG style = GetWindowLongW( descr->self, GWL_STYLE );
+            LONG style = GetWindowLongPtrW( descr->self, GWL_STYLE );
             /* Check Vertical scroll bar */
             if (style & WS_VSCROLL)
             {
@@ -2557,7 +2557,7 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     GetClientRect( hwnd, &rect );
     descr->self          = hwnd;
     descr->owner         = GetParent( descr->self );
-    descr->style         = GetWindowLongW( descr->self, GWL_STYLE );
+    descr->style         = GetWindowLongPtrW( descr->self, GWL_STYLE );
     descr->width         = rect.right - rect.left;
     descr->height        = rect.bottom - rect.top;
     descr->items         = NULL;

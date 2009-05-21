@@ -4,6 +4,7 @@
  * Copyright 2006 Jason Green 
  * Copyright 2006-2007 Henri Verbeet
  * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
+ * Copyright 2009 Henri Verbeet for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,6 +44,7 @@ WINE_DECLARE_DEBUG_CHANNEL(d3d);
 #define WINED3D_GLSL_SAMPLE_PROJECTED   0x1
 #define WINED3D_GLSL_SAMPLE_RECT        0x2
 #define WINED3D_GLSL_SAMPLE_LOD         0x4
+#define WINED3D_GLSL_SAMPLE_GRAD        0x8
 
 typedef struct {
     char reg_name[150];
@@ -51,7 +53,7 @@ typedef struct {
 
 typedef struct {
     char reg_name[150];
-    char param_str[100];
+    char param_str[200];
 } glsl_src_param_t;
 
 typedef struct {
@@ -367,8 +369,8 @@ static void shader_glsl_load_constantsF(IWineD3DBaseShaderImpl *This, const Wine
     const local_constant *lconst;
 
     /* 1.X pshaders have the constants clamped to [-1;1] implicitly. */
-    if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.reg_maps.shader_version) == 1
-            && shader_is_pshader_version(This->baseShader.reg_maps.shader_version))
+    if (This->baseShader.reg_maps.shader_version.major == 1
+            && shader_is_pshader_version(This->baseShader.reg_maps.shader_version.type))
         walk_constant_heap_clamped(gl_info, constants, constant_locations, heap, stack, version);
     else
         walk_constant_heap(gl_info, constants, constant_locations, heap, stack, version);
@@ -432,7 +434,7 @@ static void shader_glsl_load_constantsB(IWineD3DBaseShaderImpl *This, const Wine
     GLint tmp_loc;
     unsigned int i;
     char tmp_name[8];
-    char is_pshader = shader_is_pshader_version(This->baseShader.reg_maps.shader_version);
+    char is_pshader = shader_is_pshader_version(This->baseShader.reg_maps.shader_version.type);
     const char* prefix = is_pshader? "PB":"VB";
     struct list* ptr;
 
@@ -513,7 +515,7 @@ static void shader_glsl_load_np2fixup_constants(
             if (-1 != prog->np2Fixup_location[i]) {
                 const IWineD3DBaseTextureImpl* const tex = (const IWineD3DBaseTextureImpl*) stateBlock->textures[i];
                 if (!tex) {
-                    FIXME("Non-existant texture is flagged for NP2 texcoord fixup\n");
+                    FIXME("Nonexistent texture is flagged for NP2 texcoord fixup\n");
                     continue;
                 } else {
                     const float tex_dim[2] = {tex->baseTexture.pow2Matrix[0], tex->baseTexture.pow2Matrix[5]};
@@ -557,16 +559,12 @@ static void shader_glsl_load_constants(
                 prog->vuniformF_locations, &priv->vconst_heap, priv->stack, constant_version);
 
         /* Load DirectX 9 integer constants/uniforms for vertex shader */
-        if(vshader->baseShader.uses_int_consts) {
-            shader_glsl_load_constantsI(vshader, gl_info, prog->vuniformI_locations,
-                    stateBlock->vertexShaderConstantI, stateBlock->changed.vertexShaderConstantsI);
-        }
+        shader_glsl_load_constantsI(vshader, gl_info, prog->vuniformI_locations, stateBlock->vertexShaderConstantI,
+                stateBlock->changed.vertexShaderConstantsI & vshader->baseShader.reg_maps.integer_constants);
 
         /* Load DirectX 9 boolean constants/uniforms for vertex shader */
-        if(vshader->baseShader.uses_bool_consts) {
-            shader_glsl_load_constantsB(vshader, gl_info, programId,
-                    stateBlock->vertexShaderConstantB, stateBlock->changed.vertexShaderConstantsB);
-        }
+        shader_glsl_load_constantsB(vshader, gl_info, programId, stateBlock->vertexShaderConstantB,
+                stateBlock->changed.vertexShaderConstantsB & vshader->baseShader.reg_maps.boolean_constants);
 
         /* Upload the position fixup params */
         GL_EXTCALL(glUniform4fvARB(prog->posFixup_location, 1, &deviceImpl->posFixup[0]));
@@ -582,16 +580,12 @@ static void shader_glsl_load_constants(
                 prog->puniformF_locations, &priv->pconst_heap, priv->stack, constant_version);
 
         /* Load DirectX 9 integer constants/uniforms for pixel shader */
-        if(pshader->baseShader.uses_int_consts) {
-            shader_glsl_load_constantsI(pshader, gl_info, prog->puniformI_locations,
-                    stateBlock->pixelShaderConstantI, stateBlock->changed.pixelShaderConstantsI);
-        }
+        shader_glsl_load_constantsI(pshader, gl_info, prog->puniformI_locations, stateBlock->pixelShaderConstantI,
+                stateBlock->changed.pixelShaderConstantsI & pshader->baseShader.reg_maps.integer_constants);
 
         /* Load DirectX 9 boolean constants/uniforms for pixel shader */
-        if(pshader->baseShader.uses_bool_consts) {
-            shader_glsl_load_constantsB(pshader, gl_info, programId,
-                    stateBlock->pixelShaderConstantB, stateBlock->changed.pixelShaderConstantsB);
-        }
+        shader_glsl_load_constantsB(pshader, gl_info, programId, stateBlock->pixelShaderConstantB,
+                stateBlock->changed.pixelShaderConstantsB & pshader->baseShader.reg_maps.boolean_constants);
 
         /* Upload the environment bump map matrix if needed. The needsbumpmat member specifies the texture stage to load the matrix from.
          * It can't be 0 for a valid texbem instruction.
@@ -706,12 +700,11 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
 {
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) iface;
     IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) This->baseShader.device;
-    DWORD shader_version = reg_maps->shader_version;
     unsigned int i, extra_constants_needed = 0;
     const local_constant *lconst;
 
     /* There are some minor differences between pixel and vertex shaders */
-    char pshader = shader_is_pshader_version(shader_version);
+    char pshader = shader_is_pshader_version(reg_maps->shader_version.type);
     char prefix = pshader ? 'P' : 'V';
 
     /* Prototype the subroutines */
@@ -723,21 +716,53 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
     /* Declare the constants (aka uniforms) */
     if (This->baseShader.limits.constant_float > 0) {
         unsigned max_constantsF;
+        /* Unless the shader uses indirect addressing, always declare the maximum array size and ignore that we need some
+         * uniforms privately. E.g. if GL supports 256 uniforms, and we need 2 for the pos fixup and immediate values, still
+         * declare VC[256]. If the shader needs more uniforms than we have it won't work in any case. If it uses less, the
+         * compiler will figure out which uniforms are really used and strip them out. This allows a shader to use c255 on
+         * a dx9 card, as long as it doesn't also use all the other constants.
+         *
+         * If the shader uses indirect addressing the compiler must assume that all declared uniforms are used. In this case,
+         * declare only the amount that we're assured to have.
+         *
+         * Thus we run into problems in these two cases:
+         * 1) The shader really uses more uniforms than supported
+         * 2) The shader uses indirect addressing, less constants than supported, but uses a constant index > #supported consts
+         */
         if(pshader) {
-            max_constantsF = GL_LIMITS(pshader_constantsF) - (MAX_CONST_B / 4) - MAX_CONST_I - 2;
-            max_constantsF = min(This->baseShader.limits.constant_float, max_constantsF);
+            /* No indirect addressing here */
+            max_constantsF = GL_LIMITS(pshader_constantsF);
         } else {
-            /* Subtract the other potential uniforms from the max available (bools, ints, and 1 row of projection matrix) */
-            max_constantsF = GL_LIMITS(vshader_constantsF) - (MAX_CONST_B / 4) - MAX_CONST_I - 1;
-            max_constantsF = min(This->baseShader.limits.constant_float, max_constantsF);
+            if(This->baseShader.reg_maps.usesrelconstF) {
+                /* Subtract the other potential uniforms from the max available (bools, ints, and 1 row of projection matrix).
+                 * Subtract another uniform for immediate values, which have to be loaded via uniform by the driver as well.
+                 * The shader code only uses 0.5, 2.0, 1.0, 128 and -128 in vertex shader code, so one vec4 should be enough
+                 * (Unfortunately the Nvidia driver doesn't store 128 and -128 in one float
+                 */
+                max_constantsF = GL_LIMITS(vshader_constantsF) - 3;
+                max_constantsF -= count_bits(This->baseShader.reg_maps.integer_constants);
+                /* Strictly speaking a bool only uses one scalar, but the nvidia(Linux) compiler doesn't pack them properly,
+                 * so each scalar requires a full vec4. We could work around this by packing the booleans ourselves, but
+                 * for now take this into account when calculating the number of available constants
+                 */
+                max_constantsF -= count_bits(This->baseShader.reg_maps.boolean_constants);
+                /* Set by driver quirks in directx.c */
+                max_constantsF -= GLINFO_LOCATION.reserved_glsl_constants;
+            } else {
+                max_constantsF = GL_LIMITS(vshader_constantsF);
+            }
         }
+        max_constantsF = min(This->baseShader.limits.constant_float, max_constantsF);
         shader_addline(buffer, "uniform vec4 %cC[%u];\n", prefix, max_constantsF);
     }
 
-    if (This->baseShader.limits.constant_int > 0)
+    /* Always declare the full set of constants, the compiler can remove the unused ones because d3d doesn't(yet)
+     * support indirect int and bool constant addressing. This avoids problems if the app uses e.g. i0 and i9.
+     */
+    if (This->baseShader.limits.constant_int > 0 && This->baseShader.reg_maps.integer_constants)
         shader_addline(buffer, "uniform ivec4 %cI[%u];\n", prefix, This->baseShader.limits.constant_int);
 
-    if (This->baseShader.limits.constant_bool > 0)
+    if (This->baseShader.limits.constant_bool > 0 && This->baseShader.reg_maps.boolean_constants)
         shader_addline(buffer, "uniform bool %cB[%u];\n", prefix, This->baseShader.limits.constant_bool);
 
     if(!pshader) {
@@ -752,7 +777,7 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
          * out. The nvidia driver only does that if the parameter is inout instead of out, hence the
          * inout.
          */
-        if (shader_version >= WINED3DVS_VERSION(3, 0))
+        if (reg_maps->shader_version.major >= 3)
         {
             shader_addline(buffer, "void order_ps_input(in vec4[%u]);\n", MAX_REG_OUTPUT);
         } else {
@@ -809,11 +834,10 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
 
     /* Declare texture samplers */ 
     for (i = 0; i < This->baseShader.limits.sampler; i++) {
-        if (reg_maps->samplers[i]) {
-
-            DWORD stype = reg_maps->samplers[i] & WINED3DSP_TEXTURETYPE_MASK;
-            switch (stype) {
-
+        if (reg_maps->sampler_type[i])
+        {
+            switch (reg_maps->sampler_type[i])
+            {
                 case WINED3DSTT_1D:
                     shader_addline(buffer, "uniform sampler1D %csampler%u;\n", prefix, i);
                     break;
@@ -825,7 +849,8 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
                         shader_addline(buffer, "uniform sampler2D %csampler%u;\n", prefix, i);
                     }
 
-                    if(ps_args->np2_fixup & (1 << i)) {
+                    if (pshader && ps_args->np2_fixup & (1 << i))
+                    {
                         /* NP2/RECT textures in OpenGL use texcoords in the range [0,width]x[0,height]
                          * while D3D has them in the (normalized) [0,1]x[0,1] range.
                          * samplerNP2Fixup stores texture dimensions and is updated through
@@ -841,7 +866,7 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
                     break;
                 default:
                     shader_addline(buffer, "uniform unsupported_sampler %csampler%u;\n", prefix, i);
-                    FIXME("Unrecognized sampler type: %#x\n", stype);
+                    FIXME("Unrecognized sampler type: %#x\n", reg_maps->sampler_type[i]);
                     break;
             }
         }
@@ -862,7 +887,7 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
     /* Declare input register varyings. Only pixel shader, vertex shaders have that declared in the
      * helper function shader that is linked in at link time
      */
-    if (pshader && shader_version >= WINED3DPS_VERSION(3, 0))
+    if (pshader && reg_maps->shader_version.major >= 3)
     {
         if (use_vs(device->stateBlock))
         {
@@ -941,8 +966,8 @@ static void shader_generate_glsl_declarations(IWineD3DBaseShader *iface, const s
  ****************************************************************************/
 
 /* Prototypes */
-static void shader_glsl_add_src_param(const struct wined3d_shader_instruction *ins, const DWORD param,
-        const DWORD addr_token, DWORD mask, glsl_src_param_t *src_param);
+static void shader_glsl_add_src_param(const struct wined3d_shader_instruction *ins,
+        const struct wined3d_shader_src_param *wined3d_src, DWORD mask, glsl_src_param_t *glsl_src);
 
 /** Used for opcode modifiers - They multiply the result by the specified amount */
 static const char * const shift_glsl_tab[] = {
@@ -965,15 +990,12 @@ static const char * const shift_glsl_tab[] = {
 };
 
 /* Generate a GLSL parameter that does the input modifier computation and return the input register/mask to use */
-static void shader_glsl_gen_modifier (
-    const DWORD instr,
-    const char *in_reg,
-    const char *in_regswizzle,
-    char *out_str) {
-
+static void shader_glsl_gen_modifier(DWORD src_modifier, const char *in_reg, const char *in_regswizzle, char *out_str)
+{
     out_str[0] = 0;
 
-    switch (instr & WINED3DSP_SRCMOD_MASK) {
+    switch (src_modifier)
+    {
     case WINED3DSPSM_DZ: /* Need to handle this in the instructions itself (texld & texcrd). */
     case WINED3DSPSM_DW:
     case WINED3DSPSM_NONE:
@@ -1013,207 +1035,214 @@ static void shader_glsl_gen_modifier (
         sprintf(out_str, "-abs(%s%s)", in_reg, in_regswizzle);
         break;
     default:
-        FIXME("Unhandled modifier %u\n", (instr & WINED3DSP_SRCMOD_MASK));
+        FIXME("Unhandled modifier %u\n", src_modifier);
         sprintf(out_str, "%s%s", in_reg, in_regswizzle);
     }
 }
 
 /** Writes the GLSL variable name that corresponds to the register that the
  * DX opcode parameter is trying to access */
-static void shader_glsl_get_register_name(WINED3DSHADER_PARAM_REGISTER_TYPE register_type, UINT register_idx,
-        BOOL rel_addr, const DWORD addr_token, char *register_name, BOOL *is_color,
-        const struct wined3d_shader_instruction *ins)
+static void shader_glsl_get_register_name(const struct wined3d_shader_register *reg,
+        char *register_name, BOOL *is_color, const struct wined3d_shader_instruction *ins)
 {
     /* oPos, oFog and oPts in D3D */
     static const char * const hwrastout_reg_names[] = { "gl_Position", "gl_FogFragCoord", "gl_PointSize" };
 
-    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)ins->shader;
+    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)ins->ctx->shader;
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) This->baseShader.device;
     const WineD3D_GL_Info* gl_info = &deviceImpl->adapter->gl_info;
-    DWORD shader_version = This->baseShader.reg_maps.shader_version;
-    char pshader = shader_is_pshader_version(shader_version);
+    char pshader = shader_is_pshader_version(This->baseShader.reg_maps.shader_version.type);
 
     *is_color = FALSE;
 
-    switch (register_type)
+    switch (reg->type)
     {
-    case WINED3DSPR_TEMP:
-        sprintf(register_name, "R%u", register_idx);
-    break;
-    case WINED3DSPR_INPUT:
-        if (pshader) {
-            /* Pixel shaders >= 3.0 */
-            if (WINED3DSHADER_VERSION_MAJOR(shader_version) >= 3)
+        case WINED3DSPR_TEMP:
+            sprintf(register_name, "R%u", reg->idx);
+            break;
+
+        case WINED3DSPR_INPUT:
+            /* vertex shaders */
+            if (!pshader)
             {
+                if (((IWineD3DVertexShaderImpl *)This)->cur_args->swizzle_map & (1 << reg->idx)) *is_color = TRUE;
+                sprintf(register_name, "attrib%u", reg->idx);
+                break;
+            }
+
+            /* pixel shaders >= 3.0 */
+            if (This->baseShader.reg_maps.shader_version.major >= 3)
+            {
+                DWORD idx = ((IWineD3DPixelShaderImpl *)This)->input_reg_map[reg->idx];
                 DWORD in_count = GL_LIMITS(glsl_varyings) / 4;
 
-                if (rel_addr)
+                if (reg->rel_addr)
                 {
                     glsl_src_param_t rel_param;
-                    shader_glsl_add_src_param(ins, addr_token, 0, WINED3DSP_WRITEMASK_0, &rel_param);
+
+                    shader_glsl_add_src_param(ins, reg->rel_addr, WINED3DSP_WRITEMASK_0, &rel_param);
 
                     /* Removing a + 0 would be an obvious optimization, but macos doesn't see the NOP
-                     * operation there
-                     */
-                    if (((IWineD3DPixelShaderImpl *)This)->input_reg_map[register_idx])
+                     * operation there */
+                    if (idx)
                     {
-                        if (((IWineD3DPixelShaderImpl *)This)->declared_in_count > in_count) {
-                            sprintf(register_name, "((%s + %u) > %d ? (%s + %u) > %d ? gl_SecondaryColor : gl_Color : IN[%s + %u])",
-                                    rel_param.param_str, ((IWineD3DPixelShaderImpl *)This)->input_reg_map[register_idx], in_count - 1,
-                                    rel_param.param_str, ((IWineD3DPixelShaderImpl *)This)->input_reg_map[register_idx], in_count,
-                                    rel_param.param_str, ((IWineD3DPixelShaderImpl *)This)->input_reg_map[register_idx]);
-                        } else {
-                            sprintf(register_name, "IN[%s + %u]", rel_param.param_str,
-                                    ((IWineD3DPixelShaderImpl *)This)->input_reg_map[register_idx]);
+                        if (((IWineD3DPixelShaderImpl *)This)->declared_in_count > in_count)
+                        {
+                            sprintf(register_name,
+                                    "((%s + %u) > %d ? (%s + %u) > %d ? gl_SecondaryColor : gl_Color : IN[%s + %u])",
+                                    rel_param.param_str, idx, in_count - 1, rel_param.param_str, idx, in_count,
+                                    rel_param.param_str, idx);
                         }
-                    } else {
-                        if (((IWineD3DPixelShaderImpl *)This)->declared_in_count > in_count) {
+                        else
+                        {
+                            sprintf(register_name, "IN[%s + %u]", rel_param.param_str, idx);
+                        }
+                    }
+                    else
+                    {
+                        if (((IWineD3DPixelShaderImpl *)This)->declared_in_count > in_count)
+                        {
                             sprintf(register_name, "((%s) > %d ? (%s) > %d ? gl_SecondaryColor : gl_Color : IN[%s])",
-                                    rel_param.param_str, in_count - 1,
-                                    rel_param.param_str, in_count,
+                                    rel_param.param_str, in_count - 1, rel_param.param_str, in_count,
                                     rel_param.param_str);
-                        } else {
+                        }
+                        else
+                        {
                             sprintf(register_name, "IN[%s]", rel_param.param_str);
                         }
                     }
-                } else {
-                    DWORD idx = ((IWineD3DPixelShaderImpl *) This)->input_reg_map[register_idx];
-                    if (idx == in_count) {
-                        sprintf(register_name, "gl_Color");
-                    } else if (idx == in_count + 1) {
-                        sprintf(register_name, "gl_SecondaryColor");
-                    } else {
-                        sprintf(register_name, "IN[%u]", idx);
-                    }
                 }
-            } else {
-                if (register_idx == 0)
-                    strcpy(register_name, "gl_Color");
                 else
-                    strcpy(register_name, "gl_SecondaryColor");
+                {
+                    if (idx == in_count) sprintf(register_name, "gl_Color");
+                    else if (idx == in_count + 1) sprintf(register_name, "gl_SecondaryColor");
+                    else sprintf(register_name, "IN[%u]", idx);
+                }
             }
-        } else {
-            if (((IWineD3DVertexShaderImpl *)This)->cur_args->swizzle_map & (1 << register_idx)) *is_color = TRUE;
-            sprintf(register_name, "attrib%u", register_idx);
-        }
-        break;
-    case WINED3DSPR_CONST:
-    {
-        const char prefix = pshader? 'P':'V';
-
-        /* Relative addressing */
-        if (rel_addr)
-        {
-           /* Relative addressing on shaders 2.0+ have a relative address token, 
-            * prior to that, it was hard-coded as "A0.x" because there's only 1 register */
-           if (WINED3DSHADER_VERSION_MAJOR(shader_version) >= 2)
-           {
-               glsl_src_param_t rel_param;
-               shader_glsl_add_src_param(ins, addr_token, 0, WINED3DSP_WRITEMASK_0, &rel_param);
-               if (register_idx)
-               {
-                   sprintf(register_name, "%cC[%s + %u]", prefix, rel_param.param_str, register_idx);
-               } else {
-                   sprintf(register_name, "%cC[%s]", prefix, rel_param.param_str);
-               }
-           } else {
-               if (register_idx)
-               {
-                   sprintf(register_name, "%cC[A0.x + %u]", prefix, register_idx);
-               } else {
-                   sprintf(register_name, "%cC[A0.x]", prefix);
-               }
-           }
-
-        } else {
-            if (shader_constant_is_local(This, register_idx))
+            else
             {
-                sprintf(register_name, "%cLC%u", prefix, register_idx);
-            } else {
-                sprintf(register_name, "%cC[%u]", prefix, register_idx);
+                if (reg->idx == 0) strcpy(register_name, "gl_Color");
+                else strcpy(register_name, "gl_SecondaryColor");
+                break;
             }
-        }
+            break;
 
-        break;
-    }
-    case WINED3DSPR_CONSTINT:
-        if (pshader)
-            sprintf(register_name, "PI[%u]", register_idx);
-        else
-            sprintf(register_name, "VI[%u]", register_idx);
-        break;
-    case WINED3DSPR_CONSTBOOL:
-        if (pshader)
-            sprintf(register_name, "PB[%u]", register_idx);
-        else
-            sprintf(register_name, "VB[%u]", register_idx);
-        break;
-    case WINED3DSPR_TEXTURE: /* case WINED3DSPR_ADDR: */
-        if (pshader) {
-            sprintf(register_name, "T%u", register_idx);
-        } else {
-            sprintf(register_name, "A%u", register_idx);
-        }
-    break;
-    case WINED3DSPR_LOOP:
-        sprintf(register_name, "aL%u", This->baseShader.cur_loop_regno - 1);
-    break;
-    case WINED3DSPR_SAMPLER:
-        if (pshader)
-            sprintf(register_name, "Psampler%u", register_idx);
-        else
-            sprintf(register_name, "Vsampler%u", register_idx);
-    break;
-    case WINED3DSPR_COLOROUT:
-        if (register_idx >= GL_LIMITS(buffers))
-            WARN("Write to render target %u, only %d supported\n", register_idx, 4);
+        case WINED3DSPR_CONST:
+            {
+                const char prefix = pshader ? 'P' : 'V';
 
-        if (GL_SUPPORT(ARB_DRAW_BUFFERS)) {
-            sprintf(register_name, "gl_FragData[%u]", register_idx);
-        } else { /* On older cards with GLSL support like the GeforceFX there's only one buffer. */
-            sprintf(register_name, "gl_FragColor");
-        }
-    break;
-    case WINED3DSPR_RASTOUT:
-        sprintf(register_name, "%s", hwrastout_reg_names[register_idx]);
-    break;
-    case WINED3DSPR_DEPTHOUT:
-        sprintf(register_name, "gl_FragDepth");
-    break;
-    case WINED3DSPR_ATTROUT:
-        if (register_idx == 0)
-        {
-            sprintf(register_name, "gl_FrontColor");
-        } else {
-            sprintf(register_name, "gl_FrontSecondaryColor");
-        }
-    break;
-    case WINED3DSPR_TEXCRDOUT:
-        /* Vertex shaders >= 3.0: WINED3DSPR_OUTPUT */
-        if (WINED3DSHADER_VERSION_MAJOR(shader_version) >= 3) sprintf(register_name, "OUT[%u]", register_idx);
-        else sprintf(register_name, "gl_TexCoord[%u]", register_idx);
-    break;
-    case WINED3DSPR_MISCTYPE:
-        if (register_idx == 0)
-        {
-            /* vPos */
-            sprintf(register_name, "vpos");
-        }
-        else if (register_idx == 1)
-        {
-            /* Note that gl_FrontFacing is a bool, while vFace is
-             * a float for which the sign determines front/back
-             */
-            sprintf(register_name, "(gl_FrontFacing ? 1.0 : -1.0)");
-        } else {
-            FIXME("Unhandled misctype register %d\n", register_idx);
+                /* Relative addressing */
+                if (reg->rel_addr)
+                {
+                    glsl_src_param_t rel_param;
+                    shader_glsl_add_src_param(ins, reg->rel_addr, WINED3DSP_WRITEMASK_0, &rel_param);
+                    if (reg->idx) sprintf(register_name, "%cC[%s + %u]", prefix, rel_param.param_str, reg->idx);
+                    else sprintf(register_name, "%cC[%s]", prefix, rel_param.param_str);
+                }
+                else
+                {
+                    if (shader_constant_is_local(This, reg->idx))
+                        sprintf(register_name, "%cLC%u", prefix, reg->idx);
+                    else
+                        sprintf(register_name, "%cC[%u]", prefix, reg->idx);
+                }
+            }
+            break;
+
+        case WINED3DSPR_CONSTINT:
+            if (pshader) sprintf(register_name, "PI[%u]", reg->idx);
+            else sprintf(register_name, "VI[%u]", reg->idx);
+            break;
+
+        case WINED3DSPR_CONSTBOOL:
+            if (pshader) sprintf(register_name, "PB[%u]", reg->idx);
+            else sprintf(register_name, "VB[%u]", reg->idx);
+            break;
+
+        case WINED3DSPR_TEXTURE: /* case WINED3DSPR_ADDR: */
+            if (pshader) sprintf(register_name, "T%u", reg->idx);
+            else sprintf(register_name, "A%u", reg->idx);
+            break;
+
+        case WINED3DSPR_LOOP:
+            sprintf(register_name, "aL%u", This->baseShader.cur_loop_regno - 1);
+            break;
+
+        case WINED3DSPR_SAMPLER:
+            if (pshader) sprintf(register_name, "Psampler%u", reg->idx);
+            else sprintf(register_name, "Vsampler%u", reg->idx);
+            break;
+
+        case WINED3DSPR_COLOROUT:
+            if (reg->idx >= GL_LIMITS(buffers))
+                WARN("Write to render target %u, only %d supported\n", reg->idx, 4);
+
+            if (GL_SUPPORT(ARB_DRAW_BUFFERS)) sprintf(register_name, "gl_FragData[%u]", reg->idx);
+            /* On older cards with GLSL support like the GeforceFX there's only one buffer. */
+            else sprintf(register_name, "gl_FragColor");
+            break;
+
+        case WINED3DSPR_RASTOUT:
+            sprintf(register_name, "%s", hwrastout_reg_names[reg->idx]);
+            break;
+
+        case WINED3DSPR_DEPTHOUT:
+            sprintf(register_name, "gl_FragDepth");
+            break;
+
+        case WINED3DSPR_ATTROUT:
+            if (reg->idx == 0) sprintf(register_name, "gl_FrontColor");
+            else sprintf(register_name, "gl_FrontSecondaryColor");
+            break;
+
+        case WINED3DSPR_TEXCRDOUT:
+            /* Vertex shaders >= 3.0: WINED3DSPR_OUTPUT */
+            if (This->baseShader.reg_maps.shader_version.major >= 3) sprintf(register_name, "OUT[%u]", reg->idx);
+            else sprintf(register_name, "gl_TexCoord[%u]", reg->idx);
+            break;
+
+        case WINED3DSPR_MISCTYPE:
+            if (reg->idx == 0)
+            {
+                /* vPos */
+                sprintf(register_name, "vpos");
+            }
+            else if (reg->idx == 1)
+            {
+                /* Note that gl_FrontFacing is a bool, while vFace is
+                 * a float for which the sign determines front/back */
+                sprintf(register_name, "(gl_FrontFacing ? 1.0 : -1.0)");
+            }
+            else
+            {
+                FIXME("Unhandled misctype register %d\n", reg->idx);
+                sprintf(register_name, "unrecognized_register");
+            }
+            break;
+
+        case WINED3DSPR_IMMCONST:
+            switch (reg->immconst_type)
+            {
+                case WINED3D_IMMCONST_FLOAT:
+                    sprintf(register_name, "%.8e", *(float *)reg->immconst_data);
+                    break;
+
+                case WINED3D_IMMCONST_FLOAT4:
+                    sprintf(register_name, "vec4(%.8e, %.8e, %.8e, %.8e)",
+                            *(float *)&reg->immconst_data[0], *(float *)&reg->immconst_data[1],
+                            *(float *)&reg->immconst_data[2], *(float *)&reg->immconst_data[3]);
+                    break;
+
+                default:
+                    FIXME("Unhandled immconst type %#x\n", reg->immconst_type);
+                    sprintf(register_name, "<unhandled_immconst_type %#x>", reg->immconst_type);
+            }
+            break;
+
+        default:
+            FIXME("Unhandled register name Type(%d)\n", reg->type);
             sprintf(register_name, "unrecognized_register");
-        }
-        break;
-    default:
-        FIXME("Unhandled register name Type(%d)\n", register_type);
-        sprintf(register_name, "unrecognized_register");
-    break;
+            break;
     }
 }
 
@@ -1232,7 +1261,7 @@ static DWORD shader_glsl_get_write_mask(const struct wined3d_shader_dst_param *p
 {
     DWORD mask = param->write_mask;
 
-    if (shader_is_scalar(param->register_type, param->register_idx))
+    if (shader_is_scalar(&param->reg))
     {
         mask = WINED3DSP_WRITEMASK_0;
         *write_mask = '\0';
@@ -1256,45 +1285,47 @@ static unsigned int shader_glsl_get_write_mask_size(DWORD write_mask) {
     return size;
 }
 
-static void shader_glsl_get_swizzle(const DWORD param, BOOL fixup, DWORD mask, char *swizzle_str) {
+static void shader_glsl_swizzle_to_str(const DWORD swizzle, BOOL fixup, DWORD mask, char *str)
+{
     /* For registers of type WINED3DDECLTYPE_D3DCOLOR, data is stored as "bgra",
      * but addressed as "rgba". To fix this we need to swap the register's x
      * and z components. */
-    DWORD swizzle = (param & WINED3DSP_SWIZZLE_MASK) >> WINED3DSP_SWIZZLE_SHIFT;
     const char *swizzle_chars = fixup ? "zyxw" : "xyzw";
-    char *ptr = swizzle_str;
 
-    if (!shader_is_scalar(shader_get_regtype(param), param & WINED3DSP_REGNUM_MASK))
-    {
-        *ptr++ = '.';
-        /* swizzle bits fields: wwzzyyxx */
-        if (mask & WINED3DSP_WRITEMASK_0) *ptr++ = swizzle_chars[swizzle & 0x03];
-        if (mask & WINED3DSP_WRITEMASK_1) *ptr++ = swizzle_chars[(swizzle >> 2) & 0x03];
-        if (mask & WINED3DSP_WRITEMASK_2) *ptr++ = swizzle_chars[(swizzle >> 4) & 0x03];
-        if (mask & WINED3DSP_WRITEMASK_3) *ptr++ = swizzle_chars[(swizzle >> 6) & 0x03];
-    }
+    *str++ = '.';
+    /* swizzle bits fields: wwzzyyxx */
+    if (mask & WINED3DSP_WRITEMASK_0) *str++ = swizzle_chars[swizzle & 0x03];
+    if (mask & WINED3DSP_WRITEMASK_1) *str++ = swizzle_chars[(swizzle >> 2) & 0x03];
+    if (mask & WINED3DSP_WRITEMASK_2) *str++ = swizzle_chars[(swizzle >> 4) & 0x03];
+    if (mask & WINED3DSP_WRITEMASK_3) *str++ = swizzle_chars[(swizzle >> 6) & 0x03];
+    *str = '\0';
+}
 
-    *ptr = '\0';
+static void shader_glsl_get_swizzle(const struct wined3d_shader_src_param *param,
+        BOOL fixup, DWORD mask, char *swizzle_str)
+{
+    if (shader_is_scalar(&param->reg))
+        *swizzle_str = '\0';
+    else
+        shader_glsl_swizzle_to_str(param->swizzle, fixup, mask, swizzle_str);
 }
 
 /* From a given parameter token, generate the corresponding GLSL string.
  * Also, return the actual register name and swizzle in case the
  * caller needs this information as well. */
 static void shader_glsl_add_src_param(const struct wined3d_shader_instruction *ins,
-        const DWORD param, const DWORD addr_token, DWORD mask, glsl_src_param_t *src_param)
+        const struct wined3d_shader_src_param *wined3d_src, DWORD mask, glsl_src_param_t *glsl_src)
 {
     BOOL is_color = FALSE;
     char swizzle_str[6];
 
-    src_param->reg_name[0] = '\0';
-    src_param->param_str[0] = '\0';
+    glsl_src->reg_name[0] = '\0';
+    glsl_src->param_str[0] = '\0';
     swizzle_str[0] = '\0';
 
-    shader_glsl_get_register_name(shader_get_regtype(param), param & WINED3DSP_REGNUM_MASK,
-            param & WINED3DSHADER_ADDRMODE_RELATIVE, addr_token, src_param->reg_name, &is_color, ins);
-
-    shader_glsl_get_swizzle(param, is_color, mask, swizzle_str);
-    shader_glsl_gen_modifier(param, src_param->reg_name, swizzle_str, src_param->param_str);
+    shader_glsl_get_register_name(&wined3d_src->reg, glsl_src->reg_name, &is_color, ins);
+    shader_glsl_get_swizzle(wined3d_src, is_color, mask, swizzle_str);
+    shader_glsl_gen_modifier(wined3d_src->modifiers, glsl_src->reg_name, swizzle_str, glsl_src->param_str);
 }
 
 /* From a given parameter token, generate the corresponding GLSL string.
@@ -1308,8 +1339,7 @@ static DWORD shader_glsl_add_dst_param(const struct wined3d_shader_instruction *
     glsl_dst->mask_str[0] = '\0';
     glsl_dst->reg_name[0] = '\0';
 
-    shader_glsl_get_register_name(wined3d_dst->register_type, wined3d_dst->register_idx,
-            wined3d_dst->has_rel_addr, wined3d_dst->addr_token, glsl_dst->reg_name, &is_color, ins);
+    shader_glsl_get_register_name(&wined3d_dst->reg, glsl_dst->reg_name, &is_color, ins);
     return shader_glsl_get_write_mask(wined3d_dst, glsl_dst->mask_str);
 }
 
@@ -1333,7 +1363,7 @@ static DWORD shader_glsl_append_dst(SHADER_BUFFER *buffer, const struct wined3d_
 }
 
 /** Process GLSL instruction modifiers */
-void shader_glsl_add_instruction_modifiers(const struct wined3d_shader_instruction *ins)
+static void shader_glsl_add_instruction_modifiers(const struct wined3d_shader_instruction *ins)
 {
     glsl_dst_param_t dst_param;
     DWORD modifiers;
@@ -1348,7 +1378,7 @@ void shader_glsl_add_instruction_modifiers(const struct wined3d_shader_instructi
     if (modifiers & WINED3DSPDM_SATURATE)
     {
         /* _SAT means to clamp the value of the register to between 0 and 1 */
-        shader_addline(ins->buffer, "%s%s = clamp(%s%s, 0.0, 1.0);\n", dst_param.reg_name,
+        shader_addline(ins->ctx->buffer, "%s%s = clamp(%s%s, 0.0, 1.0);\n", dst_param.reg_name,
                 dst_param.mask_str, dst_param.reg_name, dst_param.mask_str);
     }
 
@@ -1363,9 +1393,8 @@ void shader_glsl_add_instruction_modifiers(const struct wined3d_shader_instructi
     }
 }
 
-static inline const char *shader_get_comp_op(DWORD flags)
+static inline const char *shader_get_comp_op(DWORD op)
 {
-    DWORD op = (flags & INST_CONTROLS_MASK) >> INST_CONTROLS_SHIFT;
     switch (op) {
         case COMPARISON_GT: return ">";
         case COMPARISON_EQ: return "==";
@@ -1384,12 +1413,15 @@ static void shader_glsl_get_sample_function(DWORD sampler_type, DWORD flags, gls
     BOOL projected = flags & WINED3D_GLSL_SAMPLE_PROJECTED;
     BOOL texrect = flags & WINED3D_GLSL_SAMPLE_RECT;
     BOOL lod = flags & WINED3D_GLSL_SAMPLE_LOD;
+    BOOL grad = flags & WINED3D_GLSL_SAMPLE_GRAD;
 
     /* Note that there's no such thing as a projected cube texture. */
     switch(sampler_type) {
         case WINED3DSTT_1D:
             if(lod) {
                 sample_function->name = projected ? "texture1DProjLod" : "texture1DLod";
+            } else  if(grad) {
+                sample_function->name = projected ? "texture1DProjGradARB" : "texture1DGradARB";
             } else {
                 sample_function->name = projected ? "texture1DProj" : "texture1D";
             }
@@ -1399,12 +1431,19 @@ static void shader_glsl_get_sample_function(DWORD sampler_type, DWORD flags, gls
             if(texrect) {
                 if(lod) {
                     sample_function->name = projected ? "texture2DRectProjLod" : "texture2DRectLod";
+                } else  if(grad) {
+                    /* What good are texrect grad functions? I don't know, but GL_EXT_gpu_shader4 defines them.
+                    * There is no GL_ARB_shader_texture_lod spec yet, so I don't know if they're defined there
+                     */
+                    sample_function->name = projected ? "shadow2DRectProjGradARB" : "shadow2DRectGradARB";
                 } else {
                     sample_function->name = projected ? "texture2DRectProj" : "texture2DRect";
                 }
             } else {
                 if(lod) {
                     sample_function->name = projected ? "texture2DProjLod" : "texture2DLod";
+                } else  if(grad) {
+                    sample_function->name = projected ? "texture2DProjGradARB" : "texture2DGradARB";
                 } else {
                     sample_function->name = projected ? "texture2DProj" : "texture2D";
                 }
@@ -1414,6 +1453,8 @@ static void shader_glsl_get_sample_function(DWORD sampler_type, DWORD flags, gls
         case WINED3DSTT_CUBE:
             if(lod) {
                 sample_function->name = "textureCubeLod";
+            } else if(grad) {
+                sample_function->name = "textureCubeGradARB";
             } else {
                 sample_function->name = "textureCube";
             }
@@ -1422,6 +1463,8 @@ static void shader_glsl_get_sample_function(DWORD sampler_type, DWORD flags, gls
         case WINED3DSTT_VOLUME:
             if(lod) {
                 sample_function->name = projected ? "texture3DProjLod" : "texture3DLod";
+            } else  if(grad) {
+                sample_function->name = projected ? "texture3DProjGradARB" : "texture3DGradARB";
             } else {
                 sample_function->name = projected ? "texture3DProj" : "texture3D";
             }
@@ -1532,17 +1575,18 @@ static void shader_glsl_color_correction(const struct wined3d_shader_instruction
 
     if (mask_size > 1)
     {
-        shader_addline(ins->buffer, "%s%s = vec%u(%s);\n",
+        shader_addline(ins->ctx->buffer, "%s%s = vec%u(%s);\n",
                 dst_param.reg_name, dst_param.mask_str, mask_size, arguments);
     }
     else
     {
-        shader_addline(ins->buffer, "%s%s = %s;\n", dst_param.reg_name, dst_param.mask_str, arguments);
+        shader_addline(ins->ctx->buffer, "%s%s = %s;\n", dst_param.reg_name, dst_param.mask_str, arguments);
     }
 }
 
-static void PRINTF_ATTR(6, 7) shader_glsl_gen_sample_code(const struct wined3d_shader_instruction *ins,
+static void PRINTF_ATTR(8, 9) shader_glsl_gen_sample_code(const struct wined3d_shader_instruction *ins,
         DWORD sampler, const glsl_sample_function_t *sample_function, DWORD swizzle,
+        const char *dx, const char *dy,
         const char *bias, const char *coord_reg_fmt, ...)
 {
     const char *sampler_base;
@@ -1551,11 +1595,11 @@ static void PRINTF_ATTR(6, 7) shader_glsl_gen_sample_code(const struct wined3d_s
     BOOL np2_fixup = FALSE;
     va_list args;
 
-    shader_glsl_get_swizzle(swizzle, FALSE, ins->dst[0].write_mask, dst_swizzle);
+    shader_glsl_swizzle_to_str(swizzle, FALSE, ins->dst[0].write_mask, dst_swizzle);
 
-    if (shader_is_pshader_version(ins->reg_maps->shader_version))
+    if (shader_is_pshader_version(ins->ctx->reg_maps->shader_version.type))
     {
-        IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->shader;
+        IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
         fixup = This->cur_args->color_fixup[sampler];
         sampler_base = "Psampler";
 
@@ -1571,21 +1615,23 @@ static void PRINTF_ATTR(6, 7) shader_glsl_gen_sample_code(const struct wined3d_s
         fixup = COLOR_FIXUP_IDENTITY; /* FIXME: Vshader color fixup */
     }
 
-    shader_glsl_append_dst(ins->buffer, ins);
+    shader_glsl_append_dst(ins->ctx->buffer, ins);
 
-    shader_addline(ins->buffer, "%s(%s%u, ", sample_function->name, sampler_base, sampler);
+    shader_addline(ins->ctx->buffer, "%s(%s%u, ", sample_function->name, sampler_base, sampler);
 
     va_start(args, coord_reg_fmt);
-    shader_vaddline(ins->buffer, coord_reg_fmt, args);
+    shader_vaddline(ins->ctx->buffer, coord_reg_fmt, args);
     va_end(args);
 
     if(bias) {
-        shader_addline(ins->buffer, ", %s)%s);\n", bias, dst_swizzle);
+        shader_addline(ins->ctx->buffer, ", %s)%s);\n", bias, dst_swizzle);
     } else {
         if (np2_fixup) {
-            shader_addline(ins->buffer, " * PsamplerNP2Fixup%u)%s);\n", sampler, dst_swizzle);
+            shader_addline(ins->ctx->buffer, " * PsamplerNP2Fixup%u)%s);\n", sampler, dst_swizzle);
+        } else if(dx && dy) {
+            shader_addline(ins->ctx->buffer, ", %s, %s)%s);\n", dx, dy, dst_swizzle);
         } else {
-            shader_addline(ins->buffer, ")%s);\n", dst_swizzle);
+            shader_addline(ins->ctx->buffer, ")%s);\n", dst_swizzle);
         }
     }
 
@@ -1603,7 +1649,7 @@ static void PRINTF_ATTR(6, 7) shader_glsl_gen_sample_code(const struct wined3d_s
 /* Generate GLSL arithmetic functions (dst = src1 + src2) */
 static void shader_glsl_arith(const struct wined3d_shader_instruction *ins)
 {
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src0_param;
     glsl_src_param_t src1_param;
     DWORD write_mask;
@@ -1622,26 +1668,26 @@ static void shader_glsl_arith(const struct wined3d_shader_instruction *ins)
     }
 
     write_mask = shader_glsl_append_dst(buffer, ins);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], write_mask, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], write_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
     shader_addline(buffer, "%s %c %s);\n", src0_param.param_str, op, src1_param.param_str);
 }
 
 /* Process the WINED3DSIO_MOV opcode using GLSL (dst = src) */
 static void shader_glsl_mov(const struct wined3d_shader_instruction *ins)
 {
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src0_param;
     DWORD write_mask;
 
     write_mask = shader_glsl_append_dst(buffer, ins);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], write_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], write_mask, &src0_param);
 
     /* In vs_1_1 WINED3DSIO_MOV can write to the address register. In later
      * shader versions WINED3DSIO_MOVA is used for this. */
-    if ((WINED3DSHADER_VERSION_MAJOR(ins->reg_maps->shader_version) == 1
-            && !shader_is_pshader_version(ins->reg_maps->shader_version)
-            && ins->dst[0].register_type == WINED3DSPR_ADDR))
+    if (ins->ctx->reg_maps->shader_version.major == 1
+            && !shader_is_pshader_version(ins->ctx->reg_maps->shader_version.type)
+            && ins->dst[0].reg.type == WINED3DSPR_ADDR)
     {
         /* This is a simple floor() */
         unsigned int mask_size = shader_glsl_get_write_mask_size(write_mask);
@@ -1668,7 +1714,7 @@ static void shader_glsl_mov(const struct wined3d_shader_instruction *ins)
 /* Process the dot product operators DP3 and DP4 in GLSL (dst = dot(src0, src1)) */
 static void shader_glsl_dot(const struct wined3d_shader_instruction *ins)
 {
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src0_param;
     glsl_src_param_t src1_param;
     DWORD dst_write_mask, src_write_mask;
@@ -1685,8 +1731,8 @@ static void shader_glsl_dot(const struct wined3d_shader_instruction *ins)
         src_write_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
     }
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_write_mask, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], src_write_mask, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_write_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], src_write_mask, &src1_param);
 
     if (dst_size > 1) {
         shader_addline(buffer, "vec%d(dot(%s, %s)));\n", dst_size, src0_param.param_str, src1_param.param_str);
@@ -1705,10 +1751,10 @@ static void shader_glsl_cross(const struct wined3d_shader_instruction *ins)
     char dst_mask[6];
 
     shader_glsl_get_write_mask(&ins->dst[0], dst_mask);
-    shader_glsl_append_dst(ins->buffer, ins);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], src_mask, &src1_param);
-    shader_addline(ins->buffer, "cross(%s, %s)%s);\n", src0_param.param_str, src1_param.param_str, dst_mask);
+    shader_glsl_append_dst(ins->ctx->buffer, ins);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], src_mask, &src1_param);
+    shader_addline(ins->ctx->buffer, "cross(%s, %s)%s);\n", src0_param.param_str, src1_param.param_str, dst_mask);
 }
 
 /* Process the WINED3DSIO_POW instruction in GLSL (dst = |src0|^src1)
@@ -1716,7 +1762,7 @@ static void shader_glsl_cross(const struct wined3d_shader_instruction *ins)
  * GLSL uses the value as-is. */
 static void shader_glsl_pow(const struct wined3d_shader_instruction *ins)
 {
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src0_param;
     glsl_src_param_t src1_param;
     DWORD dst_write_mask;
@@ -1725,8 +1771,8 @@ static void shader_glsl_pow(const struct wined3d_shader_instruction *ins)
     dst_write_mask = shader_glsl_append_dst(buffer, ins);
     dst_size = shader_glsl_get_write_mask_size(dst_write_mask);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], WINED3DSP_WRITEMASK_0, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_0, &src1_param);
 
     if (dst_size > 1) {
         shader_addline(buffer, "vec%d(pow(abs(%s), %s)));\n", dst_size, src0_param.param_str, src1_param.param_str);
@@ -1740,7 +1786,7 @@ static void shader_glsl_pow(const struct wined3d_shader_instruction *ins)
  * GLSL uses the value as-is. */
 static void shader_glsl_log(const struct wined3d_shader_instruction *ins)
 {
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src0_param;
     DWORD dst_write_mask;
     unsigned int dst_size;
@@ -1748,7 +1794,7 @@ static void shader_glsl_log(const struct wined3d_shader_instruction *ins)
     dst_write_mask = shader_glsl_append_dst(buffer, ins);
     dst_size = shader_glsl_get_write_mask_size(dst_write_mask);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
 
     if (dst_size > 1) {
         shader_addline(buffer, "vec%d(log2(abs(%s))));\n", dst_size, src0_param.param_str);
@@ -1760,7 +1806,7 @@ static void shader_glsl_log(const struct wined3d_shader_instruction *ins)
 /* Map the opcode 1-to-1 to the GL code (arg->dst = instruction(src0, src1, ...) */
 static void shader_glsl_map2gl(const struct wined3d_shader_instruction *ins)
 {
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src_param;
     const char *instruction;
     DWORD write_mask;
@@ -1790,11 +1836,11 @@ static void shader_glsl_map2gl(const struct wined3d_shader_instruction *ins)
 
     if (ins->src_count)
     {
-        shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], write_mask, &src_param);
+        shader_glsl_add_src_param(ins, &ins->src[0], write_mask, &src_param);
         shader_addline(buffer, "%s", src_param.param_str);
         for (i = 1; i < ins->src_count; ++i)
         {
-            shader_glsl_add_src_param(ins, ins->src[i], ins->src_addr[i], write_mask, &src_param);
+            shader_glsl_add_src_param(ins, &ins->src[i], write_mask, &src_param);
             shader_addline(buffer, ", %s", src_param.param_str);
         }
     }
@@ -1815,31 +1861,31 @@ static void shader_glsl_expp(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src_param;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src_param);
 
-    if (ins->reg_maps->shader_version < WINED3DPS_VERSION(2,0))
+    if (ins->ctx->reg_maps->shader_version.major < 2)
     {
         char dst_mask[6];
 
-        shader_addline(ins->buffer, "tmp0.x = exp2(floor(%s));\n", src_param.param_str);
-        shader_addline(ins->buffer, "tmp0.y = %s - floor(%s);\n", src_param.param_str, src_param.param_str);
-        shader_addline(ins->buffer, "tmp0.z = exp2(%s);\n", src_param.param_str);
-        shader_addline(ins->buffer, "tmp0.w = 1.0;\n");
+        shader_addline(ins->ctx->buffer, "tmp0.x = exp2(floor(%s));\n", src_param.param_str);
+        shader_addline(ins->ctx->buffer, "tmp0.y = %s - floor(%s);\n", src_param.param_str, src_param.param_str);
+        shader_addline(ins->ctx->buffer, "tmp0.z = exp2(%s);\n", src_param.param_str);
+        shader_addline(ins->ctx->buffer, "tmp0.w = 1.0;\n");
 
-        shader_glsl_append_dst(ins->buffer, ins);
+        shader_glsl_append_dst(ins->ctx->buffer, ins);
         shader_glsl_get_write_mask(&ins->dst[0], dst_mask);
-        shader_addline(ins->buffer, "tmp0%s);\n", dst_mask);
+        shader_addline(ins->ctx->buffer, "tmp0%s);\n", dst_mask);
     } else {
         DWORD write_mask;
         unsigned int mask_size;
 
-        write_mask = shader_glsl_append_dst(ins->buffer, ins);
+        write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
         mask_size = shader_glsl_get_write_mask_size(write_mask);
 
         if (mask_size > 1) {
-            shader_addline(ins->buffer, "vec%d(exp2(%s)));\n", mask_size, src_param.param_str);
+            shader_addline(ins->ctx->buffer, "vec%d(exp2(%s)));\n", mask_size, src_param.param_str);
         } else {
-            shader_addline(ins->buffer, "exp2(%s));\n", src_param.param_str);
+            shader_addline(ins->ctx->buffer, "exp2(%s));\n", src_param.param_str);
         }
     }
 }
@@ -1851,20 +1897,20 @@ static void shader_glsl_rcp(const struct wined3d_shader_instruction *ins)
     DWORD write_mask;
     unsigned int mask_size;
 
-    write_mask = shader_glsl_append_dst(ins->buffer, ins);
+    write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
     mask_size = shader_glsl_get_write_mask_size(write_mask);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_3, &src_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_3, &src_param);
 
     if (mask_size > 1) {
-        shader_addline(ins->buffer, "vec%d(1.0 / %s));\n", mask_size, src_param.param_str);
+        shader_addline(ins->ctx->buffer, "vec%d(1.0 / %s));\n", mask_size, src_param.param_str);
     } else {
-        shader_addline(ins->buffer, "1.0 / %s);\n", src_param.param_str);
+        shader_addline(ins->ctx->buffer, "1.0 / %s);\n", src_param.param_str);
     }
 }
 
 static void shader_glsl_rsq(const struct wined3d_shader_instruction *ins)
 {
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src_param;
     DWORD write_mask;
     unsigned int mask_size;
@@ -1872,7 +1918,7 @@ static void shader_glsl_rsq(const struct wined3d_shader_instruction *ins)
     write_mask = shader_glsl_append_dst(buffer, ins);
     mask_size = shader_glsl_get_write_mask_size(write_mask);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_3, &src_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_3, &src_param);
 
     if (mask_size > 1) {
         shader_addline(buffer, "vec%d(inversesqrt(%s)));\n", mask_size, src_param.param_str);
@@ -1889,10 +1935,10 @@ static void shader_glsl_compare(const struct wined3d_shader_instruction *ins)
     DWORD write_mask;
     unsigned int mask_size;
 
-    write_mask = shader_glsl_append_dst(ins->buffer, ins);
+    write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
     mask_size = shader_glsl_get_write_mask_size(write_mask);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], write_mask, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], write_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
 
     if (mask_size > 1) {
         const char *compare;
@@ -1905,7 +1951,7 @@ static void shader_glsl_compare(const struct wined3d_shader_instruction *ins)
                 FIXME("Can't handle opcode %#x\n", ins->handler_idx);
         }
 
-        shader_addline(ins->buffer, "vec%d(%s(%s, %s)));\n", mask_size, compare,
+        shader_addline(ins->ctx->buffer, "vec%d(%s(%s, %s)));\n", mask_size, compare,
                 src0_param.param_str, src1_param.param_str);
     } else {
         switch(ins->handler_idx)
@@ -1918,11 +1964,12 @@ static void shader_glsl_compare(const struct wined3d_shader_instruction *ins)
                  * issue. Playing with not() is not possible either because not() does not accept
                  * a scalar.
                  */
-                shader_addline(ins->buffer, "(%s < %s) ? 1.0 : 0.0);\n", src0_param.param_str, src1_param.param_str);
+                shader_addline(ins->ctx->buffer, "(%s < %s) ? 1.0 : 0.0);\n",
+                        src0_param.param_str, src1_param.param_str);
                 break;
             case WINED3DSIH_SGE:
                 /* Here we can use the step() function and safe a conditional */
-                shader_addline(ins->buffer, "step(%s, %s));\n", src1_param.param_str, src0_param.param_str);
+                shader_addline(ins->ctx->buffer, "step(%s, %s));\n", src1_param.param_str, src0_param.param_str);
                 break;
             default:
                 FIXME("Can't handle opcode %#x\n", ins->handler_idx);
@@ -1942,25 +1989,17 @@ static void shader_glsl_cmp(const struct wined3d_shader_instruction *ins)
     char mask_char[6];
     BOOL temp_destination = FALSE;
 
-    if (shader_is_scalar(shader_get_regtype(ins->src[0]), ins->src[0] & WINED3DSP_REGNUM_MASK))
+    if (shader_is_scalar(&ins->src[0].reg))
     {
-        write_mask = shader_glsl_append_dst(ins->buffer, ins);
+        write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
 
-        shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_ALL, &src0_param);
-        shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
-        shader_glsl_add_src_param(ins, ins->src[2], ins->src_addr[2], write_mask, &src2_param);
+        shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_ALL, &src0_param);
+        shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
+        shader_glsl_add_src_param(ins, &ins->src[2], write_mask, &src2_param);
 
-        shader_addline(ins->buffer, "%s >= 0.0 ? %s : %s);\n",
+        shader_addline(ins->ctx->buffer, "%s >= 0.0 ? %s : %s);\n",
                        src0_param.param_str, src1_param.param_str, src2_param.param_str);
     } else {
-        DWORD src0reg = ins->src[0] & WINED3DSP_REGNUM_MASK;
-        DWORD src1reg = ins->src[1] & WINED3DSP_REGNUM_MASK;
-        DWORD src2reg = ins->src[2] & WINED3DSP_REGNUM_MASK;
-        DWORD src0regtype = shader_get_regtype(ins->src[0]);
-        DWORD src1regtype = shader_get_regtype(ins->src[1]);
-        DWORD src2regtype = shader_get_regtype(ins->src[2]);
-        DWORD dstreg = ins->dst[0].register_idx;
-        DWORD dstregtype = ins->dst[0].register_type;
         DWORD dst_mask = ins->dst[0].write_mask;
         struct wined3d_shader_dst_param dst = ins->dst[0];
 
@@ -1969,7 +2008,7 @@ static void shader_glsl_cmp(const struct wined3d_shader_instruction *ins)
             write_mask = 0;
             /* Find the destination channels which use the current source0 channel */
             for (j=0; j<4; j++) {
-                if (((ins->src[0] >> (WINED3DSP_SWIZZLE_SHIFT + 2 * j)) & 0x3) == i)
+                if (((ins->src[0].swizzle >> (2 * j)) & 0x3) == i)
                 {
                     write_mask |= WINED3DSP_WRITEMASK_0 << j;
                     cmp_channel = WINED3DSP_WRITEMASK_0 << j;
@@ -1981,31 +2020,34 @@ static void shader_glsl_cmp(const struct wined3d_shader_instruction *ins)
             * The first lines may overwrite source parameters of the following lines.
             * Deal with that by using a temporary destination register if needed
             */
-            if ((src0reg == dstreg && src0regtype == dstregtype)
-                    || (src1reg == dstreg && src1regtype == dstregtype)
-                    || (src2reg == dstreg && src2regtype == dstregtype))
+            if ((ins->src[0].reg.idx == ins->dst[0].reg.idx
+                    && ins->src[0].reg.type == ins->dst[0].reg.type)
+                    || (ins->src[1].reg.idx == ins->dst[0].reg.idx
+                    && ins->src[1].reg.type == ins->dst[0].reg.type)
+                    || (ins->src[2].reg.idx == ins->dst[0].reg.idx
+                    && ins->src[2].reg.type == ins->dst[0].reg.type))
             {
                 write_mask = shader_glsl_get_write_mask(&dst, mask_char);
                 if (!write_mask) continue;
-                shader_addline(ins->buffer, "tmp0%s = (", mask_char);
+                shader_addline(ins->ctx->buffer, "tmp0%s = (", mask_char);
                 temp_destination = TRUE;
             } else {
-                write_mask = shader_glsl_append_dst_ext(ins->buffer, ins, &dst);
+                write_mask = shader_glsl_append_dst_ext(ins->ctx->buffer, ins, &dst);
                 if (!write_mask) continue;
             }
 
-            shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], cmp_channel, &src0_param);
-            shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
-            shader_glsl_add_src_param(ins, ins->src[2], ins->src_addr[2], write_mask, &src2_param);
+            shader_glsl_add_src_param(ins, &ins->src[0], cmp_channel, &src0_param);
+            shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
+            shader_glsl_add_src_param(ins, &ins->src[2], write_mask, &src2_param);
 
-            shader_addline(ins->buffer, "%s >= 0.0 ? %s : %s);\n",
+            shader_addline(ins->ctx->buffer, "%s >= 0.0 ? %s : %s);\n",
                         src0_param.param_str, src1_param.param_str, src2_param.param_str);
         }
 
         if(temp_destination) {
             shader_glsl_get_write_mask(&ins->dst[0], mask_char);
-            shader_glsl_append_dst(ins->buffer, ins);
-            shader_addline(ins->buffer, "tmp0%s);\n", mask_char);
+            shader_glsl_append_dst(ins->ctx->buffer, ins);
+            shader_addline(ins->ctx->buffer, "tmp0%s);\n", mask_char);
         }
     }
 
@@ -2023,20 +2065,22 @@ static void shader_glsl_cnd(const struct wined3d_shader_instruction *ins)
     DWORD write_mask, cmp_channel = 0;
     unsigned int i, j;
     DWORD dst_mask;
+    DWORD shader_version = WINED3D_SHADER_VERSION(ins->ctx->reg_maps->shader_version.major,
+            ins->ctx->reg_maps->shader_version.minor);
 
-    if (ins->reg_maps->shader_version < WINED3DPS_VERSION(1, 4))
+    if (shader_version < WINED3D_SHADER_VERSION(1, 4))
     {
-        write_mask = shader_glsl_append_dst(ins->buffer, ins);
-        shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
-        shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
-        shader_glsl_add_src_param(ins, ins->src[2], ins->src_addr[2], write_mask, &src2_param);
+        write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
+        shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
+        shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
+        shader_glsl_add_src_param(ins, &ins->src[2], write_mask, &src2_param);
 
         /* Fun: The D3DSI_COISSUE flag changes the semantic of the cnd instruction for < 1.4 shaders */
         if (ins->coissue)
         {
-            shader_addline(ins->buffer, "%s /* COISSUE! */);\n", src1_param.param_str);
+            shader_addline(ins->ctx->buffer, "%s /* COISSUE! */);\n", src1_param.param_str);
         } else {
-            shader_addline(ins->buffer, "%s > 0.5 ? %s : %s);\n",
+            shader_addline(ins->ctx->buffer, "%s > 0.5 ? %s : %s);\n",
                     src0_param.param_str, src1_param.param_str, src2_param.param_str);
         }
         return;
@@ -2048,7 +2092,7 @@ static void shader_glsl_cnd(const struct wined3d_shader_instruction *ins)
         write_mask = 0;
         /* Find the destination channels which use the current source0 channel */
         for (j=0; j<4; j++) {
-            if (((ins->src[0] >> (WINED3DSP_SWIZZLE_SHIFT + 2 * j)) & 0x3) == i)
+            if (((ins->src[0].swizzle >> (2 * j)) & 0x3) == i)
             {
                 write_mask |= WINED3DSP_WRITEMASK_0 << j;
                 cmp_channel = WINED3DSP_WRITEMASK_0 << j;
@@ -2056,14 +2100,14 @@ static void shader_glsl_cnd(const struct wined3d_shader_instruction *ins)
         }
 
         dst.write_mask = dst_mask & write_mask;
-        write_mask = shader_glsl_append_dst_ext(ins->buffer, ins, &dst);
+        write_mask = shader_glsl_append_dst_ext(ins->ctx->buffer, ins, &dst);
         if (!write_mask) continue;
 
-        shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], cmp_channel, &src0_param);
-        shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
-        shader_glsl_add_src_param(ins, ins->src[2], ins->src_addr[2], write_mask, &src2_param);
+        shader_glsl_add_src_param(ins, &ins->src[0], cmp_channel, &src0_param);
+        shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
+        shader_glsl_add_src_param(ins, &ins->src[2], write_mask, &src2_param);
 
-        shader_addline(ins->buffer, "%s > 0.5 ? %s : %s);\n",
+        shader_addline(ins->ctx->buffer, "%s > 0.5 ? %s : %s);\n",
                 src0_param.param_str, src1_param.param_str, src2_param.param_str);
     }
 }
@@ -2076,11 +2120,11 @@ static void shader_glsl_mad(const struct wined3d_shader_instruction *ins)
     glsl_src_param_t src2_param;
     DWORD write_mask;
 
-    write_mask = shader_glsl_append_dst(ins->buffer, ins);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], write_mask, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
-    shader_glsl_add_src_param(ins, ins->src[2], ins->src_addr[2], write_mask, &src2_param);
-    shader_addline(ins->buffer, "(%s * %s) + %s);\n",
+    write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
+    shader_glsl_add_src_param(ins, &ins->src[0], write_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[2], write_mask, &src2_param);
+    shader_addline(ins->ctx->buffer, "(%s * %s) + %s);\n",
             src0_param.param_str, src1_param.param_str, src2_param.param_str);
 }
 
@@ -2090,21 +2134,18 @@ static void shader_glsl_mnxn(const struct wined3d_shader_instruction *ins)
 {
     int i;
     int nComponents = 0;
-    struct wined3d_shader_dst_param tmp_dst = {0};
+    struct wined3d_shader_dst_param tmp_dst = {{0}};
+    struct wined3d_shader_src_param tmp_src[2] = {{{0}}};
     struct wined3d_shader_instruction tmp_ins;
 
     memset(&tmp_ins, 0, sizeof(tmp_ins));
 
     /* Set constants for the temporary argument */
-    tmp_ins.shader      = ins->shader;
-    tmp_ins.buffer      = ins->buffer;
-    tmp_ins.src[0]      = ins->src[0];
-    tmp_ins.src_addr[0] = ins->src_addr[0];
-    tmp_ins.src_addr[1] = ins->src_addr[1];
-    tmp_ins.reg_maps = ins->reg_maps;
+    tmp_ins.ctx = ins->ctx;
     tmp_ins.dst_count = 1;
     tmp_ins.dst = &tmp_dst;
     tmp_ins.src_count = 2;
+    tmp_ins.src = tmp_src;
 
     switch(ins->handler_idx)
     {
@@ -2133,11 +2174,13 @@ static void shader_glsl_mnxn(const struct wined3d_shader_instruction *ins)
     }
 
     tmp_dst = ins->dst[0];
+    tmp_src[0] = ins->src[0];
+    tmp_src[1] = ins->src[1];
     for (i = 0; i < nComponents; ++i)
     {
         tmp_dst.write_mask = WINED3DSP_WRITEMASK_0 << i;
-        tmp_ins.src[1] = ins->src[1] + i;
         shader_glsl_dot(&tmp_ins);
+        ++tmp_src[1].reg.idx;
     }
 }
 
@@ -2154,13 +2197,13 @@ static void shader_glsl_lrp(const struct wined3d_shader_instruction *ins)
     glsl_src_param_t src2_param;
     DWORD write_mask;
 
-    write_mask = shader_glsl_append_dst(ins->buffer, ins);
+    write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], write_mask, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], write_mask, &src1_param);
-    shader_glsl_add_src_param(ins, ins->src[2], ins->src_addr[2], write_mask, &src2_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], write_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], write_mask, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[2], write_mask, &src2_param);
 
-    shader_addline(ins->buffer, "mix(%s, %s, %s));\n",
+    shader_addline(ins->ctx->buffer, "mix(%s, %s, %s));\n",
             src2_param.param_str, src1_param.param_str, src0_param.param_str);
 }
 
@@ -2177,12 +2220,12 @@ static void shader_glsl_lit(const struct wined3d_shader_instruction *ins)
     glsl_src_param_t src3_param;
     char dst_mask[6];
 
-    shader_glsl_append_dst(ins->buffer, ins);
+    shader_glsl_append_dst(ins->ctx->buffer, ins);
     shader_glsl_get_write_mask(&ins->dst[0], dst_mask);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_1, &src1_param);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_3, &src3_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_1, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_3, &src3_param);
 
     /* The sdk specifies the instruction like this
      * dst.x = 1.0;
@@ -2205,7 +2248,7 @@ static void shader_glsl_lit(const struct wined3d_shader_instruction *ins)
      * which sets dst.z to 0. If y > 0, but x = 0.0, we get pow(y * 0.0, power), which results in 0 too.
      * if both x and y are > 0, we get pow(y * 1.0, power), as it is supposed to
      */
-    shader_addline(ins->buffer,
+    shader_addline(ins->ctx->buffer,
             "vec4(1.0, max(%s, 0.0), pow(max(0.0, %s) * step(0.0, %s), clamp(%s, -128.0, 128.0)), 1.0)%s);\n",
             src0_param.param_str, src1_param.param_str, src0_param.param_str, src3_param.param_str, dst_mask);
 }
@@ -2224,15 +2267,15 @@ static void shader_glsl_dst(const struct wined3d_shader_instruction *ins)
     glsl_src_param_t src1w_param;
     char dst_mask[6];
 
-    shader_glsl_append_dst(ins->buffer, ins);
+    shader_glsl_append_dst(ins->ctx->buffer, ins);
     shader_glsl_get_write_mask(&ins->dst[0], dst_mask);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_1, &src0y_param);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_2, &src0z_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], WINED3DSP_WRITEMASK_1, &src1y_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], WINED3DSP_WRITEMASK_3, &src1w_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_1, &src0y_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_2, &src0z_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_1, &src1y_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_3, &src1w_param);
 
-    shader_addline(ins->buffer, "vec4(1.0, %s * %s, %s, %s))%s;\n",
+    shader_addline(ins->ctx->buffer, "vec4(1.0, %s * %s, %s, %s))%s;\n",
             src0y_param.param_str, src1y_param.param_str, src0z_param.param_str, src1w_param.param_str, dst_mask);
 }
 
@@ -2250,20 +2293,20 @@ static void shader_glsl_sincos(const struct wined3d_shader_instruction *ins)
     glsl_src_param_t src0_param;
     DWORD write_mask;
 
-    write_mask = shader_glsl_append_dst(ins->buffer, ins);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
+    write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
 
     switch (write_mask) {
         case WINED3DSP_WRITEMASK_0:
-            shader_addline(ins->buffer, "cos(%s));\n", src0_param.param_str);
+            shader_addline(ins->ctx->buffer, "cos(%s));\n", src0_param.param_str);
             break;
 
         case WINED3DSP_WRITEMASK_1:
-            shader_addline(ins->buffer, "sin(%s));\n", src0_param.param_str);
+            shader_addline(ins->ctx->buffer, "sin(%s));\n", src0_param.param_str);
             break;
 
         case (WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1):
-            shader_addline(ins->buffer, "vec2(cos(%s), sin(%s)));\n", src0_param.param_str, src0_param.param_str);
+            shader_addline(ins->ctx->buffer, "vec2(cos(%s), sin(%s)));\n", src0_param.param_str, src0_param.param_str);
             break;
 
         default:
@@ -2281,22 +2324,22 @@ static void shader_glsl_sincos(const struct wined3d_shader_instruction *ins)
 static void shader_glsl_loop(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src1_param;
-    IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)ins->shader;
-    DWORD regtype = shader_get_regtype(ins->src[1]);
-    DWORD reg = ins->src[1] & WINED3DSP_REGNUM_MASK;
+    IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)ins->ctx->shader;
     const DWORD *control_values = NULL;
     const local_constant *constant;
 
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], WINED3DSP_WRITEMASK_ALL, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_ALL, &src1_param);
 
     /* Try to hardcode the loop control parameters if possible. Direct3D 9 class hardware doesn't support real
      * varying indexing, but Microsoft designed this feature for Shader model 2.x+. If the loop control is
      * known at compile time, the GLSL compiler can unroll the loop, and replace indirect addressing with direct
      * addressing.
      */
-    if(regtype == WINED3DSPR_CONSTINT) {
+    if (ins->src[1].reg.type == WINED3DSPR_CONSTINT)
+    {
         LIST_FOR_EACH_ENTRY(constant, &shader->baseShader.constantsI, local_constant, entry) {
-            if(constant->idx == reg) {
+            if (constant->idx == ins->src[1].reg.idx)
+            {
                 control_values = constant->value;
                 break;
             }
@@ -2305,23 +2348,24 @@ static void shader_glsl_loop(const struct wined3d_shader_instruction *ins)
 
     if(control_values) {
         if(control_values[2] > 0) {
-            shader_addline(ins->buffer, "for (aL%u = %d; aL%u < (%d * %d + %d); aL%u += %d) {\n",
+            shader_addline(ins->ctx->buffer, "for (aL%u = %d; aL%u < (%d * %d + %d); aL%u += %d) {\n",
                     shader->baseShader.cur_loop_depth, control_values[1],
                     shader->baseShader.cur_loop_depth, control_values[0], control_values[2], control_values[1],
                     shader->baseShader.cur_loop_depth, control_values[2]);
         } else if(control_values[2] == 0) {
-            shader_addline(ins->buffer, "for (aL%u = %d, tmpInt%u = 0; tmpInt%u < %d; tmpInt%u++) {\n",
+            shader_addline(ins->ctx->buffer, "for (aL%u = %d, tmpInt%u = 0; tmpInt%u < %d; tmpInt%u++) {\n",
                     shader->baseShader.cur_loop_depth, control_values[1], shader->baseShader.cur_loop_depth,
                     shader->baseShader.cur_loop_depth, control_values[0],
                     shader->baseShader.cur_loop_depth);
         } else {
-            shader_addline(ins->buffer, "for (aL%u = %d; aL%u > (%d * %d + %d); aL%u += %d) {\n",
+            shader_addline(ins->ctx->buffer, "for (aL%u = %d; aL%u > (%d * %d + %d); aL%u += %d) {\n",
                     shader->baseShader.cur_loop_depth, control_values[1],
                     shader->baseShader.cur_loop_depth, control_values[0], control_values[2], control_values[1],
                     shader->baseShader.cur_loop_depth, control_values[2]);
         }
     } else {
-        shader_addline(ins->buffer, "for (tmpInt%u = 0, aL%u = %s.y; tmpInt%u < %s.x; tmpInt%u++, aL%u += %s.z) {\n",
+        shader_addline(ins->ctx->buffer,
+                "for (tmpInt%u = 0, aL%u = %s.y; tmpInt%u < %s.x; tmpInt%u++, aL%u += %s.z) {\n",
                 shader->baseShader.cur_loop_depth, shader->baseShader.cur_loop_regno,
                 src1_param.reg_name, shader->baseShader.cur_loop_depth, src1_param.reg_name,
                 shader->baseShader.cur_loop_depth, shader->baseShader.cur_loop_regno, src1_param.reg_name);
@@ -2333,9 +2377,9 @@ static void shader_glsl_loop(const struct wined3d_shader_instruction *ins)
 
 static void shader_glsl_end(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)ins->shader;
+    IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)ins->ctx->shader;
 
-    shader_addline(ins->buffer, "}\n");
+    shader_addline(ins->ctx->buffer, "}\n");
 
     if (ins->handler_idx == WINED3DSIH_ENDLOOP)
     {
@@ -2351,13 +2395,34 @@ static void shader_glsl_end(const struct wined3d_shader_instruction *ins)
 
 static void shader_glsl_rep(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)ins->shader;
+    IWineD3DBaseShaderImpl *shader = (IWineD3DBaseShaderImpl *)ins->ctx->shader;
     glsl_src_param_t src0_param;
+    const DWORD *control_values = NULL;
+    const local_constant *constant;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
-    shader_addline(ins->buffer, "for (tmpInt%d = 0; tmpInt%d < %s; tmpInt%d++) {\n",
-            shader->baseShader.cur_loop_depth, shader->baseShader.cur_loop_depth,
-            src0_param.param_str, shader->baseShader.cur_loop_depth);
+    /* Try to hardcode local values to help the GLSL compiler to unroll and optimize the loop */
+    if (ins->src[0].reg.type == WINED3DSPR_CONSTINT)
+    {
+        LIST_FOR_EACH_ENTRY(constant, &shader->baseShader.constantsI, local_constant, entry)
+        {
+            if (constant->idx == ins->src[0].reg.idx)
+            {
+                control_values = constant->value;
+                break;
+            }
+        }
+    }
+
+    if(control_values) {
+        shader_addline(ins->ctx->buffer, "for (tmpInt%d = 0; tmpInt%d < %d; tmpInt%d++) {\n",
+                       shader->baseShader.cur_loop_depth, shader->baseShader.cur_loop_depth,
+                       control_values[0], shader->baseShader.cur_loop_depth);
+    } else {
+        shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
+        shader_addline(ins->ctx->buffer, "for (tmpInt%d = 0; tmpInt%d < %s; tmpInt%d++) {\n",
+                shader->baseShader.cur_loop_depth, shader->baseShader.cur_loop_depth,
+                src0_param.param_str, shader->baseShader.cur_loop_depth);
+    }
     shader->baseShader.cur_loop_depth++;
 }
 
@@ -2365,8 +2430,8 @@ static void shader_glsl_if(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src0_param;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
-    shader_addline(ins->buffer, "if (%s) {\n", src0_param.param_str);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
+    shader_addline(ins->ctx->buffer, "if (%s) {\n", src0_param.param_str);
 }
 
 static void shader_glsl_ifc(const struct wined3d_shader_instruction *ins)
@@ -2374,21 +2439,21 @@ static void shader_glsl_ifc(const struct wined3d_shader_instruction *ins)
     glsl_src_param_t src0_param;
     glsl_src_param_t src1_param;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], WINED3DSP_WRITEMASK_0, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_0, &src1_param);
 
-    shader_addline(ins->buffer, "if (%s %s %s) {\n",
+    shader_addline(ins->ctx->buffer, "if (%s %s %s) {\n",
             src0_param.param_str, shader_get_comp_op(ins->flags), src1_param.param_str);
 }
 
 static void shader_glsl_else(const struct wined3d_shader_instruction *ins)
 {
-    shader_addline(ins->buffer, "} else {\n");
+    shader_addline(ins->ctx->buffer, "} else {\n");
 }
 
 static void shader_glsl_break(const struct wined3d_shader_instruction *ins)
 {
-    shader_addline(ins->buffer, "break;\n");
+    shader_addline(ins->ctx->buffer, "break;\n");
 }
 
 /* FIXME: According to MSDN the compare is done per component. */
@@ -2397,34 +2462,30 @@ static void shader_glsl_breakc(const struct wined3d_shader_instruction *ins)
     glsl_src_param_t src0_param;
     glsl_src_param_t src1_param;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_0, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], WINED3DSP_WRITEMASK_0, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_0, &src1_param);
 
-    shader_addline(ins->buffer, "if (%s %s %s) break;\n",
+    shader_addline(ins->ctx->buffer, "if (%s %s %s) break;\n",
             src0_param.param_str, shader_get_comp_op(ins->flags), src1_param.param_str);
 }
 
 static void shader_glsl_label(const struct wined3d_shader_instruction *ins)
 {
-
-    DWORD snum = (ins->src[0]) & WINED3DSP_REGNUM_MASK;
-    shader_addline(ins->buffer, "}\n");
-    shader_addline(ins->buffer, "void subroutine%u () {\n",  snum);
+    shader_addline(ins->ctx->buffer, "}\n");
+    shader_addline(ins->ctx->buffer, "void subroutine%u () {\n",  ins->src[0].reg.idx);
 }
 
 static void shader_glsl_call(const struct wined3d_shader_instruction *ins)
 {
-    DWORD snum = (ins->src[0]) & WINED3DSP_REGNUM_MASK;
-    shader_addline(ins->buffer, "subroutine%u();\n", snum);
+    shader_addline(ins->ctx->buffer, "subroutine%u();\n", ins->src[0].reg.idx);
 }
 
 static void shader_glsl_callnz(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src1_param;
 
-    DWORD snum = (ins->src[0]) & WINED3DSP_REGNUM_MASK;
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], WINED3DSP_WRITEMASK_0, &src1_param);
-    shader_addline(ins->buffer, "if (%s) subroutine%u();\n", src1_param.param_str, snum);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_0, &src1_param);
+    shader_addline(ins->ctx->buffer, "if (%s) subroutine%u();\n", src1_param.param_str, ins->src[0].reg.idx);
 }
 
 /*********************************************
@@ -2432,22 +2493,23 @@ static void shader_glsl_callnz(const struct wined3d_shader_instruction *ins)
  ********************************************/
 static void pshader_glsl_tex(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->shader;
+    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) This->baseShader.device;
-    DWORD shader_version = ins->reg_maps->shader_version;
+    DWORD shader_version = WINED3D_SHADER_VERSION(ins->ctx->reg_maps->shader_version.major,
+            ins->ctx->reg_maps->shader_version.minor);
     glsl_sample_function_t sample_function;
     DWORD sample_flags = 0;
-    DWORD sampler_type;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type;
     DWORD sampler_idx;
     DWORD mask = 0, swizzle;
 
     /* 1.0-1.4: Use destination register as sampler source.
      * 2.0+: Use provided sampler source. */
-    if (shader_version < WINED3DPS_VERSION(2,0)) sampler_idx = ins->dst[0].register_idx;
-    else sampler_idx = ins->src[1] & WINED3DSP_REGNUM_MASK;
-    sampler_type = ins->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
+    if (shader_version < WINED3D_SHADER_VERSION(2,0)) sampler_idx = ins->dst[0].reg.idx;
+    else sampler_idx = ins->src[1].reg.idx;
+    sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
 
-    if (shader_version < WINED3DPS_VERSION(1,4))
+    if (shader_version < WINED3D_SHADER_VERSION(1,4))
     {
         DWORD flags = deviceImpl->stateBlock->textureState[sampler_idx][WINED3DTSS_TEXTURETRANSFORMFLAGS];
 
@@ -2463,9 +2525,9 @@ static void pshader_glsl_tex(const struct wined3d_shader_instruction *ins)
             }
         }
     }
-    else if (shader_version < WINED3DPS_VERSION(2,0))
+    else if (shader_version < WINED3D_SHADER_VERSION(2,0))
     {
-        DWORD src_mod = ins->src[0] & WINED3DSP_SRCMOD_MASK;
+        DWORD src_mod = ins->src[0].modifiers;
 
         if (src_mod == WINED3DSPSM_DZ) {
             sample_flags |= WINED3D_GLSL_SAMPLE_PROJECTED;
@@ -2491,89 +2553,122 @@ static void pshader_glsl_tex(const struct wined3d_shader_instruction *ins)
     shader_glsl_get_sample_function(sampler_type, sample_flags, &sample_function);
     mask |= sample_function.coord_mask;
 
-    if (shader_version < WINED3DPS_VERSION(2,0)) swizzle = WINED3DVS_NOSWIZZLE;
-    else swizzle = ins->src[1] & WINED3DSP_SWIZZLE_MASK;
+    if (shader_version < WINED3D_SHADER_VERSION(2,0)) swizzle = WINED3DSP_NOSWIZZLE;
+    else swizzle = ins->src[1].swizzle;
 
     /* 1.0-1.3: Use destination register as coordinate source.
        1.4+: Use provided coordinate source register. */
-    if (shader_version < WINED3DPS_VERSION(1,4))
+    if (shader_version < WINED3D_SHADER_VERSION(1,4))
     {
         char coord_mask[6];
         shader_glsl_write_mask_to_str(mask, coord_mask);
-        shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, NULL,
+        shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, NULL, NULL, NULL,
                 "T%u%s", sampler_idx, coord_mask);
     } else {
         glsl_src_param_t coord_param;
-        shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], mask, &coord_param);
+        shader_glsl_add_src_param(ins, &ins->src[0], mask, &coord_param);
         if (ins->flags & WINED3DSI_TEXLD_BIAS)
         {
             glsl_src_param_t bias;
-            shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_3, &bias);
-            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, bias.param_str,
+            shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_3, &bias);
+            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, NULL, NULL, bias.param_str,
                     "%s", coord_param.param_str);
         } else {
-            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, NULL,
+            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, NULL, NULL, NULL,
                     "%s", coord_param.param_str);
         }
     }
 }
 
+static void shader_glsl_texldd(const struct wined3d_shader_instruction *ins)
+{
+    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)ins->ctx->shader;
+    IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) This->baseShader.device;
+    const WineD3D_GL_Info* gl_info = &deviceImpl->adapter->gl_info;
+    glsl_sample_function_t sample_function;
+    glsl_src_param_t coord_param, dx_param, dy_param;
+    DWORD sample_flags = WINED3D_GLSL_SAMPLE_GRAD;
+    DWORD sampler_type;
+    DWORD sampler_idx;
+    DWORD swizzle = ins->src[1].swizzle;
+
+    if(!GL_SUPPORT(ARB_SHADER_TEXTURE_LOD)) {
+        FIXME("texldd used, but not supported by hardware. Falling back to regular tex\n");
+        return pshader_glsl_tex(ins);
+    }
+
+    sampler_idx = ins->src[1].reg.idx;
+    sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
+    if(deviceImpl->stateBlock->textures[sampler_idx] &&
+       IWineD3DBaseTexture_GetTextureDimensions(deviceImpl->stateBlock->textures[sampler_idx]) == GL_TEXTURE_RECTANGLE_ARB) {
+        sample_flags |= WINED3D_GLSL_SAMPLE_RECT;
+    }
+
+    shader_glsl_get_sample_function(sampler_type, sample_flags, &sample_function);
+    shader_glsl_add_src_param(ins, &ins->src[0], sample_function.coord_mask, &coord_param);
+    shader_glsl_add_src_param(ins, &ins->src[2], sample_function.coord_mask, &dx_param);
+    shader_glsl_add_src_param(ins, &ins->src[3], sample_function.coord_mask, &dy_param);
+
+    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, dx_param.param_str, dy_param.param_str, NULL,
+                                "%s", coord_param.param_str);
+}
+
 static void shader_glsl_texldl(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)ins->shader;
+    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)ins->ctx->shader;
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) This->baseShader.device;
     glsl_sample_function_t sample_function;
     glsl_src_param_t coord_param, lod_param;
     DWORD sample_flags = WINED3D_GLSL_SAMPLE_LOD;
     DWORD sampler_type;
     DWORD sampler_idx;
-    DWORD swizzle = ins->src[1] & WINED3DSP_SWIZZLE_MASK;
+    DWORD swizzle = ins->src[1].swizzle;
 
-    sampler_idx = ins->src[1] & WINED3DSP_REGNUM_MASK;
-    sampler_type = ins->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
+    sampler_idx = ins->src[1].reg.idx;
+    sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
     if(deviceImpl->stateBlock->textures[sampler_idx] &&
        IWineD3DBaseTexture_GetTextureDimensions(deviceImpl->stateBlock->textures[sampler_idx]) == GL_TEXTURE_RECTANGLE_ARB) {
         sample_flags |= WINED3D_GLSL_SAMPLE_RECT;
     }
     shader_glsl_get_sample_function(sampler_type, sample_flags, &sample_function);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], sample_function.coord_mask, &coord_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], sample_function.coord_mask, &coord_param);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_3, &lod_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_3, &lod_param);
 
-    if (shader_is_pshader_version(ins->reg_maps->shader_version))
+    if (shader_is_pshader_version(ins->ctx->reg_maps->shader_version.type))
     {
         /* The GLSL spec claims the Lod sampling functions are only supported in vertex shaders.
          * However, they seem to work just fine in fragment shaders as well. */
         WARN("Using %s in fragment shader.\n", sample_function.name);
     }
-    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, lod_param.param_str,
+    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, swizzle, NULL, NULL, lod_param.param_str,
             "%s", coord_param.param_str);
 }
 
 static void pshader_glsl_texcoord(const struct wined3d_shader_instruction *ins)
 {
     /* FIXME: Make this work for more than just 2D textures */
-    SHADER_BUFFER *buffer = ins->buffer;
-    DWORD write_mask = shader_glsl_append_dst(ins->buffer, ins);
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
+    DWORD write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
 
-    if (ins->reg_maps->shader_version != WINED3DPS_VERSION(1,4))
+    if (!(ins->ctx->reg_maps->shader_version.major == 1 && ins->ctx->reg_maps->shader_version.minor == 4))
     {
         char dst_mask[6];
 
         shader_glsl_get_write_mask(&ins->dst[0], dst_mask);
         shader_addline(buffer, "clamp(gl_TexCoord[%u], 0.0, 1.0)%s);\n",
-                ins->dst[0].register_idx, dst_mask);
+                ins->dst[0].reg.idx, dst_mask);
     } else {
-        DWORD reg = ins->src[0] & WINED3DSP_REGNUM_MASK;
-        DWORD src_mod = ins->src[0] & WINED3DSP_SRCMOD_MASK;
+        DWORD reg = ins->src[0].reg.idx;
+        DWORD src_mod = ins->src[0].modifiers;
         char dst_swizzle[6];
 
-        shader_glsl_get_swizzle(ins->src[0], FALSE, write_mask, dst_swizzle);
+        shader_glsl_get_swizzle(&ins->src[0], FALSE, write_mask, dst_swizzle);
 
         if (src_mod == WINED3DSPSM_DZ) {
             glsl_src_param_t div_param;
             unsigned int mask_size = shader_glsl_get_write_mask_size(write_mask);
-            shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_2, &div_param);
+            shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_2, &div_param);
 
             if (mask_size > 1) {
                 shader_addline(buffer, "gl_TexCoord[%u]%s / vec%d(%s));\n", reg, dst_swizzle, mask_size, div_param.param_str);
@@ -2583,7 +2678,7 @@ static void pshader_glsl_texcoord(const struct wined3d_shader_instruction *ins)
         } else if (src_mod == WINED3DSPSM_DW) {
             glsl_src_param_t div_param;
             unsigned int mask_size = shader_glsl_get_write_mask_size(write_mask);
-            shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_3, &div_param);
+            shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_3, &div_param);
 
             if (mask_size > 1) {
                 shader_addline(buffer, "gl_TexCoord[%u]%s / vec%d(%s));\n", reg, dst_swizzle, mask_size, div_param.param_str);
@@ -2603,12 +2698,12 @@ static void pshader_glsl_texdp3tex(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src0_param;
     glsl_sample_function_t sample_function;
-    DWORD sampler_idx = ins->dst[0].register_idx;
+    DWORD sampler_idx = ins->dst[0].reg.idx;
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
-    DWORD sampler_type = ins->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
     UINT mask_size;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
 
     /* Do I have to take care about the projected bit? I don't think so, since the dp3 returns only one
      * scalar, and projected sampling would require 4.
@@ -2621,17 +2716,17 @@ static void pshader_glsl_texdp3tex(const struct wined3d_shader_instruction *ins)
     switch(mask_size)
     {
         case 1:
-            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DVS_NOSWIZZLE, NULL,
+            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL,
                     "dot(gl_TexCoord[%u].xyz, %s)", sampler_idx, src0_param.param_str);
             break;
 
         case 2:
-            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DVS_NOSWIZZLE, NULL,
+            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL,
                     "vec2(dot(gl_TexCoord[%u].xyz, %s), 0.0)", sampler_idx, src0_param.param_str);
             break;
 
         case 3:
-            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DVS_NOSWIZZLE, NULL,
+            shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL,
                     "vec3(dot(gl_TexCoord[%u].xyz, %s), 0.0, 0.0)", sampler_idx, src0_param.param_str);
             break;
 
@@ -2646,19 +2741,19 @@ static void pshader_glsl_texdp3tex(const struct wined3d_shader_instruction *ins)
 static void pshader_glsl_texdp3(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src0_param;
-    DWORD dstreg = ins->dst[0].register_idx;
+    DWORD dstreg = ins->dst[0].reg.idx;
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
     DWORD dst_mask;
     unsigned int mask_size;
 
-    dst_mask = shader_glsl_append_dst(ins->buffer, ins);
+    dst_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
     mask_size = shader_glsl_get_write_mask_size(dst_mask);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
 
     if (mask_size > 1) {
-        shader_addline(ins->buffer, "vec%d(dot(T%u.xyz, %s)));\n", mask_size, dstreg, src0_param.param_str);
+        shader_addline(ins->ctx->buffer, "vec%d(dot(T%u.xyz, %s)));\n", mask_size, dstreg, src0_param.param_str);
     } else {
-        shader_addline(ins->buffer, "dot(T%u.xyz, %s));\n", dstreg, src0_param.param_str);
+        shader_addline(ins->ctx->buffer, "dot(T%u.xyz, %s));\n", dstreg, src0_param.param_str);
     }
 }
 
@@ -2676,7 +2771,7 @@ static void pshader_glsl_texdepth(const struct wined3d_shader_instruction *ins)
      * too is irrelevant, since if x = 0, any y value < 1.0 (and > 1.0 is not allowed) results in a result
      * >= 1.0 or < 0.0
      */
-    shader_addline(ins->buffer, "gl_FragDepth = clamp((%s.x / min(%s.y, 1.0)), 0.0, 1.0);\n",
+    shader_addline(ins->ctx->buffer, "gl_FragDepth = clamp((%s.x / min(%s.y, 1.0)), 0.0, 1.0);\n",
             dst_param.reg_name, dst_param.reg_name);
 }
 
@@ -2688,13 +2783,13 @@ static void pshader_glsl_texdepth(const struct wined3d_shader_instruction *ins)
 static void pshader_glsl_texm3x2depth(const struct wined3d_shader_instruction *ins)
 {
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
-    DWORD dstreg = ins->dst[0].register_idx;
+    DWORD dstreg = ins->dst[0].reg.idx;
     glsl_src_param_t src0_param;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
 
-    shader_addline(ins->buffer, "tmp0.y = dot(T%u.xyz, %s);\n", dstreg, src0_param.param_str);
-    shader_addline(ins->buffer, "gl_FragDepth = (tmp0.y == 0.0) ? 1.0 : clamp(tmp0.x / tmp0.y, 0.0, 1.0);\n");
+    shader_addline(ins->ctx->buffer, "tmp0.y = dot(T%u.xyz, %s);\n", dstreg, src0_param.param_str);
+    shader_addline(ins->ctx->buffer, "gl_FragDepth = (tmp0.y == 0.0) ? 1.0 : clamp(tmp0.x / tmp0.y, 0.0, 1.0);\n");
 }
 
 /** Process the WINED3DSIO_TEXM3X2PAD instruction in GLSL
@@ -2702,11 +2797,11 @@ static void pshader_glsl_texm3x2depth(const struct wined3d_shader_instruction *i
 static void pshader_glsl_texm3x2pad(const struct wined3d_shader_instruction *ins)
 {
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
-    DWORD reg = ins->dst[0].register_idx;
-    SHADER_BUFFER *buffer = ins->buffer;
+    DWORD reg = ins->dst[0].reg.idx;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src0_param;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
     shader_addline(buffer, "tmp0.x = dot(T%u.xyz, %s);\n", reg, src0_param.param_str);
 }
 
@@ -2714,14 +2809,14 @@ static void pshader_glsl_texm3x2pad(const struct wined3d_shader_instruction *ins
  * Calculate the 1st or 2nd row of a 3-row matrix multiplication. */
 static void pshader_glsl_texm3x3pad(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DPixelShaderImpl *shader = (IWineD3DPixelShaderImpl *)ins->shader;
+    IWineD3DPixelShaderImpl *shader = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
-    DWORD reg = ins->dst[0].register_idx;
-    SHADER_BUFFER *buffer = ins->buffer;
+    DWORD reg = ins->dst[0].reg.idx;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     SHADER_PARSE_STATE* current_state = &shader->baseShader.parse_state;
     glsl_src_param_t src0_param;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
     shader_addline(buffer, "tmp0.%c = dot(T%u.xyz, %s);\n", 'x' + current_state->current_row, reg, src0_param.param_str);
     current_state->texcoord_w[current_state->current_row++] = reg;
 }
@@ -2729,19 +2824,19 @@ static void pshader_glsl_texm3x3pad(const struct wined3d_shader_instruction *ins
 static void pshader_glsl_texm3x2tex(const struct wined3d_shader_instruction *ins)
 {
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
-    DWORD reg = ins->dst[0].register_idx;
-    SHADER_BUFFER *buffer = ins->buffer;
+    DWORD reg = ins->dst[0].reg.idx;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     glsl_src_param_t src0_param;
-    DWORD sampler_type = ins->reg_maps->samplers[reg] & WINED3DSP_TEXTURETYPE_MASK;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type = ins->ctx->reg_maps->sampler_type[reg];
     glsl_sample_function_t sample_function;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
     shader_addline(buffer, "tmp0.y = dot(T%u.xyz, %s);\n", reg, src0_param.param_str);
 
     shader_glsl_get_sample_function(sampler_type, 0, &sample_function);
 
     /* Sample the texture using the calculated coordinates */
-    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DVS_NOSWIZZLE, NULL, "tmp0.xy");
+    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL, "tmp0.xy");
 }
 
 /** Process the WINED3DSIO_TEXM3X3TEX instruction in GLSL
@@ -2750,20 +2845,20 @@ static void pshader_glsl_texm3x3tex(const struct wined3d_shader_instruction *ins
 {
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
     glsl_src_param_t src0_param;
-    DWORD reg = ins->dst[0].register_idx;
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->shader;
+    DWORD reg = ins->dst[0].reg.idx;
+    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
     SHADER_PARSE_STATE* current_state = &This->baseShader.parse_state;
-    DWORD sampler_type = ins->reg_maps->samplers[reg] & WINED3DSP_TEXTURETYPE_MASK;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type = ins->ctx->reg_maps->sampler_type[reg];
     glsl_sample_function_t sample_function;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
-    shader_addline(ins->buffer, "tmp0.z = dot(T%u.xyz, %s);\n", reg, src0_param.param_str);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
+    shader_addline(ins->ctx->buffer, "tmp0.z = dot(T%u.xyz, %s);\n", reg, src0_param.param_str);
 
     /* Dependent read, not valid with conditional NP2 */
     shader_glsl_get_sample_function(sampler_type, 0, &sample_function);
 
     /* Sample the texture using the calculated coordinates */
-    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DVS_NOSWIZZLE, NULL, "tmp0.xyz");
+    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL, "tmp0.xyz");
 
     current_state->current_row = 0;
 }
@@ -2775,15 +2870,15 @@ static void pshader_glsl_texm3x3(const struct wined3d_shader_instruction *ins)
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
     glsl_src_param_t src0_param;
     char dst_mask[6];
-    DWORD reg = ins->dst[0].register_idx;
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->shader;
+    DWORD reg = ins->dst[0].reg.idx;
+    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
     SHADER_PARSE_STATE* current_state = &This->baseShader.parse_state;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
 
-    shader_glsl_append_dst(ins->buffer, ins);
+    shader_glsl_append_dst(ins->ctx->buffer, ins);
     shader_glsl_get_write_mask(&ins->dst[0], dst_mask);
-    shader_addline(ins->buffer, "vec4(tmp0.xy, dot(T%u.xyz, %s), 1.0)%s);\n", reg, src0_param.param_str, dst_mask);
+    shader_addline(ins->ctx->buffer, "vec4(tmp0.xy, dot(T%u.xyz, %s), 1.0)%s);\n", reg, src0_param.param_str, dst_mask);
 
     current_state->current_row = 0;
 }
@@ -2792,18 +2887,18 @@ static void pshader_glsl_texm3x3(const struct wined3d_shader_instruction *ins)
  * Perform the final texture lookup based on the previous 2 3x3 matrix multiplies */
 static void pshader_glsl_texm3x3spec(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DPixelShaderImpl *shader = (IWineD3DPixelShaderImpl *)ins->shader;
-    DWORD reg = ins->dst[0].register_idx;
+    IWineD3DPixelShaderImpl *shader = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
+    DWORD reg = ins->dst[0].reg.idx;
     glsl_src_param_t src0_param;
     glsl_src_param_t src1_param;
-    SHADER_BUFFER *buffer = ins->buffer;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     SHADER_PARSE_STATE* current_state = &shader->baseShader.parse_state;
-    DWORD stype = ins->reg_maps->samplers[reg] & WINED3DSP_TEXTURETYPE_MASK;
+    WINED3DSAMPLER_TEXTURE_TYPE stype = ins->ctx->reg_maps->sampler_type[reg];
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
     glsl_sample_function_t sample_function;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1], src_mask, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], src_mask, &src1_param);
 
     /* Perform the last matrix multiply operation */
     shader_addline(buffer, "tmp0.z = dot(T%u.xyz, %s);\n", reg, src0_param.param_str);
@@ -2814,7 +2909,7 @@ static void pshader_glsl_texm3x3spec(const struct wined3d_shader_instruction *in
     shader_glsl_get_sample_function(stype, 0, &sample_function);
 
     /* Sample the texture */
-    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DVS_NOSWIZZLE, NULL, "tmp0.xyz");
+    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL, "tmp0.xyz");
 
     current_state->current_row = 0;
 }
@@ -2823,16 +2918,16 @@ static void pshader_glsl_texm3x3spec(const struct wined3d_shader_instruction *in
  * Perform the final texture lookup based on the previous 2 3x3 matrix multiplies */
 static void pshader_glsl_texm3x3vspec(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DPixelShaderImpl *shader = (IWineD3DPixelShaderImpl *)ins->shader;
-    DWORD reg = ins->dst[0].register_idx;
-    SHADER_BUFFER *buffer = ins->buffer;
+    IWineD3DPixelShaderImpl *shader = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
+    DWORD reg = ins->dst[0].reg.idx;
+    SHADER_BUFFER *buffer = ins->ctx->buffer;
     SHADER_PARSE_STATE* current_state = &shader->baseShader.parse_state;
     glsl_src_param_t src0_param;
     DWORD src_mask = WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1 | WINED3DSP_WRITEMASK_2;
-    DWORD sampler_type = ins->reg_maps->samplers[reg] & WINED3DSP_TEXTURETYPE_MASK;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type = ins->ctx->reg_maps->sampler_type[reg];
     glsl_sample_function_t sample_function;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], src_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], src_mask, &src0_param);
 
     /* Perform the last matrix multiply operation */
     shader_addline(buffer, "tmp0.z = dot(vec3(T%u), vec3(%s));\n", reg, src0_param.param_str);
@@ -2846,7 +2941,7 @@ static void pshader_glsl_texm3x3vspec(const struct wined3d_shader_instruction *i
     shader_glsl_get_sample_function(sampler_type, 0, &sample_function);
 
     /* Sample the texture using the calculated coordinates */
-    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DVS_NOSWIZZLE, NULL, "tmp0.xyz");
+    shader_glsl_gen_sample_code(ins, reg, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL, "tmp0.xyz");
 
     current_state->current_row = 0;
 }
@@ -2857,20 +2952,20 @@ static void pshader_glsl_texm3x3vspec(const struct wined3d_shader_instruction *i
  */
 static void pshader_glsl_texbem(const struct wined3d_shader_instruction *ins)
 {
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->shader;
+    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)ins->ctx->shader;
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) This->baseShader.device;
     glsl_sample_function_t sample_function;
     glsl_src_param_t coord_param;
-    DWORD sampler_type;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type;
     DWORD sampler_idx;
     DWORD mask;
     DWORD flags;
     char coord_mask[6];
 
-    sampler_idx = ins->dst[0].register_idx;
+    sampler_idx = ins->dst[0].reg.idx;
     flags = deviceImpl->stateBlock->textureState[sampler_idx][WINED3DTSS_TEXTURETRANSFORMFLAGS];
 
-    sampler_type = ins->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
+    sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
     /* Dependent read, not valid with conditional NP2 */
     shader_glsl_get_sample_function(sampler_type, 0, &sample_function);
     mask = sample_function.coord_mask;
@@ -2891,13 +2986,12 @@ static void pshader_glsl_texbem(const struct wined3d_shader_instruction *ins)
             case WINED3DTTFF_DISABLE: div_mask = WINED3DSP_WRITEMASK_3; break;
         }
         shader_glsl_write_mask_to_str(div_mask, coord_div_mask);
-        shader_addline(ins->buffer, "T%u%s /= T%u%s;\n", sampler_idx, coord_mask, sampler_idx, coord_div_mask);
+        shader_addline(ins->ctx->buffer, "T%u%s /= T%u%s;\n", sampler_idx, coord_mask, sampler_idx, coord_div_mask);
     }
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0],
-            WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &coord_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &coord_param);
 
-    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DVS_NOSWIZZLE, NULL,
+    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL,
             "T%u%s + vec4(bumpenvmat%d * %s, 0.0, 0.0)%s", sampler_idx, coord_mask, sampler_idx,
             coord_param.param_str, coord_mask);
 
@@ -2906,10 +3000,10 @@ static void pshader_glsl_texbem(const struct wined3d_shader_instruction *ins)
         glsl_src_param_t luminance_param;
         glsl_dst_param_t dst_param;
 
-        shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_2, &luminance_param);
+        shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_2, &luminance_param);
         shader_glsl_add_dst_param(ins, &ins->dst[0], &dst_param);
 
-        shader_addline(ins->buffer, "%s%s *= (%s * luminancescale%d + luminanceoffset%d);\n",
+        shader_addline(ins->ctx->buffer, "%s%s *= (%s * luminancescale%d + luminanceoffset%d);\n",
                 dst_param.reg_name, dst_param.mask_str,
                 luminance_param.param_str, sampler_idx, sampler_idx);
     }
@@ -2918,15 +3012,13 @@ static void pshader_glsl_texbem(const struct wined3d_shader_instruction *ins)
 static void pshader_glsl_bem(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src0_param, src1_param;
-    DWORD sampler_idx = ins->dst[0].register_idx;
+    DWORD sampler_idx = ins->dst[0].reg.idx;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0],
-            WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1],
-            WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src1_param);
 
-    shader_glsl_append_dst(ins->buffer, ins);
-    shader_addline(ins->buffer, "%s + bumpenvmat%d * %s);\n",
+    shader_glsl_append_dst(ins->ctx->buffer, ins);
+    shader_addline(ins->ctx->buffer, "%s + bumpenvmat%d * %s);\n",
             src0_param.param_str, sampler_idx, src1_param.param_str);
 }
 
@@ -2935,14 +3027,14 @@ static void pshader_glsl_bem(const struct wined3d_shader_instruction *ins)
 static void pshader_glsl_texreg2ar(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src0_param;
-    DWORD sampler_idx = ins->dst[0].register_idx;
-    DWORD sampler_type = ins->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
+    DWORD sampler_idx = ins->dst[0].reg.idx;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
     glsl_sample_function_t sample_function;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_ALL, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_ALL, &src0_param);
 
     shader_glsl_get_sample_function(sampler_type, 0, &sample_function);
-    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DVS_NOSWIZZLE, NULL,
+    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL,
             "%s.wx", src0_param.reg_name);
 }
 
@@ -2951,14 +3043,14 @@ static void pshader_glsl_texreg2ar(const struct wined3d_shader_instruction *ins)
 static void pshader_glsl_texreg2gb(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src0_param;
-    DWORD sampler_idx = ins->dst[0].register_idx;
-    DWORD sampler_type = ins->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
+    DWORD sampler_idx = ins->dst[0].reg.idx;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
     glsl_sample_function_t sample_function;
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], WINED3DSP_WRITEMASK_ALL, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_ALL, &src0_param);
 
     shader_glsl_get_sample_function(sampler_type, 0, &sample_function);
-    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DVS_NOSWIZZLE, NULL,
+    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL,
             "%s.yz", src0_param.reg_name);
 }
 
@@ -2967,15 +3059,15 @@ static void pshader_glsl_texreg2gb(const struct wined3d_shader_instruction *ins)
 static void pshader_glsl_texreg2rgb(const struct wined3d_shader_instruction *ins)
 {
     glsl_src_param_t src0_param;
-    DWORD sampler_idx = ins->dst[0].register_idx;
-    DWORD sampler_type = ins->reg_maps->samplers[sampler_idx] & WINED3DSP_TEXTURETYPE_MASK;
+    DWORD sampler_idx = ins->dst[0].reg.idx;
+    WINED3DSAMPLER_TEXTURE_TYPE sampler_type = ins->ctx->reg_maps->sampler_type[sampler_idx];
     glsl_sample_function_t sample_function;
 
     /* Dependent read, not valid with conditional NP2 */
     shader_glsl_get_sample_function(sampler_type, 0, &sample_function);
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0], sample_function.coord_mask, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], sample_function.coord_mask, &src0_param);
 
-    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DVS_NOSWIZZLE, NULL,
+    shader_glsl_gen_sample_code(ins, sampler_idx, &sample_function, WINED3DSP_NOSWIZZLE, NULL, NULL, NULL,
             "%s", src0_param.param_str);
 }
 
@@ -2987,16 +3079,16 @@ static void pshader_glsl_texkill(const struct wined3d_shader_instruction *ins)
 
     /* The argument is a destination parameter, and no writemasks are allowed */
     shader_glsl_add_dst_param(ins, &ins->dst[0], &dst_param);
-    if ((ins->reg_maps->shader_version >= WINED3DPS_VERSION(2,0)))
+    if (ins->ctx->reg_maps->shader_version.major >= 2)
     {
         /* 2.0 shaders compare all 4 components in texkill */
-        shader_addline(ins->buffer, "if (any(lessThan(%s.xyzw, vec4(0.0)))) discard;\n", dst_param.reg_name);
+        shader_addline(ins->ctx->buffer, "if (any(lessThan(%s.xyzw, vec4(0.0)))) discard;\n", dst_param.reg_name);
     } else {
         /* 1.X shaders only compare the first 3 components, probably due to the nature of the texkill
          * instruction as a tex* instruction, and phase, which kills all a / w components. Even if all
          * 4 components are defined, only the first 3 are used
          */
-        shader_addline(ins->buffer, "if (any(lessThan(%s.xyz, vec3(0.0)))) discard;\n", dst_param.reg_name);
+        shader_addline(ins->ctx->buffer, "if (any(lessThan(%s.xyz, vec3(0.0)))) discard;\n", dst_param.reg_name);
     }
 }
 
@@ -3010,21 +3102,18 @@ static void pshader_glsl_dp2add(const struct wined3d_shader_instruction *ins)
     DWORD write_mask;
     unsigned int mask_size;
 
-    write_mask = shader_glsl_append_dst(ins->buffer, ins);
+    write_mask = shader_glsl_append_dst(ins->ctx->buffer, ins);
     mask_size = shader_glsl_get_write_mask_size(write_mask);
 
-    shader_glsl_add_src_param(ins, ins->src[0], ins->src_addr[0],
-            WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src0_param);
-    shader_glsl_add_src_param(ins, ins->src[1], ins->src_addr[1],
-            WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src1_param);
-    shader_glsl_add_src_param(ins, ins->src[2], ins->src_addr[2],
-            WINED3DSP_WRITEMASK_0, &src2_param);
+    shader_glsl_add_src_param(ins, &ins->src[0], WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src0_param);
+    shader_glsl_add_src_param(ins, &ins->src[1], WINED3DSP_WRITEMASK_0 | WINED3DSP_WRITEMASK_1, &src1_param);
+    shader_glsl_add_src_param(ins, &ins->src[2], WINED3DSP_WRITEMASK_0, &src2_param);
 
     if (mask_size > 1) {
-        shader_addline(ins->buffer, "vec%d(dot(%s, %s) + %s));\n",
+        shader_addline(ins->ctx->buffer, "vec%d(dot(%s, %s) + %s));\n",
                 mask_size, src0_param.param_str, src1_param.param_str, src2_param.param_str);
     } else {
-        shader_addline(ins->buffer, "dot(%s, %s) + %s);\n",
+        shader_addline(ins->ctx->buffer, "dot(%s, %s) + %s);\n",
                 src0_param.param_str, src1_param.param_str, src2_param.param_str);
     }
 }
@@ -3281,8 +3370,8 @@ static GLhandleARB generate_param_reorder_function(IWineD3DVertexShader *vertexs
     IWineD3DVertexShaderImpl *vs = (IWineD3DVertexShaderImpl *) vertexshader;
     IWineD3DPixelShaderImpl *ps = (IWineD3DPixelShaderImpl *) pixelshader;
     IWineD3DDeviceImpl *device;
-    DWORD vs_major = WINED3DSHADER_VERSION_MAJOR(vs->baseShader.reg_maps.shader_version);
-    DWORD ps_major = ps ? WINED3DSHADER_VERSION_MAJOR(ps->baseShader.reg_maps.shader_version) : 0;
+    DWORD vs_major = vs->baseShader.reg_maps.shader_version.major;
+    DWORD ps_major = ps ? ps->baseShader.reg_maps.shader_version.major : 0;
     unsigned int i;
     SHADER_BUFFER buffer;
     DWORD usage, usage_idx, writemask;
@@ -3607,7 +3696,7 @@ static void set_glsl_shader_program(IWineD3DDevice *iface, BOOL use_ps, BOOL use
     checkGLcall("Find glsl program uniform locations");
 
     if (pshader
-            && WINED3DSHADER_VERSION_MAJOR(((IWineD3DPixelShaderImpl *)pshader)->baseShader.reg_maps.shader_version) >= 3
+            && ((IWineD3DPixelShaderImpl *)pshader)->baseShader.reg_maps.shader_version.major >= 3
             && ((IWineD3DPixelShaderImpl *)pshader)->declared_in_count > GL_LIMITS(glsl_varyings) / 4)
     {
         TRACE("Shader %d needs vertex color clamping disabled\n", programId);
@@ -3794,7 +3883,7 @@ static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
     /* Note: Do not use QueryInterface here to find out which shader type this is because this code
      * can be called from IWineD3DBaseShader::Release
      */
-    char pshader = shader_is_pshader_version(This->baseShader.reg_maps.shader_version);
+    char pshader = shader_is_pshader_version(This->baseShader.reg_maps.shader_version.type);
 
     if(pshader) {
         ps = (IWineD3DPixelShaderImpl *) This;
@@ -3970,7 +4059,9 @@ static BOOL shader_glsl_dirty_const(IWineD3DDevice *iface) {
     return FALSE;
 }
 
-static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BUFFER *buffer, const struct ps_compile_args *args) {
+static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface,
+        SHADER_BUFFER *buffer, const struct ps_compile_args *args)
+{
     IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)iface;
     const struct shader_reg_maps *reg_maps = &This->baseShader.reg_maps;
     CONST DWORD *function = This->baseShader.function;
@@ -3985,6 +4076,9 @@ static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
     if (GL_SUPPORT(ARB_DRAW_BUFFERS)) {
         shader_addline(buffer, "#extension GL_ARB_draw_buffers : enable\n");
     }
+    if(GL_SUPPORT(ARB_SHADER_TEXTURE_LOD) && reg_maps->usestexldd) {
+        shader_addline(buffer, "#extension GL_ARB_shader_texture_lod : enable\n");
+    }
     if (GL_SUPPORT(ARB_TEXTURE_RECTANGLE)) {
         /* The spec says that it doesn't have to be explicitly enabled, but the nvidia
          * drivers write a warning if we don't do so
@@ -3996,15 +4090,16 @@ static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
     shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, buffer, &GLINFO_LOCATION, args);
 
     /* Pack 3.0 inputs */
-    if (reg_maps->shader_version >= WINED3DPS_VERSION(3,0) && args->vp_mode != vertexshader) {
+    if (reg_maps->shader_version.major >= 3 && args->vp_mode != vertexshader)
+    {
         pshader_glsl_input_pack(iface, buffer, This->semantics_in, reg_maps, args->vp_mode);
     }
 
     /* Base Shader Body */
-    shader_generate_main( (IWineD3DBaseShader*) This, buffer, reg_maps, function);
+    shader_generate_main((IWineD3DBaseShader *)This, buffer, reg_maps, function);
 
     /* Pixel shaders < 2.0 place the resulting color in R0 implicitly */
-    if (reg_maps->shader_version < WINED3DPS_VERSION(2,0))
+    if (reg_maps->shader_version.major < 2)
     {
         /* Some older cards like GeforceFX ones don't support multiple buffers, so also not gl_FragData */
         if(GL_SUPPORT(ARB_DRAW_BUFFERS))
@@ -4034,7 +4129,8 @@ static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
      * NOTE: gl_Fog.start and gl_Fog.end don't hold fog start s and end e but
      * -1/(e-s) and e/(e-s) respectively.
      */
-    if(reg_maps->shader_version < WINED3DPS_VERSION(3,0)) {
+    if (reg_maps->shader_version.major < 3)
+    {
         switch(args->fog) {
             case FOG_OFF: break;
             case FOG_LINEAR:
@@ -4069,7 +4165,9 @@ static GLuint shader_glsl_generate_pshader(IWineD3DPixelShader *iface, SHADER_BU
     return shader_obj;
 }
 
-static GLuint shader_glsl_generate_vshader(IWineD3DVertexShader *iface, SHADER_BUFFER *buffer, const struct vs_compile_args *args) {
+static GLuint shader_glsl_generate_vshader(IWineD3DVertexShader *iface,
+        SHADER_BUFFER *buffer, const struct vs_compile_args *args)
+{
     IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
     const struct shader_reg_maps *reg_maps = &This->baseShader.reg_maps;
     CONST DWORD *function = This->baseShader.function;
@@ -4084,10 +4182,10 @@ static GLuint shader_glsl_generate_vshader(IWineD3DVertexShader *iface, SHADER_B
     shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, buffer, &GLINFO_LOCATION, NULL);
 
     /* Base Shader Body */
-    shader_generate_main( (IWineD3DBaseShader*) This, buffer, reg_maps, function);
+    shader_generate_main((IWineD3DBaseShader*)This, buffer, reg_maps, function);
 
     /* Unpack 3.0 outputs */
-    if (reg_maps->shader_version >= WINED3DVS_VERSION(3,0)) shader_addline(buffer, "order_ps_input(OUT);\n");
+    if (reg_maps->shader_version.major >= 3) shader_addline(buffer, "order_ps_input(OUT);\n");
     else shader_addline(buffer, "order_ps_input();\n");
 
     /* The D3DRS_FOGTABLEMODE render state defines if the shader-generated fog coord is used
@@ -4144,8 +4242,7 @@ static void shader_glsl_get_caps(WINED3DDEVTYPE devtype, const WineD3D_GL_Info *
     else
         pCaps->VertexShaderVersion = WINED3DVS_VERSION(3,0);
     TRACE_(d3d_caps)("Hardware vertex shader version %d.%d enabled (GLSL)\n", (pCaps->VertexShaderVersion >> 8) & 0xff, pCaps->VertexShaderVersion & 0xff);
-    /* Subtract the other potential uniforms from the max available (bools, ints, and 1 row of projection matrix) */
-    pCaps->MaxVertexShaderConst = GL_LIMITS(vshader_constantsF) - (MAX_CONST_B / 4) - MAX_CONST_I - 1;
+    pCaps->MaxVertexShaderConst = GL_LIMITS(vshader_constantsF);
 
     /* Older DX9-class videocards (GeforceFX / Radeon >9500/X*00) only support pixel shader 2.0/2.0a/2.0b.
      * In OpenGL the extensions related to GLSL abstract lowlevel GL info away which is needed
@@ -4163,12 +4260,7 @@ static void shader_glsl_get_caps(WINED3DDEVTYPE devtype, const WineD3D_GL_Info *
     else
         pCaps->PixelShaderVersion = WINED3DPS_VERSION(3,0);
 
-    /* Subtract the other potential uniforms from the max available (bools & ints), and 2 states for fog.
-     * In theory the texbem instruction may need one more shader constant too. But lets assume
-     * that a sm <= 1.3 shader does not need all the uniforms provided by a glsl-capable card,
-     * and lets not take away a uniform needlessly from all other shaders.
-     */
-    pCaps->MaxPixelShaderConst = GL_LIMITS(pshader_constantsF) - (MAX_CONST_B / 4) - MAX_CONST_I - 2;
+    pCaps->MaxPixelShaderConst = GL_LIMITS(pshader_constantsF);
 
     /* FIXME: The following line is card dependent. -8.0 to 8.0 is the
      * Direct3D minimum requirement.
@@ -4276,7 +4368,7 @@ static const SHADER_HANDLER shader_glsl_instruction_handler_table[WINED3DSIH_TAB
     /* WINED3DSIH_TEXDP3        */ pshader_glsl_texdp3,
     /* WINED3DSIH_TEXDP3TEX     */ pshader_glsl_texdp3tex,
     /* WINED3DSIH_TEXKILL       */ pshader_glsl_texkill,
-    /* WINED3DSIH_TEXLDD        */ NULL,
+    /* WINED3DSIH_TEXLDD        */ shader_glsl_texldd,
     /* WINED3DSIH_TEXLDL        */ shader_glsl_texldl,
     /* WINED3DSIH_TEXM3x2DEPTH  */ pshader_glsl_texm3x2depth,
     /* WINED3DSIH_TEXM3x2PAD    */ pshader_glsl_texm3x2pad,
@@ -4309,4 +4401,5 @@ const shader_backend_t glsl_shader_backend = {
     shader_glsl_generate_vshader,
     shader_glsl_get_caps,
     shader_glsl_color_fixup_supported,
+    shader_glsl_add_instruction_modifiers,
 };

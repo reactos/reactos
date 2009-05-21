@@ -29,6 +29,8 @@
   #define DDKAPI
 #endif
 
+#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
+
 NTSTATUS
 NTAPI
 PortClsCreate(
@@ -60,9 +62,6 @@ NTSTATUS NewMiniportDMusUART(
 NTSTATUS NewMiniportFmSynth(
     OUT PMINIPORT* OutMiniport,
     IN  REFCLSID ClassId);
-
-NTSTATUS NewPortMidi(
-    OUT PPORT* OutPort);
 
 NTSTATUS NewPortDMus(
     OUT PPORT* OutPort);
@@ -99,6 +98,54 @@ PDEVICE_OBJECT
 GetDeviceObjectFromWaveCyclic(
     IPortWavePci* iface);
 
+PDEVICE_OBJECT
+GetDeviceObjectFromPortWavePci(
+    IPortWavePci* iface);
+
+PMINIPORTWAVEPCI
+GetWavePciMiniport(
+    PPORTWAVEPCI Port);
+
+NTSTATUS 
+NewPortFilterDMus(
+    OUT PPORTFILTERDMUS * OutFilter);
+
+NTSTATUS NewPortPinDMus(
+    OUT PPORTPINDMUS * OutPin);
+
+VOID
+GetDMusMiniport(
+    IN IPortDMus * iface, 
+    IN PMINIPORTDMUS * Miniport,
+    IN PMINIPORTMIDI * MidiMiniport);
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+NTSTATUS 
+NewPortFilterWaveRT(
+    OUT IPortFilterWaveRT ** OutFilter);
+
+NTSTATUS NewPortPinWaveRT(
+    OUT IPortPinWaveRT ** OutPin);
+
+PMINIPORTWAVERT
+GetWaveRTMiniport(
+    IN IPortWaveRT* iface);
+
+PDEVICE_OBJECT
+GetDeviceObjectFromPortWaveRT(
+    IPortWaveRT* iface);
+
+NTSTATUS
+NewPortWaveRTStream(
+    PPORTWAVERTSTREAM *OutStream);
+
+NTSTATUS
+NewPortWaveRT(
+    OUT PPORT* OutPort);
+
+
+#endif
 
 NTSTATUS
 NTAPI
@@ -169,10 +216,6 @@ typedef struct
     ULONG MaxSubDevices;
     KSOBJECT_CREATE_ITEM * CreateItems;
 
-    PIO_WORKITEM StartWorkItem;
-    PIO_WORKITEM StopWorkItem;
-    PIO_WORKITEM CloseWorkItem;
-
     IResourceList* resources;
     LIST_ENTRY SubDeviceList;
     LIST_ENTRY PhysicalConnectionList;
@@ -185,6 +228,13 @@ typedef struct
     KSSTREAM_HEADER Header;
     PIRP Irp;
 }CONTEXT_WRITE, *PCONTEXT_WRITE;
+
+typedef struct
+{
+    PVOID Pin;
+    PIO_WORKITEM WorkItem;
+    PIRP Irp;
+}CLOSESTREAM_CONTEXT, *PCLOSESTREAM_CONTEXT;
 
 NTSTATUS
 NTAPI
@@ -249,26 +299,33 @@ PcPropertyHandler(
     IN PIRP Irp,
     IN PSUBDEVICE_DESCRIPTOR Descriptor);
 
+NTSTATUS
+NTAPI
+FastPropertyHandler(
+    IN PFILE_OBJECT  FileObject,
+    IN PKSPROPERTY UNALIGNED  Property,
+    IN ULONG  PropertyLength,
+    IN OUT PVOID UNALIGNED  Data,
+    IN ULONG  DataLength,
+    OUT PIO_STATUS_BLOCK  IoStatus,
+    IN ULONG  PropertySetsCount,
+    IN const KSPROPERTY_SET *PropertySet,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor,
+    IN ISubdevice *SubDevice);
+
 PDEVICE_OBJECT
 GetDeviceObject(
     IPortWaveCyclic* iface);
 
-NTSTATUS
+IIrpQueue*
 NTAPI
-IPortWavePciStream_AddMapping(
-    IN IPortWavePciStream *iface,
-    IN PUCHAR Buffer,
-    IN ULONG BufferSize,
-    IN PIRP Irp);
+IPortWavePciStream_GetIrpQueue(
+    IN IPortWavePciStream *iface);
 
 NTSTATUS
 NTAPI
 NewIPortWavePciStream(
-    OUT PPORTWAVEPCISTREAM *Stream,
-    IN KSPIN_CONNECT *ConnectDetails,
-    IN PKSDATAFORMAT DataFormat,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN ULONG FrameSize);
+    OUT PPORTWAVEPCISTREAM *Stream);
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\

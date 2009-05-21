@@ -81,8 +81,7 @@
 #include "urlmon.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
-
-#include "wine/wingdi16.h"
+#include "wine/library.h"
 
 #include "ungif.h"
 

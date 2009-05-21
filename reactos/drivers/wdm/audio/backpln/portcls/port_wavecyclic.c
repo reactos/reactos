@@ -8,6 +8,8 @@
 
 #include "private.h"
 
+extern GUID IID_IDmaChannelSlave;
+
 typedef struct
 {
     IPortWaveCyclicVtbl *lpVtbl;
@@ -287,6 +289,7 @@ IPortWaveCyclic_fnGetDeviceProperty(
     OUT PULONG  ReturnLength)
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!This->bInitialized)
     {
@@ -314,6 +317,7 @@ IPortWaveCyclic_fnInit(
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
     DPRINT("IPortWaveCyclic_Init entered %p\n", This);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (This->bInitialized)
     {
@@ -420,6 +424,8 @@ IPortWaveCyclic_fnNewRegistryKey(
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     if (!This->bInitialized)
     {
         DPRINT("IPortWaveCyclic_fnNewRegistryKey called w/o initialized\n");
@@ -449,6 +455,8 @@ IPortWaveCyclic_fnNewMasterDmaChannel(
     NTSTATUS Status;
     DEVICE_DESCRIPTION DeviceDescription;
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!This->bInitialized)
     {
@@ -480,8 +488,9 @@ IPortWaveCyclic_fnNewSlaveDmaChannel(
     DEVICE_DESCRIPTION DeviceDescription;
     PDMACHANNEL DmaChannel;
     NTSTATUS Status;
-
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!This->bInitialized)
     {
@@ -608,6 +617,7 @@ ISubDevice_fnNewIrpTarget(
     }
 
     *OutTarget = (IIrpTarget*)Filter;
+    This->Filter = Filter;
     return Status;
 }
 

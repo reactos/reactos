@@ -1795,6 +1795,22 @@ HRESULT d3dfmt_get_conv(IWineD3DSurfaceImpl *This, BOOL need_alpha_ck, BOOL use_
             *target_bpp = 6;
             break;
 
+        case WINED3DFMT_R16G16_FLOAT:
+            *convert = CONVERT_R16G16F;
+            *format = GL_RGB;
+            *internal = GL_RGB16F_ARB;
+            *type = GL_HALF_FLOAT_ARB;
+            *target_bpp = 6;
+            break;
+
+        case WINED3DFMT_R32G32_FLOAT:
+            *convert = CONVERT_R32G32F;
+            *format = GL_RGB;
+            *internal = GL_RGB32F_ARB;
+            *type = GL_FLOAT;
+            *target_bpp = 12;
+            break;
+
         default:
             break;
     }
@@ -2123,6 +2139,7 @@ static HRESULT d3dfmt_convert_surface(const BYTE *src, BYTE *dst, UINT pitch, UI
         }
 
         case CONVERT_G16R16:
+        case CONVERT_R16G16F:
         {
             unsigned int x, y;
             const WORD *Source;
@@ -2136,7 +2153,30 @@ static HRESULT d3dfmt_convert_surface(const BYTE *src, BYTE *dst, UINT pitch, UI
                     WORD red = (*Source++);
                     Dest[0] = green;
                     Dest[1] = red;
+                    /* Strictly speaking not correct for R16G16F, but it doesn't matter because the
+                     * shader overwrites it anyway
+                     */
                     Dest[2] = 0xffff;
+                    Dest += 3;
+                }
+            }
+            break;
+        }
+
+        case CONVERT_R32G32F:
+        {
+            unsigned int x, y;
+            const float *Source;
+            float *Dest;
+            for(y = 0; y < height; y++) {
+                Source = (const float *)(src + y * pitch);
+                Dest = (float *) (dst + y * outpitch);
+                for (x = 0; x < width; x++ ) {
+                    float green = (*Source++);
+                    float red = (*Source++);
+                    Dest[0] = green;
+                    Dest[1] = red;
+                    Dest[2] = 1.0;
                     Dest += 3;
                 }
             }

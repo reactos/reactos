@@ -147,6 +147,19 @@ BEGIN
   DEFPUSHBUTTON "No", IDCANCEL, 102, 129, 54, 13
 END
 
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Ferma altri servizi"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Volete fermare questi servizi?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "Si", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "No", IDCANCEL, 120, 129, 54, 14
+END
+
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
 CAPTION "Opzioni"
 FONT 8, "MS Shell Dlg",0,0
@@ -191,6 +204,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Numero Servizi: %d"
+  IDS_STOP_DEPENDS "Quando %s si ferma, Questi altri sevizi si fermeranno"
   IDS_LICENSE "Questo programma è software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma è distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILITÀ o UTILIZZABILITÀ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non è cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
 END
 

@@ -512,8 +512,14 @@ VOID
 NTAPI
 ExGetCurrentProcessorCounts(
   PULONG ThreadKernelTime,
+   PULONG ThreadKernelTime,
    PULONG TotalCpuTime,
    PULONG ProcessorNumber);
+
+VOID
+NTAPI
+ExGetCurrentProcessorCpuUsage(
+    PULONG CpuUsage);
 
 /* portability fixes */
 #ifdef _M_AMD64

@@ -246,4 +246,9 @@ DECLARE_INTERFACE_(IMiniportDMus, IMiniport)
 typedef IMiniportDMus *PMINIPORTDMUS;
 #undef INTERFACE
 
+#define STATIC_IID_IAllocatorMXF\
+    0xa5f0d62c, 0xb30f, 0x11d2, 0xb7, 0xa3, 0x00, 0x60, 0x08, 0x33, 0x16, 0xc1
+DEFINE_GUIDSTRUCT("a5f0d62c-b30f-11d2-b7a3-0060083316c1", IID_IAllocatorMXF);
+#define IID_IAllocatorMXF DEFINE_GUIDNAMED(IID_IAllocatorMXF)
+
 #endif

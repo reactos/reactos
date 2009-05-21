@@ -388,7 +388,7 @@ static HRESULT get_node(
     if ( !out )
         return E_INVALIDARG;
 
-    /* if we dont have a doc, use our parent. */
+    /* if we don't have a doc, use our parent. */
     if(node && !node->doc && node->parent)
         node->doc = node->parent->doc;
 

@@ -704,7 +704,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		non_if_data.includes.push_back ( include );
 		subs_invalid = true;
 	}
-	else if ( e.name == "define" )
+	else if ( e.name == "define" || e.name == "redefine" )
 	{
 		Define* pDefine = new Define ( project, this, e );
 		non_if_data.defines.push_back ( pDefine );

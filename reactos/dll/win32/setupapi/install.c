@@ -2228,8 +2228,8 @@ cleanup:
     MyFree(SourceInfFileNameW);
     MyFree(OEMSourceMediaLocationW);
     MyFree(DestinationInfFileNameW);
-
     TRACE("Returning %d\n", ret);
+    if (ret) SetLastError(ERROR_SUCCESS);
     return ret;
 }
 
@@ -2518,5 +2518,6 @@ cleanup:
     }
 
     TRACE("Returning %d\n", ret);
+    if (ret) SetLastError(ERROR_SUCCESS);
     return ret;
 }

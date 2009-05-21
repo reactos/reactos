@@ -34,6 +34,7 @@ typedef struct {
 
     const IInternetProtocolVtbl *lpInternetProtocolVtbl;
     const IInternetPriorityVtbl *lpInternetPriorityVtbl;
+    const IWinInetHttpInfoVtbl  *lpWinInetHttpInfoVtbl;
 
     BOOL https;
     IHttpNegotiate *http_negotiate;
@@ -42,8 +43,9 @@ typedef struct {
     LONG ref;
 } HttpProtocol;
 
-#define PROTOCOL(x)  ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
-#define PRIORITY(x)  ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
+#define PROTOCOL(x)      ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
+#define PRIORITY(x)      ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
+#define INETHTTPINFO(x)  ((IWinInetHttpInfo*)   &(x)->lpWinInetHttpInfoVtbl)
 
 /* Default headers from native */
 static const WCHAR wszHeaders[] = {'A','c','c','e','p','t','-','E','n','c','o','d','i','n','g',
@@ -326,6 +328,12 @@ static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFI
     }else if(IsEqualGUID(&IID_IInternetPriority, riid)) {
         TRACE("(%p)->(IID_IInternetPriority %p)\n", This, ppv);
         *ppv = PRIORITY(This);
+    }else if(IsEqualGUID(&IID_IWinInetInfo, riid)) {
+        TRACE("(%p)->(IID_IWinInetInfo %p)\n", This, ppv);
+        *ppv = INETHTTPINFO(This);
+    }else if(IsEqualGUID(&IID_IWinInetHttpInfo, riid)) {
+        TRACE("(%p)->(IID_IWinInetHttpInfo %p)\n", This, ppv);
+        *ppv = INETHTTPINFO(This);
     }
 
     if(*ppv) {
@@ -364,14 +372,14 @@ static ULONG WINAPI HttpProtocol_Release(IInternetProtocol *iface)
 
 static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     HttpProtocol *This = PROTOCOL_THIS(iface);
 
     static const WCHAR httpW[] = {'h','t','t','p',':'};
     static const WCHAR httpsW[] = {'h','t','t','p','s',':'};
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     if(This->https
@@ -527,6 +535,52 @@ static const IInternetPriorityVtbl HttpPriorityVtbl = {
     HttpPriority_GetPriority
 };
 
+#define INETINFO_THIS(iface) DEFINE_THIS(HttpProtocol, WinInetHttpInfo, iface)
+
+static HRESULT WINAPI HttpInfo_QueryInterface(IWinInetHttpInfo *iface, REFIID riid, void **ppv)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    return IBinding_QueryInterface(PROTOCOL(This), riid, ppv);
+}
+
+static ULONG WINAPI HttpInfo_AddRef(IWinInetHttpInfo *iface)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    return IBinding_AddRef(PROTOCOL(This));
+}
+
+static ULONG WINAPI HttpInfo_Release(IWinInetHttpInfo *iface)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    return IBinding_Release(PROTOCOL(This));
+}
+
+static HRESULT WINAPI HttpInfo_QueryOption(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI HttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer, DWORD *pdwFlags, DWORD *pdwReserved)
+{
+    HttpProtocol *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
+    return E_NOTIMPL;
+}
+
+#undef INETINFO_THIS
+
+static const IWinInetHttpInfoVtbl WinInetHttpInfoVtbl = {
+    HttpInfo_QueryInterface,
+    HttpInfo_AddRef,
+    HttpInfo_Release,
+    HttpInfo_QueryOption,
+    HttpInfo_QueryInfo
+};
+
 static HRESULT create_http_protocol(BOOL https, void **ppobj)
 {
     HttpProtocol *ret;
@@ -538,6 +592,7 @@ static HRESULT create_http_protocol(BOOL https, void **ppobj)
     ret->base.vtbl = &AsyncProtocolVtbl;
     ret->lpInternetProtocolVtbl = &HttpProtocolVtbl;
     ret->lpInternetPriorityVtbl = &HttpPriorityVtbl;
+    ret->lpWinInetHttpInfoVtbl  = &WinInetHttpInfoVtbl;
 
     ret->https = https;
     ret->ref = 1;

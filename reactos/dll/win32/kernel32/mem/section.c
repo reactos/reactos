@@ -138,6 +138,13 @@ CreateFileMappingW(HANDLE hFile,
                              flProtect,
                              Attributes,
                              hFile);
+    
+    if (Status == STATUS_OBJECT_NAME_EXISTS)
+    {
+        SetLastError(ERROR_ALREADY_EXISTS);
+        return SectionHandle;
+    }
+
     if (!NT_SUCCESS(Status))
     {
         /* We failed */
@@ -145,6 +152,7 @@ CreateFileMappingW(HANDLE hFile,
         return NULL;
     }
 
+    SetLastError(ERROR_SUCCESS);
     /* Return the section */
     return SectionHandle;
 }
@@ -343,6 +351,7 @@ OpenFileMappingW(DWORD dwDesiredAccess,
         return NULL;
     }
 
+    SetLastError(ERROR_SUCCESS);
     /* Otherwise, return the handle */
     return SectionHandle;
 }

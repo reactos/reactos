@@ -220,7 +220,7 @@ void RefreshApplicationPage(void)
 
 void UpdateApplicationListControlViewSetting(void)
 {
-    DWORD  dwStyle = GetWindowLongW(hApplicationPageListCtrl, GWL_STYLE);
+    DWORD  dwStyle = GetWindowLongPtrW(hApplicationPageListCtrl, GWL_STYLE);
 
     dwStyle &= ~(LVS_REPORT | LVS_ICON | LVS_LIST | LVS_SMALLICON);
 
@@ -229,7 +229,7 @@ void UpdateApplicationListControlViewSetting(void)
     case ID_VIEW_SMALL:   dwStyle |= LVS_SMALLICON; break;
     case ID_VIEW_DETAILS: dwStyle |= LVS_REPORT; break;
     }
-    SetWindowLongW(hApplicationPageListCtrl, GWL_STYLE, dwStyle);
+    SetWindowLongPtrW(hApplicationPageListCtrl, GWL_STYLE, dwStyle);
 
     RefreshApplicationPage();
 }
@@ -298,7 +298,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
         !IsWindowVisible(hWnd) ||
         (GetParent(hWnd) != NULL) ||
         (GetWindow(hWnd, GW_OWNER) != NULL) ||
-        (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+        (GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
     {
         return TRUE; /* Skip this window */
     }
@@ -422,7 +422,7 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
             !IsWindowVisible(pAPLI->hWnd) ||
             (GetParent(pAPLI->hWnd) != NULL) ||
             (GetWindow(pAPLI->hWnd, GW_OWNER) != NULL) ||
-            (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+            (GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
         {
             ImageList_Remove(hImageListLarge, item.iItem);
             ImageList_Remove(hImageListSmall, item.iItem);

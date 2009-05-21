@@ -8,7 +8,7 @@
 	<include base="ReactOS">include/reactos/libs/libjpeg</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="PROXY_CLSID">CLSID_PSDispatch</define>
 	<define name="COM_NO_WINDOWS_H"/>
 	<define name="_OLEAUT32_"/>

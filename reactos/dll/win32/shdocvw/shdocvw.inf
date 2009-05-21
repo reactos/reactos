@@ -126,6 +126,9 @@ HKCR,"InternetShortcut\shell\open\command",,,"rundll32.exe shdocvw.dll,OpenURL %
 HKCR,"InternetShortcut\shell\print\command",,,"rundll32.exe mshtml.dll,PrintHTML ""%1"""
 HKCR,"InternetShortcut\shell\printto\command",,,"rundll32.exe mshtml.dll,PrintHTML ""%1"" ""%2"" ""%3"" ""%4"""
 
+HKCR,"CLSID\%CLSID_TaskbarList%",,,"Task Bar Communication"
+HKCR,"CLSID\%CLSID_TaskbarList%\InProcServer32",,,"%MODULE%"
+HKCR,"CLSID\%CLSID_TaskbarList%\InProcServer32","ThreadingModel",,"Apartment"
 
 [URL.Reg]
 HKLM,"Software\Microsoft\Windows\CurrentVersion\URL\DefaultPrefix",,,"http://"

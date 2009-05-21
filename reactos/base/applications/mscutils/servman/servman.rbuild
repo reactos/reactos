@@ -15,12 +15,15 @@
 		<file>control.c</file>
 		<file>create.c</file>
 		<file>delete.c</file>
+		<file>dependencies.c</file>
 		<file>export.c</file>
 		<file>listview.c</file>
 		<file>mainwnd.c</file>
 		<file>misc.c</file>
 		<file>progress.c</file>
 		<file>propsheet.c</file>
+		<file>propsheet_depends.c</file>
+		<file>propsheet_general.c</file>
 		<file>query.c</file>
 		<file>servman.c</file>
 		<file>start.c</file>

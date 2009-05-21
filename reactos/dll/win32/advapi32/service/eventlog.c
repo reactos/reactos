@@ -632,6 +632,13 @@ ReadEventLogA(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
+    /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
+       trying to access a null pointer */
+    if (!lpBuffer)
+    {
+        nNumberOfBytesToRead = 0;
+    }
+
     RpcTryExcept
     {
         Status = ElfrReadELA(hEventLog,
@@ -648,14 +655,14 @@ ReadEventLogA(IN HANDLE hEventLog,
     }
     RpcEndExcept;
 
+    *pnBytesRead = (DWORD)bytesRead;
+    *pnMinNumberOfBytesNeeded = (DWORD)minNumberOfBytesNeeded;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
-
-    *pnBytesRead = (DWORD)bytesRead;
-    *pnMinNumberOfBytesNeeded = (DWORD)minNumberOfBytesNeeded;
 
     return TRUE;
 }
@@ -689,6 +696,13 @@ ReadEventLogW(IN HANDLE hEventLog,
         hEventLog, dwReadFlags, dwRecordOffset, lpBuffer,
         nNumberOfBytesToRead, pnBytesRead, pnMinNumberOfBytesNeeded);
 
+    /* If buffer is NULL set nNumberOfBytesToRead to 0 to prevent rpcrt4 from
+       trying to access a null pointer */
+    if (!lpBuffer)
+    {
+        nNumberOfBytesToRead = 0;
+    }
+
     RpcTryExcept
     {
         Status = ElfrReadELW(hEventLog,
@@ -705,14 +719,14 @@ ReadEventLogW(IN HANDLE hEventLog,
     }
     RpcEndExcept;
 
+    *pnBytesRead = (DWORD)bytesRead;
+    *pnMinNumberOfBytesNeeded = (DWORD)minNumberOfBytesNeeded;
+
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
-
-    *pnBytesRead = (DWORD)bytesRead;
-    *pnMinNumberOfBytesNeeded = (DWORD)minNumberOfBytesNeeded;
 
     return TRUE;
 }
@@ -924,7 +938,7 @@ ReportEventW(IN HANDLE hEventLog,
         RtlInitUnicodeString(&Strings[i], lpStrings[i]);
 
     /*FIXME: ComputerName */
-    RtlInitEmptyUnicodeString(&ComputerName, NULL, 0);
+    RtlInitEmptyUnicodeString(&ComputerName, L"", 0);
 
     RpcTryExcept
     {

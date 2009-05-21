@@ -443,8 +443,8 @@ WelcomeDlgProc(
 			CenterWindow(hwndControl);
 
 			/* Hide the system menu */
-			dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-			SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+			dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+			SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 
 			/* Set title font */
 			SendDlgItemMessage(
@@ -549,8 +549,8 @@ CHSourceDlgProc(
 			CenterWindow(hwndControl);
 
 			/* Hide the system menu */
-			dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-			SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+			dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+			SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 
 			PopulateCustomPathCombo(GetDlgItem(hwndDlg, IDC_COMBO_PATH));
 
@@ -706,8 +706,8 @@ SearchDrvDlgProc(
 				(LPARAM)DevInstData->buffer);
 
 			/* Hide the system menu */
-			dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-			SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+			dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+			SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 			break;
 		}
 
@@ -741,7 +741,7 @@ SearchDrvDlgProc(
 				case PSN_KILLACTIVE:
 					if (hThread != 0)
 					{
-						SetWindowLong(hwndDlg, DWL_MSGRESULT, TRUE);
+						SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
 						return TRUE;
 					}
 					break;
@@ -801,8 +801,8 @@ InstallDrvDlgProc(
 				(LPARAM)DevInstData->drvInfoData.Description);
 
 			/* Hide the system menu */
-			dwStyle = GetWindowLong(hwndControl, GWL_STYLE);
-			SetWindowLong(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
+			dwStyle = GetWindowLongPtr(hwndControl, GWL_STYLE);
+			SetWindowLongPtr(hwndControl, GWL_STYLE, dwStyle & ~WS_SYSMENU);
 			break;
 		}
 
@@ -847,7 +847,7 @@ InstallDrvDlgProc(
 				case PSN_KILLACTIVE:
 					if (hThread != 0)
 					{
-						SetWindowLong(hwndDlg, DWL_MSGRESULT, TRUE);
+						SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, TRUE);
 						return TRUE;
 					}
 					break;

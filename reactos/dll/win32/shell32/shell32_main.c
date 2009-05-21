@@ -764,7 +764,7 @@ HICON WINAPI ExtractIconW(HINSTANCE hInstance, LPCWSTR lpszFile, UINT nIconIndex
  */
 VOID WINAPI Printer_LoadIconsW(LPCWSTR wsPrinterName, HICON * pLargeIcon, HICON * pSmallIcon)
 {
-    INT iconindex=IDI_SHELL_PRINTER;
+    INT iconindex=IDI_SHELL_PRINTERS_FOLDER;
 
     TRACE("(%s, %p, %p)\n", debugstr_w(wsPrinterName), pLargeIcon, pSmallIcon);
 
@@ -1324,6 +1324,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 
         SIC_Initialize();
         InitChangeNotifications();
+        InitIconOverlays();
         break;
 
     case DLL_PROCESS_DETACH:

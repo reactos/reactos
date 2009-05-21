@@ -55,6 +55,7 @@ typedef struct _parser_ctx_t {
     script_ctx_t *script;
     source_elements_t *source;
     BOOL nl;
+    BOOL is_html;
     HRESULT hres;
 
     jsheap_t heap;
@@ -65,7 +66,7 @@ typedef struct _parser_ctx_t {
     struct _parser_ctx_t *next;
 } parser_ctx_t;
 
-HRESULT script_parse(script_ctx_t*,const WCHAR*,parser_ctx_t**);
+HRESULT script_parse(script_ctx_t*,const WCHAR*,const WCHAR*,parser_ctx_t**);
 void parser_release(parser_ctx_t*);
 
 int parser_lex(void*,parser_ctx_t*);

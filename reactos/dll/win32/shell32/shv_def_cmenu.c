@@ -299,10 +299,10 @@ HasClipboardData()
       if(SUCCEEDED(IDataObject_GetData(pda,&formatetc,&medium)))
       {
           ret = TRUE;
+          ReleaseStgMedium(&medium);		  
       }
 
       IDataObject_Release(pda);
-      ReleaseStgMedium(&medium);
     }
 
     return ret;

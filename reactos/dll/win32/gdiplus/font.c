@@ -36,6 +36,8 @@ WINE_DEFAULT_DEBUG_CHANNEL (gdiplus);
 static const REAL mm_per_inch = 25.4;
 static const REAL inch_per_point = 1.0/72.0;
 
+static GpFontCollection installedFontCollection = {0};
+
 static inline REAL get_dpi (void)
 {
     REAL dpi;
@@ -193,7 +195,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC hdc,
     oldfont = SelectObject(hdc, hfont);
     GetTextMetricsW(hdc, &textmet);
 
-    (*font)->lfw.lfHeight = -textmet.tmHeight;
+    (*font)->lfw.lfHeight = -(textmet.tmHeight-textmet.tmInternalLeading);
     (*font)->lfw.lfWeight = textmet.tmWeight;
     (*font)->lfw.lfCharSet = textmet.tmCharSet;
 
@@ -224,9 +226,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromLogfontA(HDC hdc,
     if(!MultiByteToWideChar(CP_ACP, 0, lfa->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE))
         return GenericError;
 
-    GdipCreateFontFromLogfontW(hdc, &lfw, font);
-
-    return Ok;
+    return GdipCreateFontFromLogfontW(hdc, &lfw, font);
 }
 
 /*******************************************************************************
@@ -301,7 +301,7 @@ GpStatus WINGDIPAPI GdipGetFamily(GpFont *font, GpFontFamily **family)
  *
  * RETURNS
  *  SUCCESS: Ok
- *  FAILURE: InvalidParamter (font or size was NULL)
+ *  FAILURE: InvalidParameter (font or size was NULL)
  *
  * NOTES
  *  Size returned is actually emSize -- not internal size used for drawing.
@@ -390,7 +390,7 @@ GpStatus WINGDIPAPI GdipGetLogFontA(GpFont *font, GpGraphics *graphics,
 
     memcpy(lfa, &lfw, FIELD_OFFSET(LOGFONTA,lfFaceName) );
 
-    if(!MultiByteToWideChar(CP_ACP, 0, lfa->lfFaceName, -1, lfw.lfFaceName, LF_FACESIZE))
+    if(!WideCharToMultiByte(CP_ACP, 0, lfw.lfFaceName, -1, lfa->lfFaceName, LF_FACESIZE, NULL, NULL))
         return GenericError;
 
     return Ok;
@@ -938,5 +938,7 @@ GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
     if (!fontCollection)
         return InvalidParameter;
 
-    return NotImplemented;
+    *fontCollection = &installedFontCollection;
+
+    return Ok;
 }

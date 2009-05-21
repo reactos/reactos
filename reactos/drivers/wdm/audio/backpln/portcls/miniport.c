@@ -19,6 +19,7 @@ PcNewMiniport(
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
 
     DPRINT("PcNewMiniport entered\n");
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!OutMiniport)
     {

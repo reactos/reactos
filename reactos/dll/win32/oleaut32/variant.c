@@ -40,6 +40,7 @@
 #include "wine/unicode.h"
 #include "winerror.h"
 #include "variant.h"
+#include "resource.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(variant);
@@ -2467,14 +2468,19 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
 {
     VARTYPE leftvt,rightvt,resultvt;
     HRESULT hres;
-    static const WCHAR str_true[] = {'T','r','u','e','\0'};
-    static const WCHAR str_false[] = {'F','a','l','s','e','\0'};
+    static WCHAR str_true[32];
+    static WCHAR str_false[32];
     static const WCHAR sz_empty[] = {'\0'};
     leftvt = V_VT(left);
     rightvt = V_VT(right);
 
     TRACE("(%p->(%s%s),%p->(%s%s),%p)\n", left, debugstr_VT(left),
           debugstr_VF(left), right, debugstr_VT(right), debugstr_VF(right), out);
+
+    if (!str_true[0]) {
+        VARIANT_GetLocalisedText(LOCALE_USER_DEFAULT, IDS_FALSE, str_false);
+        VARIANT_GetLocalisedText(LOCALE_USER_DEFAULT, IDS_TRUE, str_true);
+    }
 
     /* when both left and right are NULL the result is NULL */
     if (leftvt == VT_NULL && rightvt == VT_NULL)
@@ -2558,7 +2564,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
         {
             if (leftvt == VT_BOOL)
             {
-                /* Bools are handled as True/False strings instead of 0/-1 as in MSDN */
+                /* Bools are handled as localized True/False strings instead of 0/-1 as in MSDN */
                 V_VT(&bstrvar_left) = VT_BSTR;
                 if (V_BOOL(left) == TRUE)
                     V_BSTR(&bstrvar_left) = SysAllocString(str_true);
@@ -2598,7 +2604,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
         {
             if (rightvt == VT_BOOL)
             {
-                /* Bools are handled as True/False strings instead of 0/-1 as in MSDN */
+                /* Bools are handled as localized True/False strings instead of 0/-1 as in MSDN */
                 V_VT(&bstrvar_right) = VT_BSTR;
                 if (V_BOOL(right) == TRUE)
                     V_BSTR(&bstrvar_right) = SysAllocString(str_true);

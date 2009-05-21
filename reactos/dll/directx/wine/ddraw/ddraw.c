@@ -1727,20 +1727,9 @@ IDirectDrawImpl_RecreateSurfacesCallback(IDirectDrawSurface7 *surf,
     }
 
     /* Create the new surface */
-    hr = IWineD3DDevice_CreateSurface(This->wineD3DDevice,
-                                      Width, Height, Format,
-                                      TRUE /* Lockable */,
-                                      FALSE /* Discard */,
-                                      surfImpl->mipmap_level,
-                                      &surfImpl->WineD3DSurface,
-                                      Type,
-                                      Usage,
-                                      Pool,
-                                      MultiSampleType,
-                                      MultiSampleQuality,
-                                      0 /* SharedHandle */,
-                                      This->ImplType,
-                                      Parent);
+    hr = IWineD3DDevice_CreateSurface(This->wineD3DDevice, Width, Height, Format,
+            TRUE /* Lockable */, FALSE /* Discard */, surfImpl->mipmap_level, &surfImpl->WineD3DSurface,
+            Type, Usage, Pool, MultiSampleType, MultiSampleQuality, This->ImplType, Parent);
 
     if(hr != D3D_OK)
         return hr;
@@ -2036,21 +2025,9 @@ IDirectDrawImpl_CreateNewSurface(IDirectDrawImpl *This,
     }
 
     /* Now create the WineD3D Surface */
-    hr = IWineD3DDevice_CreateSurface(This->wineD3DDevice,
-                                      pDDSD->dwWidth,
-                                      pDDSD->dwHeight,
-                                      Format,
-                                      TRUE /* Lockable */,
-                                      FALSE /* Discard */,
-                                      level,
-                                      &(*ppSurf)->WineD3DSurface,
-                                      ResType, Usage,
-                                      Pool,
-                                      WINED3DMULTISAMPLE_NONE,
-                                      0 /* MultiSampleQuality */,
-                                      0 /* SharedHandle */,
-                                      ImplType,
-                                      Parent);
+    hr = IWineD3DDevice_CreateSurface(This->wineD3DDevice, pDDSD->dwWidth, pDDSD->dwHeight, Format,
+            TRUE /* Lockable */, FALSE /* Discard */, level, &(*ppSurf)->WineD3DSurface, ResType, Usage,
+            Pool, WINED3DMULTISAMPLE_NONE, 0 /* MultiSampleQuality */, ImplType, Parent);
 
     if(hr != D3D_OK)
     {
@@ -2725,15 +2702,13 @@ IDirectDrawImpl_CreateSurface(IDirectDraw7 *iface,
          */
         if(desc2.ddsCaps.dwCaps2 & DDSCAPS2_CUBEMAP)
         {
-            hr = IWineD3DDevice_CreateCubeTexture(This->wineD3DDevice, DDSD->dwWidth /* Edgelength */,
-                    levels, 0 /* usage */, Format, Pool, (IWineD3DCubeTexture **)&object->wineD3DTexture,
-                    0 /* SharedHandle */, (IUnknown *)object);
+            hr = IWineD3DDevice_CreateCubeTexture(This->wineD3DDevice, DDSD->dwWidth /* Edgelength */, levels,
+                    0 /* usage */, Format, Pool, (IWineD3DCubeTexture **)&object->wineD3DTexture, (IUnknown *)object);
         }
         else
         {
             hr = IWineD3DDevice_CreateTexture(This->wineD3DDevice, DDSD->dwWidth, DDSD->dwHeight, levels,
-                    0 /* usage */, Format, Pool, (IWineD3DTexture **) &object->wineD3DTexture,
-                    0 /* SharedHandle */, (IUnknown *)object);
+                    0 /* usage */, Format, Pool, (IWineD3DTexture **)&object->wineD3DTexture, (IUnknown *)object);
         }
         This->tex_root = NULL;
     }

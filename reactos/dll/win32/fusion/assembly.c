@@ -52,7 +52,7 @@ typedef struct tagCLRTABLE
 
 struct tagASSEMBLY
 {
-    LPSTR path;
+    LPWSTR path;
 
     HANDLE hfile;
     HANDLE hmap;
@@ -75,22 +75,6 @@ struct tagASSEMBLY
     BYTE *strings;
     BYTE *blobs;
 };
-
-static LPSTR strdupWtoA(LPCWSTR str)
-{
-    LPSTR ret = NULL;
-    DWORD len;
-
-    if (!str)
-        return ret;
-
-    len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-    ret = HeapAlloc(GetProcessHeap(), 0, len);
-    if (ret)
-        WideCharToMultiByte(CP_ACP, 0, str, -1, ret, len, NULL, NULL);
-
-    return ret;
-}
 
 static DWORD rva_to_offset(IMAGE_NT_HEADERS *nthdrs, DWORD rva)
 {
@@ -647,14 +631,18 @@ static HRESULT parse_pe_header(ASSEMBLY *assembly)
     if (!assembly->nthdr)
         return E_FAIL;
 
-    if (assembly->nthdr->FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64)
+    if (assembly->nthdr->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
     {
         IMAGE_OPTIONAL_HEADER64 *opthdr =
                 (IMAGE_OPTIONAL_HEADER64 *)&assembly->nthdr->OptionalHeader;
         datadirs = opthdr->DataDirectory;
     }
     else
-        datadirs = assembly->nthdr->OptionalHeader.DataDirectory;
+    {
+        IMAGE_OPTIONAL_HEADER32 *opthdr =
+                (IMAGE_OPTIONAL_HEADER32 *)&assembly->nthdr->OptionalHeader;
+        datadirs = opthdr->DataDirectory;
+    }
 
     if (!datadirs)
         return E_FAIL;
@@ -684,7 +672,7 @@ HRESULT assembly_create(ASSEMBLY **out, LPCWSTR file)
     if (!assembly)
         return E_OUTOFMEMORY;
 
-    assembly->path = strdupWtoA(file);
+    assembly->path = strdupW(file);
     if (!assembly->path)
     {
         hr = E_OUTOFMEMORY;
@@ -743,16 +731,21 @@ HRESULT assembly_release(ASSEMBLY *assembly)
     return S_OK;
 }
 
-static LPSTR assembly_dup_str(ASSEMBLY *assembly, DWORD index)
+static LPWSTR assembly_dup_str(ASSEMBLY *assembly, DWORD index)
 {
+    int len;
+    LPWSTR cpy;
     LPSTR str = (LPSTR)&assembly->strings[index];
-    LPSTR cpy = HeapAlloc(GetProcessHeap(), 0, strlen(str)+1);
-    if (cpy)
-       strcpy(cpy, str);
+
+    len = MultiByteToWideChar(CP_ACP, 0, str, -1, NULL, 0);
+
+    if ((cpy = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR))))
+       MultiByteToWideChar(CP_ACP, 0, str, -1, cpy, len);
+
     return cpy;
 }
 
-HRESULT assembly_get_name(ASSEMBLY *assembly, LPSTR *name)
+HRESULT assembly_get_name(ASSEMBLY *assembly, LPWSTR *name)
 {
     BYTE *ptr;
     LONG offset;
@@ -779,59 +772,43 @@ HRESULT assembly_get_name(ASSEMBLY *assembly, LPSTR *name)
     return S_OK;
 }
 
-HRESULT assembly_get_path(ASSEMBLY *assembly, LPSTR *path)
+HRESULT assembly_get_path(ASSEMBLY *assembly, LPWSTR *path)
 {
-    LPSTR cpy = HeapAlloc(GetProcessHeap(), 0, strlen(assembly->path)+1);
+    LPWSTR cpy = HeapAlloc(GetProcessHeap(), 0, (strlenW(assembly->path) + 1) * sizeof(WCHAR));
     *path = cpy;
     if (cpy)
-        strcpy(cpy, assembly->path);
+        strcpyW(cpy, assembly->path);
     else
         return E_OUTOFMEMORY;
 
     return S_OK;
 }
 
-HRESULT assembly_get_version(ASSEMBLY *assembly, LPSTR *version)
+HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version)
 {
-    LPSTR verdata;
-    VS_FIXEDFILEINFO *ffi;
-    HRESULT hr = S_OK;
-    DWORD size;
+    static const WCHAR format[] = {'%','u','.','%','u','.','%','u','.','%','u',0};
 
-    size = GetFileVersionInfoSizeA(assembly->path, NULL);
-    if (!size)
-        return HRESULT_FROM_WIN32(GetLastError());
+    ASSEMBLYTABLE *asmtbl;
+    LONG offset;
 
-    verdata = HeapAlloc(GetProcessHeap(), 0, size);
-    if (!verdata)
+    *version = NULL;
+
+    offset = assembly->tables[TableFromToken(mdtAssembly)].offset;
+    if (offset == -1)
+        return E_FAIL;
+
+    asmtbl = assembly_data_offset(assembly, offset);
+    if (!asmtbl)
+        return E_FAIL;
+
+    *version = HeapAlloc(GetProcessHeap(), 0, sizeof(format) + 4 * strlen("65535") * sizeof(WCHAR));
+    if (!*version)
         return E_OUTOFMEMORY;
 
-    if (!GetFileVersionInfoA(assembly->path, 0, size, verdata))
-    {
-        hr = HRESULT_FROM_WIN32(GetLastError());
-        goto done;
-    }
+    sprintfW(*version, format, asmtbl->MajorVersion, asmtbl->MinorVersion,
+             asmtbl->BuildNumber, asmtbl->RevisionNumber);
 
-    if (!VerQueryValueA(verdata, "\\", (LPVOID *)&ffi, &size))
-    {
-        hr = HRESULT_FROM_WIN32(GetLastError());
-        goto done;
-    }
-
-    *version = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
-    if (!*version)
-    {
-        hr = E_OUTOFMEMORY;
-        goto done;
-    }
-
-    sprintf(*version, "%d.%d.%d.%d", HIWORD(ffi->dwFileVersionMS),
-            LOWORD(ffi->dwFileVersionMS), HIWORD(ffi->dwFileVersionLS),
-            LOWORD(ffi->dwFileVersionLS));
-
-done:
-    HeapFree(GetProcessHeap(), 0, verdata);
-    return hr;
+    return S_OK;
 }
 
 HRESULT assembly_get_architecture(ASSEMBLY *assembly, DWORD fixme)
@@ -845,26 +822,7 @@ static BYTE *assembly_get_blob(ASSEMBLY *assembly, WORD index, ULONG *size)
     return GetData(&assembly->blobs[index], size);
 }
 
-static void bytes_to_str(BYTE *bytes, DWORD len, LPSTR str)
-{
-    DWORD i;
-
-    static const char hexval[16] = {
-        '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'
-    };
-
-    for(i = 0; i < len; i++)
-    {
-        str[i * 2] = hexval[((bytes[i] >> 4) & 0xF)];
-        str[i * 2 + 1] = hexval[(bytes[i]) & 0x0F];
-    }
-}
-
-#define BYTES_PER_TOKEN 8
-#define CHARS_PER_BYTE 2
-#define TOKEN_LENGTH (BYTES_PER_TOKEN * CHARS_PER_BYTE + 1)
-
-HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPSTR *token)
+HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPWSTR *token)
 {
     ASSEMBLYTABLE *asmtbl;
     ULONG i, size;
@@ -875,7 +833,7 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPSTR *token)
     BYTE *pubkey;
     BYTE tokbytes[BYTES_PER_TOKEN];
     HRESULT hr = E_FAIL;
-    LPSTR tok;
+    LPWSTR tok;
 
     *token = NULL;
 
@@ -916,15 +874,14 @@ HRESULT assembly_get_pubkey_token(ASSEMBLY *assembly, LPSTR *token)
     for (i = size - 1; i >= size - 8; i--)
         tokbytes[size - i - 1] = hashdata[i];
 
-    tok = HeapAlloc(GetProcessHeap(), 0, TOKEN_LENGTH);
+    tok = HeapAlloc(GetProcessHeap(), 0, (TOKEN_LENGTH + 1) * sizeof(WCHAR));
     if (!tok)
     {
         hr = E_OUTOFMEMORY;
         goto done;
     }
 
-    bytes_to_str(tokbytes, BYTES_PER_TOKEN, tok);
-    tok[TOKEN_LENGTH - 1] = '\0';
+    token_to_str(tokbytes, tok);
 
     *token = tok;
     hr = S_OK;

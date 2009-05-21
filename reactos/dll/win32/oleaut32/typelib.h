@@ -26,7 +26,6 @@
 #include "windef.h"
 #include "winbase.h"
 #include "oleauto.h"
-#include "wine/windef16.h"
 
 #define HELPDLLFLAG (0x0100)
 #define DO_NOT_SEEK (-1)

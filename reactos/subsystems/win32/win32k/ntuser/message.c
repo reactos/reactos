@@ -1309,11 +1309,7 @@ UserPostMessage(HWND Wnd,
    PMSGMEMORY MsgMemoryEntry;
 
    pti = PsGetCurrentThreadWin32Thread();
-   if (WM_QUIT == Msg)
-   {
-      MsqPostQuitMessage(pti->MessageQueue, wParam);
-   }
-   else if (Wnd == HWND_BROADCAST)
+   if (Wnd == HWND_BROADCAST)
    {
       HWND *List;
       PWINDOW_OBJECT DesktopWindow;
@@ -1345,24 +1341,31 @@ UserPostMessage(HWND Wnd,
          return FALSE;
       }
 
-      UserModeMsg.hwnd = Wnd;
-      UserModeMsg.message = Msg;
-      UserModeMsg.wParam = wParam;
-      UserModeMsg.lParam = lParam;
-      MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
-      Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
-      if (! NT_SUCCESS(Status))
+      if (WM_QUIT == Msg)
       {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return FALSE;
+          MsqPostQuitMessage(Window->MessageQueue, wParam);
       }
-      IntGetCursorLocation(pti->Desktop->WindowStation,
-                           &KernelModeMsg.pt);
-      KeQueryTickCount(&LargeTickCount);
-      KernelModeMsg.time = MsqCalculateMessageTime(&LargeTickCount);
-      MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
-                     NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
-                     QS_POSTMESSAGE);
+      else
+      {
+         UserModeMsg.hwnd = Wnd;
+         UserModeMsg.message = Msg;
+         UserModeMsg.wParam = wParam;
+         UserModeMsg.lParam = lParam;
+         MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+         Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
+         if (! NT_SUCCESS(Status))
+         {
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return FALSE;
+         }
+         IntGetCursorLocation(pti->Desktop->WindowStation,
+                              &KernelModeMsg.pt);
+         KeQueryTickCount(&LargeTickCount);
+         pti->timeLast = KernelModeMsg.time = MsqCalculateMessageTime(&LargeTickCount);
+         MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
+                        NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
+                        QS_POSTMESSAGE);
+      }
    }
 
    return TRUE;
@@ -1998,7 +2001,7 @@ IntInitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
    {
-     ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook++;
+     ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook++;
      return TRUE;
    }
    return FALSE;
@@ -2009,11 +2012,11 @@ IntUninitMessagePumpHook()
 {
    if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
    {
-      if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook <= 0)
+      if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook <= 0)
       {
          return FALSE;
       }
-      ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo->ClientThreadInfo.dwcPumpHook--;
+      ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook--;
       return TRUE;
    }
    return FALSE;

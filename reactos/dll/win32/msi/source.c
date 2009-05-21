@@ -64,21 +64,24 @@ static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, DWORD dwOptions,
         if (dwOptions & MSICODE_PATCH)
             rc = MSIREG_OpenUserPatchesKey(szProduct, &rootkey, create);
         else
-            rc = MSIREG_OpenProductKey(szProduct, context, &rootkey, create);
+            rc = MSIREG_OpenProductKey(szProduct, NULL, context,
+                                       &rootkey, create);
     }
     else if (context == MSIINSTALLCONTEXT_USERMANAGED)
     {
         if (dwOptions & MSICODE_PATCH)
             rc = MSIREG_OpenUserPatchesKey(szProduct, &rootkey, create);
         else
-            rc = MSIREG_OpenProductKey(szProduct, context, &rootkey, create);
+            rc = MSIREG_OpenProductKey(szProduct, NULL, context,
+                                       &rootkey, create);
     }
     else if (context == MSIINSTALLCONTEXT_MACHINE)
     {
         if (dwOptions & MSICODE_PATCH)
             rc = MSIREG_OpenPatchesKey(szProduct, &rootkey, create);
         else
-            rc = MSIREG_OpenProductKey(szProduct, context, &rootkey, create);
+            rc = MSIREG_OpenProductKey(szProduct, NULL, context,
+                                       &rootkey, create);
     }
 
     if (rc != ERROR_SUCCESS)
@@ -903,13 +906,14 @@ UINT WINAPI MsiSourceListAddSourceW( LPCWSTR szProduct, LPCWSTR szUserName,
             msi_free(psid);
         }
 
-        r = MSIREG_OpenProductKey(szProduct, MSIINSTALLCONTEXT_USERMANAGED,
-                                  &hkey, FALSE);
+        r = MSIREG_OpenProductKey(szProduct, NULL,
+                                  MSIINSTALLCONTEXT_USERMANAGED, &hkey, FALSE);
         if (r == ERROR_SUCCESS)
             context = MSIINSTALLCONTEXT_USERMANAGED;
         else
         {
-            r = MSIREG_OpenProductKey(szProduct, MSIINSTALLCONTEXT_USERUNMANAGED,
+            r = MSIREG_OpenProductKey(szProduct, NULL,
+                                      MSIINSTALLCONTEXT_USERUNMANAGED,
                                       &hkey, FALSE);
             if (r != ERROR_SUCCESS)
                 return ERROR_UNKNOWN_PRODUCT;
@@ -1312,6 +1316,28 @@ UINT WINAPI MsiSourceListClearAllA( LPCSTR szProduct, LPCSTR szUserName, DWORD d
 UINT WINAPI MsiSourceListClearAllW( LPCWSTR szProduct, LPCWSTR szUserName, DWORD dwReserved )
 {
     FIXME("(%s %s %d)\n", debugstr_w(szProduct), debugstr_w(szUserName), dwReserved);
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************
+ *  MsiSourceListClearAllExA (MSI.@)
+ */
+UINT WINAPI MsiSourceListClearAllExA( LPCSTR szProduct, LPCSTR szUserSid,
+    MSIINSTALLCONTEXT dwContext, DWORD dwOptions )
+{
+    FIXME("(%s %s %d %08x)\n", debugstr_a(szProduct), debugstr_a(szUserSid),
+          dwContext, dwOptions);
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************
+ *  MsiSourceListClearAllExW (MSI.@)
+ */
+UINT WINAPI MsiSourceListClearAllExW( LPCWSTR szProduct, LPCWSTR szUserSid,
+    MSIINSTALLCONTEXT dwContext, DWORD dwOptions )
+{
+    FIXME("(%s %s %d %08x)\n", debugstr_w(szProduct), debugstr_w(szUserSid),
+          dwContext, dwOptions);
     return ERROR_SUCCESS;
 }
 

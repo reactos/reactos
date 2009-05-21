@@ -72,7 +72,7 @@ VOID LoadReactOSSetup(VOID)
   LoaderBlock.PageDirectoryEnd = (ULONG_PTR)&PageDirectoryEnd;
   LoaderBlock.ModsCount = 0;
   LoaderBlock.ModsAddr = reactos_modules;
-  LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
+  LoaderBlock.MmapLength = (unsigned long)MachVtbl.GetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
   {
 #if defined (_M_IX86) || defined (_M_AMD64)

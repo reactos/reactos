@@ -198,7 +198,9 @@ interface IBindStatusCallback : IUnknown
         BSCF_INTERMEDIATEDATANOTIFICATION = 0x02,
         BSCF_LASTDATANOTIFICATION = 0x04,
         BSCF_DATAFULLYAVAILABLE = 0x08,
-        BSCF_AVAILABLEDATASIZEUNKNOWN = 0x10
+        BSCF_AVAILABLEDATASIZEUNKNOWN = 0x10,
+        BSCF_SKIPDRAINDATAFORFILEURLS = 0x20,
+        BSCF_64BITLENGTHDOWNLOAD = 0x40
     } BSCF;
 
     typedef enum BINDSTATUS
@@ -703,7 +705,7 @@ interface IInternetProtocolRoot : IUnknown
         [in] IInternetProtocolSink *pOIProtSink,
         [in] IInternetBindInfo *pOIBindInfo,
         [in] DWORD grfPI,
-        [in] DWORD dwReserved);
+        [in] HANDLE_PTR dwReserved);
 
     HRESULT Continue(
         [in] PROTOCOLDATA *pProtocolData);
@@ -1367,6 +1369,14 @@ typedef enum _tagINTERNETFEATURELIST
     FEATURE_ENTRY_COUNT
 } INTERNETFEATURELIST;
 
+typedef struct _tagPROTOCOLFILTERDATA {
+    DWORD cbSize;
+    IInternetProtocolSink *pProtocolSink;
+    IInternetProtocol *pProtocol;
+    IUnknown *pUnk;
+    DWORD dwFilterFlags;
+} PROTOCOLFILTERDATA;
+
 /*****************************************************************************
  * IUri interface
  */
@@ -1513,6 +1523,7 @@ cpp_quote("DEFINE_GUID(CLSID_InternetZoneManager, 0x7B8A2D95, 0x0AC9, 0x11D1, 0x
 cpp_quote("DEFINE_GUID(IID_IAsyncMoniker, 0x79EAC9D3, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);")
 cpp_quote("DEFINE_GUID(IID_IAsyncBindCtx, 0x79EAC9D4, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);")
 cpp_quote("DEFINE_GUID(CLSID_StdURLMoniker, 0x79EAC9E0, 0xBAF9, 0x11CE, 0x8C, 0x82, 0x00, 0xAA, 0x00, 0x4B, 0xA9, 0x0B);")
+cpp_quote("DEFINE_GUID(CLSID_DeCompMimeFilter, 0x8f6b0360, 0xb80d, 0x11d0, 0xa9,0xb3, 0x00,0x60,0x97,0x94,0x23,0x11);")
 
 cpp_quote("DEFINE_GUID(CLSID_CdlProtocol, 0x3dd53d40, 0x7b8b, 0x11D0, 0xb0,0x13, 0x00,0xaa,0x00,0x59,0xce,0x02);")
 cpp_quote("DEFINE_GUID(CLSID_FileProtocol, 0x79EAC9E7, 0xBAF9, 0x11CE, 0x8C,0x82, 0x00,0xAA,0x00,0x4B,0xA9,0x0B);")

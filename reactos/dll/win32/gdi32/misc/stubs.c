@@ -72,29 +72,68 @@ SaveDC(IN HDC hdc)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-CancelDC(HDC hdc)
+CancelDC(HDC hDC)
 {
-    /* FIXME Sharememory */
-    return NtGdiCancelDC(hdc);
+  PDC_ATTR pDc_Attr;
+
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC &&
+      GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC )
+  {
+     PLDC pLDC = GdiGetLDC(hDC);
+     if ( !pLDC )
+     {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+     }
+     /* If a document has started set it to die. */
+     if (pLDC->Flags & LDC_INIT_DOCUMENT) pLDC->Flags |= LDC_KILL_DOCUMENT;
+
+     return NtGdiCancelDC(hDC);
+  }
+
+  if (GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &pDc_Attr))
+  {
+     pDc_Attr->ulDirty_ &= ~DC_PLAYMETAFILE;
+     return TRUE;
+  }
+
+  return FALSE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 WINAPI
-DrawEscape(HDC  hdc,
+DrawEscape(HDC  hDC,
            INT nEscape,
            INT cbInput,
            LPCSTR lpszInData)
 {
-    /* FIXME Sharememory */
-    return NtGdiDrawEscape(hdc, nEscape, cbInput, (LPSTR) lpszInData);
+  if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)
+     return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_METADC)
+  {
+     PLDC pLDC = GdiGetLDC(hDC);
+     if ( pLDC )
+     {
+        if (pLDC->Flags & LDC_META_PRINT)
+        {
+//           if (nEscape != QUERYESCSUPPORT)
+//              return EMFDRV_WriteEscape(hDC, nEscape, cbInput, lpszInData, EMR_DRAWESCAPE);
+
+           return NtGdiDrawEscape(hDC, nEscape, cbInput, (LPSTR) lpszInData);
+        }
+     }
+     SetLastError(ERROR_INVALID_HANDLE);
+  }
+  return 0;
 }
 
 
@@ -266,13 +305,19 @@ DeleteEnhMetaFile(
 BOOL
 WINAPI
 EnumEnhMetaFile(
-	HDC		a0,
-	HENHMETAFILE	a1,
-	ENHMFENUMPROC	a2,
-	LPVOID		a3,
-	CONST RECT	*a4
+	HDC		hdc,
+	HENHMETAFILE	hmf,
+	ENHMFENUMPROC	callback,
+	LPVOID		data,
+	CONST RECT	*lpRect
 	)
 {
+    if(!lpRect && hdc)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -581,10 +626,15 @@ GdiFlush()
 int
 WINAPI
 SetICMMode(
-	HDC	a0,
-	int	a1
+	HDC	hdc,
+	int	iEnableICM
 	)
 {
+    /*FIXME:  Assume that ICM is always off, and cannot be turned on */
+    if (iEnableICM == ICM_OFF) return ICM_OFF;
+    if (iEnableICM == ICM_ON) return 0;
+    if (iEnableICM == ICM_QUERY) return ICM_OFF;
+
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -676,11 +726,14 @@ ColorMatchToTarget(
 BOOL
 WINAPI
 wglCopyContext(
-	HGLRC	a0,
-	HGLRC	a1,
-	UINT	a2
+	HGLRC	hglrcSrc,
+	HGLRC	hglrcDst,
+	UINT	mask
 	)
 {
+    if(!hglrcSrc || !hglrcDst)
+        return FALSE;
+
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -724,9 +777,11 @@ wglCreateLayerContext(
 BOOL
 WINAPI
 wglDeleteContext(
-	HGLRC	a
+	HGLRC	hglrc
 	)
 {
+    if (hglrc == NULL) return FALSE;
+
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
@@ -765,9 +820,11 @@ wglGetCurrentDC(VOID)
 PROC
 WINAPI
 wglGetProcAddress(
-	LPCSTR		a0
+	LPCSTR		func
 	)
 {
+    if(!func) return NULL;
+
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
@@ -796,10 +853,11 @@ wglMakeCurrent(
 BOOL
 WINAPI
 wglShareLists(
-	HGLRC	a0,
-	HGLRC	a1
+	HGLRC	hglrc1,
+	HGLRC	hglrc2
 	)
 {
+    if (hglrc1 == NULL) return FALSE;
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;

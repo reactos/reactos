@@ -44,5 +44,5 @@ BEGIN
     IDS_HISTORY        "Местни настройки\\Посетени"
     IDS_COOKIES        "Курабийки"
     IDS_PROGRAMFILES   "%SystemDrive%\\Program Files"
-    IDS_COMMONFILES    "Common Files"
+    IDS_COMMONFILES    "Общи файлове"
 END

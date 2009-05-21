@@ -16,6 +16,10 @@ IDB_STOP    BITMAP DISCARDABLE "res/stop.bmp"
 IDB_PAUSE   BITMAP DISCARDABLE "res/pause.bmp"
 IDB_RESTART BITMAP DISCARDABLE "res/restart.bmp"
 
+IDI_NODEPENDS   ICON "res/nodepends.ico"
+IDI_SERVICE     ICON "res/system.ico"
+IDI_DRIVER      ICON "res/driver.ico"
+
 #include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"

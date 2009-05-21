@@ -54,7 +54,7 @@ MachInit(const char *CmdLine)
     MachVtbl.DiskGetPartitionEntry = DiskGetPartitionEntry;
     MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
-    MachVtbl.RTCGetCurrentDateTime = PcRTCGetCurrentDateTime;
+    MachVtbl.GetTime = PcGetTime;
     MachVtbl.HwDetect = PcHwDetect;
 }
 

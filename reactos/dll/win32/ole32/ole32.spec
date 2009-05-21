@@ -183,7 +183,7 @@
 @ stub OleCreateEmbeddingHelper
 @ stub OleCreateEx
 @ stdcall OleCreateFromData(ptr ptr long ptr ptr ptr ptr)
-@ stub OleCreateFromDataEx
+@ stdcall OleCreateFromDataEx(ptr ptr long long long ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall OleCreateFromFile(ptr ptr ptr long ptr ptr ptr ptr)
 @ stub OleCreateFromFileEx
 @ stdcall OleCreateLink(ptr ptr long ptr ptr ptr ptr)

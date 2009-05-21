@@ -58,6 +58,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Entrez votre nom complet et le nom de votre société.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Nom :", IDC_STATIC, 54, 37, 44, 8
@@ -72,11 +73,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Entrez un nom pour votre ordinateur de 63 caractères ou moins. "\
           "Si vous êtes sur un réseau, le nom saisi doit être unique.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Nom de l'ordinateur :", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "L'assistant va créer un compte utilisateur sur votre ordinateur appelé Administrateur. "\
           "Vous pourrez utiliser ce compte pour avoir un accès complet à votre ordinateur.",
           IDC_STATIC, 54, 57, 250, 25
@@ -94,6 +97,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "La localisation système correspond à la langue souhaitée "\
           "pour les applications. Elle contrôle la manière dont les nombres, "\
           "monnaies et dates sont affichées.", IDC_STATIC, 53, 7, 253, 20
@@ -115,6 +119,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Date et Heure :", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -209,6 +214,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Lancer le bureau distant"
     IDS_CMT_EVENTVIEW   "Launch Event Viewer"
     IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -275,6 +281,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

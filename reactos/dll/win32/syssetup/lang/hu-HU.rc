@@ -55,6 +55,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Telepítõ"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Add meg a neved és ha van ilyen a céged nevét.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Név:", IDC_STATIC, 54, 37, 44, 8
@@ -69,11 +70,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Telepítõ"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Adj egy nevet a számítógépednek, ami nem több mint 63 betû. "\
           "Ha hálózaton vagy, akkor ennek a névnek egyedinek kell lennie.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Számítógép név:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "A telepítõ létrehoz egy felhasználói fiókot, a Rendszergazdát. "\
           "Ezzel a fiókkal teljes jogod van a számítógéped felett.", IDC_STATIC, 54, 57, 250, 25
     LTEXT "Adj meg egy jelszót, ami nem több mint 14 karakter.", IDC_STATIC, 54, 87, 250, 8
@@ -89,6 +92,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Telepítõ"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "A rendszer területi beállítása meghatározzák a használni kívánt nyelvet. "\
           "A területi beállítások határozzák meg, hogy a számok, "\
           "valuta és dátum információk hogyan jelennek meg.", IDC_STATIC, 53, 7, 253, 24
@@ -108,6 +112,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS Telepítõ"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "Dátum és idõ", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -221,6 +226,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Launch Remote Desktop"
     IDS_CMT_EVENTVIEW   "Launch Event Viewer"
     IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -288,6 +294,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

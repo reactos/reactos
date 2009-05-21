@@ -54,7 +54,7 @@ BOOLEAN PcDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTI
 BOOLEAN PcDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG PcDiskGetCacheableBlockCount(ULONG DriveNumber);
 
-VOID PcRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
+TIMEINFO* PcGetTime(VOID);
 
 PCONFIGURATION_COMPONENT_DATA PcHwDetect(VOID);
 

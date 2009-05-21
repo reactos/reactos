@@ -35,5 +35,12 @@ typedef struct _NET_PNP_EVENT
    ULONG_PTR TdiClientReserved[4];
 } NET_PNP_EVENT, *PNET_PNP_EVENT;
 
+typedef enum _NDIS_DEVICE_PNP_EVENT
+{
+   NdisDevicePnPEventSurpriseRemoved,
+   NdisDevicePnPEventPowerProfileChanged,
+   NdisDevicePnPEventMaximum
+} NDIS_DEVICE_PNP_EVENT, *PNDIS_DEVICE_PNP_EVENT;
+
 #endif 
 

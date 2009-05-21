@@ -1,0 +1,37 @@
+/*
+ * Copyright 2005 Mike McCormack
+ * Copyright 2009 Michael Stefaniuc
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+STRINGTABLE DISCARDABLE
+{
+        4 "Pachetul de instalare menționat nu a putut fi deschis. Verificați calea și încercați din nou."
+        5 "calea %s nu a fost găsită"
+        9 "inserați discul %s"
+        10 "parameteri greșiți"
+        11 "introduceți fișierul care conține %s"
+        12 "lipsește sursa de instalare pentru această caracteristică"
+        13 "lipsește unitatea de rețea pentru această caracteristică"
+        14 "caracteristică de la:"
+        15 "selectați fișierul care conține %s"
+}
+
+#pragma code_page(default)

@@ -130,7 +130,7 @@ IWineGDISurfaceImpl_LockRect(IWineD3DSurface *iface,
     /* Already locked? */
     if(This->Flags & SFLAG_LOCKED)
     {
-        ERR("(%p) Surface already locked\n", This);
+        WARN("(%p) Surface already locked\n", This);
         /* What should I return here? */
         return WINED3DERR_INVALIDCALL;
     }

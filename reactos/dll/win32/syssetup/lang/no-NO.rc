@@ -41,7 +41,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "ReactOS utviklerene anerkjenner de følgende Åpen kildekode prosjektene, "\
+    LTEXT           "ReactOS utviklerene anerkjenner de følgende åpen kildekode prosjektene, "\
                     "(deler av) som ble brukt til å skape ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
@@ -60,6 +60,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Skriv inn ditt fulle navn og navnet på din bedrift eller organisasjon.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "Na&vn:", IDC_STATIC, 54, 37, 44, 8
@@ -74,19 +75,21 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Skriv inn et navn for din datamaskin som er 63 karakterer eller mindre. "\
           "Hvis du er på et nettverk, så må ditt datamaskin navn være unikt.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Datamaskin navn:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Installasjonen vil lage en brukerkonto som blir kalt Administrator. "\
           "Du kan bruke denne kontoen hvis du trenger full adgang til din datamaskin.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Skriv inn et Administrator passord som er 14 karakterer eller mindre.",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Administrator Passord:", IDC_STATIC, 54, 104, 75, 8
+    LTEXT "&Administrator passord:", IDC_STATIC, 54, 104, 75, 8
     EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "B&ekreft Passord:", IDC_STATIC, 54, 123, 75, 8
+    LTEXT "B&ekreft passord:", IDC_STATIC, 54, 123, 75, 8
     EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -96,10 +99,11 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "Systemets språk og region burde samsvare med språket på programmene "\
-          "du vil bruke. Instillingene for språk og region kontrollerer hvordan tall, "\
-          "valutaer, og dato vises.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
+          "du vil bruke. Innstillingene for språk og region kontrollerer hvordan tall, "\
+          "valutaer, og dato vises.", IDC_STATIC, 55, 7, 259, 24
+    LTEXT "", IDC_LOCALETEXT, 53, 32, 250, 18
     LTEXT "For å forandre systemets språk og region instilling, Trykk på Tilpass.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Tilpass...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
@@ -117,7 +121,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS installasjon"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Dato og Tid", IDC_STATIC, 53, 7, 253, 8
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
+    LTEXT "Dato og tid", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
@@ -149,7 +154,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Fullfører ReactOS installasjons veiviser", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Installasjonen av ReactOS er fullført.\n\n" \
-          "Når du trykker på fullfør, vil datamaskinen bli restartet.", IDC_STATIC, 115, 40, 195, 100
+          "Når du trykker på fullfør, vil datamaskinen bli startet på nytt.", IDC_STATIC, 115, 40, 205, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "Fjern en eventuell CD-ROM fra stasjonen. Klikk Fullfør "\
           "for å starte datamaskinen på nytt.", IDC_STATIC, 115, 169, 195, 17
@@ -180,13 +185,13 @@ STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Annerkjennelser"
     IDS_ACKSUBTITLE      "Skuldrene ReactOS står på og lisens informasjon"
-    IDS_OWNERTITLE       "Personaliserer dine Programmer"
+    IDS_OWNERTITLE       "Personaliserer dine programmer"
     IDS_OWNERSUBTITLE    "Installasjonen bruker denne informasjonen om deg selv for å personalisere ReactOS."
     IDS_COMPUTERTITLE    "Datamaskin navn og Administrator passord"
     IDS_COMPUTERSUBTITLE "Du må angi et navn og et administrator passord for din datamaskin."
     IDS_LOCALETITLE      "Regionale innstillinger"
     IDS_LOCALESUBTITLE   "Du kan stille inn ReactOS for andre regioner og språk."
-    IDS_DATETIMETITLE    "Dato og Tid"
+    IDS_DATETIMETITLE    "Dato og tid"
     IDS_DATETIMESUBTITLE "Still inn dato og tid for din datamaskin."
     IDS_PROCESSTITLE     "Bearbeid side tittel"
     IDS_PROCESSSUBTITLE  "Bearbeider side undertittel"
@@ -201,8 +206,8 @@ STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Tilbehør"
     IDS_CMT_CALC        "Start Kalkulator"
-    IDS_CMT_CMD         "Åpne command prompt"
-    IDS_CMT_EXPLORER    "Start Explorer"
+    IDS_CMT_CMD         "Åpne Kommandolinje"
+    IDS_CMT_EXPLORER    "Start Utforsker"
     IDS_CMT_NOTEPAD     "Start Tekstredigering"
     IDS_CMT_REGEDIT     "Start Registerredigering"
     IDS_CMT_WORDPAD     "Start Dokument redigering"
@@ -210,48 +215,49 @@ BEGIN
     IDS_CMT_DEVMGMT     "Start Enhetsbehandler"
     IDS_CMT_SERVMAN     "Start Tjenestebehandler"
     IDS_CMT_RDESKTOP    "Start Ekstern skrivebord"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
+    IDS_CMT_EVENTVIEW   "Start Hendelseliste"
+    IDS_CMT_MSCONFIG    "Start Systemkonfigurasjon"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Spill"
-    IDS_CMT_SOLITAIRE	"Kabal"
-    IDS_CMT_WINEMINE	"Minnesveiper"
+    IDS_GAMES           "Spill"
+    IDS_CMT_SOLITAIRE   "Kabal"
+    IDS_CMT_WINEMINE    "Minnesveiper"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System verktøy"
-	IDS_CMT_CHARMAP      "Tegnkart"
-	IDS_CMT_KBSWITCH     "Endre tastatur valg"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
+    IDS_SYS_TOOLS       "Systemverktøy"
+    IDS_CMT_CHARMAP     "Tegnkart"
+    IDS_CMT_KBSWITCH    "Endre tastaturvalg"
+    IDS_CMT_DXDIAG      "Kjør ReactX-Diagnose program"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Tilgjengelighet"
-	IDS_CMT_MAGNIFY      	     "Forstørrelse"
+    IDS_SYS_ACCESSIBILITY       "Tilgjengelighet"
+    IDS_CMT_MAGNIFY             "Forstørrelse"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
+    IDS_SYS_ENTERTAINMENT       "Underholdning"
+    IDS_CMT_MPLAY32             "Start Multimedia avspiller"
+    IDS_CMT_SNDVOL32            "Start Volumkontroll"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "ReactOS installasjon"
+    IDS_REACTOS_SETUP           "ReactOS installasjon"
     IDS_UNKNOWN_ERROR           "Ukjent feil"
     IDS_REGISTERING_COMPONENTS  "Registrerer komponenter..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary feilet: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr feilet: "
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary feilet: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr feilet: "
     IDS_REGSVR_FAILED           "DllRegisterServer feilet: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall feilet: "
-    IDS_TIMEOUT			        "Tidsavbrudd under registrering"
+    IDS_DLLINSTALL_FAILED       "DllInstall feilet: "
+    IDS_TIMEOUT                 "Tidsavbrudd under registrering"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -278,17 +284,18 @@ BEGIN
     IDS_SHORT_MSCONFIG   "System Configuration.lnk"
     IDS_SHORT_SNDVOL32   "Volume Control.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Installasjonen kan ikke fortsette uten ditt navn."
-    IDS_WZD_SETCOMPUTERNAME  "Installasjonen klarte ikke sette datamaskinnavnet."
-    IDS_WZD_COMPUTERNAME  "Installasjonen kan ikke fortsette før du taster inn navn for datamaskinen."
-    IDS_WZD_PASSWORDEMPTY  "Du må taste et passord!"
-    IDS_WZD_PASSWORDMATCH  "Passordene du tastet er ikke like. Vennligst tast inn på nytt."
-    IDS_WZD_PASSWORDCHAR  "Passordet du tastet inneholder ugyldige tegn. Vennligst tast inn et annet."
-    IDS_WZD_LOCALTIME    "Installasjonen klarte ikke å sette lokal tid."
+    IDS_WZD_NAME            "Installasjonen kan ikke fortsette uten ditt navn."
+    IDS_WZD_SETCOMPUTERNAME "Installasjonen klarte ikke sette datamaskinnavnet."
+    IDS_WZD_COMPUTERNAME    "Installasjonen kan ikke fortsette før du taster inn navn for datamaskinen."
+    IDS_WZD_PASSWORDEMPTY   "Du må taste et passord!"
+    IDS_WZD_PASSWORDMATCH   "Passordene du tastet er ikke like. Vennligst tast inn på nytt."
+    IDS_WZD_PASSWORDCHAR    "Passordet du tastet inneholder ugyldige tegn. Vennligst tast inn et annet."
+    IDS_WZD_LOCALTIME       "Installasjonen klarte ikke å sette lokal tid."
 END
 
 STRINGTABLE

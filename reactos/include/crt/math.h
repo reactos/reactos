@@ -272,6 +272,10 @@ extern "C" {
     return sw & (FP_NAN | FP_NORMAL | FP_ZERO );
   }
 
+  __CRT_INLINE int __cdecl __fpclassify (double x){
+    return __fpclassifyl((long double)x);
+  }
+
 #define fpclassify(x) (sizeof (x) == sizeof (float) ? __fpclassifyf (x)	  \
   : sizeof (x) == sizeof (double) ? __fpclassify (x) \
   : __fpclassifyl (x))

@@ -91,6 +91,8 @@ static const struct {
     {"GL_ARB_vertex_program",               ARB_VERTEX_PROGRAM,             0                           },
     {"GL_ARB_vertex_shader",                ARB_VERTEX_SHADER,              0                           },
     {"GL_ARB_shader_objects",               ARB_SHADER_OBJECTS,             0                           },
+    {"GL_ARB_shader_texture_lod",           ARB_SHADER_TEXTURE_LOD,         0                           },
+    {"GL_ARB_half_float_vertex",            ARB_HALF_FLOAT_VERTEX,          0                           },
 
     /* EXT */
     {"GL_EXT_blend_color",                  EXT_BLEND_COLOR,                0                           },
@@ -232,8 +234,7 @@ static void WineD3D_ReleaseFakeGLContext(void) {
         if(!wined3d_fake_gl_context_foreign && glCtx) {
             TRACE_(d3d_caps)("destroying fake GL context\n");
             pwglMakeCurrent(NULL, NULL);
-            //ros hack, this line does destire the real icd interface in windows and reactos
-            // pwglDeleteContext(glCtx);
+            //pwglDeleteContext(glCtx);
         }
         if(wined3d_fake_gl_context_hdc)
             ReleaseDC(wined3d_fake_gl_context_hwnd, wined3d_fake_gl_context_hdc);
@@ -1009,7 +1010,15 @@ static BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
             gl_info->supported[NV_TEXTURE_SHADER2] = FALSE;
             gl_info->supported[NV_TEXTURE_SHADER3] = FALSE;
         }
-
+        if(gl_info->supported[NV_HALF_FLOAT]) {
+            /* GL_ARB_half_float_vertex is a subset of GL_NV_half_float */
+            gl_info->supported[ARB_HALF_FLOAT_VERTEX] = TRUE;
+        }
+        if(gl_info->supported[ARB_POINT_SPRITE]) {
+            gl_info->max_point_sprite_units = gl_info->max_textures;
+        } else {
+            gl_info->max_point_sprite_units = 0;
+        }
     }
     checkGLcall("extension detection\n");
 
@@ -2392,6 +2401,7 @@ static BOOL CheckTextureCapability(struct WineD3DAdapter *adapter,
 
             /* Floating point formats */
         case WINED3DFMT_R16_FLOAT:
+        case WINED3DFMT_R16G16_FLOAT:
         case WINED3DFMT_R16G16B16A16_FLOAT:
             if(GL_SUPPORT(ARB_TEXTURE_FLOAT) && GL_SUPPORT(ARB_HALF_FLOAT_PIXEL)) {
                 TRACE_(d3d_caps)("[OK]\n");
@@ -2401,17 +2411,9 @@ static BOOL CheckTextureCapability(struct WineD3DAdapter *adapter,
             return FALSE;
 
         case WINED3DFMT_R32_FLOAT:
+        case WINED3DFMT_R32G32_FLOAT:
         case WINED3DFMT_R32G32B32A32_FLOAT:
             if (GL_SUPPORT(ARB_TEXTURE_FLOAT)) {
-                TRACE_(d3d_caps)("[OK]\n");
-                return TRUE;
-            }
-            TRACE_(d3d_caps)("[FAILED]\n");
-            return FALSE;
-
-        case WINED3DFMT_R16G16_FLOAT:
-        case WINED3DFMT_R32G32_FLOAT:
-            if(GL_SUPPORT(ARB_TEXTURE_RG)) {
                 TRACE_(d3d_caps)("[OK]\n");
                 return TRUE;
             }
@@ -3636,7 +3638,7 @@ static HRESULT WINAPI IWineD3DImpl_GetDeviceCaps(IWineD3D *iface, UINT Adapter, 
                            WINED3DDTCAPS_UBYTE4N   |
                            WINED3DDTCAPS_SHORT2N   |
                            WINED3DDTCAPS_SHORT4N;
-        if (GL_SUPPORT(NV_HALF_FLOAT)) {
+        if (GL_SUPPORT(ARB_HALF_FLOAT_VERTEX)) {
             pCaps->DeclTypes |= WINED3DDTCAPS_FLOAT16_2 |
                                 WINED3DDTCAPS_FLOAT16_4;
         }
@@ -3851,7 +3853,7 @@ ULONG WINAPI D3DCB_DefaultDestroyVolume(IWineD3DVolume *pVolume) {
     return IUnknown_Release(volumeParent);
 }
 
-static BOOL implementation_is_apple(const WineD3D_GL_Info *gl_info)
+static BOOL match_apple(const WineD3D_GL_Info *gl_info)
 {
     /* MacOS has various specialities in the extensions it advertises. Some have to be loaded from
      * the opengl 1.2+ core, while other extensions are advertised, but software emulated. So try to
@@ -3908,6 +3910,8 @@ static void test_pbo_functionality(WineD3D_GL_Info *gl_info) {
     while(glGetError());
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 4, 4, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
     checkGLcall("Specifying the PBO test texture\n");
 
@@ -4003,46 +4007,80 @@ static const struct driver_version_information driver_version_table[] = {
     /* TODO: Add information about legacy ATI hardware, Intel and other cards */
 };
 
-static void fixup_extensions(WineD3D_GL_Info *gl_info) {
-    unsigned int i;
-    BOOL apple = implementation_is_apple(gl_info);
+static BOOL match_ati_r300_to_500(const WineD3D_GL_Info *gl_info) {
+    if(gl_info->gl_vendor != VENDOR_ATI) return FALSE;
+    if(gl_info->gl_card == CARD_ATI_RADEON_9500) return TRUE;
+    if(gl_info->gl_card == CARD_ATI_RADEON_X700) return TRUE;
+    if(gl_info->gl_card == CARD_ATI_RADEON_X1600) return TRUE;
+    return FALSE;
+}
 
-    if(apple) {
-        /* MacOS advertises more GLSL vertex shader uniforms than supported by the hardware, and if more are
-         * used it falls back to software. While the compiler can detect if the shader uses all declared
-         * uniforms, the optimization fails if the shader uses relative addressing. So any GLSL shader
-         * using relative addressing falls back to software.
-         *
-         * ARB vp gives the correct amount of uniforms, so use it instead of GLSL
-         */
-        if(gl_info->vs_glsl_constantsF <= gl_info->vs_arb_constantsF) {
-            FIXME("GLSL doesn't advertise more vertex shader uniforms than ARB. Driver fixup outdated?\n");
-        } else {
-            TRACE("Driver claims %u GLSL vs uniforms, replacing with %u ARB vp uniforms\n",
-                  gl_info->vs_glsl_constantsF, gl_info->vs_arb_constantsF);
-            gl_info->vs_glsl_constantsF = gl_info->vs_arb_constantsF;
-        }
-
-        /* The Intel GPUs on MacOS set the .w register of texcoords to 0.0 by default, which causes problems
-         * with fixed function fragment processing. Ideally this flag should be detected with a test shader
-         * and OpenGL feedback mode, but some GL implementations (MacOS ATI at least, probably all MacOS ones)
-         * do not like vertex shaders in feedback mode and return an error, even though it should be valid
-         * according to the spec.
-         *
-         * We don't want to enable this on all cards, as it adds an extra instruction per texcoord used. This
-         * makes the shader slower and eats instruction slots which should be available to the d3d app.
-         *
-         * ATI Radeon HD 2xxx cards on MacOS have the issue. Instead of checking for the buggy cards, blacklist
-         * all radeon cards on Macs and whitelist the good ones. That way we're prepared for the future. If
-         * this workaround is activated on cards that do not need it, it won't break things, just affect
-         * performance negatively.
-         */
-        if(gl_info->gl_vendor == VENDOR_INTEL ||
-           (gl_info->gl_vendor == VENDOR_ATI && gl_info->gl_card != CARD_ATI_RADEON_X1600)) {
-            TRACE("Enabling vertex texture coord fixes in vertex shaders\n");
-            gl_info->set_texcoord_w = TRUE;
+static BOOL match_geforce5(const WineD3D_GL_Info *gl_info) {
+    if(gl_info->gl_vendor == VENDOR_NVIDIA) {
+        if(gl_info->gl_card == CARD_NVIDIA_GEFORCEFX_5800 || gl_info->gl_card == CARD_NVIDIA_GEFORCEFX_5600) {
+            return TRUE;
         }
     }
+    return FALSE;
+}
+
+static BOOL match_apple_intel(const WineD3D_GL_Info *gl_info) {
+    return gl_info->gl_vendor == VENDOR_INTEL && match_apple(gl_info);
+}
+
+static BOOL match_apple_nonr500ati(const WineD3D_GL_Info *gl_info) {
+    if(!match_apple(gl_info)) return FALSE;
+    if(gl_info->gl_vendor != VENDOR_ATI) return FALSE;
+    if(gl_info->gl_card == CARD_ATI_RADEON_X1600) return FALSE;
+    return TRUE;
+}
+
+static BOOL match_fglrx(const WineD3D_GL_Info *gl_info) {
+    if(gl_info->gl_vendor != VENDOR_ATI) return FALSE;
+    if(match_apple(gl_info)) return FALSE;
+    if(strstr(gl_info->gl_renderer, "DRI")) return FALSE; /* Filter out Mesa DRI drivers */
+    return TRUE;
+}
+
+static void quirk_arb_constants(WineD3D_GL_Info *gl_info) {
+    TRACE_(d3d_caps)("Using ARB vs constant limit(=%u) for GLSL\n", gl_info->vs_arb_constantsF);
+    gl_info->vs_glsl_constantsF = gl_info->vs_arb_constantsF;
+    TRACE_(d3d_caps)("Using ARB ps constant limit(=%u) for GLSL\n", gl_info->ps_arb_constantsF);
+    gl_info->ps_glsl_constantsF = gl_info->ps_arb_constantsF;
+}
+
+static void quirk_apple_glsl_constants(WineD3D_GL_Info *gl_info) {
+    quirk_arb_constants(gl_info);
+    /* MacOS needs uniforms for relative addressing offsets. This can accumulate to quite a few uniforms.
+     * Beyond that the general uniform isn't optimal, so reserve a number of uniforms. 12 vec4's should
+     * allow 48 different offsets or other helper immediate values
+     */
+    TRACE_(d3d_caps)("Reserving 12 GLSL constants for compiler private use\n");
+    gl_info->reserved_glsl_constants = max(gl_info->reserved_glsl_constants, 12);
+}
+
+/* fglrx crashes with a very bad kernel panic if GL_POINT_SPRITE_ARB is set to GL_COORD_REPLACE_ARB
+ * on more than one texture unit. This means that the d3d9 visual point size test will cause a
+ * kernel panic on any machine running fglrx 9.3(latest that supports r300 to r500 cards). This
+ * quirk only enables point sprites on the first texture unit. This keeps point sprites working in
+ * most games, but avoids the crash
+ *
+ * A more sophisticated way would be to find all units that need texture coordinates and enable
+ * point sprites for one if only one is found, and software emulate point sprites in drawStridedSlow
+ * if more than one unit needs texture coordinates(This requires software ffp and vertex shaders though)
+ *
+ * Note that disabling the extension entirely does not gain predictability because there is no point
+ * sprite capability flag in d3d, so the potential rendering bugs are the same if we disable the extension.
+ */
+static void quirk_one_point_sprite(WineD3D_GL_Info *gl_info) {
+    if(gl_info->supported[ARB_POINT_SPRITE]) {
+        TRACE("Limiting point sprites to one texture unit\n");
+        gl_info->max_point_sprite_units = 1;
+    }
+}
+
+static void quirk_ati_dx9(WineD3D_GL_Info *gl_info) {
+    quirk_arb_constants(gl_info);
 
     /* MacOS advertises GL_ARB_texture_non_power_of_two on ATI r500 and earlier cards, although
      * these cards only support GL_ARB_texture_rectangle(D3DPTEXTURECAPS_NONPOW2CONDITIONAL).
@@ -4056,16 +4094,18 @@ static void fixup_extensions(WineD3D_GL_Info *gl_info) {
      * has this extension promoted to core. The extension loading code sets this extension supported
      * due to that, so this code works on fglrx as well.
      */
-    if(gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO] && gl_info->gl_vendor == VENDOR_ATI) {
-        if(gl_info->gl_card == CARD_ATI_RADEON_X700 || gl_info->gl_card == CARD_ATI_RADEON_X1600 ||
-            gl_info->gl_card == CARD_ATI_RADEON_9500 || gl_info->gl_card == CARD_ATI_RADEON_8500  ||
-            gl_info->gl_card == CARD_ATI_RADEON_7200 || gl_info->gl_card == CARD_ATI_RAGE_128PRO) {
-            TRACE("GL_ARB_texture_non_power_of_two advertised on R500 or earlier card, removing\n");
-            gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO] = FALSE;
-            gl_info->supported[WINE_NORMALIZED_TEXRECT] = TRUE;
-        }
-    }
+    TRACE("GL_ARB_texture_non_power_of_two advertised on R500 or earlier card, removing\n");
+    gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO] = FALSE;
+    gl_info->supported[WINE_NORMALIZED_TEXRECT] = TRUE;
 
+    /* fglrx has the same structural issues as the one described in quirk_apple_glsl_constants, although
+     * it is generally more efficient. Reserve just 8 constants
+     */
+    TRACE_(d3d_caps)("Reserving 8 GLSL constants for compiler private use\n");
+    gl_info->reserved_glsl_constants = max(gl_info->reserved_glsl_constants, 8);
+}
+
+static void quirk_no_np2(WineD3D_GL_Info *gl_info) {
     /*  The nVidia GeForceFX series reports OpenGL 2.0 capabilities with the latest drivers versions, but
      *  doesn't explicitly advertise the ARB_tex_npot extension in the GL extension string.
      *  This usually means that ARB_tex_npot is supported in hardware as long as the application is staying
@@ -4081,12 +4121,77 @@ static void fixup_extensions(WineD3D_GL_Info *gl_info) {
      *  post-processing effects in the game "Max Payne 2").
      *  The behaviour can be verified through a simple test app attached in bugreport #14724.
      */
-    if(gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO] && gl_info->gl_vendor == VENDOR_NVIDIA) {
-        if(gl_info->gl_card == CARD_NVIDIA_GEFORCEFX_5800 || gl_info->gl_card == CARD_NVIDIA_GEFORCEFX_5600) {
-            TRACE("GL_ARB_texture_non_power_of_two advertised through OpenGL 2.0 on NV FX card, removing\n");
-            gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO] = FALSE;
-            gl_info->supported[ARB_TEXTURE_RECTANGLE] = TRUE;
-        }
+    TRACE("GL_ARB_texture_non_power_of_two advertised through OpenGL 2.0 on NV FX card, removing\n");
+    gl_info->supported[ARB_TEXTURE_NON_POWER_OF_TWO] = FALSE;
+    gl_info->supported[ARB_TEXTURE_RECTANGLE] = TRUE;
+}
+
+static void quirk_texcoord_w(WineD3D_GL_Info *gl_info) {
+    /* The Intel GPUs on MacOS set the .w register of texcoords to 0.0 by default, which causes problems
+     * with fixed function fragment processing. Ideally this flag should be detected with a test shader
+     * and OpenGL feedback mode, but some GL implementations (MacOS ATI at least, probably all MacOS ones)
+     * do not like vertex shaders in feedback mode and return an error, even though it should be valid
+     * according to the spec.
+     *
+     * We don't want to enable this on all cards, as it adds an extra instruction per texcoord used. This
+     * makes the shader slower and eats instruction slots which should be available to the d3d app.
+     *
+     * ATI Radeon HD 2xxx cards on MacOS have the issue. Instead of checking for the buggy cards, blacklist
+     * all radeon cards on Macs and whitelist the good ones. That way we're prepared for the future. If
+     * this workaround is activated on cards that do not need it, it won't break things, just affect
+     * performance negatively.
+     */
+    TRACE("Enabling vertex texture coord fixes in vertex shaders\n");
+    gl_info->set_texcoord_w = TRUE;
+}
+
+struct driver_quirk quirk_table[] = {
+    {
+        match_ati_r300_to_500,
+        quirk_ati_dx9,
+        "ATI GLSL constant and normalized texrect quirk"
+    },
+    /* MacOS advertises more GLSL vertex shader uniforms than supported by the hardware, and if more are
+     * used it falls back to software. While the compiler can detect if the shader uses all declared
+     * uniforms, the optimization fails if the shader uses relative addressing. So any GLSL shader
+     * using relative addressing falls back to software.
+     *
+     * ARB vp gives the correct amount of uniforms, so use it instead of GLSL
+     */
+    {
+        match_apple,
+        quirk_apple_glsl_constants,
+        "Apple GLSL uniform override"
+    },
+    {
+        match_geforce5,
+        quirk_no_np2,
+        "Geforce 5 NP2 disable"
+    },
+    {
+        match_apple_intel,
+        quirk_texcoord_w,
+        "Init texcoord .w for Apple Intel GPU driver"
+    },
+    {
+        match_apple_nonr500ati,
+        quirk_texcoord_w,
+        "Init texcoord .w for Apple ATI >= r600 GPU driver"
+    },
+    {
+        match_fglrx,
+        quirk_one_point_sprite,
+        "Fglrx point sprite crash workaround"
+    }
+};
+
+static void fixup_extensions(WineD3D_GL_Info *gl_info) {
+    unsigned int i;
+
+    for(i = 0; i < (sizeof(quirk_table) / sizeof(*quirk_table)); i++) {
+        if(!quirk_table[i].match(gl_info)) continue;
+        TRACE_(d3d_caps)("Applying driver quirk \"%s\"\n", quirk_table[i].description);
+        quirk_table[i].apply(gl_info);
     }
 
     /* Find out if PBOs work as they are supposed to */
@@ -4276,6 +4381,7 @@ static void fillGLAttribFuncs(const WineD3D_GL_Info *gl_info)
     multi_texcoord_funcs[WINED3D_FFP_EMIT_DEC3N]     = invalid_texcoord_func;
     if (GL_SUPPORT(NV_HALF_FLOAT))
     {
+        /* Not supported by ARB_HALF_FLOAT_VERTEX, so check for NV_HALF_FLOAT */
         multi_texcoord_funcs[WINED3D_FFP_EMIT_FLOAT16_2] = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord2hvNV);
         multi_texcoord_funcs[WINED3D_FFP_EMIT_FLOAT16_4] = (glMultiTexCoordFunc)GL_EXTCALL(glMultiTexCoord4hvNV);
     } else {

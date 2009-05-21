@@ -83,6 +83,7 @@ static FOLDER_VIEW_ENTRY s_Options[] =
 };
 */
 
+HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_iface, IDataObject *pDataObj);
 
 INT_PTR
 CALLBACK
@@ -512,11 +513,11 @@ FolderPropertiesGeneralDlg(
             }
             break;
         case WM_DESTROY:
-            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLong(hwndDlg, DWL_USER);
+            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLongPtr(hwndDlg, DWL_USER);
             SHFree((LPVOID)pContext);
             break;
         case WM_NOTIFY:
-            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLong(hwndDlg, DWL_USER);
+            pContext = (PFOLDER_PROPERTIES_CONTEXT)GetWindowLongPtr(hwndDlg, DWL_USER);
             lppsn = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == PSN_APPLY)
             {
@@ -539,7 +540,7 @@ FolderPropertiesGeneralDlg(
 
                     SetFileAttributesW(pContext->szFolderPath, Attribute);
                 }
-                SetWindowLong( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
+                SetWindowLongPtr( hwndDlg, DWL_MSGRESULT, PSNRET_NOERROR );
                 return TRUE;
             }
             break;
@@ -562,15 +563,16 @@ FolderAddPropSheetPageProc(HPROPSHEETPAGE hpage, LPARAM lParam)
 }
 
 BOOL
-SH_ShowFolderProperties(LPWSTR pwszFolder)
+SH_ShowFolderProperties(LPWSTR pwszFolder,  LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl)
 {
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
     HPROPSHEETPAGE hpage;
     PROPSHEETHEADERW psh;
     BOOL ret;
     WCHAR szName[MAX_PATH] = {0};
-    HPSXA hpsx;
+    HPSXA hpsx = NULL;
     LPWSTR pFolderName;
+    IDataObject * pDataObj = NULL;
 
     if (!PathIsDirectoryW(pwszFolder))
         return FALSE;
@@ -594,15 +596,25 @@ SH_ShowFolderProperties(LPWSTR pwszFolder)
     psh.u3.phpage = hppages;
     psh.pszCaption = szName;
 
-    hpsx = SHCreatePropSheetExtArray(HKEY_CLASSES_ROOT,
-                                     L"Folder",
-                                     MAX_PROPERTY_SHEET_PAGE-1);
 
-    SHAddFromPropSheetExtArray(hpsx,
-                               (LPFNADDPROPSHEETPAGE)FolderAddPropSheetPageProc,
-                               (LPARAM)&psh);
+    if (SHCreateDataObject(pidlFolder, 1, apidl, NULL, &IID_IDataObject, (void**)&pDataObj) == S_OK)
+    {
+        hpsx = SHCreatePropSheetExtArrayEx(HKEY_CLASSES_ROOT, L"Directory", MAX_PROPERTY_SHEET_PAGE-1, pDataObj);
+        if (hpsx)
+        {
+            SHAddFromPropSheetExtArray(hpsx,
+                                      (LPFNADDPROPSHEETPAGE)FolderAddPropSheetPageProc,
+                                      (LPARAM)&psh);
+        }
+    }
 
     ret = PropertySheetW(&psh);
+   if (pDataObj)
+       IDataObject_Release(pDataObj);
+
+   if (hpsx)
+       SHDestroyPropSheetExtArray(hpsx);
+
     if (ret < 0)
         return FALSE;
     else

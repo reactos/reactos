@@ -442,9 +442,8 @@ VOID TuiDrawStatusText(PCSTR StatusText)
 
 VOID TuiUpdateDateTime(VOID)
 {
-	ULONG	Year, Month, Day;
-	ULONG	Hour, Minute, Second;
-	CHAR	DateString[40];
+	TIMEINFO*	TimeInfo;
+	char	DateString[40];
 	CHAR	TimeString[40];
 	CHAR	TempString[20];
 	BOOLEAN	PMHour = FALSE;
@@ -452,27 +451,31 @@ VOID TuiUpdateDateTime(VOID)
     /* Don't draw the time if this has been disabled */
     if (!UiDrawTime) return;
 
-	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
-	if (Year < 1 || 9999 < Year || Month < 1 || 12 < Month || Day < 1 ||
-            31 < Day || 23 < Hour || 59 < Minute || 59 < Second)
+	TimeInfo = ArcGetTime();
+	if (TimeInfo->Year < 1 || 9999 < TimeInfo->Year ||
+	    TimeInfo->Month < 1 || 12 < TimeInfo->Month ||
+	    TimeInfo->Day < 1 || 31 < TimeInfo->Day ||
+	    23 < TimeInfo->Hour ||
+	    59 < TimeInfo->Minute ||
+	    59 < TimeInfo->Second)
 	{
 		/* This happens on QEmu sometimes. We just skip updating */
 		return;
 	}
 	// Get the month name
-	strcpy(DateString, UiMonthNames[Month - 1]);
+	strcpy(DateString, UiMonthNames[TimeInfo->Month - 1]);
 	// Get the day
-	_itoa(Day, TempString, 10);
+	_itoa(TimeInfo->Day, TempString, 10);
 	// Get the day postfix
-	if (1 == Day || 21 == Day || 31 == Day)
+	if (1 == TimeInfo->Day || 21 == TimeInfo->Day || 31 == TimeInfo->Day)
 	{
 		strcat(TempString, "st");
 	}
-	else if (2 == Day || 22 == Day)
+	else if (2 == TimeInfo->Day || 22 == TimeInfo->Day)
 	{
 		strcat(TempString, "nd");
 	}
-	else if (3 == Day || 23 == Day)
+	else if (3 == TimeInfo->Day || 23 == TimeInfo->Day)
 	{
 		strcat(TempString, "rd");
 	}
@@ -486,35 +489,35 @@ VOID TuiUpdateDateTime(VOID)
 	strcat(DateString, " ");
 
 	// Get the year and add it to the date
-	_itoa(Year, TempString, 10);
+	_itoa(TimeInfo->Year, TempString, 10);
 	strcat(DateString, TempString);
 
 	// Draw the date
 	TuiDrawText(UiScreenWidth-strlen(DateString)-2, 1, DateString, ATTR(UiTitleBoxFgColor, UiTitleBoxBgColor));
 
 	// Get the hour and change from 24-hour mode to 12-hour
-	if (Hour > 12)
+	if (TimeInfo->Hour > 12)
 	{
-		Hour -= 12;
+		TimeInfo->Hour -= 12;
 		PMHour = TRUE;
 	}
-	if (Hour == 0)
+	if (TimeInfo->Hour == 0)
 	{
-		Hour = 12;
+		TimeInfo->Hour = 12;
 	}
-	_itoa(Hour, TempString, 10);
+	_itoa(TimeInfo->Hour, TempString, 10);
 	strcpy(TimeString, "    ");
 	strcat(TimeString, TempString);
 	strcat(TimeString, ":");
-	_itoa(Minute, TempString, 10);
-	if (Minute < 10)
+	_itoa(TimeInfo->Minute, TempString, 10);
+	if (TimeInfo->Minute < 10)
 	{
 		strcat(TimeString, "0");
 	}
 	strcat(TimeString, TempString);
 	strcat(TimeString, ":");
-	_itoa(Second, TempString, 10);
-	if (Second < 10)
+	_itoa(TimeInfo->Second, TempString, 10);
+	if (TimeInfo->Second < 10)
 	{
 		strcat(TimeString, "0");
 	}

@@ -531,7 +531,10 @@ RemoveDirectoryW (
                                            &NtPathU,
                                            NULL,
                                            NULL))
+        {
+                SetLastError(ERROR_PATH_NOT_FOUND);
                 return FALSE;
+        }
 
         InitializeObjectAttributes(&ObjectAttributes,
                                    &NtPathU,
@@ -541,21 +544,14 @@ RemoveDirectoryW (
 
         TRACE("NtPathU '%S'\n", NtPathU.Buffer);
 
-        Status = NtCreateFile (&DirectoryHandle,
-                               DELETE,
-                               &ObjectAttributes,
-                               &IoStatusBlock,
-                               NULL,
-                               FILE_ATTRIBUTE_DIRECTORY, /* 0x7 */
-                               0,
-                               FILE_OPEN,
-                               FILE_DIRECTORY_FILE,      /* 0x204021 */
-                               NULL,
-                               0);
+        Status = NtOpenFile(&DirectoryHandle,
+                            DELETE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
 
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     NtPathU.Buffer);
+        RtlFreeUnicodeString(&NtPathU);
 
         if (!NT_SUCCESS(Status))
         {

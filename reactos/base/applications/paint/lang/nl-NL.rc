@@ -1,0 +1,193 @@
+/*
+ * Dutch Language resource file
+ * Translated by: Wouter De Vlieger
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+ID_MENU MENU
+BEGIN
+    POPUP "&Bestand"
+    BEGIN
+        MENUITEM "Nieuw\tCtrl+N", IDM_FILENEW
+        MENUITEM "Openen...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "Opslaan\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Opslaan als...", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Als achtergrond instellen (naast elkaar)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Als achtergrond instellen (gecentreerd)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Als achtergrond instellen (uitgerekt)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "Afsluiten\tAlt+F4", IDM_FILEEXIT
+    END
+
+    POPUP "Be&werken"
+    BEGIN
+        MENUITEM "Ongedaan maken\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Opnieuw\tCtrl+Y", IDM_EDITREDO
+        MENUITEM SEPARATOR
+        MENUITEM "Knippen\tCtrl+X", IDM_EDITCUT
+        MENUITEM "Kopiëren\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Plakken\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Selectie wissen\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Selectie omkeren", IDM_EDITINVERTSELECTION
+        MENUITEM "Alles selecteren\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "Kopiëren naar...", IDM_EDITCOPYTO
+        MENUITEM "Plakken uit...", IDM_EDITPASTEFROM
+    END
+
+    POPUP "Beel&d"
+    BEGIN
+        MENUITEM "Werkset\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Kleurenpalet\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Statusbalk", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Werkbalk tekst", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "In-/uitzoomen"
+        BEGIN
+            MENUITEM "12,5%", IDM_VIEWZOOM125
+            MENUITEM "25%", IDM_VIEWZOOM25
+            MENUITEM "50%", IDM_VIEWZOOM50
+            MENUITEM "100%", IDM_VIEWZOOM100
+            MENUITEM "200%", IDM_VIEWZOOM200
+            MENUITEM "400%", IDM_VIEWZOOM400
+            MENUITEM "800%", IDM_VIEWZOOM800
+        END
+        MENUITEM "Volledig scherm\tCtrl+F", IDM_VIEWFULLSCREEN
+    END
+    
+    POPUP "&Afbeelding"
+    BEGIN
+        MENUITEM "Spiegelen/draaien...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Formaat wijzigen...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "Bijsnijden", IDM_IMAGECROP
+        MENUITEM "Negatief\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Kenmerken...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Afbeelding wissen", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Ondoorzichtig tekenen", IDM_IMAGEDRAWOPAQUE
+    END
+    
+    POPUP "&Kleuren"
+    BEGIN
+        MENUITEM "Kleurenpalet bewerken...", IDM_COLORSEDITPALETTE
+    END
+    
+    POPUP "&?"
+    BEGIN
+        MENUITEM "Help-onderwerpen", IDM_HELPHELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Informatie", IDM_HELPINFO
+    END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^N", IDM_FILENEW
+    "^O", IDM_FILEOPEN
+    "^S", IDM_FILESAVE
+    "^Z", IDM_EDITUNDO
+    "^Y", IDM_EDITREDO
+    "^X", IDM_EDITCUT
+    "^C", IDM_EDITCOPY
+    "^V", IDM_EDITPASTE
+    VK_DELETE, IDM_EDITDELETESELECTION, VIRTKEY
+    "^A", IDM_EDITSELECTALL
+    "^T", IDM_VIEWTOOLBOX
+    "^L", IDM_VIEWCOLORPALETTE
+    "^F", IDM_VIEWFULLSCREEN
+    "^R", IDM_IMAGEROTATEMIRROR
+    "^W", IDM_IMAGECHANGESIZE
+    "^I", IDM_IMAGEINVERTCOLORS
+    "^E", IDM_IMAGEATTRIBUTES
+    "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+END
+
+IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Spiegelen en draaien"
+BEGIN
+    GROUPBOX "Spiegelen of draaien", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "Horizontaal spiegelen", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "Verticaal spiegelen", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "Draaihoek", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
+    PUSHBUTTON "Annuleren", IDCANCEL, 125, 24, 48, 14
+END
+
+IDD_ATTRIBUTES DIALOGEX 100, 100, 210, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Kenmerken"
+BEGIN
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
+    LTEXT "Breedte:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
+    LTEXT "Hoogte:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
+    LTEXT "Datum laatst gewijzigd:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "Bestandsgrootte:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "Resolutie:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Niet beschikbaar", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
+    LTEXT "Niet beschikbaar", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
+    LTEXT "Niet beschikbaar", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    GROUPBOX "Eenheden", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
+    AUTORADIOBUTTON "Inch", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
+    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
+    AUTORADIOBUTTON "Pixels", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
+    GROUPBOX "Kleuren", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
+    AUTORADIOBUTTON "Zwart-wit", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "Kleuren", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Annuleren", IDCANCEL, 155, 24, 48, 14
+    PUSHBUTTON "Standaard", IDD_ATTRIBUTESSTANDARD, 155, 40, 48, 14
+END
+
+IDD_CHANGESIZE DIALOGEX 100, 100, 210, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Formaat wijzigen"
+BEGIN
+    GROUPBOX "Formaat wijzigen", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
+    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18
+    LTEXT "Horizontaal:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43
+    LTEXT "Verticaal:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Annuleren", IDCANCEL, 155, 24, 48, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMNAME, "Paint"
+    IDS_WINDOWTITLE, "%s - Paint"
+    IDS_INFOTITLE, "Paint for ReactOS"
+    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Wilt u de wijzigingen die zijn aangebracht in %s opslaan?"
+    IDS_DEFAULTFILENAME, "Naamloos.bmp"
+    IDS_TOOLTIP1, "Vrij selecteren"
+    IDS_TOOLTIP2, "Selecteren"
+    IDS_TOOLTIP3, "Gum"
+    IDS_TOOLTIP4, "Opvullen"
+    IDS_TOOLTIP5, "Kleur selecteren"
+    IDS_TOOLTIP6, "Vergroten"
+    IDS_TOOLTIP7, "Potlood"
+    IDS_TOOLTIP8, "Kwast"
+    IDS_TOOLTIP9, "Spuitbus"
+    IDS_TOOLTIP10, "Tekst"
+    IDS_TOOLTIP11, "Lijn"
+    IDS_TOOLTIP12, "Gebogen lijn"
+    IDS_TOOLTIP13, "Rechthoek"
+    IDS_TOOLTIP14, "Veelhoek"
+    IDS_TOOLTIP15, "Ovaal"
+    IDS_TOOLTIP16, "Afgeronde rechthoek"
+    IDS_OPENFILTER, "Bitmapbestanden (*.bmp;*.dib)\1*.bmp;*.dib\1Alle bestanden (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+END

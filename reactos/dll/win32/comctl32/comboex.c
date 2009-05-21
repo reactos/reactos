@@ -1669,6 +1669,14 @@ static LRESULT COMBOEX_Size (COMBOEX_INFO *infoPtr, INT width, INT height)
 }
 
 
+static LRESULT COMBOEX_SetRedraw(COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+{
+    LRESULT ret = DefWindowProcW( infoPtr->hwndSelf, WM_SETREDRAW, wParam, lParam );
+    if (wParam) RedrawWindow( infoPtr->hwndSelf, NULL, 0, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN );
+    return ret;
+}
+
+
 static LRESULT COMBOEX_WindowPosChanging (COMBOEX_INFO *infoPtr, WINDOWPOS *wp)
 {
     RECT cbx_wrect, cbx_crect, cb_wrect;
@@ -2301,6 +2309,9 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SIZE:
 	    return COMBOEX_Size (infoPtr, LOWORD(lParam), HIWORD(lParam));
+
+        case WM_SETREDRAW:
+            return COMBOEX_SetRedraw(infoPtr, wParam, lParam);
 
         case WM_WINDOWPOSCHANGING:
 	    return COMBOEX_WindowPosChanging (infoPtr, (WINDOWPOS *)lParam);

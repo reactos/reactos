@@ -57,6 +57,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
+    ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
     LTEXT "名前と会社名または組織名を入力してください。",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "名前(&M):", IDC_STATIC, 54, 37, 44, 8
@@ -71,11 +72,13 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
+    ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
     LTEXT "コンピュータ名を半角63文字以内で入力してください。 "\
           "コンピュータがネットワーク上にある場合は、名前が重複しないようにしてください。",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "コンピュータ名(&C):", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Administratorと呼ばれるユーザーアカウントを作成します。"\
           "コンピュータにフルアクセスが必要なとき、このアカウントを使用します。",
           IDC_STATIC, 54, 57, 250, 25
@@ -93,6 +96,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
+    ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
     LTEXT "システムのロケールを、アプリケーションで使用したい言語に設定してください。 "\
           "ユーザーロケールは、数値、通貨、日付の表\示方法を制御します。 "\
           "", IDC_STATIC, 53, 7, 253, 20
@@ -114,6 +118,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS セットアップ"
 FONT 9, "MS UI Gothic"
 BEGIN
+    ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
     LTEXT "日付と時刻:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
@@ -209,6 +214,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "スクリーンショットを撮ります"
     IDS_CMT_SERVMAN     "サービス マネージャを起動します"
     IDS_CMT_WORDPAD     "ドキュメントエディタを起動します"
+    IDS_CMT_PAINT       "Launch Paint"
 END
 
 STRINGTABLE
@@ -275,6 +281,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "ソ\リティア.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "ワードパッド.lnk"
+    IDS_SHORT_PAINT      "Paint.lnk"
 END
 
 STRINGTABLE

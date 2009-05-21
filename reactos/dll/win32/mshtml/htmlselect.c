@@ -100,14 +100,14 @@ static HRESULT WINAPI HTMLSelectElement_Invoke(IHTMLSelectElement *iface, DISPID
             wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
-static HRESULT WINAPI HTMLSelectElement_put_size(IHTMLSelectElement *iface, long v)
+static HRESULT WINAPI HTMLSelectElement_put_size(IHTMLSelectElement *iface, LONG v)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLSelectElement_get_size(IHTMLSelectElement *iface, long *p)
+static HRESULT WINAPI HTMLSelectElement_get_size(IHTMLSelectElement *iface, LONG *p)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -190,12 +190,12 @@ static HRESULT WINAPI HTMLSelectElement_get_onchange(IHTMLSelectElement *iface, 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLSelectElement_put_selectedIndex(IHTMLSelectElement *iface, long v)
+static HRESULT WINAPI HTMLSelectElement_put_selectedIndex(IHTMLSelectElement *iface, LONG v)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
     nsresult nsres;
 
-    TRACE("(%p)->(%ld)\n", This, v);
+    TRACE("(%p)->(%d)\n", This, v);
 
     nsres = nsIDOMHTMLSelectElement_SetSelectedIndex(This->nsselect, v);
     if(NS_FAILED(nsres))
@@ -204,7 +204,7 @@ static HRESULT WINAPI HTMLSelectElement_put_selectedIndex(IHTMLSelectElement *if
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLSelectElement_get_selectedIndex(IHTMLSelectElement *iface, long *p)
+static HRESULT WINAPI HTMLSelectElement_get_selectedIndex(IHTMLSelectElement *iface, LONG *p)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
     PRInt32 idx = 0;
@@ -336,21 +336,21 @@ static HRESULT WINAPI HTMLSelectElement_add(IHTMLSelectElement *iface, IHTMLElem
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLSelectElement_remove(IHTMLSelectElement *iface, long index)
+static HRESULT WINAPI HTMLSelectElement_remove(IHTMLSelectElement *iface, LONG index)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, index);
+    FIXME("(%p)->(%d)\n", This, index);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLSelectElement_put_length(IHTMLSelectElement *iface, long v)
+static HRESULT WINAPI HTMLSelectElement_put_length(IHTMLSelectElement *iface, LONG v)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLSelectElement_get_length(IHTMLSelectElement *iface, long *p)
+static HRESULT WINAPI HTMLSelectElement_get_length(IHTMLSelectElement *iface, LONG *p)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
     PRUint32 length = 0;
@@ -364,7 +364,7 @@ static HRESULT WINAPI HTMLSelectElement_get_length(IHTMLSelectElement *iface, lo
 
     *p = length;
 
-    TRACE("ret %ld\n", *p);
+    TRACE("ret %d\n", *p);
     return S_OK;
 }
 

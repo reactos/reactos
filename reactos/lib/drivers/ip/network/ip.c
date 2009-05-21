@@ -219,6 +219,13 @@ PIP_INTERFACE IPCreateInterface(
 
     TcpipInitializeSpinLock(&IF->Lock);
 
+    IF->TCPContext = exAllocatePool
+	( NonPagedPool, sizeof(OSK_IFADDR) + 2 * sizeof( struct sockaddr_in ) );
+    if (!IF->TCPContext) {
+        exFreePool(IF);
+        return NULL;
+    }
+
 #ifdef __NTDRIVER__
     InsertTDIInterfaceEntity( IF );
 #endif
@@ -241,6 +248,7 @@ VOID IPDestroyInterface(
     RemoveTDIInterfaceEntity( IF );
 #endif
 
+    exFreePool(IF->TCPContext);
     exFreePool(IF);
 }
 
@@ -263,9 +271,6 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
 	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
         return;
     }
-
-    /* Allow TCP to hang some configuration on this interface */
-    IF->TCPContext = TCPPrepareInterface( IF );
 }
 
 BOOLEAN IPRegisterInterface(
@@ -317,11 +322,6 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)
     {
-       if ( IF->TCPContext ) {
-           TCPDisposeInterfaceData( IF->TCPContext );
-           IF->TCPContext = NULL;
-       }
-
        TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
        TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
 

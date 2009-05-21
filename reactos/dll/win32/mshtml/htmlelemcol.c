@@ -178,15 +178,15 @@ static HRESULT WINAPI HTMLElementCollection_toString(IHTMLElementCollection *ifa
 }
 
 static HRESULT WINAPI HTMLElementCollection_put_length(IHTMLElementCollection *iface,
-                                                       long v)
+                                                       LONG v)
 {
     HTMLElementCollection *This = ELEMCOL_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI HTMLElementCollection_get_length(IHTMLElementCollection *iface,
-                                                       long *p)
+                                                       LONG *p)
 {
     HTMLElementCollection *This = ELEMCOL_THIS(iface);
 

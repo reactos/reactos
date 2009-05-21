@@ -193,8 +193,8 @@ static const char isIdChar[] = {
 int sqliteGetToken(const WCHAR *z, int *tokenType){
   int i;
   switch( *z ){
-    case ' ': case '\t': case '\n': case '\f': case '\r': {
-      for(i=1; isspace(z[i]); i++){}
+    case ' ': case '\t': case '\n': case '\f': {
+      for(i=1; isspace(z[i]) && z[i] != '\r'; i++){}
       *tokenType = TK_SPACE;
       return i;
     }
@@ -254,13 +254,8 @@ int sqliteGetToken(const WCHAR *z, int *tokenType){
     case '`': case '\'': {
       int delim = z[0];
       for(i=1; z[i]; i++){
-        if( z[i]==delim ){
-          if( z[i+1]==delim ){
-            i++;
-          }else{
-            break;
-          }
-        }
+        if( z[i]==delim )
+          break;
       }
       if( z[i] ) i++;
       if( delim == '`' )

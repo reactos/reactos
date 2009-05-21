@@ -2,7 +2,6 @@
 	<importlibrary definition="crtdll.spec" />
 	<include base="crtdll">.</include>
 	<include base="crt">include</include>
-	<define name="_DISABLE_TIDENTS" />
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />

@@ -108,7 +108,7 @@ const struct builtin_class_descr STATIC_builtin_class =
 
 static __inline void set_ui_state( HWND hwnd, LONG flags )
 {
-    SetWindowLongW( hwnd, UISTATE_GWL_OFFSET, flags );
+    SetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET, flags );
 }
 
 static __inline LONG get_ui_state( HWND hwnd )
@@ -435,7 +435,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
                                      LPARAM lParam, BOOL unicode )
 {
     LRESULT lResult = 0;
-    LONG full_style = GetWindowLongW( hwnd, GWL_STYLE );
+    LONG full_style = GetWindowLongPtrW( hwnd, GWL_STYLE );
     LONG style = full_style & SS_TYPEMASK;
 
     switch (uMsg)
@@ -510,8 +510,8 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
             LPCWSTR textW;
 
             if (full_style & SS_SUNKEN)
-                SetWindowLongW( hwnd, GWL_EXSTYLE,
-                                GetWindowLongW( hwnd, GWL_EXSTYLE ) | WS_EX_STATICEDGE );
+                SetWindowLongPtrW( hwnd, GWL_EXSTYLE,
+                                   GetWindowLongPtrW( hwnd, GWL_EXSTYLE ) | WS_EX_STATICEDGE );
 
             if(unicode)
             {

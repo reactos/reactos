@@ -34,6 +34,12 @@ typedef struct _NDIS_M_DRIVER_BLOCK {
 } NDIS_M_DRIVER_BLOCK, *PNDIS_M_DRIVER_BLOCK;
 #endif
 
+/* There must be some defined struct to do this... */
+typedef struct _NDIS_M_DEVICE_BLOCK {
+    PDEVICE_OBJECT DeviceObject;
+    PNDIS_STRING   SymbolicName;
+} NDIS_M_DEVICE_BLOCK, *PNDIS_M_DEVICE_BLOCK;
+
 /* resources allocated on behalf on the miniport */
 #define MINIPORT_RESOURCE_TYPE_MEMORY 0
 typedef struct _MINIPORT_RESOURCE {
@@ -65,6 +71,7 @@ typedef struct _MINIPORT_SHARED_MEMORY {
     BOOLEAN               Cached;
     PNDIS_MINIPORT_BLOCK  Adapter;
     PVOID                 Context;
+    PKEVENT               Event;
 } MINIPORT_SHARED_MEMORY, *PMINIPORT_SHARED_MEMORY;
 
 /* A structure of WrapperConfigurationContext (not compatible with the
@@ -73,6 +80,7 @@ typedef struct _NDIS_WRAPPER_CONTEXT {
     HANDLE            RegistryHandle;
     PDEVICE_OBJECT    DeviceObject;
     ULONG             BusNumber;
+    ULONG             SlotNumber;
 } NDIS_WRAPPER_CONTEXT, *PNDIS_WRAPPER_CONTEXT;
 
 #define GET_MINIPORT_DRIVER(Handle)((PNDIS_M_DRIVER_BLOCK)Handle)

@@ -421,7 +421,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     PEPROCESS Process;
     MEMORY_AREA* MemoryArea;
-    PMM_AVL_TABLE AddressSpace;
+    PMMSUPPORT AddressSpace;
 
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_QUERY_INFORMATION,
@@ -436,7 +436,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
         return(Status);
     }
 
-    AddressSpace = &Process->VadRoot;
+    AddressSpace = &Process->Vm;
 
     MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
@@ -576,7 +576,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                        OUT PULONG OldAccessProtection  OPTIONAL)
 {
     PMEMORY_AREA MemoryArea;
-    PMM_AVL_TABLE AddressSpace;
+    PMMSUPPORT AddressSpace;
     ULONG OldAccessProtection_;
     NTSTATUS Status;
 
@@ -585,7 +585,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     PAGE_ROUND_DOWN(*BaseAddress);
     *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
 
-    AddressSpace = &Process->VadRoot;
+    AddressSpace = &Process->Vm;
 
     MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
@@ -844,10 +844,25 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
 {
     PEPROCESS Process;
     ULONG OldAccessProtection;
+    ULONG Protection;
     PVOID BaseAddress = NULL;
     SIZE_T NumberOfBytesToProtect = 0;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Check for valid protection flags */
+    Protection = NewAccessProtection & ~(PAGE_GUARD|PAGE_NOCACHE);
+    if (Protection != PAGE_NOACCESS &&
+        Protection != PAGE_READONLY &&
+        Protection != PAGE_READWRITE &&
+        Protection != PAGE_WRITECOPY &&
+        Protection != PAGE_EXECUTE &&
+        Protection != PAGE_EXECUTE_READ &&
+        Protection != PAGE_EXECUTE_READWRITE &&
+        Protection != PAGE_EXECUTE_WRITECOPY)
+    {
+        return STATUS_INVALID_PAGE_PROTECTION;
+    }
 
     /* Check if we came from user mode */
     if (PreviousMode != KernelMode)

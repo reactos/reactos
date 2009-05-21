@@ -12,6 +12,24 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct
+{
+    PDMA_ADAPTER Adapter;
+    ULONG MapRegisters;
+
+}VIP_DMA_ADAPTER, *PVIP_DMA_ADAPTER;
+
+typedef struct
+{
+    PVOID HwDeviceExtension;
+    PSCATTER_GATHER_LIST  ScatterGatherList;
+    PEXECUTE_DMA ExecuteDmaRoutine;
+    PVOID Context;
+    PVP_DMA_ADAPTER VpDmaAdapter;
+
+}DMA_START_CONTEXT, *PDMA_START_CONTEXT;
+
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -26,11 +44,10 @@ VideoPortAllocateCommonBuffer(IN PVOID HwDeviceExtension,
                               IN BOOLEAN CacheEnabled,
                               PVOID Reserved)
 {
-    /* Forward to HAL */
-    return HalAllocateCommonBuffer((PADAPTER_OBJECT)VpDmaAdapter,
-                                   DesiredLength,
-                                   LogicalAddress,
-                                   CacheEnabled);
+    PVIP_DMA_ADAPTER Adapter = (PVIP_DMA_ADAPTER)VpDmaAdapter;
+
+
+    return Adapter->Adapter->DmaOperations->AllocateCommonBuffer(Adapter->Adapter, DesiredLength, LogicalAddress, CacheEnabled);
 }
 
 /*
@@ -45,23 +62,23 @@ VideoPortReleaseCommonBuffer(IN PVOID HwDeviceExtension,
                              IN PVOID VirtualAddress,
                              IN BOOLEAN CacheEnabled)
 {
-    /* Forward to HAL */
-    HalFreeCommonBuffer((PADAPTER_OBJECT)VpDmaAdapter,
-                       Length,
-                       LogicalAddress,
-                       VirtualAddress,
-                       CacheEnabled);
+    PVIP_DMA_ADAPTER Adapter = (PVIP_DMA_ADAPTER)VpDmaAdapter;
+
+    Adapter->Adapter->DmaOperations->FreeCommonBuffer(Adapter->Adapter, Length, LogicalAddress, VirtualAddress, CacheEnabled);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 VideoPortPutDmaAdapter(IN PVOID HwDeviceExtension,
                        IN PVP_DMA_ADAPTER VpDmaAdapter)
 {
-    UNIMPLEMENTED;
+    PVIP_DMA_ADAPTER Adapter = (PVIP_DMA_ADAPTER)VpDmaAdapter;
+
+    Adapter->Adapter->DmaOperations->PutDmaAdapter(Adapter->Adapter);
+    ExFreePool(Adapter);
 }
 
 /*
@@ -75,29 +92,45 @@ VideoPortGetDmaAdapter(IN PVOID HwDeviceExtension,
     DEVICE_DESCRIPTION DeviceDescription;
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
     ULONG NumberOfMapRegisters;
+    PVIP_DMA_ADAPTER Adapter;
+    PDMA_ADAPTER DmaAdapter;
 
-	/* Zero the structure */
+    /* Zero the structure */
     RtlZeroMemory(&DeviceDescription,
-	              sizeof(DEVICE_DESCRIPTION));
+                  sizeof(DEVICE_DESCRIPTION));
 
     /* Initialize the structure */
     DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
     DeviceDescription.Master = TRUE /* ?? */;
-	DeviceDescription.DmaWidth = Width8Bits;
+    DeviceDescription.DmaWidth = Width8Bits;
     DeviceDescription.DmaSpeed = Compatible;
 
-	/* Copy data from caller's device extension */
+    /* Copy data from caller's device extension */
     DeviceDescription.ScatterGather = VpDeviceExtension->ScatterGather;
-	DeviceDescription.Dma32BitAddresses = VpDeviceExtension->Dma32BitAddresses;
-	DeviceDescription.Dma64BitAddresses = VpDeviceExtension->Dma64BitAddresses;
-	DeviceDescription.MaximumLength = VpDeviceExtension->MaximumLength;
+    DeviceDescription.Dma32BitAddresses = VpDeviceExtension->Dma32BitAddresses;
+    DeviceDescription.Dma64BitAddresses = VpDeviceExtension->Dma64BitAddresses;
+    DeviceDescription.MaximumLength = VpDeviceExtension->MaximumLength;
 
     /* Copy data from the internal device extension */
     DeviceDescription.BusNumber = DeviceExtension->SystemIoBusNumber;
     DeviceDescription.InterfaceType = DeviceExtension->AdapterInterfaceType;
 
-	return (PVP_DMA_ADAPTER)HalGetAdapter(&DeviceDescription,
-	                                      &NumberOfMapRegisters);
+    Adapter = ExAllocatePool(NonPagedPool, sizeof(VIP_DMA_ADAPTER));
+    if (!Adapter)
+        return NULL;
+
+
+    DmaAdapter = IoGetDmaAdapter(DeviceExtension->PhysicalDeviceObject, &DeviceDescription, &NumberOfMapRegisters);
+    if (!DmaAdapter)
+    {
+        ExFreePool(Adapter);
+        return NULL;
+    }
+
+    Adapter->Adapter = DmaAdapter;
+    Adapter->MapRegisters = NumberOfMapRegisters;
+
+    return (PVP_DMA_ADAPTER)Adapter;
 }
 
 /*
@@ -198,24 +231,91 @@ VideoPortSignalDmaComplete(IN PVOID HwDeviceExtension,
 	return FALSE;
 }
 
+
+BOOLEAN
+NTAPI
+SyncScatterRoutine(
+    IN PVOID  Context)
+{
+    PDMA_START_CONTEXT StartContext = (PDMA_START_CONTEXT)Context;
+
+    StartContext->ExecuteDmaRoutine(StartContext->HwDeviceExtension, StartContext->VpDmaAdapter, (PVP_SCATTER_GATHER_LIST)StartContext->ScatterGatherList, StartContext->Context);
+    return TRUE;
+}
+
+VOID
+NTAPI
+ScatterAdapterControl(
+    IN PDEVICE_OBJECT  *DeviceObject,
+    IN PIRP  *Irp,
+    IN PSCATTER_GATHER_LIST  ScatterGather,
+    IN PVOID  Context)
+{
+    PDMA_START_CONTEXT StartContext = (PDMA_START_CONTEXT)Context;
+
+    StartContext->ScatterGatherList = ScatterGather;
+
+    VideoPortSynchronizeExecution(StartContext->HwDeviceExtension, VpMediumPriority, SyncScatterRoutine, StartContext);
+    ExFreePool(StartContext);
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 VP_STATUS
 NTAPI
 VideoPortStartDma(IN PVOID HwDeviceExtension,
                   IN PVP_DMA_ADAPTER VpDmaAdapter,
-				  IN PVOID Mdl,
-				  IN ULONG Offset,
-				  IN OUT PULONG pLength,
-				  IN PEXECUTE_DMA ExecuteDmaRoutine,
-				  IN PVOID Context,
-				  IN BOOLEAN WriteToDevice)
+                  IN PVOID Mdl,
+                  IN ULONG Offset,
+                  IN OUT PULONG pLength,
+                  IN PEXECUTE_DMA ExecuteDmaRoutine,
+                  IN PVOID Context,
+                  IN BOOLEAN WriteToDevice)
 {
-    UNIMPLEMENTED;
+    NTSTATUS Status;
+    KIRQL OldIrql;
+    PDMA_START_CONTEXT StartContext;
+    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
+    PVIP_DMA_ADAPTER Adapter = (PVIP_DMA_ADAPTER)VpDmaAdapter;
 
-	/* Lie and return success */
-	return NO_ERROR;
+    StartContext = ExAllocatePool(NonPagedPool, sizeof(DMA_START_CONTEXT));
+    if (!StartContext)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    StartContext->Context = Context;
+    StartContext->ExecuteDmaRoutine = ExecuteDmaRoutine;
+    StartContext->HwDeviceExtension = HwDeviceExtension;
+    StartContext->VpDmaAdapter = VpDmaAdapter;
+
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    Status = Adapter->Adapter->DmaOperations->GetScatterGatherList(Adapter->Adapter,
+                                                                   DeviceExtension->PhysicalDeviceObject,
+                                                                   Mdl,
+                                                                   MmGetSystemAddressForMdl((PMDL)Mdl),
+                                                                   MmGetMdlByteCount((PMDL)Mdl),
+                                                                   (PDRIVER_LIST_CONTROL)ScatterAdapterControl,
+                                                                   StartContext,
+                                                                   WriteToDevice);
+
+    KeLowerIrql(OldIrql);
+
+    if (!NT_SUCCESS(Status))
+    {
+        *pLength = 0;
+        ExFreePool(StartContext);
+        Status = ERROR_NOT_ENOUGH_MEMORY;
+    }
+    else
+    {
+        Status = NO_ERROR;
+    }
+
+    /* Return status */
+    return Status;
 }
 
 /*
@@ -240,7 +340,7 @@ VideoPortDoDma(IN PVOID HwDeviceExtension,
                IN DMA_FLAGS DmaFlags)
 {
     /* Deprecated */
-	return NULL;
+    return NULL;
 }
 
 /*
@@ -258,7 +358,7 @@ VideoPortAssociateEventsWithDmaHandle(IN PVOID HwDeviceExtension,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VP_STATUS
 NTAPI
@@ -267,8 +367,12 @@ VideoPortCompleteDma(IN PVOID HwDeviceExtension,
                      IN PVP_SCATTER_GATHER_LIST VpScatterGather,
                      IN BOOLEAN WriteToDevice)
 {
-    UNIMPLEMENTED;
+    KIRQL OldIrql;
+    PVIP_DMA_ADAPTER Adapter = (PVIP_DMA_ADAPTER)VpDmaAdapter;
 
-	/* Lie and return success */
-	return NO_ERROR;
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    Adapter->Adapter->DmaOperations->PutScatterGatherList(Adapter->Adapter, (PSCATTER_GATHER_LIST)VpScatterGather, WriteToDevice);
+    KeLowerIrql(OldIrql);
+
+    return NO_ERROR;
 }

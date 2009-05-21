@@ -1326,8 +1326,8 @@ TaskSwitchWnd_EnumWindowsProc(IN HWND hWnd,
         /* Don't list popup windows and also no tool windows */
         if (GetWindow(hWnd,
                       GW_OWNER) == NULL &&
-            !(GetWindowLong(hWnd,
-                            GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+            !(GetWindowLongPtr(hWnd,
+                               GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
         {
             TaskSwitchWnd_AddTask(This,
                                   hWnd);

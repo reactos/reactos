@@ -227,6 +227,8 @@ HRESULT CUrlHistory_Create(IUnknown*,REFIID,void**);
 
 HRESULT InternetShortcut_Create(IUnknown*,REFIID,void**);
 
+HRESULT TaskbarList_Create(IUnknown*,REFIID,void**);
+
 #define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
 /**********************************************************************

@@ -22,6 +22,8 @@ PcNewPort(
 
     DPRINT("PcNewPort entered\n");
 
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
     if (!OutPort)
     {
         DPRINT("PcNewPort was supplied a NULL OutPort parameter\n");
@@ -29,7 +31,7 @@ PcNewPort(
     }
 
     if (IsEqualGUIDAligned(ClassId, &CLSID_PortMidi))
-        Status = NewPortMidi(OutPort);
+        Status = NewPortDMus(OutPort);
     else if (IsEqualGUIDAligned(ClassId, &CLSID_PortDMus))
         Status = NewPortDMus(OutPort);
     else if (IsEqualGUIDAligned(ClassId, &CLSID_PortTopology))
@@ -38,6 +40,10 @@ PcNewPort(
         Status = NewPortWaveCyclic(OutPort);
     else if (IsEqualGUIDAligned(ClassId, &CLSID_PortWavePci))
         Status = NewPortWavePci(OutPort);
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+    else if (IsEqualGUIDAligned(ClassId, &CLSID_PortWavePci))
+        Status = NewPortWaveRT(OutPort);
+#endif
     else
     {
 

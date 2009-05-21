@@ -80,6 +80,7 @@ struct Binding {
     const IBindingVtbl               *lpBindingVtbl;
     const IInternetProtocolSinkVtbl  *lpInternetProtocolSinkVtbl;
     const IInternetBindInfoVtbl      *lpInternetBindInfoVtbl;
+    const IWinInetHttpInfoVtbl       *lpWinInetHttpInfoVtbl;
     const IServiceProviderVtbl       *lpServiceProviderVtbl;
 
     LONG ref;
@@ -117,6 +118,7 @@ struct Binding {
 #define BINDING(x)   ((IBinding*)               &(x)->lpBindingVtbl)
 #define PROTSINK(x)  ((IInternetProtocolSink*)  &(x)->lpInternetProtocolSinkVtbl)
 #define BINDINF(x)   ((IInternetBindInfo*)      &(x)->lpInternetBindInfoVtbl)
+#define INETINFO(x)  ((IWinInetHttpInfo*)       &(x)->lpWinInetHttpInfoVtbl)
 #define SERVPROV(x)  ((IServiceProvider*)       &(x)->lpServiceProviderVtbl)
 
 #define STREAM(x) ((IStream*) &(x)->lpStreamVtbl)
@@ -901,6 +903,31 @@ static HRESULT WINAPI Binding_QueryInterface(IBinding *iface, REFIID riid, void 
     }else if(IsEqualGUID(&IID_IServiceProvider, riid)) {
         TRACE("(%p)->(IID_IServiceProvider %p)\n", This, ppv);
         *ppv = SERVPROV(This);
+    }else if(IsEqualGUID(&IID_IWinInetInfo, riid)) {
+        TRACE("(%p)->(IID_IWinInetInfo %p)\n", This, ppv);
+
+        /* NOTE: This violidates COM rules, but tests prove that we should do it */
+        if(!get_wininet_info(This->protocol))
+           return E_NOINTERFACE;
+
+        *ppv = INETINFO(This);
+    }else if(IsEqualGUID(&IID_IWinInetHttpInfo, riid)) {
+        IWinInetHttpInfo *http_info;
+        IWinInetInfo *info;
+        HRESULT hres;
+
+        TRACE("(%p)->(IID_IWinInetHttpInfo %p)\n", This, ppv);
+
+        info = get_wininet_info(This->protocol);
+        if(!info)
+            return E_NOINTERFACE;
+
+        hres = IWinInetInfo_QueryInterface(info, &IID_IWinInetHttpInfo, (void**)&http_info);
+        if(FAILED(hres))
+            return E_NOINTERFACE;
+
+        IWinInetHttpInfo_Release(http_info);
+        *ppv = INETINFO(This);
     }
 
     if(*ppv) {
@@ -1448,6 +1475,52 @@ static const IInternetBindInfoVtbl InternetBindInfoVtbl = {
     InternetBindInfo_GetBindString
 };
 
+#define INETINFO_THIS(iface) DEFINE_THIS(Binding, WinInetHttpInfo, iface)
+
+static HRESULT WINAPI WinInetHttpInfo_QueryInterface(IWinInetHttpInfo *iface, REFIID riid, void **ppv)
+{
+    Binding *This = INETINFO_THIS(iface);
+    return IBinding_QueryInterface(BINDING(This), riid, ppv);
+}
+
+static ULONG WINAPI WinInetHttpInfo_AddRef(IWinInetHttpInfo *iface)
+{
+    Binding *This = INETINFO_THIS(iface);
+    return IBinding_AddRef(BINDING(This));
+}
+
+static ULONG WINAPI WinInetHttpInfo_Release(IWinInetHttpInfo *iface)
+{
+    Binding *This = INETINFO_THIS(iface);
+    return IBinding_Release(BINDING(This));
+}
+
+static HRESULT WINAPI WinInetHttpInfo_QueryOption(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer)
+{
+    Binding *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p)\n", This, dwOption, pBuffer, pcbBuffer);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI WinInetHttpInfo_QueryInfo(IWinInetHttpInfo *iface, DWORD dwOption,
+        void *pBuffer, DWORD *pcbBuffer, DWORD *pdwFlags, DWORD *pdwReserved)
+{
+    Binding *This = INETINFO_THIS(iface);
+    FIXME("(%p)->(%x %p %p %p %p)\n", This, dwOption, pBuffer, pcbBuffer, pdwFlags, pdwReserved);
+    return E_NOTIMPL;
+}
+
+#undef INETINFO_THIS
+
+static const IWinInetHttpInfoVtbl WinInetHttpInfoVtbl = {
+    WinInetHttpInfo_QueryInterface,
+    WinInetHttpInfo_AddRef,
+    WinInetHttpInfo_Release,
+    WinInetHttpInfo_QueryOption,
+    WinInetHttpInfo_QueryInfo
+};
+
 #define SERVPROV_THIS(iface) DEFINE_THIS(Binding, ServiceProvider, iface)
 
 static HRESULT WINAPI ServiceProvider_QueryInterface(IServiceProvider *iface,
@@ -1559,6 +1632,7 @@ static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, 
     ret->lpBindingVtbl              = &BindingVtbl;
     ret->lpInternetProtocolSinkVtbl = &InternetProtocolSinkVtbl;
     ret->lpInternetBindInfoVtbl     = &InternetBindInfoVtbl;
+    ret->lpWinInetHttpInfoVtbl      = &WinInetHttpInfoVtbl;
     ret->lpServiceProviderVtbl      = &ServiceProviderVtbl;
 
     ret->ref = 1;

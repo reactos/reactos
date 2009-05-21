@@ -497,6 +497,8 @@ typedef struct IDirect3DVertexShader9Impl {
   LPDIRECT3DDEVICE9EX parentDevice;
 } IDirect3DVertexShader9Impl;
 
+#define D3D9_MAX_VERTEX_SHADER_CONSTANTF 256
+
 /* --------------------- */
 /* IDirect3DPixelShader9 */
 /* --------------------- */

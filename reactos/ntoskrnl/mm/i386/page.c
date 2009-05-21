@@ -172,7 +172,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
 
     /* Initialize the Addresss Space */
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    Process->VadRoot.BalancedRoot.u1.Parent = NULL;
+    Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
 
     /* The process now has an address space */
     Process->HasAddressSpace = TRUE;

@@ -2314,12 +2314,6 @@ HDEVINFO WINAPI SetupDiGetClassDevsW(
 /***********************************************************************
  *              SetupDiGetClassDevsExW (SETUPAPI.@)
  */
-LONG
-SETUP_CreateDevicesList(
-    IN OUT struct DeviceInfoSet *list,
-    IN PCWSTR MachineName OPTIONAL,
-    IN CONST GUID *Class OPTIONAL,
-    IN PCWSTR Enumerator OPTIONAL);
 HDEVINFO WINAPI SetupDiGetClassDevsExW(
         CONST GUID *class,
         PCWSTR enumstr,

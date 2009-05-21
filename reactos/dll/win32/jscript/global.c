@@ -264,7 +264,7 @@ static HRESULT JSGlobal_eval(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
     }
 
     TRACE("parsing %s\n", debugstr_w(V_BSTR(arg)));
-    hres = script_parse(dispex->ctx, V_BSTR(arg), &parser_ctx);
+    hres = script_parse(dispex->ctx, V_BSTR(arg), NULL, &parser_ctx);
     if(FAILED(hres)) {
         WARN("parse (%s) failed: %08x\n", debugstr_w(V_BSTR(arg)), hres);
         return hres;

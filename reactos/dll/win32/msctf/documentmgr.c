@@ -167,7 +167,7 @@ static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
     if (dwFlags)
         return E_INVALIDARG;
 
-    if (This->contextStack[0] == NULL) /* Cannot pop last context */
+    if (This->contextStack[1] == NULL) /* Cannot pop last context */
         return E_FAIL;
 
     ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink,This->contextStack[0]);
@@ -199,14 +199,21 @@ static HRESULT WINAPI DocumentMgr_GetTop(ITfDocumentMgr *iface, ITfContext **ppi
 static HRESULT WINAPI DocumentMgr_GetBase(ITfDocumentMgr *iface, ITfContext **ppic)
 {
     DocumentMgr *This = (DocumentMgr *)iface;
+    ITfContext *tgt;
+
     TRACE("(%p)\n",This);
     if (!ppic)
         return E_INVALIDARG;
 
     if (This->contextStack[1])
-        ITfContext_AddRef(This->contextStack[1]);
+        tgt = This->contextStack[1];
+    else
+        tgt = This->contextStack[0];
 
-    *ppic = This->contextStack[1];
+    if (tgt)
+        ITfContext_AddRef(tgt);
+
+    *ppic = tgt;
 
     return S_OK;
 }

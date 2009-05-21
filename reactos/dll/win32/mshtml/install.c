@@ -425,6 +425,7 @@ static LPWSTR get_url(void)
     HKEY hkey;
     DWORD res, type;
     DWORD size = INTERNET_MAX_URL_LENGTH*sizeof(WCHAR);
+    DWORD returned_size;
     LPWSTR url;
 
     static const WCHAR wszGeckoUrl[] = {'G','e','c','k','o','U','r','l',0};
@@ -437,15 +438,16 @@ static LPWSTR get_url(void)
         return NULL;
 
     url = heap_alloc(size);
+    returned_size = size;
 
-    res = RegQueryValueExW(hkey, wszGeckoUrl, NULL, &type, (LPBYTE)url, &size);
+    res = RegQueryValueExW(hkey, wszGeckoUrl, NULL, &type, (LPBYTE)url, &returned_size);
     RegCloseKey(hkey);
     if(res != ERROR_SUCCESS || type != REG_SZ) {
         heap_free(url);
         return NULL;
     }
 
-    if(size > sizeof(httpW) && !memcmp(url, httpW, sizeof(httpW))) {
+    if(returned_size > sizeof(httpW) && !memcmp(url, httpW, sizeof(httpW))) {
         strcatW(url, v_formatW);
         MultiByteToWideChar(CP_ACP, 0, GECKO_VERSION, -1, url+strlenW(url), size/sizeof(WCHAR)-strlenW(url));
     }

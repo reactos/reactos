@@ -613,19 +613,30 @@ NdisMMapIoSpace(
  *     NDIS_STATUS_FAILURE: a general failure has occured
  * NOTES:
  *     - Must be called at IRQL = PASSIVE_LEVEL
- * BUGS:
- *     - Only supports things that MmMapIoSpace internally supports - what
- *       about considering bus type, etc?
- *     - doesn't track resources allocated...
  */
 {
+  PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+  ULONG AddressSpace = 0; /* Memory Space */
+  NDIS_PHYSICAL_ADDRESS TranslatedAddress;
+
   PAGED_CODE();
   ASSERT(VirtualAddress && MiniportAdapterHandle);
 
-  *VirtualAddress = MmMapIoSpace(PhysicalAddress, Length, MmNonCached);
+  NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  if(!*VirtualAddress)
+  if(!HalTranslateBusAddress(Adapter->NdisMiniportBlock.BusType, Adapter->NdisMiniportBlock.BusNumber,
+                             PhysicalAddress, &AddressSpace, &TranslatedAddress))
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Unable to translate address\n"));
+      return NDIS_STATUS_RESOURCES;
+  }
+
+  *VirtualAddress = MmMapIoSpace(TranslatedAddress, Length, MmNonCached);
+
+  if(!*VirtualAddress) {
+    NDIS_DbgPrint(MIN_TRACE, ("MmMapIoSpace failed\n"));
     return NDIS_STATUS_RESOURCES;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }

@@ -370,6 +370,7 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format
              * byte float according to the IEEE standard
              */
             if (GL_SUPPORT(NV_HALF_FLOAT)) {
+                /* Not supported by GL_ARB_half_float_vertex */
                 GL_EXTCALL(glVertexAttrib2hvNV(index, ptr));
             } else {
                 float x = float_16_to_32(((const unsigned short *)ptr) + 0);
@@ -379,6 +380,7 @@ static inline void send_attribute(IWineD3DDeviceImpl *This, WINED3DFORMAT format
             break;
         case WINED3DFMT_R16G16B16A16_FLOAT:
             if (GL_SUPPORT(NV_HALF_FLOAT)) {
+                /* Not supported by GL_ARB_half_float_vertex */
                 GL_EXTCALL(glVertexAttrib4hvNV(index, ptr));
             } else {
                 float x = float_16_to_32(((const unsigned short *)ptr) + 0);

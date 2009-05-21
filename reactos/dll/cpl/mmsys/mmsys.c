@@ -273,13 +273,13 @@ InstallDefaultSystemSoundScheme(HKEY hRootKey)
             swprintf(Path, L"%%SystemRoot%%\\media\\%s", EventLabels[i].FileName);
             if (RegCreateKeyExW(hSubKey, L".Current",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
             {
-                RegSetValueExW(hScheme, NULL, 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
                 RegCloseKey(hScheme);
             }
 
             if (RegCreateKeyExW(hSubKey, L".Default",  0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &hScheme, NULL) == ERROR_SUCCESS)
             {
-                RegSetValueExW(hScheme, NULL, 0, REG_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
+                RegSetValueExW(hScheme, NULL, 0, REG_EXPAND_SZ, (LPBYTE)Path, (wcslen(Path)+1) * sizeof(WCHAR));
                 RegCloseKey(hScheme);
             }
             RegCloseKey(hSubKey);

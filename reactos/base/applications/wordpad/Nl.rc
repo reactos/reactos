@@ -241,4 +241,5 @@ BEGIN
     STRING_OPEN_FAILED,          "Bestand kon niet geopend worden."
     STRING_OPEN_ACCESS_DENIED,   "Onvoldoende rechten om het bestand te openen."
     STRING_PRINTING_NOT_IMPLEMENTED, "Printen is nog niet geimplementeerd"
+    STRING_MAX_TAB_STOPS,        "Onmogelijk om meer dan 32 tab stops toe te voegen."
 END

@@ -642,7 +642,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     LoaderBlock.DrivesAddr = reactos_arc_disk_info;
     LoaderBlock.RdAddr = (ULONG_PTR)gRamDiskBase;
     LoaderBlock.RdLength = gRamDiskSize;
-    LoaderBlock.MmapLength = (SIZE_T)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
+    LoaderBlock.MmapLength = (SIZE_T)MachVtbl.GetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
     if (LoaderBlock.MmapLength)
     {
         ULONG i;

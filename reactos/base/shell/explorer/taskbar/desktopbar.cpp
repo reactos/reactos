@@ -109,7 +109,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	_hwndStartButton = hwndStart;
 
 	 // disable double clicks
-	SetClassLong(hwndStart, GCL_STYLE, GetClassLong(hwndStart, GCL_STYLE) & ~CS_DBLCLKS);
+	SetClassLongPtr(hwndStart, GCL_STYLE, GetClassLongPtr(hwndStart, GCL_STYLE) & ~CS_DBLCLKS);
 
 	 // create task bar
 	_hwndTaskBar = TaskBar::Create(_hwnd);

@@ -1,0 +1,15 @@
+IDI_APPICON     ICON MOVEABLE PURE LOADONCALL DISCARDABLE "icons/paint.ico"
+
+IDB_TOOLBARICONS    BITMAP "icons/iconbar.bmp"
+
+IDI_TRANSPARENT     ICON "icons/transparent.ico"
+IDI_NONTRANSPARENT  ICON "icons/nontransparent.ico"
+
+IDC_FILL        ICON "icons/fill_cur.ico"
+IDC_COLOR       ICON "icons/color_cur.ico"
+IDC_ZOOM        ICON "icons/zoom_cur.ico"
+IDC_PEN         ICON "icons/pen_cur.ico"
+IDC_AIRBRUSH    ICON "icons/airbrush_cur.ico"
+
+IDI_HORZSTRETCH ICON "icons/horzstretch.ico"
+IDI_VERTSTRETCH ICON "icons/vertstretch.ico"

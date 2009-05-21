@@ -1372,12 +1372,12 @@ static HRESULT WINAPI HTMLTxtRange_expand(IHTMLTxtRange *iface, BSTR Unit, VARIA
 }
 
 static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
-        long Count, long *ActualCount)
+        LONG Count, LONG *ActualCount)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     range_unit_t unit;
 
-    TRACE("(%p)->(%s %ld %p)\n", This, debugstr_w(Unit), Count, ActualCount);
+    TRACE("(%p)->(%s %d %p)\n", This, debugstr_w(Unit), Count, ActualCount);
 
     unit = string_to_unit(Unit);
     if(unit == RU_UNKNOWN)
@@ -1436,17 +1436,17 @@ static HRESULT WINAPI HTMLTxtRange_move(IHTMLTxtRange *iface, BSTR Unit,
         FIXME("unimplemented unit %s\n", debugstr_w(Unit));
     }
 
-    TRACE("ret %ld\n", *ActualCount);
+    TRACE("ret %d\n", *ActualCount);
     return S_OK;
 }
 
 static HRESULT WINAPI HTMLTxtRange_moveStart(IHTMLTxtRange *iface, BSTR Unit,
-        long Count, long *ActualCount)
+        LONG Count, LONG *ActualCount)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     range_unit_t unit;
 
-    TRACE("(%p)->(%s %ld %p)\n", This, debugstr_w(Unit), Count, ActualCount);
+    TRACE("(%p)->(%s %d %p)\n", This, debugstr_w(Unit), Count, ActualCount);
 
     unit = string_to_unit(Unit);
     if(unit == RU_UNKNOWN)
@@ -1492,12 +1492,12 @@ static HRESULT WINAPI HTMLTxtRange_moveStart(IHTMLTxtRange *iface, BSTR Unit,
 }
 
 static HRESULT WINAPI HTMLTxtRange_moveEnd(IHTMLTxtRange *iface, BSTR Unit,
-        long Count, long *ActualCount)
+        LONG Count, LONG *ActualCount)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     range_unit_t unit;
 
-    TRACE("(%p)->(%s %ld %p)\n", This, debugstr_w(Unit), Count, ActualCount);
+    TRACE("(%p)->(%s %d %p)\n", This, debugstr_w(Unit), Count, ActualCount);
 
     unit = string_to_unit(Unit);
     if(unit == RU_UNKNOWN)
@@ -1588,7 +1588,7 @@ static HRESULT WINAPI HTMLTxtRange_setEndPoint(IHTMLTxtRange *iface, BSTR how,
 }
 
 static HRESULT WINAPI HTMLTxtRange_compareEndPoints(IHTMLTxtRange *iface, BSTR how,
-        IHTMLTxtRange *SourceRange, long *ret)
+        IHTMLTxtRange *SourceRange, LONG *ret)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
     HTMLTxtRange *src_range;
@@ -1615,17 +1615,17 @@ static HRESULT WINAPI HTMLTxtRange_compareEndPoints(IHTMLTxtRange *iface, BSTR h
 }
 
 static HRESULT WINAPI HTMLTxtRange_findText(IHTMLTxtRange *iface, BSTR String,
-        long count, long Flags, VARIANT_BOOL *Success)
+        LONG count, LONG Flags, VARIANT_BOOL *Success)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
-    FIXME("(%p)->(%s %ld %08lx %p)\n", This, debugstr_w(String), count, Flags, Success);
+    FIXME("(%p)->(%s %d %08x %p)\n", This, debugstr_w(String), count, Flags, Success);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTxtRange_moveToPoint(IHTMLTxtRange *iface, long x, long y)
+static HRESULT WINAPI HTMLTxtRange_moveToPoint(IHTMLTxtRange *iface, LONG x, LONG y)
 {
     HTMLTxtRange *This = HTMLTXTRANGE_THIS(iface);
-    FIXME("(%p)->(%ld %ld)\n", This, x, y);
+    FIXME("(%p)->(%d %d)\n", This, x, y);
     return E_NOTIMPL;
 }
 

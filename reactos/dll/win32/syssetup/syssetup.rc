@@ -15,6 +15,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
 
+IDI_ICON1 ICON "resources/1.ico"
+IDI_ICON2 ICON "resources/2.ico"
+IDI_ICON3 ICON "resources/3.ico"
+IDI_ICON4 ICON "resources/4.ico"
+IDI_ICON5 ICON "resources/5.ico"
+
 
 STRINGTABLE
 BEGIN

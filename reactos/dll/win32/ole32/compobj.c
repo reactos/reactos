@@ -493,6 +493,31 @@ static APARTMENT *apartment_findmain(void)
     return result;
 }
 
+/* gets the multi-threaded apartment if it exists. The caller must
+ * release the reference from the apartment as soon as the apartment pointer
+ * is no longer required. */
+static APARTMENT *apartment_find_multi_threaded(void)
+{
+    APARTMENT *result = NULL;
+    struct list *cursor;
+
+    EnterCriticalSection(&csApartment);
+
+    LIST_FOR_EACH( cursor, &apts )
+    {
+        struct apartment *apt = LIST_ENTRY( cursor, struct apartment, entry );
+        if (apt->multi_threaded)
+        {
+            result = apt;
+            apartment_addref(result);
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&csApartment);
+    return result;
+}
+
 struct host_object_params
 {
     HKEY hkeydll;
@@ -2237,6 +2262,7 @@ HRESULT WINAPI CoGetClassObject(
     LPUNKNOWN	regClassObject;
     HRESULT	hres = E_UNEXPECTED;
     APARTMENT  *apt;
+    BOOL release_apt = FALSE;
 
     TRACE("\n\tCLSID:\t%s,\n\tIID:\t%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
 
@@ -2245,11 +2271,14 @@ HRESULT WINAPI CoGetClassObject(
 
     *ppv = NULL;
 
-    apt = COM_CurrentApt();
-    if (!apt)
+    if (!(apt = COM_CurrentApt()))
     {
-        ERR("apartment not initialised\n");
-        return CO_E_NOTINITIALIZED;
+        if (!(apt = apartment_find_multi_threaded()))
+        {
+            ERR("apartment not initialised\n");
+            return CO_E_NOTINITIALIZED;
+        }
+        release_apt = TRUE;
     }
 
     if (pServerInfo) {
@@ -2273,7 +2302,7 @@ HRESULT WINAPI CoGetClassObject(
        * is good since we are not returning it in the "out" parameter.
        */
       IUnknown_Release(regClassObject);
-
+      if (release_apt) apartment_release(apt);
       return hres;
     }
 
@@ -2284,7 +2313,10 @@ HRESULT WINAPI CoGetClassObject(
         HKEY hkey;
 
         if (IsEqualCLSID(rclsid, &CLSID_InProcFreeMarshaler))
+        {
+            if (release_apt) apartment_release(apt);
             return FTMarshalCF_Create(iid, ppv);
+        }
 
         hres = COM_OpenKeyForCLSID(rclsid, wszInprocServer32, KEY_READ, &hkey);
         if (FAILED(hres))
@@ -2308,7 +2340,10 @@ HRESULT WINAPI CoGetClassObject(
         /* return if we got a class, otherwise fall through to one of the
          * other types */
         if (SUCCEEDED(hres))
+        {
+            if (release_apt) apartment_release(apt);
             return hres;
+        }
     }
 
     /* Next try in-process handler */
@@ -2339,8 +2374,12 @@ HRESULT WINAPI CoGetClassObject(
         /* return if we got a class, otherwise fall through to one of the
          * other types */
         if (SUCCEEDED(hres))
+        {
+            if (release_apt) apartment_release(apt);
             return hres;
+        }
     }
+    if (release_apt) apartment_release(apt);
 
     /* Next try out of process */
     if (CLSCTX_LOCAL_SERVER & dwClsContext)
@@ -2418,6 +2457,7 @@ HRESULT WINAPI CoCreateInstance(
 {
   HRESULT hres;
   LPCLASSFACTORY lpclf = 0;
+  APARTMENT *apt;
 
   TRACE("(rclsid=%s, pUnkOuter=%p, dwClsContext=%08x, riid=%s, ppv=%p)\n", debugstr_guid(rclsid),
         pUnkOuter, dwClsContext, debugstr_guid(iid), ppv);
@@ -2433,10 +2473,14 @@ HRESULT WINAPI CoCreateInstance(
    */
   *ppv = 0;
 
-  if (!COM_CurrentApt())
+  if (!(apt = COM_CurrentApt()))
   {
+    if (!(apt = apartment_find_multi_threaded()))
+    {
       ERR("apartment not initialised\n");
       return CO_E_NOTINITIALIZED;
+    }
+    apartment_release(apt);
   }
 
   /*
@@ -2922,7 +2966,10 @@ HRESULT WINAPI CoGetTreatAsClass(REFCLSID clsidOld, LPCLSID clsidNew)
 
     res = COM_OpenKeyForCLSID(clsidOld, wszTreatAs, KEY_READ, &hkey);
     if (FAILED(res))
+    {
+        res = S_FALSE;
         goto done;
+    }
     if (RegQueryValueW(hkey, NULL, szClsidNew, &len))
     {
         res = S_FALSE;

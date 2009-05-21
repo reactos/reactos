@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="wined3d" type="win32dll" installbase="system32" installname="wined3d.dll" allowwarnings ="true" crt="msvcrt">
 	<importlibrary definition="wined3d.spec" />
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="wined3d">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
@@ -34,6 +33,8 @@
 	<file>pixelshader.c</file>
 	<file>query.c</file>
 	<file>resource.c</file>
+	<file>shader_sm1.c</file>
+	<file>shader_sm4.c</file>
 	<file>state.c</file>
 	<file>stateblock.c</file>
 	<file>surface_base.c</file>

@@ -848,6 +848,19 @@ typedef enum _WINED3DSURFTYPE
     SURFACE_GDI,                                    /* User surface. No 3D, DirectDraw rendering with GDI */
 } WINED3DSURFTYPE;
 
+enum wined3d_sysval_semantic
+{
+    WINED3D_SV_DEPTH = 0xffffffff,
+    WINED3D_SV_TARGET0 = 0,
+    WINED3D_SV_TARGET1 = 1,
+    WINED3D_SV_TARGET2 = 2,
+    WINED3D_SV_TARGET3 = 3,
+    WINED3D_SV_TARGET4 = 4,
+    WINED3D_SV_TARGET5 = 5,
+    WINED3D_SV_TARGET6 = 6,
+    WINED3D_SV_TARGET7 = 7,
+};
+
 const UINT WINED3DCOLORWRITEENABLE_RED                          = (1<<0);
 const UINT WINED3DCOLORWRITEENABLE_GREEN                        = (1<<1);
 const UINT WINED3DCOLORWRITEENABLE_BLUE                         = (1<<2);
@@ -2117,6 +2130,23 @@ struct wined3d_buffer_desc
     UINT misc_flags;
 };
 
+struct wined3d_shader_signature_element
+{
+    const char *semantic_name;
+    UINT semantic_idx;
+    enum wined3d_sysval_semantic sysval_semantic;
+    DWORD component_type;
+    UINT register_idx;
+    DWORD mask;
+};
+
+struct wined3d_shader_signature
+{
+    UINT element_count;
+    struct wined3d_shader_signature_element *elements;
+    char *string_data;
+};
+
 interface IWineD3DResource;
 interface IWineD3DSurface;
 interface IWineD3DVolume;
@@ -2222,8 +2252,8 @@ interface IWineD3D : IWineD3DBase
     );
     HRESULT EnumAdapterModes(
         [in] UINT adapter_idx,
-        [in] UINT mode_idx,
         [in] WINED3DFORMAT format,
+        [in] UINT mode_idx,
         [out] WINED3DDISPLAYMODE *mode
     );
     HRESULT GetAdapterDisplayMode(
@@ -2823,7 +2853,8 @@ interface IWineD3DBuffer : IWineD3DResource
 interface IWineD3DBaseShader : IWineD3DBase
 {
     HRESULT SetFunction(
-        [in] const DWORD *function
+        [in] const DWORD *function,
+        [in] const struct wined3d_shader_signature *output_signature
     );
 }
 
@@ -2886,7 +2917,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] DWORD fvf,
         [in] WINED3DPOOL pool,
         [out] IWineD3DBuffer **vertex_buffer,
-        [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
     HRESULT CreateIndexBuffer(
@@ -2894,7 +2924,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] DWORD usage,
         [in] WINED3DPOOL pool,
         [out] IWineD3DBuffer **index_buffer,
-        [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
     HRESULT CreateStateBlock(
@@ -2915,7 +2944,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DPOOL pool,
         [in] WINED3DMULTISAMPLE_TYPE multisample_type,
         [in] DWORD multisample_quality,
-        [in] HANDLE *shared_handle,
         [in] WINED3DSURFTYPE surface_type,
         [in] IUnknown *parent
     );
@@ -2932,7 +2960,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DFORMAT format,
         [in] WINED3DPOOL pool,
         [out] IWineD3DTexture **texture,
-        [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
     HRESULT CreateVolumeTexture(
@@ -2944,7 +2971,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DFORMAT format,
         [in] WINED3DPOOL pool,
         [out] IWineD3DVolumeTexture **texture,
-        [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
     HRESULT CreateVolume(
@@ -2955,7 +2981,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DFORMAT format,
         [in] WINED3DPOOL pool,
         [out] IWineD3DVolume **volume,
-        [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
     HRESULT CreateCubeTexture(
@@ -2965,7 +2990,6 @@ interface IWineD3DDevice : IWineD3DBase
         [in] WINED3DFORMAT format,
         [in] WINED3DPOOL pool,
         [out] IWineD3DCubeTexture **texture,
-        [in] HANDLE *shared_handle,
         [in] IUnknown *parent
     );
     HRESULT CreateQuery(
@@ -2998,6 +3022,7 @@ interface IWineD3DDevice : IWineD3DBase
     );
     HRESULT CreatePixelShader(
         [in] const DWORD *function,
+        [in] const struct wined3d_shader_signature *output_signature,
         [out] IWineD3DPixelShader **shader,
         [in] IUnknown *parent
     );

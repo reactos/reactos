@@ -98,8 +98,8 @@ static HRESULT Math_LOG10E(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS
 static HRESULT Math_LN2(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+    return math_constant(M_LN2, flags, retv);
 }
 
 static HRESULT Math_LN10(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -212,8 +212,22 @@ static HRESULT Math_ceil(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *
 static HRESULT Math_cos(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    if(!arg_cnt(dp)) {
+        if(retv) num_set_nan(retv);
+        return S_OK;
+    }
+
+    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    if(FAILED(hres))
+        return hres;
+
+    if(retv) num_set_val(retv, cos(num_val(&v)));
+    return S_OK;
 }
 
 static HRESULT Math_exp(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,

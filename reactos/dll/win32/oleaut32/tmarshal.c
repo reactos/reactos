@@ -213,7 +213,7 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
 	goto fail;
     }
     
-    hres = IStream_Stat(pStm,&ststg,0);
+    hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
     if (hres) {
         ERR("Stream stat failed\n");
         goto fail;

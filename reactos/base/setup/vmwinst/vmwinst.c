@@ -389,7 +389,7 @@ PageWelcomeProc(
                 {
                     if(DriverFilesFound)
                     {
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CONFIG);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CONFIG);
                         return TRUE;
                     }
                     break;
@@ -421,7 +421,7 @@ PageInsertDiscProc(
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
                 break;
             case PSN_WIZNEXT:
-                SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSTALLING_VMWARE_TOOLS);
+                SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_INSTALLING_VMWARE_TOOLS);
                 break;
             }
             break;
@@ -567,13 +567,13 @@ PageInstallingProc(
                 {
                     PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
                     InstTerminateInstaller(FALSE);
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, -1);
                     return -1;
                 }
                 else
                 {
                     SendDlgItemMessage(hwndDlg, IDC_INSTALLINGPROGRESS, PBM_SETMARQUEE, FALSE, 0);
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_INSERT_VMWARE_TOOLS);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_INSERT_VMWARE_TOOLS);
                 }
                 break;
             }
@@ -713,12 +713,12 @@ PageConfigProc(
                 {
                     if(StartVMwConfigWizard)
                     {
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
                         return TRUE;
                     }
                     if(DriverFilesFound)
                     {
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
                         return TRUE;
                     }
                     break;
@@ -797,7 +797,7 @@ PageChooseActionProc(
                 break;
             case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
                     return TRUE;
                 }
             case PSN_WIZNEXT:
@@ -815,7 +815,7 @@ PageChooseActionProc(
 
                     UninstallDriver = (i == IDC_UNINSTALL);
 
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, SelPage[i - IDC_CONFIGSETTINGS]);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, SelPage[i - IDC_CONFIGSETTINGS]);
                     return TRUE;
                 }
             }
@@ -849,7 +849,7 @@ PageSelectDriverProc(
                 break;
             case PSN_WIZBACK:
                 {
-                    SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
+                    SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_CHOOSEACTION);
                     return TRUE;
                 }
             case PSN_WIZNEXT:
@@ -876,7 +876,7 @@ PageSelectDriverProc(
                         WCHAR Msg[1024];
                         LoadString(hAppInstance, (ActivateVBE ? IDS_FAILEDTOSELVBEDRIVER : IDS_FAILEDTOSELVGADRIVER), Msg, sizeof(Msg) / sizeof(WCHAR));
                         MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-                        SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
+                        SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
                         return TRUE;
                     }
                     break;
@@ -925,7 +925,7 @@ PageDoUninstallProc(
                             WCHAR Msg[1024];
                             LoadString(hAppInstance, (ActivateVBE ? IDS_FAILEDTOSELVBEDRIVER : IDS_FAILEDTOSELVGADRIVER), Msg, sizeof(Msg) / sizeof(WCHAR));
                             MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-                            SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
+                            SetWindowLongPtr(hwndDlg, DWL_MSGRESULT, IDD_SELECTDRIVER);
                             return TRUE;
                         }
                         ShowUninstNotice(GetParent(hwndDlg));

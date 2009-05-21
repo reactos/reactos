@@ -20,6 +20,7 @@ Signature = "$ReactOS$"
 5 = system32\drivers\etc
 6 = inf
 7 = bin
+8 = media
 
 .InfEnd
 
@@ -625,15 +626,21 @@ Signature = "$ReactOS$"
 ;media\inf\usbstor.inf                               6
 ;media\inf\xboxdisp.inf                              6
 
+
+; Media Files
+media\sounds\ReactOS_LogOn.wav                      8
+
 ; Ini Files
 ;boot\bootdata\system.ini                            4
+
+; Regression Testing
+boot\bootdata\bootcdregtest\regtest.cmd             7   optional
 
 ; Subsystems
 ;subsystems\win32\csrss\csrss.exe                    1
 ;subsystems\win32\csrss\win32csr\win32csr.dll        1
 ;subsystems\ntvdm\ntvdm.exe                          1
 ;subsystems\win32\win32k\win32k.sys                  1
-boot\bootdata\bootcdregtest\testboot.bat            7   optional
 
 ; Modules
 modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional

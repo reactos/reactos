@@ -746,6 +746,15 @@ KsCreate(
              /* set object create item */
             KSCREATE_ITEM_IRP_STORAGE(Irp) = &DeviceHeader->ItemList[Index].CreateItem;
             Status = DeviceHeader->ItemList[Index].CreateItem.Create(DeviceObject, Irp);
+
+            /* FIXME IoRegisterDeviceInterface does not support reference strings */
+            /* FIXME Check the irp target with the create item's object class */
+            if (NT_SUCCESS(Status))
+            {
+                /* release lock */
+                KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
+                return Status;
+            }
         }
     }
 

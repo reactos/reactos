@@ -28,8 +28,9 @@ NdisImmediateReadPciSlotInformation(
     IN  ULONG       Length)
 {
   PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
+  /* Slot number is ignored. */
   return HalGetBusDataByOffset(PCIConfiguration, WrapperContext->BusNumber,
-                               SlotNumber, Buffer, Offset, Length);
+                               WrapperContext->SlotNumber, Buffer, Offset, Length);
 }
 
 
@@ -46,8 +47,9 @@ NdisImmediateWritePciSlotInformation(
     IN  ULONG       Length)
 {
   PNDIS_WRAPPER_CONTEXT WrapperContext = (PNDIS_WRAPPER_CONTEXT)WrapperConfigurationContext;
+  /* Slot number is ignored. */
   return HalSetBusDataByOffset(PCIConfiguration, WrapperContext->BusNumber,
-                               SlotNumber, Buffer, Offset, Length);
+                               WrapperContext->SlotNumber, Buffer, Offset, Length);
 }
 
 

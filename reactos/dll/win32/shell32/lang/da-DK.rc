@@ -1,29 +1,17 @@
-/*
- * Copyright 1998 Juergen Schmied
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+/* PROJECT:     ReactOS Shell Library
+ * FILE:        dll/win32/shell32/lang/da-DK.rc
+ * PURPOSE:     Danish resource file
+ * UPDATED:     01 May 2009
  */
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "Lar&ge Icons",  FCIDM_SHVIEW_BIGICON
-	MENUITEM "S&mall Icons",  FCIDM_SHVIEW_SMALLICON
-	MENUITEM "&List",         FCIDM_SHVIEW_LISTVIEW
-	MENUITEM "&Details",      FCIDM_SHVIEW_REPORTVIEW
+	MENUITEM "Sto&re Ikoner", FCIDM_SHVIEW_BIGICON
+	MENUITEM "S&må Ikoner",   FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Liste",        FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Detaljer",     FCIDM_SHVIEW_REPORTVIEW
 END
 
 /* shellview background menu */
@@ -31,31 +19,31 @@ MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		POPUP "&View"
+		POPUP "&Visning"
 		BEGIN
-			MENUITEM "Lar&ge Icons",       FCIDM_SHVIEW_BIGICON
-			MENUITEM "S&mall Icons",       FCIDM_SHVIEW_SMALLICON
-			MENUITEM "&List",              FCIDM_SHVIEW_LISTVIEW
-			MENUITEM "&Details",           FCIDM_SHVIEW_REPORTVIEW
+			MENUITEM "Sto&re Ikoner",      FCIDM_SHVIEW_BIGICON
+			MENUITEM "S&må Ikoner",        FCIDM_SHVIEW_SMALLICON
+			MENUITEM "&Liste",             FCIDM_SHVIEW_LISTVIEW
+			MENUITEM "&Detaljer",          FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "Arrange &Icons"
+		POPUP "Arrangere &Ikoner"
 		BEGIN
-			MENUITEM "By &Name",           0x30  /* column 0 */
-			MENUITEM "By &Type",           0x32  /* column 2 */
-			MENUITEM "By &Size",           0x31  /* ... */
-			MENUITEM "By &Date",           0x33
+			MENUITEM "Efter &Navn",        0x30  /* column 0 */
+			MENUITEM "Efter &Type",        0x32  /* column 2 */
+			MENUITEM "Efter &Størrelse",   0x31  /* ... */
+			MENUITEM "Efter &Dato",        0x33
 			MENUITEM SEPARATOR
-			MENUITEM "&Auto Arrange",      FCIDM_SHVIEW_AUTOARRANGE
+			MENUITEM "&Arrangere Automatisk", FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "Line up Icons",        FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "Line up Ikoner",       FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
-		MENUITEM "Refresh",              FCIDM_SHVIEW_REFRESH
+		MENUITEM "Opfrisk",              FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
-		MENUITEM "Paste",                FCIDM_SHVIEW_INSERT
-		MENUITEM "Paste as Link",        FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "Indsæt",               FCIDM_SHVIEW_INSERT
+		MENUITEM "Indsæt som Link",      FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
-		MENUITEM "Properties",           FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "Egenskaber",           FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -64,27 +52,27 @@ MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "E&xplore",             FCIDM_SHVIEW_EXPLORE
-		MENUITEM "&Open",                FCIDM_SHVIEW_OPEN
+		MENUITEM "E&xplore",                   FCIDM_SHVIEW_EXPLORE
+		MENUITEM "&Åbn",                       FCIDM_SHVIEW_OPEN
 		MENUITEM SEPARATOR
-		MENUITEM "C&ut",                 FCIDM_SHVIEW_CUT
-		MENUITEM "&Copy",                FCIDM_SHVIEW_COPY
+		MENUITEM "K&lip",                      FCIDM_SHVIEW_CUT
+		MENUITEM "&Kopiere",                   FCIDM_SHVIEW_COPY
 		MENUITEM SEPARATOR
-		MENUITEM "Create &Link",         FCIDM_SHVIEW_CREATELINK
-		MENUITEM "&Delete",              FCIDM_SHVIEW_DELETE
-		MENUITEM "&Rename",              FCIDM_SHVIEW_RENAME
+		MENUITEM "Opret &Link",                FCIDM_SHVIEW_CREATELINK
+		MENUITEM "&Slet",                      FCIDM_SHVIEW_DELETE
+		MENUITEM "&Omdøb",                     FCIDM_SHVIEW_RENAME
 		MENUITEM SEPARATOR
-		MENUITEM "&Properties",          FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "&Egenskabe",                 FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
 SHBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Browse for Folder"
+CAPTION "Søg efter Mappe"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Cancel", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Fortryd", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
 	LTEXT "", IDD_TITLE, 4, 4, 180, 12
 	LTEXT "", IDD_STATUS, 4, 25, 180, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -149,16 +137,16 @@ END
 
 SHELL_RUN_DLG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION ""
+CAPTION "Run"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
-	LTEXT "&Open:", 12305, 7, 39, 24, 10
+	LTEXT "Indtast navnet på det program, mappe, dokument, eller Internet Ressourcer, du vil have at ReactOS skal åbne for dig.", 12289, 36, 11, 182, 18
+	LTEXT "&Åbn:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
-	PUSHBUTTON "Cancel", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
-	PUSHBUTTON "&Browse...", 12288, 160, 63, 59, 14, WS_TABSTOP
+	PUSHBUTTON "Fortryd", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
+	PUSHBUTTON "&Gennemse...", 12288, 160, 63, 59, 14, WS_TABSTOP
 END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
@@ -220,6 +208,7 @@ BEGIN
 	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
 END
 
+
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
@@ -270,32 +259,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14000, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Type:", -1, 15, 55, 40, 10
-	LTEXT "", 14002, 110, 55, 100, 10
+	LTEXT "", 14001, 110, 55, 100, 10
 
 	LTEXT "File system:", -1, 15, 70, 100, 10
-	LTEXT "", 14003, 110, 70, 100, 10
+	LTEXT "", 14002, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
 	LTEXT "Used space:", -1, 25, 90, 120, 10
-	LTEXT "", 14004, 110, 90, 120, 10
-	LTEXT "", 14005, 200, 90, 40, 10
+	LTEXT "", 14003, 110, 90, 120, 10
+	LTEXT "", 14004, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
 	LTEXT "Free space:", -1, 25, 105, 70, 10
-	LTEXT "", 14006, 110, 105, 120, 10
-	LTEXT "", 14007, 200, 105, 40, 10
+	LTEXT "", 14005, 110, 105, 120, 10
+	LTEXT "", 14006, 200, 105, 40, 10
 
 	LTEXT "Capacity:", -1, 25, 125, 80, 10
-	LTEXT "", 14008, 110, 125, 120, 10
-	LTEXT "", 14009, 200, 125, 40, 10
+	LTEXT "", 14007, 110, 125, 120, 10
+	LTEXT "", 14008, 200, 125, 40, 10
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Drive %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 180, 10, WS_DISABLED
+	LTEXT "Drive %s", 14009, 100, 170, 40, 10
+	PUSHBUTTON "Disk Cleanup", 14010, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Compress drive to save disk space", 14011, 15, 205, 180, 10, WS_DISABLED
 	CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
@@ -366,7 +355,7 @@ BEGIN
 	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
 	LTEXT "File:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Programs", -1, 7, 42, 249, 187
-        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
+        LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP,WS_EX_STATICEDGE
 	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
 	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
@@ -417,7 +406,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 LTEXT "Registered file &types:", -1, 7, 10, 70, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Ny", 14001, 120, 110, 50, 14, WS_TABSTOP
 PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
 GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
 LTEXT "Opens with:", -1, 12, 140, 40, 10
@@ -594,15 +583,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 	/* columns in the shellview */
-	IDS_SHV_COLUMN1             "File"
-	IDS_SHV_COLUMN2             "Size"
+	IDS_SHV_COLUMN1             "Fil"
+	IDS_SHV_COLUMN2             "Størrelse"
 	IDS_SHV_COLUMN3             "Type"
-	IDS_SHV_COLUMN4             "Modified"
-	IDS_SHV_COLUMN5             "Attributes"
-	IDS_SHV_COLUMN6             "Size"
-	IDS_SHV_COLUMN7             "Size available"
-	IDS_SHV_COLUMN8             "Name"
-	IDS_SHV_COLUMN9             "Comments"
+	IDS_SHV_COLUMN4             "Ændret"
+	IDS_SHV_COLUMN5             "Attributer"
+	IDS_SHV_COLUMN6             "Størrelse"
+	IDS_SHV_COLUMN7             "Størrelse tilgængelig"
+	IDS_SHV_COLUMN8             "Navn"
+	IDS_SHV_COLUMN9             "Kommentar"
 	IDS_SHV_COLUMN10            "Owner"
 	IDS_SHV_COLUMN11            "Group"
 	IDS_SHV_COLUMN12            "Filename"
@@ -619,19 +608,19 @@ BEGIN
 	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
-	IDS_DESKTOP                 "Desktop"
-	IDS_MYCOMPUTER              "My Computer"
+	IDS_DESKTOP                 "Skrivebord"
+	IDS_MYCOMPUTER              "Min Computer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
 	IDS_CONTROLPANEL            "Control Panel"
 	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "Lar&ge Icons"
-	IDS_VIEW_SMALL              "S&mall Icons"
-	IDS_VIEW_LIST               "&List"
-	IDS_VIEW_DETAILS            "&Details"
-	IDS_SELECT                  "Select"
-	IDS_OPEN                    "Open"
+	IDS_VIEW_LARGE              "Sto&re Ikoner"
+	IDS_VIEW_SMALL              "S&må Ikoner"
+	IDS_VIEW_LIST               "&Liste"
+	IDS_VIEW_DETAILS            "&Detaljer"
+	IDS_SELECT                  "Vælg"
+	IDS_OPEN                    "Åbn"
 	IDS_CREATELINK              "Create &Link"
 	IDS_COPY                    "Copy"
 	IDS_DELETE                  "Delete"
@@ -642,61 +631,61 @@ BEGIN
 	IDS_RENAME                  "Rename"
 	IDS_INSERT                  "Insert"
 
-	IDS_CREATEFOLDER_DENIED     "Unable to create new Folder: Permission denied."
-	IDS_CREATEFOLDER_CAPTION    "Error during creation of a new folder"
-	IDS_DELETEITEM_CAPTION      "Confirm file deletion"
-	IDS_DELETEFOLDER_CAPTION    "Confirm folder deletion"
-	IDS_DELETEITEM_TEXT         "Are you sure you want to delete '%1'?"
+	IDS_CREATEFOLDER_DENIED     "Kan ikke oprette ny mappe: Tilladelse Afvist."
+	IDS_CREATEFOLDER_CAPTION    "Fejl ved oprettelse ad ny mappe"
+	IDS_DELETEITEM_CAPTION      "Bekræft sletning af fil"
+	IDS_DELETEFOLDER_CAPTION    "Bekræft sletning af mappe"
+	IDS_DELETEITEM_TEXT         "Er du sikker på du vil slette '%1'?"
 	IDS_DELETEMULTIPLE_TEXT     "Are you sure you want to delete these %1 items?"
 	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
 	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
 	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
 	IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
 	IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
-	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-	IDS_OVERWRITEFILE_CAPTION   "Confirm file overwrite"
+	IDS_OVERWRITEFILE_TEXT      "Overskriv fil %1?"
+	IDS_OVERWRITEFILE_CAPTION   "Bekræft overskrivelse af fil"
 	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
 		"If the files in the destination folder have the same names as files in the\n"\
 		"selected folder they will be replaced. Do you still want to move or copy\n"\
 		"the folder?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "Restart"
-	IDS_RESTART_PROMPT          "Do you want to restart the system?"
-	IDS_SHUTDOWN_TITLE          "Shutdown"
-	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
+	IDS_RESTART_TITLE           "Genstart"
+	IDS_RESTART_PROMPT          "Ønsker du at Genstarte Systemet?"
+	IDS_SHUTDOWN_TITLE          "Luk Ned"
+	IDS_SHUTDOWN_PROMPT         "Ønsker du at Lukke Ned?"
 
 	/* shell folder path default values */
-	IDS_PROGRAMS                "Start Menu\\Programs"
-	IDS_PERSONAL                "My Documents"
-	IDS_FAVORITES               "Favorites"
-	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
-	IDS_RECENT                  "Recent"
-	IDS_SENDTO                  "SendTo"
+	IDS_PROGRAMS                "Start Menu\\Programmer"
+	IDS_PERSONAL                "Mine Dokumenter"
+	IDS_FAVORITES               "Favoritter"
+	IDS_STARTUP                 "Start Menu\\Programer\\Opstart"
+	IDS_RECENT                  "Midlertidige"
+	IDS_SENDTO                  "Send Til"
 	IDS_STARTMENU               "Start Menu"
-	IDS_MYMUSIC                 "My Music"
-	IDS_MYVIDEO                 "My Videos"
-	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_MYMUSIC                 "Mine Dokumenter\\Min Musik"
+	IDS_MYVIDEO                 "Mine Dokumenter\\Mine Videoer"
+	IDS_DESKTOPDIRECTORY        "Skrivebord"
 	IDS_NETHOOD                 "NetHood"
-	IDS_TEMPLATES               "Templates"
+	IDS_TEMPLATES               "Skabeloner"
 	IDS_APPDATA                 "Application Data"
 	IDS_PRINTHOOD               "PrintHood"
-	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
-	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
+	IDS_LOCAL_APPDATA           "Lokale Indstillinger\\Application Data"
+	IDS_INTERNET_CACHE          "Midlertidige Internet Filer"
 	IDS_COOKIES                 "Cookies"
-	IDS_HISTORY                 "Local Settings\\History"
-	IDS_PROGRAM_FILES           "Program Files"
-	IDS_MYPICTURES              "My Pictures"
-	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-	IDS_COMMON_DOCUMENTS        "Documents"
-	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-	IDS_COMMON_MUSIC            "Documents\\My Music"
-	IDS_COMMON_PICTURES         "Documents\\My Pictures"
-	IDS_COMMON_VIDEO            "Documents\\My Videos"
-	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+	IDS_HISTORY                 "Historie"
+	IDS_PROGRAM_FILES           "Programmer"
+	IDS_MYPICTURES              "Mine Dokumenter\\Mine Billeder"
+	IDS_PROGRAM_FILES_COMMON    "Programmer\\Fælles Filer"
+	IDS_COMMON_DOCUMENTS        "Dokumenter"
+	IDS_ADMINTOOLS              "Start Menu\\Programmer\\Administrative Værktøjer"
+	IDS_COMMON_MUSIC            "Dokumenter\\Min Musik"
+	IDS_COMMON_PICTURES         "Dokumenter\\Mine Billeder"
+	IDS_COMMON_VIDEO            "Dokumenter\\Mine Videoer"
+	IDS_CDBURN_AREA             "Lokale Indstillinger\\Application Data\\Microsoft\\CD Brænding"
 	IDS_NETWORKPLACE            "My Network Places"
 
-	IDS_NEWFOLDER               "New Folder"
+	IDS_NEWFOLDER               "Ny Mappe"
 
 	IDS_DRIVE_FIXED             "Local Disk"
 	IDS_DRIVE_CDROM             "CDROM"
@@ -707,15 +696,15 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
-	FCIDM_SHVIEW_NEW 	    "New"
-	FCIDM_SHVIEW_NEWFOLDER 	    "New &Folder"
-	FCIDM_SHVIEW_NEWLINK 	    "New &Link"
+	FCIDM_SHVIEW_NEW 	    "Ny"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Ny &Mappe"
+	FCIDM_SHVIEW_NEWLINK 	    "Nyt &Link"
 	IDS_FOLDER_OPTIONS          "Folder Options"
 	IDS_RECYCLEBIN_LOCATION     "Recycle Bin Location"
 	IDS_RECYCLEBIN_DISKSPACE    "Space Available"
 	IDS_EMPTY_BITBUCKET         "Empty Recycle Bin"
 	IDS_PICK_ICON_TITLE         "Choose Icon"
-        IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
+	IDS_PICK_ICON_FILTER        "Icon Files(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
 	IDS_DIRECTORY               "Folder"
 	IDS_VIRTUAL_DRIVER          "Virtual Device Driver"

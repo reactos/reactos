@@ -2,6 +2,7 @@
  *  (Simplified Chinese resources)
  *  (简体中文资源)
  *  by zhangbing 2008 <e_zb@21cn.com, ezb@mail.gywb.cn>
+ *  Updated: 2009-05-02 Jingjing Fu <jingjingf AT 188.com> 
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
@@ -43,8 +44,8 @@ STYLE DS_SHELLFONT | WS_CAPTION | WS_SYSMENU
 CAPTION "单击锁定的设置"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Short", -1, 50, 35, 27, 10
-  LTEXT "Long", -1, 157, 35, 27, 10
+  LTEXT "短", -1, 50, 35, 27, 10
+  LTEXT "长", -1, 157, 35, 27, 10
   CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 78, 35, 70, 17
   PUSHBUTTON "确定(&O)", IDOK, 110, 59, 60, 14
   PUSHBUTTON "取消(&C)", IDCANCEL, 174, 59, 60, 14

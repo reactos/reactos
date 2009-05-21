@@ -1,0 +1,194 @@
+/*
+ * Slovak Language resource file
+ * Translated by: M·rio KaËm·r /Mario Kacmar/ aka Kario
+ * Last changed:  28-04-2009
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+ID_MENU MENU
+BEGIN
+    POPUP "&S˙bor"
+    BEGIN
+        MENUITEM "&Nov˝\tCtrl+N", IDM_FILENEW
+        MENUITEM "&Otvoriù...\tCtrl+O", IDM_FILEOPEN
+        MENUITEM "&Uloûiù\tCtrl+S", IDM_FILESAVE
+        MENUITEM "Uloûiù &ako...", IDM_FILESAVEAS
+        MENUITEM SEPARATOR
+        MENUITEM "Nastaviù ako pozadie (vydl·ûdenÈ)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Nastaviù ako pozadie (v strede)", IDM_FILEASWALLPAPERCENTERED
+        MENUITEM "Nastaviù ako pozadie (roztiahnutÈ)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM SEPARATOR
+        MENUITEM "SkonËiù\tAlt+F4", IDM_FILEEXIT
+    END
+
+    POPUP "&Upraviù"
+    BEGIN
+        MENUITEM "Sp‰ù\tCtrl+Z", IDM_EDITUNDO
+        MENUITEM "Znova\tCtrl+Y", IDM_EDITREDO
+        MENUITEM SEPARATOR
+        MENUITEM "Vystrihn˙ù\tCtrl+X", IDM_EDITCUT
+        MENUITEM "KopÌrovaù\tCtrl+C", IDM_EDITCOPY
+        MENUITEM "Prilepiù\tCtrl+V", IDM_EDITPASTE
+        MENUITEM "Vymazaù v˝ber\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Invertovaù v˝ber", IDM_EDITINVERTSELECTION
+        MENUITEM "Vybraù vöetko\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM SEPARATOR
+        MENUITEM "KopÌrovaù do...", IDM_EDITCOPYTO
+        MENUITEM "Prilepiù z...", IDM_EDITPASTEFROM
+    END
+
+    POPUP "&Zobraziù"
+    BEGIN
+        MENUITEM "Panel n·strojov\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
+        MENUITEM "Paleta farieb\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "Stavov˝ riadok", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "Format icon bar", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM SEPARATOR
+        POPUP "Lupa" //Zoom
+        BEGIN
+            MENUITEM "12,5%", IDM_VIEWZOOM125
+            MENUITEM "25%", IDM_VIEWZOOM25
+            MENUITEM "50%", IDM_VIEWZOOM50
+            MENUITEM "100%", IDM_VIEWZOOM100
+            MENUITEM "200%", IDM_VIEWZOOM200
+            MENUITEM "400%", IDM_VIEWZOOM400
+            MENUITEM "800%", IDM_VIEWZOOM800
+        END
+        MENUITEM "Cel· obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
+    END
+
+    POPUP "&Obr·zok"
+    BEGIN
+        MENUITEM "Prevr·tiù alebo otoËiù...\tCtrl+R", IDM_IMAGEROTATEMIRROR
+        MENUITEM "Zmeniù veækosù...\tCtrl+W", IDM_IMAGECHANGESIZE
+        MENUITEM "Orezaù", IDM_IMAGECROP
+        MENUITEM "Invertovaù farby\tCtrl+I", IDM_IMAGEINVERTCOLORS
+        MENUITEM "Atrib˙ty...\tCtrl+E", IDM_IMAGEATTRIBUTES
+        MENUITEM "Vymazaù obr·zok\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Kresliù nepriesvitne", IDM_IMAGEDRAWOPAQUE
+    END
+
+    POPUP "&Farby"
+    BEGIN
+        MENUITEM "Upraviù paletu...", IDM_COLORSEDITPALETTE
+    END
+
+    POPUP "&PomocnÌk"
+    BEGIN
+        MENUITEM "&TÈmy pomocnÌka", IDM_HELPHELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "Info", IDM_HELPINFO
+    END
+END
+
+ID_ACCELERATORS ACCELERATORS
+BEGIN
+    "^N", IDM_FILENEW
+    "^O", IDM_FILEOPEN
+    "^S", IDM_FILESAVE
+    "^Z", IDM_EDITUNDO
+    "^Y", IDM_EDITREDO
+    "^X", IDM_EDITCUT
+    "^C", IDM_EDITCOPY
+    "^V", IDM_EDITPASTE
+    VK_DELETE, IDM_EDITDELETESELECTION, VIRTKEY
+    "^A", IDM_EDITSELECTALL
+    "^T", IDM_VIEWTOOLBOX
+    "^L", IDM_VIEWCOLORPALETTE
+    "^F", IDM_VIEWFULLSCREEN
+    "^R", IDM_IMAGEROTATEMIRROR
+    "^W", IDM_IMAGECHANGESIZE
+    "^I", IDM_IMAGEINVERTCOLORS
+    "^E", IDM_IMAGEATTRIBUTES
+    "N", IDM_IMAGEDELETEIMAGE, CONTROL, SHIFT, VIRTKEY
+END
+
+IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Prevr·tenie alebo otoËenie obr·zka"
+BEGIN
+    GROUPBOX "Prevr·tiù alebo otoËiù", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
+    AUTORADIOBUTTON "Prevr·tiù vodorovne", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "Prevr·tiù zvislo", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "&OtoËiù o uhol", IDD_MIRRORROTATERB3, 12, 42, 100, 10
+    AUTORADIOBUTTON "90∞", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180∞", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270∞", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
+    PUSHBUTTON "Zruöiù", IDCANCEL, 125, 24, 48, 14
+END
+
+IDD_ATTRIBUTES DIALOGEX 100, 100, 210, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Atrib˙ty"
+BEGIN
+    EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
+    EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
+    LTEXT "äÌrka:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
+    LTEXT "V˝öka:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
+    LTEXT "File date:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "File size:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "RozlÌöenie:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
+    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
+    LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    GROUPBOX "Jednotky", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
+    AUTORADIOBUTTON "palce", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
+    AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
+    AUTORADIOBUTTON "pixely", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
+    GROUPBOX "Farby", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
+    AUTORADIOBUTTON "»ierno&bielo", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "&Farebne", IDD_ATTRIBUTESRB5, 92, 100, 45, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Zruöiù", IDCANCEL, 155, 24, 48, 14
+    PUSHBUTTON "&PredvolenÈ", IDD_ATTRIBUTESSTANDARD, 155, 40, 48, 14
+END
+
+IDD_CHANGESIZE DIALOGEX 100, 100, 210, 80
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Zmena veækosti"
+BEGIN
+    GROUPBOX "Zmeniù veækosù", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
+    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18
+    LTEXT "&Vodorovne:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
+    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43
+    LTEXT "&Zvislo:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
+    EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
+    LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
+    DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
+    PUSHBUTTON "Zruöiù", IDCANCEL, 155, 24, 48, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_PROGRAMNAME, "Skic·r"
+    IDS_WINDOWTITLE, "%s - Skic·r"
+    IDS_INFOTITLE, "Skic·r systÈmu ReactOS"
+    IDS_INFOTEXT, "Skic·r systÈmu ReactOS je dostupn˝ za podmienok GNU Lesser General Public License (LGPL) verzia 3 (viÔ www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Chcete uloûiù vykonanÈ zmeny do %s?"
+    IDS_DEFAULTFILENAME, "Bez n·zvu.bmp"
+    IDS_TOOLTIP1, "Voæn˝ v˝ber"
+    IDS_TOOLTIP2, "V˝ber"
+    IDS_TOOLTIP3, "Guma"
+    IDS_TOOLTIP4, "Vyplniù farbou"
+    IDS_TOOLTIP5, "Zvoliù farbu"
+    IDS_TOOLTIP6, "Lupa"
+    IDS_TOOLTIP7, "Ceruzka"
+    IDS_TOOLTIP8, "ätetec"
+    IDS_TOOLTIP9, "Sprej"
+    IDS_TOOLTIP10, "Text"
+    IDS_TOOLTIP11, "»iara"
+    IDS_TOOLTIP12, "BÈzierova krivka" //kreslenie kriviek pomocou bodov
+    IDS_TOOLTIP13, "ObdÂûnik" //pravouholnÌk
+    IDS_TOOLTIP14, "PolygÛn" //mnohouholnÌk
+    IDS_TOOLTIP15, "Elipsa"
+    IDS_TOOLTIP16, "Zaoblen˝ obdÂûnik"
+    IDS_OPENFILTER, "Bitmap files (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+END

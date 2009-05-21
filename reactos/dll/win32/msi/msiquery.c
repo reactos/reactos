@@ -70,7 +70,7 @@ UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, UINT *n )
         INT x;
 
         col_name = NULL;
-        r = table->ops->get_column_info( table, i, &col_name, NULL );
+        r = table->ops->get_column_info( table, i, &col_name, NULL, NULL );
         if( r != ERROR_SUCCESS )
             return r;
         x = lstrcmpW( name, col_name );
@@ -308,7 +308,7 @@ UINT msi_view_get_row(MSIDATABASE *db, MSIVIEW *view, UINT row, MSIRECORD **rec)
 
     for (i = 1; i <= col_count; i++)
     {
-        ret = view->ops->get_column_info(view, i, NULL, &type);
+        ret = view->ops->get_column_info(view, i, NULL, &type, NULL);
         if (ret)
         {
             ERR("Error getting column type for %d\n", i);
@@ -377,7 +377,10 @@ UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
 
     r = msi_view_get_row(query->db, view, query->row, prec);
     if (r == ERROR_SUCCESS)
+    {
         query->row ++;
+        MSI_RecordSetInteger(*prec, 0, (int)query);
+    }
 
     return r;
 }
@@ -490,7 +493,8 @@ out:
     return ret;
 }
 
-static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field, UINT type )
+static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field,
+                                        UINT type, BOOL temporary )
 {
     static const WCHAR fmt[] = { '%','d',0 };
     WCHAR szType[0x10];
@@ -500,9 +504,20 @@ static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field, UINT type )
     else if (type & MSITYPE_LOCALIZABLE)
         szType[0] = 'l';
     else if (type & MSITYPE_STRING)
-        szType[0] = 's';
+    {
+        if (temporary)
+            szType[0] = 'g';
+        else
+          szType[0] = 's';
+    }
     else
-        szType[0] = 'i';
+    {
+        if (temporary)
+            szType[0] = 'j';
+        else
+            szType[0] = 'i';
+    }
+
     if (type & MSITYPE_NULLABLE)
         szType[0] &= ~0x20;
 
@@ -519,6 +534,7 @@ UINT MSI_ViewGetColumnInfo( MSIQUERY *query, MSICOLINFO info, MSIRECORD **prec )
     MSIRECORD *rec;
     MSIVIEW *view = query->view;
     LPWSTR name;
+    BOOL temporary;
 
     if( !view )
         return ERROR_FUNCTION_FAILED;
@@ -539,13 +555,13 @@ UINT MSI_ViewGetColumnInfo( MSIQUERY *query, MSICOLINFO info, MSIRECORD **prec )
     for( i=0; i<count; i++ )
     {
         name = NULL;
-        r = view->ops->get_column_info( view, i+1, &name, &type );
+        r = view->ops->get_column_info( view, i+1, &name, &type, &temporary );
         if( r != ERROR_SUCCESS )
             continue;
         if (info == MSICOLINFO_NAMES)
             MSI_RecordSetStringW( rec, i+1, name );
         else
-            msi_set_record_type_string( rec, i+1, type);
+            msi_set_record_type_string( rec, i+1, type, temporary );
         msi_free( name );
     }
 
@@ -595,6 +611,9 @@ UINT MSI_ViewModify( MSIQUERY *query, MSIMODIFY mode, MSIRECORD *rec )
 
     view = query->view;
     if ( !view  || !view->ops->modify)
+        return ERROR_FUNCTION_FAILED;
+
+    if ( mode == MSIMODIFY_UPDATE && MSI_RecordGetInteger( rec, 0 ) != (int)query )
         return ERROR_FUNCTION_FAILED;
 
     r = view->ops->modify( view, mode, rec, query->row );
@@ -842,7 +861,7 @@ struct msi_primary_key_record_info
 static UINT msi_primary_key_iterator( MSIRECORD *rec, LPVOID param )
 {
     struct msi_primary_key_record_info *info = param;
-    LPCWSTR name;
+    LPCWSTR name, table;
     DWORD type;
 
     type = MSI_RecordGetInteger( rec, 4 );
@@ -851,6 +870,12 @@ static UINT msi_primary_key_iterator( MSIRECORD *rec, LPVOID param )
         info->n++;
         if( info->rec )
         {
+            if ( info->n == 1 )
+            {
+                table = MSI_RecordGetString( rec, 1 );
+                MSI_RecordSetStringW( info->rec, 0, table);
+            }
+
             name = MSI_RecordGetString( rec, 3 );
             MSI_RecordSetStringW( info->rec, info->n, name );
         }

@@ -295,10 +295,10 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
     }
     if (!ME_StreamOutRTFText(pStream, table[i].szFaceName, -1))
       return FALSE;
-    if (!ME_StreamOutPrint(pStream, ";}\r\n"))
+    if (!ME_StreamOutPrint(pStream, ";}"))
       return FALSE;
   }
-  if (!ME_StreamOutPrint(pStream, "}"))
+  if (!ME_StreamOutPrint(pStream, "}\r\n"))
     return FALSE;
 
   /* Output colors table if not empty */
@@ -904,7 +904,7 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
       break;
     p = ME_FindItemFwd(p, diRunOrParagraphOrEnd);
   }
-  if (!ME_StreamOutPrint(pStream, "}"))
+  if (!ME_StreamOutMove(pStream, "}\0", 2))
     return FALSE;
   return TRUE;
 }

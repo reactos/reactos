@@ -103,7 +103,7 @@ GetThreadDesktopInfo(VOID)
 
     ti = GetW32ThreadInfo();
     if (ti != NULL)
-        di = DesktopPtrToUser(ti->pDeskInfo);
+        di = GetWin32ClientInfo()->pDeskInfo;
 
     return di;
 }

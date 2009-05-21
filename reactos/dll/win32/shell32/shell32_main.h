@@ -148,6 +148,7 @@ HGLOBAL RenderPREFEREDDROPEFFECT (DWORD dwFlags);
 /* Change Notification */
 void InitChangeNotifications(void);
 void FreeChangeNotifications(void);
+void InitIconOverlays(void);
 
 /* file operation */
 #define ASK_DELETE_FILE           1
@@ -213,12 +214,9 @@ static LPWSTR __inline __SHCloneStrAtoW(WCHAR ** target, const char * source)
 #define HINSTANCE_16(h32)	(LOWORD(h32))
 
 typedef UINT_PTR (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
-			    LPSHELLEXECUTEINFOW sei, LPSHELLEXECUTEINFOW sei_out);
+			    const SHELLEXECUTEINFOW *sei, LPSHELLEXECUTEINFOW sei_out);
 
 BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc);
-
-UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
-                          LPWSTR lpResult, int resultLen, LPWSTR key, WCHAR **env, LPITEMIDLIST pidl, LPCWSTR args);
 
 extern WCHAR swShell32Name[MAX_PATH];
 
@@ -238,5 +236,5 @@ HPROPSHEETPAGE SH_CreatePropertySheetPage(LPSTR resname, DLGPROC dlgproc, LPARAM
 BOOL SH_ShowDriveProperties(WCHAR * drive, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl);
 BOOL SH_ShowRecycleBinProperties(WCHAR sDrive);
 BOOL SH_ShowPropertiesDialog(LPWSTR lpf, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl);
-BOOL SH_ShowFolderProperties(LPWSTR pwszFolder);
+BOOL SH_ShowFolderProperties(LPWSTR pwszFolder, LPCITEMIDLIST pidlFolder, LPCITEMIDLIST * apidl);
 #endif

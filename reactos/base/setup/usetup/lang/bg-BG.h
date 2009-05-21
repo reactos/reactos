@@ -1486,8 +1486,8 @@ MUI_ERROR bgBGErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Настройката не можа да установи означителя на географското положение.\n"
+        "ENTER = Презапускане на компютъра"
     },
     {
         NULL,

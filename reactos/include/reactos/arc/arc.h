@@ -121,6 +121,16 @@ typedef enum _MEMORY_TYPE
     MemoryMaximum
 } MEMORY_TYPE;
 
+typedef struct _TIMEINFO
+{
+    USHORT Year;
+    USHORT Month;
+    USHORT Day;
+    USHORT Hour;
+    USHORT Minute;
+    USHORT Second;
+} TIMEINFO;
+
 typedef struct _MEMORY_DESCRIPTOR
 {
     MEMORY_TYPE MemoryType;

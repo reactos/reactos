@@ -93,7 +93,7 @@ static HRESULT WINAPI HTMLTextContainer_createControlRange(IHTMLTextContainer *i
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLTextContainer_get_scrollHeight(IHTMLTextContainer *iface, long *p)
+static HRESULT WINAPI HTMLTextContainer_get_scrollHeight(IHTMLTextContainer *iface, LONG *p)
 {
     HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
 
@@ -102,7 +102,7 @@ static HRESULT WINAPI HTMLTextContainer_get_scrollHeight(IHTMLTextContainer *ifa
     return IHTMLElement2_get_scrollHeight(HTMLELEM2(&This->element), p);
 }
 
-static HRESULT WINAPI HTMLTextContainer_get_scrollWidth(IHTMLTextContainer *iface, long *p)
+static HRESULT WINAPI HTMLTextContainer_get_scrollWidth(IHTMLTextContainer *iface, LONG *p)
 {
     HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
 
@@ -111,16 +111,16 @@ static HRESULT WINAPI HTMLTextContainer_get_scrollWidth(IHTMLTextContainer *ifac
     return IHTMLElement2_get_scrollWidth(HTMLELEM2(&This->element), p);
 }
 
-static HRESULT WINAPI HTMLTextContainer_put_scrollTop(IHTMLTextContainer *iface, long v)
+static HRESULT WINAPI HTMLTextContainer_put_scrollTop(IHTMLTextContainer *iface, LONG v)
 {
     HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
 
-    TRACE("(%p)->(%ld)\n", This, v);
+    TRACE("(%p)->(%d)\n", This, v);
 
     return IHTMLElement2_put_scrollTop(HTMLELEM2(&This->element), v);
 }
 
-static HRESULT WINAPI HTMLTextContainer_get_scrollTop(IHTMLTextContainer *iface, long *p)
+static HRESULT WINAPI HTMLTextContainer_get_scrollTop(IHTMLTextContainer *iface, LONG *p)
 {
     HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
 
@@ -129,16 +129,16 @@ static HRESULT WINAPI HTMLTextContainer_get_scrollTop(IHTMLTextContainer *iface,
     return IHTMLElement2_get_scrollTop(HTMLELEM2(&This->element), p);
 }
 
-static HRESULT WINAPI HTMLTextContainer_put_scrollLeft(IHTMLTextContainer *iface, long v)
+static HRESULT WINAPI HTMLTextContainer_put_scrollLeft(IHTMLTextContainer *iface, LONG v)
 {
     HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
 
-    TRACE("(%p)->(%ld)\n", This, v);
+    TRACE("(%p)->(%d)\n", This, v);
 
     return IHTMLElement2_put_scrollLeft(HTMLELEM2(&This->element), v);
 }
 
-static HRESULT WINAPI HTMLTextContainer_get_scrollLeft(IHTMLTextContainer *iface, long *p)
+static HRESULT WINAPI HTMLTextContainer_get_scrollLeft(IHTMLTextContainer *iface, LONG *p)
 {
     HTMLTextContainer *This = HTMLTEXTCONT_THIS(iface);
 

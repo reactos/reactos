@@ -870,7 +870,7 @@ static void DialogSaveFile(void)
     ZeroMemory(&sfn, sizeof(sfn));
 
     sfn.lStructSize = sizeof(sfn);
-    sfn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+    sfn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_ENABLESIZING;
     sfn.hwndOwner = hMainWnd;
     sfn.lpstrFilter = wszFilter;
     sfn.lpstrFile = wszFile;
@@ -964,7 +964,7 @@ static void DialogOpenFile(void)
     ZeroMemory(&ofn, sizeof(ofn));
 
     ofn.lStructSize = sizeof(ofn);
-    ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    ofn.Flags = OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ENABLESIZING;
     ofn.hwndOwner = hMainWnd;
     ofn.lpstrFilter = wszFilter;
     ofn.lpstrFile = wszFile;
@@ -2233,7 +2233,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     case ID_EDIT_READONLY:
         {
-        long nStyle = GetWindowLong(hwndEditor, GWL_STYLE);
+        LONG nStyle = GetWindowLong(hwndEditor, GWL_STYLE);
         if (nStyle & ES_READONLY)
             SendMessageW(hwndEditor, EM_SETREADONLY, 0, 0);
         else

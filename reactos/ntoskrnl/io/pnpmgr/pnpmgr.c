@@ -515,6 +515,11 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
    Irp->IoStatus.Information = 0;
 
+   if (MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
+   {
+      Irp->IoStatus.Information = (ULONG_PTR)Stack->Parameters.FilterResourceRequirements.IoResourceRequirementList;
+   }
+
    IrpSp = IoGetNextIrpStackLocation(Irp);
    IrpSp->MinorFunction = (UCHAR)MinorFunction;
 
@@ -747,7 +752,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                                    &KeyName,
                                    0,
                                    REG_RESOURCE_LIST,
-                                   &DeviceNode->BootResources,
+                                   DeviceNode->BootResources,
                                    ListSize);
          }
       }
@@ -1047,7 +1052,7 @@ IopTranslateDeviceResources(
          {
             case CmResourceTypePort:
             {
-               ULONG AddressSpace = 0; /* IO space */
+               ULONG AddressSpace = 1; /* IO space */
                if (!HalTranslateBusAddress(
                   DeviceNode->ResourceList->List[i].InterfaceType,
                   DeviceNode->ResourceList->List[i].BusNumber,
@@ -1073,7 +1078,7 @@ IopTranslateDeviceResources(
             }
             case CmResourceTypeMemory:
             {
-               ULONG AddressSpace = 1; /* Memory space */
+               ULONG AddressSpace = 0; /* Memory space */
                if (!HalTranslateBusAddress(
                   DeviceNode->ResourceList->List[i].InterfaceType,
                   DeviceNode->ResourceList->List[i].BusNumber,
@@ -3213,7 +3218,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         {
             Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
         }
-        Data = &DeviceNode->BootResources;
+        Data = DeviceNode->BootResources;
         break;
 
         /* FIXME: use a translated boot configuration instead */
@@ -3223,7 +3228,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
         {
             Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
         }
-        Data = &DeviceNode->BootResources;
+        Data = DeviceNode->BootResources;
         break;
 
     case DevicePropertyEnumeratorName:

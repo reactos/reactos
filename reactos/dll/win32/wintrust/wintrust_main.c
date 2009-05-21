@@ -41,6 +41,23 @@
 WINE_DEFAULT_DEBUG_CHANNEL(wintrust);
 
 
+/* Utility functions */
+void * WINAPI WINTRUST_Alloc(DWORD cb)
+{
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cb);
+}
+
+static void* WINTRUST_ReAlloc(void *ptr, DWORD cb) __WINE_ALLOC_SIZE(2);
+static void* WINTRUST_ReAlloc(void *ptr, DWORD cb)
+{
+    return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ptr, cb);
+}
+
+void WINAPI WINTRUST_Free(void *p)
+{
+    HeapFree(GetProcessHeap(), 0, p);
+}
+
 /***********************************************************************
  *		DllMain  (WINTRUST.@)
  */
@@ -888,20 +905,6 @@ BOOL WINAPI WintrustSetRegPolicyFlags( DWORD dwPolicyFlags)
 }
 
 /* Utility functions */
-void * WINAPI WINTRUST_Alloc(DWORD cb)
-{
-    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cb);
-}
-
-void * WINAPI WINTRUST_ReAlloc(void *ptr, DWORD cb)
-{
-    return HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, ptr, cb);
-}
-
-void WINAPI WINTRUST_Free(void *p)
-{
-    HeapFree(GetProcessHeap(), 0, p);
-}
 
 BOOL WINAPI WINTRUST_AddStore(CRYPT_PROVIDER_DATA *data, HCERTSTORE store)
 {

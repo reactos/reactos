@@ -2386,7 +2386,7 @@ SimpleMatch(REGlobalData *gData, REMatchState *x, REOp op,
 
     const char *opname = reop_names[op];
     TRACE("\n%06d: %*s%s\n", pc - gData->regexp->program,
-             gData->stateStackTop * 2, "", opname);
+          (int)gData->stateStackTop * 2, "", opname);
 
     switch (op) {
       case REOP_EMPTY:
@@ -2625,7 +2625,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
     for (;;) {
         const char *opname = reop_names[op];
         TRACE("\n%06d: %*s%s\n", pc - gData->regexp->program,
-                 gData->stateStackTop * 2, "", opname);
+              (int)gData->stateStackTop * 2, "", opname);
 
         if (REOP_IS_SIMPLE(op)) {
             result = SimpleMatch(gData, x, op, &pc, TRUE);

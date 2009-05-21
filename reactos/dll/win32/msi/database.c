@@ -610,6 +610,8 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
     LPWSTR **temp_records;
 
     static const WCHAR backslash[] = {'\\',0};
+    static const WCHAR suminfo[] =
+        {'_','S','u','m','m','a','r','y','I','n','f','o','r','m','a','t','i','o','n',0};
 
     TRACE("%p %s %s\n", db, debugstr_w(folder), debugstr_w(file) );
 
@@ -660,17 +662,29 @@ static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
         records = temp_records;
     }
 
-    if (!TABLE_Exists(db, labels[0]))
+    if (!strcmpW(labels[0], suminfo))
     {
-        r = msi_add_table_to_db( db, columns, types, labels, num_labels, num_columns );
+        r = msi_add_suminfo( db, records, num_records, num_columns );
         if (r != ERROR_SUCCESS)
         {
             r = ERROR_FUNCTION_FAILED;
             goto done;
         }
     }
+    else
+    {
+        if (!TABLE_Exists(db, labels[0]))
+        {
+            r = msi_add_table_to_db( db, columns, types, labels, num_labels, num_columns );
+            if (r != ERROR_SUCCESS)
+            {
+                r = ERROR_FUNCTION_FAILED;
+                goto done;
+            }
+        }
 
-    r = msi_add_records_to_table( db, columns, types, labels, records, num_columns, num_records );
+        r = msi_add_records_to_table( db, columns, types, labels, records, num_columns, num_records );
+    }
 
 done:
     msi_free(path);
@@ -1349,7 +1363,7 @@ static UINT merge_table(MSIDATABASE *db, MERGETABLE *table)
         if (r != ERROR_SUCCESS)
             return r;
 
-        r = tv->ops->insert_row(tv, row->data, FALSE);
+        r = tv->ops->insert_row(tv, row->data, -1, FALSE);
         tv->ops->delete(tv);
 
         if (r != ERROR_SUCCESS)

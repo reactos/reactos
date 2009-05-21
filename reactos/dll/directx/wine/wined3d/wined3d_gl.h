@@ -2537,6 +2537,12 @@ typedef void (WINE_GLAPI * PGLFNGETCOMPRESSEDTEXIMAGEPROC) (GLenum target, GLint
 #define GL_DECR_WRAP_EXT                  0x8508
 #endif
 
+/* GL_ARB_half_float_vertex */
+#ifndef GL_ARB_half_float_vertex
+#define GL_ARB_half_float_vertex
+/* No _ARB, see extension spec */
+#define GL_HALF_FLOAT                     0x140B
+#endif
 /* GL_NV_half_float */
 #ifndef GL_NV_half_float
 #define GL_NV_half_float 1
@@ -2895,7 +2901,7 @@ typedef void (WINE_GLAPI * PGLFNGETFENCEIVNVPROC) (GLuint, GLenum, GLint *);
 #ifndef GL_APPLE_fence
 #define GL_APPLE_fence 1
 #define GL_DRAW_PIXELS_APPLE                0x8A0A
-#define GL_FENCE_APPLE                      0x84F3
+#define GL_FENCE_APPLE                      0x8A0B
 #endif
 typedef void (WINE_GLAPI * PGLFNGENFENCESAPPLEPROC) (GLsizei, GLuint *);
 typedef void (WINE_GLAPI * PGLFNDELETEFENCESAPPLEPROC) (GLuint, const GLuint *);
@@ -3397,6 +3403,8 @@ typedef enum _GL_SupportedExt {
   ARB_VERTEX_BUFFER_OBJECT,
   ARB_VERTEX_SHADER,
   ARB_SHADER_OBJECTS,
+  ARB_SHADER_TEXTURE_LOD,
+  ARB_HALF_FLOAT_VERTEX,
   /* EXT */
   EXT_BLEND_COLOR,
   EXT_BLEND_MINMAX,
@@ -3925,6 +3933,7 @@ typedef struct _WineD3D_GL_Info {
   UINT   max_texture_size;
   UINT   max_texture3d_size;
   float  max_pointsize, max_pointsizemin;
+  UINT   max_point_sprite_units;
   UINT   max_blends;
   UINT   max_anisotropy;
   UINT   max_glsl_varyings;
@@ -3951,6 +3960,7 @@ typedef struct _WineD3D_GL_Info {
 
   BOOL arb_vs_offset_limit;
   BOOL set_texcoord_w;
+  DWORD reserved_glsl_constants;
 
   BOOL supported[OPENGL_SUPPORTED_EXT_END + 1];
 
@@ -3962,5 +3972,11 @@ typedef struct _WineD3D_GL_Info {
   struct GlPixelFormatDesc *gl_formats;
 } WineD3D_GL_Info;
 #undef USE_GL_FUNC
+
+struct driver_quirk {
+    BOOL        (*match)(const WineD3D_GL_Info *gl_info);
+    void        (*apply)(WineD3D_GL_Info *gl_info);
+    const char  *description;
+};
 
 #endif /* __WINE_WINED3D_GL */

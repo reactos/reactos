@@ -28,6 +28,10 @@
 #include "mm.h"
 #endif
 
+#ifndef __FS_H
+#include "fs.h"
+#endif
+
 typedef enum tagVIDEODISPLAYMODE
 {
   VideoTextMode,
@@ -55,6 +59,7 @@ typedef struct tagMACHVTBL
   VOID (*Beep)(VOID);
   VOID (*PrepareForReactOS)(IN BOOLEAN Setup);
 
+  MEMORY_DESCRIPTOR* (*GetMemoryDescriptor)(MEMORY_DESCRIPTOR* Current);
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
   BOOLEAN (*DiskGetBootVolume)(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
@@ -68,7 +73,8 @@ typedef struct tagMACHVTBL
   BOOLEAN (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
   ULONG (*DiskGetCacheableBlockCount)(ULONG DriveNumber);
 
-  VOID (*RTCGetCurrentDateTime)(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
+  TIMEINFO* (*GetTime)(VOID);
+  ULONG (*GetRelativeTime)(VOID);
 
   PCONFIGURATION_COMPONENT_DATA (*HwDetect)(VOID);
 } MACHVTBL, *PMACHVTBL;
@@ -93,7 +99,7 @@ VOID MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
 VOID MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue);
 VOID MachVideoSync(VOID);
 VOID MachBeep(VOID);
-ULONG MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
+MEMORY_DESCRIPTOR* ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current);
 BOOLEAN MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
 BOOLEAN
 MachDiskGetSystemVolume(char *SystemPath,
@@ -111,7 +117,8 @@ BOOLEAN MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, UL
 BOOLEAN MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
 BOOLEAN MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
 ULONG MachDiskGetCacheableBlockCount(ULONG DriveNumber);
-VOID MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
+TIMEINFO* ArcGetTime(VOID);
+ULONG ArcGetRelativeTime(VOID);
 VOID MachHwDetect(VOID);
 VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 
@@ -132,7 +139,6 @@ VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 #define MachVideoSync()				MachVtbl.VideoSync()
 #define MachBeep()                   MachVtbl.Beep()
 #define MachPrepareForReactOS(a)		MachVtbl.PrepareForReactOS(a)
-#define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
 #define MachDiskGetBootVolume(Drv, Start, Cnt, FsType)	MachVtbl.DiskGetBootVolume((Drv), (Start), (Cnt), (FsType))
 #define MachDiskGetSystemVolume(SysPath, RemPath, Dev, Drv, Start, Cnt, FsType)	MachVtbl.DiskGetSystemVolume((SysPath), (RemPath), (Dev), (Drv), (Start), (Cnt), (FsType))
 #define MachDiskGetBootPath(Path, Size)		MachVtbl.DiskGetBootPath((Path), (Size))
@@ -143,7 +149,6 @@ VOID MachPrepareForReactOS(IN BOOLEAN Setup);
 #define MachDiskGetPartitionEntry(Drive, Part, Entry)	MachVtbl.DiskGetPartitionEntry((Drive), (Part), (Entry))
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
 #define MachDiskGetCacheableBlockCount(Drive)	MachVtbl.DiskGetCacheableBlockCount(Drive)
-#define MachRTCGetCurrentDateTime(Y, Mo, D, H, Mi, S)	MachVtbl.RTCGetCurrentDateTime((Y), (Mo), (D), (H), (Mi), (S));
 #define MachHwDetect()				MachVtbl.HwDetect()
 
 #endif /* __MACHINE_H_ */

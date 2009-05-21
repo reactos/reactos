@@ -199,7 +199,7 @@ typedef struct tagMSIVIEWOPS
     /*
      * Inserts a new row into the database from the records contents
      */
-    UINT (*insert_row)( struct tagMSIVIEW *view, MSIRECORD *record, BOOL temporary );
+    UINT (*insert_row)( struct tagMSIVIEW *view, MSIRECORD *record, UINT row, BOOL temporary );
 
     /*
      * Deletes a row from the database
@@ -231,7 +231,7 @@ typedef struct tagMSIVIEWOPS
      *   the caller.
      *  The column information can be queried at any time.
      */
-    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPWSTR *name, UINT *type );
+    UINT (*get_column_info)( struct tagMSIVIEW *view, UINT n, LPWSTR *name, UINT *type, BOOL *temporary );
 
     /*
      * modify - not yet implemented properly
@@ -760,8 +760,8 @@ extern BOOL encode_base85_guid(GUID *,LPWSTR);
 extern BOOL decode_base85_guid(LPCWSTR,GUID*);
 extern UINT MSIREG_OpenUninstallKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_DeleteUninstallKey(LPCWSTR szProduct);
-extern UINT MSIREG_OpenProductKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
-                                  HKEY* key, BOOL create);
+extern UINT MSIREG_OpenProductKey(LPCWSTR szProduct, LPCWSTR szUserSid,
+                                  MSIINSTALLCONTEXT context, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, MSIINSTALLCONTEXT context,
                                    HKEY *key, BOOL create);
 extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
@@ -819,6 +819,7 @@ extern UINT msi_spawn_error_dialog( MSIPACKAGE*, LPWSTR, LPWSTR );
 extern MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount );
 extern LPWSTR msi_suminfo_dup_string( MSISUMMARYINFO *si, UINT uiProperty );
 extern LPWSTR msi_get_suminfo_product( IStorage *stg );
+extern UINT msi_add_suminfo( MSIDATABASE *db, LPWSTR **records, int num_records, int num_columns );
 
 /* undocumented functions */
 UINT WINAPI MsiCreateAndVerifyInstallerDirectory( DWORD );

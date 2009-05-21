@@ -55,6 +55,18 @@ ProSendPackets(
     IN  PPNDIS_PACKET   PacketArray,
     IN  UINT            NumberOfPackets);
 
+NTSTATUS
+NTAPI
+NdisIPnPQueryStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
+NTSTATUS
+NTAPI
+NdisIPnPCancelStopDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    PIRP Irp);
+
 #endif /* __PROTOCOL_H */
 
 /* EOF */

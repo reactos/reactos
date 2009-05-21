@@ -21,6 +21,8 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE DISCARDABLE
 {
     IDS_HTMLDISABLED  "Die HTML-Darstellung ist zur Zeit ausgeschaltet."
@@ -36,7 +38,7 @@ FONT 8, "MS Shell Dlg"
 {
     LTEXT "Diese Anwendung versucht, eine HTML-Seite anzuzeigen. Wine muss " \
           "Gecko (Mozilla HTML-Bibliothek) installieren um die Seite " \
-	  "anzuzeigen. Klicken Sie auf „Installieren“, um Gecko automatisch " \
+          "anzuzeigen. Klicken Sie auf â€žInstallierenâ€œ, um Gecko automatisch " \
           "herunterzuladen und zu installieren.", ID_DWL_STATUS, 10, 10, 240, 40, SS_LEFT
     CONTROL "Fortschritt", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12
     DEFPUSHBUTTON "&Installieren", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
@@ -56,3 +58,16 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON "OK", IDOK, 200, 10, 45, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Abbrechen", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
 }
+
+ID_PROMPT_DIALOG DIALOG 0, 0, 200, 90
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30
+    EDITTEXT ID_PROMPT_EDIT, 10, 45, 180, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Abbrechen", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
+}
+
+#pragma code_page(default)

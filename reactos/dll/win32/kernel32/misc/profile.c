@@ -130,7 +130,7 @@ static void PROFILE_CopyEntry( LPWSTR buffer, LPCWSTR value, int len,
 static __inline void PROFILE_ByteSwapShortBuffer(WCHAR * buffer, int len)
 {
     int i;
-    USHORT * shortbuffer = (USHORT *)buffer;
+    USHORT * shortbuffer = buffer;
     for (i = 0; i < len; i++)
         shortbuffer[i] = RtlUshortByteSwap(shortbuffer[i]);
 }
@@ -293,7 +293,7 @@ static __inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * l
     INT flags =   IS_TEXT_UNICODE_SIGNATURE |
                   IS_TEXT_UNICODE_REVERSE_SIGNATURE |
                   IS_TEXT_UNICODE_ODD_LENGTH;
-    if (*len >= (int)sizeof(bom_utf8) && !memcmp(buffer, bom_utf8, sizeof(bom_utf8)))
+    if (*len >= sizeof(bom_utf8) && !memcmp(buffer, bom_utf8, sizeof(bom_utf8)))
     {
         *len = sizeof(bom_utf8);
         return ENCODING_UTF8;
@@ -334,7 +334,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
     DPRINT("%p\n", hFile);
 
     dwFileSize = GetFileSize(hFile, NULL);
-    if (dwFileSize == INVALID_FILE_SIZE)
+    if (dwFileSize == INVALID_FILE_SIZE || dwFileSize == 0)
         return NULL;
 
     buffer_base = HeapAlloc(GetProcessHeap(), 0 , dwFileSize);
@@ -359,40 +359,40 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
     case ENCODING_ANSI:
         DPRINT("ANSI encoding\n");
 
-        len = MultiByteToWideChar(CP_ACP, 0, (char *)pBuffer, dwFileSize, NULL, 0);
+        len = MultiByteToWideChar(CP_ACP, 0, pBuffer, dwFileSize, NULL, 0);
         szFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         if (!szFile)
         {
             HeapFree(GetProcessHeap(), 0, buffer_base);
             return NULL;
         }
-        MultiByteToWideChar(CP_ACP, 0, (char *)pBuffer, dwFileSize, szFile, len);
+        MultiByteToWideChar(CP_ACP, 0, pBuffer, dwFileSize, szFile, len);
         szEnd = szFile + len;
         break;
 
     case ENCODING_UTF8:
         DPRINT("UTF8 encoding\n");
 
-        len = MultiByteToWideChar(CP_UTF8, 0, (char *)pBuffer, dwFileSize, NULL, 0);
+        len = MultiByteToWideChar(CP_UTF8, 0, pBuffer, dwFileSize, NULL, 0);
         szFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         if (!szFile)
         {
             HeapFree(GetProcessHeap(), 0, buffer_base);
             return NULL;
         }
-        MultiByteToWideChar(CP_UTF8, 0, (char *)pBuffer, dwFileSize, szFile, len);
+        MultiByteToWideChar(CP_UTF8, 0, pBuffer, dwFileSize, szFile, len);
         szEnd = szFile + len;
         break;
 
     case ENCODING_UTF16LE:
         DPRINT("UTF16 Little Endian encoding\n");
-        szFile = (WCHAR *)pBuffer;// + 1;
+        szFile = pBuffer;// + 1;
         szEnd = (WCHAR *)((char *)pBuffer + dwFileSize);
         break;
 
     case ENCODING_UTF16BE:
         DPRINT("UTF16 Big Endian encoding\n");
-        szFile = (WCHAR *)pBuffer;// + 1;
+        szFile = pBuffer;// + 1;
         szEnd = (WCHAR *)((char *)pBuffer + dwFileSize);
         PROFILE_ByteSwapShortBuffer(szFile, dwFileSize / sizeof(WCHAR));
         break;
@@ -834,6 +834,7 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
 			 else
 			 {
                  DPRINT("(%S): already opened, needs refreshing (mru=%d)\n", buffer, i);
+				 PROFILE_Free(CurProfile->section);
                  CurProfile->section = PROFILE_Load(hFile, &CurProfile->encoding);
                  CurProfile->LastWriteTime = LastWriteTime;
 			 }
@@ -1459,8 +1460,7 @@ BOOL WINAPI WritePrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
     else if (PROFILE_Open( filename, TRUE ))
     {
         if (!section) {
-            DPRINT1("(NULL?, %S, %S, %S)?\n",
-                        entry, string, filename);
+            SetLastError(ERROR_FILE_NOT_FOUND);
         } else {
             ret = PROFILE_SetString( section, entry, string, FALSE);
             PROFILE_FlushFile();
@@ -1733,7 +1733,7 @@ BOOL WINAPI GetPrivateProfileStructW (LPCWSTR section, LPCWSTR key,
                 {
                     BOOL highnibble = TRUE;
                     BYTE b = 0, val;
-                    LPBYTE binbuf = (LPBYTE)buf;
+                    LPBYTE binbuf = buf;
 
                     end -= 2; /* don't include checksum in output data */
                     /* translate ASCII hex format into binary data */

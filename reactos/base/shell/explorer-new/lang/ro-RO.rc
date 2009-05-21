@@ -1,0 +1,59 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDM_TRAYWND MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Blocare barã de activitãþi", ID_LOCKTASKBAR
+        MENUITEM "P&roprietãþi", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Programe", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "F&avoritee", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Documente", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Setãri", IDM_SETTINGS
+        BEGIN
+            MENUITEM "&Panou de control", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Securitate...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Conexiuni la reþea", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Imprimante ºi faxuri", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Barã de activitãþi ºi meniu Începe", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        POPUP "Cãut&are", IDM_SEARCH
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "&Ajutor ºi suport", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Rulare...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "S&incronizare", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Ieºire din %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "D&econectare...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "Undock calcula&tor", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "În&chidere calculator", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_START             "Începe"
+    IDS_PROPERTIES        "P&roprietãþi"
+    IDS_OPEN_ALL_USERS    "Deschidere& Toþi Utilizatorii"
+    IDS_EXPLORE_ALL_USERS "E&xplorare Toþi Utilizatorii"
+END

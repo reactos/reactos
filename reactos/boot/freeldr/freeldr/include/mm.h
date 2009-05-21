@@ -88,21 +88,18 @@ extern	ULONG		FreePagesInLookupTable;
 extern	ULONG		LastFreePageHint;
 
 #ifdef DBG
-PUCHAR	MmGetSystemMemoryMapTypeString(ULONG Type);
+PCSTR MmGetSystemMemoryMapTypeString(MEMORY_TYPE Type);
 #endif
 
 ULONG		MmGetPageNumberFromAddress(PVOID Address);	// Returns the page number that contains a linear address
-PVOID	MmGetEndAddressOfAnyMemory(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Returns the last address of memory from the memory map
-ULONG		MmGetAddressablePageCountIncludingHoles(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Returns the count of addressable pages from address zero including any memory holes and reserved memory regions
-PVOID	MmFindLocationForPageLookupTable(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Returns the address for a memory chunk big enough to hold the page lookup table (starts search from end of memory)
-VOID	MmSortBiosMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Sorts the BIOS_MEMORY_MAP array so the first element corresponds to the first address in memory
-VOID	MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MapCount);	// Inits the page lookup table according to the memory types in the memory map
+ULONG		MmGetAddressablePageCountIncludingHoles(VOID);	// Returns the count of addressable pages from address zero including any memory holes and reserved memory regions
+PVOID	MmFindLocationForPageLookupTable(ULONG TotalPageCount);	// Returns the address for a memory chunk big enough to hold the page lookup table (starts search from end of memory)
+VOID	MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount);	// Inits the page lookup table according to the memory types in the memory map
 VOID	MmMarkPagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY PageAllocated);	// Marks the specified pages as allocated or free in the lookup table
 VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG PageCount, TYPE_OF_MEMORY MemoryType);	// Allocates the specified pages in the lookup table
 ULONG		MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount);	// Returns the number of free pages in the lookup table
 ULONG		MmFindAvailablePages(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, BOOLEAN FromEnd);	// Returns the page number of the first available page range from the beginning or end of memory
 ULONG		MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded, ULONG LastPage);	// Returns the page number of the first available page range before the specified page
-VOID	MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG* MapCount);	// Removes entries in the memory map that describe memory above 4G
 VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount);	// Sets the LastFreePageHint to the last usable page of memory
 BOOLEAN	MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount);	// Returns TRUE if the specified pages of memory are available, otherwise FALSE
 VOID	MmSetMemoryType(PVOID MemoryAddress, ULONG MemorySize, TYPE_OF_MEMORY NewType); // Use with EXTREME caution!

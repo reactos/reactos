@@ -522,12 +522,12 @@ void WINAPI DragAcceptFiles(HWND hWnd, BOOL b)
 	LONG exstyle;
 
 	if( !IsWindow(hWnd) ) return;
-	exstyle = GetWindowLongA(hWnd,GWL_EXSTYLE);
+	exstyle = GetWindowLongPtrA(hWnd,GWL_EXSTYLE);
 	if (b)
 	  exstyle |= WS_EX_ACCEPTFILES;
 	else
 	  exstyle &= ~WS_EX_ACCEPTFILES;
-	SetWindowLongA(hWnd,GWL_EXSTYLE,exstyle);
+	SetWindowLongPtrA(hWnd,GWL_EXSTYLE,exstyle);
 }
 
 /*************************************************************************

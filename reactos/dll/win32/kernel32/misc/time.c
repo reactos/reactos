@@ -661,8 +661,8 @@ SystemTimeToTzSpecificLocalTime(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformati
  */
 BOOL
 WINAPI
-TzSpecificLocalTimeToSystemTime(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation,
-                                CONST SYSTEMTIME *lpLocalTime,
+TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
+                                LPSYSTEMTIME lpLocalTime,
                                 LPSYSTEMTIME lpUniversalTime)
 {
     FILETIME ft;

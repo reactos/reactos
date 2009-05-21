@@ -41,24 +41,24 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(fusion);
 
-static BOOL create_full_path(LPCSTR path)
+static BOOL create_full_path(LPCWSTR path)
 {
-    LPSTR new_path;
+    LPWSTR new_path;
     BOOL ret = TRUE;
     int len;
 
-    new_path = HeapAlloc(GetProcessHeap(), 0, lstrlenA(path) + 1);
+    new_path = HeapAlloc(GetProcessHeap(), 0, (strlenW(path) + 1) * sizeof(WCHAR));
     if (!new_path)
         return FALSE;
 
-    lstrcpyA(new_path, path);
+    strcpyW(new_path, path);
 
-    while ((len = lstrlenA(new_path)) && new_path[len - 1] == '\\')
+    while ((len = strlenW(new_path)) && new_path[len - 1] == '\\')
         new_path[len - 1] = 0;
 
-    while (!CreateDirectoryA(new_path, NULL))
+    while (!CreateDirectoryW(new_path, NULL))
     {
-        LPSTR slash;
+        LPWSTR slash;
         DWORD last_error = GetLastError();
 
         if(last_error == ERROR_ALREADY_EXISTS)
@@ -70,7 +70,7 @@ static BOOL create_full_path(LPCSTR path)
             break;
         }
 
-        if(!(slash = strrchr(new_path, '\\')))
+        if(!(slash = strrchrW(new_path, '\\')))
         {
             ret = FALSE;
             break;
@@ -89,6 +89,18 @@ static BOOL create_full_path(LPCSTR path)
 
     HeapFree(GetProcessHeap(), 0, new_path);
     return ret;
+}
+
+static BOOL get_assembly_directory(LPWSTR dir, DWORD size)
+{
+    static const WCHAR gac[] =
+        {'\\','a','s','s','e','m','b','l','y','\\','G','A','C','_','M','S','I','L',0};
+
+    FIXME("Ignoring assembly architecture\n");
+
+    GetWindowsDirectoryW(dir, size);
+    strcatW(dir, gac);
+    return TRUE;
 }
 
 /* IAssemblyCache */
@@ -160,10 +172,48 @@ static HRESULT WINAPI IAssemblyCacheImpl_QueryAssemblyInfo(IAssemblyCache *iface
                                                            LPCWSTR pszAssemblyName,
                                                            ASSEMBLY_INFO *pAsmInfo)
 {
-    FIXME("(%p, %d, %s, %p) stub!\n", iface, dwFlags,
+    IAssemblyName *asmname, *next = NULL;
+    IAssemblyEnum *asmenum = NULL;
+    HRESULT hr;
+
+    TRACE("(%p, %d, %s, %p)\n", iface, dwFlags,
           debugstr_w(pszAssemblyName), pAsmInfo);
 
-    return E_NOTIMPL;
+    if (pAsmInfo)
+    {
+        if (pAsmInfo->cbAssemblyInfo == 0)
+            pAsmInfo->cbAssemblyInfo = sizeof(ASSEMBLY_INFO);
+        else if (pAsmInfo->cbAssemblyInfo != sizeof(ASSEMBLY_INFO))
+            return E_INVALIDARG;
+    }
+
+    hr = CreateAssemblyNameObject(&asmname, pszAssemblyName,
+                                  CANOF_PARSE_DISPLAY_NAME, NULL);
+    if (FAILED(hr))
+        return hr;
+
+    hr = CreateAssemblyEnum(&asmenum, NULL, asmname, ASM_CACHE_GAC, NULL);
+    if (FAILED(hr))
+        goto done;
+
+    hr = IAssemblyEnum_GetNextAssembly(asmenum, NULL, &next, 0);
+    if (hr == S_FALSE)
+    {
+        hr = HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+        goto done;
+    }
+
+    if (!pAsmInfo)
+        goto done;
+
+    pAsmInfo->dwAssemblyFlags = ASSEMBLYINFO_FLAG_INSTALLED;
+
+done:
+    IAssemblyName_Release(asmname);
+    if (next) IAssemblyName_Release(next);
+    if (asmenum) IAssemblyEnum_Release(asmenum);
+
+    return hr;
 }
 
 static HRESULT WINAPI IAssemblyCacheImpl_CreateAssemblyCacheItem(IAssemblyCache *iface,
@@ -190,14 +240,17 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
                                                          LPCWSTR pszManifestFilePath,
                                                          LPCFUSION_INSTALL_REFERENCE pRefData)
 {
+    static const WCHAR format[] =
+        {'%','s','\\','%','s','\\','%','s','_','_','%','s','\\',0};
+
     ASSEMBLY *assembly;
-    LPSTR filename;
-    LPSTR name = NULL;
-    LPSTR token = NULL;
-    LPSTR version = NULL;
-    LPSTR asmpath = NULL;
-    CHAR path[MAX_PATH];
-    CHAR windir[MAX_PATH];
+    LPWSTR filename;
+    LPWSTR name = NULL;
+    LPWSTR token = NULL;
+    LPWSTR version = NULL;
+    LPWSTR asmpath = NULL;
+    WCHAR path[MAX_PATH];
+    WCHAR asmdir[MAX_PATH];
     LPWSTR ext;
     HRESULT hr;
 
@@ -238,12 +291,9 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     if (FAILED(hr))
         goto done;
 
-    GetWindowsDirectoryA(windir, MAX_PATH);
+    get_assembly_directory(asmdir, MAX_PATH);
 
-    FIXME("Ignoring assembly architecture!\n");
-
-    sprintf(path, "%s\\assembly\\GAC_MSIL\\%s\\%s__%s\\", windir, name,
-            version, token);
+    sprintfW(path, format, asmdir, name, version, token);
 
     create_full_path(path);
 
@@ -251,10 +301,10 @@ static HRESULT WINAPI IAssemblyCacheImpl_InstallAssembly(IAssemblyCache *iface,
     if (FAILED(hr))
         goto done;
 
-    filename = PathFindFileNameA(asmpath);
+    filename = PathFindFileNameW(asmpath);
 
-    lstrcatA(path, filename);
-    if (!CopyFileA(asmpath, path, FALSE))
+    strcatW(path, filename);
+    if (!CopyFileW(asmpath, path, FALSE))
         hr = HRESULT_FROM_WIN32(GetLastError());
 
 done:
@@ -390,87 +440,4 @@ static const IAssemblyCacheItemVtbl AssemblyCacheItemVtbl = {
     IAssemblyCacheItemImpl_CreateStream,
     IAssemblyCacheItemImpl_Commit,
     IAssemblyCacheItemImpl_AbortItem
-};
-
-/* IAssemblyEnum */
-
-typedef struct {
-    const IAssemblyEnumVtbl *lpIAssemblyEnumVtbl;
-
-    LONG ref;
-} IAssemblyEnumImpl;
-
-static HRESULT WINAPI IAssemblyEnumImpl_QueryInterface(IAssemblyEnum *iface,
-                                                       REFIID riid, LPVOID *ppobj)
-{
-    IAssemblyEnumImpl *This = (IAssemblyEnumImpl *)iface;
-
-    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppobj);
-
-    *ppobj = NULL;
-
-    if (IsEqualIID(riid, &IID_IUnknown) ||
-        IsEqualIID(riid, &IID_IAssemblyEnum))
-    {
-        IUnknown_AddRef(iface);
-        *ppobj = This;
-        return S_OK;
-    }
-
-    WARN("(%p, %s, %p): not found\n", This, debugstr_guid(riid), ppobj);
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI IAssemblyEnumImpl_AddRef(IAssemblyEnum *iface)
-{
-    IAssemblyEnumImpl *This = (IAssemblyEnumImpl *)iface;
-    ULONG refCount = InterlockedIncrement(&This->ref);
-
-    TRACE("(%p)->(ref before = %u)\n", This, refCount - 1);
-
-    return refCount;
-}
-
-static ULONG WINAPI IAssemblyEnumImpl_Release(IAssemblyEnum *iface)
-{
-    IAssemblyEnumImpl *This = (IAssemblyEnumImpl *)iface;
-    ULONG refCount = InterlockedDecrement(&This->ref);
-
-    TRACE("(%p)->(ref before = %u)\n", This, refCount + 1);
-
-    if (!refCount)
-        HeapFree(GetProcessHeap(), 0, This);
-
-    return refCount;
-}
-
-static HRESULT WINAPI IAssemblyEnumImpl_GetNextAssembly(IAssemblyEnum *iface,
-                                                        LPVOID pvReserved,
-                                                        IAssemblyName **ppName,
-                                                        DWORD dwFlags)
-{
-    FIXME("(%p, %p, %p, %d) stub!\n", iface, pvReserved, ppName, dwFlags);
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI IAssemblyEnumImpl_Reset(IAssemblyEnum *iface)
-{
-    FIXME("(%p) stub!\n", iface);
-    return E_NOTIMPL;
-}
-
-static HRESULT WINAPI IAssemblyEnumImpl_Clone(IAssemblyEnum *iface,
-                                               IAssemblyEnum **ppEnum)
-{
-    FIXME("(%p, %p) stub!\n", iface, ppEnum);
-    return E_NOTIMPL;
-}
-
-static const IAssemblyEnumVtbl AssemblyEnumVtbl = {
-    IAssemblyEnumImpl_QueryInterface,
-    IAssemblyEnumImpl_AddRef,
-    IAssemblyEnumImpl_Release,
-    IAssemblyEnumImpl_GetNextAssembly,
-    IAssemblyEnumImpl_Reset,
-    IAssemblyEnumImpl_Clone
 };

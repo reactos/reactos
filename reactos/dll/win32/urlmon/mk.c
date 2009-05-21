@@ -93,7 +93,7 @@ static HRESULT report_result(IInternetProtocolSink *sink, HRESULT hres, DWORD dw
 
 static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     MkProtocol *This = PROTOCOL_THIS(iface);
     IParseDisplayName *pdn;
@@ -108,7 +108,7 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     static const WCHAR wszMK[] = {'m','k',':','@'};
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     if(strncmpiW(szUrl, wszMK, sizeof(wszMK)/sizeof(WCHAR)))

@@ -366,11 +366,7 @@ typedef struct _W32THREADINFO
 {
     PPROCESSINFO ppi; /* [KERNEL] */
     PDESKTOPINFO pDeskInfo;
-//    PVOID DesktopHeapBase;
-//    ULONG_PTR DesktopHeapLimit;
-    /* A mask of what hooks are currently active */
     ULONG fsHooks;
-    CLIENTTHREADINFO ClientThreadInfo;
 } W32THREADINFO, *PW32THREADINFO;
 
 /* Window Client Information structure */
@@ -506,6 +502,11 @@ typedef struct _USERCONNECT
 //
 #define DCX_USESTYLE     0x00010000
 #define DCX_KEEPCLIPRGN  0x00040000
+
+//
+// Non SDK Queue message types.
+//
+#define QS_SMRESULT      0x8000
 
 DWORD
 NTAPI
@@ -1723,7 +1724,9 @@ enum ThreadStateRoutines
     THREADSTATE_ACTIVEWINDOW,
     THREADSTATE_CAPTUREWINDOW,
     THREADSTATE_PROGMANWINDOW,
-    THREADSTATE_TASKMANWINDOW
+    THREADSTATE_TASKMANWINDOW,
+    THREADSTATE_GETMESSAGETIME,
+    THREADSTATE_GETINPUTSTATE
 };
 
 DWORD_PTR

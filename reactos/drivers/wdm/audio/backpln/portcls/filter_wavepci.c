@@ -131,7 +131,7 @@ IPortFilterWavePci_fnNewIrpTarget(
     }
 
     /* initialize the pin */
-    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &This->Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId], GetDeviceObjectFromWaveCyclic(This->Port));
+    Status = Pin->lpVtbl->Init(Pin, This->Port, iface, ConnectDetails, &This->Descriptor->Factory.KsPinDescriptor[ConnectDetails->PinId], GetDeviceObjectFromPortWavePci(This->Port));
     if (!NT_SUCCESS(Status))
     {
         Pin->lpVtbl->Release(Pin);
@@ -244,7 +244,6 @@ IPortFilterWavePci_fnClose(
         {
             This->Pins[Index]->lpVtbl->Close(This->Pins[Index], DeviceObject, NULL);
         }
-
     }
 
 
@@ -284,7 +283,7 @@ IPortFilterWavePci_fnSetSecurity(
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWavePci_fnFastDeviceIoControl(
     IN IPortFilterWavePci* iface,
@@ -298,14 +297,49 @@ IPortFilterWavePci_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    ULONG Index;
+    PKSPROPERTY Property;
+    NTSTATUS Status;
+    ISubdevice * SubDevice = NULL;
+    PSUBDEVICE_DESCRIPTOR Descriptor = NULL;
+    IPortFilterWavePciImpl * This = (IPortFilterWavePciImpl *)iface;
+
+    Property = (PKSPROPERTY)InputBuffer;
+
+    if (InputBufferLength < sizeof(KSPROPERTY))
+        return FALSE;
+
+
+    /* get private interface */
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    /* get descriptor */
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        SubDevice->lpVtbl->Release(SubDevice);
+        return FALSE;
+    }
+
+    for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
+    {
+        if (IsEqualGUIDAligned(&Property->Set, Descriptor->FilterPropertySet.Properties[Index].Set))
+        {
+            FastPropertyHandler(FileObject, (PKSPROPERTY)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, StatusBlock,
+                                1,
+                                &Descriptor->FilterPropertySet.Properties[Index],
+                                Descriptor, SubDevice);
+        }
+    }
+    return TRUE;
 }
 
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWavePci_fnFastRead(
     IN IPortFilterWavePci* iface,
@@ -319,13 +353,13 @@ IPortFilterWavePci_fnFastRead(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*
  * @implemented
  */
-NTSTATUS
+BOOLEAN
 NTAPI
 IPortFilterWavePci_fnFastWrite(
     IN IPortFilterWavePci* iface,
@@ -339,7 +373,7 @@ IPortFilterWavePci_fnFastWrite(
     IN PDEVICE_OBJECT DeviceObject)
 {
     UNIMPLEMENTED
-    return STATUS_SUCCESS;
+    return FALSE;
 }
 
 /*

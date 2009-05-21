@@ -7,7 +7,7 @@
 	<include base="urlmon">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>bindctx.c</file>
 	<file>binding.c</file>
 	<file>bindprot.c</file>
@@ -18,6 +18,7 @@
 	<file>gopher.c</file>
 	<file>http.c</file>
 	<file>internet.c</file>
+	<file>mimefilter.c</file>
 	<file>mk.c</file>
 	<file>protocol.c</file>
 	<file>regsvr.c</file>
@@ -36,5 +37,8 @@
 	<library>advapi32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
+</module>
+<module name="urlmon_local_interface" type="idlinterface">
+	<file>urlmon_local.idl</file>
 </module>
 </group>

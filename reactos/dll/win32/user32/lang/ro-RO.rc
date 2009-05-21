@@ -1,0 +1,74 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOGEX DISCARDABLE 20, 20, 220, 140
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Alegere fereastrã"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Revocare", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "&Anulare", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "D&ecupare", WM_CUT
+    MENUITEM "&Copiere", WM_COPY
+    MENUITEM "&Lipire", WM_PASTE
+    MENUITEM "&ªtergere", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "Selectare &totalã", EM_SETSEL
+  END
+END
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+  MENUITEM "&Restabilire", SC_RESTORE
+  MENUITEM "&Mutare", SC_MOVE
+  MENUITEM "&Redimensionare", SC_SIZE
+  MENUITEM "Mi&nimizare", SC_MINIMIZE
+  MENUITEM "Ma&ximizare", SC_MAXIMIZE
+  MENUITEM SEPARATOR
+  MENUITEM "&Închidere\tAlt-F4", SC_CLOSE
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+BEGIN
+  IDS_ERROR,    "Eroare"
+  IDS_OK,       "OK"
+  IDS_CANCEL,   "Anulare"
+  IDS_ABORT,    "&Abandon"
+  IDS_RETRY,    "&Reîncercare"
+  IDS_IGNORE,   "&Ignorare"
+  IDS_YES,      "&Da"
+  IDS_NO,       "&Nu"
+  IDS_HELP,     "Ajutor"
+  IDS_TRYAGAIN, "&Reîncercare"
+  IDS_CONTINUE, "&Continuare"
+END
+
+STRINGTABLE
+BEGIN
+  IDS_MDI_MOREWINDOWS, "&Mai multe ferestre..."
+END

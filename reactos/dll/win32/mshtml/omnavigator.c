@@ -270,7 +270,7 @@ static HRESULT WINAPI OmNavigator_get_appMinorVersion(IOmNavigator *iface, BSTR 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI OmNavigator_get_connectionSpeed(IOmNavigator *iface, long *p)
+static HRESULT WINAPI OmNavigator_get_connectionSpeed(IOmNavigator *iface, LONG *p)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);

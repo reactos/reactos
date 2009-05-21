@@ -1,0 +1,16 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_QUIT, "Ieºire"
+	IDS_PRINT, "Imprimare"
+	IDS_STRING, "Profesoara mea de chimie scrie multe poezii frumoase. 1234567890"
+	IDS_ERROR, "Eroare"
+	IDS_ERROR_NOMEM, "Nu e destulã memorie pentru a încheia operaþia."
+	IDS_ERROR_NOFONT, "Fiºierul %1 este un fiºier font deteriorat."
+	IDS_ERROR_NOCLASS, "Nu s-a putut iniþializa clasa de ferestre."
+	IDS_ERROR_BADCMD, "Niciun font specificat.\nSintaxã:\n  fontview.exe <fiºier font>"
+END
+
+
+

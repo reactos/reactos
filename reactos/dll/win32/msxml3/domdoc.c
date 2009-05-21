@@ -1521,7 +1521,7 @@ static HRESULT WINAPI domdoc_load(
 
 static HRESULT WINAPI domdoc_get_readyState(
     IXMLDOMDocument2 *iface,
-    long* value )
+    LONG *value )
 {
     FIXME("\n");
     return E_NOTIMPL;

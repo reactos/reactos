@@ -17,7 +17,7 @@ NdisInterlockedAddUlong (
     IN  ULONG           Increment,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-   ExInterlockedAddUlong ( Addend, Increment, (PKSPIN_LOCK)SpinLock );
+   ExInterlockedAddUlong ( Addend, Increment, &SpinLock->SpinLock );
 }
 
 
@@ -32,7 +32,7 @@ NdisInterlockedInsertHeadList(
     IN  PLIST_ENTRY     ListEntry,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-  return ExInterlockedInsertHeadList ( ListHead, ListEntry, (PKSPIN_LOCK)SpinLock );
+  return ExInterlockedInsertHeadList ( ListHead, ListEntry, &SpinLock->SpinLock );
 }
 
 
@@ -47,7 +47,7 @@ NdisInterlockedInsertTailList(
     IN  PLIST_ENTRY     ListEntry,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-  return ExInterlockedInsertTailList ( ListHead, ListEntry, (PKSPIN_LOCK)SpinLock );
+  return ExInterlockedInsertTailList ( ListHead, ListEntry, &SpinLock->SpinLock );
 }
 
 
@@ -61,7 +61,7 @@ NdisInterlockedRemoveHeadList(
     IN  PLIST_ENTRY     ListHead,
     IN  PNDIS_SPIN_LOCK SpinLock)
 {
-  return ExInterlockedRemoveHeadList ( ListHead, (PKSPIN_LOCK)SpinLock );
+  return ExInterlockedRemoveHeadList ( ListHead, &SpinLock->SpinLock );
 }
 
 typedef struct _NDIS_HANDLE_OBJECT
@@ -400,6 +400,22 @@ NdisScheduleWorkItem(
     ExInitializeWorkItem(pntWorkItem, ndisProcWorkItemHandler, pWorkItem);
     ExQueueWorkItem(pntWorkItem, DelayedWorkQueue);
     return NDIS_STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisGetCurrentProcessorCpuUsage(
+    PULONG  pCpuUsage)
+/*
+ * FUNCTION: Returns how busy the current processor is as a percentage
+ * ARGUMENTS:
+ *     pCpuUsage = Pointer to a buffer to place CPU usage
+ */
+{
+    ExGetCurrentProcessorCpuUsage(pCpuUsage);
 }
 
 /* EOF */

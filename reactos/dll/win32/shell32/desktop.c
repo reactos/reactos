@@ -258,7 +258,7 @@ Fail:
 static HWND
 SHDESK_FindDesktopListView (SHDESK *This)
 {
-    return FindWindowEx (This->hWndShellView,
+    return FindWindowExW(This->hWndShellView,
                          NULL,
                          WC_LISTVIEW,
                          NULL);
@@ -410,10 +410,10 @@ SHDESK_SendControlMsg(IShellBrowser *iface, UINT id, UINT uMsg, WPARAM wParam, L
                                    id);
     if (hWnd != NULL)
     {
-        *pret = SendMessage(hWnd,
-                            uMsg,
-                            wParam,
-                            lParam);
+        *pret = SendMessageW(hWnd,
+                             uMsg,
+                             wParam,
+                             lParam);
         return S_OK;
     }
 
@@ -552,12 +552,12 @@ SHDESK_MessageLoop(SHDESK *This)
     MSG Msg;
     BOOL bRet;
 
-    while ((bRet = GetMessage(&Msg, NULL, 0, 0)) != 0)
+    while ((bRet = GetMessageW(&Msg, NULL, 0, 0)) != 0)
     {
         if (bRet != -1)
         {
             TranslateMessage(&Msg);
-            DispatchMessage(&Msg);
+            DispatchMessageW(&Msg);
         }
     }
 
@@ -684,7 +684,7 @@ RegisterProgmanWindowClass(VOID)
     wcProgman.cbWndExtra = sizeof(PSHDESK);
     wcProgman.hInstance = shell32_hInstance;
     wcProgman.hIcon = NULL;
-    wcProgman.hCursor = LoadCursor(NULL,
+    wcProgman.hCursor = LoadCursorW(NULL,
                                    IDC_ARROW);
     wcProgman.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1);
     wcProgman.lpszMenuName = NULL;
@@ -732,7 +732,7 @@ HANDLE WINAPI SHCreateDesktop(IShellDesktop *ShellDesk)
         rcDesk.left, rcDesk.top, rcDesk.right, rcDesk.bottom,
         NULL, NULL, shell32_hInstance, (LPVOID)ShellDesk);
     if (hWndDesk != NULL)
-        return (HANDLE)GetWindowLongPtr(hWndDesk, 0);
+        return (HANDLE)GetWindowLongPtrW(hWndDesk, 0);
 
     return NULL;
 }

@@ -419,7 +419,7 @@ static HRESULT WINAPI xmldoc_get_mimeType(IXMLDocument *iface, BSTR *p)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI xmldoc_get_readyState(IXMLDocument *iface, long *p)
+static HRESULT WINAPI xmldoc_get_readyState(IXMLDocument *iface, LONG *p)
 {
     FIXME("(%p, %p): stub\n", iface, p);
     return E_NOTIMPL;
@@ -455,7 +455,7 @@ static HRESULT WINAPI xmldoc_get_dtdURl(IXMLDocument *iface, BSTR *p)
     return E_NOTIMPL;
 }
 
-static xmlElementType type_msxml_to_libxml(long type)
+static xmlElementType type_msxml_to_libxml(LONG type)
 {
     switch (type)
     {

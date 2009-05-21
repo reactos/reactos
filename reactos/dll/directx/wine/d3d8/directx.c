@@ -265,6 +265,7 @@ static HRESULT  WINAPI  IDirect3D8Impl_GetDeviceCaps(LPDIRECT3D8 iface, UINT Ada
     if(pCaps->VertexShaderVersion > D3DVS_VERSION(1,1)){
         pCaps->VertexShaderVersion = D3DVS_VERSION(1,1);
     }
+    pCaps->MaxVertexShaderConst = min(D3D8_MAX_VERTEX_SHADER_CONSTANTF, pCaps->MaxVertexShaderConst);
 
     TRACE("(%p) returning %p\n", This, pCaps);
     return hrc;

@@ -10,6 +10,7 @@
 	<library>advapi32</library>
 	<library>dbghelp</library>
 	<file>asmcache.c</file>
+	<file>asmenum.c</file>
 	<file>asmname.c</file>
 	<file>assembly.c</file>
 	<file>fusion.c</file>

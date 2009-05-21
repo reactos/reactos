@@ -155,18 +155,18 @@ static UINT UPDATE_get_dimensions( struct tagMSIVIEW *view, UINT *rows, UINT *co
 }
 
 static UINT UPDATE_get_column_info( struct tagMSIVIEW *view,
-                UINT n, LPWSTR *name, UINT *type )
+                UINT n, LPWSTR *name, UINT *type, BOOL *temporary )
 {
     MSIUPDATEVIEW *uv = (MSIUPDATEVIEW*)view;
     MSIVIEW *wv;
 
-    TRACE("%p %d %p %p\n", uv, n, name, type );
+    TRACE("%p %d %p %p %p\n", uv, n, name, type, temporary );
 
     wv = uv->wv;
     if( !wv )
         return ERROR_FUNCTION_FAILED;
 
-    return wv->ops->get_column_info( wv, n, name, type );
+    return wv->ops->get_column_info( wv, n, name, type, temporary );
 }
 
 static UINT UPDATE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,

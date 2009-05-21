@@ -1106,6 +1106,8 @@ INT CDECL iswxdigit( wchar_t wc )
     return isxdigitW( wc );
 }
 
+#endif
+
 /*********************************************************************
  *		wcscpy_s (MSVCRT.@)
  */
@@ -1137,7 +1139,6 @@ INT CDECL wcscpy_s( wchar_t* wcDest, size_t numElement, const  wchar_t *wcSrc)
 
     return 0;
 }
-#endif
 
 /******************************************************************
  *		wcsncpy_s (MSVCRT.@)

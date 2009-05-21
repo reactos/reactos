@@ -140,7 +140,7 @@ static HRESULT WINAPI HTMLWindow2_item(IHTMLWindow2 *iface, VARIANT *pvarIndex, 
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLWindow2_get_length(IHTMLWindow2 *iface, long *p)
+static HRESULT WINAPI HTMLWindow2_get_length(IHTMLWindow2 *iface, LONG *p)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -183,12 +183,12 @@ static HRESULT WINAPI HTMLWindow2_get_status(IHTMLWindow2 *iface, BSTR *p)
 }
 
 static HRESULT WINAPI HTMLWindow2_setTimeout(IHTMLWindow2 *iface, BSTR expression,
-        long msec, VARIANT *language, long *timerID)
+        LONG msec, VARIANT *language, LONG *timerID)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
     VARIANT expr_var;
 
-    TRACE("(%p)->(%s %ld %p %p)\n", This, debugstr_w(expression), msec, language, timerID);
+    TRACE("(%p)->(%s %d %p %p)\n", This, debugstr_w(expression), msec, language, timerID);
 
     V_VT(&expr_var) = VT_BSTR;
     V_BSTR(&expr_var) = expression;
@@ -196,11 +196,11 @@ static HRESULT WINAPI HTMLWindow2_setTimeout(IHTMLWindow2 *iface, BSTR expressio
     return IHTMLWindow3_setTimeout(HTMLWINDOW3(This), &expr_var, msec, language, timerID);
 }
 
-static HRESULT WINAPI HTMLWindow2_clearTimeout(IHTMLWindow2 *iface, long timerID)
+static HRESULT WINAPI HTMLWindow2_clearTimeout(IHTMLWindow2 *iface, LONG timerID)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
 
-    TRACE("(%p)->(%ld)\n", This, timerID);
+    TRACE("(%p)->(%d)\n", This, timerID);
 
     return clear_task_timer(This->doc, FALSE, timerID);
 }
@@ -226,16 +226,114 @@ static HRESULT WINAPI HTMLWindow2_confirm(IHTMLWindow2 *iface, BSTR message,
         VARIANT_BOOL *confirmed)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%s %p)\n", This, debugstr_w(message), confirmed);
-    return E_NOTIMPL;
+    WCHAR wszTitle[100];
+
+    TRACE("(%p)->(%s %p)\n", This, debugstr_w(message), confirmed);
+
+    if(!confirmed) return E_INVALIDARG;
+
+    if(!LoadStringW(get_shdoclc(), IDS_MESSAGE_BOX_TITLE, wszTitle,
+                sizeof(wszTitle)/sizeof(WCHAR))) {
+        WARN("Could not load message box title: %d\n", GetLastError());
+        *confirmed = VARIANT_TRUE;
+        return S_OK;
+    }
+
+    if(MessageBoxW(This->doc->hwnd, message, wszTitle,
+                MB_OKCANCEL|MB_ICONQUESTION)==IDOK)
+        *confirmed = VARIANT_TRUE;
+    else *confirmed = VARIANT_FALSE;
+
+    return S_OK;
+}
+
+typedef struct
+{
+    BSTR message;
+    BSTR dststr;
+    VARIANT *textdata;
+}prompt_arg;
+
+static INT_PTR CALLBACK prompt_dlgproc(HWND hwnd, UINT msg,
+        WPARAM wparam, LPARAM lparam)
+{
+    switch(msg)
+    {
+        case WM_INITDIALOG:
+        {
+            prompt_arg *arg = (prompt_arg*)lparam;
+            WCHAR wszTitle[100];
+
+            if(!LoadStringW(get_shdoclc(), IDS_MESSAGE_BOX_TITLE, wszTitle,
+                        sizeof(wszTitle)/sizeof(WCHAR))) {
+                WARN("Could not load message box title: %d\n", GetLastError());
+                EndDialog(hwnd, wparam);
+                return FALSE;
+            }
+
+            SetWindowLongPtrW(hwnd, DWLP_USER, lparam);
+            SetWindowTextW(hwnd, wszTitle);
+            SetWindowTextW(GetDlgItem(hwnd, ID_PROMPT_PROMPT), arg->message);
+            SetWindowTextW(GetDlgItem(hwnd, ID_PROMPT_EDIT), arg->dststr);
+            return FALSE;
+        }
+        case WM_COMMAND:
+            switch(wparam)
+            {
+                case MAKEWPARAM(IDCANCEL, BN_CLICKED):
+                    EndDialog(hwnd, wparam);
+                    return TRUE;
+                case MAKEWPARAM(IDOK, BN_CLICKED):
+                {
+                    prompt_arg *arg =
+                        (prompt_arg*)GetWindowLongPtrW(hwnd, DWLP_USER);
+                    HWND hwndPrompt = GetDlgItem(hwnd, ID_PROMPT_EDIT);
+                    INT len = GetWindowTextLengthW(hwndPrompt);
+
+                    if(!arg->textdata)
+                    {
+                        EndDialog(hwnd, wparam);
+                        return TRUE;
+                    }
+
+                    V_VT(arg->textdata) = VT_BSTR;
+                    if(!len && !arg->dststr)
+                        V_BSTR(arg->textdata) = NULL;
+                    else
+                    {
+                        V_BSTR(arg->textdata) = SysAllocStringLen(NULL, len);
+                        GetWindowTextW(hwndPrompt, V_BSTR(arg->textdata), len+1);
+                    }
+                    EndDialog(hwnd, wparam);
+                    return TRUE;
+                }
+            }
+            return FALSE;
+        case WM_CLOSE:
+            EndDialog(hwnd, IDCANCEL);
+            return TRUE;
+        default:
+            return FALSE;
+    }
 }
 
 static HRESULT WINAPI HTMLWindow2_prompt(IHTMLWindow2 *iface, BSTR message,
         BSTR dststr, VARIANT *textdata)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%s %s %p)\n", This, debugstr_w(message), debugstr_w(dststr), textdata);
-    return E_NOTIMPL;
+    prompt_arg arg;
+
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_w(message), debugstr_w(dststr), textdata);
+
+    if(textdata) V_VT(textdata) = VT_NULL;
+
+    arg.message = message;
+    arg.dststr = dststr;
+    arg.textdata = textdata;
+
+    DialogBoxParamW(hInst, MAKEINTRESOURCEW(ID_PROMPT_DIALOG),
+            This->doc->hwnd, prompt_dlgproc, (LPARAM)&arg);
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLWindow2_get_Image(IHTMLWindow2 *iface, IHTMLImageElementFactory **p)
@@ -586,10 +684,10 @@ static HRESULT WINAPI HTMLWindow2_blur(IHTMLWindow2 *iface)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLWindow2_scroll(IHTMLWindow2 *iface, long x, long y)
+static HRESULT WINAPI HTMLWindow2_scroll(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%ld %ld)\n", This, x, y);
+    FIXME("(%p)->(%d %d)\n", This, x, y);
     return E_NOTIMPL;
 }
 
@@ -601,23 +699,23 @@ static HRESULT WINAPI HTMLWindow2_get_clientInformation(IHTMLWindow2 *iface, IOm
 }
 
 static HRESULT WINAPI HTMLWindow2_setInterval(IHTMLWindow2 *iface, BSTR expression,
-        long msec, VARIANT *language, long *timerID)
+        LONG msec, VARIANT *language, LONG *timerID)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
     VARIANT expr;
 
-    TRACE("(%p)->(%s %ld %p %p)\n", This, debugstr_w(expression), msec, language, timerID);
+    TRACE("(%p)->(%s %d %p %p)\n", This, debugstr_w(expression), msec, language, timerID);
 
     V_VT(&expr) = VT_BSTR;
     V_BSTR(&expr) = expression;
     return IHTMLWindow3_setInterval(HTMLWINDOW3(This), &expr, msec, language, timerID);
 }
 
-static HRESULT WINAPI HTMLWindow2_clearInterval(IHTMLWindow2 *iface, long timerID)
+static HRESULT WINAPI HTMLWindow2_clearInterval(IHTMLWindow2 *iface, LONG timerID)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
 
-    TRACE("(%p)->(%ld)\n", This, timerID);
+    TRACE("(%p)->(%d)\n", This, timerID);
 
     return clear_task_timer(This->doc, TRUE, timerID);
 }
@@ -651,12 +749,12 @@ static HRESULT WINAPI HTMLWindow2_toString(IHTMLWindow2 *iface, BSTR *String)
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLWindow2_scrollBy(IHTMLWindow2 *iface, long x, long y)
+static HRESULT WINAPI HTMLWindow2_scrollBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
     nsresult nsres;
 
-    TRACE("(%p)->(%ld %ld)\n", This, x, y);
+    TRACE("(%p)->(%d %d)\n", This, x, y);
 
     nsres = nsIDOMWindow_ScrollBy(This->nswindow, x, y);
     if(NS_FAILED(nsres))
@@ -665,12 +763,12 @@ static HRESULT WINAPI HTMLWindow2_scrollBy(IHTMLWindow2 *iface, long x, long y)
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLWindow2_scrollTo(IHTMLWindow2 *iface, long x, long y)
+static HRESULT WINAPI HTMLWindow2_scrollTo(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
     nsresult nsres;
 
-    TRACE("(%p)->(%ld %ld)\n", This, x, y);
+    TRACE("(%p)->(%d %d)\n", This, x, y);
 
     nsres = nsIDOMWindow_ScrollTo(This->nswindow, x, y);
     if(NS_FAILED(nsres))
@@ -679,31 +777,31 @@ static HRESULT WINAPI HTMLWindow2_scrollTo(IHTMLWindow2 *iface, long x, long y)
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLWindow2_moveTo(IHTMLWindow2 *iface, long x, long y)
+static HRESULT WINAPI HTMLWindow2_moveTo(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%ld %ld)\n", This, x, y);
+    FIXME("(%p)->(%d %d)\n", This, x, y);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLWindow2_moveBy(IHTMLWindow2 *iface, long x, long y)
+static HRESULT WINAPI HTMLWindow2_moveBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%ld %ld)\n", This, x, y);
+    FIXME("(%p)->(%d %d)\n", This, x, y);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLWindow2_resizeTo(IHTMLWindow2 *iface, long x, long y)
+static HRESULT WINAPI HTMLWindow2_resizeTo(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%ld %ld)\n", This, x, y);
+    FIXME("(%p)->(%d %d)\n", This, x, y);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLWindow2_resizeBy(IHTMLWindow2 *iface, long x, long y)
+static HRESULT WINAPI HTMLWindow2_resizeBy(IHTMLWindow2 *iface, LONG x, LONG y)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    FIXME("(%p)->(%ld %ld)\n", This, x, y);
+    FIXME("(%p)->(%d %d)\n", This, x, y);
     return E_NOTIMPL;
 }
 
@@ -860,14 +958,14 @@ static HRESULT WINAPI HTMLWindow3_Invoke(IHTMLWindow3 *iface, DISPID dispIdMembe
             pVarResult, pExcepInfo, puArgErr);
 }
 
-static HRESULT WINAPI HTMLWindow3_get_screenLeft(IHTMLWindow3 *iface, long *p)
+static HRESULT WINAPI HTMLWindow3_get_screenLeft(IHTMLWindow3 *iface, LONG *p)
 {
     HTMLWindow *This = HTMLWINDOW3_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLWindow3_get_screenTop(IHTMLWindow3 *iface, long *p)
+static HRESULT WINAPI HTMLWindow3_get_screenTop(IHTMLWindow3 *iface, LONG *p)
 {
     HTMLWindow *This = HTMLWINDOW3_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);
@@ -888,8 +986,8 @@ static HRESULT WINAPI HTMLWindow3_detachEvent(IHTMLWindow3 *iface, BSTR event, I
     return E_NOTIMPL;
 }
 
-static HRESULT window_set_timer(HTMLWindow *This, VARIANT *expr, long msec, VARIANT *language,
-        BOOL interval, long *timer_id)
+static HRESULT window_set_timer(HTMLWindow *This, VARIANT *expr, LONG msec, VARIANT *language,
+        BOOL interval, LONG *timer_id)
 {
     IDispatch *disp = NULL;
 
@@ -917,22 +1015,22 @@ static HRESULT window_set_timer(HTMLWindow *This, VARIANT *expr, long msec, VARI
     return S_OK;
 }
 
-static HRESULT WINAPI HTMLWindow3_setTimeout(IHTMLWindow3 *iface, VARIANT *expression, long msec,
-        VARIANT *language, long *timerID)
+static HRESULT WINAPI HTMLWindow3_setTimeout(IHTMLWindow3 *iface, VARIANT *expression, LONG msec,
+        VARIANT *language, LONG *timerID)
 {
     HTMLWindow *This = HTMLWINDOW3_THIS(iface);
 
-    TRACE("(%p)->(%p(%d) %ld %p %p)\n", This, expression, V_VT(expression), msec, language, timerID);
+    TRACE("(%p)->(%p(%d) %d %p %p)\n", This, expression, V_VT(expression), msec, language, timerID);
 
     return window_set_timer(This, expression, msec, language, FALSE, timerID);
 }
 
-static HRESULT WINAPI HTMLWindow3_setInterval(IHTMLWindow3 *iface, VARIANT *expression, long msec,
-        VARIANT *language, long *timerID)
+static HRESULT WINAPI HTMLWindow3_setInterval(IHTMLWindow3 *iface, VARIANT *expression, LONG msec,
+        VARIANT *language, LONG *timerID)
 {
     HTMLWindow *This = HTMLWINDOW3_THIS(iface);
 
-    TRACE("(%p)->(%p %ld %p %p)\n", This, expression, msec, language, timerID);
+    TRACE("(%p)->(%p %d %p %p)\n", This, expression, msec, language, timerID);
 
     return window_set_timer(This, expression, msec, language, TRUE, timerID);
 }

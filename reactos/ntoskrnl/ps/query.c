@@ -72,6 +72,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PPROCESS_SESSION_INFORMATION SessionInfo =
         (PPROCESS_SESSION_INFORMATION)ProcessInformation;
     PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
+    PIO_COUNTERS IoCounters = (PIO_COUNTERS)ProcessInformation;
     PROCESS_DEVICEMAP_INFORMATION DeviceMap;
     PUNICODE_STRING ImageName;
     ULONG Cookie;
@@ -149,8 +150,32 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             ObDereferenceObject(Process);
             break;
 
-        /* Quote limits and I/O Counters: not implemented */
+        /* Quote limits: not implemented */
         case ProcessQuotaLimits:
+
+            Length = sizeof(QUOTA_LIMITS);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
+            /* TODO: Implement this case */
+            Status = STATUS_NOT_IMPLEMENTED;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
+            break;
+
         case ProcessIoCounters:
 
             Length = sizeof(IO_COUNTERS);
@@ -169,7 +194,24 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
-            Status = STATUS_NOT_IMPLEMENTED;
+            _SEH2_TRY
+            {
+                IoCounters->ReadOperationCount = Process->ReadOperationCount.QuadPart;
+                IoCounters->ReadTransferCount = Process->ReadTransferCount.QuadPart;
+                IoCounters->WriteOperationCount = Process->WriteOperationCount.QuadPart;
+                IoCounters->WriteTransferCount = Process->WriteTransferCount.QuadPart;
+                IoCounters->OtherOperationCount = Process->OtherOperationCount.QuadPart;
+                IoCounters->OtherTransferCount = Process->OtherTransferCount.QuadPart;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Ignore exception */
+            }
+            _SEH2_END;
+
+            /* Set status to success in any case */
+            Status = STATUS_SUCCESS;
+
             /* Dereference the process */
             ObDereferenceObject(Process);
             break;

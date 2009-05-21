@@ -59,7 +59,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
     //
     // Get the current second of time
     //
-    MachRTCGetCurrentDateTime(NULL, NULL, NULL, NULL, NULL, &LastClockSecond);
+    LastClockSecond = ArcGetTime()->Second;
 
     //
     // Process keys
@@ -92,12 +92,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
             //
             // Get the updated time, seconds only
             //
-            MachRTCGetCurrentDateTime(NULL,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      NULL,
-                                      &CurrentClockSecond);
+            CurrentClockSecond = ArcGetTime()->Second;
 
             //
             // Check if more then a second has now elapsed

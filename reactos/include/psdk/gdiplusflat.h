@@ -82,6 +82,7 @@ GpStatus WINGDIPAPI GdipCreateFontFromDC(HDC,GpFont**);
 GpStatus WINGDIPAPI GdipCreateFontFromLogfontA(HDC,GDIPCONST LOGFONTA*,GpFont**);
 GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC,GDIPCONST LOGFONTW*,GpFont**);
 GpStatus WINGDIPAPI GdipDeleteFont(GpFont*);
+GpStatus WINGDIPAPI GdipGetLogFontA(GpFont*,GpGraphics*,LOGFONTA*);
 GpStatus WINGDIPAPI GdipGetLogFontW(GpFont*,GpGraphics*,LOGFONTW*);
 GpStatus WINGDIPAPI GdipGetFamily(GpFont*, GpFontFamily**);
 GpStatus WINGDIPAPI GdipGetFontUnit(GpFont*, Unit*);
@@ -92,6 +93,7 @@ GpStatus WINGDIPAPI GdipGetFontHeight(GDIPCONST GpFont*, GDIPCONST GpGraphics*,
 GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont*, REAL, REAL*);
 
 /* FontCollection */
+GpStatus WINGDIPAPI GdipNewInstalledFontCollection(GpFontCollection**);
 GpStatus WINGDIPAPI GdipNewPrivateFontCollection(GpFontCollection**);
 GpStatus WINGDIPAPI GdipDeletePrivateFontCollection(GpFontCollection**);
 GpStatus WINGDIPAPI GdipPrivateAddFontFile(GpFontCollection*, GDIPCONST WCHAR*);
@@ -326,6 +328,7 @@ GpStatus WINGDIPAPI GdipGetImageHorizontalResolution(GpImage*,REAL*);
 GpStatus WINGDIPAPI GdipGetImageItemData(GpImage*,ImageItemData*);
 GpStatus WINGDIPAPI GdipGetImagePixelFormat(GpImage*,PixelFormat*);
 GpStatus WINGDIPAPI GdipGetImageRawFormat(GpImage*,GUID*);
+GpStatus WINGDIPAPI GdipGetImageThumbnail(GpImage*,UINT,UINT,GpImage**,GetThumbnailImageAbort,VOID*);
 GpStatus WINGDIPAPI GdipGetImageType(GpImage*,ImageType*);
 GpStatus WINGDIPAPI GdipGetImageVerticalResolution(GpImage*,REAL*);
 GpStatus WINGDIPAPI GdipGetImageWidth(GpImage*,UINT*);
@@ -337,6 +340,7 @@ GpStatus WINGDIPAPI GdipGetPropertySize(GpImage*,UINT*,UINT*);
 GpStatus WINGDIPAPI GdipImageGetFrameCount(GpImage*,GDIPCONST GUID*,UINT*);
 GpStatus WINGDIPAPI GdipImageGetFrameDimensionsCount(GpImage*,UINT*);
 GpStatus WINGDIPAPI GdipImageGetFrameDimensionsList(GpImage*,GUID*,UINT);
+GpStatus WINGDIPAPI GdipImageRotateFlip(GpImage*,RotateFlipType);
 GpStatus WINGDIPAPI GdipImageSelectActiveFrame(GpImage*,GDIPCONST GUID*,UINT);
 GpStatus WINGDIPAPI GdipLoadImageFromFile(GDIPCONST WCHAR*,GpImage**);
 GpStatus WINGDIPAPI GdipLoadImageFromFileICM(GDIPCONST WCHAR*,GpImage**);
@@ -380,6 +384,8 @@ GpStatus WINGDIPAPI GdipGetLineRectI(GpLineGradient*,GpRect*);
 GpStatus WINGDIPAPI GdipGetLineWrapMode(GpLineGradient*,GpWrapMode*);
 GpStatus WINGDIPAPI GdipSetLineBlend(GpLineGradient*,GDIPCONST REAL*,
     GDIPCONST REAL*,INT);
+GpStatus WINGDIPAPI GdipGetLineBlend(GpLineGradient*,REAL*,REAL*,INT);
+GpStatus WINGDIPAPI GdipGetLineBlendCount(GpLineGradient*,INT*);
 GpStatus WINGDIPAPI GdipSetLineColors(GpLineGradient*,ARGB,ARGB);
 GpStatus WINGDIPAPI GdipSetLineGammaCorrection(GpLineGradient*,BOOL);
 GpStatus WINGDIPAPI GdipSetLineSigmaBlend(GpLineGradient*,REAL,REAL);

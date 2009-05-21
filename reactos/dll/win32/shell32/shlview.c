@@ -267,8 +267,8 @@ static void SetStyle(IShellViewImpl * This, DWORD dwAdd, DWORD dwRemove)
 
 	TRACE("(%p)\n", This);
 
-	tmpstyle = GetWindowLongW(This->hWndList, GWL_STYLE);
-	SetWindowLongW(This->hWndList, GWL_STYLE, dwAdd | (tmpstyle & ~dwRemove));
+	tmpstyle = GetWindowLongPtrW(This->hWndList, GWL_STYLE);
+	SetWindowLongPtrW(This->hWndList, GWL_STYLE, dwAdd | (tmpstyle & ~dwRemove));
 }
 
 /**********************************************************

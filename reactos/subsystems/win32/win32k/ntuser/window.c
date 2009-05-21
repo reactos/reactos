@@ -1585,7 +1585,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        * native ole32.OleInitialize uses HWND_MESSAGE to create the
        * message window (style: WS_POPUP|WS_DISABLED)
        */
-      DPRINT1("FIXME - Parent is HWND_MESSAGE\n");
+      DPRINT("FIXME - Parent is HWND_MESSAGE\n");
       // ParentWindowHandle set already.      
    }
    else if (hWndParent)

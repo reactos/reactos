@@ -107,14 +107,14 @@ static HRESULT WINAPI HTMLCommentElement_get_text(IHTMLCommentElement *iface, BS
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLCommentElement_put_atomic(IHTMLCommentElement *iface, long v)
+static HRESULT WINAPI HTMLCommentElement_put_atomic(IHTMLCommentElement *iface, LONG v)
 {
     HTMLCommentElement *This = HTMLCOMMENT_THIS(iface);
-    FIXME("(%p)->(%ld)\n", This, v);
+    FIXME("(%p)->(%d)\n", This, v);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI HTMLCommentElement_get_atomic(IHTMLCommentElement *iface, long *p)
+static HRESULT WINAPI HTMLCommentElement_get_atomic(IHTMLCommentElement *iface, LONG *p)
 {
     HTMLCommentElement *This = HTMLCOMMENT_THIS(iface);
     FIXME("(%p)->(%p)\n", This, p);

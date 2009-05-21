@@ -376,15 +376,15 @@ StgStreamImpl* StgStreamImpl_Construct(
 
 #define htole32(x) RtlUlongByteSwap(x)
 #define htole16(x) RtlUshortByteSwap(x)
-#define le32toh(x) RtlUlongByteSwap(x)
-#define le16toh(x) RtlUshortByteSwap(x)
+#define lendian32toh(x) RtlUlongByteSwap(x)
+#define lendian16toh(x) RtlUshortByteSwap(x)
 
 #else
 
 #define htole32(x) (x)
 #define htole16(x) (x)
-#define le32toh(x) (x)
-#define le16toh(x) (x)
+#define lendian32toh(x) (x)
+#define lendian16toh(x) (x)
 
 #endif
 

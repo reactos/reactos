@@ -969,7 +969,7 @@ static BOOL CRYPT_AsnEncodeInteger(DWORD dwCertEncodingType,
     return ret;
 }
 
-BOOL WINAPI CRYPT_AsnEncodeInt(DWORD dwCertEncodingType,
+static BOOL WINAPI CRYPT_AsnEncodeInt(DWORD dwCertEncodingType,
  LPCSTR lpszStructType, const void *pvStructInfo, BYTE *pbEncoded,
  DWORD *pcbEncoded)
 {

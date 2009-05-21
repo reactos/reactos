@@ -18,37 +18,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /*
  * @unimplemented
  */
-int
-WINAPI
-GetMouseMovePointsEx(
-  UINT cbSize,
-  LPMOUSEMOVEPOINT lppt,
-  LPMOUSEMOVEPOINT lpptBuf,
-  int nBufPoints,
-  DWORD resolution)
-{
-    if((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
-	{
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return -1;
-    }
-
-    if(!lppt || !lpptBuf)
-	{
-        SetLastError(ERROR_NOACCESS);
-        return -1;
-    }
-
-    UNIMPLEMENTED;
-
-    SetLastError(ERROR_POINT_NOT_FOUND);
-    return -1;
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 WINAPI
 WaitForInputIdle(

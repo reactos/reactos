@@ -203,4 +203,13 @@ CMP_RegisterNotification(
 }
 
 
-
+/***********************************************************************
+ *		CMP_UnregisterNotification(SETUPAPI.@)
+ */
+CONFIGRET
+WINAPI
+CMP_UnregisterNotification(IN HDEVNOTIFY handle)
+{
+    FIXME ("Stub %p\n", handle);
+    return CR_SUCCESS;
+}

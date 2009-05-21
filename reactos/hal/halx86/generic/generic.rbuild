@@ -4,7 +4,6 @@
 	<module name="hal_generic" type="objectlibrary">
 		<include base="hal_generic">../include</include>
 		<include base="ntoskrnl">include</include>
-		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<file>beep.c</file>
 		<file>bios.c</file>
@@ -27,7 +26,6 @@
 	<module name="hal_generic_up" type="objectlibrary">
 		<include base="hal_generic_up">../include</include>
 		<include base="ntoskrnl">include</include>
-		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<file>irq.S</file>
 		<file>processor.c</file>
@@ -36,7 +34,6 @@
 	<module name="hal_generic_pc" type="objectlibrary">
 		<include base="hal_generic_pc">../include</include>
 		<include base="ntoskrnl">include</include>
-		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<file>pci.c</file>
 	</module>

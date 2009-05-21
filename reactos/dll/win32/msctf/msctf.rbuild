@@ -1,10 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<group>
 <module name="msctf" type="win32dll" baseaddress="${BASEADDRESS_MSCTF}" installbase="system32" installname="msctf.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="msctf.spec" />
 	<include base="msctf">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="_WIN32_WINNT">0x600</define>
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>categorymgr.c</file>
 	<file>context.c</file>
 	<file>documentmgr.c</file>
@@ -21,3 +24,7 @@
 	<library>kernel32</library>
 	<library>ntdll</library>
 </module>
+<module name="msctf_local_interface" type="idlinterface">
+	<file>msctf_local.idl</file>
+</module>
+</group>

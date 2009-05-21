@@ -32,10 +32,10 @@ STRINGTABLE DISCARDABLE
 
 ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Programme d'installation de Gecko de Wine"
+CAPTION "Programme d'installation de Gecko pour Wine"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Cette application essaie d'afficher une page HTML. Wine requiert la présence du moteur de rendu Gecko de Mozilla" \
+    LTEXT "Cette application essaie d'afficher une page HTML. Wine requiert la présence du moteur de rendu Gecko de Mozilla " \
           "pour afficher cette page. Cliquez sur Installer si vous souhaitez que Wine " \
           "télécharge et installe automatiquement Gecko.", ID_DWL_STATUS, 10, 10, 240, 40, SS_LEFT
     CONTROL "Progression", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12

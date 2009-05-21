@@ -848,9 +848,11 @@ EXPORTS
   wscanf @842
 
   _mbsnbcpy_s
+  wcscpy_s
   wcsncpy_s
   _ftol2=_ftol
   _ftol2_sse=_ftol
   strcat_s
+  strcpy_s
 
   _swprintf=swprintf

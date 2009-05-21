@@ -137,7 +137,7 @@ static HRESULT report_result(IInternetProtocolSink *sink, HRESULT hres)
 
 static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
         IInternetProtocolSink *pOIProtSink, IInternetBindInfo *pOIBindInfo,
-        DWORD grfPI, DWORD dwReserved)
+        DWORD grfPI, HANDLE_PTR dwReserved)
 {
     ITSProtocol *This = PROTOCOL_THIS(iface);
     BINDINFO bindinfo;
@@ -151,7 +151,7 @@ static HRESULT WINAPI ITSProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     static const WCHAR separator[] = {':',':',0};
 
-    TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
+    TRACE("(%p)->(%s %p %p %08x %lx)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
     ptr = skip_schema(szUrl);

@@ -678,8 +678,8 @@ static HRESULT IDirect3DDevice9Impl_CreateSurface(LPDIRECT3DDEVICE9EX iface, UIN
 
     EnterCriticalSection(&d3d9_cs);
     hrc = IWineD3DDevice_CreateSurface(This->WineD3DDevice, Width, Height, wined3dformat_from_d3dformat(Format),
-            Lockable, Discard, Level, &object->wineD3DSurface, Type, Usage & WINED3DUSAGE_MASK, (WINED3DPOOL)Pool,
-            MultiSample, MultisampleQuality, pSharedHandle, SURFACE_OPENGL, (IUnknown *)object);
+            Lockable, Discard, Level, &object->wineD3DSurface, Type, Usage & WINED3DUSAGE_MASK,
+            (WINED3DPOOL)Pool, MultiSample, MultisampleQuality, SURFACE_OPENGL, (IUnknown *)object);
     LeaveCriticalSection(&d3d9_cs);
 
     if (hrc != D3D_OK || NULL == object->wineD3DSurface) {
@@ -2099,7 +2099,7 @@ static HRESULT STDMETHODCALLTYPE device_parent_CreateVolume(IWineD3DDeviceParent
     object->lpVtbl = &Direct3DVolume9_Vtbl;
     object->ref = 1;
     hr = IWineD3DDevice_CreateVolume(This->WineD3DDevice, width, height, depth, usage & WINED3DUSAGE_MASK,
-            format, pool, &object->wineD3DVolume, NULL, (IUnknown *)object);
+            format, pool, &object->wineD3DVolume, (IUnknown *)object);
     if (FAILED(hr))
     {
         ERR("(%p) CreateVolume failed, returning %#x\n", iface, hr);

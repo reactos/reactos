@@ -103,8 +103,8 @@
 @ stub StrongNameSignatureGeneration
 @ stub StrongNameSignatureGenerationEx
 @ stub StrongNameSignatureSize
-@ stub StrongNameSignatureVerification
-@ stub StrongNameSignatureVerificationEx
+@ stdcall StrongNameSignatureVerification(wstr long ptr)
+@ stdcall StrongNameSignatureVerificationEx(wstr long ptr)
 @ stub StrongNameSignatureVerificationFromImage
 @ stub StrongNameTokenFromAssembly
 @ stub StrongNameTokenFromAssemblyEx

@@ -31,7 +31,7 @@ POBJECT_TYPE IoDeviceObjectType = NULL;
 POBJECT_TYPE IoFileObjectType = NULL;
 extern POBJECT_TYPE IoControllerObjectType;
 extern UNICODE_STRING NtSystemRoot;
-BOOLEAN IoCountOperations;
+BOOLEAN IoCountOperations = TRUE;
 ULONG IoReadOperationCount = 0;
 LARGE_INTEGER IoReadTransferCount = {{0, 0}};
 ULONG IoWriteOperationCount = 0;

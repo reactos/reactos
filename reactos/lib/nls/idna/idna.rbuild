@@ -3,10 +3,10 @@
 <module name="idna" type="staticlibrary">
 	<library>icu4ros</library>
 
-	<define name="WINVER">0x600</define>
+	<redefine name="WINVER">0x600</redefine>
 
-	<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
-	<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+	<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+	<compilerflag compiler="cxx">-fno-rtti</compilerflag>
 	<include base="icu4ros">icu/source/common</include>
 	<file>idna.cpp</file>
 	<file>nameprep.cpp</file>

@@ -1175,7 +1175,7 @@ static HRESULT unmarshal_ORPC_EXTENT_ARRAY(RPC_MESSAGE *msg, const char *end,
         /* arbitrary limit for security (don't know what native does) */
         if (extensions->size > 256)
         {
-            ERR("too many extensions: %ld\n", extensions->size);
+            ERR("too many extensions: %d\n", extensions->size);
             return RPC_S_INVALID_BOUND;
         }
 
@@ -1242,7 +1242,7 @@ static HRESULT unmarshal_ORPCTHIS(RPC_MESSAGE *msg, ORPCTHIS *orpcthis,
 
     if (orpcthis->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4))
     {
-        ERR("invalid flags 0x%lx\n", orpcthis->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
+        ERR("invalid flags 0x%x\n", orpcthis->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
         return RPC_E_INVALID_HEADER;
     }
 
@@ -1285,7 +1285,7 @@ static HRESULT unmarshal_ORPCTHAT(RPC_MESSAGE *msg, ORPCTHAT *orpcthat,
 
     if (orpcthat->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4))
     {
-        ERR("invalid flags 0x%lx\n", orpcthat->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
+        ERR("invalid flags 0x%x\n", orpcthat->flags & ~(ORPCF_LOCAL|ORPCF_RESERVED1|ORPCF_RESERVED2|ORPCF_RESERVED3|ORPCF_RESERVED4));
         return RPC_E_INVALID_HEADER;
     }
 
@@ -1904,7 +1904,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 
         TRACE("marshalling IClassFactory to client\n");
         
-        hres = IStream_Stat(pStm,&ststg,0);
+        hres = IStream_Stat(pStm,&ststg,STATFLAG_NONAME);
         if (hres) return hres;
 
         seekto.u.LowPart = 0;

@@ -95,6 +95,8 @@ MiniportHandleInterrupt(
         }
       if(Data & CSR0_RINT)
         {
+          BOOLEAN IndicatedData = FALSE;
+
           DPRINT("receive interrupt\n");
 
           while(1)
@@ -135,7 +137,8 @@ MiniportHandleInterrupt(
               DPRINT("Indicating a %d-byte packet (index %d)\n", ByteCount, Adapter->CurrentReceiveDescriptorIndex);
 
               NdisMEthIndicateReceive(Adapter->MiniportAdapterHandle, 0, Buffer, 14, Buffer+14, ByteCount-14, ByteCount-14);
-              NdisMEthIndicateReceiveComplete(Adapter->MiniportAdapterHandle);
+
+              IndicatedData = TRUE;
 
               RtlZeroMemory(Descriptor, sizeof(RECEIVE_DESCRIPTOR));
               Descriptor->RBADR =
@@ -148,6 +151,9 @@ MiniportHandleInterrupt(
 
               Adapter->Statistics.RcvGoodFrames++;
             }
+
+            if (IndicatedData)
+                NdisMEthIndicateReceiveComplete(Adapter->MiniportAdapterHandle);
         }
       if(Data & CSR0_TINT)
         {

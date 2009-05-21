@@ -66,14 +66,15 @@ static UINT create_temp_property_table(MSIPACKAGE *package)
     UINT rc;
 
     static const WCHAR CreateSql[] = {
-       'C','R','E','A','T','E',' ','T','A','B','L','E',' ','`','_','P','r','o',
-       'p','e','r','t','y','`',' ','(',' ','`','_','P','r','o','p','e','r','t',
-       'y','`',' ','C','H','A','R','(','5','6',')',' ','N','O','T',' ','N','U',
-       'L','L',' ','T','E','M','P','O','R','A','R','Y',',',' ','`','V','a','l',
-       'u','e','`',' ','C','H','A','R','(','9','8',')',' ','N','O','T',' ','N',
-       'U','L','L',' ','T','E','M','P','O','R','A','R','Y',' ','P','R','I','M',
-       'A','R','Y',' ','K','E','Y',' ','`','_','P','r','o','p','e','r','t','y',
-        '`',')',0};
+       'C','R','E','A','T','E',' ','T','A','B','L','E',' ',
+       '`','_','P','r','o','p','e','r','t','y','`',' ','(',' ',
+       '`','_','P','r','o','p','e','r','t','y','`',' ',
+       'C','H','A','R','(','5','6',')',' ','N','O','T',' ','N','U','L','L',' ',
+       'T','E','M','P','O','R','A','R','Y',',',' ',
+       '`','V','a','l','u','e','`',' ','C','H','A','R','(','9','8',')',' ',
+       'N','O','T',' ','N','U','L','L',' ','T','E','M','P','O','R','A','R','Y',
+       ' ','P','R','I','M','A','R','Y',' ','K','E','Y',' ',
+       '`','_','P','r','o','p','e','r','t','y','`',')',' ','H','O','L','D',0};
 
     rc = MSI_DatabaseOpenViewW(package->db, CreateSql, &view);
     if (rc != ERROR_SUCCESS)
@@ -219,7 +220,7 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
 {
     HKEY netsetup;
     LONG res;
-    LPWSTR file;
+    LPWSTR file = NULL;
     DWORD index = 0, size;
     WCHAR ver[MAX_PATH];
     WCHAR name[MAX_PATH];
@@ -242,34 +243,46 @@ static LPWSTR get_fusion_filename(MSIPACKAGE *package)
     if (res != ERROR_SUCCESS)
         return NULL;
 
+    GetWindowsDirectoryW(windir, MAX_PATH);
+
     ver[0] = '\0';
     size = MAX_PATH;
     while (RegEnumKeyExW(netsetup, index, name, &size, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
         index++;
+
+        /* verify existence of fusion.dll .Net 3.0 does not install a new one */
         if (lstrcmpW(ver, name) < 0)
-            lstrcpyW(ver, name);
+        {
+            LPWSTR check;
+            size = lstrlenW(windir) + lstrlenW(subdir) + lstrlenW(name) +lstrlenW(fusion) + 3;
+            check = msi_alloc(size * sizeof(WCHAR));
+
+            if (!check)
+            {
+                msi_free(file);
+                return NULL;
+            }
+
+            lstrcpyW(check, windir);
+            lstrcatW(check, backslash);
+            lstrcatW(check, subdir);
+            lstrcatW(check, name);
+            lstrcatW(check, backslash);
+            lstrcatW(check, fusion);
+
+            if(GetFileAttributesW(check) != INVALID_FILE_ATTRIBUTES)
+            {
+                msi_free(file);
+                file = check;
+                lstrcpyW(ver, name);
+            }
+            else
+                msi_free(check);
+        }
     }
 
     RegCloseKey(netsetup);
-
-    if (!index)
-        return NULL;
-
-    GetWindowsDirectoryW(windir, MAX_PATH);
-
-    size = lstrlenW(windir) + lstrlenW(subdir) + lstrlenW(ver) +lstrlenW(fusion) + 3;
-    file = msi_alloc(size * sizeof(WCHAR));
-    if (!file)
-        return NULL;
-
-    lstrcpyW(file, windir);
-    lstrcatW(file, backslash);
-    lstrcatW(file, subdir);
-    lstrcatW(file, ver);
-    lstrcatW(file, backslash);
-    lstrcatW(file, fusion);
-
     return file;
 }
 
@@ -439,11 +452,12 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szDate[] = {'D','a','t','e',0};
     static const WCHAR szTime[] = {'T','i','m','e',0};
     static const WCHAR szUserLangID[] = {'U','s','e','r','L','a','n','g','u','a','g','e','I','D',0};
+    static const WCHAR szSystemLangID[] = {'S','y','s','t','e','m','L','a','n','g','u','a','g','e','I','D',0};
 
     /*
      * Other things that probably should be set:
      *
-     * SystemLanguageID ComputerName UserLanguageID LogonUser VirtualMemory
+     * ComputerName LogonUser VirtualMemory
      * ShellAdvSupport DefaultUIFont PackagecodeChanging
      * ProductState CaptionHeight BorderTop BorderSide TextHeight
      * RedirectedDllSupport
@@ -639,6 +653,11 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     sprintfW(bufstr, szIntFormat, langid);
 
     MSI_SetPropertyW( package, szUserLangID, bufstr );
+
+    langid = GetSystemDefaultLangID();
+    sprintfW(bufstr, szIntFormat, langid);
+
+    MSI_SetPropertyW( package, szSystemLangID, bufstr );
 }
 
 static UINT msi_load_summary_properties( MSIPACKAGE *package )
@@ -1344,7 +1363,8 @@ UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
         msiobj_release(&view->hdr);
     }
 
-    msiobj_release(&row->hdr);
+    if (row)
+      msiobj_release(&row->hdr);
 
     if (rc == ERROR_SUCCESS && (!lstrcmpW(szName, cszSourceDir)))
         msi_reset_folders(package, TRUE);
@@ -1402,16 +1422,36 @@ UINT WINAPI MsiSetPropertyW( MSIHANDLE hInstall, LPCWSTR szName, LPCWSTR szValue
 
 static MSIRECORD *MSI_GetPropertyRow( MSIPACKAGE *package, LPCWSTR name )
 {
+    MSIQUERY *view;
+    MSIRECORD *rec, *row = NULL;
+    UINT r;
+
     static const WCHAR query[]= {
         'S','E','L','E','C','T',' ','`','V','a','l','u','e','`',' ',
         'F','R','O','M',' ' ,'`','_','P','r','o','p','e','r','t','y','`',
         ' ','W','H','E','R','E',' ' ,'`','_','P','r','o','p','e','r','t','y','`',
-        '=','\'','%','s','\'',0};
+        '=','?',0};
 
     if (!name || !*name)
         return NULL;
 
-    return MSI_QueryGetRecord( package->db, query, name );
+    rec = MSI_CreateRecord(1);
+    if (!rec)
+        return NULL;
+
+    MSI_RecordSetStringW(rec, 1, name);
+
+    r = MSI_DatabaseOpenViewW(package->db, query, &view);
+    if (r == ERROR_SUCCESS)
+    {
+        MSI_ViewExecute(view, rec);
+        MSI_ViewFetch(view, &row);
+        MSI_ViewClose(view);
+        msiobj_release(&view->hdr);
+    }
+
+    msiobj_release(&rec->hdr);
+    return row;
 }
 
 /* internal function, not compatible with MsiGetPropertyW */

@@ -19,8 +19,14 @@
 #ifndef RESOURCE_H
 #define RESOURCE_H
 
-#define IDB_WATERMARK                    100
-#define IDB_HEADER                       101
+#define IDB_WATERMARK                   100
+#define IDB_HEADER                      101
+
+#define IDI_ICON1                       10
+#define IDI_ICON2                       11
+#define IDI_ICON3                       12
+#define IDI_ICON4                       13
+#define IDI_ICON5                       14
 
 #define IDC_STATIC                        -1
 
@@ -114,6 +120,7 @@
 #define IDS_CMT_WORDPAD                 3228
 #define IDS_CMT_SNDVOL32                3229
 #define IDS_CMT_DXDIAG                  3230
+#define IDS_CMT_PAINT                   3231
 
 #define IDS_REACTOS_SETUP               3300
 #define IDS_UNKNOWN_ERROR               3301
@@ -146,6 +153,7 @@
 #define IDS_SHORT_WORDPAD       3418
 #define IDS_SHORT_SNDVOL32      3419
 #define IDS_SHORT_DXDIAG        3420
+#define IDS_SHORT_PAINT         3421
 
 #define IDS_WZD_NAME            3450
 #define IDS_WZD_SETCOMPUTERNAME 3451

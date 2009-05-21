@@ -94,6 +94,7 @@ typedef struct
 typedef struct
 {
     PLOGFILE LogFile;
+    ULONG CurrentRecord;
     WCHAR *Name;
 } EVENTSOURCE, *PEVENTSOURCE;
 
@@ -114,9 +115,9 @@ VOID LogfListAddItem(PLOGFILE Item);
 
 VOID LogfListRemoveItem(PLOGFILE Item);
 
-BOOL LogfReadEvent(PLOGFILE LogFile,
+DWORD LogfReadEvent(PLOGFILE LogFile,
                    DWORD Flags,
-                   DWORD RecordNumber,
+                   DWORD * RecordNumber,
                    DWORD BufSize,
                    PBYTE Buffer,
                    DWORD * BytesRead,
@@ -138,6 +139,8 @@ BOOL LogfInitializeNew(PLOGFILE LogFile);
 BOOL LogfInitializeExisting(PLOGFILE LogFile);
 
 DWORD LogfGetOldestRecord(PLOGFILE LogFile);
+
+DWORD LogfGetCurrentRecord(PLOGFILE LogFile);
 
 ULONG LogfOffsetByNumber(PLOGFILE LogFile,
                          DWORD RecordNumber);

@@ -49,7 +49,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         IN PDEVICE_OBJECT DeviceObject,                    \
         IN PIRP Irp)PURE;                                  \
                                                            \
-    STDMETHOD_(NTSTATUS, FastDeviceIoControl)(THIS_        \
+    STDMETHOD_(BOOLEAN, FastDeviceIoControl)(THIS_        \
         IN PFILE_OBJECT FileObject,                        \
         IN BOOLEAN Wait,                                   \
         IN PVOID InputBuffer,                              \
@@ -60,7 +60,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         OUT PIO_STATUS_BLOCK StatusBlock,                  \
         IN PDEVICE_OBJECT DeviceObject)PURE;               \
                                                            \
-    STDMETHOD_(NTSTATUS, FastRead)(THIS_                   \
+    STDMETHOD_(BOOLEAN, FastRead)(THIS_                    \
         IN PFILE_OBJECT FileObject,                        \
         IN PLARGE_INTEGER FileOffset,                      \
         IN ULONG Length,                                   \
@@ -70,7 +70,7 @@ DEFINE_GUID(IID_IIrpTargetFactory, 0xB4C90A62, 0x5791, 0x11D0, 0xF9, 0x86, 0x00,
         OUT PIO_STATUS_BLOCK StatusBlock,                  \
         IN PDEVICE_OBJECT DeviceObject)PURE;               \
                                                            \
-    STDMETHOD_(NTSTATUS, FastWrite)(THIS_                  \
+    STDMETHOD_(BOOLEAN, FastWrite)(THIS_                   \
         IN PFILE_OBJECT FileObject,                        \
         IN PLARGE_INTEGER FileOffset,                      \
         IN ULONG Length,                                   \
@@ -195,7 +195,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN KSPIN_CONNECT *ConnectDetails,
         IN PKSDATAFORMAT DataFormat,
         IN PDEVICE_OBJECT DeviceObject,
-        IN ULONG FrameSize);
+        IN ULONG FrameSize,
+        IN ULONG Alignment);
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PUCHAR Buffer,
@@ -227,9 +228,11 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         OUT PULONG  ByteCount,
         OUT PULONG  Flags);
 
-    STDMETHOD_(VOID, ReleaseMappingWithTag)(THIS_
+    STDMETHOD_(NTSTATUS, ReleaseMappingWithTag)(THIS_
         IN PVOID Tag);
 
+    STDMETHOD_(BOOL, HasLastMappingFailed)(THIS);
+    STDMETHOD_(VOID, PrintQueueStatus)(THIS);
 };
 
 
@@ -473,6 +476,54 @@ DECLARE_INTERFACE_(IPortPinWavePci, IIrpTarget)
 
 typedef IPortPinWavePci *PPORTPINWAVEPCI;
 
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+/*****************************************************************************
+ * IPortFilterWaveRT
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortFilterWaveRT
+
+DECLARE_INTERFACE_(IPortFilterWaveRT, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTWAVERT Port)PURE;
+};
+
+typedef IPortFilterWaveRT *PPORTFILTERWAVERT;
+
+/*****************************************************************************
+ * IPortPinWaveRT
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortPinWaveRT
+
+DECLARE_INTERFACE_(IPortPinWaveRT, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTWAVERT Port,
+        IN PPORTFILTERWAVERT Filter,
+        IN KSPIN_CONNECT * ConnectDetails,
+        IN KSPIN_DESCRIPTOR * PinDescriptor,
+        IN PDEVICE_OBJECT DeviceObject) PURE;
+};
+
+typedef IPortPinWaveRT *PPORTPINWAVERT;
+
+#endif
+
 /*****************************************************************************
  * IPortFilterWaveCyclic
  *****************************************************************************
@@ -519,5 +570,116 @@ DECLARE_INTERFACE_(IPortPinWaveCyclic, IIrpTarget)
     STDMETHOD_(PVOID, GetIrpStream)(THIS);
     STDMETHOD_(PMINIPORT, GetMiniport)(THIS);
 };
+
+/*****************************************************************************
+ * IPortFilterDMus
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortFilterDMus
+
+struct IPortPinDMus;
+
+DECLARE_INTERFACE_(IPortFilterDMus, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTDMUS Port)PURE;
+
+    STDMETHOD_(NTSTATUS, FreePin)(THIS_
+        IN struct IPortPinDMus* Pin)PURE;
+
+    STDMETHOD_(VOID, NotifyPins)(THIS);
+};
+
+typedef IPortFilterDMus *PPORTFILTERDMUS;
+
+/*****************************************************************************
+ * IPortPinDMus
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortPinDMus
+
+DECLARE_INTERFACE_(IPortPinDMus, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTDMUS Port,
+        IN PPORTFILTERDMUS Filter,
+        IN KSPIN_CONNECT * ConnectDetails,
+        IN KSPIN_DESCRIPTOR * PinDescriptor,
+        IN PDEVICE_OBJECT DeviceObject) PURE;
+
+    STDMETHOD_(VOID, Notify)(THIS);
+};
+
+typedef IPortPinDMus *PPORTPINDMUS;
+
+/*****************************************************************************
+ * IDmaChannelInit
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IDmaChannelInit
+
+DECLARE_INTERFACE_(IDmaChannelInit, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS,AllocateBuffer)(THIS_
+        IN  ULONG BufferSize,
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL);
+
+    STDMETHOD_(VOID, FreeBuffer)(THIS);
+    STDMETHOD_(ULONG, TransferCount)(THIS);
+    STDMETHOD_(ULONG, MaximumBufferSize)(THIS);
+    STDMETHOD_(ULONG, AllocatedBufferSize)(THIS);
+    STDMETHOD_(ULONG, BufferSize)(THIS);
+
+    STDMETHOD_(VOID, SetBufferSize)(THIS_ 
+        IN  ULONG BufferSize);
+
+    STDMETHOD_(PVOID, SystemAddress)(THIS);
+    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)(THIS_
+        IN PPHYSICAL_ADDRESS Address);
+
+    STDMETHOD_(PADAPTER_OBJECT, GetAdapterObject)(THIS);
+
+    STDMETHOD_(VOID, CopyTo)(THIS_
+        IN  PVOID Destination,
+        IN  PVOID Source,
+        IN  ULONG ByteCount);
+
+    STDMETHOD_(VOID, CopyFrom)(THIS_
+        IN  PVOID Destination,
+        IN  PVOID Source,
+        IN  ULONG ByteCount);
+
+    STDMETHOD_(NTSTATUS, Start)( THIS_ 
+        IN  ULONG MapSize,
+        IN  BOOLEAN WriteToDevice) PURE;
+
+    STDMETHOD_(NTSTATUS, Stop)( THIS ) PURE;
+    STDMETHOD_(ULONG, ReadCounter)( THIS ) PURE;
+
+    STDMETHOD_(NTSTATUS, WaitForTC)( THIS_
+        ULONG Timeout) PURE;
+
+    STDMETHOD_(NTSTATUS, Init)( THIS_
+        IN PDEVICE_DESCRIPTION DeviceDescription,
+        IN PDEVICE_OBJECT DeviceObject) PURE;
+};
+
+#undef INTERFACE
 
 #endif

@@ -449,16 +449,16 @@ GetCurrentView(HWND hwndDlg, UINT ViewControl, UINT ListControl)
 	switch (nCurrSel)
 	{
 		case 0:
-			SetWindowLong(GetDlgItem(hwndDlg, ListControl),
-						  GWL_STYLE, LVS_ICON | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
+			SetWindowLongPtr(GetDlgItem(hwndDlg, ListControl),
+						     GWL_STYLE, LVS_ICON | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
 		break;
 		case 1:
-			SetWindowLong(GetDlgItem(hwndDlg, ListControl),
-						  GWL_STYLE,LVS_LIST | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
+			SetWindowLongPtr(GetDlgItem(hwndDlg, ListControl),
+						     GWL_STYLE,LVS_LIST | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
 		break;
 		case 2:
-			SetWindowLong(GetDlgItem(hwndDlg, ListControl),
-						  GWL_STYLE,LVS_REPORT | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
+			SetWindowLongPtr(GetDlgItem(hwndDlg, ListControl),
+						     GWL_STYLE,LVS_REPORT | LVS_SORTASCENDING | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP);
 		break;
 	}
 }

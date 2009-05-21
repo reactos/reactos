@@ -49,6 +49,27 @@ static GUID InterfaceGuids[3] =
     }
 };
 
+DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterWavePciTopologySet, TopologyPropertyHandler);
+DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PortFilterWavePciPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
+
+KSPROPERTY_SET WavePciPropertySet[] =
+{
+    {
+        &KSPROPSETID_Topology,
+        sizeof(PortFilterWavePciTopologySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWavePciTopologySet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Pin,
+        sizeof(PortFilterWavePciPinSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterWavePciPinSet,
+        0,
+        NULL
+    }
+};
+
 
 //---------------------------------------------------------------
 // IPortEvents
@@ -114,6 +135,7 @@ IPortEvents_fnAddEventToEventList(
     IN PKSEVENT_ENTRY EventEntry)
 {
     UNIMPLEMENTED
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 }
 
 
@@ -204,7 +226,7 @@ IServiceSink_fnRequestService(
     IServiceSink* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblServiceSink);
-    DPRINT("IServiceSink_fnRequestService entered\n");
+    //DPRINT("IServiceSink_fnRequestService entered\n");
     if (This->Miniport)
     {
         This->Miniport->lpVtbl->Service(This->Miniport);
@@ -348,6 +370,7 @@ IPortWavePci_fnInit(
 
     DPRINT("IPortWavePci_fnInit entered with This %p, DeviceObject %p Irp %p UnknownMiniport %p, UnknownAdapter %p ResourceList %p\n", 
             This, DeviceObject, Irp, UnknownMiniport, UnknownAdapter, ResourceList);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (This->bInitialized)
     {
@@ -399,14 +422,14 @@ IPortWavePci_fnInit(
         return Status;
     }
 
-    /* create the subdevice descriptor */
+   /* create the subdevice descriptor */
     Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
                                          3,
-                                         InterfaceGuids, 
+                                         InterfaceGuids,
                                          0, 
                                          NULL,
-                                         0, 
-                                         NULL,
+                                         2, 
+                                         WavePciPropertySet,
                                          0,
                                          0,
                                          0,
@@ -414,6 +437,7 @@ IPortWavePci_fnInit(
                                          0,
                                          NULL,
                                          This->pDescriptor);
+
 
     if (!NT_SUCCESS(Status))
     {
@@ -471,6 +495,7 @@ IPortWavePci_fnNewRegistryKey(
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
     DPRINT("IPortWavePci_fnNewRegistryKey entered\n");
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!This->bInitialized)
     {
@@ -501,6 +526,7 @@ IPortWavePci_fnGetDeviceProperty(
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
     DPRINT("IPortWavePci_fnGetDeviceProperty entered\n");
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!This->bInitialized)
     {
@@ -533,6 +559,7 @@ IPortWavePci_fnNewMasterDmaChannel(
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
     DPRINT("IPortWavePci_fnNewMasterDmaChannel This %p entered\n", This);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     Status = PcDmaMasterDescription(ResourceList, ScatterGather, Dma32BitAddresses, IgnoreCount, Dma64BitAddresses, DmaWidth, DmaSpeed, MaximumLength, DmaPort, &DeviceDescription);
     if (NT_SUCCESS(Status))
@@ -549,17 +576,14 @@ IPortWavePci_fnNotify(
     IN IPortWavePci * iface,
     IN  PSERVICEGROUP ServiceGroup)
 {
-    IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
+    //IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
 
+    //DPRINT("IPortWavePci_fnNotify entered %p, ServiceGroup %p\n", This, ServiceGroup);
 
-    DPRINT1("IPortWavePci_fnNotify entered %p, ServiceGroup %p\n", This, ServiceGroup);
-
-    //if (This->ServiceGroup)
-    //{
-    //    ServiceGroup->lpVtbl->RequestService (ServiceGroup);
-    //}
-
-   // KeInsertQueueDpc(&This->Dpc, NULL, NULL);
+    if (ServiceGroup)
+    {
+        ServiceGroup->lpVtbl->RequestService (ServiceGroup);
+    }
 }
 
 static IPortWavePciVtbl vt_IPortWavePci =
@@ -655,6 +679,7 @@ ISubDevice_fnNewIrpTarget(
     }
 
     *OutTarget = (IIrpTarget*)Filter;
+    This->Filter = Filter;
     return Status;
 }
 
@@ -786,10 +811,17 @@ NewPortWavePci(
 }
 
 PDEVICE_OBJECT
-GetDeviceObjectFromWaveCyclic(
+GetDeviceObjectFromPortWavePci(
     IPortWavePci* iface)
 {
     IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
     return This->pDeviceObject;
 }
 
+PMINIPORTWAVEPCI
+GetWavePciMiniport(
+    PPORTWAVEPCI iface)
+{
+    IPortWavePciImpl * This = (IPortWavePciImpl*)iface;
+    return This->Miniport;
+}

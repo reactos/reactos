@@ -470,6 +470,27 @@ static LRESULT UPDOWN_KeyPressed(UPDOWN_INFO *infoPtr, int key)
 }
 
 /***********************************************************************
+ * UPDOWN_SetRange
+ *
+ * Handle UDM_SETRANGE, UDM_SETRANGE32
+ *
+ * FIXME: handle Max == Min properly:
+ *        - arrows should be disabled (without WS_DISABLED set),
+ *          visually they can't be pressed and don't respond;
+ *        - all input messages should still pass in.
+ */
+static LRESULT UPDOWN_SetRange(UPDOWN_INFO *infoPtr, INT Max, INT Min)
+{
+    infoPtr->MaxVal = Max;
+    infoPtr->MinVal = Min;
+
+    TRACE("UpDown Ctrl new range(%d to %d), hwnd=%p\n",
+           infoPtr->MinVal, infoPtr->MaxVal, infoPtr->Self);
+
+    return 0;
+}
+
+/***********************************************************************
  * UPDOWN_MouseWheel
  *
  * Handle mouse wheel scrolling
@@ -507,6 +528,7 @@ UPDOWN_Buddy_SubclassProc(HWND  hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
 
 	UPDOWN_KeyPressed(UPDOWN_GetInfoPtr(upDownHwnd), (int)wParam);
+	if ((wParam == VK_UP) || (wParam == VK_DOWN)) return 0;
     }
     else if (uMsg == WM_MOUSEWHEEL) {
         HWND upDownHwnd = GetPropW(hwnd, BUDDY_UPDOWN_HWND);
@@ -1044,12 +1066,11 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    return MAKELONG(infoPtr->MaxVal, infoPtr->MinVal);
 
 	case UDM_SETRANGE:
-                                                     /* we must have:     */
-	    infoPtr->MaxVal = (short)(lParam);       /* UD_MINVAL <= Max <= UD_MAXVAL */
-	    infoPtr->MinVal = (short)HIWORD(lParam); /* UD_MINVAL <= Min <= UD_MAXVAL */
-                                                     /* |Max-Min| <= UD_MAXVAL        */
-	    TRACE("UpDown Ctrl new range(%d to %d), hwnd=%p\n",
-		  infoPtr->MinVal, infoPtr->MaxVal, hwnd);
+	    /* we must have:
+	    UD_MINVAL <= Max <= UD_MAXVAL
+	    UD_MINVAL <= Min <= UD_MAXVAL
+	    |Max-Min| <= UD_MAXVAL */
+	    UPDOWN_SetRange(infoPtr, (short)lParam, (short)HIWORD(lParam));
 	    break;
 
 	case UDM_GETRANGE32:
@@ -1058,12 +1079,7 @@ static LRESULT WINAPI UpDownWindowProc(HWND hwnd, UINT message, WPARAM wParam, L
 	    break;
 
 	case UDM_SETRANGE32:
-	    infoPtr->MinVal = (INT)wParam;
-	    infoPtr->MaxVal = (INT)lParam;
-	    if (infoPtr->MaxVal <= infoPtr->MinVal)
-		infoPtr->MaxVal = infoPtr->MinVal + 1;
-	    TRACE("UpDown Ctrl new range(%d to %d), hwnd=%p\n",
-		  infoPtr->MinVal, infoPtr->MaxVal, hwnd);
+	    UPDOWN_SetRange(infoPtr, (INT)lParam, (INT)wParam);
 	    break;
 
 	case UDM_GETPOS32:

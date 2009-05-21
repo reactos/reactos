@@ -146,7 +146,7 @@ static HRESULT WINAPI IEI_Printers_fnGetIconLocation(
         *pwFlags = 0;
 
     lstrcpynW(szIconFile, swShell32Name, cchMax);
-    *piIndex = -IDI_SHELL_PRINTER; /* FIXME: other icons for default, network, print to file */
+    *piIndex = -IDI_SHELL_PRINTERS_FOLDER; /* FIXME: other icons for default, network, print to file */
 
     TRACE("-- %s %x\n", debugstr_w(szIconFile), *piIndex);
     return NOERROR;

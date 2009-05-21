@@ -46,6 +46,7 @@ PcInitializeAdapterDriver(
     //ULONG i;
 
     DPRINT1("PcInitializeAdapterDriver\n");
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     /* Our IRP handlers */
     DPRINT1("Setting IRP handlers\n");
@@ -94,6 +95,7 @@ PcAddAdapterDevice(
     PPCLASS_DEVICE_EXTENSION portcls_ext = NULL;
 
     DPRINT1("PcAddAdapterDevice called\n");
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (!DriverObject || !PhysicalDeviceObject || !StartDevice)
     {
@@ -156,36 +158,6 @@ PcAddAdapterDevice(
     /* clear initializing flag */
     fdo->Flags &= ~ DO_DEVICE_INITIALIZING;
 
-    /* allocate work item */
-    portcls_ext->CloseWorkItem = IoAllocateWorkItem(fdo);
-
-    if (!portcls_ext->CloseWorkItem)
-    {
-        /* not enough resources */
-        goto cleanup;
-        status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* allocate work item */
-    portcls_ext->StartWorkItem = IoAllocateWorkItem(fdo);
-
-    if (!portcls_ext->StartWorkItem)
-    {
-        /* not enough resources */
-        goto cleanup;
-        status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    /* allocate work item */
-    portcls_ext->StopWorkItem = IoAllocateWorkItem(fdo);
-
-    if (!portcls_ext->StopWorkItem)
-    {
-        /* not enough resources */
-        goto cleanup;
-        status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-
     /* allocate the device header */
     status = KsAllocateDeviceHeader(&portcls_ext->KsDeviceHeader, MaxObjects, portcls_ext->CreateItems);
     /* did we succeed */
@@ -222,24 +194,6 @@ cleanup:
             KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
         }
 
-        if (portcls_ext->CloseWorkItem)
-        {
-            /* free allocated work item */
-            IoFreeWorkItem(portcls_ext->CloseWorkItem);
-        }
-
-        if (portcls_ext->StartWorkItem)
-        {
-            /* free allocated work item */
-            IoFreeWorkItem(portcls_ext->StartWorkItem);
-        }
-
-        if (portcls_ext->StopWorkItem)
-        {
-            /* free allocated work item */
-            IoFreeWorkItem(portcls_ext->StopWorkItem);
-        }
-
         if (portcls_ext->CreateItems)
         {
             /* free previously allocated create items */
@@ -271,6 +225,7 @@ PcRegisterSubdevice(
     ULONG Index;
 
     DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     /* check if all parameters are valid */
     if (!DeviceObject || !Name || !Unknown)
