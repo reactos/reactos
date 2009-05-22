@@ -536,7 +536,7 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR *lpfilename)
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wOriginalFilename, &str, lang, code);
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductName, &str, lang, code);
     SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductVersion, &str, lang, code);
-    SetWindowLongPtr(hwndDlg, DWL_USER, (LONG)pBuf);
+    SetWindowLongPtr(hwndDlg, DWL_USER, (LONG_PTR)pBuf);
 
     /* select first item */
     hDlgCtrl = GetDlgItem(hwndDlg, 14009);

@@ -1164,7 +1164,7 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
 }
 
 
-BOOL 
+INT_PTR 
 CALLBACK 
 FormatDriveDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
