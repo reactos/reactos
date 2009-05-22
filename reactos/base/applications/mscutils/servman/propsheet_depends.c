@@ -50,6 +50,7 @@ AddItemToTreeView(HWND hTreeView,
     return TreeView_InsertItem(hTreeView, &tvins);
 }
 
+#if 0 // FIXME: What is this good for?
 static VOID
 AddServiceDependency(PSERVICEPROPSHEET dlgInfo,
                      HWND hTreeView,
@@ -123,6 +124,7 @@ AddServiceDependency(PSERVICEPROPSHEET dlgInfo,
     }
 
 }
+#endif
 
 static VOID
 AddServiceDependent(HWND hTreeView,
