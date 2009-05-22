@@ -492,7 +492,7 @@ SHORT WINAPI
 VkKeyScanExW(WCHAR ch,
 	     HKL dwhkl)
 {
-  return (SHORT) NtUserVkKeyScanEx(ch, dwhkl, 0);
+  return (SHORT) NtUserVkKeyScanEx(ch, dwhkl, TRUE);
 }
 
 
@@ -502,7 +502,7 @@ VkKeyScanExW(WCHAR ch,
 SHORT WINAPI
 VkKeyScanW(WCHAR ch)
 {
-  return VkKeyScanExW(ch, GetKeyboardLayout(0));
+  return (SHORT) NtUserVkKeyScanEx(ch, 0, FALSE);
 }
 
 

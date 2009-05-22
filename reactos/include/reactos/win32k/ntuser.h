@@ -2697,7 +2697,7 @@ NTAPI
 NtUserVkKeyScanEx(
   WCHAR wChar,
   HKL KeyboardLayout,
-  DWORD Unknown2);
+  BOOL bUsehHK);
 
 DWORD
 NTAPI
