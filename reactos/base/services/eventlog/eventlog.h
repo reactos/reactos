@@ -149,6 +149,9 @@ BOOL LogfAddOffsetInformation(PLOGFILE LogFile,
                               ULONG ulNumber,
                               ULONG ulOffset);
 
+BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile,
+                              ULONG ulNumber);
+
 PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwRecordNumber,
                                  WORD wType,
