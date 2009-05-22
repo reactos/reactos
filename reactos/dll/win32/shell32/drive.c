@@ -17,12 +17,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-#define LARGEINT_PROTOS
-#define LargeIntegerDivide RtlLargeIntegerDivide
-#define ExtendedIntegerMultiply RtlExtendedIntegerMultiply
-#define ConvertUlongToLargeInteger RtlConvertUlongToLargeInteger
-#define LargeIntegerSubtract RtlLargeIntegerSubtract
 #define MAX_PROPERTY_SHEET_PAGE 32
 
 #define WIN32_NO_STATUS
@@ -33,7 +27,6 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 #include <fmifs/fmifs.h>
-#include <largeint.h>
 
 #include <precomp.h>
 
@@ -294,20 +287,21 @@ static
 LARGE_INTEGER
 GetFreeBytesShare(LARGE_INTEGER TotalNumberOfFreeBytes, LARGE_INTEGER TotalNumberOfBytes)
 {
-   LARGE_INTEGER Temp, Result, Remainder;
+   LARGE_INTEGER Temp, Result;
 
    if (TotalNumberOfFreeBytes.QuadPart == 0LL)
    {
-      return ConvertUlongToLargeInteger(0);
+      Result.QuadPart = 1;
+      return Result;
    }
 
-   Temp = LargeIntegerDivide(TotalNumberOfBytes, ConvertUlongToLargeInteger(100), &Remainder);
+   Temp.QuadPart = TotalNumberOfBytes.QuadPart / 100;
    if (Temp.QuadPart >= TotalNumberOfFreeBytes.QuadPart)
    {
-      Result = ConvertUlongToLargeInteger(1);
+      Result.QuadPart = 1;
    }else
    {
-      Result = LargeIntegerDivide(TotalNumberOfFreeBytes, Temp, &Remainder);
+      Result.QuadPart = TotalNumberOfFreeBytes.QuadPart / Temp.QuadPart;
    }
 
    return Result;
@@ -431,7 +425,7 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          swprintf(szResult, L"%02d%%", Result.QuadPart);
          SendDlgItemMessageW(hwndDlg, 14007, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
          /* store used share amount */
-         Result = LargeIntegerSubtract(ConvertUlongToLargeInteger(100), Result);
+         Result.QuadPart = 100 - Result.QuadPart;
          swprintf(szResult, L"%02d%%", Result.QuadPart);
          SendDlgItemMessageW(hwndDlg, 14005, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
          if (LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
