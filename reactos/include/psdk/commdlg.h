@@ -334,9 +334,18 @@ typedef struct tagOFNA {
 	WORD nFileOffset;
 	WORD nFileExtension;
 	LPCSTR lpstrDefExt;
-	DWORD lCustData;
+	LPARAM lCustData;
 	LPOFNHOOKPROC lpfnHook;
 	LPCSTR lpTemplateName;
+#ifdef _MAC
+    LPEDITMENU lpEditInfo;
+    LPCSTR lpstrPrompt;
+#endif
+#if (_WIN32_WINNT >= 0x0500)
+    void *pvReserved;
+    DWORD dwReserved;
+    DWORD FlagsEx;
+#endif
 } OPENFILENAMEA,*LPOPENFILENAMEA;
 typedef struct tagOFNW {
 	DWORD lStructSize;
@@ -356,9 +365,18 @@ typedef struct tagOFNW {
 	WORD nFileOffset;
 	WORD nFileExtension;
 	LPCWSTR lpstrDefExt;
-	DWORD lCustData;
+	LPARAM lCustData;
 	LPOFNHOOKPROC lpfnHook;
 	LPCWSTR lpTemplateName;
+#ifdef _MAC
+    LPEDITMENU lpEditInfo;
+    LPCSTR lpstrPrompt;
+#endif
+#if (_WIN32_WINNT >= 0x0500)
+    void *pvReserved;
+    DWORD dwReserved;
+    DWORD FlagsEx;
+#endif
 } OPENFILENAMEW,*LPOPENFILENAMEW;
 typedef struct _OFNOTIFYA {
 	NMHDR hdr;
