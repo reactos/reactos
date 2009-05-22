@@ -194,4 +194,48 @@ NdisWritePciSlotInformation(
                                Buffer, Offset, Length);
 }
 
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisReadEisaSlotInformation(
+    OUT PNDIS_STATUS                    Status,
+    IN  NDIS_HANDLE                     WrapperConfigurationContext,
+    OUT PUINT                           SlotNumber,
+    OUT PNDIS_EISA_FUNCTION_INFORMATION EisaData)
+{
+    PNDIS_WRAPPER_CONTEXT Wrapper = WrapperConfigurationContext;
+    ULONG Ret;
+    PVOID Buffer;
+
+    /* We are called only at PASSIVE_LEVEL */
+    Buffer = ExAllocatePool(PagedPool, sizeof(NDIS_EISA_FUNCTION_INFORMATION));
+    if (!Buffer) {
+        *Status = NDIS_STATUS_RESOURCES;
+        return;
+    }
+
+    Ret = HalGetBusData(EisaConfiguration,
+                        Wrapper->BusNumber,
+                        Wrapper->SlotNumber,
+                        Buffer,
+                        sizeof(NDIS_EISA_FUNCTION_INFORMATION));
+
+    if (Ret == 0 || Ret == 2) {
+        ExFreePool(Buffer);
+        *Status = NDIS_STATUS_FAILURE;
+        return;
+    }
+
+    *SlotNumber = Wrapper->SlotNumber;
+
+    RtlCopyMemory(EisaData, Buffer, sizeof(NDIS_EISA_FUNCTION_INFORMATION));
+
+    ExFreePool(Buffer);
+
+    *Status = NDIS_STATUS_SUCCESS;
+}
+
 /* EOF */

@@ -336,22 +336,6 @@ NdisImmediateWriteSharedMemory(
 }
 
 
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisReadEisaSlotInformation(
-    OUT PNDIS_STATUS                    Status,
-    IN  NDIS_HANDLE                     WrapperConfigurationContext,
-    OUT PUINT                           SlotNumber,
-    OUT PNDIS_EISA_FUNCTION_INFORMATION EisaData)
-{
-    UNIMPLEMENTED
-}
-
-
 /*
  * @unimplemented
  */
