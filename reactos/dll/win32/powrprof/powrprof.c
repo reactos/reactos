@@ -633,7 +633,7 @@ WriteGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)
                     &hKey))
         return FALSE;
 
-    if (RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&gupp,sizeof(GLOBAL_USER_POWER_POLICY)) == ERROR_SUCCESS)
+    if (RegSetValueExW(hKey,szPolicies,0,REG_BINARY,(const unsigned char *)&gupp,sizeof(GLOBAL_USER_POWER_POLICY)) == ERROR_SUCCESS)
     {
         RegCloseKey(hKey);
 
@@ -644,7 +644,7 @@ WriteGlobalPwrPolicy(PGLOBAL_POWER_POLICY pGlobalPowerPolicy)
                        &hKey))
             return FALSE;
 
-        if (RegSetValueExW(hKey,szPolicies,(DWORD)NULL,REG_BINARY,(const unsigned char *)&gmpp,sizeof(GLOBAL_MACHINE_POWER_POLICY)) == ERROR_SUCCESS)
+        if (RegSetValueExW(hKey,szPolicies,0,REG_BINARY,(const unsigned char *)&gmpp,sizeof(GLOBAL_MACHINE_POWER_POLICY)) == ERROR_SUCCESS)
         {
             RegCloseKey(hKey);
             return TRUE;
