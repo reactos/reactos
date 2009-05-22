@@ -503,14 +503,17 @@ NdisMCompleteBufferPhysicalMapping(
 VOID
 EXPORT
 NdisMDeregisterDmaChannel(
-    IN  PNDIS_HANDLE    MiniportDmaHandle)
+    IN  NDIS_HANDLE    MiniportDmaHandle)
 {
-    PNDIS_MINIPORT_BLOCK NdisMiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
-    PDMA_ADAPTER AdapterObject = NdisMiniportBlock->SystemAdapterObject;
+    PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
+    PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
+
+    if (AdapterObject == ((PLOGICAL_ADAPTER)DmaBlock->Miniport)->NdisMiniportBlock.SystemAdapterObject)
+        ((PLOGICAL_ADAPTER)DmaBlock->Miniport)->NdisMiniportBlock.SystemAdapterObject = NULL;
 
     AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
 
-    NdisMiniportBlock->SystemAdapterObject = NULL;
+    ExFreePool(DmaBlock);
 }
 
 
@@ -650,13 +653,10 @@ EXPORT
 NdisMReadDmaCounter(
     IN  NDIS_HANDLE MiniportDmaHandle)
 {
-  PNDIS_MINIPORT_BLOCK MiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
-  PDMA_ADAPTER AdapterObject = MiniportBlock->SystemAdapterObject;
+  PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
+  PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  if (AdapterObject == NULL)
-    return 0;
 
   return AdapterObject->DmaOperations->ReadDmaCounter(AdapterObject);
 }
@@ -670,13 +670,10 @@ EXPORT
 NdisMGetDmaAlignment(
     IN  NDIS_HANDLE MiniportDmaHandle)
 {
-  PNDIS_MINIPORT_BLOCK MiniportBlock = (PNDIS_MINIPORT_BLOCK)MiniportDmaHandle;
-  PDMA_ADAPTER AdapterObject = MiniportBlock->SystemAdapterObject;
+  PNDIS_DMA_BLOCK DmaBlock = MiniportDmaHandle;
+  PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  if (AdapterObject == NULL)
-    return 0;
 
   return AdapterObject->DmaOperations->GetDmaAlignment(AdapterObject);
 }
@@ -698,15 +695,9 @@ NdisMRegisterDmaChannel(
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportAdapterHandle;
   DEVICE_DESCRIPTION DeviceDesc;
   ULONG MapRegisters;
+  PNDIS_DMA_BLOCK DmaBlock;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
-
-  if (Adapter->NdisMiniportBlock.SystemAdapterObject)
-  {
-      NDIS_DbgPrint(MIN_TRACE,("Using existing DMA adapter\n"));
-      *MiniportDmaHandle = &Adapter->NdisMiniportBlock;
-      return NDIS_STATUS_SUCCESS;
-  }
 
   RtlZeroMemory(&DeviceDesc, sizeof(DEVICE_DESCRIPTION));
 
@@ -724,13 +715,23 @@ NdisMRegisterDmaChannel(
   DeviceDesc.DmaSpeed = DmaDescription->DmaSpeed;
   DeviceDesc.MaximumLength = MaximumLength;
 
-  Adapter->NdisMiniportBlock.SystemAdapterObject = 
-         IoGetDmaAdapter(Adapter->NdisMiniportBlock.PhysicalDeviceObject, &DeviceDesc, &MapRegisters);
 
-  if (!Adapter->NdisMiniportBlock.SystemAdapterObject)
+  DmaBlock = ExAllocatePool(NonPagedPool, sizeof(NDIS_DMA_BLOCK));
+  if (!DmaBlock)
       return NDIS_STATUS_RESOURCES;
 
-  *MiniportDmaHandle = &Adapter->NdisMiniportBlock;
+  DmaBlock->SystemAdapterObject = (PVOID)IoGetDmaAdapter(Adapter->NdisMiniportBlock.PhysicalDeviceObject, &DeviceDesc, &MapRegisters);
+
+  if (!DmaBlock->SystemAdapterObject) {
+      ExFreePool(DmaBlock);
+      return NDIS_STATUS_RESOURCES;
+  }
+
+  Adapter->NdisMiniportBlock.SystemAdapterObject = (PDMA_ADAPTER)DmaBlock->SystemAdapterObject;
+
+  DmaBlock->Miniport = Adapter;
+
+  *MiniportDmaHandle = DmaBlock;
 
   return NDIS_STATUS_SUCCESS;
 }
