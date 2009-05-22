@@ -210,9 +210,12 @@ NdisReadEisaSlotInformation(
     ULONG Ret;
     PVOID Buffer;
 
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     /* We are called only at PASSIVE_LEVEL */
     Buffer = ExAllocatePool(PagedPool, sizeof(NDIS_EISA_FUNCTION_INFORMATION));
     if (!Buffer) {
+         NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         *Status = NDIS_STATUS_RESOURCES;
         return;
     }
@@ -224,6 +227,7 @@ NdisReadEisaSlotInformation(
                         sizeof(NDIS_EISA_FUNCTION_INFORMATION));
 
     if (Ret == 0 || Ret == 2) {
+        NDIS_DbgPrint(MIN_TRACE, ("HalGetBusData failed.\n"));
         ExFreePool(Buffer);
         *Status = NDIS_STATUS_FAILURE;
         return;
@@ -236,6 +240,66 @@ NdisReadEisaSlotInformation(
     ExFreePool(Buffer);
 
     *Status = NDIS_STATUS_SUCCESS;
+}
+
+
+/*
+ * @implemented
+ */
+ULONG
+EXPORT
+NdisReadPcmciaAttributeMemory(
+    IN  NDIS_HANDLE NdisAdapterHandle,
+    IN  ULONG       Offset,
+    IN  PVOID       Buffer,
+    IN  ULONG       Length)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return HalGetBusDataByOffset(PCMCIAConfiguration,
+                                 Adapter->NdisMiniportBlock.BusNumber,
+                                 Adapter->NdisMiniportBlock.SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+}
+
+
+/*
+ * @implemented
+ */
+ULONG
+EXPORT
+NdisWritePcmciaAttributeMemory(
+    IN  NDIS_HANDLE NdisAdapterHandle,
+    IN  ULONG       Offset,
+    IN  PVOID       Buffer,
+    IN  ULONG       Length)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = NdisAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return HalSetBusDataByOffset(PCMCIAConfiguration,
+                                 Adapter->NdisMiniportBlock.BusNumber,
+                                 Adapter->NdisMiniportBlock.SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
 }
 
 /* EOF */

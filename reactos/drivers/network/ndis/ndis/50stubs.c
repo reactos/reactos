@@ -270,52 +270,6 @@ NdisMSetMiniportSecondary(
 /*
  * @unimplemented
  */
-ULONG
-EXPORT
-NdisReadPcmciaAttributeMemory(
-    IN  NDIS_HANDLE NdisAdapterHandle,
-    IN  ULONG       Offset,
-    IN  PVOID       Buffer,
-    IN  ULONG       Length)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-ULONG
-EXPORT
-NdisWritePcmciaAttributeMemory(
-    IN  NDIS_HANDLE NdisAdapterHandle,
-    IN  ULONG       Offset,
-    IN  PVOID       Buffer,
-    IN  ULONG       Length)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
 VOID
 EXPORT
 NdisIMAssociateMiniport(
