@@ -309,6 +309,7 @@ NtUserGetMouseMovePointsEx(
 
    if ((cbSize != sizeof(MOUSEMOVEPOINT)) || (nBufPoints < 0) || (nBufPoints > 64))
    {
+      UserLeave();
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return -1;
    }
