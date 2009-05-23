@@ -81,7 +81,8 @@ typedef struct {
 
 #define MRUF_STRING_LIST 0
 
-typedef int (WINAPI *CREATEMRULISTW)(
+// FIXME: CREATEMRULISTW is also a structure, see explorer_new/undoc.h
+typedef HANDLE (WINAPI *CREATEMRULISTW)(
     LPMRUINFO lpmi
 );
 
@@ -105,7 +106,7 @@ static const IContextMenu2Vtbl cmvt;
 static HRESULT WINAPI SHEOWCm_fnQueryInterface(IContextMenu2 *iface, REFIID riid, LPVOID *ppvObj);
 static ULONG WINAPI SHEOWCm_fnRelease(IContextMenu2 *iface);
 
-int OpenMRUList(HKEY hKey);
+HANDLE OpenMRUList(HKEY hKey);
 void LoadItemFromHKCU(POPEN_WITH_CONTEXT pContext, WCHAR * szExt);
 void LoadItemFromHKCR(POPEN_WITH_CONTEXT pContext, WCHAR * szExt);
 void InsertOpenWithItem(POPEN_WITH_CONTEXT pContext, WCHAR * szAppName);
@@ -424,7 +425,7 @@ StoreNewSettings(LPCWSTR szFileName, WCHAR *szAppName)
     WCHAR * pFileExt;
     HKEY hKey;
     LONG result;
-    int hList;
+    HANDLE hList;
 
     /* get file extension */
     pFileExt = wcsrchr(szFileName, L'.');
@@ -448,10 +449,10 @@ StoreNewSettings(LPCWSTR szFileName, WCHAR *szAppName)
     }
 
     /* insert the entry */
-    result = (*AddMRUStringW)((HANDLE)hList, szAppName);
+    result = (*AddMRUStringW)(hList, szAppName);
 
     /* close mru list */
-    (*FreeMRUList)((HANDLE)hList);
+    (*FreeMRUList)(hList);
     /* create mru list key */
     RegCloseKey(hKey);
 }
@@ -994,7 +995,7 @@ AddItemFromProgIDList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
    FIXME("implement me :)))\n");
 }
 
-int
+HANDLE
 OpenMRUList(HKEY hKey)
 {
     MRUINFO info;
@@ -1031,7 +1032,7 @@ OpenMRUList(HKEY hKey)
 void
 AddItemFromMRUList(POPEN_WITH_CONTEXT pContext, HKEY hKey)
 {
-    int hList;
+    HANDLE hList;
     int nItem, nCount, nResult;
     WCHAR szBuffer[MAX_PATH];
 
