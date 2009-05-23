@@ -49,11 +49,6 @@ ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars)
   return s;
 }
 
-ME_String *ME_MakeString(LPCWSTR szText)
-{
-  return ME_MakeStringN(szText, lstrlenW(szText));
-}
-
 /* Make a string by repeating a char nMaxChars times */
 ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars)
 {

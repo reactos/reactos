@@ -86,7 +86,6 @@ void ME_DumpDocument(ME_TextBuffer *buffer);
 const char *ME_GetDITypeName(ME_DIType type);
 
 /* string.c */
-ME_String *ME_MakeString(LPCWSTR szText);
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars);
 ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars);
 ME_String *ME_StrDup(const ME_String *s);
