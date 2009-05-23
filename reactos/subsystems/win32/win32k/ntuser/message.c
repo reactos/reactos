@@ -2042,6 +2042,7 @@ NtUserMessageCall(
    /* Validate input */
    if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
    {
+      UserLeave();
       return 0;
    }
    switch(dwType)
