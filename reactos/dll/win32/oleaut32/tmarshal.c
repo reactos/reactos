@@ -299,7 +299,7 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
 	return E_FAIL;
     }
     RegCloseKey(ikey);
-    sprintf(typelibkey,"Typelib\\%s\\%s\\0\\win32",tlguid,ver);
+    sprintf(typelibkey,"Typelib\\%s\\%s\\0\\win%u",tlguid,ver,(sizeof(void*) == 8) ? 64 : 32);
     tlfnlen = sizeof(tlfn);
     if (RegQueryValueA(HKEY_CLASSES_ROOT,typelibkey,tlfn,&tlfnlen)) {
 	ERR("Could not get typelib fn?\n");

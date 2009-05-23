@@ -265,12 +265,14 @@ static WCHAR *get_lcid_subkey( LCID lcid, SYSKIND syskind, WCHAR *buffer )
     static const WCHAR LcidFormatW[] = {'%','l','x','\\',0};
     static const WCHAR win16W[] = {'w','i','n','1','6',0};
     static const WCHAR win32W[] = {'w','i','n','3','2',0};
+    static const WCHAR win64W[] = {'w','i','n','6','4',0};
 
     sprintfW( buffer, LcidFormatW, lcid );
     switch(syskind)
     {
     case SYS_WIN16: strcatW( buffer, win16W ); break;
     case SYS_WIN32: strcatW( buffer, win32W ); break;
+    case SYS_WIN64: strcatW( buffer, win64W ); break;
     default:
         TRACE("Typelib is for unsupported syskind %i\n", syskind);
         return NULL;
@@ -535,6 +537,12 @@ HRESULT WINAPI RegisterTypeLib(
     if (FAILED(ITypeLib_GetLibAttr(ptlib, &attr)))
         return E_FAIL;
 
+#ifdef _WIN64
+    if (attr->syskind != SYS_WIN64) return TYPE_E_BADMODULEKIND;
+#else
+    if (attr->syskind != SYS_WIN32 && attr->syskind != SYS_WIN16) return TYPE_E_BADMODULEKIND;
+#endif
+
     get_typelib_key( &attr->guid, attr->wMajorVerNum, attr->wMinorVerNum, keyName );
 
     res = S_OK;
@@ -780,7 +788,7 @@ HRESULT WINAPI UnRegisterTypeLib(
     /* Create the path to the key */
     get_typelib_key( libid, wVerMajor, wVerMinor, keyName );
 
-    if (syskind != SYS_WIN16 && syskind != SYS_WIN32)
+    if (syskind != SYS_WIN16 && syskind != SYS_WIN32 && syskind != SYS_WIN64)
     {
         TRACE("Unsupported syskind %i\n", syskind);
         result = E_INVALIDARG;
@@ -1926,7 +1934,7 @@ MSFT_DoFuncs(TLBContext*     pcx,
         (*pptfd)->funcdesc.callconv   =  (pFuncRec->FKCCIC) >> 8 & 0xF;
         (*pptfd)->funcdesc.cParams    =   pFuncRec->nrargs  ;
         (*pptfd)->funcdesc.cParamsOpt =   pFuncRec->nroargs ;
-        (*pptfd)->funcdesc.oVft       =   (pFuncRec->VtableOffset * sizeof(void *))/4;
+        (*pptfd)->funcdesc.oVft       =   pFuncRec->VtableOffset;
         (*pptfd)->funcdesc.wFuncFlags =   LOWORD(pFuncRec->Flags) ;
 
         MSFT_GetTdesc(pcx,
@@ -2185,7 +2193,7 @@ static ITypeInfoImpl * MSFT_DoTypeInfo(
     ptiRet->TypeAttr.wMajorVerNum=LOWORD(tiBase.version);
     ptiRet->TypeAttr.wMinorVerNum=HIWORD(tiBase.version);
     ptiRet->TypeAttr.cImplTypes=tiBase.cImplTypes;
-    ptiRet->TypeAttr.cbSizeVft=(tiBase.cbSizeVft * sizeof(void *))/4; /* FIXME: this is only the non inherited part */
+    ptiRet->TypeAttr.cbSizeVft=tiBase.cbSizeVft; /* FIXME: this is only the non inherited part */
     if(ptiRet->TypeAttr.typekind == TKIND_ALIAS)
         MSFT_GetTdesc(pcx, tiBase.datatype1,
             &ptiRet->TypeAttr.tdescAlias, ptiRet);
@@ -3947,7 +3955,7 @@ static ITypeLib2* ITypeLib2_Constructor_SLTG(LPVOID pLib, DWORD dwTLBLength)
 
       (*ppTypeInfoImpl)->TypeAttr.cbAlignment = pTITail->cbAlignment;
       (*ppTypeInfoImpl)->TypeAttr.cbSizeInstance = pTITail->cbSizeInstance;
-      (*ppTypeInfoImpl)->TypeAttr.cbSizeVft = (pTITail->cbSizeVft * sizeof(void *))/4;
+      (*ppTypeInfoImpl)->TypeAttr.cbSizeVft = pTITail->cbSizeVft;
 
       switch(pTIHeader->typekind) {
       case TKIND_ENUM:
@@ -7528,7 +7536,7 @@ HRESULT WINAPI CreateDispTypeInfo(
         (*ppFuncDesc)->funcdesc.callconv = md->cc;
         (*ppFuncDesc)->funcdesc.cParams = md->cArgs;
         (*ppFuncDesc)->funcdesc.cParamsOpt = 0;
-        (*ppFuncDesc)->funcdesc.oVft = md->iMeth << 2;
+        (*ppFuncDesc)->funcdesc.oVft = md->iMeth * sizeof(void *);
         (*ppFuncDesc)->funcdesc.cScodes = 0;
         (*ppFuncDesc)->funcdesc.wFuncFlags = 0;
         (*ppFuncDesc)->funcdesc.elemdescFunc.tdesc.vt = md->vtReturn;

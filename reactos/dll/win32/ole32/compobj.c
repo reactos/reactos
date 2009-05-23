@@ -56,6 +56,7 @@
 #include "ole2.h"
 #include "ole2ver.h"
 #include "ctxtcall.h"
+#include "dde.h"
 
 #include "compobj_private.h"
 
@@ -3525,7 +3526,8 @@ static BOOL COM_PeekMessage(struct apartment *apt, MSG *msg)
     /* first try to retrieve messages for incoming COM calls to the apartment window */
     return PeekMessageW(msg, apt->win, WM_USER, WM_APP - 1, PM_REMOVE|PM_NOYIELD) ||
            /* next retrieve other messages necessary for the app to remain responsive */
-           PeekMessageW(msg, NULL, 0, 0, PM_QS_PAINT|PM_QS_POSTMESSAGE|PM_REMOVE|PM_NOYIELD);
+           PeekMessageW(msg, NULL, WM_DDE_FIRST, WM_DDE_LAST, PM_REMOVE|PM_NOYIELD) ||
+           PeekMessageW(msg, NULL, 0, 0, PM_QS_PAINT|PM_QS_SENDMESSAGE|PM_REMOVE|PM_NOYIELD);
 }
 
 /***********************************************************************
