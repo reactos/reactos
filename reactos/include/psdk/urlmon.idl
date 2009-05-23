@@ -1500,6 +1500,20 @@ interface IUri : IUnknown
 }
 
 /*****************************************************************************
+ * IUriContainer interface
+ */
+[
+    local,
+    object,
+    uuid(a158a630-ed6f-45fb-b987-f68676f57752),
+    pointer_default(unique)
+]
+interface IUriContainer : IUnknown
+{
+    HRESULT GetIUri([out] IUri **ppIUri);
+}
+
+/*****************************************************************************
  * IInternetProtocolEx interface
  */
 [

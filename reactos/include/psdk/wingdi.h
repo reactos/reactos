@@ -2898,6 +2898,7 @@ int WINAPI FillRgn(HDC,HRGN,HBRUSH);
 BOOL WINAPI FixBrushOrgEx(HDC,int,int,LPPOINT);
 BOOL WINAPI FlattenPath(HDC);
 BOOL WINAPI FloodFill(HDC,int,int,COLORREF);
+BOOL WINAPI GdiAlphaBlend(HDC,int,int,int,int,HDC,int,int,int,int,BLENDFUNCTION);
 BOOL WINAPI GdiComment(HDC,UINT,const BYTE*);
 BOOL WINAPI GdiFlush(void);
 DWORD WINAPI GdiGetBatchLimit(void);

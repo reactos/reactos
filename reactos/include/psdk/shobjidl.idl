@@ -69,6 +69,21 @@ interface IPersistFolder2 : IPersistFolder
 
 
 /*****************************************************************************
+ * IPersistIDList interface
+ */
+[
+    object,
+    uuid(1079acfc-29bd-11d3-8e0d-00c04f6837d5),
+    pointer_default(unique)
+]
+interface IPersistIDList : IPersist
+{
+    HRESULT SetIDList( [in] LPCITEMIDLIST pidl );
+    HRESULT GetIDList( [out] LPITEMIDLIST *ppidl );
+}
+
+
+/*****************************************************************************
  * IEnumIDList interface
  */
 [
@@ -340,7 +355,41 @@ interface IShellFolder2 : IShellFolder
     HRESULT MapColumnToSCID( [in] UINT iColumn, [in] SHCOLUMNID *pscid );
 }
 
+/*****************************************************************************
+ * IShellItem interface
+ */
+[
+    object,
+    uuid(43826d1e-e718-42ee-bc55-a1e261c37bfe),
+    pointer_default(unique)
+]
+interface IShellItem : IUnknown
+{
+    typedef DWORD SIGDN;
 
+    typedef DWORD SICHINTF;
+
+    HRESULT BindToHandler(
+        [in] IBindCtx *pbc,
+        [in] REFGUID rbhid,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppvOut);
+
+    HRESULT GetParent( [out] IShellItem **ppsi );
+
+    HRESULT GetDisplayName(
+        [in] SIGDN sigdnName,
+        [out] LPWSTR *ppszName);
+
+    HRESULT GetAttributes(
+        [in] SFGAOF sfgaoMask,
+        [out] SFGAOF *psfgaoAttribs);
+
+    HRESULT Compare(
+        [in] IShellItem *psi,
+        [in] SICHINTF hint,
+        [out] int *piOrder);
+}
 
 /*****************************************************************************
  * FOLDERSETTINGS

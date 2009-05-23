@@ -30,7 +30,10 @@ typedef WORD LANGID;
 cpp_quote("#endif")
 
 cpp_quote("#define TF_E_STACKFULL MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0501)")
+cpp_quote("#define TF_E_DISCONNECTED    MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0504)")
 cpp_quote("#define TF_E_ALREADY_EXISTS  MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0506)")
+cpp_quote("#define TF_E_NOLOCK          MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0201)")
+
 cpp_quote("EXTERN_C const CLSID CLSID_TF_ThreadMgr;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_InputProcessorProfiles;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_CategoryMgr;")
@@ -91,6 +94,8 @@ typedef [uuid(77c12f95-b783-450d-879f-1cd2362c6521)] struct TF_PRESERVEDKEY
     UINT uVKey;
     UINT uModifiers;
 } TF_PRESERVEDKEY;
+
+typedef [uuid(5a886226-ae9a-489b-b991-2b1e25ee59a9)]  enum { TF_ANCHOR_START = 0, TF_ANCHOR_END = 1 } TfAnchor;
 
 [
     object,
@@ -703,4 +708,168 @@ interface ITfClientId : IUnknown
     HRESULT GetClientId(
         [in] REFCLSID rclsid,
         [out] TfClientId *ptid);
+};
+
+[
+  object,
+  uuid(43c9fe15-f494-4c17-9de2-b8a4ac350aa8),
+  pointer_default(unique)
+]
+interface ITfLanguageProfileNotifySink : IUnknown
+{
+    HRESULT OnLanguageChange(
+        [in] LANGID langid,
+        [out] BOOL *pfAccept);
+
+    HRESULT OnLanguageChanged();
+}
+
+[
+  object,
+  uuid(aa80e803-2021-11d2-93e0-0060b067b86e),
+  pointer_default(unique)
+]
+interface ITfEditSession : IUnknown
+{
+    HRESULT DoEditSession(
+        [in] TfEditCookie ec);
+}
+
+[
+  object,
+  uuid(aa80e7ff-2021-11d2-93e0-0060b067b86e),
+  pointer_default(unique)
+]
+interface ITfRange : IUnknown
+{
+    const WCHAR TF_CHAR_EMBEDDED     = TS_CHAR_EMBEDDED;
+
+    typedef [uuid(cf610f06-2882-46f6-abe5-298568b664c4)] enum { TF_GRAVITY_BACKWARD = 0, TF_GRAVITY_FORWARD = 1 } TfGravity;
+
+    typedef [uuid(1e512533-bbdc-4530-9a8e-a1dc0af67468)] enum { TF_SD_BACKWARD = 0, TF_SD_FORWARD = 1 } TfShiftDir;
+
+    const DWORD TF_HF_OBJECT         = 1;
+    const DWORD TF_TF_MOVESTART      = 1;
+    const DWORD TF_TF_IGNOREEND      = 2;
+    const DWORD TF_ST_CORRECTION     = 1;
+    const DWORD TF_IE_CORRECTION     = 1;
+
+    typedef [uuid(49930d51-7d93-448c-a48c-fea5dac192b1)] struct  TF_HALTCOND
+    {
+        ITfRange *pHaltRange;
+        TfAnchor aHaltPos;
+        DWORD dwFlags;
+    } TF_HALTCOND;
+
+    HRESULT GetText(
+        [in] TfEditCookie ec,
+        [in] DWORD dwFlags,
+        [out, size_is(cchMax), length_is(*pcch)] WCHAR *pchText,
+        [in] ULONG cchMax,
+        [out] ULONG *pcch);
+
+    HRESULT SetText(
+        [in] TfEditCookie ec,
+        [in] DWORD dwFlags,
+        [in, size_is(cch), unique] const WCHAR *pchText,
+        [in] LONG cch);
+
+    HRESULT GetFormattedText(
+        [in] TfEditCookie ec,
+        [out] IDataObject **ppDataObject);
+
+    HRESULT GetEmbedded(
+        [in] TfEditCookie ec,
+        [in] REFGUID rguidService,
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **ppunk);
+
+    HRESULT InsertEmbedded(
+        [in] TfEditCookie ec,
+        [in] DWORD dwFlags,
+        [in] IDataObject *pDataObject);
+
+    HRESULT ShiftStart(
+        [in] TfEditCookie ec,
+        [in] LONG cchReq,
+        [out] LONG *pcch,
+        [in, unique] const TF_HALTCOND *pHalt);
+
+    HRESULT ShiftEnd(
+        [in] TfEditCookie ec,
+        [in] LONG cchReq,
+        [out] LONG *pcch,
+        [in, unique] const TF_HALTCOND *pHalt);
+
+    HRESULT ShiftStartToRange(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pRange,
+        [in] TfAnchor aPos);
+
+    HRESULT ShiftEndToRange(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pRange,
+        [in] TfAnchor aPos);
+
+    HRESULT ShiftStartRegion(
+        [in] TfEditCookie ec,
+        [in] TfShiftDir dir,
+        [out] BOOL *pfNoRegion);
+
+    HRESULT ShiftEndRegion(
+        [in] TfEditCookie ec,
+        [in] TfShiftDir dir,
+        [out] BOOL *pfNoRegion);
+
+    HRESULT IsEmpty(
+        [in] TfEditCookie ec,
+        [out] BOOL *pfEmpty);
+
+    HRESULT Collapse(
+        [in] TfEditCookie ec,
+        [in] TfAnchor aPos);
+
+    HRESULT IsEqualStart(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] BOOL *pfEqual);
+
+    HRESULT IsEqualEnd(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] BOOL *pfEqual);
+
+    HRESULT CompareStart(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] LONG *plResult);
+
+    HRESULT CompareEnd(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pWith,
+        [in] TfAnchor aPos,
+        [out] LONG *plResult);
+
+    HRESULT AdjustForInsert(
+        [in] TfEditCookie ec,
+        [in] ULONG cchInsert,
+        [out] BOOL *pfInsertOk);
+
+    HRESULT GetGravity(
+        [out] TfGravity *pgStart,
+        [out] TfGravity *pgEnd);
+
+    HRESULT SetGravity(
+        [in] TfEditCookie ec,
+        [in] TfGravity gStart,
+        [in] TfGravity gEnd);
+
+    HRESULT Clone(
+        [out] ITfRange **ppClone);
+
+    HRESULT GetContext(
+        [out] ITfContext **ppContext);
 };
