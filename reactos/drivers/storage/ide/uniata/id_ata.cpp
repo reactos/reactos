@@ -5433,6 +5433,8 @@ UniAtaCalculateLBARegs(
     USHORT               cylinder;
     ULONG                tmp;
 
+    (*max_bcount) = 0;
+
     if(LunExt->DeviceFlags & DFLAGS_LBA_ENABLED) {
         if(LunExt->LimitedTransferMode >= ATA_DMA) {
             if(LunExt->DeviceExtension) {
@@ -5457,7 +5459,6 @@ UniAtaCalculateLBARegs(
         KdPrint2((PRINT_PREFIX "UniAtaCalculateLBARegs: C:H:S=%#x:%#x:%#x, max_bc %#x\n",
             cylinder, drvSelect, sectorNumber, (*max_bcount)));
     }
-        (*max_bcount) = 0;
 
     return (ULONG)(sectorNumber&0xff) | (((ULONG)cylinder&0xffff)<<8) | (((ULONG)drvSelect&0xf)<<24);
 } // end UniAtaCalculateLBARegs()
@@ -8355,7 +8356,7 @@ DriverEntry(
     LARGE_INTEGER t0, t1;
 
     Connect_DbgPrint();
-    KdPrint2((PRINT_PREFIX (PCCHAR)ver_string));
+    KdPrint2((PRINT_PREFIX "%s", (PCCHAR)ver_string));
     a = (WCHAR)strlen(ver_string);
 
     g_opt_Verbose = (BOOLEAN)AtapiRegCheckDevValue(NULL, CHAN_NOT_SPECIFIED, DEVNUM_NOT_SPECIFIED, L"PrintLogo", 0);
