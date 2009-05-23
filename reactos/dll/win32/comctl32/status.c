@@ -167,7 +167,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     pt.x = lpRect->right - 1;
     pt.y = lpRect->bottom - 1;
 
-    hPenFace = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DFACE ));
+    hPenFace = CreatePen( PS_SOLID, 1, comctl32_color.clr3dFace);
     hOldPen = SelectObject( hdc, hPenFace );
     MoveToEx (hdc, pt.x - 12, pt.y, NULL);
     LineTo (hdc, pt.x, pt.y);
@@ -176,7 +176,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     pt.x--;
     pt.y--;
 
-    hPenShadow = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DSHADOW ));
+    hPenShadow = CreatePen( PS_SOLID, 1, comctl32_color.clr3dShadow);
     SelectObject( hdc, hPenShadow );
     for (i = 1; i < 11; i += 4) {
 	MoveToEx (hdc, pt.x - i, pt.y, NULL);
@@ -186,7 +186,7 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
 	LineTo (hdc, pt.x + 1, pt.y - i - 2);
     }
 
-    hPenHighlight = CreatePen( PS_SOLID, 1, GetSysColor( COLOR_3DHIGHLIGHT ));
+    hPenHighlight = CreatePen( PS_SOLID, 1, comctl32_color.clr3dHilight);
     SelectObject( hdc, hPenHighlight );
     for (i = 3; i < 13; i += 4) {
 	MoveToEx (hdc, pt.x - i, pt.y, NULL);
@@ -1312,6 +1312,10 @@ StatusWindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 	    if (STATUSBAR_WMSize (infoPtr, (WORD)wParam)) return 0;
             return DefWindowProcW (hwnd, msg, wParam, lParam);
+
+        case WM_SYSCOLORCHANGE:
+            COMCTL32_RefreshSysColors();
+            return 0;
 
         case WM_THEMECHANGED:
             return theme_changed (infoPtr);

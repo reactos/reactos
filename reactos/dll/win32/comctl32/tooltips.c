@@ -189,8 +189,8 @@ TOOLTIPS_InitSystemSettings (TOOLTIPS_INFO *infoPtr)
 {
     NONCLIENTMETRICSW nclm;
 
-    infoPtr->clrBk   = GetSysColor (COLOR_INFOBK);
-    infoPtr->clrText = GetSysColor (COLOR_INFOTEXT);
+    infoPtr->clrBk   = comctl32_color.clrInfoBk;
+    infoPtr->clrText = comctl32_color.clrInfoText;
 
     DeleteObject (infoPtr->hFont);
     nclm.cbSize = sizeof(nclm);
@@ -2863,6 +2863,10 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SETFONT:
 	    return TOOLTIPS_SetFont (hwnd, wParam, lParam);
+
+	case WM_SYSCOLORCHANGE:
+	    COMCTL32_RefreshSysColors();
+	    return 0;
 
 	case WM_TIMER:
 	    return TOOLTIPS_Timer (hwnd, wParam, lParam);

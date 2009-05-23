@@ -1535,11 +1535,11 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 
 	/* now draw the text */
 	if (!IsWindowVisible (infoPtr->hwndEdit)) {
-	    nbkc = GetSysColor ((dis->itemState & ODS_SELECTED) ?
-				COLOR_HIGHLIGHT : COLOR_WINDOW);
+	    nbkc = (dis->itemState & ODS_SELECTED) ?
+	            comctl32_color.clrHighlight : comctl32_color.clrWindow;
 	    bkc = SetBkColor (dis->hDC, nbkc);
-	    ntxc = GetSysColor ((dis->itemState & ODS_SELECTED) ?
-				COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT);
+	    ntxc = (dis->itemState & ODS_SELECTED) ?
+	            comctl32_color.clrHighlightText : comctl32_color.clrWindowText;
 	    txc = SetTextColor (dis->hDC, ntxc);
 	    x = xbase + xioff;
 	    y = dis->rcItem.top +
@@ -1750,7 +1750,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	     * The following was determined by traces of the native
 	     */
             hDC = (HDC) wParam;
-	    obkc = SetBkColor (hDC, GetSysColor (COLOR_WINDOW));
+	    obkc = SetBkColor (hDC, comctl32_color.clrWindow);
             GetClientRect (hwnd, &rect);
             TRACE("erasing (%s)\n", wine_dbgstr_rect(&rect));
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
@@ -1953,7 +1953,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	     * The following was determined by traces of the native
 	     */
             hDC = (HDC) wParam;
-	    obkc = SetBkColor (hDC, GetSysColor (COLOR_WINDOW));
+	    obkc = SetBkColor (hDC, comctl32_color.clrWindow);
             GetClientRect (hwnd, &rect);
             TRACE("erasing (%s)\n", wine_dbgstr_rect(&rect));
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
@@ -2318,6 +2318,10 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         case WM_SETFOCUS:
             SetFocus(infoPtr->hwndCombo);
+            return 0;
+
+        case WM_SYSCOLORCHANGE:
+            COMCTL32_RefreshSysColors();
             return 0;
 
 	default:

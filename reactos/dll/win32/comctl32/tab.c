@@ -1668,7 +1668,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
   /*
    * Text pen
    */
-  htextPen = CreatePen( PS_SOLID, 1, GetSysColor(COLOR_BTNTEXT) );
+  htextPen = CreatePen( PS_SOLID, 1, comctl32_color.clrBtnText );
   holdPen  = SelectObject(hdc, htextPen);
   hOldFont = SelectObject(hdc, infoPtr->hFont);
 
