@@ -67,12 +67,12 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     {
         /* FIXME - lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
-                                             sizeof(W32PROCESS),
+                                             sizeof(PROCESSINFO),
                                              TAG('W', '3', '2', 'p'));
 
         if (Win32Process == NULL) RETURN( STATUS_NO_MEMORY);
 
-        RtlZeroMemory(Win32Process, sizeof(W32PROCESS));
+        RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
 
         PsSetProcessWin32Process(Process, Win32Process);
         /* FIXME - unlock the process */
@@ -151,12 +151,6 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       if(LogonProcess == Win32Process)
       {
         LogonProcess = NULL;
-      }
-
-      if (Win32Process->ProcessInfo != NULL)
-      {
-          UserHeapFree(Win32Process->ProcessInfo);
-          Win32Process->ProcessInfo = NULL;
       }
     }
 
@@ -339,12 +333,12 @@ Win32kInitWin32Thread(PETHREAD Thread)
   if (Process->Win32Process == NULL)
     {
       /* FIXME - lock the process */
-      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(W32PROCESS));
+      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(PROCESSINFO));
 
       if (Process->Win32Process == NULL)
 	return STATUS_NO_MEMORY;
 
-      RtlZeroMemory(Process->Win32Process, sizeof(W32PROCESS));
+      RtlZeroMemory(Process->Win32Process, sizeof(PROCESSINFO));
       /* FIXME - unlock the process */
 
       Win32kProcessCallback(Process, TRUE);

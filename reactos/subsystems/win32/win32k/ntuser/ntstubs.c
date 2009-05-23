@@ -893,12 +893,13 @@ NtUserProcessConnect(
   {
      UserEnterShared();
      GetW32ThreadInfo();
-     PPROCESSINFO ppi = GetW32ProcessInfo();
+     PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
      _SEH2_TRY
      {
         pUserConnect->siClient.psi = gpsi;
-        pUserConnect->siClient.aheList = ppi->UserHandleTable;
-        pUserConnect->siClient.ulSharedDelta = ppi->UserHeapDelta;
+        pUserConnect->siClient.aheList = gHandleTable;
+        pUserConnect->siClient.ulSharedDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
+                                               (ULONG_PTR)W32Process->HeapMappings.UserMapping;
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
@@ -909,7 +910,6 @@ NtUserProcessConnect(
      {
         SetLastNtError(Status);
      }
-     DPRINT("NtUserPC SI 0x%x : HT 0x%x : D 0x%x\n", gpsi, ppi->UserHandleTable, ppi->UserHeapDelta);
      UserLeave();
      return Status;
   }

@@ -94,4 +94,17 @@ typedef struct _W32PROCESS
   PPROCESSINFO ProcessInfo;
 } W32PROCESS, *PW32PROCESS;
 
+typedef struct _PROCESSINFO
+{
+    W32PROCESS          XzyxW32Process; /* Place holder. */
+    /* ReactOS */
+    HINSTANCE    hModUser;
+    PWINDOWCLASS LocalClassList;
+    PWINDOWCLASS GlobalClassList;
+    PWINDOWCLASS SystemClassList;
+                    
+    UINT RegisteredSysClasses : 1;
+                        
+} PROCESSINFO;
+
 #endif /* __INCLUDE_NAPI_WIN32_H */
