@@ -155,7 +155,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Culoare"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Culori de &basă:",   1088, 4,    4,  140, 10
+ LTEXT "Culori de &bază:",   1088, 4,    4,  140, 10
  LTEXT "&Culori personalizate:",  1089, 4,   106, 140, 10
  LTEXT "Culoare |  Sol&id",  1090, 150, 151,  48, 10
  LTEXT   "&Roșu:", 726 /*1094*/,249,126,24,10
