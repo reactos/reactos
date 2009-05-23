@@ -308,6 +308,9 @@ static void test_bitmap_font(void)
     SIZE size_orig;
     INT ret, i, width_orig, height_orig, scale, lfWidth;
 
+    skip("ROS-HACK: Skipping bitmap font tests!\n");
+    return;
+
     hdc = GetDC(0);
 
     /* "System" has only 1 pixel size defined, otherwise the test breaks */
@@ -2916,8 +2919,6 @@ START_TEST(font)
     init();
 
     test_logfont();
-    skip("ROS-HACK: Skipping bitmap font tests\n");
-    return;
     test_bitmap_font();
     test_outline_font();
     test_bitmap_font_metrics();

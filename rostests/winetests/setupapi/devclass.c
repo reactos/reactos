@@ -119,7 +119,6 @@ static void test_SetupDiClassGuidsFromNameA(void)
     SetLastError( 0xdeadbeef );
     ok( !SetupDiClassGuidsFromNameA( test_class_name, NULL, 0, &required_size ),
         "Fail expected\n" );
-    SetLastError( 0xdeadbeef );
     ok( GetLastError() == ERROR_INSUFFICIENT_BUFFER,
         "Expected error %lx, got %lx\n", ERROR_INSUFFICIENT_BUFFER, GetLastError() );
     ok( required_size > 0, "Expected > 0, got %lu\n", required_size );
