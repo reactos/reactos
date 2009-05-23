@@ -1,5 +1,5 @@
 <module name="twain_32" type="win32dll" baseaddress="${BASEADDRESS_TWAIN_32}" installbase="system32" installname="twain_32.dll" allowwarnings="true" crt="msvcrt">
-	<importlibrary definition="twain_32.def" />
+	<importlibrary definition="twain_32.spec" />
 	<include base="twain_32">.</include>
 	<library>wine</library>
 	<library>ntdll</library>
