@@ -13,6 +13,7 @@
 	<file>documentmgr.c</file>
 	<file>inputprocessor.c</file>
 	<file>msctf.c</file>
+	<file>range.c</file>
 	<file>regsvr.c</file>
 	<file>threadmgr.c</file>
 	<file>version.rc</file>

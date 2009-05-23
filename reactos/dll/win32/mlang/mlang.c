@@ -1939,7 +1939,7 @@ static HRESULT WINAPI fnIMLangFontLink_GetStrCodePages(
     }
 
     if (pdwCodePages) *pdwCodePages = cps;
-    if (pcchCodePages) *pcchCodePages = i;
+    if (pcchCodePages) *pcchCodePages = min( i + 1, cchSrc );
     return S_OK;
 }
 

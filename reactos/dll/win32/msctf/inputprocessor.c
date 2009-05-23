@@ -32,8 +32,10 @@
 #include "shlwapi.h"
 #include "winerror.h"
 #include "objbase.h"
+#include "olectl.h"
 
 #include "wine/unicode.h"
+#include "wine/list.h"
 
 #include "msctf.h"
 #include "msctf_internal.h"
@@ -45,11 +47,26 @@ static const WCHAR szwEnabled[] = {'E','n','a','b','l','e','d',0};
 static const WCHAR szwTipfmt[] = {'%','s','\\','%','s',0};
 static const WCHAR szwFullLangfmt[] = {'%','s','\\','%','s','\\','%','s','\\','0','x','%','0','8','x','\\','%','s',0};
 
+typedef struct tagInputProcessorProfilesSink {
+    struct list         entry;
+    union {
+        /* InputProcessorProfile Sinks */
+        IUnknown            *pIUnknown;
+        ITfLanguageProfileNotifySink *pITfLanguageProfileNotifySink;
+    } interfaces;
+} InputProcessorProfilesSink;
+
 typedef struct tagInputProcessorProfiles {
     const ITfInputProcessorProfilesVtbl *InputProcessorProfilesVtbl;
+    const ITfSourceVtbl *SourceVtbl;
+    /* const ITfInputProcessorProfileMgrVtbl *InputProcessorProfileMgrVtbl; */
+    /* const ITfInputProcessorProfilesExVtbl *InputProcessorProfilesExVtbl; */
+    /* const ITfInputProcessorProfileSubstituteLayoutVtbl *InputProcessorProfileSubstituteLayoutVtbl; */
     LONG refCount;
 
     LANGID  currentLanguage;
+
+    struct list     LanguageProfileNotifySink;
 } InputProcessorProfiles;
 
 typedef struct tagProfilesEnumGuid {
@@ -78,9 +95,30 @@ typedef struct tagEnumTfLanguageProfiles {
 static HRESULT ProfilesEnumGuid_Constructor(IEnumGUID **ppOut);
 static HRESULT EnumTfLanguageProfiles_Constructor(LANGID langid, IEnumTfLanguageProfiles **ppOut);
 
+static inline InputProcessorProfiles *impl_from_ITfSourceVtbl(ITfSource *iface)
+{
+    return (InputProcessorProfiles *)((char *)iface - FIELD_OFFSET(InputProcessorProfiles,SourceVtbl));
+}
+
+static void free_sink(InputProcessorProfilesSink *sink)
+{
+        IUnknown_Release(sink->interfaces.pIUnknown);
+        HeapFree(GetProcessHeap(),0,sink);
+}
+
 static void InputProcessorProfiles_Destructor(InputProcessorProfiles *This)
 {
+    struct list *cursor, *cursor2;
     TRACE("destroying %p\n", This);
+
+    /* free sinks */
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->LanguageProfileNotifySink)
+    {
+        InputProcessorProfilesSink* sink = LIST_ENTRY(cursor,InputProcessorProfilesSink,entry);
+        list_remove(cursor);
+        free_sink(sink);
+    }
+
     HeapFree(GetProcessHeap(),0,This);
 }
 
@@ -121,6 +159,10 @@ static HRESULT WINAPI InputProcessorProfiles_QueryInterface(ITfInputProcessorPro
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_ITfInputProcessorProfiles))
     {
         *ppvOut = This;
+    }
+    else if (IsEqualIID(iid, &IID_ITfSource))
+    {
+        *ppvOut = &This->SourceVtbl;
     }
 
     if (*ppvOut)
@@ -536,6 +578,92 @@ static const ITfInputProcessorProfilesVtbl InputProcessorProfiles_InputProcessor
     InputProcessorProfiles_SubstituteKeyboardLayout
 };
 
+/*****************************************************
+ * ITfSource functions
+ *****************************************************/
+static HRESULT WINAPI IPPSource_QueryInterface(ITfSource *iface, REFIID iid, LPVOID *ppvOut)
+{
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+    return InputProcessorProfiles_QueryInterface((ITfInputProcessorProfiles *)This, iid, *ppvOut);
+}
+
+static ULONG WINAPI IPPSource_AddRef(ITfSource *iface)
+{
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+    return InputProcessorProfiles_AddRef((ITfInputProcessorProfiles*)This);
+}
+
+static ULONG WINAPI IPPSource_Release(ITfSource *iface)
+{
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+    return InputProcessorProfiles_Release((ITfInputProcessorProfiles *)This);
+}
+
+static WINAPI HRESULT IPPSource_AdviseSink(ITfSource *iface,
+        REFIID riid, IUnknown *punk, DWORD *pdwCookie)
+{
+    InputProcessorProfilesSink *ipps;
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+
+    TRACE("(%p) %s %p %p\n",This,debugstr_guid(riid),punk,pdwCookie);
+
+    if (!riid || !punk || !pdwCookie)
+        return E_INVALIDARG;
+
+    if (IsEqualIID(riid, &IID_ITfLanguageProfileNotifySink))
+    {
+        ipps = HeapAlloc(GetProcessHeap(),0,sizeof(InputProcessorProfilesSink));
+        if (!ipps)
+            return E_OUTOFMEMORY;
+        if (FAILED(IUnknown_QueryInterface(punk, riid, (LPVOID *)&ipps->interfaces.pITfLanguageProfileNotifySink)))
+        {
+            HeapFree(GetProcessHeap(),0,ipps);
+            return CONNECT_E_CANNOTCONNECT;
+        }
+        list_add_head(&This->LanguageProfileNotifySink,&ipps->entry);
+        *pdwCookie = generate_Cookie(COOKIE_MAGIC_IPPSINK, ipps);
+    }
+    else
+    {
+        FIXME("(%p) Unhandled Sink: %s\n",This,debugstr_guid(riid));
+        return E_NOTIMPL;
+    }
+
+    TRACE("cookie %x\n",*pdwCookie);
+
+    return S_OK;
+}
+
+static WINAPI HRESULT IPPSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
+{
+    InputProcessorProfilesSink *sink;
+    InputProcessorProfiles *This = impl_from_ITfSourceVtbl(iface);
+
+    TRACE("(%p) %x\n",This,pdwCookie);
+
+    if (get_Cookie_magic(pdwCookie)!=COOKIE_MAGIC_IPPSINK)
+        return E_INVALIDARG;
+
+    sink = (InputProcessorProfilesSink*)remove_Cookie(pdwCookie);
+    if (!sink)
+        return CONNECT_E_NOCONNECTION;
+
+    list_remove(&sink->entry);
+    free_sink(sink);
+
+    return S_OK;
+}
+
+static const ITfSourceVtbl InputProcessorProfiles_SourceVtbl =
+{
+    IPPSource_QueryInterface,
+    IPPSource_AddRef,
+    IPPSource_Release,
+
+    IPPSource_AdviseSink,
+    IPPSource_UnadviseSink,
+};
+
 HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 {
     InputProcessorProfiles *This;
@@ -547,8 +675,11 @@ HRESULT InputProcessorProfiles_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut
         return E_OUTOFMEMORY;
 
     This->InputProcessorProfilesVtbl= &InputProcessorProfiles_InputProcessorProfilesVtbl;
+    This->SourceVtbl = &InputProcessorProfiles_SourceVtbl;
     This->refCount = 1;
     This->currentLanguage = GetUserDefaultLCID();
+
+    list_init(&This->LanguageProfileNotifySink);
 
     TRACE("returning %p\n", This);
     *ppOut = (IUnknown *)This;

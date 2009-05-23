@@ -71,12 +71,20 @@ typedef struct tagACLMulti {
     const ITfKeystrokeMgrVtbl *KeystrokeMgrVtbl;
     const ITfMessagePumpVtbl *MessagePumpVtbl;
     const ITfClientIdVtbl *ClientIdVtbl;
+    /* const ITfThreadMgrExVtbl *ThreadMgrExVtbl; */
+    /* const ITfConfigureSystemKeystrokeFeedVtbl *ConfigureSystemKeystrokeFeedVtbl; */
+    /* const ITfLangBarItemMgrVtbl *LangBarItemMgrVtbl; */
+    /* const ITfUIElementMgrVtbl *UIElementMgrVtbl; */
+    /* const ITfSourceSingleVtbl *SourceSingleVtbl; */
     LONG refCount;
 
     const ITfThreadMgrEventSinkVtbl *ThreadMgrEventSinkVtbl; /* internal */
 
     ITfDocumentMgr *focus;
     LONG activationCount;
+
+    ITfKeyEventSink *forgroundKeyEventSink;
+    CLSID forgroundTextService;
 
     struct list CurrentPreservedKeys;
 
@@ -434,7 +442,7 @@ static WINAPI HRESULT ThreadMgrSource_AdviseSink(ITfSource *iface,
         tms = HeapAlloc(GetProcessHeap(),0,sizeof(ThreadMgrSink));
         if (!tms)
             return E_OUTOFMEMORY;
-        if (!SUCCEEDED(IUnknown_QueryInterface(punk, riid, (LPVOID*)&tms->interfaces.pITfThreadMgrEventSink)))
+        if (FAILED(IUnknown_QueryInterface(punk, riid, (LPVOID *)&tms->interfaces.pITfThreadMgrEventSink)))
         {
             HeapFree(GetProcessHeap(),0,tms);
             return CONNECT_E_CANNOTCONNECT;
@@ -509,24 +517,87 @@ static HRESULT WINAPI KeystrokeMgr_AdviseKeyEventSink(ITfKeystrokeMgr *iface,
         TfClientId tid, ITfKeyEventSink *pSink, BOOL fForeground)
 {
     ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    CLSID textservice;
+    ITfKeyEventSink *check = NULL;
+
+    TRACE("(%p) %x %p %i\n",This,tid,pSink,fForeground);
+
+    if (!tid || !pSink)
+        return E_INVALIDARG;
+
+    textservice = get_textservice_clsid(tid);
+    if (IsEqualCLSID(&GUID_NULL,&textservice))
+        return E_INVALIDARG;
+
+    get_textservice_sink(tid, &IID_ITfKeyEventSink, (IUnknown**)&check);
+    if (check != NULL)
+        return CONNECT_E_ADVISELIMIT;
+
+    if (FAILED(IUnknown_QueryInterface(pSink,&IID_ITfKeyEventSink,(LPVOID*) &check)))
+        return E_INVALIDARG;
+
+    set_textservice_sink(tid, &IID_ITfKeyEventSink, (IUnknown*)check);
+
+    if (fForeground)
+    {
+        if (This->forgroundKeyEventSink)
+        {
+            ITfKeyEventSink_OnSetFocus(This->forgroundKeyEventSink, FALSE);
+            ITfKeyEventSink_Release(This->forgroundKeyEventSink);
+        }
+        ITfKeyEventSink_AddRef(check);
+        ITfKeyEventSink_OnSetFocus(check, TRUE);
+        This->forgroundKeyEventSink = check;
+        This->forgroundTextService = textservice;
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI KeystrokeMgr_UnadviseKeyEventSink(ITfKeystrokeMgr *iface,
         TfClientId tid)
 {
     ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    CLSID textservice;
+    ITfKeyEventSink *check = NULL;
+    TRACE("(%p) %x\n",This,tid);
+
+    if (!tid)
+        return E_INVALIDARG;
+
+    textservice = get_textservice_clsid(tid);
+    if (IsEqualCLSID(&GUID_NULL,&textservice))
+        return E_INVALIDARG;
+
+    get_textservice_sink(tid, &IID_ITfKeyEventSink, (IUnknown**)&check);
+
+    if (!check)
+        return CONNECT_E_NOCONNECTION;
+
+    set_textservice_sink(tid, &IID_ITfKeyEventSink, NULL);
+    ITfKeyEventSink_Release(check);
+
+    if (This->forgroundKeyEventSink == check)
+    {
+        ITfKeyEventSink_Release(This->forgroundKeyEventSink);
+        This->forgroundKeyEventSink = NULL;
+        This->forgroundTextService = GUID_NULL;
+    }
+    return S_OK;
 }
 
 static HRESULT WINAPI KeystrokeMgr_GetForeground(ITfKeystrokeMgr *iface,
         CLSID *pclsid)
 {
     ThreadMgr *This = impl_from_ITfKeystrokeMgrVtbl(iface);
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    TRACE("(%p) %p\n",This,pclsid);
+    if (!pclsid)
+        return E_INVALIDARG;
+
+    if (IsEqualCLSID(&This->forgroundTextService,&GUID_NULL))
+        return S_FALSE;
+
+    *pclsid = This->forgroundTextService;
+    return S_OK;
 }
 
 static HRESULT WINAPI KeystrokeMgr_TestKeyDown(ITfKeystrokeMgr *iface,
