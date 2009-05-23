@@ -1999,7 +1999,7 @@ CLEANUP:
 BOOL APIENTRY
 IntInitMessagePumpHook()
 {
-   if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
+   if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti)
    {
      ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook++;
      return TRUE;
@@ -2010,7 +2010,7 @@ IntInitMessagePumpHook()
 BOOL APIENTRY
 IntUninitMessagePumpHook()
 {
-   if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->ThreadInfo)
+   if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti)
    {
       if (((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->pcti->dwcPumpHook <= 0)
       {
