@@ -346,6 +346,40 @@ static void brush_fill_path(GpGraphics *graphics, GpBrush* brush)
         }
         break;
     }
+    case BrushTypeSolidColor:
+    {
+        GpSolidFill *fill = (GpSolidFill*)brush;
+        if (fill->bmp)
+        {
+            RECT rc;
+            /* partially transparent fill */
+
+            SelectClipPath(graphics->hdc, RGN_AND);
+            if (GetClipBox(graphics->hdc, &rc) != NULLREGION)
+            {
+                HDC hdc = CreateCompatibleDC(NULL);
+                HBITMAP oldbmp;
+                BLENDFUNCTION bf;
+
+                if (!hdc) break;
+
+                oldbmp = SelectObject(hdc, fill->bmp);
+
+                bf.BlendOp = AC_SRC_OVER;
+                bf.BlendFlags = 0;
+                bf.SourceConstantAlpha = 255;
+                bf.AlphaFormat = AC_SRC_ALPHA;
+
+                GdiAlphaBlend(graphics->hdc, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, hdc, 0, 0, 1, 1, bf);
+
+                SelectObject(hdc, oldbmp);
+                DeleteDC(hdc);
+            }
+
+            break;
+        }
+        /* else fall through */
+    }
     default:
         SelectObject(graphics->hdc, brush->gdibrush);
         FillPath(graphics->hdc);
@@ -2016,6 +2050,9 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     SIZE size;
     RECT drawcoord;
 
+    TRACE("(%p, %s, %i, %p, %s, %p, %p)\n", graphics, debugstr_wn(string, length),
+        length, font, debugstr_rectf(rect), format, brush);
+
     if(!graphics || !string || !font || !brush || !rect)
         return InvalidParameter;
 
@@ -2932,6 +2969,10 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
         nheight;
     SIZE size;
 
+    TRACE("(%p, %s, %i, %p, %s, %p, %p, %p, %p)\n", graphics,
+        debugstr_wn(string, length), length, font, debugstr_rectf(rect), format,
+        bounds, codepointsfitted, linesfilled);
+
     if(!graphics || !string || !font || !rect)
         return InvalidParameter;
 
@@ -3585,23 +3626,104 @@ GpStatus WINGDIPAPI GdipGetClip(GpGraphics *graphics, GpRegion *region)
 GpStatus WINGDIPAPI GdipTransformPoints(GpGraphics *graphics, GpCoordinateSpace dst_space,
                                         GpCoordinateSpace src_space, GpPointF *points, INT count)
 {
+    GpMatrix *matrix;
+    GpStatus stat;
+    REAL unitscale;
+
     if(!graphics || !points || count <= 0)
         return InvalidParameter;
 
     if(graphics->busy)
         return ObjectBusy;
 
-    FIXME("(%p, %d, %d, %p, %d): stub\n", graphics, dst_space, src_space, points, count);
+    TRACE("(%p, %d, %d, %p, %d)\n", graphics, dst_space, src_space, points, count);
 
-    return NotImplemented;
+    if (src_space == dst_space) return Ok;
+
+    stat = GdipCreateMatrix(&matrix);
+    if (stat == Ok)
+    {
+        unitscale = convert_unit(graphics->hdc, graphics->unit);
+
+        if(graphics->unit != UnitDisplay)
+            unitscale *= graphics->scale;
+
+        /* transform from src_space to CoordinateSpacePage */
+        switch (src_space)
+        {
+        case CoordinateSpaceWorld:
+            GdipMultiplyMatrix(matrix, graphics->worldtrans, MatrixOrderAppend);
+            break;
+        case CoordinateSpacePage:
+            break;
+        case CoordinateSpaceDevice:
+            GdipScaleMatrix(matrix, 1.0/unitscale, 1.0/unitscale, MatrixOrderAppend);
+            break;
+        }
+
+        /* transform from CoordinateSpacePage to dst_space */
+        switch (dst_space)
+        {
+        case CoordinateSpaceWorld:
+            {
+                GpMatrix *inverted_transform;
+                stat = GdipCloneMatrix(graphics->worldtrans, &inverted_transform);
+                if (stat == Ok)
+                {
+                    stat = GdipInvertMatrix(inverted_transform);
+                    if (stat == Ok)
+                        GdipMultiplyMatrix(matrix, inverted_transform, MatrixOrderAppend);
+                    GdipDeleteMatrix(inverted_transform);
+                }
+                break;
+            }
+        case CoordinateSpacePage:
+            break;
+        case CoordinateSpaceDevice:
+            GdipScaleMatrix(matrix, unitscale, unitscale, MatrixOrderAppend);
+            break;
+        }
+
+        if (stat == Ok)
+            stat = GdipTransformMatrixPoints(matrix, points, count);
+
+        GdipDeleteMatrix(matrix);
+    }
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipTransformPointsI(GpGraphics *graphics, GpCoordinateSpace dst_space,
                                          GpCoordinateSpace src_space, GpPoint *points, INT count)
 {
-    FIXME("(%p, %d, %d, %p, %d): stub\n", graphics, dst_space, src_space, points, count);
+    GpPointF *pointsF;
+    GpStatus ret;
+    INT i;
 
-    return NotImplemented;
+    TRACE("(%p, %d, %d, %p, %d)\n", graphics, dst_space, src_space, points, count);
+
+    if(count <= 0)
+        return InvalidParameter;
+
+    pointsF = GdipAlloc(sizeof(GpPointF) * count);
+    if(!pointsF)
+        return OutOfMemory;
+
+    for(i = 0; i < count; i++){
+        pointsF[i].X = (REAL)points[i].X;
+        pointsF[i].Y = (REAL)points[i].Y;
+    }
+
+    ret = GdipTransformPoints(graphics, dst_space, src_space, pointsF, count);
+
+    if(ret == Ok)
+        for(i = 0; i < count; i++){
+            points[i].X = roundr(pointsF[i].X);
+            points[i].Y = roundr(pointsF[i].Y);
+        }
+    GdipFree(pointsF);
+
+    return ret;
 }
 
 HPALETTE WINGDIPAPI GdipCreateHalftonePalette(void)

@@ -41,6 +41,7 @@
 #define TENSION_CONST (0.3)
 
 COLORREF ARGB2COLORREF(ARGB color);
+HBITMAP ARGB2BMP(ARGB color);
 extern INT arc2polybezier(GpPointF * points, REAL x1, REAL y1, REAL x2, REAL y2,
     REAL startAngle, REAL sweepAngle);
 extern REAL gdiplus_atan2(REAL dy, REAL dx);
@@ -51,6 +52,8 @@ extern void calc_curve_bezier(CONST GpPointF *pts, REAL tension, REAL *x1,
     REAL *y1, REAL *x2, REAL *y2);
 extern void calc_curve_bezier_endp(REAL xend, REAL yend, REAL xadj, REAL yadj,
     REAL tension, REAL *x, REAL *y);
+
+extern void free_installed_fonts(void);
 
 extern BOOL lengthen_path(GpPath *path, INT len);
 
@@ -68,6 +71,8 @@ static inline REAL deg2rad(REAL degrees)
 {
     return M_PI * degrees / 180.0;
 }
+
+extern const char *debugstr_rectf(CONST RectF* rc);
 
 struct GpPen{
     UINT style;
@@ -122,6 +127,7 @@ struct GpHatch{
 struct GpSolidFill{
     GpBrush brush;
     ARGB color;
+    HBITMAP bmp;
 };
 
 struct GpPathGradient{
@@ -243,6 +249,7 @@ struct GpStringFormat{
 struct GpFontCollection{
     GpFontFamily **FontFamilies;
     INT count;
+    INT allocated;
 };
 
 struct GpFontFamily{

@@ -844,6 +844,7 @@ GpStatus WINGDIPAPI GdipNewPrivateFontCollection(GpFontCollection** fontCollecti
 
     (*fontCollection)->FontFamilies = NULL;
     (*fontCollection)->count = 0;
+    (*fontCollection)->allocated = 0;
     return Ok;
 }
 
@@ -930,13 +931,76 @@ GpStatus WINGDIPAPI GdipGetFontCollectionFamilyList(
     return Ok;
 }
 
+void free_installed_fonts(void)
+{
+    while (installedFontCollection.count)
+        GdipDeleteFontFamily(installedFontCollection.FontFamilies[--installedFontCollection.count]);
+    HeapFree(GetProcessHeap(), 0, installedFontCollection.FontFamilies);
+    installedFontCollection.FontFamilies = NULL;
+    installedFontCollection.allocated = 0;
+}
+
+static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm,
+        DWORD type, LPARAM lParam)
+{
+    GpFontCollection* fonts = (GpFontCollection*)lParam;
+    int i;
+
+    /* skip duplicates */
+    for (i=0; i<fonts->count; i++)
+        if (strcmpiW(lfw->lfFaceName, fonts->FontFamilies[i]->FamilyName) == 0)
+            return 1;
+
+    if (fonts->allocated == fonts->count)
+    {
+        INT new_alloc_count = fonts->allocated+50;
+        GpFontFamily** new_family_list = HeapAlloc(GetProcessHeap(), 0, new_alloc_count*sizeof(void*));
+
+        if (!new_family_list)
+            return 0;
+
+        memcpy(new_family_list, fonts->FontFamilies, fonts->count*sizeof(void*));
+        HeapFree(GetProcessHeap(), 0, fonts->FontFamilies);
+        fonts->FontFamilies = new_family_list;
+        fonts->allocated = new_alloc_count;
+    }
+
+    if (GdipCreateFontFamilyFromName(lfw->lfFaceName, NULL, &fonts->FontFamilies[fonts->count]) == Ok)
+        fonts->count++;
+    else
+        return 0;
+
+    return 1;
+}
+
 GpStatus WINGDIPAPI GdipNewInstalledFontCollection(
         GpFontCollection** fontCollection)
 {
-    FIXME("stub: %p\n",fontCollection);
+    TRACE("(%p)\n",fontCollection);
 
     if (!fontCollection)
         return InvalidParameter;
+
+    if (installedFontCollection.count == 0)
+    {
+        HDC hdc;
+        LOGFONTW lfw;
+
+        hdc = GetDC(0);
+
+        lfw.lfCharSet = DEFAULT_CHARSET;
+        lfw.lfFaceName[0] = 0;
+        lfw.lfPitchAndFamily = 0;
+
+        if (!EnumFontFamiliesExW(hdc, &lfw, add_font_proc, (LPARAM)&installedFontCollection, 0))
+        {
+            free_installed_fonts();
+            ReleaseDC(0, hdc);
+            return OutOfMemory;
+        }
+
+        ReleaseDC(0, hdc);
+    }
 
     *fontCollection = &installedFontCollection;
 

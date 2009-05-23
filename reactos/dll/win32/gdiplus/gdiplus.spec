@@ -621,8 +621,8 @@
 @ stdcall GdipTranslateWorldTransform(ptr long long long)
 @ stdcall GdipVectorTransformMatrixPoints(ptr ptr long)
 @ stdcall GdipVectorTransformMatrixPointsI(ptr ptr long)
-@ stub GdipWarpPath
-@ stub GdipWidenPath
+@ stdcall GdipWarpPath(ptr ptr ptr long long long long long long long)
+@ stdcall GdipWidenPath(ptr ptr ptr long)
 @ stub GdipWindingModeOutline
 @ stdcall GdiplusNotificationHook(ptr)
 @ stdcall GdiplusNotificationUnhook(ptr)
