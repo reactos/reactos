@@ -213,3 +213,23 @@ CMP_UnregisterNotification(IN HDEVNOTIFY handle)
     FIXME ("Stub %p\n", handle);
     return CR_SUCCESS;
 }
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_Size_ExA (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExA(PULONG len, LPGUID class, DEVINSTID_A id,
+                                                       ULONG flags, HMACHINE machine)
+{
+    FIXME("%p %p %s 0x%08x %p: stub\n", len, class, debugstr_a(id), flags, machine);
+    return CR_FAILURE;
+}
+
+/***********************************************************************
+ *      CM_Get_Device_Interface_List_Size_ExW (SETUPAPI.@)
+ */
+CONFIGRET WINAPI CM_Get_Device_Interface_List_Size_ExW(PULONG len, LPGUID class, DEVINSTID_W id,
+                                                       ULONG flags, HMACHINE machine)
+{
+    FIXME("%p %p %s 0x%08x %p: stub\n", len, class, debugstr_w(id), flags, machine);
+    return CR_FAILURE;
+}

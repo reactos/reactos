@@ -100,8 +100,8 @@
 @ stub CM_Get_Device_Interface_List_ExW
 @ stub CM_Get_Device_Interface_List_SizeA
 @ stub CM_Get_Device_Interface_List_SizeW
-@ stub CM_Get_Device_Interface_List_Size_ExA
-@ stub CM_Get_Device_Interface_List_Size_ExW
+@ stdcall CM_Get_Device_Interface_List_Size_ExA(ptr ptr str long ptr)
+@ stdcall CM_Get_Device_Interface_List_Size_ExW(ptr ptr wstr long ptr)
 @ stdcall CM_Get_First_Log_Conf(ptr long long)
 @ stdcall CM_Get_First_Log_Conf_Ex(ptr long long long)
 @ stdcall CM_Get_Global_State(ptr long)
@@ -528,8 +528,8 @@
 @ stdcall SetupTermDefaultQueueCallback(ptr)
 @ stdcall SetupTerminateFileLog(long)
 @ stub SetupUninstallNewlyCopiedInfs
-@ stub SetupUninstallOEMInfA
-@ stub SetupUninstallOEMInfW
+@ stdcall SetupUninstallOEMInfA(str long ptr)
+@ stdcall SetupUninstallOEMInfW(wstr long ptr)
 @ stub SetupVerifyInfFileA
 @ stub SetupVerifyInfFileW
 @ stdcall UnicodeToMultiByte(wstr long)
