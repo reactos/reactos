@@ -684,7 +684,7 @@ VOID LANTransmit(
         if (Adapter->MTU < PacketLength) {
             /* This is NOT a pointer. MSDN explicitly says so. */
             NDIS_PER_PACKET_INFO_FROM_PACKET(NdisPacket,
-                                             TcpLargeSendPacketInfo) = (PVOID)((ULONG)Adapter->MTU);
+                                             TcpLargeSendPacketInfo) = (PVOID)((ULONG_PTR)Adapter->MTU);
         }
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
