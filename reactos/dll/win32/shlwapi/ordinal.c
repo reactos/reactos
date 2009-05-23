@@ -1081,11 +1081,11 @@ HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup,
  */
 LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags)
 {
-  LONG ret = GetWindowLongPtrA(hwnd, offset);
+  LONG ret = GetWindowLongA(hwnd, offset);
   LONG newFlags = (wFlags & wMask) | (ret & ~wFlags);
 
   if (newFlags != ret)
-    ret = SetWindowLongPtrA(hwnd, offset, newFlags);
+    ret = SetWindowLongA(hwnd, offset, newFlags);
   return ret;
 }
 
@@ -2912,6 +2912,26 @@ static HRESULT SHLWAPI_InvokeByIID(
 
   return S_OK;
 }
+
+/*************************************************************************
+ *  IConnectionPoint_InvokeWithCancel   [SHLWAPI.283]
+ */
+HRESULT WINAPI IConnectionPoint_InvokeWithCancel( IConnectionPoint* iCP,
+                                                  DISPID dispId, DISPPARAMS* dispParams,
+                                                  DWORD unknown1, DWORD unknown2 )
+{
+    IID iid;
+    HRESULT result;
+
+    FIXME("(%p)->(0x%x %p %x %x) partial stub\n", iCP, dispId, dispParams, unknown1, unknown2);
+
+    result = IConnectionPoint_GetConnectionInterface(iCP, &iid);
+    if (SUCCEEDED(result))
+        result = SHLWAPI_InvokeByIID(iCP, &iid, dispId, dispParams);
+
+    return result;
+}
+
 
 /*************************************************************************
  *      @	[SHLWAPI.284]

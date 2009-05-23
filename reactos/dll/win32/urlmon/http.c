@@ -32,7 +32,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    const IInternetProtocolVtbl *lpInternetProtocolVtbl;
+    const IInternetProtocolVtbl *lpIInternetProtocolVtbl;
     const IInternetPriorityVtbl *lpInternetPriorityVtbl;
     const IWinInetHttpInfoVtbl  *lpWinInetHttpInfoVtbl;
 
@@ -43,7 +43,6 @@ typedef struct {
     LONG ref;
 } HttpProtocol;
 
-#define PROTOCOL(x)      ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
 #define PRIORITY(x)      ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
 #define INETHTTPINFO(x)  ((IWinInetHttpInfo*)   &(x)->lpWinInetHttpInfoVtbl)
 
@@ -309,7 +308,7 @@ static const ProtocolVtbl AsyncProtocolVtbl = {
     HttpProtocol_close_connection
 };
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, InternetProtocol, iface)
+#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, IInternetProtocol, iface)
 
 static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
@@ -590,9 +589,9 @@ static HRESULT create_http_protocol(BOOL https, void **ppobj)
         return E_OUTOFMEMORY;
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->lpInternetProtocolVtbl = &HttpProtocolVtbl;
-    ret->lpInternetPriorityVtbl = &HttpPriorityVtbl;
-    ret->lpWinInetHttpInfoVtbl  = &WinInetHttpInfoVtbl;
+    ret->lpIInternetProtocolVtbl = &HttpProtocolVtbl;
+    ret->lpInternetPriorityVtbl  = &HttpPriorityVtbl;
+    ret->lpWinInetHttpInfoVtbl   = &WinInetHttpInfoVtbl;
 
     ret->https = https;
     ret->ref = 1;

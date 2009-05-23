@@ -264,6 +264,36 @@ HRESULT get_protocol_handler(LPCWSTR url, CLSID *clsid, BOOL *urlmon_protocol, I
     return get_protocol_cf(schema, schema_len, clsid, ret);
 }
 
+IInternetProtocol *get_mime_filter(LPCWSTR mime)
+{
+    IClassFactory *cf = NULL;
+    IInternetProtocol *ret;
+    mime_filter *iter;
+    HRESULT hres;
+
+    EnterCriticalSection(&session_cs);
+
+    for(iter = mime_filter_list; iter; iter = iter->next) {
+        if(!strcmpW(iter->mime, mime)) {
+            cf = iter->cf;
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&session_cs);
+
+    if(!cf)
+        return NULL;
+
+    hres = IClassFactory_CreateInstance(cf, NULL, &IID_IInternetProtocol, (void**)&ret);
+    if(FAILED(hres)) {
+        WARN("CreateInstance failed: %08x\n", hres);
+        return NULL;
+    }
+
+    return ret;
+}
+
 static HRESULT WINAPI InternetSession_QueryInterface(IInternetSession *iface,
         REFIID riid, void **ppv)
 {

@@ -36,8 +36,87 @@ LONG URLMON_refCount = 0;
 
 HINSTANCE URLMON_hInstance = 0;
 static HMODULE hCabinet = NULL;
+static DWORD urlmon_tls;
 
 static void init_session(BOOL);
+
+static struct list tls_list = LIST_INIT(tls_list);
+
+static CRITICAL_SECTION tls_cs;
+static CRITICAL_SECTION_DEBUG tls_cs_dbg =
+{
+    0, 0, &tls_cs,
+    { &tls_cs_dbg.ProcessLocksList, &tls_cs_dbg.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": tls") }
+};
+
+static CRITICAL_SECTION tls_cs = { &tls_cs_dbg, -1, 0, 0, 0, 0 };
+
+tls_data_t *get_tls_data(void)
+{
+    tls_data_t *data;
+
+    if(!urlmon_tls) {
+        DWORD tls = TlsAlloc();
+        tls = InterlockedCompareExchange((LONG*)&urlmon_tls, tls, 0);
+        if(tls != urlmon_tls)
+            TlsFree(tls);
+    }
+
+    data = TlsGetValue(urlmon_tls);
+    if(!data) {
+        data = heap_alloc_zero(sizeof(tls_data_t));
+        if(!data)
+            return NULL;
+
+        EnterCriticalSection(&tls_cs);
+        list_add_tail(&tls_list, &data->entry);
+        LeaveCriticalSection(&tls_cs);
+
+        TlsSetValue(urlmon_tls, data);
+    }
+
+    return data;
+}
+
+static void free_tls_list(void)
+{
+    tls_data_t *data;
+
+    if(!urlmon_tls)
+        return;
+
+    while(!list_empty(&tls_list)) {
+        data = LIST_ENTRY(list_head(&tls_list), tls_data_t, entry);
+        list_remove(&data->entry);
+        heap_free(data);
+    }
+
+    TlsFree(urlmon_tls);
+}
+
+static void detach_thread(void)
+{
+    tls_data_t *data;
+
+    if(!urlmon_tls)
+        return;
+
+    data = TlsGetValue(urlmon_tls);
+    if(!data)
+        return;
+
+    EnterCriticalSection(&tls_cs);
+    list_remove(&data->entry);
+    LeaveCriticalSection(&tls_cs);
+
+    if(data->notif_hwnd) {
+        WARN("notif_hwnd not destroyed\n");
+        DestroyWindow(data->notif_hwnd);
+    }
+
+    heap_free(data);
+}
 
 /***********************************************************************
  *		DllMain (URLMON.init)
@@ -48,7 +127,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 
     switch(fdwReason) {
     case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hinstDLL);
         URLMON_hInstance = hinstDLL;
         init_session(TRUE);
 	break;
@@ -58,8 +136,13 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
             FreeLibrary(hCabinet);
         hCabinet = NULL;
         init_session(FALSE);
+        free_tls_list();
         URLMON_hInstance = 0;
 	break;
+
+    case DLL_THREAD_DETACH:
+        detach_thread();
+        break;
     }
     return TRUE;
 }

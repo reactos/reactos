@@ -21,6 +21,7 @@
 	<file>mimefilter.c</file>
 	<file>mk.c</file>
 	<file>protocol.c</file>
+	<file>protproxy.c</file>
 	<file>regsvr.c</file>
 	<file>sec_mgr.c</file>
 	<file>session.c</file>
