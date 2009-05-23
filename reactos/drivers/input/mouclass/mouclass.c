@@ -368,6 +368,7 @@ cleanup:
 	DeviceExtension->DeviceName = DeviceNameU.Buffer;
 	Fdo->Flags |= DO_POWER_PAGABLE;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+    Fdo->Flags |= DO_BUFFERED_IO;
 
 	/* Add entry entry to HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\[DeviceBaseName] */
 	RtlWriteRegistryValue(
