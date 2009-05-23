@@ -1,5 +1,5 @@
 101 stub -noname DoConnectoidsExist
-102 stub -noname GetDiskInfoA
+102 stdcall -noname GetDiskInfoA(str ptr ptr ptr)
 103 stub -noname PerformOperationOverUrlCacheA
 104 stub -noname HttpCheckDavComplianceA
 105 stub -noname HttpCheckDavComplianceW
@@ -9,7 +9,7 @@
 111 stub -noname ExportCookieFileW
 112 stub -noname IsProfilesEnabled
 116 stub -noname IsDomainlegalCookieDomainA
-117 stub -noname IsDomainLegalCookieDomainW
+117 stdcall -noname IsDomainLegalCookieDomainW(wstr wstr)
 118 stub -noname FindP3PPolicySymbol
 120 stub -noname MapResourceToPolicy
 121 stub -noname GetP3PPolicy
@@ -109,7 +109,7 @@
 @ stdcall HttpSendRequestExA(long ptr ptr long long)
 @ stdcall HttpSendRequestExW(long ptr ptr long long)
 @ stdcall HttpSendRequestW(ptr wstr long ptr long)
-@ stub IncrementUrlCacheHeaderData
+@ stdcall IncrementUrlCacheHeaderData(long ptr)
 @ stub InternetAlgIdToStringA
 @ stub InternetAlgIdToStringW
 @ stdcall InternetAttemptConnect(long)
@@ -213,10 +213,10 @@
 @ stdcall IsUrlCacheEntryExpiredW(wstr long ptr)
 @ stub LoadUrlCacheContent
 @ stub ParseX509EncodedCertificateForListBoxEntry
-@ stub PrivacyGetZonePreferenceW # (long long ptr ptr ptr)
-@ stub PrivacySetZonePreferenceW # (long long long wstr)
+@ stdcall PrivacyGetZonePreferenceW(long long ptr ptr ptr)
+@ stdcall PrivacySetZonePreferenceW(long long long wstr)
 @ stdcall ReadUrlCacheEntryStream(ptr long ptr ptr long)
-@ stub RegisterUrlCacheNotification
+@ stdcall RegisterUrlCacheNotification(ptr long long long long long)
 @ stdcall ResumeSuspendedDownload(long long)
 @ stdcall RetrieveUrlCacheEntryFileA(str ptr ptr long)
 @ stdcall RetrieveUrlCacheEntryFileW(wstr ptr ptr long)

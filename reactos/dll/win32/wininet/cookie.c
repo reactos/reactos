@@ -23,6 +23,10 @@
 #include "config.h"
 #include "wine/port.h"
 
+#if defined(__MINGW32__) || defined (_MSC_VER)
+#include <ws2tcpip.h>
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +52,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(wininet);
  *     Cookies are currently memory only.
  *     Cookies are NOT THREAD SAFE
  *     Cookies could use A LOT OF MEMORY. We need some kind of memory management here!
- *     Cookies should care about the expiry time
  */
 
 typedef struct _cookie_domain cookie_domain;
@@ -62,7 +65,7 @@ struct _cookie
 
     LPWSTR lpCookieName;
     LPWSTR lpCookieData;
-    time_t expiry; /* FIXME: not used */
+    FILETIME expiry;
 };
 
 struct _cookie_domain
@@ -76,7 +79,7 @@ struct _cookie_domain
 
 static struct list domain_list = LIST_INIT(domain_list);
 
-static cookie *COOKIE_addCookie(cookie_domain *domain, LPCWSTR name, LPCWSTR data);
+static cookie *COOKIE_addCookie(cookie_domain *domain, LPCWSTR name, LPCWSTR data, FILETIME expiry);
 static cookie *COOKIE_findCookie(cookie_domain *domain, LPCWSTR lpszCookieName);
 static void COOKIE_deleteCookie(cookie *deadCookie, BOOL deleteDomain);
 static cookie_domain *COOKIE_addDomain(LPCWSTR domain, LPCWSTR path);
@@ -84,13 +87,14 @@ static void COOKIE_deleteDomain(cookie_domain *deadDomain);
 
 
 /* adds a cookie to the domain */
-static cookie *COOKIE_addCookie(cookie_domain *domain, LPCWSTR name, LPCWSTR data)
+static cookie *COOKIE_addCookie(cookie_domain *domain, LPCWSTR name, LPCWSTR data, FILETIME expiry)
 {
     cookie *newCookie = HeapAlloc(GetProcessHeap(), 0, sizeof(cookie));
 
     list_init(&newCookie->entry);
     newCookie->lpCookieName = NULL;
     newCookie->lpCookieData = NULL;
+    newCookie->expiry = expiry;
 
     if (name)
     {
@@ -177,6 +181,7 @@ static cookie_domain *COOKIE_addDomain(LPCWSTR domain, LPCWSTR path)
 static BOOL COOKIE_crackUrlSimple(LPCWSTR lpszUrl, LPWSTR hostName, int hostNameLen, LPWSTR path, int pathLen)
 {
     URL_COMPONENTSW UrlComponents;
+    BOOL rc;
 
     UrlComponents.lpszExtraInfo = NULL;
     UrlComponents.lpszPassword = NULL;
@@ -191,7 +196,22 @@ static BOOL COOKIE_crackUrlSimple(LPCWSTR lpszUrl, LPWSTR hostName, int hostName
     UrlComponents.dwHostNameLength = hostNameLen;
     UrlComponents.dwUrlPathLength = pathLen;
 
-    return InternetCrackUrlW(lpszUrl, 0, 0, &UrlComponents);
+    rc = InternetCrackUrlW(lpszUrl, 0, 0, &UrlComponents);
+
+    /* discard the webpage off the end of the path */
+    if (pathLen > 0 && path[pathLen-1] != '/')
+    {
+        LPWSTR ptr;
+        ptr = strrchrW(path,'/');
+        if (ptr)
+            *(++ptr) = 0;
+        else
+        {
+            path[0] = '/';
+            path[1] = 0;
+        }
+    }
+    return rc;
 }
 
 /* match a domain. domain must match if the domain is not NULL. path must match if the path is not NULL */
@@ -215,11 +235,22 @@ static BOOL COOKIE_matchDomain(LPCWSTR lpszCookieDomain, LPCWSTR lpszCookiePath,
  	}
     if (lpszCookiePath)
     {
+        INT len;
         TRACE("comparing paths: %s with %s\n", debugstr_w(lpszCookiePath), debugstr_w(searchDomain->lpCookiePath));
+        /* paths match at the beginning.  so a path of  /foo would match
+         * /foobar and /foo/bar
+         */
         if (!searchDomain->lpCookiePath)
             return FALSE;
-        if (strcmpW(lpszCookiePath, searchDomain->lpCookiePath))
+        if (allow_partial)
+        {
+            len = lstrlenW(searchDomain->lpCookiePath);
+            if (strncmpiW(searchDomain->lpCookiePath, lpszCookiePath, len)!=0)
+                return FALSE;
+        }
+        else if (strcmpW(lpszCookiePath, searchDomain->lpCookiePath))
             return FALSE;
+
 	}
 	return TRUE;
 }
@@ -262,6 +293,7 @@ BOOL WINAPI InternetGetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
     struct list * cursor;
     unsigned int cnt = 0, domain_count = 0, cookie_count = 0;
     WCHAR hostName[2048], path[2048];
+    FILETIME tm;
 
     TRACE("(%s, %s, %p, %p)\n", debugstr_w(lpszUrl),debugstr_w(lpszCookieName),
           lpCookieData, lpdwSize);
@@ -276,10 +308,12 @@ BOOL WINAPI InternetGetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
     ret = COOKIE_crackUrlSimple(lpszUrl, hostName, sizeof(hostName)/sizeof(hostName[0]), path, sizeof(path)/sizeof(path[0]));
     if (!ret || !hostName[0]) return FALSE;
 
+    GetSystemTimeAsFileTime(&tm);
+
     LIST_FOR_EACH(cursor, &domain_list)
     {
         cookie_domain *cookiesDomain = LIST_ENTRY(cursor, cookie_domain, entry);
-        if (COOKIE_matchDomain(hostName, NULL /* FIXME: path */, cookiesDomain, TRUE))
+        if (COOKIE_matchDomain(hostName, path, cookiesDomain, TRUE))
         {
             struct list * cursor;
             domain_count++;
@@ -288,6 +322,14 @@ BOOL WINAPI InternetGetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
             LIST_FOR_EACH(cursor, &cookiesDomain->cookie_list)
             {
                 cookie *thisCookie = LIST_ENTRY(cursor, cookie, entry);
+                /* check for expiry */
+                if ((thisCookie->expiry.dwLowDateTime != 0 || thisCookie->expiry.dwHighDateTime != 0) && CompareFileTime(&tm,&thisCookie->expiry)  > 0)
+                {
+                    TRACE("Found expired cookie. deleting\n");
+                    COOKIE_deleteCookie(thisCookie, FALSE);
+                    continue;
+                }
+
                 if (lpCookieData == NULL) /* return the size of the buffer required to lpdwSize */
                 {
                     unsigned int len;
@@ -405,27 +447,116 @@ static BOOL set_cookie(LPCWSTR domain, LPCWSTR path, LPCWSTR cookie_name, LPCWST
     cookie_domain *thisCookieDomain = NULL;
     cookie *thisCookie;
     struct list *cursor;
+    LPWSTR data, value;
+    WCHAR *ptr;
+    FILETIME expiry;
+    BOOL expired = FALSE;
+
+    value = data = HeapAlloc(GetProcessHeap(), 0, (strlenW(cookie_data) + 1) * sizeof(WCHAR));
+    strcpyW(data,cookie_data);
+    memset(&expiry,0,sizeof(expiry));
+
+    /* lots of information can be parsed out of the cookie value */
+
+    ptr = data;
+    for (;;)
+    {
+        static const WCHAR szDomain[] = {'d','o','m','a','i','n','=',0};
+        static const WCHAR szPath[] = {'p','a','t','h','=',0};
+        static const WCHAR szExpires[] = {'e','x','p','i','r','e','s','=',0};
+        static const WCHAR szSecure[] = {'s','e','c','u','r','e',0};
+        static const WCHAR szHttpOnly[] = {'h','t','t','p','o','n','l','y',0};
+
+        if (!(ptr = strchrW(ptr,';'))) break;
+        *ptr++ = 0;
+
+        value = HeapAlloc(GetProcessHeap(), 0, (ptr - data) * sizeof(WCHAR));
+        strcpyW(value, data);
+
+        while (*ptr == ' ') ptr++; /* whitespace */
+
+        if (strncmpiW(ptr, szDomain, 7) == 0)
+        {
+            ptr+=strlenW(szDomain);
+            domain = ptr;
+            TRACE("Parsing new domain %s\n",debugstr_w(domain));
+        }
+        else if (strncmpiW(ptr, szPath, 5) == 0)
+        {
+            ptr+=strlenW(szPath);
+            path = ptr;
+            TRACE("Parsing new path %s\n",debugstr_w(path));
+        }
+        else if (strncmpiW(ptr, szExpires, 8) == 0)
+        {
+            FILETIME ft;
+            SYSTEMTIME st;
+            FIXME("persistent cookies not handled (%s)\n",debugstr_w(ptr));
+            ptr+=strlenW(szExpires);
+            if (InternetTimeToSystemTimeW(ptr, &st, 0))
+            {
+                SystemTimeToFileTime(&st, &expiry);
+                GetSystemTimeAsFileTime(&ft);
+
+                if (CompareFileTime(&ft,&expiry) > 0)
+                {
+                    TRACE("Cookie already expired.\n");
+                    expired = TRUE;
+                }
+            }
+        }
+        else if (strncmpiW(ptr, szSecure, 6) == 0)
+        {
+            FIXME("secure not handled (%s)\n",debugstr_w(ptr));
+            ptr += strlenW(szSecure);
+        }
+        else if (strncmpiW(ptr, szHttpOnly, 8) == 0)
+        {
+            FIXME("httponly not handled (%s)\n",debugstr_w(ptr));
+            ptr += strlenW(szHttpOnly);
+        }
+        else if (*ptr)
+        {
+            FIXME("Unknown additional option %s\n",debugstr_w(ptr));
+            break;
+        }
+    }
 
     LIST_FOR_EACH(cursor, &domain_list)
     {
         thisCookieDomain = LIST_ENTRY(cursor, cookie_domain, entry);
-        if (COOKIE_matchDomain(domain, NULL /* FIXME: path */, thisCookieDomain, FALSE))
+        if (COOKIE_matchDomain(domain, path, thisCookieDomain, FALSE))
             break;
         thisCookieDomain = NULL;
     }
 
     if (!thisCookieDomain)
-        thisCookieDomain = COOKIE_addDomain(domain, path);
+    {
+        if (!expired)
+            thisCookieDomain = COOKIE_addDomain(domain, path);
+        else
+        {
+            HeapFree(GetProcessHeap(),0,data);
+            if (value != data) HeapFree(GetProcessHeap(), 0, value);
+            return TRUE;
+        }
+    }
 
     if ((thisCookie = COOKIE_findCookie(thisCookieDomain, cookie_name)))
         COOKIE_deleteCookie(thisCookie, FALSE);
 
-    TRACE("setting cookie %s=%s for domain %s\n", debugstr_w(cookie_name),
-          debugstr_w(cookie_data), debugstr_w(thisCookieDomain->lpCookieDomain));
+    TRACE("setting cookie %s=%s for domain %s path %s\n", debugstr_w(cookie_name),
+          debugstr_w(value), debugstr_w(thisCookieDomain->lpCookieDomain),debugstr_w(thisCookieDomain->lpCookiePath));
 
-    if (!COOKIE_addCookie(thisCookieDomain, cookie_name, cookie_data))
+    if (!expired && !COOKIE_addCookie(thisCookieDomain, cookie_name, value, expiry))
+    {
+        HeapFree(GetProcessHeap(),0,data);
+        if (value != data) HeapFree(GetProcessHeap(), 0, value);
         return FALSE;
+    }
 
+    HeapFree(GetProcessHeap(),0,data);
+    if (value != data) HeapFree(GetProcessHeap(), 0, value);
     return TRUE;
 }
 
@@ -475,7 +606,7 @@ BOOL WINAPI InternetSetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
          * the cookie data in the form of name[=data].
          */
         if (!(data = strchrW(cookie, '='))) data = cookie + len;
-        else data++;
+        else *data++ = 0;
 
         ret = set_cookie(hostName, path, cookie, data);
 
@@ -690,5 +821,30 @@ BOOL WINAPI InternetSetPerSiteCookieDecisionA( LPCSTR pchHostName, DWORD dwDecis
 BOOL WINAPI InternetSetPerSiteCookieDecisionW( LPCWSTR pchHostName, DWORD dwDecision )
 {
     FIXME("(%s, 0x%08x) stub\n", debugstr_w(pchHostName), dwDecision);
+    return FALSE;
+}
+
+/***********************************************************************
+ *           IsDomainLegalCookieDomainW (WININET.@)
+ */
+BOOL WINAPI IsDomainLegalCookieDomainW( LPCWSTR s1, LPCWSTR s2 )
+{
+    const WCHAR *p;
+
+    FIXME("(%s, %s)\n", debugstr_w(s1), debugstr_w(s2));
+
+    if (!s1 || !s2)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (s1[0] == '.' || !s1[0] || s2[0] == '.' || !s2[0])
+    {
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
+    }
+    if (!(p = strchrW(s2, '.'))) return FALSE;
+    if (strchrW(p + 1, '.') && !strcmpW(p + 1, s1)) return TRUE;
+    else if (!strcmpW(s1, s2)) return TRUE;
     return FALSE;
 }

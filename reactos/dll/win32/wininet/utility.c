@@ -25,6 +25,10 @@
 #include "config.h"
 #include "wine/port.h"
 
+#if defined(__MINGW32__) || defined (_MSC_VER)
+#include <ws2tcpip.h>
+#endif
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +44,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
+#ifndef HAVE_GETADDRINFO
+
 /* critical section to protect non-reentrant gethostbyname() */
 static CRITICAL_SECTION cs_gethostbyname;
 static CRITICAL_SECTION_DEBUG critsect_debug =
@@ -49,6 +55,8 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": cs_gethostbyname") }
 };
 static CRITICAL_SECTION cs_gethostbyname = { &critsect_debug, -1, 0, 0, 0, 0 };
+
+#endif
 
 #define TIME_STRING_LEN  30
 
@@ -142,7 +150,12 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
     WCHAR *found;
     char *name;
     int len, sz;
+#ifdef HAVE_GETADDRINFO
+    struct addrinfo *res, hints;
+    int ret;
+#else
     struct hostent *phe;
+#endif
 
     TRACE("%s\n", debugstr_w(lpszServerName));
 
@@ -158,27 +171,45 @@ BOOL GetAddress(LPCWSTR lpszServerName, INTERNET_PORT nServerPort,
         len = strlenW(lpszServerName);
 
     sz = WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, NULL, 0, NULL, NULL );
-    name = HeapAlloc(GetProcessHeap(), 0, sz+1);
+    if (!(name = HeapAlloc( GetProcessHeap(), 0, sz + 1 ))) return FALSE;
     WideCharToMultiByte( CP_UNIXCP, 0, lpszServerName, len, name, sz, NULL, NULL );
     name[sz] = 0;
 
+#ifdef HAVE_GETADDRINFO
+    memset( &hints, 0, sizeof(struct addrinfo) );
+    hints.ai_family = AF_INET;
+
+    ret = getaddrinfo( name, NULL, &hints, &res );
+    HeapFree( GetProcessHeap(), 0, name );
+    if (ret != 0)
+    {
+        TRACE("failed to get address of %s (%s)\n", debugstr_w(lpszServerName), gai_strerror(ret));
+        return FALSE;
+    }
+    memset( psa, 0, sizeof(struct sockaddr_in) );
+    memcpy( &psa->sin_addr, &((struct sockaddr_in *)res->ai_addr)->sin_addr, sizeof(struct in_addr) );
+    psa->sin_family = res->ai_family;
+    psa->sin_port = htons(nServerPort);
+
+    freeaddrinfo( res );
+#else
     EnterCriticalSection( &cs_gethostbyname );
     phe = gethostbyname(name);
     HeapFree( GetProcessHeap(), 0, name );
 
     if (NULL == phe)
     {
-        TRACE("Failed to get hostname: (%s)\n", debugstr_w(lpszServerName) );
+        TRACE("failed to get address of %s (%d)\n", debugstr_w(lpszServerName), h_errno);
         LeaveCriticalSection( &cs_gethostbyname );
         return FALSE;
     }
-
     memset(psa,0,sizeof(struct sockaddr_in));
     memcpy((char *)&psa->sin_addr, phe->h_addr, phe->h_length);
     psa->sin_family = phe->h_addrtype;
     psa->sin_port = htons(nServerPort);
 
     LeaveCriticalSection( &cs_gethostbyname );
+#endif
     return TRUE;
 }
 
