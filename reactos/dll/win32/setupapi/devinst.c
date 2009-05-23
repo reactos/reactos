@@ -3560,7 +3560,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     else
     {
         ERR("Invalid Flags parameter!\n");
-        SetLastError(ERROR_INVALID_PARAMETER);
+        SetLastError(ERROR_INVALID_FLAGS);
         if (MachineName != NULL) RegCloseKey(HKLM);
         return INVALID_HANDLE_VALUE;
     }
