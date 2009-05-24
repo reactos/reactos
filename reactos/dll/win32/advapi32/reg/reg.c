@@ -3964,96 +3964,110 @@ RegQueryReflectionKey(IN HKEY hBase,
  *
  * @implemented
  */
-LSTATUS WINAPI RegQueryValueExA( HKEY hkey, LPCSTR name, LPDWORD reserved, LPDWORD type,
-                              LPBYTE data, LPDWORD count )
+LONG WINAPI
+RegQueryValueExA(HKEY hKey,
+                 LPCSTR lpValueName,
+                 LPDWORD lpReserved,
+                 LPDWORD lpType,
+                 LPBYTE  lpData,
+                 LPDWORD lpcbData)
 {
-    NTSTATUS status;
-    ANSI_STRING nameA;
-    DWORD total_size, datalen = 0;
-    char buffer[256], *buf_ptr = buffer;
-    KEY_VALUE_PARTIAL_INFORMATION *info = (KEY_VALUE_PARTIAL_INFORMATION *)buffer;
-    static const int info_size = offsetof( KEY_VALUE_PARTIAL_INFORMATION, Data );
+    UNICODE_STRING ValueName;
+    UNICODE_STRING ValueData;
+    ANSI_STRING AnsiString;
+    LONG ErrorCode;
+    DWORD Length;
+    DWORD Type;
 
-    TRACE("(%p,%s,%p,%p,%p,%p=%d)\n",
-          hkey, debugstr_a(name), reserved, type, data, count, count ? *count : 0 );
+    TRACE("hKey 0x%X  lpValueName %s  lpData 0x%X  lpcbData %d\n",
+          hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
 
-    if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
-
-    status = MapDefaultKey( (PHANDLE)&hkey, hkey);
-    if (!NT_SUCCESS(status))
+    if (lpData != NULL && lpcbData == NULL)
     {
-        return RtlNtStatusToDosError(status);
+        return ERROR_INVALID_PARAMETER;
     }
 
-    if (count) datalen = *count;
-    if (!data && count) *count = 0;
-
-    /* this matches Win9x behaviour - NT sets *type to a random value */
-    if (type) *type = REG_NONE;
-
-    RtlInitAnsiString( &nameA, name );
-    if ((status = RtlAnsiStringToUnicodeString( &NtCurrentTeb()->StaticUnicodeString,
-                                                &nameA, FALSE )))
-        return RtlNtStatusToDosError(status);
-
-    status = NtQueryValueKey( hkey, &NtCurrentTeb()->StaticUnicodeString,
-                              KeyValuePartialInformation, buffer, sizeof(buffer), &total_size );
-    if (status && status != STATUS_BUFFER_OVERFLOW) goto done;
-
-    /* we need to fetch the contents for a string type even if not requested,
-     * because we need to compute the length of the ASCII string. */
-    if (data || is_string(info->Type))
+    if (lpData)
     {
-        /* retry with a dynamically allocated buffer */
-        while (status == STATUS_BUFFER_OVERFLOW)
+        ValueData.Length = 0;
+        ValueData.MaximumLength = (*lpcbData + 1) * sizeof(WCHAR);
+        ValueData.Buffer = RtlAllocateHeap(ProcessHeap,
+                                           0,
+                                           ValueData.MaximumLength);
+        if (!ValueData.Buffer)
         {
-            if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-            if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
-            {
-                status = STATUS_NO_MEMORY;
-                goto done;
-            }
-            info = (KEY_VALUE_PARTIAL_INFORMATION *)buf_ptr;
-            status = NtQueryValueKey( hkey, &NtCurrentTeb()->StaticUnicodeString,
-                                    KeyValuePartialInformation, buf_ptr, total_size, &total_size );
-        }
-
-        if (status) goto done;
-
-        if (is_string(info->Type))
-        {
-            DWORD len;
-
-            RtlUnicodeToMultiByteSize( &len, (WCHAR *)(buf_ptr + info_size),
-                                       total_size - info_size );
-            if (data && len)
-            {
-                if (len > datalen) status = STATUS_BUFFER_OVERFLOW;
-                else
-                {
-                    RtlUnicodeToMultiByteN( (char*)data, len, NULL, (WCHAR *)(buf_ptr + info_size),
-                                            total_size - info_size );
-                    /* if the type is REG_SZ and data is not 0-terminated
-                     * and there is enough space in the buffer NT appends a \0 */
-                    if (len < datalen && data[len-1]) data[len] = 0;
-                }
-            }
-            total_size = len + info_size;
-        }
-        else if (data)
-        {
-            if (total_size - info_size > datalen) status = STATUS_BUFFER_OVERFLOW;
-            else memcpy( data, buf_ptr + info_size, total_size - info_size );
+            return ERROR_OUTOFMEMORY;
         }
     }
-    else status = STATUS_SUCCESS;
+    else
+    {
+        ValueData.Buffer = NULL;
+        ValueData.Length = 0;
+        ValueData.MaximumLength = 0;
 
-    if (type) *type = info->Type;
-    if (count) *count = total_size - info_size;
+        if (lpcbData)
+            *lpcbData = 0;
+    }
 
- done:
-    if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-    return RtlNtStatusToDosError(status);
+    RtlCreateUnicodeStringFromAsciiz(&ValueName,
+                                     (LPSTR)lpValueName);
+
+    Length = (lpcbData == NULL) ? 0 : *lpcbData * sizeof(WCHAR);
+    ErrorCode = RegQueryValueExW(hKey,
+                                 ValueName.Buffer,
+                                 lpReserved,
+                                 &Type,
+                                 (lpData == NULL) ? NULL : (LPBYTE)ValueData.Buffer,
+                                 &Length);
+    TRACE("ErrorCode %lu\n", ErrorCode);
+    RtlFreeUnicodeString(&ValueName);
+
+    if (ErrorCode == ERROR_SUCCESS ||
+        ErrorCode == ERROR_MORE_DATA)
+    {
+        if (lpType != NULL)
+        {
+            *lpType = Type;
+        }
+
+        if ((Type == REG_SZ) || (Type == REG_MULTI_SZ) || (Type == REG_EXPAND_SZ))
+        {
+            if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
+            {
+                RtlInitAnsiString(&AnsiString, NULL);
+                AnsiString.Buffer = (LPSTR)lpData;
+                AnsiString.MaximumLength = *lpcbData;
+                ValueData.Length = Length;
+                ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
+                RtlUnicodeStringToAnsiString(&AnsiString, &ValueData, FALSE);
+            }
+
+            Length = Length / sizeof(WCHAR);
+        }
+        else if (ErrorCode == ERROR_SUCCESS && ValueData.Buffer != NULL)
+        {
+            if (*lpcbData < Length)
+            {
+                ErrorCode = ERROR_MORE_DATA;
+            }
+            else
+            {
+                RtlMoveMemory(lpData, ValueData.Buffer, Length);
+            }
+        }
+
+        if (lpcbData != NULL)
+        {
+            *lpcbData = Length;
+        }
+    }
+
+    if (ValueData.Buffer != NULL)
+    {
+        RtlFreeHeap(ProcessHeap, 0, ValueData.Buffer);
+    }
+
+    return ErrorCode;
 }
 
 
@@ -4692,43 +4706,86 @@ RegSetKeySecurity(HKEY hKey,
  *
  * @implemented
  */
-LSTATUS WINAPI RegSetValueExA( HKEY hkey, LPCSTR name, DWORD reserved, DWORD type,
-                            CONST BYTE *data, DWORD count )
+LONG WINAPI
+RegSetValueExA(HKEY hKey,
+               LPCSTR lpValueName,
+               DWORD Reserved,
+               DWORD dwType,
+               CONST BYTE* lpData,
+               DWORD cbData)
 {
-    ANSI_STRING nameA;
-    WCHAR *dataW = NULL;
-    NTSTATUS status;
+    UNICODE_STRING ValueName;
+    LPWSTR pValueName;
+    ANSI_STRING AnsiString;
+    UNICODE_STRING Data;
+    LONG ErrorCode;
+    LPBYTE pData;
+    DWORD DataSize;
 
-    if (count && is_string(type))
+    if (lpValueName != NULL &&
+        strlen(lpValueName) != 0)
     {
-        /* if user forgot to count terminating null, add it (yes NT does this) */
-        if (data[count-1] && !data[count]) count++;
+        RtlCreateUnicodeStringFromAsciiz(&ValueName,
+                                         (PSTR)lpValueName);
+    }
+    else
+    {
+        ValueName.Buffer = NULL;
     }
 
-    status = MapDefaultKey( (PHANDLE)&hkey, hkey);
-    if (!NT_SUCCESS(status))
+    pValueName = (LPWSTR)ValueName.Buffer;
+
+    if (((dwType == REG_SZ) ||
+         (dwType == REG_MULTI_SZ) ||
+         (dwType == REG_EXPAND_SZ)) &&
+        (cbData != 0))
     {
-        return RtlNtStatusToDosError(status);
+        /* NT adds one if the caller forgot the NULL-termination character */
+        if (lpData[cbData - 1] != '\0')
+        {
+            cbData++;
+        }
+
+        RtlInitAnsiString(&AnsiString,
+                          NULL);
+        AnsiString.Buffer = (PSTR)lpData;
+        AnsiString.Length = cbData - 1;
+        AnsiString.MaximumLength = cbData;
+        RtlAnsiStringToUnicodeString(&Data,
+                                     &AnsiString,
+                                     TRUE);
+        pData = (LPBYTE)Data.Buffer;
+        DataSize = cbData * sizeof(WCHAR);
+    }
+    else
+    {
+        RtlInitUnicodeString(&Data,
+                             NULL);
+        pData = (LPBYTE)lpData;
+        DataSize = cbData;
     }
 
-    if (is_string( type )) /* need to convert to Unicode */
+    ErrorCode = RegSetValueExW(hKey,
+                               pValueName,
+                               Reserved,
+                               dwType,
+                               pData,
+                               DataSize);
+    if (pValueName != NULL)
     {
-        DWORD lenW;
-        RtlMultiByteToUnicodeSize( &lenW, (const char *)data, count );
-        if (!(dataW = HeapAlloc( GetProcessHeap(), 0, lenW ))) return ERROR_OUTOFMEMORY;
-        RtlMultiByteToUnicodeN( dataW, lenW, NULL, (const char *)data, count );
-        count = lenW;
-        data = (BYTE *)dataW;
+        RtlFreeHeap(ProcessHeap,
+                    0,
+                    ValueName.Buffer);
     }
 
-    RtlInitAnsiString( &nameA, name );
-    if (!(status = RtlAnsiStringToUnicodeString( &NtCurrentTeb()->StaticUnicodeString,
-                                                 &nameA, FALSE )))
+    if (Data.Buffer != NULL)
     {
-        status = NtSetValueKey( hkey, &NtCurrentTeb()->StaticUnicodeString, 0, type, (PVOID)data, count );
+        RtlFreeHeap(ProcessHeap,
+                    0,
+                    Data.Buffer);
     }
-    HeapFree( GetProcessHeap(), 0, dataW );
-    return RtlNtStatusToDosError( status );
+
+    return ErrorCode;
 }
 
 
