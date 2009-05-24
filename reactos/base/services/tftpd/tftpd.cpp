@@ -938,7 +938,7 @@ void processRequest(void *lpParam)
                 continue;
 
             errno = 0;
-            req.bytesReady = (DWORD)outPtr - (DWORD)&req.mesout;
+            req.bytesReady = (DWORD_PTR)outPtr - (DWORD_PTR)&req.mesout;
             //printf("Bytes Ready=%u\n", req.bytesReady);
             send(req.sock, (const char*)&req.mesout, req.bytesReady, 0);
             errno = WSAGetLastError();
