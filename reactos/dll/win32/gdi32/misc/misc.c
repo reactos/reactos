@@ -174,7 +174,7 @@ VOID GdiSAPCallback(PLDC pldc)
 
     pldc->CallBackTick = NewTime;
 
-    if ( pldc->pAbortProc(pldc->hDC, 0) )
+    if ( !pldc->pAbortProc(pldc->hDC, 0) )
     {
        CancelDC(pldc->hDC);
        AbortDoc(pldc->hDC);
