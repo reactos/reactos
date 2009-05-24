@@ -258,11 +258,15 @@ MmGrowKernelStack(PVOID StackPointer)
 {
     PETHREAD Thread = PsGetCurrentThread();
 
-    /* Make sure we have reserved space for our grow */
-    if (((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit) >
-           (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE))
+    /* Make sure the stack did not overflow */
+    ASSERT(((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit) <=
+           (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE));
+
+    /* Check if we have reserved space for our grow */
+    if ((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit +
+        KERNEL_STACK_SIZE > KERNEL_LARGE_STACK_SIZE)
     {
-        return STATUS_NO_MEMORY;
+        return STATUS_STACK_OVERFLOW;
     }
 
     /*
