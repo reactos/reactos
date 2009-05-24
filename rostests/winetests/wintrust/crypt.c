@@ -373,6 +373,37 @@ static void test_calchash(void)
     DeleteFileA(temp);
 }
 
+static void test_CryptCATOpen(void)
+{
+    HANDLE hcat;
+    char empty[MAX_PATH];
+    WCHAR emptyW[MAX_PATH];
+    HANDLE file;
+    BOOL ret;
+
+    SetLastError(0xdeadbeef);
+    hcat = pCryptCATOpen(NULL, 0, 0, 0, 0);
+    ok(hcat == INVALID_HANDLE_VALUE, "CryptCATOpen succeeded\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
+       "Expected ERROR_INVALID_PARAMETER, got %08x\n", GetLastError());
+
+    if (!GetTempFileNameA(CURR_DIR, "cat", 0, empty)) return;
+
+    file = CreateFileA(empty, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    ok(file != INVALID_HANDLE_VALUE, "CreateFileA failed %u\n", GetLastError());
+    CloseHandle(file);
+    MultiByteToWideChar(CP_ACP, 0, empty, -1, emptyW, MAX_PATH);
+
+    hcat = pCryptCATOpen(emptyW, 0, 0, 0, 0);
+    todo_wine
+    ok(hcat != INVALID_HANDLE_VALUE, "Expected a correct handle\n");
+
+    ret = pCryptCATClose(hcat);
+    todo_wine
+    ok(ret, "CryptCATClose failed\n");
+    DeleteFileA(empty);
+}
+
 static DWORD error_area;
 static DWORD local_error;
 
@@ -614,9 +645,6 @@ static void test_catalog_properties(CHAR *catfile, int attributes, int members)
         MultiByteToWideChar(CP_ACP, 0, catfile, -1, catalogW, MAX_PATH);
         catalog[0] = 0;
     }
-
-    hcat = pCryptCATOpen(NULL, 0, 0, 0, 0);
-    ok(hcat == INVALID_HANDLE_VALUE, "CryptCATOpen succeeded\n");
 
     hcat = pCryptCATOpen(catalogW, 0, 0, 0, 0);
     if (hcat == INVALID_HANDLE_VALUE && members == 0)
@@ -1106,6 +1134,7 @@ START_TEST(crypt)
    
     test_context();
     test_calchash();
+    test_CryptCATOpen();
     /* Parameter checking only */
     test_CryptCATCDF_params();
     /* Test the parsing of a cdf file */
