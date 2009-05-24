@@ -2243,6 +2243,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
     PVOID Queue;
     PFILE_COMPLETION_INFORMATION CompletionInfo = FileInformation;
     PIO_COMPLETION_CONTEXT Context;
+    PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we're called from user mode */
@@ -2363,6 +2364,12 @@ NtSetInformationFile(IN HANDLE FileHandle,
     {
         /* Use local event */
         Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        if (!Event)
+        {
+            ObDereferenceObject(FileObject);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
     }
