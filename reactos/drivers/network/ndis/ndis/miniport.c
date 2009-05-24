@@ -2792,7 +2792,6 @@ NdisMRegisterDevice(
          DriverBlock->DriverObject->MajorFunction[i] = MajorFunctions[i];
 
     DriverBlock->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
-    DriverBlock->DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NdisIShutdown;
 
     DeviceBlock->DeviceObject = DeviceObject;
     DeviceBlock->SymbolicName = SymbolicName;
