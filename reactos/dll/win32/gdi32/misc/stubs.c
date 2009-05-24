@@ -558,14 +558,50 @@ AbortDoc(
 	HDC	hdc
 	)
 {
+   PLDC pldc;
+   int Ret = SP_ERROR;
+   ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
+
+   if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
+   {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return SP_ERROR;
+   }
+   pldc = GdiGetLDC(hdc);
+   if ( !pldc )
+   {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return SP_ERROR;
+   }
+   if ( !(pldc->Flags & LDC_INIT_DOCUMENT) ) return 1;
+
+   /* winspool:DocumentEvent printer driver */
+
+   ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
+
+   if ( pldc->Flags & LDC_META_PRINT)
+   {
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return Ret;
+   }
+
+   if (NtGdiAbortDoc(hdc))
+   {
+      /* winspool:AbortPrinter driver */
+      Ret = 1;
+   }
+   else
+      Ret = SP_ERROR;
+
+   pldc->Flags &= ~(LDC_INFODC|LDC_META_PRINT|LDC_INIT_PAGE|LDC_INIT_DOCUMENT|LDC_SAPCALLBACK);
+
+   return Ret;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 WINAPI
@@ -573,9 +609,35 @@ SetAbortProc(
 	HDC hdc,
 	ABORTPROC lpAbortProc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   PLDC pldc;
+   ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
+
+   if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
+      return SP_ERROR;
+
+   pldc = GdiGetLDC(hdc);
+   if ( pldc )
+   {
+      if ( lpAbortProc )
+      {
+         if ( pldc->Flags & LDC_INIT_DOCUMENT )
+         {
+            pldc->Flags |= LDC_SAPCALLBACK;
+            pldc->CallBackTick = GetTickCount();
+         }
+      }
+      else
+      {
+         pldc->Flags &= ~LDC_SAPCALLBACK;
+      }
+      pldc->pAbortProc = lpAbortProc;
+      return 1;
+   }
+   else
+   {
+      SetLastError(ERROR_INVALID_HANDLE);
+   }
+   return SP_ERROR;
 }
 
 /*

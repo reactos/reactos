@@ -183,6 +183,7 @@
 #define LDC_CLOCKWISE     0x00002000
 #define LDC_KILL_DOCUMENT 0x00010000
 #define LDC_META_PRINT    0x00020000
+#define LDC_INFODC        0x01000000 /* If CreateIC was passed. */
 #define LDC_DEVCAPS       0x02000000
 
 /* DC_ATTR Xform Flags */
