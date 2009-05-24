@@ -2788,7 +2788,7 @@ NdisMRegisterDevice(
         return NDIS_STATUS_RESOURCES;
     }
 
-    for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
          DriverBlock->DriverObject->MajorFunction[i] = MajorFunctions[i];
 
     DriverBlock->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
