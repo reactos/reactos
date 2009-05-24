@@ -2020,7 +2020,7 @@ NdisIDeviceIoControl(
   {
     case IOCTL_NDIS_QUERY_GLOBAL_STATS:
       Status = MiniQueryInformation(Adapter,
-                                    (NDIS_OID)Irp->AssociatedIrp.SystemBuffer,
+                                    *(PNDIS_OID)Irp->AssociatedIrp.SystemBuffer,
                                     Stack->Parameters.DeviceIoControl.OutputBufferLength,
                                     MmGetSystemAddressForMdl(Irp->MdlAddress),
                                     &Irp->IoStatus.Information);
