@@ -1142,15 +1142,26 @@ GdiCleanCacheDC(HDC hdc)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 WINAPI
 GdiConvertAndCheckDC(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   PLDC pldc;
+   ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
+   if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
+      return hdc;
+   pldc = GdiGetLDC(hdc);
+   if (pldc)
+   {
+      if (pldc->Flags & LDC_SAPCALLBACK) GdiSAPCallback(pldc);
+      if (pldc->Flags & LDC_KILL_DOCUMENT) return NULL;
+      if (pldc->Flags & LDC_STARTPAGE) StartPage(hdc);
+      return hdc;
+   }
+   SetLastError(ERROR_INVALID_HANDLE);
+   return NULL;   
 }
 
 /*

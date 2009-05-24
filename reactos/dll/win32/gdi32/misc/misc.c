@@ -164,6 +164,23 @@ PLDC GdiGetLDC(HDC hDC)
     return Dc_Attr->pvLDC;
 }
 
+VOID GdiSAPCallback(PLDC pldc)
+{
+    DWORD Time, NewTime = GetTickCount();
+
+    Time = NewTime - pldc->CallBackTick;
+
+    if ( Time < SAPCALLBACKDELAY) return;
+
+    pldc->CallBackTick = NewTime;
+
+    if ( pldc->pAbortProc(pldc->hDC, 0) )
+    {
+       CancelDC(pldc->hDC);
+       AbortDoc(pldc->hDC);
+    }
+}
+
 /*
  * @implemented
  */

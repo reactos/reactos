@@ -31,6 +31,8 @@ typedef INT
 #define METAFILE_MEMORY 1
 #define METAFILE_DISK   2
 
+#define SAPCALLBACKDELAY 244
+
 /* MACRO ********************************************************************/
 
 #define ROP_USES_SOURCE(Rop)   (((Rop) << 2 ^ Rop) & 0xCC0000)
@@ -237,5 +239,7 @@ UINT FASTCALL DIB_BitmapBitsSize( PBITMAPINFO );
 int
 WINAPI
 GdiGetBitmapBitsSize(BITMAPINFO *lpbmi);
+
+VOID GdiSAPCallback(PLDC pldc);
 
 /* EOF */
