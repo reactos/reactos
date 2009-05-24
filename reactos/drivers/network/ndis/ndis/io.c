@@ -308,7 +308,7 @@ NdisMAllocateMapRegisters(
   
   if(DmaSize == NDIS_DMA_64BITS)
     Description.Dma64BitAddresses = TRUE;
-  else
+  else if(DmaSize == NDIS_DMA_32BITS)
     Description.Dma32BitAddresses = TRUE;
 
   AdapterObject = IoGetDmaAdapter(
