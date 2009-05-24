@@ -344,7 +344,7 @@ PopulateWdmDeviceList(
 
     for ( i = 0; i < DeviceCount; ++ i )
     {
-        Result = ListSoundDevice(DeviceType, (PVOID) i, &SoundDevice);
+        Result = ListSoundDevice(DeviceType, UlongToPtr(i), &SoundDevice);
 
         if ( ! MMSUCCESS(Result) )
         {
