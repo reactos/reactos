@@ -138,7 +138,7 @@
 		<library>normalize</library>
 	</module>
 	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll" crt="dll">
-		<importlibrary definition="kernel32.spec" />
+		<importlibrary definition="kernel32.pspec" />
 		<include base="kernel32">.</include>
 		<include base="kernel32" root="intermediate">.</include>
 		<include base="kernel32">include</include>
