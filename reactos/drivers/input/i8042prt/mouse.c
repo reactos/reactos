@@ -482,8 +482,19 @@ cleanup:
 		}
 		case IOCTL_INTERNAL_I8042_HOOK_MOUSE:
 		{
+			PINTERNAL_I8042_HOOK_MOUSE MouseHook;
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_I8042_HOOK_MOUSE\n");
-			/* Nothing to do here */
+			if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(CONNECT_DATA))
+			{
+				Status = STATUS_INVALID_PARAMETER;
+				break;
+			}
+			MouseHook = (PINTERNAL_I8042_HOOK_MOUSE)Stack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+			DeviceExtension->MouseHook.Context = MouseHook->Context;
+			if (MouseHook->IsrRoutine)
+				DeviceExtension->MouseHook.IsrRoutine = MouseHook->IsrRoutine;
+
 			Status = STATUS_SUCCESS;
 			break;
 		}
