@@ -502,6 +502,16 @@ ROSGL_SetContextCallBack( const ICDTable *table )
  */
 #define BUFFERDEPTH_SCORE(want, have) \
     ((want == 0) ? (0) : ((want < have) ? (1) : ((want > have) ? (3) : (0))))
+
+/* Score if we want and not have it */
+#define FLAG_SCORE(want, have, flag) \
+    (((want & ~have) & flag) ? (1) : (0))
+
+/* Score if what we want is different than what we have, except when
+   _DONTCARE was set */
+#define FLAG_SCORE_DONTCARE(want, have, flag) \
+    ((!(have & flag ## _DONTCARE)) && ((want & flag) != (have & flag)) ? (1) : (0))
+
 int
 APIENTRY
 rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
@@ -512,8 +522,6 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
     int best = 0;
     int score, bestScore = 0x7fff; /* used to choose a pfd if no exact match */
     int icdNumFormats;
-    const DWORD compareFlags = PFD_DRAW_TO_WINDOW | PFD_DRAW_TO_BITMAP |
-                               PFD_SUPPORT_GDI | PFD_SUPPORT_OPENGL;
 
     DBGTRACE( "Called!" );
 
@@ -555,18 +563,17 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
             continue;
         }
 
+        score = 0; /* higher is worse */
+
         /* compare flags */
-        if ((pfd->dwFlags & compareFlags) != (icdPfd.dwFlags & compareFlags))
-            continue;
-        if (!(pfd->dwFlags & PFD_DOUBLEBUFFER_DONTCARE) &&
-            ((pfd->dwFlags & PFD_DOUBLEBUFFER) != (icdPfd.dwFlags & PFD_DOUBLEBUFFER)))
-            continue;
-        if (!(pfd->dwFlags & PFD_STEREO_DONTCARE) &&
-            ((pfd->dwFlags & PFD_STEREO) != (icdPfd.dwFlags & PFD_STEREO)))
-            continue;
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_DRAW_TO_WINDOW);
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_DRAW_TO_BITMAP);
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_SUPPORT_GDI);
+        score += FLAG_SCORE(pfd->dwFlags, icdPfd.dwFlags, PFD_SUPPORT_OPENGL);
+        score += FLAG_SCORE_DONTCARE(pfd->dwFlags, icdPfd.dwFlags, PFD_DOUBLEBUFFER);
+        score += FLAG_SCORE_DONTCARE(pfd->dwFlags, icdPfd.dwFlags, PFD_STEREO);
 
         /* check other attribs */
-        score = 0; /* higher is worse */
         if (pfd->iPixelType != icdPfd.iPixelType)
             score += 5; /* this is really bad i think */
         if (pfd->iLayerType != icdPfd.iLayerType)
