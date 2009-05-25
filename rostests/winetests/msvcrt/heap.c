@@ -103,7 +103,7 @@ static void test_aligned_realloc(unsigned int size1, unsigned int size2, unsigne
 	mem1 = malloc(size1);
         if (mem1)
         {
-            int i;
+            unsigned int i;
             for (i = 0; i < size1; i++)
                 ((char *)mem)[i] = i + 1;
             memcpy(mem1, mem, size1);
@@ -138,7 +138,7 @@ static void test_aligned_realloc(unsigned int size1, unsigned int size2, unsigne
                 ok(memcmp(mem2, mem1, min(size1, size2))==0, "_aligned_realloc(%p, %d, %d) has different data\n", mem, size2, alignment);
                 if (memcmp(mem2, mem1, min(size1, size2)) && winetest_debug > 1)
                 {
-                    int i;
+                    unsigned int i;
                     for (i = 0; i < min(size1, size2); i++)
                     {
                         if (((char *)mem2)[i] != ((char *)mem1)[i])
@@ -175,7 +175,7 @@ static void test_aligned_offset_realloc(unsigned int size1, unsigned int size2,
 	mem1 = malloc(size1);
         if (mem1)
         {
-            int i;
+            unsigned int i;
             for (i = 0; i < size1; i++)
                 ((char *)mem)[i] = i + 1;
             memcpy(mem1, mem, size1);
@@ -211,7 +211,7 @@ static void test_aligned_offset_realloc(unsigned int size1, unsigned int size2,
                 ok(memcmp(mem2, mem1, min(size1, size2))==0, "_aligned_offset_realloc(%p, %d, %d, %d) has different data\n", mem, size2, alignment, offset);
                 if (memcmp(mem2, mem1, min(size1, size2)) && winetest_debug > 1)
                 {
-                    int i;
+                    unsigned int i;
                     for (i = 0; i < min(size1, size2); i++)
                     {
                         if (((char *)mem2)[i] != ((char *)mem1)[i])

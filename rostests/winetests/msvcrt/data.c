@@ -70,19 +70,19 @@ static void test_initterm(void)
 static void test_initvar( HMODULE hmsvcrt )
 {
     OSVERSIONINFO osvi = { sizeof(OSVERSIONINFO) };
-    int* (*pp_winver)() =  (int*(*)())GetProcAddress(hmsvcrt, "__p__winver");
-    int* (*pp_winmajor)() =  (int*(*)())GetProcAddress(hmsvcrt, "__p__winmajor");
-    int* (*pp_winminor)() =  (int*(*)())GetProcAddress(hmsvcrt, "__p__winminor");
-    int* (*pp_osver)() =  (int*(*)())GetProcAddress(hmsvcrt, "__p__osver");
-    int winver, winmajor, winminor, osver;
+    int *pp_winver   = (int*)GetProcAddress(hmsvcrt, "_winver");
+    int *pp_winmajor = (int*)GetProcAddress(hmsvcrt, "_winmajor");
+    int *pp_winminor = (int*)GetProcAddress(hmsvcrt, "_winminor");
+    int *pp_osver    = (int*)GetProcAddress(hmsvcrt, "_osver");
+    unsigned int winver, winmajor, winminor, osver;
 
     if( !( pp_winmajor && pp_winminor && pp_winver)) {
         win_skip("_winver variables are not available\n");
         return;
     }
-    winver = *pp_winver();
-    winminor = *pp_winminor();
-    winmajor = *pp_winmajor();
+    winver = *pp_winver;
+    winminor = *pp_winminor;
+    winmajor = *pp_winmajor;
     GetVersionEx( &osvi);
     ok( winminor == osvi.dwMinorVersion, "Wrong value for _winminor %02x expected %02x\n",
             winminor, osvi.dwMinorVersion);
@@ -95,7 +95,7 @@ static void test_initvar( HMODULE hmsvcrt )
         win_skip("_osver variables are not available\n");
         return;
     }
-    osver = *pp_osver();
+    osver = *pp_osver;
     ok( osver == (osvi.dwBuildNumber & 0xffff) ||
             ((osvi.dwBuildNumber >> 24) == osvi.dwMajorVersion &&
                  ((osvi.dwBuildNumber >> 16) & 0xff) == osvi.dwMinorVersion), /* 95/98/ME */
