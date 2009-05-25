@@ -4025,10 +4025,6 @@ RegQueryValueExA(HKEY hKey,
     if (ErrorCode == ERROR_SUCCESS ||
         ErrorCode == ERROR_MORE_DATA)
     {
-        if (lpType != NULL)
-        {
-            *lpType = Type;
-        }
 
         if ((Type == REG_SZ) || (Type == REG_MULTI_SZ) || (Type == REG_EXPAND_SZ))
         {
@@ -4060,6 +4056,11 @@ RegQueryValueExA(HKEY hKey,
         {
             *lpcbData = Length;
         }
+    }
+
+    if (lpType != NULL)
+    {
+        *lpType = Type;
     }
 
     if (ValueData.Buffer != NULL)
@@ -4114,6 +4115,9 @@ RegQueryValueExW(HKEY hkeyorg,
         if (count) *count = 0;
     }
 
+    /* this matches Win9x behaviour - NT sets *type to a random value */
+    if (type) *type = REG_NONE;
+
     status = NtQueryValueKey( hkey, &name_str, KeyValuePartialInformation,
                               buffer, total_size, &total_size );
     if (status && status != STATUS_BUFFER_OVERFLOW) goto done;
@@ -4125,7 +4129,10 @@ RegQueryValueExW(HKEY hkeyorg,
         {
             if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
             if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
+            {
+                ClosePredefKey(hkey);
                 return ERROR_NOT_ENOUGH_MEMORY;
+            }
             info = (KEY_VALUE_PARTIAL_INFORMATION *)buf_ptr;
             status = NtQueryValueKey( hkey, &name_str, KeyValuePartialInformation,
                                       buf_ptr, total_size, &total_size );
