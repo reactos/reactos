@@ -701,6 +701,22 @@ IntSystemParametersInfo(
             *((BOOL*)pvParam) = IntIsFontRenderingEnabled();
             break;
          }
+      case SPI_SETFONTSMOOTHINGTYPE:
+         {
+            if (*((UINT*)pvParam) == FE_FONTSMOOTHINGCLEARTYPE)
+            {
+                DPRINT1("ReactOS does not support ClearType smoothing but it is returned TRUE\n");
+            }
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETFONTSMOOTHINGTYPE:
+         {
+            /* We do not support ClearType. Only standard smoothing */
+            DPRINT1("ReactOS does not support ClearType smoothing. Returned FE_FONTSMOOTHINGSTANDARD\n");
+            *((UINT*)pvParam) = FE_FONTSMOOTHINGSTANDARD;
+            break;
+         }
       case SPI_GETICONTITLELOGFONT:
          {
             ASSERT(pvParam);
