@@ -8,89 +8,6 @@
  */
 int
 WINAPI
-EndDoc(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-StartDocW(
-	HDC		hdc,
-	CONST DOCINFOW	*a1
-	)
-{
-	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1, NULL, 0);
-}
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-StartDocA(
-	HDC		hdc,
-	CONST DOCINFOA	*lpdi
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-StartPage(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-EndFormPage(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-EndPage(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-WINAPI
 AbortDoc(
 	HDC	hdc
 	)
@@ -136,6 +53,84 @@ AbortDoc(
    return Ret;
 }
 
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+EndDoc(
+	HDC	hdc
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE
+WINAPI
+GdiGetSpoolFileHandle(LPWSTR pwszPrinterName,
+                      LPDEVMODEW pDevmode,
+                      LPWSTR pwszDocName)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+WINAPI
+GdiDeleteSpoolFileHandle(HANDLE SpoolFileHandle)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD
+WINAPI
+GdiGetPageCount(HANDLE SpoolFileHandle)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+EndFormPage(HDC hdc)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+EndPage(
+	HDC	hdc
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
 
 /*
  * @implemented
@@ -177,4 +172,45 @@ SetAbortProc(
    return SP_ERROR;
 }
 
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+StartDocW(
+	HDC		hdc,
+	CONST DOCINFOW	*a1
+	)
+{
+	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1, NULL, 0);
+}
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+StartDocA(
+	HDC		hdc,
+	CONST DOCINFOA	*lpdi
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+int
+WINAPI
+StartPage(
+	HDC	hdc
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return 0;
+}
 

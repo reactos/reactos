@@ -1643,45 +1643,6 @@ GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
     return 0;
 }
 
-
-/*
- * @unimplemented
- */
-HANDLE
-WINAPI
-GdiGetSpoolFileHandle(LPWSTR pwszPrinterName,
-                      LPDEVMODEW pDevmode,
-                      LPWSTR pwszDocName)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GdiDeleteSpoolFileHandle(HANDLE SpoolFileHandle)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-GdiGetPageCount(HANDLE SpoolFileHandle)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
 /*
  * @unimplemented
  */
