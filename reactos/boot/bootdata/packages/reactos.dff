@@ -319,6 +319,7 @@ dll\win32\modemui\modemui.dll                       1
 dll\win32\mpr\mpr.dll                               1
 dll\win32\mprapi\mprapi.dll                         1
 dll\win32\msacm32\msacm32.dll                       1
+dll\win32\msacm32\msacm32.drv\msacm32.drv           1
 dll\win32\msadp32.acm\msadp32.acm                   1
 dll\win32\msafd\msafd.dll                           1
 dll\win32\mscat32\mscat32.dll                       1
@@ -455,7 +456,6 @@ dll\win32\xinput1_2\xinput1_2.dll                   1
 dll\win32\xinput1_3\xinput1_3.dll                   1
 dll\win32\xinput9_1_0\xinput9_1_0.dll               1
 dll\win32\winmm\midimap\midimap.dll                 1
-dll\win32\winmm\wavemap\msacm32.drv                 1   optional
 dll\win32\wdmaud.drv\wdmaud.drv                     1
 
 ; Shell Extensions
