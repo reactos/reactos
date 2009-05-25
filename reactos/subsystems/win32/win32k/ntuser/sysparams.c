@@ -192,6 +192,7 @@ IntSystemParametersInfo(
    static BOOL KeyboardPref = FALSE;
    static BOOL ShowSounds = FALSE;
    static ACCESSTIMEOUT AccessTimeout = {sizeof(ACCESSTIMEOUT), 0, 0};
+   static DWORD CaretWidth = 1;
    static SERIALKEYS SerialKeys = {sizeof(SERIALKEYS), 0, 0, 0, 0, 0, 0};
 
    if (!bInitialized)
@@ -853,6 +854,19 @@ IntSystemParametersInfo(
       case SPI_SETACCESSTIMEOUT:
          {
             AccessTimeout = *((ACCESSTIMEOUT*)pvParam);
+            bChanged = TRUE;
+            break;
+         }
+
+      case SPI_GETCARETWIDTH:
+         {
+            *((DWORD*)pvParam) = CaretWidth;
+            break;
+         }
+
+      case SPI_SETCARETWIDTH:
+         {
+            CaretWidth = *((DWORD*)pvParam);
             bChanged = TRUE;
             break;
          }
