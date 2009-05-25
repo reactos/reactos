@@ -1266,20 +1266,6 @@ ResetDCA(
 /*
  * @implemented
  */
-int
-WINAPI
-StartDocW(
-	HDC		hdc,
-	CONST DOCINFOW	*a1
-	)
-{
-	return NtGdiStartDoc ( hdc, (DOCINFOW *)a1, NULL, 0);
-}
-
-
-/*
- * @implemented
- */
 DWORD
 WINAPI
 GetObjectType(
