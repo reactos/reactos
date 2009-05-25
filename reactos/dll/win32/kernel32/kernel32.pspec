@@ -950,9 +950,11 @@
 @ stdcall WaitNamedPipeW (wstr long)
 @ stdcall WideCharToMultiByte(long long wstr long ptr long ptr ptr)
 @ stdcall WinExec(str long)
+#ifdef _M_AMD64
 @ stdcall Wow64EnableWow64FsRedirection(long)
 @ stdcall Wow64DisableWow64FsRedirection(long)
 @ stdcall Wow64RevertWow64FsRedirection(long)
+#endif
 @ stdcall WriteConsoleA(long ptr long ptr ptr)
 @ stdcall WriteConsoleInputA(long ptr long ptr)
 @ stdcall WriteConsoleInputVDMA(long long long long)
