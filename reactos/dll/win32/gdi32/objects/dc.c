@@ -20,6 +20,15 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
 
  HANDLE hspool = NULL;
 
+ if ( !ghSpooler && !LoadTheSpoolerDrv())
+ {
+    DPRINT1("WinSpooler.Drv Did not load!\n");
+ }
+ else
+ {
+    DPRINT("WinSpooler.Drv Loaded! hMod -> 0x%x\n", ghSpooler);
+ }
+
  if ((!lpwszDevice) && (!lpwszDriver))
  {
      Default = FALSE;  // Ask Win32k to set Default device.

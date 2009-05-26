@@ -845,6 +845,10 @@ BOOL WINAPI GetPrinterDriverDirectoryA(LPSTR,LPSTR,DWORD,LPBYTE,DWORD,LPDWORD);
 BOOL WINAPI GetPrinterDriverDirectoryW(LPWSTR,LPWSTR,DWORD,LPBYTE,DWORD,LPDWORD);
 BOOL WINAPI GetPrintProcessorDirectoryA(LPSTR,LPSTR,DWORD,LPBYTE,DWORD,LPDWORD);
 BOOL WINAPI GetPrintProcessorDirectoryW(LPWSTR,LPWSTR,DWORD,LPBYTE,DWORD,LPDWORD);
+#if NTDDI_VERSION >= NTDDI_WINXPSP2
+BOOL WINAPI IsValidDevmodeA(PDEVMODEA,size_t);
+BOOL WINAPI IsValidDevmodeW(PDEVMODEW,size_t);
+#endif
 BOOL WINAPI OpenPrinterA(LPSTR,PHANDLE,LPPRINTER_DEFAULTSA);
 BOOL WINAPI OpenPrinterW(LPWSTR,PHANDLE,LPPRINTER_DEFAULTSW);
 DWORD WINAPI PrinterMessageBoxA(HANDLE,DWORD,HWND,LPSTR,LPSTR,DWORD);
@@ -934,6 +938,7 @@ typedef LPPROVIDOR_INFO_2W LPPROVIDOR_INFO_2;
 #define GetPrinterDriver GetPrinterDriverW
 #define GetPrinterDriverDirectory GetPrinterDriverDirectoryW
 #define GetPrintProcessorDirectory GetPrintProcessorDirectoryW
+#define IsValidDevmode IsValidDevmodeW
 #define OpenPrinter OpenPrinterW
 #define PrinterMessageBox PrinterMessageBoxW
 #define ResetPrinter ResetPrinterW
@@ -1003,6 +1008,7 @@ typedef PRINTER_DEFAULTSA PRINTER_DEFAULTS,*PPRINTER_DEFAULTS,*LPPRINTER_DEFAULT
 #define GetPrinterDriver GetPrinterDriverA
 #define GetPrinterDriverDirectory GetPrinterDriverDirectoryA
 #define GetPrintProcessorDirectory GetPrintProcessorDirectoryA
+#define IsValidDevmode IsValidDevmodeA
 #define OpenPrinter OpenPrinterA
 #define PrinterMessageBox PrinterMessageBoxA
 #define ResetPrinter ResetPrinterA
