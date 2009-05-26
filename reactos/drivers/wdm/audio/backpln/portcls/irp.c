@@ -97,7 +97,6 @@ PortClsPnp(
             if (!NT_SUCCESS(Status))
             {
                 DPRINT("StartDevice returned a failure code [0x%8x]\n", Status);
-                resource_list->lpVtbl->Release(resource_list);
 
                 Irp->IoStatus.Status = Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
