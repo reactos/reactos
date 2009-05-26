@@ -1714,12 +1714,19 @@ static LRESULT LISTBOX_InsertString( LB_DESCR *descr, INT index, LPCWSTR str )
  */
 static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
 {
+    /* save the item data before it gets freed by LB_RESETCONTENT */
+    ULONG_PTR item_data = descr->items[index].data;
+    LPWSTR item_str = descr->items[index].str;
+
+    if (!descr->nb_items)
+        SendMessageW( descr->self, LB_RESETCONTENT, 0, 0 );
+
     /* Note: Win 3.1 only sends DELETEITEM on owner-draw items,
      *       while Win95 sends it for all items with user data.
      *       It's probably better to send it too often than not
      *       often enough, so this is what we do here.
      */
-    if (IS_OWNERDRAW(descr) || descr->items[index].data)
+    if (IS_OWNERDRAW(descr) || item_data)
     {
         DELETEITEMSTRUCT dis;
         UINT id = (UINT)GetWindowLongPtrW( descr->self, GWLP_ID );
@@ -1728,11 +1735,11 @@ static void LISTBOX_DeleteItem( LB_DESCR *descr, INT index )
         dis.CtlID    = id;
         dis.itemID   = index;
         dis.hwndItem = descr->self;
-        dis.itemData = descr->items[index].data;
+        dis.itemData = item_data;
         SendMessageW( descr->owner, WM_DELETEITEM, id, (LPARAM)&dis );
     }
     if (HAS_STRINGS(descr))
-        HeapFree( GetProcessHeap(), 0, descr->items[index].str );
+        HeapFree( GetProcessHeap(), 0, item_str );
 }
 
 
@@ -1751,15 +1758,17 @@ static LRESULT LISTBOX_RemoveItem( LB_DESCR *descr, INT index )
     /* We need to invalidate the original rect instead of the updated one. */
     LISTBOX_InvalidateItems( descr, index );
 
+    descr->nb_items--;
     LISTBOX_DeleteItem( descr, index );
+
+    if (!descr->nb_items) return LB_OKAY;
 
     /* Remove the item */
 
     item = &descr->items[index];
-    if (index < descr->nb_items-1)
+    if (index < descr->nb_items)
         RtlMoveMemory( item, item + 1,
-                       (descr->nb_items - index - 1) * sizeof(LB_ITEMDATA) );
-    descr->nb_items--;
+                       (descr->nb_items - index) * sizeof(LB_ITEMDATA) );
     if (descr->anchor_item == descr->nb_items) descr->anchor_item--;
 
     /* Shrink the item array if possible */
