@@ -1,0 +1,13 @@
+#include "resource.h"
+/*
+ * Dutch Language resource file
+ * Translated by: Wouter De Vlieger
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+BEGIN
+
+STRING_USERINIT_FAIL, "Userinit kon de shell niet starten!\n"
+
+END

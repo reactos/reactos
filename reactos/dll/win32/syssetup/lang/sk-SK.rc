@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  09-02-2008
- * LAST CHANGE:  16-03-2009
+ * LAST CHANGE:  14-05-2009
  * THANKS TO  :  Filip Navara and Kamil Hornicek and all good people ;-)
  */
 
@@ -86,13 +86,13 @@ BEGIN
     LTEXT "Lokaliz·cia systÈmu by mala s˙hlasiù s jazykom aplik·ciÌ, "\
           "ktorÈ chcete pouûÌvaù. Lokaliz·cia urËÌ ako bud˙ zobrazenÈ "\
           "ËÌsla, meny a ˙daje kalend·ra.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "<text lokality>", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pre zmenu lokaliz·cie systÈmu kliknite na Zmeniù.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Zmeniù...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Rozloûenie kl·ves urËÌ znaky, ktorÈ sa zobrazia, keÔ pÌöete.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "<text rozloûenia>", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pre zmenu rozloûenia kl·ves, kliknite na Zmeniù.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&meniù...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
@@ -199,7 +199,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Spustiù Vzdialen˙ pracovn˙ plochu"
     IDS_CMT_EVENTVIEW   "Spustiù ZobrazovaË udalostÌ"
     IDS_CMT_MSCONFIG    "Spustiù Program na konfigur·ciu systÈmu"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_PAINT       "Spustiù Skic·r"
 END
 
 STRINGTABLE
@@ -267,7 +267,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Program na konfigur·ciu systÈmu.lnk"
     IDS_SHORT_SNDVOL32   "Ovl·danie hlasitosti.lnk" //Volume Control
     IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
+    IDS_SHORT_PAINT      "Skic·r.lnk"
 END
 
 STRINGTABLE

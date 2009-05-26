@@ -695,7 +695,7 @@ BEGIN
 	IDS_COMMON_PICTURES         "Documente\\Fotografiile mele"
 	IDS_COMMON_VIDEO            "Documente\\Filmele mele"
 	IDS_CDBURN_AREA             "Setãri locale\\Date Aplicaþii\\Microsoft\\CD Burning"
-	IDS_NETWORKPLACE            "Locaºiile mele în reºea"
+	IDS_NETWORKPLACE            "Locaþiile mele în reþea"
 
 	IDS_NEWFOLDER               "Dosar nou"
 

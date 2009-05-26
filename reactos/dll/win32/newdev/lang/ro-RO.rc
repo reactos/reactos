@@ -1,0 +1,109 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Bun venit",IDC_WELCOMETITLE,120,8,195,24
+    LTEXT           "Acest expert instaleazã un driver pentru dispozitivul:",
+                    IDC_STATIC,120,21,195,16
+    LTEXT           "Clic pe Urmãtor pentru a continua.",IDC_STATIC,120,169,195,17
+    LTEXT           "DISPOZITIV NECUNOSCUT",IDC_DEVICE,134,36,164,11
+    LTEXT           "AVERTISMENT! INSTALAREA UNUI DISPOZITIV NECUNOSCUT POATE AVEA EFECTE GRAVE ASUPRA COMPUTERULUI DVS!",IDC_STATIC,120,59,195,16
+    CONTROL         "Instalare automatã",IDC_RADIO_AUTO,"Button",
+                    BS_AUTORADIOBUTTON,120,112,178,13
+    CONTROL         "Instalare driver din locaþie specificã",IDC_RADIO_MANUAL,
+                    "Button",BS_AUTORADIOBUTTON,120,133,164,14
+END
+
+IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Instalarea a eºuat",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Dispozitivul nu a fost instalat pentru cã driverul nu a fost gãsit.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "Clic pe Înapoi dacã aveþi un disc sau ºtiþi calea driverului.",
+                    IDC_STATIC,120,98,181,24
+    CONTROL         "Nu mai afiºa acest dialog",IDC_DONOTSHOWDLG,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
+END
+
+IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Instalarea a eºuat",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Dispozitivul nu s-a instalat deoarece a fost întâmpinatã o eroare neaºteptatã.",
+                    IDC_STATIC,120,40,195,19
+    LTEXT           "DISPOZITIV NECUNOSCUT",IDC_DEVICE,134,55,164,11
+END
+
+IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "Cãutare în aceste locaþii",IDC_RADIO_SEARCHHERE,"Button",
+                    BS_AUTORADIOBUTTON,27,11,239,13
+    CONTROL         "Alegere driver manual",IDC_RADIO_CHOOSE,"Button",
+                    BS_AUTORADIOBUTTON,27,98,171,12
+    CONTROL         "Cãutare pe amovabile",IDC_CHECK_MEDIA,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,47,33,163,9
+    CONTROL         "Includere cale",IDC_CHECK_PATH,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,47,54,162,10
+    PUSHBUTTON      "Rãsfoire",IDC_BROWSE,248,69,50,14
+    COMBOBOX        IDC_COMBO_PATH,61,71,176,12,CBS_DROPDOWN | CBS_SORT |
+                    WS_VSCROLL | WS_TABSTOP  | CBS_AUTOHSCROLL
+END
+
+IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "DISPOZITIV NECUNOSCUT",IDC_DEVICE,51,20,169,16
+END
+
+IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "DISPOZITIV NECUNOSCUT",IDC_DEVICE,51,20,169,16
+END
+
+IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Instalare completã",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Trebuie sã reporniþi pentru a finaliza instalarea:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Clic pe Terminã pentru a închide expertul.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "DISPOZITIV NECUNOSCUT",IDC_DEVICE,148,53,147,12
+END
+
+IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+CAPTION "Instalare dispozitiv"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Instalare completã",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Expertul a terminat instalarea dispozitivului:",
+                    IDC_STATIC,120,32,195,19
+    LTEXT           "Clic pe Terminã pentru a închide expertul.",IDC_STATIC,120,174,
+                    179,11
+    LTEXT           "DISPOZITIV NECUNOSCUT",IDC_DEVICE,148,53,147,12
+END
+
