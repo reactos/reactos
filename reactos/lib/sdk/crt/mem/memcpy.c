@@ -1,16 +1,36 @@
-/*
- * $Id$
- */
-
 #include <string.h>
 
+/* NOTE: This code is a duplicate of memmove implementation! */
 void* memcpy(void* to, const void* from, size_t count)
 {
-  register char *f = (char *)from;
-  register char *t = (char *)to;
-  register int i = count;
+    char *char_dest = (char *)dest;
+    char *char_src = (char *)src;
 
-  while (i-- > 0)
-    *t++ = *f++;
-  return to;
+    if ((char_dest <= char_src) || (char_dest >= (char_src+count)))
+    {
+        /*  non-overlapping buffers */
+        while(count > 0)
+	{
+            *char_dest = *char_src;
+            char_dest++;
+            char_src++;
+            count--;
+	}
+    }
+    else
+    {
+        /* overlaping buffers */
+        char_dest = (char *)dest + count - 1;
+        char_src = (char *)src + count - 1;
+
+        while(count > 0)
+	{
+           *char_dest = *char_src;
+           char_dest--;
+           char_src--;
+           count--;
+	}
+    }
+
+    return dest;
 }
