@@ -65,7 +65,7 @@ NdisMPciAssignResources(
 {
   PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
 
-  if (Adapter->NdisMiniportBlock.BusType != PCIBus ||
+  if (Adapter->NdisMiniportBlock.BusType != NdisInterfacePci ||
       Adapter->NdisMiniportBlock.AllocatedResources == NULL)
     {
       *AssignedResources = NULL;
