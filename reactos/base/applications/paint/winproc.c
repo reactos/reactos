@@ -13,6 +13,7 @@
 #include <commctrl.h>
 //#include <htmlhelp.h>
 #include <stdio.h>
+#include <tchar.h>
 #include "definitions.h"
 #include "globalvar.h"
 #include "dialogs.h"
@@ -60,13 +61,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         case WM_CLOSE:
             if (undoSteps>0)
             {
-                char programname[20];
-                char saveprompttext[100];
-                LoadString(hProgInstance, IDS_PROGRAMNAME, (LPTSTR)programname, sizeof(programname));
-                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, (LPTSTR)saveprompttext, sizeof(saveprompttext));
-                char temptext[500];
-                sprintf(temptext, saveprompttext, filename);
-                switch (MessageBox(hwnd, (LPTSTR)temptext, (LPTSTR)programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+                TCHAR programname[20];
+                TCHAR saveprompttext[100];
+                LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
+                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
+                TCHAR temptext[500];
+                _stprintf(temptext, saveprompttext, filename);
+                switch (MessageBox(hwnd, temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
                 {
                     case IDNO:
                         DestroyWindow(hwnd);
@@ -319,8 +320,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 if ((!drawing)||(activeTool<=9))
                 {
-                    char coordStr[100];
-                    sprintf(coordStr, "%d, %d", (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom);
+                    TCHAR coordStr[100];
+                    _stprintf(coordStr, _T("%d, %d"), (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom);
                     SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM)coordStr);
                 }
                 if (drawing)
@@ -331,8 +332,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if ((activeTool>=10)||(activeTool==2))
                         {
-                            char sizeStr[100];
-                            sprintf(sizeStr, "%d x %d", (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
+                            TCHAR sizeStr[100];
+                            _stprintf(sizeStr, _T("%d x %d"), (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)sizeStr);
                         }
                     }
@@ -342,15 +343,15 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if (activeTool>=10)
                         {
-                            char sizeStr[100];
-                            sprintf(sizeStr, "%d x %d", (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
+                            TCHAR sizeStr[100];
+                            _stprintf(sizeStr, _T("%d x %d"), (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)sizeStr);
                         }
                     }
                 }
             } else
             {
-                SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM)"");
+                SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM)_T(""));
             }
             break;
             
@@ -362,11 +363,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case IDM_HELPINFO:
                     {
                         HICON paintIcon = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
-                        char infotitle[100];
-                        char infotext[200];
-                        LoadString(hProgInstance, IDS_INFOTITLE, (LPTSTR)infotitle, sizeof(infotitle));
-                        LoadString(hProgInstance, IDS_INFOTEXT, (LPTSTR)infotext, sizeof(infotext));
-                        ShellAbout(hMainWnd, (LPTSTR)infotitle, (LPTSTR)infotext, paintIcon);
+                        TCHAR infotitle[100];
+                        TCHAR infotext[200];
+                        LoadString(hProgInstance, IDS_INFOTITLE, infotitle, SIZEOF(infotitle));
+                        LoadString(hProgInstance, IDS_INFOTEXT, infotext, SIZEOF(infotext));
+                        ShellAbout(hMainWnd, infotitle, infotext, paintIcon);
                         DeleteObject(paintIcon);
                     }
                     break;
@@ -388,12 +389,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         {
                             insertReversible(bmNew);
                             updateCanvasAndScrollbars();
-                            char tempstr[1000];
-                            char resstr[100];
+                            TCHAR tempstr[1000];
+                            TCHAR resstr[100];
                             CopyMemory(filename, ofn.lpstrFileTitle, sizeof(filename));
                             CopyMemory(filepathname, ofn.lpstrFileTitle, sizeof(filepathname));
-                            LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)resstr, sizeof(resstr));
-                            sprintf(tempstr, resstr, filename);
+                            LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+                            _stprintf(tempstr, resstr, filename);
                             SetWindowText(hMainWnd, tempstr);
                             clearHistory();
                             isAFile = TRUE;
@@ -410,12 +411,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     if (GetSaveFileName(&sfn)!=0)
                     {
                         SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC);
-                        char tempstr[1000];
-                        char resstr[100];
+                        TCHAR tempstr[1000];
+                        TCHAR resstr[100];
                         CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
                         CopyMemory(filepathname, sfn.lpstrFileTitle, sizeof(filepathname));
-                        LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)resstr, sizeof(resstr));
-                        sprintf(tempstr, resstr, filename);
+                        LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+                        _stprintf(tempstr, resstr, filename);
                         SetWindowText(hMainWnd, tempstr);
                         isAFile = TRUE;
                     }

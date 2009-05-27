@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="paint" type="win32gui" installbase="system32" installname="paint.exe" allowwarnings="true">
+<module name="paint" type="win32gui" installbase="system32" installname="paint.exe" unicode="yes" allowwarnings="true">
 	<include base="paint">.</include>
 	<library>comdlg32</library>
 	<library>shell32</library>

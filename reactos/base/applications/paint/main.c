@@ -12,6 +12,7 @@
 #include <windowsx.h>
 #include <commctrl.h>
 #include <stdio.h>
+#include <tchar.h>
 #include "definitions.h"
 
 #include "drawing.h"
@@ -97,11 +98,11 @@ HWND hToolBtn[16];
 
 HINSTANCE hProgInstance;
 
-char filename[256];
-char filepathname[1000];
+TCHAR filename[256];
+TCHAR filepathname[1000];
 BOOL isAFile = FALSE;
 
-int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpszArgument, int nFunsterStil)
+int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, int nFunsterStil)
 {
     hProgInstance = hThisInstance;
     HWND hwnd;               /* This is the handle for our window */
@@ -113,7 +114,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     //initializing and registering the window class used for the main window
     WNDCLASSEX wincl;
     wincl.hInstance         = hThisInstance;
-    wincl.lpszClassName     = "WindowsApp";
+    wincl.lpszClassName     = _T("WindowsApp");
     wincl.lpfnWndProc       = WindowProcedure;
     wincl.style             = CS_DBLCLKS;
     wincl.cbSize            = sizeof (WNDCLASSEX);
@@ -130,7 +131,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
 
     WNDCLASSEX wclScroll;
     wclScroll.hInstance     = hThisInstance;
-    wclScroll.lpszClassName = "Scrollbox";
+    wclScroll.lpszClassName = _T("Scrollbox");
     wclScroll.lpfnWndProc   = WindowProcedure;
     wclScroll.style         = 0;
     wclScroll.cbSize        = sizeof (WNDCLASSEX);
@@ -147,7 +148,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
 
     WNDCLASSEX wclPal;
     wclPal.hInstance        = hThisInstance;
-    wclPal.lpszClassName    = "Palette";
+    wclPal.lpszClassName    = _T("Palette");
     wclPal.lpfnWndProc      = PalWinProc;
     wclPal.style            = CS_DBLCLKS;
     wclPal.cbSize           = sizeof (WNDCLASSEX);
@@ -164,7 +165,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
 
     WNDCLASSEX wclSettings;
     wclSettings.hInstance       = hThisInstance;
-    wclSettings.lpszClassName   = "ToolSettings";
+    wclSettings.lpszClassName   = _T("ToolSettings");
     wclSettings.lpfnWndProc     = SettingsWinProc;
     wclSettings.style           = CS_DBLCLKS;
     wclSettings.cbSize          = sizeof (WNDCLASSEX);
@@ -181,7 +182,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
 
     WNDCLASSEX wclSelection;
     wclSelection.hInstance      = hThisInstance;
-    wclSelection.lpszClassName  = "Selection";
+    wclSelection.lpszClassName  = _T("Selection");
     wclSelection.lpfnWndProc    = SelectionWinProc;
     wclSelection.style          = CS_DBLCLKS;
     wclSelection.cbSize         = sizeof (WNDCLASSEX);
@@ -194,15 +195,15 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     wclSelection.hbrBackground  = NULL;//GetSysColorBrush(COLOR_BTNFACE);
     RegisterClassEx (&wclSelection);
 
-    LoadString(hThisInstance, IDS_DEFAULTFILENAME, (LPTSTR)filename, sizeof(filename));
-    char progtitle[1000];
-    char resstr[100];
-    LoadString(hThisInstance, IDS_WINDOWTITLE, (LPTSTR)resstr, sizeof(resstr));
-    sprintf(progtitle, resstr, filename);
+    LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
+    TCHAR progtitle[1000];
+    TCHAR resstr[100];
+    LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+    _stprintf(progtitle, resstr, filename);
     
     
     // create main window
-    hwnd = CreateWindowEx (0, "WindowsApp", (LPTSTR)progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544, 375, HWND_DESKTOP, NULL, hThisInstance, NULL);
+    hwnd = CreateWindowEx (0, _T("WindowsApp"), progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544, 375, HWND_DESKTOP, NULL, hThisInstance, NULL);
 
     hMainWnd = hwnd;
 
@@ -222,7 +223,7 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     hCurPen         = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_PEN));
     hCurAirbrush    = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_AIRBRUSH));
 
-    HWND hLine = CreateWindowEx (0, "STATIC", "", WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL, hThisInstance, NULL);
+    HWND hLine = CreateWindowEx (0, _T("STATIC"), _T(""), WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL, hThisInstance, NULL);
 
     // creating the 16 bitmap radio buttons and setting the bitmap
 
@@ -236,12 +237,12 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     DeleteObject(tempBm);
     SendMessage(hToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     int i;
-    char tooltips[16][30];
+    TCHAR tooltips[16][30];
     for (i=0; i<16; i++)
     {
         int wrapnow = 0;
         if (i % 2 == 1) wrapnow = TBSTATE_WRAP;
-        LoadString(hThisInstance, IDS_TOOLTIP1 + i, (LPTSTR)tooltips[i], 30);
+        LoadString(hThisInstance, IDS_TOOLTIP1 + i, tooltips[i], 30);
         TBBUTTON tbbutton = { i, ID_FREESEL + i, TBSTATE_ENABLED | wrapnow, TBSTYLE_CHECKGROUP, {0}, 0, (INT_PTR)tooltips[i] };
         SendMessage(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&tbbutton);
     }
@@ -256,25 +257,25 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
 
 
     // creating the tool settings child window
-    hToolSettings = CreateWindowEx(0, "ToolSettings", "", WS_CHILD | WS_VISIBLE, 7, 210, 42, 140, hwnd, NULL, hThisInstance, NULL);
+    hToolSettings = CreateWindowEx(0, _T("ToolSettings"), _T(""), WS_CHILD | WS_VISIBLE, 7, 210, 42, 140, hwnd, NULL, hThisInstance, NULL);
 
     // creating the palette child window
-    hPalWin = CreateWindowEx(0, "Palette", "", WS_CHILD | WS_VISIBLE, 56, 9, 255, 32, hwnd, NULL, hThisInstance, NULL);
+    hPalWin = CreateWindowEx(0, _T("Palette"), _T(""), WS_CHILD | WS_VISIBLE, 56, 9, 255, 32, hwnd, NULL, hThisInstance, NULL);
 
     // creating the scroll box
-    hScrollbox = CreateWindowEx (WS_EX_CLIENTEDGE, "Scrollbox", "", WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, 56, 49, 472, 248, hwnd, NULL, hThisInstance, NULL);
+    hScrollbox = CreateWindowEx (WS_EX_CLIENTEDGE, _T("Scrollbox"), _T(""), WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, 56, 49, 472, 248, hwnd, NULL, hThisInstance, NULL);
 
     // creating the status bar
-    hStatusBar = CreateWindowEx (0, STATUSCLASSNAME, "", SBARS_SIZEGRIP | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, NULL, hThisInstance, NULL);
+    hStatusBar = CreateWindowEx (0, STATUSCLASSNAME, _T(""), SBARS_SIZEGRIP | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, NULL, hThisInstance, NULL);
     SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
 
-    hScrlClient = CreateWindowEx(0, "Scrollbox", "", WS_CHILD | WS_VISIBLE, 0, 0, 500, 500, hScrollbox, NULL, hThisInstance, NULL);
+    hScrlClient = CreateWindowEx(0, _T("Scrollbox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 500, 500, hScrollbox, NULL, hThisInstance, NULL);
 
     // create selection window (initially hidden)
-    hSelection = CreateWindowEx(WS_EX_TRANSPARENT, "Selection", "", WS_CHILD | BS_OWNERDRAW, 350, 0, 100, 100, hScrlClient, NULL, hThisInstance, NULL);
+    hSelection = CreateWindowEx(WS_EX_TRANSPARENT, _T("Selection"), _T(""), WS_CHILD | BS_OWNERDRAW, 350, 0, 100, 100, hScrlClient, NULL, hThisInstance, NULL);
 
     // creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn
-    hImageArea = CreateWindowEx (0, "Scrollbox", "", WS_CHILD | WS_VISIBLE, 3, 3, imgXRes, imgYRes, hScrlClient, NULL, hThisInstance, NULL);
+    hImageArea = CreateWindowEx (0, _T("Scrollbox"), _T(""), WS_CHILD | WS_VISIBLE, 3, 3, imgXRes, imgYRes, hScrlClient, NULL, hThisInstance, NULL);
 
     hDrawingDC = CreateCompatibleDC(GetDC(hImageArea));
     hSelDC = CreateCompatibleDC(GetDC(hImageArea));
@@ -299,41 +300,41 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     choosecolor.lpfnHook        = NULL;
     choosecolor.lpTemplateName  = NULL;
 
-    char *c;
+    TCHAR *c;
 
     // initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName
-    char ofnFilename[1000];
+    TCHAR ofnFilename[1000];
     CopyMemory(ofnFilename, filename, sizeof(filename));
-    char ofnFiletitle[256];
-    char ofnFilter[1000];
-    LoadString(hThisInstance, IDS_OPENFILTER, (LPTSTR)ofnFilter, sizeof(ofnFilter));
+    TCHAR ofnFiletitle[256];
+    TCHAR ofnFilter[1000];
+    LoadString(hThisInstance, IDS_OPENFILTER, ofnFilter, SIZEOF(ofnFilter));
     for (c = ofnFilter; *c; c++) if (*c == '\1') *c = '\0';
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize     = sizeof (OPENFILENAME);
     ofn.hwndOwner       = hwnd;
     ofn.hInstance       = hThisInstance;
-    ofn.lpstrFilter     = (LPCTSTR)ofnFilter;
-    ofn.lpstrFile       = (LPTSTR)ofnFilename;
-    ofn.nMaxFile        = sizeof(ofnFilename);
-    ofn.lpstrFileTitle  = (LPTSTR)ofnFiletitle;
-    ofn.nMaxFileTitle   = sizeof(ofnFiletitle);
+    ofn.lpstrFilter     = ofnFilter;
+    ofn.lpstrFile       = ofnFilename;
+    ofn.nMaxFile        = SIZEOF(ofnFilename);
+    ofn.lpstrFileTitle  = ofnFiletitle;
+    ofn.nMaxFileTitle   = SIZEOF(ofnFiletitle);
     ofn.Flags           = OFN_HIDEREADONLY;
 
-    char sfnFilename[1000];
+    TCHAR sfnFilename[1000];
     CopyMemory(sfnFilename, filename, sizeof(filename));
-    char sfnFiletitle[256];
-    char sfnFilter[1000];
-    LoadString(hThisInstance, IDS_SAVEFILTER, (LPTSTR)sfnFilter, sizeof(sfnFilter));
+    TCHAR sfnFiletitle[256];
+    TCHAR sfnFilter[1000];
+    LoadString(hThisInstance, IDS_SAVEFILTER, sfnFilter, SIZEOF(sfnFilter));
     for (c = sfnFilter; *c; c++) if (*c == '\1') *c = '\0';
     ZeroMemory(&sfn, sizeof(OPENFILENAME));
     sfn.lStructSize     = sizeof (OPENFILENAME);
     sfn.hwndOwner       = hwnd;
     sfn.hInstance       = hThisInstance;
-    sfn.lpstrFilter     = (LPCTSTR)sfnFilter;
-    sfn.lpstrFile       = (LPTSTR)sfnFilename;
-    sfn.nMaxFile        = sizeof(sfnFilename);
-    sfn.lpstrFileTitle  = (LPTSTR)sfnFiletitle;
-    sfn.nMaxFileTitle   = sizeof(sfnFiletitle);
+    sfn.lpstrFilter     = sfnFilter;
+    sfn.lpstrFile       = sfnFilename;
+    sfn.nMaxFile        = SIZEOF(sfnFilename);
+    sfn.lpstrFileTitle  = sfnFiletitle;
+    sfn.nMaxFileTitle   = SIZEOF(sfnFiletitle);
     sfn.Flags           = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
 

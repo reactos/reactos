@@ -12,6 +12,6 @@ int GetDIBWidth(HBITMAP hbm);
 
 int GetDIBHeight(HBITMAP hbm);
 
-void SaveDIBToFile(HBITMAP hbm, LPSTR name, HDC hdc);
+void SaveDIBToFile(HBITMAP hbm, LPTSTR name, HDC hdc);
 
-HBITMAP LoadDIBFromFile(LPSTR name);
+HBITMAP LoadDIBFromFile(LPTSTR name);
