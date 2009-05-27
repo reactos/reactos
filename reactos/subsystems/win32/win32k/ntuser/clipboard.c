@@ -229,7 +229,10 @@ IntEmptyClipboardData()
     while(ce)
     {
         tmp = ce->next;
-        ExFreePool(ce->hData);
+		if (ce->hData)
+		{
+            ExFreePool(ce->hData);
+        }
 	    ExFreePool(ce);
 	    ce = tmp;
     }
