@@ -218,7 +218,11 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 #define MAKELONG(a,b)           ((LONG)(((WORD)(a))|(((DWORD)((WORD)(b)))<<16)))
 
 #define NT_SUCCESS(x)           ((x)>=0)
+#if !defined(__GNUC__)
 #define FIELD_OFFSET(t,f)       ((LONG_PTR)&(((t*)0)->f))
+#else
+#define FIELD_OFFSET(t,f)       __builtin_offsetof(t,f)
+#endif
 #define RTL_CONSTANT_STRING(s)  { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
 #define CONTAINING_RECORD(address, type, field)  ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 
