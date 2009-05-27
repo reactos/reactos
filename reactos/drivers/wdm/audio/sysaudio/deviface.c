@@ -59,7 +59,7 @@ FilterPinWorkerRoutine(
     if (!DeviceEntry->Pins)
     {
         /* no memory */
-        DPRINT1("Failed to allocate memory Block %x\n", Count * sizeof(PIN_INFO));
+        DPRINT1("Failed to allocate memory Pins %u Block %x\n", Count, Count * sizeof(PIN_INFO));
         goto cleanup;
     }
     /* clear array */
