@@ -965,6 +965,15 @@ typedef struct _NDIS_ENCAPSULATION_FORMAT {
   ULONG  EncapsulationHeaderSize;
 } NDIS_ENCAPSULATION_FORMAT, *PNDIS_ENCAPSULATION_FORMAT;
 
+typedef struct _NDIS_TASK_OFFLOAD_HEADER
+{
+    ULONG       Version;
+    ULONG       Size;
+    ULONG       Reserved;
+    ULONG       OffsetFirstTask;
+    NDIS_ENCAPSULATION_FORMAT  EncapsulationFormat;
+} NDIS_TASK_OFFLOAD_HEADER, *PNDIS_TASK_OFFLOAD_HEADER;
+
 typedef struct _NDIS_TASK_TCP_IP_CHECKSUM {
   struct {
     ULONG  IpOptionsSupported:1;
