@@ -27,6 +27,26 @@
 extern "C" {
 #endif
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+typedef struct _DOCEVENT_FILTER {
+    UINT    cbSize;
+    UINT    cElementsAllocated;
+    UINT    cElementsNeeded;
+    UINT    cElementsReturned;
+    DWORD   aDocEventCall[ANYSIZE_ARRAY];
+} DOCEVENT_FILTER, *PDOCEVENT_FILTER;
+typedef struct _DOCEVENT_CREATEDCPRE {
+    PWSTR       pszDriver;
+    PWSTR       pszDevice;
+    PDEVMODEW   pdm;
+    BOOL        bIC;
+} DOCEVENT_CREATEDCPRE, *PDCEVENT_CREATEDCPRE;
+typedef struct _DOCEVENT_ESCAPE {
+    int    iEscape;
+    int    cjInput;
+    PVOID  pvInData;
+} DOCEVENT_ESCAPE, *PDOCEVENT_ESCAPE;
+#endif
 #define DOCUMENTEVENT_FIRST         1
 #define DOCUMENTEVENT_CREATEDCPRE   1
 #define DOCUMENTEVENT_CREATEDCPOST  2
@@ -69,6 +89,8 @@ extern "C" {
 #define DOCUMENTEVENT_SUCCESS     1
 #define DOCUMENTEVENT_UNSUPPORTED 0
 #define DOCUMENTEVENT_FAILURE    -1
+#define DOCUMENTEVENT_EVENT(iX) (LOWORD(iX))
+#define DOCUMENTEVENT_FLAGS(iX) (HIWORD(iX))
 
 int WINAPI DrvDocumentEvent(HANDLE,HDC,int,ULONG,PVOID,ULONG,PVOID);
 
