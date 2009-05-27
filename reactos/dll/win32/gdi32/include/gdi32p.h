@@ -104,7 +104,8 @@ typedef struct _UMPDEV
   DWORD           dwDriverCount;   // After init should be 2
   DWORD           WOW64_UMPDev;
   DWORD           WOW64_hMod;
-  WCHAR           String[188];
+  DWORD           Unknown;
+  PVOID           apfn[INDEX_LAST]; // Print Driver pfn
 } UMPDEV, *PUMPDEV;
 
 #define LOCALFONT_COUNT 10
@@ -128,7 +129,7 @@ typedef BOOL WINAPI (*ISVALIDDEVMODEW) (PDEVMODEW,size_t);
 typedef BOOL WINAPI (*OPENPRINTERW) (LPWSTR,PHANDLE,LPPRINTER_DEFAULTSW);
 typedef BOOL WINAPI (*READPRINTER) (HANDLE,PVOID,DWORD,PDWORD);
 typedef BOOL WINAPI (*RESETPRINTERW) (HANDLE,LPPRINTER_DEFAULTSW);
-typedef BOOL WINAPI (*STARTDOCDLGW) (HANDLE,DOCINFOW *);
+typedef LPWSTR WINAPI (*STARTDOCDLGW) (HANDLE,DOCINFOW *);
 typedef DWORD WINAPI (*STARTDOCPRINTERW) (HANDLE,DWORD,PBYTE);
 typedef BOOL WINAPI (*STARTPAGEPRINTER) (HANDLE);
 // ddk/winsplp.h
@@ -144,6 +145,8 @@ typedef BOOL WINAPI (*QUERYCOLORPROFILE) (HANDLE,PDEVMODEW,ULONG,VOID*,ULONG,FLO
 // Unknown:
 typedef DWORD WINAPI (*QUERYSPOOLMODE) (HANDLE,DWORD,DWORD);
 typedef DWORD WINAPI (*QUERYREMOTEFONTS) (DWORD,DWORD,DWORD);
+
+extern CLOSEPRINTER fpClosePrinter;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -195,6 +198,7 @@ GdiGetHandleUserData(
 );
 
 PLDC
+FASTCALL
 GdiGetLDC(HDC hDC);
 
 HGDIOBJ
@@ -277,6 +281,7 @@ GdiGetBitmapBitsSize(BITMAPINFO *lpbmi);
 VOID GdiSAPCallback(PLDC pldc);
 
 int FASTCALL DocumentEventEx(PVOID,HANDLE,HDC,int,ULONG,PVOID,ULONG,PVOID);
+BOOL FASTCALL EndPagePrinterEx(PVOID,HANDLE);
 BOOL FASTCALL LoadTheSpoolerDrv(VOID);
 
 /* EOF */

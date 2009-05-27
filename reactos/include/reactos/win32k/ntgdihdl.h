@@ -186,7 +186,6 @@
 #define LDC_INFODC        0x01000000 /* If CreateIC was passed. */
 #define LDC_DEVCAPS       0x02000000
 #define LDC_ATENDPAGE     0x10000000
-#define LDC_ENDPAGE_MFDC  0x80000000
 
 /* DC_ATTR Xform Flags */
 #define METAFILE_TO_WORLD_IDENTITY          0x00000001

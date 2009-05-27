@@ -40,7 +40,7 @@
 HANDLE ghSpooler = NULL;
 
 static ABORTPRINTER fpAbortPrinter;
-static CLOSEPRINTER fpClosePrinter;
+CLOSEPRINTER fpClosePrinter;
 static CLOSESPOOLFILEHANDLE fpCloseSpoolFileHandle;
 static COMMITSPOOLDATA fpCommitSpoolData;
 //static fpConnectToLd64In32Server;
@@ -92,10 +92,60 @@ IntEndPage(
       return SP_ERROR;
    }
 
+   if (pldc->Flags & LDC_ATENDPAGE) return 1;
+
+   if (pldc->Flags & LDC_META_PRINT)
+   {
+      if ( Form )
+      {
+         // Do MF EndPageForm
+      }
+      else
+      {
+         // Do MF EndPage
+      }
+      return Ret;      
+   }
+
+   if (pldc->Flags & LDC_KILL_DOCUMENT || pldc->Flags & LDC_INIT_PAGE)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return SP_ERROR;
+   }
+
+   if (pldc->Flags & LDC_SAPCALLBACK) GdiSAPCallback(pldc);
+
+   pldc->Flags &= ~LDC_INIT_PAGE;
+
+   DocumentEventEx(NULL, pldc->hPrinter, hdc, DOCUMENTEVENT_ENDPAGE, 0, NULL, 0, NULL);   
+
+   ((PW32CLIENTINFO)NtCurrentTeb()->Win32ClientInfo)->cSpins = 0;
+
+   if ( NtGdiEndPage(hdc) )
+   {
+      BOOL Good;
+//      if (pldc->pUMPDev)
+         Good = EndPagePrinterEx(NULL,pldc->hPrinter);
+
+      if (Good) pldc->Flags |= LDC_STARTPAGE;
+      Ret = 1;
+   }
+   else
+      SetLastError(ERROR_INVALID_PARAMETER);
    return Ret;
 }
 
 /* FUNCTIONS *****************************************************************/
+
+BOOL
+FASTCALL
+AbortPrinterEx(
+        PVOID   pvUMPDev,
+        HANDLE  hPrinter
+               )
+{
+    return fpAbortPrinter(hPrinter);
+}
 
 int
 FASTCALL
@@ -128,11 +178,11 @@ FASTCALL
 EndPagePrinterEx(
         PVOID   pvUMPDev,
         HANDLE  hPrinter
-               )
+                )
 {
     return fpEndPagePrinter(hPrinter);
 }
-
+ 
 BOOL
 FASTCALL
 LoadTheSpoolerDrv(VOID)
@@ -169,7 +219,7 @@ LoadTheSpoolerDrv(VOID)
         fpSeekPrinter = GetProcAddress(hModWinSpoolDrv, "SeekPrinter");
         fpSplDriverUnloadComplete = GetProcAddress(hModWinSpoolDrv, "SplDriverUnloadComplete");
         fpSplReadPrinter = GetProcAddress(hModWinSpoolDrv, (LPCSTR)205);
-        fpStartDocDlgW = GetProcAddress(hModWinSpoolDrv, "StartDocDlgW");
+        fpStartDocDlgW = (PVOID)GetProcAddress(hModWinSpoolDrv, "StartDocDlgW");
         fpStartDocPrinterW = (PVOID)GetProcAddress(hModWinSpoolDrv, "StartDocPrinterW");
         fpStartPagePrinter = GetProcAddress(hModWinSpoolDrv, "StartPagePrinter");
 
@@ -211,6 +261,31 @@ LoadTheSpoolerDrv(VOID)
   if ( !ghSpooler ) SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 
   return (ghSpooler != NULL);
+}
+
+/*
+  Note from msdn:
+
+   The sequence for a print job is as follows:
+
+   1. To begin a print job, call StartDocPrinter.
+   2. To begin each page, call StartPagePrinter.
+   3. To write data to a page, call WritePrinter.
+   4. To end each page, call EndPagePrinter.
+   5. Repeat 2, 3, and 4 for as many pages as necessary.
+   6. To end the print job, call EndDocPrinter.
+                  
+ */
+DWORD
+FASTCALL
+StartDocPrinterWEx(
+        PVOID   pvUMPDev,
+        HANDLE  hPrinter,
+        DWORD   Level,
+        LPBYTE  pDocInfo
+                  )
+{
+    return fpStartDocPrinterW(hPrinter,Level,pDocInfo);
 }
 
 BOOL
@@ -312,7 +387,7 @@ EndDoc(
    if (pldc->Flags & LDC_INIT_DOCUMENT)
    {
       BOOL Good;
-      if (pldc->Flags & LDC_ENDPAGE_MFDC) EndPage(hdc);
+      if (pldc->Flags & LDC_INIT_PAGE) EndPage(hdc);
 
       DocumentEventEx(NULL, pldc->hPrinter, hdc, DOCUMENTEVENT_ENDDOC, 0, NULL, 0, NULL);
    
@@ -320,7 +395,7 @@ EndDoc(
 
       Good = NtGdiEndDoc(hdc);
 
-      if (Good)
+//      if (pldc->pUMPDev)
          Good = EndDocPrinterEx(NULL,pldc->hPrinter);
 
       if (Good)
@@ -348,9 +423,7 @@ EndFormPage(HDC hdc)
  */
 int
 WINAPI
-EndPage(
-	HDC	hdc
-	)
+EndPage(HDC hdc	)
 {
    return IntEndPage(hdc,FALSE);
 }
@@ -404,22 +477,116 @@ StartDocW(
 	)
 {
    PLDC pldc;
+   DOCINFOW diW;
+   DOC_INFO_1W di1W;
+   LPWSTR lpwstrRet = NULL;
+   BOOL Banding;
+   int PrnJobNo, Ret = SP_ERROR;  
    ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
 
    if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
-   {
-      SetLastError(ERROR_INVALID_HANDLE);
       return SP_ERROR;
-   }
 
    pldc = GdiGetLDC(hdc);
-   if ( !pldc )
+   if ( !pldc || pldc->Flags & LDC_ATENDPAGE)
    {
       SetLastError(ERROR_INVALID_HANDLE);
       return SP_ERROR;
    }
 
-   return NtGdiStartDoc ( hdc, (DOCINFOW *)lpdi, NULL, 0);
+   if (!pldc->hPrinter) return SP_ERROR;
+
+   pldc->Flags &= ~LDC_KILL_DOCUMENT;
+
+   if (lpdi)
+      RtlCopyMemory(&diW, lpdi, sizeof(DOCINFOW));
+   else
+   {
+      diW.cbSize = sizeof(DOCINFOW);
+      diW.lpszDocName  = NULL;
+      diW.lpszOutput   = NULL;
+      diW.lpszDatatype = NULL;
+      diW.fwType = 0;
+   }
+
+   if (!diW.lpszOutput)
+      if (pldc->pwszPort) diW.lpszOutput = pldc->pwszPort;
+
+   lpwstrRet = fpStartDocDlgW(pldc->hPrinter, &diW);
+   if (lpwstrRet == (LPWSTR)SP_APPABORT)
+   {
+      pldc->Flags |= LDC_KILL_DOCUMENT;
+      return SP_ERROR;
+   }
+   if (lpwstrRet == (LPWSTR)SP_ERROR) return SP_ERROR;
+
+   if (lpwstrRet != 0) diW.lpszOutput = lpwstrRet;
+
+   Ret = DocumentEventEx( NULL,
+                          pldc->hPrinter,
+                          hdc,
+                          DOCUMENTEVENT_STARTDOC,
+                          sizeof(ULONG),
+                          &diW,
+                          0,
+                          NULL);
+
+   if (Ret == SP_APPABORT)
+   {
+      pldc->Flags |= LDC_KILL_DOCUMENT;
+      Ret = SP_ERROR;
+   }
+   if (Ret == SP_ERROR)
+   {
+      if (lpwstrRet) LocalFree(lpwstrRet);
+      return Ret;
+   }
+
+   di1W.pDocName    = (LPWSTR)diW.lpszDocName;
+   di1W.pOutputFile = (LPWSTR)diW.lpszOutput;
+   di1W.pDatatype   = (LPWSTR)diW.lpszDatatype;
+
+   Ret = SP_ERROR;
+
+   PrnJobNo = StartDocPrinterWEx(NULL, pldc->hPrinter, 1, (LPBYTE)&di1W);
+   if (PrnJobNo <= 0)
+   {
+      Ret = NtGdiStartDoc( hdc, &diW, &Banding, PrnJobNo);
+      if (Ret)
+      {
+         if (pldc->pAbortProc)
+         {
+            GdiSAPCallback(pldc);
+            pldc->Flags |= LDC_SAPCALLBACK;
+            pldc->CallBackTick = GetTickCount();
+         }
+         pldc->Flags |= LDC_INIT_DOCUMENT;
+         if (!Banding) pldc->Flags |= LDC_STARTPAGE;
+      }
+   }
+   if (Ret == SP_ERROR)
+   {
+       //if ( pldc->pUMPDev  )
+         AbortPrinterEx(NULL, pldc->hPrinter);
+       DPRINT1("StartDoc Died!!!\n");
+   }
+   else
+   {
+      if ( DocumentEventEx( NULL,
+                            pldc->hPrinter,
+                            hdc,
+                            DOCUMENTEVENT_STARTDOCPOST,
+                            sizeof(ULONG),
+                            &Ret,
+                            0,
+                            NULL) == SP_ERROR)
+      {
+          AbortDoc(hdc);
+          Ret = SP_ERROR;
+      }
+   }
+   if (lpwstrRet) LocalFree(lpwstrRet);
+   return Ret;
 }
 
 /*
@@ -502,9 +669,9 @@ StartPage(
 	return SP_ERROR;
    }
 
-   pldc->Flags &= ~(LDC_STARTPAGE);
+   pldc->Flags &= ~(LDC_ATENDPAGE|LDC_STARTPAGE);
 
-   if (pldc->Flags & LDC_ENDPAGE_MFDC) return 1;
+   if (pldc->Flags & LDC_INIT_PAGE) return 1;
 
    if (DocumentEventEx(NULL, pldc->hPrinter, hdc, DOCUMENTEVENT_STARTPAGE, 0, NULL, 0, NULL) != SP_ERROR)
    {
