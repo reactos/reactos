@@ -701,7 +701,7 @@ PdoQueryResources(
   }
 
   /* Calculate the resource list size */
-  ListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List->PartialResourceList.PartialDescriptors)
+  ListSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors)
     + ResCount * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 
   /* Allocate the resource list */
