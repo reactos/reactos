@@ -197,7 +197,7 @@ Directory::EscapeSpaces ( const string& path )
 			newpath = newpath + "\\ ";
 		else
 			newpath = newpath + *p;
-		*p++;
+		p++;
 	}
 	return newpath;
 }
