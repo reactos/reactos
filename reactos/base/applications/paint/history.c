@@ -15,6 +15,8 @@
 
 /* FUNCTIONS ********************************************************/
 
+extern void updateCanvasAndScrollbars(void);
+
 void setImgXYRes(int x, int y)
 {
     if ((imgXRes!=x)||(imgYRes!=y))

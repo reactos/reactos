@@ -10,6 +10,9 @@
 
 #include <windows.h>
 #include "globalvar.h"
+#include "drawing.h"
+#include "history.h"
+#include "mouse.h"
 
 /* FUNCTIONS ********************************************************/
 

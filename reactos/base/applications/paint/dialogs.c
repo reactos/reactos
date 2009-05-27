@@ -59,6 +59,7 @@ LRESULT CALLBACK MRDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
         default:
             return FALSE;
     }
+    return TRUE;
 }
 
 int mirrorRotateDlg()
@@ -93,6 +94,7 @@ LRESULT CALLBACK ATTDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM l
         default:
             return FALSE;
     }
+    return TRUE;
 }
 
 int attributesDlg()
@@ -125,6 +127,7 @@ LRESULT CALLBACK CHSIZEDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
         default:
             return FALSE;
     }
+    return TRUE;
 }
 
 int changeSizeDlg()

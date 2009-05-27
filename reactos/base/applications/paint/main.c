@@ -194,11 +194,11 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     wclSelection.hbrBackground  = NULL;//GetSysColorBrush(COLOR_BTNFACE);
     RegisterClassEx (&wclSelection);
 
-    LoadString(hThisInstance, IDS_DEFAULTFILENAME, (LPTSTR)&filename, 256);
+    LoadString(hThisInstance, IDS_DEFAULTFILENAME, (LPTSTR)filename, sizeof(filename));
     char progtitle[1000];
     char resstr[100];
-    LoadString(hThisInstance, IDS_WINDOWTITLE, (LPTSTR)&resstr, 100);
-    sprintf(progtitle, resstr, &filename);
+    LoadString(hThisInstance, IDS_WINDOWTITLE, (LPTSTR)resstr, sizeof(resstr));
+    sprintf(progtitle, resstr, filename);
     
     
     // create main window
@@ -240,9 +240,9 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     for (i=0; i<16; i++)
     {
         int wrapnow = 0;
-        if (i%2==1) wrapnow = TBSTATE_WRAP;
-        LoadString(hThisInstance, IDS_TOOLTIP1+i, (LPTSTR)&tooltips[i], 30);
-        TBBUTTON tbbutton = {i, (HMENU)(ID_FREESEL+i), TBSTATE_ENABLED | wrapnow, TBSTYLE_CHECKGROUP, {0}, 0, &tooltips[i]};
+        if (i % 2 == 1) wrapnow = TBSTATE_WRAP;
+        LoadString(hThisInstance, IDS_TOOLTIP1 + i, (LPTSTR)tooltips[i], 30);
+        TBBUTTON tbbutton = { i, ID_FREESEL + i, TBSTATE_ENABLED | wrapnow, TBSTYLE_CHECKGROUP, {0}, 0, (INT_PTR)tooltips[i] };
         SendMessage(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&tbbutton);
     }
    // SendMessage(hToolbar, TB_SETROWS, MAKEWPARAM(8, FALSE), (LPARAM)NULL);
@@ -299,41 +299,41 @@ int WINAPI WinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPSTR lpsz
     choosecolor.lpfnHook        = NULL;
     choosecolor.lpTemplateName  = NULL;
 
-    int c;
+    char *c;
 
     // initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName
     char ofnFilename[1000];
-    CopyMemory(&ofnFilename, &filename, 256);
+    CopyMemory(ofnFilename, filename, sizeof(filename));
     char ofnFiletitle[256];
     char ofnFilter[1000];
-    LoadString(hThisInstance, IDS_OPENFILTER, (LPTSTR)&ofnFilter, 1000);
-    for (c=0; c<1000; c++) if (ofnFilter[c]==(char)1) ofnFilter[c] = (char)0;
+    LoadString(hThisInstance, IDS_OPENFILTER, (LPTSTR)ofnFilter, sizeof(ofnFilter));
+    for (c = ofnFilter; *c; c++) if (*c == '\1') *c = '\0';
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
     ofn.lStructSize     = sizeof (OPENFILENAME);
     ofn.hwndOwner       = hwnd;
     ofn.hInstance       = hThisInstance;
-    ofn.lpstrFilter     = (LPCTSTR)&ofnFilter;
-    ofn.lpstrFile       = (LPTSTR)&ofnFilename;
-    ofn.nMaxFile        = 1000;
-    ofn.lpstrFileTitle  = (LPTSTR)&ofnFiletitle;
-    ofn.nMaxFileTitle   = 256;
+    ofn.lpstrFilter     = (LPCTSTR)ofnFilter;
+    ofn.lpstrFile       = (LPTSTR)ofnFilename;
+    ofn.nMaxFile        = sizeof(ofnFilename);
+    ofn.lpstrFileTitle  = (LPTSTR)ofnFiletitle;
+    ofn.nMaxFileTitle   = sizeof(ofnFiletitle);
     ofn.Flags           = OFN_HIDEREADONLY;
 
     char sfnFilename[1000];
-    CopyMemory(&sfnFilename, &filename, 256);
+    CopyMemory(sfnFilename, filename, sizeof(filename));
     char sfnFiletitle[256];
     char sfnFilter[1000];
-    LoadString(hThisInstance, IDS_SAVEFILTER, (LPTSTR)&sfnFilter, 1000);
-    for (c=0; c<1000; c++) if (sfnFilter[c]==(char)1) sfnFilter[c] = (char)0;
+    LoadString(hThisInstance, IDS_SAVEFILTER, (LPTSTR)sfnFilter, sizeof(sfnFilter));
+    for (c = sfnFilter; *c; c++) if (*c == '\1') *c = '\0';
     ZeroMemory(&sfn, sizeof(OPENFILENAME));
     sfn.lStructSize     = sizeof (OPENFILENAME);
     sfn.hwndOwner       = hwnd;
     sfn.hInstance       = hThisInstance;
-    sfn.lpstrFilter     = (LPCTSTR)&sfnFilter;
-    sfn.lpstrFile       = (LPTSTR)&sfnFilename;
-    sfn.nMaxFile        = 1000;
-    sfn.lpstrFileTitle  = (LPTSTR)&sfnFiletitle;
-    sfn.nMaxFileTitle   = 256;
+    sfn.lpstrFilter     = (LPCTSTR)sfnFilter;
+    sfn.lpstrFile       = (LPTSTR)sfnFilename;
+    sfn.nMaxFile        = sizeof(sfnFilename);
+    sfn.lpstrFileTitle  = (LPTSTR)sfnFiletitle;
+    sfn.nMaxFileTitle   = sizeof(sfnFiletitle);
     sfn.Flags           = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
 

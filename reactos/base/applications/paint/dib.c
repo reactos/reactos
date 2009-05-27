@@ -43,7 +43,7 @@ int GetDIBHeight(HBITMAP hbm)
     return bm.bmHeight;
 }
 
-void SaveDIBToFile(HBITMAP hbm, char name[], HDC hdc)
+void SaveDIBToFile(HBITMAP hbm, LPSTR name, HDC hdc)
 {
     BITMAP bm;
     GetObject(hbm, sizeof(BITMAP), &bm);
@@ -77,7 +77,7 @@ void SaveDIBToFile(HBITMAP hbm, char name[], HDC hdc)
     HeapFree(GetProcessHeap(), 0, buffer);
 }
 
-HBITMAP LoadDIBFromFile(char name[])
+HBITMAP LoadDIBFromFile(LPSTR name)
 {
     HBITMAP bm;
     BITMAPFILEHEADER bfh;
@@ -88,7 +88,7 @@ HBITMAP LoadDIBFromFile(char name[])
     ReadFile(f, &bfh, 14, (LPDWORD)&bytesRead, NULL);
     if (bfh.bfType!=0x4d42)
     {
-        fclose(f);
+        CloseHandle(f);
         return NULL;
     }
     bi = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, bfh.bfOffBits-14);

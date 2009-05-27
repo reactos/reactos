@@ -10,6 +10,7 @@
 
 #include <windows.h>
 #include "globalvar.h"
+#include "drawing.h"
 
 /* FUNCTIONS ********************************************************/
 

@@ -16,7 +16,10 @@
 #include "definitions.h"
 #include "globalvar.h"
 #include "dialogs.h"
+#include "dib.h"
+#include "drawing.h"
 #include "history.h"
+#include "mouse.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -59,11 +62,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 char programname[20];
                 char saveprompttext[100];
-                LoadString(hProgInstance, IDS_PROGRAMNAME, (LPTSTR)&programname, 20);
-                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, (LPTSTR)&saveprompttext, 100);
+                LoadString(hProgInstance, IDS_PROGRAMNAME, (LPTSTR)programname, sizeof(programname));
+                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, (LPTSTR)saveprompttext, sizeof(saveprompttext));
                 char temptext[500];
                 sprintf(temptext, saveprompttext, filename);
-                switch (MessageBox(hwnd, (LPTSTR)&temptext, (LPTSTR)&programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+                switch (MessageBox(hwnd, (LPTSTR)temptext, (LPTSTR)programname, MB_YESNOCANCEL | MB_ICONQUESTION))
                 {
                     case IDNO:
                         DestroyWindow(hwnd);
@@ -361,9 +364,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         HICON paintIcon = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
                         char infotitle[100];
                         char infotext[200];
-                        LoadString(hProgInstance, IDS_INFOTITLE, (LPTSTR)&infotitle, 100);
-                        LoadString(hProgInstance, IDS_INFOTEXT, (LPTSTR)&infotext, 200);
-                        ShellAbout(hMainWnd, (LPTSTR)&infotitle, (LPTSTR)&infotext, paintIcon);
+                        LoadString(hProgInstance, IDS_INFOTITLE, (LPTSTR)infotitle, sizeof(infotitle));
+                        LoadString(hProgInstance, IDS_INFOTEXT, (LPTSTR)infotext, sizeof(infotext));
+                        ShellAbout(hMainWnd, (LPTSTR)infotitle, (LPTSTR)infotext, paintIcon);
                         DeleteObject(paintIcon);
                     }
                     break;
@@ -387,10 +390,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                             updateCanvasAndScrollbars();
                             char tempstr[1000];
                             char resstr[100];
-                            CopyMemory(&filename, ofn.lpstrFileTitle, 256);
-                            CopyMemory(&filepathname, ofn.lpstrFileTitle, 1000);
-                            LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)&resstr, 100);
-                            sprintf(tempstr, resstr, &filename);
+                            CopyMemory(filename, ofn.lpstrFileTitle, sizeof(filename));
+                            CopyMemory(filepathname, ofn.lpstrFileTitle, sizeof(filepathname));
+                            LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)resstr, sizeof(resstr));
+                            sprintf(tempstr, resstr, filename);
                             SetWindowText(hMainWnd, tempstr);
                             clearHistory();
                             isAFile = TRUE;
@@ -399,7 +402,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_FILESAVE:
                     if (isAFile)
-                        SaveDIBToFile(hBms[currInd], &filepathname, hDrawingDC);
+                        SaveDIBToFile(hBms[currInd], filepathname, hDrawingDC);
                     else
                         SendMessage(hwnd, WM_COMMAND, IDM_FILESAVEAS, 0);
                     break;
@@ -409,10 +412,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC);
                         char tempstr[1000];
                         char resstr[100];
-                        CopyMemory(&filename, sfn.lpstrFileTitle, 256);
-                        CopyMemory(&filepathname, sfn.lpstrFileTitle, 1000);
-                        LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)&resstr, 100);
-                        sprintf(tempstr, resstr, &filename);
+                        CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
+                        CopyMemory(filepathname, sfn.lpstrFileTitle, sizeof(filepathname));
+                        LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)resstr, sizeof(resstr));
+                        sprintf(tempstr, resstr, filename);
                         SetWindowText(hMainWnd, tempstr);
                         isAFile = TRUE;
                     }
@@ -503,7 +506,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_IMAGEATTRIBUTES:
                     {
-                        int attrdata[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+                        //int attrdata[8] = {0, 0, 0, 0, 0, 0, 0, 0};
                         attributesDlg();
                         //cropReversible(640, 200);
                         //ZoomTo(zoom);
