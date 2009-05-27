@@ -2258,7 +2258,7 @@ KdbpReadCommand(
          /* Read the next char - this is to throw away a \n which most clients should
           * send after \r.
           */
-		 KeStallExecutionProcessor(100000);
+         KeStallExecutionProcessor(100000);
          if (KdbDebugState & KD_DEBUG_KDSERIAL)
             NextKey = KdbpTryGetCharSerial(5);
          else
