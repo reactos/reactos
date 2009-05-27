@@ -18,10 +18,6 @@ typedef struct
 
 }IRegistryKeyImpl;
 
-
-static IRegistryKeyVtbl vt_IRegistryKey;
-
-
 ULONG
 NTAPI
 IRegistryKey_fnAddRef(
@@ -187,7 +183,7 @@ IRegistryKey_fnNewSubKey(
 
     NewThis->hKey = hKey;
     NewThis->ref = 1;
-    NewThis->lpVtbl = &vt_IRegistryKey;
+    NewThis->lpVtbl = This->lpVtbl;
     *RegistrySubKey = (PREGISTRYKEY)&NewThis->lpVtbl;
 
     DPRINT("IRegistryKey_fnNewSubKey RESULT %p\n", *RegistrySubKey );
@@ -243,9 +239,9 @@ IRegistryKey_fnQueryValueKey(
     IN ULONG  Length,
     OUT PULONG  ResultLength)
 {
+    NTSTATUS Status;
     IRegistryKeyImpl * This = (IRegistryKeyImpl*)iface;
 
-    DPRINT("IRegistryKey_fnQueryValueKey entered %p value %wZ\n", This, ValueName);
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     if (This->Deleted)
@@ -253,7 +249,9 @@ IRegistryKey_fnQueryValueKey(
         return STATUS_INVALID_HANDLE;
     }
 
-    return ZwQueryValueKey(This->hKey, ValueName, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
+    Status = ZwQueryValueKey(This->hKey, ValueName, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
+    DPRINT("IRegistryKey_fnQueryValueKey entered %p value %wZ Status %x\n", This, ValueName, Status);
+    return Status;
 }
 
 NTSTATUS

@@ -347,7 +347,7 @@ PcNewInterruptSync(
     DPRINT("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n", 
             OutInterruptSync, OuterUnknown, ResourceList, ResourceIndex, Mode);
 
-    if (!OutInterruptSync || !ResourceList || Mode > InterruptSyncModeRepeat || Mode < 0)
+    if (!OutInterruptSync || !ResourceList || Mode > InterruptSyncModeRepeat || Mode < InterruptSyncModeNormal || Mode > InterruptSyncModeRepeat)
         return STATUS_INVALID_PARAMETER;
 
     if (ResourceIndex > ResourceList->lpVtbl->NumberOfEntriesOfType(ResourceList, CmResourceTypeInterrupt))
