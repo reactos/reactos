@@ -393,7 +393,7 @@ PdoQueryResourceRequirements(
   }
 
   /* Calculate the resource list size */
-  ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List->Descriptors)
+  ListSize = FIELD_OFFSET(IO_RESOURCE_REQUIREMENTS_LIST, List[0].Descriptors)
     + ResCount * sizeof(IO_RESOURCE_DESCRIPTOR);
 
   DPRINT("ListSize %lu (0x%lx)\n", ListSize, ListSize);
