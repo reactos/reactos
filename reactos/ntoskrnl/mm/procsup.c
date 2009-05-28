@@ -532,6 +532,10 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
     Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
 
+    /* Initialize AVL tree */
+    ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
+    Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
+
     /* Acquire the Lock */
     MmLockAddressSpace(ProcessAddressSpace);
 
