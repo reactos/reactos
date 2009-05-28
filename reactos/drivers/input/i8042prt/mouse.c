@@ -498,6 +498,24 @@ cleanup:
 			Status = STATUS_SUCCESS;
 			break;
 		}
+		case IOCTL_INTERNAL_I8042_MOUSE_WRITE_BUFFER:
+		{
+			DPRINT1("IOCTL_INTERNAL_I8042_MOUSE_WRITE_BUFFER not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_INTERNAL_I8042_MOUSE_START_INFORMATION:
+		{
+			DPRINT1("IOCTL_INTERNAL_I8042_MOUSE_START_INFORMATION not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_MOUSE_QUERY_ATTRIBUTES:
+		{
+			DPRINT1("IOCTL_MOUSE_QUERY_ATTRIBUTES not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
 		default:
 		{
 			ERR_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / unknown ioctl code 0x%lx\n",
