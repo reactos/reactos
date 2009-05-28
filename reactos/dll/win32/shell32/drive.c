@@ -435,9 +435,16 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
          Result = LargeIntegerSubtract(ConvertUlongToLargeInteger(100), Result);
          swprintf(szResult, L"%02d%%", Result.QuadPart);
          SendDlgItemMessageW(hwndDlg, 14004, WM_SETTEXT, (WPARAM)0, (LPARAM)szResult);
-         if (LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
-             SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, (WPARAM)0, (LPARAM)szBuffer);
-
+         if (DriveType == DRIVE_FIXED)
+         {
+            if (LoadStringW(shell32_hInstance, IDS_DRIVE_FIXED, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+               SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, (WPARAM)0, (LPARAM)szBuffer);
+         }
+         else /* DriveType == DRIVE_CDROM) */
+         {
+            if (LoadStringW(shell32_hInstance, IDS_DRIVE_CDROM, szBuffer, sizeof(szBuffer) / sizeof(WCHAR)))
+               SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, (WPARAM)0, (LPARAM)szBuffer);
+         }
       }
    }
    /* set drive description */
