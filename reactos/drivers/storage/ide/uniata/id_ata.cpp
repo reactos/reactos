@@ -4305,7 +4305,7 @@ continue_err:
         for (k = atapiDev ? 0 : 200; k; k--) {
             GetStatus(chan, statusByte);
             if (!(statusByte & IDE_STATUS_DRQ)) {
-                AtapiStallExecution(50);
+                AtapiStallExecution(100);
             } else {
                 break;
             }
@@ -6365,7 +6365,7 @@ make_reset:
         InterlockedExchange(&(chan->CheckIntr),
                                       CHECK_INTR_IDLE);
 
-        AtapiDisableInterrupts(deviceExtension, lChannel);
+        //AtapiDisableInterrupts(deviceExtension, lChannel);
 
         // Write ATAPI packet command.
         AtapiWritePort1(chan, IDX_IO1_o_Command, IDE_COMMAND_ATAPI_PACKET);
@@ -6400,7 +6400,7 @@ make_reset:
 
     GetBaseStatus(chan, statusByte);
 
-    AtapiEnableInterrupts(deviceExtension, lChannel);
+    //AtapiEnableInterrupts(deviceExtension, lChannel);
 
     WriteBuffer(chan,
                 (PUSHORT)Srb->Cdb,
