@@ -813,13 +813,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","Type",0x00010001,0x00000001
 
-; Atapi miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ImagePath",0x00020000,"system32\drivers\atapi.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Tag",0x00010001,0x00000010
+; UniATA/Atapi miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Group",0x00000000,"System Bus Extender"
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","ImagePath",0x00020000,"system32\drivers\uniata.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Tag",0x00010001,0x00000010
 
 ; Audio Service
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","DisplayName",0x00000000,"Audio Service"
