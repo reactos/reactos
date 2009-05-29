@@ -124,47 +124,43 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 {
-  if ( GdiHandleTable )
+  if ( !GdiHandleTable )
   {
-     PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-     if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
-       ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
-                                                                   GDI_HANDLE_GET_TYPE(hGdiObj))
-     {
-       HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-       if(pid == NULL || pid == CurrentProcessId)
-       {
-       //
-       // Need to test if we have Read & Write access to the VM address space.
-       //
-         BOOL Result = TRUE;
-         if(Entry->UserData)
+     // FIXME HAX!! Due to the "Dll Initialization Bug" set the local handle table pointer.
+     GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+  }
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
+  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
+    ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
+                                                                GDI_HANDLE_GET_TYPE(hGdiObj))
+  {
+    HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+    if(pid == NULL || pid == CurrentProcessId)
+    {
+    //
+    // Need to test if we have Read & Write access to the VM address space.
+    //
+      BOOL Result = TRUE;
+      if(Entry->UserData)
+      {
+         volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
+         _SEH2_TRY
          {
-            volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-            _SEH2_TRY
-            {
-              *Current = *Current;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-              Result = FALSE;
-            }
-            _SEH2_END
+           *Current = *Current;
          }
-         else
-            Result = FALSE; // Can not be zero.
-         if (Result) *UserData = Entry->UserData;
-         return Result;
-       }
-     }
-     SetLastError(ERROR_INVALID_PARAMETER);
-     return FALSE;
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+           Result = FALSE;
+         }
+         _SEH2_END
+      }
+      else
+         Result = FALSE; // Can not be zero.
+      if (Result) *UserData = Entry->UserData;
+      return Result;
+    }
   }
-  else
-  {
-    DPRINT1("!GGHUD: Warning System Initialization Error!!!! GdiHandleTable == 0x%x !!!\n",GdiHandleTable);
-    *UserData = NULL;
-  }
+  SetLastError(ERROR_INVALID_PARAMETER);
   return FALSE;
 }
 
@@ -172,43 +168,40 @@ PLDC
 FASTCALL
 GdiGetLDC(HDC hDC)
 {
-  if ( GdiHandleTable )
+  if ( !GdiHandleTable )
   {
-     PDC_ATTR Dc_Attr;
-     PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
-     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
-     // Don't check the mask, just the object type.
-     if ( Entry->ObjectType == GDIObjType_DC_TYPE &&
-          (pid == NULL || pid == CurrentProcessId) )
-     {
-        BOOL Result = TRUE;
-        if (Entry->UserData)
-        {
-           volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
-           _SEH2_TRY
-           {
-             *Current = *Current;
-           }
-           _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-           {
-             Result = FALSE;
-           }
-           _SEH2_END
-        }
-        else
-           Result = FALSE;
-
-        if (Result)
-        {
-           Dc_Attr = (PDC_ATTR)Entry->UserData;
-           return Dc_Attr->pvLDC;
-        }
-     }
-     return NULL;
+     // FIXME HAX!! Due to the "Dll Initialization Bug" set the local handle table pointer.
+     GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
   }
-  else
+  PDC_ATTR Dc_Attr;
+  PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
+  HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
+  // Don't check the mask, just the object type.
+  if ( Entry->ObjectType == GDIObjType_DC_TYPE &&
+       (pid == NULL || pid == CurrentProcessId) )
   {
-     DPRINT1("!LDC: Warning System Initialization Error!!!! GdiHandleTable == 0x%x !!!\n",GdiHandleTable);
+     BOOL Result = TRUE;
+     if (Entry->UserData)
+     {
+        volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
+        _SEH2_TRY
+        {
+          *Current = *Current;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+          Result = FALSE;
+        }
+        _SEH2_END
+     }
+     else
+        Result = FALSE;
+
+     if (Result)
+     {
+        Dc_Attr = (PDC_ATTR)Entry->UserData;
+        return Dc_Attr->pvLDC;
+     }
   }
   return NULL;
 }
