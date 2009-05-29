@@ -169,7 +169,7 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint pentru ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS este disponibil sub licenþa GNU Lesser General Public versiunea 3 (vedeþi www.gnu.org)"
+    IDS_INFOTEXT, "Paint pentru ReactOS este disponibil sub licenþa GNU Lesser General Public versiunea 3 (vedeþi www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Vreþi sã salvaþi schimbãrile la %s?"
     IDS_DEFAULTFILENAME, "FãrãNume.bmp"
     IDS_TOOLTIP1, "Golire selecþie"

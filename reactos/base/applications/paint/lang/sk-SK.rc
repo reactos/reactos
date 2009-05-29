@@ -1,7 +1,7 @@
 /*
  * Slovak Language resource file
  * Translated by: M·rio KaËm·r /Mario Kacmar/ aka Kario
- * Last changed:  28-04-2009
+ * Last changed:  27-05-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -43,7 +43,7 @@ BEGIN
         MENUITEM "Panel n·strojov\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
         MENUITEM "Paleta farieb\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
         MENUITEM "Stavov˝ riadok", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Format icon bar", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "Panel pÌsma", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
         POPUP "Lupa" //Zoom
         BEGIN
@@ -129,8 +129,8 @@ BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
     LTEXT "äÌrka:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
     LTEXT "V˝öka:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
-    LTEXT "File date:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "File size:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "D·tum zmeny:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10 //File date
+    LTEXT "Veækosù s˙boru:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10 //File size
     LTEXT "RozlÌöenie:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
     LTEXT "Nie je k dispozÌcii", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
@@ -189,6 +189,6 @@ BEGIN
     IDS_TOOLTIP14, "PolygÛn" //mnohouholnÌk
     IDS_TOOLTIP15, "Elipsa"
     IDS_TOOLTIP16, "Zaoblen˝ obdÂûnik"
-    IDS_OPENFILTER, "Bitmap files (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_OPENFILTER, "S˙bory bitov˝ch m·p (*.bmp;*.dib)\1*.bmp;*.dib\1Vöetky s˙bory (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "24-bitov· mapa (*.bmp;*.dib)\1*.bmp;*.dib\1"
 END

@@ -1,0 +1,104 @@
+/*
+ * PROJECT:     ReactOS Event Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/mscutils/eventvwr/lang/en-US.rc
+ * PURPOSE:     Romanian Language File for ReactOS Event Viewer
+ * TRANSLATORS: Dimitriu Petru
+ */
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDC_EVENTVWR MENU
+BEGIN
+	POPUP "&Jurnal"
+	BEGIN
+		MENUITEM "&Aplicaþii",              ID_LOG_APPLICATION
+		MENUITEM "&Securitate",                 ID_LOG_SECURITY
+		MENUITEM "&Sistem",                   ID_LOG_SYSTEM
+		MENUITEM SEPARATOR
+		MENUITEM "I&eºire",                     IDM_EXIT
+	END
+	POPUP "&Vizualizare"
+	BEGIN
+		MENUITEM "&Reîmprospãtare",                  IDM_REFRESH
+	END
+	MENUITEM "&Opþiuni",                    ID_OPTIONS
+	POPUP "&Ajutor"
+	BEGIN
+		MENUITEM "A&jutor",                     IDM_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "&Despre...",                 IDM_ABOUT
+	END
+END
+
+IDC_EVENTVWR ACCELERATORS
+BEGIN
+	"?",            IDM_ABOUT,              ASCII,  ALT
+	"/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
+	LTEXT           "Vizualizator de Evenimente ReactOS Versiunea 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "Drept de autor (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
+	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
+END
+
+IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER
+CAPTION "Aºteptaþi.."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	CTEXT           "Încãrcare evenimente...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
+END
+
+IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Detalii eveniment"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+	DEFPUSHBUTTON   "&Închidere",IDOK,12,258,50,14
+	PUSHBUTTON      "&Precedent",IDPREVIOUS,78,258,50,14
+	PUSHBUTTON      "&Urmãtor",IDNEXT,144,258,50,14
+	PUSHBUTTON      "&Ajutor",IDHELP,210,258,50,14
+	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
+	LTEXT           "&Descriere:",IDC_STATIC,15,70,39,8
+	LTEXT           "Datã:",IDC_STATIC,14,14,36,8
+	LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
+	LTEXT           "Orã:",IDC_STATIC,14,27,36,8
+	LTEXT           "Static",IDC_EVENTTIMESTATIC,56,27,72,8
+	LTEXT           "&Utilizator:",IDC_STATIC,14,41,36,8
+	LTEXT           "Static",IDC_EVENTUSERSTATIC,56,41,72,8
+	LTEXT           "&Computer:",IDC_STATIC,14,54,36,8
+	LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
+	LTEXT           "EventID:",IDC_STATIC,133,15,36,8
+	LTEXT           "Static",IDC_EVENTIDSTATIC,175,15,87,8
+	LTEXT           "Sursã:",IDC_STATIC,133,28,36,8
+	LTEXT           "Static",IDC_EVENTSOURCESTATIC,175,28,87,8
+	LTEXT           "Tip:",IDC_STATIC,133,42,36,8
+	LTEXT           "Static",IDC_EVENTTYPESTATIC,175,42,87,8
+	LTEXT           "Categorie:",IDC_STATIC,133,55,36,8
+	LTEXT           "Static",IDC_EVENTCATEGORYSTATIC,175,55,87,8
+	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
+	LTEXT           "D&ate",IDC_STATIC,14,194,20,8
+	CONTROL         "&Octeþi",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,34,10
+	CONTROL         "&Cuvânt",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
+END
+
+STRINGTABLE
+BEGIN
+	IDS_APP_TITLE                  "Vizualizator evenimente"
+	IDC_EVENTSTRINGIDNOTFOUND      "Descrierea pentru ID-ul de eveniment ( %lu ) în sursa ( %s ) nu poate fi gãsitã. Computerul local este posibil sã nu aibã informaþiile sau fiºierele DLL pentru a afiºa mesajele de pe un computer la distanþã."
+	IDC_EVENTLOG_ERROR_TYPE        "Eroare"
+	IDC_EVENTLOG_WARNING_TYPE      "Avertisment"
+	IDC_EVENTLOG_INFORMATION_TYPE  "Informaþie"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Succes audit"
+	IDC_EVENTLOG_AUDIT_FAILURE     "Eºec audit"
+	IDC_EVENTLOG_SUCCESS           "Succes"
+	IDC_EVENTLOG_UNKNOWN_TYPE      "Eveniment necunoscut"
+END
