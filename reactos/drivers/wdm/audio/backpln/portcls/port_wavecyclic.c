@@ -242,7 +242,7 @@ IPortWaveCyclic_fnAddRef(
     IPortWaveCyclic* iface)
 {
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
-
+    DPRINT("IPortWaveCyclic_fnAddRef %u entered\n", This->ref);
     return InterlockedIncrement(&This->ref);
 }
 
@@ -254,13 +254,10 @@ IPortWaveCyclic_fnRelease(
     IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)iface;
 
     InterlockedDecrement(&This->ref);
+    DPRINT("IPortWaveCyclic_fnRelease %u entered\n", This->ref);
 
     if (This->ref == 0)
     {
-        if (This->bInitialized)
-        {
-            This->pMiniport->lpVtbl->Release(This->pMiniport);
-        }
         if (This->pPinCount)
             This->pPinCount->lpVtbl->Release(This->pPinCount);
 

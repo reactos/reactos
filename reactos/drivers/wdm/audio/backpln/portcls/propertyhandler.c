@@ -198,6 +198,9 @@ PinPropertyHandler(
     /* Release reference */
     Port->lpVtbl->Release(Port);
 
+    /* Release subdevice reference */
+    SubDevice->lpVtbl->Release(SubDevice);
+
     return Status;
 }
 

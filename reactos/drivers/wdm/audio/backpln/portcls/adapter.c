@@ -54,6 +54,7 @@ PcInitializeAdapterDriver(
     DriverObject->MajorFunction[IRP_MJ_PNP] = PcDispatchIrp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = PcDispatchIrp;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = PcDispatchIrp;
+    DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = PcDispatchIrp;
 
     /* The driver-supplied AddDevice */
     DriverObject->DriverExtension->AddDevice = AddDevice;
@@ -181,6 +182,10 @@ PcAddAdapterDevice(
         status = STATUS_UNSUCCESSFUL;
         goto cleanup;
     }
+
+    /* register shutdown notification */
+    IoRegisterShutdownNotification(PhysicalDeviceObject);
+
     return status;
 
 cleanup:
@@ -223,6 +228,7 @@ PcRegisterSubdevice(
     UNICODE_STRING SymbolicLinkName;
     SUBDEVICE_DESCRIPTOR * SubDeviceDescriptor;
     ULONG Index;
+    UNICODE_STRING RefName;
 
     DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
@@ -272,18 +278,17 @@ PcRegisterSubdevice(
         return Status;
     }
 
-    /* increment reference count */
-    SubDevice->lpVtbl->AddRef(SubDevice);
+    /* initialize reference string */
+    RtlInitUnicodeString(&RefName, Name);
 
     for(Index = 0; Index < SubDeviceDescriptor->InterfaceCount; Index++)
     {
-        //FIXME
-        // Use a reference string such as Wave0001 / Topology0001
-        //
-
+        /* FIXME
+         * check if reference string with that name already exists
+         */
         Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
                                            &SubDeviceDescriptor->Interfaces[Index],
-                                           NULL,
+                                           &RefName,
                                            &SymbolicLinkName);
         if (NT_SUCCESS(Status))
         {
@@ -291,6 +296,9 @@ PcRegisterSubdevice(
             RtlFreeUnicodeString(&SymbolicLinkName);
         }
     }
+
+    /* Release SubDevice reference */
+    SubDevice->lpVtbl->Release(SubDevice);
 
     return STATUS_SUCCESS;
 }

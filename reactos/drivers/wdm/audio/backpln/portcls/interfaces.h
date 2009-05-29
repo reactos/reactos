@@ -532,6 +532,8 @@ typedef IPortPinWaveRT *PPORTPINWAVERT;
 #undef INTERFACE
 #define INTERFACE IPortFilterWaveCyclic
 
+struct IPortPinWaveCyclic;
+
 DECLARE_INTERFACE_(IPortFilterWaveCyclic, IIrpTarget)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -540,6 +542,9 @@ DECLARE_INTERFACE_(IPortFilterWaveCyclic, IIrpTarget)
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
         IN PPORTWAVECYCLIC Port)PURE;
+
+    STDMETHOD_(NTSTATUS, FreePin)(THIS_
+        IN struct IPortPinWaveCyclic* Pin)PURE;
 };
 
 typedef IPortFilterWaveCyclic *PPORTFILTERWAVECYCLIC;

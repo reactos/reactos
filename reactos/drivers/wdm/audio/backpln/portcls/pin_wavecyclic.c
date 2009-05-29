@@ -732,6 +732,7 @@ CloseStreamRoutine(
     {
         Stream = This->Stream;
         This->Stream = NULL;
+        This->Filter->lpVtbl->FreePin(This->Filter, (IPortPinWaveCyclic*)This);
         DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->lpVtbl->Release(Stream);
         /* this line is never reached */
@@ -1064,7 +1065,7 @@ IPortPinWaveCyclic_fnInit(
 
     //This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
 	DPRINT1("Setting state to acquire %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_ACQUIRE));
-	DPRINT1("Setting state to run %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
+	DPRINT1("Setting state to pause %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
     This->State = KSSTATE_PAUSE;
 
 

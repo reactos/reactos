@@ -236,16 +236,20 @@ IPortFilterWaveCyclic_fnClose(
     IN PIRP Irp)
 {
     ULONG Index;
+    PMINIPORTWAVECYCLIC Miniport;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
     for(Index = 0; Index < This->Descriptor->Factory.PinDescriptorCount; Index++)
     {
-        if (This->Pins[Index])
-        {
-            This->Pins[Index]->lpVtbl->Close(This->Pins[Index], DeviceObject, NULL);
-        }
-
+        /* all pins should have been closed by now */
+        ASSERT(This->Pins[Index] == NULL);
     }
+
+    /* release reference to port */
+    This->Port->lpVtbl->Release(This->Port);
+
+    Miniport = GetWaveCyclicMiniport(This->Port);
+    Miniport->lpVtbl->Release(Miniport);
 
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -388,6 +392,29 @@ IPortFilterWaveCyclic_fnInit(
     return STATUS_SUCCESS;
 }
 
+
+static
+NTSTATUS
+NTAPI
+IPortFilterWaveCyclic_fnFreePin(
+    IN IPortFilterWaveCyclic* iface,
+    IN struct IPortPinWaveCyclic* Pin)
+{
+    ULONG Index;
+    IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl*)iface;
+
+    for(Index = 0; Index < This->Descriptor->Factory.PinDescriptorCount; Index++)
+    {
+        if (This->Pins[Index] == Pin)
+        {
+            This->Pins[Index]->lpVtbl->Release(This->Pins[Index]);
+            This->Pins[Index] = NULL;
+            return STATUS_SUCCESS;
+        }
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
 static IPortFilterWaveCyclicVtbl vt_IPortFilterWaveCyclic =
 {
     IPortFilterWaveCyclic_fnQueryInterface,
@@ -404,7 +431,8 @@ static IPortFilterWaveCyclicVtbl vt_IPortFilterWaveCyclic =
     IPortFilterWaveCyclic_fnFastDeviceIoControl,
     IPortFilterWaveCyclic_fnFastRead,
     IPortFilterWaveCyclic_fnFastWrite,
-    IPortFilterWaveCyclic_fnInit
+    IPortFilterWaveCyclic_fnInit,
+    IPortFilterWaveCyclic_fnFreePin
 };
 
 NTSTATUS 

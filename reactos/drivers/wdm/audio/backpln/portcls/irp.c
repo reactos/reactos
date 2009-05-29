@@ -151,7 +151,7 @@ PortClsPnp(
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return STATUS_NOT_SUPPORTED;
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
-            DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS Status %x Information %p\n", Irp->IoStatus.Status, Irp->IoStatus.Information);
+            DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS Status %x Information %p Information2 %p\n", Irp->IoStatus.Status, Irp->IoStatus.Information, IoStack->Parameters.FilterResourceRequirements.IoResourceRequirementList);
             Status = Irp->IoStatus.Status;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
             return Status;
@@ -210,6 +210,25 @@ PortClsSysControl(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+PortClsShutdown(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    DPRINT("PortClsShutdown called\n");
+    //DbgBreakPoint();
+
+    /* TODO */
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
+}
+
+
 
 /*
     ==========================================================================
@@ -252,6 +271,9 @@ PcDispatchIrp(
 
         case IRP_MJ_SYSTEM_CONTROL :
             return PortClsSysControl(DeviceObject, Irp);
+
+        case IRP_MJ_SHUTDOWN:
+            return PortClsShutdown(DeviceObject, Irp);
 
         default:
             DPRINT1("Unhandled function %x\n", IoStack->MajorFunction);
