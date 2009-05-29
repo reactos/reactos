@@ -91,7 +91,7 @@ void insertReversible(HBITMAP hbm)
     setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
 }
 
-void cropReversible(int x, int y)
+void cropReversible(int x, int y)//FIXME: This function is broken
 {
     SelectObject(hDrawingDC, hBms[currInd]);
     DeleteObject(hBms[(currInd+1)%4]);

@@ -16,6 +16,7 @@
 	<file>main.c</file>
 	<file>mouse.c</file>
 	<file>palette.c</file>
+	<file>registry.c</file>
 	<file>selection.c</file>
 	<file>toolsettings.c</file>
 	<file>winproc.c</file>

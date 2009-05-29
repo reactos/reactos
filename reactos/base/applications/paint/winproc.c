@@ -21,6 +21,7 @@
 #include "drawing.h"
 #include "history.h"
 #include "mouse.h"
+#include "registry.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -87,7 +88,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             switch (lParam)
             {
                 case 0:
-                    if (FALSE)
+                    if (isAFile)
                     {
                         EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERPLANE, MF_ENABLED | MF_BYCOMMAND);
                         EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERCENTERED, MF_ENABLED | MF_BYCOMMAND);
@@ -421,6 +422,15 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         isAFile = TRUE;
                     }
                     break;
+                case IDM_FILEASWALLPAPERPLANE:
+                    setWallpaper(filepathname, 2);
+                    break;
+                case IDM_FILEASWALLPAPERCENTERED:
+                    setWallpaper(filepathname, 1);
+                    break;
+                case IDM_FILEASWALLPAPERSTRETCHED:
+                    setWallpaper(filepathname, 0);
+                    break;
                 case IDM_EDITUNDO:
                     undo();
                     SendMessage(hImageArea, WM_PAINT, 0, 0);
@@ -507,10 +517,14 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_IMAGEATTRIBUTES:
                     {
-                        //int attrdata[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-                        attributesDlg();
-                        //cropReversible(640, 200);
-                        //ZoomTo(zoom);
+                        int retVal = attributesDlg();
+                        if ((LOWORD(retVal)!=0)&&(HIWORD(retVal)!=0))
+                        {
+                            // cropReversible broken, dirty hack:
+                            // insertReversible(CopyImage(hBms[currInd], IMAGE_BITMAP, LOWORD(retVal), HIWORD(retVal), 0));
+                            cropReversible(LOWORD(retVal), HIWORD(retVal));
+                            updateCanvasAndScrollbars();
+                        }
                     }
                     break;
                 case IDM_IMAGECHANGESIZE:
