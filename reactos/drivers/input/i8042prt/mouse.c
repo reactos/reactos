@@ -512,8 +512,16 @@ cleanup:
 		}
 		case IOCTL_MOUSE_QUERY_ATTRIBUTES:
 		{
-			DPRINT1("IOCTL_MOUSE_QUERY_ATTRIBUTES not implemented\n");
-			Status = STATUS_NOT_IMPLEMENTED;
+			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_MOUSE_QUERY_ATTRIBUTES\n");
+			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUSE_ATTRIBUTES))
+			{
+				Status = STATUS_BUFFER_TOO_SMALL;
+				break;
+			}
+
+			*(PMOUSE_ATTRIBUTES) Irp->AssociatedIrp.SystemBuffer = DeviceExtension->MouseAttributes;
+			Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
+			Status = STATUS_SUCCESS;
 			break;
 		}
 		default:
