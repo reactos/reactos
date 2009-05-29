@@ -140,8 +140,8 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       {
          /* Set flag and convert to screen location */
          mi.dwFlags |= MOUSEEVENTF_ABSOLUTE;
-         mi.dx = mi.dx / (65535 / UserGetSystemMetrics(SM_CXVIRTUALSCREEN));
-         mi.dy = mi.dy / (65535 / UserGetSystemMetrics(SM_CYVIRTUALSCREEN));
+         mi.dx = mi.dx / (65535 / (UserGetSystemMetrics(SM_CXVIRTUALSCREEN) - 1));
+         mi.dy = mi.dy / (65535 / (UserGetSystemMetrics(SM_CYVIRTUALSCREEN) - 1));
       }
 
       if(mid->ButtonFlags)
