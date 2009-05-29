@@ -636,6 +636,20 @@ cleanup:
 		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
 		{
 			DPRINT1("IOCTL_KEYBOARD_QUERY_ATTRIBUTES not implemented\n");
+#if 0
+            /* FIXME: KeyboardAttributes are not initialized anywhere */
+			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
+			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_ATTRIBUTES))
+			{
+				Status = STATUS_BUFFER_TOO_SMALL;
+				break;
+			}
+
+			*(PKEYBOARD_ATTRIBUTES) Irp->AssociatedIrp.SystemBuffer = DeviceExtension->KeyboardAttributes;
+			Irp->IoStatus.Information = sizeof(KEYBOARD_ATTRIBUTES);
+			Status = STATUS_SUCCESS;
+			break;
+#endif
 			Status = STATUS_NOT_IMPLEMENTED;
 			break;
 		}
