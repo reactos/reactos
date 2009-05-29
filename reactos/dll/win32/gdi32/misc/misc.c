@@ -124,11 +124,6 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 {
-  if ( !GdiHandleTable )
-  {
-     // FIXME HAX!! Due to the "Dll Initialization Bug" set the local handle table pointer.
-     GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-  }
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
   if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
     ( (Entry->Type << GDI_ENTRY_UPPER_SHIFT) & GDI_HANDLE_TYPE_MASK ) == 
@@ -168,11 +163,6 @@ PLDC
 FASTCALL
 GdiGetLDC(HDC hDC)
 {
-  if ( !GdiHandleTable )
-  {
-     // FIXME HAX!! Due to the "Dll Initialization Bug" set the local handle table pointer.
-     GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-  }
   PDC_ATTR Dc_Attr;
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX((HGDIOBJ) hDC);
   HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
