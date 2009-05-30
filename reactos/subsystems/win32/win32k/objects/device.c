@@ -1202,7 +1202,7 @@ IntChangeDisplaySettings(
     BOOLEAN NoReset = FALSE;
     BOOLEAN Reset = FALSE;
     BOOLEAN SetPrimary = FALSE;
-    LONG Ret=0;
+    LONG Ret = DISP_CHANGE_SUCCESSFUL;
     NTSTATUS Status ;
 
     DPRINT1("display flags : %x\n",dwflags);
@@ -1230,14 +1230,17 @@ IntChangeDisplaySettings(
         /* Dynamically change graphics mode */
         DPRINT1("flag 0 UNIMPLEMENTED\n");
         return DISP_CHANGE_FAILED;
+        SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
     }
 
     if ((dwflags & CDS_TEST) == CDS_TEST)
     {
-        /* Test reslution */
+        /* Test resolution */
         dwflags &= ~CDS_TEST;
-        DPRINT1("flag CDS_TEST UNIMPLEMENTED\n");
-        Ret = DISP_CHANGE_FAILED;
+        Status = IntEnumDisplaySettings(pDeviceName, ENUM_REGISTRY_SETTINGS, DevMode, 0);
+        if (!NT_SUCCESS(Status))
+            Ret = DISP_CHANGE_BADMODE;
+        return Ret;
     }
 
     if ((dwflags & CDS_FULLSCREEN) == CDS_FULLSCREEN)
@@ -1274,6 +1277,7 @@ IntChangeDisplaySettings(
         {
             DPRINT1("flag CDS_VIDEOPARAMETERS UNIMPLEMENTED\n");
             Ret = DISP_CHANGE_FAILED;
+            SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
         }
 
     }
@@ -1387,6 +1391,7 @@ IntChangeDisplaySettings(
     if (dwflags != 0)
         Ret = DISP_CHANGE_BADFLAGS;
 
+    DPRINT("IntChangeDisplaySettings returning %x\n", Ret);
     return Ret;
 }
 
