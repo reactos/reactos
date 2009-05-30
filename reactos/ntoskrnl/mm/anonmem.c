@@ -949,11 +949,13 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
  */
 {
    MEMORY_AREA* MemoryArea;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    PEPROCESS Process;
    PMMSUPPORT AddressSpace;
    PVOID BaseAddress;
    ULONG RegionSize;
+
+   PAGED_CODE();
 
    DPRINT("NtFreeVirtualMemory(ProcessHandle %x, *PBaseAddress %x, "
           "*PRegionSize %x, FreeType %x)\n",ProcessHandle,*PBaseAddress,
@@ -963,6 +965,23 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
     {
         DPRINT1("Invalid FreeType\n");
         return STATUS_INVALID_PARAMETER_4;
+    }
+
+    if(ExGetPreviousMode() != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            /* Probe user pointers */
+            ProbeForWriteSize_t(PRegionSize);
+            ProbeForWritePointer(PBaseAddress);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Get exception code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
