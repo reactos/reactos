@@ -74,6 +74,7 @@ NdisCompleteUnbindAdapter@8
 NdisConvertStringToAtmAddress@12
 NdisCopyBuffer@24
 NdisCopyFromPacketToPacket@24
+NdisCopyFromPacketToPacketSafe@28
 NdisDeregisterAdapter@4
 NdisDeregisterAdapterShutdownHandler@4
 NdisDeregisterMac@8
