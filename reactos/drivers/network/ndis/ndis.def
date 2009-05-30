@@ -100,6 +100,9 @@ NdisGetCurrentProcessorCpuUsage@4
 NdisGetCurrentSystemTime@4
 NdisGetDriverHandle@8
 NdisGetFirstBufferFromPacket@20
+NdisGetFirstBufferFromPacketSafe@24
+NdisGetPacketCancelId@4
+NdisGetPoolFromPacket@4
 NdisGetReceivedPacket@8
 NdisGetSystemUpTime@4
 NdisIMAssociateMiniport@8
@@ -220,6 +223,7 @@ NdisOpenFile@24
 NdisOpenProtocolConfiguration@12
 ;NdisOverrideBusNumber ?
 NdisPacketPoolUsage@4
+NdisPacketSize@4
 NdisPciAssignResources@20
 NdisQueryAdapterInstanceName@8
 ;NdisQueryBindInstanceName?
@@ -249,6 +253,7 @@ NdisReturnPackets@8
 NdisSend@12
 NdisSendPackets@12
 NdisSetEvent@4
+NdisSetPacketCancelId@8
 ;NdisSetPacketPoolProtocolId ?
 ;NdisSetProtocolFilter ?
 NdisSetTimer@8
