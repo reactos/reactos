@@ -513,8 +513,8 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
     {
         Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
                               &FileName,
-                              0,
-                              0,
+                              1,
+                              1,
                               &LogHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -593,8 +593,8 @@ OpenEventLogW(IN LPCWSTR lpUNCServerName,
         Status = ElfrOpenELW((LPWSTR)lpUNCServerName,
                              &SourceName,
                              &EmptyString,
-                             0,
-                             0,
+                             1,
+                             1,
                              &LogHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -799,8 +799,8 @@ RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
         Status = ElfrRegisterEventSourceW((LPWSTR)lpUNCServerName,
                                           &SourceName,
                                           &EmptyString,
-                                          0,
-                                          0,
+                                          1,
+                                          1,
                                           &LogHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -938,7 +938,7 @@ ReportEventW(IN HANDLE hEventLog,
         RtlInitUnicodeString(&Strings[i], lpStrings[i]);
 
     /*FIXME: ComputerName */
-    RtlInitEmptyUnicodeString(&ComputerName, L"", 0);
+    RtlInitUnicodeString(&ComputerName, L"");
 
     RpcTryExcept
     {
