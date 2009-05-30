@@ -226,7 +226,7 @@ NdisPacketPoolUsage@4
 NdisPacketSize@4
 NdisPciAssignResources@20
 NdisQueryAdapterInstanceName@8
-;NdisQueryBindInstanceName?
+NdisQueryBindInstanceName@8
 NdisQueryBuffer@12
 NdisQueryBufferOffset@12
 NdisQueryBufferSafe@16
@@ -254,7 +254,7 @@ NdisSend@12
 NdisSendPackets@12
 NdisSetEvent@4
 NdisSetPacketCancelId@8
-;NdisSetPacketPoolProtocolId ?
+NdisSetPacketPoolProtocolId@8
 ;NdisSetProtocolFilter ?
 NdisSetTimer@8
 NdisSetupDmaTransfer@24

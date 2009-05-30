@@ -13,6 +13,32 @@
 /*
  * @unimplemented
  */
+NDIS_STATUS
+EXPORT
+NdisQueryBindInstanceName(
+    OUT PNDIS_STRING  pAdapterInstanceName,
+    IN NDIS_HANDLE  BindingContext)
+{
+    UNIMPLEMENTED
+
+    return NDIS_STATUS_FAILURE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisSetPacketPoolProtocolId(
+    IN NDIS_HANDLE  PacketPoolHandle,
+    IN UINT  ProtocolId)
+{
+    UNIMPLEMENTED
+}
+
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisCompleteQueryStatistics(
