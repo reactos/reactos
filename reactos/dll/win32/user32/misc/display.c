@@ -493,7 +493,10 @@ ChangeDisplaySettingsA(
   LPDEVMODEA lpDevMode,
   DWORD dwflags)
 {
-  return ChangeDisplaySettingsExA ( NULL, lpDevMode, NULL, dwflags, 0 );
+  LONG Status = ChangeDisplaySettingsExA ( NULL, lpDevMode, NULL, dwflags, 0 );
+  if(lpDevMode)
+    lpDevMode->dmDriverExtra = 0;
+  return Status;
 }
 
 
@@ -533,5 +536,8 @@ ChangeDisplaySettingsW(
   LPDEVMODEW lpDevMode,
   DWORD dwflags)
 {
-  return ChangeDisplaySettingsExW ( NULL, lpDevMode, NULL, dwflags, 0 );
+  LONG Status = ChangeDisplaySettingsExW ( NULL, lpDevMode, NULL, dwflags, 0 );
+  if(lpDevMode)
+    lpDevMode->dmDriverExtra = 0; 
+  return Status;
 }
