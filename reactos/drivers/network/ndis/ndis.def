@@ -257,6 +257,7 @@ NdisSetPacketCancelId@8
 NdisSetPacketPoolProtocolId@8
 ;NdisSetProtocolFilter ?
 NdisSetTimer@8
+NdisSetTimerEx@12
 NdisSetupDmaTransfer@24
 NdisSystemProcessorCount@0
 NdisTerminateWrapper@8
