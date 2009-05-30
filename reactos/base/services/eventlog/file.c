@@ -716,7 +716,7 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
         /* Determine how many records need to be overwritten */
         while (TRUE)
         {
-            DPRINT1("EventLogFile has reached maximume size\n");
+            DPRINT("EventLogFile has reached maximume size\n");
 
             if (!RecBuf)
             {
@@ -762,13 +762,9 @@ BOOL LogfWriteData(PLOGFILE LogFile, DWORD BufSize, PBYTE Buffer)
             /* Check the size of the record as the record adding may be larger */
             if (OverWriteLength >= BufSize)
             {
-                DPRINT1("Record will fit. Lenght %d, BufSize %d\n", OverWriteLength, BufSize);
+                DPRINT("Record will fit. Lenght %d, BufSize %d\n", OverWriteLength, BufSize);
                 LogFile->Header.StartOffset = LogfOffsetByNumber(LogFile, LogFile->Header.OldestRecordNumber);
                 break;
-            }
-            else
-            {
-                DPRINT1("Record wont fit\n");
             }
         }
         HeapFree(GetProcessHeap(), 0, RecBuf);
