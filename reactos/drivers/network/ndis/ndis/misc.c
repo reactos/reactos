@@ -20,6 +20,58 @@ NdisInterlockedAddUlong (
    ExInterlockedAddUlong ( Addend, Increment, &SpinLock->SpinLock );
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisInterlockedAddLargeInteger(
+    IN PLARGE_INTEGER Addend,
+    IN LARGE_INTEGER Increment,
+    IN PNDIS_SPIN_LOCK SpinLock)
+{
+    /* This needs to be verified. The documentation
+     * seems to be missing but it is exported by
+     * NDIS 5.1 so I'm implementing it like the other
+     * interlocked routines
+     */
+
+    ExInterlockedAddLargeInteger(Addend, Increment, &SpinLock->SpinLock);
+}
+
+/*
+ * @implemented
+ */
+LONG
+EXPORT
+NdisCompareAnsiString(
+    IN PNDIS_ANSI_STRING String1,
+    IN PNDIS_ANSI_STRING String2,
+    BOOLEAN CaseInSensitive)
+{
+    /* This one needs to be verified also. See the
+     * comment in NdisInterlockedAddLargeInteger
+     */
+
+    return RtlCompareString(String1, String2, CaseInSensitive);
+}
+
+/*
+ * @implemented
+ */
+LONG
+EXPORT
+NdisCompareUnicodeString(
+    IN PNDIS_STRING String1,
+    IN PNDIS_STRING String2,
+    IN BOOLEAN CaseInSensitive)
+{
+    /* This one needs to be verified also. See the
+     * comment in NdisInterlockedAddLargeInteger
+     */
+
+    return RtlCompareUnicodeString(String1, String2, CaseInSensitive);
+}
 
 /*
  * @implemented
@@ -34,7 +86,6 @@ NdisInterlockedInsertHeadList(
 {
   return ExInterlockedInsertHeadList ( ListHead, ListEntry, &SpinLock->SpinLock );
 }
-
 
 /*
  * @implemented

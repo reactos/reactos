@@ -67,8 +67,8 @@ NdisCoGetTapiCallId@8
 NdisCoRequest@20
 NdisCoRequestComplete@20
 NdisCoSendPackets@12
-;NdisCompareAnsiString ?
-;NdisCompareUnicodeString ?
+NdisCompareAnsiString@12
+NdisCompareUnicodeString@12
 NdisCompleteBindAdapter@12
 NdisCompleteCloseAdapter@8
 NdisCompleteDmaTransfer@24
@@ -150,7 +150,7 @@ NdisInitializeString@8
 NdisInitializeTimer@12
 NdisInitializeWrapper@16
 NdisInitUnicodeString@8
-;NdisInterlockedAddLargeInterger ?
+NdisInterlockedAddLargeInteger@16
 NdisInterlockedAddUlong@12
 NdisInterlockedDecrement@4
 NdisInterlockedIncrement@4
