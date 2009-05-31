@@ -1874,29 +1874,26 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL *ppSacl,
                       PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
-    UNICODE_STRING ObjectName;
-    NTSTATUS Status;
-    DWORD Ret;
+    DWORD len;
+    LPWSTR wstr = NULL;
+    DWORD r;
 
-    Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
-                                              pObjectName);
-    if (!NT_SUCCESS(Status))
+    TRACE("%s %d %d %p %p %p %p %p\n", pObjectName, ObjectType, SecurityInfo,
+        ppsidOwner, ppsidGroup, ppDacl, ppSacl, ppSecurityDescriptor);
+
+    if( pObjectName )
     {
-        return RtlNtStatusToDosError(Status);
+        len = MultiByteToWideChar( CP_ACP, 0, pObjectName, -1, NULL, 0 );
+        wstr = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR));
+        MultiByteToWideChar( CP_ACP, 0, pObjectName, -1, wstr, len );
     }
 
-    Ret = GetNamedSecurityInfoW(ObjectName.Buffer,
-                                ObjectType,
-                                SecurityInfo,
-                                ppsidOwner,
-                                ppsidGroup,
-                                ppDacl,
-                                ppSacl,
-                                ppSecurityDescriptor);
+    r = GetNamedSecurityInfoW( wstr, ObjectType, SecurityInfo, ppsidOwner,
+                           ppsidGroup, ppDacl, ppSacl, ppSecurityDescriptor );
 
-    RtlFreeUnicodeString(&ObjectName);
+    HeapFree( GetProcessHeap(), 0, wstr );
 
-    return Ret;
+    return r;
 }
 
 
