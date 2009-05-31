@@ -1295,13 +1295,14 @@ PdoPnpControl(
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
 
   switch (IrpSp->MinorFunction) {
-#if 0
+
   case IRP_MN_DEVICE_USAGE_NOTIFICATION:
+        DPRINT("Unimplemented IRP_MN_DEVICE_USAGE_NOTIFICATION received\n");
     break;
 
   case IRP_MN_EJECT:
+        DPRINT("Unimplemented IRP_MN_EJECT received\n");
     break;
-#endif
 
   case IRP_MN_QUERY_BUS_INFORMATION:
     Status = PdoQueryBusInformation(DeviceObject, Irp, IrpSp);
@@ -1311,11 +1312,10 @@ PdoPnpControl(
     Status = PdoQueryCapabilities(DeviceObject, Irp, IrpSp);
     break;
 
-#if 0
   case IRP_MN_QUERY_DEVICE_RELATIONS:
     /* FIXME: Possibly handle for RemovalRelations */
+    DPRINT("Unimplemented IRP_MN_QUERY_DEVICE_RELATIONS received\n");
     break;
-#endif
 
   case IRP_MN_QUERY_DEVICE_TEXT:
     DPRINT("IRP_MN_QUERY_DEVICE_TEXT received\n");
@@ -1327,10 +1327,9 @@ PdoPnpControl(
     Status = PdoQueryId(DeviceObject, Irp, IrpSp);
     break;
 
-#if 0
   case IRP_MN_QUERY_PNP_DEVICE_STATE:
+    DPRINT("Unimplemented IRP_MN_QUERY_ID received\n");
     break;
-#endif
 
   case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
     DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS received\n");
@@ -1342,10 +1341,9 @@ PdoPnpControl(
     Status = PdoQueryResources(DeviceObject, Irp, IrpSp);
     break;
 
-#if 0
   case IRP_MN_SET_LOCK:
+    DPRINT("Unimplemented IRP_MN_SET_LOCK received\n");
     break;
-#endif
 
   case IRP_MN_START_DEVICE:
   case IRP_MN_QUERY_STOP_DEVICE:
