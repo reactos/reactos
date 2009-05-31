@@ -148,9 +148,9 @@ UINT
 EXPORT
 NdisGetVersion(VOID)
 {
-    NDIS_DbgPrint(MAX_TRACE, ("NdisGetVersion() has returned 5.0\n"));
+    NDIS_DbgPrint(MAX_TRACE, ("NdisGetVersion() has returned 5.1\n"));
 
-    return (UINT) 0x5;
+    return (UINT) 0x501;
 }
 
 /*
