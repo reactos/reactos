@@ -17,6 +17,7 @@ typedef unsigned long NDIS_STATS;
 #include <xfilter.h>
 #include <afilter.h>
 #include <atm.h>
+#include <ndistapi.h>
 
 struct _ADAPTER_BINDING;
 
