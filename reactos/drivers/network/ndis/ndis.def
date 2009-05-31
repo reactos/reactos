@@ -16,6 +16,7 @@ NdisAdjustBufferLength@8
 NdisAllocateBuffer@20
 NdisAllocateBufferPool@12
 NdisAllocateDmaChannel@20
+NdisAllocateFromBlockPool@4
 NdisAllocateMemory@20
 NdisAllocateMemoryWithTag@12
 NdisAllocatePacket@12
@@ -26,6 +27,7 @@ NdisAllocateSpinLock@4
 NdisAnsiStringToUnicodeString@8
 NdisBufferLength@4
 NdisBufferVirtualAddress@4
+NdisCancelSendPackets@8
 NdisCancelTimer@8
 NdisClAddParty@16
 NdisClCloseAddressFamily@4
@@ -57,8 +59,10 @@ NdisCmModifyCallQoSComplete@12
 NdisCmOpenAddressFamilyComplete@12
 NdisCmRegisterAddressFamily@16
 NdisCmRegisterSapComplete@12
+NdisCoAssignInstanceName@12
 NdisCoCreateVc@16
 NdisCoDeleteVc@4
+NdisCoGetTapiCallId@8
 NdisCoRequest@20
 NdisCoRequestComplete@20
 NdisCoSendPackets@12
@@ -75,10 +79,13 @@ NdisConvertStringToAtmAddress@12
 NdisCopyBuffer@24
 NdisCopyFromPacketToPacket@24
 NdisCopyFromPacketToPacketSafe@28
+NdisCreateBlockPool@16
 NdisDeregisterAdapter@4
 NdisDeregisterAdapterShutdownHandler@4
 NdisDeregisterMac@8
 NdisDeregisterProtocol@8
+;NdisDeregisterTdiCallback ?
+NdisDestroyBlockPool@4
 NdisDprAcquireSpinLock@4
 NdisDprAllocatePacket@12
 NdisDprAllocatePacketNonInterlocked@12
@@ -94,6 +101,7 @@ NdisFreePacket@4
 NdisFreePacketPool@4
 NdisFreeSharedMemory@24
 NdisFreeSpinLock@4
+NdisGeneratePartialCancelId@0
 NdisGetBufferPhysicalArraySize@8
 NdisGetCurrentProcessorCounts@12
 NdisGetCurrentProcessorCpuUsage@4
@@ -104,7 +112,10 @@ NdisGetFirstBufferFromPacketSafe@24
 NdisGetPacketCancelId@4
 NdisGetPoolFromPacket@4
 NdisGetReceivedPacket@8
+NdisGetRoutineAddress@4
+NdisGetSharedDataAlignment@0
 NdisGetSystemUpTime@4
+NdisGetVersion@0
 NdisIMAssociateMiniport@8
 NdisIMCancelInitializeDeviceInstance@8
 NdisIMCopySendCompletePerPacketInfo@8
@@ -112,9 +123,11 @@ NdisIMCopySendPerPacketInfo@8
 NdisIMDeInitializeDeviceInstance@4
 NdisIMDeregisterLayeredMiniport@4
 NdisIMGetBindingContext@4
+NdisIMGetCurrentPacketStack@8
 NdisIMGetDeviceContext@4
 NdisIMInitializeDeviceInstance@8
 NdisIMInitializeDeviceInstanceEx@12
+NdisIMNotifyPnPEvent@8
 NdisImmediateReadPciSlotInformation@20
 NdisImmediateReadPortUchar@12
 NdisImmediateReadPortUlong@12
@@ -231,6 +244,7 @@ NdisQueryBuffer@12
 NdisQueryBufferOffset@12
 NdisQueryBufferSafe@16
 NdisQueryMapRegisterCount@8
+NdisQueryPendingIOCount@8
 NdisReadConfiguration@20
 NdisReadEisaSlotInformation@16
 NdisReadEisaSlotInformationEx@20
@@ -255,6 +269,7 @@ NdisSendPackets@12
 NdisSetEvent@4
 NdisSetPacketCancelId@8
 NdisSetPacketPoolProtocolId@8
+NdisSetPacketStatus@16
 ;NdisSetProtocolFilter ?
 NdisSetTimer@8
 NdisSetTimerEx@12

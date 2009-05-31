@@ -13,6 +13,176 @@
 /*
  * @unimplemented
  */
+VOID
+EXPORT
+NdisSetPacketStatus(
+    IN PNDIS_PACKET  Packet,
+    IN NDIS_STATUS  Status,
+    IN NDIS_HANDLE  Handle,
+    IN ULONG  Code)
+{
+    UNIMPLEMENTED
+}
+
+/*
+ * @unimplemented
+ */
+NDIS_STATUS
+EXPORT
+NdisQueryPendingIOCount(
+    IN  PVOID  NdisBindingHandle,
+    OUT PULONG  IoCount)
+{
+    UNIMPLEMENTED
+
+    return NDIS_STATUS_FAILURE;
+}
+
+/*
+ * @unimplemented
+ */
+NDIS_STATUS
+EXPORT
+NdisIMNotifyPnPEvent(
+    IN  NDIS_HANDLE  MiniportHandle,
+    IN  PNET_PNP_EVENT  NetPnPEvent)
+{
+    UNIMPLEMENTED
+
+    return NDIS_STATUS_FAILURE;
+}
+
+/*
+ * @unimplemented
+ */
+PNDIS_PACKET_STACK
+EXPORT
+NdisIMGetCurrentPacketStack(
+    IN PNDIS_PACKET  Packet,
+    OUT BOOLEAN  *StacksRemaining)
+{
+    UNIMPLEMENTED
+
+    *StacksRemaining = FALSE;
+
+    return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+UCHAR
+EXPORT
+NdisGeneratePartialCancelId(VOID)
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisFreeToBlockPool(
+    IN PUCHAR  Block)
+{
+    UNIMPLEMENTED
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisDestroyBlockPool(
+    IN NDIS_HANDLE  BlockPoolHandle)
+{
+    UNIMPLEMENTED
+}
+
+/*
+ * @unimplemented
+ */
+NDIS_HANDLE
+EXPORT
+NdisCreateBlockPool(
+    IN USHORT  BlockSize,
+    IN USHORT  FreeBlockLinkOffset,
+    IN ULONG  Tag,
+    IN NDIS_BLOCK_INITIALIZER  InitFunction OPTIONAL)
+{
+    UNIMPLEMENTED
+
+    return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+PUCHAR
+EXPORT
+NdisAllocateFromBlockPool(
+    IN NDIS_HANDLE  BlockPoolHandle)
+{
+    UNIMPLEMENTED
+
+    return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+ULONG
+EXPORT
+NdisGetSharedDataAlignment(VOID)
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+EXPORT
+NdisGetVersion(VOID)
+{
+    UNIMPLEMENTED
+
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+EXPORT
+NdisGetRoutineAddress(
+    IN PUNICODE_STRING  NdisRoutineName)
+{
+    UNIMPLEMENTED
+
+    return NULL;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisCancelSendPackets(
+    IN NDIS_HANDLE  NdisBindingHandle,
+    IN PVOID  CancelId)
+{
+    UNIMPLEMENTED
+}
+
+/*
+ * @unimplemented
+ */
 NDIS_STATUS
 EXPORT
 NdisQueryBindInstanceName(
