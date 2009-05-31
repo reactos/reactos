@@ -234,7 +234,7 @@ NdisOpenConfigurationKeyByIndex@20
 NdisOpenConfigurationKeyByName@16
 NdisOpenFile@24
 NdisOpenProtocolConfiguration@12
-;NdisOverrideBusNumber ?
+NdisOverrideBusNumber@12
 NdisPacketPoolUsage@4
 NdisPacketSize@4
 NdisPciAssignResources@20

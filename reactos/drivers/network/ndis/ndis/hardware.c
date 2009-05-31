@@ -302,4 +302,31 @@ NdisWritePcmciaAttributeMemory(
                                  Length);
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisOverrideBusNumber(
+    IN  NDIS_HANDLE WrapperConfigurationContext,
+    IN  NDIS_HANDLE MiniportAdapterHandle   OPTIONAL,
+    IN  ULONG       BusNumber)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 4.0
+ */
+{
+    PNDIS_WRAPPER_CONTEXT Wrapper = WrapperConfigurationContext;
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    Wrapper->BusNumber = BusNumber;
+
+    if (Adapter)
+        Adapter->NdisMiniportBlock.BusNumber = BusNumber;
+}
+
 /* EOF */
