@@ -639,6 +639,19 @@ typedef VOID DDKAPI
 (*ADAPTER_SHUTDOWN_HANDLER)(
   IN PVOID  ShutdownContext);
 
+typedef NTSTATUS DDKAPI
+(*TDI_REGISTER_CALLBACK)(
+    IN  PUNICODE_STRING         DeviceName,
+    OUT HANDLE*                 TdiHandle);
+
+typedef NTSTATUS DDKAPI
+(*TDI_PNP_HANDLER)(
+    IN  PUNICODE_STRING         UpperComponent,
+    IN  PUNICODE_STRING         LowerComponent,
+    IN  PUNICODE_STRING         BindList,
+    IN  PVOID                   ReconfigBuffer,
+    IN  UINT                    ReconfigBufferSize,
+    IN  UINT                    Operation);
 
 typedef struct _OID_LIST    OID_LIST, *POID_LIST;
 
