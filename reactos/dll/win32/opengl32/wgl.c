@@ -400,7 +400,7 @@ ROSGL_ICDForHDC( HDC hdc )
         {
             WCHAR Buffer[256];
             snwprintf(Buffer, sizeof(Buffer)/sizeof(WCHAR),
-                      L"Couldn't load driver \"%s\".", driverName);
+                      L"Couldn't load driver \"%s\".", info.DriverName);
             MessageBox(WindowFromDC( hdc ), Buffer,
                        L"OPENGL32.dll: Warning",
                        MB_OK | MB_ICONWARNING);
