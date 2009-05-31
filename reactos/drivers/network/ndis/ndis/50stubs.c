@@ -132,28 +132,6 @@ NdisAllocateFromBlockPool(
 }
 
 /*
- * @implemented
- */
-ULONG
-EXPORT
-NdisGetSharedDataAlignment(VOID)
-{
-    return KeGetRecommendedSharedDataAlignment();
-}
-
-/*
- * @implemented
- */
-UINT
-EXPORT
-NdisGetVersion(VOID)
-{
-    NDIS_DbgPrint(MAX_TRACE, ("NdisGetVersion() has returned 5.1\n"));
-
-    return (UINT) 0x501;
-}
-
-/*
  * @unimplemented
  */
 PVOID
@@ -309,28 +287,31 @@ NdisMWanSendComplete(
     UNIMPLEMENTED
 }
 
-
 /*
-NdisOpenGlobalConfiguration
-*/
-
-#if 0
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisRegisterTdiCallBack(
-    IN  TDI_REGISTER_CALLBACK   RegsterCallback)
+    IN  TDI_REGISTER_CALLBACK   RegisterCallback,
+    IN  TDI_PNP_HANDLER         PnPHandler)
 {
     UNIMPLEMENTED
 }
-#endif
-
 
 /*
-NdisScheduleWorkItem
-*/
+ * @unimplemented
+ */
+VOID
+EXPORT
+NdisDeregisterTdiCallBack(VOID)
+{
+    UNIMPLEMENTED
+}
 
-
-#if 0
+/*
+ * @unimplemented
+ */
 VOID
 EXPORT
 NdisSetProtocolFilter(
@@ -345,18 +326,6 @@ NdisSetProtocolFilter(
 {
     UNIMPLEMENTED
 }
-#endif
-
-
-/*
-NdisUpcaseUnicodeString
-NdisUpdateSharedMemory@4
-*/
-
-
-/*
-NdisWriteEventLogEntry
-*/
 
 
 /*

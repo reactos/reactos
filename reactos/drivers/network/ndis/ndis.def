@@ -34,6 +34,7 @@ NdisClCloseAddressFamily@4
 NdisClCloseCall@16
 NdisClDeregisterSap@4
 NdisClDropParty@12
+NdisClGetProtocolVcContextFromTapiCallId@12
 NdisClIncomingCallComplete@12
 NdisClMakeCall@16
 NdisClModifyCallQoS@8
@@ -84,7 +85,7 @@ NdisDeregisterAdapter@4
 NdisDeregisterAdapterShutdownHandler@4
 NdisDeregisterMac@8
 NdisDeregisterProtocol@8
-;NdisDeregisterTdiCallback ?
+NdisDeregisterTdiCallBack@0
 NdisDestroyBlockPool@4
 NdisDprAcquireSpinLock@4
 NdisDprAllocatePacket@12
@@ -256,7 +257,7 @@ NdisReEnumerateProtocolBindings@4
 NdisRegisterAdapter@24
 NdisRegisterAdapterShutdownHandler@12
 NdisRegisterProtocol@16
-;NdisRegisterTdiCallBack ?
+NdisRegisterTdiCallBack@8
 NdisReleaseAdapterResources@4
 NdisReleaseReadWriteLock@8
 NdisReleaseSpinLock@4
@@ -270,7 +271,7 @@ NdisSetEvent@4
 NdisSetPacketCancelId@8
 NdisSetPacketPoolProtocolId@8
 NdisSetPacketStatus@16
-;NdisSetProtocolFilter ?
+NdisSetProtocolFilter@32
 NdisSetTimer@8
 NdisSetTimerEx@12
 NdisSetupDmaTransfer@24

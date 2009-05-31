@@ -126,6 +126,8 @@ NdisUnmapFile(
 {
   PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
 
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
   HandleObject->Mapped = FALSE;
 }
 
@@ -140,6 +142,8 @@ NdisCloseFile(
   PNDIS_HANDLE_OBJECT FileHandleObject;
 
   ASSERT_IRQL(PASSIVE_LEVEL);
+
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   ASSERT ( FileHandle );
 
@@ -176,6 +180,8 @@ NdisOpenFile(
   IO_STATUS_BLOCK IoStatusBlock;
 
   ASSERT_IRQL(PASSIVE_LEVEL);
+
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   *Status = NDIS_STATUS_SUCCESS;
   FullFileName.Buffer = NULL;
@@ -280,6 +286,8 @@ NdisGetCurrentProcessorCounts(
  *    NDIS 5.0
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     ExGetCurrentProcessorCounts( (PULONG) pIdleCount, (PULONG) pKernelAndUser, (PULONG) pIndex); 
 }
 
@@ -293,6 +301,8 @@ NdisGetSystemUpTime(OUT PULONG pSystemUpTime)
 {           
     ULONG Increment;
     LARGE_INTEGER TickCount;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     /* Get the increment and current tick count */
     Increment = KeQueryTimeIncrement();
@@ -388,6 +398,9 @@ NTAPI
 ndisProcWorkItemHandler(PVOID pContext)
 {
     PNDIS_WORK_ITEM pNdisItem = (PNDIS_WORK_ITEM)pContext;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     pNdisItem->Routine(pNdisItem, pNdisItem->Context);
 }
 
@@ -397,6 +410,9 @@ NdisScheduleWorkItem(
     IN PNDIS_WORK_ITEM  pWorkItem)
 {
     PWORK_QUEUE_ITEM pntWorkItem = (PWORK_QUEUE_ITEM)pWorkItem->WrapperReserved;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     ExInitializeWorkItem(pntWorkItem, ndisProcWorkItemHandler, pWorkItem);
     ExQueueWorkItem(pntWorkItem, DelayedWorkQueue);
     return NDIS_STATUS_SUCCESS;
@@ -415,7 +431,33 @@ NdisGetCurrentProcessorCpuUsage(
  *     pCpuUsage = Pointer to a buffer to place CPU usage
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     ExGetCurrentProcessorCpuUsage(pCpuUsage);
+}
+
+/*
+ * @implemented
+ */
+ULONG
+EXPORT
+NdisGetSharedDataAlignment(VOID)
+{
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return KeGetRecommendedSharedDataAlignment();
+}
+
+/*
+ * @implemented
+ */
+UINT
+EXPORT
+NdisGetVersion(VOID)
+{
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return (UINT) 0x501;
 }
 
 /* EOF */
