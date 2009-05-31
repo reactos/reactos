@@ -451,6 +451,10 @@ typedef struct _NDIS_PM_PACKET_PATTERN {
   ULONG  PatternFlags;
 } NDIS_PM_PACKET_PATTERN,  *PNDIS_PM_PACKET_PATTERN;
 
+typedef struct _NDIS_PACKET_STACK {
+  ULONG_PTR IMReserved[2];
+  ULONG_PTR NdisReserved[4];
+} NDIS_PACKET_STACK, *PNDIS_PACKET_STACK;
 
 /* Request types used by NdisRequest */
 typedef enum _NDIS_REQUEST_TYPE {
@@ -2432,7 +2436,11 @@ NdisUpdateSharedMemory(
 #define NdisZeroMemory(Destination, Length) \
   RtlZeroMemory(Destination, Length)
 
-
+typedef VOID DDKAPI
+(*NDIS_BLOCK_INITIALIZER) (
+    IN  PUCHAR  Block,
+    IN  SIZE_T  NumberOfBytes
+    );
 
 /* Configuration routines */
 
