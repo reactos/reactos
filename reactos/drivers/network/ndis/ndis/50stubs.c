@@ -132,27 +132,25 @@ NdisAllocateFromBlockPool(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 EXPORT
 NdisGetSharedDataAlignment(VOID)
 {
-    UNIMPLEMENTED
-
-    return 0;
+    return KeGetRecommendedSharedDataAlignment();
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 EXPORT
 NdisGetVersion(VOID)
 {
-    UNIMPLEMENTED
+    NDIS_DbgPrint(MAX_TRACE, ("NdisGetVersion() has returned 5.0\n"));
 
-    return 0;
+    return (UINT) 0x5;
 }
 
 /*
