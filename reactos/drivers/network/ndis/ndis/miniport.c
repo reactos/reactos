@@ -2093,6 +2093,13 @@ NdisIDispatchPnp(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
 
+      case IRP_MN_QUERY_PNP_DEVICE_STATE:
+        Status = NDIS_STATUS_SUCCESS;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information |= Adapter->NdisMiniportBlock.PnPFlags;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        break;
+
       default:
         IoSkipCurrentIrpStackLocation(Irp);
         Status = IoCallDriver(Adapter->NdisMiniportBlock.NextDeviceObject, Irp);
