@@ -23,6 +23,8 @@
 #ifndef __NDISGUID_H
 #define __NDISGUID_H
 
+#include <initguid.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
