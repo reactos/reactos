@@ -1913,6 +1913,8 @@ NdisIPnPStartDevice(
   Adapter->NdisMiniportBlock.OldPnPDeviceState = Adapter->NdisMiniportBlock.PnPDeviceState;
   Adapter->NdisMiniportBlock.PnPDeviceState = NdisPnPDeviceStarted;
 
+  IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, TRUE);
+
   Timeout.QuadPart = Int32x32To64(Adapter->NdisMiniportBlock.CheckForHangSeconds, -1000000);
   KeSetTimerEx(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer, Timeout,
                Adapter->NdisMiniportBlock.CheckForHangSeconds * 1000,
@@ -1950,6 +1952,8 @@ NdisIPnPStopDevice(
   KeCancelTimer(&Adapter->NdisMiniportBlock.WakeUpDpcTimer.Timer);
 
   (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.HaltHandler)(Adapter);
+
+  IoSetDeviceInterfaceState(&Adapter->NdisMiniportBlock.SymbolicLinkName, FALSE);
 
   if (Adapter->NdisMiniportBlock.AllocatedResources)
     {
@@ -2220,10 +2224,22 @@ NdisIAddDevice(
   Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
   KeInitializeSpinLock(&Adapter->NdisMiniportBlock.Lock);
   InitializeListHead(&Adapter->ProtocolListHead);
+
+  Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
+                                     &GUID_DEVINTERFACE_NET,
+                                     NULL,
+                                     &Adapter->NdisMiniportBlock.SymbolicLinkName);
+
+  if (!NT_SUCCESS(Status))
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Could not create device interface.\n"));
+      IoDeleteDevice(DeviceObject);
+      RtlFreeUnicodeString(&ExportName);
+      return Status;
+  }
+
   Adapter->NdisMiniportBlock.DriverHandle = Miniport;
-
   Adapter->NdisMiniportBlock.MiniportName = ExportName;
-
   Adapter->NdisMiniportBlock.DeviceObject = DeviceObject;
   Adapter->NdisMiniportBlock.PhysicalDeviceObject = PhysicalDeviceObject;
   Adapter->NdisMiniportBlock.NextDeviceObject =
