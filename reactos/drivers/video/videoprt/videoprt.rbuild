@@ -19,6 +19,7 @@
 	<file>resource.c</file>
 	<file>services.c</file>
 	<file>spinlock.c</file>
+	<file>stubs.c</file>
 	<file>timer.c</file>
 	<file>videoprt.c</file>
 	<file>videoprt.rc</file>
