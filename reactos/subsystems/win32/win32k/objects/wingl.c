@@ -23,13 +23,32 @@
 #define NDEBUG
 #include <debug.h>
 
+static
 INT
-APIENTRY
-NtGdiChoosePixelFormat(HDC  hDC,
-                           CONST PPIXELFORMATDESCRIPTOR  pfd)
+FASTCALL
+IntGetipfdDevMax(PDC pdc)
 {
-  UNIMPLEMENTED;
-  return 0;
+  INT Ret = 0;
+  PPDEVOBJ ppdev = pdc->ppdev;
+
+  if (ppdev->flFlags & PDEV_META_DEVICE)
+  {
+     return 0;
+  }
+
+  if (ppdev->DriverFunctions.DescribePixelFormat)
+  {
+
+     Ret = ppdev->DriverFunctions.DescribePixelFormat(
+                                                ppdev->hPDev,
+                                                1,
+                                                0,
+                                                NULL);
+  }
+
+  if (Ret) pdc->ipfdDevMax = Ret;
+
+  return Ret;
 }
 
 
@@ -40,8 +59,67 @@ NtGdiDescribePixelFormat(HDC  hDC,
                              UINT  BufSize,
                              LPPIXELFORMATDESCRIPTOR  pfd)
 {
-  UNIMPLEMENTED;
-  return 0;
+  PDC pdc;
+  PPDEVOBJ ppdev;
+  INT Ret = 0;
+  PIXELFORMATDESCRIPTOR pfdSafe;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  if (!BufSize) return 0;
+
+  pdc = DC_LockDc(hDC);
+  if (!pdc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  if (!pdc->ipfdDevMax) IntGetipfdDevMax(pdc);
+
+  if ( BufSize < sizeof(PIXELFORMATDESCRIPTOR) ||
+       PixelFormat < 1 ||
+       PixelFormat > pdc->ipfdDevMax )
+  {  
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     goto Exit;
+  }
+
+  ppdev = pdc->ppdev;
+
+  if (ppdev->flFlags & PDEV_META_DEVICE)
+  {
+     UNIMPLEMENTED;
+     goto Exit;
+  }
+
+  if (ppdev->DriverFunctions.DescribePixelFormat)
+  {
+
+     Ret = ppdev->DriverFunctions.DescribePixelFormat(
+                                                ppdev->hPDev,
+                                                PixelFormat,
+                                                sizeof(PIXELFORMATDESCRIPTOR),
+                                                &pfdSafe);
+  }
+
+  _SEH2_TRY
+  {
+     ProbeForWrite( pfd,
+                    sizeof(PIXELFORMATDESCRIPTOR),
+                    1);
+     RtlCopyMemory(&pfdSafe, pfd, sizeof(PIXELFORMATDESCRIPTOR));
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+     Status = _SEH2_GetExceptionCode();
+  }
+  _SEH2_END;
+
+  if (!NT_SUCCESS(Status)) SetLastNtError(Status);
+
+Exit:
+  DC_UnlockDc(pdc);
+  return Ret;
 }
 
 
