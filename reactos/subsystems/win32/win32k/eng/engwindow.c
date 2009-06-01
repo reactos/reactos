@@ -27,7 +27,10 @@
  *                 16/11/2004: Created
  */
 
-/* TODO: Check how the WNDOBJ implementation should behave with a driver on windows. */
+/* TODO: Check how the WNDOBJ implementation should behave with a driver on windows.
+
+   Simple! Use Prop's!
+ */
 
 #include <w32k.h>
 
