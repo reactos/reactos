@@ -243,6 +243,9 @@ NdisSetTimer(
   KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
 }
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 NdisSetTimerEx(
@@ -250,18 +253,12 @@ NdisSetTimerEx(
     IN UINT  MillisecondsToDelay,
     IN PVOID  FunctionContext)
 {
-#if 0
-    /* FIXME: I'm not sure how to this in a nice way
-     * We can't store the function context anywhere in NDIS_TIMER
-     * so I'm forced to do this
-     */
+    NDIS_DbgPrint(MAX_TRACE, ("Called. Timer is: 0x%x, Timeout is: %ld, FunctionContext is: 0x%x\n", 
+                               Timer, MillisecondsToDelay, FunctionContext));
 
     Timer->Dpc.DeferredContext = FunctionContext;
 
     NdisSetTimer(Timer, MillisecondsToDelay);
-#else
-    UNIMPLEMENTED
-#endif
 }
 
 /* EOF */
