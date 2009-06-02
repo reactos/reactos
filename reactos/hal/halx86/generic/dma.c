@@ -903,7 +903,9 @@ HalFreeCommonBuffer(
    PVOID VirtualAddress,
    BOOLEAN CacheEnabled)
 {
-   MmFreeContiguousMemory(VirtualAddress);
+   MmFreeContiguousMemorySpecifyCache(VirtualAddress,
+                                      Length,
+                                      CacheEnabled ? MmCached : MmNonCached);
 }
 
 /**
