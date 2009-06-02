@@ -267,7 +267,7 @@ ExFreePoolWithTag(
         (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
     {
         /* Validate tag */
-#if 0
+#ifndef DEBUG_PPOOL
         if (Tag != 0 && Tag != EiGetPagedPoolTag(Block))
             KeBugCheckEx(BAD_POOL_CALLER,
                          0x0a,
@@ -297,13 +297,14 @@ ExFreePoolWithTag(
              (char*)Block < ((char*)MiNonPagedPoolStart + MiNonPagedPoolLength))
     {
         /* Validate tag */
-        /*if (Tag != 0 && Tag != EiGetNonPagedPoolTag(Block))
+#ifndef DEBUG_NPOOL
+        if (Tag != 0 && Tag != EiGetNonPagedPoolTag(Block))
             KeBugCheckEx(BAD_POOL_CALLER,
                          0x0a,
                          (ULONG_PTR)Block,
                          EiGetNonPagedPoolTag(Block),
-                         Tag);*/
-
+                         Tag);
+#endif
         /* Validate IRQL */
         if (KeGetCurrentIrql() > DISPATCH_LEVEL)
             KeBugCheckEx(BAD_POOL_CALLER,
