@@ -357,6 +357,8 @@ ScatterGatherSendPacket(
                         Packet,
                         Status);
    }
+
+   ExFreePool(DmaContext);
 }
 
 NDIS_STATUS
