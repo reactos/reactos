@@ -1922,18 +1922,18 @@ NtUserDrawCaptionTemp(
       ProbeForRead(lpRc, sizeof(RECTL), sizeof(ULONG));
       RtlCopyMemory(&SafeRect, lpRc, sizeof(RECTL));
       if (str != NULL)
-	  {
-        SafeStr = ProbeForReadUnicodeString(str);
-	    if (SafeStr.Length != 0)
-        {
-          ProbeForRead(SafeStr.Buffer,
-               SafeStr.Length,
-               sizeof(WCHAR));
-        }
-		Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, &SafeStr, uFlags);
+      {
+         SafeStr = ProbeForReadUnicodeString(str);
+         if (SafeStr.Length != 0)
+         {
+             ProbeForRead( SafeStr.Buffer,
+                           SafeStr.Length,
+                            sizeof(WCHAR));
+         }
+         Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, &SafeStr, uFlags);
       }
-	  else
-	    Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, NULL, uFlags);
+      else
+         Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, NULL, uFlags);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {

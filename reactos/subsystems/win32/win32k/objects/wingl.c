@@ -38,7 +38,6 @@ IntGetipfdDevMax(PDC pdc)
 
   if (ppdev->DriverFunctions.DescribePixelFormat)
   {
-
      Ret = ppdev->DriverFunctions.DescribePixelFormat(
                                                 ppdev->hPDev,
                                                 1,
@@ -94,7 +93,6 @@ NtGdiDescribePixelFormat(HDC  hDC,
 
   if (ppdev->DriverFunctions.DescribePixelFormat)
   {
-
      Ret = ppdev->DriverFunctions.DescribePixelFormat(
                                                 ppdev->hPDev,
                                                 PixelFormat,
@@ -129,8 +127,77 @@ NtGdiSetPixelFormat(
     IN HDC hdc,
     IN INT ipfd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  PDC pdc;
+  PPDEVOBJ ppdev;
+  HWND hWnd;
+  PWNDOBJ pWndObj;
+  SURFOBJ *pso = NULL;
+  BOOL Ret = FALSE;
+
+  pdc = DC_LockDc(hdc);
+  if (!pdc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+
+  if (!pdc->ipfdDevMax) IntGetipfdDevMax(pdc);
+
+  if ( ipfd < 1 ||
+       ipfd > pdc->ipfdDevMax )
+  {  
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     goto Exit;
+  }
+
+  UserEnterExclusive();
+  hWnd = UserGethWnd(hdc, &pWndObj);
+  UserLeave();
+
+  if (!hWnd)
+  {
+     SetLastWin32Error(ERROR_INVALID_WINDOW_STYLE);
+     goto Exit;
+  }
+
+  ppdev = pdc->ppdev;
+
+  if (pWndObj) pso = pWndObj->psoOwner;
+  else
+  {
+     SetLastWin32Error(ERROR_INVALID_PIXEL_FORMAT);
+     goto Exit;
+  }
+
+  if (!pso)
+  {
+  /*
+     Based on some rules! InfoDC to DC or, based on wiki information!
+     All pointers, it's a "must be!", (CONTAINING_RECORD +10h = SURFOBJ), the
+     pointer will start at SURFOBJ of the SURFACE structure. 
+   */
+     pso = (SURFOBJ *)pdc->dclevel.pSurface;
+     if (!pso) pso = pdc->pSurfInfo;
+     if (!pso) pso = ppdev->pSurface;
+  }
+
+  if (ppdev->flFlags & PDEV_META_DEVICE)
+  {
+     UNIMPLEMENTED;
+     goto Exit;
+  }
+
+  if (ppdev->DriverFunctions.SetPixelFormat)
+  {
+     Ret = ppdev->DriverFunctions.SetPixelFormat(
+                                                pso,
+                                                ipfd,
+                                                hWnd);
+  }
+
+Exit:
+  DC_UnlockDc(pdc);
+  return Ret;
 }
 
 BOOL
