@@ -77,7 +77,7 @@ static void GraphCtrl_Init(TGraphCtrl* this)
     /*  background, grid and data colors */
     /*  these are public variables and can be set directly */
     this->m_crBackColor = RGB(  0,   0,   0);  /*  see also SetBackgroundColor */
-    this->m_crGridColor = RGB(  0, 255, 255);  /*  see also SetGridColor */
+    this->m_crGridColor = RGB(  0, 128, 64);  /*  see also SetGridColor */
     this->m_crPlotColor[0] = RGB(255, 255, 255);  /*  see also SetPlotColor */
     this->m_crPlotColor[1] = RGB(100, 255, 255);  /*  see also SetPlotColor */
     this->m_crPlotColor[2] = RGB(255, 100, 255);  /*  see also SetPlotColor */
@@ -189,7 +189,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*  There is a lot of drawing going on here - particularly in terms of  */
     /*  drawing the grid.  Don't panic, this is all being drawn (only once) */
     /*  to a bitmap.  The result is then BitBlt'd to the control whenever needed. */
-    int i, j;
+    int i;
     int nCharacters;
     int nTopGridPix, nMidGridPix, nBottomGridPix;
 
@@ -249,33 +249,27 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     LineTo(this->m_dcGrid, this->m_rectPlot.right+1, this->m_rectPlot.bottom+1);
     LineTo(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.bottom+1);
     /*   LineTo(m_dcGrid, m_rectPlot.left, m_rectPlot.top); */
-    SelectObject(this->m_dcGrid, oldPen);
-    DeleteObject(solidPen);
 
-    /*  draw the dotted lines,
-     *  use SetPixel instead of a dotted pen - this allows for a
-     *  finer dotted line and a more "technical" look
-     */
+    /*  draw the horizontal and vertical axis */
     nMidGridPix    = (this->m_rectPlot.top + this->m_rectPlot.bottom)/2;
     nTopGridPix    = nMidGridPix - this->m_nPlotHeight/4;
     nBottomGridPix = nMidGridPix + this->m_nPlotHeight/4;
 
-    for (i=this->m_rectPlot.left; i<this->m_rectPlot.right; i+=2)
+    MoveToEx(this->m_dcGrid, this->m_rectPlot.left, nTopGridPix, NULL);
+    LineTo(this->m_dcGrid, this->m_rectPlot.right, nTopGridPix);
+    MoveToEx(this->m_dcGrid, this->m_rectPlot.left, nMidGridPix, NULL);
+    LineTo(this->m_dcGrid, this->m_rectPlot.right, nMidGridPix);
+    MoveToEx(this->m_dcGrid, this->m_rectPlot.left, nBottomGridPix, NULL);
+    LineTo(this->m_dcGrid, this->m_rectPlot.right, nBottomGridPix);
+
+    for (i = this->m_rectPlot.left; i<this->m_rectPlot.right; i+=13)
     {
-        SetPixel(this->m_dcGrid, i, nTopGridPix,    this->m_crGridColor);
-        SetPixel(this->m_dcGrid, i, nMidGridPix,    this->m_crGridColor);
-        SetPixel(this->m_dcGrid, i, nBottomGridPix, this->m_crGridColor);
+        MoveToEx(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.bottom, NULL);
+        LineTo(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.top);
     }
 
-    for (i=this->m_rectPlot.left; i<this->m_rectPlot.right; i+=10)
-    {
-        for (j=this->m_rectPlot.top; j<this->m_rectPlot.bottom; j+=2)
-        {
-            SetPixel(this->m_dcGrid, i, j, this->m_crGridColor);
-            /*       SetPixel(m_dcGrid, i, j, m_crGridColor); */
-            /*       SetPixel(m_dcGrid, i, j, m_crGridColor); */
-        }
-    }
+    SelectObject(this->m_dcGrid, oldPen);
+    DeleteObject(solidPen);
 
 #if 0
     /*  create some fonts (horizontal and vertical) */
