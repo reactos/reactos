@@ -430,18 +430,40 @@ MiniSendComplete(
  *     Status            = Status of send operation
  */
 {
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
     PADAPTER_BINDING AdapterBinding;
     KIRQL OldIrql;
+    PSCATTER_GATHER_LIST SGList;
 
     NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[1];
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Should we free this before or after calling SendComplete? */
+    if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
+    {
+        NDIS_DbgPrint(MAX_TRACE, ("Freeing Scatter/Gather list\n"));
+
+        SGList = NDIS_PER_PACKET_INFO_FROM_PACKET(Packet,
+                                                  ScatterGatherListPacketInfo);
+
+        Adapter->NdisMiniportBlock.SystemAdapterObject->
+            DmaOperations->PutScatterGatherList(
+                           Adapter->NdisMiniportBlock.SystemAdapterObject,
+                           SGList,
+                           TRUE);
+
+        NDIS_PER_PACKET_INFO_FROM_PACKET(Packet,
+                                         ScatterGatherListPacketInfo) = NULL;
+    }
+
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
         AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
+
     KeLowerIrql(OldIrql);
 }
 

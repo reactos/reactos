@@ -22,6 +22,11 @@ KSPIN_LOCK ProtocolListLock;
 
 #define WORKER_TEST 0
 
+typedef struct _DMA_CONTEXT {
+    PLOGICAL_ADAPTER Adapter;
+    PNDIS_PACKET Packet;
+} DMA_CONTEXT, *PDMA_CONTEXT;
+
 PNET_PNP_EVENT
 ProSetupPnPEvent(
     NET_PNP_EVENT_CODE EventCode,
@@ -327,6 +332,33 @@ ProReset(
     return NDIS_STATUS_FAILURE;
 }
 
+VOID NTAPI
+ScatterGatherSendPacket(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp,
+   IN PSCATTER_GATHER_LIST ScatterGather,
+   IN PVOID Context)
+{
+   PDMA_CONTEXT DmaContext = Context;
+   PLOGICAL_ADAPTER Adapter = DmaContext->Adapter;
+   PNDIS_PACKET Packet = DmaContext->Packet;
+   NDIS_STATUS Status;
+
+   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+   NDIS_PER_PACKET_INFO_FROM_PACKET(Packet,
+                                    ScatterGatherListPacketInfo) = ScatterGather;
+
+   Status = proSendPacketToMiniport(Adapter, Packet);
+
+   if (Status != NDIS_STATUS_PENDING) {
+       NDIS_DbgPrint(MAX_TRACE, ("Completing packet.\n"));
+       MiniSendComplete(Adapter,
+                        Packet,
+                        Status);
+   }
+}
+
 NDIS_STATUS
 proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet)
 {
@@ -412,6 +444,11 @@ ProSend(
 {
   PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter;
+  PNDIS_BUFFER NdisBuffer;
+  PDMA_CONTEXT Context;
+  NDIS_STATUS NdisStatus;
+  UINT PacketLength;
+  KIRQL OldIrql;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -447,6 +484,48 @@ ProSend(
         return ProIndicatePacket(Adapter, Packet);
 #endif
     } else {
+        if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
+        {
+            NDIS_DbgPrint(MAX_TRACE, ("Using Scatter/Gather DMA\n"));
+
+            NdisQueryPacket(Packet,
+                            NULL,
+                            NULL,
+                            &NdisBuffer,
+                            &PacketLength);
+
+            Context = ExAllocatePool(NonPagedPool, sizeof(DMA_CONTEXT));
+            if (!Context)
+                return NDIS_STATUS_RESOURCES;
+
+            Context->Adapter = Adapter;
+            Context->Packet = Packet;
+
+            KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+            KeFlushIoBuffers(NdisBuffer, FALSE, TRUE);
+
+            NdisStatus = Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->GetScatterGatherList(
+                          Adapter->NdisMiniportBlock.SystemAdapterObject,
+                          Adapter->NdisMiniportBlock.PhysicalDeviceObject,
+                          NdisBuffer,
+                          MmGetMdlVirtualAddress(NdisBuffer),
+                          PacketLength,
+                          ScatterGatherSendPacket,
+                          Context,
+                          TRUE);
+
+            KeLowerIrql(OldIrql);
+
+            if (!NT_SUCCESS(NdisStatus)) {
+                NDIS_DbgPrint(MIN_TRACE, ("GetScatterGatherList failed!\n"));
+                return NdisStatus;
+            }
+
+            return NDIS_STATUS_PENDING;
+        }
+
+
         return proSendPacketToMiniport(Adapter, Packet);
     }
 }

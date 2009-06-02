@@ -944,12 +944,6 @@ NdisMInitializeScatterGatherDma(
     if (!(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_BUS_MASTER))
         return NDIS_STATUS_NOT_SUPPORTED;
 
-    if (Adapter->NdisMiniportBlock.SystemAdapterObject)
-    {
-        NDIS_DbgPrint(MIN_TRACE,("Using existing DMA adapter\n"));
-        return NDIS_STATUS_SUCCESS;
-    }
-
     RtlZeroMemory(&DeviceDesc, sizeof(DEVICE_DESCRIPTION));
 
     DeviceDesc.Version = DEVICE_DESCRIPTION_VERSION;
@@ -966,6 +960,9 @@ NdisMInitializeScatterGatherDma(
 
     if (!Adapter->NdisMiniportBlock.SystemAdapterObject)
         return NDIS_STATUS_RESOURCES;
+
+    /* FIXME: Right now we just use this as a place holder */
+    Adapter->NdisMiniportBlock.ScatterGatherListSize = 1;
 
     return NDIS_STATUS_SUCCESS;
 }

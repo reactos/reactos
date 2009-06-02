@@ -67,6 +67,9 @@ NdisIPnPCancelStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp);
 
+NDIS_STATUS
+proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet);
+
 #endif /* __PROTOCOL_H */
 
 /* EOF */
