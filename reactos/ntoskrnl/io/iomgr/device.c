@@ -1186,8 +1186,12 @@ IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
         /* Get the Lower Device Object */
         LowerDeviceObject = DeviceExtension->AttachedTo;
 
-        /* Reference it */
-        ObReferenceObject(LowerDeviceObject);
+        /* Check that we got a valid device object */
+        if (LowerDeviceObject)
+        {
+            /* We did so let's reference it */
+            ObReferenceObject(LowerDeviceObject);
+        }
     }
 
     /* Return it */
