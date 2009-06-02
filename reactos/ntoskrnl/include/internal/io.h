@@ -938,6 +938,10 @@ IopReinitializeBootDrivers(
 //
 // File Routines
 //
+VOID
+NTAPI
+IopDeleteDevice(IN PVOID ObjectBody);
+
 NTSTATUS
 NTAPI
 IopParseDevice(

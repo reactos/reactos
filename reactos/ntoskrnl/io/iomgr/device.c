@@ -23,6 +23,21 @@ KSPIN_LOCK ShutdownListLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+VOID
+NTAPI
+IopDeleteDevice(IN PVOID ObjectBody)
+{
+    PDEVICE_OBJECT DeviceObject = ObjectBody;
+    PAGED_CODE();
+ 
+    /* TODO: Delete Device Node */
+
+    /* Dereference the driver object, referenced in IoCreateDevice */
+    if (DeviceObject->DriverObject);
+        ObDereferenceObject(DeviceObject->DriverObject);
+}
+
+
 PDEVICE_OBJECT
 NTAPI
 IopAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
@@ -356,6 +371,13 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Unload it */
     if (DriverObject->DriverUnload) DriverObject->DriverUnload(DriverObject);
+
+    /* Make object temporary so it can be deleted */
+    ObMakeTemporaryObject(DriverObject);
+
+    /* Dereference once more, referenced at driver object creation */
+    ObDereferenceObject(DriverObject);
+
 }
 
 VOID

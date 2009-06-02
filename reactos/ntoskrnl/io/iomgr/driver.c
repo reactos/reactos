@@ -977,9 +977,12 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    UNICODE_STRING ServiceName;
    UNICODE_STRING ObjectName;
    PDRIVER_OBJECT DriverObject;
+   PDEVICE_OBJECT DeviceObject;
+   PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
    LOAD_UNLOAD_PARAMS LoadParams;
    NTSTATUS Status;
    LPWSTR Start;
+   BOOLEAN SafeToUnload = TRUE;
 
    DPRINT("IopUnloadDriver('%wZ', %d)\n", DriverServiceName, UnloadPnpDrivers);
 
@@ -1031,6 +1034,14 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
       return Status;
    }
 
+   /* Check that driver is not already unloading */
+   if (DriverObject->Flags & DRVO_UNLOAD_INVOKED)
+   {
+       DPRINT1("Driver deletion pending\n");
+       ObDereferenceObject(DriverObject);
+       return STATUS_DELETE_PENDING;
+   }
+
    /*
     * Get path of service...
     */
@@ -1049,6 +1060,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+      ObDereferenceObject(DriverObject);
       return Status;
    }
 
@@ -1061,6 +1073,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("IopNormalizeImagePath() failed (Status %x)\n", Status);
+      ObDereferenceObject(DriverObject);
       return Status;
    }
 
@@ -1070,6 +1083,35 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    ExFreePool(ImagePath.Buffer);
 
+   /* Loop through each device object of the driver
+      and set DOE_UNLOAD_PENDING flag */
+   DeviceObject = DriverObject->DeviceObject;
+   while (DeviceObject)
+   {
+      /* Set the unload pending flag for the device */
+      DeviceExtension = IoGetDevObjExtension(DeviceObject);
+      DeviceExtension->ExtensionFlags |= DOE_UNLOAD_PENDING;
+
+      /* Make sure there are no attached devices or no reference counts */
+      if ((DeviceObject->ReferenceCount) || (DeviceObject->AttachedDevice))
+      {
+         /* Not safe to unload */
+         DPRINT1("Drivers device object is referenced or has attached devices\n");
+
+         SafeToUnload = FALSE;
+      }
+
+      DeviceObject = DeviceObject->NextDevice;
+   }
+
+   /* If not safe to unload, then return success */
+   if (!SafeToUnload)
+   {
+      ObDereferenceObject(DriverObject);
+      return STATUS_SUCCESS;
+   }
+
+
    /*
     * Unload the module and release the references to the device object
     */
@@ -1077,6 +1119,9 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /* Call the load/unload routine, depending on current process */
    if (DriverObject->DriverUnload && DriverObject->DriverSection)
    {
+      /* Set the unload invoked flag */
+      DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
+
       if (PsGetCurrentProcess() == PsInitialSystemProcess)
       {
          /* Just call right away */
