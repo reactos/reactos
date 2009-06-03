@@ -97,6 +97,7 @@ NdisEqualString@12
 NdisFreeBuffer@4
 NdisFreeBufferPool@4
 NdisFreeDmaChannel@4
+NdisFreeToBlockPool@4
 NdisFreeMemory@12
 NdisFreePacket@4
 NdisFreePacketPool@4
