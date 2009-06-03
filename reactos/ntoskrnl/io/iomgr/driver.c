@@ -1302,7 +1302,7 @@ try_again:
     RtlZeroMemory(DriverObject, ObjectSize);
     DriverObject->Type = IO_TYPE_DRIVER;
     DriverObject->Size = sizeof(DRIVER_OBJECT);
-    DriverObject->Flags = DRVO_BUILTIN_DRIVER;
+    DriverObject->Flags = DRVO_LEGACY_DRIVER;//DRVO_BUILTIN_DRIVER;
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
@@ -1398,6 +1398,14 @@ try_again:
     {
         /* Returns to caller the object */
         *pDriverObject = DriverObject;
+    }
+
+    /* Loop all Major Functions */
+    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+    {
+        /* Set each function that was set to NULL to internal routine */
+		if (!DriverObject->MajorFunction[i])
+            DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
     }
 
     /* Return the Status */
