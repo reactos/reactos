@@ -441,7 +441,6 @@ MiniSendComplete(
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
-    /* Should we free this before or after calling SendComplete? */
     if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
     {
         NDIS_DbgPrint(MAX_TRACE, ("Freeing Scatter/Gather list\n"));
@@ -684,6 +683,8 @@ MiniQueryInformation(
   KeLowerIrql(OldIrql);
 
   /* FIXME: Wait in pending case! */
+
+  ASSERT(NdisStatus != NDIS_STATUS_PENDING);
 
   return NdisStatus;
 }
