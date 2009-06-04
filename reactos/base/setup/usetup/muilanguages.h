@@ -190,7 +190,7 @@ const MUI_LANGUAGE LanguageList[] =
   {L"00003009", L"1252", L"437", L"10000", L"English (Zimbabwe)",           L"1",   enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    enZWLayouts },
   {L"00003409", L"1252", L"437", L"10000", L"English (Philippines)",        L"63",  enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    enPHLayouts },
   {L"0000048F", L"1252", L"437", L"10000", L"Esperanto",                    L"1",   enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    eoAALayouts },
-  {L"00000425", L"1257", L"775", L"10029", L"Estonian",                     L"372", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    etEELayouts },
+  {L"00000425", L"1252", L"775", L"10029", L"Estonian",                     L"372", etEEPages, etEEErrorEntries, etEEStrings, LatinFonts,    etEELayouts },
   {L"00000438", L"1252", L"850", L"10079", L"Faeroese",                     L"1",   enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    foFOLayouts },
   {L"00000429", L"1256", L"720", L"10004", L"Farsi",                        L"1",   enUSPages, enUSErrorEntries, enUSStrings, UnicodeFonts,  faIRLayouts },
   {L"0000040B", L"1252", L"850", L"10000", L"Finnish",                      L"358", enUSPages, enUSErrorEntries, enUSStrings, LatinFonts,    fiFILayouts },
