@@ -162,23 +162,14 @@ NtGdiSetPixelFormat(
 
   ppdev = pdc->ppdev;
 
+  /*
+      WndObj is needed so exit on NULL pointer.
+   */
   if (pWndObj) pso = pWndObj->psoOwner;
   else
   {
      SetLastWin32Error(ERROR_INVALID_PIXEL_FORMAT);
      goto Exit;
-  }
-
-  if (!pso)
-  {
-  /*
-     Based on some rules! InfoDC to DC or, based on wiki information!
-     All pointers, it's a "must be!", (CONTAINING_RECORD +10h = SURFOBJ), the
-     pointer will start at SURFOBJ of the SURFACE structure. 
-   */
-     pso = (SURFOBJ *)pdc->dclevel.pSurface;
-     if (!pso) pso = pdc->pSurfInfo;
-     if (!pso) pso = ppdev->pSurface;
   }
 
   if (ppdev->flFlags & PDEV_META_DEVICE)
