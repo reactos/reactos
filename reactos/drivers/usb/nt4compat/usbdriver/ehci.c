@@ -630,7 +630,7 @@ ehci_process_pending_endp(PEHCI_DEV ehci)
         if (can_submit == STATUS_NO_MORE_ENTRIES)
         {
             //no enough bandwidth or tds
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
             InsertTailList(&temp_list, pthis);
         }
         else
@@ -788,7 +788,7 @@ ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     }
 
     pending_endp->pendp = purb->pendp;
-    InsertTailList(&ehci->pending_endp_list, (PLIST_ENTRY) pending_endp);
+    InsertTailList(&ehci->pending_endp_list, &pending_endp->endp_link);
 
     unlock_dev(pdev, TRUE);
     unlock_pending_endp_list(&ehci->pending_endp_list_lock);
@@ -1198,7 +1198,7 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
             purb->flags &= ~URB_FLAG_STATE_MASK;
             purb->flags |= URB_FLAG_STATE_PENDING;
 
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
         }
 
         pending_endp = alloc_pending_endp(&ehci->pending_endp_pool, 1);
@@ -1382,7 +1382,7 @@ ehci_insert_urb_schedule(PEHCI_DEV ehci, PURB purb)
 
     purb->flags &= ~URB_FLAG_STATE_MASK;
     purb->flags |= URB_FLAG_STATE_IN_PROCESS | URB_FLAG_IN_SCHEDULE;
-    InsertTailList(&ehci->urb_list, (PLIST_ENTRY) purb);
+    InsertTailList(&ehci->urb_list, &purb->urb_link);
 
     return TRUE;
 }

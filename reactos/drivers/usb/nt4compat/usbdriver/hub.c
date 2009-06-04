@@ -122,7 +122,7 @@ free_event(PUSB_EVENT_POOL pool, PUSB_EVENT pevent)
     }
 
     RtlZeroMemory(pevent, sizeof(USB_EVENT));
-    InsertTailList(&pool->free_que, (PLIST_ENTRY) pevent);
+    InsertTailList(&pool->free_que, &pevent->event_link);
     pool->free_count++;
     usb_dbg_print(DBGLVL_MAXIMUM + 1,
                   ("free_event(): alloced=0x%x, addr=0x%x\n", MAX_EVENTS - pool->free_count, pevent));
@@ -204,7 +204,7 @@ free_timer_svc(PTIMER_SVC_POOL pool, PTIMER_SVC ptimer)
         return FALSE;
 
     RtlZeroMemory(ptimer, sizeof(TIMER_SVC));
-    InsertTailList(&pool->free_que, (PLIST_ENTRY) & ptimer->timer_svc_link);
+    InsertTailList(&pool->free_que, &ptimer->timer_svc_link);
     pool->free_count++;
 
     return TRUE;
