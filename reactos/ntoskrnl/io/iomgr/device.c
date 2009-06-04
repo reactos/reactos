@@ -33,7 +33,7 @@ IopDeleteDevice(IN PVOID ObjectBody)
     /* TODO: Delete Device Node */
 
     /* Dereference the driver object, referenced in IoCreateDevice */
-    if (DeviceObject->DriverObject);
+    if (DeviceObject->DriverObject)
         ObDereferenceObject(DeviceObject->DriverObject);
 }
 
