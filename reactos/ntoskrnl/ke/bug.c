@@ -1138,13 +1138,11 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 #endif
 
         /* Display the BSOD */
-        KeLowerIrql(APC_LEVEL); // This is a nastier hack than any ever before
         KiDisplayBlueScreen(MessageId,
                             IsHardError,
                             HardErrCaption,
                             HardErrMessage,
                             AnsiName);
-        KeRaiseIrql(HIGH_LEVEL, &OldIrql);
 
         /* Check if the debugger is disabled but we can enable it */
         if (!(KdDebuggerEnabled) && !(KdPitchDebugger))
