@@ -322,10 +322,10 @@ NdisMAllocateMapRegisters(
 
   Adapter->NdisMiniportBlock.SystemAdapterObject = AdapterObject;
 
-  if(AvailableMapRegisters < MapRegistersPerBaseRegister)
+  if(AvailableMapRegisters < MapRegistersPerBaseRegister * BaseMapRegistersNeeded)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Didn't get enough map registers from hal - requested 0x%x, got 0x%x\n",
-          MapRegistersPerBaseRegister, AvailableMapRegisters));
+          MapRegistersPerBaseRegister * BaseMapRegistersNeeded, AvailableMapRegisters));
 
       AdapterObject->DmaOperations->PutDmaAdapter(AdapterObject);
       Adapter->NdisMiniportBlock.SystemAdapterObject = NULL;
