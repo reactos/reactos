@@ -1200,10 +1200,10 @@ IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
 
     /* Make sure it's not getting deleted */
     DeviceExtension = IoGetDevObjExtension(DeviceObject);
-    if (DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING |
+    if (!(DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING |
                                            DOE_DELETE_PENDING |
                                            DOE_REMOVE_PENDING |
-                                           DOE_REMOVE_PROCESSED))
+                                           DOE_REMOVE_PROCESSED)))
     {
         /* Get the Lower Device Object */
         LowerDeviceObject = DeviceExtension->AttachedTo;
