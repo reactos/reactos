@@ -1,4 +1,4 @@
-// vertaald door Lionel Lowie
+// vertaald door Lionel Lowie, Oscar van Egmond
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
@@ -15,15 +15,15 @@ BEGIN
     PUSHBUTTON "&Installeren", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Verwijderen", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
     PUSHBUTTON "&Eigenschappen", IDC_PROPERTIES, 174, 130, 65, 14
-    GROUPBOX "Description", -1, 9, 153, 230, 46, BS_GROUPBOX
-    LTEXT "Component Description goes here...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
-    CHECKBOX "&Show Icon in taskbar when connected", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Notify me when this connection has limited or no connectivity", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    GROUPBOX "Beschrijving", -1, 9, 153, 230, 46, BS_GROUPBOX
+    LTEXT "Component Beschrijving gaat hier...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+    CHECKBOX "&Toon Pictogram in taskbar wanneer verbonden", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Breng me op de hoogte wanneer deze verbinding geen of beperkte connectiviteit heeft", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Allgemein"
+CAPTION "Algemeen"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -56,11 +56,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Support"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Connection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
-    LTEXT "Address type:", -1, 22, 20, 80, 8
-    LTEXT "IP address:", -1, 22, 34, 80, 8
+    GROUPBOX "Verbinding Status", -1, 9, 8, 200, 88, BS_GROUPBOX
+    LTEXT "Adres type:", -1, 22, 20, 80, 8
+    LTEXT "IP adres:", -1, 22, 34, 80, 8
     LTEXT "SubNet mask:", -1, 22, 48, 80, 8
-    LTEXT "Default gateway:", -1, 22, 62, 80, 8
+    LTEXT "Standaard gateway:", -1, 22, 62, 80, 8
 
     RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
     RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
@@ -72,57 +72,57 @@ END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Network Connection Details"
+CAPTION "Netwerk Verbinding Details"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+    LTEXT "Netwerk Verbinding &Details:", -1, 15, 9, 170, 12
     CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
     PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_PHYSICAL_ADDRESS        "Physical Address"
-    IDS_IP_ADDRESS              "IP Address"
+    IDS_PHYSICAL_ADDRESS        "Fysieke Adres"
+    IDS_IP_ADDRESS              "IP Adres"
     IDS_SUBNET_MASK             "Subnet Mask"
-    IDS_DEF_GATEWAY             "Default Gateway"
+    IDS_DEF_GATEWAY             "Standaard Gateway"
     IDS_DHCP_SERVER             "DHCP Server"
-    IDS_LEASE_OBTAINED          "Lease Obtained"
-    IDS_LEASE_EXPIRES           "Lease Expires"
+    IDS_LEASE_OBTAINED          "Lease Verkregen"
+    IDS_LEASE_EXPIRES           "Lease Verloopt"
     IDS_DNS_SERVERS             "DNS Servers"
     IDS_WINS_SERVERS            "WINS Servers"
-    IDS_PROPERTY                "Property"
-    IDS_VALUE                   "Value"
-    IDS_NETWORKCONNECTION       "Network Connection"
-    IDS_SHV_COLUMN_NAME         "Name"
+    IDS_PROPERTY                "Eigenschap"
+    IDS_VALUE                   "Waarde"
+    IDS_NETWORKCONNECTION       "Netwerk Verbinding"
+    IDS_SHV_COLUMN_NAME         "Naam"
     IDS_SHV_COLUMN_TYPE         "Type"
     IDS_SHV_COLUMN_STATE        "Status"
-    IDS_SHV_COLUMN_DEVNAME      "Device Name"
-    IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
-    IDS_SHV_COLUMN_OWNER        "Owner"
-    IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
-    IDS_STATUS_NON_OPERATIONAL  "Disabled"
-    IDS_STATUS_UNREACHABLE      "Not Connected"
-    IDS_STATUS_DISCONNECTED     "Network cable unplugged"
-    IDS_STATUS_CONNECTING       "Acquiring network address"
-    IDS_STATUS_CONNECTED        "Connected"
-    IDS_STATUS_OPERATIONAL      "Connected"
+    IDS_SHV_COLUMN_DEVNAME      "Apparaat Naam"
+    IDS_SHV_COLUMN_PHONE        "Telefoon # of Host Adres"
+    IDS_SHV_COLUMN_OWNER        "Eigenaar"
+    IDS_TYPE_ETHERNET           "LAN of Hoge snelheid Internet"
+    IDS_STATUS_NON_OPERATIONAL  "Uitgeschakeld"
+    IDS_STATUS_UNREACHABLE      "Niet Verbonden"
+    IDS_STATUS_DISCONNECTED     "Netwerk kabel afgesloten"
+    IDS_STATUS_CONNECTING       "Netwerkadres verwerven"
+    IDS_STATUS_CONNECTED        "Verbonden"
+    IDS_STATUS_OPERATIONAL      "Verbonden"
 
-    IDS_NET_ACTIVATE            "Enable"
-    IDS_NET_DEACTIVATE          "Disable"
+    IDS_NET_ACTIVATE            "Schakel in"
+    IDS_NET_DEACTIVATE          "Schakel uit"
     IDS_NET_STATUS              "Status"
-    IDS_NET_REPAIR              "Repair"
-    IDS_NET_CREATELINK          "Create Shortcut"
-    IDS_NET_DELETE              "Delete"
-    IDS_NET_RENAME              "Rename"
-    IDS_NET_PROPERTIES          "Properties"
+    IDS_NET_REPAIR              "Repareren"
+    IDS_NET_CREATELINK          "Maak snelkoppeling"
+    IDS_NET_DELETE              "Verwijderen"
+    IDS_NET_RENAME              "Hernoemen"
+    IDS_NET_PROPERTIES          "Eigenschappen"
 
     IDS_FORMAT_BIT              "%u Bit/s"
     IDS_FORMAT_KBIT             "%u KBit/s"
     IDS_FORMAT_MBIT             "%u MBit/s"
     IDS_FORMAT_GBIT             "%u GBit/s"
-    IDS_DURATION_DAY            "%d Day %s"
-    IDS_DURATION_DAYS           "%d Days %s"
-    IDS_ASSIGNED_DHCP           "Assigned by DHCP"
-    IDS_ASSIGNED_MANUAL         "Manually configured"
+    IDS_DURATION_DAY            "%d Dag %s"
+    IDS_DURATION_DAYS           "%d Dagen %s"
+    IDS_ASSIGNED_DHCP           "Toegekend door DHCP"
+    IDS_ASSIGNED_MANUAL         "Handmatig geconfigureerd"
 END
