@@ -1132,11 +1132,18 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\Vga\Device0","DefaultSettings.YResolution",0x00010001,480
 
 ; USB uhci/ehci driver
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Group",0x00000000,"Base"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ImagePath",0x00020000,"system32\drivers\usbdriver.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Start",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Group",0x00000000,"Base"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","ImagePath",0x00020000,"system32\drivers\usbdriver.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\usbdriver","Type",0x00010001,0x00000001
+
+; USB storage driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Group",0x00000000,"Extended Base"
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","ImagePath",0x00020000,"system32\drivers\usbstor.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\usbstor","Type",0x00010001,0x00000001
 
 ; Windows Installer Service
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","DisplayName",0x00000000,"ReactOS Installer"
