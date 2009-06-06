@@ -38,9 +38,10 @@
 #include "shlobj.h"
 #include "shellapi.h"
 #include "wine/windef16.h"
+*/
 #include "wine/unicode.h"
 
-*/
+
 /*******************************************
 *  global SHELL32.DLL variables
 */
