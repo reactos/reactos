@@ -40,6 +40,8 @@ static UINT (WINAPI *pMsiSourceListEnumSourcesA)
 static UINT (WINAPI *pMsiSourceListGetInfoA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, LPCSTR, LPSTR, LPDWORD);
 
+static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
+
 static HMODULE hsrclient = 0;
 static BOOL (WINAPI *pSRRemoveRestorePoint)(DWORD);
 static BOOL (WINAPI *pSRSetRestorePointA)(RESTOREPOINTINFOA*, STATEMGRSTATUS*);
@@ -1316,6 +1318,7 @@ static int CDECL fci_delete(char *pszFile, int *err, void *pv)
 static void init_functionpointers(void)
 {
     HMODULE hmsi = GetModuleHandleA("msi.dll");
+    HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
 
 #define GET_PROC(mod, func) \
     p ## func = (void*)GetProcAddress(mod, #func); \
@@ -1325,6 +1328,8 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiQueryComponentStateA);
     GET_PROC(hmsi, MsiSourceListEnumSourcesA);
     GET_PROC(hmsi, MsiSourceListGetInfoA);
+
+    GET_PROC(hadvapi32, ConvertSidToStringSidA);
 
     hsrclient = LoadLibraryA("srclient.dll");
     GET_PROC(hsrclient, SRRemoveRestorePoint);
@@ -1346,26 +1351,28 @@ static BOOL check_win9x(void)
     return FALSE;
 }
 
-static void get_user_sid(LPSTR *usersid)
+static LPSTR get_user_sid(LPSTR *usersid)
 {
     HANDLE token;
     BYTE buf[1024];
     DWORD size;
     PTOKEN_USER user;
-    HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
-    static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
+
+    if (!pConvertSidToStringSidA)
+    {
+        win_skip("ConvertSidToStringSidA is not available\n");
+        return NULL;
+    }
 
     *usersid = NULL;
-    pConvertSidToStringSidA = (void *)GetProcAddress(hadvapi32, "ConvertSidToStringSidA");
-    if (!pConvertSidToStringSidA)
-        return;
-
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     size = sizeof(buf);
     GetTokenInformation(token, TokenUser, buf, size, &size);
     user = (PTOKEN_USER)buf;
     pConvertSidToStringSidA(user->User.Sid, usersid);
+    ok(*usersid != NULL, "pConvertSidToStringSidA failed lre=%d\n", GetLastError());
     CloseHandle(token);
+    return *usersid;
 }
 
 static BOOL check_record(MSIHANDLE rec, UINT field, LPCSTR val)
@@ -2511,12 +2518,8 @@ static void test_publish_registerproduct(void)
     static const CHAR userugkey[] = "Software\\Microsoft\\Installer\\UpgradeCodes"
                                     "\\51AAE0C44620A5E4788506E91F249BD2";
 
-    get_user_sid(&usersid);
-    if (!usersid)
-    {
-        skip("ConvertSidToStringSidA is not available\n");
+    if (!get_user_sid(&usersid))
         return;
-    }
 
     get_date_str(date);
     GetTempPath(MAX_PATH, temp);
@@ -2756,12 +2759,8 @@ static void test_publish_publishproduct(void)
     static const CHAR machprod[] = "Installer\\Products\\84A88FD7F6998CE40A22FB59F6B9C2BB";
     static const CHAR machup[] = "Installer\\UpgradeCodes\\51AAE0C44620A5E4788506E91F249BD2";
 
-    get_user_sid(&usersid);
-    if (!usersid)
-    {
-        skip("ConvertSidToStringSidA is not available\n");
+    if (!get_user_sid(&usersid))
         return;
-    }
 
     GetTempPath(MAX_PATH, temp);
 
@@ -2952,12 +2951,8 @@ static void test_publish_publishfeatures(void)
     static const CHAR classfeat[] = "Software\\Classes\\Installer\\Features"
                                     "\\84A88FD7F6998CE40A22FB59F6B9C2BB";
 
-    get_user_sid(&usersid);
-    if (!usersid)
-    {
-        skip("ConvertSidToStringSidA is not available\n");
+    if (!get_user_sid(&usersid))
         return;
-    }
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
@@ -3114,12 +3109,8 @@ static void test_publish_registeruser(void)
         "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\"
         "UserData\\%s\\Products\\84A88FD7F6998CE40A22FB59F6B9C2BB\\InstallProperties";
 
-    get_user_sid(&usersid);
-    if (!usersid)
-    {
-        skip("ConvertSidToStringSidA is not available\n");
+    if (!get_user_sid(&usersid))
         return;
-    }
 
     get_owner_company(&owner, &company);
 
@@ -3197,12 +3188,8 @@ static void test_publish_processcomponents(void)
     static const CHAR compkey[] =
         "Software\\Microsoft\\Windows\\CurrentVersion\\Installer\\Components";
 
-    get_user_sid(&usersid);
-    if (!usersid)
-    {
-        skip("ConvertSidToStringSidA is not available\n");
+    if (!get_user_sid(&usersid))
         return;
-    }
 
     CreateDirectoryA("msitest", NULL);
     create_file("msitest\\maximus", 500);
@@ -3322,7 +3309,7 @@ static void test_publish(void)
 
     if (!pMsiQueryComponentStateA)
     {
-        skip("MsiQueryComponentStateA is not available\n");
+        win_skip("MsiQueryComponentStateA is not available\n");
         return;
     }
 
@@ -3810,7 +3797,7 @@ static void test_publishsourcelist(void)
 
     if (!pMsiSourceListEnumSourcesA || !pMsiSourceListGetInfoA)
     {
-        skip("MsiSourceListEnumSourcesA and/or MsiSourceListGetInfoA are not available\n");
+        win_skip("MsiSourceListEnumSourcesA and/or MsiSourceListGetInfoA are not available\n");
         return;
     }
 

@@ -33,6 +33,10 @@ ok(true === true, "true === true is false");
 ok(null === null, "null === null is false");
 ok(undefined === undefined, "undefined === undefined is false");
 ok(!(undefined === null), "!(undefined === null) is false");
+ok(1E0 === 1, "1E0 === 1 is false");
+ok(1000000*1000000 === 1000000000000, "1000000*1000000 === 1000000000000 is false");
+ok(8.64e15 === 8640000000000000, "8.64e15 !== 8640000000000000"+8.64e15);
+ok(1e2147483648 === Infinity, "1e2147483648 !== Infinity");
 
 ok(1 !== 2, "1 !== 2 is false");
 ok(null !== undefined, "null !== undefined is false");

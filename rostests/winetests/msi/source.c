@@ -193,7 +193,7 @@ static void test_MsiSourceListGetInfo(void)
 
     if (!pMsiSourceListGetInfoA)
     {
-        skip("Skipping MsiSourceListGetInfoA tests\n");
+        win_skip("Skipping MsiSourceListGetInfoA tests\n");
         return;
     }
 
@@ -645,7 +645,7 @@ static void test_MsiSourceListAddSourceEx(void)
 
     if (!pMsiSourceListAddSourceExA)
     {
-        skip("Skipping MsiSourceListAddSourceExA tests\n");
+        win_skip("Skipping MsiSourceListAddSourceExA tests\n");
         return;
     }
 
@@ -1018,7 +1018,7 @@ static void test_MsiSourceListEnumSources(void)
 
     if (!pMsiSourceListEnumSourcesA)
     {
-        skip("MsiSourceListEnumSourcesA is not available\n");
+        win_skip("MsiSourceListEnumSourcesA is not available\n");
         return;
     }
 
@@ -1620,7 +1620,7 @@ static void test_MsiSourceListSetInfo(void)
 
     if (!pMsiSourceListSetInfoA)
     {
-        skip("MsiSourceListSetInfoA is not available\n");
+        win_skip("MsiSourceListSetInfoA is not available\n");
         return;
     }
 
@@ -2030,7 +2030,7 @@ static void test_MsiSourceListAddMediaDisk(void)
 
     if (!pMsiSourceListAddMediaDiskA)
     {
-        skip("MsiSourceListAddMediaDiskA is not available\n");
+        win_skip("MsiSourceListAddMediaDiskA is not available\n");
         return;
     }
 
@@ -2332,7 +2332,7 @@ static void test_MsiSourceListEnumMediaDisks(void)
 
     if (!pMsiSourceListEnumMediaDisksA)
     {
-        skip("MsiSourceListEnumMediaDisksA is not available\n");
+        win_skip("MsiSourceListEnumMediaDisksA is not available\n");
         return;
     }
 
@@ -3131,7 +3131,7 @@ static void test_MsiSourceListAddSource(void)
 
     if (!pMsiSourceListAddSourceA)
     {
-        skip("Skipping MsiSourceListAddSourceA tests\n");
+        win_skip("Skipping MsiSourceListAddSourceA tests\n");
         return;
     }
 

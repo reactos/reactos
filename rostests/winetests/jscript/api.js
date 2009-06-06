@@ -618,6 +618,12 @@ ok(tmp === 2, "Math.pow(2, 2) = " + tmp);
 tmp = Math.pow(2, 2, 3);
 ok(tmp === 4, "Math.pow(2, 2, 3) = " + tmp);
 
+tmp = Math.pow(2);
+ok(isNaN(tmp), "Math.pow(2) is not NaN");
+
+tmp = Math.pow();
+ok(isNaN(tmp), "Math.pow() is not NaN");
+
 tmp = Math.random();
 ok(typeof(tmp) == "number", "typeof(tmp) = " + typeof(tmp));
 ok(0 <= tmp && tmp <= 1, "Math.random() = " + tmp);
@@ -625,6 +631,285 @@ ok(0 <= tmp && tmp <= 1, "Math.random() = " + tmp);
 tmp = Math.random(100);
 ok(typeof(tmp) == "number", "typeof(tmp) = " + typeof(tmp));
 ok(0 <= tmp && tmp <= 1, "Math.random(100) = " + tmp);
+
+tmp = Math.acos(0);
+ok(Math.floor(tmp*100) === 157, "Math.acos(0) = " + tmp);
+
+tmp = Math.acos(1);
+ok(Math.floor(tmp*100) === 0, "Math.acos(1) = " + tmp);
+
+tmp = Math.acos(-1);
+ok(Math.floor(tmp*100) === 314, "Math.acos(-1) = " + tmp);
+
+tmp = Math.acos(Math.PI/4, 2);
+ok(Math.floor(tmp*100) === 66, "Math.acos(Math.PI/4, 2) = " + tmp);
+
+tmp = Math.acos(true);
+ok(Math.floor(tmp*100) === 0, "Math.acos(true) = " + tmp);
+
+tmp = Math.acos(false);
+ok(Math.floor(tmp*100) === 157, "Math.acos(false) = " + tmp);
+
+tmp = Math.acos(1.1);
+ok(isNaN(tmp), "Math.acos(1.1) is not NaN");
+
+tmp = Math.acos();
+ok(isNaN(tmp), "Math.acos() is not NaN");
+
+tmp = Math.acos(NaN);
+ok(isNaN(tmp), "Math.acos(NaN) is not NaN");
+
+tmp = Math.acos(Infinity);
+ok(isNaN(tmp), "Math.acos(Infinity) is not NaN");
+
+tmp = Math.acos(-Infinity);
+ok(isNaN(tmp), "Math.acos(-Infinity) is not NaN");
+
+tmp = Math.asin(0);
+ok(Math.floor(tmp*100) === 0, "Math.asin(0) = " + tmp);
+
+tmp = Math.asin(1);
+ok(Math.floor(tmp*100) === 157, "Math.asin(1) = " + tmp);
+
+tmp = Math.asin(-1);
+ok(Math.floor(tmp*100) === -158, "Math.asin(-1) = " + tmp);
+
+tmp = Math.asin(Math.PI/4, 2);
+ok(Math.floor(tmp*100) === 90, "Math.asin(Math.PI/4, 2) = " + tmp);
+
+tmp = Math.asin(true);
+ok(Math.floor(tmp*100) === 157, "Math.asin(true) = " + tmp);
+
+tmp = Math.asin(false);
+ok(Math.floor(tmp*100) === 0, "Math.asin(false) = " + tmp);
+
+tmp = Math.asin(1.1);
+ok(isNaN(tmp), "Math.asin(1.1) is not NaN");
+
+tmp = Math.asin();
+ok(isNaN(tmp), "Math.asin() is not NaN");
+
+tmp = Math.asin(NaN);
+ok(isNaN(tmp), "Math.asin(NaN) is not NaN");
+
+tmp = Math.asin(Infinity);
+ok(isNaN(tmp), "Math.asin(Infinity) is not NaN");
+
+tmp = Math.asin(-Infinity);
+ok(isNaN(tmp), "Math.asin(-Infinity) is not NaN");
+
+tmp = Math.atan(0);
+ok(Math.floor(tmp*100) === 0, "Math.atan(0) = " + tmp);
+
+tmp = Math.atan(1);
+ok(Math.floor(tmp*100) === 78, "Math.atan(1) = " + tmp);
+
+tmp = Math.atan(-1);
+ok(Math.floor(tmp*100) === -79, "Math.atan(-1) = " + tmp);
+
+tmp = Math.atan(true);
+ok(Math.floor(tmp*100) === 78, "Math.atan(true) = " + tmp);
+
+tmp = Math.atan(false);
+ok(Math.floor(tmp*100) === 0, "Math.atan(false) = " + tmp);
+
+tmp = Math.atan();
+ok(isNaN(tmp), "Math.atan() is not NaN");
+
+tmp = Math.atan(NaN);
+ok(isNaN(tmp), "Math.atan(NaN) is not NaN");
+
+tmp = Math.atan(Infinity);
+ok(Math.floor(tmp*100) === 157, "Math.atan(Infinity) = " + tmp);
+
+tmp = Math.atan(-Infinity);
+ok(Math.floor(tmp*100) === -158, "Math.atan(Infinity) = " + tmp);
+
+tmp = Math.atan2(0, 0);
+ok(Math.floor(tmp*100) === 0, "Math.atan2(0, 0) = " + tmp);
+
+tmp = Math.atan2(0, 1);
+ok(Math.floor(tmp*100) === 0, "Math.atan2(0, 1) = " + tmp);
+
+tmp = Math.atan2(0, Infinity);
+ok(Math.floor(tmp*100) === 0, "Math.atan2(0, Infinity) = " + tmp);
+
+tmp = Math.atan2(0, -1);
+ok(Math.floor(tmp*100) === 314, "Math.atan2(0, -1) = " + tmp);
+
+tmp = Math.atan2(0, -Infinity);
+ok(Math.floor(tmp*100) === 314, "Math.atan2(0, -Infinity) = " + tmp);
+
+tmp = Math.atan2(1, 0);
+ok(Math.floor(tmp*100) === 157, "Math.atan2(1, 0) = " + tmp);
+
+tmp = Math.atan2(Infinity, 0);
+ok(Math.floor(tmp*100) === 157, "Math.atan2(Infinity, 0) = " + tmp);
+
+tmp = Math.atan2(-1, 0);
+ok(Math.floor(tmp*100) === -158, "Math.atan2(-1, 0) = " + tmp);
+
+tmp = Math.atan2(-Infinity, 0);
+ok(Math.floor(tmp*100) === -158, "Math.atan2(-Infinity, 0) = " + tmp);
+
+tmp = Math.atan2(1, 1);
+ok(Math.floor(tmp*100) === 78, "Math.atan2(1, 1) = " + tmp);
+
+tmp = Math.atan2(-1, -1);
+ok(Math.floor(tmp*100) === -236, "Math.atan2(-1, -1) = " + tmp);
+
+tmp = Math.atan2(-1, 1);
+ok(Math.floor(tmp*100) === -79, "Math.atan2(-1, 1) = " + tmp);
+
+tmp = Math.atan2(Infinity, Infinity);
+ok(Math.floor(tmp*100) === 78, "Math.atan2(Infinity, Infinity) = " + tmp);
+
+tmp = Math.atan2(Infinity, -Infinity, 1);
+ok(Math.floor(tmp*100) === 235, "Math.atan2(Infinity, -Infinity, 1) = " + tmp);
+
+tmp = Math.atan2();
+ok(isNaN(tmp), "Math.atan2() is not NaN");
+
+tmp = Math.atan2(1);
+ok(isNaN(tmp), "Math.atan2(1) is not NaN");
+
+tmp = Math.exp(0);
+ok(tmp === 1, "Math.exp(0) = " + tmp);
+
+tmp = Math.exp(1);
+ok(Math.floor(tmp*100) === 271, "Math.exp(1) = " + tmp);
+
+tmp = Math.exp(-1);
+ok(Math.floor(tmp*100) === 36, "Math.exp(-1) = " + tmp);
+
+tmp = Math.exp(true);
+ok(Math.floor(tmp*100) === 271, "Math.exp(true) = " + tmp);
+
+tmp = Math.exp(1, 1);
+ok(Math.floor(tmp*100) === 271, "Math.exp(1, 1) = " + tmp);
+
+tmp = Math.exp();
+ok(isNaN(tmp), "Math.exp() is not NaN");
+
+tmp = Math.exp(NaN);
+ok(isNaN(tmp), "Math.exp(NaN) is not NaN");
+
+tmp = Math.exp(Infinity);
+ok(tmp === Infinity, "Math.exp(Infinity) = " + tmp);
+
+tmp = Math.exp(-Infinity);
+ok(tmp === 0, "Math.exp(-Infinity) = " + tmp);
+
+tmp = Math.log(1);
+ok(Math.floor(tmp*100) === 0, "Math.log(1) = " + tmp);
+
+tmp = Math.log(-1);
+ok(isNaN(tmp), "Math.log(-1) is not NaN");
+
+tmp = Math.log(true);
+ok(Math.floor(tmp*100) === 0, "Math.log(true) = " + tmp);
+
+tmp = Math.log(1, 1);
+ok(Math.floor(tmp*100) === 0, "Math.log(1, 1) = " + tmp);
+
+tmp = Math.log();
+ok(isNaN(tmp), "Math.log() is not NaN");
+
+tmp = Math.log(NaN);
+ok(isNaN(tmp), "Math.log(NaN) is not NaN");
+
+tmp = Math.log(Infinity);
+ok(tmp === Infinity, "Math.log(Infinity) = " + tmp);
+
+tmp = Math.log(-Infinity);
+ok(isNaN(tmp), "Math.log(-Infinity) is not NaN");
+
+tmp = Math.sin(0);
+ok(tmp === 0, "Math.sin(0) = " + tmp);
+
+tmp = Math.sin(Math.PI/2);
+ok(tmp === 1, "Math.sin(Math.PI/2) = " + tmp);
+
+tmp = Math.sin(-Math.PI/2);
+ok(tmp === -1, "Math.sin(-Math.PI/2) = " + tmp);
+
+tmp = Math.sin(Math.PI/3, 2);
+ok(Math.floor(tmp*100) === 86, "Math.sin(Math.PI/3, 2) = " + tmp);
+
+tmp = Math.sin(true);
+ok(Math.floor(tmp*100) === 84, "Math.sin(true) = " + tmp);
+
+tmp = Math.sin(false);
+ok(tmp === 0, "Math.sin(false) = " + tmp);
+
+tmp = Math.sin();
+ok(isNaN(tmp), "Math.sin() is not NaN");
+
+tmp = Math.sin(NaN);
+ok(isNaN(tmp), "Math.sin(NaN) is not NaN");
+
+tmp = Math.sin(Infinity);
+ok(isNaN(tmp), "Math.sin(Infinity) is not NaN");
+
+tmp = Math.sin(-Infinity);
+ok(isNaN(tmp), "Math.sin(-Infinity) is not NaN");
+
+tmp = Math.sqrt(0);
+ok(tmp === 0, "Math.sqrt(0) = " + tmp);
+
+tmp = Math.sqrt(4);
+ok(tmp === 2, "Math.sqrt(4) = " + tmp);
+
+tmp = Math.sqrt(-1);
+ok(isNaN(tmp), "Math.sqrt(-1) is not NaN");
+
+tmp = Math.sqrt(2, 2);
+ok(Math.floor(tmp*100) === 141, "Math.sqrt(2, 2) = " + tmp);
+
+tmp = Math.sqrt(true);
+ok(tmp === 1, "Math.sqrt(true) = " + tmp);
+
+tmp = Math.sqrt(false);
+ok(tmp === 0, "Math.sqrt(false) = " + tmp);
+
+tmp = Math.sqrt();
+ok(isNaN(tmp), "Math.sqrt() is not NaN");
+
+tmp = Math.sqrt(NaN);
+ok(isNaN(tmp), "Math.sqrt(NaN) is not NaN");
+
+tmp = Math.sqrt(Infinity);
+ok(tmp === Infinity, "Math.sqrt(Infinity) = " + tmp);
+
+tmp = Math.sqrt(-Infinity);
+ok(isNaN(tmp), "Math.sqrt(-Infinity) is not NaN");
+
+tmp = Math.tan(0);
+ok(tmp === 0, "Math.tan(0) = " + tmp);
+
+tmp = Math.tan(Math.PI);
+ok(Math.floor(tmp*100) === -1, "Math.tan(Math.PI) = " + tmp);
+
+tmp = Math.tan(2, 2);
+ok(Math.floor(tmp*100) === -219, "Math.tan(2, 2) = " + tmp);
+
+tmp = Math.tan(true);
+ok(Math.floor(tmp*100) === 155, "Math.tan(true) = " + tmp);
+
+tmp = Math.tan(false);
+ok(tmp === 0, "Math.tan(false) = " + tmp);
+
+tmp = Math.tan();
+ok(isNaN(tmp), "Math.tan() is not NaN");
+
+tmp = Math.tan(NaN);
+ok(isNaN(tmp), "Math.tan(NaN) is not NaN");
+
+tmp = Math.tan(Infinity);
+ok(isNaN(tmp), "Math.tan(Infinity) is not NaN");
+
+tmp = Math.tan(-Infinity);
+ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
 
 var func = function  (a) {
         var a = 1;
@@ -649,6 +934,16 @@ var date = new Date();
 date = new Date(100);
 ok(date.getTime() === 100, "date.getTime() = " + date.getTime());
 ok(Date.prototype.getTime() === 0, "date.prototype.getTime() = " + Date.prototype.getTime());
+date = new Date(8.64e15);
+ok(date.getTime() === 8.64e15, "date.getTime() = " + date.getTime());
+date = new Date(8.64e15+1);
+ok(isNaN(0+date.getTime()), "date.getTime() is not NaN");
+date = new Date(Infinity);
+ok(isNaN(0+date.getTime()), "date.getTime() is not NaN");
+
+ok(date.setTime(123) === 123, "date.setTime(123) !== 123");
+ok(date.setTime("123", NaN) === 123, "date.setTime(\"123\") !== 123");
+ok(isNaN(date.setTime(NaN)), "date.setTime(NaN) is not NaN");
 
 ok(typeof(Math.PI) === "number", "typeof(Math.PI) = " + typeof(Math.PI));
 ok(Math.floor(Math.PI*100) === 314, "Math.PI = " + Math.PI);
@@ -674,5 +969,20 @@ ok(typeof(Math.LN2) === "number", "typeof(Math.LN2) = " + typeof(Math.LN2));
 ok(Math.floor(Math.LN2*100) === 69, "Math.LN2 = " + Math.LN2);
 Math.LN2 = "test";
 ok(Math.floor(Math.LN2*100) === 69, "modified Math.LN2 = " + Math.LN2);
+
+ok(typeof(Math.LN10) === "number", "typeof(Math.LN10) = " + typeof(Math.LN10));
+ok(Math.floor(Math.LN10*100) === 230, "Math.LN10 = " + Math.LN10);
+Math.LN10 = "test";
+ok(Math.floor(Math.LN10*100) === 230, "modified Math.LN10 = " + Math.LN10);
+
+ok(typeof(Math.SQRT2) === "number", "typeof(Math.SQRT2) = " + typeof(Math.SQRT2));
+ok(Math.floor(Math.SQRT2*100) === 141, "Math.SQRT2 = " + Math.SQRT2);
+Math.SQRT2 = "test";
+ok(Math.floor(Math.SQRT2*100) === 141, "modified Math.SQRT2 = " + Math.SQRT2);
+
+ok(typeof(Math.SQRT1_2) === "number", "typeof(Math.SQRT1_2) = " + typeof(Math.SQRT1_2));
+ok(Math.floor(Math.SQRT1_2*100) === 70, "Math.SQRT1_2 = " + Math.SQRT1_2);
+Math.SQRT1_2 = "test";
+ok(Math.floor(Math.SQRT1_2*100) === 70, "modified Math.SQRT1_2 = " + Math.SQRT1_2);
 
 reportSuccess();
