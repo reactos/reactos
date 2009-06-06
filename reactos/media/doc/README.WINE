@@ -222,10 +222,10 @@ snmpapi -
 
 User32 -
   reactos/dll/win32/user32/controls/button.c    # Synced to Wine-1_1_22
-  reactos/dll/win32/user32/controls/combo.c     # Synced to Wine-1_1_13
+  reactos/dll/win32/user32/controls/combo.c     # Synced to Wine-1_1_22
   reactos/dll/win32/user32/controls/edit.c      # Synced to Wine-1_1_22
   reactos/dll/win32/user32/controls/icontitle.c # Synced to Wine-1_1_13
-  reactos/dll/win32/user32/controls/listbox.c   # Synced to Wine-1_1_13
+  reactos/dll/win32/user32/controls/listbox.c   # Synced to Wine-1_1_22
   reactos/dll/win32/user32/controls/scrollbar.c # Forked
   reactos/dll/win32/user32/controls/static.c    # Synced to Wine-1_1_22
 

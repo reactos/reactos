@@ -1900,8 +1900,7 @@ static LRESULT LISTBOX_Directory( LB_DESCR *descr, UINT attrib,
                 else  /* not a directory */
                 {
 #define ATTRIBS (FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | \
-                 FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE | \
-                 FILE_ATTRIBUTE_DIRECTORY)
+                 FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_ARCHIVE)
 
                     if ((attrib & DDL_EXCLUSIVE) &&
                         ((attrib & ATTRIBS) != (entry.dwFileAttributes & ATTRIBS)))
@@ -2674,7 +2673,7 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         if (msg == WM_CREATE)
         {
 	    CREATESTRUCTW *lpcs = (CREATESTRUCTW *)lParam;
-	    if (lpcs->style & LBS_COMBOBOX) lphc = (LPHEADCOMBO)lpcs->lpCreateParams;
+            if (lpcs->style & LBS_COMBOBOX) lphc = lpcs->lpCreateParams;
             if (!LISTBOX_Create( hwnd, lphc )) return -1;
             TRACE("creating hwnd %p descr %p\n", hwnd, (void *)GetWindowLongPtrW( hwnd, 0 ) );
             return 0;
