@@ -1196,7 +1196,7 @@ NtGdiEngCreateDeviceBitmap(
     IN SIZEL sizl,
     IN ULONG iFormatCompat)
 {
-    if ( ( sizl.cx > 0 && sizl.cy > 0 && ((sizl.cy * sizl.cx) <= -1) ) &&
+    if ( ( sizl.cx > 0 && sizl.cy > 0 && (((LONGLONG)(sizl.cy * sizl.cx)) <= 0xFFFFFFFFULL) ) &&
          iFormatCompat <= BMF_8RLE &&
          iFormatCompat >= BMF_1BPP )
        return EngCreateDeviceBitmap(dhsurf, sizl, iFormatCompat);
