@@ -50,7 +50,7 @@ reactos/dll/win32/comctl32        # Autosync
 reactos/dll/win32/comdlg32        # Autosync
 reactos/dll/win32/compstui        # Autosync
 reactos/dll/win32/credui          # Autosync
-reactos/dll/win32/crypt32         # Synced to Wine-1_0-rc1
+reactos/dll/win32/crypt32         # Synced to Wine-1_1_21
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/cryptui         # Autosync
@@ -106,7 +106,7 @@ reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/msvidc32        # Autosync
-reactos/dll/win32/msxml3          # Synced to Wine-20071230
+reactos/dll/win32/msxml3          # Synced to Wine-1_1_20
 reactos/dll/win32/nddeapi         # Autosync
 reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/ntdsapi         # Autosync
@@ -140,7 +140,7 @@ reactos/dll/win32/schannel        # Autosync
 reactos/dll/win32/sensapi         # Autosync
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
 reactos/dll/win32/shell32         # Forked at Wine-20071011
-reactos/dll/win32/shdocvw         # Synced to Wine-0_9_5
+reactos/dll/win32/shdocvw         # Synced to Wine-1_1_20
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
 reactos/dll/win32/slbcsp          # Autosync
@@ -186,7 +186,7 @@ reactos/base/applications/winhlp32        # Autosync
 reactos/base/applications/wordpad         # Autosync
 reactos/base/services/rpcss               # Synced to Wine-20081105
 reactos/base/system/expand                # Out of sync
-reactos/base/system/msiexec               # Wine 1.0-rc1
+reactos/base/system/msiexec               # Synced to Wine-1_1_5
 reactos/modules/rosapps/winfile           # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
