@@ -40,10 +40,12 @@
 typedef void (WINAPI *fnILFree)(LPITEMIDLIST);
 typedef BOOL (WINAPI *fnILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST);
 typedef HRESULT (WINAPI *fnSHILCreateFromPath)(LPCWSTR, LPITEMIDLIST *,DWORD*);
+typedef HRESULT (WINAPI *fnSHDefExtractIconA)(LPCSTR, int, UINT, HICON*, HICON*, UINT);
 
 static fnILFree pILFree;
 static fnILIsEqual pILIsEqual;
 static fnSHILCreateFromPath pSHILCreateFromPath;
+static fnSHDefExtractIconA pSHDefExtractIconA;
 
 static DWORD (WINAPI *pGetLongPathNameA)(LPCSTR, LPSTR, DWORD);
 
@@ -708,6 +710,34 @@ static void test_datalink(void)
     IShellLinkW_Release( sl );
 }
 
+static void test_shdefextracticon(void)
+{
+    HICON hiconlarge=NULL, hiconsmall=NULL;
+    HRESULT res;
+
+    if (!pSHDefExtractIconA)
+    {
+        win_skip("SHDefExtractIconA is unavailable\n");
+        return;
+    }
+
+    res = pSHDefExtractIconA("shell32.dll", 0, 0, &hiconlarge, &hiconsmall, MAKELONG(16,24));
+    ok(SUCCEEDED(res), "SHDefExtractIconA failed, res=%x\n", res);
+    ok(hiconlarge != NULL, "got null hiconlarge\n");
+    ok(hiconsmall != NULL, "got null hiconsmall\n");
+    DestroyIcon(hiconlarge);
+    DestroyIcon(hiconsmall);
+
+    hiconsmall = NULL;
+    res = pSHDefExtractIconA("shell32.dll", 0, 0, NULL, &hiconsmall, MAKELONG(16,24));
+    ok(SUCCEEDED(res), "SHDefExtractIconA failed, res=%x\n", res);
+    ok(hiconsmall != NULL, "got null hiconsmall\n");
+    DestroyIcon(hiconsmall);
+
+    res = pSHDefExtractIconA("shell32.dll", 0, 0, NULL, NULL, MAKELONG(16,24));
+    ok(SUCCEEDED(res), "SHDefExtractIconA failed, res=%x\n", res);
+}
+
 START_TEST(shelllink)
 {
     HRESULT r;
@@ -717,6 +747,7 @@ START_TEST(shelllink)
     pILFree = (fnILFree) GetProcAddress(hmod, (LPSTR)155);
     pILIsEqual = (fnILIsEqual) GetProcAddress(hmod, (LPSTR)21);
     pSHILCreateFromPath = (fnSHILCreateFromPath) GetProcAddress(hmod, (LPSTR)28);
+    pSHDefExtractIconA = (fnSHDefExtractIconA) GetProcAddress(hmod, "SHDefExtractIconA");
 
     pGetLongPathNameA = (void *)GetProcAddress(hkernel32, "GetLongPathNameA");
 
@@ -728,6 +759,7 @@ START_TEST(shelllink)
     test_get_set();
     test_load_save();
     test_datalink();
+    test_shdefextracticon();
 
     CoUninitialize();
 }

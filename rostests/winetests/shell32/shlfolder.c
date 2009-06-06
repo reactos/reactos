@@ -52,6 +52,9 @@ static HRESULT (WINAPI *pStrRetToBufW)(STRRET*,LPCITEMIDLIST,LPWSTR,UINT);
 static LPITEMIDLIST (WINAPI *pILFindLastID)(LPCITEMIDLIST);
 static void (WINAPI *pILFree)(LPITEMIDLIST);
 static BOOL (WINAPI *pILIsEqual)(LPCITEMIDLIST, LPCITEMIDLIST);
+static HRESULT (WINAPI *pSHCreateShellItem)(LPCITEMIDLIST,IShellFolder*,LPCITEMIDLIST,IShellItem**);
+static LPITEMIDLIST (WINAPI *pILCombine)(LPCITEMIDLIST,LPCITEMIDLIST);
+
 
 static void init_function_pointers(void)
 {
@@ -68,6 +71,8 @@ static void init_function_pointers(void)
     pILFindLastID = (void *)GetProcAddress(hmod, (LPCSTR)16);
     pILFree = (void*)GetProcAddress(hmod, (LPSTR)155);
     pILIsEqual = (void*)GetProcAddress(hmod, (LPSTR)21);
+    pSHCreateShellItem = (void*)GetProcAddress(hmod, "SHCreateShellItem");
+    pILCombine = (void*)GetProcAddress(hmod, (LPSTR)25);
 
     hmod = GetModuleHandleA("shlwapi.dll");
     pStrRetToBufW = (void*)GetProcAddress(hmod, "StrRetToBufW");
@@ -1740,6 +1745,163 @@ cleanup:
     RemoveDirectoryA(".\\testfolder");
 }
 
+static void test_SHCreateShellItem(void)
+{
+    IShellItem *shellitem, *shellitem2;
+    IPersistIDList *persistidl;
+    LPITEMIDLIST pidl_cwd=NULL, pidl_testfile, pidl_abstestfile, pidl_test;
+    HRESULT ret;
+    char curdirA[MAX_PATH];
+    WCHAR curdirW[MAX_PATH];
+    IShellFolder *desktopfolder=NULL, *currentfolder=NULL;
+    static WCHAR testfileW[] = {'t','e','s','t','f','i','l','e',0};
+
+    GetCurrentDirectoryA(MAX_PATH, curdirA);
+
+    if (!lstrlenA(curdirA))
+    {
+        win_skip("GetCurrentDirectoryA returned empty string, skipping test_SHCreateShellItem\n");
+        return;
+    }
+
+    MultiByteToWideChar(CP_ACP, 0, curdirA, -1, curdirW, MAX_PATH);
+
+    ret = SHGetDesktopFolder(&desktopfolder);
+    ok(SUCCEEDED(ret), "SHGetShellFolder returned %x\n", ret);
+
+    ret = IShellFolder_ParseDisplayName(desktopfolder, NULL, NULL, curdirW, NULL, &pidl_cwd, NULL);
+    ok(SUCCEEDED(ret), "ParseDisplayName returned %x\n", ret);
+
+    ret = IShellFolder_BindToObject(desktopfolder, pidl_cwd, NULL, &IID_IShellFolder, (void**)&currentfolder);
+    ok(SUCCEEDED(ret), "BindToObject returned %x\n", ret);
+
+    CreateTestFile(".\\testfile");
+
+    ret = IShellFolder_ParseDisplayName(currentfolder, NULL, NULL, testfileW, NULL, &pidl_testfile, NULL);
+    ok(SUCCEEDED(ret), "ParseDisplayName returned %x\n", ret);
+
+    pidl_abstestfile = pILCombine(pidl_cwd, pidl_testfile);
+
+    ret = pSHCreateShellItem(NULL, NULL, NULL, &shellitem);
+    ok(ret == E_INVALIDARG, "SHCreateShellItem returned %x\n", ret);
+
+    if (0) /* crashes on Windows XP */
+    {
+        pSHCreateShellItem(NULL, NULL, pidl_cwd, NULL);
+        pSHCreateShellItem(pidl_cwd, NULL, NULL, &shellitem);
+        pSHCreateShellItem(NULL, currentfolder, NULL, &shellitem);
+        pSHCreateShellItem(pidl_cwd, currentfolder, NULL, &shellitem);
+    }
+
+    ret = pSHCreateShellItem(NULL, NULL, pidl_cwd, &shellitem);
+    ok(SUCCEEDED(ret), "SHCreateShellItem returned %x\n", ret);
+    if (SUCCEEDED(ret))
+    {
+        ret = IShellItem_QueryInterface(shellitem, &IID_IPersistIDList, (void**)&persistidl);
+        ok(SUCCEEDED(ret), "QueryInterface returned %x\n", ret);
+        if (SUCCEEDED(ret))
+        {
+            ret = IPersistIDList_GetIDList(persistidl, &pidl_test);
+            ok(SUCCEEDED(ret), "GetIDList returned %x\n", ret);
+            if (SUCCEEDED(ret))
+            {
+                ok(ILIsEqual(pidl_cwd, pidl_test), "id lists are not equal\n");
+                pILFree(pidl_test);
+            }
+            IPersistIDList_Release(persistidl);
+        }
+        IShellItem_Release(shellitem);
+    }
+
+    ret = pSHCreateShellItem(pidl_cwd, NULL, pidl_testfile, &shellitem);
+    ok(SUCCEEDED(ret), "SHCreateShellItem returned %x\n", ret);
+    if (SUCCEEDED(ret))
+    {
+        ret = IShellItem_QueryInterface(shellitem, &IID_IPersistIDList, (void**)&persistidl);
+        ok(SUCCEEDED(ret), "QueryInterface returned %x\n", ret);
+        if (SUCCEEDED(ret))
+        {
+            ret = IPersistIDList_GetIDList(persistidl, &pidl_test);
+            ok(SUCCEEDED(ret), "GetIDList returned %x\n", ret);
+            if (SUCCEEDED(ret))
+            {
+                ok(ILIsEqual(pidl_abstestfile, pidl_test), "id lists are not equal\n");
+                pILFree(pidl_test);
+            }
+            IPersistIDList_Release(persistidl);
+        }
+
+        ret = IShellItem_GetParent(shellitem, &shellitem2);
+        ok(SUCCEEDED(ret), "GetParent returned %x\n", ret);
+        if (SUCCEEDED(ret))
+        {
+            ret = IShellItem_QueryInterface(shellitem2, &IID_IPersistIDList, (void**)&persistidl);
+            ok(SUCCEEDED(ret), "QueryInterface returned %x\n", ret);
+            if (SUCCEEDED(ret))
+            {
+                ret = IPersistIDList_GetIDList(persistidl, &pidl_test);
+                ok(SUCCEEDED(ret), "GetIDList returned %x\n", ret);
+                if (SUCCEEDED(ret))
+                {
+                    ok(ILIsEqual(pidl_cwd, pidl_test), "id lists are not equal\n");
+                    pILFree(pidl_test);
+                }
+                IPersistIDList_Release(persistidl);
+            }
+            IShellItem_Release(shellitem2);
+        }
+
+        IShellItem_Release(shellitem);
+    }
+
+    ret = pSHCreateShellItem(NULL, currentfolder, pidl_testfile, &shellitem);
+    ok(SUCCEEDED(ret), "SHCreateShellItem returned %x\n", ret);
+    if (SUCCEEDED(ret))
+    {
+        ret = IShellItem_QueryInterface(shellitem, &IID_IPersistIDList, (void**)&persistidl);
+        ok(SUCCEEDED(ret), "QueryInterface returned %x\n", ret);
+        if (SUCCEEDED(ret))
+        {
+            ret = IPersistIDList_GetIDList(persistidl, &pidl_test);
+            ok(SUCCEEDED(ret), "GetIDList returned %x\n", ret);
+            if (SUCCEEDED(ret))
+            {
+                ok(ILIsEqual(pidl_abstestfile, pidl_test), "id lists are not equal\n");
+                pILFree(pidl_test);
+            }
+            IPersistIDList_Release(persistidl);
+        }
+        IShellItem_Release(shellitem);
+    }
+
+    /* if a parent pidl and shellfolder are specified, the shellfolder is ignored */
+    ret = pSHCreateShellItem(pidl_cwd, desktopfolder, pidl_testfile, &shellitem);
+    ok(SUCCEEDED(ret), "SHCreateShellItem returned %x\n", ret);
+    if (SUCCEEDED(ret))
+    {
+        ret = IShellItem_QueryInterface(shellitem, &IID_IPersistIDList, (void**)&persistidl);
+        ok(SUCCEEDED(ret), "QueryInterface returned %x\n", ret);
+        if (SUCCEEDED(ret))
+        {
+            ret = IPersistIDList_GetIDList(persistidl, &pidl_test);
+            ok(SUCCEEDED(ret), "GetIDList returned %x\n", ret);
+            if (SUCCEEDED(ret))
+            {
+                ok(ILIsEqual(pidl_abstestfile, pidl_test), "id lists are not equal\n");
+                pILFree(pidl_test);
+            }
+            IPersistIDList_Release(persistidl);
+        }
+        IShellItem_Release(shellitem);
+    }
+
+    DeleteFileA(".\\testfile");
+    pILFree(pidl_abstestfile);
+    pILFree(pidl_testfile);
+    pILFree(pidl_cwd);
+    IShellFolder_Release(currentfolder);
+    IShellFolder_Release(desktopfolder);
+}
 
 START_TEST(shlfolder)
 {
@@ -1762,6 +1924,10 @@ START_TEST(shlfolder)
     else
         skip("SHGetFolderPathAndSubDirA not present\n");
     test_LocalizedNames();
+    if(pSHCreateShellItem)
+        test_SHCreateShellItem();
+    else
+        win_skip("test_SHCreateShellItem not present\n");
 
     OleUninitialize();
 }

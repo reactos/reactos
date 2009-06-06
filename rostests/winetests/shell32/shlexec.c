@@ -333,11 +333,11 @@ static void create_test_verb_dde(const char* extension, const char* verb,
     }
     else
     {
-        cmd=malloc(strlen(argv0)+10+strlen(child_file)+2+strlen(cmdtail)+1);
+        cmd=HeapAlloc(GetProcessHeap(), 0, strlen(argv0)+10+strlen(child_file)+2+strlen(cmdtail)+1);
         sprintf(cmd,"%s shlexec \"%s\" %s", argv0, child_file, cmdtail);
         rc=RegSetValueEx(hkey_cmd, NULL, 0, REG_SZ, (LPBYTE)cmd, strlen(cmd)+1);
         assert(rc==ERROR_SUCCESS);
-        free(cmd);
+        HeapFree(GetProcessHeap(), 0, cmd);
     }
 
     if (ddeexec)
@@ -677,6 +677,8 @@ static void test_filename(void)
     test=filename_tests;
     while (test->basename)
     {
+        BOOL quotedfile = FALSE;
+
         sprintf(filename, test->basename, tmpdir);
         if (strchr(filename, '/'))
         {
@@ -695,6 +697,8 @@ static void test_filename(void)
         else
         {
             char quoted[MAX_PATH + 2];
+
+            quotedfile = TRUE;
             sprintf(quoted, "\"%s\"", filename);
             rc=shell_execute(test->verb, quoted, NULL, NULL);
         }
@@ -702,7 +706,9 @@ static void test_filename(void)
             rc=33;
         if ((test->todo & 0x1)==0)
         {
-            ok(rc==test->rc, "%s failed: rc=%d err=%d\n", shell_call,
+            ok(rc==test->rc ||
+               broken(quotedfile && rc == 2), /* NT4 */
+               "%s failed: rc=%d err=%d\n", shell_call,
                rc, GetLastError());
         }
         else todo_wine
@@ -858,7 +864,8 @@ static void test_find_executable(void)
     ok(rc == SE_ERR_NOASSOC /* >= win2000 */ || rc > 32 /* win98, nt4 */, "FindExecutable(NULL) returned %ld\n", rc);
     ok(strcmp(command, "your word") != 0, "FindExecutable(NULL) returned command=[%s]\n", command);
 
-    sprintf(filename, "%s\\test file.sfe", tmpdir);
+    /* Win95 can't cope with double backslashes in FindExecutableA (tmpdir has a trailing backslash) */
+    sprintf(filename, "%stest file.sfe", tmpdir);
     rc=(INT_PTR)FindExecutableA(filename, NULL, command);
     ok(rc > 32, "FindExecutable(%s) returned %ld\n", filename, rc);
     /* Depending on the platform, command could be '%1' or 'test file.sfe' */
@@ -904,6 +911,10 @@ static void test_find_executable(void)
     test=filename_tests;
     while (test->basename)
     {
+        /* Win95 can't cope with double slashes/backslashes in FindExecutableA */
+        if (tmpdir[strlen(tmpdir) - 1] == '\\')
+            tmpdir[strlen(tmpdir) - 1] = 0;
+
         sprintf(filename, test->basename, tmpdir);
         if (strchr(filename, '/'))
         {
@@ -1591,6 +1602,8 @@ static void cleanup_test(void)
     while (*testfile)
     {
         sprintf(filename, *testfile, tmpdir);
+        /* Make sure we can delete the files ('test file.noassoc' is read-only now) */
+        SetFileAttributes(filename, FILE_ATTRIBUTE_NORMAL);
         DeleteFile(filename);
         testfile++;
     }
