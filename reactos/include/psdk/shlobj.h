@@ -1243,8 +1243,8 @@ HRESULT WINAPI SHGetRealIDL(IShellFolder *psf, LPCITEMIDLIST pidlSimple, LPITEMI
 * SHCreateDirectory API
 */
 DWORD WINAPI SHCreateDirectory(HWND, LPCWSTR);
-int WINAPI SHCreateDirectoryExA(HWND, LPCSTR, const SECURITY_ATTRIBUTES*);
-int WINAPI SHCreateDirectoryExW(HWND, LPCWSTR, const SECURITY_ATTRIBUTES*);
+int WINAPI SHCreateDirectoryExA(HWND, LPCSTR, LPSECURITY_ATTRIBUTES);
+int WINAPI SHCreateDirectoryExW(HWND, LPCWSTR, LPSECURITY_ATTRIBUTES);
 
 /****************************************************************************
 * SHGetSpecialFolderLocation API
