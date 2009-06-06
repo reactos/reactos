@@ -388,7 +388,7 @@ static void     doChild(const char* file, const char* option)
         ret = SetConsoleCP(1252);
         if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
         {
-            win_skip("Setting the codepage is not implemented");
+            win_skip("Setting the codepage is not implemented\n");
         }
         else
         {
@@ -927,6 +927,72 @@ static void test_CommandLine(void)
     okChildStringWA("Arguments", "CommandLineW", buffer2);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
+
+    if (0) /* Test crashes on NT-based Windows. */
+    {
+        /* Test NULL application name and command line parameters. */
+        SetLastError(0xdeadbeef);
+        ret = CreateProcessA(NULL, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+        ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+        ok(GetLastError() == ERROR_INVALID_PARAMETER,
+           "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+    }
+
+    buffer[0] = '\0';
+
+    /* Test empty application name parameter. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_PATH_NOT_FOUND ||
+       broken(GetLastError() == ERROR_FILE_NOT_FOUND) /* Win9x/WinME */ ||
+       broken(GetLastError() == ERROR_ACCESS_DENIED) /* Win98 */,
+       "Expected ERROR_PATH_NOT_FOUND, got %d\n", GetLastError());
+
+    buffer2[0] = '\0';
+
+    /* Test empty application name and command line parameters. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer, buffer2, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_PATH_NOT_FOUND ||
+       broken(GetLastError() == ERROR_FILE_NOT_FOUND) /* Win9x/WinME */ ||
+       broken(GetLastError() == ERROR_ACCESS_DENIED) /* Win98 */,
+       "Expected ERROR_PATH_NOT_FOUND, got %d\n", GetLastError());
+
+    /* Test empty command line parameter. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer2, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND ||
+       GetLastError() == ERROR_PATH_NOT_FOUND /* NT4 */ ||
+       GetLastError() == ERROR_BAD_PATHNAME /* Win98 */,
+       "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    strcpy(buffer, "doesnotexist.exe");
+    strcpy(buffer2, "does not exist.exe");
+
+    /* Test nonexistent application name. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(buffer2, NULL, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    /* Test nonexistent command line parameter. */
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = CreateProcessA(NULL, buffer2, NULL, NULL, FALSE, 0L, NULL, NULL, &startup, &info);
+    ok(!ret, "CreateProcessA unexpectedly succeeded\n");
+    ok(GetLastError() == ERROR_FILE_NOT_FOUND, "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
 }
 
 static void test_Directory(void)

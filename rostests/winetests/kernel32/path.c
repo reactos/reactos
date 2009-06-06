@@ -878,8 +878,11 @@ static void test_GetTempPathW(char* tmp_dir)
 
     lstrcpyW(buf, fooW);
     len = GetTempPathW(MAX_PATH, buf);
-    if (len==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    if (len == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetTempPathW is not available\n");
         return;
+    }
     ok(lstrcmpiW(buf, tmp_dirW) == 0, "GetTempPathW returned an incorrect temporary path\n");
     ok(len == lstrlenW(buf), "returned length should be equal to the length of string\n");
 

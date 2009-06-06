@@ -282,15 +282,16 @@ static void crash_and_debug(HKEY hkey, const char* argv0, const char* dbgtasks)
         /* If, after attaching to the debuggee, the debugger exits without
          * detaching, then the debuggee gets a special exit code.
          */
-        ok(exit_code == 0xffffffff || /* Win 9x */
-           exit_code == 0x80 || /* NT4 */
-           exit_code == STATUS_DEBUGGER_INACTIVE, /* Win >= XP */
+        ok(exit_code == STATUS_DEBUGGER_INACTIVE ||
+           broken(exit_code == 0xffffffff) || /* Win9x */
+           broken(exit_code == WAIT_ABANDONED), /* NT4, W2K */
            "wrong exit code : %08x\n", exit_code);
     }
     else
-         ok(exit_code == STATUS_ACCESS_VIOLATION ||
-            exit_code == WAIT_ABANDONED, /* win2k3 */
-            "exit code = %08x instead of STATUS_ACCESS_VIOLATION or WAIT_ABANDONED\n", exit_code);
+        ok(exit_code == STATUS_ACCESS_VIOLATION ||
+           broken(exit_code == WAIT_ABANDONED) || /* NT4, W2K, W2K3 */
+           broken(exit_code == 0xffffffff), /* Win9x, WinME */
+           "wrong exit code : %08x\n", exit_code);
     CloseHandle(info.hProcess);
 
     /* ...before the debugger */
@@ -412,8 +413,12 @@ static void test_ExitCode(void)
     crash_and_debug(hkey, test_exe, "dbg,attach,event,code2");
     if (pDebugSetProcessKillOnExit)
         crash_and_debug(hkey, test_exe, "dbg,attach,event,nokill");
+    else
+        win_skip("DebugSetProcessKillOnExit is not available\n");
     if (pDebugActiveProcessStop)
         crash_and_debug(hkey, test_exe, "dbg,attach,event,detach");
+    else
+        win_skip("DebugActiveProcessStop is not available\n");
 
     if (disposition == REG_CREATED_NEW_KEY)
     {

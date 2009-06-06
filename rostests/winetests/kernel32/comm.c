@@ -571,7 +571,10 @@ static void test_BuildCommDCBW(TEST *ptest, int initial_value, DCB *pexpected_dc
 	result = BuildCommDCBW(wide_string, &dcb);
 
 	if(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+	{
+		win_skip("BuildCommDCBW is not available\n");
 		return;
+	}
 
 	/* check results */
 	check_result("BuildCommDCBW", ptest, initial_value, result);
@@ -595,7 +598,10 @@ static void test_BuildCommDCBAndTimeoutsW(TEST *ptest, int initial_value, DCB *p
 	result = BuildCommDCBAndTimeoutsW(wide_string, &dcb, &timeouts);
 
 	if(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+	{
+		win_skip("BuildCommDCBAndTimeoutsW is not available\n");
 		return;
+	}
 
 	/* check results */
 	check_result("BuildCommDCBAndTimeoutsA", ptest, initial_value, result);

@@ -822,17 +822,11 @@ static void test_GetPrivateProfileString(const char *content, const char *descri
     DeleteFileA(filename);
 }
 
-static DWORD timeout = 0;
-
 static BOOL check_binary_file_data(LPCSTR path, const VOID *data, DWORD size)
 {
     HANDLE file;
     CHAR buf[MAX_PATH];
     BOOL ret;
-
-    /* Sleep() is needed on Win9x and WinME */
-    if (timeout)
-        Sleep(timeout);
 
     file = CreateFileA(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0);
     if (file == INVALID_HANDLE_VALUE)
@@ -864,6 +858,19 @@ static void test_WritePrivateProfileString(void)
     CHAR path[MAX_PATH];
     CHAR temp[MAX_PATH];
 
+    SetLastError(0xdeadbeef);
+    ret = WritePrivateProfileStringW(NULL, NULL, NULL, NULL);
+    if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        /* Win9x/WinME needs (variable) timeouts between tests and even long timeouts don't
+         * guarantee a correct result.
+         * Win9x/WinMe also produces different ini files where there is always a newline before
+         * a section start (except for the first one).
+         */
+        win_skip("WritePrivateProfileString on Win9x/WinME is hard to test reliably\n");
+        return;
+    }
+
     GetTempPathA(MAX_PATH, temp);
     GetTempFileNameA(temp, "wine", 0, path);
     DeleteFileA(path);
@@ -878,8 +885,6 @@ static void test_WritePrivateProfileString(void)
        broken(GetLastError() == ERROR_INVALID_PARAMETER) || /* NT4 */
        broken(GetLastError() == 0xdeadbeef), /* Win9x and WinME */
        "Expected ERROR_FILE_NOT_FOUND, got %d\n", GetLastError());
-    if (GetLastError() == 0xdeadbeef)
-        timeout = 1000;
     ok(GetFileAttributesA(path) == INVALID_FILE_ATTRIBUTES,
        "Expected path to not exist\n");
 

@@ -328,7 +328,7 @@ static void test_MapViewOfFile(void)
 {
     static const char testfile[] = "testfile.xxx";
     const char *name;
-    HANDLE file, mapping;
+    HANDLE file, mapping, map2;
     void *ptr, *ptr2;
     MEMORY_BASIC_INFORMATION info;
     BOOL ret;
@@ -365,6 +365,39 @@ static void test_MapViewOfFile(void)
     ptr = MapViewOfFile( mapping, FILE_MAP_WRITE, 0, 0, 4096 );
     ok( ptr != NULL, "MapViewOfFile FILE_MAP_WRITE error %u\n", GetLastError() );
     UnmapViewOfFile( ptr );
+
+    ret = DuplicateHandle( GetCurrentProcess(), mapping, GetCurrentProcess(), &map2,
+                           FILE_MAP_READ|FILE_MAP_WRITE, FALSE, 0 );
+    ok( ret, "DuplicateHandle failed error %u\n", GetLastError());
+    ptr = MapViewOfFile( map2, FILE_MAP_WRITE, 0, 0, 4096 );
+    ok( ptr != NULL, "MapViewOfFile FILE_MAP_WRITE error %u\n", GetLastError() );
+    UnmapViewOfFile( ptr );
+    CloseHandle( map2 );
+
+    ret = DuplicateHandle( GetCurrentProcess(), mapping, GetCurrentProcess(), &map2,
+                           FILE_MAP_READ, FALSE, 0 );
+    ok( ret, "DuplicateHandle failed error %u\n", GetLastError());
+    ptr = MapViewOfFile( map2, FILE_MAP_WRITE, 0, 0, 4096 );
+    if (!ptr)
+    {
+        ok( GetLastError() == ERROR_ACCESS_DENIED, "Wrong error %d\n", GetLastError() );
+        CloseHandle( map2 );
+        ret = DuplicateHandle( GetCurrentProcess(), mapping, GetCurrentProcess(), &map2, 0, FALSE, 0 );
+        ok( ret, "DuplicateHandle failed error %u\n", GetLastError());
+        ptr = MapViewOfFile( map2, 0, 0, 0, 4096 );
+        ok( !ptr, "MapViewOfFile succeeded\n" );
+        ok( GetLastError() == ERROR_ACCESS_DENIED, "Wrong error %d\n", GetLastError() );
+        CloseHandle( map2 );
+        ret = DuplicateHandle( GetCurrentProcess(), mapping, GetCurrentProcess(), &map2,
+                               FILE_MAP_READ, FALSE, 0 );
+        ok( ret, "DuplicateHandle failed error %u\n", GetLastError());
+        ptr = MapViewOfFile( map2, 0, 0, 0, 4096 );
+        ok( ptr != NULL, "MapViewOfFile NO_ACCESS error %u\n", GetLastError() );
+    }
+    else win_skip( "no access checks on win9x\n" );
+
+    UnmapViewOfFile( ptr );
+    CloseHandle( map2 );
     CloseHandle( mapping );
 
     /* read-only mapping */

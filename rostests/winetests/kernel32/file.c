@@ -26,6 +26,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 #include "wine/test.h"
 #include "windef.h"
@@ -36,6 +37,7 @@ static HANDLE (WINAPI *pFindFirstFileExA)(LPCSTR,FINDEX_INFO_LEVELS,LPVOID,FINDE
 static BOOL (WINAPI *pReplaceFileA)(LPCSTR, LPCSTR, LPCSTR, DWORD, LPVOID, LPVOID);
 static BOOL (WINAPI *pReplaceFileW)(LPCWSTR, LPCWSTR, LPCWSTR, DWORD, LPVOID, LPVOID);
 static UINT (WINAPI *pGetSystemWindowsDirectoryA)(LPSTR, UINT);
+static BOOL (WINAPI *pGetVolumeNameForVolumeMountPointA)(LPCSTR, LPSTR, DWORD);
 
 /* keep filename and filenameW the same */
 static const char filename[] = "testfile.xxx";
@@ -52,6 +54,13 @@ static const char sillytext[] =
 "1234 43 4kljf lf &%%%&&&&&& 34 4 34   3############# 33 3 3 3 # 3## 3"
 "sdlkfjasdlkfj a dslkj adsklf  \n  \nasdklf askldfa sdlkf \nsadklf asdklf asdf ";
 
+struct test_list {
+    const char *file;
+    const DWORD err;
+    const DWORD options;
+    const BOOL todo_flag;
+} ;
+
 static void InitFunctionPointers(void)
 {
     HMODULE hkernel32 = GetModuleHandleA("kernel32");
@@ -60,6 +69,7 @@ static void InitFunctionPointers(void)
     pReplaceFileA=(void*)GetProcAddress(hkernel32, "ReplaceFileA");
     pReplaceFileW=(void*)GetProcAddress(hkernel32, "ReplaceFileW");
     pGetSystemWindowsDirectoryA=(void*)GetProcAddress(hkernel32, "GetSystemWindowsDirectoryA");
+    pGetVolumeNameForVolumeMountPointA = (void *) GetProcAddress(hkernel32, "GetVolumeNameForVolumeMountPointA");
 }
 
 static void test__hread( void )
@@ -633,8 +643,11 @@ static void test_CopyFileW(void)
     DWORD ret;
 
     ret = GetTempPathW(MAX_PATH, temp_path);
-    if (ret==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    if (ret == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetTempPathW is not available\n");
         return;
+    }
     ok(ret != 0, "GetTempPathW error %d\n", GetLastError());
     ok(ret < MAX_PATH, "temp path should fit into MAX_PATH\n");
 
@@ -657,13 +670,68 @@ static void test_CopyFileW(void)
     ok(ret, "DeleteFileW: error %d\n", GetLastError());
 }
 
+
+/*
+ *   Debugging routine to dump a buffer in a hexdump-like fashion.
+ */
+static void dumpmem(unsigned char* mem, int len) {
+    int x,y;
+    char buf[200];
+    int ln=0;
+
+    for (x=0; x<len; x+=16) {
+        ln += sprintf(buf+ln, "%04x: ",x);
+        for (y=0; y<16; y++) {
+            if ((x+y)>len) {
+                ln += sprintf(buf+ln, "   ");
+            } else {
+                ln += sprintf(buf+ln, "%02hhx ",mem[x+y]);
+            }
+        }
+        ln += sprintf(buf+ln, "- ");
+        for (y=0; y<16; y++) {
+            if ((x+y)<=len) {
+                if (mem[x+y]<32 || mem[x+y]>127) {
+                    ln += sprintf(buf+ln, ".");
+                } else {
+                    ln += sprintf(buf+ln, "%c",mem[x+y]);
+                }
+            }
+        }
+        sprintf(buf+ln, "\n");
+        trace(buf);
+        ln = 0;
+    }
+}
+
 static void test_CreateFileA(void)
 {
     HANDLE hFile;
-    char temp_path[MAX_PATH];
+    char temp_path[MAX_PATH], dirname[MAX_PATH];
     char filename[MAX_PATH];
     static const char prefix[] = "pfx";
-    DWORD ret;
+    char windowsdir[MAX_PATH];
+    char Volume_1[MAX_PATH];
+    unsigned char buffer[512];
+    char directory[] = "removeme";
+    static const char nt_drive[] = "\\\\?\\A:";
+    DWORD i, ret, len;
+    struct test_list p[] = {
+    {"", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* dir as file w \ */
+    {"", ERROR_SUCCESS, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* dir as dir w \ */
+    {"a", ERROR_FILE_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, FALSE }, /* non-exist file */
+    {"a\\", ERROR_FILE_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, FALSE }, /* non-exist dir */
+    {"removeme", ERROR_ACCESS_DENIED, FILE_ATTRIBUTE_NORMAL, FALSE }, /* exist dir w/o \ */
+    {"removeme\\", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* exst dir w \ */
+    {"c:", ERROR_ACCESS_DENIED, FILE_ATTRIBUTE_NORMAL, FALSE }, /* device in file namespace */
+    {"c:", ERROR_SUCCESS, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* device in file namespace as dir */
+    {"c:\\", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* root dir w \ */
+    {"c:\\", ERROR_SUCCESS, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* root dir w \ as dir */
+    {"\\\\?\\c:", ERROR_SUCCESS, FILE_ATTRIBUTE_NORMAL,FALSE }, /* dev namespace drive */
+    {"\\\\?\\c:\\", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* dev namespace drive w \ */
+    {NULL, 0, 0, FALSE}
+    };
+    BY_HANDLE_FILE_INFORMATION  Finfo;
 
     ret = GetTempPathA(MAX_PATH, temp_path);
     ok(ret != 0, "GetTempPathA error %d\n", GetLastError());
@@ -707,6 +775,263 @@ static void test_CreateFileA(void)
 
     ret = DeleteFileA(filename);
     ok(ret, "DeleteFileA: error %d\n", GetLastError());
+
+    /* get windows drive letter */
+    ret = GetWindowsDirectory(windowsdir, sizeof(windowsdir));
+    ok(ret < sizeof(windowsdir), "windowsdir is abnormally long!\n");
+    ok(ret != 0, "GetWindowsDirectory: error %d\n", GetLastError());
+
+    /* test error return codes from CreateFile for some cases */
+    ret = GetTempPathA(MAX_PATH, temp_path);
+    ok(ret != 0, "GetTempPathA error %d\n", GetLastError());
+    strcpy(dirname, temp_path);
+    strcat(dirname, directory);
+    ret = CreateDirectory(dirname, NULL);
+    ok( ret, "Createdirectory failed, gle=%d\n", GetLastError() );
+    /* set current drive & directory to known location */
+    SetCurrentDirectoryA( temp_path );
+    i = 0;
+    while (p[i].file)
+    {
+        filename[0] = 0;
+        /* update the drive id in the table entry with the current one */
+        if (p[i].file[1] == ':')
+        {
+            strcpy(filename, p[i].file);
+            filename[0] = windowsdir[0];
+        }
+        else if (p[i].file[0] == '\\' && p[i].file[5] == ':')
+        {
+            strcpy(filename, p[i].file);
+            filename[4] = windowsdir[0];
+        }
+        else
+        {
+            /* prefix the table entry with the current temp directory */
+            strcpy(filename, temp_path);
+            strcat(filename, p[i].file);
+        }
+        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        p[i].options, NULL );
+        /* if we get ACCESS_DENIED when we do not expect it, assume
+         * no access to the volume
+         */
+        if (hFile == INVALID_HANDLE_VALUE &&
+            GetLastError() == ERROR_ACCESS_DENIED &&
+            p[i].err != ERROR_ACCESS_DENIED)
+        {
+            if (p[i].todo_flag)
+                skip("Either no authority to volume, or is todo_wine for %s err=%d should be %d\n", filename, GetLastError(), p[i].err);
+            else
+                skip("Do not have authority to access volumes. Test for %s skipped\n", filename);
+        }
+        /* otherwise validate results with expectations */
+        else if (p[i].todo_flag)
+            todo_wine ok((hFile == INVALID_HANDLE_VALUE && p[i].err == GetLastError()) ||
+                (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
+                "CreateFileA failed on %s, hFile %p, err=%u, should be %u\n",
+                filename, hFile, GetLastError(), p[i].err);
+        else
+            ok((hFile == INVALID_HANDLE_VALUE && p[i].err == GetLastError()) ||
+               (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
+                "CreateFileA failed on %s, hFile %p, err=%u, should be %u\n",
+                filename, hFile, GetLastError(), p[i].err);
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle( hFile );
+        i++;
+    }
+    ret = RemoveDirectoryA(dirname);
+    ok(ret, "RemoveDirectoryA: error %d\n", GetLastError());
+
+
+    /* test opening directory as a directory */
+    hFile = CreateFileA( temp_path, GENERIC_READ,
+                        FILE_SHARE_READ,
+                        NULL,
+                        OPEN_EXISTING,
+                        FILE_FLAG_BACKUP_SEMANTICS, NULL );
+    ok(hFile != INVALID_HANDLE_VALUE && GetLastError() == ERROR_SUCCESS,
+            "CreateFileA did not work, last error %u on volume <%s>\n",
+             GetLastError(), temp_path );
+
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        ret = GetFileInformationByHandle( hFile, &Finfo );
+        if (ret)
+        {
+            ok(Finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY,
+                "CreateFileA probably did not open temp directory %s correctly\n   file information does not include FILE_ATTRIBUTE_DIRECTORY, actual=0x%08x\n",
+                temp_path, Finfo.dwFileAttributes);
+        }
+        CloseHandle( hFile );
+    }
+
+
+    /* ***  Test opening volumes/devices using drive letter  ***         */
+
+    /* test using drive letter in non-rewrite format without trailing \  */
+    /* this should work                                                  */
+    strcpy(filename, nt_drive);
+    filename[4] = windowsdir[0];
+    hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
+    if (hFile != INVALID_HANDLE_VALUE || GetLastError() != ERROR_ACCESS_DENIED)
+    {
+        /* if we have adm rights to volume, then try rest of tests */
+        ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA did not open %s, last error=%u\n",
+            filename, GetLastError());
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            /* if we opened the volume/device, try to read it. Since it  */
+            /* opened, we should be able to read it.  We don't care about*/
+            /* what the data is at this time.                            */
+            len = 512;
+            ret = ReadFile( hFile, buffer, len, &len, NULL );
+            todo_wine ok(ret, "Failed to read volume, last error %u, %u, for %s\n",
+                GetLastError(), ret, filename);
+            if (ret)
+            {
+                trace("buffer is\n");
+                dumpmem(buffer, 64);
+            }
+            CloseHandle( hFile );
+        }
+
+        /* test using drive letter with trailing \ and in non-rewrite   */
+        /* this should not work                                         */
+        strcpy(filename, nt_drive);
+        filename[4] = windowsdir[0];
+        strcat( filename, "\\" );
+        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
+        todo_wine
+        ok(hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_PATH_NOT_FOUND,
+            "CreateFileA should have returned ERROR_PATH_NOT_FOUND on %s, but got %u\n",
+            filename, GetLastError());
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle( hFile );
+
+        /* test using temp path with trailing \ and in non-rewrite as dir */
+        /* this should work                                               */
+        strcpy(filename, nt_drive);
+        filename[4] = 0;
+        strcat( filename, temp_path );
+        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        FILE_FLAG_BACKUP_SEMANTICS, NULL );
+        ok(hFile != INVALID_HANDLE_VALUE,
+            "CreateFileA should have worked on %s, but got %u\n",
+            filename, GetLastError());
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle( hFile );
+
+        /* test using drive letter without trailing \ and in device ns  */
+        /* this should work                                             */
+        strcpy(filename, nt_drive);
+        filename[4] = windowsdir[0];
+        filename[2] = '.';
+        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
+        ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA did not open %s, last error=%u\n",
+            filename, GetLastError());
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle( hFile );
+    }
+    else
+        skip("Do not have authority to access volumes. Tests skipped\n");
+
+
+    /* ***  Test opening volumes/devices using GUID  ***           */
+
+    if (pGetVolumeNameForVolumeMountPointA)
+    {
+        strcpy(filename, "c:\\");
+        filename[0] = windowsdir[0];
+        ret = pGetVolumeNameForVolumeMountPointA( filename, Volume_1, MAX_PATH );
+        ok(ret == TRUE, "GetVolumeNameForVolumeMountPointA failed\n");
+        ok(strlen(Volume_1) == 49, "GetVolumeNameForVolumeMountPointA returned wrong length name %s\n", Volume_1);
+
+        /* test the result of opening a unique volume name (GUID)   */
+        /* with the trailing \                                      */
+        /* this should error out                                    */
+        strcpy(filename, Volume_1);
+        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
+        todo_wine
+        ok(hFile == INVALID_HANDLE_VALUE,
+            "CreateFileA should not have opened %s, hFile %p\n",
+            filename, hFile);
+        todo_wine
+        ok(hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_PATH_NOT_FOUND,
+            "CreateFileA should have returned ERROR_PATH_NOT_FOUND on %s, but got %u\n",
+            filename, GetLastError());
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle( hFile );
+
+        /* test the result of opening a unique volume name (GUID)   */
+        /* with the temp path string as dir                         */
+        /* this should work                                         */
+        strcpy(filename, Volume_1);
+        strcat(filename, temp_path+3);
+        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        FILE_FLAG_BACKUP_SEMANTICS, NULL );
+        todo_wine
+        ok(hFile != INVALID_HANDLE_VALUE,
+            "CreateFileA should have opened %s, but got %u\n",
+            filename, GetLastError());
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle( hFile );
+
+        /* test the result of opening a unique volume name (GUID)   */
+        /* without the trailing \ and in device namespace           */
+        /* this should work                                         */
+        strcpy(filename, Volume_1);
+        filename[2] = '.';
+        filename[48] = 0;
+        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
+        if (hFile != INVALID_HANDLE_VALUE || GetLastError() != ERROR_ACCESS_DENIED)
+        {
+            /* if we have adm rights to volume, then try rest of tests */
+            ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA did not open %s, last error=%u\n",
+                filename, GetLastError());
+            if (hFile != INVALID_HANDLE_VALUE)
+            {
+                /* if we opened the volume/device, try to read it. Since it  */
+                /* opened, we should be able to read it.  We don't care about*/
+                /* what the data is at this time.                            */
+                len = 512;
+                ret = ReadFile( hFile, buffer, len, &len, NULL );
+                todo_wine ok(ret, "Failed to read volume, last error %u, %u, for %s\n",
+                    GetLastError(), ret, filename);
+                if (ret)
+                {
+                    trace("buffer is\n");
+                    dumpmem(buffer, 64);
+                }
+                CloseHandle( hFile );
+			}
+        }
+        else
+            skip("Do not have authority to access volumes. Tests skipped\n");
+    }
+    else
+        win_skip("GetVolumeNameForVolumeMountPointA not found\n");
 }
 
 static void test_CreateFileW(void)
@@ -720,8 +1045,11 @@ static void test_CreateFileW(void)
     DWORD ret;
 
     ret = GetTempPathW(MAX_PATH, temp_path);
-    if (ret==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    if (ret == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetTempPathW is not available\n");
         return;
+    }
     ok(ret != 0, "GetTempPathW error %d\n", GetLastError());
     ok(ret < MAX_PATH, "temp path should fit into MAX_PATH\n");
 
@@ -864,8 +1192,11 @@ static void test_DeleteFileW( void )
     static const WCHAR emptyW[]={'\0'};
 
     ret = DeleteFileW(NULL);
-    if (ret==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    if (ret == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("DeleteFileW is not available\n");
         return;
+    }
     ok(!ret && GetLastError() == ERROR_PATH_NOT_FOUND,
        "DeleteFileW(NULL) returned ret=%d error=%d\n",ret,GetLastError());
 
@@ -984,8 +1315,11 @@ static void test_MoveFileW(void)
     DWORD ret;
 
     ret = GetTempPathW(MAX_PATH, temp_path);
-    if (ret==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+    if (ret == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetTempPathW is not available\n");
         return;
+    }
     ok(ret != 0, "GetTempPathW error %d\n", GetLastError());
     ok(ret < MAX_PATH, "temp path should fit into MAX_PATH\n");
 
@@ -1364,7 +1698,12 @@ static void test_FindFirstFileA(void)
 
     /* try FindFirstFileA on "C:\foo\" */
     SetLastError( 0xdeadbeaf );
-    GetTempFileNameA( buffer, "foo", 0, nonexistent );
+    if (!GetTempFileNameA( buffer, "foo", 0, nonexistent ) && GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        char tmp[MAX_PATH];
+        GetTempPathA( sizeof(tmp), tmp );
+        GetTempFileNameA( tmp, "foo", 0, nonexistent );
+    }
     DeleteFileA( nonexistent );
     strcpy(buffer2, nonexistent);
     strcat(buffer2, "\\");
@@ -2352,8 +2691,11 @@ static void test_ReplaceFileW(void)
     }
 
     ret = GetTempPathW(MAX_PATH, temp_path);
-    if (ret==0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    if (ret == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("GetTempPathW is not available\n");
         return;
+    }
     ok(ret != 0, "GetTempPathW error %d\n", GetLastError());
     ok(ret < MAX_PATH, "temp path should fit into MAX_PATH\n");
 

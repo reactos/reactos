@@ -249,10 +249,24 @@ static void testLoadLibraryEx(void)
     SetLastError(0xdeadbeef);
     hmodule = LoadLibraryExA("testfile.dll", hfile, 0);
     ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
-    ok(GetLastError() == ERROR_SHARING_VIOLATION ||
-       GetLastError() == ERROR_INVALID_PARAMETER || /* win2k3 */
-       GetLastError() == ERROR_FILE_NOT_FOUND, /* win9x */
-       "Unexpected last error, got %d\n", GetLastError());
+    todo_wine
+    {
+        ok(GetLastError() == ERROR_SHARING_VIOLATION ||
+           GetLastError() == ERROR_INVALID_PARAMETER || /* win2k3 */
+           GetLastError() == ERROR_FILE_NOT_FOUND, /* win9x */
+           "Unexpected last error, got %d\n", GetLastError());
+    }
+
+    SetLastError(0xdeadbeef);
+    hmodule = LoadLibraryExA("testfile.dll", (HANDLE)0xdeadbeef, 0);
+    ok(hmodule == 0, "Expected 0, got %p\n", hmodule);
+    todo_wine
+    {
+        ok(GetLastError() == ERROR_SHARING_VIOLATION ||
+           GetLastError() == ERROR_INVALID_PARAMETER || /* win2k3 */
+           GetLastError() == ERROR_FILE_NOT_FOUND, /* win9x */
+           "Unexpected last error, got %d\n", GetLastError());
+    }
 
     /* try to open a file that is locked */
     SetLastError(0xdeadbeef);
@@ -303,6 +317,12 @@ static void testLoadLibraryEx(void)
     ok(GetLastError() == 0xdeadbeef ||
        GetLastError() == ERROR_SUCCESS, /* win9x */
        "Expected 0xdeadbeef or ERROR_SUCCESS, got %d\n", GetLastError());
+
+    /* try invalid file handle */
+    SetLastError(0xdeadbeef);
+    hmodule = LoadLibraryExA(path, (HANDLE)0xdeadbeef, 0);
+    if (!hmodule)  /* succeeds on xp and older */
+        ok(GetLastError() == ERROR_INVALID_PARAMETER, "wrong error %u\n", GetLastError());
 
     CloseHandle(hmodule);
 

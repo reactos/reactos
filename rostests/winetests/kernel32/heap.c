@@ -362,9 +362,58 @@ static void test_heap(void)
     GlobalFree(gbl);
 }
 
+static void test_obsolete_flags(void)
+{
+    static struct {
+        UINT flags;
+        UINT globalflags;
+    } test_global_flags[] = {
+        {GMEM_FIXED | GMEM_NOTIFY, 0},
+        {GMEM_FIXED | GMEM_DISCARDABLE, 0},
+        {GMEM_MOVEABLE | GMEM_NOTIFY, 0},
+        {GMEM_MOVEABLE | GMEM_DDESHARE, GMEM_DDESHARE},
+        {GMEM_MOVEABLE | GMEM_NOT_BANKED, 0},
+        {GMEM_MOVEABLE | GMEM_NODISCARD, 0},
+        {GMEM_MOVEABLE | GMEM_DISCARDABLE, GMEM_DISCARDABLE},
+        {GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_DISCARDABLE | GMEM_LOWER | GMEM_NOCOMPACT | GMEM_NODISCARD |
+         GMEM_NOT_BANKED | GMEM_NOTIFY, GMEM_DDESHARE | GMEM_DISCARDABLE},
+    };
+
+    unsigned int i;
+    HGLOBAL gbl;
+    UINT resultflags;
+
+    UINT (WINAPI *pGlobalFlags)(HGLOBAL);
+
+    pGlobalFlags = (void *) GetProcAddress(GetModuleHandleA("kernel32"), "GlobalFlags");
+
+    if (!pGlobalFlags)
+    {
+        win_skip("GlobalFlags is not available\n");
+        return;
+    }
+
+    for (i = 0; i < sizeof(test_global_flags)/sizeof(test_global_flags[0]); i++)
+    {
+        gbl = GlobalAlloc(test_global_flags[i].flags, 4);
+        ok(gbl != NULL, "GlobalAlloc failed\n");
+
+        SetLastError(MAGIC_DEAD);
+        resultflags = pGlobalFlags(gbl);
+
+        ok( resultflags == test_global_flags[i].globalflags ||
+            broken(resultflags == (test_global_flags[i].globalflags & ~GMEM_DDESHARE)), /* win9x */
+            "%u: expected 0x%08x, but returned 0x%08x with %d\n",
+            i, test_global_flags[i].globalflags, resultflags, GetLastError() );
+
+        GlobalFree(gbl);
+    }
+}
+
 START_TEST(heap)
 {
     test_heap();
+    test_obsolete_flags();
 
     /* Test both short and very long blocks */
     test_sized_HeapAlloc(1);

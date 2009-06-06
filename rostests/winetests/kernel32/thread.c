@@ -693,7 +693,10 @@ static VOID test_thread_priority(void)
    SetLastError(0xdeadbeef);
    rc=pGetThreadPriorityBoost(curthread,&disabled);
    if (rc==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
-     return; /* WinME */
+   {
+      win_skip("GetThreadPriorityBoost is not implemented on WinME\n");
+      return;
+   }
 
    todo_wine
      ok(rc!=0,"error=%d\n",GetLastError());
@@ -755,7 +758,10 @@ static VOID test_GetThreadTimes(void)
 /* GetThreadTimes should set all of the parameters passed to it */
      error=GetThreadTimes(thread,&creationTime,&exitTime,
                           &kernelTime,&userTime);
-     if (error!=0 || GetLastError()!=ERROR_CALL_NOT_IMPLEMENTED) {
+
+     if (error == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+       win_skip("GetThreadTimes is not implemented\n");
+     else {
        ok(error!=0,"GetThreadTimes failed\n");
        ok(creationTime.dwLowDateTime!=99 || creationTime.dwHighDateTime!=99,
           "creationTime was invalid\n");
