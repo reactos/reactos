@@ -191,7 +191,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*  to a bitmap.  The result is then BitBlt'd to the control whenever needed. */
     int i;
     int nCharacters;
-    int nTopGridPix, nMidGridPix, nBottomGridPix;
+    //int nTopGridPix, nMidGridPix, nBottomGridPix;
 
     HPEN oldPen;
     HPEN solidPen = CreatePen(PS_SOLID, 0, this->m_crGridColor);
@@ -250,19 +250,15 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     LineTo(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.bottom+1);
     /*   LineTo(m_dcGrid, m_rectPlot.left, m_rectPlot.top); */
 
-    /*  draw the horizontal and vertical axis */
-    nMidGridPix    = (this->m_rectPlot.top + this->m_rectPlot.bottom)/2;
-    nTopGridPix    = nMidGridPix - this->m_nPlotHeight/4;
-    nBottomGridPix = nMidGridPix + this->m_nPlotHeight/4;
+    /*  draw the horizontal axis */
+    for (i = this->m_rectPlot.top; i < this->m_rectPlot.bottom; i += 12)
+    {
+        MoveToEx(this->m_dcGrid, this->m_rectPlot.left, this->m_rectPlot.top + i, NULL);
+        LineTo(this->m_dcGrid, this->m_rectPlot.right, this->m_rectPlot.top + i);
+    }
 
-    MoveToEx(this->m_dcGrid, this->m_rectPlot.left, nTopGridPix, NULL);
-    LineTo(this->m_dcGrid, this->m_rectPlot.right, nTopGridPix);
-    MoveToEx(this->m_dcGrid, this->m_rectPlot.left, nMidGridPix, NULL);
-    LineTo(this->m_dcGrid, this->m_rectPlot.right, nMidGridPix);
-    MoveToEx(this->m_dcGrid, this->m_rectPlot.left, nBottomGridPix, NULL);
-    LineTo(this->m_dcGrid, this->m_rectPlot.right, nBottomGridPix);
-
-    for (i = this->m_rectPlot.left; i<this->m_rectPlot.right; i+=13)
+    /*  draw the vertical axis */
+    for (i = this->m_rectPlot.left; i < this->m_rectPlot.right; i += 12)
     {
         MoveToEx(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.bottom, NULL);
         LineTo(this->m_dcGrid, this->m_rectPlot.left + i, this->m_rectPlot.top);
