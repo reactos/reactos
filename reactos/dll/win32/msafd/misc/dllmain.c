@@ -700,10 +700,15 @@ WSPSelect(int nfds,
                   ( writefds ? writefds->fd_count : 0 ) +
                   ( exceptfds ? exceptfds->fd_count : 0 );
 
-    if( HandleCount < 0 || nfds != 0 )
-        HandleCount = nfds * 3;
+    if ( HandleCount == 0 )
+    {
+        AFD_DbgPrint(MAX_TRACE,("HandleCount: %d. Return SOCKET_ERROR\n",
+                     HandleCount));
+        if (lpErrno) *lpErrno = WSAEINVAL;
+        return SOCKET_ERROR;
+    }
 
-    PollBufferSize = sizeof(*PollInfo) + (HandleCount * sizeof(AFD_HANDLE));
+    PollBufferSize = sizeof(*PollInfo) + ((HandleCount - 1) * sizeof(AFD_HANDLE));
 
     AFD_DbgPrint(MID_TRACE,("HandleCount: %d BufferSize: %d\n", 
                  HandleCount, PollBufferSize));
