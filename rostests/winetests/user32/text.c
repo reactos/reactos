@@ -27,8 +27,7 @@
 #include "winuser.h"
 #include "winerror.h"
 
-#define MODIFIED(rect) (rect.left = 10 && rect.right != 100 && rect.top == 10 && rect.bottom != 100)
-#define SAME(rect) (rect.left = 10 && rect.right == 100 && rect.top == 10 && rect.bottom == 100)
+#define MODIFIED(rect) (rect.left == 10 && rect.right != 100 && rect.top == 10 && rect.bottom != 100)
 #define EMPTY(rect) (rect.left == rect.right && rect.bottom == rect.top)
 
 static void test_DrawTextCalcRect(void)

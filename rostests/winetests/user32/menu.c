@@ -571,7 +571,7 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
                        4 + (mnuopt != 1 ? GetSystemMetrics(SM_CXMENUCHECK) : 0)
                        : 0) +
                        arrowwidth  + MOD_avec + (hbmp ?
-                                    ((int)hbmp<0||(int)hbmp>12 ? bmpsize.cx + 2 : GetSystemMetrics( SM_CXMENUSIZE) + 2)
+                                    ((INT_PTR)hbmp<0||(INT_PTR)hbmp>12 ? bmpsize.cx + 2 : GetSystemMetrics( SM_CXMENUSIZE) + 2)
                                     : 0) +
                 (text && hastab ? /* TAB space */
                  MOD_avec + ( hastab==2 ? sc_size.cx : 0) : 0) +
@@ -588,7 +588,7 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
             expect = max( ( !(text || hbmp) ? GetSystemMetrics( SM_CYMENUSIZE)/2 : 0),
                           max( (text ? max( 2 + size.cy, MOD_hic + 4) : 0),
                                (hbmp ?
-                                   ((int)hbmp<0||(int)hbmp>12 ?
+                                   ((INT_PTR)hbmp<0||(INT_PTR)hbmp>12 ?
                                        bmpsize.cy + 2
                                      : GetSystemMetrics( SM_CYMENUSIZE) + 2)
                                  : 0)));

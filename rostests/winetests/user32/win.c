@@ -118,6 +118,16 @@ static void check_parents( HWND hwnd, HWND ga_parent, HWND gwl_parent, HWND get_
     }
 }
 
+static BOOL ignore_message( UINT message )
+{
+    /* these are always ignored */
+    return (message >= 0xc000 ||
+            message == WM_GETICON ||
+            message == WM_GETOBJECT ||
+            message == WM_TIMECHANGE ||
+            message == WM_DEVICECHANGE);
+}
+
 static BOOL CALLBACK EnumChildProc( HWND hwndChild, LPARAM lParam)
 {
     (*(LPINT)lParam)++;
@@ -2312,7 +2322,10 @@ static void check_wnd_state_(const char *file, int line,
                              HWND active, HWND foreground, HWND focus, HWND capture)
 {
     ok_(file, line)(active == GetActiveWindow(), "GetActiveWindow() = %p\n", GetActiveWindow());
-    if (foreground && GetForegroundWindow())
+    /* only check foreground if it belongs to the current thread */
+    /* foreground can be moved to a different app pretty much at any time */
+    if (foreground && GetForegroundWindow() &&
+        GetWindowThreadProcessId(GetForegroundWindow(), NULL) == GetCurrentThreadId())
         ok_(file, line)(foreground == GetForegroundWindow(), "GetForegroundWindow() = %p\n", GetForegroundWindow());
     ok_(file, line)(focus == GetFocus(), "GetFocus() = %p\n", GetFocus());
     ok_(file, line)(capture == GetCapture(), "GetCapture() = %p\n", GetCapture());
@@ -2621,6 +2634,17 @@ static void test_capture_3(HWND hwnd1, HWND hwnd2)
     ok (ret, "releasecapture did not return TRUE after second try.\n");
 }
 
+/* PeekMessage wrapper that ignores the messages we don't care about */
+static BOOL peek_message( MSG *msg )
+{
+    BOOL ret;
+    do
+    {
+        ret = PeekMessageA(msg, 0, 0, 0, PM_REMOVE);
+    } while (ret && (msg->message == WM_TIMER || ignore_message(msg->message)));
+    return ret;
+}
+
 static void test_keyboard_input(HWND hwnd)
 {
     MSG msg;
@@ -2639,40 +2663,31 @@ static void test_keyboard_input(HWND hwnd)
     flush_events( TRUE );
 
     PostMessageA(hwnd, WM_KEYDOWN, 0, 0);
-    do
-    {
-        ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
-        ok( ret, "no message available\n");
-    }
-    while (ret && msg.message >= 0xc000);
+    ret = peek_message(&msg);
+    ok( ret, "no message available\n");
     ok(msg.hwnd == hwnd && msg.message == WM_KEYDOWN, "hwnd %p message %04x\n", msg.hwnd, msg.message);
-    do
-        ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
-    while (ret && (msg.message == WM_TIMER || msg.message >= 0xc000));
+    ret = peek_message(&msg);
     ok( !ret, "message %04x available\n", msg.message);
 
     ok(GetFocus() == hwnd, "wrong focus window %p\n", GetFocus());
 
     PostThreadMessageA(GetCurrentThreadId(), WM_KEYDOWN, 0, 0);
-    ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "no message available\n");
+    ret = peek_message(&msg);
+    ok(ret, "no message available\n");
     ok(!msg.hwnd && msg.message == WM_KEYDOWN, "hwnd %p message %04x\n", msg.hwnd, msg.message);
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    ret = peek_message(&msg);
     ok( !ret, "message %04x available\n", msg.message);
 
     ok(GetFocus() == hwnd, "wrong focus window %p\n", GetFocus());
 
     keybd_event(VK_SPACE, 0, 0, 0);
-    do
-    {
-        ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
-    } while (ret && msg.message >= 0xc000);
-    if (!ret)
+    if (!peek_message(&msg))
     {
         skip( "keybd_event didn't work, skipping keyboard test\n" );
         return;
     }
     ok(msg.hwnd == hwnd && msg.message == WM_KEYDOWN, "hwnd %p message %04x\n", msg.hwnd, msg.message);
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    ret = peek_message(&msg);
     ok( !ret, "message %04x available\n", msg.message);
 
     SetFocus(0);
@@ -2681,25 +2696,28 @@ static void test_keyboard_input(HWND hwnd)
     flush_events( TRUE );
 
     PostMessageA(hwnd, WM_KEYDOWN, 0, 0);
-    ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "no message available\n");
+    ret = peek_message(&msg);
+    ok(ret, "no message available\n");
     ok(msg.hwnd == hwnd && msg.message == WM_KEYDOWN, "hwnd %p message %04x\n", msg.hwnd, msg.message);
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    ret = peek_message(&msg);
     ok( !ret, "message %04x available\n", msg.message);
 
     ok(GetFocus() == 0, "wrong focus window %p\n", GetFocus());
 
     PostThreadMessageA(GetCurrentThreadId(), WM_KEYDOWN, 0, 0);
-    ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "no message available\n");
+    ret = peek_message(&msg);
+    ok(ret, "no message available\n");
     ok(!msg.hwnd && msg.message == WM_KEYDOWN, "hwnd %p message %04x\n", msg.hwnd, msg.message);
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    ret = peek_message(&msg);
     ok( !ret, "message %04x available\n", msg.message);
 
     ok(GetFocus() == 0, "wrong focus window %p\n", GetFocus());
 
     keybd_event(VK_SPACE, 0, 0, 0);
-    ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "no message available\n");
+    ret = peek_message(&msg);
+    ok(ret, "no message available\n");
     ok(msg.hwnd == hwnd && msg.message == WM_SYSKEYDOWN, "hwnd %p message %04x\n", msg.hwnd, msg.message);
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    ret = peek_message(&msg);
     ok( !ret, "message %04x available\n", msg.message);
 }
 
@@ -2709,11 +2727,11 @@ static BOOL wait_for_message( MSG *msg )
 
     for (;;)
     {
-        ret = PeekMessageA(msg, 0, 0, 0, PM_REMOVE);
+        ret = peek_message(msg);
         if (ret)
         {
             if (msg->message == WM_PAINT) DispatchMessage(msg);
-            else if (msg->message < 0xc000) break;  /* skip registered messages */
+            else break;
         }
         else if (MsgWaitForMultipleObjects( 0, NULL, FALSE, 100, QS_ALLINPUT ) == WAIT_TIMEOUT) break;
     }
@@ -2766,9 +2784,7 @@ static void test_mouse_input(HWND hwnd)
     /* Check that setting the same position may generate WM_MOUSEMOVE */
     SetCursorPos(x, y);
     msg.message = 0;
-    do
-        ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
-    while (ret && msg.message >= 0xc000);  /* skip registered messages */
+    ret = peek_message(&msg);
     if (ret)
     {
         ok(msg.hwnd == popup && msg.message == WM_MOUSEMOVE, "hwnd %p message %04x\n",
@@ -2789,11 +2805,11 @@ static void test_mouse_input(HWND hwnd)
     /* FIXME: SetCursorPos in Wine generates additional WM_MOUSEMOVE message */
     while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE))
     {
-        if (msg.message == WM_TIMER || msg.message >= 0xc000) continue;  /* skip registered messages */
+        if (msg.message == WM_TIMER || ignore_message(msg.message)) continue;
         ok(msg.hwnd == popup && msg.message == WM_MOUSEMOVE,
            "hwnd %p message %04x\n", msg.hwnd, msg.message);
     }
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    ret = peek_message(&msg);
     ok( !ret, "message %04x available\n", msg.message);
 
     mouse_event(MOUSEEVENTF_MOVE, -1, -1, 0, 0);
@@ -2853,7 +2869,7 @@ static void test_mouse_input(HWND hwnd)
     ok(msg.hwnd == popup && msg.message == WM_LBUTTONUP, "hwnd %p/%p message %04x\n",
        msg.hwnd, popup, msg.message);
 
-    ret = PeekMessageA(&msg, 0, 0, 0, PM_REMOVE);
+    ret = peek_message(&msg);
     ok(!ret, "message %04x available\n", msg.message);
 
     ShowWindow(popup, SW_HIDE);
@@ -2881,10 +2897,10 @@ static void test_mouse_input(HWND hwnd)
     ok(ret, "no message available\n");
     ok(msg.hwnd == popup && msg.message == WM_LBUTTONDOWN, "hwnd %p/%p message %04x\n",
        msg.hwnd, popup, msg.message);
-    ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "no message available\n");
+    ok(peek_message(&msg), "no message available\n");
     ok(msg.hwnd == popup && msg.message == WM_LBUTTONUP, "hwnd %p/%p message %04x\n",
        msg.hwnd, popup, msg.message);
-    ok(PeekMessageA(&msg, 0, 0, 0, PM_REMOVE), "no message available\n");
+    ok(peek_message(&msg), "no message available\n");
 
     /* Test WM_MOUSEACTIVATE */
 #define TEST_MOUSEACTIVATE(A,B)                                                          \

@@ -1615,12 +1615,6 @@ static void test_DdeCreateDataHandle(void)
     ok(hdata != NULL, "Expected non-NULL hdata\n");
     ok(err == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", err);
 
-    ptr = GlobalLock(hdata);
-    todo_wine
-    {
-        ok(ptr == NULL, "Expected NULL, got %p\n", ptr);
-    }
-
     ptr = DdeAccessData(hdata, &size);
     ok(ptr != NULL, "Expected non-NULL ptr\n");
     ok(size == 260, "Expected 260, got %d\n", size);
@@ -1638,12 +1632,6 @@ static void test_DdeCreateDataHandle(void)
     ok(hdata != NULL, "Expected non-NULL hdata\n");
     ok(err == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", err);
 
-    ptr = GlobalLock(hdata);
-    todo_wine
-    {
-        ok(ptr == NULL, "Expected NULL, got %p\n", ptr);
-    }
-
     ptr = DdeAccessData(hdata, &size);
     ok(ptr != NULL, "Expected non-NULL ptr\n");
     ok(size == 0, "Expected 0, got %d\n", size);
@@ -1660,12 +1648,6 @@ static void test_DdeCreateDataHandle(void)
     err = DdeGetLastError(dde_inst);
     ok(hdata != NULL, "Expected non-NULL hdata\n");
     ok(err == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", err);
-
-    ptr = GlobalLock(hdata);
-    todo_wine
-    {
-        ok(ptr == NULL, "Expected NULL, got %p\n", ptr);
-    }
 
     ptr = DdeAccessData(hdata, &size);
     ok(ptr != NULL, "Expected non-NULL ptr\n");
@@ -1688,12 +1670,6 @@ static void test_DdeCreateDataHandle(void)
     ok(hdata != NULL, "Expected non-NULL hdata\n");
     ok(err == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", err);
 
-    ptr = GlobalLock(hdata);
-    todo_wine
-    {
-        ok(ptr == NULL, "Expected NULL, got %p\n", ptr);
-    }
-
     ptr = DdeAccessData(hdata, &size);
     ok(ptr != NULL, "Expected non-NULL ptr\n");
     ok(!lstrcmpA((LPSTR)ptr, "data"), "Expected data, got %s\n", ptr);
@@ -1712,12 +1688,6 @@ static void test_DdeCreateDataHandle(void)
     ok(hdata != NULL, "Expected non-NULL hdata\n");
     ok(err == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", err);
 
-    ptr = GlobalLock(hdata);
-    todo_wine
-    {
-        ok(ptr == NULL, "Expected NULL, got %p\n", ptr);
-    }
-
     ptr = DdeAccessData(hdata, &size);
     ok(ptr != NULL, "Expected non-NULL ptr\n");
     ok(!lstrcmpA((LPSTR)ptr, "data"), "Expected data, got %s\n", ptr);
@@ -1735,12 +1705,6 @@ static void test_DdeCreateDataHandle(void)
     err = DdeGetLastError(dde_inst);
     ok(hdata != NULL, "Expected non-NULL hdata\n");
     ok(err == DMLERR_NO_ERROR, "Expected DMLERR_NO_ERROR, got %d\n", err);
-
-    ptr = GlobalLock(hdata);
-    todo_wine
-    {
-        ok(ptr == NULL, "Expected NULL, got %p\n", ptr);
-    }
 
     ptr = DdeAccessData(hdata, &size);
     ok(ptr != NULL, "Expected non-NULL ptr\n");

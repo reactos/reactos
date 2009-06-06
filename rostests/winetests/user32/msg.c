@@ -885,7 +885,7 @@ static const struct message WmShowVisiblePopupSeq_3[] = {
     { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { WM_SETFOCUS, sent|defwinproc },
     { WM_GETTEXT, sent|optional },
-    { WM_WINDOWPOSCHANGED, sent|wparam|optional, SWP_SHOWWINDOW|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE },
+    { WM_WINDOWPOSCHANGED, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE, 0, SWP_SHOWWINDOW },
     { 0 }
 };
 /* CreateWindow (for child window, not initially visible) */
@@ -1123,6 +1123,13 @@ static const struct message WmDestroyChildSeq[] = {
     { WM_DESTROY, sent|optional }, /* some other (IME?) window */
     { WM_NCDESTROY, sent|optional }, /* some other (IME?) window */
     { WM_NCDESTROY, sent },
+    { 0 }
+};
+/* visible child window destroyed by thread exit */
+static const struct message WmExitThreadSeq[] = {
+    { WM_NCDESTROY, sent },  /* actually in grandchild */
+    { WM_PAINT, sent|parent },
+    { WM_ERASEBKGND, sent|parent|beginpaint },
     { 0 }
 };
 /* DestroyWindow for a visible child window with invisible parent */
@@ -1557,6 +1564,8 @@ static const struct message WmEnableWindowSeq_1[] =
 {
     { WM_CANCELMODE, sent|wparam|lparam, 0, 0 },
     { EVENT_OBJECT_STATECHANGE, winevent_hook|wparam|lparam, 0, 0 },
+    { HCBT_SETFOCUS, hook|optional },
+    { WM_KILLFOCUS, sent|optional },
     { WM_ENABLE, sent|wparam|lparam, FALSE, 0 },
     { 0 }
 };
@@ -1759,6 +1768,16 @@ static const char *get_winpos_flags(UINT flags)
 #undef DUMP
 }
 
+static BOOL ignore_message( UINT message )
+{
+    /* these are always ignored */
+    return (message >= 0xc000 ||
+            message == WM_GETICON ||
+            message == WM_GETOBJECT ||
+            message == WM_TIMECHANGE ||
+            message == WM_DEVICECHANGE);
+}
+
 
 #define add_message(msg) add_message_(__LINE__,msg);
 static void add_message_(int line, const struct recvd_message *msg)
@@ -1863,6 +1882,8 @@ static void add_message_(int line, const struct recvd_message *msg)
                 sprintf( seq->output, "%s: %p %04x wp %08lx lp %08lx",
                          msg->descr, msg->hwnd, msg->message, msg->wParam, msg->lParam );
             }
+            if (msg->flags & (sent|posted|parent|defwinproc|beginpaint))
+                sprintf( seq->output + strlen(seq->output), " (flags %x)", msg->flags );
         }
     }
 
@@ -3202,9 +3223,7 @@ static LRESULT WINAPI mdi_client_hook_proc(HWND hwnd, UINT message, WPARAM wPara
         message != WM_NCHITTEST &&
         message != WM_GETTEXT &&
         message != WM_MDIGETACTIVE &&
-        message != WM_GETICON &&
-        message != WM_GETOBJECT &&
-        message != WM_DEVICECHANGE)
+        !ignore_message( message ))
     {
         msg.hwnd = hwnd;
         msg.message = message;
@@ -3231,9 +3250,7 @@ static LRESULT WINAPI mdi_child_wnd_proc(HWND hwnd, UINT message, WPARAM wParam,
         message != WM_ERASEBKGND &&
         message != WM_NCHITTEST &&
         message != WM_GETTEXT &&
-        message != WM_GETICON &&
-        message != WM_GETOBJECT &&
-        message != WM_DEVICECHANGE)
+        !ignore_message( message ))
     {
         switch (message)
         {
@@ -3281,9 +3298,7 @@ static LRESULT WINAPI mdi_frame_wnd_proc(HWND hwnd, UINT message, WPARAM wParam,
         message != WM_ERASEBKGND &&
         message != WM_NCHITTEST &&
         message != WM_GETTEXT &&
-        message != WM_GETICON &&
-        message != WM_GETOBJECT &&
-        message != WM_DEVICECHANGE)
+        !ignore_message( message ))
     {
         msg.hwnd = hwnd;
         msg.message = message;
@@ -3898,16 +3913,15 @@ static INT_PTR CALLBACK TestModalDlgProcA(HWND hwnd, UINT message, WPARAM wParam
 {
     struct recvd_message msg;
 
+    if (ignore_message( message )) return 0;
+
     switch (message)
     {
 	/* ignore */
-        case WM_GETICON:
-        case WM_GETOBJECT:
 	case WM_MOUSEMOVE:
 	case WM_NCMOUSEMOVE:
 	case WM_NCMOUSELEAVE:
 	case WM_SETCURSOR:
-	case WM_DEVICECHANGE:
             return 0;
         case WM_NCHITTEST:
             return HTCLIENT;
@@ -3958,7 +3972,6 @@ static void test_hv_scroll_1(HWND hwnd, INT ctl, DWORD clear, DWORD set, INT min
 
     xmin = 0xdeadbeef;
     xmax = 0xdeadbeef;
-    trace("Ignore GetScrollRange error below if you are on Win9x\n");
     ret = GetScrollRange(hwnd, ctl, &xmin, &xmax);
     ok( ret, "GetScrollRange(%d) error %d\n", ctl, GetLastError());
     ok_sequence(WmEmptySeq, "GetScrollRange(SB_HORZ/SB_VERT) empty sequence", FALSE);
@@ -5157,11 +5170,10 @@ static LRESULT CALLBACK button_hook_proc(HWND hwnd, UINT message, WPARAM wParam,
     LRESULT ret;
     struct recvd_message msg;
 
+    if (ignore_message( message )) return 0;
+
     switch (message)
     {
-    case WM_GETICON:
-    case WM_GETOBJECT:
-        return 0;  /* ignore them */
     case WM_SYNCPAINT:
         break;
     case BM_SETSTATE:
@@ -5318,7 +5330,7 @@ static LRESULT CALLBACK static_hook_proc(HWND hwnd, UINT message, WPARAM wParam,
     LRESULT ret;
     struct recvd_message msg;
 
-    if (message == WM_GETICON || message == WM_GETOBJECT) return 0;  /* ignore them */
+    if (ignore_message( message )) return 0;
 
     msg.hwnd = hwnd;
     msg.message = message;
@@ -5420,9 +5432,7 @@ static LRESULT CALLBACK combobox_hook_proc(HWND hwnd, UINT message, WPARAM wPara
         message != WM_ERASEBKGND &&
         message != WM_NCHITTEST &&
         message != WM_GETTEXT &&
-        message != WM_GETICON &&
-        message != WM_GETOBJECT &&
-        message != WM_DEVICECHANGE)
+        !ignore_message( message ))
     {
         msg.hwnd = hwnd;
         msg.message = message;
@@ -6305,7 +6315,9 @@ static void test_paint_messages(void)
 struct wnd_event
 {
     HWND hwnd;
-    HANDLE event;
+    HANDLE grand_child;
+    HANDLE start_event;
+    HANDLE stop_event;
 };
 
 static DWORD WINAPI thread_proc(void *param)
@@ -6317,7 +6329,7 @@ static DWORD WINAPI thread_proc(void *param)
                                       100, 100, 200, 200, 0, 0, 0, NULL);
     ok(wnd_event->hwnd != 0, "Failed to create overlapped window\n");
 
-    SetEvent(wnd_event->event);
+    SetEvent(wnd_event->start_event);
 
     while (GetMessage(&msg, 0, 0, 0))
     {
@@ -6327,6 +6339,54 @@ static DWORD WINAPI thread_proc(void *param)
 
     ok(IsWindow(wnd_event->hwnd), "window should still exist\n");
 
+    return 0;
+}
+
+static DWORD CALLBACK create_grand_child_thread( void *param )
+{
+    struct wnd_event *wnd_event = param;
+    HWND hchild;
+    MSG msg;
+
+    hchild = CreateWindowExA(0, "TestWindowClass", "Test child",
+                             WS_CHILD | WS_VISIBLE, 0, 0, 10, 10, wnd_event->hwnd, 0, 0, NULL);
+    ok (hchild != 0, "Failed to create child window\n");
+    flush_events();
+    flush_sequence();
+    SetEvent( wnd_event->start_event );
+
+    for (;;)
+    {
+        MsgWaitForMultipleObjects(0, NULL, FALSE, 1000, QS_ALLINPUT);
+        if (!IsWindow( hchild )) break;  /* will be destroyed when parent thread exits */
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    }
+    return 0;
+}
+
+static DWORD CALLBACK create_child_thread( void *param )
+{
+    struct wnd_event *wnd_event = param;
+    struct wnd_event child_event;
+    DWORD ret, tid;
+    MSG msg;
+
+    child_event.hwnd = CreateWindowExA(0, "TestWindowClass", "Test child",
+                             WS_CHILD | WS_VISIBLE, 0, 0, 10, 10, wnd_event->hwnd, 0, 0, NULL);
+    ok (child_event.hwnd != 0, "Failed to create child window\n");
+    SetFocus( child_event.hwnd );
+    flush_events();
+    flush_sequence();
+    child_event.start_event = wnd_event->start_event;
+    wnd_event->grand_child = CreateThread(NULL, 0, create_grand_child_thread, &child_event, 0, &tid);
+    for (;;)
+    {
+        DWORD ret = MsgWaitForMultipleObjects(1, &child_event.start_event, FALSE, 1000, QS_SENDMESSAGE);
+        if (ret != 1) break;
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    }
+    ret = WaitForSingleObject( wnd_event->stop_event, 5000 );
+    ok( !ret, "WaitForSingleObject failed %x\n", ret );
     return 0;
 }
 
@@ -6341,8 +6401,8 @@ static void test_interthread_messages(void)
     struct wnd_event wnd_event;
     BOOL ret;
 
-    wnd_event.event = CreateEventW(NULL, 0, 0, NULL);
-    if (!wnd_event.event)
+    wnd_event.start_event = CreateEventW(NULL, 0, 0, NULL);
+    if (!wnd_event.start_event)
     {
         win_skip("skipping interthread message test under win9x\n");
         return;
@@ -6351,9 +6411,9 @@ static void test_interthread_messages(void)
     hThread = CreateThread(NULL, 0, thread_proc, &wnd_event, 0, &tid);
     ok(hThread != NULL, "CreateThread failed, error %d\n", GetLastError());
 
-    ok(WaitForSingleObject(wnd_event.event, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
+    ok(WaitForSingleObject(wnd_event.start_event, INFINITE) == WAIT_OBJECT_0, "WaitForSingleObject failed\n");
 
-    CloseHandle(wnd_event.event);
+    CloseHandle(wnd_event.start_event);
 
     SetLastError(0xdeadbeef);
     ok(!DestroyWindow(wnd_event.hwnd), "DestroyWindow succeded\n");
@@ -6397,6 +6457,38 @@ static void test_interthread_messages(void)
     CloseHandle(hThread);
 
     ok(!IsWindow(wnd_event.hwnd), "window should be destroyed on thread exit\n");
+
+    wnd_event.hwnd = CreateWindowExA(0, "TestParentClass", "Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                              100, 100, 200, 200, 0, 0, 0, NULL);
+    ok (wnd_event.hwnd != 0, "Failed to create parent window\n");
+    flush_sequence();
+    log_all_parent_messages++;
+    wnd_event.start_event = CreateEventA( NULL, TRUE, FALSE, NULL );
+    wnd_event.stop_event = CreateEventA( NULL, TRUE, FALSE, NULL );
+    hThread = CreateThread( NULL, 0, create_child_thread, &wnd_event, 0, &tid );
+    for (;;)
+    {
+        ret = MsgWaitForMultipleObjects(1, &wnd_event.start_event, FALSE, 1000, QS_SENDMESSAGE);
+        if (ret != 1) break;
+        while (PeekMessageA(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+    }
+    ok( !ret, "MsgWaitForMultipleObjects failed %x\n", ret );
+    /* now wait for the thread without processing messages; this shouldn't deadlock */
+    SetEvent( wnd_event.stop_event );
+    ret = WaitForSingleObject( hThread, 5000 );
+    ok( !ret, "WaitForSingleObject failed %x\n", ret );
+    CloseHandle( hThread );
+
+    ret = WaitForSingleObject( wnd_event.grand_child, 5000 );
+    ok( !ret, "WaitForSingleObject failed %x\n", ret );
+    CloseHandle( wnd_event.grand_child );
+
+    CloseHandle( wnd_event.start_event );
+    CloseHandle( wnd_event.stop_event );
+    flush_events();
+    ok_sequence(WmExitThreadSeq, "destroy child on thread exit", FALSE);
+    log_all_parent_messages--;
+    DestroyWindow( wnd_event.hwnd );
 }
 
 
@@ -6657,10 +6749,8 @@ static void pump_msg_loop(HWND hwnd, HACCEL hAccel)
 
         /* ignore some unwanted messages */
         if (msg.message == WM_MOUSEMOVE ||
-            msg.message == WM_GETICON ||
-            msg.message == WM_GETOBJECT ||
             msg.message == WM_TIMER ||
-            msg.message == WM_DEVICECHANGE)
+            ignore_message( msg.message ))
             continue;
 
         log_msg.hwnd = msg.hwnd;
@@ -6902,8 +6992,7 @@ static LRESULT MsgCheckProc (BOOL unicode, HWND hwnd, UINT message,
     LRESULT ret;
     struct recvd_message msg;
 
-    /* ignore registered messages */
-    if (message >= 0xc000) return 0;
+    if (ignore_message( message )) return 0;
 
     switch (message)
     {
@@ -6966,9 +7055,6 @@ static LRESULT MsgCheckProc (BOOL unicode, HWND hwnd, UINT message,
 	case WM_MOUSEACTIVATE:
 	case WM_NCMOUSEMOVE:
 	case WM_SETCURSOR:
-	case WM_GETICON:
-	case WM_GETOBJECT:
-	case WM_DEVICECHANGE:
 	case WM_IME_SELECT:
 	    return 0;
     }
@@ -7038,11 +7124,10 @@ static LRESULT WINAPI PopupMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam,
     LRESULT ret;
     struct recvd_message msg;
 
+    if (ignore_message( message )) return 0;
+
     switch (message)
     {
-    case WM_GETICON:
-    case WM_GETOBJECT:
-        return 0;  /* ignore them */
     case WM_QUERYENDSESSION:
     case WM_ENDSESSION:
         lParam &= ~0x01;  /* Vista adds a 0x01 flag */
@@ -7078,10 +7163,7 @@ static LRESULT WINAPI ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam
     LRESULT ret;
     struct recvd_message msg;
 
-    if (message == WM_GETICON || message == WM_GETOBJECT) return 0;  /* ignore them */
-
-    /* ignore registered messages */
-    if (message >= 0xc000) return 0;
+    if (ignore_message( message )) return 0;
 
     if (log_all_parent_messages ||
         message == WM_PARENTNOTIFY || message == WM_CANCELMODE ||
@@ -7145,7 +7227,7 @@ static LRESULT WINAPI TestDlgProcA(HWND hwnd, UINT message, WPARAM wParam, LPARA
     LRESULT ret;
     struct recvd_message msg;
 
-    if (message == WM_GETICON || message == WM_GETOBJECT) return 0;  /* ignore them */
+    if (ignore_message( message )) return 0;
 
     if (test_def_id)
     {
@@ -8254,6 +8336,7 @@ static const struct message ScrollWindowPaint1[] = {
     { WM_GETTEXT, sent|beginpaint|optional },
     { WM_GETTEXT, sent|beginpaint|optional },
     { WM_GETTEXT, sent|beginpaint|optional },
+    { WM_GETTEXT, sent|beginpaint|defwinproc|optional },
     { WM_ERASEBKGND, sent|beginpaint|optional },
     { 0 }
 };
@@ -8773,7 +8856,7 @@ static LRESULT CALLBACK edit_hook_proc(HWND hwnd, UINT message, WPARAM wParam, L
     LRESULT ret;
     struct recvd_message msg;
 
-    if (message == WM_GETICON || message == WM_GETOBJECT) return 0;  /* ignore them */
+    if (ignore_message( message )) return 0;
 
     msg.hwnd = hwnd;
     msg.message = message;
@@ -10138,7 +10221,7 @@ static const struct message WmShowMaximized_2[] = {
 };
 static const struct message WmShowMaximized_3[] = {
     { HCBT_MINMAX, hook|lparam, 0, SW_SHOWMAXIMIZED },
-    { WM_GETMINMAXINFO, sent },
+    { WM_GETMINMAXINFO, sent|optional },
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_FRAMECHANGED|SWP_STATECHANGED, 0, SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE|SWP_NOSIZE|SWP_NOMOVE },
     { HCBT_ACTIVATE, hook|optional }, /* win2000 doesn't send it */
     { WM_WINDOWPOSCHANGING, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE }, /* win2000 doesn't send it */
@@ -10271,12 +10354,7 @@ static INT_PTR WINAPI test_dlg_proc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 {
     struct recvd_message msg;
 
-    switch (message)
-    {
-    case WM_GETICON:
-    case WM_GETOBJECT:
-        return 0;  /* ignore them */
-    }
+    if (ignore_message( message )) return 0;
 
     msg.hwnd = hwnd;
     msg.message = message;
@@ -11020,14 +11098,18 @@ static const struct message wm_lb_click_0[] =
 static const struct message wm_lb_deletestring[] =
 {
     { LB_DELETESTRING, sent|wparam|lparam, 0, 0 },
-    { WM_DELETEITEM, sent|wparam|parent, ID_LISTBOX, 0 },
+    { WM_DELETEITEM, sent|wparam|parent|optional, ID_LISTBOX, 0 },
+    { WM_DRAWITEM, sent|wparam|parent|optional, ID_LISTBOX },
+    { WM_DRAWITEM, sent|wparam|parent|optional, ID_LISTBOX },
     { 0 }
 };
 static const struct message wm_lb_deletestring_reset[] =
 {
     { LB_DELETESTRING, sent|wparam|lparam, 0, 0 },
-    { LB_RESETCONTENT, sent|wparam|lparam|defwinproc, 0, 0 },
-    { WM_DELETEITEM, sent|wparam|parent, ID_LISTBOX, 0 },
+    { LB_RESETCONTENT, sent|wparam|lparam|defwinproc|optional, 0, 0 },
+    { WM_DELETEITEM, sent|wparam|parent|optional, ID_LISTBOX, 0 },
+    { WM_DRAWITEM, sent|wparam|parent|optional, ID_LISTBOX },
+    { WM_DRAWITEM, sent|wparam|parent|optional, ID_LISTBOX },
     { 0 }
 };
 
@@ -11048,9 +11130,7 @@ static LRESULT WINAPI listbox_hook_proc(HWND hwnd, UINT message, WPARAM wp, LPAR
         message != WM_ERASEBKGND &&
         message != WM_NCHITTEST &&
         message != WM_GETTEXT &&
-        message != WM_GETOBJECT &&
-        message != WM_GETICON &&
-        message != WM_DEVICECHANGE)
+        !ignore_message( message ))
     {
         msg.hwnd = hwnd;
         msg.message = message;
@@ -11080,7 +11160,9 @@ static void check_lb_state_dbg(HWND listbox, int count, int cur_sel,
     ret = CallWindowProcA(listbox_orig_proc, listbox, LB_GETCURSEL, 0, 0);
     ok_(__FILE__, line)(ret == cur_sel, "expected cur sel %d, got %ld\n", cur_sel, ret);
     ret = CallWindowProcA(listbox_orig_proc, listbox, LB_GETCARETINDEX, 0, 0);
-    ok_(__FILE__, line)(ret == caret_index, "expected caret index %d, got %ld\n", caret_index, ret);
+    ok_(__FILE__, line)(ret == caret_index ||
+                        broken(cur_sel == -1 && caret_index == 0 && ret == -1),  /* nt4 */
+                        "expected caret index %d, got %ld\n", caret_index, ret);
     ret = CallWindowProcA(listbox_orig_proc, listbox, LB_GETTOPINDEX, 0, 0);
     ok_(__FILE__, line)(ret == top_index, "expected top index %d, got %ld\n", top_index, ret);
 }
