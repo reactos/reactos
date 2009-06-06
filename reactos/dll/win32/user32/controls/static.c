@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  *
@@ -68,7 +68,7 @@ static COLORREF color_3dshadow, color_3ddkshadow, color_3dhighlight;
 
 typedef void (*pfPaint)( HWND hwnd, HDC hdc, DWORD style );
 
-static pfPaint staticPaintFunc[SS_TYPEMASK+1] =
+static const pfPaint staticPaintFunc[SS_TYPEMASK+1] =
 {
     STATIC_PaintTextfn,      /* SS_LEFT */
     STATIC_PaintTextfn,      /* SS_CENTER */
@@ -95,9 +95,10 @@ static pfPaint staticPaintFunc[SS_TYPEMASK+1] =
 /*********************************************************************
  * static class descriptor
  */
+static const WCHAR staticW[] = {'S','t','a','t','i','c',0};
 const struct builtin_class_descr STATIC_builtin_class =
 {
-    L"Static",            /* name */
+    staticW,             /* name */
     CS_DBLCLKS | CS_PARENTDC, /* style  */
     StaticWndProcA,      /* procA */
     StaticWndProcW,      /* procW */
@@ -106,6 +107,7 @@ const struct builtin_class_descr STATIC_builtin_class =
     0                    /* brush */
 };
 
+/* REACTOS ONLY */
 static __inline void set_ui_state( HWND hwnd, LONG flags )
 {
     SetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET, flags );
@@ -115,6 +117,29 @@ static __inline LONG get_ui_state( HWND hwnd )
 {
     return GetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET );
 }
+
+/* Retrieve the UI state for the control */
+static BOOL STATIC_update_uistate(HWND hwnd, BOOL unicode)
+{
+    LONG flags, prevflags;
+
+    if (unicode)
+        flags = DefWindowProcW(hwnd, WM_QUERYUISTATE, 0, 0);
+    else
+        flags = DefWindowProcA(hwnd, WM_QUERYUISTATE, 0, 0);
+
+    prevflags = get_ui_state(hwnd);
+
+    if (prevflags != flags)
+    {
+        set_ui_state(hwnd, flags);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+/* END REACTOS ONLY */
 
 static void setup_clipping(HWND hwnd, HDC hdc, HRGN *orig)
 {
@@ -142,27 +167,6 @@ static void restore_clipping(HDC hdc, HRGN hrgn)
     SelectClipRgn(hdc, hrgn);
     if (hrgn != NULL)
         DeleteObject(hrgn);
-}
-
-/* Retrieve the UI state for the control */
-static BOOL STATIC_update_uistate(HWND hwnd, BOOL unicode)
-{
-    LONG flags, prevflags;
-
-    if (unicode)
-        flags = DefWindowProcW(hwnd, WM_QUERYUISTATE, 0, 0);
-    else
-        flags = DefWindowProcA(hwnd, WM_QUERYUISTATE, 0, 0);
-
-    prevflags = get_ui_state(hwnd);
-
-    if (prevflags != flags)
-    {
-        set_ui_state(hwnd, flags);
-        return TRUE;
-    }
-
-    return FALSE;
 }
 
 /***********************************************************************
@@ -241,6 +245,7 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
             SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
                           SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
+
     }
     return hOldBitmap;
 }
@@ -306,7 +311,7 @@ static HICON STATIC_LoadIconA( HWND hwnd, LPCSTR name, DWORD style )
         /* Windows doesn't try to load a standard cursor,
            probably because most IDs for standard cursors conflict
            with the IDs for standard icons anyway */
-    return hicon;
+        return hicon;
     }
 }
 
@@ -387,14 +392,14 @@ static HBRUSH STATIC_SendWmCtlColorStatic(HWND hwnd, HDC hdc)
     HBRUSH hBrush;
     HWND parent = GetParent(hwnd);
 
-    if(!parent) parent = hwnd;
-    hBrush = (HBRUSH) SendMessageW( GetParent(hwnd),
+    if (!parent) parent = hwnd;
+    hBrush = (HBRUSH) SendMessageW( parent,
                     WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
     if (!hBrush) /* did the app forget to call DefWindowProc ? */
     {
         /* FIXME: DefWindowProc should return different colors if a
                   manifest is present */
-        hBrush = (HBRUSH)DefWindowProcW(GetParent(hwnd), WM_CTLCOLORSTATIC,
+        hBrush = (HBRUSH)DefWindowProcW( parent, WM_CTLCOLORSTATIC,
                                         (WPARAM)hdc, (LPARAM)hwnd);
     }
     return hBrush;
@@ -622,7 +627,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
 	    lResult = (LRESULT)STATIC_SetIcon( hwnd, (HICON)lParam, full_style );
 	    break;
 	default:
-	    FIXME("STM_SETIMAGE: Unhandled type %x\n", wParam);
+	    FIXME("STM_SETIMAGE: Unhandled type %lx\n", wParam);
 	    break;
 	}
         STATIC_TryPaintFcn( hwnd, full_style );
@@ -701,7 +706,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     RECT rc;
     HBRUSH hBrush;
     HFONT hFont, hOldFont = NULL;
-    DWORD wFormat;
+    WORD wFormat;
     INT len, buf_size;
     WCHAR *text;
 
@@ -733,6 +738,9 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
         return;
     }
 
+    if (GetWindowLongW( hwnd, GWL_EXSTYLE ) & WS_EX_RIGHT)
+        wFormat = DT_RIGHT | (wFormat & ~(DT_LEFT | DT_CENTER));
+
     if (style & SS_NOPREFIX)
         wFormat |= DT_NOPREFIX;
     else if (get_ui_state(hwnd) & UISF_HIDEACCEL)
@@ -753,7 +761,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     }
 
     if ((hFont = (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET )))
-        hOldFont = (HFONT)SelectObject( hdc, hFont );
+        hOldFont = SelectObject( hdc, hFont );
 
     /* SS_SIMPLE controls: WM_CTLCOLORSTATIC is sent, but the returned
                            brush is not used */
@@ -899,7 +907,7 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
             if (brush.lbStyle == BS_SOLID)
                 SetBkColor(hdc, brush.lbColor);
         }
-            GetClientRect(hwnd, &rcClient);
+        GetClientRect(hwnd, &rcClient);
         if (style & SS_CENTERIMAGE)
         {
             INT x, y;
@@ -917,12 +925,6 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
         }
         SelectObject(hMemDC, oldbitmap);
         DeleteDC(hMemDC);
-    }
-    else
-    {
-        RECT rcClient;
-        GetClientRect( hwnd, &rcClient );
-        FillRect( hdc, &rcClient, hbrush );
     }
 }
 
