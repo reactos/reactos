@@ -351,8 +351,8 @@ static HRESULT JSGlobal_parseInt(DispatchEx *dispex, LCID lcid, WORD flags, DISP
     HRESULT hres;
 
     if(!arg_cnt(dp)) {
-        FIXME("NAN\n");
-        return E_NOTIMPL;
+        if(retv) num_set_nan(retv);
+        return S_OK;
     }
 
     if(arg_cnt(dp) >= 2) {

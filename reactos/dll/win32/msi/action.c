@@ -6076,7 +6076,7 @@ static UINT load_assembly(MSIRECORD *rec, LPVOID param)
         /* FIXME: we should probably check the manifest file here */
 
         if (!MsiGetFileVersionW(assembly->file->TargetPath, version, &size, NULL, NULL) &&
-            strcmpW(version, assembly->file->Version) >= 0)
+            (!assembly->file->Version || strcmpW(version, assembly->file->Version) >= 0))
         {
             assembly->installed = TRUE;
         }

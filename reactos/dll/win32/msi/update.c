@@ -261,7 +261,10 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
 
     uv = msi_alloc_zero( sizeof *uv );
     if( !uv )
+    {
+        wv->ops->delete( wv );
         return ERROR_FUNCTION_FAILED;
+    }
 
     /* fill the structure */
     uv->view.ops = &update_ops;

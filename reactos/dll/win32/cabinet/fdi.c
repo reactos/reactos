@@ -2260,7 +2260,7 @@ static int fdi_decomp(const struct fdi_file *fi, int savemode, fdi_decomp_state 
   return DECR_OK;
 }
 
-static void free_decompression_temps(HFDI hfdi, struct fdi_folder *fol,
+static void free_decompression_temps(HFDI hfdi, const struct fdi_folder *fol,
   fdi_decomp_state *decomp_state)
 {
   switch (fol->comp_type & cffoldCOMPTYPE_MASK) {

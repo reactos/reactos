@@ -1158,6 +1158,93 @@ static UINT TABLE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
     return ERROR_SUCCESS;
 }
 
+static UINT msi_stream_name( const MSITABLEVIEW *tv, UINT row, LPWSTR *pstname )
+{
+    LPWSTR p, stname = NULL;
+    UINT i, r, type, ival;
+    DWORD len;
+    LPCWSTR sval;
+    MSIVIEW *view = (MSIVIEW *) tv;
+
+    TRACE("%p %d\n", tv, row);
+
+    len = lstrlenW( tv->name ) + 1;
+    stname = msi_alloc( len*sizeof(WCHAR) );
+    if ( !stname )
+    {
+       r = ERROR_OUTOFMEMORY;
+       goto err;
+    }
+
+    lstrcpyW( stname, tv->name );
+
+    for ( i = 0; i < tv->num_cols; i++ )
+    {
+        type = tv->columns[i].type;
+        if ( type & MSITYPE_KEY )
+        {
+            static const WCHAR szDot[] = { '.', 0 };
+
+            r = TABLE_fetch_int( view, row, i+1, &ival );
+            if ( r != ERROR_SUCCESS )
+                goto err;
+
+            if ( tv->columns[i].type & MSITYPE_STRING )
+            {
+                sval = msi_string_lookup_id( tv->db->strings, ival );
+                if ( !sval )
+                {
+                    r = ERROR_INVALID_PARAMETER;
+                    goto err;
+                }
+            }
+            else
+            {
+                static const WCHAR fmt[] = { '%','d',0 };
+                WCHAR number[0x20];
+                UINT n = bytes_per_column( tv->db, &tv->columns[i] );
+
+                switch( n )
+                {
+                case 2:
+                    sprintfW( number, fmt, ival^0x8000 );
+                    break;
+                case 4:
+                    sprintfW( number, fmt, ival^0x80000000 );
+                    break;
+                default:
+                    ERR( "oops - unknown column width %d\n", n );
+                    r = ERROR_FUNCTION_FAILED;
+                    goto err;
+                }
+                sval = number;
+            }
+
+            len += lstrlenW( szDot ) + lstrlenW( sval );
+            p = msi_realloc ( stname, len*sizeof(WCHAR) );
+            if ( !p )
+            {
+                r = ERROR_OUTOFMEMORY;
+                goto err;
+            }
+            stname = p;
+
+            lstrcatW( stname, szDot );
+            lstrcatW( stname, sval );
+        }
+        else
+           continue;
+    }
+
+    *pstname = stname;
+    return ERROR_SUCCESS;
+
+err:
+    msi_free( stname );
+    *pstname = NULL;
+    return r;
+}
+
 /*
  * We need a special case for streams, as we need to reference column with
  * the name of the stream in the same table, and the table name
@@ -1166,57 +1253,18 @@ static UINT TABLE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
 static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, IStream **stm )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
-    UINT ival = 0, refcol = 0, r;
-    LPCWSTR sval;
-    LPWSTR full_name;
-    DWORD len;
-    static const WCHAR szDot[] = { '.', 0 };
-    WCHAR number[0x20];
+    UINT r;
+    LPWSTR full_name = NULL;
 
     if( !view->ops->fetch_int )
         return ERROR_INVALID_PARAMETER;
 
-    /*
-     * The column marked with the type stream data seems to have a single number
-     * which references the column containing the name of the stream data
-     *
-     * Fetch the column to reference first.
-     */
-    r = view->ops->fetch_int( view, row, col, &ival );
-    if( r != ERROR_SUCCESS )
+    r = msi_stream_name( tv, row, &full_name );
+    if ( r != ERROR_SUCCESS )
+    {
+        ERR("fetching stream, error = %d\n", r);
         return r;
-
-    /* check the column value is in range */
-    if (ival > tv->num_cols || ival == col)
-    {
-        ERR("bad column ref (%u) for stream\n", ival);
-        return ERROR_FUNCTION_FAILED;
     }
-
-    if ( tv->columns[ival - 1].type & MSITYPE_STRING )
-    {
-        /* now get the column with the name of the stream */
-        r = view->ops->fetch_int( view, row, ival, &refcol );
-        if ( r != ERROR_SUCCESS )
-            return r;
-
-        /* lookup the string value from the string table */
-        sval = msi_string_lookup_id( tv->db->strings, refcol );
-        if ( !sval )
-            return ERROR_INVALID_PARAMETER;
-    }
-    else
-    {
-        static const WCHAR fmt[] = { '%','d',0 };
-        sprintfW( number, fmt, ival );
-        sval = number;
-    }
-
-    len = lstrlenW( tv->name ) + 2 + lstrlenW( sval );
-    full_name = msi_alloc( len*sizeof(WCHAR) );
-    lstrcpyW( full_name, tv->name );
-    lstrcatW( full_name, szDot );
-    lstrcatW( full_name, sval );
 
     r = db_get_raw_stream( tv->db, full_name, stm );
     if( r )
@@ -1285,6 +1333,46 @@ static UINT TABLE_get_row( struct tagMSIVIEW *view, UINT row, MSIRECORD **rec )
     return msi_view_get_row(tv->db, view, row, rec);
 }
 
+static UINT msi_addstreamW( MSIDATABASE *db, LPCWSTR name, IStream *data )
+{
+    UINT r;
+    MSIQUERY *query = NULL;
+    MSIRECORD *rec = NULL;
+
+    static const WCHAR insert[] = {
+       'I','N','S','E','R','T',' ','I','N','T','O',' ',
+          '`','_','S','t','r','e','a','m','s','`',' ',
+         '(','`','N','a','m','e','`',',',
+             '`','D','a','t','a','`',')',' ',
+         'V','A','L','U','E','S',' ','(','?',',','?',')',0};
+
+    TRACE("%p %s %p\n", db, debugstr_w(name), data);
+
+    rec = MSI_CreateRecord( 2 );
+    if ( !rec )
+        return ERROR_OUTOFMEMORY;
+
+    r = MSI_RecordSetStringW( rec, 1, name );
+    if ( r != ERROR_SUCCESS )
+       goto err;
+
+    r = MSI_RecordSetIStream( rec, 2, data );
+    if ( r != ERROR_SUCCESS )
+       goto err;
+
+    r = MSI_DatabaseOpenViewW( db, insert, &query );
+    if ( r != ERROR_SUCCESS )
+       goto err;
+
+    r = MSI_ViewExecute( query, rec );
+
+err:
+    msiobj_release( &query->hdr );
+    msiobj_release( &rec->hdr );
+
+    return r;
+}
+
 static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UINT mask )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
@@ -1315,6 +1403,27 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
         {
             if ( MSITYPE_IS_BINARY(tv->columns[ i ].type) )
             {
+                IStream *stm;
+                LPWSTR stname;
+
+                r = MSI_RecordGetIStream( rec, i + 1, &stm );
+                if ( r != ERROR_SUCCESS )
+                    return r;
+
+                r = msi_stream_name( tv, row, &stname );
+                if ( r != ERROR_SUCCESS )
+                {
+                    IStream_Release( stm );
+                    return r;
+                }
+
+                r = msi_addstreamW( tv->db, stname, stm );
+                IStream_Release( stm );
+                msi_free ( stname );
+
+                if ( r != ERROR_SUCCESS )
+                    return r;
+
                 val = 1; /* refers to the first key column */
             }
             else if ( tv->columns[i].type & MSITYPE_STRING )
@@ -2264,7 +2373,67 @@ static UINT read_raw_int(const BYTE *data, UINT col, UINT bytes)
     return ret;
 }
 
+static UINT msi_record_encoded_stream_name( const MSITABLEVIEW *tv, MSIRECORD *rec, LPWSTR *pstname )
+{
+    static const WCHAR szDot[] = { '.', 0 };
+    LPWSTR stname = NULL, sval, p;
+    DWORD len;
+    UINT i, r;
+
+    TRACE("%p %p\n", tv, rec);
+
+    len = lstrlenW( tv->name ) + 1;
+    stname = msi_alloc( len*sizeof(WCHAR) );
+    if ( !stname )
+    {
+       r = ERROR_OUTOFMEMORY;
+       goto err;
+    }
+
+    lstrcpyW( stname, tv->name );
+
+    for ( i = 0; i < tv->num_cols; i++ )
+    {
+        if ( tv->columns[i].type & MSITYPE_KEY )
+        {
+            sval = msi_dup_record_field( rec, i + 1 );
+            if ( !sval )
+            {
+                r = ERROR_OUTOFMEMORY;
+                goto err;
+            }
+
+            len += lstrlenW( szDot ) + lstrlenW ( sval );
+            p = msi_realloc ( stname, len*sizeof(WCHAR) );
+            if ( !p )
+            {
+                r = ERROR_OUTOFMEMORY;
+                goto err;
+            }
+            stname = p;
+
+            lstrcatW( stname, szDot );
+            lstrcatW( stname, sval );
+
+            msi_free( sval );
+        }
+        else
+            continue;
+    }
+
+    *pstname = encode_streamname( FALSE, stname );
+    msi_free( stname );
+
+    return ERROR_SUCCESS;
+
+err:
+    msi_free ( stname );
+    *pstname = NULL;
+    return r;
+}
+
 static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string_table *st,
+                                            IStorage *stg,
                                             const BYTE *rawdata, UINT bytes_per_strref )
 {
     UINT i, val, ofs = 0;
@@ -2288,8 +2457,28 @@ static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string
         if ( (~mask&1) && (~columns[i].type & MSITYPE_KEY) && ((1<<i) & ~mask) )
             continue;
 
-        if( (columns[i].type & MSITYPE_STRING) &&
-            ! MSITYPE_IS_BINARY(tv->columns[i].type) )
+        if( MSITYPE_IS_BINARY(tv->columns[i].type) )
+        {
+            LPWSTR encname;
+            IStream *stm = NULL;
+            UINT r;
+
+            ofs += bytes_per_column( tv->db, &columns[i] );
+
+            r = msi_record_encoded_stream_name( tv, rec, &encname );
+            if ( r != ERROR_SUCCESS )
+                return NULL;
+
+            r = IStorage_OpenStream( stg, encname, NULL,
+                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm );
+            msi_free( encname );
+            if ( r != ERROR_SUCCESS )
+                return NULL;
+
+            MSI_RecordSetStream( rec, i+1, stm );
+            TRACE(" field %d [%s]\n", i+1, debugstr_w(encname));
+        }
+        else if( columns[i].type & MSITYPE_STRING )
         {
             LPCWSTR sval;
 
@@ -2550,7 +2739,7 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
             break;
         }
 
-        rec = msi_get_transform_record( tv, st, &rawdata[n], bytes_per_strref );
+        rec = msi_get_transform_record( tv, st, stg, &rawdata[n], bytes_per_strref );
         if (rec)
         {
             if ( mask & 1 )

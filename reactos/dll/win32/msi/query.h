@@ -98,7 +98,7 @@ UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
 UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
                        struct expr *cond );
 
-UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
+UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
                         column_info *col_info, BOOL hold );
 
 UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,

@@ -523,7 +523,10 @@ UINT STREAMS_CreateView(MSIDATABASE *db, MSIVIEW **view)
     sv->db = db;
     rows = add_streams_to_table(sv);
     if (rows < 0)
+    {
+        msi_free( sv );
         return ERROR_FUNCTION_FAILED;
+    }
     sv->num_rows = rows;
 
     *view = (MSIVIEW *)sv;

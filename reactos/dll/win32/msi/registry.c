@@ -1822,7 +1822,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
         LPWSTR patch, LPWSTR targetprod, MSIINSTALLCONTEXT *targetctx,
         LPWSTR targetsid, DWORD *sidsize, LPWSTR *transforms)
 {
-    MSIPATCHSTATE state;
+    MSIPATCHSTATE state = MSIPATCHSTATE_INVALID;
     LPWSTR ptr, patches = NULL;
     HKEY prod, patchkey = 0;
     HKEY localprod = 0, localpatch = 0;

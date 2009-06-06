@@ -338,7 +338,10 @@ UINT JOIN_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR tables )
 
         table = msi_alloc(sizeof(JOINTABLE));
         if (!table)
-            return ERROR_OUTOFMEMORY;
+        {
+            r = ERROR_OUTOFMEMORY;
+            goto end;
+        }
 
         r = TABLE_CreateView( db, tables, &table->view );
         if( r != ERROR_SUCCESS )

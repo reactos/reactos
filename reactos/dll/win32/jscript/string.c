@@ -254,8 +254,8 @@ static HRESULT String_charCodeAt(DispatchEx *dispex, LCID lcid, WORD flags, DISP
             return hres;
 
         if(V_VT(&v) != VT_I4 || V_I4(&v) < 0 || V_I4(&v) >= length) {
-            FIXME("NAN\n");
-            return E_FAIL;
+            if(retv) num_set_nan(&v);
+            return S_OK;
         }
 
         idx = V_I4(&v);

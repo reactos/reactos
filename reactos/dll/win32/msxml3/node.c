@@ -369,8 +369,8 @@ static HRESULT WINAPI xmlnode_get_nodeType(
 
     TRACE("%p %p\n", This, type);
 
-    assert( NODE_ELEMENT == XML_ELEMENT_NODE );
-    assert( NODE_NOTATION == XML_NOTATION_NODE );
+    assert( (int)NODE_ELEMENT  == (int)XML_ELEMENT_NODE );
+    assert( (int)NODE_NOTATION == (int)XML_NOTATION_NODE );
 
     *type = This->node->type;
 

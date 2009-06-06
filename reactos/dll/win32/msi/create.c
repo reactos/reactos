@@ -42,7 +42,7 @@ typedef struct tagMSICREATEVIEW
 {
     MSIVIEW          view;
     MSIDATABASE     *db;
-    LPWSTR           name;
+    LPCWSTR          name;
     BOOL             bIsTemp;
     BOOL             hold;
     column_info     *col_info;
@@ -145,9 +145,9 @@ static const MSIVIEWOPS create_ops =
     NULL,
 };
 
-static UINT check_columns( column_info *col_info )
+static UINT check_columns( const column_info *col_info )
 {
-    column_info *c1, *c2;
+    const column_info *c1, *c2;
 
     /* check for two columns with the same name */
     for( c1 = col_info; c1; c1 = c1->next )
@@ -158,7 +158,7 @@ static UINT check_columns( column_info *col_info )
     return ERROR_SUCCESS;
 }
 
-UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
+UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPCWSTR table,
                         column_info *col_info, BOOL hold )
 {
     MSICREATEVIEW *cv = NULL;
@@ -180,7 +180,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     for( col = col_info; col; col = col->next )
     {
         if (!col->table)
-            col->table = strdupW(table);
+            col->table = table;
 
         if( !col->temporary )
             temp = FALSE;
