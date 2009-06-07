@@ -2376,6 +2376,10 @@ IsDialogMessageW(
                  }
                  else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {
+                    HWND hwndDef = GetDlgItem(hDlg, LOWORD(dw));
+                    if (!hwndDef || !IsWindowEnabled(hwndDef))
+                        return TRUE;
+
                      SendMessageW( hDlg, WM_COMMAND, MAKEWPARAM( LOWORD(dw), BN_CLICKED ),
                                      (LPARAM)GetDlgItem(hDlg, LOWORD(dw)));
                  }
