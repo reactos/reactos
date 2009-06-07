@@ -155,6 +155,18 @@ enum DependenciesType
 	FullDependencies
 };
 
+enum CompilerSet
+{
+	GnuGcc,
+	MicrosoftC
+};
+
+enum LinkerSet
+{
+	GnuLd,
+	MicrosoftLink
+};
+
 class Configuration
 {
 public:
@@ -174,6 +186,8 @@ public:
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
 	bool InstallFiles;
+	CompilerSet Compiler;
+	LinkerSet Linker;
 };
 
 class Environment

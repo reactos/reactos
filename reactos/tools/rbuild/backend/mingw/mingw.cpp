@@ -726,32 +726,47 @@ MingwBackend::DetectCompiler ()
 	printf ( "Detecting compiler..." );
 
 	bool detectedCompiler = false;
-	const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
-	if ( ROS_PREFIXValue.length () > 0 )
+	bool supportedCompiler = false;
+	string compilerVersion;
+
+	if ( ProjectNode.configuration.Compiler == GnuGcc )
 	{
-		compilerPrefix = ROS_PREFIXValue;
-		compilerCommand = compilerPrefix + "-gcc";
-		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
-	}
+		const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+		if ( ROS_PREFIXValue.length () > 0 )
+		{
+			compilerPrefix = ROS_PREFIXValue;
+			compilerCommand = compilerPrefix + "-gcc";
+			detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+		}
 #if defined(WIN32)
-	if ( !detectedCompiler )
-	{
-		compilerPrefix = "";
-		compilerCommand = "gcc";
-		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
-	}
+		if ( !detectedCompiler )
+		{
+			compilerPrefix = "";
+			compilerCommand = "gcc";
+			detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+		}
 #endif
-	if ( !detectedCompiler )
+		if ( !detectedCompiler )
+		{
+			compilerPrefix = "mingw32";
+			compilerCommand = compilerPrefix + "-gcc";
+			detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+		}
+
+		if ( detectedCompiler )
+			compilerVersion = GetCompilerVersion ( compilerCommand );
+
+		supportedCompiler = IsSupportedCompilerVersion ( compilerVersion );
+	}
+	else if ( ProjectNode.configuration.Compiler == MicrosoftC )
 	{
-		compilerPrefix = "mingw32";
-		compilerCommand = compilerPrefix + "-gcc";
-		detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+		detectedCompiler = DetectMicrosoftCompiler ( compilerVersion );
+		supportedCompiler = true; // TODO
 	}
 
 	if ( detectedCompiler )
 	{
-		string compilerVersion = GetCompilerVersion ( compilerCommand );
-		if ( IsSupportedCompilerVersion ( compilerVersion ) )
+		if ( supportedCompiler )
 			printf ( "detected (%s %s)\n", compilerCommand.c_str (), compilerVersion.c_str() );
 		else
 		{
@@ -953,34 +968,50 @@ MingwBackend::DetectBinutils ()
 	printf ( "Detecting binutils..." );
 
 	bool detectedBinutils = false;
-	const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+	bool supportedBinutils = false;
+	string binutilsVersion;
 
-	if ( ROS_PREFIXValue.length () > 0 )
+	if ( ProjectNode.configuration.Linker == GnuLd )
 	{
-		binutilsPrefix = ROS_PREFIXValue;
-		binutilsCommand = binutilsPrefix + "-ld";
-		manualBinutilsSetting = true;
-		detectedBinutils = true;
-	}
+		const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+
+		if ( ROS_PREFIXValue.length () > 0 )
+		{
+			binutilsPrefix = ROS_PREFIXValue;
+			binutilsCommand = binutilsPrefix + "-ld";
+			manualBinutilsSetting = true;
+			detectedBinutils = true;
+		}
 #if defined(WIN32)
-	if ( !detectedBinutils )
-	{
-		binutilsPrefix = "";
-		binutilsCommand = "ld";
-		detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
-	}
+		if ( !detectedBinutils )
+		{
+			binutilsPrefix = "";
+			binutilsCommand = "ld";
+			detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+		}
 #endif
-	if ( !detectedBinutils )
-	{
-		binutilsPrefix = "mingw32";
-		binutilsCommand = binutilsPrefix + "-ld";
-		detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+		if ( !detectedBinutils )
+		{
+			binutilsPrefix = "mingw32";
+			binutilsCommand = binutilsPrefix + "-ld";
+			detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+		}
+		if ( detectedBinutils )
+		{
+			binutilsVersion = GetBinutilsVersionDate ( binutilsCommand );
+			supportedBinutils = IsSupportedBinutilsVersion ( binutilsVersion );
+		}
 	}
+	else if ( ProjectNode.configuration.Linker == MicrosoftLink )
+	{
+		detectedBinutils = DetectMicrosoftLinker ( binutilsVersion );
+		supportedBinutils = true; // TODO
+	}
+
 	if ( detectedBinutils )
 	{
-		string binutilsVersion = GetBinutilsVersionDate ( binutilsCommand );
-		if ( IsSupportedBinutilsVersion ( binutilsVersion ) )
-			printf ( "detected (%s %s)\n", binutilsCommand.c_str (), GetBinutilsVersion( binutilsCommand ).c_str() );
+		if ( supportedBinutils )
+			printf ( "detected (%s %s)\n", binutilsCommand.c_str (), binutilsVersion.c_str() );
 		else
 		{
 			printf ( "detected (%s), but with unsupported version (%s)\n",
@@ -1022,33 +1053,36 @@ MingwBackend::DetectNetwideAssembler ()
 void
 MingwBackend::DetectPipeSupport ()
 {
-	printf ( "Detecting compiler -pipe support..." );
-
-	string pipe_detection = "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pipe_detection.c";
-	string pipe_detectionObjectFilename = ReplaceExtension ( pipe_detection,
-	                                                         ".o" );
-	string command = ssprintf (
-		"%s -pipe -c %s -o %s 1>%s 2>%s",
-		FixSeparatorForSystemCommand(compilerCommand).c_str (),
-		pipe_detection.c_str (),
-		pipe_detectionObjectFilename.c_str (),
-		NUL,
-		NUL );
-	int exitcode = system ( command.c_str () );
-	FILE* f = fopen ( pipe_detectionObjectFilename.c_str (), "rb" );
-	if ( f )
+	if ( ProjectNode.configuration.Compiler == GnuGcc )
 	{
-		usePipe = (exitcode == 0);
-		fclose ( f );
-		unlink ( pipe_detectionObjectFilename.c_str () );
-	}
-	else
-		usePipe = false;
+		printf ( "Detecting compiler -pipe support..." );
 
-	if ( usePipe )
-		printf ( "detected\n" );
-	else
-		printf ( "not detected\n" );
+		string pipe_detection = "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pipe_detection.c";
+		string pipe_detectionObjectFilename = ReplaceExtension ( pipe_detection,
+																 ".o" );
+		string command = ssprintf (
+			"%s -pipe -c %s -o %s 1>%s 2>%s",
+			FixSeparatorForSystemCommand(compilerCommand).c_str (),
+			pipe_detection.c_str (),
+			pipe_detectionObjectFilename.c_str (),
+			NUL,
+			NUL );
+		int exitcode = system ( command.c_str () );
+		FILE* f = fopen ( pipe_detectionObjectFilename.c_str (), "rb" );
+		if ( f )
+		{
+			usePipe = (exitcode == 0);
+			fclose ( f );
+			unlink ( pipe_detectionObjectFilename.c_str () );
+		}
+		else
+			usePipe = false;
+
+		if ( usePipe )
+			printf ( "detected\n" );
+		else
+			printf ( "not detected\n" );
+	}
 }
 
 void
@@ -1056,7 +1090,7 @@ MingwBackend::DetectPCHSupport ()
 {
 	printf ( "Detecting compiler pre-compiled header support..." );
 
-	if ( configuration.PrecompiledHeadersEnabled )
+	if ( configuration.PrecompiledHeadersEnabled && ProjectNode.configuration.Compiler == GnuGcc )
 	{
 		string path = "tools" + sSep + "rbuild" + sSep + "backend" + sSep + "mingw" + sSep + "pch_detection.h";
 		string cmd = ssprintf (

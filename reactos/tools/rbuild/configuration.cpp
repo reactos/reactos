@@ -33,6 +33,8 @@ Configuration::Configuration ()
 	InstallFiles = false;
 	UseConfigurationInPath = false;
 	UseVSVersionInPath = false;
+	Compiler = GnuGcc;
+	Linker = GnuLd;
 }
 
 Configuration::~Configuration ()
