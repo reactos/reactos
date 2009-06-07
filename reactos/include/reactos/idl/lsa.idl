@@ -11,7 +11,7 @@ typedef LSAPR_HANDLE *PLSAPR_HANDLE;
 
 cpp_quote("#ifndef _WINNT_H")
 typedef struct _LUID {
-    ULONG LowPart;
+    DWORD LowPart;
     LONG HighPart;
 } LUID, *PLUID;
 cpp_quote("#endif")

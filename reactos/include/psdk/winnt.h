@@ -2936,7 +2936,8 @@ typedef union _ULARGE_INTEGER {
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 typedef struct _LUID {
-    LARGE_INTEGER_ORDER(LONG)
+    DWORD LowPart;
+    LONG HighPart;
 } LUID, *PLUID;
 #pragma pack(push,4)
 typedef struct _LUID_AND_ATTRIBUTES {
