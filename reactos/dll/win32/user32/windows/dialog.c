@@ -323,7 +323,7 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
 
     while (items--)
     {
-        template = (LPCSTR)DIALOG_GetControl32( (WORD *)template, &info,
+        template = (LPCSTR)DIALOG_GetControl32( (const WORD *)template, &info,
                                                 dlgTemplate->dialogEx );
         /* Is this it? */
         if (info.style & WS_BORDER)
@@ -842,14 +842,14 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         return 0;
     }
 
-//    dlgInfo->hwndFocus   = 0;
+    dlgInfo->hwndFocus   = 0;
     dlgInfo->hUserFont   = hUserFont;
     dlgInfo->hMenu       = hMenu;
     dlgInfo->xBaseUnit   = xBaseUnit;
     dlgInfo->yBaseUnit   = yBaseUnit;
-//    dlgInfo->idResult    = 0;
+    dlgInfo->idResult    = 0;
     dlgInfo->flags       = flags;
-//    dlgInfo->hDialogHeap = 0;
+    /* dlgInfo->hDialogHeap = 0; */
 
     if (template.helpId) SetWindowContextHelpId( hwnd, template.helpId );
 
@@ -864,6 +864,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if (DIALOG_CreateControls32( hwnd, dlgTemplate, &template, hInst, unicode ))
     {
         /* Send initialisation messages and set focus */
+
         if (dlgProc)
         {
             if (SendMessageW( hwnd, WM_INITDIALOG, (WPARAM)dlgInfo->hwndFocus, param ) &&
@@ -889,6 +890,7 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     return 0;
 }
 
+
 /***********************************************************************
  *           DEFDLG_SetFocus
  *
@@ -909,6 +911,7 @@ static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
     SetFocus( hwndCtrl );
 }
 
+
 /***********************************************************************
  *           DEFDLG_SaveFocus
  */
@@ -922,6 +925,7 @@ static void DEFDLG_SaveFocus( HWND hwnd )
     infoPtr->hwndFocus = hwndFocus;
     /* Remove default button */
 }
+
 
 /***********************************************************************
  *           DEFDLG_RestoreFocus
@@ -945,6 +949,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
 }
+
 
 /***********************************************************************
  *           DEFDLG_FindDefButton
@@ -973,6 +978,7 @@ static HWND DEFDLG_FindDefButton( HWND hwndDlg )
     }
     return hwndChild;
 }
+
 
 /***********************************************************************
  *           DEFDLG_SetDefId
@@ -1005,6 +1011,7 @@ static BOOL DEFDLG_SetDefId( HWND hwndDlg, DIALOGINFO *dlgInfo, WPARAM wParam)
     }
     return TRUE;
 }
+
 
 /***********************************************************************
  *           DEFDLG_SetDefButton
@@ -1042,6 +1049,7 @@ static BOOL DEFDLG_SetDefButton( HWND hwndDlg, DIALOGINFO *dlgInfo, HWND hwndNew
     }
     return TRUE;
 }
+
 
 /***********************************************************************
  *           DEFDLG_Proc
@@ -1084,7 +1092,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
              /* Window clean-up */
             return DefWindowProcA( hwnd, msg, wParam, lParam );
 
-	case WM_SHOWWINDOW:
+        case WM_SHOWWINDOW:
             if (!wParam) DEFDLG_SaveFocus( hwnd );
             return DefWindowProcA( hwnd, msg, wParam, lParam );
 
@@ -1157,7 +1165,7 @@ static LRESULT DEFDLG_Epilog(HWND hwnd, UINT msg, BOOL fResult)
 
     // TODO: where's wine's WM_CTLCOLOR from?
     if ((msg >= WM_CTLCOLORMSGBOX && msg <= WM_CTLCOLORSTATIC) ||
-         msg == WM_CTLCOLOR ||  msg == WM_COMPAREITEM ||
+         msg == WM_CTLCOLOR || msg == WM_COMPAREITEM ||
          msg == WM_VKEYTOITEM || msg == WM_CHARTOITEM ||
          msg == WM_QUERYDRAGICON || msg == WM_INITDIALOG)
         return fResult;
@@ -1226,7 +1234,6 @@ static HWND DIALOG_GetNextTabItem( HWND hwndMain, HWND hwndDlg, HWND hwndCtrl, B
             retWnd = DIALOG_GetNextTabItem(hwndMain,hwndMain,NULL,fPrevious );
     }
     return retWnd ? retWnd : hwndCtrl;
-
 }
 
 /**********************************************************************
@@ -1529,13 +1536,12 @@ DefDlgProcA(
   WPARAM wParam,
   LPARAM lParam)
 {
+    DIALOGINFO *dlgInfo;
     WNDPROC dlgproc;
     BOOL result = FALSE;
-    DIALOGINFO * dlgInfo;
 
-	/* if there's no dialog info property then call default windows proc?? */
-    if (!(dlgInfo = DIALOG_get_info(hDlg, TRUE)))
-	    return DefWindowProcA( hDlg, Msg, wParam, lParam );
+    /* Perform DIALOGINFO initialization if not done */
+    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return -1;
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
@@ -1590,13 +1596,12 @@ DefDlgProcW(
   WPARAM wParam,
   LPARAM lParam)
 {
+    DIALOGINFO *dlgInfo;
     WNDPROC dlgproc;
     BOOL result = FALSE;
-    DIALOGINFO * dlgInfo;
 
-	/* if there's no dialog info property then call default windows proc?? */
-    if (!(dlgInfo = DIALOG_get_info(hDlg, TRUE)))
-	    return DefWindowProcW( hDlg, Msg, wParam, lParam );
+    /* Perform DIALOGINFO initialization if not done */
+    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return -1;
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
@@ -1713,7 +1718,7 @@ DialogBoxParamA(
     LPCDLGTEMPLATE ptr;
 
     if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG )) ||
-        !(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc)))
+        !(ptr = LoadResource(hInstance, hrsrc)))
     {
         SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
         return -1;
@@ -1746,7 +1751,7 @@ DialogBoxParamW(
     LPCDLGTEMPLATE ptr;
 
     if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG )) ||
-        !(ptr = (LPCDLGTEMPLATE)LoadResource(hInstance, hrsrc)))
+        !(ptr = LoadResource(hInstance, hrsrc)))
     {
         SetLastError(ERROR_RESOURCE_NAME_NOT_FOUND);
         return -1;
