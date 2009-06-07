@@ -608,10 +608,14 @@ static HRESULT WINAPI ProtocolHandler_Start(IInternetProtocol *iface, LPCWSTR sz
 static HRESULT WINAPI ProtocolHandler_Continue(IInternetProtocol *iface, PROTOCOLDATA *pProtocolData)
 {
     BindProtocol *This = PROTOCOLHANDLER_THIS(iface);
+    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, pProtocolData);
 
-    return IInternetProtocol_Continue(This->protocol, pProtocolData);
+    hres = IInternetProtocol_Continue(This->protocol, pProtocolData);
+
+    heap_free(pProtocolData);
+    return hres;
 }
 
 static HRESULT WINAPI ProtocolHandler_Abort(IInternetProtocol *iface, HRESULT hrReason,
@@ -874,14 +878,14 @@ static ULONG WINAPI BPInternetProtocolSink_Release(IInternetProtocolSink *iface)
 
 typedef struct {
     task_header_t header;
-    PROTOCOLDATA data;
+    PROTOCOLDATA *data;
 } switch_task_t;
 
 static void switch_proc(BindProtocol *bind, task_header_t *t)
 {
     switch_task_t *task = (switch_task_t*)t;
 
-    IInternetProtocol_Continue(bind->protocol_handler, &task->data);
+    IInternetProtocol_Continue(bind->protocol_handler, task->data);
 
     heap_free(task);
 }
@@ -890,11 +894,17 @@ static HRESULT WINAPI BPInternetProtocolSink_Switch(IInternetProtocolSink *iface
         PROTOCOLDATA *pProtocolData)
 {
     BindProtocol *This = PROTSINK_THIS(iface);
+    PROTOCOLDATA *data;
 
     TRACE("(%p)->(%p)\n", This, pProtocolData);
 
     TRACE("flags %x state %x data %p cb %u\n", pProtocolData->grfFlags, pProtocolData->dwState,
           pProtocolData->pData, pProtocolData->cbData);
+
+    data = heap_alloc(sizeof(PROTOCOLDATA));
+    if(!data)
+        return E_OUTOFMEMORY;
+    memcpy(data, pProtocolData, sizeof(PROTOCOLDATA));
 
     if(!do_direct_notif(This)) {
         switch_task_t *task;
@@ -903,18 +913,18 @@ static HRESULT WINAPI BPInternetProtocolSink_Switch(IInternetProtocolSink *iface
         if(!task)
             return E_OUTOFMEMORY;
 
-        task->data = *pProtocolData;
+        task->data = data;
 
         push_task(This, &task->header, switch_proc);
         return S_OK;
     }
 
     if(!This->protocol_sink) {
-        IInternetProtocol_Continue(This->protocol_handler, pProtocolData);
+        IInternetProtocol_Continue(This->protocol_handler, data);
         return S_OK;
     }
 
-    return IInternetProtocolSink_Switch(This->protocol_sink, pProtocolData);
+    return IInternetProtocolSink_Switch(This->protocol_sink, data);
 }
 
 static void report_progress(BindProtocol *This, ULONG status_code, LPCWSTR status_text)

@@ -85,7 +85,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     BYTE security_id[512];
     DWORD len = 0;
     ULONG num = 0;
-    BOOL res;
+    BOOL res, b;
     HRESULT hres;
 
     static const WCHAR wszBindVerb[BINDVERB_CUSTOM][5] =
@@ -208,6 +208,11 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
         else
             optional = (LPWSTR)This->base.bind_info.stgmedData.u.hGlobal;
     }
+
+    b = TRUE;
+    res = InternetSetOptionW(This->base.request, INTERNET_OPTION_HTTP_DECODING, &b, sizeof(b));
+    if(!res)
+        WARN("InternetSetOption(INTERNET_OPTION_HTTP_DECODING) failed: %08x\n", GetLastError());
 
     res = HttpSendRequestW(This->base.request, This->full_header, lstrlenW(This->full_header),
             optional, optional ? This->base.bind_info.cbstgmedData : 0);

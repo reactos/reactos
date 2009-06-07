@@ -36,7 +36,7 @@ LONG URLMON_refCount = 0;
 
 HINSTANCE URLMON_hInstance = 0;
 static HMODULE hCabinet = NULL;
-static DWORD urlmon_tls;
+static DWORD urlmon_tls = TLS_OUT_OF_INDEXES;
 
 static void init_session(BOOL);
 
@@ -56,9 +56,12 @@ tls_data_t *get_tls_data(void)
 {
     tls_data_t *data;
 
-    if(!urlmon_tls) {
+    if(urlmon_tls == TLS_OUT_OF_INDEXES) {
         DWORD tls = TlsAlloc();
-        tls = InterlockedCompareExchange((LONG*)&urlmon_tls, tls, 0);
+        if(tls == TLS_OUT_OF_INDEXES)
+            return NULL;
+
+        tls = InterlockedCompareExchange((LONG*)&urlmon_tls, tls, TLS_OUT_OF_INDEXES);
         if(tls != urlmon_tls)
             TlsFree(tls);
     }
@@ -83,7 +86,7 @@ static void free_tls_list(void)
 {
     tls_data_t *data;
 
-    if(!urlmon_tls)
+    if(urlmon_tls == TLS_OUT_OF_INDEXES)
         return;
 
     while(!list_empty(&tls_list)) {
@@ -99,7 +102,7 @@ static void detach_thread(void)
 {
     tls_data_t *data;
 
-    if(!urlmon_tls)
+    if(urlmon_tls == TLS_OUT_OF_INDEXES)
         return;
 
     data = TlsGetValue(urlmon_tls);

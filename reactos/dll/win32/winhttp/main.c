@@ -38,8 +38,6 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
     switch(fdwReason)
     {
-    case DLL_WINE_PREATTACH:
-        return FALSE;  /* prefer native version */
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hInstDLL);
         break;
@@ -83,42 +81,4 @@ HRESULT WINAPI DllUnregisterServer(void)
 {
     FIXME("()\n");
     return S_OK;
-}
-
-#define SCHEME_HTTP  3
-#define SCHEME_HTTPS 4
-
-BOOL WINAPI InternetCrackUrlW( LPCWSTR, DWORD, DWORD, LPURL_COMPONENTSW );
-BOOL WINAPI InternetCreateUrlW( LPURL_COMPONENTS, DWORD, LPWSTR, LPDWORD );
-
-/***********************************************************************
- *          WinHttpCrackUrl (winhttp.@)
- */
-BOOL WINAPI WinHttpCrackUrl( LPCWSTR url, DWORD len, DWORD flags, LPURL_COMPONENTSW components )
-{
-    BOOL ret;
-
-    TRACE("%s, %d, %x, %p\n", debugstr_w(url), len, flags, components);
-
-    if ((ret = InternetCrackUrlW( url, len, flags, components )))
-    {
-        /* fix up an incompatibility between wininet and winhttp */
-        if (components->nScheme == SCHEME_HTTP) components->nScheme = INTERNET_SCHEME_HTTP;
-        else if (components->nScheme == SCHEME_HTTPS) components->nScheme = INTERNET_SCHEME_HTTPS;
-        else
-        {
-            set_last_error( ERROR_WINHTTP_UNRECOGNIZED_SCHEME );
-            return FALSE;
-        }
-    }
-    return ret;
-}
-
-/***********************************************************************
- *          WinHttpCreateUrl (winhttp.@)
- */
-BOOL WINAPI WinHttpCreateUrl( LPURL_COMPONENTS comps, DWORD flags, LPWSTR url, LPDWORD len )
-{
-    TRACE("%p, 0x%08x, %p, %p\n", comps, flags, url, len);
-    return InternetCreateUrlW( comps, flags, url, len );
 }
