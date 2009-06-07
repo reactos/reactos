@@ -173,7 +173,7 @@ static int read_xx_header( HFILE lzfd )
 
 #ifndef __REACTOS__
 /***********************************************************************
- *           load_ne_resource         [internal]
+ *           find_ne_resource         [internal]
  */
 static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
                                 DWORD *resLen, DWORD *resOff )
@@ -273,7 +273,7 @@ static BOOL find_ne_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
 #endif /* ! __REACTOS__ */
 
 /***********************************************************************
- *           load_pe_resource         [internal]
+ *           find_pe_resource         [internal]
  */
 static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
                                 DWORD *resLen, DWORD *resOff )
@@ -348,7 +348,7 @@ static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     /* Find resource */
     resDir = resSection + (resDataDir->VirtualAddress - sections[i].VirtualAddress);
 
-    resPtr = (const IMAGE_RESOURCE_DIRECTORY*)resDir;
+    resPtr = resDir;
     resPtr = find_entry_by_name( resPtr, typeid, resDir );
     if ( !resPtr )
     {
@@ -406,9 +406,8 @@ DWORD WINAPI GetFileResourceSize16( LPCSTR lpszFileName, LPCSTR lpszResType,
     OFSTRUCT ofs;
     DWORD reslen;
 
-    TRACE("(%s,type=0x%x,id=0x%x,off=%p)\n",
-                debugstr_a(lpszFileName), (LONG)lpszResType, (LONG)lpszResId,
-                lpszResId );
+    TRACE("(%s,type=%p,id=%p,off=%p)\n",
+          debugstr_a(lpszFileName), lpszResType, lpszResId, lpszResId );
 
     lzfd = LZOpenFileA( (LPSTR)lpszFileName, &ofs, OF_READ );
     if ( lzfd < 0 ) return 0;
