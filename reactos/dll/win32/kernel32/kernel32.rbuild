@@ -75,7 +75,7 @@
 			<file>handle.c</file>
 			<file>lang.c</file>
 			<file>ldr.c</file>
-			<file>lzexpand_main.c</file>
+			<file>lzexpand.c</file>
 			<file>muldiv.c</file>
 			<file>nls.c</file>
 			<file>perfcnt.c</file>
