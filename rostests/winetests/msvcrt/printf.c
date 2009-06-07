@@ -782,7 +782,7 @@ static void test_xcvt(void)
     }
 }
 
-static int _vsnwprintf_wrapper(wchar_t *str, size_t len, const wchar_t *format, ...)
+static int __cdecl _vsnwprintf_wrapper(wchar_t *str, size_t len, const wchar_t *format, ...)
 {
     int ret;
     __ms_va_list valist;
@@ -810,8 +810,8 @@ static void test_vsnwprintf(void)
     ok( !strcmp(buf, "onetwothree"), "got %s expected 'onetwothree'\n", buf );
 }
 
-static int (*p__vscprintf)(const char *format, __ms_va_list valist);
-static int (*p__vscwprintf)(const wchar_t *format, __ms_va_list valist);
+static int (__cdecl *p__vscprintf)(const char *format, __ms_va_list valist);
+static int (__cdecl *p__vscwprintf)(const wchar_t *format, __ms_va_list valist);
 
 static int __cdecl _vscprintf_wrapper(const char *format, ...)
 {

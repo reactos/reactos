@@ -45,12 +45,12 @@ static char *buf_to_string(const unsigned char *bin, int len, int nr)
 #define expect_eq(expr, value, type, format) { type ret = (expr); ok((value) == ret, #expr " expected " format " got " format "\n", value, ret); }
 #define expect_bin(buf, value, len) { ok(memcmp((buf), value, len) == 0, "Binary buffer mismatch - expected %s, got %s\n", buf_to_string((unsigned char *)value, len, 1), buf_to_string((buf), len, 0)); }
 
-static void* (*pmemcpy)(void *, const void *, size_t n);
-static int* (*pmemcmp)(void *, const void *, size_t n);
-static int (*pstrcpy_s)(char *dst, size_t len, const char *src);
-static int (*pstrcat_s)(char *dst, size_t len, const char *src);
-static int (*p_mbsnbcpy_s)(unsigned char * dst, size_t size, const unsigned char * src, size_t count);
-static int (*p_wcscpy_s)(wchar_t *wcDest, size_t size, const wchar_t *wcSrc);
+static void* (__cdecl *pmemcpy)(void *, const void *, size_t n);
+static int* (__cdecl *pmemcmp)(void *, const void *, size_t n);
+static int (__cdecl *pstrcpy_s)(char *dst, size_t len, const char *src);
+static int (__cdecl *pstrcat_s)(char *dst, size_t len, const char *src);
+static int (__cdecl *p_mbsnbcpy_s)(unsigned char * dst, size_t size, const unsigned char * src, size_t count);
+static int (__cdecl *p_wcscpy_s)(wchar_t *wcDest, size_t size, const wchar_t *wcSrc);
 static int *p__mb_cur_max;
 static unsigned char *p_mbctype;
 

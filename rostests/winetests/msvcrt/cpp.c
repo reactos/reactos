@@ -55,10 +55,10 @@ typedef struct __type_info
 /* Function pointers. We need to use these to call these funcs as __thiscall */
 static HMODULE hMsvcrt;
 
-static void* (*poperator_new)(unsigned int);
-static void  (*poperator_delete)(void*);
-static void* (*pmalloc)(unsigned int);
-static void  (*pfree)(void*);
+static void* (__cdecl *poperator_new)(unsigned int);
+static void  (__cdecl *poperator_delete)(void*);
+static void* (__cdecl *pmalloc)(unsigned int);
+static void  (__cdecl *pfree)(void*);
 
 /* exception */
 static void (WINAPI *pexception_ctor)(exception*,LPCSTR*);
@@ -113,12 +113,12 @@ static int   (WINAPI *ptype_info_opequals_equals)(type_info*,type_info*);
 static int   (WINAPI *ptype_info_opnot_equals)(type_info*,type_info*);
 
 /* RTTI */
-static type_info* (*p__RTtypeid)(void*);
-static void* (*p__RTCastToVoid)(void*);
-static void* (*p__RTDynamicCast)(void*,int,void*,void*,int);
+static type_info* (__cdecl *p__RTtypeid)(void*);
+static void* (__cdecl *p__RTCastToVoid)(void*);
+static void* (__cdecl *p__RTDynamicCast)(void*,int,void*,void*,int);
 
 /*Demangle*/
-static char* (*p__unDName)(char*,const char*,int,void*,void*,unsigned short int);
+static char* (__cdecl *p__unDName)(char*,const char*,int,void*,void*,unsigned short int);
 
 
 /* _very_ early native versions have serious RTTI bugs, so we check */

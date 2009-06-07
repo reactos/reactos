@@ -23,11 +23,11 @@
 #include <errno.h>
 #include "wine/test.h"
 
-static void (*p_aligned_free)(void*) = NULL;
-static void * (*p_aligned_malloc)(size_t,size_t) = NULL;
-static void * (*p_aligned_offset_malloc)(size_t,size_t,size_t) = NULL;
-static void * (*p_aligned_realloc)(void*,size_t,size_t) = NULL;
-static void * (*p_aligned_offset_realloc)(void*,size_t,size_t,size_t) = NULL;
+static void (__cdecl *p_aligned_free)(void*) = NULL;
+static void * (__cdecl *p_aligned_malloc)(size_t,size_t) = NULL;
+static void * (__cdecl *p_aligned_offset_malloc)(size_t,size_t,size_t) = NULL;
+static void * (__cdecl *p_aligned_realloc)(void*,size_t,size_t) = NULL;
+static void * (__cdecl *p_aligned_offset_realloc)(void*,size_t,size_t,size_t) = NULL;
 
 static void test_aligned_malloc(unsigned int size, unsigned int alignment)
 {
