@@ -1083,35 +1083,6 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    ExFreePool(ImagePath.Buffer);
 
-   /* Loop through each device object of the driver
-      and set DOE_UNLOAD_PENDING flag */
-   DeviceObject = DriverObject->DeviceObject;
-   while (DeviceObject)
-   {
-      /* Set the unload pending flag for the device */
-      DeviceExtension = IoGetDevObjExtension(DeviceObject);
-      DeviceExtension->ExtensionFlags |= DOE_UNLOAD_PENDING;
-
-      /* Make sure there are no attached devices or no reference counts */
-      if ((DeviceObject->ReferenceCount) || (DeviceObject->AttachedDevice))
-      {
-         /* Not safe to unload */
-         DPRINT1("Drivers device object is referenced or has attached devices\n");
-
-         SafeToUnload = FALSE;
-      }
-
-      DeviceObject = DeviceObject->NextDevice;
-   }
-
-   /* If not safe to unload, then return success */
-   if (!SafeToUnload)
-   {
-      ObDereferenceObject(DriverObject);
-      return STATUS_SUCCESS;
-   }
-
-
    /*
     * Unload the module and release the references to the device object
     */
@@ -1119,6 +1090,34 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /* Call the load/unload routine, depending on current process */
    if (DriverObject->DriverUnload && DriverObject->DriverSection)
    {
+      /* Loop through each device object of the driver
+         and set DOE_UNLOAD_PENDING flag */
+      DeviceObject = DriverObject->DeviceObject;
+      while (DeviceObject)
+      {
+         /* Set the unload pending flag for the device */
+         DeviceExtension = IoGetDevObjExtension(DeviceObject);
+         DeviceExtension->ExtensionFlags |= DOE_UNLOAD_PENDING;
+
+         /* Make sure there are no attached devices or no reference counts */
+         if ((DeviceObject->ReferenceCount) || (DeviceObject->AttachedDevice))
+         {
+            /* Not safe to unload */
+            DPRINT1("Drivers device object is referenced or has attached devices\n");
+
+            SafeToUnload = FALSE;
+         }
+
+         DeviceObject = DeviceObject->NextDevice;
+      }
+
+      /* If not safe to unload, then return success */
+      if (!SafeToUnload)
+	  {
+         ObDereferenceObject(DriverObject);
+         return STATUS_SUCCESS;
+	  }
+
       /* Set the unload invoked flag */
       DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
 
@@ -1681,7 +1680,8 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-      ExFreePool(ImagePath.Buffer);
+      if (ImagePath.Buffer)
+         ExFreePool(ImagePath.Buffer);
       LoadParams->Status = Status;
       (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
       return;
