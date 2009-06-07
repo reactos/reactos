@@ -2268,6 +2268,10 @@ MingwBackend::DetectMicrosoftLinker ( std::string& version )
 // TODO? attempt to support Microsoft tools on non-Windows?
 #if !defined(WIN32)
 
+#include "../../pch.h"
+
+#include "mingw.h"
+
 bool
 MingwBackend::DetectMicrosoftCompiler ( std::string& )
 {
