@@ -226,7 +226,7 @@ static ULONG   AVIFILE_SearchStream(const IAVIFileImpl *This, DWORD fccType,
 				    LONG lSkip);
 static void    AVIFILE_UpdateInfo(IAVIFileImpl *This);
 static HRESULT AVIFILE_WriteBlock(IAVIStreamImpl *This, DWORD block,
-				  FOURCC ckid, DWORD flags, LPVOID buffer,
+				  FOURCC ckid, DWORD flags, LPCVOID buffer,
 				  LONG size);
 
 HRESULT AVIFILE_CreateAVIFile(REFIID riid, LPVOID *ppv)
@@ -2543,7 +2543,7 @@ static void    AVIFILE_UpdateInfo(IAVIFileImpl *This)
 }
 
 static HRESULT AVIFILE_WriteBlock(IAVIStreamImpl *This, DWORD block,
-				  FOURCC ckid, DWORD flags, LPVOID buffer,
+				  FOURCC ckid, DWORD flags, LPCVOID buffer,
 				  LONG size)
 {
   MMCKINFO ck;
