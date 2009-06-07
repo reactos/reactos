@@ -1,0 +1,461 @@
+/*
+ * cryptui dll 	dutch resources
+ *
+ * Copyright 2009 Frans Kool
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_CERTIFICATE "Certificaat"
+    IDS_CERTIFICATEINFORMATION "Certificaat informatie"
+    IDS_CERT_INFO_BAD_SIG "Dit certificaat heeft een foutieve handtekening. Het certificaat kan gewijzigd of corrupt zijn."
+    IDS_CERT_INFO_UNTRUSTED_CA "Dit basis certificaat wordt niet vertrouwd. Om het te vertrouwen, voeg het toe aan uw systeem's vertrouwde basis certificatenopslag."
+    IDS_CERT_INFO_UNTRUSTED_ROOT "Dit certificaat kon niet worden getraceerd naar een vertrouwd basis certificaat."
+    IDS_CERT_INFO_PARTIAL_CHAIN "De uitgever van dit certificaat kon niet gevonden worden."
+    IDS_CERT_INFO_BAD_PURPOSES "De doeleinden voor dit certificaat konden niet geverifieerd worden."
+    IDS_CERT_INFO_PURPOSES "Dit certificaat is bedoeld voor de volgende doeleinden:"
+    IDS_SUBJECT_HEADING "Verstrekt aan: "
+    IDS_ISSUER_HEADING "Uitgegeven door: "
+    IDS_VALID_FROM "geldig vanaf "
+    IDS_VALID_TO " tot "
+    IDS_CERTIFICATE_BAD_SIGNATURE "Dit certificaat heeft een foutieve handtekening."
+    IDS_CERTIFICATE_BAD_TIME "Dit certificaat is verlopen of is nog niet geldig."
+    IDS_CERTIFICATE_BAD_TIMENEST "De geldigheidsperiode van dit certificaat is groter dan die van zijn uitgever."
+    IDS_CERTIFICATE_REVOKED "Dit certificaat was teruggeroepen door de uitgever."
+    IDS_CERTIFICATE_VALID "Dit certificaat is OK."
+    IDS_FIELD "Veld"
+    IDS_VALUE "Waarde"
+    IDS_FIELDS_ALL "<Alle>"
+    IDS_FIELDS_V1 "Alleen versie 1 velden"
+    IDS_FIELDS_EXTENSIONS "Alleen extensies"
+    IDS_FIELDS_CRITICAL_EXTENSIONS "Alleen kritieke extensies"
+    IDS_FIELDS_PROPERTIES "Alleen eigenschappen"
+    IDS_FIELD_VERSION "Versie"
+    IDS_FIELD_SERIAL_NUMBER "Serienummer"
+    IDS_FIELD_ISSUER "Uitgever"
+    IDS_FIELD_VALID_FROM "Geldig vanaf"
+    IDS_FIELD_VALID_TO "Geldig tot"
+    IDS_FIELD_SUBJECT "Onderwerp"
+    IDS_FIELD_PUBLIC_KEY "Publieke sleutel"
+    IDS_FIELD_PUBLIC_KEY_FORMAT "%s (%d bits)"
+    IDS_PROP_HASH "SHA1 hash"
+    IDS_PROP_ENHKEY_USAGE "Uitgebreid sleutel gebruik (eigenschap)"
+    IDS_PROP_FRIENDLY_NAME "Naam alias"
+    IDS_PROP_DESCRIPTION "Beschrijving"
+    IDS_CERTIFICATE_PROPERTIES "Certificaat eigenschappen"
+    IDS_CERTIFICATE_PURPOSE_ERROR "Geef aub. een OID in in de vorm van 1.2.3.4"
+    IDS_CERTIFICATE_PURPOSE_EXISTS "De ingegeven OID bestaat reeds."
+    IDS_SELECT_STORE_TITLE "Selecteer certificatenopslag"
+    IDS_SELECT_STORE "Selecteer aub. een certificatenopslag."
+    IDS_IMPORT_WIZARD "Certificaat importeerhulp"
+    IDS_IMPORT_TYPE_MISMATCH "Het bestand bevat objecten die niet voldoen aan de opgegeven criteria. Selecteer aub. een ander bestand."
+    IDS_IMPORT_FILE_TITLE "Bestand om te importeren"
+    IDS_IMPORT_FILE_SUBTITLE "Specificeer het bestand dat u wilt importeren."
+    IDS_IMPORT_STORE_TITLE "Certificatenopslag"
+    IDS_IMPORT_STORE_SUBTITLE "Certificatenopslagen zijn verzamelingen van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten."
+    IDS_IMPORT_FILTER_CERT "X.509 Certificaat (*.cer; *.crt)"
+    IDS_IMPORT_FILTER_PFX "Persoonlijke informatie uitwisseling (*.pfx; *.p12)"
+    IDS_IMPORT_FILTER_CRL "Certificaat terugroeplijst (*.crl)"
+    IDS_IMPORT_FILTER_CTL "Certificaat vertrouwenslijst (*.stl)"
+    IDS_IMPORT_FILTER_SERIALIZED_STORE "Microsoft seriële certificatenopslag (*.sst)"
+    IDS_IMPORT_FILTER_CMS "CMS/PKCS #7 berichten (*.spc; *.p7b)"
+    IDS_IMPORT_FILTER_ALL "Alle bestanden (*.*)"
+    IDS_IMPORT_EMPTY_FILE "Selecteer een bestand."
+    IDS_IMPORT_BAD_FORMAT "Het bestandsformaat wordt niet herkend. Selecteer aub. een ander bestand."
+    IDS_IMPORT_OPEN_FAILED "Openen mislukt voor "
+    IDS_IMPORT_DEST_DETERMINED "Bepaald door het programma"
+    IDS_IMPORT_SELECT_STORE "Selecteer een opslag"
+    IDS_IMPORT_STORE_SELECTION "Geselecteerde certificatenopslag"
+    IDS_IMPORT_DEST_AUTOMATIC "Automatisch bepaald door het programma"
+    IDS_IMPORT_FILE "Bestand"
+    IDS_IMPORT_CONTENT "Inhoud"
+    IDS_IMPORT_CONTENT_CERT "Certificaat"
+    IDS_IMPORT_CONTENT_CRL "Certificaat terugroeplijst"
+    IDS_IMPORT_CONTENT_CTL "Certificaat vertrouwenslijst"
+    IDS_IMPORT_CONTENT_CMS "CMS/PKCS #7 bericht"
+    IDS_IMPORT_CONTENT_PFX "Persoonlijke informatie uitwisseling"
+    IDS_IMPORT_CONTENT_STORE "Certificatenopslag"
+    IDS_IMPORT_SUCCEEDED "Het importeren was succesvol."
+    IDS_IMPORT_FAILED "Het importeren is mislukt."
+    IDS_WIZARD_TITLE_FONT "Arial"
+    IDS_PURPOSE_ALL "<Alle>"
+    IDS_PURPOSE_ADVANCED "<Geadvanceerde doeleinden>"
+    IDS_SUBJECT_COLUMN "Verstrekt aan"
+    IDS_ISSUER_COLUMN "Uitgegeven door"
+    IDS_EXPIRATION_COLUMN "Verloop datum"
+    IDS_FRIENDLY_NAME_COLUMN "Naam alias"
+    IDS_ALLOWED_PURPOSE_ALL "<Alle>"
+    IDS_ALLOWED_PURPOSE_NONE "<Geen>"
+    IDS_WARN_REMOVE_MY "U kunt niet langer berichten ontcijferen of ondertekenen met dit certificaat.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_MY "U kunt niet langer berichten ontcijferen of ondertekenen met deze certificaten.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met dit certificaat.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_ADDRESSBOOK "U kunt niet langer berichten coderen of verifiëren met deze certificaten.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_CA "Certificaten uitgegeven door deze certificaten autoriteit zullen niet meer vertrouwd worden.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_CA "Certificaten uitgegeven door deze certificaten autoriteiten zullen niet meer vertrouwd worden.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_ROOT "Certificaten uitgegeven door deze basic certificaten autoriteit, alsmede enige certificatie autoriteit die hij verstrekt, zullen niet meer vertrouwd worden.\nWeet u zeker dat u dit vertrouwde basic certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_ROOT "Certificaten uitgegeven door deze basic certificaten autoriteiten, alsmede enige certificatie autoriteit die zij verstrekken, zullen niet meer vertrouwd worden.\nWeet u zeker dat u deze vertrouwde basic certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_TRUSTEDPUBLISHER "Software ondertekend door deze uitgever zal niet meer vertrouwd worden.\nWeet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_TRUSTEDPUBLISHER "Software ondertekend door deze uitgevers zal niet meer vertrouwd worden.\nWeet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_WARN_REMOVE_DEFAULT "Weet u zeker dat u dit certificaat wilt verwijderen?"
+    IDS_WARN_REMOVE_PLURAL_DEFAULT "Weet u zeker dat u deze certificaten wilt verwijderen?"
+    IDS_CERT_MGR "Certificaten"
+    IDS_PURPOSE_SERVER_AUTH "Bewijst de identiteit van een remote computer"
+    IDS_PURPOSE_CLIENT_AUTH "Bewijst uw identiteit aan een remote computer"
+    IDS_PURPOSE_CODE_SIGNING "Bewijst dat de software kwam van de software uitgever\nBeschermt software tegen wijzigingen na publicatie"
+    IDS_PURPOSE_EMAIL_PROTECTION "Beschermt e-mail berichten"
+    IDS_PURPOSE_IPSEC "Staat beveiligde communicatie over het Internet toe"
+    IDS_PURPOSE_TIMESTAMP_SIGNING "Laat data ondertekend worden met de huidige tijd"
+    IDS_PURPOSE_CTL_USAGE_SIGNING "Laat u een certificaat vertrouwenslijst digitaal ondertekenen"
+    IDS_PURPOSE_EFS "Laat data op de disk gecodeerd worden"
+    IDS_PURPOSE_EFS_RECOVERY "Bestandsherstel"
+    IDS_PURPOSE_WHQL "Windows Hardware Driver Verificatie"
+    IDS_PURPOSE_NT5 "Windows System Component Verificatie"
+    IDS_PURPOSE_OEM_WHQL "OEM Windows Systeem Component Verificatie"
+    IDS_PURPOSE_EMBEDDED_NT "Ingebed Windows Systeem Component Verificatie"
+    IDS_PURPOSE_ROOT_LIST_SIGNER "Basislijst Ondertekenaar"
+    IDS_PURPOSE_QUALIFIED_SUBORDINATION "Gekwalificeerde ondergeschiktheid"
+    IDS_PURPOSE_KEY_RECOVERY "Sleutel herstellen"
+    IDS_PURPOSE_DOCUMENT_SIGNING "Document ondertekening"
+    IDS_PURPOSE_LIFETIME_SIGNING "Levenslang ondertekenen"
+    IDS_PURPOSE_DRM "Digitale rechten"
+    IDS_PURPOSE_LICENSES "Sleutelbos licenties"
+    IDS_PURPOSE_LICENSE_SERVER "Licentieserver verificatie"
+    IDS_PURPOSE_ENROLLMENT_AGENT "Certificaatverzoek agent"
+    IDS_PURPOSE_SMARTCARD_LOGON "Smartcard aanloggen"
+    IDS_PURPOSE_CA_EXCHANGE "Persoonlijke sleutel archiefbescheiden"
+    IDS_PURPOSE_KEY_RECOVERY_AGENT "Sleutel herstel agent"
+    IDS_PURPOSE_DS_EMAIL_REPLICATION "Directory service email replicatie"
+    IDS_EXPORT_WIZARD "Certificaat Exporteerhulp"
+    IDS_EXPORT_FORMAT_TITLE "Export formaat"
+    IDS_EXPORT_FORMAT_SUBTITLE "Selecteer het formaat waarin de inhoud zal worden opgeslagen."
+    IDS_EXPORT_FILE_TITLE "Exporteer bestandsnaam"
+    IDS_EXPORT_FILE_SUBTITLE "Geef de naam van het bestand waarin de inhoud zal worden opgeslagen."
+    IDS_EXPORT_FILE_EXISTS "Het gekozen bestand bestaat reeds. Wilt u het overschrijven?"
+    IDS_EXPORT_FILTER_CERT "DER-Encoded Binary X.509 (*.cer)"
+    IDS_EXPORT_FILTER_BASE64_CERT "Base64-geëncodeerd X.509 (*.cer)"
+    IDS_EXPORT_FILTER_CRL "Certificaat terugroeplijst (*.crl)"
+    IDS_EXPORT_FILTER_CTL "Certificaat vertrouwenslijst (*.stl)"
+    IDS_EXPORT_FILTER_CMS "CMS/PKCS #7 berichten (*.p7b)"
+    IDS_EXPORT_FILTER_PFX "Persoonlijke informatie uitwisseling (*.pfx)"
+    IDS_EXPORT_FILTER_SERIALIZED_CERT_STORE "Seriële certificatenopslag (*.sst)"
+    IDS_EXPORT_FORMAT "Bestandsformaat"
+    IDS_EXPORT_INCLUDE_CHAIN "Neem alle certificaten in het certificatiepad op"
+    IDS_EXPORT_KEYS "Exporteer sleutels"
+    IDS_YES "Ja"
+    IDS_NO "Nee"
+    IDS_EXPORT_SUCCEEDED "Het exporteren is gelukt."
+    IDS_EXPORT_FAILED "Het exporteren is mislukt."
+    IDS_EXPORT_PRIVATE_KEY_TITLE "Exporteer persoonlijke sleutel"
+    IDS_EXPORT_PRIVATE_KEY_SUBTITLE "Het certificaat bevat een persoonlijke sleutel die mee kan worden geëxporteerd met het certificaat."
+    IDS_EXPORT_PASSWORD_TITLE "Voer wachtwoord in"
+    IDS_EXPORT_PASSWORD_SUBTITLE "U kunt een persoonlijke sleutel beveiligen met een wachtwoord."
+    IDS_EXPORT_PASSWORD_MISMATCH "De wachtwoorden zijn niet gelijk."
+    IDS_EXPORT_PRIVATE_KEY_UNAVAILABLE "NB: De persoonlijke sleutel voor dit certificaat kon niet geopend worden."
+    IDS_EXPORT_PRIVATE_KEY_NON_EXPORTABLE "Note: De persoonlijke sleutel voor dit certificaat kan niet geëxporteerd worden."
+}
+
+IDD_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Algemeen"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", -1, "Static", WS_BORDER|SS_WHITERECT, 6,10,241,200
+  CONTROL "", IDC_CERTIFICATE_ICON,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,8,11,26,26
+  CONTROL "", IDC_CERTIFICATE_INFO,"RichEdit20W",
+    ES_READONLY|WS_DISABLED,34,11,212,26
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,37,222,1
+  CONTROL "", IDC_CERTIFICATE_STATUS,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE,8,38,238,78
+  CONTROL "", -1, "Static", SS_BLACKFRAME, 16,116,222,1
+  CONTROL "", IDC_CERTIFICATE_NAMES,"RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_DISABLED,8,118,238,90
+  PUSHBUTTON "&Installeer certificaat...", IDC_ADDTOSTORE,103,216,70,14
+  PUSHBUTTON "Uitgevers &verklaring", IDC_ISSUERSTATEMENT,177,216,70,14
+END
+
+IDD_DETAIL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Details"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Toon:", -1, 6,12,40,14
+  COMBOBOX IDC_DETAIL_SELECT, 28,10,100,14,
+    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_DETAIL_LIST, "SysListView32",
+    LVS_REPORT|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    6,28,241,100
+  CONTROL "", IDC_DETAIL_VALUE, "RichEdit20W",
+    ES_READONLY|ES_MULTILINE|WS_TABSTOP, 6,136,241,70
+  PUSHBUTTON "&Wijzig eigenschappen...", IDC_EDITPROPERTIES,103,216,70,14
+  PUSHBUTTON "&Kopieer naar bestand...", IDC_EXPORT,177,216,70,14
+END
+
+IDD_HIERARCHY DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Certificatie pad"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Certification &pad", -1,6,10,245,165, BS_GROUPBOX
+  CONTROL "",IDC_CERTPATH, "SysTreeView32", TVS_HASLINES|WS_BORDER,
+    13,22,231,130
+  PUSHBUTTON "&Bekijk certificaat", IDC_VIEWCERTIFICATE,175,156,70,14
+  LTEXT "Certificaat &status:", IDC_CERTIFICATESTATUS,6,183,70,14
+  CONTROL "", IDC_CERTIFICATESTATUSTEXT,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,195,245,36
+END
+
+IDD_USERNOTICE DIALOG DISCARDABLE 0, 0, 255, 256
+CAPTION "Disclaimer"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", IDC_USERNOTICE,"RichEdit20W",
+    WS_BORDER|ES_READONLY|ES_MULTILINE|WS_DISABLED,6,10,241,200
+  PUSHBUTTON "&Sluiten", IDOK,103,216,70,14
+  PUSHBUTTON "Meer &informatie", IDC_CPS,177,216,70,14
+END
+
+IDD_CERT_PROPERTIES_GENERAL DIALOG DISCARDABLE 0, 0, 255, 236
+CAPTION "Algemeen"
+STYLE WS_VISIBLE
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Naam alias:", -1, 6,14,60,14
+  EDITTEXT IDC_FRIENDLY_NAME, 60,12,191,14, ES_AUTOHSCROLL|WS_TABSTOP
+  LTEXT "&Beschrijving:", -1, 6,32,60,14
+  EDITTEXT IDC_DESCRIPTION, 60,30,191,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Certificaat doeleinden", -1,6,48,245,165, BS_GROUPBOX
+  AUTORADIOBUTTON "Schakel alle doeleinden voor dit certificaat &in",
+    IDC_ENABLE_ALL_PURPOSES, 12,58,180,14, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "Schakel alle doeleinden voor dit certificaat &uit",
+    IDC_DISABLE_ALL_PURPOSES, 12,70,180,14, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "Schakel &alleen de volgende doeleinden voor dit certificaat in:",
+    IDC_ENABLE_SELECTED_PURPOSES, 12,82,180,14, BS_AUTORADIOBUTTON
+  CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    24,100,220,90
+  PUSHBUTTON "Voeg &doeleinde toe...", IDC_ADD_PURPOSE,184,194,60,14
+END
+
+IDD_ADD_CERT_PURPOSE DIALOG DISCARDABLE 0,0,200,68
+CAPTION "Voeg doeleinde toe"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Voer het object id. (OID) in voor het toe te voegen certificaat doeleinde:",
+    -1, 6,6,190,28
+  EDITTEXT IDC_NEW_PURPOSE, 6,28,190,14, ES_AUTOVSCROLL|ES_MULTILINE|WS_TABSTOP|WS_VSCROLL
+  PUSHBUTTON "OK", IDOK, 33,48,60,14
+  PUSHBUTTON "Annuleren", IDCANCEL, 100,48,60,14
+END
+
+IDD_SELECT_STORE DIALOG DISCARDABLE 0,0,200,136
+CAPTION "Selecteer certificatenopslag"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Selecteer de certificatenopslag die u wilt gebruiken:", IDC_STORE_TEXT, 6,6,190,28
+  CONTROL "",IDC_STORE_LIST, "SysTreeView32", TVS_HASLINES|WS_BORDER|WS_TABSTOP,
+    6,28,188,70
+  CHECKBOX "&Toon fysieke opslagen", IDC_SHOW_PHYSICAL_STORES, 6,102,90,14,
+    BS_AUTOCHECKBOX|WS_TABSTOP
+  PUSHBUTTON "OK", IDOK, 90,118,50,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "Annuleren", IDCANCEL, 144,118,50,14
+END
+
+IDD_IMPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat importeerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Welkom bij de certificaat importeerhulp", IDC_IMPORT_TITLE,
+    115,1,195,40
+  LTEXT "Deze hulp helps u met het importeren van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten uit een bestand naar een certificatenopslag.",
+    -1, 115,33,195,16
+  LTEXT "Een certificaat kan gebruikt worden om u of de computer waarmee u werkt te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Certificatenopslagen zijn verzamelingen van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten.",
+    -1, 115,56,195,40
+  LTEXT "Om verder te gaan, click op Volgende.",
+    -1, 115,103,195,8
+END
+
+IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat importeerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Bestands&naam:", -1, 21,1,195,10
+  EDITTEXT IDC_IMPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  PUSHBUTTON "B&laderen...", IDC_IMPORT_BROWSE_FILE, 236,11,60,14
+  LTEXT "NB: De volgende bestandsformaten kunnen meer dan één certificaat, certificaat terugroeplijst of certificaat vertrouwenslijst bevatten:",
+    -1, 21,26,265,16
+  LTEXT "Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (.p7b)",
+    -1, 31,49,265,10
+  LTEXT "Persoonlijke informatie uitwisseling/PKCS #12 (.pfx, .p12)",
+    -1, 31,64,265,10
+  LTEXT "Microsoft seriële certificatenopslag (.sst)",
+    -1, 31,79,265,10
+END
+
+IDD_IMPORT_STORE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat importeerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Wine kan automatisch de certificatenopslag selecteren, of u kunt een locatie opgeven voor de certificaten.",
+    -1, 21,1,195,20
+  AUTORADIOBUTTON "&Automatisch certificatenopslag selecteren",
+    IDC_IMPORT_AUTO_STORE, 31,18,180,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "&Plaats alle certificaten in de volgende opslag:",
+    IDC_IMPORT_SPECIFY_STORE, 31,30,180,12, BS_AUTORADIOBUTTON
+  EDITTEXT IDC_IMPORT_STORE, 44,49,185,14, ES_READONLY
+  PUSHBUTTON "B&laderen...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
+END
+
+IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat importeerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Afronden van de certificaat importeerhulp", IDC_IMPORT_TITLE,
+    115,1,195,40
+  LTEXT "U heeft de certificaat importeerhulp succesvol afgerond.",
+    -1, 115,33,195,24
+  LTEXT "U heeft de volgende instellingen ingegeven:",
+    -1, 115,57,195,12
+  CONTROL "", IDC_IMPORT_SETTINGS, "SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    115,67,174,100
+END
+
+IDD_CERT_MGR DIALOG DISCARDABLE 0,0,335,270
+CAPTION "Certificaten"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Doeleinden:", -1, 7,9,100,12
+  COMBOBOX IDC_MGR_PURPOSE_SELECTION, 83,7,245,14,
+    CBS_DROPDOWNLIST|WS_BORDER|WS_VSCROLL|WS_TABSTOP
+  CONTROL "", IDC_MGR_STORES, "SysTabControl32",
+    WS_CLIPSIBLINGS|WS_TABSTOP, 7,25,321,140
+  CONTROL "", IDC_MGR_CERTS, "SysListView32",
+    LVS_REPORT|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER, 15,46,305,111
+  PUSHBUTTON "&Importeer...", IDC_MGR_IMPORT, 7,172,51,14
+  PUSHBUTTON "&Exporteer...", IDC_MGR_EXPORT, 62,172,51,14, WS_DISABLED
+  PUSHBUTTON "&Verwijder", IDC_MGR_REMOVE, 117,172,51,14, WS_DISABLED
+  PUSHBUTTON "Ge&avanceerd...", IDC_MGR_ADVANCED, 277,172,51,14
+  GROUPBOX "Certificaat doeleinden", -1,7,194,321,47, BS_GROUPBOX
+  LTEXT "", IDC_MGR_PURPOSES, 13,208,252,30
+  PUSHBUTTON "&Bekijken...", IDC_MGR_VIEW, 269,218,51,14, WS_DISABLED
+  PUSHBUTTON "&Sluiten", IDCANCEL, 277,249,51,14, BS_DEFPUSHBUTTON
+END
+
+IDD_CERT_MGR_ADVANCED DIALOG DISCARDABLE 0,0,248,176
+CAPTION "Geavanceerde opties"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Certificaat doeleinde", -1, 7,7,234,141, BS_GROUPBOX
+  LTEXT "Selecteer een of meerdere doelen om te tonen als Geavanceerde doeleinden wordt geselecteerd.",
+    -1, 14,18,220,16
+  LTEXT "&Certificaat doeleinden:", -1, 14,41,90,12, WS_TABSTOP
+  CONTROL "", IDC_CERTIFICATE_USAGES,"SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    14,51,220,90
+  PUSHBUTTON "OK", IDOK, 132,155,51,14, BS_DEFPUSHBUTTON
+  PUSHBUTTON "Annuleren", IDCANCEL, 190,155,51,14
+END
+
+IDD_EXPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat exporteerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Welkom bij de Certificaat exporteerhulp", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "Deze hulp assisteerd u bij het exporteren van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten vanuit een certificatenopslag naar een bestand.",
+    -1, 115,33,195,16
+  LTEXT "Een certificaat kan gebruikt worden om u of de computer waarmee u werkt te identificeren. Het kan ook gebruikt worden voor authenticatie en om berichten te ondertekenen. Certificatenopslagen zijn verzamelingen van certificaten, certificaat terugroeplijsten en certificaat vertrouwenslijsten.",
+    -1, 115,56,195,40
+  LTEXT "Om verder te gaan, click op Volgende.",
+    -1, 115,103,195,8
+END
+
+IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat exporteerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Als u de persoonlijke sleutel wilt exporteren zult u later verzocht worden een wachtwoord in te geven om de sleutel te beveiligen.", -1, 21,1,195,23
+  LTEXT "Wilt u de persoonlijke sleutel exporteren?", -1, 21,24,195,15
+  AUTORADIOBUTTON "&Ja, exporteer de persoonlijke sleutel",
+    IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "&Nee, exporteer de persoonlijke sleutel niet",
+    IDC_EXPORT_PRIVATE_KEY_NO, 31,48,200,12, BS_AUTORADIOBUTTON
+  LTEXT "", IDC_EXPORT_PRIVATE_KEY_UNAVAILABLE, 21,60,200,24
+END
+
+IDD_EXPORT_PASSWORD DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat exporteerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "&Wachtwoord:", -1, 21,1,195,10
+  EDITTEXT IDC_EXPORT_PASSWORD, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  LTEXT "&Bevestig wachtwoord:", -1, 21,35,195,10
+  EDITTEXT IDC_EXPORT_PASSWORD_CONFIRM, 21,45,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+END
+
+IDD_EXPORT_FORMAT DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat exporteerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Selecteer het formaat dat u wilt gebruiken:", -1, 21,1,195,10
+  AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
+    IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+  AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
+    IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Cryptographisch berichtsyntaxis standaard/PKCS #7 berichten (.p7b)",
+    IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
+  CHECKBOX "Neem &alle certificaten in het certificatiepad op indien mogelijk",
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  AUTORADIOBUTTON "&Persoonlijke informatie uitwisseling/PKCS #12 (.pfx)",
+    IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
+  CHECKBOX "Nee&m alle certificaten in het certificatiepad op indien mogelijk",
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "&Gebruikt sterke encryptie",
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+  CHECKBOX "Verwijder de persoonlijke s&leutel als de export succesvol is",
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,200,8,
+    BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+END
+
+IDD_EXPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat exporteerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Bestands&naam:", -1, 21,1,195,10
+  EDITTEXT IDC_EXPORT_FILENAME, 21,11,208,14, ES_AUTOHSCROLL|WS_TABSTOP
+  PUSHBUTTON "&Bladeren...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
+END
+
+IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+CAPTION "Certificaat exporteerhulp"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Afronden van de Certificaat exporteerhulp", IDC_EXPORT_TITLE,
+    115,1,195,40
+  LTEXT "U heeft de Certificaat exporteerhulp succesvol afgerond.",
+    -1, 115,33,195,24
+  LTEXT "U heeft de volgende instellingen gespecificeerd:",
+    -1, 115,57,195,12
+  CONTROL "", IDC_EXPORT_SETTINGS, "SysListView32",
+    LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
+    115,67,174,100
+END

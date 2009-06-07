@@ -609,7 +609,7 @@ BOOL fill_protect_data(struct protect_data_t * pInfo, LPCWSTR szDataDescr,
     if ((pInfo->salt.pbData=CryptMemAlloc(CRYPT32_PROTECTDATA_SALT_LEN)))
     {
         /* generate random salt */
-        if (!CryptGenRandom(hProv, pInfo->salt.cbData, pInfo->salt.pbData))
+        if (!CryptGenRandom(hProv, CRYPT32_PROTECTDATA_SALT_LEN, pInfo->salt.pbData))
         {
             ERR("CryptGenRandom\n");
             free_protect_data(pInfo);
