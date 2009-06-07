@@ -263,7 +263,28 @@ static const TEST_URL_COMBINE TEST_COMBINE[] = {
     {"foo:/today", "foo:calendar", 0, S_OK, "foo:/calendar"},
     {"foo:/today/", "foo:calendar", 0, S_OK, "foo:/today/calendar"},
     {"mk:@MSITStore:dir/test.chm::dir/index.html", "image.jpg", 0, S_OK, "mk:@MSITStore:dir/test.chm::dir/image.jpg"},
-    {"mk:@MSITStore:dir/test.chm::dir/dir2/index.html", "../image.jpg", 0, S_OK, "mk:@MSITStore:dir/test.chm::dir/image.jpg"}
+    {"mk:@MSITStore:dir/test.chm::dir/dir2/index.html", "../image.jpg", 0, S_OK, "mk:@MSITStore:dir/test.chm::dir/image.jpg"},
+    /* UrlCombine case 2 tests.  Schemes do not match */
+    {"outbind://xxxxxxxxx","http://wine1/dir",0, S_OK,"http://wine1/dir"},
+    {"xxxx://xxxxxxxxx","http://wine2/dir",0, S_OK,"http://wine2/dir"},
+    {"ftp://xxxxxxxxx/","http://wine3/dir",0, S_OK,"http://wine3/dir"},
+    {"outbind://xxxxxxxxx","http://wine4/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"http://wine4/dir"},
+    {"xxx://xxxxxxxxx","http://wine5/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"http://wine5/dir"},
+    {"ftp://xxxxxxxxx/","http://wine6/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"http://wine6/dir"},
+    {"http://xxxxxxxxx","outbind://wine7/dir",0, S_OK,"outbind://wine7/dir"},
+    {"xxx://xxxxxxxxx","ftp://wine8/dir",0, S_OK,"ftp://wine8/dir"},
+    {"ftp://xxxxxxxxx/","xxx://wine9/dir",0, S_OK,"xxx://wine9/dir"},
+    {"http://xxxxxxxxx","outbind://wine10/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"outbind://wine10/dir"},
+    {"xxx://xxxxxxxxx","ftp://wine11/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"ftp://wine11/dir"},
+    {"ftp://xxxxxxxxx/","xxx://wine12/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"xxx://wine12/dir"},
+    {"http://xxxxxxxxx","outbind:wine13/dir",0, S_OK,"outbind:wine13/dir"},
+    {"xxx://xxxxxxxxx","ftp:wine14/dir",0, S_OK,"ftp:wine14/dir"},
+    {"ftp://xxxxxxxxx/","xxx:wine15/dir",0, S_OK,"xxx:wine15/dir"},
+    {"outbind://xxxxxxxxx/","http:wine16/dir",0, S_OK,"http:wine16/dir"},
+    {"http://xxxxxxxxx","outbind:wine17/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"outbind:wine17/dir"},
+    {"xxx://xxxxxxxxx","ftp:wine18/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"ftp:wine18/dir"},
+    {"ftp://xxxxxxxxx/","xxx:wine19/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"xxx:wine19/dir"},
+    {"outbind://xxxxxxxxx/","http:wine20/dir",URL_PLUGGABLE_PROTOCOL, S_OK,"http:wine20/dir"}
 };
 
 /* ################ */
