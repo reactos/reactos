@@ -2901,7 +2901,7 @@ get_msg_name(UINT msg)
   return "";
 }
 
-void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam)
+static void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   int x,y;
   ME_DisplayItem *para, *run;
@@ -4616,14 +4616,14 @@ static BOOL ME_RegisterEditorClass(HINSTANCE hInstance)
   return TRUE;
 }
 
-LRESULT WINAPI REComboWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT WINAPI REComboWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   /* FIXME: Not implemented */
   TRACE("hWnd %p msg %04x (%s) %08lx %08lx\n",
         hWnd, msg, get_msg_name(msg), wParam, lParam);
   return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-LRESULT WINAPI REListWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT WINAPI REListWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   /* FIXME: Not implemented */
   TRACE("hWnd %p msg %04x (%s) %08lx %08lx\n",
         hWnd, msg, get_msg_name(msg), wParam, lParam);

@@ -282,6 +282,7 @@ static HRESULT WINAPI DataObjectImpl_EnumFormatEtc(IDataObject* iface, DWORD dwD
     if(dwDirection != DATADIR_GET) {
         FIXME("Unsupported direction: %d\n", dwDirection);
         /* WinXP riched20 also returns E_NOTIMPL in this case */
+        *ppenumFormatEtc = NULL;
         return E_NOTIMPL;
     }
     return EnumFormatImpl_Create(This->fmtetc, This->fmtetc_cnt, ppenumFormatEtc);

@@ -168,7 +168,7 @@ int ME_SetSelection(ME_TextEditor *editor, int from, int to)
 }
 
 
-void
+static void
 ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
                         int *x, int *y, int *height)
 {

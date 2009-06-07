@@ -725,18 +725,6 @@ void ME_CalcRunExtent(ME_Context *c, const ME_Paragraph *para, int startx, ME_Ru
 }
 
 /******************************************************************************
- * ME_MustBeWrapped
- * 
- * This should ensure that the given paragraph is wrapped so that its screen
- * row structure may be used. But it doesn't, yet. 
- */     
-void ME_MustBeWrapped(ME_Context *c, ME_DisplayItem *para)
-{
-  assert(para->type == diParagraph);
-  /* FIXME */
-}
-
-/******************************************************************************
  * ME_SetSelectionCharFormat
  * 
  * Applies a style change, either to a current selection, or to insert cursor

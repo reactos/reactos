@@ -171,9 +171,6 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
 void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
-void ME_MustBeWrapped(ME_Context *c, ME_DisplayItem *para);
-void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
-                             int *x, int *y, int *height);
 int ME_GetCursorOfs(ME_TextEditor *editor, int nCursor);
 void ME_GetSelection(ME_TextEditor *editor, int *from, int *to);
 int ME_CountParagraphsBetween(ME_TextEditor *editor, int from, int to);
