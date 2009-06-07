@@ -211,7 +211,8 @@ NTSTATUS
 NTAPI
 NewDispatchObject(
     IN PIRP Irp,
-    IN IIrpTarget * Target)
+    IN IIrpTarget * Target,
+    IN LPWSTR Name)
 {
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
@@ -223,6 +224,7 @@ NewDispatchObject(
         return STATUS_INSUFFICIENT_RESOURCES;
 
     CreateItem->Context = (PVOID)Target;
+    RtlInitUnicodeString(&CreateItem->ObjectClass, Name);
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->FileObject);

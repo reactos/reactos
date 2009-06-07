@@ -352,7 +352,7 @@ KsAllocateObjectHeader(
     }
 
     /* was the request for a pin/clock/node */
-    if (IoStack->FileObject)
+    if (IoStack->FileObject->FileName.Buffer)
     {
         /* store the object in the file object */
         ASSERT(IoStack->FileObject->FsContext == NULL);
@@ -360,9 +360,10 @@ KsAllocateObjectHeader(
     }
     else
     {
-        /* the object header is for device */
+        /* the object header is for a audio filter */
         ASSERT(DeviceHeader->DeviceIndex < DeviceHeader->MaxItems);
         DeviceHeader->ItemList[DeviceHeader->DeviceIndex].ObjectHeader = ObjectHeader;
+        IoStack->FileObject->FsContext = ObjectHeader;
     }
 
     /* store result */
@@ -720,7 +721,7 @@ KsCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    //PIO_STACK_LOCATION IoStack;
+    PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER DeviceHeader;
     ULONG Index;
@@ -729,7 +730,7 @@ KsCreate(
 
     DPRINT("KS / CREATE\n");
     /* get current stack location */
-    //IoStack = IoGetCurrentIrpStackLocation(Irp);
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
     /* get device header */
@@ -756,11 +757,41 @@ KsCreate(
                 return Status;
             }
         }
+        else if (DeviceHeader->ItemList[Index].bCreated && IoStack->FileObject->FileName.Buffer != NULL)
+        {
+            ULONG Length = wcslen(DeviceHeader->ItemList[Index].ObjectHeader->CreateItem->ObjectClass.Buffer);
+
+            /* filter for that type has already exists */
+            if (!_wcsnicmp(DeviceHeader->ItemList[Index].ObjectHeader->CreateItem->ObjectClass.Buffer,
+                          IoStack->FileObject->FileName.Buffer,
+                          Length))
+            {
+                if (IoStack->FileObject->FileName.Buffer[0] != L'{')
+                {
+                    RtlMoveMemory(IoStack->FileObject->FileName.Buffer, &IoStack->FileObject->FileName.Buffer[Length+1],
+                                   IoStack->FileObject->FileName.Length - Length * sizeof(WCHAR));
+
+                    IoStack->FileObject->FileName.Length -= Length * sizeof(WCHAR);
+                }
+
+
+                KSCREATE_ITEM_IRP_STORAGE(Irp) = &DeviceHeader->ItemList[Index].CreateItem;
+                Status = DeviceHeader->ItemList[Index].CreateItem.Create(DeviceObject, Irp);
+                KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
+                return Status;
+            }
+        }
+
     }
 
     /* release lock */
     KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
-    return Status;
+
+    Irp->IoStatus.Information = 0;
+    /* set return status */
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 }
 
 static NTAPI
@@ -771,9 +802,17 @@ KsClose(
 {
     PIO_STACK_LOCATION IoStack;
     PKSIOBJECT_HEADER ObjectHeader;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    ULONG Index;
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
 
     DPRINT("KS / CLOSE\n");
 
@@ -782,11 +821,20 @@ KsClose(
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
 
         KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+
+        for(Index = 0; Index < DeviceHeader->MaxItems; Index++)
+        {
+            if (DeviceHeader->ItemList[Index].ObjectHeader == ObjectHeader)
+            {
+                DeviceHeader->ItemList[Index].ObjectHeader = NULL;
+            }
+        }
         return ObjectHeader->DispatchTable.Close(DeviceObject, Irp);
     }
     else
     {
-        DPRINT1("Expected Object Header\n");
+        DPRINT1("Expected Object Header FileObject %p FsContext %p\n", IoStack->FileObject, IoStack->FileObject->FsContext);
+        KeBugCheckEx(0, 0, 0, 0, 0);
         return STATUS_SUCCESS;
     }
 }
@@ -809,6 +857,15 @@ KsDeviceControl(
         ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
 
         KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+
+        if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL && IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_OBJECT_CLASS)
+        {
+            *((LPWSTR*)Irp->UserBuffer) = ObjectHeader->CreateItem->ObjectClass.Buffer;
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(LPWSTR);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
         return ObjectHeader->DispatchTable.DeviceIoControl(DeviceObject, Irp);
     }
     else

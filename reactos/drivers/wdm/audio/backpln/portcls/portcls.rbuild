@@ -19,6 +19,7 @@
 	<file>dma_slave.c</file>
 	<file>drm.c</file>
 	<file>drm_port.c</file>
+	<file>filter_topology.c</file>
 	<file>filter_dmus.c</file>
 	<file>filter_wavecyclic.c</file>
 	<file>filter_wavepci.c</file>

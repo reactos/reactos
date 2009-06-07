@@ -248,7 +248,9 @@ IPortFilterWaveCyclic_fnClose(
     /* release reference to port */
     This->Port->lpVtbl->Release(This->Port);
 
+    /* get the miniport driver */
     Miniport = GetWaveCyclicMiniport(This->Port);
+    /* release miniport driver */
     Miniport->lpVtbl->Release(Miniport);
 
 
@@ -256,7 +258,7 @@ IPortFilterWaveCyclic_fnClose(
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }
 
 /*

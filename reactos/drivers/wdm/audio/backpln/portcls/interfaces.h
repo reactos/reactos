@@ -687,4 +687,26 @@ DECLARE_INTERFACE_(IDmaChannelInit, IUnknown)
 
 #undef INTERFACE
 
+/*****************************************************************************
+ * IPortFilterTopology
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortFilterTopology
+
+DECLARE_INTERFACE_(IPortFilterTopology, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTTOPOLOGY Port)PURE;
+};
+
+typedef IPortFilterTopology *PPORTFILTERTOPOLOGY;
+
+#undef INTERFACE
+
 #endif

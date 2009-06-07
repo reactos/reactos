@@ -74,7 +74,7 @@ Dispatch_fnClose(
     PIRP Irp)
 {
     PSYSAUDIO_CLIENT Client;
-    PKSAUDIO_DEVICE_ENTRY Entry;
+    PKSAUDIO_SUBDEVICE_ENTRY Entry;
     PIO_STACK_LOCATION IoStatus;
     ULONG Index, SubIndex;
     PSYSAUDIODEVEXT DeviceExtension;

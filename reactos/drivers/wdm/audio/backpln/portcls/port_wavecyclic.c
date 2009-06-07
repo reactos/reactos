@@ -593,28 +593,40 @@ ISubDevice_fnNewIrpTarget(
 
     DPRINT("ISubDevice_NewIrpTarget this %p\n", This);
 
+    /* is there already an instance of the filter */
     if (This->Filter)
     {
+        /* it is, let's return the result */
         *OutTarget = (IIrpTarget*)This->Filter;
+
+        /* increment reference */
+        This->Filter->lpVtbl->AddRef(This->Filter);
         return STATUS_SUCCESS;
     }
 
-
+    /* create new instance of filter */
     Status = NewPortFilterWaveCyclic(&Filter);
     if (!NT_SUCCESS(Status))
     {
+        /* not enough memory */
         return Status;
     }
 
+    /* initialize the filter */
     Status = Filter->lpVtbl->Init(Filter, (IPortWaveCyclic*)This);
     if (!NT_SUCCESS(Status))
     {
+        /* destroy filter */
         Filter->lpVtbl->Release(Filter);
+        /* return status */
         return Status;
     }
 
+    /* store result */
     *OutTarget = (IIrpTarget*)Filter;
+    /* store for later re-use */
     This->Filter = Filter;
+    /* return status */
     return Status;
 }
 

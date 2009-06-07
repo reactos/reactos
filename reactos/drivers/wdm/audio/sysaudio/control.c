@@ -19,11 +19,93 @@ const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, 
 
 NTSTATUS
 ComputeCompatibleFormat(
-    IN PKSAUDIO_DEVICE_ENTRY Entry,
+    IN PKSAUDIO_SUBDEVICE_ENTRY Entry,
     IN ULONG PinId,
     IN PSYSAUDIODEVEXT DeviceExtension,
     IN PKSDATAFORMAT_WAVEFORMATEX ClientFormat,
     OUT PKSDATAFORMAT_WAVEFORMATEX MixerFormat);
+
+
+NTSTATUS
+NTAPI
+KspCreateObjectType(
+    IN HANDLE ParentHandle,
+    IN LPWSTR ObjectType,
+    PVOID CreateParameters,
+    UINT CreateParametersSize,
+    IN  ACCESS_MASK DesiredAccess,
+    OUT PHANDLE NodeHandle)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING Name;
+
+    Name.Length = (wcslen(ObjectType) + 1) * sizeof(WCHAR) + CreateParametersSize;
+    Name.MaximumLength += sizeof(WCHAR);
+    Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
+
+    if (!Name.Buffer)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    wcscpy(Name.Buffer, ObjectType);
+    Name.Buffer[wcslen(ObjectType)] = '\\';
+
+    RtlMoveMemory(Name.Buffer + wcslen(ObjectType) +1, CreateParameters, CreateParametersSize);
+
+    Name.Buffer[Name.Length / 2] = L'\0';
+    InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, ParentHandle, NULL);
+
+
+    Status = IoCreateFile(NodeHandle,
+                          DesiredAccess,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          0,
+                          FILE_OPEN,
+                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          NULL,
+                          0,
+                          CreateFileTypeNone,
+                          NULL,
+                          IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
+
+    return Status;
+}
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsoCreatePin(
+    IN  HANDLE FilterHandle,
+    IN  PKSPIN_CONNECT Connect,
+    IN  ACCESS_MASK DesiredAccess,
+    OUT PHANDLE ConnectionHandle,
+    IN LPWSTR ObjectClass)
+{
+    WCHAR szBuffer[100];
+    UINT ConnectSize = sizeof(KSPIN_CONNECT);
+
+    PKSDATAFORMAT_WAVEFORMATEX Format = (PKSDATAFORMAT_WAVEFORMATEX)(Connect + 1);
+    if (Format->DataFormat.FormatSize == sizeof(KSDATAFORMAT) ||
+        Format->DataFormat.FormatSize == sizeof(KSDATAFORMAT) + sizeof(WAVEFORMATEX))
+    {
+        ConnectSize += Format->DataFormat.FormatSize;
+    }
+
+    swprintf(szBuffer, L"%s\\{146F1A80-4791-11D0-A5D6-28DB04C10000}", ObjectClass);
+
+    return KspCreateObjectType(FilterHandle,
+                               szBuffer,
+                               (PVOID)Connect,
+                               ConnectSize,
+                               DesiredAccess,
+                               ConnectionHandle);
+}
 
 
 NTSTATUS
@@ -46,20 +128,39 @@ SetIrpIoStatus(
 
 }
 
-PKSAUDIO_DEVICE_ENTRY
+PKSAUDIO_SUBDEVICE_ENTRY
 GetListEntry(
     IN PLIST_ENTRY Head,
     IN ULONG Index)
 {
-    PLIST_ENTRY Entry = Head->Flink;
+    PKSAUDIO_DEVICE_ENTRY DeviceEntry;
+    PKSAUDIO_SUBDEVICE_ENTRY SubDeviceEntry;
+    PLIST_ENTRY SubEntry, Entry = Head->Flink;
 
-    while(Index-- && Entry != Head)
+	DPRINT1("device index %u\n", Index);
+    while(Entry != Head)
+    {
+        DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)CONTAINING_RECORD(Entry, KSAUDIO_DEVICE_ENTRY, Entry);
+        if (Index < DeviceEntry->NumSubDevices)
+        {
+            SubEntry = DeviceEntry->SubDeviceList.Flink;
+            while(SubEntry != &DeviceEntry->SubDeviceList && Index--)
+                SubEntry = SubEntry->Flink;
+
+            SubDeviceEntry = (PKSAUDIO_SUBDEVICE_ENTRY)CONTAINING_RECORD(SubEntry, KSAUDIO_SUBDEVICE_ENTRY, Entry);
+            return SubDeviceEntry;
+        }
+        else
+        {
+            Index -= DeviceEntry->NumSubDevices;
+        }
+
         Entry = Entry->Flink;
 
-    if (Entry == Head)
-        return NULL;
-
-    return (PKSAUDIO_DEVICE_ENTRY)CONTAINING_RECORD(Entry, KSAUDIO_DEVICE_ENTRY, Entry);
+    }
+	DPRINT1("Not Found index %u\n", Index);
+	DbgBreakPoint();
+    return NULL;
 }
 
 NTSTATUS
@@ -69,7 +170,7 @@ SysAudioOpenVirtualDevice(
     PSYSAUDIODEVEXT DeviceExtension)
 {
     PSYSAUDIO_CLIENT ClientInfo;
-    PKSAUDIO_DEVICE_ENTRY Entry;
+    PKSAUDIO_SUBDEVICE_ENTRY Entry;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
     /* access the create item */
@@ -98,9 +199,6 @@ SysAudioOpenVirtualDevice(
     /* get device context */
     Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, DeviceNumber);
     ASSERT(Entry != NULL);
-
-    /* increase usage count */
-    Entry->NumberOfClients++;
 
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }
@@ -217,13 +315,12 @@ CreatePinWorkerRoutine(
     ASSERT(WorkerContext->Entry->Pins);
     ASSERT(WorkerContext->Entry->NumberOfPins > WorkerContext->PinConnect->PinId);
 
-
     /* Fetch input format */
     InputFormat = (PKSDATAFORMAT_WAVEFORMATEX)(WorkerContext->PinConnect + 1);
 
 
     /* Let's try to create the audio irp pin */
-    Status = KsCreatePin(WorkerContext->Entry->Handle, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle);
+    Status = KsoCreatePin(WorkerContext->Entry->Handle, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle, WorkerContext->Entry->ObjectClass);
 
     if (!NT_SUCCESS(Status))
     {
@@ -260,7 +357,7 @@ CreatePinWorkerRoutine(
         }
 
         /* Retry with Mixer format */
-        Status = KsCreatePin(WorkerContext->Entry->Handle, MixerPinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle);
+        Status = KsoCreatePin(WorkerContext->Entry->Handle, MixerPinConnect, GENERIC_READ | GENERIC_WRITE, &RealPinHandle, WorkerContext->Entry->ObjectClass);
         if (!NT_SUCCESS(Status))
         {
            /* This should not fail */
@@ -432,7 +529,7 @@ HandleSysAudioFilterPinProperties(
 {
     PIO_STACK_LOCATION IoStack;
     NTSTATUS Status;
-    PKSAUDIO_DEVICE_ENTRY Entry;
+    PKSAUDIO_SUBDEVICE_ENTRY Entry;
     ULONG BytesReturned;
     PKSP_PIN Pin;
 
@@ -519,7 +616,7 @@ HandleSysAudioFilterPinProperties(
 
 NTSTATUS
 ComputeCompatibleFormat(
-    IN PKSAUDIO_DEVICE_ENTRY Entry,
+    IN PKSAUDIO_SUBDEVICE_ENTRY Entry,
     IN ULONG PinId,
     IN PSYSAUDIODEVEXT DeviceExtension,
     IN PKSDATAFORMAT_WAVEFORMATEX ClientFormat,
@@ -653,7 +750,7 @@ ComputeCompatibleFormat(
 
 NTSTATUS
 GetPinInstanceCount(
-    PKSAUDIO_DEVICE_ENTRY Entry,
+    PKSAUDIO_SUBDEVICE_ENTRY Entry,
     PKSPIN_CINSTANCES PinInstances,
     PKSPIN_CONNECT PinConnect)
 {
@@ -723,7 +820,7 @@ HandleSysAudioFilterPinCreation(
     PDEVICE_OBJECT DeviceObject)
 {
     ULONG Length;
-    PKSAUDIO_DEVICE_ENTRY Entry;
+    PKSAUDIO_SUBDEVICE_ENTRY Entry;
     KSPIN_CONNECT * PinConnect;
     PIO_STACK_LOCATION IoStack;
     PSYSAUDIO_INSTANCE_INFO InstanceInfo;
@@ -886,7 +983,7 @@ SysAudioHandleProperty(
     PULONG Index;
     PKSPROPERTY Property;
     PSYSAUDIODEVEXT DeviceExtension;
-    PKSAUDIO_DEVICE_ENTRY Entry;
+    PKSAUDIO_SUBDEVICE_ENTRY Entry;
     PSYSAUDIO_INSTANCE_INFO InstanceInfo;
     ULONG BytesReturned;
     PKSOBJECT_CREATE_ITEM CreateItem;

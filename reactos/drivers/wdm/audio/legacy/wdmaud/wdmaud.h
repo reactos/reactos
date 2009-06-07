@@ -5,7 +5,7 @@
 #include <ntddk.h>
 #include <portcls.h>
 #include <ks.h>
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 #include <ksmedia.h>
 #include <mmsystem.h>
@@ -15,8 +15,6 @@
 typedef struct
 {
     HANDLE hProcess;
-    HANDLE hSysAudio;
-    PFILE_OBJECT FileObject;
     ULONG NumPins;
     HANDLE * hPins;
 
@@ -38,6 +36,8 @@ typedef struct
     KSPIN_LOCK Lock;
     ULONG NumSysAudioDevices;
     LIST_ENTRY SysAudioDeviceList;
+    HANDLE hSysAudio;
+    PFILE_OBJECT FileObject;
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 

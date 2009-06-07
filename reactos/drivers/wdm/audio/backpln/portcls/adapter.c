@@ -288,7 +288,7 @@ PcRegisterSubdevice(
          */
         Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
                                            &SubDeviceDescriptor->Interfaces[Index],
-                                           &RefName,
+                                           NULL, //&RefName,
                                            &SymbolicLinkName);
         if (NT_SUCCESS(Status))
         {

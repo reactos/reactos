@@ -215,8 +215,6 @@ WdmAudCleanup(
             ExFreePool(pClient->hPins);
         }
 
-        ObDereferenceObject(pClient->FileObject);
-        ZwClose(pClient->hSysAudio);
         ExFreePool(pClient);
         IoStack->FileObject->FsContext = NULL;
     }

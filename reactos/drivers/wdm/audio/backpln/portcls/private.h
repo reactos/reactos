@@ -9,7 +9,7 @@
 
 #include <ntddk.h>
 #include <portcls.h>
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 
 #include <dmusicks.h>
@@ -147,11 +147,20 @@ NewPortWaveRT(
 
 #endif
 
+NTSTATUS 
+NewPortFilterTopology(
+    OUT IPortFilterTopology ** OutFilter);
+
+PMINIPORTTOPOLOGY
+GetTopologyMiniport(
+    PPORTTOPOLOGY Port);
+
 NTSTATUS
 NTAPI
 NewDispatchObject(
     IN PIRP Irp,
-    IN IIrpTarget * Target);
+    IN IIrpTarget * Target,
+    IN LPWSTR Name);
 
 PMINIPORTWAVECYCLIC
 GetWaveCyclicMiniport(
