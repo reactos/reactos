@@ -831,6 +831,18 @@ GpStatus WINGDIPAPI GdipAddPathPolygonI(GpPath *path, GDIPCONST GpPoint *points,
     return status;
 }
 
+GpStatus WINGDIPAPI GdipAddPathString(GpPath* path, GDIPCONST WCHAR* string, INT length, GDIPCONST GpFontFamily* family, INT style, REAL emSize, GDIPCONST RectF* layoutRect, GDIPCONST GpStringFormat* format)
+{
+    FIXME("(%p, %p, %d, %p, %d, %f, %p, %p): stub\n", path, string, length, family, style, emSize, layoutRect, format);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipAddPathStringI(GpPath* path, GDIPCONST WCHAR* string, INT length, GDIPCONST GpFontFamily* family, INT style, REAL emSize, GDIPCONST Rect* layoutRect, GDIPCONST GpStringFormat* format)
+{
+    FIXME("(%p, %p, %d, %p, %d, %f, %p, %p): stub\n", path, string, length, family, style, emSize, layoutRect, format);
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipClonePath(GpPath* path, GpPath **clone)
 {
     TRACE("(%p, %p)\n", path, clone);

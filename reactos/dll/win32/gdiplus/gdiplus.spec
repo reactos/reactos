@@ -29,15 +29,15 @@
 @ stdcall GdipAddPathRectangleI(ptr long long long long)
 @ stdcall GdipAddPathRectangles(ptr ptr long)
 @ stdcall GdipAddPathRectanglesI(ptr ptr long)
-@ stub GdipAddPathString
-@ stub GdipAddPathStringI
+@ stdcall GdipAddPathString(ptr wstr long ptr long long ptr ptr)
+@ stdcall GdipAddPathStringI(ptr wstr long ptr long long ptr ptr)
 @ stdcall GdipAlloc(long)
 @ stdcall GdipBeginContainer2(ptr ptr)
-@ stub GdipBeginContainer
-@ stub GdipBeginContainerI
-@ stub GdipBitmapApplyEffect
+@ stdcall GdipBeginContainer(ptr ptr ptr long ptr)
+@ stdcall GdipBeginContainerI(ptr ptr ptr long ptr)
+@ stdcall GdipBitmapApplyEffect(ptr ptr ptr long ptr ptr)
 @ stub GdipBitmapConvertFormat
-@ stub GdipBitmapCreateApplyEffect
+@ stdcall GdipBitmapCreateApplyEffect(ptr long ptr ptr ptr ptr long ptr ptr)
 @ stub GdipBitmapGetHistogram
 @ stub GdipBitmapGetHistogramSize
 @ stdcall GdipBitmapGetPixel(ptr long long ptr)
@@ -46,7 +46,7 @@
 @ stdcall GdipBitmapSetResolution(ptr long long)
 @ stdcall GdipBitmapUnlockBits(ptr ptr)
 @ stdcall GdipClearPathMarkers(ptr)
-@ stub GdipCloneBitmapArea
+@ stdcall GdipCloneBitmapArea(long long long long long ptr ptr)
 @ stdcall GdipCloneBitmapAreaI(long long long long long ptr ptr)
 @ stdcall GdipCloneBrush(ptr ptr)
 @ stdcall GdipCloneCustomLineCap(ptr ptr)
@@ -65,7 +65,7 @@
 @ stdcall GdipCombineRegionRect(ptr ptr long)
 @ stdcall GdipCombineRegionRectI(ptr ptr long)
 @ stdcall GdipCombineRegionRegion(ptr ptr long)
-@ stub GdipComment
+@ stdcall GdipComment(ptr long ptr)
 @ stdcall GdipConvertToEmfPlus(ptr ptr ptr long ptr ptr)
 @ stub GdipConvertToEmfPlusToFile
 @ stub GdipConvertToEmfPlusToStream
@@ -94,7 +94,7 @@
 @ stdcall GdipCreateFromHWND(long ptr)
 @ stdcall GdipCreateFromHWNDICM(long ptr)
 @ stdcall GdipCreateHBITMAPFromBitmap(ptr ptr long)
-@ stub GdipCreateHICONFromBitmap
+@ stdcall GdipCreateHICONFromBitmap(ptr ptr)
 @ stdcall GdipCreateHalftonePalette()
 @ stdcall GdipCreateHatchBrush(long long long ptr)
 @ stdcall GdipCreateImageAttributes(ptr)
@@ -109,8 +109,8 @@
 @ stdcall GdipCreateMatrix3I(ptr ptr ptr)
 @ stdcall GdipCreateMatrix(ptr)
 @ stdcall GdipCreateMetafileFromEmf(ptr long ptr)
-@ stub GdipCreateMetafileFromFile
-@ stub GdipCreateMetafileFromStream
+@ stdcall GdipCreateMetafileFromFile(ptr ptr)
+@ stdcall GdipCreateMetafileFromStream(ptr ptr)
 @ stdcall GdipCreateMetafileFromWmf(ptr long ptr ptr)
 @ stdcall GdipCreateMetafileFromWmfFile(wstr ptr ptr)
 @ stdcall GdipCreatePath2(ptr ptr long long ptr)
@@ -139,7 +139,7 @@
 @ stdcall GdipDeleteBrush(ptr)
 @ stdcall GdipDeleteCachedBitmap(ptr)
 @ stdcall GdipDeleteCustomLineCap(ptr)
-@ stub GdipDeleteEffect
+@ stdcall GdipDeleteEffect(ptr)
 @ stdcall GdipDeleteFont(ptr)
 @ stdcall GdipDeleteFontFamily(ptr)
 @ stdcall GdipDeleteGraphics(ptr)
@@ -175,10 +175,10 @@
 @ stdcall GdipDrawImage(ptr ptr long long)
 @ stub GdipDrawImageFX
 @ stdcall GdipDrawImageI(ptr ptr long long)
-@ stub GdipDrawImagePointRect
-@ stub GdipDrawImagePointRectI
-@ stub GdipDrawImagePoints
-@ stub GdipDrawImagePointsI
+@ stdcall GdipDrawImagePointRect(ptr ptr long long long long long long long)
+@ stdcall GdipDrawImagePointRectI(ptr ptr long long long long long long long)
+@ stdcall GdipDrawImagePoints(ptr ptr ptr long)
+@ stdcall GdipDrawImagePointsI(ptr ptr ptr long)
 @ stdcall GdipDrawImagePointsRect(ptr ptr ptr long long long long long long ptr ptr ptr)
 @ stdcall GdipDrawImagePointsRectI(ptr ptr ptr long long long long long long ptr ptr ptr)
 @ stdcall GdipDrawImageRect(ptr ptr long long long long)
@@ -199,7 +199,7 @@
 @ stdcall GdipDrawRectangles(ptr ptr ptr long)
 @ stdcall GdipDrawRectanglesI(ptr ptr ptr long)
 @ stdcall GdipDrawString(ptr ptr long ptr ptr ptr ptr)
-@ stub GdipEmfToWmfBits
+@ stdcall GdipEmfToWmfBits(ptr long ptr long long)
 @ stdcall GdipEndContainer(ptr ptr)
 @ stub GdipEnumerateMetafileDestPoint
 @ stub GdipEnumerateMetafileDestPointI

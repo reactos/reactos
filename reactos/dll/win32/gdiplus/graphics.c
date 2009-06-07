@@ -1116,6 +1116,20 @@ GpStatus WINGDIPAPI GdipCreateMetafileFromWmfFile(GDIPCONST WCHAR *file,
     return GdipCreateMetafileFromWmf(hmf, TRUE, placeable, metafile);
 }
 
+GpStatus WINGDIPAPI GdipCreateMetafileFromFile(GDIPCONST WCHAR *file,
+    GpMetafile **metafile)
+{
+    FIXME("(%p, %p): stub\n", file, metafile);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipCreateMetafileFromStream(IStream *stream,
+    GpMetafile **metafile)
+{
+    FIXME("(%p, %p): stub\n", stream, metafile);
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipCreateStreamOnFile(GDIPCONST WCHAR * filename,
     UINT access, IStream **stream)
 {
@@ -1590,6 +1604,36 @@ GpStatus WINGDIPAPI GdipDrawImageI(GpGraphics *graphics, GpImage *image, INT x,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipDrawImagePointRect(GpGraphics *graphics, GpImage *image,
+    REAL x, REAL y, REAL srcx, REAL srcy, REAL srcwidth, REAL srcheight,
+    GpUnit srcUnit)
+{
+    FIXME("(%p, %p, %f, %f, %f, %f, %f, %f, %d): stub\n", graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipDrawImagePointRectI(GpGraphics *graphics, GpImage *image,
+    INT x, INT y, INT srcx, INT srcy, INT srcwidth, INT srcheight,
+    GpUnit srcUnit)
+{
+    FIXME("(%p, %p, %d, %d, %d, %d, %d, %d, %d): stub\n", graphics, image, x, y, srcx, srcy, srcwidth, srcheight, srcUnit);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipDrawImagePoints(GpGraphics *graphics, GpImage *image,
+    GDIPCONST GpPointF *dstpoints, INT count)
+{
+    FIXME("(%p, %p, %p, %d): stub\n", graphics, image, dstpoints, count);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipDrawImagePointsI(GpGraphics *graphics, GpImage *image,
+    GDIPCONST GpPoint *dstpoints, INT count)
+{
+    FIXME("(%p, %p, %p, %d): stub\n", graphics, image, dstpoints, count);
+    return NotImplemented;
+}
+
 /* FIXME: partially implemented (only works for rectangular parallelograms) */
 GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image,
      GDIPCONST GpPointF *points, INT count, REAL srcx, REAL srcy, REAL srcwidth,
@@ -2045,7 +2089,7 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     POINT corners[4];
     WCHAR* stringdup;
     REAL angle, ang_cos, ang_sin, rel_width, rel_height;
-    INT sum = 0, height = 0, fit, fitcpy, save_state, i, j, lret, nwidth,
+    INT sum = 0, height = 0, offsety = 0, fit, fitcpy, save_state, i, j, lret, nwidth,
         nheight;
     SIZE size;
     RECT drawcoord;
@@ -2061,8 +2105,21 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
         return NotImplemented;
     }
 
-    if(format)
+    if(format){
         TRACE("may be ignoring some format flags: attr %x\n", format->attr);
+
+        /* Should be no need to explicitly test for StringAlignmentNear as
+         * that is default behavior if no alignment is passed. */
+        if(format->vertalign != StringAlignmentNear){
+            RectF bounds;
+            GdipMeasureString(graphics, string, length, font, rect, format, &bounds, 0, 0);
+
+            if(format->vertalign == StringAlignmentCenter)
+                offsety = (rect->Height - bounds.Height) / 2;
+            else if(format->vertalign == StringAlignmentFar)
+                offsety = (rect->Height - bounds.Height);
+        }
+    }
 
     if(length == -1) length = lstrlenW(string);
 
@@ -2074,9 +2131,9 @@ GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string
     SetTextColor(graphics->hdc, brush->lb.lbColor);
 
     rectcpy[3].X = rectcpy[0].X = rect->X;
-    rectcpy[1].Y = rectcpy[0].Y = rect->Y;
+    rectcpy[1].Y = rectcpy[0].Y = rect->Y + offsety;
     rectcpy[2].X = rectcpy[1].X = rect->X + rect->Width;
-    rectcpy[3].Y = rectcpy[2].Y = rect->Y + rect->Height;
+    rectcpy[3].Y = rectcpy[2].Y = rect->Y + offsety + rect->Height;
     transform_and_round_points(graphics, corners, rectcpy, 4);
 
     if (roundr(rect->Width) == 0)
@@ -3150,6 +3207,24 @@ GpStatus WINGDIPAPI GdipBeginContainer2(GpGraphics *graphics, GraphicsContainer 
 
     *state = 0xdeadbeef;
     return Ok;
+}
+
+GpStatus WINGDIPAPI GdipBeginContainer(GpGraphics *graphics, GDIPCONST GpRectF *dstrect, GDIPCONST GpRectF *srcrect, GpUnit unit, GraphicsContainer *state)
+{
+    FIXME("(%p, %p, %p, %d, %p): stub\n", graphics, dstrect, srcrect, unit, state);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipBeginContainerI(GpGraphics *graphics, GDIPCONST GpRect *dstrect, GDIPCONST GpRect *srcrect, GpUnit unit, GraphicsContainer *state)
+{
+    FIXME("(%p, %p, %p, %d, %p): stub\n", graphics, dstrect, srcrect, unit, state);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipComment(GpGraphics *graphics, UINT sizeData, GDIPCONST BYTE *data)
+{
+    FIXME("(%p, %d, %p): stub\n", graphics, sizeData, data);
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipEndContainer(GpGraphics *graphics, GraphicsState state)
