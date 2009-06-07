@@ -126,3 +126,4 @@ BEGIN
     IDS_ASSIGNED_DHCP           "Toegekend door DHCP"
     IDS_ASSIGNED_MANUAL         "Handmatig geconfigureerd"
 END
+
