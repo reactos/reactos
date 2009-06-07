@@ -3,7 +3,7 @@
 
 #include <ntifs.h>
 #include <ntddk.h>
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 #include <portcls.h>
 #include <ks.h>
