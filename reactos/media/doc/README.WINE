@@ -186,7 +186,7 @@ reactos/base/applications/winhlp32        # Autosync
 reactos/base/applications/wordpad         # Autosync
 reactos/base/services/rpcss               # Synced to Wine-20081105
 reactos/base/system/expand                # Out of sync
-reactos/base/system/msiexec               # Synced to Wine-1_1_5
+reactos/base/system/msiexec               # Synced to Wine-1_1_23
 reactos/modules/rosapps/winfile           # Autosync
 
 In addition the following libs, dlls and source files are mostly based on code ported
