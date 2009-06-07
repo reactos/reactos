@@ -235,7 +235,7 @@ User32 -
   reactos/dll/win32/user32/misc/exticon.c       # Synced to Wine-1_1_22
   reactos/dll/win32/user32/misc/resources.c     # Forked?
   reactos/dll/win32/user32/misc/winhelp.c       # Last sync date unknown
-  reactos/dll/win32/user32/misc/wsprintf.c      # Synced to Wine-1_1_13
+  reactos/dll/win32/user32/misc/wsprintf.c      # Synced to Wine-1_1_23
 
   reactos/dll/win32/user32/windows/defwnd.c     # Forked
   reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
