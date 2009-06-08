@@ -223,7 +223,7 @@ SetStreamWorkerRoutine(
     /* Set the state */
     if (NT_SUCCESS(This->Stream->lpVtbl->SetState(This->Stream, State)))
     {
-        /* Set internal state to stop */
+        /* Set internal state */
         This->State = State;
 
         if (This->State == KSSTATE_STOP)
@@ -913,7 +913,7 @@ IPortPinWaveCyclic_fnFastWrite(
 
     InterlockedIncrement((PLONG)&This->TotalPackets);
 
-    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
+    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
 
     Packet = (PCONTEXT_WRITE)Buffer;
 

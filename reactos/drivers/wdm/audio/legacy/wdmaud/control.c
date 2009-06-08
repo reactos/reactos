@@ -17,6 +17,7 @@ const GUID KSMEDIUMSETID_Standard               = {0x4747B320L, 0x62CE, 0x11CF, 
 const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
+const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 NTSTATUS
 SetIrpIoStatus(
@@ -146,6 +147,11 @@ WdmAudControlOpen(
     ULONG FilterId;
     ULONG PinId;
 
+    if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
+    {
+        return WdmAudControlOpenMixer(DeviceObject, Irp, DeviceInfo, ClientInfo);
+    }
+
     if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
     {
         DPRINT1("FIXME: only waveout / wavein devices are supported\n");
@@ -240,11 +246,11 @@ WdmAudControlOpen(
     Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, Length, &PinHandle, sizeof(HANDLE), &BytesReturned);
     if (NT_SUCCESS(Status))
     {
-        PHANDLE Handels;
+        PWDMAUD_HANDLE Handels;
 
         for(Index = 0; Index < ClientInfo->NumPins; Index++)
         {
-            if (ClientInfo->hPins[Index] == PinHandle)
+            if (ClientInfo->hPins[Index].Handle == PinHandle)
             {
                 /* the pin handle has been re-used */
                 DeviceInfo->hDevice = PinHandle;
@@ -253,18 +259,19 @@ WdmAudControlOpen(
 
         }
 
-        Handels = ExAllocatePool(NonPagedPool, sizeof(HANDLE) * (ClientInfo->NumPins+1));
+        Handels = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
 
         if (Handels)
         {
             if (ClientInfo->NumPins)
             {
-                RtlMoveMemory(Handels, ClientInfo->hPins, sizeof(HANDLE) * ClientInfo->NumPins);
+                RtlMoveMemory(Handels, ClientInfo->hPins, sizeof(WDMAUD_HANDLE) * ClientInfo->NumPins);
                 ExFreePool(ClientInfo->hPins);
             }
 
             ClientInfo->hPins = Handels;
-            ClientInfo->hPins[ClientInfo->NumPins] = PinHandle;
+            ClientInfo->hPins[ClientInfo->NumPins].Handle = PinHandle;
+            ClientInfo->hPins[ClientInfo->NumPins].Type = DeviceInfo->DeviceType;
             ClientInfo->NumPins++;
         }
         DeviceInfo->hDevice = PinHandle;
@@ -291,7 +298,13 @@ WdmAudControlDeviceType(
     KSPIN_DATAFLOW DataFlow;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE && DeviceInfo->DeviceType != MIXER_DEVICE_TYPE)
+    if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
+    {
+        DeviceInfo->DeviceCount = GetNumOfMixerDevices(DeviceObject);
+        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+    if (DeviceInfo->DeviceType != WAVE_OUT_DEVICE_TYPE && DeviceInfo->DeviceType != WAVE_IN_DEVICE_TYPE)
     {
         DPRINT1("FIXME: Unsupported device type %x\n", DeviceInfo->DeviceType);
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
@@ -563,11 +576,11 @@ WdmAudIoctlClose(
 
     for(Index = 0; Index < ClientInfo->NumPins; Index++)
     {
-        if (ClientInfo->hPins[Index] == DeviceInfo->hDevice)
+        if (ClientInfo->hPins[Index].Handle == DeviceInfo->hDevice && ClientInfo->hPins[Index].Type != MIXER_DEVICE_TYPE)
         {
             DPRINT1("Closing device %p\n", DeviceInfo->hDevice);
             ZwClose(DeviceInfo->hDevice);
-            ClientInfo->hPins[Index] = NULL;
+            ClientInfo->hPins[Index].Handle = NULL;
             SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
             return STATUS_SUCCESS;
         }

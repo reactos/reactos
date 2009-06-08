@@ -14,9 +14,16 @@
 
 typedef struct
 {
+    HANDLE Handle;
+    SOUND_DEVICE_TYPE Type;
+}WDMAUD_HANDLE, *PWDMAUD_HANDLE;
+
+
+typedef struct
+{
     HANDLE hProcess;
     ULONG NumPins;
-    HANDLE * hPins;
+    WDMAUD_HANDLE * hPins;
 
 }WDMAUD_CLIENT, *PWDMAUD_CLIENT;
 
@@ -83,5 +90,21 @@ WdmAudWrite(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
+NTSTATUS
+WdmAudControlOpenMixer(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo);
+
+ULONG
+GetNumOfMixerDevices(
+    IN  PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+SetIrpIoStatus(
+    IN PIRP Irp,
+    IN NTSTATUS Status,
+    IN ULONG Length);
 
 #endif

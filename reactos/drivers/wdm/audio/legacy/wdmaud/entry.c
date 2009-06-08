@@ -204,9 +204,9 @@ WdmAudCleanup(
     {
         for (Index = 0; Index < pClient->NumPins; Index++)
         {
-           if (pClient->hPins[Index])
+           if (pClient->hPins[Index].Handle && pClient->hPins[Index].Type != MIXER_DEVICE_TYPE)
            {
-               ZwClose(pClient->hPins[Index]);
+               ZwClose(pClient->hPins[Index].Handle);
            }
         }
 

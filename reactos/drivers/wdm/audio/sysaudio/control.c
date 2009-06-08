@@ -13,6 +13,7 @@ const GUID KSPROPSETID_Sysaudio_Pin             = {0xA3A53220L, 0xC6E4, 0x11D0, 
 const GUID KSPROPSETID_General                  = {0x1464EDA5L, 0x6A8F, 0x11D1, {0x9A, 0xA7, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
 const GUID KSPROPSETID_Pin                     = {0x8C134960L, 0x51AD, 0x11CF, {0x87, 0x8A, 0x94, 0xF8, 0x01, 0xC1, 0x00, 0x00}};
 const GUID KSPROPSETID_Connection              = {0x1D58C920L, 0xAC9B, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+const GUID KSPROPSETID_Topology                 = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 const GUID KSDATAFORMAT_TYPE_AUDIO              = {0x73647561L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SUBTYPE_PCM             = {0x00000001L, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
 const GUID KSDATAFORMAT_SPECIFIER_WAVEFORMATEX  = {0x05589f81L, 0xc356, 0x11ce, {0xbf, 0x01, 0x00, 0xaa, 0x00, 0x55, 0x59, 0x5a}};
@@ -137,7 +138,6 @@ GetListEntry(
     PKSAUDIO_SUBDEVICE_ENTRY SubDeviceEntry;
     PLIST_ENTRY SubEntry, Entry = Head->Flink;
 
-	DPRINT1("device index %u\n", Index);
     while(Entry != Head)
     {
         DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)CONTAINING_RECORD(Entry, KSAUDIO_DEVICE_ENTRY, Entry);
@@ -158,8 +158,8 @@ GetListEntry(
         Entry = Entry->Flink;
 
     }
-	DPRINT1("Not Found index %u\n", Index);
-	DbgBreakPoint();
+    DPRINT1("Not Found index %u\n", Index);
+
     return NULL;
 }
 
@@ -988,6 +988,8 @@ SysAudioHandleProperty(
     ULONG BytesReturned;
     PKSOBJECT_CREATE_ITEM CreateItem;
     UNICODE_STRING GuidString;
+    PKSP_PIN Pin;
+
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
@@ -1006,6 +1008,27 @@ SysAudioHandleProperty(
     if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Pin))
     {
         return HandleSysAudioFilterPinProperties(Irp, Property, DeviceExtension);
+    }
+    else if(IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Topology))
+    {
+        if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSP_PIN))
+        {
+            /* too small buffer */
+            return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSP_PIN));
+        }
+        Pin = (PKSP_PIN)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, Pin->Reserved);
+        ASSERT(Entry != NULL);
+
+        /* forward request to the filter implementing the property */
+        Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY,
+                                             (PVOID)IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
+                                             IoStack->Parameters.DeviceIoControl.InputBufferLength,
+                                             Irp->UserBuffer,
+                                             IoStack->Parameters.DeviceIoControl.OutputBufferLength,
+                                             &BytesReturned);
+
+        return SetIrpIoStatus(Irp, Status, BytesReturned);
     }
     else if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Sysaudio))
     {

@@ -130,6 +130,7 @@ typedef struct
     KSPROPERTY_SET_LIST FilterPropertySet;
 
     PPCFILTER_DESCRIPTOR DeviceDescriptor;
+    KSTOPOLOGY*  Topology;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
