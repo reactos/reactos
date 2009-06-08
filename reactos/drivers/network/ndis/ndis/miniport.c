@@ -666,25 +666,29 @@ MiniQueryInformation(
  */
 {
   NDIS_STATUS NdisStatus;
-  ULONG BytesNeeded;
-  KIRQL OldIrql;
+  PNDIS_REQUEST NdisRequest;
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  /* call the miniport's queryinfo handler */
-  KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-  NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
-      Adapter->NdisMiniportBlock.MiniportAdapterContext,
-      Oid,
-      Buffer,
-      Size,
-      BytesWritten,
-      &BytesNeeded);
-  KeLowerIrql(OldIrql);
+  NdisRequest = ExAllocatePool(NonPagedPool, sizeof(NDIS_REQUEST));
+  if (!NdisRequest) return NDIS_STATUS_RESOURCES;
+
+  RtlZeroMemory(NdisRequest, sizeof(NDIS_REQUEST));
+
+  NdisRequest->RequestType = NdisRequestQueryInformation;
+  NdisRequest->DATA.QUERY_INFORMATION.Oid = Oid;
+  NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer = Buffer;
+  NdisRequest->DATA.QUERY_INFORMATION.InformationBufferLength = Size;
+
+  NdisStatus = MiniDoRequest(Adapter, NdisRequest);
 
   /* FIXME: Wait in pending case! */
 
   ASSERT(NdisStatus != NDIS_STATUS_PENDING);
+
+  *BytesWritten = NdisRequest->DATA.QUERY_INFORMATION.BytesWritten;
+
+  ExFreePool(NdisRequest);
 
   return NdisStatus;
 }
@@ -929,30 +933,40 @@ MiniDoRequest(
     Adapter->NdisMiniportBlock.PendingRequest = NdisRequest;
     KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
 
-    switch (NdisRequest->RequestType)
+    if (!Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CoRequestHandler)
     {
-    case NdisRequestQueryInformation:
-        Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
-            Adapter->NdisMiniportBlock.MiniportAdapterContext,
-            NdisRequest->DATA.QUERY_INFORMATION.Oid,
-            NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer,
-            NdisRequest->DATA.QUERY_INFORMATION.InformationBufferLength,
-            (PULONG)&NdisRequest->DATA.QUERY_INFORMATION.BytesWritten,
-            (PULONG)&NdisRequest->DATA.QUERY_INFORMATION.BytesNeeded);
-        break;
+        switch (NdisRequest->RequestType)
+        {
+        case NdisRequestQueryInformation:
+            Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
+                Adapter->NdisMiniportBlock.MiniportAdapterContext,
+                NdisRequest->DATA.QUERY_INFORMATION.Oid,
+                NdisRequest->DATA.QUERY_INFORMATION.InformationBuffer,
+                NdisRequest->DATA.QUERY_INFORMATION.InformationBufferLength,
+                (PULONG)&NdisRequest->DATA.QUERY_INFORMATION.BytesWritten,
+                (PULONG)&NdisRequest->DATA.QUERY_INFORMATION.BytesNeeded);
+            break;
 
-    case NdisRequestSetInformation:
-        Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SetInformationHandler)(
-            Adapter->NdisMiniportBlock.MiniportAdapterContext,
-            NdisRequest->DATA.SET_INFORMATION.Oid,
-            NdisRequest->DATA.SET_INFORMATION.InformationBuffer,
-            NdisRequest->DATA.SET_INFORMATION.InformationBufferLength,
-            (PULONG)&NdisRequest->DATA.SET_INFORMATION.BytesRead,
-            (PULONG)&NdisRequest->DATA.SET_INFORMATION.BytesNeeded);
-        break;
+        case NdisRequestSetInformation:
+            Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SetInformationHandler)(
+                Adapter->NdisMiniportBlock.MiniportAdapterContext,
+                NdisRequest->DATA.SET_INFORMATION.Oid,
+                NdisRequest->DATA.SET_INFORMATION.InformationBuffer,
+                NdisRequest->DATA.SET_INFORMATION.InformationBufferLength,
+                (PULONG)&NdisRequest->DATA.SET_INFORMATION.BytesRead,
+                (PULONG)&NdisRequest->DATA.SET_INFORMATION.BytesNeeded);
+            break;
 
-    default:
-        Status = NDIS_STATUS_FAILURE;
+        default:
+            Status = NDIS_STATUS_FAILURE;
+        }
+    }
+    else
+    {
+        Status = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CoRequestHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext,
+            NULL, /* FIXME */
+            NdisRequest);
     }
 
     if (Status != NDIS_STATUS_PENDING) {
