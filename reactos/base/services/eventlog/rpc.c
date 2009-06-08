@@ -389,19 +389,19 @@ NTSTATUS ElfrReportEventW(
         switch (EventType)
         {
             case EVENTLOG_SUCCESS:
-                DPRINT1("Success: %wZ\n", Strings[i]);
+                DPRINT("Success: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_ERROR_TYPE:
-                DPRINT1("Error: %wZ\n", Strings[i]);
+                DPRINT("Error: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_WARNING_TYPE:
-                DPRINT1("Warning: %wZ\n", Strings[i]);
+                DPRINT("Warning: %wZ\n", Strings[i]);
                 break;
 
             case EVENTLOG_INFORMATION_TYPE:
-                DPRINT1("Info: %wZ\n", Strings[i]);
+                DPRINT("Info: %wZ\n", Strings[i]);
                 break;
 
             default:
