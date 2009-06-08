@@ -4688,19 +4688,24 @@ RtlCompareMemory (
 
 FORCEINLINE
 PVOID
-RtlSecureZeroMemory(IN PVOID ptr,
-                    IN SIZE_T cnt)
+RtlSecureZeroMemory(IN PVOID Buffer,
+                    IN SIZE_T Length)
 {
-    volatile char *vptr = (volatile char *)ptr;
+    volatile char *VolatilePointer;
 
-    while (cnt)
+    /* Get a volatile pointer to prevent any compiler optimizations */
+    VolatilePointer = (volatile char *)Buffer;
+
+    /* Loop the whole buffer */
+    while (Length)
     {
-        *vptr = 0;
-        vptr++;
-        cnt--;
+        /* Zero the current byte and move on */
+        *VolatilePointer++ = 0;
+        Length--;
     }
 
-    return ptr;
+    /* Return the pointer to ensure the compiler won't optimize this away */
+    return Buffer;
 }
 
 typedef struct _OBJECT_TYPE_LIST {
