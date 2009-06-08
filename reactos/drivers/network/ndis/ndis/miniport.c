@@ -277,19 +277,17 @@ MiniIndicateReceivePacket(
   {
       AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, AdapterListEntry);
 
-      if (AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)
+      for (i = 0; i < NumberOfPackets; i++)
       {
-          for (i = 0; i < NumberOfPackets; i++)
-          {
+           if (AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler &&
+               NDIS_GET_PACKET_STATUS(PacketArray[i]) != NDIS_STATUS_RESOURCES)
+           {
               (*AdapterBinding->ProtocolBinding->Chars.ReceivePacketHandler)(
                AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
                PacketArray[i]);
-          }
-      }
-      else
-      {
-          for (i = 0; i < NumberOfPackets; i++)
-          {
+           }
+           else
+           {
               UINT FirstBufferLength, TotalBufferLength, LookAheadSize, HeaderSize;
               PNDIS_BUFFER NdisBuffer;
               PVOID NdisBufferVA, LookAheadBuffer;
