@@ -2345,14 +2345,32 @@ NdisMRegisterMiniport(
 
   /* Check if mandatory MiniportXxx functions are specified */
   if ((!MiniportCharacteristics->HaltHandler) ||
-      (!MiniportCharacteristics->InitializeHandler)||
-      (!MiniportCharacteristics->QueryInformationHandler) ||
-      (!MiniportCharacteristics->ResetHandler) ||
-      (!MiniportCharacteristics->SetInformationHandler))
+       (!MiniportCharacteristics->InitializeHandler)||
+       (!MiniportCharacteristics->ResetHandler))
     {
       NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics.\n"));
       return NDIS_STATUS_BAD_CHARACTERISTICS;
     }
+
+  if (MiniportCharacteristics->MajorNdisVersion < 0x05)
+  {
+      if ((!MiniportCharacteristics->QueryInformationHandler) ||
+          (!MiniportCharacteristics->SetInformationHandler))
+      {
+           NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics. (Set/Query)\n"));
+           return NDIS_STATUS_BAD_CHARACTERISTICS;
+      }
+  }
+  else
+  {
+      if (((!MiniportCharacteristics->QueryInformationHandler) ||
+           (!MiniportCharacteristics->SetInformationHandler)) &&
+           (!MiniportCharacteristics->CoRequestHandler))
+      {
+           NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics. (Set/Query)\n"));
+           return NDIS_STATUS_BAD_CHARACTERISTICS;
+      }
+  }
 
   if (MiniportCharacteristics->MajorNdisVersion == 0x03)
     {
@@ -2362,13 +2380,25 @@ NdisMRegisterMiniport(
           return NDIS_STATUS_BAD_CHARACTERISTICS;
         }
     }
-  else if (MiniportCharacteristics->MajorNdisVersion >= 0x04)
+  else if (MiniportCharacteristics->MajorNdisVersion == 0x04)
     {
-      /* NDIS 4.0+ */
+      /* NDIS 4.0 */
       if ((!MiniportCharacteristics->SendHandler) &&
           (!MiniportCharacteristics->SendPacketsHandler))
         {
           NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics. (NDIS 4.0)\n"));
+          return NDIS_STATUS_BAD_CHARACTERISTICS;
+        }
+    }
+  else if (MiniportCharacteristics->MajorNdisVersion == 0x05)
+    {
+      /* TODO: Add more checks here */
+
+      if ((!MiniportCharacteristics->SendHandler) &&
+          (!MiniportCharacteristics->SendPacketsHandler) &&
+          (!MiniportCharacteristics->CoSendPacketsHandler))
+        {
+          NDIS_DbgPrint(MIN_TRACE, ("Bad miniport characteristics. (NDIS 5.0)\n"));
           return NDIS_STATUS_BAD_CHARACTERISTICS;
         }
     }
