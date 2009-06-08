@@ -2806,6 +2806,14 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           Status = SpiGetInquiryData(DeviceExtension, Irp);
           break;
 
+      case IOCTL_SCSI_MINIPORT:
+          DPRINT1("IOCTL_SCSI_MINIPORT unimplemented!\n");
+          break;
+
+      case IOCTL_SCSI_PASS_THROUGH:
+          DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
+          break;
+
       default:
 	DPRINT1("  unknown ioctl code: 0x%lX\n",
 	       Stack->Parameters.DeviceIoControl.IoControlCode);
