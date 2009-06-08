@@ -164,7 +164,7 @@ IPortDMus_fnInit(
     IMiniportDMus * Miniport = NULL;
     IMiniportMidi * MidiMiniport = NULL;
     NTSTATUS Status;
-    PSERVICEGROUP ServiceGroup;
+    PSERVICEGROUP ServiceGroup = NULL;
     PPINCOUNT PinCount;
     PPOWERNOTIFY PowerNotify;
     IPortDMusImpl * This = (IPortDMusImpl*)iface;
@@ -263,8 +263,11 @@ IPortDMus_fnInit(
         return Status;
     }
 
-    ASSERT(This->ServiceGroup);
-    ASSERT(ServiceGroup == This->ServiceGroup);
+    if (This->ServiceGroup == NULL && ServiceGroup)
+    {
+        /* register service group */
+        This->ServiceGroup = ServiceGroup;
+    }
 
     /* Initialize port object */
     This->pMiniport = Miniport;
