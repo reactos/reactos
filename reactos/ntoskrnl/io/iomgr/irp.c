@@ -400,19 +400,19 @@ IopCompleteRequest(IN PKAPC Apc,
             {
                 /* Update write transfer count */
                 IopUpdateTransferCount(IopWriteTransfer,
-                                       Irp->IoStatus.Information);
+                                       (ULONG)Irp->IoStatus.Information);
             }
             else if (Irp->Flags & IRP_READ_OPERATION)
             {
                 /* Update read transfer count */
                 IopUpdateTransferCount(IopReadTransfer,
-                                       Irp->IoStatus.Information);
+                                       (ULONG)Irp->IoStatus.Information);
             }
             else
             {
                 /* Update other transfer count */
                 IopUpdateTransferCount(IopOtherTransfer,
-                                       Irp->IoStatus.Information);
+                                       (ULONG)Irp->IoStatus.Information);
             }
         }
 
