@@ -133,7 +133,6 @@ GetNumOfMixerDevices(
     NTSTATUS Status;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
-
     Pin.Property.Set = KSPROPSETID_Sysaudio;
     Pin.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_COUNT;
     Pin.Property.Flags = KSPROPERTY_TYPE_GET;
@@ -143,7 +142,7 @@ GetNumOfMixerDevices(
     Count = 0;
     Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Pin, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
     if (!NT_SUCCESS(Status) || !Count)
-        return STATUS_UNSUCCESSFUL;
+        return 0;
 
     NumPins = 0;
     for(Index = 0; Index < Count; Index++)

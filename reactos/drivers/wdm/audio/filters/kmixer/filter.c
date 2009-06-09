@@ -189,6 +189,7 @@ DispatchCreateKMix(
     KSOBJECT_HEADER ObjectHeader;
     PIO_STACK_LOCATION IoStatus;
     LPWSTR Buffer;
+    PKSOBJECT_CREATE_ITEM CreateItem;
 
     static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
@@ -211,8 +212,23 @@ DispatchCreateKMix(
         }
     }
 
+    /* allocate create item */
+    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+    if (!CreateItem)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* zero create struct */
+    RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
+
+    RtlInitUnicodeString(&CreateItem->ObjectClass, L"KMixer");
+
     /* allocate object header */
-    Status = KsAllocateObjectHeader(&ObjectHeader, 0, NULL, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
 
     DPRINT("KsAllocateObjectHeader result %x\n", Status);
     /* complete the irp */

@@ -759,7 +759,13 @@ KsCreate(
         }
         else if (DeviceHeader->ItemList[Index].bCreated && IoStack->FileObject->FileName.Buffer != NULL)
         {
-            ULONG Length = wcslen(DeviceHeader->ItemList[Index].ObjectHeader->CreateItem->ObjectClass.Buffer);
+            ULONG Length;
+
+            ASSERT(DeviceHeader->ItemList[Index].ObjectHeader);
+            ASSERT(DeviceHeader->ItemList[Index].ObjectHeader->CreateItem);
+            ASSERT(DeviceHeader->ItemList[Index].ObjectHeader->CreateItem->ObjectClass.Buffer);
+
+            Length = wcslen(DeviceHeader->ItemList[Index].ObjectHeader->CreateItem->ObjectClass.Buffer);
 
             /* filter for that type has already exists */
             if (!_wcsnicmp(DeviceHeader->ItemList[Index].ObjectHeader->CreateItem->ObjectClass.Buffer,

@@ -346,6 +346,7 @@ DispatchCreateSysAudio(
 
     /* store create context */
     CreateItem->Context = (PVOID)Client;
+    RtlInitUnicodeString(&CreateItem->ObjectClass, L"SysAudio");
 
     /* store the object in FsContext */
     IoStatus->FileObject->FsContext2 = (PVOID)Client;

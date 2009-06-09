@@ -256,7 +256,7 @@ CreateMixerPinAndSetFormat(
     HANDLE PinHandle;
     PFILE_OBJECT FileObject;
 
-    Status = KsCreatePin(KMixerHandle, PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle);
+    Status = KsoCreatePin(KMixerHandle, PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle, L"KMixer");
 
     if (!NT_SUCCESS(Status))
     {
@@ -419,7 +419,7 @@ CreatePinWorkerRoutine(
 
     DPRINT1("creating virtual pin\n");
     /* now create the virtual audio pin which is exposed to wdmaud */
-    Status = KsCreatePin(Filter, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &VirtualPinHandle);
+    Status = KsoCreatePin(Filter, WorkerContext->PinConnect, GENERIC_READ | GENERIC_WRITE, &VirtualPinHandle, L"SysAudio");
 
     if (!NT_SUCCESS(Status))
     {
