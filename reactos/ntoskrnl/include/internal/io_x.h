@@ -92,7 +92,7 @@ IopUpdateOperationCount(IN IOP_TRANSFER_TYPE Type)
 static
 __inline
 VOID
-IopUpdateTransferCount(IN IOP_TRANSFER_TYPE Type, IN ULONG TransferCount)
+IopUpdateTransferCount(IN IOP_TRANSFER_TYPE Type, IN ULONG_PTR TransferCount)
 {
     PLARGE_INTEGER CountToChange;
     PLARGE_INTEGER TransferToChange;

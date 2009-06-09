@@ -2354,6 +2354,9 @@ NtSetInformationFile(IN HANDLE FileHandle,
             }
             _SEH2_END;
 
+            /* Update transfer count */
+            IopUpdateTransferCount(IopOtherTransfer, Length);
+
             /* Release the file lock, dereference the file and return */
             IopUnlockFileObject(FileObject);
             ObDereferenceObject(FileObject);
