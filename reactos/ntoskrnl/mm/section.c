@@ -4148,10 +4148,11 @@ MmUnmapViewOfSection(PEPROCESS Process,
       Status = MmUnmapViewOfSegment(AddressSpace, BaseAddress);
    }
 
+   MmUnlockAddressSpace(AddressSpace);
+
    /* Notify debugger */
    if (ImageBaseAddress) DbgkUnMapViewOfSection(ImageBaseAddress);
 
-   MmUnlockAddressSpace(AddressSpace);
    return(STATUS_SUCCESS);
 }
 
