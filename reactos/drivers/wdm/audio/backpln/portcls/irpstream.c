@@ -393,13 +393,15 @@ IIrpQueue_fnGetMappingWithTag(
 
         /* insert into list to free later */
         ExInterlockedInsertTailList(&This->FreeHead, &CurMapping->Entry, &This->Lock);
+        DPRINT("IIrpQueue_fnGetMappingWithTag Tag %p Mapping %p\n", Tag, CurMapping);
     }
     else
     {
         /* we can free this entry now */
         FreeItem(CurMapping, TAG_PORTCLASS);
+        DPRINT("IIrpQueue_fnGetMappingWithTag Tag %p Mapping %p FREED\n", Tag, CurMapping);
     }
-    DPRINT("IIrpQueue_fnGetMappingWithTag Tag %p\n", Tag);
+
     return STATUS_SUCCESS;
 }
 

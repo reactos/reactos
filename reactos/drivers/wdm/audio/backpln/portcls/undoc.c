@@ -236,8 +236,14 @@ PcCreateSubdeviceDescriptor(
 
         for(Index = 0; Index < FilterDescription->NodeCount; Index++)
         {
-            RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodes[Index], FilterDescription->Nodes[Index].Type, sizeof(GUID));
-            RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodesNames[Index], FilterDescription->Nodes[Index].Name, sizeof(GUID));
+            if (FilterDescription->Nodes[Index].Type)
+            {
+                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodes[Index], FilterDescription->Nodes[Index].Type, sizeof(GUID));
+            }
+            if (FilterDescription->Nodes[Index].Name)
+            {
+                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodesNames[Index], FilterDescription->Nodes[Index].Name, sizeof(GUID));
+            }
         }
         Descriptor->Topology->TopologyNodesCount = FilterDescription->NodeCount;
     }

@@ -236,7 +236,7 @@ IPortFilterWaveCyclic_fnClose(
     IN PIRP Irp)
 {
     ULONG Index;
-    PMINIPORTWAVECYCLIC Miniport;
+    //PMINIPORTWAVECYCLIC Miniport;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
     for(Index = 0; Index < This->Descriptor->Factory.PinDescriptorCount; Index++)
@@ -246,12 +246,12 @@ IPortFilterWaveCyclic_fnClose(
     }
 
     /* release reference to port */
-    This->Port->lpVtbl->Release(This->Port);
+    //This->Port->lpVtbl->Release(This->Port);
 
     /* get the miniport driver */
-    Miniport = GetWaveCyclicMiniport(This->Port);
+    //Miniport = GetWaveCyclicMiniport(This->Port);
     /* release miniport driver */
-    Miniport->lpVtbl->Release(Miniport);
+    //Miniport->lpVtbl->Release(Miniport);
 
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
