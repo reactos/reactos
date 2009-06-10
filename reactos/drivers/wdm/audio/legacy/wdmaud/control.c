@@ -165,6 +165,17 @@ WdmAudControlOpen(
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
+    /* close pin handle which uses same virtual audio device id and pin id */
+    for(Index = 0; Index < ClientInfo->NumPins; Index++)
+    {
+        if (ClientInfo->hPins[Index].FilterId == FilterId && ClientInfo->hPins[Index].PinId == PinId && ClientInfo->hPins[Index].Handle)
+        {
+            ZwClose(ClientInfo->hPins[Index].Handle);
+            ClientInfo->hPins[Index].Handle = NULL;
+        }
+    }
+
+
     Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
     InstanceInfo = ExAllocatePool(NonPagedPool, Length);
     if (!InstanceInfo)
@@ -272,6 +283,8 @@ WdmAudControlOpen(
             ClientInfo->hPins = Handels;
             ClientInfo->hPins[ClientInfo->NumPins].Handle = PinHandle;
             ClientInfo->hPins[ClientInfo->NumPins].Type = DeviceInfo->DeviceType;
+            ClientInfo->hPins[ClientInfo->NumPins].FilterId = FilterId;
+            ClientInfo->hPins[ClientInfo->NumPins].PinId = PinId;
             ClientInfo->NumPins++;
         }
         DeviceInfo->hDevice = PinHandle;

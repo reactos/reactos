@@ -16,6 +16,8 @@ typedef struct
 {
     HANDLE Handle;
     SOUND_DEVICE_TYPE Type;
+    ULONG FilterId;
+    ULONG PinId;
 }WDMAUD_HANDLE, *PWDMAUD_HANDLE;
 
 

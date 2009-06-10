@@ -13,30 +13,6 @@
 
 typedef struct
 {
-    BOOL bHandle;                    // indicates if an audio pin can be instantated more than once
-    ULONG PinId;                     // specifies the pin id
-    HANDLE hPin;                     // handle to audio irp pin
-    HANDLE hMixer;                   // handle to mixer pin
-    PVOID DispatchContext;           // pointer to dispatch context
-}SYSAUDIO_PIN_HANDLE, *PSYSAUDIO_PIN_HANDLE;
-
-
-typedef struct
-{
-    ULONG DeviceId;                         //specifies the device id
-    ULONG ClientHandlesCount;               // number of client handles
-    PSYSAUDIO_PIN_HANDLE ClientHandles;     // array of client handles
-}SYSAUDIO_CLIENT_HANDELS, *PSYSAUDIO_CLIENT_HANDELS;
-
-typedef struct
-{
-    ULONG NumDevices;                       // number of devices in Devs array
-    PSYSAUDIO_CLIENT_HANDELS Devs;          // array of client handles
-
-}SYSAUDIO_CLIENT, *PSYSAUDIO_CLIENT;
-
-typedef struct
-{
     ULONG MaxPinInstanceCount;              // maximum times a audio irp pin can be instantiated
     HANDLE PinHandle;                       // handle to audio irp pin
     ULONG References;                       // number of clients having a reference to this audio irp pin
@@ -94,12 +70,10 @@ typedef struct
 typedef struct
 {
     HANDLE Handle;                                       // audio irp pin handle
-    PFILE_OBJECT FileObject;                             // audio irp pin file object
     ULONG PinId;                                         // pin id of device
     PKSAUDIO_SUBDEVICE_ENTRY AudioEntry;                 // pointer to audio device entry
 
     HANDLE hMixerPin;                                    // handle to mixer pin
-    PFILE_OBJECT MixerFileObject;                        // mixer file object
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
 
 // struct PIN_WORKER_CONTEXT
@@ -115,7 +89,6 @@ typedef struct
     PKSAUDIO_SUBDEVICE_ENTRY Entry;
     KSPIN_CONNECT * PinConnect;
     PDISPATCH_CONTEXT DispatchContext;
-    PSYSAUDIO_CLIENT AudioClient;
     PSYSAUDIODEVEXT DeviceExtension;
     PKSDATAFORMAT_WAVEFORMATEX MixerFormat;
     PIO_WORKITEM WorkItem;
