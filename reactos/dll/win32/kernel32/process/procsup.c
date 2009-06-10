@@ -1179,16 +1179,19 @@ GetAppName:
         goto Cleanup;
     }
 
-    /* Set new class */
-    Status = NtSetInformationProcess(hProcess,
-                                     ProcessPriorityClass,
-                                     &PriorityClass,
-                                     sizeof(PROCESS_PRIORITY_CLASS));
-    if(!NT_SUCCESS(Status))
+    if (PriorityClass.PriorityClass != PROCESS_PRIORITY_CLASS_INVALID)
     {
-        DPRINT1("Unable to set new process priority, status 0x%x\n", Status);
-        SetLastErrorByStatus(Status);
-        goto Cleanup;
+        /* Set new class */
+        Status = NtSetInformationProcess(hProcess,
+                                         ProcessPriorityClass,
+                                         &PriorityClass,
+                                         sizeof(PROCESS_PRIORITY_CLASS));
+        if(!NT_SUCCESS(Status))
+        {
+            DPRINT1("Unable to set new process priority, status 0x%x\n", Status);
+            SetLastErrorByStatus(Status);
+            goto Cleanup;
+        }
     }
 
     /* Set Error Mode */
