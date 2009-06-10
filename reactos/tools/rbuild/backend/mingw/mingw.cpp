@@ -453,38 +453,41 @@ MingwBackend::GenerateGlobalVariables () const
 
 	GenerateGlobalProperties ( "=", ProjectNode.non_if_data );
 
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -Wall\n" );
-	fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -march=$(OARCH)\n" );
-	fprintf ( fMakefile, "endif\n" );
-	fprintf ( fMakefile, "ifneq ($(TUNE),)\n" );
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -mtune=$(TUNE)\n" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -mtune=$(TUNE)\n" );
-	fprintf ( fMakefile, "endif\n" );
+	if ( ProjectNode.configuration.Compiler == GnuGcc )
+	{
+		fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
+		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -Wall\n" );
+		fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
+		fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );
+		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -march=$(OARCH)\n" );
+		fprintf ( fMakefile, "endif\n" );
+		fprintf ( fMakefile, "ifneq ($(TUNE),)\n" );
+		fprintf ( fMakefile, "PROJECT_CFLAGS += -mtune=$(TUNE)\n" );
+		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -mtune=$(TUNE)\n" );
+		fprintf ( fMakefile, "endif\n" );
 
-	fprintf ( fMakefile, "PROJECT_CFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
-	fprintf ( fMakefile, "PROJECT_CXXFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
-	fprintf ( fMakefile, "PROJECT_ASFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
+		fprintf ( fMakefile, "PROJECT_CFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
+		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
+		fprintf ( fMakefile, "PROJECT_ASFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
+
+		if ( usePipe )
+		{
+			fprintf ( fMakefile, "PROJECT_CFLAGS += -pipe\n" );
+			fprintf ( fMakefile, "PROJECT_CXXFLAGS += -pipe\n" );
+			fprintf ( fMakefile, "PROJECT_ASFLAGS += -pipe\n" );
+		}
+
+		// Because RosBE gcc is built to suck
+		fputs ( "BUILTIN_HOST_CINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
+		fputs ( "BUILTIN_HOST_CPPINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
+		fputs ( "BUILTIN_HOST_CXXINCLUDES+= $(HOST_CPPFLAGS)\n", fMakefile );
+
+		// Would be nice to have our own C++ runtime
+		fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
+	}
 
 	MingwModuleHandler::GenerateParameters ( "PROJECT", "+=", ProjectNode.non_if_data );
 	MingwModuleHandler::GenerateParameters ( "PROJECT_HOST", "+=", ProjectNode.host_non_if_data );
-
-	if ( usePipe )
-	{
-		fprintf ( fMakefile, "PROJECT_CFLAGS += -pipe\n" );
-		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -pipe\n" );
-		fprintf ( fMakefile, "PROJECT_ASFLAGS += -pipe\n" );
-	}
-
-	// Because RosBE gcc is built to suck
-	fputs ( "BUILTIN_HOST_CINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-	fputs ( "BUILTIN_HOST_CPPINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-	fputs ( "BUILTIN_HOST_CXXINCLUDES+= $(HOST_CPPFLAGS)\n", fMakefile );
-
-	// Would be nice to have our own C++ runtime
-	fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
 
 	// TODO: linker flags
 	fprintf ( fMakefile, "PROJECT_LFLAGS := '$(shell ${TARGET_CC} -print-libgcc-file-name)' %s\n", GenerateProjectLFLAGS ().c_str () );
@@ -771,6 +774,7 @@ MingwBackend::DetectCompiler ()
 	}
 	else if ( ProjectNode.configuration.Compiler == MicrosoftC )
 	{
+		compilerCommand = "cl";
 		detectedCompiler = DetectMicrosoftCompiler ( compilerVersion, mscPath );
 		supportedCompiler = true; // TODO
 	}
@@ -1015,6 +1019,7 @@ MingwBackend::DetectBinutils ()
 	}
 	else if ( ProjectNode.configuration.Linker == MicrosoftLink )
 	{
+		compilerCommand = "link";
 		detectedBinutils = DetectMicrosoftLinker ( binutilsVersion, mslinkPath );
 		supportedBinutils = true; // TODO
 	}
@@ -1094,6 +1099,8 @@ MingwBackend::DetectPipeSupport ()
 		else
 			printf ( "not detected\n" );
 	}
+	else
+		usePipe = false;
 }
 
 void

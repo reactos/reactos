@@ -121,5 +121,5 @@
 		<xi:include href="tools/tools.rbuild" />
 	</directory>
 
-	<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
+	<compilerflag compiler="cxx" compilerset="gcc">-Wno-non-virtual-dtor</compilerflag>
 </group>
