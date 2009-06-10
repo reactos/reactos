@@ -15,7 +15,7 @@ CPPFLAG_UNICODE:=/DUNICODE /D_UNICODE
 
 BUILTIN_CPPFLAGS+= /X
 
-cl=$$(Q)$$(RBUILD_HELPER_TARGET) "RBUILD_CL_" "$(notdir $<<)" cl /nologo
+cl=$(Q)$(RBUILD_HELPER_TARGET) "RBUILD_CL_" "$(notdir $<)" cl /nologo
 
 #(module, source, dependencies, cflags, output)
 #TODO
@@ -78,6 +78,8 @@ else
 $(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
 	$${cl} /TP /Fo$$@ ${call RBUILD_cxxflags,$(1),$(4)} /c $$<
+
+endif
 
 endef
 

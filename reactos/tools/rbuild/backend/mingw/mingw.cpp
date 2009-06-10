@@ -70,6 +70,9 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "" }, // MessageHeader
 };
 
+static std::string mscPath;
+static std::string mslinkPath;
+
 string
 MingwBackend::GetFullPath ( const FileLocation& file ) const
 {
@@ -426,6 +429,12 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "include tools$(SEP)rbuild$(SEP)backend$(SEP)mingw$(SEP)linkers$(SEP)%s.mak\n", ProjectNode.GetLinkerSet ().c_str () );
 	fprintf ( fMakefile, "include tools$(SEP)rbuild$(SEP)backend$(SEP)mingw$(SEP)compilers$(SEP)%s.mak\n", ProjectNode.GetCompilerSet ().c_str () );
 
+	if ( mscPath.length() )
+		fprintf ( fMakefile, "export RBUILD_CL_PATH=%s\n", mscPath.c_str () );
+
+	if ( mslinkPath.length() )
+		fprintf ( fMakefile, "export RBUILD_LINK_PATH=%s\n", mslinkPath.c_str () );
+
 	if ( configuration.Dependencies == FullDependencies )
 	{
 		fprintf ( fMakefile,
@@ -762,7 +771,7 @@ MingwBackend::DetectCompiler ()
 	}
 	else if ( ProjectNode.configuration.Compiler == MicrosoftC )
 	{
-		detectedCompiler = DetectMicrosoftCompiler ( compilerVersion );
+		detectedCompiler = DetectMicrosoftCompiler ( compilerVersion, mscPath );
 		supportedCompiler = true; // TODO
 	}
 
@@ -1006,7 +1015,7 @@ MingwBackend::DetectBinutils ()
 	}
 	else if ( ProjectNode.configuration.Linker == MicrosoftLink )
 	{
-		detectedBinutils = DetectMicrosoftLinker ( binutilsVersion );
+		detectedBinutils = DetectMicrosoftLinker ( binutilsVersion, mslinkPath );
 		supportedBinutils = true; // TODO
 	}
 

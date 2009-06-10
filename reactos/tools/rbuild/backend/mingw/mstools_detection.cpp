@@ -2216,7 +2216,7 @@ void EnumerateMicrosoftTools(const std::string& arch, bool wantCompiler, bool wa
 }
 
 bool
-MingwBackend::DetectMicrosoftCompiler ( std::string& version )
+MingwBackend::DetectMicrosoftCompiler ( std::string& version, std::string& path )
 {
 	bool wantCompiler = ProjectNode.configuration.Compiler == MicrosoftC;
 	bool wantLinker = ProjectNode.configuration.Linker == MicrosoftLink;
@@ -2234,13 +2234,14 @@ MingwBackend::DetectMicrosoftCompiler ( std::string& version )
 		std::ostringstream compilerVersion;
 		compilerVersion << msCompilerVersion;
 		version = compilerVersion.str();
+		path = msCompilerPath;
 	}
 
 	return ret;
 }
 
 bool
-MingwBackend::DetectMicrosoftLinker ( std::string& version )
+MingwBackend::DetectMicrosoftLinker ( std::string& version, std::string& path )
 {
 	bool wantCompiler = ProjectNode.configuration.Compiler == MicrosoftC;
 	bool wantLinker = ProjectNode.configuration.Linker == MicrosoftLink;
@@ -2258,6 +2259,7 @@ MingwBackend::DetectMicrosoftLinker ( std::string& version )
 		std::ostringstream linkerVersion;
 		linkerVersion << msLinkerVersion;
 		version = linkerVersion.str();
+		path = msLinkerPath;
 	}
 
 	return ret;
@@ -2273,13 +2275,13 @@ MingwBackend::DetectMicrosoftLinker ( std::string& version )
 #include "mingw.h"
 
 bool
-MingwBackend::DetectMicrosoftCompiler ( std::string& )
+MingwBackend::DetectMicrosoftCompiler ( std::string&, std::string& )
 {
 	return false;
 }
 
 bool
-MingwBackend::DetectMicrosoftLinker ( std::string& )
+MingwBackend::DetectMicrosoftLinker ( std::string&, std::string& )
 {
 	return false;
 }
