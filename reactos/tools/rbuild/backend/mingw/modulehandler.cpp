@@ -1080,12 +1080,12 @@ Rule winebuildRule ( "$(eval $(call RBUILD_WINEBUILD_RULE,$(module_name),$(sourc
 Rule gasRule ( "$(eval $(call RBUILD_GAS_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
-Rule gccRule ( "$(eval $(call RBUILD_GCC_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
+Rule gccRule ( "$(eval $(call RBUILD_CC_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
 Rule gccHostRule ( "$(eval $(call RBUILD_HOST_GCC_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
                    "$(intermediate_path_unique).o", NULL );
-Rule gppRule ( "$(eval $(call RBUILD_GPP_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
+Rule gppRule ( "$(eval $(call RBUILD_CXX_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
                "$(intermediate_path_unique).o",
                "$(intermediate_path_unique).o.d", NULL );
 Rule gppHostRule ( "$(eval $(call RBUILD_HOST_GPP_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
@@ -1116,11 +1116,11 @@ Rule widlDlldataRule ( "$(eval $(call RBUILD_WIDL_DLLDATA_RULE,$(module_name),$(
                        "$(intermediate_path_noext).o", NULL );
 Rule widlTlbRule ( "$(eval $(call RBUILD_WIDL_TLB_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
                    "$(intermediate_dir)$(SEP)", NULL );
-Rule pchRule ( "$(eval $(call RBUILD_GCC_PCH_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
+Rule pchRule ( "$(eval $(call RBUILD_CC_PCH_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
 			   "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch",
 			   "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch.d",
 			   "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)", NULL );
-Rule pchCxxRule ( "$(eval $(call RBUILD_GPP_PCH_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
+Rule pchCxxRule ( "$(eval $(call RBUILD_CXX_PCH_RULE,$(module_name),$(source),$(dependencies),$(compiler_flags)))\n",
 			      "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch",
 			      "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)$(source_name).gch.d",
 			      "$(intermediate_dir)$(SEP).gch_$(module_name)$(SEP)", NULL );
