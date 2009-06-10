@@ -739,6 +739,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     HANDLE PortHandle = NULL;
     HANDLE TokenHandle = NULL;
     PROCESS_SESSION_INFORMATION SessionInfo = {0};
+    PROCESS_PRIORITY_CLASS PriorityClass = {0};
     PVOID ExceptionPort;
     PAGED_CODE();
 
@@ -924,8 +925,53 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             //PsUnlockProcess(Process);
             break;
 
-        /* Priority class: HACK! */
         case ProcessPriorityClass:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(PROCESS_PRIORITY_CLASS))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Enter SEH for capture */
+            _SEH2_TRY
+            {
+                /* Capture the caller's buffer */
+                PriorityClass = *(PPROCESS_PRIORITY_CLASS)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+            if (!NT_SUCCESS(Status)) break;
+
+            /* Check for invalid PriorityClass value */
+            if (PriorityClass.PriorityClass > PROCESS_PRIORITY_CLASS_ABOVE_NORMAL)
+            {
+                Status = STATUS_INVALID_PARAMETER;
+                break;
+            }
+
+            /* TODO: Check privileges */
+
+            /* Check if we have a job */
+            if (Process->Job)
+            {
+                DPRINT1("Jobs not yet supported\n");
+            }
+
+            /* Set process priority class */
+            Process->PriorityClass = PriorityClass.PriorityClass;
+
+            /* Set process priority mode (foreground or background) */
+            PsSetProcessPriorityByClass(Process,
+                                        !PriorityClass.Foreground ? PsProcessPriorityBackground :
+                                        PsProcessPriorityForeground);
+
+            Status = STATUS_SUCCESS;
             break;
 
         /* We currently don't implement any of these */
