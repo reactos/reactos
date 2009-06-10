@@ -26,7 +26,7 @@ RBUILD_CXX_DEPENDS=${call RBUILD_CL_DEPENDS,$(1),$(2),$(3),$(4) /TP,$(5)}
 #(module, source, dependencies, cflags, output)
 define RBUILD_CL_CPP
 
-$(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(2)}
+$(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CPP)
 	$${cl} /E $(4) $$< > $$@
 

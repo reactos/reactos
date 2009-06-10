@@ -15,7 +15,7 @@ BUILTIN_CXXFLAGS+= -fno-optimize-sibling-calls
 #(module, source, dependencies, cflags, output)
 define RBUILD_DEPENDS
 
-$(5): $(2) $(3) | ${call RBUILD_dir,$(2)}
+$(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_DEPENDS)
 	$${gcc} -xc -MF $$@ $(4) -M -MP -MT $$@ $$<
 
@@ -24,7 +24,7 @@ endef
 #(module, source, dependencies, cflags, output)
 define RBUILD_CXX_DEPENDS
 
-$(5): $(2) $(3) | ${call RBUILD_dir,$(2)}
+$(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_DEPENDS)
 	$${gpp} -MF $$@ $(4) -M -MP -MT $$@ $$<
 
@@ -33,7 +33,7 @@ endef
 #(module, source, dependencies, cflags, output)
 define RBUILD_CPP
 
-$(5): $(2) $(3) | ${call RBUILD_dir,$(2)}
+$(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CPP)
 	$${gcc} -xc -E $(4) $$< > $$@
 
@@ -42,7 +42,7 @@ endef
 #(module, source, dependencies, cflags, output)
 define RBUILD_CXX_CPP
 
-$(5): $(2) $(3) | ${call RBUILD_dir,$(2)}
+$(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CPP)
 	$${gpp} -E $(4) $$< > $$@
 
