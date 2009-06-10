@@ -20,11 +20,18 @@
 	DEALINGS IN THE SOFTWARE.
 */
 
+#if !defined(WIN32)
+
+// TODO: needs a near rewrite for UNIX, but it's not required right now
+int main() { return 1; }
+
+#else
+
 #include <functional>
 #include <iterator>
+#include <limits>
 
 #include <tchar.h>
-#include <limits.h>
 
 #include <stdio.h>
 
@@ -131,10 +138,11 @@ namespace
 		DieMessage("msc_helper: out of memory\n");
 	}
 
+	template<class CharT>
 	class store_argument
 	{
 	private:
-		char * m_arg;
+		CharT * m_arg;
 		size_t m_argLen;
 
 	public:
@@ -147,27 +155,26 @@ namespace
 
 		void push_back(TCHAR x)
 		{
-#ifdef UNICODE
-			if(x > CHAR_MAX)
+			if(x > std::numeric_limits<CharT>::max() || x < std::numeric_limits<CharT>::min())
 				DieMessage("msc_helper: invalid character in command line\n");
-#endif
-			m_arg = static_cast<char *>(HeapReAlloc(GetProcessHeap(), 0, m_arg, m_argLen + 1));
+
+			m_arg = static_cast<CharT *>(HeapReAlloc(GetProcessHeap(), 0, m_arg, (m_argLen + 1) * sizeof(CharT)));
 
 			if(m_arg == NULL)
 				OutOfMemory();
 
-			m_arg[m_argLen] = static_cast<char>(x);
-			++ m_argLen;
+			m_arg[m_argLen] = static_cast<CharT>(x);
+			++ m_argLen; // TODO: better allocation strategy
 		}
 
 	public:
-		store_argument(): m_arg(static_cast<char *>(HeapAlloc(GetProcessHeap(), 0, 1))), m_argLen(0)
+		store_argument(): m_arg(static_cast<CharT *>(HeapAlloc(GetProcessHeap(), 0, 1))), m_argLen(0)
 		{
 			if(m_arg == NULL)
 				OutOfMemory();
 		}
 
-		const char * get_arg() const { return m_arg; }
+		const CharT * get_arg() const { return m_arg; }
 		size_t get_arg_len() const { return m_argLen; }
 	};
 
@@ -363,6 +370,17 @@ namespace
 
 	DWORD filter_output::s_cbDummy = 0;
 	DWORD filter_output::s_pipeId = 0;
+
+	size_t LengthOfVersionStrings(const TCHAR * pszStrings)
+	{
+		size_t cchStrings = 0;
+
+		do
+			cchStrings += lstrlen(pszStrings + cchStrings) + 1;
+		while(pszStrings[cchStrings]);
+
+		return cchStrings + 1;
+	}
 }
 
 int main()
@@ -375,10 +393,15 @@ int main()
 	// Skip argv[0]
 	pszCommandLine = skip_argument(stringz_begin(pszCommandLine), stringz_end(pszCommandLine)).base();
 
-	// Get argv[1]: the line that should be filtered out of the output
-	// argv[2..N] will become argv[0..N-2] of the compiler
-	store_argument filterLine;
+	// Get argv[1]: the prefix for environment variable replacement
+	store_argument<TCHAR> envPrefix;
+	pszCommandLine = copy_argument(stringz_begin(pszCommandLine), stringz_end(pszCommandLine), std::back_inserter(envPrefix)).base();
+
+	// Get argv[2]: the line that should be filtered out of the output
+	store_argument<char> filterLine;
 	pszCommandLine = copy_argument(stringz_begin(pszCommandLine), stringz_end(pszCommandLine), std::back_inserter(filterLine)).base();
+
+	// argv[3..N] will become argv[0..N-3] of the compiler
 
 	// Initialize the output filters
 	bool fDone = false;
@@ -392,14 +415,62 @@ int main()
 		Die("DuplicateHandle");
 
 	// Fix the environment
-	static TCHAR szPath[32768];
-	DWORD cchPath = GetEnvironmentVariable(TEXT("MSC_HELPER_PATH"), szPath, ARRAYSIZE(szPath));
+	if(envPrefix.get_arg_len())
+	{
+		LPTCH pEnv = GetEnvironmentStrings();
 
-	if(cchPath > ARRAYSIZE(szPath))
-		DieMessage("msc_helper: %MSC_HELPER_PATH% variable too big\n");
+		if(!pEnv)
+			OutOfMemory();
 
-	if(cchPath > 0 && !SetEnvironmentVariable(TEXT("PATH"), szPath))
-		Die("SetEnvironmentVariable");
+		SIZE_T cbEnv = LengthOfVersionStrings(pEnv) * sizeof(TCHAR);
+		LPVOID pDupEnv = HeapAlloc(GetProcessHeap(), 0, cbEnv);
+
+		if(!pDupEnv)
+			OutOfMemory();
+
+		RtlMoveMemory(pDupEnv, pEnv, cbEnv);
+		FreeEnvironmentStrings(pEnv);
+		pEnv = static_cast<TCHAR *>(pDupEnv);
+
+		LPCTSTR pszEnvVar = pEnv;
+
+		size_t cchPrefix = envPrefix.get_arg_len();
+		const TCHAR * pszBeginPrefix = envPrefix.get_arg();
+		const TCHAR * pszEndPrefix = pszBeginPrefix + cchPrefix;
+
+		do
+		{
+			const TCHAR * pszBeginName = pszEnvVar;
+			const TCHAR * pszEndName = std::find(stringz_begin(pszEnvVar), stringz_end(pszEnvVar), TEXT('=')).base();
+			const TCHAR * pszBeginValue = pszEndName;
+
+			if(*pszEndName)
+			{
+				*const_cast<TCHAR *>(pszEndName) = 0;
+				++ pszBeginValue;
+			}
+
+			size_t cchName = pszEndName - pszBeginName;
+
+			if(cchName >= cchPrefix && std::equal(pszBeginPrefix, pszEndPrefix, pszBeginName))
+			{
+				SetEnvironmentVariable(pszBeginName, NULL);
+
+				if(cchName > cchPrefix)
+					SetEnvironmentVariable(pszBeginName + cchPrefix, *pszBeginValue ? pszBeginValue : NULL);
+			}
+
+			pszEnvVar = pszBeginValue;
+
+			while(*pszEnvVar)
+				++ pszEnvVar;
+
+			++ pszEnvVar;
+		}
+		while(*pszEnvVar);
+
+		HeapFree(GetProcessHeap(), 0, pEnv);
+	}
 
 	// Run the sub-process
 	STARTUPINFO si;
@@ -471,5 +542,7 @@ int main()
 
 	Exit(dwExitCode);
 }
+
+#endif
 
 // EOF
