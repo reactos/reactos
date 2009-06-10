@@ -68,6 +68,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     PPROCESS_BASIC_INFORMATION ProcessBasicInfo =
         (PPROCESS_BASIC_INFORMATION)ProcessInformation;
     PKERNEL_USER_TIMES ProcessTime = (PKERNEL_USER_TIMES)ProcessInformation;
+    PPROCESS_PRIORITY_CLASS PsPriorityClass = (PPROCESS_PRIORITY_CLASS)ProcessInformation;
     ULONG HandleCount;
     PPROCESS_SESSION_INFORMATION SessionInfo =
         (PPROCESS_SESSION_INFORMATION)ProcessInformation;
@@ -559,7 +560,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessPriorityClass:
 
             /* Set the return length*/
-            Length = sizeof(USHORT);
+            Length = sizeof(PROCESS_PRIORITY_CLASS);
 
             if (ProcessInformationLength != Length)
             {
@@ -580,7 +581,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_TRY
             {
                 /* Return current priority class */
-                *(PUSHORT)ProcessInformation = Process->PriorityClass;
+                PsPriorityClass->PriorityClass = Process->PriorityClass;
+                PsPriorityClass->Foreground = FALSE;
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
