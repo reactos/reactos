@@ -477,14 +477,14 @@ MingwBackend::GenerateGlobalVariables () const
 			fprintf ( fMakefile, "PROJECT_ASFLAGS += -pipe\n" );
 		}
 
-		// Because RosBE gcc is built to suck
-		fputs ( "BUILTIN_HOST_CINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-		fputs ( "BUILTIN_HOST_CPPINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
-		fputs ( "BUILTIN_HOST_CXXINCLUDES+= $(HOST_CPPFLAGS)\n", fMakefile );
-
 		// Would be nice to have our own C++ runtime
 		fputs ( "BUILTIN_CXXINCLUDES+= $(TARGET_CPPFLAGS)\n", fMakefile );
 	}
+
+	// Because RosBE gcc is built to suck
+	fputs ( "BUILTIN_HOST_CINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
+	fputs ( "BUILTIN_HOST_CPPINCLUDES+= $(HOST_CFLAGS)\n", fMakefile );
+	fputs ( "BUILTIN_HOST_CXXINCLUDES+= $(HOST_CPPFLAGS)\n", fMakefile );
 
 	MingwModuleHandler::GenerateParameters ( "PROJECT", "+=", ProjectNode.non_if_data );
 	MingwModuleHandler::GenerateParameters ( "PROJECT_HOST", "+=", ProjectNode.host_non_if_data );
