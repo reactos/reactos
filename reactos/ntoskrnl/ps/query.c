@@ -171,6 +171,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             if (!NT_SUCCESS(Status)) break;
 
             /* TODO: Implement this case */
+            DPRINT1("Query ProcessQuotaLimits unimplemented\n");
             Status = STATUS_NOT_IMPLEMENTED;
 
             /* Dereference the process */
@@ -303,6 +304,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessLdtInformation:
         case ProcessWorkingSetWatch:
         case ProcessWx86Information:
+            DPRINT1("Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
@@ -703,6 +705,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessAffinityMask:
         case ProcessForegroundInformation:
         default:
+            DPRINT1("Unsupported or unimplemented: %lx\n", ProcessInformationClass);
             Status = STATUS_INVALID_INFO_CLASS;
     }
 
