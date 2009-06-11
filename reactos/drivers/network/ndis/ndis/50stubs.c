@@ -147,18 +147,6 @@ NdisGetRoutineAddress(
 /*
  * @unimplemented
  */
-VOID
-EXPORT
-NdisCancelSendPackets(
-    IN NDIS_HANDLE  NdisBindingHandle,
-    IN PVOID  CancelId)
-{
-    UNIMPLEMENTED
-}
-
-/*
- * @unimplemented
- */
 NDIS_STATUS
 EXPORT
 NdisQueryBindInstanceName(

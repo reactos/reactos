@@ -3009,5 +3009,27 @@ NdisCompletePnPEvent(
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisCancelSendPackets(
+    IN NDIS_HANDLE  NdisBindingHandle,
+    IN PVOID  CancelId)
+{
+    PADAPTER_BINDING AdapterBinding = NdisBindingHandle;
+    PLOGICAL_ADAPTER Adapter = AdapterBinding->Adapter;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called for ID %x.\n", CancelId));
+
+    if (Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CancelSendPacketsHandler)
+    {
+        (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.CancelSendPacketsHandler)(
+          Adapter->NdisMiniportBlock.MiniportAdapterContext,
+          CancelId);
+    }
+}
+
 /* EOF */
 
