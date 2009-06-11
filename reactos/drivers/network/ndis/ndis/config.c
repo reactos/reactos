@@ -194,7 +194,7 @@ NdisOpenConfiguration(
         return;
     }
 
-    ConfigurationContext = ExAllocatePool(PagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
+    ConfigurationContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
@@ -268,7 +268,7 @@ NdisOpenProtocolConfiguration(
         return;
     }
 
-    ConfigurationContext = ExAllocatePool(PagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
+    ConfigurationContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
@@ -846,7 +846,7 @@ NdisOpenConfigurationKeyByIndex(
         return;
     }
 
-    ConfigurationContext = ExAllocatePool(PagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
+    ConfigurationContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
@@ -905,7 +905,7 @@ NdisOpenConfigurationKeyByName(
         return;
     }
 
-    ConfigurationContext = ExAllocatePool(PagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
+    ConfigurationContext = ExAllocatePool(NonPagedPool, sizeof(MINIPORT_CONFIGURATION_CONTEXT));
     if(!ConfigurationContext)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
