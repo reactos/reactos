@@ -201,13 +201,13 @@ PspComputeQuantumAndPriority(IN PEPROCESS Process,
     if (Mode == PsProcessPriorityForeground)
     {
         /* Set the memory priority and use priority separation */
-        MemoryPriority = 2;
+        MemoryPriority = MEMORY_PRIORITY_FOREGROUND;
         i = PsPrioritySeparation;
     }
     else
     {
         /* Set the background memory priority and no separation */
-        MemoryPriority = 0;
+        MemoryPriority = MEMORY_PRIORITY_BACKGROUND;
         i = 0;
     }
 
