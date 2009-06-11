@@ -1113,10 +1113,10 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
       /* If not safe to unload, then return success */
       if (!SafeToUnload)
-	  {
+      {
          ObDereferenceObject(DriverObject);
          return STATUS_SUCCESS;
-	  }
+      }
 
       /* Set the unload invoked flag */
       DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
