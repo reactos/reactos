@@ -782,6 +782,13 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         /* Error/Exception Port */
         case ProcessExceptionPort:
 
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Use SEH for capture */
             _SEH2_TRY
             {
@@ -819,6 +826,13 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         /* Security Token */
         case ProcessAccessToken:
 
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(PROCESS_ACCESS_TOKEN))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Use SEH for capture */
             _SEH2_TRY
             {
@@ -841,6 +855,13 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         /* Hard error processing */
         case ProcessDefaultHardErrorMode:
 
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Enter SEH for direct buffer read */
             _SEH2_TRY
             {
@@ -858,6 +879,13 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
         /* Session ID */
         case ProcessSessionInformation:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(PROCESS_SESSION_INFORMATION))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Enter SEH for capture */
             _SEH2_TRY
@@ -1062,6 +1090,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         /* Thread priority */
         case ThreadPriority:
 
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(KPRIORITY))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Use SEH for capture */
             _SEH2_TRY
             {
@@ -1090,6 +1125,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             break;
 
         case ThreadBasePriority:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(LONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Use SEH for capture */
             _SEH2_TRY
@@ -1129,6 +1171,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             break;
 
         case ThreadAffinityMask:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG_PTR))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Use SEH for capture */
             _SEH2_TRY
@@ -1191,6 +1240,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
 
         case ThreadImpersonationToken:
 
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Use SEH for capture */
             _SEH2_TRY
             {
@@ -1211,6 +1267,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
 
         case ThreadQuerySetWin32StartAddress:
 
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG_PTR))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Use SEH for capture */
             _SEH2_TRY
             {
@@ -1230,6 +1293,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             break;
 
         case ThreadIdealProcessor:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG_PTR))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Use SEH for capture */
             _SEH2_TRY
@@ -1272,6 +1342,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
 
         case ThreadPriorityBoost:
 
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG_PTR))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
             /* Use SEH for capture */
             _SEH2_TRY
             {
@@ -1291,6 +1368,13 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             break;
 
         case ThreadZeroTlsCell:
+
+            /* Check buffer length */
+            if (ThreadInformationLength != sizeof(ULONG_PTR))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Use SEH for capture */
             _SEH2_TRY
