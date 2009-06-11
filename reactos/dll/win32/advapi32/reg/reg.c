@@ -31,6 +31,7 @@ static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 static HANDLE ProcessHeap;
 static BOOLEAN DefaultHandlesDisabled = FALSE;
 static BOOLEAN DefaultHandleHKUDisabled = FALSE;
+static BOOLEAN DllInitialized = FALSE; /* HACK */
 
 /* PROTOTYPES ***************************************************************/
 
@@ -66,10 +67,16 @@ RegInitialize(VOID)
 {
     TRACE("RegInitialize()\n");
 
-    ProcessHeap = RtlGetProcessHeap();
-    RtlZeroMemory(DefaultHandleTable,
-                  MAX_DEFAULT_HANDLES * sizeof(HANDLE));
-    RtlInitializeCriticalSection(&HandleTableCS);
+    /* Lazy init hack */
+    if (!DllInitialized)
+    {
+        ProcessHeap = RtlGetProcessHeap();
+        RtlZeroMemory(DefaultHandleTable,
+                      MAX_DEFAULT_HANDLES * sizeof(HANDLE));
+        RtlInitializeCriticalSection(&HandleTableCS);
+
+        DllInitialized = TRUE;
+    }
 
     return TRUE;
 }
@@ -161,7 +168,7 @@ MapDefaultKey(OUT PHANDLE RealKey,
     {
         return STATUS_INVALID_PARAMETER;
     }
-
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection (&HandleTableCS);
 
     if (Key == HKEY_CURRENT_USER)
@@ -205,7 +212,7 @@ static VOID
 CloseDefaultKeys(VOID)
 {
     ULONG i;
-
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection(&HandleTableCS);
 
     for (i = 0; i < MAX_DEFAULT_HANDLES; i++)
@@ -311,6 +318,7 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
 LONG WINAPI
 RegDisablePredefinedCache(VOID)
 {
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection(&HandleTableCS);
     DefaultHandleHKUDisabled = TRUE;
     RtlLeaveCriticalSection(&HandleTableCS);
@@ -326,6 +334,7 @@ RegDisablePredefinedCache(VOID)
 LONG WINAPI
 RegDisablePredefinedCacheEx(VOID)
 {
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection(&HandleTableCS);
     DefaultHandlesDisabled = TRUE;
     DefaultHandleHKUDisabled = TRUE;
@@ -371,7 +380,7 @@ RegOverridePredefKey(IN HKEY hKey,
 
             ASSERT(hNewHKey != NULL);
         }
-
+        RegInitialize(); /* HACK until delay-loading is implemented */
         RtlEnterCriticalSection(&HandleTableCS);
 
         /* close the currently mapped handle if existing */
@@ -3472,7 +3481,7 @@ ReadTokenSid:
                   handle for example! */
         return RtlNtStatusToDosError(Status);
     }
-
+    RegInitialize(); /* HACK until delay-loading is implemented */
     TokenUserData = RtlAllocateHeap(ProcessHeap,
                                     0,
                                     RequiredLength);
