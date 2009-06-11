@@ -779,13 +779,6 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
     /* Check what kind of information class this is */
     switch (ProcessInformationClass)
     {
-        /* Quotas and priorities: not implemented */
-        case ProcessQuotaLimits:
-        case ProcessBasePriority:
-        case ProcessRaisePriority:
-            Status = STATUS_NOT_IMPLEMENTED;
-            break;
-
         /* Error/Exception Port */
         case ProcessExceptionPort:
 
@@ -975,6 +968,9 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             break;
 
         /* We currently don't implement any of these */
+        case ProcessQuotaLimits:
+        case ProcessBasePriority:
+        case ProcessRaisePriority:
         case ProcessLdtInformation:
         case ProcessLdtSize:
         case ProcessIoPortHandlers:
@@ -982,6 +978,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessUserModeIOPL:
         case ProcessEnableAlignmentFaultFixup:
         case ProcessAffinityMask:
+            DPRINT1("Not implemented: %lx\n", ProcessInformationClass);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
@@ -995,6 +992,7 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessWow64Information:
         case ProcessDebugPort:
         default:
+            DPRINT1("Unsupported or unimplemented: %lx\n", ProcessInformationClass);
             Status = STATUS_INVALID_INFO_CLASS;
     }
 
