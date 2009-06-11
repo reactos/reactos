@@ -40,7 +40,7 @@ StartTest()
 VOID
 FinishTest(LPSTR TestName)
 {
-    DbgPrint("Test %s finished with %d succeses and %d failures\n", TestName, successes, failures);
+    DbgPrint("%s: %d test executed (0 marked as todo, %d failures), 0 skipped.\n", TestName, successes + failures, failures);
 }
 
 void kmtest_set_location(const char* file, int line)
@@ -100,6 +100,8 @@ int kmtest_ok(int condition, const char *msg, ... )
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+PWCHAR CreateLowerDeviceRegistryKey(PUNICODE_STRING RegistryPath, PWCHAR NewDriver);
+
 /*
  * Test Declarations
  */
@@ -107,6 +109,63 @@ VOID NtoskrnlIoTests();
 VOID NtoskrnlObTest();
 VOID NtoskrnlExecutiveTests();
 VOID NtoskrnlPoolsTest();
+VOID DriverObjectTest(PDRIVER_OBJECT, int);
+VOID DeviceCreateDeleteTest(PDRIVER_OBJECT);
+VOID DeviceObjectTest(PDEVICE_OBJECT);
+BOOLEAN ZwLoadTest(PDRIVER_OBJECT, PUNICODE_STRING, PWCHAR);
+BOOLEAN ZwUnloadTest(PDRIVER_OBJECT, PUNICODE_STRING, PWCHAR);
+BOOLEAN DetachDeviceTest(PDEVICE_OBJECT);
+BOOLEAN AttachDeviceTest(PDEVICE_OBJECT,  PWCHAR);
+VOID LowerDeviceKernelAPITest(PDEVICE_OBJECT, BOOLEAN);
+
+/*
+ * KmtestDispatch
+ */
+NTSTATUS
+NTAPI
+KmtestDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (AttachDeviceObject)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(AttachDeviceObject, Irp);
+        return Status;
+    }
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+/*
+ * KmtestCreateClose
+ */
+NTSTATUS
+NTAPI
+KmtestCreateClose(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (AttachDeviceObject)
+    {
+        IoSkipCurrentIrpStackLocation(Irp);
+        Status = IoCallDriver(AttachDeviceObject, Irp);
+        return Status;
+    }
+
+    /* Do DriverObject Test with Driver Initialized */
+    DriverObjectTest(DeviceObject->DriverObject, 1);
+
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information=0;
+
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
 
 /*
  * KmtestUnload
@@ -115,7 +174,24 @@ VOID
 NTAPI
 KmtestUnload(IN PDRIVER_OBJECT DriverObject)
 {
-    /* Nothing to do here */
+    UNICODE_STRING DosDeviceString;
+
+    if(AttachDeviceObject)
+    {
+        IoDetachDevice(AttachDeviceObject);
+    }
+
+    /* Do DriverObject Test for Unload */
+    DriverObjectTest(DriverObject, 2);
+
+    if (MainDeviceObject)
+    {
+        RtlInitUnicodeString(&DosDeviceString, L"\\DosDevices\\Kmtest");
+        IoDeleteSymbolicLink(&DosDeviceString);
+
+        IoDeleteDevice(MainDeviceObject);
+    }
+    FinishTest("Driver Tests");
 }
 
 /*
@@ -126,15 +202,70 @@ NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
-    DbgPrint("\n===============================================\nKernel Mode Regression Test driver starting...\n");
+    int i;
+    PWCHAR LowerDriverRegPath;
 
-    /* Set necessary routines */
-    DriverObject->DriverUnload = KmtestUnload;
+    DbgPrint("\n===============================================\n");
+    DbgPrint("Kernel Mode Regression Driver Test starting...\n");
+    DbgPrint("===============================================\n");
+
+    MainDeviceObject = NULL;
+    AttachDeviceObject = NULL;
+    ThisDriverObject = DriverObject;
 
     NtoskrnlExecutiveTests();
     NtoskrnlIoTests();
     NtoskrnlObTest();
     NtoskrnlPoolsTest();
+
+    /* Start the tests for the driver routines */
+    StartTest();
+
+    /* Do DriverObject Test for Driver Entry */
+    DriverObjectTest(DriverObject, 0);
+    /* Create and delete device, on return MainDeviceObject has been created */
+    DeviceCreateDeleteTest(DriverObject);
+
+    /* Make sure a device object was created */
+    if (MainDeviceObject)
+    {
+        LowerDriverRegPath = CreateLowerDeviceRegistryKey(RegistryPath, L"kmtestassist");
+
+        if (LowerDriverRegPath)
+        {
+            /* Load driver test and load the lower driver */
+            if (ZwLoadTest(DriverObject, RegistryPath, LowerDriverRegPath))
+            {
+                AttachDeviceTest(MainDeviceObject, L"kmtestassists");
+                if (AttachDeviceObject)
+                {
+                    LowerDeviceKernelAPITest(MainDeviceObject, FALSE);
+                }
+
+                /* Unload lower driver without detaching from its device */
+                ZwUnloadTest(DriverObject, RegistryPath, LowerDriverRegPath);
+                LowerDeviceKernelAPITest(MainDeviceObject, TRUE);
+            }
+            else
+            {
+                DbgPrint("Failed to load kmtestassist driver\n");
+            }
+        }
+    }
+    else
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Set all MajorFunctions to NULL to verify that kernel fixes them */
+    for (i = 1; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+        DriverObject->MajorFunction[i] = NULL;
+
+    /* Set necessary routines */
+    DriverObject->DriverUnload = KmtestUnload;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = KmtestDispatch;
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = KmtestCreateClose;
+    DriverObject->MajorFunction[IRP_MJ_CLOSE] = KmtestCreateClose;
 
     return STATUS_SUCCESS;
 }

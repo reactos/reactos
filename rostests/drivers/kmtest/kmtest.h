@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include "ntddk.h"
+
 
 /*
     Some macros, structs, and vars are based or inspired from the great
@@ -44,5 +46,9 @@ extern int kmtest_ok( int condition, const char *msg, ... );
 
 #define ok_(file, line)     (kmtest_set_location(file, line), 0) ? 0 : kmtest_ok
 #define ok     ok_(__FILE__, __LINE__)
+
+PDEVICE_OBJECT AttachDeviceObject;
+PDEVICE_OBJECT MainDeviceObject;
+PDRIVER_OBJECT ThisDriverObject;
 
 #endif /* PNPTEST_H */
