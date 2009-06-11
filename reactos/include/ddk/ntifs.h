@@ -4083,6 +4083,32 @@ IoGetBaseFileSystemDeviceObject (
     IN PFILE_OBJECT FileObject
 );
 
+#if (VER_PRODUCTBUILD >= 2600)
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetDeviceAttachmentBaseRef (
+    IN PDEVICE_OBJECT DeviceObject
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoGetDiskDeviceObject (
+    IN PDEVICE_OBJECT   FileSystemDeviceObject,
+    OUT PDEVICE_OBJECT  *DiskDeviceObject
+);
+
+NTKERNELAPI
+PDEVICE_OBJECT
+NTAPI
+IoGetLowerDeviceObject (
+    IN PDEVICE_OBJECT DeviceObject
+);
+
+#endif /* (VER_PRODUCTBUILD >= 2600) */
+
 NTKERNELAPI
 PEPROCESS
 NTAPI
