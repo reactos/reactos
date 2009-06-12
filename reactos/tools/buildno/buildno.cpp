@@ -45,38 +45,35 @@ int count_wide_string( const wchar_t *str )
 	return i;
 }
 
-char *
-GetRev(void)
+long
+GetRev(char *Revision, size_t length)
 {
-	static char Unknown[] = "UNKNOWN";
-	static char Revision[10]; /* 999999999 revisions should be enough for everyone... */
+	long revno = 0;
+	char *p;
 
-	/* SVN 1.4.x-1.5.x */
 	FILE *fp = NULL;
-	char ch;
-	size_t count = 0, chars = 0;
 	fp = fopen(".svn/entries", "r");
 	if (fp != NULL)
 	{
-		ch=fgetc(fp);
-		if (ch == 56 || ch == 57) /* some kind of header? */
+		if (fgets(Revision, length, fp) != NULL)
 		{
-			while((ch=fgetc(fp)) != EOF)
+			/* If the first character of the file is not a digit,
+			   then it is probably in XML format. */
+			if (isdigit(Revision[0]))
 			{
-				if (ch == 10)
-					count++; /* seems to used as a seperator */
-				if (count > 3)
-					break;
-				if ((count == 3) && (chars < sizeof(Revision)))
+				while (fgets(Revision, length, fp) != NULL)
 				{
-					if (chars != 0)
-						Revision[chars - 1] = ch;
-					chars++;
+					revno = strtol(Revision, &p, 10);
+					if (revno != 0)
+					{
+						*p = '\0';
+						fclose(fp);
+						return revno;
+					}
 				}
 			}
-			fclose(fp);
-			return Revision;
 		}
+		fclose(fp);
 	}
 
 	try
@@ -113,20 +110,21 @@ GetRev(void)
 					}
 					if ("revision" == Attribute->name)
 					{
-						if (sizeof(Revision) <= Attribute->value.length() + 1)
+						if (length <= Attribute->value.length() + 1)
 						{
 							strcpy(Revision, "revtoobig");
 						}
 						else
 						{
 							strcpy(Revision, Attribute->value.c_str());
+							revno = strtol(Revision, NULL, 10);
 						}
 						GotRevision = true;
 					}
 					if (GotName && GotKind && GotRevision)
 					{
 						delete head;
-						return Revision;
+						return revno;
 					}
 				}
 			}
@@ -139,11 +137,12 @@ GetRev(void)
 		;
 	}
 
-	return Unknown;
+	strcpy(Revision, "UNKNOWN");
+	return revno;
 }
 
 void
-write_h (int build, char *buildstr)
+write_h (int build, char *buildstr, long revno)
 {
 	FILE	*h = NULL;
 	char* s;
@@ -159,7 +158,7 @@ write_h (int build, char *buildstr)
 	s = s + sprintf (s, "#define _INC_REACTOS_BUILDNO\n" );
 
 	s = s + sprintf (s, "#define KERNEL_VERSION_BUILD\t%d\n", build);
-	s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_HEX\t0x%x\n", atoi(GetRev()));
+	s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_HEX\t0x%lx\n", revno);
 	s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%s\"\n", buildstr);
 	s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_RC\t\"%s\\0\"\n", buildstr);
 	s = s + sprintf (s, "#define KERNEL_RELEASE_RC\t\"%d.%d",
@@ -285,7 +284,8 @@ main (int argc, char * argv [])
 	int quiet = FALSE;
 
 	int build = 0;
-	char buildstr[64];
+	long revno;
+	char buildstr[64], revision[10];
 
 	time_t t1 = 0;
 	struct tm * t1_tm = NULL;
@@ -382,7 +382,8 @@ main (int argc, char * argv [])
 		build_tag = new_build_tag;
 	}
 
-	sprintf(buildstr, "%d-r%s", build, GetRev());
+	revno = GetRev(revision, sizeof(revision));
+	sprintf(buildstr, "%d-r%s", build, revision);
 
 	if (! quiet)
 	{
@@ -399,7 +400,7 @@ main (int argc, char * argv [])
 	/* (Over)write the include file, unless the user switched on -p. */
 	if (! print_only)
 	{
-		write_h (build, buildstr);
+		write_h (build, buildstr, revno);
 	}
 	else
 	{
