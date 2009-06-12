@@ -639,6 +639,7 @@ CsrpRunWinlogon (int argc, char ** argv, char ** envp)
 	UNICODE_STRING                CommandLine;
 	PRTL_USER_PROCESS_PARAMETERS  ProcessParameters = NULL;
 	RTL_USER_PROCESS_INFORMATION  ProcessInfo;
+    PROCESS_PRIORITY_CLASS        PriorityClass;
 
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);
@@ -674,6 +675,19 @@ CsrpRunWinlogon (int argc, char ** argv, char ** envp)
 		DPRINT1("SM: %s: loading winlogon.exe failed (Status=%08lx)\n",
 				__FUNCTION__, Status);
 	}
+
+    PriorityClass.PriorityClass = PROCESS_PRIORITY_CLASS_HIGH;
+    PriorityClass.Foreground = FALSE;
+
+    /* Set priority for process */
+    if (!NT_SUCCESS(NtSetInformationProcess(ProcessInfo.ProcessHandle,
+                                            ProcessPriorityClass,
+                                            &PriorityClass,
+                                            sizeof(PROCESS_PRIORITY_CLASS))))
+    {
+        DPRINT1("Unable to set process priority for winlogon.exe\n");
+    }
+
    ZwResumeThread(ProcessInfo.ThreadHandle, NULL);
 	return Status;
 }
