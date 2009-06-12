@@ -477,6 +477,9 @@ ChangeDisplaySettingsExA(
 
   rc = NtUserChangeDisplaySettings ( pDeviceName, pDevModeW, hwnd, dwflags, lParam );
 
+  if (pDevModeW != NULL)
+    RtlFreeHeap(GetProcessHeap(), pDevModeW);
+
   if (lpszDeviceName != NULL)
     RtlFreeUnicodeString ( &DeviceName );
 
