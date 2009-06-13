@@ -1320,4 +1320,57 @@ NdisCopyFromPacketToPacketSafe(
     *BytesCopied = Total;
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisIMCopySendCompletePerPacketInfo(
+    IN  PNDIS_PACKET    DstPacket,
+    IN  PNDIS_PACKET    SrcPacket)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    /* FIXME: What is the difference between NdisIMCopySendPerPacketInfo and
+     * NdisIMCopySendCompletePerPacketInfo?
+     */
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    RtlCopyMemory(NDIS_PACKET_EXTENSION_FROM_PACKET(DstPacket),
+                  NDIS_PACKET_EXTENSION_FROM_PACKET(SrcPacket),
+                  sizeof(NDIS_PACKET_EXTENSION));
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisIMCopySendPerPacketInfo(
+    IN  PNDIS_PACKET    DstPacket,
+    IN  PNDIS_PACKET    SrcPacket)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    /* FIXME: What is the difference between NdisIMCopySendPerPacketInfo and
+     * NdisIMCopySendCompletePerPacketInfo?
+     */
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    RtlCopyMemory(NDIS_PACKET_EXTENSION_FROM_PACKET(DstPacket),
+                  NDIS_PACKET_EXTENSION_FROM_PACKET(SrcPacket),
+                  sizeof(NDIS_PACKET_EXTENSION));
+}
+
 /* EOF */

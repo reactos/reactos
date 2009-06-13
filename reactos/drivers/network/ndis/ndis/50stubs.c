@@ -451,44 +451,6 @@ NdisIMCancelInitializeDeviceInstance(
  */
 VOID
 EXPORT
-NdisIMCopySendCompletePerPacketInfo(
-    IN  PNDIS_PACKET    DstPacket,
-    IN  PNDIS_PACKET    SrcPacket)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisIMCopySendPerPacketInfo(
-    IN  PNDIS_PACKET    DstPacket,
-    IN  PNDIS_PACKET    SrcPacket)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-VOID
-EXPORT
 NdisIMDeregisterLayeredMiniport(
     IN  NDIS_HANDLE DriverHandle)
 /*
