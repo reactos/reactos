@@ -25,6 +25,12 @@ typedef struct _NDIS_BUFFER_POOL
     NETWORK_HEADER Buffers[0];
 } NDIS_BUFFER_POOL, *PNDIS_BUFFER_POOL;
 
+typedef struct _NDISI_PACKET_POOL {
+  NDIS_SPIN_LOCK  SpinLock;
+  struct _NDIS_PACKET *FreeList;
+  UINT  PacketLength;
+  UCHAR  Buffer[1];
+} NDISI_PACKET_POOL, * PNDISI_PACKET_POOL;
 
 UINT CopyBufferToBufferChain(
     PNDIS_BUFFER DstBuffer,
