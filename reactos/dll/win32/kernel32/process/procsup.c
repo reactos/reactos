@@ -1072,6 +1072,11 @@ GetAppName:
                                       &StartupInfo,
                                       lpProcessInformation);
 
+            case STATUS_OBJECT_NAME_NOT_FOUND:
+            case STATUS_OBJECT_PATH_NOT_FOUND:
+                SetLastErrorByStatus(Status);
+                goto Cleanup;
+
             default:
                 /* Invalid Image Type */
                 SetLastError(ERROR_BAD_EXE_FORMAT);
