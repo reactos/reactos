@@ -44,7 +44,7 @@ BOOLEAN KdbpSymbolsInitialized = FALSE;
  *
  * \sa KdbpSymFindModule
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
                       IN LPCWSTR Name  OPTIONAL,
                       IN INT Index  OPTIONAL,
@@ -102,7 +102,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
  *
  * \sa KdbpSymFindUserModule
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpSymFindModule(IN PVOID Address  OPTIONAL,
                   IN LPCWSTR Name  OPTIONAL,
                   IN INT Index  OPTIONAL,
@@ -296,7 +296,7 @@ KdbSymGetAddressInformation(IN PROSSYM_INFO RosSymInfo,
  *
  * \sa KdbpSymAddCachedFile
  */
-STATIC PROSSYM_INFO
+static PROSSYM_INFO
 KdbpSymFindCachedFile(IN PUNICODE_STRING FileName)
 {
   PIMAGE_SYMBOL_INFO_CACHE Current;
@@ -337,7 +337,7 @@ KdbpSymFindCachedFile(IN PUNICODE_STRING FileName)
  *
  * \sa KdbpSymRemoveCachedFile
  */
-STATIC VOID
+static VOID
 KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
 		     IN PROSSYM_INFO RosSymInfo)
 {
@@ -371,7 +371,7 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
  *
  * \sa KdbpSymAddCachedFile
  */
-STATIC VOID
+static VOID
 KdbpSymRemoveCachedFile(IN PROSSYM_INFO RosSymInfo)
 {
   PIMAGE_SYMBOL_INFO_CACHE Current;
@@ -413,7 +413,7 @@ KdbpSymRemoveCachedFile(IN PROSSYM_INFO RosSymInfo)
  *
  * \sa KdbpSymUnloadModuleSymbols
  */
-STATIC VOID
+static VOID
 KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
                          OUT PROSSYM_INFO *RosSymInfo)
 {
@@ -484,7 +484,7 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
  *
  * \sa KdbpSymLoadModuleSymbols
  */
-STATIC VOID
+static VOID
 KdbpSymUnloadModuleSymbols(IN PROSSYM_INFO RosSymInfo)
 {
   DPRINT("Unloading symbols\n");

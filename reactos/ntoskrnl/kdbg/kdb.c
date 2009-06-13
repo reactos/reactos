@@ -27,34 +27,34 @@
 
 /* GLOBALS *******************************************************************/
 
-STATIC LONG KdbEntryCount = 0;
-STATIC CHAR KdbStack[KDB_STACK_SIZE];
+static LONG KdbEntryCount = 0;
+static CHAR KdbStack[KDB_STACK_SIZE];
 
-STATIC ULONG KdbBreakPointCount = 0;  /* Number of used breakpoints in the array */
-STATIC KDB_BREAKPOINT KdbBreakPoints[KDB_MAXIMUM_BREAKPOINT_COUNT] = {{0}};  /* Breakpoint array */
-STATIC ULONG KdbSwBreakPointCount = 0;  /* Number of enabled software breakpoints */
-STATIC ULONG KdbHwBreakPointCount = 0;  /* Number of enabled hardware breakpoints */
-STATIC PKDB_BREAKPOINT KdbSwBreakPoints[KDB_MAXIMUM_SW_BREAKPOINT_COUNT]; /* Enabled software breakpoints, orderless */
-STATIC PKDB_BREAKPOINT KdbHwBreakPoints[KDB_MAXIMUM_HW_BREAKPOINT_COUNT]; /* Enabled hardware breakpoints, orderless */
-STATIC PKDB_BREAKPOINT KdbBreakPointToReenable = NULL; /* Set to a breakpoint struct when single stepping after
+static ULONG KdbBreakPointCount = 0;  /* Number of used breakpoints in the array */
+static KDB_BREAKPOINT KdbBreakPoints[KDB_MAXIMUM_BREAKPOINT_COUNT] = {{0}};  /* Breakpoint array */
+static ULONG KdbSwBreakPointCount = 0;  /* Number of enabled software breakpoints */
+static ULONG KdbHwBreakPointCount = 0;  /* Number of enabled hardware breakpoints */
+static PKDB_BREAKPOINT KdbSwBreakPoints[KDB_MAXIMUM_SW_BREAKPOINT_COUNT]; /* Enabled software breakpoints, orderless */
+static PKDB_BREAKPOINT KdbHwBreakPoints[KDB_MAXIMUM_HW_BREAKPOINT_COUNT]; /* Enabled hardware breakpoints, orderless */
+static PKDB_BREAKPOINT KdbBreakPointToReenable = NULL; /* Set to a breakpoint struct when single stepping after
                                                           a software breakpoint was hit, to reenable it */
 LONG KdbLastBreakPointNr = -1;  /* Index of the breakpoint which cause KDB to be entered */
 ULONG KdbNumSingleSteps = 0; /* How many single steps to do */
 BOOLEAN KdbSingleStepOver = FALSE; /* Whether to step over calls/reps. */
 ULONG KdbDebugState = 0; /* KDBG Settings (NOECHO, KDSERIAL) */
-STATIC BOOLEAN KdbEnteredOnSingleStep = FALSE; /* Set to true when KDB was entered because of single step */
+static BOOLEAN KdbEnteredOnSingleStep = FALSE; /* Set to true when KDB was entered because of single step */
 PEPROCESS KdbCurrentProcess = NULL;  /* The current process context in which KDB runs */
 PEPROCESS KdbOriginalProcess = NULL; /* The process in whichs context KDB was intered */
 PETHREAD KdbCurrentThread = NULL;  /* The current thread context in which KDB runs */
 PETHREAD KdbOriginalThread = NULL; /* The thread in whichs context KDB was entered */
 PKDB_KTRAP_FRAME KdbCurrentTrapFrame = NULL; /* Pointer to the current trapframe */
-STATIC KDB_KTRAP_FRAME KdbTrapFrame = { { 0 } };  /* The trapframe which was passed to KdbEnterDebuggerException */
-STATIC KDB_KTRAP_FRAME KdbThreadTrapFrame = { { 0 } }; /* The trapframe of the current thread (KdbCurrentThread) */
-STATIC KAPC_STATE KdbApcState;
+static KDB_KTRAP_FRAME KdbTrapFrame = { { 0 } };  /* The trapframe which was passed to KdbEnterDebuggerException */
+static KDB_KTRAP_FRAME KdbThreadTrapFrame = { { 0 } }; /* The trapframe of the current thread (KdbCurrentThread) */
+static KAPC_STATE KdbApcState;
 extern BOOLEAN KdbpBugCheckRequested;
 
 /* Array of conditions when to enter KDB */
-STATIC KDB_ENTER_CONDITION KdbEnterConditions[][2] =
+static KDB_ENTER_CONDITION KdbEnterConditions[][2] =
 {
    /* First chance       Last chance */
    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Zero devide */
@@ -81,7 +81,7 @@ STATIC KDB_ENTER_CONDITION KdbEnterConditions[][2] =
 };
 
 /* Exception descriptions */
-STATIC CONST CHAR *ExceptionNrToString[] =
+static const CHAR *ExceptionNrToString[] =
 {
    "Divide Error",
    "Debug Trap",
@@ -133,7 +133,7 @@ HalReleaseDisplayOwnership(
 
 /* FUNCTIONS *****************************************************************/
 
-STATIC VOID
+static VOID
 KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFrame)
 {
    ULONG TrapCr0, TrapCr2, TrapCr3, TrapCr4;
@@ -180,7 +180,7 @@ KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFram
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
 
-STATIC VOID
+static VOID
 KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFrame)
 {
    /* Copy the TrapFrame only up to Eflags and zero the rest*/
@@ -194,7 +194,7 @@ KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFram
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
 
-STATIC VOID
+static VOID
 KdbpKdbTrapFrameFromKernelStack(PVOID KernelStack,
                                 PKDB_KTRAP_FRAME KdbTrapFrame)
 {
@@ -227,7 +227,7 @@ KdbpKdbTrapFrameFromKernelStack(PVOID KernelStack,
  *
  * \returns NTSTATUS
  */
-STATIC NTSTATUS
+static NTSTATUS
 KdbpOverwriteInstruction(
    IN  PEPROCESS Process,
    IN  ULONG_PTR Address,
@@ -698,7 +698,7 @@ KdbpDeleteBreakPoint(
  *
  * \returns Breakpoint number, -1 on error.
  */
-STATIC LONG
+static LONG
 KdbpIsBreakPointOurs(
    IN NTSTATUS ExceptionCode,
    IN PKTRAP_FRAME TrapFrame)
@@ -1174,7 +1174,7 @@ KdbpAttachToProcess(
 
 /*!\brief Calls the main loop ...
  */
-STATIC VOID
+static VOID
 KdbpCallMainLoop()
 {
    KdbpCliMainLoop(KdbEnteredOnSingleStep);
@@ -1184,7 +1184,7 @@ KdbpCallMainLoop()
  *
  * Disables interrupts, releases display ownership, ...
  */
-STATIC VOID
+static VOID
 KdbpInternalEnter()
 {
    PETHREAD Thread;
@@ -1218,7 +1218,7 @@ KdbpInternalEnter()
    KbdEnableMouse();
 }
 
-STATIC ULONG
+static ULONG
 KdbpGetExceptionNumberFromStatus(IN NTSTATUS ExceptionCode)
 {
     ULONG Ret;
@@ -1507,7 +1507,7 @@ KdbEnterDebuggerException(
    }
    else
    {
-      CONST CHAR *ExceptionString = (ExpNr < RTL_NUMBER_OF(ExceptionNrToString)) ?
+      const CHAR *ExceptionString = (ExpNr < RTL_NUMBER_OF(ExceptionNrToString)) ?
                                     (ExceptionNrToString[ExpNr]) :
                                     ("Unknown/User defined exception");
 
