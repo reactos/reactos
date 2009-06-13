@@ -71,18 +71,6 @@ NdisIMGetCurrentPacketStack(
 /*
  * @unimplemented
  */
-UCHAR
-EXPORT
-NdisGeneratePartialCancelId(VOID)
-{
-    UNIMPLEMENTED
-
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 VOID
 EXPORT
 NdisFreeToBlockPool(

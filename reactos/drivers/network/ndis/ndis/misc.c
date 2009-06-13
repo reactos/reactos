@@ -511,4 +511,20 @@ NdisGetVersion(VOID)
     return (UINT) 0x501;
 }
 
+/*
+ * @implemented
+ */
+UCHAR
+EXPORT
+NdisGeneratePartialCancelId(VOID)
+{
+    static UCHAR CancelId = 0;
+
+    CancelId++;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Cancel ID %u\n", CancelId));
+
+    return CancelId;
+}
+
 /* EOF */
