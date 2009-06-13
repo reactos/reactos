@@ -286,7 +286,11 @@ BOOL
 WINAPI
 GetComputerNameA(LPSTR lpBuffer, LPDWORD lpnSize)
 {
-    return GetComputerNameExA(ComputerNameNetBIOS, lpBuffer, lpnSize);
+    BOOL ret;
+    ret = GetComputerNameExA(ComputerNameNetBIOS, lpBuffer, lpnSize);    
+    if(!ret && GetLastError() == ERROR_MORE_DATA)
+      SetLastError(ERROR_BUFFER_OVERFLOW);
+      return ret;
 }
 
 
@@ -297,7 +301,11 @@ BOOL
 WINAPI
 GetComputerNameW(LPWSTR lpBuffer, LPDWORD lpnSize)
 {
-    return GetComputerNameExW(ComputerNameNetBIOS, lpBuffer, lpnSize);
+    BOOL ret;
+    ret=GetComputerNameExW(ComputerNameNetBIOS, lpBuffer, lpnSize);
+    if(!ret && GetLastError() == ERROR_MORE_DATA)
+      SetLastError(ERROR_BUFFER_OVERFLOW);
+    return ret;
 }
 
 
