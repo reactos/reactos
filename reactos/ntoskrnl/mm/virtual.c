@@ -849,6 +849,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
     SIZE_T NumberOfBytesToProtect = 0;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
 
     /* Check for valid protection flags */
     Protection = NewAccessProtection & ~(PAGE_GUARD|PAGE_NOCACHE);
@@ -961,6 +962,7 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     WCHAR ModuleFileNameBuffer[MAX_PATH] = {0};
     UNICODE_STRING ModuleFileName;
     PMEMORY_SECTION_NAME SectionName = NULL;
+    PEPROCESS Process;
     union
     {
         MEMORY_BASIC_INFORMATION BasicInfo;
@@ -975,11 +977,15 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
 
     PreviousMode =  ExGetPreviousMode();
 
-    if (PreviousMode != KernelMode && UnsafeResultLength != NULL)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
-            ProbeForWriteSize_t(UnsafeResultLength);
+            ProbeForWrite(VirtualMemoryInformation,
+                          Length,
+                          sizeof(ULONG_PTR));
+
+            if (UnsafeResultLength) ProbeForWriteSize_t(UnsafeResultLength);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -1002,6 +1008,19 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
     /* FIXME: Move this inside MiQueryVirtualMemory */
     if (VirtualMemoryInformationClass == MemorySectionName)
     {
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_QUERY_INFORMATION,
+                                           NULL,
+                                           PreviousMode,
+                                           (PVOID*)(&Process),
+                                           NULL);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtQueryVirtualMemory() = %x\n",Status);
+            return(Status);
+        }
+
         RtlInitEmptyUnicodeString(&ModuleFileName, ModuleFileNameBuffer, sizeof(ModuleFileNameBuffer));
         Status = MmGetFileNameForAddress(Address, &ModuleFileName);
 
@@ -1039,6 +1058,7 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                 }
             }
         }
+        ObDereferenceObject(Process);
         return Status;
     }
     else
