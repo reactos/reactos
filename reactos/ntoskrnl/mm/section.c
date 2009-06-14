@@ -3498,13 +3498,17 @@ NtCreateSection (OUT PHANDLE SectionHandle,
 
    PreviousMode = ExGetPreviousMode();
 
-   if(MaximumSize != NULL && PreviousMode != KernelMode)
+   if(PreviousMode != KernelMode)
    {
      _SEH2_TRY
      {
-       /* make a copy on the stack */
-       SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
-       MaximumSize = &SafeMaximumSize;
+       if (MaximumSize != NULL)
+       {
+          /* make a copy on the stack */
+          SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
+          MaximumSize = &SafeMaximumSize;
+       }
+       ProbeForWriteHandle(SectionHandle);
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
@@ -4238,6 +4242,7 @@ NtQuerySection(IN HANDLE SectionHandle,
    PROS_SECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
 
