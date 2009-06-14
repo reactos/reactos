@@ -82,4 +82,48 @@ typedef struct _NDIS_802_11_BSSID_LIST
     NDIS_WLAN_BSSID Bssid[1];
 } NDIS_802_11_BSSID_LIST, *PNDIS_802_11_BSSID_LIST;
 
+/* NDIS driver medium (OID_GEN_MEDIA_SUPPORTED / OID_GEN_MEDIA_IN_USE) */
+typedef enum _NDIS_MEDIUM {
+  NdisMedium802_3,
+  NdisMedium802_5,
+  NdisMediumFddi,
+  NdisMediumWan,
+  NdisMediumLocalTalk,
+  NdisMediumDix,
+  NdisMediumArcnetRaw,
+  NdisMediumArcnet878_2,
+  NdisMediumAtm,
+  NdisMediumWirelessWan,
+  NdisMediumIrda,
+  NdisMediumBpc,
+  NdisMediumCoWan,
+  NdisMedium1394,
+  NdisMediumMax
+} NDIS_MEDIUM, *PNDIS_MEDIUM;
+
+typedef enum _NDIS_PHYSICAL_MEDIUM
+{
+    NdisPhysicalMediumUnspecified,
+    NdisPhysicalMediumWirelessLan,
+    NdisPhysicalMediumCableModem,
+    NdisPhysicalMediumPhoneLine,
+    NdisPhysicalMediumPowerLine,
+    NdisPhysicalMediumDSL,
+    NdisPhysicalMediumFibreChannel,
+    NdisPhysicalMedium1394,
+    NdisPhysicalMediumWirelessWan,
+    NdisPhysicalMediumNative802_11,
+    NdisPhysicalMediumBluetooth,
+    NdisPhysicalMediumInfiniband,
+    NdisPhysicalMediumWiMax,
+    NdisPhysicalMediumUWB,
+    NdisPhysicalMedium802_3,
+    NdisPhysicalMedium802_5,
+    NdisPhysicalMediumIrda,
+    NdisPhysicalMediumWiredWAN,
+    NdisPhysicalMediumWiredCoWan,
+    NdisPhysicalMediumOther,
+    NdisPhysicalMediumMax
+} NDIS_PHYSICAL_MEDIUM, *PNDIS_PHYSICAL_MEDIUM;
+
 #endif
