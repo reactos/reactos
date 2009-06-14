@@ -467,46 +467,6 @@ NdisIMDeregisterLayeredMiniport(
 /*
  * @unimplemented
  */
-NDIS_HANDLE
-EXPORT
-NdisIMGetBindingContext(
-    IN  NDIS_HANDLE NdisBindingHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return (NDIS_HANDLE)NULL;
-}
-
-
-/*
- * @unimplemented
- */
-NDIS_HANDLE
-EXPORT
-NdisIMGetDeviceContext(
-    IN  NDIS_HANDLE MiniportAdapterHandle)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-
-    return (NDIS_HANDLE)NULL;
-}
-
-
-/*
- * @unimplemented
- */
 NDIS_STATUS
 EXPORT
 NdisIMInitializeDeviceInstanceEx(

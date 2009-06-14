@@ -3031,5 +3031,50 @@ NdisCancelSendPackets(
     }
 }
 
+
+/*
+ * @implemented
+ */
+NDIS_HANDLE
+EXPORT
+NdisIMGetBindingContext(
+    IN  NDIS_HANDLE NdisBindingHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PADAPTER_BINDING AdapterBinding = NdisBindingHandle;
+    PLOGICAL_ADAPTER Adapter = AdapterBinding->Adapter;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return Adapter->NdisMiniportBlock.DeviceContext;
+}
+
+
+/*
+ * @implemented
+ */
+NDIS_HANDLE
+EXPORT
+NdisIMGetDeviceContext(
+    IN  NDIS_HANDLE MiniportAdapterHandle)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+    PLOGICAL_ADAPTER Adapter = MiniportAdapterHandle;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return Adapter->NdisMiniportBlock.DeviceContext;
+}
+
 /* EOF */
 
