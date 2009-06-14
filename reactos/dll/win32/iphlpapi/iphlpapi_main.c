@@ -2179,9 +2179,12 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 DWORD WINAPI GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
     if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
+    if (!pAdapterAddresses || *pOutBufLen == 0)
+      return ERROR_BUFFER_OVERFLOW;
+    if (Reserved) return ERROR_INVALID_PARAMETER;
 
     FIXME(":stub\n");
-    return 0L;
+    return ERROR_NO_DATA;
 }
 
 /*
@@ -2218,6 +2221,35 @@ DWORD WINAPI GetIcmpStatisticsEx(PMIB_ICMP_EX pStats,DWORD dwFamily)
 {
     FIXME(":stub\n");
     return 0L;
+}
+
+/******************************************************************
+ *    GetIfTable2 (IPHLPAPI.@)
+ *
+ * PARAMS
+ *  pIfTable [In/Out]
+ */
+ 
+NETIOAPI_API WINAPI GetIfTable2(PMIB_IF_TABLE2 *pIfTable)
+{
+    UNIMPLEMENTED;
+    return ERROR_NOT_SUPPORTED;
+}
+
+/******************************************************************
+ *    GetIfEntry2 (IPHLPAPI.@)
+ *
+ * PARAMS
+ *  pIfRow [In/Out]
+ */
+NETIOAPI_API WINAPI GetIfEntry2(IN OUT PMIB_IF_ROW2 pIfRow)
+{
+  TRACE("pIfRow %p\n", pIfRow);
+  if (!pIfRow)
+    return ERROR_INVALID_PARAMETER;
+    
+  UNIMPLEMENTED;
+  return ERROR_NOT_SUPPORTED;
 }
 
 
