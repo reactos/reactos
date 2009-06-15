@@ -148,6 +148,7 @@ dll\cpl\timedate\timedate.cpl                       1
 dll\directx\amstream\amstream.dll                   1
 dll\directx\dinput\dinput.dll                       1
 dll\directx\dinput8\dinput8.dll                     1
+dll\directx\dmusic\dmusic.dll                       1
 dll\directx\dplay\dplay.dll                         1
 dll\directx\dplayx\dplayx.dll                       1
 dll\directx\dsound\dsound.dll                       1
