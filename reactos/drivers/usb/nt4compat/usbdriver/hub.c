@@ -762,10 +762,15 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
                 //
                 // do not think the device is workable, no requests to it any more.
                 // including the int polling
-                //
-                // usb_free_mem( purb );
-                //
-                goto LBL_SCAN_PORT_STAT;
+
+                if (purb)
+                    usb_free_mem(purb);
+
+                if (port_idx)
+                    hub_check_reset_port_status(pdev, port_idx);
+
+                //reinitialize the int request, here to reduce some uncertainty of concurrency
+                hub_start_int_request(pdev);
             }
         }
         return;
