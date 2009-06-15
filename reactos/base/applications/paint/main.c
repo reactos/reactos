@@ -223,7 +223,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     hCurPen         = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_PEN));
     hCurAirbrush    = LoadIcon(hThisInstance, MAKEINTRESOURCE(IDC_AIRBRUSH));
 
-    HWND hLine = CreateWindowEx (0, _T("STATIC"), _T(""), WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL, hThisInstance, NULL);
+    CreateWindowEx (0, _T("STATIC"), _T(""), WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL, hThisInstance, NULL);
 
     // creating the 16 bitmap radio buttons and setting the bitmap
 

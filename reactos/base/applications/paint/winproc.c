@@ -423,13 +423,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     }
                     break;
                 case IDM_FILEASWALLPAPERPLANE:
-                    setWallpaper(filepathname, 2);
+                    SetWallpaper(filepathname, 1, 1);
                     break;
                 case IDM_FILEASWALLPAPERCENTERED:
-                    setWallpaper(filepathname, 1);
+                    SetWallpaper(filepathname, 1, 0);
                     break;
                 case IDM_FILEASWALLPAPERSTRETCHED:
-                    setWallpaper(filepathname, 0);
+                    SetWallpaper(filepathname, 2, 0);
                     break;
                 case IDM_EDITUNDO:
                     undo();

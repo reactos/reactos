@@ -9,31 +9,30 @@
 /* INCLUDES *********************************************************/
 
 #include <windows.h>
+#include <tchar.h>
 
 /* FUNCTIONS ********************************************************/
 
-void setWallpaper(char fname[], int style)
+void SetWallpaper(TCHAR *FileName, DWORD dwStyle, DWORD dwTile)
 {
-    HKEY hkeycontrolpanel;
-    HKEY hkeydesktop;
-    RegOpenKeyEx(HKEY_CURRENT_USER, "Control Panel", 0, 0, hkeycontrolpanel);
-    RegOpenKeyEx(hkeycontrolpanel, "Desktop", 0, KEY_SET_VALUE, hkeydesktop);
-    RegSetValueEx(hkeydesktop, "Wallpaper", 0, REG_SZ, fname, sizeof(fname));
-    switch (style)
+    HKEY hDesktop;
+    TCHAR szStyle[3], szTile[3];
+
+    if ((dwStyle > 2) || (dwTile > 2))
+        return;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
+        _T("Control Panel\\Desktop"), 0,
+        KEY_READ | KEY_SET_VALUE, &hDesktop) == ERROR_SUCCESS)
     {
-        case 0:
-            RegSetValueEx(hkeydesktop, "WallpaperStyle", 0, REG_SZ, "2", 2);
-            RegSetValueEx(hkeydesktop, "TileWallpaper", 0, REG_SZ, "0", 2);
-            break;
-        case 1:
-            RegSetValueEx(hkeydesktop, "WallpaperStyle", 0, REG_SZ, "1", 2);
-            RegSetValueEx(hkeydesktop, "TileWallpaper", 0, REG_SZ, "0", 2);
-            break;
-        case 2:
-            RegSetValueEx(hkeydesktop, "WallpaperStyle", 0, REG_SZ, "1", 2);
-            RegSetValueEx(hkeydesktop, "TileWallpaper", 0, REG_SZ, "1", 2);
-            break;
+        RegSetValueEx(hDesktop, _T("Wallpaper"), 0, REG_SZ, (LPBYTE) FileName, _tcslen(FileName) * sizeof(TCHAR));
+
+        _stprintf(szStyle, _T("%i"), dwStyle);
+        _stprintf(szTile,  _T("%i"), dwTile);
+
+        RegSetValueEx(hDesktop, _T("WallpaperStyle"), 0, REG_SZ, (LPBYTE) szStyle, _tcslen(szStyle) * sizeof(TCHAR));
+        RegSetValueEx(hDesktop, _T("TileWallpaper"), 0, REG_SZ, (LPBYTE) szTile, _tcslen(szTile) * sizeof(TCHAR));
+
+        RegCloseKey(hDesktop);
     }
-    RegCloseKey(hkeydesktop);
-    RegCloseKey(hkeycontrolpanel);
 }

@@ -6,4 +6,4 @@
  * PROGRAMMERS: Benedikt Freisen
  */
 
-void setWallpaper(char fname[], int style);
+void SetWallpaper(TCHAR *szFileName, DWORD dwStyle, DWORD dwTile);
