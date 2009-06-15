@@ -768,9 +768,6 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
 
                 if (port_idx)
                     hub_check_reset_port_status(pdev, port_idx);
-
-                //reinitialize the int request, here to reduce some uncertainty of concurrency
-                hub_start_int_request(pdev);
             }
         }
         return;
