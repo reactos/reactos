@@ -958,8 +958,11 @@ typedef struct _RTL_UNLOAD_EVENT_TRACE
 //
 typedef struct _RTL_HANDLE_TABLE_ENTRY
 {
-    ULONG Flags;
-    struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+    union
+    {
+        ULONG Flags;
+        struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+    };
 } RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
 
 typedef struct _RTL_HANDLE_TABLE
