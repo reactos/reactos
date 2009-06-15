@@ -304,7 +304,20 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessLdtInformation:
         case ProcessWorkingSetWatch:
         case ProcessWx86Information:
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
             DPRINT1("Not implemented: %lx\n", ProcessInformationClass);
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
