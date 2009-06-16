@@ -48,7 +48,6 @@ extern "C" {
 #define UNALLIGNED
 
 #define CONST const
-#define VOLATILE volatile
 
 #define RESTRICTED_POINTER
 
@@ -1213,8 +1212,8 @@ typedef enum _KSPIN_LOCK_QUEUE_NUMBER
 } KSPIN_LOCK_QUEUE_NUMBER, *PKSPIN_LOCK_QUEUE_NUMBER;
 
 typedef struct _KSPIN_LOCK_QUEUE {
-  struct _KSPIN_LOCK_QUEUE  *VOLATILE Next;
-  PKSPIN_LOCK VOLATILE  Lock;
+  struct _KSPIN_LOCK_QUEUE  *volatile Next;
+  PKSPIN_LOCK volatile  Lock;
 } KSPIN_LOCK_QUEUE, *PKSPIN_LOCK_QUEUE;
 
 typedef struct _KLOCK_QUEUE_HANDLE {

@@ -467,7 +467,7 @@ InterlockedExchangeAdd(
 /*
  * PVOID
  * InterlockedExchangePointer(
- *   IN OUT PVOID VOLATILE  *Target,
+ *   IN OUT PVOID volatile  *Target,
  *   IN PVOID  Value)
  */
 #define InterlockedExchangePointer(Target, Value) \
