@@ -34,10 +34,10 @@
 
 #define _ReadWriteBarrier() __sync_synchronize()
 
-static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * const dest, const long exch, const long comp)
+__INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const dest, const long exch, const long comp)
 {
 	long a, b;
-    
+
 	__asm__ __volatile__ (    "0:\n\t"
                           "ldr %1, [%2]\n\t"
                           "cmp %1, %4\n\t"
@@ -50,11 +50,11 @@ static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchang
                           : "=&r" (a), "=&r" (b)
                           : "r" (dest), "r" (exch), "r" (comp)
                           : "cc", "memory");
-    
+
 	return a;
 }
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * const dest, const long long exch, const long long comp)
+__INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * const dest, const long long exch, const long long comp)
 {
     //
     // FIXME
@@ -65,16 +65,16 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedCompareEx
     return result;
 }
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
+__INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
     return (void*)_InterlockedCompareExchange((volatile long* const)Destination, (const long)Exchange, (const long)Comperand);
 }
 
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * const dest, const long add)
+__INTRIN_INLINE long _InterlockedExchangeAdd(volatile long * const dest, const long add)
 {
 	long a, b, c;
-    
+
 	__asm__ __volatile__ (  "0:\n\t"
                           "ldr %0, [%3]\n\t"
                           "add %1, %0, %4\n\t"
@@ -85,201 +85,201 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(vo
                           : "=&r" (a), "=&r" (b), "=&r" (c)
                           : "r" (dest), "r" (add)
                           : "cc", "memory");
-    
+
 	return a;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * const dest, const long exch)
+__INTRIN_INLINE long _InterlockedExchange(volatile long * const dest, const long exch)
 {
 	long a;
-    
+
 	__asm__ __volatile__ (  "swp %0, %2, [%1]"
                           : "=&r" (a)
                           : "r" (dest), "r" (exch));
-    
+
 	return a;
 }
 
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
+__INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
 {
     return _InterlockedExchange(Target, Value);
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * const value, const char mask)
+__INTRIN_INLINE char _InterlockedAnd8(volatile char * const value, const char mask)
 {
 	char x;
 	char y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange8(value, x & mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * const value, const short mask)
+__INTRIN_INLINE short _InterlockedAnd16(volatile short * const value, const short mask)
 {
 	short x;
 	short y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange16(value, x & mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * const value, const long mask)
+__INTRIN_INLINE long _InterlockedAnd(volatile long * const value, const long mask)
 {
 	long x;
 	long y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange(value, x & mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * const value, const char mask)
+__INTRIN_INLINE char _InterlockedOr8(volatile char * const value, const char mask)
 {
 	char x;
 	char y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange8(value, x | mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * const value, const short mask)
+__INTRIN_INLINE short _InterlockedOr16(volatile short * const value, const short mask)
 {
 	short x;
 	short y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange16(value, x | mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * const value, const long mask)
+__INTRIN_INLINE long _InterlockedOr(volatile long * const value, const long mask)
 {
 	long x;
 	long y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange(value, x | mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * const value, const char mask)
+__INTRIN_INLINE char _InterlockedXor8(volatile char * const value, const char mask)
 {
 	char x;
 	char y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange8(value, x ^ mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * const value, const short mask)
+__INTRIN_INLINE short _InterlockedXor16(volatile short * const value, const short mask)
 {
 	short x;
 	short y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange16(value, x ^ mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile long * const value, const long mask)
+__INTRIN_INLINE long _InterlockedXor(volatile long * const value, const long mask)
 {
 	long x;
 	long y;
-    
+
 	y = *value;
-    
+
 	do
 	{
 		x = y;
 		y = _InterlockedCompareExchange(value, x ^ mask, x);
 	}
 	while(y != x);
-    
+
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedDecrement(volatile long * const lpAddend)
+__INTRIN_INLINE long _InterlockedDecrement(volatile long * const lpAddend)
 {
 	return _InterlockedExchangeAdd(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedIncrement(volatile long * const lpAddend)
+__INTRIN_INLINE long _InterlockedIncrement(volatile long * const lpAddend)
 {
 	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedDecrement16(volatile short * const lpAddend)
+__INTRIN_INLINE long _InterlockedDecrement16(volatile short * const lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(volatile short * const lpAddend)
+__INTRIN_INLINE long _InterlockedIncrement16(volatile short * const lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
 
-static __inline__ __attribute__((always_inline)) void _disable(void)
+__INTRIN_INLINE void _disable(void)
 {
     __asm__ __volatile__
     (
@@ -289,7 +289,7 @@ static __inline__ __attribute__((always_inline)) void _disable(void)
     );
 }
 
-static __inline__ __attribute__((always_inline)) void _enable(void)
+__INTRIN_INLINE void _enable(void)
 {
     __asm__ __volatile__
     (
@@ -300,7 +300,7 @@ static __inline__ __attribute__((always_inline)) void _enable(void)
 }
 
 #ifndef __MSVCRT__
-static __inline__ __attribute__((always_inline)) unsigned long _rotl(const unsigned long value, const unsigned char shift)
+__INTRIN_INLINE unsigned long _rotl(const unsigned long value, const unsigned char shift)
 {
 	return (((value) << ((int)(shift))) | ((value) >> (32 - (int)(shift))));
 }

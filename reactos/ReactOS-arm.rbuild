@@ -23,7 +23,7 @@
 		<define name="KDBG">1</define>
 		<property name="DBG_OR_KDBG" value="true" />
 	</if>
-	
+
 	<include>.</include>
 	<include>include</include>
 	<include root="intermediate">include</include>
@@ -71,11 +71,11 @@
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<linkerflag>--strip-debug</linkerflag>
 	<linkerflag>-static</linkerflag>
-	
+
 	<directory name="media">
 		<directory name="nls">
 			<xi:include href="media/nls/nls.rbuild" />
-		</directory>	
+		</directory>
 	</directory>
 	<directory name="lib">
 		<directory name="drivers">
@@ -180,13 +180,15 @@
 	<directory name="dll">
 		<directory name="ntdll">
 			<xi:include href="dll/ntdll/ntdll.rbuild" />
-		</directory>	
+		</directory>
 	</directory>
 	<directory name="base">
 		<directory name="system">
             <directory name="smss">
                 <xi:include href="base/system/smss/smss.rbuild" />
-            </directory>	
-		</directory>	
+            </directory>
+		</directory>
 	</directory>
+
+	<define name="_USE_32BIT_TIME_T" />
 </project>

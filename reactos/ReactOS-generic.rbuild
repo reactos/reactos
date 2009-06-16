@@ -67,7 +67,8 @@
 	<include>include/dxsdk</include>
 	<include root="intermediate">include/dxsdk</include>
 	<include>include/crt</include>
-	<include>include/crt/mingw32</include>
+	<include compilerset="gcc">include/crt/mingw32</include>
+	<include compilerset="msc">include/crt/msc</include>
 	<include>include/ddk</include>
 	<include>include/GL</include>
 	<include>include/ndk</include>

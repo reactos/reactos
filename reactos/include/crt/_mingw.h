@@ -9,13 +9,6 @@
 
 #define _INTEGRAL_MAX_BITS 64
 
-// ROS HACK!
-#ifndef _WIN64
- #ifndef _USE_32BIT_TIME_T
-  #define _USE_32BIT_TIME_T
- #endif
-#endif
-
 #ifndef MINGW64
 #define MINGW64
 #define MINGW64_VERSION	1.0
@@ -48,15 +41,19 @@
 #define __MINGW_GNUC_PREREQ(major, minor)  0
 #endif
 
-#if !defined (_MSC_VER)
-#define __MINGW_MSC_PREREQ(major, minor)  0
+#if defined (_MSC_VER)
+#define __MINGW_MSC_PREREQ(major, minor) ((major * 100 + minor * 10) >= _MSC_VER)
+#else
+#define __MINGW_MSC_PREREQ(major, minor) 0
 #endif
 
 #define USE___UUIDOF	0
 
 #ifdef __cplusplus
 # define __CRT_INLINE inline
-#else
+#elif defined(_MSC_VER)
+# define __CRT_INLINE __inline
+#elif defined(__GNUC__)
 # if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
 #  define __CRT_INLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
 # else
@@ -79,8 +76,10 @@
 #else
 # ifdef __GNUC__
 #  define __unaligned __attribute((packed))
+# elif defined(_MSC_VER) && !defined(_M_IA64) && !defined(_M_AMD64)
+#  define __unaligned
 # else
-#  define __UNUSED_PARAM(x) x
+#  define __unaligned
 # endif
 #endif
 
@@ -98,6 +97,9 @@
 #if __MINGW_GNUC_PREREQ (3, 0)
 #define __MINGW_ATTRIB_MALLOC __attribute__ ((__malloc__))
 #define __MINGW_ATTRIB_PURE __attribute__ ((__pure__))
+#elif __MINGW_MSC_PREREQ(14, 0)
+#define __MINGW_ATTRIB_MALLOC __declspec(noalias) __declspec(restrict)
+#define __MINGW_ATTRIB_PURE
 #else
 #define __MINGW_ATTRIB_MALLOC
 #define __MINGW_ATTRIB_PURE
@@ -119,7 +121,7 @@
 #else
 #define __MINGW_ATTRIB_DEPRECATED
 #endif
- 
+
 #if  __MINGW_GNUC_PREREQ (3, 3)
 #define __MINGW_NOTHROW __attribute__ ((__nothrow__))
 #elif __MINGW_MSC_PREREQ(12, 0) && defined (__cplusplus)
@@ -172,20 +174,6 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 #define USE_MINGW_SETJMP_TWO_ARGS
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#ifndef __GNUC_VA_LIST
-#define __GNUC_VA_LIST
-  typedef __builtin_va_list __gnuc_va_list;
-#endif
-
-#ifndef _VA_LIST_DEFINED
-#define _VA_LIST_DEFINED
-  typedef __gnuc_va_list va_list;
-#endif
-
 /* Diable deprecation for now! */
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_SECURE_NO_DEPRECATE_CORE
@@ -193,40 +181,11 @@ extern "C" {
 #define _CRT_NONSTDC_NO_DEPRECATE
 #endif
 
-#if (defined(_MSC_VER) && __STDC__)// || !defined(__WINESRC__)
-#define NO_OLDNAMES
-#endif
-
-#ifdef __cplusplus
-}
-#endif
-
 #define __crt_typefix(ctype)
 
 #ifndef _CRT_UNUSED
 #define _CRT_UNUSED(x) (void)x
 #endif
-
-/* These are here for intrin.h */
-#ifndef _SIZE_T_DEFINED
-#define _SIZE_T_DEFINED
-#ifdef _WIN64
-  typedef unsigned __int64 size_t;
-#else
-  typedef unsigned int size_t;
-#endif
-#endif
-
-#ifndef _UINTPTR_T_DEFINED
-#define _UINTPTR_T_DEFINED
-#ifdef _WIN64
-  typedef unsigned __int64 uintptr_t;
-#else
-  typedef unsigned int uintptr_t;
-#endif
-#endif
-
-#include <mingw32/intrin.h>
 
 #endif /* !_INC_MINGW */
 

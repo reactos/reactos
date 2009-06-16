@@ -79,4 +79,5 @@
 		<linkerflag>-disable-stdcall-fixup</linkerflag>
 	</group>
 
+	<define name="_USE_32BIT_TIME_T" />
 </project>
