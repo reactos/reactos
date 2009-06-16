@@ -2252,4 +2252,20 @@ NETIOAPI_API WINAPI GetIfEntry2(IN OUT PMIB_IF_ROW2 pIfRow)
   return ERROR_NOT_SUPPORTED;
 }
 
+DWORD WINAPI
+SetIpForwardEntryToStack(PMIB_IPFORWARDROW pRoute)
+{
+    FIXME("SetIpForwardEntryToStack() stub\n");
+    return 0L;
+}
 
+DWORD WINAPI
+NhGetInterfaceNameFromDeviceGuid(DWORD dwUnknown1,
+                                 DWORD dwUnknown2,
+                                 DWORD dwUnknown3,
+                                 DWORD dwUnknown4,
+                                 DWORD dwUnknown5)
+{
+    FIXME("NhGetInterfaceNameFromDeviceGuid() stub\n");
+    return 0L;
+}

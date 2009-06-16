@@ -110,7 +110,7 @@
 @ stub NTPTimeToNTFileTime
 @ stub NTTimeToNTPTime
 @ stub NhGetGuidFromInterfaceName
-@ stub NhGetInterfaceNameFromDeviceGuid
+@ stdcall NhGetInterfaceNameFromDeviceGuid(long long long long long)
 @ stub NhGetInterfaceNameFromGuid
 @ stub NhpAllocateAndGetInterfaceInfoFromStack
 @ stub NhpGetInterfaceIndexFromStack
@@ -125,7 +125,7 @@
 @ stdcall SetIfEntry( ptr )
 @ stub SetIfEntryToStack
 @ stdcall SetIpForwardEntry( ptr )
-@ stub SetIpForwardEntryToStack
+@ stdcall SetIpForwardEntryToStack( ptr )
 @ stub SetIpMultihopRouteEntryToStack
 @ stdcall SetIpNetEntry( ptr )
 @ stub SetIpNetEntryToStack
