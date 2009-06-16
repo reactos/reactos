@@ -3573,7 +3573,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
                           samDesired,
                           &hClassesKey)))
         {
-            SetLastError(l);
+            SetLastError(ERROR_INVALID_CLASS);
             hClassesKey = INVALID_HANDLE_VALUE;
         }
         if (MachineName != NULL)
