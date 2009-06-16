@@ -28,8 +28,8 @@ LRESULT CALLBACK SelectionWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
             {
                 if (!moving)
                 {
-                    DefWindowProc (hwnd, message, wParam, lParam);
                     HDC hdc=GetDC(hwnd);
+                    DefWindowProc (hwnd, message, wParam, lParam);
                     SelectionFrame(hdc, 1, 1, rectSel_dest[2]*zoom/1000+5, rectSel_dest[3]*zoom/1000+5);
                     ReleaseDC(hwnd, hdc);
                 }

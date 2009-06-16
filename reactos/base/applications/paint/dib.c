@@ -46,10 +46,15 @@ int GetDIBHeight(HBITMAP hbm)
 void SaveDIBToFile(HBITMAP hbm, LPTSTR name, HDC hdc)
 {
     BITMAP bm;
-    GetObject(hbm, sizeof(BITMAP), &bm);
+    HANDLE hFile;
     BITMAPFILEHEADER bf;
     BITMAPINFOHEADER bi;
-    int imgDataSize = bm.bmWidthBytes*bm.bmHeight;
+    int imgDataSize;
+    int bytesWritten;
+
+    GetObject(hbm, sizeof(BITMAP), &bm);
+
+    imgDataSize = bm.bmWidthBytes*bm.bmHeight;
     bf.bfType = 0x4d42;
     bf.bfSize = imgDataSize+52;
     bf.bfReserved1 = 0;
@@ -68,12 +73,11 @@ void SaveDIBToFile(HBITMAP hbm, LPTSTR name, HDC hdc)
     bi.biClrImportant = 0;
     int *buffer = HeapAlloc(GetProcessHeap(), HEAP_GENERATE_EXCEPTIONS, imgDataSize);
     GetDIBits(hdc, hbm, 0, bm.bmHeight, buffer, (LPBITMAPINFO)&bi, DIB_RGB_COLORS);
-    HANDLE f = CreateFile(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
-    int bytesWritten;
-    WriteFile(f, &bf, 14, (LPDWORD)&bytesWritten, NULL);
-    WriteFile(f, &bi, 40, (LPDWORD)&bytesWritten, NULL);
-    WriteFile(f, buffer, imgDataSize, (LPDWORD)&bytesWritten, NULL);
-    CloseHandle(f);
+    hFile = CreateFile(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+    WriteFile(hFile, &bf, 14, (LPDWORD)&bytesWritten, NULL);
+    WriteFile(hFile, &bi, 40, (LPDWORD)&bytesWritten, NULL);
+    WriteFile(hFile, buffer, imgDataSize, (LPDWORD)&bytesWritten, NULL);
+    CloseHandle(hFile);
     HeapFree(GetProcessHeap(), 0, buffer);
 }
 

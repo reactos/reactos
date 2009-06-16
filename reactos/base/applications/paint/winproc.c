@@ -64,9 +64,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 TCHAR programname[20];
                 TCHAR saveprompttext[100];
+                TCHAR temptext[500];
                 LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
                 LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
-                TCHAR temptext[500];
                 _stprintf(temptext, saveprompttext, filename);
                 switch (MessageBox(hwnd, temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
                 {
@@ -157,11 +157,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             if ((hwnd==hImageArea)||(hwnd==hScrollbox))
             {
                 long clientRectScrollbox[4];
-                GetClientRect(hScrollbox, (LPRECT)&clientRectScrollbox);
                 long clientRectImageArea[4];
+                SCROLLINFO horzScroll;
+                SCROLLINFO vertScroll;
+                GetClientRect(hScrollbox, (LPRECT)&clientRectScrollbox);
                 GetClientRect(hImageArea, (LPRECT)&clientRectImageArea);
                 MoveWindow(hScrlClient, 0, 0, max(clientRectImageArea[2]+6, clientRectScrollbox[2]), max(clientRectImageArea[3]+6, clientRectScrollbox[3]), TRUE);
-                SCROLLINFO horzScroll;
                 horzScroll.cbSize       = sizeof(SCROLLINFO);
                 horzScroll.fMask        = SIF_PAGE | SIF_RANGE;
                 horzScroll.nMax         = 10000;
@@ -171,7 +172,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 horzScroll.nTrackPos    = 0;
                 SetScrollInfo(hScrollbox, SB_HORZ, &horzScroll, TRUE);
                 GetClientRect(hScrollbox, (LPRECT)clientRectScrollbox);
-                SCROLLINFO vertScroll;
                 vertScroll.cbSize       = sizeof(SCROLLINFO);
                 vertScroll.fMask        = SIF_PAGE | SIF_RANGE;
                 vertScroll.nMax         = 10000;
@@ -388,10 +388,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         HBITMAP bmNew = (HBITMAP)LoadDIBFromFile(ofn.lpstrFile);
                         if (bmNew!=NULL)
                         {
-                            insertReversible(bmNew);
-                            updateCanvasAndScrollbars();
                             TCHAR tempstr[1000];
                             TCHAR resstr[100];
+                            insertReversible(bmNew);
+                            updateCanvasAndScrollbars();
                             CopyMemory(filename, ofn.lpstrFileTitle, sizeof(filename));
                             CopyMemory(filepathname, ofn.lpstrFileTitle, sizeof(filepathname));
                             LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
@@ -411,9 +411,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case IDM_FILESAVEAS:
                     if (GetSaveFileName(&sfn)!=0)
                     {
-                        SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC);
                         TCHAR tempstr[1000];
                         TCHAR resstr[100];
+                        SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC);
                         CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
                         CopyMemory(filepathname, sfn.lpstrFileTitle, sizeof(filepathname));
                         LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
@@ -484,9 +484,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_IMAGEINVERTCOLORS:
                     {
+                        RECT tempRect;
                         newReversible();
-                        int tempRect[4] = {0, 0, imgXRes, imgYRes};
-                        InvertRect(hDrawingDC, (LPRECT)tempRect);
+                        SetRect(&tempRect, 0, 0, imgXRes, imgYRes);
+                        InvertRect(hDrawingDC, &tempRect);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                     }
                     break; 

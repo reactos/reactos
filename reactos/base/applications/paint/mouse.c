@@ -59,9 +59,11 @@ void whilePainting(HDC hdc, short x, short y, int fg, int bg)
     {
         case 2:
             {
+                short tempX;
+                short tempY;
                 resetToU1();
-                short tempX = max(0, min(x, imgXRes));
-                short tempY = max(0, min(y, imgYRes));
+                tempX = max(0, min(x, imgXRes));
+                tempY = max(0, min(y, imgYRes));
                 rectSel_dest[0] = rectSel_src[0] = min(startX, tempX);
                 rectSel_dest[1] = rectSel_src[1] = min(startY, tempY);
                 rectSel_dest[2] = rectSel_src[2] = max(startX, tempX)-min(startX, tempX);

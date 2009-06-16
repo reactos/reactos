@@ -20,13 +20,13 @@ LRESULT CALLBACK SettingsWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM
     {
         case WM_PAINT:
             {
+                HDC hdc = GetDC(hwnd);
+                int rectang[4] = {0, 0, 42, 66};
+                int rectang2[4] = {0, 70, 42, 136};
+
                 DefWindowProc (hwnd, message, wParam, lParam);
                 
-                HDC hdc = GetDC(hwnd);
-                
-                int rectang[4] = {0, 0, 42, 66};
                 DrawEdge(hdc, (LPRECT)&rectang, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
-                int rectang2[4] = {0, 70, 42, 136};
                 if (activeTool>=13)
                     DrawEdge(hdc, (LPRECT)&rectang2, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);
                 else
@@ -64,11 +64,11 @@ LRESULT CALLBACK SettingsWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         break;
                     case 8:
                         {
+                            int i;
                             HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                             SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
                             Rectangle(hdc, brushStyle%3*13+2, brushStyle/3*15+2, brushStyle%3*13+15, brushStyle/3*15+17);
                             DeleteObject(SelectObject(hdc, oldPen));
-                            int i;
                             for (i=0; i<12; i++)
                             if (i==brushStyle)
                                 Brush(hdc, i%3*13+7, i/3*15+8, i%3*13+7, i/3*15+8, GetSysColor(COLOR_HIGHLIGHTTEXT), i);

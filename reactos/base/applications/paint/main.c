@@ -104,15 +104,39 @@ BOOL isAFile = FALSE;
 
 int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, int nFunsterStil)
 {
-    hProgInstance = hThisInstance;
     HWND hwnd;               /* This is the handle for our window */
     MSG messages;            /* Here messages to the application are saved */
+    WNDCLASSEX wclScroll;
+    WNDCLASSEX wincl;
+    WNDCLASSEX wclPal;
+    WNDCLASSEX wclSettings;
+    WNDCLASSEX wclSelection;
+    TCHAR progtitle[1000];
+    TCHAR resstr[100];
+    HMENU menu;
+    HWND hToolbar;
+    HIMAGELIST hImageList;
+    HANDLE haccel;
+    HBITMAP tempBm;
+    int i;
+    TCHAR tooltips[16][30];
+    TCHAR *c;
+    TCHAR sfnFilename[1000];
+    TCHAR sfnFiletitle[256];
+    TCHAR sfnFilter[1000];
+    TCHAR ofnFilename[1000];
+    TCHAR ofnFiletitle[256];
+    TCHAR ofnFilter[1000];
+    int custColors[16] =
+        {0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
+        0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff};
 
-    // Necessary
+    hProgInstance = hThisInstance;
+
+    /* Necessary */
     InitCommonControls();
 
-    //initializing and registering the window class used for the main window
-    WNDCLASSEX wincl;
+    /* initializing and registering the window class used for the main window */
     wincl.hInstance         = hThisInstance;
     wincl.lpszClassName     = _T("WindowsApp");
     wincl.lpfnWndProc       = WindowProcedure;
@@ -127,9 +151,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     wincl.hbrBackground     = GetSysColorBrush(COLOR_BTNFACE);
     RegisterClassEx (&wincl);
 
-    // initializing and registering the window class used for the scroll box
-
-    WNDCLASSEX wclScroll;
+    /* initializing and registering the window class used for the scroll box */
     wclScroll.hInstance     = hThisInstance;
     wclScroll.lpszClassName = _T("Scrollbox");
     wclScroll.lpfnWndProc   = WindowProcedure;
@@ -144,9 +166,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     wclScroll.hbrBackground = GetSysColorBrush(COLOR_APPWORKSPACE);
     RegisterClassEx (&wclScroll);
 
-    // initializing and registering the window class used for the palette window
-
-    WNDCLASSEX wclPal;
+    /* initializing and registering the window class used for the palette window */
     wclPal.hInstance        = hThisInstance;
     wclPal.lpszClassName    = _T("Palette");
     wclPal.lpfnWndProc      = PalWinProc;
@@ -161,9 +181,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     wclPal.hbrBackground    = GetSysColorBrush(COLOR_BTNFACE);
     RegisterClassEx (&wclPal);
 
-    // initializing and registering the window class for the settings window
-
-    WNDCLASSEX wclSettings;
+    /* initializing and registering the window class for the settings window */
     wclSettings.hInstance       = hThisInstance;
     wclSettings.lpszClassName   = _T("ToolSettings");
     wclSettings.lpfnWndProc     = SettingsWinProc;
@@ -178,9 +196,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     wclSettings.hbrBackground   = GetSysColorBrush(COLOR_BTNFACE);
     RegisterClassEx (&wclSettings);
 
-    // initializing and registering the window class for the selection frame
-
-    WNDCLASSEX wclSelection;
+    /* initializing and registering the window class for the selection frame */
     wclSelection.hInstance      = hThisInstance;
     wclSelection.lpszClassName  = _T("Selection");
     wclSelection.lpfnWndProc    = SelectionWinProc;
@@ -196,24 +212,21 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     RegisterClassEx (&wclSelection);
 
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
-    TCHAR progtitle[1000];
-    TCHAR resstr[100];
     LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
     _stprintf(progtitle, resstr, filename);
     
     
-    // create main window
+    /* create main window */
     hwnd = CreateWindowEx (0, _T("WindowsApp"), progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544, 375, HWND_DESKTOP, NULL, hThisInstance, NULL);
 
     hMainWnd = hwnd;
 
-    // loading and setting the window menu from resource
-    HMENU menu;
+    /* loading and setting the window menu from resource */
     menu = LoadMenu(hThisInstance, MAKEINTRESOURCE(ID_MENU));
     SetMenu(hwnd, menu);
-    HANDLE haccel = LoadAccelerators(hThisInstance, MAKEINTRESOURCE(800));
+    haccel = LoadAccelerators(hThisInstance, MAKEINTRESOURCE(800));
 
-    // preloading the draw transparent/nontransparent icons for later use
+    /* preloading the draw transparent/nontransparent icons for later use */
     hNontranspIcon  = LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_NONTRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
     hTranspIcon     = LoadImage(hThisInstance, MAKEINTRESOURCE(IDI_TRANSPARENT), IMAGE_ICON, 40, 30, LR_DEFAULTCOLOR);
 
@@ -225,19 +238,17 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
 
     CreateWindowEx (0, _T("STATIC"), _T(""), WS_CHILD | WS_VISIBLE | SS_ETCHEDHORZ, 0, 0, 5000, 2, hwnd, NULL, hThisInstance, NULL);
 
-    // creating the 16 bitmap radio buttons and setting the bitmap
+    /* creating the 16 bitmap radio buttons and setting the bitmap */
 
 
-    // FIXME: Unintentionally there is a line above the tool bar. To prevent cropping of the buttons height has been increased from 200 to 205
-    HWND hToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE | TBSTYLE_TOOLTIPS, 3, 3, 50, 205, hwnd, NULL, hThisInstance, NULL);
-    HIMAGELIST hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
+    /* FIXME: Unintentionally there is a line above the tool bar. To prevent cropping of the buttons height has been increased from 200 to 205 */
+    hToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE | CCS_NOPARENTALIGN | CCS_VERT | CCS_NORESIZE | TBSTYLE_TOOLTIPS, 3, 3, 50, 205, hwnd, NULL, hThisInstance, NULL);
+    hImageList = ImageList_Create(16, 16, ILC_COLOR24 | ILC_MASK, 16, 0);
     SendMessage(hToolbar, TB_SETIMAGELIST, 0, (LPARAM)hImageList);
-    HBITMAP tempBm = LoadImage(hThisInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
+    tempBm = LoadImage(hThisInstance, MAKEINTRESOURCE(IDB_TOOLBARICONS), IMAGE_BITMAP, 256, 16, 0);
     ImageList_AddMasked(hImageList, tempBm, 0xff00ff);
     DeleteObject(tempBm);
     SendMessage(hToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-    int i;
-    TCHAR tooltips[16][30];
     for (i=0; i<16; i++)
     {
         int wrapnow = 0;
@@ -246,35 +257,35 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
         TBBUTTON tbbutton = { i, ID_FREESEL + i, TBSTATE_ENABLED | wrapnow, TBSTYLE_CHECKGROUP, {0}, 0, (INT_PTR)tooltips[i] };
         SendMessage(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&tbbutton);
     }
-   // SendMessage(hToolbar, TB_SETROWS, MAKEWPARAM(8, FALSE), (LPARAM)NULL);
+   /* SendMessage(hToolbar, TB_SETROWS, MAKEWPARAM(8, FALSE), (LPARAM)NULL); */
     SendMessage(hToolbar, TB_CHECKBUTTON, ID_PEN, MAKELONG(TRUE, 0));
     SendMessage(hToolbar, TB_SETMAXTEXTROWS, 0, 0);
 
     SendMessage(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(25, 25));
-   // SendMessage(hToolbar, TB_AUTOSIZE, 0, 0);
+   /* SendMessage(hToolbar, TB_AUTOSIZE, 0, 0); */
 
 
 
 
-    // creating the tool settings child window
+    /* creating the tool settings child window */
     hToolSettings = CreateWindowEx(0, _T("ToolSettings"), _T(""), WS_CHILD | WS_VISIBLE, 7, 210, 42, 140, hwnd, NULL, hThisInstance, NULL);
 
-    // creating the palette child window
+    /* creating the palette child window */
     hPalWin = CreateWindowEx(0, _T("Palette"), _T(""), WS_CHILD | WS_VISIBLE, 56, 9, 255, 32, hwnd, NULL, hThisInstance, NULL);
 
-    // creating the scroll box
+    /* creating the scroll box */
     hScrollbox = CreateWindowEx (WS_EX_CLIENTEDGE, _T("Scrollbox"), _T(""), WS_CHILD | WS_GROUP | WS_HSCROLL | WS_VSCROLL | WS_VISIBLE, 56, 49, 472, 248, hwnd, NULL, hThisInstance, NULL);
 
-    // creating the status bar
+    /* creating the status bar */
     hStatusBar = CreateWindowEx (0, STATUSCLASSNAME, _T(""), SBARS_SIZEGRIP | WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, hwnd, NULL, hThisInstance, NULL);
     SendMessage(hStatusBar, SB_SETMINHEIGHT, 21, 0);
 
     hScrlClient = CreateWindowEx(0, _T("Scrollbox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 500, 500, hScrollbox, NULL, hThisInstance, NULL);
 
-    // create selection window (initially hidden)
+    /* create selection window (initially hidden) */
     hSelection = CreateWindowEx(WS_EX_TRANSPARENT, _T("Selection"), _T(""), WS_CHILD | BS_OWNERDRAW, 350, 0, 100, 100, hScrlClient, NULL, hThisInstance, NULL);
 
-    // creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn
+    /* creating the window inside the scroll box, on which the image in hDrawingDC's bitmap is drawn */
     hImageArea = CreateWindowEx (0, _T("Scrollbox"), _T(""), WS_CHILD | WS_VISIBLE, 3, 3, imgXRes, imgYRes, hScrlClient, NULL, hThisInstance, NULL);
 
     hDrawingDC = CreateCompatibleDC(GetDC(hImageArea));
@@ -286,10 +297,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     SelectObject(hDrawingDC, hBms[0]);
     Rectangle(hDrawingDC, 0-1, 0-1, imgXRes+1, imgYRes+1);
 
-    // initializing the CHOOSECOLOR structure for use with ChooseColor
-    int custColors[16] =
-        {0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
-        0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff};
+    /* initializing the CHOOSECOLOR structure for use with ChooseColor */
     choosecolor.lStructSize     = sizeof(CHOOSECOLOR);
     choosecolor.hwndOwner       = hwnd;
     choosecolor.hInstance       = NULL;
@@ -300,13 +308,8 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     choosecolor.lpfnHook        = NULL;
     choosecolor.lpTemplateName  = NULL;
 
-    TCHAR *c;
-
-    // initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName
-    TCHAR ofnFilename[1000];
+    /* initializing the OPENFILENAME structure for use with GetOpenFileName and GetSaveFileName */
     CopyMemory(ofnFilename, filename, sizeof(filename));
-    TCHAR ofnFiletitle[256];
-    TCHAR ofnFilter[1000];
     LoadString(hThisInstance, IDS_OPENFILTER, ofnFilter, SIZEOF(ofnFilter));
     for (c = ofnFilter; *c; c++) if (*c == '\1') *c = '\0';
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
@@ -320,10 +323,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     ofn.nMaxFileTitle   = SIZEOF(ofnFiletitle);
     ofn.Flags           = OFN_HIDEREADONLY;
 
-    TCHAR sfnFilename[1000];
     CopyMemory(sfnFilename, filename, sizeof(filename));
-    TCHAR sfnFiletitle[256];
-    TCHAR sfnFilter[1000];
     LoadString(hThisInstance, IDS_SAVEFILTER, sfnFilter, SIZEOF(sfnFilter));
     for (c = sfnFilter; *c; c++) if (*c == '\1') *c = '\0';
     ZeroMemory(&sfn, sizeof(OPENFILENAME));
@@ -338,7 +338,7 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     sfn.Flags           = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
 
-    // by moving the window, the things in WM_SIZE are done
+    /* by moving the window, the things in WM_SIZE are done */
     MoveWindow(hwnd, 100, 100, 600, 450, TRUE);
 
     /* Make the window visible on the screen */

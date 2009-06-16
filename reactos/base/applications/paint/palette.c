@@ -19,14 +19,16 @@ LRESULT CALLBACK PalWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
     {
         case WM_PAINT:
             {
-                DefWindowProc (hwnd, message, wParam, lParam);
-                HDC hdc = GetDC(hwnd);
-                HPEN oldPen;
-                HBRUSH oldBrush;
                 int i;
                 long rectang[4] = {0, 0, 31, 32};
                 int a;
                 int b;
+                HDC hdc = GetDC(hwnd);
+                HPEN oldPen;
+                HBRUSH oldBrush;
+
+                DefWindowProc (hwnd, message, wParam, lParam);
+
                 for (b=2; b<30; b++) for (a=2; a<29; a++) if ((a+b)%2==1) SetPixel(hdc, a, b, GetSysColor(COLOR_BTNHILIGHT));
                 DrawEdge(hdc, (LPRECT)&rectang, EDGE_RAISED, BF_TOPLEFT);
                 DrawEdge(hdc, (LPRECT)&rectang, BDR_SUNKENOUTER, BF_TOPLEFT|BF_BOTTOMRIGHT);

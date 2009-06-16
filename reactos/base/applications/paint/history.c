@@ -93,6 +93,10 @@ void insertReversible(HBITMAP hbm)
 
 void cropReversible(int x, int y)//FIXME: This function is broken
 {
+    HBITMAP oldBitmap;
+    HPEN oldPen;
+    HBRUSH oldBrush;
+
     SelectObject(hDrawingDC, hBms[currInd]);
     DeleteObject(hBms[(currInd+1)%4]);
     hBms[(currInd+1)%4] = CreateDIBWithProperties(x, y);
@@ -100,9 +104,9 @@ void cropReversible(int x, int y)//FIXME: This function is broken
     if (undoSteps<3) undoSteps++;
     redoSteps = 0;
     
-    HBITMAP oldBitmap = SelectObject(hSelDC, hBms[currInd]);
-    HPEN oldPen = SelectObject(hSelDC, CreatePen(PS_SOLID, 1, bgColor));
-    HBRUSH oldBrush = SelectObject(hSelDC, CreateSolidBrush(bgColor));
+    oldBitmap = SelectObject(hSelDC, hBms[currInd]);
+    oldPen = SelectObject(hSelDC, CreatePen(PS_SOLID, 1, bgColor));
+    oldBrush = SelectObject(hSelDC, CreateSolidBrush(bgColor));
     Rectangle(hSelDC, 0, 0, x, y);
     DeleteObject(SelectObject(hSelDC, oldBrush));
     DeleteObject(SelectObject(hSelDC, oldPen));
