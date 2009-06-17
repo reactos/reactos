@@ -6,6 +6,12 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4820)
+#endif
+
 /* Get/SetSystemPaletteUse() values */
 #define SYSPAL_ERROR        0
 #define SYSPAL_STATIC       1
@@ -3329,6 +3335,11 @@ typedef DISPLAY_DEVICEA DISPLAY_DEVICE, *PDISPLAY_DEVICE, *LPDISPLAY_DEVICE;
 #define wglUseFontOutlines wglUseFontOutlinesA
 #endif
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -4,6 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
 #define DI_CHANNEL 1
 #define DI_CHANNEL_WRITE 2
 #define DI_READ_SPOOL_JOB 3
@@ -1019,6 +1023,9 @@ typedef PRINTER_DEFAULTSA PRINTER_DEFAULTS,*PPRINTER_DEFAULTS,*LPPRINTER_DEFAULT
 #define StartDocPrinter StartDocPrinterA
 #endif
 #endif /* RC_INVOKED */
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 #ifdef __cplusplus
 }
 #endif

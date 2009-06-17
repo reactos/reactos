@@ -4,6 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
 #define WINSHELLAPI DECLSPEC_IMPORT
 #define ABE_LEFT	0
 #define ABE_TOP	1
@@ -418,6 +422,9 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define SHQueryRecycleBin SHQueryRecycleBinA
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
+#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 #ifdef __cplusplus
 }

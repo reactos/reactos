@@ -5,6 +5,12 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4820)
+#endif
+
 #if !defined(_USER32_)
 #define WINUSERAPI DECLSPEC_IMPORT
 #else
@@ -4675,6 +4681,10 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #endif /* NOGDI */
 #endif /* UNICODE */
 #endif /* RC_INVOKED */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

@@ -80,6 +80,7 @@ typedef __builtin_va_list __gnuc_va_list;
 #undef _BSD_VA_LIST
 #endif
 
+#ifdef __GNUC__
 #if defined(__svr4__) || (defined(_SCO_DS) && !defined(__VA_LIST))
 /* SVR4.2 uses _VA_LIST for an internal alias for va_list,
    so we must avoid testing it and setting it here.
@@ -92,9 +93,7 @@ typedef __builtin_va_list __gnuc_va_list;
 #define _VA_LIST va_list
 #endif
 #endif /* __i860__ */
-#ifdef __GNUC__
 typedef __gnuc_va_list va_list;
-#endif
 #ifdef _SCO_DS
 #define __VA_LIST
 #endif
@@ -114,9 +113,7 @@ typedef __gnuc_va_list va_list;
 #ifndef _VA_LIST_T_H
 /* The macro __va_list__ is used by BeOS.  */
 #ifndef __va_list__
-#ifdef __GNUC__
 typedef __gnuc_va_list va_list;
-#endif
 #endif /* not __va_list__ */
 #endif /* not _VA_LIST_T_H */
 #endif /* not _VA_LIST */
@@ -141,6 +138,7 @@ typedef __gnuc_va_list va_list;
 
 #endif /* not __svr4__ */
 
+#endif /* __GNUC__ */
 #endif /* _STDARG_H */
 
 #endif /* not _ANSI_STDARG_H_ */

@@ -236,6 +236,14 @@ typedef DWORD FLONG;
 
 #define NTAPI __stdcall
 #include <basetsd.h>
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4214)
+#pragma warning(disable:4820)
+#endif
+
 #define ACE_OBJECT_TYPE_PRESENT           0x00000001
 #define ACE_INHERITED_OBJECT_TYPE_PRESENT 0x00000002
 #define APPLICATION_ERROR_MASK       0x20000000
@@ -4579,7 +4587,7 @@ typedef OSVERSIONINFOA OSVERSIONINFO,*POSVERSIONINFO,*LPOSVERSIONINFO;
 typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 #endif
 
-#if (WIN32_WINNT >= 0x0500)
+#if (_WIN32_WINNT >= 0x0500)
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
 
@@ -4976,6 +4984,10 @@ MemoryBarrier(VOID)
 
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
 
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #endif /* RC_INVOKED */

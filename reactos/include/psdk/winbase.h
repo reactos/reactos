@@ -11,6 +11,13 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4214)
+#pragma warning(disable:4820)
+#endif
+
 #define FILE_ENCRYPTABLE         0
 #define FILE_IS_ENCRYPTED        1
 #define FILE_SYSTEM_ATTR         2
@@ -2618,6 +2625,11 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define WriteProfileString WriteProfileStringA
 #endif
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

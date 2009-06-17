@@ -9,6 +9,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
+
 #define	WINMMAPI	DECLSPEC_IMPORT
 #define _loadds
 #define _huge
@@ -2056,6 +2062,11 @@ typedef MCI_OVLY_SAVE_PARMSA MCI_OVLY_SAVE_PARMS,*PMCI_OVLY_SAVE_PARMS,*LPMCI_OV
 #define mciGetDeviceIDFromElementID mciGetDeviceIDFromElementIDA
 #define mciGetErrorString mciGetErrorStringA
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -190,7 +190,7 @@ typedef I_RPC_HANDLE *RPC_EP_INQ_HANDLE;
 #define RPC_C_HTTP_AUTHN_SCHEME_NEGOTIATE   0x10
 
 typedef RPC_STATUS RPC_ENTRY RPC_IF_CALLBACK_FN( RPC_IF_HANDLE InterfaceUuid, void *Context );
-typedef void (__RPC_USER *RPC_AUTH_KEY_RETRIEVAL_FN)();
+typedef void (__RPC_USER *RPC_AUTH_KEY_RETRIEVAL_FN)( void *Arg, unsigned char *ServerPrincName, unsigned long KeyVer, void **Key, RPC_STATUS *Status );
 
 typedef struct _RPC_POLICY
 {
@@ -305,7 +305,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextW(RPC_STATUS e, RPC_WSTR buffer);
 
 RPCRTAPI DECLSPEC_NORETURN void RPC_ENTRY
   RpcRaiseException( RPC_STATUS exception );
-        
+
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingCopy( RPC_BINDING_HANDLE SourceBinding, RPC_BINDING_HANDLE* DestinationBinding );
 

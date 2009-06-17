@@ -33,6 +33,10 @@
 # define __attribute__(x) /* nothing */
 #endif
 
+#ifdef _MSC_VER
+#define __restrict__ /* nothing */
+#endif
+
 #if defined (__GNUC__) && defined (__GNUC_MINOR__)
 #define __MINGW_GNUC_PREREQ(major, minor) \
   (__GNUC__ > (major) \
