@@ -59,8 +59,7 @@
 
 
 <!--
-	Whether to compile for debugging. No compiler optimizations will be
-	performed.
+	Whether to compile for debugging.
 -->
 <property name="DBG" value="1" />
 
