@@ -176,7 +176,6 @@ static HRESULT FillBuffer(MPEGSplitterImpl *This, IMediaSample *pCurrentSample)
 
     /* Find the next valid header.. it <SHOULD> be right here */
     assert(parse_header(fbuf, &length, &This->position) == S_OK);
-    assert(length == len || length + 4 == len);
     IMediaSample_SetActualDataLength(pCurrentSample, length);
 
     /* Queue the next sample */
