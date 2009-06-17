@@ -91,7 +91,7 @@ extern "C" {
 #define __va_copy(d,s)	((void)((d) = (s)))
 #endif
 
-#if !defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L
+#if !defined(va_copy) && (!defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L)
 #define va_copy(d,s)	__va_copy((d),(s))
 #endif
 
