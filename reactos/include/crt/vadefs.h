@@ -37,14 +37,20 @@ extern "C" {
 #endif
 #endif
 
+#ifdef __GNUC__
 #ifndef __GNUC_VA_LIST
 #define __GNUC_VA_LIST
   typedef __builtin_va_list __gnuc_va_list;
 #endif
+#endif
 
 #ifndef _VA_LIST_DEFINED
 #define _VA_LIST_DEFINED
+#if defined(__GNUC__)
   typedef __gnuc_va_list va_list;
+#elif defined(_MSC_VER)
+  typedef char *  va_list;
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -66,16 +72,28 @@ extern "C" {
 #define _APALIGN(t,ap) (__alignof(t))
 #endif
 
-#if !defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L
-#define va_copy(d,s)	__builtin_va_copy(d,s)
-#endif
-#define __va_copy(d,s)	__builtin_va_copy(d,s)
-
 #define _INTSIZEOF(n) ((sizeof(n) + sizeof(int) - 1) & ~(sizeof(int) - 1))
 
+#if defined(__GNUC__)
 #define _crt_va_start(v,l)	__builtin_va_start(v,l)
 #define _crt_va_arg(v,l)	__builtin_va_arg(v,l)
 #define _crt_va_end(v)	__builtin_va_end(v)
+#define __va_copy(d,s)	__builtin_va_copy(d,s)
+#elif defined(_MSC_VER)
+
+#if defined(_M_IA64) || defined(_M_AMD64) || defined(_M_CEE)
+#error Please implement me
+#endif
+
+#define _crt_va_start(v,l)	((void)((v) = (va_list)_ADDRESSOF(l) + _INTSIZEOF(l)))
+#define _crt_va_arg(v,l)	(*(l *)(((v) += _INTSIZEOF(l)) - _INTSIZEOF(l)))
+#define _crt_va_end(v)	((void)((v) = (va_list)0))
+#define __va_copy(d,s)	((void)((d) = (s)))
+#endif
+
+#if !defined(__STRICT_ANSI__) || __STDC_VERSION__ + 0 >= 199900L
+#define va_copy(d,s)	__va_copy((d),(s))
+#endif
 
 #ifdef __cplusplus
 }

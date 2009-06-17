@@ -44,15 +44,18 @@ Boston, MA 02110-1301, USA.  */
 
 /* Define __gnuc_va_list.  */
 
+#ifdef __GNUC__
 #ifndef __GNUC_VA_LIST
 #define __GNUC_VA_LIST
 typedef __builtin_va_list __gnuc_va_list;
+#endif
 #endif
 
 /* Define the standard macros for the user,
    if this invocation was from the user program.  */
 #ifdef _STDARG_H
 
+#ifdef __GNUC__
 #define va_start(v,l)	__builtin_va_start(v,l)
 #define va_end(v)	__builtin_va_end(v)
 #define va_arg(v,l)	__builtin_va_arg(v,l)
@@ -60,11 +63,12 @@ typedef __builtin_va_list __gnuc_va_list;
 #define va_copy(d,s)	__builtin_va_copy(d,s)
 #endif
 #define __va_copy(d,s)	__builtin_va_copy(d,s)
+#endif
 
 /* Define va_list, if desired, from __gnuc_va_list. */
 /* We deliberately do not define va_list when called from
    stdio.h, because ANSI C says that stdio.h is not supposed to define
-   va_list.  stdio.h needs to have access to that data type, 
+   va_list.  stdio.h needs to have access to that data type,
    but must not use that name.  It should use the name __gnuc_va_list,
    which is safe because it is reserved for the implementation.  */
 
@@ -88,7 +92,9 @@ typedef __builtin_va_list __gnuc_va_list;
 #define _VA_LIST va_list
 #endif
 #endif /* __i860__ */
+#ifdef __GNUC__
 typedef __gnuc_va_list va_list;
+#endif
 #ifdef _SCO_DS
 #define __VA_LIST
 #endif
@@ -108,7 +114,9 @@ typedef __gnuc_va_list va_list;
 #ifndef _VA_LIST_T_H
 /* The macro __va_list__ is used by BeOS.  */
 #ifndef __va_list__
+#ifdef __GNUC__
 typedef __gnuc_va_list va_list;
+#endif
 #endif /* not __va_list__ */
 #endif /* not _VA_LIST_T_H */
 #endif /* not _VA_LIST */
