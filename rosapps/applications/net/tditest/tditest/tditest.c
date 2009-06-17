@@ -12,7 +12,7 @@
 #include <tditest.h>
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 ULONG DebugTraceLevel = -1;
