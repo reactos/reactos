@@ -307,8 +307,11 @@ void printWindowsError()
             (LPTSTR) &lpMsgBuf,
             0, NULL );
 
-        printf("Error: %p\nPress Enter..\n", lpMsgBuf);
+        _tprintf(_T("Error: %s\nPress Enter..\n"), (LPTSTR)lpMsgBuf);
         getchar();
+
+        if(lpMsgBuf)
+            LocalFree(lpMsgBuf);
     }
 }
 
