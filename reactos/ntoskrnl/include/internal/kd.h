@@ -66,7 +66,7 @@ KdPortPutByteEx(
 /* SYMBOL ROUTINES **********************************************************/
 #ifdef __NTOSKRNL__
 
-#if defined(KDBG) || defined(DBG)
+#if defined(KDBG) || DBG
 
 VOID
 KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule);
@@ -128,7 +128,7 @@ typedef struct _KDB_MODULE_INFO
 # define KDB_CREATE_THREAD_HOOK(CONTEXT)	do { } while (0)
 #endif
 
-#if defined(KDBG) || defined(DBG)
+#if defined(KDBG) || DBG
 # define KeRosPrintAddress(ADDRESS)         KdbSymPrintAddress(ADDRESS)
 #else
 # define KeRosPrintAddress(ADDRESS)         KiRosPrintAddress(ADDRESS)

@@ -267,7 +267,7 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PDEVICE_OBJECT DeviceObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
-#ifdef DBG
+#if DBG
    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
 #endif
 

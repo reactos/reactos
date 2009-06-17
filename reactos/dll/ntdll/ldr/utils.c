@@ -69,7 +69,7 @@ static VOID LdrpDetachProcess(BOOLEAN UnloadAll);
 
 /* FUNCTIONS *****************************************************************/
 
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
 
 VOID
 LdrpLoadUserModuleSymbols(PLDR_DATA_TABLE_ENTRY LdrModule)
@@ -2274,7 +2274,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
             DPRINT1("LdrFixupImports failed for %wZ, status=%x\n", &(*Module)->BaseDllName, Status);
             return Status;
           }
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
         LdrpLoadUserModuleSymbols(*Module);
 #endif /* DBG || KDBG */
         RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);

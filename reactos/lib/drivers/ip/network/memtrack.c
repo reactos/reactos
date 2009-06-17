@@ -2,7 +2,7 @@
 #include "precomp.h"
 
 
-#ifdef DBG
+#if DBG
 #define TRACK_TAG TAG('T','r','C','K')
 
 static LIST_ENTRY AllocatedObjectsList;

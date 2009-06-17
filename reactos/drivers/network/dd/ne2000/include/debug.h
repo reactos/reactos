@@ -18,7 +18,7 @@
 #define DEBUG_MEMORY   0x00000100
 #define DEBUG_ULTRA    0xFFFFFFFF
 
-#ifdef DBG
+#if DBG
 
 extern ULONG DebugTraceLevel;
 

@@ -78,7 +78,7 @@ RtlAssert(
 
 /* Print stuff only on Debug Builds*/
 #define DPFLTR_DEFAULT_ID -1
-#ifdef DBG
+#if DBG
 
     /* These are always printed */
     #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint

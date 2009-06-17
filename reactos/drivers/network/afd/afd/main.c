@@ -17,7 +17,7 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
@@ -349,7 +349,7 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status = STATUS_SUCCESS;
-#ifdef DBG
+#if DBG
     PFILE_OBJECT FileObject = IrpSp->FileObject;
 #endif
 

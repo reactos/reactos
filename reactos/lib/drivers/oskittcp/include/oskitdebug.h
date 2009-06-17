@@ -35,7 +35,7 @@
 
 #include <oskittypes.h>
 
-#ifdef DBG
+#if DBG
 
 extern OSK_UINT OskitDebugTraceLevel;
 

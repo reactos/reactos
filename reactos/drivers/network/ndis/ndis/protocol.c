@@ -247,7 +247,7 @@ ProIndicatePacket(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-#ifdef DBG
+#if DBG
   MiniDisplayPacket(Packet);
 #endif
 

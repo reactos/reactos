@@ -694,7 +694,7 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
 
     LoadSymbols = FALSE;
 
-#ifdef DBG
+#if DBG
     /* Load symbols only if we have 96Mb of RAM or more */
     if (MmNumberOfPhysicalPages >= 0x6000)
         LoadSymbols = TRUE;

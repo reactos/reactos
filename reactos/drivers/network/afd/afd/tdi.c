@@ -13,7 +13,7 @@
 #include "tdiconn.h"
 #include "tdi_proto.h"
 
-#ifdef DBG
+#if DBG
 #if 0
 static VOID DisplayBuffer(
     PVOID Buffer,

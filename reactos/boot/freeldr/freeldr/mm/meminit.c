@@ -21,7 +21,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-#ifdef DBG
+#if DBG
 typedef struct
 {
     MEMORY_TYPE Type;
@@ -54,13 +54,13 @@ extern ULONG_PTR	MmHeapStart;
 
 BOOLEAN MmInitializeMemoryManager(VOID)
 {
-#ifdef DBG
+#if DBG
 	MEMORY_DESCRIPTOR* MemoryDescriptor = NULL;
 #endif
 
 	DPRINTM(DPRINT_MEMORY, "Initializing Memory Manager.\n");
 
-#ifdef DBG
+#if DBG
 	// Dump the system memory map
 	DPRINTM(DPRINT_MEMORY, "System Memory Map (Base Address, Length, Type):\n");
 	while ((MemoryDescriptor = ArcGetMemoryDescriptor(MemoryDescriptor)) != NULL)
@@ -128,7 +128,7 @@ VOID MmInitializeHeap(PVOID PageLookupTable)
 	DPRINTM(DPRINT_MEMORY, "Heap initialized, base 0x%08x, pages %d\n", (HeapStart << MM_PAGE_SHIFT), PagesNeeded);
 }
 
-#ifdef DBG
+#if DBG
 PCSTR MmGetSystemMemoryMapTypeString(MEMORY_TYPE Type)
 {
 	ULONG		Index;

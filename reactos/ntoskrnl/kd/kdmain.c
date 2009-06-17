@@ -49,7 +49,7 @@ KdpServiceDispatcher(ULONG Service,
             Result = KdpPrintString(Buffer1, Buffer1Length);
             break;
 
-#ifdef DBG
+#if DBG
         case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
         {
             switch ((ULONG)Buffer1)

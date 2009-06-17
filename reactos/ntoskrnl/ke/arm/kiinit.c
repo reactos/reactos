@@ -65,7 +65,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 #ifndef CONFIG_SMP
     Prcb->BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
-#ifdef DBG
+#if DBG
     Prcb->BuildType |= PRCB_BUILD_DEBUG;
 #endif
     Prcb->CurrentThread = InitThread;

@@ -26,7 +26,7 @@ UINT Random(
     return RandomNumber;
 }
 
-#ifdef DBG
+#if DBG
 static VOID DisplayIPHeader(
     PCHAR Header,
     UINT Length)
@@ -131,7 +131,7 @@ VOID DisplayTCPPacket(
 VOID DisplayIPPacket(
     PIP_PACKET IPPacket)
 {
-#ifdef DBG
+#if DBG
     PCHAR p;
     UINT Length;
     PNDIS_BUFFER Buffer;

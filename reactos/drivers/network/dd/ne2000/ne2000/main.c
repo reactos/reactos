@@ -19,7 +19,7 @@ DriverEntry(
     PUNICODE_STRING RegistryPath);
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 ULONG DebugTraceLevel = 0;

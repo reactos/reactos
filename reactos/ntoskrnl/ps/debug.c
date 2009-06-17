@@ -15,7 +15,7 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-#ifdef DBG
+#if DBG
 VOID
 NTAPI
 PspDumpThreads(BOOLEAN IncludeSystem)

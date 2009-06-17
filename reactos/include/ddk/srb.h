@@ -33,7 +33,7 @@ extern "C" {
   #define SCSIPORTAPI DECLSPEC_IMPORT
 #endif
 
-#ifdef DBG
+#if DBG
 #define DebugPrint(x) ScsiDebugPrint x
 #else
 #define DebugPrint(x)
@@ -56,7 +56,7 @@ typedef PHYSICAL_ADDRESS SCSI_PHYSICAL_ADDRESS, *PSCSI_PHYSICAL_ADDRESS;
 
 #define MAXIMUM_CDB_SIZE                  12
 
-#ifdef DBG
+#if DBG
 #define SCSI_PORT_SIGNATURE               0x54524f50
 #endif
 

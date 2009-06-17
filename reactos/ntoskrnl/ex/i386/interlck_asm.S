@@ -461,7 +461,7 @@ _ExInterlockedDecrementLong@8:
 
 /*ULONG
  *NTAPI
- *ExInterlockedExchangeUlong(IN PULONG Taget,
+ *ExInterlockedExchangeUlong(IN PULONG Target,
  *                           IN ULONG Value,
  *                           IN PKSPIN_LOCK Lock)
  */
@@ -529,7 +529,7 @@ _Exi386InterlockedDecrementLong@4:
 
 /*ULONG
  *NTAPI
- *Exi386InterlockedExchangeUlong(IN PULONG Taget,
+ *Exi386InterlockedExchangeUlong(IN PULONG Target,
  *                               IN ULONG Value,
  *                               IN PKSPIN_LOCK Lock)
  */

@@ -159,7 +159,7 @@ RtlLeaveHeapLock(
     return STATUS_SUCCESS;
 }
 
-#ifdef DBG
+#if DBG
 VOID FASTCALL
 CHECK_PAGED_CODE_RTL(char *file, int line)
 {

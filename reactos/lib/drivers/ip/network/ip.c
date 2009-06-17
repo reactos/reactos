@@ -179,7 +179,7 @@ PIP_INTERFACE IPCreateInterface(
 
     TI_DbgPrint(DEBUG_IP, ("Called. BindInfo (0x%X).\n", BindInfo));
 
-#ifdef DBG
+#if DBG
     if (BindInfo->Address) {
         PUCHAR A = BindInfo->Address;
         TI_DbgPrint(DEBUG_IP, ("Interface address (%02X %02X %02X %02X %02X %02X).\n",

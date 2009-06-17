@@ -20,7 +20,7 @@
 #include <freeldr.h>
 #include <debug.h>
 
-#ifdef DBG
+#if DBG
 VOID		DumpMemoryAllocMap(VOID);
 VOID		MemAllocTest(VOID);
 #endif // DBG
@@ -69,7 +69,7 @@ PVOID MmAllocateMemoryWithType(ULONG MemorySize, TYPE_OF_MEMORY MemoryType)
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-#ifdef DBG
+#if DBG
 	DPRINTM(DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd);
 	DPRINTM(DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer);
 #endif // DBG
@@ -169,7 +169,7 @@ PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress, TYPE_OF_
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)((ULONG_PTR)StartPageNumber * MM_PAGE_SIZE);
 
-#ifdef DBG
+#if DBG
 	DPRINTM(DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, StartPageNumber);
 	DPRINTM(DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer);
 #endif // DBG
@@ -242,7 +242,7 @@ PVOID MmAllocateHighestMemoryBelowAddress(ULONG MemorySize, PVOID DesiredAddress
 	FreePagesInLookupTable -= PagesNeeded;
 	MemPointer = (PVOID)((ULONG_PTR)FirstFreePageFromEnd * MM_PAGE_SIZE);
 
-#ifdef DBG
+#if DBG
 	DPRINTM(DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d.\n", MemorySize, PagesNeeded, FirstFreePageFromEnd);
 	DPRINTM(DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer);
 #endif // DBG
@@ -259,7 +259,7 @@ VOID MmFreeMemory(PVOID MemoryPointer)
 {
 }
 
-#ifdef DBG
+#if DBG
 
 VOID DumpMemoryAllocMap(VOID)
 {

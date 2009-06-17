@@ -649,7 +649,7 @@ VOID LANTransmit(
                 EHeader->EType = ETYPE_IPv6;
                 break;
             default:
-#ifdef DBG
+#if DBG
                 /* Should not happen */
                 TI_DbgPrint(MIN_TRACE, ("Unknown LAN protocol.\n"));
 

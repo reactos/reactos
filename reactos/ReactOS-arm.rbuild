@@ -19,6 +19,10 @@
 		<define name="_SEH_ENABLE_TRACE" />
 		<property name="DBG_OR_KDBG" value="true" />
 	</if>
+	<if property="DBG" value="0">
+		<define name="DBG">0</define>
+	</if>
+
 	<if property="KDBG" value="1">
 		<define name="KDBG">1</define>
 		<property name="DBG_OR_KDBG" value="true" />

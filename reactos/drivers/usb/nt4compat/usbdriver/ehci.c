@@ -6060,7 +6060,7 @@ ehci_isr(PKINTERRUPT interrupt, PVOID context)
 
     PEHCI_DEV ehci;
     ULONG status;
-#ifdef DBG
+#if DBG
     ULONG urb_count;
 #endif
     PLIST_ENTRY pthis, pnext;
@@ -6116,7 +6116,7 @@ ehci_isr(PKINTERRUPT interrupt, PVOID context)
     door_bell_rings = ((status & STS_IAA) != 0);
 
     // scan to remove those due
-#ifdef DBG
+#if DBG
     urb_count = dbg_count_list(&ehci->urb_list);
     ehci_dbg_print(DBGLVL_MAXIMUM, ("ehci_isr(): urb# in process is %d\n", urb_count));
 #endif

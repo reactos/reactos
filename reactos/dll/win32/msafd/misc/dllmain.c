@@ -14,7 +14,7 @@
 
 #include <debug.h>
 
-#ifdef DBG
+#if DBG
 //DWORD DebugTraceLevel = DEBUG_ULTRA;
 DWORD DebugTraceLevel = 0;
 #endif /* DBG */

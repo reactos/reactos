@@ -164,7 +164,7 @@ VOID NTAPI DispCancelRequest(
     Irp->IoStatus.Status = STATUS_CANCELLED;
     Irp->IoStatus.Information = 0;
 
-#ifdef DBG
+#if DBG
     if (!Irp->Cancel)
         TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
 #endif
@@ -243,7 +243,7 @@ VOID NTAPI DispCancelListenRequest(
 
     TI_DbgPrint(DEBUG_IRP, ("IRP at (0x%X).\n", Irp));
 
-#ifdef DBG
+#if DBG
     if (!Irp->Cancel)
         TI_DbgPrint(MIN_TRACE, ("Irp->Cancel is FALSE, should be TRUE.\n"));
 #endif

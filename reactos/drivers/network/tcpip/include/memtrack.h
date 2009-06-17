@@ -15,7 +15,7 @@
 #define AllocatePacketWithBuffer(x,y,z) AllocatePacketWithBufferX(x,y,z,__FILE__,__LINE__)
 #define FreeNdisPacket(x) FreeNdisPacketX(x,__FILE__,__LINE__)
 
-#ifdef DBG
+#if DBG
 #define MTMARK() TrackDumpFL(__FILE__, __LINE__)
 #define exAllocatePool(x,y) ExAllocatePoolX(x,y,__FILE__,__LINE__)
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolX(x,y,__FILE__,__LINE__)

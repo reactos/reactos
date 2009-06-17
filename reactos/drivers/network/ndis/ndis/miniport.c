@@ -62,7 +62,7 @@ VOID
 MiniDisplayPacket(
     PNDIS_PACKET Packet)
 {
-#ifdef DBG
+#if DBG
     ULONG i, Length;
     UCHAR Buffer[64];
     if ((DebugTraceLevel & DEBUG_PACKET) > 0) {
@@ -92,7 +92,7 @@ MiniDisplayPacket2(
     PVOID  LookaheadBuffer,
     UINT   LookaheadBufferSize)
 {
-#ifdef DBG
+#if DBG
     if ((DebugTraceLevel & DEBUG_PACKET) > 0) {
         ULONG i, Length;
         PUCHAR p;
@@ -520,7 +520,7 @@ MiniAdapterHasAddress(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-#ifdef DBG
+#if DBG
   if(!Adapter)
     {
       NDIS_DbgPrint(MID_TRACE, ("Adapter object was null\n"));
@@ -1586,7 +1586,7 @@ DoQueries(
       return NdisStatus;
     }
 
-#ifdef DBG
+#if DBG
     {
       /* 802.3 only */
 

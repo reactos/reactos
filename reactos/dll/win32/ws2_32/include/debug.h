@@ -22,7 +22,7 @@
 #undef ASSERT
 #endif
 
-#ifdef DBG
+#if DBG
 
 extern DWORD DebugTraceLevel;
 

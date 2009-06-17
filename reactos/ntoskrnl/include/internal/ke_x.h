@@ -445,7 +445,7 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
             /* Value changed... wait until it's locked */
             while (*(volatile KSPIN_LOCK *)SpinLock == 1)
             {
-#ifdef DBG
+#if DBG
                 /* On debug builds, we use a much slower but useful routine */
                 //Kii386SpinOnSpinLock(SpinLock, 5);
 
@@ -459,7 +459,7 @@ KxAcquireSpinLock(IN PKSPIN_LOCK SpinLock)
         }
         else
         {
-#ifdef DBG
+#if DBG
             /* On debug builds, we OR in the KTHREAD */
             *SpinLock = (KSPIN_LOCK)KeGetCurrentThread() | 1;
 #endif
@@ -476,7 +476,7 @@ FORCEINLINE
 VOID
 KxReleaseSpinLock(IN PKSPIN_LOCK SpinLock)
 {
-#ifdef DBG
+#if DBG
     /* Make sure that the threads match */
     if (((KSPIN_LOCK)KeGetCurrentThread() | 1) != *SpinLock)
     {

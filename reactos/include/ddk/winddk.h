@@ -4256,7 +4256,7 @@ typedef struct _IO_REMOVE_LOCK_DBG_BLOCK {
 
 typedef struct _IO_REMOVE_LOCK {
   IO_REMOVE_LOCK_COMMON_BLOCK  Common;
-#ifdef DBG
+#if DBG
   IO_REMOVE_LOCK_DBG_BLOCK  Dbg;
 #endif
 } IO_REMOVE_LOCK, *PIO_REMOVE_LOCK;
@@ -5753,7 +5753,7 @@ KeAcquireSpinLockRaiseToDpc(
 #define ROUND_TO_PAGES(Size) \
   ((ULONG_PTR) (((ULONG_PTR) Size + PAGE_SIZE - 1) & ~(PAGE_SIZE - 1)))
 
-#ifdef DBG
+#if DBG
 
 #define ASSERT(exp) \
   (VOID)((!(exp)) ? \
@@ -6273,7 +6273,7 @@ ExUuidCreate(
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
 
 
-#ifdef DBG
+#if DBG
 
 #define PAGED_CODE() { \
   if (KeGetCurrentIrql() > APC_LEVEL) { \
@@ -10267,7 +10267,7 @@ DbgSetDebugFilterState(
   IN ULONG  Level,
   IN BOOLEAN  State);
 
-#ifdef DBG
+#if DBG
 
 #define KdPrint(_x_) DbgPrint _x_
 #define KdPrintEx(_x_) DbgPrintEx _x_

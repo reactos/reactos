@@ -479,7 +479,7 @@ NDIS_STATUS NICStop(
         NdisStallExecution(500);
     }
 
-#ifdef DBG
+#if DBG
     if (i == 4)
         NDIS_DbgPrint(MIN_TRACE, ("NIC was not reset after 2ms.\n"));
 #endif
@@ -686,7 +686,7 @@ VOID NICReadDataAlign(
         NdisStallExecution(4);
     }
 
-#ifdef DBG
+#if DBG
     if (Count == 0xFFFF)
         NDIS_DbgPrint(MIN_TRACE, ("Remote DMA did not complete.\n"));
 #endif
@@ -741,7 +741,7 @@ VOID NICWriteDataAlign(
         NdisStallExecution(4);
     }
 
-#ifdef DBG
+#if DBG
     if (Count == 0xFFFF)
         NDIS_DbgPrint(MIN_TRACE, ("Remote DMA did not complete.\n"));
 #endif
@@ -778,7 +778,7 @@ VOID NICWriteDataAlign(
         NdisStallExecution(4);
     }
 
-#ifdef DBG
+#if DBG
     if (Count == 0xFFFF)
         NDIS_DbgPrint(MIN_TRACE, ("Remote DMA did not complete.\n"));
 #endif
@@ -1184,7 +1184,7 @@ static VOID HandleReceive(
             NdisStallExecution(500);
         }
 
-#ifdef DBG
+#if DBG
         if (i == 4)
             NDIS_DbgPrint(MIN_TRACE, ("NIC was not reset after 2ms.\n"));
 #endif

@@ -14,7 +14,7 @@
 #include "ndissys.h"
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 ULONG DebugTraceLevel = MIN_TRACE;

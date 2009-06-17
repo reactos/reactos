@@ -614,7 +614,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 	DPRINTM(DPRINT_WINDOWS, "Memory Descriptor List prepared, printing PDE\n");
 	List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);
 
-#ifdef DBG
+#if DBG
 	{
 		ULONG *PDE_Addr=(ULONG *)PDE;//0xC0300000;
 		int j;

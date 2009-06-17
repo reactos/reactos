@@ -3077,7 +3077,7 @@ AtapiCallBack__(
         goto ReturnCallback;
     }
 
-#ifdef DBG
+#if DBG
     if (!IS_RDP((srb->Cdb[0]))) {
         KdPrint2((PRINT_PREFIX "AtapiCallBack: Invalid CDB marked as RDP - %#x\n", srb->Cdb[0]));
     }

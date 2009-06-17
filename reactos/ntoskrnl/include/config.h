@@ -16,7 +16,7 @@
 /********** mm/ppool.c **********/
 
 /* Disable Debugging Features */
-#ifndef DBG
+#if !DBG
     /* Enable strict checking of the nonpaged pool on every allocation */
     #undef ENABLE_VALIDATE_POOL
 
