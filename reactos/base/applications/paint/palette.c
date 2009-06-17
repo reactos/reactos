@@ -19,54 +19,49 @@ LRESULT CALLBACK PalWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
     {
         case WM_PAINT:
             {
-                int i;
-                long rectang[4] = {0, 0, 31, 32};
-                int a;
-                int b;
-                HDC hdc = GetDC(hwnd);
+                RECT rc = {0, 0, 31, 32};
+                HDC hDC = GetDC(hwnd);
                 HPEN oldPen;
                 HBRUSH oldBrush;
+                int i, a, b;
 
                 DefWindowProc (hwnd, message, wParam, lParam);
 
-                for (b=2; b<30; b++) for (a=2; a<29; a++) if ((a+b)%2==1) SetPixel(hdc, a, b, GetSysColor(COLOR_BTNHILIGHT));
-                DrawEdge(hdc, (LPRECT)&rectang, EDGE_RAISED, BF_TOPLEFT);
-                DrawEdge(hdc, (LPRECT)&rectang, BDR_SUNKENOUTER, BF_TOPLEFT|BF_BOTTOMRIGHT);
-                    rectang[0] = 11;
-                    rectang[1] = 12;
-                    rectang[2] = 26;
-                    rectang[3] = 27;
-                    DrawEdge(hdc, (LPRECT)&rectang, BDR_RAISEDINNER, BF_RECT|BF_MIDDLE);
-                    oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-                    oldBrush = SelectObject(hdc, CreateSolidBrush(bgColor));
-                    Rectangle( hdc, rectang[0]+2,rectang[1]+2,rectang[2]-1,rectang[3]-1);
-                    DeleteObject(SelectObject(hdc, oldBrush));
-                    DeleteObject(SelectObject(hdc, oldPen));
-                    rectang[0] = 4;
-                    rectang[1] = 5;
-                    rectang[2] = 19;
-                    rectang[3] = 20;
-                    DrawEdge(hdc, (LPRECT)&rectang, BDR_RAISEDINNER, BF_RECT|BF_MIDDLE);
-                    oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-                    oldBrush = SelectObject(hdc, CreateSolidBrush(fgColor));
-                    Rectangle( hdc, rectang[0]+2,rectang[1]+2,rectang[2]-1,rectang[3]-1);
-                    DeleteObject(SelectObject(hdc, oldBrush));
-                    DeleteObject(SelectObject(hdc, oldPen));
+                for (b = 2; b < 30; b++)
+                    for (a = 2; a < 29; a++)
+                        if ((a + b) % 2 == 1)
+                            SetPixel(hDC, a, b, GetSysColor(COLOR_BTNHILIGHT));
+
+                DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
+                DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_TOPLEFT|BF_BOTTOMRIGHT);
+                SetRect(&rc, 11, 12, 26, 27);
+                DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT|BF_MIDDLE);
+                oldPen = SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
+                oldBrush = SelectObject(hDC, CreateSolidBrush(bgColor));
+                Rectangle(hDC, rc.left, rc.top + 2, rc.right -1, rc.bottom - 1);
+                DeleteObject(SelectObject(hDC, oldBrush));
+                SetRect(&rc, 4, 5, 19, 20);
+                DrawEdge(hDC, &rc, BDR_RAISEDINNER, BF_RECT|BF_MIDDLE);
+                oldBrush = SelectObject(hDC, CreateSolidBrush(fgColor));
+                Rectangle( hDC, rc.left + 2,rc.top + 2, rc.right - 1, rc.bottom - 1);
+                DeleteObject(SelectObject(hDC, oldBrush));
+                DeleteObject(SelectObject(hDC, oldPen));
+
                 for (i=0; i<28; i++)
                 {
-                    rectang[0] = 31+(i%14)*16;
-                    rectang[1] = 0+(i/14)*16;
-                    rectang[2] = 16+rectang[0];
-                    rectang[3] = 16+rectang[1];
-                    DrawEdge(hdc, (LPRECT)&rectang, EDGE_RAISED, BF_TOPLEFT);
-                    DrawEdge(hdc, (LPRECT)&rectang, BDR_SUNKENOUTER, BF_RECT);
-                    oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
-                    oldBrush = SelectObject(hdc, CreateSolidBrush(palColors[i]));
-                    Rectangle( hdc, rectang[0]+2,rectang[1]+2,rectang[2]-1,rectang[3]-1);
-                    DeleteObject(SelectObject(hdc, oldBrush));
-                    DeleteObject(SelectObject(hdc, oldPen));
+                    SetRect(&rc, 31 + (i % 14) * 16,
+                                 0 + (i / 14) * 16,
+                                 16 + 31 + (i % 14) * 16,
+                                16 + 0 + (i / 14) * 16);
+                    DrawEdge(hDC, &rc, EDGE_RAISED, BF_TOPLEFT);
+                    DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
+                    oldPen = SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
+                    oldBrush = SelectObject(hDC, CreateSolidBrush(palColors[i]));
+                    Rectangle(hDC, rc.left + 2,rc.top + 2,rc.right + 1, rc.bottom - 1);
+                    DeleteObject(SelectObject(hDC, oldBrush));
+                    DeleteObject(SelectObject(hDC, oldPen));
                 }
-                ReleaseDC(hwnd, hdc);
+                ReleaseDC(hwnd, hDC);
             }
             break;
         case WM_LBUTTONDOWN:

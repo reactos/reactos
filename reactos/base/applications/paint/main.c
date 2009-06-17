@@ -251,10 +251,17 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     SendMessage(hToolbar, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
     for (i=0; i<16; i++)
     {
+        TBBUTTON tbbutton;
         int wrapnow = 0;
+
         if (i % 2 == 1) wrapnow = TBSTATE_WRAP;
         LoadString(hThisInstance, IDS_TOOLTIP1 + i, tooltips[i], 30);
-        TBBUTTON tbbutton = { i, ID_FREESEL + i, TBSTATE_ENABLED | wrapnow, TBSTYLE_CHECKGROUP, {0}, 0, (INT_PTR)tooltips[i] };
+        ZeroMemory(&tbbutton, sizeof(TBBUTTON));
+        tbbutton.iString = (INT_PTR)tooltips[i];
+        tbbutton.fsStyle = TBSTYLE_CHECKGROUP;
+        tbbutton.fsState = TBSTATE_ENABLED | wrapnow;
+        tbbutton.idCommand = ID_FREESEL + i;
+        tbbutton.iBitmap = i;
         SendMessage(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&tbbutton);
     }
    /* SendMessage(hToolbar, TB_SETROWS, MAKEWPARAM(8, FALSE), (LPARAM)NULL); */
@@ -263,9 +270,6 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
 
     SendMessage(hToolbar, TB_SETBUTTONSIZE, 0, MAKELONG(25, 25));
    /* SendMessage(hToolbar, TB_AUTOSIZE, 0, 0); */
-
-
-
 
     /* creating the tool settings child window */
     hToolSettings = CreateWindowEx(0, _T("ToolSettings"), _T(""), WS_CHILD | WS_VISIBLE, 7, 210, 42, 140, hwnd, NULL, hThisInstance, NULL);
