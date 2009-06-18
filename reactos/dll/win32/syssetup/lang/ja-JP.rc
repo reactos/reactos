@@ -43,8 +43,8 @@ BEGIN
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS はGPLの下にライセンスされており、すべてまたは一部を再利用、再配布する "\
-                    "場合はGPLに従う必要があります。",
+    LTEXT           "ReactOSはGPLの下にライセンスされており、すべてまたは一部を再利用、 "\
+                    "再配布する場合はGPLに従う必要があります。",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "GPLを表\示(&V)...",IDC_VIEWGPL,251,110,50,19
     LTEXT           "セットアップを続行するには [次へ] をクリックしてください。",IDC_STATIC,15,136,
@@ -79,7 +79,7 @@ BEGIN
     LTEXT "コンピュータ名(&C):", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
-    LTEXT "Administratorと呼ばれるユーザーアカウントを作成します。"\
+    LTEXT "Administratorと呼ばれるユーザーアカウントを作成します。 "\
           "コンピュータにフルアクセスが必要なとき、このアカウントを使用します。",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Administratorのパスワードを半角 14 文字以内で入力してください。",
@@ -214,7 +214,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "スクリーンショットを撮ります"
     IDS_CMT_SERVMAN     "サービス マネージャを起動します"
     IDS_CMT_WORDPAD     "ドキュメントエディタを起動します"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_PAINT       "ペイントを起動します"
 END
 
 STRINGTABLE
@@ -281,7 +281,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "ソ\リティア.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_WORDPAD    "ワードパッド.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
+    IDS_SHORT_PAINT      "ペイント.lnk"
 END
 
 STRINGTABLE
