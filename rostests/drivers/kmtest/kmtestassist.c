@@ -60,7 +60,9 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
     IoDeleteDevice(DriverObject->DeviceObject);
 }
 
-NTSTATUS DriverEntry(IN PDRIVER_OBJECT DriverObject,IN PUNICODE_STRING path)
+NTSTATUS
+NTAPI
+DriverEntry(IN PDRIVER_OBJECT DriverObject,IN PUNICODE_STRING path)
 {
     PDEVICE_OBJECT  pDeviceObject;
     UNICODE_STRING  DriverString;
