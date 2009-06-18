@@ -49,9 +49,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000010
 HKLM,"SOFTWARE\Microsoft\Rpc",,0x00000012
 
 ; Version Information
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"5.0"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 3"
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"2195"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentVersion",0x00020000,"5.2"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CSDVersion",0x00020000,"Service Pack 2"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion","CurrentBuildNumber",0x00020000,"3790"
 
 
 ; Image File Execution Options (NtGlobalFlag with FLG_SHOW_LDR_SNAPS set for loadlib.exe) 
