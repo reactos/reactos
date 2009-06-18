@@ -74,6 +74,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         (PPROCESS_SESSION_INFORMATION)ProcessInformation;
     PVM_COUNTERS VmCounters = (PVM_COUNTERS)ProcessInformation;
     PIO_COUNTERS IoCounters = (PIO_COUNTERS)ProcessInformation;
+    PQUOTA_LIMITS QuotaLimits = (PQUOTA_LIMITS)ProcessInformation;
     PROCESS_DEVICEMAP_INFORMATION DeviceMap;
     PUNICODE_STRING ImageName;
     ULONG Cookie;
@@ -151,7 +152,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             ObDereferenceObject(Process);
             break;
 
-        /* Quote limits: not implemented */
+        /* Process quota limits */
         case ProcessQuotaLimits:
 
             Length = sizeof(QUOTA_LIMITS);
@@ -170,9 +171,46 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                                                NULL);
             if (!NT_SUCCESS(Status)) break;
 
-            /* TODO: Implement this case */
-            DPRINT1("Query ProcessQuotaLimits unimplemented\n");
-            Status = STATUS_NOT_IMPLEMENTED;
+            /* Indicate success */
+            Status = STATUS_SUCCESS;
+
+            _SEH2_TRY
+            {
+                /* Set max/min working set sizes */
+                QuotaLimits->MaximumWorkingSetSize =
+                        Process->Vm.MaximumWorkingSetSize << PAGE_SHIFT;
+                QuotaLimits->MinimumWorkingSetSize =
+                        Process->Vm.MinimumWorkingSetSize << PAGE_SHIFT;
+
+                /* Set default time limits */
+                QuotaLimits->TimeLimit.LowPart = (ULONG)-1;
+                QuotaLimits->TimeLimit.HighPart = (ULONG)-1;
+
+                /* Is quota block a default one? */
+                if (Process->QuotaBlock == &PspDefaultQuotaBlock)
+                {
+                    /* Set default pools and pagefile limits */
+                    QuotaLimits->PagedPoolLimit = (SIZE_T)-1;
+                    QuotaLimits->NonPagedPoolLimit = (SIZE_T)-1;
+                    QuotaLimits->PagefileLimit = (SIZE_T)-1;
+                }
+                else
+                {
+                    /* Get limits from non-default quota block */
+                    QuotaLimits->PagedPoolLimit =
+                        Process->QuotaBlock->QuotaEntry[PagedPool].Limit;
+                    QuotaLimits->NonPagedPoolLimit =
+                        Process->QuotaBlock->QuotaEntry[NonPagedPool].Limit;
+                    QuotaLimits->PagefileLimit =
+                        Process->QuotaBlock->QuotaEntry[2].Limit;
+                }
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
 
             /* Dereference the process */
             ObDereferenceObject(Process);
