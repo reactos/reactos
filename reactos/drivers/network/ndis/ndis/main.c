@@ -21,6 +21,8 @@ ULONG DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 
+UCHAR CancelId;
+
 
 VOID NTAPI MainUnload(
     PDRIVER_OBJECT DriverObject)
@@ -60,6 +62,8 @@ DriverEntry(
   KeInitializeSpinLock(&AdapterListLock);
 
   DriverObject->DriverUnload = MainUnload;
+
+  CancelId = 0;
 
   return STATUS_SUCCESS;
 }
