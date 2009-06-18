@@ -21,6 +21,11 @@
 #ifndef __WINE_MMREG_H
 #define __WINE_MMREG_H
 
+#ifndef RC_INVOKED
+#include "pshpack1.h"
+#endif
+
+
 /***********************************************************************
  * Defines/Enums
  */
@@ -507,6 +512,10 @@ typedef struct tagEXBMINFOHEADER {
 #define ICTYPE_AUDIO		mmioFOURCC('a', 'u', 'd', 'c')
 #endif
 
+#endif
+
+#ifndef RC_INVOKED
+#include "poppack.h"
 #endif
 
 #endif /* __WINE_MMREG_H */
