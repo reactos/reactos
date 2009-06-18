@@ -86,7 +86,8 @@ $(2)
 #(module, flags, includes)
 RBUILD_cflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),C}
 RBUILD_cxxflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),CXX}
-RBUILD_asflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),AS}
+#~ RBUILD_asflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),AS}
+RBUILD_asflags=${call RBUILD_compiler_flags_builtin_cpp,$(1),$(2),$(3),AS}
 RBUILD_nasmflags=${call RBUILD_compiler_flags_builtin_cpp,$(1),$(2),$(3),NASM}
 RBUILD_rc_pp_flags=${call RBUILD_compiler_flags_cpp,$(1),-DRC_INVOKED=1 -D__WIN32__=1 -D__FLAT__=1,$(3) -I.,RC}
 RBUILD_rc_flags=${call RBUILD_compiler_flags_with_includes,$(1),$(2),$(3),RC}
