@@ -1,6 +1,6 @@
 <module name="inetcomm_winetest" type="win32cui" installbase="bin" installname="inetcomm_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="inetcomm_winetest">.</include>
+	<define name="__ROS_LONG64__" />
 	<file>mimeintl.c</file>
 	<file>mimeole.c</file>
 	<file>testlist.c</file>

@@ -1,6 +1,6 @@
 <module name="fusion_winetest" type="win32cui" installbase="bin" installname="fusion_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="fusion_winetest">.</include>
+	<define name="__ROS_LONG64__" />
 	<file>asmcache.c</file>
 	<file>asmenum.c</file>
 	<file>asmname.c</file>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="rosautotest" type="win32cui" installbase="system32" installname="rosautotest.exe" unicode="yes">
-	<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	<compilerflag compiler="cxx" compilerset="gcc">-fno-rtti</compilerflag>
 	<include base="rosautotest">.</include>
 	<library>advapi32</library>
 	<library>kernel32</library>

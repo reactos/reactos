@@ -2,10 +2,9 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="msvcrt_winetest" type="win32cui" installbase="bin" installname="msvcrt_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="msvcrt_winetest">.</include>
 	<include base="msvcrt">include/reactos/wine/msvcrt</include>
-    <define name="__ROS_LONG64__" />
+	<define name="__ROS_LONG64__" />
 	<define name="_CRT_NONSTDC_NO_DEPRECATE" />
 	<library>kernel32</library>
 	<library>msvcrt</library>

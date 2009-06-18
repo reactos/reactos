@@ -2,8 +2,8 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="msxml3_winetest" type="win32cui" installbase="bin" installname="msxml3_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="msxml3_winetest">.</include>
+	<define name="__ROS_LONG64__" />
 	<file>domdoc.c</file>
 	<file>saxreader.c</file>
 	<file>schema.c</file>

@@ -1,6 +1,6 @@
 <module name="quartz_winetest" type="win32cui" installbase="bin" installname="quartz_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="quartz_winetest">.</include>
+	<define name="__ROS_LONG64__" />
 	<file>avisplitter.c</file>
 	<file>filtergraph.c</file>
 	<file>filtermapper.c</file>

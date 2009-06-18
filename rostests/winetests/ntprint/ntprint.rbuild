@@ -1,6 +1,6 @@
 <module name="ntprint_winetest" type="win32cui" installbase="bin" installname="ntprint_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="ntprint_winetest">.</include>
+	<define name="__ROS_LONG64__" />
 	<file>ntprint.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>

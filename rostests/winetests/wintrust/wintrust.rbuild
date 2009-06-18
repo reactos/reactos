@@ -2,8 +2,8 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="wintrust_winetest" type="win32cui" installbase="bin" installname="wintrust_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="wintrust_winetest">.</include>
+	<define name="__ROS_LONG64__" />
 	<file>asn.c</file>
 	<file>crypt.c</file>
 	<file>register.c</file>

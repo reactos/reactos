@@ -2,9 +2,8 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="wlanapi_winetest" type="win32cui" installbase="bin" installname="wlanapi_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="wininet_winetest">.</include>
-    <define name="__ROS_LONG64__" />
+	<define name="__ROS_LONG64__" />
 	<library>wine</library>
 	<library>wlanapi</library>
 	<library>kernel32</library>

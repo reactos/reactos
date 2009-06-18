@@ -1,6 +1,6 @@
 <module name="cryptui_winetest" type="win32cui" installbase="bin" installname="cryptui_winetest.exe" allowwarnings="true">
-	<compilerflag compiler="cc">-Wno-format</compilerflag>
 	<include base="cryptui_winetest">.</include>
+	<define name="__ROS_LONG64__" />
 	<file>cryptui.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>
