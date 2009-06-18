@@ -64,13 +64,13 @@ BEGIN
         MENUITEM "Kadrowanie", IDM_IMAGECROP
         MENUITEM "Odwrócenie kolorów\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atrybuty...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "Delete image\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Draw opaque", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "Wyczyœæ obraz\tCtrl+Shft+N", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Rysuj nieprzezroczyste", IDM_IMAGEDRAWOPAQUE
     END
     
     POPUP "&Kolory"
     BEGIN
-        MENUITEM "Edit palette...", IDM_COLORSEDITPALETTE
+        MENUITEM "Edytuj kolory...", IDM_COLORSEDITPALETTE
     END
     
     POPUP "&?"
@@ -131,9 +131,9 @@ BEGIN
     LTEXT "Data:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
     LTEXT "Rozmiar:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
     LTEXT "Rozdzielczoœæ:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
-    LTEXT "Not available", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
+    LTEXT "Niedostêpny", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
+    LTEXT "Niedostêpny", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
+    LTEXT "Niedostêpny", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
     GROUPBOX "Jednostki", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
     AUTORADIOBUTTON "Cale", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
@@ -186,7 +186,7 @@ BEGIN
     IDS_TOOLTIP12, "Krzywa Beziera"
     IDS_TOOLTIP13, "Prostok¹t"
     IDS_TOOLTIP14, "Polygon"
-    IDS_TOOLTIP15, "Ellipsa"
+    IDS_TOOLTIP15, "Elipsa"
     IDS_TOOLTIP16, "Zaokr¹glony Prostok¹t"
     IDS_OPENFILTER, "Pliki Bitmapy (*.bmp;*.dib)\1*.bmp;*.dib\1Wszystkie pliki (*.*)\1*.*\1"
     IDS_SAVEFILTER, "Bitmapa 24 bit (*.bmp;*.dib)\1*.bmp;*.dib\1"

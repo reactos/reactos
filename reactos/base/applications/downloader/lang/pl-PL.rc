@@ -52,7 +52,7 @@ BEGIN
     IDS_XMLERROR_2           "Nie uda³o siê przetworzyæ pliku XML !"
     IDS_DOWNLOAD_ERROR       "Sci¹ganie pliku nieudane.\nProszê sprawdziæ po³¹czenie z internetem."
     IDS_VERSION              "Wersja: "
-    IDS_LICENCE              "Licenccja: "
+    IDS_LICENCE              "Licencja: "
     IDS_MAINTAINER           "Opiekun: "
     IDS_APPS_TITLE           "Programy"
     IDS_CATS_TITLE           "Kategorie"
