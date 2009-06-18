@@ -9,7 +9,7 @@
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="_CTYPE_DISABLE_MACROS" />
 	<define name="_NO_INLINING" />
-	<linkerflag>-enable-stdcall-fixup</linkerflag>
+	<linkerflag linkerset="ld">-enable-stdcall-fixup</linkerflag>
 
 	<!--	__MINGW_IMPORT needs to be defined differently because it's defined
 		as dllimport by default, which is invalid from GCC 4.1.0 on!	-->

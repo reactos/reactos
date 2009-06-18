@@ -7,13 +7,17 @@
 	<include base="ReactOS">include/reactos/libs</include>
 	<include base="ReactOS">include/reactos/elf</include>
 	<define name="_NTHAL_" />
-	<compilerflag>-fno-inline</compilerflag>
-	<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag>-fno-inline</compilerflag>
+		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
+	</group>
 
 	<if property="ARCH" value="arm">
-		<compilerflag>-ffreestanding</compilerflag>
-		<compilerflag>-fno-builtin</compilerflag>
-		<compilerflag>-Os</compilerflag>
+		<group compilerset="gcc">
+			<compilerflag>-ffreestanding</compilerflag>
+			<compilerflag>-fno-builtin</compilerflag>
+			<compilerflag>-Os</compilerflag>
+		</group>
 	</if>
 
 	<directory name="arch">
