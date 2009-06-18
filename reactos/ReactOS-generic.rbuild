@@ -127,4 +127,6 @@
 	</directory>
 
 	<compilerflag compiler="cxx" compilerset="gcc">-Wno-non-virtual-dtor</compilerflag>
+
+	<compilerflag compilerset="msc">/wd4711</compilerflag>
 </group>

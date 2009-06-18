@@ -47,13 +47,13 @@ ${call RBUILD_DEPENDS,$(1),$(2),,${call RBUILD_cflags,$(1),$(4)},$(5).d}
 
 $(5): $(2) $(5).d $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
-	$${cl} /TC /Fo$$@ ${call RBUILD_cflags,$(1),$(4)} /c $$<
+	$${cl} /TC /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cflags,$(1),$(4)} /c $$<
 
 else
 
 $(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
-	$${cl} /TC /Fo$$@ ${call RBUILD_cflags,$(1),$(4)} /c $$<
+	$${cl} /TC /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cflags,$(1),$(4)} /c $$<
 
 endif
 
@@ -71,13 +71,13 @@ ${call RBUILD_CXX_DEPENDS,$(1),$(2),,${call RBUILD_cflags,$(1),$(4)},$(5).d}
 
 $(5): $(2) $(5).d $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
-	$${cl} /TP /Fo$$@ ${call RBUILD_cxxflags,$(1),$(4)} /c $$<
+	$${cl} /TP /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cxxflags,$(1),$(4)} /c $$<
 
 else
 
 $(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CC)
-	$${cl} /TP /Fo$$@ ${call RBUILD_cxxflags,$(1),$(4)} /c $$<
+	$${cl} /TP /Fo$$@ /Fd$(basename $$@).pdb ${call RBUILD_cxxflags,$(1),$(4)} /c $$<
 
 endif
 

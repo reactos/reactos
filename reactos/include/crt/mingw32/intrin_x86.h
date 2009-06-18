@@ -479,12 +479,12 @@ __INTRIN_INLINE long _InterlockedIncrement(volatile long * const lpAddend)
 	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
 }
 
-__INTRIN_INLINE long _InterlockedDecrement16(volatile short * const lpAddend)
+__INTRIN_INLINE short _InterlockedDecrement16(volatile short * const lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, -1) - 1;
 }
 
-__INTRIN_INLINE long _InterlockedIncrement16(volatile short * const lpAddend)
+__INTRIN_INLINE short _InterlockedIncrement16(volatile short * const lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
@@ -1132,7 +1132,6 @@ __INTRIN_INLINE void __writecr8(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr8" : : [Data] "q" (Data) : "memory");
 }
-#endif
 
 __INTRIN_INLINE unsigned __int64 __readcr0(void)
 {
@@ -1162,11 +1161,38 @@ __INTRIN_INLINE unsigned __int64 __readcr4(void)
 	return value;
 }
 
-#ifdef _M_AMD64
 __INTRIN_INLINE unsigned __int64 __readcr8(void)
 {
 	unsigned __int64 value;
 	__asm__ __volatile__("movq %%cr8, %q[value]" : [value] "=q" (value));
+	return value;
+}
+#else
+__INTRIN_INLINE unsigned long __readcr0(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr0, %[value]" : [value] "=q" (value));
+	return value;
+}
+
+__INTRIN_INLINE unsigned long __readcr2(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr2, %[value]" : [value] "=q" (value));
+	return value;
+}
+
+__INTRIN_INLINE unsigned long __readcr3(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr3, %[value]" : [value] "=q" (value));
+	return value;
+}
+
+__INTRIN_INLINE unsigned long __readcr4(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr4, %[value]" : [value] "=q" (value));
 	return value;
 }
 #endif
@@ -1206,6 +1232,70 @@ __INTRIN_INLINE unsigned __int64 __readdr(unsigned int reg)
 }
 
 __INTRIN_INLINE void __writedr(unsigned reg, unsigned __int64 value)
+{
+	switch (reg)
+	{
+		case 0:
+			__asm__("movq %q[value], %%dr0" : : [value] "q" (value) : "memory");
+			break;
+		case 1:
+			__asm__("movq %q[value], %%dr1" : : [value] "q" (value) : "memory");
+			break;
+		case 2:
+			__asm__("movq %q[value], %%dr2" : : [value] "q" (value) : "memory");
+			break;
+		case 3:
+			__asm__("movq %q[value], %%dr3" : : [value] "q" (value) : "memory");
+			break;
+		case 4:
+			__asm__("movq %q[value], %%dr4" : : [value] "q" (value) : "memory");
+			break;
+		case 5:
+			__asm__("movq %q[value], %%dr5" : : [value] "q" (value) : "memory");
+			break;
+		case 6:
+			__asm__("movq %q[value], %%dr6" : : [value] "q" (value) : "memory");
+			break;
+		case 7:
+			__asm__("movq %q[value], %%dr7" : : [value] "q" (value) : "memory");
+			break;
+	}
+}
+#else
+__INTRIN_INLINE unsigned int __readdr(unsigned int reg)
+{
+	unsigned int value;
+	switch (reg)
+	{
+		case 0:
+			__asm__ __volatile__("movq %%dr0, %q[value]" : [value] "=q" (value));
+			break;
+		case 1:
+			__asm__ __volatile__("movq %%dr1, %q[value]" : [value] "=q" (value));
+			break;
+		case 2:
+			__asm__ __volatile__("movq %%dr2, %q[value]" : [value] "=q" (value));
+			break;
+		case 3:
+			__asm__ __volatile__("movq %%dr3, %q[value]" : [value] "=q" (value));
+			break;
+		case 4:
+			__asm__ __volatile__("movq %%dr4, %q[value]" : [value] "=q" (value));
+			break;
+		case 5:
+			__asm__ __volatile__("movq %%dr5, %q[value]" : [value] "=q" (value));
+			break;
+		case 6:
+			__asm__ __volatile__("movq %%dr6, %q[value]" : [value] "=q" (value));
+			break;
+		case 7:
+			__asm__ __volatile__("movq %%dr7, %q[value]" : [value] "=q" (value));
+			break;
+	}
+	return value;
+}
+
+__INTRIN_INLINE void __writedr(unsigned reg, unsigned int value)
 {
 	switch (reg)
 	{

@@ -35,8 +35,8 @@ long _InterlockedXor(volatile long * const value, const long mask);
 long _InterlockedAddLargeStatistic(volatile __int64 * const Addend, const long Value);
 long _InterlockedDecrement(volatile long * const lpAddend);
 long _InterlockedIncrement(volatile long * const lpAddend);
-long _InterlockedDecrement16(volatile short * const lpAddend);
-long _InterlockedIncrement16(volatile short * const lpAddend);
+short _InterlockedDecrement16(volatile short * const lpAddend);
+short _InterlockedIncrement16(volatile short * const lpAddend);
 unsigned char _interlockedbittestandreset(volatile long * a, const long b);
 unsigned char _interlockedbittestandset(volatile long * a, const long b);
 
@@ -92,7 +92,7 @@ void __incfsword(const unsigned long Offset);
 void __incfsdword(const unsigned long Offset);
 void __addfsbyte(const unsigned long Offset, const unsigned char Data);
 void __addfsword(const unsigned long Offset, const unsigned short Data);
-void __addfsdword(const unsigned long Offset, const unsigned int Data)
+void __addfsdword(const unsigned long Offset, const unsigned int Data);
 #endif
 
 
@@ -153,19 +153,21 @@ void __writecr4(const unsigned __int64 Data);
 
 #ifdef _M_AMD64
 void __writecr8(const unsigned __int64 Data);
-#endif
-
 unsigned __int64 __readcr0(void);
 unsigned __int64 __readcr2(void);
 unsigned __int64 __readcr3(void);
 unsigned __int64 __readcr4(void);
-
-#ifdef _M_AMD64
 unsigned __int64 __readcr8(void);
-#endif
-
 unsigned __int64 __readdr(unsigned int reg);
 void __writedr(unsigned reg, unsigned __int64 value);
+#else
+unsigned long __readcr0(void);
+unsigned long __readcr2(void);
+unsigned long __readcr3(void);
+unsigned long __readcr4(void);
+unsigned int __readdr(unsigned int reg);
+void __writedr(unsigned reg, unsigned int value);
+#endif
 
 void __invlpg(void * const Address);
 

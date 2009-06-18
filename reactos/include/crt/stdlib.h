@@ -304,7 +304,7 @@ extern "C" {
   _CRTIMP __declspec(noreturn) void __cdecl _exit(int _Code);
 #if !defined __NO_ISOCEXT /* extern stub in static libmingwex.a */
   /* C99 function name */
-  void __cdecl __declspec(noreturn) _Exit(int); /* Declare to get noreturn attribute.  */
+  __declspec(noreturn) void __cdecl _Exit(int); /* Declare to get noreturn attribute.  */
   __CRT_INLINE void __cdecl _Exit(int status)
   {  _exit(status); }
 #endif
@@ -312,7 +312,7 @@ extern "C" {
 #pragma push_macro("abort")
 #undef abort
 #endif
-  void __cdecl __declspec(noreturn) abort(void);
+  __declspec(noreturn) void __cdecl abort(void);
 #if __MINGW_GNUC_PREREQ(4,4)
 #pragma pop_macro("abort")
 #endif
