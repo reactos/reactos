@@ -470,7 +470,7 @@ NdisAllocatePacketPoolEx(
 
     if (NumberOfDescriptors > 0xffff)
     {
-        NDIS_DbgPrint(MIN_TRACE, ("Invalid number of descriptors (%lx)\n"))
+        NDIS_DbgPrint(MIN_TRACE, ("Invalid number of descriptors (%lx)\n", NumberOfDescriptors))
         *Status = NDIS_STATUS_RESOURCES;
     }
     else
@@ -478,7 +478,7 @@ NdisAllocatePacketPoolEx(
         NumberOfDescriptors += NumberOfOverflowDescriptors;
         if (NumberOfDescriptors > 0xffff)
         {
-            NDIS_DbgPrint(MIN_TRACE, ("Total number of descriptors > 0xffff (%lx)\n"));
+            NDIS_DbgPrint(MIN_TRACE, ("Total number of descriptors > 0xffff (%lx)\n", NumberOfDescriptors));
             NumberOfDescriptors = 0xffff;
         }
 
