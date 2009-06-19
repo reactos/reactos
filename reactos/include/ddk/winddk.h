@@ -8165,16 +8165,16 @@ KeAreApcsDisabled(
   VOID);
 
 NTKERNELAPI
+DECLSPEC_NORETURN
 VOID
 NTAPI
-__declspec(noreturn)
 KeBugCheck(
   IN ULONG  BugCheckCode);
 
 NTKERNELAPI
+DECLSPEC_NORETURN
 VOID
 NTAPI
-__declspec(noreturn)
 KeBugCheckEx(
   IN ULONG  BugCheckCode,
   IN ULONG_PTR  BugCheckParameter1,
