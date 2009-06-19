@@ -679,6 +679,8 @@ WdmAudWrite(
     PCONTEXT_WRITE Packet;
     PFILE_OBJECT FileObject;
     IO_STATUS_BLOCK IoStatusBlock;
+    PMDL Mdl;
+    PVOID SystemBuffer;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -746,10 +748,19 @@ WdmAudWrite(
     }
     Packet->Header.Data = Buffer;
 
+    Mdl = IoAllocateMdl(DeviceInfo->Buffer, DeviceInfo->BufferSize, FALSE, FALSE, FALSE);
+    if (!Mdl)
+    {
+        /* no memory */
+        ExFreePool(Packet);
+        ObDereferenceObject(FileObject);
+        ExFreePool(Buffer);
+        return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
+    }
+
     _SEH2_TRY
     {
-        ProbeForRead(DeviceInfo->Buffer, DeviceInfo->BufferSize, TYPE_ALIGNMENT(char));
-        RtlMoveMemory(Buffer, DeviceInfo->Buffer, DeviceInfo->BufferSize);
+        MmProbeAndLockPages(Mdl, UserMode, IoReadAccess);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -763,9 +774,25 @@ WdmAudWrite(
         DPRINT1("Invalid buffer supplied\n");
         ExFreePool(Buffer);
         ExFreePool(Packet);
+        IoFreeMdl(Mdl);
         ObDereferenceObject(FileObject);
         return SetIrpIoStatus(Irp, Status, 0);
     }
+
+    SystemBuffer = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority );
+    if (!SystemBuffer)
+    {
+        DPRINT1("Invalid buffer supplied\n");
+        ExFreePool(Buffer);
+        ExFreePool(Packet);
+        IoFreeMdl(Mdl);
+        ObDereferenceObject(FileObject);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    RtlMoveMemory(Buffer, SystemBuffer, DeviceInfo->BufferSize);
+    MmUnlockPages(Mdl);
+    IoFreeMdl(Mdl);
 
     KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, KernelMode);
     ObDereferenceObject(FileObject);

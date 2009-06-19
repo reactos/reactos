@@ -204,6 +204,7 @@ WdmAudCleanup(
     {
         for (Index = 0; Index < pClient->NumPins; Index++)
         {
+           DPRINT("Index %u Pin %p Type %x\n", Index, pClient->hPins[Index].Handle, pClient->hPins[Index].Type);
            if (pClient->hPins[Index].Handle && pClient->hPins[Index].Type != MIXER_DEVICE_TYPE)
            {
                ZwClose(pClient->hPins[Index].Handle);
