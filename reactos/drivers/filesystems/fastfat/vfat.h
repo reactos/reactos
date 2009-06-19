@@ -2,16 +2,9 @@
 #include <ntdddisk.h>
 #include <debug.h>
 
-#ifdef __GNUC__
 #include <ccros.h>
 
 #define USE_ROS_CC_AND_FS
-#else
-#define KEBUGCHECK KeBugCheck
-#define KEBUGCHECKEX KeBugCheckEx
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-#define ROUND_UP(N, S) ROUND_DOWN((N) + (S) - 1, (S))
-#endif
 
 #define ROUND_DOWN(n, align) \
     (((ULONG)n) & ~((align) - 1l))
