@@ -2471,12 +2471,13 @@ typedef struct
 /* ===============================================================
     XP / DX8
 */
-
+#if defined(_NTDDK_)
 struct _KSMAPPING {
     PHYSICAL_ADDRESS PhysicalAddress;
     ULONG ByteCount;
     ULONG Alignment;
 };
+#endif
 
 struct _KSSTREAM_POINTER_OFFSET
 {
