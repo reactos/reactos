@@ -228,7 +228,9 @@ LsaEnumerateAccountRights(
     PULONG CountOfRights)
 {
     FIXME("(%p,%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights, CountOfRights);
-    return STATUS_NOT_IMPLEMENTED;
+    *UserRights = 0;
+    *CountOfRights = 0;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
