@@ -80,17 +80,25 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     ULONG Cookie;
     PAGED_CODE();
 
-    /* Check validity of Information Class */
-#if 0
-    Status = DefaultQueryInfoBufferCheck(ProcessInformationClass,
-                                         PsProcessInfoClass,
-                                         RTL_NUMBER_OF(PsProcessInfoClass),
-                                         ProcessInformation,
-                                         ProcessInformationLength,
-                                         ReturnLength,
-                                         PreviousMode);
-    if (!NT_SUCCESS(Status)) return Status;
-#endif
+    /* Check for user-mode caller */
+    if (PreviousMode != KernelMode)
+    {
+        /* Prepare to probe parameters */
+        _SEH2_TRY
+        {
+            ProbeForWrite(ProcessInformation,
+                          ProcessInformationLength,
+                          sizeof(ULONG));
+            if (ReturnLength) ProbeForWriteUlong(ReturnLength);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+        if(!NT_SUCCESS(Status)) return Status;
+    }
 
     if((ProcessInformationClass == ProcessCookie) &&
         (ProcessHandle != NtCurrentProcess()))
