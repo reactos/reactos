@@ -209,13 +209,13 @@ ${call RBUILD_DEPENDS,$(1),$(2),,${call RBUILD_rc_pp_flags,$(1),$(4)},${call RBU
 
 ${call RBUILD_intermediate_path_unique,$(1),$(2)}.res: $(2) ${call RBUILD_intermediate_path_unique,$(1),$(2)}.res.d $(3) $$(WRC_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_RC)
-	$${gcc} -xc ${call RBUILD_rc_pp_flags,$(1),$(4)} -E $$< | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
+	${call RBUILD_PIPE_CPP,$$<,${call RBUILD_rc_pp_flags,$(1),$(4)}} | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
 
 else
 
 ${call RBUILD_intermediate_path_unique,$(1),$(2)}.res: $(2) $(3) $$(WRC_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_RC)
-	$${gcc} -xc ${call RBUILD_rc_pp_flags,$(1),$(4)} -E $$< | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
+	${call RBUILD_PIPE_CPP,$$<,${call RBUILD_rc_pp_flags,$(1),$(4)}} | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
 
 endif
 

@@ -30,12 +30,16 @@ $(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
 
 endef
 
+#(source, cflags)
+RBUILD_PIPE_CPP=$${gcc} $(2) -xc -E $(1)
+RBUILD_PIPE_CXX_CPP=$${gpp} $(2) -E $(1)
+
 #(module, source, dependencies, cflags, output)
 define RBUILD_CPP
 
 $(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CPP)
-	$${gcc} -xc -E $(4) $$< > $$@
+	${call RBUILD_PIPE_CPP,$$<,$(4)} > $$@
 
 endef
 
@@ -44,7 +48,7 @@ define RBUILD_CXX_CPP
 
 $(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CPP)
-	$${gpp} -E $(4) $$< > $$@
+	${call RBUILD_PIPE_CXX_CPP,$$<,$(4)} > $$@
 
 endef
 

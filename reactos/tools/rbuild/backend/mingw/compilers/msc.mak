@@ -23,17 +23,22 @@ RBUILD_CL_DEPENDS=$$(error Full dependencies are not implemented for Microsoft C
 RBUILD_DEPENDS=${call RBUILD_CL_DEPENDS,$(1),$(2),$(3),$(4) /TC,$(5)}
 RBUILD_CXX_DEPENDS=${call RBUILD_CL_DEPENDS,$(1),$(2),$(3),$(4) /TP,$(5)}
 
+#(source, cflags)
+RBUILD_PIPE_CL_CPP=$${cl} $(2) /E $(1)
+RBUILD_PIPE_CPP=${call RBUILD_PIPE_CL_CPP,$(1),$(2) /TC}
+RBUILD_PIPE_CXX_CPP=${call RBUILD_PIPE_CL_CPP,$(1),$(2) /TP}
+
 #(module, source, dependencies, cflags, output)
 define RBUILD_CL_CPP
 
 $(5): $(2) $(3) $$(RBUILD_HELPER_TARGET) | ${call RBUILD_dir,$(5)}
 	$$(ECHO_CPP)
-	$${cl} /E $(4) $$< > $$@
+	${call RBUILD_PIPE_CL_CPP,$$<,$(4)} > $$@
 
 endef
 
 RBUILD_CPP=${call RBUILD_CL_CPP,$(1),$(2),$(3),$(4) /TC,$(5)}
-RBUILD_CXX_CPP=${call RBUILD_CL_CPP,$(1),$(2),$(3),$(4) /TPP,$(5)}
+RBUILD_CXX_CPP=${call RBUILD_CL_CPP,$(1),$(2),$(3),$(4) /TP,$(5)}
 
 #(module, source, dependencies, cflags, output)
 define RBUILD_CC
