@@ -210,7 +210,7 @@ MiniIndicateData(
 
       if (CurrentEntry == &Adapter->ProtocolListHead)
         {
-          NDIS_DbgPrint(DEBUG_MINIPORT, ("WARNING: No upper protocol layer.\n"));
+          NDIS_DbgPrint(MIN_TRACE, ("WARNING: No upper protocol layer.\n"));
         }
 
       while (CurrentEntry != &Adapter->ProtocolListHead)
@@ -523,13 +523,13 @@ MiniAdapterHasAddress(
 #if DBG
   if(!Adapter)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Adapter object was null\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Adapter object was null\n"));
       return FALSE;
     }
 
   if(!Packet)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Packet was null\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Packet was null\n"));
       return FALSE;
     }
 #endif
@@ -538,7 +538,7 @@ MiniAdapterHasAddress(
 
   if (!NdisBuffer)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Packet contains no buffers.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Packet contains no buffers.\n"));
       return FALSE;
     }
 
@@ -560,7 +560,7 @@ MiniAdapterHasAddress(
 
   if (BufferLength < Length)
     {
-        NDIS_DbgPrint(MID_TRACE, ("Buffer is too small.\n"));
+        NDIS_DbgPrint(MIN_TRACE, ("Buffer is too small.\n"));
         return FALSE;
     }
 
@@ -597,7 +597,7 @@ MiniLocateDevice(
 
   if(IsListEmpty(&AdapterListHead))
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("No registered miniports for protocol to bind to\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("No registered miniports for protocol to bind to\n"));
       return NULL;
     }
 
@@ -632,7 +632,7 @@ MiniLocateDevice(
     }
   else
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Leaving (adapter not found).\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Leaving (adapter not found for %wZ).\n", AdapterName));
     }
 
   return Adapter;
@@ -654,13 +654,8 @@ MiniQueryInformation(
  *     Size         = Size of the passed buffer
  *     Buffer       = Buffer for the output
  *     BytesWritten = Address of buffer to place number of bytes written
- * NOTES:
- *     If the specified buffer is too small, a new buffer is allocated,
- *     and the query is attempted again
  * RETURNS:
  *     Status of operation
- * TODO:
- *     Is there any way to use the buffer provided by the protocol?
  */
 {
   NDIS_STATUS NdisStatus;
@@ -669,7 +664,10 @@ MiniQueryInformation(
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
   NdisRequest = ExAllocatePool(NonPagedPool, sizeof(NDIS_REQUEST));
-  if (!NdisRequest) return NDIS_STATUS_RESOURCES;
+  if (!NdisRequest) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
+      return NDIS_STATUS_RESOURCES;
+  }
 
   RtlZeroMemory(NdisRequest, sizeof(NDIS_REQUEST));
 
@@ -903,6 +901,8 @@ MiniDequeueWorkItem(
     }
     else
     {
+        NDIS_DbgPrint(MIN_TRACE, ("No work item to dequeue\n"));
+
         return NDIS_STATUS_FAILURE;
     }
 }
@@ -956,6 +956,7 @@ MiniDoRequest(
             break;
 
         default:
+            NDIS_DbgPrint(MIN_TRACE, ("Bad request type\n"));
             Status = NDIS_STATUS_FAILURE;
         }
     }
@@ -1747,6 +1748,7 @@ NdisIPnPStartDevice(
         ExAllocatePool(PagedPool, ResourceListSize);
       if (Adapter->NdisMiniportBlock.AllocatedResources == NULL)
         {
+          NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
 	  ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
           return STATUS_INSUFFICIENT_RESOURCES;
         }
@@ -1755,6 +1757,7 @@ NdisIPnPStartDevice(
         ExAllocatePool(PagedPool, ResourceListSize);
       if (!Adapter->NdisMiniportBlock.Resources)
       {
+          NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
           ExFreePool(Adapter->NdisMiniportBlock.AllocatedResources);
           ExInterlockedRemoveEntryList(&Adapter->ListEntry, &AdapterListLock);
           return STATUS_INSUFFICIENT_RESOURCES;
@@ -1781,6 +1784,7 @@ NdisIPnPStartDevice(
         ExAllocatePool(PagedPool, ResourceListSize);
       if (Adapter->NdisMiniportBlock.AllocatedResourcesTranslated == NULL)
         {
+          NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
 	  ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
           return STATUS_INSUFFICIENT_RESOURCES;
         }
@@ -1890,7 +1894,7 @@ NdisIPnPStartDevice(
 
   if (SelectedMediumIndex >= MEDIA_ARRAY_SIZE)
     {
-      NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() selected a bad index\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       return NDIS_STATUS_UNSUPPORTED_MEDIA;
     }
@@ -1912,7 +1916,7 @@ NdisIPnPStartDevice(
             if (NdisStatus != NDIS_STATUS_SUCCESS)
             {
                ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
-               NDIS_DbgPrint(MAX_TRACE, ("MiniQueryInformation failed (%x)\n", NdisStatus));
+               NDIS_DbgPrint(MIN_TRACE, ("MiniQueryInformation failed (%x)\n", NdisStatus));
                return NdisStatus;
             }
 
@@ -1930,14 +1934,13 @@ NdisIPnPStartDevice(
         /* FIXME: Support other types of media */
         NDIS_DbgPrint(MIN_TRACE, ("error: unsupported media\n"));
         ASSERT(FALSE);
-/* FIXME - KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql); */
 	ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
         return STATUS_UNSUCCESSFUL;
     }
 
   if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
-      NDIS_DbgPrint(MAX_TRACE, ("couldn't create filter (%x)\n", NdisStatus));
+      NDIS_DbgPrint(MIN_TRACE, ("couldn't create filter (%x)\n", NdisStatus));
       return NdisStatus;
     }
 
@@ -2100,6 +2103,8 @@ NdisIDispatchPnp(
           {
 	      Status = NdisIPnPStartDevice(DeviceObject, Irp);
           }
+          else
+              NDIS_DbgPrint(MIN_TRACE, ("Lower driver failed device start\n"));
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
@@ -2110,6 +2115,8 @@ NdisIDispatchPnp(
           {
             Status = NdisIPnPStopDevice(DeviceObject, Irp);
           }
+          else
+            NDIS_DbgPrint(MIN_TRACE, ("Lower driver failed device stop\n"));
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
@@ -2176,8 +2183,8 @@ NdisIAddDevice(
   MiniportPtr = IoGetDriverObjectExtension(DriverObject, (PVOID)TAG('D','I','M','N'));
   if (MiniportPtr == NULL)
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get driver object extension.\n"));
-      return STATUS_UNSUCCESSFUL;
+      NDIS_DbgPrint(MIN_TRACE, ("Can't get driver object extension.\n"));
+      return NDIS_STATUS_FAILURE;
     }
   Miniport = *MiniportPtr;
 
@@ -2193,7 +2200,7 @@ NdisIAddDevice(
                                0, NULL, &DriverKeyLength);
   if (Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW && Status != STATUS_SUCCESS)
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport driver key length.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Can't get miniport driver key length.\n"));
       return Status;
     }
 
@@ -2201,7 +2208,7 @@ NdisIAddDevice(
                                     sizeof(ClassKeyName) + sizeof(LinkageKeyName));
   if (LinkageKeyBuffer == NULL)
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't allocate memory for driver key name.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Can't allocate memory for driver key name.\n"));
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -2211,7 +2218,7 @@ NdisIAddDevice(
                                &DriverKeyLength);
   if (!NT_SUCCESS(Status))
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport driver key.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Can't get miniport driver key.\n"));
       ExFreePool(LinkageKeyBuffer);
       return Status;
     }
@@ -2239,7 +2246,7 @@ NdisIAddDevice(
   ExFreePool(LinkageKeyBuffer);
   if (!NT_SUCCESS(Status))
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't get miniport device name. (%x)\n", Status));
+      NDIS_DbgPrint(MIN_TRACE, ("Can't get miniport device name. (%x)\n", Status));
       return Status;
     }
 
@@ -2428,7 +2435,7 @@ NdisMRegisterMiniport(
                                            sizeof(PNDIS_M_DRIVER_BLOCK), (PVOID*)&MiniportPtr);
   if (!NT_SUCCESS(Status))
     {
-      NDIS_DbgPrint(DEBUG_MINIPORT, ("Can't allocate driver object extension.\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Can't allocate driver object extension.\n"));
       return NDIS_STATUS_RESOURCES;
     }
 
@@ -2718,8 +2725,10 @@ NdisMQueryAdapterInstanceName(
     AdapterName.Length = 0;
     AdapterName.MaximumLength = Adapter->NdisMiniportBlock.MiniportName.MaximumLength;
     AdapterName.Buffer = ExAllocatePool(PagedPool, AdapterName.MaximumLength);
-    if (!AdapterName.Buffer)
+    if (!AdapterName.Buffer) {
+        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
         return NDIS_STATUS_RESOURCES;
+    }
 
     RtlCopyUnicodeString(&AdapterName, &Adapter->NdisMiniportBlock.MiniportName);
 
@@ -2865,6 +2874,7 @@ NdisMRegisterDevice(
 
     if (!NT_SUCCESS(Status))
     {
+        NDIS_DbgPrint(MIN_TRACE, ("IoCreateDevice failed (%x)\n", Status));
         return Status;
     }
     
@@ -2872,6 +2882,7 @@ NdisMRegisterDevice(
 
     if (!NT_SUCCESS(Status))
     {
+        NDIS_DbgPrint(MIN_TRACE, ("IoCreateSymbolicLink failed (%x)\n", Status));
         IoDeleteDevice(DeviceObject);
         return Status;
     }
@@ -2880,6 +2891,7 @@ NdisMRegisterDevice(
 
     if (!DeviceBlock)
     {
+        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
         IoDeleteDevice(DeviceObject);
         IoDeleteSymbolicLink(SymbolicName);
         return NDIS_STATUS_RESOURCES;

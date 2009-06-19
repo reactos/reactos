@@ -68,6 +68,7 @@ NdisMPciAssignResources(
   if (Adapter->NdisMiniportBlock.BusType != NdisInterfacePci ||
       Adapter->NdisMiniportBlock.AllocatedResources == NULL)
     {
+      NDIS_DbgPrint(MIN_TRACE, ("Bad bus type or no resources\n"));
       *AssignedResources = NULL;
       return NDIS_STATUS_FAILURE;
     }

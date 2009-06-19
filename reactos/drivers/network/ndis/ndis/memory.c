@@ -41,8 +41,10 @@ NdisAllocateMemoryWithTag(
   Block = ExAllocatePoolWithTag(NonPagedPool, Length, Tag);
   *VirtualAddress = Block;
 
-  if (!Block)
+  if (!Block) {
+    NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate memory (%lx)\n", Length));
     return NDIS_STATUS_FAILURE;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -94,8 +96,10 @@ NdisAllocateMemory(
       *VirtualAddress = ExAllocatePool(NonPagedPool, Length);
   }
 
-  if (!*VirtualAddress)
+  if (!*VirtualAddress) {
+    NDIS_DbgPrint(MIN_TRACE, ("Allocation failed (%lx, %lx)\n", MemoryFlags, Length));
     return NDIS_STATUS_FAILURE;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -241,7 +245,7 @@ NdisMFreeSharedMemory(
 
   if(!Memory)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Insufficient resources\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return;
     }
 
@@ -319,7 +323,7 @@ NdisMAllocateSharedMemoryAsync(
 
   if(!Memory)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Insufficient resources\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_FAILURE;
     }
 
