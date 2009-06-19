@@ -79,6 +79,7 @@ HvpGetCellFullSize(
    PHHIVE RegistryHive,
    PVOID Cell)
 {
+   UNREFERENCED_PARAMETER(RegistryHive);
    return ((PHCELL)Cell - 1)->Size;
 }
 
@@ -88,6 +89,8 @@ HvGetCellSize(IN PHHIVE Hive,
 {
    PHCELL CellHeader;
    LONG Size;
+
+   UNREFERENCED_PARAMETER(Hive);
 
    CellHeader = (PHCELL)Address - 1;
    Size = CellHeader->Size * -1;
