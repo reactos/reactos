@@ -1057,10 +1057,72 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             Status = STATUS_SUCCESS;
             break;
 
-        /* We currently don't implement any of these */
         case ProcessQuotaLimits:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(QUOTA_LIMITS))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            DPRINT1("Not implemented: ProcessQuotaLimits\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
         case ProcessBasePriority:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(KPRIORITY))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            DPRINT1("Not implemented: ProcessBasePriority\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
         case ProcessRaisePriority:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            DPRINT1("Not implemented: ProcessRaisePriority\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessWx86Information:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            DPRINT1("Not implemented: ProcessWx86Information\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessDebugPort:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(HANDLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            DPRINT1("Not implemented: ProcessDebugPort\n");
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        /* We currently don't implement any of these */
         case ProcessLdtInformation:
         case ProcessLdtSize:
         case ProcessIoPortHandlers:
@@ -1077,10 +1139,8 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
         case ProcessIoCounters:
         case ProcessTimes:
         case ProcessPooledUsageAndLimits:
-        case ProcessWx86Information:
         case ProcessHandleCount:
         case ProcessWow64Information:
-        case ProcessDebugPort:
         default:
             DPRINT1("Unsupported or unimplemented: %lx\n", ProcessInformationClass);
             Status = STATUS_INVALID_INFO_CLASS;
