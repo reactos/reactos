@@ -361,34 +361,28 @@ void hash_table_destroy(struct hash_table* ht)
 void hash_table_add(struct hash_table* ht, struct hash_table_elt* elt)
 {
     unsigned                    hash = hash_table_hash(elt->name, ht->num_buckets);
-    struct hash_table_elt**     p;
 
     if (!ht->buckets)
     {
-        ht->buckets = pool_alloc(ht->pool, ht->num_buckets * sizeof(struct hash_table_elt*));
+        ht->buckets = pool_alloc(ht->pool, ht->num_buckets * sizeof(struct hash_table_bucket));
         assert(ht->buckets);
-        memset(ht->buckets, 0, ht->num_buckets * sizeof(struct hash_table_elt*));
+        memset(ht->buckets, 0, ht->num_buckets * sizeof(struct hash_table_bucket));
     }
 
     /* in some cases, we need to get back the symbols of same name in the order
      * in which they've been inserted. So insert new elements at the end of the list.
      */
-    for (p = &ht->buckets[hash]; *p; p = &((*p)->next));
-    *p = elt;
+    if (!ht->buckets[hash].first)
+    {
+        ht->buckets[hash].first = elt;
+    }
+    else
+    {
+        ht->buckets[hash].last->next = elt;
+    }
+    ht->buckets[hash].last = elt;
     elt->next = NULL;
     ht->num_elts++;
-}
-
-void* hash_table_find(const struct hash_table* ht, const char* name)
-{
-    unsigned                    hash = hash_table_hash(name, ht->num_buckets);
-    struct hash_table_elt*      elt;
-
-    if(!ht->buckets) return NULL;
-
-    for (elt = ht->buckets[hash]; elt; elt = elt->next)
-        if (!strcmp(name, elt->name)) return elt;
-    return NULL;
 }
 
 void hash_table_iter_init(const struct hash_table* ht, 
@@ -410,10 +404,10 @@ void hash_table_iter_init(const struct hash_table* ht,
 
 void* hash_table_iter_up(struct hash_table_iter* hti)
 {
-    if(!hti->ht->buckets) return NULL;
+    if (!hti->ht->buckets) return NULL;
 
     if (hti->element) hti->element = hti->element->next;
     while (!hti->element && hti->index < hti->last) 
-        hti->element = hti->ht->buckets[++hti->index];
+        hti->element = hti->ht->buckets[++hti->index].first;
     return hti->element;
 }
