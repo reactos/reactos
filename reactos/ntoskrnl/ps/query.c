@@ -447,6 +447,29 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
 
         /* WOW64: Not implemented */
         case ProcessWow64Information:
+
+            /* Set the return length */
+            Length = sizeof(ULONG_PTR);
+
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status)) break;
+
+            DPRINT1("Not implemented: ProcessWow64Information\n");
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
             Status = STATUS_NOT_IMPLEMENTED;
             break;
 
