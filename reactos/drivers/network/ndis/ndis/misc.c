@@ -6,7 +6,7 @@
 
 #include "ndissys.h"
 
-extern UCHAR CancelId;
+extern LONG CancelId;
 
 /*
  * @implemented
@@ -522,7 +522,7 @@ NdisGeneratePartialCancelId(VOID)
 {
     UCHAR PartialCancelId;
 
-    PartialCancelId = InterlockedIncrement((PLONG)&CancelId);
+    PartialCancelId = (UCHAR)InterlockedIncrement(&CancelId);
 
     NDIS_DbgPrint(MAX_TRACE, ("Cancel ID %u\n", PartialCancelId));
 
