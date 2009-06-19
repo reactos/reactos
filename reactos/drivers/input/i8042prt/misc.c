@@ -19,6 +19,7 @@ ForwardIrpAndWaitCompletion(
 	IN PIRP Irp,
 	IN PVOID Context)
 {
+	UNREFERENCED_PARAMETER(DeviceObject);
 	if (Irp->PendingReturned)
 		KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
 	return STATUS_MORE_PROCESSING_REQUIRED;
