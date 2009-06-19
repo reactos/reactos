@@ -445,9 +445,6 @@ HvInitialize(
    NTSTATUS Status;
    PHHIVE Hive = RegistryHive;
 
-   UNREFERENCED_PARAMETER(HiveType);
-   UNREFERENCED_PARAMETER(FileName);
-
    /*
     * Create a new hive structure that will hold all the maintenance data.
     */
