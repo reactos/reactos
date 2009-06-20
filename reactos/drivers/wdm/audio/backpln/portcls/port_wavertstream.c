@@ -10,7 +10,7 @@
 
 typedef struct
 {
-    IPortWaveRTStreamVtbl *lpVtbl;
+    IPortWaveRTStreamInitVtbl *lpVtbl;
     LONG ref;
 
 }IPortWaveRTStreamImpl;
@@ -21,8 +21,8 @@ typedef struct
 static
 NTSTATUS
 NTAPI
-IPortWaveRTStream_fnQueryInterface(
-    IPortWaveRTStream* iface,
+IPortWaveRTStreamInit_fnQueryInterface(
+    IPortWaveRTStreamInit * iface,
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
@@ -46,8 +46,8 @@ IPortWaveRTStream_fnQueryInterface(
 static
 ULONG
 NTAPI
-IPortWaveRTStream_fnAddRef(
-    IPortWaveRTStream* iface)
+IPortWaveRTStreamInit_fnAddRef(
+    IPortWaveRTStreamInit * iface)
 {
     IPortWaveRTStreamImpl * This = (IPortWaveRTStreamImpl*)iface;
     DPRINT("IPortWaveRTStream_fnAddRef entered\n");
@@ -61,8 +61,8 @@ IPortWaveRTStream_fnAddRef(
 static
 ULONG
 NTAPI
-IPortWaveRTStream_fnRelease(
-    IPortWaveRTStream* iface)
+IPortWaveRTStreamInit_fnRelease(
+    IPortWaveRTStreamInit * iface)
 {
     IPortWaveRTStreamImpl * This = (IPortWaveRTStreamImpl*)iface;
 
@@ -85,8 +85,8 @@ IPortWaveRTStream_fnRelease(
 static
 PMDL
 NTAPI
-IPortWaveRTStream_fnAllocatePagesForMdl(
-    IN IPortWaveRTStream* iface,
+IPortWaveRTStreamInit_fnAllocatePagesForMdl(
+    IN IPortWaveRTStreamInit * iface,
     IN PHYSICAL_ADDRESS HighAddress,
     IN SIZE_T TotalBytes)
 {
@@ -99,8 +99,8 @@ IPortWaveRTStream_fnAllocatePagesForMdl(
 static
 PMDL
 NTAPI
-IPortWaveRTStream_fnAllocateContiguousPagesForMdl(
-    IN IPortWaveRTStream* iface,
+IPortWaveRTStreamInit_fnAllocateContiguousPagesForMdl(
+    IN IPortWaveRTStreamInit * iface,
     IN PHYSICAL_ADDRESS LowAddress,
     IN PHYSICAL_ADDRESS HighAddress,
     IN SIZE_T TotalBytes)
@@ -129,12 +129,14 @@ IPortWaveRTStream_fnAllocateContiguousPagesForMdl(
 
     if (MmGetMdlByteCount(Mdl) < TotalBytes)
     {
+        DPRINT1("ByteCount %u Required %u\n", MmGetMdlByteCount(Mdl), TotalBytes);
         MmFreePagesFromMdl(Mdl);
         ExFreePool(Mdl);
         return NULL;
     }
 
-    return NULL;
+    DPRINT("Result %p\n", Mdl);
+    return Mdl;
 }
 
 /*
@@ -143,8 +145,8 @@ IPortWaveRTStream_fnAllocateContiguousPagesForMdl(
 static
 PVOID
 NTAPI
-IPortWaveRTStream_fnMapAllocatedPages(
-    IN IPortWaveRTStream* iface,
+IPortWaveRTStreamInit_fnMapAllocatedPages(
+    IN IPortWaveRTStreamInit * iface,
     IN PMDL MemoryDescriptorList,
     IN MEMORY_CACHING_TYPE CacheType)
 {
@@ -157,8 +159,8 @@ IPortWaveRTStream_fnMapAllocatedPages(
 static
 VOID
 NTAPI
-IPortWaveRTStream_fnUnmapAllocatedPages(
-    IN IPortWaveRTStream* iface,
+IPortWaveRTStreamInit_fnUnmapAllocatedPages(
+    IN IPortWaveRTStreamInit * iface,
     IN PVOID   BaseAddress,
     IN PMDL MemoryDescriptorList)
 {
@@ -171,8 +173,8 @@ IPortWaveRTStream_fnUnmapAllocatedPages(
 static
 VOID
 NTAPI
-IPortWaveRTStream_fnFreePagesFromMdl(
-    IN IPortWaveRTStream* iface,
+IPortWaveRTStreamInit_fnFreePagesFromMdl(
+    IN IPortWaveRTStreamInit * iface,
     IN PMDL MemoryDescriptorList)
 {
     MmFreePagesFromMdl(MemoryDescriptorList);
@@ -185,8 +187,8 @@ IPortWaveRTStream_fnFreePagesFromMdl(
 static
 ULONG
 NTAPI
-IPortWaveRTStream_fnGetPhysicalPagesCount(
-    IN IPortWaveRTStream* iface,
+IPortWaveRTStreamInit_fnGetPhysicalPagesCount(
+    IN IPortWaveRTStreamInit * iface,
     IN PMDL MemoryDescriptorList)
 {
     return ADDRESS_AND_SIZE_TO_SPAN_PAGES(0, MmGetMdlByteCount(MemoryDescriptorList));
@@ -198,13 +200,15 @@ IPortWaveRTStream_fnGetPhysicalPagesCount(
 static
 PHYSICAL_ADDRESS
 NTAPI
-IPortWaveRTStream_fnGetPhysicalPageAddress(
-    IN IPortWaveRTStream* iface,
-    IN PMDL    MemoryDescriptorList,
+IPortWaveRTStreamInit_fnGetPhysicalPageAddress(
+    IN IPortWaveRTStreamInit * iface,
+    IN PPHYSICAL_ADDRESS Address,
+    IN PMDL MemoryDescriptorList,
     IN ULONG Index)
 {
     PVOID Buffer;
     ULONG Pages;
+    PHYSICAL_ADDRESS Result, Addr;
 
     Pages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(0, MmGetMdlByteCount(MemoryDescriptorList));
     if (Pages <= Index)
@@ -214,21 +218,26 @@ IPortWaveRTStream_fnGetPhysicalPageAddress(
     }
 
     Buffer = UlongToPtr(PtrToUlong(MmGetSystemAddressForMdl(MemoryDescriptorList)) + Index * PAGE_SIZE);
-    return MmGetPhysicalAddress(Buffer);
+
+    Addr = MmGetPhysicalAddress(Buffer);
+    Address->QuadPart = Addr.QuadPart;
+    Result.QuadPart = (PtrToUlong(Address));
+
+    return Result;
 }
 
-static IPortWaveRTStreamVtbl vt_PortWaveRTStream =
+static IPortWaveRTStreamInitVtbl vt_PortWaveRTStream =
 {
-    IPortWaveRTStream_fnQueryInterface,
-    IPortWaveRTStream_fnAddRef,
-    IPortWaveRTStream_fnRelease,
-    IPortWaveRTStream_fnAllocatePagesForMdl,
-    IPortWaveRTStream_fnAllocateContiguousPagesForMdl,
-    IPortWaveRTStream_fnMapAllocatedPages,
-    IPortWaveRTStream_fnUnmapAllocatedPages,
-    IPortWaveRTStream_fnFreePagesFromMdl,
-    IPortWaveRTStream_fnGetPhysicalPagesCount,
-    IPortWaveRTStream_fnGetPhysicalPageAddress
+    IPortWaveRTStreamInit_fnQueryInterface,
+    IPortWaveRTStreamInit_fnAddRef,
+    IPortWaveRTStreamInit_fnRelease,
+    IPortWaveRTStreamInit_fnAllocatePagesForMdl,
+    IPortWaveRTStreamInit_fnAllocateContiguousPagesForMdl,
+    IPortWaveRTStreamInit_fnMapAllocatedPages,
+    IPortWaveRTStreamInit_fnUnmapAllocatedPages,
+    IPortWaveRTStreamInit_fnFreePagesFromMdl,
+    IPortWaveRTStreamInit_fnGetPhysicalPagesCount,
+    IPortWaveRTStreamInit_fnGetPhysicalPageAddress
 };
 
 NTSTATUS

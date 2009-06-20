@@ -710,4 +710,62 @@ typedef IPortFilterTopology *PPORTFILTERTOPOLOGY;
 
 #undef INTERFACE
 
+/*****************************************************************************
+ * IPortWaveRTStreamInit
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortWaveRTStreamInit
+
+
+DECLARE_INTERFACE_(IPortWaveRTStreamInit, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(PMDL, AllocatePagesForMdl)
+    (   THIS_
+        IN      PHYSICAL_ADDRESS    HighAddress,
+        IN      SIZE_T              TotalBytes
+    )   PURE;
+
+    STDMETHOD_(PMDL, AllocateContiguousPagesForMdl)
+    (   THIS_
+        IN      PHYSICAL_ADDRESS    LowAddress,
+        IN      PHYSICAL_ADDRESS    HighAddress,
+        IN      SIZE_T              TotalBytes
+    )   PURE;
+
+    STDMETHOD_(PVOID, MapAllocatedPages)
+    (   THIS_
+        IN      PMDL                    MemoryDescriptorList,
+        IN      MEMORY_CACHING_TYPE     CacheType
+    )   PURE;
+
+    STDMETHOD_(VOID, UnmapAllocatedPages)
+    (   THIS_
+        IN      PVOID   BaseAddress,
+        IN      PMDL    MemoryDescriptorList
+    )   PURE;
+
+    STDMETHOD_(VOID, FreePagesFromMdl)
+    (   THIS_
+        IN      PMDL    MemoryDescriptorList
+    )   PURE;
+
+    STDMETHOD_(ULONG, GetPhysicalPagesCount)
+    (   THIS_
+        IN      PMDL    MemoryDescriptorList
+    )   PURE;
+
+    STDMETHOD_(PHYSICAL_ADDRESS, GetPhysicalPageAddress)
+    (   THIS_
+        IN      PPHYSICAL_ADDRESS Address,
+        IN      PMDL              MemoryDescriptorList,
+        IN      ULONG             Index
+    )   PURE;
+};
+
+#undef INTERFACE
+
 #endif

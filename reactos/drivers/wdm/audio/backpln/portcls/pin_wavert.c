@@ -59,6 +59,85 @@ SetStreamState(
    IN IPortPinWaveRTImpl * This,
    IN KSSTATE State);
 
+static
+VOID
+UpdateCommonBuffer(
+    IPortPinWaveRTImpl * This,
+    ULONG Position)
+{
+    ULONG BufferLength;
+    ULONG BytesToCopy;
+    ULONG BufferSize;
+    PUCHAR Buffer;
+    NTSTATUS Status;
+
+    BufferLength = Position - This->CommonBufferOffset;
+    while(BufferLength)
+    {
+        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
+        if (!NT_SUCCESS(Status))
+            return;
+
+        BytesToCopy = min(BufferLength, BufferSize);
+
+        if (This->Capture)
+        {
+            RtlMoveMemory(Buffer, (PUCHAR)This->CommonBuffer + This->CommonBufferOffset, BytesToCopy);
+        }
+        else
+        {
+            RtlMoveMemory((PUCHAR)This->CommonBuffer + This->CommonBufferOffset, Buffer, BytesToCopy);
+        }
+
+        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
+        This->CommonBufferOffset += BytesToCopy;
+
+        BufferLength = Position - This->CommonBufferOffset;
+    }
+}
+
+static
+VOID
+UpdateCommonBufferOverlap(
+    IPortPinWaveRTImpl * This,
+    ULONG Position)
+{
+    ULONG BufferLength;
+    ULONG BytesToCopy;
+    ULONG BufferSize;
+    PUCHAR Buffer;
+    NTSTATUS Status;
+
+
+    BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
+    while(BufferLength)
+    {
+        Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
+        if (!NT_SUCCESS(Status))
+            return;
+
+        BytesToCopy = min(BufferLength, BufferSize);
+
+        if (This->Capture)
+        {
+            RtlMoveMemory(Buffer, (PUCHAR)This->CommonBuffer + This->CommonBufferOffset, BytesToCopy);
+        }
+        else
+        {
+            RtlMoveMemory((PUCHAR)This->CommonBuffer + This->CommonBufferOffset, Buffer, BytesToCopy);
+        }
+
+        This->IrpQueue->lpVtbl->UpdateMapping(This->IrpQueue, BytesToCopy);
+        This->CommonBufferOffset += BytesToCopy;
+
+        BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
+    }
+    This->CommonBufferOffset = 0;
+    UpdateCommonBuffer(This, Position);
+}
+
+
+
 //==================================================================================================================================
 static
 NTSTATUS
@@ -137,14 +216,16 @@ IServiceSink_fnRequestService(
     }
 
     Status = This->Stream->lpVtbl->GetPosition(This->Stream, &Position);
-    DPRINT("PlayOffset %llu WriteOffset %llu %u Buffer %p BufferSize %u\n", Position.PlayOffset, Position.WriteOffset, Buffer, This->CommonBufferSize, BufferSize);
+    DPRINT("PlayOffset %lu WriteOffset %lu Buffer %p BufferSize %u CommonBufferSize %u\n", Position.PlayOffset, Position.WriteOffset, Buffer, BufferSize, This->CommonBufferSize);
 
-    //FIXME
-    // implement writing into cyclic buffer
-    //
-
-    /* reschedule the timer */
-    This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, This->Delay);
+    if (Position.PlayOffset < This->CommonBufferOffset)
+    {
+        UpdateCommonBufferOverlap(This, Position.PlayOffset);
+    }
+    else if (Position.PlayOffset >= This->CommonBufferOffset)
+    {
+        UpdateCommonBuffer(This, Position.PlayOffset);
+    }
 }
 
 static IServiceSinkVtbl vt_IServiceSink = 
@@ -962,18 +1043,25 @@ IPortPinWaveRT_fnInit(
     /* minimum delay of 10 milisec */
     This->Delay = Int32x32To64(min(max(Latency.ChipsetDelay + Latency.CodecDelay + Latency.FifoSize, 10), 10), -10000);
 
-    Status = This->Stream->lpVtbl->AllocateAudioBuffer(This->Stream, 16384, &This->Mdl, &This->CommonBufferSize, &This->CommonBufferOffset, &This->CacheType);
+    Status = This->Stream->lpVtbl->AllocateAudioBuffer(This->Stream, 16384 * 11, &This->Mdl, &This->CommonBufferSize, &This->CommonBufferOffset, &This->CacheType);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("AllocateAudioBuffer failed with %x\n", Status);
         goto cleanup;
     }
 
-    This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
-    This->State = KSSTATE_STOP;
-    This->Capture = Capture;
+    This->CommonBuffer = MmGetSystemAddressForMdlSafe(This->Mdl, NormalPagePriority);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to get system address %x\n", Status);
+        IoFreeMdl(This->Mdl);
+        This->Mdl = NULL;
+        goto cleanup;
+    }
 
-    This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
+    DPRINT1("Setting state to acquire %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_ACQUIRE));
+    DPRINT1("Setting state to pause %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
+    This->State = KSSTATE_PAUSE;
     return STATUS_SUCCESS;
 
 cleanup:
@@ -995,12 +1083,20 @@ cleanup:
         This->ServiceGroup = NULL;
     }
 
-    if (This->PortStream)
+    if (This->Stream)
     {
-        This->PortStream->lpVtbl->Release(This->PortStream);
-        This->PortStream = NULL;
+        This->Stream->lpVtbl->Release(This->Stream);
+        This->Stream = NULL;
     }
+    else
+    {
+        if (This->PortStream)
+        {
+            This->PortStream->lpVtbl->Release(This->PortStream);
+            This->PortStream = NULL;
+        }
 
+    }
     return Status;
 }
 

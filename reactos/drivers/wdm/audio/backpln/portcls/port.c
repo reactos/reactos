@@ -40,10 +40,8 @@ PcNewPort(
         Status = NewPortWaveCyclic(OutPort);
     else if (IsEqualGUIDAligned(ClassId, &CLSID_PortWavePci))
         Status = NewPortWavePci(OutPort);
-#if (NTDDI_VERSION >= NTDDI_VISTA)
-    else if (IsEqualGUIDAligned(ClassId, &CLSID_PortWavePci))
+    else if (IsEqualGUIDAligned(ClassId, &CLSID_PortWaveRT))
         Status = NewPortWaveRT(OutPort);
-#endif
     else
     {
 

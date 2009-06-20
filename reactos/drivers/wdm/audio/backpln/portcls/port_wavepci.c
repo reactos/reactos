@@ -22,7 +22,6 @@ typedef struct
 
     PMINIPORTWAVEPCI Miniport;
     PDEVICE_OBJECT pDeviceObject;
-    KDPC Dpc;
     BOOL bInitialized;
     PRESOURCELIST pResourceList;
     PSERVICEGROUP ServiceGroup;
@@ -331,26 +330,6 @@ IPortWavePci_fnRelease(
     return This->ref;
 }
 
-VOID
-NTAPI
-ServiceNotifyRoutine(
-    IN struct _KDPC  *Dpc,
-    IN PVOID  DeferredContext,
-    IN PVOID  SystemArgument1,
-    IN PVOID  SystemArgument2)
-{
-    DPRINT("ServiceNotifyRoutine entered %p %p %p\n", DeferredContext, SystemArgument1, SystemArgument2);
-
-    IPortWavePciImpl * This = (IPortWavePciImpl*)DeferredContext;
-    if (This->ServiceGroup && This->bInitialized)
-    {
-        DPRINT("ServiceGroup %p\n", This->ServiceGroup);
-        This->ServiceGroup->lpVtbl->RequestService(This->ServiceGroup);
-    }
-}
-
-
-
 NTSTATUS
 NTAPI
 IPortWavePci_fnInit(
@@ -385,15 +364,11 @@ IPortWavePci_fnInit(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* initialize the dpc */
-    KeInitializeDpc(&This->Dpc, ServiceNotifyRoutine, (PVOID)This);
-
     /* Initialize port object */
     This->Miniport = Miniport;
     This->pDeviceObject = DeviceObject;
     This->bInitialized = TRUE;
     This->pResourceList = ResourceList;
-
 
     /* increment reference on miniport adapter */
     Miniport->lpVtbl->AddRef(Miniport);
