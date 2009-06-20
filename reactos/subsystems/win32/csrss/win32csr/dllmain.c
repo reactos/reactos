@@ -190,7 +190,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     OBJECT_ATTRIBUTES ObjectAttributes;
     ULONG nParam = 0;
     PRTL_MESSAGE_RESOURCE_ENTRY MessageResource;
-    ULONG ParameterList[MAXIMUM_HARDERROR_PARAMETERS];
+    ULONG_PTR ParameterList[MAXIMUM_HARDERROR_PARAMETERS];
     LPSTR CaptionText, MessageBody;
     LPWSTR szxCaptionText, szxMessageBody;
     DWORD SizeOfAllUnicodeStrings = 0;
@@ -330,7 +330,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
                 ParameterStringU.MaximumLength = TempStringU.MaximumLength;
                 DPRINT("ParameterStringU=\'%wZ\'\n", &ParameterStringU);
                 RtlUnicodeStringToAnsiString(&ParamStringA, &ParameterStringU, TRUE);
-                ParameterList[nParam] = (ULONG)ParamStringA.Buffer;
+                ParameterList[nParam] = (ULONG_PTR)ParamStringA.Buffer;
                 SizeOfAllUnicodeStrings += ParamStringA.MaximumLength;
             }
         }
@@ -345,7 +345,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     // get text string of the error code
     Status = RtlFindMessage(
         (PVOID)GetModuleHandle(TEXT("ntdll")),
-        (ULONG)RT_MESSAGETABLE,
+        (ULONG_PTR)RT_MESSAGETABLE,
         LANG_NEUTRAL,
         HardErrorMessage->Status,
         &MessageResource );
@@ -412,7 +412,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
             MessageBody = NULL;
             Status = RtlFindMessage(
                 (PVOID)GetModuleHandle(TEXT("ntdll")),
-                (ULONG)RT_MESSAGETABLE,
+                (ULONG_PTR)RT_MESSAGETABLE,
                 LANG_NEUTRAL,
                 ParameterList[0],
                 &MsgResException);

@@ -65,7 +65,7 @@ ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData, DWORD
 
       Thread = CreateRemoteThread(ProcessData->Process, NULL, 0,
                                   (LPTHREAD_START_ROUTINE) ProcessData->CtrlDispatcher,
-                                  (PVOID) Event, 0, NULL);
+                                  UlongToPtr(Event), 0, NULL);
       if (NULL == Thread)
         {
           DPRINT1("Failed thread creation (Error: 0x%x)\n", GetLastError());
