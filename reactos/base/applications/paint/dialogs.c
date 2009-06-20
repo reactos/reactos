@@ -59,6 +59,7 @@ LRESULT CALLBACK MRDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
         default:
             return FALSE;
     }
+    return TRUE;
 }
 
 int mirrorRotateDlg()
@@ -83,16 +84,23 @@ LRESULT CALLBACK ATTDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    EndDialog(hwnd, 1);
+                    EndDialog(hwnd, GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, NULL, FALSE) | (GetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, NULL, FALSE)<<16));
                     break;
                 case IDCANCEL:
                     EndDialog(hwnd, 0);
+                    break;
+                case IDD_ATTRIBUTESSTANDARD:
+                    CheckDlgButton(hwnd, IDD_ATTRIBUTESRB3, BST_CHECKED);
+                    CheckDlgButton(hwnd, IDD_ATTRIBUTESRB5, BST_CHECKED);
+                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT1, imgXRes, FALSE);
+                    SetDlgItemInt(hwnd, IDD_ATTRIBUTESEDIT2, imgYRes, FALSE);
                     break;
             }
             break;
         default:
             return FALSE;
     }
+    return TRUE;
 }
 
 int attributesDlg()
@@ -125,6 +133,7 @@ LRESULT CALLBACK CHSIZEDlgWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
         default:
             return FALSE;
     }
+    return TRUE;
 }
 
 int changeSizeDlg()

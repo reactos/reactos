@@ -1981,8 +1981,24 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
                 SCSI_PORT_RESET | SCSI_PORT_RESET_REPORTED;
           break;
 
+      case CallDisableInterrupts:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: CallDisableInterrupts!\n");
+          break;
+
+      case CallEnableInterrupts:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: CallEnableInterrupts!\n");
+          break;
+
+      case RequestTimerCall:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: RequestTimerCall!\n");
+          break;
+
+      case BusChangeDetected:
+          DPRINT1("UNIMPLEMENTED SCSI Notification called: BusChangeDetected!\n");
+          break;
+      
       default:
-	DPRINT1 ("Unsupported notification %lu\n", NotificationType);
+	DPRINT1 ("Unsupported notification from WMI: %lu\n", NotificationType);
 	break;
     }
 
@@ -2804,6 +2820,14 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
           /* Copy inquiry data to the port device extension */
           Status = SpiGetInquiryData(DeviceExtension, Irp);
+          break;
+
+      case IOCTL_SCSI_MINIPORT:
+          DPRINT1("IOCTL_SCSI_MINIPORT unimplemented!\n");
+          break;
+
+      case IOCTL_SCSI_PASS_THROUGH:
+          DPRINT1("IOCTL_SCSI_PASS_THROUGH unimplemented!\n");
           break;
 
       default:

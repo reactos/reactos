@@ -86,7 +86,7 @@ typedef HW_DMA_RETURN
 #undef PAGED_CODE
 #endif
 
-#ifdef DBG
+#if DBG
 
 #define PAGED_CODE() \
   if (VideoPortGetCurrentIrql() > 1 /* APC_LEVEL */) \
@@ -1540,7 +1540,7 @@ VideoPortZeroMemory(
   IN PVOID  Destination,
   IN ULONG  Length);
 
-#ifdef DBG
+#if DBG
 #define VideoDebugPrint(x) VideoPortDebugPrint x
 #else
 #define VideoDebugPrint(x)

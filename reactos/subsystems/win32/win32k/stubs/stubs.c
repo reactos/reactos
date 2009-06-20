@@ -6,9 +6,6 @@
 
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
-
-
-
 /*
  * @unimplemented
  */
@@ -1176,19 +1173,22 @@ NtGdiEngCheckAbort(SURFOBJ *pso)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HSURF APIENTRY
 NtGdiEngCreateDeviceSurface( IN DHSURF Surface,
                              IN SIZEL Size,
                              IN ULONG FormatVersion)
 {
-     UNIMPLEMENTED;
-    return 0;
+    if ( FormatVersion <= BMF_8RLE &&
+         FormatVersion >= BMF_1BPP )
+       return EngCreateDeviceSurface(Surface, Size, FormatVersion);
+    else
+       return NULL;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HBITMAP APIENTRY
 NtGdiEngCreateDeviceBitmap(
@@ -1196,8 +1196,12 @@ NtGdiEngCreateDeviceBitmap(
     IN SIZEL sizl,
     IN ULONG iFormatCompat)
 {
-     UNIMPLEMENTED;
-    return NULL;
+    if ( ( sizl.cx > 0 && sizl.cy > 0 && (((LONGLONG)(sizl.cy * sizl.cx)) <= 0xFFFFFFFFULL) ) &&
+         iFormatCompat <= BMF_8RLE &&
+         iFormatCompat >= BMF_1BPP )
+       return EngCreateDeviceBitmap(dhsurf, sizl, iFormatCompat);
+    else
+       return NULL;
 }
 
 
@@ -1362,15 +1366,6 @@ NtGdiEngEraseSurface(SURFOBJ *Surface,
     UNIMPLEMENTED;
     return FALSE;
 }
-
-
-
-
-
-
-
-
-
 
 /*
  * @unimplemented

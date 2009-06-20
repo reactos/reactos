@@ -188,7 +188,7 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
         /* Sanity check */
         ASSERT(!WaitBlock->Signaled);
 
-#ifdef DBG
+#if DBG
         /* We are about to get signaled */
         WaitBlock->Signaled = TRUE;
 #endif

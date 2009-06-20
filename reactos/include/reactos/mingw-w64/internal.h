@@ -32,6 +32,12 @@ extern "C" {
 #define __IOINFO_TM_UTF8 1
 #define __IOINFO_TM_UTF16LE 2
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4214)
+#pragma warning(disable:4820)
+#endif
+
   typedef struct {
     intptr_t osfhnd;
     char osfile;
@@ -42,6 +48,10 @@ extern "C" {
     char unicode : 1;
     char pipech2[2];
   } ioinfo;
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #define IOINFO_ARRAY_ELTS (1 << 5)
 
@@ -159,7 +169,7 @@ extern char **_imp___wcmdln;
 #include <errno.h>
 
   void * __cdecl _encode_pointer(void *);
-  void * __cdecl _encoded_null();
+  void * __cdecl _encoded_null(void);
   void * __cdecl _decode_pointer(void *);
 
   BOOL __cdecl _ValidateImageBase (PBYTE pImageBase);

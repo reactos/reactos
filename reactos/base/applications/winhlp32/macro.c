@@ -47,6 +47,14 @@ static unsigned         MACRO_NumLoaded /* = 0 */;
 
 /*******      helper functions     *******/
 
+static char* StrDup(const char* str)
+{
+    char* dst;
+    dst=HeapAlloc(GetProcessHeap(),0,strlen(str)+1);
+    strcpy(dst, str);
+    return dst;
+}
+
 static WINHELP_BUTTON**        MACRO_LookupButton(WINHELP_WINDOW* win, LPCSTR name)
 {
     WINHELP_BUTTON**    b;
@@ -711,7 +719,7 @@ static void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR 
         else if ((dll = HeapAlloc(GetProcessHeap(), 0, sizeof(*dll))))
         {
             dll->hLib = hLib;
-            dll->name = strdup(dll_name); /* FIXME */
+            dll->name = StrDup(dll_name); /* FIXME: never freed */
             dll->next = Globals.dlls;
             Globals.dlls = dll;
             dll->handler = (WINHELP_LDLLHandler)GetProcAddress(dll->hLib, "LDLLHandler");
@@ -731,10 +739,10 @@ static void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR 
     size = ++MACRO_NumLoaded * sizeof(struct MacroDesc);
     if (!MACRO_Loaded) MACRO_Loaded = HeapAlloc(GetProcessHeap(), 0, size);
     else MACRO_Loaded = HeapReAlloc(GetProcessHeap(), 0, MACRO_Loaded, size);
-    MACRO_Loaded[MACRO_NumLoaded - 1].name      = strdup(proc); /* FIXME */
+    MACRO_Loaded[MACRO_NumLoaded - 1].name      = StrDup(proc); /* FIXME: never freed */
     MACRO_Loaded[MACRO_NumLoaded - 1].alias     = NULL;
     MACRO_Loaded[MACRO_NumLoaded - 1].isBool    = 0;
-    MACRO_Loaded[MACRO_NumLoaded - 1].arguments = strdup(args); /* FIXME */
+    MACRO_Loaded[MACRO_NumLoaded - 1].arguments = StrDup(args); /* FIXME: never freed */
     MACRO_Loaded[MACRO_NumLoaded - 1].fn        = fn;
     WINE_TRACE("Added %s(%s) at %p\n", proc, args, fn);
 }

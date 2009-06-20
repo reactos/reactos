@@ -28,7 +28,7 @@ typedef BOOL
                          ULONG ul_reason_for_call,
                          LPVOID lpReserved);
 
-#if defined(KDBG) || defined(DBG)
+#if defined(KDBG) || DBG
 VOID
 LdrpLoadUserModuleSymbols(PLDR_DATA_TABLE_ENTRY LdrModule);
 #endif

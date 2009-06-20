@@ -831,6 +831,18 @@ GpStatus WINGDIPAPI GdipAddPathPolygonI(GpPath *path, GDIPCONST GpPoint *points,
     return status;
 }
 
+GpStatus WINGDIPAPI GdipAddPathString(GpPath* path, GDIPCONST WCHAR* string, INT length, GDIPCONST GpFontFamily* family, INT style, REAL emSize, GDIPCONST RectF* layoutRect, GDIPCONST GpStringFormat* format)
+{
+    FIXME("(%p, %p, %d, %p, %d, %f, %p, %p): stub\n", path, string, length, family, style, emSize, layoutRect, format);
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipAddPathStringI(GpPath* path, GDIPCONST WCHAR* string, INT length, GDIPCONST GpFontFamily* family, INT style, REAL emSize, GDIPCONST Rect* layoutRect, GDIPCONST GpStringFormat* format)
+{
+    FIXME("(%p, %p, %d, %p, %d, %f, %p, %p): stub\n", path, string, length, family, style, emSize, layoutRect, format);
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipClonePath(GpPath* path, GpPath **clone)
 {
     TRACE("(%p, %p)\n", path, clone);
@@ -1463,6 +1475,24 @@ GpStatus WINGDIPAPI GdipTransformPath(GpPath *path, GpMatrix *matrix)
 
     return GdipTransformMatrixPoints(matrix, path->pathdata.Points,
                                      path->pathdata.Count);
+}
+
+GpStatus WINGDIPAPI GdipWarpPath(GpPath *path, GpMatrix* matrix,
+    GDIPCONST GpPointF *points, INT count, REAL x, REAL y, REAL width,
+    REAL height, WarpMode warpmode, REAL flatness)
+{
+    FIXME("(%p,%p,%p,%i,%0.2f,%0.2f,%0.2f,%0.2f,%i,%0.2f)\n", path, matrix,
+        points, count, x, y, width, height, warpmode, flatness);
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipWidenPath(GpPath *path, GpPen *pen, GpMatrix *matrix,
+    REAL flatness)
+{
+    FIXME("(%p,%p,%p,%0.2f)\n", path, pen, matrix, flatness);
+
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipAddPathRectangle(GpPath *path, REAL x, REAL y,

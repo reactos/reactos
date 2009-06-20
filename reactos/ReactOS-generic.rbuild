@@ -11,6 +11,10 @@
 		<define name="_SEH_ENABLE_TRACE" />
 		<property name="DBG_OR_KDBG" value="true" />
 	</if>
+	<if property="DBG" value="0">
+		<define name="DBG">0</define>
+	</if>
+
 	<if property="KDBG" value="1">
 		<define name="KDBG">1</define>
 		<property name="DBG_OR_KDBG" value="true" />
@@ -67,7 +71,8 @@
 	<include>include/dxsdk</include>
 	<include root="intermediate">include/dxsdk</include>
 	<include>include/crt</include>
-	<include>include/crt/mingw32</include>
+	<include compilerset="gcc">include/crt/mingw32</include>
+	<include compilerset="msc">include/crt/msc</include>
 	<include>include/ddk</include>
 	<include>include/GL</include>
 	<include>include/ndk</include>
@@ -121,5 +126,7 @@
 		<xi:include href="tools/tools.rbuild" />
 	</directory>
 
-	<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
+	<compilerflag compiler="cxx" compilerset="gcc">-Wno-non-virtual-dtor</compilerflag>
+
+	<compilerflag compilerset="msc">/wd4711</compilerflag>
 </group>

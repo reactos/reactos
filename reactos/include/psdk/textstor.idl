@@ -20,6 +20,10 @@
 import "oaidl.idl";
 #endif
 
+cpp_quote("#define TS_E_READONLY        MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0209)")
+cpp_quote("#define TS_E_NOLOCK          MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0201)")
+
+
 const ULONG TS_DEFAULT_SELECTION = ~0u;
 
 const DWORD TS_SD_READONLY     = 0x001;
@@ -38,6 +42,13 @@ const DWORD TS_AS_STATUS_CHANGE    = 0x10;
 
 const DWORD TS_AS_ALL_SINKS = (TS_AS_TEXT_CHANGE | TS_AS_SEL_CHANGE | TS_AS_LAYOUT_CHANGE | TS_AS_ATTR_CHANGE | TS_AS_STATUS_CHANGE);
 
+const DWORD TS_LF_SYNC            = 0x1;
+const DWORD TS_LF_READ            = 0x2;
+const DWORD TS_LF_READWRITE       = 0x6;
+
+const WCHAR TS_CHAR_EMBEDDED     = 0xfffc;
+const WCHAR TS_CHAR_REGION       = 0x0000;
+const WCHAR TS_CHAR_REPLACEMENT  = 0xfffd;
 
 typedef [uuid(05fcf85b-5e9c-4c3e-ab71-29471d4f38e7)]  enum { TS_AE_NONE, TS_AE_START, TS_AE_END } TsActiveSelEnd;
 typedef [uuid(033b0df0-f193-4170-b47b-141afc247878)]  enum { TS_RT_PLAIN, TS_RT_HIDDEN, TS_RT_OPAQUE } TsRunType;

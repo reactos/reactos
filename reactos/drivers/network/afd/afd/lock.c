@@ -264,7 +264,7 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
 }
 
 VOID SocketStateUnlock( PAFD_FCB FCB ) {
-#ifdef DBG
+#if DBG
     PVOID CurrentThread = KeGetCurrentThread();
 #endif
     ASSERT(FCB->LockCount > 0);

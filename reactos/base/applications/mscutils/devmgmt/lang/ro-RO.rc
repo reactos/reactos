@@ -1,0 +1,82 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "&Fiºier"
+  BEGIN
+    MENUITEM "I&eºire",                   IDC_EXIT
+  END
+  POPUP "Acþiune"
+  BEGIN
+    MENUITEM "Imprimare",                   IDC_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Proprietãþi",              IDC_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Ajutor",                    IDC_PROGHELP, GRAYED
+  END
+  POPUP "Vizualizare"
+  BEGIN
+    MENUITEM "Dispozitive dupã tip",         IDC_DEVBYTYPE, CHECKED
+    MENUITEM "Dispozitive dupã conexiune",   IDC_STATIC, GRAYED
+    MENUITEM "Resurse dupã tip",       IDC_STATIC, GRAYED
+    MENUITEM "Resurse dupã conexiune", IDC_STATIC, GRAYED
+  END
+  POPUP "Ajutor"
+  BEGIN
+    MENUITEM "Ajutor",                    IDC_PROGHELP
+    MENUITEM "Despre",                   IDC_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "Proprietãþi",              IDC_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Ajutor",                    IDC_PROGHELP
+  END
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "Despre Gestionarul de Dispozitive"
+FONT 8,"MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "Gestionar de Dispozitive v0.1\nDrept de autor (C) 2006\nde Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  PUSHBUTTON "Închidere", IDOK, 75, 162, 44, 15
+  ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE "Tradus în limba românã de Petru Dimitriu.\r\nAcest program este software liber; puteþi redistribui sau modifica programul sub termenii licenþei publice GNU aºa cum este publicatã de Free Software Foundation - fie versiunea 2 a licenþei, sau (la alegerea dvs.) oricare versiune ulterioarã.\r\n\r\nAcest program este distribuit în speranþa cã va fi de folos, dar FÃRÃ NICIO GARANÞIE, nici mãcar garanþia VANDABILITÃÞII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vedeþi Licenþa GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui sã fi primit o copie a licenþei împreunã cu acest program; dacã nu, scrieþi la Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP      "Proprietãþi"
+  IDS_TOOLTIP_REFRESH   "Reîmprospãtare"
+  IDS_TOOLTIP_HELP      "Ajutor"
+  IDS_TOOLTIP_EXIT      "Ieºire"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "Gestionarul de Dispozitive ReactOS"
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXIT         " Pãrãseºte programul."
+  IDS_HINT_REFRESH      " Reîmprospãteazã lista de servicii."
+  IDS_HINT_PROP         " Afieazã tabel cu proprietãþi pentru selecþia curentã."
+  IDS_HINT_HELP         " Afiºeazã fereastra de ajutor."
+  IDS_HINT_ABOUT        " Despre Gestionarul de Dispozitive ReactOS."
+
+  IDS_HINT_SYS_RESTORE  " Aduce fereastra la mãrimea normalã."
+  IDS_HINT_SYS_MOVE     " Mutã fereastra."
+  IDS_HINT_SYS_SIZE     " Redimensioneazã fereastra."
+  IDS_HINT_SYS_MINIMIZE " Reduce fereastra la o pictogramã pe ecran."
+  IDS_HINT_SYS_MAXIMIZE " Mãreºte fereastra astfel încât aceasta sã ocupe tot ecranul."
+  IDS_HINT_SYS_CLOSE    " Închide fereastra."
+END

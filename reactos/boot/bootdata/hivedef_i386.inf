@@ -21,6 +21,24 @@ HKCU,"Control Panel\Desktop","HungAppTimeout",0x00000002,"5000"
 HKCU,"Control Panel\Desktop","SCRNSAVE.EXE",0x00000000,""
 HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",0x00000002,"20000"
 HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
+HKCU,"Control Panel\Desktop","FontSmoothing",2,"0"
+HKCU,"Control Panel\Desktop","DragFullWindows",2,"0"
+HKCU,"Control Panel\Desktop","SmoothScroll",3,00,00,00,00
+HKCU,"Control Panel\Desktop","UserPreferenceMask",3,10,00,00,80
+HKCU,"Control Panel\Desktop","LowPowerActive",,"0"
+HKCU,"Control Panel\Desktop","MenuShowDelay",2,"400"
+
+HKCU,"Control Panel\Desktop\WindowMetrics","ScrollWidth",2,"16"
+HKCU,"Control Panel\Desktop\WindowMetrics","ScrollHeight",2,"16"
+HKCU,"Control Panel\Desktop\WindowMetrics","CaptionWidth",2,"18"
+HKCU,"Control Panel\Desktop\WindowMetrics","CaptionHeight",2,"18"
+HKCU,"Control Panel\Desktop\WindowMetrics","SmCaptionWidth",2,"13"
+HKCU,"Control Panel\Desktop\WindowMetrics","SmCaptionHeight",2,"15"
+HKCU,"Control Panel\Desktop\WindowMetrics","MenuWidth",2,"18"
+HKCU,"Control Panel\Desktop\WindowMetrics","MenuHeight",2,"18"
+HKCU,"Control Panel\Desktop\WindowMetrics","BorderWidth",2,"1"
+HKCU,"Control Panel\Desktop\WindowMetrics","Shell Icon Size",2,"32"
+
 HKCU,"Control Panel\International",,0x00000012
 HKCU,"Control Panel\International","Locale",0x00000000,"0409"
 HKCU,"Control Panel\International\Geo","Nation",0x00000000,"1"

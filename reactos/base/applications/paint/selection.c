@@ -10,6 +10,9 @@
 
 #include <windows.h>
 #include "globalvar.h"
+#include "drawing.h"
+#include "history.h"
+#include "mouse.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -25,10 +28,10 @@ LRESULT CALLBACK SelectionWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARA
             {
                 if (!moving)
                 {
+                    HDC hDC = GetDC(hwnd);
                     DefWindowProc (hwnd, message, wParam, lParam);
-                    HDC hdc=GetDC(hwnd);
-                    SelectionFrame(hdc, 1, 1, rectSel_dest[2]*zoom/1000+5, rectSel_dest[3]*zoom/1000+5);
-                    ReleaseDC(hwnd, hdc);
+                    SelectionFrame(hDC, 1, 1, rectSel_dest[2]*zoom/1000+5, rectSel_dest[3]*zoom/1000+5);
+                    ReleaseDC(hwnd, hDC);
                 }
             }
             break;

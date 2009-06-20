@@ -12,7 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#ifdef DBG
+#if DBG
 #define trace printf
 #else
 #define trace if (0) printf

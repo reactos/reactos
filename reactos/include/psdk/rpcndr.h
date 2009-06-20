@@ -30,6 +30,13 @@ extern "C" {
 
 #include <basetsd.h>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4255)
+#pragma warning(disable:4820)
+#endif
+
 #undef CONST_VTBL
 #ifdef CONST_VTABLE
 # define CONST_VTBL const
@@ -749,6 +756,10 @@ RPCRTAPI void RPC_ENTRY
 
 RPCRTAPI RPC_STATUS RPC_ENTRY
   NdrGetUserMarshalInfo( ULONG *pFlags, ULONG InformationLevel, NDR_USER_MARSHAL_INFO *pMarshalInfo );
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

@@ -26,7 +26,7 @@
 #endif
 
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 DWORD DebugTraceLevel = MAX_TRACE;

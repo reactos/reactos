@@ -6,7 +6,7 @@
 	<include base="zlibhost">.</include>
 	<include base="rtl">.</include>
 	<define name="MKHIVE_HOST" />
-	<compilerflag>-fshort-wchar</compilerflag>
+	<compilerflag compilerset="gcc">-fshort-wchar</compilerflag>
 	<library>inflibhost</library>
 	<library>cmlibhost</library>
 	<library>host_wcsfuncs</library>

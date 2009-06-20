@@ -74,17 +74,13 @@ extern "C" {
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
 /* TODO: __getcallerseflags but how??? */
 
-/* Maybe the same for x86? */
-#ifdef _x86_64
-#define _alloca(s) __builtin_alloca(s)
-#endif
 
 /*** Atomic operations ***/
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 #define _ReadWriteBarrier() __sync_synchronize()
 #else
-static void __inline__ __attribute__((always_inline)) _MemoryBarrier(void)
+__INTRIN_INLINE void _MemoryBarrier(void)
 {
 	__asm__ __volatile__("" : : : "memory");
 }
@@ -97,27 +93,27 @@ static void __inline__ __attribute__((always_inline)) _MemoryBarrier(void)
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 
-static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * Destination, const char Exchange, const char Comperand)
+__INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * Destination, const char Exchange, const char Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * Destination, const short Exchange, const short Comperand)
+__INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * Destination, const short Exchange, const short Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * Destination, const long Exchange, const long Comperand)
+__INTRIN_INLINE long _InterlockedCompareExchange(volatile long * Destination, const long Exchange, const long Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * Destination, void * const Exchange, void * const Comperand)
+__INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile *  Destination, void * const Exchange, void * const Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * Target, const long Value)
+__INTRIN_INLINE long _InterlockedExchange(volatile long * Target, const long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
@@ -125,7 +121,7 @@ static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volat
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long long _InterlockedExchange64(volatile long long * Target, const long long Value)
+__INTRIN_INLINE long long _InterlockedExchange64(volatile long long * Target, const long long Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
@@ -133,148 +129,148 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedExchange6
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * Target, void * const Value)
+__INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * Target, void * const Value)
 {
 	/* NOTE: ditto */
 	__sync_synchronize();
 	return __sync_lock_test_and_set(Target, Value);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * Addend, const short Value)
+__INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * Addend, const short Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * Addend, const long Value)
+__INTRIN_INLINE long _InterlockedExchangeAdd(volatile long * Addend, const long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long long _InterlockedExchangeAdd64(volatile long long * Addend, const long long Value)
+__INTRIN_INLINE long long _InterlockedExchangeAdd64(volatile long long * Addend, const long long Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * value, const char mask)
+__INTRIN_INLINE char _InterlockedAnd8(volatile char * value, const char mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * value, const short mask)
+__INTRIN_INLINE short _InterlockedAnd16(volatile short * value, const short mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * value, const long mask)
+__INTRIN_INLINE long _InterlockedAnd(volatile long * value, const long mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long _InterlockedAnd64(volatile long long * value, const long long mask)
+__INTRIN_INLINE long _InterlockedAnd64(volatile long long * value, const long long mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * value, const char mask)
+__INTRIN_INLINE char _InterlockedOr8(volatile char * value, const char mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * value, const short mask)
+__INTRIN_INLINE short _InterlockedOr16(volatile short * value, const short mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * value, const long mask)
+__INTRIN_INLINE long _InterlockedOr(volatile long * value, const long mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long _InterlockedOr64(volatile long long * value, const long long mask)
+__INTRIN_INLINE long _InterlockedOr64(volatile long long * value, const long long mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * value, const char mask)
+__INTRIN_INLINE char _InterlockedXor8(volatile char * value, const char mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * value, const short mask)
+__INTRIN_INLINE short _InterlockedXor16(volatile short * value, const short mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile long * const value, const long mask)
+__INTRIN_INLINE long _InterlockedXor(volatile long * value, const long mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
 
 #else
 
-static __inline__ __attribute__((always_inline)) char _InterlockedCompareExchange8(volatile char * Destination, const char Exchange, const char Comperand)
+__INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * Destination, const char Exchange, const char Comperand)
 {
 	char retval = Comperand;
 	__asm__("lock; cmpxchgb %b[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedCompareExchange16(volatile short * Destination, const short Exchange, const short Comperand)
+__INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * Destination, const short Exchange, const short Comperand)
 {
 	short retval = Comperand;
 	__asm__("lock; cmpxchgw %w[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange): "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedCompareExchange(volatile long * Destination, const long Exchange, const long Comperand)
+__INTRIN_INLINE long _InterlockedCompareExchange(volatile long * Destination, const long Exchange, const long Comperand)
 {
 	long retval = Comperand;
 	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "+a" (retval) : [Destination] "m" (*Destination), [Exchange] "q" (Exchange): "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedCompareExchangePointer(void * volatile * Destination, void * const Exchange, void * const Comperand)
+__INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * Destination, void * const Exchange, void * const Comperand)
 {
 	void * retval = (void *)Comperand;
 	__asm__("lock; cmpxchgl %k[Exchange], %[Destination]" : [retval] "=a" (retval) : "[retval]" (retval), [Destination] "m" (*Destination), [Exchange] "q" (Exchange) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchange(volatile long * Target, const long Value)
+__INTRIN_INLINE long _InterlockedExchange(volatile long * Target, const long Value)
 {
 	long retval = Value;
 	__asm__("xchgl %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) void * _InterlockedExchangePointer(void * volatile * Target, void * const Value)
+__INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * Target, void * const Value)
 {
 	void * retval = Value;
 	__asm__("xchgl %[retval], %[Target]" : [retval] "+r" (retval) : [Target] "m" (*Target) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd16(volatile short * Addend, const short Value)
+__INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * Addend, const short Value)
 {
 	long retval = Value;
 	__asm__("lock; xaddw %[retval], %[Addend]" : [retval] "+r" (retval) : [Addend] "m" (*Addend) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedExchangeAdd(volatile long * Addend, const long Value)
+__INTRIN_INLINE long _InterlockedExchangeAdd(volatile long * Addend, const long Value)
 {
 	long retval = Value;
 	__asm__("lock; xaddl %[retval], %[Addend]" : [retval] "+r" (retval) : [Addend] "m" (*Addend) : "memory");
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile char * value, const char mask)
+__INTRIN_INLINE char _InterlockedAnd8(volatile char * value, const char mask)
 {
 	char x;
 	char y;
@@ -291,7 +287,7 @@ static __inline__ __attribute__((always_inline)) char _InterlockedAnd8(volatile 
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatile short * value, const short mask)
+__INTRIN_INLINE short _InterlockedAnd16(volatile short * value, const short mask)
 {
 	short x;
 	short y;
@@ -308,7 +304,7 @@ static __inline__ __attribute__((always_inline)) short _InterlockedAnd16(volatil
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile long * value, const long mask)
+__INTRIN_INLINE long _InterlockedAnd(volatile long * value, const long mask)
 {
 	long x;
 	long y;
@@ -325,7 +321,7 @@ static __inline__ __attribute__((always_inline)) long _InterlockedAnd(volatile l
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile char * value, const char mask)
+__INTRIN_INLINE char _InterlockedOr8(volatile char * value, const char mask)
 {
 	char x;
 	char y;
@@ -342,7 +338,7 @@ static __inline__ __attribute__((always_inline)) char _InterlockedOr8(volatile c
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile short * value, const short mask)
+__INTRIN_INLINE short _InterlockedOr16(volatile short * value, const short mask)
 {
 	short x;
 	short y;
@@ -359,7 +355,7 @@ static __inline__ __attribute__((always_inline)) short _InterlockedOr16(volatile
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile long * value, const long mask)
+__INTRIN_INLINE long _InterlockedOr(volatile long * value, const long mask)
 {
 	long x;
 	long y;
@@ -376,7 +372,7 @@ static __inline__ __attribute__((always_inline)) long _InterlockedOr(volatile lo
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile char * value, const char mask)
+__INTRIN_INLINE char _InterlockedXor8(volatile char * value, const char mask)
 {
 	char x;
 	char y;
@@ -393,7 +389,7 @@ static __inline__ __attribute__((always_inline)) char _InterlockedXor8(volatile 
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatile short * value, const short mask)
+__INTRIN_INLINE short _InterlockedXor16(volatile short * value, const short mask)
 {
 	short x;
 	short y;
@@ -410,7 +406,7 @@ static __inline__ __attribute__((always_inline)) short _InterlockedXor16(volatil
 	return y;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile long * value, const long mask)
+__INTRIN_INLINE long _InterlockedXor(volatile long * value, const long mask)
 {
 	long x;
 	long y;
@@ -431,14 +427,14 @@ static __inline__ __attribute__((always_inline)) long _InterlockedXor(volatile l
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100 && defined(__x86_64__)
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * Destination, const long long Exchange, const long long Comperand)
+__INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Destination, const long long Exchange, const long long Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
 #else
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedCompareExchange64(volatile long long * Destination, const long long Exchange, const long long Comperand)
+__INTRIN_INLINE long long _InterlockedCompareExchange64(volatile long long * Destination, const long long Exchange, const long long Comperand)
 {
 	long long retval = Comperand;
 
@@ -457,7 +453,7 @@ static __inline__ __attribute__((always_inline)) long long _InterlockedCompareEx
 
 #endif
 
-static __inline__ __attribute__((always_inline)) long _InterlockedAddLargeStatistic(volatile long long * Addend, const long Value)
+__INTRIN_INLINE long _InterlockedAddLargeStatistic(volatile long long * Addend, const long Value)
 {
 	__asm__
 	(
@@ -473,39 +469,39 @@ static __inline__ __attribute__((always_inline)) long _InterlockedAddLargeStatis
 	return Value;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedDecrement(volatile long * lpAddend)
+__INTRIN_INLINE long _InterlockedDecrement(volatile long * lpAddend)
 {
 	return _InterlockedExchangeAdd(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedIncrement(volatile long * lpAddend)
+__INTRIN_INLINE long _InterlockedIncrement(volatile long * lpAddend)
 {
 	return _InterlockedExchangeAdd(lpAddend, 1) + 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedDecrement16(volatile short * lpAddend)
+__INTRIN_INLINE short _InterlockedDecrement16(volatile short * lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long _InterlockedIncrement16(volatile short * lpAddend)
+__INTRIN_INLINE short _InterlockedIncrement16(volatile short * lpAddend)
 {
 	return _InterlockedExchangeAdd16(lpAddend, 1) + 1;
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) long long _InterlockedDecrement64(volatile long long * lpAddend)
+__INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * lpAddend)
 {
 	return _InterlockedExchangeAdd64(lpAddend, -1) - 1;
 }
 
-static __inline__ __attribute__((always_inline)) long long _InterlockedIncrement64(volatile long long * lpAddend)
+__INTRIN_INLINE long long _InterlockedIncrement64(volatile long long * lpAddend)
 {
 	return _InterlockedExchangeAdd64(lpAddend, 1) + 1;
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset(volatile long * a, const long b)
+__INTRIN_INLINE unsigned char _interlockedbittestandreset(volatile long * a, const long b)
 {
 	unsigned char retval;
 	__asm__("lock; btrl %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
@@ -513,7 +509,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandreset64(volatile long long * a, const long long b)
+__INTRIN_INLINE unsigned char _interlockedbittestandreset64(volatile long long * a, const long long b)
 {
 	unsigned char retval;
 	__asm__("lock; btrq %[b], %[a]; setb %b[retval]" : [retval] "=r" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
@@ -521,7 +517,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandset(volatile long * a, const long b)
+__INTRIN_INLINE unsigned char _interlockedbittestandset(volatile long * a, const long b)
 {
 	unsigned char retval;
 	__asm__("lock; btsl %[b], %[a]; setc %b[retval]" : [retval] "=q" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
@@ -529,7 +525,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 }
 
 #if defined(_M_AMD64)
-static __inline__ __attribute__((always_inline)) unsigned char _interlockedbittestandset64(volatile long long * a, const long long b)
+__INTRIN_INLINE unsigned char _interlockedbittestandset64(volatile long long * a, const long long b)
 {
 	unsigned char retval;
 	__asm__("lock; btsq %[b], %[a]; setc %b[retval]" : [retval] "=r" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
@@ -539,7 +535,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _interlockedbitte
 
 /*** String operations ***/
 /* NOTE: we don't set a memory clobber in the __stosX functions because Visual C++ doesn't */
-static __inline__ __attribute__((always_inline)) void __stosb(unsigned char * Dest, const unsigned char Data, size_t Count)
+__INTRIN_INLINE void __stosb(unsigned char * Dest, const unsigned char Data, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -549,7 +545,7 @@ static __inline__ __attribute__((always_inline)) void __stosb(unsigned char * De
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __stosw(unsigned short * Dest, const unsigned short Data, size_t Count)
+__INTRIN_INLINE void __stosw(unsigned short * Dest, const unsigned short Data, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -559,7 +555,7 @@ static __inline__ __attribute__((always_inline)) void __stosw(unsigned short * D
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __stosd(unsigned long * Dest, const unsigned long Data, size_t Count)
+__INTRIN_INLINE void __stosd(unsigned long * Dest, const unsigned long Data, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -569,7 +565,7 @@ static __inline__ __attribute__((always_inline)) void __stosd(unsigned long * De
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __movsb(unsigned char * Destination, const unsigned char * Source, size_t Count)
+__INTRIN_INLINE void __movsb(unsigned char * Destination, const unsigned char * Source, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -579,7 +575,7 @@ static __inline__ __attribute__((always_inline)) void __movsb(unsigned char * De
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __movsw(unsigned short * Destination, const unsigned short * Source, size_t Count)
+__INTRIN_INLINE void __movsw(unsigned short * Destination, const unsigned short * Source, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -589,7 +585,7 @@ static __inline__ __attribute__((always_inline)) void __movsw(unsigned short * D
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __movsd(unsigned long * Destination, const unsigned long * Source, size_t Count)
+__INTRIN_INLINE void __movsd(unsigned long * Destination, const unsigned long * Source, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -602,160 +598,160 @@ static __inline__ __attribute__((always_inline)) void __movsd(unsigned long * De
 #if defined(_M_AMD64)
 /*** GS segment addressing ***/
 
-static __inline__ __attribute__((always_inline)) void __writegsbyte(const unsigned long Offset, const unsigned char Data)
+__INTRIN_INLINE void __writegsbyte(const unsigned long Offset, const unsigned char Data)
 {
 	__asm__ __volatile__("movb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __writegsword(const unsigned long Offset, const unsigned short Data)
+__INTRIN_INLINE void __writegsword(const unsigned long Offset, const unsigned short Data)
 {
 	__asm__ __volatile__("movw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __writegsdword(const unsigned long Offset, const unsigned long Data)
+__INTRIN_INLINE void __writegsdword(const unsigned long Offset, const unsigned long Data)
 {
 	__asm__ __volatile__("movl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __writegsqword(const unsigned long Offset, const unsigned __int64 Data)
+__INTRIN_INLINE void __writegsqword(const unsigned long Offset, const unsigned __int64 Data)
 {
 	__asm__ __volatile__("movq %q[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char __readgsbyte(const unsigned long Offset)
+__INTRIN_INLINE unsigned char __readgsbyte(const unsigned long Offset)
 {
 	unsigned char value;
 	__asm__ __volatile__("movb %%gs:%a[Offset], %b[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short __readgsword(const unsigned long Offset)
+__INTRIN_INLINE unsigned short __readgsword(const unsigned long Offset)
 {
 	unsigned short value;
 	__asm__ __volatile__("movw %%gs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long __readgsdword(const unsigned long Offset)
+__INTRIN_INLINE unsigned long __readgsdword(const unsigned long Offset)
 {
 	unsigned long value;
 	__asm__ __volatile__("movl %%gs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned __int64 __readgsqword(const unsigned long Offset)
+__INTRIN_INLINE unsigned __int64 __readgsqword(const unsigned long Offset)
 {
 	unsigned __int64 value;
 	__asm__ __volatile__("movq %%gs:%a[Offset], %q[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) void __incgsbyte(const unsigned long Offset)
+__INTRIN_INLINE void __incgsbyte(const unsigned long Offset)
 {
 	__asm__ __volatile__("incb %%gs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __incgsword(const unsigned long Offset)
+__INTRIN_INLINE void __incgsword(const unsigned long Offset)
 {
 	__asm__ __volatile__("incw %%gs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __incgsdword(const unsigned long Offset)
+__INTRIN_INLINE void __incgsdword(const unsigned long Offset)
 {
 	__asm__ __volatile__("incl %%gs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __addgsbyte(const unsigned long Offset, const unsigned char Data)
+__INTRIN_INLINE void __addgsbyte(const unsigned long Offset, const unsigned char Data)
 {
 	__asm__ __volatile__("addb %b[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __addgsword(const unsigned long Offset, const unsigned short Data)
+__INTRIN_INLINE void __addgsword(const unsigned long Offset, const unsigned short Data)
 {
 	__asm__ __volatile__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __addgsdword(const unsigned long Offset, const unsigned int Data)
+__INTRIN_INLINE void __addgsdword(const unsigned long Offset, const unsigned int Data)
 {
 	__asm__ __volatile__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __addgsqword(const unsigned long Offset, const unsigned __int64 Data)
+__INTRIN_INLINE void __addgsqword(const unsigned long Offset, const unsigned __int64 Data)
 {
 	__asm__ __volatile__("addq %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
 #else
 /*** FS segment addressing ***/
-static __inline__ __attribute__((always_inline)) void __writefsbyte(const unsigned long Offset, const unsigned char Data)
+__INTRIN_INLINE void __writefsbyte(const unsigned long Offset, const unsigned char Data)
 {
 	__asm__ __volatile__("movb %b[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __writefsword(const unsigned long Offset, const unsigned short Data)
+__INTRIN_INLINE void __writefsword(const unsigned long Offset, const unsigned short Data)
 {
 	__asm__ __volatile__("movw %w[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __writefsdword(const unsigned long Offset, const unsigned long Data)
+__INTRIN_INLINE void __writefsdword(const unsigned long Offset, const unsigned long Data)
 {
 	__asm__ __volatile__("movl %k[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char __readfsbyte(const unsigned long Offset)
+__INTRIN_INLINE unsigned char __readfsbyte(const unsigned long Offset)
 {
 	unsigned char value;
 	__asm__ __volatile__("movb %%fs:%a[Offset], %b[value]" : [value] "=q" (value) : [Offset] "irm" (Offset) : "memory");
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short __readfsword(const unsigned long Offset)
+__INTRIN_INLINE unsigned short __readfsword(const unsigned long Offset)
 {
 	unsigned short value;
-	__asm__ __volatile__("movw %%fs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movw %%fs:%a[Offset], %w[value]" : [value] "=q" (value) : [Offset] "irm" (Offset) : "memory");
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long __readfsdword(const unsigned long Offset)
+__INTRIN_INLINE unsigned long __readfsdword(const unsigned long Offset)
 {
 	unsigned long value;
-	__asm__ __volatile__("movl %%fs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset));
+	__asm__ __volatile__("movl %%fs:%a[Offset], %k[value]" : [value] "=q" (value) : [Offset] "irm" (Offset) : "memory");
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) void __incfsbyte(const unsigned long Offset)
+__INTRIN_INLINE void __incfsbyte(const unsigned long Offset)
 {
 	__asm__ __volatile__("incb %%fs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __incfsword(const unsigned long Offset)
+__INTRIN_INLINE void __incfsword(const unsigned long Offset)
 {
 	__asm__ __volatile__("incw %%fs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __incfsdword(const unsigned long Offset)
+__INTRIN_INLINE void __incfsdword(const unsigned long Offset)
 {
 	__asm__ __volatile__("incl %%fs:%a[Offset]" : : [Offset] "ir" (Offset) : "memory");
 }
 
 /* NOTE: the bizarre implementation of __addfsxxx mimics the broken Visual C++ behavior */
-static __inline__ __attribute__((always_inline)) void __addfsbyte(const unsigned long Offset, const unsigned char Data)
+__INTRIN_INLINE void __addfsbyte(const unsigned long Offset, const unsigned char Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__ __volatile__("addb %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
+		__asm__ __volatile__("addb %b[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
 		__asm__ __volatile__("addb %b[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __addfsword(const unsigned long Offset, const unsigned short Data)
+__INTRIN_INLINE void __addfsword(const unsigned long Offset, const unsigned short Data)
 {
 	if(!__builtin_constant_p(Offset))
-		__asm__ __volatile__("addw %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
+		__asm__ __volatile__("addw %w[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
 	else
 		__asm__ __volatile__("addw %w[Data], %%fs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "iq" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __addfsdword(const unsigned long Offset, const unsigned int Data)
+__INTRIN_INLINE void __addfsdword(const unsigned long Offset, const unsigned int Data)
 {
 	if(!__builtin_constant_p(Offset))
 		__asm__ __volatile__("addl %k[Offset], %%fs:%a[Offset]" : : [Offset] "r" (Offset) : "memory");
@@ -766,20 +762,20 @@ static __inline__ __attribute__((always_inline)) void __addfsdword(const unsigne
 
 
 /*** Bit manipulation ***/
-static  __inline__ __attribute__((always_inline)) unsigned char _BitScanForward(unsigned long * const Index, const unsigned long Mask)
+__INTRIN_INLINE unsigned char _BitScanForward(unsigned long * const Index, const unsigned long Mask)
 {
 	__asm__("bsfl %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
 	return Mask ? 1 : 0;
 }
 
-static  __inline__ __attribute__((always_inline)) unsigned char _BitScanReverse(unsigned long * const Index, const unsigned long Mask)
+__INTRIN_INLINE unsigned char _BitScanReverse(unsigned long * const Index, const unsigned long Mask)
 {
 	__asm__("bsrl %[Mask], %[Index]" : [Index] "=r" (*Index) : [Mask] "mr" (Mask));
 	return Mask ? 1 : 0;
 }
 
 /* NOTE: again, the bizarre implementation follows Visual C++ */
-static  __inline__ __attribute__((always_inline)) unsigned char _bittest(const long * const a, const long b)
+__INTRIN_INLINE unsigned char _bittest(const long * const a, const long b)
 {
 	unsigned char retval;
 
@@ -791,7 +787,7 @@ static  __inline__ __attribute__((always_inline)) unsigned char _bittest(const l
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char _bittestandcomplement(long * const a, const long b)
+__INTRIN_INLINE unsigned char _bittestandcomplement(long * const a, const long b)
 {
 	unsigned char retval;
 
@@ -803,7 +799,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _bittestandcomple
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char _bittestandreset(long * const a, const long b)
+__INTRIN_INLINE unsigned char _bittestandreset(long * const a, const long b)
 {
 	unsigned char retval;
 
@@ -815,7 +811,7 @@ static __inline__ __attribute__((always_inline)) unsigned char _bittestandreset(
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char _bittestandset(long * const a, const long b)
+__INTRIN_INLINE unsigned char _bittestandset(long * const a, const long b)
 {
 	unsigned char retval;
 
@@ -827,14 +823,14 @@ static __inline__ __attribute__((always_inline)) unsigned char _bittestandset(lo
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned char _rotl8(unsigned char value, unsigned char shift)
+__INTRIN_INLINE unsigned char _rotl8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
 	__asm__("rolb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short _rotl16(unsigned short value, unsigned char shift)
+__INTRIN_INLINE unsigned short _rotl16(unsigned short value, unsigned char shift)
 {
 	unsigned short retval;
 	__asm__("rolw %b[shift], %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -842,14 +838,14 @@ static __inline__ __attribute__((always_inline)) unsigned short _rotl16(unsigned
 }
 
 #ifndef __MSVCRT__
-static __inline__ __attribute__((always_inline)) unsigned int _rotl(unsigned int value, int shift)
+__INTRIN_INLINE unsigned int _rotl(unsigned int value, int shift)
 {
 	unsigned long retval;
 	__asm__("roll %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned int _rotr(unsigned int value, int shift)
+__INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
 {
 	unsigned long retval;
 	__asm__("rorl %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -857,14 +853,14 @@ static __inline__ __attribute__((always_inline)) unsigned int _rotr(unsigned int
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) unsigned char _rotr8(unsigned char value, unsigned char shift)
+__INTRIN_INLINE unsigned char _rotr8(unsigned char value, unsigned char shift)
 {
 	unsigned char retval;
 	__asm__("rorb %b[shift], %b[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short _rotr16(unsigned short value, unsigned char shift)
+__INTRIN_INLINE unsigned short _rotr16(unsigned short value, unsigned char shift)
 {
 	unsigned short retval;
 	__asm__("rorw %b[shift], %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -878,7 +874,7 @@ static __inline__ __attribute__((always_inline)) unsigned short _rotr16(unsigned
 	just confuses it. Also we declare Bit as an int and then truncate it to
 	match Visual C++ behavior
 */
-static __inline__ __attribute__((always_inline)) unsigned long long __ll_lshift(const unsigned long long Mask, const int Bit)
+__INTRIN_INLINE unsigned long long __ll_lshift(const unsigned long long Mask, const int Bit)
 {
 	unsigned long long retval = Mask;
 
@@ -892,7 +888,7 @@ static __inline__ __attribute__((always_inline)) unsigned long long __ll_lshift(
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) long long __ll_rshift(const long long Mask, const int Bit)
+__INTRIN_INLINE long long __ll_rshift(const long long Mask, const int Bit)
 {
 	unsigned long long retval = Mask;
 
@@ -906,7 +902,7 @@ static __inline__ __attribute__((always_inline)) long long __ll_rshift(const lon
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long long __ull_rshift(const unsigned long long Mask, int Bit)
+__INTRIN_INLINE unsigned long long __ull_rshift(const unsigned long long Mask, int Bit)
 {
 	unsigned long long retval = Mask;
 
@@ -920,14 +916,14 @@ static __inline__ __attribute__((always_inline)) unsigned long long __ull_rshift
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short _byteswap_ushort(unsigned short value)
+__INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
 {
 	unsigned short retval;
 	__asm__("rorw $8, %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long _byteswap_ulong(unsigned long value)
+__INTRIN_INLINE unsigned long _byteswap_ulong(unsigned long value)
 {
 	unsigned long retval;
 	__asm__("bswapl %[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
@@ -935,14 +931,14 @@ static __inline__ __attribute__((always_inline)) unsigned long _byteswap_ulong(u
 }
 
 #ifdef _M_AMD64
-static __inline__ __attribute__((always_inline)) unsigned __int64 _byteswap_uint64(unsigned __int64 value)
+__INTRIN_INLINE unsigned __int64 _byteswap_uint64(unsigned __int64 value)
 {
 	unsigned __int64 retval;
 	__asm__("bswapq %[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
 	return retval;
 }
 #else
-static __inline__ __attribute__((always_inline)) unsigned __int64 _byteswap_uint64(unsigned __int64 value)
+__INTRIN_INLINE unsigned __int64 _byteswap_uint64(unsigned __int64 value)
 {
 	union {
 		__int64 int64part;
@@ -960,61 +956,44 @@ static __inline__ __attribute__((always_inline)) unsigned __int64 _byteswap_uint
 #endif
 
 /*** 64-bit math ***/
-static __inline__ __attribute__((always_inline)) long long __emul(const int a, const int b)
+__INTRIN_INLINE long long __emul(const int a, const int b)
 {
 	long long retval;
 	__asm__("imull %[b]" : "=A" (retval) : [a] "a" (a), [b] "rm" (b));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long long __emulu(const unsigned int a, const unsigned int b)
+__INTRIN_INLINE unsigned long long __emulu(const unsigned int a, const unsigned int b)
 {
 	unsigned long long retval;
 	__asm__("mull %[b]" : "=A" (retval) : [a] "a" (a), [b] "rm" (b));
 	return retval;
 }
 
-#ifdef _M_AMD64
-
-static __inline__ __attribute__((always_inline)) __int64 __mulh(__int64 a, __int64 b)
-{
-	__int64 retval;
-	__asm__("imulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
-	return retval;
-}
-
-static __inline__ __attribute__((always_inline)) unsigned __int64 __umulh(unsigned __int64 a, unsigned __int64 b)
-{
-	unsigned __int64 retval;
-	__asm__("mulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
-	return retval;
-}
-
-#endif
 
 /*** Port I/O ***/
-static __inline__ __attribute__((always_inline)) unsigned char __inbyte(const unsigned short Port)
+__INTRIN_INLINE unsigned char __inbyte(const unsigned short Port)
 {
 	unsigned char byte;
 	__asm__ __volatile__("inb %w[Port], %b[byte]" : [byte] "=a" (byte) : [Port] "Nd" (Port));
 	return byte;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned short __inword(const unsigned short Port)
+__INTRIN_INLINE unsigned short __inword(const unsigned short Port)
 {
 	unsigned short word;
 	__asm__ __volatile__("inw %w[Port], %w[word]" : [word] "=a" (word) : [Port] "Nd" (Port));
 	return word;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long __indword(const unsigned short Port)
+__INTRIN_INLINE unsigned long __indword(const unsigned short Port)
 {
 	unsigned long dword;
 	__asm__ __volatile__("inl %w[Port], %k[dword]" : [dword] "=a" (dword) : [Port] "Nd" (Port));
 	return dword;
 }
 
-static __inline__ __attribute__((always_inline)) void __inbytestring(unsigned short Port, unsigned char * Buffer, unsigned long Count)
+__INTRIN_INLINE void __inbytestring(unsigned short Port, unsigned char * Buffer, unsigned long Count)
 {
 	__asm__ __volatile__
 	(
@@ -1025,7 +1004,7 @@ static __inline__ __attribute__((always_inline)) void __inbytestring(unsigned sh
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __inwordstring(unsigned short Port, unsigned short * Buffer, unsigned long Count)
+__INTRIN_INLINE void __inwordstring(unsigned short Port, unsigned short * Buffer, unsigned long Count)
 {
 	__asm__ __volatile__
 	(
@@ -1036,7 +1015,7 @@ static __inline__ __attribute__((always_inline)) void __inwordstring(unsigned sh
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __indwordstring(unsigned short Port, unsigned long * Buffer, unsigned long Count)
+__INTRIN_INLINE void __indwordstring(unsigned short Port, unsigned long * Buffer, unsigned long Count)
 {
 	__asm__ __volatile__
 	(
@@ -1047,44 +1026,44 @@ static __inline__ __attribute__((always_inline)) void __indwordstring(unsigned s
 	);
 }
 
-static __inline__ __attribute__((always_inline)) void __outbyte(unsigned short const Port, const unsigned char Data)
+__INTRIN_INLINE void __outbyte(unsigned short const Port, const unsigned char Data)
 {
 	__asm__ __volatile__("outb %b[Data], %w[Port]" : : [Port] "Nd" (Port), [Data] "a" (Data));
 }
 
-static __inline__ __attribute__((always_inline)) void __outword(unsigned short const Port, const unsigned short Data)
+__INTRIN_INLINE void __outword(unsigned short const Port, const unsigned short Data)
 {
 	__asm__ __volatile__("outw %w[Data], %w[Port]" : : [Port] "Nd" (Port), [Data] "a" (Data));
 }
 
-static __inline__ __attribute__((always_inline)) void __outdword(unsigned short const Port, const unsigned long Data)
+__INTRIN_INLINE void __outdword(unsigned short const Port, const unsigned long Data)
 {
 	__asm__ __volatile__("outl %k[Data], %w[Port]" : : [Port] "Nd" (Port), [Data] "a" (Data));
 }
 
-static __inline__ __attribute__((always_inline)) void __outbytestring(unsigned short const Port, const unsigned char * const Buffer, const unsigned long Count)
+__INTRIN_INLINE void __outbytestring(unsigned short const Port, const unsigned char * const Buffer, const unsigned long Count)
 {
 	__asm__ __volatile__("rep; outsb" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
 }
 
-static __inline__ __attribute__((always_inline)) void __outwordstring(unsigned short const Port, const unsigned short * const Buffer, const unsigned long Count)
+__INTRIN_INLINE void __outwordstring(unsigned short const Port, const unsigned short * const Buffer, const unsigned long Count)
 {
 	__asm__ __volatile__("rep; outsw" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
 }
 
-static __inline__ __attribute__((always_inline)) void __outdwordstring(unsigned short const Port, const unsigned long * const Buffer, const unsigned long Count)
+__INTRIN_INLINE void __outdwordstring(unsigned short const Port, const unsigned long * const Buffer, const unsigned long Count)
 {
 	__asm__ __volatile__("rep; outsl" : : [Port] "d" (Port), [Buffer] "S" (Buffer), "c" (Count));
 }
 
 
 /*** System information ***/
-static __inline__ __attribute__((always_inline)) void __cpuid(int CPUInfo[], const int InfoType)
+__INTRIN_INLINE void __cpuid(int CPUInfo[], const int InfoType)
 {
 	__asm__ __volatile__("cpuid" : "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (InfoType));
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void)
+__INTRIN_INLINE unsigned long long __rdtsc(void)
 {
 #ifdef _M_AMD64
 	unsigned long long low, high;
@@ -1097,12 +1076,12 @@ static __inline__ __attribute__((always_inline)) unsigned long long __rdtsc(void
 #endif
 }
 
-static __inline__ __attribute__((always_inline)) void __writeeflags(uintptr_t Value)
+__INTRIN_INLINE void __writeeflags(uintptr_t Value)
 {
 	__asm__ __volatile__("push %0\n popf" : : "rim"(Value));
 }
 
-static __inline__ __attribute__((always_inline)) uintptr_t __readeflags(void)
+__INTRIN_INLINE uintptr_t __readeflags(void)
 {
 	uintptr_t retval;
 	__asm__ __volatile__("pushf\n pop %0" : "=rm"(retval));
@@ -1110,22 +1089,22 @@ static __inline__ __attribute__((always_inline)) uintptr_t __readeflags(void)
 }
 
 /*** Interrupts ***/
-static __inline__ __attribute__((always_inline)) void __debugbreak(void)
+__INTRIN_INLINE void __debugbreak(void)
 {
 	__asm__("int $3");
 }
 
-static __inline__ __attribute__((always_inline)) void __int2c(void)
+__INTRIN_INLINE void __int2c(void)
 {
 	__asm__("int $0x2c");
 }
 
-static __inline__ __attribute__((always_inline)) void _disable(void)
+__INTRIN_INLINE void _disable(void)
 {
 	__asm__("cli");
 }
 
-static __inline__ __attribute__((always_inline)) void _enable(void)
+__INTRIN_INLINE void _enable(void)
 {
 	__asm__("sti");
 }
@@ -1133,67 +1112,93 @@ static __inline__ __attribute__((always_inline)) void _enable(void)
 
 /*** Protected memory management ***/
 
-static __inline__ __attribute__((always_inline)) void __writecr0(const unsigned __int64 Data)
+__INTRIN_INLINE void __writecr0(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr0" : : [Data] "q" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __writecr3(const unsigned __int64 Data)
+__INTRIN_INLINE void __writecr3(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr3" : : [Data] "q" (Data) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void __writecr4(const unsigned __int64 Data)
+__INTRIN_INLINE void __writecr4(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr4" : : [Data] "q" (Data) : "memory");
 }
 
 #ifdef _M_AMD64
-static __inline__ __attribute__((always_inline)) void __writecr8(const unsigned __int64 Data)
+__INTRIN_INLINE void __writecr8(const unsigned __int64 Data)
 {
 	__asm__("mov %[Data], %%cr8" : : [Data] "q" (Data) : "memory");
 }
-#endif
 
-static __inline__ __attribute__((always_inline)) unsigned __int64 __readcr0(void)
+__INTRIN_INLINE unsigned __int64 __readcr0(void)
 {
 	unsigned __int64 value;
 	__asm__ __volatile__("mov %%cr0, %[value]" : [value] "=q" (value));
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned __int64 __readcr2(void)
+__INTRIN_INLINE unsigned __int64 __readcr2(void)
 {
 	unsigned __int64 value;
 	__asm__ __volatile__("mov %%cr2, %[value]" : [value] "=q" (value));
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned __int64 __readcr3(void)
+__INTRIN_INLINE unsigned __int64 __readcr3(void)
 {
 	unsigned __int64 value;
 	__asm__ __volatile__("mov %%cr3, %[value]" : [value] "=q" (value));
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) unsigned __int64 __readcr4(void)
+__INTRIN_INLINE unsigned __int64 __readcr4(void)
 {
 	unsigned __int64 value;
 	__asm__ __volatile__("mov %%cr4, %[value]" : [value] "=q" (value));
 	return value;
 }
 
-#ifdef _M_AMD64
-static __inline__ __attribute__((always_inline)) unsigned __int64 __readcr8(void)
+__INTRIN_INLINE unsigned __int64 __readcr8(void)
 {
 	unsigned __int64 value;
 	__asm__ __volatile__("movq %%cr8, %q[value]" : [value] "=q" (value));
 	return value;
 }
+#else
+__INTRIN_INLINE unsigned long __readcr0(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr0, %[value]" : [value] "=q" (value));
+	return value;
+}
+
+__INTRIN_INLINE unsigned long __readcr2(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr2, %[value]" : [value] "=q" (value));
+	return value;
+}
+
+__INTRIN_INLINE unsigned long __readcr3(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr3, %[value]" : [value] "=q" (value));
+	return value;
+}
+
+__INTRIN_INLINE unsigned long __readcr4(void)
+{
+	unsigned long value;
+	__asm__ __volatile__("mov %%cr4, %[value]" : [value] "=q" (value));
+	return value;
+}
 #endif
 
 #ifdef _M_AMD64
-static __inline__ __attribute__((always_inline)) unsigned __int64 __readdr(unsigned int reg)
+__INTRIN_INLINE unsigned __int64 __readdr(unsigned int reg)
 {
 	unsigned __int64 value;
 	switch (reg)
@@ -1226,7 +1231,71 @@ static __inline__ __attribute__((always_inline)) unsigned __int64 __readdr(unsig
 	return value;
 }
 
-static __inline__ __attribute__((always_inline)) void __writedr(unsigned reg, unsigned __int64 value)
+__INTRIN_INLINE void __writedr(unsigned reg, unsigned __int64 value)
+{
+	switch (reg)
+	{
+		case 0:
+			__asm__("movq %q[value], %%dr0" : : [value] "q" (value) : "memory");
+			break;
+		case 1:
+			__asm__("movq %q[value], %%dr1" : : [value] "q" (value) : "memory");
+			break;
+		case 2:
+			__asm__("movq %q[value], %%dr2" : : [value] "q" (value) : "memory");
+			break;
+		case 3:
+			__asm__("movq %q[value], %%dr3" : : [value] "q" (value) : "memory");
+			break;
+		case 4:
+			__asm__("movq %q[value], %%dr4" : : [value] "q" (value) : "memory");
+			break;
+		case 5:
+			__asm__("movq %q[value], %%dr5" : : [value] "q" (value) : "memory");
+			break;
+		case 6:
+			__asm__("movq %q[value], %%dr6" : : [value] "q" (value) : "memory");
+			break;
+		case 7:
+			__asm__("movq %q[value], %%dr7" : : [value] "q" (value) : "memory");
+			break;
+	}
+}
+#else
+__INTRIN_INLINE unsigned int __readdr(unsigned int reg)
+{
+	unsigned int value;
+	switch (reg)
+	{
+		case 0:
+			__asm__ __volatile__("movq %%dr0, %q[value]" : [value] "=q" (value));
+			break;
+		case 1:
+			__asm__ __volatile__("movq %%dr1, %q[value]" : [value] "=q" (value));
+			break;
+		case 2:
+			__asm__ __volatile__("movq %%dr2, %q[value]" : [value] "=q" (value));
+			break;
+		case 3:
+			__asm__ __volatile__("movq %%dr3, %q[value]" : [value] "=q" (value));
+			break;
+		case 4:
+			__asm__ __volatile__("movq %%dr4, %q[value]" : [value] "=q" (value));
+			break;
+		case 5:
+			__asm__ __volatile__("movq %%dr5, %q[value]" : [value] "=q" (value));
+			break;
+		case 6:
+			__asm__ __volatile__("movq %%dr6, %q[value]" : [value] "=q" (value));
+			break;
+		case 7:
+			__asm__ __volatile__("movq %%dr7, %q[value]" : [value] "=q" (value));
+			break;
+	}
+	return value;
+}
+
+__INTRIN_INLINE void __writedr(unsigned reg, unsigned int value)
 {
 	switch (reg)
 	{
@@ -1258,14 +1327,14 @@ static __inline__ __attribute__((always_inline)) void __writedr(unsigned reg, un
 }
 #endif
 
-static __inline__ __attribute__((always_inline)) void __invlpg(void * const Address)
+__INTRIN_INLINE void __invlpg(void * const Address)
 {
 	__asm__("invlpg %[Address]" : : [Address] "m" (*((unsigned char *)(Address))));
 }
 
 
 /*** System operations ***/
-static __inline__ __attribute__((always_inline)) unsigned long long __readmsr(const int reg)
+__INTRIN_INLINE unsigned long long __readmsr(const int reg)
 {
 #ifdef _M_AMD64
 	unsigned long low, high;
@@ -1278,7 +1347,7 @@ static __inline__ __attribute__((always_inline)) unsigned long long __readmsr(co
 #endif
 }
 
-static __inline__ __attribute__((always_inline)) void __writemsr(const unsigned long Register, const unsigned long long Value)
+__INTRIN_INLINE void __writemsr(const unsigned long Register, const unsigned long long Value)
 {
 #ifdef _M_AMD64
 	__asm__ __volatile__("wrmsr" : : "a" (Value), "d" (Value >> 32), "c" (Register));
@@ -1287,7 +1356,7 @@ static __inline__ __attribute__((always_inline)) void __writemsr(const unsigned 
 #endif
 }
 
-static __inline__ __attribute__((always_inline)) unsigned long long __readpmc(const int counter)
+__INTRIN_INLINE unsigned long long __readpmc(const int counter)
 {
 	unsigned long long retval;
 	__asm__ __volatile__("rdpmc" : "=A" (retval) : "c" (counter));
@@ -1295,29 +1364,29 @@ static __inline__ __attribute__((always_inline)) unsigned long long __readpmc(co
 }
 
 /* NOTE: an immediate value for 'a' will raise an ICE in Visual C++ */
-static __inline__ __attribute__((always_inline)) unsigned long __segmentlimit(const unsigned long a)
+__INTRIN_INLINE unsigned long __segmentlimit(const unsigned long a)
 {
 	unsigned long retval;
 	__asm__ __volatile__("lsl %[a], %[retval]" : [retval] "=r" (retval) : [a] "rm" (a));
 	return retval;
 }
 
-static __inline__ __attribute__((always_inline)) void __wbinvd(void)
+__INTRIN_INLINE void __wbinvd(void)
 {
 	__asm__ __volatile__("wbinvd");
 }
 
-static __inline__ __attribute__((always_inline)) void __lidt(void *Source)
+__INTRIN_INLINE void __lidt(void *Source)
 {
 	__asm__ __volatile__("lidt %0" : : "m"(*(short*)Source));
 }
 
-static __inline__ __attribute__((always_inline)) void __sidt(void *Destination)
+__INTRIN_INLINE void __sidt(void *Destination)
 {
 	__asm__ __volatile__("sidt %0" : : "m"(*(short*)Destination) : "memory");
 }
 
-static __inline__ __attribute__((always_inline)) void _mm_pause(void)
+__INTRIN_INLINE void _mm_pause(void)
 {
 	__asm__ __volatile__("pause");
 }

@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
+
 #ifndef SNDMSG
 #ifdef __cplusplus
 #define SNDMSG ::SendMessage
@@ -352,6 +357,11 @@ static const WCHAR WC_PROPSHEETW[] = { 'S','y','s',
 #define CreatePropertySheetPage CreatePropertySheetPageA
 #define PropertySheet PropertySheetA
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

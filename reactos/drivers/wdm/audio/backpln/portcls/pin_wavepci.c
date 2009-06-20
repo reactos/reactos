@@ -8,8 +8,6 @@
 
 #include "private.h"
 
-#include "private.h"
-
 typedef struct
 {
     IPortPinWavePciVtbl *lpVtbl;

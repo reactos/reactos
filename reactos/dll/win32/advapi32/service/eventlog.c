@@ -154,6 +154,7 @@ BackupEventLogA(IN HANDLE hEventLog,
     BackupFileName.Buffer = (LPSTR)lpBackupFileName;
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? strlen(lpBackupFileName) : 0;
+	BackupFileName.MaximumLength += sizeof(CHAR);
 
     RpcTryExcept
     {
@@ -194,6 +195,7 @@ BackupEventLogW(IN HANDLE hEventLog,
     BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
+    BackupFileName.MaximumLength += sizeof(WCHAR);
 
     RpcTryExcept
     {
@@ -231,6 +233,7 @@ ClearEventLogA(IN HANDLE hEventLog,
     BackupFileName.Buffer = (LPSTR)lpBackupFileName;
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? strlen(lpBackupFileName) : 0;
+    BackupFileName.MaximumLength += sizeof(CHAR);
 
     RpcTryExcept
     {
@@ -268,6 +271,7 @@ ClearEventLogW(IN HANDLE hEventLog,
     BackupFileName.Buffer = (LPWSTR)lpBackupFileName;
     BackupFileName.Length = BackupFileName.MaximumLength =
         lpBackupFileName ? wcslen(lpBackupFileName) * sizeof(WCHAR) : 0;
+    BackupFileName.MaximumLength += sizeof(WCHAR);
 
     RpcTryExcept
     {
@@ -508,13 +512,14 @@ OpenBackupEventLogW(IN LPCWSTR lpUNCServerName,
     FileName.Buffer = (LPWSTR)lpFileName;
     FileName.Length = FileName.MaximumLength =
         lpFileName ? wcslen(lpFileName) * sizeof(WCHAR) : 0;
+    FileName.MaximumLength += sizeof(WCHAR);
 
     RpcTryExcept
     {
         Status = ElfrOpenBELW((LPWSTR)lpUNCServerName,
                               &FileName,
-                              0,
-                              0,
+                              1,
+                              1,
                               &LogHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -587,14 +592,15 @@ OpenEventLogW(IN LPCWSTR lpUNCServerName,
     SourceName.Buffer = (LPWSTR)lpSourceName;
     SourceName.Length = SourceName.MaximumLength =
         lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
+    SourceName.MaximumLength += sizeof(WCHAR);
 
     RpcTryExcept
     {
         Status = ElfrOpenELW((LPWSTR)lpUNCServerName,
                              &SourceName,
                              &EmptyString,
-                             0,
-                             0,
+                             1,
+                             1,
                              &LogHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -793,14 +799,15 @@ RegisterEventSourceW(IN LPCWSTR lpUNCServerName,
     SourceName.Buffer = (LPWSTR)lpSourceName;
     SourceName.Length = SourceName.MaximumLength =
         lpSourceName ? wcslen(lpSourceName) * sizeof(WCHAR) : 0;
+    SourceName.MaximumLength += sizeof(WCHAR);
 
     RpcTryExcept
     {
         Status = ElfrRegisterEventSourceW((LPWSTR)lpUNCServerName,
                                           &SourceName,
                                           &EmptyString,
-                                          0,
-                                          0,
+                                          1,
+                                          1,
                                           &LogHandle);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
@@ -938,7 +945,7 @@ ReportEventW(IN HANDLE hEventLog,
         RtlInitUnicodeString(&Strings[i], lpStrings[i]);
 
     /*FIXME: ComputerName */
-    RtlInitEmptyUnicodeString(&ComputerName, L"", 0);
+    RtlInitUnicodeString(&ComputerName, L"");
 
     RpcTryExcept
     {

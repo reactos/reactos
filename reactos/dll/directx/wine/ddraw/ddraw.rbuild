@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll" allowwarnings ="true">
+	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="ddraw.spec" />
 	<include base="ddraw">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
@@ -42,5 +43,5 @@
 	<dependency>wineheaders</dependency>
 
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

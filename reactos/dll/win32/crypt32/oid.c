@@ -197,7 +197,7 @@ BOOL WINAPI CryptGetDefaultOIDDllList(HCRYPTOIDFUNCSET hFuncSet,
     struct OIDFunctionSet *set = hFuncSet;
     char *keyName;
     HKEY key;
-    long rc;
+    LSTATUS rc;
 
     TRACE("(%p, %d, %p, %p)\n", hFuncSet, dwEncodingType, pwszDllList,
      pcchDllList);
@@ -299,7 +299,7 @@ static BOOL CRYPT_GetFuncFromReg(DWORD dwEncodingType, LPCSTR pszOID,
     char *keyName;
     const char *funcName;
     HKEY key;
-    long rc;
+    LSTATUS rc;
 
     keyName = CRYPT_GetKeyName(dwEncodingType, szFuncName, pszOID);
     rc = RegOpenKeyExA(HKEY_LOCAL_MACHINE, keyName, 0, KEY_READ, &key);

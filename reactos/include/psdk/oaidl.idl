@@ -989,7 +989,8 @@ interface ITypeLib : IUnknown
   typedef [v1_enum] enum tagSYSKIND {
     SYS_WIN16 = 0,
     SYS_WIN32,
-    SYS_MAC
+    SYS_MAC,
+    SYS_WIN64
   } SYSKIND;
 
   typedef [v1_enum] enum tagLIBFLAGS {

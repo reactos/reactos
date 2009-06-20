@@ -661,7 +661,7 @@ static UINT RECORD_StreamFromFile(LPCWSTR szFile, IStream **pstm)
     return ERROR_SUCCESS;
 }
 
-static UINT MSI_RecordSetStream(MSIRECORD *rec, UINT iField, IStream *stream)
+UINT MSI_RecordSetStream(MSIRECORD *rec, UINT iField, IStream *stream)
 {
     if ( (iField == 0) || (iField > rec->count) )
         return ERROR_INVALID_PARAMETER;
@@ -673,7 +673,7 @@ static UINT MSI_RecordSetStream(MSIRECORD *rec, UINT iField, IStream *stream)
     return ERROR_SUCCESS;
 }
 
-static UINT MSI_RecordSetStreamFromFileW(MSIRECORD *rec, UINT iField, LPCWSTR szFilename)
+UINT MSI_RecordSetStreamFromFileW(MSIRECORD *rec, UINT iField, LPCWSTR szFilename)
 {
     IStream *stm = NULL;
     HRESULT r;
@@ -930,6 +930,7 @@ MSIRECORD *MSI_CloneRecord(MSIRECORD *rec)
                 msiobj_release(&clone->hdr);
                 return NULL;
             }
+            clone->fields[i].type = MSIFIELD_STREAM;
         }
         else
         {

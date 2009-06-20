@@ -205,6 +205,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_NUM_SERVICES "Numero Servizi: %d"
   IDS_STOP_DEPENDS "Quando %s si ferma, Questi altri sevizi si fermeranno"
+  IDS_NO_DEPENDS "<Nessuna dipendenza>"
   IDS_LICENSE "Questo programma è software libero; puoi distribuirlo e/o modificarlo nei termini di licenza di 'GNU General Public License' come pubblicata dalla 'Free Software Foundation'; entrambe le versioni 2 della Licenza, o (a vostra scelta) qualunque versione successiva.\r\n\r\nQuesto programma è distribuito con l'augurio che sia utile, ma PRIVO DI OGNI GARANZIA; privo anche della garanzia implicita di COMMERCIABILITÀ o UTILIZZABILITÀ PER UNO SPECIFICO USO. Vedi la 'GNU General Public License' per ulteriori dettagli.\r\n\r\nVoi dovreste aver ricevuto una copia della 'GNU General Public License' assieme a questo programma; se non è cosi' scrivete a 'Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA'."
 END
 

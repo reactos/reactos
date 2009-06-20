@@ -155,6 +155,18 @@ enum DependenciesType
 	FullDependencies
 };
 
+enum CompilerSet
+{
+	GnuGcc,
+	MicrosoftC
+};
+
+enum LinkerSet
+{
+	GnuLd,
+	MicrosoftLink
+};
+
 class Configuration
 {
 public:
@@ -174,6 +186,8 @@ public:
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
 	bool InstallFiles;
+	CompilerSet Compiler;
+	LinkerSet Linker;
 };
 
 class Environment
@@ -260,6 +274,8 @@ public:
 	const std::string& GetProjectFilename () const;
 	std::string ResolveProperties ( const std::string& s ) const;
 	const Property* LookupProperty ( const std::string& name ) const;
+	std::string GetCompilerSet () const;
+	std::string GetLinkerSet () const;
 private:
 	std::string ResolveNextProperty ( const std::string& s ) const;
 	void ReadXml ();
@@ -429,23 +445,37 @@ private:
 	                           bool default_value = false );
 };
 
+class ToolsetDirective
+{
+private:
+	bool enabled;
+
+protected:
+	void ParseToolsets ( const Project& project, const XMLElement& node );
+
+public:
+	bool IsEnabled () const;
+};
+
 class CompilerDirective
 {
 private:
 	std::bitset<CompilerTypesCount> compilersSet;
+	bool enabled;
+
+protected:
+	void ParseCompilers ( const XMLElement& node, const std::string& defaultValue );
 
 public:
+	CompilerDirective (): enabled ( true ) { }
 	void SetCompiler ( CompilerType compiler );
 	void UnsetCompiler ( CompilerType compiler );
 	void SetAllCompilers ();
 	void UnsetAllCompilers ();
-
-	void ParseCompilers ( const XMLElement& node, const std::string& defaultValue );
-
 	bool IsCompilerSet ( CompilerType compiler ) const;
 };
 
-class Include: public CompilerDirective
+class Include: public CompilerDirective, public ToolsetDirective
 {
 public:
 	FileLocation *directory;
@@ -469,7 +499,7 @@ private:
 };
 
 
-class Define: public CompilerDirective
+class Define: public CompilerDirective, public ToolsetDirective
 {
 public:
 	const Project& project;
@@ -633,7 +663,7 @@ public:
 };
 
 
-class CompilerFlag: public CompilerDirective
+class CompilerFlag: public CompilerDirective, public ToolsetDirective
 {
 public:
 	const Project& project;
@@ -653,7 +683,7 @@ private:
 };
 
 
-class LinkerFlag
+class LinkerFlag: public ToolsetDirective
 {
 public:
 	const Project& project;

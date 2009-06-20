@@ -205,7 +205,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Avvia il Desktop remoto"
     IDS_CMT_EVENTVIEW   "Lancia il visualizzatore degli eventi"
     IDS_CMT_MSCONFIG    "Lancia il programma di configurazione del sistema"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_PAINT       "Lancia Paint"
 END
 
 STRINGTABLE

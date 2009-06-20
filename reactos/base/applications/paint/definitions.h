@@ -8,6 +8,8 @@
  
 /* DEFINES **********************************************************/
 
+#define SIZEOF(a)  (sizeof(a) / sizeof((a)[0]))
+
 #define IDI_APPICON 500
 
 #define IDB_TOOLBARICONS    510

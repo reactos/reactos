@@ -505,80 +505,6 @@ SetColorAdjustment(
 }
 
 /*
- * @unimplemented
- */
-int
-WINAPI
-EndDoc(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-StartPage(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-EndPage(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-AbortDoc(
-	HDC	hdc
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-SetAbortProc(
-	HDC hdc,
-	ABORTPROC lpAbortProc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -1108,18 +1034,6 @@ ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEn
 /*
  * @unimplemented
  */
-int
-WINAPI
-EndFormPage(HDC hdc)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 WINAPI
 GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
@@ -1142,15 +1056,26 @@ GdiCleanCacheDC(HDC hdc)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HDC
 WINAPI
 GdiConvertAndCheckDC(HDC hdc)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+   PLDC pldc;
+   ULONG hType = GDI_HANDLE_GET_TYPE(hdc);
+   if (hType == GDILoObjType_LO_DC_TYPE || hType == GDILoObjType_LO_METADC16_TYPE)
+      return hdc;
+   pldc = GdiGetLDC(hdc);
+   if (pldc)
+   {
+      if (pldc->Flags & LDC_SAPCALLBACK) GdiSAPCallback(pldc);
+      if (pldc->Flags & LDC_KILL_DOCUMENT) return NULL;
+      if (pldc->Flags & LDC_STARTPAGE) StartPage(hdc);
+      return hdc;
+   }
+   SetLastError(ERROR_INVALID_HANDLE);
+   return NULL;   
 }
 
 /*
@@ -1712,45 +1637,6 @@ GdiCreateLocalEnhMetaFile(HENHMETAFILE hmo)
 METAFILEPICT *
 WINAPI
 GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HANDLE
-WINAPI
-GdiGetSpoolFileHandle(LPWSTR pwszPrinterName,
-                      LPDEVMODEW pDevmode,
-                      LPWSTR pwszDocName)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-WINAPI
-GdiDeleteSpoolFileHandle(HANDLE SpoolFileHandle)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-GdiGetPageCount(HANDLE SpoolFileHandle)
 {
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

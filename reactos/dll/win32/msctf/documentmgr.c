@@ -138,6 +138,7 @@ static HRESULT WINAPI DocumentMgr_Push(ITfDocumentMgr *iface, ITfContext *pic)
     This->contextStack[0] = check;
 
     ITfThreadMgrEventSink_OnPushContext(This->ThreadMgrSink,check);
+    Context_Initialize(check);
 
     return S_OK;
 }
@@ -153,11 +154,13 @@ static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
         {
             ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink,This->contextStack[0]);
             ITfContext_Release(This->contextStack[0]);
+            Context_Uninitialize(This->contextStack[0]);
         }
         if (This->contextStack[1])
         {
             ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink,This->contextStack[1]);
             ITfContext_Release(This->contextStack[1]);
+            Context_Uninitialize(This->contextStack[1]);
         }
         This->contextStack[0] = This->contextStack[1] = NULL;
         ITfThreadMgrEventSink_OnUninitDocumentMgr(This->ThreadMgrSink, iface);
@@ -172,6 +175,7 @@ static HRESULT WINAPI DocumentMgr_Pop(ITfDocumentMgr *iface, DWORD dwFlags)
 
     ITfThreadMgrEventSink_OnPopContext(This->ThreadMgrSink,This->contextStack[0]);
     ITfContext_Release(This->contextStack[0]);
+    Context_Uninitialize(This->contextStack[0]);
     This->contextStack[0] = This->contextStack[1];
     This->contextStack[1] = NULL;
 

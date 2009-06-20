@@ -19,7 +19,7 @@
 #define DEBUG_IRP      0x00000200
 #define DEBUG_ULTRA    0xFFFFFFFF
 
-#ifdef DBG
+#if DBG
 
 extern DWORD DebugTraceLevel;
 

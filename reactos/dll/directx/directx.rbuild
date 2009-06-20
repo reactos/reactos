@@ -25,6 +25,9 @@
 	<directory name="dinput8">
 		<xi:include href="dinput8/dinput8.rbuild" />
 	</directory>
+	<directory name="dmusic">
+		<xi:include href="dmusic/dmusic.rbuild" />
+	</directory>
 	<directory name="dplay">
 		<xi:include href="dplay/dplay.rbuild" />
 	</directory>

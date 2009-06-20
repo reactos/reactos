@@ -42,19 +42,6 @@ HRESULT WINAPI ClearDownloadCache(void)
 }
 
 /******************************************************************
- *  CompareAssemblyIdentity   (FUSION.@)
- */
-HRESULT WINAPI CompareAssemblyIdentity(LPCWSTR pwzAssemblyIdentity1, BOOL fUnified1,
-                                       LPCWSTR pwzAssemblyIdentity2, BOOL fUnified2,
-                                       BOOL *pfEquivalent, AssemblyComparisonResult *pResult)
-{
-    FIXME("(%s, %d, %s, %d, %p, %p) stub!\n", debugstr_w(pwzAssemblyIdentity1),
-          fUnified1, debugstr_w(pwzAssemblyIdentity2), fUnified2, pfEquivalent, pResult);
-
-    return E_NOTIMPL;
-}
-
-/******************************************************************
  *  CreateInstallReferenceEnum   (FUSION.@)
  */
 HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum **ppRefEnum,
@@ -62,18 +49,6 @@ HRESULT WINAPI CreateInstallReferenceEnum(IInstallReferenceEnum **ppRefEnum,
                                           LPVOID pvReserved)
 {
     FIXME("(%p, %p, %08x, %p) stub!\n", ppRefEnum, pName, dwFlags, pvReserved);
-    return E_NOTIMPL;
-}
-
-/******************************************************************
- *  GetAssemblyIdentityFromFile   (FUSION.@)
- */
-HRESULT WINAPI GetAssemblyIdentityFromFile(LPCWSTR pwzFilePath, REFIID riid,
-                                           IUnknown **ppIdentity)
-{
-    FIXME("(%s, %s, %p) stub!\n", debugstr_w(pwzFilePath), debugstr_guid(riid),
-          ppIdentity);
-
     return E_NOTIMPL;
 }
 

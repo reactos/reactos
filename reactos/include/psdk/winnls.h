@@ -5,6 +5,11 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
+
 #define GEOID_NOT_AVAILABLE (-1)
 #define MAX_LEADBYTES 	12
 #define MAX_DEFAULTCHAR	2
@@ -744,6 +749,11 @@ typedef LPNUMBERFMTA LPNUMBERFMT;
 #endif /* (WINVER >= 0x0500) */
 #endif /* UNICODE */
 #endif /* RC_INVOKED */
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

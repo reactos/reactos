@@ -702,7 +702,7 @@ SetThreadIdealProcessor(HANDLE hThread,
         return -1;
     }
 
-    return dwIdealProcessor;
+    return (DWORD)Status;
 }
 
 /*

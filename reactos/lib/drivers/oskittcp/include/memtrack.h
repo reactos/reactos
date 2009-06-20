@@ -8,7 +8,7 @@
 #define FBSD_MALLOC FOURCC('d','s','b','f')
 #define EXALLOC_TAG FOURCC('E','x','A','l')
 
-#ifdef DBG
+#if DBG
 #define MTMARK() TrackDumpFL(__FILE__, __LINE__)
 #define NdisAllocateBuffer(x,y,z,a,b) { \
     NdisAllocateBuffer(x,y,z,a,b); \

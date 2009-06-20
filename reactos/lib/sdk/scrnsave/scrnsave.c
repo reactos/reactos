@@ -204,6 +204,9 @@ int APIENTRY _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR CmdLine, int
 {
     LPTSTR p;
 
+	UNREFERENCED_PARAMETER(nCmdShow);
+	UNREFERENCED_PARAMETER(hPrevInst);
+
     hMainInstance = hInst;
 
     // Parse the arguments

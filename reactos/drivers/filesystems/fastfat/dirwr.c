@@ -77,7 +77,7 @@ vfatFindDirSpace(
 {
     LARGE_INTEGER FileOffset;
     ULONG i, count, size, nbFree = 0;
-    PDIR_ENTRY pFatEntry;
+    PDIR_ENTRY pFatEntry = NULL;
     PVOID Context = NULL;
     NTSTATUS Status;
     ULONG SizeDirEntry;
@@ -616,7 +616,7 @@ FATDelEntry(
     ULONG CurrentCluster = 0, NextCluster, i;
     PVOID Context = NULL;
     LARGE_INTEGER Offset;
-    PFAT_DIR_ENTRY pDirEntry;
+    PFAT_DIR_ENTRY pDirEntry = NULL;
 
     ASSERT(pFcb);
     ASSERT(pFcb->parentFcb);

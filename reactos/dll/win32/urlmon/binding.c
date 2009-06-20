@@ -78,7 +78,7 @@ typedef enum {
 
 struct Binding {
     const IBindingVtbl               *lpBindingVtbl;
-    const IInternetProtocolSinkVtbl  *lpInternetProtocolSinkVtbl;
+    const IInternetProtocolSinkVtbl  *lpIInternetProtocolSinkVtbl;
     const IInternetBindInfoVtbl      *lpInternetBindInfoVtbl;
     const IWinInetHttpInfoVtbl       *lpWinInetHttpInfoVtbl;
     const IServiceProviderVtbl       *lpServiceProviderVtbl;
@@ -100,66 +100,24 @@ struct Binding {
     LPWSTR url;
     IID iid;
     BOOL report_mime;
-    DWORD continue_call;
     DWORD state;
     HRESULT hres;
     download_state_t download_state;
     IUnknown *obj;
     IMoniker *mon;
     IBindCtx *bctx;
-
-    DWORD apartment_thread;
     HWND notif_hwnd;
 
-    task_header_t *task_queue_head, *task_queue_tail;
     CRITICAL_SECTION section;
 };
 
 #define BINDING(x)   ((IBinding*)               &(x)->lpBindingVtbl)
-#define PROTSINK(x)  ((IInternetProtocolSink*)  &(x)->lpInternetProtocolSinkVtbl)
 #define BINDINF(x)   ((IInternetBindInfo*)      &(x)->lpInternetBindInfoVtbl)
 #define INETINFO(x)  ((IWinInetHttpInfo*)       &(x)->lpWinInetHttpInfoVtbl)
 #define SERVPROV(x)  ((IServiceProvider*)       &(x)->lpServiceProviderVtbl)
 
 #define STREAM(x) ((IStream*) &(x)->lpStreamVtbl)
 #define HTTPNEG2(x) ((IHttpNegotiate2*) &(x)->lpHttpNegotiate2Vtbl)
-
-#define WM_MK_CONTINUE   (WM_USER+101)
-
-static void push_task(Binding *binding, task_header_t *task, task_proc_t proc)
-{
-    task->proc = proc;
-    task->next = NULL;
-
-    EnterCriticalSection(&binding->section);
-
-    if(binding->task_queue_tail) {
-        binding->task_queue_tail->next = task;
-        binding->task_queue_tail = task;
-    }else {
-        binding->task_queue_tail = binding->task_queue_head = task;
-    }
-
-    LeaveCriticalSection(&binding->section);
-}
-
-static task_header_t *pop_task(Binding *binding)
-{
-    task_header_t *ret;
-
-    EnterCriticalSection(&binding->section);
-
-    ret = binding->task_queue_head;
-    if(ret) {
-        binding->task_queue_head = ret->next;
-        if(!binding->task_queue_head)
-            binding->task_queue_tail = NULL;
-    }
-
-    LeaveCriticalSection(&binding->section);
-
-    return ret;
-}
 
 static void fill_stgmed_buffer(stgmed_buf_t *buf)
 {
@@ -173,59 +131,6 @@ static void fill_stgmed_buffer(stgmed_buf_t *buf)
     buf->size += read;
     if(read > 0)
         buf->init = TRUE;
-}
-
-static LRESULT WINAPI notif_wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    if(msg == WM_MK_CONTINUE) {
-        Binding *binding = (Binding*)lParam;
-        task_header_t *task;
-
-        while((task = pop_task(binding))) {
-            binding->continue_call++;
-            task->proc(binding, task);
-            binding->continue_call--;
-        }
-
-        IBinding_Release(BINDING(binding));
-        return 0;
-    }
-
-    return DefWindowProcW(hwnd, msg, wParam, lParam);
-}
-
-static HWND get_notif_hwnd(void)
-{
-    static ATOM wnd_class = 0;
-    HWND hwnd;
-
-    static const WCHAR wszURLMonikerNotificationWindow[] =
-        {'U','R','L',' ','M','o','n','i','k','e','r',' ',
-         'N','o','t','i','f','i','c','a','t','i','o','n',' ','W','i','n','d','o','w',0};
-
-    if(!wnd_class) {
-        static WNDCLASSEXW wndclass = {
-            sizeof(wndclass), 0,
-            notif_wnd_proc, 0, 0,
-            NULL, NULL, NULL, NULL, NULL,
-            wszURLMonikerNotificationWindow,
-            NULL        
-        };
-
-        wndclass.hInstance = URLMON_hInstance;
-
-        wnd_class = RegisterClassExW(&wndclass);
-        if (!wnd_class && GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
-            wnd_class = 1;
-    }
-
-    hwnd = CreateWindowExW(0, wszURLMonikerNotificationWindow,
-                           wszURLMonikerNotificationWindow, 0, 0, 0, 0, 0, HWND_MESSAGE,
-                           NULL, URLMON_hInstance, NULL);
-
-    TRACE("hwnd = %p\n", hwnd);
-
-    return hwnd;
 }
 
 static void dump_BINDINFO(BINDINFO *bi)
@@ -272,73 +177,17 @@ static void dump_BINDINFO(BINDINFO *bi)
             );
 }
 
-static void set_binding_mime(Binding *binding, LPCWSTR mime)
+static void mime_available(Binding *This, LPCWSTR mime)
 {
-    EnterCriticalSection(&binding->section);
+    heap_free(This->mime);
+    This->mime = heap_strdupW(mime);
 
-    if(binding->report_mime) {
-        heap_free(binding->mime);
-        binding->mime = heap_strdupW(mime);
-    }
-
-    LeaveCriticalSection(&binding->section);
-}
-
-static void handle_mime_available(Binding *binding, BOOL verify)
-{
-    BOOL report_mime;
-
-    EnterCriticalSection(&binding->section);
-    report_mime = binding->report_mime;
-    binding->report_mime = FALSE;
-    LeaveCriticalSection(&binding->section);
-
-    if(!report_mime)
+    if(!This->mime || !This->report_mime)
         return;
 
-    if(verify) {
-        LPWSTR mime = NULL;
+    IBindStatusCallback_OnProgress(This->callback, 0, 0, BINDSTATUS_MIMETYPEAVAILABLE, This->mime);
 
-        fill_stgmed_buffer(binding->stgmed_buf);
-        FindMimeFromData(NULL, binding->url, binding->stgmed_buf->buf,
-                         min(binding->stgmed_buf->size, 255), binding->mime, 0, &mime, 0);
-
-        heap_free(binding->mime);
-        binding->mime = heap_strdupW(mime);
-        CoTaskMemFree(mime);
-    }
-
-    IBindStatusCallback_OnProgress(binding->callback, 0, 0, BINDSTATUS_MIMETYPEAVAILABLE, binding->mime);
-
-    binding->clipboard_format = RegisterClipboardFormatW(binding->mime);
-}
-
-typedef struct {
-    task_header_t header;
-    BOOL verify;
-} mime_available_task_t;
-
-static void mime_available_proc(Binding *binding, task_header_t *t)
-{
-    mime_available_task_t *task = (mime_available_task_t*)t;
-
-    handle_mime_available(binding, task->verify);
-
-    heap_free(task);
-}
-
-static void mime_available(Binding *This, LPCWSTR mime, BOOL verify)
-{
-    if(mime)
-        set_binding_mime(This, mime);
-
-    if(GetCurrentThreadId() == This->apartment_thread) {
-        handle_mime_available(This, verify);
-    }else {
-        mime_available_task_t *task = heap_alloc(sizeof(task_header_t));
-        task->verify = verify;
-        push_task(This, &task->header, mime_available_proc);
-    }
+    This->clipboard_format = RegisterClipboardFormatW(This->mime);
 }
 
 static void stop_binding(Binding *binding, HRESULT hres, LPCWSTR str)
@@ -957,8 +806,8 @@ static ULONG WINAPI Binding_Release(IBinding *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
-        if (This->notif_hwnd)
-            DestroyWindow( This->notif_hwnd );
+        if(This->notif_hwnd)
+            release_notif_hwnd(This->notif_hwnd);
         if(This->mon)
             IMoniker_Release(This->mon);
         if(This->callback)
@@ -1066,7 +915,7 @@ static const IBindingVtbl BindingVtbl = {
     Binding_GetBindResult
 };
 
-#define PROTSINK_THIS(iface) DEFINE_THIS(Binding, InternetProtocolSink, iface)
+#define PROTSINK_THIS(iface) DEFINE_THIS(Binding, IInternetProtocolSink, iface)
 
 static HRESULT WINAPI InternetProtocolSink_QueryInterface(IInternetProtocolSink *iface,
         REFIID riid, void **ppv)
@@ -1087,92 +936,21 @@ static ULONG WINAPI InternetProtocolSink_Release(IInternetProtocolSink *iface)
     return IBinding_Release(BINDING(This));
 }
 
-typedef struct {
-    task_header_t header;
-    PROTOCOLDATA data;
-} switch_task_t;
-
-static void switch_proc(Binding *binding, task_header_t *t)
-{
-    switch_task_t *task = (switch_task_t*)t;
-
-    IInternetProtocol_Continue(binding->protocol, &task->data);
-
-    heap_free(task);
-}
-
 static HRESULT WINAPI InternetProtocolSink_Switch(IInternetProtocolSink *iface,
         PROTOCOLDATA *pProtocolData)
 {
     Binding *This = PROTSINK_THIS(iface);
-    switch_task_t *task;
 
-    TRACE("(%p)->(%p)\n", This, pProtocolData);
+    WARN("(%p)->(%p)\n", This, pProtocolData);
 
-    task = heap_alloc(sizeof(switch_task_t));
-    task->data = *pProtocolData;
-
-    push_task(This, &task->header, switch_proc);
-
-    IBinding_AddRef(BINDING(This));
-    PostMessageW(This->notif_hwnd, WM_MK_CONTINUE, 0, (LPARAM)This);
-
-    return S_OK;
-}
-
-typedef struct {
-    task_header_t header;
-
-    Binding *binding;
-    ULONG progress;
-    ULONG progress_max;
-    ULONG status_code;
-    LPWSTR status_text;
-} on_progress_task_t;
-
-static void on_progress_proc(Binding *binding, task_header_t *t)
-{
-    on_progress_task_t *task = (on_progress_task_t*)t;
-
-    IBindStatusCallback_OnProgress(binding->callback, task->progress,
-            task->progress_max, task->status_code, task->status_text);
-
-    heap_free(task->status_text);
-    heap_free(task);
+    return E_FAIL;
 }
 
 static void on_progress(Binding *This, ULONG progress, ULONG progress_max,
                         ULONG status_code, LPCWSTR status_text)
 {
-    on_progress_task_t *task;
-
-    if(GetCurrentThreadId() == This->apartment_thread && !This->continue_call) {
-        IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
-                                       status_code, status_text);
-        return;
-    }
-
-    task = heap_alloc(sizeof(on_progress_task_t));
-
-    task->progress = progress;
-    task->progress_max = progress_max;
-    task->status_code = status_code;
-
-    if(status_text) {
-        DWORD size = (strlenW(status_text)+1)*sizeof(WCHAR);
-
-        task->status_text = heap_alloc(size);
-        memcpy(task->status_text, status_text, size);
-    }else {
-        task->status_text = NULL;
-    }
-
-    push_task(This, &task->header, on_progress_proc);
-
-    if(GetCurrentThreadId() != This->apartment_thread) {
-        IBinding_AddRef(BINDING(This));
-        PostMessageW(This->notif_hwnd, WM_MK_CONTINUE, 0, (LPARAM)This);
-    }
+    IBindStatusCallback_OnProgress(This->callback, progress, progress_max,
+            status_code, status_text);
 }
 
 static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink *iface,
@@ -1192,22 +970,26 @@ static HRESULT WINAPI InternetProtocolSink_ReportProgress(IInternetProtocolSink 
     case BINDSTATUS_BEGINDOWNLOADDATA:
         fill_stgmed_buffer(This->stgmed_buf);
         break;
-    case BINDSTATUS_MIMETYPEAVAILABLE:
-        set_binding_mime(This, szStatusText);
-        break;
     case BINDSTATUS_SENDINGREQUEST:
         on_progress(This, 0, 0, BINDSTATUS_SENDINGREQUEST, szStatusText);
         break;
     case BINDSTATUS_PROTOCOLCLASSID:
         break;
+    case BINDSTATUS_MIMETYPEAVAILABLE:
     case BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE:
-        mime_available(This, szStatusText, FALSE);
+        mime_available(This, szStatusText);
         break;
     case BINDSTATUS_CACHEFILENAMEAVAILABLE:
         heap_free(This->stgmed_buf->cache_file);
         This->stgmed_buf->cache_file = heap_strdupW(szStatusText);
         break;
-    case BINDSTATUS_DIRECTBIND:
+    case BINDSTATUS_DECODING:
+        IBindStatusCallback_OnProgress(This->callback, 0, 0, BINDSTATUS_DECODING, szStatusText);
+        break;
+    case BINDSTATUS_LOADINGMIMEHANDLER:
+        on_progress(This, 0, 0, BINDSTATUS_LOADINGMIMEHANDLER, szStatusText);
+        break;
+    case BINDSTATUS_DIRECTBIND: /* FIXME: Handle BINDSTATUS_DIRECTBIND in BindProtocol */
         This->report_mime = FALSE;
         break;
     case BINDSTATUS_ACCEPTRANGES:
@@ -1229,12 +1011,6 @@ static void report_data(Binding *This, DWORD bscf, ULONG progress, ULONG progres
 
     if(This->download_state == END_DOWNLOAD || (This->state & BINDING_STOPPED))
         return;
-
-    if(GetCurrentThreadId() != This->apartment_thread)
-        FIXME("called from worker thread\n");
-
-    if(This->report_mime)
-        mime_available(This, NULL, TRUE);
 
     if(This->download_state == BEFORE_DOWNLOAD) {
         fill_stgmed_buffer(This->stgmed_buf);
@@ -1288,22 +1064,6 @@ static void report_data(Binding *This, DWORD bscf, ULONG progress, ULONG progres
     }
 }
 
-typedef struct {
-    task_header_t header;
-    DWORD bscf;
-    ULONG progress;
-    ULONG progress_max;
-} report_data_task_t;
-
-static void report_data_proc(Binding *binding, task_header_t *t)
-{
-    report_data_task_t *task = (report_data_task_t*)t;
-
-    report_data(binding, task->bscf, task->progress, task->progress_max);
-
-    heap_free(task);
-}
-
 static HRESULT WINAPI InternetProtocolSink_ReportData(IInternetProtocolSink *iface,
         DWORD grfBSCF, ULONG ulProgress, ULONG ulProgressMax)
 {
@@ -1311,40 +1071,8 @@ static HRESULT WINAPI InternetProtocolSink_ReportData(IInternetProtocolSink *ifa
 
     TRACE("(%p)->(%d %u %u)\n", This, grfBSCF, ulProgress, ulProgressMax);
 
-    if(GetCurrentThreadId() != This->apartment_thread)
-        FIXME("called from worked hread\n");
-
-    if(This->continue_call) {
-        report_data_task_t *task = heap_alloc(sizeof(report_data_task_t));
-        task->bscf = grfBSCF;
-        task->progress = ulProgress;
-        task->progress_max = ulProgressMax;
-
-        push_task(This, &task->header, report_data_proc);
-    }else {
-        report_data(This, grfBSCF, ulProgress, ulProgressMax);
-    }
-
+    report_data(This, grfBSCF, ulProgress, ulProgressMax);
     return S_OK;
-}
-
-typedef struct {
-    task_header_t header;
-
-    HRESULT hres;
-    LPWSTR str;
-} report_result_task_t;
-
-static void report_result_proc(Binding *binding, task_header_t *t)
-{
-    report_result_task_t *task = (report_result_task_t*)t;
-
-    IInternetProtocol_Terminate(binding->protocol, 0);
-
-    stop_binding(binding, task->hres, task->str);
-
-    heap_free(task->str);
-    heap_free(task);
 }
 
 static HRESULT WINAPI InternetProtocolSink_ReportResult(IInternetProtocolSink *iface,
@@ -1354,18 +1082,8 @@ static HRESULT WINAPI InternetProtocolSink_ReportResult(IInternetProtocolSink *i
 
     TRACE("(%p)->(%08x %d %s)\n", This, hrResult, dwError, debugstr_w(szResult));
 
-    if(GetCurrentThreadId() == This->apartment_thread && !This->continue_call) {
-        IInternetProtocol_Terminate(This->protocol, 0);
-        stop_binding(This, hrResult, szResult);
-    }else {
-        report_result_task_t *task = heap_alloc(sizeof(report_result_task_t));
-
-        task->hres = hrResult;
-        task->str = heap_strdupW(szResult);
-
-        push_task(This, &task->header, report_result_proc);
-    }
-
+    IInternetProtocol_Terminate(This->protocol, 0);
+    stop_binding(This, hrResult, szResult);
     return S_OK;
 }
 
@@ -1458,6 +1176,17 @@ static HRESULT WINAPI InternetBindInfo_GetBindString(IInternetBindInfo *iface,
         IInternetBindInfo_Release(bindinfo);
 
         return hres;
+    }
+    case BINDSTRING_URL: {
+        DWORD size = (strlenW(This->url)+1) * sizeof(WCHAR);
+
+        if(!ppwzStr || !pcElFetched)
+            return E_INVALIDARG;
+
+        *ppwzStr = CoTaskMemAlloc(size);
+        memcpy(*ppwzStr, This->url, size);
+        *pcElFetched = 1;
+        return S_OK;
     }
     }
 
@@ -1630,7 +1359,7 @@ static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, 
     ret = heap_alloc_zero(sizeof(Binding));
 
     ret->lpBindingVtbl              = &BindingVtbl;
-    ret->lpInternetProtocolSinkVtbl = &InternetProtocolSinkVtbl;
+    ret->lpIInternetProtocolSinkVtbl = &InternetProtocolSinkVtbl;
     ret->lpInternetBindInfoVtbl     = &InternetBindInfoVtbl;
     ret->lpWinInetHttpInfoVtbl      = &WinInetHttpInfoVtbl;
     ret->lpServiceProviderVtbl      = &ServiceProviderVtbl;
@@ -1639,7 +1368,6 @@ static HRESULT Binding_Create(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, 
 
     ret->to_object = to_obj;
     ret->iid = *riid;
-    ret->apartment_thread = GetCurrentThreadId();
     ret->notif_hwnd = get_notif_hwnd();
     ret->report_mime = !binding_ctx;
     ret->download_state = BEFORE_DOWNLOAD;
@@ -1749,7 +1477,7 @@ static HRESULT start_binding(IMoniker *mon, Binding *binding_ctx, LPCWSTR url, I
         report_data(binding, 0, 0, 0);
     }else {
         hres = IInternetProtocol_Start(binding->protocol, url, PROTSINK(binding),
-                 BINDINF(binding), 0, 0);
+                 BINDINF(binding), PI_APARTMENTTHREADED|PI_MIMEVERIFICATION, 0);
 
         TRACE("start ret %08x\n", hres);
 

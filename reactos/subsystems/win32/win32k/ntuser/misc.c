@@ -468,43 +468,7 @@ IntFreeNULLTerminatedFromUnicodeString(PWSTR NullTerminated, PUNICODE_STRING Uni
 PPROCESSINFO
 GetW32ProcessInfo(VOID)
 {
-    PPROCESSINFO pi;
-    PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
-
-    if (W32Process == NULL)
-    {
-        /* FIXME - temporary hack for system threads... */
-        return NULL;
-    }
-
-    if (W32Process->ProcessInfo == NULL)
-    {
-        pi = UserHeapAlloc(sizeof(PROCESSINFO));
-        if (pi != NULL)
-        {
-            RtlZeroMemory(pi,
-                          sizeof(PROCESSINFO));
-
-            /* initialize it */
-            pi->UserHandleTable = gHandleTable;
-            pi->hUserHeap = W32Process->HeapMappings.KernelMapping;
-            pi->UserHeapDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
-                                (ULONG_PTR)W32Process->HeapMappings.UserMapping;
-
-            if (InterlockedCompareExchangePointer((PVOID*)&W32Process->ProcessInfo,
-                                                  pi,
-                                                  NULL) != NULL)
-            {
-                UserHeapFree(pi);
-            }
-        }
-        else
-        {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        }
-    }
-
-    return W32Process->ProcessInfo;
+    return (PPROCESSINFO)PsGetCurrentProcessWin32Process();
 }
 
 PW32THREADINFO

@@ -977,9 +977,12 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    UNICODE_STRING ServiceName;
    UNICODE_STRING ObjectName;
    PDRIVER_OBJECT DriverObject;
+   PDEVICE_OBJECT DeviceObject;
+   PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
    LOAD_UNLOAD_PARAMS LoadParams;
    NTSTATUS Status;
    LPWSTR Start;
+   BOOLEAN SafeToUnload = TRUE;
 
    DPRINT("IopUnloadDriver('%wZ', %d)\n", DriverServiceName, UnloadPnpDrivers);
 
@@ -1031,6 +1034,14 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
       return Status;
    }
 
+   /* Check that driver is not already unloading */
+   if (DriverObject->Flags & DRVO_UNLOAD_INVOKED)
+   {
+       DPRINT1("Driver deletion pending\n");
+       ObDereferenceObject(DriverObject);
+       return STATUS_DELETE_PENDING;
+   }
+
    /*
     * Get path of service...
     */
@@ -1049,6 +1060,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+      ObDereferenceObject(DriverObject);
       return Status;
    }
 
@@ -1061,6 +1073,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("IopNormalizeImagePath() failed (Status %x)\n", Status);
+      ObDereferenceObject(DriverObject);
       return Status;
    }
 
@@ -1077,6 +1090,37 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     /* Call the load/unload routine, depending on current process */
    if (DriverObject->DriverUnload && DriverObject->DriverSection)
    {
+      /* Loop through each device object of the driver
+         and set DOE_UNLOAD_PENDING flag */
+      DeviceObject = DriverObject->DeviceObject;
+      while (DeviceObject)
+      {
+         /* Set the unload pending flag for the device */
+         DeviceExtension = IoGetDevObjExtension(DeviceObject);
+         DeviceExtension->ExtensionFlags |= DOE_UNLOAD_PENDING;
+
+         /* Make sure there are no attached devices or no reference counts */
+         if ((DeviceObject->ReferenceCount) || (DeviceObject->AttachedDevice))
+         {
+            /* Not safe to unload */
+            DPRINT1("Drivers device object is referenced or has attached devices\n");
+
+            SafeToUnload = FALSE;
+         }
+
+         DeviceObject = DeviceObject->NextDevice;
+      }
+
+      /* If not safe to unload, then return success */
+      if (!SafeToUnload)
+      {
+         ObDereferenceObject(DriverObject);
+         return STATUS_SUCCESS;
+      }
+
+      /* Set the unload invoked flag */
+      DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
+
       if (PsGetCurrentProcess() == PsInitialSystemProcess)
       {
          /* Just call right away */
@@ -1257,7 +1301,7 @@ try_again:
     RtlZeroMemory(DriverObject, ObjectSize);
     DriverObject->Type = IO_TYPE_DRIVER;
     DriverObject->Size = sizeof(DRIVER_OBJECT);
-    DriverObject->Flags = DRVO_BUILTIN_DRIVER;
+    DriverObject->Flags = DRVO_LEGACY_DRIVER;//DRVO_BUILTIN_DRIVER;
     DriverObject->DriverExtension = (PDRIVER_EXTENSION)(DriverObject + 1);
     DriverObject->DriverExtension->DriverObject = DriverObject;
     DriverObject->DriverInit = InitializationFunction;
@@ -1353,6 +1397,14 @@ try_again:
     {
         /* Returns to caller the object */
         *pDriverObject = DriverObject;
+    }
+
+    /* Loop all Major Functions */
+    for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
+    {
+        /* Set each function that was set to NULL to internal routine */
+		if (!DriverObject->MajorFunction[i])
+            DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
     }
 
     /* Return the Status */
@@ -1628,7 +1680,8 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-      ExFreePool(ImagePath.Buffer);
+      if (ImagePath.Buffer)
+         ExFreePool(ImagePath.Buffer);
       LoadParams->Status = Status;
       (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
       return;

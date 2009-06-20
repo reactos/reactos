@@ -4,7 +4,7 @@
 	<importlibrary definition="portcls.spec" />
 	<define name="PC_NO_IMPORTS" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
-	<include base="portcls">../include</include>
+	<include base="portcls">.</include>
 	<library>ntoskrnl</library>
 	<library>ks</library>
 	<library>drmk</library>
@@ -19,6 +19,7 @@
 	<file>dma_slave.c</file>
 	<file>drm.c</file>
 	<file>drm_port.c</file>
+	<file>filter_topology.c</file>
 	<file>filter_dmus.c</file>
 	<file>filter_wavecyclic.c</file>
 	<file>filter_wavepci.c</file>

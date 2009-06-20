@@ -198,6 +198,9 @@ PinPropertyHandler(
     /* Release reference */
     Port->lpVtbl->Release(Port);
 
+    /* Release subdevice reference */
+    SubDevice->lpVtbl->Release(SubDevice);
+
     return Status;
 }
 
@@ -350,10 +353,11 @@ TopologyPropertyHandler(
     IN PKSIDENTIFIER  Request,
     IN OUT PVOID  Data)
 {
-    return KsTopologyPropertyHandler(Irp,
-                                     Request,
-                                     Data,
-                                     NULL /* FIXME */);
+    PSUBDEVICE_DESCRIPTOR Descriptor;
+
+    Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
+
+    return KsTopologyPropertyHandler(Irp, Request, Data, Descriptor->Topology);
 }
 
 NTSTATUS

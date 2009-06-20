@@ -36,5 +36,9 @@ VfatSetExtendedAttributes(PFILE_OBJECT FileObject,
 			  PVOID Ea,
 			  ULONG EaLength)
 {
+	UNREFERENCED_PARAMETER(FileObject);
+	UNREFERENCED_PARAMETER(Ea);
+	UNREFERENCED_PARAMETER(EaLength);
+
   return(STATUS_EAS_NOT_SUPPORTED);
 }

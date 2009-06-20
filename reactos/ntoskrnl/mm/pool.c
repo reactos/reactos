@@ -14,7 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
-/* Uncomment to enable pool overruns debugging */
+/* Uncomment to enable pool overruns debugging. Don't forget to increase
+   max pool sizes (MM_[NON]PAGED_POOL_SIZE) in include/internal/mm.h */
 //#define DEBUG_NPOOL
 //#define DEBUG_PPOOL
 
@@ -266,13 +267,14 @@ ExFreePoolWithTag(
         (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
     {
         /* Validate tag */
+#ifndef DEBUG_PPOOL
         if (Tag != 0 && Tag != EiGetPagedPoolTag(Block))
             KeBugCheckEx(BAD_POOL_CALLER,
                          0x0a,
                          (ULONG_PTR)Block,
                          EiGetPagedPoolTag(Block),
                          Tag);
-
+#endif
         /* Validate IRQL */
         if (KeGetCurrentIrql() > APC_LEVEL)
             KeBugCheckEx(BAD_POOL_CALLER,
@@ -295,13 +297,14 @@ ExFreePoolWithTag(
              (char*)Block < ((char*)MiNonPagedPoolStart + MiNonPagedPoolLength))
     {
         /* Validate tag */
+#ifndef DEBUG_NPOOL
         if (Tag != 0 && Tag != EiGetNonPagedPoolTag(Block))
             KeBugCheckEx(BAD_POOL_CALLER,
                          0x0a,
                          (ULONG_PTR)Block,
                          EiGetNonPagedPoolTag(Block),
                          Tag);
-
+#endif
         /* Validate IRQL */
         if (KeGetCurrentIrql() > DISPATCH_LEVEL)
             KeBugCheckEx(BAD_POOL_CALLER,

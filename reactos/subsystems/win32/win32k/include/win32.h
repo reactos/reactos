@@ -91,7 +91,19 @@ typedef struct _W32PROCESS
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout;
   W32HEAP_USER_MAPPING HeapMappings;
-  PPROCESSINFO ProcessInfo;
 } W32PROCESS, *PW32PROCESS;
+
+typedef struct _PROCESSINFO
+{
+    W32PROCESS          XzyxW32Process; /* Place holder. */
+    /* ReactOS */
+    HINSTANCE    hModUser;
+    PWINDOWCLASS LocalClassList;
+    PWINDOWCLASS GlobalClassList;
+    PWINDOWCLASS SystemClassList;
+                    
+    UINT RegisteredSysClasses : 1;
+                        
+} PROCESSINFO;
 
 #endif /* __INCLUDE_NAPI_WIN32_H */

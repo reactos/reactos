@@ -605,6 +605,11 @@ TerminateProcess (HANDLE	hProcess,
 {
   NTSTATUS Status;
 
+  if (hProcess == NULL)
+    {
+      return FALSE;
+    }
+
   Status = NtTerminateProcess (hProcess, uExitCode);
   if (NT_SUCCESS(Status))
     {

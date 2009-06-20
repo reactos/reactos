@@ -94,6 +94,8 @@ WdmAudOpenSysAudioDevices(
     LPWSTR SymbolicLinkList;
     SYSAUDIO_ENTRY * Entry;
     ULONG Length;
+    HANDLE hSysAudio;
+    PFILE_OBJECT FileObject;
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\sysaudio");
 
     if (DeviceExtension->DeviceInterfaceSupport)
@@ -135,7 +137,28 @@ WdmAudOpenSysAudioDevices(
 
             InsertTailList(&DeviceExtension->SysAudioDeviceList, &Entry->Entry);
             DeviceExtension->NumSysAudioDevices++;
+
+            DPRINT("Opening device %S\n", Entry->SymbolicLink.Buffer);
+            Status = WdmAudOpenSysAudioDevice(Entry->SymbolicLink.Buffer, &hSysAudio);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to open sysaudio %x\n", Status);
+                return Status;
+            }
+
+            /* get the file object */
+            Status = ObReferenceObjectByHandle(hSysAudio, FILE_READ_DATA | FILE_WRITE_DATA, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Failed to reference FileObject %x\n", Status);
+                ZwClose(hSysAudio);
+                return Status;
+            }
+            DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+            DeviceExtension->hSysAudio = hSysAudio;
+            DeviceExtension->FileObject = FileObject;
     }
+
     return Status;
 }
 
@@ -180,10 +203,6 @@ WdmAudOpenSysaudio(
     IN PWDMAUD_CLIENT *pClient)
 {
     PWDMAUD_CLIENT Client;
-    NTSTATUS Status;
-    HANDLE hSysAudio;
-    PSYSAUDIO_ENTRY SysEntry;
-    PFILE_OBJECT FileObject;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -200,34 +219,6 @@ WdmAudOpenSysaudio(
     }
 
     RtlZeroMemory(Client, sizeof(WDMAUD_CLIENT));
-
-
-    /* open the first sysaudio device available */
-    SysEntry = (PSYSAUDIO_ENTRY)DeviceExtension->SysAudioDeviceList.Flink;
-
-    DPRINT1("Opening device %S\n", SysEntry->SymbolicLink.Buffer);
-    Status = WdmAudOpenSysAudioDevice(SysEntry->SymbolicLink.Buffer, &hSysAudio);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to open sysaudio %x\n", Status);
-        ExFreePool(Client);
-        return Status;
-    }
-
-    /* get the file object */
-    Status = ObReferenceObjectByHandle(hSysAudio, FILE_READ_DATA | FILE_WRITE_DATA, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to reference FileObject %x\n", Status);
-        ExFreePool(Client);
-        ZwClose(hSysAudio);
-        return Status;
-    }
-
-    Client->hSysAudio = hSysAudio;
-    Client->FileObject = FileObject;
-    Client->hProcess = PsGetCurrentProcessId();
-
     *pClient = Client;
 
     return STATUS_SUCCESS;

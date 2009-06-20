@@ -16,6 +16,7 @@ NdisAdjustBufferLength@8
 NdisAllocateBuffer@20
 NdisAllocateBufferPool@12
 NdisAllocateDmaChannel@20
+NdisAllocateFromBlockPool@4
 NdisAllocateMemory@20
 NdisAllocateMemoryWithTag@12
 NdisAllocatePacket@12
@@ -26,12 +27,14 @@ NdisAllocateSpinLock@4
 NdisAnsiStringToUnicodeString@8
 NdisBufferLength@4
 NdisBufferVirtualAddress@4
+NdisCancelSendPackets@8
 NdisCancelTimer@8
 NdisClAddParty@16
 NdisClCloseAddressFamily@4
 NdisClCloseCall@16
 NdisClDeregisterSap@4
 NdisClDropParty@12
+NdisClGetProtocolVcContextFromTapiCallId@12
 NdisClIncomingCallComplete@12
 NdisClMakeCall@16
 NdisClModifyCallQoS@8
@@ -57,13 +60,15 @@ NdisCmModifyCallQoSComplete@12
 NdisCmOpenAddressFamilyComplete@12
 NdisCmRegisterAddressFamily@16
 NdisCmRegisterSapComplete@12
+NdisCoAssignInstanceName@12
 NdisCoCreateVc@16
 NdisCoDeleteVc@4
+NdisCoGetTapiCallId@8
 NdisCoRequest@20
 NdisCoRequestComplete@20
 NdisCoSendPackets@12
-;NdisCompareAnsiString ?
-;NdisCompareUnicodeString ?
+NdisCompareAnsiString@12
+NdisCompareUnicodeString@12
 NdisCompleteBindAdapter@12
 NdisCompleteCloseAdapter@8
 NdisCompleteDmaTransfer@24
@@ -74,10 +79,14 @@ NdisCompleteUnbindAdapter@8
 NdisConvertStringToAtmAddress@12
 NdisCopyBuffer@24
 NdisCopyFromPacketToPacket@24
+NdisCopyFromPacketToPacketSafe@28
+NdisCreateBlockPool@16
 NdisDeregisterAdapter@4
 NdisDeregisterAdapterShutdownHandler@4
 NdisDeregisterMac@8
 NdisDeregisterProtocol@8
+NdisDeregisterTdiCallBack@0
+NdisDestroyBlockPool@4
 NdisDprAcquireSpinLock@4
 NdisDprAllocatePacket@12
 NdisDprAllocatePacketNonInterlocked@12
@@ -88,19 +97,27 @@ NdisEqualString@12
 NdisFreeBuffer@4
 NdisFreeBufferPool@4
 NdisFreeDmaChannel@4
+NdisFreeToBlockPool@4
 NdisFreeMemory@12
 NdisFreePacket@4
 NdisFreePacketPool@4
 NdisFreeSharedMemory@24
 NdisFreeSpinLock@4
+NdisGeneratePartialCancelId@0
 NdisGetBufferPhysicalArraySize@8
 NdisGetCurrentProcessorCounts@12
 NdisGetCurrentProcessorCpuUsage@4
 NdisGetCurrentSystemTime@4
 NdisGetDriverHandle@8
 NdisGetFirstBufferFromPacket@20
+NdisGetFirstBufferFromPacketSafe@24
+NdisGetPacketCancelId@4
+NdisGetPoolFromPacket@4
 NdisGetReceivedPacket@8
+NdisGetRoutineAddress@4
+NdisGetSharedDataAlignment@0
 NdisGetSystemUpTime@4
+NdisGetVersion@0
 NdisIMAssociateMiniport@8
 NdisIMCancelInitializeDeviceInstance@8
 NdisIMCopySendCompletePerPacketInfo@8
@@ -108,9 +125,11 @@ NdisIMCopySendPerPacketInfo@8
 NdisIMDeInitializeDeviceInstance@4
 NdisIMDeregisterLayeredMiniport@4
 NdisIMGetBindingContext@4
+NdisIMGetCurrentPacketStack@8
 NdisIMGetDeviceContext@4
 NdisIMInitializeDeviceInstance@8
 NdisIMInitializeDeviceInstanceEx@12
+NdisIMNotifyPnPEvent@8
 NdisImmediateReadPciSlotInformation@20
 NdisImmediateReadPortUchar@12
 NdisImmediateReadPortUlong@12
@@ -132,7 +151,7 @@ NdisInitializeString@8
 NdisInitializeTimer@12
 NdisInitializeWrapper@16
 NdisInitUnicodeString@8
-;NdisInterlockedAddLargeInterger ?
+NdisInterlockedAddLargeInteger@16
 NdisInterlockedAddUlong@12
 NdisInterlockedDecrement@4
 NdisInterlockedIncrement@4
@@ -217,15 +236,17 @@ NdisOpenConfigurationKeyByIndex@20
 NdisOpenConfigurationKeyByName@16
 NdisOpenFile@24
 NdisOpenProtocolConfiguration@12
-;NdisOverrideBusNumber ?
+NdisOverrideBusNumber@12
 NdisPacketPoolUsage@4
+NdisPacketSize@4
 NdisPciAssignResources@20
 NdisQueryAdapterInstanceName@8
-;NdisQueryBindInstanceName?
+NdisQueryBindInstanceName@8
 NdisQueryBuffer@12
 NdisQueryBufferOffset@12
 NdisQueryBufferSafe@16
 NdisQueryMapRegisterCount@8
+NdisQueryPendingIOCount@8
 NdisReadConfiguration@20
 NdisReadEisaSlotInformation@16
 NdisReadEisaSlotInformationEx@20
@@ -233,11 +254,11 @@ NdisReadMcaPosInformation@16
 NdisReadNetworkAddress@16
 NdisReadPciSlotInformation@20
 NdisReadPcmciaAttributeMemory@16
-;NdisReEnumerateProtocolBindings ?
+NdisReEnumerateProtocolBindings@4
 NdisRegisterAdapter@24
 NdisRegisterAdapterShutdownHandler@12
 NdisRegisterProtocol@16
-;NdisRegisterTdiCallBack ?
+NdisRegisterTdiCallBack@8
 NdisReleaseAdapterResources@4
 NdisReleaseReadWriteLock@8
 NdisReleaseSpinLock@4
@@ -248,9 +269,12 @@ NdisReturnPackets@8
 NdisSend@12
 NdisSendPackets@12
 NdisSetEvent@4
-;NdisSetPacketPoolProtocolId ?
-;NdisSetProtocolFilter ?
+NdisSetPacketCancelId@8
+NdisSetPacketPoolProtocolId@8
+NdisSetPacketStatus@16
+NdisSetProtocolFilter@32
 NdisSetTimer@8
+NdisSetTimerEx@12
 NdisSetupDmaTransfer@24
 NdisSystemProcessorCount@0
 NdisTerminateWrapper@8

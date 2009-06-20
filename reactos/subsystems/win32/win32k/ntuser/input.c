@@ -135,6 +135,15 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       mi.dx += mid->LastX;
       mi.dy += mid->LastY;
 
+      /* Check if the mouse move is absolute */
+      if (mid->Flags == MOUSE_MOVE_ABSOLUTE)
+      {
+         /* Set flag and convert to screen location */
+         mi.dwFlags |= MOUSEEVENTF_ABSOLUTE;
+         mi.dx = mi.dx / (65535 / (UserGetSystemMetrics(SM_CXVIRTUALSCREEN) - 1));
+         mi.dy = mi.dy / (65535 / (UserGetSystemMetrics(SM_CYVIRTUALSCREEN) - 1));
+      }
+
       if(mid->ButtonFlags)
       {
          if(mid->ButtonFlags & MOUSE_LEFT_BUTTON_DOWN)
@@ -213,6 +222,7 @@ MouseThreadMain(PVOID StartContext)
    OBJECT_ATTRIBUTES MouseObjectAttributes;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
+   MOUSE_ATTRIBUTES MouseAttr;
 
    InitializeObjectAttributes(&MouseObjectAttributes,
                               &MouseDeviceName,
@@ -249,6 +259,20 @@ MouseThreadMain(PVOID StartContext)
                                      TRUE,
                                      NULL);
       DPRINT("Mouse Input Thread Starting...\n");
+
+      /*FIXME: Does mouse attributes need to be used for anything */
+      Status = NtDeviceIoControlFile(MouseDeviceHandle,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &Iosb,
+                                     IOCTL_MOUSE_QUERY_ATTRIBUTES,
+                                     &MouseAttr, sizeof(MOUSE_ATTRIBUTES),
+                                     NULL, 0);
+      if(!NT_SUCCESS(Status))
+      {
+         DPRINT("Failed to get mouse attributes\n");
+      }
 
       /*
        * Receive and process mouse input.

@@ -427,7 +427,7 @@ static BOOLEAN NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
     return NtfsFixupRecord((PNTFS_RECORD)Buffer);
 }
 
-#ifdef DBG
+#if DBG
 VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
 {
     PWCHAR FileName;
@@ -455,7 +455,7 @@ static BOOLEAN NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     EntryFileName = IndexEntry->FileName.FileName;
     EntryFileNameLength = IndexEntry->FileName.FileNameLength;
 
-#ifdef DBG
+#if DBG
     NtfsPrintFile(IndexEntry);
 #endif
 

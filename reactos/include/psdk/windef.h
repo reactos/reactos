@@ -11,6 +11,11 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4255)
+#endif
+
 #ifndef WINVER
 #define WINVER 0x0400
 /*
@@ -419,6 +424,10 @@ typedef struct tagPOINTS {
 	SHORT x;
 	SHORT y;
 } POINTS,*PPOINTS,*LPPOINTS;
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

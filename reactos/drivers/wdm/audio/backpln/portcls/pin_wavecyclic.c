@@ -223,7 +223,7 @@ SetStreamWorkerRoutine(
     /* Set the state */
     if (NT_SUCCESS(This->Stream->lpVtbl->SetState(This->Stream, State)))
     {
-        /* Set internal state to stop */
+        /* Set internal state */
         This->State = State;
 
         if (This->State == KSSTATE_STOP)
@@ -732,6 +732,7 @@ CloseStreamRoutine(
     {
         Stream = This->Stream;
         This->Stream = NULL;
+        This->Filter->lpVtbl->FreePin(This->Filter, (IPortPinWaveCyclic*)This);
         DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->lpVtbl->Release(Stream);
         /* this line is never reached */
@@ -912,7 +913,7 @@ IPortPinWaveCyclic_fnFastWrite(
 
     InterlockedIncrement((PLONG)&This->TotalPackets);
 
-    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
+    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -1064,7 +1065,7 @@ IPortPinWaveCyclic_fnInit(
 
     //This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
 	DPRINT1("Setting state to acquire %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_ACQUIRE));
-	DPRINT1("Setting state to run %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
+	DPRINT1("Setting state to pause %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
     This->State = KSSTATE_PAUSE;
 
 

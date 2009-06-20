@@ -354,7 +354,7 @@ CreateClassDeviceObject(
 			&DeviceNameU,
 			FILE_DEVICE_KEYBOARD,
 			FILE_DEVICE_SECURE_OPEN,
-			TRUE,
+			FALSE,
 			&Fdo);
 		if (NT_SUCCESS(Status))
 			goto cleanup;
@@ -649,7 +649,7 @@ ClassAddDevice(
 		NULL,
 		Pdo->DeviceType,
 		Pdo->Characteristics & FILE_DEVICE_SECURE_OPEN ? FILE_DEVICE_SECURE_OPEN : 0,
-		TRUE,
+		FALSE,
 		&Fdo);
 	if (!NT_SUCCESS(Status))
 	{

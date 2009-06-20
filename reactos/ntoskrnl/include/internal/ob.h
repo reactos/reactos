@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _OB_DEBUG_                                      0x01
+#define _OB_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported

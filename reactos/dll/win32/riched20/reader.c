@@ -226,10 +226,6 @@ void RTFInit(RTF_Info *info)
 		info->rtfTextBuf[0] = info->pushedTextBuf[0] = '\0';
 	}
 
-	heap_free (info->inputName);
-	heap_free (info->outputName);
-	info->inputName = info->outputName = NULL;
-
 	for (i = 0; i < rtfMaxClass; i++)
 		RTFSetClassCallback (info, i, NULL);
 	for (i = 0; i < rtfMaxDestination; i++)
@@ -276,39 +272,6 @@ void RTFInit(RTF_Info *info)
         info->canInheritInTbl = FALSE;
         info->borderType = 0;
 }
-
-/*
- * Set or get the input or output file name.  These are never guaranteed
- * to be accurate, only insofar as the calling program makes them so.
- */
-
-void RTFSetInputName(RTF_Info *info, const char *name)
-{
-	info->inputName = RTFStrSave (name);
-	if (info->inputName == NULL)
-		ERR ("RTFSetInputName: out of memory\n");
-}
-
-
-char *RTFGetInputName(const RTF_Info *info)
-{
-	return (info->inputName);
-}
-
-
-void RTFSetOutputName(RTF_Info *info, const char *name)
-{
-	info->outputName = RTFStrSave (name);
-	if (info->outputName == NULL)
-		ERR ("RTFSetOutputName: out of memory\n");
-}
-
-
-char *RTFGetOutputName(const RTF_Info *info)
-{
-	return (info->outputName);
-}
-
 
 /*
  * Install or return a writer callback for a destination type
@@ -480,14 +443,6 @@ static void RTFUngetToken(RTF_Info *info)
 	 * twice due to the RTFUngetToken. */
 	if(RTFCheckCM (info, rtfGroup, rtfEndGroup))
 		info->stackTop++;
-}
-
-
-int RTFPeekToken(RTF_Info *info)
-{
-	_RTFGetToken (info);
-	RTFUngetToken (info);
-	return (info->rtfClass);
 }
 
 
@@ -792,29 +747,6 @@ static int GetChar(RTF_Info *info)
 	}
 	info->prevChar = c;
 	return (c);
-}
-
-
-/*
- * Synthesize a token by setting the global variables to the
- * values supplied.  Typically this is followed with a call
- * to RTFRouteToken().
- *
- * If a param value other than rtfNoParam is passed, it becomes
- * part of the token text.
- */
-
-static void RTFSetToken(RTF_Info *info, int class, int major, int minor, int param, const char *text)
-{
-	info->rtfClass = class;
-	info->rtfMajor = major;
-	info->rtfMinor = minor;
-	info->rtfParam = param;
-	if (param == rtfNoParam)
-		lstrcpyA(info->rtfTextBuf, text);
-	else
-		sprintf (info->rtfTextBuf, "%s%d", text, param);
-	info->rtfTextLen = lstrlenA (info->rtfTextBuf);
 }
 
 
@@ -1281,22 +1213,6 @@ static void ReadObjGroup(RTF_Info *info)
  * References to style 0 are mapped onto the Normal style.
  */
 
-
-static RTFStyle *RTFGetStyle(const RTF_Info *info, int num)
-{
-	RTFStyle	*s;
-
-	if (num == -1)
-		return (info->styleList);
-	for (s = info->styleList; s != NULL; s = s->rtfNextStyle)
-	{
-		if (s->rtfSNum == num)
-			break;
-	}
-	return (s);		/* NULL if not found */
-}
-
-
 RTFFont *RTFGetFont(const RTF_Info *info, int num)
 {
 	RTFFont	*f;
@@ -1324,59 +1240,6 @@ RTFColor *RTFGetColor(const RTF_Info *info, int num)
 			break;
 	}
 	return (c);		/* NULL if not found */
-}
-
-
-/* ---------------------------------------------------------------------- */
-
-
-/*
- * Expand style n, if there is such a style.
- */
-
-void RTFExpandStyle(RTF_Info *info, int n)
-{
-	RTFStyle	*s;
-	RTFStyleElt	*se;
-
-	if (n == -1)
-		return;
-	s = RTFGetStyle (info, n);
-	if (s == NULL)
-		return;
-	if (s->rtfExpanding != 0)
-		ERR ("Style expansion loop, style %d\n", n);
-	s->rtfExpanding = 1;	/* set expansion flag for loop detection */
-	/*
-	 * Expand "based-on" style (unless it's the same as the current
-	 * style -- Normal style usually gives itself as its own based-on
-	 * style).  Based-on style expansion is done by synthesizing
-	 * the token that the writer needs to see in order to trigger
-	 * another style expansion, and feeding to token back through
-	 * the router so the writer sees it.
-	 */
-	if (n != s->rtfSBasedOn)
-	{
-		RTFSetToken (info, rtfControl, rtfParAttr, rtfStyleNum,
-							s->rtfSBasedOn, "\\s");
-		RTFRouteToken (info);
-	}
-	/*
-	 * Now route the tokens unique to this style.  RTFSetToken()
-	 * isn't used because it would add the param value to the end
-	 * of the token text, which already has it in.
-	 */
-	for (se = s->rtfSSEList; se != NULL; se = se->rtfNextSE)
-	{
-		info->rtfClass = se->rtfSEClass;
-		info->rtfMajor = se->rtfSEMajor;
-		info->rtfMinor = se->rtfSEMinor;
-		info->rtfParam = se->rtfSEParam;
-		lstrcpyA (info->rtfTextBuf, se->rtfSEText);
-		info->rtfTextLen = lstrlenA (info->rtfTextBuf);
-		RTFRouteToken (info);
-	}
-	s->rtfExpanding = 0;	/* done - clear expansion flag */
 }
 
 
@@ -2431,14 +2294,6 @@ int RTFCharToHex(char c)
 	if (isdigit (c))
 		return (c - '0');	/* '0'..'9' */
 	return (c - 'a' + 10);		/* 'a'..'f' */
-}
-
-
-int RTFHexToChar(int i)
-{
-	if (i < 10)
-		return (i + '0');
-	return (i - 10 + 'a');
 }
 
 

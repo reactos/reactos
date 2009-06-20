@@ -6,6 +6,8 @@
 
 #include "ndissys.h"
 
+extern LONG CancelId;
+
 /*
  * @implemented
  */
@@ -20,6 +22,58 @@ NdisInterlockedAddUlong (
    ExInterlockedAddUlong ( Addend, Increment, &SpinLock->SpinLock );
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisInterlockedAddLargeInteger(
+    IN PLARGE_INTEGER Addend,
+    IN LARGE_INTEGER Increment,
+    IN PNDIS_SPIN_LOCK SpinLock)
+{
+    /* This needs to be verified. The documentation
+     * seems to be missing but it is exported by
+     * NDIS 5.1 so I'm implementing it like the other
+     * interlocked routines
+     */
+
+    ExInterlockedAddLargeInteger(Addend, Increment, &SpinLock->SpinLock);
+}
+
+/*
+ * @implemented
+ */
+LONG
+EXPORT
+NdisCompareAnsiString(
+    IN PNDIS_ANSI_STRING String1,
+    IN PNDIS_ANSI_STRING String2,
+    BOOLEAN CaseInSensitive)
+{
+    /* This one needs to be verified also. See the
+     * comment in NdisInterlockedAddLargeInteger
+     */
+
+    return RtlCompareString(String1, String2, CaseInSensitive);
+}
+
+/*
+ * @implemented
+ */
+LONG
+EXPORT
+NdisCompareUnicodeString(
+    IN PNDIS_STRING String1,
+    IN PNDIS_STRING String2,
+    IN BOOLEAN CaseInSensitive)
+{
+    /* This one needs to be verified also. See the
+     * comment in NdisInterlockedAddLargeInteger
+     */
+
+    return RtlCompareUnicodeString(String1, String2, CaseInSensitive);
+}
 
 /*
  * @implemented
@@ -34,7 +88,6 @@ NdisInterlockedInsertHeadList(
 {
   return ExInterlockedInsertHeadList ( ListHead, ListEntry, &SpinLock->SpinLock );
 }
-
 
 /*
  * @implemented
@@ -105,6 +158,7 @@ NdisMapFile(
   if (HandleObject->Mapped)
   {
       /* If a file already mapped we will return an error code */
+      NDIS_DbgPrint(MIN_TRACE, ("File already mapped\n"));
       *Status = NDIS_STATUS_ALREADY_MAPPED;
       return;
   }
@@ -126,6 +180,8 @@ NdisUnmapFile(
 {
   PNDIS_HANDLE_OBJECT HandleObject = (PNDIS_HANDLE_OBJECT) FileHandle;
 
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
   HandleObject->Mapped = FALSE;
 }
 
@@ -140,6 +196,8 @@ NdisCloseFile(
   PNDIS_HANDLE_OBJECT FileHandleObject;
 
   ASSERT_IRQL(PASSIVE_LEVEL);
+
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   ASSERT ( FileHandle );
 
@@ -177,6 +235,8 @@ NdisOpenFile(
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
+  NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
   *Status = NDIS_STATUS_SUCCESS;
   FullFileName.Buffer = NULL;
 
@@ -188,6 +248,7 @@ NdisOpenFile(
 
   if ( !FullFileName.Buffer )
   {
+    NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
     *Status = NDIS_STATUS_RESOURCES;
     goto cleanup;
   }
@@ -195,6 +256,7 @@ NdisOpenFile(
   FileHandleObject = ExAllocatePool ( NonPagedPool, sizeof(NDIS_HANDLE_OBJECT) );
   if ( !FileHandleObject )
   {
+    NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
     *Status = NDIS_STATUS_RESOURCES;
     goto cleanup;
   }
@@ -204,6 +266,7 @@ NdisOpenFile(
   *Status = RtlAppendUnicodeStringToString ( &FullFileName, FileName );
   if ( !NT_SUCCESS(*Status) )
   {
+    NDIS_DbgPrint(MIN_TRACE, ("RtlAppendUnicodeStringToString failed (%x)\n", *Status));
     *Status = NDIS_STATUS_FAILURE;
     goto cleanup;
   }
@@ -229,6 +292,7 @@ NdisOpenFile(
   
   if ( !NT_SUCCESS(*Status) )
   {
+    NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x)\n", *Status));
     *Status = NDIS_STATUS_FAILURE;
   }
 
@@ -280,6 +344,8 @@ NdisGetCurrentProcessorCounts(
  *    NDIS 5.0
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     ExGetCurrentProcessorCounts( (PULONG) pIdleCount, (PULONG) pKernelAndUser, (PULONG) pIndex); 
 }
 
@@ -293,6 +359,8 @@ NdisGetSystemUpTime(OUT PULONG pSystemUpTime)
 {           
     ULONG Increment;
     LARGE_INTEGER TickCount;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     /* Get the increment and current tick count */
     Increment = KeQueryTimeIncrement();
@@ -388,6 +456,9 @@ NTAPI
 ndisProcWorkItemHandler(PVOID pContext)
 {
     PNDIS_WORK_ITEM pNdisItem = (PNDIS_WORK_ITEM)pContext;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     pNdisItem->Routine(pNdisItem, pNdisItem->Context);
 }
 
@@ -397,6 +468,9 @@ NdisScheduleWorkItem(
     IN PNDIS_WORK_ITEM  pWorkItem)
 {
     PWORK_QUEUE_ITEM pntWorkItem = (PWORK_QUEUE_ITEM)pWorkItem->WrapperReserved;
+
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     ExInitializeWorkItem(pntWorkItem, ndisProcWorkItemHandler, pWorkItem);
     ExQueueWorkItem(pntWorkItem, DelayedWorkQueue);
     return NDIS_STATUS_SUCCESS;
@@ -415,7 +489,49 @@ NdisGetCurrentProcessorCpuUsage(
  *     pCpuUsage = Pointer to a buffer to place CPU usage
  */
 {
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     ExGetCurrentProcessorCpuUsage(pCpuUsage);
+}
+
+/*
+ * @implemented
+ */
+ULONG
+EXPORT
+NdisGetSharedDataAlignment(VOID)
+{
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return KeGetRecommendedSharedDataAlignment();
+}
+
+/*
+ * @implemented
+ */
+UINT
+EXPORT
+NdisGetVersion(VOID)
+{
+    NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    return (UINT) 0x501;
+}
+
+/*
+ * @implemented
+ */
+UCHAR
+EXPORT
+NdisGeneratePartialCancelId(VOID)
+{
+    UCHAR PartialCancelId;
+
+    PartialCancelId = (UCHAR)InterlockedIncrement(&CancelId);
+
+    NDIS_DbgPrint(MAX_TRACE, ("Cancel ID %u\n", PartialCancelId));
+
+    return PartialCancelId;
 }
 
 /* EOF */

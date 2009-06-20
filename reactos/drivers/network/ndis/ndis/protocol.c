@@ -22,6 +22,11 @@ KSPIN_LOCK ProtocolListLock;
 
 #define WORKER_TEST 0
 
+typedef struct _DMA_CONTEXT {
+    PLOGICAL_ADAPTER Adapter;
+    PNDIS_PACKET Packet;
+} DMA_CONTEXT, *PDMA_CONTEXT;
+
 PNET_PNP_EVENT
 ProSetupPnPEvent(
     NET_PNP_EVENT_CODE EventCode,
@@ -31,8 +36,10 @@ ProSetupPnPEvent(
     PNET_PNP_EVENT PnPEvent;
 
     PnPEvent = ExAllocatePool(PagedPool, sizeof(NET_PNP_EVENT));
-    if (!PnPEvent)
+    if (!PnPEvent) {
+        NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
         return NULL;
+    }
 
     RtlZeroMemory(PnPEvent, sizeof(NET_PNP_EVENT));
 
@@ -43,6 +50,7 @@ ProSetupPnPEvent(
         PnPEvent->Buffer = ExAllocatePool(PagedPool, EventBufferLength);
         if (!PnPEvent->Buffer)
         {
+            NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
             ExFreePool(PnPEvent);
             return NULL;
         }
@@ -112,8 +120,10 @@ NdisIPwrSetPower(
   ASSERT(Stack->Parameters.Power.Type == DevicePowerState);
 
   PnPEvent = ProSetupPnPEvent(NetEventSetPower, &Stack->Parameters.Power.State, sizeof(NDIS_DEVICE_POWER_STATE));
-  if (!PnPEvent)
+  if (!PnPEvent) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_RESOURCES;
+  }
 
   return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
 }
@@ -131,8 +141,10 @@ NdisIPwrQueryPower(
   ASSERT(Stack->Parameters.Power.Type == DevicePowerState);
 
   PnPEvent = ProSetupPnPEvent(NetEventQueryPower, &Stack->Parameters.Power.State, sizeof(NDIS_DEVICE_POWER_STATE));
-  if (!PnPEvent)
+  if (!PnPEvent) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_RESOURCES;
+  }
 
   return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
 }
@@ -148,8 +160,10 @@ NdisIPnPQueryStopDevice(
   PNET_PNP_EVENT PnPEvent;
 
   PnPEvent = ProSetupPnPEvent(NetEventQueryRemoveDevice, NULL, 0);
-  if (!PnPEvent)
+  if (!PnPEvent) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_RESOURCES;
+  }
 
   return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
 }
@@ -164,8 +178,10 @@ NdisIPnPCancelStopDevice(
   PNET_PNP_EVENT PnPEvent;
 
   PnPEvent = ProSetupPnPEvent(NetEventCancelRemoveDevice, NULL, 0);
-  if (!PnPEvent)
+  if (!PnPEvent) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_RESOURCES;
+  }
 
   return ProSendAndFreePnPEvent(Adapter, PnPEvent, Irp);
 }
@@ -193,7 +209,10 @@ NdisCompleteBindAdapter(
 {
   PROTOCOL_BINDING *Protocol = (PROTOCOL_BINDING *)BindAdapterContext;
 
-  if (!NT_SUCCESS(Status)) return;
+  if (!NT_SUCCESS(Status)) {
+      NDIS_DbgPrint(MIN_TRACE, ("Binding failed (%x)\n", Status));
+      return;
+  }
 
   /* Put protocol binding struct on global list */
   ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
@@ -214,7 +233,10 @@ NdisCompleteUnbindAdapter(
 
   PROTOCOL_BINDING *Protocol = (PROTOCOL_BINDING *)UnbindAdapterContext;
 
-  if (!NT_SUCCESS(Status)) return;
+  if (!NT_SUCCESS(Status)) {
+      NDIS_DbgPrint(MIN_TRACE, ("Unbinding failed (%x)\n", Status));
+      return;
+  }
 
   ExInterlockedRemoveEntryList(&Protocol->ListEntry, &ProtocolListLock);
 }
@@ -242,13 +264,15 @@ ProIndicatePacket(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-#ifdef DBG
+#if DBG
   MiniDisplayPacket(Packet);
 #endif
 
   LookaheadBuffer = ExAllocatePool(NonPagedPool, Adapter->NdisMiniportBlock.CurrentLookahead + Adapter->MediumHeaderSize);
-  if (!LookaheadBuffer)
+  if (!LookaheadBuffer) {
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_RESOURCES;
+  }
 
   NdisQueryPacket(Packet, NULL, NULL, NULL, &PacketLength);
 
@@ -325,6 +349,35 @@ ProReset(
     UNIMPLEMENTED
 
     return NDIS_STATUS_FAILURE;
+}
+
+VOID NTAPI
+ScatterGatherSendPacket(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp,
+   IN PSCATTER_GATHER_LIST ScatterGather,
+   IN PVOID Context)
+{
+   PDMA_CONTEXT DmaContext = Context;
+   PLOGICAL_ADAPTER Adapter = DmaContext->Adapter;
+   PNDIS_PACKET Packet = DmaContext->Packet;
+   NDIS_STATUS Status;
+
+   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+   NDIS_PER_PACKET_INFO_FROM_PACKET(Packet,
+                                    ScatterGatherListPacketInfo) = ScatterGather;
+
+   Status = proSendPacketToMiniport(Adapter, Packet);
+
+   if (Status != NDIS_STATUS_PENDING) {
+       NDIS_DbgPrint(MAX_TRACE, ("Completing packet.\n"));
+       MiniSendComplete(Adapter,
+                        Packet,
+                        Status);
+   }
+
+   ExFreePool(DmaContext);
 }
 
 NDIS_STATUS
@@ -412,6 +465,11 @@ ProSend(
 {
   PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter;
+  PNDIS_BUFFER NdisBuffer;
+  PDMA_CONTEXT Context;
+  NDIS_STATUS NdisStatus;
+  UINT PacketLength;
+  KIRQL OldIrql;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -447,6 +505,50 @@ ProSend(
         return ProIndicatePacket(Adapter, Packet);
 #endif
     } else {
+        if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
+        {
+            NDIS_DbgPrint(MAX_TRACE, ("Using Scatter/Gather DMA\n"));
+
+            NdisQueryPacket(Packet,
+                            NULL,
+                            NULL,
+                            &NdisBuffer,
+                            &PacketLength);
+
+            Context = ExAllocatePool(NonPagedPool, sizeof(DMA_CONTEXT));
+            if (!Context) {
+                NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
+                return NDIS_STATUS_RESOURCES;
+            }
+
+            Context->Adapter = Adapter;
+            Context->Packet = Packet;
+
+            KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+            KeFlushIoBuffers(NdisBuffer, FALSE, TRUE);
+
+            NdisStatus = Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->GetScatterGatherList(
+                          Adapter->NdisMiniportBlock.SystemAdapterObject,
+                          Adapter->NdisMiniportBlock.PhysicalDeviceObject,
+                          NdisBuffer,
+                          MmGetMdlVirtualAddress(NdisBuffer),
+                          PacketLength,
+                          ScatterGatherSendPacket,
+                          Context,
+                          TRUE);
+
+            KeLowerIrql(OldIrql);
+
+            if (!NT_SUCCESS(NdisStatus)) {
+                NDIS_DbgPrint(MIN_TRACE, ("GetScatterGatherList failed! (%x)\n", NdisStatus));
+                return NdisStatus;
+            }
+
+            return NDIS_STATUS_PENDING;
+        }
+
+
         return proSendPacketToMiniport(Adapter, Packet);
     }
 }
@@ -679,7 +781,7 @@ NdisOpenAdapter(
 
   if(!NdisProtocolHandle)
     {
-      NDIS_DbgPrint(MAX_TRACE, ("NdisProtocolHandle is NULL\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("NdisProtocolHandle is NULL\n"));
       *OpenErrorStatus = *Status = NDIS_STATUS_FAILURE;
       return;
     }
@@ -892,7 +994,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTER
           if(BindHandler)
             BindHandler(Status, BindContext, &DeviceName, &RegistryPath, 0);
           else
-            NDIS_DbgPrint(MID_TRACE, ("No protocol bind handler specified\n"));
+            NDIS_DbgPrint(MIN_TRACE, ("No protocol bind handler specified\n"));
         }
     }
 
@@ -1000,6 +1102,7 @@ NdisRegisterProtocol(
   if (*Status == NDIS_STATUS_SUCCESS) {
       ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
   } else {
+      NDIS_DbgPrint(MIN_TRACE, ("Binding failed (%x)\n", *Status));
       ExFreePool(Protocol);
       *NdisProtocolHandle = NULL;
   }
@@ -1144,6 +1247,7 @@ NdisGetDriverHandle(
 
     if (!Binding)
     {
+        NDIS_DbgPrint(MIN_TRACE, ("Bad binding handle\n"));
         *NdisDriverHandle = NULL;
         return;
     }

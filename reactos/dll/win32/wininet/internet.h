@@ -42,19 +42,10 @@
 # include <sys/socket.h>
 #endif
 
-#if defined(__MINGW32__) || defined (_MSC_VER)
-#include "ws2tcpip.h"
-#ifndef MSG_WAITALL
-#define MSG_WAITALL 0
-#endif
-#else
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
 #define closesocket close
 #define ioctlsocket ioctl
 #endif /* __MINGW32__ */
-
-/* ReactOS-specific definitions */
-#undef CP_UNIXCP
-#define CP_UNIXCP   CP_THREAD_ACP
 
 /* used for netconnection.c stuff */
 typedef struct
@@ -62,9 +53,6 @@ typedef struct
     BOOL useSSL;
     int socketFD;
     void *ssl_s;
-    char *peek_msg;
-    char *peek_msg_mem;
-    size_t peek_len;
 } WININET_NETCONNECTION;
 
 static inline LPWSTR WININET_strdupW( LPCWSTR str )
@@ -133,6 +121,7 @@ typedef struct {
     DWORD (*SetOption)(WININETHANDLEHEADER*,DWORD,void*,DWORD);
     DWORD (*ReadFile)(WININETHANDLEHEADER*,void*,DWORD,DWORD*);
     DWORD (*ReadFileExA)(WININETHANDLEHEADER*,INTERNET_BUFFERSA*,DWORD,DWORD_PTR);
+    DWORD (*ReadFileExW)(WININETHANDLEHEADER*,INTERNET_BUFFERSW*,DWORD,DWORD_PTR);
     BOOL (*WriteFile)(WININETHANDLEHEADER*,const void*,DWORD,DWORD*);
     DWORD (*QueryDataAvailable)(WININETHANDLEHEADER*,DWORD*,DWORD,DWORD_PTR);
     DWORD (*FindNextFileW)(WININETHANDLEHEADER*,void*);
@@ -206,12 +195,18 @@ typedef struct
     LPWSTR lpszStatusText;
     DWORD dwContentLength; /* total number of bytes to be read */
     DWORD dwContentRead; /* bytes of the content read so far */
+    DWORD dwBytesToWrite;
+    DWORD dwBytesWritten;
     HTTPHEADERW *pCustHeaders;
     DWORD nCustHeaders;
     HANDLE hCacheFile;
     LPWSTR lpszCacheFile;
     struct HttpAuthInfo *pAuthInfo;
     struct HttpAuthInfo *pProxyAuthInfo;
+    BOOL  read_chunked;   /* are we reading in chunked mode? */
+    DWORD read_pos;       /* current read position in read_buf */
+    DWORD read_size;      /* valid data size in read_buf */
+    char  read_buf[4096]; /* buffer for already read but not returned data */
 } WININETHTTPREQW, *LPWININETHTTPREQW;
 
 
@@ -297,6 +292,12 @@ struct WORKREQ_HTTPSENDREQUESTW
     BOOL   bEndRequest;
 };
 
+struct WORKREQ_HTTPENDREQUESTW
+{
+    DWORD     dwFlags;
+    DWORD_PTR dwContext;
+};
+
 struct WORKREQ_SENDCALLBACK
 {
     DWORD_PTR dwContext;
@@ -320,6 +321,11 @@ struct WORKREQ_INTERNETREADFILEEXA
     LPINTERNET_BUFFERSA lpBuffersOut;
 };
 
+struct WORKREQ_INTERNETREADFILEEXW
+{
+    LPINTERNET_BUFFERSW lpBuffersOut;
+};
+
 typedef struct WORKREQ
 {
     void (*asyncproc)(struct WORKREQ*);
@@ -338,9 +344,11 @@ typedef struct WORKREQ
         struct WORKREQ_FTPRENAMEFILEW           FtpRenameFileW;
         struct WORKREQ_FTPFINDNEXTW             FtpFindNextW;
         struct WORKREQ_HTTPSENDREQUESTW         HttpSendRequestW;
+        struct WORKREQ_HTTPENDREQUESTW          HttpEndRequestW;
         struct WORKREQ_SENDCALLBACK             SendCallback;
-	struct WORKREQ_INTERNETOPENURLW         InternetOpenUrlW;
+        struct WORKREQ_INTERNETOPENURLW         InternetOpenUrlW;
         struct WORKREQ_INTERNETREADFILEEXA      InternetReadFileExA;
+        struct WORKREQ_INTERNETREADFILEEXW      InternetReadFileExW;
     } u;
 
 } WORKREQUEST, *LPWORKREQUEST;
@@ -381,7 +389,6 @@ INTERNETAPI HINTERNET WINAPI HTTP_HttpOpenRequestW(LPWININETHTTPSESSIONW lpwhs,
 	LPCWSTR lpszVerb, LPCWSTR lpszObjectName, LPCWSTR lpszVersion,
 	LPCWSTR lpszReferrer , LPCWSTR *lpszAcceptTypes,
 	DWORD dwFlags, DWORD_PTR dwContext);
-BOOL HTTP_FinishedReading(LPWININETHTTPREQW lpwhr);
 
 VOID SendAsyncCallback(LPWININETHANDLEHEADER hdr, DWORD_PTR dwContext,
                        DWORD dwInternetStatus, LPVOID lpvStatusInfo,
@@ -390,8 +397,6 @@ VOID SendAsyncCallback(LPWININETHANDLEHEADER hdr, DWORD_PTR dwContext,
 VOID INTERNET_SendCallback(LPWININETHANDLEHEADER hdr, DWORD_PTR dwContext,
                            DWORD dwInternetStatus, LPVOID lpvStatusInfo,
                            DWORD dwStatusInfoLength);
-
-LPHTTPHEADERW HTTP_GetHeader(LPWININETHTTPREQW lpwhr, LPCWSTR header);
 
 BOOL NETCON_connected(WININET_NETCONNECTION *connection);
 BOOL NETCON_init(WININET_NETCONNECTION *connnection, BOOL useSSL);
@@ -406,7 +411,6 @@ BOOL NETCON_send(WININET_NETCONNECTION *connection, const void *msg, size_t len,
 BOOL NETCON_recv(WININET_NETCONNECTION *connection, void *buf, size_t len, int flags,
 		int *recvd /* out */);
 BOOL NETCON_query_data_available(WININET_NETCONNECTION *connection, DWORD *available);
-BOOL NETCON_getNextLine(WININET_NETCONNECTION *connection, LPSTR lpszBuffer, LPDWORD dwBuffer);
 LPCVOID NETCON_GetCert(WININET_NETCONNECTION *connection);
 DWORD NETCON_set_timeout(WININET_NETCONNECTION *connection, BOOL send, int value);
 

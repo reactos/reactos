@@ -19,7 +19,7 @@
 
 ULONG DbgPrint(PCH Format,...);
 
-#ifdef DBG
+#if DBG
 
 extern DWORD DebugTraceLevel;
 

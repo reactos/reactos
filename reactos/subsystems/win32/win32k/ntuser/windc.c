@@ -866,6 +866,36 @@ UserGetWindowDC(PWINDOW_OBJECT Wnd)
   return UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
+HWND FASTCALL
+UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
+{
+  PWNDGDI pWndgdi;
+  PWINDOW_OBJECT Wnd = NULL;
+  HWND hWnd;
+  BOOL Hit = FALSE;
+  PLIST_ENTRY Entry;
+  hWnd = IntWindowFromDC(hdc);
+
+  if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
+  {
+     KeEnterCriticalRegion();
+     Entry = Wnd->WndObjListHead.Flink;
+     while (Entry != &Wnd->WndObjListHead)
+     {
+        pWndgdi = (PWNDGDI)Entry;
+        if (pWndgdi->Hwnd == hWnd)
+        {
+           Hit = TRUE;
+           break;
+        }
+        Entry = Entry->Flink;
+     }
+     if (pwndo && Hit) *pwndo = (PWNDOBJ)pWndgdi;
+     KeLeaveCriticalRegion();
+  }
+  return hWnd;
+}
+
 HDC APIENTRY
 NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 {

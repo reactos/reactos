@@ -108,7 +108,7 @@ extern LIST_ENTRY AdapterListHead;
 extern KSPIN_LOCK AdapterListLock;
 
 
-#ifdef DBG
+#if DBG
 VOID
 MiniDisplayPacket(
     PNDIS_PACKET Packet);

@@ -44,9 +44,9 @@ static const IPersistFolder2Vtbl vt_NP_PersistFolder2;
 #define _IPersistFolder2_Offset ((INT_PTR)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
 #define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
 
-#define _IUnknown_(This)	(IUnknown*)&(This->lpVtbl)
-#define _IShellFolder_(This)	(IShellFolder*)&(This->lpVtbl)
-#define _IPersistFolder2_(This)	(IPersistFolder2*)&(This->lpVtblPersistFolder2)
+#define _IUnknown_(This)        ((IUnknown*)&(This)->lpVtbl)
+#define _IShellFolder_(This)    ((IShellFolder*)&(This)->lpVtbl)
+#define _IPersistFolder2_(This) (&(This)->lpVtblPersistFolder2)
 
 static shvheader NetworkPlacesSFHeader[] = {
     {IDS_SHV_COLUMN8, SHCOLSTATE_TYPE_STR | SHCOLSTATE_ONBYDEFAULT, LVCFMT_RIGHT, 15},
@@ -76,7 +76,7 @@ HRESULT WINAPI ISF_NetworkPlaces_Constructor (IUnknown * pUnkOuter, REFIID riid,
     if (pUnkOuter)
         return CLASS_E_NOAGGREGATION;
 
-    sf = (IGenericSFImpl *) HeapAlloc ( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (IGenericSFImpl));
+    sf = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (IGenericSFImpl));
     if (!sf)
         return E_OUTOFMEMORY;
 
@@ -85,7 +85,7 @@ HRESULT WINAPI ISF_NetworkPlaces_Constructor (IUnknown * pUnkOuter, REFIID riid,
     sf->lpVtblPersistFolder2 = &vt_NP_PersistFolder2;
     sf->pidlRoot = _ILCreateNetHood();	/* my qualified pidl */
 
-    if (!SUCCEEDED (IUnknown_QueryInterface (_IUnknown_ (sf), riid, ppv)))
+    if (FAILED (IUnknown_QueryInterface (_IUnknown_ (sf), riid, ppv)))
     {
         IUnknown_Release (_IUnknown_ (sf));
         return E_NOINTERFACE;
@@ -255,7 +255,7 @@ static HRESULT WINAPI ISF_NetworkPlaces_fnCreateViewObject (IShellFolder2 * ifac
     HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(hwnd=%p,%s,%p)\n", This,
-            hwndOwner, shdebugstr_guid (riid), ppvOut);
+           hwndOwner, shdebugstr_guid (riid), ppvOut);
 
     if (!ppvOut)
         return hr;

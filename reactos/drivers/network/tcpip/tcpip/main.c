@@ -622,7 +622,7 @@ VOID NTAPI TiUnload(
  *     DriverObject = Pointer to driver object created by the system
  */
 {
-#ifdef DBG
+#if DBG
   KIRQL OldIrql;
 
   TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);

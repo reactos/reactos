@@ -351,7 +351,7 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 #ifndef CONFIG_SMP
     Pcr->PrcbData.BuildType |= PRCB_BUILD_UNIPROCESSOR;
 #endif
-#ifdef DBG
+#if DBG
     Pcr->PrcbData.BuildType |= PRCB_BUILD_DEBUG;
 #endif
 

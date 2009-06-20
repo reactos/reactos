@@ -39,7 +39,7 @@
 extern char* g_file;
 extern int g_line;
 
-#ifdef DBG
+#if DBG
 
     VOID	DbgPrintMask(ULONG Mask, char *format, ...);
 	VOID	DebugInit(VOID);
@@ -85,6 +85,6 @@ void	MEMORY_WRITE_BREAKPOINT4(unsigned long addr);
 	#define BugCheck(_x_)
 	#define DbgDumpBuffer(_x_, _y_, _z_)
 
-#endif // defined DBG
+#endif // DBG
 
 #endif // defined __DEBUG_H

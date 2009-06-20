@@ -16,18 +16,25 @@
 
 #if 1
 
-#define KBD_STATUS_REG		0x64
-#define KBD_CNTL_REG		0x64
-#define KBD_DATA_REG		0x60
+#define KBD_STATUS_REG          0x64
+#define KBD_CNTL_REG            0x64
+#define KBD_DATA_REG            0x60
+
+#define KBD_STAT_OBF            0x01
+#define KBD_STAT_IBF            0x02
+
+#define CTRL_WRITE_MOUSE        0xD4
+#define MOU_ENAB                0xF4
+#define MOU_DISAB               0xF5
+#define MOUSE_ACK               0xFA
 
 #define KBD_DISABLE_MOUSE       0xA7
 #define KBD_ENABLE_MOUSE        0xA8
 
-#define KBD_STAT_OBF 		0x01	/* Keyboard output buffer full */
-
-#define kbd_write_command(cmd) WRITE_PORT_UCHAR((PUCHAR)KBD_STATUS_REG,cmd)
-#define kbd_read_input() READ_PORT_UCHAR((PUCHAR)KBD_DATA_REG)
-#define kbd_read_status() READ_PORT_UCHAR((PUCHAR)KBD_STATUS_REG)
+#define kbd_write_command(cmd)  WRITE_PORT_UCHAR((PUCHAR)KBD_CNTL_REG,cmd)
+#define kbd_write_data(cmd)     WRITE_PORT_UCHAR((PUCHAR)KBD_DATA_REG,cmd)
+#define kbd_read_input()        READ_PORT_UCHAR((PUCHAR)KBD_DATA_REG)
+#define kbd_read_status()       READ_PORT_UCHAR((PUCHAR)KBD_STATUS_REG)
 
 static unsigned char keyb_layout[2][128] =
 {
@@ -50,14 +57,49 @@ static unsigned char keyb_layout[2][128] =
 
 typedef UCHAR byte_t;
 
+/* FUNCTIONS *****************************************************************/
+
+static VOID
+KbdSendCommandToMouse(UCHAR Command)
+{
+    ULONG Retry = 20000;
+
+    while (kbd_read_status() & KBD_STAT_OBF && Retry--)
+    {
+        kbd_read_input();
+        KeStallExecutionProcessor(50);
+    }
+
+    Retry = 20000;
+    while (kbd_read_status() & KBD_STAT_IBF && Retry--)
+        KeStallExecutionProcessor(50);
+
+    kbd_write_command(CTRL_WRITE_MOUSE);
+
+    Retry = 20000;
+    while (kbd_read_status() & KBD_STAT_IBF && Retry--)
+        KeStallExecutionProcessor(50);
+
+    kbd_write_data(Command);
+
+    Retry = 20000;
+    while (!(kbd_read_status() & KBD_STAT_OBF) && Retry--)
+        KeStallExecutionProcessor(50);
+
+    if (kbd_read_input() != MOUSE_ACK) { ; }
+    return;
+}
+
 VOID KbdEnableMouse()
 {
-    kbd_write_command(KBD_ENABLE_MOUSE);
+    KbdSendCommandToMouse(MOU_ENAB);
+    // kbd_write_command(KBD_ENABLE_MOUSE);
 }
 
 VOID KbdDisableMouse()
 {
-    kbd_write_command(KBD_DISABLE_MOUSE);
+    KbdSendCommandToMouse(MOU_DISAB);
+    // kbd_write_command(KBD_DISABLE_MOUSE);
 }
 
 CHAR

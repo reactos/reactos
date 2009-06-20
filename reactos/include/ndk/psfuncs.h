@@ -150,6 +150,13 @@ PsIsSystemProcess(
     IN PEPROCESS Process
 );
 
+VOID
+NTAPI
+PsSetProcessPriorityByClass(
+    IN PEPROCESS Process,
+    IN PSPROCESSPRIORITYMODE Type
+);
+
 //
 // Quota Functions
 //

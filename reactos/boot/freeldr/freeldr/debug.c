@@ -21,7 +21,7 @@
 
 #include <debug.h>
 
-#ifdef DBG
+#if DBG
 
 //#define DEBUG_ALL
 //#define DEBUG_INIFILE
@@ -297,7 +297,7 @@ ULONG DbgPrint(PCCH Format, ...)
     return 0;
 }
 
-#endif // defined DBG
+#endif // DBG
 
 ULONG
 MsgBoxPrint(const char *Format, ...)

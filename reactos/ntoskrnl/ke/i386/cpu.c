@@ -934,7 +934,7 @@ NTAPI
 KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState;
-    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
     DPRINT1("%s is not really implemented\n", __FUNCTION__);
 
     /* check if we are doing software emulation */

@@ -143,7 +143,7 @@ VOID LoadReactOSSetup(VOID)
   if (!*SourcePath)
     SourcePath = "\\";
 
-#ifdef DBG
+#if DBG
   /* Get load options */
   if (InfFindFirstLine (InfHandle,
 			"SetupData",

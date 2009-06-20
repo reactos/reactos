@@ -210,6 +210,43 @@ PcCreateSubdeviceDescriptor(
        }
     }
 
+    Descriptor->Topology = AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY), TAG_PORTCLASS);
+    if (!Descriptor->Topology)
+        goto cleanup;
+
+    if (FilterDescription->ConnectionCount)
+    {
+        Descriptor->Topology->TopologyConnections = AllocateItem(NonPagedPool, sizeof(PCCONNECTION_DESCRIPTOR) * FilterDescription->ConnectionCount, TAG_PORTCLASS);
+        if (!Descriptor->Topology->TopologyConnections)
+            goto cleanup;
+
+        RtlMoveMemory((PVOID)Descriptor->Topology->TopologyConnections, FilterDescription->Connections, FilterDescription->ConnectionCount * sizeof(PCCONNECTION_DESCRIPTOR));
+        Descriptor->Topology->TopologyConnectionsCount = FilterDescription->ConnectionCount;
+    }
+
+    if (FilterDescription->NodeCount)
+    {
+        Descriptor->Topology->TopologyNodes = AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescription->NodeCount, TAG_PORTCLASS);
+        if (!Descriptor->Topology->TopologyNodes)
+            goto cleanup;
+
+        Descriptor->Topology->TopologyNodesNames = AllocateItem(NonPagedPool, sizeof(GUID) * FilterDescription->NodeCount, TAG_PORTCLASS);
+        if (!Descriptor->Topology->TopologyNodesNames)
+            goto cleanup;
+
+        for(Index = 0; Index < FilterDescription->NodeCount; Index++)
+        {
+            if (FilterDescription->Nodes[Index].Type)
+            {
+                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodes[Index], FilterDescription->Nodes[Index].Type, sizeof(GUID));
+            }
+            if (FilterDescription->Nodes[Index].Name)
+            {
+                RtlMoveMemory((PVOID)&Descriptor->Topology->TopologyNodesNames[Index], FilterDescription->Nodes[Index].Name, sizeof(GUID));
+            }
+        }
+        Descriptor->Topology->TopologyNodesCount = FilterDescription->NodeCount;
+    }
 
     if (FilterDescription->PinCount)
     {

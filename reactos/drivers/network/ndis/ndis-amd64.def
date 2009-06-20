@@ -17,6 +17,7 @@ NdisAllocateBuffer
 NdisAllocateBufferPool
 NdisAllocateDmaChannel
 NdisAllocateMemory
+NdisAllocateFromBlockPool
 NdisAllocateMemoryWithTag
 NdisAllocatePacket
 NdisAllocatePacketPool
@@ -26,12 +27,14 @@ NdisAllocateSpinLock
 NdisAnsiStringToUnicodeString
 NdisBufferLength
 NdisBufferVirtualAddress
+NdisCancelSendPackets
 NdisCancelTimer
 NdisClAddParty
 NdisClCloseAddressFamily
 NdisClCloseCall
 NdisClDeregisterSap
 NdisClDropParty
+NdisClGetProtocolVcContextFromTapiCallId
 NdisClIncomingCallComplete
 NdisClMakeCall
 NdisClModifyCallQoS
@@ -57,13 +60,15 @@ NdisCmModifyCallQoSComplete
 NdisCmOpenAddressFamilyComplete
 NdisCmRegisterAddressFamily
 NdisCmRegisterSapComplete
+NdisCoAssignInstanceName
 NdisCoCreateVc
 NdisCoDeleteVc
+NdisCoGetTapiCallId
 NdisCoRequest
 NdisCoRequestComplete
 NdisCoSendPackets
-;NdisCompareAnsiString ?
-;NdisCompareUnicodeString ?
+NdisCompareAnsiString
+NdisCompareUnicodeString
 NdisCompleteBindAdapter
 NdisCompleteCloseAdapter
 NdisCompleteDmaTransfer
@@ -74,10 +79,14 @@ NdisCompleteUnbindAdapter
 NdisConvertStringToAtmAddress
 NdisCopyBuffer
 NdisCopyFromPacketToPacket
+NdisCopyFromPacketToPacketSafe
+NdisCreateBlockPool
 NdisDeregisterAdapter
 NdisDeregisterAdapterShutdownHandler
 NdisDeregisterMac
 NdisDeregisterProtocol
+NdisDeregisterTdiCallBack
+NdisDestroyBlockPool
 NdisDprAcquireSpinLock
 NdisDprAllocatePacket
 NdisDprAllocatePacketNonInterlocked
@@ -88,19 +97,27 @@ NdisEqualString
 NdisFreeBuffer
 NdisFreeBufferPool
 NdisFreeDmaChannel
+NdisFreeToBlockPool
 NdisFreeMemory
 NdisFreePacket
 NdisFreePacketPool
 NdisFreeSharedMemory
 NdisFreeSpinLock
+NdisGeneratePartialCancelId
 NdisGetBufferPhysicalArraySize
 NdisGetCurrentProcessorCounts
 NdisGetCurrentProcessorCpuUsage
 NdisGetCurrentSystemTime
 NdisGetDriverHandle
 NdisGetFirstBufferFromPacket
+NdisGetFirstBufferFromPacketSafe
+NdisGetPacketCancelId
+NdisGetPoolFromPacket
 NdisGetReceivedPacket
+NdisGetRoutineAddress
+NdisGetSharedDataAlignment
 NdisGetSystemUpTime
+NdisGetVersion
 NdisIMAssociateMiniport
 NdisIMCancelInitializeDeviceInstance
 NdisIMCopySendCompletePerPacketInfo
@@ -108,9 +125,11 @@ NdisIMCopySendPerPacketInfo
 NdisIMDeInitializeDeviceInstance
 NdisIMDeregisterLayeredMiniport
 NdisIMGetBindingContext
+NdisIMGetCurrentPacketStack
 NdisIMGetDeviceContext
 NdisIMInitializeDeviceInstance
 NdisIMInitializeDeviceInstanceEx
+NdisIMNotifyPnPEvent
 NdisImmediateReadPciSlotInformation
 NdisImmediateReadPortUchar
 NdisImmediateReadPortUlong
@@ -132,7 +151,7 @@ NdisInitializeString
 NdisInitializeTimer
 NdisInitializeWrapper
 NdisInitUnicodeString
-;NdisInterlockedAddLargeInterger ?
+NdisInterlockedAddLargeInteger
 NdisInterlockedAddUlong
 NdisInterlockedDecrement
 NdisInterlockedIncrement
@@ -217,15 +236,17 @@ NdisOpenConfigurationKeyByIndex
 NdisOpenConfigurationKeyByName
 NdisOpenFile
 NdisOpenProtocolConfiguration
-;NdisOverrideBusNumber ?
+NdisOverrideBusNumber
 NdisPacketPoolUsage
+NdisPacketSize
 NdisPciAssignResources
 NdisQueryAdapterInstanceName
-;NdisQueryBindInstanceName?
+NdisQueryBindInstanceName
 NdisQueryBuffer
 NdisQueryBufferOffset
 NdisQueryBufferSafe
 NdisQueryMapRegisterCount
+NdisQueryPendingIOCount
 NdisReadConfiguration
 NdisReadEisaSlotInformation
 NdisReadEisaSlotInformationEx
@@ -233,11 +254,11 @@ NdisReadMcaPosInformation
 NdisReadNetworkAddress
 NdisReadPciSlotInformation
 NdisReadPcmciaAttributeMemory
-;NdisReEnumerateProtocolBindings ?
+NdisReEnumerateProtocolBindings
 NdisRegisterAdapter
 NdisRegisterAdapterShutdownHandler
 NdisRegisterProtocol
-;NdisRegisterTdiCallBack ?
+NdisRegisterTdiCallBack
 NdisReleaseAdapterResources
 NdisReleaseReadWriteLock
 NdisReleaseSpinLock
@@ -248,9 +269,12 @@ NdisReturnPackets
 NdisSend
 NdisSendPackets
 NdisSetEvent
-;NdisSetPacketPoolProtocolId ?
-;NdisSetProtocolFilter ?
+NdisSetPacketCancelId
+NdisSetPacketPoolProtocolId
+NdisSetPacketStatus
+NdisSetProtocolFilter
 NdisSetTimer
+NdisSetTimerEx
 NdisSetupDmaTransfer
 NdisSystemProcessorCount
 NdisTerminateWrapper

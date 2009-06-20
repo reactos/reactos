@@ -130,6 +130,7 @@ typedef struct
     KSPROPERTY_SET_LIST FilterPropertySet;
 
     PPCFILTER_DESCRIPTOR DeviceDescriptor;
+    KSTOPOLOGY*  Topology;
 }SUBDEVICE_DESCRIPTOR, *PSUBDEVICE_DESCRIPTOR;
 
 #undef INTERFACE
@@ -532,6 +533,8 @@ typedef IPortPinWaveRT *PPORTPINWAVERT;
 #undef INTERFACE
 #define INTERFACE IPortFilterWaveCyclic
 
+struct IPortPinWaveCyclic;
+
 DECLARE_INTERFACE_(IPortFilterWaveCyclic, IIrpTarget)
 {
     DEFINE_ABSTRACT_UNKNOWN()
@@ -540,6 +543,9 @@ DECLARE_INTERFACE_(IPortFilterWaveCyclic, IIrpTarget)
 
     STDMETHOD_(NTSTATUS, Init)(THIS_
         IN PPORTWAVECYCLIC Port)PURE;
+
+    STDMETHOD_(NTSTATUS, FreePin)(THIS_
+        IN struct IPortPinWaveCyclic* Pin)PURE;
 };
 
 typedef IPortFilterWaveCyclic *PPORTFILTERWAVECYCLIC;
@@ -679,6 +685,28 @@ DECLARE_INTERFACE_(IDmaChannelInit, IUnknown)
         IN PDEVICE_DESCRIPTION DeviceDescription,
         IN PDEVICE_OBJECT DeviceObject) PURE;
 };
+
+#undef INTERFACE
+
+/*****************************************************************************
+ * IPortFilterTopology
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IPortFilterTopology
+
+DECLARE_INTERFACE_(IPortFilterTopology, IIrpTarget)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    DEFINE_ABSTRACT_IRPTARGET()
+
+    STDMETHOD_(NTSTATUS, Init)(THIS_
+        IN PPORTTOPOLOGY Port)PURE;
+};
+
+typedef IPortFilterTopology *PPORTFILTERTOPOLOGY;
 
 #undef INTERFACE
 

@@ -191,7 +191,7 @@ KeTryToAcquireSpinLockAtDpcLevel(IN OUT PKSPIN_LOCK SpinLock)
         return FALSE;
     }
 
-#ifdef DBG
+#if DBG
     /* On debug builds, we OR in the KTHREAD */
     *SpinLock = (ULONG_PTR)KeGetCurrentThread() | 1;
 #endif

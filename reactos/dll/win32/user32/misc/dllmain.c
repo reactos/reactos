@@ -331,11 +331,14 @@ FASTCALL
 GetConnected(VOID)
 {
   USERCONNECT UserCon;
+//  ERR("GetConnected\n");
 
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
   if (g_psi && g_ppi) return;
+// FIXME HAX: Due to the "Dll Initialization Bug" we have to call this too.
+  GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
   NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
@@ -346,5 +349,4 @@ GetConnected(VOID)
   g_psi = SharedPtrToUser(UserCon.siClient.psi);
   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
   gHandleEntries = SharedPtrToUser(gHandleTable->handles);
-//  ERR("2 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);  
 }

@@ -14,11 +14,18 @@
 
 typedef struct
 {
+    HANDLE Handle;
+    SOUND_DEVICE_TYPE Type;
+    ULONG FilterId;
+    ULONG PinId;
+}WDMAUD_HANDLE, *PWDMAUD_HANDLE;
+
+
+typedef struct
+{
     HANDLE hProcess;
-    HANDLE hSysAudio;
-    PFILE_OBJECT FileObject;
     ULONG NumPins;
-    HANDLE * hPins;
+    WDMAUD_HANDLE * hPins;
 
 }WDMAUD_CLIENT, *PWDMAUD_CLIENT;
 
@@ -38,6 +45,8 @@ typedef struct
     KSPIN_LOCK Lock;
     ULONG NumSysAudioDevices;
     LIST_ENTRY SysAudioDeviceList;
+    HANDLE hSysAudio;
+    PFILE_OBJECT FileObject;
 
 }WDMAUD_DEVICE_EXTENSION, *PWDMAUD_DEVICE_EXTENSION;
 
@@ -83,5 +92,21 @@ WdmAudWrite(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp);
 
+NTSTATUS
+WdmAudControlOpenMixer(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo);
+
+ULONG
+GetNumOfMixerDevices(
+    IN  PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+SetIrpIoStatus(
+    IN PIRP Irp,
+    IN NTSTATUS Status,
+    IN ULONG Length);
 
 #endif

@@ -3396,7 +3396,7 @@ HRESULT regexp_match(DispatchEx *dispex, const WCHAR *str, DWORD len, BOOL gflag
         }
 
         if(FAILED(hres))
-            return hres;
+            break;
 
         if(ret_size == i) {
             if(ret)

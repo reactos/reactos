@@ -23,6 +23,21 @@ KSPIN_LOCK ShutdownListLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+VOID
+NTAPI
+IopDeleteDevice(IN PVOID ObjectBody)
+{
+    PDEVICE_OBJECT DeviceObject = ObjectBody;
+    PAGED_CODE();
+ 
+    /* TODO: Delete Device Node */
+
+    /* Dereference the driver object, referenced in IoCreateDevice */
+    if (DeviceObject->DriverObject)
+        ObDereferenceObject(DeviceObject->DriverObject);
+}
+
+
 PDEVICE_OBJECT
 NTAPI
 IopAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
@@ -356,6 +371,13 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
 
     /* Unload it */
     if (DriverObject->DriverUnload) DriverObject->DriverUnload(DriverObject);
+
+    /* Make object temporary so it can be deleted */
+    ObMakeTemporaryObject(DriverObject);
+
+    /* Dereference once more, referenced at driver object creation */
+    ObDereferenceObject(DriverObject);
+
 }
 
 VOID
@@ -1178,16 +1200,20 @@ IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
 
     /* Make sure it's not getting deleted */
     DeviceExtension = IoGetDevObjExtension(DeviceObject);
-    if (DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING |
+    if (!(DeviceExtension->ExtensionFlags & (DOE_UNLOAD_PENDING |
                                            DOE_DELETE_PENDING |
                                            DOE_REMOVE_PENDING |
-                                           DOE_REMOVE_PROCESSED))
+                                           DOE_REMOVE_PROCESSED)))
     {
         /* Get the Lower Device Object */
         LowerDeviceObject = DeviceExtension->AttachedTo;
 
-        /* Reference it */
-        ObReferenceObject(LowerDeviceObject);
+        /* Check that we got a valid device object */
+        if (LowerDeviceObject)
+        {
+            /* We did so let's reference it */
+            ObReferenceObject(LowerDeviceObject);
+        }
     }
 
     /* Return it */

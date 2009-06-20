@@ -31,6 +31,7 @@ static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 static HANDLE ProcessHeap;
 static BOOLEAN DefaultHandlesDisabled = FALSE;
 static BOOLEAN DefaultHandleHKUDisabled = FALSE;
+static BOOLEAN DllInitialized = FALSE; /* HACK */
 
 /* PROTOTYPES ***************************************************************/
 
@@ -66,10 +67,16 @@ RegInitialize(VOID)
 {
     TRACE("RegInitialize()\n");
 
-    ProcessHeap = RtlGetProcessHeap();
-    RtlZeroMemory(DefaultHandleTable,
-                  MAX_DEFAULT_HANDLES * sizeof(HANDLE));
-    RtlInitializeCriticalSection(&HandleTableCS);
+    /* Lazy init hack */
+    if (!DllInitialized)
+    {
+        ProcessHeap = RtlGetProcessHeap();
+        RtlZeroMemory(DefaultHandleTable,
+                      MAX_DEFAULT_HANDLES * sizeof(HANDLE));
+        RtlInitializeCriticalSection(&HandleTableCS);
+
+        DllInitialized = TRUE;
+    }
 
     return TRUE;
 }
@@ -161,7 +168,7 @@ MapDefaultKey(OUT PHANDLE RealKey,
     {
         return STATUS_INVALID_PARAMETER;
     }
-
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection (&HandleTableCS);
 
     if (Key == HKEY_CURRENT_USER)
@@ -205,7 +212,7 @@ static VOID
 CloseDefaultKeys(VOID)
 {
     ULONG i;
-
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection(&HandleTableCS);
 
     for (i = 0; i < MAX_DEFAULT_HANDLES; i++)
@@ -311,6 +318,7 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
 LONG WINAPI
 RegDisablePredefinedCache(VOID)
 {
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection(&HandleTableCS);
     DefaultHandleHKUDisabled = TRUE;
     RtlLeaveCriticalSection(&HandleTableCS);
@@ -326,6 +334,7 @@ RegDisablePredefinedCache(VOID)
 LONG WINAPI
 RegDisablePredefinedCacheEx(VOID)
 {
+    RegInitialize(); /* HACK until delay-loading is implemented */
     RtlEnterCriticalSection(&HandleTableCS);
     DefaultHandlesDisabled = TRUE;
     DefaultHandleHKUDisabled = TRUE;
@@ -371,7 +380,7 @@ RegOverridePredefKey(IN HKEY hKey,
 
             ASSERT(hNewHKey != NULL);
         }
-
+        RegInitialize(); /* HACK until delay-loading is implemented */
         RtlEnterCriticalSection(&HandleTableCS);
 
         /* close the currently mapped handle if existing */
@@ -3472,7 +3481,7 @@ ReadTokenSid:
                   handle for example! */
         return RtlNtStatusToDosError(Status);
     }
-
+    RegInitialize(); /* HACK until delay-loading is implemented */
     TokenUserData = RtlAllocateHeap(ProcessHeap,
                                     0,
                                     RequiredLength);
@@ -4025,10 +4034,6 @@ RegQueryValueExA(HKEY hKey,
     if (ErrorCode == ERROR_SUCCESS ||
         ErrorCode == ERROR_MORE_DATA)
     {
-        if (lpType != NULL)
-        {
-            *lpType = Type;
-        }
 
         if ((Type == REG_SZ) || (Type == REG_MULTI_SZ) || (Type == REG_EXPAND_SZ))
         {
@@ -4060,6 +4065,11 @@ RegQueryValueExA(HKEY hKey,
         {
             *lpcbData = Length;
         }
+    }
+
+    if (lpType != NULL)
+    {
+        *lpType = Type;
     }
 
     if (ValueData.Buffer != NULL)
@@ -4098,7 +4108,6 @@ RegQueryValueExW(HKEY hkeyorg,
           (count && data) ? *count : 0 );
 
     if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;
-    //if (!(hkey = get_special_root_hkey( hkey ))) return ERROR_INVALID_HANDLE;
 
     status = MapDefaultKey(&hkey, hkeyorg);
     if (!NT_SUCCESS(status))
@@ -4115,6 +4124,9 @@ RegQueryValueExW(HKEY hkeyorg,
         if (count) *count = 0;
     }
 
+    /* this matches Win9x behaviour - NT sets *type to a random value */
+    if (type) *type = REG_NONE;
+
     status = NtQueryValueKey( hkey, &name_str, KeyValuePartialInformation,
                               buffer, total_size, &total_size );
     if (status && status != STATUS_BUFFER_OVERFLOW) goto done;
@@ -4126,7 +4138,10 @@ RegQueryValueExW(HKEY hkeyorg,
         {
             if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
             if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
+            {
+                ClosePredefKey(hkey);
                 return ERROR_NOT_ENOUGH_MEMORY;
+            }
             info = (KEY_VALUE_PARTIAL_INFORMATION *)buf_ptr;
             status = NtQueryValueKey( hkey, &name_str, KeyValuePartialInformation,
                                       buf_ptr, total_size, &total_size );
@@ -4162,93 +4177,27 @@ RegQueryValueExW(HKEY hkeyorg,
  *
  * @implemented
  */
-LONG WINAPI
-RegQueryValueA(HKEY hKey,
-               LPCSTR lpSubKey,
-               LPSTR lpValue,
-               PLONG lpcbValue)
+LSTATUS WINAPI RegQueryValueA( HKEY hkey, LPCSTR name, LPSTR data, LPLONG count )
 {
-    WCHAR SubKeyNameBuffer[MAX_PATH+1];
-    UNICODE_STRING SubKeyName;
-    UNICODE_STRING Value;
-    ANSI_STRING AnsiString;
-    LONG ValueSize;
-    LONG ErrorCode;
+    DWORD ret;
+    HKEY subkey = hkey;
 
-    TRACE("hKey 0x%X lpSubKey %s lpValue %p lpcbValue %d\n",
-          hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
+    TRACE("(%p,%s,%p,%d)\n", hkey, debugstr_a(name), data, count ? *count : 0 );
 
-    if (lpValue != NULL &&
-        lpcbValue == NULL)
+    if (name && name[0])
     {
-        return ERROR_INVALID_PARAMETER;
+    if ((ret = RegOpenKeyA( hkey, name, &subkey )) != ERROR_SUCCESS) return ret;
     }
-
-    RtlInitUnicodeString(&SubKeyName,
-                         NULL);
-    RtlInitUnicodeString(&Value,
-                         NULL);
-    if (lpSubKey != NULL &&
-        strlen(lpSubKey) != 0)
+    ret = RegQueryValueExA( subkey, NULL, NULL, NULL, (LPBYTE)data, (LPDWORD)count );
+    if (subkey != hkey) RegCloseKey( subkey );
+    if (ret == ERROR_FILE_NOT_FOUND)
     {
-        RtlInitAnsiString(&AnsiString,
-                          (LPSTR)lpSubKey);
-      SubKeyName.Buffer = &SubKeyNameBuffer[0];
-      SubKeyName.MaximumLength = sizeof(SubKeyNameBuffer);
-      RtlAnsiStringToUnicodeString(&SubKeyName,
-                                   &AnsiString,
-                                   FALSE);
+    /* return empty string if default value not found */
+    if (data) *data = 0;
+    if (count) *count = 1;
+    ret = ERROR_SUCCESS;
     }
-
-    if (lpValue != NULL)
-    {
-        ValueSize = *lpcbValue * sizeof(WCHAR);
-        Value.MaximumLength = ValueSize;
-        Value.Buffer = RtlAllocateHeap(ProcessHeap,
-                                       0,
-                                       ValueSize);
-        if (Value.Buffer == NULL)
-        {
-            return ERROR_OUTOFMEMORY;
-        }
-    }
-    else
-    {
-        ValueSize = 0;
-    }
-
-    ErrorCode = RegQueryValueW(hKey,
-                               (LPCWSTR)SubKeyName.Buffer,
-                               Value.Buffer,
-                               &ValueSize);
-    if (ErrorCode == ERROR_SUCCESS)
-    {
-        if (lpValue != NULL)
-        {
-            Value.Length = ValueSize;
-            RtlInitAnsiString(&AnsiString,
-                              NULL);
-            AnsiString.Buffer = lpValue;
-            AnsiString.MaximumLength = *lpcbValue;
-            RtlUnicodeStringToAnsiString(&AnsiString,
-                                         &Value,
-                                         FALSE);
-            *lpcbValue = ValueSize;
-        }
-        else if (lpcbValue != NULL)
-        {
-            *lpcbValue = ValueSize;
-        }
-    }
-
-    if (Value.Buffer != NULL)
-    {
-        RtlFreeHeap(ProcessHeap,
-                    0,
-                    Value.Buffer);
-    }
-
-    return ErrorCode;
+    return ret;
 }
 
 
@@ -4257,75 +4206,42 @@ RegQueryValueA(HKEY hKey,
  *
  * @implemented
  */
-LONG WINAPI
-RegQueryValueW(HKEY hKey,
-               LPCWSTR lpSubKey,
-               LPWSTR lpValue,
-               PLONG lpcbValue)
+LSTATUS WINAPI RegQueryValueW( HKEY hkey, LPCWSTR name, LPWSTR data, LPLONG count )
 {
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING SubKeyString;
-    HANDLE KeyHandle;
-    HANDLE RealKey;
-    LONG ErrorCode;
-    BOOL CloseRealKey;
-    NTSTATUS Status;
+    DWORD ret;
+    HKEY subkey = hkey;
 
-    TRACE("hKey 0x%X lpSubKey %S lpValue %p lpcbValue %d\n",
-          hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
-    if (hKey == NULL)
+    TRACE("(%p,%s,%p,%d)\n", hkey, debugstr_w(name), data, count ? *count : 0 );
+    if (hkey == NULL)
     {
        return ERROR_INVALID_HANDLE;
     }
-    Status = MapDefaultKey(&KeyHandle,
-                           hKey);
-    if (!NT_SUCCESS(Status))
+    if (name && name[0])
     {
-        return RtlNtStatusToDosError(Status);
-    }
-
-    if (lpSubKey != NULL &&
-        wcslen(lpSubKey) != 0)
-    {
-        RtlInitUnicodeString(&SubKeyString,
-                             (LPWSTR)lpSubKey);
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &SubKeyString,
-                                   OBJ_CASE_INSENSITIVE,
-                                   KeyHandle,
-                                   NULL);
-        Status = NtOpenKey(&RealKey,
-                           KEY_QUERY_VALUE,
-                           &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
+        ret = RegOpenKeyW( hkey, name, &subkey);
+        if (ret != ERROR_SUCCESS) 
         {
-            ErrorCode = RtlNtStatusToDosError(Status);
-            goto Cleanup;
+            return ret;
         }
-
-        CloseRealKey = TRUE;
     }
-    else
+
+    ret = RegQueryValueExW( subkey, NULL, NULL, NULL, (LPBYTE)data, (LPDWORD)count );
+    
+    if (subkey != hkey) 
     {
-        RealKey = hKey;
-        CloseRealKey = FALSE;
+        RegCloseKey( subkey );
     }
 
-    ErrorCode = RegQueryValueExW(RealKey,
-                                 NULL,
-                                 NULL,
-                                 NULL,
-                                 (LPBYTE)lpValue,
-                                 (LPDWORD)lpcbValue);
-    if (CloseRealKey)
+    if (ret == ERROR_FILE_NOT_FOUND)
     {
-        NtClose(RealKey);
+        /* return empty string if default value not found */
+        if (data) 
+            *data = 0;
+        if (count) 
+            *count = sizeof(WCHAR);
+        ret = ERROR_SUCCESS;
     }
-
-Cleanup:
-    ClosePredefKey(KeyHandle);
-
-    return ErrorCode;
+    return ret;
 }
 
 

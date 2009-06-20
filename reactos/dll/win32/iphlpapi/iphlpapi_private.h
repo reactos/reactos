@@ -23,6 +23,7 @@
 #define _WIN32_WINNT 0x500
 #define WIN32_NO_STATUS
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -32,6 +33,7 @@
 #include "resinfo.h"
 #include "wine/debug.h"
 
+//#include "ntddndis.h"
 #include "ddk/tdiinfo.h"
 #include "tcpioctl.h"
 

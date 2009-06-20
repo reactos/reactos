@@ -3190,8 +3190,8 @@ REBAR_NCCreate (HWND hwnd, LPARAM lParam)
     /* initialize info structure - initial values are 0 */
     infoPtr->clrBk = CLR_NONE;
     infoPtr->clrText = CLR_NONE;
-    infoPtr->clrBtnText = GetSysColor (COLOR_BTNTEXT);
-    infoPtr->clrBtnFace = GetSysColor (COLOR_BTNFACE);
+    infoPtr->clrBtnText = comctl32_color.clrBtnText;
+    infoPtr->clrBtnFace = comctl32_color.clrBtnFace;
     infoPtr->iOldBand = -1;
     infoPtr->ichevronhotBand = -2;
     infoPtr->iGrabbedBand = -1;
@@ -3720,10 +3720,9 @@ REBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_THEMECHANGED:
             return theme_changed (infoPtr);
 
-/*      case WM_SYSCOLORCHANGE: supported according to ControlSpy */
-/*      "Applications that have brushes using the existing system colors
-         should delete those brushes and recreate them using the new
-         system colors."  per MSDN                                */
+        case WM_SYSCOLORCHANGE:
+            COMCTL32_RefreshSysColors();
+            return 0;
 
 /*      case WM_VKEYTOITEM:     supported according to ControlSpy */
 /*	case WM_WININICHANGE: */

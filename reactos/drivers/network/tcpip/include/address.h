@@ -20,7 +20,7 @@
     (IPAddress)->Address.IPv4Address = (RawAddress);  \
 }
 
-#ifdef DBG
+#if DBG
 
 PCHAR A2S(
     PIP_ADDRESS Address);

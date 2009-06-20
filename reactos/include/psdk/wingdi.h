@@ -6,6 +6,12 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4820)
+#endif
+
 /* Get/SetSystemPaletteUse() values */
 #define SYSPAL_ERROR        0
 #define SYSPAL_STATIC       1
@@ -2898,6 +2904,7 @@ int WINAPI FillRgn(HDC,HRGN,HBRUSH);
 BOOL WINAPI FixBrushOrgEx(HDC,int,int,LPPOINT);
 BOOL WINAPI FlattenPath(HDC);
 BOOL WINAPI FloodFill(HDC,int,int,COLORREF);
+BOOL WINAPI GdiAlphaBlend(HDC,int,int,int,int,HDC,int,int,int,int,BLENDFUNCTION);
 BOOL WINAPI GdiComment(HDC,UINT,const BYTE*);
 BOOL WINAPI GdiFlush(void);
 DWORD WINAPI GdiGetBatchLimit(void);
@@ -3328,6 +3335,11 @@ typedef DISPLAY_DEVICEA DISPLAY_DEVICE, *PDISPLAY_DEVICE, *LPDISPLAY_DEVICE;
 #define wglUseFontOutlines wglUseFontOutlinesA
 #endif
 #endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

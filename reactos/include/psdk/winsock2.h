@@ -27,6 +27,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
 /*   Names common to Winsock1.1 and Winsock2  */
 #if !defined ( _BSDTYPES_DEFINED )
 /* also defined in gmon.h and in cygwin's sys/types */
@@ -102,7 +106,7 @@ if (__i == ((fd_set *)(set))->fd_count) {\
 #warning "fd_set and associated macros have been defined in sys/types.  \
     This may cause runtime problems with W32 sockets"
 #endif /* ndef _SYS_TYPES_FD_SET */
-#if !(defined (__INSIDE_CYGWIN__) || (__INSIDE_MSYS__))
+#if !(defined (__INSIDE_CYGWIN__) || (defined (__INSIDE_MSYS__) && (__INSIDE_MSYS__)))
 #ifndef _TIMEVAL_DEFINED
 /* also in sys/time.h */
 #define _TIMEVAL_DEFINED
@@ -1208,6 +1212,10 @@ typedef DWORD (WINAPI *LPFN_WSAWAITFORMULTIPLEEVENTS)(DWORD, const WSAEVENT *, B
 #define WSASocket WSASocketA
 #define WSAStringToAddress WSAStringToAddressA
 #define WSASetService WSASetServiceA
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #ifdef __cplusplus

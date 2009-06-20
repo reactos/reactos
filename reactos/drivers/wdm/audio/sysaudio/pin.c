@@ -17,6 +17,7 @@ Pin_fnDeviceIoControl(
     PDISPATCH_CONTEXT Context;
     NTSTATUS Status;
     ULONG BytesReturned;
+    PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION IoStack;
 
     DPRINT("Pin_fnDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
@@ -29,15 +30,27 @@ Pin_fnDeviceIoControl(
 
     /* Sanity check */
     ASSERT(Context);
-    ASSERT(Context->FileObject != NULL);
+
+    /* acquire real pin file object */
+    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        /* Complete the irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     /* Re-dispatch the request to the real target pin */
-    Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IoStack->Parameters.DeviceIoControl.IoControlCode,
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IoStack->Parameters.DeviceIoControl.IoControlCode,
                                           IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
                                           IoStack->Parameters.DeviceIoControl.InputBufferLength,
                                           Irp->UserBuffer,
                                           IoStack->Parameters.DeviceIoControl.OutputBufferLength,
                                           &BytesReturned);
+    /* release file object */
+    ObDereferenceObject(FileObject);
 
     /* Save status and information */
     Irp->IoStatus.Information = BytesReturned;
@@ -57,6 +70,7 @@ Pin_fnRead(
     PDISPATCH_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
     ULONG BytesReturned;
+    PFILE_OBJECT FileObject;
     NTSTATUS Status;
 
     /* Get current stack location */
@@ -67,17 +81,30 @@ Pin_fnRead(
 
     /* Sanity check */
     ASSERT(Context);
-    ASSERT(Context->FileObject != NULL);
+
+    /* acquire real pin file object */
+    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        /* Complete the irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     /* Re-dispatch the request to the real target pin */
-    Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IOCTL_KS_READ_STREAM,
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_READ_STREAM,
                                           MmGetMdlVirtualAddress(Irp->MdlAddress),
                                           IoStack->Parameters.Read.Length,
                                           NULL,
                                           0,
                                           &BytesReturned);
 
-    if (Context->hMixerPin && Context->MixerFileObject)
+    /* release file object */
+    ObDereferenceObject(FileObject);
+
+    if (Context->hMixerPin)
     {
         // FIXME
         // call kmixer to convert stream
@@ -102,6 +129,7 @@ Pin_fnWrite(
     PDISPATCH_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
     ULONG BytesReturned;
+    PFILE_OBJECT FileObject;
     NTSTATUS Status;
 
     /* Get current stack location */
@@ -112,23 +140,35 @@ Pin_fnWrite(
 
     /* Sanity check */
     ASSERT(Context);
-    ASSERT(Context->FileObject != NULL);
 
-    if (Context->hMixerPin && Context->MixerFileObject)
+    if (Context->hMixerPin)
     {
         // FIXME
         // call kmixer to convert stream
         UNIMPLEMENTED
     }
 
+    /* acquire real pin file object */
+    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        /* Complete the irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     /* Re-dispatch the request to the real target pin */
-    Status = KsSynchronousIoControlDevice(Context->FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
                                           MmGetMdlVirtualAddress(Irp->MdlAddress),
                                           IoStack->Parameters.Read.Length,
                                           NULL,
                                           0,
                                           &BytesReturned);
+
+    /* release file object */
+    ObDereferenceObject(FileObject);
 
     /* Save status and information */
     Irp->IoStatus.Status = Status;
@@ -149,6 +189,7 @@ Pin_fnFlush(
     PIO_STACK_LOCATION IoStack;
     PDEVICE_OBJECT PinDeviceObject;
     PIRP PinIrp;
+    PFILE_OBJECT FileObject;
     IO_STATUS_BLOCK IoStatus;
     KEVENT Event;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
@@ -161,10 +202,24 @@ Pin_fnFlush(
 
     /* Sanity check */
     ASSERT(Context);
-    ASSERT(Context->FileObject != NULL);
+
+
+    /* acquire real pin file object */
+    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        /* Complete the irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 
     /* Get Pin's device object */
-    PinDeviceObject = IoGetRelatedDeviceObject(Context->FileObject);
+    PinDeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* release file object */
+    ObDereferenceObject(FileObject);
 
     /* Initialize notification event */
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -177,7 +232,7 @@ Pin_fnFlush(
         /* Get the next stack location */
         IoStack = IoGetNextIrpStackLocation(PinIrp);
         /* The file object must be present in the irp as it contains the KSOBJECT_HEADER */
-        IoStack->FileObject = Context->FileObject;
+        IoStack->FileObject = FileObject;
 
         /* call the driver */
         Status = IoCallDriver(PinDeviceObject, PinIrp);
@@ -206,7 +261,24 @@ Pin_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PDISPATCH_CONTEXT Context;
+    PIO_STACK_LOCATION IoStack;
+
     DPRINT("Pin_fnClose called DeviceObject %p Irp %p\n", DeviceObject);
+
+    /* Get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* The dispatch context is stored in the FsContext2 member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+
+    if (Context->Handle)
+    {
+        ZwClose(Context->Handle);
+    }
+    ZwClose(Context->hMixerPin);
+
+    ExFreePool(Context);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -294,15 +366,22 @@ Pin_fnFastWrite(
     PDEVICE_OBJECT DeviceObject)
 {
     PDISPATCH_CONTEXT Context;
+    PFILE_OBJECT RealFileObject;
     NTSTATUS Status;
 
     DPRINT("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
     Context = (PDISPATCH_CONTEXT)FileObject->FsContext2;
 
-    if (Context->hMixerPin && Context->MixerFileObject)
+    if (Context->hMixerPin)
     {
-        Status = KsStreamIo(Context->MixerFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+        Status = ObReferenceObjectByHandle(Context->hMixerPin, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&RealFileObject, NULL);
+        if (NT_SUCCESS(Status))
+        {
+            Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+            ObDereferenceObject(RealFileObject);
+        }
+
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Mixing stream failed with %lx\n", Status);
@@ -310,7 +389,14 @@ Pin_fnFastWrite(
         }
     }
 
-    Status = KsStreamIo(Context->FileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+    Status = ObReferenceObjectByHandle(Context->Handle, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&RealFileObject, NULL);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+
+    ObDereferenceObject(RealFileObject);
+
     if (Status == STATUS_SUCCESS)
         return TRUE;
     else

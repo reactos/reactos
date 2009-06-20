@@ -869,7 +869,7 @@ UINT MSI_FormatRecordW( MSIPACKAGE* package, MSIRECORD* record, LPWSTR buffer,
     DWORD len;
     UINT rc = ERROR_INVALID_PARAMETER;
 
-    TRACE("%p %p %p %i\n", package, record ,buffer, *size);
+    TRACE("%p %p %p %p\n", package, record, buffer, size);
 
     rec = msi_dup_record_field(record,0);
     if (!rec)

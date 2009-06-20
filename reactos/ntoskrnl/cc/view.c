@@ -79,7 +79,7 @@ void* _alloca(size_t size);
 #error Unknown compiler for alloca intrinsic stack allocation "function"
 #endif
 
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
 static void CcRosCacheSegmentIncRefCount_ ( PCACHE_SEGMENT cs, const char* file, int line )
 {
 	++cs->ReferenceCount;
@@ -117,7 +117,7 @@ CcRosTraceCacheMap (
 	PBCB Bcb,
 	BOOLEAN Trace )
 {
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
 	KIRQL oldirql;
 	PLIST_ENTRY current_entry;
 	PCACHE_SEGMENT current;
@@ -596,7 +596,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
   current->PageOut = FALSE;
   current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
   current->Bcb = Bcb;
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
   if ( Bcb->Trace )
   {
     DPRINT1("CacheMap 0x%p: new Cache Segment: 0x%p\n", Bcb, current );
@@ -628,7 +628,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
      {
 	CcRosCacheSegmentIncRefCount(current);
 	KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
 	if ( Bcb->Trace )
 	{
 		DPRINT1("CacheMap 0x%p: deleting newly created Cache Segment 0x%p ( found existing one 0x%p )\n",
@@ -881,7 +881,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
   KIRQL oldIrql;
 #endif
   DPRINT("Freeing cache segment 0x%p\n", CacheSeg);
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
 	if ( CacheSeg->Bcb->Trace )
 	{
 		DPRINT1("CacheMap 0x%p: deleting Cache Segment: 0x%p\n", CacheSeg->Bcb, CacheSeg );
@@ -1081,7 +1081,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 	 }
          InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
       }
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
       Bcb->Trace = FALSE;
 #endif
       KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);

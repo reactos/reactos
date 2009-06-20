@@ -9,30 +9,7 @@
 #include <math.h>
 #define NDEBUG
 #include <debug.h>
-
-typedef struct
-{
-    BOOL bHandle;                    // indicates if an audio pin can be instantated more than once
-    ULONG PinId;                     // specifies the pin id
-    HANDLE hPin;                     // handle to audio irp pin
-    HANDLE hMixer;                   // handle to mixer pin
-    PVOID DispatchContext;           // pointer to dispatch context
-}SYSAUDIO_PIN_HANDLE, *PSYSAUDIO_PIN_HANDLE;
-
-
-typedef struct
-{
-    ULONG DeviceId;                         //specifies the device id
-    ULONG ClientHandlesCount;               // number of client handles
-    PSYSAUDIO_PIN_HANDLE ClientHandles;     // array of client handles
-}SYSAUDIO_CLIENT_HANDELS, *PSYSAUDIO_CLIENT_HANDELS;
-
-typedef struct
-{
-    ULONG NumDevices;                       // number of devices in Devs array
-    PSYSAUDIO_CLIENT_HANDELS Devs;          // array of client handles
-
-}SYSAUDIO_CLIENT, *PSYSAUDIO_CLIENT;
+#include <stdio.h>
 
 typedef struct
 {
@@ -43,20 +20,27 @@ typedef struct
     KSPIN_COMMUNICATION Communication;      // pin type
 }PIN_INFO;
 
+typedef struct
+{
+    LIST_ENTRY Entry;                       // linked list entry to KSAUDIO_DEVICE_ENTRY
+
+    HANDLE Handle;                          // handle to audio sub device
+    PFILE_OBJECT FileObject;                // file objecto to audio sub device
+
+    ULONG NumberOfPins;                     // number of pins of audio device
+    PIN_INFO * Pins;                        // array of PIN_INFO
+
+    LPWSTR ObjectClass;                     // object class of sub device
+
+}KSAUDIO_SUBDEVICE_ENTRY, *PKSAUDIO_SUBDEVICE_ENTRY;
 
 typedef struct
 {
     LIST_ENTRY Entry;                                  // device entry for KsAudioDeviceList
-    HANDLE Handle;                                     // handle to audio device
-    PFILE_OBJECT FileObject;                           // file object for audio device
     UNICODE_STRING DeviceName;                         // symbolic link of audio device
-    ULONG NumberOfClients;                             // number of clients referenced audio device
 
-    ULONG NumberOfPins;                                // number of pins of audio device
-    PIN_INFO * Pins;                                   // array of PIN_INFO
-
-    ULONG NumWaveOutPin;                               // number of wave out pins
-    ULONG NumWaveInPin;                                // number of wave in pins
+    ULONG NumSubDevices;                               // number of subdevices
+    LIST_ENTRY SubDeviceList;                          // audio sub device list
 
 }KSAUDIO_DEVICE_ENTRY, *PKSAUDIO_DEVICE_ENTRY;
 
@@ -86,12 +70,10 @@ typedef struct
 typedef struct
 {
     HANDLE Handle;                                       // audio irp pin handle
-    PFILE_OBJECT FileObject;                             // audio irp pin file object
     ULONG PinId;                                         // pin id of device
-    PKSAUDIO_DEVICE_ENTRY AudioEntry;                    // pointer to audio device entry
+    PKSAUDIO_SUBDEVICE_ENTRY AudioEntry;                 // pointer to audio device entry
 
     HANDLE hMixerPin;                                    // handle to mixer pin
-    PFILE_OBJECT MixerFileObject;                        // mixer file object
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
 
 // struct PIN_WORKER_CONTEXT
@@ -104,10 +86,9 @@ typedef struct
     PIRP Irp;
     BOOL CreateRealPin;
     BOOL CreateMixerPin;
-    PKSAUDIO_DEVICE_ENTRY Entry;
+    PKSAUDIO_SUBDEVICE_ENTRY Entry;
     KSPIN_CONNECT * PinConnect;
     PDISPATCH_CONTEXT DispatchContext;
-    PSYSAUDIO_CLIENT AudioClient;
     PSYSAUDIODEVEXT DeviceExtension;
     PKSDATAFORMAT_WAVEFORMATEX MixerFormat;
     PIO_WORKITEM WorkItem;
@@ -148,7 +129,7 @@ OpenDevice(
     IN PHANDLE HandleOut,
     IN PFILE_OBJECT * FileObjectOut);
 
-PKSAUDIO_DEVICE_ENTRY
+PKSAUDIO_SUBDEVICE_ENTRY
 GetListEntry(
     IN PLIST_ENTRY Head,
     IN ULONG Index);

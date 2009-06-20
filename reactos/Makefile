@@ -328,8 +328,6 @@ objcopy = $(Q)$(PREFIX_)objcopy
 dlltool = $(Q)$(PREFIX_)dlltool
 strip = $(Q)$(PREFIX_)strip
 windres = $(Q)$(PREFIX_)windres
-cl = $(Q)cl -nologo
-link = $(Q)link -nologo
 
 # Set utilities
 ifeq ($(OSTYPE),msys)

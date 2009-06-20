@@ -68,7 +68,7 @@ SmpCallbackServer (PSM_PORT_MESSAGE Request,
 	ULONG             CallbackPortNameLength = SM_SB_NAME_MAX_LENGTH; /* TODO: compute length */
 	SB_CONNECT_DATA   SbConnectData;
 	ULONG             SbConnectDataLength = sizeof SbConnectData;
-    SECURITY_QUALITY_OF_SERVICE SecurityQos;
+	SECURITY_QUALITY_OF_SERVICE SecurityQos;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
@@ -118,7 +118,7 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 	HANDLE          ConnectedPort = * (PHANDLE) pConnectedPort;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
-    RtlZeroMemory(&Request, sizeof(SM_PORT_MESSAGE));
+	RtlZeroMemory(&Request, sizeof(SM_PORT_MESSAGE));
 
 	while (TRUE)
 	{
@@ -160,10 +160,13 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 			}
 		} else {
 			/* LPC failed */
+			DPRINT1("SM: %s: NtReplyWaitReceivePort() failed (Status=0x%08lx)\n",
+				__FUNCTION__, Status);
 			break;
 		}
 	}
 	NtClose (ConnectedPort);
+	DPRINT("SM: %s done\n", __FUNCTION__);
 	NtTerminateThread (NtCurrentThread(), Status);
 }
 
@@ -267,7 +270,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 				__FUNCTION__, Status);
 			return Status;
 		} else {
-			DPRINT("SM: %s: completing conn req\n", __FUNCTION__);
+			DPRINT("SM: %s: completing connection request\n", __FUNCTION__);
 			Status = NtCompleteConnectPort (*ClientDataApiPort);
 			if (!NT_SUCCESS(Status))
 			{
@@ -293,6 +296,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
  * 	necessary in NT LPC, because server side connected ports are
  * 	never used to receive requests.
  */
+#if 0
 VOID NTAPI
 SmpApiThread (HANDLE ListeningPort)
 {
@@ -323,7 +327,7 @@ SmpApiThread (HANDLE ListeningPort)
 	/* DIE */
 	NtTerminateThread(NtCurrentThread(), Status);
 }
-
+#endif
 
 /* LPC PORT INITIALIZATION **************************************************/
 
@@ -338,7 +342,7 @@ NTSTATUS
 SmCreateApiPort(VOID)
 {
   OBJECT_ATTRIBUTES  ObjectAttributes = {0};
-  UNICODE_STRING     UnicodeString = RTL_CONSTANT_STRING(L"\\SmApiPort");
+  UNICODE_STRING     UnicodeString = RTL_CONSTANT_STRING(SM_API_PORT_NAME);
   NTSTATUS           Status = STATUS_SUCCESS;
 
   InitializeObjectAttributes(&ObjectAttributes,

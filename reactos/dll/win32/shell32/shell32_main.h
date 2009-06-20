@@ -38,9 +38,10 @@
 #include "shlobj.h"
 #include "shellapi.h"
 #include "wine/windef16.h"
+*/
 #include "wine/unicode.h"
 
-*/
+
 /*******************************************
 *  global SHELL32.DLL variables
 */
@@ -91,6 +92,7 @@ IContextMenu2 *	ISvBgCm_Constructor(LPSHELLFOLDER pSFParent, BOOL bDesktop);
 LPSHELLVIEW	IShellView_Constructor(LPSHELLFOLDER);
 
 HRESULT WINAPI IFSFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
+HRESULT WINAPI IShellItem_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 HRESULT WINAPI IShellLink_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 HRESULT WINAPI IShellLink_ConstructFromFile(IUnknown * pUnkOuter, REFIID riid, LPCITEMIDLIST pidl, LPVOID * ppv);
 HRESULT WINAPI ISF_Desktop_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);

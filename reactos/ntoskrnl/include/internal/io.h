@@ -10,7 +10,7 @@
 //
 // Define this if you want debugging support
 //
-#define _IO_DEBUG_                                      0x01
+#define _IO_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported
@@ -43,7 +43,7 @@
     }
 #endif
 #else
-#define IOTRACE(x, ...) DPRINT(__VA_ARGS__);
+#define IOTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
 //
@@ -938,6 +938,10 @@ IopReinitializeBootDrivers(
 //
 // File Routines
 //
+VOID
+NTAPI
+IopDeleteDevice(IN PVOID ObjectBody);
+
 NTSTATUS
 NTAPI
 IopParseDevice(

@@ -5,8 +5,10 @@
 
 	<redefine name="WINVER">0x600</redefine>
 
-	<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
-	<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	</group>
 	<include base="icu4ros">icu/source/common</include>
 	<file>idna.cpp</file>
 	<file>nameprep.cpp</file>

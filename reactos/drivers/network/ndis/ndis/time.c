@@ -243,5 +243,23 @@ NdisSetTimer(
   KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
 }
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisSetTimerEx(
+    IN PNDIS_TIMER  Timer,
+    IN UINT  MillisecondsToDelay,
+    IN PVOID  FunctionContext)
+{
+    NDIS_DbgPrint(MAX_TRACE, ("Called. Timer is: 0x%x, Timeout is: %ld, FunctionContext is: 0x%x\n", 
+                               Timer, MillisecondsToDelay, FunctionContext));
+
+    Timer->Dpc.DeferredContext = FunctionContext;
+
+    NdisSetTimer(Timer, MillisecondsToDelay);
+}
+
 /* EOF */
 

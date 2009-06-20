@@ -70,6 +70,29 @@ static INT ipicture_pixel_width(IPicture *pic)
     return x;
 }
 
+GpStatus WINGDIPAPI GdipBitmapApplyEffect(GpBitmap* bitmap, CGpEffect* effect,
+    RECT* roi, BOOL useAuxData, VOID** auxData, INT* auxDataSize)
+{
+    FIXME("(%p %p %p %d %p %p): stub\n", bitmap, effect, roi, useAuxData, auxData, auxDataSize);
+    /*
+     * Note: According to Jose Roca's GDI+ docs, this function is not
+     * implemented in Windows's GDI+.
+     */
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipBitmapCreateApplyEffect(GpBitmap** inputBitmaps,
+    INT numInputs, CGpEffect* effect, RECT* roi, RECT* outputRect,
+    GpBitmap** outputBitmap, BOOL useAuxData, VOID** auxData, INT* auxDataSize)
+{
+    FIXME("(%p %d %p %p %p %p %d %p %p): stub\n", inputBitmaps, numInputs, effect, roi, outputRect, outputBitmap, useAuxData, auxData, auxDataSize);
+    /*
+     * Note: According to Jose Roca's GDI+ docs, this function is not
+     * implemented in Windows's GDI+.
+     */
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipBitmapGetPixel(GpBitmap* bitmap, INT x, INT y,
     ARGB *color)
 {
@@ -271,10 +294,18 @@ GpStatus WINGDIPAPI GdipBitmapUnlockBits(GpBitmap* bitmap,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipCloneBitmapArea(REAL x, REAL y, REAL width, REAL height,
+    PixelFormat format, GpBitmap* srcBitmap, GpBitmap** dstBitmap)
+{
+    FIXME("(%f,%f,%f,%f,%i,%p,%p): stub\n", x, y, width, height, format, srcBitmap, dstBitmap);
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipCloneBitmapAreaI(INT x, INT y, INT width, INT height,
     PixelFormat format, GpBitmap* srcBitmap, GpBitmap** dstBitmap)
 {
-    FIXME("(%i,%i,%i,%i,%i,%p,%p)\n", x, y, width, height, format, srcBitmap, dstBitmap);
+    FIXME("(%i,%i,%i,%i,%i,%p,%p): stub\n", x, y, width, height, format, srcBitmap, dstBitmap);
 
     return NotImplemented;
 }
@@ -655,6 +686,13 @@ GpStatus WINGDIPAPI GdipCreateCachedBitmap(GpBitmap *bitmap, GpGraphics *graphic
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipCreateHICONFromBitmap(GpBitmap *bitmap, HICON *hicon)
+{
+    FIXME("(%p, %p)\n", bitmap, hicon);
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipDeleteCachedBitmap(GpCachedBitmap *cachedbmp)
 {
     TRACE("%p\n", cachedbmp);
@@ -677,6 +715,13 @@ GpStatus WINGDIPAPI GdipDrawCachedBitmap(GpGraphics *graphics,
         return InvalidParameter;
 
     return GdipDrawImage(graphics, cachedbmp->image, (REAL)x, (REAL)y);
+}
+
+GpStatus WINGDIPAPI GdipEmfToWmfBits(HENHMETAFILE hemf, UINT cbData16,
+    LPBYTE pData16, INT iMapMode, INT eFlags)
+{
+    FIXME("(%p, %d, %p, %d, %d): stub\n", hemf, cbData16, pData16, iMapMode, eFlags);
+    return NotImplemented;
 }
 
 GpStatus WINGDIPAPI GdipDisposeImage(GpImage *image)
@@ -1584,6 +1629,14 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromHBITMAP(HBITMAP hbm, HPALETTE hpal, GpBi
         format, bits, bitmap);
 
     return retval;
+}
+
+GpStatus WINGDIPAPI GdipDeleteEffect(CGpEffect *effect)
+{
+    FIXME("(%p): stub\n", effect);
+    /* note: According to Jose Roca's GDI+ Docs, this is not implemented
+     * in Windows's gdiplus */
+    return NotImplemented;
 }
 
 /*****************************************************************************

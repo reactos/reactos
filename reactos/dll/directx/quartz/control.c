@@ -278,6 +278,8 @@ static HRESULT ForwardCmdSeek( PCRITICAL_SECTION crit_sect, IBaseFilter* from, S
             IPin_Release( pin );
         }
     }
+    IEnumPins_Release( enumpins );
+
     if (foundend && allnotimpl)
         hr = E_NOTIMPL;
     else

@@ -162,7 +162,7 @@ KsTopologyPropertyHandler(
             break;
 
         case KSPROPERTY_TOPOLOGY_CONNECTIONS:
-            Size = sizeof(KSMULTIPLE_ITEM) + Topology->TopologyConnectionsCount  * sizeof(GUID);
+            Size = sizeof(KSMULTIPLE_ITEM) + Topology->TopologyConnectionsCount  * sizeof(KSTOPOLOGY_CONNECTION);
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
@@ -174,7 +174,7 @@ KsTopologyPropertyHandler(
             Item->Size = Size;
             Item->Count = Topology->TopologyConnectionsCount;
 
-            RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyConnections, Topology->TopologyConnectionsCount * sizeof(GUID));
+            RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyConnections, Topology->TopologyConnectionsCount * sizeof(KSTOPOLOGY_CONNECTION));
             Irp->IoStatus.Information = Size;
             Status = STATUS_SUCCESS;
             break;

@@ -506,24 +506,29 @@ DesktopShellView::DesktopShellView(HWND hwnd, IShellView* pShellView)
 	InitDragDrop();
 }
 
+
+DesktopShellView::~DesktopShellView()
+{
+	if (FAILED(RevokeDragDrop(_hwnd)))
+		assert(0);
+}
+
+
 bool DesktopShellView::InitDragDrop()
 {
 	CONTEXT("DesktopShellView::InitDragDrop()");
 
-	_pDropTarget = new DesktopDropTarget(_hwnd);
+	DesktopDropTarget * pDropTarget = new DesktopDropTarget(_hwnd);
 
-	if (!_pDropTarget)
+	if (!pDropTarget)
 		return false;
 
-	_pDropTarget->AddRef();
+	pDropTarget->AddRef();
 
-	if (FAILED(RegisterDragDrop(_hwnd, _pDropTarget))) {
-		_pDropTarget->Release();
-		_pDropTarget = NULL;
+	if (FAILED(RegisterDragDrop(_hwnd, pDropTarget))) {
+		pDropTarget->Release();
 		return false;
 	}
-	else
-		_pDropTarget->Release();
 
 	FORMATETC ftetc;
 
@@ -532,7 +537,8 @@ bool DesktopShellView::InitDragDrop()
 	ftetc.tymed = TYMED_HGLOBAL;
 	ftetc.cfFormat = CF_HDROP;
 
-	_pDropTarget->AddSuportedFormat(ftetc);
+	pDropTarget->AddSuportedFormat(ftetc);
+	pDropTarget->Release();
 
 	return true;
 }

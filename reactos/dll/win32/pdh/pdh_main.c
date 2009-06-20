@@ -1098,6 +1098,8 @@ PDH_STATUS WINAPI PdhMakeCounterPathA( PDH_COUNTER_PATH_ELEMENTS_A *e, LPSTR buf
             }
             heap_free( bufferW );
         }
+        else
+            ret = PDH_MEMORY_ALLOCATION_FAILURE;
     }
 
 done:

@@ -1265,8 +1265,8 @@ IntFillArc( PDC dc,
 {
   PDC_ATTR pdcattr;
   PBRUSH pbrush;
-  int Start = ceill(StartArc);
-  int End   = ceill(EndArc);
+  int Start = ceil(StartArc);
+  int End   = ceil(EndArc);
   BOOL Chord = (arctype == GdiTypeChord), ret;
 
   pdcattr = dc->pdcattr;
@@ -1300,8 +1300,8 @@ IntDrawArc( PDC dc,
             ARCTYPE arctype,
             PBRUSH pbrush)
 {
-  int Start = ceill(StartArc);
-  int End   = ceill(EndArc);
+  int Start = ceil(StartArc);
+  int End   = ceil(EndArc);
   BOOL Chord = (arctype == GdiTypeChord);
   // Sort out alignment here.
   return app_draw_arc(dc, rect( XLeft, YLeft, Width, Height),

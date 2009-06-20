@@ -86,7 +86,6 @@ void ME_DumpDocument(ME_TextBuffer *buffer);
 const char *ME_GetDITypeName(ME_DIType type);
 
 /* string.c */
-ME_String *ME_MakeString(LPCWSTR szText);
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars);
 ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars);
 ME_String *ME_StrDup(const ME_String *s);
@@ -172,9 +171,6 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
 void ME_InsertEndRowFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
-void ME_MustBeWrapped(ME_Context *c, ME_DisplayItem *para);
-void ME_GetCursorCoordinates(ME_TextEditor *editor, ME_Cursor *pCursor,
-                             int *x, int *y, int *height);
 int ME_GetCursorOfs(ME_TextEditor *editor, int nCursor);
 void ME_GetSelection(ME_TextEditor *editor, int *from, int *to);
 int ME_CountParagraphsBetween(ME_TextEditor *editor, int from, int to);

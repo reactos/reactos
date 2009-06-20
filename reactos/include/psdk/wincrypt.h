@@ -21,12 +21,17 @@
 #ifndef __WINE_WINCRYPT_H
 #define __WINE_WINCRYPT_H
 
+#include <bcrypt.h>
+/* FIXME: #include <ncrypt.h> */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <bcrypt.h>
-/* FIXME: #include <ncrypt.h> */
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#endif
 
 #ifdef _ADVAPI32_
 # define WINADVAPI
@@ -87,7 +92,7 @@ typedef struct _HMAC_INFO {
   BYTE*  pbOuterString;
   DWORD  cbOuterString;
 } HMAC_INFO, *PHMAC_INFO;
-		
+
 typedef struct _CRYPTOAPI_BLOB {
   DWORD    cbData;
   BYTE*    pbData;
@@ -1951,7 +1956,7 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 #define CRYPT_MODE_OFB          3
 #define CRYPT_MODE_CFB          4
 
-#define CRYPT_ENCRYPT           0x0001 
+#define CRYPT_ENCRYPT           0x0001
 #define CRYPT_DECRYPT           0x0002
 #define CRYPT_EXPORT            0x0004
 #define CRYPT_READ              0x0008
@@ -2106,10 +2111,10 @@ static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s'
 #define CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH \
  L"Software\\Policies\\Microsoft\\SystemCertificates"
 #else
-static const WCHAR CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH[] = 
+static const WCHAR CERT_LOCAL_MACHINE_SYSTEM_STORE_REGPATH[] =
  {'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
   'S','y','s','t','e','m','C','e','r','t','i','f','i','c','a','t','e','s',0 };
-static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] = 
+static const WCHAR CERT_GROUP_POLICY_SYSTEM_STORE_REGPATH[] =
  {'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
   'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m','C','e','r',
   't','i','f','i','c','a','t','e','s',0 };
@@ -2366,7 +2371,7 @@ static const WCHAR CRYPT_OID_REG_FLAGS_VALUE_NAME[] =
 # define CERT_PHYSICAL_STORE_AUTH_ROOT_NAME \
  L".AuthRoot"
 #else
-static const WCHAR CERT_PHYSICAL_STORE_DEFAULT_NAME[] = 
+static const WCHAR CERT_PHYSICAL_STORE_DEFAULT_NAME[] =
  {'.','D','e','f','a','u','l','t','0'};
 static const WCHAR CERT_PHYSICAL_STORE_GROUP_POLICY_NAME[] =
  {'.','G','r','o','u','p','P','o','l','i','c','y',0};
@@ -4445,6 +4450,10 @@ BOOL WINAPI CryptRetrieveObjectByUrlW(LPCWSTR pszURL, LPCSTR pszObjectOid,
  HCRYPTASYNC hAsyncRetrieve, PCRYPT_CREDENTIALS pCredentials, LPVOID pvVerify,
  PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
 #define CryptRetrieveObjectByUrl WINELIB_NAME_AW(CryptRetrieveObjectByUrl)
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #ifdef __cplusplus
 }

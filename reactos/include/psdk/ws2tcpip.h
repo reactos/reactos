@@ -14,6 +14,7 @@
 #endif
 
 #include <winsock2.h>
+#include <ws2ipdef.h>
 #ifdef  __cplusplus
 extern "C" {
 #endif

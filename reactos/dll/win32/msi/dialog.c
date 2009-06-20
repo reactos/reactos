@@ -135,6 +135,8 @@ static const WCHAR szMaskedEdit[] = { 'M','a','s','k','e','d','E','d','i','t',0 
 static const WCHAR szPathEdit[] = { 'P','a','t','h','E','d','i','t',0 };
 static const WCHAR szProgressBar[] = {
      'P','r','o','g','r','e','s','s','B','a','r',0 };
+static const WCHAR szSetProgress[] = {
+    'S','e','t','P','r','o','g','r','e','s','s',0 };
 static const WCHAR szRadioButtonGroup[] = { 
     'R','a','d','i','o','B','u','t','t','o','n','G','r','o','u','p',0 };
 static const WCHAR szIcon[] = { 'I','c','o','n',0 };
@@ -1571,7 +1573,14 @@ end:
 
 static UINT msi_dialog_progress_bar( msi_dialog *dialog, MSIRECORD *rec )
 {
-    msi_dialog_add_control( dialog, rec, PROGRESS_CLASSW, WS_VISIBLE );
+    msi_control *control;
+
+    control = msi_dialog_add_control( dialog, rec, PROGRESS_CLASSW, WS_VISIBLE );
+    if( !control )
+        return ERROR_FUNCTION_FAILED;
+
+    ControlEvent_SubscribeToEvent( dialog->package, dialog,
+                                   szSetProgress, control->name, szProgress );
     return ERROR_SUCCESS;
 }
 

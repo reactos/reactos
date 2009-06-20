@@ -11,20 +11,44 @@
 #include "i8042prt.h"
 
 /* FUNCTIONS *****************************************************************/
+static IO_COMPLETION_ROUTINE ForwardIrpAndWaitCompletion;
+
+static NTSTATUS NTAPI
+ForwardIrpAndWaitCompletion(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	IN PVOID Context)
+{
+	UNREFERENCED_PARAMETER(DeviceObject);
+	if (Irp->PendingReturned)
+		KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
+	return STATUS_MORE_PROCESSING_REQUIRED;
+}
 
 NTSTATUS NTAPI
 ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
+	KEVENT Event;
+	NTSTATUS Status;
 	PDEVICE_OBJECT LowerDevice = ((PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-
 	ASSERT(LowerDevice);
 
-	if (!IoForwardIrpSynchronously(LowerDevice, Irp))
-		return STATUS_UNSUCCESSFUL;
+	KeInitializeEvent(&Event, NotificationEvent, FALSE);
+	IoCopyCurrentIrpStackLocationToNext(Irp);
 
-	return Irp->IoStatus.Status;
+	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
+
+	Status = IoCallDriver(LowerDevice, Irp);
+	if (Status == STATUS_PENDING)
+	{
+		Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+		if (NT_SUCCESS(Status))
+			Status = Irp->IoStatus.Status;
+	}
+
+	return Status;
 }
 
 NTSTATUS NTAPI

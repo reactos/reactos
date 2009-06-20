@@ -451,6 +451,10 @@ typedef struct _NDIS_PM_PACKET_PATTERN {
   ULONG  PatternFlags;
 } NDIS_PM_PACKET_PATTERN,  *PNDIS_PM_PACKET_PATTERN;
 
+typedef struct _NDIS_PACKET_STACK {
+  ULONG_PTR IMReserved[2];
+  ULONG_PTR NdisReserved[4];
+} NDIS_PACKET_STACK, *PNDIS_PACKET_STACK;
 
 /* Request types used by NdisRequest */
 typedef enum _NDIS_REQUEST_TYPE {
@@ -635,6 +639,19 @@ typedef VOID DDKAPI
 (*ADAPTER_SHUTDOWN_HANDLER)(
   IN PVOID  ShutdownContext);
 
+typedef NTSTATUS DDKAPI
+(*TDI_REGISTER_CALLBACK)(
+    IN  PUNICODE_STRING         DeviceName,
+    OUT HANDLE*                 TdiHandle);
+
+typedef NTSTATUS DDKAPI
+(*TDI_PNP_HANDLER)(
+    IN  PUNICODE_STRING         UpperComponent,
+    IN  PUNICODE_STRING         LowerComponent,
+    IN  PUNICODE_STRING         BindList,
+    IN  PVOID                   ReconfigBuffer,
+    IN  UINT                    ReconfigBufferSize,
+    IN  UINT                    Operation);
 
 typedef struct _OID_LIST    OID_LIST, *POID_LIST;
 
@@ -964,6 +981,15 @@ typedef struct _NDIS_ENCAPSULATION_FORMAT {
   } Flags;
   ULONG  EncapsulationHeaderSize;
 } NDIS_ENCAPSULATION_FORMAT, *PNDIS_ENCAPSULATION_FORMAT;
+
+typedef struct _NDIS_TASK_OFFLOAD_HEADER
+{
+    ULONG       Version;
+    ULONG       Size;
+    ULONG       Reserved;
+    ULONG       OffsetFirstTask;
+    NDIS_ENCAPSULATION_FORMAT  EncapsulationFormat;
+} NDIS_TASK_OFFLOAD_HEADER, *PNDIS_TASK_OFFLOAD_HEADER;
 
 typedef struct _NDIS_TASK_TCP_IP_CHECKSUM {
   struct {
@@ -2399,7 +2425,11 @@ NdisUpdateSharedMemory(
 #define NdisZeroMemory(Destination, Length) \
   RtlZeroMemory(Destination, Length)
 
-
+typedef VOID DDKAPI
+(*NDIS_BLOCK_INITIALIZER) (
+    IN  PUCHAR  Block,
+    IN  SIZE_T  NumberOfBytes
+    );
 
 /* Configuration routines */
 

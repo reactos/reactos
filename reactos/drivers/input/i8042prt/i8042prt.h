@@ -147,6 +147,8 @@ typedef struct _I8042_KEYBOARD_EXTENSION
 	INTERNAL_I8042_HOOK_KEYBOARD KeyboardHook; /* FIXME: IsrWritePort ignored */
 	KDPC DpcKeyboard;
 
+	KEYBOARD_ATTRIBUTES KeyboardAttributes;
+
 	KEYBOARD_INDICATOR_PARAMETERS KeyboardIndicators;
 
 	KEYBOARD_SCAN_STATE KeyboardScanState;

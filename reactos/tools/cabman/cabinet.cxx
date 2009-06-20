@@ -64,7 +64,7 @@ static bool _ReadFileData(FILEHANDLE handle, void* buffer, ULONG size, PULONG by
 #ifndef CAB_READ_ONLY
 
 #if 0
-#ifdef DBG
+#if DBG
 
 void DumpBuffer(void* Buffer, ULONG Size)
 {

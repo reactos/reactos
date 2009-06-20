@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="taskmgr" type="win32gui" installbase="system32" installname="taskmgr.exe" unicode="yes">
 	<include base="taskmgr">.</include>
-	<library>ntsys</library>
+	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>

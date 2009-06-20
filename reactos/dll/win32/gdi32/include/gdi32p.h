@@ -16,6 +16,8 @@ extern HANDLE CurrentProcessId;
 extern DWORD GDI_BatchLimit;
 extern PDEVCAPS GdiDevCaps;
 extern BOOL gbLpk;          // Global bool LanguagePack
+extern HANDLE ghSpooler;
+extern RTL_CRITICAL_SECTION semLocal;
 
 typedef INT
 (CALLBACK* EMFPLAYPROC)(
@@ -30,6 +32,8 @@ typedef INT
 
 #define METAFILE_MEMORY 1
 #define METAFILE_DISK   2
+
+#define SAPCALLBACKDELAY 244
 
 /* MACRO ********************************************************************/
 
@@ -100,7 +104,8 @@ typedef struct _UMPDEV
   DWORD           dwDriverCount;   // After init should be 2
   DWORD           WOW64_UMPDev;
   DWORD           WOW64_hMod;
-  WCHAR           String[188];
+  DWORD           Unknown;
+  PVOID           apfn[INDEX_LAST]; // Print Driver pfn
 } UMPDEV, *PUMPDEV;
 
 #define LOCALFONT_COUNT 10
@@ -108,6 +113,40 @@ typedef struct _LOCALFONT
 {
   FONT_ATTR  lfa[LOCALFONT_COUNT];
 } LOCALFONT, *PLOCALFONT;
+
+// sdk/winspool.h
+typedef BOOL WINAPI (*ABORTPRINTER) (HANDLE);
+typedef BOOL WINAPI (*CLOSEPRINTER) (HANDLE);
+typedef BOOL WINAPI (*CLOSESPOOLFILEHANDLE) (HANDLE, HANDLE); // W2k8
+typedef HANDLE WINAPI (*COMMITSPOOLDATA) (HANDLE,HANDLE,DWORD); // W2k8
+typedef LONG WINAPI (*DOCUMENTPROPERTIESW) (HWND,HANDLE,LPWSTR,PDEVMODEW,PDEVMODEW,DWORD);
+typedef BOOL WINAPI (*ENDDOCPRINTER) (HANDLE);
+typedef BOOL WINAPI (*ENDPAGEPRINTER) (HANDLE);
+typedef BOOL WINAPI (*GETPRINTERW) (HANDLE,DWORD,LPBYTE,DWORD,LPDWORD);
+typedef BOOL WINAPI (*GETPRINTERDRIVERW) (HANDLE,LPWSTR,DWORD,LPBYTE,DWORD,LPDWORD);
+typedef HANDLE WINAPI (*GETSPOOLFILEHANDLE) (HANDLE); // W2k8
+typedef BOOL WINAPI (*ISVALIDDEVMODEW) (PDEVMODEW,size_t);
+typedef BOOL WINAPI (*OPENPRINTERW) (LPWSTR,PHANDLE,LPPRINTER_DEFAULTSW);
+typedef BOOL WINAPI (*READPRINTER) (HANDLE,PVOID,DWORD,PDWORD);
+typedef BOOL WINAPI (*RESETPRINTERW) (HANDLE,LPPRINTER_DEFAULTSW);
+typedef LPWSTR WINAPI (*STARTDOCDLGW) (HANDLE,DOCINFOW *);
+typedef DWORD WINAPI (*STARTDOCPRINTERW) (HANDLE,DWORD,PBYTE);
+typedef BOOL WINAPI (*STARTPAGEPRINTER) (HANDLE);
+// ddk/winsplp.h
+typedef BOOL WINAPI (*SEEKPRINTER) (HANDLE,LARGE_INTEGER,PLARGE_INTEGER,DWORD,BOOL);
+typedef BOOL WINAPI (*SPLREADPRINTER) (HANDLE,LPBYTE *,DWORD);
+// Same as ddk/winsplp.h DriverUnloadComplete?
+typedef BOOL WINAPI (*SPLDRIVERUNLOADCOMPLETE) (LPWSTR); 
+// Driver support:
+// DrvDocumentEvent api/winddiui.h not W2k8 DocumentEventAW
+typedef INT WINAPI (*DOCUMENTEVENT) (HANDLE,HDC,INT,ULONG,PVOID,ULONG,PVOID);
+// DrvQueryColorProfile
+typedef BOOL WINAPI (*QUERYCOLORPROFILE) (HANDLE,PDEVMODEW,ULONG,VOID*,ULONG,FLONG);
+// Unknown:
+typedef DWORD WINAPI (*QUERYSPOOLMODE) (HANDLE,DWORD,DWORD);
+typedef DWORD WINAPI (*QUERYREMOTEFONTS) (DWORD,DWORD,DWORD);
+
+extern CLOSEPRINTER fpClosePrinter;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -159,6 +198,7 @@ GdiGetHandleUserData(
 );
 
 PLDC
+FASTCALL
 GdiGetLDC(HDC hDC);
 
 HGDIOBJ
@@ -237,5 +277,11 @@ UINT FASTCALL DIB_BitmapBitsSize( PBITMAPINFO );
 int
 WINAPI
 GdiGetBitmapBitsSize(BITMAPINFO *lpbmi);
+
+VOID GdiSAPCallback(PLDC pldc);
+
+int FASTCALL DocumentEventEx(PVOID,HANDLE,HDC,int,ULONG,PVOID,ULONG,PVOID);
+BOOL FASTCALL EndPagePrinterEx(PVOID,HANDLE);
+BOOL FASTCALL LoadTheSpoolerDrv(VOID);
 
 /* EOF */

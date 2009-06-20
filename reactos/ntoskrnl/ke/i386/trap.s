@@ -200,7 +200,7 @@ NotWin32K:
     /* Increase total syscall count */
     inc dword ptr PCR[KPCR_SYSTEM_CALLS]
 
-#ifdef DBG
+#if DBG
     /* Increase per-syscall count */
     mov ecx, [edi+SERVICE_DESCRIPTOR_COUNT]
     jecxz NoCountTable
@@ -239,7 +239,7 @@ CopyParams:
     call ebx
 
 AfterSysCall:
-#ifdef DBG
+#if DBG
     /* Make sure the user-mode call didn't return at elevated IRQL */
     test byte ptr [ebp+KTRAP_FRAME_CS], MODE_MASK
     jz SkipCheck
@@ -377,7 +377,7 @@ BadStack:
     push 0
     jmp _KiTrap6
 
-#ifdef DBG
+#if DBG
 InvalidIrql:
     /* Save current IRQL */
     push PCR[KPCR_IRQL]

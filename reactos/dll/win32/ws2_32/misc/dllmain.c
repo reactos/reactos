@@ -14,7 +14,7 @@
 #include <handle.h>
 #include <upcall.h>
 
-#ifdef DBG
+#if DBG
 
 /* See debug.h for debug/trace constants */
 //DWORD DebugTraceLevel = MIN_TRACE;
@@ -657,7 +657,7 @@ WSAAccept(IN     SOCKET s,
 
     if ( addr )
     {
-#ifdef DBG
+#if DBG
         LPSOCKADDR_IN sa = (LPSOCKADDR_IN)addr;
         WS_DbgPrint(MAX_TRACE,("Returned address: %d %s:%d (len %d)\n",
                                sa->sin_family,

@@ -1964,10 +1964,9 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
     }
     if (TRACE_ON(setupapi))
     {
-        TRACE( "%p/%p/%d/%d index %d returning",
+        TRACE( "%p/%p/%d/%d index %d returning:\n",
                context->Inf, context->CurrentInf, context->Section, context->Line, index );
-        for (i = index; i < line->nb_fields; i++) TRACE( " %02x", buffer[i - index] );
-        TRACE( "\n" );
+        for (i = index; i < line->nb_fields; i++) TRACE( " %02x\n", buffer[i - index] );
     }
     return TRUE;
 }

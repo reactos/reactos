@@ -24,14 +24,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    const IInternetProtocolVtbl  *lpInternetProtocolVtbl;
+    const IInternetProtocolVtbl  *lpIInternetProtocolVtbl;
     const IInternetPriorityVtbl  *lpInternetPriorityVtbl;
     const IWinInetHttpInfoVtbl   *lpWinInetHttpInfoVtbl;
 
     LONG ref;
 } FtpProtocol;
 
-#define PROTOCOL(x)      ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
 #define PRIORITY(x)      ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
 #define INETHTTPINFO(x)  ((IWinInetHttpInfo*)   &(x)->lpWinInetHttpInfoVtbl)
 
@@ -80,7 +79,7 @@ static const ProtocolVtbl AsyncProtocolVtbl = {
     FtpProtocol_close_connection
 };
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(FtpProtocol, InternetProtocol, iface)
+#define PROTOCOL_THIS(iface) DEFINE_THIS(FtpProtocol, IInternetProtocol, iface)
 
 static HRESULT WINAPI FtpProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
@@ -360,9 +359,9 @@ HRESULT FtpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret = heap_alloc_zero(sizeof(FtpProtocol));
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->lpInternetProtocolVtbl = &FtpProtocolVtbl;
-    ret->lpInternetPriorityVtbl = &FtpPriorityVtbl;
-    ret->lpWinInetHttpInfoVtbl  = &WinInetHttpInfoVtbl;
+    ret->lpIInternetProtocolVtbl = &FtpProtocolVtbl;
+    ret->lpInternetPriorityVtbl  = &FtpPriorityVtbl;
+    ret->lpWinInetHttpInfoVtbl   = &WinInetHttpInfoVtbl;
     ret->ref = 1;
 
     *ppobj = PROTOCOL(ret);

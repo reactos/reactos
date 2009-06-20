@@ -8,10 +8,18 @@
 
 #include <crtdefs.h>
 
+#define __need___va_list
+#include <stdarg.h>
+
 #pragma pack(push,_CRT_PACKING)
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
 #endif
 
 #ifndef WCHAR_MIN
@@ -800,6 +808,11 @@ __CRT_INLINE errno_t _wctime_s(wchar_t *_Buffer, size_t _SizeInWords,const time_
     }
     return (_S);
   }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

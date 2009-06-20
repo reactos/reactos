@@ -237,6 +237,14 @@ typedef DWORD FLONG;
 
 #define NTAPI __stdcall
 #include <basetsd.h>
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4201)
+#pragma warning(disable:4214)
+#pragma warning(disable:4820)
+#endif
+
 #define ACE_OBJECT_TYPE_PRESENT           0x00000001
 #define ACE_INHERITED_OBJECT_TYPE_PRESENT 0x00000002
 #define APPLICATION_ERROR_MASK       0x20000000
@@ -1281,7 +1289,11 @@ typedef enum {
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
 /* Also in winddk.h */
+#ifndef __GNUC__
 #define FIELD_OFFSET(t,f) ((LONG_PTR)&(((t*)0)->f))
+#else
+#define FIELD_OFFSET(t,f) __builtin_offsetof(t,f)
+#endif
 #ifndef CONTAINING_RECORD
 #define CONTAINING_RECORD(address, type, field) \
   ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
@@ -3079,13 +3091,39 @@ typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
     DWORD Sacl;
     DWORD Dacl;
 } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
+
 typedef enum _TOKEN_INFORMATION_CLASS {
-	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
-	TokenPrimaryGroup,TokenDefaultDacl,TokenSource,TokenType,
-	TokenImpersonationLevel,TokenStatistics,TokenRestrictedSids,
-	TokenSessionId,TokenGroupsAndPrivileges,TokenSessionReference,
-	TokenSandBoxInert,TokenAuditPolicy,TokenOrigin,
+  TokenUser = 1,
+  TokenGroups,
+  TokenPrivileges,
+  TokenOwner,
+  TokenPrimaryGroup,
+  TokenDefaultDacl,
+  TokenSource,
+  TokenType,
+  TokenImpersonationLevel,
+  TokenStatistics,
+  TokenRestrictedSids,
+  TokenSessionId,
+  TokenGroupsAndPrivileges,
+  TokenSessionReference,
+  TokenSandBoxInert,
+  TokenAuditPolicy,
+  TokenOrigin,
+  TokenElevationType,
+  TokenLinkedToken,
+  TokenElevation,
+  TokenHasRestrictions,
+  TokenAccessInformation,
+  TokenVirtualizationAllowed,
+  TokenVirtualizationEnabled,
+  TokenIntegrityLevel,
+  TokenUIAccess,
+  TokenMandatoryPolicy,
+  TokenLogonSid,
+  MaxTokenInfoClass
 } TOKEN_INFORMATION_CLASS;
+
 #endif
 typedef enum _SID_NAME_USE {
 	SidTypeUser=1,SidTypeGroup,SidTypeDomain,SidTypeAlias,
@@ -4583,7 +4621,7 @@ typedef OSVERSIONINFOA OSVERSIONINFO,*POSVERSIONINFO,*LPOSVERSIONINFO;
 typedef OSVERSIONINFOEXA OSVERSIONINFOEX,*POSVERSIONINFOEX,*LPOSVERSIONINFOEX;
 #endif
 
-#if (WIN32_WINNT >= 0x0500)
+#if (_WIN32_WINNT >= 0x0500)
 ULONGLONG WINAPI VerSetConditionMask(ULONGLONG,DWORD,BYTE);
 #endif
 
@@ -4692,19 +4730,24 @@ RtlCompareMemory (
 
 FORCEINLINE
 PVOID
-RtlSecureZeroMemory(IN PVOID ptr,
-                    IN SIZE_T cnt)
+RtlSecureZeroMemory(IN PVOID Buffer,
+                    IN SIZE_T Length)
 {
-    volatile char *vptr = (volatile char *)ptr;
+    volatile char *VolatilePointer;
 
-    while (cnt)
+    /* Get a volatile pointer to prevent any compiler optimizations */
+    VolatilePointer = (volatile char *)Buffer;
+
+    /* Loop the whole buffer */
+    while (Length)
     {
-        *vptr = 0;
-        vptr++;
-        cnt--;
+        /* Zero the current byte and move on */
+        *VolatilePointer++ = 0;
+        Length--;
     }
 
-    return ptr;
+    /* Return the pointer to ensure the compiler won't optimize this away */
+    return Buffer;
 }
 
 typedef struct _OBJECT_TYPE_LIST {
@@ -4975,6 +5018,10 @@ MemoryBarrier(VOID)
 
 #define InterlockedExchangeAddSizeT(a, b) InterlockedExchangeAdd((LONG *)a, b)
 
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #endif /* RC_INVOKED */

@@ -1561,7 +1561,7 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 {
    PUSER_MESSAGE_QUEUE MessageQueue;
 
-   MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePoolWithTag(PagedPool,
+   MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePoolWithTag(NonPagedPool,
                   sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO),
                   TAG_MSGQ);
 

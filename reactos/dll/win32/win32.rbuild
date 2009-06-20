@@ -328,6 +328,9 @@
 <directory name="ntdsapi">
 	<xi:include href="ntdsapi/ntdsapi.rbuild" />
 </directory>
+<directory name="ntlanman">
+	<xi:include href="ntlanman/ntlanman.rbuild" />
+</directory>
 <directory name="ntmarta">
 	<xi:include href="ntmarta/ntmarta.rbuild" />
 </directory>

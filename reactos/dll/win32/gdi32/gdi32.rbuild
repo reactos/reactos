@@ -41,6 +41,7 @@
 		<file>linedda.c</file>
 		<file>metafile.c</file>
 		<file>painting.c</file>
+		<file>printdrv.c</file>
 		<file>palette.c</file>
 		<file>pen.c</file>
 		<file>region.c</file>
@@ -50,5 +51,5 @@
 	</directory>
 	<file>gdi32.rc</file>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-	<compilerflag>-fno-unit-at-a-time</compilerflag>
+	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

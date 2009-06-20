@@ -35,23 +35,6 @@ GetCharacterPlacementA(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-int
-WINAPI
-StartDocA(
-	HDC		hdc,
-	CONST DOCINFOA	*lpdi
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 /*
  * @unimplemented
  */

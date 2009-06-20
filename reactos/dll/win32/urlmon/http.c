@@ -32,7 +32,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 typedef struct {
     Protocol base;
 
-    const IInternetProtocolVtbl *lpInternetProtocolVtbl;
+    const IInternetProtocolVtbl *lpIInternetProtocolVtbl;
     const IInternetPriorityVtbl *lpInternetPriorityVtbl;
     const IWinInetHttpInfoVtbl  *lpWinInetHttpInfoVtbl;
 
@@ -43,7 +43,6 @@ typedef struct {
     LONG ref;
 } HttpProtocol;
 
-#define PROTOCOL(x)      ((IInternetProtocol*)  &(x)->lpInternetProtocolVtbl)
 #define PRIORITY(x)      ((IInternetPriority*)  &(x)->lpInternetPriorityVtbl)
 #define INETHTTPINFO(x)  ((IWinInetHttpInfo*)   &(x)->lpWinInetHttpInfoVtbl)
 
@@ -86,7 +85,7 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
     BYTE security_id[512];
     DWORD len = 0;
     ULONG num = 0;
-    BOOL res;
+    BOOL res, b;
     HRESULT hres;
 
     static const WCHAR wszBindVerb[BINDVERB_CUSTOM][5] =
@@ -210,6 +209,11 @@ static HRESULT HttpProtocol_open_request(Protocol *prot, LPCWSTR url, DWORD requ
             optional = (LPWSTR)This->base.bind_info.stgmedData.u.hGlobal;
     }
 
+    b = TRUE;
+    res = InternetSetOptionW(This->base.request, INTERNET_OPTION_HTTP_DECODING, &b, sizeof(b));
+    if(!res)
+        WARN("InternetSetOption(INTERNET_OPTION_HTTP_DECODING) failed: %08x\n", GetLastError());
+
     res = HttpSendRequestW(This->base.request, This->full_header, lstrlenW(This->full_header),
             optional, optional ? This->base.bind_info.cbstgmedData : 0);
     if(!res && GetLastError() != ERROR_IO_PENDING) {
@@ -309,7 +313,7 @@ static const ProtocolVtbl AsyncProtocolVtbl = {
     HttpProtocol_close_connection
 };
 
-#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, InternetProtocol, iface)
+#define PROTOCOL_THIS(iface) DEFINE_THIS(HttpProtocol, IInternetProtocol, iface)
 
 static HRESULT WINAPI HttpProtocol_QueryInterface(IInternetProtocol *iface, REFIID riid, void **ppv)
 {
@@ -590,9 +594,9 @@ static HRESULT create_http_protocol(BOOL https, void **ppobj)
         return E_OUTOFMEMORY;
 
     ret->base.vtbl = &AsyncProtocolVtbl;
-    ret->lpInternetProtocolVtbl = &HttpProtocolVtbl;
-    ret->lpInternetPriorityVtbl = &HttpPriorityVtbl;
-    ret->lpWinInetHttpInfoVtbl  = &WinInetHttpInfoVtbl;
+    ret->lpIInternetProtocolVtbl = &HttpProtocolVtbl;
+    ret->lpInternetPriorityVtbl  = &HttpPriorityVtbl;
+    ret->lpWinInetHttpInfoVtbl   = &WinInetHttpInfoVtbl;
 
     ret->https = https;
     ret->ref = 1;

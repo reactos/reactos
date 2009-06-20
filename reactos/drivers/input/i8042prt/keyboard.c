@@ -39,6 +39,7 @@ i8042DebugWorkItem(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PVOID Key)
 {
+	UNREFERENCED_PARAMETER(DeviceObject);
 	INFO_(I8042PRT, "Debug key: p\n", Key);
 
 	if (!Key)
@@ -213,6 +214,8 @@ i8042PowerWorkItem(
 
 	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)Context;
 
+	UNREFERENCED_PARAMETER(DeviceObject);
+
 	/* See http://blogs.msdn.com/doronh/archive/2006/09/08/746961.aspx */
 
 	/* Register GUID_DEVICE_SYS_BUTTON interface and report capability */
@@ -339,6 +342,10 @@ i8042KbdDpcRoutine(
 	ULONG KeysTransferred = 0;
 	ULONG KeysInBufferCopy;
 	KIRQL Irql;
+
+	UNREFERENCED_PARAMETER(Dpc);
+	UNREFERENCED_PARAMETER(SystemArgument1);
+	UNREFERENCED_PARAMETER(SystemArgument2);
 
 	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
@@ -633,6 +640,38 @@ cleanup:
 			Status = STATUS_SUCCESS;
 			break;
 		}
+		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
+		{
+			DPRINT1("IOCTL_KEYBOARD_QUERY_ATTRIBUTES not implemented\n");
+#if 0
+            /* FIXME: KeyboardAttributes are not initialized anywhere */
+			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
+			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KEYBOARD_ATTRIBUTES))
+			{
+				Status = STATUS_BUFFER_TOO_SMALL;
+				break;
+			}
+
+			*(PKEYBOARD_ATTRIBUTES) Irp->AssociatedIrp.SystemBuffer = DeviceExtension->KeyboardAttributes;
+			Irp->IoStatus.Information = sizeof(KEYBOARD_ATTRIBUTES);
+			Status = STATUS_SUCCESS;
+			break;
+#endif
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
+		{
+			DPRINT1("IOCTL_KEYBOARD_QUERY_TYPEMATIC not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_KEYBOARD_SET_TYPEMATIC:
+		{
+			DPRINT1("IOCTL_KEYBOARD_SET_TYPEMATIC not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
 		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
 		{
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION\n");
@@ -755,9 +794,11 @@ i8042KbdInterruptService(
 	PPORT_DEVICE_EXTENSION PortDeviceExtension;
 	PKEYBOARD_INPUT_DATA InputData;
 	ULONG Counter;
-	UCHAR PortStatus, Output;
+	UCHAR PortStatus = 0, Output = 0;
 	BOOLEAN ToReturn = FALSE;
 	NTSTATUS Status;
+
+	UNREFERENCED_PARAMETER(Interrupt);
 
 	DeviceExtension = (PI8042_KEYBOARD_EXTENSION)Context;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;

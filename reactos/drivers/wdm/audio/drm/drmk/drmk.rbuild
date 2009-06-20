@@ -4,8 +4,10 @@
 	<include base="drmk">.</include>
 	<include base="drmk">..</include>
 	<include base="drmk">../include</include>
-	<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
-	<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	</group>
 	<importlibrary definition="drmk.spec" />
 	<library>ntoskrnl</library>
 	<define name="BUILDING_DRMK" />

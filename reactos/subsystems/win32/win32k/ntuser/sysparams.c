@@ -192,6 +192,7 @@ IntSystemParametersInfo(
    static BOOL KeyboardPref = FALSE;
    static BOOL ShowSounds = FALSE;
    static ACCESSTIMEOUT AccessTimeout = {sizeof(ACCESSTIMEOUT), 0, 0};
+   static DWORD CaretWidth = 1;
    static SERIALKEYS SerialKeys = {sizeof(SERIALKEYS), 0, 0, 0, 0, 0, 0};
 
    if (!bInitialized)
@@ -700,6 +701,22 @@ IntSystemParametersInfo(
             *((BOOL*)pvParam) = IntIsFontRenderingEnabled();
             break;
          }
+      case SPI_SETFONTSMOOTHINGTYPE:
+         {
+            if (*((UINT*)pvParam) == FE_FONTSMOOTHINGCLEARTYPE)
+            {
+                DPRINT1("ReactOS does not support ClearType smoothing but it is returned TRUE\n");
+            }
+            bChanged = TRUE;
+            break;
+         }
+      case SPI_GETFONTSMOOTHINGTYPE:
+         {
+            /* We do not support ClearType. Only standard smoothing */
+            DPRINT1("ReactOS does not support ClearType smoothing. Returned FE_FONTSMOOTHINGSTANDARD\n");
+            *((UINT*)pvParam) = FE_FONTSMOOTHINGSTANDARD;
+            break;
+         }
       case SPI_GETICONTITLELOGFONT:
          {
             ASSERT(pvParam);
@@ -853,6 +870,19 @@ IntSystemParametersInfo(
       case SPI_SETACCESSTIMEOUT:
          {
             AccessTimeout = *((ACCESSTIMEOUT*)pvParam);
+            bChanged = TRUE;
+            break;
+         }
+
+      case SPI_GETCARETWIDTH:
+         {
+            *((DWORD*)pvParam) = CaretWidth;
+            break;
+         }
+
+      case SPI_SETCARETWIDTH:
+         {
+            CaretWidth = *((DWORD*)pvParam);
             bChanged = TRUE;
             break;
          }

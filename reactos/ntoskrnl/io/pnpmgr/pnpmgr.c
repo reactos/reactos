@@ -2852,7 +2852,7 @@ PnpInit(VOID)
 	ExInitializeFastMutex(&IopBusTypeGuidListLock);
 	
     /* Initialize the Bus Type GUID List */
-    IopBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
+    IopBusTypeGuidList = ExAllocatePool(NonPagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
     if (!IopBusTypeGuidList) {
 	DPRINT1("ExAllocatePool() failed\n");
 	KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, STATUS_NO_MEMORY, 0, 0, 0);

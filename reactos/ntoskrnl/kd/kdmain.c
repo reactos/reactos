@@ -49,7 +49,7 @@ KdpServiceDispatcher(ULONG Service,
             Result = KdpPrintString(Buffer1, Buffer1Length);
             break;
 
-#ifdef DBG
+#if DBG
         case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
         {
             switch ((ULONG_PTR)Buffer1)
@@ -137,6 +137,7 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             KdpServiceDispatcher(BREAKPOINT_PRINT,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
                                  ExceptionRecord->ExceptionInformation[2]);
+            Context->Eax = STATUS_SUCCESS;
         }
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {

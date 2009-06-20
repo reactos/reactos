@@ -30,8 +30,24 @@
 
 #ifndef RC_INVOKED
 
-#ifndef __GNUC__
-#error Unsupported compiler
+#define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+
+#ifndef _SIZE_T_DEFINED
+#define _SIZE_T_DEFINED
+#ifdef _WIN64
+  typedef unsigned __int64 size_t;
+#else
+  typedef unsigned int size_t;
+#endif
+#endif
+
+#ifndef _UINTPTR_T_DEFINED
+#define _UINTPTR_T_DEFINED
+#ifdef _WIN64
+  typedef unsigned __int64 uintptr_t;
+#else
+  typedef unsigned int uintptr_t;
+#endif
 #endif
 
 /*

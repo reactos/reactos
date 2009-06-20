@@ -41,7 +41,7 @@ extern "C" {
 #undef DebugPrint
 #endif
 
-#ifdef DBG
+#if DBG
 #define DebugPrint(x) ChangerClassDebugPrint x
 #else
 #define DebugPrint(x)

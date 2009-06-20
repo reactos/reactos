@@ -6,7 +6,7 @@
 	<include base="riched20">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<linkerflag>-enable-stdcall-fixup</linkerflag>
+	<linkerflag linkerset="ld">-enable-stdcall-fixup</linkerflag>
 	<file>caret.c</file>
 	<file>clipboard.c</file>
 	<file>context.c</file>

@@ -278,7 +278,7 @@ KeSetPriorityAndQuantumProcess(IN PKPROCESS Process,
     if (Process->BasePriority == Priority) return Process->BasePriority;
 
     /* If the caller gave priority 0, normalize to 1 */
-    if (!LOW_PRIORITY) Priority = LOW_PRIORITY + 1;
+    if (!Priority) Priority = LOW_PRIORITY + 1;
 
     /* Lock the process */
     KiAcquireProcessLock(Process, &ProcessLock);

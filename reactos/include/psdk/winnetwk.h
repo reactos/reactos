@@ -4,6 +4,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4820)
+#endif
 #define WNNC_NET_MSNET      0x00010000
 #define WNNC_NET_LANMAN     0x00020000
 #define WNNC_NET_NETWARE    0x00030000
@@ -340,6 +344,9 @@ typedef REMOTE_NAME_INFOA REMOTE_NAME_INFO,*LPREMOTE_NAME_INFO;
 #define WNetGetLastError WNetGetLastErrorA
 #define MultinetGetConnectionPerformance MultinetGetConnectionPerformanceA
 #endif
+#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 #ifdef __cplusplus
 }

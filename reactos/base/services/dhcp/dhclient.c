@@ -1961,11 +1961,9 @@ check_option(struct client_lease *l, int option)
 	case DHO_HOST_NAME:
 	case DHO_DOMAIN_NAME:
 	case DHO_NIS_DOMAIN:
-		if (!res_hnok(sbuf)) {
+		if (!res_hnok(sbuf))
 			warning("Bogus Host Name option %d: %s (%s)", option,
 			    sbuf, opbuf);
-			return (0);
-		}
 		return (1);
 	case DHO_PAD:
 	case DHO_TIME_OFFSET:

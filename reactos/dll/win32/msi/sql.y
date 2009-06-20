@@ -32,6 +32,7 @@
 #include "query.h"
 #include "wine/list.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 #define YYLEX_PARAM info
 #define YYPARSE_PARAM info
@@ -54,7 +55,7 @@ static UINT SQL_getstring( void *info, const struct sql_str *strdata, LPWSTR *st
 static INT SQL_getint( void *info );
 static int sql_lex( void *SQL_lval, SQL_input *info );
 
-static LPWSTR parser_add_table( LPWSTR list, LPWSTR table );
+static LPWSTR parser_add_table( void *info, LPCWSTR list, LPCWSTR table );
 static void *parser_alloc( void *info, unsigned int sz );
 static column_info *parser_alloc_column( void *info, LPCWSTR table, LPCWSTR column );
 
@@ -492,7 +493,6 @@ fromtable:
             UINT r;
 
             r = JOIN_CreateView( sql->db, &$$, $2 );
-            msi_free( $2 );
             if( r != ERROR_SUCCESS )
                 YYABORT;
         }
@@ -501,12 +501,12 @@ fromtable:
 tablelist:
     table
         {
-            $$ = strdupW($1);
+            $$ = $1;
         }
   |
     table TK_COMMA tablelist
         {
-            $$ = parser_add_table($3, $1);
+            $$ = parser_add_table( info, $3, $1 );
             if (!$$)
                 YYABORT;
         }
@@ -696,17 +696,20 @@ number:
 
 %%
 
-static LPWSTR parser_add_table(LPWSTR list, LPWSTR table)
+static LPWSTR parser_add_table( void *info, LPCWSTR list, LPCWSTR table )
 {
-    DWORD size = lstrlenW(list) + lstrlenW(table) + 2;
     static const WCHAR space[] = {' ',0};
+    DWORD len = strlenW( list ) + strlenW( table ) + 2;
+    LPWSTR ret;
 
-    list = msi_realloc(list, size * sizeof(WCHAR));
-    if (!list) return NULL;
-
-    lstrcatW(list, space);
-    lstrcatW(list, table);
-    return list;
+    ret = parser_alloc( info, len * sizeof(WCHAR) );
+    if( ret )
+    {
+        strcpyW( ret, list );
+        strcatW( ret, space );
+        strcatW( ret, table );
+    }
+    return ret;
 }
 
 static void *parser_alloc( void *info, unsigned int sz )

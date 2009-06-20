@@ -988,14 +988,15 @@ MiniportInitialize(
                            Adapter);
       NdisMSetPeriodicTimer(&Adapter->MediaDetectionTimer,
                             MEDIA_DETECTION_INTERVAL);
+      NdisMRegisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle,
+                                          Adapter,
+                                          MiniportShutdown);
     }
 
 #if DBG
   if(!MiTestCard(Adapter))
     ASSERT(0);
 #endif
-
-  NdisMRegisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle, Adapter, MiniportShutdown);
 
   DPRINT("returning 0x%x\n", Status);
   *OpenErrorStatus = Status;

@@ -334,8 +334,8 @@ static HRESULT WINAPI BITS_IBackgroundCopyJob_SetPriority(
     IBackgroundCopyJob2 *iface,
     BG_JOB_PRIORITY Val)
 {
-    FIXME("Not implemented\n");
-    return E_NOTIMPL;
+    FIXME("(%p,0x%08x) stub\n", iface, Val);
+    return S_OK;
 }
 
 static HRESULT WINAPI BITS_IBackgroundCopyJob_GetPriority(

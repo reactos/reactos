@@ -640,6 +640,9 @@ extern "C" {
 /* Flags for StringTableAddString and StringTableLookUpString */
 #define ST_CASE_SENSITIVE_COMPARE	0x00000001
 
+/* SetupUninstallOEMInf Flags values */
+#define SUOI_FORCEDELETE 0x00000001
+
 #ifndef RC_INVOKED
 typedef PVOID HINF;
 typedef PVOID HDSKSPC;

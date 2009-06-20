@@ -249,8 +249,18 @@ typedef KSIDENTIFIER KSDEGRADE, *PKSDEGRADE;
 typedef KSIDENTIFIER KSPIN_INTERFACE, *PKSPIN_INTERFACE;
 typedef KSIDENTIFIER KSPIN_MEDIUM, *PKSPIN_MEDIUM;
 
-typedef union
-{
+#if !defined( _MSC_VER ) 
+typedef struct {
+    ULONG   FormatSize;
+    ULONG   Flags;
+    ULONG   SampleSize;
+    ULONG   Reserved;
+    GUID    MajorFormat;
+    GUID    SubFormat;
+    GUID    Specifier;
+} KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
+#else
+typedef union {
     struct {
         ULONG   FormatSize;
         ULONG   Flags;
@@ -262,9 +272,13 @@ typedef union
     };
     LONGLONG    Alignment;
 } KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
+#endif
 
 typedef struct
 {
+    ULONG Size;
+    ULONG Flags;
+    GUID Attribute;
 } KSATTRIBUTE, *PKSATTRIBUTE;
 
 
@@ -1171,20 +1185,37 @@ enum VARENUM {
 
 typedef struct
 {
-} KS_FRAMING_ITEM, *PKS_FRAMING_ITEM;
-
-typedef struct
-{
+    ULONG   MinFrameSize;
+    ULONG   MaxFrameSize;
+    ULONG   Stepping;
 } KS_FRAMING_RANGE, *PKS_FRAMING_RANGE;
 
 typedef struct
 {
-    /* Obsolete */
+    KS_FRAMING_RANGE  Range;
+    ULONG             InPlaceWeight;
+    ULONG             NotInPlaceWeight;
 } KS_FRAMING_RANGE_WEIGHTED, *PKS_FRAMING_RANGE_WEIGHTED;
 
-/* ??? */
 typedef struct
 {
+    GUID                        MemoryType;
+    GUID                        BusType;
+    ULONG                       MemoryFlags;
+    ULONG                       BusFlags;   
+    ULONG                       Flags;   
+    ULONG                       Frames;
+    ULONG                       FileAlignment;
+    ULONG                       MemoryTypeWeight;
+    KS_FRAMING_RANGE            PhysicalRange;
+    KS_FRAMING_RANGE_WEIGHTED   FramingRange; 
+} KS_FRAMING_ITEM, *PKS_FRAMING_ITEM;
+
+typedef struct
+{
+    ULONG   RatioNumerator;
+    ULONG   RatioDenominator; 
+    ULONG   RatioConstantMargin;
 } KS_COMPRESSION, *PKS_COMPRESSION;
 
 
@@ -1236,11 +1267,47 @@ typedef struct
 #define KSPROPERTY_ITEM_IRP_STORAGE(Irp)    (*(const KSPROPERTY_ITEM**)&(Irp)->Tail.Overlay.DriverContext[3])
 #define KSPROPERTY_ATTRIBUTES_IRP_STORAGE(Irp) (*(PKSATTRIBUTE_LIST*)&(Irp)->Tail.Overlay.DriverContext[2])
 
-#endif
+typedef 
+VOID 
+(*PFNREFERENCEDEVICEOBJECT)( 
+    IN PVOID Context
+    );
+    
+typedef 
+VOID 
+(*PFNDEREFERENCEDEVICEOBJECT)( 
+    IN PVOID Context
+    );
+    
+typedef
+NTSTATUS
+(*PFNQUERYREFERENCESTRING)( 
+    IN PVOID Context,
+    IN OUT PWCHAR *String
+    );
 
 typedef struct
 {
+    INTERFACE                   Interface;
+    PFNREFERENCEDEVICEOBJECT    ReferenceDeviceObject;
+    PFNDEREFERENCEDEVICEOBJECT  DereferenceDeviceObject;
+    PFNQUERYREFERENCESTRING     QueryReferenceString;
 } BUS_INTERFACE_REFERENCE, *PBUS_INTERFACE_REFERENCE;
+
+typedef struct
+{
+    KDPC            Dpc;
+    ULONG           ReferenceCount;
+    KSPIN_LOCK      AccessLock;
+} KSDPC_ITEM, *PKSDPC_ITEM;
+
+typedef struct
+{
+    KSDPC_ITEM          DpcItem;
+    LIST_ENTRY          BufferList;
+} KSBUFFER_ITEM, *PKSBUFFER_ITEM;
+
+#endif
 
 typedef struct
 {
@@ -1252,10 +1319,6 @@ typedef struct
     ULONG   Revision;
 } KSCOMPONENTID, *PKSCOMPONENTID;
 
-typedef struct
-{
-} KSBUFFER_ITEM, *PKSBUFFER_ITEM;
-
 /* ===============================================================
     Properties
 */
@@ -1265,40 +1328,85 @@ typedef struct
 #define KSPROPERTY_MEMBER_VALUES        0x00000003
 #define KSPROPERTY_MEMBER_FLAG_DEFAULT  KSPROPERTY_MEMBER_RANGES
 
+typedef enum {
+    KS_SEEKING_NoPositioning,
+    KS_SEEKING_AbsolutePositioning,
+    KS_SEEKING_RelativePositioning,
+    KS_SEEKING_IncrementalPositioning,
+    KS_SEEKING_PositioningBitsMask = 0x3,
+    KS_SEEKING_SeekToKeyFrame,
+    KS_SEEKING_ReturnTime = 0x8
+} KS_SEEKING_FLAGS;
+
 typedef struct
 {
+    LONGLONG            Current;
+    LONGLONG            Stop;
+    KS_SEEKING_FLAGS    CurrentFlags;
+    KS_SEEKING_FLAGS    StopFlags;
 } KSPROPERTY_POSITIONS, *PKSPROPERTY_POSITIONS;
 
 typedef struct
 {
-} KSPROPERTY_SERIAL, *PKSPROPERTY_SERIAL;
-
-typedef struct
-{
+    GUID            PropertySet;
+    ULONG           Count;
 } KSPROPERTY_SERIALHDR, *PKSPROPERTY_SERIALHDR;
 
 typedef struct
 {
-#if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
-    struct _SIGNED {
-#else
+    KSIDENTIFIER    PropTypeSet;
+    ULONG           Id;
+    ULONG           PropertyLength;
+} KSPROPERTY_SERIAL, *PKSPROPERTY_SERIAL;
+
+
+typedef union
+{
     struct {
-#endif    
         LONG    SignedMinimum;
         LONG    SignedMaximum;
-    };
+    
 #if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
-    struct _UNSIGNED {
+     }_SIGNED;
 #else
-    struct {
-#endif    
+     };
+#endif
+
+	struct {
         ULONG   UnsignedMinimum;
         ULONG   UnsignedMaximum;
-    };
+#if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
+     }_UNSIGNED;
+#else
+     };
+#endif
+
 } KSPROPERTY_BOUNDS_LONG, *PKSPROPERTY_BOUNDS_LONG;
 
-typedef struct
+typedef union
 {
+    struct {
+        LONGLONG    SignedMinimum;
+        LONGLONG    SignedMaximum;
+#if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
+     }_SIGNED64;
+#else
+     };
+#endif
+
+    struct {
+#if defined(_NTDDK_)
+        ULONGLONG   UnsignedMinimum;
+        ULONGLONG   UnsignedMaximum;
+#else
+        DWORDLONG   UnsignedMinimum;
+        DWORDLONG   UnsignedMaximum;
+#endif
+#if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
+     }_UNSIGNED64;
+#else
+     };
+#endif
 } KSPROPERTY_BOUNDS_LONGLONG, *PKSPROPERTY_BOUNDS_LONGLONG;
 
 typedef struct
@@ -1312,6 +1420,8 @@ typedef struct
 
 typedef struct
 {
+    LONGLONG    Earliest;
+    LONGLONG    Latest;
 } KSPROPERTY_MEDIAAVAILABLE, *PKSPROPERTY_MEDIAAVAILABLE;
 
 
@@ -1406,10 +1516,13 @@ typedef struct
 
 typedef struct
 {
+#if defined(_NTDDK_)
+    ULONGLONG                   SteppingDelta;
+#else
+    DWORDLONG                   SteppingDelta;
+#endif
+    KSPROPERTY_BOUNDS_LONGLONG  Bounds;
 } KSPROPERTY_STEPPING_LONGLONG, *PKSPROPERTY_STEPPING_LONGLONG;
-
-
-
 
 /* ===============================================================
     Allocator Framing
@@ -1434,6 +1547,11 @@ typedef struct
 
 typedef struct
 {
+    ULONG               CountItems;         // count of FramingItem-s below.
+    ULONG               PinFlags;
+    KS_COMPRESSION      OutputCompression;
+    ULONG               PinWeight;          // this pin framing's Weight graph-wide
+    KS_FRAMING_ITEM     FramingItem[1]; 
 } KSALLOCATOR_FRAMING_EX, *PKSALLOCATOR_FRAMING_EX;
 
 
@@ -1443,6 +1561,9 @@ typedef struct
 
 typedef struct
 {
+    PVOID       Context;
+    ULONG       Proportion;
+    LONGLONG    DeltaTime;
 } KSQUALITY, *PKSQUALITY;
 
 typedef struct
@@ -1453,10 +1574,17 @@ typedef struct
 
 typedef struct
 {
+    LONGLONG        PresentationStart;
+    LONGLONG        Duration;
+    KSPIN_INTERFACE Interface;
+    LONG            Rate;
+    ULONG           Flags;
 } KSRATE, *PKSRATE;
 
 typedef struct
 {
+    KSPROPERTY      Property;
+    KSRATE          Rate;
 } KSRATE_CAPABILITY, *PKSRATE_CAPABILITY;
 
 typedef struct
@@ -1467,6 +1595,62 @@ typedef struct
 
 typedef struct
 {
+    ULONG       NotificationType;
+    union {
+        struct {
+            HANDLE              Event;
+            ULONG_PTR           Reserved[2];
+        } EventHandle;
+        struct {
+            HANDLE              Semaphore;
+            ULONG               Reserved;
+            LONG                Adjustment;
+        } SemaphoreHandle;
+#if defined(_NTDDK_)
+        struct {
+            PVOID               Event;
+            KPRIORITY           Increment;
+            ULONG_PTR           Reserved;
+        } EventObject;
+        struct {
+            PVOID               Semaphore;
+            KPRIORITY           Increment;
+            LONG                Adjustment;
+        } SemaphoreObject;
+        struct {
+            PKDPC               Dpc;
+            ULONG               ReferenceCount;
+            ULONG_PTR           Reserved;
+        } Dpc;
+        struct {
+            PWORK_QUEUE_ITEM    WorkQueueItem;
+            WORK_QUEUE_TYPE     WorkQueueType;
+            ULONG_PTR           Reserved;
+        } WorkItem;
+        struct {
+            PWORK_QUEUE_ITEM    WorkQueueItem;
+            PKSWORKER           KsWorkerObject;
+            ULONG_PTR           Reserved;
+        } KsWorkItem;
+#endif
+        struct {
+            PVOID               Unused;
+            LONG_PTR            Alignment[2];
+        } Alignment;
+    };
+} KSEVENTDATA, *PKSEVENTDATA;
+
+typedef struct
+{
+    ULONG Size;
+    ULONG Flags;
+    union {
+        HANDLE ObjectHandle;
+        PVOID ObjectPointer;
+    };
+    PVOID Reserved;
+    KSEVENT Event;
+    KSEVENTDATA EventData;
 } KSRELATIVEEVENT, *PKSRELATIVEEVENT;
 
 
@@ -1483,6 +1667,8 @@ typedef struct
 
 typedef struct
 {
+    LONGLONG    Time;
+    LONGLONG    SystemTime;
 } KSCORRELATED_TIME, *PKSCORRELATED_TIME;
 
 typedef struct
@@ -1495,10 +1681,15 @@ typedef struct
 
 typedef struct
 {
+    LONGLONG        TimeBase;
+    LONGLONG        Interval;
 } KSINTERVAL, *PKSINTERVAL;
 
 typedef struct
 {
+    LONGLONG    Duration;
+    ULONG       FrameFlags;
+    ULONG       Reserved;
 } KSFRAMETIME, *PKSFRAMETIME;
 
 
@@ -1506,23 +1697,39 @@ typedef struct
     Clocks
 */
 
-typedef struct
-{
-} KSCLOCK, *PKSCLOCK, *PKSDEFAULTCLOCK; /* OK ? */
+typedef PVOID   PKSDEFAULTCLOCK;
 
 typedef struct
 {
+    ULONG       CreateFlags;
 } KSCLOCK_CREATE, *PKSCLOCK_CREATE;
 
+#if defined(_NTDDK_)
+
+typedef
+LONGLONG
+(FASTCALL *PFNKSCLOCK_GETTIME)(
+    IN PFILE_OBJECT FileObject
+    );
+typedef
+LONGLONG
+(FASTCALL *PFNKSCLOCK_CORRELATEDTIME)(
+    IN PFILE_OBJECT FileObject,
+    OUT PLONGLONG SystemTime);
+
 typedef struct
 {
+    PFNKSCLOCK_GETTIME GetTime;
+    PFNKSCLOCK_GETTIME GetPhysicalTime;
+    PFNKSCLOCK_CORRELATEDTIME GetCorrelatedTime;
+    PFNKSCLOCK_CORRELATEDTIME GetCorrelatedPhysicalTime;
 } KSCLOCK_FUNCTIONTABLE, *PKSCLOCK_FUNCTIONTABLE;
 
 
 /* ===============================================================
     Objects ??? SORT ME!
 */
-#if defined(_NTDDK_)
+
 typedef struct
 {
     PDRIVER_DISPATCH       Create;
@@ -1551,34 +1758,55 @@ typedef struct
 
 typedef struct
 {
+    KSEVENT         Event;
+    PKSEVENTDATA    EventData;
+    PVOID           Reserved;
 } KSQUERYBUFFER, *PKSQUERYBUFFER;
 
 typedef struct
 {
+    PVOID       Context;
+    ULONG       Status;
 } KSERROR, *PKSERROR;
-
-typedef struct
-{
-} KSDPC_ITEM, *PKSDPC_ITEM;
-
 
 /* ===============================================================
     Methods
 */
+#if defined(_NTDDK_)
 
 typedef struct
 {
-} KSMETHOD_SET, *PKSMETHOD_SET;
-
-typedef struct
-{
+    ULONG                   MethodId;
+    union {
+        PFNKSHANDLER            MethodHandler;
+        BOOLEAN                 MethodSupported;
+    };
+    ULONG                   MinMethod;
+    ULONG                   MinData;
+    PFNKSHANDLER            SupportHandler;
+    ULONG                   Flags;
 } KSMETHOD_ITEM, *PKSMETHOD_ITEM;
 
+
 typedef struct
 {
+    ULONG                   MethodId;
+    union {
+        PFNKSFASTHANDLER        MethodHandler;
+        BOOLEAN                 MethodSupported;
+    };
 } KSFASTMETHOD_ITEM, *PKSFASTMETHOD_ITEM;
 
+typedef struct
+{
+    const GUID*             Set;
+    ULONG                   MethodsCount;
+    const KSMETHOD_ITEM*    MethodItem;
+    ULONG                   FastIoCount;
+    const KSFASTMETHOD_ITEM*FastIoTable;
+} KSMETHOD_SET, *PKSMETHOD_SET;
 
+#endif
 /* ===============================================================
     Nodes
 */
@@ -1599,51 +1827,222 @@ typedef struct
 
 typedef struct
 {
+    KSEVENT         Event;
+    ULONG           NodeId;
+    ULONG           Reserved;
 } KSE_NODE, *PKSE_NODE;
 
-typedef struct
-{
+typedef struct {
+    ULONG       CreateFlags;
+    ULONG       Node;
 } KSNODE_CREATE, *PKSNODE_CREATE;
 
 
 /* ===============================================================
     Events
 */
+typedef struct _KSEVENT_ENTRY KSEVENT_ENTRY, *PKSEVENT_ENTRY;
 
+#if defined(_NTDDK_)
 typedef struct
 {
+    KSEVENTDATA     EventData;
+    LONGLONG        MarkTime;
 } KSEVENT_TIME_MARK, *PKSEVENT_TIME_MARK;
 
 typedef struct
 {
+    KSEVENTDATA     EventData;
+    LONGLONG        TimeBase;
+    LONGLONG        Interval;
 } KSEVENT_TIME_INTERVAL, *PKSEVENT_TIME_INTERVAL;
 
-typedef struct
-{
-} KSEVENT_SET, *PKSEVENT_SET;
+typedef NTSTATUS (*PFNKSADDEVENT)(
+    IN  PIRP Irp,
+    IN  PKSEVENTDATA EventData,
+    IN  struct _KSEVENT_ENTRY* EventEntry);
+
+typedef
+VOID
+(*PFNKSREMOVEEVENT)(
+    IN PFILE_OBJECT FileObject,
+    IN struct _KSEVENT_ENTRY* EventEntry
+    );
 
 typedef struct
 {
+    ULONG               EventId;
+    ULONG               DataInput;
+    ULONG               ExtraEntryData;
+    PFNKSADDEVENT       AddHandler;
+    PFNKSREMOVEEVENT    RemoveHandler;
+    PFNKSHANDLER        SupportHandler;
 } KSEVENT_ITEM, *PKSEVENT_ITEM;
 
-typedef struct _KSEVENT_ENTRY
-{
-} KSEVENT_ENTRY, *PKSEVENT_ENTRY;
-
 typedef struct
 {
-} KSEVENTDATA, *PKSEVENTDATA;
+    const GUID*         Set;
+    ULONG               EventsCount;
+    const KSEVENT_ITEM* EventItem;
+} KSEVENT_SET, *PKSEVENT_SET;
 
+struct _KSEVENT_ENTRY
+{
+    LIST_ENTRY      ListEntry;
+    PVOID           Object;
+    union {
+        PKSDPC_ITEM         DpcItem;
+        PKSBUFFER_ITEM      BufferItem;
+    };
+    PKSEVENTDATA        EventData;
+    ULONG               NotificationType;
+    const KSEVENT_SET*  EventSet;
+    const KSEVENT_ITEM* EventItem;
+    PFILE_OBJECT        FileObject;
+    ULONG               SemaphoreAdjustment;
+    ULONG               Reserved;
+    ULONG               Flags;
+};
 
+#endif
 /* ===============================================================
     Pins
 */
 
+#if defined(_NTDDK_)
+
+typedef struct _KSPIN  KSPIN, *PKSPIN;
+typedef struct _KSSTREAM_POINTER KSSTREAM_POINTER, *PKSSTREAM_POINTER;
+typedef struct _KSSTREAM_POINTER_OFFSET KSSTREAM_POINTER_OFFSET, *PKSSTREAM_POINTER_OFFSET;
+typedef struct _KSMAPPING KSMAPPING, *PKSMAPPING;
+typedef struct _KSPROCESSPIN KSPROCESSPIN, *PKSPROCESSPIN;
+
+typedef
+NTSTATUS
+(*PFNKSPINIRP)(
+    IN PKSPIN Pin,
+    IN PIRP Irp
+    );
+
+typedef
+NTSTATUS
+(*PFNKSPIN)(
+    IN PKSPIN Pin
+    );
+
+typedef
+void
+(*PFNKSPINVOID)(
+    IN PKSPIN Pin
+    );
+
+typedef
+void
+(*PFNKSSTREAMPOINTER)(
+    IN PKSSTREAM_POINTER StreamPointer
+    );
+
+typedef struct {
+    ULONG Count;
+    PKSATTRIBUTE* Attributes;
+} KSATTRIBUTE_LIST, *PKSATTRIBUTE_LIST;
+
+typedef
+NTSTATUS
+(*PFNKSPINSETDATAFORMAT)(
+    IN PKSPIN Pin,
+    IN PKSDATAFORMAT OldFormat OPTIONAL,
+    IN PKSMULTIPLE_ITEM OldAttributeList OPTIONAL,
+    IN const KSDATARANGE* DataRange,
+    IN const KSATTRIBUTE_LIST* AttributeRange OPTIONAL
+    );
+
+typedef
+NTSTATUS
+(*PFNKSPINSETDEVICESTATE)(
+    IN PKSPIN Pin,
+    IN KSSTATE ToState,
+    IN KSSTATE FromState
+    );
+
+typedef struct _KSCLOCK_DISPATCH KSCLOCK_DISPATCH, *PKSCLOCK_DISPATCH;
+typedef struct _KSALLOCATOR_DISPATCH KSALLOCATOR_DISPATCH, *PKSALLOCATOR_DISPATCH;
+
 typedef struct
 {
+    PFNKSPINIRP Create;
+    PFNKSPINIRP Close;
+    PFNKSPIN Process;
+    PFNKSPINVOID Reset;
+    PFNKSPINSETDATAFORMAT SetDataFormat;
+    PFNKSPINSETDEVICESTATE SetDeviceState;
+    PFNKSPIN Connect;
+    PFNKSPINVOID Disconnect;
+    const KSCLOCK_DISPATCH* Clock;
+    const KSALLOCATOR_DISPATCH* Allocator;
 } KSPIN_DISPATCH, *PKSPIN_DISPATCH;
 
-#if defined(_NTDDK_)
+typedef
+BOOLEAN
+(*PFNKSPINSETTIMER)(
+    IN PKSPIN Pin,
+    IN PKTIMER Timer,
+    IN LARGE_INTEGER DueTime,
+    IN PKDPC Dpc
+    );
+
+typedef
+BOOLEAN
+(*PFNKSPINCANCELTIMER)(
+    IN PKSPIN Pin,
+    IN PKTIMER Timer
+    );
+
+typedef
+LONGLONG
+(FASTCALL *PFNKSPINCORRELATEDTIME)(
+    IN PKSPIN Pin,
+    OUT PLONGLONG SystemTime
+    );
+
+typedef
+void
+(*PFNKSPINRESOLUTION)(
+    IN PKSPIN Pin,
+    OUT PKSRESOLUTION Resolution
+    );
+
+struct _KSCLOCK_DISPATCH {
+    PFNKSPINSETTIMER SetTimer;
+    PFNKSPINCANCELTIMER CancelTimer;
+    PFNKSPINCORRELATEDTIME CorrelatedTime;
+    PFNKSPINRESOLUTION Resolution;
+};
+
+typedef
+NTSTATUS
+(*PFNKSPININITIALIZEALLOCATOR)(
+    IN PKSPIN Pin,
+    IN PKSALLOCATOR_FRAMING AllocatorFraming,
+    OUT PVOID* Context
+    );
+
+typedef PVOID (*PFNKSDELETEALLOCATOR)(
+    IN  PVOID Context);
+
+typedef PVOID (*PFNKSDEFAULTALLOCATE)(
+    IN  PVOID Context);
+
+typedef PVOID (*PFNKSDEFAULTFREE)(
+    IN  PVOID Context,
+    IN  PVOID Buffer);
+
+struct _KSALLOCATOR_DISPATCH {
+    PFNKSPININITIALIZEALLOCATOR InitializeAllocator;
+    PFNKSDELETEALLOCATOR DeleteAllocator;
+    PFNKSDEFAULTALLOCATE Allocate;
+    PFNKSDEFAULTFREE Free;
+};
 
 typedef struct
 {
@@ -1741,7 +2140,7 @@ typedef struct
 #define KSPIN_FLAG_DENY_USERMODE_ACCESS
 #define KSPIN_FLAG_IMPLEMENT_CLOCK
 
-typedef struct
+struct _KSPIN
 {
     const KSPIN_DESCRIPTOR_EX* Descriptor;
     KSOBJECT_BAG Bag;
@@ -1759,7 +2158,7 @@ typedef struct
     KSSTATE DeviceState;
     KSRESET ResetState;
     KSSTATE ClientState;
-} KSPIN, *PKSPIN;
+};
 
 #define DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(Handler)\
     DEFINE_KSPROPERTY_ITEM(\
@@ -2008,31 +2407,16 @@ DEFINE_KSPROPERTY_TABLE(TopologySet) {\
 /* TODO */
 typedef void* UNKNOWN;
 
-typedef PVOID (*PFNKSDEFAULTALLOCATE)(
-    IN  PVOID Context);
-
-typedef PVOID (*PFNKSDEFAULTFREE)(
-    IN  PVOID Context,
-    IN  PVOID Buffer);
-
 typedef PVOID (*PFNKSINITIALIZEALLOCATOR)(
     IN  PVOID InitialContext,
     IN  PKSALLOCATOR_FRAMING AllocatorFraming,
     OUT PVOID* Context);
-
-typedef PVOID (*PFNKSDELETEALLOCATOR)(
-    IN  PVOID Context);
 
 #if defined(_NTDDK_)
 typedef NTSTATUS (*PFNKSALLOCATOR)(
     IN  PIRP Irp,
     IN  ULONG BufferSize,
     IN  BOOLEAN InputOperation);
-
-typedef NTSTATUS (*PFNKSADDEVENT)(
-    IN  PIRP Irp,
-    IN  PKSEVENTDATA EventData,
-    IN  struct _KSEVENT_ENTRY* EventEntry);
 
 typedef NTSTATUS (*PFNKINTERSECTHANDLEREX)(
     IN  PVOID Context,
@@ -2087,18 +2471,61 @@ typedef struct
 /* ===============================================================
     XP / DX8
 */
+#if defined(_NTDDK_)
+struct _KSMAPPING {
+    PHYSICAL_ADDRESS PhysicalAddress;
+    ULONG ByteCount;
+    ULONG Alignment;
+};
+#endif
 
-typedef struct
+struct _KSSTREAM_POINTER_OFFSET
 {
-    /* TODO */
-} KSPROCESSPIN, *PKSPROCESSPIN;
+#if defined(_NTDDK_)
+    union {
+        PUCHAR Data;
+        PKSMAPPING Mappings;
+    };
+#else
+    PUCHAR Data;
+#endif
+#if !defined(_WIN64)
+    PVOID Alignment;
+#endif
+    ULONG Count;
+    ULONG Remaining;
+};
+#if defined(_NTDDK_)
+struct _KSSTREAM_POINTER
+{
+    PVOID Context;
+    PKSPIN Pin;
+    PKSSTREAM_HEADER StreamHeader;
+    PKSSTREAM_POINTER_OFFSET Offset;
+    KSSTREAM_POINTER_OFFSET OffsetIn;
+    KSSTREAM_POINTER_OFFSET OffsetOut;
+};
+
+struct _KSPROCESSPIN
+{
+    PKSPIN Pin;
+    PKSSTREAM_POINTER StreamPointer;
+    PKSPROCESSPIN InPlaceCounterpart;
+    PKSPROCESSPIN DelegateBranch;
+    PKSPROCESSPIN CopySource;
+    PVOID Data;
+    ULONG BytesAvailable;
+    ULONG BytesUsed;
+    ULONG Flags;
+    BOOLEAN Terminate;
+};
 
 typedef struct
 {
     PKSPROCESSPIN* Pins;
     ULONG Count;
 } KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
-
+#endif
 
 /* ===============================================================
     Device Dispatch

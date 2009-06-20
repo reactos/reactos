@@ -3,8 +3,10 @@
 <module name="scripts" type="staticlibrary">
 	<library>icu4ros</library>
 	<redefine name="WINVER">0x600</redefine>
-	<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
-	<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+	</group>
 	<include base="icu4ros">icu/source/common</include>
 	<file>scripts.cpp</file>
 </module>

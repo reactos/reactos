@@ -28,6 +28,13 @@ extern "C" {
 #define NTKERNELAPI DECLSPEC_IMPORT
 #endif
 
+#ifdef _WIN64
+#define PORT_MAXIMUM_MESSAGE_LENGTH 512
+#else
+#define PORT_MAXIMUM_MESSAGE_LENGTH 256
+#endif
+
+
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
@@ -460,7 +467,7 @@ InterlockedExchangeAdd(
 /*
  * PVOID
  * InterlockedExchangePointer(
- *   IN OUT PVOID VOLATILE  *Target,
+ *   IN OUT PVOID volatile  *Target,
  *   IN PVOID  Value)
  */
 #define InterlockedExchangePointer(Target, Value) \

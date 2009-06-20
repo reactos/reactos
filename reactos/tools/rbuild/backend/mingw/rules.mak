@@ -86,7 +86,8 @@ $(2)
 #(module, flags, includes)
 RBUILD_cflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),C}
 RBUILD_cxxflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),CXX}
-RBUILD_asflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),AS}
+#~ RBUILD_asflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),AS}
+RBUILD_asflags=${call RBUILD_compiler_flags_builtin_cpp,$(1),$(2),$(3),AS}
 RBUILD_nasmflags=${call RBUILD_compiler_flags_builtin_cpp,$(1),$(2),$(3),NASM}
 RBUILD_rc_pp_flags=${call RBUILD_compiler_flags_cpp,$(1),-DRC_INVOKED=1 -D__WIN32__=1 -D__FLAT__=1,$(3) -I.,RC}
 RBUILD_rc_flags=${call RBUILD_compiler_flags_with_includes,$(1),$(2),$(3),RC}
@@ -96,52 +97,12 @@ RBUILD_midlflags=${call RBUILD_compiler_flags_builtin_cpp,$(1),$(2),$(3),MIDL}
 RBUILD_host_cflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),C,HOST_}
 RBUILD_host_cxxflags=${call RBUILD_compiler_flags_with_cpp,$(1),$(2),$(3),CXX,HOST_}
 
-CFLAG_WERROR:=-Werror
-CFLAG_CRTDLL:=-D_DLL -D__USE_CRTIMP
-
-CXXFLAG_WERROR:=-Werror
-CXXFLAG_CRTDLL:=-D_DLL -D__USE_CRTIMP
-
-CPPFLAG_WERROR:=-Werror
-CPPFLAG_UNICODE:=-DUNICODE -D_UNICODE
-
 RCFLAG_UNICODE:=-DUNICODE -D_UNICODE
 
 BUILTIN_ASDEFINES+= -D__ASM__
-# FIXME: disabled until RosBE stops sucking
-# BUILTIN_CPPFLAGS+= -nostdinc
-BUILTIN_CFLAGS+= -fno-optimize-sibling-calls
-BUILTIN_CXXFLAGS+= -fno-optimize-sibling-calls
 BUILTIN_RCFLAGS+= --nostdinc
 BUILTIN_RCDEFINES+= -DRC_INVOKED
 BUILTIN_NASMFLAGS+= -f win32
-
-#(module, source, dependencies, cflags, output)
-define RBUILD_GCC
-
-$(2): $${$(1)_precondition}
-
-ifeq ($(ROS_BUILDDEPS),full)
-
-$(5).d: $(2) | ${call RBUILD_dir,$(5)}
-	$$(ECHO_DEPENDS)
-	$${gcc} -MF $$@ ${call RBUILD_cflags,$(1),$(4)} -M -MP -MT $$@ $$<
-
--include $(5).d
-
-$(5): $(2) $(5).d $(3) | ${call RBUILD_dir,$(5)}
-	$$(ECHO_CC)
-	$${gcc} -o $$@ ${call RBUILD_cflags,$(1),$(4)} -c $$<
-
-else
-
-$(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
-	$$(ECHO_CC)
-	$${gcc} -o $$@ ${call RBUILD_cflags,$(1),$(4)} -c $$<
-
-endif
-
-endef
 
 #(module, source, dependencies, cflags, output)
 define RBUILD_GAS
@@ -170,118 +131,8 @@ endif
 
 endef
 
-#(module, source, dependencies, cflags, output)
-define RBUILD_GPP
-
-$(2): $${$(1)_precondition}
-
-ifeq ($(ROS_BUILDDEPS),full)
-
-$(5).d: $(2) | ${call RBUILD_dir,$(5)}
-	$$(ECHO_DEPENDS)
-	$${gpp} -MF $$@ ${call RBUILD_cxxflags,$(1),$(4)} -M -MP -MT $$@ $$<
-
--include $(5).d
-
-$(5): $(2) $(5).d $(3) | ${call RBUILD_dir,$(5)}
-	$$(ECHO_CC)
-	$${gpp} -o $$@ ${call RBUILD_cxxflags,$(1),$(4)} -c $$<
-
-else
-
-$(5): $(2) $(3) | ${call RBUILD_dir,$(5)}
-	$$(ECHO_CC)
-	$${gpp} -o $$@ ${call RBUILD_cxxflags,$(1),$(4)} -c $$<
-
-endif
-
-endef
-
 #(module, source, dependencies, cflags)
-RBUILD_GCC_RULE=${call RBUILD_GCC,$(1),$(2),$(3),$(4),${call RBUILD_intermediate_path_unique,$(1),$(2)}.o}
-RBUILD_GPP_RULE=${call RBUILD_GPP,$(1),$(2),$(3),$(4),${call RBUILD_intermediate_path_unique,$(1),$(2)}.o}
 RBUILD_GAS_RULE=${call RBUILD_GAS,$(1),$(2),$(3),$(4),${call RBUILD_intermediate_path_unique,$(1),$(2)}.o}
-
-#(module, source, dependencies, cflags)
-define RBUILD_GPP_RULE
-
-$(2): $${$(1)_precondition}
-
-ifeq ($(ROS_BUILDDEPS),full)
-
-${call RBUILD_intermediate_path_unique,$(1),$(2)}.o.d: $(2) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_DEPENDS)
-	$${gpp} -MF $$@ ${call RBUILD_cxxflags,$(1),$(4)} -M -MP -MT $$@ $$<
-
--include ${call RBUILD_intermediate_path_unique,$(1),$(2)}.o.d
-
-${call RBUILD_intermediate_path_unique,$(1),$(2)}.o: $(2) ${call RBUILD_intermediate_path_unique,$(1),$(2)}.o.d $(3) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_CC)
-	$${gpp} -o $$@ ${call RBUILD_cxxflags,$(1),$(4)} -c $$<
-
-else
-
-${call RBUILD_intermediate_path_unique,$(1),$(2)}.o: $(2) $(3) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_CC)
-	$${gpp} -o $$@ ${call RBUILD_cxxflags,$(1),$(4)} -c $$<
-
-endif
-
-endef
-
-#(module, source, dependencies, cflags)
-define RBUILD_GCC_PCH_RULE
-
-$(2): $${$(1)_precondition}
-
-ifeq ($$(ROS_BUILDDEPS),full)
-
-${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch.d: $(2) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_DEPENDS)
-	$${gcc} -MF $$@ ${call RBUILD_cflags,$(1),$(4)} -x c-header -M -MP -MT $$@ $$<
-
--include $$(intermediate_dir)$$(SEP).gch_$$(module_name)$$(SEP)$(notdir $(2)).gch.d
-
-${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch: $(2) ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch.d $(3) | ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)
-	$$(ECHO_PCH)
-	$${gcc} -MF $$@ ${call RBUILD_cflags,$(1),$(4)} -x c-header -M -MP -MT $$@ $$<
-
-else
-
-${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch: $(2) $(3) | ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)
-	$$(ECHO_PCH)
-	$${gcc} -MF $$@ ${call RBUILD_cflags,$(1),$(4)} -x c-header -M -MP -MT $$@ $$<
-
-endif
-
-endef
-
-#(module, source, dependencies, cflags)
-define RBUILD_GPP_PCH_RULE
-
-$(2): $${$(1)_precondition}
-
-ifeq ($$(ROS_BUILDDEPS),full)
-
-${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch.d: $(2) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_DEPENDS)
-	$${gpp} -MF $$@ ${call RBUILD_cxxflags,$(1),$(4)} -x c++-header -M -MP -MT $$@ $$<
-
--include $$(intermediate_dir)$$(SEP).gch_$$(module_name)$$(SEP)$(notdir $(2)).gch.d
-
-${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch: $(2) ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch.d $(3) | ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)
-	$$(ECHO_PCH)
-	$${gpp} -MF $$@ ${call RBUILD_cxxflags,$(1),$(4)} -x c++-header -M -MP -MT $$@ $$<
-
-else
-
-${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)$$(SEP)$(notdir $(2)).gch: $(2) $(3) | ${call RBUILD_intermediate_dir,$(2)}$$(SEP).gch_$(1)
-	$$(ECHO_PCH)
-	$${gpp} -MF $$@ ${call RBUILD_cxxflags,$(1),$(4)} -x c++-header -M -MP -MT $$@ $$<
-
-endif
-
-endef
 
 #(module, source, dependencies, cflags, output)
 define RBUILD_NASM
@@ -319,27 +170,20 @@ define RBUILD_WINEBUILD_WITH_CPP_RULE
 
 ifeq ($$(ROS_BUILDDEPS),full)
 
-${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec.d: $(2) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_DEPENDS)
-	$${gcc} -xc -MF $$@ ${call RBUILD_spec_pp_flags,$(1),$(4)} -M -MP -MT $$@ $$<
-
+${call RBUILD_DEPENDS,$(1),$(2),,${call RBUILD_spec_pp_flags,$(1),$(4)},${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec.d}
 -include ${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec.d
 
-${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec: $(2) ${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec.d $(3) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_CPP)
-	$${gcc} -xc -E ${call RBUILD_spec_pp_flags,$(1),$(4)} $$< > $$@
+${call RBUILD_CPP,$(1),$(2),${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec.d $(3),${call RBUILD_spec_pp_flags,$(1),$(4)},${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec}
 
 else
 
-${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec: $(2) $(3) | ${call RBUILD_intermediate_dir,$(2)}
-	$$(ECHO_CPP)
-	$${gcc} -xc -E ${call RBUILD_spec_pp_flags,$(1),$(4)} $$< > $$@
+${call RBUILD_CPP,$(1),$(2),$(3),${call RBUILD_spec_pp_flags,$(1),$(4)},${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec}
 
 endif
 
 ${call RBUILD_WINEBUILD_DEF,$(1),${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec,,$(4),$(5),${call RBUILD_intermediate_path_unique,$(1),$(2)}.auto.def}
 ${call RBUILD_WINEBUILD_STUBS,$(1),${call RBUILD_intermediate_path_unique,$(1),$(2)}.spec,,$(4),$(5),${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.c}
-${call RBUILD_GCC,$(1),${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.c,,,${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.c,,,${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.o}
 
 endef
 
@@ -348,7 +192,7 @@ define RBUILD_WINEBUILD_RULE
 
 ${call RBUILD_WINEBUILD_DEF,$(1),$(2),$(3),$(4),$(5),${call RBUILD_intermediate_path_unique,$(1),$(2)}.auto.def}
 ${call RBUILD_WINEBUILD_STUBS,$(1),$(2),$(3),$(4),$(5),${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.c}
-${call RBUILD_GCC,$(1),${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.c,,,${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.c,,,${call RBUILD_intermediate_path_unique,$(1),$(2)}.stubs.o}
 
 endef
 
@@ -360,21 +204,18 @@ $(2): $${$(1)_precondition}
 
 ifeq ($$(ROS_BUILDDEPS),full)
 
-${call RBUILD_intermediate_path_unique,$(1),$(2)}.res.d: $(2) | ${call RBUILD_intermediate_dir,$(2)} $$(TEMPORARY)
-	$$(ECHO_DEPENDS)
-	$${gcc} -xc -MF $$@ ${call RBUILD_rc_pp_flags,$(1),$(4)} -M -MP -MT $$@ $$<
-
+${call RBUILD_DEPENDS,$(1),$(2),,${call RBUILD_rc_pp_flags,$(1),$(4)},${call RBUILD_intermediate_path_unique,$(1),$(2)}.res.d}
 -include ${call RBUILD_intermediate_path_unique,$(1),$(2)}.coff.d
 
 ${call RBUILD_intermediate_path_unique,$(1),$(2)}.res: $(2) ${call RBUILD_intermediate_path_unique,$(1),$(2)}.res.d $(3) $$(WRC_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_RC)
-	$${gcc} -xc ${call RBUILD_rc_pp_flags,$(1),$(4)} -E $$< | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
+	${call RBUILD_PIPE_CPP,$$<,${call RBUILD_rc_pp_flags,$(1),$(4)}} | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
 
 else
 
 ${call RBUILD_intermediate_path_unique,$(1),$(2)}.res: $(2) $(3) $$(WRC_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_RC)
-	$${gcc} -xc ${call RBUILD_rc_pp_flags,$(1),$(4)} -E $$< | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
+	${call RBUILD_PIPE_CPP,$$<,${call RBUILD_rc_pp_flags,$(1),$(4)}} | $$(WRC_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
 
 endif
 
@@ -407,7 +248,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_c.c ${call RBUILD_intermediate_path_
 	$$(ECHO_WIDL)
 	$$(Q)$$(WIDL_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_c.h -c -C ${call RBUILD_intermediate_path_noext,$(2)}_c.c $(2)
 
-${call RBUILD_GCC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_c.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_c.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_c.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_c.o}
 
 endef
 
@@ -420,7 +261,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_s.c ${call RBUILD_intermediate_path_
 	$$(ECHO_WIDL)
 	$$(Q)$$(WIDL_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_s.h -s -S ${call RBUILD_intermediate_path_noext,$(2)}_s.c $(2)
 
-${call RBUILD_GCC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_s.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_s.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_s.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_s.o}
 
 endef
 
@@ -433,7 +274,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_p.c ${call RBUILD_intermediate_path_
 	$$(ECHO_WIDL)
 	$$(Q)$$(WIDL_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -h -H ${call RBUILD_intermediate_path_noext,$(2)}_p.h -p -P ${call RBUILD_intermediate_path_noext,$(2)}_p.c $(2)
 
-${call RBUILD_GCC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_p.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_p.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_p.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_p.o}
 
 endef
 
@@ -446,7 +287,7 @@ ${call RBUILD_intermediate_path_noext,$(2)}_i.c: $(2) $(3) $$(WIDL_TARGET) | ${c
 	$$(ECHO_WIDL)
 	$$(Q)$$(WIDL_TARGET) ${call RBUILD_midlflags,$(1),$(4),-I${call RBUILD_dir,$(2)}} -u -U $$@ $$<
 
-${call RBUILD_GCC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_i.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_i.o}
+${call RBUILD_CC,$(1),${call RBUILD_intermediate_path_noext,$(2)}_i.c,,-fno-unit-at-a-time,${call RBUILD_intermediate_path_noext,$(2)}_i.o}
 
 endef
 
@@ -458,7 +299,7 @@ $(2): $(3) ${$(1)_precondition} $$(WIDL_TARGET) | ${call RBUILD_intermediate_dir
 	$$(ECHO_WIDL)
 	$$(Q)$$(WIDL_TARGET) ${call RBUILD_midlflags,$(1),$(4)} --dlldata-only --dlldata=$(2) $(5)
 
-${call RBUILD_GCC,$(1),$(2),,,${call RBUILD_intermediate_path_noext,$(2)}.o}
+${call RBUILD_CC,$(1),$(2),,,${call RBUILD_intermediate_path_noext,$(2)}.o}
 
 endef
 

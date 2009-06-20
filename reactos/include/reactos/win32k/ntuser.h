@@ -1,7 +1,7 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
-struct _PROCESSINFO;
+typedef struct _PROCESSINFO *PPROCESSINFO;
 struct _W32THREADINFO;
 struct _WINDOW;
 
@@ -334,20 +334,6 @@ typedef struct _SERVERINFO
   DWORD    TimeTick;
   DWORD    SrvEventActivity;
 } SERVERINFO, *PSERVERINFO;
-
-typedef struct _PROCESSINFO
-{
-    PVOID UserHandleTable;
-    HANDLE hUserHeap;
-    ULONG_PTR UserHeapDelta;
-    HINSTANCE hModUser;
-    PWINDOWCLASS LocalClassList;
-    PWINDOWCLASS GlobalClassList;
-    PWINDOWCLASS SystemClassList;
-
-    UINT RegisteredSysClasses : 1;
-
-} PROCESSINFO, *PPROCESSINFO;
 
 #define CTI_INSENDMESSAGE 0x0002
 
@@ -2699,7 +2685,7 @@ NTAPI
 NtUserVkKeyScanEx(
   WCHAR wChar,
   HKL KeyboardLayout,
-  DWORD Unknown2);
+  BOOL bUsehHK);
 
 DWORD
 NTAPI

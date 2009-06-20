@@ -811,12 +811,6 @@ HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version)
     return S_OK;
 }
 
-HRESULT assembly_get_architecture(ASSEMBLY *assembly, DWORD fixme)
-{
-    /* FIXME */
-    return S_OK;
-}
-
 static BYTE *assembly_get_blob(ASSEMBLY *assembly, WORD index, ULONG *size)
 {
     return GetData(&assembly->blobs[index], size);

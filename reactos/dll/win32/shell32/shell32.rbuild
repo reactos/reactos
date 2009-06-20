@@ -1,3 +1,4 @@
+<group>
 <module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="Both" />
 	<importlibrary definition="shell32.spec" />
@@ -44,6 +45,7 @@
 	<file>pidl.c</file>
 	<file>regsvr.c</file>
 	<file>shell32_main.c</file>
+	<file>shellitem.c</file>
 	<file>shelllink.c</file>
 	<file>shellole.c</file>
 	<file>shellord.c</file>
@@ -78,3 +80,7 @@
 	<file>folder_options.c</file>
 	<file>shell32.rc</file>
 </module>
+<module name="shobjidl_local_interface" type="idlinterface">
+	<file>shobjidl_local.idl</file>
+</module>
+</group>

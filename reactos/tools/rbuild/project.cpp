@@ -330,6 +330,48 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
                                 const string& path,
                                 ParseContext& parseContext )
 {
+	const XMLAttribute* att;
+
+	att = e.GetAttribute ( "compilerset", false );
+
+	if ( att )
+	{
+		CompilerSet compilerSet;
+
+		if ( att->value == "msc" )
+			compilerSet = MicrosoftC;
+		else if ( att->value == "gcc" )
+			compilerSet = GnuGcc;
+		else
+			throw InvalidAttributeValueException (
+				e.location,
+				"compilerset",
+				att->value );
+
+		if ( compilerSet != configuration.Compiler )
+			return;
+	}
+
+	att = e.GetAttribute ( "linkerset", false );
+
+	if ( att )
+	{
+		LinkerSet linkerSet;
+
+		if ( att->value == "mslink" )
+			linkerSet = MicrosoftLink;
+		else if ( att->value == "ld" )
+			linkerSet = GnuLd;
+		else
+			throw InvalidAttributeValueException (
+				e.location,
+				"linkerset",
+				att->value );
+
+		if ( linkerSet != configuration.Linker )
+			return;
+	}
+
 	bool subs_invalid = false;
 
 	string subpath(path);
@@ -474,4 +516,26 @@ const std::string&
 Project::GetProjectFilename () const
 {
 	return xmlfile;
+}
+
+std::string
+Project::GetCompilerSet () const
+{
+	switch ( configuration.Compiler )
+	{
+	case GnuGcc: return "gcc";
+	case MicrosoftC: return "msc";
+	default: assert ( false );
+	}
+}
+
+std::string
+Project::GetLinkerSet () const
+{
+	switch ( configuration.Linker )
+	{
+	case GnuLd: return "ld";
+	case MicrosoftLink: return "mslink";
+	default: assert ( false );
+	}
 }

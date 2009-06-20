@@ -40,8 +40,10 @@
 @ stub GetIcmpStatsFromStack
 @ stub GetIcmpStatsFromStackEx
 @ stdcall GetIfEntry( ptr )
+@ stdcall GetIfEntry2( ptr )
 @ stub GetIfEntryFromStack
 @ stdcall GetIfTable( ptr ptr long )
+@ stdcall GetIfTable2(ptr)
 @ stub GetIfTableFromStack
 @ stub GetIgmpList
 @ stdcall GetInterfaceInfo( ptr ptr )
@@ -108,7 +110,7 @@
 @ stub NTPTimeToNTFileTime
 @ stub NTTimeToNTPTime
 @ stub NhGetGuidFromInterfaceName
-@ stub NhGetInterfaceNameFromDeviceGuid
+@ stdcall NhGetInterfaceNameFromDeviceGuid(long long long long long)
 @ stub NhGetInterfaceNameFromGuid
 @ stub NhpAllocateAndGetInterfaceInfoFromStack
 @ stub NhpGetInterfaceIndexFromStack
@@ -123,7 +125,7 @@
 @ stdcall SetIfEntry( ptr )
 @ stub SetIfEntryToStack
 @ stdcall SetIpForwardEntry( ptr )
-@ stub SetIpForwardEntryToStack
+@ stdcall SetIpForwardEntryToStack( ptr )
 @ stub SetIpMultihopRouteEntryToStack
 @ stdcall SetIpNetEntry( ptr )
 @ stub SetIpNetEntryToStack

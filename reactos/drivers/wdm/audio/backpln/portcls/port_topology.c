@@ -23,6 +23,7 @@ typedef struct
 
     PPCFILTER_DESCRIPTOR pDescriptor;
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
+    IPortFilterTopology * Filter;
 }IPortTopologyImpl;
 
 typedef struct
@@ -44,27 +45,26 @@ static GUID InterfaceGuids[2] =
     }
 };
 
-#if 0
-static
-KSPROPERTY_SET PinPropertySet =
-{
-    &KSPROPSETID_Pin,
-    0,
-    NULL,
-    0,
-    NULL
-};
+DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterTopologyTopologySet, TopologyPropertyHandler);
+DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PortFilterTopologyPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
 
-static
-KSPROPERTY_SET TopologyPropertySet =
+KSPROPERTY_SET TopologyPropertySet[] =
 {
-    &KSPROPSETID_Topology,
-    4,
-    NULL,
-    0,
-    NULL
+    {
+        &KSPROPSETID_Topology,
+        sizeof(PortFilterTopologyTopologySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterTopologyTopologySet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Pin,
+        sizeof(PortFilterTopologyPinSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterTopologyPinSet,
+        0,
+        NULL
+    }
 };
-#endif
 
 
 //---------------------------------------------------------------
@@ -223,13 +223,13 @@ IPortTopology_fnInit(
     }
 
     /* create the subdevice descriptor */
-    Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
+    Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor,
                                          2,
                                          InterfaceGuids, 
                                          0, 
                                          NULL,
-                                         0, 
-                                         NULL,
+                                         2, 
+                                         TopologyPropertySet,
                                          0,
                                          0,
                                          0,
@@ -339,10 +339,45 @@ ISubDevice_fnNewIrpTarget(
     IN PIRP Irp, 
     IN KSOBJECT_CREATE *CreateObject)
 {
-    //IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
+    NTSTATUS Status;
+    IPortFilterTopology * Filter;
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    /* is there already an instance of the filter */
+    if (This->Filter)
+    {
+        /* it is, let's return the result */
+        *OutTarget = (IIrpTarget*)This->Filter;
+
+        /* increment reference */
+        This->Filter->lpVtbl->AddRef(This->Filter);
+        return STATUS_SUCCESS;
+    }
+
+    /* create new instance of filter */
+    Status = NewPortFilterTopology(&Filter);
+    if (!NT_SUCCESS(Status))
+    {
+        /* not enough memory */
+        return Status;
+    }
+
+    /* initialize the filter */
+    Status = Filter->lpVtbl->Init(Filter, (IPortTopology*)This);
+    if (!NT_SUCCESS(Status))
+    {
+        /* destroy filter */
+        Filter->lpVtbl->Release(Filter);
+        /* return status */
+        return Status;
+    }
+
+    /* store result */
+    *OutTarget = (IIrpTarget*)Filter;
+    /* store for later re-use */
+    This->Filter = Filter;
+    /* return status */
+    return Status;
 }
 
 static
@@ -366,7 +401,7 @@ ISubDevice_fnGetDescriptor(
 {
     IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
-    DPRINT("ISubDevice_GetDescriptor this %p\n", This);
+    DPRINT("ISubDevice_GetDescriptor this %p Descp %p\n", This, This->SubDeviceDescriptor);
     *Descriptor = This->SubDeviceDescriptor;
     return STATUS_SUCCESS;
 }
@@ -477,7 +512,7 @@ CreatePinWorkerRoutine(
     if (NT_SUCCESS(Status))
     {
         /* create the dispatch object */
-        Status = NewDispatchObject(WorkerContext->Irp, Pin);
+        Status = NewDispatchObject(WorkerContext->Irp, Pin, NULL);
         DPRINT("Pin %p\n", Pin);
     }
 
@@ -573,7 +608,7 @@ PcCreateItemDispatch(
     if (IoStack->FileObject->FileName.Buffer == NULL)
     {
         /* create the dispatch object */
-        Status = NewDispatchObject(Irp, Filter);
+        Status = NewDispatchObject(Irp, Filter, CreateItem->ObjectClass.Buffer);
 
         DPRINT1("Filter %p\n", Filter);
     }
@@ -644,4 +679,12 @@ NewPortTopology(
     DPRINT("NewPortTopology result %p\n", *OutPort);
 
     return STATUS_SUCCESS;
+}
+
+PMINIPORTTOPOLOGY
+GetTopologyMiniport(
+    PPORTTOPOLOGY Port)
+{
+    IPortTopologyImpl * This = (IPortTopologyImpl*)Port;
+    return This->pMiniport;
 }

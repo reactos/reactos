@@ -29,6 +29,10 @@
 #include "config.h"
 #include "wine/port.h"
 
+#if defined(__MINGW32__) || defined (_MSC_VER)
+#include <ws2tcpip.h>
+#endif
+
 #include <sys/types.h>
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
@@ -59,6 +63,7 @@
 
 #include "internet.h"
 #include "wine/debug.h"
+#include "wine/exception.h"
 #include "wine/unicode.h"
 
 #include "inet_ntop.c"
@@ -76,6 +81,7 @@ static const WCHAR szProxy_Authorization[] = { 'P','r','o','x','y','-','A','u','
 static const WCHAR szStatus[] = { 'S','t','a','t','u','s',0 };
 static const WCHAR szKeepAlive[] = {'K','e','e','p','-','A','l','i','v','e',0};
 static const WCHAR szGET[] = { 'G','E','T', 0 };
+static const WCHAR szCrLf[] = {'\r','\n', 0};
 
 #define MAXHOSTNAME 100
 #define MAX_FIELD_VALUE_LEN 256
@@ -116,15 +122,15 @@ static BOOL HTTP_InsertCustomHeader(LPWININETHTTPREQW lpwhr, LPHTTPHEADERW lpHdr
 static INT HTTP_GetCustomHeaderIndex(LPWININETHTTPREQW lpwhr, LPCWSTR lpszField, INT index, BOOL Request);
 static BOOL HTTP_DeleteCustomHeader(LPWININETHTTPREQW lpwhr, DWORD index);
 static LPWSTR HTTP_build_req( LPCWSTR *list, int len );
-static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD
-        dwInfoLevel, LPVOID lpBuffer, LPDWORD lpdwBufferLength, LPDWORD
-        lpdwIndex);
+static BOOL HTTP_HttpQueryInfoW(LPWININETHTTPREQW, DWORD, LPVOID, LPDWORD, LPDWORD);
+static LPWSTR HTTP_GetRedirectURL(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl);
 static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl);
 static UINT HTTP_DecodeBase64(LPCWSTR base64, LPSTR bin);
 static BOOL HTTP_VerifyValidHeader(LPWININETHTTPREQW lpwhr, LPCWSTR field);
 static void HTTP_DrainContent(WININETHTTPREQW *req);
+static BOOL HTTP_FinishedReading(LPWININETHTTPREQW lpwhr);
 
-LPHTTPHEADERW HTTP_GetHeader(LPWININETHTTPREQW req, LPCWSTR head)
+static LPHTTPHEADERW HTTP_GetHeader(LPWININETHTTPREQW req, LPCWSTR head)
 {
     int HeaderIndex = 0;
     HeaderIndex = HTTP_GetCustomHeaderIndex(req, head, 0, TRUE);
@@ -132,6 +138,29 @@ LPHTTPHEADERW HTTP_GetHeader(LPWININETHTTPREQW req, LPCWSTR head)
         return NULL;
     else
         return &req->pCustHeaders[HeaderIndex];
+}
+
+/* set the request content length based on the headers */
+static DWORD set_content_length( LPWININETHTTPREQW lpwhr )
+{
+    static const WCHAR szChunked[] = {'c','h','u','n','k','e','d',0};
+    WCHAR encoding[20];
+    DWORD size;
+
+    size = sizeof(lpwhr->dwContentLength);
+    if (!HTTP_HttpQueryInfoW(lpwhr, HTTP_QUERY_FLAG_NUMBER|HTTP_QUERY_CONTENT_LENGTH,
+                             &lpwhr->dwContentLength, &size, NULL))
+        lpwhr->dwContentLength = ~0u;
+
+    size = sizeof(encoding);
+    if (HTTP_HttpQueryInfoW(lpwhr, HTTP_QUERY_TRANSFER_ENCODING, encoding, &size, NULL) &&
+        !strcmpiW(encoding, szChunked))
+    {
+        lpwhr->dwContentLength = ~0u;
+        lpwhr->read_chunked = TRUE;
+    }
+
+    return lpwhr->dwContentLength;
 }
 
 /***********************************************************************
@@ -146,21 +175,26 @@ static LPWSTR * HTTP_Tokenize(LPCWSTR string, LPCWSTR token_string)
     int i;
     LPCWSTR next_token;
 
-    /* empty string has no tokens */
-    if (*string)
-        tokens++;
-    /* count tokens */
-    for (i = 0; string[i]; i++)
-        if (!strncmpW(string+i, token_string, strlenW(token_string)))
-        {
-            DWORD j;
+    if (string)
+    {
+        /* empty string has no tokens */
+        if (*string)
             tokens++;
-            /* we want to skip over separators, but not the null terminator */
-            for (j = 0; j < strlenW(token_string) - 1; j++)
-                if (!string[i+j])
-                    break;
-            i += j;
+        /* count tokens */
+        for (i = 0; string[i]; i++)
+        {
+            if (!strncmpW(string+i, token_string, strlenW(token_string)))
+            {
+                DWORD j;
+                tokens++;
+                /* we want to skip over separators, but not the null terminator */
+                for (j = 0; j < strlenW(token_string) - 1; j++)
+                    if (!string[i+j])
+                        break;
+                i += j;
+            }
         }
+    }
 
     /* add 1 for terminating NULL */
     token_array = HeapAlloc(GetProcessHeap(), 0, (tokens+1) * sizeof(*token_array));
@@ -258,7 +292,6 @@ static LPWSTR HTTP_BuildHeaderRequestString( LPWININETHTTPREQW lpwhr, LPCWSTR ve
     LPWSTR p;
 
     static const WCHAR szSpace[] = { ' ',0 };
-    static const WCHAR szcrlf[] = {'\r','\n', 0};
     static const WCHAR szColon[] = { ':',' ',0 };
     static const WCHAR sztwocrlf[] = {'\r','\n','\r','\n', 0};
 
@@ -279,7 +312,7 @@ static LPWSTR HTTP_BuildHeaderRequestString( LPWININETHTTPREQW lpwhr, LPCWSTR ve
     {
         if (lpwhr->pCustHeaders[i].wFlags & HDR_ISREQUEST)
         {
-            req[n++] = szcrlf;
+            req[n++] = szCrLf;
             req[n++] = lpwhr->pCustHeaders[i].lpszField;
             req[n++] = szColon;
             req[n++] = lpwhr->pCustHeaders[i].lpszValue;
@@ -313,82 +346,29 @@ static void HTTP_ProcessCookies( LPWININETHTTPREQW lpwhr )
 {
     static const WCHAR szSet_Cookie[] = { 'S','e','t','-','C','o','o','k','i','e',0 };
     int HeaderIndex;
+    int numCookies = 0;
     LPHTTPHEADERW setCookieHeader;
 
-    HeaderIndex = HTTP_GetCustomHeaderIndex(lpwhr, szSet_Cookie, 0, FALSE);
-    if (HeaderIndex == -1)
-            return;
-    setCookieHeader = &lpwhr->pCustHeaders[HeaderIndex];
-
-    if (!(lpwhr->hdr.dwFlags & INTERNET_FLAG_NO_COOKIES) && setCookieHeader->lpszValue)
+    while((HeaderIndex = HTTP_GetCustomHeaderIndex(lpwhr, szSet_Cookie, numCookies, FALSE)) != -1)
     {
-        int nPosStart = 0, nPosEnd = 0, len;
-        static const WCHAR szFmt[] = { 'h','t','t','p',':','/','/','%','s','/',0};
+        setCookieHeader = &lpwhr->pCustHeaders[HeaderIndex];
 
-        while (setCookieHeader->lpszValue[nPosEnd] != '\0')
+        if (!(lpwhr->hdr.dwFlags & INTERNET_FLAG_NO_COOKIES) && setCookieHeader->lpszValue)
         {
-            LPWSTR buf_cookie, cookie_name, cookie_data;
+            int len;
+            static const WCHAR szFmt[] = { 'h','t','t','p',':','/','/','%','s','%','s',0};
             LPWSTR buf_url;
-            LPWSTR domain = NULL;
             LPHTTPHEADERW Host;
 
-            int nEqualPos = 0;
-            while (setCookieHeader->lpszValue[nPosEnd] != ';' && setCookieHeader->lpszValue[nPosEnd] != ',' &&
-                   setCookieHeader->lpszValue[nPosEnd] != '\0')
-            {
-                nPosEnd++;
-            }
-            if (setCookieHeader->lpszValue[nPosEnd] == ';')
-            {
-                /* fixme: not case sensitive, strcasestr is gnu only */
-                int nDomainPosEnd = 0;
-                int nDomainPosStart = 0, nDomainLength = 0;
-                static const WCHAR szDomain[] = {'d','o','m','a','i','n','=',0};
-                LPWSTR lpszDomain = strstrW(&setCookieHeader->lpszValue[nPosEnd], szDomain);
-                if (lpszDomain)
-                { /* they have specified their own domain, lets use it */
-                    while (lpszDomain[nDomainPosEnd] != ';' && lpszDomain[nDomainPosEnd] != ',' &&
-                           lpszDomain[nDomainPosEnd] != '\0')
-                    {
-                        nDomainPosEnd++;
-                    }
-                    nDomainPosStart = strlenW(szDomain);
-                    nDomainLength = (nDomainPosEnd - nDomainPosStart) + 1;
-                    domain = HeapAlloc(GetProcessHeap(), 0, (nDomainLength + 1)*sizeof(WCHAR));
-                    lstrcpynW(domain, &lpszDomain[nDomainPosStart], nDomainLength + 1);
-                }
-            }
-            if (setCookieHeader->lpszValue[nPosEnd] == '\0') break;
-            buf_cookie = HeapAlloc(GetProcessHeap(), 0, ((nPosEnd - nPosStart) + 1)*sizeof(WCHAR));
-            lstrcpynW(buf_cookie, &setCookieHeader->lpszValue[nPosStart], (nPosEnd - nPosStart) + 1);
-            TRACE("%s\n", debugstr_w(buf_cookie));
-            while (buf_cookie[nEqualPos] != '=' && buf_cookie[nEqualPos] != '\0')
-            {
-                nEqualPos++;
-            }
-            if (buf_cookie[nEqualPos] == '\0' || buf_cookie[nEqualPos + 1] == '\0')
-            {
-                HeapFree(GetProcessHeap(), 0, buf_cookie);
-                break;
-            }
-
-            cookie_name = HeapAlloc(GetProcessHeap(), 0, (nEqualPos + 1)*sizeof(WCHAR));
-            lstrcpynW(cookie_name, buf_cookie, nEqualPos + 1);
-            cookie_data = &buf_cookie[nEqualPos + 1];
-
             Host = HTTP_GetHeader(lpwhr,szHost);
-            len = lstrlenW((domain ? domain : (Host?Host->lpszValue:NULL))) + 
-                strlenW(lpwhr->lpszPath) + 9;
+            len = lstrlenW(Host->lpszValue) + 9 + lstrlenW(lpwhr->lpszPath);
             buf_url = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
-            sprintfW(buf_url, szFmt, (domain ? domain : (Host?Host->lpszValue:NULL))); /* FIXME PATH!!! */
-            InternetSetCookieW(buf_url, cookie_name, cookie_data);
+            sprintfW(buf_url, szFmt, Host->lpszValue, lpwhr->lpszPath);
+            InternetSetCookieW(buf_url, NULL, setCookieHeader->lpszValue);
 
             HeapFree(GetProcessHeap(), 0, buf_url);
-            HeapFree(GetProcessHeap(), 0, buf_cookie);
-            HeapFree(GetProcessHeap(), 0, cookie_name);
-            HeapFree(GetProcessHeap(), 0, domain);
-            nPosStart = nPosEnd;
         }
+        numCookies++;
     }
 }
 
@@ -614,7 +594,7 @@ static BOOL HTTP_DoAuthorization( LPWININETHTTPREQW lpwhr, LPCWSTR pszAuthValue,
 /***********************************************************************
  *           HTTP_HttpAddRequestHeadersW (internal)
  */
-static BOOL WINAPI HTTP_HttpAddRequestHeadersW(LPWININETHTTPREQW lpwhr,
+static BOOL HTTP_HttpAddRequestHeadersW(LPWININETHTTPREQW lpwhr,
 	LPCWSTR lpszHeader, DWORD dwHeaderLength, DWORD dwModifier)
 {
     LPWSTR lpszStart;
@@ -656,6 +636,13 @@ static BOOL WINAPI HTTP_HttpAddRequestHeadersW(LPWININETHTTPREQW lpwhr,
             lpszEnd += 2; /* Jump over \r\n */
         }
         TRACE("interpreting header %s\n", debugstr_w(lpszStart));
+        if (*lpszStart == '\0')
+        {
+            /* Skip 0-length headers */
+            lpszStart = lpszEnd;
+            bSuccess = TRUE;
+            continue;
+        }
         pFieldAndValue = HTTP_InterpretHttpHeader(lpszStart);
         if (pFieldAndValue)
         {
@@ -760,55 +747,83 @@ BOOL WINAPI HttpAddRequestHeadersA(HINTERNET hHttpRequest,
 BOOL WINAPI HttpEndRequestA(HINTERNET hRequest, 
         LPINTERNET_BUFFERSA lpBuffersOut, DWORD dwFlags, DWORD_PTR dwContext)
 {
-    LPINTERNET_BUFFERSA ptr;
-    LPINTERNET_BUFFERSW lpBuffersOutW,ptrW;
-    BOOL rc = FALSE;
+    TRACE("(%p, %p, %08x, %08lx)\n", hRequest, lpBuffersOut, dwFlags, dwContext);
 
-    TRACE("(%p, %p, %08x, %08lx): stub\n", hRequest, lpBuffersOut, dwFlags,
-            dwContext);
-
-    ptr = lpBuffersOut;
-    if (ptr)
-        lpBuffersOutW = (LPINTERNET_BUFFERSW)HeapAlloc(GetProcessHeap(),
-                HEAP_ZERO_MEMORY, sizeof(INTERNET_BUFFERSW));
-    else
-        lpBuffersOutW = NULL;
-
-    ptrW = lpBuffersOutW;
-    while (ptr)
+    if (lpBuffersOut)
     {
-        if (ptr->lpvBuffer && ptr->dwBufferLength)
-            ptrW->lpvBuffer = HeapAlloc(GetProcessHeap(),0,ptr->dwBufferLength);
-        ptrW->dwBufferLength = ptr->dwBufferLength;
-        ptrW->dwBufferTotal= ptr->dwBufferTotal;
-
-        if (ptr->Next)
-            ptrW->Next = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,
-                    sizeof(INTERNET_BUFFERSW));
-
-        ptr = ptr->Next;
-        ptrW = ptrW->Next;
+        INTERNET_SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
     }
 
-    rc = HttpEndRequestW(hRequest, lpBuffersOutW, dwFlags, dwContext);
+    return HttpEndRequestW(hRequest, NULL, dwFlags, dwContext);
+}
 
-    if (lpBuffersOutW)
+static BOOL HTTP_HttpEndRequestW(LPWININETHTTPREQW lpwhr, DWORD dwFlags, DWORD_PTR dwContext)
+{
+    BOOL rc = FALSE;
+    INT responseLen;
+    DWORD dwBufferSize;
+    INTERNET_ASYNC_RESULT iar;
+
+    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
+                  INTERNET_STATUS_RECEIVING_RESPONSE, NULL, 0);
+
+    responseLen = HTTP_GetResponseHeaders(lpwhr, TRUE);
+    if (responseLen)
+        rc = TRUE;
+
+    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
+                  INTERNET_STATUS_RESPONSE_RECEIVED, &responseLen, sizeof(DWORD));
+
+    /* process cookies here. Is this right? */
+    HTTP_ProcessCookies(lpwhr);
+
+    if (!set_content_length( lpwhr )) HTTP_FinishedReading(lpwhr);
+
+    if (!(lpwhr->hdr.dwFlags & INTERNET_FLAG_NO_AUTO_REDIRECT))
     {
-        ptrW = lpBuffersOutW;
-        while (ptrW)
+        DWORD dwCode,dwCodeLength = sizeof(DWORD);
+        if (HTTP_HttpQueryInfoW(lpwhr, HTTP_QUERY_FLAG_NUMBER|HTTP_QUERY_STATUS_CODE, &dwCode, &dwCodeLength, NULL) &&
+            (dwCode == 302 || dwCode == 301 || dwCode == 303))
         {
-            LPINTERNET_BUFFERSW ptrW2;
-
-            FIXME("Do we need to translate info out of these buffer?\n");
-
-            HeapFree(GetProcessHeap(),0,ptrW->lpvBuffer);
-            ptrW2 = ptrW->Next;
-            HeapFree(GetProcessHeap(),0,ptrW);
-            ptrW = ptrW2;
+            WCHAR *new_url, szNewLocation[INTERNET_MAX_URL_LENGTH];
+            dwBufferSize=sizeof(szNewLocation);
+            if (HTTP_HttpQueryInfoW(lpwhr, HTTP_QUERY_LOCATION, szNewLocation, &dwBufferSize, NULL))
+            {
+                /* redirects are always GETs */
+                HeapFree(GetProcessHeap(), 0, lpwhr->lpszVerb);
+                lpwhr->lpszVerb = WININET_strdupW(szGET);
+                HTTP_DrainContent(lpwhr);
+                if ((new_url = HTTP_GetRedirectURL( lpwhr, szNewLocation )))
+                {
+                    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext, INTERNET_STATUS_REDIRECT,
+                                          new_url, (strlenW(new_url) + 1) * sizeof(WCHAR));
+                    rc = HTTP_HandleRedirect(lpwhr, new_url);
+                    if (rc)
+                        rc = HTTP_HttpSendRequestW(lpwhr, NULL, 0, NULL, 0, 0, TRUE);
+                    HeapFree( GetProcessHeap(), 0, new_url );
+                }
+            }
         }
     }
 
+    iar.dwResult = (DWORD_PTR)lpwhr->hdr.hInternet;
+    iar.dwError = rc ? 0 : INTERNET_GetLastError();
+
+    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
+                          INTERNET_STATUS_REQUEST_COMPLETE, &iar,
+                          sizeof(INTERNET_ASYNC_RESULT));
     return rc;
+}
+
+static void AsyncHttpEndRequestProc(WORKREQUEST *work)
+{
+    struct WORKREQ_HTTPENDREQUESTW const *req = &work->u.HttpEndRequestW;
+    LPWININETHTTPREQW lpwhr = (LPWININETHTTPREQW)work->hdr;
+
+    TRACE("%p\n", lpwhr);
+
+    HTTP_HttpEndRequestW(lpwhr, req->dwFlags, req->dwContext);
 }
 
 /***********************************************************************
@@ -826,10 +841,15 @@ BOOL WINAPI HttpEndRequestW(HINTERNET hRequest,
 {
     BOOL rc = FALSE;
     LPWININETHTTPREQW lpwhr;
-    INT responseLen;
-    DWORD dwBufferSize;
 
     TRACE("-->\n");
+
+    if (lpBuffersOut)
+    {
+        INTERNET_SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     lpwhr = (LPWININETHTTPREQW) WININET_GetObject( hRequest );
 
     if (NULL == lpwhr || lpwhr->hdr.htype != WH_HHTTPREQ)
@@ -837,58 +857,27 @@ BOOL WINAPI HttpEndRequestW(HINTERNET hRequest,
         INTERNET_SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
         if (lpwhr)
             WININET_Release( &lpwhr->hdr );
-    	return FALSE;
+        return FALSE;
     }
-
     lpwhr->hdr.dwFlags |= dwFlags;
-    lpwhr->hdr.dwContext = dwContext;
 
-    /* We appear to do nothing with lpBuffersOut.. is that correct? */
-
-    SendAsyncCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
-            INTERNET_STATUS_RECEIVING_RESPONSE, NULL, 0);
-
-    responseLen = HTTP_GetResponseHeaders(lpwhr, TRUE);
-    if (responseLen)
-	    rc = TRUE;
-
-    SendAsyncCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
-            INTERNET_STATUS_RESPONSE_RECEIVED, &responseLen, sizeof(DWORD));
-
-    /* process cookies here. Is this right? */
-    HTTP_ProcessCookies(lpwhr);
-
-    dwBufferSize = sizeof(lpwhr->dwContentLength);
-    if (!HTTP_HttpQueryInfoW(lpwhr,HTTP_QUERY_FLAG_NUMBER|HTTP_QUERY_CONTENT_LENGTH,
-                             &lpwhr->dwContentLength,&dwBufferSize,NULL))
-        lpwhr->dwContentLength = -1;
-
-    if (lpwhr->dwContentLength == 0)
-        HTTP_FinishedReading(lpwhr);
-
-    if(!(lpwhr->hdr.dwFlags & INTERNET_FLAG_NO_AUTO_REDIRECT))
+    if (lpwhr->lpHttpSession->lpAppInfo->hdr.dwFlags & INTERNET_FLAG_ASYNC)
     {
-        DWORD dwCode,dwCodeLength=sizeof(DWORD);
-        if(HTTP_HttpQueryInfoW(lpwhr,HTTP_QUERY_FLAG_NUMBER|HTTP_QUERY_STATUS_CODE,&dwCode,&dwCodeLength,NULL) &&
-            (dwCode==302 || dwCode==301))
-        {
-            WCHAR szNewLocation[INTERNET_MAX_URL_LENGTH];
-            dwBufferSize=sizeof(szNewLocation);
-            if(HTTP_HttpQueryInfoW(lpwhr,HTTP_QUERY_LOCATION,szNewLocation,&dwBufferSize,NULL))
-            {
-                /* redirects are always GETs */
-                HeapFree(GetProcessHeap(),0,lpwhr->lpszVerb);
-                lpwhr->lpszVerb = WININET_strdupW(szGET);
-                HTTP_DrainContent(lpwhr);
-                INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
-                                      INTERNET_STATUS_REDIRECT, szNewLocation,
-                                      dwBufferSize);
-                rc = HTTP_HandleRedirect(lpwhr, szNewLocation);
-                if (rc)
-                    rc = HTTP_HttpSendRequestW(lpwhr, NULL, 0, NULL, 0, 0, TRUE);
-            }
-        }
+        WORKREQUEST work;
+        struct WORKREQ_HTTPENDREQUESTW *request;
+
+        work.asyncproc = AsyncHttpEndRequestProc;
+        work.hdr = WININET_AddRef( &lpwhr->hdr );
+
+        request = &work.u.HttpEndRequestW;
+        request->dwFlags = dwFlags;
+        request->dwContext = dwContext;
+
+        INTERNET_AsyncCall(&work);
+        INTERNET_SetLastError(ERROR_IO_PENDING);
     }
+    else
+        rc = HTTP_HttpEndRequestW(lpwhr, dwFlags, dwContext);
 
     WININET_Release( &lpwhr->hdr );
     TRACE("%i <--\n",rc);
@@ -1017,12 +1006,20 @@ HINTERNET WINAPI HttpOpenRequestA(HINTERNET hHttpSession,
         types = lpszAcceptTypes;
         while (*types)
         {
-            /* find out how many there are */
-            if (((ULONG_PTR)*types >> 16) && **types)
+            __TRY
             {
-                TRACE("accept type: %s\n", debugstr_a(*types));
-                acceptTypesCount++;
+                /* find out how many there are */
+                if (*types && **types)
+                {
+                    TRACE("accept type: %s\n", debugstr_a(*types));
+                    acceptTypesCount++;
+                }
             }
+            __EXCEPT_PAGE_FAULT
+            {
+                WARN("invalid accept type pointer\n");
+            }
+            __ENDTRY;
             types++;
         }
         szAcceptTypes = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR *) * (acceptTypesCount+1));
@@ -1032,20 +1029,26 @@ HINTERNET WINAPI HttpOpenRequestA(HINTERNET hHttpSession,
         types = lpszAcceptTypes;
         while (*types)
         {
-            if (((ULONG_PTR)*types >> 16) && **types)
+            __TRY
             {
-                len = MultiByteToWideChar(CP_ACP, 0, *types, -1, NULL, 0 );
-                szAcceptTypes[acceptTypesCount] = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-                if (!szAcceptTypes[acceptTypesCount]) goto end;
+                if (*types && **types)
+                {
+                    len = MultiByteToWideChar(CP_ACP, 0, *types, -1, NULL, 0 );
+                    szAcceptTypes[acceptTypesCount] = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
 
-                MultiByteToWideChar(CP_ACP, 0, *types, -1, szAcceptTypes[acceptTypesCount], len);
-                acceptTypesCount++;
+                    MultiByteToWideChar(CP_ACP, 0, *types, -1, szAcceptTypes[acceptTypesCount], len);
+                    acceptTypesCount++;
+                }
             }
+            __EXCEPT_PAGE_FAULT
+            {
+                /* ignore invalid pointer */
+            }
+            __ENDTRY;
             types++;
         }
         szAcceptTypes[acceptTypesCount] = NULL;
     }
-    else szAcceptTypes = 0;
 
     rc = HttpOpenRequestW(hHttpSession, szVerb, szObjectName,
                           szVersion, szReferrer,
@@ -1377,6 +1380,32 @@ static void HTTPREQ_Destroy(WININETHANDLEHEADER *hdr)
 
     WININET_Release(&lpwhr->lpHttpSession->hdr);
 
+    if (lpwhr->pAuthInfo)
+    {
+        if (SecIsValidHandle(&lpwhr->pAuthInfo->ctx))
+            DeleteSecurityContext(&lpwhr->pAuthInfo->ctx);
+        if (SecIsValidHandle(&lpwhr->pAuthInfo->cred))
+            FreeCredentialsHandle(&lpwhr->pAuthInfo->cred);
+
+        HeapFree(GetProcessHeap(), 0, lpwhr->pAuthInfo->auth_data);
+        HeapFree(GetProcessHeap(), 0, lpwhr->pAuthInfo->scheme);
+        HeapFree(GetProcessHeap(), 0, lpwhr->pAuthInfo);
+        lpwhr->pAuthInfo = NULL;
+    }
+
+    if (lpwhr->pProxyAuthInfo)
+    {
+        if (SecIsValidHandle(&lpwhr->pProxyAuthInfo->ctx))
+            DeleteSecurityContext(&lpwhr->pProxyAuthInfo->ctx);
+        if (SecIsValidHandle(&lpwhr->pProxyAuthInfo->cred))
+            FreeCredentialsHandle(&lpwhr->pProxyAuthInfo->cred);
+
+        HeapFree(GetProcessHeap(), 0, lpwhr->pProxyAuthInfo->auth_data);
+        HeapFree(GetProcessHeap(), 0, lpwhr->pProxyAuthInfo->scheme);
+        HeapFree(GetProcessHeap(), 0, lpwhr->pProxyAuthInfo);
+        lpwhr->pProxyAuthInfo = NULL;
+    }
+
     HeapFree(GetProcessHeap(), 0, lpwhr->lpszPath);
     HeapFree(GetProcessHeap(), 0, lpwhr->lpszVerb);
     HeapFree(GetProcessHeap(), 0, lpwhr->lpszRawHeaders);
@@ -1401,31 +1430,6 @@ static void HTTPREQ_CloseConnection(WININETHANDLEHEADER *hdr)
 
     if (!NETCON_connected(&lpwhr->netConnection))
         return;
-
-    if (lpwhr->pAuthInfo)
-    {
-        if (SecIsValidHandle(&lpwhr->pAuthInfo->ctx))
-            DeleteSecurityContext(&lpwhr->pAuthInfo->ctx);
-        if (SecIsValidHandle(&lpwhr->pAuthInfo->cred))
-            FreeCredentialsHandle(&lpwhr->pAuthInfo->cred);
-
-        HeapFree(GetProcessHeap(), 0, lpwhr->pAuthInfo->auth_data);
-        HeapFree(GetProcessHeap(), 0, lpwhr->pAuthInfo->scheme);
-        HeapFree(GetProcessHeap(), 0, lpwhr->pAuthInfo);
-        lpwhr->pAuthInfo = NULL;
-    }
-    if (lpwhr->pProxyAuthInfo)
-    {
-        if (SecIsValidHandle(&lpwhr->pProxyAuthInfo->ctx))
-            DeleteSecurityContext(&lpwhr->pProxyAuthInfo->ctx);
-        if (SecIsValidHandle(&lpwhr->pProxyAuthInfo->cred))
-            FreeCredentialsHandle(&lpwhr->pProxyAuthInfo->cred);
-
-        HeapFree(GetProcessHeap(), 0, lpwhr->pProxyAuthInfo->auth_data);
-        HeapFree(GetProcessHeap(), 0, lpwhr->pProxyAuthInfo->scheme);
-        HeapFree(GetProcessHeap(), 0, lpwhr->pProxyAuthInfo);
-        lpwhr->pProxyAuthInfo = NULL;
-    }
 
     INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
                           INTERNET_STATUS_CLOSING_CONNECTION, 0, 0);
@@ -1598,29 +1602,224 @@ static DWORD HTTPREQ_SetOption(WININETHANDLEHEADER *hdr, DWORD option, void *buf
 
         return NETCON_set_timeout(&req->netConnection, option == INTERNET_OPTION_SEND_TIMEOUT,
                     *(DWORD*)buffer);
+
+    case INTERNET_OPTION_USERNAME:
+        HeapFree(GetProcessHeap(), 0, req->lpHttpSession->lpszUserName);
+        if (!(req->lpHttpSession->lpszUserName = WININET_strdupW(buffer))) return ERROR_OUTOFMEMORY;
+        return ERROR_SUCCESS;
+
+    case INTERNET_OPTION_PASSWORD:
+        HeapFree(GetProcessHeap(), 0, req->lpHttpSession->lpszPassword);
+        if (!(req->lpHttpSession->lpszPassword = WININET_strdupW(buffer))) return ERROR_OUTOFMEMORY;
+        return ERROR_SUCCESS;
     }
 
     return ERROR_INTERNET_INVALID_OPTION;
 }
 
-static DWORD HTTP_Read(WININETHTTPREQW *req, void *buffer, DWORD size, DWORD *read, BOOL sync)
+/* read some more data into the read buffer */
+static BOOL read_more_data( WININETHTTPREQW *req, int maxlen )
 {
-    int bytes_read;
+    int len;
 
-    if(!NETCON_recv(&req->netConnection, buffer, min(size, req->dwContentLength - req->dwContentRead),
-                     sync ? MSG_WAITALL : 0, &bytes_read)) {
-        if(req->dwContentLength != -1 && req->dwContentRead != req->dwContentLength)
-            ERR("not all data received %d/%d\n", req->dwContentRead, req->dwContentLength);
-
-        /* always return success, even if the network layer returns an error */
-        *read = 0;
-        HTTP_FinishedReading(req);
-        return ERROR_SUCCESS;
+    if (req->read_size && req->read_pos)
+    {
+        /* move existing data to the start of the buffer */
+        memmove( req->read_buf, req->read_buf + req->read_pos, req->read_size );
+        req->read_pos = 0;
     }
 
+    if (maxlen == -1) maxlen = sizeof(req->read_buf);
+    if (!NETCON_recv( &req->netConnection, req->read_buf + req->read_size,
+                      maxlen - req->read_size, 0, &len )) return FALSE;
+    req->read_size += len;
+    return TRUE;
+}
+
+/* remove some amount of data from the read buffer */
+static void remove_data( WININETHTTPREQW *req, int count )
+{
+    if (!(req->read_size -= count)) req->read_pos = 0;
+    else req->read_pos += count;
+}
+
+static BOOL read_line( WININETHTTPREQW *req, LPSTR buffer, DWORD *len )
+{
+    int count, bytes_read, pos = 0;
+
+    for (;;)
+    {
+        char *eol = memchr( req->read_buf + req->read_pos, '\n', req->read_size );
+
+        if (eol)
+        {
+            count = eol - (req->read_buf + req->read_pos);
+            bytes_read = count + 1;
+        }
+        else count = bytes_read = req->read_size;
+
+        count = min( count, *len - pos );
+        memcpy( buffer + pos, req->read_buf + req->read_pos, count );
+        pos += count;
+        remove_data( req, bytes_read );
+        if (eol) break;
+
+        if (!read_more_data( req, -1 )) return FALSE;
+        if (!req->read_size)
+        {
+            *len = 0;
+            TRACE( "returning empty string\n" );
+            return FALSE;
+        }
+    }
+
+    if (pos < *len)
+    {
+        if (pos && buffer[pos - 1] == '\r') pos--;
+        *len = pos + 1;
+    }
+    buffer[*len - 1] = 0;
+    TRACE( "returning %s\n", debugstr_a(buffer));
+    return TRUE;
+}
+
+/* discard data contents until we reach end of line */
+static BOOL discard_eol( WININETHTTPREQW *req )
+{
+    do
+    {
+        char *eol = memchr( req->read_buf + req->read_pos, '\n', req->read_size );
+        if (eol)
+        {
+            remove_data( req, (eol + 1) - (req->read_buf + req->read_pos) );
+            break;
+        }
+        req->read_pos = req->read_size = 0;  /* discard everything */
+        if (!read_more_data( req, -1 )) return FALSE;
+    } while (req->read_size);
+    return TRUE;
+}
+
+/* read the size of the next chunk */
+static BOOL start_next_chunk( WININETHTTPREQW *req )
+{
+    DWORD chunk_size = 0;
+
+    if (!req->dwContentLength) return TRUE;
+    if (req->dwContentLength == req->dwContentRead)
+    {
+        /* read terminator for the previous chunk */
+        if (!discard_eol( req )) return FALSE;
+        req->dwContentLength = ~0u;
+        req->dwContentRead = 0;
+    }
+    for (;;)
+    {
+        while (req->read_size)
+        {
+            char ch = req->read_buf[req->read_pos];
+            if (ch >= '0' && ch <= '9') chunk_size = chunk_size * 16 + ch - '0';
+            else if (ch >= 'a' && ch <= 'f') chunk_size = chunk_size * 16 + ch - 'a' + 10;
+            else if (ch >= 'A' && ch <= 'F') chunk_size = chunk_size * 16 + ch - 'A' + 10;
+            else if (ch == ';' || ch == '\r' || ch == '\n')
+            {
+                TRACE( "reading %u byte chunk\n", chunk_size );
+                req->dwContentLength = chunk_size;
+                req->dwContentRead = 0;
+                if (!discard_eol( req )) return FALSE;
+                return TRUE;
+            }
+            remove_data( req, 1 );
+        }
+        if (!read_more_data( req, -1 )) return FALSE;
+        if (!req->read_size)
+        {
+            req->dwContentLength = req->dwContentRead = 0;
+            return TRUE;
+        }
+    }
+}
+
+/* return the size of data available to be read immediately */
+static DWORD get_avail_data( WININETHTTPREQW *req )
+{
+    if (req->read_chunked && (req->dwContentLength == ~0u || req->dwContentLength == req->dwContentRead))
+        return 0;
+    return min( req->read_size, req->dwContentLength - req->dwContentRead );
+}
+
+/* check if we have reached the end of the data to read */
+static BOOL end_of_read_data( WININETHTTPREQW *req )
+{
+    if (req->read_chunked) return (req->dwContentLength == 0);
+    if (req->dwContentLength == ~0u) return FALSE;
+    return (req->dwContentLength == req->dwContentRead);
+}
+
+static BOOL refill_buffer( WININETHTTPREQW *req )
+{
+    int len = sizeof(req->read_buf);
+
+    if (req->read_chunked && (req->dwContentLength == ~0u || req->dwContentLength == req->dwContentRead))
+    {
+        if (!start_next_chunk( req )) return FALSE;
+    }
+
+    if (req->dwContentLength != ~0u) len = min( len, req->dwContentLength - req->dwContentRead );
+    if (len <= req->read_size) return TRUE;
+
+    if (!read_more_data( req, len )) return FALSE;
+    if (!req->read_size) req->dwContentLength = req->dwContentRead = 0;
+    return TRUE;
+}
+
+static void HTTP_ReceiveRequestData(WININETHTTPREQW *req, BOOL first_notif)
+{
+    INTERNET_ASYNC_RESULT iar;
+
+    TRACE("%p\n", req);
+
+    if (refill_buffer( req )) {
+        iar.dwResult = (DWORD_PTR)req->hdr.hInternet;
+        iar.dwError = first_notif ? 0 : get_avail_data(req);
+    }else {
+        iar.dwResult = 0;
+        iar.dwError = INTERNET_GetLastError();
+    }
+
+    INTERNET_SendCallback(&req->hdr, req->hdr.dwContext, INTERNET_STATUS_REQUEST_COMPLETE, &iar,
+                          sizeof(INTERNET_ASYNC_RESULT));
+}
+
+static DWORD HTTPREQ_Read(WININETHTTPREQW *req, void *buffer, DWORD size, DWORD *read, BOOL sync)
+{
+    int len, bytes_read = 0;
+
+    if (req->read_chunked && (req->dwContentLength == ~0u || req->dwContentLength == req->dwContentRead))
+    {
+        if (!start_next_chunk( req )) goto done;
+    }
+    if (req->dwContentLength != ~0u) size = min( size, req->dwContentLength - req->dwContentRead );
+
+    if (req->read_size)
+    {
+        bytes_read = min( req->read_size, size );
+        memcpy( buffer, req->read_buf + req->read_pos, bytes_read );
+        remove_data( req, bytes_read );
+    }
+
+    if (size > bytes_read && (!bytes_read || sync))
+    {
+        if (NETCON_recv( &req->netConnection, (char *)buffer + bytes_read, size - bytes_read,
+                         sync ? MSG_WAITALL : 0, &len))
+            bytes_read += len;
+        /* always return success, even if the network layer returns an error */
+    }
+done:
     req->dwContentRead += bytes_read;
     *read = bytes_read;
 
+    TRACE( "retrieved %u bytes (%u/%u)\n", bytes_read, req->dwContentRead, req->dwContentLength );
     if(req->lpszCacheFile) {
         BOOL res;
         DWORD dwBytesWritten;
@@ -1636,102 +1835,6 @@ static DWORD HTTP_Read(WININETHTTPREQW *req, void *buffer, DWORD size, DWORD *re
     return ERROR_SUCCESS;
 }
 
-static DWORD get_chunk_size(const char *buffer)
-{
-    const char *p;
-    DWORD size = 0;
-
-    for (p = buffer; *p; p++)
-    {
-        if (*p >= '0' && *p <= '9') size = size * 16 + *p - '0';
-        else if (*p >= 'a' && *p <= 'f') size = size * 16 + *p - 'a' + 10;
-        else if (*p >= 'A' && *p <= 'F') size = size * 16 + *p - 'A' + 10;
-        else if (*p == ';') break;
-    }
-    return size;
-}
-
-static DWORD HTTP_ReadChunked(WININETHTTPREQW *req, void *buffer, DWORD size, DWORD *read, BOOL sync)
-{
-    char reply[MAX_REPLY_LEN], *p = buffer;
-    DWORD buflen, to_read, to_write = size;
-    int bytes_read;
-
-    *read = 0;
-    for (;;)
-    {
-        if (*read == size) break;
-
-        if (req->dwContentLength == ~0UL) /* new chunk */
-        {
-            buflen = sizeof(reply);
-            if (!NETCON_getNextLine(&req->netConnection, reply, &buflen)) break;
-
-            if (!(req->dwContentLength = get_chunk_size(reply)))
-            {
-                /* zero sized chunk marks end of transfer; read any trailing headers and return */
-                HTTP_GetResponseHeaders(req, FALSE);
-                break;
-            }
-        }
-        to_read = min(to_write, req->dwContentLength - req->dwContentRead);
-
-        if (!NETCON_recv(&req->netConnection, p, to_read, sync ? MSG_WAITALL : 0, &bytes_read))
-        {
-            if (bytes_read != to_read)
-                ERR("Not all data received %d/%d\n", bytes_read, to_read);
-
-            /* always return success, even if the network layer returns an error */
-            *read = 0;
-            break;
-        }
-        if (!bytes_read) break;
-
-        req->dwContentRead += bytes_read;
-        to_write -= bytes_read;
-        *read += bytes_read;
-
-        if (req->lpszCacheFile)
-        {
-            DWORD dwBytesWritten;
-
-            if (!WriteFile(req->hCacheFile, p, bytes_read, &dwBytesWritten, NULL))
-                WARN("WriteFile failed: %u\n", GetLastError());
-        }
-        p += bytes_read;
-
-        if (req->dwContentRead == req->dwContentLength) /* chunk complete */
-        {
-            req->dwContentRead = 0;
-            req->dwContentLength = ~0UL;
-
-            buflen = sizeof(reply);
-            if (!NETCON_getNextLine(&req->netConnection, reply, &buflen))
-            {
-                ERR("Malformed chunk\n");
-                *read = 0;
-                break;
-            }
-        }
-    }
-    if (!*read) HTTP_FinishedReading(req);
-    return ERROR_SUCCESS;
-}
-
-static DWORD HTTPREQ_Read(WININETHTTPREQW *req, void *buffer, DWORD size, DWORD *read, BOOL sync)
-{
-    WCHAR encoding[20];
-    DWORD buflen = sizeof(encoding);
-    static const WCHAR szChunked[] = {'c','h','u','n','k','e','d',0};
-
-    if (HTTP_HttpQueryInfoW(req, HTTP_QUERY_TRANSFER_ENCODING, encoding, &buflen, NULL) &&
-        !strcmpiW(encoding, szChunked))
-    {
-        return HTTP_ReadChunked(req, buffer, size, read, sync);
-    }
-    else
-        return HTTP_Read(req, buffer, size, read, sync);
-}
 
 static DWORD HTTPREQ_ReadFile(WININETHANDLEHEADER *hdr, void *buffer, DWORD size, DWORD *read)
 {
@@ -1739,7 +1842,7 @@ static DWORD HTTPREQ_ReadFile(WININETHANDLEHEADER *hdr, void *buffer, DWORD size
     return HTTPREQ_Read(req, buffer, size, read, TRUE);
 }
 
-static void HTTPREQ_AsyncReadFileExProc(WORKREQUEST *workRequest)
+static void HTTPREQ_AsyncReadFileExAProc(WORKREQUEST *workRequest)
 {
     struct WORKREQ_INTERNETREADFILEEXA const *data = &workRequest->u.InternetReadFileExA;
     WININETHTTPREQW *req = (WININETHTTPREQW*)workRequest->hdr;
@@ -1774,22 +1877,77 @@ static DWORD HTTPREQ_ReadFileExA(WININETHANDLEHEADER *hdr, INTERNET_BUFFERSA *bu
 
     INTERNET_SendCallback(&req->hdr, req->hdr.dwContext, INTERNET_STATUS_RECEIVING_RESPONSE, NULL, 0);
 
-    if (hdr->dwFlags & INTERNET_FLAG_ASYNC) {
-        DWORD available = 0;
+    if ((hdr->dwFlags & INTERNET_FLAG_ASYNC) && !get_avail_data(req))
+    {
+        WORKREQUEST workRequest;
 
-        NETCON_query_data_available(&req->netConnection, &available);
-        if (!available)
-        {
-            WORKREQUEST workRequest;
+        workRequest.asyncproc = HTTPREQ_AsyncReadFileExAProc;
+        workRequest.hdr = WININET_AddRef(&req->hdr);
+        workRequest.u.InternetReadFileExA.lpBuffersOut = buffers;
 
-            workRequest.asyncproc = HTTPREQ_AsyncReadFileExProc;
-            workRequest.hdr = WININET_AddRef(&req->hdr);
-            workRequest.u.InternetReadFileExA.lpBuffersOut = buffers;
+        INTERNET_AsyncCall(&workRequest);
 
-            INTERNET_AsyncCall(&workRequest);
+        return ERROR_IO_PENDING;
+    }
 
-            return ERROR_IO_PENDING;
-        }
+    res = HTTPREQ_Read(req, buffers->lpvBuffer, buffers->dwBufferLength, &buffers->dwBufferLength,
+            !(flags & IRF_NO_WAIT));
+
+    if (res == ERROR_SUCCESS) {
+        DWORD size = buffers->dwBufferLength;
+        INTERNET_SendCallback(&req->hdr, req->hdr.dwContext, INTERNET_STATUS_RESPONSE_RECEIVED,
+                &size, sizeof(size));
+    }
+
+    return res;
+}
+
+static void HTTPREQ_AsyncReadFileExWProc(WORKREQUEST *workRequest)
+{
+    struct WORKREQ_INTERNETREADFILEEXW const *data = &workRequest->u.InternetReadFileExW;
+    WININETHTTPREQW *req = (WININETHTTPREQW*)workRequest->hdr;
+    INTERNET_ASYNC_RESULT iar;
+    DWORD res;
+
+    TRACE("INTERNETREADFILEEXW %p\n", workRequest->hdr);
+
+    res = HTTPREQ_Read(req, data->lpBuffersOut->lpvBuffer,
+            data->lpBuffersOut->dwBufferLength, &data->lpBuffersOut->dwBufferLength, TRUE);
+
+    iar.dwResult = res == ERROR_SUCCESS;
+    iar.dwError = res;
+
+    INTERNET_SendCallback(&req->hdr, req->hdr.dwContext,
+                          INTERNET_STATUS_REQUEST_COMPLETE, &iar,
+                          sizeof(INTERNET_ASYNC_RESULT));
+}
+
+static DWORD HTTPREQ_ReadFileExW(WININETHANDLEHEADER *hdr, INTERNET_BUFFERSW *buffers,
+        DWORD flags, DWORD_PTR context)
+{
+
+    WININETHTTPREQW *req = (WININETHTTPREQW*)hdr;
+    DWORD res;
+
+    if (flags & ~(IRF_ASYNC|IRF_NO_WAIT))
+        FIXME("these dwFlags aren't implemented: 0x%x\n", flags & ~(IRF_ASYNC|IRF_NO_WAIT));
+
+    if (buffers->dwStructSize != sizeof(*buffers))
+        return ERROR_INVALID_PARAMETER;
+
+    INTERNET_SendCallback(&req->hdr, req->hdr.dwContext, INTERNET_STATUS_RECEIVING_RESPONSE, NULL, 0);
+
+    if ((hdr->dwFlags & INTERNET_FLAG_ASYNC) && !get_avail_data(req))
+    {
+        WORKREQUEST workRequest;
+
+        workRequest.asyncproc = HTTPREQ_AsyncReadFileExWProc;
+        workRequest.hdr = WININET_AddRef(&req->hdr);
+        workRequest.u.InternetReadFileExW.lpBuffersOut = buffers;
+
+        INTERNET_AsyncCall(&workRequest);
+
+        return ERROR_IO_PENDING;
     }
 
     res = HTTPREQ_Read(req, buffers->lpvBuffer, buffers->dwBufferLength, &buffers->dwBufferLength,
@@ -1806,58 +1964,62 @@ static DWORD HTTPREQ_ReadFileExA(WININETHANDLEHEADER *hdr, INTERNET_BUFFERSA *bu
 
 static BOOL HTTPREQ_WriteFile(WININETHANDLEHEADER *hdr, const void *buffer, DWORD size, DWORD *written)
 {
+    BOOL ret;
     LPWININETHTTPREQW lpwhr = (LPWININETHTTPREQW)hdr;
 
-    return NETCON_send(&lpwhr->netConnection, buffer, size, 0, (LPINT)written);
+    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext, INTERNET_STATUS_SENDING_REQUEST, NULL, 0);
+
+    *written = 0;
+    if ((ret = NETCON_send(&lpwhr->netConnection, buffer, size, 0, (LPINT)written)))
+        lpwhr->dwBytesWritten += *written;
+
+    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext, INTERNET_STATUS_REQUEST_SENT, written, sizeof(DWORD));
+    return ret;
 }
 
 static void HTTPREQ_AsyncQueryDataAvailableProc(WORKREQUEST *workRequest)
 {
     WININETHTTPREQW *req = (WININETHTTPREQW*)workRequest->hdr;
-    INTERNET_ASYNC_RESULT iar;
-    char buffer[4048];
 
-    TRACE("%p\n", workRequest->hdr);
-
-    iar.dwResult = NETCON_recv(&req->netConnection, buffer,
-                               min(sizeof(buffer), req->dwContentLength - req->dwContentRead),
-                               MSG_PEEK, (int *)&iar.dwError);
-
-    INTERNET_SendCallback(&req->hdr, req->hdr.dwContext, INTERNET_STATUS_REQUEST_COMPLETE, &iar,
-                          sizeof(INTERNET_ASYNC_RESULT));
+    HTTP_ReceiveRequestData(req, FALSE);
 }
 
 static DWORD HTTPREQ_QueryDataAvailable(WININETHANDLEHEADER *hdr, DWORD *available, DWORD flags, DWORD_PTR ctx)
 {
     WININETHTTPREQW *req = (WININETHTTPREQW*)hdr;
-    BYTE buffer[4048];
-    BOOL async;
 
     TRACE("(%p %p %x %lx)\n", req, available, flags, ctx);
 
-    if(!NETCON_query_data_available(&req->netConnection, available) || *available)
-        return ERROR_SUCCESS;
-
-    /* Even if we are in async mode, we need to determine whether
-     * there is actually more data available. We do this by trying
-     * to peek only a single byte in async mode. */
-    async = (req->lpHttpSession->lpAppInfo->hdr.dwFlags & INTERNET_FLAG_ASYNC) != 0;
-
-    if (NETCON_recv(&req->netConnection, buffer,
-                    min(async ? 1 : sizeof(buffer), req->dwContentLength - req->dwContentRead),
-                    MSG_PEEK, (int *)available) && async && *available)
+    if (!(*available = get_avail_data( req )))
     {
-        WORKREQUEST workRequest;
+        if (end_of_read_data( req )) return ERROR_SUCCESS;
 
-        *available = 0;
-        workRequest.asyncproc = HTTPREQ_AsyncQueryDataAvailableProc;
-        workRequest.hdr = WININET_AddRef( &req->hdr );
+        if (req->lpHttpSession->lpAppInfo->hdr.dwFlags & INTERNET_FLAG_ASYNC)
+        {
+            WORKREQUEST workRequest;
 
-        INTERNET_AsyncCall(&workRequest);
+            workRequest.asyncproc = HTTPREQ_AsyncQueryDataAvailableProc;
+            workRequest.hdr = WININET_AddRef( &req->hdr );
 
-        return ERROR_IO_PENDING;
+            INTERNET_AsyncCall(&workRequest);
+
+            return ERROR_IO_PENDING;
+        }
+        else
+        {
+            refill_buffer( req );
+            *available = get_avail_data( req );
+        }
     }
 
+    if (*available == sizeof(req->read_buf))  /* check if we have even more pending in the socket */
+    {
+        DWORD extra;
+        if (NETCON_query_data_available(&req->netConnection, &extra))
+            *available = min( *available + extra, req->dwContentLength - req->dwContentRead );
+    }
+
+    TRACE( "returning %u\n", *available );
     return ERROR_SUCCESS;
 }
 
@@ -1868,6 +2030,7 @@ static const HANDLEHEADERVtbl HTTPREQVtbl = {
     HTTPREQ_SetOption,
     HTTPREQ_ReadFile,
     HTTPREQ_ReadFileExA,
+    HTTPREQ_ReadFileExW,
     HTTPREQ_WriteFile,
     HTTPREQ_QueryDataAvailable,
     NULL
@@ -1913,6 +2076,7 @@ HINTERNET WINAPI HTTP_HttpOpenRequestW(LPWININETHTTPSESSIONW lpwhs,
     lpwhr->hdr.refs = 1;
     lpwhr->hdr.lpfnStatusCB = lpwhs->hdr.lpfnStatusCB;
     lpwhr->hdr.dwInternalFlags = lpwhs->hdr.dwInternalFlags & INET_CALLBACKW;
+    lpwhr->dwContentLength = ~0u;
 
     WININET_AddRef( &lpwhs->hdr );
     lpwhr->lpHttpSession = lpwhs;
@@ -1950,7 +2114,7 @@ HINTERNET WINAPI HTTP_HttpOpenRequestW(LPWININETHTTPSESSIONW lpwhs,
         lpwhr->lpszPath = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
         rc = UrlEscapeW(lpszObjectName, lpwhr->lpszPath, &len,
                    URL_ESCAPE_SPACES_ONLY);
-        if (rc)
+        if (rc != S_OK)
         {
             ERR("Unable to escape string!(%s) (%d)\n",debugstr_w(lpszObjectName),rc);
             strcpyW(lpwhr->lpszPath,lpszObjectName);
@@ -2027,12 +2191,15 @@ static void HTTP_DrainContent(WININETHTTPREQW *req)
     if (!NETCON_connected(&req->netConnection)) return;
 
     if (req->dwContentLength == -1)
+    {
         NETCON_close(&req->netConnection);
+        return;
+    }
 
     do
     {
         char buffer[2048];
-        if (HTTP_Read(req, buffer, sizeof(buffer), &bytes_read, TRUE) != ERROR_SUCCESS)
+        if (HTTPREQ_Read(req, buffer, sizeof(buffer), &bytes_read, TRUE) != ERROR_SUCCESS)
             return;
     } while (bytes_read);
 }
@@ -2169,27 +2336,28 @@ static const LPCWSTR header_lookup[] = {
 /***********************************************************************
  *           HTTP_HttpQueryInfoW (internal)
  */
-static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLevel,
+static BOOL HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLevel,
 	LPVOID lpBuffer, LPDWORD lpdwBufferLength, LPDWORD lpdwIndex)
 {
     LPHTTPHEADERW lphttpHdr = NULL;
     BOOL bSuccess = FALSE;
     BOOL request_only = dwInfoLevel & HTTP_QUERY_FLAG_REQUEST_HEADERS;
     INT requested_index = lpdwIndex ? *lpdwIndex : 0;
-    INT level = (dwInfoLevel & ~HTTP_QUERY_MODIFIER_FLAGS_MASK);
+    DWORD level = (dwInfoLevel & ~HTTP_QUERY_MODIFIER_FLAGS_MASK);
     INT index = -1;
 
     /* Find requested header structure */
     switch (level)
     {
     case HTTP_QUERY_CUSTOM:
+        if (!lpBuffer) return FALSE;
         index = HTTP_GetCustomHeaderIndex(lpwhr, lpBuffer, requested_index, request_only);
         break;
 
     case HTTP_QUERY_RAW_HEADERS_CRLF:
         {
             LPWSTR headers;
-            DWORD len;
+            DWORD len = 0;
             BOOL ret = FALSE;
 
             if (request_only)
@@ -2197,15 +2365,24 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
             else
                 headers = lpwhr->lpszRawHeaders;
 
-            len = (strlenW(headers) + 1) * sizeof(WCHAR);
-            if (len > *lpdwBufferLength)
+            if (headers)
+                len = strlenW(headers) * sizeof(WCHAR);
+
+            if (len + sizeof(WCHAR) > *lpdwBufferLength)
             {
+                len += sizeof(WCHAR);
                 INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 ret = FALSE;
             }
             else if (lpBuffer)
             {
-                memcpy(lpBuffer, headers, len);
+                if (headers)
+                    memcpy(lpBuffer, headers, len + sizeof(WCHAR));
+                else
+                {
+                    len = strlenW(szCrLf) * sizeof(WCHAR);
+                    memcpy(lpBuffer, szCrLf, sizeof(szCrLf));
+                }
                 TRACE("returning data: %s\n", debugstr_wn(lpBuffer, len / sizeof(WCHAR)));
                 ret = TRUE;
             }
@@ -2217,10 +2394,9 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
         }
     case HTTP_QUERY_RAW_HEADERS:
         {
-            static const WCHAR szCrLf[] = {'\r','\n',0};
             LPWSTR * ppszRawHeaderLines = HTTP_Tokenize(lpwhr->lpszRawHeaders, szCrLf);
             DWORD i, size = 0;
-            LPWSTR pszString = (WCHAR*)lpBuffer;
+            LPWSTR pszString = lpBuffer;
 
             for (i = 0; ppszRawHeaderLines[i]; i++)
                 size += strlenW(ppszRawHeaderLines[i]) + 1;
@@ -2232,17 +2408,17 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
                 INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return FALSE;
             }
-
-            for (i = 0; ppszRawHeaderLines[i]; i++)
+            if (pszString)
             {
-                DWORD len = strlenW(ppszRawHeaderLines[i]);
-                memcpy(pszString, ppszRawHeaderLines[i], (len+1)*sizeof(WCHAR));
-                pszString += len+1;
+                for (i = 0; ppszRawHeaderLines[i]; i++)
+                {
+                    DWORD len = strlenW(ppszRawHeaderLines[i]);
+                    memcpy(pszString, ppszRawHeaderLines[i], (len+1)*sizeof(WCHAR));
+                    pszString += len+1;
+                }
+                *pszString = '\0';
+                TRACE("returning data: %s\n", debugstr_wn(lpBuffer, size));
             }
-            *pszString = '\0';
-
-            TRACE("returning data: %s\n", debugstr_wn((WCHAR*)lpBuffer, size));
-
             *lpdwBufferLength = size * sizeof(WCHAR);
             HTTP_FreeTokens(ppszRawHeaderLines);
 
@@ -2258,11 +2434,12 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
                 INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return FALSE;
             }
-            memcpy(lpBuffer, lpwhr->lpszStatusText, (len+1)*sizeof(WCHAR));
+            if (lpBuffer)
+            {
+                memcpy(lpBuffer, lpwhr->lpszStatusText, (len + 1) * sizeof(WCHAR));
+                TRACE("returning data: %s\n", debugstr_wn(lpBuffer, len));
+            }
             *lpdwBufferLength = len * sizeof(WCHAR);
-
-            TRACE("returning data: %s\n", debugstr_wn((WCHAR*)lpBuffer, len));
-
             return TRUE;
         }
         break;
@@ -2276,18 +2453,19 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
                 INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return FALSE;
             }
-            memcpy(lpBuffer, lpwhr->lpszVersion, (len+1)*sizeof(WCHAR));
+            if (lpBuffer)
+            {
+                memcpy(lpBuffer, lpwhr->lpszVersion, (len + 1) * sizeof(WCHAR));
+                TRACE("returning data: %s\n", debugstr_wn(lpBuffer, len));
+            }
             *lpdwBufferLength = len * sizeof(WCHAR);
-
-            TRACE("returning data: %s\n", debugstr_wn((WCHAR*)lpBuffer, len));
-
             return TRUE;
         }
         break;
     default:
         assert (LAST_TABLE_HEADER == (HTTP_QUERY_UNLESS_MODIFIED_SINCE + 1));
 
-        if (level >= 0 && level < LAST_TABLE_HEADER && header_lookup[level])
+        if (level < LAST_TABLE_HEADER && header_lookup[level])
             index = HTTP_GetCustomHeaderIndex(lpwhr, header_lookup[level],
                                               requested_index,request_only);
     }
@@ -2304,18 +2482,16 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
         return bSuccess;
     }
 
-    if (lpdwIndex)
-        (*lpdwIndex)++;
+    if (lpdwIndex && level != HTTP_QUERY_STATUS_CODE) (*lpdwIndex)++;
 
     /* coalesce value to requested type */
-    if (dwInfoLevel & HTTP_QUERY_FLAG_NUMBER)
+    if (dwInfoLevel & HTTP_QUERY_FLAG_NUMBER && lpBuffer)
     {
-	*(int *)lpBuffer = atoiW(lphttpHdr->lpszValue);
-	bSuccess = TRUE;
-
-	TRACE(" returning number : %d\n", *(int *)lpBuffer);
+        *(int *)lpBuffer = atoiW(lphttpHdr->lpszValue);
+        TRACE(" returning number: %d\n", *(int *)lpBuffer);
+        bSuccess = TRUE;
     }
-    else if (dwInfoLevel & HTTP_QUERY_FLAG_SYSTEMTIME)
+    else if (dwInfoLevel & HTTP_QUERY_FLAG_SYSTEMTIME && lpBuffer)
     {
         time_t tmpTime;
         struct tm tmpTM;
@@ -2324,24 +2500,20 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
         tmpTime = ConvertTimeString(lphttpHdr->lpszValue);
 
         tmpTM = *gmtime(&tmpTime);
-        STHook = (SYSTEMTIME *) lpBuffer;
-        if(STHook==NULL)
-            return bSuccess;
-
-	STHook->wDay = tmpTM.tm_mday;
-	STHook->wHour = tmpTM.tm_hour;
-	STHook->wMilliseconds = 0;
-	STHook->wMinute = tmpTM.tm_min;
-	STHook->wDayOfWeek = tmpTM.tm_wday;
-	STHook->wMonth = tmpTM.tm_mon + 1;
-	STHook->wSecond = tmpTM.tm_sec;
-	STHook->wYear = tmpTM.tm_year;
+        STHook = (SYSTEMTIME *)lpBuffer;
+        STHook->wDay = tmpTM.tm_mday;
+        STHook->wHour = tmpTM.tm_hour;
+        STHook->wMilliseconds = 0;
+        STHook->wMinute = tmpTM.tm_min;
+        STHook->wDayOfWeek = tmpTM.tm_wday;
+        STHook->wMonth = tmpTM.tm_mon + 1;
+        STHook->wSecond = tmpTM.tm_sec;
+        STHook->wYear = tmpTM.tm_year;
+        bSuccess = TRUE;
 	
-	bSuccess = TRUE;
-	
-	TRACE(" returning time : %04d/%02d/%02d - %d - %02d:%02d:%02d.%02d\n", 
-	      STHook->wYear, STHook->wMonth, STHook->wDay, STHook->wDayOfWeek,
-	      STHook->wHour, STHook->wMinute, STHook->wSecond, STHook->wMilliseconds);
+        TRACE(" returning time: %04d/%02d/%02d - %d - %02d:%02d:%02d.%02d\n",
+              STHook->wYear, STHook->wMonth, STHook->wDay, STHook->wDayOfWeek,
+              STHook->wHour, STHook->wMinute, STHook->wSecond, STHook->wMilliseconds);
     }
     else if (lphttpHdr->lpszValue)
     {
@@ -2353,12 +2525,13 @@ static BOOL WINAPI HTTP_HttpQueryInfoW( LPWININETHTTPREQW lpwhr, DWORD dwInfoLev
             INTERNET_SetLastError(ERROR_INSUFFICIENT_BUFFER);
             return bSuccess;
         }
-
-        memcpy(lpBuffer, lphttpHdr->lpszValue, len);
+        if (lpBuffer)
+        {
+            memcpy(lpBuffer, lphttpHdr->lpszValue, len);
+            TRACE(" returning string: %s\n", debugstr_w(lpBuffer));
+        }
         *lpdwBufferLength = len - sizeof(WCHAR);
         bSuccess = TRUE;
-
-	TRACE(" returning string : %s\n", debugstr_w(lpBuffer));
     }
     return bSuccess;
 }
@@ -2778,8 +2951,13 @@ BOOL WINAPI HttpSendRequestW(HINTERNET hHttpRequest, LPCWSTR lpszHeaders,
         req = &workRequest.u.HttpSendRequestW;
         if (lpszHeaders)
         {
-            req->lpszHeader = HeapAlloc(GetProcessHeap(), 0, dwHeaderLength * sizeof(WCHAR));
-            memcpy(req->lpszHeader, lpszHeaders, dwHeaderLength * sizeof(WCHAR));
+            DWORD size;
+
+            if (dwHeaderLength == ~0u) size = (strlenW(lpszHeaders) + 1) * sizeof(WCHAR);
+            else size = dwHeaderLength * sizeof(WCHAR);
+
+            req->lpszHeader = HeapAlloc(GetProcessHeap(), 0, size);
+            memcpy(req->lpszHeader, lpszHeaders, size);
         }
         else
             req->lpszHeader = 0;
@@ -2850,12 +3028,74 @@ static BOOL HTTP_GetRequestURL(WININETHTTPREQW *req, LPWSTR buf)
 }
 
 /***********************************************************************
+ *           HTTP_GetRedirectURL (internal)
+ */
+static LPWSTR HTTP_GetRedirectURL(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl)
+{
+    static WCHAR szHttp[] = {'h','t','t','p',0};
+    static WCHAR szHttps[] = {'h','t','t','p','s',0};
+    LPWININETHTTPSESSIONW lpwhs = lpwhr->lpHttpSession;
+    URL_COMPONENTSW urlComponents;
+    DWORD url_length = 0;
+    LPWSTR orig_url;
+    LPWSTR combined_url;
+
+    if (lpszUrl[0]=='/') return WININET_strdupW( lpszUrl );
+
+    urlComponents.dwStructSize = sizeof(URL_COMPONENTSW);
+    urlComponents.lpszScheme = (lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE) ? szHttps : szHttp;
+    urlComponents.dwSchemeLength = 0;
+    urlComponents.lpszHostName = lpwhs->lpszHostName;
+    urlComponents.dwHostNameLength = 0;
+    urlComponents.nPort = lpwhs->nHostPort;
+    urlComponents.lpszUserName = lpwhs->lpszUserName;
+    urlComponents.dwUserNameLength = 0;
+    urlComponents.lpszPassword = NULL;
+    urlComponents.dwPasswordLength = 0;
+    urlComponents.lpszUrlPath = lpwhr->lpszPath;
+    urlComponents.dwUrlPathLength = 0;
+    urlComponents.lpszExtraInfo = NULL;
+    urlComponents.dwExtraInfoLength = 0;
+
+    if (!InternetCreateUrlW(&urlComponents, 0, NULL, &url_length) &&
+        (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
+        return NULL;
+
+    orig_url = HeapAlloc(GetProcessHeap(), 0, url_length);
+
+    /* convert from bytes to characters */
+    url_length = url_length / sizeof(WCHAR) - 1;
+    if (!InternetCreateUrlW(&urlComponents, 0, orig_url, &url_length))
+    {
+        HeapFree(GetProcessHeap(), 0, orig_url);
+        return NULL;
+    }
+
+    url_length = 0;
+    if (!InternetCombineUrlW(orig_url, lpszUrl, NULL, &url_length, ICU_ENCODE_SPACES_ONLY) &&
+        (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
+    {
+        HeapFree(GetProcessHeap(), 0, orig_url);
+        return NULL;
+    }
+    combined_url = HeapAlloc(GetProcessHeap(), 0, url_length * sizeof(WCHAR));
+
+    if (!InternetCombineUrlW(orig_url, lpszUrl, combined_url, &url_length, ICU_ENCODE_SPACES_ONLY))
+    {
+        HeapFree(GetProcessHeap(), 0, orig_url);
+        HeapFree(GetProcessHeap(), 0, combined_url);
+        return NULL;
+    }
+    HeapFree(GetProcessHeap(), 0, orig_url);
+    return combined_url;
+}
+
+
+/***********************************************************************
  *           HTTP_HandleRedirect (internal)
  */
 static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl)
 {
-    static const WCHAR szContentType[] = {'C','o','n','t','e','n','t','-','T','y','p','e',0};
-    static const WCHAR szContentLength[] = {'C','o','n','t','e','n','t','-','L','e','n','g','t','h',0};
     LPWININETHTTPSESSIONW lpwhs = lpwhr->lpHttpSession;
     LPWININETAPPINFOW hIC = lpwhs->lpAppInfo;
     BOOL using_proxy = hIC->lpszProxy && hIC->lpszProxy[0];
@@ -2873,55 +3113,6 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl)
         WCHAR protocol[32], hostName[MAXHOSTNAME], userName[1024];
         static WCHAR szHttp[] = {'h','t','t','p',0};
         static WCHAR szHttps[] = {'h','t','t','p','s',0};
-        DWORD url_length = 0;
-        LPWSTR orig_url;
-        LPWSTR combined_url;
-
-        urlComponents.dwStructSize = sizeof(URL_COMPONENTSW);
-        urlComponents.lpszScheme = (lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE) ? szHttps : szHttp;
-        urlComponents.dwSchemeLength = 0;
-        urlComponents.lpszHostName = lpwhs->lpszHostName;
-        urlComponents.dwHostNameLength = 0;
-        urlComponents.nPort = lpwhs->nHostPort;
-        urlComponents.lpszUserName = lpwhs->lpszUserName;
-        urlComponents.dwUserNameLength = 0;
-        urlComponents.lpszPassword = NULL;
-        urlComponents.dwPasswordLength = 0;
-        urlComponents.lpszUrlPath = lpwhr->lpszPath;
-        urlComponents.dwUrlPathLength = 0;
-        urlComponents.lpszExtraInfo = NULL;
-        urlComponents.dwExtraInfoLength = 0;
-
-        if (!InternetCreateUrlW(&urlComponents, 0, NULL, &url_length) &&
-            (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
-            return FALSE;
-
-        orig_url = HeapAlloc(GetProcessHeap(), 0, url_length);
-
-        /* convert from bytes to characters */
-        url_length = url_length / sizeof(WCHAR) - 1;
-        if (!InternetCreateUrlW(&urlComponents, 0, orig_url, &url_length))
-        {
-            HeapFree(GetProcessHeap(), 0, orig_url);
-            return FALSE;
-        }
-
-        url_length = 0;
-        if (!InternetCombineUrlW(orig_url, lpszUrl, NULL, &url_length, ICU_ENCODE_SPACES_ONLY) &&
-            (GetLastError() != ERROR_INSUFFICIENT_BUFFER))
-        {
-            HeapFree(GetProcessHeap(), 0, orig_url);
-            return FALSE;
-        }
-        combined_url = HeapAlloc(GetProcessHeap(), 0, url_length * sizeof(WCHAR));
-
-        if (!InternetCombineUrlW(orig_url, lpszUrl, combined_url, &url_length, ICU_ENCODE_SPACES_ONLY))
-        {
-            HeapFree(GetProcessHeap(), 0, orig_url);
-            HeapFree(GetProcessHeap(), 0, combined_url);
-            return FALSE;
-        }
-        HeapFree(GetProcessHeap(), 0, orig_url);
 
         userName[0] = 0;
         hostName[0] = 0;
@@ -2940,13 +3131,8 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl)
         urlComponents.dwUrlPathLength = 2048;
         urlComponents.lpszExtraInfo = NULL;
         urlComponents.dwExtraInfoLength = 0;
-        if(!InternetCrackUrlW(combined_url, strlenW(combined_url), 0, &urlComponents))
-        {
-            HeapFree(GetProcessHeap(), 0, combined_url);
+        if(!InternetCrackUrlW(lpszUrl, strlenW(lpszUrl), 0, &urlComponents))
             return FALSE;
-        }
-
-        HeapFree(GetProcessHeap(), 0, combined_url);
 
         if (!strncmpW(szHttp, urlComponents.lpszScheme, strlenW(szHttp)) &&
             (lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE))
@@ -3020,6 +3206,8 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl)
                 NETCON_close(&lpwhr->netConnection);
                 if (!HTTP_ResolveName(lpwhr)) return FALSE;
                 if (!NETCON_init(&lpwhr->netConnection, lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE)) return FALSE;
+                lpwhr->read_pos = lpwhr->read_size = 0;
+                lpwhr->read_chunked = FALSE;
             }
         }
         else
@@ -3039,7 +3227,7 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl)
         lpwhr->lpszPath = HeapAlloc(GetProcessHeap(), 0, needed*sizeof(WCHAR));
         rc = UrlEscapeW(path, lpwhr->lpszPath, &needed,
                         URL_ESCAPE_SPACES_ONLY);
-        if (rc)
+        if (rc != S_OK)
         {
             ERR("Unable to escape string!(%s) (%d)\n",debugstr_w(path),rc);
             strcpyW(lpwhr->lpszPath,path);
@@ -3047,10 +3235,10 @@ static BOOL HTTP_HandleRedirect(LPWININETHTTPREQW lpwhr, LPCWSTR lpszUrl)
     }
 
     /* Remove custom content-type/length headers on redirects.  */
-    index = HTTP_GetCustomHeaderIndex(lpwhr, szContentType, 0, TRUE);
+    index = HTTP_GetCustomHeaderIndex(lpwhr, szContent_Type, 0, TRUE);
     if (0 <= index)
         HTTP_DeleteCustomHeader(lpwhr, index);
-    index = HTTP_GetCustomHeaderIndex(lpwhr, szContentLength, 0, TRUE);
+    index = HTTP_GetCustomHeaderIndex(lpwhr, szContent_Length, 0, TRUE);
     if (0 <= index)
         HTTP_DeleteCustomHeader(lpwhr, index);
 
@@ -3124,29 +3312,28 @@ static BOOL HTTP_SecureProxyConnect(LPWININETHTTPREQW lpwhr)
 
 static void HTTP_InsertCookies(LPWININETHTTPREQW lpwhr)
 {
-    static const WCHAR szUrlForm[] = {'h','t','t','p',':','/','/','%','s',0};
+    static const WCHAR szUrlForm[] = {'h','t','t','p',':','/','/','%','s','%','s',0};
     LPWSTR lpszCookies, lpszUrl = NULL;
     DWORD nCookieSize, size;
     LPHTTPHEADERW Host = HTTP_GetHeader(lpwhr,szHost);
 
-    size = (strlenW(Host->lpszValue) + strlenW(szUrlForm)) * sizeof(WCHAR);
+    size = (strlenW(Host->lpszValue) + strlenW(szUrlForm) + strlenW(lpwhr->lpszPath)) * sizeof(WCHAR);
     if (!(lpszUrl = HeapAlloc(GetProcessHeap(), 0, size))) return;
-    sprintfW( lpszUrl, szUrlForm, Host->lpszValue );
+    sprintfW( lpszUrl, szUrlForm, Host->lpszValue, lpwhr->lpszPath);
 
     if (InternetGetCookieW(lpszUrl, NULL, NULL, &nCookieSize))
     {
         int cnt = 0;
         static const WCHAR szCookie[] = {'C','o','o','k','i','e',':',' ',0};
-        static const WCHAR szcrlf[] = {'\r','\n',0};
 
-        size = sizeof(szCookie) + nCookieSize * sizeof(WCHAR) + sizeof(szcrlf);
+        size = sizeof(szCookie) + nCookieSize * sizeof(WCHAR) + sizeof(szCrLf);
         if ((lpszCookies = HeapAlloc(GetProcessHeap(), 0, size)))
         {
             cnt += sprintfW(lpszCookies, szCookie);
             InternetGetCookieW(lpszUrl, NULL, lpszCookies + cnt, &nCookieSize);
-            strcatW(lpszCookies, szcrlf);
+            strcatW(lpszCookies, szCrLf);
 
-            HTTP_HttpAddRequestHeadersW(lpwhr, lpszCookies, strlenW(lpszCookies), HTTP_ADDREQ_FLAG_ADD);
+            HTTP_HttpAddRequestHeadersW(lpwhr, lpszCookies, strlenW(lpszCookies), HTTP_ADDREQ_FLAG_REPLACE);
             HeapFree(GetProcessHeap(), 0, lpszCookies);
         }
     }
@@ -3168,7 +3355,7 @@ BOOL WINAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
 	DWORD dwContentLength, BOOL bEndRequest)
 {
     INT cnt;
-    BOOL bSuccess = FALSE;
+    BOOL bSuccess = FALSE, redirected = FALSE;
     LPWSTR requestString = NULL;
     INT responseLen;
     BOOL loop_next;
@@ -3186,10 +3373,11 @@ BOOL WINAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
     if (!lpwhr->lpszVerb)
         lpwhr->lpszVerb = WININET_strdupW(szGET);
 
-    if (dwContentLength || !strcmpW(lpwhr->lpszVerb, szPost))
+    if (dwContentLength || strcmpW(lpwhr->lpszVerb, szGET))
     {
         sprintfW(contentLengthStr, szContentLength, dwContentLength);
-        HTTP_HttpAddRequestHeadersW(lpwhr, contentLengthStr, -1L, HTTP_ADDREQ_FLAG_ADD_IF_NEW);
+        HTTP_HttpAddRequestHeadersW(lpwhr, contentLengthStr, -1L, HTTP_ADDREQ_FLAG_REPLACE);
+        lpwhr->dwBytesToWrite = dwContentLength;
     }
     if (lpwhr->lpHttpSession->lpAppInfo->lpszAgent)
     {
@@ -3269,7 +3457,7 @@ BOOL WINAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
             goto lend;
 
         /* send the request as ASCII, tack on the optional data */
-        if( !lpOptional )
+        if (!lpOptional || redirected)
             dwOptionalLength = 0;
         len = WideCharToMultiByte( CP_ACP, 0, requestString, -1,
                                    NULL, 0, NULL, NULL );
@@ -3288,6 +3476,8 @@ BOOL WINAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
         NETCON_send(&lpwhr->netConnection, ascii_req, len, 0, &cnt);
         HeapFree( GetProcessHeap(), 0, ascii_req );
 
+        lpwhr->dwBytesWritten = dwOptionalLength;
+
         INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
                               INTERNET_STATUS_REQUEST_SENT,
                               &len, sizeof(DWORD));
@@ -3296,8 +3486,6 @@ BOOL WINAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
         {
             DWORD dwBufferSize;
             DWORD dwStatusCode;
-            WCHAR encoding[20];
-            static const WCHAR szChunked[] = {'c','h','u','n','k','e','d',0};
 
             INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
                                 INTERNET_STATUS_RECEIVING_RESPONSE, NULL, 0);
@@ -3315,22 +3503,7 @@ BOOL WINAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
 
             HTTP_ProcessCookies(lpwhr);
 
-            dwBufferSize = sizeof(lpwhr->dwContentLength);
-            if (!HTTP_HttpQueryInfoW(lpwhr,HTTP_QUERY_FLAG_NUMBER|HTTP_QUERY_CONTENT_LENGTH,
-                                     &lpwhr->dwContentLength,&dwBufferSize,NULL))
-                lpwhr->dwContentLength = -1;
-
-            if (lpwhr->dwContentLength == 0)
-                HTTP_FinishedReading(lpwhr);
-
-            /* Correct the case where both a Content-Length and Transfer-encoding = chunked are set */
-
-            dwBufferSize = sizeof(encoding);
-            if (HTTP_HttpQueryInfoW(lpwhr, HTTP_QUERY_TRANSFER_ENCODING, encoding, &dwBufferSize, NULL) &&
-                !strcmpiW(encoding, szChunked))
-            {
-                lpwhr->dwContentLength = -1;
-            }
+            if (!set_content_length( lpwhr )) HTTP_FinishedReading(lpwhr);
 
             dwBufferSize = sizeof(dwStatusCode);
             if (!HTTP_HttpQueryInfoW(lpwhr,HTTP_QUERY_FLAG_NUMBER|HTTP_QUERY_STATUS_CODE,
@@ -3339,21 +3512,29 @@ BOOL WINAPI HTTP_HttpSendRequestW(LPWININETHTTPREQW lpwhr, LPCWSTR lpszHeaders,
 
             if (!(lpwhr->hdr.dwFlags & INTERNET_FLAG_NO_AUTO_REDIRECT) && bSuccess)
             {
-                WCHAR szNewLocation[INTERNET_MAX_URL_LENGTH];
+                WCHAR *new_url, szNewLocation[INTERNET_MAX_URL_LENGTH];
                 dwBufferSize=sizeof(szNewLocation);
                 if ((dwStatusCode==HTTP_STATUS_REDIRECT || dwStatusCode==HTTP_STATUS_MOVED) &&
                     HTTP_HttpQueryInfoW(lpwhr,HTTP_QUERY_LOCATION,szNewLocation,&dwBufferSize,NULL))
                 {
+                    /* redirects are always GETs */
+                    HeapFree(GetProcessHeap(), 0, lpwhr->lpszVerb);
+                    lpwhr->lpszVerb = WININET_strdupW(szGET);
+
                     HTTP_DrainContent(lpwhr);
-                    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
-                                          INTERNET_STATUS_REDIRECT, szNewLocation,
-                                          dwBufferSize);
-                    bSuccess = HTTP_HandleRedirect(lpwhr, szNewLocation);
-                    if (bSuccess)
+                    if ((new_url = HTTP_GetRedirectURL( lpwhr, szNewLocation )))
                     {
-                        HeapFree(GetProcessHeap(), 0, requestString);
-                        loop_next = TRUE;
+                        INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext, INTERNET_STATUS_REDIRECT,
+                                              new_url, (strlenW(new_url) + 1) * sizeof(WCHAR));
+                        bSuccess = HTTP_HandleRedirect(lpwhr, new_url);
+                        if (bSuccess)
+                        {
+                            HeapFree(GetProcessHeap(), 0, requestString);
+                            loop_next = TRUE;
+                        }
+                        HeapFree( GetProcessHeap(), 0, new_url );
                     }
+                    redirected = TRUE;
                 }
             }
             if (!(lpwhr->hdr.dwFlags & INTERNET_FLAG_NO_AUTH) && bSuccess)
@@ -3429,12 +3610,31 @@ lend:
 
     /* TODO: send notification for P3P header */
 
-    iar.dwResult = (DWORD_PTR)lpwhr->hdr.hInternet;
-    iar.dwError = bSuccess ? ERROR_SUCCESS : INTERNET_GetLastError();
+    if (lpwhr->lpHttpSession->lpAppInfo->hdr.dwFlags & INTERNET_FLAG_ASYNC)
+    {
+        if (bSuccess)
+        {
+            if (lpwhr->dwBytesWritten == lpwhr->dwBytesToWrite) HTTP_ReceiveRequestData(lpwhr, TRUE);
+            else
+            {
+                iar.dwResult = (DWORD_PTR)lpwhr->hdr.hInternet;
+                iar.dwError = 0;
 
-    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
-                          INTERNET_STATUS_REQUEST_COMPLETE, &iar,
-                          sizeof(INTERNET_ASYNC_RESULT));
+                INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
+                                  INTERNET_STATUS_REQUEST_COMPLETE, &iar,
+                                  sizeof(INTERNET_ASYNC_RESULT));
+            }
+        }
+        else
+        {
+            iar.dwResult = (DWORD_PTR)lpwhr->hdr.hInternet;
+            iar.dwError = INTERNET_GetLastError();
+
+            INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
+                                  INTERNET_STATUS_REQUEST_COMPLETE, &iar,
+                                  sizeof(INTERNET_ASYNC_RESULT));
+        }
+    }
 
     TRACE("<--\n");
     if (bSuccess) INTERNET_SetLastError(ERROR_SUCCESS);
@@ -3479,11 +3679,34 @@ static DWORD HTTPSESSION_QueryOption(WININETHANDLEHEADER *hdr, DWORD option, voi
     return INET_QueryOption(option, buffer, size, unicode);
 }
 
+static DWORD HTTPSESSION_SetOption(WININETHANDLEHEADER *hdr, DWORD option, void *buffer, DWORD size)
+{
+    WININETHTTPSESSIONW *ses = (WININETHTTPSESSIONW*)hdr;
+
+    switch(option) {
+    case INTERNET_OPTION_USERNAME:
+    {
+        HeapFree(GetProcessHeap(), 0, ses->lpszUserName);
+        if (!(ses->lpszUserName = WININET_strdupW(buffer))) return ERROR_OUTOFMEMORY;
+        return ERROR_SUCCESS;
+    }
+    case INTERNET_OPTION_PASSWORD:
+    {
+        HeapFree(GetProcessHeap(), 0, ses->lpszPassword);
+        if (!(ses->lpszPassword = WININET_strdupW(buffer))) return ERROR_OUTOFMEMORY;
+        return ERROR_SUCCESS;
+    }
+    default: break;
+    }
+
+    return ERROR_INTERNET_INVALID_OPTION;
+}
+
 static const HANDLEHEADERVtbl HTTPSESSIONVtbl = {
     HTTPSESSION_Destroy,
     NULL,
     HTTPSESSION_QueryOption,
-    NULL,
+    HTTPSESSION_SetOption,
     NULL,
     NULL,
     NULL,
@@ -3611,7 +3834,7 @@ static BOOL HTTP_OpenConnection(LPWININETHTTPREQW lpwhr)
     TRACE("-->\n");
 
 
-    if (NULL == lpwhr ||  lpwhr->hdr.htype != WH_HHTTPREQ)
+    if (lpwhr->hdr.htype != WH_HHTTPREQ)
     {
         INTERNET_SetLastError(ERROR_INVALID_PARAMETER);
         goto lend;
@@ -3670,6 +3893,9 @@ static BOOL HTTP_OpenConnection(LPWININETHTTPREQW lpwhr)
     bSuccess = TRUE;
 
 lend:
+    lpwhr->read_pos = lpwhr->read_size = 0;
+    lpwhr->read_chunked = FALSE;
+
     TRACE("%d <--\n", bSuccess);
     return bSuccess;
 }
@@ -3714,7 +3940,6 @@ static INT HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr, BOOL clear)
     DWORD buflen = MAX_REPLY_LEN;
     BOOL bSuccess = FALSE;
     INT  rc = 0;
-    static const WCHAR szCrLf[] = {'\r','\n',0};
     static const WCHAR szHundred[] = {'1','0','0',0};
     char bufferA[MAX_REPLY_LEN];
     LPWSTR status_code, status_text;
@@ -3732,17 +3957,12 @@ static INT HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr, BOOL clear)
 
     do {
         /*
-         * HACK peek at the buffer
-         */
-        buflen = MAX_REPLY_LEN;
-        NETCON_recv(&lpwhr->netConnection, buffer, buflen, MSG_PEEK, &rc);
-
-        /*
          * We should first receive 'HTTP/1.x nnn OK' where nnn is the status code.
          */
-        memset(buffer, 0, MAX_REPLY_LEN);
-        if (!NETCON_getNextLine(&lpwhr->netConnection, bufferA, &buflen))
+        buflen = MAX_REPLY_LEN;
+        if (!read_line(lpwhr, bufferA, &buflen))
             goto lend;
+        rc += buflen;
         MultiByteToWideChar( CP_ACP, 0, bufferA, buflen, buffer, MAX_REPLY_LEN );
 
         /* split the version from the status code */
@@ -3792,11 +4012,18 @@ static INT HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr, BOOL clear)
     do
     {
 	buflen = MAX_REPLY_LEN;
-        if (NETCON_getNextLine(&lpwhr->netConnection, bufferA, &buflen))
+        if (read_line(lpwhr, bufferA, &buflen))
         {
             LPWSTR * pFieldAndValue;
 
             TRACE("got line %s, now interpreting\n", debugstr_a(bufferA));
+
+            if (!bufferA[0]) break;
+            if (!strchr(bufferA, ':'))
+            {
+                WARN("invalid header\n");
+                continue;
+            }
             MultiByteToWideChar( CP_ACP, 0, bufferA, buflen, buffer, MAX_REPLY_LEN );
 
             while (cchRawHeaders + buflen + strlenW(szCrLf) > cchMaxRawHeaders)
@@ -4051,7 +4278,7 @@ static BOOL HTTP_ProcessHeader(LPWININETHTTPREQW lpwhr, LPCWSTR field, LPCWSTR v
  * Called when all content from server has been read by client.
  *
  */
-BOOL HTTP_FinishedReading(LPWININETHTTPREQW lpwhr)
+static BOOL HTTP_FinishedReading(LPWININETHTTPREQW lpwhr)
 {
     WCHAR szVersion[10];
     WCHAR szConnectionResponse[20];
@@ -4062,9 +4289,9 @@ BOOL HTTP_FinishedReading(LPWININETHTTPREQW lpwhr)
 
     /* as per RFC 2068, S8.1.2.1, if the client is HTTP/1.1 then assume that
      * the connection is keep-alive by default */
-    if (!HTTP_HttpQueryInfoW(lpwhr, HTTP_QUERY_VERSION, szVersion,
-                             &dwBufferSize, NULL) ||
-        strcmpiW(szVersion, g_szHttp1_1))
+    if (HTTP_HttpQueryInfoW(lpwhr, HTTP_QUERY_VERSION, szVersion,
+                             &dwBufferSize, NULL) &&
+        !strcmpiW(szVersion, g_szHttp1_1))
     {
         keepalive = TRUE;
     }

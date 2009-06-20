@@ -1279,7 +1279,7 @@ AtapiReadChipConfig(
         }
         deviceExtension->opt_AtapiDmaZeroTransfer = FALSE;
         deviceExtension->opt_AtapiDmaControlCmd   = FALSE;
-        deviceExtension->opt_AtapiDmaRawRead      = TRUE;
+        deviceExtension->opt_AtapiDmaRawRead      = FALSE;//TRUE; // Disabling that for VirtualBox
         deviceExtension->opt_AtapiDmaReadWrite    = TRUE;
     }
 

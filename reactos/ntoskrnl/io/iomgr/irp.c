@@ -393,6 +393,29 @@ IopCompleteRequest(IN PKAPC Apc,
             }
         }
 
+        /* Update transfer count for everything but create operation */
+        if (!(Irp->Flags & IRP_CREATE_OPERATION))
+        {
+            if (Irp->Flags & IRP_WRITE_OPERATION)
+            {
+                /* Update write transfer count */
+                IopUpdateTransferCount(IopWriteTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+            else if (Irp->Flags & IRP_READ_OPERATION)
+            {
+                /* Update read transfer count */
+                IopUpdateTransferCount(IopReadTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+            else
+            {
+                /* Update other transfer count */
+                IopUpdateTransferCount(IopOtherTransfer,
+                                       (ULONG)Irp->IoStatus.Information);
+            }
+        }
+
         /* Now that we've signaled the events, de-associate the IRP */
         IopUnQueueIrpFromThread(Irp);
 

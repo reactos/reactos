@@ -330,6 +330,7 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
 	{
 	    SendMessageW( hWnd, BM_SETSTATE, TRUE, 0 );
             set_button_state( hWnd, get_button_state( hWnd ) | BUTTON_BTNPRESSED );
+            SetCapture( hWnd );
 	}
 	break;
 

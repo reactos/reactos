@@ -13,10 +13,15 @@
 #include <commctrl.h>
 //#include <htmlhelp.h>
 #include <stdio.h>
+#include <tchar.h>
 #include "definitions.h"
 #include "globalvar.h"
 #include "dialogs.h"
+#include "dib.h"
+#include "drawing.h"
 #include "history.h"
+#include "mouse.h"
+#include "registry.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -57,13 +62,13 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
         case WM_CLOSE:
             if (undoSteps>0)
             {
-                char programname[20];
-                char saveprompttext[100];
-                LoadString(hProgInstance, IDS_PROGRAMNAME, (LPTSTR)&programname, 20);
-                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, (LPTSTR)&saveprompttext, 100);
-                char temptext[500];
-                sprintf(temptext, saveprompttext, filename);
-                switch (MessageBox(hwnd, (LPTSTR)&temptext, (LPTSTR)&programname, MB_YESNOCANCEL | MB_ICONQUESTION))
+                TCHAR programname[20];
+                TCHAR saveprompttext[100];
+                TCHAR temptext[500];
+                LoadString(hProgInstance, IDS_PROGRAMNAME, programname, SIZEOF(programname));
+                LoadString(hProgInstance, IDS_SAVEPROMPTTEXT, saveprompttext, SIZEOF(saveprompttext));
+                _stprintf(temptext, saveprompttext, filename);
+                switch (MessageBox(hwnd, temptext, programname, MB_YESNOCANCEL | MB_ICONQUESTION))
                 {
                     case IDNO:
                         DestroyWindow(hwnd);
@@ -83,7 +88,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             switch (lParam)
             {
                 case 0:
-                    if (FALSE)
+                    if (isAFile)
                     {
                         EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERPLANE, MF_ENABLED | MF_BYCOMMAND);
                         EnableMenuItem(GetMenu(hMainWnd), IDM_FILEASWALLPAPERCENTERED, MF_ENABLED | MF_BYCOMMAND);
@@ -152,11 +157,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             if ((hwnd==hImageArea)||(hwnd==hScrollbox))
             {
                 long clientRectScrollbox[4];
-                GetClientRect(hScrollbox, (LPRECT)&clientRectScrollbox);
                 long clientRectImageArea[4];
+                SCROLLINFO horzScroll;
+                SCROLLINFO vertScroll;
+                GetClientRect(hScrollbox, (LPRECT)&clientRectScrollbox);
                 GetClientRect(hImageArea, (LPRECT)&clientRectImageArea);
                 MoveWindow(hScrlClient, 0, 0, max(clientRectImageArea[2]+6, clientRectScrollbox[2]), max(clientRectImageArea[3]+6, clientRectScrollbox[3]), TRUE);
-                SCROLLINFO horzScroll;
                 horzScroll.cbSize       = sizeof(SCROLLINFO);
                 horzScroll.fMask        = SIF_PAGE | SIF_RANGE;
                 horzScroll.nMax         = 10000;
@@ -166,7 +172,6 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 horzScroll.nTrackPos    = 0;
                 SetScrollInfo(hScrollbox, SB_HORZ, &horzScroll, TRUE);
                 GetClientRect(hScrollbox, (LPRECT)clientRectScrollbox);
-                SCROLLINFO vertScroll;
                 vertScroll.cbSize       = sizeof(SCROLLINFO);
                 vertScroll.fMask        = SIF_PAGE | SIF_RANGE;
                 vertScroll.nMax         = 10000;
@@ -316,8 +321,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 if ((!drawing)||(activeTool<=9))
                 {
-                    char coordStr[100];
-                    sprintf(coordStr, "%d, %d", (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom);
+                    TCHAR coordStr[100];
+                    _stprintf(coordStr, _T("%d, %d"), (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom);
                     SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM)coordStr);
                 }
                 if (drawing)
@@ -328,8 +333,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if ((activeTool>=10)||(activeTool==2))
                         {
-                            char sizeStr[100];
-                            sprintf(sizeStr, "%d x %d", (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
+                            TCHAR sizeStr[100];
+                            _stprintf(sizeStr, _T("%d x %d"), (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)sizeStr);
                         }
                     }
@@ -339,15 +344,15 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if (activeTool>=10)
                         {
-                            char sizeStr[100];
-                            sprintf(sizeStr, "%d x %d", (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
+                            TCHAR sizeStr[100];
+                            _stprintf(sizeStr, _T("%d x %d"), (short)LOWORD(lParam)*1000/zoom-startX, (short)HIWORD(lParam)*1000/zoom-startY);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)sizeStr);
                         }
                     }
                 }
             } else
             {
-                SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM)"");
+                SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM)_T(""));
             }
             break;
             
@@ -359,11 +364,11 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case IDM_HELPINFO:
                     {
                         HICON paintIcon = LoadIcon(hProgInstance, MAKEINTRESOURCE(IDI_APPICON));
-                        char infotitle[100];
-                        char infotext[200];
-                        LoadString(hProgInstance, IDS_INFOTITLE, (LPTSTR)&infotitle, 100);
-                        LoadString(hProgInstance, IDS_INFOTEXT, (LPTSTR)&infotext, 200);
-                        ShellAbout(hMainWnd, (LPTSTR)&infotitle, (LPTSTR)&infotext, paintIcon);
+                        TCHAR infotitle[100];
+                        TCHAR infotext[200];
+                        LoadString(hProgInstance, IDS_INFOTITLE, infotitle, SIZEOF(infotitle));
+                        LoadString(hProgInstance, IDS_INFOTEXT, infotext, SIZEOF(infotext));
+                        ShellAbout(hMainWnd, infotitle, infotext, paintIcon);
                         DeleteObject(paintIcon);
                     }
                     break;
@@ -383,14 +388,14 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         HBITMAP bmNew = (HBITMAP)LoadDIBFromFile(ofn.lpstrFile);
                         if (bmNew!=NULL)
                         {
+                            TCHAR tempstr[1000];
+                            TCHAR resstr[100];
                             insertReversible(bmNew);
                             updateCanvasAndScrollbars();
-                            char tempstr[1000];
-                            char resstr[100];
-                            CopyMemory(&filename, ofn.lpstrFileTitle, 256);
-                            CopyMemory(&filepathname, ofn.lpstrFileTitle, 1000);
-                            LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)&resstr, 100);
-                            sprintf(tempstr, resstr, &filename);
+                            CopyMemory(filename, ofn.lpstrFileTitle, sizeof(filename));
+                            CopyMemory(filepathname, ofn.lpstrFileTitle, sizeof(filepathname));
+                            LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+                            _stprintf(tempstr, resstr, filename);
                             SetWindowText(hMainWnd, tempstr);
                             clearHistory();
                             isAFile = TRUE;
@@ -399,23 +404,32 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_FILESAVE:
                     if (isAFile)
-                        SaveDIBToFile(hBms[currInd], &filepathname, hDrawingDC);
+                        SaveDIBToFile(hBms[currInd], filepathname, hDrawingDC);
                     else
                         SendMessage(hwnd, WM_COMMAND, IDM_FILESAVEAS, 0);
                     break;
                 case IDM_FILESAVEAS:
                     if (GetSaveFileName(&sfn)!=0)
                     {
+                        TCHAR tempstr[1000];
+                        TCHAR resstr[100];
                         SaveDIBToFile(hBms[currInd], sfn.lpstrFile, hDrawingDC);
-                        char tempstr[1000];
-                        char resstr[100];
-                        CopyMemory(&filename, sfn.lpstrFileTitle, 256);
-                        CopyMemory(&filepathname, sfn.lpstrFileTitle, 1000);
-                        LoadString(hProgInstance, IDS_WINDOWTITLE, (LPTSTR)&resstr, 100);
-                        sprintf(tempstr, resstr, &filename);
+                        CopyMemory(filename, sfn.lpstrFileTitle, sizeof(filename));
+                        CopyMemory(filepathname, sfn.lpstrFileTitle, sizeof(filepathname));
+                        LoadString(hProgInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
+                        _stprintf(tempstr, resstr, filename);
                         SetWindowText(hMainWnd, tempstr);
                         isAFile = TRUE;
                     }
+                    break;
+                case IDM_FILEASWALLPAPERPLANE:
+                    SetWallpaper(filepathname, 1, 1);
+                    break;
+                case IDM_FILEASWALLPAPERCENTERED:
+                    SetWallpaper(filepathname, 1, 0);
+                    break;
+                case IDM_FILEASWALLPAPERSTRETCHED:
+                    SetWallpaper(filepathname, 2, 0);
                     break;
                 case IDM_EDITUNDO:
                     undo();
@@ -470,9 +484,10 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_IMAGEINVERTCOLORS:
                     {
+                        RECT tempRect;
                         newReversible();
-                        int tempRect[4] = {0, 0, imgXRes, imgYRes};
-                        InvertRect(hDrawingDC, (LPRECT)tempRect);
+                        SetRect(&tempRect, 0, 0, imgXRes, imgYRes);
+                        InvertRect(hDrawingDC, &tempRect);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                     }
                     break; 
@@ -503,10 +518,14 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     break;
                 case IDM_IMAGEATTRIBUTES:
                     {
-                        int attrdata[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-                        attributesDlg();
-                        //cropReversible(640, 200);
-                        //ZoomTo(zoom);
+                        int retVal = attributesDlg();
+                        if ((LOWORD(retVal)!=0)&&(HIWORD(retVal)!=0))
+                        {
+                            // cropReversible broken, dirty hack:
+                            // insertReversible(CopyImage(hBms[currInd], IMAGE_BITMAP, LOWORD(retVal), HIWORD(retVal), 0));
+                            cropReversible(LOWORD(retVal), HIWORD(retVal));
+                            updateCanvasAndScrollbars();
+                        }
                     }
                     break;
                 case IDM_IMAGECHANGESIZE:

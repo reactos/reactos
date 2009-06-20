@@ -25,6 +25,12 @@ cpp_quote("#ifndef __wtypes_h__")
 cpp_quote("#define __wtypes_h__")
 cpp_quote("#endif")
 
+cpp_quote("#ifdef _MSC_VER")
+cpp_quote("#pragma warning(push)")
+cpp_quote("#pragma warning(disable:4201)")
+cpp_quote("#pragma warning(disable:4820)")
+cpp_quote("#endif")
+
 [
   uuid(D3980A60-910C-1068-9341-00DD010F2F1C),
   version(0.1),
@@ -831,3 +837,7 @@ typedef union switch(DWORD tyspec)
 } uCLSSPEC;
 
 } /* interface IWinTypes */
+
+cpp_quote("#ifdef _MSC_VER")
+cpp_quote("#pragma warning(pop)")
+cpp_quote("#endif")

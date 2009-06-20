@@ -3997,14 +3997,15 @@ NtUserGetWindowPlacement(HWND hWnd,
    {
       Safepl.showCmd = SW_HIDE;
    }
-   else if (0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
-            0 != (Wnd->Style & WS_MAXIMIZE))
+   else if ((0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
+            0 != (Wnd->Style & WS_MAXIMIZE)) &&
+            0 == (Wnd->Style & WS_MINIMIZE))
    {
-      Safepl.showCmd = SW_MAXIMIZE;
+      Safepl.showCmd = SW_SHOWMAXIMIZED;
    }
    else if (0 != (Wnd->Style & WS_MINIMIZE))
    {
-      Safepl.showCmd = SW_MINIMIZE;
+      Safepl.showCmd = SW_SHOWMINIMIZED;
    }
    else if (0 != (Wnd->Style & WS_VISIBLE))
    {

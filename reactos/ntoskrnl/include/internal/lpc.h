@@ -9,7 +9,7 @@
 //
 // Define this if you want debugging support
 //
-#define _LPC_DEBUG_                                         0x01
+#define _LPC_DEBUG_                                         0x00
 
 //
 // These define the Debug Masks Supported
@@ -45,6 +45,8 @@
         DbgPrint(__VA_ARGS__);                              \
     }
 #endif
+#else
+#define LPCTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
 //

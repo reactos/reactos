@@ -601,6 +601,48 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	                           const string& relative_path,
                                ParseContext& parseContext )
 {
+	const XMLAttribute* att;
+
+	att = e.GetAttribute ( "compilerset", false );
+
+	if ( att )
+	{
+		CompilerSet compilerSet;
+
+		if ( att->value == "msc" )
+			compilerSet = MicrosoftC;
+		else if ( att->value == "gcc" )
+			compilerSet = GnuGcc;
+		else
+			throw InvalidAttributeValueException (
+				e.location,
+				"compilerset",
+				att->value );
+
+		if ( compilerSet != project.configuration.Compiler )
+			return;
+	}
+
+	att = e.GetAttribute ( "linkerset", false );
+
+	if ( att )
+	{
+		LinkerSet linkerSet;
+
+		if ( att->value == "mslink" )
+			linkerSet = MicrosoftLink;
+		else if ( att->value == "ld" )
+			linkerSet = GnuLd;
+		else
+			throw InvalidAttributeValueException (
+				e.location,
+				"linkerset",
+				att->value );
+
+		if ( linkerSet != project.configuration.Linker )
+			return;
+	}
+
 	CompilationUnit* pOldCompilationUnit = parseContext.compilationUnit;
 	bool subs_invalid = false;
 	string subpath ( relative_path );

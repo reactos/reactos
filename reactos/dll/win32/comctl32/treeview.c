@@ -2306,7 +2306,7 @@ TREEVIEW_DrawItemLines(const TREEVIEW_INFO *infoPtr, HDC hdc, const TREEVIEW_ITE
 		 & (TVS_LINESATROOT|TVS_HASLINES|TVS_HASBUTTONS))
 		> TVS_LINESATROOT);
     HBRUSH hbr, hbrOld;
-    COLORREF clrBk = infoPtr->clrBk == -1 ? GetSysColor(COLOR_WINDOW):
+    COLORREF clrBk = infoPtr->clrBk == -1 ? comctl32_color.clrWindow:
                                             infoPtr->clrBk;
 
     if (!lar && item->iLevel == 0)
@@ -2460,26 +2460,26 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem
     {
 	if ((wineItem->state & TVIS_DROPHILITED) || inFocus)
 	{
-	    nmcdhdr.clrTextBk = GetSysColor(COLOR_HIGHLIGHT);
-	    nmcdhdr.clrText   = GetSysColor(COLOR_HIGHLIGHTTEXT);
+	    nmcdhdr.clrTextBk = comctl32_color.clrHighlight;
+	    nmcdhdr.clrText   = comctl32_color.clrHighlightText;
 	}
 	else
 	{
-	    nmcdhdr.clrTextBk = GetSysColor(COLOR_BTNFACE);
+	    nmcdhdr.clrTextBk = comctl32_color.clrBtnFace;
 	    if (infoPtr->clrText == -1)
-		nmcdhdr.clrText = GetSysColor(COLOR_WINDOWTEXT);
+		nmcdhdr.clrText = comctl32_color.clrWindowText;
 	    else
 		nmcdhdr.clrText = infoPtr->clrText;
 	}
     }
     else
     {
-	nmcdhdr.clrTextBk = infoPtr->clrBk == -1 ? GetSysColor(COLOR_WINDOW):
+	nmcdhdr.clrTextBk = infoPtr->clrBk == -1 ? comctl32_color.clrWindow:
                                                    infoPtr->clrBk;
 	if ((infoPtr->dwStyle & TVS_TRACKSELECT) && (wineItem == infoPtr->hotItem))
 	    nmcdhdr.clrText = comctl32_color.clrHighlight;
 	else if (infoPtr->clrText == -1)
-	    nmcdhdr.clrText = GetSysColor(COLOR_WINDOWTEXT);
+	    nmcdhdr.clrText = comctl32_color.clrWindowText;
 	else
 	    nmcdhdr.clrText = infoPtr->clrText;
     }
@@ -2786,7 +2786,7 @@ static LRESULT
 TREEVIEW_EraseBackground(const TREEVIEW_INFO *infoPtr, HDC hDC)
 {
     HBRUSH hBrush;
-    COLORREF clrBk = infoPtr->clrBk == -1 ? GetSysColor(COLOR_WINDOW):
+    COLORREF clrBk = infoPtr->clrBk == -1 ? comctl32_color.clrWindow:
                                             infoPtr->clrBk;
     RECT rect;
 
@@ -4890,7 +4890,7 @@ initialize_checkboxes(TREEVIEW_INFO *infoPtr)
 
     SelectObject(hdc, hbmOld);
     nIndex = ImageList_AddMasked(infoPtr->himlState, hbm,
-                                 GetSysColor(COLOR_WINDOW));
+                                 comctl32_color.clrWindow);
     TRACE("checkbox index %d\n", nIndex);
 
     DeleteObject(hbm);
@@ -4954,7 +4954,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->clrBk   = -1; /* use system color */
     infoPtr->clrText = -1;	/* use system color */
     infoPtr->clrLine = RGB(128, 128, 128);
-    infoPtr->clrInsertMark = GetSysColor(COLOR_BTNTEXT);
+    infoPtr->clrInsertMark = comctl32_color.clrBtnText;
 
     /* hwndToolTip */
 
@@ -5710,7 +5710,9 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_STYLECHANGED:
 	return TREEVIEW_StyleChanged(infoPtr, wParam, lParam);
 
-	/* WM_SYSCOLORCHANGE */
+    case WM_SYSCOLORCHANGE:
+        COMCTL32_RefreshSysColors();
+        return 0;
 
 	/* WM_SYSKEYDOWN */
 

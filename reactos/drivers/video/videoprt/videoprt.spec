@@ -6,12 +6,12 @@
 @ stdcall VideoPortAllocateCommonBuffer(ptr ptr long ptr long ptr)
 @ stdcall VideoPortAllocateContiguousMemory(ptr long long long)
 @ stdcall VideoPortAllocatePool(ptr long long long)
-;VideoPortAssociateEventsWithDmaHandle
+@ stdcall VideoPortAssociateEventsWithDmaHandle(ptr ptr ptr ptr)
 @ stdcall VideoPortCheckForDeviceExistence(ptr long long long long long long)
 ;VideoPortCheckForDeviceExistence  there's a second dummy export with the same name on ms videoprt
 @ stdcall VideoPortClearEvent(ptr ptr)
 @ stdcall VideoPortCompareMemory(ptr ptr long) NTOSKRNL.RtlCompareMemory
-;VideoPortCompleteDma
+@ stdcall VideoPortCompleteDma(ptr ptr ptr long)
 @ stdcall VideoPortCreateEvent(ptr long ptr ptr)
 @ stdcall VideoPortCreateSecondaryDisplay(ptr ptr long)
 @ stdcall VideoPortCreateSpinLock(ptr ptr)
@@ -23,26 +23,26 @@
 @ stdcall VideoPortDeleteEvent(ptr ptr)
 @ stdcall VideoPortDeleteSpinLock(ptr ptr)
 @ stdcall VideoPortDisableInterrupt(ptr)
-;VideoPortDoDma
+@ stdcall VideoPortDoDma(ptr ptr long)
 @ stdcall VideoPortEnableInterrupt(ptr)
 @ stdcall VideoPortEnumerateChildren(ptr ptr)
-;VideoPortFlushRegistry
+@ stdcall VideoPortFlushRegistry(ptr)
 @ stdcall VideoPortFreeCommonBuffer(ptr long ptr long long long)
 @ stdcall VideoPortFreeDeviceBase(ptr ptr)
 @ stdcall VideoPortFreePool(ptr ptr)
 @ stdcall VideoPortGetAccessRanges(ptr long ptr long ptr ptr ptr ptr)
 @ stdcall VideoPortGetAgpServices(ptr ptr)
 @ stdcall VideoPortGetAssociatedDeviceExtension(ptr)
-;VideoPortGetAssociatedDeviceID
+@ stdcall VideoPortGetAssociatedDeviceID(ptr)
 @ stdcall VideoPortGetBusData(ptr long long ptr long long)
-;VideoPortGetBytesUsed
-;VideoPortGetCommonBuffer
+@ stdcall VideoPortGetBytesUsed(ptr ptr)
+@ stdcall VideoPortGetCommonBuffer(ptr long long ptr ptr long)
 @ stdcall VideoPortGetCurrentIrql()
 @ stdcall VideoPortGetDeviceBase(ptr long long long long)
 @ stdcall VideoPortGetDeviceData(ptr long ptr ptr)
 @ stdcall VideoPortGetDmaAdapter(ptr ptr)
-;VideoPortGetDmaContext
-;VideoPortGetMdl
+@ stdcall VideoPortGetDmaContext(ptr ptr)
+@ stdcall VideoPortGetMdl(ptr ptr)
 @ stdcall VideoPortGetRegistryParameters(ptr wstr long ptr ptr)
 @ stdcall VideoPortGetRomImage(ptr ptr long long)
 @ stdcall VideoPortGetVersion(ptr ptr)
@@ -54,10 +54,10 @@
 @ fastcall VideoPortInterlockedIncrement(ptr) NTOSKRNL.InterlockedIncrement
 @ stdcall VideoPortLockBuffer(ptr ptr long long)
 ;VideoPortIsNoVesa // 2003 and later
-;VideoPortLockPages
+@ stdcall VideoPortLockPages(ptr ptr ptr ptr long)
 @ stdcall VideoPortLogError(ptr ptr long long)
 @ stdcall VideoPortMapBankedMemory(ptr long long ptr ptr ptr long long ptr ptr)
-;VideoPortMapDmaMemory
+@ stdcall VideoPortMapDmaMemory(ptr ptr double ptr ptr ptr ptr ptr)
 @ stdcall VideoPortMapMemory(ptr long long ptr ptr ptr)
 @ stdcall VideoPortMoveMemory(ptr ptr long) NTOSKRNL.RtlMoveMemory
 ;VideoPortNotification
@@ -78,7 +78,7 @@
 @ stdcall VideoPortReadRegisterUchar(ptr) NTOSKRNL.READ_REGISTER_UCHAR
 @ stdcall VideoPortReadRegisterUlong(ptr) NTOSKRNL.READ_REGISTER_ULONG
 @ stdcall VideoPortReadRegisterUshort(ptr) NTOSKRNL.READ_REGISTER_USHORT
-;VideoPortReadStateEvent
+@ stdcall VideoPortReadStateEvent(ptr ptr)
 @ stdcall VideoPortRegisterBugcheckCallback(ptr long ptr long)
 @ stdcall VideoPortReleaseBuffer(ptr ptr)
 @ stdcall VideoPortReleaseCommonBuffer(ptr ptr long long long ptr long)
@@ -87,20 +87,20 @@
 @ stdcall VideoPortReleaseSpinLockFromDpcLevel(ptr ptr)
 @ stdcall VideoPortScanRom(ptr ptr long ptr)
 @ stdcall VideoPortSetBusData(ptr long long ptr long long)
-;VideoPortSetBytesUsed
-;VideoPortSetDmaContext
+@ stdcall VideoPortSetBytesUsed(ptr ptr long)
+@ stdcall VideoPortSetDmaContext(ptr ptr ptr)
 @ stdcall VideoPortSetEvent(ptr ptr)
 @ stdcall VideoPortSetRegistryParameters(ptr wstr ptr long)
 @ stdcall VideoPortSetTrappedEmulatorPorts(ptr long ptr)
-;VideoPortSignalDmaComplete
+@ stdcall VideoPortSignalDmaComplete(ptr ptr)
 @ stdcall VideoPortStallExecution(ptr) HAL.KeStallExecutionProcessor
-;VideoPortStartDma
+@ stdcall VideoPortStartDma(ptr ptr ptr long ptr ptr ptr long)
 @ stdcall VideoPortStartTimer(ptr)
 @ stdcall VideoPortStopTimer(ptr)
 @ stdcall VideoPortSynchronizeExecution(ptr long ptr ptr)
 @ stdcall VideoPortUnlockBuffer(ptr ptr)
-;VideoPortUnlockPages
-;VideoPortUnmapDmaMemory
+@ stdcall VideoPortUnlockPages(ptr ptr)
+@ stdcall VideoPortUnmapDmaMemory(ptr ptr ptr ptr)
 @ stdcall VideoPortUnmapMemory(ptr ptr ptr)
 @ stdcall VideoPortVerifyAccessRanges(ptr long ptr)
 @ stdcall VideoPortWaitForSingleObject(ptr ptr ptr)

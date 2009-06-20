@@ -893,7 +893,6 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
     int i;
     HBRUSH hbsave, hb, hb2;
     HPEN hpsave, hp, hp2;
-    int tri = 290*SmallDiam/1000 - 1;
     int d46, d93;
     // end scrollgripsize
     switch(uFlags & 0xff)

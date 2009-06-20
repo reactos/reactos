@@ -140,7 +140,7 @@ _KiFlushNPXState@4:
     cmp dword ptr [esp+20], 0
     je Return
 
-#ifdef DBG
+#if DBG
     /* Assert Fxsr support */
     test byte ptr _KeI386FxsrPresent, 1
     jnz AssertOk
@@ -167,7 +167,7 @@ Cr0OK:
     cmp byte ptr [eax+KTHREAD_NPX_STATE], NPX_STATE_NOT_LOADED
     jnz DontSave
 
-#ifdef DBG
+#if DBG
     /* We are the NPX Thread with an unloaded NPX State... this isn't normal! */
     int 3
 #endif
@@ -368,7 +368,7 @@ NotBusy:
 
 AfterTrace:
 #ifdef CONFIG_SMP
-#ifdef DBG
+#if DBG
     /* Assert that we're on the right CPU */
     mov cl, [esi+KTHREAD_NEXT_PROCESSOR]
     cmp cl, [ebx+KPCR_PROCESSOR_NUMBER]
@@ -422,7 +422,7 @@ StackOk:
     lock xor [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
 
     /* Assert change went ok */
-#ifdef DBG
+#if DBG
     test [ebp+KPROCESS_ACTIVE_PROCESSORS], ecx
     jz WrongActiveCpu
     test [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
@@ -551,7 +551,7 @@ LoadLdt:
 
 NewCr0:
 
-#ifdef DBG
+#if DBG
     /* Assert NPX State */
     test byte ptr [esi+KTHREAD_NPX_STATE], ~(NPX_STATE_NOT_LOADED)
     jnz InvalidNpx
@@ -592,7 +592,7 @@ BugCheckDpc:
     push ATTEMPTED_SWITCH_FROM_DPC
     call _KeBugCheckEx@20
 
-#ifdef DBG
+#if DBG
 InvalidNpx:
     int 3
 WrongActiveCpu:
@@ -845,7 +845,7 @@ _KiSwapProcess@8:
     lock xor [eax+KPROCESS_ACTIVE_PROCESSORS], ecx
 
     /* Sanity check */
-#ifdef DBG
+#if DBG
     test dword ptr [edx+KPROCESS_ACTIVE_PROCESSORS], 0
     jz WrongCpu1
     test dword ptr [eax+KPROCESS_ACTIVE_PROCESSORS], 0
@@ -880,7 +880,7 @@ NewLdt:
     /* FIXME: TODO */
     int 3
 
-#ifdef DBG
+#if DBG
 WrongCpu1:
     int 3
 WrongCpu2:

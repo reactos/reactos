@@ -427,7 +427,7 @@ LdrpInit2(PCONTEXT Context,
     InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
                    &NtModule->InInitializationOrderLinks);
 
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
 
     LdrpLoadUserModuleSymbols(NtModule);
 
@@ -475,7 +475,7 @@ LdrpInit2(PCONTEXT Context,
 
     LdrpInitLoader();
 
-#if defined(DBG) || defined(KDBG)
+#if DBG || defined(KDBG)
 
     LdrpLoadUserModuleSymbols(ExeModule);
 

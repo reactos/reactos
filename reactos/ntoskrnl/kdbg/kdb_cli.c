@@ -58,50 +58,50 @@
 
 /* PROTOTYPES ****************************************************************/
 
-STATIC BOOLEAN KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdDisassembleX(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdRegs(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdDisassembleX(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdRegs(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[]);
 
-STATIC BOOLEAN KdbpCmdContinue(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdStep(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdBreakPointList(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdEnableDisableClearBreakPoint(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdContinue(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdStep(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdBreakPointList(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdEnableDisableClearBreakPoint(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[]);
 
-STATIC BOOLEAN KdbpCmdThread(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdProc(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdThread(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdProc(ULONG Argc, PCHAR Argv[]);
 
-STATIC BOOLEAN KdbpCmdMod(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdPcr(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdTss(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdMod(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdPcr(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdTss(ULONG Argc, PCHAR Argv[]);
 
-STATIC BOOLEAN KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdFilter(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
-STATIC BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdFilter(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdSet(ULONG Argc, PCHAR Argv[]);
+static BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 
 /* GLOBALS *******************************************************************/
 
-STATIC BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
-STATIC BOOLEAN KdbBreakOnModuleLoad = FALSE; /* Set to TRUE to break into KDB when a module is loaded */
+static BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
+static BOOLEAN KdbBreakOnModuleLoad = FALSE; /* Set to TRUE to break into KDB when a module is loaded */
 
-STATIC CHAR KdbCommandHistoryBuffer[2048]; /* Command history string ringbuffer */
-STATIC PCHAR KdbCommandHistory[sizeof(KdbCommandHistoryBuffer) / 8] = { NULL }; /* Command history ringbuffer */
-STATIC LONG KdbCommandHistoryBufferIndex = 0;
-STATIC LONG KdbCommandHistoryIndex = 0;
+static CHAR KdbCommandHistoryBuffer[2048]; /* Command history string ringbuffer */
+static PCHAR KdbCommandHistory[sizeof(KdbCommandHistoryBuffer) / 8] = { NULL }; /* Command history ringbuffer */
+static LONG KdbCommandHistoryBufferIndex = 0;
+static LONG KdbCommandHistoryIndex = 0;
 
-STATIC ULONG KdbNumberOfRowsPrinted = 0;
-STATIC ULONG KdbNumberOfColsPrinted = 0;
-STATIC BOOLEAN KdbOutputAborted = FALSE;
-STATIC LONG KdbNumberOfRowsTerminal = -1;
-STATIC LONG KdbNumberOfColsTerminal = -1;
+static ULONG KdbNumberOfRowsPrinted = 0;
+static ULONG KdbNumberOfColsPrinted = 0;
+static BOOLEAN KdbOutputAborted = FALSE;
+static LONG KdbNumberOfRowsTerminal = -1;
+static LONG KdbNumberOfColsTerminal = -1;
 
 PCHAR KdbInitFileBuffer = NULL; /* Buffer where KDBinit file is loaded into during initialization */
 BOOLEAN KdbpBugCheckRequested = FALSE;
 
-STATIC CONST struct
+static const struct
 {
    PCHAR Name;
    PCHAR Syntax;
@@ -163,7 +163,7 @@ STATIC CONST struct
  * \retval TRUE   Success.
  * \retval FALSE  Failure.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpGetComponentId(
    IN  PCCH ComponentName,
    OUT PULONG ComponentId)
@@ -293,13 +293,13 @@ KdbpGetComponentId(
  * \retval TRUE   Success.
  * \retval FALSE  Failure.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpEvaluateExpression(
    IN  PCHAR Expression,
    IN  LONG ErrOffset,
    OUT PULONGLONG Result)
 {
-   STATIC CHAR ErrMsgBuffer[130] = "^ ";
+   static CHAR ErrMsgBuffer[130] = "^ ";
    LONG ExpressionErrOffset = -1;
    PCHAR ErrMsg = ErrMsgBuffer;
    BOOLEAN Ok;
@@ -320,7 +320,7 @@ KdbpEvaluateExpression(
 
 /*!\brief Evaluates an expression and displays the result.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
 {
    ULONG i, len;
@@ -375,7 +375,7 @@ KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Display list of active debug channels
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdFilter(ULONG Argc, PCHAR Argv[])
 {
     ULONG i, j, ComponentId, Level;
@@ -455,7 +455,7 @@ KdbpCmdFilter(ULONG Argc, PCHAR Argv[])
 /*!\brief Disassembles 10 instructions at eip or given address or
  *        displays 16 dwords from memory at given address.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdDisassembleX(ULONG Argc, PCHAR Argv[])
 {
    ULONG Count;
@@ -565,12 +565,12 @@ KdbpCmdDisassembleX(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Displays CPU registers.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
 {
    PKTRAP_FRAME Tf = &KdbCurrentTrapFrame->Tf;
    INT i;
-   STATIC CONST PCHAR EflagsBits[32] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
+   static const PCHAR EflagsBits[32] = { " CF", NULL, " PF", " BIT3", " AF", " BIT5",
                                          " ZF", " SF", " TF", " IF", " DF", " OF",
                                          NULL, NULL, " NT", " BIT15", " RF", " VF",
                                          " AC", " VIF", " VIP", " ID", " BIT22",
@@ -617,11 +617,11 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
       ULONG Cr0, Cr2, Cr3, Cr4;
       KDESCRIPTOR Gdtr = {0}, Ldtr = {0}, Idtr = {0};
       ULONG Tr = 0;
-      STATIC CONST PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
+      static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                          " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, " NW", " CD", " PG" };
-      STATIC CONST PCHAR Cr4Bits[32] = { " VME", " PVI", " TSD", " DE", " PSE", " PAE", " MCE", " PGE",
+      static const PCHAR Cr4Bits[32] = { " VME", " PVI", " TSD", " DE", " PSE", " PAE", " MCE", " PGE",
                                          " PCE", " OSFXSR", " OSXMMEXCPT", NULL, NULL, NULL, NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
@@ -698,7 +698,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Displays a backtrace.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
 {
    ULONG Count;
@@ -797,7 +797,7 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Continues execution of the system/leaves KDB.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdContinue(ULONG Argc, PCHAR Argv[])
 {
    /* Exit the main loop */
@@ -806,7 +806,7 @@ KdbpCmdContinue(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Continues execution of the system/leaves KDB.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdStep(ULONG Argc, PCHAR Argv[])
 {
    ULONG Count = 1;
@@ -834,7 +834,7 @@ KdbpCmdStep(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Lists breakpoints.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdBreakPointList(ULONG Argc, PCHAR Argv[])
 {
    LONG l;
@@ -927,7 +927,7 @@ KdbpCmdBreakPointList(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Enables, disables or clears a breakpoint.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdEnableDisableClearBreakPoint(ULONG Argc, PCHAR Argv[])
 {
    PCHAR pend;
@@ -966,7 +966,7 @@ KdbpCmdEnableDisableClearBreakPoint(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Sets a software or hardware (memory) breakpoint at the given address.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
 {
    ULONGLONG Result = 0;
@@ -1084,7 +1084,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Lists threads or switches to another thread context.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdThread(ULONG Argc, PCHAR Argv[])
 {
    PLIST_ENTRY Entry;
@@ -1096,7 +1096,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
    ULONG Eip;
    ULONG ul = 0;
    PCHAR State, pend, str1, str2;
-   STATIC CONST PCHAR ThreadStateToString[DeferredReady+1] =
+   static const PCHAR ThreadStateToString[DeferredReady+1] =
                                           { "Initialized", "Ready", "Running",
                                             "Standby", "Terminated", "Waiting",
                                             "Transition", "DeferredReady" };
@@ -1268,7 +1268,7 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Lists processes or switches to another process context.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdProc(ULONG Argc, PCHAR Argv[])
 {
    PLIST_ENTRY Entry;
@@ -1380,7 +1380,7 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Lists loaded modules or the one containing the specified address.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdMod(ULONG Argc, PCHAR Argv[])
 {
    ULONGLONG Result = 0;
@@ -1441,7 +1441,7 @@ KdbpCmdMod(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Displays GDT, LDT or IDTd.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
 {
    KDESCRIPTOR Reg = {0};
@@ -1642,7 +1642,7 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Displays the KPCR
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
 {
    PKIPCR Pcr = (PKIPCR)KeGetPcr();
@@ -1687,7 +1687,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Displays the TSS
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdTss(ULONG Argc, PCHAR Argv[])
 {
    KTSS *Tss = KeGetPcr()->TSS;
@@ -1707,7 +1707,7 @@ KdbpCmdTss(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Bugchecks the system.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[])
 {
    /* Set the flag and quit looping */
@@ -1717,7 +1717,7 @@ KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Sets or displays a config variables value.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdSet(ULONG Argc, PCHAR Argv[])
 {
    LONG l;
@@ -1725,7 +1725,7 @@ KdbpCmdSet(ULONG Argc, PCHAR Argv[])
    PCHAR pend = 0;
    KDB_ENTER_CONDITION ConditionFirst = KdbDoNotEnter;
    KDB_ENTER_CONDITION ConditionLast = KdbDoNotEnter;
-   STATIC CONST PCHAR ExceptionNames[21] =
+   static const PCHAR ExceptionNames[21] =
       { "ZERODEVIDE", "DEBUGTRAP", "NMI", "INT3", "OVERFLOW", "BOUND", "INVALIDOP",
         "NOMATHCOP", "DOUBLEFAULT", "RESERVED(9)", "INVALIDTSS", "SEGMENTNOTPRESENT",
         "STACKFAULT", "GPF", "PAGEFAULT", "RESERVED(15)", "MATHFAULT", "ALIGNMENTCHECK",
@@ -1875,7 +1875,7 @@ KdbpCmdSet(ULONG Argc, PCHAR Argv[])
 
 /*!\brief Displays help screen.
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpCmdHelp(ULONG Argc, PCHAR Argv[])
 {
    ULONG i;
@@ -1912,10 +1912,10 @@ KdbpPrint(
    IN PCHAR Format,
    IN ...  OPTIONAL)
 {
-   STATIC CHAR Buffer[4096];
-   STATIC BOOLEAN TerminalInitialized = FALSE;
-   STATIC BOOLEAN TerminalConnected = FALSE;
-   STATIC BOOLEAN TerminalReportsSize = TRUE;
+   static CHAR Buffer[4096];
+   static BOOLEAN TerminalInitialized = FALSE;
+   static BOOLEAN TerminalConnected = FALSE;
+   static BOOLEAN TerminalReportsSize = TRUE;
    CHAR c = '\0';
    PCHAR p, p2;
    ULONG Length;
@@ -2122,7 +2122,7 @@ KdbpPrint(
  *
  * \param Command  Pointer to the command to append to the history.
  */
-STATIC VOID
+static VOID
 KdbpCommandHistoryAppend(
    IN PCHAR Command)
 {
@@ -2194,7 +2194,7 @@ KdbpCommandHistoryAppend(
  *
  * \note Accepts only \n newlines, \r is ignored.
  */
-STATIC VOID
+static VOID
 KdbpReadCommand(
    OUT PCHAR Buffer,
    IN  ULONG Size)
@@ -2203,8 +2203,8 @@ KdbpReadCommand(
    PCHAR Orig = Buffer;
    ULONG ScanCode = 0;
    BOOLEAN EchoOn;
-   STATIC CHAR LastCommand[1024] = "";
-   STATIC CHAR NextKey = '\0';
+   static CHAR LastCommand[1024] = "";
+   static CHAR NextKey = '\0';
    INT CmdHistIndex = -1;
    INT i;
 
@@ -2258,7 +2258,7 @@ KdbpReadCommand(
          /* Read the next char - this is to throw away a \n which most clients should
           * send after \r.
           */
-		 KeStallExecutionProcessor(100000);
+         KeStallExecutionProcessor(100000);
          if (KdbDebugState & KD_DEBUG_KDSERIAL)
             NextKey = KdbpTryGetCharSerial(5);
          else
@@ -2373,15 +2373,15 @@ KdbpReadCommand(
  * \retval TRUE   Don't continue execution.
  * \retval FALSE  Continue execution (leave KDB)
  */
-STATIC BOOLEAN
+static BOOLEAN
 KdbpDoCommand(
    IN PCHAR Command)
 {
    ULONG i;
    PCHAR p;
    ULONG Argc;
-   STATIC PCH Argv[256];
-   STATIC CHAR OrigCommand[1024];
+   static PCH Argv[256];
+   static CHAR OrigCommand[1024];
 
    strncpy(OrigCommand, Command, sizeof(OrigCommand) - 1);
    OrigCommand[sizeof(OrigCommand) - 1] = '\0';
@@ -2429,7 +2429,7 @@ VOID
 KdbpCliMainLoop(
    IN BOOLEAN EnteredOnSingleStep)
 {
-   STATIC CHAR Command[1024];
+   static CHAR Command[1024];
    BOOLEAN Continue;
 
    if (EnteredOnSingleStep)

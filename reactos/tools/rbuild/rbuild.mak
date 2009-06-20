@@ -199,6 +199,7 @@ RBUILD_TEST_TARGET = \
 RBUILD_BACKEND_MINGW_BASE_SOURCES = $(addprefix $(RBUILD_MINGW_BASE_), \
 	mingw.cpp \
 	modulehandler.cpp \
+	mstools_detection.cpp \
 	proxymakefile.cpp \
 	rule.cpp \
 	)
@@ -349,6 +350,10 @@ RBUILD_HOST_CXXFLAGS = -I$(RBUILD_BASE) -I$(TOOLS_BASE) -I$(INFLIB_BASE) $(TOOLS
 
 RBUILD_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
+ifeq ($(HOST),mingw32-windows)
+RBUILD_HOST_LFLAGS += -loleaut32 -lole32 -luuid
+endif
+
 .PHONY: rbuild
 rbuild: $(RBUILD_TARGET)
 host_gpp += -g
@@ -474,6 +479,10 @@ $(RBUILD_MINGW_INT_)mingw.o: $(RBUILD_MINGW_BASE_)mingw.cpp $(RBUILD_HEADERS) | 
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_MINGW_INT_)modulehandler.o: $(RBUILD_MINGW_BASE_)modulehandler.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
+	$(ECHO_HOSTCC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_MINGW_INT_)mstools_detection.o: $(RBUILD_MINGW_BASE_)mstools_detection.cpp $(RBUILD_HEADERS) | $(RBUILD_MINGW_INT)
 	$(ECHO_HOSTCC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

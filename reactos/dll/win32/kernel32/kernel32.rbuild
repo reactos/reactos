@@ -13,8 +13,12 @@
 		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 		<pch>k32.h</pch>
 		-->
-		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
-		<compilerflag>-fno-unit-at-a-time</compilerflag>
+		<group compilerset="gcc">
+			<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+			<compilerflag>-fno-unit-at-a-time</compilerflag>
+			<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
+			<compilerflag compiler="cxx">-fno-rtti</compilerflag>
+		</group>
 		<directory name="debug">
 			<file>debugger.c</file>
 			<file>output.c</file>
@@ -75,7 +79,7 @@
 			<file>handle.c</file>
 			<file>lang.c</file>
 			<file>ldr.c</file>
-			<file>lzexpand_main.c</file>
+			<file>lzexpand.c</file>
 			<file>muldiv.c</file>
 			<file>nls.c</file>
 			<file>perfcnt.c</file>
@@ -135,16 +139,13 @@
 			</if>
 		</directory>
 
-		<compilerflag compiler="cxx">-fno-exceptions</compilerflag>
-		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
-
 		<directory name="misc">
 			<file>icustubs.cpp</file>
 		</directory>
 		<library>normalize</library>
 	</module>
 	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll" crt="dll">
-		<importlibrary definition="kernel32.spec" />
+		<importlibrary definition="kernel32.pspec" />
 		<include base="kernel32">.</include>
 		<include base="kernel32" root="intermediate">.</include>
 		<include base="kernel32">include</include>

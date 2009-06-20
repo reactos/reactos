@@ -455,9 +455,10 @@ IDmaChannelInit_fnWaitForTC(
 
     }while(RetryCount-- >= 1);
 
-    //FIXME
-    // return error code on timeout
-    //
+    if (BytesRemaining)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
 
     return STATUS_SUCCESS;
 

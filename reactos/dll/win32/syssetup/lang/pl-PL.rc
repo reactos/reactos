@@ -222,7 +222,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Uruchom Zdalny pulpit"
     IDS_CMT_EVENTVIEW   "Uruchom Podgl¹d Zdarzeñ"
     IDS_CMT_MSCONFIG    "Uruchom Narzêdzie konfiguracji systemu"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_PAINT       "Uruchom Paint"
 END
 
 

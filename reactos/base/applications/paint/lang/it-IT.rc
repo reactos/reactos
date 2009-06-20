@@ -152,11 +152,11 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Ridimensiona"
 BEGIN
     GROUPBOX "Ridimensiona", IDD_CHANGESIZEGROUP, 6, 6, 142, 66
-    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18
+    ICON IDI_HORZSTRETCH, IDD_CHANGESIZEICON1, 12, 18, 32, 32
     LTEXT "Orizzontalmente:", IDD_CHANGESIZETEXT1, 45, 24, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT1, 90, 23, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT2, 125, 24, 15, 10
-    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43
+    ICON IDI_VERTSTRETCH, IDD_CHANGESIZEICON2, 12, 43, 32, 32
     LTEXT "Verticalmente:", IDD_CHANGESIZETEXT3, 45, 49, 40, 10
     EDITTEXT IDD_CHANGESIZEEDIT2, 90, 48, 32, 12
     LTEXT "%", IDD_CHANGESIZETEXT4, 125, 49, 15, 10
@@ -168,26 +168,26 @@ STRINGTABLE
 BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
-    IDS_INFOTITLE, "Paint for ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Do you want to save the changes to %s?"
-    IDS_DEFAULTFILENAME, "Unnamed.bmp"
-    IDS_TOOLTIP1, "Free selection"
-    IDS_TOOLTIP2, "Selection"
-    IDS_TOOLTIP3, "Rubber"
-    IDS_TOOLTIP4, "Fill with color"
-    IDS_TOOLTIP5, "Select color"
+    IDS_INFOTITLE, "Paint per ReactOS"
+    IDS_INFOTEXT, "Paint per ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "Volete salvare le modifiche a %s?"
+    IDS_DEFAULTFILENAME, "SenzaNome.bmp"
+    IDS_TOOLTIP1, "Selezione libera"
+    IDS_TOOLTIP2, "Selezione"
+    IDS_TOOLTIP3, "Gomma"
+    IDS_TOOLTIP4, "Riempimento con colore"
+    IDS_TOOLTIP5, "Selezione colore"
     IDS_TOOLTIP6, "Zoom"
-    IDS_TOOLTIP7, "Pencil"
-    IDS_TOOLTIP8, "Brush"
-    IDS_TOOLTIP9, "Airbrush"
-    IDS_TOOLTIP10, "Text"
-    IDS_TOOLTIP11, "Line"
-    IDS_TOOLTIP12, "Bezier curve"
-    IDS_TOOLTIP13, "Rectangle"
-    IDS_TOOLTIP14, "Polygon"
-    IDS_TOOLTIP15, "Ellipse"
-    IDS_TOOLTIP16, "Rounded rectangle"
+    IDS_TOOLTIP7, "Matita"
+    IDS_TOOLTIP8, "Pennello"
+    IDS_TOOLTIP9, "Aerografo"
+    IDS_TOOLTIP10, "Testo"
+    IDS_TOOLTIP11, "Linea"
+    IDS_TOOLTIP12, "Curva Bezier"
+    IDS_TOOLTIP13, "Rettangolo"
+    IDS_TOOLTIP14, "Poligono"
+    IDS_TOOLTIP15, "Ellisse"
+    IDS_TOOLTIP16, "Rettangolo arrotondato"
     IDS_OPENFILTER, "Bitmap files (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
 END

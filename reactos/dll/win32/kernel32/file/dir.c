@@ -885,7 +885,7 @@ SearchPathA (
                     goto Cleanup;
         }
 
-        BufferU.MaximumLength = (USHORT)nBufferLength * sizeof(WCHAR);
+        BufferU.MaximumLength = min(nBufferLength * sizeof(WCHAR), USHRT_MAX);
         BufferU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
                                           0,
                                           BufferU.MaximumLength);
@@ -895,7 +895,7 @@ SearchPathA (
             goto Cleanup;
         }
 
-        Buffer.MaximumLength = (USHORT)nBufferLength;
+        Buffer.MaximumLength = min(nBufferLength, USHRT_MAX);
         Buffer.Buffer = lpBuffer;
 
         RetValue = SearchPathW (NULL == lpPath ? NULL : PathU.Buffer,

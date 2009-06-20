@@ -263,6 +263,10 @@ i8042MouDpcRoutine(
 	KIRQL Irql;
 	LARGE_INTEGER Timeout;
 
+	UNREFERENCED_PARAMETER(Dpc);
+	UNREFERENCED_PARAMETER(SystemArgument1);
+	UNREFERENCED_PARAMETER(SystemArgument2);
+
 	DeviceExtension = (PI8042_MOUSE_EXTENSION)DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 
@@ -347,6 +351,10 @@ i8042DpcRoutineMouseTimeout(
 	PI8042_MOUSE_EXTENSION DeviceExtension;
 	PPORT_DEVICE_EXTENSION PortDeviceExtension;
 	KIRQL Irql;
+
+	UNREFERENCED_PARAMETER(Dpc);
+	UNREFERENCED_PARAMETER(SystemArgument1);
+	UNREFERENCED_PARAMETER(SystemArgument2);
 
 	DeviceExtension = (PI8042_MOUSE_EXTENSION)DeferredContext;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
@@ -482,8 +490,45 @@ cleanup:
 		}
 		case IOCTL_INTERNAL_I8042_HOOK_MOUSE:
 		{
+			PINTERNAL_I8042_HOOK_MOUSE MouseHook;
 			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_I8042_HOOK_MOUSE\n");
-			/* Nothing to do here */
+			if (Stack->Parameters.DeviceIoControl.InputBufferLength < sizeof(CONNECT_DATA))
+			{
+				Status = STATUS_INVALID_PARAMETER;
+				break;
+			}
+			MouseHook = (PINTERNAL_I8042_HOOK_MOUSE)Stack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+			DeviceExtension->MouseHook.Context = MouseHook->Context;
+			if (MouseHook->IsrRoutine)
+				DeviceExtension->MouseHook.IsrRoutine = MouseHook->IsrRoutine;
+
+			Status = STATUS_SUCCESS;
+			break;
+		}
+		case IOCTL_INTERNAL_I8042_MOUSE_WRITE_BUFFER:
+		{
+			DPRINT1("IOCTL_INTERNAL_I8042_MOUSE_WRITE_BUFFER not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_INTERNAL_I8042_MOUSE_START_INFORMATION:
+		{
+			DPRINT1("IOCTL_INTERNAL_I8042_MOUSE_START_INFORMATION not implemented\n");
+			Status = STATUS_NOT_IMPLEMENTED;
+			break;
+		}
+		case IOCTL_MOUSE_QUERY_ATTRIBUTES:
+		{
+			TRACE_(I8042PRT, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_MOUSE_QUERY_ATTRIBUTES\n");
+			if (Stack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(MOUSE_ATTRIBUTES))
+			{
+				Status = STATUS_BUFFER_TOO_SMALL;
+				break;
+			}
+
+			*(PMOUSE_ATTRIBUTES) Irp->AssociatedIrp.SystemBuffer = DeviceExtension->MouseAttributes;
+			Irp->IoStatus.Information = sizeof(MOUSE_ATTRIBUTES);
 			Status = STATUS_SUCCESS;
 			break;
 		}
@@ -835,8 +880,10 @@ i8042MouInterruptService(
 	PI8042_MOUSE_EXTENSION DeviceExtension;
 	PPORT_DEVICE_EXTENSION PortDeviceExtension;
 	ULONG Counter;
-	UCHAR Output, PortStatus;
+	UCHAR Output = 0, PortStatus = 0;
 	NTSTATUS Status;
+
+	UNREFERENCED_PARAMETER(Interrupt);
 
 	DeviceExtension = (PI8042_MOUSE_EXTENSION)Context;
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;

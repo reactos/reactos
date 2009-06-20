@@ -87,7 +87,7 @@ extern	ULONG		TotalPagesInLookupTable;
 extern	ULONG		FreePagesInLookupTable;
 extern	ULONG		LastFreePageHint;
 
-#ifdef DBG
+#if DBG
 PCSTR MmGetSystemMemoryMapTypeString(MEMORY_TYPE Type);
 #endif
 

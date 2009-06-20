@@ -101,7 +101,7 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
 void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
 {
     PWINDOWCLASS Class;
-    PPROCESSINFO pi = Process->ProcessInfo;
+    PPROCESSINFO pi = (PPROCESSINFO)Process;
 
     if (pi != NULL)
     {

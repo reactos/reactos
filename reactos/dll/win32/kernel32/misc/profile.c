@@ -70,6 +70,7 @@ static PROFILE *MRUProfile[N_CACHED_PROFILES]={NULL};
 #define IS_ENTRY_COMMENT(str)  ((str)[0] == ';')
 
 static const WCHAR emptystringW[] = {0};
+static const WCHAR wininiW[] = { 'w','i','n','.','i','n','i',0 };
 
 static RTL_CRITICAL_SECTION PROFILE_CritSect;
 static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
@@ -159,7 +160,6 @@ static __inline void PROFILE_WriteMarker(HANDLE hFile, ENCODING encoding)
     }
 }
 
-
 static void PROFILE_WriteLine( HANDLE hFile, WCHAR * szLine, int len, ENCODING encoding)
 {
     char * write_buffer;
@@ -197,7 +197,6 @@ static void PROFILE_WriteLine( HANDLE hFile, WCHAR * szLine, int len, ENCODING e
         DPRINT1("encoding type %d not implemented\n", encoding);
     }
 }
-
 
 /***********************************************************************
  *           PROFILE_Save
@@ -279,14 +278,12 @@ static void PROFILE_Free( PROFILESECTION *section )
     }
 }
 
-
 /* returns 1 if a character white space else 0 */
 static __inline int PROFILE_isspaceW(WCHAR c)
 {
     /* ^Z (DOS EOF) is a space too  (found on CD-ROMs) */
     return isspace(c) || c == 0x1a;
 }
-
 
 static __inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * len)
 {
@@ -729,7 +726,6 @@ static void PROFILE_ReleaseFile(void)
     ZeroMemory(&CurProfile->LastWriteTime, sizeof(CurProfile->LastWriteTime));
 }
 
-
 /***********************************************************************
  *
  * Compares a file time with the current time. If the file time is
@@ -749,7 +745,6 @@ static BOOL is_not_current(FILETIME * ft)
     DPRINT("%08x;%08x\n",(unsigned)ftll+21000000,(unsigned)nowll);
     return ftll + 21000000 < nowll;
 }
-
 
 /***********************************************************************
  *           PROFILE_Open
@@ -784,7 +779,7 @@ static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
     GetWindowsDirectoryW( windirW, MAX_PATH );
 
     if (!filename)
-        filename = L"win.ini";
+        filename = wininiW;
 
     if ((RtlDetermineDosPathNameType_U(filename) == RtlPathTypeRelative) &&
         !wcschr(filename, '\\') && !wcschr(filename, '/'))
@@ -1139,14 +1134,13 @@ UINT WINAPI GetProfileIntW( LPCWSTR section, LPCWSTR entry, INT def_val )
 static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
                    LPCWSTR def_val, LPWSTR buffer,
                    UINT len, LPCWSTR filename,
-		   BOOL win32 )
+                   BOOL win32 )
 {
     int     ret;
     LPWSTR defval_tmp = NULL;
 
     DPRINT("%S, %S, %S, %p, %u, %S\n",
-           section, entry,
-           def_val, buffer, len, filename);
+           section, entry, def_val, buffer, len, filename);
 
     /* strip any trailing ' ' of def_val. */
     if (def_val)
@@ -1235,7 +1229,6 @@ DWORD WINAPI GetPrivateProfileStringA( LPCSTR section, LPCSTR entry,
     HeapFree(GetProcessHeap(), 0, bufferW);
     return ret;
 }
-
 
 /***********************************************************************
  *           GetPrivateProfileStringW   (KERNEL32.@)
@@ -1348,7 +1341,6 @@ UINT WINAPI GetPrivateProfileIntA( LPCSTR section, LPCSTR entry,
     return res;
 }
 
-
 /***********************************************************************
  *           GetPrivateProfileSectionW   (KERNEL32.@)
  */
@@ -1363,8 +1355,7 @@ DWORD WINAPI GetPrivateProfileSectionW( LPCWSTR section, LPWSTR buffer,
         return 0;
     }
 
-    DPRINT("(%S, %p, %ld, %S)\n",
-           section, buffer, len, filename);
+    DPRINT("(%S, %p, %ld, %S)\n", section, buffer, len, filename);
 
     RtlEnterCriticalSection( &PROFILE_CritSect );
 
@@ -1375,7 +1366,6 @@ DWORD WINAPI GetPrivateProfileSectionW( LPCWSTR section, LPWSTR buffer,
 
     return ret;
 }
-
 
 /***********************************************************************
  *           GetPrivateProfileSectionA   (KERNEL32.@)
@@ -1597,7 +1587,7 @@ BOOL WINAPI WriteProfileSectionA( LPCSTR section, LPCSTR keys_n_values)
  */
 BOOL WINAPI WriteProfileSectionW( LPCWSTR section, LPCWSTR keys_n_values)
 {
-   return WritePrivateProfileSectionW(section, keys_n_values, L"win.ini");
+   return WritePrivateProfileSectionW(section, keys_n_values, wininiW);
 }
 
 

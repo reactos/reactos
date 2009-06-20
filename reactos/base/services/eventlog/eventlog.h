@@ -91,11 +91,12 @@ typedef struct
     LIST_ENTRY ListEntry;
 } LOGFILE, *PLOGFILE;
 
-typedef struct
+typedef struct _EVENTSOURCE
 {
+    LIST_ENTRY EventSourceListEntry;
     PLOGFILE LogFile;
     ULONG CurrentRecord;
-    WCHAR *Name;
+    WCHAR szName[1];
 } EVENTSOURCE, *PEVENTSOURCE;
 
 /* file.c */
@@ -148,6 +149,9 @@ ULONG LogfOffsetByNumber(PLOGFILE LogFile,
 BOOL LogfAddOffsetInformation(PLOGFILE LogFile,
                               ULONG ulNumber,
                               ULONG ulOffset);
+
+BOOL LogfDeleteOffsetInformation(PLOGFILE LogFile,
+                              ULONG ulNumber);
 
 PBYTE LogfAllocAndBuildNewRecord(LPDWORD lpRecSize,
                                  DWORD dwRecordNumber,

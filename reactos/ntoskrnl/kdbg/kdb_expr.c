@@ -87,9 +87,9 @@ typedef struct _RPN_STACK
 #define RPN_VALUE_STACK_SIZE  256
 
 /* GLOBALS *******************************************************************/
-STATIC struct { ULONG Size; ULONG Sp; RPN_OP Ops[RPN_OP_STACK_SIZE]; } RpnStack = { RPN_OP_STACK_SIZE, 0 };
+static struct { ULONG Size; ULONG Sp; RPN_OP Ops[RPN_OP_STACK_SIZE]; } RpnStack = { RPN_OP_STACK_SIZE, 0 };
 
-STATIC CONST struct { PCHAR Name; UCHAR Offset; UCHAR Size; } RegisterToTrapFrame[] =
+static const struct { PCHAR Name; UCHAR Offset; UCHAR Size; } RegisterToTrapFrame[] =
 {
    {"eip",     FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.Eip),     RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.Eip)},
    {"eflags",  FIELD_OFFSET(KDB_KTRAP_FRAME, Tf.EFlags),  RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Tf.EFlags)},
@@ -118,7 +118,7 @@ STATIC CONST struct { PCHAR Name; UCHAR Offset; UCHAR Size; } RegisterToTrapFram
    {"cr3",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr3),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr3)},
    {"cr4",     FIELD_OFFSET(KDB_KTRAP_FRAME, Cr4),        RTL_FIELD_SIZE(KDB_KTRAP_FRAME, Cr4)}
 };
-STATIC CONST INT RegisterToTrapFrameCount =
+static const INT RegisterToTrapFrameCount =
                      sizeof (RegisterToTrapFrame) / sizeof (RegisterToTrapFrame[0]);
 
 /* FUNCTIONS *****************************************************************/
@@ -268,7 +268,7 @@ RpnpDumpStack(
  *
  * \param Stack  Pointer to a RPN_STACK structure.
  */
-STATIC VOID
+static VOID
 RpnpClearStack(
    OUT PRPN_STACK Stack)
 {
@@ -281,7 +281,7 @@ RpnpClearStack(
  * \param Stack  Pointer to a RPN_STACK structure.
  * \param Op     RPN_OP to be copied onto the stack.
  */
-STATIC BOOLEAN
+static BOOLEAN
 RpnpPushStack(
    IN OUT PRPN_STACK Stack,
    IN     PRPN_OP Op)
@@ -305,7 +305,7 @@ RpnpPushStack(
  * \retval TRUE   Success.
  * \retval FALSE  Failure (stack empty)
  */
-STATIC BOOLEAN
+static BOOLEAN
 RpnpPopStack(
    IN OUT PRPN_STACK Stack,
    OUT    PRPN_OP Op  OPTIONAL)
@@ -329,7 +329,7 @@ RpnpPopStack(
  * \retval TRUE   Success.
  * \retval FALSE  Failure (stack empty)
  */
-STATIC BOOLEAN
+static BOOLEAN
 RpnpTopStack(
    IN  PRPN_STACK Stack,
    OUT PRPN_OP Op)
@@ -362,7 +362,7 @@ RpnpTopStack(
  * \retval TRUE   Success.
  * \retval FALSE  Failure.
  */
-STATIC BOOLEAN
+static BOOLEAN
 RpnpParseExpression(
    IN  PRPN_STACK Stack,
    IN  PCHAR Expression,
@@ -785,7 +785,7 @@ get_operand:
  * \retval TRUE   Success.
  * \retval FALSE  Failure.
  */
-STATIC BOOLEAN
+static BOOLEAN
 RpnpEvaluateStack(
    IN  PRPN_STACK Stack,
    IN  PKDB_KTRAP_FRAME TrapFrame,

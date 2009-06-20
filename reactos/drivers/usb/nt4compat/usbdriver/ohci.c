@@ -927,7 +927,7 @@ ohci_process_pending_endp(POHCI_DEV ehci)
         if (can_submit == STATUS_NO_MORE_ENTRIES)
         {
             //no enough bandwidth or tds
-            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertHeadList(&pendp->urb_list, &purb->urb_link);
             InsertTailList(&temp_list, pthis);
         }
         else
@@ -1332,7 +1332,7 @@ ohci_submit_urb(POHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     }
 
     pending_endp->pendp = purb->pendp;
-    InsertTailList(&ehci->pending_endp_list, (PLIST_ENTRY) pending_endp);
+    InsertTailList(&ehci->pending_endp_list, &pending_endp->endp_link);
 
     unlock_dev(pdev, TRUE);
     unlock_pending_endp_list(&ehci->pending_endp_list_lock);

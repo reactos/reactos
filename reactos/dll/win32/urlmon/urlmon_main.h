@@ -34,6 +34,7 @@
 #include "wininet.h"
 
 #include "wine/unicode.h"
+#include "wine/list.h"
 
 extern HINSTANCE URLMON_hInstance;
 extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
@@ -59,6 +60,7 @@ static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_ref
 
 IInternetProtocolInfo *get_protocol_info(LPCWSTR);
 HRESULT get_protocol_handler(LPCWSTR,CLSID*,BOOL*,IClassFactory**);
+IInternetProtocol *get_mime_filter(LPCWSTR);
 BOOL is_registered_protocol(LPCWSTR);
 void register_urlmon_namespace(IClassFactory*,REFIID,LPCWSTR,BOOL);
 
@@ -105,6 +107,33 @@ HRESULT protocol_read(Protocol*,void*,ULONG,ULONG*);
 HRESULT protocol_lock_request(Protocol*);
 HRESULT protocol_unlock_request(Protocol*);
 void protocol_close_connection(Protocol*);
+
+typedef struct {
+    const IInternetProtocolVtbl      *lpIInternetProtocolVtbl;
+    const IInternetProtocolSinkVtbl  *lpIInternetProtocolSinkVtbl;
+
+    LONG ref;
+
+    IInternetProtocolSink *protocol_sink;
+    IInternetProtocol *protocol;
+} ProtocolProxy;
+
+#define PROTOCOL(x)  ((IInternetProtocol*)       &(x)->lpIInternetProtocolVtbl)
+#define PROTSINK(x)  ((IInternetProtocolSink*)   &(x)->lpIInternetProtocolSinkVtbl)
+
+HRESULT create_protocol_proxy(IInternetProtocol*,IInternetProtocolSink*,ProtocolProxy**);
+
+typedef struct {
+    HWND notif_hwnd;
+    DWORD notif_hwnd_cnt;
+
+    struct list entry;
+} tls_data_t;
+
+tls_data_t *get_tls_data(void);
+
+HWND get_notif_hwnd(void);
+void release_notif_hwnd(HWND);
 
 static inline void *heap_alloc(size_t len)
 {

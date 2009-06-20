@@ -41,8 +41,10 @@ NdisAllocateMemoryWithTag(
   Block = ExAllocatePoolWithTag(NonPagedPool, Length, Tag);
   *VirtualAddress = Block;
 
-  if (!Block)
+  if (!Block) {
+    NDIS_DbgPrint(MIN_TRACE, ("Failed to allocate memory (%lx)\n", Length));
     return NDIS_STATUS_FAILURE;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -74,28 +76,30 @@ NdisAllocateMemory(
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  if (MemoryFlags & NDIS_MEMORY_NONCACHED)
-    {
-      *VirtualAddress = MmAllocateNonCachedMemory(Length);
-      if(!*VirtualAddress)
-        return NDIS_STATUS_FAILURE;
-
-      return NDIS_STATUS_SUCCESS;
-    }
-
   if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS)
-    {
-      *VirtualAddress = MmAllocateContiguousMemory(Length, HighestAcceptableAddress);
-      if(!*VirtualAddress)
-        return NDIS_STATUS_FAILURE;
+  {
+      /* Allocate contiguous memory (possibly noncached) */
+      *VirtualAddress = MmAllocateContiguousMemorySpecifyCache(Length,
+                                                               RtlConvertUlongToLargeInteger(0),
+                                                               HighestAcceptableAddress,
+                                                               RtlConvertUlongToLargeInteger(0),
+                                                               (MemoryFlags & NDIS_MEMORY_NONCACHED) ? MmNonCached : MmCached);
+  }
+  else if (MemoryFlags & NDIS_MEMORY_NONCACHED)
+  {
+      /* Allocate noncached noncontiguous memory */
+      *VirtualAddress = MmAllocateNonCachedMemory(Length);
+  }
+  else
+  {
+      /* Allocate plain nonpaged memory */
+      *VirtualAddress = ExAllocatePool(NonPagedPool, Length);
+  }
 
-      return NDIS_STATUS_SUCCESS;
-    }
-
-  /* Plain nonpaged memory */
-  *VirtualAddress = ExAllocatePool(NonPagedPool, Length);
-  if (!*VirtualAddress)
+  if (!*VirtualAddress) {
+    NDIS_DbgPrint(MIN_TRACE, ("Allocation failed (%lx, %lx)\n", MemoryFlags, Length));
     return NDIS_STATUS_FAILURE;
+  }
 
   return NDIS_STATUS_SUCCESS;
 }
@@ -120,19 +124,23 @@ NdisFreeMemory(
 {
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-  if (MemoryFlags & NDIS_MEMORY_NONCACHED)
-    {
-      MmFreeNonCachedMemory(VirtualAddress, Length);
-      return;
-    }
-
   if (MemoryFlags & NDIS_MEMORY_CONTIGUOUS)
-    {
-      MmFreeContiguousMemory(VirtualAddress);
-      return;
-    }
-
-  ExFreePool(VirtualAddress);
+  {
+      /* Free contiguous memory (possibly noncached) */
+      MmFreeContiguousMemorySpecifyCache(VirtualAddress,
+                                         Length,
+                                         (MemoryFlags & NDIS_MEMORY_NONCACHED) ? MmNonCached : MmCached);
+  }
+  else if (MemoryFlags & NDIS_MEMORY_NONCACHED)
+  {
+      /* Free noncached noncontiguous memory */
+      MmFreeNonCachedMemory(VirtualAddress, Length);
+  }
+  else
+  {
+      /* Free nonpaged pool */
+      ExFreePool(VirtualAddress);
+  }
 }
 
 
@@ -237,7 +245,7 @@ NdisMFreeSharedMemory(
 
   if(!Memory)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Insufficient resources\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return;
     }
 
@@ -315,7 +323,7 @@ NdisMAllocateSharedMemoryAsync(
 
   if(!Memory)
     {
-      NDIS_DbgPrint(MID_TRACE, ("Insufficient resources\n"));
+      NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources\n"));
       return NDIS_STATUS_FAILURE;
     }
 
