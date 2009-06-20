@@ -76,7 +76,7 @@ mktime_worker(struct tm * ptm, int utc)
     }
 
     /* Finally get normalized tm struct */
-    ptm2 = gmtime(&time);
+    ptm2 = _gmtime64(&time);
     if (!ptm2)
     {
         return -1;
