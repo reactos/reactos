@@ -74,6 +74,10 @@ extern "C" {
 #define _AddressOfReturnAddress() (&(((void **)(__builtin_frame_address(0)))[1]))
 /* TODO: __getcallerseflags but how??? */
 
+/* Maybe the same for x86? */
+#ifdef _x86_64
+#define _alloca(s) __builtin_alloca(s)
+#endif
 
 /*** Atomic operations ***/
 
@@ -970,6 +974,23 @@ __INTRIN_INLINE unsigned long long __emulu(const unsigned int a, const unsigned 
 	return retval;
 }
 
+#ifdef _M_AMD64
+
+static __inline__ __attribute__((always_inline)) __int64 __mulh(__int64 a, __int64 b)
+{
+	__int64 retval;
+	__asm__("imulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
+	return retval;
+}
+
+static __inline__ __attribute__((always_inline)) unsigned __int64 __umulh(unsigned __int64 a, unsigned __int64 b)
+{
+	unsigned __int64 retval;
+	__asm__("mulq %[b]" : "=d" (retval) : [a] "a" (a), [b] "rm" (b));
+	return retval;
+}
+
+#endif
 
 /*** Port I/O ***/
 __INTRIN_INLINE unsigned char __inbyte(const unsigned short Port)
