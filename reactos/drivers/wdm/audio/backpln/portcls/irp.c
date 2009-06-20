@@ -143,22 +143,19 @@ PortClsPnp(
         case IRP_MN_QUERY_INTERFACE:
             DPRINT("IRP_MN_QUERY_INTERFACE\n");
             Status = PcForwardIrpSynchronous(DeviceObject, Irp);
-            return Status;
-
+            return PcCompleteIrp(DeviceObject, Irp, Status);
         case IRP_MN_QUERY_DEVICE_RELATIONS:
             DPRINT("IRP_MN_QUERY_DEVICE_RELATIONS\n");
-            Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_NOT_SUPPORTED;
+            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+            return PcCompleteIrp(DeviceObject, Irp, Status);
         case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
-            DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS Status %x Information %p Information2 %p\n", Irp->IoStatus.Status, Irp->IoStatus.Information, IoStack->Parameters.FilterResourceRequirements.IoResourceRequirementList);
-            Status = Irp->IoStatus.Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
+            DPRINT("IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+            Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+            return PcCompleteIrp(DeviceObject, Irp, Status);
        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
             DPRINT("IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
             Status = PcForwardIrpSynchronous(DeviceObject, Irp);
-            return Status;
+            return PcCompleteIrp(DeviceObject, Irp, Status);
     }
 
     DPRINT1("unhandled function %u\n", IoStack->MinorFunction);
@@ -289,16 +286,23 @@ PcDispatchIrp(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-NTSTATUS NTAPI
+NTSTATUS
+NTAPI
 PcCompleteIrp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
     IN  NTSTATUS Status)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    ASSERT(DeviceObject);
+    ASSERT(Irp);
+    ASSERT(Status != STATUS_PENDING);
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
 }
 
 NTSTATUS
