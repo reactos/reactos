@@ -1,0 +1,6 @@
+LIBRARY	"idndl"
+
+EXPORTS
+	DownlevelGetLocaleScripts    = DownlevelGetLocaleScripts@12 @1
+	DownlevelGetStringScripts@20 = kernel32.GetStringScripts    @2
+	DownlevelVerifyScripts@20    = kernel32.VerifyScripts       @3
