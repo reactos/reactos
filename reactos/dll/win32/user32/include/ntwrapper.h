@@ -85,7 +85,7 @@ RegisterTasklist(DWORD x)
 }
 
 EXTINLINE DWORD WINAPI
-DragObject(HWND hwnd1, HWND hwnd2, UINT u1, DWORD dw1, HCURSOR hc1)
+DragObject(HWND hwnd1, HWND hwnd2, UINT u1, ULONG_PTR dw1, HCURSOR hc1)
 {
     return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
 }
@@ -96,7 +96,7 @@ KillTimer(HWND hWnd, UINT_PTR IDEvent)
     return NtUserKillTimer(hWnd, IDEvent);
 }
 
-EXTINLINE UINT_PTR WINAPI
+EXTINLINE UINT WINAPI // FIXME: wine compatibility definition, should be UINT_PTR
 SetSystemTimer(HWND hWnd, UINT_PTR IDEvent, UINT Period, TIMERPROC TimerFunc)
 {
     return NtUserSetSystemTimer(hWnd, IDEvent, Period, TimerFunc);

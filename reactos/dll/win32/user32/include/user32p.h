@@ -118,7 +118,7 @@
   NtUserCallOneParam((DWORD)bShow, ONEPARAM_ROUTINE_SHOWCURSOR)
 
 #define NtUserGetDesktopMapping(Ptr) \
-  (PVOID)NtUserCallOneParam((DWORD)Ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING)
+  (PVOID)NtUserCallOneParam((DWORD_PTR)Ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING)
 
 #define ShowCaret(hwnd) \
   NtUserShowCaret(hwnd)
@@ -127,7 +127,7 @@
   NtUserHideCaret(hwnd)
 
 #define NtUserRegisterSystemClasses(Count,SysClasses) \
-    (BOOL)NtUserCallTwoParam((DWORD)Count, (DWORD)SysClasses, TWOPARAM_ROUTINE_ROS_REGSYSCLASSES)
+    (BOOL)NtUserCallTwoParam(Count, (DWORD_PTR)SysClasses, TWOPARAM_ROUTINE_ROS_REGSYSCLASSES)
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;
