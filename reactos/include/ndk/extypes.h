@@ -640,7 +640,7 @@ typedef struct _HARDERROR_MSG
     ULONG Response;
     ULONG NumberOfParameters;
     ULONG UnicodeStringParameterMask;
-    ULONG Parameters[MAXIMUM_HARDERROR_PARAMETERS];
+    ULONG_PTR Parameters[MAXIMUM_HARDERROR_PARAMETERS];
 } HARDERROR_MSG, *PHARDERROR_MSG;
 
 //
