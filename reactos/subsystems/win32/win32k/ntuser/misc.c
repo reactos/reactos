@@ -102,29 +102,31 @@ NtUserGetThreadState(
          break;
       case THREADSTATE_INSENDMESSAGE:
          {
-           DWORD Ret = ISMEX_NOSEND;
            PUSER_MESSAGE_QUEUE MessageQueue = 
                 ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->MessageQueue;
            DPRINT1("THREADSTATE_INSENDMESSAGE\n");
 
+           ret = ISMEX_NOSEND;
            if (!IsListEmpty(&MessageQueue->SentMessagesListHead))
            {
-             Ret = ISMEX_SEND;
+             ret = ISMEX_SEND;
            }
            else if (!IsListEmpty(&MessageQueue->NotifyMessagesListHead))
            {
            /* FIXME Need to set message flag when in callback mode with notify */
-             Ret = ISMEX_NOTIFY;
+             ret = ISMEX_NOTIFY;
            }
            /* FIXME Need to set message flag if replied to or ReplyMessage */
-           RETURN( Ret);           
+           break;         
          }
       case THREADSTATE_GETMESSAGETIME: 
          /* FIXME Needs more work! */
-         RETURN( ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast);
+         ret = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->timeLast;
+         break;
 
       case THREADSTATE_GETINPUTSTATE:
-         RETURN( HIWORD(IntGetQueueStatus(FALSE)) & (QS_KEY | QS_MOUSEBUTTON));
+         ret = HIWORD(IntGetQueueStatus(FALSE)) & (QS_KEY | QS_MOUSEBUTTON);
+         break;
    }
 
    DPRINT("Leave NtUserGetThreadState, ret=%i\n", ret);
