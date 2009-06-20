@@ -2062,6 +2062,15 @@ BOOLEAN   WINAPI RtlIsTextUnicode(LPCVOID,INT,INT *);
 BOOLEAN   WINAPI RtlIsValidHandle(const RTL_HANDLE_TABLE *, const RTL_HANDLE *);
 BOOLEAN   WINAPI RtlIsValidIndexHandle(const RTL_HANDLE_TABLE *, ULONG Index, RTL_HANDLE **);
 
+#ifdef _M_AMD64
+#define RtlLargeIntegerAdd(x1, x2) ((x1)+(x2))
+#define RtlLargeIntegerArithmeticShift(x, s) ((x) >> (s))
+//#define RtlLargeIntegerDivide(a,b,c,d) 
+#define RtlLargeIntegerNegate(x) (-(x))
+#define RtlLargeIntegerShiftLeft(x, s) ((x)<<(s))
+#define RtlLargeIntegerShiftRight(x, s) ((x)>>(s))
+#define RtlLargeIntegerSubtract(x1, x2) ((x1)-(x2))
+#else
 LONGLONG  WINAPI RtlLargeIntegerAdd(LONGLONG,LONGLONG);
 LONGLONG  WINAPI RtlLargeIntegerArithmeticShift(LONGLONG,INT);
 ULONGLONG WINAPI RtlLargeIntegerDivide( ULONGLONG,ULONGLONG,ULONGLONG *);
@@ -2069,6 +2078,7 @@ LONGLONG  WINAPI RtlLargeIntegerNegate(LONGLONG);
 LONGLONG  WINAPI RtlLargeIntegerShiftLeft(LONGLONG,INT);
 LONGLONG  WINAPI RtlLargeIntegerShiftRight(LONGLONG,INT);
 LONGLONG  WINAPI RtlLargeIntegerSubtract(LONGLONG,LONGLONG);
+#endif
 NTSTATUS  WINAPI RtlLargeIntegerToChar(const ULONGLONG *,ULONG,ULONG,PCHAR);
 NTSTATUS  WINAPI RtlLeaveCriticalSection(RTL_CRITICAL_SECTION *);
 DWORD     WINAPI RtlLengthRequiredSid(DWORD);
