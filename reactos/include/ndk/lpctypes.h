@@ -34,7 +34,13 @@ Author:
 //
 // Maximum message size that can be sent through an LPC Port without a section
 //
-#define PORT_MAXIMUM_MESSAGE_LENGTH     256
+#ifdef NTOS_MODE_USER
+#ifdef _WIN64
+#define PORT_MAXIMUM_MESSAGE_LENGTH 512
+#else
+#define PORT_MAXIMUM_MESSAGE_LENGTH 256
+#endif
+#endif
 
 //
 // Port Object Access Masks
