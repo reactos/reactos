@@ -14,6 +14,9 @@
 	<define name="__arm__" />
 	<define name="TARGET_arm" host="true" />
 
+	<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
+	<compilerflag compiler="as">-gstabs+</compilerflag>
+
 	<if property="DBG" value="1">
 		<define name="DBG">1</define>
 		<define name="_SEH_ENABLE_TRACE" />

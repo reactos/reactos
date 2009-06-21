@@ -126,7 +126,14 @@
 		<xi:include href="tools/tools.rbuild" />
 	</directory>
 
-	<compilerflag compiler="cxx" compilerset="gcc">-Wno-non-virtual-dtor</compilerflag>
+	<group compilerset="gcc">
+		<compilerflag>-Wall</compilerflag>
+		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
+	</group>
 
-	<compilerflag compilerset="msc">/wd4711</compilerflag>
+	<group compilerset="msc">
+		<compilerflag>/Zl</compilerflag>
+		<compilerflag>/Zi</compilerflag>
+		<compilerflag>/W1</compilerflag>
+	</group>
 </group>

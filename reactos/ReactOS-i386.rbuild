@@ -43,6 +43,8 @@
 		<compilerflag>-Wno-strict-aliasing</compilerflag>
 		<compilerflag>-Wpointer-arith</compilerflag>
 		<compilerflag>-Wno-multichar</compilerflag>
+
+		<compilerflag>-gstabs+</compilerflag>
 		<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
 	</group>
 
@@ -70,10 +72,9 @@
 		</if>
 
 		<compilerflag>/GS-</compilerflag>
-		<compilerflag>/Zl</compilerflag>
-		<compilerflag>/Zi</compilerflag>
-		<compilerflag>/Wall</compilerflag>
 	</group>
+
+	<compilerflag compiler="as">-gstabs+</compilerflag>
 
 	<group linkerset="ld">
 		<linkerflag>-disable-stdcall-fixup</linkerflag>
