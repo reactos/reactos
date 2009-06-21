@@ -26,7 +26,7 @@ typedef enum
 typedef struct
 {
     SOUND_DEVICE_TYPE DeviceType;
-    ULONG DeviceIndex;
+    ULONG_PTR DeviceIndex;
 
     HANDLE hDevice;
     ULONG DeviceCount;
