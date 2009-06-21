@@ -775,9 +775,9 @@ KsCreate(
                 if (IoStack->FileObject->FileName.Buffer[0] != L'{')
                 {
                     RtlMoveMemory(IoStack->FileObject->FileName.Buffer, &IoStack->FileObject->FileName.Buffer[Length+1],
-                                   IoStack->FileObject->FileName.Length - Length * sizeof(WCHAR));
+                                   IoStack->FileObject->FileName.Length - (Length + 1) * sizeof(WCHAR));
 
-                    IoStack->FileObject->FileName.Length -= Length * sizeof(WCHAR);
+                    IoStack->FileObject->FileName.Length -= (Length + 1)* sizeof(WCHAR);
                 }
 
 
