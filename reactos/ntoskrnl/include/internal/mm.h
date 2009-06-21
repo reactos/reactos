@@ -29,6 +29,8 @@ struct _MM_PAGEOP;
 typedef ULONG SWAPENTRY;
 typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
+#define MI_STATIC_MEMORY_AREAS              (1)
+
 #define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)
 #define MEMORY_AREA_CONTINUOUS_MEMORY       (2)
@@ -43,6 +45,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MEMORY_AREA_PAGED_POOL              (12)
 #define MEMORY_AREA_NO_ACCESS               (13)
 #define MEMORY_AREA_PEB_OR_TEB              (14)
+#define MEMORY_AREA_STATIC                  (0x80000000)
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING        (0x8)
 
