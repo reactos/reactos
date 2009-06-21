@@ -1,9 +1,11 @@
 #ifndef _WINNT_H
 #define _WINNT_H
 
+#ifndef _M_AMD64
 #if !defined(__ROS_LONG64__)
 #ifdef __WINESRC__
-//#define __ROS_LONG64__  <- hack of fail!!!
+#define __ROS_LONG64__
+#endif
 #endif
 #endif
 

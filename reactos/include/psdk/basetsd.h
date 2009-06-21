@@ -1,9 +1,11 @@
 #ifndef _BASETSD_H
 #define _BASETSD_H
 
+#ifndef _M_AMD64
 #if !defined(__ROS_LONG64__)
 #ifdef __WINESRC__
-//#define __ROS_LONG64__
+#define __ROS_LONG64__
+#endif
 #endif
 #endif
 
