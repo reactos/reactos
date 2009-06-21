@@ -1050,6 +1050,16 @@ MiGetPfnEntry(IN PFN_TYPE Pfn)
     return Page;
 };
 
+FORCEINLINE
+PFN_NUMBER
+MiGetPfnEntryIndex(IN PMMPFN Pfn1)
+{
+    //
+    // This will return the Page Frame Number (PFN) from the MMPFN
+    //
+    return Pfn1 - MmPfnDatabase;
+}
+
 PFN_TYPE
 NTAPI
 MmGetLRUNextUserPage(PFN_TYPE PreviousPage);

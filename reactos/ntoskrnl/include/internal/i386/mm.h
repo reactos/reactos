@@ -23,6 +23,11 @@ PULONG MmGetPageDirectory(VOID);
 #define MiAddressToPteOffset(x) \
     ((((ULONG)(x)) << 10) >> 22)
 
+//
+// Convert a PTE into a corresponding address
+//
+#define MiPteToAddress(PTE) ((PVOID)((ULONG)(PTE) << 10))
+
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG)(v)) / (1024 * PAGE_SIZE)))
 #define ADDR_TO_PTE_OFFSET(v)  ((((ULONG)(v)) % (1024 * PAGE_SIZE)) / PAGE_SIZE)
