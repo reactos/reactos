@@ -546,9 +546,9 @@ KiDoBugCheckCallbacks(VOID)
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
-__declspec(noreturn)
 KiBugCheckDebugBreak(IN ULONG StatusCode)
 {
     /* If KDBG isn't connected, freeze the CPU, otherwise, break */
@@ -751,7 +751,6 @@ KiDisplayBlueScreen(IN ULONG MessageId,
 
 VOID
 NTAPI
-__declspec(noreturn)
 KeBugCheckWithTf(IN ULONG BugCheckCode,
                  IN ULONG_PTR BugCheckParameter1,
                  IN ULONG_PTR BugCheckParameter2,
