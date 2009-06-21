@@ -5182,6 +5182,9 @@ extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
 
 #define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
 #define MM_SYSTEM_SPACE_END 0xFFFFFFFF
+    
+#define MM_DONT_ZERO_ALLOCATION             0x00000001
+#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY    0x00000002
 
 #elif defined(__x86_64__)
 
