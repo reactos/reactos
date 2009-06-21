@@ -1040,8 +1040,8 @@ IPortPinWaveRT_fnInit(
         goto cleanup;
 
     This->Stream->lpVtbl->GetHWLatency(This->Stream, &Latency);
-    /* minimum delay of 10 milisec */
-    This->Delay = Int32x32To64(min(max(Latency.ChipsetDelay + Latency.CodecDelay + Latency.FifoSize, 10), 10), -10000);
+    /* delay of 10 milisec */
+    This->Delay = Int32x32To64(10, -10000);
 
     Status = This->Stream->lpVtbl->AllocateAudioBuffer(This->Stream, 16384 * 11, &This->Mdl, &This->CommonBufferSize, &This->CommonBufferOffset, &This->CacheType);
     if (!NT_SUCCESS(Status))
