@@ -100,7 +100,7 @@ EnumerateSecurityPackagesA(
 	)
 {
     SECURITY_STATUS ret;
-    PSecPkgInfoW info;
+    PSecPkgInfoW info = {0};
 
     ret = EnumerateSecurityPackagesW(pcPackages, &info);
     if (ret == SEC_E_OK && *pcPackages && info)
