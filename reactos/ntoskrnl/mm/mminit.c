@@ -47,7 +47,6 @@ MemType[] =
 
 BOOLEAN IsThisAnNtAsSystem = FALSE;
 MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
-PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 ULONG MmBootImageSize;
@@ -107,110 +106,45 @@ MiShutdownMemoryManager(VOID)
 VOID
 INIT_FUNCTION
 NTAPI
-MmInitVirtualMemory()
+MiInitSystemMemoryAreas()
 {
-   PVOID BaseAddress;
-   ULONG Length;
-   NTSTATUS Status;
-   PHYSICAL_ADDRESS BoundaryAddressMultiple;
-   PMEMORY_AREA MArea;
+    PVOID BaseAddress;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    PMEMORY_AREA MArea;
+    BoundaryAddressMultiple.QuadPart = 0;
+    
+    //
+    // First initialize the page table and hyperspace memory areas
+    //
+    MiInitPageDirectoryMap();
+    
+    //
+    // Next, the KPCR
+    //
+    BaseAddress = (PVOID)PCR;
+    MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                       MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
+                       &BaseAddress,
+                       PAGE_SIZE * KeNumberProcessors,
+                       PAGE_READWRITE,
+                       &MArea,
+                       TRUE,
+                       0,
+                       BoundaryAddressMultiple);
 
-   BoundaryAddressMultiple.QuadPart = 0;
-
-   DPRINT("NonPagedPool %x - %x, PagedPool %x - %x\n", MiNonPagedPoolStart, (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength - 1,
-           MmPagedPoolBase, (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize - 1);
-
-   MiInitializeNonPagedPool();
-
-   /*
-    * Setup the system area descriptor list
-    */
-   MiInitPageDirectoryMap();
-
-   BaseAddress = (PVOID)PCR;
-   MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      PAGE_SIZE * KeNumberProcessors,
-                      PAGE_READWRITE,
-                      &MArea,
-                      TRUE,
-                      0,
-                      BoundaryAddressMultiple);
-
-#if defined(_M_IX86)
-   /* Local APIC base */
-   BaseAddress = (PVOID)0xFEE00000;
-   MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      PAGE_SIZE,
-                      PAGE_READWRITE,
-                      &MArea,
-                      TRUE,
-                      0,
-                      BoundaryAddressMultiple);
-
-   /* i/o APIC base */
-   BaseAddress = (PVOID)0xFEC00000;
-   MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      PAGE_SIZE,
-                      PAGE_READWRITE,
-                      &MArea,
-                      TRUE,
-                      0,
-                      BoundaryAddressMultiple);
-#endif
-
-   BaseAddress = MiNonPagedPoolStart;
-   MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      MiNonPagedPoolLength,
-                      PAGE_READWRITE,
-                      &MArea,
-                      TRUE,
-                      0,
-                      BoundaryAddressMultiple);
-
-   BaseAddress = MmPagedPoolBase;
-   Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                               MEMORY_AREA_PAGED_POOL,
-                               &BaseAddress,
-                               MmPagedPoolSize,
-                               PAGE_READWRITE,
-                               &MArea,
-                               TRUE,
-                               0,
-                               BoundaryAddressMultiple);
-
-   MmInitializePagedPool();
-
-   /*
-    * Create the kernel mapping of the user/kernel shared memory.
-    */
-   BaseAddress = (PVOID)KI_USER_SHARED_DATA;
-   Length = PAGE_SIZE;
-   MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      Length,
-                      PAGE_READWRITE,
-                      &MArea,
-                      TRUE,
-                      0,
-                      BoundaryAddressMultiple);
-
-   /* Shared data are always located the next page after PCR */
-   MmSharedDataPagePhysicalAddress = MmGetPhysicalAddress((PVOID)PCR);
-   MmSharedDataPagePhysicalAddress.QuadPart += PAGE_SIZE;
-
-   /*
-    *
-    */
-   MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
+    //
+    // Now the KUSER_SHARED_DATA
+    //
+    BaseAddress = (PVOID)KI_USER_SHARED_DATA;
+    MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                       MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
+                       &BaseAddress,
+                       PAGE_SIZE,
+                       PAGE_READWRITE,
+                       &MArea,
+                       TRUE,
+                       0,
+                       BoundaryAddressMultiple);
 }
 
 VOID
@@ -432,6 +366,9 @@ MmInit1(VOID)
     
     /* Dump kernel memory layout */
     MiDbgKernelLayout();
+    
+    /* Intialize system memory areas */
+    MiInitSystemMemoryAreas();
 
     /* Initialize hyperspace */
     MiInitHyperSpace();
@@ -441,12 +378,18 @@ MmInit1(VOID)
 
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
-
-    /* Intialize memory areas */
-    MmInitVirtualMemory();
+    
+    /* Initialize nonpaged pool */
+    MiInitializeNonPagedPool();
+    
+    /* Initialize paged pool */
+    MmInitializePagedPool();
 
     /* Initialize MDLs */
     MmInitializeMdlImplementation();
+    
+    /* Initialize working sets */
+    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
 BOOLEAN

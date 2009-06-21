@@ -1161,7 +1161,7 @@ MiInitPageDirectoryMap(VOID)
     BoundaryAddressMultiple.QuadPart = 0;
     BaseAddress = (PVOID)PAGETABLE_MAP;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
                                 &BaseAddress,
                                 0x400000,
                                 PAGE_READWRITE,
@@ -1175,7 +1175,7 @@ MiInitPageDirectoryMap(VOID)
     }
     BaseAddress = (PVOID)HYPERSPACE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
                                 &BaseAddress,
                                 0x400000,
                                 PAGE_READWRITE,
