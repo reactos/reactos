@@ -352,6 +352,9 @@ typedef struct _MMPFN
     } u4;
 } MMPFN, *PMMPFN;
 
+extern PMMPFN MmPageArray;
+extern ULONG MmPageArraySize;
+
 extern MM_STATS MmStats;
 
 typedef struct _MM_PAGEOP
@@ -1036,14 +1039,9 @@ PMMPFN
 MiGetPfnEntry(IN PFN_TYPE Pfn)
 {
     PMMPFN Page;
-    extern PMMPFN MmPageArray;
-    extern ULONG MmPageArraySize;
-
-    /* Mark MmPageArraySize as unreferenced, otherwise it will appear as an unused variable on a Release build */
-    UNREFERENCED_PARAMETER(MmPageArraySize);
 
     /* Make sure the PFN number is valid */
-    ASSERT(Pfn <= MmPageArraySize);
+    if (Pfn > MmPageArraySize) return NULL;
 
     /* Get the entry */
     Page = &MmPageArray[Pfn];
