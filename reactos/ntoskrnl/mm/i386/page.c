@@ -310,7 +310,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 {
                     return NULL;
                 }
-                Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+                Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
                 if (!NT_SUCCESS(Status) || Pfn == 0)
                 {
                     KeBugCheck(MEMORY_MANAGEMENT);
@@ -322,8 +322,11 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 }
                 if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
                 {
-                    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+                    MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
                 }
+                InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
+                RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
+                return (PULONG)MiAddressToPte(Address);
             }
             InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
         }

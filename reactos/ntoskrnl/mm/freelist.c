@@ -777,7 +777,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 
    PfnOffset = PageDescriptor - MmPfnDatabase;
-   if (NeedClear)
+   if ((NeedClear) && (Consumer != MC_SYSTEM))
    {
       MiZeroPage(PfnOffset);
    }

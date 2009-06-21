@@ -102,7 +102,8 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define MC_USER                             (1)
 #define MC_PPOOL                            (2)
 #define MC_NPPOOL                           (3)
-#define MC_MAXIMUM                          (4)
+#define MC_SYSTEM                           (4)
+#define MC_MAXIMUM                          (5)
 
 #define PAGED_POOL_MASK                     1
 #define MUST_SUCCEED_POOL_MASK              2
