@@ -391,14 +391,12 @@ CloseStreamRoutine(
         if (This->State != KSSTATE_STOP)
         {
             This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
-            KeStallExecutionProcessor(10);
         }
     }
 
     if (This->ServiceGroup)
     {
         This->ServiceGroup->lpVtbl->RemoveMember(This->ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
-        This->ServiceGroup->lpVtbl->Release(This->ServiceGroup);
     }
 
     Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
@@ -407,20 +405,15 @@ CloseStreamRoutine(
         Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
         if (NT_SUCCESS(Status))
         {
-            ISubDevice->lpVtbl->Release(ISubDevice);
             Descriptor->Factory.Instances[This->ConnectDetails->PinId].CurrentPinInstanceCount--;
         }
+        ISubDevice->lpVtbl->Release(ISubDevice);
     }
 
     if (This->Format)
     {
         ExFreePool(This->Format);
         This->Format = NULL;
-    }
-
-    if (This->WaveStream)
-    {
-        This->WaveStream->lpVtbl->Release(This->WaveStream);
     }
 
     /* complete the irp */
@@ -440,7 +433,6 @@ CloseStreamRoutine(
         This->Stream = NULL;
         DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->lpVtbl->Release(Stream);
-        /* this line is never reached */
     }
 }
 

@@ -702,9 +702,9 @@ CloseStreamRoutine(
         Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
         if (NT_SUCCESS(Status))
         {
-            ISubDevice->lpVtbl->Release(ISubDevice);
             Descriptor->Factory.Instances[This->ConnectDetails->PinId].CurrentPinInstanceCount--;
         }
+        ISubDevice->lpVtbl->Release(ISubDevice);
     }
 
     if (This->Format)
@@ -735,7 +735,6 @@ CloseStreamRoutine(
         This->Stream = NULL;
         DPRINT1("Closing stream at Irql %u\n", KeGetCurrentIrql());
         Stream->lpVtbl->Release(Stream);
-        /* this line is never reached */
     }
 }
 
