@@ -289,30 +289,68 @@ typedef struct
     ULONG PagingRequestsInLastFifteenMinutes;
 } MM_STATS;
 
-typedef struct _PHYSICAL_PAGE
+typedef struct _MMPFNENTRY
 {
+    USHORT Modified:1;
+    USHORT ReadInProgress:1;                 // StartOfAllocation
+    USHORT WriteInProgress:1;                // EndOfAllocation
+    USHORT PrototypePte:1;                   // Zero
+    USHORT PageColor:4;                      // LockCount
+    USHORT PageLocation:3;                   // Consumer
+    USHORT RemovalRequested:1;
+    USHORT CacheAttribute:2;                 // Type
+    USHORT Rom:1;
+    USHORT ParityError:1;
+} MMPFNENTRY;
+
+typedef struct _MMPFN
+{
+    union
+    {
+        PFN_NUMBER Flink;                    // ListEntry.Flink
+        ULONG WsIndex;
+        PKEVENT Event;
+        NTSTATUS ReadStatus;
+        SINGLE_LIST_ENTRY NextStackPfn;
+    } u1;
+    PMMPTE PteAddress;                       // ListEntry.Blink
+    union
+    {
+        PFN_NUMBER Blink;
+        ULONG_PTR ShareCount;                // MapCount
+    } u2;
     union
     {
         struct
         {
-            ULONG Type: 2;
-            ULONG Consumer: 3;
-            ULONG Zero: 1;
-            ULONG StartOfAllocation: 1;
-            ULONG EndOfAllocation: 1;
-        }
-        Flags;
-        ULONG AllFlags;
+            USHORT ReferenceCount;           // ReferenceCount
+            MMPFNENTRY e1;
+        };
+        struct
+        {
+            USHORT ReferenceCount;
+            USHORT ShortFlags;
+        } e2;
+    } u3;
+    union
+    {
+        MMPTE OriginalPte;
+        LONG AweReferenceCount;              // RmapListHead
     };
-
-    LIST_ENTRY ListEntry;
-    ULONG ReferenceCount;
-    SWAPENTRY SavedSwapEntry;
-    ULONG LockCount;
-    ULONG MapCount;
-    struct _MM_RMAP_ENTRY* RmapListHead;
-}
-PHYSICAL_PAGE, *PPHYSICAL_PAGE;
+    union
+    {
+        ULONG_PTR EntireFrame;               // SavedSwapEntry
+        struct
+        {
+            ULONG_PTR PteFrame:25;
+            ULONG_PTR InPageError:1;
+            ULONG_PTR VerifierAllocation:1;
+            ULONG_PTR AweAllocation:1;
+            ULONG_PTR Priority:3;
+            ULONG_PTR MustBeCached:1;
+        };
+    } u4;
+} MMPFN, *PMMPFN;
 
 extern MM_STATS MmStats;
 
@@ -991,14 +1029,14 @@ MmPageOutPhysicalAddress(PFN_TYPE Page);
 
 /* freelist.c **********************************************************/
 
-#define ASSERT_PFN(x) ASSERT((x)->Flags.Type != 0)
+#define ASSERT_PFN(x) ASSERT((x)->u3.e1.CacheAttribute != 0)
 
 FORCEINLINE
-PPHYSICAL_PAGE
+PMMPFN
 MiGetPfnEntry(IN PFN_TYPE Pfn)
 {
-    PPHYSICAL_PAGE Page;
-    extern PPHYSICAL_PAGE MmPageArray;
+    PMMPFN Page;
+    extern PMMPFN MmPageArray;
     extern ULONG MmPageArraySize;
 
     /* Mark MmPageArraySize as unreferenced, otherwise it will appear as an unused variable on a Release build */
@@ -1277,16 +1315,6 @@ MmGetReferenceCountPage(PFN_TYPE Page);
 BOOLEAN
 NTAPI
 MmIsPageInUse(PFN_TYPE Page);
-
-VOID
-NTAPI
-MmSetFlagsPage(
-    PFN_TYPE Page,
-    ULONG Flags);
-
-ULONG
-NTAPI
-MmGetFlagsPage(PFN_TYPE Page);
 
 VOID
 NTAPI

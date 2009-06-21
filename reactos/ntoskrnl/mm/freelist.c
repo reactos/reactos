@@ -27,6 +27,27 @@
 
 /* GLOBALS ****************************************************************/
 
+//
+//
+// ReactOS to NT Physical Page Descriptor Entry Legacy Mapping Definitions
+//
+//        REACTOS                 NT
+//
+#define Consumer             PageLocation
+#define Type                 CacheAttribute
+#define Zero                 PrototypePte
+#define LockCount            u3.e1.PageColor
+#define MapCount             u2.ShareCount
+#define RmapListHead         AweReferenceCount
+#define SavedSwapEntry       u4.EntireFrame
+#define Flags                u3.e1
+#define ReferenceCount       u3.ReferenceCount
+#define RemoveEntryList(x)   RemoveEntryList((PLIST_ENTRY)x)
+#define InsertTailList(x, y) InsertTailList(x, (PLIST_ENTRY)y)
+#define ListEntry            u1
+#define PHYSICAL_PAGE        MMPFN
+#define PPHYSICAL_PAGE       PMMPFN
+
 PPHYSICAL_PAGE MmPageArray;
 ULONG MmPageArraySize;
 
@@ -94,7 +115,7 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
    Page = MiGetPfnEntry(PreviousPfn);
    ASSERT(Page->Flags.Type == MM_PHYSICAL_PAGE_USED);
    ASSERT(Page->Flags.Consumer == MC_USER);
-   NextListEntry = Page->ListEntry.Flink;
+   NextListEntry = (PLIST_ENTRY)Page->ListEntry.Flink;
    if (NextListEntry == &UserPageListHead)
    {
 	  KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
@@ -295,10 +316,12 @@ MmInitializePageList(VOID)
          NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
          NextEntry = NextEntry->Flink)
     {
+#undef ListEntry
         /* Get the descriptor */
         Md = CONTAINING_RECORD(NextEntry,
                                MEMORY_ALLOCATION_DESCRIPTOR,
                                ListEntry);
+#define ListEntry            u1        
 
         /* Skip bad memory */
         if ((Md->MemoryType == LoaderFirmwarePermanent) ||
@@ -368,23 +391,12 @@ MmInitializePageList(VOID)
 
 VOID
 NTAPI
-MmSetFlagsPage(PFN_TYPE Pfn, ULONG Flags)
-{
-   KIRQL oldIrql;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->AllFlags = Flags;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-}
-
-VOID
-NTAPI
 MmSetRmapListHeadPage(PFN_TYPE Pfn, struct _MM_RMAP_ENTRY* ListHead)
 {
    KIRQL oldIrql;
     
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->RmapListHead = ListHead;
+   MiGetPfnEntry(Pfn)->RmapListHead = (LONG)ListHead;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
@@ -396,7 +408,7 @@ MmGetRmapListHeadPage(PFN_TYPE Pfn)
    struct _MM_RMAP_ENTRY* ListHead;
     
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   ListHead = MiGetPfnEntry(Pfn)->RmapListHead;
+   ListHead = (struct _MM_RMAP_ENTRY*)MiGetPfnEntry(Pfn)->RmapListHead;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
     
    return(ListHead);
@@ -451,29 +463,14 @@ MmMarkPageUnmapped(PFN_TYPE Pfn)
    }
 }
 
-ULONG
-NTAPI
-MmGetFlagsPage(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   ULONG Flags;
-
-   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   Flags = MiGetPfnEntry(Pfn)->AllFlags;
-   KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-
-   return(Flags);
-}
-
-
 VOID
 NTAPI
-MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SavedSwapEntry)
+MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SwapEntry)
 {
    KIRQL oldIrql;
 
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   MiGetPfnEntry(Pfn)->SavedSwapEntry = SavedSwapEntry;
+   MiGetPfnEntry(Pfn)->SavedSwapEntry = SwapEntry;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 }
 
@@ -481,14 +478,14 @@ SWAPENTRY
 NTAPI
 MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
 {
-   SWAPENTRY SavedSwapEntry;
+   SWAPENTRY SwapEntry;
    KIRQL oldIrql;
 
    oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-   SavedSwapEntry = MiGetPfnEntry(Pfn)->SavedSwapEntry;
+   SwapEntry = MiGetPfnEntry(Pfn)->SavedSwapEntry;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 
-   return(SavedSwapEntry);
+   return(SwapEntry);
 }
 
 VOID
@@ -591,7 +588,7 @@ MmDereferencePage(PFN_TYPE Pfn)
       MmStats.NrFreePages++;
       MmStats.NrSystemPages--;
       if (Page->Flags.Consumer == MC_USER) RemoveEntryList(&Page->ListEntry);
-      if (Page->RmapListHead != NULL)
+      if (Page->RmapListHead != (LONG)NULL)
       {
          DPRINT1("Freeing page with rmap entries.\n");
          KeBugCheck(MEMORY_MANAGEMENT);
@@ -636,7 +633,7 @@ NTAPI
 MmGetLockCountPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
-   ULONG LockCount;
+   ULONG CurrentLockCount;
    PPHYSICAL_PAGE Page;
 
    DPRINT("MmGetLockCountPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
@@ -650,10 +647,10 @@ MmGetLockCountPage(PFN_TYPE Pfn)
       KeBugCheck(MEMORY_MANAGEMENT);
    }
 
-   LockCount = Page->LockCount;
+   CurrentLockCount = Page->LockCount;
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
 
-   return(LockCount);
+   return(CurrentLockCount);
 }
 
 VOID
@@ -711,7 +708,7 @@ MmUnlockPage(PFN_TYPE Pfn)
 
 PFN_TYPE
 NTAPI
-MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
+MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
 {
    PFN_TYPE PfnOffset;
    PLIST_ENTRY ListEntry;
@@ -774,7 +771,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
    PageDescriptor->ReferenceCount = 1;
    PageDescriptor->LockCount = 0;
    PageDescriptor->MapCount = 0;
-   PageDescriptor->SavedSwapEntry = SavedSwapEntry;
+   PageDescriptor->SavedSwapEntry = SwapEntry;
 
    MmStats.NrSystemPages++;
    MmStats.NrFreePages--;

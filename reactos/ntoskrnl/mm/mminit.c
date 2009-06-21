@@ -403,7 +403,7 @@ MmInit1(VOID)
 
     /* We'll put the PFN array right after the loaded modules */
     MmPfnDatabase = (PVOID)MiKSeg0End;
-    MmPfnDatabaseEnd = (ULONG_PTR)MmPfnDatabase + (MmHighestPhysicalPage * sizeof(PHYSICAL_PAGE));
+    MmPfnDatabaseEnd = (ULONG_PTR)MmPfnDatabase + (MmHighestPhysicalPage * sizeof(MMPFN));
     MmPfnDatabaseEnd = PAGE_ROUND_UP(MmPfnDatabaseEnd);
     
     /*

@@ -277,7 +277,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
          KeBugCheck(NO_PAGES_AVAILABLE);
       }
       /* Update the Consumer */
-      MiGetPfnEntry(Page)->Flags.Consumer = Consumer;
+      MiGetPfnEntry(Page)->u3.e1.PageLocation = Consumer;
       if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
       *AllocatedPage = Page;
       (void)InterlockedDecrementUL(&MiPagesRequired);
