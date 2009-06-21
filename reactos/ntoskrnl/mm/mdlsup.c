@@ -26,7 +26,6 @@ PVOID MiMdlMappingRegionBase = NULL;
 RTL_BITMAP MiMdlMappingRegionAllocMap;
 ULONG MiMdlMappingRegionHint;
 KSPIN_LOCK MiMdlMappingRegionLock;
-extern ULONG MmPageArraySize;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -418,7 +417,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
 
     /* Check if this is an MDL in I/O Space */
     if (Mdl->StartVa >= MmSystemRangeStart &&
-        MmGetPfnForProcess(NULL, Mdl->StartVa) >= MmPageArraySize)
+        MmGetPfnForProcess(NULL, Mdl->StartVa) >= MmHighestPhysicalPage)
     {
         /* Just loop each page */
         for (i = 0; i < NrPages; i++)
@@ -521,7 +520,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                 for (j = 0; j < i; j++)
                 {
                     Page = MdlPages[j];
-                    if (Page < MmPageArraySize)
+                    if (Page < MmHighestPhysicalPage)
                     {
                         MmUnlockPage(Page);
                         MmDereferencePage(Page);
@@ -532,7 +531,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
         }
         Page = MmGetPfnForProcess(NULL, Address);
         MdlPages[i] = Page;
-        if (Page >= MmPageArraySize)
+        if (Page >= MmHighestPhysicalPage)
         {
             Mdl->MdlFlags |= MDL_IO_SPACE;
         }        

@@ -21,7 +21,6 @@ extern ULONG MmPagedPoolSize;
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
 extern ULONG MmHighestPhysicalPage;
-extern PVOID MmPfnDatabase;
 
 struct _KTRAP_FRAME;
 struct _EPROCESS;
@@ -352,9 +351,7 @@ typedef struct _MMPFN
     } u4;
 } MMPFN, *PMMPFN;
 
-extern PMMPFN MmPageArray;
-extern ULONG MmPageArraySize;
-
+extern PMMPFN MmPfnDatabase;
 extern MM_STATS MmStats;
 
 typedef struct _MM_PAGEOP
@@ -1041,10 +1038,10 @@ MiGetPfnEntry(IN PFN_TYPE Pfn)
     PMMPFN Page;
 
     /* Make sure the PFN number is valid */
-    if (Pfn > MmPageArraySize) return NULL;
+    if (Pfn > MmHighestPhysicalPage) return NULL;
 
     /* Get the entry */
-    Page = &MmPageArray[Pfn];
+    Page = &MmPfnDatabase[Pfn];
 
     /* Make sure it's valid */
     ASSERT_PFN(Page);

@@ -53,7 +53,6 @@ ULONG MiNonPagedPoolLength;
 ULONG MmBootImageSize;
 ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
 ULONG_PTR MiKSeg0Start, MiKSeg0End;
-PVOID MmPfnDatabase;
 ULONG_PTR MmPfnDatabaseEnd;
 PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
