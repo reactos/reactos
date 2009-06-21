@@ -2053,6 +2053,7 @@ NdisIDeviceIoControl(
   PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)DeviceObject->DeviceExtension;
   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
   NDIS_STATUS Status = STATUS_NOT_SUPPORTED;
+  ULONG Written;
 
   Irp->IoStatus.Information = 0;
 
@@ -2065,7 +2066,8 @@ NdisIDeviceIoControl(
                                     *(PNDIS_OID)Irp->AssociatedIrp.SystemBuffer,
                                     Stack->Parameters.DeviceIoControl.OutputBufferLength,
                                     MmGetSystemAddressForMdl(Irp->MdlAddress),
-                                    &Irp->IoStatus.Information);
+                                    &Written);
+      Irp->IoStatus.Information = Written;
       break;
 
     default:
