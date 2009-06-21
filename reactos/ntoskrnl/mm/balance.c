@@ -85,6 +85,8 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
    MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
    MiMemoryConsumers[MC_NPPOOL].PagesTarget = 0xFFFFFFFF;
    MiMemoryConsumers[MC_NPPOOL].PagesUsed = NrSystemPages;
+   MiMemoryConsumers[MC_SYSTEM].PagesTarget = 0xFFFFFFFF;
+   MiMemoryConsumers[MC_SYSTEM].PagesUsed = 0;
 }
 
 VOID
@@ -221,7 +223,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    /*
     * Allocate always memory for the non paged pool and for the pager thread.
     */
-   if (Consumer == MC_NPPOOL || MiIsBalancerThread())
+   if ((Consumer == MC_NPPOOL) || (Consumer == MC_SYSTEM) || MiIsBalancerThread())
    {
       Page = MmAllocPage(Consumer, 0);
       if (Page == 0)
