@@ -21,6 +21,18 @@
 #ifndef __WINE_SERVER_LIST_H
 #define __WINE_SERVER_LIST_H
 
+#ifdef __cplusplus
+#define __WINE_SERVER_LIST_INLINE inline
+#else
+#if defined(__GNUC__)
+#define __WINE_SERVER_LIST_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#elif defined(_MSC_VER)
+#define __WINE_SERVER_LIST_INLINE __inline
+#else
+#define __WINE_SERVER_LIST_INLINE static
+#endif
+#endif
+
 struct list
 {
     struct list *next;
@@ -63,7 +75,7 @@ struct list
  */
 
 /* add an element after the specified one */
-static inline void list_add_after( struct list *elem, struct list *to_add )
+__WINE_SERVER_LIST_INLINE void list_add_after( struct list *elem, struct list *to_add )
 {
     to_add->next = elem->next;
     to_add->prev = elem;
@@ -72,7 +84,7 @@ static inline void list_add_after( struct list *elem, struct list *to_add )
 }
 
 /* add an element before the specified one */
-static inline void list_add_before( struct list *elem, struct list *to_add )
+__WINE_SERVER_LIST_INLINE void list_add_before( struct list *elem, struct list *to_add )
 {
     to_add->next = elem;
     to_add->prev = elem->prev;
@@ -81,26 +93,26 @@ static inline void list_add_before( struct list *elem, struct list *to_add )
 }
 
 /* add element at the head of the list */
-static inline void list_add_head( struct list *list, struct list *elem )
+__WINE_SERVER_LIST_INLINE void list_add_head( struct list *list, struct list *elem )
 {
     list_add_after( list, elem );
 }
 
 /* add element at the tail of the list */
-static inline void list_add_tail( struct list *list, struct list *elem )
+__WINE_SERVER_LIST_INLINE void list_add_tail( struct list *list, struct list *elem )
 {
     list_add_before( list, elem );
 }
 
 /* remove an element from its list */
-static inline void list_remove( struct list *elem )
+__WINE_SERVER_LIST_INLINE void list_remove( struct list *elem )
 {
     elem->next->prev = elem->prev;
     elem->prev->next = elem->next;
 }
 
 /* get the next element */
-static inline struct list *list_next( const struct list *list, const struct list *elem )
+__WINE_SERVER_LIST_INLINE struct list *list_next( const struct list *list, const struct list *elem )
 {
     struct list *ret = elem->next;
     if (elem->next == list) ret = NULL;
@@ -108,7 +120,7 @@ static inline struct list *list_next( const struct list *list, const struct list
 }
 
 /* get the previous element */
-static inline struct list *list_prev( const struct list *list, const struct list *elem )
+__WINE_SERVER_LIST_INLINE struct list *list_prev( const struct list *list, const struct list *elem )
 {
     struct list *ret = elem->prev;
     if (elem->prev == list) ret = NULL;
@@ -116,31 +128,31 @@ static inline struct list *list_prev( const struct list *list, const struct list
 }
 
 /* get the first element */
-static inline struct list *list_head( const struct list *list )
+__WINE_SERVER_LIST_INLINE struct list *list_head( const struct list *list )
 {
     return list_next( list, list );
 }
 
 /* get the last element */
-static inline struct list *list_tail( const struct list *list )
+__WINE_SERVER_LIST_INLINE struct list *list_tail( const struct list *list )
 {
     return list_prev( list, list );
 }
 
 /* check if a list is empty */
-static inline int list_empty( const struct list *list )
+__WINE_SERVER_LIST_INLINE int list_empty( const struct list *list )
 {
     return list->next == list;
 }
 
 /* initialize a list */
-static inline void list_init( struct list *list )
+__WINE_SERVER_LIST_INLINE void list_init( struct list *list )
 {
     list->next = list->prev = list;
 }
 
 /* count the elements of a list */
-static inline unsigned int list_count( const struct list *list )
+__WINE_SERVER_LIST_INLINE unsigned int list_count( const struct list *list )
 {
     unsigned count = 0;
     const struct list *ptr;
@@ -149,7 +161,7 @@ static inline unsigned int list_count( const struct list *list )
 }
 
 /* move all elements from src to the tail of dst */
-static inline void list_move_tail( struct list *dst, struct list *src )
+__WINE_SERVER_LIST_INLINE void list_move_tail( struct list *dst, struct list *src )
 {
     if (list_empty(src)) return;
 
@@ -161,7 +173,7 @@ static inline void list_move_tail( struct list *dst, struct list *src )
 }
 
 /* move all elements from src to the head of dst */
-static inline void list_move_head( struct list *dst, struct list *src )
+__WINE_SERVER_LIST_INLINE void list_move_head( struct list *dst, struct list *src )
 {
     if (list_empty(src)) return;
 
