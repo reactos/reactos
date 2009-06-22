@@ -11,75 +11,16 @@
    OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 ****************************************************************************/
-
 /****************************************************************************
- *  Header: remcom.c,v 1.34 91/03/09 12:29:49 glenne Exp $
- *
- *  Module name: remcom.c $
- *  Revision: 1.34 $
- *  Date: 91/03/09 12:29:49 $
  *  Contributor:     Lake Stevens Instrument Division$
  *
  *  Description:     low level support for gdb debugger. $
  *
- *  Considerations:  only works on target hardware $
- *
  *  Written by:      Glenn Engel $
  *  ModuleState:     Experimental $
  *
- *  NOTES:           See Below $
- *
  *  Modified for 386 by Jim Kingdon, Cygnus Support.
  *  Modified for ReactOS by Casper S. Hornstrup <chorns@users.sourceforge.net>
- *
- *  To enable debugger support, two things need to happen.  One, setting
- *  up a routine so that it is in the exception path, is necessary in order
- *  to allow any breakpoints or error conditions to be properly intercepted
- *  and reported to gdb.
- *  Two, a breakpoint needs to be generated to begin communication.
- *
- *  Because gdb will sometimes write to the stack area to execute function
- *  calls, this program cannot rely on using the supervisor stack so it
- *  uses it's own stack area.
- *
- *************
- *
- *    The following gdb commands are supported:
- *
- * command          function                               Return value
- *
- *    g             return the value of the CPU Registers  hex data or ENN
- *    G             set the value of the CPU Registers     OK or ENN
- *
- *    mAA..AA,LLLL  Read LLLL bytes at address AA..AA      hex data or ENN
- *    MAA..AA,LLLL: Write LLLL bytes at address AA.AA      OK or ENN
- *
- *    c             Resume at current address              SNN   ( signal NN)
- *    cAA..AA       Continue at address AA..AA             SNN
- *
- *    s             Step one instruction                   SNN
- *    sAA..AA       Step one instruction from AA..AA       SNN
- *
- *    k             kill
- *
- *    ?             What was the last sigval ?             SNN   (signal NN)
- *
- * All commands and responses are sent with a packet which includes a
- * Checksum.  A packet consists of
- *
- * $<packet info>#<Checksum>.
- *
- * where
- * <packet info> :: <characters representing the command or response>
- * <Checksum>    :: < two hex digits computed as modulo 256 sum of <packetinfo>>
- *
- * When a packet is received, it is first acknowledged with either '+' or '-'.
- * '+' indicates a successful transfer.  '-' indicates a failed transfer.
- *
- * Example:
- *
- * Host:                  Reply:
- * $m0,10#2a               +$00010203040506070809101112131415#42
  *
  ****************************************************************************/
 
@@ -88,12 +29,8 @@
 #include <debug.h>
 
 /************************************************************************/
-/* BUFMAX defines the maximum number of characters in inbound/outbound buffers*/
-/* at least NUMREGBYTES*2 are needed for register packets */
-#define BUFMAX 1000
 
 static BOOLEAN GspInitialized;
-
 static BOOLEAN GspRemoteDebug;
 
 static CONST CHAR HexChars[]="0123456789abcdef";
@@ -105,7 +42,12 @@ static PETHREAD GspEnumThread;
 static FAST_MUTEX GspLock;
 
 extern LIST_ENTRY PsActiveProcessHead;
-KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 }; /* FIXME hardcoded for COM2, 115200 baud */
+
+/* FIXME hardcoded for COM2, 115200 baud */
+KD_PORT_INFORMATION GdbPortInfo = { 2, 115200, 0 };
+
+static CHAR GspInBuffer[1000];
+static CHAR GspOutBuffer[1000];
 
 /* Number of Registers.  */
 #define NUMREGS 16
@@ -178,8 +120,6 @@ HexValue(CHAR ch)
   return -1;
 }
 
-static CHAR GspInBuffer[BUFMAX];
-static CHAR GspOutBuffer[BUFMAX];
 
 VOID
 GdbPutChar(UCHAR Value)
@@ -199,7 +139,6 @@ GdbGetChar(VOID)
 }
 
 /* scan for the sequence $<data>#<Checksum>     */
-
 PCHAR
 GspGetPacket()
 {
@@ -221,7 +160,7 @@ GspGetPacket()
       Count = 0;
 
       /* now, read until a # or end of Buffer is found */
-      while (Count < BUFMAX)
+      while (Count < sizeof(GspInBuffer) - 1)
         {
           ch = GdbGetChar();
           if (ch == '$')
@@ -260,7 +199,6 @@ GspGetPacket()
 }
 
 /* send the packet in Buffer.  */
-
 VOID
 GspPutPacket(PCHAR Buffer)
 {
@@ -314,17 +252,23 @@ GspPutPacketNoWait(PCHAR Buffer)
   GdbPutChar(HexChars[Checksum & 0xf]);
 }
 
-/* Indicate to caller of GspMem2Hex or GspHex2Mem that there has been an
-   error.  */
+/* Indicate to caller of GspMem2Hex or GspHex2Mem that there has been an error. */
 static volatile BOOLEAN GspMemoryError = FALSE;
-static volatile void *GspAccessLocation = NULL;
 
 static CHAR
 GspReadMemSafe(PCHAR Address)
 {
-    CHAR ch;
-    KdpSafeReadMemory((ULONG_PTR)Address, 1, &ch);
+    CHAR ch = 0;
+    if (!KdpSafeReadMemory((ULONG_PTR)Address, 1, &ch))
+      GspMemoryError = TRUE;
     return ch;
+}
+
+static void
+GspWriteMemSafe(PCHAR Address, CHAR Ch)
+{
+    if (!KdpSafeWriteMemory((ULONG_PTR)Address, 1, Ch))
+      GspMemoryError = TRUE;
 }
 
 /* Convert the memory pointed to by Address into hex, placing result in Buffer */
@@ -375,7 +319,6 @@ GspWriteMem(PCHAR Address,
   ULONG CountInPage;
   ULONG i;
   CHAR ch;
-  ULONG OldProt = 0;
 
   Current = Address;
   while (Current < Address + Count)
@@ -391,11 +334,6 @@ GspWriteMem(PCHAR Address,
           /* Flows into next page, handle only current page in this iteration */
           CountInPage = PAGE_SIZE - (Address - Page);
         }
-      if (MayFault)
-        {
-          OldProt = MmGetPageProtect(NULL, Address);
-          MmSetPageProtect(NULL, Address, PAGE_EXECUTE_READWRITE);
-        }
 
       for (i = 0; i < CountInPage && ! GspMemoryError; i++)
         {
@@ -403,18 +341,17 @@ GspWriteMem(PCHAR Address,
 
           if (MayFault)
             {
-              GspAccessLocation = Current;
+              GspWriteMemSafe(Current, ch);
             }
-          *Current = ch;
-          if (MayFault)
+          else
             {
-              GspAccessLocation = NULL;
+              *Current = ch;
             }
+
           Current++;
         }
       if (MayFault)
         {
-          MmSetPageProtect(NULL, Page, OldProt);
           if (GspMemoryError)
             {
               return Current - Address;
@@ -432,8 +369,8 @@ GspHex2MemGetContent(PVOID Context, ULONG Offset)
                 HexValue(*((PCHAR) Context + 2 * Offset + 1)));
 }
 
-/* Convert the hex array pointed to by Buffer into binary to be placed at Address */
-/* Return a pointer to the character AFTER the last byte read from Buffer */
+/* Convert the hex array pointed to by Buffer into binary to be placed at Address
+ * Return a pointer to the character AFTER the last byte read from Buffer */
 static PCHAR
 GspHex2Mem(PCHAR Buffer,
   PCHAR Address,
@@ -444,49 +381,6 @@ GspHex2Mem(PCHAR Buffer,
 
   return Buffer + 2 * Count;
 }
-
-static void
-GspWriteMemSafe(PCHAR Address,
-  CHAR Ch)
-{
-    KdpSafeWriteMemory((ULONG_PTR)Address, 1, Ch);
-}
-
-
-/* This function takes the 386 exception vector and attempts to
-   translate this number into a unix compatible signal value */
-ULONG
-GspComputeSignal(NTSTATUS ExceptionCode)
-{
-  ULONG SigVal;
-
-  switch (ExceptionCode)
-    {
-    case STATUS_INTEGER_DIVIDE_BY_ZERO:
-      SigVal = 8; /* divide by zero */
-      break;
-    case STATUS_SINGLE_STEP:
-    case STATUS_BREAKPOINT:
-      SigVal = 5; /* breakpoint */
-      break;
-    case STATUS_INTEGER_OVERFLOW:
-    case STATUS_ARRAY_BOUNDS_EXCEEDED:
-      SigVal = 16; /* bound instruction */
-      break;
-    case STATUS_ILLEGAL_INSTRUCTION:
-      SigVal = 4; /* Invalid opcode */
-      break;
-    case STATUS_STACK_OVERFLOW:
-    case STATUS_DATATYPE_MISALIGNMENT:
-    case STATUS_ACCESS_VIOLATION:
-      SigVal = 11; /* access violation */
-      break;
-    default:
-      SigVal = 7; /* "software generated" */
-    }
-  return SigVal;
-}
-
 
 /**********************************************/
 /* WHILE WE FIND NICE HEX CHARS, BUILD A LONG */
@@ -932,6 +826,15 @@ GspQuery(PCHAR Request)
           GspMem2Hex(Buffer, &GspOutBuffer[0], strlen(Buffer), FALSE);
         }
     }
+  else if (strncmp(Request, "Supported", 9) == 0)
+    {
+      /* tell maximum incoming packet size */
+      sprintf(GspOutBuffer, "PacketSize=%u", sizeof(GspInBuffer) - 1);
+    }
+  else if (strncmp(Request, "Rcmd,", 5) == 0)
+    {
+      ;
+    }
 }
 
 VOID
@@ -954,6 +857,8 @@ GspQueryThreadStatus(PCHAR Request)
       GspOutBuffer[1] = '\0';
     }
 }
+
+#define DR6_BS         0x00004000 /* Single step */
 
 #define DR7_L0         0x00000001 /* Local breakpoint 0 enable */
 #define DR7_G0         0x00000002 /* Global breakpoint 0 enable */
@@ -1011,7 +916,6 @@ typedef struct _GSPSWBREAKPOINT
 #define MAX_SW_BREAKPOINTS 64
 static unsigned GspSwBreakpointCount = 0;
 static GSPSWBREAKPOINT GspSwBreakpoints[MAX_SW_BREAKPOINTS];
-static CHAR GspSwBreakpointsInstructions[MAX_SW_BREAKPOINTS];
 
 static void
 GspSetHwBreakpoint(ULONG Type, ULONG_PTR Address, ULONG Length)
@@ -1085,6 +989,21 @@ GspRemoveHwBreakpoint(ULONG Type, ULONG_PTR Address, ULONG Length)
   strcpy(GspOutBuffer, "E22");
 }
 
+static BOOLEAN
+GspFindSwBreakpoint(ULONG_PTR Address, PULONG PIndex)
+{
+  ULONG Index;
+
+  for (Index = 0; Index < GspSwBreakpointCount; Index++)
+    if (GspSwBreakpoints[Index].Address == Address)
+      {
+        if (PIndex) *PIndex = Index;
+        return TRUE;
+      }
+
+  return FALSE;
+}
+
 static void
 GspSetSwBreakpoint(ULONG_PTR Address)
 {
@@ -1094,61 +1013,44 @@ GspSetSwBreakpoint(ULONG_PTR Address)
     {
       DPRINT1("Trying to set too many software breakpoints\n");
       strcpy(GspOutBuffer, "E22");
+      return;
     }
-  else
+
+  if (GspFindSwBreakpoint(Address, NULL))
     {
-      unsigned Index;
-
-      for (Index = 0; Index < GspSwBreakpointCount; Index++)
-        {
-          if (GspSwBreakpoints[Index].Address == Address)
-            {
-                strcpy(GspOutBuffer, "E22");
-                return;
-            }
-        }
-
-      DPRINT("Stored at index %u\n", GspSwBreakpointCount);
-      GspSwBreakpoints[GspSwBreakpointCount].Address = Address;
-      GspSwBreakpoints[GspSwBreakpointCount].Active = FALSE;
-      GspSwBreakpointsInstructions[GspSwBreakpointCount] = 
-        GspReadMemSafe((PCHAR )Address);
-      GspWriteMemSafe((PCHAR )Address, 0xCC);
-      GspSwBreakpointCount++;
-      strcpy(GspOutBuffer, "OK");
+      strcpy(GspOutBuffer, "E22");
+      return;
     }
+
+  DPRINT("Stored at index %u\n", GspSwBreakpointCount);
+  GspSwBreakpoints[GspSwBreakpointCount].Address = Address;
+  GspSwBreakpoints[GspSwBreakpointCount].Active = FALSE;
+  GspSwBreakpointCount++;
+  strcpy(GspOutBuffer, "OK");
 }
 
 static void
 GspRemoveSwBreakpoint(ULONG_PTR Address)
 {
-  unsigned Index;
+  ULONG Index;
 
   DPRINT("GspRemoveSwBreakpoint(0x%p)\n", Address);
-  for (Index = 0; Index < GspSwBreakpointCount; Index++)
+
+  if (GspFindSwBreakpoint(Address, &Index))
     {
-      if (GspSwBreakpoints[Index].Address == Address)
+      DPRINT("Found match at index %u\n", Index);
+      ASSERT(! GspSwBreakpoints[Index].Active);
+
+      if (Index + 1 < GspSwBreakpointCount)
         {
-          DPRINT("Found match at index %u\n", Index);
-          ASSERT(! GspSwBreakpoints[Index].Active);
-
-          GspWriteMemSafe((PCHAR )Address,
-                GspSwBreakpointsInstructions[Index]);
-
-          if (Index + 1 < GspSwBreakpointCount)
-            {
-              memmove(GspSwBreakpoints + Index,
-                      GspSwBreakpoints + (Index + 1),
-                      (GspSwBreakpointCount - Index - 1) *
-                      sizeof(GSPSWBREAKPOINT));
-              memmove(GspSwBreakpointsInstructions + Index,
-                      GspSwBreakpointsInstructions + (Index + 1),
-                      (GspSwBreakpointCount - Index - 1) * sizeof(CHAR));
-            }
-          GspSwBreakpointCount--;
-          strcpy(GspOutBuffer, "OK");
-          return;
+          memmove(GspSwBreakpoints + Index,
+                  GspSwBreakpoints + (Index + 1),
+                  (GspSwBreakpointCount - Index - 1) *
+                  sizeof(GSPSWBREAKPOINT));
         }
+      GspSwBreakpointCount--;
+      strcpy(GspOutBuffer, "OK");
+      return;
     }
 
   DPRINT1("Not found\n");
@@ -1195,6 +1097,28 @@ GspLoadHwBreakpoint(PKTRAP_FRAME TrapFrame,
 }
 
 static void
+GspLoadSwBreakpoint(ULONG Index)
+{
+  GspMemoryError = FALSE;
+  GspSwBreakpoints[Index].PrevContent = GspReadMemSafe((PCHAR) GspSwBreakpoints[Index].Address);
+  if (! GspMemoryError)
+    {
+      GspWriteMemSafe((PCHAR) GspSwBreakpoints[Index].Address, I386_OPCODE_INT3);
+    }
+  GspSwBreakpoints[Index].Active = ! GspMemoryError;
+  if (GspMemoryError)
+    {
+      DPRINT1("Failed to set software breakpoint at 0x%p\n",
+              GspSwBreakpoints[Index].Address);
+    }
+  else
+    {
+      DPRINT("Successfully set software breakpoint at 0x%p\n",
+             GspSwBreakpoints[Index].Address);
+    }
+}
+
+static void
 GspLoadBreakpoints(PKTRAP_FRAME TrapFrame)
 {
   unsigned Index;
@@ -1202,6 +1126,7 @@ GspLoadBreakpoints(PKTRAP_FRAME TrapFrame)
 
   DPRINT("GspLoadBreakpoints\n");
   DPRINT("DR7 on entry: 0x%08x\n", TrapFrame->Dr7);
+
   /* Remove all breakpoints */
   TrapFrame->Dr7 &= ~(DR7_L0 | DR7_L1 | DR7_L2 | DR7_L3 |
                       DR7_G0 | DR7_G1 | DR7_G2 | DR7_G3 |
@@ -1235,47 +1160,22 @@ GspLoadBreakpoints(PKTRAP_FRAME TrapFrame)
 
   for (Index = 0; Index < GspSwBreakpointCount; Index++)
     {
-      if (GspHwBreakpointCount + Index < MAX_HW_BREAKPOINTS)
-        {
-          DPRINT("Implementing software interrupt using hardware register\n");
-          GspLoadHwBreakpoint(TrapFrame, GspHwBreakpointCount + Index,
-                              GspSwBreakpoints[Index].Address, 0,
-                              I386_BP_TYPE_EXECUTE);
-          GspSwBreakpoints[Index].Active = FALSE;
-        }
-      else
-        {
-          DPRINT("Using real software breakpoint\n");
-          GspMemoryError = FALSE;
-          GspSwBreakpoints[Index].PrevContent = GspReadMemSafe((PCHAR) GspSwBreakpoints[Index].Address);
-          if (! GspMemoryError)
-            {
-              GspWriteMemSafe((PCHAR) GspSwBreakpoints[Index].Address, I386_OPCODE_INT3);
-            }
-          GspSwBreakpoints[Index].Active = ! GspMemoryError;
-          if (GspMemoryError)
-            {
-              DPRINT1("Failed to set software breakpoint at 0x%p\n",
-                      GspSwBreakpoints[Index].Address);
-            }
-          else
-            {
-              DPRINT("Successfully set software breakpoint at 0x%p\n",
-                     GspSwBreakpoints[Index].Address);
-    DPRINT1("Successfully set software breakpoint at 0x%p\n", GspSwBreakpoints[Index].Address);
-            }
-        }
+      DPRINT("Using real software breakpoint\n");
+      GspLoadSwBreakpoint(Index);
     }
 
   DPRINT("Final DR7 value 0x%08x\n", TrapFrame->Dr7);
 }
 
 static void
-GspUnloadBreakpoints(PKTRAP_FRAME TrapFrame)
+GspUnloadBreakpoints(void)
 {
   unsigned Index;
 
-  DPRINT("GspUnloadHwBreakpoints\n");
+  DPRINT("GspUnloadBreakpoints\n");
+
+  /* Disable hardware debugging while we are inside the stub */
+  Ke386SetDr7(0);
 
   for (Index = 0; Index < GspSwBreakpointCount; Index++)
     {
@@ -1299,62 +1199,37 @@ GspUnloadBreakpoints(PKTRAP_FRAME TrapFrame)
     }
 }
 
-static BOOLEAN gdb_attached_yet = FALSE;
-/*
- * This function does all command procesing for interfacing to gdb.
- */
-KD_CONTINUE_TYPE
-NTAPI
-KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
-                             PCONTEXT Context,
-                             PKTRAP_FRAME TrapFrame)
+static void
+GspStopReply(NTSTATUS ExceptionCode, PKTRAP_FRAME TrapFrame)
 {
-  BOOLEAN Stepping;
-  LONG Address;
-  LONG Length;
-  LONG SigVal = 0;
-  LONG NewPC;
-  PCHAR ptr;
+    PCHAR ptr = GspOutBuffer;
+    ULONG SigVal;
+    LONG Esp;
 
-  /* FIXME: Stop on other CPUs too */
-
-  if (STATUS_ACCESS_VIOLATION == (NTSTATUS) ExceptionRecord->ExceptionCode &&
-      NULL != GspAccessLocation &&
-      (ULONG_PTR) GspAccessLocation ==
-      (ULONG_PTR) ExceptionRecord->ExceptionInformation[1])
+  switch (ExceptionCode)
     {
-      GspAccessLocation = NULL;
-      GspMemoryError = TRUE;
-      Context->Eip += 3;
+    case STATUS_INTEGER_DIVIDE_BY_ZERO:
+      SigVal = 8; /* divide by zero */
+      break;
+    case STATUS_SINGLE_STEP:
+    case STATUS_BREAKPOINT:
+      SigVal = 5; /* breakpoint */
+      break;
+    case STATUS_INTEGER_OVERFLOW:
+    case STATUS_ARRAY_BOUNDS_EXCEEDED:
+      SigVal = 16; /* bound instruction */
+      break;
+    case STATUS_ILLEGAL_INSTRUCTION:
+      SigVal = 4; /* Invalid opcode */
+      break;
+    case STATUS_STACK_OVERFLOW:
+    case STATUS_DATATYPE_MISALIGNMENT:
+    case STATUS_ACCESS_VIOLATION:
+      SigVal = 11; /* access violation */
+      break;
+    default:
+      SigVal = 7; /* "software generated" */
     }
-  else
-    {
-      DPRINT("Thread %p entering stub\n", PsGetCurrentThread());
-      /* Can only debug 1 thread at a time... */
-      ExAcquireFastMutex(&GspLock);
-      DPRINT("Thread %p acquired mutex\n", PsGetCurrentThread());
-
-      /* Disable hardware debugging while we are inside the stub */
-      Ke386SetDr7(0);
-      GspUnloadBreakpoints(TrapFrame);
-
-      /* Make sure we're debugging the current thread. */
-      if (NULL != GspDbgThread)
-        {
-          DPRINT1("Internal error: entering stub with non-NULL GspDbgThread\n");
-          ObDereferenceObject(GspDbgThread);
-          GspDbgThread = NULL;
-        }
-
-      /* ugly hack to avoid attempting to send status at the very
-       * beginning, right when GDB is trying to query the stub */
-      if (gdb_attached_yet)
-        {
-          LONG Esp;
-
-          stop_reply:
-          /* reply to host that an exception has occurred */
-          SigVal = GspComputeSignal(ExceptionRecord->ExceptionCode);
 
           ptr = GspOutBuffer;
 
@@ -1380,33 +1255,67 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           *ptr++ = ';';
 
           *ptr = '\0';
+}
 
-          GspPutPacket(&GspOutBuffer[0]);
-          /* DPRINT("------- replied status: (%s) -------\n", GspOutBuffer); */
+
+/*
+ * This function does all command procesing for interfacing to GDB.
+ */
+KD_CONTINUE_TYPE
+NTAPI
+KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+                             PCONTEXT Context,
+                             PKTRAP_FRAME TrapFrame)
+{
+    static BOOLEAN GdbAttached = FALSE;
+    BOOLEAN Stepping = FALSE;
+    NTSTATUS ExceptionCode;
+    LONG Address;
+    LONG Length;
+    PCHAR ptr;
+
+    /* FIXME: Stop on other CPUs too */
+
+    DPRINT("Thread %p entering stub\n", PsGetCurrentThread());
+    ExceptionCode = (NTSTATUS) ExceptionRecord->ExceptionCode;
+
+      /* Can only debug 1 thread at a time... */
+      ExAcquireFastMutex(&GspLock);
+      DPRINT("Thread %p acquired mutex\n", PsGetCurrentThread());
+
+      GspUnloadBreakpoints();
+
+      /* Make sure we're debugging the current thread. */
+      if (NULL != GspDbgThread)
+        {
+          DPRINT1("Internal error: entering stub with non-NULL GspDbgThread\n");
+          ObDereferenceObject(GspDbgThread);
+          GspDbgThread = NULL;
+        }
+
+      if (GdbAttached)
+        {
+          GspStopReply(ExceptionCode, TrapFrame);
+          GspPutPacket(GspOutBuffer);
+          // DbgPrint(">>> (%s) >>>\n", GspOutBuffer);
         }
       else
         {
-          gdb_attached_yet = 1;
+          GdbAttached = TRUE;
         }
-
-      Stepping = FALSE;
 
       while (TRUE)
         {
           /* Zero the buffer now so we don't have to worry about the terminating zero character */
-          memset(GspOutBuffer, 0, sizeof(GspInBuffer));
+          memset(GspOutBuffer, 0, sizeof(GspOutBuffer));
           ptr = GspGetPacket();
-          /* DPRINT("------- Get (%s) command -------\n", ptr); */
+          // DbgPrint("<<< (%s) <<<\n", ptr);
 
           switch(*ptr++)
             {
             case '?':
               /* a little hack to send more complete status information */
-              goto stop_reply;
-              GspOutBuffer[0] = 'S';
-              GspOutBuffer[1] = HexChars[SigVal >> 4];
-              GspOutBuffer[2] = HexChars[SigVal % 16];
-              GspOutBuffer[3] = 0;
+              GspStopReply(ExceptionCode, TrapFrame);
               break;
             case 'd':
               GspRemoteDebug = !GspRemoteDebug; /* toggle debug flag */
@@ -1478,7 +1387,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                   if (GspMemoryError)
                     {
                       strcpy(GspOutBuffer, "E03");
-                      DPRINT("Fault during memory read\n");
+                      DPRINT1("Fault during memory read\n");
                     }
                 }
 
@@ -1514,7 +1423,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                       if (GspMemoryError)
                         {
                           strcpy(GspOutBuffer, "E03");
-                          DPRINT("Fault during memory write\n");
+                          DPRINT1("Fault during memory write\n");
                         }
                       else
                         {
@@ -1537,55 +1446,49 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
             case 'c':
               {
                 ULONG BreakpointNumber;
-                ULONG dr6_;
+                ULONG Dr6;
 
-                /* try to read optional parameter, pc unchanged if no parm */
+                /* try to read optional parameter, pc changed if param */
                 if (GspHex2Long (&ptr, &Address))
                   {
                     Context->Eip = Address;
                   }
-
-                NewPC = Context->Eip;
+                else if (ExceptionCode == STATUS_BREAKPOINT)
+                  {
+                    if (GspReadMemSafe((PCHAR) Context->Eip) == (CHAR) I386_OPCODE_INT3)
+                      {
+                        Context->Eip++;
+                      }
+                  }
 
                 /* clear the trace bit */
-                Context->EFlags &= 0xfffffeff;
+                Context->EFlags &= ~EFLAGS_TF;
 
                 /* set the trace bit if we're Stepping */
                 if (Stepping)
                   {
-                    Context->EFlags |= 0x100;
+                    Context->EFlags |= EFLAGS_TF;
                   }
 
-#if defined(__GNUC__)
-                asm volatile ("movl %%db6, %0\n" : "=r" (dr6_) : );
-#elif defined(_MSC_VER)
-                __asm mov eax, dr6  __asm mov dr6_, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
-                if (!(dr6_ & 0x4000))
+                Dr6 = Ke386GetDr6();
+                if (!(Dr6 & DR6_BS))
                   {
-                    for (BreakpointNumber = 0; BreakpointNumber < 4; ++BreakpointNumber)
+                    for (BreakpointNumber = 0; BreakpointNumber < MAX_HW_BREAKPOINTS; ++BreakpointNumber)
                       {
-                        if (dr6_ & (1 << BreakpointNumber))
+                        if (Dr6 & (1 << BreakpointNumber))
                           {
-                            if (GspHwBreakpoints[BreakpointNumber].Type == 0)
+                            if (GspHwBreakpoints[BreakpointNumber].Type == I386_BP_TYPE_EXECUTE)
                               {
                                 /* Set restore flag */
-                                Context->EFlags |= 0x10000;
+                                Context->EFlags |= EFLAGS_RF;
                                 break;
                               }
                           }
                       }
                   }
+
                 GspLoadBreakpoints(TrapFrame);
-#if defined(__GNUC__)
-                asm volatile ("movl %0, %%db6\n" : : "r" (0));
-#elif defined(_MSC_VER)
-                __asm mov eax, 0  __asm mov dr6, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+                Ke386SetDr6(0);
 
                 if (NULL != GspDbgThread)
                   {
@@ -1596,14 +1499,19 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                 DPRINT("Thread %p releasing mutex\n", PsGetCurrentThread());
                 ExReleaseFastMutex(&GspLock);
                 DPRINT("Thread %p leaving stub\n", PsGetCurrentThread());
-                return kdContinue;
-                break;
+
+                if (ExceptionCode == STATUS_BREAKPOINT ||
+                    ExceptionCode == STATUS_SINGLE_STEP)
+                  {
+                    return kdContinue;
+                  }
+
+                return kdHandleException;
               }
 
             case 'k':  /* kill the program */
               strcpy(GspOutBuffer, "OK");
               break;
-              /* kill the program */
 
             case 'H': /* Set thread */
               GspSetThread(ptr);
@@ -1630,11 +1538,11 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                 GspHex2Long(&ptr, &Length);
                 if (0 == Type)
                   {
-                  GspSetSwBreakpoint((ULONG_PTR) Address);
+                    GspSetSwBreakpoint((ULONG_PTR) Address);
                   }
                 else
                   {
-                  GspSetHwBreakpoint(Type, (ULONG_PTR) Address, Length);
+                    GspSetHwBreakpoint(Type, (ULONG_PTR) Address, Length);
                   }
                 break;
               }
@@ -1652,11 +1560,11 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                 GspHex2Long(&ptr, &Length);
                 if (0 == Type)
                   {
-                  GspRemoveSwBreakpoint((ULONG_PTR) Address);
+                    GspRemoveSwBreakpoint((ULONG_PTR) Address);
                   }
                 else
                   {
-                  GspRemoveHwBreakpoint(Type, (ULONG_PTR) Address, Length);
+                    GspRemoveHwBreakpoint(Type, (ULONG_PTR) Address, Length);
                   }
                 break;
               }
@@ -1667,20 +1575,8 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 
           /* reply to the request */
           GspPutPacket(GspOutBuffer);
-          /* DPRINT("------- reply command (%s) -------\n",  GspOutBuffer); */
+          // DbgPrint(">>> (%s) >>>\n",  GspOutBuffer);
         }
-
-      /* not reached */
-      ASSERT(0);
-    }
-
-  if (NULL != GspDbgThread)
-    {
-      ObDereferenceObject(GspDbgThread);
-      GspDbgThread = NULL;
-    }
-
-  return kdContinue;
 }
 
 
@@ -1754,8 +1650,6 @@ KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
 
       /* Initialize the Port */
       KdPortInitializeEx(&GdbPortInfo, 0, 0);
-
-      KdpPort = GdbPortInfo.ComPort;
     }
   else if (BootPhase == 1)
     {
