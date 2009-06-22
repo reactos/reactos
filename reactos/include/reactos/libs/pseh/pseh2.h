@@ -401,10 +401,10 @@ __SEH_END_SCOPE_CHAIN;
 
 #include <excpt.h>
 
-#define _SEH2_TRY __try
-#define _SEH2_FINALLY __finally
-#define _SEH2_EXCEPT(...) __except(__VA_ARGS__)
-#define _SEH2_END
+#define _SEH2_TRY __try {
+#define _SEH2_FINALLY } __finally {
+#define _SEH2_EXCEPT(...) } __except(__VA_ARGS__) {
+#define _SEH2_END }
 
 #define _SEH2_GetExceptionInformation() (GetExceptionInformation())
 #define _SEH2_GetExceptionCode() (GetExceptionCode())
