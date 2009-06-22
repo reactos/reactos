@@ -384,11 +384,11 @@ MmInit1(VOID)
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
     
-    //
-    // Initialize ARM³
-    //
+#ifdef _ARM_
+    /* Initialize ARM³ */
     MmArmInitSystem(0, KeLoaderBlock);
-    
+#endif
+
     /* Initialize nonpaged pool */
     MiInitializeNonPagedPool();
     
