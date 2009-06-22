@@ -141,7 +141,7 @@ CLEANUP:
 DWORD_PTR
 APIENTRY
 NtUserCallOneParam(
-   DWORD Param,
+   DWORD_PTR Param,
    DWORD Routine)
 {
    DECLARE_RETURN(DWORD_PTR);
@@ -450,8 +450,8 @@ CLEANUP:
 DWORD_PTR
 APIENTRY
 NtUserCallTwoParam(
-   DWORD Param1,
-   DWORD Param2,
+   DWORD_PTR Param1,
+   DWORD_PTR Param2,
    DWORD Routine)
 {
    NTSTATUS Status;

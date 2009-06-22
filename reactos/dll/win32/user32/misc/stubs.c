@@ -129,7 +129,7 @@ UINT
 WINAPI
 UserRealizePalette ( HDC hDC )
 {
-  return NtUserCallOneParam((DWORD) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
+  return NtUserCallOneParam((DWORD_PTR) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
 }
 
 

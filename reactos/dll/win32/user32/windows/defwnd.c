@@ -1781,7 +1781,7 @@ User32DefWindowProc(HWND hWnd,
             /* Pack the information and call win32k */
             if (Change)
             {
-                if (!NtUserCallTwoParam((DWORD)hWnd, (DWORD)Flags | ((DWORD)Action << 3), TWOPARAM_ROUTINE_ROS_UPDATEUISTATE))
+                if (!NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)Flags | ((DWORD_PTR)Action << 3), TWOPARAM_ROUTINE_ROS_UPDATEUISTATE))
                     break;
             }
 

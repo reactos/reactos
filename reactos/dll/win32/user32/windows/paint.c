@@ -197,7 +197,7 @@ GetWindowRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
+  return (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_GETWINDOWRGN);
 }
 
 
@@ -210,7 +210,7 @@ GetWindowRgnBox(
     HWND hWnd,
     LPRECT lprc)
 {
-  return (int)NtUserCallTwoParam((DWORD)hWnd, (DWORD)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
+  return (int)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)lprc, TWOPARAM_ROUTINE_GETWINDOWRGNBOX);
 }
 
 

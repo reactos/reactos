@@ -1603,7 +1603,7 @@ BOOL WINAPI
 ShowOwnedPopups(HWND hWnd,
                 BOOL fShow)
 {
-    return (BOOL)NtUserCallTwoParam((DWORD)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
+    return (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
 }
 
 

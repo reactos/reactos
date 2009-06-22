@@ -61,7 +61,7 @@ WINAPI
 RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
   return NtUserCallTwoParam(dwProcessId,
-			    (DWORD)bRegister,
+			    (DWORD_PTR)bRegister,
 			    TWOPARAM_ROUTINE_REGISTERLOGONPROC);
 }
 

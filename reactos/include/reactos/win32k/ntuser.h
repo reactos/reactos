@@ -973,14 +973,14 @@ NtUserCallNoParam(
 DWORD_PTR
 NTAPI
 NtUserCallOneParam(
-  DWORD Param,
+  DWORD_PTR Param,
   DWORD Routine);
 
 DWORD_PTR
 NTAPI
 NtUserCallTwoParam(
-  DWORD Param1,
-  DWORD Param2,
+  DWORD_PTR Param1,
+  DWORD_PTR Param2,
   DWORD Routine);
 
 BOOL
