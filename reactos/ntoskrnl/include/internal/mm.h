@@ -1158,8 +1158,8 @@ MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page);
 //
 // ReactOS Compatibility Layer
 //
-PVOID
 FORCEINLINE
+PVOID
 MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
 {
     HyperProcess = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
