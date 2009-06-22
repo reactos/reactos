@@ -1550,10 +1550,10 @@ GetGeoInfoA(
         case GEO_FRIENDLYNAME:
         {
             WCHAR szBuffer[MAX_PATH];
-            int Ret;
-        
-            Ret = NLS_GetGeoFriendlyName(Location, szBuffer, cchData);
             char szBufferA[sizeof(szBuffer)/sizeof(WCHAR)];
+            int Ret;
+
+            Ret = NLS_GetGeoFriendlyName(Location, szBuffer, cchData);
 
             WideCharToMultiByte(CP_ACP, 0, szBuffer, -1, szBufferA, sizeof(szBufferA), 0, 0);
             strcpy(lpGeoData, szBufferA);

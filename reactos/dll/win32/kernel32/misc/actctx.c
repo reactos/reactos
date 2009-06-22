@@ -174,7 +174,7 @@ CreateActCtxW(
 
     DPRINT("CreateActCtxW(%p %08lx)\n", pActCtx, pActCtx ? pActCtx->dwFlags : 0);
 
-    Status = RtlCreateActivationContext(&hActCtx, &pActCtx);
+    Status = RtlCreateActivationContext(&hActCtx, (PVOID*)&pActCtx);
     if (!NT_SUCCESS(Status))
     {
         SetLastError(RtlNtStatusToDosError(Status));
@@ -318,6 +318,6 @@ ZombifyActCtx(
         SetLastError(RtlNtStatusToDosError(Status));
         return FALSE;
     }
-     
+
     return TRUE;
 }

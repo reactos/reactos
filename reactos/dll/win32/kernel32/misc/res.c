@@ -13,6 +13,7 @@
  */
 
 #include <k32.h>
+#include <wine/list.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -20,55 +21,6 @@
 #define STUB \
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
   DPRINT1("%s() is UNIMPLEMENTED!\n", __FUNCTION__)
-
-/* Strustures and functions from include/wine/list.h */
-struct list
-{
-    struct list *next;
-    struct list *prev;
-};
-
-static inline void list_init( struct list *list )
-{
-    list->next = list->prev = list;
-}
-
-/* add an element before the specified one */
-static inline void list_add_before( struct list *elem, struct list *to_add )
-{
-    to_add->next = elem;
-    to_add->prev = elem->prev;
-    elem->prev->next = to_add;
-    elem->prev = to_add;
-}
-
-/* add element at the tail of the list */
-static inline void list_add_tail( struct list *list, struct list *elem )
-{
-    list_add_before( list, elem );
-}
-
-/* remove an element from its list */
-static inline void list_remove( struct list *elem )
-{
-    elem->next->prev = elem->prev;
-    elem->prev->next = elem->next;
-}
-
-/* get the next element */
-static inline struct list *list_next( const struct list *list, const struct list *elem )
-{
-    struct list *ret = elem->next;
-    if (elem->next == list) ret = NULL;
-    return ret;
-}
-
-/* get the first element */
-static inline struct list *list_head( const struct list *list )
-{
-    return list_next( list, list );
-}
-
 
 /*
  *  Data structure for updating resources.
@@ -263,16 +215,6 @@ static struct resource_data *allocate_resource_data( WORD Language, DWORD codepa
 
     return resdata;
 }
-
-/* get pointer to object containing list element */
-#define LIST_ENTRY(elem, type, field) \
-    ((type *)((char *)(elem) - (unsigned int)(&((type *)0)->field)))
-
-/* iterate through the list using a list entry */
-#define LIST_FOR_EACH_ENTRY(elem, list, type, field) \
-    for ((elem) = LIST_ENTRY((list)->next, type, field); \
-         &(elem)->field != (list); \
-         (elem) = LIST_ENTRY((elem)->field.next, type, field))
 
 static void add_resource_dir_entry( struct list *dir, struct resource_dir_entry *resdir )
 {
