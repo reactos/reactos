@@ -95,6 +95,13 @@ PVOID MmNonPagedPoolStart;
 PVOID MmNonPagedPoolExpansionStart;
 PVOID MmNonPagedPoolEnd = (PVOID)0xFFBE0000;
 
+//
+// Windows NT seems to choose between 7000, 11000 and 50000
+// On systems with more than 32MB, this number is then doubled, and further
+// aligned up to a PDE boundary (4MB).
+//
+ULONG MmNumberOfSystemPtes;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -109,11 +116,40 @@ MmArmInitSystem(IN ULONG Phase,
     MMPTE TempPde = HyperTemplatePte, TempPte = HyperTemplatePte;
     PVOID NonPagedPoolExpansionVa, BaseAddress;
     NTSTATUS Status;
+    ULONG OldCount;
     BoundaryAddressMultiple.QuadPart = Low.QuadPart = 0;
     High.QuadPart = -1;
     
     if (Phase == 0)
     {
+        //
+        // Check if this is a machine with less than 19MB of RAM
+        //
+        if (MmNumberOfPhysicalPages < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
+        {
+            //
+            // Use the very minimum of system PTEs
+            //
+            MmNumberOfSystemPtes = 7000;
+        }
+        else
+        {
+            //
+            // Use the default, but check if we have more than 32MB of RAM
+            //
+            MmNumberOfSystemPtes = 11000;
+            if (MmNumberOfPhysicalPages > MI_MIN_PAGES_FOR_SYSPTE_BOOST)
+            {
+                //
+                // Double the amount of system PTEs
+                //
+                MmNumberOfSystemPtes <<= 1;
+            }
+        }
+        
+        DPRINT1("System PTE count has been tuned to %d (%d bytes)\n",
+                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+        
         //
         // Check if this is a machine with less than 256MB of RAM, and no overide
         //
@@ -212,28 +248,47 @@ MmArmInitSystem(IN ULONG Phase,
         NonPagedPoolExpansionVa = MmNonPagedPoolStart;
         DPRINT1("NP Pool has been tuned to: %d bytes and %d bytes\n",
                 MmSizeOfNonPagedPoolInBytes, MmMaximumNonPagedPoolInBytes);
-        DPRINT1("NP Expansion VA begins at: %p and ends at: %p\n",
-                MmNonPagedPoolStart, MmNonPagedPoolEnd);
         
         //
-        // Now calculate the nonpaged system VA region
-        // This includes nonpaged pool expansion (above) and the system PTEs
-        // Since there are no system PTEs yet, this is (for now) the same
+        // Now calculate the nonpaged system VA region, which includes the
+        // nonpaged pool expansion (above) and the system PTEs. Note that it is
+        // then aligned to a PDE boundary (4MB).
         //
-        MmNonPagedSystemStart = MmNonPagedPoolStart;
-        DPRINT1("NP System VA (later will be System PTEs) start at: %p\n",
-                MmNonPagedSystemStart);
+        MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
+                                        (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
+        MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
+                                        ~((4 * 1024 * 1024) - 1));
         
+        //
+        // Don't let it go below the minimum
+        //
+        if (MmNonPagedSystemStart < (PVOID)0xEB000000)
+        {
+            //
+            // This is a hard-coded limit in the Windows NT address space
+            //
+            MmNonPagedSystemStart = (PVOID)0xEB000000;
+            
+            //
+            // Reduce the amount of system PTEs to reach this point
+            //
+            MmNumberOfSystemPtes = ((ULONG_PTR)MmNonPagedPoolStart -
+                                    (ULONG_PTR)MmNonPagedSystemStart) >>
+                                    PAGE_SHIFT;
+            MmNumberOfSystemPtes--;
+            ASSERT(MmNumberOfSystemPtes > 1000);
+        }
+                
         //
         // Non paged pool should come after the PFN database, but since we are
         // co-existing with the ReactOS NP pool, our "ARM Pool" will instead
         // start at this arbitrarly chosen base address.
         // When ARM pool becomes non paged pool, this needs to be changed.
         //
+        DPRINT1("System PTE VA starts at: %p\n", MmNonPagedSystemStart);
+        DPRINT1("NP Expansion VA begins at: %p and ends at: %p\n",
+                MmNonPagedPoolStart, MmNonPagedPoolEnd);
         MmNonPagedPoolStart = (PVOID)0xA0000000;
-        DPRINT1("NP VA begins at: %p and ends at: %p\n",
-                MmNonPagedPoolStart,
-                (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes);
 
         //
         // Now we actually need to get these many physical pages. Nonpaged pool
@@ -244,11 +299,14 @@ MmArmInitSystem(IN ULONG Phase,
                                               High,
                                               BoundaryAddressMultiple);
         ASSERT(PageFrameIndex != 0);
+        DPRINT1("NP VA begins at: %p and ends at: %p\n",
+                MmNonPagedPoolStart,
+                (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes);        
         DPRINT1("NP PA PFN begins at: %lx\n", PageFrameIndex);
 
         //
         // Now we need some pages to create the page tables for the NP system VA
-        // which would normally include system PTEs and expansion NP
+        // which includes system PTEs and expansion NP
         //
         StartPde = MiAddressToPde(MmNonPagedSystemStart);
         EndPde = MiAddressToPde((PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
@@ -311,7 +369,7 @@ MmArmInitSystem(IN ULONG Phase,
         }
 
         //
-        // Now rememeber where the expansion starts
+        // Now remember where the expansion starts
         //
         MmNonPagedPoolExpansionStart = NonPagedPoolExpansionVa;
 
@@ -348,7 +406,7 @@ MmArmInitSystem(IN ULONG Phase,
         ASSERT(Status == STATUS_SUCCESS);
         
         //
-        // And we need one more for the system NP (expansion NP only for now)
+        // And we need one more for the system NP
         //
         BaseAddress = MmNonPagedSystemStart;
         Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -364,9 +422,27 @@ MmArmInitSystem(IN ULONG Phase,
         ASSERT(Status == STATUS_SUCCESS);
         
         //
+        // Sanity check: make sure we have properly defined the system PTE space
+        //
+        ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
+               MiAddressToPte(MmNonPagedPoolExpansionStart));
+        
+        //
         // Now go ahead and initialize the ARM pool
         //
         MiInitializeArmPool();
+        
+        //
+        // We PDE-aligned the nonpaged system start VA, so haul some extra PTEs!
+        //
+        PointerPte = MiAddressToPte(MmNonPagedSystemStart);
+        OldCount = MmNumberOfSystemPtes;
+        MmNumberOfSystemPtes = MiAddressToPte(MmNonPagedPoolExpansionStart) -
+                               PointerPte;
+        MmNumberOfSystemPtes--;
+        ASSERT((MmNumberOfSystemPtes - OldCount) <= 1000);
+        DPRINT1("Final System PTE count: %d (%d bytes)\n",
+                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
     }
     
     //
