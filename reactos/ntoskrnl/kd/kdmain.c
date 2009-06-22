@@ -116,7 +116,7 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                           IN KPROCESSOR_MODE PreviousMode,
                           IN BOOLEAN SecondChance)
 {
-    KD_CONTINUE_TYPE Return;
+    KD_CONTINUE_TYPE Return = kdHandleException;
     ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
 #ifdef _M_IX86
     ULONG EipOld;
