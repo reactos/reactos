@@ -132,6 +132,7 @@
 	</group>
 
 	<group compilerset="msc">
+		<define name="inline" compiler="cc">__inline</define>
 		<compilerflag>/Zl</compilerflag>
 		<compilerflag>/Zi</compilerflag>
 		<compilerflag>/W1</compilerflag>
