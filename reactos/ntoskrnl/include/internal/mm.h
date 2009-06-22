@@ -29,7 +29,7 @@ struct _MM_PAGEOP;
 typedef ULONG SWAPENTRY;
 typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
-#define MI_STATIC_MEMORY_AREAS              (6)
+#define MI_STATIC_MEMORY_AREAS              (8)
 
 #define MEMORY_AREA_INVALID                 (0)
 #define MEMORY_AREA_SECTION_VIEW            (1)

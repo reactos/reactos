@@ -289,6 +289,11 @@ VOID
 NTAPI
 MiInitHyperSpace(VOID);
 
+NTSTATUS
+NTAPI
+MmArmInitSystem(IN ULONG Phase,
+                IN PLOADER_PARAMETER_BLOCK LoaderBlock);
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -378,6 +383,11 @@ MmInit1(VOID)
 
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
+    
+    //
+    // Initialize ARM³
+    //
+    MmArmInitSystem(0, KeLoaderBlock);
     
     /* Initialize nonpaged pool */
     MiInitializeNonPagedPool();

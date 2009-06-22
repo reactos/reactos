@@ -359,6 +359,9 @@
 				<file>page.c</file>
 			</directory>
 		</if>
+		<directory name="ARM3">
+			<file>init.c</file>
+		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
 		<file>cont.c</file>
