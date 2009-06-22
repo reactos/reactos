@@ -467,6 +467,7 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if (style & BS_NOTIFY)
             BUTTON_NOTIFY_PARENT(hWnd, BN_KILLFOCUS);
 
+        InvalidateRect( hWnd, NULL, FALSE );
         break;
 
     case WM_SYSCOLORCHANGE:
