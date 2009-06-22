@@ -692,7 +692,6 @@ static LPURLCACHE_HEADER URLCacheContainer_LockIndex(URLCACHECONTAINER * pContai
      * of the memory mapped file */
     if (pHeader->dwFileSize != pContainer->file_size)
     {
-        UnmapViewOfFile( pHeader );
         URLCacheContainer_CloseIndex(pContainer);
         error = URLCacheContainer_OpenIndex(pContainer);
         if (error != ERROR_SUCCESS)
@@ -3624,26 +3623,10 @@ BOOL WINAPI IsUrlCacheEntryExpiredW( LPCWSTR url, DWORD dwFlags, FILETIME* pftLa
 /***********************************************************************
  *           GetDiskInfoA (WININET.@)
  */
-BOOL WINAPI GetDiskInfoA(PCSTR path, PDWORD cluster_size, PDWORDLONG free, PDWORDLONG total)
+DWORD WINAPI GetDiskInfoA(void *p0, void *p1, void *p2, void *p3)
 {
-    BOOL ret;
-    ULARGE_INTEGER bytes_free, bytes_total;
-
-    TRACE("(%s, %p, %p, %p)\n", debugstr_a(path), cluster_size, free, total);
-
-    if (!path)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    if ((ret = GetDiskFreeSpaceExA(path, NULL, &bytes_total, &bytes_free)))
-    {
-        if (cluster_size) *cluster_size = 1;
-        if (free) *free = bytes_free.QuadPart;
-        if (total) *total = bytes_total.QuadPart;
-    }
-    return ret;
+    FIXME("(%p, %p, %p, %p)\n", p0, p1, p2, p3);
+    return 0;
 }
 
 /***********************************************************************
@@ -3653,13 +3636,4 @@ DWORD WINAPI RegisterUrlCacheNotification(LPVOID a, DWORD b, DWORD c, DWORD d, D
 {
     FIXME("(%p %x %x %x %x %x)\n", a, b, c, d, e, f);
     return 0;
-}
-
-/***********************************************************************
- *           IncrementUrlCacheHeaderData (WININET.@)
- */
-BOOL WINAPI IncrementUrlCacheHeaderData(DWORD index, LPDWORD data)
-{
-    FIXME("(%u, %p)\n", index, data);
-    return FALSE;
 }
