@@ -341,7 +341,7 @@ static DWORD CRYPT_AddPrefixW(LPCWSTR prefix, LPWSTR psz, DWORD csz)
 static const WCHAR indent[] = { ' ',' ',' ',' ',' ',0 };
 
 DWORD cert_name_to_str_with_indent(DWORD dwCertEncodingType, DWORD indentLevel,
- PCERT_NAME_BLOB pName, DWORD dwStrType, LPWSTR psz, DWORD csz)
+ const CERT_NAME_BLOB *pName, DWORD dwStrType, LPWSTR psz, DWORD csz)
 {
     static const DWORD unsupportedFlags = CERT_NAME_STR_NO_QUOTING_FLAG |
      CERT_NAME_STR_ENABLE_T61_UNICODE_FLAG;

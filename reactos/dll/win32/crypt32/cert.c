@@ -2419,7 +2419,7 @@ static void CRYPT_SetBitInField(struct BitField *field, DWORD bit)
         field->indexes[indexIndex] |= 1 << (bit % BITS_PER_DWORD);
 }
 
-static BOOL CRYPT_IsBitInFieldSet(struct BitField *field, DWORD bit)
+static BOOL CRYPT_IsBitInFieldSet(const struct BitField *field, DWORD bit)
 {
     BOOL set = FALSE;
     DWORD indexIndex = bit / BITS_PER_DWORD;

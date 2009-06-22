@@ -1,7 +1,7 @@
 /*
  * crypt32 dll French resources
  *
- * Copyright 2006-2008 Jonathan Ernst
+ * Copyright 2006-2009 Jonathan Ernst
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -171,6 +171,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_MY "Personnel"
     IDS_LOCALIZEDNAME_CA "Autorités intermédiaires"
     IDS_LOCALIZEDNAME_ADDRESSBOOK "Autres personnes"
+    IDS_LOCALIZEDNAME_TRUSTEDPUBLISHER "Éditeurs de confiance"
 }
 
 STRINGTABLE DISCARDABLE

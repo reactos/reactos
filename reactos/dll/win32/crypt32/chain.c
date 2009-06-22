@@ -262,7 +262,7 @@ static void CRYPT_CheckSimpleChainForCycles(PCERT_SIMPLE_CHAIN chain)
 }
 
 /* Checks whether the chain is cyclic by examining the last element's status */
-static inline BOOL CRYPT_IsSimpleChainCyclic(PCERT_SIMPLE_CHAIN chain)
+static inline BOOL CRYPT_IsSimpleChainCyclic(const CERT_SIMPLE_CHAIN *chain)
 {
     if (chain->cElement)
         return chain->rgpElement[chain->cElement - 1]->TrustStatus.dwErrorStatus
@@ -272,7 +272,7 @@ static inline BOOL CRYPT_IsSimpleChainCyclic(PCERT_SIMPLE_CHAIN chain)
 }
 
 static inline void CRYPT_CombineTrustStatus(CERT_TRUST_STATUS *chainStatus,
- CERT_TRUST_STATUS *elementStatus)
+ const CERT_TRUST_STATUS *elementStatus)
 {
     /* Any error that applies to an element also applies to a chain.. */
     chainStatus->dwErrorStatus |= elementStatus->dwErrorStatus;
@@ -282,7 +282,7 @@ static inline void CRYPT_CombineTrustStatus(CERT_TRUST_STATUS *chainStatus,
     chainStatus->dwInfoStatus |= (elementStatus->dwInfoStatus & 0xfffffff0);
 }
 
-static BOOL CRYPT_AddCertToSimpleChain(PCertificateChainEngine engine,
+static BOOL CRYPT_AddCertToSimpleChain(const CertificateChainEngine *engine,
  PCERT_SIMPLE_CHAIN chain, PCCERT_CONTEXT cert, DWORD subjectInfoStatus)
 {
     BOOL ret = FALSE;
@@ -720,7 +720,7 @@ static void CRYPT_CheckChainNameConstraints(PCERT_SIMPLE_CHAIN chain)
     }
 }
 
-static void dump_basic_constraints(PCERT_EXTENSION ext)
+static void dump_basic_constraints(const CERT_EXTENSION *ext)
 {
     CERT_BASIC_CONSTRAINTS_INFO *info;
     DWORD size = 0;
@@ -737,7 +737,7 @@ static void dump_basic_constraints(PCERT_EXTENSION ext)
     }
 }
 
-static void dump_basic_constraints2(PCERT_EXTENSION ext)
+static void dump_basic_constraints2(const CERT_EXTENSION *ext)
 {
     CERT_BASIC_CONSTRAINTS2_INFO constraints;
     DWORD size = sizeof(CERT_BASIC_CONSTRAINTS2_INFO);
@@ -754,7 +754,7 @@ static void dump_basic_constraints2(PCERT_EXTENSION ext)
     }
 }
 
-static void dump_extension(PCERT_EXTENSION ext)
+static void dump_extension(const CERT_EXTENSION *ext)
 {
     TRACE_(chain)("%s (%scritical)\n", debugstr_a(ext->pszObjId),
      ext->fCritical ? "" : "not ");
@@ -1008,7 +1008,7 @@ static PCCERT_CONTEXT CRYPT_GetIssuer(HCERTSTORE store, PCCERT_CONTEXT subject,
 /* Builds a simple chain by finding an issuer for the last cert in the chain,
  * until reaching a self-signed cert, or until no issuer can be found.
  */
-static BOOL CRYPT_BuildSimpleChain(PCertificateChainEngine engine,
+static BOOL CRYPT_BuildSimpleChain(const CertificateChainEngine *engine,
  HCERTSTORE world, PCERT_SIMPLE_CHAIN chain)
 {
     BOOL ret = TRUE;
@@ -1116,7 +1116,7 @@ static BOOL CRYPT_BuildCandidateChainFromCert(HCERTCHAINENGINE hChainEngine,
 
 /* Makes and returns a copy of chain, up to and including element iElement. */
 static PCERT_SIMPLE_CHAIN CRYPT_CopySimpleChainToElement(
- PCERT_SIMPLE_CHAIN chain, DWORD iElement)
+ const CERT_SIMPLE_CHAIN *chain, DWORD iElement)
 {
     PCERT_SIMPLE_CHAIN copy = CryptMemAlloc(sizeof(CERT_SIMPLE_CHAIN));
 
@@ -1345,7 +1345,7 @@ static PCertificateChain CRYPT_BuildAlternateContextFromChain(
 #define IS_TRUST_ERROR_SET(TrustStatus, bits) \
  (TrustStatus)->dwErrorStatus & (bits)
 
-static DWORD CRYPT_ChainQuality(PCertificateChain chain)
+static DWORD CRYPT_ChainQuality(const CertificateChain *chain)
 {
     DWORD quality = CHAIN_QUALITY_HIGHEST;
 
@@ -1402,7 +1402,7 @@ static PCertificateChain CRYPT_ChooseHighestQualityChain(
 }
 
 static BOOL CRYPT_AddAlternateChainToChain(PCertificateChain chain,
- PCertificateChain alternate)
+ const CertificateChain *alternate)
 {
     BOOL ret;
 
@@ -1427,7 +1427,7 @@ static BOOL CRYPT_AddAlternateChainToChain(PCertificateChain chain,
 }
 
 static PCERT_CHAIN_ELEMENT CRYPT_FindIthElementInChain(
- PCERT_CHAIN_CONTEXT chain, DWORD i)
+ const CERT_CHAIN_CONTEXT *chain, DWORD i)
 {
     DWORD j, iElement;
     PCERT_CHAIN_ELEMENT element = NULL;
@@ -1448,7 +1448,7 @@ typedef struct _CERT_CHAIN_PARA_NO_EXTRA_FIELDS {
 } CERT_CHAIN_PARA_NO_EXTRA_FIELDS, *PCERT_CHAIN_PARA_NO_EXTRA_FIELDS;
 
 static void CRYPT_VerifyChainRevocation(PCERT_CHAIN_CONTEXT chain,
- LPFILETIME pTime, PCERT_CHAIN_PARA pChainPara, DWORD chainFlags)
+ LPFILETIME pTime, const CERT_CHAIN_PARA *pChainPara, DWORD chainFlags)
 {
     DWORD cContext;
 

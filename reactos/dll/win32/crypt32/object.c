@@ -1080,7 +1080,7 @@ static BOOL WINAPI CRYPT_FormatBasicConstraints2(DWORD dwCertEncodingType,
     return ret;
 }
 
-static BOOL CRYPT_FormatHexStringWithPrefix(CRYPT_DATA_BLOB *blob, int id,
+static BOOL CRYPT_FormatHexStringWithPrefix(const CRYPT_DATA_BLOB *blob, int id,
  LPWSTR str, DWORD *pcbStr)
 {
     WCHAR buf[MAX_STRING_RESOURCE_LEN];
@@ -1114,13 +1114,13 @@ static BOOL CRYPT_FormatHexStringWithPrefix(CRYPT_DATA_BLOB *blob, int id,
     return ret;
 }
 
-static BOOL CRYPT_FormatKeyId(CRYPT_DATA_BLOB *keyId, LPWSTR str,
+static BOOL CRYPT_FormatKeyId(const CRYPT_DATA_BLOB *keyId, LPWSTR str,
  DWORD *pcbStr)
 {
     return CRYPT_FormatHexStringWithPrefix(keyId, IDS_KEY_ID, str, pcbStr);
 }
 
-static BOOL CRYPT_FormatCertSerialNumber(CRYPT_DATA_BLOB *serialNum, LPWSTR str,
+static BOOL CRYPT_FormatCertSerialNumber(const CRYPT_DATA_BLOB *serialNum, LPWSTR str,
  DWORD *pcbStr)
 {
     return CRYPT_FormatHexStringWithPrefix(serialNum, IDS_CERT_SERIAL_NUMBER,
