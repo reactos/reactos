@@ -23,6 +23,7 @@ PMMPTE MmSystemPtesStart[MaximumPtePoolTypes];
 PMMPTE MmSystemPtesEnd[MaximumPtePoolTypes];
 MMPTE MmFirstFreeSystemPte[MaximumPtePoolTypes];
 ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
+ULONG MmTotalSystemPtes;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -36,7 +37,6 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     // Sanity checks
     //
     ASSERT(NumberOfPtes >= 1);
-    ASSERT(PoolType == NonPagedPoolExpansion);
     
     //
     // Set the starting and ending PTE addresses for this space
@@ -71,6 +71,17 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     // We also keep a global for it
     //
     MmTotalFreeSystemPtes[PoolType] = NumberOfPtes;
+    
+    //
+    // Check if this is the system PTE space
+    //
+    if (PoolType == SystemPteSpace)
+    {
+        //
+        // Remember how many PTEs we have
+        //
+        MmTotalSystemPtes = NumberOfPtes;
+    }
 }
 
 /* EOF */

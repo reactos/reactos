@@ -443,6 +443,11 @@ MmArmInitSystem(IN ULONG Phase,
         ASSERT((MmNumberOfSystemPtes - OldCount) <= 1000);
         DPRINT1("Final System PTE count: %d (%d bytes)\n",
                 MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+        
+        //
+        // Create the system PTE space
+        //
+        MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
     }
     
     //
