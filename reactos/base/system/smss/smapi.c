@@ -285,49 +285,6 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 	return Status;
 }
 
-/**********************************************************************
- * NAME
- * 	SmpApiThread/1
- *
- * DECRIPTION
- * 	Due to differences in LPC implementation between NT and ROS,
- * 	we need a thread to listen to for connection request that
- * 	creates a new thread for each connected port. This is not
- * 	necessary in NT LPC, because server side connected ports are
- * 	never used to receive requests.
- */
-#if 0
-VOID NTAPI
-SmpApiThread (HANDLE ListeningPort)
-{
-	NTSTATUS	Status = STATUS_SUCCESS;
-	SM_PORT_MESSAGE	Request;
-
-	DPRINT("SM: %s called\n", __FUNCTION__);
-    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
-
-	while (TRUE)
-	{
-		Status = NtListenPort (ListeningPort, & Request.Header);
-		if (!NT_SUCCESS(Status))
-		{
-			DPRINT1("SM: %s: NtListenPort() failed! (Status==x%08lx)\n", __FUNCTION__, Status);
-			break;
-		}
-		Status = SmpHandleConnectionRequest (& Request);
-		if(!NT_SUCCESS(Status))
-		{
-			DPRINT1("SM: %s: SmpHandleConnectionRequest failed (Status=0x%08lx)\n",
-				__FUNCTION__, Status);
-			break;
-		}
-	}
-	/* Cleanup */
-	NtClose(ListeningPort);
-	/* DIE */
-	NtTerminateThread(NtCurrentThread(), Status);
-}
-#endif
 
 /* LPC PORT INITIALIZATION **************************************************/
 
@@ -360,6 +317,7 @@ SmCreateApiPort(VOID)
     {
       return(Status);
     }
+
   /*
    * Create one thread for the named LPC
    * port \SmApiPort
