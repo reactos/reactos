@@ -1775,6 +1775,7 @@ static BOOL ignore_message( UINT message )
             message == WM_GETICON ||
             message == WM_GETOBJECT ||
             message == WM_TIMECHANGE ||
+            message == WM_DISPLAYCHANGE ||
             message == WM_DEVICECHANGE);
 }
 
@@ -1870,7 +1871,10 @@ static void add_message_(int line, const struct recvd_message *msg)
                 di.u.lp = 0;
                 di.u.item.type = dis->CtlType;
                 di.u.item.ctl_id = dis->CtlID;
-                di.u.item.item_id = dis->itemID;
+                if (dis->CtlType == ODT_LISTBOX ||
+                    dis->CtlType == ODT_COMBOBOX ||
+                    dis->CtlType == ODT_MENU)
+                    di.u.item.item_id = dis->itemID;
                 di.u.item.action = dis->itemAction;
                 di.u.item.state = dis->itemState;
 
@@ -5088,6 +5092,8 @@ todo_wine {
 }
 
 /****************** button message test *************************/
+#define ID_BUTTON 0x000e
+
 static const struct message WmSetFocusButtonSeq[] =
 {
     { HCBT_SETFOCUS, hook },
@@ -5095,7 +5101,9 @@ static const struct message WmSetFocusButtonSeq[] =
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
     { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { WM_SETFOCUS, sent|wparam, 0 },
-    { WM_CTLCOLORBTN, sent|defwinproc },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_SETFOCUS) },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
     { 0 }
 };
 static const struct message WmKillFocusButtonSeq[] =
@@ -5103,9 +5111,13 @@ static const struct message WmKillFocusButtonSeq[] =
     { HCBT_SETFOCUS, hook },
     { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { WM_KILLFOCUS, sent|wparam, 0 },
-    { WM_CTLCOLORBTN, sent|defwinproc },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_KILLFOCUS) },
     { WM_IME_SETCONTEXT, sent|wparam|optional, 0 },
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 1 },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { WM_PAINT, sent },
+    { WM_CTLCOLORBTN, sent|parent },
     { 0 }
 };
 static const struct message WmSetFocusStaticSeq[] =
@@ -5115,7 +5127,10 @@ static const struct message WmSetFocusStaticSeq[] =
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
     { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { WM_SETFOCUS, sent|wparam, 0 },
-    { WM_CTLCOLORSTATIC, sent|defwinproc },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_SETFOCUS) },
+    { WM_COMMAND, sent|wparam|parent|optional, MAKEWPARAM(ID_BUTTON, BN_CLICKED) }, /* radio button */
+    { WM_APP, sent|wparam|lparam, 0, 0 },
     { 0 }
 };
 static const struct message WmKillFocusStaticSeq[] =
@@ -5123,9 +5138,42 @@ static const struct message WmKillFocusStaticSeq[] =
     { HCBT_SETFOCUS, hook },
     { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
     { WM_KILLFOCUS, sent|wparam, 0 },
-    { WM_CTLCOLORSTATIC, sent|defwinproc },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_KILLFOCUS) },
     { WM_IME_SETCONTEXT, sent|wparam|optional, 0 },
     { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 1 },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { WM_PAINT, sent },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { 0 }
+};
+static const struct message WmSetFocusOwnerdrawSeq[] =
+{
+    { HCBT_SETFOCUS, hook },
+    { WM_IME_SETCONTEXT, sent|wparam|optional, 1 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 2 },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_SETFOCUS, sent|wparam, 0 },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_DRAWITEM, sent|wparam|lparam|parent, ID_BUTTON, 0x001040e4 },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_SETFOCUS) },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmKillFocusOwnerdrawSeq[] =
+{
+    { HCBT_SETFOCUS, hook },
+    { EVENT_OBJECT_FOCUS, winevent_hook|wparam|lparam, OBJID_CLIENT, 0 },
+    { WM_KILLFOCUS, sent|wparam, 0 },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_DRAWITEM, sent|wparam|lparam|parent, ID_BUTTON, 0x000040e4 },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_KILLFOCUS) },
+    { WM_IME_SETCONTEXT, sent|wparam|optional, 0 },
+    { WM_IME_NOTIFY, sent|wparam|defwinproc|optional, 1 },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { WM_PAINT, sent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_DRAWITEM, sent|wparam|lparam|parent, ID_BUTTON, 0x000010e4 },
     { 0 }
 };
 static const struct message WmLButtonDownSeq[] =
@@ -5242,10 +5290,10 @@ static void test_button_messages(void)
 	{ BS_AUTORADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
 	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
 	{ BS_OWNERDRAW, DLGC_BUTTON,
-	  WmSetFocusButtonSeq, WmKillFocusButtonSeq }
+	  WmSetFocusOwnerdrawSeq, WmKillFocusOwnerdrawSeq }
     };
     unsigned int i;
-    HWND hwnd;
+    HWND hwnd, parent;
     DWORD dlg_code;
     HFONT zfont;
 
@@ -5262,11 +5310,26 @@ static void test_button_messages(void)
 
     subclass_button();
 
+    parent = CreateWindowExA(0, "TestParentClass", "Test parent", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                             100, 100, 200, 200, 0, 0, 0, NULL);
+    ok(parent != 0, "Failed to create parent window\n");
+
     for (i = 0; i < sizeof(button)/sizeof(button[0]); i++)
     {
-	hwnd = CreateWindowExA(0, "my_button_class", "test", button[i].style | WS_POPUP,
-			       0, 0, 50, 14, 0, 0, 0, NULL);
+        MSG msg;
+        DWORD style;
+
+        hwnd = CreateWindowExA(0, "my_button_class", "test", button[i].style | WS_CHILD | BS_NOTIFY,
+                               0, 0, 50, 14, parent, (HMENU)ID_BUTTON, 0, NULL);
 	ok(hwnd != 0, "Failed to create button window\n");
+
+        style = GetWindowLongA(hwnd, GWL_STYLE);
+        style &= ~(WS_CHILD | BS_NOTIFY);
+        /* XP turns a BS_USERBUTTON into BS_PUSHBUTTON */
+        if (button[i].style == BS_USERBUTTON)
+            todo_wine ok(style == BS_PUSHBUTTON, "expected style BS_PUSHBUTTON got %x\n", style);
+        else
+        ok(style == button[i].style, "expected style %x got %x\n", button[i].style, style);
 
 	dlg_code = SendMessageA(hwnd, WM_GETDLGCODE, 0, 0);
 	ok(dlg_code == button[i].dlg_code, "%u: wrong dlg_code %08x\n", i, dlg_code);
@@ -5274,17 +5337,30 @@ static void test_button_messages(void)
 	ShowWindow(hwnd, SW_SHOW);
 	UpdateWindow(hwnd);
 	SetFocus(0);
+	flush_events();
 	flush_sequence();
 
+        log_all_parent_messages++;
+
 	trace("button style %08x\n", button[i].style);
+        ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
 	SetFocus(hwnd);
+        SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
 	ok_sequence(button[i].setfocus, "SetFocus(hwnd) on a button", FALSE);
 
 	SetFocus(0);
+        SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
 	ok_sequence(button[i].killfocus, "SetFocus(0) on a button", FALSE);
 
+        log_all_parent_messages--;
+
+        ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
 	DestroyWindow(hwnd);
     }
+
+    DestroyWindow(parent);
 
     hwnd = CreateWindowExA(0, "my_button_class", "test", BS_PUSHBUTTON | WS_POPUP | WS_VISIBLE,
 			   0, 0, 50, 14, 0, 0, 0, NULL);
@@ -7169,7 +7245,7 @@ static LRESULT WINAPI ParentMsgCheckProcA(HWND hwnd, UINT message, WPARAM wParam
         message == WM_PARENTNOTIFY || message == WM_CANCELMODE ||
 	message == WM_SETFOCUS || message == WM_KILLFOCUS ||
 	message == WM_ENABLE ||	message == WM_ENTERIDLE ||
-        message == WM_DRAWITEM ||
+	message == WM_DRAWITEM || message == WM_COMMAND ||
 	message == WM_IME_SETCONTEXT)
     {
         switch (message)
@@ -11592,6 +11668,66 @@ static void test_defwinproc(void)
     DestroyWindow( hwnd);
 }
 
+static void test_PostMessage(void)
+{
+    static const struct
+    {
+        HWND hwnd;
+        BOOL ret;
+    } data[] =
+    {
+        { HWND_TOP /* 0 */, TRUE },
+        { HWND_BROADCAST, TRUE },
+        { HWND_BOTTOM, TRUE },
+        { HWND_TOPMOST, TRUE },
+        { HWND_NOTOPMOST, FALSE },
+        { HWND_MESSAGE, FALSE },
+        { (HWND)0xdeadbeef, FALSE }
+    };
+    int i;
+    HWND hwnd;
+    BOOL ret;
+    MSG msg;
+    static const WCHAR staticW[] = {'s','t','a','t','i','c',0};
+
+    SetLastError(0xdeadbeef);
+    hwnd = CreateWindowExW(0, staticW, NULL, WS_POPUP, 0,0,0,0,0,0,0, NULL);
+    if (!hwnd && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("Skipping some PostMessage tests on Win9x/WinMe\n");
+        return;
+    }
+    assert(hwnd);
+
+    flush_events();
+
+    PostMessage(hwnd, WM_USER+1, 0x1234, 0x5678);
+    PostMessage(0, WM_USER+2, 0x5678, 0x1234);
+
+    for (i = 0; i < sizeof(data)/sizeof(data[0]); i++)
+    {
+        memset(&msg, 0xab, sizeof(msg));
+        ret = PeekMessageA(&msg, data[i].hwnd, 0, 0, PM_NOREMOVE);
+        ok(ret == data[i].ret, "%d: hwnd %p expected %d, got %d\n", i, data[i].hwnd, data[i].ret, ret);
+        if (data[i].ret)
+        {
+            if (data[i].hwnd)
+                ok(ret && msg.hwnd == 0 && msg.message == WM_USER+2 &&
+                   msg.wParam == 0x5678 && msg.lParam == 0x1234,
+                   "%d: got ret %d hwnd %p msg %04x wParam %08lx lParam %08lx instead of TRUE/0/WM_USER+2/0x5678/0x1234\n",
+                   i, ret, msg.hwnd, msg.message, msg.wParam, msg.lParam);
+            else
+                ok(ret && msg.hwnd == hwnd && msg.message == WM_USER+1 &&
+                   msg.wParam == 0x1234 && msg.lParam == 0x5678,
+                   "%d: got ret %d hwnd %p msg %04x wParam %08lx lParam %08lx instead of TRUE/%p/WM_USER+1/0x1234/0x5678\n",
+                   i, ret, msg.hwnd, msg.message, msg.wParam, msg.lParam, msg.hwnd);
+        }
+    }
+
+    DestroyWindow(hwnd);
+    flush_events();
+}
+
 START_TEST(msg)
 {
     BOOL ret;
@@ -11633,6 +11769,7 @@ START_TEST(msg)
     hEvent_hook = 0;
 #endif
 
+    test_PostMessage();
     test_ShowWindow();
     test_PeekMessage();
     test_PeekMessage2();
