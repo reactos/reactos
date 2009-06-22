@@ -63,7 +63,7 @@ NdisWriteConfiguration(
  *    I don't know why tho so i free everything before return.  comments welcome.
  */
 {
-    ULONG ParameterType = ParameterValue->ParameterType;
+    ULONG ParameterType;
     ULONG DataSize;
     PVOID Data;
     WCHAR Buff[25];
@@ -71,7 +71,7 @@ NdisWriteConfiguration(
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     /* reset parameter type to standard reg types */
-    switch(ParameterType)
+    switch(ParameterValue->ParameterType)
     {
         case NdisParameterHexInteger:
         case NdisParameterInteger:
@@ -85,7 +85,7 @@ NdisWriteConfiguration(
                  ParameterType = REG_SZ;
                  if (!NT_SUCCESS(RtlIntegerToUnicodeString(
                       ParameterValue->ParameterData.IntegerData,
-                      (ParameterType == NdisParameterInteger) ? 10 : 16, &Str)))
+                      (ParameterValue->ParameterType == NdisParameterInteger) ? 10 : 16, &Str)))
                  {
                       *Status = NDIS_STATUS_FAILURE;
                       return;
@@ -96,7 +96,7 @@ NdisWriteConfiguration(
              break;
         case NdisParameterString:
         case NdisParameterMultiString:
-            ParameterType = REG_SZ;
+            ParameterType = (ParameterValue->ParameterType == NdisParameterString) ? REG_SZ : REG_MULTI_SZ;
             Data = ParameterValue->ParameterData.StringData.Buffer;
             DataSize = ParameterValue->ParameterData.StringData.Length;
             break;
