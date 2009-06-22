@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="win32csr" type="win32dll" installbase="system32" installname="win32csr.dll">
-	<importlibrary definition="win32csr.def" />
+	<importlibrary definition="win32csr.spec" />
 	<include base="win32csr">.</include>
 	<include base="csrss">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
