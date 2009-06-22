@@ -1265,11 +1265,19 @@ BOOL WINAPI FileIconInit(BOOL bFullInit)
 {	FIXME("(%s)\n", bFullInit ? "true" : "false");
 	return 0;
 }
-/*************************************************************************
- * IsUserAdmin					[SHELL32.680] NT 4.0
- *
- */
 
+/*************************************************************************
+ * IsUserAnAdmin    [SHELL32.680] NT 4.0
+ *
+ * Checks whether the current user is a member of the Administrators group.
+ *
+ * PARAMS
+ *     None
+ *
+ * RETURNS
+ *     Success: TRUE
+ *     Failure: FALSE
+  */
 BOOL WINAPI IsUserAnAdmin(VOID)
 {
     SID_IDENTIFIER_AUTHORITY Authority = {SECURITY_NT_AUTHORITY};
@@ -1331,7 +1339,6 @@ BOOL WINAPI IsUserAnAdmin(VOID)
 
     FreeSid(lpSid);
     HeapFree(GetProcessHeap(), 0, lpGroups);
-
     return bResult;
 }
 
