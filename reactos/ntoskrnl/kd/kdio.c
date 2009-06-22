@@ -293,11 +293,11 @@ KdpPrintString(LPSTR String,
     }
 
     /* Call the Wrapper Routine */
-    if (WrapperInitRoutine) WrapperTable.KdpPrintRoutine(String, Length);
+    if (WrapperTable.KdpPrintRoutine)
+        WrapperTable.KdpPrintRoutine(String, Length);
 
     /* Return the Length */
     return Length;
 }
 
 /* EOF */
-
