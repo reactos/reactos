@@ -30,89 +30,6 @@
 
 static BOOLEAN KdpPhysAccess = FALSE;
 
-#if 0
-extern ULONG MmGlobalKernelPageDirectory[1024];
-ULONG_PTR IdentityMapAddrHigh, IdentityMapAddrLow;
-
-ULONGLONG
-FASTCALL
-KdpPhysRead(ULONG_PTR Addr, LONG Len)
-{
-    ULONGLONG Result = 0;
-    ULONG_PTR OldCR3 = __readcr3(), OldCR4 = __readcr4();
-
-    if (Addr & HIGH_PHYS_MASK)
-    {
-        Addr &= ~HIGH_PHYS_MASK;
-        __writecr3(IdentityMapAddrHigh);
-    }
-    else
-        __writecr3(IdentityMapAddrLow);
-
-    __writecr4(OldCR4|CR4_PAGE_SIZE_BIT); // Turn on large page translation
-    __invlpg((PVOID)Addr);
-
-    switch (Len)
-    {
-    case 8:
-        Result = *((PULONGLONG)Addr);
-        break;
-    case 4:
-        Result = *((PULONG)Addr);
-        break;
-    case 2:
-        Result = *((PUSHORT)Addr);
-        break;
-    case 1:
-        Result = *((PUCHAR)Addr);
-        break;
-    }
-    __writecr4(OldCR4); // Turn off large page translation
-    __writecr3(OldCR3);
-    __invlpg((PVOID)Addr);
-
-    return Result;
-}
-
-VOID
-NTAPI
-KdpPhysWrite(ULONG_PTR Addr, LONG Len, ULONGLONG Value)
-{
-    ULONG_PTR OldCR3 = __readcr3(), OldCR4 = __readcr4();
-
-    if (Addr & HIGH_PHYS_MASK)
-    {
-        Addr &= ~HIGH_PHYS_MASK;
-        __writecr3(IdentityMapAddrHigh);
-    }
-    else
-        __writecr3(IdentityMapAddrLow);
-
-    __writecr4(OldCR4|CR4_PAGE_SIZE_BIT); // Turn on large page translation
-    __invlpg((PVOID)Addr);
-
-    switch (Len)
-    {
-    case 8:
-        *((PULONGLONG)Addr) = Value;
-        break;
-    case 4:
-        *((PULONG)Addr) = Value;
-        break;
-    case 2:
-        *((PUSHORT)Addr) = Value;
-        break;
-    case 1:
-        *((PUCHAR)Addr) = Value;
-        break;
-    }
-    __writecr4(OldCR4); // Turn off large page translation
-    __writecr3(OldCR3);    
-    __invlpg((PVOID)Addr);
-}
-
-#else
-
 static
 ULONG_PTR
 KdpPhysMap(ULONG_PTR PhysAddr, LONG Len)
@@ -194,7 +111,6 @@ KdpPhysWrite(ULONG_PTR PhysAddr, LONG Len, ULONGLONG Value)
         break;
     }
 }
-#endif
 
 BOOLEAN
 NTAPI
@@ -291,60 +207,11 @@ KdpSafeWriteMemory(ULONG_PTR Addr, LONG Len, ULONGLONG Value)
     return TRUE;
 }
 
-#if 0
-VOID
-NTAPI
-KdpEnableSafeMem()
-{
-    int i;
-    PULONG IdentityMapVirt;
-    PHYSICAL_ADDRESS IdentityMapPhys, Highest = { };
-
-    if (KdpPhysAccess)
-        return;
-
-    Highest.LowPart = (ULONG)-1;
-    /* Allocate a physical page and map it to copy the phys copy code onto */
-    IdentityMapVirt = (PULONG)MmAllocateContiguousMemory(2 * PAGE_SIZE, Highest);
-    IdentityMapPhys = MmGetPhysicalAddress(IdentityMapVirt);
-    IdentityMapAddrHigh = IdentityMapPhys.LowPart;
-
-    /* Copy the kernel space */
-    memcpy(IdentityMapVirt,
-           MmGlobalKernelPageDirectory,
-           PAGE_SIZE);
-
-    /* Set up 512 4Mb pages (high 2Gig identity mapped) */
-    for (i = 0; i < 512; i++)
-    {
-        IdentityMapVirt[i] = 
-            HIGH_PHYS_MASK | (i << 22) | PDE_PS_BIT | PDE_W_BIT | PDE_PRESENT_BIT;
-    }
-
-    /* Allocate a physical page and map it to copy the phys copy code onto */
-    IdentityMapAddrLow = IdentityMapAddrHigh + PAGE_SIZE;
-    IdentityMapVirt += PAGE_SIZE / sizeof(ULONG);
-
-    /* Copy the kernel space */
-    memcpy(IdentityMapVirt,
-           MmGlobalKernelPageDirectory,
-           PAGE_SIZE);
-
-    /* Set up 512 4Mb pages (low 2Gig identity mapped) */
-    for (i = 0; i < 512; i++)
-    {
-        IdentityMapVirt[i] = (i << 22) | PDE_PS_BIT | PDE_W_BIT | PDE_PRESENT_BIT;
-    }
-
-    KdpPhysAccess = TRUE;
-}
-
-#else
-
 VOID
 NTAPI
 KdpEnableSafeMem(VOID)
 {
     KdpPhysAccess = TRUE;
 }
-#endif
+
+/* EOF */
