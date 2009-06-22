@@ -11,6 +11,13 @@
 #define MI_MAX_NONPAGED_POOL_SIZE              (128 * 1024 * 1024)
 #define MI_MAX_FREE_PAGE_LISTS                 4
 
+typedef enum _MMSYSTEM_PTE_POOL_TYPE
+{
+    SystemPteSpace,
+    NonPagedPoolExpansion,
+    MaximumPtePoolTypes
+} MMSYSTEM_PTE_POOL_TYPE;
+
 extern MMPTE HyperTemplatePte;
 
 extern ULONG MmSizeOfNonPagedPoolInBytes;
@@ -22,6 +29,14 @@ VOID
 NTAPI
 MiInitializeArmPool(
     VOID
+);
+
+VOID
+NTAPI
+MiInitializeSystemPtes(
+    IN PMMPTE StartingPte,
+    IN ULONG NumberOfPtes,
+    IN MMSYSTEM_PTE_POOL_TYPE PoolType
 );
 
 /* EOF */
