@@ -37,6 +37,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 
 static HMODULE hadvapi32;
 static NTSTATUS (WINAPI *pLsaClose)(LSA_HANDLE);
+static NTSTATUS (WINAPI *pLsaEnumerateAccountRights)(LSA_HANDLE,PSID,PLSA_UNICODE_STRING*,PULONG);
 static NTSTATUS (WINAPI *pLsaFreeMemory)(PVOID);
 static NTSTATUS (WINAPI *pLsaOpenPolicy)(PLSA_UNICODE_STRING,PLSA_OBJECT_ATTRIBUTES,ACCESS_MASK,PLSA_HANDLE);
 static NTSTATUS (WINAPI *pLsaQueryInformationPolicy)(LSA_HANDLE,POLICY_INFORMATION_CLASS,PVOID*);
@@ -47,12 +48,13 @@ static BOOL init(void)
     hadvapi32 = GetModuleHandle("advapi32.dll");
 
     pLsaClose = (void*)GetProcAddress(hadvapi32, "LsaClose");
+    pLsaEnumerateAccountRights = (void*)GetProcAddress(hadvapi32, "LsaEnumerateAccountRights");
     pLsaFreeMemory = (void*)GetProcAddress(hadvapi32, "LsaFreeMemory");
     pLsaOpenPolicy = (void*)GetProcAddress(hadvapi32, "LsaOpenPolicy");
     pLsaQueryInformationPolicy = (void*)GetProcAddress(hadvapi32, "LsaQueryInformationPolicy");
     pConvertSidToStringSidA = (void*)GetProcAddress(hadvapi32, "ConvertSidToStringSidA");
 
-    if (pLsaClose && pLsaFreeMemory && pLsaOpenPolicy && pLsaQueryInformationPolicy && pConvertSidToStringSidA)
+    if (pLsaClose && pLsaEnumerateAccountRights && pLsaFreeMemory && pLsaOpenPolicy && pLsaQueryInformationPolicy && pConvertSidToStringSidA)
         return TRUE;
 
     return FALSE;
@@ -73,9 +75,9 @@ static void test_lsa(void)
 
     /* try a more restricted access mask if necessary */
     if (status == STATUS_ACCESS_DENIED) {
-        trace("LsaOpenPolicy(POLICY_ALL_ACCESS) failed, trying POLICY_VIEW_LOCAL_INFORMATION\n");
-        status = pLsaOpenPolicy( NULL, &object_attributes, POLICY_VIEW_LOCAL_INFORMATION, &handle);
-        ok(status == STATUS_SUCCESS, "LsaOpenPolicy(POLICY_VIEW_LOCAL_INFORMATION) returned 0x%08x\n", status);
+        trace("LsaOpenPolicy(POLICY_ALL_ACCESS) failed, trying POLICY_VIEW_LOCAL_INFORMATION|POLICY_LOOKUP_NAMES\n");
+        status = pLsaOpenPolicy( NULL, &object_attributes, POLICY_VIEW_LOCAL_INFORMATION|POLICY_LOOKUP_NAMES, &handle);
+        ok(status == STATUS_SUCCESS, "LsaOpenPolicy(POLICY_VIEW_LOCAL_INFORMATION|POLICY_LOOKUP_NAMES) returned 0x%08x\n", status);
     }
 
     if (status == STATUS_SUCCESS) {
@@ -83,6 +85,8 @@ static void test_lsa(void)
         PPOLICY_PRIMARY_DOMAIN_INFO primary_domain_info;
         PPOLICY_ACCOUNT_DOMAIN_INFO account_domain_info;
         PPOLICY_DNS_DOMAIN_INFO dns_domain_info;
+        HANDLE token;
+        BOOL ret;
 
         status = pLsaQueryInformationPolicy(handle, PolicyAuditEventsInformation, (PVOID*)&audit_events_info);
         if (status == STATUS_ACCESS_DENIED)
@@ -172,6 +176,39 @@ static void test_lsa(void)
             else
                 trace("Running on a standalone system.\n");
             pLsaFreeMemory((LPVOID)dns_domain_info);
+        }
+
+        /* We need a valid SID to pass to LsaEnumerateAccountRights */
+        ret = OpenProcessToken( GetCurrentProcess(), TOKEN_QUERY, &token );
+        ok(ret, "Unable to obtain process token, error %u\n", GetLastError( ));
+        if (ret) {
+            char buffer[64];
+            DWORD len;
+            TOKEN_USER *token_user = (TOKEN_USER *) buffer;
+            ret = GetTokenInformation( token, TokenUser, (LPVOID) token_user, sizeof(buffer), &len );
+            ok(ret || GetLastError( ) == ERROR_INSUFFICIENT_BUFFER, "Unable to obtain token information, error %u\n", GetLastError( ));
+            if (! ret && GetLastError( ) == ERROR_INSUFFICIENT_BUFFER) {
+                trace("Resizing buffer to %u.\n", len);
+                token_user = LocalAlloc( 0, len );
+                if (token_user != NULL)
+                    ret = GetTokenInformation( token, TokenUser, (LPVOID) token_user, len, &len );
+            }
+
+            if (ret) {
+                PLSA_UNICODE_STRING rights;
+                ULONG rights_count;
+                rights = (PLSA_UNICODE_STRING) 0xdeadbeaf;
+                rights_count = 0xcafecafe;
+                status = pLsaEnumerateAccountRights(handle, token_user->User.Sid, &rights, &rights_count);
+                ok(status == STATUS_SUCCESS || status == STATUS_OBJECT_NAME_NOT_FOUND, "Unexpected status 0x%x\n", status);
+                if (status == STATUS_SUCCESS)
+                    pLsaFreeMemory( rights );
+                else
+                    ok(rights == NULL && rights_count == 0, "Expected rights and rights_count to be set to 0 on failure\n");
+            }
+            if (token_user != NULL && token_user != (TOKEN_USER *) buffer)
+                LocalFree( token_user );
+            CloseHandle( token );
         }
 
         status = pLsaClose(handle);

@@ -1237,10 +1237,11 @@ static void test_token_attr(void)
         Domain[0] = '\0';
         ret = LookupAccountSid(NULL, Groups->Groups[i].Sid, Name, &NameLength, Domain, &DomainLength, &SidNameUse);
         if (ret)
-            trace("\t%s, %s\\%s use: %d attr: 0x%08x\n", SidString, Domain, Name, SidNameUse, Groups->Groups[i].Attributes);
-        else
-            trace("\t%s, attr: 0x%08x LookupAccountSid failed with error %d\n", SidString, Groups->Groups[i].Attributes, GetLastError());
-        LocalFree(SidString);
+        {
+            trace("%s, %s\\%s use: %d attr: 0x%08x\n", SidString, Domain, Name, SidNameUse, Groups->Groups[i].Attributes);
+            LocalFree(SidString);
+        }
+        else trace("attr: 0x%08x LookupAccountSid failed with error %d\n", Groups->Groups[i].Attributes, GetLastError());
     }
     HeapFree(GetProcessHeap(), 0, Groups);
 
