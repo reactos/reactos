@@ -38,6 +38,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Fi.rc"
 #include "Hu.rc"
 #include "Ko.rc"
+#include "Lt.rc"
 #include "Nl.rc"
 #include "No.rc"
 #include "Pl.rc"
