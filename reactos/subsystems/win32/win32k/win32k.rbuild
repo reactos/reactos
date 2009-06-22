@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="win32k_base" type="objectlibrary">
+<module name="win32k_base" type="objectlibrary" allowwarnings="true">
 	<include base="win32k_base">.</include>
 	<include base="win32k_base">include</include>
 	<include base="win32k_base" root="intermediate">.</include>
