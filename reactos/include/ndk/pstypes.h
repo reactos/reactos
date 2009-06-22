@@ -1036,7 +1036,6 @@ typedef struct _PSP_RATE_APC
 typedef struct _ETHREAD
 {
     KTHREAD Tcb;
-    PVOID Padding;
     LARGE_INTEGER CreateTime;
     union
     {
