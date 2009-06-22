@@ -64,24 +64,218 @@ static const WCHAR getMinutesW[] = {'g','e','t','M','i','n','u','t','e','s',0};
 static const WCHAR getUTCMinutesW[] = {'g','e','t','U','T','C','M','i','n','u','t','e','s',0};
 static const WCHAR getSecondsW[] = {'g','e','t','S','e','c','o','n','d','s',0};
 static const WCHAR getUTCSecondsW[] = {'g','e','t','U','T','C','S','e','c','o','n','d','s',0};
-static const WCHAR getMilisecondsW[] = {'g','e','t','M','i','l','i','s','e','c','o','n','d','s',0};
-static const WCHAR getUTCMilisecondsW[] = {'g','e','t','U','T','C','M','i','l','i','s','e','c','o','n','d','s',0};
+static const WCHAR getMillisecondsW[] = {'g','e','t','M','i','l','l','i','s','e','c','o','n','d','s',0};
+static const WCHAR getUTCMillisecondsW[] = {'g','e','t','U','T','C','M','i','l','l','i','s','e','c','o','n','d','s',0};
 static const WCHAR getTimezoneOffsetW[] = {'g','e','t','T','i','m','e','z','o','n','e','O','f','f','s','e','t',0};
 static const WCHAR setTimeW[] = {'s','e','t','T','i','m','e',0};
-static const WCHAR setMilisecondsW[] = {'s','e','t','M','i','l','i','s','e','c','o','n','d','s',0};
-static const WCHAR setUTCMilisecondsW[] = {'s','e','t','U','T','C','M','i','l','i','s','e','c','o','n','d','s',0};
+static const WCHAR setMillisecondsW[] = {'s','e','t','M','i','l','l','i','s','e','c','o','n','d','s',0};
+static const WCHAR setUTCMillisecondsW[] = {'s','e','t','U','T','C','M','i','l','l','i','s','e','c','o','n','d','s',0};
 static const WCHAR setSecondsW[] = {'s','e','t','S','e','c','o','n','d','s',0};
 static const WCHAR setUTCSecondsW[] = {'s','e','t','U','T','C','S','e','c','o','n','d','s',0};
 static const WCHAR setMinutesW[] = {'s','e','t','M','i','n','u','t','e','s',0};
 static const WCHAR setUTCMinutesW[] = {'s','e','t','U','T','C','M','i','n','u','t','e','s',0};
 static const WCHAR setHoursW[] = {'s','e','t','H','o','u','r','s',0};
-static const WCHAR setUTCHoursW[] = {'s','e','t','H','o','u','r','s',0};
+static const WCHAR setUTCHoursW[] = {'s','e','t','U','T','C','H','o','u','r','s',0};
 static const WCHAR setDateW[] = {'s','e','t','D','a','t','e',0};
 static const WCHAR setUTCDateW[] = {'s','e','t','U','T','C','D','a','t','e',0};
 static const WCHAR setMonthW[] = {'s','e','t','M','o','n','t','h',0};
 static const WCHAR setUTCMonthW[] = {'s','e','t','U','T','C','M','o','n','t','h',0};
 static const WCHAR setFullYearW[] = {'s','e','t','F','u','l','l','Y','e','a','r',0};
 static const WCHAR setUTCFullYearW[] = {'s','e','t','U','T','C','F','u','l','l','Y','e','a','r',0};
+
+/*ECMA-262 3th Edition    15.9.1.2 */
+#define MS_PER_DAY 86400000
+#define MS_PER_HOUR 3600000
+#define MS_PER_MINUTE 60000
+
+/* ECMA-262 3th Edition    15.9.1.2 */
+static inline DOUBLE day(DOUBLE time)
+{
+    return floor(time / MS_PER_DAY);
+}
+
+/* ECMA-262 3th Edition    15.9.1.3 */
+static inline DOUBLE days_in_year(DOUBLE year)
+{
+    int y;
+
+    if(year != (int)year)
+        return ret_nan();
+
+    y = year;
+    if(y%4 != 0) return 365;
+    if(y%100 != 0) return 366;
+    if(y%400 != 0) return 365;
+    return 366;
+}
+
+/* ECMA-262 3th Edition    15.9.1.3 */
+static inline DOUBLE day_from_year(DOUBLE year)
+{
+    int y;
+
+    if(year != (int)year)
+        return ret_nan();
+
+    y = year;
+    return 365*(y-1970) + floor((y-1969)/4)
+        - floor((y-1901)/100) + floor((y-1601)/400);
+}
+
+/* ECMA-262 3th Edition    15.9.1.3 */
+static inline DOUBLE time_from_year(DOUBLE year)
+{
+    return MS_PER_DAY*day_from_year(year);
+}
+
+/* ECMA-262 3th Edition    15.9.1.3 */
+static inline DOUBLE year_from_time(DOUBLE time)
+{
+    int y;
+
+    if(isnan(time))
+        return ret_nan();
+
+    y = 1970 + time/365.25/MS_PER_DAY;
+
+    if(time_from_year(y) > time)
+        while(time_from_year(y) > time) y--;
+    else
+        while(time_from_year(y+1)<=time) y++;
+
+    return y;
+}
+
+/* ECMA-262 3th Edition    15.9.1.3 */
+static inline int in_leap_year(DOUBLE time)
+{
+    if(days_in_year(year_from_time(time))==366)
+        return 1;
+    return 0;
+}
+
+/* ECMA-262 3th Edition    15.9.1.4 */
+static inline int day_within_year(DOUBLE time)
+{
+    return day(time) - day_from_year(year_from_time(time));
+}
+
+/* ECMA-262 3th Edition    15.9.1.4 */
+static inline DOUBLE month_from_time(DOUBLE time)
+{
+    int ily = in_leap_year(time);
+    int dwy = day_within_year(time);
+
+    if(isnan(time))
+        return ret_nan();
+
+    if(0<=dwy && dwy<31) return 0;
+    if(dwy < 59+ily) return 1;
+    if(dwy < 90+ily) return 2;
+    if(dwy < 120+ily) return 3;
+    if(dwy < 151+ily) return 4;
+    if(dwy < 181+ily) return 5;
+    if(dwy < 212+ily) return 6;
+    if(dwy < 243+ily) return 7;
+    if(dwy < 273+ily) return 8;
+    if(dwy < 304+ily) return  9;
+    if(dwy < 334+ily) return  10;
+    return  11;
+}
+
+/* ECMA-262 3th Edition    15.9.1.5 */
+static inline DOUBLE date_from_time(DOUBLE time)
+{
+    int dwy = day_within_year(time);
+    int ily = in_leap_year(time);
+    int mft = month_from_time(time);
+
+    if(isnan(time))
+        return ret_nan();
+
+    if(mft==0) return dwy+1;
+    if(mft==1) return dwy-30;
+    if(mft==2) return dwy-58-ily;
+    if(mft==3) return dwy-89-ily;
+    if(mft==4) return dwy-119-ily;
+    if(mft==5) return dwy-150-ily;
+    if(mft==6) return dwy-180-ily;
+    if(mft==7) return dwy-211-ily;
+    if(mft==8) return dwy-242-ily;
+    if(mft==9) return dwy-272-ily;
+    if(mft==10) return dwy-303-ily;
+    return dwy-333-ily;
+}
+
+/* ECMA-262 3th Edition    15.9.1.6 */
+static inline DOUBLE week_day(DOUBLE time)
+{
+    DOUBLE ret;
+
+    if(isnan(time))
+        return ret_nan();
+
+    ret = fmod(day(time)+4, 7);
+    if(ret<0) ret += 7;
+
+    return ret;
+}
+
+/* ECMA-262 3th Edition    15.9.1.10 */
+static inline DOUBLE hour_from_time(DOUBLE time)
+{
+    DOUBLE ret;
+
+    if(isnan(time))
+        return ret_nan();
+
+    ret = fmod(floor(time/MS_PER_HOUR), 24);
+    if(ret<0) ret += 24;
+
+    return ret;
+}
+
+/* ECMA-262 3th Edition    15.9.1.10 */
+static inline DOUBLE min_from_time(DOUBLE time)
+{
+    DOUBLE ret;
+
+    if(isnan(time))
+        return ret_nan();
+
+    ret = fmod(floor(time/MS_PER_MINUTE), 60);
+    if(ret<0) ret += 60;
+
+    return ret;
+}
+
+/* ECMA-262 3th Edition    15.9.1.10 */
+static inline DOUBLE sec_from_time(DOUBLE time)
+{
+    DOUBLE ret;
+
+    if(isnan(time))
+        return ret_nan();
+
+    ret = fmod(floor(time/1000), 60);
+    if(ret<0) ret += 60;
+
+    return ret;
+}
+
+/* ECMA-262 3th Edition    15.9.1.10 */
+static inline DOUBLE ms_from_time(DOUBLE time)
+{
+    DOUBLE ret;
+
+    if(isnan(time))
+        return ret_nan();
+
+    ret = fmod(time, 1000);
+    if(ret<0) ret += 1000;
+
+    return ret;
+}
 
 /* ECMA-262 3rd Edition    15.9.1.14 */
 static inline DOUBLE time_clip(DOUBLE time)
@@ -188,116 +382,308 @@ static HRESULT Date_getTime(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
     return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.3 */
 static HRESULT Date_getFullYear(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, year_from_time(time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.3 */
 static HRESULT Date_getUTCFullYear(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, year_from_time(date->time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.4 */
 static HRESULT Date_getMonth(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, month_from_time(time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.4 */
 static HRESULT Date_getUTCMonth(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, month_from_time(date->time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.5 */
 static HRESULT Date_getDate(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, date_from_time(time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.5 */
 static HRESULT Date_getUTCDate(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, date_from_time(date->time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.6 */
 static HRESULT Date_getDay(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, week_day(time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.6 */
 static HRESULT Date_getUTCDay(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, week_day(date->time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.10 */
 static HRESULT Date_getHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, hour_from_time(time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.10 */
 static HRESULT Date_getUTCHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, hour_from_time(date->time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.10 */
 static HRESULT Date_getMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, min_from_time(time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.10 */
 static HRESULT Date_getUTCMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, min_from_time(date->time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.10 */
 static HRESULT Date_getSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, sec_from_time(time));
+    }
+    return S_OK;
 }
 
+/* ECMA-262 3th Edition    15.9.1.10 */
 static HRESULT Date_getUTCSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, sec_from_time(date->time));
+    }
+    return S_OK;
 }
 
-static HRESULT Date_getMiliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+/* ECMA-262 3th Edition    15.9.1.10 */
+static HRESULT Date_getMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        DOUBLE time = date->time - date->bias*MS_PER_MINUTE;
+
+        num_set_val(retv, ms_from_time(time));
+    }
+    return S_OK;
 }
 
-static HRESULT Date_getUTCMiliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+/* ECMA-262 3th Edition    15.9.1.10 */
+static HRESULT Date_getUTCMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, ms_from_time(date->time));
+    }
+    return S_OK;
 }
 
 static HRESULT Date_getTimezoneOffset(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -322,6 +708,7 @@ static HRESULT Date_setTime(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
     }
 
     if(!arg_cnt(dp)) {
+        FIXME("throw ArgumentNotOptional\n");
         if(retv) num_set_nan(retv);
         return S_OK;
     }
@@ -339,60 +726,190 @@ static HRESULT Date_setTime(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
     return S_OK;
 }
 
-static HRESULT Date_setMiliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Date_setMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+    DateInstance *date;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(!arg_cnt(dp)) {
+        FIXME("throw ArgumentNotOptional\n");
+        if(retv) num_set_nan(retv);
+        return S_OK;
+    }
+
+    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    if(FAILED(hres))
+        return hres;
+
+    date = (DateInstance*)dispex;
+    date->time = time_clip(date->time - ms_from_time(date->time) + num_val(&v));
+
+    if(retv)
+        num_set_val(retv, date->time);
+
+    return S_OK;
 }
 
-static HRESULT Date_setUTCMiliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+static HRESULT Date_setUTCMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    return Date_setMilliseconds(dispex, lcid, flags, dp, retv, ei, caller);
 }
 
 static HRESULT Date_setSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+    DateInstance *date;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(!arg_cnt(dp)) {
+        FIXME("throw ArgumentNotOptional\n");
+        if(retv) num_set_nan(retv);
+        return S_OK;
+    }
+
+    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    if(FAILED(hres))
+        return hres;
+
+    date = (DateInstance*)dispex;
+    date->time = time_clip(date->time - (sec_from_time(date->time) - num_val(&v))*1000.0);
+
+    if(retv)
+        num_set_val(retv, date->time);
+
+    return S_OK;
 }
 
 static HRESULT Date_setUTCSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    return Date_setSeconds(dispex, lcid, flags, dp, retv, ei, caller);
 }
 
 static HRESULT Date_setMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+    DateInstance *date;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(!arg_cnt(dp)) {
+        FIXME("throw ArgumentNotOptional\n");
+        if(retv) num_set_nan(retv);
+        return S_OK;
+    }
+
+    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    if(FAILED(hres))
+        return hres;
+
+    date = (DateInstance*)dispex;
+    date->time = time_clip(date->time - (min_from_time(date->time) - num_val(&v))*MS_PER_MINUTE);
+
+    if(retv)
+        num_set_val(retv, date->time);
+
+    return S_OK;
 }
 
 static HRESULT Date_setUTCMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    return Date_setMinutes(dispex, lcid, flags, dp, retv, ei, caller);
 }
 
 static HRESULT Date_setHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+    DateInstance *date;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(!arg_cnt(dp)) {
+        FIXME("throw ArgumentNotOptional\n");
+        if(retv) num_set_nan(retv);
+        return S_OK;
+    }
+
+    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    if(FAILED(hres))
+        return hres;
+
+    date = (DateInstance*)dispex;
+    date->time = time_clip(date->time
+            - (hour_from_time(date->time - date->bias*MS_PER_MINUTE)
+                - num_val(&v))*MS_PER_HOUR);
+
+    if(retv)
+        num_set_val(retv, date->time);
+
+    return S_OK;
 }
 
 static HRESULT Date_setUTCHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    VARIANT v;
+    HRESULT hres;
+    DateInstance *date;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE)) {
+        FIXME("throw TypeError\n");
+        return E_FAIL;
+    }
+
+    if(!arg_cnt(dp)) {
+        FIXME("throw ArgumentNotOptional\n");
+        if(retv) num_set_nan(retv);
+        return S_OK;
+    }
+
+    hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+    if(FAILED(hres))
+        return hres;
+
+    date = (DateInstance*)dispex;
+    date->time = time_clip(date->time
+            - (hour_from_time(date->time) - num_val(&v))*MS_PER_HOUR);
+
+    if(retv)
+        num_set_val(retv, date->time);
+
+    return S_OK;
 }
 
 static HRESULT Date_setDate(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -449,7 +966,7 @@ static const builtin_prop_t Date_props[] = {
     {getDayW,                Date_getDay,                PROPF_METHOD},
     {getFullYearW,           Date_getFullYear,           PROPF_METHOD},
     {getHoursW,              Date_getHours,              PROPF_METHOD},
-    {getMilisecondsW,        Date_getMiliseconds,        PROPF_METHOD},
+    {getMillisecondsW,       Date_getMilliseconds,       PROPF_METHOD},
     {getMinutesW,            Date_getMinutes,            PROPF_METHOD},
     {getMonthW,              Date_getMonth,              PROPF_METHOD},
     {getSecondsW,            Date_getSeconds,            PROPF_METHOD},
@@ -459,7 +976,7 @@ static const builtin_prop_t Date_props[] = {
     {getUTCDayW,             Date_getUTCDay,             PROPF_METHOD},
     {getUTCFullYearW,        Date_getUTCFullYear,        PROPF_METHOD},
     {getUTCHoursW,           Date_getUTCHours,           PROPF_METHOD},
-    {getUTCMilisecondsW,     Date_getUTCMiliseconds,     PROPF_METHOD},
+    {getUTCMillisecondsW,    Date_getUTCMilliseconds,    PROPF_METHOD},
     {getUTCMinutesW,         Date_getUTCMinutes,         PROPF_METHOD},
     {getUTCMonthW,           Date_getUTCMonth,           PROPF_METHOD},
     {getUTCSecondsW,         Date_getUTCSeconds,         PROPF_METHOD},
@@ -469,7 +986,7 @@ static const builtin_prop_t Date_props[] = {
     {setDateW,               Date_setDate,               PROPF_METHOD},
     {setFullYearW,           Date_setFullYear,           PROPF_METHOD},
     {setHoursW,              Date_setHours,              PROPF_METHOD},
-    {setMilisecondsW,        Date_setMiliseconds,        PROPF_METHOD},
+    {setMillisecondsW,       Date_setMilliseconds,       PROPF_METHOD},
     {setMinutesW,            Date_setMinutes,            PROPF_METHOD},
     {setMonthW,              Date_setMonth,              PROPF_METHOD},
     {setSecondsW,            Date_setSeconds,            PROPF_METHOD},
@@ -477,7 +994,7 @@ static const builtin_prop_t Date_props[] = {
     {setUTCDateW,            Date_setUTCDate,            PROPF_METHOD},
     {setUTCFullYearW,        Date_setUTCFullYear,        PROPF_METHOD},
     {setUTCHoursW,           Date_setUTCHours,           PROPF_METHOD},
-    {setUTCMilisecondsW,     Date_setUTCMiliseconds,     PROPF_METHOD},
+    {setUTCMillisecondsW,    Date_setUTCMilliseconds,    PROPF_METHOD},
     {setUTCMinutesW,         Date_setUTCMinutes,         PROPF_METHOD},
     {setUTCMonthW,           Date_setUTCMonth,           PROPF_METHOD},
     {setUTCSecondsW,         Date_setUTCSeconds,         PROPF_METHOD},
