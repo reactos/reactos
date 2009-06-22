@@ -1664,7 +1664,8 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
     unsigned int i;
     TRACE("(%d, %s, %p, %p)\n", WellKnownSidType, debugstr_sid(DomainSid), pSid, cbSid);
 
-    if (cbSid == NULL || pSid == NULL || (DomainSid && !IsValidSid(DomainSid))) {
+    if (cbSid == NULL || (DomainSid && !IsValidSid(DomainSid)))
+    {
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -1673,11 +1674,17 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
         if (WellKnownSids[i].Type == WellKnownSidType) {
             DWORD length = GetSidLengthRequired(WellKnownSids[i].Sid.SubAuthorityCount);
 
-            if (*cbSid < length) {
+            if (*cbSid < length)
+            {
+                *cbSid = length;
                 SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return FALSE;
             }
-
+            if (!pSid)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return FALSE;
+            }
             CopyMemory(pSid, &WellKnownSids[i].Sid.Revision, length);
             *cbSid = length;
             return TRUE;
@@ -1696,11 +1703,17 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
             DWORD domain_sid_length = GetSidLengthRequired(domain_subauth);
             DWORD output_sid_length = GetSidLengthRequired(domain_subauth + 1);
 
-            if (*cbSid < output_sid_length) {
+            if (*cbSid < output_sid_length)
+            {
+                *cbSid = output_sid_length;
                 SetLastError(ERROR_INSUFFICIENT_BUFFER);
                 return FALSE;
             }
-
+            if (!pSid)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return FALSE;
+            }
             CopyMemory(pSid, DomainSid, domain_sid_length);
             (*GetSidSubAuthorityCount(pSid))++;
             (*GetSidSubAuthority(pSid, domain_subauth)) = WellKnownRids[i].Rid;
