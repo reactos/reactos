@@ -9,7 +9,19 @@
 #define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING ((255*1024*1024) >> PAGE_SHIFT)
 #define MI_MAX_INIT_NONPAGED_POOL_SIZE         (128 * 1024 * 1024)
 #define MI_MAX_NONPAGED_POOL_SIZE              (128 * 1024 * 1024)
+#define MI_MAX_FREE_PAGE_LISTS                 4
 
 extern MMPTE HyperTemplatePte;
+
+extern ULONG MmSizeOfNonPagedPoolInBytes;
+extern ULONG MmMaximumNonPagedPoolInBytes;
+extern PVOID MmNonPagedPoolStart;
+extern PVOID MmNonPagedPoolExpansionStart;
+
+VOID
+NTAPI
+MiInitializeArmPool(
+    VOID
+);
 
 /* EOF */

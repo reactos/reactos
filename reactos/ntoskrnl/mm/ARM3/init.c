@@ -362,6 +362,11 @@ MmArmInitSystem(IN ULONG Phase,
                                     0,
                                     BoundaryAddressMultiple);
         ASSERT(Status == STATUS_SUCCESS);
+        
+        //
+        // Now go ahead and initialize the ARM pool
+        //
+        MiInitializeArmPool();
     }
     
     //
