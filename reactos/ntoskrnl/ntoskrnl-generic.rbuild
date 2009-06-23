@@ -352,11 +352,6 @@
 			<directory name="arm">
 				<file>stubs.c</file>
 			</directory>
-			<directory name="ARM3">
-				<file>init.c</file>
-				<file>pool.c</file>
-				<file>syspte.c</file>
-			</directory>
 		</if>
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
@@ -364,6 +359,11 @@
 				<file>page.c</file>
 			</directory>
 		</if>
+		<directory name="ARM3">
+			<file>init.c</file>
+			<file>pool.c</file>
+			<file>syspte.c</file>
+		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
 		<file>cont.c</file>
