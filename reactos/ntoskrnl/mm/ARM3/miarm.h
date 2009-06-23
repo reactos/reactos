@@ -26,6 +26,7 @@ extern ULONG MmSizeOfNonPagedPoolInBytes;
 extern ULONG MmMaximumNonPagedPoolInBytes;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
+extern PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 
 VOID
 NTAPI

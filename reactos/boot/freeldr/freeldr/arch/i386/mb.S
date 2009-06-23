@@ -34,7 +34,6 @@
     .globl _startup_pagedirectory
     .globl _lowmem_pagetable
     .globl _kernel_pagetable
-    .globl _hyperspace_pagetable
     .globl _apic_pagetable
     .globl _kpcr_pagetable
     .globl _kuser_pagetable
@@ -64,9 +63,6 @@ _lowmem_pagetable:
 _kernel_pagetable:
 	.fill 2*4096, 1, 0
 
-_hyperspace_pagetable:
-	.fill 4096, 1, 0
-	
 _apic_pagetable:
 	.fill 4096, 1, 0
 

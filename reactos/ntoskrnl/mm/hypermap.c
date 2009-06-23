@@ -14,29 +14,12 @@
 
 /* GLOBALS ********************************************************************/
 
-PMMPTE MmFirstReservedMappingPte;
-PMMPTE MmLastReservedMappingPte;
+PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 MMPTE HyperTemplatePte;
 PEPROCESS HyperProcess;
 KIRQL HyperIrql;
 
 /* PRIVATE FUNCTIONS **********************************************************/
-
-VOID
-NTAPI
-MiInitHyperSpace(VOID)
-{
-    PMMPTE PointerPte;
-
-    /* Get the hyperspace PTE and zero out the page table */
-    PointerPte = MiAddressToPte(HYPER_SPACE);
-    RtlZeroMemory(PointerPte, PAGE_SIZE);
-
-    /* Setup mapping PTEs */
-    MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
-    MmLastReservedMappingPte =  MiAddressToPte(MI_MAPPING_RANGE_END);
-    MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
-}
 
 PVOID
 NTAPI

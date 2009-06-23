@@ -149,10 +149,5 @@ MasterTranslationTable:
     .space 0x0400 // 0xYYYYYYYY->0xC10FFFFF
     .space 0x0C00 // PADDING FOR 4KB GRANULARITY
 
-.global HyperSpaceTranslationTable
-HyperSpaceTranslationTable:
-    .space 0x0400 // 0xYYYYYYYY->0xC10FFFFF
-    .space 0x0C00 // PADDING FOR 4KB GRANULARITY
-
 .global TranslationTableEnd
 TranslationTableEnd:

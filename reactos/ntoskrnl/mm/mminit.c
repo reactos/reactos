@@ -375,9 +375,6 @@ MmInit1(VOID)
     /* Intialize system memory areas */
     MiInitSystemMemoryAreas();
 
-    /* Initialize hyperspace */
-    MiInitHyperSpace();
-
     /* Initialize the page list */
     MmInitializePageList();
 

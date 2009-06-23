@@ -297,7 +297,8 @@ MmArmInitSystem(IN ULONG Phase,
         PageFrameIndex = MmGetContinuousPages(MmSizeOfNonPagedPoolInBytes,
                                               Low,
                                               High,
-                                              BoundaryAddressMultiple);
+                                              BoundaryAddressMultiple,
+                                              FALSE);
         ASSERT(PageFrameIndex != 0);
         DPRINT1("NP VA begins at: %p and ends at: %p\n",
                 MmNonPagedPoolStart,
@@ -448,6 +449,34 @@ MmArmInitSystem(IN ULONG Phase,
         // Create the system PTE space
         //
         MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
+        
+        //
+        // Get the PDE For hyperspace
+        //
+        StartPde = MiAddressToPde(HYPER_SPACE);
+        
+        //
+        // Allocate a page for it and create it
+        //
+        PageFrameIndex = MmAllocPage(MC_SYSTEM, 0);
+        TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
+        TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
+        ASSERT(StartPde->u.Hard.Valid == 0);
+        ASSERT(TempPde.u.Hard.Valid == 1);
+        *StartPde = TempPde;
+        
+        //
+        // Zero out the page table now
+        //
+        PointerPte = MiAddressToPte(HYPER_SPACE);
+        RtlZeroMemory(PointerPte, PAGE_SIZE);
+        
+        //
+        // Setup the mapping PTEs
+        //
+        MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
+        MmLastReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_END);
+        MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
     }
     
     //
