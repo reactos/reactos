@@ -62,7 +62,7 @@ BEGIN
     RTEXT "GPU:", -1, 20, 45, 70, 10
     RTEXT "Typ DAC:", -1, 20, 55, 70, 10
     RTEXT "Pamiêæ:", -1, 20, 65, 70, 10
-    RTEXT "Bierz¹ca rozdzielczoœæ:", -1, 20, 75, 70, 10
+    RTEXT "Bie¿¹ca rozdzielczoœæ:", -1, 20, 75, 70, 10
     RTEXT "Monitor:", -1, 20, 85, 70, 10
     LTEXT "", IDC_STATIC_ADAPTER_ID, 95, 25, 130, 10
     LTEXT "", IDC_STATIC_ADAPTER_VENDOR, 95, 35, 130, 10
@@ -188,7 +188,7 @@ BEGIN
 	IDS_NETWORK_DIALOG "Sieæ"
 	IDS_HELP_DIALOG "Pomoc"
 	IDS_FORMAT_MB "%I64uMB RAM"
-	IDS_FORMAT_SWAP "%I64u MB used, %I64u MB available"
+	IDS_FORMAT_SWAP "%I64u MB u¿ytych, %I64u MB dostêpnych"
 	IDS_FORMAT_UNIPROC "%s (%u CPU)"
 	IDS_FORMAT_MPPROC  "%s (%u CPUs)"
 	IDS_VERSION_UNKNOWN "Wersja nieznana"

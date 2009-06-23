@@ -158,7 +158,7 @@ BEGIN
     IDS_TOOLS_INFO_CMD       "winver.exe"
 
     IDS_TOOLS_REGEDIT_NAME   "Edytor rejestru"
-    IDS_TOOLS_REGEDIT_DESCR  "Opens the Registry-Editor."
+    IDS_TOOLS_REGEDIT_DESCR  "Otwiera edytor rejestru."
     IDS_TOOLS_REGEDIT_CMD    "regedit.exe"
 
     IDS_TOOLS_SYSDM_NAME     "W³aœciwoœci systemu"
