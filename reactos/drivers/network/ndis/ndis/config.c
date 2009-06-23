@@ -703,7 +703,7 @@ NdisReadNetworkAddress(
         str = ParameterValue->ParameterData.StringData;
     }
 
-    while (str.Buffer[j] != '\0' && j < str.Length) j++;
+    while (j < str.Length && str.Buffer[j] != '\0') j++;
          
     *NetworkAddressLength = (UINT)((j/2)+0.5);
 
