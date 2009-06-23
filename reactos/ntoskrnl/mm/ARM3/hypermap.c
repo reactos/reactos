@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/hypermap.c
+ * FILE:            ntoskrnl/mm/ARM3/hypermap.c
  * PURPOSE:         Hyperspace Mapping Functionality
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -15,6 +15,7 @@
 /* GLOBALS ********************************************************************/
 
 PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
+PMMPTE MiFirstReservedZeroingPte;
 MMPTE HyperTemplatePte;
 PEPROCESS HyperProcess;
 KIRQL HyperIrql;
@@ -30,43 +31,60 @@ MiMapPageInHyperSpace(IN PEPROCESS Process,
     MMPTE TempPte;
     PMMPTE PointerPte;
     PFN_NUMBER Offset;
-    PVOID Address;
 
-    /* Never accept page 0 */
+    //
+    // Never accept page 0
+    //
     ASSERT(Page != 0);
 
-    /* Build the PTE */
+    //
+    // Build the PTE
+    //
     TempPte = HyperTemplatePte;
     TempPte.u.Hard.PageFrameNumber = Page;
+    TempPte.u.Hard.Global = 0; // Hyperspace is local!
 
-    /* Pick the first hyperspace PTE */
+    //
+    // Pick the first hyperspace PTE
+    //
     PointerPte = MmFirstReservedMappingPte;
 
-    /* Acquire the hyperlock */
+    //
+    // Acquire the hyperlock
+    //
     ASSERT(Process == PsGetCurrentProcess());
     KeAcquireSpinLock(&Process->HyperSpaceLock, OldIrql);
 
-    /* Now get the first free PTE */
+    //
+    // Now get the first free PTE
+    //
     Offset = PFN_FROM_PTE(PointerPte);
     if (!Offset)
     {
-        /* Reset the PTEs */
+        //
+        // Reset the PTEs
+        //
         Offset = MI_HYPERSPACE_PTES;
         KeFlushProcessTb();
     }
 
-    /* Prepare the next PTE */
+    //
+    // Prepare the next PTE
+    //
     PointerPte->u.Hard.PageFrameNumber = Offset - 1;
 
-    /* Write the current PTE */
+    //
+    // Write the current PTE
+    //
     PointerPte += Offset;
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
     *PointerPte = TempPte;
 
-    /* Return the address */
-    Address = (PVOID)((ULONG_PTR)PointerPte << 10);
-    return Address;
+    //
+    // Return the address
+    //
+    return MiPteToAddress(PointerPte);
 }
 
 VOID
@@ -77,10 +95,14 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 {
     ASSERT(Process == PsGetCurrentProcess());
 
-    /* Blow away the mapping */
+    //
+    // Blow away the mapping
+    //
     MiAddressToPte(Address)->u.Long = 0;
 
-    /* Release the hyperlock */
+    //
+    // Release the hyperlock
+    //
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     KeReleaseSpinLock(&Process->HyperSpaceLock, OldIrql);
 }
@@ -93,24 +115,36 @@ MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
     PMMPTE PointerPte;
     PVOID Address; 
 
-    /* Never accept page 0 */
+    //
+    // Never accept page 0
+    //
     ASSERT(Page != 0);
 
-    /* Build the PTE */
+    //
+    // Build the PTE
+    //
     TempPte = HyperTemplatePte;
     TempPte.u.Hard.PageFrameNumber = Page;
 
-    /* Get the Zero PTE and its address */
+    //
+    // Get the Zero PTE and its address
+    //
     PointerPte = MiAddressToPte(MI_ZERO_PTE);
     Address = (PVOID)((ULONG_PTR)PointerPte << 10);
 
-    /* Invalidate the old address */
+    //
+    // Invalidate the old address
+    //
     __invlpg(Address);
 
-    /* Write the current PTE */
+    //
+    // Write the current PTE
+    //
     TempPte.u.Hard.PageFrameNumber = Page;
     *PointerPte = TempPte;
 
-    /* Return the address */
+    //
+    // Return the address
+    //
     return Address;
 }
