@@ -384,7 +384,7 @@ static void test_registerDefaultOIDFunction(void)
     static const char func[] = "CertDllOpenStoreProv";
     char buf[MAX_PATH];
     BOOL ret;
-    long rc;
+    LSTATUS rc;
     HKEY key;
 
     ret = CryptRegisterDefaultOIDFunction(0, NULL, 0, NULL);
@@ -419,7 +419,7 @@ static void test_registerDefaultOIDFunction(void)
     ok(ret, "CryptRegisterDefaultOIDFunction failed: %08x\n", GetLastError());
     sprintf(buf, fmt, 0, func);
     rc = RegOpenKeyA(HKEY_LOCAL_MACHINE, buf, &key);
-    ok(rc == 0, "Expected key to exist, RegOpenKeyA failed: %ld\n", rc);
+    ok(rc == 0, "Expected key to exist, RegOpenKeyA failed: %d\n", rc);
     if (rc == 0)
     {
         static const CHAR dllA[] = "Dll";
@@ -432,7 +432,7 @@ static void test_registerDefaultOIDFunction(void)
         size = sizeof(dllBuf) / sizeof(dllBuf[0]);
         rc = RegQueryValueExA(key, dllA, NULL, &type, (LPBYTE)dllBuf, &size);
         ok(rc == 0,
-         "Expected Dll value to exist, RegQueryValueExA failed: %ld\n", rc);
+         "Expected Dll value to exist, RegQueryValueExA failed: %d\n", rc);
         ok(type == REG_MULTI_SZ, "Expected type REG_MULTI_SZ, got %d\n", type);
         /* bogusDll was registered first, so that should be first */
         ptr = dllBuf;

@@ -5843,7 +5843,8 @@ static void test_decodePKCSAttribute(DWORD dwEncoding)
      * I doubt an app depends on that.
      */
     ok(!ret && (GetLastError() == CRYPT_E_ASN1_EOD ||
-     GetLastError() == CRYPT_E_ASN1_CORRUPT || OSS_MORE_INPUT /* Win9x */),
+     GetLastError() == CRYPT_E_ASN1_CORRUPT ||
+     GetLastError() == OSS_MORE_INPUT /* Win9x */),
      "Expected CRYPT_E_ASN1_EOD, CRYPT_E_ASN1_CORRUPT, or OSS_MORE_INPUT, got %x\n",
      GetLastError());
     ret = pCryptDecodeObjectEx(dwEncoding, PKCS_ATTRIBUTE,
