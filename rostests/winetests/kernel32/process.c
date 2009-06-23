@@ -43,6 +43,12 @@
       ok((expected) == value, "Expected " #actual " to be %d (" #expected ") is %d\n", \
           (expected), value); \
     } while (0)
+#define expect_eq_s(expected, actual) \
+    do { \
+      LPCSTR value = (actual); \
+      ok(lstrcmpA((expected), value) == 0, "Expected " #actual " to be L\"%s\" (" #expected ") is L\"%s\"\n", \
+          expected, value); \
+    } while (0)
 #define expect_eq_ws_i(expected, actual) \
     do { \
       LPCWSTR value = (actual); \
@@ -70,6 +76,7 @@ static const char *wine_dbgstr_w(LPCWSTR wstr)
 static HINSTANCE hkernel32;
 static LPVOID (WINAPI *pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
 static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
+static BOOL   (WINAPI *pQueryFullProcessImageNameA)(HANDLE hProcess, DWORD dwFlags, LPSTR lpExeName, PDWORD lpdwSize);
 static BOOL   (WINAPI *pQueryFullProcessImageNameW)(HANDLE hProcess, DWORD dwFlags, LPWSTR lpExeName, PDWORD lpdwSize);
 
 /* ############################### */
@@ -208,6 +215,7 @@ static int     init(void)
     hkernel32 = GetModuleHandleA("kernel32");
     pVirtualAllocEx = (void *) GetProcAddress(hkernel32, "VirtualAllocEx");
     pVirtualFreeEx = (void *) GetProcAddress(hkernel32, "VirtualFreeEx");
+    pQueryFullProcessImageNameA = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameA");
     pQueryFullProcessImageNameW = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameW");
     return 1;
 }
@@ -1620,6 +1628,53 @@ static void test_GetProcessVersion(void)
     CloseHandle(pi.hThread);
 }
 
+static void test_ProcessNameA(void)
+{
+#define INIT_STR "Just some words"
+    DWORD length, size;
+    CHAR buf[1024];
+
+    if (!pQueryFullProcessImageNameA)
+    {
+        win_skip("QueryFullProcessImageNameA unavailable (added in Windows Vista)\n");
+        return;
+    }
+    /* get the buffer length without \0 terminator */
+    length = 1024;
+    expect_eq_d(TRUE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, buf, &length));
+    expect_eq_d(length, lstrlenA(buf));
+
+    /*  when the buffer is too small
+     *  - function fail with error ERROR_INSUFFICIENT_BUFFER
+     *  - the size variable is not modified
+     * tested with the biggest too small size
+     */
+    size = length;
+    sprintf(buf,INIT_STR);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, buf, &size));
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_d(length, size);
+    expect_eq_s(INIT_STR, buf);
+
+    /* retest with smaller buffer size
+     */
+    size = 4;
+    sprintf(buf,INIT_STR);
+    expect_eq_d(FALSE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, buf, &size));
+    expect_eq_d(ERROR_INSUFFICIENT_BUFFER, GetLastError());
+    expect_eq_d(4, size);
+    expect_eq_s(INIT_STR, buf);
+
+    /* this is a difference between the ascii and the unicode version
+     * the unicode version crashes when the size is big enough to hold the result
+     * ascii version throughs an error
+     */
+    size = 1024;
+    expect_eq_d(FALSE, pQueryFullProcessImageNameA(GetCurrentProcess(), 0, NULL, &size));
+    expect_eq_d(1024, size);
+    expect_eq_d(ERROR_INVALID_PARAMETER, GetLastError());
+}
+
 static void test_ProcessName(void)
 {
     HANDLE hSelf;
@@ -1743,6 +1798,7 @@ START_TEST(process)
     test_ExitCode();
     test_OpenProcess();
     test_GetProcessVersion();
+    test_ProcessNameA();
     test_ProcessName();
     test_Handles();
     /* things that can be tested:

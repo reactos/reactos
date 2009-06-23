@@ -561,6 +561,7 @@ static void test_BuildCommDCBW(TEST *ptest, int initial_value, DCB *pexpected_dc
 	BOOL result;
 	DCB dcb;
 	WCHAR wide_string[sizeof(ptest->string)];
+	static int reportedDCBW = 0;
 
 	MultiByteToWideChar(CP_ACP, 0, ptest->string, -1, wide_string, sizeof(wide_string) / sizeof(WCHAR));
 
@@ -572,7 +573,8 @@ static void test_BuildCommDCBW(TEST *ptest, int initial_value, DCB *pexpected_dc
 
 	if(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
 	{
-		win_skip("BuildCommDCBW is not available\n");
+		if(!reportedDCBW++)
+			win_skip("BuildCommDCBW is not implemented\n");
 		return;
 	}
 
@@ -587,6 +589,7 @@ static void test_BuildCommDCBAndTimeoutsW(TEST *ptest, int initial_value, DCB *p
 	DCB dcb;
 	COMMTIMEOUTS timeouts;
 	WCHAR wide_string[sizeof(ptest->string)];
+	static int reportedDCBAndTW = 0;
 
 	MultiByteToWideChar(CP_ACP, 0, ptest->string, -1, wide_string, sizeof(wide_string) / sizeof(WCHAR));
 
@@ -599,14 +602,15 @@ static void test_BuildCommDCBAndTimeoutsW(TEST *ptest, int initial_value, DCB *p
 
 	if(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
 	{
-		win_skip("BuildCommDCBAndTimeoutsW is not available\n");
+		if(!reportedDCBAndTW++)
+			win_skip("BuildCommDCBAndTimeoutsW is not implemented\n");
 		return;
 	}
 
 	/* check results */
-	check_result("BuildCommDCBAndTimeoutsA", ptest, initial_value, result);
-	check_dcb("BuildCommDCBAndTimeoutsA", ptest, initial_value, &dcb, pexpected_dcb);
-	check_timeouts("BuildCommDCBAndTimeoutsA", ptest, initial_value, &timeouts, pexpected_timeouts);
+	check_result("BuildCommDCBAndTimeoutsW", ptest, initial_value, result);
+	check_dcb("BuildCommDCBAndTimeoutsW", ptest, initial_value, &dcb, pexpected_dcb);
+	check_timeouts("BuildCommDCBAndTimeoutsW", ptest, initial_value, &timeouts, pexpected_timeouts);
 }
 
 static void test_BuildCommDCB(void)

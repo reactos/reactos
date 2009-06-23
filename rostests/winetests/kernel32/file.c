@@ -55,10 +55,11 @@ static const char sillytext[] =
 "sdlkfjasdlkfj a dslkj adsklf  \n  \nasdklf askldfa sdlkf \nsadklf asdklf asdf ";
 
 struct test_list {
-    const char *file;
-    const DWORD err;
-    const DWORD options;
-    const BOOL todo_flag;
+    const char *file;           /* file string to test */
+    const DWORD err;            /* Win NT and further error code */
+    const LONG err2;            /* Win 9x & ME error code  or -1 */
+    const DWORD options;        /* option flag to use for open */
+    const BOOL todo_flag;       /* todo_wine indicator */
 } ;
 
 static void InitFunctionPointers(void)
@@ -717,19 +718,19 @@ static void test_CreateFileA(void)
     static const char nt_drive[] = "\\\\?\\A:";
     DWORD i, ret, len;
     struct test_list p[] = {
-    {"", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* dir as file w \ */
-    {"", ERROR_SUCCESS, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* dir as dir w \ */
-    {"a", ERROR_FILE_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, FALSE }, /* non-exist file */
-    {"a\\", ERROR_FILE_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, FALSE }, /* non-exist dir */
-    {"removeme", ERROR_ACCESS_DENIED, FILE_ATTRIBUTE_NORMAL, FALSE }, /* exist dir w/o \ */
-    {"removeme\\", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* exst dir w \ */
-    {"c:", ERROR_ACCESS_DENIED, FILE_ATTRIBUTE_NORMAL, FALSE }, /* device in file namespace */
-    {"c:", ERROR_SUCCESS, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* device in file namespace as dir */
-    {"c:\\", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* root dir w \ */
-    {"c:\\", ERROR_SUCCESS, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* root dir w \ as dir */
-    {"\\\\?\\c:", ERROR_SUCCESS, FILE_ATTRIBUTE_NORMAL,FALSE }, /* dev namespace drive */
-    {"\\\\?\\c:\\", ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, TRUE }, /* dev namespace drive w \ */
-    {NULL, 0, 0, FALSE}
+    {"", ERROR_PATH_NOT_FOUND, -1, FILE_ATTRIBUTE_NORMAL, TRUE }, /* dir as file w \ */
+    {"", ERROR_SUCCESS, ERROR_PATH_NOT_FOUND, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* dir as dir w \ */
+    {"a", ERROR_FILE_NOT_FOUND, -1, FILE_ATTRIBUTE_NORMAL, FALSE }, /* non-exist file */
+    {"a\\", ERROR_FILE_NOT_FOUND, ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, FALSE }, /* non-exist dir */
+    {"removeme", ERROR_ACCESS_DENIED, -1, FILE_ATTRIBUTE_NORMAL, FALSE }, /* exist dir w/o \ */
+    {"removeme\\", ERROR_PATH_NOT_FOUND, -1, FILE_ATTRIBUTE_NORMAL, TRUE }, /* exst dir w \ */
+    {"c:", ERROR_ACCESS_DENIED, ERROR_PATH_NOT_FOUND, FILE_ATTRIBUTE_NORMAL, FALSE }, /* device in file namespace */
+    {"c:", ERROR_SUCCESS, ERROR_PATH_NOT_FOUND, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* device in file namespace as dir */
+    {"c:\\", ERROR_PATH_NOT_FOUND, ERROR_ACCESS_DENIED, FILE_ATTRIBUTE_NORMAL, TRUE }, /* root dir w \ */
+    {"c:\\", ERROR_SUCCESS, ERROR_ACCESS_DENIED, FILE_FLAG_BACKUP_SEMANTICS, FALSE }, /* root dir w \ as dir */
+    {"\\\\?\\c:", ERROR_SUCCESS, ERROR_BAD_NETPATH, FILE_ATTRIBUTE_NORMAL,FALSE }, /* dev namespace drive */
+    {"\\\\?\\c:\\", ERROR_PATH_NOT_FOUND, ERROR_BAD_NETPATH, FILE_ATTRIBUTE_NORMAL, TRUE }, /* dev namespace drive w \ */
+    {NULL, 0, -1, 0, FALSE}
     };
     BY_HANDLE_FILE_INFORMATION  Finfo;
 
@@ -829,13 +830,17 @@ static void test_CreateFileA(void)
         }
         /* otherwise validate results with expectations */
         else if (p[i].todo_flag)
-            todo_wine ok((hFile == INVALID_HANDLE_VALUE && p[i].err == GetLastError()) ||
+            todo_wine ok(
+                (hFile == INVALID_HANDLE_VALUE &&
+                  (p[i].err == GetLastError() || p[i].err2 == GetLastError())) ||
                 (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
                 "CreateFileA failed on %s, hFile %p, err=%u, should be %u\n",
                 filename, hFile, GetLastError(), p[i].err);
         else
-            ok((hFile == INVALID_HANDLE_VALUE && p[i].err == GetLastError()) ||
-               (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
+            ok(
+                (hFile == INVALID_HANDLE_VALUE &&
+                 (p[i].err == GetLastError() || p[i].err2 == GetLastError())) ||
+                (hFile != INVALID_HANDLE_VALUE && p[i].err == ERROR_SUCCESS),
                 "CreateFileA failed on %s, hFile %p, err=%u, should be %u\n",
                 filename, hFile, GetLastError(), p[i].err);
         if (hFile != INVALID_HANDLE_VALUE)
@@ -852,21 +857,26 @@ static void test_CreateFileA(void)
                         NULL,
                         OPEN_EXISTING,
                         FILE_FLAG_BACKUP_SEMANTICS, NULL );
-    ok(hFile != INVALID_HANDLE_VALUE && GetLastError() == ERROR_SUCCESS,
+    if (hFile != INVALID_HANDLE_VALUE && GetLastError() != ERROR_PATH_NOT_FOUND)
+    {
+        ok(hFile != INVALID_HANDLE_VALUE && GetLastError() == ERROR_SUCCESS,
             "CreateFileA did not work, last error %u on volume <%s>\n",
              GetLastError(), temp_path );
 
-    if (hFile != INVALID_HANDLE_VALUE)
-    {
-        ret = GetFileInformationByHandle( hFile, &Finfo );
-        if (ret)
+        if (hFile != INVALID_HANDLE_VALUE)
         {
-            ok(Finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY,
-                "CreateFileA probably did not open temp directory %s correctly\n   file information does not include FILE_ATTRIBUTE_DIRECTORY, actual=0x%08x\n",
+            ret = GetFileInformationByHandle( hFile, &Finfo );
+            if (ret)
+            {
+                ok(Finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY,
+                    "CreateFileA probably did not open temp directory %s correctly\n   file information does not include FILE_ATTRIBUTE_DIRECTORY, actual=0x%08x\n",
                 temp_path, Finfo.dwFileAttributes);
+            }
+            CloseHandle( hFile );
         }
-        CloseHandle( hFile );
     }
+    else
+        skip("Probable Win9x, got ERROR_PATH_NOT_FOUND w/ FILE_FLAG_BACKUP_SEMANTICS or %s\n", temp_path);
 
 
     /* ***  Test opening volumes/devices using drive letter  ***         */
@@ -879,7 +889,8 @@ static void test_CreateFileA(void)
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, OPEN_EXISTING,
                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
-    if (hFile != INVALID_HANDLE_VALUE || GetLastError() != ERROR_ACCESS_DENIED)
+    if (hFile != INVALID_HANDLE_VALUE ||
+        (GetLastError() != ERROR_ACCESS_DENIED && GetLastError() != ERROR_BAD_NETPATH))
     {
         /* if we have adm rights to volume, then try rest of tests */
         ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA did not open %s, last error=%u\n",
@@ -946,6 +957,9 @@ static void test_CreateFileA(void)
         if (hFile != INVALID_HANDLE_VALUE)
             CloseHandle( hFile );
     }
+    /* If we see ERROR_BAD_NETPATH then on Win9x or WinME, so skip */
+    else if (GetLastError() == ERROR_BAD_NETPATH)
+        skip("Probable Win9x, got ERROR_BAD_NETPATH (53)\n");
     else
         skip("Do not have authority to access volumes. Tests skipped\n");
 
@@ -957,78 +971,86 @@ static void test_CreateFileA(void)
         strcpy(filename, "c:\\");
         filename[0] = windowsdir[0];
         ret = pGetVolumeNameForVolumeMountPointA( filename, Volume_1, MAX_PATH );
-        ok(ret == TRUE, "GetVolumeNameForVolumeMountPointA failed\n");
-        ok(strlen(Volume_1) == 49, "GetVolumeNameForVolumeMountPointA returned wrong length name %s\n", Volume_1);
+        ok(ret, "GetVolumeNameForVolumeMountPointA failed, for %s, last error=%d\n", filename, GetLastError());
+        if (ret)
+        {
+            ok(strlen(Volume_1) == 49, "GetVolumeNameForVolumeMountPointA returned wrong length name <%s>\n", Volume_1);
 
-        /* test the result of opening a unique volume name (GUID)   */
-        /* with the trailing \                                      */
-        /* this should error out                                    */
-        strcpy(filename, Volume_1);
-        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+            /* test the result of opening a unique volume name (GUID)
+             *  with the trailing \
+             *  this should error out
+             */
+            strcpy(filename, Volume_1);
+            hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, OPEN_EXISTING,
                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
-        todo_wine
-        ok(hFile == INVALID_HANDLE_VALUE,
-            "CreateFileA should not have opened %s, hFile %p\n",
-            filename, hFile);
-        todo_wine
-        ok(hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_PATH_NOT_FOUND,
-            "CreateFileA should have returned ERROR_PATH_NOT_FOUND on %s, but got %u\n",
-            filename, GetLastError());
-        if (hFile != INVALID_HANDLE_VALUE)
-            CloseHandle( hFile );
+            todo_wine
+            ok(hFile == INVALID_HANDLE_VALUE,
+                "CreateFileA should not have opened %s, hFile %p\n",
+                filename, hFile);
+            todo_wine
+            ok(hFile == INVALID_HANDLE_VALUE && GetLastError() == ERROR_PATH_NOT_FOUND,
+                "CreateFileA should have returned ERROR_PATH_NOT_FOUND on %s, but got %u\n",
+                filename, GetLastError());
+            if (hFile != INVALID_HANDLE_VALUE)
+                CloseHandle( hFile );
 
-        /* test the result of opening a unique volume name (GUID)   */
-        /* with the temp path string as dir                         */
-        /* this should work                                         */
-        strcpy(filename, Volume_1);
-        strcat(filename, temp_path+3);
-        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+            /* test the result of opening a unique volume name (GUID)
+             * with the temp path string as dir
+             * this should work
+             */
+            strcpy(filename, Volume_1);
+            strcat(filename, temp_path+3);
+            hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, OPEN_EXISTING,
                         FILE_FLAG_BACKUP_SEMANTICS, NULL );
-        todo_wine
-        ok(hFile != INVALID_HANDLE_VALUE,
-            "CreateFileA should have opened %s, but got %u\n",
-            filename, GetLastError());
-        if (hFile != INVALID_HANDLE_VALUE)
-            CloseHandle( hFile );
+            todo_wine
+            ok(hFile != INVALID_HANDLE_VALUE,
+                "CreateFileA should have opened %s, but got %u\n",
+                filename, GetLastError());
+            if (hFile != INVALID_HANDLE_VALUE)
+                CloseHandle( hFile );
 
-        /* test the result of opening a unique volume name (GUID)   */
-        /* without the trailing \ and in device namespace           */
-        /* this should work                                         */
-        strcpy(filename, Volume_1);
-        filename[2] = '.';
-        filename[48] = 0;
-        hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
+            /* test the result of opening a unique volume name (GUID)
+             * without the trailing \ and in device namespace
+             * this should work
+             */
+            strcpy(filename, Volume_1);
+            filename[2] = '.';
+            filename[48] = 0;
+            hFile = CreateFileA( filename, GENERIC_READ | GENERIC_WRITE,
                         FILE_SHARE_READ | FILE_SHARE_WRITE,
                         NULL, OPEN_EXISTING,
                         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_NO_BUFFERING, NULL );
-        if (hFile != INVALID_HANDLE_VALUE || GetLastError() != ERROR_ACCESS_DENIED)
-        {
-            /* if we have adm rights to volume, then try rest of tests */
-            ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA did not open %s, last error=%u\n",
-                filename, GetLastError());
-            if (hFile != INVALID_HANDLE_VALUE)
+            if (hFile != INVALID_HANDLE_VALUE || GetLastError() != ERROR_ACCESS_DENIED)
             {
-                /* if we opened the volume/device, try to read it. Since it  */
-                /* opened, we should be able to read it.  We don't care about*/
-                /* what the data is at this time.                            */
-                len = 512;
-                ret = ReadFile( hFile, buffer, len, &len, NULL );
-                todo_wine ok(ret, "Failed to read volume, last error %u, %u, for %s\n",
-                    GetLastError(), ret, filename);
-                if (ret)
+                /* if we have adm rights to volume, then try rest of tests */
+                ok(hFile != INVALID_HANDLE_VALUE, "CreateFileA did not open %s, last error=%u\n",
+                    filename, GetLastError());
+                if (hFile != INVALID_HANDLE_VALUE)
                 {
-                    trace("buffer is\n");
-                    dumpmem(buffer, 64);
-                }
-                CloseHandle( hFile );
-			}
+                    /* if we opened the volume/device, try to read it. Since it  */
+                    /* opened, we should be able to read it.  We don't care about*/
+                    /* what the data is at this time.                            */
+                    len = 512;
+                    ret = ReadFile( hFile, buffer, len, &len, NULL );
+                    todo_wine ok(ret, "Failed to read volume, last error %u, %u, for %s\n",
+                        GetLastError(), ret, filename);
+                    if (ret)
+                    {
+                        trace("buffer is\n");
+                        dumpmem(buffer, 64);
+                    }
+                    CloseHandle( hFile );
+	        }
+            }
+            else
+                skip("Do not have authority to access volumes. Tests skipped\n");
         }
         else
-            skip("Do not have authority to access volumes. Tests skipped\n");
+            win_skip("GetVolumeNameForVolumeMountPointA not functioning\n");
     }
     else
         win_skip("GetVolumeNameForVolumeMountPointA not found\n");

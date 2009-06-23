@@ -836,6 +836,7 @@ static int test_DisconnectNamedPipe(void)
     char ibuf[32];
     DWORD written;
     DWORD readden;
+    DWORD ret;
 
     SetLastError(0xdeadbeef);
     hnp = CreateNamedPipe(PIPENAME, PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE | PIPE_WAIT,
@@ -876,6 +877,8 @@ static int test_DisconnectNamedPipe(void)
             "ReadFile from disconnected pipe with bytes waiting\n");
         ok(!DisconnectNamedPipe(hnp) && GetLastError() == ERROR_PIPE_NOT_CONNECTED,
            "DisconnectNamedPipe worked twice\n");
+        ret = WaitForSingleObject(hFile, 0);
+        ok(ret == WAIT_TIMEOUT, "WaitForSingleObject returned %X\n", ret);
         ok(CloseHandle(hFile), "CloseHandle\n");
     }
 
