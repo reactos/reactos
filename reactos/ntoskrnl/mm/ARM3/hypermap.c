@@ -109,42 +109,101 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
+MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
+                             IN PFN_NUMBER NumberOfPages)
 {
     MMPTE TempPte;
     PMMPTE PointerPte;
-    PVOID Address; 
+    PFN_NUMBER Offset, PageFrameIndex;
+    PMMPFN Page;
 
     //
-    // Never accept page 0
+    // Sanity checks
     //
-    ASSERT(Page != 0);
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(NumberOfPages != 0);
+    ASSERT(NumberOfPages <= (MI_ZERO_PTES - 1));
+    
+    //
+    // Pick the first zeroing PTE
+    //
+    PointerPte = MiFirstReservedZeroingPte;
 
     //
-    // Build the PTE
+    // Now get the first free PTE
     //
-    TempPte = HyperTemplatePte;
-    TempPte.u.Hard.PageFrameNumber = Page;
-
+    Offset = PFN_FROM_PTE(PointerPte);
+    if (NumberOfPages > Offset)
+    {
+        //
+        // Reset the PTEs
+        //
+        Offset = MI_ZERO_PTES - 1;
+        PointerPte->u.Hard.PageFrameNumber = Offset;
+        KeFlushProcessTb();
+    }
+    
     //
-    // Get the Zero PTE and its address
+    // Prepare the next PTE
     //
-    PointerPte = MiAddressToPte(MI_ZERO_PTE);
-    Address = (PVOID)((ULONG_PTR)PointerPte << 10);
-
-    //
-    // Invalidate the old address
-    //
-    __invlpg(Address);
-
+    PointerPte->u.Hard.PageFrameNumber = Offset - NumberOfPages;
+   
     //
     // Write the current PTE
     //
-    TempPte.u.Hard.PageFrameNumber = Page;
-    *PointerPte = TempPte;
-
+    PointerPte += (Offset + 1);
+    TempPte = HyperTemplatePte;
+    TempPte.u.Hard.Global = FALSE; // Hyperspace is local!
+    do
+    {
+        //
+        // Get the first page entry and its PFN
+        //
+        Page = *Pages++;
+        PageFrameIndex = MiGetPfnEntryIndex(Page);
+        
+        //
+        // Write the PFN
+        //
+        TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
+        
+        //
+        // Set the correct PTE to write to, and set its new value
+        //
+        PointerPte--;
+        ASSERT(PointerPte->u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Hard.Valid == 1);
+        *PointerPte = TempPte;
+    } while (--NumberOfPages);
+    
     //
     // Return the address
     //
-    return Address;
+    return MiPteToAddress(PointerPte);
 }
+
+VOID
+NTAPI
+MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
+                        IN PFN_NUMBER NumberOfPages)
+{
+    PMMPTE PointerPte;
+    
+    //
+    // Sanity checks
+    //
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT (NumberOfPages != 0);
+    ASSERT (NumberOfPages <= (MI_ZERO_PTES - 1));
+    
+    //
+    // Get the first PTE for the mapped zero VA
+    //
+    PointerPte = MiAddressToPte(VirtualAddress);
+
+    //
+    // Blow away the mapped zero PTEs
+    //
+    RtlZeroMemory(PointerPte, NumberOfPages * sizeof(MMPTE));
+}
+

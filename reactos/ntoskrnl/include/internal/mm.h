@@ -1155,7 +1155,13 @@ MiUnmapPageInHyperSpace(IN PEPROCESS Process,
 
 PVOID
 NTAPI
-MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page);
+MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
+                             IN PFN_NUMBER NumberOfPages);
+
+VOID
+NTAPI
+MiUnmapPagesInZeroSpace(IN PVOID VirtualAddress,
+                        IN PFN_NUMBER NumberOfPages);
 
 //
 // ReactOS Compatibility Layer
@@ -1166,6 +1172,14 @@ MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
 {
     HyperProcess = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
     return MiMapPageInHyperSpace(HyperProcess, Page, &HyperIrql);
+}
+
+PVOID
+FORCEINLINE
+MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
+{
+    PMMPFN Pfn1 = MiGetPfnEntry(Page);
+    return MiMapPagesToZeroInHyperSpace(&Pfn1, 1);
 }
 
 #define MmDeleteHyperspaceMapping(x) MiUnmapPageInHyperSpace(HyperProcess, x, HyperIrql);

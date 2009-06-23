@@ -938,21 +938,6 @@ MmAllocPagesSpecifyRange(ULONG Consumer,
    return NumberOfPagesFound;
 }
 
-static
-NTSTATUS
-MiZeroPageInternal(PFN_TYPE Page)
-{
-   PVOID TempAddress;
-
-   TempAddress = MiMapPageToZeroInHyperSpace(Page);
-   if (TempAddress == NULL)
-   {
-      return(STATUS_NO_MEMORY);
-   }
-   memset(TempAddress, 0, PAGE_SIZE);
-   return(STATUS_SUCCESS);
-}
-
 NTSTATUS
 NTAPI
 MmZeroPageThreadMain(PVOID Ignored)
@@ -1000,7 +985,7 @@ MmZeroPageThreadMain(PVOID Ignored)
          PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_USED;
          KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
          Pfn = PageDescriptor - MmPfnDatabase;
-         Status = MiZeroPageInternal(Pfn);
+         Status = MiZeroPage(Pfn);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
          if (PageDescriptor->MapCount != 0)
