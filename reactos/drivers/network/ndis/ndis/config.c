@@ -65,7 +65,7 @@ NdisWriteConfiguration(
     ULONG ParameterType;
     ULONG DataSize;
     PVOID Data;
-    WCHAR Buff[25];
+    WCHAR Buff[11];
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -86,6 +86,7 @@ NdisWriteConfiguration(
                       ParameterValue->ParameterData.IntegerData,
                       (ParameterValue->ParameterType == NdisParameterInteger) ? 10 : 16, &Str)))
                  {
+                      NDIS_DbgPrint(MIN_TRACE, ("RtlIntegerToUnicodeString failed (%x)\n", *Status));
                       *Status = NDIS_STATUS_FAILURE;
                       return;
                  }
@@ -674,7 +675,7 @@ NdisReadNetworkAddress(
 
     if (ParameterValue->ParameterType == NdisParameterInteger)
     {
-        WCHAR Buff[25];
+        WCHAR Buff[11];
 
         NDIS_DbgPrint(MAX_TRACE, ("Read integer data %lx\n",
                                   ParameterValue->ParameterData.IntegerData));
@@ -702,7 +703,7 @@ NdisReadNetworkAddress(
         str = ParameterValue->ParameterData.StringData;
     }
 
-    while (str.Buffer[j] != '\0') j++;
+    while (str.Buffer[j] != '\0' && j < str.Length) j++;
          
     *NetworkAddressLength = (UINT)((j/2)+0.5);
 
