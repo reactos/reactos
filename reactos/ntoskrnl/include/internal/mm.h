@@ -1125,7 +1125,8 @@ MmGetContinuousPages(
     ULONG NumberOfBytes,
     PHYSICAL_ADDRESS LowestAcceptableAddress,
     PHYSICAL_ADDRESS HighestAcceptableAddress,
-    PHYSICAL_ADDRESS BoundaryAddressMultiple
+    PHYSICAL_ADDRESS BoundaryAddressMultiple,
+    BOOLEAN ZeroPages
 );
 
 NTSTATUS

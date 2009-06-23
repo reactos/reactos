@@ -103,7 +103,8 @@ MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
    PBase = MmGetContinuousPages(NumberOfBytes,
                                 LowestAcceptableAddress,
                                 HighestAcceptableAddress,
-                                BoundaryAddressMultiple);
+                                BoundaryAddressMultiple,
+                                TRUE);
    if (PBase == 0)
    {
       MmLockAddressSpace(MmGetKernelAddressSpace());

@@ -138,7 +138,8 @@ NTAPI
 MmGetContinuousPages(ULONG NumberOfBytes,
                      PHYSICAL_ADDRESS LowestAcceptableAddress,
                      PHYSICAL_ADDRESS HighestAcceptableAddress,
-                     PHYSICAL_ADDRESS BoundaryAddressMultiple)
+                     PHYSICAL_ADDRESS BoundaryAddressMultiple,
+                     BOOLEAN ZeroPages)
 {
    ULONG NrPages;
    ULONG i, j;
@@ -222,7 +223,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
          {
             if (MiGetPfnEntry(i)->Flags.Zero == 0)
             {
-	       MiZeroPage(i);
+                if (ZeroPages) MiZeroPage(i);
             }
             else
             {
@@ -727,7 +728,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
              /* Allocate an early page -- we'll account for it later */
              KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
              PfnOffset = MmAllocEarlyPage();
-             MiZeroPage(PfnOffset);
+             if (Consumer != MC_SYSTEM) MiZeroPage(PfnOffset);
              return PfnOffset;
          }
 
