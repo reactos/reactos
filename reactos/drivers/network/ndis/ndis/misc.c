@@ -515,7 +515,7 @@ NdisGetVersion(VOID)
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    return (UINT) 0x501;
+    return NDIS_VERSION;
 }
 
 /*

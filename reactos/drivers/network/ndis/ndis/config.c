@@ -33,7 +33,6 @@
 
 #include "ndissys.h"
 
-#define NDIS_VERSION 0x00050001          /* the version of NDIS we claim to be to miniport drivers */
 #define PARAMETERS_KEY L"Parameters"     /* The parameters subkey under the device-specific key */
 
 /*

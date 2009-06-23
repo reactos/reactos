@@ -28,6 +28,9 @@
 #define EXPORT NTAPI
 #endif
 
+/* the version of NDIS we claim to be */
+#define NDIS_VERSION 0x00050001
+
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define NDIS_TAG  0x4e4d4953
 
