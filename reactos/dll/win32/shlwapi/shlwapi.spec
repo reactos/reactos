@@ -193,7 +193,7 @@
 193 stdcall -noname SHGetCurColorRes()
 194 stdcall -noname SHWaitForSendMessageThread(ptr long)
 195 stdcall -noname SHIsExpandableFolder(ptr ptr)
-196 stub -noname DnsRecordSetCompare #stdcall @(ptr ptr ptr ptr) dnsapi.DnsRecordSetCompare
+196 stdcall -noname DnsRecordSetCompare(ptr ptr ptr ptr) dnsapi.DnsRecordSetCompare
 197 stdcall -noname SHFillRectClr(long ptr long)
 198 stdcall -noname SHSearchMapInt(ptr ptr long long)
 199 stdcall -noname IUnknown_Set(ptr ptr)
