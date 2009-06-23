@@ -104,6 +104,29 @@ ULONG MmNumberOfSystemPtes;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+//
+// In Bavaria, this is probably a hate crime
+//
+VOID
+FASTCALL
+MiSyncARM3WithROS(IN PVOID AddressStart,
+                  IN PVOID AddressEnd)
+{
+    //
+    // Puerile piece of junk-grade carbonized horseshit puss sold to the lowest bidder
+    //
+    ULONG Pde = ADDR_TO_PDE_OFFSET(AddressStart);
+    while (Pde < ADDR_TO_PDE_OFFSET(AddressEnd))
+    {
+        //
+        // This both odious and heinous
+        //
+        extern PULONG MmGlobalKernelPageDirectory;
+        MmGlobalKernelPageDirectory[Pde] = ((PULONG)PAGEDIRECTORY_MAP)[Pde];
+        Pde++;
+    }
+}
+
 NTSTATUS
 NTAPI
 MmArmInitSystem(IN ULONG Phase,
@@ -490,6 +513,13 @@ MmArmInitSystem(IN ULONG Phase,
         // Set the counter to maximum to boot with
         //
         MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
+        
+        //
+        // Sync us up with ReactOS Mm
+        //
+        MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
+        MiSyncARM3WithROS(MmNonPagedPoolStart, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
+        MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
     }
     
     //
