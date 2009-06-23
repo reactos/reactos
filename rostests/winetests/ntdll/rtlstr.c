@@ -89,7 +89,7 @@ static WCHAR* AtoW( const char* p )
 {
     WCHAR* buffer;
     DWORD len = MultiByteToWideChar( CP_ACP, 0, p, -1, NULL, 0 );
-    buffer = malloc( len * sizeof(WCHAR) );
+    buffer = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR) );
     MultiByteToWideChar( CP_ACP, 0, p, -1, buffer, len );
     return buffer;
 }
@@ -191,7 +191,7 @@ static void test_RtlInitUnicodeStringEx(void)
     UNICODE_STRING uni;
     NTSTATUS result;
 
-    teststring2 = malloc((TESTSTRING2_LEN + 1) * sizeof(WCHAR));
+    teststring2 = HeapAlloc(GetProcessHeap(), 0, (TESTSTRING2_LEN + 1) * sizeof(WCHAR));
     memset(teststring2, 'X', TESTSTRING2_LEN * sizeof(WCHAR));
     teststring2[TESTSTRING2_LEN] = '\0';
 
@@ -293,7 +293,7 @@ static void test_RtlInitUnicodeStringEx(void)
        "pRtlInitUnicodeString(&uni, 0) sets Buffer to %p, expected %p\n",
        uni.Buffer, NULL);
 
-    free(teststring2);
+    HeapFree(GetProcessHeap(), 0, teststring2);
 }
 
 
@@ -1357,14 +1357,15 @@ static void test_RtlUnicodeStringToInteger(void)
 	   test_num, str2int[test_num].str, str2int[test_num].base, result,
            str2int[test_num].result, str2int[test_num].alternative);
         if (result == STATUS_SUCCESS)
-            ok(value == str2int[test_num].value,
+            ok(value == str2int[test_num].value ||
+               broken(str2int[test_num].str[0] == '\0' && str2int[test_num].base == 16), /* nt4 */
                "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) assigns value %d, expected: %d\n",
                test_num, str2int[test_num].str, str2int[test_num].base, value, str2int[test_num].value);
         else
             ok(value == 0xdeadbeef || value == 0 /* vista */,
                "(test %d): RtlUnicodeStringToInteger(\"%s\", %d, [out]) assigns value %d, expected 0 or deadbeef\n",
                test_num, str2int[test_num].str, str2int[test_num].base, value);
-	free(wstr);
+	HeapFree(GetProcessHeap(), 0, wstr);
     }
 
     wstr = AtoW(str2int[1].str);
@@ -1404,7 +1405,7 @@ static void test_RtlUnicodeStringToInteger(void)
        "didn't return expected value (test c): expected: %d, got: %d\n",
        1, value);
     /* w2k: uni.Length = 0 returns value 11234567 instead of 0 */
-    free(wstr);
+    HeapFree(GetProcessHeap(), 0, wstr);
 }
 
 
