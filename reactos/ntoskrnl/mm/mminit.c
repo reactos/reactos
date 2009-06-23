@@ -384,7 +384,9 @@ MmInit1(VOID)
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
     
-    /* Initialize ARM³ */
+    //
+    // Initialize ARM³
+    //
     MmArmInitSystem(0, KeLoaderBlock);
 
     /* Initialize nonpaged pool */
