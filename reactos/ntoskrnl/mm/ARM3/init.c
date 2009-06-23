@@ -52,7 +52,7 @@ ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 // immediately follows the PFN database, typically sharing the same PDE. It is
 // a very small resource (32MB on a 1GB system), and capped at 128MB.
 //
-// Right now, we call this the "ARM Pool" and it begins at 0xA0000000 since we
+// Right now, we call this the "ARM Pool" and it begins at 0xB0000000 since we
 // don't want to interefere with the ReactOS memory manager PFN database (yet).
 //
 // The expansion nonpaged pool, on the other hand, can grow much bigger (400MB 
@@ -288,7 +288,7 @@ MmArmInitSystem(IN ULONG Phase,
         DPRINT1("System PTE VA starts at: %p\n", MmNonPagedSystemStart);
         DPRINT1("NP Expansion VA begins at: %p and ends at: %p\n",
                 MmNonPagedPoolStart, MmNonPagedPoolEnd);
-        MmNonPagedPoolStart = (PVOID)0xA0000000;
+        MmNonPagedPoolStart = (PVOID)0xB0000000;
 
         //
         // Now we actually need to get these many physical pages. Nonpaged pool
@@ -477,6 +477,19 @@ MmArmInitSystem(IN ULONG Phase,
         MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
         MmLastReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_END);
         MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
+
+        //
+        // Reserve system PTEs for zeroing PTEs and clear them
+        //
+        MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES,
+                                                        SystemPteSpace);
+        DPRINT1("ZERO PTEs are at: %p\n", MiFirstReservedZeroingPte);
+        RtlZeroMemory(MiFirstReservedZeroingPte, MI_ZERO_PTES * sizeof(MMPTE));
+        
+        //
+        // Set the counter to maximum to boot with
+        //
+        MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
     }
     
     //

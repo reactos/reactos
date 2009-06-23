@@ -27,6 +27,7 @@ extern ULONG MmMaximumNonPagedPoolInBytes;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
 extern PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
+extern PMMPTE MiFirstReservedZeroingPte;
 
 VOID
 NTAPI
@@ -40,6 +41,13 @@ MiInitializeSystemPtes(
     IN PMMPTE StartingPte,
     IN ULONG NumberOfPtes,
     IN MMSYSTEM_PTE_POOL_TYPE PoolType
+);
+
+PMMPTE
+NTAPI
+MiReserveSystemPtes(
+    IN ULONG NumberOfPtes,
+    IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType
 );
 
 /* EOF */

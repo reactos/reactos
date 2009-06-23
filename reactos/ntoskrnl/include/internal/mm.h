@@ -64,6 +64,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define HYPER_SPACE		                    (0xC0400000)
 
 #define MI_HYPERSPACE_PTES                  (256 - 1)
+#define MI_ZERO_PTES                        (32)
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
 #define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
                                              MI_HYPERSPACE_PTES * PAGE_SIZE)
