@@ -121,7 +121,7 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
         //
         // This both odious and heinous
         //
-        extern PULONG MmGlobalKernelPageDirectory;
+        extern ULONG MmGlobalKernelPageDirectory[1024];
         MmGlobalKernelPageDirectory[Pde] = ((PULONG)PAGEDIRECTORY_MAP)[Pde];
         Pde++;
     }
