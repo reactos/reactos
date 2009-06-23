@@ -662,6 +662,7 @@ NdisReadNetworkAddress(
     NDIS_STRING Keyword;
     UINT *IntArray = 0;
     UINT i,j = 0;
+    NDIS_STRING str;
 
     NdisInitUnicodeString(&Keyword, L"NetworkAddress");
     NdisReadConfiguration(Status, &ParameterValue, ConfigurationHandle, &Keyword, NdisParameterString);
@@ -672,11 +673,41 @@ NdisReadNetworkAddress(
         return;
     }
 
-    while (ParameterValue->ParameterData.StringData.Buffer[j] != '\0') j++;
+    if (ParameterValue->ParameterType == NdisParameterInteger)
+    {
+        WCHAR Buff[25];
 
+        NDIS_DbgPrint(MAX_TRACE, ("Read integer data %lx\n",
+                                  ParameterValue->ParameterData.IntegerData));
+
+        str.Buffer = Buff;
+        str.MaximumLength = (USHORT)sizeof(Buff);
+        str.Length = 0;
+
+        *Status = RtlIntegerToUnicodeString(ParameterValue->ParameterData.IntegerData,
+                                            10,
+                                            &str);
+
+        if (*Status != NDIS_STATUS_SUCCESS)
+        {
+            NDIS_DbgPrint(MIN_TRACE, ("RtlIntegerToUnicodeString failed (%x)\n", *Status));
+            *Status = NDIS_STATUS_FAILURE;
+            return;
+        }
+
+        NDIS_DbgPrint(MAX_TRACE, ("Converted integer data into %wZ\n", &str));
+    }
+    else
+    {
+        ASSERT(ParameterValue->ParameterType == NdisParameterString);
+        str = ParameterValue->ParameterData.StringData;
+    }
+
+    while (str.Buffer[j] != '\0') j++;
+         
     *NetworkAddressLength = (UINT)((j/2)+0.5);
 
-    if (j == 0)
+    if ((*NetworkAddressLength) == 0)
     {
         NDIS_DbgPrint(MIN_TRACE,("Empty NetworkAddress registry entry.\n"));
         *Status = NDIS_STATUS_FAILURE;
@@ -708,8 +739,8 @@ NdisReadNetworkAddress(
     /* convert from string to bytes */
     for(i=0; i<(*NetworkAddressLength); i++)
     {
-        IntArray[i] = (UnicodeToHexByte((ParameterValue->ParameterData.StringData.Buffer)[2*i]) << 4) +
-                UnicodeToHexByte((ParameterValue->ParameterData.StringData.Buffer)[2*i+1]);
+        IntArray[i] = (UnicodeToHexByte((str.Buffer)[2*i]) << 4) +
+                UnicodeToHexByte((str.Buffer)[2*i+1]);
     }
 
     *NetworkAddress = IntArray;
