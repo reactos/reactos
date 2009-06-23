@@ -386,7 +386,7 @@ static HRESULT WINAPI BSCHttpNegotiate_GetRootSecurityId(IHttpNegotiate2 *iface,
     TRACE("(%p)->(%p %p %ld)\n", This, pbSecurityId, pcbSecurityId, dwReserved);
 
     if(!This->http_negotiate2)
-        return E_FAIL;
+        return E_NOTIMPL;
 
     return IHttpNegotiate2_GetRootSecurityId(This->http_negotiate2, pbSecurityId,
                                              pcbSecurityId, dwReserved);
