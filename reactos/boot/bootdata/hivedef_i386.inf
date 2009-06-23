@@ -20,7 +20,7 @@ HKCU,"Control Panel\Desktop","PaintDesktopVersion",0x00010001,"0"
 HKCU,"Control Panel\Desktop","HungAppTimeout",0x00000002,"5000"
 HKCU,"Control Panel\Desktop","SCRNSAVE.EXE",0x00000000,""
 HKCU,"Control Panel\Desktop","WaitToKillAppTimeout",0x00000002,"20000"
-HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,""
+HKCU,"Control Panel\Desktop","Wallpaper",0x00000000,"%SystemRoot%\Angelus_02_ROSWP.bmp"
 HKCU,"Control Panel\Desktop","FontSmoothing",2,"0"
 HKCU,"Control Panel\Desktop","DragFullWindows",2,"0"
 HKCU,"Control Panel\Desktop","SmoothScroll",3,00,00,00,00

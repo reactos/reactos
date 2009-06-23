@@ -756,6 +756,7 @@ CreateShortcuts(VOID)
 
     /* Create desktop shortcuts */
     CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_CMD, _T("%SystemRoot%\\system32\\cmd.exe"), IDS_CMT_CMD, TRUE);
+    CreateShortcut(CSIDL_DESKTOP, NULL, IDS_SHORT_DOWNLOADER, _T("%SystemRoot%\\system32\\downloader.exe"), IDS_CMT_DOWNLOADER, TRUE);
 
     /* Create program startmenu shortcuts */
     CreateShortcut(CSIDL_PROGRAMS, NULL, IDS_SHORT_EXPLORER, _T("%SystemRoot%\\explorer.exe"), IDS_CMT_EXPLORER, TRUE);
