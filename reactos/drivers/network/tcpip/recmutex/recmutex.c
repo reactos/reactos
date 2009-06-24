@@ -14,6 +14,7 @@ VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
 SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
+    KIRQL CurrentIrql;
 
     /* Wait for the previous user to unlock the RecMutex state.  There might be
      * multiple waiters waiting to change the state.  We need to check each
@@ -27,9 +28,13 @@ SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
 	return TRUE;
     }
 
-    if( KeGetCurrentIrql() == PASSIVE_LEVEL ) {
+    CurrentIrql = KeGetCurrentIrql();
+
+    ASSERT(CurrentIrql <= DISPATCH_LEVEL);
+
+    if( CurrentIrql <= APC_LEVEL ) {
 	ExAcquireFastMutex( &RecMutex->Mutex );
-	RecMutex->OldIrql = PASSIVE_LEVEL;
+	RecMutex->OldIrql = CurrentIrql;
 	while( RecMutex->Locked ) {
 	    ExReleaseFastMutex( &RecMutex->Mutex );
 	    Status = KeWaitForSingleObject( &RecMutex->StateLockedEvent,
@@ -45,7 +50,8 @@ SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
 	RecMutex->LockCount++;
 	ExReleaseFastMutex( &RecMutex->Mutex );
     } else {
-	KeAcquireSpinLock( &RecMutex->SpinLock, &RecMutex->OldIrql );
+	KeAcquireSpinLockAtDpcLevel( &RecMutex->SpinLock );
+        RecMutex->OldIrql = DISPATCH_LEVEL;
 	RecMutex->Locked = TRUE;
 	RecMutex->Writer = ToWrite;
 	RecMutex->CurrentThread = CurrentThread;
@@ -56,14 +62,13 @@ SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
 }
 
 VOID RecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {
-    if( RecMutex->LockCount == 0 ) {
-	return;
-    } else
-	RecMutex->LockCount--;
+
+    ASSERT(RecMutex->LockCount > 0);
+    RecMutex->LockCount--;
 
     if( !RecMutex->LockCount ) {
 	RecMutex->CurrentThread = NULL;
-	if( RecMutex->OldIrql == PASSIVE_LEVEL ) {
+	if( RecMutex->OldIrql <= APC_LEVEL ) {
 	    ExAcquireFastMutex( &RecMutex->Mutex );
 	    RecMutex->Locked = FALSE;
 	    RecMutex->Writer = FALSE;
@@ -71,10 +76,9 @@ VOID RecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {
 	} else {
 	    RecMutex->Locked = FALSE;
 	    RecMutex->Writer = FALSE;
-	    KeReleaseSpinLock( &RecMutex->SpinLock, RecMutex->OldIrql );
+	    KeReleaseSpinLockFromDpcLevel( &RecMutex->SpinLock );
 	}
 
-	RecMutex->OldIrql = PASSIVE_LEVEL;
 	KePulseEvent( &RecMutex->StateLockedEvent, IO_NETWORK_INCREMENT,
 		      FALSE );
     }
