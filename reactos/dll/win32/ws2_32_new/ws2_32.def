@@ -9,7 +9,7 @@ WSAAccept@20 @29
 WSAAddressToStringA@20 @30
 WSAAddressToStringW@20 @31
 WSAAsyncGetHostByAddr@28 @102
-WSAAsyncGetHostByNam@20e @103
+WSAAsyncGetHostByName@20 @103
 WSAAsyncGetProtoByName@20 @105
 WSAAsyncGetProtoByNumber@20 @104
 WSAAsyncGetServByName@24 @107
