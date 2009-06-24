@@ -638,7 +638,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     PTOKEN Token;
     NTSTATUS Status;
     PAGED_CODE();
-    
+
     /* Check if this is kernel mode */
     if (PreviousMode == KernelMode)
     {
@@ -654,7 +654,7 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             /* Just give the desired access */
             *GrantedAccess = DesiredAccess;
         }
-        
+
         /* Success */
         *AccessStatus = STATUS_SUCCESS;
         return STATUS_SUCCESS;
@@ -688,24 +688,32 @@ NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     SubjectSecurityContext.ProcessAuditId = NULL;
     SeLockSubjectContext(&SubjectSecurityContext);
 
+    /* FIXME */
     /* Now perform the access check */
-    SeAccessCheck(SecurityDescriptor,
-                  &SubjectSecurityContext,
-                  TRUE,
-                  DesiredAccess,
-                  0,
-                  &PrivilegeSet, //FIXME
-                  GenericMapping,
-                  PreviousMode,
-                  GrantedAccess,
-                  AccessStatus);
+    if (SeAccessCheck(SecurityDescriptor,
+                      &SubjectSecurityContext,
+                      TRUE,
+                      DesiredAccess,
+                      0,
+                      &PrivilegeSet, //FIXME
+                      GenericMapping,
+                      PreviousMode,
+                      GrantedAccess,
+                      AccessStatus))
+    {
+        Status = *AccessStatus;
+    }
+    else
+    {
+        Status = STATUS_ACCESS_DENIED;
+    }
 
     /* Unlock subject context and dereference the token */
     SeUnlockSubjectContext(&SubjectSecurityContext);
     ObDereferenceObject(Token);
 
-    /* Check succeeded */
-    return STATUS_SUCCESS;
+    /* Check succeeded? */
+    return Status;
 }
 
 
