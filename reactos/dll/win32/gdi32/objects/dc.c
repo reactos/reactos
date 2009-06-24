@@ -36,7 +36,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
  }
  else
  {
-    if (lpwszDevice) // First
+    if ((lpwszDevice) && (wcslen(lpwszDevice) != 0))  // First
     {
       if (!_wcsnicmp(lpwszDevice, L"\\\\.\\DISPLAY",11)) Display = TRUE;
       RtlInitUnicodeString(&Device, lpwszDevice);
