@@ -36,6 +36,7 @@ struct testwindow_info
 {
     HWND hwnd;
     BOOL registered;
+    BOOL to_be_deleted;
     RECT desired_rect;
     UINT edge;
     RECT allocated_rect;
@@ -58,6 +59,12 @@ static void testwindow_setpos(HWND hwnd)
         return;
     }
 
+    if (info->to_be_deleted)
+    {
+        win_skip("Some Win95 and NT4 systems send messages to removed taskbars\n");
+        return;
+    }
+
     abd.cbSize = sizeof(abd);
     abd.hWnd = hwnd;
     abd.uEdge = info->edge;
@@ -71,15 +78,15 @@ static void testwindow_setpos(HWND hwnd)
             abd.rc.top = abd.rc.bottom - (info->desired_rect.bottom - info->desired_rect.top);
             break;
         case ABE_LEFT:
-            ok(info->desired_rect.right == abd.rc.right, "ABM_QUERYPOS changed right of rect from %i to %i\n", info->desired_rect.top, abd.rc.top);
+            ok(info->desired_rect.right == abd.rc.right, "ABM_QUERYPOS changed right of rect from %i to %i\n", info->desired_rect.right, abd.rc.right);
             abd.rc.right = abd.rc.left + (info->desired_rect.right - info->desired_rect.left);
             break;
         case ABE_RIGHT:
-            ok(info->desired_rect.left == abd.rc.left, "ABM_QUERYPOS changed left of rect from %i to %i\n", info->desired_rect.top, abd.rc.top);
+            ok(info->desired_rect.left == abd.rc.left, "ABM_QUERYPOS changed left of rect from %i to %i\n", info->desired_rect.left, abd.rc.left);
             abd.rc.left = abd.rc.right - (info->desired_rect.right - info->desired_rect.left);
             break;
         case ABE_TOP:
-            ok(info->desired_rect.bottom == abd.rc.bottom, "ABM_QUERYPOS changed bottom of rect from %i to %i\n", info->desired_rect.top, abd.rc.top);
+            ok(info->desired_rect.bottom == abd.rc.bottom, "ABM_QUERYPOS changed bottom of rect from %i to %i\n", info->desired_rect.bottom, abd.rc.bottom);
             abd.rc.bottom = abd.rc.top + (info->desired_rect.bottom - info->desired_rect.top);
             break;
     }
@@ -221,6 +228,7 @@ static void test_setpos(void)
 
     /* dock windows[0] to the bottom of the screen */
     windows[0].registered = TRUE;
+    windows[0].to_be_deleted = FALSE;
     windows[0].edge = ABE_BOTTOM;
     windows[0].desired_rect.left = 0;
     windows[0].desired_rect.right = screen_width;
@@ -241,6 +249,7 @@ static void test_setpos(void)
 
     /* dock windows[1] to the bottom of the screen */
     windows[1].registered = TRUE;
+    windows[1].to_be_deleted = FALSE;
     windows[1].edge = ABE_BOTTOM;
     windows[1].desired_rect.left = 0;
     windows[1].desired_rect.right = screen_width;
@@ -272,6 +281,7 @@ static void test_setpos(void)
 
     /* dock windows[2] to the bottom of the screen */
     windows[2].registered = TRUE;
+    windows[2].to_be_deleted = FALSE;
     windows[2].edge = ABE_BOTTOM;
     windows[2].desired_rect.left = 0;
     windows[2].desired_rect.right = screen_width;
@@ -328,6 +338,7 @@ static void test_setpos(void)
     expected_bottom = max(windows[0].allocated_rect.bottom, windows[1].allocated_rect.bottom);
 
     abd.hWnd = windows[0].hwnd;
+    windows[0].to_be_deleted = TRUE;
     ret = SHAppBarMessage(ABM_REMOVE, &abd);
     ok(ret == TRUE, "SHAppBarMessage returned %i\n", ret);
     windows[0].registered = FALSE;
@@ -341,12 +352,14 @@ static void test_setpos(void)
 
     /* remove the other windows */
     abd.hWnd = windows[1].hwnd;
+    windows[1].to_be_deleted = TRUE;
     ret = SHAppBarMessage(ABM_REMOVE, &abd);
     ok(ret == TRUE, "SHAppBarMessage returned %i\n", ret);
     windows[1].registered = FALSE;
     DestroyWindow(windows[1].hwnd);
 
     abd.hWnd = windows[2].hwnd;
+    windows[2].to_be_deleted = TRUE;
     ret = SHAppBarMessage(ABM_REMOVE, &abd);
     ok(ret == TRUE, "SHAppBarMessage returned %i\n", ret);
     windows[2].registered = FALSE;
@@ -399,7 +412,9 @@ static void test_appbarget(void)
     if(ret)
     {
         ok(abd.hWnd == (HWND)0xcccccccc, "hWnd overwritten\n");
-        ok(abd.uEdge <= ABE_BOTTOM, "uEdge not returned\n");
+        ok(abd.uEdge <= ABE_BOTTOM ||
+            broken(abd.uEdge == 0xcccccccc), /* Some Win95 and NT4 */
+            "uEdge not returned\n");
         ok(abd.rc.left != 0xcccccccc, "rc not updated\n");
     }
 

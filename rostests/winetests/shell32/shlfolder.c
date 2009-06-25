@@ -81,6 +81,15 @@ static void init_function_pointers(void)
     ok(hr == S_OK, "SHGetMalloc failed %08x\n", hr);
 }
 
+static const char *wine_dbgstr_w(LPCWSTR str)
+{
+    static char buf[512];
+    if (!str)
+        return "(null)";
+    WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
+    return buf;
+}
+
 static void test_ParseDisplayName(void)
 {
     HRESULT hr;
@@ -265,13 +274,15 @@ static void test_EnumObjects(IShellFolder *iFolder)
     for (i = 0; i < 5; i++)
     {
         SFGAOF flags;
+#define SFGAO_VISTA SFGAO_DROPTARGET | SFGAO_CANLINK | SFGAO_CANCOPY
         /* Native returns all flags no matter what we ask for */
         flags = SFGAO_CANCOPY;
         hr = IShellFolder_GetAttributesOf(iFolder, 1, (LPCITEMIDLIST*)(idlArr + i), &flags);
         flags &= SFGAO_testfor;
         ok(hr == S_OK, "GetAttributesOf returns %08x\n", hr);
         ok(flags == (attrs[i]) ||
-           flags == (attrs[i] & ~SFGAO_FILESYSANCESTOR), /* Win9x, NT4 */
+           flags == (attrs[i] & ~SFGAO_FILESYSANCESTOR) || /* Win9x, NT4 */
+           flags == ((attrs[i] & ~SFGAO_CAPABILITYMASK) | SFGAO_VISTA), /* Vista and higher */
            "GetAttributesOf[%i] got %08x, expected %08x\n", i, flags, attrs[i]);
 
         flags = SFGAO_testfor;
@@ -469,7 +480,8 @@ static void test_GetDisplayName(void)
     }
     /* WinXP and up store the filenames as both ANSI and UNICODE in the pidls */
     if (pidlLast->mkid.cb >= 76) {
-        ok(!lstrcmpW((WCHAR*)&pidlLast->mkid.abID[46], wszFileName),
+        ok(!lstrcmpW((WCHAR*)&pidlLast->mkid.abID[46], wszFileName) ||
+            (pidlLast->mkid.cb >= 94 && !lstrcmpW((WCHAR*)&pidlLast->mkid.abID[64], wszFileName)), /* Vista */
             "Filename should be stored as wchar-string at this position!\n");
     }
     
@@ -478,6 +490,7 @@ static void test_GetDisplayName(void)
     hr = IShellFolder_BindToObject(psfDesktop, pidlTestFile, NULL, &IID_IUnknown, (VOID**)&psfFile);
     todo_wine
     ok (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
+        hr == E_NOTIMPL || /* Vista */
         broken(SUCCEEDED(hr)), /* Win9x, W2K */
         "hr = %08x\n", hr);
     if (SUCCEEDED(hr)) {
@@ -960,7 +973,9 @@ static void test_SHGetPathFromIDList(void)
     wszPath[1] = '\0';
     result = pSHGetPathFromIDListW(pidlMyComputer, wszPath);
     ok (!result, "SHGetPathFromIDListW succeeded where it shouldn't!\n");
-    ok (GetLastError()==0xdeadbeef, "SHGetPathFromIDListW shouldn't set last error! Last error: %u\n", GetLastError());
+    ok (GetLastError()==0xdeadbeef ||
+        GetLastError()==ERROR_SUCCESS, /* Vista and higher */
+        "Unexpected last error from SHGetPathFromIDListW: %u\n", GetLastError());
     ok (!wszPath[0], "Expected empty path\n");
     if (result) {
         IShellFolder_Release(psfDesktop);
@@ -1116,6 +1131,10 @@ static HRESULT WINAPI InitPropertyBag_IPropertyBag_Read(IPropertyBag *iface, LPC
         'A','t','t','r','i','b','u','t','e','s',0 };
     static const WCHAR wszResolveLinkFlags[] = {
         'R','e','s','o','l','v','e','L','i','n','k','F','l','a','g','s',0 };
+    static const WCHAR wszTargetKnownFolder[] = {
+        'T','a','r','g','e','t','K','n','o','w','n','F','o','l','d','e','r',0 };
+    static const WCHAR wszCLSID[] = {
+        'C','L','S','I','D',0 };
        
     if (!lstrcmpW(pszPropName, wszTargetSpecialFolder)) {
         ok(V_VT(pVar) == VT_I4 ||
@@ -1155,7 +1174,19 @@ static HRESULT WINAPI InitPropertyBag_IPropertyBag_Read(IPropertyBag *iface, LPC
         return S_OK;
     }
 
-    ok(FALSE, "PropertyBag was asked for unknown property (vt=%d)!\n", V_VT(pVar));
+    if (!lstrcmpW(pszPropName, wszTargetKnownFolder)) {
+        ok(V_VT(pVar) == VT_BSTR, "Wrong variant type for 'TargetKnownFolder' property!\n");
+        /* TODO */
+        return E_INVALIDARG;
+    }
+
+    if (!lstrcmpW(pszPropName, wszCLSID)) {
+        ok(V_VT(pVar) == VT_EMPTY, "Wrong variant type for 'CLSID' property!\n");
+        /* TODO */
+        return E_INVALIDARG;
+    }
+
+    ok(FALSE, "PropertyBag was asked for unknown property %s (vt=%d)!\n", wine_dbgstr_w(pszPropName), V_VT(pVar));
     return E_INVALIDARG;
 }
 
@@ -1529,7 +1560,7 @@ static void testSHGetFolderPathAndSubDirA(void)
     static char toolongpath[MAX_PATH+1];
 
     if(!pSHGetFolderPathA) {
-        skip("SHGetFolderPathA not present!\n");
+        win_skip("SHGetFolderPathA not present!\n");
         return;
     }
     if(FAILED(pSHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdata)))
@@ -1551,16 +1582,13 @@ static void testSHGetFolderPathAndSubDirA(void)
         skip("RemoveDirectoryA(%s) failed with error %u\n", testpath, GetLastError());
         return;
     }
-    for(i=0; i< MAX_PATH; i++)
-        toolongpath[i] = '0' + i % 10;
-    toolongpath[MAX_PATH] = '\0';
 
     /* test invalid second parameter */
     ret = pSHGetFolderPathAndSubDirA(NULL, CSIDL_FLAG_DONT_VERIFY | 0xff, NULL, SHGFP_TYPE_CURRENT, wine, testpath);
     ok(E_INVALIDARG == ret, "expected E_INVALIDARG, got  %x\n", ret);
 
-    /* test invalid forth parameter */
-    ret = pSHGetFolderPathAndSubDirA(NULL, CSIDL_FLAG_DONT_VERIFY | CSIDL_LOCAL_APPDATA, NULL, 2, wine, testpath);
+    /* test fourth parameter */
+    ret = pSHGetFolderPathAndSubDirA(NULL, CSIDL_FLAG_DONT_VERIFY | CSIDL_LOCAL_APPDATA, NULL, 2, winetemp, testpath);
     switch(ret) {
         case S_OK: /* winvista */
             ok(!strncmp(appdata, testpath, strlen(appdata)),
@@ -1590,6 +1618,9 @@ static void testSHGetFolderPathAndSubDirA(void)
     ok(S_OK == ret, "expected S_OK, got %x\n", ret);
     ok(!lstrcmpA(appdata, testpath), "expected %s, got %s\n", appdata, testpath);
 
+    for(i=0; i< MAX_PATH; i++)
+        toolongpath[i] = '0' + i % 10;
+    toolongpath[MAX_PATH] = '\0';
     ret = pSHGetFolderPathAndSubDirA(NULL, CSIDL_FLAG_DONT_VERIFY | CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, toolongpath, testpath);
     ok(HRESULT_FROM_WIN32(ERROR_FILENAME_EXCED_RANGE) == ret,
         "expected %x, got %x\n", HRESULT_FROM_WIN32(ERROR_FILENAME_EXCED_RANGE), ret);
@@ -1620,15 +1651,6 @@ static void testSHGetFolderPathAndSubDirA(void)
     RemoveDirectoryA(testpath);
     sprintf(testpath, "%s\\%s", appdata, wine);
     RemoveDirectoryA(testpath);
-}
-
-static const char *wine_dbgstr_w(LPCWSTR str)
-{
-    static char buf[512];
-    if (!str)
-        return "(null)";
-    WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
-    return buf;
 }
 
 static void test_LocalizedNames(void)
