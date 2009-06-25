@@ -456,6 +456,11 @@ HKCU, "Control Panel\Desktop\WindowMetrics","StatusFont",0x00000001,f5,ff,ff,ff,
 00,61,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,\
 00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
+; Accessibility
+HKCU,"Control Panel\Accessibility",,0x00000012
+HKCU,"Control Panel\Accessibility\Keyboard Preference",,0x00000012
+HKCU,"Control Panel\Accessibility\Keyboard Preference","On",2,"0"
+
 ; Internet Explorer
 
 HKCU,Software\Wine\MSHTML,"GeckoUrl",,"http://source.winehq.org/winegecko.php"
