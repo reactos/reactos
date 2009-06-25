@@ -172,7 +172,7 @@ AccessCheck(IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
     {
         /* Access denied */
         SetLastError(RtlNtStatusToDosError(NtAccessStatus));
-        return FALSE;
+        *AccessStatus = FALSE;
     }
     else
     {
