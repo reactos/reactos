@@ -347,8 +347,10 @@ co_IntCallHookProc(INT HookId,
    CBT_CREATEWNDW *CbtCreateWnd =NULL;
    PCHAR Extra;
    PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra ;
-   PUNICODE_STRING WindowName = NULL;
-   PUNICODE_STRING ClassName = NULL;
+   UNICODE_STRING WindowName;
+   UNICODE_STRING ClassName;
+   PANSI_STRING asWindowName;
+   PANSI_STRING asClassName;
 
    ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
                     + ModuleName->Length;
@@ -360,12 +362,29 @@ co_IntCallHookProc(INT HookId,
             case HCBT_CREATEWND:
                CbtCreateWnd = (CBT_CREATEWNDW *) lParam;
                ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS);
-               WindowName = (PUNICODE_STRING) (CbtCreateWnd->lpcs->lpszName);
-               ArgumentLength += WindowName->Length + sizeof(WCHAR);
-               ClassName = (PUNICODE_STRING) (CbtCreateWnd->lpcs->lpszClass);
-               if (! IS_ATOM(ClassName->Buffer))
+
+               asWindowName = (PANSI_STRING)&WindowName;
+               asClassName = (PANSI_STRING)&ClassName;
+
+               if (Ansi)
                {
-                  ArgumentLength += ClassName->Length + sizeof(WCHAR);
+                  RtlInitAnsiString(asWindowName, (PCSZ)CbtCreateWnd->lpcs->lpszName);
+                  ArgumentLength += WindowName.Length + sizeof(CHAR);
+               }
+               else
+               {
+                  RtlInitUnicodeString(&WindowName, CbtCreateWnd->lpcs->lpszName);
+                  ArgumentLength += WindowName.Length + sizeof(WCHAR);
+               }
+
+               if (Ansi)
+                  RtlInitAnsiString(asClassName, (PCSZ)CbtCreateWnd->lpcs->lpszClass);
+               else
+                  RtlInitUnicodeString(&ClassName, CbtCreateWnd->lpcs->lpszClass);
+
+               if (! IS_ATOM(ClassName.Buffer))
+               {
+                  ArgumentLength += ClassName.Length + sizeof(WCHAR);
                }
                break;
             default:
@@ -430,19 +449,32 @@ co_IntCallHookProc(INT HookId,
                CbtCreatewndExtra->Cs = *(CbtCreateWnd->lpcs);
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
                Extra = (PCHAR) (CbtCreatewndExtra + 1);
-               RtlCopyMemory(Extra, WindowName->Buffer, WindowName->Length);
+               RtlCopyMemory(Extra, WindowName.Buffer, WindowName.Length);
                CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
-               CbtCreatewndExtra->Cs.lpszClass = ClassName->Buffer;
-               Extra += WindowName->Length;
-               *((WCHAR *) Extra) = L'\0';
-               Extra += sizeof(WCHAR);
-               if (! IS_ATOM(ClassName->Buffer))
+               CbtCreatewndExtra->Cs.lpszClass = ClassName.Buffer;
+               Extra += WindowName.Length;
+               if (Ansi)
                {
-                  RtlCopyMemory(Extra, ClassName->Buffer, ClassName->Length);
+                 *((CHAR *) Extra) = '\0';
+                 Extra += sizeof(CHAR);
+               }
+               else
+               {
+                 *((WCHAR *) Extra) = L'\0';
+                 Extra += sizeof(WCHAR);
+               }
+
+               if (! IS_ATOM(ClassName.Buffer))
+               {
+                  RtlCopyMemory(Extra, ClassName.Buffer, ClassName.Length);
                   CbtCreatewndExtra->Cs.lpszClass =
                      (LPCWSTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
-                  Extra += ClassName->Length;
-                  *((WCHAR *) Extra) = L'\0';
+                  Extra += ClassName.Length;
+
+                  if (Ansi)
+                     *((CHAR *) Extra) = '\0';
+                  else
+                     *((WCHAR *) Extra) = L'\0';
                }
                break;
          }
