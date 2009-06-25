@@ -401,99 +401,10 @@ VOID SetUserSysColors(VOID)
     RegCloseKey(hKey);
 }
 
-static
-VOID LoadUserFontSetting(
-    IN LPWSTR lpValueName,
-    OUT PLOGFONTW pFont)
-{
-    HKEY hKey;
-    LOGFONTW lfTemp;
-    DWORD Type, Size;
-    LONG rc;
+DWORD
+WINAPI
+UpdatePerUserSystemParameters(DWORD dw1, BOOL bEnable);
 
-    TRACE("(%s, %p)\n", debugstr_w(lpValueName), pFont);
-
-    Size = sizeof(LOGFONTW);
-    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_METRICS,
-                      0, KEY_QUERY_VALUE, &hKey);
-    if (rc != ERROR_SUCCESS)
-    {
-        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
-        return;
-    }
-    rc = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&lfTemp, &Size);
-    if (rc != ERROR_SUCCESS || Type != REG_BINARY)
-    {
-        WARN("RegQueryValueEx() failed with error %lu\n", rc);
-        return;
-    }
-    RegCloseKey(hKey);
-    /* FIXME: Check if lfTemp is a valid font */
-    *pFont = lfTemp;
-}
-
-static
-VOID LoadUserMetricSetting(
-    IN LPWSTR lpValueName,
-    OUT INT *pValue)
-{
-    HKEY hKey;
-    DWORD Type, Size;
-    WCHAR strValue[8];
-    LONG rc;
-
-    TRACE("(%s, %p)\n", debugstr_w(lpValueName), pValue);
-
-    Size = sizeof(strValue);
-    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_METRICS,
-                      0, KEY_QUERY_VALUE, &hKey);
-    if (rc != ERROR_SUCCESS)
-    {
-        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
-        return;
-    }
-    rc = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&strValue, &Size);
-    if (rc != ERROR_SUCCESS || Type != REG_SZ)
-    {
-        WARN("RegQueryValueEx() failed with error %lu\n", rc);
-        return;
-    }
-    RegCloseKey(hKey);
-    *pValue = StrToInt(strValue);
-}
-
-static
-VOID SetUserMetrics(VOID)
-{
-    NONCLIENTMETRICSW ncmetrics;
-    MINIMIZEDMETRICS mmmetrics;
-
-    TRACE("()\n");
-
-    ncmetrics.cbSize = sizeof(NONCLIENTMETRICSW);
-    mmmetrics.cbSize = sizeof(MINIMIZEDMETRICS);
-    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &ncmetrics, 0);
-    SystemParametersInfoW(SPI_GETMINIMIZEDMETRICS, sizeof(MINIMIZEDMETRICS), &mmmetrics, 0);
-
-    LoadUserFontSetting(L"CaptionFont", &ncmetrics.lfCaptionFont);
-    LoadUserFontSetting(L"SmCaptionFont", &ncmetrics.lfSmCaptionFont);
-    LoadUserFontSetting(L"MenuFont", &ncmetrics.lfMenuFont);
-    LoadUserFontSetting(L"StatusFont", &ncmetrics.lfStatusFont);
-    LoadUserFontSetting(L"MessageFont", &ncmetrics.lfMessageFont);
-    /* FIXME: load icon font ? */
-
-    LoadUserMetricSetting(L"BorderWidth", &ncmetrics.iBorderWidth);
-    LoadUserMetricSetting(L"ScrollWidth", &ncmetrics.iScrollWidth);
-    LoadUserMetricSetting(L"ScrollHeight", &ncmetrics.iScrollHeight);
-    LoadUserMetricSetting(L"CaptionWidth", &ncmetrics.iCaptionWidth);
-    LoadUserMetricSetting(L"CaptionHeight", &ncmetrics.iCaptionHeight);
-    LoadUserMetricSetting(L"SmCaptionWidth", &ncmetrics.iSmCaptionWidth);
-    LoadUserMetricSetting(L"SmCaptionHeight", &ncmetrics.iSmCaptionHeight);
-    LoadUserMetricSetting(L"Menuwidth", &ncmetrics.iMenuWidth);
-    LoadUserMetricSetting(L"MenuHeight", &ncmetrics.iMenuHeight);
-
-    SystemParametersInfoW(SPI_SETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &ncmetrics, 0);
-}
 
 static
 VOID SetUserWallpaper(VOID)
@@ -529,61 +440,6 @@ VOID SetUserWallpaper(VOID)
             /* remove the wallpaper */
             TRACE("No wallpaper set in registry (error %lu)\n", rc);
             SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
-        }
-        RegCloseKey(hKey);
-    }
-    else
-        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
-}
-
-static VOID SetUserPreference(UINT uiAction,BOOL bValue,UINT fWinIni)
-{
-    DWORD dwvalue = bValue;
-    SystemParametersInfo(uiAction, 0, (PVOID)&dwvalue, fWinIni);
-}
-
-static VOID SetUserPreferences(VOID)
-{
-    HKEY hKey;
-    DWORD Type, Size;
-    LONG rc;
-    USERPREFERENCESMASK Preferences;
-
-    TRACE("()\n");
-
-    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_DESKTOP,
-                      0, KEY_QUERY_VALUE, &hKey);
-    if (rc == ERROR_SUCCESS)
-    {
-        Size = sizeof(USERPREFERENCESMASK);
-        ERR("USERPREFERENCESMASK size: %d\n",Size);
-
-        rc = RegQueryValueEx(hKey,
-                             L"UserPreferencesMask",
-                             NULL,
-                             &Type,
-                             (LPBYTE)&Preferences,
-                             &Size);
-        if (rc == ERROR_SUCCESS && Type == REG_BINARY)
-        {
-            SetUserPreference(SPI_SETUIEFFECTS, Preferences.bUiEffects, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETACTIVEWINDOWTRACKING, Preferences.bActiveWindowTracking, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETMENUANIMATION, Preferences.bMenuAnimation, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETCOMBOBOXANIMATION, Preferences.bComboBoxAnimation, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETLISTBOXSMOOTHSCROLLING, Preferences.bListBoxSmoothScrolling, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETGRADIENTCAPTIONS, Preferences.bGradientCaptions, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETKEYBOARDCUES, Preferences.bKeyboardCues, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETACTIVEWNDTRKZORDER, Preferences.bActiveWndTrkZorder, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETHOTTRACKING, Preferences.bHotTracking, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETMENUFADE, Preferences.bMenuFade, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETSELECTIONFADE, Preferences.bSelectionFade, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETTOOLTIPANIMATION, Preferences.bTooltipAnimation, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETTOOLTIPFADE, Preferences.bTooltipFade, SPIF_SENDCHANGE);
-            SetUserPreference(SPI_SETCURSORSHADOW, Preferences.bCursorShadow, SPIF_SENDCHANGE);
-        }
-        else
-        {
-            ERR("No User Preferences set in registry or incorrect type (error %lu)\n", rc);
         }
         RegCloseKey(hKey);
     }
@@ -641,10 +497,9 @@ VOID SetUserSettings(VOID)
 {
     TRACE("()\n");
 
+    UpdatePerUserSystemParameters(1, TRUE);
     SetUserSysColors();
-    SetUserMetrics();
     SetUserWallpaper();
-    SetUserPreferences();
 }
 
 typedef DWORD (WINAPI *PCMP_REPORT_LOGON)(DWORD, DWORD);

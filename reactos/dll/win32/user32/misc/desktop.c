@@ -124,15 +124,6 @@ SystemParametersInfoA(UINT uiAction,
 {
   switch (uiAction)
     {
-      case SPI_GETHIGHCONTRAST:
-      case SPI_SETHIGHCONTRAST:
-      case SPI_GETSOUNDSENTRY:
-      case SPI_SETSOUNDSENTRY:
-        {
-            /* FIXME: Support this accessibility SPI actions */
-            FIXME("FIXME: Unsupported SPI Code: %lx \n",uiAction );
-            return FALSE;
-        }
 
       case SPI_GETNONCLIENTMETRICS:
         {
@@ -248,88 +239,40 @@ SystemParametersInfoA(UINT uiAction,
           }
       case SPI_GETDESKWALLPAPER:
       {
-        HKEY hKey;
-        BOOL Ret = FALSE;
+        BOOL Ret;
+        WCHAR awc[MAX_PATH];
+        UNICODE_STRING ustrWallpaper;
+        ANSI_STRING astrWallpaper;
 
-#if 0
-        /* Get the desktop bitmap handle, this does NOT return the file name! */
-        if(!NtUserSystemParametersInfo(SPI_GETDESKWALLPAPER, 0, &hbmWallpaper, 0))
-        {
-          /* Return an empty string, no wallpapaper is set */
-          *(CHAR*)pvParam = '\0';
-          return TRUE;
-        }
-#endif
+        Ret = NtUserSystemParametersInfo(SPI_GETDESKWALLPAPER, MAX_PATH, awc, fWinIni);
+        RtlInitUnicodeString(&ustrWallpaper, awc);
+        RtlUnicodeStringToAnsiString(&astrWallpaper, &ustrWallpaper, TRUE);
 
-        /* FIXME - Read the registry key for now, but what happens if the wallpaper was
-                   changed without SPIF_UPDATEINIFILE?! */
-        if(RegOpenKeyExW(HKEY_CURRENT_USER,
-                         L"Control Panel\\Desktop",
-                         0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-        {
-          DWORD Type, Size;
-          Size = uiParam;
-          if(RegQueryValueExA(hKey,
-                              "Wallpaper",
-                              NULL,
-                              &Type,
-                              (LPBYTE)pvParam,
-                              &Size) == ERROR_SUCCESS
-             && Type == REG_SZ)
-          {
-            Ret = TRUE;
-          }
-          RegCloseKey(hKey);
-        }
+        RtlCopyMemory(pvParam, astrWallpaper.Buffer, uiParam);
+        RtlFreeAnsiString(&astrWallpaper);
         return Ret;
       }
+
       case SPI_SETDESKWALLPAPER:
       {
-        HBITMAP hNewWallpaper;
-        BOOL Ret;
-        LPSTR lpWallpaper = (LPSTR)pvParam;
+          NTSTATUS Status;
+          UNICODE_STRING ustrWallpaper;
+          BOOL Ret;
 
-        if(lpWallpaper != NULL && *lpWallpaper != '\0')
-        {
-          hNewWallpaper = LoadImageA(0, lpWallpaper, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-          if(hNewWallpaper == NULL)
+          if (pvParam)
           {
-            return FALSE;
+            Status = RtlCreateUnicodeStringFromAsciiz(&ustrWallpaper, pvParam);
+            if (!NT_SUCCESS(Status))
+            {
+                ERR("Status = 0x%x\n", Status);
+                return FALSE;
+            }
+            pvParam = &ustrWallpaper;
           }
-        }
-        else
-        {
-          hNewWallpaper = NULL;
-          lpWallpaper = NULL;
-        }
 
-        /* Set the wallpaper bitmap */
-        if(!NtUserSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hNewWallpaper, fWinIni & SPIF_SENDCHANGE))
-        {
-          if(hNewWallpaper != NULL)
-            DeleteObject(hNewWallpaper);
-          return FALSE;
-        }
-        /* Do not use the bitmap handle anymore, it doesn't belong to our process anymore! */
-
-        Ret = TRUE;
-        if(fWinIni & SPIF_UPDATEINIFILE)
-        {
-          /* Save the path to the file in the registry */
-          HKEY hKey;
-          if(RegOpenKeyExW(HKEY_CURRENT_USER,
-                           L"Control Panel\\Desktop",
-                           0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
-          {
-            Ret = RegSetValueExA(hKey, "Wallpaper", 0, REG_SZ, (LPBYTE)(lpWallpaper != NULL ? lpWallpaper : ""),
-                                 (lpWallpaper != NULL ? (lstrlenA(lpWallpaper) + 1) * sizeof(CHAR) : sizeof(CHAR)) == ERROR_SUCCESS);
-            RegCloseKey(hKey);
-          }
-        }
-
-        RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
-
-        return Ret;
+          Ret = NtUserSystemParametersInfo(SPI_SETDESKWALLPAPER, uiParam, pvParam, fWinIni);
+          RtlFreeUnicodeString(&ustrWallpaper);
+          return Ret;
       }
     }
     return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
@@ -347,97 +290,14 @@ SystemParametersInfoW(UINT uiAction,
 {
   switch(uiAction)
   {
-    case SPI_GETHIGHCONTRAST:
-    case SPI_SETHIGHCONTRAST:
-    case SPI_GETSOUNDSENTRY:
-    case SPI_SETSOUNDSENTRY:
-       {
-           /* FIXME: Support this accessibility SPI actions */
-           FIXME("FIXME: Unsupported SPI Code: %lx \n",uiAction );
-           return FALSE;
-       }
-    case SPI_GETDESKWALLPAPER:
-    {
-      HKEY hKey;
-      BOOL Ret = FALSE;
 
-#if 0
-      /* Get the desktop bitmap handle, this does NOT return the file name! */
-      if(!NtUserSystemParametersInfo(SPI_GETDESKWALLPAPER, 0, &hbmWallpaper, 0))
-      {
-        /* Return an empty string, no wallpapaper is set */
-        *(WCHAR*)pvParam = L'\0';
-        return TRUE;
-      }
-#endif
-
-      /* FIXME - Read the registry key for now, but what happens if the wallpaper was
-                 changed without SPIF_UPDATEINIFILE?! */
-      if(RegOpenKeyExW(HKEY_CURRENT_USER,
-                       L"Control Panel\\Desktop",
-                       0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
-      {
-        DWORD Type, Size;
-        Size = uiParam * sizeof(WCHAR);
-        if(RegQueryValueExW(hKey,
-                            L"Wallpaper",
-                            NULL,
-                            &Type,
-                            (LPBYTE)pvParam,
-                            &Size) == ERROR_SUCCESS
-           && Type == REG_SZ)
-        {
-          Ret = TRUE;
-        }
-        RegCloseKey(hKey);
-      }
-      return Ret;
-    }
     case SPI_SETDESKWALLPAPER:
-    {
-      HBITMAP hNewWallpaper;
-      BOOL Ret;
-      LPWSTR lpWallpaper = (LPWSTR)pvParam;
-
-      if(lpWallpaper != NULL && *lpWallpaper != L'\0')
       {
-        hNewWallpaper = LoadImageW(0, lpWallpaper, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+          UNICODE_STRING ustrWallpaper;
 
-        if(hNewWallpaper == NULL)
-        {
-          return FALSE;
-        }
+          RtlInitUnicodeString(&ustrWallpaper, pvParam);
+          return NtUserSystemParametersInfo(SPI_SETDESKWALLPAPER, uiParam, &ustrWallpaper, fWinIni);
       }
-      else
-      {
-        hNewWallpaper = NULL;
-        lpWallpaper = NULL;
-      }
-
-      /* Set the wallpaper bitmap */
-      if(!NtUserSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hNewWallpaper, fWinIni & SPIF_SENDCHANGE))
-        return FALSE;
-      /* Do not use the bitmap handle anymore, it doesn't belong to our process anymore! */
-      Ret = TRUE;
-      if(fWinIni & SPIF_UPDATEINIFILE)
-      {
-        /* Save the path to the file in the registry */
-        HKEY hKey;
-
-        if(RegOpenKeyExW(HKEY_CURRENT_USER,
-                         L"Control Panel\\Desktop",
-                         0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS)
-        {
-          Ret = (RegSetValueExW(hKey, L"Wallpaper", 0, REG_SZ, (lpWallpaper != NULL ? (LPBYTE)lpWallpaper : (LPBYTE)L""),
-                               (lpWallpaper != NULL ? (lstrlenW(lpWallpaper) + 1) * sizeof(WCHAR) : sizeof(WCHAR))) == ERROR_SUCCESS);
-          RegCloseKey(hKey);
-        }
-      }
-
-      RedrawWindow(GetShellWindow(), NULL, NULL, RDW_INVALIDATE | RDW_ERASE);
-
-      return Ret;
-    }
   }
   return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 }

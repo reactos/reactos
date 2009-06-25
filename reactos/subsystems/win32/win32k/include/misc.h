@@ -54,10 +54,27 @@ extern HGDIOBJ StockObjects[];
 extern SHORT gusLanguageID;
 
 SHORT FASTCALL IntGdiGetLanguageID();
-ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
 DWORD APIENTRY IntGetQueueStatus(BOOL ClearChanges);
 VOID FASTCALL IntUserManualGuiCheck(LONG Check);
 PVOID APIENTRY HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
 VOID APIENTRY HackUnsecureVirtualMemory(IN PVOID);
+
+BOOL
+NTAPI
+RegReadUserSetting(
+    IN PCWSTR pwszKeyName,
+    IN PCWSTR pwszValueName,
+    IN ULONG ulType,
+    OUT PVOID pvData,
+    IN ULONG cbDataSize);
+
+BOOL
+NTAPI
+RegWriteUserSetting(
+    IN PCWSTR pwszKeyName,
+    IN PCWSTR pwszValueName,
+    IN ULONG ulType,
+    OUT PVOID pvData,
+    IN ULONG cbDataSize);
 
 #endif /* __WIN32K_MISC_H */

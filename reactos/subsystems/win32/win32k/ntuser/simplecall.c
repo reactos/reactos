@@ -228,23 +228,12 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
          {
-            PWINSTATION_OBJECT WinSta;
-            NTSTATUS Status;
             DWORD Result;
-
-            Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                                    KernelMode,
-                                                    0,
-                                                    &WinSta);
-            if (!NT_SUCCESS(Status))
-               RETURN( (DWORD)FALSE);
-
-            /* FIXME
-            Result = (DWORD)IntSwapMouseButton(WinStaObject, (BOOL)Param); */
-            Result = 0;
-
-            ObDereferenceObject(WinSta);
-            RETURN( Result);
+            
+            Result = gspv.bMouseBtnSwap;
+            gspv.bMouseBtnSwap = Param ? TRUE : FALSE;
+            gpsi->SystemMetrics[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
+            RETURN(Result);
          }
 
       case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:

@@ -4,8 +4,7 @@
  * PURPOSE:          Window classes
  * FILE:             subsys/win32k/ntuser/metric.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
- * REVISION HISTORY:
- *       06-06-2001  CSH  Created
+ *                   Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
@@ -20,9 +19,6 @@ static BOOL Setup = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
-// FIXME: These are only win xp default values, mostly hardcoded. They should be
-// read from the registry. It must be possible to change or reinitialize the
-// values, for example desk.cpl
 BOOL
 FASTCALL
 InitMetrics(VOID)
@@ -31,21 +27,10 @@ InitMetrics(VOID)
     PWINSTATION_OBJECT WinStaObject;
     ULONG Width = 640, Height = 480;
     PSYSTEM_CURSORINFO CurInfo;
-    HDC hScreenDC;
-    PDC pScreenDC;
+    INT *piSysMet;
 
-    hScreenDC = IntGdiCreateDC(NULL, NULL, NULL, NULL, TRUE);
-    if (hScreenDC)
-    {
-        pScreenDC = DC_LockDc(hScreenDC);
-        if (pScreenDC)
-        {
-            Width = pScreenDC->ppdev->GDIInfo.ulHorzRes;
-            Height = pScreenDC->ppdev->GDIInfo.ulVertRes;
-            DC_UnlockDc(pScreenDC);
-        }
-        NtGdiDeleteObjectApp(hScreenDC);
-    }
+    Width = pPrimarySurface->GDIInfo.ulHorzRes;
+    Height = pPrimarySurface->GDIInfo.ulVertRes;
 
     Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                             KernelMode,
@@ -60,103 +45,131 @@ InitMetrics(VOID)
         CurInfo = NULL;
     }
 
-    gpsi->SystemMetrics[SM_CXSCREEN] = Width;
-    gpsi->SystemMetrics[SM_CYSCREEN] = Height;
-    gpsi->SystemMetrics[SM_CXVSCROLL] = 16;
-    gpsi->SystemMetrics[SM_CYHSCROLL] = 16;
-    /* FIXME: "reg://Control Panel/Desktop/WindowMetrics/CaptionHeight" + 1 */
-    gpsi->SystemMetrics[SM_CYCAPTION] = 19;
-    gpsi->SystemMetrics[SM_CXBORDER] = 1;
-    gpsi->SystemMetrics[SM_CYBORDER] = 1;
-    gpsi->SystemMetrics[SM_CXDLGFRAME] = 3;
-    gpsi->SystemMetrics[SM_CYDLGFRAME] = 3;
-    gpsi->SystemMetrics[SM_CYVTHUMB] = 16;
-    gpsi->SystemMetrics[SM_CXHTHUMB] = 16;
-    gpsi->SystemMetrics[SM_CXICON] = 32;
-    gpsi->SystemMetrics[SM_CYICON] = 32;
-    gpsi->SystemMetrics[SM_CXCURSOR] = 32;
-    gpsi->SystemMetrics[SM_CYCURSOR] = 32;
-    gpsi->SystemMetrics[SM_CYMENU] = 19;
-    /* FIXME: shouldn't we take borders etc into account??? */
-    gpsi->SystemMetrics[SM_CXFULLSCREEN] = gpsi->SystemMetrics[SM_CXSCREEN];
-    gpsi->SystemMetrics[SM_CYFULLSCREEN] = gpsi->SystemMetrics[SM_CYSCREEN];
-    gpsi->SystemMetrics[SM_CYKANJIWINDOW] = 0;
-    gpsi->SystemMetrics[SM_MOUSEPRESENT] = 1;
-    gpsi->SystemMetrics[SM_CYVSCROLL] = 16;
-    gpsi->SystemMetrics[SM_CXHSCROLL] = 16;
-    gpsi->SystemMetrics[SM_DEBUG] = 0;
-    gpsi->SystemMetrics[SM_SWAPBUTTON] = CurInfo ? CurInfo->SwapButtons : 0;
-    gpsi->SystemMetrics[SM_RESERVED1] = 0;
-    gpsi->SystemMetrics[SM_RESERVED2] = 0;
-    gpsi->SystemMetrics[SM_RESERVED3] = 0;
-    gpsi->SystemMetrics[SM_RESERVED4] = 0;
-    gpsi->SystemMetrics[SM_CXMIN] = 112;
-    gpsi->SystemMetrics[SM_CYMIN] = 27;
-    gpsi->SystemMetrics[SM_CXSIZE] = 18;
-    gpsi->SystemMetrics[SM_CYSIZE] = 18;
-    gpsi->SystemMetrics[SM_CXFRAME] = 4;
-    gpsi->SystemMetrics[SM_CYFRAME] = 4;
-    gpsi->SystemMetrics[SM_CXMINTRACK] = 112;
-    gpsi->SystemMetrics[SM_CYMINTRACK] = 27;
-    gpsi->SystemMetrics[SM_CXDOUBLECLK] = CurInfo ? CurInfo->DblClickWidth : 4;
-    gpsi->SystemMetrics[SM_CYDOUBLECLK] = CurInfo ? CurInfo->DblClickWidth : 4;
-    gpsi->SystemMetrics[SM_CXICONSPACING] = 64;
-    gpsi->SystemMetrics[SM_CYICONSPACING] = 64;
-    gpsi->SystemMetrics[SM_MENUDROPALIGNMENT] = 0;
-    gpsi->SystemMetrics[SM_PENWINDOWS] = 0;
-    gpsi->SystemMetrics[SM_DBCSENABLED] = 0;
-    gpsi->SystemMetrics[SM_CMOUSEBUTTONS] = 2;
-    gpsi->SystemMetrics[SM_SECURE] = 0;
-    gpsi->SystemMetrics[SM_CXEDGE] = 2;
-    gpsi->SystemMetrics[SM_CYEDGE] = 2;
-    gpsi->SystemMetrics[SM_CXMINSPACING] = 160;
-    gpsi->SystemMetrics[SM_CYMINSPACING] = 24;
-    gpsi->SystemMetrics[SM_CXSMICON] = 16;
-    gpsi->SystemMetrics[SM_CYSMICON] = 16;
-    gpsi->SystemMetrics[SM_CYSMCAPTION] = 15;
-    gpsi->SystemMetrics[SM_CXSMSIZE] = 12;
-    gpsi->SystemMetrics[SM_CYSMSIZE] = 14;
-    gpsi->SystemMetrics[SM_CXMENUSIZE] = 18;
-    gpsi->SystemMetrics[SM_CYMENUSIZE] = 18;
-    gpsi->SystemMetrics[SM_ARRANGE] = 8;
-    gpsi->SystemMetrics[SM_CXMINIMIZED] = 160;
-    gpsi->SystemMetrics[SM_CYMINIMIZED] = 24;
-    gpsi->SystemMetrics[SM_CXMAXTRACK] = gpsi->SystemMetrics[SM_CYSCREEN] + 12;
-    gpsi->SystemMetrics[SM_CYMAXTRACK] = gpsi->SystemMetrics[SM_CYSCREEN] + 12;
-    /* This seems to be 8 pixels greater than the screen width */
-    gpsi->SystemMetrics[SM_CXMAXIMIZED] = gpsi->SystemMetrics[SM_CXSCREEN] + 8;
-    /* This seems to be 20 pixels less than the screen height, taskbar maybe? */
-    gpsi->SystemMetrics[SM_CYMAXIMIZED] = gpsi->SystemMetrics[SM_CYSCREEN] - 20;
-    gpsi->SystemMetrics[SM_NETWORK] = 3;
-    gpsi->SystemMetrics[64] = 0;
-    gpsi->SystemMetrics[65] = 0;
-    gpsi->SystemMetrics[66] = 0;
-    gpsi->SystemMetrics[SM_CLEANBOOT] = 0;
-    gpsi->SystemMetrics[SM_CXDRAG] = 4;
-    gpsi->SystemMetrics[SM_CYDRAG] = 4;
-    gpsi->SystemMetrics[SM_SHOWSOUNDS] = 0;
-    gpsi->SystemMetrics[SM_CXMENUCHECK] = 13;
-    gpsi->SystemMetrics[SM_CYMENUCHECK] = 13;
-    gpsi->SystemMetrics[SM_SLOWMACHINE] = 0;
-    gpsi->SystemMetrics[SM_MIDEASTENABLED] = 0;
-    gpsi->SystemMetrics[SM_MOUSEWHEELPRESENT] = 1;
-    gpsi->SystemMetrics[SM_XVIRTUALSCREEN] = 0;
-    gpsi->SystemMetrics[SM_YVIRTUALSCREEN] = 0;
-    gpsi->SystemMetrics[SM_CXVIRTUALSCREEN] = Width;
-    gpsi->SystemMetrics[SM_CYVIRTUALSCREEN] = Height;
-    gpsi->SystemMetrics[SM_CMONITORS] = 1;
-    gpsi->SystemMetrics[SM_SAMEDISPLAYFORMAT] = 1;
-    gpsi->SystemMetrics[SM_IMMENABLED] = 0;
-    gpsi->SystemMetrics[SM_CXFOCUSBORDER] = 1;
-    gpsi->SystemMetrics[SM_CYFOCUSBORDER] = 1;
-    gpsi->SystemMetrics[SM_TABLETPC] = 0;
-    gpsi->SystemMetrics[SM_MEDIACENTER] = 0;
-    gpsi->SystemMetrics[SM_STARTER] = 0;
-    gpsi->SystemMetrics[SM_SERVERR2] = 0;
+    piSysMet = (INT*)gpsi->SystemMetrics;
+
+    /* Screen sizes */
+    piSysMet[SM_CXSCREEN] = Width;
+    piSysMet[SM_CYSCREEN] = Height;
+    piSysMet[SM_XVIRTUALSCREEN] = 0;
+    piSysMet[SM_YVIRTUALSCREEN] = 0;
+    piSysMet[SM_CXVIRTUALSCREEN] = Width;
+    piSysMet[SM_CYVIRTUALSCREEN] = Height;
+
+    /* NC area sizes */
+    piSysMet[SM_CYCAPTION] = gspv.ncm.iCaptionHeight + 1; // 19
+    piSysMet[SM_CYSMCAPTION] = gspv.ncm.iSmCaptionHeight + 1; // 15;
+    piSysMet[SM_CXSIZE] = gspv.ncm.iCaptionHeight; // 18;
+    piSysMet[SM_CYSIZE] = gspv.ncm.iCaptionHeight; // 18;
+    piSysMet[SM_CXSMSIZE] = gspv.ncm.iSmCaptionWidth; // 12; xp: piSysMet(SM_CYSMCAPTION) - 1
+    piSysMet[SM_CYSMSIZE] = gspv.ncm.iSmCaptionHeight; // 14;
+    piSysMet[SM_CXBORDER] = 1; // seems to be hardcoded
+    piSysMet[SM_CYBORDER] = 1; // seems to be hardcoded
+    piSysMet[SM_CXFOCUSBORDER] = 1;
+    piSysMet[SM_CYFOCUSBORDER] = 1;
+    piSysMet[SM_CXDLGFRAME] = 3;
+    piSysMet[SM_CYDLGFRAME] = 3;
+    piSysMet[SM_CXEDGE] = 2;
+    piSysMet[SM_CYEDGE] = 2;
+    piSysMet[SM_CXFRAME] = piSysMet[SM_CXDLGFRAME] + gspv.ncm.iBorderWidth; // 4
+    piSysMet[SM_CYFRAME] = piSysMet[SM_CYDLGFRAME] + gspv.ncm.iBorderWidth; // 4
 #if (_WIN32_WINNT >= 0x0600)
-    gpsi->SystemMetrics[90] = 0;
-    gpsi->SystemMetrics[SM_MOUSEHORIZONTALWHEELPRESENT] = 0;
-    gpsi->SystemMetrics[SM_CXPADDEDBORDER] = 0;
+    piSysMet[SM_CXPADDEDBORDER] = 0;
+#endif
+
+    /* Window sizes */
+    DPRINT("ncm.iCaptionWidth=%d,GetSystemMetrics(SM_CYSIZE)=%d,GetSystemMetrics(SM_CXFRAME)=%d,avcwCaption=%d \n",
+           gspv.ncm.iCaptionWidth, piSysMet[SM_CYSIZE],piSysMet[SM_CXFRAME], gspv.tmCaptionFont.tmAveCharWidth);
+
+    piSysMet[SM_CXMIN] = 3 * max(gspv.ncm.iCaptionWidth, 8) // 112
+                         + piSysMet[SM_CYSIZE] + 4
+                         + 4 * gspv.tmCaptionFont.tmAveCharWidth
+                         + 2 * piSysMet[SM_CXFRAME];
+    piSysMet[SM_CYMIN] = piSysMet[SM_CYCAPTION] + 2 * piSysMet[SM_CYFRAME];// 27
+    piSysMet[SM_CXMAXIMIZED] = piSysMet[SM_CXSCREEN] + 2 * piSysMet[SM_CXFRAME];
+    piSysMet[SM_CYMAXIMIZED] = piSysMet[SM_CYSCREEN] - 20;
+    piSysMet[SM_CXFULLSCREEN] = piSysMet[SM_CXSCREEN];
+    piSysMet[SM_CYFULLSCREEN] = piSysMet[SM_CYMAXIMIZED] - piSysMet[SM_CYMIN];
+    piSysMet[SM_CYKANJIWINDOW] = 0;
+    piSysMet[SM_CXMINIMIZED] = gspv.mm.iWidth + 6;
+    piSysMet[SM_CYMINIMIZED] = piSysMet[SM_CYCAPTION] + 5;
+    piSysMet[SM_CXMINSPACING] = piSysMet[SM_CXMINIMIZED] + gspv.mm.iHorzGap;
+    piSysMet[SM_CYMINSPACING] = piSysMet[SM_CYMINIMIZED] + gspv.mm.iVertGap;
+    piSysMet[SM_CXMAXTRACK] = piSysMet[SM_CXVIRTUALSCREEN] + 4
+                              + 2 * piSysMet[SM_CXFRAME];
+    piSysMet[SM_CYMAXTRACK] = piSysMet[SM_CYVIRTUALSCREEN] + 4
+                              + 2 * piSysMet[SM_CYFRAME];
+
+    /* Icon */
+    piSysMet[SM_CXVSCROLL] = gspv.ncm.iScrollWidth; //16;
+    piSysMet[SM_CYVTHUMB] = gspv.ncm.iScrollHeight; //16;
+    piSysMet[SM_CYHSCROLL] = gspv.ncm.iScrollWidth; //16;
+    piSysMet[SM_CXHTHUMB] = gspv.ncm.iScrollHeight; //16;
+    piSysMet[SM_CYVSCROLL] = gspv.ncm.iScrollHeight; // 16
+    piSysMet[SM_CXHSCROLL] = gspv.ncm.iScrollHeight; // 16;
+    piSysMet[SM_CXICON] = 32;
+    piSysMet[SM_CYICON] = 32;
+    piSysMet[SM_CXSMICON] = 16;
+    piSysMet[SM_CYSMICON] = 16;
+    piSysMet[SM_CXICONSPACING] = gspv.im.iHorzSpacing;// 64;
+    piSysMet[SM_CYICONSPACING] = gspv.im.iVertSpacing; // 64;
+    piSysMet[SM_CXCURSOR] = 32;
+    piSysMet[SM_CYCURSOR] = 32;
+    piSysMet[SM_CXMINTRACK] = piSysMet[SM_CXMIN]; // 117
+    piSysMet[SM_CYMINTRACK] = piSysMet[SM_CYMIN]; // 27
+    piSysMet[SM_CXDRAG] = 4;
+    piSysMet[SM_CYDRAG] = 4;
+    piSysMet[SM_ARRANGE] = gspv.mm.iArrange; // 8;
+
+    /* Menu */
+    piSysMet[SM_CYMENU] = gspv.ncm.iMenuHeight + 1;//19;
+    piSysMet[SM_MENUDROPALIGNMENT] = gspv.bMenuDropAlign;
+    piSysMet[SM_CXMENUCHECK] = ((1 + gspv.tmMenuFont.tmHeight +
+                                 gspv.tmMenuFont.tmExternalLeading) & ~1) - 1; // 13;
+    piSysMet[SM_CYMENUCHECK] = piSysMet[SM_CXMENUCHECK];
+    piSysMet[SM_CXMENUSIZE] = gspv.ncm.iMenuWidth; //18;
+    piSysMet[SM_CYMENUSIZE] = gspv.ncm.iMenuHeight; //18;
+
+    /* Mouse */
+    piSysMet[SM_MOUSEPRESENT] = 1;
+    piSysMet[SM_MOUSEWHEELPRESENT] = 1;
+    piSysMet[SM_CMOUSEBUTTONS] = 2;
+    piSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap ? 1 : 0; //CurInfo ? CurInfo->SwapButtons : 0;
+    piSysMet[SM_CXDOUBLECLK] = gspv.iDblClickWidth;//CurInfo ? CurInfo->DblClickWidth : 4;
+    piSysMet[SM_CYDOUBLECLK] = gspv.iDblClickHeight;//CurInfo ? CurInfo->DblClickWidth : 4;
+#if (_WIN32_WINNT >= 0x0600)
+    piSysMet[SM_MOUSEHORIZONTALWHEELPRESENT] = 0;
+#endif
+
+    /* Version info */
+    piSysMet[SM_TABLETPC] = 0;
+    piSysMet[SM_MEDIACENTER] = 0;
+    piSysMet[SM_STARTER] = 0;
+    piSysMet[SM_SERVERR2] = 0;
+    piSysMet[SM_PENWINDOWS] = 0;
+
+    /* Other */
+    piSysMet[SM_DEBUG] = 0;
+    piSysMet[SM_NETWORK] = 3;
+    piSysMet[SM_SLOWMACHINE] = 0;
+    piSysMet[SM_SECURE] = 0;
+    piSysMet[SM_DBCSENABLED] = 0;
+    piSysMet[SM_CLEANBOOT] = 0;
+    piSysMet[SM_SHOWSOUNDS] = gspv.bShowSounds;
+    piSysMet[SM_MIDEASTENABLED] = 0;
+    piSysMet[SM_CMONITORS] = 1;
+    piSysMet[SM_SAMEDISPLAYFORMAT] = 1;
+    piSysMet[SM_IMMENABLED] = 0;
+
+    /* Reserved */
+    piSysMet[SM_RESERVED1] = 0;
+    piSysMet[SM_RESERVED2] = 0;
+    piSysMet[SM_RESERVED3] = 0;
+    piSysMet[SM_RESERVED4] = 0;
+    piSysMet[64] = 0;
+    piSysMet[65] = 0;
+    piSysMet[66] = 0;
+#if (_WIN32_WINNT >= 0x0600)
+    piSysMet[90] = 0;
 #endif
 
     gpsi->SRVINFO_Flags |= SRVINFO_METRICS;
@@ -174,13 +187,8 @@ ULONG FASTCALL
 UserGetSystemMetrics(ULONG Index)
 {
     ASSERT(gpsi);
+    ASSERT(Setup);
     DPRINT("UserGetSystemMetrics(%d)\n", Index);
-
-    // FIXME: Do this when loading
-    if (!Setup)
-    {
-        InitMetrics();
-    }
 
     /* Get metrics from array */
     if (Index < SM_CMETRICS)

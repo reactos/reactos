@@ -34,6 +34,10 @@
 #include <debug.h>
 
 ERESOURCE UserLock;
+BOOL gbInitialized;
+
+BOOL
+InitSysParams();
 
 /* FUNCTIONS **********************************************************/
 
@@ -66,8 +70,89 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
          DPRINT("Global Server Data -> %x\n", gpsi);
       }
    }
+
+   InitSysParams();
+
    return STATUS_SUCCESS;
 }
+
+
+NTSTATUS
+NTAPI
+UserInitialize(
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent)
+{
+// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
+// Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
+// Create Event for Diconnect Desktop.
+// Initialize Video.
+// {
+//     DrvInitConsole.
+//     DrvChangeDisplaySettings.
+//     Update Shared Device Caps.
+//     Initialize User Screen.
+// }
+// Create ThreadInfo for this Thread!
+// Set Global SERVERINFO Error flags.
+// Load Resources.
+
+    NtUserUpdatePerUserSystemParameters(0, TRUE);
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    Called from win32csr.
+ */
+NTSTATUS
+APIENTRY
+NtUserInitialize(
+  DWORD   dwWinVersion,
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent)
+{
+    NTSTATUS Status;
+
+    DPRINT1("Enter NtUserInitialize(%lx, %p, %p)\n",
+            dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
+
+    /* Check the Windows version */
+    if (dwWinVersion != 0)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Acquire exclusive lock */
+    UserEnterExclusive();
+
+    /* Check if we are already initialized */
+    if (gbInitialized)
+    {
+        UserLeave();
+        return STATUS_UNSUCCESSFUL;
+    }
+
+// Initialize Power Request List.
+// Initialize Media Change.
+// InitializeGreCSRSS();
+// {
+//    Startup DxGraphics.
+//    calls ** IntGdiGetLanguageID() and sets it **.
+//    Enables Fonts drivers, Initialize Font table & Stock Fonts.
+// }
+
+    /* Initialize USER */
+    Status = UserInitialize(hPowerRequestEvent, hMediaRequestEvent);
+
+    /* Set us as initialized */
+    gbInitialized = TRUE;
+
+    /* Return */
+    UserLeave();
+    return Status;
+}
+
 
 /*
 RETURN

@@ -41,7 +41,6 @@ typedef struct _WINSTATION_OBJECT
     BOOL DropShadow;
     BOOL DragFullWindows;
     BOOL FlatMenu;
-    USERPREFERENCESMASK UserPreferences;
 
     /* ScreenSaver */
     BOOL ScreenSaverRunning;

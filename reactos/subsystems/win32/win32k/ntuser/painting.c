@@ -1559,10 +1559,10 @@ UserDrawCaptionText(HDC hDc,
    #endif
 
    nclm.cbSize = sizeof(nclm);
-   if(!IntSystemParametersInfo(SPI_GETNONCLIENTMETRICS,
+   if(!UserSystemParametersInfo(SPI_GETNONCLIENTMETRICS,
       sizeof(NONCLIENTMETRICS), &nclm, 0))
    {
-      DPRINT1("%s: IntSystemParametersInfo() failed!\n", __FUNCTION__);
+      DPRINT1("%s: UserSystemParametersInfo() failed!\n", __FUNCTION__);
       return FALSE;
    }
 

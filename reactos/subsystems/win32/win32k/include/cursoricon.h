@@ -41,14 +41,14 @@ typedef struct _CURSORACCELERATION_INFO
 typedef struct _SYSTEM_CURSORINFO
 {
   BOOL Enabled;
-  BOOL SwapButtons;
+  BOOL SwapButtons;//
   UINT ButtonsDown;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
-  UINT WheelScroLines;
-  UINT WheelScroChars;
+//  UINT WheelScroLines;
+//  UINT WheelScroChars;
   BYTE ShowingCursor;
-  UINT DblClickSpeed;
+  UINT DblClickSpeed;//
   UINT DblClickWidth;
   UINT DblClickHeight;
 
@@ -56,8 +56,8 @@ typedef struct _SYSTEM_CURSORINFO
   UINT MouseHoverWidth;
   UINT MouseHoverHeight;
 
-  UINT MouseSpeed;
-  CURSORACCELERATION_INFO CursorAccelerationInfo;
+//  UINT MouseSpeed;
+//  CURSORACCELERATION_INFO CursorAccelerationInfo;
 
   DWORD LastBtnDown;
   LONG LastBtnDownX;

@@ -55,8 +55,6 @@ static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 
 /* FUNCTIONS *****************************************************************/
-ULONG FASTCALL
-IntSystemParametersInfo(UINT uiAction, UINT uiParam,PVOID pvParam, UINT fWinIni);
 DWORD IntLastInputTick(BOOL LastInputTickSetGet);
 
 #define ClearMouseInput(mi) \
@@ -885,7 +883,7 @@ RawInputThreadMain(PVOID StartContext)
 
   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
   if (!MasterTimer)
-  {   
+  {
      DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
      return;
   }
@@ -1063,18 +1061,6 @@ CLEANUP:
    DPRINT("Leave NtUserBlockInput, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-BOOL FASTCALL
-IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
-{
-   PSYSTEM_CURSORINFO CurInfo;
-   BOOL res;
-
-   CurInfo = IntGetSysCursorInfo(WinStaObject);
-   res = CurInfo->SwapButtons;
-   CurInfo->SwapButtons = Swap;
-   return res;
 }
 
 BOOL FASTCALL
