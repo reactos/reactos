@@ -377,14 +377,18 @@ co_IntCallHookProc(INT HookId,
                   ArgumentLength += WindowName.Length + sizeof(WCHAR);
                }
 
-               if (Ansi)
-                  RtlInitAnsiString(asClassName, (PCSZ)CbtCreateWnd->lpcs->lpszClass);
-               else
-                  RtlInitUnicodeString(&ClassName, CbtCreateWnd->lpcs->lpszClass);
-
-               if (! IS_ATOM(ClassName.Buffer))
+               if (! IS_ATOM(CbtCreateWnd->lpcs->lpszClass))
                {
-                  ArgumentLength += ClassName.Length + sizeof(WCHAR);
+                  if (Ansi)
+                  {
+                     RtlInitAnsiString(asClassName, (PCSZ)CbtCreateWnd->lpcs->lpszClass);
+                     ArgumentLength += ClassName.Length + sizeof(CHAR);
+                  }
+                  else
+                  {
+                     RtlInitUnicodeString(&ClassName, CbtCreateWnd->lpcs->lpszClass);
+                     ArgumentLength += ClassName.Length + sizeof(WCHAR);
+                  }
                }
                break;
             default:
