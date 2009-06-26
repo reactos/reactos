@@ -588,16 +588,6 @@ NTAPI
 NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
                           OUT EXECUTION_STATE *PreviousFlags)
 {
-    static EXECUTION_STATE current =
-        ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED | ES_USER_PRESENT;
-    EXECUTION_STATE old = current;
-
     UNIMPLEMENTED;
-
-    if (!(current & ES_CONTINUOUS) || (esFlags & ES_CONTINUOUS))
-        current = esFlags;
-    
-    *PreviousFlags = old;
-
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
