@@ -529,7 +529,7 @@ IntCallDebugHook(PHOOK Hook,
 
                 case HCBT_CREATEWND: /* Handle Ansi? */
                     Size = sizeof(CBT_CREATEWND);
-                    /* What shall we do? Size += sizeof(CREATESTRUCTEX); */
+                    /* What shall we do? Size += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS); same ass CREATESTRUCTEX */
                     break;
 
                 default:
@@ -845,7 +845,10 @@ UserCallNextHookEx(PHOOK Hook,
                         DPRINT1("HOOK HCBT_CREATEWND write ERROR!\n");
                     }
                     /* The next call handles the structures. */
-                    if (!BadChk) lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
+                    if (!BadChk)
+                    {
+//                       lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
+                    }
                     break;
                 }
 
