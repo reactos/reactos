@@ -132,13 +132,13 @@ CallMsgFilterA(
         CBT_CREATEWNDA *cbtcwA = (CBT_CREATEWNDA *)lpMsg->lParam;
         CBT_CREATEWNDW cbtcwW;
         CREATESTRUCTW csW;
-	MSG Msg;
+        MSG Msg;
 
-	Msg.hwnd = lpMsg->hwnd;
-	Msg.message = lpMsg->message;
-	Msg.time = lpMsg->time;
-	Msg.pt = lpMsg->pt;
-	Msg.wParam = lpMsg->wParam;
+        Msg.hwnd = lpMsg->hwnd;
+        Msg.message = lpMsg->message;
+        Msg.time = lpMsg->time;
+        Msg.pt = lpMsg->pt;
+        Msg.wParam = lpMsg->wParam;
 
         cbtcwW.lpcs = &csW;
         cbtcwW.hwndInsertAfter = cbtcwA->hwndInsertAfter;
