@@ -289,6 +289,12 @@ NTAPI
 NewIPortWavePciStream(
     OUT PPORTWAVEPCISTREAM *Stream);
 
+VOID
+NTAPI
+PcIoTimerRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PVOID  Context);
+
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
@@ -338,6 +344,9 @@ typedef struct
     LIST_ENTRY SubDeviceList;
     LIST_ENTRY PhysicalConnectionList;
 
+    LIST_ENTRY TimerList;
+    KSPIN_LOCK TimerListLock;
+
 } PCLASS_DEVICE_EXTENSION, *PPCLASS_DEVICE_EXTENSION;
 
 
@@ -353,5 +362,12 @@ typedef struct
     PIO_WORKITEM WorkItem;
     PIRP Irp;
 }CLOSESTREAM_CONTEXT, *PCLOSESTREAM_CONTEXT;
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    PIO_TIMER_ROUTINE pTimerRoutine;
+    PVOID Context;
+}TIMER_CONTEXT, *PTIMER_CONTEXT;
 
 #endif
