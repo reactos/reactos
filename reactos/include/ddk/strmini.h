@@ -1,13 +1,23 @@
 #ifndef _STREAM_H
 #define _STREAM_H
 
-#include <wdm.h>
-#include <windef.h>
-#include <stdio.h>
+#include <ntddk.h>
 #include <ks.h>
 
 #define STREAMAPI __stdcall
 #define STREAM_SYSTEM_TIME_MASK   ((STREAM_SYSTEM_TIME)0x00000001FFFFFFFF)
+
+typedef enum
+{
+    DebugLevelFatal = 0,
+    DebugLevelError,
+    DebugLevelWarning,
+    DebugLevelInfo,
+    DebugLevelTrace,
+    DebugLevelVerbose,
+    DebugLevelMaximum
+}STREAM_DEBUG_LEVEL;
+
 
 #if DBG
 
@@ -24,7 +34,7 @@
 #define DEBUG_ASSERT(exp)
 
 #endif
-	
+
 typedef PHYSICAL_ADDRESS STREAM_PHYSICAL_ADDRESS, *PSTREAM_PHYSICAL_ADDRESS;
 typedef unsigned __int64 STREAM_SYSTEM_TIME, *PSTREAM_SYSTEM_TIME;
 typedef unsigned __int64 STREAM_TIMESTAMP, *PSTREAM_TIMESTAMP;
@@ -51,7 +61,7 @@ typedef struct _HW_EVENT_DESCRIPTOR
     PKSEVENT_ENTRY EventEntry;
     PKSEVENTDATA EventData;
     union
-	{
+    {
         struct _HW_STREAM_OBJECT * StreamObject;
         struct _HW_DEVICE_EXTENSION *DeviceExtension;
     };
@@ -60,6 +70,7 @@ typedef struct _HW_EVENT_DESCRIPTOR
     ULONG Reserved;
 } HW_EVENT_DESCRIPTOR, *PHW_EVENT_DESCRIPTOR;
 
+struct _HW_STREAM_REQUEST_BLOCK;
 
 typedef VOID (STREAMAPI * PHW_RECEIVE_STREAM_DATA_SRB) (IN struct _HW_STREAM_REQUEST_BLOCK * SRB);
 typedef VOID (STREAMAPI * PHW_RECEIVE_STREAM_CONTROL_SRB) (IN struct _HW_STREAM_REQUEST_BLOCK  * SRB);
@@ -531,12 +542,12 @@ StreamClassRegisterAdapter(
 
 #define StreamClassRegisterMinidriver StreamClassRegisterAdapter
 
-NTSTATUS  
+NTSTATUS
 StreamClassRegisterFilterWithNoKSPins( 
     IN PDEVICE_OBJECT   DeviceObject,
     IN const GUID     * InterfaceClassGUID,
     IN ULONG            PinCount,
-    IN BOOL * PinDirection,
+    IN BOOLEAN * PinDirection,
     IN KSPIN_MEDIUM * MediumList,
     IN GUID * CategoryList
 );
