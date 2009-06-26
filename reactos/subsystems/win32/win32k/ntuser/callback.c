@@ -346,7 +346,7 @@ co_IntCallHookProc(INT HookId,
    PHOOKPROC_CALLBACK_ARGUMENTS Common;
    CBT_CREATEWNDW *CbtCreateWnd =NULL;
    PCHAR Extra;
-   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra ;
+   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
    UNICODE_STRING WindowName;
    UNICODE_STRING ClassName;
    PANSI_STRING asWindowName;
@@ -544,6 +544,14 @@ co_IntCallHookProc(INT HookId,
    if (!NT_SUCCESS(Status))
    {
       return 0;
+   }
+
+   if (HookId == WH_CBT && Code == HCBT_CREATEWND)
+   {
+      if (CbtCreatewndExtra)
+      {
+         CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+      }
    }
 
    if (Argument) IntCbFreeMemory(Argument);

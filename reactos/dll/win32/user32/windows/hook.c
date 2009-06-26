@@ -412,10 +412,8 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   LRESULT Result;
   CREATESTRUCTW Csw;
   CBT_CREATEWNDW CbtCreatewndw;
-  UNICODE_STRING UString;
   CREATESTRUCTA Csa;
   CBT_CREATEWNDA CbtCreatewnda;
-  ANSI_STRING AString;
   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
   WPARAM wParam;
   LPARAM lParam;
@@ -451,18 +449,6 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           if (Common->Ansi)
             {
               memcpy(&Csa, &Csw, sizeof(CREATESTRUCTW));
-              if (NULL != Csw.lpszName)
-                {
-                  RtlInitUnicodeString(&UString, Csw.lpszName);
-                  RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
-                  Csa.lpszName = AString.Buffer;
-                }
-              if (0 != HIWORD(Csw.lpszClass))
-                {
-                  RtlInitUnicodeString(&UString, Csw.lpszClass);
-                  RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
-                  Csa.lpszClass = AString.Buffer;
-                }
               CbtCreatewnda.lpcs = &Csa;
               CbtCreatewnda.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
               lParam = (LPARAM) &CbtCreatewnda;
@@ -478,22 +464,17 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
         }
 
-      Result = Common->Proc(Common->Code, wParam, lParam);
+      if (Common->Proc)
+         Result = Common->Proc(Common->Code, wParam, lParam);
+      else
+      {
+         ERR("Common = 0x%x, Proc = 0x%x\n",Common,Common->Proc);
+      }
 
       switch(Common->Code)
         {
         case HCBT_CREATEWND:
-          if (Common->Ansi)
-            {
-              if (0 != HIWORD(Csa.lpszClass))
-                {
-                  RtlFreeHeap(GetProcessHeap(), 0, (LPSTR) Csa.lpszClass);
-                }
-              if (NULL != Csa.lpszName)
-                {
-                  RtlFreeHeap(GetProcessHeap(), 0, (LPSTR) Csa.lpszName);
-                }
-            }
+          CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter; 
           break;
         }
       break;
