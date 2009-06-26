@@ -158,9 +158,9 @@ PcAddAdapterDevice(
     /* initialize timer list */
     InitializeListHead(&portcls_ext->TimerList);
     /* initialize io timer */
-    IoInitializeTimer(PhysicalDeviceObject, PcIoTimerRoutine, NULL);
+    IoInitializeTimer(fdo, PcIoTimerRoutine, NULL);
     /* start the io timer */
-    IoStartTimer(PhysicalDeviceObject);
+    IoStartTimer(fdo);
 
     /* set io flags */
     fdo->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
