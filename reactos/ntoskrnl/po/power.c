@@ -588,6 +588,54 @@ NTAPI
 NtSetThreadExecutionState(IN EXECUTION_STATE esFlags,
                           OUT EXECUTION_STATE *PreviousFlags)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PKTHREAD Thread = KeGetCurrentThread();
+    KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
+    EXECUTION_STATE PreviousState;
+    PAGED_CODE();
+
+    /* Validate flags */
+    if (esFlags & ~(ES_CONTINUOUS | ES_USER_PRESENT))
+    {
+        /* Fail the request */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Check for user parameters */
+    if (PreviousMode != KernelMode)
+    {
+        /* Protect the probes */
+        _SEH2_TRY
+        {
+            /* Check if the pointer is valid */
+            ProbeForWriteUlong(PreviousFlags);
+        }
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        {
+            /* It isn't -- fail */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    /* Save the previous state, always masking in the continous flag */
+    PreviousState = Thread->PowerState | ES_CONTINUOUS;
+
+    /* Check if we need to update the power state */
+    if (esFlags & ES_CONTINUOUS) Thread->PowerState = esFlags;
+
+    /* Protect the write back to user mode */
+    _SEH2_TRY
+    {
+        /* Return the previous flags */
+        *PreviousFlags = PreviousState;
+    }
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
+    {
+        /* Something's wrong, fail */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
+    /* All is good */
+    return STATUS_SUCCESS;
 }
