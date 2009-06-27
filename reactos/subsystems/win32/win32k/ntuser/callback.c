@@ -401,7 +401,7 @@ co_IntCallHookProc(INT HookId,
             case HCBT_CLICKSKIPPED:
                ArgumentLength += sizeof(MOUSEHOOKSTRUCT);
                break;
-/* ATM pass on */
+/*   ATM pass on */
             case HCBT_KEYSKIPPED:
             case HCBT_MINMAX:
             case HCBT_SETFOCUS:
@@ -469,7 +469,7 @@ co_IntCallHookProc(INT HookId,
             case HCBT_CREATEWND:
                Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS) Extra;
-               CbtCreatewndExtra->Cs = *(CbtCreateWnd->lpcs);
+               RtlCopyMemory( &CbtCreatewndExtra->Cs, CbtCreateWnd->lpcs, sizeof(CREATESTRUCTW) );
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
                Extra = (PCHAR) (CbtCreatewndExtra + 1);
                RtlCopyMemory(Extra, WindowName.Buffer, WindowName.Length);
@@ -581,7 +581,22 @@ co_IntCallHookProc(INT HookId,
    {
       if (CbtCreatewndExtra)
       {
-         CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+         _SEH2_TRY
+         { /*
+              The parameters could have been changed, include the coordinates
+              and dimensions of the window. We copy it back.
+            */
+            CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+            CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
+            CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
+            CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
+            CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+            Result = 0;
+         }
+         _SEH2_END;
       }
    }
 

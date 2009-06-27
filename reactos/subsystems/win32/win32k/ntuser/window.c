@@ -1883,18 +1883,22 @@ AllocErr:
    Cs.dwExStyle = dwExStyle;
    CbtCreate.lpcs = &Cs;
    CbtCreate.hwndInsertAfter = HWND_TOP;
-   if (co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) &CbtCreate))
+   if (ISITHOOKED(WH_CBT))
    {
-      /* FIXME - Delete window object and remove it from the thread windows list */
-      /* FIXME - delete allocated DCE */
-      DPRINT1("CBT-hook returned !0\n");
-      RETURN( (HWND) NULL);
+      if (co_HOOK_CallHooks(WH_CBT, HCBT_CREATEWND, (WPARAM) hWnd, (LPARAM) &CbtCreate))
+      {
+         /* FIXME - Delete window object and remove it from the thread windows list */
+         /* FIXME - delete allocated DCE */
+         DPRINT1("CBT-hook returned !0\n");
+         RETURN( (HWND) NULL);
+      }
    }
-
    x = Cs.x;
    y = Cs.y;
    nWidth = Cs.cx;
    nHeight = Cs.cy;
+// FIXME: Need to set the Z order in the window link list if the hook callback changed it!
+//   hwndInsertAfter = CbtCreate.hwndInsertAfter;
 
    /* default positioning for overlapped windows */
    if(!(Wnd->Style & (WS_POPUP | WS_CHILD)))
@@ -2396,8 +2400,11 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 {
    BOOLEAN isChild;
    PWINDOW Wnd;
+   HWND hWnd;
 
    ASSERT_REFS_CO(Window); // FIXME: temp hack?
+
+   hWnd = Window->hSelf;
 
    Wnd = Window->Wnd;
 
@@ -2430,9 +2437,9 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 
    IntDereferenceMessageQueue(Window->MessageQueue);
    /* Call hooks */
-   if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) Window->hSelf, 0))
+   if (ISITHOOKED(WH_CBT))
    {
-      return FALSE;
+      if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
    }
 
    IntEngWindowChanged(Window, WOC_DELETE);

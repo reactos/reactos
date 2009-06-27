@@ -480,6 +480,8 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
         case HCBT_SYSCOMMAND:
         case HCBT_DESTROYWND:
         case HCBT_QS:
+            wParam = Common->wParam;
+            lParam = Common->lParam;
             break;
         default:
           ERR("HCBT_ not supported = %d\n", Common->Code);
