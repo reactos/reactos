@@ -360,6 +360,7 @@
 			</directory>
 		</if>
 		<directory name="ARM3">
+			<file>dynamic.c</file>
 			<file>hypermap.c</file>
 			<file>init.c</file>
 			<file>iosup.c</file>
@@ -384,7 +385,6 @@
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pe.c</file>
-		<file>physical.c</file>
 		<file>pool.c</file>
 		<file>ppool.c</file>
 		<file>procsup.c</file>
