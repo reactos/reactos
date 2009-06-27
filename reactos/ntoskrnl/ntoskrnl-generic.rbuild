@@ -364,6 +364,7 @@
 			<file>init.c</file>
 			<file>iosup.c</file>
 			<file>pool.c</file>
+			<file>procsup.c</file>
 			<file>syspte.c</file>
 		</directory>
 		<file>anonmem.c</file>
