@@ -1938,6 +1938,9 @@ extern "C" {
 #define EN_VSCROLL 1538
 #define LB_ADDFILE 406
 #define LB_ADDSTRING 384
+#ifdef _WINE
+#define LB_CARETOFF 420
+#endif
 #define LB_DELETESTRING 386
 #define LB_DIR 397
 #define LB_FINDSTRING 399
@@ -2026,6 +2029,9 @@ extern "C" {
 #define DCX_INTERSECTRGN 128
 #define DCX_VALIDATE 0x200000
 #define DCX_EXCLUDEUPDATE   0x100
+#ifdef _WINE
+#define DCX_USESTYLE     0x10000
+#endif
 #define GMDI_GOINTOPOPUPS 2
 #define GMDI_USEDISABLED 1
 #define FKF_AVAILABLE 2
@@ -4151,6 +4157,8 @@ BOOL WINAPI PostThreadMessageW(DWORD,UINT,WPARAM,LPARAM);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI PrintWindow(HWND,HDC,UINT);
 #endif
+UINT WINAPI PrivateExtractIconsA(LPCSTR,int,int,int,HICON*,UINT*,UINT,UINT);
+UINT WINAPI PrivateExtractIconsW(LPCWSTR,int,int,int,HICON*,UINT*,UINT,UINT);
 BOOL WINAPI PtInRect(LPCRECT,POINT);
 HWND WINAPI RealChildWindowFromPoint(HWND,POINT);
 UINT WINAPI RealGetWindowClassA(HWND,LPSTR,UINT);
@@ -4487,6 +4495,7 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define PostAppMessage PostAppMessageW
 #define PostMessage PostMessageW
 #define PostThreadMessage PostThreadMessageW
+#define PrivateExtractIcons PrivateExtractIconsW
 #define RealGetWindowClass RealGetWindowClassW
 #define RegisterClass RegisterClassW
 #define RegisterClassEx RegisterClassExW
@@ -4654,6 +4663,7 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define PostAppMessage PostAppMessageA
 #define PostMessage PostMessageA
 #define PostThreadMessage PostThreadMessageA
+#define PrivateExtractIcons PrivateExtractIconsA
 #define RealGetWindowClass RealGetWindowClassA
 #define RegisterClass RegisterClassA
 #define RegisterClassEx RegisterClassExA

@@ -126,6 +126,11 @@ extern "C" {
 #define DRV_RESTART           DRVCNF_RESTART
 #define DRV_MCI_FIRST         DRV_RESERVED
 #define DRV_MCI_LAST          (DRV_RESERVED+0xFFF)
+#ifdef _WINE
+#define DRV_SUCCESS		0x0001
+#define DRV_FAILURE		0x0000
+#define DRV_EXITAPPLICATION     0x000C
+#endif
 #define CALLBACK_TYPEMASK     0x70000
 #define CALLBACK_NULL         0
 #define CALLBACK_WINDOW       0x10000
@@ -905,6 +910,12 @@ extern "C" {
 #define MCI_OVLY_WHERE_DESTINATION        0x40000
 #define MCI_OVLY_WHERE_FRAME              0x80000
 #define MCI_OVLY_WHERE_VIDEO              0x100000
+#ifdef _WINE
+#define MCI_OPEN_DRIVER                   0x0801
+#define MCI_CLOSE_DRIVER                  0x0802
+#define MCI_SOUND                         0x0812
+#define MCI_SOUND_NAME                    0x00000100L
+#endif
 #define NEWTRANSPARENT 3
 #define QUERYROPSUPPORT 40
 #define SELECTDIB 41
@@ -920,6 +931,18 @@ extern "C" {
 #endif
 #ifndef SEEK_END
 #define SEEK_END 2
+#endif
+
+#ifdef _WINE
+#define MAXWAVEDRIVERS	10
+#define MAXMIDIDRIVERS	10
+#define MAXAUXDRIVERS	10
+#define MAXMCIDRIVERS	32
+#define MAXMIXERDRIVERS	10
+#endif
+
+#ifdef _WINE
+typedef LPCSTR HPCSTR;
 #endif
 
 typedef DWORD MCIERROR;
@@ -1132,6 +1155,9 @@ typedef struct midievent_tag {
 	DWORD dwEvent;
 	DWORD dwParms[1];
 } MIDIEVENT;
+#ifdef _WINE
+typedef struct midievent_tag *LPMIDIEVENT;
+#endif
 
 typedef struct midistrmbuffver_tag {
 	DWORD dwVersion;
@@ -1507,6 +1533,24 @@ typedef struct tagMCI_SEEK_PARMS {
 	DWORD dwCallback;
 	DWORD dwTo;
 } MCI_SEEK_PARMS, *PMCI_SEEK_PARMS,*LPMCI_SEEK_PARMS;
+
+#ifdef _WINE
+typedef struct tagMCI_SOUND_PARMSA {
+    DWORD_PTR   dwCallback;
+    LPCSTR      lpstrSoundName;
+} MCI_SOUND_PARMSA, *LPMCI_SOUND_PARMSA;
+
+typedef struct tagMCI_SOUND_PARMSW {
+    DWORD_PTR   dwCallback;
+    LPCWSTR     lpstrSoundName;
+} MCI_SOUND_PARMSW, *LPMCI_SOUND_PARMSW;
+
+#ifdef UNICODE
+typedef MCI_SOUND_PARMSW MCI_SOUND_PARMS;
+#else
+typedef MCI_SOUND_PARMSA MCI_SOUND_PARMS;
+#endif
+#endif
 
 typedef struct tagMCI_STATUS_PARMS {
 	DWORD dwCallback;

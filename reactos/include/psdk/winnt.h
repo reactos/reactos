@@ -70,11 +70,13 @@ extern "C" {
 #endif
 #endif
 
+/*#ifdef _WINE*/
 #if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
 #define __WINE_ALLOC_SIZE(x) __attribute__((__alloc_size__(x)))
 #else
 #define __WINE_ALLOC_SIZE(x)
 #endif
+/*#endif*/
 
 #ifndef FORCEINLINE
 #if (_MSC_VER >= 1200)
@@ -881,6 +883,27 @@ typedef enum {
 #define LANG_YI   0x78
 #define LANG_YORUBA   0x6a
 #define LANG_ZULU   0x35
+
+#ifdef _WINE
+#define LANG_ESPERANTO      0x8f
+#define LANG_WALON          0x90
+#define LANG_CORNISH        0x91
+
+#define LANG_GAELIC         0x94
+#define LANG_MALTESE        0x3a
+#define LANG_ROMANSH        0x17
+#define LANG_SAAMI          0x3b
+#define LANG_LOWER_SORBIAN  0x2e
+#define LANG_UPPER_SORBIAN  0x2e
+#define LANG_SUTU           0x30
+#define LANG_TAJIK          0x28
+#define LANG_TSONGA         0x31
+#define LANG_TSWANA         0x32
+#define LANG_VENDA          0x33
+#define LANG_XHOSA          0x34
+#define LANG_ZULU           0x35
+#endif
+
 #define SUBLANG_CUSTOM_UNSPECIFIED   0x04
 #define SUBLANG_CUSTOM_DEFAULT   0x03
 #define SUBLANG_UI_CUSTOM_DEFAULT   0x05
