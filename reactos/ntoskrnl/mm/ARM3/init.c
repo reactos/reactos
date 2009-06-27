@@ -260,7 +260,7 @@ MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             // Copy the old buffer into the new, then free it
             //
             RtlCopyMemory(NewBuffer->Run,
-                          NewBuffer->Run,
+                          Buffer->Run,
                           sizeof(PHYSICAL_MEMORY_RUN) * Run);
             ExFreePool(Buffer);
             
