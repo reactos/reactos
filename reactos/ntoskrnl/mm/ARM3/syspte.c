@@ -160,6 +160,170 @@ MiReserveSystemPtes(IN ULONG NumberOfPtes,
 
 VOID
 NTAPI
+MiReleaseSystemPtes(IN PMMPTE StartingPte,
+                    IN ULONG NumberOfPtes,
+                    IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType)
+{
+    ULONG_PTR ClusterSize, CurrentSize;
+    PMMPTE CurrentPte, NextPte, PointerPte;
+    
+    //
+    // Check to make sure the PTE address is within bounds.
+    //
+    ASSERT(NumberOfPtes != 0);
+    ASSERT(StartingPte >= MmSystemPtesStart[SystemPtePoolType]);
+    ASSERT(StartingPte <= MmSystemPtesEnd[SystemPtePoolType]);
+    
+    //
+    // Zero PTEs.
+    //
+    RtlZeroMemory(StartingPte, NumberOfPtes * sizeof (MMPTE));
+  
+    //
+    // Increase availability
+    //
+    MmTotalFreeSystemPtes[SystemPtePoolType] += NumberOfPtes;
+    
+    //
+    // Get the free cluster and start going through them
+    //
+    CurrentSize = (ULONG_PTR)(StartingPte - MmSystemPteBase);
+    CurrentPte = &MmFirstFreeSystemPte[SystemPtePoolType];
+    while (TRUE)
+    {
+        //
+        // Get the first real cluster of PTEs and check if it's ours
+        //
+        PointerPte = MmSystemPteBase + CurrentPte->u.List.NextEntry;
+        if (CurrentSize < CurrentPte->u.List.NextEntry)
+        {
+            //
+            // Sanity check
+            //
+            ASSERT(((StartingPte + NumberOfPtes) <= PointerPte) ||
+                   (CurrentPte->u.List.NextEntry == -1));
+            
+            //
+            // Get the next cluster in case it's the one
+            //
+            NextPte = CurrentPte + 1;
+            
+            //
+            // Check if this was actually a single-PTE entry
+            //
+            if (CurrentPte->u.List.OneEntry)
+            {
+                //
+                // We only have one page
+                //
+                ClusterSize = 1;
+            }
+            else
+            {
+                //
+                // The next cluster will have the page count
+                //
+                ClusterSize = (ULONG_PTR)NextPte->u.List.NextEntry;
+            }
+            
+            //
+            // So check if this cluster actually describes the entire mapping
+            //
+            if ((CurrentPte + ClusterSize) == StartingPte)
+            {
+                //
+                // It does -- collapse the free PTEs into the next cluster
+                //
+                NumberOfPtes += ClusterSize;
+                NextPte->u.List.NextEntry = NumberOfPtes;
+                CurrentPte->u.List.OneEntry = 0;
+                
+                //
+                // Make another pass
+                //
+                StartingPte = CurrentPte;
+            }
+            else
+            {
+                //
+                // There's still PTEs left -- make us into a cluster
+                //
+                StartingPte->u.List.NextEntry = CurrentPte->u.List.NextEntry;
+                CurrentPte->u.List.NextEntry = CurrentSize;
+                
+                //
+                // Is there just one page left?
+                //
+                if (NumberOfPtes == 1)
+                {
+                    //
+                    // Then this actually becomes a single PTE entry
+                    //
+                    StartingPte->u.List.OneEntry = 1;
+                }
+                else
+                {
+                    //
+                    // Otherwise, create a new cluster for the remaining pages
+                    //
+                    StartingPte->u.List.OneEntry = 0;
+                    NextPte = StartingPte + 1;
+                    NextPte->u.List.NextEntry = NumberOfPtes;
+                }
+            }
+            
+            //
+            // Now check if we've arrived at yet another cluster
+            //
+            if ((StartingPte + NumberOfPtes) == PointerPte)
+            {
+                //
+                // We'll collapse the next cluster into us
+                //
+                StartingPte->u.List.NextEntry = PointerPte->u.List.NextEntry;
+                StartingPte->u.List.OneEntry = 0;
+                NextPte = StartingPte + 1;
+                
+                //
+                // Check if the cluster only had one page
+                //
+                if (PointerPte->u.List.OneEntry)
+                {
+                    //
+                    // So will we...
+                    //
+                    ClusterSize = 1;
+                }
+                else
+                {
+                    //
+                    // Otherwise, grab the page count from the next-next cluster
+                    //
+                    PointerPte++;
+                    ClusterSize = (ULONG_PTR)PointerPte->u.List.NextEntry;
+                }
+                
+                //
+                // And create the final combined cluster
+                //
+                NextPte->u.List.NextEntry = NumberOfPtes + ClusterSize;
+            }
+            
+            //
+            // We released the PTEs into their cluster (and optimized the list)
+            //
+            break;
+        }
+        
+        //
+        // Try the next cluster of PTEs...
+        //
+        CurrentPte = PointerPte;
+    }
+}
+
+VOID
+NTAPI
 MiInitializeSystemPtes(IN PMMPTE StartingPte,
                        IN ULONG NumberOfPtes,
                        IN MMSYSTEM_PTE_POOL_TYPE PoolType)
