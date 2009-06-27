@@ -16,8 +16,6 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
-ULONG PagesForStacks = 0;
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -55,7 +53,6 @@ MmDeleteKernelStack(IN PVOID StackBase,
             // Nuke it
             //
             MmReleasePageMemoryConsumer(MC_NPPOOL, PFN_FROM_PTE(PointerPte));
-            PagesForStacks--;
         }
         
         //
@@ -161,7 +158,6 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         // Write it
         //
         *PointerPte = TempPte;
-        PagesForStacks++;
     }
     
     //
