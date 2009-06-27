@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/mm/ARM3/hypermap.c
- * PURPOSE:         Hyperspace Mapping Functionality
+ * PURPOSE:         ARM Memory Manager Hyperspace Mapping Functionality
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
@@ -11,6 +11,10 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+
+#line 15 "ARM³::HYPERMAP"
+#define MODULE_INVOLVED_IN_ARM3
+#include "../ARM3/miarm.h"
 
 /* GLOBALS ********************************************************************/
 
