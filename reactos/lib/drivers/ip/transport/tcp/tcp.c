@@ -217,24 +217,66 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     }
 
     if( NewState & SEL_FIN ) {
-        PLIST_ENTRY ListsToErase[4];
-        UINT i;
+        TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 
-		TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
+        while (!IsListEmpty(&Connection->ReceiveRequest))
+        {
+           DISCONNECT_TYPE DisType;
+           PIO_STACK_LOCATION IrpSp;
+           Entry = RemoveHeadList(&Connection->ReceiveRequest);
+           Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+           Complete = Bucket->Request.RequestNotifyObject;
+           IrpSp = IoGetCurrentIrpStackLocation((PIRP)Bucket->Request.RequestContext);
 
-        ListsToErase[0] = &Connection->ReceiveRequest;
-        ListsToErase[1] = &Connection->ListenRequest;
-        ListsToErase[2] = &Connection->ConnectRequest;
-        ListsToErase[3] = &Connection->SendRequest;
+           /* We have to notify oskittcp of the abortion */
+           DisType.Type = TDI_DISCONNECT_RELEASE | TDI_DISCONNECT_ABORT;
+	   DisType.Context = Connection;
+	   DisType.Irp = (PIRP)Bucket->Request.RequestContext;
+	   DisType.FileObject = IrpSp->FileObject;
 
-        for( i = 0; i < 4; i++ ) {
-            while( !IsListEmpty( ListsToErase[i] ) ) {
-                Entry = RemoveHeadList( ListsToErase[i] );
-                Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-                Complete = Bucket->Request.RequestNotifyObject;
-                Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
-                exFreePool( Bucket );
-            }
+           ChewCreate(NULL, sizeof(DISCONNECT_TYPE),
+                      DispDoDisconnect, &DisType);
+        }
+
+        while (!IsListEmpty(&Connection->SendRequest))
+        {
+           DISCONNECT_TYPE DisType;
+           PIO_STACK_LOCATION IrpSp;
+           Entry = RemoveHeadList(&Connection->SendRequest);
+           Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+           Complete = Bucket->Request.RequestNotifyObject;
+           IrpSp = IoGetCurrentIrpStackLocation((PIRP)Bucket->Request.RequestContext);
+
+           /* We have to notify oskittcp of the abortion */
+           DisType.Type = TDI_DISCONNECT_RELEASE;
+	   DisType.Context = Connection;
+	   DisType.Irp = (PIRP)Bucket->Request.RequestContext;
+	   DisType.FileObject = IrpSp->FileObject;
+
+           ChewCreate(NULL, sizeof(DISCONNECT_TYPE),
+                      DispDoDisconnect, &DisType);
+        }
+
+        while (!IsListEmpty(&Connection->ListenRequest))
+        {
+           Entry = RemoveHeadList(&Connection->ListenRequest);
+           Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+           Complete = Bucket->Request.RequestNotifyObject;
+
+           /* We have to notify oskittcp of the abortion */
+           TCPAbortListenForSocket(Connection->AddressFile->Listener,
+	                           Connection);
+
+           Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+        }
+
+        while (!IsListEmpty(&Connection->ConnectRequest))
+        {
+           Entry = RemoveHeadList(&Connection->ConnectRequest);
+           Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+           Complete = Bucket->Request.RequestNotifyObject;
+
+           Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
         }
     }
 
@@ -656,11 +698,11 @@ NTSTATUS TCPClose
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
-    Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
-
     /* Make our code remove all pending IRPs */
     Connection->State |= SEL_FIN;
     DrainSignals();
+
+    Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
 
     TcpipRecursiveMutexLeave( &TCPLock );
 

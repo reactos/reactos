@@ -111,13 +111,6 @@ VOID DispDataRequestComplete(
     TI_DbgPrint(DEBUG_IRP, ("Done Completing IRP\n"));
 }
 
-typedef struct _DISCONNECT_TYPE {
-    UINT Type;
-    PVOID Context;
-    PIRP Irp;
-    PFILE_OBJECT FileObject;
-} DISCONNECT_TYPE, *PDISCONNECT_TYPE;
-
 VOID DispDoDisconnect( PVOID Data ) {
     PDISCONNECT_TYPE DisType = (PDISCONNECT_TYPE)Data;
 
@@ -250,6 +243,9 @@ VOID NTAPI DispCancelListenRequest(
 
     /* Try canceling the request */
     Connection = (PCONNECTION_ENDPOINT)TranContext->Handle.ConnectionContext;
+
+    TCPRemoveIRP(Connection, Irp);
+
     TCPAbortListenForSocket(
 	    Connection->AddressFile->Listener,
 	    Connection );
