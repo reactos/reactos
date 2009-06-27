@@ -232,7 +232,7 @@ NtUserCallOneParam(
             
             Result = gspv.bMouseBtnSwap;
             gspv.bMouseBtnSwap = Param ? TRUE : FALSE;
-            gpsi->SystemMetrics[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
+            gpsi->aiSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
             RETURN(Result);
          }
 

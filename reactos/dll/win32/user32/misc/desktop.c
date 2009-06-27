@@ -102,7 +102,7 @@ GetSystemMetrics(int nIndex)
   GetConnected();
 //  FIXME("Global Sever Data -> %x\n",g_psi);
   if (nIndex < 0 || nIndex >= SM_CMETRICS) return 0;
-  return g_psi->SystemMetrics[nIndex];
+  return g_psi->aiSysMet[nIndex];
 }
 
 

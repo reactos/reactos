@@ -9,6 +9,7 @@
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
+	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269

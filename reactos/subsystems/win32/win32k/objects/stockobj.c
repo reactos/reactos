@@ -28,7 +28,7 @@
 #include <debug.h>
 
 
-static COLORREF SysColors[] =
+static const COLORREF SysColors[] =
 {
   RGB(212, 208, 200), /* COLOR_SCROLLBAR  */
   RGB(58, 110, 165),  /* COLOR_BACKGROUND  */
@@ -221,8 +221,8 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
   {
     if((UINT)(*Elements) < NUM_SYSCOLORS)
     {
-      gpsi->SysColors[*Elements] = *Colors;
-      IntGdiSetSolidBrushColor(gpsi->SysColorBrushes[*Elements], *Colors);
+      gpsi->argbSystem[*Elements] = *Colors;
+      IntGdiSetSolidBrushColor(gpsi->ahbrSystem[*Elements], *Colors);
       IntGdiSetSolidPenColor(gpsi->SysColorPens[*Elements], *Colors);
     }
     Elements++;
@@ -246,7 +246,7 @@ IntGetSysColorBrushes(HBRUSH *pahBrushes, UINT nBrushes)
 
   for(i = 0; i < nBrushes; i++)
   {
-    pahBrushes[i] = gpsi->SysColorBrushes[i];
+    pahBrushes[i] = gpsi->ahbrSystem[i];
   }
 
   return nBrushes > 0;
@@ -255,7 +255,7 @@ IntGetSysColorBrushes(HBRUSH *pahBrushes, UINT nBrushes)
 HGDIOBJ FASTCALL
 IntGetSysColorBrush(INT Object)
 {
-  return ((Object < 0) || (NUM_SYSCOLORS <= Object)) ? NULL : gpsi->SysColorBrushes[Object];
+  return ((Object < 0) || (NUM_SYSCOLORS <= Object)) ? NULL : gpsi->ahbrSystem[Object];
 }
 
 BOOL FASTCALL
@@ -293,7 +293,7 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
     return FALSE;
   }
 
-  col = &gpsi->SysColors[0];
+  col = &gpsi->argbSystem[0];
   for(i = 0; i < nColors; i++)
   {
     *(Colors++) = *(col++);
@@ -305,7 +305,7 @@ IntGetSysColors(COLORREF *Colors, UINT nColors)
 DWORD FASTCALL
 IntGetSysColor(INT nIndex)
 {
-  return (NUM_SYSCOLORS <= (UINT)nIndex) ? 0 : gpsi->SysColors[nIndex];
+  return (NUM_SYSCOLORS <= (UINT)nIndex) ? 0 : gpsi->argbSystem[nIndex];
 }
 
 VOID FASTCALL
@@ -316,18 +316,18 @@ CreateSysColorObjects(VOID)
 
   for(i = 0; i < NUM_SYSCOLORS; i++)
   {
-    gpsi->SysColors[i] = SysColors[i];
+    gpsi->argbSystem[i] = SysColors[i];
   }
 
   /* Create the syscolor brushes */
   for(i = 0; i < NUM_SYSCOLORS; i++)
   {
-    if(gpsi->SysColorBrushes[i] == NULL)
+    if(gpsi->ahbrSystem[i] == NULL)
     {
-      gpsi->SysColorBrushes[i] = IntGdiCreateSolidBrush(SysColors[i]);
-      if(gpsi->SysColorBrushes[i] != NULL)
+      gpsi->ahbrSystem[i] = IntGdiCreateSolidBrush(SysColors[i]);
+      if(gpsi->ahbrSystem[i] != NULL)
       {
-        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&gpsi->SysColorBrushes[i]);
+        GDIOBJ_ConvertToStockObj((HGDIOBJ*)&gpsi->ahbrSystem[i]);
       }
     }
   }

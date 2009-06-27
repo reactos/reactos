@@ -857,8 +857,8 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             /* Verify the new values */
             if (rcWorkArea.left < 0 ||
                 rcWorkArea.top < 0 ||
-                rcWorkArea.right > gpsi->SystemMetrics[SM_CXSCREEN] ||
-                rcWorkArea.bottom > gpsi->SystemMetrics[SM_CYSCREEN] ||
+                rcWorkArea.right > gpsi->aiSysMet[SM_CXSCREEN] ||
+                rcWorkArea.bottom > gpsi->aiSysMet[SM_CYSCREEN] ||
                 rcWorkArea.right <= rcWorkArea.left ||
                 rcWorkArea.bottom <= rcWorkArea.top)
                 return 0;

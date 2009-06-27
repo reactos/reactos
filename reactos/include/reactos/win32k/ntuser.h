@@ -206,43 +206,51 @@ typedef struct _WINDOW
 
 typedef struct _PFNCLIENT
 {
-   PROC pfnScrollBarC;
-   PROC pfnDefWndC;
-   PROC pfnMenuC;
-   PROC pfnDesktopC;
-   PROC pfnDefWnd1C;
-   PROC pfnDefWnd2C;
-   PROC pfnDefWnd3C;
-   PROC pfnButtomC;
-   PROC pfnComboBoxC;
-   PROC pfnComboListBoxC;
-   PROC pfnDefDlgC;
-   PROC pfnEditC;
-   PROC pfnListBoxC;
-   PROC pfnMDIClientC;
-   PROC pfnStaticC;
-   PROC pfnImeC;
-   PROC pfnHkINLPCWPSTRUCT;
-   PROC pfnHkINLPCWPRETSTRUCT;
-   PROC pfnDispatchHookC;
-   PROC pfnDispatchDefC;
+    WNDPROC pfnScrollBarWndProc;
+    WNDPROC pfnTitleWndProc;
+    WNDPROC pfnMenuWndProc;
+    WNDPROC pfnDesktopWndProc;
+    WNDPROC pfnDefWindowProc;
+    WNDPROC pfnMessageWindowProc;
+    WNDPROC pfnSwitchWindowProc;
+    WNDPROC pfnButtonWndProc;
+    WNDPROC pfnComboBoxWndProc;
+    WNDPROC pfnComboListBoxProc;
+    WNDPROC pfnDialogWndProc;
+    WNDPROC pfnEditWndProc;
+    WNDPROC pfnListBoxWndProc;
+    WNDPROC pfnMDIClientWndProc;
+    WNDPROC pfnStaticWndProc;
+    WNDPROC pfnImeWndProc;
+    WNDPROC pfnGhostWndProc;
+    WNDPROC pfnHkINLPCWPSTRUCT;
+    WNDPROC pfnHkINLPCWPRETSTRUCT;
+    WNDPROC pfnDispatchHook;
+    WNDPROC pfnDispatchDefWindowProc;
+    WNDPROC pfnDispatchMessage;
+    WNDPROC pfnMDIActivateDlgProc;
 } PFNCLIENT, *PPFNCLIENT;
 
 typedef struct _PFNCLIENTWORKER
 {
-   PROC pfnButtonCW;
-   PROC pfnComboBoxCW;
-   PROC pfnComboListBoxCW;
-   PROC pfnDefDlgCW;
-   PROC pfnEditCW;
-   PROC pfnListBoxCW;
-   PROC pfnMDIClientCW;
-   PROC pfnStaticCW;
-   PROC pfnImeCW;
+    WNDPROC pfnButtonWndProc;
+    WNDPROC pfnComboBoxWndProc;
+    WNDPROC pfnComboListBoxProc;
+    WNDPROC pfnDialogWndProc;
+    WNDPROC pfnEditWndProc;
+    WNDPROC pfnListBoxWndProc;
+    WNDPROC pfnMDIClientWndProc;
+    WNDPROC pfnStaticWndProc;
+    WNDPROC pfnImeWndProc;
+    WNDPROC pfnGhostWndProc;
+    WNDPROC pfnCtfHookProc;
 } PFNCLIENTWORKER, *PPFNCLIENTWORKER;
 
+struct _WND;
+typedef LONG_PTR (NTAPI *PFN_FNID)(struct _WND*, UINT, WPARAM, LPARAM, ULONG_PTR);
 
 // FNID's for NtUserSetWindowFNID, NtUserMessageCall
+#define FNID_FIRST                  0x029A
 #define FNID_SCROLLBAR              0x029A
 #define FNID_ICONTITLE              0x029B
 #define FNID_MENU                   0x029C
@@ -269,8 +277,10 @@ typedef struct _PFNCLIENTWORKER
 #define FNID_UNKNOWN                0x02B6
 #define FNID_SENDNOTIFYMESSAGE      0x02B7
 #define FNID_SENDMESSAGECALLBACK    0x02B8
+#define FNID_LAST                   0x02B9
 
- 
+#define FNID_NUM FNID_LAST - FNID_FIRST + 1
+
 #define FNID_DDEML       0x2000 // Registers DDEML
 #define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
                                 // Seen during WM_CREATE on error exit too.
@@ -302,37 +312,106 @@ typedef struct _PFNCLIENTWORKER
 #define ICLS_NOTUSED      23
 #define ICLS_END          31
 
+#define COLOR_LAST COLOR_MENUBAR
+#define MAX_MB_STRINGS 11
+
 #define SRVINFO_METRICS 0x0020
 
-typedef struct _SERVERINFO
+typedef struct tagOEMBITMAPINFO
 {
-  DWORD    SRVINFO_Flags;
-  DWORD    SystemMetrics[SM_CMETRICS];       // System Metrics
-  COLORREF SysColors[COLOR_MENUBAR+1];       // GetSysColor
-  HBRUSH   SysColorBrushes[COLOR_MENUBAR+1]; // GetSysColorBrush
-  HPEN     SysColorPens[COLOR_MENUBAR+1];    // ReactOS exclusive
-  HBRUSH   hbrGray;
-  POINTL   ptCursor;
-  //
-  DWORD    cxSysFontChar;
-  DWORD    cySysFontChar;
-  DWORD    cxMsgFontChar;
-  DWORD    cyMsgFontChar;
-  TEXTMETRICW tmSysFont;
-  //
-  RECTL    rcScreen;
-  WORD     BitCount;
-  WORD     dmLogPixels;
-  BYTE     BitsPixel;
-  BYTE     Planes;
-  WORD     reserved;
-  DWORD    PUSIFlags; // PERUSERSERVERINFO Flags.
-  ULONG    uCaretWidth;
-  LANGID   UILangID;
-  UINT     LastRITWasKeyboard : 1;
-  UINT     bKeyboardPref : 1;
-  DWORD    TimeTick;
-  DWORD    SrvEventActivity;
+    INT x;
+    INT y;
+    INT cx;
+    INT cy;
+} OEMBITMAPINFO, *POEMBITMAPINFO;
+
+typedef struct tagMBSTRING
+{
+    WCHAR szName[15];
+    UINT uID;
+    UINT uStr;
+} MBSTRING, *PMBSTRING;
+
+typedef struct tagDPISERVERINFO
+{
+    INT gclBorder;                       /* 000 */
+    HFONT hCaptionFont;                  /* 004 */
+    HFONT hMsgFont;                      /* 008 */
+    INT cxMsgFontChar;                   /* 00C */
+    INT cyMsgFontChar;                   /* 010 */
+    UINT wMaxBtnSize;                    /* 014 */
+} DPISERVERINFO, *PDPISERVERINFO;
+
+typedef struct _PERUSERSERVERINFO
+{
+    INT           aiSysMet[SM_CMETRICS];
+    ULONG         argbSystemUnmatched[COLOR_LAST+1];
+    COLORREF      argbSystem[COLOR_LAST+1];
+    HBRUSH        ahbrSystem[COLOR_LAST+1];
+    HBRUSH        hbrGray;
+    POINT         ptCursor;
+    POINT         ptCursorReal;
+    DWORD         dwLastRITEventTickCount;
+    INT           nEvents;
+    UINT          dtScroll;
+    UINT          dtLBSearch;
+    UINT          dtCaretBlink;
+    UINT          ucWheelScrollLines;
+    UINT          ucWheelScrollChars;
+    INT           wMaxLeftOverlapChars;
+    INT           wMaxRightOverlapChars;
+    INT           cxSysFontChar;
+    INT           cySysFontChar;
+    TEXTMETRICW   tmSysFont;
+    DPISERVERINFO dpiSystem;
+    HICON         hIconSmWindows;
+    HICON         hIcoWindows;
+    DWORD         dwKeyCache;
+    DWORD         dwAsyncKeyCache;
+    ULONG         cCaptures;
+    OEMBITMAPINFO oembmi[93];
+    RECT          rcScreenReal;
+    USHORT        BitCount;
+    USHORT        dmLogPixels;
+    BYTE          Planes;
+    BYTE          BitsPixel;
+    ULONG         PUSIFlags;
+    UINT          uCaretWidth;
+    USHORT        UILangID;
+    DWORD         dwLastSystemRITEventTickCountUpdate;
+    ULONG         adwDBGTAGFlags[35];
+    DWORD         dwTagCount;
+    DWORD         dwRIPFlags;
+} PERUSERSERVERINFO, *PPERUSERSERVERINFO;
+
+typedef struct tagSERVERINFO
+{
+    DWORD           dwSRVIFlags;
+    ULONG_PTR       cHandleEntries;
+    PFN_FNID        mpFnidPfn[FNID_NUM];
+//    WNDPROC         aStoCidPfn[7];
+//    USHORT          mpFnid_serverCBWndProc[31];
+    PFNCLIENT       apfnClientA;
+    PFNCLIENT       apfnClientW;
+    PFNCLIENTWORKER apfnClientWorker;
+    ULONG           cbHandleTable;
+    ATOM            atomSysClass[ICLS_NOTUSED+1];
+    DWORD           dwDefaultHeapBase;
+    DWORD           dwDefaultHeapSize;
+    UINT            uiShellMsg;
+    MBSTRING        MBStrings[MAX_MB_STRINGS];
+    ATOM            atomIconSmProp;
+    ATOM            atomIconProp;
+    ATOM            atomContextHelpIdProp;
+    ATOM            atomFrostedWindowProp;
+    CHAR            acOemToAnsi[256];
+    CHAR            acAnsiToOem[256];
+    DWORD           dwInstalledEventHooks;
+    PERUSERSERVERINFO;
+///////////////////////////////
+    /* Reactos specific fields */
+    DWORD    SrvEventActivity;
+    HPEN     SysColorPens[COLOR_MENUBAR+1];
 } SERVERINFO, *PSERVERINFO;
 
 #define CTI_INSENDMESSAGE 0x0002
@@ -407,7 +486,7 @@ typedef struct _CLIENTINFO
     MSG msgDbcsCB;
     ULONG Win32ClientInfo3[28];
 /* It's just a pointer reference not to be used w the structure in user space. */
-    PPROCESSINFO ppi;    
+    PPROCESSINFO ppi;
 } CLIENTINFO, *PCLIENTINFO;
 
 /* Make sure it fits exactly into the TEB */
@@ -444,7 +523,7 @@ typedef struct _BROADCASTPARM
   DWORD recipients;
   HDESK hDesk;
   HWND  hWnd;
-  LUID  luid;  
+  LUID  luid;
 } BROADCASTPARM, *PBROADCASTPARM;
 
 PW32THREADINFO GetW32ThreadInfo(VOID);
@@ -1774,7 +1853,7 @@ NtUserInitialize(
 NTSTATUS
 NTAPI
 NtUserInitializeClientPfnArrays(
-  PPFNCLIENT pfnClientA, 
+  PPFNCLIENT pfnClientA,
   PPFNCLIENT pfnClientW,
   PPFNCLIENTWORKER pfnClientWorker,
   HINSTANCE hmodUser);

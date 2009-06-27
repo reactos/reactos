@@ -45,7 +45,7 @@ InitMetrics(VOID)
         CurInfo = NULL;
     }
 
-    piSysMet = (INT*)gpsi->SystemMetrics;
+    piSysMet = gpsi->aiSysMet;
 
     /* Screen sizes */
     piSysMet[SM_CXSCREEN] = Width;
@@ -172,7 +172,7 @@ InitMetrics(VOID)
     piSysMet[90] = 0;
 #endif
 
-    gpsi->SRVINFO_Flags |= SRVINFO_METRICS;
+    gpsi->dwSRVIFlags |= SRVINFO_METRICS;
     Setup = TRUE;
 
     if (NT_SUCCESS(Status))
@@ -193,7 +193,7 @@ UserGetSystemMetrics(ULONG Index)
     /* Get metrics from array */
     if (Index < SM_CMETRICS)
     {
-        return gpsi->SystemMetrics[Index];
+        return gpsi->aiSysMet[Index];
     }
 
     /* Handle special values */

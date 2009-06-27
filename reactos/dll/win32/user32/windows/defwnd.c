@@ -63,7 +63,7 @@ GetSysColor(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
-    return g_psi->SysColors[nIndex];
+    return g_psi->argbSystem[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -93,7 +93,7 @@ GetSysColorBrush(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
-    return g_psi->SysColorBrushes[nIndex];
+    return g_psi->ahbrSystem[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
