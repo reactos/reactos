@@ -20,6 +20,14 @@ typedef enum _MMSYSTEM_PTE_POOL_TYPE
     MaximumPtePoolTypes
 } MMSYSTEM_PTE_POOL_TYPE;
 
+typedef enum _MI_PFN_CACHE_ATTRIBUTE
+{
+    MiNonCached,
+    MiCached,
+    MiWriteCombined,
+    MiNotMapped
+} MI_PFN_CACHE_ATTRIBUTE, *PMI_PFN_CACHE_ATTRIBUTE;
+
 extern MMPTE HyperTemplatePte;
 
 extern ULONG MmSizeOfNonPagedPoolInBytes;
@@ -46,6 +54,14 @@ MiInitializeSystemPtes(
 PMMPTE
 NTAPI
 MiReserveSystemPtes(
+    IN ULONG NumberOfPtes,
+    IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType
+);
+
+VOID
+NTAPI
+MiReleaseSystemPtes(
+    IN PMMPTE StartingPte,
     IN ULONG NumberOfPtes,
     IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType
 );

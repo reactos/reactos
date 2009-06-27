@@ -362,6 +362,7 @@
 		<directory name="ARM3">
 			<file>hypermap.c</file>
 			<file>init.c</file>
+			<file>iosup.c</file>
 			<file>pool.c</file>
 			<file>syspte.c</file>
 		</directory>
@@ -371,7 +372,6 @@
 		<file>dbgpool.c</file>
 		<file>drvlck.c</file>
 		<file>freelist.c</file>
-		<file>iospace.c</file>
 		<file>kmap.c</file>
 		<file>marea.c</file>
 		<file>mdlsup.c</file>
