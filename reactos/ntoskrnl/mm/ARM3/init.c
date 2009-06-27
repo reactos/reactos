@@ -52,8 +52,8 @@ ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 // immediately follows the PFN database, typically sharing the same PDE. It is
 // a very small resource (32MB on a 1GB system), and capped at 128MB.
 //
-// Right now, we call this the "ARM Pool" and it begins at 0xB0000000 since we
-// don't want to interefere with the ReactOS memory manager PFN database (yet).
+// Right now, we call this the "ARM Pool" and it begins somewhere after the ARM
+// PFN database (which starts at 0xB0000000).
 //
 // The expansion nonpaged pool, on the other hand, can grow much bigger (400MB 
 // for a 1GB system). On ARM³ however, it is currently capped at 128MB.
@@ -101,6 +101,18 @@ PVOID MmNonPagedPoolEnd = (PVOID)0xFFBE0000;
 // aligned up to a PDE boundary (4MB).
 //
 ULONG MmNumberOfSystemPtes;
+
+//
+// This is how many pages the PFN database will take up
+// In Windows, this includes the Quark Color Table, but not in ARM³
+//
+ULONG MxPfnAllocation;
+
+
+//
+// The ARM³ PFN Database
+//
+PMMPFN MmArmPfnDatabase;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -276,6 +288,12 @@ MmArmInitSystem(IN ULONG Phase,
         }
         
         //
+        // Calculate the number of bytes, and then convert to pages
+        //
+        MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
+        MxPfnAllocation >>= PAGE_SHIFT;
+        
+        //
         // Now calculate the nonpaged pool expansion VA region
         //
         MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmNonPagedPoolEnd -
@@ -315,32 +333,44 @@ MmArmInitSystem(IN ULONG Phase,
             MmNumberOfSystemPtes--;
             ASSERT(MmNumberOfSystemPtes > 1000);
         }
+        
+        //
+        // Normally, the PFN database should start after the loader images.
+        // This is already the case in ReactOS, but for now we want to co-exist
+        // with the old memory manager, so we'll create a "Shadow PFN Database"
+        // instead, and arbitrarly start it at 0xB0000000.
+        //
+        MmArmPfnDatabase = (PVOID)0xB0000000;
+        ASSERT(((ULONG_PTR)MmArmPfnDatabase & ((4 * 1024 * 1024) - 1)) == 0);
                 
         //
-        // Non paged pool should come after the PFN database, but since we are
-        // co-existing with the ReactOS NP pool, our "ARM Pool" will instead
-        // start at this arbitrarly chosen base address.
-        // When ARM pool becomes non paged pool, this needs to be changed.
+        // Non paged pool comes after the PFN database
         //
         DPRINT1("System PTE VA starts at: %p\n", MmNonPagedSystemStart);
         DPRINT1("NP Expansion VA begins at: %p and ends at: %p\n",
                 MmNonPagedPoolStart, MmNonPagedPoolEnd);
-        MmNonPagedPoolStart = (PVOID)0xB0000000;
+        MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmArmPfnDatabase +
+                                      (MxPfnAllocation << PAGE_SHIFT));
 
         //
         // Now we actually need to get these many physical pages. Nonpaged pool
         // is actually also physically contiguous (but not the expansion)
         //
-        PageFrameIndex = MmGetContinuousPages(MmSizeOfNonPagedPoolInBytes,
+        PageFrameIndex = MmGetContinuousPages(MmSizeOfNonPagedPoolInBytes +
+                                              (MxPfnAllocation << PAGE_SHIFT),
                                               Low,
                                               High,
                                               BoundaryAddressMultiple,
                                               FALSE);
         ASSERT(PageFrameIndex != 0);
+        DPRINT1("PFN DB VA begins at: %p and ends at: %p\n",
+                MmArmPfnDatabase,
+                (ULONG_PTR)MmArmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT));        
+        DPRINT1("PFN DB PA PFN begins at: %lx\n", PageFrameIndex);
         DPRINT1("NP VA begins at: %p and ends at: %p\n",
                 MmNonPagedPoolStart,
                 (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes);        
-        DPRINT1("NP PA PFN begins at: %lx\n", PageFrameIndex);
+        DPRINT1("NP PA PFN begins at: %lx\n", PageFrameIndex + MxPfnAllocation);
 
         //
         // Now we need some pages to create the page tables for the NP system VA
@@ -377,7 +407,7 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Now we need pages for the page tables which will map initial NP
         //
-        StartPde = MiAddressToPde(MmNonPagedPoolStart);
+        StartPde = MiAddressToPde(MmArmPfnDatabase);
         EndPde = MiAddressToPde((PVOID)((ULONG_PTR)MmNonPagedPoolStart +
                                         MmSizeOfNonPagedPoolInBytes - 1));
         while (StartPde <= EndPde)
