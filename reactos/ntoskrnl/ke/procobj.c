@@ -535,7 +535,7 @@ KeDetachProcess(VOID)
     KiReleaseApcLockFromDpcLevel(&ApcLock);
 
     /* Swap Processes */
-    KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
+    KiSwapProcess(Thread->ApcState.Process, Process);
 
     /* Exit the dispatcher */
     KiExitDispatcher(ApcLock.OldIrql);
@@ -705,7 +705,7 @@ KeUnstackDetachProcess(IN PRKAPC_STATE ApcState)
     KiReleaseApcLockFromDpcLevel(&ApcLock);
 
     /* Swap Processes */
-    KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
+    KiSwapProcess(Thread->ApcState.Process, Process);
 
     /* Exit the dispatcher */
     KiExitDispatcher(ApcLock.OldIrql);
