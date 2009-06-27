@@ -2533,6 +2533,8 @@ LCMapStringA (
         ret = wine_get_sortkey(dwMapFlags, srcW, srclenW, lpDestStr, cchDest);
         if (ret == 0)
             SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        else
+            ret++;
         goto map_string_exit;
     }
 
