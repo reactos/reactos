@@ -2430,13 +2430,10 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 
    IntDereferenceMessageQueue(Window->MessageQueue);
    /* Call hooks */
-#if 0 /* FIXME */
-
-   if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hwnd, 0, TRUE))
+   if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) Window->hSelf, 0))
    {
       return FALSE;
    }
-#endif
 
    IntEngWindowChanged(Window, WOC_DELETE);
    isChild = (0 != (Wnd->Style & WS_CHILD));

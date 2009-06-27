@@ -414,15 +414,17 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   CBT_CREATEWNDW CbtCreatewndw;
   CREATESTRUCTA Csa;
   CBT_CREATEWNDA CbtCreatewnda;
-  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
-  WPARAM wParam;
-  LPARAM lParam;
+  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
+  WPARAM wParam = 0;
+  LPARAM lParam = 0;
   PKBDLLHOOKSTRUCT KeyboardLlData;
   PMSLLHOOKSTRUCT MouseLlData;
   PMSG Msg;
   PMOUSEHOOKSTRUCT MHook;
   PCWPSTRUCT CWP;
   PCWPRETSTRUCT CWPR;
+  PRECTL prl;  
+  LPCBTACTIVATESTRUCT pcbtas;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
@@ -430,39 +432,59 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
     case WH_CBT:
       switch(Common->Code)
-        {
+      {
         case HCBT_CREATEWND:
           CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
                               ((PCHAR) Common + Common->lParam);
           Csw = CbtCreatewndExtra->Cs;
           if (NULL != CbtCreatewndExtra->Cs.lpszName)
-            {
+          {
               Csw.lpszName = (LPCWSTR)((PCHAR) CbtCreatewndExtra
                                        + (ULONG) CbtCreatewndExtra->Cs.lpszName);
-            }
+          }
           if (0 != HIWORD(CbtCreatewndExtra->Cs.lpszClass))
-            {
+          {
               Csw.lpszClass = (LPCWSTR)((PCHAR) CbtCreatewndExtra
                                          + LOWORD((ULONG) CbtCreatewndExtra->Cs.lpszClass));
-            }
+          }
           wParam = Common->wParam;
           if (Common->Ansi)
-            {
+          {
               memcpy(&Csa, &Csw, sizeof(CREATESTRUCTW));
               CbtCreatewnda.lpcs = &Csa;
               CbtCreatewnda.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
               lParam = (LPARAM) &CbtCreatewnda;
-            }
+          }
           else
-            {
+          {
               CbtCreatewndw.lpcs = &Csw;
               CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
               lParam = (LPARAM) &CbtCreatewndw;
-            }
+          }
           break;
+        case HCBT_CLICKSKIPPED:
+            MHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
+            lParam = (LPARAM) MHook;
+            break;
+        case HCBT_MOVESIZE:
+            prl = (PRECTL)((PCHAR) Common + Common->lParam);
+            lParam = (LPARAM) prl;
+            break;
+        case HCBT_ACTIVATE:
+            pcbtas = (LPCBTACTIVATESTRUCT)((PCHAR) Common + Common->lParam);
+            lParam = (LPARAM) pcbtas;
+            break;
+        case HCBT_KEYSKIPPED:
+        case HCBT_MINMAX:
+        case HCBT_SETFOCUS:
+        case HCBT_SYSCOMMAND:
+        case HCBT_DESTROYWND:
+        case HCBT_QS:
+            break;
         default:
+          ERR("HCBT_ not supported = %d\n", Common->Code);
           return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
-        }
+      }
 
       if (Common->Proc)
          Result = Common->Proc(Common->Code, wParam, lParam);
@@ -472,11 +494,11 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       }
 
       switch(Common->Code)
-        {
+      {
         case HCBT_CREATEWND:
           CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter; 
           break;
-        }
+      }
       break;
     case WH_KEYBOARD_LL:
       KeyboardLlData = (PKBDLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);

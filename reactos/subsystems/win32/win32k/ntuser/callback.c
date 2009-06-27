@@ -391,6 +391,25 @@ co_IntCallHookProc(INT HookId,
                   }
                }
                break;
+
+            case HCBT_MOVESIZE:
+               ArgumentLength += sizeof(RECTL);
+               break;
+            case HCBT_ACTIVATE:
+               ArgumentLength += sizeof(CBTACTIVATESTRUCT);
+               break;
+            case HCBT_CLICKSKIPPED:
+               ArgumentLength += sizeof(MOUSEHOOKSTRUCT);
+               break;
+/* ATM pass on */
+            case HCBT_KEYSKIPPED:
+            case HCBT_MINMAX:
+            case HCBT_SETFOCUS:
+            case HCBT_SYSCOMMAND:
+/*   These types pass through. */
+            case HCBT_DESTROYWND:
+            case HCBT_QS:
+               break;
             default:
                DPRINT1("Trying to call unsupported CBT hook %d\n", Code);
                return 0;
@@ -480,6 +499,18 @@ co_IntCallHookProc(INT HookId,
                   else
                      *((WCHAR *) Extra) = L'\0';
                }
+               break;
+            case HCBT_CLICKSKIPPED:
+               RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+               break;
+            case HCBT_MOVESIZE:
+               RtlCopyMemory(Extra, (PVOID) lParam, sizeof(RECTL));
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+               break;
+            case HCBT_ACTIVATE:
+               RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CBTACTIVATESTRUCT));
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                break;
          }
          break;
