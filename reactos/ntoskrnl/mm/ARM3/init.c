@@ -108,11 +108,15 @@ ULONG MmNumberOfSystemPtes;
 //
 ULONG MxPfnAllocation;
 
-
 //
 // The ARM³ PFN Database
 //
 PMMPFN MmArmPfnDatabase;
+
+//
+// This structure describes the different pieces of RAM-backed address space
+//
+PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -139,6 +143,142 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
     }
 }
 
+PPHYSICAL_MEMORY_DESCRIPTOR
+NTAPI
+MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                         IN PBOOLEAN IncludeType)
+{
+    PLIST_ENTRY NextEntry;
+    ULONG Run = 0, InitialRuns = 0;
+    PFN_NUMBER NextPage = -1, PageCount = 0;
+    PPHYSICAL_MEMORY_DESCRIPTOR Buffer, NewBuffer;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    
+    //
+    // Scan the memory descriptors
+    //
+    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        //
+        // For each one, increase the memory allocation estimate
+        //
+        InitialRuns++;
+        NextEntry = NextEntry->Flink;
+    }
+    
+    //
+    // Allocate the maximum we'll ever need
+    //
+    Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                   sizeof(PHYSICAL_MEMORY_DESCRIPTOR) +
+                                   sizeof(PHYSICAL_MEMORY_RUN) *
+                                   (InitialRuns - 1),
+                                   'lMmM');
+    if (!Buffer) return NULL;
+
+    //
+    // For now that's how many runs we have
+    //
+    Buffer->NumberOfRuns = InitialRuns;
+    
+    //
+    // Now loop through the descriptors again
+    //
+    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+    {
+        //
+        // Grab each one, and check if it's one we should include
+        //
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+        if ((MdBlock->MemoryType < LoaderMaximum) &&
+            (IncludeType[MdBlock->MemoryType]))
+        {
+            //
+            // Add this to our running total
+            //
+            PageCount += MdBlock->PageCount;
+            
+            //
+            // Check if the next page is described by the next descriptor
+            //            
+            if (MdBlock->BasePage == NextPage)
+            {
+                //
+                // Combine it into the same physical run
+                //
+                ASSERT(MdBlock->PageCount != 0);
+                Buffer->Run[Run - 1].PageCount += MdBlock->PageCount;
+                NextPage += MdBlock->PageCount;
+            }
+            else
+            {
+                //
+                // Otherwise just duplicate the descriptor's contents
+                //
+                Buffer->Run[Run].BasePage = MdBlock->BasePage;
+                Buffer->Run[Run].PageCount = MdBlock->PageCount;
+                NextPage = Buffer->Run[Run].BasePage + Buffer->Run[Run].PageCount;
+                
+                //
+                // And in this case, increase the number of runs
+                //
+                Run++;
+            }
+        }
+        
+        //
+        // Try the next descriptor
+        //
+        NextEntry = MdBlock->ListEntry.Flink;
+    }
+    
+    //
+    // We should not have been able to go past our initial estimate
+    //
+    ASSERT(Run <= Buffer->NumberOfRuns);
+
+    //
+    // Our guess was probably exaggerated...
+    //
+    if (InitialRuns > Run)
+    {
+        //
+        // Allocate a more accurately sized buffer
+        //
+        NewBuffer = ExAllocatePoolWithTag(NonPagedPool,
+                                          sizeof(PHYSICAL_MEMORY_DESCRIPTOR) +
+                                          sizeof(PHYSICAL_MEMORY_RUN) *
+                                          (Run - 1),
+                                          'lMmM');
+        if (NewBuffer)
+        {
+            //
+            // Copy the old buffer into the new, then free it
+            //
+            RtlCopyMemory(NewBuffer->Run,
+                          NewBuffer->Run,
+                          sizeof(PHYSICAL_MEMORY_RUN) * Run);
+            ExFreePool(Buffer);
+            
+            //
+            // Now use the new buffer
+            //
+            Buffer = NewBuffer;
+        }
+    }
+    
+    //
+    // Write the final numbers, and return it
+    //
+    Buffer->NumberOfRuns = Run;
+    Buffer->NumberOfPages = PageCount;
+    return Buffer;
+}
+
 NTSTATUS
 NTAPI
 MmArmInitSystem(IN ULONG Phase,
@@ -152,6 +292,8 @@ MmArmInitSystem(IN ULONG Phase,
     PVOID NonPagedPoolExpansionVa, BaseAddress;
     NTSTATUS Status;
     ULONG OldCount;
+    BOOLEAN IncludeType[LoaderMaximum];
+    ULONG i;
     BoundaryAddressMultiple.QuadPart = Low.QuadPart = 0;
     High.QuadPart = -1;
     
@@ -564,6 +706,36 @@ MmArmInitSystem(IN ULONG Phase,
         MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
         MiSyncARM3WithROS(MmNonPagedPoolStart, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
         MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
+    }
+    else
+    {
+        //
+        // Instantiate memory that we don't consider RAM/usable
+        // We use the same exclusions that Windows does, in order to try to be
+        // compatible with WinLDR-style booting
+        //
+        for (i = 0; i < LoaderMaximum; i++) IncludeType[i] = TRUE;
+        IncludeType[LoaderBad] = FALSE;
+        IncludeType[LoaderFirmwarePermanent] = FALSE;
+        IncludeType[LoaderSpecialMemory] = FALSE;
+        IncludeType[LoaderBBTMemory] = FALSE;
+        
+        //
+        // Build the physical memory block
+        //
+        MmPhysicalMemoryBlock = MmInitializeMemoryLimits(LoaderBlock,
+                                                         IncludeType);
+        for (i = 0; i < MmPhysicalMemoryBlock->NumberOfRuns; i++)
+        {
+            //
+            // Dump it for debugging
+            //
+            PPHYSICAL_MEMORY_RUN Run;
+            Run = &MmPhysicalMemoryBlock->Run[i];
+            DPRINT1("PHYSICAL RAM [0x%08p to 0x%08p]\n",
+                    Run->BasePage << PAGE_SHIFT,
+                    (Run->BasePage + Run->PageCount) << PAGE_SHIFT);
+        }
     }
     
     //

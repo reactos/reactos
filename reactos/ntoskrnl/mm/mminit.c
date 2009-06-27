@@ -376,7 +376,7 @@ MmInit1(VOID)
     MmInitializePageList();
     
     //
-    // Initialize ARM³
+    // Initialize ARM³ in phase 0
     //
     MmArmInitSystem(0, KeLoaderBlock);
 
@@ -391,6 +391,11 @@ MmInit1(VOID)
     
     /* Initialize working sets */
     MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
+    
+    //
+    // Initialize ARM³ in phase 1
+    //
+    MmArmInitSystem(1, KeLoaderBlock);
 }
 
 BOOLEAN
