@@ -49,13 +49,13 @@ POSK_IFADDR TCPGetInterfaceData( PIP_INTERFACE IF ) {
 
     ifaddr->ifa_addr = (struct sockaddr *)addr_in;
     Status = GetInterfaceIPv4Address( IF,
-				      ADE_UNICAST,
-				      (PULONG)&addr_in->sin_addr.s_addr );
+                      ADE_UNICAST,
+                      (PULONG)&addr_in->sin_addr.s_addr );
 
     ASSERT(NT_SUCCESS(Status));
 
     TI_DbgPrint(DEBUG_TCPIF,("interface %x : addr %x\n",
-			   IF, addr_in->sin_addr.s_addr));
+               IF, addr_in->sin_addr.s_addr));
 
     ifaddr->ifa_flags = 0; /* XXX what goes here? */
     ifaddr->ifa_refcnt = 0; /* Anachronistic */
@@ -68,10 +68,10 @@ POSK_IFADDR TCPGetInterfaceData( PIP_INTERFACE IF ) {
 }
 
 POSK_IFADDR TCPFindInterface( void *ClientData,
-			      OSK_UINT AddrType,
-			      OSK_UINT FindType,
-			      OSK_SOCKADDR *ReqAddr,
-			      OSK_IFADDR *Interface ) {
+                  OSK_UINT AddrType,
+                  OSK_UINT FindType,
+                  OSK_SOCKADDR *ReqAddr,
+                  OSK_IFADDR *Interface ) {
     PIP_INTERFACE IF;
     IP_ADDRESS Destination;
     struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
@@ -80,8 +80,8 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
     TI_DbgPrint(DEBUG_TCPIF,("called for type %d\n", FindType));
 
     if( !ReqAddr ) {
-	TI_DbgPrint(DEBUG_TCPIF,("no addr or no ifaddr (%x)\n", ReqAddr));
-	return NULL;
+    TI_DbgPrint(DEBUG_TCPIF,("no addr or no ifaddr (%x)\n", ReqAddr));
+    return NULL;
     }
 
     Destination.Type = IP_ADDRESS_V4;
@@ -95,7 +95,7 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
     InterfaceData = TCPGetInterfaceData(IF);
 
     addr_in = (struct sockaddr_in *)
-	InterfaceData->ifa_addr;
+    InterfaceData->ifa_addr;
 
     TI_DbgPrint(DEBUG_TCPIF,("returning addr %x\n", addr_in->sin_addr.s_addr));
 
