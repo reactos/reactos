@@ -52,7 +52,6 @@ void gethmsfromlargeint(LARGE_INTEGER largeint, DWORD *dwHours, DWORD *dwMinutes
 void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
 void CommaSeparateNumberString(LPWSTR strNumber, int nMaxCount);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
-BOOL PerfDataGet(ULONG Index, PPERFDATA *lppData);
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCount);
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
 
@@ -452,20 +451,6 @@ void UpdateProcesses()
     {
         (void)ListView_SortItems(hProcessPageListCtrl, ProcessPageCompareFunc, NULL);
     }
-}
-
-BOOL PerfDataGet(ULONG Index, PPERFDATA *lppData)
-{
-    BOOL  bSuccessful = FALSE;
-
-    EnterCriticalSection(&PerfDataCriticalSection);
-    if (Index < ProcessCount)
-    {
-        *lppData = pPerfData + Index;
-        bSuccessful = TRUE;
-    }
-    LeaveCriticalSection(&PerfDataCriticalSection);
-    return bSuccessful;
 }
 
 void AddProcess(ULONG Index)

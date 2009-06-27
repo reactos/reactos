@@ -901,3 +901,18 @@ ULONG PerfDataGetTotalThreadCount(void)
 
     return ThreadCount;
 }
+
+BOOL PerfDataGet(ULONG Index, PPERFDATA *lppData)
+{
+    BOOL  bSuccessful = FALSE;
+
+    EnterCriticalSection(&PerfDataCriticalSection);
+    if (Index < ProcessCount)
+    {
+        *lppData = pPerfData + Index;
+        bSuccessful = TRUE;
+    }
+    LeaveCriticalSection(&PerfDataCriticalSection);
+    return bSuccessful;
+}
+
