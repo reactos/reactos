@@ -99,7 +99,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
    INT ThumbSize = ScrollBarInfo->xyThumbBottom - ScrollBarInfo->xyThumbTop;
    INT ThumbTop = ScrollBarInfo->xyThumbTop;
    RECT Rect;
-   HPEN hSavePen;
    HBRUSH hSaveBrush, hBrush;
    BOOL TopSelected = FALSE, BottomSelected = FALSE;
 
@@ -124,7 +123,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
       hBrush = DefWndControlColor(hDC, CTLCOLOR_SCROLLBAR);
    }
 
-   hSavePen = SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
    hSaveBrush = SelectObject(hDC, hBrush);
 
    /* Calculate the scroll rectangle */
@@ -150,7 +148,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
          Rect.bottom - Rect.top, PATCOPY);
 
       /* Cleanup and return */
-      SelectObject(hDC, hSavePen);
       SelectObject(hDC, hSaveBrush);
       return;
    }
@@ -207,7 +204,6 @@ IntDrawScrollInterior(HWND hWnd, HDC hDC, INT nBar, BOOL Vertical,
       DrawEdge(hDC, &Rect, EDGE_RAISED, BF_RECT | BF_MIDDLE);
 
    /* Cleanup */
-   SelectObject(hDC, hSavePen);
    SelectObject(hDC, hSaveBrush);
 }
 
