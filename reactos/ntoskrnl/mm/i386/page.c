@@ -71,12 +71,6 @@ MiFlushTlb(PULONG Pt, PVOID Address)
     }
 }
 
-PULONG
-MmGetPageDirectory(VOID)
-{
-    return (PULONG)(ULONG_PTR)__readcr3();
-}
-
 static ULONG
 ProtectToPTE(ULONG flProtect)
 {
@@ -224,32 +218,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     DirectoryTableBase[1] = 0;
     DPRINT("Finished MmCopyMmInfo(): 0x%x\n", DirectoryTableBase[0]);
     return TRUE;
-}
-
-VOID
-NTAPI
-MmDeletePageTable(PEPROCESS Process, PVOID Address)
-{
-    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-    
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeAttachProcess(&Process->Pcb);
-    }
-    
-    MiAddressToPde(Address)->u.Long = 0;
-    MiFlushTlb((PULONG)MiAddressToPde(Address),
-               MiAddressToPte(Address));
-    
-    if (Address >= MmSystemRangeStart)
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-        //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-    }
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeDetachProcess();
-    }
 }
 
 static PULONG

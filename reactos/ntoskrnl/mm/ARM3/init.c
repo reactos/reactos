@@ -146,6 +146,20 @@ MmArmInitSystem(IN ULONG Phase,
     if (Phase == 0)
     {
         //
+        // Set CR3 for the system process
+        //
+        PointerPte = MiAddressToPde(PAGETABLE_MAP);
+        PageFrameIndex = PFN_FROM_PTE(PointerPte) << PAGE_SHIFT;
+        PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameIndex;
+        
+        //
+        // Blow away user-mode
+        //
+        StartPde = MiAddressToPde(0);
+        EndPde = MiAddressToPde(KSEG0_BASE);
+        RtlZeroMemory(StartPde, (EndPde - StartPde) * sizeof(MMPTE));
+        
+        //
         // Check if this is a machine with less than 19MB of RAM
         //
         if (MmNumberOfPhysicalPages < MI_MIN_PAGES_FOR_SYSPTE_TUNING)

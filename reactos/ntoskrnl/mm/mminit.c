@@ -305,9 +305,6 @@ MmInit1(VOID)
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
 
-    /* Set the page directory */
-    PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = (ULONG)MmGetPageDirectory();
-
     /* Get the size of FreeLDR's image allocations */
     MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
     MmBootImageSize *= PAGE_SIZE;
@@ -377,9 +374,6 @@ MmInit1(VOID)
 
     /* Initialize the page list */
     MmInitializePageList();
-
-    /* Unmap low memory */
-    MmDeletePageTable(NULL, 0);
     
     //
     // Initialize ARM³
