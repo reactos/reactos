@@ -106,7 +106,10 @@ VOID DGDeliverData(
       while((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found)) {
           Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
 
-	  if( DstPort == AddrFile->Port ) {
+	  if( DstPort == AddrFile->Port &&
+              (AddrIsEqual(DstAddress, &AddrFile->Address) ||
+               AddrIsUnspecified(&AddrFile->Address) ||
+               AddrIsUnspecified(DstAddress))) {
 	      Found = TRUE;
 	      /* Remove the request from the queue */
 	      RemoveEntryList(&Current->ListEntry);

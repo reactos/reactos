@@ -643,6 +643,8 @@ NTSTATUS TCPConnect
             Bucket->Request.RequestNotifyObject = (PVOID)Complete;
             Bucket->Request.RequestContext = Context;
             
+            IoMarkIrpPending((PIRP)Context);
+			
             InsertHeadList( &Connection->ConnectRequest, &Bucket->Entry );
         }
     }
@@ -767,8 +769,9 @@ NTSTATUS TCPReceiveData
         Bucket->Request.RequestContext = Context;
         *BytesReceived = 0;
 
+        IoMarkIrpPending((PIRP)Context);
+
         InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
-        Status = STATUS_PENDING;
         TI_DbgPrint(DEBUG_TCP,("Queued read irp\n"));
     } else {
         TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Received));
@@ -833,6 +836,8 @@ NTSTATUS TCPSendData
         Bucket->Request.RequestNotifyObject = Complete;
         Bucket->Request.RequestContext = Context;
         *BytesSent = 0;
+
+        IoMarkIrpPending((PIRP)Context);
         
         InsertTailList( &Connection->SendRequest, &Bucket->Entry );
         TI_DbgPrint(DEBUG_TCP,("Queued write irp\n"));
