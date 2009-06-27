@@ -85,6 +85,10 @@ KdpServiceDispatcher(ULONG Service,
                 case EnterDebugger:
                     DbgBreakPoint();
                     break;
+                    
+                case ThatsWhatSheSaid:
+                    MmDumpPfnDatabase();
+                    break;
 
                 default:
                     break;

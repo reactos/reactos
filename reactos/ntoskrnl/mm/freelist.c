@@ -253,6 +253,94 @@ MmAllocEarlyPage(VOID)
 
 VOID
 NTAPI
+MmDumpPfnDatabase(VOID)
+{
+    ULONG i;
+    PPHYSICAL_PAGE Pfn1;
+    PCHAR State = "????", Consumer = "Unknown";
+    KIRQL OldIrql;
+    
+    OldIrql = KfRaiseIrql(HIGH_LEVEL);
+    
+    //
+    // Loop the PFN database
+    //
+    for (i = 0; i <= MmHighestPhysicalPage; i++)
+    {
+        Pfn1 = MiGetPfnEntry(i);
+        
+        //
+        // Get the consumer
+        //
+        switch (Pfn1->Flags.Consumer)
+        {
+            case MC_NPPOOL:
+                
+                Consumer = "Nonpaged Pool";
+                break;
+                
+            case MC_PPOOL:
+                
+                Consumer = "Paged Pool";
+                break;
+                
+            case MC_CACHE:
+                
+                Consumer = "File System Cache";
+                break;
+                
+            case MC_USER:
+                
+                Consumer = "Process Working Set";
+                break;
+                
+            case MC_SYSTEM:
+                
+                Consumer = "System";
+                break;
+        }
+        
+        //
+        // Get the type
+        //
+        switch (Pfn1->Flags.Type)
+        {
+            case MM_PHYSICAL_PAGE_USED:
+                
+                State = "Used";
+                break;
+                
+            case MM_PHYSICAL_PAGE_FREE:
+                
+                State = "Free";
+                Consumer = "Free";
+                break;
+                
+            case MM_PHYSICAL_PAGE_BIOS:
+                
+                State = "BIOS";
+                Consumer = "System Reserved";
+                break;
+        }
+
+        //
+        // Pretty-print the page
+        //
+        DbgPrint("0x%08p:\t%04s\t%20s\t(%02d.%02d.%02d) [%08p])\n",
+                 i << PAGE_SHIFT,
+                 State,
+                 Consumer,
+                 Pfn1->ReferenceCount,
+                 Pfn1->MapCount,
+                 Pfn1->LockCount,
+                 Pfn1->RmapListHead);
+    }
+    
+    KeLowerIrql(OldIrql);
+}
+
+VOID
+NTAPI
 MmInitializePageList(VOID)
 {
     ULONG i;

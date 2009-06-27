@@ -293,6 +293,12 @@ typedef struct
     ULONG PagingRequestsInLastFifteenMinutes;
 } MM_STATS;
 
+//
+// These two mappings are actually used by Windows itself, based on the ASSERTS
+//
+#define StartOfAllocation ReadInProgress
+#define EndOfAllocation WriteInProgress
+
 typedef struct _MMPFNENTRY
 {
     USHORT Modified:1;
@@ -1118,6 +1124,12 @@ VOID
 NTAPI
 MmInitializePageList(
     VOID
+);
+
+VOID
+NTAPI
+MmDumpPfnDatabase(
+   VOID
 );
 
 PFN_TYPE
