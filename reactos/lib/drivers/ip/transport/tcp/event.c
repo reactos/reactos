@@ -112,6 +112,7 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	      int tmio ) {
     PSLEEPING_THREAD SleepingThread;
+    LARGE_INTEGER Timeout;
 
     TI_DbgPrint(DEBUG_TCP,
 		("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
@@ -131,12 +132,14 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	InsertTailList( &SleepingThreadsList, &SleepingThread->Entry );
 	TcpipReleaseFastMutex( &SleepingThreadsLock );
 
+        Timeout.QuadPart = Int32x32To64(tmio, -10000);
+
 	TI_DbgPrint(DEBUG_TCP,("Waiting on %x\n", token));
 	KeWaitForSingleObject( &SleepingThread->Event,
-			       WrSuspended,
+			       Executive,
 			       KernelMode,
 			       TRUE,
-			       NULL );
+			       (tmio != 0) ? &Timeout : NULL );
 
 	TcpipAcquireFastMutex( &SleepingThreadsLock );
 	RemoveEntryList( &SleepingThread->Entry );
