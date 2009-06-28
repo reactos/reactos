@@ -242,7 +242,8 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,       "Nimate pravic za shranjevanje te datoteke."
     STRING_OPEN_FAILED,               "Napaka pri odpiranju datoteke."
     STRING_OPEN_ACCESS_DENIED,        "Nimate pravic za odpiranje te datoteke."
-    STRING_PRINTING_NOT_IMPLEMENTED, "Tiskanje (še) ni na voljo"
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Tiskanje (še) ni na voljo"
+    STRING_MAX_TAB_STOPS,             "Ne morem vstaviti več kot 32 položajev tabulatorja."
 END
 
 #pragma code_page(default)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2007 by Jonathan Ernst
+ * Copyright 2006-2009 by Jonathan Ernst
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -240,4 +240,5 @@ BEGIN
     STRING_OPEN_FAILED,               "Impossible d'ouvrir le fichier."
     STRING_OPEN_ACCESS_DENIED,        "Vous ne disposez pas des accès nécessaires à l'ouverture du fichier."
     STRING_PRINTING_NOT_IMPLEMENTED, "L'impression n'est pas implémentée"
+    STRING_MAX_TAB_STOPS,             "Impossible d'ajouter plus de 32 taquets de tabulation."
 END

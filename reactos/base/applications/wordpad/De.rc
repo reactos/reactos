@@ -242,6 +242,7 @@ BEGIN
     STRING_OPEN_FAILED,          "Die Datei konnte nicht geöffnet werden."
     STRING_OPEN_ACCESS_DENIED,   "Sie haben keine ausreichende Zugriffsberechtigung um die Datei zu öffnen."
     STRING_PRINTING_NOT_IMPLEMENTED, "Drucken ist nicht implementiert"
+    STRING_MAX_TAB_STOPS,            "Es können nur maximal 32 Tabstopps definiert werden."
 END
 
 #pragma code_page(default)
