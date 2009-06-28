@@ -84,7 +84,9 @@ DECLARE_HANDLE(DHSURF);
 DECLARE_HANDLE(DHPDEV);
 DECLARE_HANDLE(HDRVOBJ);
 
+#ifndef __NTDDVDEO_H
 typedef struct _ENG_EVENT *PEVENT;
+#endif
 
 #define OPENGL_CMD                        4352
 #define OPENGL_GETINFO                    4353
