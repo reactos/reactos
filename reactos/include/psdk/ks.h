@@ -249,17 +249,6 @@ typedef KSIDENTIFIER KSDEGRADE, *PKSDEGRADE;
 typedef KSIDENTIFIER KSPIN_INTERFACE, *PKSPIN_INTERFACE;
 typedef KSIDENTIFIER KSPIN_MEDIUM, *PKSPIN_MEDIUM;
 
-#if !defined( _MSC_VER ) 
-typedef struct {
-    ULONG   FormatSize;
-    ULONG   Flags;
-    ULONG   SampleSize;
-    ULONG   Reserved;
-    GUID    MajorFormat;
-    GUID    SubFormat;
-    GUID    Specifier;
-} KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
-#else
 typedef union {
     struct {
         ULONG   FormatSize;
@@ -272,7 +261,7 @@ typedef union {
     };
     LONGLONG    Alignment;
 } KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
-#endif
+
 
 typedef struct
 {
