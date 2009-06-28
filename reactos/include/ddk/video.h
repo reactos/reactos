@@ -44,7 +44,6 @@ extern "C" {
 typedef LONG VP_STATUS;
 typedef VP_STATUS *PVP_STATUS;
 typedef struct __DMA_PARAMETERS * PDMA;
-typedef struct _VIDEO_PORT_EVENT *PEVENT;
 typedef struct _VIDEO_PORT_SPIN_LOCK *PSPIN_LOCK;
 typedef struct __VP_DMA_ADAPTER *PVP_DMA_ADAPTER;
 
