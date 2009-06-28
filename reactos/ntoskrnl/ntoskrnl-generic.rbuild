@@ -360,6 +360,7 @@
 			</directory>
 		</if>
 		<directory name="ARM3">
+			<file>contmem.c</file>
 			<file>dynamic.c</file>
 			<file>hypermap.c</file>
 			<file>init.c</file>
@@ -370,7 +371,6 @@
 		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
-		<file>cont.c</file>
 		<file>dbgpool.c</file>
 		<file>drvlck.c</file>
 		<file>freelist.c</file>

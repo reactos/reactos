@@ -47,8 +47,10 @@ extern ULONG MmSizeOfNonPagedPoolInBytes;
 extern ULONG MmMaximumNonPagedPoolInBytes;
 extern PVOID MmNonPagedPoolStart;
 extern PVOID MmNonPagedPoolExpansionStart;
+extern PVOID MmNonPagedPoolEnd;
 extern PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 extern PMMPTE MiFirstReservedZeroingPte;
+extern MI_PFN_CACHE_ATTRIBUTE MiPlatformCacheAttributes[2][MmMaximumCacheType];
 extern PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 
 VOID
@@ -78,6 +80,29 @@ MiReleaseSystemPtes(
     IN PMMPTE StartingPte,
     IN ULONG NumberOfPtes,
     IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType
+);
+
+
+PFN_NUMBER
+NTAPI
+MiFindContiguousPages(
+    IN PFN_NUMBER LowestPfn,
+    IN PFN_NUMBER HighestPfn,
+    IN PFN_NUMBER BoundaryPfn,
+    IN PFN_NUMBER SizeInPages,
+    IN MEMORY_CACHING_TYPE CacheType
+);
+
+PVOID
+NTAPI
+MiCheckForContiguousMemory(
+    IN PVOID BaseAddress,
+    IN PFN_NUMBER BaseAddressPages,
+    IN PFN_NUMBER SizeInPages,
+    IN PFN_NUMBER LowestPfn,
+    IN PFN_NUMBER HighestPfn,
+    IN PFN_NUMBER BoundaryPfn,
+    IN MI_PFN_CACHE_ATTRIBUTE CacheAttribute
 );
 
 /* EOF */
