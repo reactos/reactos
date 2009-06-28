@@ -361,6 +361,7 @@
 		</if>
 		<directory name="ARM3">
 			<file>contmem.c</file>
+			<file>drvmgmt.c</file>
 			<file>dynamic.c</file>
 			<file>hypermap.c</file>
 			<file>init.c</file>
@@ -372,7 +373,6 @@
 		<file>anonmem.c</file>
 		<file>balance.c</file>
 		<file>dbgpool.c</file>
-		<file>drvlck.c</file>
 		<file>freelist.c</file>
 		<file>kmap.c</file>
 		<file>marea.c</file>
@@ -392,7 +392,6 @@
 		<file>rmap.c</file>
 		<file>section.c</file>
 		<file>sysldr.c</file>
-		<file>verifier.c</file>
 		<file>virtual.c</file>
 		<file>wset.c</file>
 		<if property="_ELF_" value="1">

@@ -46,16 +46,3 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
    }
    return(STATUS_SUCCESS);
 }
-
-/*
- * @unimplemented
- */
-ULONG
-NTAPI
-MmTrimAllSystemPagableMemory (
-	IN ULONG PurgeTransitionList
-	)
-{
-	UNIMPLEMENTED;
-	return 0;
-}

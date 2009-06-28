@@ -52,6 +52,7 @@ extern PMMPTE MmFirstReservedMappingPte, MmLastReservedMappingPte;
 extern PMMPTE MiFirstReservedZeroingPte;
 extern MI_PFN_CACHE_ATTRIBUTE MiPlatformCacheAttributes[2][MmMaximumCacheType];
 extern PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
+extern ULONG MmBootImageSize;
 
 VOID
 NTAPI
