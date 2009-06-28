@@ -1,0 +1,8 @@
+@ stdcall DllInitialize(long)
+@ stdcall DllUnload()
+@ stdcall StreamClassRegisterAdapter(ptr ptr ptr)
+@ stdcall StreamClassReenumerateStreams(ptr long)
+@ stdcall StreamClassDebugAssert(long long ptr long)
+@ cdecl StreamClassDebugPrint (long str)
+@ cdecl StreamClassDeviceNotification(long ptr)
+@ stdcall StreamClassGetDmaBuffer(ptr)
