@@ -682,13 +682,13 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DeleteObject(DesktopRgn);
     }
   }
-#if 0
-  if (ISITHOOKED(WH_CBT))
+//#if 0
+//  if (ISITHOOKED(WH_CBT))
   {
-      if (NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, (LPARAM)&sizingRect, 0, FNID_DEFWINDOWPROC, FALSE))
+      if (NtUserMessageCall( hwnd, WM_CBT, HCBT_MOVESIZE, (LPARAM)&sizingRect, 0, FNID_DEFWINDOWPROC, FALSE))
          moved = FALSE;
   }
-#endif
+//#endif
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
   SendMessageA( hwnd, WM_EXITSIZEMOVE, 0, 0 );
   SendMessageA( hwnd, WM_SETVISIBLE, !IsIconic(hwnd), 0L);
@@ -768,13 +768,15 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
   WINDOWPLACEMENT wp;
   POINT Pt;
 
-#if 0
-  if (ISITHOOKED(WH_CBT))
+  if (!IsWindowEnabled( hWnd )) return 0;
+
+//#if 0
+//  if (ISITHOOKED(WH_CBT))
   {
      if (NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE))
         return 0;
   }
-#endif
+//#endif
   switch (wParam & 0xfff0)
     {
       case SC_MOVE:
@@ -806,8 +808,8 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
         }
         break;
       case SC_CLOSE:
-        SendMessageA(hWnd, WM_CLOSE, 0, 0);
-        break;
+        return SendMessageW(hWnd, WM_CLOSE, 0, 0);
+
       case SC_MOUSEMENU:
         {
           Pt.x = (short)LOWORD(lParam);

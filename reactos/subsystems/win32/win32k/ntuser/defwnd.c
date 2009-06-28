@@ -12,25 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-LRESULT FASTCALL
-IntDefWinHandleSysCommand( PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam , BOOL Ansi)
-{
-   DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Window->hSelf, wParam, lParam );
-
-   if (!ISITHOOKED(WH_CBT)) return 0;
-
-//   if (!UserCallNextHookEx(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam, Ansi))
-      return 0;
-
-   switch (wParam & 0xfff0)
-   {
-       case SC_MOVE:
-       case SC_SIZE:
-  //      return UserCallNextHookEx(WH_CBT, HCBT_MOVESIZE, (WPARAM)Window->hSelf, lParam, Ansi);
-        break;
-   }
-   return 1;
-}
 /*
    Win32k counterpart of User DefWindowProc
  */
@@ -54,7 +35,9 @@ IntDefWindowProc(
    {
       case WM_SYSCOMMAND:
       {
-          lResult = IntDefWinHandleSysCommand( Window, wParam, lParam, Ansi );
+          DPRINT1("hwnd %p WM_SYSCOMMAND %lx %lx\n", Window->hSelf, wParam, lParam );
+          if (!ISITHOOKED(WH_CBT)) break;
+          lResult = co_HOOK_CallHooks(WH_CBT, HCBT_SYSCOMMAND, wParam, lParam);
           break;
       }
       case WM_SHOWWINDOW:
@@ -76,8 +59,43 @@ IntDefWindowProc(
          }
       }
       break;
-   }
+      case WM_CBT:
+      {
+         if (!ISITHOOKED(WH_CBT)) break;
 
+         switch (wParam)
+         {
+            case HCBT_MOVESIZE:
+            {
+               RECTL rt;
+
+               if (lParam)
+               {
+                  _SEH2_TRY
+                  {
+                      ProbeForRead((PVOID)lParam,
+                                   sizeof(RECT),
+                                   1);
+
+                      RtlCopyMemory(&rt,
+                                    (PVOID)lParam,
+                                    sizeof(RECT));
+                  }
+                  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                  {
+                      lResult = 1;
+                  }
+                  _SEH2_END;
+               }
+               if (!lResult)
+                  lResult = co_HOOK_CallHooks(WH_CBT, HCBT_MOVESIZE, (WPARAM)Window->hSelf, lParam ? (LPARAM)&rt : 0);
+            }
+            break;
+         }
+         break;
+      }
+      break;
+   }
    return lResult;
 }
 

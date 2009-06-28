@@ -320,6 +320,7 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    HWND hWndPrev;
    HWND hWnd = 0;
    PWINDOW Wnd;
+   CBTACTIVATESTRUCT cbt;
 
    if (Window)
       ASSERT_REFS_CO(Window);
@@ -346,7 +347,11 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
       return hWndPrev;
    }
 
-   /* FIXME: Call hooks. */
+   /* call CBT hook chain */
+   cbt.fMouse     = FALSE;
+   cbt.hWndActive = hWndPrev;
+   if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
+      return 0;
 
    ThreadQueue->ActiveWindow = hWnd;
 
@@ -382,6 +387,9 @@ co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
          return hWndPrev;
       }
 
+     if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->hSelf, (LPARAM)hWndPrev))
+        return 0;
+
       ThreadQueue->FocusWindow = Window->hSelf;
 
       co_IntSendKillFocusMessages(hWndPrev, Window->hSelf);
@@ -390,6 +398,9 @@ co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
    else
    {
       ThreadQueue->FocusWindow = 0;
+
+     if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)0, (LPARAM)hWndPrev))
+        return 0;
 
       co_IntSendKillFocusMessages(hWndPrev, 0);
    }

@@ -308,6 +308,9 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
    Size.y = Wnd->WindowRect.top;
    WinPosInitInternalPos(Window, &Size, &Wnd->WindowRect);
 
+   if (co_HOOK_CallHooks( WH_CBT, HCBT_MINMAX, (WPARAM)Window->hSelf, ShowFlag))
+      return SWP_NOSIZE | SWP_NOMOVE;
+
       if (Wnd->Style & WS_MINIMIZE)
       {
          if (!co_IntSendMessage(Window->hSelf, WM_QUERYOPEN, 0, 0))

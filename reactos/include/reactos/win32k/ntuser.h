@@ -559,6 +559,7 @@ typedef struct _USERCONNECT
 //
 #define WM_SYSTIMER 280
 #define WM_POPUPSYSTEMMENU 787
+#define WM_CBT 1023 // ReactOS only.
 
 //
 // Non SDK DCE types.
