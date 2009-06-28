@@ -1151,4 +1151,57 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
     return STATUS_SUCCESS;
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+NtGetWriteWatch(IN HANDLE ProcessHandle,
+                IN ULONG Flags,
+                IN PVOID BaseAddress,
+                IN ULONG RegionSize,
+                IN PVOID *UserAddressArray,
+                OUT PULONG EntriesInUserAddressArray,
+                OUT PULONG Granularity)
+{
+    if (!EntriesInUserAddressArray || !Granularity)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+    
+    if (!*EntriesInUserAddressArray || !RegionSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    
+    if (!UserAddressArray)
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+    
+    /* HACK: Set granularity to PAGE_SIZE */
+    *Granularity = PAGE_SIZE;
+    
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+NtResetWriteWatch(IN HANDLE ProcessHandle,
+                  IN PVOID BaseAddress,
+                  IN ULONG RegionSize)
+{
+    if (!RegionSize)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+    
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /* EOF */

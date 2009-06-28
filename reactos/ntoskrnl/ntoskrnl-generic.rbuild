@@ -374,10 +374,10 @@
 		<file>balance.c</file>
 		<file>dbgpool.c</file>
 		<file>freelist.c</file>
-		<file>kmap.c</file>
 		<file>marea.c</file>
 		<file>mdlsup.c</file>
-		<file>mm.c</file>
+		<file>mmfault.c</file>
+		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
 		<file>ncache.c</file>
@@ -393,7 +393,6 @@
 		<file>section.c</file>
 		<file>sysldr.c</file>
 		<file>virtual.c</file>
-		<file>wset.c</file>
 		<if property="_ELF_" value="1">
 			<file>elf32.c</file>
 			<file>elf64.c</file>

@@ -1,30 +1,18 @@
 /*
  * COPYRIGHT:       See COPYING in the top directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/mm.c
+ * FILE:            ntoskrnl/mm/mmfault.c
  * PURPOSE:         Kernel memory managment functions
  * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *****************************************************************/
-
-ULONG MmUserProbeAddress = 0;
-PVOID MmHighestUserAddress = NULL;
-PBOOLEAN Mm64BitPhysicalAddress = FALSE;
-PVOID MmSystemRangeStart = NULL;
-ULONG MmReadClusterSize;
-
-MM_STATS MmStats;
-
-PMMSUPPORT MmKernelAddressSpace;
-
-/* FUNCTIONS ****************************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
 FASTCALL
@@ -55,54 +43,6 @@ MiSyncForContextSwitch(IN PKTHREAD Thread)
                     (PVOID)Thread->StackLimit,
                     Thread->LargeStack ?
                     KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
-}
-
-/*
- * @implemented
- */
-BOOLEAN NTAPI MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
-{
-   return MmIsAddressValid(VirtualAddress);
-}
-
-/*
- * @implemented
- */
-BOOLEAN NTAPI MmIsAddressValid(PVOID VirtualAddress)
-/*
- * FUNCTION: Checks whether the given address is valid for a read or write
- * ARGUMENTS:
- *          VirtualAddress = address to check
- * RETURNS: True if the access would be valid
- *          False if the access would cause a page fault
- * NOTES: This function checks whether a byte access to the page would
- *        succeed. Is this realistic for RISC processors which don't
- *        allow byte granular access?
- */
-{
-   MEMORY_AREA* MemoryArea;
-   PMMSUPPORT AddressSpace;
-
-   if (VirtualAddress >= MmSystemRangeStart)
-   {
-      AddressSpace = MmGetKernelAddressSpace();
-   }
-   else
-   {
-      AddressSpace = &PsGetCurrentProcess()->Vm;
-   }
-
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
-                                            VirtualAddress);
-
-   if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-      return(FALSE);
-   }
-   MmUnlockAddressSpace(AddressSpace);
-   return(TRUE);
 }
 
 NTSTATUS
@@ -379,113 +319,40 @@ MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
    return(Status);
 }
 
-
-
-/* Miscellanea functions: they may fit somewhere else */
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
  * @implemented
  */
 BOOLEAN
 NTAPI
-MmIsRecursiveIoFault (VOID)
+MmIsAddressValid(IN PVOID VirtualAddress)
 {
-    PETHREAD Thread = PsGetCurrentThread();
-
-    return (Thread->DisablePageFaultClustering | Thread->ForwardClusterOnly);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-MmMapUserAddressesToPage(IN PVOID BaseAddress,
-                         IN SIZE_T NumberOfBytes,
-                         IN PVOID PageAddress)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-ULONG NTAPI
-MmAdjustWorkingSetSize (ULONG Unknown0,
-                        ULONG Unknown1,
-                        ULONG Unknown2,
-                        ULONG Unknown3)
-{
-   UNIMPLEMENTED;
-   return (0);
-}
-
-/*
- * @unimplemented
- */
-BOOLEAN
-NTAPI
-MmSetAddressRangeModified (
-    IN PVOID    Address,
-    IN ULONG    Length
-)
-{
-   UNIMPLEMENTED;
-   return (FALSE);
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-NtGetWriteWatch(IN HANDLE ProcessHandle,
-                IN ULONG Flags,
-                IN PVOID BaseAddress,
-                IN ULONG RegionSize,
-                IN PVOID *UserAddressArray,
-                OUT PULONG EntriesInUserAddressArray,
-                OUT PULONG Granularity)
-{
-    if (!EntriesInUserAddressArray || !Granularity)
+    MEMORY_AREA* MemoryArea;
+    PMMSUPPORT AddressSpace;
+    
+    DPRINT1("WARNING: %s returns bogus result\n", __FUNCTION__);
+    
+    if (VirtualAddress >= MmSystemRangeStart)
     {
-        return STATUS_ACCESS_VIOLATION;
+        AddressSpace = MmGetKernelAddressSpace();
     }
-
-    if (!*EntriesInUserAddressArray || !RegionSize)
+    else
     {
-        return STATUS_INVALID_PARAMETER;
+        AddressSpace = &PsGetCurrentProcess()->Vm;
     }
-
-    if (!UserAddressArray)
+    
+    MmLockAddressSpace(AddressSpace);
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
+                                             VirtualAddress);
+    
+    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
     {
-        return STATUS_ACCESS_VIOLATION;
+        MmUnlockAddressSpace(AddressSpace);
+        return(FALSE);
     }
-
-    /* HACK: Set granularity to PAGE_SIZE */
-    *Granularity = PAGE_SIZE;
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-NTSTATUS
-NTAPI
-NtResetWriteWatch(IN HANDLE ProcessHandle,
-                 IN PVOID BaseAddress,
-                 IN ULONG RegionSize)
-{
-    if (!RegionSize)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    MmUnlockAddressSpace(AddressSpace);
+    return(TRUE);
 }
 
 /* EOF */
