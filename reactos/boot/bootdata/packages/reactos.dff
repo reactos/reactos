@@ -96,6 +96,7 @@ base\services\telnetd\telnetd.exe                   1
 base\services\tcpsvcs\quotes                        5
 base\services\umpnpmgr\umpnpmgr.exe                 1
 base\services\wlansvc\wlansvc.exe                   1
+base\services\svchost\svchost.exe                   1
 
 base\setup\setup\setup.exe                          1
 base\setup\vmwinst\vmwinst.exe                      1
