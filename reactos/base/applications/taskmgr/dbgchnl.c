@@ -42,33 +42,6 @@ BOOL DebugChannelsAreSupported(void)
     return FALSE;
 }
 
-static DWORD    get_selected_pid(void)
-{
-    LVITEM  lvitem;
-    ULONG   Index;
-    DWORD   dwProcessId;
-
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        memset(&lvitem, 0, sizeof(LVITEM));
-
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
-        return 0;
-    return dwProcessId;
-}
-
 static int     list_channel_CB(HANDLE hProcess, void* addr, WCHAR* buffer, void* user)
 {
     int     j;
@@ -290,7 +263,7 @@ static void DebugChannels_FillList(HWND hChannelLV)
 
     (void)ListView_DeleteAllItems(hChannelLV);
 
-    hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ, FALSE, get_selected_pid());
+    hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ, FALSE, GetSelectedProcessId());
     if (!hProcess) return; /* FIXME messagebox */
     SendMessageW(hChannelLV, WM_SETREDRAW, FALSE, 0);
     enum_channel(hProcess, list_channel_CB, (void*)hChannelLV, TRUE);
@@ -350,7 +323,7 @@ static void DebugChannels_OnNotify(HWND hDlg, LPARAM lParam)
             HANDLE           hProcess;
             NMITEMACTIVATE*  nmia = (NMITEMACTIVATE*)lParam;
 
-            hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, get_selected_pid());
+            hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetSelectedProcessId());
             if (!hProcess) return; /* FIXME message box */
             lhti.pt = nmia->ptAction;
             hChannelLV = GetDlgItem(hDlg, IDC_DEBUG_CHANNELS_LIST);

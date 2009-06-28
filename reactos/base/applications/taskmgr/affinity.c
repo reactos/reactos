@@ -40,24 +40,15 @@ static INT_PTR CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wP
 
 void ProcessPage_OnSetAffinity(void)
 {
-    LV_ITEM  lvitem;
-    ULONG    Index;
     DWORD    dwProcessId;
     WCHAR    strErrorText[260];
     WCHAR    szTitle[256];
 
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++) {
-        memset(&lvitem, 0, sizeof(LV_ITEM));
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-    dwProcessId = PerfDataGetProcessId(Index);
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
+    dwProcessId = GetSelectedProcessId();
+
+    if (dwProcessId == 0)
         return;
+
     hProcessAffinityHandle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_SET_INFORMATION, FALSE, dwProcessId);
     if (!hProcessAffinityHandle) {
         GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(WCHAR));

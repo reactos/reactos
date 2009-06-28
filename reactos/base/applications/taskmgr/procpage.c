@@ -40,10 +40,7 @@ HWND hProcessPageShowAllProcessesButton;/* Process Show All Processes checkbox *
 
 static int  nProcessPageWidth;
 static int  nProcessPageHeight;
-static BOOL    bProcessSort = FALSE;
-static BOOL    bProcessSortAscending = FALSE;
 static HANDLE  hProcessPageEvent = NULL;    /* When this event becomes signaled then we refresh the process list */
-static ULONG   ProcessSortColumnIndex = 0;
 
 int CALLBACK    ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 void AddProcess(ULONG Index);
@@ -54,6 +51,29 @@ void CommaSeparateNumberString(LPWSTR strNumber, int nMaxCount);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCount);
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
+
+DWORD GetSelectedProcessId(void)
+{
+    int     Index;
+    LVITEM  lvitem;
+
+    if(ListView_GetSelectedCount(hProcessPageListCtrl) == 1)
+    {
+        Index = ListView_GetSelectionMark(hProcessPageListCtrl);
+
+        memset(&lvitem, 0, sizeof(LVITEM));
+
+        lvitem.mask = LVIF_PARAM;
+        lvitem.iItem = Index;
+
+        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
+
+        if (lvitem.lParam)
+            return PerfDataGetProcessId(((LPPROCESS_PAGE_LIST_ITEM)lvitem.lParam)->Index);
+    }
+
+    return 0;
+}
 
 INT_PTR CALLBACK
 ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -171,7 +191,6 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
     LPNMLISTVIEW   pnmv;
     NMLVDISPINFO*  pnmdi;
     LPNMHEADER     pnmhdr;
-    LVITEM         lvitem;
     ULONG          Index;
     ULONG          ColumnIndex;
     LPPROCESS_PAGE_LIST_ITEM  pData;
@@ -207,26 +226,7 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 
         case NM_RCLICK:
 
-            for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-            {
-                memset(&lvitem, 0, sizeof(LVITEM));
-
-                lvitem.mask = LVIF_STATE;
-                lvitem.stateMask = LVIS_SELECTED;
-                lvitem.iItem = Index;
-
-                (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-                if (lvitem.state & LVIS_SELECTED)
-                    break;
-            }
-
-            if ((ListView_GetSelectedCount(hProcessPageListCtrl) == 1) &&
-                (PerfDataGetProcessId(Index) != 0))
-            {
-                ProcessPageShowContextMenu(PerfDataGetProcessId(Index));
-            }
-
+            ProcessPageShowContextMenu(GetSelectedProcessId());
             break;
 
         }
@@ -237,10 +237,9 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
         {
         case HDN_ITEMCLICK:
 
-            ProcessSortColumnIndex = pnmhdr->iItem;
-            bProcessSortAscending = !bProcessSortAscending;
+            TaskManagerSettings.SortColumn = ColumnDataHints[pnmhdr->iItem];
+            TaskManagerSettings.SortAscending = !TaskManagerSettings.SortAscending;
             (void)ListView_SortItems(hProcessPageListCtrl, ProcessPageCompareFunc, NULL);
-            bProcessSort = TRUE;
 
             break;
 
@@ -447,7 +446,7 @@ void UpdateProcesses()
     {
         AddProcess(l);
     }
-    if (bProcessSort)
+    if (TaskManagerSettings.SortColumn != -1)
     {
         (void)ListView_SortItems(hProcessPageListCtrl, ProcessPageCompareFunc, NULL);
     }
@@ -674,7 +673,6 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     int ret = 0;
     LPPROCESS_PAGE_LIST_ITEM Param1;
     LPPROCESS_PAGE_LIST_ITEM Param2;
-    ULONG ColumnIndex;
     WCHAR text1[260];
     WCHAR text2[260];
     ULONG l1;
@@ -686,130 +684,129 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
     ULONGLONG      ull1;
     ULONGLONG      ull2;
 
-    if (bProcessSortAscending) {
+    if (TaskManagerSettings.SortAscending) {
         Param1 = (LPPROCESS_PAGE_LIST_ITEM)lParam1;
         Param2 = (LPPROCESS_PAGE_LIST_ITEM)lParam2;
     } else {
         Param1 = (LPPROCESS_PAGE_LIST_ITEM)lParam2;
         Param2 = (LPPROCESS_PAGE_LIST_ITEM)lParam1;
     }
-    ColumnIndex = ProcessSortColumnIndex;
 
-    if (ColumnDataHints[ColumnIndex] == COLUMN_IMAGENAME)
+    if (TaskManagerSettings.SortColumn == COLUMN_IMAGENAME)
     {
         PerfDataGetImageName(Param1->Index, text1, sizeof (text1) / sizeof (*text1));
         PerfDataGetImageName(Param2->Index, text2, sizeof (text2) / sizeof (*text2));
         ret = _wcsicmp(text1, text2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_PID)
+    else if (TaskManagerSettings.SortColumn == COLUMN_PID)
     {
         l1 = PerfDataGetProcessId(Param1->Index);
         l2 = PerfDataGetProcessId(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_USERNAME)
+    else if (TaskManagerSettings.SortColumn == COLUMN_USERNAME)
     {
         PerfDataGetUserName(Param1->Index, text1, sizeof (text1) / sizeof (*text1));
         PerfDataGetUserName(Param2->Index, text2, sizeof (text2) / sizeof (*text2));
         ret = _wcsicmp(text1, text2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_SESSIONID)
+    else if (TaskManagerSettings.SortColumn == COLUMN_SESSIONID)
     {
         l1 = PerfDataGetSessionId(Param1->Index);
         l2 = PerfDataGetSessionId(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_CPUUSAGE)
+    else if (TaskManagerSettings.SortColumn == COLUMN_CPUUSAGE)
     {
         l1 = PerfDataGetCPUUsage(Param1->Index);
         l2 = PerfDataGetCPUUsage(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_CPUTIME)
+    else if (TaskManagerSettings.SortColumn == COLUMN_CPUTIME)
     {
         time1 = PerfDataGetCPUTime(Param1->Index);
         time2 = PerfDataGetCPUTime(Param2->Index);
         ret = largeintcmp(time1, time2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_MEMORYUSAGE)
+    else if (TaskManagerSettings.SortColumn == COLUMN_MEMORYUSAGE)
     {
         l1 = PerfDataGetWorkingSetSizeBytes(Param1->Index);
         l2 = PerfDataGetWorkingSetSizeBytes(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_PEAKMEMORYUSAGE)
+    else if (TaskManagerSettings.SortColumn == COLUMN_PEAKMEMORYUSAGE)
     {
         l1 = PerfDataGetPeakWorkingSetSizeBytes(Param1->Index);
         l2 = PerfDataGetPeakWorkingSetSizeBytes(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_MEMORYUSAGEDELTA)
+    else if (TaskManagerSettings.SortColumn == COLUMN_MEMORYUSAGEDELTA)
     {
         l1 = PerfDataGetWorkingSetSizeDelta(Param1->Index);
         l2 = PerfDataGetWorkingSetSizeDelta(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_PAGEFAULTS)
+    else if (TaskManagerSettings.SortColumn == COLUMN_PAGEFAULTS)
     {
         l1 = PerfDataGetPageFaultCount(Param1->Index);
         l2 = PerfDataGetPageFaultCount(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_PAGEFAULTSDELTA)
+    else if (TaskManagerSettings.SortColumn == COLUMN_PAGEFAULTSDELTA)
     {
         l1 = PerfDataGetPageFaultCountDelta(Param1->Index);
         l2 = PerfDataGetPageFaultCountDelta(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_VIRTUALMEMORYSIZE)
+    else if (TaskManagerSettings.SortColumn == COLUMN_VIRTUALMEMORYSIZE)
     {
         l1 = PerfDataGetVirtualMemorySizeBytes(Param1->Index);
         l2 = PerfDataGetVirtualMemorySizeBytes(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_PAGEDPOOL)
+    else if (TaskManagerSettings.SortColumn == COLUMN_PAGEDPOOL)
     {
         l1 = PerfDataGetPagedPoolUsagePages(Param1->Index);
         l2 = PerfDataGetPagedPoolUsagePages(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_NONPAGEDPOOL)
+    else if (TaskManagerSettings.SortColumn == COLUMN_NONPAGEDPOOL)
     {
         l1 = PerfDataGetNonPagedPoolUsagePages(Param1->Index);
         l2 = PerfDataGetNonPagedPoolUsagePages(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_BASEPRIORITY)
+    else if (TaskManagerSettings.SortColumn == COLUMN_BASEPRIORITY)
     {
         l1 = PerfDataGetBasePriority(Param1->Index);
         l2 = PerfDataGetBasePriority(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_HANDLECOUNT)
+    else if (TaskManagerSettings.SortColumn == COLUMN_HANDLECOUNT)
     {
         l1 = PerfDataGetHandleCount(Param1->Index);
         l2 = PerfDataGetHandleCount(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_THREADCOUNT)
+    else if (TaskManagerSettings.SortColumn == COLUMN_THREADCOUNT)
     {
         l1 = PerfDataGetThreadCount(Param1->Index);
         l2 = PerfDataGetThreadCount(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_USEROBJECTS)
+    else if (TaskManagerSettings.SortColumn == COLUMN_USEROBJECTS)
     {
         l1 = PerfDataGetUSERObjectCount(Param1->Index);
         l2 = PerfDataGetUSERObjectCount(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_GDIOBJECTS)
+    else if (TaskManagerSettings.SortColumn == COLUMN_GDIOBJECTS)
     {
         l1 = PerfDataGetGDIObjectCount(Param1->Index);
         l2 = PerfDataGetGDIObjectCount(Param2->Index);
         ret = CMP(l1, l2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADS)
+    else if (TaskManagerSettings.SortColumn == COLUMN_IOREADS)
     {
         PerfDataGetIOCounters(Param1->Index, &iocounters1);
         PerfDataGetIOCounters(Param2->Index, &iocounters2);
@@ -817,7 +814,7 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
         ull2 = iocounters2.ReadOperationCount;
         ret = CMP(ull1, ull2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITES)
+    else if (TaskManagerSettings.SortColumn == COLUMN_IOWRITES)
     {
         PerfDataGetIOCounters(Param1->Index, &iocounters1);
         PerfDataGetIOCounters(Param2->Index, &iocounters2);
@@ -825,7 +822,7 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
         ull2 = iocounters2.WriteOperationCount;
         ret = CMP(ull1, ull2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHER)
+    else if (TaskManagerSettings.SortColumn == COLUMN_IOOTHER)
     {
         PerfDataGetIOCounters(Param1->Index, &iocounters1);
         PerfDataGetIOCounters(Param2->Index, &iocounters2);
@@ -833,7 +830,7 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
         ull2 = iocounters2.OtherOperationCount;
         ret = CMP(ull1, ull2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_IOREADBYTES)
+    else if (TaskManagerSettings.SortColumn == COLUMN_IOREADBYTES)
     {
         PerfDataGetIOCounters(Param1->Index, &iocounters1);
         PerfDataGetIOCounters(Param2->Index, &iocounters2);
@@ -841,7 +838,7 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
         ull2 = iocounters2.ReadTransferCount;
         ret = CMP(ull1, ull2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_IOWRITEBYTES)
+    else if (TaskManagerSettings.SortColumn == COLUMN_IOWRITEBYTES)
     {
         PerfDataGetIOCounters(Param1->Index, &iocounters1);
         PerfDataGetIOCounters(Param2->Index, &iocounters2);
@@ -849,7 +846,7 @@ int CALLBACK ProcessPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lPara
         ull2 = iocounters2.WriteTransferCount;
         ret = CMP(ull1, ull2);
     }
-    else if (ColumnDataHints[ColumnIndex] == COLUMN_IOOTHERBYTES)
+    else if (TaskManagerSettings.SortColumn == COLUMN_IOOTHERBYTES)
     {
         PerfDataGetIOCounters(Param1->Index, &iocounters1);
         PerfDataGetIOCounters(Param2->Index, &iocounters2);

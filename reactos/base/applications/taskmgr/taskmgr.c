@@ -706,7 +706,7 @@ void LoadSettings(void)
         TaskManagerSettings.ColumnSizeArray[i] = ColumnPresets[i].size;
     }
 
-    TaskManagerSettings.SortColumn = 1;
+    TaskManagerSettings.SortColumn = COLUMN_IMAGENAME;
     TaskManagerSettings.SortAscending = TRUE;
 
     /* Performance page settings */
