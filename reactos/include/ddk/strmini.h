@@ -451,7 +451,7 @@ StreamClassDebugAssert(
     IN ULONG AssertValue
 );
 
-VOID            
+VOID
 __cdecl
 StreamClassDebugPrint(
     IN STREAM_DEBUG_LEVEL DebugPrintLevel,
@@ -464,7 +464,10 @@ __cdecl
 StreamClassDeviceNotification(
     IN STREAM_MINIDRIVER_DEVICE_NOTIFICATION_TYPE NotificationType,
     IN PVOID HwDeviceExtension,
-    ...
+    IN PHW_STREAM_REQUEST_BLOCK  pSrb,
+    IN PKSEVENT_ENTRY  EventEntry,
+    IN GUID  *EventSet,
+    IN ULONG  EventId
 );
 
 VOID
