@@ -64,9 +64,6 @@
 #define NtUserGetSysColorBrushes(HBrushes, count) \
   (BOOL)NtUserCallTwoParam((DWORD)(HBrushes), (DWORD)(count), TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES)
 
-#define NtUserGetSysColorPens(HPens, count) \
-  (BOOL)NtUserCallTwoParam((DWORD)(HPens), (DWORD)(count), TWOPARAM_ROUTINE_GETSYSCOLORPENS)
-
 #define NtUserGetSysColors(ColorRefs, count) \
   (BOOL)NtUserCallTwoParam((DWORD)(ColorRefs), (DWORD)(count), TWOPARAM_ROUTINE_GETSYSCOLORS)
 
@@ -229,7 +226,6 @@ extern PUSER_HANDLE_ENTRY gHandleEntries;
 PUSER_HANDLE_ENTRY FASTCALL GetUser32Handle(HANDLE);
 PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 
-#define SYSCOLOR_GetPen(index) GetSysColorPen(index)
 #define WIN_GetFullHandle(h) ((HWND)(h))
 
 #ifndef __ms_va_list

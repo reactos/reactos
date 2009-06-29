@@ -120,7 +120,6 @@ static const signed char LTRBInnerFlat[] = {
 /* FUNCTIONS *****************************************************************/
 
 
-HPEN WINAPI GetSysColorPen(int nIndex);
 HBRUSH WINAPI GetSysColorBrush(int nIndex);
 
 /* Ported from WINE20020904 */
@@ -187,9 +186,9 @@ static BOOL IntDrawDiagEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
     }
 
     if(InnerI != -1)
-        InnerPen = GetSysColorPen(InnerI);
+        InnerPen = GetStockObject(DC_PEN);
     if(OuterI != -1)
-        OuterPen = GetSysColorPen(OuterI);
+        OuterPen = GetStockObject(DC_PEN);
 
     MoveToEx(hdc, 0, 0, &SavePoint);
 
@@ -241,9 +240,11 @@ static BOOL IntDrawDiagEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
 
     MoveToEx(hdc, spx, spy, NULL);
     SelectObject(hdc, OuterPen);
+    SetDCPenColor(hdc, GetSysColor(OuterI));
     LineTo(hdc, epx, epy);
 
     SelectObject(hdc, InnerPen);
+    SetDCPenColor(hdc, GetSysColor(InnerI));
 
     switch(uFlags & (BF_RECT|BF_DIAGONAL))
     {
@@ -337,11 +338,11 @@ static BOOL IntDrawDiagEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
     if((uFlags & BF_MIDDLE) && retval)
     {
         HBRUSH hbsave;
-        HBRUSH hb = GetSysColorBrush(uFlags & BF_MONO ? COLOR_WINDOW : COLOR_BTNFACE);
         HPEN hpsave;
-        HPEN hp = GetSysColorPen(uFlags & BF_MONO ? COLOR_WINDOW : COLOR_BTNFACE);
-        hbsave = (HBRUSH)SelectObject(hdc, hb);
-        hpsave = (HPEN)SelectObject(hdc, hp);
+        hbsave = (HBRUSH)SelectObject(hdc, GetStockObject(DC_BRUSH));
+        hpsave = (HPEN)SelectObject(hdc, GetStockObject(DC_PEN));
+        SetDCBrushColor(hdc, GetSysColor(uFlags & BF_MONO ? COLOR_WINDOW : COLOR_BTNFACE));
+        SetDCPenColor(hdc, GetSysColor(uFlags & BF_MONO ? COLOR_WINDOW : COLOR_BTNFACE));
         Polygon(hdc, Points, 4);
         SelectObject(hdc, hbsave);
         SelectObject(hdc, hpsave);
@@ -503,13 +504,13 @@ static BOOL IntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
         LTpenplus = 1;
 
     if(LTInnerI != -1)
-        LTInnerPen = GetSysColorPen(LTInnerI);
+        LTInnerPen = GetStockObject(DC_PEN);
     if(LTOuterI != -1)
-        LTOuterPen = GetSysColorPen(LTOuterI);
+        LTOuterPen = GetStockObject(DC_PEN);
     if(RBInnerI != -1)
-        RBInnerPen = GetSysColorPen(RBInnerI);
+        RBInnerPen = GetStockObject(DC_PEN);
     if(RBOuterI != -1)
-        RBOuterPen = GetSysColorPen(RBOuterI);
+        RBOuterPen = GetStockObject(DC_PEN);
     if((uFlags & BF_MIDDLE) && retval)
     {
         FillRect(hdc, &InnerRect, GetSysColorBrush(uFlags & BF_MONO ?
@@ -519,6 +520,7 @@ static BOOL IntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
 
     /* Draw the outer edge */
     SelectObject(hdc, LTOuterPen);
+    SetDCPenColor(hdc, GetSysColor(LTOuterI));
     if(uFlags & BF_TOP)
     {
         MoveToEx(hdc, InnerRect.left, InnerRect.top, NULL);
@@ -530,6 +532,7 @@ static BOOL IntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
         LineTo(hdc, InnerRect.left, InnerRect.bottom);
     }
     SelectObject(hdc, RBOuterPen);
+    SetDCPenColor(hdc, GetSysColor(RBOuterI));
     if(uFlags & BF_BOTTOM)
     {
         MoveToEx(hdc, InnerRect.left, InnerRect.bottom-1, NULL);
@@ -543,6 +546,7 @@ static BOOL IntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
 
     /* Draw the inner edge */
     SelectObject(hdc, LTInnerPen);
+    SetDCPenColor(hdc, GetSysColor(LTInnerI));
     if(uFlags & BF_TOP)
     {
         MoveToEx(hdc, InnerRect.left+LTpenplus, InnerRect.top+1, NULL);
@@ -554,6 +558,7 @@ static BOOL IntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
         LineTo(hdc, InnerRect.left+1, InnerRect.bottom-LBpenplus);
     }
     SelectObject(hdc, RBInnerPen);
+    SetDCPenColor(hdc, GetSysColor(RBInnerI));
     if(uFlags & BF_BOTTOM)
     {
         MoveToEx(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2, NULL);
@@ -891,8 +896,9 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
     POINT Line[4];
     int SmallDiam = UITOOLS_MakeSquareRect(r, &myr) - 2;
     int i;
-    HBRUSH hbsave, hb, hb2;
-    HPEN hpsave, hp, hp2;
+    HBRUSH hbsave;
+    HPEN hpsave;
+    COLORREF crPen1, crPen2, crBrush1, crBrush2;
     int d46, d93;
     // end scrollgripsize
     switch(uFlags & 0xff)
@@ -909,7 +915,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 	case DFCS_SCROLLLEFT:
 		Symbol = '3';
 		break;
-        
+
 	case DFCS_SCROLLRIGHT:
 		Symbol = '4';
 		break;
@@ -918,20 +924,21 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 	    // FIXME: needs to use marlett too, copied for compatibility only
             /* This one breaks the flow... */
             IntDrawRectEdge(dc, r, EDGE_BUMP, BF_MIDDLE | ((uFlags&(DFCS_MONO|DFCS_FLAT)) ? BF_MONO : 0));
-            hpsave = (HPEN)SelectObject(dc, GetStockObject(NULL_PEN));
-            hbsave = (HBRUSH)SelectObject(dc, GetStockObject(NULL_BRUSH));
+            hpsave = (HPEN)SelectObject(dc, GetStockObject(DC_PEN));
+            hbsave = (HBRUSH)SelectObject(dc, GetStockObject(DC_BRUSH));
             if(uFlags & (DFCS_MONO|DFCS_FLAT))
             {
-                hp = hp2 = GetSysColorPen(COLOR_WINDOWFRAME);
-                hb = hb2 = GetSysColorBrush(COLOR_WINDOWFRAME);
+                crPen1 = crPen2 = GetSysColor(COLOR_WINDOWFRAME);
+                crBrush1 = crBrush2 = GetSysColor(COLOR_WINDOWFRAME);
             }
             else
             {
-                hp  = GetSysColorPen(COLOR_BTNHIGHLIGHT);
-                hp2 = GetSysColorPen(COLOR_BTNSHADOW);
-                hb  = GetSysColorBrush(COLOR_BTNHIGHLIGHT);
-                hb2 = GetSysColorBrush(COLOR_BTNSHADOW);
+                crPen1 = GetSysColor(COLOR_BTNHIGHLIGHT);
+                crPen2 = GetSysColor(COLOR_BTNSHADOW);
+                crBrush1 = GetSysColor(COLOR_BTNHIGHLIGHT);
+                crBrush2 = GetSysColor(COLOR_BTNSHADOW);
             }
+
             Line[0].x = Line[1].x = r->right-1;
             Line[2].y = Line[3].y = r->bottom-1;
             d46 = 46*SmallDiam/750;
@@ -942,15 +949,15 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
             Line[3].x = r->right - i - 1;
             Line[1].y = Line[0].y + d46;
             Line[2].x = Line[3].x + d46;
-            SelectObject(dc, hb);
-            SelectObject(dc, hp);
+            SetDCBrushColor(dc, crBrush1);
+            SetDCPenColor(dc, crPen1);
             Polygon(dc, Line, 4);
 
             Line[1].y++; Line[2].x++;
             Line[0].y = Line[1].y + d93;
             Line[3].x = Line[2].x + d93;
-            SelectObject(dc, hb2);
-            SelectObject(dc, hp2);
+            SetDCBrushColor(dc, crBrush2);
+            SetDCPenColor(dc, crPen2);
             Polygon(dc, Line, 4);
 
             i = 398*SmallDiam/750;
@@ -958,15 +965,15 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
             Line[3].x = r->right - i - 1;
             Line[1].y = Line[0].y + d46;
             Line[2].x = Line[3].x + d46;
-            SelectObject(dc, hb);
-            SelectObject(dc, hp);
+            SetDCBrushColor(dc, crBrush1);
+            SetDCPenColor(dc, crPen1);
             Polygon(dc, Line, 4);
 
             Line[1].y++; Line[2].x++;
             Line[0].y = Line[1].y + d93;
             Line[3].x = Line[2].x + d93;
-            SelectObject(dc, hb2);
-            SelectObject(dc, hp2);
+            SetDCBrushColor(dc, crBrush2);
+            SetDCPenColor(dc, crPen2);
             Polygon(dc, Line, 4);
 
             i = 210*SmallDiam/750;
@@ -974,15 +981,15 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
             Line[3].x = r->right - i - 1;
             Line[1].y = Line[0].y + d46;
             Line[2].x = Line[3].x + d46;
-            SelectObject(dc, hb);
-            SelectObject(dc, hp);
+            SetDCBrushColor(dc, crBrush1);
+            SetDCPenColor(dc, crPen1);
             Polygon(dc, Line, 4);
 
             Line[1].y++; Line[2].x++;
             Line[0].y = Line[1].y + d93;
             Line[3].x = Line[2].x + d93;
-            SelectObject(dc, hb2);
-            SelectObject(dc, hp2);
+            SetDCBrushColor(dc, crBrush2);
+            SetDCPenColor(dc, crPen2);
             Polygon(dc, Line, 4);
 
             SelectObject(dc, hpsave);

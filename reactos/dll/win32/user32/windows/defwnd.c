@@ -73,21 +73,6 @@ GetSysColor(int nIndex)
 /*
  * @implemented
  */
-HPEN WINAPI
-GetSysColorPen(int nIndex)
-{
-  if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
-  {
-    return g_psi->SysColorPens[nIndex];
-  }
-
-  SetLastError(ERROR_INVALID_PARAMETER);
-  return NULL;
-}
-
-/*
- * @implemented
- */
 HBRUSH WINAPI
 GetSysColorBrush(int nIndex)
 {

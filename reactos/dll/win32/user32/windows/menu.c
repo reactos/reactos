@@ -659,7 +659,8 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
     rc.bottom = Height - 3;
     if (flat_menu)
     {
-       oldPen = SelectObject( Dc, GetSysColorPen(COLOR_BTNSHADOW) );
+       oldPen = SelectObject( Dc, GetStockObject(DC_PEN) );
+       SetDCPenColor(Dc, GetSysColor(COLOR_BTNSHADOW));
        MoveToEx( Dc, rc.left, rc.top, NULL );
        LineTo( Dc, rc.left, rc.bottom );
        SelectObject( Dc, oldPen );
@@ -678,7 +679,8 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
     rc.top += SEPARATOR_HEIGHT / 2;
     if (flat_menu)
     {
-       oldPen = SelectObject( Dc, GetSysColorPen(COLOR_BTNSHADOW) );
+       oldPen = SelectObject( Dc, GetStockObject(DC_PEN) );
+       SetDCPenColor(Dc, GetSysColor(COLOR_BTNSHADOW));
        MoveToEx( Dc, rc.left, rc.top, NULL );
        LineTo( Dc, rc.right, rc.top );
        SelectObject( Dc, oldPen );
@@ -692,7 +694,8 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
   /* helper lines for debugging */
   /* This is a very good test tool when hacking menus! (JT) 07/16/2006 */
   FrameRect(Dc, &Rect, GetStockObject(BLACK_BRUSH));
-  SelectObject(Dc, GetSysColorPen(COLOR_WINDOWFRAME));
+  SelectObject(Dc, GetStockObject(DC_PEN));
+  SetDCPenColor(Dc, GetSysColor(COLOR_WINDOWFRAME));
   MoveToEx(Dc, Rect.left, (Rect.top + Rect.bottom) / 2, NULL);
   LineTo(Dc, Rect.right, (Rect.top + Rect.bottom) / 2);
 #endif
@@ -1639,7 +1642,8 @@ DrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font)
 
   FillRect(DC, Rect, GetSysColorBrush(flat_menu ? COLOR_MENUBAR : COLOR_MENU));
 
-  SelectObject(DC, GetSysColorPen(COLOR_3DFACE));
+  SelectObject(DC, GetStockObject(DC_PEN));
+  SetDCPenColor(DC, GetSysColor(COLOR_3DFACE));
   MoveToEx(DC, Rect->left, Rect->bottom, NULL);
   LineTo(DC, Rect->right, Rect->bottom);
 
@@ -4010,7 +4014,7 @@ DrawMenuBar(HWND hWnd)
   MenuInfo.Height = 0; // make sure to recalc size
   MenuSetRosMenuInfo(&MenuInfo);
   /* The wine method doesn't work and I suspect it's more effort
-     then hackfix solution 
+     then hackfix solution
   SetWindowPos( hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                   SWP_NOZORDER | SWP_FRAMECHANGED );
   return TRUE;*/
@@ -4224,7 +4228,7 @@ GetMenuItemInfoA(
 
    RtlFreeHeap(GetProcessHeap(), 0, miiW.dwTypeData);
    mii->dwTypeData = AnsiBuffer;
- 
+
    return TRUE;
 }
 

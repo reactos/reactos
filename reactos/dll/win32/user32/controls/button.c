@@ -860,8 +860,12 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     SendMessageW( parent, WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
 
     setup_clipping( hwnd, hDC );
-
+#ifdef __REACTOS__
+    hOldPen = SelectObject(hDC, GetStockObject(DC_PEN));
+    SetDCPenColor(hDC, GetSysColor(COLOR_WINDOWFRAME));
+#else
     hOldPen = SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
+#endif
     hOldBrush = SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
 
