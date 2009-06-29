@@ -890,15 +890,6 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
     RECT myr;
     INT bkmode;
     TCHAR Symbol;
-    // for scrollgripsize
-    POINT Line[4];
-    int SmallDiam = UITOOLS_MakeSquareRect(r, &myr) - 2;
-    int i;
-    HBRUSH hbsave;
-    HPEN hpsave;
-    COLORREF crPen1, crPen2, crBrush1, crBrush2;
-    int d46, d93;
-    // end scrollgripsize
     switch(uFlags & 0xff)
     {
         case DFCS_SCROLLCOMBOBOX:
@@ -919,82 +910,39 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 		break;
 
 	case DFCS_SCROLLSIZEGRIP:
-	    // FIXME: needs to use marlett too, copied for compatibility only
-            /* This one breaks the flow... */
-            IntDrawRectEdge(dc, r, EDGE_BUMP, BF_MIDDLE | ((uFlags&(DFCS_MONO|DFCS_FLAT)) ? BF_MONO : 0));
-            hpsave = (HPEN)SelectObject(dc, GetStockObject(DC_PEN));
-            hbsave = (HBRUSH)SelectObject(dc, GetStockObject(DC_BRUSH));
-            if(uFlags & (DFCS_MONO|DFCS_FLAT))
-            {
-                crPen1 = crPen2 = GetSysColor(COLOR_WINDOWFRAME);
-                crBrush1 = crBrush2 = GetSysColor(COLOR_WINDOWFRAME);
-            }
-            else
-            {
-                crPen1 = GetSysColor(COLOR_BTNHIGHLIGHT);
-                crPen2 = GetSysColor(COLOR_BTNSHADOW);
-                crBrush1 = GetSysColor(COLOR_BTNHIGHLIGHT);
-                crBrush2 = GetSysColor(COLOR_BTNSHADOW);
-            }
-
-            Line[0].x = Line[1].x = r->right-1;
-            Line[2].y = Line[3].y = r->bottom-1;
-            d46 = 46*SmallDiam/750;
-            d93 = 93*SmallDiam/750;
-
-            i = 586*SmallDiam/750;
-            Line[0].y = r->bottom - i - 1;
-            Line[3].x = r->right - i - 1;
-            Line[1].y = Line[0].y + d46;
-            Line[2].x = Line[3].x + d46;
-            SetDCBrushColor(dc, crBrush1);
-            SetDCPenColor(dc, crPen1);
-            Polygon(dc, Line, 4);
-
-            Line[1].y++; Line[2].x++;
-            Line[0].y = Line[1].y + d93;
-            Line[3].x = Line[2].x + d93;
-            SetDCBrushColor(dc, crBrush2);
-            SetDCPenColor(dc, crPen2);
-            Polygon(dc, Line, 4);
-
-            i = 398*SmallDiam/750;
-            Line[0].y = r->bottom - i - 1;
-            Line[3].x = r->right - i - 1;
-            Line[1].y = Line[0].y + d46;
-            Line[2].x = Line[3].x + d46;
-            SetDCBrushColor(dc, crBrush1);
-            SetDCPenColor(dc, crPen1);
-            Polygon(dc, Line, 4);
-
-            Line[1].y++; Line[2].x++;
-            Line[0].y = Line[1].y + d93;
-            Line[3].x = Line[2].x + d93;
-            SetDCBrushColor(dc, crBrush2);
-            SetDCPenColor(dc, crPen2);
-            Polygon(dc, Line, 4);
-
-            i = 210*SmallDiam/750;
-            Line[0].y = r->bottom - i - 1;
-            Line[3].x = r->right - i - 1;
-            Line[1].y = Line[0].y + d46;
-            Line[2].x = Line[3].x + d46;
-            SetDCBrushColor(dc, crBrush1);
-            SetDCPenColor(dc, crPen1);
-            Polygon(dc, Line, 4);
-
-            Line[1].y++; Line[2].x++;
-            Line[0].y = Line[1].y + d93;
-            Line[3].x = Line[2].x + d93;
-            SetDCBrushColor(dc, crBrush2);
-            SetDCPenColor(dc, crPen2);
-            Polygon(dc, Line, 4);
-
-            SelectObject(dc, hpsave);
-            SelectObject(dc, hbsave);
-            return TRUE;
 	case DFCS_SCROLLSIZEGRIPRIGHT:
-            return FALSE; // unimplemented yet
+		ZeroMemory(&lf, sizeof(LOGFONT));
+		UITOOLS_MakeSquareRect(r, &myr);
+		lf.lfHeight = myr.bottom - myr.top;
+		lf.lfWidth = 0;
+		lf.lfWeight = FW_NORMAL;
+		lf.lfCharSet = DEFAULT_CHARSET;
+		lstrcpy(lf.lfFaceName, TEXT("Marlett"));
+		hFont = CreateFontIndirect(&lf);
+		/* save font and text color */
+		hOldFont = SelectObject(dc, hFont);
+		clrsave = GetTextColor(dc);
+		bkmode = GetBkMode(dc);
+		/* set color and drawing mode */
+		SetBkMode(dc, TRANSPARENT);
+		if (!(uFlags & (DFCS_MONO | DFCS_FLAT)))
+		{
+			SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+			/* draw selected symbol */
+			Symbol = ((uFlags & 0xff) == DFCS_SCROLLSIZEGRIP) ? 'o' : 'x';
+			TextOut(dc, myr.left, myr.top, &Symbol, 1);
+			SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
+		} else
+			SetTextColor(dc, GetSysColor(COLOR_WINDOWFRAME));
+		/* draw selected symbol */
+		Symbol = ((uFlags & 0xff) == DFCS_SCROLLSIZEGRIP) ? 'p' : 'y';
+		TextOut(dc, myr.left, myr.top, &Symbol, 1);
+		/* restore previous settings */
+		SetTextColor(dc, clrsave);
+		SelectObject(dc, hOldFont);
+		SetBkMode(dc, bkmode);
+		DeleteObject(hFont);
+            return TRUE;
 	default:
             return FALSE;
     }
