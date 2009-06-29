@@ -45,7 +45,11 @@
 #define isprintW iswprint
 
 #ifndef WINE_UNICODE_API
-#define WINE_UNICODE_API __attribute__((dllimport))
+# if defined(_MSC_VER)
+#  define WINE_UNICODE_API __declspec(dllimport)
+# else
+#  define WINE_UNICODE_API __attribute__((dllimport))
+# endif
 #endif
 
 #ifndef __VALIST
