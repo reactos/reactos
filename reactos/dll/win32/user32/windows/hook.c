@@ -316,7 +316,7 @@ NotifyWinEvent(
 // "Servers call NotifyWinEvent to announce the event to the system after the
 // event has occurred; they must never notify the system of an event before
 // the event has occurred." msdn on NotifyWinEvent.
-  if (g_psi->SrvEventActivity & GetMaskFromEvent(event)) // Check to see.
+  if (g_psi->dwInstalledEventHooks & GetMaskFromEvent(event)) // Check to see.
       NtUserNotifyWinEvent(event, hwnd, idObject, idChild);
 }
 
@@ -371,7 +371,7 @@ IsWinEventHookInstalled(
 {
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
   {
-     return (g_psi->SrvEventActivity & GetMaskFromEvent(event)) != 0;
+     return (g_psi->dwInstalledEventHooks & GetMaskFromEvent(event)) != 0;
   }
   return FALSE;
 }
