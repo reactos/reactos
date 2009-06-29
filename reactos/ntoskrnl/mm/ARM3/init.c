@@ -650,7 +650,6 @@ MmArmInitSystem(IN ULONG Phase,
         MmNumberOfSystemPtes = MiAddressToPte(MmNonPagedPoolExpansionStart) -
                                PointerPte;
         MmNumberOfSystemPtes--;
-        ASSERT((MmNumberOfSystemPtes - OldCount) <= 1000);
         DPRINT1("Final System PTE count: %d (%d bytes)\n",
                 MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
         
