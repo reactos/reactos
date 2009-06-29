@@ -8,11 +8,11 @@
 			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.20/win32/en-US/Firefox%20Setup%202.0.0.20.exe</location>
 		</application>
 		<application name="Firefox 3.0">
-			<regname>Mozilla Firefox (3.0.9)</regname>
+			<regname>Mozilla Firefox (3.0.11)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>3.0.9</version>
+			<version>3.0.11</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/3.0.9/win32/en-US/Firefox%20Setup%203.0.9.exe</location>
+			<location>http://releases.mozilla.org/pub/mozilla.org/firefox/releases/3.0.11/win32/en-US/Firefox%20Setup%203.0.11.exe</location>
 		</application>
 		<application name="Opera">
 			<regname>Opera</regname>
