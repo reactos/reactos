@@ -5,6 +5,7 @@
  * Copyright 2001 Casper S. Hournstroup
  * Copyright 2003 Andrew Greenwood
  * Copyright 2003 Filip Navara
+ * Copyright 2009 Matthias Kupfer
  *
  * Based on Wine code.
  *
@@ -650,6 +651,9 @@ static void UITOOLS_DrawCheckedRect( HDC dc, LPRECT rect )
  * Does a pretty good job in emulating MS behavior. Some quirks are
  * however there because MS uses a TrueType font (Marlett) to draw
  * the buttons.
+ *
+ * FIXME: This looks a little bit strange, needs to be rewritten completely
+ * (several quirks with adjust, DFCS_CHECKED aso)
  */
 static BOOL UITOOLS95_DFC_ButtonPush(HDC dc, LPRECT r, UINT uFlags)
 {
@@ -814,7 +818,6 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
 static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 {
-    int colorIdx = uFlags & DFCS_INACTIVE ? COLOR_BTNSHADOW : COLOR_BTNTEXT;
     LOGFONT lf;
     HFONT hFont, hOldFont;
     COLORREF clrsave;
@@ -841,11 +844,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         default:
              return FALSE;
     }
-    if(uFlags & DFCS_PUSHED)
-        IntDrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
-    else
-        IntDrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
-                        BF_SOFT | BF_MIDDLE);
+    IntDrawRectEdge(dc,r,(uFlags&DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT | BF_MIDDLE | BF_SOFT);
     ZeroMemory(&lf, sizeof(LOGFONT));
     UITOOLS_MakeSquareRect(r, &myr);
     myr.left += 1;
@@ -872,7 +871,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
         SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
         TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
     }
-    SetTextColor(dc, GetSysColor(colorIdx));
+    SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     /* draw selected symbol */
     TextOut(dc, myr.left, myr.top, &Symbol, 1);
     /* restore previous settings */
@@ -885,7 +884,6 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 {
-    int colorIdx = uFlags & DFCS_INACTIVE ? COLOR_BTNSHADOW : COLOR_BTNTEXT;
     LOGFONT lf;
     HFONT hFont, hOldFont;
     COLORREF clrsave;
@@ -1000,6 +998,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 	default:
             return FALSE;
     }
+    // FIXME: the following edge isn't windows-like
     if(uFlags & DFCS_PUSHED)
         IntDrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
     else
@@ -1031,7 +1030,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
         SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
         TextOut(dc, myr.left + 1, myr.top + 1, &Symbol, 1);
     }
-    SetTextColor(dc, GetSysColor(colorIdx));
+    SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     /* draw selected symbol */
     TextOut(dc, myr.left, myr.top, &Symbol, 1);
     /* restore previous settings */
@@ -1081,6 +1080,13 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     hFont = CreateFontIndirect(&lf);
     /* save font */
     hOldFont = SelectObject(dc, hFont);
+    if(uFlags & DFCS_INACTIVE)
+    {
+        /* draw shadow */
+        SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
+        TextOut(dc, r->left + 1, r->top + 1, &Symbol, 1);
+    }
+    SetTextColor(dc, GetSysColor((uFlags & DFCS_INACTIVE) ? COLOR_BTNSHADOW : COLOR_BTNTEXT));
     /* draw selected symbol */
     TextOut(dc, r->left, r->top, &Symbol, 1);
     /* restore previous settings */
