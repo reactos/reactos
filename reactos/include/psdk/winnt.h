@@ -2969,12 +2969,14 @@ typedef union _ULARGE_INTEGER {
 typedef struct _LUID {
     LARGE_INTEGER_ORDER(LONG)
 } LUID, *PLUID;
-#pragma pack(push,4)
+
+#include <pshpack4.h>
 typedef struct _LUID_AND_ATTRIBUTES {
 	LUID   Luid;
 	DWORD  Attributes;
 } LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
-#pragma pack(pop)
+#include <poppack.h>
+
 typedef LUID_AND_ATTRIBUTES LUID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
 typedef struct _PRIVILEGE_SET {
@@ -3073,6 +3075,8 @@ typedef enum tagTOKEN_TYPE {
 	TokenPrimary = 1,
 	TokenImpersonation
 } TOKEN_TYPE,*PTOKEN_TYPE;
+
+#include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
 	LUID TokenId;
 	LUID AuthenticationId;
@@ -3085,6 +3089,8 @@ typedef struct _TOKEN_STATISTICS {
 	DWORD PrivilegeCount;
 	LUID ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
+#include <poppack.h>
+
 typedef struct _TOKEN_USER {
 	SID_AND_ATTRIBUTES User;
 } TOKEN_USER, *PTOKEN_USER;
@@ -3419,6 +3425,7 @@ typedef struct _EVENTLOGRECORD {
 	DWORD DataLength;
 	DWORD DataOffset;
 } EVENTLOGRECORD,*PEVENTLOGRECORD;
+
 typedef struct _OSVERSIONINFOA {
 	DWORD dwOSVersionInfoSize;
 	DWORD dwMajorVersion;
@@ -3427,6 +3434,7 @@ typedef struct _OSVERSIONINFOA {
 	DWORD dwPlatformId;
 	CHAR szCSDVersion[128];
 } OSVERSIONINFOA,*POSVERSIONINFOA,*LPOSVERSIONINFOA;
+
 typedef struct _OSVERSIONINFOW {
 	DWORD dwOSVersionInfoSize;
 	DWORD dwMajorVersion;
@@ -3435,6 +3443,7 @@ typedef struct _OSVERSIONINFOW {
 	DWORD dwPlatformId;
 	WCHAR szCSDVersion[128];
 } OSVERSIONINFOW,*POSVERSIONINFOW,*LPOSVERSIONINFOW;
+
 typedef struct _OSVERSIONINFOEXA {
 	DWORD dwOSVersionInfoSize;
 	DWORD dwMajorVersion;
@@ -3448,6 +3457,7 @@ typedef struct _OSVERSIONINFOEXA {
 	BYTE wProductType;
 	BYTE wReserved;
 } OSVERSIONINFOEXA, *POSVERSIONINFOEXA, *LPOSVERSIONINFOEXA;
+
 typedef struct _OSVERSIONINFOEXW {
 	DWORD dwOSVersionInfoSize;
 	DWORD dwMajorVersion;
@@ -3461,7 +3471,8 @@ typedef struct _OSVERSIONINFOEXW {
 	BYTE wProductType;
 	BYTE wReserved;
 } OSVERSIONINFOEXW, *POSVERSIONINFOEXW, *LPOSVERSIONINFOEXW;
-#pragma pack(push,2)
+
+#include <pshpack2.h>
 typedef struct _IMAGE_VXD_HEADER {
 	WORD e32_magic;
 	BYTE e32_border;
@@ -3515,8 +3526,8 @@ typedef struct _IMAGE_VXD_HEADER {
 	WORD e32_devid;
 	WORD e32_ddkver;
 } IMAGE_VXD_HEADER,*PIMAGE_VXD_HEADER;
-#pragma pack(pop)
-#pragma pack(push,4)
+#include <poppack.h>
+
 typedef struct _IMAGE_FILE_HEADER {
 	WORD Machine;
 	WORD NumberOfSections;
@@ -3526,10 +3537,12 @@ typedef struct _IMAGE_FILE_HEADER {
 	WORD SizeOfOptionalHeader;
 	WORD Characteristics;
 } IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER;
+
 typedef struct _IMAGE_DATA_DIRECTORY {
 	DWORD VirtualAddress;
 	DWORD Size;
 } IMAGE_DATA_DIRECTORY,*PIMAGE_DATA_DIRECTORY;
+
 typedef struct _IMAGE_OPTIONAL_HEADER32 {
 	WORD Magic;
 	BYTE MajorLinkerVersion;
@@ -3563,6 +3576,7 @@ typedef struct _IMAGE_OPTIONAL_HEADER32 {
 	DWORD NumberOfRvaAndSizes;
 	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 } IMAGE_OPTIONAL_HEADER32,*PIMAGE_OPTIONAL_HEADER32;
+
 typedef struct _IMAGE_OPTIONAL_HEADER64 {
 	WORD Magic;
 	BYTE MajorLinkerVersion;
@@ -3595,6 +3609,7 @@ typedef struct _IMAGE_OPTIONAL_HEADER64 {
 	DWORD NumberOfRvaAndSizes;
 	IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 } IMAGE_OPTIONAL_HEADER64,*PIMAGE_OPTIONAL_HEADER64;
+
 typedef struct _IMAGE_ROM_OPTIONAL_HEADER {
 	WORD Magic;
 	BYTE MajorLinkerVersion;
@@ -3610,8 +3625,8 @@ typedef struct _IMAGE_ROM_OPTIONAL_HEADER {
 	DWORD CprMask[4];
 	DWORD GpValue;
 } IMAGE_ROM_OPTIONAL_HEADER,*PIMAGE_ROM_OPTIONAL_HEADER;
-#pragma pack(pop)
-#pragma pack(push,2)
+
+#include <pshpack2.h>
 typedef struct _IMAGE_DOS_HEADER {
 	WORD e_magic;
 	WORD e_cblp;
@@ -3633,6 +3648,7 @@ typedef struct _IMAGE_DOS_HEADER {
 	WORD e_res2[10];
 	LONG e_lfanew;
 } IMAGE_DOS_HEADER,*PIMAGE_DOS_HEADER;
+
 typedef struct _IMAGE_OS2_HEADER {
 	WORD ne_magic;
 	CHAR ne_ver;
@@ -3665,18 +3681,20 @@ typedef struct _IMAGE_OS2_HEADER {
 	WORD ne_swaparea;
 	WORD ne_expver;
 } IMAGE_OS2_HEADER,*PIMAGE_OS2_HEADER;
-#pragma pack(pop)
-#pragma pack(push,4)
+#include <poppack.h>
+
 typedef struct _IMAGE_NT_HEADERS32 {
 	DWORD Signature;
 	IMAGE_FILE_HEADER FileHeader;
 	IMAGE_OPTIONAL_HEADER32 OptionalHeader;
 } IMAGE_NT_HEADERS32,*PIMAGE_NT_HEADERS32;
+
 typedef struct _IMAGE_NT_HEADERS64 {
 	DWORD Signature;
 	IMAGE_FILE_HEADER FileHeader;
 	IMAGE_OPTIONAL_HEADER64 OptionalHeader;
 } IMAGE_NT_HEADERS64,*PIMAGE_NT_HEADERS64;
+
 #ifdef _WIN64
 typedef IMAGE_OPTIONAL_HEADER64 IMAGE_OPTIONAL_HEADER;
 typedef PIMAGE_OPTIONAL_HEADER64 PIMAGE_OPTIONAL_HEADER;
@@ -3688,10 +3706,12 @@ typedef PIMAGE_OPTIONAL_HEADER32 PIMAGE_OPTIONAL_HEADER;
 typedef IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS;
 typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 #endif
+
 typedef struct _IMAGE_ROM_HEADERS {
 	IMAGE_FILE_HEADER FileHeader;
 	IMAGE_ROM_OPTIONAL_HEADER OptionalHeader;
 } IMAGE_ROM_HEADERS,*PIMAGE_ROM_HEADERS;
+
 typedef struct _IMAGE_SECTION_HEADER {
 	BYTE Name[IMAGE_SIZEOF_SHORT_NAME];
 	union {
@@ -3707,8 +3727,8 @@ typedef struct _IMAGE_SECTION_HEADER {
 	WORD NumberOfLinenumbers;
 	DWORD Characteristics;
 } IMAGE_SECTION_HEADER,*PIMAGE_SECTION_HEADER;
-#pragma pack(pop)
-#pragma pack(push,2)
+
+#include <pshpack2.h>
 typedef struct _IMAGE_SYMBOL {
 	union {
 		BYTE ShortName[8];
@@ -3724,6 +3744,15 @@ typedef struct _IMAGE_SYMBOL {
 	BYTE StorageClass;
 	BYTE NumberOfAuxSymbols;
 } IMAGE_SYMBOL,*PIMAGE_SYMBOL;
+
+typedef struct _IMAGE_LINENUMBER {
+	union {
+		DWORD SymbolTableIndex;
+		DWORD VirtualAddress;
+	} Type;
+	WORD Linenumber;
+} IMAGE_LINENUMBER,*PIMAGE_LINENUMBER;
+
 typedef union _IMAGE_AUX_SYMBOL {
 	struct {
 		DWORD TagIndex;
@@ -3824,6 +3853,7 @@ typedef struct _IMAGE_COFF_SYMBOLS_HEADER {
 	DWORD RvaToFirstByteOfData;
 	DWORD RvaToLastByteOfData;
 } IMAGE_COFF_SYMBOLS_HEADER,*PIMAGE_COFF_SYMBOLS_HEADER;
+
 typedef struct _IMAGE_RELOCATION {
 	_ANONYMOUS_UNION union {
 		DWORD VirtualAddress;
@@ -3832,23 +3862,13 @@ typedef struct _IMAGE_RELOCATION {
 	DWORD SymbolTableIndex;
 	WORD Type;
 } IMAGE_RELOCATION,*PIMAGE_RELOCATION;
-#pragma pack(pop)
-#pragma pack(push,4)
+#include <poppack.h>
+
 typedef struct _IMAGE_BASE_RELOCATION {
 	DWORD VirtualAddress;
 	DWORD SizeOfBlock;
 } IMAGE_BASE_RELOCATION,*PIMAGE_BASE_RELOCATION;
-#pragma pack(pop)
-#pragma pack(push,2)
-typedef struct _IMAGE_LINENUMBER {
-	union {
-		DWORD SymbolTableIndex;
-		DWORD VirtualAddress;
-	} Type;
-	WORD Linenumber;
-} IMAGE_LINENUMBER,*PIMAGE_LINENUMBER;
-#pragma pack(pop)
-#pragma pack(push,4)
+
 typedef struct _IMAGE_ARCHIVE_MEMBER_HEADER {
 	BYTE Name[16];
 	BYTE Date[12];
@@ -3858,6 +3878,7 @@ typedef struct _IMAGE_ARCHIVE_MEMBER_HEADER {
 	BYTE Size[10];
 	BYTE EndHeader[2];
 } IMAGE_ARCHIVE_MEMBER_HEADER,*PIMAGE_ARCHIVE_MEMBER_HEADER;
+
 typedef struct _IMAGE_EXPORT_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;
@@ -3871,11 +3892,13 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
 	DWORD AddressOfNames;
 	DWORD AddressOfNameOrdinals;
 } IMAGE_EXPORT_DIRECTORY,*PIMAGE_EXPORT_DIRECTORY;
+
 typedef struct _IMAGE_IMPORT_BY_NAME {
 	WORD Hint;
 	BYTE Name[1];
 } IMAGE_IMPORT_BY_NAME,*PIMAGE_IMPORT_BY_NAME;
-#include "pshpack8.h"
+
+#include <pshpack8.h>
 typedef struct _IMAGE_THUNK_DATA64 {
     union {
         ULONGLONG ForwarderString;
@@ -3885,7 +3908,7 @@ typedef struct _IMAGE_THUNK_DATA64 {
     } u1;
 } IMAGE_THUNK_DATA64;
 typedef IMAGE_THUNK_DATA64 *PIMAGE_THUNK_DATA64;
-#include "poppack.h"
+#include <poppack.h>
 
 typedef struct _IMAGE_THUNK_DATA32 {
     union {
@@ -3954,16 +3977,19 @@ typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 	DWORD Name;
 	ULONG FirstThunk;
 } IMAGE_IMPORT_DESCRIPTOR,*PIMAGE_IMPORT_DESCRIPTOR;
+
 typedef struct _IMAGE_BOUND_IMPORT_DESCRIPTOR {
 	DWORD TimeDateStamp;
 	WORD OffsetModuleName;
 	WORD NumberOfModuleForwarderRefs;
 } IMAGE_BOUND_IMPORT_DESCRIPTOR,*PIMAGE_BOUND_IMPORT_DESCRIPTOR;
+
 typedef struct _IMAGE_BOUND_FORWARDER_REF {
 	DWORD TimeDateStamp;
 	WORD OffsetModuleName;
 	WORD Reserved;
 } IMAGE_BOUND_FORWARDER_REF,*PIMAGE_BOUND_FORWARDER_REF;
+
 typedef struct _IMAGE_RESOURCE_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;
@@ -3992,20 +4018,24 @@ _ANONYMOUS_STRUCT typedef struct _IMAGE_RESOURCE_DIRECTORY_ENTRY {
 		} DUMMYSTRUCTNAME3;
 	} DUMMYUNIONNAME2;
 } IMAGE_RESOURCE_DIRECTORY_ENTRY,*PIMAGE_RESOURCE_DIRECTORY_ENTRY;
+
 typedef struct _IMAGE_RESOURCE_DIRECTORY_STRING {
 	WORD Length;
 	CHAR NameString[1];
 } IMAGE_RESOURCE_DIRECTORY_STRING,*PIMAGE_RESOURCE_DIRECTORY_STRING;
+
 typedef struct _IMAGE_RESOURCE_DIR_STRING_U {
 	WORD Length;
 	WCHAR NameString[1];
 } IMAGE_RESOURCE_DIR_STRING_U,*PIMAGE_RESOURCE_DIR_STRING_U;
+
 typedef struct _IMAGE_RESOURCE_DATA_ENTRY {
 	DWORD OffsetToData;
 	DWORD Size;
 	DWORD CodePage;
 	DWORD Reserved;
 } IMAGE_RESOURCE_DATA_ENTRY,*PIMAGE_RESOURCE_DATA_ENTRY;
+
 typedef struct _IMAGE_LOAD_CONFIG_DIRECTORY {
     DWORD Size;
     DWORD TimeDateStamp;
@@ -4028,6 +4058,7 @@ typedef struct _IMAGE_LOAD_CONFIG_DIRECTORY {
     DWORD SEHandlerTable;
     DWORD SEHandlerCount;
 } IMAGE_LOAD_CONFIG_DIRECTORY,*PIMAGE_LOAD_CONFIG_DIRECTORY;
+
 typedef struct _IMAGE_RUNTIME_FUNCTION_ENTRY {
 	DWORD BeginAddress;
 	DWORD EndAddress;
@@ -4035,6 +4066,7 @@ typedef struct _IMAGE_RUNTIME_FUNCTION_ENTRY {
 	PVOID HandlerData;
 	DWORD PrologEndAddress;
 } IMAGE_RUNTIME_FUNCTION_ENTRY,*PIMAGE_RUNTIME_FUNCTION_ENTRY;
+
 typedef struct _IMAGE_DEBUG_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;
@@ -4045,6 +4077,7 @@ typedef struct _IMAGE_DEBUG_DIRECTORY {
 	DWORD AddressOfRawData;
 	DWORD PointerToRawData;
 } IMAGE_DEBUG_DIRECTORY,*PIMAGE_DEBUG_DIRECTORY;
+
 typedef struct _FPO_DATA {
 	DWORD ulOffStart;
 	DWORD cbProcSize;
@@ -4057,6 +4090,7 @@ typedef struct _FPO_DATA {
 	WORD reserved:1;
 	WORD cbFrame:2;
 } FPO_DATA,*PFPO_DATA;
+
 typedef struct _IMAGE_DEBUG_MISC {
 	DWORD DataType;
 	DWORD Length;
@@ -4064,11 +4098,13 @@ typedef struct _IMAGE_DEBUG_MISC {
 	BYTE Reserved[3];
 	BYTE Data[1];
 } IMAGE_DEBUG_MISC,*PIMAGE_DEBUG_MISC;
+
 typedef struct _IMAGE_FUNCTION_ENTRY {
 	DWORD StartingAddress;
 	DWORD EndingAddress;
 	DWORD EndOfPrologue;
 } IMAGE_FUNCTION_ENTRY,*PIMAGE_FUNCTION_ENTRY;
+
 typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
 	WORD Signature;
 	WORD Flags;
@@ -4084,7 +4120,7 @@ typedef struct _IMAGE_SEPARATE_DEBUG_HEADER {
 	DWORD SectionAlignment;
 	DWORD Reserved[2];
 } IMAGE_SEPARATE_DEBUG_HEADER,*PIMAGE_SEPARATE_DEBUG_HEADER;
-#pragma pack(pop)
+
 typedef enum _CM_SERVICE_NODE_TYPE {
 	DriverType=SERVICE_KERNEL_DRIVER,
 	FileSystemType=SERVICE_FILE_SYSTEM_DRIVER,
@@ -4093,6 +4129,7 @@ typedef enum _CM_SERVICE_NODE_TYPE {
 	AdapterType=SERVICE_ADAPTER,
 	RecognizerType=SERVICE_RECOGNIZER_DRIVER
 } SERVICE_NODE_TYPE;
+
 typedef enum _CM_SERVICE_LOAD_TYPE {
 	BootLoad=SERVICE_BOOT_START,
 	SystemLoad=SERVICE_SYSTEM_START,
@@ -4100,12 +4137,14 @@ typedef enum _CM_SERVICE_LOAD_TYPE {
 	DemandLoad=SERVICE_DEMAND_START,
 	DisableLoad=SERVICE_DISABLED
 } SERVICE_LOAD_TYPE;
+
 typedef enum _CM_ERROR_CONTROL_TYPE {
 	IgnoreError=SERVICE_ERROR_IGNORE,
 	NormalError=SERVICE_ERROR_NORMAL,
 	SevereError=SERVICE_ERROR_SEVERE,
 	CriticalError=SERVICE_ERROR_CRITICAL
 } SERVICE_ERROR_TYPE;
+
 typedef struct _NT_TIB {
 	struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
 	PVOID StackBase;
@@ -4118,6 +4157,7 @@ typedef struct _NT_TIB {
 	PVOID ArbitraryUserPointer;
 	struct _NT_TIB *Self;
 } NT_TIB,*PNT_TIB;
+
 typedef struct _REPARSE_GUID_DATA_BUFFER {
 	DWORD  ReparseTag;
 	WORD   ReparseDataLength;
@@ -4127,6 +4167,7 @@ typedef struct _REPARSE_GUID_DATA_BUFFER {
 		BYTE   DataBuffer[1];
 	} GenericReparseBuffer;
 } REPARSE_GUID_DATA_BUFFER, *PREPARSE_GUID_DATA_BUFFER;
+
 typedef struct _REPARSE_POINT_INFORMATION {
 	WORD   ReparseDataLength;
 	WORD   UnparsedNameLength;
@@ -4234,14 +4275,17 @@ typedef struct _JOBOBJECT_BASIC_LIMIT_INFORMATION {
 	DWORD PriorityClass;
 	DWORD SchedulingClass;
 } JOBOBJECT_BASIC_LIMIT_INFORMATION,*PJOBOBJECT_BASIC_LIMIT_INFORMATION;
+
 typedef struct _JOBOBJECT_BASIC_PROCESS_ID_LIST {
 	DWORD NumberOfAssignedProcesses;
 	DWORD NumberOfProcessIdsInList;
 	ULONG_PTR ProcessIdList[1];
 } JOBOBJECT_BASIC_PROCESS_ID_LIST, *PJOBOBJECT_BASIC_PROCESS_ID_LIST;
+
 typedef struct _JOBOBJECT_BASIC_UI_RESTRICTIONS {
 	DWORD UIRestrictionsClass;
 } JOBOBJECT_BASIC_UI_RESTRICTIONS,*PJOBOBJECT_BASIC_UI_RESTRICTIONS;
+
 /* Steven you are my hero when you fix the w32api ddk! */
 #ifndef _NTDDK_
 typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
@@ -4252,17 +4296,21 @@ typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
 	PTOKEN_GROUPS RestrictedSids;
 } JOBOBJECT_SECURITY_LIMIT_INFORMATION,*PJOBOBJECT_SECURITY_LIMIT_INFORMATION;
 #endif
+
 typedef struct _JOBOBJECT_END_OF_JOB_TIME_INFORMATION {
 	DWORD EndOfJobTimeAction;
 } JOBOBJECT_END_OF_JOB_TIME_INFORMATION,*PJOBOBJECT_END_OF_JOB_TIME_INFORMATION;
+
 typedef struct _JOBOBJECT_ASSOCIATE_COMPLETION_PORT {
 	PVOID CompletionKey;
 	HANDLE CompletionPort;
 } JOBOBJECT_ASSOCIATE_COMPLETION_PORT,*PJOBOBJECT_ASSOCIATE_COMPLETION_PORT;
+
 typedef struct _JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION {
 	JOBOBJECT_BASIC_ACCOUNTING_INFORMATION BasicInfo;
 	IO_COUNTERS IoInfo;
 } JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION,*PJOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION;
+
 typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
 	JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
 	IO_COUNTERS IoInfo;
@@ -4271,6 +4319,7 @@ typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
 	SIZE_T PeakProcessMemoryUsed;
 	SIZE_T PeakJobMemoryUsed;
 } JOBOBJECT_EXTENDED_LIMIT_INFORMATION,*PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
+
 typedef struct _JOBOBJECT_JOBSET_INFORMATION {
 	DWORD MemberLevel;
 } JOBOBJECT_JOBSET_INFORMATION,*PJOBOBJECT_JOBSET_INFORMATION;
