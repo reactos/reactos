@@ -62,28 +62,28 @@ IntSetSrvEventMask( UINT EventMin, UINT EventMax)
           (event >= EVENT_CONSOLE_CARET && event <= EVENT_CONSOLE_END_APPLICATION) ||
           (event >= EVENT_OBJECT_CREATE && event <= EVENT_OBJECT_ACCELERATORCHANGE))
       {
-         gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+         gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
       }
       if (event > EVENT_SYSTEM_MINIMIZEEND && event < EVENT_CONSOLE_CARET)
       {
           event = EVENT_CONSOLE_CARET-1;
-          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+          gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
       }
       if (event > EVENT_CONSOLE_END_APPLICATION && event < EVENT_OBJECT_CREATE )
       {
           event = EVENT_OBJECT_CREATE-1;
-          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+          gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
       }
       if (event > EVENT_OBJECT_ACCELERATORCHANGE && event < EVENT_MAX)
       {
           event = EVENT_MAX-1;
-          gpsi->SrvEventActivity |= GetMaskFromEvent(event);
+          gpsi->dwInstalledEventHooks |= GetMaskFromEvent(event);
           break;
-      }      
+      }
    }
-   if (!gpsi->SrvEventActivity)
-      gpsi->SrvEventActivity |= SRV_EVENT_RUNNING; // Set something.
-   DPRINT("SetSrvEventMask 2 : %x\n", gpsi->SrvEventActivity);
+   if (!gpsi->dwInstalledEventHooks)
+      gpsi->dwInstalledEventHooks |= SRV_EVENT_RUNNING; // Set something.
+   DPRINT("SetSrvEventMask 2 : %x\n", gpsi->dwInstalledEventHooks);
 }
 
 static
@@ -128,7 +128,7 @@ IntRemoveEvent(PEVENTHOOK pEH)
    {
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
-      if (!GlobalEvents->Counts) gpsi->SrvEventActivity = 0;
+      if (!GlobalEvents->Counts) gpsi->dwInstalledEventHooks = 0;
       UserDeleteObject(pEH->Self, otEvent);
       return TRUE;
    }
@@ -229,9 +229,9 @@ NtUserNotifyWinEvent(
    {
       UserLeave();
       return;
-   }   
-   
-   if (gpsi->SrvEventActivity & GetMaskFromEvent(Event))
+   }
+
+   if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
       UserRefObjectCo(Window, &Ref);
       IntNotifyWinEvent( Event, Window, idObject, idChild);

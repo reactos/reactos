@@ -229,7 +229,7 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
          {
             DWORD Result;
-            
+
             Result = gspv.bMouseBtnSwap;
             gspv.bMouseBtnSwap = Param ? TRUE : FALSE;
             gpsi->aiSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
@@ -419,7 +419,7 @@ NtUserCallOneParam(
           }
           _SEH2_END;
           RETURN(Ret);
-      }      
+      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
@@ -608,55 +608,6 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
          RETURN( (DWORD)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
-      case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
-      case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
-      case TWOPARAM_ROUTINE_GETSYSCOLORS:
-         {
-            DWORD Ret = 0;
-            union
-            {
-               PVOID Pointer;
-               HBRUSH *Brushes;
-               HPEN *Pens;
-               COLORREF *Colors;
-            } Buffer;
-
-            /* FIXME - we should make use of SEH here... */
-
-            Buffer.Pointer = ExAllocatePool(PagedPool, Param2 * sizeof(HANDLE));
-            if(Buffer.Pointer != NULL)
-            {
-               switch(Routine)
-               {
-                  case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
-                     Ret = (DWORD)IntGetSysColorBrushes(Buffer.Brushes, (UINT)Param2);
-                     break;
-                  case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
-                     Ret = (DWORD)IntGetSysColorPens(Buffer.Pens, (UINT)Param2);
-                     break;
-                  case TWOPARAM_ROUTINE_GETSYSCOLORS:
-                     Ret = (DWORD)IntGetSysColors(Buffer.Colors, (UINT)Param2);
-                     break;
-                  default:
-                     Ret = 0;
-                     break;
-               }
-
-               if(Ret > 0)
-               {
-                  Status = MmCopyToCaller((PVOID)Param1, Buffer.Pointer, Param2 * sizeof(HANDLE));
-                  if(!NT_SUCCESS(Status))
-                  {
-                     SetLastNtError(Status);
-                     Ret = 0;
-                  }
-               }
-
-               ExFreePool(Buffer.Pointer);
-            }
-            RETURN( Ret);
-         }
-
       case TWOPARAM_ROUTINE_ROS_REGSYSCLASSES:
       {
           DWORD Ret = 0;
@@ -760,7 +711,7 @@ NtUserCallHwndLock(
       case HWNDLOCK_ROUTINE_REDRAWFRAME:
          co_WinPosSetWindowPos( Window,
                                 HWND_DESKTOP,
-                                0,0,0,0, 
+                                0,0,0,0,
                                 SWP_NOSIZE|
                                 SWP_NOMOVE|
                                 SWP_NOZORDER|
@@ -772,7 +723,7 @@ NtUserCallHwndLock(
       case HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK:
          co_WinPosSetWindowPos( Window,
                                 HWND_DESKTOP,
-                                0,0,0,0, 
+                                0,0,0,0,
                                 SWP_NOSIZE|
                                 SWP_NOMOVE|
                                 SWP_NOZORDER|

@@ -230,7 +230,6 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
         {
             gpsi->argbSystem[*Elements] = *Colors;
             IntGdiSetSolidBrushColor(gpsi->ahbrSystem[*Elements], *Colors);
-            IntGdiSetSolidPenColor(gpsi->SysColorPens[*Elements], *Colors);
         }
         Elements++;
         Colors++;
@@ -238,75 +237,10 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
     return nColors > 0;
 }
 
-BOOL FASTCALL
-IntGetSysColorBrushes(HBRUSH *pahBrushes, UINT nBrushes)
-{
-    UINT i;
-
-    ASSERT(pahBrushes);
-
-    if (nBrushes > NUM_SYSCOLORS)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    for (i = 0; i < nBrushes; i++)
-    {
-        pahBrushes[i] = gpsi->ahbrSystem[i];
-    }
-
-    return nBrushes > 0;
-}
-
 HGDIOBJ FASTCALL
 IntGetSysColorBrush(INT Object)
 {
     return ((Object < 0) || (NUM_SYSCOLORS <= Object)) ? NULL : gpsi->ahbrSystem[Object];
-}
-
-BOOL FASTCALL
-IntGetSysColorPens(HPEN *Pens, UINT nPens)
-{
-    UINT i;
-
-    ASSERT(Pens);
-
-    if (nPens > NUM_SYSCOLORS)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    for (i = 0; i < nPens; i++)
-    {
-        *(Pens++) = gpsi->SysColorPens[i];
-    }
-
-    return nPens > 0;
-}
-
-BOOL FASTCALL
-IntGetSysColors(COLORREF *Colors, UINT nColors)
-{
-    UINT i;
-    COLORREF *col;
-
-    ASSERT(Colors);
-
-    if (nColors > NUM_SYSCOLORS)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
-    col = &gpsi->argbSystem[0];
-    for (i = 0; i < nColors; i++)
-    {
-        *(Colors++) = *(col++);
-    }
-
-    return nColors > 0;
 }
 
 DWORD FASTCALL
@@ -319,7 +253,6 @@ VOID FASTCALL
 CreateSysColorObjects(VOID)
 {
     UINT i;
-    LOGPEN Pen;
 
     for (i = 0; i < NUM_SYSCOLORS; i++)
     {
@@ -335,23 +268,6 @@ CreateSysColorObjects(VOID)
             if (gpsi->ahbrSystem[i] != NULL)
             {
                 GDIOBJ_ConvertToStockObj((HGDIOBJ*)&gpsi->ahbrSystem[i]);
-            }
-        }
-    }
-
-    /* Create the syscolor pens */
-    Pen.lopnStyle = PS_SOLID;
-    Pen.lopnWidth.x = 0;
-    Pen.lopnWidth.y = 0;
-    for (i = 0; i < NUM_SYSCOLORS; i++)
-    {
-        if (gpsi->SysColorPens[i] == NULL)
-        {
-            Pen.lopnColor = SysColors[i];
-            gpsi->SysColorPens[i] = IntCreateStockPen(Pen.lopnStyle, Pen.lopnWidth.x, BS_SOLID, Pen.lopnColor);
-            if (gpsi->SysColorPens[i] != NULL)
-            {
-                GDIOBJ_ConvertToStockObj((HGDIOBJ*)&gpsi->SysColorPens[i]);
             }
         }
     }

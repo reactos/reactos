@@ -408,10 +408,6 @@ typedef struct tagSERVERINFO
     CHAR            acAnsiToOem[256];
     DWORD           dwInstalledEventHooks;
     PERUSERSERVERINFO;
-///////////////////////////////
-    /* Reactos specific fields */
-    DWORD    SrvEventActivity;
-    HPEN     SysColorPens[COLOR_MENUBAR+1];
 } SERVERINFO, *PSERVERINFO;
 
 #define CTI_INSENDMESSAGE 0x0002
@@ -2863,9 +2859,6 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
 #define TWOPARAM_ROUTINE_GETWINDOWINFO      0xfffd0061
 #define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0xfffd0062
-#define TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES 0xfffd0063
-#define TWOPARAM_ROUTINE_GETSYSCOLORPENS    0xfffd0064
-#define TWOPARAM_ROUTINE_GETSYSCOLORS       0xfffd0065
 #define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
 #define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002
 #define TWOPARAM_ROUTINE_ROS_REGSYSCLASSES  0x1003

@@ -154,17 +154,8 @@ IntGdiCombineTransform(LPXFORM XFormResult,
 BOOL FASTCALL
 IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors);
 
-BOOL FASTCALL
-IntGetSysColorBrushes(HBRUSH *Brushes, UINT nBrushes);
-
 HGDIOBJ FASTCALL
 IntGetSysColorBrush(INT Object);
-
-BOOL FASTCALL
-IntGetSysColorPens(HPEN *Pens, UINT nPens);
-
-BOOL FASTCALL
-IntGetSysColors(COLORREF *Colors, UINT nColors);
 
 DWORD FASTCALL
 IntGetSysColor(INT nIndex);
