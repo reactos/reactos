@@ -1,4 +1,4 @@
-#include<stdarg.h>
+#include <stdarg.h>
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #define STANDALONE
@@ -6,6 +6,7 @@
 #include "winternl.h"
 #include "windef.h"
 #include "winbase.h"
+#include "winreg.h"
 #include "powrprof.h"
 #include "assert.h"
 
