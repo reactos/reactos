@@ -998,12 +998,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 	default:
             return FALSE;
     }
-    // FIXME: the following edge isn't windows-like
-    if(uFlags & DFCS_PUSHED)
-        IntDrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
-    else
-        IntDrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
-                        BF_SOFT | BF_MIDDLE);
+    IntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT);
     ZeroMemory(&lf, sizeof(LOGFONT));
     UITOOLS_MakeSquareRect(r, &myr);
     myr.left += 1;
