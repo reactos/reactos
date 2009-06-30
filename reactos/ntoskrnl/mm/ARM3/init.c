@@ -338,8 +338,8 @@ MmArmInitSystem(IN ULONG Phase,
             }
         }
         
-        DPRINT1("System PTE count has been tuned to %d (%d bytes)\n",
-                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+        DPRINT("System PTE count has been tuned to %d (%d bytes)\n",
+               MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
         
         //
         // Check if this is a machine with less than 256MB of RAM, and no overide
@@ -443,8 +443,8 @@ MmArmInitSystem(IN ULONG Phase,
                                       MmSizeOfNonPagedPoolInBytes);
         MmNonPagedPoolStart = (PVOID)PAGE_ALIGN(MmNonPagedPoolStart);
         NonPagedPoolExpansionVa = MmNonPagedPoolStart;
-        DPRINT1("NP Pool has been tuned to: %d bytes and %d bytes\n",
-                MmSizeOfNonPagedPoolInBytes, MmMaximumNonPagedPoolInBytes);
+        DPRINT("NP Pool has been tuned to: %d bytes and %d bytes\n",
+               MmSizeOfNonPagedPoolInBytes, MmMaximumNonPagedPoolInBytes);
         
         //
         // Now calculate the nonpaged system VA region, which includes the
@@ -488,9 +488,6 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Non paged pool comes after the PFN database
         //
-        DPRINT1("System PTE VA starts at: %p\n", MmNonPagedSystemStart);
-        DPRINT1("NP Expansion VA begins at: %p and ends at: %p\n",
-                MmNonPagedPoolStart, MmNonPagedPoolEnd);
         MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmArmPfnDatabase +
                                       (MxPfnAllocation << PAGE_SHIFT));
 
@@ -505,14 +502,16 @@ MmArmInitSystem(IN ULONG Phase,
                                               BoundaryAddressMultiple,
                                               FALSE);
         ASSERT(PageFrameIndex != 0);
-        DPRINT1("PFN DB VA begins at: %p and ends at: %p\n",
+        DPRINT1("          0x%p - 0x%p\t%s\n",
                 MmArmPfnDatabase,
-                (ULONG_PTR)MmArmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT));        
-        DPRINT1("PFN DB PA PFN begins at: %lx\n", PageFrameIndex);
-        DPRINT1("NP VA begins at: %p and ends at: %p\n",
+                (ULONG_PTR)MmArmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
+                "Shadow PFN Database");
+        DPRINT("PFN DB PA PFN begins at: %lx\n", PageFrameIndex);
+        DPRINT1("          0x%p - 0x%p\t%s\n",
                 MmNonPagedPoolStart,
-                (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes);        
-        DPRINT1("NP PA PFN begins at: %lx\n", PageFrameIndex + MxPfnAllocation);
+                 (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
+                "ARM Non Paged Pool");
+        DPRINT("NP PA PFN begins at: %lx\n", PageFrameIndex + MxPfnAllocation);
 
         //
         // Now we need some pages to create the page tables for the NP system VA
@@ -582,6 +581,12 @@ MmArmInitSystem(IN ULONG Phase,
         // Now remember where the expansion starts
         //
         MmNonPagedPoolExpansionStart = NonPagedPoolExpansionVa;
+        DPRINT1("          0x%p - 0x%p\t%s\n",
+                MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
+                "System PTE Space");
+        DPRINT1("          0x%p - 0x%p\t%s\n",
+                MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
+                "Non Paged Pool Expansion PTE Space");
 
         //
         // Last step is to actually map the nonpaged pool
@@ -650,8 +655,8 @@ MmArmInitSystem(IN ULONG Phase,
         MmNumberOfSystemPtes = MiAddressToPte(MmNonPagedPoolExpansionStart) -
                                PointerPte;
         MmNumberOfSystemPtes--;
-        DPRINT1("Final System PTE count: %d (%d bytes)\n",
-                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+        DPRINT("Final System PTE count: %d (%d bytes)\n",
+               MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
         
         //
         // Create the system PTE space
@@ -691,7 +696,6 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES,
                                                         SystemPteSpace);
-        DPRINT1("ZERO PTEs are at: %p\n", MiFirstReservedZeroingPte);
         RtlZeroMemory(MiFirstReservedZeroingPte, MI_ZERO_PTES * sizeof(MMPTE));
         
         //
@@ -731,9 +735,9 @@ MmArmInitSystem(IN ULONG Phase,
             //
             PPHYSICAL_MEMORY_RUN Run;
             Run = &MmPhysicalMemoryBlock->Run[i];
-            DPRINT1("PHYSICAL RAM [0x%08p to 0x%08p]\n",
-                    Run->BasePage << PAGE_SHIFT,
-                    (Run->BasePage + Run->PageCount) << PAGE_SHIFT);
+            DPRINT("PHYSICAL RAM [0x%08p to 0x%08p]\n",
+                   Run->BasePage << PAGE_SHIFT,
+                   (Run->BasePage + Run->PageCount) << PAGE_SHIFT);
         }
     }
     

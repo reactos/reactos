@@ -339,8 +339,8 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     MmSystemPteBase = (PVOID)PAGETABLE_MAP;
     MmSystemPtesStart[PoolType] = StartingPte;
     MmSystemPtesEnd[PoolType] = StartingPte + NumberOfPtes - 1;
-    DPRINT1("System PTE space for %d starting at: %p and ending at: %p\n",
-            PoolType, MmSystemPtesStart[PoolType], MmSystemPtesEnd[PoolType]);
+    DPRINT("System PTE space for %d starting at: %p and ending at: %p\n",
+           PoolType, MmSystemPtesStart[PoolType], MmSystemPtesEnd[PoolType]);
     
     //
     // Clear all the PTEs to start with
