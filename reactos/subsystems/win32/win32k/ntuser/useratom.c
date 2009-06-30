@@ -79,4 +79,23 @@ IntGetAtomName(RTL_ATOM nAtom, LPWSTR lpBuffer, ULONG nSize)
    return Size;
 }
 
+RTL_ATOM FASTCALL
+IntAddGlobalAtom(LPWSTR lpBuffer, BOOL PinAtom)
+{
+   RTL_ATOM Atom;
+   NTSTATUS Status = STATUS_SUCCESS;
+
+   Status = RtlAddAtomToAtomTable(gAtomTable, lpBuffer, &Atom);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Error init Global Atom.\n");
+      return 0;
+   }
+
+   if ( Atom && PinAtom ) RtlPinAtomInAtomTable(gAtomTable, Atom);
+
+   return Atom;
+}
+
 /* EOF */
