@@ -367,6 +367,7 @@
 			<file>init.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
+			<file>ncache.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>syspte.c</file>
@@ -380,7 +381,6 @@
 		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
-		<file>ncache.c</file>
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
