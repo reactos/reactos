@@ -392,9 +392,6 @@ MmInit1(VOID)
     
     /* Initialize paged pool */
     MmInitializePagedPool();
-
-    /* Initialize MDLs */
-    MmInitializeMdlImplementation();
     
     /* Initialize working sets */
     MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);

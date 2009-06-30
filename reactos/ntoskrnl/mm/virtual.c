@@ -622,6 +622,115 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     return Status;
 }
 
+PVOID
+NTAPI
+MiMapLockedPagesInUserSpace(IN PMDL Mdl,
+                            IN PVOID BaseVa,
+                            IN MEMORY_CACHING_TYPE CacheType,
+                            IN PVOID BaseAddress)
+{
+    PVOID Base;
+    PPFN_NUMBER MdlPages;
+    ULONG PageCount;   
+    PEPROCESS CurrentProcess;
+    NTSTATUS Status;
+    ULONG Protect;
+    MEMORY_AREA *Result;
+    LARGE_INTEGER BoundaryAddressMultiple;
+    
+    /* Calculate the number of pages required. */
+    MdlPages = (PPFN_NUMBER)(Mdl + 1);
+    PageCount = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
+    
+    /* Set default page protection */
+    Protect = PAGE_READWRITE;
+    if (CacheType == MmNonCached) Protect |= PAGE_NOCACHE;
+    
+    BoundaryAddressMultiple.QuadPart = 0;
+    Base = BaseAddress;
+    
+    CurrentProcess = PsGetCurrentProcess();
+    
+    MmLockAddressSpace(&CurrentProcess->Vm);
+    Status = MmCreateMemoryArea(&CurrentProcess->Vm,
+                                MEMORY_AREA_MDL_MAPPING,
+                                &Base,
+                                PageCount * PAGE_SIZE,
+                                Protect,
+                                &Result,
+                                (Base != NULL),
+                                0,
+                                BoundaryAddressMultiple);
+    MmUnlockAddressSpace(&CurrentProcess->Vm);
+    if (!NT_SUCCESS(Status))
+    {
+        if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)
+        {
+            return NULL;
+        }
+        
+        /* Throw exception */
+        ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+        ASSERT(0);
+    }
+    
+    /* Set the virtual mappings for the MDL pages. */
+    if (Mdl->MdlFlags & MDL_IO_SPACE)
+    {
+        /* Map the pages */
+        Status = MmCreateVirtualMappingUnsafe(CurrentProcess,
+                                              Base,
+                                              Protect,
+                                              MdlPages,
+                                              PageCount);
+    }
+    else
+    {
+        /* Map the pages */
+        Status = MmCreateVirtualMapping(CurrentProcess,
+                                        Base,
+                                        Protect,
+                                        MdlPages,
+                                        PageCount);
+    }
+    
+    /* Check if the mapping suceeded */
+    if (!NT_SUCCESS(Status))
+    {
+        /* If it can fail, return NULL */
+        if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL) return NULL;
+        
+        /* Throw exception */
+        ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+    }
+    
+    /* Return the base */
+    Base = (PVOID)((ULONG_PTR)Base + Mdl->ByteOffset);
+    return Base;
+}
+
+VOID
+NTAPI
+MiUnmapLockedPagesInUserSpace(IN PVOID BaseAddress,
+                              IN PMDL Mdl)
+{
+    PMEMORY_AREA MemoryArea;
+    
+    /* Sanity check */
+    ASSERT(Mdl->Process == PsGetCurrentProcess());
+    
+    /* Find the memory area */
+    MemoryArea = MmLocateMemoryAreaByAddress(&Mdl->Process->Vm,
+                                             BaseAddress);
+    ASSERT(MemoryArea);
+    
+    /* Free it */
+    MmFreeMemoryArea(&Mdl->Process->Vm,
+                     MemoryArea,
+                     NULL,
+                     NULL);    
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*

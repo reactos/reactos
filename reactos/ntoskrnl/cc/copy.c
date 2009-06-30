@@ -247,6 +247,17 @@ WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
     {
       Size = CacheSeg->Bcb->CacheSegmentSize;
     }
+    //
+    // Nonpaged pool PDEs in ReactOS must actually be synchronized between the
+    // MmGlobalPageDirectory and the real system PDE directory. What a mess...
+    //
+    {
+        int i = 0;
+        do
+        {
+            MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)CacheSeg->BaseAddress + (i << PAGE_SHIFT)));
+        } while (++i < (Size >> PAGE_SHIFT));
+    }
   Mdl = alloca(MmSizeOfMdl(CacheSeg->BaseAddress, Size));
   MmInitializeMdl(Mdl, CacheSeg->BaseAddress, Size);
   MmBuildMdlForNonPagedPool(Mdl);

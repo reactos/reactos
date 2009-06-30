@@ -366,6 +366,7 @@
 			<file>hypermap.c</file>
 			<file>init.c</file>
 			<file>iosup.c</file>
+			<file>mdlsup.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
 			<file>syspte.c</file>
@@ -375,7 +376,6 @@
 		<file>dbgpool.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
-		<file>mdlsup.c</file>
 		<file>mmfault.c</file>
 		<file>mmsup.c</file>
 		<file>mminit.c</file>

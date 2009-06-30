@@ -53,6 +53,8 @@ extern PMMPTE MiFirstReservedZeroingPte;
 extern MI_PFN_CACHE_ATTRIBUTE MiPlatformCacheAttributes[2][MmMaximumCacheType];
 extern PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 extern ULONG MmBootImageSize;
+extern PMMPTE MmSystemPtesStart[MaximumPtePoolTypes];
+extern PMMPTE MmSystemPtesEnd[MaximumPtePoolTypes];
 
 VOID
 NTAPI
@@ -104,6 +106,33 @@ MiCheckForContiguousMemory(
     IN PFN_NUMBER HighestPfn,
     IN PFN_NUMBER BoundaryPfn,
     IN MI_PFN_CACHE_ATTRIBUTE CacheAttribute
+);
+
+PMDL
+NTAPI
+MiAllocatePagesForMdl(
+    IN PHYSICAL_ADDRESS LowAddress,
+    IN PHYSICAL_ADDRESS HighAddress,
+    IN PHYSICAL_ADDRESS SkipBytes,
+    IN SIZE_T TotalBytes,
+    IN MI_PFN_CACHE_ATTRIBUTE CacheAttribute,
+    IN ULONG Flags
+);
+
+PVOID
+NTAPI
+MiMapLockedPagesInUserSpace(
+    IN PMDL Mdl,
+    IN PVOID BaseVa,
+    IN MEMORY_CACHING_TYPE CacheType,
+    IN PVOID BaseAddress
+);
+
+VOID
+NTAPI
+MiUnmapLockedPagesInUserSpace(
+    IN PVOID BaseAddress,
+    IN PMDL Mdl
 );
 
 /* EOF */
