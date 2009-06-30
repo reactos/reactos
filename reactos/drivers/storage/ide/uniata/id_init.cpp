@@ -96,8 +96,8 @@ UniataChipDetectChannels(
     case ATA_ATI_ID:
         KdPrint2((PRINT_PREFIX "ATI\n"));
         switch(deviceExtension->DevID) {
-        case 0x438c1002: 
-        case 0x439c1002:
+        case ATA_ATI_IXP600: 
+        case ATA_ATI_IXP700:
             /* IXP600 & IXP700 only have 1 PATA channel */
             if(BMList[deviceExtension->DevIndex].channel) {
                 KdPrint2((PRINT_PREFIX "New ATI no 2nd PATA chan\n"));
