@@ -188,6 +188,14 @@ MiniIsBusy(
     PLOGICAL_ADAPTER Adapter,
     NDIS_WORK_ITEM_TYPE Type);
 
+NDIS_STATUS
+MiniReset(
+    PLOGICAL_ADAPTER Adapter);
+
+VOID
+MiniDoAddressingReset(
+    PLOGICAL_ADAPTER Adapter);
+
 #endif /* __MINIPORT_H */
 
 /* EOF */
