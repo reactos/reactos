@@ -160,7 +160,6 @@ ShutdownThreadMain(PVOID Context)
    PspShutdownProcessManager();
 
    CmShutdownSystem();
-   MiShutdownMemoryManager();
    IoShutdownRegisteredFileSystems();
    IoShutdownRegisteredDevices();
 

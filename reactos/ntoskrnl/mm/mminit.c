@@ -45,13 +45,10 @@ MemType[] =
     "LoaderXIPRom      "
 };
 
-BOOLEAN IsThisAnNtAsSystem = FALSE;
-MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
 ULONG MmBootImageSize;
 ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
-ULONG_PTR MiKSeg0Start, MiKSeg0End;
 ULONG_PTR MmPfnDatabaseEnd;
 PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
@@ -63,9 +60,6 @@ ULONG MmReadClusterSize;
 MM_STATS MmStats;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;
-extern HANDLE MpwThreadHandle;
-extern BOOLEAN MpwThreadShouldTerminate;
-extern KEVENT MpwThreadEvent;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
 TRUE;
@@ -74,41 +68,6 @@ FALSE;
 #endif
 
 /* PRIVATE FUNCTIONS *********************************************************/
-
-VOID
-NTAPI
-MiShutdownMemoryManager(VOID)
-{
-#if 0
-    ULONG PagesWritten;
-    PETHREAD Thread;
-
-    /* Ask MPW thread to shutdown */
-    MpwThreadShouldTerminate = TRUE;
-    KeSetEvent(&MpwThreadEvent, IO_NO_INCREMENT, FALSE);
-
-    /* Wait for it */
-    ObReferenceObjectByHandle(MpwThreadHandle,
-                              THREAD_ALL_ACCESS,
-                              PsThreadType,
-                              KernelMode,
-                              (PVOID*)&Thread,
-                              NULL);
-
-    KeWaitForSingleObject(Thread,
-                          Executive,
-                          KernelMode,
-                          FALSE,
-                          NULL);
-
-    ObDereferenceObject(Thread);
-
-    /* Check if there are any dirty pages, and flush them.
-       There will be no other chance to do this later, since filesystems
-       are going to be shut down. */
-    CcRosFlushDirtyPages(128, &PagesWritten);
-#endif
-}
 
 VOID
 INIT_FUNCTION
@@ -223,18 +182,11 @@ MiDbgKernelLayout(VOID)
 {
     DPRINT1("%8s%12s\t\t%s\n", "Start", "End", "Type");
     DPRINT1("0x%p - 0x%p\t%s\n",
-            KSEG0_BASE, MiKSeg0Start,
-            "Undefined region");
-    DPRINT1("0x%p - 0x%p\t%s\n",
-            MiKSeg0Start, MiKSeg0End,
-            "FreeLDR Kernel mapping region");
+            MmSystemRangeStart, (ULONG_PTR)MmSystemRangeStart + MmBootImageSize,
+            "Boot Image Mapping Region");
     DPRINT1("0x%p - 0x%p\t%s\n",
             MmPfnDatabase, MmPfnDatabaseEnd,
             "PFN Database region");
-    if (MmPfnDatabaseEnd != (ULONG_PTR)MiNonPagedPoolStart)
-    DPRINT1("0x%p - 0x%p\t%s\n",
-            MmPfnDatabaseEnd, MiNonPagedPoolStart,
-            "Remaining FreeLDR mapping");
     DPRINT1("0x%p - 0x%p\t%s\n",
              MiNonPagedPoolStart, (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength,
             "Non paged pool region");
@@ -264,38 +216,6 @@ MiDbgDumpMemoryDescriptors(VOID)
     DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
 }
 
-ULONG_PTR
-NTAPI
-MiGetLastKernelAddress(VOID)
-{
-    PLIST_ENTRY NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR Md;
-    ULONG_PTR LastKrnlPhysAddr = 0;
-
-    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
-         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
-         NextEntry = NextEntry->Flink)
-    {
-        Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-
-        if (Md->MemoryType != LoaderFree &&
-            Md->MemoryType != LoaderFirmwareTemporary &&
-            Md->MemoryType != LoaderSpecialMemory)
-        {
-            if (Md->BasePage+Md->PageCount > LastKrnlPhysAddr)
-                LastKrnlPhysAddr = Md->BasePage+Md->PageCount;
-        }
-    }
-
-    /* Convert to a physical address */
-    return LastKrnlPhysAddr << PAGE_SHIFT;
-}
-
-
-VOID
-NTAPI
-MiInitHyperSpace(VOID);
-
 NTSTATUS
 NTAPI
 MmArmInitSystem(IN ULONG Phase,
@@ -305,10 +225,7 @@ VOID
 INIT_FUNCTION
 NTAPI
 MmInit1(VOID)
-{
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    ULONG Dummy[2];
-    
+{    
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
 
@@ -323,47 +240,23 @@ MmInit1(VOID)
     DPRINT("MmSystemRangeStart:  %08x\n", MmSystemRangeStart);
     DPRINT("MmUserProbeAddress:  %08x\n", MmUserProbeAddress);
     DPRINT("MmHighestUserAddress:%08x\n", MmHighestUserAddress);
-
-    /* Initialize memory managment statistics */
-    RtlZeroMemory(&MmStats, sizeof(MmStats));
     
     /* Count RAM */
     MiCountFreePagesInLoaderBlock(KeLoaderBlock);
     DbgPrint("Used memory %dKb\n", (MmNumberOfPhysicalPages * PAGE_SIZE) / 1024);
     
     /* Initialize the kernel address space */
-    MmInitializeHandBuiltProcess(PsGetCurrentProcess(), Dummy);
+    KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
     MmKernelAddressSpace = MmGetCurrentAddressSpace();
     MmInitGlobalKernelPageDirectory();
-    
-    /* Get kernel address boundaries */
-    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
-                                 LDR_DATA_TABLE_ENTRY,
-                                 InLoadOrderLinks);
-    MiKSeg0Start = (ULONG_PTR)LdrEntry->DllBase | KSEG0_BASE;
-    MiKSeg0End = PAGE_ROUND_UP(MiGetLastKernelAddress()  | KSEG0_BASE);
 
     /* We'll put the PFN array right after the loaded modules */
-    MmPfnDatabase = (PVOID)MiKSeg0End;
+    MmPfnDatabase = (PVOID)((ULONG_PTR)MmSystemRangeStart + MmBootImageSize);
     MmPfnDatabaseEnd = (ULONG_PTR)MmPfnDatabase + (MmHighestPhysicalPage * sizeof(MMPFN));
     MmPfnDatabaseEnd = PAGE_ROUND_UP(MmPfnDatabaseEnd);
     
-    /*
-     * FreeLDR maps 6MB starting at the kernel base address, followed by the
-     * PFN database. If the PFN database doesn't go over the FreeLDR allocation
-     * then choose the end of the FreeLDR block. If it does go past the FreeLDR
-     * allocation, then choose the next PAGE_SIZE boundary.
-     */
-    if ((ULONG_PTR)MmPfnDatabaseEnd < (MiKSeg0Start + 0x600000))
-    {
-        /* Use the first memory following FreeLDR's 6MB mapping */
-        MiNonPagedPoolStart = (PVOID)((ULONG_PTR)MiKSeg0Start + 0x600000);
-    }
-    else
-    {
-        /* Use the next free available page */
-        MiNonPagedPoolStart = (PVOID)MmPfnDatabaseEnd;
-    }
+    /* Put nonpaged pool after the PFN database */
+    MiNonPagedPoolStart = (PVOID)MmPfnDatabaseEnd;
     
     /* Length of non-paged pool */
     MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;
@@ -461,25 +354,3 @@ MmInitSystem(IN ULONG Phase,
     return TRUE;
 }
 
-
-/* PUBLIC FUNCTIONS **********************************************************/
-
-/*
- * @implemented
- */
-BOOLEAN
-NTAPI
-MmIsThisAnNtAsSystem(VOID)
-{
-   return IsThisAnNtAsSystem;
-}
-
-/*
- * @implemented
- */
-MM_SYSTEMSIZE
-NTAPI
-MmQuerySystemSize(VOID)
-{
-   return MmSystemSize;
-}

@@ -12,6 +12,11 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
+
+BOOLEAN IsThisAnNtAsSystem = FALSE;
+MM_SYSTEMSIZE MmSystemSize = MmSmallSystem;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -115,6 +120,26 @@ BOOLEAN NTAPI MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
 {
     DPRINT1("WARNING: %s returns bogus result\n", __FUNCTION__);
     return MmIsAddressValid(VirtualAddress);
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+MmIsThisAnNtAsSystem(VOID)
+{
+    return IsThisAnNtAsSystem;
+}
+
+/*
+ * @implemented
+ */
+MM_SYSTEMSIZE
+NTAPI
+MmQuerySystemSize(VOID)
+{
+    return MmSystemSize;
 }
 
 /* EOF */
