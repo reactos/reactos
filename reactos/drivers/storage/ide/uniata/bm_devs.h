@@ -521,7 +521,8 @@ BUSMASTER_CONTROLLER_INFORMATION const BusMasterAdapters[] = {
     PCI_DEV_HW_SPEC_BM( 438c, 1002, 0x00, ATA_UDMA6, "ATI IXP600"       , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 4380, 1002, 0x00, ATA_SA150, "ATI IXP600"       , UNIATA_SATA | UNIATA_AHCI               ),
     PCI_DEV_HW_SPEC_BM( 439c, 1002, 0x00, ATA_UDMA6, "ATI IXP700"       , 0                                       ),
-    PCI_DEV_HW_SPEC_BM( 4390, 1002, 0x00, ATA_SA150, "ATI IXP700"       , UNIATA_SATA | UNIATA_AHCI               ),
+    PCI_DEV_HW_SPEC_BM( 4390, 1002, 0x00, ATA_UDMA6, "ATI IXP700"       , 0                                       ),
+    PCI_DEV_HW_SPEC_BM( 4391, 1002, 0x00, ATA_SA150, "ATI IXP700"       , UNIATA_SATA | UNIATA_AHCI               ),
 
     PCI_DEV_HW_SPEC_BM( 0004, 1103, 0x05, ATA_UDMA6, "HighPoint HPT372" , HPT372 | 0x00   | UNIATA_RAID_CONTROLLER),
     PCI_DEV_HW_SPEC_BM( 0004, 1103, 0x03, ATA_UDMA5, "HighPoint HPT370" , HPT370 | 0x00   | UNIATA_RAID_CONTROLLER),
