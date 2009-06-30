@@ -48,13 +48,13 @@
 		<file>alphablend.c</file>
 		<file>bitblt.c</file>
 		<file>engbrush.c</file>
+		<file>engevent.c</file>
 		<file>clip.c</file>
 		<file>copybits.c</file>
 		<file>debug.c</file>
 		<file>device.c</file>
 		<file>driverobj.c</file>
 		<file>error.c</file>
-		<file>event.c</file>
 		<file>float.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
