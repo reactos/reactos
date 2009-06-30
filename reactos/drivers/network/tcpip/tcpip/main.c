@@ -725,10 +725,6 @@ DriverEntry(
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   TrackingInit();
-  TrackTag(NDIS_BUFFER_TAG);
-  TrackTag(NDIS_PACKET_TAG);
-  TrackTag(FBSD_MALLOC);
-  TrackTag(EXALLOC_TAG);
 
   /* TdiInitialize() ? */
 

@@ -8,14 +8,6 @@
 static LIST_ENTRY AllocatedObjectsList;
 static KSPIN_LOCK AllocatedObjectsLock;
 static NPAGED_LOOKASIDE_LIST AllocatedObjectsLookasideList;
-ULONG TagsToShow[MEMTRACK_MAX_TAGS_TO_TRACK] = { 0 };
-
-VOID TrackTag( ULONG Tag ) {
-    UINT i;
-
-    for( i = 0; TagsToShow[i]; i++ );
-    TagsToShow[i] = Tag;
-}
 
 VOID TrackingInit() {
     TcpipInitializeSpinLock( &AllocatedObjectsLock );
@@ -82,9 +74,8 @@ VOID TrackWithTag( ULONG Tag, PVOID Thing, PCHAR FileName, ULONG LineNo ) {
 	if( ThingInList->Thing == Thing ) {
 	    RemoveEntryList(Entry);
 
-            TI_DbgPrint(MAX_TRACE,("TRACK: SPECIFIED ALREADY ALLOCATED ITEM %x\n", Thing));
-            ShowTrackedThing( "Double Alloc (Item in list)", ThingInList, FALSE );
-            ShowTrackedThing( "Double Alloc (Item not in list)", TrackedThing, FALSE );
+            ShowTrackedThing( "Double Alloc (Item in list)", ThingInList, TRUE );
+            ShowTrackedThing( "Double Alloc (Item not in list)", TrackedThing, TRUE );
 
             ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
 	                                 ThingInList );
@@ -97,14 +88,6 @@ VOID TrackWithTag( ULONG Tag, PVOID Thing, PCHAR FileName, ULONG LineNo ) {
     InsertHeadList( &AllocatedObjectsList, &TrackedThing->Entry );
 
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
-}
-
-BOOLEAN ShowTag( ULONG Tag ) {
-    UINT i;
-
-    for( i = 0; TagsToShow[i] && TagsToShow[i] != Tag; i++ );
-
-    return TagsToShow[i] ? TRUE : FALSE;
 }
 
 VOID UntrackFL( PCHAR File, ULONG Line, PVOID Thing, ULONG Tag ) {
@@ -132,13 +115,21 @@ VOID UntrackFL( PCHAR File, ULONG Line, PVOID Thing, ULONG Tag ) {
 
 	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 
-	    /* TrackDumpFL( File, Line ); */
 	    return;
 	}
 	Entry = Entry->Flink;
     }
     TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
-    DbgPrint("UNTRACK: SPECIFIED ALREADY FREE ITEM %x\n", Thing);
+
+    DbgPrint("[Double Free] Thing %08x %c%c%c%c (%s:%d)\n",
+             Thing,
+             ((PCHAR)&Tag)[3],
+             ((PCHAR)&Tag)[2],
+             ((PCHAR)&Tag)[1],
+             ((PCHAR)&Tag)[0],
+             File,
+             Line);
+
     ASSERT( FALSE );
 }
 
