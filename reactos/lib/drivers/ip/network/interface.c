@@ -112,34 +112,6 @@ BOOLEAN AddrLocateADEv4(
     return Matched;
 }
 
-BOOLEAN IPGetDefaultAddress( PIP_ADDRESS Address ) {
-    KIRQL OldIrql;
-    BOOLEAN Matched = FALSE;
-    IF_LIST_ITER(CurrentIF);
-
-    TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
-
-    /* Find the first 'real' interface */
-    ForEachInterface(CurrentIF) {
-	if( CurrentIF->Context ) {
-	    *Address = CurrentIF->Unicast;
-	    Matched = TRUE; break;
-	}
-    } EndFor(CurrentIF);
-
-    /* Not matched, use the first one */
-    if( !Matched ) {
-	ForEachInterface(CurrentIF) {
-	    *Address = CurrentIF->Unicast;
-	    Matched = TRUE; break;
-	} EndFor(CurrentIF);
-    }
-
-    TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
-
-    return Matched;
-}
-
 BOOLEAN HasPrefix(
     PIP_ADDRESS Address,
     PIP_ADDRESS Prefix,

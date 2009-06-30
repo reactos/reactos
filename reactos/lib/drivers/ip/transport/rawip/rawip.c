@@ -210,11 +210,19 @@ NTSTATUS RawIPSendDatagram(
 	return STATUS_UNSUCCESSFUL;
     }
 
+    TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
+
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	return STATUS_NETWORK_UNREACHABLE;
+
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
     {
-        if (!IPGetDefaultAddress(&LocalAddress))
-            return STATUS_UNSUCCESSFUL;
+        /* If the local address is unspecified (0),
+         * then use the unicast address of the
+         * interface we're sending over
+         */
+        LocalAddress = NCE->Interface->Unicast;
     }
 
     Status = BuildRawIpPacket( &Packet,
@@ -227,13 +235,6 @@ NTSTATUS RawIPSendDatagram(
 
     if( !NT_SUCCESS(Status) )
 	return Status;
-
-    TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
-
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-        FreeNdisPacket(Packet.NdisPacket);
-	return STATUS_NETWORK_UNREACHABLE;
-    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
