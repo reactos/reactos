@@ -453,7 +453,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     KIRQL OldIrql;
     PLIST_ENTRY ListEntry;
     PPHYSICAL_PAGE Pfn1;
-    ULONG LookForZeroedPages;
+    INT LookForZeroedPages;
     ASSERT (KeGetCurrentIrql() <= APC_LEVEL);
     
     //
@@ -689,7 +689,7 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
         // Check if we've reached the end
         //
         Page = *MdlPage;
-        if (Page == -1) break;
+        if (Page == (PFN_NUMBER)-1) break;
         
         //
         // Get the PFN entry for the page and check if we should zero it out

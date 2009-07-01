@@ -1186,8 +1186,8 @@ MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
     return MiMapPageInHyperSpace(HyperProcess, Page, &HyperIrql);
 }
 
-PVOID
 FORCEINLINE
+PVOID
 MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page)
 {
     PMMPFN Pfn1 = MiGetPfnEntry(Page);

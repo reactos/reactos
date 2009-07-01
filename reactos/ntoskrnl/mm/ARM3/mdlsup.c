@@ -328,7 +328,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
         //
         // Get the correct cache type
         //
-        IsIoMapping = Mdl->MdlFlags & MDL_IO_SPACE;
+        IsIoMapping = (Mdl->MdlFlags & MDL_IO_SPACE) != 0;
         CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
         
         //
