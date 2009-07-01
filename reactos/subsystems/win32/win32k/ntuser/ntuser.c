@@ -34,6 +34,7 @@
 #include <debug.h>
 
 ERESOURCE UserLock;
+ATOM AtomMessage; // Window Message atom.
 BOOL gbInitialized;
 
 BOOL

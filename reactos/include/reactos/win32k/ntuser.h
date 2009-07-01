@@ -268,6 +268,8 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(struct _WND*, UINT, WPARAM, LPARAM, ULONG_PTR
 #define FNID_IME                    0x02A9
 #define FNID_CALLWNDPROC            0x02AA
 #define FNID_CALLWNDPROCRET         0x02AB
+#define FNID_HKINLPCWPEXSTRUCT      0x02AC
+#define FNID_HKINLPCWPRETEXSTRUCT   0x02AD
 #define FNID_SENDMESSAGE            0x02B0
 // Kernel has option to use TimeOut or normal msg send, based on type of msg.
 #define FNID_SENDMESSAGEWTOOPTION   0x02B1
@@ -308,8 +310,15 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(struct _WND*, UINT, WPARAM, LPARAM, ULONG_PTR
 #define ICLS_SWITCH       19
 #define ICLS_ICONTITLE    20
 #define ICLS_TOOLTIPS     21
+#if (_WIN32_WINNT <= 0x0501)
 #define ICLS_UNKNOWN      22
 #define ICLS_NOTUSED      23
+#else
+#define ICLS_SYSSHADOW    22
+#define ICLS_HWNDMESSAGE  23
+#define ICLS_UNKNOWN      24
+#define ICLS_NOTUSED      25
+#endif
 #define ICLS_END          31
 
 #define COLOR_LAST COLOR_MENUBAR
@@ -327,7 +336,7 @@ typedef struct tagOEMBITMAPINFO
 
 typedef struct tagMBSTRING
 {
-    WCHAR szName[15];
+    WCHAR szName[16];
     UINT uID;
     UINT uStr;
 } MBSTRING, *PMBSTRING;
@@ -389,8 +398,8 @@ typedef struct tagSERVERINFO
     DWORD           dwSRVIFlags;
     ULONG_PTR       cHandleEntries;
     PFN_FNID        mpFnidPfn[FNID_NUM];
-//    WNDPROC         aStoCidPfn[7];
-//    USHORT          mpFnid_serverCBWndProc[31];
+    WNDPROC         aStoCidPfn[7];
+    USHORT          mpFnid_serverCBWndProc[FNID_NUM];
     PFNCLIENT       apfnClientA;
     PFNCLIENT       apfnClientW;
     PFNCLIENTWORKER apfnClientWorker;
@@ -553,6 +562,7 @@ typedef struct _USERCONNECT
 //
 // Non SDK Window Message types.
 //
+#define WM_COPYGLOBALDATA 73
 #define WM_SYSTIMER 280
 #define WM_POPUPSYSTEMMENU 787
 #define WM_CBT 1023 // ReactOS only.
@@ -1072,6 +1082,18 @@ NtUserChangeDisplaySettings(
   DWORD dwflags,
   LPVOID lParam);
 
+BOOL
+NTAPI
+NtUserCheckDesktopByThreadId(
+  DWORD dwThreadId);
+
+BOOL
+NTAPI
+NtUserCheckWindowThreadDesktop(
+  HWND hwnd,
+  DWORD dwThreadId,
+  ULONG ReturnValue);
+
 DWORD
 NTAPI
 NtUserCheckImeHotKey(
@@ -1145,11 +1167,11 @@ NtUserCreateCaret(
 HDESK
 NTAPI
 NtUserCreateDesktop(
-  PUNICODE_STRING lpszDesktopName,
+  POBJECT_ATTRIBUTES poa,
+  PUNICODE_STRING lpszDesktopDevice,
+  LPDEVMODEW lpdmw,
   DWORD dwFlags,
-  ACCESS_MASK dwDesiredAccess,
-  LPSECURITY_ATTRIBUTES lpSecurity,
-  HWINSTA hWindowStation);
+  ACCESS_MASK dwDesiredAccess);
 
 DWORD
 NTAPI
@@ -1936,7 +1958,7 @@ NtUserMapVirtualKeyEx( UINT keyCode,
 		       UINT transType,
 		       DWORD keyboardId,
 		       HKL dwhkl );
-LRESULT
+BOOL
 NTAPI
 NtUserMessageCall(
   HWND hWnd,

@@ -1700,6 +1700,74 @@ PostMessageW(
   return Result;
 }
 
+BOOL
+WINAPI
+PostMessageWX(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  LRESULT Ret;
+
+  /* Check for combo box or a list box to send names. */
+  if (Msg == CB_DIR || Msg == LB_DIR)
+  {
+  /*
+     Set DDL_POSTMSGS, so use the PostMessage function to send messages to the
+     combo/list box. Forces a call like DlgDirListComboBox.
+  */
+    wParam |= DDL_POSTMSGS;
+    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
+  }
+
+  /* No drop files or current Process, just post message. */
+  if ( (Msg != WM_DROPFILES) ||
+       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
+                  PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
+  {
+    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
+  }
+
+  /* We have drop files or this is not the same process for this window. */
+
+  /* Just incase, check wParam for Global memory handle and send size. */
+  Ret = SendMessageW( hWnd,
+                      WM_COPYGLOBALDATA,
+                      (WPARAM)GlobalSize((HGLOBAL)wParam), // Zero if not a handle.
+                      (LPARAM)wParam);                     // Send wParam as lParam.
+
+  if ( Ret ) return NtUserPostMessage(hWnd, Msg, (WPARAM)Ret, lParam);
+
+  return FALSE;
+}
+BOOL
+WINAPI
+PostMessageAX(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  MSG AnsiMsg, UcMsg;
+  BOOL Ret;
+
+  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.message = Msg;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+
+  if (!MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  {
+      return FALSE;
+  }
+
+  Ret = PostMessageWX( hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+
+  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+
+  return Ret;
+}
 
 /*
  * @implemented
@@ -2113,6 +2181,43 @@ SendNotifyMessageW(
   return Result;
 }
 
+BOOL
+WINAPI
+SendNotifyMessageAX(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  BOOL Ret;
+  MSG AnsiMsg, UcMsg;
+
+  AnsiMsg.hwnd = hWnd;
+  AnsiMsg.message = Msg;
+  AnsiMsg.wParam = wParam;
+  AnsiMsg.lParam = lParam;
+  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
+  {
+     return FALSE;
+  }
+  /* ATM, ReactOS does not support Ansi in win32k. */
+  Ret = NtUserMessageCall(hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam, 0, FNID_SENDNOTIFYMESSAGE, FALSE);
+
+  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+
+  return Ret;
+}
+
+BOOL
+WINAPI
+SendNotifyMessageWX(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return NtUserMessageCall(hWnd, Msg, wParam, lParam, 0, FNID_SENDNOTIFYMESSAGE, FALSE);
+}
 
 /*
  * @implemented

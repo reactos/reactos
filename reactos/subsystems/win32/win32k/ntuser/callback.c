@@ -605,6 +605,9 @@ co_IntCallHookProc(INT HookId,
    return Result;
 }
 
+//
+// Events are notifications w/o results.
+//
 LRESULT
 APIENTRY
 co_IntCallEventProc(HWINEVENTHOOK hook,
@@ -616,11 +619,11 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                    DWORD dwmsEventTime,
                      WINEVENTPROC Proc)
 {
-   LRESULT Result;
+   LRESULT Result = 0;
    NTSTATUS Status;
    PEVENTPROC_CALLBACK_ARGUMENTS Common;
    ULONG ArgumentLength, ResultLength;
-   PVOID Argument, ResultPointer, pWnd;
+   PVOID Argument, ResultPointer;
 
    ArgumentLength = sizeof(EVENTPROC_CALLBACK_ARGUMENTS);
 
@@ -643,8 +646,6 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);
 
-   IntSetTebWndCallback (&hWnd, &pWnd);
-
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_EVENTPROC,
@@ -653,12 +654,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                                &ResultPointer,
                                &ResultLength);
 
-   /* Simulate old behaviour: copy into our local buffer */
-   Result = *(LRESULT*)ResultPointer;
-
    UserEnterCo();
-
-   IntRestoreTebWndCallback (hWnd, pWnd);
 
    IntCbFreeMemory(Argument);
   

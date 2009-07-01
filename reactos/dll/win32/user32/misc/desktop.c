@@ -356,19 +356,35 @@ CreateDesktopW(LPCWSTR lpszDesktop,
 	       ACCESS_MASK dwDesiredAccess,
 	       LPSECURITY_ATTRIBUTES lpsa)
 {
-  UNICODE_STRING DesktopName;
+  OBJECT_ATTRIBUTES oas;
+  UNICODE_STRING DesktopName, DesktopDevice;
   HWINSTA hWinSta;
   HDESK hDesktop;
+  ULONG Attributes = (OBJ_OPENIF|OBJ_CASE_INSENSITIVE);
 
+  /* Retrive WinStation handle. */
   hWinSta = NtUserGetProcessWindowStation();
 
+  /* Initialize the strings. */
   RtlInitUnicodeString(&DesktopName, lpszDesktop);
+  RtlInitUnicodeString(&DesktopDevice, lpszDevice);
 
-  hDesktop = NtUserCreateDesktop(&DesktopName,
-				 dwFlags,
-				 dwDesiredAccess,
-				 lpsa,
-				 hWinSta);
+  /* Check for process is inherited, set flag if set. */
+  if (lpsa && lpsa->bInheritHandle) Attributes |= OBJ_INHERIT;
+
+  /* Initialize the attributes for the desktop. */
+  InitializeObjectAttributes( &oas,
+                              &DesktopName,
+                               Attributes,
+                               hWinSta,
+                               lpsa ? lpsa->lpSecurityDescriptor : NULL);
+
+  /* Send the request and call to win32k. */
+  hDesktop = NtUserCreateDesktop( &oas,
+                                  &DesktopDevice,
+                                   pDevmode,
+				   dwFlags,
+				   dwDesiredAccess);
 
   return(hDesktop);
 }

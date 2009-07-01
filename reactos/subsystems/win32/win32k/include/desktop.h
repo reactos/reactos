@@ -28,6 +28,7 @@ typedef struct _DESKTOP
     PWIN32HEAP pheapDesktop;
     PSECTION_OBJECT DesktopHeapSection;
     PDESKTOPINFO DesktopInfo;
+    HWND spwndMessage;
 } DESKTOP, *PDESKTOP;
 
 extern PDESKTOP InputDesktop;
@@ -134,6 +135,7 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
     &(OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(d))->Name) :   \
     NULL
 
+HWND FASTCALL IntGetMessageWindow(VOID);
 
 static __inline PVOID
 DesktopHeapAlloc(IN PDESKTOP Desktop,

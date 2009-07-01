@@ -165,14 +165,14 @@ VOID
 FASTCALL
 IntNotifyWinEvent(
    DWORD Event,
-   PWINDOW_OBJECT Window,
+   HWND  hWnd,
    LONG  idObject,
    LONG  idChild)
 {
    PEVENTHOOK pEH;
    LRESULT Result;
 
-   if (!GlobalEvents->Counts) return;
+   if (!GlobalEvents || !GlobalEvents->Counts) return;
 
    pEH = (PEVENTHOOK)GlobalEvents->Events.Flink;
 
@@ -187,7 +187,7 @@ IntNotifyWinEvent(
            if (!(pEH->idProcess) || !(pEH->idThread) || 
                (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
            {
-              Result = IntCallLowLevelEvent(pEH, Event, Window->hSelf, idObject, idChild);
+              Result = IntCallLowLevelEvent(pEH, Event, hWnd, idObject, idChild);
            }
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
@@ -198,7 +198,7 @@ IntNotifyWinEvent(
         {
            Result = co_IntCallEventProc( pEH->Self,
                                              Event,
-                                     Window->hSelf,
+                                              hWnd,
                                           idObject,
                                            idChild,
              PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
@@ -234,7 +234,7 @@ NtUserNotifyWinEvent(
    if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
       UserRefObjectCo(Window, &Ref);
-      IntNotifyWinEvent( Event, Window, idObject, idChild);
+      IntNotifyWinEvent( Event, Window->hSelf, idObject, idChild);
       UserDerefObjectCo(Window);
    }
    UserLeave();
@@ -258,6 +258,8 @@ NtUserSetWinEventHook(
    NTSTATUS Status;
    HANDLE Handle;
    PETHREAD Thread = NULL;
+
+   DPRINT("NtUserSetWinEventHook hmod 0x%x, pfn 0x%x\n",hmodWinEventProc, lpfnWinEventProc);
 
    UserEnterExclusive();
 
@@ -316,7 +318,6 @@ NtUserSetWinEventHook(
       pEH->eventMax  = eventMax;
       pEH->idProcess = idProcess;
       pEH->idThread  = idThread;
-      pEH->Ansi      = FALSE;
       pEH->Flags     = dwflags;
 
 
@@ -363,7 +364,9 @@ NtUserSetWinEventHook(
 
          pEH->ModuleName.Length = ModuleName.Length;
 
-         pEH->Proc = (void *)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
+         pEH->offPfn = (ULONG_PTR)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
+         pEH->ihmod = (INT)hmodWinEventProc;
+         pEH->Proc = lpfnWinEventProc;
       }
       else
          pEH->Proc = lpfnWinEventProc;

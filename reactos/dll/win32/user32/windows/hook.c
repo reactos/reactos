@@ -219,13 +219,13 @@ CallNextHookEx(
      {
         PCWPSTRUCT pCWP = (PCWPSTRUCT)lParam;
 
-        lResult = NtUserMessageCall( pCWP->hwnd,
-                                  pCWP->message,
-                                   pCWP->wParam,
-                                   pCWP->lParam, 
-                                              0,
-                               FNID_CALLWNDPROC,
-                                    pHook->Ansi);
+        NtUserMessageCall( pCWP->hwnd,
+                           pCWP->message,
+                           pCWP->wParam,
+                           pCWP->lParam, 
+                          (ULONG_PTR)&lResult,
+                           FNID_CALLWNDPROC,
+                           pHook->Ansi);
      }
      else
      {
@@ -233,13 +233,13 @@ CallNextHookEx(
 
         ClientInfo->dwHookData = pCWPR->lResult;
 
-        lResult = NtUserMessageCall( pCWPR->hwnd,
-                                  pCWPR->message,
-                                   pCWPR->wParam,
-                                   pCWPR->lParam, 
-                                               0,
-                             FNID_CALLWNDPROCRET,
-                                     pHook->Ansi);
+        NtUserMessageCall( pCWPR->hwnd,
+                           pCWPR->message,
+                           pCWPR->wParam,
+                           pCWPR->lParam, 
+                          (ULONG_PTR)&lResult,
+                           FNID_CALLWNDPROCRET,
+                           pHook->Ansi);
      }
      ClientInfo->CI_flags ^= ((ClientInfo->CI_flags ^ Flags) & CI_CURTHPRHOOK);
      ClientInfo->dwHookData = Save;
@@ -429,8 +429,9 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
   switch(Common->HookId)
-    {
+  {
     case WH_CBT:
+    {
       switch(Common->Code)
       {
         case HCBT_CREATEWND:
@@ -494,7 +495,6 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       {
          ERR("Common = 0x%x, Proc = 0x%x\n",Common,Common->Proc);
       }
-
       switch(Common->Code)
       {
         case HCBT_CREATEWND:
@@ -502,6 +502,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
           break;
       }
       break;
+    }
     case WH_KEYBOARD_LL:
       KeyboardLlData = (PKBDLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) KeyboardLlData);
@@ -536,7 +537,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       break;
     default:
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
-    }
+  }
 
   return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
 }
@@ -547,15 +548,15 @@ User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PEVENTPROC_CALLBACK_ARGUMENTS Common;
 
   Common = (PEVENTPROC_CALLBACK_ARGUMENTS) Arguments;
-  
+
   Common->Proc(Common->hook,
-              Common->event,
+               Common->event,
                Common->hwnd,
-           Common->idObject,
-            Common->idChild,
-      Common->dwEventThread,
-      Common->dwmsEventTime);
-  
+               Common->idObject,
+               Common->idChild,
+               Common->dwEventThread,
+               Common->dwmsEventTime);
+
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);
 }
 

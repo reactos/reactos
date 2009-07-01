@@ -156,6 +156,10 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                Size = sizeof(COPYDATASTRUCT) + ((PCOPYDATASTRUCT)lParam)->cbData;
                break;
 
+            case WM_COPYGLOBALDATA:
+               Size = wParam;
+               break;
+
             default:
                assert(FALSE);
                Size = 0;
@@ -2023,7 +2027,7 @@ IntUninitMessagePumpHook()
 }
 
 
-LRESULT APIENTRY
+BOOL APIENTRY
 NtUserMessageCall(
    HWND hWnd,
    UINT Msg,
@@ -2034,6 +2038,8 @@ NtUserMessageCall(
    BOOL Ansi)
 {
    LRESULT lResult = 0;
+   BOOL Ret = FALSE;
+   BOOL BadChk = FALSE;
    PWINDOW_OBJECT Window = NULL;
    USER_REFERENCE_ENTRY Ref;
 
@@ -2043,21 +2049,23 @@ NtUserMessageCall(
    if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
    {
       UserLeave();
-      return 0;
+      return FALSE;
    }
    switch(dwType)
    {
       case FNID_DEFWINDOWPROC:
          UserRefObjectCo(Window, &Ref);
          lResult = IntDefWindowProc(Window, Msg, wParam, lParam, Ansi);
+         Ret = TRUE;
          UserDerefObjectCo(Window);
+      break;
+      case FNID_SENDNOTIFYMESSAGE:
+         Ret = UserSendNotifyMessage(hWnd, Msg, wParam, lParam);
       break;
       case FNID_BROADCASTSYSTEMMESSAGE:
       {
          PBROADCASTPARM parm;
-         BOOL BadChk = FALSE;
          DWORD_PTR RetVal = 0;
-         lResult = -1;
 
          if (ResultInfo)
          {
@@ -2119,11 +2127,11 @@ NtUserMessageCall(
             }
             else if (parm->flags & BSF_POSTMESSAGE)
             {
-               lResult = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
+               Ret = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
             }
             else if ( parm->flags & BSF_SENDNOTIFYMESSAGE)
             {
-               lResult = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
+               Ret = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
             }
          }
       }
@@ -2189,8 +2197,33 @@ NtUserMessageCall(
       }
       break;
    }
+
+   switch(dwType)
+   {
+      case FNID_DEFWINDOWPROC:
+      case FNID_CALLWNDPROC:
+      case FNID_CALLWNDPROCRET:
+         if (ResultInfo)
+         {
+            _SEH2_TRY
+            {
+                ProbeForWrite((PVOID)ResultInfo, sizeof(LRESULT), 1);
+                RtlCopyMemory((PVOID)ResultInfo, &lResult, sizeof(LRESULT));
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                BadChk = TRUE;
+            }
+            _SEH2_END;      
+         }
+         break;
+      default:
+         break;   
+   }
+
    UserLeave();
-   return lResult;
+
+   return BadChk ? FALSE : Ret;
 }
 
 #define INFINITE 0xFFFFFFFF

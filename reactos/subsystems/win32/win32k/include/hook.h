@@ -36,8 +36,9 @@ typedef struct tagEVENTHOOK
   DWORD          idProcess;
   DWORD          idThread;
   WINEVENTPROC   Proc;       /* Event function */
-  BOOLEAN        Ansi;       /* Is it an Ansi event? */
   ULONG          Flags;      /* Some internal flags */
+  ULONG_PTR      offPfn;
+  INT            ihmod;
   UNICODE_STRING ModuleName; /* Module name for global events */
 } EVENTHOOK, *PEVENTHOOK;
 

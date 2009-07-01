@@ -670,8 +670,9 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 //#if 0
 //  if (ISITHOOKED(WH_CBT))
   {
-      if (NtUserMessageCall( hwnd, WM_CBT, HCBT_MOVESIZE, (LPARAM)&sizingRect, 0, FNID_DEFWINDOWPROC, FALSE))
-         moved = FALSE;
+      LRESULT lResult;
+      NtUserMessageCall( hwnd, WM_CBT, HCBT_MOVESIZE, (LPARAM)&sizingRect, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+      if (lResult) moved = FALSE;
   }
 //#endif
   (void)NtUserSetGUIThreadHandle(MSQ_STATE_MOVESIZE, NULL);
@@ -758,8 +759,9 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 //#if 0
 //  if (ISITHOOKED(WH_CBT))
   {
-     if (NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, 0, FNID_DEFWINDOWPROC, FALSE))
-        return 0;
+     LRESULT lResult;
+     NtUserMessageCall( hWnd, WM_SYSCOMMAND, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+     if (lResult) return 0;
   }
 //#endif
   switch (wParam & 0xfff0)

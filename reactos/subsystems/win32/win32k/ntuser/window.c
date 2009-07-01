@@ -393,6 +393,8 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    IntDeRegisterShellHookWindow(Window->hSelf);
 
+   IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window->hSelf, OBJID_WINDOW, 0);
+
    if(SendMessages)
    {
       /* Send destroy messages */
@@ -1552,7 +1554,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    RTL_ATOM ClassAtom;
    PWINDOW_OBJECT Window = NULL;
    PWINDOW_OBJECT ParentWindow = NULL, OwnerWindow;
-   HWND ParentWindowHandle;
+   HWND ParentWindowHandle = NULL;
    HWND OwnerWindowHandle;
    PMENU_OBJECT SystemMenu;
    HWND hWnd;
@@ -1576,7 +1578,12 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    PTHREADINFO pti;
 
    pti = PsGetCurrentThreadWin32Thread();
-   ParentWindowHandle = pti->Desktop->DesktopWindow;
+
+   if (pti->Desktop)
+   {
+       ParentWindowHandle = pti->Desktop->DesktopWindow;
+   }
+
    OwnerWindowHandle = NULL;
 
    if (hWndParent == HWND_MESSAGE)
@@ -1585,8 +1592,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        * native ole32.OleInitialize uses HWND_MESSAGE to create the
        * message window (style: WS_POPUP|WS_DISABLED)
        */
-      DPRINT("FIXME - Parent is HWND_MESSAGE\n");
-      // ParentWindowHandle set already.      
+      DPRINT1("FIXME - Parent is HWND_MESSAGE\n");
+      // ParentWindowHandle = IntGetMessageWindow();
    }
    else if (hWndParent)
    {
@@ -1605,16 +1612,16 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       RETURN( (HWND)0);  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
    }
 
-//   if (NULL != ParentWindowHandle)
-//   {
-   ParentWindow = UserGetWindowObject(ParentWindowHandle);
+   if (ParentWindowHandle)
+   {
+      ParentWindow = UserGetWindowObject(ParentWindowHandle);
 
-   if (ParentWindow) UserRefObjectCo(ParentWindow, &ParentRef);
-//   }
-//   else
-//   {
-//      ParentWindow = NULL;
-//   }
+      if (ParentWindow) UserRefObjectCo(ParentWindow, &ParentRef);
+   }
+   else
+   {
+      ParentWindow = NULL;
+   }
 
    /* FIXME: parent must belong to the current process */
 
@@ -2123,17 +2130,9 @@ AllocErr:
       IntUnlinkWindow(Window);
       RETURN((HWND)0);
    }
-#if 0
-   Result = IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window, OBJID_WINDOW, 0);
 
-   if (Result == (LRESULT)-1)
-   {
-      /* FIXME: Cleanup. */
-      DPRINT1("IntCreateWindowEx(): event CREATE hook failed. No cleanup performed!\n");
-      IntUnlinkWindow(Window);
-      RETURN((HWND)0);
-   }
-#endif
+   IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window->hSelf, OBJID_WINDOW, 0);
+
    /* Send move and size messages. */
    if (!(Window->Flags & WINDOWOBJECT_NEED_SIZE))
    {
@@ -2417,6 +2416,12 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       return FALSE;
    }
 
+   /* Call hooks */
+   if (ISITHOOKED(WH_CBT))
+   {
+      if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
+   }
+
    /* Look whether the focus is within the tree of windows we will
     * be destroying.
     */
@@ -2436,11 +2441,6 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       Window->MessageQueue->CaptureWindow = NULL;
 
    IntDereferenceMessageQueue(Window->MessageQueue);
-   /* Call hooks */
-   if (ISITHOOKED(WH_CBT))
-   {
-      if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
-   }
 
    IntEngWindowChanged(Window, WOC_DELETE);
    isChild = (0 != (Wnd->Style & WS_CHILD));
@@ -3224,6 +3224,18 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
 
    DPRINT("Enter NtUserSetParent\n");
    UserEnterExclusive();
+
+   /*
+      Check Parent first from user space, set it here.
+    */
+   if (!hWndNewParent)
+   {
+      hWndNewParent = IntGetDesktopWindow();
+   }
+   else if (hWndNewParent == HWND_MESSAGE)
+   {
+      // hWndNewParent = IntGetMessageWindow();
+   }
 
    RETURN( co_UserSetParent(hWndChild, hWndNewParent));
 

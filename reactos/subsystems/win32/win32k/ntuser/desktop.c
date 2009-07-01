@@ -556,6 +556,17 @@ PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
    return UserGetWindowObject(pdo->DesktopWindow);
 }
 
+HWND FASTCALL IntGetMessageWindow(VOID)
+{
+   PDESKTOP pdo = IntGetActiveDesktop();
+   
+   if (!pdo)
+   {
+      DPRINT("No active desktop\n");
+      return NULL;
+   }
+   return pdo->spwndMessage;
+}
 
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
@@ -829,8 +840,14 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
  * Creates a new desktop.
  *
  * Parameters
- *    lpszDesktopName
- *       Name of the new desktop.
+ *    poaAttribs
+ *       Object Attributes.
+ *
+ *    lpszDesktopDevice
+ *       Name of the device.
+ *
+ *    pDeviceMode
+ *       Device Mode.
  *
  *    dwFlags
  *       Interaction flags.
@@ -838,11 +855,6 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
  *    dwDesiredAccess
  *       Requested type of access.
  *
- *    lpSecurity
- *       Security descriptor.
- *
- *    hWindowStation
- *       Handle to window station on which to create the desktop.
  *
  * Return Value
  *    If the function succeeds, the return value is a handle to the newly
@@ -857,17 +869,19 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 
 HDESK APIENTRY
 NtUserCreateDesktop(
-   PUNICODE_STRING lpszDesktopName,
+   POBJECT_ATTRIBUTES poa,
+   PUNICODE_STRING lpszDesktopDevice,
+   LPDEVMODEW lpdmw,
    DWORD dwFlags,
-   ACCESS_MASK dwDesiredAccess,
-   LPSECURITY_ATTRIBUTES lpSecurity,
-   HWINSTA hWindowStation)
+   ACCESS_MASK dwDesiredAccess)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
+   PTHREADINFO W32Thread;
+//   HWND hwndMessage;
    PWINSTATION_OBJECT WinStaObject;
    PDESKTOP DesktopObject;
    UNICODE_STRING DesktopName;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    HDESK Desktop;
    CSR_API_MESSAGE Request;
    PVOID DesktopHeapSystemBase = NULL;
@@ -875,11 +889,35 @@ NtUserCreateDesktop(
    UNICODE_STRING SafeDesktopName;
    ULONG DummyContext;
    ULONG_PTR HeapSize = 4 * 1024 * 1024; /* FIXME */
+   HWINSTA hWindowStation = NULL ;
+   PUNICODE_STRING lpszDesktopName = NULL;
+//   UNICODE_STRING AtomName;
    DECLARE_RETURN(HDESK);
-
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
    UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead( poa,
+                    sizeof(OBJECT_ATTRIBUTES),
+                    1);
+
+      hWindowStation = poa->RootDirectory;
+      lpszDesktopName = poa->ObjectName;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status =_SEH2_GetExceptionCode();
+   }
+   _SEH2_END
+
+   if (! NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed reading Object Attributes from user space.\n");
+      SetLastNtError(Status);
+      RETURN( NULL);
+   }
 
    Status = IntValidateWindowStationHandle(
                hWindowStation,
@@ -1037,6 +1075,52 @@ NtUserCreateDesktop(
       RETURN( NULL);
    }
 
+   W32Thread = PsGetCurrentThreadWin32Thread();
+
+   if (!W32Thread->Desktop) IntSetThreadDesktop(DesktopObject,FALSE);
+
+#if 0
+  /*
+     Based on wine/server/window.c line 1804 in get_desktop_window.
+     We create an atom to be used for create desktop to create
+     the message window.
+   */
+   // FIXME!
+   // ReactOS CreateWindow does not know how to correctly use Atom Classes.
+   // So we have this HAX!
+   { // Warning! HACK! Yes it is very wrong!
+
+   // Normally, this would have been performed during the win32k init phase.
+   //  AtomMessage = IntAddGlobalAtom(L"Message", TRUE); // <- correct, but should be in ntuser.c
+
+     AtomMessage = 
+   }
+   AtomName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(AtomMessage)));
+   AtomName.Length = 0;
+
+   hwndMessage = co_IntCreateWindowEx( 0,
+                                       &AtomName,
+                                       NULL,
+                                      (WS_POPUP|WS_CLIPCHILDREN),
+                                       0,
+                                       0,
+                                       100,
+                                       100,
+                                       NULL,
+                                       NULL,
+                                       NULL,//hModuleWin, // pi->hModUser; ? no!
+                                       NULL,
+                                       0,
+                                       TRUE);
+   if (!hwndMessage)
+   {
+      DPRINT1("Failed to create Message window handle\n");
+   }
+   else
+   {
+      DesktopObject->spwndMessage = hwndMessage;
+   }
+#endif
    RETURN( Desktop);
 
 CLEANUP:
