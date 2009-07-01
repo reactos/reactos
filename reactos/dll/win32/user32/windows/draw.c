@@ -702,7 +702,7 @@ static BOOL UITOOLS95_DFC_ButtonPush(HDC dc, LPRECT r, UINT uFlags)
 static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL Radio)
 {
     RECT rc;
-    LOGFONT lf;
+    LOGFONTW lf;
     HFONT hFont, hOldFont;
     int SmallDiam, i;
     TCHAR OutRight, OutLeft, InRight, InLeft, Center;
@@ -725,7 +725,7 @@ static BOOL UITOOLS95_DFC_ButtonCheckRadio(HDC dc, LPRECT r, UINT uFlags, BOOL R
 
     SmallDiam = UITOOLS_MakeSquareRect(r, &rc);
 
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&lf, sizeof(LOGFONTW));
     lf.lfHeight = SmallDiam;
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
@@ -818,7 +818,7 @@ static BOOL UITOOLS95_DrawFrameButton(HDC hdc, LPRECT rc, UINT uState)
 
 static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 {
-    LOGFONT lf;
+    LOGFONTW lf;
     HFONT hFont, hOldFont;
     COLORREF clrsave;
     RECT myr;
@@ -845,7 +845,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
              return FALSE;
     }
     IntDrawRectEdge(dc,r,(uFlags&DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, BF_RECT | BF_MIDDLE | BF_SOFT);
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&lf, sizeof(LOGFONTW));
     UITOOLS_MakeSquareRect(r, &myr);
     myr.left += 1;
     myr.top += 1;
@@ -884,7 +884,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 {
-    LOGFONT lf;
+    LOGFONTW lf;
     HFONT hFont, hOldFont;
     COLORREF clrsave;
     RECT myr;
@@ -911,7 +911,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
 	case DFCS_SCROLLSIZEGRIP:
 	case DFCS_SCROLLSIZEGRIPRIGHT:
-		ZeroMemory(&lf, sizeof(LOGFONT));
+		ZeroMemory(&lf, sizeof(LOGFONTW));
 		UITOOLS_MakeSquareRect(r, &myr);
 		lf.lfHeight = myr.bottom - myr.top;
 		lf.lfWidth = 0;
@@ -947,7 +947,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
             return FALSE;
     }
     IntDrawRectEdge(dc, r, (uFlags & DFCS_PUSHED) ? EDGE_SUNKEN : EDGE_RAISED, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT);
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&lf, sizeof(LOGFONTW));
     UITOOLS_MakeSquareRect(r, &myr);
     myr.left += 1;
     myr.top += 1;
@@ -986,7 +986,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
 static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
 {
-    LOGFONT lf;
+    LOGFONTW lf;
     HFONT hFont, hOldFont;
     TCHAR Symbol;
     switch(uFlags & 0xff)
@@ -1014,7 +1014,7 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
             return FALSE;
     }
     /* acquire ressources only if valid menu */
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&lf, sizeof(LOGFONTW));
     lf.lfHeight = r->bottom - r->top;
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
