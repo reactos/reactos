@@ -33,7 +33,6 @@
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
 
-
 //
 // SUPPORT FOR WINDOWS XP THEMES:
 // THIS WILL MAKE THE PROGRAM USE THE COMMON CONTROLS

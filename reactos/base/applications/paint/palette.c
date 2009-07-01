@@ -57,7 +57,7 @@ LRESULT CALLBACK PalWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                     DrawEdge(hDC, &rc, BDR_SUNKENOUTER, BF_RECT);
                     oldPen = SelectObject(hDC, CreatePen(PS_NULL, 0, 0));
                     oldBrush = SelectObject(hDC, CreateSolidBrush(palColors[i]));
-                    Rectangle(hDC, rc.left + 2,rc.top + 2,rc.right + 1, rc.bottom - 1);
+                    Rectangle(hDC, rc.left + 2,rc.top + 2,rc.right - 1, rc.bottom - 1);
                     DeleteObject(SelectObject(hDC, oldBrush));
                     DeleteObject(SelectObject(hDC, oldPen));
                 }

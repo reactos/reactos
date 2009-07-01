@@ -46,13 +46,19 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Lupa"
         BEGIN
-            MENUITEM "12,5%", IDM_VIEWZOOM125
-            MENUITEM "25%", IDM_VIEWZOOM25
-            MENUITEM "50%", IDM_VIEWZOOM50
-            MENUITEM "100%", IDM_VIEWZOOM100
-            MENUITEM "200%", IDM_VIEWZOOM200
-            MENUITEM "400%", IDM_VIEWZOOM400
-            MENUITEM "800%", IDM_VIEWZOOM800
+            POPUP "User defined"
+            BEGIN
+                MENUITEM "12,5%", IDM_VIEWZOOM125
+                MENUITEM "25%", IDM_VIEWZOOM25
+                MENUITEM "50%", IDM_VIEWZOOM50
+                MENUITEM "100%", IDM_VIEWZOOM100
+                MENUITEM "200%", IDM_VIEWZOOM200
+                MENUITEM "400%", IDM_VIEWZOOM400
+                MENUITEM "800%", IDM_VIEWZOOM800
+            END
+            MENUITEM SEPARATOR
+            MENUITEM "Show grid", IDM_VIEWSHOWGRID
+            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Celá obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -172,6 +178,7 @@ BEGIN
     IDS_INFOTEXT, "ReactOS Malování je dostupné pod licencí GNU Lesser General Public License (LGPL) verze 3 (viz. www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Chcete uložit provedené zmìny v %s?"
     IDS_DEFAULTFILENAME, "Bez názvu.bmp"
+    IDS_MINIATURETITLE, "Miniature"
     IDS_TOOLTIP1, "Volný výbìr"
     IDS_TOOLTIP2, "Výbìr"
     IDS_TOOLTIP3, "Guma"

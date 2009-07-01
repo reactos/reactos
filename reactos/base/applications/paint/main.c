@@ -102,6 +102,11 @@ TCHAR filename[256];
 TCHAR filepathname[1000];
 BOOL isAFile = FALSE;
 
+BOOL showGrid = FALSE;
+BOOL showMiniature = FALSE;
+
+HWND hwndMiniature;
+
 int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, int nFunsterStil)
 {
     HWND hwnd;               /* This is the handle for our window */
@@ -214,12 +219,15 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
     LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
     _stprintf(progtitle, resstr, filename);
+    TCHAR miniaturetitle[100];
+    LoadString(hThisInstance, IDS_MINIATURETITLE, miniaturetitle, SIZEOF(miniaturetitle));
     
     
     /* create main window */
     hwnd = CreateWindowEx (0, _T("WindowsApp"), progtitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 544, 375, HWND_DESKTOP, NULL, hThisInstance, NULL);
 
     hMainWnd = hwnd;
+    hwndMiniature = CreateWindowEx(WS_EX_PALETTEWINDOW, _T("WindowsApp"), miniaturetitle, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME, 180, 200, 120, 100, hwnd, NULL, hThisInstance, NULL);
 
     /* loading and setting the window menu from resource */
     menu = LoadMenu(hThisInstance, MAKEINTRESOURCE(ID_MENU));
