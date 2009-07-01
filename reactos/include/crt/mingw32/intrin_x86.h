@@ -837,7 +837,6 @@ __INTRIN_INLINE unsigned short _rotl16(unsigned short value, unsigned char shift
 	return retval;
 }
 
-#ifndef __MSVCRT__
 __INTRIN_INLINE unsigned int _rotl(unsigned int value, int shift)
 {
 	unsigned long retval;
@@ -851,7 +850,6 @@ __INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
 	__asm__("rorl %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
-#endif
 
 __INTRIN_INLINE unsigned char _rotr8(unsigned char value, unsigned char shift)
 {
