@@ -184,24 +184,7 @@ WdmAudControlOpen(
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    InstanceInfo->Property.Set = KSPROPSETID_Sysaudio;
-    InstanceInfo->Property.Id = KSPROPERTY_SYSAUDIO_INSTANCE_INFO;
-    InstanceInfo->Property.Flags = KSPROPERTY_TYPE_SET;
-    InstanceInfo->Flags = 0;
-    InstanceInfo->DeviceNumber = FilterId;
-
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* failed to acquire audio device */
-        DPRINT1("KsSynchronousIoControlDevice failed with %x\n", Status);
-        ExFreePool(InstanceInfo);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
     if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
@@ -261,13 +244,17 @@ WdmAudControlOpen(
 
         for(Index = 0; Index < ClientInfo->NumPins; Index++)
         {
-            if (ClientInfo->hPins[Index].Handle == PinHandle)
+            if (ClientInfo->hPins[Index].Handle == NULL)
             {
-                /* the pin handle has been re-used */
+                /* re-use a free index */
+                ClientInfo->hPins[Index].Handle = PinHandle;
+                ClientInfo->hPins[Index].FilterId = FilterId;
+                ClientInfo->hPins[Index].PinId = PinId;
+                ClientInfo->hPins[Index].Type = DeviceInfo->DeviceType;
+
                 DeviceInfo->hDevice = PinHandle;
                 return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
             }
-
         }
 
         Handels = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
