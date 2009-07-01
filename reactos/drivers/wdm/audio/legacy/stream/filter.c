@@ -102,6 +102,7 @@ InitializeFilterWithKs(
     PKSOBJECT_CREATE_ITEM CreateItem;
     PIO_STACK_LOCATION IoStack;
     HW_STREAM_REQUEST_BLOCK_EXT RequestBlock;
+    PVOID HwInstanceExtension = NULL;
 
    /* Get device extension */
     DeviceExtension = (PSTREAM_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -120,10 +121,22 @@ InitializeFilterWithKs(
         /* driver supports more than one filter instance */
         RtlZeroMemory(&RequestBlock, sizeof(HW_STREAM_REQUEST_BLOCK_EXT));
 
+        /* allocate instance extension */
+        HwInstanceExtension = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->Data.FilterInstanceExtensionSize);
+        if (!HwInstanceExtension)
+        {
+            /* Not enough memory */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Zero instance extension */
+        RtlZeroMemory(HwInstanceExtension, DeviceExtension->DriverExtension->Data.FilterInstanceExtensionSize);
+
         /* set up request block */
         RequestBlock.Block.Command = SRB_OPEN_DEVICE_INSTANCE;
         RequestBlock.Block.HwDeviceExtension = DeviceExtension->DeviceExtension;
         RequestBlock.Block.Irp = Irp;
+        RequestBlock.Block.HwInstanceExtension = HwInstanceExtension;
         KeInitializeEvent(&RequestBlock.Event, SynchronizationEvent, FALSE);
 
         /*FIXME SYNCHRONIZATION */
@@ -139,6 +152,7 @@ InitializeFilterWithKs(
         if (!NT_SUCCESS(RequestBlock.Block.Status))
         {
             /* Resource is not available */
+            ExFreePool(HwInstanceExtension);
             return RequestBlock.Block.Status;
         }
     }
@@ -162,8 +176,17 @@ InitializeFilterWithKs(
     {
         /* Failed to create header */
         ExFreePool(CreateItem);
+        if (HwInstanceExtension)
+        {
+            /* free instance buffer */
+            ExFreePool(HwInstanceExtension);
+        }
         return Status;
     }
+
+    /* Store instance buffer in file object context */
+    IoStack->FileObject->FsContext2 = HwInstanceExtension;
+
     /* Increment total instance count */
     InterlockedIncrement(&DeviceExtension->InstanceCount);
     /* Return result */

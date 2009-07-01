@@ -290,6 +290,7 @@ StreamClassGetDmaBuffer(
     IN PVOID  HwDeviceExtension)
 {
     PSTREAM_DEVICE_EXTENSION DeviceExtension;
+
     /* Get our DeviceExtension */
     DeviceExtension = (PSTREAM_DEVICE_EXTENSION) ((ULONG_PTR)HwDeviceExtension - sizeof(STREAM_DEVICE_EXTENSION));
     ASSERT(DeviceExtension->DeviceExtension == HwDeviceExtension);
@@ -297,3 +298,97 @@ StreamClassGetDmaBuffer(
     return DeviceExtension->DmaCommonBuffer;
 }
 
+NTSTATUS
+NTAPI
+StreamClassRWCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    PIO_STATUS_BLOCK IoStatusBlock = (PIO_STATUS_BLOCK)Context;
+
+    IoStatusBlock->Information = Irp->IoStatus.Information;
+    IoStatusBlock->Status = Irp->IoStatus.Status;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+ *@implemented
+ */
+BOOLEAN
+STREAMAPI
+StreamClassReadWriteConfig(
+    IN PVOID  HwDeviceExtension,
+    IN BOOLEAN  Read,
+    IN PVOID  Buffer,
+    IN ULONG  OffSet,
+    IN ULONG  Length)
+{
+    PIRP Irp;
+    ULONG MajorFunction;
+    KEVENT Event;
+    PSTREAM_DEVICE_EXTENSION DeviceExtension;
+    LARGE_INTEGER Offset;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
+
+    /* Get our DeviceExtension */
+    DeviceExtension = (PSTREAM_DEVICE_EXTENSION) ((ULONG_PTR)HwDeviceExtension - sizeof(STREAM_DEVICE_EXTENSION));
+    ASSERT(DeviceExtension->DeviceExtension == HwDeviceExtension);
+
+    if (Read)
+    {
+        /* Zero input buffer */
+        RtlZeroMemory(Buffer, Length);
+    }
+
+    /* Set request type */
+    MajorFunction = (Read ? IRP_MJ_READ : IRP_MJ_WRITE);
+
+    /* Initialize event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* Set offset */
+    Offset.QuadPart = OffSet;
+
+    /* Pre-init status block */
+    StatusBlock.Status = STATUS_NOT_SUPPORTED;
+
+    /* Create Irp */
+    Irp = IoBuildSynchronousFsdRequest(MajorFunction,
+                                       DeviceExtension->LowerDeviceObject, /* Verify */
+                                       Buffer,
+                                       Length,
+                                       &Offset,
+                                       &Event,
+                                       &StatusBlock);
+
+    if (!Irp)
+    {
+        /* Failed to allocate memory */
+        return FALSE;
+    }
+
+    /* Setup a completion routine */
+    IoSetCompletionRoutine(Irp, StreamClassRWCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+
+    /* Call driver */
+    Status = IoCallDriver(DeviceExtension->LowerDeviceObject, Irp);
+
+    if (Status == STATUS_PENDING)
+    {
+        /* Request is pending, wait for result */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        /* Fetch result */
+        Status = StatusBlock.Status;
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        return FALSE;
+    }
+
+    /* FIXME Handle Length != InputLength */
+    return TRUE;
+}
