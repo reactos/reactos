@@ -35,8 +35,9 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
 
     /* Things that can happen when we try the initial connection */
     if( NewState & SEL_CONNECT ) {
-        while( !IsListEmpty( &Connection->ConnectRequest ) ) {
-            Entry = RemoveHeadList( &Connection->ConnectRequest );
+        while( (Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
+                                                     &Connection->Lock )) != NULL ) {
+            
             TI_DbgPrint(DEBUG_TCP, ("Connect Event\n"));
 
             Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
@@ -67,10 +68,10 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                                IsListEmpty(&Connection->ListenRequest) ?
                                "empty" : "nonempty"));
 
-        while( !IsListEmpty( &Connection->ListenRequest ) ) {
+        while( (Entry = ExInterlockedRemoveHeadList( &Connection->ListenRequest,
+                                                     &Connection->Lock )) != NULL ) {
             PIO_STACK_LOCATION IrpSp;
 
-            Entry = RemoveHeadList( &Connection->ListenRequest );
             Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
             Complete = Bucket->Request.RequestNotifyObject;
 
@@ -86,7 +87,7 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
             TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
 
             if( Status == STATUS_PENDING ) {
-                InsertHeadList( &Connection->ListenRequest, &Bucket->Entry );
+                ExInterlockedInsertHeadList( &Connection->ListenRequest, &Bucket->Entry, &Connection->Lock );
                 break;
             } else {
                 Complete( Bucket->Request.RequestContext, Status, 0 );
@@ -101,11 +102,11 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                                IsListEmpty(&Connection->ReceiveRequest) ?
                                "empty" : "nonempty"));
 
-        while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
+        while( (Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
+                                                     &Connection->Lock )) != NULL ) {
             OSK_UINT RecvLen = 0, Received = 0;
             PVOID RecvBuffer = 0;
 
-            Entry = RemoveHeadList( &Connection->ReceiveRequest );
             Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
             Complete = Bucket->Request.RequestNotifyObject;
 
@@ -144,8 +145,8 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                           STATUS_SUCCESS, Received );
                 exFreePool( Bucket );
             } else if( Status == STATUS_PENDING ) {
-                InsertHeadList
-                    ( &Connection->ReceiveRequest, &Bucket->Entry );
+                ExInterlockedInsertHeadList
+                    ( &Connection->ReceiveRequest, &Bucket->Entry, &Connection->Lock );
                 break;
             } else {
                 TI_DbgPrint(DEBUG_TCP,
@@ -161,11 +162,11 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                                IsListEmpty(&Connection->SendRequest) ?
                                "empty" : "nonempty"));
 
-        while( !IsListEmpty( &Connection->SendRequest ) ) {
+        while( (Entry = ExInterlockedRemoveHeadList( &Connection->SendRequest,
+                                                     &Connection->Lock )) != NULL ) {
             OSK_UINT SendLen = 0, Sent = 0;
             PVOID SendBuffer = 0;
 
-            Entry = RemoveHeadList( &Connection->SendRequest );
             Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
             Complete = Bucket->Request.RequestNotifyObject;
 
@@ -203,8 +204,8 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                           STATUS_SUCCESS, Sent );
                 exFreePool( Bucket );
             } else if( Status == STATUS_PENDING ) {
-                InsertHeadList
-                    ( &Connection->SendRequest, &Bucket->Entry );
+                ExInterlockedInsertHeadList
+                    ( &Connection->SendRequest, &Bucket->Entry, &Connection->Lock );
                 break;
             } else {
                 TI_DbgPrint(DEBUG_TCP,
@@ -219,11 +220,11 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
     if( NewState & SEL_FIN ) {
         TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
 
-        while (!IsListEmpty(&Connection->ReceiveRequest))
+        while ((Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
+                                                     &Connection->Lock )) != NULL)
         {
            DISCONNECT_TYPE DisType;
            PIO_STACK_LOCATION IrpSp;
-           Entry = RemoveHeadList(&Connection->ReceiveRequest);
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
            IrpSp = IoGetCurrentIrpStackLocation((PIRP)Bucket->Request.RequestContext);
@@ -238,11 +239,11 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                       DispDoDisconnect, &DisType);
         }
 
-        while (!IsListEmpty(&Connection->SendRequest))
+        while ((Entry = ExInterlockedRemoveHeadList( &Connection->SendRequest,
+                                                     &Connection->Lock )) != NULL)
         {
            DISCONNECT_TYPE DisType;
            PIO_STACK_LOCATION IrpSp;
-           Entry = RemoveHeadList(&Connection->SendRequest);
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
            IrpSp = IoGetCurrentIrpStackLocation((PIRP)Bucket->Request.RequestContext);
@@ -257,9 +258,9 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
                       DispDoDisconnect, &DisType);
         }
 
-        while (!IsListEmpty(&Connection->ListenRequest))
+        while ((Entry = ExInterlockedRemoveHeadList( &Connection->ListenRequest,
+                                                     &Connection->Lock )) != NULL)
         {
-           Entry = RemoveHeadList(&Connection->ListenRequest);
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
 
@@ -270,9 +271,9 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
            Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
         }
 
-        while (!IsListEmpty(&Connection->ConnectRequest))
+        while ((Entry = ExInterlockedRemoveHeadList( &Connection->ConnectRequest,
+                                                     &Connection->Lock )) != NULL)
         {
-           Entry = RemoveHeadList(&Connection->ConnectRequest);
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
 
@@ -644,7 +645,7 @@ NTSTATUS TCPConnect
             
             IoMarkIrpPending((PIRP)Context);
 			
-            InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
+            ExInterlockedInsertTailList( &Connection->ConnectRequest, &Bucket->Entry, &Connection->Lock );
         }
     }
 
@@ -770,7 +771,7 @@ NTSTATUS TCPReceiveData
 
         IoMarkIrpPending((PIRP)Context);
 
-        InsertTailList( &Connection->ReceiveRequest, &Bucket->Entry );
+        ExInterlockedInsertTailList( &Connection->ReceiveRequest, &Bucket->Entry, &Connection->Lock );
         TI_DbgPrint(DEBUG_TCP,("Queued read irp\n"));
     } else {
         TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Received));
@@ -838,7 +839,7 @@ NTSTATUS TCPSendData
 
         IoMarkIrpPending((PIRP)Context);
         
-        InsertTailList( &Connection->SendRequest, &Bucket->Entry );
+        ExInterlockedInsertTailList( &Connection->SendRequest, &Bucket->Entry, &Connection->Lock );
         TI_DbgPrint(DEBUG_TCP,("Queued write irp\n"));
     } else {
         TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Sent));

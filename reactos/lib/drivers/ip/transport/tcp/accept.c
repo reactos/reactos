@@ -106,8 +106,9 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
                   PCONNECTION_ENDPOINT Connection ) {
     PLIST_ENTRY ListEntry;
     PTDI_BUCKET Bucket;
+    KIRQL OldIrql;
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+    KeAcquireSpinLock(&Listener->Lock, &OldIrql);
 
     ListEntry = Listener->ListenRequest.Flink;
     while ( ListEntry != &Listener->ListenRequest ) {
@@ -122,7 +123,7 @@ VOID TCPAbortListenForSocket( PCONNECTION_ENDPOINT Listener,
     ListEntry = ListEntry->Flink;
     }
 
-   TcpipRecursiveMutexLeave( &TCPLock );
+    KeReleaseSpinLock(&Listener->Lock, OldIrql);
 }
 
 NTSTATUS TCPAccept ( PTDI_REQUEST Request,
@@ -149,7 +150,7 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
             Bucket->Request.RequestNotifyObject = Complete;
             Bucket->Request.RequestContext = Context;
             IoMarkIrpPending((PIRP)Context);
-            InsertTailList( &Listener->ListenRequest, &Bucket->Entry );
+            ExInterlockedInsertTailList( &Listener->ListenRequest, &Bucket->Entry, &Listener->Lock );
         } else
             Status = STATUS_NO_MEMORY;
     }
