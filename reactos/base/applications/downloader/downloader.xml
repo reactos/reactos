@@ -163,7 +163,7 @@
 			<regname>OpenTTD 0.7.1</regname>
 			<version>0.7.1</version>
 			<description>Open Source clone of the "Transport Tycoon Deluxe" game engine. You either need a copy of Transport Tycoon or have to manually download and set up the OpenGFX files.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.6.0-win32.exe</location>
+			<location>http://binaries.openttd.org/releases/0.7.1/openttd-0.7.1-windows-win32.exe</location>
 		</application>
 		<application name="LBreakout2">
 			<regname>LBreakout2 2.4.1</regname>
