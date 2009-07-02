@@ -62,7 +62,7 @@ BEGIN
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 123, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 171, 87, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Înþepenire clic", -1, 5, 150, 236, 70
-  CHECKBOX "&Pornire ÎnþepenireClic", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
+  CHECKBOX "&Pornire ÎnþepenireClic", IDC_CHECK_CLICK_LOCK, 10, 160, 90, 20
   PUSHBUTTON "&Setãri...", IDC_BUTTON_CLICK_LOCK, 172, 161, 60, 14
   LTEXT "Vã permite sã trageþi elemente sau sã le selectaþi fãrã a þine apãsat butonul mausului încontinuu. Pentru a activa, apãsaþi ºi þineþi apãsat puþin. Pentru a dezactiva, faceþi clic din nou.", -1, 10, 180, 224, 30
 END
@@ -108,7 +108,7 @@ BEGIN
   LTEXT "Rapidã", -1, 170, 30, 20, 10
   ICON IDI_MOUSE_SPEED, IDC_ICON_MOUSE_SPEED, 18, 20, 32, 32
   CHECKBOX "&Creºtere precizie", IDC_CHECK_POINTER_PRECISION, 52, 50, 140, 10
-  GROUPBOX "Zburare automatã", -1, 5, 70, 236, 40
+  GROUPBOX "Zbor automat", -1, 5, 70, 236, 40
   CHECKBOX "M&utare cursor în mod automat pe butonul implicit al ferestrelor de dialog.",
            IDC_CHECK_SNAP_TO, 52, 84, 183, 20, BS_MULTILINE | BS_TOP
   ICON IDI_MOUSE_BUTTON, IDC_ICON_SNAP_TO, 18, 83, 15, 15
@@ -132,7 +132,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Derulare", -1, 5, 5, 236, 80
   ICON IDI_MOUSE_WHEEL, IDC_ICON_WHEEL, 20, 20, 32, 32
-  LTEXT "Învârtire rotiþã pentru a derula", -1, 60, 15, 150, 10
+  LTEXT "La învârtire rotiþei se va derula", -1, 60, 15, 150, 10
   RADIOBUTTON "Urmãtorul numãr de linii odatã:", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
   RADIOBUTTON "&Cuprinsul unui ecran odatã", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
   EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP

@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  14-12-2008
+ * LastChange:  20-06-2009
  */
 
 #ifndef LANG_SK_SK_H__
@@ -1349,12 +1349,13 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-          "partition table that can not be handled properly!\n"
+//          "InÁtal†tor zistil, ße najmenej jeden pevnÏ disk obsahuje nekompatibiln£\n"
+          "InÁtal†tor naÁiel najmenej na jednom pevnom disku nekompatibiln£\n"
+          "tabuñku oblast°, s ktorou sa ned† spr†vne zaobch†dzaú!\n"
           "\n"
           "Vytvorenie alebo odstr†nenie oblast° mìße zniüiú tabuñku oblast°.\n"
           "\n"
-          "  \x07  Stlaüte F3 pre skonüenie inÁtal†cie."
+          "  \x07  Stlaüte F3 pre skonüenie inÁtal†cie.\n"
           "  \x07  Stlaüte ENTER pre pokraüovanie.",
           "F3 = Skonüiú  ENTER = Pokraüovaú"
     },
@@ -1484,8 +1485,8 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "InÁtal†tor nemohol nastaviú geo id.\n"
+        "ENTER = ReÁtart poü°taüa"
     },
     {
         NULL,

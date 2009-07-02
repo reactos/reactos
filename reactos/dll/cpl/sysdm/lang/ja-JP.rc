@@ -29,17 +29,17 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     GROUPBOX    "デバイス マネージャ", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "デバイス マネージャはコンピュータに装着されているすべてのハードウェアを表\示します。 各デバイスのプロパティを変更するにはデバイス マネージャを使用してください。", IDC_STATIC, 42, 18, 204, 24
+    LTEXT       "デバイスマネージャはコンピュータに装着されているすべてのハードウェアを表\示 します。各デバイスのプロパティを変更するにはデバイスマネージャを使用 してください。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON  "デバイス マネージャ(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
 
     GROUPBOX    "ハードウェア ウィザード", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT       "ハードウェア ウィザードはハードウェアのインストール、アンインストール、修復、取り外し、取り出し、設定の手助けをします。", IDC_STATIC, 42, 90, 204, 24
+    LTEXT       "ハードウェアウィザードはハードウェアのインストール、アンインストール、修復、 取り外し、取り出し、設定の手助けをします。", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON  "ハードウェア ウィザード(&H)...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
 
     GROUPBOX    "ハードウェア プロファイル", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "ハードウェア プロファイルは別のハードウェアの構\成を設定し、格納する方法を提供します。", IDC_STATIC, 42, 160, 204, 24
+    LTEXT       "ハードウェアプロファイルは別のハードウェアの構\成を設定し、格納する方法を 提供します。", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON  "ハードウェア プロファイル(&W)...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
@@ -51,7 +51,7 @@ FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     LTEXT       "これらほとんどの設定を変更するにはAdministrator権限が必要です。", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "パフォーマンス", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "パフォーマンス オプションはアプリケーションのメモリの使用方法を制御します。この設定はコンピュータの動作速度に影響します。", IDC_STATIC, 16, 29, 228, 17
+    LTEXT       "パフォーマンスオプションはアプリケーションのメモリの使用方法を制御します。この設定は コンピュータの動作速度に影響します。", IDC_STATIC, 16, 29, 228, 17
     PUSHBUTTON  "設定", IDC_PERFOR, 194, 48, 50, 15
 
     GROUPBOX    "ユーザー プロファイル", IDC_STATIC, 6,75,244,48
@@ -59,10 +59,10 @@ BEGIN
     PUSHBUTTON  "設定", IDC_USERPROFILE, 194, 103, 50, 15
 
     GROUPBOX    "起動と回復", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "起動と回復 オプションではコンピュータの起動方法と、コンピュータが停止するエラーが発生場合、どう処理するかを設定します。", IDC_STATIC, 16, 144, 228, 19
+    LTEXT       "起動と回復オプションではコンピュータの起動方法と、コンピュータが停止するエラーが 発生した場合、どう処理するかを設定します。", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON  "設定", IDC_STAREC, 194, 162, 50, 15
 
-    PUSHBUTTON  "環境変変", IDC_ENVVAR, 84, 192, 80, 15
+    PUSHBUTTON  "環境変数", IDC_ENVVAR, 84, 192, 80, 15
     PUSHBUTTON  "エラー報告", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
@@ -116,7 +116,7 @@ CAPTION "ユーザー プロファイル"
 FONT 9, "MS UI Gothic"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "ユーザー プロファイルには、デスクトップの設定と他のログインに関する情報が含まれます。 異なるプロファイルを使用するコンピュータごとに作成したり、使用するコンピュータごとに同じローミングプロファイルを選択することもできます。",
+    LTEXT       "ユーザープロファイルには、デスクトップの設定と他のログインに関する情報が 含まれます。異なるプロファイルを使用する コンピュータごとに作成したり、使用するコンピュータごとに 同じローミングプロファイルを選択することもできます。",
                     IDC_STATIC, 40, 11, 211, 35
     LTEXT       "このコンピュータに格納されているプロファイル:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,

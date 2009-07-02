@@ -1,0 +1,613 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDM_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "&Duplicare...", 0
+		MENUITEM "E&liminare", 1
+		MENUITEM "&Vizualizare jurnal", 2
+		MENUITEM SEPARATOR
+		MENUITEM "P&roprietãþi", 3
+		MENUITEM "C&opiere proprietãþi", 4
+		MENUITEM "A&plicare proprietãþi", 5
+	END
+END
+
+IDD_ADVANCED DIALOGEX 17, 12, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Avansat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Setãri extra", 1018, 6, 6, 225, 70
+	LTEXT "Comenzi de iniþializare extra:", 1011, 16, 20, 143, 8
+	EDITTEXT 1016, 16, 31, 205, 13, ES_AUTOHSCROLL
+	LTEXT "&Aºteptare ton:", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
+	EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
+	CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
+	LTEXT "secunde", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
+	GROUPBOX "&Selectare þarã/regiune", 1012, 6, 80, 225, 75
+	COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "&Setãri port avansate...", 1100, 107, 170, 125, 14
+	DEFPUSHBUTTON "Schimbare opþiuni implicite...", 3, 107, 188, 125, 14
+END
+
+IDD_GENERAL DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Port:", 1018, 9, 8, 32, 10
+	LTEXT "Port com", 1095, 48, 8, 181, 10
+	GROUPBOX "&Volum sonor", 1029, 10, 21, 218, 48
+	CONTROL "", 1032, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000001, 84, 40, 66, 20
+	RTEXT "Oprit", 1045, 56, 40, 22, 8
+	LTEXT "Înalt", 1001, 155, 40, 25, 11
+	GROUPBOX "&Vitezã maximã port", 1031, 10, 78, 218, 46
+	COMBOBOX 1036, 18, 100, 202, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Control apel", 1060, 10, 133, 218, 51
+	AUTOCHECKBOX "&Aºteptare ton înaintea apelãrii", 1003, 27, 157, 174, 10
+END
+
+IDD_DISTINCTIVE_RING DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Distinctive Ring"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "", 1068, 10, 7, 218, 145
+	AUTOCHECKBOX "&Acest telefon are servicii Distinctive Ring", 1069, 20, 7, 184, 10
+	CTEXT "Model sunet apel", -1, 84, 21, 70, 8
+	CTEXT "Tip apel", -1, 159, 21, 63, 8
+	LTEXT "&Adresã primarã:", 1070, 20, 41, 62, 8
+	COMBOBOX 1073, 84, 37, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1082, 160, 37, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Addresã &1:", 1071, 20, 59, 62, 8
+	COMBOBOX 1074, 84, 55, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1083, 160, 55, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Addresã &2:", 1072, 20, 77, 62, 8
+	COMBOBOX 1075, 84, 73, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1084, 160, 73, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Addresã &3:", 1076, 20, 95, 62, 8
+	COMBOBOX 1077, 84, 91, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1085, 160, 91, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Apelanþi cu prioritate:", 1078, 20, 112, 62, 8
+	COMBOBOX 1079, 84, 109, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1086, 160, 109, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Call&back:", 1080, 20, 131, 62, 8
+	COMBOBOX 1081, 84, 127, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1087, 160, 127, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+IDD_DISTINCTIVE_RING_2 DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Distinctive Ring"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "", 1068, 10, 7, 218, 87
+	AUTOCHECKBOX "&Acest telefon are servicii Distinctive Ring.", 1069, 19, 7, 177, 10
+	CTEXT "Model sunet apel", -1, 20, 21, 74, 8
+	CTEXT "Tip apel", -1, 96, 21, 65, 8
+	LTEXT "&Bip simplu:", 1088, 20, 37, 53, 8
+	COMBOBOX 1091, 96, 37, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Bip dublu:", 1089, 20, 57, 53, 8
+	COMBOBOX 1092, 96, 55, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Bip triplu:", 1090, 20, 76, 53, 8
+	COMBOBOX 1093, 96, 73, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+IDD_DIAGNOSTICS DIALOGEX 0, 0, 238, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Diagnostic"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL "", 1042, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 18, 200, 58
+	CONTROL "", 1041, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 84, 200, 58
+	PUSHBUTTON "&Înregistrare modem", 1096, 138, 149, 75, 14
+	AUTOCHECKBOX "Înregistrare jurnal", 1020, 18, 187, 98, 10
+	PUSHBUTTON "&Vizualizare jurnal", 1094, 138, 184, 75, 14, WS_DISABLED
+	GROUPBOX "Informaþii modem", 1047, 10, 6, 217, 164
+	GROUPBOX "Scriere jurnal", -1, 10, 173, 217, 32
+END
+
+IDD_PLEASE_WAIT DIALOGEX 0, 0, 195, 72
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Vã rugãm aºteptaþi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 5100, -1, 9, 7, 20, 20
+	LTEXT "Se comunicã cu modemul. Acest lucru poate dura câteva secunde.", -1, 42, 7, 146, 28
+	DEFPUSHBUTTON "Anulare", 2, 72, 52, 50, 14
+END
+
+IDD_GENERAL_2 DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "&Apelare asistatã de operator (manualã)", 1002, 19, 22, 150, 10
+	AUTOCHECKBOX "&Deconectare în caz de inactivitate", 1042, 19, 38, 143, 10
+	EDITTEXT 1043, 168, 35, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "&Anuleazã apelul în caz de inactivitate", -1, 19, 56, 147, 10
+	EDITTEXT 1040, 168, 54, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
+	RTEXT "&Vitezã port:", 1034, 16, 102, 93, 8
+	COMBOBOX 1036, 114, 100, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "Protocol date:", 1032, 16, 122, 93, 8
+	COMBOBOX 1037, 114, 119, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "Comp&resioe", 1035, 16, 139, 93, 8
+	COMBOBOX 1099, 114, 137, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Control flux:", 1027, 16, 157, 93, 8
+	COMBOBOX 1031, 114, 155, 84, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Preferinþe apel", 1060, 11, 7, 217, 66
+	LTEXT "min", 1044, 195, 38, 22, 8
+	LTEXT "sec", 1041, 194, 56, 22, 8
+	GROUPBOX "Perferinþe date conexiune", -1, 11, 82, 217, 94
+END
+
+IDD_ADVANCED_2 DIALOGEX 17, 12, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Avansat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "Afiºare fereastrã terminal înaintea apelãrii", 1000, 20, 21, 200, 10
+	AUTOCHECKBOX "Afiºare fereastrã terminal dupã apelare", 1001, 20, 38, 200, 10
+	RTEXT "&Biþi date:", 1024, 18, 79, 93, 8
+	COMBOBOX 1025, 114, 77, 106, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Paritate:", 1026, 18, 97, 93, 8
+	COMBOBOX 1028, 114, 95, 106, 60, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Biþi oprire:", 1029, 18, 115, 93, 8
+	COMBOBOX 1030, 114, 113, 106, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Modulare:", 1045, 18, 133, 93, 8
+	COMBOBOX 1038, 114, 131, 106, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Fereastrã terminal", 1004, 10, 7, 217, 49
+	GROUPBOX "Setãri hardware", 1005, 10, 64, 217, 89
+END
+
+IDD_ISDN DIALOGEX 0, 0, 238, 210
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ISDN"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Schimbare &tip", -1, 11, 6, 217, 39
+	COMBOBOX 1104, 17, 20, 204, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "&Primul numãr:", -1, 11, 50, 217, 50
+	EDITTEXT 1017, 33, 62, 188, 13, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "S&PID/EAZ:", 1027, 34, 83, 67, 8
+	EDITTEXT 1107, 104, 79, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
+	GROUPBOX "&Al doilea numãr:", -1, 11, 105, 217, 49
+	EDITTEXT 1018, 33, 114, 189, 13, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "SPI&D/EAZ:", 1028, 35, 135, 68, 8
+	EDITTEXT 1108, 105, 132, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
+END
+
+IDD_PLEASE_WAIT_2 DIALOGEX 0, 0, 195, 72
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Vã rugãm aºteptaþi"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 5100, -1, 9, 7, 20, 20
+	LTEXT "Se trimit informaþii þarã/regiune cãtre modem.", -1, 42, 7, 146, 28
+END
+
+IDD_WARNING DIALOGEX 0, 0, 360, 105
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Avertisment"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "Nu mai afiºa acest mesaj", 1109, 17, 73, 118, 10
+	DEFPUSHBUTTON "OK", 1, 302, 84, 50, 14
+	LTEXT "Unele modemuri nu funcþioneazã corect cu ºiruri de iniþializare atât de lungi.", -1, 50, 27, 304, 8
+	LTEXT "Informaþii despre aceste limite puteþi afla de la producãtorul modemului.", -1, 50, 41, 304, 8
+	ICON 5100, -1, 15, 14, 20, 20
+	LTEXT "Aþi scris un ºir de iniþializare mai lung de 57 de caractere.", -1, 50, 14, 304, 8
+END
+
+IDD_MODEMS DIALOGEX 0, 0, 252, 218
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Modemuri"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 5100, 1057, 6, 7, 20, 20
+	LTEXT "Urmãtoarele modemuri sunt instalate: ", -1, 44, 12, 203, 9
+	CONTROL "", 113, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00000849, 7, 32, 238, 158, WS_EX_CLIENTEDGE
+	PUSHBUTTON "A&dãugare", 110, 56, 198, 60, 14
+	PUSHBUTTON "&Eliminare", 112, 121, 198, 60, 14
+	PUSHBUTTON "&Proprietãþi", 109, 185, 198, 60, 14
+END
+
+IDD_PLEASE_WAIT_3 DIALOGEX 0, 0, 195, 72
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Vã rugãm aºteptaþi..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Oprire", 2, 74, 53, 50, 14
+	ICON 5100, -1, 9, 7, 20, 20
+	LTEXT "Eliminare", -1, 40, 8, 151, 8
+	LTEXT "Modem", 1005, 40, 16, 151, 25
+END
+
+STRINGTABLE
+BEGIN
+	180 "RS-232 Serial Port"
+	181 "Modem extern"
+	182 "Modem intern"
+	183 "Modem PCMCIA"
+	184 "Parallel Modem"
+	185 "Parallel Port"
+	200 "110"
+	201 "1200"
+	202 "2400"
+	203 "4800"
+	204 "9600"
+	206 "19200"
+	207 "38400"
+	210 "115200"
+	211 "57600"
+	216 "300"
+	220 "230400"
+	221 "460800"
+	222 "921600"
+	240 "4"
+	241 "5"
+	242 "6"
+	243 "7"
+	244 "8"
+	250 "Par"
+	251 "Impar"
+	252 "Nimic"
+	253 "Marcare"
+	254 "Spaþiu"
+	255 "1"
+	256 "1.5"
+	257 "2"
+	260 "Xon / Xoff"
+	261 "Hardware"
+	262 "Nimic"
+	263 "Pornit"
+	264 "Scãzut"
+	265 "V.23 (Minitel)"
+	266 "Standard"
+	267 "Non-standard (Bell, HST)"
+	270 "Adãugare la jurnal"
+	300 "Nespecificat"
+	301 "Date"
+	302 "Fax"
+	303 "Voce"
+	304 "Nimic"
+	320 "Setãri þarã/regiune actualizate"
+	340 "Modem"
+	341 "Setãri modem"
+	342 "Adresã modem"
+	400 "Setãri þarã/regiune neactualizate"
+	401 "Unele modemuri nu funcþioneazã corect cu ºiruri de iniþializare peste 57 de caractere.\n\nCereþi mai multe informaþii de la producãtor."
+	402 "Avertisment"
+	460 "Nu existã destulã memorie pentru a afiºa caseta de dialog General.\nÎnchideþi unele aplicaþii ºi reîncercaþi."
+	461 "Nu existã destulã memorie pentru a afiºa caseta de dialog Setãri modem.\nÎnchideþi unele aplicaþii ºi reîncercaþi."
+	463 "Fiecare adresã de apelare trebuie setatã pe 'Automat' sau pe un model de apel unic.\n\nSchimbaþi dublura ºi reîncercaþi."
+	465 "Standard EC"
+	466 "Forced EC"
+	467 "Celular"
+	468 "Dezactivat"
+	469 "Activat"
+	470 "Dezactivat"
+	480 "AUTO  (1 Ch.)"
+	481 "AUTO  (2 Ch.)"
+	482 "PPP   (56K)"
+	483 "PPP   (64K)"
+	484 "PPP   (112K)"
+	485 "PPP   (112K,PAP)"
+	486 "PPP   (112K,CHAP)"
+	487 "PPP   (112K,MSCHAP)"
+	488 "PPP   (128K)"
+	489 "PPP   (128K,PAP)"
+	490 "PPP   (128K,CHAP)"
+	491 "PPP   (128K,MSCHAP)"
+	500 "V.120 (64K)"
+	501 "V.120 (56K)"
+	502 "V.120 (112K)"
+	503 "V.120 (128K)"
+	504 "X.75  (64K)"
+	505 "X.75  (128K)"
+	506 "X.75  (T.70)"
+	507 "X.75  (BTX)"
+	508 "V.110 (1.2K)"
+	509 "V.110 (2.4K)"
+	510 "V.110 (4.8K)"
+	511 "V.110 (9.6K)"
+	512 "V.110 (12.0K)"
+	513 "V.110 (14.4K)"
+	514 "V.110 (19.2K)"
+	515 "V.110 (28.8K)"
+	516 "V.110 (38.4K)"
+	517 "V.110 (57.6K)"
+	518 "Analog (V.34/V.90)"
+	550 "ESS5 (AT&T) (America de Nord)"
+	551 "AT&T Point to Multipoint"
+	552 "National ISDN 1 (NI-1)"
+	553 "Northern Telecom DMS 100 (NT1)"
+	554 "NTT INS64 (Japonia)"
+	555 "European ISDN (DSS1)"
+	556 "German National (1TR6) (rar)"
+	557 "French National (VN3) (rar)"
+	558 "Belgium National (rar)"
+	559 "Australian National (rar)"
+	560 "Switch necunoscut"
+	570 "Configuraþia ISDN pentru acest modem\ne incompletã.\n\nVã rugãm introduceþi datele\nîn fila ISDN ºi reîncercaþi."
+	600 "PPP   (56K,GSM)"
+	601 "PPP   (64K,GSM)"
+	602 "V.120 (64K,GSM)"
+	604 "V.110 (1.2K,GSM)"
+	605 "V.110 (2.4K,GSM)"
+	606 "V.110 (4.8K,GSM)"
+	607 "V.110 (9.6K,GSM)"
+	608 "V.110 (12.0K,GSM)"
+	609 "V.110 (14.4K,GSM)"
+	610 "V.110 (19.2K,GSM)"
+	611 "V.110 (28.8K,GSM)"
+	612 "V.110 (38.4K,GSM)"
+	613 "V.110 (57.6K,GSM)"
+	614 "Analog RLP"
+	615 "Analog NRLP"
+	616 "GPRS"
+	617 "PIAFS - dinspre"
+	618 "PIAFS - spre"
+	700 "Folosire locaþie TAPI curentã"
+	2006 "Ataºat la"
+	2007 "Absent"
+	2008 "Inactiv"
+	2009 "Necesitã repornire"
+	2010 "#Pentru a termina instalarea modemului, trebuie sã reporniþi computerul.\n\nVreþi sã reporniþi computerul acum?"
+	2011 "Modem instalat incorect"
+	2012 "Port necunoscut"
+	3000 "Instalare modem"
+	3018 "Modemuri"
+	3019 "Instaleazã modemuri ºi editeazã proprietãþi ale acestora."
+	3053 "Proprietãþile modemului nu pot fi afiºate deoarce modemul e indisponibil..\n\nReporniþi sistemul ºi reîncercaþi."
+	3054 "Properietãþi pentru Modemuri"
+	3060 "Sigur vreþi sã eliminaþi acest(e) modem(uri) din sistem?"
+	3061 "ReactOS nu a putut elimina modemul '%1' din %2."
+	3062 "Modem"
+	3069 "Nu existã destulã memorie pentru a afiºa panoul de control.\n\nÎnchideþi unele programe ºi reîncercaþi."
+	3073 "Trebuie sã fiþi administrator de sistem pentru a instala un modem."
+	3074 "Niciun modem instalat. Trebuie sã fiþi administrator de sistem pentru a instala un modem."
+	3076 "Trebuie sã închideþi ºi sã reporniþi computerul pentru ca setãrile noi sã aibã efect.\n\nVreþi sã reporniþi computerul acum?"
+	3077 "Schimbare setãri reþea"
+	3200 "300 Baud"
+	3201 "1200 Baud"
+	3202 "2400 Baud"
+	3203 "9600 Baud"
+	3204 "19.2K Baud"
+	3205 "38.4K Baud"
+	3206 "57.6K Baud"
+	3207 "Niciun rãspuns"
+	3212 "Comandã"
+	3213 "Rãspuns"
+	3214 "Portul la care e ataºat modemul nu poate fi deschis. Acest lucru ar putea fi rezultatul unui conflict între dispozitive. Verificaþi în Gestionarul de dispozitive pentru probleme."
+	3215 "Portul care este folosit de modem este folosit în acest moment de o altã aplicaþie. Închideþi toate aplicaþiile care ar putea folosi portul."
+	3218 "OpenComm"
+	3221 "115K Baud"
+	3222 "Updating"
+	3223 "Eroare"
+	3233 "Succes"
+	3236 "Modemul nu a putut rãspunde. Asiguraþi-vã cã e conectat corect ºi cã e pornit.  Dacã e un modem intern sau e conectat deja, verificaþi dacã întreruperea este corect setatã."
+	3237 "COMMANDÃ NESUPORTATÃ"
+	3238 "Câmp"
+	3239 "Valoare"
+	3240 " Opþiuni implicite"
+	3241 " Preferinþe conexiune"
+	6144 "Japonia"
+	6145 "Albania"
+	6146 "Algeria"
+	6147 "American Samoa"
+	6148 "Germany (Cod þarã/regiune 04)"
+	6149 "Anguilla"
+	6150 "Antigua and Barbuda"
+	6151 "Argentina"
+	6152 "Insula Ascension"
+	6153 "Australia"
+	6154 "Austria"
+	6155 "Bahamas"
+	6156 "Bahrain"
+	6157 "Bangladesh"
+	6158 "Barbados"
+	6159 "Belgia"
+	6160 "Belize"
+	6161 "Benin"
+	6162 "Bermude"
+	6163 "Bhutan"
+	6164 "Bolivia"
+	6165 "Botswana"
+	6166 "Brazilia"
+	6167 "Cod regiune/þarã (23)"
+	6168 "British Indian Ocean Territory"
+	6169 "British Virgin Islands"
+	6170 "Brunei"
+	6171 "Bulgaria"
+	6172 "Myanmar"
+	6173 "Burundi"
+	6174 "Belarus"
+	6175 "Cameroon"
+	6176 "Canada"
+	6177 "Cape Verde"
+	6178 "Cayman Islands"
+	6179 "Central African Republic"
+	6180 "Chad"
+	6181 "Chile"
+	6182 "China"
+	6183 "Colombia"
+	6184 "Comoros"
+	6185 "Congo"
+	6186 "Cook Islands"
+	6187 "Costa Rica"
+	6188 "Cuba"
+	6189 "Cyprus"
+	6190 "Czech Republic"
+	6191 "Cambodia"
+	6192 "North Korea"
+	6193 "Denmark"
+	6194 "Djibouti"
+	6195 "Dominican Republic"
+	6196 "Dominica"
+	6197 "Ecuador"
+	6198 "Egypt"
+	6199 "El Salvador"
+	6200 "Equatorial Guinea"
+	6201 "Ethiopia"
+	6202 "Falkland Islands (Islas Malvinas)"
+	6203 "Fiji Islands"
+	6204 "Finland"
+	6205 "France"
+	6206 "French Polynesia"
+	6207 "Cod þarã/regiune (63)"
+	6208 "Gabon"
+	6209 "Gambia"
+	6210 "Germany (Cod þarã/regiune 66)"
+	6211 "Angola"
+	6212 "Ghana"
+	6213 "Gibraltar"
+	6214 "Greece"
+	6215 "Grenada"
+	6216 "Guam"
+	6217 "Guatemala"
+	6218 "Guernsey"
+	6219 "Guinea"
+	6220 "Guinea-Bissau"
+	6221 "Guyana"
+	6222 "Haiti"
+	6223 "Honduras"
+	6224 "Hong Kong SAR"
+	6225 "Hungary"
+	6226 "Iceland"
+	6227 "India"
+	6228 "Indonesia"
+	6229 "Iran"
+	6230 "Iraq"
+	6231 "Ireland"
+	6232 "Israel"
+	6233 "Italy"
+	6234 "Cote d'Ivoire"
+	6235 "Jamaica"
+	6236 "Afghanistan"
+	6237 "Jersey"
+	6238 "Jordan"
+	6239 "Kenya"
+	6240 "Kiribati"
+	6241 "Korea"
+	6242 "Kuwait"
+	6243 "Laos"
+	6244 "Lebanon"
+	6245 "Lesotho"
+	6246 "Liberia"
+	6247 "Libya"
+	6248 "Liechtenstein"
+	6249 "Luxembourg"
+	6250 "Macau SAR"
+	6251 "Madagascar"
+	6252 "Malaysia"
+	6253 "Malawi"
+	6254 "Maldives"
+	6255 "Mali"
+	6256 "Malta"
+	6257 "Mauritania"
+	6258 "Mauritius"
+	6259 "Mexico"
+	6260 "Monaco"
+	6261 "Mongolia"
+	6262 "Montserrat"
+	6263 "Morocco"
+	6264 "Mozambique"
+	6265 "Nauru"
+	6266 "Nepal"
+	6267 "Netherlands"
+	6268 "Netherlands Antilles"
+	6269 "New Caledonia"
+	6270 "New Zealand"
+	6271 "Nicaragua"
+	6272 "Niger"
+	6273 "Nigeria"
+	6274 "Norway"
+	6275 "Oman"
+	6276 "Pakistan"
+	6277 "Panama"
+	6278 "Papua New Guinea"
+	6279 "Paraguay"
+	6280 "Peru"
+	6281 "Philippines"
+	6282 "Polonia"
+	6283 "Portugalia"
+	6284 "Puerto Rico"
+	6285 "Qatar"
+	6286 "România"
+	6287 "Rwanda"
+	6288 "St. Kitts and Nevis"
+	6289 "Cod þarã/regiune (145)"
+	6290 "St. Helena"
+	6291 "St. Lucia"
+	6292 "San Marino"
+	6293 "Cod þarã/regiune (148)"
+	6294 "Sao Tome and Principe"
+	6295 "St. Vincent and the Grenadines"
+	6296 "Saudi Arabia"
+	6297 "Senegal"
+	6298 "Seychelles"
+	6299 "Sierra Leone"
+	6300 "Singapore"
+	6301 "Solomon Islands"
+	6302 "Somalia"
+	6303 "South Africa"
+	6304 "Spain"
+	6305 "Sri Lanka"
+	6306 "Sudan"
+	6307 "Suriname"
+	6308 "Swaziland"
+	6309 "Sweden"
+	6310 "Switzerland"
+	6311 "Syria"
+	6312 "Tanzania"
+	6313 "Thailand"
+	6314 "Togo"
+	6315 "Tonga"
+	6316 "Trinidad and Tobago"
+	6317 "Tunisia"
+	6318 "Turkey"
+	6319 "Turks and Caicos Islands"
+	6320 "Tuvalu"
+	6321 "Uganda"
+	6322 "Ukraine"
+	6323 "United Arab Emirates"
+	6324 "United Kingdom"
+	6325 "United States"
+	6326 "Burkina Faso"
+	6327 "Uruguay"
+	6328 "Cod þarã/regiune (184)"
+	6329 "Vanuatu"
+	6330 "Vatican City"
+	6331 "Venezuela"
+	6332 "Vietnam"
+	6333 "Wallis and Futuna"
+	6334 "Samoa"
+	6335 "Yemen"
+	6336 "Yemen"
+	6337 "Cod þarã/regiune (193)"
+	6338 "Congo (DRC)"
+	6339 "Zambia"
+	6340 "Zimbabwe"
+	6501 "Moldova"
+	6502 "Estonia"
+	6503 "Lithuania"
+	6504 "Armenia"
+	6505 "Georgia"
+	6506 "Azerbaijan"
+	6507 "Turkmenistan"
+	6508 "Uzbekistan"
+	6509 "Kazakhstan"
+	6510 "Tajikistan"
+	6511 "Kyrgyzstan"
+	6512 "Latvia"
+	6513 "Russia"
+	6600 "Croatia"
+	6601 "Slovenia"
+	6602 "Macedonia, FYRO"
+	6603 "Bosnia and Herzegovina"
+	6604 "Iugoslavia"
+	20013 "ID dispozitiv"
+END

@@ -40,7 +40,7 @@ BEGIN
     CONTROL         "レジューム時にパスワードを尋ねる(&P)",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
     GROUPBOX        "モニタの省電力機能\(&E)", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "モニタの電源設定を変更するには、電源設定をクリックしてください。",
+    LTEXT           "モニタの電源設定を変更するには、電源設定を クリックしてください。",
                     IDC_STATIC, 14, 166, 146 ,20
     PUSHBUTTON      "電源(&O)...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
@@ -115,7 +115,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 95, 285, 19
     CONTROL         "ドラッグ中にウィンドウの内容を表\示する(&W)",IDC_EFFAPPEARANCE_DRAGFULLWINDOWS,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
-    CONTROL         "Altキーを押すまでキーボードナビゲーションの下線を隠しておく(&H)ide underlined letters for keyboard navigation until I press the Alt key",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
+    CONTROL         "Altキーを押すまでキーボードナビゲーションの下線を隠しておく(&H)",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
     PUSHBUTTON "キャンセル", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14

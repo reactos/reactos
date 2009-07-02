@@ -77,8 +77,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Controlori pentru jocuri"
-    IDS_CPLSYSTEMDESCRIPTION "Adãugare, eliminare sau configurare controlori pentru jocuri, precum joystickuri sau gamepaduri."
+    IDS_CPLSYSTEMNAME "Controloare pentru jocuri"
+    IDS_CPLSYSTEMDESCRIPTION "Adãugare, eliminare sau configurare controloare pentru jocuri, precum joystickuri sau gamepaduri."
     IDS_CONTROLLER "Controlor"
     IDS_STATUS "Stare"
 END

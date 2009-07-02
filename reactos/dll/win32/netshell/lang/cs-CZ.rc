@@ -5,23 +5,24 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Obecné nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
- CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
- LTEXT "Pøipojit prostøednictvím:", -1, 9,9,217,8
- EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_DISABLED | WS_TABSTOP
- PUSHBUTTON "&Nastavit", IDC_CONFIGURE, 189, 38, 50, 14
- LTEXT "Vybrané komponenty jsou používány tímto pøipojením:", -1, 9, 59, 217, 8
- PUSHBUTTON "&Instalovat", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
- PUSHBUTTON "&Odstranit", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
- PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 174, 130, 65, 14
- GROUPBOX "Popis", -1, 9, 153, 230, 46, BS_GROUPBOX
- LTEXT "Tak tady bude popis komponenty...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
- CHECKBOX "Po pøipojení zobrazit ikonu na hlavním panelu", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- CHECKBOX "Upozornit, když bude pøipojení omezené nebo pøerušené", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    LTEXT "Pøipojit prostøednictvím:", -1, 9,9,217,8
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&Nastavit", IDC_CONFIGURE, 189, 38, 50, 14
+    LTEXT "Vybrané komponenty jsou používány tímto pøipojením:", -1, 9, 59, 217, 8
+    LISTBOX IDC_COMPONENTSLIST, 9, 71, 230, 55, LBS_NOTIFY | WS_VSCROLL | WS_BORDER | LBS_NOINTEGRALHEIGHT
+    PUSHBUTTON "&Instalovat", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Odstranit", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 174, 130, 65, 14
+    GROUPBOX "Popis", -1, 9, 153, 230, 46, BS_GROUPBOX
+    LTEXT "Tak tady bude popis komponenty...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+    CHECKBOX "Po pøipojení zobrazit ikonu na hlavním panelu", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Notify me when this connection has limited or no connectivity", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Allgemein"
+CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -31,22 +32,22 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
 CAPTION "Obecné nastavení"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Spojení", -1, 9, 8, 182, 58, BS_GROUPBOX
- LTEXT "Stav:", -1, 19, 20, 60, 8
- LTEXT "Doba pøipojení:", -1, 19, 34, 60, 8
- LTEXT "Rychlost:", -1, 19, 48, 60, 8
- GROUPBOX "Aktivita", -1, 9, 74, 182, 70, BS_GROUPBOX
- RTEXT "Odesláno", -1, 26, 90, 60, 8
- ICON IDI_NETSTAT, -1, 110, 85, 32, 32
- LTEXT "Pøijato", -1, 149, 90, 37, 8
- LTEXT "Bytù:", -1, 17, 115, 32, 8
- RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
- RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
- PUSHBUTTON "&Vlastnosti", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
- PUSHBUTTON "&Zakázat", IDC_ENDISABLE, 66, 150, 50, 14
- RTEXT "",IDC_STATUS,83,20,98,8
- RTEXT "",IDC_DURATION,83,34,98,8
- RTEXT "",IDC_SPEED,83,48,98,8
+    GROUPBOX "Spojení", -1, 9, 8, 182, 58, BS_GROUPBOX
+    LTEXT "Stav:", -1, 19, 20, 60, 8
+    LTEXT "Doba pøipojení:", -1, 19, 34, 60, 8
+    LTEXT "Rychlost:", -1, 19, 48, 60, 8
+    GROUPBOX "Aktivita", -1, 9, 74, 182, 70, BS_GROUPBOX
+    RTEXT "Odesláno", -1, 26, 90, 60, 8
+    ICON IDI_NETSTAT, -1, 110, 85, 32, 32
+    LTEXT "Pøijato", -1, 149, 90, 37, 8
+    LTEXT "Bytù:", -1, 17, 115, 32, 8
+    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
+    PUSHBUTTON "&Vlastnosti", IDC_PROPERTIES, 10, 150, 50, 14
+    PUSHBUTTON "&Zakázat", IDC_ENDISABLE, 66, 150, 50, 14
+    RTEXT "",IDC_STATUS,83,20,98,8
+    RTEXT "",IDC_DURATION,83,34,98,8
+    RTEXT "",IDC_SPEED,83,48,98,8
 END
 
 IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
@@ -54,18 +55,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Podpora"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Stav pøipojení", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Typ adresy:", -1, 22, 20, 80, 8
- LTEXT "IP adresa:", -1, 22, 34, 80, 8
- LTEXT "Maska podsítì:", -1, 22, 48, 80, 8
- LTEXT "Výchozí brána:", -1, 22, 62, 80, 8
+    GROUPBOX "Stav pøipojení", -1, 9, 8, 200, 88, BS_GROUPBOX
+    LTEXT "Typ adresy:", -1, 22, 20, 80, 8
+    LTEXT "IP adresa:", -1, 22, 34, 80, 8
+    LTEXT "Maska podsítì:", -1, 22, 48, 80, 8
+    LTEXT "Výchozí brána:", -1, 22, 62, 80, 8
 
- RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
- RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
- RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
- RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+    RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
 
- PUSHBUTTON "&Detaily...", IDC_DETAILS, 22, 76, 62, 14
+    PUSHBUTTON "&Detaily...", IDC_DETAILS, 22, 76, 62, 14
 END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
@@ -73,54 +74,54 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Network Connection Details"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
- CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
- PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+    LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+    CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
+    PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-	IDS_PHYSICAL_ADDRESS        "Physical Address"
-	IDS_IP_ADDRESS              "IP Address"
-	IDS_SUBNET_MASK             "Subnet Mask"
-	IDS_DEF_GATEWAY             "Default Gateway"
-	IDS_DHCP_SERVER             "DHCP Server"
-	IDS_LEASE_OBTAINED          "Lease Obtained"
-	IDS_LEASE_EXPIRES           "Lease Expires"
-	IDS_DNS_SERVERS             "DNS Servers"
-	IDS_WINS_SERVERS            "WINS Servers"
-	IDS_PROPERTY                "Property"
-	IDS_VALUE                   "Value"
-	IDS_NETWORKCONNECTION       "Network Connection"
-	IDS_SHV_COLUMN_NAME         "Name"
-	IDS_SHV_COLUMN_TYPE         "Type"
-	IDS_SHV_COLUMN_STATE        "Status"
-	IDS_SHV_COLUMN_DEVNAME      "Device Name"
-	IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
-	IDS_SHV_COLUMN_OWNER        "Owner"
-	IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
-	IDS_STATUS_NON_OPERATIONAL  "Disabled"
-	IDS_STATUS_UNREACHABLE      "Not Connected"
-	IDS_STATUS_DISCONNECTED     "Network cable unplugged"
-	IDS_STATUS_CONNECTING       "Acquiring network address"
-	IDS_STATUS_CONNECTED        "Connected"
-	IDS_STATUS_OPERATIONAL      "Connected"
+    IDS_PHYSICAL_ADDRESS        "Physical Address"
+    IDS_IP_ADDRESS              "IP Address"
+    IDS_SUBNET_MASK             "Subnet Mask"
+    IDS_DEF_GATEWAY             "Default Gateway"
+    IDS_DHCP_SERVER             "DHCP Server"
+    IDS_LEASE_OBTAINED          "Lease Obtained"
+    IDS_LEASE_EXPIRES           "Lease Expires"
+    IDS_DNS_SERVERS             "DNS Servers"
+    IDS_WINS_SERVERS            "WINS Servers"
+    IDS_PROPERTY                "Property"
+    IDS_VALUE                   "Value"
+    IDS_NETWORKCONNECTION       "Network Connection"
+    IDS_SHV_COLUMN_NAME         "Name"
+    IDS_SHV_COLUMN_TYPE         "Type"
+    IDS_SHV_COLUMN_STATE        "Status"
+    IDS_SHV_COLUMN_DEVNAME      "Device Name"
+    IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
+    IDS_SHV_COLUMN_OWNER        "Owner"
+    IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
+    IDS_STATUS_NON_OPERATIONAL  "Disabled"
+    IDS_STATUS_UNREACHABLE      "Not Connected"
+    IDS_STATUS_DISCONNECTED     "Network cable unplugged"
+    IDS_STATUS_CONNECTING       "Acquiring network address"
+    IDS_STATUS_CONNECTED        "Connected"
+    IDS_STATUS_OPERATIONAL      "Connected"
 
-	IDS_NET_ACTIVATE            "Enable"
-	IDS_NET_DEACTIVATE          "Disable"
-	IDS_NET_STATUS              "Status"
-	IDS_NET_REPAIR              "Repair"
-	IDS_NET_CREATELINK          "Create Shortcut"
-	IDS_NET_DELETE              "Delete"
-	IDS_NET_PROPERTIES          "Properties"
+    IDS_NET_ACTIVATE            "Enable"
+    IDS_NET_DEACTIVATE          "Disable"
+    IDS_NET_STATUS              "Status"
+    IDS_NET_REPAIR              "Repair"
+    IDS_NET_CREATELINK          "Create Shortcut"
+    IDS_NET_DELETE              "Delete"
+    IDS_NET_PROPERTIES          "Properties"
 
-	IDS_FORMAT_BIT              "%u Bit/s"
-	IDS_FORMAT_KBIT             "%u KBit/s"
-	IDS_FORMAT_MBIT             "%u MBit/s"
-	IDS_FORMAT_GBIT             "%u GBit/s"
-	IDS_DURATION_DAY            "%d Day %s"
-	IDS_DURATION_DAYS           "%d Days %s"
-	IDS_ASSIGNED_DHCP           "Pøiøazeno DHCP"
-	IDS_ASSIGNED_MANUAL         "Ruènì nastaveno"
+    IDS_FORMAT_BIT              "%u Bit/s"
+    IDS_FORMAT_KBIT             "%u KBit/s"
+    IDS_FORMAT_MBIT             "%u MBit/s"
+    IDS_FORMAT_GBIT             "%u GBit/s"
+    IDS_DURATION_DAY            "%d Day %s"
+    IDS_DURATION_DAYS           "%d Days %s"
+    IDS_ASSIGNED_DHCP           "Pøiøazeno DHCP"
+    IDS_ASSIGNED_MANUAL         "Ruènì nastaveno"
 END
 

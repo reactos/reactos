@@ -18,7 +18,7 @@ BEGIN
         BEGIN
             MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
         END
-        POPUP "F&avoritee", IDM_FAVORITES
+        POPUP "F&avorite", IDM_FAVORITES
         BEGIN
             MENUITEM "(Gol)", -1, MFT_STRING, MFS_GRAYED
         END
@@ -45,8 +45,8 @@ BEGIN
         MENUITEM "S&incronizare", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Ieºire din %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "D&econectare...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Undock calcula&tor", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "În&chidere calculator", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "Deconectare compu&ter", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "În&chidere computer", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 

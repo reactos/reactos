@@ -1345,7 +1345,7 @@ MUI_ERROR enUSErrorEntries[] =
           "\n"
           "Creating or deleting partitions can destroy the partition table.\n"
           "\n"
-          "  \x07  Press F3 to quit Setup."
+          "  \x07  Press F3 to quit Setup.\n"
           "  \x07  Press ENTER to continue.",
           "F3= Quit  ENTER = Continue"
     },

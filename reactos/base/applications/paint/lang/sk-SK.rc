@@ -1,7 +1,7 @@
 /*
  * Slovak Language resource file
- * Translated by: M·rio KaËm·r /Mario Kacmar/ aka Kario
- * Last changed:  27-05-2009
+ * Translated by: M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * Last changed:  02-07-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -47,7 +47,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Lupa" //Zoom
         BEGIN
-            POPUP "User defined"
+            POPUP "VlastnÈ zv‰Ëöenie" //PouûÌvateæom definovanÈ
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -58,8 +58,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Zobraziù mrieûku\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "Zobraziù miniat˙ru", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Cel· obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -102,6 +102,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE

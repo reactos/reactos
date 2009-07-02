@@ -34,8 +34,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_WINDOW_TITLE         "Œci¹gnij ! - Mened¿er pobierania dla ReactOS"
-    IDS_WELCOME_TITLE        "Witamy w Œci¹gnij dla ReactOS"
+    IDS_WINDOW_TITLE         "Download! - Mened¿er pobierania dla ReactOS"
+    IDS_WELCOME_TITLE        "Witamy w Download! dla ReactOS"
     IDS_WELCOME              "Proszê wybraæ kategoriê po lewej. Wersja programu: 1.1."
     IDS_NO_APP_TITLE         "Nie wybrano programu"
     IDS_NO_APP               "Proszê wybraæ program, przed klikniêciem w przycisk Œci¹gnij. W razie problemów kliknij w znak zapytania, w prawym górnym rogu okna."

@@ -22,16 +22,16 @@ END
 
 IDD_SCREENSAVER DIALOGEX 0, 0, 246, 204
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Economizor ecran"
+CAPTION "Ecran de veghe"
 FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "&Economizor",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "&Ecran de veghe",IDC_SCREENS_DUMMY, 8, 92, 230, 52
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Se&tãri",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
     PUSHBUTTON      "V&izualizare",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "&Aºteptaþi",IDC_WAITTEXT, 14, 125, 16, 9
+    LTEXT           "&Aºt.",IDC_WAITTEXT, 14, 125, 16, 9
     EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
@@ -40,7 +40,7 @@ BEGIN
     CONTROL         "Solicitare &parolã dupã",IDC_SCREENS_USEPASSCHK,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 104, 19
     GROUPBOX        "&Facilitãþi de economisire energie monitor", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
-    LTEXT           "Pentru a ajusta setãrile de consum curent pentru monitor clic pe butonul Setãri Energie.",
+    LTEXT           "Pentru a ajusta setãrile de consum curent pentru monitor clic pe butonul Energie.",
                     IDC_STATIC, 14, 166, 146 ,20
     PUSHBUTTON      "E&nergie...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
@@ -117,7 +117,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP | WS_DISABLED, 10, 110, 285, 19
     CONTROL         "&Ascundere litere subliniate pentru navigarea cu tastatura pânã când apãs Alt",IDC_EFFAPPEARANCE_KEYBOARDCUES,"button",
                     BS_AUTOCHECKBOX | WS_TABSTOP, 10, 125, 285, 19
-    PUSHBUTTON "Renunþare", IDCANCEL, 226, 165, 50, 14
+    PUSHBUTTON "Anulare", IDCANCEL, 226, 165, 50, 14
     DEFPUSHBUTTON "OK", IDOK, 172, 165, 50, 14
 END
 
@@ -255,7 +255,7 @@ BEGIN
     IDS_ELEMENT_18 "Barã de defilare micã"
     IDS_ELEMENT_19 "Distanþã simbol (orizontal)"
     IDS_ELEMENT_20 "Distanþã simbol (vertical)"
-    IDS_ELEMENT_21 "Informaþii rapide"
+    IDS_ELEMENT_21 "SfatEcran"
     IDS_ELEMENT_22 "Simbol"
 END
 
