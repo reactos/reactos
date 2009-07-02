@@ -698,20 +698,7 @@ HDC
 APIENTRY
 DxEngGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd)
 {
-    PWINDOW_OBJECT DesktopObject = 0;
-    HDC DesktopHDC = 0;
-
-    if (DcType == DC_TYPE_DIRECT)
-    {        
-        DesktopObject = UserGetDesktopWindow();
-        DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
-    }
-    else
-    {
-        UNIMPLEMENTED;
-    }
-
-    return DesktopHDC;
+    return UserGetDesktopDC(DcType, EmptyDC, ValidatehWnd);
 }
 
 /************************************************************************/

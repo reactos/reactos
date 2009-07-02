@@ -432,6 +432,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
 
 //
 // If NULL, first time through! Build the default (was window) dc!
+// Setup clean DC state for the system.
 //
     if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
     { // This is a cheesy way to do this.
