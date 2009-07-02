@@ -588,6 +588,11 @@ NTSTATUS TCPConnect
          &RemoteAddress,
          &RemotePort);
 
+    if (!NT_SUCCESS(Status)) {
+        TI_DbgPrint(DEBUG_TCP, ("Could not AddrBuildAddress in TCPConnect\n"));
+        return Status;
+    }
+
     if (!(NCE = RouteGetRouteToDestination(&RemoteAddress)))
     {
         return STATUS_NETWORK_UNREACHABLE;
@@ -606,12 +611,6 @@ NTSTATUS TCPConnect
                 ("Connecting to address %x:%x\n",
                  RemoteAddress.Address.IPv4Address,
                  RemotePort));
-
-    if (!NT_SUCCESS(Status)) {
-        TI_DbgPrint(DEBUG_TCP, ("Could not AddrBuildAddress in TCPConnect\n"));
-        TcpipRecursiveMutexLeave( &TCPLock );
-        return Status;
-    }
 
     AddressToConnect.sin_family = AF_INET;
     AddressToBind = AddressToConnect;
@@ -645,7 +644,7 @@ NTSTATUS TCPConnect
             
             IoMarkIrpPending((PIRP)Context);
 			
-            InsertHeadList( &Connection->ConnectRequest, &Bucket->Entry );
+            InsertTailList( &Connection->ConnectRequest, &Bucket->Entry );
         }
     }
 

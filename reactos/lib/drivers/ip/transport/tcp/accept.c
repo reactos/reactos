@@ -149,7 +149,7 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
             Bucket->Request.RequestNotifyObject = Complete;
             Bucket->Request.RequestContext = Context;
             IoMarkIrpPending((PIRP)Context);
-            InsertHeadList( &Listener->ListenRequest, &Bucket->Entry );
+            InsertTailList( &Listener->ListenRequest, &Bucket->Entry );
         } else
             Status = STATUS_NO_MEMORY;
     }

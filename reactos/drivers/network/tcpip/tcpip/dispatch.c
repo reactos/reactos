@@ -86,15 +86,6 @@ VOID DispDataRequestComplete(
 
     (void)IoSetCancelRoutine(Irp, NULL);
 
-    if (Irp->Cancel || TranContext->CancelIrps) {
-        /* The IRP has been cancelled */
-
-        TI_DbgPrint(DEBUG_IRP, ("IRP is cancelled.\n"));
-
-        Status = STATUS_CANCELLED;
-        Count  = 0;
-    }
-
     IoReleaseCancelSpinLock(OldIrql);
 
     Irp->IoStatus.Status      = Status;
@@ -463,6 +454,12 @@ NTSTATUS DispTdiDisassociateAddress(
     TI_DbgPrint(MID_TRACE, ("No address file is asscociated.\n"));
     return STATUS_INVALID_PARAMETER;
   }
+
+  /* Remove this connection from the address file */
+  Connection->AddressFile->Connection = NULL;
+
+  /* Remove the address file from this connection */
+  Connection->AddressFile = NULL;
 
   return STATUS_SUCCESS;
 }
