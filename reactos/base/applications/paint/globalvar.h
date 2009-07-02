@@ -76,3 +76,12 @@ extern BOOL showGrid;
 extern BOOL showMiniature;
 
 extern HWND hwndMiniature;
+
+extern HWND hSizeboxLeftTop;
+extern HWND hSizeboxCenterTop;
+extern HWND hSizeboxRightTop;
+extern HWND hSizeboxLeftCenter;
+extern HWND hSizeboxRightCenter;
+extern HWND hSizeboxLeftBottom;
+extern HWND hSizeboxCenterBottom;
+extern HWND hSizeboxRightBottom;

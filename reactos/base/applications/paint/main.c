@@ -26,6 +26,7 @@
 #include "palette.h"
 #include "toolsettings.h"
 #include "selection.h"
+#include "sizebox.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -106,6 +107,15 @@ BOOL showGrid = FALSE;
 BOOL showMiniature = FALSE;
 
 HWND hwndMiniature;
+
+HWND hSizeboxLeftTop;
+HWND hSizeboxCenterTop;
+HWND hSizeboxRightTop;
+HWND hSizeboxLeftCenter;
+HWND hSizeboxRightCenter;
+HWND hSizeboxLeftBottom;
+HWND hSizeboxCenterBottom;
+HWND hSizeboxRightBottom;
 
 int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument, int nFunsterStil)
 {
@@ -216,6 +226,21 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     wclSelection.cbWndExtra     = 0;
     wclSelection.hbrBackground  = NULL;//GetSysColorBrush(COLOR_BTNFACE);
     RegisterClassEx (&wclSelection);
+
+    /* initializing and registering the window class for the size boxes */
+    wclSettings.hInstance       = hThisInstance;
+    wclSettings.lpszClassName   = _T("Sizebox");
+    wclSettings.lpfnWndProc     = SizeboxWinProc;
+    wclSettings.style           = CS_DBLCLKS;
+    wclSettings.cbSize          = sizeof (WNDCLASSEX);
+    wclSettings.hIcon           = NULL;
+    wclSettings.hIconSm         = NULL;
+    wclSettings.hCursor         = LoadCursor (NULL, IDC_ARROW);
+    wclSettings.lpszMenuName    = NULL;
+    wclSettings.cbClsExtra      = 0;
+    wclSettings.cbWndExtra      = 0;
+    wclSettings.hbrBackground   = GetSysColorBrush(COLOR_HIGHLIGHT);
+    RegisterClassEx (&wclSettings);
 
     LoadString(hThisInstance, IDS_DEFAULTFILENAME, filename, SIZEOF(filename));
     LoadString(hThisInstance, IDS_WINDOWTITLE, resstr, SIZEOF(resstr));
@@ -348,6 +373,15 @@ int WINAPI _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR l
     sfn.nMaxFileTitle   = SIZEOF(sfnFiletitle);
     sfn.Flags           = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
+    hSizeboxLeftTop     = CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    hSizeboxCenterTop   = CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    hSizeboxRightTop    = CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    hSizeboxLeftCenter  = CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    hSizeboxRightCenter = CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    hSizeboxLeftBottom  = CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    hSizeboxCenterBottom= CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    hSizeboxRightBottom = CreateWindowEx(0, _T("Sizebox"), _T(""), WS_CHILD | WS_VISIBLE, 0, 0, 3, 3, hScrlClient, NULL, hThisInstance, NULL);
+    SendMessage(hImageArea, WM_SIZE, 0, 0);
 
     /* by moving the window, the things in WM_SIZE are done */
     MoveWindow(hwnd, 100, 100, 600, 450, TRUE);

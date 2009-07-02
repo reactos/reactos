@@ -198,6 +198,33 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 MoveWindow(hScrollbox, 56, 49,LOWORD(lParam)-56, HIWORD(lParam)-72, TRUE);
                 //InvalidateRect(hwnd, NULL, TRUE);
             }
+            if (hwnd==hImageArea)
+            {
+                MoveWindow(hSizeboxLeftTop, 
+                    0, 
+                    0, 3, 3, TRUE);
+                MoveWindow(hSizeboxCenterTop, 
+                    imgXRes*zoom/2000+3*3/4, 
+                    0, 3, 3, TRUE);
+                MoveWindow(hSizeboxRightTop, 
+                    imgXRes*zoom/1000+3, 
+                    0, 3, 3, TRUE);
+                MoveWindow(hSizeboxLeftCenter, 
+                    0, 
+                    imgYRes*zoom/2000+3*3/4, 3, 3, TRUE);
+                MoveWindow(hSizeboxRightCenter, 
+                    imgXRes*zoom/1000+3, 
+                    imgYRes*zoom/2000+3*3/4, 3, 3, TRUE);
+                MoveWindow(hSizeboxLeftBottom, 
+                    0, 
+                    imgYRes*zoom/1000+3, 3, 3, TRUE);
+                MoveWindow(hSizeboxCenterBottom, 
+                    imgXRes*zoom/2000+3*3/4, 
+                    imgYRes*zoom/1000+3, 3, 3, TRUE);
+                MoveWindow(hSizeboxRightBottom, 
+                    imgXRes*zoom/1000+3, 
+                    imgYRes*zoom/1000+3, 3, 3, TRUE);
+            }
             if ((hwnd==hImageArea)||(hwnd==hScrollbox))
             {
                 long clientRectScrollbox[4];
@@ -287,8 +314,8 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 long mclient[4];
                 GetClientRect(hwndMiniature, (LPRECT)&mclient);
                 HDC hdc = GetDC(hwndMiniature);
-                BitBlt(hdc, 0, 0, imgXRes, imgYRes, hDrawingDC, min(imgXRes*GetScrollPos(hScrollbox, SB_HORZ)/10000, imgXRes-mclient[2]),
-                    min(imgYRes*GetScrollPos(hScrollbox, SB_VERT)/10000, imgYRes-mclient[3]), SRCCOPY);
+                BitBlt(hdc, -min(imgXRes*GetScrollPos(hScrollbox, SB_HORZ)/10000, imgXRes-mclient[2]), 
+                    -min(imgYRes*GetScrollPos(hScrollbox, SB_VERT)/10000, imgYRes-mclient[3]), imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
                 ReleaseDC(hwndMiniature, hdc);
             }
             break; 
@@ -591,9 +618,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         int retVal = attributesDlg();
                         if ((LOWORD(retVal)!=0)&&(HIWORD(retVal)!=0))
                         {
-                            // cropReversible broken, dirty hack:
-                            // insertReversible(CopyImage(hBms[currInd], IMAGE_BITMAP, LOWORD(retVal), HIWORD(retVal), 0));
-                            cropReversible(LOWORD(retVal), HIWORD(retVal));
+                            cropReversible(LOWORD(retVal), HIWORD(retVal), 0, 0);
                             updateCanvasAndScrollbars();
                         }
                     }
