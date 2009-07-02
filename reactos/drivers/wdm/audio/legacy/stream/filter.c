@@ -91,6 +91,45 @@ static KSDISPATCH_TABLE DispatchTable =
     NULL
 };
 
+VOID
+RegisterDeviceInterfaces(
+    IN PSTREAM_DEVICE_EXTENSION DeviceExtension)
+{
+    ULONG Index;
+    PHW_STREAM_INFORMATION StreamInformation;
+    UNICODE_STRING SymbolicLink;
+    NTSTATUS Status;
+
+    /* Sanity check */
+    ASSERT(DeviceExtension->StreamDescriptor);
+    ASSERT(DeviceExtension->StreamDescriptorSize);
+
+    /* Loop all stream descriptors and register device interfaces */
+    StreamInformation = (PHW_STREAM_INFORMATION)&DeviceExtension->StreamDescriptor->StreamInfo;
+
+    for(Index = 0; DeviceExtension->StreamDescriptor->StreamHeader.NumberOfStreams; Index++)
+    {
+        if (StreamInformation->Category)
+        {
+            /* Register device interface */
+            Status = IoRegisterDeviceInterface(DeviceExtension->PhysicalDeviceObject,
+                                               StreamInformation->Category,
+                                               NULL, /* see bug 4566 */
+                                               &SymbolicLink);
+
+            if (NT_SUCCESS(Status))
+            {
+                /* Activate device interface */
+                IoSetDeviceInterfaceState(&SymbolicLink, TRUE);
+                /* Release Symbolic Link */
+                RtlFreeUnicodeString(&SymbolicLink);
+            }
+        }
+        StreamInformation = (PHW_STREAM_INFORMATION) (ULONG_PTR)StreamInformation + DeviceExtension->StreamDescriptor->StreamHeader.SizeOfHwStreamInformation;
+    }
+
+}
+
 NTSTATUS
 InitializeFilterWithKs(
     IN PDEVICE_OBJECT DeviceObject,
@@ -189,6 +228,10 @@ InitializeFilterWithKs(
 
     /* Increment total instance count */
     InterlockedIncrement(&DeviceExtension->InstanceCount);
+
+    /* Register device stream interfaces */
+    RegisterDeviceInterfaces(DeviceExtension);
+
     /* Return result */
     return Status;
 
