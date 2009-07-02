@@ -231,7 +231,9 @@ User32 -
   reactos/dll/win32/user32/controls/scrollbar.c # Forked
   reactos/dll/win32/user32/controls/static.c    # Synced to Wine-1_1_22
 
-  reactos/dll/win32/user32/misc/dde.c           # Synced to wine 1.1.17 (dde_misc.c)
+  reactos/dll/win32/user32/include/dde_private.h # Synced to wine 1.1.24
+
+  reactos/dll/win32/user32/misc/dde.c           # Synced to wine 1.1.24 (dde_misc.c)
   reactos/dll/win32/user32/misc/ddeclient.c     # Synced to Wine-1_1_23
   reactos/dll/win32/user32/misc/ddeserver.c     # Synced to Wine-1_1_23
   reactos/dll/win32/user32/misc/exticon.c       # Synced to Wine-1_1_22
