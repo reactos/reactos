@@ -242,10 +242,10 @@
 			<location>http://www.muppetlabs.com/~breadbox/pub/software/tworld/tworld-1.3.0-win32-CCLP2.exe</location>
 		</application>
 		<application name="OpenTTD">
-			<regname>OpenTTD 0.6.0</regname>
-			<version>0.6.0</version>
-			<description>Open Source clone of the "Transport Tycoon Deluxe" game engine. You need a copy of Transport Tycoon.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.6.0-win32.exe</location>
+			<regname>OpenTTD 0.7.1</regname>
+			<version>0.7.1</version>
+			<description>Open Source clone of the "Transport Tycoon Deluxe" game engine. You either need a copy of Transport Tycoon or have to manually download and set up the OpenGFX files.</description>
+			<location>http://binaries.openttd.org/releases/0.7.1/openttd-0.7.1-windows-win32.exe</location>
 		</application>
 		<application name="LBreakout2">
 			<regname>LBreakout2 2.4.1</regname>
