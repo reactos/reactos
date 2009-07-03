@@ -1551,21 +1551,21 @@ PeekMessageA(LPMSG lpMsg,
 
   MsgConversionCleanup(lpMsg, TRUE, FALSE, NULL);
   Res = NtUserPeekMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-  if (-1 == (int) Res || ! Res)
+  if (-1 == (int) Res || !Res)
     {
-      return Res;
+      return FALSE;
     }
   Conversion.LParamSize = Info.LParamSize;
   Conversion.KMMsg = Info.Msg;
 
   if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
     {
-      return (BOOL) -1;
+      return FALSE;
     }
   if (! MsgiUnicodeToAnsiMessage(&Conversion.AnsiMsg, &Conversion.UnicodeMsg))
     {
       MsgiKMToUMCleanup(&Info.Msg, &Conversion.UnicodeMsg);
-      return (BOOL) -1;
+      return FALSE;
     }
   if (!lpMsg)
   {
@@ -1604,16 +1604,16 @@ PeekMessageW(
 
   MsgConversionCleanup(lpMsg, FALSE, FALSE, NULL);
   Res = NtUserPeekMessage(&Info, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
-  if (-1 == (int) Res || ! Res)
+  if (-1 == (int) Res || !Res)
     {
-      return Res;
+      return FALSE;
     }
   Conversion.LParamSize = Info.LParamSize;
   Conversion.KMMsg = Info.Msg;
 
   if (! MsgiKMToUMMessage(&Conversion.KMMsg, &Conversion.UnicodeMsg))
     {
-      return (BOOL) -1;
+      return FALSE;
     }
   if (!lpMsg)
   {
