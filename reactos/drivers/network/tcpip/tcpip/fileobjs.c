@@ -363,7 +363,9 @@ NTSTATUS FileCloseAddress(
   case IPPROTO_TCP:
     TCPFreePort( AddrFile->Port );
     if( AddrFile->Listener ) {
+            TcpipRecursiveMutexEnter(&TCPLock, TRUE);
 	    TCPClose( AddrFile->Listener );
+            TcpipRecursiveMutexLeave(&TCPLock);
 	    exFreePool( AddrFile->Listener );
     }
     break;
@@ -425,7 +427,9 @@ NTSTATUS FileOpenConnection(
 
   if( !Connection ) return STATUS_NO_MEMORY;
 
+  TcpipRecursiveMutexEnter(&TCPLock, TRUE);
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
+  TcpipRecursiveMutexLeave(&TCPLock);
 
   if( !NT_SUCCESS(Status) ) {
       TCPFreeConnectionEndpoint( Connection );

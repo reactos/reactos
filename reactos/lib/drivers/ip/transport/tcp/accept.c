@@ -19,6 +19,8 @@ NTSTATUS TCPServiceListeningSocket( PCONNECTION_ENDPOINT Listener,
     PTA_IP_ADDRESS RequestAddressReturn;
     PTDI_CONNECTION_INFORMATION WhoIsConnecting;
 
+    ASSERT_LOCKED(&TCPLock);
+
     /* Unpack TDI info -- We need the return connection information
      * struct to return the address so it can be filtered if needed
      * by WSAAccept -- The returned address will be passed on to

@@ -16,6 +16,8 @@ int TCPSocketState(void *ClientData,
            OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = WhichConnection;
 
+    ASSERT_LOCKED(&TCPLock);
+
     TI_DbgPrint(MID_TRACE,("Flags: %c%c%c%c\n",
                NewState & SEL_CONNECT ? 'C' : 'c',
                NewState & SEL_READ    ? 'R' : 'r',
@@ -42,7 +44,7 @@ int TCPSocketState(void *ClientData,
     Connection->SignalState |= NewState;
     if( !Connection->Signalled ) {
     Connection->Signalled = TRUE;
-    InsertTailList( &SignalledConnections, &Connection->SignalList );
+    ExInterlockedInsertTailList( &SignalledConnectionsList, &Connection->SignalList, &SignalledConnectionsLock );
     }
 
     return 0;
@@ -52,6 +54,8 @@ void TCPPacketSendComplete( PVOID Context,
                 PNDIS_PACKET NdisPacket,
                 NDIS_STATUS NdisStatus ) {
     TI_DbgPrint(DEBUG_TCP,("called %x\n", NdisPacket));
+    ASSERT_LOCKED(&TCPLock);
+
     FreeNdisPacket(NdisPacket);
     TI_DbgPrint(DEBUG_TCP,("done\n"));
 }
@@ -64,6 +68,8 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
     IP_PACKET Packet = { 0 };
     IP_ADDRESS RemoteAddress, LocalAddress;
     PIPv4_HEADER Header;
+
+    ASSERT_LOCKED(&TCPLock);
 
     if( *data == 0x45 ) { /* IPv4 */
     Header = (PIPv4_HEADER)data;
@@ -114,6 +120,8 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
     PSLEEPING_THREAD SleepingThread;
     LARGE_INTEGER Timeout;
 
+    ASSERT_LOCKED(&TCPLock);
+
     TI_DbgPrint(DEBUG_TCP,
         ("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
          token, priority, msg, tmio));
@@ -158,6 +166,8 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 void TCPWakeup( void *ClientData, void *token ) {
     PLIST_ENTRY Entry;
     PSLEEPING_THREAD SleepingThread;
+
+    ASSERT_LOCKED(&TCPLock);
 
     TcpipAcquireFastMutex( &SleepingThreadsLock );
     Entry = SleepingThreadsList.Flink;
@@ -222,6 +232,8 @@ void *TCPMalloc( void *ClientData,
          OSK_UINT Bytes, OSK_PCHAR File, OSK_UINT Line ) {
     void *v;
     ULONG Signature;
+
+    ASSERT_LOCKED(&TCPLock);
 
 #if 0 != MEM_PROFILE
     static OSK_UINT *Sizes = NULL, *Counts = NULL, ArrayAllocated = 0;
@@ -297,6 +309,8 @@ void *TCPMalloc( void *ClientData,
 void TCPFree( void *ClientData,
           void *data, OSK_PCHAR File, OSK_UINT Line ) {
     ULONG Signature;
+
+    ASSERT_LOCKED(&TCPLock);
 
     UntrackFL( (PCHAR)File, Line, data, FOURCC('f','b','s','d') );
     data = (void *)((char *) data - sizeof(ULONG));

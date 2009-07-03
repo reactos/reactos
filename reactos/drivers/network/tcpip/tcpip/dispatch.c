@@ -106,6 +106,7 @@ VOID DispDoDisconnect( PVOID Data ) {
     PDISCONNECT_TYPE DisType = (PDISCONNECT_TYPE)Data;
 
     TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect\n"));
+    TcpipRecursiveMutexEnter(&TCPLock, TRUE);
     TCPDisconnect
 	( DisType->Context,
 	  DisType->Type,
@@ -113,6 +114,7 @@ VOID DispDoDisconnect( PVOID Data ) {
 	  NULL,
 	  DispDataRequestComplete,
 	  DisType->Irp );
+    TcpipRecursiveMutexLeave(&TCPLock);
     TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect done\n"));
 
     DispDataRequestComplete(DisType->Irp, STATUS_CANCELLED, 0);
@@ -405,12 +407,12 @@ NTSTATUS DispTdiConnect(
       Irp );
 
 done:
+  TcpipRecursiveMutexLeave( &TCPLock );
+
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, 0);
   } else
       IoMarkIrpPending(Irp);
-
-  TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(MAX_TRACE, ("TCP Connect returned %08x\n", Status));
 
@@ -513,12 +515,12 @@ NTSTATUS DispTdiDisconnect(
       Irp );
 
 done:
+   TcpipRecursiveMutexLeave( &TCPLock );
+
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, 0);
    } else
        IoMarkIrpPending(Irp);
-
-  TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(MAX_TRACE, ("TCP Disconnect returned %08x\n", Status));
 
@@ -618,12 +620,12 @@ NTSTATUS DispTdiListen(
   }
 
 done:
+  TcpipRecursiveMutexLeave( &TCPLock );
+
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, 0);
   } else
       IoMarkIrpPending(Irp);
-
-  TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
 
@@ -834,12 +836,12 @@ NTSTATUS DispTdiReceive(
     }
 
 done:
+  TcpipRecursiveMutexLeave( &TCPLock );
+
   if (Status != STATUS_PENDING) {
       DispDataRequestComplete(Irp, Status, BytesReceived);
   } else
       IoMarkIrpPending(Irp);
-
-  TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
@@ -912,12 +914,12 @@ NTSTATUS DispTdiReceiveDatagram(
     }
 
 done:
+   TcpipRecursiveMutexLeave( &TCPLock );
+
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, BytesReceived);
    } else
        IoMarkIrpPending(Irp);
-
-  TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
@@ -988,12 +990,12 @@ NTSTATUS DispTdiSend(
     }
 
 done:
+   TcpipRecursiveMutexLeave( &TCPLock );
+
    if (Status != STATUS_PENDING) {
        DispDataRequestComplete(Irp, Status, BytesSent);
    } else
        IoMarkIrpPending(Irp);
-
-  TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status is (0x%X)\n", Status));
 
@@ -1070,12 +1072,12 @@ NTSTATUS DispTdiSendDatagram(
     }
 
 done:
+    TcpipRecursiveMutexLeave( &TCPLock );
+
     if (Status != STATUS_PENDING) {
         DispDataRequestComplete(Irp, Status, Irp->IoStatus.Information);
     } else
         IoMarkIrpPending(Irp);
-
-    TcpipRecursiveMutexLeave( &TCPLock );
 
     TI_DbgPrint(DEBUG_IRP, ("Leaving.\n"));
 
