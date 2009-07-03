@@ -739,7 +739,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
  */
 BOOL FASTCALL
 co_IntPeekMessage(PUSER_MESSAGE Msg,
-                  HWND hWnd,
+                  PWINDOW_OBJECT Window,
                   UINT MsgFilterMin,
                   UINT MsgFilterMax,
                   UINT RemoveMsg)
@@ -796,7 +796,7 @@ CheckMessages:
    Present = co_MsqFindMessage(ThreadQueue,
                                FALSE,
                                RemoveMessages,
-                               hWnd,
+                               Window,
                                MsgFilterMin,
                                MsgFilterMax,
                                &Message);
@@ -814,7 +814,7 @@ CheckMessages:
    Present = co_MsqFindMessage(ThreadQueue,
                                TRUE,
                                RemoveMessages,
-                               hWnd,
+                               Window,
                                MsgFilterMin,
                                MsgFilterMax,
                                &Message);
@@ -833,19 +833,19 @@ CheckMessages:
       ;
 
    /* Check for paint messages. */
-   if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, pti, &Msg->Msg, RemoveMessages))
+   if (IntGetPaintMessage(Window, MsgFilterMin, MsgFilterMax, pti, &Msg->Msg, RemoveMessages))
    {
       Msg->FreeLParam = FALSE;
       goto MsgExit;
    }
 
    if (ThreadQueue->WakeMask & QS_TIMER)
-      if (PostTimerMessages(hWnd)) // If there are timers ready,
+      if (PostTimerMessages(Window)) // If there are timers ready,
          goto CheckMessages;       // go back and process them.
 
    // LOL! Polling Timer Queue? How much time is spent doing this?
    /* Check for WM_(SYS)TIMER messages */
-   Present = MsqGetTimerMessage(ThreadQueue, hWnd, MsgFilterMin, MsgFilterMax,
+   Present = MsqGetTimerMessage(ThreadQueue, Window, MsgFilterMin, MsgFilterMax,
                                 &Msg->Msg, RemoveMessages);
    if (Present)
    {
@@ -989,13 +989,20 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    DPRINT("Enter NtUserPeekMessage\n");
    UserEnterExclusive();
 
+   if (hWnd == (HWND)-1 || hWnd == (HWND)0x0000FFFF || hWnd == (HWND)0xFFFFFFFF)
+      hWnd = (HWND)1;
+
    /* Validate input */
-   if (hWnd && hWnd != INVALID_HANDLE_VALUE)
+   if (hWnd && hWnd != (HWND)1)
    {
       if (!(Window = UserGetWindowObject(hWnd)))
       {
          RETURN(-1);
       }
+   }
+   else
+   {
+      Window = (PWINDOW_OBJECT)hWnd;
    }
 
    if (MsgFilterMax < MsgFilterMin)
@@ -1004,7 +1011,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
       MsgFilterMax = 0;
    }
 
-   Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+   Present = co_IntPeekMessage(&Msg, Window, MsgFilterMin, MsgFilterMax, RemoveMsg);
    if (Present)
    {
 
@@ -1063,7 +1070,7 @@ CLEANUP:
 }
 
 static BOOL FASTCALL
-co_IntWaitMessage(HWND Wnd,
+co_IntWaitMessage(PWINDOW_OBJECT Window,
                   UINT MsgFilterMin,
                   UINT MsgFilterMax)
 {
@@ -1077,13 +1084,13 @@ co_IntWaitMessage(HWND Wnd,
 
    do
    {
-      if (co_IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_NOREMOVE))
+      if (co_IntPeekMessage(&Msg, Window, MsgFilterMin, MsgFilterMax, PM_NOREMOVE))
       {
          return TRUE;
       }
 
       /* Nothing found. Wait for new messages. */
-      Status = co_MsqWaitForNewMessages(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax);
+      Status = co_MsqWaitForNewMessages(ThreadQueue, Window, MsgFilterMin, MsgFilterMax);
    }
    while ((STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) || STATUS_TIMEOUT == Status);
 
@@ -1139,7 +1146,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
 
    do
    {
-      GotMessage = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
+      GotMessage = co_IntPeekMessage(&Msg, Window, MsgFilterMin, MsgFilterMax, PM_REMOVE);
       if (GotMessage)
       {
          Info.Msg = Msg.Msg;
@@ -1188,7 +1195,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
             RETURN( (BOOL) -1);
          }
       }
-      else if (! co_IntWaitMessage(hWnd, MsgFilterMin, MsgFilterMax))
+      else if (! co_IntWaitMessage(Window, MsgFilterMin, MsgFilterMax))
       {
          RETURN( (BOOL) -1);
       }

@@ -679,7 +679,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
 }
 
 BOOL FASTCALL
-IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
+IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
                    PTHREADINFO Thread, MSG *Message, BOOL Remove)
 {
    PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
@@ -701,7 +701,7 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
       return FALSE;
    }
 
-   if (hWnd != NULL && Message->hwnd != hWnd)
+   if (Window != NULL && Message->hwnd != Window->hSelf)
       return FALSE;
 
    Message->message = WM_PAINT;

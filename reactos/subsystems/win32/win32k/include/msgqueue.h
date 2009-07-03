@@ -139,7 +139,7 @@ BOOLEAN APIENTRY
 co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
-	       IN HWND Wnd,
+	       IN PWINDOW_OBJECT Window,
 	       IN UINT MsgFilterLow,
 	       IN UINT MsgFilterHigh,
 	       OUT PUSER_MESSAGE* Message);
@@ -158,7 +158,7 @@ MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
 co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
+co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
 VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
@@ -262,11 +262,11 @@ MsqKillTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
              UINT_PTR IDEvent, UINT Msg);
 BOOLEAN FASTCALL
 MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
-                   HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
+                   PWINDOW_OBJECT WindowFilter, UINT MsgFilterMin, UINT MsgFilterMax,
                    MSG *Msg, BOOLEAN Restart);
 BOOLEAN FASTCALL
 MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
-                       HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
+                       PWINDOW_OBJECT WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
                        PLARGE_INTEGER FirstTimerExpiry);
 VOID FASTCALL
 MsqRemoveTimersWindow(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd);

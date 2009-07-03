@@ -1,7 +1,7 @@
 #ifndef _WIN32K_WINSTA_H
 #define _WIN32K_WINSTA_H
 
-#include "msgqueue.h"
+#include "window.h"
 #include "clipboard.h"
 
 #define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
