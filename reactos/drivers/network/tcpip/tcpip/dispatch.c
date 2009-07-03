@@ -646,15 +646,19 @@ NTSTATUS DispTdiQueryInformation(
   PTDI_REQUEST_KERNEL_QUERY_INFORMATION Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
+  NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   Parameters = (PTDI_REQUEST_KERNEL_QUERY_INFORMATION)&IrpSp->Parameters;
 
+  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
   TranContext = IrpSp->FileObject->FsContext;
   if (!TranContext) {
     TI_DbgPrint(MID_TRACE, ("Bad transport context.\n"));
+    TcpipRecursiveMutexLeave(&TCPLock);
     return STATUS_INVALID_PARAMETER;
   }
 
@@ -672,6 +676,7 @@ NTSTATUS DispTdiQueryInformation(
             (FIELD_OFFSET(TDI_ADDRESS_INFO, Address.Address[0].Address) +
              sizeof(TDI_ADDRESS_IP))) {
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small.\n"));
+          TcpipRecursiveMutexLeave(&TCPLock);
           return STATUS_BUFFER_TOO_SMALL;
         }
 
@@ -690,6 +695,7 @@ NTSTATUS DispTdiQueryInformation(
 			RtlZeroMemory(
 				&Address->Address[0].Address[0].sin_zero,
 				sizeof(Address->Address[0].Address[0].sin_zero));
+			TcpipRecursiveMutexLeave(&TCPLock);
 			return STATUS_SUCCESS;
 
           case TDI_CONNECTION_FILE:
@@ -700,18 +706,22 @@ NTSTATUS DispTdiQueryInformation(
 			RtlZeroMemory(
 				&Address->Address[0].Address[0].sin_zero,
 				sizeof(Address->Address[0].Address[0].sin_zero));
+			TcpipRecursiveMutexLeave(&TCPLock);
 			return STATUS_SUCCESS;
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
+            TcpipRecursiveMutexLeave(&TCPLock);
             return STATUS_INVALID_PARAMETER;
         }
 
         if (!AddrFile) {
           TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
+          TcpipRecursiveMutexLeave(&TCPLock);
           return STATUS_INVALID_PARAMETER;
         }
 
+        TcpipRecursiveMutexLeave(&TCPLock);
         return STATUS_SUCCESS;
       }
 
@@ -725,6 +735,7 @@ NTSTATUS DispTdiQueryInformation(
             (FIELD_OFFSET(TDI_CONNECTION_INFORMATION, RemoteAddress) +
              sizeof(PVOID))) {
           TI_DbgPrint(MID_TRACE, ("MDL buffer too small (ptr).\n"));
+          TcpipRecursiveMutexLeave(&TCPLock);
           return STATUS_BUFFER_TOO_SMALL;
         }
 
@@ -743,18 +754,24 @@ NTSTATUS DispTdiQueryInformation(
 
           default:
             TI_DbgPrint(MIN_TRACE, ("Invalid transport context\n"));
+            TcpipRecursiveMutexLeave(&TCPLock);
             return STATUS_INVALID_PARAMETER;
         }
 
         if (!Endpoint) {
           TI_DbgPrint(MID_TRACE, ("No connection object.\n"));
+          TcpipRecursiveMutexLeave(&TCPLock);
           return STATUS_INVALID_PARAMETER;
         }
 
-        return TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
+        Status = TCPGetSockAddress( Endpoint, AddressInfo->RemoteAddress, TRUE );
+
+        TcpipRecursiveMutexLeave(&TCPLock);
+        return Status;
       }
   }
 
+  TcpipRecursiveMutexLeave(&TCPLock);
   return STATUS_NOT_IMPLEMENTED;
 }
 

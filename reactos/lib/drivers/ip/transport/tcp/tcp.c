@@ -332,7 +332,6 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
                            "Proto %d\n",
                            Connection, Family, Type, Proto));
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
     Status = TCPTranslateError( OskitTCPSocket( Connection,
                                                 &Connection->SocketContext,
                                                 Family,
@@ -343,8 +342,6 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
                            Connection->SocketContext));
-
-    TcpipRecursiveMutexLeave( &TCPLock );
 
     return Status;
 }
@@ -599,11 +596,8 @@ NTSTATUS TCPConnect
         return STATUS_NETWORK_UNREACHABLE;
     }
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
     if (Connection->State & SEL_FIN)
     {
-        TcpipRecursiveMutexLeave( &TCPLock );
         return STATUS_REMOTE_DISCONNECT;
     }
 
@@ -649,8 +643,6 @@ NTSTATUS TCPConnect
         }
     }
 
-    TcpipRecursiveMutexLeave( &TCPLock );
-
     return Status;
 }
 
@@ -664,8 +656,6 @@ NTSTATUS TCPDisconnect
     NTSTATUS Status;
 
     TI_DbgPrint(DEBUG_TCP,("started\n"));
-
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     switch( Flags & (TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE) ) {
     case 0:
@@ -685,8 +675,6 @@ NTSTATUS TCPDisconnect
     Status = TCPTranslateError
         ( OskitTCPShutdown( Connection->SocketContext, Flags ) );
 
-    TcpipRecursiveMutexLeave( &TCPLock );
-
     TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
 
     return Status;
@@ -698,15 +686,11 @@ NTSTATUS TCPClose
 
     TI_DbgPrint(DEBUG_TCP,("TCPClose started\n"));
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
     /* Make our code remove all pending IRPs */
     Connection->State |= SEL_FIN;
     DrainSignals();
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
-
-    TcpipRecursiveMutexLeave( &TCPLock );
 
     TI_DbgPrint(DEBUG_TCP,("TCPClose finished %x\n", Status));
 
@@ -731,12 +715,9 @@ NTSTATUS TCPReceiveData
 
     ASSERT_KM_POINTER(Connection->SocketContext);
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
     /* Closing */
     if (Connection->State & SEL_FIN)
     {
-        TcpipRecursiveMutexLeave( &TCPLock );
         *BytesReceived = 0;
         return STATUS_REMOTE_DISCONNECT;
     }
@@ -761,7 +742,6 @@ NTSTATUS TCPReceiveData
         Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
         if( !Bucket ) {
             TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
-            TcpipRecursiveMutexLeave( &TCPLock );
             return STATUS_NO_MEMORY;
         }
 
@@ -777,8 +757,6 @@ NTSTATUS TCPReceiveData
         TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Received));
         *BytesReceived = Received;
     }
-
-    TcpipRecursiveMutexLeave( &TCPLock );
 
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
@@ -802,8 +780,6 @@ NTSTATUS TCPSendData
 
     ASSERT_KM_POINTER(Connection->SocketContext);
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
     TI_DbgPrint(DEBUG_TCP,("Connection = %x\n", Connection));
     TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
                            Connection->SocketContext));
@@ -811,7 +787,6 @@ NTSTATUS TCPSendData
     /* Closing */
     if (Connection->State & SEL_FIN)
     {
-        TcpipRecursiveMutexLeave( &TCPLock );
         *BytesSent = 0;
         return STATUS_REMOTE_DISCONNECT;
     }
@@ -829,7 +804,6 @@ NTSTATUS TCPSendData
         Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
         if( !Bucket ) {
             TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
-            TcpipRecursiveMutexLeave( &TCPLock );
             return STATUS_NO_MEMORY;
         }
         
@@ -845,8 +819,6 @@ NTSTATUS TCPSendData
         TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Sent));
         *BytesSent = Sent;
     }
-    
-    TcpipRecursiveMutexLeave( &TCPLock );
     
     TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
@@ -880,8 +852,6 @@ NTSTATUS TCPGetSockAddress
     OSK_UI16 LocalPort, RemotePort;
     PTA_IP_ADDRESS AddressIP = (PTA_IP_ADDRESS)Address;
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-
     OskitTCPGetAddress
         ( Connection->SocketContext,
           &LocalAddress, &LocalPort,
@@ -892,8 +862,6 @@ NTSTATUS TCPGetSockAddress
     AddressIP->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
     AddressIP->Address[0].Address[0].sin_port = GetRemote ? RemotePort : LocalPort;
     AddressIP->Address[0].Address[0].in_addr = GetRemote ? RemoteAddress : LocalAddress;
-
-    TcpipRecursiveMutexLeave( &TCPLock );
 
     return STATUS_SUCCESS;
 }

@@ -142,6 +142,8 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
     Status = TCPServiceListeningSocket( Listener, Connection,
                        (PTDI_REQUEST_KERNEL)Request );
 
+    TcpipRecursiveMutexLeave( &TCPLock );
+
     if( Status == STATUS_PENDING ) {
         Bucket = exAllocatePool( NonPagedPool, sizeof(*Bucket) );
 
@@ -154,8 +156,6 @@ NTSTATUS TCPAccept ( PTDI_REQUEST Request,
         } else
             Status = STATUS_NO_MEMORY;
     }
-
-    TcpipRecursiveMutexLeave( &TCPLock );
 
     TI_DbgPrint(DEBUG_TCP,("TCPAccept finished %x\n", Status));
     return Status;
