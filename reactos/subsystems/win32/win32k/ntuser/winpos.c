@@ -759,6 +759,9 @@ BOOL FASTCALL
 WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 {
    PWINDOW Wnd = Window->Wnd;
+
+   if (!Wnd) return FALSE;
+
    if (Wnd->Style & WS_VISIBLE)
    {
       WinPos->flags &= ~SWP_SHOWWINDOW;

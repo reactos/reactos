@@ -43,7 +43,7 @@ VIS_ComputeVisibleRegion(
 
    Wnd = Window->Wnd;
 
-   if (!(Wnd->Style & WS_VISIBLE))
+   if (!Wnd || !(Wnd->Style & WS_VISIBLE))
    {
       return NULL;
    }
