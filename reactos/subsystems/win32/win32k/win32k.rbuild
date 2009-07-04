@@ -67,7 +67,6 @@
 		<file>engmisc.c</file>
 		<file>mouse.c</file>
 		<file>paint.c</file>
-		<file>palette.c</file>
 		<file>perfcnt.c</file>
 		<file>semaphor.c</file>
 		<file>sort.c</file>
@@ -163,7 +162,6 @@
 		<file>bitmaps.c</file>
 		<file>brush.c</file>
 		<file>cliprgn.c</file>
-		<file>color.c</file>
 		<file>coord.c</file>
 		<file>dcattr.c</file>
 		<file>dclife.c</file>
@@ -181,7 +179,7 @@
 		<file>icm.c</file>
 		<file>line.c</file>
 		<file>metafile.c</file>
-		<file>palobj.c</file>
+		<file>palette.c</file>
 		<file>path.c</file>
 		<file>pen.c</file>
 		<file>polyfill.c</file>
