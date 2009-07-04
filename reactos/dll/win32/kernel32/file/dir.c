@@ -1030,7 +1030,7 @@ SearchPathW (
                 }
                 else
                 {
-                        Name = RtlAllocateHeap(GetProcessHeap(),
+                        Name = RtlAllocateHeap(RtlGetProcessHeap(),
                                                HEAP_GENERATE_EXCEPTIONS,
                                                (wcslen(lpFileName) + wcslen(lpExtension) + 1)
                                                * sizeof(WCHAR));

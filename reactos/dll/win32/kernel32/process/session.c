@@ -9,6 +9,9 @@
  *     2001-12-07 created
  */
 #include <k32.h>
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32session);
 
 DWORD ActiveConsoleSessionId = 0;
 
@@ -19,6 +22,7 @@ DWORD ActiveConsoleSessionId = 0;
 DWORD WINAPI
 DosPathToSessionPathW (DWORD SessionID, LPWSTR InPath, LPWSTR * OutPath)
 {
+    UNIMPLEMENTED;
 	return 0;
 }
 
@@ -39,6 +43,7 @@ DWORD WINAPI
 DosPathToSessionPathA (DWORD SessionId, LPSTR InPath, LPSTR * OutPath)
 {
 	//DosPathToSessionPathW (SessionId,InPathW,OutPathW);
+    UNIMPLEMENTED;
 	return 0;
 }
 
