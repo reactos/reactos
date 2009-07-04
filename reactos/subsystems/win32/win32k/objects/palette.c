@@ -14,7 +14,7 @@
 
 static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the pallete and restore it */
 
-const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
+const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
 {
   // first 10 entries in the system palette
   // red  green blue  flags
@@ -44,11 +44,6 @@ const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0x00, 0xff, 0xff, PC_SYS_USED },
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
-
-const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
-{
-   return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
-}
 
 INT APIENTRY COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
                              XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved)
@@ -106,7 +101,6 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
 #ifndef NO_MAPPING
     PALOBJ *palObj;
 #endif
-    const PALETTEENTRY* __sysPalTemplate = (const PALETTEENTRY*)COLOR_GetSystemPaletteTemplate();
 
     // create default palette (20 system colors)
     palPtr = ExAllocatePoolWithTag(PagedPool,
@@ -119,9 +113,9 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     palPtr->palNumEntries = NB_RESERVED_COLORS;
     for (i=0; i<NB_RESERVED_COLORS; i++)
     {
-        palPtr->palPalEntry[i].peRed = __sysPalTemplate[i].peRed;
-        palPtr->palPalEntry[i].peGreen = __sysPalTemplate[i].peGreen;
-        palPtr->palPalEntry[i].peBlue = __sysPalTemplate[i].peBlue;
+        palPtr->palPalEntry[i].peRed = g_sysPalTemplate[i].peRed;
+        palPtr->palPalEntry[i].peGreen = g_sysPalTemplate[i].peGreen;
+        palPtr->palPalEntry[i].peBlue = g_sysPalTemplate[i].peBlue;
         palPtr->palPalEntry[i].peFlags = 0;
     }
 
