@@ -160,7 +160,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     if( AdapterKey )
         IPAddress = RegReadString( AdapterKey, NULL, "IPAddress" );
 
-    if( IPAddress && strcmp( IPAddress, "0.0.0.0" ) ) {
+    if( IPAddress && !strcmp( IPAddress, "0.0.0.0" ) ) {
         /* Non-automatic case */
         DH_DbgPrint
             (MID_TRACE,("Adapter Name: [%s] (Bind Status %x) (static %s)\n",
