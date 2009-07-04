@@ -18,6 +18,8 @@
 #ifndef __WINE_CRYPTRES_H__
 #define __WINE_CRYPTRES_H__
 
+#include <windef.h>
+
 #define IDS_AUTHORITY_KEY_ID 1000
 #define IDS_KEY_ATTRIBUTES 1001
 #define IDS_KEY_USAGE_RESTRICTION 1002

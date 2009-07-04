@@ -20,6 +20,7 @@
 @ stdcall CertCreateCTLContext(long ptr long)
 @ stdcall CertCreateCertificateChainEngine(ptr ptr)
 @ stdcall CertCreateCertificateContext(long ptr long)
+@ stdcall CertCreateContext(long long ptr long long ptr)
 @ stdcall CertCreateSelfSignCertificate(long ptr long ptr ptr ptr ptr ptr)
 @ stdcall CertDeleteCRLFromStore(ptr)
 @ stdcall CertDeleteCTLFromStore(ptr)
@@ -162,7 +163,7 @@
 @ stdcall CryptQueryObject(long ptr long long long ptr ptr ptr ptr ptr ptr)
 @ stdcall CryptRegisterDefaultOIDFunction(long str long wstr)
 @ stdcall CryptRegisterOIDFunction(long str str wstr str)
-@ stub CryptRegisterOIDInfo
+@ stdcall CryptRegisterOIDInfo(ptr long)
 @ stdcall CryptSIPAddProvider(ptr)
 @ stdcall CryptSIPCreateIndirectData(ptr ptr ptr)
 @ stdcall CryptSIPGetSignedDataMsg(ptr ptr long ptr ptr)

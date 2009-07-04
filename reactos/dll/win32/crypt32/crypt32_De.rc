@@ -19,6 +19,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "cryptres.h"
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
@@ -239,5 +241,3 @@ STRINGTABLE DISCARDABLE
     IDS_NETSCAPE_SMIME_CA "S/MIME Zertifikationsautorität"
     IDS_NETSCAPE_SIGN_CA "Zertifikationsautorität der Signatur"
 }
-
-#pragma code_page(default)

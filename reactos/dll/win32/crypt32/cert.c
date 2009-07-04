@@ -2951,3 +2951,35 @@ BOOL WINAPI CertVerifyCTLUsage(DWORD dwEncodingType, DWORD dwSubjectType,
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+
+const void * WINAPI CertCreateContext(DWORD dwContextType, DWORD dwEncodingType,
+                                      const BYTE *pbEncoded, DWORD cbEncoded,
+                                      DWORD dwFlags, PCERT_CREATE_CONTEXT_PARA pCreatePara)
+{
+    TRACE("(0x%x, 0x%x, %p, %d, 0x%08x, %p)\n", dwContextType, dwEncodingType,
+          pbEncoded, cbEncoded, dwFlags, pCreatePara);
+
+    if (dwFlags)
+    {
+        FIXME("dwFlags 0x%08x not handled\n", dwFlags);
+        return NULL;
+    }
+    if (pCreatePara)
+    {
+        FIXME("pCreatePara not handled\n");
+        return NULL;
+    }
+
+    switch (dwContextType)
+    {
+    case CERT_STORE_CERTIFICATE_CONTEXT:
+        return CertCreateCertificateContext(dwEncodingType, pbEncoded, cbEncoded);
+    case CERT_STORE_CRL_CONTEXT:
+        return CertCreateCRLContext(dwEncodingType, pbEncoded, cbEncoded);
+    case CERT_STORE_CTL_CONTEXT:
+        return CertCreateCTLContext(dwEncodingType, pbEncoded, cbEncoded);
+    default:
+        WARN("unknown context type: 0x%x\n", dwContextType);
+        return NULL;
+    }
+}

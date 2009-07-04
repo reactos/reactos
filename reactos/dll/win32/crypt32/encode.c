@@ -564,13 +564,12 @@ static BOOL WINAPI CRYPT_AsnEncodeCRLEntries(DWORD dwCertEncodingType,
  LPCSTR lpszStructType, const void *pvStructInfo, DWORD dwFlags,
  PCRYPT_ENCODE_PARA pEncodePara, BYTE *pbEncoded, DWORD *pcbEncoded)
 {
-    DWORD cCRLEntry = *(const DWORD *)pvStructInfo;
     DWORD bytesNeeded, dataLen, lenBytes, i;
-    const CRL_ENTRY *rgCRLEntry = *(const CRL_ENTRY *const *)
-     ((const BYTE *)pvStructInfo + sizeof(DWORD));
+    const CRL_INFO *info = pvStructInfo;
+    const CRL_ENTRY *rgCRLEntry = info->rgCRLEntry;
     BOOL ret = TRUE;
 
-    for (i = 0, dataLen = 0; ret && i < cCRLEntry; i++)
+    for (i = 0, dataLen = 0; ret && i < info->cCRLEntry; i++)
     {
         DWORD size;
 
@@ -594,7 +593,7 @@ static BOOL WINAPI CRYPT_AsnEncodeCRLEntries(DWORD dwCertEncodingType,
                 *pbEncoded++ = ASN_SEQUENCEOF;
                 CRYPT_EncodeLen(dataLen, pbEncoded, &lenBytes);
                 pbEncoded += lenBytes;
-                for (i = 0; i < cCRLEntry; i++)
+                for (i = 0; i < info->cCRLEntry; i++)
                 {
                     DWORD size = dataLen;
 
@@ -659,7 +658,7 @@ static BOOL WINAPI CRYPT_AsnEncodeCRLInfo(DWORD dwCertEncodingType,
         }
         if (info->cCRLEntry)
         {
-            items[cItem].pvStructInfo = &info->cCRLEntry;
+            items[cItem].pvStructInfo = info;
             items[cItem].encodeFunc = CRYPT_AsnEncodeCRLEntries;
             cItem++;
         }
