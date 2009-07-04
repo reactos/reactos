@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "cryptuires.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -461,5 +463,3 @@ BEGIN
     LVS_REPORT|LVS_NOCOLUMNHEADER|LVS_SINGLESEL|WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_BORDER,
     115,67,174,100
 END
-
-#pragma code_page(default)

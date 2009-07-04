@@ -17,11 +17,6 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "commctrl.h"
-#include "dlgs.h"
 
 #include "cryptuires.h"
 
@@ -45,8 +40,3 @@ IDB_CERT_WATERMARK BITMAP LOADONCALL DISCARDABLE certwatermark.bmp
 
 /* @makedep: certheader.bmp */
 IDB_CERT_HEADER BITMAP LOADONCALL DISCARDABLE certheader.bmp
-
-#include "cryptui_De.rc"
-#include "cryptui_En.rc"
-#include "cryptui_Ko.rc"
-#include "cryptui_Nl.rc"
