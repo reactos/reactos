@@ -80,9 +80,19 @@ INT      APIENTRY  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BO
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 
 INT FASTCALL PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
+ULONG NTAPI PALETTE_ulGetNearestPaletteIndex(PALETTE* ppal, ULONG iColor);
+VOID NTAPI PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors);
 
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
 HPALETTE FASTCALL GdiSelectPalette(HDC, HPALETTE, BOOL);
 
+FORCEINLINE
+ULONG
+PALETTE_ulGetRGBColorFromIndex(PPALETTE ppal, ULONG ulIndex)
+{
+    return RGB(ppal->IndexedColors[ulIndex].peRed,
+               ppal->IndexedColors[ulIndex].peGreen,
+               ppal->IndexedColors[ulIndex].peBlue);
+}
 
 #endif /* not _WIN32K_PALETTE_H */

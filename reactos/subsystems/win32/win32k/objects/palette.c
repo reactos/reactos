@@ -45,45 +45,6 @@ const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
   { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
 };
 
-INT APIENTRY COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
-                             XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved)
-{
-  int i, best = 0, diff = 0x7fffffff;
-  int r, g, b;
-
-  for( i = 0; i < size && diff ; i++ )
-  {
-#if 0
-    if(!(palPalEntry[i].peFlags & PC_SYS_USED) || (skipReserved && palPalEntry[i].peFlags  & PC_SYS_RESERVED))
-      continue;
-#endif
-
-    r = abs((SHORT)palPalEntry[i].peRed - GetRValue(col));
-    g = abs((SHORT)palPalEntry[i].peGreen - GetGValue(col));
-    b = abs((SHORT)palPalEntry[i].peBlue - GetBValue(col));
-
-    r = r*r + g*g + b*b;
-
-    if( r < diff ) { best = i; diff = r; }
-  }
-
-  if (XlateObj == NULL)
-    return best;
-  else
-    return (XlateObj->pulXlate) ? (INT)XlateObj->pulXlate[best] : best;
-}
-
-COLORREF APIENTRY COLOR_LookupNearestColor( PALETTEENTRY* palPalEntry, int size, COLORREF color )
-{
-   INT index;
-
-   index = COLOR_PaletteLookupPixel(palPalEntry, size, NULL, color, FALSE);
-   return RGB(
-      palPalEntry[index].peRed,
-      palPalEntry[index].peGreen,
-      palPalEntry[index].peBlue);
-}
-
 unsigned short GetNumberOfBits(unsigned int dwMask)
 {
    unsigned short wBits;
@@ -258,7 +219,7 @@ PALETTE_Cleanup(PVOID ObjectBody)
 }
 
 INT FASTCALL
-PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer)
+PALETTE_GetObject(PPALETTE ppal, INT cbCount, LPLOGBRUSH lpBuffer)
 {
     if (!lpBuffer)
     {
@@ -266,8 +227,67 @@ PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer)
     }
 
     if ((UINT)cbCount < sizeof(WORD)) return 0;
-    *((WORD*)lpBuffer) = (WORD)pGdiObject->NumColors;
+    *((WORD*)lpBuffer) = (WORD)ppal->NumColors;
     return sizeof(WORD);
+}
+
+ULONG
+NTAPI
+PALETTE_ulGetNearestPaletteIndex(PALETTE* ppal, ULONG iColor)
+{
+    ULONG ulDiff, ulColorDiff, ulMinimalDiff = 0xFFFFFF;
+    ULONG i, ulBestIndex = 0;
+    PALETTEENTRY peColor = *(PPALETTEENTRY)&iColor;
+
+    /* Loop all palette entries, break on exact match */
+    for (i = 0; i < ppal->NumColors && ulMinimalDiff != 0; i++)
+    {
+        /* Calculate distance in the color cube */
+        ulDiff = peColor.peRed - ppal->IndexedColors[i].peRed;
+        ulColorDiff = ulDiff * ulDiff;
+        ulDiff = peColor.peGreen - ppal->IndexedColors[i].peGreen;
+        ulColorDiff += ulDiff * ulDiff;
+        ulDiff = peColor.peBlue - ppal->IndexedColors[i].peBlue;
+        ulColorDiff += ulDiff * ulDiff;
+
+        /* Check for a better match */
+        if (ulColorDiff < ulMinimalDiff)
+        {
+            ulBestIndex = i;
+            ulMinimalDiff = ulColorDiff;
+        }
+    }
+
+    return ulBestIndex;
+}
+
+VOID
+NTAPI
+PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors)
+{
+    ASSERT(pulColors);
+
+    switch (ppal->Mode)
+    {
+        case PAL_INDEXED:
+        case PAL_RGB:
+            pulColors[0] = RGB(0xFF, 0x00, 0x00);
+            pulColors[1] = RGB(0x00, 0xFF, 0x00);
+            pulColors[2] = RGB(0x00, 0x00, 0xFF);
+            break;
+
+        case PAL_BGR:
+            pulColors[0] = RGB(0x00, 0x00, 0xFF);
+            pulColors[1] = RGB(0x00, 0xFF, 0x00);
+            pulColors[2] = RGB(0xFF, 0x00, 0x00);
+            break;
+
+        case PAL_BITFIELDS:
+            pulColors[0] = ppal->RedMask;
+            pulColors[1] = ppal->GreenMask;
+            pulColors[2] = ppal->BlueMask;
+            break;
+    }
 }
 
 VOID
@@ -585,9 +605,12 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
       switch (palGDI->Mode)
       {
          case PAL_INDEXED:
-            nearest = COLOR_LookupNearestColor(palGDI->IndexedColors,
-               palGDI->NumColors, Color);
+         {
+            ULONG index;
+            index = PALETTE_ulGetNearestPaletteIndex(palGDI, Color);
+            nearest = PALETTE_ulGetRGBColorFromIndex(palGDI, index);
             break;
+         }
          case PAL_BGR:
          case PAL_RGB:
             nearest = Color;
@@ -621,11 +644,7 @@ NtGdiGetNearestPaletteIndex(
     if (ppal)
     {
         /* Return closest match for the given RGB color */
-        index = COLOR_PaletteLookupPixel(ppal->IndexedColors,
-                                         ppal->NumColors,
-                                         NULL,
-                                         crColor,
-                                         FALSE);
+        index = PALETTE_ulGetNearestPaletteIndex(ppal, crColor);
         PALETTE_UnlockPalette(ppal);
     }
 
