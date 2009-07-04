@@ -100,8 +100,6 @@ int		no_daemon;
 int		unknown_ok = 1;
 int		routefd;
 
-struct interface_info	*ifi = NULL;
-
 void		 usage(void);
 int		 check_option(struct client_lease *l, int option);
 int		 ipv4addrs(char * buf);
@@ -135,6 +133,7 @@ int
 main(int argc, char *argv[])
 {
     int i = 0;
+    PDHCP_ADAPTER Adapter;
         ApiInit();
         AdapterInit();
         PipeInit();
@@ -150,32 +149,29 @@ main(int argc, char *argv[])
 
         DH_DbgPrint(MID_TRACE,("DHCP Service Started\n"));
 
-	read_client_conf();
+        for (Adapter = AdapterGetFirst();
+             Adapter != NULL;
+             Adapter = AdapterGetNext(Adapter))
+        {
+	   read_client_conf(&Adapter->DhclientInfo);
 
-	if (!interface_link_status(ifi->name)) {
-            DH_DbgPrint(MID_TRACE,("%s: no link ", ifi->name));
-            Sleep(1000);
-            while (!interface_link_status(ifi->name)) {
-                DH_DbgPrint(MID_TRACE,("."));
-                if (++i > 10) {
-                    DH_DbgPrint(MID_TRACE,("Giving up for now on adapter [%s]\n", ifi->name));
-                }
-                Sleep(1000);
-            }
-            DH_DbgPrint(MID_TRACE,("Got link on [%s]\n", ifi->name));
-	}
+	   if (!interface_link_status(Adapter->DhclientInfo.name)) {
+               DH_DbgPrint(MID_TRACE,("%s: no link ", Adapter->DhclientInfo.name));
+               Sleep(1000);
+               while (!interface_link_status(Adapter->DhclientInfo.name)) {
+                    DH_DbgPrint(MID_TRACE,("."));
+                    if (++i > 10) {
+                        DH_DbgPrint(MID_TRACE,("Giving up for now on adapter [%s]\n", Adapter->DhclientInfo.name));
+                    }
+                    Sleep(1000);
+               }
+               DH_DbgPrint(MID_TRACE,("Got link on [%s]\n", Adapter->DhclientInfo.name));
+	   }
 
-        DH_DbgPrint(MID_TRACE,("Discover Interfaces\n"));
+           DH_DbgPrint(MID_TRACE,("Discover Interfaces\n"));
 
-        /* If no adapters were found, just idle for now ... If any show up,
-         * then we'll start it later */
-        if( ifi ) {
-            /* set up the interface */
-            discover_interfaces(ifi);
-
-            DH_DbgPrint
-                (MID_TRACE,
-                 ("Setting init state and restarting interface %p\n",ifi));
+           /* set up the interface */
+           discover_interfaces(&Adapter->DhclientInfo);
         }
 
 	bootp_packet_handler = do_packet;
@@ -1556,7 +1552,7 @@ free_client_lease(struct client_lease *lease)
 FILE *leaseFile;
 
 void
-rewrite_client_leases(void)
+rewrite_client_leases(struct interface_info *ifi)
 {
 	struct client_lease *lp;
 
@@ -1587,7 +1583,7 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 
 	if (!rewrite) {
 		if (leases_written++ > 20) {
-			rewrite_client_leases();
+			rewrite_client_leases(ip);
 			leases_written = 0;
 		}
 	}
@@ -1674,19 +1670,16 @@ script_init(char *reason, struct string_list *medium)
 }
 
 void
-priv_script_init(char *reason, char *medium)
+priv_script_init(struct interface_info *ip, char *reason, char *medium)
 {
-	struct interface_info *ip = ifi;
-
 	if (ip) {
             // XXX Do we need to do anything?
         }
 }
 
 void
-priv_script_write_params(char *prefix, struct client_lease *lease)
+priv_script_write_params(struct interface_info *ip, char *prefix, struct client_lease *lease)
 {
-	struct interface_info *ip = ifi;
 	u_int8_t dbuf[1500];
 	int i, len = 0;
 

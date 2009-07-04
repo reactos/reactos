@@ -72,6 +72,8 @@ typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 
 void AdapterInit(VOID);
 HANDLE PipeInit(VOID);
+extern PDHCP_ADAPTER AdapterGetFirst();
+extern PDHCP_ADAPTER AdapterGetNext(PDHCP_ADAPTER);
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
 extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
 extern VOID ApiInit();

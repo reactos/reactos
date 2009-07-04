@@ -3,7 +3,6 @@
 static SOCKET DhcpSocket = INVALID_SOCKET;
 static LIST_ENTRY AdapterList;
 static WSADATA wsd;
-extern struct interface_info *ifi;
 
 PCHAR *GetSubkeyNames( PCHAR MainKeyName, PCHAR Append ) {
     int i = 0;
@@ -215,6 +214,7 @@ void AdapterInit() {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size, i;
     PDHCP_ADAPTER Adapter = NULL;
+    struct interface_info *ifi = NULL;
 
     WSAStartup(0x0101,&wsd);
 

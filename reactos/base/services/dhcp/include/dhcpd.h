@@ -426,11 +426,11 @@ void make_request(struct interface_info *, struct client_lease *);
 void make_decline(struct interface_info *, struct client_lease *);
 
 void free_client_lease(struct client_lease *);
-void rewrite_client_leases(void);
+void rewrite_client_leases(struct interface_info *);
 void write_client_lease(struct interface_info *, struct client_lease *, int);
 
-void	 priv_script_init(char *, char *);
-void	 priv_script_write_params(char *, struct client_lease *);
+void	 priv_script_init(struct interface_info *, char *, char *);
+void	 priv_script_write_params(struct interface_info *, char *, struct client_lease *);
 int	 priv_script_go(void);
 
 void script_init(char *, struct string_list *);
@@ -466,7 +466,7 @@ ssize_t decode_ethernet_header(struct interface_info *, unsigned char *,
     int, struct hardware *);
 
 /* clparse.c */
-int read_client_conf(void);
+int read_client_conf(struct interface_info *);
 void read_client_leases(void);
 void parse_client_statement(FILE *, struct interface_info *,
     struct client_config *);
