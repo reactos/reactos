@@ -1317,11 +1317,11 @@ UserPostMessage(HWND Wnd,
    MSG Message;
    LARGE_INTEGER LargeTickCount;
 
-	if (FindMsgMemory(Msg) != 0)
-	{
-		SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
-		return FALSE;
-	}
+   if (FindMsgMemory(Msg) != 0)
+   {
+      SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
+      return FALSE;
+   }
 
    pti = PsGetCurrentThreadWin32Thread();
    if (Wnd == HWND_BROADCAST)
@@ -1412,11 +1412,11 @@ NtUserPostThreadMessage(DWORD idThread,
 
    DPRINT("Enter NtUserPostThreadMessage\n");
 
-   	if (FindMsgMemory(Msg) != 0)
-	{
-		SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
-		return FALSE;
-	}
+   if (FindMsgMemory(Msg) != 0)
+   {
+      SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
+      return FALSE;
+   }
 
    UserEnterExclusive();
 
@@ -1869,11 +1869,11 @@ UserSendNotifyMessage(HWND hWnd,
 {
    BOOL Result = TRUE;
 
-    if (FindMsgMemory(Msg) != 0)
-	{
-		SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
-		return FALSE;
-	}
+   if (FindMsgMemory(Msg) != 0)
+   {
+      SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
+      return FALSE;
+   }
 
    // Basicly the same as IntPostOrSendMessage
    if (hWnd == HWND_BROADCAST) //Handle Broadcast
