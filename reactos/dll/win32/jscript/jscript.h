@@ -132,7 +132,10 @@ HRESULT jsdisp_propget_name(DispatchEx*,LPCWSTR,LCID,VARIANT*,jsexcept_t*,IServi
 HRESULT jsdisp_propget_idx(DispatchEx*,DWORD,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_get_id(DispatchEx*,const WCHAR*,DWORD,DISPID*);
 
-HRESULT create_builtin_function(script_ctx_t*,builtin_invoke_t,DWORD,DispatchEx*,DispatchEx**);
+HRESULT create_builtin_function(script_ctx_t*,builtin_invoke_t,const builtin_info_t*,DWORD,
+        DispatchEx*,DispatchEx**);
+HRESULT Function_value(DispatchEx*,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+
 
 HRESULT create_object(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_math(script_ctx_t*,DispatchEx**);

@@ -829,7 +829,7 @@ HRESULT create_array_constr(script_ctx_t *ctx, DispatchEx **ret)
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, ArrayConstr_value, PROPF_CONSTR, &array->dispex, ret);
+    hres = create_builtin_function(ctx, ArrayConstr_value, NULL, PROPF_CONSTR, &array->dispex, ret);
 
     IDispatchEx_Release(_IDispatchEx_(&array->dispex));
     return hres;

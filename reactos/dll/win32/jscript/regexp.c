@@ -3685,7 +3685,7 @@ HRESULT create_regexp_constr(script_ctx_t *ctx, DispatchEx **ret)
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, RegExpConstr_value, PROPF_CONSTR, &regexp->dispex, ret);
+    hres = create_builtin_function(ctx, RegExpConstr_value, NULL, PROPF_CONSTR, &regexp->dispex, ret);
 
     jsdisp_release(&regexp->dispex);
     return hres;
