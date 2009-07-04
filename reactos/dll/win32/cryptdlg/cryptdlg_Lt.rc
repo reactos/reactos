@@ -1,7 +1,7 @@
 /*
- * cryptdlg dll resources
+ * cryptdlg dll Lithuanian resources
  *
- * Copyright 2008 Juan Lang
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,19 +20,22 @@
 
 #include "cryptres.h"
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_CERT_POLICY "Certificate Policy"
-    IDS_POLICY_ID "Policy Identifier: "
-    IDS_POLICY_QUALIFIER_INFO "Policy Qualifier Info"
-    IDS_POLICY_QUALIFIER_ID "Policy Qualifier Id="
+    IDS_CERT_POLICY "Liudijimo politika"
+    IDS_POLICY_ID "Politikos identifikatorius: "
+    IDS_POLICY_QUALIFIER_INFO "Politikos kvalifikatoriaus informacija"
+    IDS_POLICY_QUALIFIER_ID "Politikos kvalifikatoriaus identifikatorius="
     IDS_CPS "CPS"
-    IDS_USER_NOTICE "User Notice"
-    IDS_QUALIFIER "Qualifier"
-    IDS_NOTICE_REF "Notice Reference"
-    IDS_ORGANIZATION "Organization="
-    IDS_NOTICE_NUM "Notice Number="
-    IDS_NOTICE_TEXT "Notice Text="
+    IDS_USER_NOTICE "Naudotojo pranešimas"
+    IDS_QUALIFIER "Kvalifikatorius"
+    IDS_NOTICE_REF "Pranešimo nuoroda"
+    IDS_ORGANIZATION "Organizacija="
+    IDS_NOTICE_NUM "Pranešimo numeris="
+    IDS_NOTICE_TEXT "Pranešimo tekstas="
 }

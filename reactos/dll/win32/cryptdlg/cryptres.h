@@ -18,6 +18,8 @@
 #ifndef __CRYPTRES_H__
 #define __CRYPTRES_H__
 
+#include <windef.h>
+
 #define IDS_CERT_POLICY 100
 #define IDS_POLICY_ID 101
 #define IDS_POLICY_QUALIFIER_INFO 102
