@@ -17,6 +17,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#include "localui.h"
+
 #pragma code_page(65001)
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -53,5 +56,3 @@ STRINGTABLE DISCARDABLE
     IDS_PORTEXISTS "Le port %s existe déjà"
     IDS_NOTHINGTOCONFIG "Ce port n'a pas d'options de configuration"
 }
-
-#pragma code_page(default)

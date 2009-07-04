@@ -1,7 +1,7 @@
 /*
- * Dutch resources for localui
+ * Lithuanian resources for localui
  *
- * Copyright 2008 Frans Kool
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,37 +20,40 @@
 
 #include "localui.h"
 
-LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
 ADDPORT_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE 6, 18, 245, 47
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Voeg een Lokale Poort toe"
+CAPTION "Pridėti vietinį prievadą"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Voer de toe te voegen poort naam in:", -1, 7, 13, 194, 13, WS_VISIBLE
+    LTEXT "&Įveskite pridedamo prievado vardą:", -1, 7, 13, 194, 13, WS_VISIBLE
     EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 199, 10, 40, 14, WS_VISIBLE
-    PUSHBUTTON "Annuleren", IDCANCEL, 199, 27, 40, 14, WS_VISIBLE
+    DEFPUSHBUTTON "Gerai", IDOK, 199, 10, 40, 14, WS_VISIBLE
+    PUSHBUTTON "Atsisakyti", IDCANCEL, 199, 27, 40, 14, WS_VISIBLE
 END
 
 
 LPTCONFIG_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE 6, 18, 220, 47
 STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Configureer LPT Poort"
+CAPTION "Konfigūruoti LPT prievadą"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Timeout (seconden)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
-    LTEXT "&Transmissie Herstart:", -1, 14, 22, 90, 13, WS_VISIBLE
+    GROUPBOX "Laukimo laikas (sekundėmis)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
+    LTEXT "&Perdavimo pakartojimas:", -1, 14, 22, 90, 13, WS_VISIBLE
     EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
-    DEFPUSHBUTTON "OK", IDOK, 164, 10, 50, 14, WS_VISIBLE
-    PUSHBUTTON "Annuleren", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
+    DEFPUSHBUTTON "Gerai", IDOK, 164, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "Atsisakyti", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
 END
 
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_LOCALPORT "Lokale Poort"
-    IDS_INVALIDNAME "'%s' is geen valide poort naam"
-    IDS_PORTEXISTS "Poort %s bestaat reeds"
-    IDS_NOTHINGTOCONFIG "Deze poort heeft geen opties om in te stellen"
+    IDS_LOCALPORT "Vietinis prievadas"
+    IDS_INVALIDNAME "'%s' yra netinkamas prievado vardas"
+    IDS_PORTEXISTS "Prievadas %s jau egzistuoja"
+    IDS_NOTHINGTOCONFIG "Šis prievadas neturi parinkčių konfigūravimui"
 }
