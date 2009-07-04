@@ -699,5 +699,4 @@ NtUserRegisterClassEx                   6
 NtUserMonitorFromWindow                 2
 NtUserSendMessage                       5
 NtUserSendMessageTimeout                8
-NtUserSendNotifyMessage                 4
 NtUserSetScrollBarInfo                  3

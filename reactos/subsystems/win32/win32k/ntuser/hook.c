@@ -785,14 +785,14 @@ UserCallNextHookEx(PHOOK Hook,
         }
 
         case WH_CBT:
-            DPRINT1("HOOK WH_CBT!\n");
+            DPRINT("HOOK WH_CBT!\n");
             switch (Code)
             {
                 case HCBT_CREATEWND:
                 {
                     LPCBT_CREATEWNDW pcbtcww = (LPCBT_CREATEWNDW)lParam;
 
-                    DPRINT1("HOOK HCBT_CREATEWND\n");
+                    DPRINT("HOOK HCBT_CREATEWND\n");
                     _SEH2_TRY
                     {
                         if (Ansi)
@@ -856,7 +856,7 @@ UserCallNextHookEx(PHOOK Hook,
                 {
                     RECTL rt;
 
-                    DPRINT1("HOOK HCBT_MOVESIZE\n");
+                    DPRINT("HOOK HCBT_MOVESIZE\n");
 
                     if (lParam)
                     {
@@ -893,7 +893,7 @@ UserCallNextHookEx(PHOOK Hook,
                 {
                     CBTACTIVATESTRUCT CbAs;
 
-                    DPRINT1("HOOK HCBT_ACTIVATE\n");
+                    DPRINT("HOOK HCBT_ACTIVATE\n");
                     if (lParam)
                     {
                         _SEH2_TRY
@@ -927,7 +927,7 @@ UserCallNextHookEx(PHOOK Hook,
 
                 /* The rest just use default. */
                 default:
-                    DPRINT1("HOOK HCBT_ %d\n",Code);
+                    DPRINT("HOOK HCBT_ %d\n",Code);
                     lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
                     break;
             }

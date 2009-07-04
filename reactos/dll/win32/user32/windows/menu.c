@@ -72,6 +72,7 @@ typedef struct
   POINT Pt;
 } MTRACKER;
 
+static LRESULT WINAPI PopupMenuWndProcA(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 static LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 /*********************************************************************
@@ -969,6 +970,70 @@ MenuDrawPopupMenu(HWND Wnd, HDC Dc, HMENU Menu)
           SelectObject(Dc, PrevBrush);
 	}
     }
+}
+
+static LRESULT WINAPI
+PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+  TRACE("YES! hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
+
+  switch(Message)
+    {
+    case WM_CREATE:
+      {
+        CREATESTRUCTA *cs = (CREATESTRUCTA *) lParam;
+        SetWindowLongPtrA(Wnd, 0, (LONG) cs->lpCreateParams);
+        return 0;
+      }
+
+    case WM_MOUSEACTIVATE:  /* We don't want to be activated */
+      return MA_NOACTIVATE;
+
+    case WM_PAINT:
+      {
+        PAINTSTRUCT ps;
+        BeginPaint(Wnd, &ps);
+        MenuDrawPopupMenu(Wnd, ps.hdc, (HMENU)GetWindowLongPtrA(Wnd, 0));
+        EndPaint(Wnd, &ps);
+        return 0;
+      }
+
+    case WM_ERASEBKGND:
+      return 1;
+
+    case WM_DESTROY:
+      /* zero out global pointer in case resident popup window was destroyed. */
+      if (Wnd == TopPopup)
+        {
+          TopPopup = NULL;
+        }
+      break;
+
+    case WM_SHOWWINDOW:
+      if (0 != wParam)
+        {
+          if (0 == GetWindowLongPtrA(Wnd, 0))
+            {
+              OutputDebugStringA("no menu to display\n");
+            }
+        }
+      else
+        {
+          SetWindowLongPtrA(Wnd, 0, 0);
+        }
+      break;
+
+    case MM_SETMENUHANDLE:
+      SetWindowLongPtrA(Wnd, 0, wParam);
+      break;
+
+    case MM_GETMENUHANDLE:
+      return GetWindowLongPtrA(Wnd, 0);
+
+    default:
+      return DefWindowProcA(Wnd, Message, wParam, lParam);
+    }
+  return 0;
 }
 
 static LRESULT WINAPI
@@ -5161,33 +5226,56 @@ GetMenuContextHelpId(HMENU hmenu)
 /*
  * @unimplemented
  */
-LRESULT
+BOOL
 WINAPI
 MenuWindowProcA(
 		HWND   hWnd,
+		ULONG_PTR Result,
 		UINT   Msg,
 		WPARAM wParam,
 		LPARAM lParam
 		)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  if ( Msg < WM_USER)
+  {
+     LRESULT lResult;
+     lResult = PopupMenuWndProcA(hWnd, Msg, wParam, lParam );
+     if (Result)
+     {
+        Result = (ULONG_PTR)lResult;
+        return TRUE;
+     }
+     return FALSE;
+  }
+  return NtUserMessageCall(hWnd, Msg, wParam, lParam, Result, FNID_MENU, TRUE);
+
 }
 
 /*
  * @unimplemented
  */
-LRESULT
+BOOL
 WINAPI
 MenuWindowProcW(
 		HWND   hWnd,
+		ULONG_PTR Result,
 		UINT   Msg,
 		WPARAM wParam,
 		LPARAM lParam
 		)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  if ( Msg < WM_USER)
+  {
+     LRESULT lResult;
+     lResult = PopupMenuWndProcW(hWnd, Msg, wParam, lParam );
+     if (Result)
+     {
+        Result = (ULONG_PTR)lResult;
+        return TRUE;
+     }
+     return FALSE;
+  }
+  return NtUserMessageCall(hWnd, Msg, wParam, lParam, Result, FNID_MENU, FALSE);
 }
 
 /*

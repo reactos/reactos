@@ -566,6 +566,7 @@ typedef struct _USERCONNECT
 #define WM_SYSTIMER 280
 #define WM_POPUPSYSTEMMENU 787
 #define WM_CBT 1023 // ReactOS only.
+#define WM_MAXIMUM 0x0001FFFF
 
 //
 // Non SDK DCE types.
@@ -3077,16 +3078,6 @@ NtUserSendMessageTimeout(HWND hWnd,
 			 UINT uTimeout,
 			 ULONG_PTR *uResult,
              PNTUSERSENDMESSAGEINFO Info);
-
-/* use NtUserMessageCall */
-BOOL
-NTAPI
-NtUserSendNotifyMessage(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam);
-
 
 typedef struct _SETSCROLLBARINFO
 {

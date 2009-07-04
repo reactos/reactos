@@ -1632,51 +1632,12 @@ PeekMessageW(
   return Res;
 }
 
-
-/*
- * @implemented
- */
+//
+// Worker function for post message.
+//
 BOOL
-WINAPI
-PostMessageA(
-  HWND Wnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  MSG AnsiMsg, UcMsg;
-  MSG KMMsg;
-  LRESULT Result;
-
-  AnsiMsg.hwnd = Wnd;
-  AnsiMsg.message = Msg;
-  AnsiMsg.wParam = wParam;
-  AnsiMsg.lParam = lParam;
-  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
-    {
-      return FALSE;
-    }
-
-  if (! MsgiUMToKMMessage(&UcMsg, &KMMsg, TRUE))
-    {
-      MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-      return FALSE;
-    }
-  Result = NtUserPostMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam);
-  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
-  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-
-  return Result;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-PostMessageW(
+FASTCALL
+PostMessageWorker(
   HWND Wnd,
   UINT Msg,
   WPARAM wParam,
@@ -1690,60 +1651,25 @@ PostMessageW(
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
-    {
-      return FALSE;
-    }
-  Result = NtUserPostMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam);
+  {
+     return FALSE;
+  }
+  Result = NtUserPostMessage( KMMsg.hwnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam);
+
   MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
   return Result;
 }
 
+/*
+ * @implemented
+ */
 BOOL
 WINAPI
-PostMessageWX(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  LRESULT Ret;
-
-  /* Check for combo box or a list box to send names. */
-  if (Msg == CB_DIR || Msg == LB_DIR)
-  {
-  /*
-     Set DDL_POSTMSGS, so use the PostMessage function to send messages to the
-     combo/list box. Forces a call like DlgDirListComboBox.
-  */
-    wParam |= DDL_POSTMSGS;
-    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
-  }
-
-  /* No drop files or current Process, just post message. */
-  if ( (Msg != WM_DROPFILES) ||
-       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
-                  PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
-  {
-    return NtUserPostMessage(hWnd, Msg, wParam, lParam);
-  }
-
-  /* We have drop files or this is not the same process for this window. */
-
-  /* Just incase, check wParam for Global memory handle and send size. */
-  Ret = SendMessageW( hWnd,
-                      WM_COPYGLOBALDATA,
-                      (WPARAM)GlobalSize((HGLOBAL)wParam), // Zero if not a handle.
-                      (LPARAM)wParam);                     // Send wParam as lParam.
-
-  if ( Ret ) return NtUserPostMessage(hWnd, Msg, (WPARAM)Ret, lParam);
-
-  return FALSE;
-}
-BOOL
-WINAPI
-PostMessageAX(
+PostMessageA(
   HWND hWnd,
   UINT Msg,
   WPARAM wParam,
@@ -1762,11 +1688,56 @@ PostMessageAX(
       return FALSE;
   }
 
-  Ret = PostMessageWX( hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+  Ret = PostMessageW( hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
 
   MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
 
   return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+PostMessageW(
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  LRESULT Ret;
+
+  /* Check for combo box or a list box to send names. */
+  if (Msg == CB_DIR || Msg == LB_DIR)
+  {
+  /*
+     Set DDL_POSTMSGS, so use the PostMessage function to send messages to the
+     combo/list box. Forces a call like DlgDirListComboBox.
+  */
+    wParam |= DDL_POSTMSGS;
+    return PostMessageWorker(hWnd, Msg, wParam, lParam);
+  }
+
+  /* No drop files or current Process, just post message. */
+  if ( (Msg != WM_DROPFILES) ||
+       ( NtUserQueryWindow( hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID) == 
+                  PtrToUint(NtCurrentTeb()->ClientId.UniqueProcess) ) )
+  {
+    return PostMessageWorker(hWnd, Msg, wParam, lParam);
+  }
+
+  /* We have drop files and this is not the same process for this window. */
+
+  /* Just incase, check wParam for Global memory handle and send size. */
+  Ret = SendMessageW( hWnd,
+                      WM_COPYGLOBALDATA,
+                      (WPARAM)GlobalSize((HGLOBAL)wParam), // Zero if not a handle.
+                      (LPARAM)wParam);                     // Send wParam as lParam.
+
+  if ( Ret ) return PostMessageWorker(hWnd, Msg, (WPARAM)Ret, lParam);
+
+  return FALSE;
 }
 
 /*
@@ -2113,9 +2084,8 @@ SendMessageTimeoutW(
   return Result;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -2125,35 +2095,26 @@ SendNotifyMessageA(
   WPARAM wParam,
   LPARAM lParam)
 {
+  BOOL Ret;
   MSG AnsiMsg, UcMsg;
-  MSG KMMsg;
-  LRESULT Result;
 
   AnsiMsg.hwnd = hWnd;
   AnsiMsg.message = Msg;
   AnsiMsg.wParam = wParam;
   AnsiMsg.lParam = lParam;
   if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
-    {
-      return FALSE;
-    }
+  {
+     return FALSE;
+  }
+  Ret = SendNotifyMessageW(hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam);
 
-  if (! MsgiUMToKMMessage(&UcMsg, &KMMsg, TRUE))
-    {
-      MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
-      return FALSE;
-    }
-  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
-                                   KMMsg.wParam, KMMsg.lParam);
-  MsgiUMToKMCleanup(&UcMsg, &KMMsg);
   MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
 
-  return Result;
+  return Ret;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -2171,52 +2132,20 @@ SendNotifyMessageW(
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, TRUE))
-    {
-      return FALSE;
-    }
-  Result = NtUserSendNotifyMessage(KMMsg.hwnd, KMMsg.message,
-                                   KMMsg.wParam, KMMsg.lParam);
-  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
-
-  return Result;
-}
-
-BOOL
-WINAPI
-SendNotifyMessageAX(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  BOOL Ret;
-  MSG AnsiMsg, UcMsg;
-
-  AnsiMsg.hwnd = hWnd;
-  AnsiMsg.message = Msg;
-  AnsiMsg.wParam = wParam;
-  AnsiMsg.lParam = lParam;
-  if (! MsgiAnsiToUnicodeMessage(&UcMsg, &AnsiMsg))
   {
      return FALSE;
   }
-  /* ATM, ReactOS does not support Ansi in win32k. */
-  Ret = NtUserMessageCall(hWnd, UcMsg.message, UcMsg.wParam, UcMsg.lParam, 0, FNID_SENDNOTIFYMESSAGE, FALSE);
+  Result = NtUserMessageCall( hWnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
+                              0,
+                              FNID_SENDNOTIFYMESSAGE,
+                              FALSE);
 
-  MsgiAnsiToUnicodeCleanup(&UcMsg, &AnsiMsg);
+  MsgiUMToKMCleanup(&UMMsg, &KMMsg);
 
-  return Ret;
-}
-
-BOOL
-WINAPI
-SendNotifyMessageWX(
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
-{
-  return NtUserMessageCall(hWnd, Msg, wParam, lParam, 0, FNID_SENDNOTIFYMESSAGE, FALSE);
+  return Result;
 }
 
 /*
@@ -2234,6 +2163,8 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
             return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
 
         default:
+            if ( lpMsg->message & ~WM_MAXIMUM )
+               SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 }
@@ -2245,7 +2176,20 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 BOOL WINAPI
 TranslateMessage(CONST MSG *lpMsg)
 {
-  return(TranslateMessageEx((LPMSG)lpMsg, 0));
+  BOOL Ret = FALSE;
+  
+// Ref: msdn ImmGetVirtualKey:
+// http://msdn.microsoft.com/en-us/library/aa912145.aspx
+/*
+  if ( (LOWORD(lpMsg->wParam) != VK_PROCESSKEY) ||
+       !(Ret = IMM_ImmTranslateMessage( lpMsg->hwnd,
+                                        lpMsg->message,
+                                        lpMsg->wParam,
+                                        lpMsg->lParam)) )*/
+  {
+     Ret = TranslateMessageEx((LPMSG)lpMsg, 0);
+  }
+  return Ret;
 }
 
 
