@@ -1308,6 +1308,55 @@ CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
 }
 
 BOOL FASTCALL
+UserPostThreadMessage( DWORD idThread,
+                       UINT Msg,
+                       WPARAM wParam,
+                       LPARAM lParam)
+{
+   MSG Message;
+   PETHREAD peThread;
+   PTHREADINFO pThread;
+   LARGE_INTEGER LargeTickCount;
+   NTSTATUS Status;
+
+   DPRINT1("UserPostThreadMessage wParam 0x%x  lParam 0x%x\n", wParam,lParam);
+
+   if (FindMsgMemory(Msg) != 0)
+   {
+      SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
+      return FALSE;
+   }
+
+   Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
+
+   if( Status == STATUS_SUCCESS )
+   {
+      pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
+      if( !pThread || !pThread->MessageQueue )
+      {
+         ObDereferenceObject( peThread );
+         return FALSE;
+      }
+
+      Message.hwnd = NULL;
+      Message.message = Msg;
+      Message.wParam = wParam;
+      Message.lParam = lParam;
+      IntGetCursorLocation(pThread->Desktop->WindowStation, &Message.pt);
+      KeQueryTickCount(&LargeTickCount);
+      pThread->timeLast = Message.time = MsqCalculateMessageTime(&LargeTickCount);
+      MsqPostMessage(pThread->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
+      ObDereferenceObject( peThread );
+      return TRUE;
+   }
+   else
+   {
+      SetLastNtError( Status );
+   }
+   return FALSE;
+}
+
+BOOL FASTCALL
 UserPostMessage(HWND Wnd,
                 UINT Msg,
                 WPARAM wParam,
@@ -1322,6 +1371,12 @@ UserPostMessage(HWND Wnd,
       SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
       return FALSE;
    }
+
+   if (!Wnd) 
+      return UserPostThreadMessage( PtrToInt(PsGetCurrentThreadId()),
+                                    Msg,
+                                    wParam,
+                                    lParam);
 
    pti = PsGetCurrentThreadWin32Thread();
    if (Wnd == HWND_BROADCAST)
@@ -1372,7 +1427,6 @@ UserPostMessage(HWND Wnd,
          MsqPostMessage(Window->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
       }
    }
-
    return TRUE;
 }
 
@@ -1388,7 +1442,7 @@ NtUserPostMessage(HWND hWnd,
    DPRINT("Enter NtUserPostMessage\n");
    UserEnterExclusive();
 
-   RETURN(UserPostMessage(hWnd, Msg, wParam, lParam));
+   RETURN( UserPostMessage(hWnd, Msg, wParam, lParam));
 
 CLEANUP:
    DPRINT("Leave NtUserPostMessage, ret=%i\n",_ret_);
@@ -1404,46 +1458,15 @@ NtUserPostThreadMessage(DWORD idThread,
                         WPARAM wParam,
                         LPARAM lParam)
 {
-   MSG Message;
-   PETHREAD peThread;
-   PTHREADINFO pThread;
-   NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserPostThreadMessage\n");
-
-   if (FindMsgMemory(Msg) != 0)
-   {
-      SetLastWin32Error(ERROR_MESSAGE_SYNC_ONLY );
-      return FALSE;
-   }
-
    UserEnterExclusive();
 
-   Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
-
-   if( Status == STATUS_SUCCESS )
-   {
-      pThread = (PTHREADINFO)peThread->Tcb.Win32Thread;
-      if( !pThread || !pThread->MessageQueue )
-      {
-         ObDereferenceObject( peThread );
-         RETURN( FALSE);
-      }
-
-      Message.hwnd = NULL;
-      Message.message = Msg;
-      Message.wParam = wParam;
-      Message.lParam = lParam;
-      MsqPostMessage(pThread->MessageQueue, &Message, FALSE, QS_POSTMESSAGE);
-      ObDereferenceObject( peThread );
-      RETURN( TRUE);
-   }
-   else
-   {
-      SetLastNtError( Status );
-      RETURN( FALSE);
-   }
+   RETURN( UserPostThreadMessage( idThread,
+                                  Msg,
+                                  wParam,
+                                  lParam));
 
 CLEANUP:
    DPRINT("Leave NtUserPostThreadMessage, ret=%i\n",_ret_);
