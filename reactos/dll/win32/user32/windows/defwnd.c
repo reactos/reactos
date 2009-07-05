@@ -1463,6 +1463,13 @@ User32DefWindowProc(HWND hWnd,
             break;
         }
 
+        case WM_CLIENTSHUTDOWN:
+        {
+            LRESULT lResult;
+            NtUserMessageCall( hWnd, Msg, wParam, lParam, (ULONG_PTR)&lResult, FNID_DEFWINDOWPROC, FALSE);
+            return lResult;   
+        }
+
         case WM_CANCELMODE:
         {
             iMenuSysKey = 0;

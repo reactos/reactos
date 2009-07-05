@@ -562,6 +562,7 @@ typedef struct _USERCONNECT
 //
 // Non SDK Window Message types.
 //
+#define WM_CLIENTSHUTDOWN 59
 #define WM_COPYGLOBALDATA 73
 #define WM_SYSTIMER 280
 #define WM_POPUPSYSTEMMENU 787
