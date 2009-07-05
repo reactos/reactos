@@ -90,9 +90,9 @@ SharedPtrToKernel(PVOID Ptr)
 }
 
 static __inline BOOL
-IsThreadHooked(PW32THREADINFO ti)
+IsThreadHooked(PCLIENTINFO pci)
 {
-    return ti->fsHooks != 0;
+    return pci->fsHooks != 0;
 }
 
 static __inline PDESKTOPINFO

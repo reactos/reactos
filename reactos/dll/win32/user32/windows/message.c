@@ -1801,7 +1801,7 @@ SendMessageW(HWND Wnd,
       PW32THREADINFO ti = GetW32ThreadInfo();
 
       Window = ValidateHwnd(Wnd);
-      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(ti))
+      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(GetWin32ClientInfo()))
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
@@ -1819,23 +1819,30 @@ SendMessageW(HWND Wnd,
   UMMsg.wParam = wParam;
   UMMsg.lParam = lParam;
   if (! MsgiUMToKMMessage(&UMMsg, &KMMsg, FALSE))
-    {
-      return FALSE;
-    }
+  {
+     return FALSE;
+  }
   Info.Ansi = FALSE;
-  Result = NtUserSendMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam, &Info);
+  Result = NtUserSendMessage( KMMsg.hwnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
+                              &Info);
   if (! Info.HandledByKernel)
-    {
-      MsgiUMToKMCleanup(&UMMsg, &KMMsg);
-      /* We need to send the message ourselves */
-      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, UMMsg.hwnd, UMMsg.message,
-                                  UMMsg.wParam, UMMsg.lParam);
-    }
+  {
+     MsgiUMToKMCleanup(&UMMsg, &KMMsg);
+     /* We need to send the message ourselves */
+     Result = IntCallWindowProcW( Info.Ansi,
+                                  Info.Proc,
+                                  UMMsg.hwnd,
+                                  UMMsg.message,
+                                  UMMsg.wParam,
+                                  UMMsg.lParam);
+  }
   else if (! MsgiUMToKMReply(&UMMsg, &KMMsg, &Result))
-    {
-      return FALSE;
-    }
+  {
+     return FALSE;
+  }
 
   return Result;
 }
@@ -1858,7 +1865,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       PW32THREADINFO ti = GetW32ThreadInfo();
 
       Window = ValidateHwnd(Wnd);
-      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(ti))
+      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(GetWin32ClientInfo()))
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
@@ -1886,8 +1893,11 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       return FALSE;
     }
   Info.Ansi = TRUE;
-  Result = NtUserSendMessage(KMMsg.hwnd, KMMsg.message,
-                             KMMsg.wParam, KMMsg.lParam, &Info);
+  Result = NtUserSendMessage( KMMsg.hwnd,
+                              KMMsg.message,
+                              KMMsg.wParam,
+                              KMMsg.lParam,
+                              &Info);
   if (! Info.HandledByKernel)
     {
       /* We need to send the message ourselves */
@@ -1904,8 +1914,12 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
           /* Unicode winproc. Although we started out with an Ansi message we
              already converted it to Unicode for the kernel call. Reuse that
              message to avoid another conversion */
-          Result = IntCallWindowProcW(Info.Ansi, Info.Proc, UcMsg.hwnd,
-                                      UcMsg.message, UcMsg.wParam, UcMsg.lParam);
+          Result = IntCallWindowProcW( Info.Ansi,
+                                       Info.Proc,
+                                       UcMsg.hwnd,
+                                       UcMsg.message,
+                                       UcMsg.wParam,
+                                       UcMsg.lParam);
           if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
             {
               return FALSE;
