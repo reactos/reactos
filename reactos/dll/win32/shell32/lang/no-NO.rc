@@ -457,7 +457,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
 	LTEXT "Er du sikker på at du vil logge av?", -1, 43, 11, 140, 22
-	DEFPUSHBUTTON "&Log Off", IDOK, 57, 40, 60, 14
+	DEFPUSHBUTTON "&Logg av", IDOK, 57, 40, 60, 14
 	PUSHBUTTON "Avbryt", IDCANCEL, 122, 40, 60, 14
 END
 

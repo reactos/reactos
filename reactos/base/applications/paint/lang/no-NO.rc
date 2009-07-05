@@ -46,7 +46,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Forstørre"
         BEGIN
-            POPUP "User defined"
+            POPUP "Egendefinert"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -57,8 +57,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Vis rutenett", IDM_VIEWSHOWGRID
+            MENUITEM "Vis miniatyr", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Full skjerm\tCtrl+F", IDM_VIEWFULLSCREEN
     END
