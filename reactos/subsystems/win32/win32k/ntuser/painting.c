@@ -1813,6 +1813,7 @@ BOOL UserDrawCaption(
 	  /* FIXME: Draw the Icon when pWnd == NULL but  hIcon is valid */
 	  if (pWnd != NULL)
 		UserDrawSysMenuButton(pWnd, hMemDc, &r, FALSE);
+
       r.left += IconWidth;
       r.top --;
    }
@@ -1848,8 +1849,8 @@ BOOL UserDrawCaption(
 	  /* FIXME: hFont isn't handled */
       if (str)
          UserDrawCaptionText(hMemDc, str, &r, uFlags);
-	  else if (pWnd != NULL)
-	     UserDrawCaptionText(hMemDc, &pWnd->Wnd->WindowName, &r, uFlags);
+      else if (pWnd != NULL)
+         UserDrawCaptionText(hMemDc, &pWnd->Wnd->WindowName, &r, uFlags);
    }
 
    if(!NtGdiBitBlt(hDc, lpRc->left, lpRc->top,
@@ -1902,9 +1903,10 @@ NtUserDrawCaptionTemp(
    UINT uFlags)
 {
    PWINDOW_OBJECT pWnd = NULL;
-   RECTL SafeRect;
    UNICODE_STRING SafeStr = {0};
-   BOOL Ret = FALSE;
+   NTSTATUS Status = STATUS_SUCCESS;
+   RECTL SafeRect;
+   BOOL Ret;
 
    UserEnterExclusive();
 
@@ -1930,16 +1932,25 @@ NtUserDrawCaptionTemp(
                            SafeStr.Length,
                             sizeof(WCHAR));
          }
-         Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, &SafeStr, uFlags);
       }
-      else
-         Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, NULL, uFlags);
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      SetLastNtError(_SEH2_GetExceptionCode());
+      Status = _SEH2_GetExceptionCode();
    }
    _SEH2_END;
+
+   if (Status != STATUS_SUCCESS)
+   {
+      SetLastNtError(Status);
+      UserLeave();
+      return FALSE;
+   }
+
+   if (str != NULL)
+      Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, &SafeStr, uFlags);
+   else
+      Ret = UserDrawCaption(pWnd, hDC, &SafeRect, hFont, hIcon, NULL, uFlags);
 
    UserLeave();
    return Ret;
