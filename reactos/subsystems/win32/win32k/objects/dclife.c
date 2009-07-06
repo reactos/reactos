@@ -358,6 +358,7 @@ NtGdiOpenDCW(
     DEVMODEW *InitData,
     PUNICODE_STRING pustrLogAddr,
     ULONG iType,
+    BOOL bDisplay,
     HANDLE hspool,
     VOID *pDriverInfo2,
     VOID *pUMdhpdev)

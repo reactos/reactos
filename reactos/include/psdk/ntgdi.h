@@ -2085,6 +2085,7 @@ NtGdiOpenDCW(
     IN DEVMODEW *pdm,  // See note for NtGdiResetDC
     IN PUNICODE_STRING pustrLogAddr,
     IN ULONG iType,
+    IN BOOL bDisplay,
     IN OPTIONAL HANDLE hspool,
     IN OPTIONAL VOID *pDriverInfo2, // this is  "typedef struct _DRIVER_INFO_2W DRIVER_INFO_2W;"
     OUT VOID *pUMdhpdev

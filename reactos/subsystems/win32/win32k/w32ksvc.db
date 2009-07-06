@@ -235,7 +235,7 @@ NtGdiMonoBitmap                                  1
 NtGdiMoveTo                                      4
 NtGdiOffsetClipRgn                               3
 NtGdiOffsetRgn                                   3
-NtGdiOpenDCW                                     7
+NtGdiOpenDCW                                     8
 NtGdiPatBlt                                      6
 NtGdiPolyPatBlt                                  5
 NtGdiPathToRegion                                1
