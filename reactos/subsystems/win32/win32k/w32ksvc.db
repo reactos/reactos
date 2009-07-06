@@ -583,7 +583,7 @@ NtUserUnregisterUserApiHook                      0
 NtUserUnregisterHotKey                           2
 NtUserUpdateInputContext                         3
 NtUserUpdateInstance                             3
-NtUserUpdateLayeredWindow                        9
+NtUserUpdateLayeredWindow                        10
 NtUserGetLayeredWindowAttributes                 4
 NtUserSetLayeredWindowAttributes                 4
 NtUserUpdatePerUserSystemParameters              2

@@ -1608,14 +1608,55 @@ ShowOwnedPopups(HWND hWnd,
 
 
 /*
- * @unimplemented
+ * @implemented
+ */
+BOOL WINAPI
+UpdateLayeredWindow( HWND hwnd,
+                     HDC hdcDst,
+                     POINT *pptDst,
+                     SIZE *psize,
+                     HDC hdcSrc,
+                     POINT *pptSrc,
+                     COLORREF crKey,
+                     BLENDFUNCTION *pbl,
+                     DWORD dwFlags)
+{
+  if ( dwFlags & ULW_EX_NORESIZE)
+     dwFlags = ~(ULW_EX_NORESIZE|ULW_OPAQUE|ULW_ALPHA|ULW_COLORKEY);
+  return NtUserUpdateLayeredWindow( hwnd,
+                                    hdcDst,
+                                    pptDst,
+                                    psize,
+                                    hdcSrc,
+                                    pptSrc,
+                                    crKey,
+                                    pbl,
+                                    dwFlags,
+                                    NULL);
+}
+
+/*
+ * @implemented
  */
 BOOL WINAPI
 UpdateLayeredWindowIndirect(HWND hwnd,
                             const UPDATELAYEREDWINDOWINFO *info)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+  if (info && info->cbSize == sizeof(info))
+  {
+     return NtUserUpdateLayeredWindow( hwnd,
+                                       info->hdcDst,
+                                       (POINT *)info->pptDst,
+                                       (SIZE *)info->psize,
+                                       info->hdcSrc,
+                                       (POINT *)info->pptSrc,
+                                       info->crKey,
+                                       (BLENDFUNCTION *)info->pblend,
+                                       info->dwFlags,
+                                       (RECT *)info->prcDirty);
+  }
+  SetLastError(ERROR_INVALID_PARAMETER);
+  return FALSE;
 }
 
 

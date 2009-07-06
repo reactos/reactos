@@ -1654,7 +1654,7 @@ PostMessageWorker(
   {
      return FALSE;
   }
-  Result = NtUserPostMessage( KMMsg.hwnd,
+  Result = NtUserPostMessage( Wnd,
                               KMMsg.message,
                               KMMsg.wParam,
                               KMMsg.lParam);

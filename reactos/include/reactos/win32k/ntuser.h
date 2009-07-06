@@ -2744,7 +2744,8 @@ NtUserUpdateLayeredWindow(
   POINT *pptSrc,
   COLORREF crKey,
   BLENDFUNCTION *pblend,
-  DWORD dwFlags);
+  DWORD dwFlags,
+  RECT *prcDirty);
 
 BOOL
 NTAPI
