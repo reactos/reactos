@@ -241,7 +241,7 @@ NtGdiMonoBitmap@4
 NtGdiMoveTo@16
 NtGdiOffsetClipRgn@12
 NtGdiOffsetRgn@12
-NtGdiOpenDCW@28
+NtGdiOpenDCW@32
 NtGdiPatBlt@24
 NtGdiPolyPatBlt@20
 NtGdiPathToRegion@4
