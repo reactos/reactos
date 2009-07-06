@@ -63,11 +63,6 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
       DPRINT1("Page fault at high IRQL was %d\n", KeGetCurrentIrql());
       return(STATUS_UNSUCCESSFUL);
    }
-   if (PsGetCurrentProcess() == NULL)
-   {
-      DPRINT("No current process\n");
-      return(STATUS_UNSUCCESSFUL);
-   }
 
    /*
     * Find the memory area for the faulting address
