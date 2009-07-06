@@ -280,7 +280,7 @@ NTSTATUS tdiGetMibForIfEntity
            entry->ent.if_descr);
     TRACE("} status %08x\n",status);
 
-    return status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile,
