@@ -190,6 +190,8 @@ IntIsWindow(HWND hWnd)
 PWINDOW_OBJECT FASTCALL
 IntGetParent(PWINDOW_OBJECT Wnd)
 {
+   if (!Wnd->Wnd) return NULL;
+
    if (Wnd->Wnd->Style & WS_POPUP)
    {
       return UserGetWindowObject(Wnd->hOwner);
