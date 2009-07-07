@@ -49,6 +49,12 @@ NtGdiAlphaBlend(
     BLENDOBJ BlendObj;
     BlendObj.BlendFunction = BlendFunc;
 
+    if (WidthDest < 0 || HeightDest < 0 || WidthSrc < 0 || HeightSrc < 0)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     DCDest = DC_LockDc(hDCDest);
     if (NULL == DCDest)
     {
