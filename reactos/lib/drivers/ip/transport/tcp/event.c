@@ -54,8 +54,6 @@ void TCPPacketSendComplete( PVOID Context,
                 PNDIS_PACKET NdisPacket,
                 NDIS_STATUS NdisStatus ) {
     TI_DbgPrint(DEBUG_TCP,("called %x\n", NdisPacket));
-    ASSERT_LOCKED(&TCPLock);
-
     FreeNdisPacket(NdisPacket);
     TI_DbgPrint(DEBUG_TCP,("done\n"));
 }
