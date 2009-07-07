@@ -212,7 +212,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
 
 void AdapterInit() {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
-    DWORD Error, Size, i;
+    DWORD Error, Size = sizeof(MIB_IFTABLE), i;
     PDHCP_ADAPTER Adapter = NULL;
     struct interface_info *ifi = NULL;
 
