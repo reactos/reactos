@@ -242,7 +242,7 @@ BOOLEAN IPRegisterInterface(
  */
 {
     KIRQL OldIrql;
-    UINT ChosenIndex = 1;
+    UINT ChosenIndex = 0;
     BOOLEAN IndexHasBeenChosen;
     IF_LIST_ITER(Interface);
 

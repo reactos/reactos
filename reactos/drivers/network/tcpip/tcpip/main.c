@@ -885,6 +885,51 @@ DriverEntry(
 	return Status;
   }
 
+  /* Use direct I/O */
+  IPDeviceObject->Flags    |= DO_DIRECT_IO;
+  RawIPDeviceObject->Flags |= DO_DIRECT_IO;
+  UDPDeviceObject->Flags   |= DO_DIRECT_IO;
+  TCPDeviceObject->Flags   |= DO_DIRECT_IO;
+
+  /* Initialize the driver object with this driver's entry points */
+  DriverObject->MajorFunction[IRP_MJ_CREATE]  = TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLOSE]   = TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = TiDispatchOpenClose;
+  DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = TiDispatchInternal;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = TiDispatch;
+
+  DriverObject->DriverUnload = TiUnload;
+
+  /* Initialize our periodic timer and its associated DPC object. When the
+     timer expires, the IPTimeout deferred procedure call (DPC) is queued */
+  ExInitializeWorkItem( &IpWorkItem, IPTimeout, NULL );
+  KeInitializeDpc(&IPTimeoutDpc, IPTimeoutDpcFn, NULL);
+  KeInitializeTimer(&IPTimer);
+
+  /* Start the periodic timer with an initial and periodic
+     relative expiration time of IP_TIMEOUT milliseconds */
+  DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
+  KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
+
+  /* Open loopback adapter */
+  Status = LoopRegisterAdapter(NULL, NULL);
+  if (!NT_SUCCESS(Status)) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
+    TCPShutdown();
+    UDPShutdown();
+    RawIPShutdown();
+    IPShutdown();
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
+    exFreePool(EntityList);
+    NdisFreePacketPool(GlobalPacketPool);
+    NdisFreeBufferPool(GlobalBufferPool);
+    return Status;
+  }
+
   /* Register protocol with NDIS */
   /* This used to be IP_DEVICE_NAME but the DDK says it has to match your entry in the SCM */
   Status = LANRegisterProtocol(&strNdisDeviceName);
@@ -912,52 +957,6 @@ DriverEntry(
     NdisFreeBufferPool(GlobalBufferPool);
     return Status;
   }
-
-  /* Open loopback adapter */
-  Status = LoopRegisterAdapter(NULL, NULL);
-  if (!NT_SUCCESS(Status)) {
-    TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
-    TCPShutdown();
-    UDPShutdown();
-    RawIPShutdown();
-    IPShutdown();
-    ChewShutdown();
-    IoDeleteDevice(IPDeviceObject);
-    IoDeleteDevice(RawIPDeviceObject);
-    IoDeleteDevice(UDPDeviceObject);
-    IoDeleteDevice(TCPDeviceObject);
-    exFreePool(EntityList);
-    NdisFreePacketPool(GlobalPacketPool);
-    NdisFreeBufferPool(GlobalBufferPool);
-    LANUnregisterProtocol();
-    return Status;
-  }
-
-  /* Use direct I/O */
-  IPDeviceObject->Flags    |= DO_DIRECT_IO;
-  RawIPDeviceObject->Flags |= DO_DIRECT_IO;
-  UDPDeviceObject->Flags   |= DO_DIRECT_IO;
-  TCPDeviceObject->Flags   |= DO_DIRECT_IO;
-
-  /* Initialize the driver object with this driver's entry points */
-  DriverObject->MajorFunction[IRP_MJ_CREATE]  = TiDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLOSE]   = TiDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_CLEANUP] = TiDispatchOpenClose;
-  DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = TiDispatchInternal;
-  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = TiDispatch;
-
-  DriverObject->DriverUnload = TiUnload;
-
-  /* Initialize our periodic timer and its associated DPC object. When the
-     timer expires, the IPTimeout deferred procedure call (DPC) is queued */
-  ExInitializeWorkItem( &IpWorkItem, IPTimeout, NULL );
-  KeInitializeDpc(&IPTimeoutDpc, IPTimeoutDpcFn, NULL);
-  KeInitializeTimer(&IPTimer);
-
-  /* Start the periodic timer with an initial and periodic
-     relative expiration time of IP_TIMEOUT milliseconds */
-  DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
-  KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
 
   return STATUS_SUCCESS;
 }
