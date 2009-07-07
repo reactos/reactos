@@ -895,6 +895,8 @@ co_WinPosSetWindowPos(
 
    ASSERT_REFS_CO(Window);
 
+   if (!Window->Wnd) return FALSE;
+
    /* FIXME: Get current active window from active queue. */
 
    /*
