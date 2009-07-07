@@ -4663,6 +4663,16 @@ NtUserUpdateLayeredWindow(
    return 0;
 }
 
+/*
+ *    @unimplemented
+ */
+HWND APIENTRY
+NtUserWindowFromPhysicalPoint(POINT Point)
+{
+   UNIMPLEMENTED
+
+   return NULL;
+}
 
 /*
  *    @implemented

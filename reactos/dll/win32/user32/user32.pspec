@@ -740,6 +740,7 @@
 @ stdcall WinHelpW(long wstr long long)
 @ stdcall WindowFromDC(long)
 @ stdcall WindowFromPoint(double)
+@ stdcall WindowFromPhysicalPoint(double) NtUserWindowFromPhysicalPoint
 @ stdcall keybd_event(long long long long)
 @ stdcall mouse_event(long long long long long)
 @ varargs wsprintfA(str str)

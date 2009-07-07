@@ -596,6 +596,7 @@ NtUserWaitForInputIdle                           3
 NtUserWaitForMsgAndEvent                         1
 NtUserWaitMessage                                0
 NtUserWin32PoolAllocationStats                   6
+NtUserWindowFromPhysicalPoint                    2
 NtUserWindowFromPoint                            2
 NtUserYieldTask                                  0
 NtUserRemoteConnect                              3

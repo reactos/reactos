@@ -2814,6 +2814,11 @@ NtUserWin32PoolAllocationStats(
 
 HWND
 NTAPI
+NtUserWindowFromPhysicalPoint(      
+  POINT Point);
+
+HWND
+NTAPI
 NtUserWindowFromPoint(
   LONG X,
   LONG Y);
