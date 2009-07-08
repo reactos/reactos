@@ -1030,7 +1030,7 @@ TaskSwitchWnd_AddTask(IN OUT PTASK_SWITCH_WND This,
 
 static BOOL
 TaskSwitchWnd_ActivateTaskItem(IN OUT PTASK_SWITCH_WND This,
-                               IN OUT PTASK_ITEM TaskItem)
+                               IN OUT PTASK_ITEM TaskItem  OPTIONAL)
 {
     if (TaskItem != NULL)
     {
@@ -1647,29 +1647,32 @@ static VOID
 TaskSwitchWnd_HandleTaskItemClick(IN OUT PTASK_SWITCH_WND This,
                                   IN OUT PTASK_ITEM TaskItem)
 {
-    BOOL bMinimize;
-    
+    BOOL bIsMinimized;
+    BOOL bIsActive;
+
     if (IsWindow(TaskItem->hWnd))
     {
-        bMinimize = !IsIconic(TaskItem->hWnd) &&
-                    TaskItem == This->ActiveTaskItem;
-        
-        if (!bMinimize && IsIconic(TaskItem->hWnd))
-        {
-             PostMessage(TaskItem->hWnd,
-                         WM_SYSCOMMAND,
-                         SC_RESTORE,
-                         0);
-        }
+        bIsMinimized = IsIconic(TaskItem->hWnd);
+        bIsActive = (TaskItem == This->ActiveTaskItem);
 
-        SetForegroundWindow(TaskItem->hWnd);
-        
-        if (bMinimize)
+        if (!bIsMinimized && bIsActive)
         {
             PostMessage(TaskItem->hWnd,
                         WM_SYSCOMMAND,
                         SC_MINIMIZE,
                         0);
+        }
+        else
+        {
+            if (bIsMinimized)
+            {
+                 PostMessage(TaskItem->hWnd,
+                             WM_SYSCOMMAND,
+                             SC_RESTORE,
+                             0);
+            }
+
+            SetForegroundWindow(TaskItem->hWnd);
         }
     }
 }
