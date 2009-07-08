@@ -78,7 +78,7 @@ BltMask(SURFOBJ* psoDest,
     fnDest_PutPixel = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel;
     if (psurfPattern)
     {
-        XlateObj = pebo ? pebo->XlateObject : NULL;
+        XlateObj = pebo->XlateObject;
         PatternY = (prclDest->top - pptlBrush->y) % PatternHeight;
         if (PatternY < 0)
         {
@@ -101,7 +101,7 @@ BltMask(SURFOBJ* psoDest,
                 if (*pjMskCurrent & fjMaskBit)
                 {
                     fnDest_PutPixel(psoDest, x, y,
-                        XLATEOBJ_iXlate(XlateObj, 
+                        XLATEOBJ_iXlate(XlateObj,
                             fnPattern_GetPixel(psoPattern, PatternX, PatternY)));
                 }
                 fjMaskBit = _rotr8(fjMaskBit, 1);
