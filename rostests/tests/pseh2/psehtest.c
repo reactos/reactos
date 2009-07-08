@@ -2348,7 +2348,7 @@ DEFINE_TEST(test_bug_4663)
 static
 LONG WINAPI unhandled_exception(PEXCEPTION_POINTERS ExceptionInfo)
 {
-	ok(0, "unhandled exception %08lX thrown from %p\n", ExceptionInfo->ExceptionRecord->ExceptionCode, ExceptionInfo->ExceptionRecord->ExceptionAddress);
+	trace("unhandled exception %08lX thrown from %p\n", ExceptionInfo->ExceptionRecord->ExceptionCode, ExceptionInfo->ExceptionRecord->ExceptionAddress);
 	return EXCEPTION_CONTINUE_SEARCH;
 }
 
@@ -2374,8 +2374,8 @@ int sanity_check(int ret, struct volatile_context * before, struct volatile_cont
 {
 	if(ret && memcmp(before, after, sizeof(before)))
 	{
-		ok(0, "volatile context corrupted\n");
-		ret = 0;
+		trace("volatile context corrupted\n");
+		return 0;
 	}
 
 	return ret;
@@ -2438,11 +2438,11 @@ int call_test(int (* func)(void))
 #if defined(_X86_)
 	if((_SEH2Registration_t *)__readfsdword(0) != &passthrough_frame || passthrough_frame.SER_Prev != prev_frame)
 	{
-		ok(0, "exception registration list corrupted\n");
+		trace("exception registration list corrupted\n");
 		ret = 0;
 	}
-	else
-		__writefsdword(0, (unsigned long)prev_frame);
+
+	__writefsdword(0, (unsigned long)prev_frame);
 #endif
 
 	SetUnhandledExceptionFilter(prev_unhandled_exception);
