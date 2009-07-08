@@ -107,6 +107,9 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG Color0,
                          ULONG Color1);
 
+XLATEOBJ*
+IntCreateBrushXlate(PDC pdc, BRUSH *pbrush);
+
 HPALETTE FASTCALL
 IntEngGetXlatePalette(XLATEOBJ *XlateObj,
                       ULONG Palette);

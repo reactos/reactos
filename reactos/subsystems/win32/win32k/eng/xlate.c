@@ -671,4 +671,53 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
    return 0;
 }
 
+// HACK!
+XLATEOBJ*
+IntCreateBrushXlate(PDC pdc, BRUSH *pbrush)
+{
+    SURFACE * psurf;
+    XLATEOBJ *pxlo = NULL;
+    HPALETTE hPalette = NULL;
+
+    psurf = pdc->dclevel.pSurface;
+    if (psurf)
+    {
+        hPalette = psurf->hDIBPalette;
+    }
+    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
+
+    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
+    {
+        pxlo = NULL;
+    }
+    else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
+    {
+        pxlo = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
+    }
+    else
+    {
+        SURFACE *psurfPattern = SURFACE_LockSurface(pbrush->hbmPattern);
+        if (psurfPattern == NULL)
+            return FALSE;
+
+        /* Special case: 1bpp pattern */
+        if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP)
+        {
+            if (pdc->rosdc.bitsPerPixel != 1)
+                pxlo = IntEngCreateSrcMonoXlate(hPalette,
+                                                pdc->pdcattr->crBackgroundClr,
+                                                pbrush->BrushAttr.lbColor);
+        }
+        else if (pbrush->flAttrs & GDIBRUSH_IS_DIB)
+        {
+            pxlo = IntEngCreateXlate(0, 0, hPalette, psurfPattern->hDIBPalette);
+        }
+
+        SURFACE_UnlockSurface(psurfPattern);
+    }
+
+    return pxlo;
+}
+
+
 /* EOF */

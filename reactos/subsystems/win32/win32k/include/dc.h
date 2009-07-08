@@ -21,8 +21,6 @@ typedef struct _ROS_DC_INFO
   BYTE   bitsPerPixel;
 
   CLIPOBJ     *CombinedClip;
-  XLATEOBJ    *XlateBrush;
-  XLATEOBJ    *XlatePen;
 
   UNICODE_STRING    DriverName;
 

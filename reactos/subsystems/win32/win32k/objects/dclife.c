@@ -500,10 +500,6 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
         NtGdiSelectBrush (DCHandle, STOCK_WHITE_BRUSH);
         NtGdiSelectFont (DCHandle, STOCK_SYSTEM_FONT);
         DC_LockDC (DCHandle); NtGdiSelectXxx does not recognize stock objects yet  */
-        if (DCToDelete->rosdc.XlateBrush != NULL)
-            EngDeleteXlate(DCToDelete->rosdc.XlateBrush);
-        if (DCToDelete->rosdc.XlatePen != NULL)
-            EngDeleteXlate(DCToDelete->rosdc.XlatePen);
     }
     if (DCToDelete->rosdc.hClipRgn)
     {
@@ -719,7 +715,7 @@ NewNtGdiDeleteObjectApp(HANDLE DCHandle)
           return GreDeleteObject((HGDIOBJ) DCHandle);
 
         default:
-          return FALSE; 
+          return FALSE;
      }
   }
   return (DCHandle != NULL);

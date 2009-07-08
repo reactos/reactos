@@ -941,6 +941,7 @@ IntPatBlt(
     EBRUSHOBJ eboFill;
     POINTL BrushOrigin;
     BOOL ret;
+    XLATEOBJ *pxlo;
 
     ASSERT(pbrush);
 
@@ -988,7 +989,8 @@ IntPatBlt(
     BrushOrigin.x = pbrush->ptOrigin.x + pdc->ptlDCOrig.x;
     BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y;
 
-    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc->rosdc.XlateBrush);
+    pxlo = IntCreateBrushXlate(pdc, pbrush);
+    EBRUSHOBJ_vInit(&eboFill, pbrush, pxlo);
 
     ret = IntEngBitBlt(
         &psurf->SurfObj,
@@ -1002,6 +1004,8 @@ IntPatBlt(
         &eboFill.BrushObject, // use pDC->eboFill
         &BrushOrigin,
         ROP3_TO_ROP4(dwRop));
+
+    EngDeleteXlate(pxlo);
 
     return ret;
 }
