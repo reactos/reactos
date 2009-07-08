@@ -2304,6 +2304,45 @@ DEFINE_TEST(test_bug_4004)
 	return return_arg(i1) + return_arg(i2) + return_arg(i3) == return_positive() * 3;
 }
 //}}}
+
+/* #4663: *///{{{
+DEFINE_TEST(test_bug_4663)
+{
+	int i1, i2;
+
+	i1 = return_zero();
+	i2 = return_zero();
+
+	_SEH2_TRY
+	{
+		_SEH2_TRY
+		{
+			RaiseException(0xE00DEAD0, 0, 0, NULL);
+		}
+		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+		{
+			if (i1 == return_zero())
+			{
+				i1 = return_one();
+			}
+		}
+		_SEH2_END;
+
+		if (i1 == return_one())
+		{
+			i1 = return_minusone();
+			RaiseException(0xE00DEAD0, 0, 0, NULL);
+		}
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		i2 = return_one();
+	}
+	_SEH2_END;
+
+	return ((i1 == return_minusone()) && (i2 == return_one()));
+}
+//}}}
 //}}}
 
 static
@@ -2334,9 +2373,18 @@ DECLSPEC_NOINLINE
 int sanity_check(int ret, struct volatile_context * before, struct volatile_context * after)
 {
 	if(ret && memcmp(before, after, sizeof(before)))
+	{
 		ok(0, "volatile context corrupted\n");
+		ret = 0;
+	}
 
 	return ret;
+}
+
+static
+int passthrough_handler(struct _EXCEPTION_RECORD * e, void * f, struct _CONTEXT * c, void * d)
+{
+	return ExceptionContinueSearch;
 }
 
 static
@@ -2346,8 +2394,17 @@ int call_test(int (* func)(void))
 	static int ret;
 	static struct volatile_context before, after;
 	static LPTOP_LEVEL_EXCEPTION_FILTER prev_unhandled_exception;
+	static _SEH2Registration_t * prev_frame;
+	_SEH2Registration_t passthrough_frame;
 
 	prev_unhandled_exception = SetUnhandledExceptionFilter(&unhandled_exception);
+
+#if defined(_X86_)
+	prev_frame = (_SEH2Registration_t *)__readfsdword(0);
+	passthrough_frame.SER_Prev = prev_frame;
+	passthrough_frame.SER_Handler = passthrough_handler;
+	__writefsdword(0, (unsigned long)&passthrough_frame);
+#endif
 
 #if defined(__GNUC__) && defined(__i386__)
 	__asm__ __volatile__
@@ -2376,6 +2433,16 @@ int call_test(int (* func)(void))
 	);
 #else
 	ret = func();
+#endif
+
+#if defined(_X86_)
+	if((_SEH2Registration_t *)__readfsdword(0) != &passthrough_frame || passthrough_frame.SER_Prev != prev_frame)
+	{
+		ok(0, "exception registration list corrupted\n");
+		ret = 0;
+	}
+	else
+		__writefsdword(0, (unsigned long)prev_frame);
 #endif
 
 	SetUnhandledExceptionFilter(prev_unhandled_exception);
@@ -2501,12 +2568,16 @@ void testsuite_syntax(void)
 		USE_TEST(test_abnorm_8),
 
 		USE_TEST(test_bug_4004),
+		USE_TEST(test_bug_4663),
 	};
 
 	size_t i;
 
 	for(i = 0; i < sizeof(testsuite) / sizeof(testsuite[0]); ++ i)
+	{
+		//printf("%s\n", testsuite[i].name);
 		ok(call_test(testsuite[i].func), "%s failed\n", testsuite[i].name);
+	}
 }
 
 const struct test winetest_testlist[] = {
