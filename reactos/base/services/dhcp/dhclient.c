@@ -462,8 +462,6 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         int i, addrs =
             new_lease->options[DHO_DOMAIN_NAME_SERVERS].len / sizeof(ULONG);
 
-               /* XXX I'm setting addrs to 1 until we are ready up the chain */
-               addrs = 1;
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
 
         if( nsbuf) {
