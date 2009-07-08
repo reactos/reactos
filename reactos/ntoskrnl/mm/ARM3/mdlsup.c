@@ -679,7 +679,6 @@ MmProbeAndLockPages(IN PMDL Mdl,
         // Oops :(
         //
         ProbeStatus = _SEH2_GetExceptionCode();
-        _SEH2_YIELD(break);
     }
     _SEH2_END;
     
