@@ -739,42 +739,22 @@ ExecuteCommand(PARSED_COMMAND *Cmd)
 	return Ret;
 }
 
-BOOL
-GrowIfNecessary_dbg ( UINT needed, LPTSTR* ret, UINT* retlen, const char *file, int line )
-{
-	if ( *ret && needed < *retlen )
-		return TRUE;
-	*retlen = needed;
-	if ( *ret )
-		cmd_free ( *ret );
-#ifdef _DEBUG_MEM
-	*ret = (LPTSTR)cmd_alloc_dbg ( *retlen * sizeof(TCHAR), file, line );
-#else
-	*ret = (LPTSTR)cmd_alloc ( *retlen * sizeof(TCHAR) );
-#endif
-	if ( !*ret )
-		SetLastError ( ERROR_OUTOFMEMORY );
-	return *ret != NULL;
-}
-#define GrowIfNecessary(x, y, z) GrowIfNecessary_dbg(x, y, z, __FILE__, __LINE__)
-
 LPTSTR
 GetEnvVar(LPCTSTR varName)
 {
 	static LPTSTR ret = NULL;
-	static UINT retlen = 0;
 	UINT size;
 
-	size = GetEnvironmentVariable ( varName, ret, retlen );
-	if ( size > retlen )
+	cmd_free(ret);
+	ret = NULL;
+	size = GetEnvironmentVariable(varName, NULL, 0);
+	if (size > 0)
 	{
-		if ( !GrowIfNecessary ( size, &ret, &retlen ) )
-			return NULL;
-		size = GetEnvironmentVariable ( varName, ret, retlen );
+		ret = cmd_alloc(size * sizeof(TCHAR));
+		if (ret != NULL)
+			GetEnvironmentVariable(varName, ret, size + 1);
 	}
-	if ( size )
-		return ret;
-	return NULL;
+	return ret;
 }
 
 LPCTSTR
@@ -1636,9 +1616,6 @@ Initialize()
 		NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)GetProcAddress(NtDllModule, "NtReadVirtualMemory");
 	}
 
-	cmdLine = GetCommandLine();
-	TRACE ("[command args: %s]\n", debugstr_aw(cmdLine));
-
 	InitLocale ();
 
 	/* get default input and output console handles */
@@ -1652,8 +1629,31 @@ Initialize()
 	if (GetEnvironmentVariable(_T("PROMPT"),lpBuffer, sizeof(lpBuffer) / sizeof(lpBuffer[0])) == 0)
 	    SetEnvironmentVariable (_T("PROMPT"), _T("$P$G"));
 
+#ifdef FEATURE_DIR_STACK
+	/* initialize directory stack */
+	InitDirectoryStack ();
+#endif
+
+#ifdef FEATURE_HISTORY
+	/*initialize history*/
+	InitHistory();
+#endif
+
+	/* Set COMSPEC environment variable */
+	if (0 != GetModuleFileName (NULL, ModuleName, _MAX_PATH + 1))
+	{
+		ModuleName[_MAX_PATH] = _T('\0');
+		SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
+	}
+
+	/* add ctrl break handler */
+	AddBreakHandler ();
+
 
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
+
+	cmdLine = GetCommandLine();
+	TRACE ("[command args: %s]\n", debugstr_aw(cmdLine));
 
 	for (ptr = cmdLine; *ptr; ptr++)
 	{
@@ -1663,7 +1663,9 @@ Initialize()
 			if (option == _T('?'))
 			{
 				ConOutResPaging(TRUE,STRING_CMD_HELP8);
-				cmd_exit(0);
+				nErrorLevel = 1;
+				bExit = TRUE;
+				return;
 			}
 			else if (option == _T('P'))
 			{
@@ -1731,27 +1733,6 @@ Initialize()
 		ConOutPuts(_T("(C) Copyright 1998-") _T(COPYRIGHT_YEAR) _T(" ReactOS Team."));
 	}
 
-#ifdef FEATURE_DIR_STACK
-	/* initialize directory stack */
-	InitDirectoryStack ();
-#endif
-
-
-#ifdef FEATURE_HISTORY
-	/*initialize history*/
-	InitHistory();
-#endif
-
-	/* Set COMSPEC environment variable */
-	if (0 != GetModuleFileName (NULL, ModuleName, _MAX_PATH + 1))
-	{
-		ModuleName[_MAX_PATH] = _T('\0');
-		SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
-	}
-
-	/* add ctrl break handler */
-	AddBreakHandler ();
-
 	if (AutoRun)
 	{
 		ExecuteAutoRunFile(HKEY_LOCAL_MACHINE);
@@ -1796,6 +1777,8 @@ static VOID Cleanup()
 	CleanHistory();
 #endif
 
+	/* free GetEnvVar's buffer */
+	GetEnvVar(NULL);
 
 	/* remove ctrl break handler */
 	RemoveBreakHandler ();
