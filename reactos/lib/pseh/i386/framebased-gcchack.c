@@ -192,6 +192,7 @@ void _SEH2Handle(_SEH2Frame_t * frame, volatile _SEH2TryLevel_t * trylevel)
 
 	_SEH2GlobalUnwind(frame);
 	_SEH2LocalUnwind(frame, &fulltrylevel->SHT_Common);
+	frame->SF_TopTryLevel = fulltrylevel->SHT_Common.ST_Next;
 
 	__SEH2Handle
 	(
