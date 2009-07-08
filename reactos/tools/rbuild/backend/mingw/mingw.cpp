@@ -993,7 +993,7 @@ MingwBackend::DetectBinutils ()
 		if ( ROS_PREFIXValue.length () > 0 )
 		{
 			binutilsPrefix = ROS_PREFIXValue;
-			binutilsCommand = binutilsPrefix + "-ld";
+			binutilsCommand = binutilsPrefix + "ld";
 			manualBinutilsSetting = true;
 			detectedBinutils = true;
 		}
