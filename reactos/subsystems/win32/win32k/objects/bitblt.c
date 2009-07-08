@@ -928,78 +928,80 @@ NtGdiStretchBlt(
 
 BOOL FASTCALL
 IntPatBlt(
-    PDC dc,
+    PDC pdc,
     INT XLeft,
     INT YLeft,
     INT Width,
     INT Height,
-    DWORD ROP,
-    PBRUSH BrushObj)
+    DWORD dwRop,
+    PBRUSH pbrush)
 {
     RECTL DestRect;
     SURFACE *psurf;
     EBRUSHOBJ eboFill;
     POINTL BrushOrigin;
-    BOOL ret = TRUE;
+    BOOL ret;
 
-    ASSERT(BrushObj);
+    ASSERT(pbrush);
 
-    psurf = dc->dclevel.pSurface;
+    psurf = pdc->dclevel.pSurface;
     if (psurf == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
 
-    if (!(BrushObj->flAttrs & GDIBRUSH_IS_NULL))
+    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
     {
-        if (Width > 0)
-        {
-            DestRect.left = XLeft;
-            DestRect.right = XLeft + Width;
-        }
-        else
-        {
-            DestRect.left = XLeft + Width + 1;
-            DestRect.right = XLeft + 1;
-        }
-
-        if (Height > 0)
-        {
-            DestRect.top = YLeft;
-            DestRect.bottom = YLeft + Height;
-        }
-        else
-        {
-            DestRect.top = YLeft + Height + 1;
-            DestRect.bottom = YLeft + 1;
-        }
-
-        IntLPtoDP(dc, (LPPOINT)&DestRect, 2);
-
-        DestRect.left   += dc->ptlDCOrig.x;
-        DestRect.top    += dc->ptlDCOrig.y;
-        DestRect.right  += dc->ptlDCOrig.x;
-        DestRect.bottom += dc->ptlDCOrig.y;
-
-        BrushOrigin.x = BrushObj->ptOrigin.x + dc->ptlDCOrig.x;
-        BrushOrigin.y = BrushObj->ptOrigin.y + dc->ptlDCOrig.y;
-
-        EBRUSHOBJ_vInit(&eboFill, BrushObj, dc->rosdc.XlateBrush);
-
-        ret = IntEngBitBlt(
-            &psurf->SurfObj,
-            NULL,
-            NULL,
-            dc->rosdc.CombinedClip,
-            NULL,
-            &DestRect,
-            NULL,
-            NULL,
-            &eboFill.BrushObject, // use pDC->eboFill
-            &BrushOrigin,
-            ROP3_TO_ROP4(ROP));
+        return TRUE;
     }
+
+    if (Width > 0)
+    {
+        DestRect.left = XLeft;
+        DestRect.right = XLeft + Width;
+    }
+    else
+    {
+        DestRect.left = XLeft + Width + 1;
+        DestRect.right = XLeft + 1;
+    }
+
+    if (Height > 0)
+    {
+        DestRect.top = YLeft;
+        DestRect.bottom = YLeft + Height;
+    }
+    else
+    {
+        DestRect.top = YLeft + Height + 1;
+        DestRect.bottom = YLeft + 1;
+    }
+
+    IntLPtoDP(pdc, (LPPOINT)&DestRect, 2);
+
+    DestRect.left   += pdc->ptlDCOrig.x;
+    DestRect.top    += pdc->ptlDCOrig.y;
+    DestRect.right  += pdc->ptlDCOrig.x;
+    DestRect.bottom += pdc->ptlDCOrig.y;
+
+    BrushOrigin.x = pbrush->ptOrigin.x + pdc->ptlDCOrig.x;
+    BrushOrigin.y = pbrush->ptOrigin.y + pdc->ptlDCOrig.y;
+
+    EBRUSHOBJ_vInit(&eboFill, pbrush, pdc->rosdc.XlateBrush);
+
+    ret = IntEngBitBlt(
+        &psurf->SurfObj,
+        NULL,
+        NULL,
+        pdc->rosdc.CombinedClip,
+        NULL,
+        &DestRect,
+        NULL,
+        NULL,
+        &eboFill.BrushObject, // use pDC->eboFill
+        &BrushOrigin,
+        ROP3_TO_ROP4(dwRop));
 
     return ret;
 }
@@ -1009,52 +1011,46 @@ IntGdiPolyPatBlt(
     HDC hDC,
     DWORD dwRop,
     PPATRECT pRects,
-    int cRects,
+    INT cRects,
     ULONG Reserved)
 {
-    int i;
-    PPATRECT r;
+    INT i;
     PBRUSH pbrush;
-    PDC_ATTR pdcattr;
-    DC *dc;
+    PDC pdc;
 
-    dc = DC_LockDc(hDC);
-    if (dc == NULL)
+    pdc = DC_LockDc(hDC);
+    if (!pdc)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->dctype == DC_TYPE_INFO)
+
+    if (pdc->dctype == DC_TYPE_INFO)
     {
-        DC_UnlockDc(dc);
+        DC_UnlockDc(pdc);
         /* Yes, Windows really returns TRUE in this case */
         return TRUE;
     }
 
-    pdcattr = dc->pdcattr;
-
-    if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(dc);
-
-    for (r = pRects, i = 0; i < cRects; i++)
+    for (i = 0; i < cRects; i++)
     {
-        pbrush = BRUSH_LockBrush(r->hBrush);
+        pbrush = BRUSH_LockBrush(pRects->hBrush);
         if(pbrush != NULL)
         {
             IntPatBlt(
-                dc,
-                r->r.left,
-                r->r.top,
-                r->r.right,
-                r->r.bottom,
+                pdc,
+                pRects->r.left,
+                pRects->r.top,
+                pRects->r.right,
+                pRects->r.bottom,
                 dwRop,
                 pbrush);
             BRUSH_UnlockBrush(pbrush);
         }
-        r++;
+        pRects++;
     }
 
-    DC_UnlockDc(dc);
+    DC_UnlockDc(pdc);
 
     return TRUE;
 }
