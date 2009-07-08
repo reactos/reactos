@@ -749,7 +749,7 @@ MingwBackend::DetectCompiler ()
 		if ( ROS_PREFIXValue.length () > 0 )
 		{
 			compilerPrefix = ROS_PREFIXValue;
-			compilerCommand = compilerPrefix + "-gcc";
+			compilerCommand = compilerPrefix + "gcc";
 			detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 		}
 #if defined(WIN32)
