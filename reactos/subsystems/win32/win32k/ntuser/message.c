@@ -2051,7 +2051,7 @@ NtUserMessageCall(
       break;
       case FNID_BROADCASTSYSTEMMESSAGE:
       {
-         PBROADCASTPARM parm;
+         BROADCASTPARM parm;
          DWORD_PTR RetVal = 0;
 
          if (ResultInfo)
@@ -2061,7 +2061,7 @@ NtUserMessageCall(
                ProbeForWrite((PVOID)ResultInfo,
                          sizeof(BROADCASTPARM),
                                              1);
-               parm = (PBROADCASTPARM)ResultInfo;
+               RtlCopyMemory(&parm, (PVOID)ResultInfo, sizeof(BROADCASTPARM));
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
@@ -2073,15 +2073,15 @@ NtUserMessageCall(
          else
            break;
 
-         if ( parm->recipients & BSM_ALLDESKTOPS ||
-              parm->recipients == BSM_ALLCOMPONENTS )
+         if ( parm.recipients & BSM_ALLDESKTOPS ||
+              parm.recipients == BSM_ALLCOMPONENTS )
          {
          }
-         else if (parm->recipients & BSM_APPLICATIONS)
+         else if (parm.recipients & BSM_APPLICATIONS)
          {
-            if (parm->flags & BSF_QUERY)
+            if (parm.flags & BSF_QUERY)
             {
-               if (parm->flags & BSF_FORCEIFHUNG || parm->flags & BSF_NOHANG)
+               if (parm.flags & BSF_FORCEIFHUNG || parm.flags & BSF_NOHANG)
                {
                   co_IntSendMessageTimeout( HWND_BROADCAST,
                                             Msg,
@@ -2091,7 +2091,7 @@ NtUserMessageCall(
                                             2000,
                                             &RetVal);
                }
-               else if (parm->flags & BSF_NOTIMEOUTIFNOTHUNG)
+               else if (parm.flags & BSF_NOTIMEOUTIFNOTHUNG)
                {
                   co_IntSendMessageTimeout( HWND_BROADCAST,
                                             Msg,
@@ -2112,11 +2112,11 @@ NtUserMessageCall(
                                             &RetVal);
                }
             }
-            else if (parm->flags & BSF_POSTMESSAGE)
+            else if (parm.flags & BSF_POSTMESSAGE)
             {
                Ret = UserPostMessage(HWND_BROADCAST, Msg, wParam, lParam);
             }
-            else if ( parm->flags & BSF_SENDNOTIFYMESSAGE)
+            else if ( parm.flags & BSF_SENDNOTIFYMESSAGE)
             {
                Ret = UserSendNotifyMessage(HWND_BROADCAST, Msg, wParam, lParam);
             }
