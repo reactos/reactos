@@ -2310,37 +2310,37 @@ DEFINE_TEST(test_bug_4663)
 {
 	int i1, i2;
 
-	i1 = return_zero();
-	i2 = return_zero();
+	i1 = return_positive();
+	i2 = return_positive();
 
 	_SEH2_TRY
 	{
 		_SEH2_TRY
 		{
-			RaiseException(0xE00DEAD0, 0, 0, NULL);
+			RaiseException(0xE00DEAD0, 0, 0, 0);
 		}
 		_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 		{
-			if (i1 == return_zero())
+			if (i1 == return_positive())
 			{
-				i1 = return_one();
+				i1 = return_positive() + 1;
 			}
 		}
 		_SEH2_END;
 
-		if (i1 == return_one())
+		if (i1 == return_positive() + 1)
 		{
-			i1 = return_minusone();
-			RaiseException(0xE00DEAD0, 0, 0, NULL);
+			i1 = return_negative();
+			RaiseException(0xE00DEAD0, 0, 0, 0);
 		}
 	}
 	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 	{
-		i2 = return_one();
+		i2 = return_negative();
 	}
 	_SEH2_END;
 
-	return ((i1 == return_minusone()) && (i2 == return_one()));
+	return ((i1 == return_negative()) && (i2 == return_negative()));
 }
 //}}}
 //}}}
@@ -2574,10 +2574,7 @@ void testsuite_syntax(void)
 	size_t i;
 
 	for(i = 0; i < sizeof(testsuite) / sizeof(testsuite[0]); ++ i)
-	{
-		//printf("%s\n", testsuite[i].name);
 		ok(call_test(testsuite[i].func), "%s failed\n", testsuite[i].name);
-	}
 }
 
 const struct test winetest_testlist[] = {
