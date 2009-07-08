@@ -103,7 +103,7 @@ DWORD getInterfaceGatewayByIndex(DWORD index)
 
     for (ndx = 0; ndx < numRoutes; ndx++)
     {
-        if ((table->routes[ndx].ifIndex == (index - 1)) && (table->routes[ndx].dest == 0))
+        if ((table->routes[ndx].ifIndex == (index)) && (table->routes[ndx].dest == 0))
             retVal = table->routes[ndx].gateway;
     }
     HeapFree(GetProcessHeap(), 0, table);
