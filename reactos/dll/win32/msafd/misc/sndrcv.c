@@ -166,7 +166,7 @@ WSPRecv(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            RecvInfo.AfdFlags = AFD_SKIP_FIO;
+            RecvInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
@@ -318,7 +318,7 @@ WSPRecvFrom(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            RecvInfo.AfdFlags = AFD_SKIP_FIO;
+            RecvInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
@@ -445,7 +445,7 @@ WSPSend(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            SendInfo.AfdFlags = AFD_SKIP_FIO;
+            SendInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
@@ -577,7 +577,7 @@ WSPSendTo(SOCKET Handle,
             /* Using Overlapped Structure and a Completition Routine, so use an APC */
             APCFunction = NULL; // should be a private io completition function inside us
             APCContext = lpCompletionRoutine;
-            SendInfo.AfdFlags = AFD_SKIP_FIO;
+            SendInfo.AfdFlags |= AFD_SKIP_FIO;
         }
 
         IOSB = (PIO_STATUS_BLOCK)&lpOverlapped->Internal;
