@@ -733,6 +733,8 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 {
    PWINDOW_OBJECT Child;
 
+   ASSERT(Window != Window->FirstChild);
+
    Window->Wnd->WindowRect.left += MoveX;
    Window->Wnd->WindowRect.right += MoveX;
    Window->Wnd->WindowRect.top += MoveY;
