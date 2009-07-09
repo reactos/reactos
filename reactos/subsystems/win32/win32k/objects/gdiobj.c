@@ -8,6 +8,8 @@
 
 /** INCLUDES ******************************************************************/
 
+//#define GDI_DEBUG
+
 #include <w32k.h>
 #define NDEBUG
 #include <debug.h>
@@ -25,6 +27,8 @@
 #define DelayExecution() \
   DPRINT("%s:%i: Delay\n", __FILE__, __LINE__); \
   KeDelayExecutionThread(KernelMode, FALSE, &ShortDelay)
+
+#include "gdidbg.c"
 
 /* static */ /* FIXME: -fno-unit-at-a-time breaks this */
 BOOL INTERNAL_CALL GDI_CleanupDummy(PVOID ObjectBody);
@@ -77,10 +81,6 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 };
 
 static LARGE_INTEGER ShortDelay;
-
-/** DEBUGGING *****************************************************************/
-//#define GDI_DEBUG
-#include "gdidbg.c"
 
 /** INTERNAL FUNCTIONS ********************************************************/
 
@@ -576,8 +576,8 @@ LockHandle:
             {
                 Object->BaseFlags |= BASEFLAG_READY_TO_DIE;
                 DPRINT("Object %p, ulShareCount = %d\n", Object->hHmgr, Object->ulShareCount);
-                GDIDBG_TRACECALLER();
-                GDIDBG_TRACESHARELOCKER(GDI_HANDLE_GET_INDEX(hObj));
+                //GDIDBG_TRACECALLER();
+                //GDIDBG_TRACESHARELOCKER(GDI_HANDLE_GET_INDEX(hObj));
                 (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
                 /* Don't wait on shared locks */
                 return FALSE;
