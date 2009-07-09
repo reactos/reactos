@@ -41,7 +41,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Мас&штаб"
         BEGIN
-            POPUP "User defined"
+            POPUP "Выбрать"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -52,8 +52,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Показать сетку", IDM_VIEWSHOWGRID
+            MENUITEM "Показать эскиз", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Полный экран\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -173,7 +173,7 @@ BEGIN
     IDS_INFOTEXT, "Paint для ReactOS распространяется под лицензией GNU Lesser General Public License (LGPL) версии 3 (see www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Сохранить изменения в %s?"
     IDS_DEFAULTFILENAME, "Без_имени.bmp"
-    IDS_MINIATURETITLE, "Miniature"
+    IDS_MINIATURETITLE, "Эскиз"
     IDS_TOOLTIP1, "Выделение произвольной области"
     IDS_TOOLTIP2, "Выделение"
     IDS_TOOLTIP3, "Ластик"
