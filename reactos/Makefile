@@ -303,31 +303,31 @@ host_objcopy = $(Q)objcopy
 
 # Set target compiler/linker
 ifneq ($(ROS_PREFIX),)
-  PREFIX_ := $(ROS_PREFIX)-
+  PREFIX_ := $(ROS_PREFIX)
 else
   ifeq ($(HOST),mingw32-linux)
-    PREFIX_ := mingw32-
+    PREFIX_ := mingw32
   else
     PREFIX_ :=
   endif
 endif
 ifeq ($(TARGET_CC),)
-  TARGET_CC = $(PREFIX_)gcc
+  TARGET_CC = $(PREFIX_)-gcc
 endif
 ifeq ($(TARGET_CPP),)
-  TARGET_CPP = $(PREFIX_)g++
+  TARGET_CPP = $(PREFIX_)-g++
 endif
 gcc = $(Q)$(TARGET_CC)
 gpp = $(Q)$(TARGET_CPP)
 gas = $(Q)$(TARGET_CC) -x assembler-with-cpp
-ld = $(Q)$(PREFIX_)ld
-nm = $(Q)$(PREFIX_)nm
-objdump = $(Q)$(PREFIX_)objdump
-ar = $(Q)$(PREFIX_)ar
-objcopy = $(Q)$(PREFIX_)objcopy
-dlltool = $(Q)$(PREFIX_)dlltool
-strip = $(Q)$(PREFIX_)strip
-windres = $(Q)$(PREFIX_)windres
+ld = $(Q)$(PREFIX_)-ld
+nm = $(Q)$(PREFIX_)-nm
+objdump = $(Q)$(PREFIX_)-objdump
+ar = $(Q)$(PREFIX_)-ar
+objcopy = $(Q)$(PREFIX_)-objcopy
+dlltool = $(Q)$(PREFIX_)-dlltool
+strip = $(Q)$(PREFIX_)-strip
+windres = $(Q)$(PREFIX_)-windres
 
 # Set utilities
 ifeq ($(OSTYPE),msys)

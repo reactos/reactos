@@ -749,7 +749,7 @@ MingwBackend::DetectCompiler ()
 		if ( ROS_PREFIXValue.length () > 0 )
 		{
 			compilerPrefix = ROS_PREFIXValue;
-			compilerCommand = compilerPrefix + "gcc";
+			compilerCommand = compilerPrefix + "-gcc";
 			detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
 		}
 #if defined(WIN32)
@@ -993,7 +993,7 @@ MingwBackend::DetectBinutils ()
 		if ( ROS_PREFIXValue.length () > 0 )
 		{
 			binutilsPrefix = ROS_PREFIXValue;
-			binutilsCommand = binutilsPrefix + "ld";
+			binutilsCommand = binutilsPrefix + "-ld";
 			manualBinutilsSetting = true;
 			detectedBinutils = true;
 		}
