@@ -70,6 +70,35 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 NTSTATUS NTAPI
+AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+            PIO_STACK_LOCATION IrpSp ) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    _SEH2_TRY {
+      switch (InfoReq->InformationClass) {
+        case AFD_INFO_BLOCKING_MODE:
+          AFD_DbgPrint(MID_TRACE,("Blocking mode set to %d\n", InfoReq->Information.Ulong));
+          FCB->BlockingMode = InfoReq->Information.Ulong;
+          break;
+        default:
+          AFD_DbgPrint(MIN_TRACE,("Unknown request %d\n", InfoReq->InformationClass));
+          break;
+      }
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+      Status = STATUS_INVALID_PARAMETER;
+    } _SEH2_END;
+
+    AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
+
+    return UnlockAndMaybeComplete(FCB, Status, Irp, 0);
+}
+
+NTSTATUS NTAPI
 AfdGetSockName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;

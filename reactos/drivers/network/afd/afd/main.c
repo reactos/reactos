@@ -422,6 +422,9 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	case IOCTL_AFD_GET_INFO:
 	    return AfdGetInfo( DeviceObject, Irp, IrpSp );
 
+	case IOCTL_AFD_SET_INFO:
+	    return AfdSetInfo( DeviceObject, Irp, IrpSp );
+
 	case IOCTL_AFD_GET_CONTEXT:
 	    return AfdGetContext( DeviceObject, Irp, IrpSp );
 
@@ -445,10 +448,6 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));
-	    break;
-
-	case IOCTL_AFD_SET_INFO:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_INFO\n"));
 	    break;
 
 	case IOCTL_AFD_SET_CONNECT_DATA:
