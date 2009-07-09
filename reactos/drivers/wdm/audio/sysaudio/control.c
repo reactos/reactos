@@ -42,7 +42,7 @@ KspCreateObjectType(
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
 
-    Name.Length = (wcslen(ObjectType) + 1) * sizeof(WCHAR) + CreateParametersSize;
+    Name.Length = Name.MaximumLength = (wcslen(ObjectType) + 1) * sizeof(WCHAR) + CreateParametersSize;
     Name.MaximumLength += sizeof(WCHAR);
     Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
 
@@ -74,6 +74,8 @@ KspCreateObjectType(
                           CreateFileTypeNone,
                           NULL,
                           IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
+
+    ExFreePool(Name.Buffer);
 
     return Status;
 }
@@ -984,6 +986,7 @@ SysAudioHandleProperty(
 
     RtlStringFromGUID(&Property->Set, &GuidString);
     DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    DbgBreakPoint();
     RtlFreeUnicodeString(&GuidString);
     return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
 }

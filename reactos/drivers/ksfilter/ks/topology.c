@@ -19,7 +19,7 @@ KspCreateObjectType(
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING Name;
 
-    Name.Length = (wcslen(ObjectType) + 1) * sizeof(WCHAR) + CreateParametersSize;
+    Name.Length = Name.MaximumLength = (wcslen(ObjectType) + 1) * sizeof(WCHAR) + CreateParametersSize;
     Name.MaximumLength += sizeof(WCHAR);
     Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
 
@@ -52,8 +52,7 @@ KspCreateObjectType(
                           NULL,
                           IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
 
-    // HACK HACK HACK HACK
-    //ExFreePool(Name.Buffer);
+    ExFreePool(Name.Buffer);
     return Status;
 }
 
