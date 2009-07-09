@@ -13,6 +13,56 @@
 #define MI_MAX_NONPAGED_POOL_SIZE              (128 * 1024 * 1024)
 #define MI_MAX_FREE_PAGE_LISTS                 4
 
+//
+// FIXFIX: These should go in ex.h after the pool merge
+//
+#define POOL_BLOCK_SIZE     8
+#define POOL_LISTS_PER_PAGE (PAGE_SIZE / POOL_BLOCK_SIZE)
+
+typedef struct _POOL_DESCRIPTOR
+{
+    POOL_TYPE PoolType;
+    ULONG PoolIndex;
+    ULONG RunningAllocs;
+    ULONG RunningDeAllocs;
+    ULONG TotalPages;
+    ULONG TotalBigPages;
+    ULONG Threshold;
+    PVOID LockAddress;
+    PVOID PendingFrees;
+    LONG PendingFreeDepth;
+    SIZE_T TotalBytes;
+    SIZE_T Spare0;
+    LIST_ENTRY ListHeads[POOL_LISTS_PER_PAGE];
+} POOL_DESCRIPTOR, *PPOOL_DESCRIPTOR;
+
+typedef struct _POOL_HEADER
+{
+    union
+    {
+        struct
+        {
+            USHORT PreviousSize:9;
+            USHORT PoolIndex:7;
+            USHORT BlockSize:9;
+            USHORT PoolType:7;
+        };
+        ULONG Ulong1;
+    };
+    union
+    {
+        ULONG PoolTag;
+        struct
+        {
+            USHORT AllocatorBackTraceIndex;
+            USHORT PoolTagHash;
+        };
+    };
+} POOL_HEADER, *PPOOL_HEADER;
+//
+// END FIXFIX
+//
+
 typedef enum _MMSYSTEM_PTE_POOL_TYPE
 {
     SystemPteSpace,
@@ -60,6 +110,13 @@ VOID
 NTAPI
 MiInitializeArmPool(
     VOID
+);
+
+VOID
+NTAPI
+InitializePool(                          //
+    IN POOL_TYPE PoolType,
+    IN ULONG Threshold
 );
 
 VOID

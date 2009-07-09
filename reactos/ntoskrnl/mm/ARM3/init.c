@@ -132,7 +132,7 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
     // Puerile piece of junk-grade carbonized horseshit puss sold to the lowest bidder
     //
     ULONG Pde = ADDR_TO_PDE_OFFSET(AddressStart);
-    while (Pde < ADDR_TO_PDE_OFFSET(AddressEnd))
+    while (Pde <= ADDR_TO_PDE_OFFSET(AddressEnd))
     {
         //
         // This both odious and heinous
@@ -707,8 +707,13 @@ MmArmInitSystem(IN ULONG Phase,
         // Sync us up with ReactOS Mm
         //
         MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
-        MiSyncARM3WithROS(MmNonPagedPoolStart, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
+        MiSyncARM3WithROS(MmArmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
         MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
+        
+        //
+        // Initialize the nonpaged pool
+        //
+        InitializePool(NonPagedPool, 0);
     }
     else
     {

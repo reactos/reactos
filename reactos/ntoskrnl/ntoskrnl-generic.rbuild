@@ -363,6 +363,7 @@
 			<file>contmem.c</file>
 			<file>drvmgmt.c</file>
 			<file>dynamic.c</file>
+			<file>expool.c</file>
 			<file>hypermap.c</file>
 			<file>init.c</file>
 			<file>iosup.c</file>
