@@ -184,6 +184,12 @@ WdmAudControlOpen(
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
+    InstanceInfo->Property.Set = KSPROPSETID_Sysaudio;
+    InstanceInfo->Property.Id = KSPROPERTY_SYSAUDIO_INSTANCE_INFO;
+    InstanceInfo->Property.Flags = KSPROPERTY_TYPE_SET;
+    InstanceInfo->Flags = 0;
+    InstanceInfo->DeviceNumber = FilterId;
+
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE ||
