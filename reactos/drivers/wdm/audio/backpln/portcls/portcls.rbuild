@@ -8,7 +8,6 @@
 	<library>ntoskrnl</library>
 	<library>ks</library>
 	<library>drmk</library>
-	<library>rtl</library>
 	<library>hal</library>
 	<library>libcntpr</library>
 	<file>adapter.c</file>
