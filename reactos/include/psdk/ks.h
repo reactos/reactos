@@ -1719,6 +1719,11 @@ typedef struct
     Objects ??? SORT ME!
 */
 
+#define KSCREATE_ITEM_SECURITYCHANGED       0x1
+#define KSCREATE_ITEM_WILDCARD              0x2
+#define KSCREATE_ITEM_NOPARAMETERS          0x4
+#define KSCREATE_ITEM_FREEONSTOP            0x8
+
 typedef struct
 {
     PDRIVER_DISPATCH       Create;
