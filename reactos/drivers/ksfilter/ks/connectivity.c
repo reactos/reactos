@@ -45,26 +45,29 @@ KsValidateConnectRequest(
     PKSPIN_CONNECT ConnectDetails;
     LPWSTR PinName = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}\\";
     PKSDATAFORMAT DataFormat;
+    LPWSTR Offset;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     if (!IoStack->FileObject->FileName.Buffer)
         return STATUS_INVALID_PARAMETER;
 
-    if (wcsncmp(IoStack->FileObject->FileName.Buffer, PinName, wcslen(PinName)))
+    if (IoStack->FileObject->FileName.Length < wcslen(PinName) + sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT))
         return STATUS_INVALID_PARAMETER;
 
-    ConnectDetails = (PKSPIN_CONNECT)(IoStack->FileObject->FileName.Buffer + wcslen(PinName));
+    Offset = wcsstr(IoStack->FileObject->FileName.Buffer, PinName);
+    if (!Offset)
+    {
+        /* request is not targeted for a pin */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    ConnectDetails = (PKSPIN_CONNECT)(Offset + wcslen(PinName));
 
     if (ConnectDetails->PinToHandle != NULL)
     {
         UNIMPLEMENTED
         return STATUS_NOT_IMPLEMENTED;
     }
-
-    if (IoStack->FileObject->FileName.Length < wcslen(PinName) + sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT))
-        return STATUS_INVALID_PARAMETER;
-
-    ConnectDetails = (PKSPIN_CONNECT)(IoStack->FileObject->FileName.Buffer + wcslen(PinName));
 
     if (ConnectDetails->PinId >= DescriptorsCount)
         return STATUS_INVALID_PARAMETER;

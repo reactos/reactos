@@ -314,7 +314,7 @@ IIrpQueue_fnMinimumDataAvailable(
     if (This->StartStream)
         return TRUE;
 
-    if (This->DataFormat->WaveFormatEx.nAvgBytesPerSec < This->NumDataAvailable)
+    if (This->DataFormat->WaveFormatEx.nAvgBytesPerSec/3 < This->NumDataAvailable)
     {
         This->StartStream = TRUE;
         Result = TRUE;

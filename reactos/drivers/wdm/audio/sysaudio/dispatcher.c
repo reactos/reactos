@@ -201,7 +201,7 @@ DispatchCreateSysAudio(
     if (Buffer)
     {
         /* is the request for a new pin */
-        if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
+        if (wcsstr(Buffer, KS_NAME_PIN))
         {
             Status = CreateDispatcher(Irp);
             DPRINT("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
@@ -259,6 +259,7 @@ SysAudioAllocateDeviceHeader(
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
     CreateItem->Create = DispatchCreateSysAudio;
     RtlInitUnicodeString(&CreateItem->ObjectClass, L"SysAudio");
+    CreateItem->Flags = KSCREATE_ITEM_WILDCARD;
 
     Status = KsAllocateDeviceHeader(&DeviceExtension->KsDeviceHeader,
                                     1,
@@ -271,7 +272,6 @@ SysAudioOpenKMixer(
     IN SYSAUDIODEVEXT *DeviceExtension)
 {
     NTSTATUS Status;
-    
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\kmixer");
     UNICODE_STRING DevicePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\kmixer");
 

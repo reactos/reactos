@@ -542,6 +542,8 @@ PcCreateItemDispatch(
     IIrpTarget *Filter;
     PKSOBJECT_CREATE_ITEM CreateItem;
     PPIN_WORKER_CONTEXT Context;
+    LPWSTR Buffer;
+    static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
     DPRINT1("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
 
@@ -604,60 +606,55 @@ PcCreateItemDispatch(
         return Status;
     }
 
-    /* is just the filter requested */
-    if (IoStack->FileObject->FileName.Buffer == NULL)
+    /* get the buffer */
+    Buffer = IoStack->FileObject->FileName.Buffer;
+
+    /* check if the request contains a pin request */
+    if (!wcsstr(Buffer, KS_NAME_PIN))
     {
-        /* create the dispatch object */
+        /* creator just wants the filter object */
         Status = NewDispatchObject(Irp, Filter, CreateItem->ObjectClass.Buffer);
 
         DPRINT1("Filter %p\n", Filter);
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
     }
     else
     {
-        LPWSTR Buffer = IoStack->FileObject->FileName.Buffer;
-
-        static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
-
-        /* is the request for a new pin */
-        if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
+        /* try to create new pin */
+        Context = AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
+        if (!Context)
         {
-            /* try to create new pin */
-            Context = AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
-            if (!Context)
-            {
-                DPRINT("Failed to allocate worker context\n");
-                Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-            /* allocate work item */
-            Context->WorkItem = IoAllocateWorkItem(DeviceObject);
-            if (!Context->WorkItem)
-            {
-                DPRINT("Failed to allocate workitem\n");
-                FreeItem(Context, TAG_PORTCLASS);
-                Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-                return STATUS_INSUFFICIENT_RESOURCES;
-            }
-
-            Context->Filter = Filter;
-            Context->Irp = Irp;
-
-            DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
+            DPRINT("Failed to allocate worker context\n");
             Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_PENDING;
-            IoMarkIrpPending(Irp);
-            IoQueueWorkItem(Context->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
-            return STATUS_PENDING;
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_INSUFFICIENT_RESOURCES;
         }
+        /* allocate work item */
+        Context->WorkItem = IoAllocateWorkItem(DeviceObject);
+        if (!Context->WorkItem)
+        {
+            DPRINT("Failed to allocate workitem\n");
+            FreeItem(Context, TAG_PORTCLASS);
+            Irp->IoStatus.Information = 0;
+            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        Context->Filter = Filter;
+        Context->Irp = Irp;
+
+        DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_PENDING;
+        IoMarkIrpPending(Irp);
+        IoQueueWorkItem(Context->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
+        return STATUS_PENDING;
     }
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
 }
 
 

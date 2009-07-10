@@ -6,17 +6,15 @@ struct KSIDEVICE_HEADER;
 typedef struct
 {
     KSDISPATCH_TABLE DispatchTable;
-    LPWSTR ObjectClass;
     ULONG ItemCount;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
+    UNICODE_STRING ObjectClass;
 }KSIOBJECT_HEADER, *PKSIOBJECT_HEADER;
 
 typedef struct
 {
-    BOOL bCreated;
-    PKSIOBJECT_HEADER ObjectHeader;
-    KSOBJECT_CREATE_ITEM CreateItem;
+    PKSOBJECT_CREATE_ITEM CreateItem;
 }DEVICE_ITEM, *PDEVICE_ITEM;
 
 

@@ -22,25 +22,14 @@ typedef struct
 
 typedef struct
 {
-    LIST_ENTRY Entry;                       // linked list entry to KSAUDIO_DEVICE_ENTRY
+    LIST_ENTRY Entry;                                  // device entry for KsAudioDeviceList
+    UNICODE_STRING DeviceName;                         // symbolic link of audio device
 
     HANDLE Handle;                          // handle to audio sub device
     PFILE_OBJECT FileObject;                // file objecto to audio sub device
 
     ULONG NumberOfPins;                     // number of pins of audio device
     PIN_INFO * Pins;                        // array of PIN_INFO
-
-    LPWSTR ObjectClass;                     // object class of sub device
-
-}KSAUDIO_SUBDEVICE_ENTRY, *PKSAUDIO_SUBDEVICE_ENTRY;
-
-typedef struct
-{
-    LIST_ENTRY Entry;                                  // device entry for KsAudioDeviceList
-    UNICODE_STRING DeviceName;                         // symbolic link of audio device
-
-    ULONG NumSubDevices;                               // number of subdevices
-    LIST_ENTRY SubDeviceList;                          // audio sub device list
 
 }KSAUDIO_DEVICE_ENTRY, *PKSAUDIO_DEVICE_ENTRY;
 
@@ -71,7 +60,7 @@ typedef struct
 {
     HANDLE Handle;                                       // audio irp pin handle
     ULONG PinId;                                         // pin id of device
-    PKSAUDIO_SUBDEVICE_ENTRY AudioEntry;                 // pointer to audio device entry
+    PKSAUDIO_DEVICE_ENTRY AudioEntry;                 // pointer to audio device entry
 
     HANDLE hMixerPin;                                    // handle to mixer pin
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
@@ -86,7 +75,7 @@ typedef struct
     PIRP Irp;
     BOOL CreateRealPin;
     BOOL CreateMixerPin;
-    PKSAUDIO_SUBDEVICE_ENTRY Entry;
+    PKSAUDIO_DEVICE_ENTRY Entry;
     KSPIN_CONNECT * PinConnect;
     PDISPATCH_CONTEXT DispatchContext;
     PSYSAUDIODEVEXT DeviceExtension;
@@ -129,7 +118,7 @@ OpenDevice(
     IN PHANDLE HandleOut,
     IN PFILE_OBJECT * FileObjectOut);
 
-PKSAUDIO_SUBDEVICE_ENTRY
+PKSAUDIO_DEVICE_ENTRY
 GetListEntry(
     IN PLIST_ENTRY Head,
     IN ULONG Index);

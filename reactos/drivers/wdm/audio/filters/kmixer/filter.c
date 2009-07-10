@@ -201,7 +201,7 @@ DispatchCreateKMix(
     if (Buffer)
     {
         /* is the request for a new pin */
-        if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
+        if (!wcsstr(KS_NAME_PIN, Buffer))
         {
             Status = CreatePin(Irp);
 

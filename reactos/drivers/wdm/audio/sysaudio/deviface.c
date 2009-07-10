@@ -18,7 +18,7 @@ const GUID DMOCATEGORY_ACOUSTIC_ECHO_CANCEL    = {0xBF963D80L, 0xC559, 0x11D0, {
 
 VOID
 QueryFilterRoutine(
-    IN PKSAUDIO_SUBDEVICE_ENTRY DeviceEntry)
+    IN PKSAUDIO_DEVICE_ENTRY DeviceEntry)
 {
     KSPROPERTY PropertyRequest;
     KSP_PIN PinRequest;
@@ -31,15 +31,6 @@ QueryFilterRoutine(
     ULONG NumWaveOutPin, NumWaveInPin;
 
     DPRINT("Querying filter...\n");
-
-    Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_OBJECT_CLASS, NULL, 0, &DeviceEntry->ObjectClass, sizeof(LPWSTR), &BytesReturned);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to query object class Status %x\n", Status);
-        return;
-    }
-
-    DPRINT("ObjectClass %S\n", DeviceEntry->ObjectClass);
 
     PropertyRequest.Set = KSPROPSETID_Pin;
     PropertyRequest.Flags = KSPROPERTY_TYPE_GET;
@@ -114,9 +105,6 @@ QueryFilterRoutine(
     DPRINT("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, NumWaveInPin, NumWaveOutPin);
 }
 
-
-
-
 VOID
 NTAPI
 FilterPinWorkerRoutine(
@@ -124,21 +112,11 @@ FilterPinWorkerRoutine(
     IN PVOID Context)
 {
     PKSAUDIO_DEVICE_ENTRY DeviceEntry;
-    PKSAUDIO_SUBDEVICE_ENTRY SubDeviceEntry;
-    PLIST_ENTRY ListEntry;
-
     PFILTER_WORKER_CONTEXT Ctx = (PFILTER_WORKER_CONTEXT)Context;
 
     DeviceEntry = Ctx->DeviceEntry;
 
-    ListEntry = DeviceEntry->SubDeviceList.Flink;
-    while(ListEntry != &DeviceEntry->SubDeviceList)
-    {
-        SubDeviceEntry = (PKSAUDIO_SUBDEVICE_ENTRY)CONTAINING_RECORD(ListEntry, KSAUDIO_SUBDEVICE_ENTRY, Entry);
-        QueryFilterRoutine(SubDeviceEntry);
-        ListEntry = ListEntry->Flink;
-    }
-
+    QueryFilterRoutine(DeviceEntry);
 
     /* free work item */
     IoFreeWorkItem(Ctx->WorkItem);
@@ -177,7 +155,7 @@ OpenDevice(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("ZwCreateFile failed with %x\n", Status);
+        DPRINT("ZwCreateFile failed with %x %S\n", Status, DeviceName->Buffer);
         return Status;
     }
 
@@ -195,125 +173,92 @@ OpenDevice(
 }
 
 NTSTATUS
-NTAPI
-DeviceInterfaceChangeCallback(
-    IN PVOID NotificationStructure,
-    IN PVOID Context)
+InsertAudioDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PUNICODE_STRING DeviceName,
+    IN LPWSTR ReferenceString)
 {
-    DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
     NTSTATUS Status = STATUS_SUCCESS;
+    PFILTER_WORKER_CONTEXT Ctx = NULL;
+    PIO_WORKITEM WorkItem = NULL;
     PSYSAUDIODEVEXT DeviceExtension;
     PKSAUDIO_DEVICE_ENTRY DeviceEntry = NULL;
-    PKSAUDIO_SUBDEVICE_ENTRY SubDeviceEntry;
-    PIO_WORKITEM WorkItem = NULL;
-    PFILTER_WORKER_CONTEXT Ctx = NULL;
-    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
 
+    /* a new device has arrived */
+    DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
+    if (!DeviceEntry)
+    {
+        /* no memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* initialize audio device entry */
+    RtlZeroMemory(DeviceEntry, sizeof(KSAUDIO_DEVICE_ENTRY));
+
+    /* allocate filter ctx */
+    Ctx = ExAllocatePool(NonPagedPool, sizeof(FILTER_WORKER_CONTEXT));
+    if (!Ctx)
+    {
+        /* no memory */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    /* allocate work item */
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!WorkItem)
+    {
+        /* no memory */
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    /* set device name */
+    DeviceEntry->DeviceName.Length = 0;
+    DeviceEntry->DeviceName.MaximumLength = DeviceName->MaximumLength + 10 * sizeof(WCHAR);
+
+    /* hack for bug 4566 */
+    if (ReferenceString)
+    {
+        DeviceEntry->DeviceName.MaximumLength += (wcslen(ReferenceString) + 2) * sizeof(WCHAR);
+    }
+
+    DeviceEntry->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);
+
+    if (!DeviceEntry->DeviceName.Buffer)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\");
+    RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
+
+    if (ReferenceString)
+    {
+        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\");
+        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, ReferenceString);
+    }
+
+    Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
+
+     if (!NT_SUCCESS(Status))
+     {
+         goto cleanup;
+     }
+
+    Ctx->DeviceEntry = DeviceEntry;
+    Ctx->WorkItem = WorkItem;
+
+    /* fetch device extension */
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
+    /* insert new audio device */
+    ExInterlockedInsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry, &DeviceExtension->Lock);
+    InterlockedIncrement((PLONG)&DeviceExtension->NumberOfKsAudioDevices);
 
-    Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
-
-    if (IsEqualGUIDAligned(&Event->Event,
-                           &GUID_DEVICE_INTERFACE_ARRIVAL))
-    {
-
-        /* a new device has arrived */
-        DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
-        if (!DeviceEntry)
-        {
-            /* no memory */
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        /* initialize audio device entry */
-        RtlZeroMemory(DeviceEntry, sizeof(KSAUDIO_DEVICE_ENTRY));
-
-        /* allocate filter ctx */
-        Ctx = ExAllocatePool(NonPagedPool, sizeof(FILTER_WORKER_CONTEXT));
-        if (!Ctx)
-        {
-            /* no memory */
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto cleanup;
-        }
-
-        /* allocate work item */
-        WorkItem = IoAllocateWorkItem(DeviceObject);
-        if (!WorkItem)
-        {
-            /* no memory */
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto cleanup;
-        }
-
-        /* set device name */
-        DeviceEntry->DeviceName.Length = 0;
-        DeviceEntry->DeviceName.MaximumLength = Event->SymbolicLinkName->Length + 10 * sizeof(WCHAR);
-        DeviceEntry->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);
-
-        if (!DeviceEntry->DeviceName.Buffer)
-        {
-            Status = STATUS_INSUFFICIENT_RESOURCES;
-            goto cleanup;
-        }
-
-        if (!NT_SUCCESS(RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\")))
-        {
-            DPRINT1("RtlAppendUnicodeToString failed with %x\n", Status);
-            goto cleanup;
-        }
-
-        if (!NT_SUCCESS(RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, Event->SymbolicLinkName)))
-        {
-            DPRINT1("RtlAppendUnicodeStringToString failed with %x\n", Status);
-            goto cleanup;
-        }
-
-        /* FIXME Ros does not support device interface strings */
-        /* Workarround: repeatly call IoCreateFile untill ks wont find a create item which has no object header attached */
-
-        InitializeListHead(&DeviceEntry->SubDeviceList);
-        do
-        {
-            SubDeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_SUBDEVICE_ENTRY));
-            if (SubDeviceEntry)
-            {
-                RtlZeroMemory(SubDeviceEntry,  sizeof(KSAUDIO_SUBDEVICE_ENTRY));
-                Status = OpenDevice(&DeviceEntry->DeviceName, &SubDeviceEntry->Handle, &SubDeviceEntry->FileObject);
-                if (NT_SUCCESS(Status))
-                {
-                    InsertTailList(&DeviceEntry->SubDeviceList, &SubDeviceEntry->Entry);
-                    DeviceEntry->NumSubDevices++;
-                    /* increment audio device count */
-                    InterlockedIncrement((PLONG)&DeviceExtension->NumberOfKsAudioDevices);
-                }
-                else
-                {
-                    ExFreePool(SubDeviceEntry);
-                    break;
-                }
-            }
-        }while(NT_SUCCESS(Status) && SubDeviceEntry != NULL);
-
-        DPRINT("Successfully opened audio device %u Device %S NumberOfSubDevices %u\n", DeviceExtension->NumberOfKsAudioDevices, DeviceEntry->DeviceName.Buffer, DeviceEntry->NumSubDevices);
-
-        Ctx->DeviceEntry = DeviceEntry;
-        Ctx->WorkItem = WorkItem;
-
-        /* fetch device extension */
-        DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
-        /* insert new audio device */
-        ExInterlockedInsertTailList(&DeviceExtension->KsAudioDeviceList, &DeviceEntry->Entry, &DeviceExtension->Lock);
-
-        IoQueueWorkItem(WorkItem, FilterPinWorkerRoutine, DelayedWorkQueue, (PVOID)Ctx);
-        return Status;
-    }
-    else
-    {
-        DPRINT("Remove interface to audio device!\n");
-        UNIMPLEMENTED
-        return STATUS_SUCCESS;
-    }
+    DPRINT("Successfully opened audio device %u Device %S\n", DeviceExtension->NumberOfKsAudioDevices, DeviceEntry->DeviceName.Buffer);
+    IoQueueWorkItem(WorkItem, FilterPinWorkerRoutine, DelayedWorkQueue, (PVOID)Ctx);
+    return Status;
 
 cleanup:
     if (Ctx)
@@ -331,6 +276,93 @@ cleanup:
     }
 
     return Status;
+
+}
+
+
+NTSTATUS
+NTAPI
+DeviceInterfaceChangeCallback(
+    IN PVOID NotificationStructure,
+    IN PVOID Context)
+{
+    DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PSYSAUDIODEVEXT DeviceExtension;
+    UNICODE_STRING DeviceName;
+    HANDLE Handle;
+    PFILE_OBJECT FileObject;
+    LPWSTR ReferenceString;
+    ULONG BytesReturned;
+
+
+    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
+
+    DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
+
+    Event = (DEVICE_INTERFACE_CHANGE_NOTIFICATION*)NotificationStructure;
+
+    if (IsEqualGUIDAligned(&Event->Event,
+                           &GUID_DEVICE_INTERFACE_ARRIVAL))
+    {
+        /*<HACK>
+         * 1) Open the filter w/o reference string
+         * 2) Retrieve reference strings with our private IOCTL_KS_OBJECT_CLASS
+         * 3) Append these reference strings to symbolic link we got
+         * * see bug 4566
+         */
+
+        DeviceName.Length = 0;
+        DeviceName.MaximumLength = Event->SymbolicLinkName->Length + 10 * sizeof(WCHAR);
+
+        DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceName.MaximumLength);
+
+        if (!DeviceName.Buffer)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+       RtlAppendUnicodeToString(&DeviceName, L"\\??\\");
+       RtlAppendUnicodeStringToString(&DeviceName, Event->SymbolicLinkName);
+
+
+        Status = OpenDevice(&DeviceName, &Handle, &FileObject);
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(DeviceName.Buffer);
+            return Status;
+        }
+
+        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_OBJECT_CLASS, NULL, 0, &ReferenceString, sizeof(LPWSTR), &BytesReturned);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("failed Status %x\n", Status);
+
+            ExFreePool(DeviceName.Buffer);
+            ObDereferenceObject(FileObject);
+            ZwClose(Handle);
+            return Status;
+       }
+
+        while(*ReferenceString)
+        {
+            Status = InsertAudioDevice(DeviceObject, Event->SymbolicLinkName, ReferenceString);
+            ReferenceString += wcslen(ReferenceString) + 1;
+        }
+        //ExFreePool(ReferenceString);
+        ObDereferenceObject(FileObject);
+        ZwClose(Handle);
+        ExFreePool(DeviceName.Buffer);
+        return Status;
+    }
+    else
+    {
+        DPRINT("Remove interface to audio device!\n");
+        UNIMPLEMENTED
+        return STATUS_SUCCESS;
+    }
+
+
 }
 
 NTSTATUS

@@ -17,26 +17,56 @@ KspCreateObjectType(
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     OBJECT_ATTRIBUTES ObjectAttributes;
+    PFILE_OBJECT FileObject;
     UNICODE_STRING Name;
+    PKSIOBJECT_HEADER ObjectHeader;
 
-    Name.Length = Name.MaximumLength = (wcslen(ObjectType) + 1) * sizeof(WCHAR) + CreateParametersSize;
+    /* acquire parent file object */
+    Status = ObReferenceObjectByHandle(ParentHandle,
+                                       GENERIC_READ | GENERIC_WRITE, 
+                                       IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed to reference parent %x\n", Status);
+        return Status;
+    }
+
+    /* get parent object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    /* sanity check */
+    ASSERT(ObjectHeader);
+
+    /* calculate request length */
+    Name.Length = 0;
+    Name.MaximumLength = wcslen(ObjectType) * sizeof(WCHAR) + CreateParametersSize + ObjectHeader->ObjectClass.MaximumLength + 2 * sizeof(WCHAR);
     Name.MaximumLength += sizeof(WCHAR);
+    /* acquire request buffer */
     Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
-
+    /* check for success */
     if (!Name.Buffer)
     {
+        /* insufficient resources */
+        ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    wcscpy(Name.Buffer, ObjectType);
-    Name.Buffer[wcslen(ObjectType)] = '\\';
-
-    RtlMoveMemory(Name.Buffer + wcslen(ObjectType) +1, CreateParameters, CreateParametersSize);
-
+    /* build a request which looks like \Parent\{ObjectGuid}\CreateParameters 
+     * For pins the parent is the reference string used in registration
+     * For clocks it is full path for pin\{ClockGuid}\ClockCreateParams
+     */
+    
+    RtlAppendUnicodeStringToString(&Name, &ObjectHeader->ObjectClass);
+    RtlAppendUnicodeToString(&Name, L"\\");
+    RtlAppendUnicodeToString(&Name, ObjectType);
+    RtlAppendUnicodeToString(&Name, L"\\");
+    /* append create parameters */
+    RtlMoveMemory(Name.Buffer + (Name.Length / sizeof(WCHAR)), CreateParameters, CreateParametersSize);
+    Name.Length += CreateParametersSize;
     Name.Buffer[Name.Length / 2] = L'\0';
+
     InitializeObjectAttributes(&ObjectAttributes, &Name, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE | OBJ_OPENIF, ParentHandle, NULL);
-
-
+    /* create the instance */
     Status = IoCreateFile(NodeHandle,
                           DesiredAccess,
                           &ObjectAttributes,
@@ -52,7 +82,10 @@ KspCreateObjectType(
                           NULL,
                           IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
 
+    /* free request buffer */
     ExFreePool(Name.Buffer);
+    /* release parent handle */
+    ObDereferenceObject(FileObject);
     return Status;
 }
 
