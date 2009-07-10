@@ -20,10 +20,191 @@
 
 #include <precomp.h>
 
+INT_PTR CALLBACK
+TaskbarPageProc(HWND hwndDlg,
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+
+        case WM_DESTROY:
+            break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+
+            switch(pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    break;
+
+                case PSN_APPLY:
+                    break;
+            }
+
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+
+INT_PTR CALLBACK
+StartMenuPageProc(HWND hwndDlg,
+                  UINT uMsg,
+                  WPARAM wParam,
+                  LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+
+        case WM_DESTROY:
+            break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+
+            switch(pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    break;
+
+                case PSN_APPLY:
+                    break;
+            }
+
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+
+INT_PTR CALLBACK
+NotificationPageProc(HWND hwndDlg,
+                     UINT uMsg,
+                     WPARAM wParam,
+                     LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+
+        case WM_DESTROY:
+            break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+
+            switch(pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    break;
+
+                case PSN_APPLY:
+                    break;
+            }
+
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+
+INT_PTR CALLBACK
+ToolbarsPageProc(HWND hwndDlg,
+                 UINT uMsg,
+                 WPARAM wParam,
+                 LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+
+        case WM_DESTROY:
+            break;
+
+        case WM_NOTIFY:
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
+
+            switch(pnmh->code)
+            {
+                case PSN_SETACTIVE:
+                    break;
+
+                case PSN_APPLY:
+                    break;
+            }
+
+            break;
+        }
+    }
+
+    return FALSE;
+}
+
+
+static VOID
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+{
+    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
+    psp->dwSize = sizeof(PROPSHEETPAGE);
+    psp->dwFlags = PSP_DEFAULT;
+    psp->hInstance = hExplorerInstance;
+    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pfnDlgProc = DlgProc;
+}
+
+
 HWND
 DisplayTrayProperties(ITrayWindow *Tray)
 {
-    DbgPrint("DisplayTrayProperties() not implemented!\n");
+    PROPSHEETHEADER psh;
+    PROPSHEETPAGE psp[4];
+    TCHAR szCaption[256];
+#if 1
     MessageBox(NULL, _T("Not implemented"), NULL, 0);
     return NULL;
+#endif
+    if (!LoadString(hExplorerInstance,
+                    IDS_TASKBAR_STARTMENU_PROP_CAPTION,
+                    szCaption,
+                    sizeof(szCaption) / sizeof(szCaption[0])))
+    {
+        return NULL;
+    }
+
+    ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
+    psh.dwSize = sizeof(PROPSHEETHEADER);
+    psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+    psh.hwndParent = NULL;
+    psh.hInstance = hExplorerInstance;
+    psh.hIcon = NULL;
+    psh.pszCaption = szCaption;
+    psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
+    psh.nStartPage = 0;
+    psh.ppsp = psp;
+
+    InitPropSheetPage(&psp[0], IDD_TASKBARPAGE, (DLGPROC)TaskbarPageProc);
+    InitPropSheetPage(&psp[1], IDD_STARTMENUPAGE, (DLGPROC)StartMenuPageProc);
+    InitPropSheetPage(&psp[2], IDD_NOTIFICATIONPAGE, (DLGPROC)NotificationPageProc);
+    InitPropSheetPage(&psp[3], IDD_TOOLBARSPAGE, (DLGPROC)ToolbarsPageProc);
+
+    return (HWND)PropertySheet(&psh);
 }

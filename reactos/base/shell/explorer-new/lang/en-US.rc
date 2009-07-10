@@ -4,6 +4,10 @@ IDM_TRAYWND MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
+
+        MENUITEM SEPARATOR
+        MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
         MENUITEM "&Lock the Taskbar", ID_LOCKTASKBAR
         MENUITEM "P&roperties", ID_SHELL_CMD_PROPERTIES
     END
@@ -56,4 +60,9 @@ BEGIN
     IDS_PROPERTIES        "P&roperties"
     IDS_OPEN_ALL_USERS    "O&pen All Users"
     IDS_EXPLORE_ALL_USERS "E&xplore All Users"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taskbar and Start Menu Properties"
 END

@@ -21,6 +21,7 @@
 #define ID_SHELL_CMD_OPEN_ALL_USERS (ID_SHELL_CMD_LAST + 2)
 #define ID_SHELL_CMD_EXPLORE_ALL_USERS  (ID_SHELL_CMD_LAST + 3)
 #define ID_LOCKTASKBAR  (ID_SHELL_CMD_LAST + 4)
+#define ID_SHELL_CMD_OPEN_TASKMGR (ID_SHELL_CMD_LAST + 5)
 
 /* NOTE: The following constants may *NOT* be changed because
          they're hardcoded and need to be the exact values
@@ -43,5 +44,13 @@
 #define IDM_UNDOCKCOMPUTER 410
 #define IDM_SHUTDOWN 506
 #define IDM_LASTSTARTMENU_SEPARATOR 450
+
+/* Taskbar resources */
+#define IDD_TASKBARPAGE 2000
+#define IDD_STARTMENUPAGE 2001
+#define IDD_NOTIFICATIONPAGE 2002
+#define IDD_TOOLBARSPAGE 2003
+
+#define IDS_TASKBAR_STARTMENU_PROP_CAPTION 2200
 
 #endif /* __RESOURCE_H */

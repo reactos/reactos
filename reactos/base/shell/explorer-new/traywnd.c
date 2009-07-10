@@ -1697,6 +1697,17 @@ OpenCommonStartMenuDirectory(IN HWND hWndOwner,
     }
 }
 
+static VOID
+OpenTaskManager(IN HWND hWndOwner)
+{
+    ShellExecute(hWndOwner,
+                 TEXT("open"),
+                 TEXT("taskmgr.exe"),
+                 NULL,
+                 NULL,
+                 SW_SHOWNORMAL);
+}
+
 static BOOL STDMETHODCALLTYPE
 ITrayWindowImpl_ExecContextMenuCmd(IN OUT ITrayWindow *iface,
                                    IN UINT uiCmd)
@@ -1727,6 +1738,11 @@ ITrayWindowImpl_ExecContextMenuCmd(IN OUT ITrayWindow *iface,
                                  !This->Locked);
             }
             break;
+
+        case ID_SHELL_CMD_OPEN_TASKMGR:
+            OpenTaskManager(This->hWnd);
+            break;
+
 
         default:
             DbgPrint("ITrayWindow::ExecContextMenuCmd(%u): Unhandled Command ID!\n", uiCmd);
