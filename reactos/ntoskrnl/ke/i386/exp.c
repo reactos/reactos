@@ -1029,7 +1029,7 @@ DispatchToUser:
         }
 
         /* Try second chance */
-        if (DbgkForwardException(ExceptionRecord, TRUE, FALSE))
+        if (DbgkForwardException(ExceptionRecord, TRUE, TRUE))
         {
             /* Handled, get out */
             goto Exit;
