@@ -76,6 +76,7 @@ extern PDHCP_ADAPTER AdapterGetFirst();
 extern PDHCP_ADAPTER AdapterGetNext(PDHCP_ADAPTER);
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
 extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
+extern PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen );
 extern VOID ApiInit();
 extern VOID ApiLock();
 extern VOID ApiUnlock();

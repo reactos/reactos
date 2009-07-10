@@ -231,6 +231,7 @@ got_one(struct protocol *l)
         struct dhcp_packet packet;
     } u;
     struct interface_info *ip = l->local;
+    PDHCP_ADAPTER adapter;
 
     if ((result = receive_packet(ip, u.packbuf, sizeof(u), &from,
                                  &hfrom)) == -1) {
@@ -257,7 +258,16 @@ got_one(struct protocol *l)
         ifrom.len = 4;
         memcpy(ifrom.iabuf, &from.sin_addr, ifrom.len);
 
-        (*bootp_packet_handler)(ip, &u.packet, result,
+        
+        adapter = AdapterFindByHardwareAddress(u.packet.chaddr,
+                                               u.packet.hlen);
+
+        if (!adapter) {
+            warning("Discarding packet with a non-matching target physical address\n");
+            return;
+        }
+
+        (*bootp_packet_handler)(&adapter->DhclientInfo, &u.packet, result,
                                 from.sin_port, ifrom, &hfrom);
     }
 }

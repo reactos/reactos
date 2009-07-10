@@ -355,6 +355,23 @@ PDHCP_ADAPTER AdapterFindInfo( struct interface_info *ip ) {
     return NULL;
 }
 
+PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen ) {
+    PDHCP_ADAPTER Adapter;
+    PLIST_ENTRY ListEntry;
+
+    for(ListEntry = AdapterList.Flink;
+        ListEntry != &AdapterList;
+        ListEntry = ListEntry->Flink) {
+       Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
+       if (Adapter->DhclientInfo.hw_address.hlen == hlen &&
+           !memcmp(Adapter->DhclientInfo.hw_address.haddr,
+                  haddr,
+                  hlen)) return Adapter;
+    }
+
+    return NULL;
+}
+
 PDHCP_ADAPTER AdapterGetFirst() {
     if( IsListEmpty( &AdapterList ) ) return NULL; else {
         return CONTAINING_RECORD
