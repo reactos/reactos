@@ -50,6 +50,7 @@ BltMask(SURFOBJ* psoDest,
     PFN_DIB_GetPixel fnPattern_GetPixel = NULL;
     XLATEOBJ *XlateObj;
     ULONG Pattern = 0;
+    SURFACE *psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
     if (psoMask == NULL)
     {
@@ -78,7 +79,9 @@ BltMask(SURFOBJ* psoDest,
     fnDest_PutPixel = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel;
     if (psurfPattern)
     {
-        XlateObj = pebo->XlateObject;
+        XlateObj = IntCreateBrushXlate(pebo->pbrush,
+                                       psurfDest,
+                                       pebo->crCurrentBack);
         PatternY = (prclDest->top - pptlBrush->y) % PatternHeight;
         if (PatternY < 0)
         {
@@ -113,6 +116,9 @@ BltMask(SURFOBJ* psoDest,
             PatternY++;
             PatternY %= PatternHeight;
         }
+
+        if (XlateObj)
+            EngDeleteXlate(XlateObj);
     }
     else
     {
@@ -177,6 +183,8 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     PEBRUSHOBJ GdiBrush = NULL;
     SURFACE *psurfPattern;
     BOOLEAN Result;
+    SURFACE *psurfDest = CONTAINING_RECORD(OutputObj, SURFACE, SurfObj);
+    XLATEOBJ *XlatePatternToDest = NULL;
 
     BltInfo.DestSurface = OutputObj;
     BltInfo.SourceSurface = InputObj;
@@ -205,7 +213,10 @@ CallDibBitBlt(SURFOBJ* OutputObj,
         {
             /* FIXME - What to do here? */
         }
-        BltInfo.XlatePatternToDest = GdiBrush->XlateObject;
+        XlatePatternToDest = IntCreateBrushXlate(GdiBrush->pbrush,
+                                                 psurfDest,
+                                                 GdiBrush->crCurrentBack);
+        BltInfo.XlatePatternToDest = XlatePatternToDest;
     }
     else
     {
@@ -213,6 +224,9 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     }
 
     Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
+
+    if (XlatePatternToDest)
+        EngDeleteXlate(XlatePatternToDest);
 
     /* Pattern brush */
     if (psurfPattern != NULL)

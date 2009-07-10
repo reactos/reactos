@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI stretch blt functions
@@ -39,6 +39,8 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     PEBRUSHOBJ GdiBrush = NULL;
     SURFOBJ* PatternSurface = NULL;
     XLATEOBJ* XlatePatternToDest = NULL;
+    BOOL bResult;
+    SURFACE *psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
 
     if (BrushOrigin == NULL)
     {
@@ -62,23 +64,32 @@ CallDibStretchBlt(SURFOBJ* psoDest,
         {
             /* FIXME - What to do here? */
         }
-        XlatePatternToDest = GdiBrush->XlateObject;
+        XlatePatternToDest = IntCreateBrushXlate(GdiBrush->pbrush,
+                                                 psurfDest,
+                                                 GdiBrush->crCurrentBack);
     }
     else
     {
         psurfPattern = NULL;
     }
 
-    return DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
-               psoDest, psoSource, Mask, PatternSurface, 
-               OutputRect, InputRect, MaskOrigin, pbo, &RealBrushOrigin, 
+    bResult = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
+               psoDest, psoSource, Mask, PatternSurface,
+               OutputRect, InputRect, MaskOrigin, pbo, &RealBrushOrigin,
                ColorTranslation, XlatePatternToDest, Rop4);
+
+    if (XlatePatternToDest)
+    {
+        EngDeleteXlate(XlatePatternToDest);
+    }
 
     /* Pattern brush */
     if (psurfPattern)
     {
         SURFACE_UnlockSurface(psurfPattern);
     }
+
+    return bResult;
 }
 
 

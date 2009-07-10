@@ -100,21 +100,21 @@ DC_AllocDC(PUNICODE_STRING Driver)
     /* Create the default fill brush */
     pdcattr->hbrush = NtGdiGetStockObject(WHITE_BRUSH);
     NewDC->dclevel.pbrFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
-    EBRUSHOBJ_vInit(&NewDC->eboFill, NewDC->dclevel.pbrFill, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboFill, NewDC->dclevel.pbrFill, NewDC);
 
     /* Create the default pen / line brush */
     pdcattr->hpen = NtGdiGetStockObject(BLACK_PEN);
     NewDC->dclevel.pbrLine = PEN_ShareLockPen(pdcattr->hpen);
-    EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrLine, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrLine, NewDC);
 
     /* Create the default text brush */
     pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(BLACK_BRUSH));
-    EBRUSHOBJ_vInit(&NewDC->eboText, pbrush, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboText, pbrush, NewDC);
     pdcattr->ulDirty_ |= DIRTY_TEXT;
 
     /* Create the default background brush */
     pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(WHITE_BRUSH));
-    EBRUSHOBJ_vInit(&NewDC->eboBackground, pbrush, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboBackground, pbrush, NewDC);
 
     pdcattr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
     TextIntRealizeFont(pdcattr->hlfntNew,NULL);
@@ -161,6 +161,12 @@ DC_Cleanup(PVOID ObjectBody)
     /* Dereference default brushes */
     BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
     BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
+
+    /* Cleanup the dc brushes */
+    EBRUSHOBJ_vCleanup(&pDC->eboFill);
+    EBRUSHOBJ_vCleanup(&pDC->eboLine);
+    EBRUSHOBJ_vCleanup(&pDC->eboText);
+    EBRUSHOBJ_vCleanup(&pDC->eboBackground);
 
     return TRUE;
 }

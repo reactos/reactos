@@ -689,13 +689,11 @@ XLATEOBJ_hGetColorTransform(
 
 // HACK!
 XLATEOBJ*
-IntCreateBrushXlate(PDC pdc, BRUSH *pbrush)
+IntCreateBrushXlate(BRUSH *pbrush, SURFACE * psurf, COLORREF crBackgroundClr)
 {
-    SURFACE * psurf;
     XLATEOBJ *pxlo = NULL;
     HPALETTE hPalette = NULL;
 
-    psurf = pdc->dclevel.pSurface;
     if (psurf)
     {
         hPalette = psurf->hDIBPalette;
@@ -719,10 +717,9 @@ IntCreateBrushXlate(PDC pdc, BRUSH *pbrush)
         /* Special case: 1bpp pattern */
         if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP)
         {
-            if (pdc->rosdc.bitsPerPixel != 1)
-                pxlo = IntEngCreateSrcMonoXlate(hPalette,
-                                                pdc->pdcattr->crBackgroundClr,
-                                                pbrush->BrushAttr.lbColor);
+            pxlo = IntEngCreateSrcMonoXlate(hPalette,
+                                            crBackgroundClr,
+                                            pbrush->BrushAttr.lbColor);
         }
         else if (pbrush->flAttrs & GDIBRUSH_IS_DIB)
         {

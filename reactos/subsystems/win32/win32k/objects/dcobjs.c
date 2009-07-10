@@ -41,7 +41,9 @@ DC_vUpdateFillBrush(PDC pdc)
     }
 
     /* ROS HACK, should use surf xlate */
-    pxlo = IntCreateBrushXlate(pdc, pdc->dclevel.pbrFill);
+    pxlo = IntCreateBrushXlate(pdc->dclevel.pbrFill,
+                               pdc->dclevel.pSurface,
+                               pdc->pdcattr->crBackgroundClr);
 
     /* Check if the EBRUSHOBJ needs update */
     if (pdcattr->ulDirty_ & DIRTY_FILL)
@@ -49,7 +51,7 @@ DC_vUpdateFillBrush(PDC pdc)
         pbrFill = pdc->dclevel.pbrFill;
 
         /* Update eboFill, realizing it, if needed */
-        EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pxlo);
+        EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pdc);
     }
 
     /* Check for DC brush */
@@ -95,7 +97,9 @@ DC_vUpdateLineBrush(PDC pdc)
     }
 
     /* ROS HACK, should use surf xlate */
-    pxlo = IntCreateBrushXlate(pdc, pdc->dclevel.pbrFill);
+    pxlo = IntCreateBrushXlate(pdc->dclevel.pbrFill,
+                               pdc->dclevel.pSurface,
+                               pdc->pdcattr->crBackgroundClr);
 
     /* Check if the EBRUSHOBJ needs update */
     if (pdcattr->ulDirty_ & DIRTY_LINE)
@@ -103,7 +107,7 @@ DC_vUpdateLineBrush(PDC pdc)
         pbrLine = pdc->dclevel.pbrLine;
 
         /* Update eboLine, realizing it, if needed */
-        EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pxlo);
+        EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pdc);
     }
 
     /* Check for DC pen */
@@ -177,8 +181,8 @@ DC_vUpdateBackgroundBrush(PDC pdc)
     pdcattr->ulDirty_ &= ~DIRTY_BACKGROUND;
 }
 
-HPALETTE 
-FASTCALL 
+HPALETTE
+FASTCALL
 GdiSelectPalette(
     HDC hDC,
     HPALETTE hpal,
@@ -331,7 +335,7 @@ NtGdiSelectBitmap(
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
     psurfBmp->hDC = hDC;
 
-    // if we're working with a DIB, get the palette 
+    // if we're working with a DIB, get the palette
     // [fixme: only create if the selected palette is null]
     if (psurfBmp->hSecure)
     {
