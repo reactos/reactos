@@ -1,3 +1,6 @@
+#include <windef.h>
+#include <winuser.h>
+
 #define MNID_FILE_OPEN          0x101
 #define MNID_FILE_PRINT         0x104
 #define MNID_FILE_SETUP         0x106

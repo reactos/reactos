@@ -19,12 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "winhelp_res.h"
+
+#pragma code_page(65001)
+
 /* Menu */
 
 MAIN_MENU MENU LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 {
  POPUP "&Datei" {
-  MENUITEM "÷&ffnen...", MNID_FILE_OPEN
+  MENUITEM "√ñ&ffnen...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "Thema &drucken", MNID_FILE_PRINT
   MENUITEM "Drucker&einrichtung...", MNID_FILE_SETUP
@@ -61,7 +65,7 @@ MAIN_MENU MENU LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
    MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "&‹ber WINE", MNID_HELP_WINE
+   MENUITEM "&√úber WINE", MNID_HELP_WINE
 #endif
  }
 }
@@ -94,7 +98,7 @@ STID_NOT_IMPLEMENTED, 	"Nicht implementiert"
 STID_HLPFILE_ERROR_s, 	"Fehler beim Lesen der Hilfe-Datei `%s'"
 STID_INDEX, 		"&Inhalt"
 STID_CONTENTS,		"Summary"
-STID_BACK, 		"&Zur¸ck"
+STID_BACK, 		"&Zur√ºck"
 STID_ALL_FILES, 	"Alle Dateien (*.*)"
 STID_HELP_FILES_HLP, 	"Hilfe-Dateien (*.hlp)"
 STID_FILE_NOT_FOUND_s	"'%s' konnte nicht gefunden werden. Wollen Sie selber nach dieser Datei suchen?"
@@ -109,11 +113,11 @@ BEGIN
 MENUITEM "Anmerken...",       MNID_CTXT_ANNOTATE
 MENUITEM "Kopieren",                MNID_CTXT_COPY
 MENUITEM "Drucken...",            MNID_CTXT_PRINT
-POPUP    "Schriftgrˆﬂe"
+POPUP    "Schriftgr√∂√üe"
 BEGIN
 MENUITEM "Klein",       MNID_CTXT_FONTS_SMALL
 MENUITEM "Normal",      MNID_CTXT_FONTS_NORMAL
-MENUITEM "Groﬂ",       MNID_CTXT_FONTS_LARGE
+MENUITEM "Gro√ü",       MNID_CTXT_FONTS_LARGE
 END
 POPUP   "Hilfe immer sichtbar"
 BEGIN

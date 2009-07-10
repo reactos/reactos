@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -28,44 +33,44 @@ BEGIN
         MENUITEM "Enregistrer &sous...",    ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Imprimer...\tCtrl+P",    ID_PRINT
-        MENUITEM "A&perçu avant impression...",    ID_PREVIEW
+        MENUITEM "A&perÃ§u avant impression...",    ID_PREVIEW
         MENUITEM "&Mise en page...",        ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Quitter",        ID_FILE_EXIT
     END
-    POPUP "É&dition"
+    POPUP "Ã‰&dition"
     BEGIN
         MENUITEM "&Annuler\tCtrl+Z",                ID_EDIT_UNDO
-        MENUITEM "&Rétablir\tCtrl+Y",                ID_EDIT_REDO
+        MENUITEM "&RÃ©tablir\tCtrl+Y",                ID_EDIT_REDO
         MENUITEM SEPARATOR
         MENUITEM "&Couper\tCtrl+X",                 ID_EDIT_CUT
         MENUITEM "Co&pier\tCtrl+C",                 ID_EDIT_COPY
         MENUITEM "C&oller\tCtrl+V",                 ID_EDIT_PASTE
         MENUITEM "&Effacer\tDel",                   ID_EDIT_CLEAR
-        MENUITEM "&Sélectionner tout\tCtrl+A",      ID_EDIT_SELECTALL
+        MENUITEM "&SÃ©lectionner tout\tCtrl+A",      ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Rechercher...\tCrtl+F",             ID_FIND
         MENUITEM "Rechercher le &suivant\tF3",                  ID_FIND_NEXT
         MENUITEM "&Remplacer...\tCtrl+H",          ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Lecture-&seule",                  ID_EDIT_READONLY
-        MENUITEM "&Modifié",                        ID_EDIT_MODIFIED
+        MENUITEM "Lecture &seule",                  ID_EDIT_READONLY
+        MENUITEM "&ModifiÃ©",                        ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
-        POPUP "&Avancés"
+        POPUP "&AvancÃ©"
         BEGIN
-            MENUITEM "&Information sélection",      ID_EDIT_SELECTIONINFO
-            MENUITEM "&Format caractères",          ID_EDIT_CHARFORMAT
-            MENUITEM "&Déf. format car.",           ID_EDIT_DEFCHARFORMAT
+            MENUITEM "&Information sÃ©lection",      ID_EDIT_SELECTIONINFO
+            MENUITEM "&Format caractÃ¨res",          ID_EDIT_CHARFORMAT
+            MENUITEM "&DÃ©f. format car.",           ID_EDIT_DEFCHARFORMAT
             MENUITEM "Format paragrap&he",          ID_EDIT_PARAFORMAT
-            MENUITEM "&Recevoir texte",             ID_EDIT_GETTEXT
+            MENUITEM "Texte &complet",              ID_EDIT_GETTEXT
         END
     END
     POPUP "&Affichage"
     BEGIN
         MENUITEM "&Barre d'outils",        ID_TOGGLE_TOOLBAR
         MENUITEM "&Barre de format",      ID_TOGGLE_FORMATBAR
-        MENUITEM "&Règle",             ID_TOGGLE_RULER
-        MENUITEM "&Barre d'état",      ID_TOGGLE_STATUSBAR
+        MENUITEM "&RÃ¨gle",             ID_TOGGLE_RULER
+        MENUITEM "&Barre d'Ã©tat",      ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Options...",  ID_VIEWPROPERTIES
     END
@@ -76,18 +81,18 @@ BEGIN
     POPUP "Forma&t"
     BEGIN
         MENUITEM "&Police...",                  ID_FONTSETTINGS
-        MENUITEM "&Puces"                ID_BULLET
-        MENUITEM "&Paragraphe..."              ID_PARAFORMAT
+        MENUITEM "Pu&ces"                ID_BULLET
+        MENUITEM "Para&graphe..."              ID_PARAFORMAT
         MENUITEM "&Tabulations..."                   ID_TABSTOPS
-        POPUP "&Fond"
+        POPUP "&ArriÃ¨re-plan"
         BEGIN
-            MENUITEM "&Système\tCtrl+1",         ID_BACK_1
-            MENUITEM "&Jaunasse\tCtrl+2",           ID_BACK_2
+            MENUITEM "&SystÃ¨me\tCtrl+1",         ID_BACK_1
+            MENUITEM "&Jaune pÃ¢le\tCtrl+2",           ID_BACK_2
         END
     END
     POPUP "Aid&e"
     BEGIN
-        MENUITEM "À &propos du Wordpad de Wine"       ID_ABOUT
+        MENUITEM "Ã€ &propos du Wordpad de Wine"       ID_ABOUT
     END
 END
 
@@ -99,8 +104,8 @@ BEGIN
         MENUITEM "Co&pier",             ID_EDIT_COPY
         MENUITEM "C&oller",             ID_EDIT_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "&Puces"       ID_BULLET
-        MENUITEM "&Paragraphe"     ID_PARAFORMAT
+        MENUITEM "P&uces"       ID_BULLET
+        MENUITEM "Para&graphe"     ID_PARAFORMAT
     END
 END
 
@@ -136,7 +141,7 @@ BEGIN
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
     LTEXT "Droite", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Première ligne", -1, 15, 58, 40, 18
+    LTEXT "PremiÃ¨re ligne", -1, 15, 58, 40, 18
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
     LTEXT "Alignement", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
@@ -149,13 +154,13 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabulations"
 FONT 8, "MS SHell DLg"
 BEGIN
-    GROUPBOX "Arrêts de tabulation", -1, 10, 10, 120, 90
+    GROUPBOX "Taquets de tabulation", -1, 10, 10, 120, 90
     COMBOBOX IDC_TABSTOPS, 20, 20, 100, 60, CBS_SIMPLE
-    DEFPUSHBUTTON "&Ajouter", ID_TAB_ADD, 20, 80, 45, 15
+    DEFPUSHBUTTON "A&jouter", ID_TAB_ADD, 20, 80, 45, 15
     PUSHBUTTON "&Supprimer", ID_TAB_DEL, 72, 80, 45, 15
-    PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
-    PUSHBUTTON "&Annuler", IDCANCEL, 137, 33, 50, 15
-    PUSHBUTTON "Supprimer &tous", ID_TAB_EMPTY, 137, 51, 50, 15
+    PUSHBUTTON "&OK", IDOK, 137, 15, 56, 15
+    PUSHBUTTON "&Annuler", IDCANCEL, 137, 33, 56, 15
+    PUSHBUTTON "Supprimer &tous", ID_TAB_EMPTY, 137, 51, 56, 15
 END
 
 IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
@@ -163,23 +168,23 @@ STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Enveloppement de ligne", -1, 10, 10, 170, 85
-    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 145, 15
-    RADIOBUTTON "Enveloppe le texte à partir de la bordure de fenêtre", IDC_PAGEFMT_WW, 18, 45, 145, 15
-    RADIOBUTTON "Enveloppe le texte à partir de la &marge", IDC_PAGEFMT_WM, 18, 65, 145, 15
-    GROUPBOX "Barres d'outils", -1, 170, 10, 120, 85
-    CHECKBOX "&Barre d'outils", IDC_PAGEFMT_TB, 180, 20, 80, 15
-    CHECKBOX "Barre de &format", IDC_PAGEFMT_FB, 180, 38, 80, 15
-    CHECKBOX "&Règle", IDC_PAGEFMT_RU, 180, 56, 80, 15
-    CHECKBOX "Barre de &statut", IDC_PAGEFMT_SB, 180, 74, 80, 15
+    GROUPBOX "Passage Ã  la ligne automatique", -1, 10, 10, 140, 85
+    RADIOBUTTON "&Aucun", IDC_PAGEFMT_WN, 18, 25, 127, 15
+    RADIOBUTTON "Au niveau de la bordure de fe&nÃªtre", IDC_PAGEFMT_WW, 18, 45, 127, 15
+    RADIOBUTTON "Au niveau de la &marge", IDC_PAGEFMT_WM, 18, 65, 127, 15
+    GROUPBOX "Barres d'outils", -1, 156, 10, 115, 85
+    CHECKBOX "&Barre d'outils", IDC_PAGEFMT_TB, 166, 20, 80, 15
+    CHECKBOX "Barre de &format", IDC_PAGEFMT_FB, 166, 38, 80, 15
+    CHECKBOX "&RÃ¨gle", IDC_PAGEFMT_RU, 166, 56, 80, 15
+    CHECKBOX "Barre de &statut", IDC_PAGEFMT_SB, 166, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "Documents texte riche (*.rtf)"
+    STRING_RICHTEXT_FILES_RTF,     "Format de texte enrichi (*.rtf)"
     STRING_TEXT_FILES_TXT,         "Documents texte (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "Documents texte unicode (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "Documents texte Unicode (*.txt)"
     STRING_ALL_FILES,              "Tous les documents (*.*)"
 END
 
@@ -192,9 +197,9 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_NEWFILE_RICHTEXT,     "Document texte riche"
+    STRING_NEWFILE_RICHTEXT,     "Format de texte enrichi (RTF)"
     STRING_NEWFILE_TXT,          "Document texte"
-    STRING_NEWFILE_TXT_UNICODE,  "Document texte unicode"
+    STRING_NEWFILE_TXT_UNICODE,  "Document texte Unicode"
 END
 
 STRINGTABLE DISCARDABLE
@@ -213,7 +218,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     STRING_PREVIEW_PRINT,            "Imprimer"
     STRING_PREVIEW_NEXTPAGE,         "Page suivante"
-    STRING_PREVIEW_PREVPAGE,         "Page précédente"
+    STRING_PREVIEW_PREVPAGE,         "Page prÃ©cÃ©dente"
     STRING_PREVIEW_TWOPAGES,         "Deux pages"
     STRING_PREVIEW_ONEPAGE,          "Une page"
     STRING_PREVIEW_CLOSE,            "Fermer"
@@ -227,18 +232,18 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Document"
-    STRING_PROMPT_SAVE_CHANGES,  "Enregistrer les modifications de « %s » ?"
-    STRING_SEARCH_FINISHED,      "Recherche terminée dans le document."
-    STRING_LOAD_RICHED_FAILED,   "Impossible de charger la bibliothèque RichEdit."
+    STRING_PROMPT_SAVE_CHANGES,  "Enregistrer les modifications de Â«Â %sÂ Â»Â ?"
+    STRING_SEARCH_FINISHED,      "Recherche terminÃ©e dans le document."
+    STRING_LOAD_RICHED_FAILED,   "Impossible de charger la bibliothÃ¨que RichEdit."
     STRING_SAVE_LOSEFORMATTING,  "Vous avez choisi d'enregistrer en texte simple, " \
                                  "ce qui causera la perte de tout formattage. " \
-                                 "Voulez-vous vraiment continuer ?"
+                                 "Voulez-vous vraiment continuerÂ ?"
     STRING_INVALID_NUMBER,       "Format de nombre invalide"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "Les documents conteneur OLE ne sont pas supportés"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "Les documents conteneur OLE ne sont pas supportÃ©s"
     STRING_WRITE_FAILED,              "Impossible d'enregistrer le fichier."
-    STRING_WRITE_ACCESS_DENIED,       "Vous ne disposez pas des accès nécessaires à l'enregistrement du fichier."
+    STRING_WRITE_ACCESS_DENIED,       "Vous ne disposez pas des accÃ¨s nÃ©cessaires Ã  l'enregistrement du fichier."
     STRING_OPEN_FAILED,               "Impossible d'ouvrir le fichier."
-    STRING_OPEN_ACCESS_DENIED,        "Vous ne disposez pas des accès nécessaires à l'ouverture du fichier."
-    STRING_PRINTING_NOT_IMPLEMENTED, "L'impression n'est pas implémentée"
+    STRING_OPEN_ACCESS_DENIED,        "Vous ne disposez pas des accÃ¨s nÃ©cessaires Ã  l'ouverture du fichier."
+    STRING_PRINTING_NOT_IMPLEMENTED, "L'impression n'est pas implÃ©mentÃ©e"
     STRING_MAX_TAB_STOPS,             "Impossible d'ajouter plus de 32 taquets de tabulation."
 END

@@ -19,6 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "winhelp_res.h"
+
+#pragma code_page(65001)
+
 /* Menu */
 
 MAIN_MENU MENU LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
@@ -32,28 +36,28 @@ MAIN_MENU MENU LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
   MENUITEM "&Afsluiten", MNID_FILE_EXIT
  }
  POPUP "&Bewerken" {
-   MENUITEM "&Kopiëren...", MNID_EDIT_COPYDLG
+   MENUITEM "&KopiÃ«ren...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Annoteren...", MNID_EDIT_ANNOTATE
  }
  POPUP "&Favorieten" {
    MENUITEM "&Aanmaken...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Help always visible"
+ POPUP "&Opties" {
+   POPUP	"Help altijd zichtbaar"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "Standaard",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Zichtbaar",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Niet zichtbaar",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "History",		MNID_OPTS_HISTORY
-  POPUP    "Fonts"
+  MENUITEM "Historie",		MNID_OPTS_HISTORY
+  POPUP    "Lettertype"
   BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Klein",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Standaard",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Groot",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "Gebruik systeemkleuren",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "&Help" {
    MENUITEM "Hulp &bij help", MNID_HELP_HELPON
@@ -61,7 +65,7 @@ MAIN_MENU MENU LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
    MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "&Over WINE", MNID_HELP_WINE
+   MENUITEM "&Over Wine", MNID_HELP_WINE
 #endif
  }
 }
@@ -79,26 +83,26 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Zoeken"
 {
-    LTEXT  "Nog niet geimplementeerd", -1, 10, 10, 180, 150
+    LTEXT  "Nog niet geÃ¯mplementeerd", -1, 10, 10, 180, 150
 }
 
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 {
-STID_WINE_HELP, 	"WINE Help"
+STID_WINE_HELP, 	"Wine Help"
 STID_WHERROR, 		"FOUT"
 STID_WARNING,  		"WAARSCHUWING"
 STID_INFO,  		"Informatie"
-STID_NOT_IMPLEMENTED, 	"Niet geïmplementeerd"
-STID_HLPFILE_ERROR_s, 	"Fout bij het lezen van het helpbestand `%s'"
-STID_INDEX, 		"&Inhoud"
-STID_CONTENTS,		"Summary"
+STID_NOT_IMPLEMENTED, 	"Niet geÃ¯mplementeerd"
+STID_HLPFILE_ERROR_s, 	"Fout bij het lezen van het helpbestand '%s'"
+STID_INDEX, 		"Inde&x"
+STID_CONTENTS,		"&Inhoudsopgave"
 STID_BACK, 		"&Terug"
 STID_ALL_FILES, 	"Alle bestanden (*.*)"
 STID_HELP_FILES_HLP, 	"Helpbestanden (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Kan '%s' niet openen. Wilt u zelf dit bestand zoeken?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
+STID_NO_RICHEDIT	"Kan geen richedit implementatie vinden... Actie afgebroken"
+STID_PSH_INDEX,		"Help onderwerpen: "
 }
 
 CONTEXT_MENU MENU LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
@@ -106,7 +110,7 @@ BEGIN
 	POPUP ""
 	BEGIN
 		MENUITEM "Annotering...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Kopiëren",            MNID_CTXT_COPY
+		MENUITEM "KopiÃ«ren",            MNID_CTXT_COPY
 		MENUITEM "Print...",            MNID_CTXT_PRINT
 		POPUP    "Lettertypes"
 		BEGIN

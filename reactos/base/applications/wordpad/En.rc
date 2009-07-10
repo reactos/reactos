@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -241,4 +243,13 @@ BEGIN
     STRING_OPEN_ACCESS_DENIED,        "You do not have access to open the file."
     STRING_PRINTING_NOT_IMPLEMENTED,  "Printing not implemented"
     STRING_MAX_TAB_STOPS,             "Cannot add more than 32 tab stops."
+END
+
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "Left"
+    STRING_ALIGN_RIGHT,           "Right"
+    STRING_ALIGN_CENTER,          "Centre"
 END
