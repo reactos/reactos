@@ -14,6 +14,8 @@
 
 static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the pallete and restore it */
 
+PALETTE gpalRGB, gpalBGR;
+
 const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
 {
   // first 10 entries in the system palette
@@ -97,6 +99,16 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
 #endif
 
     /*  palette_size = visual->map_entries; */
+
+    gpalRGB.Mode = PAL_RGB;
+    gpalRGB.RedMask = RGB(0xFF, 0x00, 0x00);
+    gpalRGB.GreenMask = RGB(0x00, 0xFF, 0x00);
+    gpalRGB.BlueMask = RGB(0x00, 0x00, 0xFF);
+
+    gpalBGR.Mode = PAL_BGR;
+    gpalBGR.RedMask = RGB(0x00, 0x00, 0xFF);
+    gpalBGR.GreenMask = RGB(0x00, 0xFF, 0x00);
+    gpalBGR.BlueMask = RGB(0xFF, 0x00, 0x00);
 
     return hpalette;
 }

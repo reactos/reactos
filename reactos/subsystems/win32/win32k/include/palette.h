@@ -58,6 +58,9 @@ typedef struct _PALETTE
   HDEV  hPDev;
 } PALETTE, *PPALETTE;
 
+extern PALETTE gpalRGB, gpalBGR;
+
+
 HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
                                        ULONG NumColors,
                                        ULONG *Colors,
