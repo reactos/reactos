@@ -85,3 +85,8 @@ extern HWND hSizeboxRightCenter;
 extern HWND hSizeboxLeftBottom;
 extern HWND hSizeboxCenterBottom;
 extern HWND hSizeboxRightBottom;
+
+/* VARIABLES declared in mouse.c *************************************/
+
+extern POINT pointStack[256];
+extern short pointSP;

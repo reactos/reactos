@@ -23,37 +23,70 @@ void placeSelWin()
     //SendMessage(hSelection, WM_PAINT, 0, 0);
 }
 
-void startPainting(HDC hdc, short x, short y, int fg, int bg)
+POINT pointStack[256];
+short pointSP;
+
+void startPaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     startX = x;
     startY = y;
     lastX = x;
     lastY = y;
-    if ((activeTool!=5)&&(activeTool!=6)) newReversible();
     switch (activeTool)
     {
+        case 1:
+        case 10:
+        case 11:
+        case 15:
+        case 16:
+            newReversible();
         case 2:
+            newReversible();
             ShowWindow(hSelection, SW_HIDE);
             break;
         case 3:
+            newReversible();
             Erase(hdc, x, y, x, y, bg, rubberRadius);
             break;
         case 4:
+            newReversible();
             Fill(hdc, x, y, fg);
             break;
         case 7:
+            newReversible();
             SetPixel(hdc, x, y, fg);
             break;
         case 8:
+            newReversible();
             Brush(hdc, x, y, x, y, fg, brushStyle);
             break;
         case 9:
+            newReversible();
             Airbrush(hdc, x, y, fg, airBrushWidth);
+            break;
+        case 12:
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            if (pointSP==0)
+            {
+                newReversible();
+                pointSP++;
+            }
+            break;
+        case 14:
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, fg, bg, lineWidth, shapeStyle, FALSE);
+            if (pointSP==0)
+            {
+                newReversible();
+                pointSP++;
+            }
             break;
     }
 }
 
-void whilePainting(HDC hdc, short x, short y, int fg, int bg)
+void whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
@@ -87,50 +120,34 @@ void whilePainting(HDC hdc, short x, short y, int fg, int bg)
             resetToU1();
             Line(hdc, startX, startY, x, y, fg, lineWidth);
             break;
+        case 12:
+            resetToU1();
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            switch (pointSP)
+            {
+                case 1: Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, fg, lineWidth); break;
+                case 2: Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], fg, lineWidth); break;
+                case 3: Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], fg, lineWidth); break;
+            }
+            break;
         case 13:
             resetToU1();
-            switch (shapeStyle)
-            {
-                case 0:
-                    Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, FALSE);
-                    break;
-                case 1:
-                    Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, TRUE);
-                    break;
-                case 2:
-                    Rect(hdc, startX, startY, x, y, fg, fg, lineWidth, TRUE);
-                    break;
-            }
+            Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
+            break;
+        case 14:
+            resetToU1();
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, fg, bg, lineWidth, shapeStyle, FALSE);
             break;
         case 15:
             resetToU1();
-            switch (shapeStyle)
-            {
-                case 0:
-                    Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, FALSE);
-                    break;
-                case 1:
-                    Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, TRUE);
-                    break;
-                case 2:
-                    Ellp(hdc, startX, startY, x, y, fg, fg, lineWidth, TRUE);
-                    break;
-            }
+            Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
         case 16:
             resetToU1();
-            switch (shapeStyle)
-            {
-                case 0:
-                    RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, FALSE);
-                    break;
-                case 1:
-                    RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, TRUE);
-                    break;
-                case 2:
-                    RRect(hdc, startX, startY, x, y, fg, fg, lineWidth, TRUE);
-                    break;
-            }
+            RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
     }
     
@@ -138,7 +155,7 @@ void whilePainting(HDC hdc, short x, short y, int fg, int bg)
     lastY = y;
 }
 
-void endPainting(HDC hdc, short x, short y, int fg, int bg)
+void endPaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
@@ -163,50 +180,204 @@ void endPainting(HDC hdc, short x, short y, int fg, int bg)
             resetToU1();
             Line(hdc, startX, startY, x, y, fg, lineWidth);
             break;
+        case 12:
+            pointSP++;
+            if (pointSP==4) pointSP = 0;
+            break;
         case 13:
             resetToU1();
-            switch (shapeStyle)
+            Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
+            break;
+        case 14:
+            resetToU1();
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            pointSP++;
+            if (pointSP>=2)
             {
-                case 0:
-                    Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, FALSE);
-                    break;
-                case 1:
-                    Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, TRUE);
-                    break;
-                case 2:
-                    Rect(hdc, startX, startY, x, y, fg, fg, lineWidth, TRUE);
-                    break;
+                if ( (pointStack[0].x-x)*(pointStack[0].x-x) + (pointStack[0].y-y)*(pointStack[0].y-y) <= lineWidth*lineWidth+1)
+                {
+                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, TRUE);
+                    pointSP = 0;
+                }
+                else
+                {
+                    Poly(hdc, pointStack, pointSP, fg, bg, lineWidth, shapeStyle, FALSE);
+                }
             }
+            if (pointSP==255) pointSP--;
             break;
         case 15:
             resetToU1();
-            switch (shapeStyle)
-            {
-                case 0:
-                    Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, FALSE);
-                    break;
-                case 1:
-                    Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, TRUE);
-                    break;
-                case 2:
-                    Ellp(hdc, startX, startY, x, y, fg, fg, lineWidth, TRUE);
-                    break;
-            }
+            Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
         case 16:
             resetToU1();
-            switch (shapeStyle)
+            RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
+            break;
+    }
+}
+
+void startPaintingR(HDC hdc, short x, short y, int fg, int bg)
+{
+    startX = x;
+    startY = y;
+    lastX = x;
+    lastY = y;
+    switch (activeTool)
+    {
+        case 1:
+        case 10:
+        case 11:
+        case 15:
+        case 16:
+            newReversible();
+        case 3:
+            newReversible();
+            Replace(hdc, x, y, x, y, fg, bg, rubberRadius);
+            break;
+        case 4:
+            newReversible();
+            Fill(hdc, x, y, bg);
+            break;
+        case 7:
+            newReversible();
+            SetPixel(hdc, x, y, bg);
+            break;
+        case 8:
+            newReversible();
+            Brush(hdc, x, y, x, y, bg, brushStyle);
+            break;
+        case 9:
+            newReversible();
+            Airbrush(hdc, x, y, bg, airBrushWidth);
+            break;
+        case 12:
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            if (pointSP==0)
             {
-                case 0:
-                    RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, FALSE);
-                    break;
-                case 1:
-                    RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, TRUE);
-                    break;
-                case 2:
-                    RRect(hdc, startX, startY, x, y, fg, fg, lineWidth, TRUE);
-                    break;
+                newReversible();
+                pointSP++;
             }
+            break;
+        case 14:
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, bg, fg, lineWidth, shapeStyle, FALSE);
+            if (pointSP==0)
+            {
+                newReversible();
+                pointSP++;
+            }
+            break;
+    }
+}
+
+void whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
+{
+    switch (activeTool)
+    {
+        case 3:
+            Replace(hdc, lastX, lastY, x, y, fg, bg, rubberRadius);
+            break;
+        case 7:
+            Line(hdc, lastX, lastY, x, y, bg, 1);
+            break;
+        case 8:
+            Brush(hdc, lastX, lastY, x, y, bg, brushStyle);
+            break;
+        case 9:
+            Airbrush(hdc, x, y, bg, airBrushWidth);
+            break;
+        case 11:
+            resetToU1();
+            Line(hdc, startX, startY, x, y, bg, lineWidth);
+            break;
+        case 12:
+            resetToU1();
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            switch (pointSP)
+            {
+                case 1: Line(hdc, pointStack[0].x, pointStack[0].y, pointStack[1].x, pointStack[1].y, bg, lineWidth); break;
+                case 2: Bezier(hdc, pointStack[0], pointStack[2], pointStack[2], pointStack[1], bg, lineWidth); break;
+                case 3: Bezier(hdc, pointStack[0], pointStack[2], pointStack[3], pointStack[1], bg, lineWidth); break;
+            }
+            break;
+        case 13:
+            resetToU1();
+            Rect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
+            break;
+        case 14:
+            resetToU1();
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            if (pointSP+1>=2) Poly(hdc, pointStack, pointSP+1, bg, fg, lineWidth, shapeStyle, FALSE);
+            break;
+        case 15:
+            resetToU1();
+            Ellp(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
+            break;
+        case 16:
+            resetToU1();
+            RRect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
+            break;
+    }
+    
+    lastX = x;
+    lastY = y;
+}
+
+void endPaintingR(HDC hdc, short x, short y, int fg, int bg)
+{
+    switch (activeTool)
+    {
+        case 3:
+            Replace(hdc, lastX, lastY, x, y, fg, bg, rubberRadius);
+            break;
+        case 7:
+            Line(hdc, lastX, lastY, x, y, bg, 1);
+            SetPixel(hdc, x, y, bg);
+            break;
+        case 11:
+            resetToU1();
+            Line(hdc, startX, startY, x, y, bg, lineWidth);
+            break;
+        case 12:
+            pointSP++;
+            if (pointSP==4) pointSP = 0;
+            break;
+        case 13:
+            resetToU1();
+            Rect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
+            break;
+        case 14:
+            resetToU1();
+            pointStack[pointSP].x = x;
+            pointStack[pointSP].y = y;
+            pointSP++;
+            if (pointSP>=2)
+            {
+                if ( (pointStack[0].x-x)*(pointStack[0].x-x) + (pointStack[0].y-y)*(pointStack[0].y-y) <= lineWidth*lineWidth+1)
+                {
+                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, TRUE);
+                    pointSP = 0;
+                }
+                else
+                {
+                    Poly(hdc, pointStack, pointSP, bg, fg, lineWidth, shapeStyle, FALSE);
+                }
+            }
+            if (pointSP==255) pointSP--;
+            break;
+        case 15:
+            resetToU1();
+            Ellp(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
+            break;
+        case 16:
+            resetToU1();
+            RRect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
     }
 }

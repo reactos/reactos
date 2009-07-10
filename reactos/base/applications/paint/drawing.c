@@ -20,13 +20,13 @@ void Line(HDC hdc, short x1, short y1, short x2, short y2, int color, int thickn
     DeleteObject(SelectObject(hdc, oldPen));
 }
 
-void Rect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, BOOL filled)
+void Rect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
     HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
-    if (filled) logbrush.lbStyle = BS_SOLID; else logbrush.lbStyle = BS_HOLLOW;
-    logbrush.lbColor = bg;
+    if (style==0) logbrush.lbStyle = BS_HOLLOW; else logbrush.lbStyle = BS_SOLID;
+    if (style==2) logbrush.lbColor = fg; else logbrush.lbColor = bg;
     logbrush.lbHatch = 0;
     oldBrush = SelectObject(hdc, CreateBrushIndirect(&logbrush));
     Rectangle(hdc, x1, y1, x2, y2);
@@ -34,13 +34,13 @@ void Rect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int t
     DeleteObject(SelectObject(hdc, oldPen));
 }
 
-void Ellp(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, BOOL filled)
+void Ellp(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style)
 {
     HBRUSH oldBrush;
     LOGBRUSH logbrush;
     HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
-    if (filled) logbrush.lbStyle = BS_SOLID; else logbrush.lbStyle = BS_HOLLOW;
-    logbrush.lbColor = bg;
+    if (style==0) logbrush.lbStyle = BS_HOLLOW; else logbrush.lbStyle = BS_SOLID;
+    if (style==2) logbrush.lbColor = fg; else logbrush.lbColor = bg;
     logbrush.lbHatch = 0;
     oldBrush = SelectObject(hdc, CreateBrushIndirect(&logbrush));
     Ellipse(hdc, x1, y1, x2, y2);
@@ -48,17 +48,46 @@ void Ellp(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int t
     DeleteObject(SelectObject(hdc, oldPen));
 }
 
-void RRect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, BOOL filled)
+void RRect(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int thickness, int style)
 {
     LOGBRUSH logbrush;
     HBRUSH oldBrush;
     HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
-    if (filled) logbrush.lbStyle = BS_SOLID; else logbrush.lbStyle = BS_HOLLOW;
-    logbrush.lbColor = bg;
+    if (style==0) logbrush.lbStyle = BS_HOLLOW; else logbrush.lbStyle = BS_SOLID;
+    if (style==2) logbrush.lbColor = fg; else logbrush.lbColor = bg;
     logbrush.lbHatch = 0;
     oldBrush = SelectObject(hdc, CreateBrushIndirect(&logbrush));
     RoundRect(hdc, x1, y1, x2, y2, 16, 16);
     DeleteObject(SelectObject(hdc, oldBrush));
+    DeleteObject(SelectObject(hdc, oldPen));
+}
+
+void Poly(HDC hdc, POINT *lpPoints, int nCount, int fg, int bg, int thickness, int style, BOOL closed)
+{
+    LOGBRUSH logbrush;
+    HBRUSH oldBrush;
+    HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, thickness, fg));
+    if (style==0) logbrush.lbStyle = BS_HOLLOW; else logbrush.lbStyle = BS_SOLID;
+    if (style==2) logbrush.lbColor = fg; else logbrush.lbColor = bg;
+    logbrush.lbHatch = 0;
+    oldBrush = SelectObject(hdc, CreateBrushIndirect(&logbrush));
+    if (closed)
+        Polygon(hdc, lpPoints, nCount);
+    else
+        Polyline(hdc, lpPoints, nCount);
+    DeleteObject(SelectObject(hdc, oldBrush));
+    DeleteObject(SelectObject(hdc, oldPen));
+}
+
+void Bezier(HDC hdc, POINT p1, POINT p2, POINT p3, POINT p4, int color, int thickness)
+{
+    POINT fourPoints[4];
+    fourPoints[0] = p1;
+    fourPoints[1] = p2;
+    fourPoints[2] = p3;
+    fourPoints[3] = p4;
+    HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, thickness, color));
+    PolyBezier(hdc, fourPoints, 4);
     DeleteObject(SelectObject(hdc, oldPen));
 }
 
@@ -79,6 +108,15 @@ void Erase(HDC hdc, short x1, short y1, short x2, short y2, int color, int radiu
         Rectangle(hdc, (x1*(100-a)+x2*a)/100-radius+1, (y1*(100-a)+y2*a)/100-radius+1, (x1*(100-a)+x2*a)/100+radius+1, (y1*(100-a)+y2*a)/100+radius+1);
     DeleteObject(SelectObject(hdc, oldBrush));
     DeleteObject(SelectObject(hdc, oldPen));
+}
+
+void Replace(HDC hdc, short x1, short y1, short x2, short y2, int fg, int bg, int radius)
+{
+    short a, x, y;
+    for (a=0; a<=100; a++)
+        for (y=(y1*(100-a)+y2*a)/100-radius+1; y<(y1*(100-a)+y2*a)/100+radius+1; y++)
+            for (x=(x1*(100-a)+x2*a)/100-radius+1; x<(x1*(100-a)+x2*a)/100+radius+1; x++)
+                if (GetPixel(hdc, x, y)==fg) SetPixel(hdc, x, y, bg);
 }
 
 void Airbrush(HDC hdc, short x, short y, int color, int r)

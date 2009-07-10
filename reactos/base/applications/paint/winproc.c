@@ -29,6 +29,7 @@ void selectTool(int tool)
 {
     ShowWindow(hSelection, SW_HIDE);
     activeTool = tool;
+    pointSP = 0; // resets the point-buffer of the polygon and bezier functions
     SendMessage(hToolSettings, WM_PAINT, 0, 0);
 }
 
@@ -354,7 +355,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
-                    startPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
+                    startPaintingL(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 }else
                 {
                     SendMessage(hwnd, WM_LBUTTONUP, wParam, lParam);
@@ -371,7 +372,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
-                    startPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, bgColor, fgColor);
+                    startPaintingR(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 }else
                 {
                     SendMessage(hwnd, WM_RBUTTONUP, wParam, lParam);
@@ -386,7 +387,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             { 
                 ReleaseCapture();
                 drawing = FALSE;
-                endPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
+                endPaintingL(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if (activeTool==5)
                 {
@@ -402,7 +403,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             { 
                 ReleaseCapture();
                 drawing = FALSE;
-                endPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, bgColor, fgColor);
+                endPaintingR(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if (activeTool==5)
                 {
@@ -426,7 +427,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 {
                     if ((wParam&MK_LBUTTON)!=0)
                     {
-                        whilePainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
+                        whilePaintingL(hDrawingDC, (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if ((activeTool>=10)||(activeTool==2))
                         {
@@ -437,7 +438,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     }
                     if ((wParam&MK_RBUTTON)!=0)
                     {
-                        whilePainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, bgColor, fgColor);
+                        whilePaintingR(hDrawingDC, (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if (activeTool>=10)
                         {
@@ -564,9 +565,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case IDM_EDITSELECTALL:
                     if (activeTool==2)
                     {
-                        startPainting(hDrawingDC, 0, 0, fgColor, bgColor);
-                        whilePainting(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
-                        endPainting(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
+                        startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
+                        whilePaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
+                        endPaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
                     }
                     break;
                 case IDM_EDITCOPYTO:

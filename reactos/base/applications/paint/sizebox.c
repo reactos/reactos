@@ -9,10 +9,10 @@
 /* INCLUDES *********************************************************/
 
 #include <windows.h>
+#include <commctrl.h>
+#include <tchar.h>
 #include "globalvar.h"
-#include "drawing.h"
 #include "history.h"
-#include "mouse.h"
 
 /* FUNCTIONS ********************************************************/
 
@@ -43,7 +43,31 @@ LRESULT CALLBACK SizeboxWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             SetCapture(hwnd);
             break;
         case WM_MOUSEMOVE:
-            // TODO: print things in the status bar
+            if (resizing)
+            {
+                TCHAR sizeStr[100];
+                short xRel;
+                short yRel;
+                xRel = ((short)LOWORD(lParam)-xOrig)*1000/zoom;
+                yRel = ((short)HIWORD(lParam)-yOrig)*1000/zoom;
+                if (hwnd==hSizeboxLeftTop)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes-xRel, imgYRes-yRel);
+                if (hwnd==hSizeboxCenterTop)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes, imgYRes-yRel);
+                if (hwnd==hSizeboxRightTop)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes+xRel, imgYRes-yRel);
+                if (hwnd==hSizeboxLeftCenter)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes-xRel, imgYRes);
+                if (hwnd==hSizeboxRightCenter)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes+xRel, imgYRes);
+                if (hwnd==hSizeboxLeftBottom)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes-xRel, imgYRes+yRel);
+                if (hwnd==hSizeboxCenterBottom)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes, imgYRes+yRel);
+                if (hwnd==hSizeboxRightBottom)
+                    _stprintf(sizeStr, _T("%d x %d"), imgXRes+xRel, imgYRes+yRel);
+                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)sizeStr);
+            }
             break;
         case WM_LBUTTONUP:
             if (resizing)
@@ -70,6 +94,7 @@ LRESULT CALLBACK SizeboxWinProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                     cropReversible(imgXRes, imgYRes+yRel, 0, 0);
                 if (hwnd==hSizeboxRightBottom)
                     cropReversible(imgXRes+xRel, imgYRes+yRel, 0, 0);
+                SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM)_T(""));
             }
             break;
 
