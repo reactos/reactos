@@ -72,8 +72,6 @@
 #define	domainchar(c) ((c) > 0x20 && (c) < 0x7f)
 
 unsigned long debug_trace_level = 0; /* DEBUG_ULTRA */
-time_t cur_time;
-time_t default_lease_time = 43200; /* 12 hours... */
 
 char *path_dhclient_conf = _PATH_DHCLIENT_CONF;
 char *path_dhclient_db = NULL;
@@ -85,7 +83,6 @@ int privfd;
 struct iaddr iaddr_broadcast = { 4, { 255, 255, 255, 255 } };
 struct in_addr inaddr_any;
 struct sockaddr_in sockaddr_broadcast;
-unsigned long old_default_route = 0;
 
 /*
  * ASSERT_STATE() does nothing now; it used to be
@@ -139,7 +136,6 @@ main(int argc, char *argv[])
         PipeInit();
 
 	tzset();
-	time(&cur_time);
 
 	memset(&sockaddr_broadcast, 0, sizeof(sockaddr_broadcast));
 	sockaddr_broadcast.sin_family = AF_INET;
@@ -249,7 +245,7 @@ state_reboot(void *ipp)
 	   flags. */
 	make_request(ip, ip->client->active);
 	ip->client->destination = iaddr_broadcast;
-	ip->client->first_sending = cur_time;
+	time(&ip->client->first_sending);
 	ip->client->interval = ip->client->config->initial_interval;
 
 	/* Zap the medium list... */
@@ -276,7 +272,7 @@ state_init(void *ipp)
 	ip->client->xid = ip->client->packet.xid;
 	ip->client->destination = iaddr_broadcast;
 	ip->client->state = S_SELECTING;
-	ip->client->first_sending = cur_time;
+	time(&ip->client->first_sending);
 	ip->client->interval = ip->client->config->initial_interval;
 
 	/* Add an immediate timeout to cause the first DHCPDISCOVER packet
@@ -293,8 +289,11 @@ state_selecting(void *ipp)
 {
 	struct interface_info *ip = ipp;
 	struct client_lease *lp, *next, *picked;
+        time_t cur_time;
 
 	ASSERT_STATE(state, S_SELECTING);
+
+        time(&cur_time);
 
 	/* Cancel state_selecting and send_discover timeouts, since either
 	   one could have got us here. */
@@ -371,6 +370,9 @@ dhcpack(struct packet *packet)
 {
 	struct interface_info *ip = packet->interface;
 	struct client_lease *lease;
+        time_t cur_time;
+
+        time(&cur_time);
 
 	/* If we're not receptive to an offer right now, or if the offer
 	   has an unrecognizable transaction id, then just drop it. */
@@ -404,7 +406,7 @@ dhcpack(struct packet *packet)
 		ip->client->new->expiry = getULong(
 		    ip->client->new->options[DHO_DHCP_LEASE_TIME].data);
 	else
-		ip->client->new->expiry = default_lease_time;
+		ip->client->new->expiry = DHCP_DEFAULT_LEASE_TIME;
 	/* A number that looks negative here is really just very large,
 	   because the lease expiry offset is unsigned. */
 	if (ip->client->new->expiry < 0)
@@ -539,28 +541,24 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     }
 
     if( new_lease->options[DHO_ROUTERS].len ) {
-        MIB_IPFORWARDROW RouterMib;
         NTSTATUS Status;
 
-        RouterMib.dwForwardDest = 0; /* Default route */
-        RouterMib.dwForwardMask = 0;
-        RouterMib.dwForwardMetric1 = 1;
+        Adapter->RouterMib.dwForwardDest = 0; /* Default route */
+        Adapter->RouterMib.dwForwardMask = 0;
+        Adapter->RouterMib.dwForwardMetric1 = 1;
 
-        if( old_default_route ) {
+        if( Adapter->RouterMib.dwForwardNextHop ) {
             /* If we set a default route before, delete it before continuing */
-            RouterMib.dwForwardDest = old_default_route;
-            DeleteIpForwardEntry( &RouterMib );
+            DeleteIpForwardEntry( &Adapter->RouterMib );
         }
 
-        RouterMib.dwForwardNextHop =
+        Adapter->RouterMib.dwForwardNextHop =
             *((ULONG*)new_lease->options[DHO_ROUTERS].data);
 
-        Status = CreateIpForwardEntry( &RouterMib );
+        Status = CreateIpForwardEntry( &Adapter->RouterMib );
 
         if( !NT_SUCCESS(Status) )
             warning("CreateIpForwardEntry: %lx\n", Status);
-        else
-            old_default_route = RouterMib.dwForwardNextHop;
 
         if (hkey) {
             Buffer[0] = '\0';
@@ -585,6 +583,9 @@ bind_lease(struct interface_info *ip)
 {
     PDHCP_ADAPTER Adapter;
     struct client_lease *new_lease = ip->client->new;
+    time_t cur_time;
+
+    time(&cur_time);
 
     /* Remember the medium. */
     ip->client->new->medium = ip->client->medium;
@@ -638,7 +639,7 @@ state_bound(void *ipp)
 	} else
 		ip->client->destination = iaddr_broadcast;
 
-	ip->client->first_sending = cur_time;
+	time(&ip->client->first_sending);
 	ip->client->interval = ip->client->config->initial_interval;
 	ip->client->state = S_RENEWING;
 
@@ -711,6 +712,9 @@ dhcpoffer(struct packet *packet)
 	int arp_timeout_needed = 0, stop_selecting;
 	char *name = packet->options[DHO_DHCP_MESSAGE_TYPE].len ?
 	    "DHCPOFFER" : "BOOTREPLY";
+        time_t cur_time;
+
+        time(&cur_time);
 
 	/* If we're not receptive to an offer right now, or if the offer
 	   has an unrecognizable transaction id, then just drop it. */
@@ -949,8 +953,11 @@ send_discover(void *ipp)
 {
 	struct interface_info *ip = ipp;
 	int interval, increase = 1;
+        time_t cur_time;
 
         DH_DbgPrint(MID_TRACE,("Doing discover on interface %p\n",ip));
+
+        time(&cur_time);
 
 	/* Figure out how long it's been since we started transmitting. */
 	interval = cur_time - ip->client->first_sending;
@@ -1053,8 +1060,11 @@ state_panic(void *ipp)
 	struct interface_info *ip = ipp;
 	struct client_lease *loop = ip->client->active;
 	struct client_lease *lp;
+        time_t cur_time;
 
 	note("No DHCPOFFERS received.");
+
+        time(&cur_time);
 
 	/* We may not have an active lease, but we may have some
 	   predefined leases that we can try. */
@@ -1140,6 +1150,9 @@ send_request(void *ipp)
 	struct sockaddr_in destination;
 	struct in_addr from;
 	int interval;
+        time_t cur_time;
+
+        time(&cur_time); 
 
 	/* Figure out how long it's been since we started transmitting. */
 	interval = cur_time - ip->client->first_sending;

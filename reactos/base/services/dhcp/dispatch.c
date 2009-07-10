@@ -96,7 +96,7 @@ dispatch(void)
     int count, i, to_msec, nfds = 0;
     struct protocol *l;
     fd_set fds;
-    time_t howlong;
+    time_t howlong, cur_time;
     struct timeval timeval;
 
     ApiLock();
@@ -112,6 +112,8 @@ dispatch(void)
          * a timeout registered, time out the select call then.
          */
     another:
+        time(&cur_time);
+
         if (timeouts) {
             struct timeout *t;
 
@@ -183,16 +185,12 @@ dispatch(void)
         /* Not likely to be transitory... */
         if (count == SOCKET_ERROR) {
             if (errno == EAGAIN || errno == EINTR) {
-                time(&cur_time);
                 continue;
             } else {
                 error("poll: %s", strerror(errno));
                 break;
             }
         }
-
-        /* Get the current time... */
-        time(&cur_time);
 
         i = 0;
         for (l = protocols; l; l = l->next) {
