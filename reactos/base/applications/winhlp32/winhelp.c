@@ -1736,7 +1736,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
                            WINHELP_GetWindowInfo(hlpfile, wndname), show);
 
     /* Message loop */
-    while ((Globals.win_list || Globals.active_popup) && GetMessage(&msg, 0, 0, 0))
+    while (GetMessage(&msg, 0, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);

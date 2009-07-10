@@ -18,8 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wordpad.h"
-
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
@@ -471,3 +469,5 @@ BEGIN
     STRING_OPEN_FAILED,               "不能開啟檔案."
     STRING_OPEN_ACCESS_DENIED,        "你沒有開啟檔案的權力."
 END
+
+#pragma code_page(default)

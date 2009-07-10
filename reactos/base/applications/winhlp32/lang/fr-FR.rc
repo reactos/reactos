@@ -20,11 +20,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winhelp_res.h"
-
-/* UTF-8 */
-#pragma code_page(65001)
-
 /* Menu */
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
@@ -39,18 +34,18 @@ MAIN_MENU MENU
    MENUITEM SEPARATOR
   MENUITEM "&Quitter", MNID_FILE_EXIT
  }
- POPUP "Ã‰&dition" {
+ POPUP "É&dition" {
    MENUITEM "&Copier...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Annoter...", MNID_EDIT_ANNOTATE
+   MENUITEM "&Annotation...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Signets" {
-   MENUITEM "&DÃ©finir...", MNID_BKMK_DEFINE
+ POPUP "&Signet" {
+   MENUITEM "&Définir...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
    POPUP	"Aide toujours visible"
    BEGIN
-     MENUITEM "Par dÃ©faut",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Par défaut",	MNID_OPTS_HELP_DEFAULT
      MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
      MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
   END
@@ -61,7 +56,7 @@ MAIN_MENU MENU
     MENUITEM "Normale",    	MNID_OPTS_FONTS_NORMAL
     MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Utiliser les couleurs systÃ¨me", MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "Utiliser les couleurs système", MNID_OPTS_SYSTEM_COLORS
 }
  POPUP "Aid&e" {
    MENUITEM "&Utiliser l'aide", MNID_HELP_HELPON
@@ -69,7 +64,7 @@ MAIN_MENU MENU
    MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "Ã€ &propos de Wine", MNID_HELP_WINE
+   MENUITEM "À &propos de Wine", MNID_HELP_WINE
 #endif
  }
 }
@@ -87,7 +82,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Recherche"
 {
-    LTEXT  "Pas encore implÃ©mentÃ©", -1, 10, 10, 180, 150
+    LTEXT  "Pas encore implémenté", -1, 10, 10, 180, 150
 }
 
 /* Strings */
@@ -97,15 +92,15 @@ STID_WINE_HELP, 	"Aide de Wine"
 STID_WHERROR, 		"ERREUR"
 STID_WARNING,  		"ATTENTION"
 STID_INFO,  		"Information"
-STID_NOT_IMPLEMENTED, 	"Non implÃ©mentÃ©"
-STID_HLPFILE_ERROR_s, 	"Une erreur est survenue en lisant le fichier d'aide Â«Â %sÂ Â»"
+STID_NOT_IMPLEMENTED, 	"Non implémenté"
+STID_HLPFILE_ERROR_s, 	"Une erreur est survenue en lisant le fichier d'aide « %s »"
 STID_INDEX, 		"&Index"
 STID_CONTENTS,		"Sommaire"
-STID_BACK, 		"&PrÃ©cÃ©dent"
-STID_ALL_FILES, 	"Tous les fichiers (*.*)"
+STID_BACK, 		"&Précédent"
+STID_ALL_FILES, 	"Tous fichiers (*.*)"
 STID_HELP_FILES_HLP, 	"Fichiers d'aide (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Impossible de trouver Â«Â %sÂ Â». Souhaitez-vous rechercher ce fichier vous-mÃªmeÂ ?"
-STID_NO_RICHEDIT	"La bibliothÃ¨que RichEdit n'a pu Ãªtre localisÃ©e... Abandon"
+STID_FILE_NOT_FOUND_s	"Impossible de trouver « %s ». Souhaitez-vous rechercher ce fichier vous-même ?"
+STID_NO_RICHEDIT	"La bibliothèque RichEdit n'a pu être localisée... Abandon"
 STID_PSH_INDEX,		"Rubriques d'aide : "
 }
 
@@ -124,10 +119,10 @@ BEGIN
 		END
 		POPUP   "Aide toujours visible"
 		BEGIN
-			MENUITEM "Par dÃ©faut",  MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Par défaut",  MNID_CTXT_HELP_DEFAULT
 			MENUITEM "Visible",     MNID_CTXT_HELP_VISIBLE
 			MENUITEM "Non visible", MNID_CTXT_HELP_NONVISIBLE
 		END
-		MENUITEM "Utiliser les couleurs systÃ¨me", MNID_CTXT_SYSTEM_COLORS
+		MENUITEM "Utiliser les couleurs système", MNID_CTXT_SYSTEM_COLORS
 	END
 END

@@ -19,8 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "winhelp_res.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -128,3 +126,5 @@ BEGIN
 		MENUITEM "システム カラーを使う",   MNID_CTXT_SYSTEM_COLORS
 	END
 END
+
+#pragma code_page(default)

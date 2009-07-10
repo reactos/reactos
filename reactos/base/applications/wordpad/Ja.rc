@@ -16,8 +16,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "wordpad.h"
-
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -244,6 +242,6 @@ BEGIN
     STRING_WRITE_ACCESS_DENIED,       "ファイルに保存する権限がありません。"
     STRING_OPEN_FAILED,               "ファイルを開けません。"
     STRING_OPEN_ACCESS_DENIED,        "ファイルを開く権限がありません。"
-    STRING_PRINTING_NOT_IMPLEMENTED,  "プリントが実装されていません。"
-    STRING_MAX_TAB_STOPS,             "32以上なタブを追加できません。"
 END
+
+#pragma code_page(default)
