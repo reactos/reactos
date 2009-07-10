@@ -90,6 +90,8 @@ IntEngGradientFill(SURFOBJ *psoDest,
                    POINTL *pptlDitherOrg,
                    ULONG ulMode);
 
+VOID InitXlateImpl(VOID);
+
 XLATEOBJ* FASTCALL
 IntEngCreateXlate(USHORT DestPalType,
                   USHORT SourcePalType,

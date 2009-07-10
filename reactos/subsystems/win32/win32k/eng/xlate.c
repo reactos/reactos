@@ -32,6 +32,11 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID
+InitXlateImpl(VOID)
+{
+}
+
 static __inline ULONG
 ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 {
@@ -669,6 +674,17 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
    }
 
    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+HANDLE APIENTRY
+XLATEOBJ_hGetColorTransform(
+   IN XLATEOBJ *XlateObj)
+{
+   UNIMPLEMENTED;
+   return NULL;
 }
 
 // HACK!

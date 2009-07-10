@@ -528,6 +528,8 @@ DriverEntry (
       return STATUS_UNSUCCESSFUL;
     }
 
+  InitXlateImpl();
+
   /* Create stock objects, ie. precreated objects commonly
      used by win32 applications */
   CreateStockObjects();

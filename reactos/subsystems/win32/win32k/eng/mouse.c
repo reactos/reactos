@@ -1,4 +1,4 @@
-/* 
+/*
  * PROJECT:          ReactOS win32 subsystem
  * PURPOSE:          Mouse pointer functions
  * FILE:             subsystems/win32k/eng/mouse.c
@@ -420,7 +420,7 @@ EngSetPointerShape(
                                      BWColors, 0, 0, 0);
 
         DestPalette = ppdev->DevInfo.hpalDefault;
-        pgp->XlateObject = IntEngCreateXlate(0, PAL_INDEXED,
+        pgp->XlateObject = IntEngCreateXlate(0, 0,
                                              DestPalette, BWPalette);
         EngDeletePalette(BWPalette);
     }
