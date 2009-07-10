@@ -20,6 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
@@ -298,5 +300,3 @@ FONT 9, "MS Shell Dlg"
     PUSHBUTTON      "取消", 2, 158, 23, 47, 14
     PUSHBUTTON      "幫助(&H)", 254, 158, 43, 47, 14
 }
-
-#pragma code_page(default)
