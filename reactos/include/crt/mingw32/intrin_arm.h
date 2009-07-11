@@ -315,7 +315,7 @@ __INTRIN_INLINE void _enable(void)
 }
 
 #ifndef __MSVCRT__
-__INTRIN_INLINE unsigned long _rotl(const unsigned long value, const unsigned char shift)
+__INTRIN_INLINE unsigned int _rotl(const unsigned int value, int shift)
 {
 	return (((value) << ((int)(shift))) | ((value) >> (32 - (int)(shift))));
 }
