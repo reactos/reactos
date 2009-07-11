@@ -276,8 +276,10 @@ BRUSHOBJ_pvGetRbrush(
         if (!bResult)
         {
             if (pbo->pvRbrush)
+            {
                 EngFreeMem(pbo->pvRbrush);
-            pbo->pvRbrush = NULL;
+                pbo->pvRbrush = NULL;
+            }
         }
     }
 

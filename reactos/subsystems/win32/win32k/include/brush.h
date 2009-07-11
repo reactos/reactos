@@ -124,4 +124,8 @@ VOID
 NTAPI
 EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo);
 
+PVOID
+NTAPI
+EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo);
+
 #endif
