@@ -17,6 +17,13 @@
 #define HIGH_LEVEL                        31
 
 //
+// Page size
+//
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 0x1000
+#endif
+
+//
 // FIXME: mmtypes.h?
 //
 #define KIPCR                   0xFFFFF000
