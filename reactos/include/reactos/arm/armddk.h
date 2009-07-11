@@ -58,6 +58,7 @@ typedef struct _KFLOATING_SAVE
     ULONG Reserved;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
+#ifndef _WINNT_H
 /* The following flags control the contents of the CONTEXT structure. */
 #define CONTEXT_ARM    0x0000040
 #define CONTEXT_CONTROL         (CONTEXT_ARM | 0x00000001L)
@@ -104,6 +105,7 @@ typedef struct _CONTEXT {
 	ULONG Pc;
 	ULONG Psr;
 } CONTEXT;
+#endif
 
 //
 // Processor Control Region
