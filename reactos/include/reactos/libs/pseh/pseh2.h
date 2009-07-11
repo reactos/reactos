@@ -23,6 +23,8 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
+#if !defined (__arm__)
+
 #if defined(__GNUC__)
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
@@ -418,6 +420,22 @@ __SEH_END_SCOPE_CHAIN;
 #define _SEH2_LEAVE __leave
 
 #endif
+
+#endif
+
+#else
+
+#define _SEH2_TRY  {
+#define _SEH2_FINALLY }  {
+#define _SEH2_EXCEPT(...) } if (0 && __VA_ARGS__) {
+#define _SEH2_END }
+
+#define _SEH2_GetExceptionInformation() 
+#define _SEH2_GetExceptionCode() STATUS_SUCCESS
+#define _SEH2_AbnormalTermination() 
+
+#define _SEH2_YIELD(STMT_) STMT_
+#define _SEH2_LEAVE 
 
 #endif
 
