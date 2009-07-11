@@ -30,8 +30,6 @@ typedef struct
 
     HANDLE hDevice;
     ULONG DeviceCount;
-    KSSTATE State;
-    ULONG Volume;
 
     ULONG BufferSize;
     PUCHAR Buffer;
@@ -41,7 +39,10 @@ typedef struct
         WAVEFORMATEX WaveFormatEx;
         WAVEOUTCAPSW WaveOutCaps;
         AUXCAPSW     AuxCaps;
-        WAVEINCAPSW WaveInCaps;
+        WAVEINCAPSW  WaveInCaps;
+        ULONGLONG    Position;
+        KSSTATE State;
+        ULONG Volume;
     }u;
 
 }WDMAUD_DEVICE_INFO, *PWDMAUD_DEVICE_INFO;
@@ -201,6 +202,23 @@ typedef struct
 #define IOCTL_WRITEDATA \
     CTL_CODE(FILE_DEVICE_SOUND, \
              8, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+/// IOCTL_GETPOS
+///
+/// Description: This IOCTL retrieves the current playback / write position
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The DeviceType and hDevice must be set
+/// Result:     The result is returned in Volume
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETPOS \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             9, \
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 
