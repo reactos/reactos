@@ -266,7 +266,8 @@ NTSTATUS DGReceiveDatagram(
             }
 	    else
             {
-		ReceiveRequest->RemotePort    = 0;
+		ReceiveRequest->RemotePort = 0;
+		AddrInitIPv4(&ReceiveRequest->RemoteAddress, 0);
             }
 
 	    IoMarkIrpPending(Irp);
