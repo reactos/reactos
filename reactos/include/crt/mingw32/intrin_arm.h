@@ -34,6 +34,21 @@
 
 #define _ReadWriteBarrier() __sync_synchronize()
 
+__INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * const Destination, const char Exchange, const char Comperand)
+{
+	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+}
+
+__INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * const Destination, const short Exchange, const short Comperand)
+{
+	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+}
+
+__INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)
+{
+	return __sync_fetch_and_add(Addend, Value);
+}
+
 __INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const dest, const long exch, const long comp)
 {
 	long a, b;
@@ -103,7 +118,7 @@ __INTRIN_INLINE long _InterlockedExchange(volatile long * const dest, const long
 
 __INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value)
 {
-    return _InterlockedExchange(Target, Value);
+    return (void *)_InterlockedExchange((volatile long * const)Target, (const long)Value);
 }
 
 __INTRIN_INLINE char _InterlockedAnd8(volatile char * const value, const char mask)
