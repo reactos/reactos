@@ -109,7 +109,7 @@ CreateMailslotW(LPCWSTR lpName,
 				 nMaxMessageSize,
 				 &DefaultTimeOut);
 
-   if (Status == STATUS_INVALID_DEVICE_REQUEST)
+   if (Status == STATUS_INVALID_DEVICE_REQUEST || Status == STATUS_NOT_SUPPORTED)
    {
        Status = STATUS_OBJECT_NAME_INVALID;
    }
