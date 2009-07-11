@@ -228,14 +228,7 @@ GlobalFlags(HGLOBAL hMem)
             if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_REUSABLE)
             {
                 /* Set the Win32 Flag */
-                uFlags |= GMEM_DISCARDED;
-            }
-
-            /* Check if it's movable */
-            if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_MOVABLE)
-            {
-                /* Set the Win32 Flag */
-                uFlags |= GMEM_MOVEABLE;
+                uFlags |= GMEM_DISCARDABLE;
             }
 
             /* Check if it's DDE Shared */
@@ -244,6 +237,8 @@ GlobalFlags(HGLOBAL hMem)
                 /* Set the Win32 Flag */
                 uFlags |= GMEM_DDESHARE;
             }
+
+            if (!HandleEntry->Object) uFlags |= GMEM_DISCARDED;
         }
     }
 
@@ -806,6 +801,7 @@ GlobalUnlock(HGLOBAL hMem)
         /* It's not, fail */
         BASE_TRACE_FAILURE();
         SetLastError(ERROR_INVALID_HANDLE);
+        RetVal = FALSE;
     }
     else
     {

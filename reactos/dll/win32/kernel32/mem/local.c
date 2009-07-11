@@ -205,15 +205,10 @@ LocalFlags(HLOCAL hMem)
             if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_REUSABLE)
             {
                 /* Set the Win32 Flag */
-                uFlags |= LMEM_DISCARDED;
-            }
-
-            /* Check if it's movable */
-            if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_MOVABLE)
-            {
-                /* Set the Win32 Flag */
                 uFlags |= LMEM_DISCARDABLE;
             }
+
+            if (!HandleEntry->Object) uFlags |= LMEM_DISCARDED;
         }
     }
 
