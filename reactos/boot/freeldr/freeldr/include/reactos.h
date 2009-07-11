@@ -23,7 +23,7 @@
 /* Base Addres of Kernel in Physical Memory */
 #define KERNEL_BASE_PHYS 0x800000
 
-#if !defined(_M_AMD64)
+#if defined(_M_IX86)
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
 #define PFN_SHIFT 12
