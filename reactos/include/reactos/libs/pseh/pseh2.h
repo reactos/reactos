@@ -421,8 +421,6 @@ __SEH_END_SCOPE_CHAIN;
 
 #endif
 
-#endif
-
 #else
 
 #define _SEH2_TRY  {
@@ -435,7 +433,9 @@ __SEH_END_SCOPE_CHAIN;
 #define _SEH2_AbnormalTermination() 
 
 #define _SEH2_YIELD(STMT_) STMT_
-#define _SEH2_LEAVE 
+#define _SEH2_LEAVE
+
+#endif
 
 #endif
 
