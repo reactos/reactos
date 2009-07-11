@@ -2846,6 +2846,10 @@ typedef struct _CONTEXT {
 } CONTEXT;
 #elif defined(ARM)
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE                         0x1000 // FIXME: This should probably go elsewhere
+#endif
+    
 /* The following flags control the contents of the CONTEXT structure. */
 
 #define CONTEXT_ARM    0x0000040
