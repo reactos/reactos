@@ -224,7 +224,7 @@ GlobalFlags(HGLOBAL hMem)
             /* Get the lock count first */
             uFlags = HandleEntry->LockCount & GMEM_LOCKCOUNT;
 
-            /* Now check if it's discarded */
+            /* Now check if it's discardable */
             if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_REUSABLE)
             {
                 /* Set the Win32 Flag */
@@ -238,7 +238,10 @@ GlobalFlags(HGLOBAL hMem)
                 uFlags |= GMEM_DDESHARE;
             }
 
-            if (!HandleEntry->Object) uFlags |= GMEM_DISCARDED;
+            /* Now check if it's discarded */
+            if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_REUSE)
+               /* Set the Win32 Flag */
+               uFlags |= GMEM_DISCARDED;
         }
     }
 
