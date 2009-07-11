@@ -201,7 +201,7 @@ DispatchCreateKMix(
     if (Buffer)
     {
         /* is the request for a new pin */
-        if (!wcsstr(KS_NAME_PIN, Buffer))
+        if (wcsstr(Buffer, KS_NAME_PIN))
         {
             Status = CreatePin(Irp);
 
@@ -254,6 +254,7 @@ KMixAllocateDeviceHeader(
     /* initialize create item struct */
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
     CreateItem->Create = DispatchCreateKMix;
+    CreateItem->Flags = KSCREATE_ITEM_WILDCARD;
     RtlInitUnicodeString(&CreateItem->ObjectClass, L"KMixer");
 
     Status = KsAllocateDeviceHeader(&DeviceExtension->KsDeviceHeader,
