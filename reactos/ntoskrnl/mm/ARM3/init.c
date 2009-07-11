@@ -726,6 +726,7 @@ MmArmInitSystem(IN ULONG Phase,
             {
                 Buffers[i] = MiAllocatePoolPages(NonPagedPool, PAGE_SIZE);
                 if (!Buffers[i]) break;
+                if (i == 4096) break;
                 i++;
             }
             
