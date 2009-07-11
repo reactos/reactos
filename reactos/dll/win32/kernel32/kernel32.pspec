@@ -8,9 +8,10 @@
 @ stdcall AddLocalAlternateComputerNameA(str ptr)
 @ stdcall AddLocalAlternateComputerNameW(wstr ptr)
 ;@ stdcall AddRefActCtx(ptr)
+@ stdcall AddVectoredContinueHandler(long ptr) ntdll.RtlAddVectoredContinueHandler
 @ stdcall AddVectoredExceptionHandler(long ptr) ntdll.RtlAddVectoredExceptionHandler
 @ stdcall AllocConsole()
-@ stub AllocLSCallback ; missing in XP SP3
+@ stub AllocLSCallback ; missing in XP SP3 and 2003 R2
 @ stdcall AllocateUserPhysicalPages(long ptr ptr)
 @ stdcall AreFileApisANSI()
 @ stdcall AssignProcessToJobObject(ptr ptr)
@@ -19,6 +20,7 @@
 @ stdcall BackupSeek(ptr long long ptr ptr ptr)
 @ stdcall BackupWrite(ptr ptr long ptr long long ptr)
 @ stdcall BaseCheckAppcompatCache(long long long ptr) ;check
+@ stub BaseCheckRunApp
 @ stdcall BaseCleanupAppcompatCache()
 @ stdcall BaseCleanupAppcompatCacheSupport(ptr)
 @ stdcall BaseDumpAppcompatCache()
@@ -336,6 +338,7 @@
 @ stdcall GetCurrentDirectoryW(long ptr)
 @ stdcall GetCurrentProcess()
 @ stdcall GetCurrentProcessId()
+@ stdcall GetCurrentProcessorNumber() ntdll.RtlGetCurrentProcessorNumber
 @ stdcall GetCurrentThread()
 @ stdcall GetCurrentThreadId()
 @ stdcall GetDateFormatA(long long ptr str ptr long)
@@ -388,7 +391,7 @@
 @ stub GetSCallbackTemplate ; missing in XP SP3
 @ stdcall GetLargePageMinimum()
 @ stdcall GetLargestConsoleWindowSize(long)
-@ stdcall GetLastError()
+@ stdcall GetLastError() ntdll.RtlGetLastWin32Error
 @ stdcall GetLinguistLangSize(ptr)
 @ stdcall GetLocalTime(ptr)
 @ stdcall GetLocaleInfoA(long long ptr long)
@@ -573,7 +576,8 @@
 ;@ stdcall InitializeCriticalSectionEx(ptr long long) ; missing in XP SP3
 @ stdcall InitializeSListHead(ptr) ntdll.RtlInitializeSListHead
 @ stdcall InitializeSRWLock(ptr) ntdll.RtlInitializeSRWLock
-@ stdcall InterlockedCompareExchange (ptr long long)
+@ stdcall InterlockedCompareExchange(ptr long long)
+@ stdcall InterlockedCompareExchange64(ptr double double) ntdll.RtlInterlockedCompareExchange64
 @ stdcall InterlockedDecrement(ptr)
 @ stdcall InterlockedExchange(ptr long)
 @ stdcall InterlockedExchangeAdd (ptr long )
@@ -742,6 +746,7 @@
 @ stdcall RemoveDirectoryW(wstr)
 @ stdcall RemoveLocalAlternateComputerNameA(str long)
 @ stdcall RemoveLocalAlternateComputerNameW(wstr long)
+@ stdcall RemoveVectoredContinueHandler(ptr) ntdll.RtlRemoveVectoredContinueHandler
 @ stdcall RemoveVectoredExceptionHandler(ptr) ntdll.RtlRemoveVectoredExceptionHandler
 @ stdcall ReplaceFile(wstr wstr wstr long ptr ptr) ReplaceFileW
 @ stdcall ReplaceFileA(str str str long ptr ptr)
@@ -838,7 +843,7 @@
 @ stdcall SetHandleInformation(long long long)
 @ stdcall SetInformationJobObject(long long ptr long)
 @ stub SetLastConsoleEventActive ; missing in XP SP3
-@ stdcall SetLastError(long)
+@ stdcall SetLastError(long) ntdll.RtlSetLastWin32Error
 @ stub SetLocalPrimaryComputerNameA ; missing in XP SP3
 @ stub SetLocalPrimaryComputerNameW ; missing in XP SP3
 @ stdcall SetLocalTime(ptr)

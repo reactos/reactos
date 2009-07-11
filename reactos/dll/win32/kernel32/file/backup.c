@@ -33,7 +33,7 @@ BackupRead (
 	)
 {
     UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	SetLastError(ERROR_NOT_SUPPORTED);
 	return FALSE;
 }
 
@@ -53,7 +53,7 @@ BackupSeek (
 	)
 {
     UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	SetLastError(ERROR_NOT_SUPPORTED);
 	return FALSE;
 }
 
@@ -74,7 +74,7 @@ BackupWrite (
 	)
 {
     UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	SetLastError(ERROR_NOT_SUPPORTED);
 	return FALSE;
 }
 
