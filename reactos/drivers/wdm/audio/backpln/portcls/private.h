@@ -300,6 +300,10 @@ NTAPI
 NewIUnregisterSubdevice(
     OUT PUNREGISTERSUBDEVICE *OutDevice);
 
+NTSTATUS
+NTAPI
+NewIUnregisterPhysicalConnection(
+    OUT PUNREGISTERPHYSICALCONNECTION *OutConnection);
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
@@ -337,12 +341,12 @@ typedef struct
 {
     LIST_ENTRY Entry;
     ISubdevice * FromSubDevice;
-    LPWSTR FromUnicodeString;
+    UNICODE_STRING FromUnicodeString;
     ULONG FromPin;
     ISubdevice * ToSubDevice;
-    LPWSTR ToUnicodeString;
+    UNICODE_STRING ToUnicodeString;
     ULONG ToPin;
-}PHYSICAL_CONNECTION;
+}PHYSICAL_CONNECTION, *PPHYSICAL_CONNECTION;
 
 typedef struct
 {
