@@ -238,6 +238,7 @@ QueryWdmWaveDeviceFormatSupport(
 MMRESULT
 SetWdmWaveDeviceFormat(
     IN  PSOUND_DEVICE_INSTANCE Instance,
+    IN  DWORD DeviceId,
     IN  PWAVEFORMATEX WaveFormat,
     IN  DWORD WaveFormatSize)
 {
@@ -273,7 +274,7 @@ SetWdmWaveDeviceFormat(
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.DeviceType = DeviceType;
-    DeviceInfo.DeviceIndex = 0; //FIXME
+    DeviceInfo.DeviceIndex = DeviceId;
     DeviceInfo.u.WaveFormatEx.cbSize = WaveFormat->cbSize;
     DeviceInfo.u.WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
     DeviceInfo.u.WaveFormatEx.nChannels = WaveFormat->nChannels;
@@ -342,6 +343,53 @@ WriteFileEx_Committer2(
     return MMSYSERR_NOERROR;
 }
 
+MMRESULT
+GetWdmPosition(
+    IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
+    IN  MMTIME* Time)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE SoundDevice;
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    MMDEVICE_TYPE DeviceType;
+    HANDLE Handle;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    Result = GetSoundDeviceInstanceHandle(SoundDeviceInstance, &Handle);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
+    ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+    DeviceInfo.hDevice = Handle;
+    DeviceInfo.DeviceType = DeviceType;
+
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_OPEN_WDMAUD,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
+    Time->wType = TIME_BYTES;
+    Time->u.cb = (DWORD)DeviceInfo.u.Position;
+
+    return MMSYSERR_NOERROR;
+}
+
 
 MMRESULT
 PopulateWdmDeviceList(
@@ -386,6 +434,7 @@ PopulateWdmDeviceList(
         FuncTable.Open = OpenWdmSoundDevice;
         FuncTable.Close = CloseWdmSoundDevice;
         FuncTable.CommitWaveBuffer = WriteFileEx_Committer2;
+        FuncTable.GetPos = GetWdmPosition;
 
         SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
     }
