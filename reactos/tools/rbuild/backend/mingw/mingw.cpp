@@ -498,7 +498,7 @@ MingwBackend::GenerateGlobalVariables () const
 		if ( ModuleHandlerInformations[i].cflags && ModuleHandlerInformations[i].cflags[0] )
 		{
 				fprintf ( fMakefile,
-						  "MODULETYPE%d_%sFLAGS:=%s\n",
+						  "MODULETYPE%zd_%sFLAGS:=%s\n",
 						  i,
 						  "C",
 						  ModuleHandlerInformations[i].cflags );
@@ -507,7 +507,7 @@ MingwBackend::GenerateGlobalVariables () const
 		if ( ModuleHandlerInformations[i].cflags && ModuleHandlerInformations[i].cflags[0] )
 		{
 				fprintf ( fMakefile,
-						  "MODULETYPE%d_%sFLAGS:=%s\n",
+						  "MODULETYPE%zd_%sFLAGS:=%s\n",
 						  i,
 						  "CXX",
 						  ModuleHandlerInformations[i].cflags );
@@ -516,7 +516,7 @@ MingwBackend::GenerateGlobalVariables () const
 		if ( ModuleHandlerInformations[i].nasmflags && ModuleHandlerInformations[i].nasmflags[0] )
 		{
 				fprintf ( fMakefile,
-						  "MODULETYPE%d_%sFLAGS:=%s\n",
+						  "MODULETYPE%zd_%sFLAGS:=%s\n",
 						  i,
 						  "NASM",
 						  ModuleHandlerInformations[i].nasmflags );
