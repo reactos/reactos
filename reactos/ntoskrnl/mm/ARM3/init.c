@@ -714,6 +714,26 @@ MmArmInitSystem(IN ULONG Phase,
         // Initialize the nonpaged pool
         //
         InitializePool(NonPagedPool, 0);
+        
+        //
+        // Do a little test of the nonpaged pool allocator
+        //
+        if (1)
+        {
+            ULONG i = 0;
+            PVOID Buffers[4096];
+            while (TRUE)
+            {
+                Buffers[i] = MiAllocatePoolPages(NonPagedPool, PAGE_SIZE);
+                if (!Buffers[i]) break;
+                i++;
+            }
+            
+            while (i--)
+            {
+                MiFreePoolPages(Buffers[i]);
+            }
+        }
     }
     else
     {
