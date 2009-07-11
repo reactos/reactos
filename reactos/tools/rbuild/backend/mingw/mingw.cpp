@@ -456,6 +456,7 @@ MingwBackend::GenerateGlobalVariables () const
 	if ( ProjectNode.configuration.Compiler == GnuGcc )
 	{
 		fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
+		fprintf ( fMakefile, "PROJECT_ASFLAGS += -march=$(OARCH)\n" );
 		fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );
 		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -march=$(OARCH)\n" );
 		fprintf ( fMakefile, "endif\n" );
