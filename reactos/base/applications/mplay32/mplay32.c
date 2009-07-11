@@ -641,9 +641,12 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDM_ABOUT:
-                    ShellAbout(hwnd, szAppTitle, 0, 0);
+		{
+                    HICON mplayIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
+                    ShellAbout(hwnd, szAppTitle, 0, mplayIcon);
+		    DeleteObject(mplayIcon);
                     break;
-
+		}
                 case IDM_EXIT:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                     return 0;
