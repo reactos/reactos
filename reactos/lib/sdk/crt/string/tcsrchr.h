@@ -3,7 +3,7 @@
 
 #include <tchar.h>
 
-_TCHAR * _tcsrchr(const _TCHAR * s, _XINT c)
+_TCHAR * _tcsrchr(const _TCHAR * s, _TCHAR c)
 {
  _TCHAR cc = c;
  const _TCHAR * sp = (_TCHAR *)0;
