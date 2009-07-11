@@ -295,6 +295,12 @@ PcIoTimerRoutine(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PVOID  Context);
 
+NTSTATUS
+NTAPI
+NewIUnregisterSubdevice(
+    OUT PUNREGISTERSUBDEVICE *OutDevice);
+
+
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\
 DEFINE_KSPROPERTY_TABLE(PinSet) {\
@@ -315,8 +321,17 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 typedef struct
 {
     LIST_ENTRY Entry;
-    KSOBJECT_HEADER ObjectHeader;
-}SUBDEVICE_ENTRY;
+    UNICODE_STRING SymbolicLink;
+}SYMBOLICLINK_ENTRY, *PSYMBOLICLINK_ENTRY;
+
+
+typedef struct
+{
+    LIST_ENTRY Entry;
+    ISubdevice *SubDevice;
+    UNICODE_STRING Name;
+    LIST_ENTRY SymbolicLinkList;
+}SUBDEVICE_ENTRY, *PSUBDEVICE_ENTRY;
 
 typedef struct
 {

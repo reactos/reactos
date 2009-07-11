@@ -83,6 +83,10 @@ IPortDMus_fnQueryInterface(
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IUnregisterSubdevice))
+    {
+        return NewIUnregisterSubdevice((PUNREGISTERSUBDEVICE*)Output);
+    }
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {

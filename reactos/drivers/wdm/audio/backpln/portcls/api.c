@@ -20,8 +20,13 @@ PcGetDeviceProperty(
     OUT PVOID PropertyBuffer,
     OUT PULONG ResultLength)
 {
+    PPCLASS_DEVICE_EXTENSION DeviceExtension;
+
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
-    return IoGetDeviceProperty(DeviceObject, DeviceProperty, BufferLength, PropertyBuffer, ResultLength);
+
+    DeviceExtension = (PPCLASS_DEVICE_EXTENSION)((PDEVICE_OBJECT)DeviceObject)->DeviceExtension;
+
+    return IoGetDeviceProperty(DeviceExtension->PhysicalDeviceObject, DeviceProperty, BufferLength, PropertyBuffer, ResultLength);
 }
 
 /*

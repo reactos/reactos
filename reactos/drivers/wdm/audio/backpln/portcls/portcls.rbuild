@@ -49,6 +49,7 @@
 	<file>resource.c</file>
 	<file>service_group.c</file>
 	<file>undoc.c</file>
+	<file>unregister.c</file>
 	<file>version.c</file>
 	<file>portcls.rc</file>
 </module>

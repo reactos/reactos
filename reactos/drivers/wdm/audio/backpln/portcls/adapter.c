@@ -145,6 +145,8 @@ PcAddAdapterDevice(
         goto cleanup;
     }
 
+    /* store max subdevice count */
+    portcls_ext->MaxSubDevices = MaxObjects;
     /* store the physical device object */
     portcls_ext->PhysicalDeviceObject = PhysicalDeviceObject;
     /* set up the start device function */
@@ -237,6 +239,8 @@ PcRegisterSubdevice(
     SUBDEVICE_DESCRIPTOR * SubDeviceDescriptor;
     ULONG Index;
     UNICODE_STRING RefName;
+    PSUBDEVICE_ENTRY Entry;
+    PSYMBOLICLINK_ENTRY SymEntry;
 
     DPRINT1("PcRegisterSubdevice DeviceObject %p Name %S Unknown %p\n", DeviceObject, Name, Unknown);
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
@@ -276,18 +280,36 @@ PcRegisterSubdevice(
         return STATUS_UNSUCCESSFUL;
     }
 
+    /* allocate subdevice entry */
+    Entry = AllocateItem(NonPagedPool, sizeof(SUBDEVICE_ENTRY), TAG_PORTCLASS);
+    if (!Entry)
+    {
+        /* Insufficient memory */
+        SubDevice->lpVtbl->Release(SubDevice);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     /* add an create item to the device header */
     Status = KsAddObjectCreateItemToDeviceHeader(DeviceExt->KsDeviceHeader, PcCreateItemDispatch, (PVOID)SubDevice, Name, NULL);
     if (!NT_SUCCESS(Status))
     {
         /* failed to attach */
         SubDevice->lpVtbl->Release(SubDevice);
+        FreeItem(Entry, TAG_PORTCLASS);
         DPRINT1("KsAddObjectCreateItemToDeviceHeader failed with %x\n", Status);
         return Status;
     }
 
     /* initialize reference string */
     RtlInitUnicodeString(&RefName, Name);
+
+    /* initialize subdevice entry */
+    Entry->SubDevice = SubDevice;
+    RtlInitUnicodeString(&Entry->Name, Name);
+    InitializeListHead(&Entry->SymbolicLinkList);
+
+    /* store subdevice entry */
+    InsertTailList(&DeviceExt->SubDeviceList, &Entry->Entry);
 
     for(Index = 0; Index < SubDeviceDescriptor->InterfaceCount; Index++)
     {
@@ -300,12 +322,26 @@ PcRegisterSubdevice(
                                            &SymbolicLinkName);
         if (NT_SUCCESS(Status))
         {
+            /* activate device interface */
             IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-            RtlFreeUnicodeString(&SymbolicLinkName);
+            /* allocate symbolic link entry */
+            SymEntry = AllocateItem(NonPagedPool, sizeof(SYMBOLICLINK_ENTRY), TAG_PORTCLASS);
+            if (SymEntry)
+            {
+                /* initialize symbolic link item */
+                RtlInitUnicodeString(&SymEntry->SymbolicLink, SymbolicLinkName.Buffer);
+                /* store item */
+                InsertTailList(&Entry->SymbolicLinkList, &SymEntry->Entry);
+            }
+            else
+            {
+                /* allocating failed */
+                RtlFreeUnicodeString(&SymbolicLinkName);
+            }
         }
     }
 
-    /* Release SubDevice reference */
+    /* release SubDevice reference */
     SubDevice->lpVtbl->Release(SubDevice);
 
     return STATUS_SUCCESS;
