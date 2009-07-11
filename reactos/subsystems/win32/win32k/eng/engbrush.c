@@ -219,7 +219,7 @@ NTAPI
 EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
 {
     /* Cleanup the brush */
-//    EBRUSHOBJ_vCleanup(pebo);
+    EBRUSHOBJ_vCleanup(pebo);
 
     /* Reinitialize */
     EBRUSHOBJ_vInit(pebo, pbrush, pdc);
