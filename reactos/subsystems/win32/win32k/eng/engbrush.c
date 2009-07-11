@@ -14,62 +14,6 @@
 
 /** Internal functions ********************************************************/
 
-/**
- * This function is not exported, because it makes no sense for
- * The driver to punt back to this function */
-BOOL
-APIENTRY
-EngRealizeBrush(
-    BRUSHOBJ *pbo,
-    SURFOBJ  *psoDst,
-    SURFOBJ  *psoPattern,
-    SURFOBJ  *psoMask,
-    XLATEOBJ *pxlo,
-    ULONG    iHatch)
-{
-    EBRUSHOBJ *pebo;
-    HBITMAP hbmpRealize;
-    SURFOBJ *psoRealize;
-    POINTL ptlSrc = {0, 0};
-    RECTL rclDest;
-    ULONG lWidth;
-
-    /* Calculate width in bytes of the realized brush */
-    lWidth = DIB_GetDIBWidthBytes(psoPattern->sizlBitmap.cx,
-                                  BitsPerFormat(psoDst->iBitmapFormat));
-
-    /* Allocate a bitmap */
-    hbmpRealize = EngCreateBitmap(psoPattern->sizlBitmap,
-                                  lWidth,
-                                  psoDst->iBitmapFormat,
-                                  BMF_NOZEROINIT,
-                                  NULL);
-    if (!hbmpRealize)
-    {
-        return FALSE;
-    }
-
-    /* Lock the bitmap */
-    psoRealize = EngLockSurface(hbmpRealize);
-    if (!psoRealize)
-    {
-        EngDeleteSurface(hbmpRealize);
-        return FALSE;
-    }
-
-    /* Copy the bits to the new format bitmap */
-    rclDest = (RECTL){0, 0, psoPattern->sizlBitmap.cx, psoPattern->sizlBitmap.cy};
-    EngCopyBits(psoRealize, psoPattern, NULL, pxlo, &rclDest, &ptlSrc);
-
-    /* Unlock the bitmap again */
-    EngUnlockSurface(psoRealize);
-
-    pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
-    pebo->pengbrush = (PVOID)hbmpRealize;
-
-    return TRUE;
-}
-
 VOID
 NTAPI
 EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
@@ -137,9 +81,96 @@ EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor, XLATEOBJ *pxlo)
     pebo->BrushObject.iSolidColor = iSolidColor;
 }
 
+VOID
+NTAPI
+EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
+{
+    /* Check if there's a GDI realisation */
+    if (pebo->pengbrush)
+    {
+        EngDeleteSurface(pebo->pengbrush);
+        pebo->pengbrush = NULL;
+    }
+
+    /* Check if there's a driver's realisation */
+    if (pebo->BrushObject.pvRbrush)
+    {
+        /* Free allocated driver memory */
+        EngFreeMem(pebo->BrushObject.pvRbrush);
+        pebo->BrushObject.pvRbrush = NULL;
+    }
+}
+
+VOID
+NTAPI
+EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
+{
+    /* Cleanup the brush */
+    EBRUSHOBJ_vCleanup(pebo);
+
+    /* Reinitialize */
+    EBRUSHOBJ_vInit(pebo, pbrush, pdc);
+}
+
+/**
+ * This function is not exported, because it makes no sense for
+ * The driver to punt back to this function */
+BOOL
+APIENTRY
+EngRealizeBrush(
+    BRUSHOBJ *pbo,
+    SURFOBJ  *psoDst,
+    SURFOBJ  *psoPattern,
+    SURFOBJ  *psoMask,
+    XLATEOBJ *pxlo,
+    ULONG    iHatch)
+{
+    EBRUSHOBJ *pebo;
+    HBITMAP hbmpRealize;
+    SURFOBJ *psoRealize;
+    POINTL ptlSrc = {0, 0};
+    RECTL rclDest;
+    ULONG lWidth;
+
+    /* Calculate width in bytes of the realized brush */
+    lWidth = DIB_GetDIBWidthBytes(psoPattern->sizlBitmap.cx,
+                                  BitsPerFormat(psoDst->iBitmapFormat));
+
+    /* Allocate a bitmap */
+    hbmpRealize = EngCreateBitmap(psoPattern->sizlBitmap,
+                                  lWidth,
+                                  psoDst->iBitmapFormat,
+                                  BMF_NOZEROINIT,
+                                  NULL);
+    if (!hbmpRealize)
+    {
+        return FALSE;
+    }
+
+    /* Lock the bitmap */
+    psoRealize = EngLockSurface(hbmpRealize);
+    if (!psoRealize)
+    {
+        EngDeleteSurface(hbmpRealize);
+        return FALSE;
+    }
+
+    /* Copy the bits to the new format bitmap */
+    rclDest = (RECTL){0, 0, psoPattern->sizlBitmap.cx, psoPattern->sizlBitmap.cy};
+    EngCopyBits(psoRealize, psoPattern, NULL, pxlo, &rclDest, &ptlSrc);
+
+    /* Unlock the bitmap again */
+    EngUnlockSurface(psoRealize);
+
+    pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
+    pebo->pengbrush = (PVOID)hbmpRealize;
+
+    return TRUE;
+}
+
 BOOL
 NTAPI
-EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo)
+EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 {
     BOOL bResult;
     PFN_DrvRealizeBrush pfnRealzizeBrush = NULL;
@@ -155,7 +186,7 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo)
     }
 
     ppdev = (PPDEVOBJ)psurfTrg->SurfObj.hdev; // FIXME: all SURFACEs need a PDEV
-    if (ppdev)
+    if (ppdev && bCallDriver)
         pfnRealzizeBrush = ppdev->DriverFunctions.RealizeBrush;
     if (!pfnRealzizeBrush)
     {
@@ -194,37 +225,6 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo)
     return bResult;
 }
 
-VOID
-NTAPI
-EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
-{
-    /* Check if there's a GDI realisation */
-    if (pebo->pengbrush)
-    {
-        EngDeleteSurface(pebo->pengbrush);
-        pebo->pengbrush = NULL;
-    }
-
-    /* Check if there's a driver's realisation */
-    if (pebo->BrushObject.pvRbrush)
-    {
-        /* Free allocated driver memory */
-        EngFreeMem(pebo->BrushObject.pvRbrush);
-        pebo->BrushObject.pvRbrush = NULL;
-    }
-}
-
-VOID
-NTAPI
-EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
-{
-    /* Cleanup the brush */
-    EBRUSHOBJ_vCleanup(pebo);
-
-    /* Reinitialize */
-    EBRUSHOBJ_vInit(pebo, pbrush, pdc);
-}
-
 PVOID
 NTAPI
 EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo)
@@ -233,7 +233,7 @@ EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo)
 
     if (!pebo->pengbrush)
     {
-        bResult = EBRUSHOBJ_bRealizeBrush(pebo);
+        bResult = EBRUSHOBJ_bRealizeBrush(pebo, FALSE);
         if (!bResult)
         {
             if (pebo->pengbrush)
@@ -272,7 +272,7 @@ BRUSHOBJ_pvGetRbrush(
 
     if (!pbo->pvRbrush)
     {
-        bResult = EBRUSHOBJ_bRealizeBrush(pebo);
+        bResult = EBRUSHOBJ_bRealizeBrush(pebo, TRUE);
         if (!bResult)
         {
             if (pbo->pvRbrush)

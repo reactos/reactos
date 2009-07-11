@@ -118,7 +118,7 @@ EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, struct _DC *pdc);
 
 BOOL
 NTAPI
-EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo);
+EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver);
 
 VOID
 NTAPI
