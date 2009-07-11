@@ -8,76 +8,37 @@
 	</xi:include>
 
 	<xi:include href="baseaddress.rbuild" />
-
-	<define name="__REACTOS__" />
+                
+    <define name="_M_ARM" />
 	<define name="_ARM_" />
 	<define name="__arm__" />
 	<define name="TARGET_arm" host="true" />
-
-	<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
-	<compilerflag compiler="as">-gstabs+</compilerflag>
-
-	<if property="DBG" value="1">
-		<define name="DBG">1</define>
-		<define name="_SEH_ENABLE_TRACE" />
-		<property name="DBG_OR_KDBG" value="true" />
-	</if>
-	<if property="DBG" value="0">
-		<define name="DBG">0</define>
-	</if>
-
-	<if property="KDBG" value="1">
-		<define name="KDBG">1</define>
-		<property name="DBG_OR_KDBG" value="true" />
-	</if>
-
-	<include>.</include>
-	<include>include</include>
-	<include root="intermediate">include</include>
-	<include>include/psdk</include>
-	<include root="intermediate">include/psdk</include>
-	<include>include/dxsdk</include>
-	<include root="intermediate">include/dxsdk</include>
-	<include>include/crt</include>
-	<include>include/crt/mingw32</include>
-	<include>include/ddk</include>
-	<include>include/GL</include>
-	<include>include/ndk</include>
-	<include>include/reactos</include>
-	<include root="intermediate">include/reactos</include>
-	<include root="intermediate">include/reactos/mc</include>
-	<include>include/reactos/libs</include>
-	<include>include/reactos/arm</include>
-
-	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
-	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
+    
+    <define name="USE_COMPILER_EXCEPTIONS" />
+    
+    <property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
+    <property name="WINEBUILD_FLAGS" value="--kill-at"/>
+        
+    <include>include/reactos/arm</include>
 
 	<if property="SARCH" value="versatile">
 		<define name="BOARD_CONFIG_VERSATILE"/>
 	</if>
 
-	<if property="OPTIMIZE" value="1">
-		<compilerflag>-Os</compilerflag>
-		<compilerflag>-ftracer</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="2">
-		<compilerflag>-Os</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="3">
-		<compilerflag>-O1</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="4">
-		<compilerflag>-O2</compilerflag>
-	</if>
-	<if property="OPTIMIZE" value="5">
-		<compilerflag>-O3</compilerflag>
-	</if>
+	<group compilerset="gcc">
+		<if property="OPTIMIZE" value="1">
+			<compilerflag>-ftracer</compilerflag>
+		</if>
+        <compilerflag>-Wno-attributes</compilerflag>
+	</group>
 
-	<define name="__MSVCRT__"/>
-	<compilerflag>-Wno-attributes</compilerflag>
-	<compilerflag>-fno-strict-aliasing</compilerflag>
-	<linkerflag>--strip-debug</linkerflag>
-	<linkerflag>-static</linkerflag>
+    
+	<define name="__MSVCRT__"/> <!-- DUBIOUS -->
+    
+	<group linkerset="ld">
+        <linkerflag>--strip-debug</linkerflag> <!-- INVESTIGATE -->
+        <linkerflag>-static</linkerflag> <!-- INVESTIGATE -->
+	</group>
 
 	<directory name="media">
 		<directory name="nls">
@@ -196,6 +157,4 @@
             </directory>
 		</directory>
 	</directory>
-
-	<define name="_USE_32BIT_TIME_T" />
 </project>

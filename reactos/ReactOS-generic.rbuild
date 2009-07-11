@@ -85,50 +85,12 @@
 	<include host="true" root="intermediate">include</include>
 	<include host="true">include/reactos</include>
 	<include host="true">include/reactos/wine</include>
-
-	<directory name="base">
-		<xi:include href="base/base.rbuild" />
-	</directory>
-	<directory name="boot">
-		<xi:include href="boot/boot.rbuild" />
-	</directory>
-	<directory name="dll">
-		<xi:include href="dll/dll.rbuild" />
-	</directory>
-	<directory name="drivers">
-		<xi:include href="drivers/drivers.rbuild" />
-	</directory>
-	<directory name="hal">
-		<xi:include href="hal/hal.rbuild" />
-	</directory>
-	<directory name="include">
-		<xi:include href="include/directory.rbuild" />
-	</directory>
-	<directory name="lib">
-		<xi:include href="lib/lib.rbuild" />
-	</directory>
-	<directory name="media">
-		<xi:include href="media/media.rbuild" />
-	</directory>
-	<directory name="modules">
-		<xi:include href="modules/directory.rbuild" />
-	</directory>
-	<directory name="ntoskrnl">
-		<xi:include href="ntoskrnl/ntoskrnl.rbuild" />
-		<if property="BUILD_MP" value="1">
-			<xi:include href="ntoskrnl/ntkrnlmp.rbuild" />
-		</if>
-	</directory>
-	<directory name="subsystems">
-		<xi:include href="subsystems/subsystems.rbuild" />
-	</directory>
-	<directory name="tools">
-		<xi:include href="tools/tools.rbuild" />
-	</directory>
-
+    
 	<group compilerset="gcc">
 		<compilerflag>-Wall</compilerflag>
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
+        <compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
+        <compilerflag compiler="as">-gstabs+</compilerflag>
 	</group>
 
 	<group compilerset="msc">
@@ -137,4 +99,56 @@
 		<compilerflag>/Zi</compilerflag>
 		<compilerflag>/W1</compilerflag>
 	</group>
+    
+	<group compilerset="gcc">
+		<if property="OPTIMIZE" value="1">
+			<compilerflag>-Os</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="2">
+			<compilerflag>-Os</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="3">
+			<compilerflag>-O1</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="4">
+			<compilerflag>-O2</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="5">
+			<compilerflag>-O3</compilerflag>
+		</if>
+
+		<compilerflag>-fno-strict-aliasing</compilerflag>
+		<compilerflag>-Wno-strict-aliasing</compilerflag>
+		<compilerflag>-Wpointer-arith</compilerflag>
+		<compilerflag>-Wno-multichar</compilerflag>
+		<!-- compilerflag>-H</compilerflag>    enable this for header traces -->
+	</group>
+
+	<group compilerset="msc">
+		<if property="OPTIMIZE" value="1">
+			<compilerflag>/O1</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="2">
+			<compilerflag>/O2</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="3">
+			<compilerflag>/Ox /GS-</compilerflag>
+			<compilerflag>/Ot</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="4">
+			<compilerflag>/Ox /GS-</compilerflag>
+			<compilerflag>/Os</compilerflag>
+		</if>
+		<if property="OPTIMIZE" value="5">
+			<compilerflag>/Ox /GS-</compilerflag>
+			<compilerflag>/Os</compilerflag>
+			<compilerflag>/Ob2</compilerflag>
+			<compilerflag>/GF</compilerflag>
+			<compilerflag>/Gy</compilerflag>
+		</if>
+
+		<compilerflag>/GS-</compilerflag>
+	</group>
+    
+	<define name="_USE_32BIT_TIME_T" />
 </group>
