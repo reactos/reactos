@@ -459,9 +459,9 @@ BOOL OnCreate(HWND hWnd)
         return FALSE;
 
     /* Create the status bar panes */
-    nParts[0] = 100;
-    nParts[1] = 210;
-    nParts[2] = 400;
+    nParts[0] = STATUS_SIZE1;
+    nParts[1] = STATUS_SIZE2;
+    nParts[2] = STATUS_SIZE3;
     SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
 
     /* Create tab pages */
@@ -638,8 +638,8 @@ void OnSize( WPARAM nType, int cx, int cy )
     SendMessageW(hStatusWnd, WM_SIZE, nType, MAKELPARAM(cx,rc.bottom - rc.top));
 
     /* Update the status bar pane sizes */
-    nParts[0] = bInMenuLoop ? -1 : 100;
-    nParts[1] = 210;
+    nParts[0] = bInMenuLoop ? -1 : STATUS_SIZE1;
+    nParts[1] = STATUS_SIZE2;
     nParts[2] = cx;
     SendMessageW(hStatusWnd, SB_SETPARTS, bInMenuLoop ? 1 : 3, (LPARAM) (LPINT) nParts);
 
@@ -792,8 +792,8 @@ void TaskManager_OnExitMenuLoop(HWND hWnd)
     bInMenuLoop = FALSE;
     /* Update the status bar pane sizes */
     GetClientRect(hWnd, &rc);
-    nParts[0] = 100;
-    nParts[1] = 210;
+    nParts[0] = STATUS_SIZE1;
+    nParts[1] = STATUS_SIZE2;
     nParts[2] = rc.right;
     SendMessageW(hStatusWnd, SB_SETPARTS, 3, (LPARAM) (LPINT) nParts);
     SendMessageW(hStatusWnd, SB_SETTEXT, 0, (LPARAM)L"");

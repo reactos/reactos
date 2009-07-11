@@ -47,6 +47,9 @@ typedef struct _IO_COUNTERS {
 #define RUN_PERF_PAGE
 
 #define STATUS_WINDOW	2001
+#define STATUS_SIZE1	80
+#define STATUS_SIZE2	210
+#define STATUS_SIZE3	400
 
 typedef struct
 {
