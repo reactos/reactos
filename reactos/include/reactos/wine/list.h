@@ -25,7 +25,7 @@
 #define __WINE_SERVER_LIST_INLINE inline
 #else
 #if defined(__GNUC__)
-#define __WINE_SERVER_LIST_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__))
+#define __WINE_SERVER_LIST_INLINE extern __inline__ __attribute__((__always_inline__))
 #elif defined(_MSC_VER)
 #define __WINE_SERVER_LIST_INLINE __inline
 #else
