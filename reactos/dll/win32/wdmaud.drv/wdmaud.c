@@ -175,6 +175,18 @@ CloseWdmSoundDevice(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  PVOID Handle)
 {
+    WDMAUD_DEVICE_INFO DeviceInfo;
+    MMRESULT Result;
+    MMDEVICE_TYPE DeviceType;
+    PSOUND_DEVICE SoundDevice;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+
+    if ( ! MMSUCCESS(Result) )
+    {
+        return TranslateInternalMmResult(Result);
+    }
+
     if ( OpenCount == 0 )
     {
         return MMSYSERR_NOERROR;
@@ -182,9 +194,23 @@ CloseWdmSoundDevice(
 
     SND_ASSERT( KernelHandle != INVALID_HANDLE_VALUE );
 
+    Result = GetSoundDeviceType(SoundDevice, &DeviceType);
+    SND_ASSERT( Result == MMSYSERR_NOERROR );
+
     if (SoundDeviceInstance->Handle != (PVOID)KernelHandle)
     {
-        CloseHandle((HANDLE)SoundDeviceInstance->Handle);
+        ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
+
+        DeviceInfo.DeviceType = DeviceType;
+        DeviceInfo.hDevice = SoundDeviceInstance->Handle;
+
+        SyncOverlappedDeviceIoControl(KernelHandle,
+                                      IOCTL_CLOSE_WDMAUD,
+                                      (LPVOID) &DeviceInfo,
+                                      sizeof(WDMAUD_DEVICE_INFO),
+                                      (LPVOID) &DeviceInfo,
+                                      sizeof(WDMAUD_DEVICE_INFO),
+                                      NULL);
     }
 
     --OpenCount;
