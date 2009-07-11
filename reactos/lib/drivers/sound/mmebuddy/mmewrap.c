@@ -121,7 +121,7 @@ MmeOpenWaveDevice(
     if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
-    Result = SetWaveDeviceFormat(SoundDeviceInstance, Format, sizeof(WAVEFORMATEX));
+    Result = SetWaveDeviceFormat(SoundDeviceInstance, DeviceId, Format, sizeof(WAVEFORMATEX));
     if ( ! MMSUCCESS(Result) )
     {
         /* TODO: Destroy sound instance */
@@ -204,3 +204,46 @@ MmeResetWavePlayback(
 
     return StopStreaming(SoundDeviceInstance);
 }
+
+MMRESULT
+MmeGetPosition(
+    IN  MMDEVICE_TYPE DeviceType,
+    IN  DWORD DeviceId,
+    IN  DWORD PrivateHandle,
+    IN  MMTIME* Time,
+    IN  DWORD Size)
+{
+    MMRESULT Result;
+    PSOUND_DEVICE_INSTANCE SoundDeviceInstance;
+    PSOUND_DEVICE SoundDevice;
+    PMMFUNCTION_TABLE FunctionTable;
+
+    VALIDATE_MMSYS_PARAMETER( PrivateHandle );
+    SoundDeviceInstance = (PSOUND_DEVICE_INSTANCE) PrivateHandle;
+
+    if ( ! IsValidSoundDeviceInstance(SoundDeviceInstance) )
+        return MMSYSERR_INVALHANDLE;
+
+    Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( Size != sizeof(MMTIME) )
+        return MMSYSERR_INVALPARAM;
+
+    Result = GetSoundDeviceFunctionTable(SoundDevice, &FunctionTable);
+    if ( ! MMSUCCESS(Result) )
+        return TranslateInternalMmResult(Result);
+
+    if ( FunctionTable->GetPos == NULL )
+    {
+        /* This indicates bad practice, really! If you can open, why not close?! */
+        return MMSYSERR_NOTSUPPORTED;
+    }
+
+    /* Call the driver */
+    Result = FunctionTable->GetPos(SoundDeviceInstance, Time);
+
+    return Result;
+}
+
