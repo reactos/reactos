@@ -52,6 +52,7 @@
 #define EH_STACK_INVALID    0x08
 #define EH_NESTED_CALL      0x10
 
+#ifndef _M_ARM
 static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
     frame->Next = (struct _EXCEPTION_REGISTRATION_RECORD *)__readfsdword(0);
@@ -64,6 +65,7 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
 	__writefsdword(0, (unsigned long)frame->Next);
     return frame->Next;
 }
+#endif
 
 #define __TRY _SEH2_TRY
 #define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))
