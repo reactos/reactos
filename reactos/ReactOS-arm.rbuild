@@ -7,9 +7,9 @@
 		</xi:fallback>
 	</xi:include>
 
-	<xi:include href="baseaddress.rbuild" />
+    <xi:include href="ReactOS-generic.rbuild" />
                 
-    <define name="_M_ARM" />
+    <!-- <define name="_M_ARM" /> Already defined by toolchain -->
 	<define name="_ARM_" />
 	<define name="__arm__" />
 	<define name="TARGET_arm" host="true" />
