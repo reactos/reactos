@@ -5676,6 +5676,8 @@ KefReleaseSpinLockFromDpcLevel(
 #define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
 #define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
 
+#define KeGetDcacheFillSize() 1L
+    
 #else // !defined (_X86_)
 
 FORCEINLINE
@@ -5710,12 +5712,8 @@ KeAcquireSpinLockRaiseToDpc(
 
 #define KeAcquireSpinLock(SpinLock, OldIrql) \
   *(OldIrql) = KeAcquireSpinLockRaiseToDpc(SpinLock)
-
+    
 #endif // !defined (_X86_)
-
-#define KeGetDcacheFillSize() 1L
-
-
 
 /*
 ** Utillity functions
