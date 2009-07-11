@@ -72,6 +72,7 @@ GetNumWdmDevs(
 MMRESULT
 GetWdmDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD DeviceId,
     OUT PVOID Capabilities,
     IN  DWORD CapabilitiesSize)
 {
@@ -95,7 +96,7 @@ GetWdmDeviceCapabilities(
 
     ZeroMemory(&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO));
     DeviceInfo.DeviceType = DeviceType;
-    DeviceInfo.DeviceIndex = 0; //FIXME
+    DeviceInfo.DeviceIndex = DeviceId;
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
                                            IOCTL_GETCAPABILITIES,

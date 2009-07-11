@@ -72,6 +72,7 @@ MmeGetSoundDeviceCapabilities(
         return Result;
 
     return GetSoundDeviceCapabilities(SoundDevice,
+                                      DeviceId,
                                       Capabilities,
                                       CapabilitiesSize);
 }

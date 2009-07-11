@@ -156,6 +156,7 @@ struct _SOUND_DEVICE_INSTANCE;
 #define DEFINE_GETCAPS_FUNCTYPE(func_typename, caps_type) \
     typedef MMRESULT (*func_typename)( \
         IN  struct _SOUND_DEVICE* SoundDevice, \
+        IN  DWORD DeviceId, \
         OUT caps_type Capabilities, \
         IN  DWORD CapabilitiesSize);
 
@@ -414,6 +415,7 @@ MmeResetWavePlayback(
 MMRESULT
 GetSoundDeviceCapabilities(
     IN  PSOUND_DEVICE SoundDevice,
+    IN  DWORD DeviceId,
     OUT PVOID Capabilities,
     IN  DWORD CapabilitiesSize);
 
