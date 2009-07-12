@@ -290,7 +290,7 @@ BOOLEAN
 NTAPI
 MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
-                            IN PLARGE_INTEGER DirectoryTableBase)
+                            IN PULONG DirectoryTableBase)
 {
     NTSTATUS Status;
     ULONG i;
@@ -360,7 +360,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     //
     // Return the page table base
     //
-    DirectoryTableBase->QuadPart = Pfn[0] << PAGE_SHIFT;
+    DirectoryTableBase[0] = Pfn[0] << PAGE_SHIFT;
     return TRUE;
 }
 
@@ -391,12 +391,13 @@ Mmi386ReleaseMmInfo(IN PEPROCESS Process)
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PLARGE_INTEGER DirectoryTableBase)
+                             IN PULONG DirectoryTableBase)
 {
     //
     // Share the directory base with the idle process
     //
-    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
+    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
+    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
     
     //
     // Initialize the Addresss Space
@@ -685,93 +686,6 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
     //
     if (WasDirty) *WasDirty = FALSE; // LIE!!!
     if (Page) *Page = Pfn;
-}
-
-PVOID
-NTAPI
-MmCreateHyperspaceMapping(IN PFN_TYPE Page)
-{
-    PMMPTE PointerPte, FirstPte, LastPte;
-    MMPTE TempPte;
-    PVOID Address;
-    
-    //
-    // Loop hyperspace PTEs (1MB)
-    //
-    FirstPte = PointerPte = MiGetPteAddress((PVOID)HYPER_SPACE);
-    LastPte = PointerPte + 256;
-    while (PointerPte <= LastPte)
-    {
-        //
-        // Find a free slot
-        //
-        if (PointerPte->u.Hard.L2.Fault.Type == FaultPte)
-        {
-            //
-            // Use this entry
-            //
-            break;
-        }
-        
-        //
-        // Try the next one
-        //
-        PointerPte++;
-    }
-    
-    //
-    // Check if we didn't find anything
-    //
-    if (PointerPte > LastPte) return NULL;
-    
-    //
-    // Create the mapping
-    //
-    TempPte = MiArmTemplatePte;
-    TempPte.u.Hard.L2.Small.BaseAddress = Page;
-    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-    ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
-    *PointerPte = TempPte;
-    
-    //
-    // Return the address
-    //
-    Address = (PVOID)(HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE));
-    KeArmInvalidateTlbEntry(Address);
-    DPRINT("[HMAP]: %p %lx\n", Address, Page);
-    return Address;
-}
-
-PFN_TYPE
-NTAPI
-MmDeleteHyperspaceMapping(IN PVOID Address)
-{
-    PFN_TYPE Pfn;
-    PMMPTE PointerPte;
-    DPRINT("[HUNMAP]: %p\n", Address);
-    
-    //
-    // Get the PTE
-    //
-    PointerPte = MiGetPteAddress(Address);
-    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
-    
-    //
-    // Save the PFN
-    //
-    Pfn = PointerPte->u.Hard.L2.Small.BaseAddress;
-    
-    //
-    // Destroy the PTE
-    //
-    PointerPte->u.Hard.AsUlong = 0;
-    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-    
-    //
-    // Flush the TLB entry and return the PFN
-    //
-    KeArmInvalidateTlbEntry(Address);
-    return Pfn;
 }
 
 VOID
