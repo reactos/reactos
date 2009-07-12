@@ -1,7 +1,12 @@
 #include "include/reactos/msvctarget.h"
 
+#ifdef _M_ARM
+@ fastcall ExAcquireFastMutex(ptr)
+@ fastcall ExReleaseFastMutex(ptr)
+#else
 @ fastcall ExAcquireFastMutex(ptr) ExiAcquireFastMutex
 @ fastcall ExReleaseFastMutex(ptr) ExiReleaseFastMutex
+#endif
 @ fastcall ExTryToAcquireFastMutex(ptr) ExiTryToAcquireFastMutex
 @ fastcall HalClearSoftwareInterrupt(long)
 @ fastcall HalRequestSoftwareInterrupt(long)
@@ -69,14 +74,16 @@
 @ fastcall HalSweepDcache()
 #endif
 @ stdcall HalTranslateBusAddress(long long long long ptr ptr)
-@ stdcall IoAssignDriveLetters(ptr str ptr ptr) HalpAssignDriveLetters
 @ stdcall IoFlushAdapterBuffers(ptr ptr ptr ptr long long)
 @ stdcall IoFreeAdapterChannel(ptr)
 @ stdcall IoFreeMapRegisters(ptr ptr long)
 @ stdcall IoMapTransfer(ptr ptr ptr ptr ptr long)
+#ifndef _M_ARM
+@ stdcall IoAssignDriveLetters(ptr str ptr ptr) HalpAssignDriveLetters
 @ stdcall IoReadPartitionTable(ptr long long ptr) HalpReadPartitionTable
 @ stdcall IoSetPartitionInformation(ptr long long long) HalpSetPartitionInformation
 @ stdcall IoWritePartitionTable(ptr long long long ptr) HalpWritePartitionTable
+#endif
 @ stdcall KeAcquireSpinLock(ptr ptr)
 @ extern KdComPortInUse
 @ stdcall KeFlushWriteBuffer()
