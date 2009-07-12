@@ -130,11 +130,12 @@ NTAPI
 MiAllocatePoolPages(IN POOL_TYPE PoolType,
                     IN SIZE_T SizeInBytes)
 {
-    PFN_NUMBER SizeInPages;
+    PFN_NUMBER SizeInPages, PageFrameNumber;
     ULONG i;
     KIRQL OldIrql;
     PLIST_ENTRY NextEntry, NextHead, LastHead;
-    PMMPTE PointerPte;
+    PMMPTE PointerPte, StartPte;
+    MMPTE TempPte;
     PMMPFN Pfn1;
     PVOID BaseVa;
     PMMFREE_POOL_ENTRY FreeEntry;
@@ -258,13 +259,78 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     // If we got here, we're out of space.
     // Start by releasing the lock
     //
-    KeReleaseQueuedSpinLock (LockQueueMmNonPagedPoolLock, OldIrql);
+    KeReleaseQueuedSpinLock(LockQueueMmNonPagedPoolLock, OldIrql);
+
+    //
+    // Allocate some system PTEs
+    //
+    StartPte = MiReserveSystemPtes(SizeInPages, NonPagedPoolExpansion);
+    PointerPte = StartPte;
+    if (StartPte == NULL)
+    {
+        //
+        // Ran out of memory
+        //
+        DPRINT1("Out of NP Expansion Pool\n");
+        return NULL;
+    }
     
     //
-    // We should now go into expansion nonpaged pool
+    // Acquire the pool lock now
     //
-    DPRINT1("Out of NP Pool\n");
-    return NULL;
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueMmNonPagedPoolLock);
+    
+    //
+    // Lock the PFN database too
+    //
+    //KeAcquireQueuedSpinLockAtDpcLevel(LockQueuePfnLock);
+    
+    //
+    // Loop the pages
+    //
+    TempPte = HyperTemplatePte;
+    do
+    {
+        //
+        // Allocate a page
+        //
+        PageFrameNumber = MmAllocPage(MC_NPPOOL, 0);
+        
+        //
+        // Get the PFN entry for it
+        //
+        Pfn1 = MiGetPfnEntry(PageFrameNumber);
+        
+        //
+        // Write the PTE for it
+        //
+        TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+        ASSERT(PointerPte->u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Hard.Valid == 1);
+        *PointerPte++ = TempPte;
+    } while (--SizeInPages > 0);
+    
+    //
+    // This is the last page
+    //
+    Pfn1->u3.e1.EndOfAllocation = 1;
+    
+    //
+    // Get the first page and mark it as such
+    //
+    Pfn1 = MiGetPfnEntry(StartPte->u.Hard.PageFrameNumber);
+    Pfn1->u3.e1.StartOfAllocation = 1;
+    
+    //
+    // Release the PFN and nonpaged pool lock
+    //
+    //KeReleaseQueuedSpinLockFromDpcLevel(LockQueuePfnLock);
+    KeReleaseQueuedSpinLock(LockQueueMmNonPagedPoolLock, OldIrql);
+    
+    //
+    // Return the address
+    //
+    return MiPteToAddress(StartPte);
 }
 
 ULONG
