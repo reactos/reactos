@@ -3,7 +3,7 @@
 <group>
 	<if property="ARCH" value="arm">
 	<module name="hal" type="kernelmodedll">
-		<importlibrary definition="hal_arm.def" />
+		<importlibrary definition="hal.pspec" />
 		<include base="ntoskrnl">include</include>
 		<library>ntoskrnl</library>
 		<define name="_NTHAL_" />
