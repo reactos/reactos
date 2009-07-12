@@ -375,14 +375,11 @@ WdmAudControlDeviceType(
         }
     }
 
-
-    if (NT_SUCCESS(Status))
-        DeviceInfo->DeviceCount = Result;
-    else
-        DeviceInfo->DeviceCount = 0;
+    /* store result count */
+    DeviceInfo->DeviceCount = Result;
 
     DPRINT1("WdmAudControlDeviceType Status %x Devices %u\n", Status, DeviceInfo->DeviceCount);
-    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
 }
 
 NTSTATUS
