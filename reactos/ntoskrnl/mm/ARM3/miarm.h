@@ -112,12 +112,12 @@ MiInitializeArmPool(
     VOID
 );
 
-VOID
-NTAPI
-InitializePool(                          //
-    IN POOL_TYPE PoolType,
-    IN ULONG Threshold
-);
+VOID                      //
+NTAPI                     //
+InitializePool(           //
+    IN POOL_TYPE PoolType,// FIXFIX: This should go in ex.h after the pool merge
+    IN ULONG Threshold    //
+);                        //
 
 VOID
 NTAPI
