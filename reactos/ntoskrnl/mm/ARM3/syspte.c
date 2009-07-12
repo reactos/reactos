@@ -33,6 +33,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
                            IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType,
                            IN ULONG Alignment)
 {
+    KIRQL OldIrql;
     PMMPTE PointerPte, NextPte, PreviousPte;
     ULONG_PTR ClusterSize;
     
@@ -42,10 +43,22 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     ASSERT(Alignment <= PAGE_SIZE);
     
     //
+    // Lock the system PTE space
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueSystemSpaceLock);
+    
+    //
     // Get the first free cluster and make sure we have PTEs available
     //
     PointerPte = &MmFirstFreeSystemPte[SystemPtePoolType];
-    if (PointerPte->u.List.NextEntry == -1) return NULL;
+    if (PointerPte->u.List.NextEntry == ((ULONG)0xFFFFF)) 
+    {
+        //
+        // Fail
+        //
+        KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
+        return NULL;
+    }
     
     //
     // Now move to the first free system PTE cluster
@@ -96,6 +109,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
                 // Decrement the free count and move to the next starting PTE
                 //
                 MmTotalFreeSystemPtes[SystemPtePoolType] -= NumberOfPtes;
+                KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
                 PointerPte += (ClusterSize - NumberOfPtes);
                 break;
             }
@@ -126,7 +140,14 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
         //
         // We couldn't find what you wanted -- is this the last cluster?
         //
-        if (PointerPte->u.List.NextEntry == -1) return NULL;
+        if (PointerPte->u.List.NextEntry == ((ULONG)0xFFFFF))
+        {
+            //
+            // Fail
+            //
+            KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
+            return NULL;
+        }
 
         //
         // Go to the next cluster
@@ -164,20 +185,27 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
                     IN ULONG NumberOfPtes,
                     IN MMSYSTEM_PTE_POOL_TYPE SystemPtePoolType)
 {
+    KIRQL OldIrql;
     ULONG_PTR ClusterSize, CurrentSize;
     PMMPTE CurrentPte, NextPte, PointerPte;
     
     //
-    // Check to make sure the PTE address is within bounds.
+    // Check to make sure the PTE address is within bounds
     //
     ASSERT(NumberOfPtes != 0);
     ASSERT(StartingPte >= MmSystemPtesStart[SystemPtePoolType]);
     ASSERT(StartingPte <= MmSystemPtesEnd[SystemPtePoolType]);
     
     //
-    // Zero PTEs.
+    // Zero PTEs
     //
-    RtlZeroMemory(StartingPte, NumberOfPtes * sizeof (MMPTE));
+    RtlZeroMemory(StartingPte, NumberOfPtes * sizeof(MMPTE));
+    CurrentSize = (ULONG_PTR)(StartingPte - MmSystemPteBase);
+    
+    //
+    // Acquire the system PTE lock
+    //
+    OldIrql = KeAcquireQueuedSpinLock(LockQueueSystemSpaceLock);
   
     //
     // Increase availability
@@ -187,7 +215,6 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
     //
     // Get the free cluster and start going through them
     //
-    CurrentSize = (ULONG_PTR)(StartingPte - MmSystemPteBase);
     CurrentPte = &MmFirstFreeSystemPte[SystemPtePoolType];
     while (TRUE)
     {
@@ -201,7 +228,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
             // Sanity check
             //
             ASSERT(((StartingPte + NumberOfPtes) <= PointerPte) ||
-                   (CurrentPte->u.List.NextEntry == -1));
+                   (CurrentPte->u.List.NextEntry == ((ULONG)0xFFFFF)));
             
             //
             // Get the next cluster in case it's the one
@@ -312,6 +339,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
             //
             // We released the PTEs into their cluster (and optimized the list)
             //
+            KeReleaseQueuedSpinLock(LockQueueSystemSpaceLock, OldIrql);
             break;
         }
         
@@ -350,7 +378,7 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     //
     // Make the first entry free and link it
     //
-    StartingPte->u.List.NextEntry = -1;
+    StartingPte->u.List.NextEntry = ((ULONG)0xFFFFF);
     MmFirstFreeSystemPte[PoolType].u.Long = 0;
     MmFirstFreeSystemPte[PoolType].u.List.NextEntry = StartingPte -
                                                       MmSystemPteBase;
