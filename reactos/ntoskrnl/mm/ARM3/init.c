@@ -718,7 +718,7 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Do a little test of the nonpaged pool allocator
         //
-        if (1)
+        if (0)
         {
             ULONG i = 0;
             PVOID Buffers[4096];
