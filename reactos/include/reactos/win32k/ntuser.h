@@ -231,19 +231,26 @@ typedef struct _PFNCLIENT
     WNDPROC pfnMDIActivateDlgProc;
 } PFNCLIENT, *PPFNCLIENT;
 
+/*
+  Wine Common proc ( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL Unicode );
+  Windows uses Ansi == TRUE, Wine uses Unicode == TRUE.
+ */
+
+typedef LRESULT(CALLBACK *WNDPROC_EX)(HWND,UINT,WPARAM,LPARAM,BOOL);
+
 typedef struct _PFNCLIENTWORKER
 {
-    WNDPROC pfnButtonWndProc;
-    WNDPROC pfnComboBoxWndProc;
-    WNDPROC pfnComboListBoxProc;
-    WNDPROC pfnDialogWndProc;
-    WNDPROC pfnEditWndProc;
-    WNDPROC pfnListBoxWndProc;
-    WNDPROC pfnMDIClientWndProc;
-    WNDPROC pfnStaticWndProc;
-    WNDPROC pfnImeWndProc;
-    WNDPROC pfnGhostWndProc;
-    WNDPROC pfnCtfHookProc;
+    WNDPROC_EX pfnButtonWndProc;
+    WNDPROC_EX pfnComboBoxWndProc;
+    WNDPROC_EX pfnComboListBoxProc;
+    WNDPROC_EX pfnDialogWndProc;
+    WNDPROC_EX pfnEditWndProc;
+    WNDPROC_EX pfnListBoxWndProc;
+    WNDPROC_EX pfnMDIClientWndProc;
+    WNDPROC_EX pfnStaticWndProc;
+    WNDPROC_EX pfnImeWndProc;
+    WNDPROC_EX pfnGhostWndProc;
+    WNDPROC_EX pfnCtfHookProc;
 } PFNCLIENTWORKER, *PPFNCLIENTWORKER;
 
 struct _WND;
