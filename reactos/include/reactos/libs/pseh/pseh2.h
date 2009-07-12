@@ -425,7 +425,7 @@ __SEH_END_SCOPE_CHAIN;
 
 #define _SEH2_TRY  {
 #define _SEH2_FINALLY }  {
-#define _SEH2_EXCEPT(...) } if (0 && __VA_ARGS__) {
+#define _SEH2_EXCEPT(...) } if (0) {
 #define _SEH2_END }
 
 #define _SEH2_GetExceptionInformation() 
