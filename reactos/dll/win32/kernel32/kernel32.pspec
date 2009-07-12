@@ -1017,3 +1017,7 @@
 @ stdcall lstrlen(str) lstrlenA
 @ stdcall lstrlenA(str)
 @ stdcall lstrlenW(wstr)
+
+; Functions added in Win Vista
+@ stdcall QueryFullProcessImageNameA(ptr long str ptr)
+@ stdcall QueryFullProcessImageNameW(ptr long wstr ptr)
