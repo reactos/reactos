@@ -239,9 +239,10 @@ ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
         PrevLuid = LuidValue;
         NewLuid = RtlLargeIntegerAdd(PrevLuid,
                                      LuidIncrement);
-    } while(ExfInterlockedCompareExchange64(&LuidValue.QuadPart,
-                                            &NewLuid.QuadPart,
-                                            &PrevLuid.QuadPart) != PrevLuid.QuadPart);
+    } while(ExInterlockedCompareExchange64(&LuidValue.QuadPart,
+                                           &NewLuid.QuadPart,
+                                           &PrevLuid.QuadPart,
+                                           NULL) != PrevLuid.QuadPart);
 
     LocallyUniqueId->LowPart = NewLuid.u.LowPart;
     LocallyUniqueId->HighPart = NewLuid.u.HighPart;
