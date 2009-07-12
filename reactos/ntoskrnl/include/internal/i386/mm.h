@@ -14,6 +14,7 @@ PULONG MmGetPageDirectory(VOID);
 /* Base addresses of PTE and PDE */
 #define PAGETABLE_MAP       (0xc0000000)
 #define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
+#define HYPER_SPACE		                    (0xC0400000)
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \

@@ -61,8 +61,6 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
 
-#define HYPER_SPACE		                    (0xC0400000)
-
 #define MI_HYPERSPACE_PTES                  (256 - 1)
 #define MI_ZERO_PTES                        (32)
 #define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
