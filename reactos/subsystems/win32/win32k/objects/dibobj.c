@@ -1579,7 +1579,7 @@ DIB_CreateDIBSection(
         *bits = bm.bmBits;
     }
 
-//  if (res) pdcattr->ulDirty_ |= DC_DIBSECTION;
+    if (res) pdcattr->ulDirty_ |= DC_DIBSECTION;
 
     return res;
 }
