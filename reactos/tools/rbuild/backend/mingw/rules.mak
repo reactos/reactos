@@ -152,7 +152,7 @@ define RBUILD_WINEBUILD_DEF
 
 $(6): $(2) $$(WINEBUILD_TARGET) | ${call RBUILD_intermediate_dir,$(6)}
 	$$(ECHO_WINEBLD)
-	$$(Q)$$(WINEBUILD_TARGET) -o $$@ --def -E $$< --filename $(5) ${call RBUILD_spec_flags,$(1),$(4)}
+	$$(Q)$$(WINEBUILD_TARGET) $$(WINEBUILD_FLAGS) -o $$@ --def -E $$< --filename $(5) ${call RBUILD_spec_flags,$(1),$(4)}
 
 endef
 
@@ -161,7 +161,7 @@ define RBUILD_WINEBUILD_STUBS
 
 $(6): $(2) $$(WINEBUILD_TARGET) | ${call RBUILD_intermediate_dir,$(6)}
 	$$(ECHO_WINEBLD)
-	$$(Q)$$(WINEBUILD_TARGET) -o $$@ --pedll $$< --filename $(5) ${call RBUILD_spec_flags,$(1),$(4)}
+	$$(Q)$$(WINEBUILD_TARGET) $$(WINEBUILD_FLAGS) -o $$@ --pedll $$< --filename $(5) ${call RBUILD_spec_flags,$(1),$(4)}
 
 endef
 
