@@ -149,7 +149,6 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     PCHAR IPAddress = NULL, Netmask = NULL, DefaultGateway = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     DWORD Error = ERROR_SUCCESS;
-    MIB_IPFORWARDROW DefGatewayRow;
 
     Adapter->DhclientState.config = &Adapter->DhclientConfig;
     strncpy(Adapter->DhclientInfo.name, (char*)Adapter->IfMib.bDescr,
@@ -181,11 +180,11 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
         DefaultGateway = RegReadString( AdapterKey, NULL, "DefaultGateway" );
 
         if( DefaultGateway ) {
-            DefGatewayRow.dwForwardDest = 0;
-            DefGatewayRow.dwForwardMask = 0;
-            DefGatewayRow.dwForwardMetric1 = 1;
-            DefGatewayRow.dwForwardNextHop = inet_addr(DefaultGateway);
-            Error = CreateIpForwardEntry( &DefGatewayRow );
+            Adapter->RouterMib.dwForwardDest = 0;
+            Adapter->RouterMib.dwForwardMask = 0;
+            Adapter->RouterMib.dwForwardMetric1 = 1;
+            Adapter->RouterMib.dwForwardNextHop = inet_addr(DefaultGateway);
+            Error = CreateIpForwardEntry( &Adapter->RouterMib );
             if( Error )
                 warning("Failed to set default gateway %s: %ld\n",
                         DefaultGateway, Error);
@@ -212,9 +211,10 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
 
 void AdapterInit() {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
-    DWORD Error, Size = sizeof(MIB_IFTABLE), i;
+    DWORD Error, Size = sizeof(MIB_IFTABLE);
     PDHCP_ADAPTER Adapter = NULL;
     struct interface_info *ifi = NULL;
+    int i;
 
     WSAStartup(0x0101,&wsd);
 
@@ -233,7 +233,7 @@ void AdapterInit() {
 
     DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
-    for( i = 0; i < Table->dwNumEntries; i++ ) {
+    for( i = Table->dwNumEntries - 1; i >= 0; i-- ) {
         DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
                                Table->table[i].dwIndex));
         Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
