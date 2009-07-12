@@ -141,7 +141,13 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             KdpServiceDispatcher(BREAKPOINT_PRINT,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
                                  ExceptionRecord->ExceptionInformation[2]);
+#ifdef _M_IX86
             Context->Eax = STATUS_SUCCESS;
+#elif _M_ARM
+            Context->R0 = STATUS_SUCCESS;
+#else
+#error Please be portable when modifying code
+#endif
         }
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
