@@ -19,6 +19,7 @@
 #undef ExInterlockedAddULong
 #undef ExInterlockedIncrementLong
 #undef ExInterlockedDecrementLong
+#undef ExInterlockedAddLargeStatistic
 
 /* FUNCTIONS ******************************************************************/
 
@@ -288,7 +289,7 @@ ExInterlockedRemoveHeadList(IN PLIST_ENTRY ListHead,
 
 VOID
 FASTCALL
-ExInterlockedAddLargeStatistic(IN PLARGE_INTEGER Addend,
+ExInterlockedAddLargeStatistic(IN PLONGLONG Addend,
                                IN ULONG Increment)
 {
     UNIMPLEMENTED;
@@ -296,7 +297,7 @@ ExInterlockedAddLargeStatistic(IN PLARGE_INTEGER Addend,
 
 LONGLONG
 FASTCALL
-ExInterlockedCompareExchange64(IN OUT PLONGLONG Destination,
+ExInterlockedCompareExchange64(IN OUT LONGLONG volatile *Destination,
                                IN PLONGLONG Exchange,
                                IN PLONGLONG Comparand,
                                IN PKSPIN_LOCK Lock)
