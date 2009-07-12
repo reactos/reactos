@@ -124,7 +124,7 @@ main(int argc, char* argv[])
         i++;
     }
 
-    DeviceInfo.State = KSSTATE_RUN;
+    DeviceInfo.u.State = KSSTATE_RUN;
     Status = DeviceIoControl(hWdmAud, IOCTL_SETDEVICE_STATE, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
     if (!Status)
     {
@@ -154,7 +154,7 @@ main(int argc, char* argv[])
 
     printf("WDMAUD:  Played buffer\n");
 
-    DeviceInfo.State = KSSTATE_STOP;
+    DeviceInfo.u.State = KSSTATE_STOP;
     Status = DeviceIoControl(hWdmAud, IOCTL_SETDEVICE_STATE, (LPVOID)&DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &DeviceInfo, sizeof(WDMAUD_DEVICE_INFO), &BytesReturned, &Overlapped);
     if (!Status)
     {
