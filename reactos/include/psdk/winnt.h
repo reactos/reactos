@@ -4863,7 +4863,6 @@ static __inline__ struct _TEB * NtCurrentTeb(void)
 //
 // NT-ARM is not documented
 //
-#define KIRQL ULONG // Hack!
 #include <armddk.h>
 
 #elif defined (_M_AMD64)

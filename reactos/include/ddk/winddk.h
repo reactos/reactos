@@ -187,6 +187,7 @@ struct _COMPRESSED_DATA_INFO;
 
 #if (_M_IX86)
 #define KIP0PCRADDRESS                      0xffdff000
+    
 #endif
 
 #define KERNEL_STACK_SIZE                   12288
@@ -5183,9 +5184,6 @@ extern NTKERNELAPI ULONG_PTR MmUserProbeAddress;
 #define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
 #define MM_SYSTEM_SPACE_END 0xFFFFFFFF
     
-#define MM_DONT_ZERO_ALLOCATION             0x00000001
-#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY    0x00000002
-
 #elif defined(__x86_64__)
 
 #define CONTEXT_AMD64 0x100000
@@ -5566,6 +5564,10 @@ KeGetCurrentProcessorNumber(VOID)
 #error Unknown architecture
 #endif
 
+#define MM_DONT_ZERO_ALLOCATION             0x00000001
+#define MM_ALLOCATE_FROM_LOCAL_NODE_ONLY    0x00000002
+
+    
 #define EFLAG_SIGN                        0x8000
 #define EFLAG_ZERO                        0x4000
 #define EFLAG_SELECT                      (EFLAG_SIGN | EFLAG_ZERO)
@@ -5678,9 +5680,48 @@ KefReleaseSpinLockFromDpcLevel(
 
 #define KeGetDcacheFillSize() 1L
     
-#else // !defined (_X86_)
-
-FORCEINLINE
+#elif defined(_M_ARM) // !defined (_X86_)
+    
+    NTHALAPI
+    KIRQL
+    FASTCALL
+    KfAcquireSpinLock(
+                      IN PKSPIN_LOCK SpinLock);
+    
+    NTHALAPI
+    VOID
+    FASTCALL
+    KfReleaseSpinLock(
+                      IN PKSPIN_LOCK SpinLock,
+                      IN KIRQL NewIrql);
+    
+    
+    NTKERNELAPI
+    VOID
+    FASTCALL
+    KefAcquireSpinLockAtDpcLevel(
+                                 IN PKSPIN_LOCK  SpinLock);
+    
+    NTKERNELAPI
+    VOID
+    FASTCALL
+    KefReleaseSpinLockFromDpcLevel(
+                                   IN PKSPIN_LOCK  SpinLock);
+    
+    
+#define KeAcquireSpinLockAtDpcLevel(SpinLock) KefAcquireSpinLockAtDpcLevel(SpinLock)
+#define KeReleaseSpinLockFromDpcLevel(SpinLock) KefReleaseSpinLockFromDpcLevel(SpinLock)
+#define KeAcquireSpinLock(a,b)  *(b) = KfAcquireSpinLock(a)
+#define KeReleaseSpinLock(a,b)  KfReleaseSpinLock(a,b)
+    
+    NTKERNELAPI
+    VOID
+    NTAPI
+    KeInitializeSpinLock(
+                         IN PKSPIN_LOCK  SpinLock);
+    
+#else
+    
 VOID
 NTAPI
 KeInitializeSpinLock(
@@ -10691,6 +10732,13 @@ Exfi386InterlockedExchangeUlong(
 #define ExInterlockedExchangeUlong(Target, Value, Lock) Exfi386InterlockedExchangeUlong(Target, Value)
 
 #endif /* _X86_ */
+    
+#ifdef _M_ARM
+//
+// NT-ARM is not documented
+//
+#include <armddk.h>   
+#endif
 
 #ifdef __cplusplus
 }
