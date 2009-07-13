@@ -85,12 +85,12 @@
 	<include host="true" root="intermediate">include</include>
 	<include host="true">include/reactos</include>
 	<include host="true">include/reactos/wine</include>
-    
+
 	<group compilerset="gcc">
 		<compilerflag>-Wall</compilerflag>
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
-        <compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
-        <compilerflag compiler="as">-gstabs+</compilerflag>
+		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
+		<compilerflag compiler="as">-gstabs+</compilerflag>
 	</group>
 
 	<group compilerset="msc">
@@ -99,7 +99,7 @@
 		<compilerflag>/Zi</compilerflag>
 		<compilerflag>/W1</compilerflag>
 	</group>
-    
+
 	<group compilerset="gcc">
 		<if property="OPTIMIZE" value="1">
 			<compilerflag>-Os</compilerflag>
@@ -149,6 +149,6 @@
 
 		<compilerflag>/GS-</compilerflag>
 	</group>
-    
+
 	<define name="_USE_32BIT_TIME_T" />
 </group>
