@@ -178,10 +178,7 @@ DisplayTrayProperties(ITrayWindow *Tray)
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[4];
     TCHAR szCaption[256];
-#if 1
-    MessageBox(NULL, _T("Not implemented"), NULL, 0);
-    return NULL;
-#endif
+
     if (!LoadString(hExplorerInstance,
                     IDS_TASKBAR_STARTMENU_PROP_CAPTION,
                     szCaption,
@@ -201,10 +198,10 @@ DisplayTrayProperties(ITrayWindow *Tray)
     psh.nStartPage = 0;
     psh.ppsp = psp;
 
-    InitPropSheetPage(&psp[0], IDD_TASKBARPAGE, (DLGPROC)TaskbarPageProc);
-    InitPropSheetPage(&psp[1], IDD_STARTMENUPAGE, (DLGPROC)StartMenuPageProc);
-    InitPropSheetPage(&psp[2], IDD_NOTIFICATIONPAGE, (DLGPROC)NotificationPageProc);
-    InitPropSheetPage(&psp[3], IDD_TOOLBARSPAGE, (DLGPROC)ToolbarsPageProc);
+    InitPropSheetPage(&psp[0], IDD_TASKBARPROP_TASKBAR, (DLGPROC)TaskbarPageProc);
+    InitPropSheetPage(&psp[1], IDD_TASKBARPROP_STARTMENU, (DLGPROC)StartMenuPageProc);
+    InitPropSheetPage(&psp[2], IDD_TASKBARPROP_NOTIFICATION, (DLGPROC)NotificationPageProc);
+    InitPropSheetPage(&psp[3], IDD_TASKBARPROP_TOOLBARS, (DLGPROC)ToolbarsPageProc);
 
     return (HWND)PropertySheet(&psh);
 }
