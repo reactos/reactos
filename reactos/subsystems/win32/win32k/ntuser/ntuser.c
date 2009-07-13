@@ -33,14 +33,38 @@
 #define NDEBUG
 #include <debug.h>
 
+BOOL InitSysParams();
+
+/* GLOBALS *******************************************************************/
+
 ERESOURCE UserLock;
 ATOM AtomMessage; // Window Message atom.
 BOOL gbInitialized;
+HINSTANCE hModClient = NULL;
 
-BOOL
-InitSysParams();
+/* PRIVATE FUNCTIONS *********************************************************/
 
-/* FUNCTIONS **********************************************************/
+static
+NTSTATUS FASTCALL
+InitUserAtoms(VOID)
+{
+
+  gpsi->atomSysClass[ICLS_MENU]      = 32768;
+  gpsi->atomSysClass[ICLS_DESKTOP]   = 32769;
+  gpsi->atomSysClass[ICLS_DIALOG]    = 32770;
+  gpsi->atomSysClass[ICLS_SWITCH]    = 32771;
+  gpsi->atomSysClass[ICLS_ICONTITLE] = 32772;
+  gpsi->atomSysClass[ICLS_TOOLTIPS]  = 32774;
+  
+  AtomMessage = IntAddGlobalAtom(L"Message", TRUE);
+  gpsi->atomSysClass[ICLS_HWNDMESSAGE] = AtomMessage;
+
+  DPRINT("AtomMessage -> %x\n", AtomMessage);
+
+  return STATUS_SUCCESS;
+}
+
+/* FUNCTIONS *****************************************************************/
 
 
 NTSTATUS FASTCALL InitUserImpl(VOID)
@@ -71,6 +95,8 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
          DPRINT("Global Server Data -> %x\n", gpsi);
       }
    }
+
+   InitUserAtoms();
 
    InitSysParams();
 
