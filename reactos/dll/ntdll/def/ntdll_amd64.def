@@ -655,7 +655,7 @@ RtlConvertSidToUnicodeString
 RtlCopyLuid
 RtlCopyLuidAndAttributesArray
 ;RtlCopyMappedMemory
-RtlCopyMemory=memcpy
+RtlCopyMemory=memmove
 ;RtlCopyMemoryNonTemporal
 ;RtlCopyMemoryStreamTo
 ;RtlCopyOutOfProcessMemoryStreamTo
@@ -1763,7 +1763,7 @@ longjmp
 mbstowcs
 memchr
 memcmp
-memcpy
+memcpy=memmove
 memmove
 memset
 pow

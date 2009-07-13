@@ -1599,7 +1599,7 @@
 @ cdecl mbstowcs()
 @ cdecl mbtowc()
 @ cdecl memchr()
-@ cdecl memcpy()
+@ cdecl memcpy() memmove
 @ cdecl memmove()
 @ cdecl memset()
 @ cdecl qsort()

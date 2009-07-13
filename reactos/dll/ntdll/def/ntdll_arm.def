@@ -1027,7 +1027,7 @@ labs
 mbstowcs
 memchr
 memcmp
-memcpy
+memcpy=memmove
 memmove
 memset
 qsort

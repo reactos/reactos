@@ -750,7 +750,7 @@ EXPORTS
   mbtowc @744
   memchr @745
   memcmp @746
-  memcpy @747
+  memcpy=memmove @747
   memmove @748
   memset @749
   mktime @750

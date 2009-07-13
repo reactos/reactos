@@ -90,14 +90,12 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>memchr_asm.s</file>
-				<file>memcpy_asm.s</file>
 				<file>memmove_asm.s</file>
 				<file>memset_asm.s</file>
 			</directory>
 		</if>
 		<ifnot property="ARCH" value="i386">
 			<file>memchr.c</file>
-			<file>memcpy.c</file>
 			<file>memmove.c</file>
 			<file>memset.c</file>
 		</ifnot>

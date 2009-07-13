@@ -1365,7 +1365,7 @@ log
 mbstowcs
 memchr
 memcmp
-memcpy
+memcpy=memmove
 memmove
 memset
 pow
