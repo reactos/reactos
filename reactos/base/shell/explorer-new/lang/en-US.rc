@@ -90,7 +90,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Notification Area"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
+    CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
     GROUPBOX        "Icons", IDC_STATIC, 6,33,240,58, WS_DISABLED
     LTEXT           "You can keep the notification area uncluttered by hiding icons that you have not clicked recently.", IDC_STATIC, 13,48,223,16, WS_DISABLED
     AUTOCHECKBOX    "&Hide inactive icons", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
