@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_NAPI_WIN32_H
 #define __INCLUDE_NAPI_WIN32_H
 
+extern HINSTANCE hModClient; // This should replace (PROCESSINFO)->hModUser
+
 typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
 
 #include <pshpack1.h>
