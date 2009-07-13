@@ -27,6 +27,8 @@
 #define NDEBUG
 #include <debug.h>
 
+HANDLE hModuleWin;
+
 PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 /* FIXME */
@@ -386,6 +388,8 @@ DriverEntry (
       DPRINT1("Adding system services failed!\n");
       return STATUS_UNSUCCESSFUL;
     }
+
+  hModuleWin = MmPageEntireDriver(DriverEntry);
 
     /*
      * Register Object Manager Callbacks

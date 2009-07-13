@@ -119,7 +119,8 @@ MmPageEntireDriver(IN PVOID AddressWithinSection)
     //
     // We should find the driver loader entry and return its base address
     //
-    UNIMPLEMENTED;
+    PLDR_DATA_TABLE_ENTRY pLdrDataTabEntry = MiLookupDataTableEntry(AddressWithinSection);
+    if (pLdrDataTabEntry) return pLdrDataTabEntry->DllBase;
     return NULL;
 }
 
