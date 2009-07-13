@@ -364,9 +364,35 @@ NtUserInitializeClientPfnArrays(
   PPFNCLIENTWORKER pfnClientWorker,
   HINSTANCE hmodUser)
 {
-   UNIMPLEMENTED
+   NTSTATUS Status = STATUS_SUCCESS;
+   DPRINT("Enter NtUserInitializeClientPfnArrays User32 0x%x\n",hmodUser);
+   UserEnterExclusive();
 
-   return STATUS_UNSUCCESSFUL;
+   _SEH2_TRY
+   {
+      ProbeForRead( pfnClientA, sizeof(PFNCLIENT), 1);
+      ProbeForRead( pfnClientW, sizeof(PFNCLIENT), 1);
+      ProbeForRead( pfnClientWorker, sizeof(PFNCLIENTWORKER), 1);
+      RtlCopyMemory(&gpsi->apfnClientA, pfnClientA, sizeof(PFNCLIENT));
+      RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
+      RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
+
+      hModClient = hmodUser;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status =_SEH2_GetExceptionCode();
+   }
+   _SEH2_END
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed reading Client Pfns from user space.\n");
+      SetLastNtError(Status);
+   }
+   
+   UserLeave();
+   return Status;
 }
 
 DWORD
