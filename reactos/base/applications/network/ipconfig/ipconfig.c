@@ -515,6 +515,7 @@ VOID Release(LPTSTR Index)
 {
     IP_ADAPTER_INDEX_MAP AdapterInfo;
     DWORD ret;
+    DWORD i;
 
     /* if interface is not given, query GetInterfaceInfo */
     if (Index == NULL)
@@ -530,8 +531,19 @@ VOID Release(LPTSTR Index)
 
             if (GetInterfaceInfo(pInfo, &ulOutBufLen) == NO_ERROR )
             {
-                CopyMemory(&AdapterInfo, &pInfo->Adapter[0], sizeof(IP_ADAPTER_INDEX_MAP));
-                _tprintf(_T("name - %S\n"), pInfo->Adapter[0].Name);
+                for (i = 0; i < pInfo->NumAdapters; i++)
+                {
+                     CopyMemory(&AdapterInfo, &pInfo->Adapter[i], sizeof(IP_ADAPTER_INDEX_MAP));
+                     _tprintf(_T("name - %S\n"), pInfo->Adapter[i].Name);
+
+                     /* Call IpReleaseAddress to release the IP address on the specified adapter. */
+                     if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
+                     {
+                         _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
+                         DoFormatMessage(ret);
+                     }
+                }
+
                 HeapFree(ProcessHeap, 0, pInfo);
             }
             else
@@ -556,15 +568,6 @@ VOID Release(LPTSTR Index)
          *      ipconfig /release *con* will release all cards with 'con' in their name
          */
     }
-
-
-    /* Call IpReleaseAddress to release the IP address on the specified adapter. */
-    if ((ret = IpReleaseAddress(&AdapterInfo)) != NO_ERROR)
-    {
-        _tprintf(_T("\nAn error occured while releasing interface %S : \n"), AdapterInfo.Name);
-        DoFormatMessage(ret);
-    }
-
 }
 
 
