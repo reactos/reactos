@@ -78,18 +78,6 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 OUT PWINDOWCLASS *BaseClass  OPTIONAL,
                 OUT PWINDOWCLASS **Link  OPTIONAL);
 
-#define REGISTERCLASS_SYSTEM 0x4
-
-PWINDOWCLASS
-FASTCALL
-IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
-               IN PUNICODE_STRING ClassName,
-               IN PUNICODE_STRING MenuName,
-               IN WNDPROC wpExtra,
-               IN DWORD dwFlags,
-               IN PDESKTOP Desktop,
-               IN PPROCESSINFO pi);
-
 PCALLPROC
 UserFindCallProc(IN PWINDOWCLASS Class,
                  IN WNDPROC WndProc,
