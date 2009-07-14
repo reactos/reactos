@@ -61,10 +61,14 @@ DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     Adapter = AdapterFindIndex( Req->AdapterIndex );
 
-    Reply.QueryHWInfo.AdapterIndex = Req->AdapterIndex;
-    Reply.QueryHWInfo.MediaType = Adapter->IfMib.dwType;
-    Reply.QueryHWInfo.Mtu = Adapter->IfMib.dwMtu;
-    Reply.QueryHWInfo.Speed = Adapter->IfMib.dwSpeed;
+    Reply.Reply = Adapter ? 1 : 0;
+
+    if (Adapter) {
+        Reply.QueryHWInfo.AdapterIndex = Req->AdapterIndex;
+        Reply.QueryHWInfo.MediaType = Adapter->IfMib.dwType;
+        Reply.QueryHWInfo.Mtu = Adapter->IfMib.dwMtu;
+        Reply.QueryHWInfo.Speed = Adapter->IfMib.dwSpeed;
+    }
 
     ApiUnlock();
 
@@ -99,14 +103,13 @@ DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
 
     Adapter = AdapterFindIndex( Req->AdapterIndex );
 
-    Reply.Reply = Adapter ? 1 : 0;
-
     if( !Adapter || Adapter->DhclientState.state != S_BOUND ) {
         Reply.Reply = 0;
+        ApiUnlock();
         return Send( &Reply );
     }
 
-    Adapter->DhclientState.state = S_BOUND;
+    Reply.Reply = 1;
 
     send_discover( &Adapter->DhclientInfo );
     state_bound( &Adapter->DhclientInfo );

@@ -48,6 +48,8 @@
 #include "resinfo.h"
 #include "route.h"
 #include "wine/debug.h"
+#include "dhcpcsdk.h"
+#include "dhcp/rosdhcp_public.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -1880,19 +1882,33 @@ DWORD WINAPI GetUniDirectionalAdapterInfo(PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIP
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
  *
- * NOTES
- *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
- *  this function does nothing.
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
+  COMM_DHCP_REPLY Reply;
+  COMM_DHCP_REQ Request;
+  DWORD BytesRead;
+
+  Request.AdapterIndex = AdapterInfo->Index;
+  Request.Type = DhcpReqReleaseIpAddress;
+
   TRACE("AdapterInfo %p\n", AdapterInfo);
-  /* not a stub, never going to support this (and I never mark an adapter as
-     DHCP enabled, see GetAdaptersInfo, so this should never get called) */
-  return ERROR_NOT_SUPPORTED;
+
+  if (CallNamedPipe(DHCP_PIPE_NAME,
+                    &Request,
+                    sizeof(Request),
+                    &Reply,
+                    sizeof(Reply),
+                    &BytesRead,
+                    NMPWAIT_USE_DEFAULT_WAIT))
+  {
+      if (Reply.Reply)
+          return NO_ERROR;
+
+      return ERROR_INVALID_PARAMETER;
+  }
+
+  return ERROR_PROC_NOT_FOUND;
 }
 
 
@@ -1907,20 +1923,33 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
  * RETURNS
  *  Success: NO_ERROR
  *  Failure: error code from winerror.h
- *
- * NOTES
- *  Since GetAdaptersInfo never returns adapters that have DHCP enabled,
- *  this function does nothing.
- *
- * FIXME
- *  Stub, returns ERROR_NOT_SUPPORTED.
  */
 DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
+  COMM_DHCP_REPLY Reply;
+  COMM_DHCP_REQ Request;
+  DWORD BytesRead;
+
+  Request.AdapterIndex = AdapterInfo->Index;
+  Request.Type = DhcpReqRenewIpAddress;
+
   TRACE("AdapterInfo %p\n", AdapterInfo);
-  /* not a stub, never going to support this (and I never mark an adapter as
-     DHCP enabled, see GetAdaptersInfo, so this should never get called) */
-  return ERROR_NOT_SUPPORTED;
+
+  if (CallNamedPipe(DHCP_PIPE_NAME,
+                    &Request,
+                    sizeof(Request),
+                    &Reply,
+                    sizeof(Reply),
+                    &BytesRead,
+                    NMPWAIT_USE_DEFAULT_WAIT))
+  {
+      if (Reply.Reply)
+          return NO_ERROR;
+
+      return ERROR_INVALID_PARAMETER;
+  }
+
+  return ERROR_PROC_NOT_FOUND;
 }
 
 
