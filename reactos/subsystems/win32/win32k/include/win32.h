@@ -75,17 +75,17 @@ typedef struct _W32PROCESS
   ULONG         W32PF_flags;
   PKEVENT       InputIdleEvent;
   DWORD         StartCursorHideTime;
-  DWORD         NextStart;
+  struct _W32PROCESS * NextStart;
   PVOID         pDCAttrList;
   PVOID         pBrushAttrList;
   DWORD         W32Pid;
   LONG          GDIHandleCount;
   LONG          UserHandleCount;
-  DWORD         cSimpleLock;  /* Locking Process during access to structure. */
-  RTL_AVL_TABLE rtlAvlTable;  /* Process AVL Table. */
-  LIST_ENTRY    leDCAttrList;
-  LIST_ENTRY    leObjAttrList;
-/* ReactOS */
+  PEX_PUSH_LOCK GDIPushLock;  /* Locking Process during access to structure. */
+  RTL_AVL_TABLE GDIEngUserMemAllocTable;  /* Process AVL Table. */
+  LIST_ENTRY    GDIDcAttrFreeList;
+  LIST_ENTRY    GDIBrushAttrFreeList;
+/* ReactOS, will move to PROCESSINFO */
   LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
