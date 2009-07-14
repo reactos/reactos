@@ -729,7 +729,7 @@ MmDumpPfnDatabase(VOID)
     PCHAR State = "????", Consumer = "Unknown";
     KIRQL OldIrql;
     
-    OldIrql = KfRaiseIrql(HIGH_LEVEL);
+    KeRaiseIrql(HIGH_LEVEL, &OldIrql);
     
     //
     // Loop the PFN database
