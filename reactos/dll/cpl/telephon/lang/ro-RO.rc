@@ -1,7 +1,11 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE 
 BEGIN
-	IDS_CPLSYSTEMNAME "Opþiuni telefon ºi modem"
-	IDS_CPLSYSTEMDESCRIPTION "Configureazã regulile de apelare telefonicã ºi setãrile pentru modem."
+	IDS_CPLSYSTEMNAME "OpÈ›iuni telefon È™i modem"
+	IDS_CPLSYSTEMDESCRIPTION "ConfigureazÄƒ regulile de apelare telefonicÄƒ È™i setÄƒrile pentru modem."
 END
+
+#pragma code_page(default)

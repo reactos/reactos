@@ -19,17 +19,18 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
 
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Bun venit la Expertul de instalare a ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
-    LTEXT "Acest expert instaleazã ReactOS pe computerul dvs. Expertul "\
-          "trebuie sã adune niºte informaþii despre computer"\
+    LTEXT "Bun venit la Expertul de instalare al ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
+    LTEXT "Acest expert instaleazÄƒ ReactOS pe computerul dvs. Expertul "\
+          "trebuie sÄƒ adune niÈ™te informaÈ›ii despre computer"\
           "pentru a instala ReactOS corect.", IDC_STATIC, 115, 40, 195, 100
-    LTEXT "Clic pe Urmãtor pentru a continua.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "Clic pe UrmÄƒtor pentru a continua.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
@@ -38,16 +39,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Dezvoltatorii ReactOS le sunt recunoscãtori urmãtoarelor proiecte de software liber "\
-                    "din care s-au utilizat pãrþi de cod la crearea ReactOS:",
+    LTEXT           "Dezvoltatorii ReactOS le sunt recunoscÄƒtori urmÄƒtoarelor proiecte de software liber "\
+                    "care au fost utilizate la crearea ReactOS:",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
-    LTEXT           "ReactOS este sub licenþa GPL, astfel dacã vreþi sã îl redistribuiþi "\
-                    "trebuie sã respectaþi licenþa GPL.",
+    LTEXT           "ReactOS este sub licenÈ›a GPL, astfel dacÄƒ vreÈ›i sÄƒ Ã®l redistribuiÈ›i "\
+                    "trebuie sÄƒ respectaÈ›i licenÈ›a GPL.",
                     IDC_STATIC,15,110,227,19
     PUSHBUTTON      "&Vizualizare GPL...",IDC_VIEWGPL,251,110,50,19
-    LTEXT           "Clic pe Urmãtor pentru a continua.",IDC_STATIC,15,136,
+    LTEXT           "Clic pe UrmÄƒtor pentru a continua.",IDC_STATIC,15,136,
                     195,17
 END
 
@@ -58,11 +59,11 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON2, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrieþi-vã numele ºi numele companiei sau organizaþiei din care faceþi parte.",
+    LTEXT "ScrieÈ›i-vÄƒ numele È™i numele companiei sau organizaÈ›iei din care faceÈ›i parte.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "Nu&me:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizaþie:", IDC_STATIC, 54, 57, 44, 8
+    LTEXT "&OrganizaÈ›ie:", IDC_STATIC, 54, 57, 44, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -73,20 +74,20 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON1, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Scrieþi un nume pentru computer de maxim 63 de caractere. "\
-          "Dacã sunteþi în reþea, numele computerului trebuie sã fie unic.",
+    LTEXT "ScrieÈ›i un nume pentru computer de maxim 63 de caractere. "\
+          "DacÄƒ sunteÈ›i Ã®n reÈ›ea, numele computerului trebuie sÄƒ fie unic.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Nume:", IDC_STATIC, 54, 38, 75, 8
     EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     ICON IDI_ICON5, IDC_STATIC, 21, 57, 20, 20
     LTEXT "Expertul va crea un cont de utilizator cu numele Administrator. "\
-          "Îl puteþi folosi când vreþi control complet asupra computerului.",
+          "ÃŽl puteÈ›i folosi cÃ¢nd vreÈ›i control complet asupra computerului.",
           IDC_STATIC, 54, 57, 250, 25
-    LTEXT "Scrieþi o parolã pentru Administrator de maxim 14 caractere.",
+    LTEXT "ScrieÈ›i o parolÄƒ pentru Administrator de maxim 14 caractere.",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Parolã administrator:", IDC_STATIC, 54, 104, 105, 8
+    LTEXT "&ParolÄƒ administrator:", IDC_STATIC, 54, 104, 105, 8
     EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirmare parolã:", IDC_STATIC, 54, 123, 105, 8
+    LTEXT "C&onfirmare parolÄƒ:", IDC_STATIC, 54, 123, 105, 8
     EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
@@ -97,17 +98,17 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON4, IDC_STATIC, 21, 7, 20, 20
-    LTEXT "Setãrile regionale ar trebui sã se potriveascã cu limba"\
-          "programelor. Acestea controleazã cum apar numerele, "\
-          "datele ºi valutele.", IDC_STATIC, 53, 7, 253, 20
+    LTEXT "SetÄƒrile regionale ar trebui sÄƒ se potriveascÄƒ cu limba"\
+          "programelor. Acestea controleazÄƒ cum apar numerele, "\
+          "datele È™i valutele.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
-    LTEXT "Pentru a aceste setãri, clic pe Particularizare.",
+    LTEXT "Pentru a aceste setÄƒri, clic pe Particularizare.",
           IDC_STATIC, 53, 60, 196, 8
     PUSHBUTTON "&Particularizare", IDC_CUSTOMLOCALE, 250, 57, 50, 14
-    LTEXT "Controalele de ºablon tastaturã seteazã cum apar literele când scrieþi.",
+    LTEXT "Controalele de È™ablon tastaturÄƒ seteazÄƒ cum apar literele cÃ¢nd scrieÈ›i.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
-    LTEXT "Pentru a schimba ºablonul, clic pe Particularizare.",
+    LTEXT "Pentru a schimba È™ablonul, clic pe Particularizare.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Particularizare", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
@@ -119,7 +120,7 @@ CAPTION "Instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_ICON3, IDC_STATIC, 21, 10, 20, 20
-    LTEXT "Datã ºi timp:", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "DatÄƒ È™i timp:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
@@ -127,7 +128,7 @@ BEGIN
     LTEXT "Fus orar:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    AUTOCHECKBOX "Ajustare automatã ceas la schimbarea de fus orar",
+    AUTOCHECKBOX "Ajustare automatÄƒ ceas la schimbarea de fus orar",
                  IDC_AUTODAYLIGHT, 53, 124, 201, 10
 END
 
@@ -150,17 +151,17 @@ CAPTION "Finalizare instalare ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Terminare Expert instalare ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
-    LTEXT "Aþi terminat cu succes instalarea ReactOS.\n\n" \
-          "Dupã ce veþi apãsa Terminã computerul va reporni.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "AÈ›i terminat cu succes instalarea ReactOS.\n\n" \
+          "DupÄƒ ce veÈ›i apÄƒsa TerminÄƒ computerul va reporni.", IDC_STATIC, 115, 40, 195, 100
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
-    LTEXT "Dacã aveþi un CD introdus în computer, scoateþi-l. Pentru a "\
-          "reporni computerul, clic pe Terminã.", IDC_STATIC, 115, 169, 195, 17
+    LTEXT "DacÄƒ aveÈ›i un CD introdus Ã®n computer, scoateÈ›i-l. Pentru a "\
+          "reporni computerul, clic pe TerminÄƒ.", IDC_STATIC, 115, 169, 195, 17
 END
 
 
 IDD_GPL DIALOGEX 0, 0, 333, 230
 STYLE DS_SHELLFONT | DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Licenþa publicã generalã GNU"
+CAPTION "LicenÈ›a publicÄƒ generalÄƒ GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
@@ -171,7 +172,7 @@ END
 
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Vã rugãm aºteptaþi..."
+CAPTION "VÄƒ rugÄƒm aÈ™teptaÈ›i..."
 FONT 8,"MS Shell Dlg 2",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -181,29 +182,29 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACKTITLE         "Aducere-aminte"
-    IDS_ACKSUBTITLE      "Cine a contribuit la ReactOS ºi informaþii despre licenþã"
-    IDS_OWNERTITLE       "Personalizaþi"
-    IDS_OWNERSUBTITLE    "Expertul foloseºte informaþii despre dvs pentru a personaliza ReactOS."
-    IDS_COMPUTERTITLE    "Nume computer ºi parolã administrator"
-    IDS_COMPUTERSUBTITLE "Trebuie sã introduceþi un nume ºi o parolã de administrator pentru computer."
-    IDS_LOCALETITLE      "Setãri regionale"
-    IDS_LOCALESUBTITLE   "Puteþi particulariza ReactOS pentru diferite regiuni sau limbi."
-    IDS_DATETIMETITLE    "Datã ºi timp"
-    IDS_DATETIMESUBTITLE "Setaþi data corectã pentru computer."
-    IDS_PROCESSTITLE     "Înregistrare componente"
-    IDS_PROCESSSUBTITLE  "Vã rugãm aºteptaþi..."
+    IDS_ACKSUBTITLE      "Cine a contribuit la ReactOS È™i informaÈ›ii despre licenÈ›Äƒ"
+    IDS_OWNERTITLE       "PersonalizaÈ›i"
+    IDS_OWNERSUBTITLE    "Expertul foloseÈ™te informaÈ›ii despre dvs pentru a personaliza ReactOS."
+    IDS_COMPUTERTITLE    "Nume computer È™i parolÄƒ administrator"
+    IDS_COMPUTERSUBTITLE "Trebuie sÄƒ introduceÈ›i un nume È™i o parolÄƒ de administrator pentru computer."
+    IDS_LOCALETITLE      "SetÄƒri regionale"
+    IDS_LOCALESUBTITLE   "PuteÈ›i particulariza ReactOS pentru diferite regiuni sau limbi."
+    IDS_DATETIMETITLE    "DatÄƒ È™i timp"
+    IDS_DATETIMESUBTITLE "SetaÈ›i data corectÄƒ pentru computer."
+    IDS_PROCESSTITLE     "ÃŽnregistrare componente"
+    IDS_PROCESSSUBTITLE  "VÄƒ rugÄƒm aÈ™teptaÈ›i..."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMT_DOWNLOADER  "Descãrcare ºi instalare diverse programe."
+    IDS_CMT_DOWNLOADER  "DescÄƒrcare È™i instalare diverse programe."
 END
 
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Accesorii"
     IDS_CMT_CALC        "Lansare Calculator"
-    IDS_CMT_CMD         "Pornire linie de comandã"
+    IDS_CMT_CMD         "Pornire linie de comandÄƒ"
     IDS_CMT_DEVMGMT     "Pornire Gestionarul de dispozitive"
     IDS_CMT_EVENTVIEW   "Pornire Vizualizator de evenimente"
     IDS_CMT_EXPLORER    "Pornire Explorer"
@@ -211,7 +212,7 @@ BEGIN
     IDS_CMT_NOTEPAD     "Pornire Editor de text"
     IDS_CMT_RDESKTOP    "Pornire Remote Desktop"
     IDS_CMT_REGEDIT     "Pornire Editor de registri"
-    IDS_CMT_SCREENSHOT  "Efectuare capturã de ecran"
+    IDS_CMT_SCREENSHOT  "Efectuare capturÄƒ de ecran"
     IDS_CMT_SERVMAN     "Pornire Gestionar de servicii"
     IDS_CMT_WORDPAD     "Pornire Editor de documente"
     IDS_CMT_PAINT       "Pornire Paint"
@@ -229,18 +230,18 @@ BEGIN
     IDS_SYS_TOOLS       "Unelte de sistem"
     IDS_CMT_CHARMAP     "Tabel caractere"
     IDS_CMT_DXDIAG      "Pornire program de diagnostic React-X"
-    IDS_CMT_KBSWITCH    "Comutator de ºablon tastaturã"
+    IDS_CMT_KBSWITCH    "Comutator de È™ablon tastaturÄƒ"
 END
 
 STRINGTABLE
 BEGIN
     IDS_SYS_ACCESSIBILITY       "Accesibilitate"
-    IDS_CMT_MAGNIFY             "Lupã"
+    IDS_CMT_MAGNIFY             "LupÄƒ"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Distracþie"
+    IDS_SYS_ENTERTAINMENT       "DistracÈ›ie"
     IDS_CMT_MPLAY32             "Pornire Player Multimedia"
     IDS_CMT_SNDVOL32            "Pornire Control Volum"
 END
@@ -248,35 +249,35 @@ END
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP           "Instalare ReactOS"
-    IDS_UNKNOWN_ERROR           "Eroare necunoscutã"
-    IDS_REGISTERING_COMPONENTS  "Înregistrare componente..."
-    IDS_LOADLIBRARY_FAILED      "LoadLibrary a eºuat: "
-    IDS_GETPROCADDR_FAILED      "GetProcAddr a eºuat: "
-    IDS_REGSVR_FAILED           "DllRegisterServer a eºuat: "
-    IDS_DLLINSTALL_FAILED       "DllInstall a eºuat: "
-    IDS_TIMEOUT                 "Timp expirat în timpul înregistrãrii"
+    IDS_UNKNOWN_ERROR           "Eroare necunoscutÄƒ"
+    IDS_REGISTERING_COMPONENTS  "ÃŽnregistrare componente..."
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary a eÈ™uat: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr a eÈ™uat: "
+    IDS_REGSVR_FAILED           "DllRegisterServer a eÈ™uat: "
+    IDS_DLLINSTALL_FAILED       "DllInstall a eÈ™uat: "
+    IDS_TIMEOUT                 "Timp expirat Ã®n timpul Ã®nregistrÄƒrii"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
     IDS_SHORT_CALC       "Calculator.lnk"
-    IDS_SHORT_CHARMAP    "Character Map.lnk"
-    IDS_SHORT_CMD        "Linie comandã.lnk"
+    IDS_SHORT_CHARMAP    "HartÄƒ caractere.lnk"
+    IDS_SHORT_CMD        "Linie comandÄƒ.lnk"
     IDS_SHORT_DEVICE     "Gestionar dispozitive.lnk"
-    IDS_SHORT_DOWNLOADER "Descarcã !.lnk"
+    IDS_SHORT_DOWNLOADER "DescarcÄƒ !.lnk"
     IDS_SHORT_DXDIAG     "Diagnostic ReactX.lnk"
     IDS_SHORT_EVENTVIEW  "Vizualizator evenimente.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_KBSWITCH   "Comutator ºablon tastaturã.lnk"
-    IDS_SHORT_MAGNIFY    "Lupã.lnk"
+    IDS_SHORT_KBSWITCH   "Comutator È™ablon tastaturÄƒ.lnk"
+    IDS_SHORT_MAGNIFY    "LupÄƒ.lnk"
     IDS_SHORT_MPLAY32    "Player Multimedia.lnk"
     IDS_SHORT_MSCONFIG   "Configurare sistem.lnk"
-    IDS_SHORT_NOTEPAD    "Carneþel.lnk"
+    IDS_SHORT_NOTEPAD    "CarneÈ›el.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
     IDS_SHORT_REGEDIT    "Editor de registrii.lnk"
     IDS_SHORT_SERVICE    "Gestionar de servicii.lnk"
-    IDS_SHORT_SNAP       "Capturã de ecran.lnk"
+    IDS_SHORT_SNAP       "CapturÄƒ de ecran.lnk"
     IDS_SHORT_SNDVOL32   "Control volum.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
@@ -286,13 +287,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME            "Expertul nu poate continua pânã când nu scrieþi un nume."
+    IDS_WZD_NAME            "Expertul nu poate continua pÃ¢nÄƒ cÃ¢nd nu scrieÈ›i un nume."
     IDS_WZD_SETCOMPUTERNAME "Expertul nu a putut seta numele computerului."
-    IDS_WZD_COMPUTERNAME    "Expertul nu poate continua pânã când nu scrieþi un nume pentru computer."
-    IDS_WZD_PASSWORDEMPTY   "Trebuie sã scrieþi o parolã !"
-    IDS_WZD_PASSWORDMATCH   "Parolele scrise nu se potrivesc. Vã rugãm rescrieþi parola doritã ºi reîncercaþi."
-    IDS_WZD_PASSWORDCHAR    "Parola introdusã de dumneavoastrã conþine caractere invalide. Rescrieþi parola ºi reîncercaþi."
-    IDS_WZD_LOCALTIME       "Expertul nu a putut seta ora localã."
+    IDS_WZD_COMPUTERNAME    "Expertul nu poate continua pÃ¢nÄƒ cÃ¢nd nu scrieÈ›i un nume pentru computer."
+    IDS_WZD_PASSWORDEMPTY   "Trebuie sÄƒ scrieÈ›i o parolÄƒ !"
+    IDS_WZD_PASSWORDMATCH   "Parolele scrise nu se potrivesc. VÄƒ rugÄƒm rescrieÈ›i parola doritÄƒ È™i reÃ®ncercaÈ›i."
+    IDS_WZD_PASSWORDCHAR    "Parola introdusÄƒ de dumneavoastrÄƒ conÈ›ine caractere invalide. RescrieÈ›i parola È™i reÃ®ncercaÈ›i."
+    IDS_WZD_LOCALTIME       "Expertul nu a putut seta ora localÄƒ."
 END
 
 STRINGTABLE
@@ -300,4 +301,5 @@ BEGIN
     IDS_STATUS_INSTALL_DEV "Instalare dispozitive..."
 END
 
+#pragma code_page(default)
 /* EOF */

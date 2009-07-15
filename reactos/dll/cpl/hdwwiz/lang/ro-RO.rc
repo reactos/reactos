@@ -1,22 +1,24 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDD_STARTPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Bun venit la Expertul de adãugare hardware", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT "Acest expert vã ajutã:", -1, 114, 40, 182, 8
-	LTEXT "1) sã instalaþi dispozitive pe care vreþi sã le adãugaþi calculatorului", -1, 121, 56, 184, 16
-	LTEXT "2) sã rezolvaþi problemele pe care le aveþi cu dispozitivele existente", -1, 121, 78, 185, 16
+	LTEXT "Bun venit la Expertul de adÄƒugare hardware", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "Acest expert vÄƒ ajutÄƒ:", -1, 114, 40, 182, 8
+	LTEXT "1) sÄƒ instalaÈ›i dispozitive pe care vreÈ›i sÄƒ le adÄƒugaÈ›i calculatorului", -1, 121, 56, 184, 16
+	LTEXT "2) sÄƒ rezolvaÈ›i problemele pe care le aveÈ›i cu dispozitivele existente", -1, 121, 78, 185, 19
 	ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
-	LTEXT "Dacã dispozitivul vine cu un program de instalare de la firmã se recomandã instalarea lui de pe acesta.", 503, 150, 106, 155, 50
-	LTEXT "Pentru a continua, clic pe Urmãtor.", -1, 114, 166, 193, 8
+	LTEXT "DacÄƒ dispozitivul vine cu un program de instalare de la firmÄƒ se recomandÄƒ instalarea lui de pe acesta.", 503, 150, 106, 155, 50
+	LTEXT "Pentru a continua, clic pe UrmÄƒtor.", -1, 114, 166, 193, 8
 END
 
 IDD_SEARCHPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDC_STATUSTEXT, 21, 8, 275, 32
@@ -25,39 +27,39 @@ END
 
 IDD_ISCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Aþi conectat deja dispozitivul la calculator?", -1, 20, 11, 275, 8
+	LTEXT "AÈ›i conectat deja dispozitivul la calculator?", -1, 20, 11, 275, 8
 	AUTORADIOBUTTON "&Da, am conectat deja dispozitivul.", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-	AUTORADIOBUTTON "&Nu, încã nu l-am conectat.", IDC_NOTCONNECTED, 29, 35, 266, 8
+	AUTORADIOBUTTON "&Nu, Ã®ncÄƒ nu l-am conectat.", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
 IDD_PROBELISTPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Alegeþi din lista de mai jos un dispozitiv instalat ºi alegeþi proprietãþi pentru a vedea ºi rezolva eventualele probleme pe care le aveþi.", -1, 21, 8, 275, 22
-	LTEXT "Pentru a adãuga un dispozitiv nou clic pe ""Adãugare dispozitiv""", -1, 21, 32, 275, 24
+	LTEXT "AlegeÈ›i din lista de mai jos un dispozitiv instalat È™i alegeÈ›i proprietÄƒÈ›i pentru a vedea È™i rezolva eventualele probleme pe care le aveÈ›i.", -1, 21, 8, 275, 22
+	LTEXT "Pentru a adÄƒuga un dispozitiv nou clic pe ""AdÄƒugare dispozitiv""", -1, 21, 32, 275, 24
 	LTEXT "Dispozitive instalate:", -1, 21, 62, 140, 8
 	CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
 
 IDD_SELECTWAYPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Acest expert poate determina ce fel de dispozitiv este ºi poate instala driverul pentru el. Sau, dacã ºtiþi exact marca ºi modelul dispozitivului, îl puteþi alege dintr-o listã.", -1, 21, 8, 280, 24
-	LTEXT "Ce vreþi sã facã expertul?", -1, 23, 40, 275, 8
-	AUTORADIOBUTTON "&Sã caute ºi sã instaleze driverul automat (Recomandat)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Sã mã lase sã aleg driverul dintr-o listã (Avansat)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+	LTEXT "Acest expert poate determina ce fel de dispozitiv este È™i poate instala driverul pentru el. Sau, dacÄƒ È™tiÈ›i exact marca È™i modelul dispozitivului, Ã®l puteÈ›i alege dintr-o listÄƒ.", -1, 21, 8, 280, 24
+	LTEXT "Ce vreÈ›i sÄƒ facÄƒ expertul?", -1, 23, 40, 275, 8
+	AUTORADIOBUTTON "&SÄƒ caute È™i sÄƒ instaleze driverul automat (Recomandat)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "SÄƒ mÄƒ lase sÄƒ aleg driverul dintr-o listÄƒ (Avansat)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDC_STATUSTEXT, 21, 9, 275, 40
@@ -67,20 +69,20 @@ END
 
 IDD_HWTYPESPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul adãugare hardware"
+CAPTION "Expertul adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Dacã nu vedeþi categoria pe care o vreþi, apãsaþi pe Afiºare toate dispozitivele", IDC_STATUSTEXT, 21, 9, 275, 18
-	LTEXT "Dispozitive obiºnuite:", IDC_HWTYPESTEXT, 21, 31, 180, 8
+	LTEXT "DacÄƒ nu vedeÈ›i categoria pe care o vreÈ›i, apÄƒsaÈ›i pe AfiÈ™are toate dispozitivele", IDC_STATUSTEXT, 21, 9, 275, 18
+	LTEXT "Dispozitive obiÈ™nuite:", IDC_HWTYPESTEXT, 21, 31, 180, 8
 	CONTROL "", IDC_HWTYPESLIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 42, 275, 92
 END
 
 IDD_PROGRESSPAGE DIALOG DISCARDABLE 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Ar putea dura câteva minute pentru a instala dispozitivul.", -1, 21, 8, 275, 15
+	LTEXT "Ar putea dura cÃ¢teva minute pentru a instala dispozitivul.", -1, 21, 8, 275, 15
 	LTEXT "Progres total:", IDC_TPROGRESSTEXT, 21, 25, 275, 8
 	CONTROL "", IDC_TPROGRESSBAR, "msctls_progress32", 0, 21, 37, 275, 14
 	LTEXT "", IDC_PROGRESSTEXT, 58, 58, 200, 8, SS_NOPREFIX
@@ -89,59 +91,61 @@ END
 
 IDD_FINISHPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Încheiere Expert", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT "Aþi încheiat cu succes Expertul de adãugare hardware.", -1, 114, 32, 193, 19
+	LTEXT "ÃŽncheiere Expert", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "AÈ›i Ã®ncheiat cu succes Expertul de adÄƒugare hardware.", -1, 114, 32, 193, 19
 	LTEXT "", IDC_STATUSTEXT, 114, 70, 193, 92
-	LTEXT "Pentru a închide fereastra, clic pe Terminã.", -1, 114, 166, 132, 8
+	LTEXT "Pentru a Ã®nchide fereastra, clic pe TerminÄƒ.", -1, 114, 166, 132, 8
 END
 
 IDD_ISFOUNDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Încheiere Expert", IDC_FINISHTITLE, 114, 8, 203, 24
-	LTEXT "Expertul a detectat urmãtorul dispozitiv conectat:", -1, 114, 32, 193, 19
-	LTEXT "Pentru a închide Expertul, clic pe Terminare.", -1, 114, 166, 132, 8
+	LTEXT "ÃŽncheiere Expert", IDC_FINISHTITLE, 114, 8, 203, 24
+	LTEXT "Expertul a detectat urmÄƒtorul dispozitiv conectat:", -1, 114, 32, 193, 19
+	LTEXT "Pentru a Ã®nchide Expertul, clic pe Terminare.", -1, 114, 166, 132, 8
 	CONTROL "", IDC_FOUNDHARDWARELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS, 114, 56, 193, 78
 END
 
 IDD_HWSTATUSPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Încheire Expert", IDC_FINISHTITLE, 114, 8, 195, 28
-	LTEXT "Iatã starea curentã a dispozitivului selectat:", -1, 114, 40, 193, 19
+	LTEXT "ÃŽncheire Expert", IDC_FINISHTITLE, 114, 8, 195, 28
+	LTEXT "IatÄƒ starea curentÄƒ a dispozitivului selectat:", -1, 114, 40, 193, 19
 	EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Pentru a porni un program care sã vã ajute sã rezolvaþi problemele pe care le aveþi, faceþi clic pe Terminã.", -1, 114, 136, 193, 16
-	LTEXT "Pentru a ieºi, clic pe Renunþã.", IDC_STATUSTEXT, 114, 166, 132, 8
+	LTEXT "Pentru a porni un program care sÄƒ vÄƒ ajute sÄƒ rezolvaÈ›i problemele pe care le aveÈ›i, faceÈ›i clic pe TerminÄƒ.", -1, 114, 136, 193, 16
+	LTEXT "Pentru a ieÈ™i, clic pe RenunÈ›Äƒ.", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOG DISCARDABLE 0, 0, 317, 186
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Expertul de adãugare hardware"
+CAPTION "Expertul de adÄƒugare hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "Nu se poate continua Expertul", IDC_FINISHTITLE, 114, 8, 203, 28
-	LTEXT "Pentru a continua, conectaþi dispozitivul la calculator.", -1, 114, 40, 193, 16
-	AUTOCHECKBOX "&Închide calculatorul când dau clic pe Terminã astfel încât sã pot conecta dispozitivul.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
-	LTEXT "De cele mai multe ori, ReactOS îl poate instala dupã ce îl conectaþi. Dacã ReactOS nu îl detecteazã, folosiþi acest Expert pentru a îl instala.", -1, 114, 98, 193, 32
-	LTEXT "Pentru a închide Expertul, clic pe Terminã.", IDC_STATUSTEXT, 114, 166, 193, 8
+	LTEXT "Pentru a continua, conectaÈ›i dispozitivul la calculator.", -1, 114, 40, 193, 16
+	AUTOCHECKBOX "&ÃŽnchide calculatorul cÃ¢nd dau clic pe TerminÄƒ astfel Ã®ncÃ¢t sÄƒ pot conecta dispozitivul.", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+	LTEXT "De cele mai multe ori, ReactOS Ã®l poate instala dupÄƒ ce Ã®l conectaÈ›i. DacÄƒ ReactOS nu Ã®l detecteazÄƒ, folosiÈ›i acest Expert pentru a Ã®l instala.", -1, 114, 98, 193, 32
+	LTEXT "Pentru a Ã®nchide Expertul, clic pe TerminÄƒ.", IDC_STATUSTEXT, 114, 166, 193, 8
 END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLNAME "Adãugare hardware"
-	IDS_CPLDESCRIPTION "Adaugã dispozitive la calculator."
-	IDS_SEARCHTITLE "Vã rugãm aºteptaþi cât timp Expertul cautã..."
-	IDS_SEARCHTEXT "Acest Expert cautã dispozitive pe care le-aþi conectat de curând la calculator dar care nu au fost încã instalate."
+	IDS_CPLNAME "AdÄƒugare hardware"
+	IDS_CPLDESCRIPTION "AdaugÄƒ dispozitive la calculator."
+	IDS_SEARCHTITLE "VÄƒ rugÄƒm aÈ™teptaÈ›i cÃ¢t timp Expertul cautÄƒ..."
+	IDS_SEARCHTEXT "Acest Expert cautÄƒ dispozitive pe care le-aÈ›i conectat de curÃ¢nd la calculator dar care nu au fost Ã®ncÄƒ instalate."
 	IDS_ISCONNECTED "Dispozitivul este conectat?"
 	IDS_PROBELISTTITLE "Acest dispozitiv e deja instalat"
-	IDS_ADDNEWDEVICE "Adãugare dispozitiv nou"
-	IDS_SELECTWAYTITLE "Acest Expert vã poate ajuta sã instalaþi alt hardware"
-	IDS_HDTYPESTITLE "Din lista de mai jos, alegeþi dispozitivul pe care vreþi sã îl instalaþi"
+	IDS_ADDNEWDEVICE "AdÄƒugare dispozitiv nou"
+	IDS_SELECTWAYTITLE "Acest Expert vÄƒ poate ajuta sÄƒ instalaÈ›i alt hardware"
+	IDS_HDTYPESTITLE "Din lista de mai jos, alegeÈ›i dispozitivul pe care vreÈ›i sÄƒ Ã®l instalaÈ›i."
 END
+
+#pragma code_page(default)

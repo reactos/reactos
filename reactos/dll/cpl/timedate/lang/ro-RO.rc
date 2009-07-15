@@ -1,11 +1,13 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Datã ºi timp"
+CAPTION "DatÄƒ È™i timp"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&Datã", -1, 4, 2, 122, 125
+    GROUPBOX "&DatÄƒ", -1, 4, 2, 122, 125
     COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_YEARTEXT,65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
     CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
@@ -33,7 +35,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Ajustare automatã ceas când se schimbã la ora de varã/iarnã",
+    AUTOCHECKBOX "Ajustare automatÄƒ ceas cÃ¢nd se schimbÄƒ la ora de varÄƒ/iarnÄƒ",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -44,25 +46,27 @@ CAPTION "Timp internet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX    "Sincronizare automatã cu un server pentru timp.", IDC_AUTOSYNC,
+    AUTOCHECKBOX    "Sincronizare automatÄƒ cu un server pentru timp.", IDC_AUTOSYNC,
                     11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
     LTEXT           "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
     PUSHBUTTON      "Actualizare", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Sincronizarea funcþioneazã doar când computerul e conectat la internet.", -1, 12, 114, 225, 25
+    LTEXT           "Sincronizarea funcÈ›ioneazÄƒ doar cÃ¢nd computerul e conectat la internet.", -1, 12, 114, 225, 25
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Datã/timp"
-    IDS_CPLDESCRIPTION "Schimbã data, ora sau fusul orar."
+    IDS_CPLNAME "DatÄƒ/timp"
+    IDS_CPLDESCRIPTION "SchimbÄƒ data, ora sau fusul orar."
     IDS_TIMEZONETEXT "Fusul orar curent: %s"
     IDS_TIMEZONEINVALID "Invalid"
     IDS_TIMEZONEUNKNOWN "Necunoscut"
-    IDS_INETTIMESUCSYNC "Ora a fost sincronizatã cu succes %s pe %s la %s"
-    IDS_INETTIMENEXTSYNC "Urmãtoarea sincronizare: %s la %s"
-    IDS_INETTIMESYNCING "Aºteptaþi cât ReactOS se sincronizeazã cu %s"
-    IDS_INETTIMEERROR "A apãrut o eroare cât timp ReactOS se sincroniza cu %s"
+    IDS_INETTIMESUCSYNC "Ora a fost sincronizatÄƒ cu succes %s pe %s la %s"
+    IDS_INETTIMENEXTSYNC "UrmÄƒtoarea sincronizare: %s la %s"
+    IDS_INETTIMESYNCING "AÈ™teptaÈ™i cÃ¢t ReactOS se sincronizeazÄƒ cu %s"
+    IDS_INETTIMEERROR "A apÄƒrut o eroare cÃ¢t timp ReactOS se sincroniza cu %s"
 END
+
+#pragma code_page(default)

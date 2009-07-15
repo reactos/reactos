@@ -1,5 +1,7 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDD_PROPPAGEMAIN DIALOGEX 0, 0, 252, 205
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
@@ -7,12 +9,12 @@ CAPTION "Controloare pentru jocuri"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
-    LTEXT "Aceste setãri vã permit sã configuraþi dispozitivele pentru controlul jocurilor instalate pe acest computer.", -1, 33, 7, 214, 20, NOT WS_GROUP
+    LTEXT "Aceste setÄƒri vÄƒ permit sÄƒ configuraÈ›i dispozitivele pentru controlul jocurilor instalate pe acest computer.", -1, 33, 7, 214, 20, NOT WS_GROUP
     GROUPBOX "D&ispozitive pentru jocuri instalate", -1, 7, 34, 238, 117
     CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
-    PUSHBUTTON "&Adãugare...", IDC_ADD_BUTTON, 35, 129, 65, 14
+    PUSHBUTTON "&AdÄƒugare...", IDC_ADD_BUTTON, 35, 129, 65, 14
     PUSHBUTTON "&Eliminare", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
-    PUSHBUTTON "&Proprietãþi", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
+    PUSHBUTTON "&ProprietÄƒÈ›i", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
     PUSHBUTTON "A&vansat...", IDC_ADVANCED_BUTTON, 111, 157, 65, 14
     PUSHBUTTON "&Reparare...", IDC_TROUBLESHOOT_BUTTON, 180, 157, 65, 14
     PUSHBUTTON "OK", IDOK, 195, 185, 50, 14
@@ -21,14 +23,14 @@ END
 IDD_ADD DIALOGEX 0, 0, 265, 200
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Adãugare controlor jocurilor"
+CAPTION "AdÄƒugare controlor jocurilor"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
-    LTEXT "Alegeþi un controlor din lista de mai jos ºi apoi faceþi clic pe OK. Dacã dispozitivul pe care îl cãutaþi nu apare, faceþi clic pe Altul.", -1, 35, 7, 210, 33
+    LTEXT "AlegeÈ›i un controlor din lista de mai jos È™i apoi faceÈ›i clic pe OK. DacÄƒ dispozitivul pe care Ã®l cÄƒutaÈ›i nu apare, faceÈ›i clic pe Altul.", -1, 35, 7, 210, 33
     LTEXT "&Dispozitive:", -1, 8, 45, 126, 8
     LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
-    AUTOCHECKBOX "&Activare cârmã ºi pedale", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP
+    AUTOCHECKBOX "&Activare cÃ¢rmÄƒ È™i pedale", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP
     LTEXT "&Port joc:", -1, 7, 134, 38, 8, NOT WS_VISIBLE
     COMBOBOX IDC_GAME_PORT_COMBO, 7, 147, 140, 50, CBS_DROPDOWNLIST | CBS_SORT | NOT WS_VISIBLE | WS_VSCROLL
     PUSHBUTTON "&Altul...", IDC_CUSTOM_BUTTON, 208, 147, 50, 14
@@ -47,10 +49,10 @@ BEGIN
     AUTORADIOBUTTON "&Joystick", IDC_JOYSTICK_RADIO, 17, 23, 55, 10
     AUTORADIOBUTTON "&Joystick tridimensional", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
     AUTORADIOBUTTON "&Gamepad", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
-    AUTORADIOBUTTON "&Controlor pt. jocuri cu maºini", IDC_RACE_CAR_RADIO, 147, 40, 93, 10
+    AUTORADIOBUTTON "&Controlor pt. jocuri cu maÈ™ini", IDC_RACE_CAR_RADIO, 147, 40, 93, 10
     GROUPBOX "&Axe", -1, 7, 67, 116, 44, WS_GROUP
     COMBOBOX IDC_AXES_COMBO, 37, 79, 48, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTORADIOBUTTON "Cârmã/pedale", IDC_RUDDER_PEDALS_RADIO, 14, 97, 63, 10, NOT WS_VISIBLE
+    AUTORADIOBUTTON "CÃ¢rmÄƒ/pedale", IDC_RUDDER_PEDALS_RADIO, 14, 97, 63, 10, NOT WS_VISIBLE
     AUTORADIOBUTTON "Axa Z", IDC_Z_AXIS_RADIO, 81, 97, 35, 10, NOT WS_VISIBLE
     GROUPBOX "&Butoane", -1, 137, 67, 116, 44
     COMBOBOX IDC_BUTTONS_COMBO, 178, 79, 48, 50, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL, WS_EX_CLIENTEDGE
@@ -64,13 +66,13 @@ END
 IDD_ADVANCED DIALOGEX 0, 0, 220, 86
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Setãri avansate"
+CAPTION "SetÄƒri avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLSYSTEM, -1, 7, 24, 20, 20
     DEFPUSHBUTTON "OK", IDOK, 106, 65, 50, 14
     PUSHBUTTON "Anulare", IDCANCEL, 163, 65, 50, 14
-    LTEXT "Alegeþi dispozitivul de folosit pt. programe vechi.", -1, 7, 7, 208, 10
+    LTEXT "AlegeÈ›i dispozitivul de folosit pt. programe vechi.", -1, 7, 7, 208, 10
     LTEXT "&Dispozitiv preferat:", -1, 34, 24, 70, 10
     COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
 END
@@ -78,7 +80,9 @@ END
 STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Controloare pentru jocuri"
-    IDS_CPLSYSTEMDESCRIPTION "Adãugare, eliminare sau configurare controloare pentru jocuri, precum joystickuri sau gamepaduri."
+    IDS_CPLSYSTEMDESCRIPTION "AdÄƒugare, eliminare sau configurare controloare pentru jocuri, precum joystickuri sau gamepaduri."
     IDS_CONTROLLER "Controlor"
     IDS_STATUS "Stare"
 END
+
+#pragma code_page(default)

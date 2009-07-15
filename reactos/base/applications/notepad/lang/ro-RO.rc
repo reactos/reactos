@@ -20,6 +20,8 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 ID_ACCEL ACCELERATORS
 BEGIN
     "^A", CMD_SELECT_ALL
@@ -40,18 +42,18 @@ END
 
 MAIN_MENU MENU
 BEGIN
-    POPUP "&Fiºier"
+    POPUP "&FiÈ™ier"
     BEGIN
         MENUITEM "&Nou\tCtrl+N",      CMD_NEW
         MENUITEM "&Deschidere...\tCtrl+O",  CMD_OPEN
         MENUITEM "&Salvare\tCtrl+S",     CMD_SAVE
         MENUITEM "Salvare &ca...",       CMD_SAVE_AS
         MENUITEM SEPARATOR
-        MENUITEM "Iniþializare pag&inã...",    CMD_PAGE_SETUP
+        MENUITEM "IniÈ›ializare pag&inÄƒ...",    CMD_PAGE_SETUP
         MENUITEM "&Imprimare\tCtrl+P",    CMD_PRINT
-        MENUITEM "Setare i&mprimantã...", CMD_PRINTER_SETUP
+        MENUITEM "Setare i&mprimantÄƒ...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
-        MENUITEM "I&eºire",             CMD_EXIT
+        MENUITEM "I&eÈ™ire",             CMD_EXIT
     END
     POPUP "&Editare"
     BEGIN
@@ -60,29 +62,29 @@ BEGIN
         MENUITEM "Decupare\tCtrl+X",        CMD_CUT
         MENUITEM "&Copiere\tCtrl+C",       CMD_COPY
         MENUITEM "&Lipire\tCtrl+V",      CMD_PASTE
-        MENUITEM "&ªtergere\tDel",        CMD_DELETE
+        MENUITEM "&È˜tergere\tDel",        CMD_DELETE
         MENUITEM SEPARATOR
-        MENUITEM "&Gãsire...\tCtrl+F",    CMD_SEARCH
-        MENUITEM "Gãsire &urmãtorul\tF3",      CMD_SEARCH_NEXT
-        MENUITEM "Înlocuire\tCtrl+H",     CMD_REPLACE
+        MENUITEM "&GÄƒsire...\tCtrl+F",    CMD_SEARCH
+        MENUITEM "GÄƒsire &urmÄƒtorul\tF3",      CMD_SEARCH_NEXT
+        MENUITEM "ÃŽnlocuire\tCtrl+H",     CMD_REPLACE
         MENUITEM "Mergere la...\tCtrl+G",    CMD_GOTO
         MENUITEM SEPARATOR
-        MENUITEM "Selectare &totalã\tCtrl+A", CMD_SELECT_ALL
-        MENUITEM "&Orã/datã\tF5",      CMD_TIME_DATE
+        MENUITEM "Selectare &totalÄƒ\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&OrÄƒ/datÄƒ\tF5",      CMD_TIME_DATE
     END
     POPUP "F&ormatare"
     BEGIN
-        MENUITEM "&Împãrþire linii lungi", CMD_WRAP
+        MENUITEM "&ÃŽmpÄƒrÈ›ire linii lungi", CMD_WRAP
         MENUITEM "&Font...",         CMD_FONT
     END
     POPUP "&Vizualizare"
     BEGIN
-        MENUITEM "Barã de &stare", CMD_STATUSBAR
+        MENUITEM "BarÄƒ de &stare", CMD_STATUSBAR
     END
     POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Conþinut",     CMD_HELP_CONTENTS
-        MENUITEM "&Cãutare...",    CMD_HELP_SEARCH
+        MENUITEM "&ConÈ›inut",     CMD_HELP_CONTENTS
+        MENUITEM "&CÄƒutare...",    CMD_HELP_SEARCH
         MENUITEM "&Ajutor despre ajutor", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
         MENUITEM "&Despre"         CMD_ABOUT
@@ -95,7 +97,7 @@ END
 DIALOG_PAGESETUP DIALOGEX 0, 0, 225, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Iniþializare paginã"
+CAPTION "IniÈ›ializare paginÄƒ"
 BEGIN
 LTEXT    "&Antet:",  0x140,   10, 07, 40, 15
 EDITTEXT                         0x141,       60, 05,110, 12, WS_BORDER | WS_TABSTOP
@@ -103,7 +105,7 @@ LTEXT    "&Subsol:",  0x142,   10, 24, 40, 15
 EDITTEXT                         0x143,       60, 22,110, 12, WS_BORDER | WS_TABSTOP
 
 GROUPBOX "&Margini:",      0x144,     10, 43,160, 45
-LTEXT    "&Stânga:",        0x145,   20, 55, 30, 10, WS_CHILD
+LTEXT    "&StÃ¢nga:",        0x145,   20, 55, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_LEFTVALUE,*/   0x147,       50, 55, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
 LTEXT    "&Sus:",         0x148,    20, 73, 30, 10, WS_CHILD
 EDITTEXT /*STRING_PAGESETUP_TOPVALUE,*/    0x14A,        50, 73, 35, 11, WS_CHILD | WS_BORDER | WS_TABSTOP
@@ -127,7 +129,7 @@ BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 LTEXT           "Codificare:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Sfârºit:",0x156,5,20,41,12
+LTEXT           "SfÃ¢rÈ™it:",0x156,5,20,41,12
 END
 
 /* Dialog 'Go To' */
@@ -137,21 +139,21 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Mergere la linie"
 BEGIN
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Numãr linie:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "NumÄƒr linie:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Anulare", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 END
 
 IDD_ABOUTBOX DIALOGEX DISCARDABLE  22,16,284,170
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Despre Carneþelul ReactOS"
+CAPTION "Despre CarneÈ›elul ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Carneþelul ReactOS v1.0\r\nDrept de autor 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
+    CONTROL         "CarneÈ›elul ReactOS v1.0\r\nDrept de autor 1997,98 Marcel Baur <mbaur@g26.ethz.ch>\r\nCopyright 2000 Mike McCormack <Mike_McCormack@looksmart.com.au>\r\nCopyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>\r\nCopyright 2002 Andriy Palamarchuk\r\n",
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Închidere",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "ÃŽnchidere",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -159,40 +161,40 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "Tradus în limba românã de Petru Dimitriu.\r\nAcest program este software liber; puteþi redistribui sau modifica programul sub termenii licenþei publice GNU aºa cum este publicatã de Free Software Foundation - fie versiunea 2 a licenþei, sau (la alegerea dvs.) oricare versiune ulterioarã.\r\n\r\nAcest program este distribuit în speranþa cã va fi de folos, dar FÃRÃ NICIO GARANÞIE, nici mãcar garanþia VANDABILITÃÞII sau a POTRIVIRII PENTRU UN SCOP ANUME.  Vedeþi Licenþa GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui sã fi primit o copie a licenþei împreunã cu acest program; dacã nu, scrieþi la Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Tradus Ã®n limba romÃ¢nÄƒ de Petru Dimitriu.\r\nAcest program este software liber; puteÈ›i redistribui sau modifica programul sub termenii licenÈ›ei publice GNU aÈ™a cum este publicatÄƒ de Free Software Foundation - fie versiunea 2 a licenÈ›ei, sau (la alegerea dvs.) oricare versiune ulterioarÄƒ.\r\n\r\nAcest program este distribuit Ã®n speranÈ›a cÄƒ va fi de folos, dar FÄ‚RÄ‚ NICIO GARANÈšIE, nici mÄƒcar garanÈ›ia VANDABILITÄ‚ÈšII sau a POTRIVIRII PENTRU UN SCOP ANUME.  VedeÈ›i LicenÈ›a GNU GPL pentru detalii.\r\n\r\nDvs. ar trebui sÄƒ fi primit o copie a licenÈ›ei Ã®mpreunÄƒ cu acest program; dacÄƒ nu, scrieÈ›i la Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,   "Paginã &s"   /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,   "PaginÄƒ &s"   /* FIXME */
 STRING_PAGESETUP_LEFTVALUE,             "20 mm"     /* FIXME */
 STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
 STRING_PAGESETUP_TOPVALUE,              "25 mm"     /* FIXME */
 STRING_PAGESETUP_BOTTOMVALUE,   "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,                                 "Carneþel"
+STRING_NOTEPAD,                                 "CarneÈ›el"
 STRING_ERROR,                                   "EROARE"
-STRING_WARNING,                                 "ATENÞIONARE"
-STRING_INFO,                                    "Informaþie"
+STRING_WARNING,                                 "ATENÅ¢IONARE"
+STRING_INFO,                                    "InformaÈ›ie"
 
 STRING_UNTITLED,                                "(neintitulat)"
 
-STRING_ALL_FILES,                               "Toate fiºierele (*.*)"
-STRING_TEXT_FILES_TXT,                  "Fiºiere text (*.txt)"
+STRING_ALL_FILES,                               "Toate fiÈ™ierele (*.*)"
+STRING_TEXT_FILES_TXT,                  "FiÈ™iere text (*.txt)"
 
-STRING_TOOLARGE,                                "Fiºierul '%s' este prea mare.\n \
-Încercaþi un alt editor."
-STRING_NOTEXT,                                  "Nu aþi scris nimic. \
-\nVã rugãm scrieþi ceva ºi încercaþi din nou."
-STRING_DOESNOTEXIST,                            "Fiºierul '%s'\nnu existã.\n\n \
-Creaþi un nou fiºier ?"
-STRING_NOTSAVED,                                "Fiºierul '%s'\na fost modificat\n\n \
-Salvaþi schimbãrile efectuate?"
-STRING_NOTFOUND,                                        "'%s' nu poate fi gãsit."
-STRING_OUT_OF_MEMORY,                   "Nu existã suficientã memorie pentru a se încheia aceastã operaþie. \
-\nÎnchideþi una sau mai multe aplicaþii pentru a mãri memoria liberã."
-STRING_CANNOTFIND                               "Nu se poate gãsi '%s'"
+STRING_TOOLARGE,                                "FiÈ™ierul '%s' este prea mare.\n \
+ÃŽncercaÈ›i un alt editor."
+STRING_NOTEXT,                                  "Nu aÈ›i scris nimic. \
+\nVÄƒ rugÄƒm scrieÈ›i ceva È™i Ã®ncercaÈ›i din nou."
+STRING_DOESNOTEXIST,                            "FiÈ™ierul '%s'\nnu existÄƒ.\n\n \
+CreaÈ›i un nou fiÈ™ier ?"
+STRING_NOTSAVED,                                "FiÈ™ierul '%s'\na fost modificat\n\n \
+SalvaÈ›i schimbÄƒrile efectuate?"
+STRING_NOTFOUND,                                        "'%s' nu poate fi gÄƒsit."
+STRING_OUT_OF_MEMORY,                   "Nu existÄƒ suficientÄƒ memorie pentru a se Ã®ncheia aceastÄƒ operaÈ›ie. \
+\nÃŽnchideÈ›i una sau mai multe aplicaÈ›ii pentru a mÄƒri memoria liberÄƒ."
+STRING_CANNOTFIND                               "Nu se poate gÄƒsi '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"
 STRING_UNICODE_BE,                              "Unicode (big endian)"
@@ -200,5 +202,7 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Linie %d, coloanã %d"
+STRING_LINE_COLUMN,                             "Linie %d, coloanÄƒ %d"
 END
+
+#pragma code_page(default)

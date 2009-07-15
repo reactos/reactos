@@ -9,19 +9,21 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 /* Dialogs */
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Opþiuni"
+CAPTION "OpÈ›iuni"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Cãrþi", -1, 7, 7, 65, 40
+    GROUPBOX        "CÄƒrÈ›i", -1, 7, 7, 65, 40
     AUTORADIOBUTTON "Desenare &una", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
     AUTORADIOBUTTON "Desenare &trei", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Afiºare timp", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "B&arã de stare", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&AfiÈ™are timp", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "B&arÄƒ de stare", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "OK", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Anulare", IDCANCEL, 101, 97, 50, 14
@@ -29,7 +31,7 @@ END
 
 
 IDD_CARDBACK DIALOGEX 6, 6, 221, 96
-CAPTION "Alegeþi setul de cãrþi"
+CAPTION "AlegeÈ›i setul de cÄƒrÈ›i"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -48,9 +50,9 @@ STRINGTABLE
 BEGIN
     IDS_SOL_NAME    "Solitaire"
     IDS_SOL_ABOUT   "Solitaire de J Brown\nTradus de Petru Dimitriu\nCardLib versiunea 1.0."
-    IDS_SOL_QUIT    "Pãrãsiþi jocul curent?"
-    IDS_SOL_WIN     "Felicitãri, aþi câºtigat!"
-    IDS_SOL_DEAL    "Jucaþi din nou?"
+    IDS_SOL_QUIT    "PÄƒrÄƒsiÈ›i jocul curent?"
+    IDS_SOL_WIN     "FelicitÄƒri, aÈ›i cÃ¢È™tigat!"
+    IDS_SOL_DEAL    "JucaÈ›i din nou?"
 END
 
 
@@ -63,13 +65,13 @@ BEGIN
         MENUITEM "&Joc\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
         MENUITEM "Set&...",                    IDM_GAME_DECK
-        MENUITEM "&Opþiuni...",                 IDM_GAME_OPTIONS
+        MENUITEM "&OpÈ›iuni...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
-        MENUITEM "&Ieºire",                       IDM_GAME_EXIT
+        MENUITEM "&IeÈ™ire",                       IDM_GAME_EXIT
     END
     POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Conþinut\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "&ConÈ›inut\tF1",               IDM_HELP_CONTENTS
         MENUITEM "&Despre",                      IDM_HELP_ABOUT
     END
 END
@@ -83,3 +85,5 @@ BEGIN
     VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
     VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
 END
+
+#pragma code_page(default)

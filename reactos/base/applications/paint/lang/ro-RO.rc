@@ -5,20 +5,22 @@
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 ID_MENU MENU
 BEGIN
-    POPUP "&Fiºier"
+    POPUP "&FiÈ™ier"
     BEGIN
         MENUITEM "Nou\tCtrl+N", IDM_FILENEW
         MENUITEM "Deschidere...\tCtrl+O", IDM_FILEOPEN
         MENUITEM "Salvare\tCtrl+S", IDM_FILESAVE
         MENUITEM "Salvare ca...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "Setare ca fundal (în carou)", IDM_FILEASWALLPAPERPLANE
+        MENUITEM "Setare ca fundal (Ã®n carou)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Setare ca fundal (centrat)", IDM_FILEASWALLPAPERCENTERED
-        MENUITEM "Setare ca fundal (întins)", IDM_FILEASWALLPAPERSTRETCHED
+        MENUITEM "Setare ca fundal (Ã®ntins)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Ieºire\tAlt+F4", IDM_FILEEXIT
+        MENUITEM "IeÈ™ire\tAlt+F4", IDM_FILEEXIT
     END
 
     POPUP "&Editare"
@@ -29,24 +31,24 @@ BEGIN
         MENUITEM "Decupare\tCtrl+X", IDM_EDITCUT
         MENUITEM "Copiere\tCtrl+C", IDM_EDITCOPY
         MENUITEM "Lipire\tCtrl+V", IDM_EDITPASTE
-        MENUITEM "ªtergere selecþie\tDel", IDM_EDITDELETESELECTION
-        MENUITEM "Inversare selecþie", IDM_EDITINVERTSELECTION
-        MENUITEM "Selectare totalã\tCtrl+A", IDM_EDITSELECTALL
+        MENUITEM "È˜tergere selecÈ›ie\tDel", IDM_EDITDELETESELECTION
+        MENUITEM "Inversare selecÈ›ie", IDM_EDITINVERTSELECTION
+        MENUITEM "Selectare totalÄƒ\tCtrl+A", IDM_EDITSELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "Copiere în...", IDM_EDITCOPYTO
+        MENUITEM "Copiere Ã®n...", IDM_EDITCOPYTO
         MENUITEM "Lipire din...", IDM_EDITPASTEFROM
     END
 
     POPUP "&Vizualizare"
     BEGIN
         MENUITEM "Instrumente\tCtrl+T", IDM_VIEWTOOLBOX, CHECKED
-        MENUITEM "Paletã de culori\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
-        MENUITEM "Barã de stare", IDM_VIEWSTATUSBAR, CHECKED
-        MENUITEM "Barã de instrumente text", IDM_FORMATICONBAR, CHECKED, GRAYED
+        MENUITEM "PaletÄƒ de culori\tCtrl+L", IDM_VIEWCOLORPALETTE, CHECKED
+        MENUITEM "BarÄƒ de stare", IDM_VIEWSTATUSBAR, CHECKED
+        MENUITEM "BarÄƒ de instrumente text", IDM_FORMATICONBAR, CHECKED, GRAYED
         MENUITEM SEPARATOR
         POPUP "Panoramare"
         BEGIN
-            POPUP "User defined"
+            POPUP "DefinitÄƒ de utilizator"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -57,8 +59,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "AfiÈ™are grilÄƒ", IDM_VIEWSHOWGRID
+            MENUITEM "AfiÈ™are miniaturÄƒ", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Pe tot ecranul\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -67,16 +69,16 @@ BEGIN
     BEGIN
         MENUITEM "Rotire/Oglindire...\tCtrl+R", IDM_IMAGEROTATEMIRROR
         MENUITEM "Redimensionare...\tCtrl+W", IDM_IMAGECHANGESIZE
-        MENUITEM "Tãiere", IDM_IMAGECROP
+        MENUITEM "TÄƒiere", IDM_IMAGECROP
         MENUITEM "Inversare culori\tCtrl+I", IDM_IMAGEINVERTCOLORS
         MENUITEM "Atribute...\tCtrl+E", IDM_IMAGEATTRIBUTES
-        MENUITEM "ªtergere imagine", IDM_IMAGEDELETEIMAGE
-        MENUITEM "Desenare opacã", IDM_IMAGEDRAWOPAQUE
+        MENUITEM "È˜tergere imagine", IDM_IMAGEDELETEIMAGE
+        MENUITEM "Desenare opacÄƒ", IDM_IMAGEDRAWOPAQUE
     END
     
     POPUP "&Culori"
     BEGIN
-        MENUITEM "Editare paletã...", IDM_COLORSEDITPALETTE
+        MENUITEM "Editare paletÄƒ...", IDM_COLORSEDITPALETTE
     END
     
     POPUP "&Ajutor"
@@ -101,6 +103,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE
@@ -112,15 +115,15 @@ END
 IDD_MIRRORROTATE DIALOGEX 100, 100, 180, 100
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Rotire ºi oglindire imagine"
+CAPTION "Rotire È™i oglindire imagine"
 BEGIN
     GROUPBOX "Rotire sau oglindire", IDD_MIRRORROTATEGROUP, 6, 6, 112, 86
-    AUTORADIOBUTTON "Oglindire orizontalã", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
-    AUTORADIOBUTTON "Oglindire verticalã", IDD_MIRRORROTATERB2, 12, 30, 100, 10
+    AUTORADIOBUTTON "Oglindire orizontalÄƒ", IDD_MIRRORROTATERB1, 12, 18, 100, 10, WS_GROUP
+    AUTORADIOBUTTON "Oglindire verticalÄƒ", IDD_MIRRORROTATERB2, 12, 30, 100, 10
     AUTORADIOBUTTON "Rotire la un unghi de:", IDD_MIRRORROTATERB3, 12, 42, 100, 10
-    AUTORADIOBUTTON "90°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
-    AUTORADIOBUTTON "180°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
-    AUTORADIOBUTTON "270°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "90Â°", IDD_MIRRORROTATERB4, 42, 54, 50, 10, WS_GROUP | WS_DISABLED
+    AUTORADIOBUTTON "180Â°", IDD_MIRRORROTATERB5, 42, 66, 50, 10, WS_DISABLED
+    AUTORADIOBUTTON "270Â°", IDD_MIRRORROTATERB6, 42, 78, 50, 10, WS_DISABLED
     DEFPUSHBUTTON "OK", IDOK, 125, 8, 48, 14
     PUSHBUTTON "Anulare", IDCANCEL, 125, 24, 48, 14
 END
@@ -132,20 +135,20 @@ CAPTION "Atribute"
 BEGIN
     EDITTEXT IDD_ATTRIBUTESEDIT1, 40, 40, 35, 12
     EDITTEXT IDD_ATTRIBUTESEDIT2, 110, 40, 35, 12
-    LTEXT "Lãþime:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
-    LTEXT "Înãlþime:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
-    LTEXT "Datã:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
-    LTEXT "Mãrime:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
-    LTEXT "Rezoluþie:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
+    LTEXT "LÄƒÈ›ime:", IDD_ATTRIBUTESTEXT1, 10, 40, 30, 10
+    LTEXT "ÃŽnÄƒlÈ›ime:", IDD_ATTRIBUTESTEXT2, 80, 40, 30, 10
+    LTEXT "DatÄƒ:", IDD_ATTRIBUTESTEXT3, 10, 5, 60, 10
+    LTEXT "MÄƒrime:", IDD_ATTRIBUTESTEXT4, 10, 15, 60, 10
+    LTEXT "RezoluÈ›ie:", IDD_ATTRIBUTESTEXT5, 10, 25, 60, 10
     LTEXT "Indisponibil", IDD_ATTRIBUTESTEXT6, 70, 5, 60, 10
     LTEXT "Indisponibil", IDD_ATTRIBUTESTEXT7, 70, 15, 60, 10
     LTEXT "Indisponibil", IDD_ATTRIBUTESTEXT8, 70, 25, 60, 10
     GROUPBOX "Unitate", IDD_ATTRIBUTESGROUP1, 6, 57, 139, 27
-    AUTORADIOBUTTON "Þoli", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
+    AUTORADIOBUTTON "È›oli", IDD_ATTRIBUTESRB1, 12, 69, 35, 10, WS_GROUP
     AUTORADIOBUTTON "cm", IDD_ATTRIBUTESRB2, 52, 69, 35, 10
     AUTORADIOBUTTON "Pixeli", IDD_ATTRIBUTESRB3, 92, 69, 35, 10
     GROUPBOX "Culori", IDD_ATTRIBUTESGROUP2, 6, 88, 139, 27
-    AUTORADIOBUTTON "Alb ºi negru", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
+    AUTORADIOBUTTON "Alb È™i negru", IDD_ATTRIBUTESRB4, 12, 100, 70, 10, WS_GROUP
     AUTORADIOBUTTON "Color", IDD_ATTRIBUTESRB5, 92, 100, 35, 10
     DEFPUSHBUTTON "OK", IDOK, 155, 8, 48, 14
     PUSHBUTTON "Anulare", IDCANCEL, 155, 24, 48, 14
@@ -175,26 +178,28 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint pentru ReactOS"
-    IDS_INFOTEXT, "Paint pentru ReactOS este disponibil sub licenþa GNU Lesser General Public versiunea 3 (vedeþi www.gnu.org)"
-    IDS_SAVEPROMPTTEXT, "Vreþi sã salvaþi schimbãrile la %s?"
-    IDS_DEFAULTFILENAME, "FãrãNume.bmp"
+    IDS_INFOTEXT, "Paint pentru ReactOS este disponibil sub licenÈ›a GNU Lesser General Public versiunea 3 (vedeÈ›i www.gnu.org)"
+    IDS_SAVEPROMPTTEXT, "VreÈ›i sÄƒ salvaÈ›i schimbÄƒrile la %s?"
+    IDS_DEFAULTFILENAME, "FÄƒrÄƒNume.bmp"
     IDS_MINIATURETITLE, "Miniature"
-    IDS_TOOLTIP1, "Golire selecþie"
-    IDS_TOOLTIP2, "Selecþie"
-    IDS_TOOLTIP3, "Radierã"
+    IDS_TOOLTIP1, "Golire selecÈ›ie"
+    IDS_TOOLTIP2, "SelecÈ›ie"
+    IDS_TOOLTIP3, "RadierÄƒ"
     IDS_TOOLTIP4, "Umplere cu culoare"
     IDS_TOOLTIP5, "Selectare culoare"
     IDS_TOOLTIP6, "Panoramare"
     IDS_TOOLTIP7, "Creion"
-    IDS_TOOLTIP8, "Pensulã"
+    IDS_TOOLTIP8, "PensulÄƒ"
     IDS_TOOLTIP9, "Pulverizator"
     IDS_TOOLTIP10, "Text"
     IDS_TOOLTIP11, "Linie"
-    IDS_TOOLTIP12, "Curbã bezier"
+    IDS_TOOLTIP12, "CurbÄƒ bezier"
     IDS_TOOLTIP13, "Dreptunghi"
     IDS_TOOLTIP14, "Poligon"
     IDS_TOOLTIP15, "Oval"
     IDS_TOOLTIP16, "Dreptunghi rotunjit"
-    IDS_OPENFILTER, "Fiºiere bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
-    IDS_SAVEFILTER, "Bitmap pe 24 biþi (*.bmp;*.dib)\1*.bmp;*.dib\1"
+    IDS_OPENFILTER, "FiÈ™iere bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
+    IDS_SAVEFILTER, "Bitmap pe 24 biÈ›i (*.bmp;*.dib)\1*.bmp;*.dib\1"
 END
+
+#pragma code_page(default)

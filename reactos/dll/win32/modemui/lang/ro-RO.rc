@@ -1,5 +1,7 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDM_MENU MENU
 BEGIN
 	POPUP ""
@@ -8,9 +10,9 @@ BEGIN
 		MENUITEM "E&liminare", 1
 		MENUITEM "&Vizualizare jurnal", 2
 		MENUITEM SEPARATOR
-		MENUITEM "P&roprietãþi", 3
-		MENUITEM "C&opiere proprietãþi", 4
-		MENUITEM "A&plicare proprietãþi", 5
+		MENUITEM "P&roprietÄƒÈ›i", 3
+		MENUITEM "C&opiere proprietÄƒÈ›i", 4
+		MENUITEM "A&plicare proprietÄƒÈ›i", 5
 	END
 END
 
@@ -19,17 +21,17 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Avansat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Setãri extra", 1018, 6, 6, 225, 70
-	LTEXT "Comenzi de iniþializare extra:", 1011, 16, 20, 143, 8
+	GROUPBOX "SetÄƒri extra", 1018, 6, 6, 225, 70
+	LTEXT "Comenzi de iniÈ›ializare extra:", 1011, 16, 20, 143, 8
 	EDITTEXT 1016, 16, 31, 205, 13, ES_AUTOHSCROLL
-	LTEXT "&Aºteptare ton:", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
+	LTEXT "&AÈ™teptare ton:", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
 	EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
 	CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
 	LTEXT "secunde", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
-	GROUPBOX "&Selectare þarã/regiune", 1012, 6, 80, 225, 75
+	GROUPBOX "&Selectare È›arÄƒ/regiune", 1012, 6, 80, 225, 75
 	COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "&Setãri port avansate...", 1100, 107, 170, 125, 14
-	DEFPUSHBUTTON "Schimbare opþiuni implicite...", 3, 107, 188, 125, 14
+	PUSHBUTTON "&SetÄƒri port avansate...", 1100, 107, 170, 125, 14
+	DEFPUSHBUTTON "Schimbare opÈ›iuni implicite...", 3, 107, 188, 125, 14
 END
 
 IDD_GENERAL DIALOGEX 0, 0, 238, 210
@@ -42,11 +44,11 @@ BEGIN
 	GROUPBOX "&Volum sonor", 1029, 10, 21, 218, 48
 	CONTROL "", 1032, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000001, 84, 40, 66, 20
 	RTEXT "Oprit", 1045, 56, 40, 22, 8
-	LTEXT "Înalt", 1001, 155, 40, 25, 11
-	GROUPBOX "&Vitezã maximã port", 1031, 10, 78, 218, 46
+	LTEXT "ÃŽnalt", 1001, 155, 40, 25, 11
+	GROUPBOX "&VitezÄƒ maximÄƒ port", 1031, 10, 78, 218, 46
 	COMBOBOX 1036, 18, 100, 202, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	GROUPBOX "Control apel", 1060, 10, 133, 218, 51
-	AUTOCHECKBOX "&Aºteptare ton înaintea apelãrii", 1003, 27, 157, 174, 10
+	AUTOCHECKBOX "&AÈ™teptare ton Ã®naintea apelÄƒrii", 1003, 27, 157, 174, 10
 END
 
 IDD_DISTINCTIVE_RING DIALOGEX 0, 0, 238, 210
@@ -58,19 +60,19 @@ BEGIN
 	AUTOCHECKBOX "&Acest telefon are servicii Distinctive Ring", 1069, 20, 7, 184, 10
 	CTEXT "Model sunet apel", -1, 84, 21, 70, 8
 	CTEXT "Tip apel", -1, 159, 21, 63, 8
-	LTEXT "&Adresã primarã:", 1070, 20, 41, 62, 8
+	LTEXT "&AdresÄƒ primarÄƒ:", 1070, 20, 41, 62, 8
 	COMBOBOX 1073, 84, 37, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
 	COMBOBOX 1082, 160, 37, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Addresã &1:", 1071, 20, 59, 62, 8
+	LTEXT "AddresÄƒ &1:", 1071, 20, 59, 62, 8
 	COMBOBOX 1074, 84, 55, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
 	COMBOBOX 1083, 160, 55, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Addresã &2:", 1072, 20, 77, 62, 8
+	LTEXT "AddresÄƒ &2:", 1072, 20, 77, 62, 8
 	COMBOBOX 1075, 84, 73, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
 	COMBOBOX 1084, 160, 73, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Addresã &3:", 1076, 20, 95, 62, 8
+	LTEXT "AddresÄƒ &3:", 1076, 20, 95, 62, 8
 	COMBOBOX 1077, 84, 91, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
 	COMBOBOX 1085, 160, 91, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Apelanþi cu prioritate:", 1078, 20, 112, 62, 8
+	LTEXT "ApelanÈ›i cu prioritate:", 1078, 20, 112, 62, 8
 	COMBOBOX 1079, 84, 109, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
 	COMBOBOX 1086, 160, 109, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "Call&back:", 1080, 20, 131, 62, 8
@@ -102,20 +104,20 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	CONTROL "", 1042, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 18, 200, 58
 	CONTROL "", 1041, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 84, 200, 58
-	PUSHBUTTON "&Înregistrare modem", 1096, 138, 149, 75, 14
-	AUTOCHECKBOX "Înregistrare jurnal", 1020, 18, 187, 98, 10
+	PUSHBUTTON "&ÃŽnregistrare modem", 1096, 138, 149, 75, 14
+	AUTOCHECKBOX "ÃŽnregistrare jurnal", 1020, 18, 187, 98, 10
 	PUSHBUTTON "&Vizualizare jurnal", 1094, 138, 184, 75, 14, WS_DISABLED
-	GROUPBOX "Informaþii modem", 1047, 10, 6, 217, 164
+	GROUPBOX "InformaÈ›ii modem", 1047, 10, 6, 217, 164
 	GROUPBOX "Scriere jurnal", -1, 10, 173, 217, 32
 END
 
 IDD_PLEASE_WAIT DIALOGEX 0, 0, 195, 72
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Vã rugãm aºteptaþi"
+CAPTION "VÄƒ rugÄƒm aÈ™teptaÈ›i"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 5100, -1, 9, 7, 20, 20
-	LTEXT "Se comunicã cu modemul. Acest lucru poate dura câteva secunde.", -1, 42, 7, 146, 28
+	LTEXT "Se comunicÄƒ cu modemul. Acest lucru poate dura cÃ¢teva secunde.", -1, 42, 7, 146, 28
 	DEFPUSHBUTTON "Anulare", 2, 72, 52, 50, 14
 END
 
@@ -124,12 +126,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTOCHECKBOX "&Apelare asistatã de operator (manualã)", 1002, 19, 22, 150, 10
-	AUTOCHECKBOX "&Deconectare în caz de inactivitate", 1042, 19, 38, 143, 10
+	AUTOCHECKBOX "&Apelare asistatÄƒ de operator (manualÄƒ)", 1002, 19, 22, 150, 10
+	AUTOCHECKBOX "&Deconectare Ã®n caz de inactivitate", 1042, 19, 38, 143, 10
 	EDITTEXT 1043, 168, 35, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
-	LTEXT "&Anuleazã apelul în caz de inactivitate", -1, 19, 56, 147, 10
+	LTEXT "&AnuleazÄƒ apelul Ã®n caz de inactivitate", -1, 19, 56, 147, 10
 	EDITTEXT 1040, 168, 54, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
-	RTEXT "&Vitezã port:", 1034, 16, 102, 93, 8
+	RTEXT "&VitezÄƒ port:", 1034, 16, 102, 93, 8
 	COMBOBOX 1036, 114, 100, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	RTEXT "Protocol date:", 1032, 16, 122, 93, 8
 	COMBOBOX 1037, 114, 119, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
@@ -137,10 +139,10 @@ BEGIN
 	COMBOBOX 1099, 114, 137, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	RTEXT "&Control flux:", 1027, 16, 157, 93, 8
 	COMBOBOX 1031, 114, 155, 84, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	GROUPBOX "Preferinþe apel", 1060, 11, 7, 217, 66
+	GROUPBOX "PreferinÈ›e apel", 1060, 11, 7, 217, 66
 	LTEXT "min", 1044, 195, 38, 22, 8
 	LTEXT "sec", 1041, 194, 56, 22, 8
-	GROUPBOX "Perferinþe date conexiune", -1, 11, 82, 217, 94
+	GROUPBOX "PerferinÈ›e date conexiune", -1, 11, 82, 217, 94
 END
 
 IDD_ADVANCED_2 DIALOGEX 17, 12, 238, 210
@@ -148,18 +150,18 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Avansat"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTOCHECKBOX "Afiºare fereastrã terminal înaintea apelãrii", 1000, 20, 21, 200, 10
-	AUTOCHECKBOX "Afiºare fereastrã terminal dupã apelare", 1001, 20, 38, 200, 10
-	RTEXT "&Biþi date:", 1024, 18, 79, 93, 8
+	AUTOCHECKBOX "AfiÈ™are fereastrÄƒ terminal Ã®naintea apelÄƒrii", 1000, 20, 21, 200, 10
+	AUTOCHECKBOX "AfiÈ™are fereastrÄƒ terminal dupÄƒ apelare", 1001, 20, 38, 200, 10
+	RTEXT "&BiÈ›i date:", 1024, 18, 79, 93, 8
 	COMBOBOX 1025, 114, 77, 106, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	RTEXT "&Paritate:", 1026, 18, 97, 93, 8
 	COMBOBOX 1028, 114, 95, 106, 60, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	RTEXT "&Biþi oprire:", 1029, 18, 115, 93, 8
+	RTEXT "&BiÈ›i oprire:", 1029, 18, 115, 93, 8
 	COMBOBOX 1030, 114, 113, 106, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	RTEXT "&Modulare:", 1045, 18, 133, 93, 8
 	COMBOBOX 1038, 114, 131, 106, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	GROUPBOX "Fereastrã terminal", 1004, 10, 7, 217, 49
-	GROUPBOX "Setãri hardware", 1005, 10, 64, 217, 89
+	GROUPBOX "FereastrÄƒ terminal", 1004, 10, 7, 217, 49
+	GROUPBOX "SetÄƒri hardware", 1005, 10, 64, 217, 89
 END
 
 IDD_ISDN DIALOGEX 0, 0, 238, 210
@@ -169,11 +171,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX "Schimbare &tip", -1, 11, 6, 217, 39
 	COMBOBOX 1104, 17, 20, 204, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	GROUPBOX "&Primul numãr:", -1, 11, 50, 217, 50
+	GROUPBOX "&Primul numÄƒr:", -1, 11, 50, 217, 50
 	EDITTEXT 1017, 33, 62, 188, 13, ES_AUTOHSCROLL | ES_NUMBER
 	LTEXT "S&PID/EAZ:", 1027, 34, 83, 67, 8
 	EDITTEXT 1107, 104, 79, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
-	GROUPBOX "&Al doilea numãr:", -1, 11, 105, 217, 49
+	GROUPBOX "&Al doilea numÄƒr:", -1, 11, 105, 217, 49
 	EDITTEXT 1018, 33, 114, 189, 13, ES_AUTOHSCROLL | ES_NUMBER
 	LTEXT "SPI&D/EAZ:", 1028, 35, 135, 68, 8
 	EDITTEXT 1108, 105, 132, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
@@ -181,11 +183,11 @@ END
 
 IDD_PLEASE_WAIT_2 DIALOGEX 0, 0, 195, 72
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Vã rugãm aºteptaþi"
+CAPTION "VÄƒ rugÄƒm aÈ™teptaÈ›i"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 5100, -1, 9, 7, 20, 20
-	LTEXT "Se trimit informaþii þarã/regiune cãtre modem.", -1, 42, 7, 146, 28
+	LTEXT "Se trimit informaÈ›ii È›arÄƒ/regiune cÄƒtre modem.", -1, 42, 7, 146, 28
 END
 
 IDD_WARNING DIALOGEX 0, 0, 360, 105
@@ -193,12 +195,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Avertisment"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTOCHECKBOX "Nu mai afiºa acest mesaj", 1109, 17, 73, 118, 10
+	AUTOCHECKBOX "Nu mai afiÈ™a acest mesaj", 1109, 17, 73, 118, 10
 	DEFPUSHBUTTON "OK", 1, 302, 84, 50, 14
-	LTEXT "Unele modemuri nu funcþioneazã corect cu ºiruri de iniþializare atât de lungi.", -1, 50, 27, 304, 8
-	LTEXT "Informaþii despre aceste limite puteþi afla de la producãtorul modemului.", -1, 50, 41, 304, 8
+	LTEXT "Unele modemuri nu funcÈ›ioneazÄƒ corect cu È™iruri de iniÈ›ializare atÃ¢t de lungi.", -1, 50, 27, 304, 8
+	LTEXT "InformaÈ›ii despre aceste limite puteÈ›i afla de la producÄƒtorul modemului.", -1, 50, 41, 304, 8
 	ICON 5100, -1, 15, 14, 20, 20
-	LTEXT "Aþi scris un ºir de iniþializare mai lung de 57 de caractere.", -1, 50, 14, 304, 8
+	LTEXT "AÈ›i scris un È™ir de iniÈ›ializare mai lung de 57 de caractere.", -1, 50, 14, 304, 8
 END
 
 IDD_MODEMS DIALOGEX 0, 0, 252, 218
@@ -207,16 +209,16 @@ CAPTION "Modemuri"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 5100, 1057, 6, 7, 20, 20
-	LTEXT "Urmãtoarele modemuri sunt instalate: ", -1, 44, 12, 203, 9
+	LTEXT "UrmÄƒtoarele modemuri sunt instalate: ", -1, 44, 12, 203, 9
 	CONTROL "", 113, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00000849, 7, 32, 238, 158, WS_EX_CLIENTEDGE
-	PUSHBUTTON "A&dãugare", 110, 56, 198, 60, 14
+	PUSHBUTTON "A&dÄƒugare", 110, 56, 198, 60, 14
 	PUSHBUTTON "&Eliminare", 112, 121, 198, 60, 14
-	PUSHBUTTON "&Proprietãþi", 109, 185, 198, 60, 14
+	PUSHBUTTON "&ProprietÄƒÈ›i", 109, 185, 198, 60, 14
 END
 
 IDD_PLEASE_WAIT_3 DIALOGEX 0, 0, 195, 72
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Vã rugãm aºteptaþi..."
+CAPTION "VÄƒ rugÄƒm aÈ™teptaÈ›i..."
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "&Oprire", 2, 74, 53, 50, 14
@@ -255,7 +257,7 @@ BEGIN
 	251 "Impar"
 	252 "Nimic"
 	253 "Marcare"
-	254 "Spaþiu"
+	254 "SpaÈ›iu"
 	255 "1"
 	256 "1.5"
 	257 "2"
@@ -263,26 +265,26 @@ BEGIN
 	261 "Hardware"
 	262 "Nimic"
 	263 "Pornit"
-	264 "Scãzut"
+	264 "ScÄƒzut"
 	265 "V.23 (Minitel)"
 	266 "Standard"
 	267 "Non-standard (Bell, HST)"
-	270 "Adãugare la jurnal"
+	270 "AdÄƒugare la jurnal"
 	300 "Nespecificat"
 	301 "Date"
 	302 "Fax"
 	303 "Voce"
 	304 "Nimic"
-	320 "Setãri þarã/regiune actualizate"
+	320 "SetÄƒri È›arÄƒ/regiune actualizate"
 	340 "Modem"
-	341 "Setãri modem"
-	342 "Adresã modem"
-	400 "Setãri þarã/regiune neactualizate"
-	401 "Unele modemuri nu funcþioneazã corect cu ºiruri de iniþializare peste 57 de caractere.\n\nCereþi mai multe informaþii de la producãtor."
+	341 "SetÄƒri modem"
+	342 "AdresÄƒ modem"
+	400 "SetÄƒri È›arÄƒ/regiune neactualizate"
+	401 "Unele modemuri nu funcÈ›ioneazÄƒ corect cu È™iruri de iniÈ›ializare peste 57 de caractere.\n\nCereÈ›i mai multe informaÈ›ii de la producÄƒtor."
 	402 "Avertisment"
-	460 "Nu existã destulã memorie pentru a afiºa caseta de dialog General.\nÎnchideþi unele aplicaþii ºi reîncercaþi."
-	461 "Nu existã destulã memorie pentru a afiºa caseta de dialog Setãri modem.\nÎnchideþi unele aplicaþii ºi reîncercaþi."
-	463 "Fiecare adresã de apelare trebuie setatã pe 'Automat' sau pe un model de apel unic.\n\nSchimbaþi dublura ºi reîncercaþi."
+	460 "Nu existÄƒ destulÄƒ memorie pentru a afiÈ™a caseta de dialog General.\nÃŽnchideÈ›i unele aplicaÈ›ii È™i reÃ®ncercaÈ›i."
+	461 "Nu existÄƒ destulÄƒ memorie pentru a afiÈ™a caseta de dialog SetÄƒri modem.\nÃŽnchideÈ›i unele aplicaÈ›ii È™i reÃ®ncercaÈ›i."
+	463 "Fiecare adresÄƒ de apelare trebuie setatÄƒ pe 'Automat' sau pe un model de apel unic.\n\nSchimbaÈ›i dublura È™i reÃ®ncercaÈ›i."
 	465 "Standard EC"
 	466 "Forced EC"
 	467 "Celular"
@@ -331,7 +333,7 @@ BEGIN
 	558 "Belgium National (rar)"
 	559 "Australian National (rar)"
 	560 "Switch necunoscut"
-	570 "Configuraþia ISDN pentru acest modem\ne incompletã.\n\nVã rugãm introduceþi datele\nîn fila ISDN ºi reîncercaþi."
+	570 "ConfiguraÈ›ia ISDN pentru acest modem\ne incompletÄƒ.\n\nVÄƒ rugÄƒm introduceÈ›i datele\nÃ®n fila ISDN È™i reÃ®ncercaÈ›i."
 	600 "PPP   (56K,GSM)"
 	601 "PPP   (64K,GSM)"
 	602 "V.120 (64K,GSM)"
@@ -350,27 +352,27 @@ BEGIN
 	616 "GPRS"
 	617 "PIAFS - dinspre"
 	618 "PIAFS - spre"
-	700 "Folosire locaþie TAPI curentã"
-	2006 "Ataºat la"
+	700 "Folosire locaÈ›ie TAPI curentÄƒ"
+	2006 "AtaÈ™at la"
 	2007 "Absent"
 	2008 "Inactiv"
-	2009 "Necesitã repornire"
-	2010 "#Pentru a termina instalarea modemului, trebuie sã reporniþi computerul.\n\nVreþi sã reporniþi computerul acum?"
+	2009 "NecesitÄƒ repornire"
+	2010 "#Pentru a termina instalarea modemului, trebuie sÄƒ reporniÈ›i computerul.\n\nVreÈ›i sÄƒ reporniÈ›i computerul acum?"
 	2011 "Modem instalat incorect"
 	2012 "Port necunoscut"
 	3000 "Instalare modem"
 	3018 "Modemuri"
-	3019 "Instaleazã modemuri ºi editeazã proprietãþi ale acestora."
-	3053 "Proprietãþile modemului nu pot fi afiºate deoarce modemul e indisponibil..\n\nReporniþi sistemul ºi reîncercaþi."
-	3054 "Properietãþi pentru Modemuri"
-	3060 "Sigur vreþi sã eliminaþi acest(e) modem(uri) din sistem?"
+	3019 "InstaleazÄƒ modemuri È™i editeazÄƒ proprietÄƒÈ›i ale acestora."
+	3053 "ProprietÄƒÈ›ile modemului nu pot fi afiÈ™ate deoarce modemul e indisponibil..\n\nReporniÈ›i sistemul È™i reÃ®ncercaÈ›i."
+	3054 "ProperietÄƒÈ›i pentru Modemuri"
+	3060 "Sigur vreÈ›i sÄƒ eliminaÈ›i acest(e) modem(uri) din sistem?"
 	3061 "ReactOS nu a putut elimina modemul '%1' din %2."
 	3062 "Modem"
-	3069 "Nu existã destulã memorie pentru a afiºa panoul de control.\n\nÎnchideþi unele programe ºi reîncercaþi."
-	3073 "Trebuie sã fiþi administrator de sistem pentru a instala un modem."
-	3074 "Niciun modem instalat. Trebuie sã fiþi administrator de sistem pentru a instala un modem."
-	3076 "Trebuie sã închideþi ºi sã reporniþi computerul pentru ca setãrile noi sã aibã efect.\n\nVreþi sã reporniþi computerul acum?"
-	3077 "Schimbare setãri reþea"
+	3069 "Nu existÄƒ destulÄƒ memorie pentru a afiÈ™a panoul de control.\n\nÃŽnchideÈ›i unele programe È™i reÃ®ncercaÈ›i."
+	3073 "Trebuie sÄƒ fiÈ›i administrator de sistem pentru a instala un modem."
+	3074 "Niciun modem instalat. Trebuie sÄƒ fiÈ›i administrator de sistem pentru a instala un modem."
+	3076 "Trebuie sÄƒ Ã®nchideÈ›i È™i sÄƒ reporniÈ›i computerul pentru ca setÄƒrile noi sÄƒ aibÄƒ efect.\n\nVreÈ›i sÄƒ reporniÈ›i computerul acum?"
+	3077 "Schimbare setÄƒri reÈ›ea"
 	3200 "300 Baud"
 	3201 "1200 Baud"
 	3202 "2400 Baud"
@@ -378,27 +380,27 @@ BEGIN
 	3204 "19.2K Baud"
 	3205 "38.4K Baud"
 	3206 "57.6K Baud"
-	3207 "Niciun rãspuns"
-	3212 "Comandã"
-	3213 "Rãspuns"
-	3214 "Portul la care e ataºat modemul nu poate fi deschis. Acest lucru ar putea fi rezultatul unui conflict între dispozitive. Verificaþi în Gestionarul de dispozitive pentru probleme."
-	3215 "Portul care este folosit de modem este folosit în acest moment de o altã aplicaþie. Închideþi toate aplicaþiile care ar putea folosi portul."
+	3207 "Niciun rÄƒspuns"
+	3212 "ComandÄƒ"
+	3213 "RÄƒspuns"
+	3214 "Portul la care e ataÈ™at modemul nu poate fi deschis. Acest lucru ar putea fi rezultatul unui conflict Ã®ntre dispozitive. VerificaÈ›i Ã®n Gestionarul de dispozitive pentru probleme."
+	3215 "Portul care este folosit de modem este folosit Ã®n acest moment de o altÄƒ aplicaÈ›ie. ÃŽnchideÈ›i toate aplicaÈ›iile care ar putea folosi portul."
 	3218 "OpenComm"
 	3221 "115K Baud"
 	3222 "Updating"
 	3223 "Eroare"
 	3233 "Succes"
-	3236 "Modemul nu a putut rãspunde. Asiguraþi-vã cã e conectat corect ºi cã e pornit.  Dacã e un modem intern sau e conectat deja, verificaþi dacã întreruperea este corect setatã."
-	3237 "COMMANDÃ NESUPORTATÃ"
-	3238 "Câmp"
+	3236 "Modemul nu a putut rÄƒspunde. AsiguraÈ›i-vÄƒ cÄƒ e conectat corect È™i cÄƒ e pornit.  DacÄƒ e un modem intern sau e conectat deja, verificaÈ›i dacÄƒ Ã®ntreruperea este corect setatÄƒ."
+	3237 "COMMANDÄ‚ NESUPORTATÄ‚"
+	3238 "CÃ¢mp"
 	3239 "Valoare"
-	3240 " Opþiuni implicite"
-	3241 " Preferinþe conexiune"
+	3240 " OpÈ›iuni implicite"
+	3241 " PreferinÈ›e conexiune"
 	6144 "Japonia"
 	6145 "Albania"
 	6146 "Algeria"
 	6147 "American Samoa"
-	6148 "Germany (Cod þarã/regiune 04)"
+	6148 "Germany (Cod È›arÄƒ/regiune 04)"
 	6149 "Anguilla"
 	6150 "Antigua and Barbuda"
 	6151 "Argentina"
@@ -417,7 +419,7 @@ BEGIN
 	6164 "Bolivia"
 	6165 "Botswana"
 	6166 "Brazilia"
-	6167 "Cod regiune/þarã (23)"
+	6167 "Cod regiune/È›arÄƒ (23)"
 	6168 "British Indian Ocean Territory"
 	6169 "British Virgin Islands"
 	6170 "Brunei"
@@ -457,10 +459,10 @@ BEGIN
 	6204 "Finland"
 	6205 "France"
 	6206 "French Polynesia"
-	6207 "Cod þarã/regiune (63)"
+	6207 "Cod È›arÄƒ/regiune (63)"
 	6208 "Gabon"
 	6209 "Gambia"
-	6210 "Germany (Cod þarã/regiune 66)"
+	6210 "Germany (Cod È›arÄƒ/regiune 66)"
 	6211 "Angola"
 	6212 "Ghana"
 	6213 "Gibraltar"
@@ -536,14 +538,14 @@ BEGIN
 	6283 "Portugalia"
 	6284 "Puerto Rico"
 	6285 "Qatar"
-	6286 "România"
+	6286 "RomÃ¢nia"
 	6287 "Rwanda"
 	6288 "St. Kitts and Nevis"
-	6289 "Cod þarã/regiune (145)"
+	6289 "Cod È›arÄƒ/regiune (145)"
 	6290 "St. Helena"
 	6291 "St. Lucia"
 	6292 "San Marino"
-	6293 "Cod þarã/regiune (148)"
+	6293 "Cod È›arÄƒ/regiune (148)"
 	6294 "Sao Tome and Principe"
 	6295 "St. Vincent and the Grenadines"
 	6296 "Saudi Arabia"
@@ -578,7 +580,7 @@ BEGIN
 	6325 "United States"
 	6326 "Burkina Faso"
 	6327 "Uruguay"
-	6328 "Cod þarã/regiune (184)"
+	6328 "Cod È›arÄƒ/regiune (184)"
 	6329 "Vanuatu"
 	6330 "Vatican City"
 	6331 "Venezuela"
@@ -587,7 +589,7 @@ BEGIN
 	6334 "Samoa"
 	6335 "Yemen"
 	6336 "Yemen"
-	6337 "Cod þarã/regiune (193)"
+	6337 "Cod È›arÄƒ/regiune (193)"
 	6338 "Congo (DRC)"
 	6339 "Zambia"
 	6340 "Zimbabwe"
@@ -611,3 +613,5 @@ BEGIN
 	6604 "Iugoslavia"
 	20013 "ID dispozitiv"
 END
+
+#pragma code_page(default)
