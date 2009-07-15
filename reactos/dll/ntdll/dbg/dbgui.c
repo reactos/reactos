@@ -33,7 +33,7 @@ DbgUiConnectToDbg(VOID)
     return ZwCreateDebugObject(&NtCurrentTeb()->DbgSsReserved[1],
                                DEBUG_OBJECT_ALL_ACCESS,
                                &ObjectAttributes,
-                               TRUE);
+                               DBGK_KILL_PROCESS_ON_EXIT);
 }
 
 /*
