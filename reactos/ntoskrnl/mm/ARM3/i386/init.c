@@ -14,7 +14,7 @@
 
 #line 15 "ARM³::INIT"
 #define MODULE_INVOLVED_IN_ARM3
-#include "../ARM3/miarm.h"
+#include "../../ARM3/miarm.h"
 
 /* GLOBALS ********************************************************************/
 
@@ -138,7 +138,7 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
         // This both odious and heinous
         //
         extern ULONG MmGlobalKernelPageDirectory[1024];
-        MmGlobalKernelPageDirectory[Pde] = ((PULONG)PAGEDIRECTORY_MAP)[Pde];
+        MmGlobalKernelPageDirectory[Pde] = ((PULONG)PDE_BASE)[Pde];
         Pde++;
     }
 }
@@ -302,7 +302,7 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Set CR3 for the system process
         //
-        PointerPte = MiAddressToPde(PAGETABLE_MAP);
+        PointerPte = MiAddressToPde(PTE_BASE);
         PageFrameIndex = PFN_FROM_PTE(PointerPte) << PAGE_SHIFT;
         PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = PageFrameIndex;
         

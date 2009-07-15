@@ -360,12 +360,21 @@
 			</directory>
 		</if>
 		<directory name="ARM3">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>init.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="arm">
+				<directory name="arm">
+					<file>init.c</file>
+				</directory>
+			</if>
 			<file>contmem.c</file>
 			<file>drvmgmt.c</file>
 			<file>dynamic.c</file>
 			<file>expool.c</file>
 			<file>hypermap.c</file>
-			<file>init.c</file>
 			<file>iosup.c</file>
 			<file>mdlsup.c</file>
 			<file>ncache.c</file>
