@@ -1006,23 +1006,26 @@ SearchPathW (
         PWCHAR EnvironmentBufferW = NULL;
         PWCHAR AppPathW = NULL;
         WCHAR Buffer;
-        BOOL HasExtension;
+        BOOL HasExtension = FALSE, IsAbsolute = FALSE;
         LPCWSTR p;
         PWCHAR Name;
 
         TRACE("SearchPath\n");
 
-        HasExtension = FALSE;
         p = lpFileName + wcslen(lpFileName);
         while (lpFileName < p &&
                L'\\' != *(p - 1) &&
-               L'/' != *(p - 1) &&
-               L':' != *(p - 1))
+               L'/' != *(p - 1))
         {
                 HasExtension = HasExtension || L'.' == *(p - 1);
+                if (p >= lpFileName && L'\\' == *(p-1))
+                {
+                    if (':' == *p)
+                        IsAbsolute = TRUE;
+                }
                 p--;
         }
-        if (lpFileName < p)
+        if (IsAbsolute)
         {
                 if (HasExtension || NULL == lpExtension)
                 {
@@ -1041,7 +1044,7 @@ SearchPathW (
                         }
                         wcscat(wcscpy(Name, lpFileName), lpExtension);
                 }
-	        if (RtlDoesFileExists_U(Name))
+            if (RtlDoesFileExists_U(Name))
                 {
                         retCode = RtlGetFullPathName_U (Name,
                                                         nBufferLength * sizeof(WCHAR),
