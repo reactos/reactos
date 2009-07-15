@@ -1045,12 +1045,12 @@ VideoPortSynchronizeExecution(
       case VpHighPriority:
          OldIrql = KeGetCurrentIrql();
          if (OldIrql < SYNCH_LEVEL)
-            OldIrql = KfRaiseIrql(SYNCH_LEVEL);
+            KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
 
          Ret = (*SynchronizeRoutine)(Context);
 
          if (OldIrql < SYNCH_LEVEL)
-            KfLowerIrql(OldIrql);
+            KeLowerIrql(OldIrql);
          break;
 
       default:
