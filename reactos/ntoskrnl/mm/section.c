@@ -2375,12 +2375,9 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
-   Section->Type = 0;
-   Section->Size = 0;
+   RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
-   Section->Segment = NULL;
-   Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
    Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                    TAG_MM_SECTION_SEGMENT);
@@ -2449,11 +2446,9 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
-   Section->Type = 0;
-   Section->Size = 0;
+   RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
-   Section->Segment = NULL;
 
    /*
     * Check file access required
@@ -3377,9 +3372,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
-   Section->Type = 0;
-   Section->Size = 0;
-   Section->MaximumSize.QuadPart = 0;
+   RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
 
