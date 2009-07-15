@@ -2239,7 +2239,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                                           &ImpersonationLevel);
     if (Token == NULL)
     {
-        ObfDereferenceObject(Thread);
+        ObDereferenceObject(Thread);
         return STATUS_NO_TOKEN;
     }
     
@@ -2247,7 +2247,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     
     if (ImpersonationLevel == SecurityAnonymous)
     {
-        ObfDereferenceObject(Token);
+        ObDereferenceObject(Token);
         return STATUS_CANT_OPEN_ANONYMOUS;
     }
     
@@ -2267,7 +2267,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                                            (PVOID*)&Thread, NULL);
         if (!NT_SUCCESS(Status))
         {
-            ObfDereferenceObject(Token);
+            ObDereferenceObject(Token);
             if (OpenAsSelf)
             {
                 PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
@@ -2278,11 +2278,11 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         PrimaryToken = PsReferencePrimaryToken(Thread->ThreadsProcess);
         Status = SepCreateImpersonationTokenDacl(Token, PrimaryToken, &Dacl);
         ASSERT(FALSE);
-        ObfDereferenceObject(PrimaryToken);
-        ObfDereferenceObject(Thread);
+        ObDereferenceObject(PrimaryToken);
+        ObDereferenceObject(Thread);
         if (!NT_SUCCESS(Status))
         {
-            ObfDereferenceObject(Token);
+            ObDereferenceObject(Token);
             if (OpenAsSelf)
             {
                 PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
@@ -2304,7 +2304,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         ExFreePool(Dacl);
         if (!NT_SUCCESS(Status))
         {
-            ObfDereferenceObject(Token);
+            ObDereferenceObject(Token);
             if (OpenAsSelf)
             {
                 PsRestoreImpersonation(PsGetCurrentThread(), &ImpersonationState);
@@ -2323,7 +2323,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
                                        PreviousMode, &hToken);
     }
     
-    ObfDereferenceObject(Token);
+    ObDereferenceObject(Token);
     
     if (OpenAsSelf)
     {

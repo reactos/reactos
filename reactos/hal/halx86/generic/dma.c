@@ -770,7 +770,7 @@ HalGetAdapter(
    {
       if (!HalpDmaInitializeEisaAdapter(AdapterObject, DeviceDescription))
       {
-         ObfDereferenceObject(AdapterObject);
+         ObDereferenceObject(AdapterObject);
          return NULL;
       }
    }
@@ -817,7 +817,7 @@ HalPutDmaAdapter(
       KeSetEvent(&HalpDmaLock, 0, 0);
    }
 
-   ObfDereferenceObject(AdapterObject);
+   ObDereferenceObject(AdapterObject);
 }
 
 /**

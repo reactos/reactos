@@ -4427,7 +4427,7 @@ NtExtendSection(IN HANDLE SectionHandle,
 
    if (!(Section->AllocationAttributes & SEC_FILE))
    {
-      ObfDereferenceObject(Section);
+      ObDereferenceObject(Section);
       return STATUS_INVALID_PARAMETER;
    }
 
