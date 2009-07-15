@@ -226,7 +226,9 @@ numberf(wchar_t * buf, wchar_t * end, double num, int base, int size, int precis
 	{
         x = num;
 		tmp[i++] = digits[do_div(&x,base)];
+#ifndef _M_ARM // Missing __floatdidf in CeGCC 0.55 -- GCC 4.4
 		num = x;
+#endif
     }
 	if (i > precision)
 		precision = i;
