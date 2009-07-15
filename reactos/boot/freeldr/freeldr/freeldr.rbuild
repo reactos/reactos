@@ -22,10 +22,10 @@
 	<if property="ARCH" value="arm">
 		<module name="freeldr" type="bootloader" installbase=".." installname="freeldr.sys">
 			<bootstrap installbase="loader" />
+			<library>freeldr_arch</library>
 			<library>freeldr_startup</library>
 			<library>freeldr_base64k</library>
 			<library>freeldr_base</library>
-			<library>freeldr_arch</library>
 			<library>freeldr_main</library>
 			<library>rossym</library>
 			<library>cmlib</library>
@@ -33,8 +33,7 @@
 			<library>libcntpr</library>
 			<group linkerset="ld">
 				<linkerflag>-lgcc</linkerflag>
-				<linkerflag>-static</linkerflag>
-				<linkerflag>-Wl,--section-start,pagedata=0x50000</linkerflag>
+				<linkerflag>-Wl,--image-base=0x80FFF000</linkerflag>
 			</group>
 		</module>
 	</if>
