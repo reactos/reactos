@@ -142,6 +142,7 @@ IntDesktopObjectParse(IN PVOID ParseObject,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Initialize shell hook window list and set the parent */
+    RtlZeroMemory(Desktop, sizeof(DESKTOP));
     InitializeListHead(&Desktop->ShellHookWindows);
     Desktop->WindowStation = (PWINSTATION_OBJECT)ParseObject;
 

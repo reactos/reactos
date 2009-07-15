@@ -483,6 +483,9 @@ NtUserCreateWindowStation(
       return 0;
    }
 
+   /* Zero out the buffer */
+   RtlZeroMemory(WindowStationObject, sizeof(WINSTATION_OBJECT));
+
    KeInitializeSpinLock(&WindowStationObject->Lock);
 
    InitializeListHead(&WindowStationObject->DesktopListHead);

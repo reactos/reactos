@@ -247,7 +247,10 @@ SepDuplicateToken(PTOKEN Token,
         DPRINT1("ObCreateObject() failed (Status %lx)\n");
         return(Status);
     }
-    
+
+    /* Zero out the buffer */
+    RtlZeroMemory(AccessToken, sizeof(TOKEN));
+
     Status = ZwAllocateLocallyUniqueId(&AccessToken->TokenId);
     if (!NT_SUCCESS(Status))
     {
@@ -264,7 +267,6 @@ SepDuplicateToken(PTOKEN Token,
     
     AccessToken->TokenLock = &SepTokenLock;
     
-    AccessToken->TokenInUse = 0;
     AccessToken->TokenType  = TokenType;
     AccessToken->ImpersonationLevel = Level;
     RtlCopyLuid(&AccessToken->AuthenticationId, &Token->AuthenticationId);
@@ -331,10 +333,6 @@ SepDuplicateToken(PTOKEN Token,
             memcpy(AccessToken->DefaultDacl,
                    Token->DefaultDacl,
                    Token->DefaultDacl->AclSize);
-        }
-        else
-        {
-            AccessToken->DefaultDacl = 0;
         }
     }
     
@@ -549,6 +547,9 @@ SepCreateSystemProcessToken(VOID)
     {
         return NULL;
     }
+
+    /* Zero out the buffer */
+    RtlZeroMemory(AccessToken, sizeof(TOKEN));
     
     Status = ExpAllocateLocallyUniqueId(&AccessToken->TokenId);
     if (!NT_SUCCESS(Status))
@@ -575,8 +576,6 @@ SepCreateSystemProcessToken(VOID)
     
     AccessToken->TokenType = TokenPrimary;
     AccessToken->ImpersonationLevel = SecurityDelegation;
-    AccessToken->TokenSource.SourceIdentifier.LowPart = 0;
-    AccessToken->TokenSource.SourceIdentifier.HighPart = 0;
     memcpy(AccessToken->TokenSource.SourceName, "SeMgr\0\0\0", 8);
     AccessToken->ExpirationTime.QuadPart = -1;
     AccessToken->UserAndGroupCount = 4;
@@ -2042,6 +2041,9 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         DPRINT1("ObCreateObject() failed (Status %lx)\n");
         return(Status);
     }
+
+    /* Zero out the buffer */
+    RtlZeroMemory(AccessToken, sizeof(TOKEN));
     
     AccessToken->TokenLock = &SepTokenLock;
     
@@ -2058,8 +2060,6 @@ NtCreateToken(OUT PHANDLE TokenHandle,
     
     AccessToken->UserAndGroupCount = TokenGroups->GroupCount + 1;
     AccessToken->PrivilegeCount    = TokenPrivileges->PrivilegeCount;
-    AccessToken->UserAndGroups     = 0;
-    AccessToken->Privileges        = 0;
     
     AccessToken->TokenType = TokenType;
     AccessToken->ImpersonationLevel = ((PSECURITY_QUALITY_OF_SERVICE)

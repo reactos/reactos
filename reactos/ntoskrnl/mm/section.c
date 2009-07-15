@@ -2375,6 +2375,8 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
+   Section->Type = 0;
+   Section->Size = 0;
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->Segment = NULL;
@@ -2447,6 +2449,8 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
+   Section->Type = 0;
+   Section->Size = 0;
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->Segment = NULL;
@@ -3373,6 +3377,9 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
+   Section->Type = 0;
+   Section->Size = 0;
+   Section->MaximumSize.QuadPart = 0;
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
 
