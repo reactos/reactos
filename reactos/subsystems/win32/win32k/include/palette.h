@@ -33,12 +33,6 @@
 #define PAL_RGB16_565       0x00400000 // 16-bit RGB in 565 format
 #define PAL_GAMMACORRECTION 0x00800000 // Correct colors
 
-typedef struct
-{
-    int shift;
-    int scale;
-    int max;
-} ColorShifts;
 
 typedef struct _PALETTE
 {
