@@ -185,7 +185,7 @@ typedef struct _MMPTE_LIST
     ULONG filler1:1;
 } MMPTE_LIST;
 
-typedef struct _MMPTE_HARDWARE
+typedef struct _MMPDE_HARDWARE // FIXFIX: Find a way to make this more portable
 {
     union
     {
@@ -193,81 +193,50 @@ typedef struct _MMPTE_HARDWARE
         {
             struct
             {
-                ULONG Type:2;
-                ULONG Unused:30;
-            } Fault;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Ignored:2;
-                ULONG Reserved:1;
+                ULONG Valid:1;
+                ULONG Section:1;
+                ULONG Sbz:3;
                 ULONG Domain:4;
-                ULONG Ignored1:1;
-                ULONG BaseAddress:22;
+                ULONG EccEnabled:1;
+                ULONG PageFrameNumber:22;
             } Coarse;
             struct
             {
-                ULONG Type:2;
+                ULONG Coarse:1;
+                ULONG Valid:1;
                 ULONG Buffered:1;
                 ULONG Cached:1;
                 ULONG Reserved:1;
                 ULONG Domain:4;
-                ULONG Ignored:1;
+                ULONG EccEnabled:1;
                 ULONG Access:2;
-                ULONG Ignored1:8;
-                ULONG BaseAddress:12;
+                ULONG ExtendedAccess:3;
+                ULONG Sbz:3;
+                ULONG SuperSection:1;
+                ULONG Sbz1:1;
+                ULONG PageFrameNumber:12;
             } Section;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Reserved:3;
-                ULONG Domain:4;
-                ULONG Ignored:3;
-                ULONG BaseAddress:20;
-            } Fine;
-        } L1;
-        union
-        {
-            struct
-            {
-                ULONG Type:2;
-                ULONG Unused:30;
-            } Fault;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Access1:2;
-                ULONG Access2:2;
-                ULONG Access3:2;
-                ULONG Ignored:4;
-                ULONG BaseAddress:16;
-            } Large;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Access1:2;
-                ULONG Access2:2;
-                ULONG Access3:2;
-                ULONG BaseAddress:20;
-            } Small;
-            struct
-            {
-                ULONG Type:2;
-                ULONG Buffered:1;
-                ULONG Cached:1;
-                ULONG Access0:2;
-                ULONG Ignored:4;
-                ULONG BaseAddress:22;
-            } Tiny; 
-        } L2;
-        ULONG AsUlong;
+            ULONG AsUlong;
+        } Hard;
+    } u;
+} MMPDE_HARDWARE, *PMMPDE_HARDWARE;
+
+typedef union _MMPTE_HARDWARE
+{
+    struct
+    {
+        ULONG ExecuteNever:1;
+        ULONG Valid:1;
+        ULONG Buffered:1;
+        ULONG Cached:1;
+        ULONG Access:2;
+        ULONG TypeExtension:3;
+        ULONG ExtendedAccess:1;
+        ULONG Shared:1;
+        ULONG NonGlobal:1;
+        ULONG PageFrameNumber:20;
     };
+    ULONG AsUlong;
 } MMPTE_HARDWARE, *PMMPTE_HARDWARE;
 
 //
