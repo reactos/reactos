@@ -20,8 +20,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static
-int
+LONG
 MiGetExceptionInfo(EXCEPTION_POINTERS *ExceptionInfo, BOOLEAN * HaveBadAddress, ULONG_PTR * BadAddress)
 {
     PEXCEPTION_RECORD ExceptionRecord;
