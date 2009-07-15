@@ -242,6 +242,7 @@ Init(VOID)
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
    //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
 
+   RegisterClientPFN();
    /* Allocate an index for user32 thread local data. */
    User32TlsIndex = TlsAlloc();
    if (User32TlsIndex != TLS_OUT_OF_INDEXES)
@@ -349,4 +350,7 @@ GetConnected(VOID)
   g_psi = SharedPtrToUser(UserCon.siClient.psi);
   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
   gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+
+  RegisterClientPFN();  
+  
 }

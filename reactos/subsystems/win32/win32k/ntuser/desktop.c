@@ -854,7 +854,6 @@ IntFreeDesktopHeap(IN OUT PDESKTOP Desktop)
 }
 /* SYSCALLS *******************************************************************/
 
-
 /*
  * NtUserCreateDesktop
  *
@@ -898,7 +897,7 @@ NtUserCreateDesktop(
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    PTHREADINFO W32Thread;
-//   HWND hwndMessage;
+   HWND hwndMessage;
    PWINSTATION_OBJECT WinStaObject;
    PDESKTOP DesktopObject;
    UNICODE_STRING DesktopName;
@@ -912,7 +911,10 @@ NtUserCreateDesktop(
    ULONG_PTR HeapSize = 4 * 1024 * 1024; /* FIXME */
    HWINSTA hWindowStation = NULL ;
    PUNICODE_STRING lpszDesktopName = NULL;
-//   UNICODE_STRING AtomName;
+   UNICODE_STRING ClassName, WindowName, MenuName;
+   PPROCESSINFO pi = GetW32ProcessInfo();
+   WNDCLASSEXW wc;
+   PWINDOWCLASS Class;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
@@ -1072,7 +1074,12 @@ NtUserCreateDesktop(
    }
 
    /*
-    * Create a handle for CSRSS and notify CSRSS
+    * Create a handle for CSRSS and notify CSRSS for Creating Desktop Window.
+    *
+    * Honestly, I believe this is a cleverly written hack that allowed ReactOS
+    * to function at the beginning of the project by ramroding the GUI into
+    * operation and making the desktop window work from user space.
+    *                                                         (jt)
     */
    Request.Type = MAKE_CSR_API(CREATE_DESKTOP, CSR_GUI);
    Status = CsrInsertObject(Desktop,
@@ -1100,28 +1107,50 @@ NtUserCreateDesktop(
 
    if (!W32Thread->Desktop) IntSetThreadDesktop(DesktopObject,FALSE);
 
-#if 0
   /*
-     Based on wine/server/window.c line 1804 in get_desktop_window.
-     We create an atom to be used for create desktop to create
-     the message window.
+     Based on wine/server/window.c in get_desktop_window.
    */
-   // FIXME!
-   // ReactOS CreateWindow does not know how to correctly use Atom Classes.
-   // So we have this HAX!
-   { // Warning! HACK! Yes it is very wrong!
 
-   // Normally, this would have been performed during the win32k init phase.
-   //  AtomMessage = IntAddGlobalAtom(L"Message", TRUE); // <- correct, but should be in ntuser.c
+   ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(AtomMessage)));
+   ClassName.Length = 0;
+   RtlZeroMemory(&MenuName, sizeof(MenuName));
+   RtlZeroMemory(&WindowName, sizeof(WindowName));
 
-     AtomMessage = 
+   wc.cbSize = sizeof(wc);
+   wc.style = CS_DBLCLKS|CS_PARENTDC;
+   wc.lpfnWndProc = gpsi->apfnClientW.pfnDesktopWndProc; // Use User32 Desktop Proc.
+   wc.cbClsExtra = 0;
+   wc.cbWndExtra = 0;
+   wc.hInstance = pi->hModUser; // hModClient;
+   wc.hIcon = NULL;
+   wc.hCursor = NULL;
+   wc.hbrBackground = 0;
+   wc.lpszMenuName = NULL;
+   wc.lpszClassName = ClassName.Buffer;
+   wc.hIconSm = NULL;
+
+   Class = IntCreateClass( &wc,
+                           &ClassName,
+                           &MenuName,
+                           NULL,
+                           REGISTERCLASS_SYSTEM,
+                           NULL,
+                           pi);
+   if (Class != NULL)
+   {
+      ASSERT(Class->System);
+      Class->Next = pi->SystemClassList;
+      (void)InterlockedExchangePointer((PVOID*)&pi->SystemClassList,
+                                             Class);
    }
-   AtomName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(AtomMessage)));
-   AtomName.Length = 0;
+   else
+   {
+      DPRINT1("!!! Registering Message system class failed!\n");
+   }
 
    hwndMessage = co_IntCreateWindowEx( 0,
-                                       &AtomName,
-                                       NULL,
+                                       &ClassName,
+                                       &WindowName,
                                       (WS_POPUP|WS_CLIPCHILDREN),
                                        0,
                                        0,
@@ -1129,7 +1158,7 @@ NtUserCreateDesktop(
                                        100,
                                        NULL,
                                        NULL,
-                                       NULL,//hModuleWin, // pi->hModUser; ? no!
+                                       pi->hModUser, // hModClient;
                                        NULL,
                                        0,
                                        TRUE);
@@ -1141,7 +1170,7 @@ NtUserCreateDesktop(
    {
       DesktopObject->spwndMessage = hwndMessage;
    }
-#endif
+
    RETURN( Desktop);
 
 CLEANUP:

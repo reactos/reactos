@@ -37,8 +37,6 @@
 
 /* WINDOWCLASS ***************************************************************/
 
-#define REGISTERCLASS_SYSTEM 0x4
-
 static VOID
 IntFreeClassMenuName(IN OUT PWINDOWCLASS Class)
 {
@@ -168,6 +166,20 @@ IntRegisterClassAtom(IN PUNICODE_STRING ClassName,
     }
     else
         AtomName = ClassName->Buffer;
+
+  /* If an Atom, need to verify, if it was already added to the global atom list. */
+    if (IS_ATOM(AtomName))
+    {
+       *pAtom = (RTL_ATOM)((ULONG_PTR)AtomName);
+       Status = RtlQueryAtomInAtomTable( gAtomTable,
+                                         *pAtom,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         NULL);
+
+       if (NT_SUCCESS(Status)) return TRUE;
+    }
 
     Status = RtlAddAtomToAtomTable(gAtomTable,
                                    AtomName,
@@ -786,7 +798,8 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
     return Ret;
 }
 
-static PWINDOWCLASS
+PWINDOWCLASS
+FASTCALL
 IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING ClassName,
                IN PUNICODE_STRING MenuName,

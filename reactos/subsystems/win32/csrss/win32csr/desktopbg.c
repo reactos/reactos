@@ -11,7 +11,7 @@
 #include "w32csr.h"
 #include <debug.h>
 
-#define DESKTOP_WINDOW_ATOM 32880
+#define DESKTOP_WINDOW_ATOM 32769 //32880
 
 #define PM_SHOW_DESKTOP 1
 #define PM_HIDE_DESKTOP 2

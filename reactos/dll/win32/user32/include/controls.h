@@ -106,4 +106,9 @@ extern BOOL COMBO_FlipListbox( LPHEADCOMBO, BOOL, BOOL );
 #define LB_ADDSTRING_UPPER        0x1AC
 #define LB_ADDSTRING_LOWER        0x1AD
 
+#define DESKTOP_CLASS_ATOM   MAKEINTATOMA(32769)  /* Desktop */
+LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
+LRESULT WINAPI User32DefWindowProc(HWND,UINT,WPARAM,LPARAM,BOOL);
+BOOL WINAPI RegisterClientPFN(VOID);
+
 #endif /* _ROS_CONTROLS_H */

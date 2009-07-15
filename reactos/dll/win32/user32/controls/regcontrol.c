@@ -23,7 +23,6 @@ static const struct
     { &POPUPMENU_builtin_class, FNID_MENU },
     { &COMBO_builtin_class,     FNID_COMBOBOX },
     { &COMBOLBOX_builtin_class, FNID_COMBOLBOX },
-    { &DESKTOP_builtin_class,   FNID_DESKTOP },
     { &MDICLIENT_builtin_class, FNID_MDICLIENT },
 #if 0
     { &MENU_builtin_class,      FNID_MENU },
@@ -63,7 +62,7 @@ BOOL WINAPI RegisterSystemControls(VOID)
 }
 
 
-#if 0
+
 static PFNCLIENT pfnClientA;
 static PFNCLIENT pfnClientW;
 static PFNCLIENTWORKER pfnClientWorker;
@@ -72,12 +71,12 @@ BOOL WINAPI RegisterClientPFN(VOID)
 {
   NTSTATUS Status;
 
-  pfnClientA.pfnScrollBarWndProc      = ScrollBarWndProcA;
-  pfnClientW.pfnScrollBarWndProc      = ScrollBarWndProcW;
-  pfnClientA.pfnTitleWndProc          = IconTitleWndProc;
-  pfnClientW.pfnTitleWndProc          = IconTitleWndProc;
-  pfnClientA.pfnMenuWndProc           = PopupMenuWndProcA;
-  pfnClientW.pfnMenuWndProc           = PopupMenuWndProcW;
+//  pfnClientA.pfnScrollBarWndProc      = ScrollBarWndProcA;
+//  pfnClientW.pfnScrollBarWndProc      = ScrollBarWndProcW;
+//  pfnClientA.pfnTitleWndProc          = IconTitleWndProc;
+//  pfnClientW.pfnTitleWndProc          = IconTitleWndProc;
+//  pfnClientA.pfnMenuWndProc           = PopupMenuWndProcA;
+//  pfnClientW.pfnMenuWndProc           = PopupMenuWndProcW;
   pfnClientA.pfnDesktopWndProc        = DesktopWndProc; // Fixme!
   pfnClientW.pfnDesktopWndProc        = DesktopWndProc;
   pfnClientA.pfnDefWindowProc         = DefWindowProcA;
@@ -86,22 +85,22 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientW.pfnMessageWindowProc     = DefWindowProcW;
   pfnClientA.pfnSwitchWindowProc      = DefWindowProcA;
   pfnClientW.pfnSwitchWindowProc      = DefWindowProcW;
-  pfnClientA.pfnButtonWndProc         = ButtonWndProcA;
-  pfnClientW.pfnButtonWndProc         = ButtonWndProcW
-  pfnClientA.pfnComboBoxWndProc       = ComboWndProcA;
-  pfnClientW.pfnComboBoxWndProc       = ComboWndProcW;
-  pfnClientA.pfnComboListBoxProc      = ListBoxWndProcA;
-  pfnClientW.pfnComboListBoxProc      = ListBoxWndProcW;
-  pfnClientA.pfnDialogWndProc         = DefDlgProcA;
-  pfnClientW.pfnDialogWndProc         = DefDlgProcW;
-  pfnClientA.pfnEditWndProc           = EditWndProcA;
-  pfnClientW.pfnEditWndProc           = EditWndProcW;
-  pfnClientA.pfnListBoxWndProc        = ListBoxWndProcA;
-  pfnClientW.pfnListBoxWndProc        = ListBoxWndProcW;
-  pfnClientA.pfnMDIClientWndProc      = MDIClientWndProcA;
-  pfnClientW.pfnMDIClientWndProc      = MDIClientWndProcW;
-  pfnClientA.pfnStaticWndProc         = StaticWndProcA;
-  pfnClientW.pfnStaticWndProc         = StaticWndProcW;
+//  pfnClientA.pfnButtonWndProc         = ButtonWndProcA;
+//  pfnClientW.pfnButtonWndProc         = ButtonWndProcW
+//  pfnClientA.pfnComboBoxWndProc       = ComboWndProcA;
+//  pfnClientW.pfnComboBoxWndProc       = ComboWndProcW;
+//  pfnClientA.pfnComboListBoxProc      = ListBoxWndProcA;
+//  pfnClientW.pfnComboListBoxProc      = ListBoxWndProcW;
+//  pfnClientA.pfnDialogWndProc         = DefDlgProcA;
+//  pfnClientW.pfnDialogWndProc         = DefDlgProcW;
+//  pfnClientA.pfnEditWndProc           = EditWndProcA;
+//  pfnClientW.pfnEditWndProc           = EditWndProcW;
+//  pfnClientA.pfnListBoxWndProc        = ListBoxWndProcA;
+//  pfnClientW.pfnListBoxWndProc        = ListBoxWndProcW;
+//  pfnClientA.pfnMDIClientWndProc      = MDIClientWndProcA;
+//  pfnClientW.pfnMDIClientWndProc      = MDIClientWndProcW;
+//  pfnClientA.pfnStaticWndProc         = StaticWndProcA;
+//  pfnClientW.pfnStaticWndProc         = StaticWndProcW;
   pfnClientA.pfnImeWndProc            = DefWindowProcA;
   pfnClientW.pfnImeWndProc            = DefWindowProcW;
   pfnClientA.pfnGhostWndProc          = DefWindowProcA;
@@ -119,14 +118,14 @@ BOOL WINAPI RegisterClientPFN(VOID)
   pfnClientA.pfnMDIActivateDlgProc    = DefWindowProcA;
   pfnClientW.pfnMDIActivateDlgProc    = DefWindowProcW;
 
-  pfnClientWorker.pfnButtonWndProc    = ButtonWndProc_common;
-  pfnClientWorker.pfnComboBoxWndProc  = ComboWndProc_common;
-  pfnClientWorker.pfnComboListBoxProc = ListBoxWndProc_common;
-//  pfnClientWorker.pfnDialogWndProc    = DefDlgProc_common;
-  pfnClientWorker.pfnEditWndProc      = EditWndProc_common;
-  pfnClientWorker.pfnListBoxWndProc   = ListBoxWndProc_common;
-  pfnClientWorker.pfnMDIClientWndProc = MDIClientWndProc_common;
-  pfnClientWorker.pfnStaticWndProc    = StaticWndProc_common;
+//  pfnClientWorker.pfnButtonWndProc    = ButtonWndProc_common;
+//  pfnClientWorker.pfnComboBoxWndProc  = ComboWndProc_common;
+//  pfnClientWorker.pfnComboListBoxProc = ListBoxWndProc_common;
+////  pfnClientWorker.pfnDialogWndProc    = DefDlgProc_common;
+//  pfnClientWorker.pfnEditWndProc      = EditWndProc_common;
+//  pfnClientWorker.pfnListBoxWndProc   = ListBoxWndProc_common;
+//  pfnClientWorker.pfnMDIClientWndProc = MDIClientWndProc_common;
+//  pfnClientWorker.pfnStaticWndProc    = StaticWndProc_common;
   pfnClientWorker.pfnImeWndProc       = User32DefWindowProc;
   pfnClientWorker.pfnGhostWndProc     = User32DefWindowProc;
   pfnClientWorker.pfnCtfHookProc      = User32DefWindowProc;
@@ -138,4 +137,3 @@ BOOL WINAPI RegisterClientPFN(VOID)
   
   return NT_SUCCESS(Status) ? TRUE : FALSE;
 }
-#endif

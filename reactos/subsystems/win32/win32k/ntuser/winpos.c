@@ -1034,6 +1034,8 @@ co_WinPosSetWindowPos(
       }
    }
 
+   if (!Window->Wnd) return FALSE;
+
    OldWindowRect = Window->Wnd->WindowRect;
    OldClientRect = Window->Wnd->ClientRect;
 

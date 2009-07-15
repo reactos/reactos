@@ -236,6 +236,8 @@ IntWinListChildren(PWINDOW_OBJECT Window)
    HWND *List;
    UINT Index, NumChildren = 0;
 
+   if (!Window) return NULL;
+
    for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
       ++NumChildren;
 
@@ -1594,8 +1596,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        * native ole32.OleInitialize uses HWND_MESSAGE to create the
        * message window (style: WS_POPUP|WS_DISABLED)
        */
-      DPRINT1("FIXME - Parent is HWND_MESSAGE\n");
-      // ParentWindowHandle = IntGetMessageWindow();
+      ParentWindowHandle = IntGetMessageWindow();
+      DPRINT1("Parent is HWND_MESSAGE 0x%x\n", ParentWindowHandle);
    }
    else if (hWndParent)
    {
@@ -1784,7 +1786,7 @@ AllocErr:
    InitializeListHead(&Wnd->PropListHead);
    InitializeListHead(&Window->WndObjListHead);
 
-   if (NULL != WindowName->Buffer && WindowName->Length > 0)
+   if ( NULL != WindowName->Buffer && WindowName->Length > 0 )
    {
       Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
                                                 WindowName->Length + sizeof(UNICODE_NULL));
@@ -1887,6 +1889,8 @@ AllocErr:
    Cs.x = Pos.x;
    Cs.y = Pos.y;
    Cs.style = Wnd->Style;
+//   Cs.lpszName = (LPCWSTR) WindowName->Buffer;
+//   Cs.lpszClass = (LPCWSTR) ClassName->Buffer;
    Cs.lpszName = (LPCWSTR) WindowName;
    Cs.lpszClass = (LPCWSTR) ClassName;
    Cs.dwExStyle = dwExStyle;
@@ -2771,12 +2775,10 @@ NtUserFindWindowEx(HWND hwndParent,
 
    if(hwndParent == NULL)
       hwndParent = Desktop;
-   /* FIXME
    else if(hwndParent == HWND_MESSAGE)
    {
      hwndParent = IntGetMessageWindow();
    }
-   */
 
    if(!(Parent = UserGetWindowObject(hwndParent)))
    {
@@ -3236,7 +3238,7 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
    }
    else if (hWndNewParent == HWND_MESSAGE)
    {
-      // hWndNewParent = IntGetMessageWindow();
+      hWndNewParent = IntGetMessageWindow();
    }
 
    RETURN( co_UserSetParent(hWndChild, hWndNewParent));

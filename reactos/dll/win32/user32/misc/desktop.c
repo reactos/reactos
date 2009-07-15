@@ -14,12 +14,10 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-#define DESKTOP_CLASS_ATOM   MAKEINTATOMA(32769)  /* Desktop */
-static LRESULT WINAPI DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam );
-
 /*********************************************************************
  * desktop class descriptor
  */
+#if 0 // Kept for referencing.
 const struct builtin_class_descr DESKTOP_builtin_class =
 {
   (LPCWSTR) DESKTOP_CLASS_ATOM,   /* name */
@@ -30,13 +28,12 @@ const struct builtin_class_descr DESKTOP_builtin_class =
   IDC_ARROW,            /* cursor */
   (HBRUSH)(COLOR_BACKGROUND+1)    /* brush */
 };
-
-static
+#endif
 LRESULT
 WINAPI
 DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
-    FIXME("Desktop Class Atom!\n");
+    TRACE("Desktop Class Atom! hWnd 0x%x, Msg %d\n", hwnd, message);
     if (message == WM_NCCREATE) return TRUE;
     return 0;  /* all other messages are ignored */
 }

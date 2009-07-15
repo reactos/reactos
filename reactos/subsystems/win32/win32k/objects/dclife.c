@@ -375,6 +375,8 @@ NtGdiOpenDCW(
     HDC Ret;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    if (!Device) return UserGetDesktopDC(iType,FALSE,TRUE);
+
     if (InitData)
     {
         _SEH2_TRY

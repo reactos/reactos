@@ -553,7 +553,7 @@ typedef struct _SHAREDINFO
   PVOID       aheList;       // Handle Entry List
   PVOID       pDispInfo;     // global PDISPLAYINFO pointer
   ULONG_PTR   ulSharedDelta; // Heap delta
-  WNDMSG      awmControl[31];
+  WNDMSG      awmControl[FNID_LAST - FNID_FIRST];
   WNDMSG      DefWindowMsgs;
   WNDMSG      DefWindowSpecMsgs;
 } SHAREDINFO, *PSHAREDINFO;
