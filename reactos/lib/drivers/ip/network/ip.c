@@ -323,6 +323,8 @@ VOID DefaultProtocolHandler(
 {
     TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
 			    "discarded.\n", Interface));
+
+    Interface->Stats.InDiscardedUnknownProto++;
 }
 
 

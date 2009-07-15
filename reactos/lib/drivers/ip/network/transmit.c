@@ -240,6 +240,8 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
  *     send routine (IPSendFragment)
  */
 {
+    UINT PacketSize;
+
     TI_DbgPrint(MAX_TRACE, ("Called. IPPacket (0x%X)  NCE (0x%X)\n", IPPacket, NCE));
 
     DISPLAY_IP_PACKET(IPPacket);
@@ -263,6 +265,14 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
 	TI_DbgPrint(MAX_TRACE, ("Sending raw packet (flags are 0x%X).\n",
 				IPPacket->Flags));
     }
+
+    NdisQueryPacket(IPPacket->NdisPacket,
+                    NULL,
+                    NULL,
+                    NULL,
+                    &PacketSize);
+
+    NCE->Interface->Stats.OutBytes += PacketSize;
 
     return SendFragments(IPPacket, NCE, NCE->Interface->MTU,
 			 Complete, Context);

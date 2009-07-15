@@ -464,6 +464,8 @@ VOID ProcessFragment(
     /* Give the packet to the protocol dispatcher */
     IPDispatchProtocol(IF, &Datagram);
 
+    IF->Stats.InBytes += Datagram.TotalSize;
+
     /* We're done with this datagram */
     exFreePool(Datagram.Header);
     TI_DbgPrint(MAX_TRACE, ("Freeing datagram at (0x%X).\n", Datagram));

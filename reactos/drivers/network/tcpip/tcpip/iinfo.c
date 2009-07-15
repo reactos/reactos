@@ -20,6 +20,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
     PCHAR IFDescr;
     ULONG Size;
     UINT DescrLenMax = MAX_IFDESCR_LEN - 1;
+    NDIS_STATUS NdisStatus;
 
     TI_DbgPrint(DEBUG_INFO,
 		("Getting IFEntry MIB (IF %08x LA %08x) (%04x:%d)\n",
@@ -57,6 +58,28 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 		    ("IF Speed = %d * 100bps\n", OutData->Speed));
 	memcpy(OutData->PhysAddr,Interface->Address,Interface->AddressLength);
 	TI_DbgPrint(DEBUG_INFO, ("Got HWAddr\n"));
+
+        memcpy(&OutData->InOctets, &Interface->Stats, sizeof(SEND_RECV_STATS));
+
+        NdisStatus = NDISCall(IF,
+                              NdisRequestQueryInformation,
+                              OID_GEN_XMIT_ERROR,
+                              &OutData->OutErrors,
+                              sizeof(ULONG));
+        if (NdisStatus != NDIS_STATUS_SUCCESS)
+            OutData->OutErrors = 0;
+
+        TI_DbgPrint(DEBUG_INFO, ("OutErrors = %d\n", OutData->OutErrors));
+
+        NdisStatus = NDISCall(IF,
+                              NdisRequestQueryInformation,
+                              OID_GEN_RCV_ERROR,
+                              &OutData->InErrors,
+                              sizeof(ULONG));
+        if (NdisStatus != NDIS_STATUS_SUCCESS)
+            OutData->InErrors = 0;
+
+        TI_DbgPrint(DEBUG_INFO, ("InErrors = %d\n", OutData->InErrors));
     }
 
     GetInterfaceName( Interface, IFDescr, MAX_IFDESCR_LEN - 1 );
