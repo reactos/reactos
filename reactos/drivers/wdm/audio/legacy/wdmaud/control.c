@@ -159,6 +159,12 @@ WdmAudControlOpen(
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
+    if (DeviceInfo->u.WaveFormatEx.wFormatTag != WAVE_FORMAT_PCM)
+    {
+        DPRINT("FIXME: Only WAVE_FORMAT_PCM is supported RequestFormat %x\n", DeviceInfo->u.WaveFormatEx.wFormatTag);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
     Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
     if (!NT_SUCCESS(Status))
     {
@@ -236,9 +242,6 @@ WdmAudControlOpen(
     DataFormat->DataFormat.Flags = 0;
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
-
-    if (DeviceInfo->u.WaveFormatEx.wFormatTag != WAVE_FORMAT_PCM)
-        DPRINT1("FIXME\n");
 
     DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
