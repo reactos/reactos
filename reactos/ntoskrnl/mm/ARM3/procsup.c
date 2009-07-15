@@ -128,9 +128,9 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     // Setup the template stack PTE
     //
     TempPte = HyperTemplatePte;
-    TempPte.u.Hard.Global = FALSE;
+    MI_MAKE_LOCAL_PAGE(&TempPte);
+    MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = 0;
-    TempPte.u.Hard.Dirty = TRUE;
     
     //
     // Acquire the PFN DB lock
@@ -225,9 +225,9 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Setup the template stack PTE
     //
     TempPte = HyperTemplatePte;
-    TempPte.u.Hard.Global = FALSE;
+    MI_MAKE_LOCAL_PAGE(&TempPte);
+    MI_MAKE_DIRTY_PAGE(&TempPte);
     TempPte.u.Hard.PageFrameNumber = 0;
-    TempPte.u.Hard.Dirty = TRUE;
     
     //
     // Acquire the PFN DB lock

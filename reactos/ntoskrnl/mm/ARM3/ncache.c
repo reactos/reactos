@@ -120,8 +120,8 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
             //
             // Disable caching
             //
-            TempPte.u.Hard.CacheDisable = 1;
-            TempPte.u.Hard.WriteThrough = 1;
+            MI_PAGE_DISABLE_CACHE(&TempPte);
+            MI_PAGE_WRITE_THROUGH(&TempPte);
             break;
             
         case MiWriteCombined:
@@ -129,8 +129,8 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
             //
             // Enable write combining
             //
-            TempPte.u.Hard.CacheDisable = 1;
-            TempPte.u.Hard.WriteThrough = 0;
+            MI_PAGE_DISABLE_CACHE(&TempPte);
+            MI_PAGE_WRITE_COMBINED(&TempPte);
             break;
             
         default:

@@ -369,8 +369,8 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
                 //
                 // Disable caching
                 //
-                TempPte.u.Hard.CacheDisable = 1;
-                TempPte.u.Hard.WriteThrough = 1;
+                MI_PAGE_DISABLE_CACHE(&TempPte);
+                MI_PAGE_WRITE_THROUGH(&TempPte);
                 break;
                 
             case MiWriteCombined:
@@ -378,8 +378,8 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
                 //
                 // Enable write combining
                 //
-                TempPte.u.Hard.CacheDisable = 1;
-                TempPte.u.Hard.WriteThrough = 0;
+                MI_PAGE_DISABLE_CACHE(&TempPte);
+                MI_PAGE_WRITE_COMBINED(&TempPte);
                 break;
                 
             default:
@@ -856,12 +856,12 @@ MmProbeAndLockPages(IN PMDL Mdl,
             //
             // Check if the PTE is not writable
             //
-            if (!PointerPte->u.Hard.Write)
+            if (MI_IS_PAGE_WRITEABLE(PointerPte) == FALSE)
             {
                 //
                 // Check if it's copy on write
                 //
-                if (PointerPte->u.Hard.CopyOnWrite)
+                if (MI_IS_PAGE_COPY_ON_WRITE(PointerPte))
                 {
                     //
                     // Get the base address and allow a change for user-mode

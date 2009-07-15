@@ -364,7 +364,7 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     //
     // Set the starting and ending PTE addresses for this space
     //
-    MmSystemPteBase = (PVOID)PAGETABLE_MAP;
+    MmSystemPteBase = (PVOID)PTE_BASE;
     MmSystemPtesStart[PoolType] = StartingPte;
     MmSystemPtesEnd[PoolType] = StartingPte + NumberOfPtes - 1;
     DPRINT("System PTE space for %d starting at: %p and ending at: %p\n",

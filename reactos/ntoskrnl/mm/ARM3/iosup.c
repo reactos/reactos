@@ -115,8 +115,8 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
             //
             // Disable the cache
             //
-            TempPte.u.Hard.CacheDisable = 1;
-            TempPte.u.Hard.WriteThrough = 1;
+            MI_PAGE_DISABLE_CACHE(&TempPte);
+            MI_PAGE_WRITE_THROUGH(&TempPte);
             break;
             
         case MiCached:
