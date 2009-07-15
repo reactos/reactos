@@ -213,7 +213,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(ULONG, NumMappings)(THIS);
 
-    STDMETHOD_(ULONG, MinMappings)(THIS);
+    STDMETHOD_(ULONG, NumData)(THIS);
 
     STDMETHOD_(BOOL, MinimumDataAvailable)(THIS);
 

@@ -238,7 +238,7 @@ ServiceGroupThread(IN PVOID StartContext)
                 break;
             case STATUS_WAIT_1:
                 PsTerminateSystemThread(STATUS_SUCCESS);
-                break;
+                return;
         }
     }while(TRUE);
 }

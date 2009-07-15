@@ -138,11 +138,6 @@ IPortFilterWaveCyclic_fnNewIrpTarget(
         return Status;
     }
 
-    /* release existing pin */
-    if (This->Pins[ConnectDetails->PinId])
-    {
-        This->Pins[ConnectDetails->PinId]->lpVtbl->Release(This->Pins[ConnectDetails->PinId]);
-    }
     /* store pin */
     This->Pins[ConnectDetails->PinId] = Pin;
 
@@ -409,6 +404,7 @@ IPortFilterWaveCyclic_fnFreePin(
     {
         if (This->Pins[Index] == Pin)
         {
+            This->Descriptor->Factory.Instances[Index].CurrentPinInstanceCount--;
             This->Pins[Index]->lpVtbl->Release(This->Pins[Index]);
             This->Pins[Index] = NULL;
             return STATUS_SUCCESS;

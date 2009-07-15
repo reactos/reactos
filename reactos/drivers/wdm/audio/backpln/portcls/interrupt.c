@@ -255,12 +255,12 @@ IInterruptSync_fnConnect(
                                 IInterruptServiceRoutine,
                                 (PVOID)This,
                                 &This->Lock,
-                                Descriptor->u.Interrupt.Vector, 
+                                Descriptor->u.Interrupt.Vector,
                                 Descriptor->u.Interrupt.Level,
-                                Descriptor->u.Interrupt.Level, //FIXME
-                                Descriptor->Flags,
-                                TRUE,
-                                Descriptor->u.Interrupt.Affinity, 
+                                Descriptor->u.Interrupt.Level,
+                                (Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED),
+                                (Descriptor->Flags != CM_RESOURCE_INTERRUPT_LATCHED),
+                                Descriptor->u.Interrupt.Affinity,
                                 FALSE);
 
     DPRINT("IInterruptSync_fnConnect result %x\n", Status);
@@ -347,7 +347,7 @@ PcNewInterruptSync(
     DPRINT("PcNewInterruptSync entered OutInterruptSync %p OuterUnknown %p ResourceList %p ResourceIndex %u Mode %d\n", 
             OutInterruptSync, OuterUnknown, ResourceList, ResourceIndex, Mode);
 
-    if (!OutInterruptSync || !ResourceList || Mode > InterruptSyncModeRepeat || Mode < InterruptSyncModeNormal || Mode > InterruptSyncModeRepeat)
+    if (!OutInterruptSync || !ResourceList || Mode < InterruptSyncModeNormal || Mode > InterruptSyncModeRepeat)
         return STATUS_INVALID_PARAMETER;
 
     if (ResourceIndex > ResourceList->lpVtbl->NumberOfEntriesOfType(ResourceList, CmResourceTypeInterrupt))

@@ -38,6 +38,7 @@ typedef struct
     ULONG PreCompleted;
     ULONG PostCompleted;
 
+    ULONG Delay;
 }IPortPinWaveCyclicImpl;
 
 
@@ -114,7 +115,8 @@ static
 VOID
 UpdateCommonBuffer(
     IPortPinWaveCyclicImpl * This,
-    ULONG Position)
+    ULONG Position,
+    ULONG MaxTransferCount)
 {
     ULONG BufferLength;
     ULONG BytesToCopy;
@@ -123,6 +125,8 @@ UpdateCommonBuffer(
     NTSTATUS Status;
 
     BufferLength = Position - This->CommonBufferOffset;
+    BufferLength = min(BufferLength, MaxTransferCount);
+
     while(BufferLength)
     {
         Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
@@ -130,7 +134,6 @@ UpdateCommonBuffer(
             return;
 
         BytesToCopy = min(BufferLength, BufferSize);
-
 
         if (This->Capture)
         {
@@ -158,16 +161,18 @@ static
 VOID
 UpdateCommonBufferOverlap(
     IPortPinWaveCyclicImpl * This,
-    ULONG Position)
+    ULONG Position,
+    ULONG MaxTransferCount)
 {
-    ULONG BufferLength;
+    ULONG BufferLength, Length, Gap;
     ULONG BytesToCopy;
     ULONG BufferSize;
     PUCHAR Buffer;
     NTSTATUS Status;
 
 
-    BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
+    BufferLength = Gap = This->CommonBufferSize - This->CommonBufferOffset;
+    BufferLength = Length = min(BufferLength, MaxTransferCount);
     while(BufferLength)
     {
         Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
@@ -196,8 +201,18 @@ UpdateCommonBufferOverlap(
 
         BufferLength = This->CommonBufferSize - This->CommonBufferOffset;
     }
-    This->CommonBufferOffset = 0;
-    UpdateCommonBuffer(This, Position);
+
+    if (Gap == Length)
+    {
+        This->CommonBufferOffset = 0;
+
+        MaxTransferCount -= Length;
+
+        if (MaxTransferCount)
+        {
+            UpdateCommonBuffer(This, Position, MaxTransferCount);
+        }
+    }
 }
 
 VOID
@@ -231,6 +246,11 @@ SetStreamWorkerRoutine(
             /* reset start stream */
             This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue); //FIX function name
             DPRINT1("Stopping PreCompleted %u PostCompleted %u\n", This->PreCompleted, This->PostCompleted);
+        }
+        if (This->State == KSSTATE_RUN)
+        {
+            DPRINT1("State RUN %x MinAvailable %u\n", State, This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue));
+
         }
     }
 }
@@ -307,11 +327,11 @@ IServiceSink_fnRequestService(
 
     if (Position < This->CommonBufferOffset)
     {
-        UpdateCommonBufferOverlap(This, Position);
+        UpdateCommonBufferOverlap(This, Position, This->FrameSize);
     }
     else if (Position >= This->CommonBufferOffset)
     {
-        UpdateCommonBuffer(This, Position);
+        UpdateCommonBuffer(This, Position, This->FrameSize);
     }
 }
 
@@ -431,6 +451,7 @@ IPortPinWaveCyclic_HandleKsProperty(
         {
             PKSSTATE State = (PKSSTATE)Irp->UserBuffer;
 
+            ASSERT_IRQL(DISPATCH_LEVEL);
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSSTATE))
             {
                 Irp->IoStatus.Information = sizeof(KSSTATE);
@@ -674,9 +695,6 @@ CloseStreamRoutine(
     IN PVOID Context)
 {
     PMINIPORTWAVECYCLICSTREAM Stream;
-    NTSTATUS Status;
-    ISubdevice *ISubDevice;
-    PSUBDEVICE_DESCRIPTOR Descriptor;
     IPortPinWaveCyclicImpl * This;
     PCLOSESTREAM_CONTEXT Ctx = (PCLOSESTREAM_CONTEXT)Context;
 
@@ -688,19 +706,6 @@ CloseStreamRoutine(
         {
             This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
             KeStallExecutionProcessor(10);
-        }
-    }
-
-    This->ServiceGroup->lpVtbl->RemoveMember(This->ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
-
-    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
-    if (NT_SUCCESS(Status))
-    {
-        Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
-        if (NT_SUCCESS(Status))
-        {
-            ISubDevice->lpVtbl->Release(ISubDevice);
-            Descriptor->Factory.Instances[This->ConnectDetails->PinId].CurrentPinInstanceCount--;
         }
     }
 
@@ -751,26 +756,30 @@ IPortPinWaveCyclic_fnClose(
 
     if (This->Stream)
     {
+        /* allocate a close context */
         Ctx = AllocateItem(NonPagedPool, sizeof(CLOSESTREAM_CONTEXT), TAG_PORTCLASS);
         if (!Ctx)
         {
             DPRINT1("Failed to allocate stream context\n");
             goto cleanup;
         }
-
+        /* allocate work context */
         Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
         if (!Ctx->WorkItem)
         {
             DPRINT1("Failed to allocate work item\n");
             goto cleanup;
         }
-
+        /* setup the close context */
         Ctx->Irp = Irp;
         Ctx->Pin = (PVOID)This;
 
         IoMarkIrpPending(Irp);
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_PENDING;
+
+        /* remove member from service group */
+        This->ServiceGroup->lpVtbl->RemoveMember(This->ServiceGroup, (PSERVICESINK)&This->lpVtblServiceSink);
 
         /* defer work item */
         IoQueueWorkItem(Ctx->WorkItem, CloseStreamRoutine, DelayedWorkQueue, (PVOID)Ctx);
@@ -910,7 +919,7 @@ IPortPinWaveCyclic_fnFastWrite(
 
     InterlockedIncrement((PLONG)&This->TotalPackets);
 
-    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
+    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue));
 
     Packet = (PCONTEXT_WRITE)Buffer;
 
@@ -1057,6 +1066,8 @@ IPortPinWaveCyclic_fnInit(
     This->CommonBufferSize = This->DmaChannel->lpVtbl->AllocatedBufferSize(This->DmaChannel);
     This->CommonBuffer = This->DmaChannel->lpVtbl->SystemAddress(This->DmaChannel);
     This->Capture = Capture;
+    /* delay of 10 milisec */
+    This->Delay = Int32x32To64(10, -10000);
 
     Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
 

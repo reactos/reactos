@@ -138,11 +138,6 @@ IPortFilterWavePci_fnNewIrpTarget(
         return Status;
     }
 
-    /* release existing pin */
-    if (This->Pins[ConnectDetails->PinId])
-    {
-        This->Pins[ConnectDetails->PinId]->lpVtbl->Release(This->Pins[ConnectDetails->PinId]);
-    }
     /* store pin */
     This->Pins[ConnectDetails->PinId] = Pin;
 

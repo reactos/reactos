@@ -296,10 +296,11 @@ IIrpQueue_fnNumMappings(
 
 ULONG
 NTAPI
-IIrpQueue_fnMinMappings(
+IIrpQueue_fnNumData(
     IN IIrpQueue *iface)
 {
-    return 25;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+    return This->NumDataAvailable;
 }
 
 
@@ -320,8 +321,9 @@ IIrpQueue_fnMinimumDataAvailable(
         Result = TRUE;
     }
     else
+    {
         Result = FALSE;
-
+    }
     return Result;
 }
 
@@ -345,6 +347,7 @@ IIrpQueue_fnUpdateFormat(
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
     This->StartStream = FALSE;
+    This->NumDataAvailable = 0;
 
 }
 
@@ -483,7 +486,7 @@ static IIrpQueueVtbl vt_IIrpQueue =
     IIrpQueue_fnGetMapping,
     IIrpQueue_fnUpdateMapping,
     IIrpQueue_fnNumMappings,
-    IIrpQueue_fnMinMappings,
+    IIrpQueue_fnNumData,
     IIrpQueue_fnMinimumDataAvailable,
     IIrpQueue_fnCancelBuffers,
     IIrpQueue_fnUpdateFormat,
