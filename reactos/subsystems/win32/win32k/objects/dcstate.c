@@ -36,15 +36,15 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst)
     pdcDst->dclevel.efM11PtoD       = pdcSrc->dclevel.efM11PtoD;
     pdcDst->dclevel.efM22PtoD       = pdcSrc->dclevel.efM22PtoD;
     pdcDst->dclevel.sizl            = pdcSrc->dclevel.sizl;
+    pdcDst->dclevel.hpal            = pdcSrc->dclevel.hpal;
 
     /* Handle references here correctly */
     DC_vSelectSurface(pdcDst, pdcSrc->dclevel.pSurface);
     DC_vSelectFillBrush(pdcDst, pdcSrc->dclevel.pbrFill);
     DC_vSelectLineBrush(pdcDst, pdcSrc->dclevel.pbrLine);
+    DC_vSelectPalette(pdcDst, pdcSrc->dclevel.ppal);
 
     // FIXME: handle refs
-    pdcDst->dclevel.hpal            = pdcSrc->dclevel.hpal;
-    pdcDst->dclevel.ppal            = pdcSrc->dclevel.ppal;
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
     /* ROS hacks */
@@ -122,7 +122,7 @@ NtGdiRestoreDC(
     /* Check if we have a valid instance */
     if (iSaveLevel <= 0 || iSaveLevel >= pdc->dclevel.lSaveDepth)
     {
-        DPRINT("Illegal save level, requested: %ld, current: %ld\n", 
+        DPRINT("Illegal save level, requested: %ld, current: %ld\n",
                iSaveLevel, pdc->dclevel.lSaveDepth);
         DC_UnlockDc(pdc);
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -220,7 +220,7 @@ NtGdiSaveDC(
     }
     hdcSave = pdcSave->BaseObject.hHmgr;
 
-    /* Make it a kernel handle 
+    /* Make it a kernel handle
        (FIXME: windows handles this different, see wiki)*/
     GDIOBJ_SetOwnership(hdcSave, NULL);
 

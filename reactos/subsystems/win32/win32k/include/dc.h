@@ -1,9 +1,12 @@
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
+typedef struct _DC *PDC;
+
 #include "brush.h"
 #include "bitmaps.h"
 #include "pdevobj.h"
+#include "palette.h"
 
 /* Constants ******************************************************************/
 
@@ -125,7 +128,7 @@ typedef struct _DC
 
   /* Reactos specific members */
   ROS_DC_INFO rosdc;
-} DC, *PDC;
+} DC;
 
 /* Internal functions *********************************************************/
 
@@ -215,6 +218,18 @@ DC_vSelectLineBrush(PDC pdc, PBRUSH pbrLine)
     if (pbrLine)
         GDIOBJ_IncrementShareCount((POBJ)pbrLine);
     pdc->dclevel.pbrLine = pbrLine;
+}
+
+VOID
+FORCEINLINE
+DC_vSelectPalette(PDC pdc, PPALETTE ppal)
+{
+    PPALETTE ppalOld = pdc->dclevel.ppal;
+    if (ppalOld)
+        PALETTE_ShareUnlockPalette(ppalOld);
+    if (ppal)
+        GDIOBJ_IncrementShareCount((POBJ)ppal);
+    pdc->dclevel.ppal = ppal;
 }
 
 BOOL FASTCALL

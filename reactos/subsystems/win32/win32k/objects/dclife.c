@@ -120,7 +120,11 @@ DC_AllocDC(PUNICODE_STRING Driver)
     TextIntRealizeFont(pdcattr->hlfntNew,NULL);
 
     NewDC->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
-    NewDC->dclevel.laPath.eMiterLimit = 10.0;
+    NewDC->dclevel.ppal = PALETTE_ShareLockPalette(NewDC->dclevel.hpal);
+    /* This should never fail */
+    ASSERT(NewDC->dclevel.ppal);
+
+    NewDC->dclevel.laPath.eMiterLimit = 10.0; // FIXME: use FLOATL or FLOATOBJ!
 
     NewDC->dclevel.lSaveDepth = 1;
 
@@ -153,10 +157,11 @@ DC_Cleanup(PVOID ObjectBody)
     if (pDC->rosdc.DriverName.Buffer)
         ExFreePoolWithTag(pDC->rosdc.DriverName.Buffer, TAG_DC);
 
-    /* Clean up selected objects */
+    /* Deselect dc objects */
     DC_vSelectSurface(pDC, NULL);
     DC_vSelectFillBrush(pDC, NULL);
     DC_vSelectLineBrush(pDC, NULL);
+    DC_vSelectPalette(pDC, NULL);
 
     /* Dereference default brushes */
     BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);

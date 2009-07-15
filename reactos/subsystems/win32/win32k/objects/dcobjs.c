@@ -200,7 +200,7 @@ GdiSelectPalette(
     }
 
     /* Check if this is a valid palette handle */
-    ppal = PALETTE_LockPalette(hpal);
+    ppal = PALETTE_ShareLockPalette(hpal);
     if (!ppal)
     {
         DC_UnlockDc(pdc);
@@ -215,13 +215,14 @@ GdiSelectPalette(
         /* Get old palette, set new one */
         oldPal = pdc->dclevel.hpal;
         pdc->dclevel.hpal = hpal;
+        DC_vSelectPalette(pdc, ppal);
 
         /* Mark the brushes invalid */
         pdc->pdcattr->ulDirty_ |= DIRTY_FILL | DIRTY_LINE |
                                   DIRTY_BACKGROUND | DIRTY_TEXT;
     }
 
-    PALETTE_UnlockPalette(ppal);
+    PALETTE_ShareUnlockPalette(ppal);
     DC_UnlockDc(pdc);
 
     return oldPal;
