@@ -26,6 +26,12 @@
 #define MACH_TYPE_VERSATILE_PB 387
 
 //
+// TI Beagle Board, OMAP3530 SoC
+// qemu-system-arm -M beagle, Beagle Board
+//
+#define MACH_TYPE_OMAP3_BEAGLE 1546
+
+//
 // Compatible boot-loaders should return us this information
 //
 #define ARM_BOARD_CONFIGURATION_MAJOR_VERSION 1
@@ -104,6 +110,18 @@ ArmFeroGetCh(VOID);
 
 BOOLEAN
 ArmFeroKbHit(VOID);
+
+VOID
+ArmOmap3SerialInit(IN ULONG Baudrate);
+
+VOID
+ArmOmap3PutChar(IN INT Char);
+
+INT
+ArmOmap3GetCh(VOID);
+
+BOOLEAN
+ArmOmap3KbHit(VOID);
 
 VOID
 ArmVersaSerialInit(IN ULONG Baudrate);

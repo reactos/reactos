@@ -169,10 +169,10 @@ static const MEMORY_DESCRIPTOR_INT MemoryDescriptors[] =
     { { MemoryFirmwareTemporary, 0x90, 0x10 }, 5, }, // Disk read buffer for int 13h. DISKREADBUFFER
     { { MemoryFirmwarePermanent, 0xA0, 0x60 }, 6, }, // ROM / Video
     { { MemorySpecialMemory, 0xFFF, 1 }, 7, }, // unusable memory
-#elif __arm__
-    { { MemoryFirmwarePermanent, 0x00, 1 }, 0, }, // arm exception handlers
-    { { MemoryFirmwareTemporary, 0x01, 7 }, 1, }, // arm board block + freeldr stack + cmdline
-    { { MemoryLoadedProgram, 0x08, 0x70 }, 2, }, // freeldr image (roughly max. 0x64 pages)
+#elif __arm__ // This needs to be done per-platform specific way
+    { { MemoryLoadedProgram, 0x80000, 32 }, 0, }, // X-Loader + OmapLdr
+    { { MemoryLoadedProgram, 0x81000, 128 }, 1, }, // FreeLDR
+    { { MemoryFirmwareTemporary, 0x80500, 4096 }, 2, }, // Video Buffer
 #endif
 };
 MEMORY_DESCRIPTOR*

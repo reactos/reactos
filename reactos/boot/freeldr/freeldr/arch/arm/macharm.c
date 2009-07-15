@@ -12,6 +12,8 @@
 
 /* GLOBALS ********************************************************************/
 
+UCHAR BootStack[0x4000];
+PUCHAR BootStackEnd = &BootStack[0x3FFF];
 PARM_BOARD_CONFIGURATION_BLOCK ArmBoardBlock;
 ULONG BootDrive, BootPartition;
 VOID ArmPrepareForReactOS(IN BOOLEAN Setup);
@@ -40,7 +42,8 @@ ArmInit(IN PARM_BOARD_CONFIGURATION_BLOCK BootContext)
     // This should probably go away once we support more boards
     //
     ASSERT((ArmBoardBlock->BoardType == MACH_TYPE_FEROCEON) ||
-           (ArmBoardBlock->BoardType == MACH_TYPE_VERSATILE_PB));
+           (ArmBoardBlock->BoardType == MACH_TYPE_VERSATILE_PB) ||
+           (ArmBoardBlock->BoardType == MACH_TYPE_OMAP3_BEAGLE));
 
     //
     // Save data required for memory initialization
@@ -169,10 +172,25 @@ MachInit(IN PCCH CommandLine)
             MachVtbl.ConsGetCh = ArmVersaGetCh;
             break;
             
+        //
+        // Check for TI OMAP3 boards
+        // For now that means only Beagle, but ZOOM and others should be ok too
+        //
+        case MACH_TYPE_OMAP3_BEAGLE:
+            
+            //
+            // These boards use a UART16550
+            //
+            ArmOmap3SerialInit(115200);
+            MachVtbl.ConsPutChar = ArmOmap3PutChar;
+            MachVtbl.ConsKbHit = ArmOmap3KbHit;
+            MachVtbl.ConsGetCh = ArmOmap3GetCh;
+            break;
+            
         default:
             ASSERT(FALSE);
     }
-    
+        
     //
     // Setup generic ARM routines for all boards
     //
