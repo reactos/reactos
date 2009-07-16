@@ -2251,7 +2251,8 @@ AllocErr:
    /* BugBoy Comments: if the window being created is a edit control, ATOM 0xC007,
       then my testing shows that windows (2k and XP) creates a CallProc for it immediately 
       Dont understand why it does this. */
-   if (ClassAtom == 0XC007)
+//   if (ClassAtom == gpsi->atomSysClass[ICLS_EDIT]) <--- real fix!
+   if (ClassAtom == 0XC008) // <--- HACK!!!!
    {
       PCALLPROC CallProc;
       //CallProc = CreateCallProc(NULL, Wnd->WndProc, bUnicodeWindow, Wnd->ti->ppi);
