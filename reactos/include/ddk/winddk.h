@@ -5642,11 +5642,26 @@ KeTestSpinLock(
 
 #if defined (_X86_)
 
+#if defined(WIN9X_COMPAT_SPINLOCK)
+
 NTKERNELAPI
 VOID
 NTAPI
 KeInitializeSpinLock(
-  IN PKSPIN_LOCK  SpinLock);
+    IN PKSPIN_LOCK SpinLock
+);
+
+#else
+
+FORCEINLINE
+VOID
+KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+    /* Clear the lock */
+    *SpinLock = 0;
+}
+
+#endif
 
 NTHALAPI
 KIRQL

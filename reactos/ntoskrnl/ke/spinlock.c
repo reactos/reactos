@@ -123,7 +123,7 @@ KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
  */
 VOID
 NTAPI
-KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
+_KeInitializeSpinLock(IN PKSPIN_LOCK SpinLock)
 {
     /* Clear it */
     *SpinLock = 0;

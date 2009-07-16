@@ -7,7 +7,6 @@
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="__NO_CTYPE_INLINES" />
-	<define name="WIN9X_COMPAT_SPINLOCK" />
 	<define name="_IN_KERNEL_" />
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
