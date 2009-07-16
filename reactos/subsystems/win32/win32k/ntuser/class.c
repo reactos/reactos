@@ -61,7 +61,7 @@ LockupFnIdToiCls(int FnId, int *iCls )
 {
   int i;
   
-  for ( i = 0; i < 10; i++)
+  for ( i = 0; i < 11; i++)
   {
      if (FnidToiCls[i].FnId == FnId)
      {
