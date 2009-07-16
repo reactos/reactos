@@ -43,9 +43,6 @@ PortClsPnp(
     PPCLASS_DEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION IoStack;
     IResourceList* resource_list = NULL;
-    ULONG Length;
-    WCHAR szMsg[100];
-    PIO_ERROR_LOG_PACKET EventEntry;
 
     DPRINT("PortClsPnp called\n");
 
@@ -100,22 +97,6 @@ PortClsPnp(
             if (!NT_SUCCESS(Status))
             {
                 DPRINT("StartDevice returned a failure code [0x%8x]\n", Status);
-                swprintf(szMsg, L"%%1 failed to start with %x", Status);
-                Length = (wcslen(szMsg) + 1) * sizeof(WCHAR) + sizeof(IO_ERROR_LOG_PACKET);
-                if (Length < ERROR_LOG_MAXIMUM_SIZE)
-                {
-                    EventEntry = (PIO_ERROR_LOG_PACKET)IoAllocateErrorLogEntry(DeviceExt->PhysicalDeviceObject, Length);
-                    if (EventEntry)
-                    {
-                        RtlZeroMemory(EventEntry, Length);
-                        EventEntry->MajorFunctionCode = IRP_MJ_PNP;
-                        EventEntry->NumberOfStrings = 1;
-                        EventEntry->StringOffset = sizeof(IO_ERROR_LOG_PACKET);
-                        EventEntry->ErrorCode = Status;
-                        wcscpy((LPWSTR)(EventEntry + 1), szMsg);
-                        IoWriteErrorLogEntry(EventEntry);
-                    }
-                }
                 Irp->IoStatus.Status = Status;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return Status;
