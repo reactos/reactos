@@ -35,6 +35,43 @@
 #define WARN DPRINT1
 #define ERR DPRINT1
 
+static struct
+{
+    int FnId;
+    INT ClsId;
+}  FnidToiCls[] =
+{
+ { FNID_BUTTON,    ICLS_BUTTON},
+ { FNID_EDIT,      ICLS_EDIT}, 
+ { FNID_STATIC,    ICLS_STATIC},
+ { FNID_LISTBOX,   ICLS_LISTBOX},
+ { FNID_SCROLLBAR, ICLS_SCROLLBAR},
+ { FNID_COMBOBOX,  ICLS_COMBOBOX},
+ { FNID_MDICLIENT, ICLS_MDICLIENT},
+ { FNID_COMBOLBOX, ICLS_COMBOLBOX},
+ { FNID_DIALOG,    ICLS_DIALOG},  
+ { FNID_MENU,      ICLS_MENU},
+ { FNID_ICONTITLE, ICLS_ICONTITLE}
+};
+
+static 
+BOOL
+FASTCALL
+LockupFnIdToiCls(int FnId, int *iCls )
+{
+  int i;
+  
+  for ( i = 0; i < 10; i++)
+  {
+     if (FnidToiCls[i].FnId == FnId)
+     {
+        *iCls = FnidToiCls[i].ClsId;
+        return TRUE;
+     }
+  }
+  return FALSE;
+}
+
 /* WINDOWCLASS ***************************************************************/
 
 static VOID
@@ -1869,7 +1906,13 @@ UserRegisterSystemClasses(IN ULONG Count,
                                pi);
         if (Class != NULL)
         {
+            int iCls;
+
             Class->fnID = SystemClasses[i].ClassId;
+            if (LockupFnIdToiCls(Class->fnID, &iCls))
+            {
+                gpsi->atomSysClass[iCls] = Class->Atom;
+            }
 
             ASSERT(Class->System);
             Class->Next = pi->SystemClassList;
