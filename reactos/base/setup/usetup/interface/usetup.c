@@ -3353,6 +3353,18 @@ BootLoaderPage(PINPUT_RECORD Ir)
     PartitionType = PartitionList->ActiveBootPartition->
         PartInfo[PartitionList->ActiveBootPartitionNumber].PartitionType;
 
+    if (IsUnattendedSetup)
+    {
+        if (UnattendMBRInstallType == 0) /* skip MBR installation */
+        {
+            return SUCCESS_PAGE;
+        }
+        else if (UnattendMBRInstallType == 1) /* install on floppy */
+        {
+            return BOOT_LOADER_FLOPPY_PAGE;
+        }
+    }
+
     if (PartitionType == PARTITION_ENTRY_UNUSED)
     {
         DPRINT("Error: active partition invalid (unused)\n");
@@ -3398,20 +3410,10 @@ BootLoaderPage(PINPUT_RECORD Ir)
         return BOOT_LOADER_FLOPPY_PAGE;
     }
 
-    if (IsUnattendedSetup)
+    /* Unattended install on hdd? */
+    if (IsUnattendedSetup && UnattendMBRInstallType == 2)
     {
-        if (UnattendMBRInstallType == 0) /* skip MBR installation */
-        {
-            return SUCCESS_PAGE;
-        }
-        else if (UnattendMBRInstallType == 1) /* install on floppy */
-        {
-            return BOOT_LOADER_FLOPPY_PAGE;
-        }
-        else if (UnattendMBRInstallType == 2) /* install on hdd */
-        {
-            return BOOT_LOADER_HARDDISK_PAGE;
-        }
+        return BOOT_LOADER_HARDDISK_PAGE;
     }
 
     MUIDisplayPage(BOOT_LOADER_PAGE);
