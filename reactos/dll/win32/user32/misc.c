@@ -259,7 +259,7 @@ DWORD WINAPI SetWindowStationUser(DWORD x1,DWORD x2)
 /***********************************************************************
  *		RegisterLogonProcess (USER32.@)
  */
-DWORD WINAPI RegisterLogonProcess(HANDLE hprocess,BOOL x)
+BOOL WINAPI RegisterLogonProcess(HANDLE hprocess,BOOL x)
 {
     FIXME("(%p,%d),stub!\n",hprocess,x);
     return 1;
@@ -514,7 +514,7 @@ BOOL WINAPI RegisterShellHookWindow ( HWND hWnd )
 /***********************************************************************
  *           DeregisterShellHookWindow			[USER32.@]
  */
-HRESULT WINAPI DeregisterShellHookWindow ( DWORD u )
+HRESULT WINAPI DeregisterShellHookWindow ( HWND u )
 {
     FIXME("0x%08x stub\n",u);
     return 0;

@@ -257,6 +257,7 @@ INT WINAPI EnumPropsExW(HWND hwnd, PROPENUMPROCEXW func, LPARAM lParam)
 /***********************************************************************
  *              EnumProps   (USER.27)
  */
+#ifndef __REACTOS__
 INT16 WINAPI EnumProps16( HWND16 hwnd, PROPENUMPROC16 func )
 {
     int ret = -1, i, count;
@@ -294,3 +295,4 @@ INT16 WINAPI EnumProps16( HWND16 hwnd, PROPENUMPROC16 func )
     }
     return ret;
 }
+#endif

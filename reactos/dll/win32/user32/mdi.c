@@ -953,9 +953,9 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild )
 
     if ( (menuInfo.fType & MFT_BITMAP)           &&
 	 (LOWORD(menuInfo.dwTypeData)!=0)        &&
-	 (LOWORD(menuInfo.dwTypeData)!=HBITMAP_16(hBmpClose)) )
+	 (LOWORD(menuInfo.dwTypeData)!=LOWORD(hBmpClose)) )
     {
-        DeleteObject(HBITMAP_32(LOWORD(menuInfo.dwTypeData)));
+        DeleteObject((HBITMAP)(ULONG_PTR)(LOWORD(menuInfo.dwTypeData)));
     }
 
     /* close */
@@ -1082,12 +1082,14 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 	    ci->hWindowMenu	= ccs->hWindowMenu;
 	    ci->idFirstChild	= ccs->idFirstChild;
 	}
+#ifndef __REACTOS__
         else
 	{
 	    LPCLIENTCREATESTRUCT16 ccs = MapSL(PtrToUlong(cs->lpCreateParams));
 	    ci->hWindowMenu	= HMENU_32(ccs->hWindowMenu);
 	    ci->idFirstChild	= ccs->idFirstChild;
 	}
+#endif
         WIN_ReleasePtr( wndPtr );
 
         ci->hwndChildMaximized  = 0;

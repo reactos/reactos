@@ -1519,19 +1519,12 @@ static LRESULT ScrollBarWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         }
         break;
 
-    case SBM_SETPOS16:
     case SBM_SETPOS:
         return SetScrollPos( hwnd, SB_CTL, wParam, (BOOL)lParam );
 
-    case SBM_GETPOS16:
     case SBM_GETPOS:
        return SCROLL_GetScrollPos(hwnd, SB_CTL);
 
-    case SBM_SETRANGE16:
-        if (wParam) message = SBM_SETRANGEREDRAW;
-        wParam = LOWORD(lParam);
-        lParam = HIWORD(lParam);
-        /* fall through */
     case SBM_SETRANGEREDRAW:
     case SBM_SETRANGE:
         {
@@ -1543,18 +1536,9 @@ static LRESULT ScrollBarWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         }
         return 0;
 
-    case SBM_GETRANGE16:
-    {
-        INT min, max;
-
-        SCROLL_GetScrollRange(hwnd, SB_CTL, &min, &max);
-        return MAKELRESULT(min, max);
-    }
-
     case SBM_GETRANGE:
         return SCROLL_GetScrollRange(hwnd, SB_CTL, (LPINT)wParam, (LPINT)lParam);
 
-    case SBM_ENABLE_ARROWS16:
     case SBM_ENABLE_ARROWS:
         return EnableScrollBar( hwnd, SB_CTL, wParam );
 

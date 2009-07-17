@@ -2044,9 +2044,11 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 
 	/* Combo messages */
 
+#ifndef __REACTOS__
 	case CB_ADDSTRING16:
 		if( CB_HASSTRINGS(lphc) ) lParam = (LPARAM)MapSL(lParam);
 		/* fall through */
+#endif
 	case CB_ADDSTRING:
 		if( unicode )
                 {
@@ -2077,10 +2079,12 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                     HeapFree(GetProcessHeap(), 0, string);
                     return ret;
                 }
+#ifndef __REACTOS__
 	case CB_INSERTSTRING16:
 		wParam = (INT)(INT16)wParam;
 		if( CB_HASSTRINGS(lphc) ) lParam = (LPARAM)MapSL(lParam);
 		/* fall through */
+#endif
 	case CB_INSERTSTRING:
 		if( unicode )
                 {
@@ -2099,43 +2103,51 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 
                     return SendMessageA(lphc->hWndLBox, LB_INSERTSTRING, wParam, lParam);
                 }
-	case CB_DELETESTRING16:
 	case CB_DELETESTRING:
 		return unicode ? SendMessageW(lphc->hWndLBox, LB_DELETESTRING, wParam, 0) :
 				 SendMessageA(lphc->hWndLBox, LB_DELETESTRING, wParam, 0);
+#ifndef __REACTOS__
 	case CB_SELECTSTRING16:
 		wParam = (INT)(INT16)wParam;
 		if( CB_HASSTRINGS(lphc) ) lParam = (LPARAM)MapSL(lParam);
 		/* fall through */
+#endif
 	case CB_SELECTSTRING:
 		return COMBO_SelectString(lphc, (INT)wParam, lParam, unicode);
+#ifndef __REACTOS__
 	case CB_FINDSTRING16:
 		wParam = (INT)(INT16)wParam;
 		if( CB_HASSTRINGS(lphc) ) lParam = (LPARAM)MapSL(lParam);
 		/* fall through */
+#endif
 	case CB_FINDSTRING:
 		return unicode ? SendMessageW(lphc->hWndLBox, LB_FINDSTRING, wParam, lParam) :
 				 SendMessageA(lphc->hWndLBox, LB_FINDSTRING, wParam, lParam);
+#ifndef __REACTOS__
 	case CB_FINDSTRINGEXACT16:
 		wParam = (INT)(INT16)wParam;
 		if( CB_HASSTRINGS(lphc) ) lParam = (LPARAM)MapSL(lParam);
 		/* fall through */
+#endif
 	case CB_FINDSTRINGEXACT:
 		return unicode ? SendMessageW(lphc->hWndLBox, LB_FINDSTRINGEXACT, wParam, lParam) :
 				 SendMessageA(lphc->hWndLBox, LB_FINDSTRINGEXACT, wParam, lParam);
+#ifndef __REACTOS__
 	case CB_SETITEMHEIGHT16:
 		wParam = (INT)(INT16)wParam;	/* signed integer */
 		/* fall through */
+#endif
 	case CB_SETITEMHEIGHT:
 		return  COMBO_SetItemHeight( lphc, (INT)wParam, (INT)lParam);
+#ifndef __REACTOS__
 	case CB_GETITEMHEIGHT16:
 		wParam = (INT)(INT16)wParam;
 		/* fall through */
+#endif
 	case CB_GETITEMHEIGHT:
 		if( (INT)wParam >= 0 )	/* listbox item */
                     return SendMessageW(lphc->hWndLBox, LB_GETITEMHEIGHT, wParam, 0);
                 return  CBGetTextAreaHeight(hwnd, lphc);
-	case CB_RESETCONTENT16:
 	case CB_RESETCONTENT:
 		SendMessageW(lphc->hWndLBox, LB_RESETCONTENT, 0, 0);
                 if( (lphc->wState & CBF_EDIT) && CB_HASSTRINGS(lphc) )
@@ -2166,6 +2178,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		if( (CB_GETTYPE(lphc) != CBS_SIMPLE) &&
 		    (INT)wParam < 32768 ) lphc->droppedWidth = (INT)wParam;
 		return  CB_ERR;
+#ifndef __REACTOS__
 	case CB_GETDROPPEDCONTROLRECT16:
 		lParam = (LPARAM)MapSL(lParam);
 		if( lParam )
@@ -2179,19 +2192,20 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                     r16->bottom = r.bottom;
 		}
 		return  CB_OKAY;
+#endif
 	case CB_GETDROPPEDCONTROLRECT:
 		if( lParam ) CBGetDroppedControlRect(lphc, (LPRECT)lParam );
 		return  CB_OKAY;
-	case CB_GETDROPPEDSTATE16:
 	case CB_GETDROPPEDSTATE:
 		return  (lphc->wState & CBF_DROPPED) ? TRUE : FALSE;
+#ifndef __REACTOS__
 	case CB_DIR16:
 		return SendMessageA(lphc->hWndLBox, LB_DIR16, wParam, lParam);
+#endif
 	case CB_DIR:
 		return unicode ? SendMessageW(lphc->hWndLBox, LB_DIR, wParam, lParam) :
 				 SendMessageA(lphc->hWndLBox, LB_DIR, wParam, lParam);
 
-	case CB_SHOWDROPDOWN16:
 	case CB_SHOWDROPDOWN:
 		if( CB_GETTYPE(lphc) != CBS_SIMPLE )
 		{
@@ -2205,15 +2219,15 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		            CBRollUp( lphc, FALSE, TRUE );
 		}
 		return  TRUE;
-	case CB_GETCOUNT16:
 	case CB_GETCOUNT:
 		return SendMessageW(lphc->hWndLBox, LB_GETCOUNT, 0, 0);
-	case CB_GETCURSEL16:
 	case CB_GETCURSEL:
 		return SendMessageW(lphc->hWndLBox, LB_GETCURSEL, 0, 0);
+#ifndef __REACTOS__
 	case CB_SETCURSEL16:
 		wParam = (INT)(INT16)wParam;
 		/* fall through */
+#endif
 	case CB_SETCURSEL:
 		lParam = SendMessageW(lphc->hWndLBox, LB_SETCURSEL, wParam, 0);
 	        if( lParam >= 0 )
@@ -2226,44 +2240,52 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		    InvalidateRect(lphc->self, &lphc->textRect, TRUE);
 		lphc->wState &= ~CBF_SELCHANGE;
 	        return  lParam;
+#ifndef __REACTOS__
 	case CB_GETLBTEXT16:
 		wParam = (INT)(INT16)wParam;
 		lParam = (LPARAM)MapSL(lParam);
 		/* fall through */
+#endif
 	case CB_GETLBTEXT:
 		return unicode ? SendMessageW(lphc->hWndLBox, LB_GETTEXT, wParam, lParam) :
 				 SendMessageA(lphc->hWndLBox, LB_GETTEXT, wParam, lParam);
+#ifndef __REACTOS__
 	case CB_GETLBTEXTLEN16:
 		wParam = (INT)(INT16)wParam;
 		/* fall through */
+#endif
 	case CB_GETLBTEXTLEN:
                 return unicode ? SendMessageW(lphc->hWndLBox, LB_GETTEXTLEN, wParam, 0) :
                                  SendMessageA(lphc->hWndLBox, LB_GETTEXTLEN, wParam, 0);
+#ifndef __REACTOS__
 	case CB_GETITEMDATA16:
 		wParam = (INT)(INT16)wParam;
 		/* fall through */
+#endif
 	case CB_GETITEMDATA:
 		return SendMessageW(lphc->hWndLBox, LB_GETITEMDATA, wParam, 0);
+#ifndef __REACTOS__
 	case CB_SETITEMDATA16:
 		wParam = (INT)(INT16)wParam;
 		/* fall through */
+#endif
 	case CB_SETITEMDATA:
 		return SendMessageW(lphc->hWndLBox, LB_SETITEMDATA, wParam, lParam);
+#ifndef __REACTOS__
 	case CB_GETEDITSEL16:
 		wParam = lParam = 0;   /* just in case */
 		/* fall through */
+#endif
 	case CB_GETEDITSEL:
 		/* Edit checks passed parameters itself */
 		if( lphc->wState & CBF_EDIT )
 		    return SendMessageW(lphc->hWndEdit, EM_GETSEL, wParam, lParam);
 		return  CB_ERR;
-	case CB_SETEDITSEL16:
 	case CB_SETEDITSEL:
 		if( lphc->wState & CBF_EDIT )
                     return SendMessageW(lphc->hWndEdit, EM_SETSEL,
 			  (INT)(INT16)LOWORD(lParam), (INT)(INT16)HIWORD(lParam) );
 		return  CB_ERR;
-	case CB_SETEXTENDEDUI16:
 	case CB_SETEXTENDEDUI:
                 if( CB_GETTYPE(lphc) == CBS_SIMPLE )
                     return  CB_ERR;
@@ -2271,7 +2293,6 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		    lphc->wState |= CBF_EUI;
 		else lphc->wState &= ~CBF_EUI;
 		return  CB_OKAY;
-	case CB_GETEXTENDEDUI16:
 	case CB_GETEXTENDEDUI:
 		return  (lphc->wState & CBF_EUI) ? TRUE : FALSE;
 	case CB_GETCOMBOBOXINFO:

@@ -81,7 +81,9 @@ static inline HLOCAL16 LOCAL_Free( HANDLE16 ds, HLOCAL16 handle )
 #define GET_WORD(ptr)  (*(const WORD *)(ptr))
 #define GET_DWORD(ptr) (*(const DWORD *)(ptr))
 
+#ifndef __REACTOS__
 #define WM_SYSTIMER	    0x0118
+#endif
 #define WM_POPUPSYSTEMMENU  0x0313
 
 /* internal messages codes */

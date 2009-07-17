@@ -114,7 +114,7 @@ LPSTR WINAPI CharPrevExA( WORD codepage, LPCSTR start, LPCSTR ptr, DWORD flags )
 /***********************************************************************
  *           CharPrevExW   (USER32.@)
  */
-LPSTR WINAPI CharPrevExW( WORD codepage, LPCWSTR start, LPCWSTR ptr, DWORD flags )
+LPWSTR WINAPI CharPrevExW( WORD codepage, LPCWSTR start, LPCWSTR ptr, DWORD flags )
 {
     /* doesn't make sense, there are no codepages for Unicode */
     return NULL;

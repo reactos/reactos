@@ -2645,16 +2645,12 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
 
     switch(msg)
     {
-    case LB_RESETCONTENT16:
     case LB_RESETCONTENT:
         LISTBOX_ResetContent( descr );
         LISTBOX_UpdateScroll( descr );
         InvalidateRect( descr->self, NULL, TRUE );
         return 0;
 
-    case LB_ADDSTRING16:
-        if (HAS_STRINGS(descr)) lParam = (LPARAM)MapSL(lParam);
-        /* fall through */
     case LB_ADDSTRING:
     {
         INT ret;
@@ -2677,10 +2673,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return ret;
     }
 
-    case LB_INSERTSTRING16:
-        if (HAS_STRINGS(descr)) lParam = (LPARAM)MapSL(lParam);
-        wParam = (INT)(INT16)wParam;
-        /* fall through */
     case LB_INSERTSTRING:
     {
         INT ret;
@@ -2702,9 +2694,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return ret;
     }
 
-    case LB_ADDFILE16:
-        if (HAS_STRINGS(descr)) lParam = (LPARAM)MapSL(lParam);
-        /* fall through */
     case LB_ADDFILE:
     {
         INT ret;
@@ -2727,7 +2716,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return ret;
     }
 
-    case LB_DELETESTRING16:
     case LB_DELETESTRING:
         if (LISTBOX_RemoveItem( descr, wParam) != LB_ERR)
             return descr->nb_items;
@@ -2737,7 +2725,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
             return LB_ERR;
         }
 
-    case LB_GETITEMDATA16:
     case LB_GETITEMDATA:
         if (((INT)wParam < 0) || ((INT)wParam >= descr->nb_items))
         {
@@ -2746,7 +2733,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         }
         return descr->items[wParam].data;
 
-    case LB_SETITEMDATA16:
     case LB_SETITEMDATA:
         if (((INT)wParam < 0) || ((INT)wParam >= descr->nb_items))
         {
@@ -2757,18 +2743,12 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         /* undocumented: returns TRUE, not LB_OKAY (0) */
         return TRUE;
 
-    case LB_GETCOUNT16:
     case LB_GETCOUNT:
         return descr->nb_items;
 
-    case LB_GETTEXT16:
-        lParam = (LPARAM)MapSL(lParam);
-        /* fall through */
     case LB_GETTEXT:
         return LISTBOX_GetText( descr, wParam, (LPWSTR)lParam, unicode );
 
-    case LB_GETTEXTLEN16:
-        /* fall through */
     case LB_GETTEXTLEN:
         if ((INT)wParam >= descr->nb_items || (INT)wParam < 0)
         {
@@ -2780,7 +2760,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return WideCharToMultiByte( CP_ACP, 0, descr->items[wParam].str,
                                     strlenW(descr->items[wParam].str), NULL, 0, NULL, NULL );
 
-    case LB_GETCURSEL16:
     case LB_GETCURSEL:
         if (descr->nb_items == 0)
             return LB_ERR;
@@ -2791,17 +2770,12 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return descr->focus_item;
         /* otherwise, if the user tries to move the selection with the    */
         /* arrow keys, we will give the application something to choke on */
-    case LB_GETTOPINDEX16:
     case LB_GETTOPINDEX:
         return descr->top_item;
 
-    case LB_GETITEMHEIGHT16:
     case LB_GETITEMHEIGHT:
         return LISTBOX_GetItemHeight( descr, wParam );
 
-    case LB_SETITEMHEIGHT16:
-        lParam = LOWORD(lParam);
-        /* fall through */
     case LB_SETITEMHEIGHT:
         return LISTBOX_SetItemHeight( descr, wParam, lParam, TRUE );
 
@@ -2843,7 +2817,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
             return MAKELONG(index, hit ? 0 : 1);
         }
 
-    case LB_SETCARETINDEX16:
     case LB_SETCARETINDEX:
         if ((!IS_MULTISELECT(descr)) && (descr->selected_item != -1)) return LB_ERR;
         if (LISTBOX_SetCaretIndex( descr, wParam, !lParam ) == LB_ERR)
@@ -2853,37 +2826,18 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         else
              return LB_OKAY;
 
-    case LB_GETCARETINDEX16:
     case LB_GETCARETINDEX:
         return descr->focus_item;
 
-    case LB_SETTOPINDEX16:
     case LB_SETTOPINDEX:
         return LISTBOX_SetTopItem( descr, wParam, TRUE );
 
-    case LB_SETCOLUMNWIDTH16:
     case LB_SETCOLUMNWIDTH:
         return LISTBOX_SetColumnWidth( descr, wParam );
-
-    case LB_GETITEMRECT16:
-        {
-            RECT rect;
-            RECT16 *r16 = MapSL(lParam);
-            ret = LISTBOX_GetItemRect( descr, (INT16)wParam, &rect );
-            r16->left   = rect.left;
-            r16->top    = rect.top;
-            r16->right  = rect.right;
-            r16->bottom = rect.bottom;
-        }
-	return ret;
 
     case LB_GETITEMRECT:
         return LISTBOX_GetItemRect( descr, wParam, (RECT *)lParam );
 
-    case LB_FINDSTRING16:
-        wParam = (INT)(INT16)wParam;
-        if (HAS_STRINGS(descr)) lParam = (LPARAM)MapSL(lParam);
-        /* fall through */
     case LB_FINDSTRING:
     {
         INT ret;
@@ -2903,10 +2857,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return ret;
     }
 
-    case LB_FINDSTRINGEXACT16:
-        wParam = (INT)(INT16)wParam;
-        if (HAS_STRINGS(descr)) lParam = (LPARAM)MapSL(lParam);
-        /* fall through */
     case LB_FINDSTRINGEXACT:
     {
         INT ret;
@@ -2926,10 +2876,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return ret;
     }
 
-    case LB_SELECTSTRING16:
-        wParam = (INT)(INT16)wParam;
-        if (HAS_STRINGS(descr)) lParam = (LPARAM)MapSL(lParam);
-        /* fall through */
     case LB_SELECTSTRING:
     {
         INT index;
@@ -2958,23 +2904,14 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         return index;
     }
 
-    case LB_GETSEL16:
-        wParam = (INT)(INT16)wParam;
-        /* fall through */
     case LB_GETSEL:
         if (((INT)wParam < 0) || ((INT)wParam >= descr->nb_items))
             return LB_ERR;
         return descr->items[wParam].selected;
 
-    case LB_SETSEL16:
-        lParam = (INT)(INT16)lParam;
-        /* fall through */
     case LB_SETSEL:
         return LISTBOX_SetSelection( descr, lParam, wParam, FALSE );
 
-    case LB_SETCURSEL16:
-        wParam = (INT)(INT16)wParam;
-        /* fall through */
     case LB_SETCURSEL:
         if (IS_MULTISELECT(descr)) return LB_ERR;
         LISTBOX_SetCaretIndex( descr, wParam, FALSE );
@@ -2982,17 +2919,12 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
 	if (ret != LB_ERR) ret = descr->selected_item;
 	return ret;
 
-    case LB_GETSELCOUNT16:
     case LB_GETSELCOUNT:
         return LISTBOX_GetSelCount( descr );
-
-    case LB_GETSELITEMS16:
-        return LISTBOX_GetSelItems16( descr, wParam, (LPINT16)MapSL(lParam) );
 
     case LB_GETSELITEMS:
         return LISTBOX_GetSelItems( descr, wParam, (LPINT)lParam );
 
-    case LB_SELITEMRANGE16:
     case LB_SELITEMRANGE:
         if (LOWORD(lParam) <= HIWORD(lParam))
             return LISTBOX_SelectItemRange( descr, LOWORD(lParam),
@@ -3001,28 +2933,21 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
             return LISTBOX_SelectItemRange( descr, HIWORD(lParam),
                                             LOWORD(lParam), wParam );
 
-    case LB_SELITEMRANGEEX16:
     case LB_SELITEMRANGEEX:
         if ((INT)lParam >= (INT)wParam)
             return LISTBOX_SelectItemRange( descr, wParam, lParam, TRUE );
         else
             return LISTBOX_SelectItemRange( descr, lParam, wParam, FALSE);
 
-    case LB_GETHORIZONTALEXTENT16:
     case LB_GETHORIZONTALEXTENT:
         return descr->horz_extent;
 
-    case LB_SETHORIZONTALEXTENT16:
     case LB_SETHORIZONTALEXTENT:
         return LISTBOX_SetHorizontalExtent( descr, wParam );
 
-    case LB_GETANCHORINDEX16:
     case LB_GETANCHORINDEX:
         return descr->anchor_item;
 
-    case LB_SETANCHORINDEX16:
-        wParam = (INT)(INT16)wParam;
-        /* fall through */
     case LB_SETANCHORINDEX:
         if (((INT)wParam < -1) || ((INT)wParam >= descr->nb_items))
         {
@@ -3032,12 +2957,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
         descr->anchor_item = (INT)wParam;
         return LB_OKAY;
 
-    case LB_DIR16:
-        /* according to Win16 docs, DDL_DRIVES should make DDL_EXCLUSIVE
-         * be set automatically (this is different in Win32) */
-        if (wParam & DDL_DRIVES) wParam |= DDL_EXCLUSIVE;
-            lParam = (LPARAM)MapSL(lParam);
-        /* fall through */
     case LB_DIR:
     {
         INT ret;
@@ -3076,13 +2995,9 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
     case LB_SETCOUNT:
         return LISTBOX_SetCount( descr, (INT)wParam );
 
-    case LB_SETTABSTOPS16:
-        return LISTBOX_SetTabStops( descr, (INT)(INT16)wParam, MapSL(lParam), TRUE );
-
     case LB_SETTABSTOPS:
         return LISTBOX_SetTabStops( descr, wParam, (LPINT)lParam, FALSE );
 
-    case LB_CARETON16:
     case LB_CARETON:
         if (descr->caret_on)
             return LB_OKAY;
@@ -3091,7 +3006,6 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
             LISTBOX_RepaintItem( descr, descr->focus_item, ODA_FOCUS );
         return LB_OKAY;
 
-    case LB_CARETOFF16:
     case LB_CARETOFF:
         if (!descr->caret_on)
             return LB_OKAY;

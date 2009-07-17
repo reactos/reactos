@@ -3275,10 +3275,10 @@ BOOL WINAPI EnumDisplaySettingsExA(LPCSTR lpszDeviceName, DWORD iModeNum,
         lpDevMode->dmDisplayFrequency = devmodeW.dmDisplayFrequency;
         lpDevMode->dmFields           = devmodeW.dmFields;
 
-        lpDevMode->u1.s2.dmPosition.x = devmodeW.u1.s2.dmPosition.x;
-        lpDevMode->u1.s2.dmPosition.y = devmodeW.u1.s2.dmPosition.y;
-        lpDevMode->u1.s2.dmDisplayOrientation = devmodeW.u1.s2.dmDisplayOrientation;
-        lpDevMode->u1.s2.dmDisplayFixedOutput = devmodeW.u1.s2.dmDisplayFixedOutput;
+        lpDevMode->u1.dmPosition.x = devmodeW.u1.dmPosition.x;
+        lpDevMode->u1.dmPosition.y = devmodeW.u1.dmPosition.y;
+        lpDevMode->u1.dmDisplayOrientation = devmodeW.u1.dmDisplayOrientation;
+        lpDevMode->u1.dmDisplayFixedOutput = devmodeW.u1.dmDisplayFixedOutput;
     }
     if (lpszDeviceName) RtlFreeUnicodeString(&nameW);
     return ret;

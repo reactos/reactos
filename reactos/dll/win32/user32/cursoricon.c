@@ -1412,6 +1412,7 @@ HCURSOR WINAPI CreateCursor( HINSTANCE hInstance,
 /***********************************************************************
  *		CreateIcon (USER.407)
  */
+#ifndef __REACTOS__
 HICON16 WINAPI CreateIcon16( HINSTANCE16 hInstance, INT16 nWidth,
                              INT16 nHeight, BYTE bPlanes, BYTE bBitsPixel,
                              LPCVOID lpANDbits, LPCVOID lpXORbits )
@@ -1431,6 +1432,7 @@ HICON16 WINAPI CreateIcon16( HINSTANCE16 hInstance, INT16 nWidth,
 
     return CreateCursorIconIndirect16( hInstance, &info, lpANDbits, lpXORbits );
 }
+#endif
 
 
 /***********************************************************************
@@ -1926,6 +1928,7 @@ INT WINAPI LookupIconIdFromDirectory( LPBYTE dir, BOOL bIcon )
 /**********************************************************************
  *              GetIconID (USER.455)
  */
+#ifndef __REACTOS__
 WORD WINAPI GetIconID16( HGLOBAL16 hResource, DWORD resType )
 {
     LPBYTE lpDir = GlobalLock16(hResource);
@@ -1971,7 +1974,7 @@ HICON16 WINAPI LoadIconHandler16( HGLOBAL16 hResource, BOOL16 bNew )
     return HICON_16(CreateIconFromResourceEx( bits, 0, TRUE,
                       bNew ? 0x00030000 : 0x00020000, 0, 0, LR_DEFAULTCOLOR));
 }
-
+#endif
 /***********************************************************************
  *              LoadCursorW (USER32.@)
  */

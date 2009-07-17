@@ -1374,7 +1374,7 @@ failed:
     return 0;
 }
 
-
+#ifndef __REACTOS__
 /***********************************************************************
  *		CreateWindow (USER.41)
  */
@@ -1437,6 +1437,7 @@ HWND16 WINAPI CreateWindowEx16( DWORD exStyle, LPCSTR className,
         return HWND_16( WIN_CreateWindowEx( &cs, (LPCWSTR)className, 0 ));
     }
 }
+#endif
 
 
 /***********************************************************************

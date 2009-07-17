@@ -574,7 +574,6 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
     case STM_GETIMAGE:
         return (LRESULT)STATIC_GetImage( hwnd, wParam, full_style );
     
-    case STM_GETICON16:
     case STM_GETICON:
         return (LRESULT)STATIC_GetImage( hwnd, IMAGE_ICON, full_style );
 
@@ -597,7 +596,6 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         STATIC_TryPaintFcn( hwnd, full_style );
 	break;
 
-    case STM_SETICON16:
     case STM_SETICON:
         lResult = (LRESULT)STATIC_SetIcon( hwnd, (HICON)wParam, full_style );
         STATIC_TryPaintFcn( hwnd, full_style );

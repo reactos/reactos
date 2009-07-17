@@ -373,6 +373,7 @@ out:
 /***********************************************************************
  *              DefDlgProc (USER.308)
  */
+#ifndef __REACTOS__
 LRESULT WINAPI DefDlgProc16( HWND16 hwnd, UINT16 msg, WPARAM16 wParam,
                              LPARAM lParam )
 {
@@ -421,6 +422,7 @@ LRESULT WINAPI DefDlgProc16( HWND16 hwnd, UINT16 msg, WPARAM16 wParam,
     }
     return DEFDLG_Epilog( hwnd32, msg, result);
 }
+#endif
 
 
 /***********************************************************************

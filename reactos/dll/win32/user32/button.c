@@ -461,7 +461,9 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
         InvalidateRect( hWnd, NULL, FALSE );
         break;
 
+#ifndef __REACTOS__
     case BM_SETSTYLE16:
+#endif
     case BM_SETSTYLE:
         if ((wParam & 0x0f) >= MAX_BTN_TYPE) break;
         btn_type = wParam & 0x0f;
@@ -499,11 +501,15 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case BM_GETIMAGE:
         return GetWindowLongPtrW( hWnd, HIMAGE_GWL_OFFSET );
 
+#ifndef __REACTOS__
     case BM_GETCHECK16:
+#endif
     case BM_GETCHECK:
         return get_button_state( hWnd ) & 3;
 
+#ifndef __REACTOS__
     case BM_SETCHECK16:
+#endif
     case BM_SETCHECK:
         if (wParam > maxCheckState[btn_type]) wParam = maxCheckState[btn_type];
         state = get_button_state( hWnd );
@@ -522,11 +528,15 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
             BUTTON_CheckAutoRadioButton( hWnd );
         break;
 
+#ifndef __REACTOS__
     case BM_GETSTATE16:
+#endif
     case BM_GETSTATE:
         return get_button_state( hWnd );
 
+#ifndef __REACTOS__
     case BM_SETSTATE16:
+#endif
     case BM_SETSTATE:
         state = get_button_state( hWnd );
         if (wParam)

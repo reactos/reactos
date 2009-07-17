@@ -2085,7 +2085,7 @@ static BOOL MENU_SetItemData( MENUITEM *item, UINT flags, UINT_PTR id,
         HeapFree( GetProcessHeap(), 0, prevText );
     }
     else if(( flags & MFT_BITMAP)) {
-        item->hbmpItem = HBITMAP_32(LOWORD(str));
+        item->hbmpItem = (HBITMAP)(LOWORD(str));
         /* setting bitmap clears text */
         HeapFree( GetProcessHeap(), 0, item->text );
         item->text = NULL;
@@ -4011,7 +4011,7 @@ HMENU WINAPI CreatePopupMenu(void)
  *         GetMenuCheckMarkDimensions    (USER.417)
  *         GetMenuCheckMarkDimensions    (USER32.@)
  */
-DWORD WINAPI GetMenuCheckMarkDimensions(void)
+LONG WINAPI GetMenuCheckMarkDimensions(void)
 {
     return MAKELONG( GetSystemMetrics(SM_CXMENUCHECK), GetSystemMetrics(SM_CYMENUCHECK) );
 }
@@ -4348,6 +4348,7 @@ BOOL WINAPI EndMenu(void)
 /***********************************************************************
  *           LookupMenuHandle   (USER.217)
  */
+#ifndef __REACTOS__
 HMENU16 WINAPI LookupMenuHandle16( HMENU16 hmenu, INT16 id )
 {
     HMENU hmenu32 = HMENU_32(hmenu);
@@ -4376,6 +4377,7 @@ HMENU16 WINAPI LoadMenu16( HINSTANCE16 instance, LPCSTR name )
     FreeResource16( handle );
     return hMenu;
 }
+#endif
 
 
 /*****************************************************************
@@ -4403,6 +4405,7 @@ HMENU WINAPI LoadMenuW( HINSTANCE instance, LPCWSTR name )
 /**********************************************************************
  *	    LoadMenuIndirect    (USER.220)
  */
+#ifndef __REACTOS__
 HMENU16 WINAPI LoadMenuIndirect16( LPCVOID template )
 {
     HMENU hMenu;
@@ -4427,6 +4430,7 @@ HMENU16 WINAPI LoadMenuIndirect16( LPCVOID template )
     }
     return HMENU_16(hMenu);
 }
+#endif
 
 
 /**********************************************************************
@@ -4693,7 +4697,7 @@ static BOOL SetMenuItemInfo_common(MENUITEM * menu,
 	    HeapFree(GetProcessHeap(), 0, menu->text);
             set_menu_item_text( menu, lpmii->dwTypeData, unicode );
         } else if( (menu->fType) & MFT_BITMAP)
-                menu->hbmpItem = HBITMAP_32(LOWORD(lpmii->dwTypeData));
+                menu->hbmpItem = (HBITMAP)(ULONG_PTR)(LOWORD(lpmii->dwTypeData));
     }
 
     if (lpmii->fMask & MIIM_FTYPE ) {

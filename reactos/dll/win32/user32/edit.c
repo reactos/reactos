@@ -334,6 +334,7 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 {
 	INT ret;
 
+#ifndef __REACTOS__
 	if (es->word_break_proc16) {
 	    HGLOBAL16 hglob16;
 	    SEGPTR segptr;
@@ -355,7 +356,9 @@ static INT EDIT_CallWordBreakProc(EDITSTATE *es, INT start, INT index, INT count
 	    GlobalUnlock16(hglob16);
 	    GlobalFree16(hglob16);
 	}
-	else if (es->word_break_proc)
+	else
+#endif
+    if (es->word_break_proc)
         {
 	    if(es->is_unicode)
 	    {
@@ -4229,7 +4232,6 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 	 *	although it's also a regular control message.
 	 */
 	case EM_GETTHUMB: /* this one is used by NT notepad */
-	case EM_GETTHUMB16:
 	{
 		LRESULT ret;
 		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_HSCROLL)
@@ -4243,11 +4245,12 @@ static LRESULT EDIT_WM_HScroll(EDITSTATE *es, INT action, INT pos)
 		TRACE("EM_GETTHUMB: returning %ld\n", ret);
 		return ret;
 	}
+#ifndef __REACTOS__
 	case EM_LINESCROLL16:
 		TRACE("EM_LINESCROLL16\n");
 		dx = pos;
 		break;
-
+#endif
 	default:
 		ERR("undocumented WM_HSCROLL action %d (0x%04x), please report\n",
                     action, action);
@@ -4353,7 +4356,6 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 	 *	although it's also a regular control message.
 	 */
 	case EM_GETTHUMB: /* this one is used by NT notepad */
-	case EM_GETTHUMB16:
 	{
 		LRESULT ret;
 		if(GetWindowLongW( es->hwndSelf, GWL_STYLE ) & WS_VSCROLL)
@@ -4367,10 +4369,6 @@ static LRESULT EDIT_WM_VScroll(EDITSTATE *es, INT action, INT pos)
 		TRACE("EM_GETTHUMB: returning %ld\n", ret);
 		return ret;
 	}
-	case EM_LINESCROLL16:
-		TRACE("EM_LINESCROLL16 %d\n", pos);
-		dy = pos;
-		break;
 
 	default:
 		ERR("undocumented WM_VSCROLL action %d (0x%04x), please report\n",
@@ -4767,56 +4765,21 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 	if (es && (msg != WM_DESTROY)) EDIT_LockBuffer(es);
 
 	switch (msg) {
-	case EM_GETSEL16:
-		wParam = 0;
-		lParam = 0;
-		/* fall through */
 	case EM_GETSEL:
 		result = EDIT_EM_GetSel(es, (PUINT)wParam, (PUINT)lParam);
 		break;
 
-	case EM_SETSEL16:
-		if ((short)LOWORD(lParam) == -1)
-			EDIT_EM_SetSel(es, (UINT)-1, 0, FALSE);
-		else
-			EDIT_EM_SetSel(es, LOWORD(lParam), HIWORD(lParam), FALSE);
-		if (!wParam)
-			EDIT_EM_ScrollCaret(es);
-		result = 1;
-		break;
 	case EM_SETSEL:
 		EDIT_EM_SetSel(es, wParam, lParam, FALSE);
 		EDIT_EM_ScrollCaret(es);
 		result = 1;
 		break;
 
-	case EM_GETRECT16:
-		if (lParam)
-                {
-                    RECT16 *r16 = MapSL(lParam);
-                    r16->left   = es->format_rect.left;
-                    r16->top    = es->format_rect.top;
-                    r16->right  = es->format_rect.right;
-                    r16->bottom = es->format_rect.bottom;
-                }
-		break;
 	case EM_GETRECT:
 		if (lParam)
 			CopyRect((LPRECT)lParam, &es->format_rect);
 		break;
 
-	case EM_SETRECT16:
-		if ((es->style & ES_MULTILINE) && lParam) {
-			RECT rc;
-			RECT16 *r16 = MapSL(lParam);
-			rc.left   = r16->left;
-			rc.top    = r16->top;
-			rc.right  = r16->right;
-			rc.bottom = r16->bottom;
-			EDIT_SetRectNP(es, &rc);
-			EDIT_UpdateText(es, NULL, TRUE);
-		}
-		break;
 	case EM_SETRECT:
 		if ((es->style & ES_MULTILINE) && lParam) {
 			EDIT_SetRectNP(es, (LPRECT)lParam);
@@ -4824,47 +4787,28 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 		}
 		break;
 
-	case EM_SETRECTNP16:
-		if ((es->style & ES_MULTILINE) && lParam) {
-			RECT rc;
-			RECT16 *r16 = MapSL(lParam);
-			rc.left   = r16->left;
-			rc.top    = r16->top;
-			rc.right  = r16->right;
-			rc.bottom = r16->bottom;
-			EDIT_SetRectNP(es, &rc);
-		}
-		break;
 	case EM_SETRECTNP:
 		if ((es->style & ES_MULTILINE) && lParam)
 			EDIT_SetRectNP(es, (LPRECT)lParam);
 		break;
 
-	case EM_SCROLL16:
 	case EM_SCROLL:
 		result = EDIT_EM_Scroll(es, (INT)wParam);
                 break;
 
-	case EM_LINESCROLL16:
-		wParam = (WPARAM)(INT)(SHORT)HIWORD(lParam);
-		lParam = (LPARAM)(INT)(SHORT)LOWORD(lParam);
-		/* fall through */
 	case EM_LINESCROLL:
 		result = (LRESULT)EDIT_EM_LineScroll(es, (INT)wParam, (INT)lParam);
 		break;
 
-	case EM_SCROLLCARET16:
 	case EM_SCROLLCARET:
 		EDIT_EM_ScrollCaret(es);
 		result = 1;
 		break;
 
-	case EM_GETMODIFY16:
 	case EM_GETMODIFY:
 		result = ((es->flags & EF_MODIFIED) != 0);
 		break;
 
-	case EM_SETMODIFY16:
 	case EM_SETMODIFY:
 		if (wParam)
 			es->flags |= EF_MODIFIED;
@@ -4872,34 +4816,22 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
                         es->flags &= ~(EF_MODIFIED | EF_UPDATE);  /* reset pending updates */
 		break;
 
-	case EM_GETLINECOUNT16:
 	case EM_GETLINECOUNT:
 		result = (es->style & ES_MULTILINE) ? es->line_count : 1;
 		break;
 
-	case EM_LINEINDEX16:
-		if ((INT16)wParam == -1)
-			wParam = (WPARAM)-1;
-		/* fall through */
 	case EM_LINEINDEX:
 		result = (LRESULT)EDIT_EM_LineIndex(es, (INT)wParam);
 		break;
 
-	case EM_SETHANDLE16:
-		EDIT_EM_SetHandle16(es, (HLOCAL16)wParam);
-		break;
 	case EM_SETHANDLE:
 		EDIT_EM_SetHandle(es, (HLOCAL)wParam);
 		break;
 
-	case EM_GETHANDLE16:
-		result = (LRESULT)EDIT_EM_GetHandle16(es);
-		break;
 	case EM_GETHANDLE:
 		result = (LRESULT)EDIT_EM_GetHandle(es);
 		break;
 
-	case EM_GETTHUMB16:
 	case EM_GETTHUMB:
 		result = EDIT_EM_GetThumb(es);
 		break;
@@ -4917,15 +4849,10 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 		result = DefWindowProcW(hwnd, msg, wParam, lParam);
 		break;
 
-	case EM_LINELENGTH16:
 	case EM_LINELENGTH:
 		result = (LRESULT)EDIT_EM_LineLength(es, (INT)wParam);
 		break;
 
-	case EM_REPLACESEL16:
-		lParam = (LPARAM)MapSL(lParam);
-		unicode = FALSE;  /* 16-bit message is always ascii */
-		/* fall through */
 	case EM_REPLACESEL:
 	{
 		LPWSTR textW;
@@ -4948,50 +4875,35 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 		break;
 	}
 
-	case EM_GETLINE16:
-		lParam = (LPARAM)MapSL(lParam);
-		unicode = FALSE;  /* 16-bit message is always ascii */
-		/* fall through */
 	case EM_GETLINE:
 		result = (LRESULT)EDIT_EM_GetLine(es, (INT)wParam, (LPWSTR)lParam, unicode);
 		break;
 
-	case EM_LIMITTEXT16:
 	case EM_SETLIMITTEXT:
 		EDIT_EM_SetLimitText(es, wParam);
 		break;
 
-	case EM_CANUNDO16:
 	case EM_CANUNDO:
 		result = (LRESULT)EDIT_EM_CanUndo(es);
 		break;
 
-	case EM_UNDO16:
 	case EM_UNDO:
 	case WM_UNDO:
 		result = (LRESULT)EDIT_EM_Undo(es);
 		break;
 
-	case EM_FMTLINES16:
 	case EM_FMTLINES:
 		result = (LRESULT)EDIT_EM_FmtLines(es, (BOOL)wParam);
 		break;
 
-	case EM_LINEFROMCHAR16:
 	case EM_LINEFROMCHAR:
 		result = (LRESULT)EDIT_EM_LineFromChar(es, (INT)wParam);
 		break;
 
-	case EM_SETTABSTOPS16:
-		result = (LRESULT)EDIT_EM_SetTabStops16(es, (INT)wParam, MapSL(lParam));
-		break;
 	case EM_SETTABSTOPS:
 		result = (LRESULT)EDIT_EM_SetTabStops(es, (INT)wParam, (LPINT)lParam);
 		break;
 
-	case EM_SETPASSWORDCHAR16:
-		unicode = FALSE;  /* 16-bit message is always ascii */
-		/* fall through */
 	case EM_SETPASSWORDCHAR:
 	{
 		WCHAR charW = 0;
@@ -5008,19 +4920,14 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
 		break;
 	}
 
-	case EM_EMPTYUNDOBUFFER16:
 	case EM_EMPTYUNDOBUFFER:
 		EDIT_EM_EmptyUndoBuffer(es);
 		break;
 
-	case EM_GETFIRSTVISIBLELINE16:
-		result = es->y_offset;
-		break;
 	case EM_GETFIRSTVISIBLELINE:
 		result = (es->style & ES_MULTILINE) ? es->y_offset : es->x_offset;
 		break;
 
-	case EM_SETREADONLY16:
 	case EM_SETREADONLY:
 		if (wParam) {
                     SetWindowLongW( hwnd, GWL_STYLE,
@@ -5034,23 +4941,14 @@ static LRESULT EditWndProc_common( HWND hwnd, UINT msg,
                 result = 1;
 		break;
 
-	case EM_SETWORDBREAKPROC16:
-		EDIT_EM_SetWordBreakProc16(es, (EDITWORDBREAKPROC16)lParam);
-		break;
 	case EM_SETWORDBREAKPROC:
 		EDIT_EM_SetWordBreakProc(es, (void *)lParam);
 		break;
 
-	case EM_GETWORDBREAKPROC16:
-		result = (LRESULT)es->word_break_proc16;
-		break;
 	case EM_GETWORDBREAKPROC:
 		result = (LRESULT)es->word_break_proc;
 		break;
 
-	case EM_GETPASSWORDCHAR16:
-		unicode = FALSE;  /* 16-bit message is always ascii */
-		/* fall through */
 	case EM_GETPASSWORDCHAR:
 	{
 		if(unicode)
