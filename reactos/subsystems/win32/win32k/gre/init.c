@@ -148,6 +148,14 @@ Win32kWin32DataCollectionProcedure(PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+APIENTRY
+NtGdiFlushUserBatch(VOID)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
 /* DRIVER ENTRYPOINT *********************************************************/
 
 NTSTATUS

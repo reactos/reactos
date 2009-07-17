@@ -12,11 +12,7 @@
 /* INCLUDES ******************************************************************/
 
 /* Prototypes */
-NTSTATUS
-APIENTRY
-NtGdiFlushUserBatch(
-    VOID
-);
+W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 
 /* Internal  Win32K Headers */
 //#include <gdiobj.h>

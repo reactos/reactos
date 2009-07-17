@@ -19,6 +19,9 @@
 	<directory name="gre">
 		<file>init.c</file>
 	</directory>
+	<directory name="wine">
+		<file>main.c</file>
+	</directory>
 	<file>win32k.rc</file>
 </module>
 </group>
