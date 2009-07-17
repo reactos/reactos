@@ -1,0 +1,66 @@
+/*
+ * Copyright 1998 Karl Backström
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+ MENUITEM "&Återställ", 61728
+ MENUITEM "&Flytta", 61456
+ MENUITEM "&Storlek", 61440
+ MENUITEM "Mi&nimera", 61472
+ MENUITEM "Ma&ximera", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "&Avsluta\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "&Om Wine...", 61761
+}
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "&Undo", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "K&lipp", WM_CUT
+		MENUITEM "&Kopiera", WM_COPY
+		MENUITEM "Klistra &in", WM_PASTE
+		MENUITEM "&Ta bort", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "Markera &alla", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+        ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+        LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+        PUSHBUTTON "&Ok", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Avbryt", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Avbryt", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Försök igen", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Ignorera", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Ja", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Nej", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Try Again", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Continue", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Help", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END

@@ -1,0 +1,82 @@
+/*
+ * Copyright 1999 Klaas van Gend
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+ MENUITEM "&Vorig formaat", 61728
+ MENUITEM "Ve&rplaatsen", 61456
+ MENUITEM "&Grootte", 61440
+ MENUITEM "Mi&nimaliseren", 61472
+ MENUITEM "&Maximaliseren", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "&Sluiten\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "&Info over Wine...", 61761
+}
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "&Ongedaan maken", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "K&nippen", WM_CUT
+		MENUITEM "&Kopieren", WM_COPY
+		MENUITEM "&Plakken", WM_PASTE
+		MENUITEM "&Wissen", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "&Alles selecteren", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+        ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+        LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+        PUSHBUTTON "&OK", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Annuleren", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "A&fbreken", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Herhaal", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "N&egeer", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Ja", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Nee", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Probeer opnieuw", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Verder", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Help", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Venster selecteren"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "OK", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "Annuleren", IDCANCEL, 120, 100, 35, 14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ERROR "Fout"
+    IDS_MDI_MOREWINDOWS "Ov&erige vensters..."
+}

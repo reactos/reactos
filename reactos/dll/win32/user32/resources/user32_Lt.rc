@@ -1,0 +1,86 @@
+/*
+ * Copyright 2009 Aurimas Fišeras <aurimas@gmail.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+ MENUITEM "A&tkurti", 61728
+ MENUITEM "Pe&rkelti", 61456
+ MENUITEM "D&ydis", 61440
+ MENUITEM "Su&skleisti", 61472
+ MENUITEM "Pa&didinti", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "&Užverti\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "&Apie Wine...", 61761
+}
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "&Atšaukti", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "&Iškirpti", WM_CUT
+		MENUITEM "&Kopijuoti", WM_COPY
+		MENUITEM "Į&dėti", WM_PASTE
+		MENUITEM "Iš&valyti", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "&Pažymėti viską", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+        ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+        LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+        PUSHBUTTON "&Gerai", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Atsisakyti", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Nut&raukti", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Pakartoti", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "N&epaisyti", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Taip", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Ne", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Mėginti vėl", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Tę&sti", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Žinynas", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Išrinkti langą"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "Gerai", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "Atsisakyti", IDCANCEL, 120, 100, 35, 14
+END
+
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ERROR "Klaida"
+    IDS_MDI_MOREWINDOWS "&Daugiau langų..."
+}

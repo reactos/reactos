@@ -1,0 +1,83 @@
+/*
+ * Copyright 1996 Bang Jun Young
+ * Copyright 2007 YunSong Hwang
+
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+ MENUITEM "복귀(&R)", 61728
+ MENUITEM "이동(&M)", 61456
+ MENUITEM "크기 변경(&S)", 61440
+ MENUITEM "아이콘 표시(&N)", 61472
+ MENUITEM "전체 화면 표시(&M)", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "닫기(&C)\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "Wine에 관하여...", 61761
+}
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "실행 취소(&U)", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "잘라내기(&T)", WM_CUT
+		MENUITEM "복사(&C)", WM_COPY
+		MENUITEM "붙여넣기(&P)", WM_PASTE
+		MENUITEM "삭제(&D)", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "전체 선택(&A)", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+	ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+	LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+	PUSHBUTTON "확인(&O)", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "취소(&C)", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "중단(&A)", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "재시도(&R)", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "무시(&I)", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "예(&Y)", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "아니오(&N)", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "다시 시도(&T)", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "계속(&C)," 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "도움말", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "창 선택"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "확인", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "취소", IDCANCEL, 120, 100, 35, 14
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_ERROR "에러"
+  IDS_MDI_MOREWINDOWS "더 많은 창들(&M)..."
+ }

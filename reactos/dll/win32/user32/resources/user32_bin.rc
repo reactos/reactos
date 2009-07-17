@@ -1,0 +1,206 @@
+/*
+ * USER binary resources
+ *
+ * Copyright 2001 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+/****************************************************************/
+/* Bitmaps */
+
+/* @makedep: resources/obm_trtype.bmp */
+OBM_TRTYPE BITMAP resources/obm_trtype.bmp
+
+/* @makedep: resources/obm_lfarrowi.bmp */
+OBM_LFARROWI BITMAP resources/obm_lfarrowi.bmp
+
+/* @makedep: resources/obm_rgarrowi.bmp */
+OBM_RGARROWI BITMAP resources/obm_rgarrowi.bmp
+
+/* @makedep: resources/obm_dnarrowi.bmp */
+OBM_DNARROWI BITMAP resources/obm_dnarrowi.bmp
+
+/* @makedep: resources/obm_uparrowi.bmp */
+OBM_UPARROWI BITMAP resources/obm_uparrowi.bmp
+
+/* @makedep: resources/obm_combo.bmp */
+OBM_COMBO BITMAP resources/obm_combo.bmp
+
+/* @makedep: resources/obm_mnarrow.bmp */
+OBM_MNARROW BITMAP resources/obm_mnarrow.bmp
+
+/* @makedep: resources/obm_lfarrowd.bmp */
+OBM_LFARROWD BITMAP resources/obm_lfarrowd.bmp
+
+/* @makedep: resources/obm_rgarrowd.bmp */
+OBM_RGARROWD BITMAP resources/obm_rgarrowd.bmp
+
+/* @makedep: resources/obm_dnarrowd.bmp */
+OBM_DNARROWD BITMAP resources/obm_dnarrowd.bmp
+
+/* @makedep: resources/obm_uparrowd.bmp */
+OBM_UPARROWD BITMAP resources/obm_uparrowd.bmp
+
+/* @makedep: resources/obm_restored.bmp */
+OBM_RESTORED BITMAP resources/obm_restored.bmp
+
+/* @makedep: resources/obm_zoomd.bmp */
+OBM_ZOOMD BITMAP resources/obm_zoomd.bmp
+
+/* @makedep: resources/obm_reduced.bmp */
+OBM_REDUCED BITMAP resources/obm_reduced.bmp
+
+/* @makedep: resources/obm_restore.bmp */
+OBM_RESTORE BITMAP resources/obm_restore.bmp
+
+/* @makedep: resources/obm_zoom.bmp */
+OBM_ZOOM BITMAP resources/obm_zoom.bmp
+
+/* @makedep: resources/obm_reduce.bmp */
+OBM_REDUCE BITMAP resources/obm_reduce.bmp
+
+/* @makedep: resources/obm_lfarrow.bmp */
+OBM_LFARROW BITMAP resources/obm_lfarrow.bmp
+
+/* @makedep: resources/obm_rgarrow.bmp */
+OBM_RGARROW BITMAP resources/obm_rgarrow.bmp
+
+/* @makedep: resources/obm_dnarrow.bmp */
+OBM_DNARROW BITMAP resources/obm_dnarrow.bmp
+
+/* @makedep: resources/obm_uparrow.bmp */
+OBM_UPARROW BITMAP resources/obm_uparrow.bmp
+
+/* @makedep: resources/obm_close.bmp */
+OBM_CLOSE BITMAP resources/obm_close.bmp
+
+/* @makedep: resources/obm_old_restore.bmp */
+OBM_OLD_RESTORE BITMAP resources/obm_old_restore.bmp
+
+/* @makedep: resources/obm_old_zoom.bmp */
+OBM_OLD_ZOOM BITMAP resources/obm_old_zoom.bmp
+
+/* @makedep: resources/obm_old_reduce.bmp */
+OBM_OLD_REDUCE BITMAP resources/obm_old_reduce.bmp
+
+/* @makedep: resources/obm_btncorners.bmp */
+OBM_BTNCORNERS BITMAP resources/obm_btncorners.bmp
+
+/* @makedep: resources/obm_checkboxes.bmp */
+OBM_CHECKBOXES BITMAP resources/obm_checkboxes.bmp
+
+/* @makedep: resources/obm_check.bmp */
+OBM_CHECK BITMAP resources/obm_check.bmp
+
+/* @makedep: resources/obm_btsize.bmp */
+OBM_BTSIZE BITMAP resources/obm_btsize.bmp
+
+/* @makedep: resources/obm_old_lfarrow.bmp */
+OBM_OLD_LFARROW BITMAP resources/obm_old_lfarrow.bmp
+
+/* @makedep: resources/obm_old_rgarrow.bmp */
+OBM_OLD_RGARROW BITMAP resources/obm_old_rgarrow.bmp
+
+/* @makedep: resources/obm_old_dnarrow.bmp */
+OBM_OLD_DNARROW BITMAP resources/obm_old_dnarrow.bmp
+
+/* @makedep: resources/obm_old_uparrow.bmp */
+OBM_OLD_UPARROW BITMAP resources/obm_old_uparrow.bmp
+
+/* @makedep: resources/obm_size.bmp */
+OBM_SIZE BITMAP resources/obm_size.bmp
+
+/* @makedep: resources/obm_old_close.bmp */
+OBM_OLD_CLOSE BITMAP resources/obm_old_close.bmp
+
+
+/****************************************************************/
+/* Cursors */
+
+/* @makedep: resources/ocr_normal.cur */
+OCR_NORMAL CURSOR resources/ocr_normal.cur
+
+/* @makedep: resources/ocr_ibeam.cur */
+OCR_IBEAM CURSOR resources/ocr_ibeam.cur
+
+/* @makedep: resources/ocr_wait.cur */
+OCR_WAIT CURSOR resources/ocr_wait.cur
+
+/* @makedep: resources/ocr_cross.cur */
+OCR_CROSS CURSOR resources/ocr_cross.cur
+
+/* @makedep: resources/ocr_up.cur */
+OCR_UP CURSOR resources/ocr_up.cur
+
+/* @makedep: resources/ocr_size.cur */
+OCR_SIZE CURSOR resources/ocr_size.cur
+
+/* @makedep: resources/ocr_icon.cur */
+OCR_ICON CURSOR resources/ocr_icon.cur
+
+/* @makedep: resources/ocr_sizenwse.cur */
+OCR_SIZENWSE CURSOR resources/ocr_sizenwse.cur
+
+/* @makedep: resources/ocr_sizenesw.cur */
+OCR_SIZENESW CURSOR resources/ocr_sizenesw.cur
+
+/* @makedep: resources/ocr_sizewe.cur */
+OCR_SIZEWE CURSOR resources/ocr_sizewe.cur
+
+/* @makedep: resources/ocr_sizens.cur */
+OCR_SIZENS CURSOR resources/ocr_sizens.cur
+
+/* @makedep: resources/ocr_sizeall.cur */
+OCR_SIZEALL CURSOR resources/ocr_sizeall.cur
+
+/* @makedep: resources/ocr_no.cur */
+OCR_NO CURSOR resources/ocr_no.cur
+
+/* @makedep: resources/ocr_hand.cur */
+OCR_HAND CURSOR resources/ocr_hand.cur
+
+/* @makedep: resources/ocr_appstarting.cur */
+OCR_APPSTARTING CURSOR resources/ocr_appstarting.cur
+
+/* @makedep: resources/ocr_help.cur */
+OCR_HELP CURSOR resources/ocr_help.cur
+
+/* @makedep: resources/ocr_dragobject.cur */
+OCR_DRAGOBJECT CURSOR resources/ocr_dragobject.cur
+
+
+/****************************************************************/
+/* Icons */
+
+/* @makedep: resources/oic_sample.ico */
+OIC_SAMPLE ICON resources/oic_sample.ico
+
+/* @makedep: resources/oic_hand.ico */
+OIC_HAND ICON resources/oic_hand.ico
+
+/* @makedep: resources/oic_ques.ico */
+OIC_QUES ICON resources/oic_ques.ico
+
+/* @makedep: resources/oic_bang.ico */
+OIC_BANG ICON resources/oic_bang.ico
+
+/* @makedep: resources/oic_note.ico */
+OIC_NOTE ICON resources/oic_note.ico
+
+/* @makedep: resources/oic_winlogo.ico */
+OIC_WINLOGO ICON resources/oic_winlogo.ico

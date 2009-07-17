@@ -1,0 +1,82 @@
+/*
+ * Copyright 1997 Mikolaj Zalewski
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	MENUITEM "&Przywróæ", 61728
+	MENUITEM "Prze&suñ", 61456
+	MENUITEM "&Rozmiar", 61440
+	MENUITEM "Do &ikony", 61472
+	MENUITEM "Pe³ny &ekran", 61488
+	MENUITEM SEPARATOR
+	MENUITEM "&Zamknij\tAlt-F4", 61536
+	MENUITEM SEPARATOR
+	MENUITEM "&O programie Wine...", 61761
+}
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "&Cofnij", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "W&ytnij", WM_CUT
+		MENUITEM "&Kopiuj", WM_COPY
+		MENUITEM "&Wklej", WM_PASTE
+		MENUITEM "&Usu\xf1", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "&Zaznacz wszystko", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+	ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+	LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+	PUSHBUTTON "OK", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "Anuluj", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Zaniechaj", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Ponów próbê", 4, 160, 56, 50, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Ignoruj", 5, 215, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Tak", 6, 263, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Nie", 7, 311, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Try Again", 10, 359, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Continue", 11, 407, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "Help", 9, 455, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Wybierz okno"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "OK", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "Anuluj", IDCANCEL, 120, 100, 35, 14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ERROR "B³¹d"
+    IDS_MDI_MOREWINDOWS "&Wiêcej okien..."
+}

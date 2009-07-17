@@ -1,0 +1,120 @@
+EXTRADEFS = -D_USER32_ -D_WINABLE_
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = user32.dll
+IMPORTLIB = user32
+IMPORTS   = gdi32 advapi32 kernel32 ntdll
+DELAYIMPORTS = imm32
+
+SPEC_SRCS16 = \
+	user.exe.spec
+
+C_SRCS = \
+	button.c \
+	caret.c \
+	class.c \
+	clipboard.c \
+	combo.c \
+	cursoricon.c \
+	dde_client.c \
+	dde_misc.c \
+	dde_server.c \
+	defdlg.c \
+	defwnd.c \
+	desktop.c \
+	dialog.c \
+	dialog16.c \
+	driver.c \
+	driver16.c \
+	edit.c \
+	exticon.c \
+	focus.c \
+	hook.c \
+	icontitle.c \
+	input.c \
+	listbox.c \
+	lstr.c \
+	mdi.c \
+	menu.c \
+	message.c \
+	misc.c \
+	msg16.c \
+	msgbox.c \
+	nonclient.c \
+	painting.c \
+	property.c \
+	resource.c \
+	scroll.c \
+	spy.c \
+	static.c \
+	sysparams.c \
+	text.c \
+	uitools.c \
+	user_main.c \
+	win.c \
+	winhelp.c \
+	winpos.c \
+	winproc.c \
+	winstation.c \
+	wsprintf.c
+
+C_SRCS16 = \
+	bidi16.c \
+	comm16.c \
+	hook16.c \
+	network.c \
+	user16.c \
+	wnd16.c
+
+RC_SRCS = \
+	resources/user32_Bg.rc \
+	resources/user32_Ca.rc \
+	resources/user32_Cs.rc \
+	resources/user32_Da.rc \
+	resources/user32_De.rc \
+	resources/user32_En.rc \
+	resources/user32_Eo.rc \
+	resources/user32_Es.rc \
+	resources/user32_Fi.rc \
+	resources/user32_Fr.rc \
+	resources/user32_Hu.rc \
+	resources/user32_It.rc \
+	resources/user32_Ja.rc \
+	resources/user32_Ko.rc \
+	resources/user32_Lt.rc \
+	resources/user32_Nl.rc \
+	resources/user32_No.rc \
+	resources/user32_Pl.rc \
+	resources/user32_Pt.rc \
+	resources/user32_Ro.rc \
+	resources/user32_Ru.rc \
+	resources/user32_Si.rc \
+	resources/user32_Sk.rc \
+	resources/user32_Sv.rc \
+	resources/user32_Tr.rc \
+	resources/user32_Uk.rc \
+	resources/user32_Wa.rc \
+	resources/user32_Zh.rc \
+	resources/user32_bin.rc \
+	resources/version.rc
+
+SVG_SRCS = resources/oic_winlogo.svg
+
+RC_SRCS16 = \
+	resources/version16.rc
+
+EXTRASUBDIRS = resources
+
+@MAKE_DLL_RULES@
+
+# Special rules for 16-bit resource and spec files
+
+user.exe.spec.o: user.exe.spec resources/version16.res
+	$(WINEBUILD) $(WINEBUILDFLAGS) --dll -o $@ --heap 65520 --main-module $(MODULE) --res resources/version16.res --export $(SRCDIR)/user.exe.spec
+
+resources/version16.res: resources/version16.rc
+	$(LDPATH) $(RC16) $(RC16FLAGS) -fo$@ $(SRCDIR)/resources/version16.rc
+
+@DEPENDENCIES@  # everything below this line is overwritten by make depend

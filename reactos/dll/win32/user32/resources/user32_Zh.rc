@@ -1,0 +1,151 @@
+/*
+ * user32 (Simplified and Traditional Chinese Resource)
+ *
+ * Copyright 2000 Aric Stewart
+ * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+/* Chinese text is encoded in UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+ MENUITEM "恢复(&R)", 61728
+ MENUITEM "移动(&M)", 61456
+ MENUITEM "大小(&S)", 61440
+ MENUITEM "最小化(&N)", 61472
+ MENUITEM "最大化(&X)", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "关闭(&N)\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "关于Wine (&A)...", 61761
+}
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "撤消(&U)", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "剪切(&T)", WM_CUT
+		MENUITEM "复制(&C)", WM_COPY
+		MENUITEM "粘贴(&P)", WM_PASTE
+		MENUITEM "删除(&D)", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "全选(&A)", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+        ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+        LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+        PUSHBUTTON "确定(&O)", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "取消(&C)", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "中止(&A)", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "重试(&R)", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "忽略(&I)", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "是(&Y)", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "否(&N)", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "再试(&T)", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "继续(&C)", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "帮助", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "选择窗口"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "确定", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "取消", IDCANCEL, 120, 100, 35, 14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ERROR "错误"
+    IDS_MDI_MOREWINDOWS  "更多窗口(&M)..." /* defined in mdi.h */
+}
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+ MENUITEM "回復(&R)", 61728
+ MENUITEM "移動(&M)", 61456
+ MENUITEM "大小(&S)", 61440
+ MENUITEM "最小化(&N)", 61472
+ MENUITEM "最大化(&X)", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "關閉(&N)\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "关于Wine (&A)...", 61761
+}
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+	POPUP ""
+	BEGIN
+		MENUITEM "恢复(&U)", EM_UNDO
+		MENUITEM SEPARATOR
+		MENUITEM "剪下(&T)", WM_CUT
+		MENUITEM "復製(&C)", WM_COPY
+		MENUITEM "貼上(&P)", WM_PASTE
+		MENUITEM "刪除(&D)", WM_CLEAR
+		MENUITEM SEPARATOR
+		MENUITEM "全選(&A)", EM_SETSEL
+	END
+}
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+        ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+        LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+        PUSHBUTTON "確定(&O)", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "取消(&C)", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "中止(&A)", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "重試(&R)", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "忽略(&I)", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "是(&Y)", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "否(&N)", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "再試(&T)", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "繼續(&C)", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "幫助", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "選擇視窗"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "確定", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "取消", IDCANCEL, 120, 100, 35, 14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ERROR "错误"
+    IDS_MDI_MOREWINDOWS "更多視窗(&M)..."
+}

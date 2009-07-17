@@ -1,0 +1,83 @@
+/*
+ * Copyright 1997 John Zero
+ * Copyright 2002 Zoly Nagy
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resources.h"
+
+LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+ MENUITEM "&Elõzõ méret", 61728
+ MENUITEM "Át&helyzés", 61456
+ MENUITEM "&Méret", 61440
+ MENUITEM "&Kis méret", 61472
+ MENUITEM "&Teljes méret", 61488
+ MENUITEM SEPARATOR
+ MENUITEM "&Bezárás\tAlt-F4", 61536
+ MENUITEM SEPARATOR
+ MENUITEM "A &Wine-ról...", 61761
+END
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+BEGIN
+        POPUP ""
+        BEGIN
+                MENUITEM "&Visszavonás", EM_UNDO
+                MENUITEM SEPARATOR
+                MENUITEM "&Kivágás", WM_CUT
+                MENUITEM "&Másolás", WM_COPY
+                MENUITEM "&Beillesztés", WM_PASTE
+                MENUITEM "&Törlés", WM_CLEAR
+                MENUITEM SEPARATOR
+                MENUITEM "&Az összes kijelölése", EM_SETSEL
+        END
+END
+
+MSGBOX DIALOG 100, 80, 216, 168
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+        ICON "", 1088, 8, 20, 16, 16, WS_CHILD | WS_VISIBLE
+        LTEXT "", 100, 32, 4, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP | SS_NOPREFIX
+        PUSHBUTTON "&OK", 1, 16, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Mégse", 2, 64, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Leállítás", 3, 112, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Ismét", 4, 160, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Kihagyás", 5, 208, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Igen", 6, 256, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Nem", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Try Again", 10, 352, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "&Continue", 11, 400, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Help", 9, 448, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ablak kiválasztása"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LISTBOX         MDI_IDC_LISTBOX, 5, 7, 222, 90, WS_VSCROLL | WS_HSCROLL /* defined in mdi.h */
+    DEFPUSHBUTTON   "OK", IDOK, 75, 100, 35, 14
+    PUSHBUTTON      "Mégse", IDCANCEL, 120, 100, 35, 14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ERROR "Hiba"
+    IDS_MDI_MOREWINDOWS  "&További ablakok..." /* defined in mdi.h */
+}
