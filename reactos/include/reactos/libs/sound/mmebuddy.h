@@ -327,6 +327,8 @@ typedef struct _SOUND_DEVICE_INSTANCE
     //PWAVEHDR CurrentWaveHeader;
     DWORD OutstandingBuffers;
     DWORD LoopsRemaining;
+    DWORD FrameSize;
+    DWORD BufferCount;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
