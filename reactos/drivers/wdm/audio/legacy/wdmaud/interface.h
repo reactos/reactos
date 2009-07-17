@@ -43,6 +43,7 @@ typedef struct
         ULONGLONG    Position;
         KSSTATE State;
         ULONG Volume;
+        ULONG FrameSize;
     }u;
 
 }WDMAUD_DEVICE_INFO, *PWDMAUD_DEVICE_INFO;
@@ -212,13 +213,30 @@ typedef struct
 /// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
 ///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
 /// Note:       The DeviceType and hDevice must be set
-/// Result:     The result is returned in Volume
+/// Result:     The result is returned in Position
 /// ReturnCode:  STATUS_SUCCESS indicates success
 /// Prequsites: opened device
 
 #define IOCTL_GETPOS \
     CTL_CODE(FILE_DEVICE_SOUND, \
              9, \
+             METHOD_BUFFERED, \
+             FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
+
+/// IOCTL_GETFRAMESIZE
+///
+/// Description: This IOCTL retrieves the frame size requirements for an audio pin
+///
+/// Arguments:  InputBuffer is a pointer to a WDMAUD_DEVICE_INFO structure,
+///             InputBufferSize is size of WDMAUD_DEVICE_INFO structure
+/// Note:       The DeviceType and hDevice must be set
+/// Result:     The result is returned in FrameSize
+/// ReturnCode:  STATUS_SUCCESS indicates success
+/// Prequsites: opened device
+
+#define IOCTL_GETFRAMESIZE \
+    CTL_CODE(FILE_DEVICE_SOUND, \
+             10, \
              METHOD_BUFFERED, \
              FILE_CREATE_TREE_CONNECTION | FILE_ANY_ACCESS)
 

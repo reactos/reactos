@@ -128,9 +128,9 @@ Pin_fnWrite(
 {
     PDISPATCH_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
-    ULONG BytesReturned;
     PFILE_OBJECT FileObject;
     NTSTATUS Status;
+    ULONG BytesReturned;
 
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -159,20 +159,21 @@ Pin_fnWrite(
         return Status;
     }
 
-    /* Re-dispatch the request to the real target pin */
+    /* call the portcls audio pin */
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
                                           MmGetMdlVirtualAddress(Irp->MdlAddress),
-                                          IoStack->Parameters.Read.Length,
+                                          IoStack->Parameters.Write.Length,
                                           NULL,
                                           0,
                                           &BytesReturned);
 
-    /* release file object */
+
+    /* Release file object */
     ObDereferenceObject(FileObject);
 
     /* Save status and information */
     Irp->IoStatus.Status = Status;
-    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Information = BytesReturned;
     /* Complete the irp */
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     /* Done */

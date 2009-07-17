@@ -597,6 +597,49 @@ WdmAudIoctlClose(
 
 NTSTATUS
 NTAPI
+WdmAudFrameSize(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    PFILE_OBJECT FileObject;
+    KSPROPERTY Property;
+    ULONG BytesReturned;
+    KSALLOCATOR_FRAMING Framing;
+    NTSTATUS Status;
+
+    /* Get sysaudio pin file object */
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    /* Setup get framing request */
+    Property.Id = KSPROPERTY_CONNECTION_ALLOCATORFRAMING;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.Set = KSPROPSETID_Connection;
+
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&Framing, sizeof(KSALLOCATOR_FRAMING), &BytesReturned);
+    /* Did we succeed */
+    if (NT_SUCCESS(Status))
+    {
+        /* Store framesize */
+        DeviceInfo->u.FrameSize = Framing.FrameSize;
+    }
+
+    /* Release file object */
+    ObDereferenceObject(FileObject);
+
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+
+}
+
+
+NTSTATUS
+NTAPI
 WdmAudDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -647,8 +690,9 @@ WdmAudDeviceControl(
             return WdmAudCapabilities(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_CLOSE_WDMAUD:
             return WdmAudIoctlClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETFRAMESIZE:
+            return WdmAudFrameSize(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_GETPOS:
-            DPRINT1("IOCTL_GETPOS\n");
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:
@@ -793,4 +837,3 @@ WdmAudWrite(
     ObDereferenceObject(FileObject);
     return IoStatusBlock.Status;
 }
-

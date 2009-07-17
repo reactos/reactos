@@ -10,6 +10,7 @@
 	<library>drmk</library>
 	<library>hal</library>
 	<library>libcntpr</library>
+	<library>pseh</library>
 	<file>adapter.c</file>
 	<file>api.c</file>
 	<file>connection.c</file>
@@ -40,7 +41,6 @@
 	<file>port_topology.c</file>
 	<file>port_wavecyclic.c</file>
 	<file>port_wavepci.c</file>
-	<file>port_wavepcistream.c</file>
 	<file>port_wavert.c</file>
 	<file>port_wavertstream.c</file>
 	<file>power.c</file>

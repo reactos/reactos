@@ -37,6 +37,7 @@ typedef struct
     ULONG TotalPackets;
     ULONG PreCompleted;
     ULONG PostCompleted;
+    ULONG StopCount;
 
     ULONG Delay;
 }IPortPinWaveCyclicImpl;
@@ -224,6 +225,8 @@ SetStreamWorkerRoutine(
     IPortPinWaveCyclicImpl * This;
     PSETSTREAM_CONTEXT Ctx = (PSETSTREAM_CONTEXT)Context;
     KSSTATE State;
+    ULONG MinimumDataThreshold;
+    ULONG MaximumDataThreshold;
 
     This = Ctx->Pin;
     State = Ctx->State;
@@ -233,6 +236,10 @@ SetStreamWorkerRoutine(
 
     /* Has the audio stream resumed? */
     if (This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue) && State == KSSTATE_STOP)
+        return;
+
+    /* Has the audio state already been set? */
+    if (This->State == State)
         return;
 
     /* Set the state */
@@ -245,12 +252,26 @@ SetStreamWorkerRoutine(
         {
             /* reset start stream */
             This->IrpQueue->lpVtbl->CancelBuffers(This->IrpQueue); //FIX function name
-            DPRINT1("Stopping PreCompleted %u PostCompleted %u\n", This->PreCompleted, This->PostCompleted);
+
+            /* increase stop counter */
+            This->StopCount++;
+            /* get current data threshold */
+            MinimumDataThreshold = This->IrpQueue->lpVtbl->GetMinimumDataThreshold(This->IrpQueue);
+            /* get maximum data threshold */
+            MaximumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)This->Format)->WaveFormatEx.nAvgBytesPerSec;
+            /* increase minimum data threshold by a third sec */
+            MinimumDataThreshold += ((PKSDATAFORMAT_WAVEFORMATEX)This->Format)->WaveFormatEx.nAvgBytesPerSec / 3;
+
+            /* assure it has not exceeded */
+            MinimumDataThreshold = min(MinimumDataThreshold, MaximumDataThreshold);
+            /* store minimum data threshold */
+            This->IrpQueue->lpVtbl->SetMinimumDataThreshold(This->IrpQueue, MinimumDataThreshold);
+
+            DPRINT1("Stopping PreCompleted %u PostCompleted %u StopCount %u MinimumDataThreshold %u\n", This->PreCompleted, This->PostCompleted, This->StopCount, MinimumDataThreshold);
         }
         if (This->State == KSSTATE_RUN)
         {
             DPRINT1("State RUN %x MinAvailable %u\n", State, This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue));
-
         }
     }
 }
@@ -570,11 +591,34 @@ IPortPinWaveCyclic_HandleKsProperty(
                 return STATUS_SUCCESS;
             }
         }
+        else if (Property->Id == KSPROPERTY_CONNECTION_ALLOCATORFRAMING)
+        {
+            PKSALLOCATOR_FRAMING Framing = (PKSALLOCATOR_FRAMING)Irp->UserBuffer;
 
+            ASSERT_IRQL(DISPATCH_LEVEL);
+            /* Validate input buffer */
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSALLOCATOR_FRAMING))
+            {
+                Irp->IoStatus.Information = sizeof(KSALLOCATOR_FRAMING);
+                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_BUFFER_TOO_SMALL;
+            }
+            /* Clear frame structure */
+            RtlZeroMemory(Framing, sizeof(KSALLOCATOR_FRAMING));
+            /* store requested frame size */
+            Framing->FrameSize = This->FrameSize;
+            /* FIXME fill in struct */
+
+            Irp->IoStatus.Information = sizeof(KSALLOCATOR_FRAMING);
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return STATUS_SUCCESS;
+        }
     }
+
     RtlStringFromGUID(&Property->Set, &GuidString);
     DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
-    DbgBreakPoint();
     RtlFreeUnicodeString(&GuidString);
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
@@ -640,7 +684,6 @@ IPortPinWaveCyclic_fnDeviceIoControl(
     }
 
     UNIMPLEMENTED
-    DbgBreakPoint();
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -696,21 +739,24 @@ CloseStreamRoutine(
 {
     PMINIPORTWAVECYCLICSTREAM Stream;
     IPortPinWaveCyclicImpl * This;
+    NTSTATUS Status;
     PCLOSESTREAM_CONTEXT Ctx = (PCLOSESTREAM_CONTEXT)Context;
 
     This = (IPortPinWaveCyclicImpl*)Ctx->Pin;
 
-    if (This->Stream)
+    if (This->State != KSSTATE_STOP)
     {
-        if (This->State != KSSTATE_STOP)
-        {
-            This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
-            KeStallExecutionProcessor(10);
-        }
+        /* stop stream in case it hasn't been */
+        Status = This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_STOP);
+        if (!NT_SUCCESS(Status))
+            DPRINT1("Warning: failed to stop stream with %x\n", Status);
+
+        This->State = KSSTATE_STOP;
     }
 
     if (This->Format)
     {
+        /* free format */
         ExFreePool(This->Format);
         This->Format = NULL;
     }
@@ -848,7 +894,7 @@ IPortPinWaveCyclic_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
+    //UNIMPLEMENTED
     return FALSE;
 }
 
@@ -915,14 +961,18 @@ IPortPinWaveCyclic_fnFastWrite(
     NTSTATUS Status;
     PCONTEXT_WRITE Packet;
     PIRP Irp;
+    ULONG PrePostRatio;
+    ULONG MinData;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
     InterlockedIncrement((PLONG)&This->TotalPackets);
 
-    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue));
+    PrePostRatio = (This->PreCompleted * 100) / This->TotalPackets;
+    MinData = This->IrpQueue->lpVtbl->NumData(This->IrpQueue);
+
+    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u Ratio %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue), PrePostRatio);
 
     Packet = (PCONTEXT_WRITE)Buffer;
-
 
     if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue))
     {
@@ -945,7 +995,7 @@ IPortPinWaveCyclic_fnFastWrite(
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
+    if (This->State != KSSTATE_RUN && This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE)
     {
         SetStreamState(This, KSSTATE_RUN);
         /* some should initiate a state request but didnt do it */
@@ -999,13 +1049,6 @@ IPortPinWaveCyclic_fnInit(
     Status = NewIrpQueue(&This->IrpQueue);
     if (!NT_SUCCESS(Status))
         return Status;
-
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, 0, 0);
-    if (!NT_SUCCESS(Status))
-    {
-       This->IrpQueue->lpVtbl->Release(This->IrpQueue);
-       return Status;
-    }
 
     if (KsPinDescriptor->Communication == KSPIN_COMMUNICATION_SINK && KsPinDescriptor->DataFlow == KSPIN_DATAFLOW_IN)
     {
@@ -1070,6 +1113,14 @@ IPortPinWaveCyclic_fnInit(
     This->Delay = Int32x32To64(10, -10000);
 
     Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
+
+   Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, This->FrameSize, 0);
+    if (!NT_SUCCESS(Status))
+    {
+       This->IrpQueue->lpVtbl->Release(This->IrpQueue);
+       return Status;
+    }
+
 
     //This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
     DPRINT1("Setting state to acquire %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_ACQUIRE));

@@ -279,16 +279,6 @@ PDEVICE_OBJECT
 GetDeviceObject(
     IPortWaveCyclic* iface);
 
-IIrpQueue*
-NTAPI
-IPortWavePciStream_GetIrpQueue(
-    IN IPortWavePciStream *iface);
-
-NTSTATUS
-NTAPI
-NewIPortWavePciStream(
-    OUT PPORTWAVEPCISTREAM *Stream);
-
 VOID
 NTAPI
 PcIoTimerRoutine(
