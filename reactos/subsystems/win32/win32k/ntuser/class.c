@@ -38,7 +38,7 @@
 static struct
 {
     int FnId;
-    INT ClsId;
+    int ClsId;
 }  FnidToiCls[] =
 {
  { FNID_BUTTON,    ICLS_BUTTON},
@@ -61,7 +61,7 @@ LockupFnIdToiCls(int FnId, int *iCls )
 {
   int i;
   
-  for ( i = 0; i < 11; i++)
+  for ( i = 0; i < (sizeof(FnidToiCls)/2)/sizeof(int); i++)
   {
      if (FnidToiCls[i].FnId == FnId)
      {
