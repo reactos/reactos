@@ -2962,8 +2962,11 @@ BOOL WINAPI GdiAlphaBlend(HDC,int,int,int,int,HDC,int,int,int,int,BLENDFUNCTION)
 BOOL WINAPI GdiComment(HDC,UINT,const BYTE*);
 DEVMODEW * WINAPI GdiConvertToDevmodeW(const DEVMODEA *);
 BOOL WINAPI GdiFlush(void);
+LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
+DWORD WINAPI GdiGetCodePage(HDC);
 DWORD WINAPI GdiGetBatchLimit(void);
 DWORD WINAPI GdiSetBatchLimit(DWORD);
+BOOL WINAPI GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
 BOOL WINAPI GdiIsMetaFileDC(HDC);
 #define GetCValue(cmyk) ((BYTE)(cmyk))
 #define GetMValue(cmyk) ((BYTE)((cmyk)>> 8))
