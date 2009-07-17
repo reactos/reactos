@@ -1133,13 +1133,11 @@ static inline void text_buffer_changed(EDITSTATE *es)
  */
 static void EDIT_LockBuffer(EDITSTATE *es)
 {
-	STACK16FRAME* stack16 = MapSL(PtrToUlong(NtCurrentTeb()->WOW32Reserved));
 	HINSTANCE16 hInstance = GetWindowLongPtrW( es->hwndSelf, GWLP_HINSTANCE );
 
 	if (!es->text) {
 	    CHAR *textA = NULL;
 	    UINT countA = 0;
-	    BOOL _16bit = FALSE;
 
 	    if(es->hloc32W)
 	    {
@@ -1148,16 +1146,6 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 		    TRACE("Synchronizing with 32-bit ANSI buffer\n");
 		    textA = LocalLock(es->hloc32A);
 		    countA = strlen(textA) + 1;
-		}
-		else if(es->hloc16)
-		{
-		    HANDLE16 oldDS = stack16->ds;
-		    TRACE("Synchronizing with 16-bit ANSI buffer\n");
-		    stack16->ds = hInstance;
-		    textA = MapSL(LocalLock16(es->hloc16));
-		    stack16->ds = oldDS;
-		    countA = strlen(textA) + 1;
-		    _16bit = TRUE;
 		}
 	    }
 	    else {
@@ -1192,14 +1180,6 @@ static void EDIT_LockBuffer(EDITSTATE *es)
 	    if(textA)
 	    {
 		MultiByteToWideChar(CP_ACP, 0, textA, countA, es->text, es->buffer_size + 1);
-		if(_16bit)
-		{
-		    HANDLE16 oldDS = stack16->ds;
-		    stack16->ds = hInstance;
-		    LocalUnlock16(es->hloc16);
-		    stack16->ds = oldDS;
-		}
-		else
 		    LocalUnlock(es->hloc32A);
 	    }
 	}

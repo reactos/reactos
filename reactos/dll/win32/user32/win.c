@@ -104,10 +104,6 @@ static WND *create_window_handle( HWND parent, HWND owner, LPCWSTR name,
     struct tagCLASS *class = NULL;
     int extra_bytes = 0;
 
-    /* if 16-bit instance, map to module handle */
-    if (instance && !HIWORD(instance))
-        instance = HINSTANCE_32(GetExePtr(HINSTANCE_16(instance)));
-
     SERVER_START_REQ( create_window )
     {
         req->parent   = wine_server_user_handle( parent );
@@ -1217,10 +1213,7 @@ static HWND WIN_CreateWindowEx( CREATESTRUCTA *cs, LPCWSTR className, UINT flags
             LPCSTR menuName = (LPCSTR)GetClassLongPtrA( hwnd, GCLP_MENUNAME );
             if (menuName)
             {
-                if (!cs->hInstance || HIWORD(cs->hInstance))
-                    cs->hMenu = LoadMenuA(cs->hInstance,menuName);
-                else
-                    cs->hMenu = HMENU_32(LoadMenu16(HINSTANCE_16(cs->hInstance),menuName));
+                cs->hMenu = LoadMenuA(cs->hInstance,menuName);
 
                 if (cs->hMenu) MENU_SetMenu( hwnd, cs->hMenu );
             }
@@ -2232,6 +2225,7 @@ LONG_PTR WIN_SetWindowLong( HWND hwnd, INT offset, UINT size, LONG_PTR newval, B
 /**********************************************************************
  *		GetWindowLong (USER.135)
  */
+#ifndef __REACTOS__
 LONG WINAPI GetWindowLong16( HWND16 hwnd, INT16 offset )
 {
     WND *wndPtr;
@@ -2276,6 +2270,7 @@ LONG WINAPI GetWindowLong16( HWND16 hwnd, INT16 offset )
     if (is_winproc) retvalue = (LONG_PTR)WINPROC_GetProc16( (WNDPROC)retvalue, FALSE );
     return retvalue;
 }
+#endif
 
 
 /**********************************************************************
@@ -2323,6 +2318,7 @@ LONG WINAPI GetWindowLongW( HWND hwnd, INT offset )
 /**********************************************************************
  *		SetWindowLong (USER.136)
  */
+#ifndef __REACTOS__
 LONG WINAPI SetWindowLong16( HWND16 hwnd, INT16 offset, LONG newval )
 {
     WND *wndPtr;
@@ -2351,6 +2347,7 @@ LONG WINAPI SetWindowLong16( HWND16 hwnd, INT16 offset, LONG newval )
     }
     else return SetWindowLongA( WIN_Handle32(hwnd), offset, newval );
 }
+#endif
 
 
 /**********************************************************************

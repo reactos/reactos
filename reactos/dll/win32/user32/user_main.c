@@ -39,14 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(graphics);
 WORD USER_HeapSel = 0;  /* USER heap selector */
 HMODULE user32_module = 0;
 
-static SYSLEVEL USER_SysLevel;
-static CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &USER_SysLevel.crst,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": USER_SysLevel") }
-};
-static SYSLEVEL USER_SysLevel = { { &critsect_debug, -1, 0, 0, 0, 0 }, 2 };
+static CRITICAL_SECTION USER_SysCrit;
 
 static HPALETTE (WINAPI *pfnGDISelectPalette)( HDC hdc, HPALETTE hpal, WORD bkgnd );
 static UINT (WINAPI *pfnGDIRealizePalette)( HDC hdc );
@@ -62,7 +55,7 @@ extern void WDML_NotifyThreadDetach(void);
  */
 void USER_Lock(void)
 {
-    _EnterSysLevel( &USER_SysLevel );
+    EnterCriticalSection(&USER_SysCrit);
 }
 
 
@@ -71,7 +64,7 @@ void USER_Lock(void)
  */
 void USER_Unlock(void)
 {
-    _LeaveSysLevel( &USER_SysLevel );
+    LeaveCriticalSection(&USER_SysCrit);
 }
 
 
@@ -82,7 +75,8 @@ void USER_Unlock(void)
  */
 void USER_CheckNotLock(void)
 {
-    _CheckNotSysLevel( &USER_SysLevel );
+    //_CheckNotSysLevel( &USER_SysLevel );
+    UNIMPLEMENTED;
 }
 
 
@@ -270,6 +264,7 @@ static BOOL process_attach(void)
     HINSTANCE16 instance;
 
     /* Create USER heap */
+#ifndef __REACTOS__
     if ((instance = LoadLibrary16( "USER.EXE" )) >= 32) USER_HeapSel = instance | 7;
     else
     {
@@ -279,7 +274,7 @@ static BOOL process_attach(void)
 
     /* some Win9x dlls expect keyboard to be loaded */
     if (GetVersion() & 0x80000000) LoadLibrary16( "keyboard.drv" );
-
+#endif
     winstation_init();
 
     /* Initialize system colors and metrics */
@@ -339,6 +334,7 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserved )
     {
     case DLL_PROCESS_ATTACH:
         user32_module = inst;
+        InitializeCriticalSection(&USER_SysCrit);
         ret = process_attach();
         break;
     case DLL_THREAD_DETACH:

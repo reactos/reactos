@@ -388,7 +388,8 @@ BOOL WINAPI IsCharLowerA(CHAR x)
  */
 BOOL WINAPI IsCharLowerW(WCHAR x)
 {
-    return (get_char_typeW(x) & C1_LOWER) != 0;
+    //return (get_char_typeW(x) & C1_LOWER) != 0;
+    return iswlower(x);
 }
 
 
@@ -409,7 +410,8 @@ BOOL WINAPI IsCharUpperA(CHAR x)
  */
 BOOL WINAPI IsCharUpperW(WCHAR x)
 {
-    return (get_char_typeW(x) & C1_UPPER) != 0;
+    //return (get_char_typeW(x) & C1_UPPER) != 0;
+    return iswupper(x);
 }
 
 
@@ -430,7 +432,8 @@ BOOL WINAPI IsCharAlphaNumericA(CHAR x)
  */
 BOOL WINAPI IsCharAlphaNumericW(WCHAR x)
 {
-    return (get_char_typeW(x) & (C1_ALPHA|C1_DIGIT)) != 0;
+    //return (get_char_typeW(x) & (C1_ALPHA|C1_DIGIT)) != 0;
+    return iswalnum(x);
 }
 
 
@@ -451,5 +454,6 @@ BOOL WINAPI IsCharAlphaA(CHAR x)
  */
 BOOL WINAPI IsCharAlphaW(WCHAR x)
 {
-    return (get_char_typeW(x) & C1_ALPHA) != 0;
+    //return (get_char_typeW(x) & C1_ALPHA) != 0;
+    return iswalpha;
 }

@@ -1170,11 +1170,6 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
 
     if (!hInstance) hInstance = user32_module;  /* Load OEM cursor/icon */
 
-    /* Normalize hInstance (must be uniquely represented for icon cache) */
-
-    if (!HIWORD( hInstance ))
-        hInstance = HINSTANCE_32(GetExePtr( HINSTANCE_16(hInstance) ));
-
     /* Get directory resource ID */
 
     if (!(hRsrc = FindResourceW( hInstance, name,

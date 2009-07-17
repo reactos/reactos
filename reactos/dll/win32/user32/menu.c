@@ -5356,7 +5356,7 @@ INT WINAPI TranslateAcceleratorA( HWND hWnd, HACCEL hAccel, LPMSG msg )
 
     if (!hWnd || !msg) return 0;
 
-    if (!hAccel || !(lpAccelTbl = (LPACCEL16) LockResource16(HACCEL_16(hAccel))))
+    if (!hAccel || !(lpAccelTbl = (LPACCEL16) LockResource16(LOWORD(hAccel))))
     {
         WARN_(accel)("invalid accel handle=%p\n", hAccel);
         return 0;
@@ -5408,7 +5408,7 @@ INT WINAPI TranslateAcceleratorW( HWND hWnd, HACCEL hAccel, LPMSG msg )
 
     if (!hWnd || !msg) return 0;
 
-    if (!hAccel || !(lpAccelTbl = (LPACCEL16) LockResource16(HACCEL_16(hAccel))))
+    if (!hAccel || !(lpAccelTbl = (LPACCEL16) LockResource16(LOWORD(hAccel))))
     {
         WARN_(accel)("invalid accel handle=%p\n", hAccel);
         return 0;

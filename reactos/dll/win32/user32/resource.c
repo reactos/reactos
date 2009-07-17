@@ -46,6 +46,7 @@ typedef struct
 /**********************************************************************
  *			LoadAccelerators	[USER.177]
  */
+#ifndef __REACTOS__
 HACCEL16 WINAPI LoadAccelerators16(HINSTANCE16 instance, LPCSTR lpTableName)
 {
     HRSRC16	hRsrc;
@@ -60,7 +61,7 @@ HACCEL16 WINAPI LoadAccelerators16(HINSTANCE16 instance, LPCSTR lpTableName)
     TRACE_(accel)("returning HACCEL 0x%x\n", hRsrc);
     return LoadResource16(instance,hRsrc);
 }
-
+#endif
 /**********************************************************************
  *			LoadAcceleratorsW	(USER32.@)
  * The image layout seems to look like this (not 100% sure):
@@ -106,7 +107,7 @@ HACCEL WINAPI LoadAcceleratorsW(HINSTANCE instance,LPCWSTR lpTableName)
       }
     }
     TRACE_(accel)("returning HACCEL %p\n", hRsrc);
-    return HACCEL_32(hRetval);
+    return hRetval;
 }
 
 /***********************************************************************
@@ -147,7 +148,7 @@ INT WINAPI CopyAcceleratorTableW(HACCEL src, LPACCEL dst,
 				     INT entries)
 {
   int i,xsize;
-  LPACCEL16 accel = (LPACCEL16)GlobalLock16(HACCEL_16(src));
+  LPACCEL16 accel = (LPACCEL16)GlobalLock16(LOWORD(src));
   BOOL done = FALSE;
 
   /* Do parameter checking to avoid the explosions and the screaming
@@ -157,7 +158,7 @@ INT WINAPI CopyAcceleratorTableW(HACCEL src, LPACCEL dst,
          src, dst, entries);
     return 0;
   }
-  xsize = GlobalSize16(HACCEL_16(src))/sizeof(ACCEL16);
+  xsize = GlobalSize16(LOWORD(src))/sizeof(ACCEL16);
   if (xsize<entries) entries=xsize;
 
   i=0;
@@ -210,7 +211,7 @@ HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccel, INT cEntries)
   }
 
   /* Allocate memory and copy the table. */
-  hAccel = HACCEL_32(GlobalAlloc16(0,cEntries*sizeof(ACCEL16)));
+  hAccel = GlobalAlloc16(0,cEntries*sizeof(ACCEL16));
 
   TRACE_(accel)("handle %p\n", hAccel);
   if(!hAccel) {
@@ -218,7 +219,7 @@ HACCEL WINAPI CreateAcceleratorTableA(LPACCEL lpaccel, INT cEntries)
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return NULL;
   }
-  accel = GlobalLock16(HACCEL_16(hAccel));
+  accel = GlobalLock16(hAccel);
   for (i=0;i<cEntries;i++) {
     accel[i].fVirt = lpaccel[i].fVirt&0x7f;
     accel[i].key = lpaccel[i].key;
@@ -255,7 +256,7 @@ HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccel, INT cEntries)
   }
 
   /* Allocate memory and copy the table. */
-  hAccel = HACCEL_32(GlobalAlloc16(0,cEntries*sizeof(ACCEL16)));
+  hAccel = GlobalAlloc16(0,cEntries*sizeof(ACCEL16));
 
   TRACE_(accel)("handle %p\n", hAccel);
   if(!hAccel) {
@@ -263,7 +264,7 @@ HACCEL WINAPI CreateAcceleratorTableW(LPACCEL lpaccel, INT cEntries)
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return NULL;
   }
-  accel = GlobalLock16(HACCEL_16(hAccel));
+  accel = GlobalLock16(LOWORD(hAccel));
 
 
   for (i=0;i<cEntries;i++) {
@@ -303,12 +304,13 @@ BOOL WINAPI DestroyAcceleratorTable( HACCEL handle )
 {
     if( !handle )
         return FALSE;
-    return !GlobalFree16(HACCEL_16(handle));
+    return !GlobalFree16(handle);
 }
 
 /**********************************************************************
  *     LoadString   (USER.176)
  */
+#ifndef __REACTOS__
 INT16 WINAPI LoadString16( HINSTANCE16 instance, UINT16 resource_id,
                            LPSTR buffer, INT16 buflen )
 {
@@ -350,6 +352,7 @@ INT16 WINAPI LoadString16( HINSTANCE16 instance, UINT16 resource_id,
     TRACE("'%s' loaded !\n", buffer);
     return i;
 }
+#endif
 
 /**********************************************************************
  *	LoadStringW		(USER32.@)

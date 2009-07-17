@@ -774,16 +774,7 @@
 ################################################################
 # Wine extensions: Win16 functions that are needed by other dlls
 #
-@ stdcall CallWindowProc16(long long long long long)
-@ stdcall CloseDriver16(long long long)
-@ stdcall CreateDialogIndirectParam16(long ptr long long long)
-@ stdcall DefDriverProc16(long long long long long)
-@ stdcall DefWindowProc16(long long long long)
 @ stdcall DestroyIcon32(long long)
-@ stdcall DialogBoxIndirectParam16(long long long long long)
-@ stdcall GetDriverModuleHandle16(long)
-@ stdcall OpenDriver16(str str long)
-@ stdcall SendDriverMessage16(long long long long)
 @ stdcall UserYield16()
 
 ################################################################

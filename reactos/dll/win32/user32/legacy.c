@@ -85,4 +85,14 @@ FreeResource16(HGLOBAL16 h)
     return FALSE;
 }
 
+VOID
+WINAPI
+ReleaseThunkLock(DWORD *mutex_count)
+{
+}
 
+VOID
+WINAPI
+RestoreThunkLock(DWORD mutex_count)
+{
+}
