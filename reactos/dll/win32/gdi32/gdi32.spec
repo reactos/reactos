@@ -1,10 +1,3 @@
-# ordinal exports
-100 stdcall @(long long str str str) GDI_CallDevInstall16
-101 stdcall @(long str str ptr) GDI_CallExtDeviceModePropSheet16
-102 stdcall @(long ptr str str ptr str long) GDI_CallExtDeviceMode16
-103 stdcall @(long str ptr ptr) GDI_CallAdvancedSetupDialog16
-104 stdcall @(str str long ptr ptr) GDI_CallDeviceCapabilities16
-
 @ stdcall AbortDoc(long)
 @ stdcall AbortPath(long)
 @ stdcall AddFontMemResourceEx(ptr long ptr ptr)
@@ -174,7 +167,6 @@
 # @ stub GdiDrawStream
 # @ stub GdiEndDocEMF
 # @ stub GdiEndPageEMF
-@ stdcall GdiEntry13()
 # @ stub GdiFixUpHandle
 @ stdcall GdiFlush()
 # @ stub GdiFullscreenControl
@@ -513,15 +505,10 @@
 ################################################################
 # Wine extensions: Win16 functions that are needed by other dlls
 #
-@ stdcall CloseJob16(long)
-@ stdcall DrvGetPrinterData16(str str ptr ptr long ptr)
-@ stdcall DrvSetPrinterData16(str str long ptr long)
 @ stdcall GetDCHook(long ptr)
-@ stdcall OpenJob16(str str long)
 @ stdcall SelectVisRgn(long long)
 @ stdcall SetDCHook(long ptr long)
 @ stdcall SetHookFlags(long long)
-@ stdcall WriteSpool16(long ptr long)
 
 ################################################################
 # Wine internal extensions

@@ -66,14 +66,7 @@ static const LOGPEN DCPen     = { PS_SOLID, { 0, 0 }, RGB(0,0,0) };
 
 static HGDIOBJ stock_objects[NB_STOCK_OBJECTS];
 
-static SYSLEVEL GDI_level;
-static CRITICAL_SECTION_DEBUG critsect_debug =
-{
-    0, 0, &GDI_level.crst,
-    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { (DWORD_PTR)(__FILE__ ": GDI_level") }
-};
-static SYSLEVEL GDI_level = { { &critsect_debug, -1, 0, 0, 0, 0 }, 3 };
+static CRITICAL_SECTION GDI_critsect;
 
 
 /****************************************************************************
@@ -574,6 +567,9 @@ BOOL GDI_Init(void)
     const struct DefaultFontInfo* deffonts;
     int i;
 
+    /* Initialize GDI critical section */
+    InitializeCriticalSection(&GDI_critsect);
+
     WineEngInit();
 
     /* create stock objects */
@@ -648,18 +644,18 @@ HGDIOBJ alloc_gdi_handle( GDIOBJHDR *obj, WORD type, const struct gdi_obj_funcs 
     obj->funcs    = funcs;
     obj->hdcs     = NULL;
 
-    _EnterSysLevel( &GDI_level );
+    EnterCriticalSection( &GDI_critsect );
     for (i = next_large_handle + 1; i < MAX_LARGE_HANDLES; i++)
         if (!large_handles[i]) goto found;
     for (i = 0; i <= next_large_handle; i++)
         if (!large_handles[i]) goto found;
-    _LeaveSysLevel( &GDI_level );
+    LeaveCriticalSection( &GDI_critsect );
     return 0;
 
  found:
     large_handles[i] = obj;
     next_large_handle = i;
-    _LeaveSysLevel( &GDI_level );
+    LeaveCriticalSection( &GDI_critsect );
     return (HGDIOBJ)(ULONG_PTR)((i + FIRST_LARGE_HANDLE) << 2);
 }
 
@@ -677,10 +673,10 @@ void *free_gdi_handle( HGDIOBJ handle )
     i = ((ULONG_PTR)handle >> 2) - FIRST_LARGE_HANDLE;
     if (i >= 0 && i < MAX_LARGE_HANDLES)
     {
-        _EnterSysLevel( &GDI_level );
+        EnterCriticalSection( &GDI_critsect );
         object = large_handles[i];
         large_handles[i] = NULL;
-        _LeaveSysLevel( &GDI_level );
+        LeaveCriticalSection( &GDI_critsect );
     }
     if (object)
     {
@@ -703,7 +699,7 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
     GDIOBJHDR *ptr = NULL;
     int i;
 
-    _EnterSysLevel( &GDI_level );
+    EnterCriticalSection( &GDI_critsect );
 
     i = ((UINT_PTR)handle >> 2) - FIRST_LARGE_HANDLE;
     if (i >= 0 && i < MAX_LARGE_HANDLES)
@@ -714,10 +710,10 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
 
     if (!ptr)
     {
-        _LeaveSysLevel( &GDI_level );
+        LeaveCriticalSection( &GDI_critsect );
         WARN( "Invalid handle %p\n", handle );
     }
-    else TRACE("(%p): enter %d\n", handle, GDI_level.crst.RecursionCount);
+    //else TRACE("(%p): enter %d\n", handle, GDI_level.crst.RecursionCount);
 
     return ptr;
 }
@@ -729,8 +725,8 @@ void *GDI_GetObjPtr( HGDIOBJ handle, WORD type )
  */
 void GDI_ReleaseObj( HGDIOBJ handle )
 {
-    TRACE("(%p): leave %d\n", handle, GDI_level.crst.RecursionCount);
-    _LeaveSysLevel( &GDI_level );
+    //TRACE("(%p): leave %d\n", handle, GDI_level.crst.RecursionCount);
+    LeaveCriticalSection( &GDI_critsect );
 }
 
 
@@ -739,7 +735,7 @@ void GDI_ReleaseObj( HGDIOBJ handle )
  */
 void GDI_CheckNotLock(void)
 {
-    _CheckNotSysLevel( &GDI_level );
+    //_CheckNotSysLevel( &GDI_level );
 }
 
 

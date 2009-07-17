@@ -658,6 +658,7 @@ static BOOL BITMAP_DeleteObject( HGDIOBJ handle )
         }
         HeapFree(GetProcessHeap(), 0, dib);
         bmp->dib = NULL;
+#ifndef __REACTOS__
         if (bmp->segptr_bits)
         { /* free its selector array */
             WORD sel = SELECTOROF(bmp->segptr_bits);
@@ -666,6 +667,7 @@ static BOOL BITMAP_DeleteObject( HGDIOBJ handle )
 
             for (i = 0; i < count; i++) FreeSelector16(sel + (i << __AHSHIFT));
         }
+#endif
         HeapFree(GetProcessHeap(), 0, bmp->color_table);
     }
     return HeapFree( GetProcessHeap(), 0, bmp );

@@ -1415,6 +1415,7 @@ DWORD_PTR WINAPI GetDCHook( HDC hdc, DCHOOKPROC *proc )
 
 
 /* relay function to call the 16-bit DC hook proc */
+#ifndef __REACTOS__
 static BOOL WINAPI call_dc_hook16( HDC hdc, WORD code, DWORD_PTR data, LPARAM lParam )
 {
     WORD args[6];
@@ -1470,6 +1471,7 @@ DWORD WINAPI GetDCHook16( HDC16 hdc16, FARPROC16 *phookProc )
     release_dc_ptr( dc );
     return ret;
 }
+#endif
 
 
 /***********************************************************************

@@ -1,14 +1,17 @@
-<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes">
+<module name="gdi32" type="win32dll" baseaddress="${BASEADDRESS_GDI32}" installbase="system32" installname="gdi32.dll" unicode="yes" allowwarnings="true">
 	<importlibrary definition="gdi32.spec" />
 	<include base="gdi32">include</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="WINVER">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="LANGPACK" />
+	<define name="__WINESRC__" />
+	<library>wine</library>
 	<library>ntdll</library>
 	<library>user32</library>
 	<library>kernel32</library>
-	<!--library>advapi32</library-->
+	<library>advapi32</library>
 	<library>win32ksys</library>
 	<library>pseh</library>
 	<library>dxguid</library>
@@ -22,6 +25,7 @@
 	<file>dib.c</file>
 	<file>driver.c</file>
 	<file>enhmetafile.c</file>
+	<file>enhmeta2.c</file>
 	<file>font.c</file>
 	<file>freetype.c</file>
 	<file>gdi_main.c</file>
