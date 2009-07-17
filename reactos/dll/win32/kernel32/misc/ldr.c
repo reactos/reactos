@@ -31,7 +31,7 @@ extern BOOLEAN InWindows;
  * @remarks Returned pointer must be freed by caller.
  */
 
-LPWSTR WINAPI
+LPWSTR
 GetDllLoadPath(LPCWSTR lpModule)
 {
 	ULONG Pos = 0, Length = 0;
