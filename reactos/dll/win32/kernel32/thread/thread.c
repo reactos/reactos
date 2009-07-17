@@ -263,13 +263,13 @@ OpenThread(DWORD dwDesiredAccess,
            BOOL bInheritHandle,
            DWORD dwThreadId)
 {
-    NTSTATUS errCode;
+    NTSTATUS Status;
     HANDLE ThreadHandle;
     OBJECT_ATTRIBUTES ObjectAttributes;
     CLIENT_ID ClientId ;
 
     ClientId.UniqueProcess = 0;
-    ClientId.UniqueThread = (HANDLE)dwThreadId;
+    ClientId.UniqueThread = ULongToHandle(dwThreadId);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                NULL,
@@ -277,13 +277,13 @@ OpenThread(DWORD dwDesiredAccess,
                                NULL,
                                NULL);
 
-    errCode = NtOpenThread(&ThreadHandle,
-                           dwDesiredAccess,
-                           &ObjectAttributes,
-                           &ClientId);
-    if (!NT_SUCCESS(errCode))
+    Status = NtOpenThread(&ThreadHandle,
+                          dwDesiredAccess,
+                          &ObjectAttributes,
+                          &ClientId);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastErrorByStatus (errCode);
+        SetLastErrorByStatus(Status);
         return NULL;
     }
 
@@ -306,9 +306,7 @@ BOOL
 WINAPI
 SwitchToThread(VOID)
 {
-    NTSTATUS Status;
-    Status = NtYieldExecution();
-    return Status != STATUS_NO_YIELD_PERFORMED;
+    return NtYieldExecution() != STATUS_NO_YIELD_PERFORMED;
 }
 
 
@@ -750,10 +748,10 @@ GetThreadId(HANDLE Thread)
  * @unimplemented
  */
 LANGID WINAPI
-SetThreadUILanguage(WORD wReserved)
+SetThreadUILanguage(LANGID LangId)
 {
-  DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", wReserved);
-  return 0;
+  DPRINT1("SetThreadUILanguage(0x%4x) unimplemented!\n", LangId);
+  return LangId;
 }
 
 static void CALLBACK
@@ -773,10 +771,13 @@ QueueUserAPC(PAPCFUNC pfnAPC, HANDLE hThread, ULONG_PTR dwData)
 
   Status = NtQueueApcThread(hThread, IntCallUserApc, pfnAPC,
                             (PVOID)dwData, NULL);
-  if (Status)
+  if (!NT_SUCCESS(Status))
+  {
     SetLastErrorByStatus(Status);
+    return 0;
+  }
 
-  return NT_SUCCESS(Status);
+  return 1;
 }
 
 /*
@@ -853,34 +854,6 @@ dowait:
 }
 
 
-typedef struct _QUEUE_USER_WORKITEM_CONTEXT
-{
-    LPTHREAD_START_ROUTINE Function;
-    PVOID Context;
-} QUEUE_USER_WORKITEM_CONTEXT, *PQUEUE_USER_WORKITEM_CONTEXT;
-
-static VOID
-NTAPI
-InternalWorkItemTrampoline(PVOID Context)
-{
-    QUEUE_USER_WORKITEM_CONTEXT Info;
-
-    ASSERT(Context);
-
-    /* Save the context to the stack */
-    Info = *(volatile QUEUE_USER_WORKITEM_CONTEXT *)Context;
-
-    /* Free the context before calling the callback. This avoids
-       a memory leak in case the thread dies... */
-    RtlFreeHeap(RtlGetProcessHeap(),
-                0,
-                Context);
-
-    /* Call the real callback */
-    Info.Function(Info.Context);
-}
-
-
 /*
  * @implemented
  */
@@ -892,34 +865,13 @@ QueueUserWorkItem(
     ULONG Flags
     )
 {
-    PQUEUE_USER_WORKITEM_CONTEXT WorkItemContext;
     NTSTATUS Status;
 
-    /* Save the context for the trampoline function */
-    WorkItemContext = RtlAllocateHeap(RtlGetProcessHeap(),
-                                      0,
-                                      sizeof(*WorkItemContext));
-    if (WorkItemContext == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    WorkItemContext->Function = Function;
-    WorkItemContext->Context = Context;
-
-    /* NOTE: Don't use Function directly since the callback signature
-             differs. This might cause problems on certain platforms... */
-    Status = RtlQueueWorkItem(InternalWorkItemTrampoline,
-                              WorkItemContext,
+    Status = RtlQueueWorkItem((WORKERCALLBACKFUNC)Function,
+                              Context,
                               Flags);
     if (!NT_SUCCESS(Status))
     {
-        /* Free the allocated context in case of failure */
-        RtlFreeHeap(RtlGetProcessHeap(),
-                    0,
-                    WorkItemContext);
-
         SetLastErrorByStatus(Status);
         return FALSE;
     }
@@ -942,16 +894,16 @@ RegisterWaitForSingleObject(
     ULONG dwFlags
     )
 {
-    NTSTATUS Status = RtlRegisterWait( phNewWaitObject,
-                                       hObject,
-                                       Callback,
-                                       Context,
-                                       dwMilliseconds,
-                                       dwFlags );
+    NTSTATUS Status = RtlRegisterWait(phNewWaitObject,
+                                      hObject,
+                                      Callback,
+                                      Context,
+                                      dwMilliseconds,
+                                      dwFlags);
 
-    if (Status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
     return TRUE;
@@ -974,18 +926,19 @@ RegisterWaitForSingleObjectEx(
     NTSTATUS Status;
     HANDLE hNewWaitObject;
 
-    Status = RtlRegisterWait( &hNewWaitObject,
-                               hObject,
-                               Callback,
-                               Context,
-                               dwMilliseconds,
-                               dwFlags );
+    Status = RtlRegisterWait(&hNewWaitObject,
+                             hObject,
+                             Callback,
+                             Context,
+                             dwMilliseconds,
+                             dwFlags);
 
-    if (Status != STATUS_SUCCESS)
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return NULL;
     }
+
     return hNewWaitObject;
 }
 
@@ -999,12 +952,14 @@ UnregisterWait(
     HANDLE WaitHandle
     )
 {
-    NTSTATUS Status = RtlDeregisterWaitEx( WaitHandle, NULL );
-    if (Status != STATUS_SUCCESS)
+    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, NULL);
+
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
+
     return TRUE;
 }
 
@@ -1019,12 +974,14 @@ UnregisterWaitEx(
     HANDLE CompletionEvent
     )
 {
-    NTSTATUS Status = RtlDeregisterWaitEx( WaitHandle, CompletionEvent );
-    if (Status != STATUS_SUCCESS)
+    NTSTATUS Status = RtlDeregisterWaitEx(WaitHandle, CompletionEvent);
+
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError( RtlNtStatusToDosError(Status) );
+        SetLastErrorByStatus(Status);
         return FALSE;
     }
+
     return TRUE;
 }
 
