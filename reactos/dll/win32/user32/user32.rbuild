@@ -37,6 +37,7 @@
 	<file>hook.c</file>
 	<file>icontitle.c</file>
 	<file>input.c</file>
+	<file>legacy.c</file>
 	<file>listbox.c</file>
 	<file>lstr.c</file>
 	<file>mdi.c</file>

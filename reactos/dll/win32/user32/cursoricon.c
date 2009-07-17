@@ -449,6 +449,7 @@ static INT CURSORICON_DelSharedIcon( HICON hIcon )
 /**********************************************************************
  *	    CURSORICON_FreeModuleIcons
  */
+#ifndef __REACTOS__
 void CURSORICON_FreeModuleIcons( HMODULE16 hMod16 )
 {
     ICONCACHE **ptr = &IconAnchor;
@@ -472,7 +473,7 @@ void CURSORICON_FreeModuleIcons( HMODULE16 hMod16 )
 
     LeaveCriticalSection( &IconCrst );
 }
-
+#endif
 /*
  *  The following macro functions account for the irregularities of
  *   accessing cursor and icon resources in files and resource entries.
@@ -1225,6 +1226,7 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
  */
 static HICON CURSORICON_Copy( HINSTANCE16 hInst16, HICON hIcon )
 {
+#if 0
     char *ptrOld, *ptrNew;
     int size;
     HICON16 hOld = HICON_16(hIcon);
@@ -1240,6 +1242,10 @@ static HICON CURSORICON_Copy( HINSTANCE16 hInst16, HICON hIcon )
     GlobalUnlock16( hOld );
     GlobalUnlock16( hNew );
     return HICON_32(hNew);
+#else
+    ERR("CURSORICON_Copy unimplemented!\n");
+    return 0;
+#endif
 }
 
 /*************************************************************************
@@ -1404,8 +1410,12 @@ HCURSOR WINAPI CreateCursor( HINSTANCE hInstance,
     info.nWidthBytes = 0;
     info.bPlanes = 1;
     info.bBitsPerPixel = 1;
-
+#if 0
     return HICON_32(CreateCursorIconIndirect16(0, &info, lpANDbits, lpXORbits));
+#else
+    ERR("CreateCursor unimplemented!\n");
+    return 0;
+#endif
 }
 
 
@@ -1487,6 +1497,7 @@ HICON WINAPI CreateIcon(
 /***********************************************************************
  *		CreateCursorIconIndirect (USER.408)
  */
+#ifndef __REACTOS__
 HGLOBAL16 WINAPI CreateCursorIconIndirect16( HINSTANCE16 hInstance,
                                            CURSORICONINFO *info,
                                            LPCVOID lpANDbits,
@@ -1522,6 +1533,7 @@ HICON16 WINAPI CopyIcon16( HINSTANCE16 hInstance, HICON16 hIcon )
     TRACE_(icon)("%04x %04x\n", hInstance, hIcon );
     return HICON_16(CURSORICON_Copy(hInstance, HICON_32(hIcon)));
 }
+#endif
 
 
 /***********************************************************************
@@ -1537,11 +1549,13 @@ HICON WINAPI CopyIcon( HICON hIcon )
 /***********************************************************************
  *		CopyCursor (USER.369)
  */
+#ifndef __REACTOS__
 HCURSOR16 WINAPI CopyCursor16( HINSTANCE16 hInstance, HCURSOR16 hCursor )
 {
     TRACE_(cursor)("%04x %04x\n", hInstance, hCursor );
     return HICON_16(CURSORICON_Copy(hInstance, HCURSOR_32(hCursor)));
 }
+#endif
 
 /**********************************************************************
  *		DestroyIcon32 (USER.610)
@@ -1750,6 +1764,7 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
 /***********************************************************************
  *		DumpIcon (USER.459)
  */
+#ifndef __REACTOS__
 DWORD WINAPI DumpIcon16( SEGPTR pInfo, WORD *lpLen,
                        SEGPTR *lpXorBits, SEGPTR *lpAndBits )
 {
@@ -1764,6 +1779,7 @@ DWORD WINAPI DumpIcon16( SEGPTR pInfo, WORD *lpLen,
     if (lpLen) *lpLen = sizeof(CURSORICONINFO) + sizeAnd + sizeXor;
     return MAKELONG( sizeXor, sizeXor );
 }
+#endif
 
 
 /***********************************************************************

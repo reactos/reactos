@@ -1237,7 +1237,6 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 		CHAR *textA = NULL;
 		UINT countA = 0;
 		UINT countW = get_text_length(es) + 1;
-		STACK16FRAME* stack16 = NULL;
 	        HANDLE16 oldDS = 0;
 
 		if(es->hloc32A)
@@ -1263,6 +1262,7 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 		    }
 		    textA = LocalLock(es->hloc32A);
 		}
+#ifndef __REACTOS__
 		else if(es->hloc16)
 		{
 		    UINT countA_new = WideCharToMultiByte(CP_ACP, 0, es->text, countW, NULL, 0, NULL, NULL);
@@ -1292,17 +1292,14 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 		    }
 		    textA = MapSL(LocalLock16(es->hloc16));
 		}
+#endif
 
 		if(textA)
 		{
 		    WideCharToMultiByte(CP_ACP, 0, es->text, countW, textA, countA, NULL, NULL);
-		    if(stack16)
-			LocalUnlock16(es->hloc16);
-		    else
 			LocalUnlock(es->hloc32A);
 		}
 
-		if (stack16) stack16->ds = oldDS;
 		LocalUnlock(es->hloc32W);
 		es->text = NULL;
 	    }
@@ -2771,7 +2768,7 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 	}
 
 	EDIT_UnlockBuffer(es, TRUE);
-
+#ifndef __REACTOS__
 	if(es->hloc16)
 	{
 	    STACK16FRAME* stack16 = MapSL(PtrToUlong(NtCurrentTeb()->WOW32Reserved));
@@ -2782,7 +2779,7 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 	    stack16->ds = oldDS;
 	    es->hloc16 = 0;
 	}
-
+#endif
 	if(es->is_unicode)
 	{
 	    if(es->hloc32A)
@@ -4705,6 +4702,7 @@ static LRESULT EDIT_WM_Destroy(EDITSTATE *es)
 	if (es->hloc32A) {
 		LocalFree(es->hloc32A);
 	}
+#ifndef __REACTOS__
 	if (es->hloc16) {
 		STACK16FRAME* stack16 = MapSL(PtrToUlong(NtCurrentTeb()->WOW32Reserved));
 		HANDLE16 oldDS = stack16->ds;
@@ -4714,7 +4712,7 @@ static LRESULT EDIT_WM_Destroy(EDITSTATE *es)
 		LocalFree16(es->hloc16);
 		stack16->ds = oldDS;
 	}
-
+#endif
 	pc = es->first_line_def;
 	while (pc)
 	{
