@@ -69,6 +69,7 @@ extern "C" {
 #define DI_MASK	1
 #define DI_NORMAL	3
 #define DI_APPBANDING 1
+#define DI_NOMIRROR             0x0010
 #define EMR_HEADER	1
 #define EMR_POLYBEZIER 2
 #define EMR_POLYGON	3

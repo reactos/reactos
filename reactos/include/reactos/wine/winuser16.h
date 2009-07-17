@@ -47,6 +47,59 @@ typedef struct
     WORD   cmd;
 } ACCEL16, *LPACCEL16;
 
+  /* Windows */
+
+typedef struct
+{
+    SEGPTR      lpCreateParams;
+    HINSTANCE16 hInstance;
+    HMENU16     hMenu;
+    HWND16      hwndParent;
+    INT16       cy;
+    INT16       cx;
+    INT16       y;
+    INT16       x;
+    LONG        style;
+    SEGPTR      lpszName;
+    SEGPTR      lpszClass;
+    DWORD       dwExStyle;
+} CREATESTRUCT16, *LPCREATESTRUCT16;
+
+typedef struct
+{
+    SEGPTR       szClass;
+    SEGPTR       szTitle;
+    HINSTANCE16  hOwner;
+    INT16        x;
+    INT16        y;
+    INT16        cx;
+    INT16        cy;
+    DWORD        style;
+    LPARAM       lParam;
+} MDICREATESTRUCT16, *LPMDICREATESTRUCT16;
+
+  /* WM_GETMINMAXINFO struct */
+typedef struct
+{
+    POINT16   ptReserved;
+    POINT16   ptMaxSize;
+    POINT16   ptMaxPosition;
+    POINT16   ptMinTrackSize;
+    POINT16   ptMaxTrackSize;
+} MINMAXINFO16;
+
+  /* WM_WINDOWPOSCHANGING/CHANGED struct */
+typedef struct tagWINDOWPOS16
+{
+    HWND16  hwnd;
+    HWND16  hwndInsertAfter;
+    INT16   x;
+    INT16   y;
+    INT16   cx;
+    INT16   cy;
+    UINT16  flags;
+} WINDOWPOS16, *LPWINDOWPOS16;
+
   /* WM_NCCALCSIZE parameter structure */
 typedef struct
 {

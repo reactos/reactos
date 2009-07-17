@@ -37,6 +37,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(string);
 
+#ifndef __ms_va_list
+# if defined(__x86_64__) && defined (__GNUC__)
+#  define __ms_va_list __builtin_ms_va_list
+#  define __ms_va_start(list,arg) __builtin_ms_va_start(list,arg)
+#  define __ms_va_end(list) __builtin_ms_va_end(list)
+# else
+#  define __ms_va_list va_list
+#  define __ms_va_start(list,arg) va_start(list,arg)
+#  define __ms_va_end(list) va_end(list)
+# endif
+#endif
 
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */
 #define WPRINTF_PREFIX_HEX  0x0002  /* Prefix hex with 0x ('#' prefix) */

@@ -318,6 +318,7 @@ static inline LRESULT WINPROC_wrapper( WNDPROC proc, HWND hwnd, UINT msg,
 }
 #endif  /* __i386__ */
 
+#ifndef __REACTOS__
 static void RECT16to32( const RECT16 *from, RECT *to )
 {
     to->left   = from->left;
@@ -441,6 +442,7 @@ static void MDICREATESTRUCT16to32A( const MDICREATESTRUCT16* from, MDICREATESTRU
     to->szTitle = MapSL(from->szTitle);
     to->szClass = MapSL(from->szClass);
 }
+#endif
 
 static WPARAM map_wparam_char_WtoA( WPARAM wParam, DWORD len )
 {
@@ -497,6 +499,7 @@ static LRESULT call_dialog_proc( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, LRES
 }
 
 /* call a 16-bit window procedure */
+#ifndef __REACTOS__
 static LRESULT call_window_proc16( HWND16 hwnd, UINT16 msg, WPARAM16 wParam, LPARAM lParam,
                                    LRESULT *result, void *arg )
 {
@@ -617,6 +620,7 @@ WNDPROC16 WINPROC_GetProc16( WNDPROC proc, BOOL unicode )
     if (!ptr) return 0;
     return alloc_win16_thunk( ptr );
 }
+#endif
 
 
 /**********************************************************************
@@ -1287,6 +1291,7 @@ static LRESULT WINPROC_CallProcWtoA( winproc_callback_t callback, HWND hwnd, UIN
 /**********************************************************************
  *	     WINPROC_CallProc16To32A
  */
+#ifndef __REACTOS__
 LRESULT WINPROC_CallProc16To32A( winproc_callback_t callback, HWND16 hwnd, UINT16 msg,
                                  WPARAM16 wParam, LPARAM lParam, LRESULT *result, void *arg )
 {
@@ -2179,6 +2184,7 @@ LRESULT WINPROC_CallProc32ATo16( winproc_callback16_t callback, HWND hwnd, UINT 
     }
     return ret;
 }
+#endif
 
 
 /**********************************************************************
@@ -2214,8 +2220,6 @@ BOOL WINPROC_call_window( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
             call_window_proc( hwnd, msg, wParam, lParam, result, proc->procW );
         else if (proc->procA)
             WINPROC_CallProcWtoA( call_window_proc, hwnd, msg, wParam, lParam, result, proc->procA );
-        else
-            WINPROC_CallProcWtoA( call_window_proc_Ato16, hwnd, msg, wParam, lParam, result, proc->proc16 );
     }
     else
     {
@@ -2223,8 +2227,6 @@ BOOL WINPROC_call_window( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
             call_window_proc( hwnd, msg, wParam, lParam, result, proc->procA );
         else if (proc->procW)
             WINPROC_CallProcAtoW( call_window_proc, hwnd, msg, wParam, lParam, result, proc->procW, mapping );
-        else
-            WINPROC_CallProc32ATo16( call_window_proc16, hwnd, msg, wParam, lParam, result, proc->proc16 );
     }
     thread_info->recursion_count--;
     return TRUE;
@@ -2234,6 +2236,7 @@ BOOL WINPROC_call_window( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam,
 /**********************************************************************
  *		CallWindowProc (USER.122)
  */
+#ifndef __REACTOS__
 LRESULT WINAPI CallWindowProc16( WNDPROC16 func, HWND16 hwnd, UINT16 msg,
                                  WPARAM16 wParam, LPARAM lParam )
 {
@@ -2253,6 +2256,7 @@ LRESULT WINAPI CallWindowProc16( WNDPROC16 func, HWND16 hwnd, UINT16 msg,
 
     return result;
 }
+#endif
 
 
 /**********************************************************************
@@ -2298,8 +2302,6 @@ LRESULT WINAPI CallWindowProcA(
     else if (proc->procW)
         WINPROC_CallProcAtoW( call_window_proc, hwnd, msg, wParam, lParam, &result,
                               proc->procW, WMCHAR_MAP_CALLWINDOWPROC );
-    else
-        WINPROC_CallProc32ATo16( call_window_proc16, hwnd, msg, wParam, lParam, &result, proc->proc16 );
     return result;
 }
 
@@ -2323,8 +2325,6 @@ LRESULT WINAPI CallWindowProcW( WNDPROC func, HWND hwnd, UINT msg,
         call_window_proc( hwnd, msg, wParam, lParam, &result, proc->procW );
     else if (proc->procA)
         WINPROC_CallProcWtoA( call_window_proc, hwnd, msg, wParam, lParam, &result, proc->procA );
-    else
-        WINPROC_CallProcWtoA( call_window_proc_Ato16, hwnd, msg, wParam, lParam, &result, proc->proc16 );
     return result;
 }
 
@@ -2332,6 +2332,7 @@ LRESULT WINAPI CallWindowProcW( WNDPROC func, HWND hwnd, UINT msg,
 /**********************************************************************
  *		WINPROC_CallDlgProc16
  */
+#ifndef __REACTOS__
 INT_PTR WINPROC_CallDlgProc16( DLGPROC16 func, HWND16 hwnd, UINT16 msg, WPARAM16 wParam, LPARAM lParam )
 {
     WINDOWPROC *proc;
@@ -2362,6 +2363,7 @@ INT_PTR WINPROC_CallDlgProc16( DLGPROC16 func, HWND16 hwnd, UINT16 msg, WPARAM16
     }
     return ret;
 }
+#endif
 
 
 /**********************************************************************
@@ -2383,11 +2385,6 @@ INT_PTR WINPROC_CallDlgProcA( DLGPROC func, HWND hwnd, UINT msg, WPARAM wParam, 
     {
         ret = WINPROC_CallProcAtoW( call_dialog_proc, hwnd, msg, wParam, lParam, &result,
                                     proc->procW, WMCHAR_MAP_CALLWINDOWPROC );
-        SetWindowLongPtrW( hwnd, DWLP_MSGRESULT, result );
-    }
-    else
-    {
-        ret = WINPROC_CallProc32ATo16( call_dialog_proc16, hwnd, msg, wParam, lParam, &result, proc->proc16 );
         SetWindowLongPtrW( hwnd, DWLP_MSGRESULT, result );
     }
     return ret;
@@ -2412,11 +2409,6 @@ INT_PTR WINPROC_CallDlgProcW( DLGPROC func, HWND hwnd, UINT msg, WPARAM wParam, 
     else if (proc->procA)
     {
         ret = WINPROC_CallProcWtoA( call_dialog_proc, hwnd, msg, wParam, lParam, &result, proc->procA );
-        SetWindowLongPtrW( hwnd, DWLP_MSGRESULT, result );
-    }
-    else
-    {
-        ret = WINPROC_CallProcWtoA( call_dialog_proc_Ato16, hwnd, msg, wParam, lParam, &result, proc->proc16 );
         SetWindowLongPtrW( hwnd, DWLP_MSGRESULT, result );
     }
     return ret;
