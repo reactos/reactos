@@ -4392,6 +4392,7 @@ BOOL WINAPI SetSysColors(int,const INT *,const COLORREF *);
 DWORD WINAPI SetSysColorsTemp(const COLORREF *, const HBRUSH *, DWORD);
 #define SetSysModalWindow(h) (NULL)
 BOOL WINAPI SetSystemCursor(HCURSOR,DWORD);
+BOOL WINAPI SetSystemMenu(HWND,HMENU);
 BOOL WINAPI SetThreadDesktop(HDESK);
 UINT_PTR WINAPI SetTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL WINAPI SetUserObjectInformationA(HANDLE,int,PVOID,DWORD);

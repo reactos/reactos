@@ -2709,6 +2709,9 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #endif
 #endif
 
+VOID        WINAPI ReleaseThunkLock(DWORD*);
+VOID        WINAPI RestoreThunkLock(DWORD);
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
