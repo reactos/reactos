@@ -335,7 +335,7 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError( RtlNtStatusToDosError( Status ) );
+		SetLastErrorByStatus(Status);
 		fnExp = NULL;
 	}
 
@@ -388,10 +388,8 @@ FreeLibraryAndExitThread (
 	DWORD	dwExitCode
 	)
 {
-	if ( FreeLibrary(hLibModule) )
-		ExitThread(dwExitCode);
-	for (;;)
-		;
+    FreeLibrary(hLibModule);
+    ExitThread(dwExitCode);
 }
 
 
