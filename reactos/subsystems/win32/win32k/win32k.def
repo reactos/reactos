@@ -1,0 +1,17 @@
+; Win32 Kernel Driver Exports
+LIBRARY win32k
+EXPORTS
+RtlAnsiCharToUnicodeChar@4=NTOSKRNL.RtlAnsiCharToUnicodeChar
+RtlMultiByteToUnicodeN@20=NTOSKRNL.RtlMultiByteToUnicodeN
+RtlRaiseException@4=NTOSKRNL.RtlRaiseException
+RtlUnicodeToMultiByteN@20=NTOSKRNL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize@12=NTOSKRNL.RtlUnicodeToMultiByteSize
+RtlUnwind@16=NTOSKRNL.RtlUnwind
+RtlUpcaseUnicodeChar@4=NTOSKRNL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN@20=NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
+_abnormal_termination=NTOSKRNL._abnormal_termination
+_except_handler2=NTOSKRNL._except_handler2
+_global_unwind2=NTOSKRNL._global_unwind2
+_itoa@12=NTOSKRNL._itoa
+_itow@12=NTOSKRNL._itow
+_local_unwind2=NTOSKRNL._local_unwind2
