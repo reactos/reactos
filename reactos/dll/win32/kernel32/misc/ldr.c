@@ -20,6 +20,7 @@ typedef struct tagLOADPARMS32 {
 } LOADPARMS32;
 
 extern BOOLEAN InWindows;
+extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -349,8 +350,31 @@ BOOL
 WINAPI
 FreeLibrary( HMODULE hLibModule )
 {
-	LdrUnloadDll(hLibModule);
-	return TRUE;
+    PVOID Module = (PVOID)((ULONG_PTR)hLibModule & ~1);
+    NTSTATUS Status;
+
+    if ((ULONG_PTR)hLibModule & 1)
+    {
+        if (!RtlImageNtHeader(Module))
+        {
+            SetLastErrorByStatus(STATUS_INVALID_IMAGE_FORMAT);
+            return FALSE;
+        }
+
+        Status = NtUnmapViewOfSection(NtCurrentProcess(), Module);
+    }
+    else
+    {
+        Status = LdrUnloadDll(hLibModule);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -703,7 +727,7 @@ LoadModule (
   }
 
   Length = (BYTE)LoadParams->lpCmdLine[0];
-  if(!(CommandLine = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+  if(!(CommandLine = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
                                strlen(lpModuleName) + Length + 2)))
   {
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -727,7 +751,7 @@ LoadModule (
   {
     DWORD Error;
 
-    HeapFree(GetProcessHeap(), 0, CommandLine);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, CommandLine);
     /* return the right value */
     Error = GetLastError();
     switch(Error)
@@ -745,14 +769,16 @@ LoadModule (
     return 0;
   }
 
-  HeapFree(GetProcessHeap(), 0, CommandLine);
+  RtlFreeHeap(RtlGetProcessHeap(), 0, CommandLine);
 
   /* Wait up to 15 seconds for the process to become idle */
-  /* FIXME: This is user32! Windows soft-loads this only if required. */
-  //WaitForInputIdle(ProcessInformation.hProcess, 15000);
+  if (NULL != lpfnGlobalRegisterWaitForInputIdle)
+  {
+    lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess, 15000);
+  }
 
-  CloseHandle(ProcessInformation.hThread);
-  CloseHandle(ProcessInformation.hProcess);
+  NtClose(ProcessInformation.hThread);
+  NtClose(ProcessInformation.hProcess);
 
   return 33;
 }
