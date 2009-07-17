@@ -32,7 +32,7 @@
 #include "wine/winbase16.h"
 
 extern WORD USER_HeapSel DECLSPEC_HIDDEN;
-
+NTSTATUS WINAPIV DbgPrint(LPCSTR fmt, ...);
 static inline HLOCAL16 LOCAL_Alloc( HANDLE16 ds, UINT16 flags, WORD size )
 {
     DbgPrint("LOCAL_Alloc unimplemented!\n");
