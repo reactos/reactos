@@ -28,8 +28,9 @@ typedef struct _W32HEAP_USER_MAPPING
 
 typedef struct _PROCESSINFO
 {
-  PEPROCESS     peProcess;
+  PEPROCESS            peProcess;
   W32HEAP_USER_MAPPING HeapMappings;
+  LIST_ENTRY           Classes;         /* window classes owned by the process */
 } PROCESSINFO, *PPROCESSINFO;
 
 #endif /* __INCLUDE_NAPI_WIN32_H */

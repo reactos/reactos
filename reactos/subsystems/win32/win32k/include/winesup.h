@@ -14,9 +14,11 @@
 #define assert ASSERT
 #define tolowerW(n) towlower((n))
 #define strncmpiW(s1,s2,n) _wcsnicmp((const wchar_t *)(s1),(const wchar_t *)(s2),(n))
+#define set_win32_error(x) SetLastWin32Error(x)
 
 void set_error( unsigned int err );
 static inline void clear_error(void)             { set_error(0); }
+struct window_class* get_window_class( user_handle_t window );
 
 /* gets the discretionary access control list from a security descriptor */
 static inline const ACL *sd_get_dacl( const struct security_descriptor *sd, int *present )
@@ -62,5 +64,8 @@ static inline const SID *sd_get_group( const struct security_descriptor *sd )
 
 int dump_strW( const WCHAR *str, data_size_t len, FILE *f, const char escape[2] );
 const SID *token_get_user( void *token );
+
+// misc stuff, should be moved elsewhere
+#define DESKTOP_ATOM  ((atom_t)32769)
 
 #endif

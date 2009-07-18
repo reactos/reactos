@@ -24,4 +24,9 @@ const SID *token_get_user( void *token )
     return NULL;
 }
 
+struct window_class* get_window_class( user_handle_t window )
+{
+    return NULL;
+}
+
 /* EOF */

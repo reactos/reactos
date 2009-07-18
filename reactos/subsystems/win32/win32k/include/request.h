@@ -28,6 +28,20 @@
 #define DECL_HANDLER(name) \
     void req_##name( const struct name##_request *req, struct name##_reply *reply )
 
+/* get the request vararg size */
+static inline data_size_t get_req_data_size(struct __server_request_info *req)
+{
+    return req->u.req.request_header.request_size;
+}
+
+/* get the request vararg as unicode string */
+static inline void get_req_unicode_str( void *req, struct unicode_str *str )
+{
+    struct __server_request_info *serv_req = (struct __server_request_info *)req;
+    str->str = serv_req->data[0].ptr;
+    str->len = (get_req_data_size(serv_req) / sizeof(WCHAR)) * sizeof(WCHAR);
+}
+
 /* Everything below this line is generated automatically by tools/make_requests */
 /* ### make_requests begin ### */
 

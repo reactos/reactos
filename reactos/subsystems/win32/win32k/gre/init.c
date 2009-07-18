@@ -82,6 +82,7 @@ Win32kProcessCallout(PEPROCESS Process,
         Win32Process->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
         Win32Process->HeapMappings.UserMapping = UserBase;
         Win32Process->HeapMappings.Count = 1;
+        InitializeListHead(&Win32Process->Classes);
     }
     else
     {
