@@ -2387,7 +2387,7 @@ static HLOCAL EDIT_EM_GetHandle(EDITSTATE *es)
 	return hLocal;
 }
 
-
+#if 0
 /*********************************************************************
  *
  *	EM_GETHANDLE16
@@ -2455,7 +2455,7 @@ done:
 	stack16->ds = oldDS;
 	return es->hloc16;
 }
-
+#endif
 
 /*********************************************************************
  *
@@ -2813,7 +2813,7 @@ static void EDIT_EM_SetHandle(EDITSTATE *es, HLOCAL hloc)
 	EDIT_UpdateScrollInfo(es);
 }
 
-
+#if 0
 /*********************************************************************
  *
  *	EM_SETHANDLE16
@@ -2884,7 +2884,7 @@ static void EDIT_EM_SetHandle16(EDITSTATE *es, HLOCAL16 hloc)
 	/* force scroll info update */
 	EDIT_UpdateScrollInfo(es);
 }
-
+#endif
 
 /*********************************************************************
  *

@@ -409,7 +409,7 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId)
 }
 
 
-BOOL ClientThreadSetup()
+BOOL WINAPI ClientThreadSetup()
 {
     TRACE(": stub\n");
     return TRUE;

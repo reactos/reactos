@@ -6,7 +6,7 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
+	<define name="_WIN32_WINNT">0x0600</define>
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>ntdll</library>

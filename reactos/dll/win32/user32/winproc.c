@@ -277,6 +277,7 @@ static inline WNDPROC16 alloc_win16_thunk( WINDOWPROC *proc )
 
 
 #ifdef __i386__
+#define __ASM_CFI(str) ""
 /* Some window procedures modify register they shouldn't, or are not
  * properly declared stdcall; so we need a small assembly wrapper to
  * call them. */
