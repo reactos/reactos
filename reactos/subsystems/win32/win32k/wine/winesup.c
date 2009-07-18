@@ -181,4 +181,20 @@ ExReallocPool(PVOID OldPtr, ULONG NewSize, ULONG OldSize)
     return NewPtr;
 }
 
+ULONGLONG
+APIENTRY
+EngGetTickCount(VOID)
+{
+    ULONG Multiplier;
+    LARGE_INTEGER TickCount;
+
+    /* Get the multiplier and current tick count */
+    KeQueryTickCount(&TickCount);
+    Multiplier = SharedUserData->TickCountMultiplier;
+
+    /* Convert to milliseconds and return */
+    return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
+            (Multiplier * (TickCount.HighPart << 8)));
+}
+
 /* EOF */

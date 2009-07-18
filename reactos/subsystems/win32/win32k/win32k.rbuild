@@ -24,6 +24,7 @@
 		<pch>win32k.h</pch>
 	</directory>
 	<directory name="main">
+		<file>csr.c</file>
 		<file>err.c</file>
 		<file>init.c</file>
 		<file>usrheap.c</file>
