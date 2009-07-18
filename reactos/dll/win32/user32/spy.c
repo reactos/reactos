@@ -2667,6 +2667,7 @@ int SPY_Init(void)
 
     indent_tls_index = TlsAlloc();
     /* @@ Wine registry key: HKCU\Software\Wine\Debug */
+#if 0
     if(!RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Debug", &hkey))
     {
         DWORD type, count = sizeof(buffer);
@@ -2699,7 +2700,7 @@ int SPY_Init(void)
 
         RegCloseKey(hkey);
     }
-
+#endif
     /* find last good entry in spy notify array and save addr for b-search */
     p = &spnfy_array[0];
     j = 0xffffffff;

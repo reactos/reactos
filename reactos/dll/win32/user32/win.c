@@ -3398,7 +3398,20 @@ BOOL WINAPI GetWindowInfo( HWND hwnd, PWINDOWINFO pwi)
  */
 BOOL WINAPI SwitchDesktop( HDESK hDesktop)
 {
+    HWND hWnd;
+
     FIXME("SwitchDesktop(hwnd %p) stub!\n", hDesktop);
+
+    hWnd = GetDesktopWindow(/*hDesktop*/);
+
+    SetWindowPos(hWnd,
+                 NULL, 0, 0,
+                 800,//nmh->ShowDesktop.Width,
+                 600,//nmh->ShowDesktop.Height,
+                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
+    UpdateWindow(hWnd);
+
+
     return TRUE;
 }
 

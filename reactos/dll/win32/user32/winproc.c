@@ -83,6 +83,7 @@ static inline void free_buffer( void *static_buffer, void *buffer )
 
 /* find an existing winproc for a given 16-bit function and type */
 /* FIXME: probably should do something more clever than a linear search */
+#ifndef __REACTOS__
 static inline WINDOWPROC *find_winproc16( WNDPROC16 func )
 {
     unsigned int i;
@@ -93,7 +94,7 @@ static inline WINDOWPROC *find_winproc16( WNDPROC16 func )
     }
     return NULL;
 }
-
+#endif
 /* find an existing winproc for a given function and type */
 /* FIXME: probably should do something more clever than a linear search */
 static inline WINDOWPROC *find_winproc( WNDPROC funcA, WNDPROC funcW )
@@ -172,7 +173,7 @@ static inline WINDOWPROC *alloc_winproc( WNDPROC funcA, WNDPROC funcW )
     return proc;
 }
 
-
+#ifndef __REACTOS__
 #ifdef __i386__
 
 #include "pshpack1.h"
@@ -272,6 +273,7 @@ static inline WNDPROC16 alloc_win16_thunk( WINDOWPROC *proc )
 }
 
 #endif  /* __i386__ */
+#endif /* __REACTOS__ */
 
 
 #ifdef __i386__
@@ -655,6 +657,7 @@ WNDPROC WINPROC_GetProc( WNDPROC proc, BOOL unicode )
  * lot of windows, it will usually only have a limited number of window procedures, so the
  * array won't grow too large, and this way we avoid the need to track allocations per window.
  */
+#ifndef __REACTOS__
 WNDPROC WINPROC_AllocProc16( WNDPROC16 func )
 {
     WINDOWPROC *proc;
@@ -684,6 +687,7 @@ WNDPROC WINPROC_AllocProc16( WNDPROC16 func )
     }
     return proc_to_handle( proc );
 }
+#endif
 
 
 /**********************************************************************

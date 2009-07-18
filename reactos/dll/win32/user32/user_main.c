@@ -76,7 +76,7 @@ void USER_Unlock(void)
 void USER_CheckNotLock(void)
 {
     //_CheckNotSysLevel( &USER_SysLevel );
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
 }
 
 
@@ -174,6 +174,7 @@ static const WCHAR *get_default_desktop(void)
     strcpyW( p, explorerW );
 
     /* @@ Wine registry key: HKCU\Software\Wine\AppDefaults\app.exe\Explorer */
+#if 0
     if (!RegOpenKeyW( HKEY_CURRENT_USER, app_defaultsW, &tmpkey ))
     {
         if (RegOpenKeyW( tmpkey, appname, &appkey )) appkey = 0;
@@ -187,17 +188,19 @@ static const WCHAR *get_default_desktop(void)
             ret = defaultW;
         }
     }
-
+#endif
     memcpy( buffer, app_defaultsW, 13 * sizeof(WCHAR) );  /* copy only software\\wine */
     strcpyW( buffer + 13, explorerW );
 
     /* @@ Wine registry key: HKCU\Software\Wine\Explorer */
+#if 0
     if (!RegOpenKeyW( HKEY_CURRENT_USER, buffer, &appkey ))
     {
         len = sizeof(buffer);
         if (!RegQueryValueExW( appkey, desktopW, 0, NULL, (LPBYTE)buffer, &len )) ret = buffer;
         RegCloseKey( appkey );
     }
+#endif
     return ret;
 }
 
@@ -402,5 +405,13 @@ BOOL WINAPI LockWorkStation(void)
 int WINAPI RegisterServicesProcess(DWORD ServicesProcessId)
 {
     FIXME("(0x%x): stub\n", ServicesProcessId);
-    return 0;
+    return TRUE;
 }
+
+
+BOOL ClientThreadSetup()
+{
+    TRACE(": stub\n");
+    return TRUE;
+}
+

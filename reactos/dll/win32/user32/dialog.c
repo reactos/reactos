@@ -22,7 +22,6 @@
 #include "wine/port.h"
 
 #include <ctype.h>
-#include <errno.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -1379,7 +1378,7 @@ UINT WINAPI GetDlgItemInt( HWND hwnd, INT id, BOOL *translated,
         result = strtol( str, &endptr, 10 );
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
-        if (((result == LONG_MIN) || (result == LONG_MAX)) && (errno==ERANGE))
+        if (((result == LONG_MIN) || (result == LONG_MAX))/* && (errno==ERANGE)*/)
             return 0;
     }
     else
@@ -1387,7 +1386,7 @@ UINT WINAPI GetDlgItemInt( HWND hwnd, INT id, BOOL *translated,
         result = strtoul( str, &endptr, 10 );
         if (!endptr || (endptr == str))  /* Conversion was unsuccessful */
             return 0;
-        if ((result == ULONG_MAX) && (errno == ERANGE)) return 0;
+        if ((result == ULONG_MAX)/* && (errno == ERANGE)*/) return 0;
     }
     if (translated) *translated = TRUE;
     return (UINT)result;

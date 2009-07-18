@@ -3082,7 +3082,7 @@ static BOOL MENU_TrackMenu( HMENU hmenu, UINT wFlags, INT x, INT y,
     capture_win = (wFlags & TPM_POPUPMENU) ? menu->hWnd : mt.hOwnerWnd;
     set_capture_window( capture_win, GUI_INMENUMODE, NULL );
 
-    __TRY while (!fEndMenu)
+    /*__TRY*/ while (!fEndMenu)
     {
 	menu = MENU_GetMenu( mt.hCurrentMenu );
 	if (!menu) /* sometimes happens if I do a window manager close */
@@ -3303,7 +3303,7 @@ static BOOL MENU_TrackMenu( HMENU hmenu, UINT wFlags, INT x, INT y,
 	    PeekMessageW( &msg, 0, msg.message, msg.message, PM_REMOVE );
 	else mt.trackFlags &= ~TF_SKIPREMOVE;
     }
-    __FINALLY( release_capture )
+    /*__FINALLY(*/ release_capture(TRUE); /*)*/
 
     /* If dropdown is still painted and the close box is clicked on
        then the menu will be destroyed as part of the DispatchMessage above.

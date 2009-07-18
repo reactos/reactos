@@ -4487,6 +4487,7 @@ static void EDIT_GetResultStr(HIMC hIMC, EDITSTATE *es)
 
 static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
 {
+#if 0
     HIMC hIMC;
     int cursor;
 
@@ -4508,6 +4509,9 @@ static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
     cursor = ImmGetCompositionStringW(hIMC, GCS_CURSORPOS, 0, 0);
     ImmReleaseContext(hwnd, hIMC);
     EDIT_SetCaretPos(es, es->selection_start + cursor, es->flags & EF_AFTER_WRAP);
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 

@@ -41,7 +41,12 @@ static const USER_DRIVER *load_driver(void)
     HMODULE graphics_driver;
     USER_DRIVER *driver, *prev;
 
+#ifndef __REACTOS__
     strcpy( buffer, "x11" );  /* default value */
+#else
+    strcpy( buffer, "nt" );
+#endif
+#if 0
     /* @@ Wine registry key: HKCU\Software\Wine\Drivers */
     if (!RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Drivers", &hkey ))
     {
@@ -49,14 +54,14 @@ static const USER_DRIVER *load_driver(void)
         RegQueryValueExA( hkey, "Graphics", 0, &type, (LPBYTE) buffer, &count );
         RegCloseKey( hkey );
     }
-
+#endif
     name = buffer;
     while (name)
     {
         next = strchr( name, ',' );
         if (next) *next++ = 0;
 
-        snprintf( libname, sizeof(libname), "wine%s.drv", name );
+        _snprintf( libname, sizeof(libname), "wine%s.drv", name );
         if ((graphics_driver = LoadLibraryA( libname )) != 0) break;
         name = next;
     }

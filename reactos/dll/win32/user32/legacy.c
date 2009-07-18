@@ -9,9 +9,13 @@
 #include "wine/winbase16.h"
 #include "wine/winuser16.h"
 
+#include "win32k/rosuser.h"
+
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(userlegacy);
+
+void WINAPI DbgBreakPoint(void);
 
 LPVOID
 WINAPI
@@ -34,6 +38,7 @@ WINAPI
 GlobalAlloc16(UINT16 u, DWORD d)
 {
     UNIMPLEMENTED;
+    DbgBreakPoint();
     return 0;
 }
 
@@ -58,7 +63,7 @@ WINAPI
 LocalLock16(HLOCAL16 h)
 {
     UNIMPLEMENTED;
-    return NULL;
+    return 0;
 }
 
 BOOL16
@@ -96,3 +101,22 @@ WINAPI
 RestoreThunkLock(DWORD mutex_count)
 {
 }
+
+/*
+ * Private calls for CSRSS
+ */
+VOID
+WINAPI
+PrivateCsrssManualGuiCheck(LONG Check)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINAPI
+PrivateCsrssInitialized(VOID)
+{
+    /* Perform a reactos only CSRSS connection */
+    RosUserConnectCsrss();
+}
+

@@ -657,6 +657,7 @@ static BOOL SYSPARAMS_SaveRaw( LPCWSTR lpRegKey, LPCWSTR lpValName,
                                const BYTE* lpValue, DWORD valueSize, 
                                DWORD type, UINT fWinIni )
 {
+#if 0
     HKEY hKey;
     HKEY hBaseKey;
     DWORD dwOptions;
@@ -687,6 +688,9 @@ static BOOL SYSPARAMS_SaveRaw( LPCWSTR lpRegKey, LPCWSTR lpValName,
         RegCloseKey( hKey );
     }
     return ret;
+#else
+    return TRUE;
+#endif
 }
 
 /* Convenience function to save strings */
@@ -946,7 +950,7 @@ void SYSPARAMS_Init(void)
 
     /* initialize system colors */
 
-    if (RegCreateKeyExA(HKEY_CURRENT_USER, "Control Panel\\Colors", 0, 0, 0, KEY_ALL_ACCESS, 0, &hkey, 0))
+    //if (RegCreateKeyExA(HKEY_CURRENT_USER, "Control Panel\\Colors", 0, 0, 0, KEY_ALL_ACCESS, 0, &hkey, 0))
         hkey = 0;
     for (i = 0; i < NUM_SYS_COLORS; i++)
     {
@@ -3303,6 +3307,16 @@ BOOL WINAPI EnumDisplaySettingsExW(LPCWSTR lpszDeviceName, DWORD iModeNum,
 BOOL WINAPI SetProcessDPIAware( VOID )
 {
     FIXME( "stub!\n");
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *              UpdatePerUserSystemParameters   (USER32.@)
+ */
+BOOL WINAPI UpdatePerUserSystemParameters ( DWORD dwUnknown )
+{
+    FIXME( "stub, param %d!\n", dwUnknown);
 
     return TRUE;
 }

@@ -32,34 +32,15 @@
 #include "wine/winbase16.h"
 
 extern WORD USER_HeapSel DECLSPEC_HIDDEN;
-NTSTATUS WINAPIV DbgPrint(LPCSTR fmt, ...);
-static inline HLOCAL16 LOCAL_Alloc( HANDLE16 ds, UINT16 flags, WORD size )
-{
-    DbgPrint("LOCAL_Alloc unimplemented!\n");
-    return 0;
-}
-
-static inline  HLOCAL16 LOCAL_ReAlloc( HANDLE16 ds, HLOCAL16 handle, WORD size, UINT16 flags )
-{
-    DbgPrint("LOCAL_ReAlloc unimplemented!\n");
-    return 0;
-}
-
-static inline HLOCAL16 LOCAL_Free( HANDLE16 ds, HLOCAL16 handle )
-{
-    DbgPrint("LOCAL_Free unimplemented!\n");
-    return 0;
-}
 
 #define USER_HEAP_ALLOC(size) \
-            ((HANDLE)(ULONG_PTR)LOCAL_Alloc( USER_HeapSel, LMEM_FIXED, (size) ))
+            ((HANDLE)HeapAlloc( GetProcessHeap(), 0, (size) ))
 #define USER_HEAP_REALLOC(handle,size) \
-            ((HANDLE)(ULONG_PTR)LOCAL_ReAlloc( USER_HeapSel, LOWORD(handle), (size), LMEM_FIXED ))
+            ((HANDLE)HeapReAlloc( GetProcessHeap(), 0, (handle), (size) ))
 #define USER_HEAP_FREE(handle) \
-            LOCAL_Free( USER_HeapSel, LOWORD(handle) )
+            HeapFree( GetProcessHeap(), 0, handle )
 #define USER_HEAP_LIN_ADDR(handle)  \
-         /*((handle) ? MapSL(MAKESEGPTR(USER_HeapSel, LOWORD(handle))) : NULL)*/ \
-         (handle)
+            (handle)
 
 #define GET_WORD(ptr)  (*(const WORD *)(ptr))
 #define GET_DWORD(ptr) (*(const DWORD *)(ptr))
@@ -339,10 +320,23 @@ typedef struct
 
 extern void CURSORICON_FreeModuleIcons( HMODULE16 hModule ) DECLSPEC_HIDDEN;
 
-/* Mingw's assert() imports MessageBoxA and gets confused by user32 exporting it */
-#ifdef __MINGW32__
+NTSYSAPI
+VOID
+NTAPI
+RtlAssert(
+    PVOID FailedAssertion,
+    PVOID FileName,
+    ULONG LineNumber,
+    PCHAR Message
+);
+
+#ifdef assert
 #undef assert
-#define assert(expr) ((void)0)
+#endif
+#define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+
+#ifndef ASSERT
+#define ASSERT(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
 #endif
 
 #endif /* __WINE_USER_PRIVATE_H */

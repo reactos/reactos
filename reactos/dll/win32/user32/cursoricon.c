@@ -666,7 +666,7 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
 					   INT width, INT height,
 					   UINT cFlag )
 {
-    HGLOBAL16 hObj;
+    HGLOBAL hObj;
     static HDC hdcMem;
     int sizeAnd, sizeXor;
     HBITMAP hAndBits = 0, hXorBits = 0; /* error condition for later */
@@ -822,13 +822,13 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
     sizeXor = bmpXor.bmHeight * bmpXor.bmWidthBytes;
     sizeAnd = bmpAnd.bmHeight * bmpAnd.bmWidthBytes;
 
-    hObj = GlobalAlloc16( GMEM_MOVEABLE,
+    hObj = GlobalAlloc( GMEM_MOVEABLE,
                      sizeof(CURSORICONINFO) + sizeXor + sizeAnd );
     if (hObj)
     {
         CURSORICONINFO *info;
 
-        info = GlobalLock16( hObj );
+        info = GlobalLock( hObj );
         info->ptHotSpot.x   = hotspot.x;
         info->ptHotSpot.y   = hotspot.y;
         info->nWidth        = bmpXor.bmWidth;
@@ -841,12 +841,12 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
 
         GetBitmapBits( hAndBits, sizeAnd, info + 1 );
         GetBitmapBits( hXorBits, sizeXor, (char *)(info + 1) + sizeAnd );
-        GlobalUnlock16( hObj );
+        GlobalUnlock( hObj );
     }
 
     DeleteObject( hAndBits );
     DeleteObject( hXorBits );
-    return HICON_32(hObj);
+    return hObj;
 }
 
 
@@ -1560,7 +1560,7 @@ HCURSOR16 WINAPI CopyCursor16( HINSTANCE16 hInstance, HCURSOR16 hCursor )
  * the Win95 one exactly, especially the return values, which
  * depend on the setting of various flags.
  */
-WORD WINAPI DestroyIcon32( HGLOBAL16 handle, UINT16 flags )
+WORD WINAPI DestroyIcon32( HGLOBAL handle, UINT16 flags )
 {
     WORD retv;
 
@@ -1568,7 +1568,7 @@ WORD WINAPI DestroyIcon32( HGLOBAL16 handle, UINT16 flags )
 
     /* Check whether destroying active cursor */
 
-    if ( get_user_thread_info()->cursor == HICON_32(handle) )
+    if ( get_user_thread_info()->cursor == handle )
     {
         WARN_(cursor)("Destroying active cursor!\n" );
         return FALSE;
@@ -1578,7 +1578,7 @@ WORD WINAPI DestroyIcon32( HGLOBAL16 handle, UINT16 flags )
 
     if ( !(flags & CID_NONSHARED) )
     {
-        INT count = CURSORICON_DelSharedIcon(HICON_32(handle));
+        INT count = CURSORICON_DelSharedIcon(handle);
 
         if ( count != -1 )
             return (flags & CID_WIN32)? TRUE : (count == 0);
@@ -1588,7 +1588,7 @@ WORD WINAPI DestroyIcon32( HGLOBAL16 handle, UINT16 flags )
 
     /* Now assume non-shared cursor/icon */
 
-    retv = GlobalFree16( handle );
+    retv = GlobalFree( handle );
     return (flags & CID_RESOURCE)? retv : TRUE;
 }
 
@@ -1597,7 +1597,7 @@ WORD WINAPI DestroyIcon32( HGLOBAL16 handle, UINT16 flags )
  */
 BOOL WINAPI DestroyIcon( HICON hIcon )
 {
-    return DestroyIcon32(HICON_16(hIcon), CID_WIN32);
+    return DestroyIcon32(hIcon, CID_WIN32);
 }
 
 
@@ -1606,7 +1606,7 @@ BOOL WINAPI DestroyIcon( HICON hIcon )
  */
 BOOL WINAPI DestroyCursor( HCURSOR hCursor )
 {
-    return DestroyIcon32(HCURSOR_16(hCursor), CID_WIN32);
+    return DestroyIcon32(hCursor, CID_WIN32);
 }
 
 /***********************************************************************
@@ -1691,7 +1691,7 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
 
     TRACE("%p, (%d,%d), %p\n", hdc, x, y, hIcon);
 
-    if (!(ptr = GlobalLock16(HICON_16(hIcon)))) return FALSE;
+    if (!(ptr = GlobalLock(hIcon))) return FALSE;
     if (!(hMemDC = CreateCompatibleDC( hdc ))) return FALSE;
 
     dibLength = ptr->nHeight * get_bitmap_width_bytes(
@@ -1750,7 +1750,7 @@ BOOL WINAPI DrawIcon( HDC hdc, INT x, INT y, HICON hIcon )
     DeleteDC( hMemDC );
     if (hXorBits) DeleteObject( hXorBits );
     if (hAndBits) DeleteObject( hAndBits );
-    GlobalUnlock16(HICON_16(hIcon));
+    GlobalUnlock(hIcon);
     SetTextColor( hdc, oldFg );
     SetBkColor( hdc, oldBg );
     return TRUE;
@@ -1797,8 +1797,8 @@ HCURSOR WINAPI SetCursor( HCURSOR hCursor /* [in] Handle of cursor to show */ )
     /* Change the cursor shape only if it is visible */
     if (thread_info->cursor_count >= 0)
     {
-        USER_Driver->pSetCursor(GlobalLock16(HCURSOR_16(hCursor)));
-        GlobalUnlock16(HCURSOR_16(hCursor));
+        USER_Driver->pSetCursor(GlobalLock(hCursor));
+        GlobalUnlock(hCursor);
     }
     return hOldCursor;
 }
@@ -1816,8 +1816,8 @@ INT WINAPI ShowCursor( BOOL bShow )
     {
         if (++thread_info->cursor_count == 0) /* Show it */
         {
-            USER_Driver->pSetCursor(GlobalLock16(HCURSOR_16(thread_info->cursor)));
-            GlobalUnlock16(HCURSOR_16(thread_info->cursor));
+            USER_Driver->pSetCursor(GlobalLock(thread_info->cursor));
+            GlobalUnlock(thread_info->cursor);
         }
     }
     else
@@ -2060,7 +2060,7 @@ BOOL WINAPI GetIconInfo(HICON hIcon, PICONINFO iconinfo)
     CURSORICONINFO *ciconinfo;
     INT height;
 
-    ciconinfo = GlobalLock16(HICON_16(hIcon));
+    ciconinfo = GlobalLock(hIcon);
     if (!ciconinfo)
         return FALSE;
 
@@ -2100,7 +2100,7 @@ BOOL WINAPI GetIconInfo(HICON hIcon, PICONINFO iconinfo)
     iconinfo->hbmMask = CreateBitmap ( ciconinfo->nWidth, height,
                                 1, 1, ciconinfo + 1);
 
-    GlobalUnlock16(HICON_16(hIcon));
+    GlobalUnlock(hIcon);
 
     return TRUE;
 }
@@ -2112,7 +2112,7 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 {
     DIBSECTION bmpXor;
     BITMAP bmpAnd;
-    HICON16 hObj;
+    HICON hObj;
     int xor_objsize = 0, sizeXor = 0, sizeAnd, planes, bpp;
 
     TRACE("color %p, mask %p, hotspot %ux%u, fIcon %d\n",
@@ -2141,13 +2141,13 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 
     sizeAnd = bmpAnd.bmHeight * get_bitmap_width_bytes(bmpAnd.bmWidth, 1);
 
-    hObj = GlobalAlloc16( GMEM_MOVEABLE,
-                          sizeof(CURSORICONINFO) + sizeXor + sizeAnd );
+    hObj = GlobalAlloc( GMEM_MOVEABLE,
+                        sizeof(CURSORICONINFO) + sizeXor + sizeAnd );
     if (hObj)
     {
         CURSORICONINFO *info;
 
-        info = GlobalLock16( hObj );
+        info = GlobalLock( hObj );
 
         /* If we are creating an icon, the hotspot is unused */
         if (iconinfo->fIcon)
@@ -2256,9 +2256,9 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
                                dst_bits, &bminfo, DIB_RGB_COLORS );
             }
         }
-        GlobalUnlock16( hObj );
+        GlobalUnlock( hObj );
     }
-    return HICON_32(hObj);
+    return hObj;
 }
 
 /******************************************************************************
@@ -2297,7 +2297,7 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
     TRACE_(icon)("(hdc=%p,pos=%d.%d,hicon=%p,extend=%d.%d,istep=%d,br=%p,flags=0x%08x)\n",
                  hdc,x0,y0,hIcon,cxWidth,cyWidth,istep,hbr,flags );
 
-    if (!(ptr = GlobalLock16(HICON_16(hIcon)))) return FALSE;
+    if (!(ptr = GlobalLock(hIcon))) return FALSE;
     if (!(hMemDC = CreateCompatibleDC( hdc ))) return FALSE;
 
     if (istep)
@@ -2444,7 +2444,7 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
     if (hMemDC) DeleteDC( hMemDC );
     if (hDC_off) DeleteDC(hDC_off);
     if (hB_off) DeleteObject(hB_off);
-    GlobalUnlock16(HICON_16(hIcon));
+    GlobalUnlock(hIcon);
     return result;
 }
 
