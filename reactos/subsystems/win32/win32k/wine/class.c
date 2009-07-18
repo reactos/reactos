@@ -19,30 +19,32 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <limits.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-
-#include "wine/list.h"
-
-#include "request.h"
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
 #include "object.h"
-#include "process.h"
+#include "request.h"
 #include "user.h"
-#include "winuser.h"
-#include "winternl.h"
+
+#define NDEBUG
+#include <debug.h>
+
+#undef LIST_FOR_EACH
+/* iterate through the list using a list entry.
+ * elem is set to NULL if the list is run thru without breaking out or if list is empty.
+ */
+#define LIST_FOR_EACH(elem, list, type, field) \
+    for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
+         &(elem)->field != (list) || (elem == NULL); \
+         (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
 
 struct window_class
 {
-    struct list     entry;           /* entry in process list */
-    struct process *process;         /* process owning the class */
+    LIST_ENTRY      entry;           /* entry in process list */
+    PPROCESSINFO    process;         /* process owning the class */
     int             count;           /* reference count */
     int             local;           /* local class? */
     atom_t          atom;            /* class atom */
@@ -54,13 +56,13 @@ struct window_class
     char            extra_bytes[1];  /* extra bytes storage */
 };
 
-static struct window_class *create_class( struct process *process, int extra_bytes, int local )
+static struct window_class *create_class( PPROCESSINFO process, int extra_bytes, int local )
 {
     struct window_class *class;
 
     if (!(class = mem_alloc( sizeof(*class) + extra_bytes - 1 ))) return NULL;
-
-    class->process = (struct process *)grab_object( process );
+    ObReferenceObjectByPointer(process->peProcess, 0, NULL, KernelMode);
+    class->process = process;
     class->count = 0;
     class->local = local;
     class->nb_extra_bytes = extra_bytes;
@@ -68,43 +70,43 @@ static struct window_class *create_class( struct process *process, int extra_byt
     /* other fields are initialized by caller */
 
     /* local classes have priority so we put them first in the list */
-    if (local) list_add_head( &process->classes, &class->entry );
-    else list_add_tail( &process->classes, &class->entry );
+    if (local) InsertHeadList( &process->Classes, &class->entry );
+    else InsertTailList( &process->Classes, &class->entry );
     return class;
 }
 
 static void destroy_class( struct window_class *class )
 {
-    list_remove( &class->entry );
-    release_object( class->process );
-    free( class );
+    RemoveEntryList( &class->entry );
+    ObDereferenceObject( class->process->peProcess );
+    ExFreePool( class );
 }
 
-void destroy_process_classes( struct process *process )
+void destroy_process_classes( PPROCESSINFO process )
 {
-    struct list *ptr;
+    PLIST_ENTRY ptr;
 
-    while ((ptr = list_head( &process->classes )))
+    while (( ptr = process->Classes.Flink ))
     {
-        struct window_class *class = LIST_ENTRY( ptr, struct window_class, entry );
+        struct window_class *class = CONTAINING_RECORD( ptr, struct window_class, entry );
         destroy_class( class );
     }
 }
 
-static struct window_class *find_class( struct process *process, atom_t atom, mod_handle_t instance )
+static struct window_class *find_class( PPROCESSINFO process, atom_t atom, mod_handle_t instance )
 {
-    struct list *ptr;
+    struct window_class *class;
 
-    LIST_FOR_EACH( ptr, &process->classes )
+    LIST_FOR_EACH( class, &process->Classes, struct window_class, entry)
     {
-        struct window_class *class = LIST_ENTRY( ptr, struct window_class, entry );
+        //struct window_class *class = CONTAINING_RECORD( ptr, struct window_class, entry );
         if (class->atom != atom) continue;
         if (!instance || !class->local || class->instance == instance) return class;
     }
     return NULL;
 }
 
-struct window_class *grab_class( struct process *process, atom_t atom,
+struct window_class *grab_class( PPROCESSINFO process, atom_t atom,
                                  mod_handle_t instance, int *extra_bytes )
 {
     struct window_class *class = find_class( process, atom, instance );
@@ -153,7 +155,7 @@ DECL_HANDLER(create_class)
     struct unicode_str name;
     atom_t atom;
 
-    get_req_unicode_str( &name );
+    get_req_unicode_str( (void *)req, &name );
     if (name.len)
     {
         atom = add_global_atom( NULL, &name );
@@ -165,7 +167,7 @@ DECL_HANDLER(create_class)
         if (!grab_global_atom( NULL, atom )) return;
     }
 
-    class = find_class( current->process, atom, req->instance );
+    class = find_class( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), atom, req->instance );
     if (class && !class->local == !req->local)
     {
         set_win32_error( ERROR_CLASS_ALREADY_EXISTS );
@@ -180,7 +182,7 @@ DECL_HANDLER(create_class)
         return;
     }
 
-    if (!(class = create_class( current->process, req->extra, req->local )))
+    if (!(class = create_class( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->extra, req->local )))
     {
         release_global_atom( NULL, atom );
         return;
@@ -200,10 +202,10 @@ DECL_HANDLER(destroy_class)
     struct unicode_str name;
     atom_t atom = req->atom;
 
-    get_req_unicode_str( &name );
+    get_req_unicode_str( (void *)req, &name );
     if (name.len) atom = find_global_atom( NULL, &name );
 
-    if (!(class = find_class( current->process, atom, req->instance )))
+    if (!(class = find_class( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), atom, req->instance )))
         set_win32_error( ERROR_CLASS_DOES_NOT_EXIST );
     else if (class->count)
         set_win32_error( ERROR_CLASS_HAS_WINDOWS );
@@ -221,13 +223,14 @@ DECL_HANDLER(set_class_info)
     struct window_class *class = get_window_class( req->window );
 
     if (!class) return;
-
-    if (req->flags && class->process != current->process)
+DPRINT1("Fixme!\n");
+#if 0
+    if (req->flags && class->process != PsGetCurrentProcessWin32Process())
     {
         set_error( STATUS_ACCESS_DENIED );
         return;
     }
-
+#endif
     if (req->extra_size > sizeof(req->extra_value) ||
         req->extra_offset < -1 ||
         req->extra_offset > class->nb_extra_bytes - (int)req->extra_size)
