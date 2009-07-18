@@ -12,9 +12,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <windef.h>
-#include <winbase.h>
-
 typedef unsigned int obj_handle_t;
 typedef unsigned int user_handle_t;
 typedef unsigned int atom_t;
