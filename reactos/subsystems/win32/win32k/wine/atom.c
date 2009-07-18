@@ -19,25 +19,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <limits.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-
-#include "unicode.h"
-#include "request.h"
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
 #include "object.h"
-#include "process.h"
+#include "request.h"
 #include "handle.h"
 #include "user.h"
-#include "winuser.h"
-#include "winternl.h"
+
+#define NDEBUG
+#include <debug.h>
 
 #define HASH_SIZE     37
 #define MIN_HASH_SIZE 4
@@ -104,7 +98,7 @@ static struct atom_table *create_table(int entries_count)
         if ((entries_count < MIN_HASH_SIZE) ||
             (entries_count > MAX_HASH_SIZE)) entries_count = HASH_SIZE;
         table->entries_count = entries_count;
-        if (!(table->entries = malloc( sizeof(*table->entries) * table->entries_count )))
+        if (!(table->entries = ExAllocatePool( PagedPool, sizeof(*table->entries) * table->entries_count )))
         {
             set_error( STATUS_NO_MEMORY );
             goto fail;
@@ -143,7 +137,12 @@ static atom_t add_atom_entry( struct atom_table *table, struct atom_entry *entry
         int new_size = table->count + table->count / 2;
         if (new_size > MAX_ATOMS) new_size = MAX_ATOMS;
         if (new_size > table->count)
-            new_table = realloc( table->handles, sizeof(*table->handles) * new_size );
+        {
+            //new_table = ExAllocatePool(PagedPool, sizeof(*table->handles) * new_size);
+            //RtlCopyMemory(new_table, table, sizeof(*table->handles));
+            //new_table = realloc( table->handles, sizeof(*table->handles) * new_size );
+            UNIMPLEMENTED;
+        }
         if (!new_table)
         {
             set_error( STATUS_NO_MEMORY );
@@ -171,6 +170,7 @@ static unsigned short atom_hash( struct atom_table *table, const struct unicode_
 /* dump an atom table */
 static void atom_table_dump( struct object *obj, int verbose )
 {
+#if 0
     int i;
     struct atom_table *table = (struct atom_table *)obj;
     assert( obj->ops == &atom_table_ops );
@@ -187,6 +187,7 @@ static void atom_table_dump( struct object *obj, int verbose )
         dump_strW( entry->str, entry->len / sizeof(WCHAR), stderr, "\"\"");
         fprintf( stderr, "\"\n" );
     }
+#endif
 }
 
 /* destroy the atom table */
@@ -197,10 +198,10 @@ static void atom_table_destroy( struct object *obj )
     assert( obj->ops == &atom_table_ops );
     if (table->handles)
     {
-        for (i = 0; i <= table->last; i++) free( table->handles[i] );
-        free( table->handles );
+        for (i = 0; i <= table->last; i++) ExFreePool( table->handles[i] );
+        ExFreePool( table->handles );
     }
-    free( table->entries );
+    ExFreePool( table->entries );
 }
 
 /* find an atom entry in its hash list */
@@ -252,7 +253,7 @@ static atom_t add_atom( struct atom_table *table, const struct unicode_str *str 
             entry->len    = str->len;
             memcpy( entry->str, str->str, str->len );
         }
-        else free( entry );
+        else ExFreePool( entry );
     }
     else set_error( STATUS_NO_MEMORY );
     return atom;
@@ -270,7 +271,7 @@ static void delete_atom( struct atom_table *table, atom_t atom, int if_pinned )
         if (entry->prev) entry->prev->next = entry->next;
         else table->entries[entry->hash] = entry->next;
         table->handles[atom - MIN_STR_ATOM] = NULL;
-        free( entry );
+        ExFreePool( entry );
     }
 }
 
@@ -321,7 +322,7 @@ static struct atom_table *get_table( obj_handle_t h, int create )
 
     if (h)
     {
-        table = (struct atom_table *)get_handle_obj( current->process, h, 0, &atom_table_ops );
+        table = (struct atom_table *)get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), h, 0, &atom_table_ops );
     }
     else
     {
@@ -386,7 +387,7 @@ DECL_HANDLER(add_atom)
 
     if (table)
     {
-        get_req_unicode_str( &name );
+        get_req_unicode_str( (void *)req, &name );
         reply->atom = add_atom( table, &name );
         release_object( table );
     }
@@ -411,13 +412,14 @@ DECL_HANDLER(find_atom)
 
     if (table)
     {
-        get_req_unicode_str( &name );
+        get_req_unicode_str( (void *)req, &name );
         reply->atom = find_atom( table, &name );
         release_object( table );
     }
 }
 
 /* get global atom name */
+#if 0
 DECL_HANDLER(get_atom_information)
 {
     struct atom_table *table = get_table( req->table, 0 );
@@ -427,7 +429,7 @@ DECL_HANDLER(get_atom_information)
 
         if ((entry = get_atom_entry( table, req->atom )))
         {
-            set_reply_data( entry->str, min( entry->len, get_reply_max_size() ));
+            set_reply_data( (void*)req, entry->str, min( entry->len, get_reply_max_size((void*)req) ));
             reply->count = entry->count;
             reply->pinned = entry->pinned;
             reply->total = entry->len;
@@ -436,7 +438,7 @@ DECL_HANDLER(get_atom_information)
         release_object( table );
     }
 }
-
+#endif
 /* set global atom name */
 DECL_HANDLER(set_atom_information)
 {
@@ -460,7 +462,7 @@ DECL_HANDLER(init_atom_table)
 
     if (table)
     {
-        reply->table = alloc_handle( current->process, table, 0, 0 );
+        reply->table = alloc_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), table, 0, 0 );
         release_object( table );
     }
 }
@@ -483,7 +485,7 @@ DECL_HANDLER(empty_atom_table)
                 if (entry->prev) entry->prev->next = entry->next;
                 else table->entries[entry->hash] = entry->next;
                 table->handles[i] = NULL;
-                free( entry );
+                ExFreePool( entry );
             }
         }
         release_object( table );
