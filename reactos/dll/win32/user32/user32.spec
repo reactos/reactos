@@ -163,7 +163,7 @@
 @ stdcall DialogBoxIndirectParamW(long ptr long ptr long)
 @ stdcall DialogBoxParamA(long str long ptr long)
 @ stdcall DialogBoxParamW(long wstr long ptr long)
-@ stub DisableProcessWindowsGhosting
+@ stdcall DisableProcessWindowsGhosting()
 @ stdcall DispatchMessageA(ptr)
 @ stdcall DispatchMessageW(ptr)
 @ stub DisplayExitWindowsWarnings

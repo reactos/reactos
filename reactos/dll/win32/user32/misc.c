@@ -706,3 +706,14 @@ LRESULT WINAPI SendIMEMessageExW(HWND p1, LPARAM p2)
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
+
+/**********************************************************************
+ * DisableProcessWindowsGhosting [USER32.@]
+ *
+ */
+VOID WINAPI DisableProcessWindowsGhosting(VOID)
+{
+  FIXME(": stub\n");
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return;
+}
