@@ -22,6 +22,9 @@
 	<directory name="libwine">
 		<xi:include href="libwine/libwine.rbuild" />
 	</directory>
+	<directory name="libX11">
+		<xi:include href="libX11/libX11.rbuild" />
+	</directory>
 	<directory name="libxml2">
 		<xi:include href="libxml2/libxml2.rbuild" />
 	</directory>
