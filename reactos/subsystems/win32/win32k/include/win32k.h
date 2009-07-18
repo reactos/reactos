@@ -8,21 +8,14 @@
 
 /* INCLUDES ******************************************************************/
 
-/* Version Data */
-#undef __MSVCRT__
-#include <psdk/ntverp.h>
-#define _WIN32_WINNT _WIN32_WINNT_WS03
-#define NTDDI_VERSION NTDDI_WS03SP1
-#define WINVER 0x600
+#define _NO_COM
 
-/* Initial DDK/IFS Headers */
-#ifdef _MSC_VER
-#include <excpt.h>
-#include <ntdef.h>
-#undef DECLSPEC_IMPORT
-#define DECLSPEC_IMPORT
-#endif
-#include <ntifs.h>
+/* DDK/NDK/SDK Headers */
+#include <ddk/ntddk.h>
+#include <ddk/ntddmou.h>
+#include <ddk/ntifs.h>
+#include <ddk/tvout.h>
+#include <ndk/ntndk.h>
 
 /* Win32 Headers */
 /* FIXME: Defines in winbase.h that we need... */
@@ -40,30 +33,14 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <prntfont.h>
 #include <dde.h>
 #include <wincon.h>
-
-/* This set of headers is greatly incompatible */
-/* TODO: Either fix ddrawi.h + all dependencies, or create a new temporary
-         header */
 #define _NOCSECT_TYPE
 // #include <ddrawi.h>
-typedef LPVOID LPVIDMEM;
-typedef LPVOID LPVMEMHEAP;
-typedef LPVOID LPSURFACEALIGNMENT;
-
-/* NDK Headers */
-#include <ntndk.h>
 
 /* SEH Support with PSEH */
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* CSRSS Header */
 #include <csrss/csrss.h>
-
-/* Helper Header */
-#include <reactos/helper.h>
-
-/* Probe and capture */
-#include <reactos/probe.h>
 
 /* Public Win32K Headers */
 #include <win32k/callback.h>
@@ -76,3 +53,6 @@ typedef LPVOID LPSURFACEALIGNMENT;
 
 /* Internal  Win32K Header */
 #include <win32kp.h>
+
+/* Probe and capture */
+#include <reactos/probe.h>

@@ -28,6 +28,16 @@
 #define DECL_HANDLER(name) \
     void req_##name( const struct name##_request *req, struct name##_reply *reply )
 
+extern void *set_reply_data_size( void *req, data_size_t size );
+
+extern PVOID RequestData;
+
+/* get the request vararg data */
+static inline const void *get_req_data()
+{
+    return RequestData;
+}
+
 /* get the request vararg size */
 static inline data_size_t get_req_data_size(struct __server_request_info *req)
 {
@@ -38,9 +48,26 @@ static inline data_size_t get_req_data_size(struct __server_request_info *req)
 static inline void get_req_unicode_str( void *req, struct unicode_str *str )
 {
     struct __server_request_info *serv_req = (struct __server_request_info *)req;
-    str->str = serv_req->data[0].ptr;
+    str->str = get_req_data();
     str->len = (get_req_data_size(serv_req) / sizeof(WCHAR)) * sizeof(WCHAR);
 }
+
+/* get the reply maximum vararg size */
+static inline data_size_t get_reply_max_size(void *req)
+{
+    struct __server_request_info *serv_req = (struct __server_request_info *)req;
+    return serv_req->u.req.request_header.reply_size;
+}
+
+/* allocate and fill the reply data */
+static inline void *set_reply_data( void *req, const void *data, data_size_t size )
+{
+    void *ret = set_reply_data_size( req, size );
+    if (ret) memcpy( ret, data, size );
+    return ret;
+}
+
+void set_reply_data_ptr( void *req, void *data, data_size_t size );
 
 /* Everything below this line is generated automatically by tools/make_requests */
 /* ### make_requests begin ### */
@@ -529,6 +556,7 @@ static const req_handler req_handlers[REQ_NB_REQUESTS] =
     (req_handler)req_set_window_layered_info,
 };
 
+#if 0
 C_ASSERT( sizeof(affinity_t) == 8 );
 C_ASSERT( sizeof(apc_call_t) == 40 );
 C_ASSERT( sizeof(apc_param_t) == 8 );
@@ -1828,7 +1856,7 @@ C_ASSERT( FIELD_OFFSET(struct set_window_layered_info_request, color_key) == 16 
 C_ASSERT( FIELD_OFFSET(struct set_window_layered_info_request, alpha) == 20 );
 C_ASSERT( FIELD_OFFSET(struct set_window_layered_info_request, flags) == 24 );
 C_ASSERT( sizeof(struct set_window_layered_info_request) == 32 );
-
+#endif
 #endif  /* WANT_REQUEST_HANDLERS */
 
 /* ### make_requests end ### */

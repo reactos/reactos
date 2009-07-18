@@ -25,13 +25,13 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 //#include <win32k/rosuser.h>
 
 /* CSR interaction */
-//#include <csr.h>
+#include <csr.h>
 
 #include <win32.h>
 #include <heap.h>
 #include <tags.h>
 
-#include <dib.h>
+//#include <dib.h>
 
 /* Eng and GRE stuff */
 #if 0

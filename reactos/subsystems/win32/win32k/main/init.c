@@ -331,7 +331,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     init_directories();
 
     /* Initialize GDI objects implementation */
-    if (!GDIOBJ_Init()) return STATUS_UNSUCCESSFUL;
+    //if (!GDIOBJ_Init()) return STATUS_UNSUCCESSFUL;
 
     /* Init video driver implementation */
     //InitDcImpl();
