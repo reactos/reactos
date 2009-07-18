@@ -531,8 +531,4 @@ RtlAssert(
 #endif
 #define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
 
-#ifndef ASSERT
-#define ASSERT(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
-#endif
-
 #endif /* __WINE_GDI_PRIVATE_H */
