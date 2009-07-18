@@ -300,6 +300,7 @@ HBRUSH CDECL X11DRV_SelectBrush( X11DRV_PDEVICE *physDev, HBRUSH hbrush )
 
       case BS_DIBPATTERN:
 	TRACE("BS_DIBPATTERN\n");
+#ifndef __REACTOS__
         if ((bmpInfo = GlobalLock16( logbrush.lbHatch )))
 	{
 	    int size = bitmap_info_size( bmpInfo, logbrush.lbColor );
@@ -311,7 +312,7 @@ HBRUSH CDECL X11DRV_SelectBrush( X11DRV_PDEVICE *physDev, HBRUSH hbrush )
 	    DeleteObject( hBitmap );
             GlobalUnlock16( logbrush.lbHatch );
 	}
-
+#endif
 	break;
     }
     return hbrush;

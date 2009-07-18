@@ -48,7 +48,7 @@
 
 #include "x11drv.h"
 #include "xvidmode.h"
-#include "xrandr.h"
+//#include "xrandr.h"
 #include "xcomposite.h"
 #include "wine/server.h"
 #include "wine/debug.h"
@@ -498,9 +498,9 @@ static BOOL process_attach(void)
 
     /* Open display */
 
-    if (!(display = XOpenDisplay( NULL ))) return FALSE;
+    if (!(display = XOpenDisplay( "192.168.1.159:0.0" ))) return FALSE;
 
-    fcntl( ConnectionNumber(display), F_SETFD, 1 ); /* set close on exec flag */
+    //fcntl( ConnectionNumber(display), F_SETFD, 1 ); /* set close on exec flag */
     screen = DefaultScreenOfDisplay( display );
     visual = DefaultVisual( display, DefaultScreen(display) );
     root_window = DefaultRootWindow( display );
@@ -600,6 +600,7 @@ static void process_detach(void)
 /* store the display fd into the message queue */
 static void set_queue_display_fd( Display *display )
 {
+#if 0
     HANDLE handle;
     int ret;
 
@@ -620,6 +621,7 @@ static void set_queue_display_fd( Display *display )
         ExitProcess(1);
     }
     CloseHandle( handle );
+#endif
 }
 
 
@@ -638,7 +640,7 @@ struct x11drv_thread_data *x11drv_init_thread_data(void)
         ExitProcess(1);
     }
     wine_tsx11_lock();
-    if (!(data->display = XOpenDisplay(NULL)))
+    if (!(data->display = XOpenDisplay("192.168.1.159:0.0")))
     {
         wine_tsx11_unlock();
         MESSAGE( "x11drv: Can't open display: %s\n", XDisplayName(NULL) );
@@ -646,7 +648,7 @@ struct x11drv_thread_data *x11drv_init_thread_data(void)
         ExitProcess(1);
     }
 
-    fcntl( ConnectionNumber(data->display), F_SETFD, 1 ); /* set close on exec flag */
+    //fcntl( ConnectionNumber(data->display), F_SETFD, 1 ); /* set close on exec flag */
 
 #ifdef HAVE_XKB
     if (use_xkb && XkbUseExtension( data->display, NULL, NULL ))

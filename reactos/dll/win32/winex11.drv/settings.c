@@ -36,6 +36,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(x11settings);
 
+#define HandleToULong(h)        ((ULONG)(ULONG_PTR)(h))
+
 /*
  * The DDHALMODEINFO type is used to hold all the mode information.  
  * This is done because the array of DDHALMODEINFO structures must be 

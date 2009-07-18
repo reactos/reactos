@@ -42,8 +42,11 @@
 	<file>winex11.rc</file>
 
 	<library>libX11</library>
+	<library>pseh</library>
 	<library>advapi32</library>
+	<library>msvcrt</library>
 	<library>wine</library>
+	<library>comctl32</library>
 	<library>imm32</library>
 	<library>gdi32</library>
 	<library>user32</library>

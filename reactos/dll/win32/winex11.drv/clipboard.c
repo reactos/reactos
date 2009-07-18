@@ -705,15 +705,16 @@ static void X11DRV_CLIPBOARD_FreeData(LPWINE_CLIPDATA lpData)
       {
         DeleteMetaFile(((METAFILEPICT *)GlobalLock( lpData->hData32 ))->hMF );
         GlobalFree(lpData->hData32);
-
+#ifndef __REACTOS__
 	if (lpData->hData16)
 	  /* HMETAFILE16 and HMETAFILE32 are apparently the same thing,
 	     and a shallow copy is enough to share a METAFILEPICT
 	     structure between 16bit and 32bit clipboards.  The MetaFile
 	     should of course only be deleted once. */
 	  GlobalFree16(lpData->hData16);
+#endif
       }
-
+#ifndef __REACTOS__
       if (lpData->hData16)
       {
         METAFILEPICT16* lpMetaPict = GlobalLock16(lpData->hData16);
@@ -728,6 +729,7 @@ static void X11DRV_CLIPBOARD_FreeData(LPWINE_CLIPDATA lpData)
 
 	GlobalFree16(lpData->hData16);
       }
+#endif
     }
     else if (lpData->wFormatID == CF_ENHMETAFILE)
     {
@@ -739,9 +741,10 @@ static void X11DRV_CLIPBOARD_FreeData(LPWINE_CLIPDATA lpData)
     {
       if (lpData->hData32)
         GlobalFree(lpData->hData32);
-
+#ifndef __REACTOS__
       if (lpData->hData16)
 	GlobalFree16(lpData->hData16);
+#endif
     }
 
     lpData->hData16 = 0;
@@ -983,10 +986,12 @@ static BOOL X11DRV_CLIPBOARD_RenderSynthesizedText(Display *display, UINT wForma
     {
         lpstrS = GlobalLock(lpSource->hData32);
     }
+#ifndef __REACTOS__
     else
     {
         lpstrS = GlobalLock16(lpSource->hData16);
     }
+#endif
 
     if (!lpstrS)
         return FALSE;
@@ -1028,8 +1033,10 @@ static BOOL X11DRV_CLIPBOARD_RenderSynthesizedText(Display *display, UINT wForma
     /* Unlock source */
     if (lpSource->hData32)
         GlobalUnlock(lpSource->hData32);
+#ifndef __REACTOS__
     else
         GlobalUnlock16(lpSource->hData16);
+#endif
 
     return X11DRV_CLIPBOARD_InsertClipboardData(wFormatID, 0, hData32, 0, NULL, TRUE);
 }
@@ -2715,6 +2722,7 @@ BOOL CDECL X11DRV_IsClipboardFormatAvailable(UINT wFormat)
  */
 BOOL CDECL X11DRV_GetClipboardData(UINT wFormat, HANDLE16* phData16, HANDLE* phData32)
 {
+#ifndef __REACTOS__
     CLIPBOARDINFO cbinfo;
     LPWINE_CLIPDATA lpRender;
 
@@ -2806,7 +2814,7 @@ BOOL CDECL X11DRV_GetClipboardData(UINT wFormat, HANDLE16* phData16, HANDLE* phD
 
         return lpRender->hData16 || lpRender->hData32;
     }
-
+#endif
     return 0;
 }
 

@@ -74,3 +74,9 @@ void X11DRV_DDHAL_SwitchMode(DWORD dwModeIndex, LPVOID fb_addr, LPVIDMEM fb_mem)
 {
 }
 
+struct _stat;
+int CDECL fstat(int fd, struct _stat* buf)
+{
+    int CDECL _fstat(int fd, struct _stat* buf);
+    return _fstat(fd, buf);
+}

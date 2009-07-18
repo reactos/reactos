@@ -4366,7 +4366,7 @@ static LONG CALLBACK X11DRV_DIB_FaultHandler( PEXCEPTION_POINTERS ep )
     BOOL found = FALSE;
     BYTE *addr;
     struct list *ptr;
-    const size_t pagemask = getpagesize() - 1;
+    const size_t pagemask = 4096 - 1;
 
     if (ep->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return EXCEPTION_CONTINUE_SEARCH;

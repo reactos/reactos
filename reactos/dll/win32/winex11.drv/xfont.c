@@ -1825,7 +1825,7 @@ static void XFONT_LoadIgnores( HKEY hkey )
  */
 static char* XFONT_UserMetricsCache( char* buffer, int* buf_size )
 {
-    const char *confdir = wine_get_config_dir();
+    const char *confdir = "";//wine_get_config_dir();
     const char *display_name = XDisplayName(NULL);
     int len = strlen(confdir) + strlen(INIFontMetrics) + strlen(display_name) + 8;
     int display = 0;
