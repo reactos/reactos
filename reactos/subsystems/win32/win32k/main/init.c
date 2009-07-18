@@ -13,8 +13,12 @@
 /* System service call table */
 #include <include/napi.h>
 
-//#define NDEBUG
+#include <handle.h>
+
+#define NDEBUG
 #include <debug.h>
+
+void init_directories(void);
 
 /* GLOBALS *******************************************************************/
 
@@ -34,25 +38,8 @@ Win32kProcessCallout(PEPROCESS Process,
 
     /* Get the Win32 Process */
     Win32Process = PsGetProcessWin32Process(Process);
-
-    /* Allocate one if needed */
-    if (!Win32Process)
-    {
-        /* FIXME - lock the process */
-        Win32Process = ExAllocatePoolWithTag(NonPagedPool,
-            sizeof(PROCESSINFO),
-            TAG('W', '3', '2', 'p'));
-
-        if (!Win32Process)
-            return STATUS_NO_MEMORY;
-
-        RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
-
-        PsSetProcessWin32Process(Process, Win32Process);
-        /* FIXME - unlock the process */
-    }
-
-    if (Create)
+    DPRINT("Win32Process %p, Create %d\n", Win32Process, Create);
+    if (Create && !Win32Process)
     {
         SIZE_T ViewSize = 0;
         LARGE_INTEGER Offset;
@@ -60,6 +47,20 @@ Win32kProcessCallout(PEPROCESS Process,
         NTSTATUS Status;
         extern PSECTION_OBJECT GlobalUserHeapSection;
         DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
+
+        /* Allocate one if needed */
+        /* FIXME - lock the process */
+        Win32Process = ExAllocatePoolWithTag(NonPagedPool,
+            sizeof(PROCESSINFO),
+            TAG('W', '3', '2', 'p'));
+
+        if (!Win32Process) return STATUS_NO_MEMORY;
+
+        RtlZeroMemory(Win32Process, sizeof(PROCESSINFO));
+
+        PsSetProcessWin32Process(Process, Win32Process);
+        Win32Process->peProcess = Process;
+        /* FIXME - unlock the process */
 
         /* map the global heap into the process */
         Offset.QuadPart = 0;
@@ -82,7 +83,9 @@ Win32kProcessCallout(PEPROCESS Process,
         Win32Process->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
         Win32Process->HeapMappings.UserMapping = UserBase;
         Win32Process->HeapMappings.Count = 1;
+
         InitializeListHead(&Win32Process->Classes);
+        Win32Process->handles = alloc_handle_table(Win32Process, 0);
     }
     else
     {
@@ -100,14 +103,16 @@ Win32kThreadCallout(PETHREAD Thread,
 {
     struct _EPROCESS *Process;
     PTHREADINFO Win32Thread;
+    PPROCESSINFO Win32Process;
 
-    DPRINT("Enter Win32kThreadCallback\n");
+    DPRINT("Enter Win32kThreadCallback, current thread id %d, process id %d\n", PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueThread, PsGetCurrentThread()->Tcb.Teb->ClientId.UniqueProcess);
 
     Process = Thread->ThreadsProcess;
 
-    /* Get the Win32 Thread */
+    /* Get the Win32 Thread and Process */
     Win32Thread = PsGetThreadWin32Thread(Thread);
-
+    Win32Process = PsGetProcessWin32Process(Process);
+    DPRINT("Win32 thread %p, process %p\n", Win32Thread, Win32Process);
     /* Allocate one if needed */
     if (!Win32Thread)
     {
@@ -126,28 +131,15 @@ Win32kThreadCallout(PETHREAD Thread,
     }
     if (Type == PsW32ThreadCalloutInitialize)
     {
-        //PTEB pTeb;
+        DPRINT("Creating W32 thread TID:%d at IRQ level: %lu. Win32Process %p\n", Thread->Tcb.Teb->ClientId.UniqueThread, KeGetCurrentIrql(), Win32Process);
 
-        DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
-
-        Win32Thread->ppi = PsGetCurrentProcessWin32Process();
-        /*pTeb = NtCurrentTeb();
-        if (pTeb)
-        {
-            Win32Thread->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
-            Win32Thread->pClientInfo->pClientThreadInfo = NULL;
-        }*/
+        Win32Thread->process = Win32Process;
+        Win32Thread->peThread = Thread;
+        Win32Thread->desktop = Win32Process->desktop;
     }
     else
     {
-        DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
-
-        /*if (Win32Thread->ThreadInfo != NULL)
-        {
-            UserHeapFree(Win32Thread->ThreadInfo);
-            Win32Thread->ThreadInfo = NULL;
-        }*/
-
+        DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Tcb.Teb->ClientId.UniqueThread, KeGetCurrentIrql());
         PsSetThreadWin32Thread(Thread, NULL);
     }
 
@@ -160,7 +152,7 @@ NTSTATUS
 APIENTRY
 Win32kGlobalAtomTableCallout(VOID)
 {
-    UNIMPLEMENTED;
+    DPRINT("Win32kGlobalAtomTableCallout() is UNIMPLEMENTED\n");
     return STATUS_SUCCESS;
 }
 
@@ -322,6 +314,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Register them */
     PsEstablishWin32Callouts(&CalloutData);
 
+    /* Initialize user implementation */
+    UserInitialize();
+
     /* Create global heap */
     GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
                                     &GlobalUserHeapBase,
@@ -331,6 +326,15 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
         DPRINT1("Failed to initialize the global heap!\n");
         return STATUS_UNSUCCESSFUL;
     }
+
+    /* Init object directories implementation */
+    init_directories();
+
+    /* Initialize GDI objects implementation */
+    if (!GDIOBJ_Init()) return STATUS_UNSUCCESSFUL;
+
+    /* Init video driver implementation */
+    //InitDcImpl();
 
     return STATUS_SUCCESS;
 }
