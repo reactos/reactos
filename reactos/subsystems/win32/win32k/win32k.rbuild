@@ -16,7 +16,7 @@
 	<directory name="include">
 		<pch>win32k.h</pch>
 	</directory>
-	<directory name="gre">
+	<directory name="main">
 		<file>err.c</file>
 		<file>init.c</file>
 		<file>usrheap.c</file>
