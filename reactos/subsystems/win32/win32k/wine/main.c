@@ -20,33 +20,166 @@
 #define NDEBUG
 #include <debug.h>
 
+ERESOURCE UserLock;
+
+PVOID RequestData;
+ULONG ReplySize;
+PVOID ReplyData;
+
 /* PRIVATE FUNCTIONS *********************************************************/
+
+VOID UserEnterExclusive(VOID)
+{
+    /* Acquire user resource exclusively */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&UserLock, TRUE);
+}
+
+VOID UserLeave(VOID)
+{
+    /* Release user resource */
+    ExReleaseResourceLite(&UserLock);
+    KeLeaveCriticalRegion();
+}
+
+#if 0
+VOID UserCleanup(VOID)
+{
+   ExDeleteResourceLite(&UserLock);
+}
+#endif
+
+VOID UserInitialize(VOID)
+{
+    NTSTATUS Status;
+
+    /* Initialize user access resource */
+    Status = ExInitializeResourceLite(&UserLock);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failure initializing USER resource!\n");
+    }
+}
 
 UINT
 APIENTRY
 wine_server_call(void *req_ptr)
 {
     struct __server_request_info *reqinfo = req_ptr;
-    //struct type##_request * const req = &__req.u.req.type##_request;
-    //const struct type##_reply * const reply = &__req.u.reply.type##_reply;
-
     union generic_reply reply;
     enum request req = reqinfo->u.req.request_header.req;
+    UCHAR i;
+    ULONG DataWritten=0;
 
     DPRINT("WineServer call of type 0x%x\n", req);
 
+    /* Zero reply's memory area */
     memset( &reply, 0, sizeof(reply) );
 
-    //if (debug_level) trace_request();
+    /* Acquire lock */
+    UserEnterExclusive();
 
-    if (req < REQ_NB_REQUESTS)
-        req_handlers[req]( req_ptr, &reply );
+    /* Clear error status */
+    set_error(0);
+
+    if (reqinfo->data_count > 1)
+    {
+        /* We need to make a contiguous data block from those */
+        DataWritten = 0;
+        for (i=0; i<reqinfo->data_count; i++)
+        {
+            DataWritten += reqinfo->data[i].size;
+        }
+
+        /* Allocate memory for it */
+        RequestData = ExAllocatePool(PagedPool, DataWritten);
+
+        /* Place them */
+        DataWritten = 0;
+        for (i=0; i<reqinfo->data_count; i++)
+        {
+            RtlCopyMemory(((UCHAR *)RequestData + DataWritten),
+                          reqinfo->data[i].ptr,
+                          reqinfo->data[i].size);
+
+            /* Advance to the next data block */
+            DataWritten += reqinfo->data[i].size;
+        }
+    }
     else
+    {
+        RequestData = (PVOID)reqinfo->data[0].ptr;
+    }
+
+    ReplySize = 0;
+    ReplyData = NULL;
+
+    /* Perform the request */
+    if (req < REQ_NB_REQUESTS)
+    {
+        /* Call request handler */
+        req_handlers[req]( req_ptr, &reply );
+    }
+    else
+    {
         DPRINT1("WineServer call of type 0x%x is not implemented!\n", req);
+    }
 
-    //reply.reply_header.error = current->error;
-    //reply.reply_header.reply_size = current->reply_size;
-    //if (debug_level) trace_reply( req, &reply );
+    /* Free the request data area if needed */
+    if (reqinfo->data_count > 1) ExFreePool(RequestData);
 
-    return 0;
+    /* Copy back the reply data if any */
+    if (ReplySize)
+    {
+        /* Copy it */
+        RtlCopyMemory(reqinfo->reply_data, ReplyData, ReplySize);
+
+        /* Free temp storage */
+        ExFreePool(ReplyData);
+    }
+
+    /* Set reply's error flag and size */
+    reply.reply_header.error = get_error();
+    reply.reply_header.reply_size = ReplySize;
+
+    /* Copy reply back */
+    memcpy (&reqinfo->u.reply, &reply, sizeof(reply));
+
+    /* Release lock */
+    UserLeave();
+
+    //if (reply.reply_header.error)
+    //    DPRINT1("returning error 0x%08X\n", reply.reply_header.error);
+
+    //if (reply.reply_header.error == 0x103 ||
+    //    reply.reply_header.error == STATUS_ACCESS_DENIED) DbgBreakPoint();
+
+    return reply.reply_header.error;
 }
+
+/* allocate the reply data */
+void *set_reply_data_size( void *req, data_size_t size )
+{
+    ASSERT( size <= get_reply_max_size(req) );
+
+    /* Allocate storage for reply data */
+    if (size && !(ReplyData = ExAllocatePool( PagedPool, size ))) size = 0;
+
+    /* Set reply size */
+    ReplySize = size;
+
+    /* Return a pointer to allocated storage */
+    return ReplyData;
+}
+
+/* set the reply data pointer directly (will be freed by request code) */
+void set_reply_data_ptr( void *req, void *data, data_size_t size )
+{
+    ASSERT( size < get_reply_max_size(req));
+
+    /* Just save them */
+    ReplySize = size;
+    ReplyData = data;
+}
+
