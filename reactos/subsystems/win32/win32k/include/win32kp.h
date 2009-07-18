@@ -15,9 +15,31 @@
 W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 
 /* Internal  Win32K Headers */
+#include <wine/server_protocol.h>
 //#include <gdiobj.h>
 //#include <engobj.h>
 //#include <userobj.h>
+
+/* client communication functions (from server.h) */
+struct __server_iovec
+{
+    const void  *ptr;
+    data_size_t  size;
+};
+
+#define __SERVER_MAX_DATA 5
+
+struct __server_request_info
+{
+    union
+    {
+        union generic_request req;    /* request structure */
+        union generic_reply   reply;  /* reply structure */
+    } u;
+    unsigned int          data_count; /* count of request data pointers */
+    void                 *reply_data; /* reply data pointer */
+    struct __server_iovec data[__SERVER_MAX_DATA];  /* request variable size data */
+};
 
 
 #endif

@@ -21,6 +21,7 @@
 	</directory>
 	<directory name="wine">
 		<file>main.c</file>
+		<file>stubs.c</file>
 	</directory>
 	<file>win32k.rc</file>
 </module>
