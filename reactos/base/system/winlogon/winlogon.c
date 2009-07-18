@@ -86,7 +86,7 @@ PlayLogonSoundThread(
 
 			Sleep(1000);
 
-		}while(Index < 20);
+		}while(Index++ < 20);
 
 		CloseServiceHandle(hService);
 		CloseServiceHandle(hSCManager);
