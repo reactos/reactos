@@ -117,6 +117,6 @@ WINAPI
 PrivateCsrssInitialized(VOID)
 {
     /* Perform a reactos only CSRSS connection */
-    //RosUserConnectCsrss();
+    RosUserConnectCsrss();
 }
 
