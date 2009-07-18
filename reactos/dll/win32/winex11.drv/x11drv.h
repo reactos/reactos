@@ -785,4 +785,7 @@ extern LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, B
 
 #define XEMBED_MAPPED  (1 << 0)
 
+#define XBUTTON1            0x0001
+#define XBUTTON2            0x0002
+
 #endif  /* __WINE_X11DRV_H */

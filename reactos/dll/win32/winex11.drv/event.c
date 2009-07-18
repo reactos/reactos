@@ -20,7 +20,7 @@
  */
 
 #include "config.h"
-
+#include "wine/port.h"
 #ifdef HAVE_POLL_H
 #include <poll.h>
 #endif

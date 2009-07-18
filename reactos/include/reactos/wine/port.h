@@ -254,6 +254,22 @@ int lstat(const char *file_name, struct stat *buf);
 void *memmove(void *dest, const void *src, size_t len);
 #endif /* !defined(HAVE_MEMMOVE) */
 
+#ifndef HAVE_POLL
+struct pollfd
+{
+    int fd;
+    short events;
+    short revents;
+};
+#define POLLIN   0x01
+#define POLLPRI  0x02
+#define POLLOUT  0x04
+#define POLLERR  0x08
+#define POLLHUP  0x10
+#define POLLNVAL 0x20
+int poll( struct pollfd *fds, unsigned int count, int timeout );
+#endif /* HAVE_POLL */
+
 #ifndef __REACTOS__
 #ifndef HAVE_PREAD
 ssize_t pread( int fd, void *buf, size_t count, off_t offset );
