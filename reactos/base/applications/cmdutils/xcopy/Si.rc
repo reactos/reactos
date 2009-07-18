@@ -1,4 +1,4 @@
-/*
+﻿/*
  * XCOPY - Wine-compatible xcopy program
  * Slovenian language support
  *
@@ -78,5 +78,3 @@ Where:\n\
 \t\tod izvora\n\n"
 
 }
-
-#pragma code_page(default)

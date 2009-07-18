@@ -1,8 +1,7 @@
-/*
+ï»¿/*
  * Help Viewer
  *
- * Copyright 1996 Ulrich Schmid
- * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ * Copyright 2009 Aurimas FiÅ¡eras <aurimas@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,55 +16,56 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *  
- * Translation by Vytis "CMan" Girdþijauskas (cman@cman.us) 
  */
 
-LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
 /* Menu */
 
 MAIN_MENU MENU
 {
- POPUP "&Byla" {
-  MENUITEM "&Atverti", MNID_FILE_OPEN
-  MENUITEM SEPARATOR
-  MENUITEM "&Spausdinti", MNID_FILE_PRINT
-  MENUITEM "S&pausdintuvo nuostatos...", MNID_FILE_SETUP
+ POPUP "&Failas" {
+   MENUITEM "&Atverti",                   MNID_FILE_OPEN
    MENUITEM SEPARATOR
-  MENUITEM "&Baigti", MNID_FILE_EXIT
- }
- POPUP "&Redaguoti" {
-   MENUITEM "&Kopijuoti...", MNID_EDIT_COPYDLG
+   MENUITEM "&Spausdinti",                MNID_FILE_PRINT
+   MENUITEM "Spaus&dintuvo nuostatos...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-   MENUITEM "&Komentarai...", MNID_EDIT_ANNOTATE
+   MENUITEM "IÅ¡&eiti",                    MNID_FILE_EXIT
  }
- POPUP "&Þymës" {
-   MENUITEM "&Kurti...", MNID_BKMK_DEFINE
+ POPUP "&Taisa" {
+   MENUITEM "&Kopijuoti...",              MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "Ko&mentuoti...",             MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Adresynas" {
+   MENUITEM "&ApibrÄ—Å¾ti...",              MNID_BKMK_DEFINE
  }
  POPUP "&Parinktys" {
-   POPUP	"Pagalba visada matoma"
+   POPUP    "Å½inynas visuomet matomas"
    BEGIN
-     MENUITEM "Numatyta",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Matoma",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Nematoma",	MNID_OPTS_HELP_NONVISIBLE
-  END
-  MENUITEM "Istorija",		MNID_OPTS_HISTORY
-  POPUP    "Ðriftas"
-  BEGIN
-    MENUITEM "Maþas",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normalus",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Didelis",     	MNID_OPTS_FONTS_LARGE
-  END
-  MENUITEM "Naudoti sistemos spalvas",	MNID_OPTS_SYSTEM_COLORS
+     MENUITEM "Numatyta",                 MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Matomas",                  MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Nematomas",                MNID_OPTS_HELP_NONVISIBLE
+   END
+   MENUITEM "Istorija",                   MNID_OPTS_HISTORY
+   POPUP    "Å riftas"
+   BEGIN
+     MENUITEM "&MaÅ¾as",                   MNID_OPTS_FONTS_SMALL
+     MENUITEM "&Normalus",                MNID_OPTS_FONTS_NORMAL
+     MENUITEM "&Didelis",                 MNID_OPTS_FONTS_LARGE
+   END
+   MENUITEM "Naudoti &sistemos spalvas",  MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "&Pagalba" {
-   MENUITEM "&Turinys", MNID_HELP_HELPON
-   MENUITEM "Visada &virðuje", MNID_HELP_HELPTOP
+ POPUP "&Å½inynas" {
+   MENUITEM "Pa&galba apie Å¾inynÄ…",       MNID_HELP_HELPON
+   MENUITEM "&Visada virÅ¡uje",            MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Apie", MNID_HELP_ABOUT
+   MENUITEM "&Informacija...",            MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "Apie &Wine", MNID_HELP_WINE
+   MENUITEM "&Apie Wine",                 MNID_HELP_WINE
 #endif
  }
 }
@@ -73,7 +73,7 @@ MAIN_MENU MENU
 IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Rodyklë"
+CAPTION "Indeksas"
 {
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
@@ -81,49 +81,49 @@ CAPTION "Rodyklë"
 IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Paieðka"
+CAPTION "PaieÅ¡ka"
 {
-    LTEXT  "Dar nesukurta", -1, 10, 10, 180, 150
+    LTEXT  "Dar nerealizuota", -1, 10, 10, 180, 150
 }
 
 /* Strings */
 STRINGTABLE DISCARDABLE
 {
-STID_WINE_HELP, 	"Wine Pagalba"
-STID_WHERROR, 		"KLAIDA"
-STID_WARNING,  		"DËMESIO"
-STID_INFO,  		"Informacija"
-STID_NOT_IMPLEMENTED, 	"Dar nesukurta"
-STID_HLPFILE_ERROR_s, 	"Ávyko klaida skaitant pagalbos bylà '%s'."
-STID_INDEX, 		"&Rodyklë"
-STID_CONTENTS, 		"&Turinys"
-STID_BACK, 		"&Atgal"
-STID_ALL_FILES, 	"Visos bylos (*.*)"
-STID_HELP_FILES_HLP, 	"Pagalbos bylos (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Nepavyko rasti '%s'. Ar norëtumëte pabandyti surasti ðia bylà patys?"
-STID_NO_RICHEDIT	"Nerastas richedit palaikymas... Darbas nutraukiamas"
-STID_PSH_INDEX,		"Pagalbos temos: "
+STID_WINE_HELP,       "Wine Å¾inynas"
+STID_WHERROR,         "KLAIDA"
+STID_WARNING,         "Ä®SPÄ–JIMAS"
+STID_INFO,            "Informacija"
+STID_NOT_IMPLEMENTED, "Nerealizuota"
+STID_HLPFILE_ERROR_s, "Klaida skaitant Å¾inyno failÄ… â€ž%sâ€œ"
+STID_INDEX,           "&RodyklÄ—"
+STID_CONTENTS,        "Santrauka"
+STID_BACK,            "&Atgal"
+STID_ALL_FILES,       "Visi failai (*.*)"
+STID_HELP_FILES_HLP,  "Å½inyno failai (*.hlp)"
+STID_FILE_NOT_FOUND_s "Nepavyko rasti â€ž%sâ€œ. Ar norite rasti Å¡Ä¯ failÄ… patys?"
+STID_NO_RICHEDIT      "Nepavyko rasti RichEdit realizacijos... Nutraukiama"
+STID_PSH_INDEX,       "Å½inyno temos: "
 }
 
 CONTEXT_MENU MENU
 BEGIN
-	POPUP ""
-	BEGIN
-		MENUITEM "Komentarai...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Kopijuoti",                MNID_CTXT_COPY
-		MENUITEM "Spausdinti...",            MNID_CTXT_PRINT
-		POPUP    "Ðriftas"
-		BEGIN
-			MENUITEM "Maþas",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Normalus",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Didelis",       MNID_CTXT_FONTS_LARGE
-		END
-		POPUP   "Pagalba visada matoma"
-		BEGIN
-			MENUITEM "Numatyta",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Matoma",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Nematoma", MNID_CTXT_HELP_NONVISIBLE
-		END
-		MENUITEM "Naudoti sistemos spalvas",   MNID_CTXT_SYSTEM_COLORS
-	END
+  POPUP ""
+  BEGIN
+    MENUITEM "Komentuoti...",            MNID_CTXT_ANNOTATE
+    MENUITEM "Kopijuoti",                MNID_CTXT_COPY
+    MENUITEM "Spausdinti...",            MNID_CTXT_PRINT
+    POPUP    "Å riftas"
+    BEGIN
+      MENUITEM "MaÅ¾as",                  MNID_CTXT_FONTS_SMALL
+      MENUITEM "Normalus",               MNID_CTXT_FONTS_NORMAL
+      MENUITEM "Didelis",                MNID_CTXT_FONTS_LARGE
+    END
+    POPUP   "Å½inynas visuomet matomas"
+    BEGIN
+      MENUITEM "Numatyta",               MNID_CTXT_HELP_DEFAULT
+      MENUITEM "Matomas",                MNID_CTXT_HELP_VISIBLE
+      MENUITEM "Nematomas",              MNID_CTXT_HELP_NONVISIBLE
+    END
+    MENUITEM "Naudoti sistemos spalvas", MNID_CTXT_SYSTEM_COLORS
+  END
 END

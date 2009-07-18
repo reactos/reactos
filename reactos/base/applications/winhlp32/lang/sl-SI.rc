@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Help Viewer (Slovenian Resources)
  *
  * Copyright 2002, 2003, 2008 Rok Mandeljc
@@ -124,5 +124,3 @@ BEGIN
 		MENUITEM "Uporabi sistemske barve",   MNID_CTXT_SYSTEM_COLORS
 	END
 END
-
-#pragma code_page(default)
