@@ -28,13 +28,13 @@ IntUserHeapCommitRoutine(IN PVOID Base,
                          IN OUT PVOID *CommitAddress,
                          IN OUT PSIZE_T CommitSize)
 {
-    PW32PROCESS W32Process;
+    PPROCESSINFO W32Process;
     PW32HEAP_USER_MAPPING Mapping;
     PVOID UserBase = NULL;
     NTSTATUS Status;
     SIZE_T Delta = (SIZE_T)((ULONG_PTR)(*CommitAddress) - (ULONG_PTR)Base);
 
-    W32Process = PsGetCurrentProcessWin32Process();
+    W32Process = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
 
     if (W32Process != NULL)
     {

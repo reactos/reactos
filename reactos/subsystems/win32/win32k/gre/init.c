@@ -28,7 +28,7 @@ APIENTRY
 Win32kProcessCallout(PEPROCESS Process,
                      BOOLEAN Create)
 {
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
 
     DPRINT("Enter Win32kProcessCallback\n");
 
@@ -82,23 +82,6 @@ Win32kProcessCallout(PEPROCESS Process,
         Win32Process->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
         Win32Process->HeapMappings.UserMapping = UserBase;
         Win32Process->HeapMappings.Count = 1;
-
-        InitializeListHead(&Win32Process->ClassList);
-        InitializeListHead(&Win32Process->MenuListHead);
-        InitializeListHead(&Win32Process->PrivateFontListHead);
-        ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
-        InitializeListHead(&Win32Process->DriverObjListHead);
-        ExInitializeFastMutex(&Win32Process->DriverObjListLock);
-
-        if(Process->Peb != NULL)
-        {
-            /* map the gdi handle table to user land */
-            //Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(GdiTableSection, Process);
-            //Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
-        }
-
-        /* setup process flags */
-        Win32Process->W32PF_flags = 0;
     }
     else
     {
@@ -114,7 +97,61 @@ APIENTRY
 Win32kThreadCallout(PETHREAD Thread,
                     PSW32THREADCALLOUTTYPE Type)
 {
-    UNIMPLEMENTED;
+    struct _EPROCESS *Process;
+    PTHREADINFO Win32Thread;
+
+    DPRINT("Enter Win32kThreadCallback\n");
+
+    Process = Thread->ThreadsProcess;
+
+    /* Get the Win32 Thread */
+    Win32Thread = PsGetThreadWin32Thread(Thread);
+
+    /* Allocate one if needed */
+    if (!Win32Thread)
+    {
+        /* FIXME - lock the process */
+        Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
+                                            sizeof(THREADINFO),
+                                            TAG('W', '3', '2', 't'));
+
+        if (!Win32Thread)
+            return STATUS_NO_MEMORY;
+
+        RtlZeroMemory(Win32Thread, sizeof(THREADINFO));
+
+        PsSetThreadWin32Thread(Thread, Win32Thread);
+        /* FIXME - unlock the process */
+    }
+    if (Type == PsW32ThreadCalloutInitialize)
+    {
+        //PTEB pTeb;
+
+        DPRINT("Creating W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
+
+        Win32Thread->ppi = PsGetCurrentProcessWin32Process();
+        /*pTeb = NtCurrentTeb();
+        if (pTeb)
+        {
+            Win32Thread->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
+            Win32Thread->pClientInfo->pClientThreadInfo = NULL;
+        }*/
+    }
+    else
+    {
+        DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
+
+        /*if (Win32Thread->ThreadInfo != NULL)
+        {
+            UserHeapFree(Win32Thread->ThreadInfo);
+            Win32Thread->ThreadInfo = NULL;
+        }*/
+
+        PsSetThreadWin32Thread(Thread, NULL);
+    }
+
+    DPRINT("Leave Win32kThreadCallback\n");
+
     return STATUS_SUCCESS;
 }
 
