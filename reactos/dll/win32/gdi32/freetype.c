@@ -77,9 +77,12 @@
 #undef SetRectRgn
 #endif /* HAVE_CARBON_CARBON_H */
 
+#define WIN32_NO_STATUS
+#define NTOS_MODE_USER
 #include "windef.h"
 #include "winbase.h"
-#include "winternl.h"
+#include <ndk/ntndk.h>
+#include <ddk/ntstatus.h>
 #include "winerror.h"
 #include "winreg.h"
 #include "wingdi.h"
@@ -109,6 +112,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(font);
 #endif
 #ifdef HAVE_FREETYPE_FTSNAMES_H
 #include <freetype/ftsnames.h>
+#else
+# ifdef HAVE_FREETYPE_FTNAMES_H
+# include <freetype/ftnames.h>
+# endif
 #endif
 #ifdef HAVE_FREETYPE_TTNAMEID_H
 #include <freetype/ttnameid.h>
@@ -851,10 +858,10 @@ static Face *find_face_from_filename(const WCHAR *file_name, const WCHAR *face_n
     Family *family;
     Face *face;
     const char *file;
-    DWORD len = WideCharToMultiByte(CP_UNIXCP, 0, file_name, -1, NULL, 0, NULL, NULL);
+    DWORD len = WideCharToMultiByte(CP_ACP, 0, file_name, -1, NULL, 0, NULL, NULL);
     char *file_nameA = HeapAlloc(GetProcessHeap(), 0, len);
 
-    WideCharToMultiByte(CP_UNIXCP, 0, file_name, -1, file_nameA, len, NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, file_name, -1, file_nameA, len, NULL, NULL);
     TRACE("looking for file %s name %s\n", debugstr_a(file_nameA), debugstr_w(face_name));
 
     LIST_FOR_EACH_ENTRY(family, &font_list, Family, entry)
@@ -999,6 +1006,7 @@ static void split_subst_info(NameCs *nc, LPSTR str)
 
 static void LoadSubstList(void)
 {
+#if 0
     FontSubst *psub;
     HKEY hkey;
     DWORD valuelen, datalen, i = 0, type, dlen, vlen;
@@ -1044,6 +1052,9 @@ static void LoadSubstList(void)
 	HeapFree(GetProcessHeap(), 0, value);
 	RegCloseKey(hkey);
     }
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 
@@ -1576,6 +1587,7 @@ static void DumpFontList(void)
  */
 static void LoadReplaceList(void)
 {
+#if 0
     HKEY hkey;
     DWORD valuelen, datalen, i = 0, type, dlen, vlen;
     LPWSTR value;
@@ -1626,6 +1638,9 @@ static void LoadReplaceList(void)
 	HeapFree(GetProcessHeap(), 0, value);
 	RegCloseKey(hkey);
     }
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 /*************************************************************
@@ -1646,17 +1661,75 @@ static BOOL init_system_links(void)
     Family *family;
     Face *face;
     FontSubst *psub;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES Attributes;
+    UNICODE_STRING system_link = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink");
+    KEY_FULL_INFORMATION FullInfoBuffer;
+    PKEY_FULL_INFORMATION FullInfo;
+    ULONG FullInfoSize, Length, total_size;
+    char buffer[256];
+    KEY_VALUE_FULL_INFORMATION *info = (KEY_VALUE_FULL_INFORMATION *)buffer;
 
-    if(RegOpenKeyW(HKEY_LOCAL_MACHINE, system_link, &hkey) == ERROR_SUCCESS)
+    InitializeObjectAttributes(&Attributes, &system_link, OBJ_CASE_INSENSITIVE, NULL, NULL);
+    Status = NtOpenKey(&hkey, KEY_READ, &Attributes);
+    if (NT_SUCCESS(Status))
     {
-        RegQueryInfoKeyW(hkey, NULL, NULL, NULL, NULL, NULL, NULL, NULL, &max_val, &max_data, NULL, NULL);
+        FullInfoSize = sizeof(KEY_FULL_INFORMATION);
+        FullInfo = &FullInfoBuffer;
+        Status = NtQueryKey(hkey, KeyFullInformation, FullInfo, FullInfoSize, &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            ERR("NtQueryKey failed with Status 0x%08X\n", Status);
+            NtClose(hkey);
+            return;
+        }
+
+        max_val = FullInfo->MaxValueNameLen / sizeof(WCHAR) + 1;
+        max_data = FullInfo->MaxValueDataLen;
+
         value = HeapAlloc(GetProcessHeap(), 0, (max_val + 1) * sizeof(WCHAR));
         data = HeapAlloc(GetProcessHeap(), 0, max_data);
         val_len = max_val + 1;
         data_len = max_data;
         index = 0;
-        while(RegEnumValueW(hkey, index++, value, &val_len, NULL, &type, (LPBYTE)data, &data_len) == ERROR_SUCCESS)
+        while(TRUE)
         {
+            total_size = FIELD_OFFSET( KEY_VALUE_FULL_INFORMATION, Name ) + (MAX_PATH + 1) * sizeof(WCHAR) + data_len;
+            total_size = min(sizeof(buffer), total_size);
+            Status = NtEnumerateValueKey(hkey, index++, KeyValueFullInformation, buffer, total_size, &total_size);
+            if (Status == STATUS_BUFFER_OVERFLOW)
+            {
+                UNIMPLEMENTED;
+            }
+            else if (!NT_SUCCESS(Status)) break;
+
+            /* Copy value */
+            if (info->NameLength/sizeof(WCHAR) < val_len)
+            {
+                memcpy( value, info->Name, info->NameLength );
+                val_len = info->NameLength / sizeof(WCHAR);
+                value[val_len] = 0;
+            }
+
+            /* Copy data */
+            if (total_size - info->DataOffset < data_len)
+            {
+                memcpy( data, buffer + info->DataOffset, total_size - info->DataOffset );
+                if (total_size - info->DataOffset <= data_len - sizeof(WCHAR) && 
+                    ((info->Type == REG_SZ) || (info->Type == REG_EXPAND_SZ) || (info->Type == REG_MULTI_SZ)))
+                {
+                    /* if the type is REG_SZ and data is not 0-terminated
+                    * and there is enough space in the buffer NT appends a \0 */
+                    WCHAR *ptr = (WCHAR *)(data + total_size - info->DataOffset);
+                    if (ptr > (WCHAR *)data && ptr[-1]) *ptr = 0;
+                }
+            }
+
+            /* Copy type and data length */
+            type = info->Type;
+            data_len = info->DataLength;
+
+
             memset(&fs, 0, sizeof(fs));
             psub = get_font_subst(&font_subst_list, value, -1);
             /* Don't store fonts that are only substitutes for other fonts */
@@ -1718,7 +1791,7 @@ static BOOL init_system_links(void)
 
         HeapFree(GetProcessHeap(), 0, value);
         HeapFree(GetProcessHeap(), 0, data);
-        RegCloseKey(hkey);
+        NtClose(hkey);
     }
 
     /* Explicitly add an entry for the system font, this links to Tahoma and any links
@@ -1759,6 +1832,7 @@ static BOOL init_system_links(void)
 
 static BOOL ReadFontDir(const char *dirname, BOOL external_fonts)
 {
+#if 0
     DIR *dir;
     struct dirent *dent;
     char path[MAX_PATH];
@@ -1792,6 +1866,13 @@ static BOOL ReadFontDir(const char *dirname, BOOL external_fonts)
     }
     closedir(dir);
     return TRUE;
+#else
+    AddFontFileToList("C:\\ReactOS\\fonts\\tahoma.ttf", NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
+    AddFontFileToList("C:\\ReactOS\\fonts\\symbol.ttf", NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
+    AddFontFileToList("C:\\ReactOS\\fonts\\Marlett.ttf", NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
+    UNIMPLEMENTED;
+    return TRUE;
+#endif
 }
 
 static void load_fontconfig_fonts(void)
@@ -1878,14 +1959,14 @@ static BOOL load_font_from_data_dir(LPCWSTR file)
         INT len;
         char *unix_name;
 
-        len = WideCharToMultiByte(CP_UNIXCP, 0, file, -1, NULL, 0, NULL, NULL);
+        len = WideCharToMultiByte(CP_ACP, 0, file, -1, NULL, 0, NULL, NULL);
 
         unix_name = HeapAlloc(GetProcessHeap(), 0, strlen(data_dir) + len + sizeof("/fonts/"));
 
         strcpy(unix_name, data_dir);
         strcat(unix_name, "/fonts/");
 
-        WideCharToMultiByte(CP_UNIXCP, 0, file, -1, unix_name + strlen(unix_name), len, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, file, -1, unix_name + strlen(unix_name), len, NULL, NULL);
 
         EnterCriticalSection( &freetype_cs );
         ret = AddFontFileToList(unix_name, NULL, NULL, ADDFONT_FORCE_BITMAP);
@@ -1900,29 +1981,28 @@ static BOOL load_font_from_winfonts_dir(LPCWSTR file)
     static const WCHAR slashW[] = {'\\','\0'};
     BOOL ret = FALSE;
     WCHAR windowsdir[MAX_PATH];
-    char *unixname;
+    char windowsdirA[MAX_PATH];
 
     GetWindowsDirectoryW(windowsdir, sizeof(windowsdir) / sizeof(WCHAR));
     strcatW(windowsdir, fontsW);
     strcatW(windowsdir, slashW);
     strcatW(windowsdir, file);
-    if ((unixname = wine_get_unix_file_name(windowsdir))) {
-        EnterCriticalSection( &freetype_cs );
-        ret = AddFontFileToList(unixname, NULL, NULL, ADDFONT_FORCE_BITMAP);
-        LeaveCriticalSection( &freetype_cs );
-        HeapFree(GetProcessHeap(), 0, unixname);
-    }
+    sprintf(windowsdirA, "%S", windowsdir);
+    EnterCriticalSection( &freetype_cs );
+    ret = AddFontFileToList(windowsdirA, NULL, NULL, ADDFONT_FORCE_BITMAP);
+    LeaveCriticalSection( &freetype_cs );
     return ret;
 }
 
 static void load_system_fonts(void)
 {
+#if 0
     HKEY hkey;
     WCHAR data[MAX_PATH], windowsdir[MAX_PATH], pathW[MAX_PATH];
+    char pathA[MAX_PATH];
     const WCHAR * const *value;
     DWORD dlen, type;
     static const WCHAR fmtW[] = {'%','s','\\','%','s','\0'};
-    char *unixname;
 
     if(RegOpenKeyW(HKEY_CURRENT_CONFIG, system_fonts_reg_key, &hkey) == ERROR_SUCCESS) {
         GetWindowsDirectoryW(windowsdir, sizeof(windowsdir) / sizeof(WCHAR));
@@ -1934,16 +2014,15 @@ static void load_system_fonts(void)
                 BOOL added = FALSE;
 
                 sprintfW(pathW, fmtW, windowsdir, data);
-                if((unixname = wine_get_unix_file_name(pathW))) {
-                    added = AddFontFileToList(unixname, NULL, NULL, ADDFONT_FORCE_BITMAP);
-                    HeapFree(GetProcessHeap(), 0, unixname);
-                }
+                sprintf(pathA, "%S", pathW);
+                added = AddFontFileToList(pathA, NULL, NULL, ADDFONT_FORCE_BITMAP);
                 if (!added)
                     load_font_from_data_dir(data);
             }
         }
         RegCloseKey(hkey);
     }
+#endif
 }
 
 /*************************************************************
@@ -1955,6 +2034,7 @@ static void load_system_fonts(void)
  */
 static void update_reg_entries(void)
 {
+#if 0
     HKEY winnt_key = 0, win9x_key = 0, external_key = 0;
     LPWSTR valueW;
     DWORD len, len_fam;
@@ -2003,7 +2083,7 @@ static void update_reg_entries(void)
             }
             strcatW(valueW, TrueType);
 
-            file = wine_get_dos_file_name(face->file);
+            file = NULL;//wine_get_dos_file_name(face->file);
             if(file)
                 len = strlenW(file) + 1;
             else
@@ -2030,10 +2110,14 @@ static void update_reg_entries(void)
     if(win9x_key) RegCloseKey(win9x_key);
     if(winnt_key) RegCloseKey(winnt_key);
     return;
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 static void delete_external_font_keys(void)
 {
+#if 0
     HKEY winnt_key = 0, win9x_key = 0, external_key = 0;
     DWORD dlen, vlen, datalen, valuelen, i, type;
     LPWSTR valueW;
@@ -2086,6 +2170,9 @@ static void delete_external_font_keys(void)
  end:
     if(win9x_key) RegCloseKey(win9x_key);
     if(winnt_key) RegCloseKey(winnt_key);
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 /*************************************************************
@@ -2105,6 +2192,7 @@ INT WineEngAddFontResourceEx(LPCWSTR file, DWORD flags, PVOID pdv)
         if(flags)
             FIXME("Ignoring flags %x\n", flags);
 
+#if 0
         if((unixname = wine_get_unix_file_name(file)))
         {
             EnterCriticalSection( &freetype_cs );
@@ -2112,6 +2200,9 @@ INT WineEngAddFontResourceEx(LPCWSTR file, DWORD flags, PVOID pdv)
             LeaveCriticalSection( &freetype_cs );
             HeapFree(GetProcessHeap(), 0, unixname);
         }
+#else
+        UNIMPLEMENTED;
+#endif
         if (!ret && !strchrW(file, '\\')) {
             /* Try in %WINDIR%/fonts, needed for Fotobuch Designer */
             ret = load_font_from_winfonts_dir(file);
@@ -2371,8 +2462,8 @@ static inline HKEY create_fonts_NT_registry_key(void)
 {
     HKEY hkey = 0;
 
-    RegCreateKeyExW(HKEY_LOCAL_MACHINE, winnt_font_reg_key, 0, NULL,
-                    0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    //RegCreateKeyExW(HKEY_LOCAL_MACHINE, winnt_font_reg_key, 0, NULL,
+    //                0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
     return hkey;
 }
 
@@ -2380,8 +2471,8 @@ static inline HKEY create_fonts_9x_registry_key(void)
 {
     HKEY hkey = 0;
 
-    RegCreateKeyExW(HKEY_LOCAL_MACHINE, win9x_font_reg_key, 0, NULL,
-                    0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    //RegCreateKeyExW(HKEY_LOCAL_MACHINE, win9x_font_reg_key, 0, NULL,
+    //                0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
     return hkey;
 }
 
@@ -2389,29 +2480,30 @@ static inline HKEY create_config_fonts_registry_key(void)
 {
     HKEY hkey = 0;
 
-    RegCreateKeyExW(HKEY_CURRENT_CONFIG, system_fonts_reg_key, 0, NULL,
-                    0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    //RegCreateKeyExW(HKEY_CURRENT_CONFIG, system_fonts_reg_key, 0, NULL,
+    //                0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
     return hkey;
 }
 
 static void add_font_list(HKEY hkey, const struct nls_update_font_list *fl)
 {
-    RegSetValueExA(hkey, "Courier", 0, REG_SZ, (const BYTE *)fl->courier, strlen(fl->courier)+1);
-    RegSetValueExA(hkey, "MS Serif", 0, REG_SZ, (const BYTE *)fl->serif, strlen(fl->serif)+1);
-    RegSetValueExA(hkey, "MS Sans Serif", 0, REG_SZ, (const BYTE *)fl->sserif, strlen(fl->sserif)+1);
-    RegSetValueExA(hkey, "Small Fonts", 0, REG_SZ, (const BYTE *)fl->small, strlen(fl->small)+1);
+    //RegSetValueExA(hkey, "Courier", 0, REG_SZ, (const BYTE *)fl->courier, strlen(fl->courier)+1);
+    //RegSetValueExA(hkey, "MS Serif", 0, REG_SZ, (const BYTE *)fl->serif, strlen(fl->serif)+1);
+    //RegSetValueExA(hkey, "MS Sans Serif", 0, REG_SZ, (const BYTE *)fl->sserif, strlen(fl->sserif)+1);
+    //RegSetValueExA(hkey, "Small Fonts", 0, REG_SZ, (const BYTE *)fl->small, strlen(fl->small)+1);
 }
 
 static void set_value_key(HKEY hkey, const char *name, const char *value)
 {
-    if (value)
-        RegSetValueExA(hkey, name, 0, REG_SZ, (const BYTE *)value, strlen(value) + 1);
-    else if (name)
-        RegDeleteValueA(hkey, name);
+    //if (value)
+    //    RegSetValueExA(hkey, name, 0, REG_SZ, (const BYTE *)value, strlen(value) + 1);
+    //else if (name)
+    //    RegDeleteValueA(hkey, name);
 }
 
 static void update_font_info(void)
 {
+#if 0
     char buf[40], cpbuf[40];
     DWORD len, type;
     HKEY hkey = 0;
@@ -2508,6 +2600,9 @@ static void update_font_info(void)
 
     /* Clear out system links */
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, system_link);
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 static void populate_system_links(HKEY hkey, const WCHAR *name, const WCHAR *const *values)
@@ -2637,7 +2732,7 @@ static void update_system_links(void)
 
 static BOOL init_freetype(void)
 {
-    ft_handle = wine_dlopen(SONAME_LIBFREETYPE, RTLD_NOW, NULL, 0);
+    ft_handle = LoadLibraryA("freetype.dll");
     if(!ft_handle) {
         WINE_MESSAGE(
       "Wine cannot find the FreeType font library.  To enable Wine to\n"
@@ -2647,7 +2742,7 @@ static BOOL init_freetype(void)
 	return FALSE;
     }
 
-#define LOAD_FUNCPTR(f) if((p##f = wine_dlsym(ft_handle, #f, NULL, 0)) == NULL){WARN("Can't find symbol %s\n", #f); goto sym_not_found;}
+#define LOAD_FUNCPTR(f) if((p##f = GetProcAddress(ft_handle, #f)) == NULL){WARN("Can't find symbol %s\n", #f); goto sym_not_found;}
 
     LOAD_FUNCPTR(FT_Vector_Unit)
     LOAD_FUNCPTR(FT_Done_Face)
@@ -2675,19 +2770,19 @@ static BOOL init_freetype(void)
 
 #undef LOAD_FUNCPTR
     /* Don't warn if these ones are missing */
-    pFT_Library_Version = wine_dlsym(ft_handle, "FT_Library_Version", NULL, 0);
-    pFT_Load_Sfnt_Table = wine_dlsym(ft_handle, "FT_Load_Sfnt_Table", NULL, 0);
-    pFT_Get_First_Char = wine_dlsym(ft_handle, "FT_Get_First_Char", NULL, 0);
-    pFT_Get_Next_Char = wine_dlsym(ft_handle, "FT_Get_Next_Char", NULL, 0);
-    pFT_Get_TrueType_Engine_Type = wine_dlsym(ft_handle, "FT_Get_TrueType_Engine_Type", NULL, 0);
+    pFT_Library_Version = GetProcAddress(ft_handle, "FT_Library_Version");
+    pFT_Load_Sfnt_Table = GetProcAddress(ft_handle, "FT_Load_Sfnt_Table");
+    pFT_Get_First_Char = GetProcAddress(ft_handle, "FT_Get_First_Char");
+    pFT_Get_Next_Char = GetProcAddress(ft_handle, "FT_Get_Next_Char");
+    pFT_Get_TrueType_Engine_Type = GetProcAddress(ft_handle, "FT_Get_TrueType_Engine_Type");
 #ifdef HAVE_FREETYPE_FTLCDFIL_H
-    pFT_Library_SetLcdFilter = wine_dlsym(ft_handle, "FT_Library_SetLcdFilter", NULL, 0);
+    pFT_Library_SetLcdFilter = GetProcAddress(ft_handle, "FT_Library_SetLcdFilter");
 #endif
 #ifdef HAVE_FREETYPE_FTWINFNT_H
-    pFT_Get_WinFNT_Header = wine_dlsym(ft_handle, "FT_Get_WinFNT_Header", NULL, 0);
+    pFT_Get_WinFNT_Header = GetProcAddress(ft_handle, "FT_Get_WinFNT_Header");
 #endif
-      if(!wine_dlsym(ft_handle, "FT_Get_Postscript_Name", NULL, 0) &&
-	 !wine_dlsym(ft_handle, "FT_Sqrt64", NULL, 0)) {
+      if(!GetProcAddress(ft_handle, "FT_Get_Postscript_Name") &&
+	 !GetProcAddress(ft_handle, "FT_Sqrt64")) {
 	/* try to avoid 2.0.4: >= 2.0.5 has FT_Get_Postscript_Name and
 	   <= 2.0.3 has FT_Sqrt64 */
 	  goto sym_not_found;
@@ -2695,7 +2790,7 @@ static BOOL init_freetype(void)
 
     if(pFT_Init_FreeType(&library) != 0) {
         ERR("Can't init FreeType library\n");
-	wine_dlclose(ft_handle, NULL, 0);
+	FreeLibrary(ft_handle);
         ft_handle = NULL;
 	return FALSE;
     }
@@ -2722,7 +2817,7 @@ sym_not_found:
       "font library.  To enable Wine to use TrueType fonts please upgrade\n"
       "FreeType to at least version 2.0.5.\n"
       "http://www.freetype.org\n");
-    wine_dlclose(ft_handle, NULL, 0);
+    FreeLibrary(ft_handle);
     ft_handle = NULL;
     return FALSE;
 }
@@ -2764,13 +2859,10 @@ BOOL WineEngInit(void)
     /* load in the fonts from %WINDOWSDIR%\\Fonts first of all */
     GetWindowsDirectoryW(windowsdir, sizeof(windowsdir) / sizeof(WCHAR));
     strcatW(windowsdir, fontsW);
-    if((unixname = wine_get_unix_file_name(windowsdir)))
-    {
-        ReadFontDir(unixname, FALSE);
-        HeapFree(GetProcessHeap(), 0, unixname);
-    }
+    ReadFontDir(windowsdir, FALSE);
 
     /* load the system truetype fonts */
+#if 0
     data_dir = wine_get_data_dir();
     if (!data_dir) data_dir = wine_get_build_dir();
     if (data_dir && (unixname = HeapAlloc(GetProcessHeap(), 0, strlen(data_dir) + sizeof("/fonts/")))) {
@@ -2779,11 +2871,13 @@ BOOL WineEngInit(void)
         ReadFontDir(unixname, TRUE);
         HeapFree(GetProcessHeap(), 0, unixname);
     }
+#endif
 
     /* now look under HKLM\Software\Microsoft\Windows[ NT]\CurrentVersion\Fonts
        for any fonts not installed in %WINDOWSDIR%\Fonts.  They will have their
        full path as the entry.  Also look for any .fon fonts, since ReadFontDir
        will skip these. */
+#if 0
     if(RegOpenKeyW(HKEY_LOCAL_MACHINE,
                    is_win9x() ? win9x_font_reg_key : winnt_font_reg_key,
 		   &hkey) == ERROR_SUCCESS) {
@@ -2802,11 +2896,7 @@ BOOL WineEngInit(void)
                                 &dlen) == ERROR_SUCCESS) {
                 if(data[0] && (data[1] == ':'))
                 {
-                    if((unixname = wine_get_unix_file_name(data)))
-                    {
-                        AddFontFileToList(unixname, NULL, NULL, ADDFONT_FORCE_BITMAP);
-                        HeapFree(GetProcessHeap(), 0, unixname);
-                    }
+                    AddFontFileToList(data, NULL, NULL, ADDFONT_FORCE_BITMAP);
                 }
                 else if(dlen / 2 >= 6 && !strcmpiW(data + dlen / 2 - 5, dot_fonW))
                 {
@@ -2815,11 +2905,7 @@ BOOL WineEngInit(void)
                     BOOL added = FALSE;
 
                     sprintfW(pathW, fmtW, windowsdir, data);
-                    if((unixname = wine_get_unix_file_name(pathW)))
-                    {
-                        added = AddFontFileToList(unixname, NULL, NULL, ADDFONT_FORCE_BITMAP);
-                        HeapFree(GetProcessHeap(), 0, unixname);
-                    }
+                    added = AddFontFileToList(pathW, NULL, NULL, ADDFONT_FORCE_BITMAP);
                     if (!added)
                         load_font_from_data_dir(data);
                 }
@@ -2832,11 +2918,12 @@ BOOL WineEngInit(void)
         HeapFree(GetProcessHeap(), 0, valueW);
 	RegCloseKey(hkey);
     }
-
+#endif
     load_fontconfig_fonts();
 
     /* then look in any directories that we've specified in the config file */
     /* @@ Wine registry key: HKCU\Software\Wine\Fonts */
+#if 0
     if(RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Fonts", &hkey) == ERROR_SUCCESS)
     {
         DWORD len;
@@ -2849,9 +2936,9 @@ BOOL WineEngInit(void)
             valueW = HeapAlloc( GetProcessHeap(), 0, len );
             if (RegQueryValueExW( hkey, pathW, NULL, NULL, (LPBYTE)valueW, &len ) == ERROR_SUCCESS)
             {
-                len = WideCharToMultiByte( CP_UNIXCP, 0, valueW, -1, NULL, 0, NULL, NULL );
+                len = WideCharToMultiByte( CP_ACP, 0, valueW, -1, NULL, 0, NULL, NULL );
                 valueA = HeapAlloc( GetProcessHeap(), 0, len );
-                WideCharToMultiByte( CP_UNIXCP, 0, valueW, -1, valueA, len, NULL, NULL );
+                WideCharToMultiByte( CP_ACP, 0, valueW, -1, valueA, len, NULL, NULL );
                 TRACE( "got font path %s\n", debugstr_a(valueA) );
                 ptr = valueA;
                 while (ptr)
@@ -2867,6 +2954,7 @@ BOOL WineEngInit(void)
         }
         RegCloseKey(hkey);
     }
+#endif
 
     DumpFontList();
     LoadSubstList();
@@ -2925,52 +3013,57 @@ static LONG calc_ppem_for_height(FT_Face ft_face, LONG height)
 static struct font_mapping *map_font_file( const char *name )
 {
     struct font_mapping *mapping;
-    struct stat st;
-    int fd;
+    //struct stat st;
+    HANDLE file, mapped_file;
 
-    if ((fd = open( name, O_RDONLY )) == -1) return NULL;
-    if (fstat( fd, &st ) == -1) goto error;
+    file = CreateFileA( name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
+    if (!file) return NULL;
 
     LIST_FOR_EACH_ENTRY( mapping, &mappings_list, struct font_mapping, entry )
     {
+#if 0
         if (mapping->dev == st.st_dev && mapping->ino == st.st_ino)
         {
             mapping->refcount++;
-            close( fd );
+            CloseHandle( file );
             return mapping;
         }
+#endif
     }
     if (!(mapping = HeapAlloc( GetProcessHeap(), 0, sizeof(*mapping) )))
         goto error;
 
-    mapping->data = mmap( NULL, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0 );
-    close( fd );
+    mapped_file = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
+    mapping->data = MapViewOfFile(mapped_file, FILE_MAP_READ, 0, 0, 0);
+    CloseHandle( file );
 
-    if (mapping->data == MAP_FAILED)
+    if (mapping->data == NULL)
     {
         HeapFree( GetProcessHeap(), 0, mapping );
         return NULL;
     }
     mapping->refcount = 1;
-    mapping->dev = st.st_dev;
-    mapping->ino = st.st_ino;
-    mapping->size = st.st_size;
+    //mapping->dev = st.st_dev;
+    //mapping->ino = st.st_ino;
+    //mapping->size = st.st_size;
     list_add_tail( &mappings_list, &mapping->entry );
     return mapping;
 
 error:
-    close( fd );
+    CloseHandle( file );
     return NULL;
 }
 
 static void unmap_font_file( struct font_mapping *mapping )
 {
+#if 0
     if (!--mapping->refcount)
     {
         list_remove( &mapping->entry );
         munmap( mapping->data, mapping->size );
         HeapFree( GetProcessHeap(), 0, mapping );
     }
+#endif
 }
 
 static LONG load_VDMX(GdiFont*, LONG);

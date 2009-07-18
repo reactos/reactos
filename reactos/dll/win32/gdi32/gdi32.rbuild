@@ -2,6 +2,7 @@
 	<importlibrary definition="gdi32.spec" />
 	<include base="gdi32">include</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="ReactOS">dll/3rdparty/freetype/include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="WINVER">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>

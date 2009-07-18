@@ -492,6 +492,7 @@ static const WCHAR dpi_value_name[] = {'L','o','g','P','i','x','e','l','s','\0'}
 static DWORD get_dpi( void )
 {
     DWORD dpi = 96;
+#if 0
     HKEY hkey;
 
     if (RegOpenKeyW(HKEY_CURRENT_CONFIG, dpi_key_name, &hkey) == ERROR_SUCCESS)
@@ -506,6 +507,7 @@ static DWORD get_dpi( void )
         }
         RegCloseKey(hkey);
     }
+#endif
     return dpi;
 }
 

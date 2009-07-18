@@ -237,22 +237,27 @@ static struct graphics_driver *load_display_driver(void)
         return display_driver;
     }
 
+#ifndef __REACTOS__
     strcpy( buffer, "x11" );  /* default value */
+#else
+    strcpy( buffer, "nt" );  /* default value */
+#endif
     /* @@ Wine registry key: HKCU\Software\Wine\Drivers */
+#if 0
     if (!RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Drivers", &hkey ))
     {
         DWORD type, count = sizeof(buffer);
         RegQueryValueExA( hkey, "Graphics", 0, &type, (LPBYTE) buffer, &count );
         RegCloseKey( hkey );
     }
-
+#endif
     name = buffer;
     while (name)
     {
         next = strchr( name, ',' );
         if (next) *next++ = 0;
 
-        snprintf( libname, sizeof(libname), "wine%s.drv", name );
+        _snprintf( libname, sizeof(libname), "wine%s.drv", name );
         if ((module = LoadLibraryA( libname )) != 0) break;
         name = next;
     }

@@ -516,5 +516,23 @@ extern BOOL REGION_FrameRgn( HRGN dest, HRGN src, INT x, INT y ) DECLSPEC_HIDDEN
 BOOL WINAPI FontIsLinked(HDC);
 
 BOOL WINAPI SetVirtualResolution(HDC hdc, DWORD horz_res, DWORD vert_res, DWORD horz_size, DWORD vert_size);
+NTSYSAPI
+VOID
+NTAPI
+RtlAssert(
+    PVOID FailedAssertion,
+    PVOID FileName,
+    ULONG LineNumber,
+    PCHAR Message
+);
+
+#ifdef assert
+#undef assert
+#endif
+#define assert(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+
+#ifndef ASSERT
+#define ASSERT(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+#endif
 
 #endif /* __WINE_GDI_PRIVATE_H */

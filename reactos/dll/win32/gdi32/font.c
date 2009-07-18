@@ -3298,3 +3298,16 @@ BOOL WINAPI GdiRealizationInfo(HDC hdc, realization_info_t *info)
 
     return ret;
 }
+
+
+int
+WINAPI
+GdiAddFontResourceW(
+    LPCWSTR lpszFilename,
+    FLONG fl,
+    DESIGNVECTOR *pdv)
+{
+    FIXME("GdiAddFontResourceW(%S %p) UNIMPLEMENTED\n", lpszFilename, pdv);
+    return 0;
+}
+
