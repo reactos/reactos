@@ -1,6 +1,6 @@
 /*
  * WineFile
- * English Language Support
+ * Japanese Language Support
  *
  * Copyright 2000 Martin Fuchs
  * Copyright 2002 Steven Edwards
@@ -21,161 +21,166 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 /* Menu */
 
 IDM_WINEFILE MENU FIXED IMPURE
 {
-    POPUP "&File"  {
-        MENUITEM "&Open\tEnter",                ID_ACTIVATE
-        MENUITEM "&Move...\tF7",                ID_FILE_MOVE
-        MENUITEM "&Copy...\tF8",                ID_FILE_COPY
+    POPUP "ファイル(&F)"  {
+        MENUITEM "開く(&O)\tEnter",                ID_ACTIVATE
+        MENUITEM "移動(&M)...\tF7",                ID_FILE_MOVE
+        MENUITEM "コピー(&C)...\tF8",                ID_FILE_COPY
         MENUITEM "&In Clipboard...\tF9",        118
-        MENUITEM "&Delete\tDel",                ID_FILE_DELETE
-        MENUITEM "Re&name...",                  109
-        MENUITEM "Propert&ies...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM "削除(&D)\tDel",                ID_FILE_DELETE
+        MENUITEM "名前の変更(&N)...",                  109
+        MENUITEM "プロパティ(&I)...\tAlt+Enter",   ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "C&ompress...",                119
-        MENUITEM "Dec&ompress...",              120
+        MENUITEM "圧縮(&O)...",                119
+        MENUITEM "解凍(&O)...",              120
         MENUITEM SEPARATOR
-        MENUITEM "&Run...",                     ID_EXECUTE
-        MENUITEM "&Print...",                   102
-        MENUITEM "Associate...",                103
+        MENUITEM "実行(&R)...",                     ID_EXECUTE
+        MENUITEM "印刷(&P)...",                   102
+        MENUITEM "関連付け...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Cr&eate Directory...",        111
-        MENUITEM "Searc&h...",                  104
-        MENUITEM "&Select Files...",            116
+        MENUITEM "ディレクトリを作成(&E)...",        111
+        MENUITEM "検索(&H)...",                  104
+        MENUITEM "ファイルを選択(&S)...",            116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
-        MENUITEM "E&xit\tAlt+X",                ID_FILE_EXIT
+        MENUITEM "終了(&X)\tAlt+X",                ID_FILE_EXIT
 #else
-        MENUITEM "E&xit",                       ID_FILE_EXIT
+        MENUITEM "終了(&X)",                       ID_FILE_EXIT
 #endif
     }
 
-    POPUP "&Disk"  {
-        MENUITEM "&Copy Disk...",               201
+    POPUP "ディスク(&D)"  {
+        MENUITEM "ディスクをコピー(&C)...",               201
         MENUITEM "&Label Disk...",              202
         MENUITEM SEPARATOR
-        MENUITEM "&Format Disk...",             ID_FORMAT_DISK
+        MENUITEM "ディスクをフォーマット(&F)...",             ID_FORMAT_DISK
 #ifdef _WIN95
         MENUITEM "&Make System Disk...", -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Connect &Network Drive",      ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Disconnect Network Drive",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "ネットワークドライブに接続(&N)",      ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "ネットワークドライブを切断(&D)",   ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "Share as...",                 254
         MENUITEM "&Remove Share...",            255
         MENUITEM SEPARATOR
-        MENUITEM "&Select Drive...",            251
+        MENUITEM "ドライブを選択(&S)...",            251
     }
 
-    POPUP "Di&rectories"  {
+    POPUP "ディレクトリ(&R)"  {
         MENUITEM "&Next Level\t+",              301
-        MENUITEM "Expand &Tree\t*",             302
-        MENUITEM "Expand &all\tStrg+*",         303
-        MENUITEM "Collapse &Tree\t-",           304
+        MENUITEM "ツリーを展開(&T)\t*",             302
+        MENUITEM "すべてを展開(&A)\tStrg+*",         303
+        MENUITEM "ツリーを折り畳む(&T)\t-",           304
         MENUITEM SEPARATOR
         MENUITEM "&Mark Children",              505
     }
 
-    POPUP "&View"  {
-        MENUITEM "T&ree and Directory",         413
-        MENUITEM "Tr&ee Only",                  411
-        MENUITEM "Directory &Only",             412
+    POPUP "表示(&V)"  {
+        MENUITEM "ツリーとディレクトリ(&R)",         413
+        MENUITEM "ツリーのみ(&E)",                  411
+        MENUITEM "ディレクトリのみ(&O)",             412
         MENUITEM SEPARATOR
-        MENUITEM "Sp&lit",                      ID_VIEW_SPLIT
+        MENUITEM "分割(&L)",                      ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Name",                       ID_VIEW_NAME
-        MENUITEM "&All File Details",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
-        MENUITEM "&Partial Details...",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "名前(&N)",                       ID_VIEW_NAME
+        MENUITEM "すべてのファイル詳細(&A)",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "部分詳細(&P)...",         ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "&Sort by Name",               ID_VIEW_SORT_NAME
-        MENUITEM "Sort &by Type",               ID_VIEW_SORT_TYPE
-        MENUITEM "Sort by Si&ze",               ID_VIEW_SORT_SIZE
-        MENUITEM "Sort by &Date",               ID_VIEW_SORT_DATE
+        MENUITEM "名前で並べ替え(&S)",               ID_VIEW_SORT_NAME
+        MENUITEM "種類で並べ替え(&B)",               ID_VIEW_SORT_TYPE
+        MENUITEM "サイズで並べ替え(&Z)",               ID_VIEW_SORT_SIZE
+        MENUITEM "日付で並べ替え(&D)",               ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
         MENUITEM "Filter by &...",              ID_VIEW_FILTER
     }
 
-    POPUP "&Options"  {
-        MENUITEM "&Confirmation...",            501
-        MENUITEM "&Font...",                    ID_SELECT_FONT
-        MENUITEM "Customize Tool&bar...",       512
+    POPUP "オプション(&O)"  {
+        MENUITEM "確認(&C)...",            501
+        MENUITEM "フォント(&F)...",                    ID_SELECT_FONT
+        MENUITEM "ツールバーをカスタマイズ(&B)...",       512
         MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "ツールバー(&T)",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "ドライブバー(&D)",                   ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "ステータスバー(&S)",                 ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "全画面表示(&U)\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Minimize on run",            504
-        MENUITEM "&Save settings on exit",      ID_VIEW_SAVESETTINGS
+        MENUITEM "終了時に設定を保存(&S)",      ID_VIEW_SAVESETTINGS
     }
 
 
-    POPUP "&Security"  {
+    POPUP "セキュリティ(&S)"  {
         MENUITEM "&Access...",                  605
         MENUITEM "&Logging...",                 606
         MENUITEM "&Owner...",                   607
     }
 
-    POPUP "&Window"  {
-        MENUITEM "New &Window",                 ID_WINDOW_NEW
-        MENUITEM "Cascading\tCtrl+F5",          ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tCtrl+F4",   ID_WINDOW_TILE_VERT
+    POPUP "ウィンドウ(&W)"  {
+        MENUITEM "新規ウィンドウ(&W)",                 ID_WINDOW_NEW
+        MENUITEM "重ねて表示\tCtrl+F5",          ID_WINDOW_CASCADE
+        MENUITEM "上下に並べて表示(&H)",          ID_WINDOW_TILE_HORZ
+        MENUITEM "左右に並べて表示(&V)\tCtrl+F4",   ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
         MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
 #endif
         MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
-        MENUITEM "&Refresh\tF5",                ID_REFRESH
+        MENUITEM "更新(&R)\tF5",                ID_REFRESH
     }
 
-    POPUP "&Help"  {
-        MENUITEM "&Help Topics\tF1",            ID_HELP
-        MENUITEM "Help &Search...\tF1",         ID_HELP
-        MENUITEM "&Using Help\tF1",             ID_HELP_USING
+    POPUP "ヘルプ(&H)"  {
+        MENUITEM "ヘルプ トピック(&H)\tF1",            ID_HELP
+        MENUITEM "ヘルプの検索(&S)...\tF1",         ID_HELP
+        MENUITEM "ヘルプを使う(&U)\tF1",             ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&About Winefile...",          ID_ABOUT
+        MENUITEM "Winefile について(&A)...",          ID_ABOUT
     }
 }
 
 
 IDD_EXECUTE DIALOG FIXED IMPURE 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Execute"
-FONT 8, "MS Shell Dlg"
+CAPTION "実行"
+FONT 9, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "&Command:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    CONTROL         "コマンド(&C):", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
     EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
     CONTROL         "As &Symbol", 214, "Button", BS_AUTOCHECKBOX|WS_TABSTOP,3, 45, 71, 12
     DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
-    PUSHBUTTON      "Cancel", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Help", 254, 158, 43, 47, 14
+    PUSHBUTTON      "キャンセル", 2, 158, 23, 47, 14
+    PUSHBUTTON      "ヘルプ(&H)", 254, 158, 43, 47, 14
 }
 
 IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Select destination"
-FONT 8, "MS Shell Dlg"
+CAPTION "移動先を選択"
+FONT 9, "MS Shell Dlg"
 {
     CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
-    CONTROL         "&Path:", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    CONTROL         "パス(&P):", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
     EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK", 1, 158, 6, 47, 14
-    PUSHBUTTON      "Cancel", 2, 158, 23, 47, 14
-    PUSHBUTTON      "&Browse", 254, 158, 43, 47, 14
+    PUSHBUTTON      "キャンセル", 2, 158, 23, 47, 14
+    PUSHBUTTON      "参照(&B)", 254, 158, 43, 47, 14
 }
 
 IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "By File Type"
-FONT 8, "MS Sans Serif"
+FONT 9, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Name:",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
@@ -197,7 +202,7 @@ END
 IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Properties for %s"
-FONT 8, "MS Sans Serif"
+FONT 9, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,191,29,50,14
@@ -233,28 +238,28 @@ STRINGTABLE
 
 STRINGTABLE
 {
-    IDS_WINEFILE            "Wine File Manager"
+    IDS_WINEFILE            "Wine ファイルマネージャ"
     IDS_ERROR               "Error"
     IDS_ROOT_FS             "root fs"
     IDS_UNIXFS              "unixfs"
     IDS_DESKTOP             "Desktop"
-    IDS_SHELL               "Shell"
+    IDS_SHELL               "シェル"
     IDS_TITLEFMT            "%s - %s"
-    IDS_NO_IMPL             "Not yet implemented"
+    IDS_NO_IMPL             "未実装"
     IDS_WINE_FILE           "Wine File"
 }
 
 STRINGTABLE
 {
-    IDS_COL_NAME            "Name"
-    IDS_COL_SIZE            "Size"
+    IDS_COL_NAME            "名前"
+    IDS_COL_SIZE            "サイズ"
     IDS_COL_CDATE           "CDate"
     IDS_COL_ADATE           "ADate"
     IDS_COL_MDATE           "MDate"
     IDS_COL_IDX             "Index/Inode"
-    IDS_COL_LINKS           "Links"
-    IDS_COL_ATTR            "Attributes"
-    IDS_COL_SEC             "Security"
+    IDS_COL_LINKS           "リンク"
+    IDS_COL_ATTR            "属性"
+    IDS_COL_SEC             "セキュリティ"
 
     IDS_FREE_SPACE_FMT      "%s of %s free"
 }
