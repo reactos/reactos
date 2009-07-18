@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS Win32K
  * FILE:            subsystems/win32/win32k/include/win32kp.h
  * PURPOSE:         Internal Win32K Header
- * PROGRAMMER:      Stefan Ginsberg (stefan__100__@hotmail.com)
+ * PROGRAMMER:      Aleksey Bragin <aleksey@reactos.org>
  */
 
 #ifndef _INCLUDE_INTERNAL_WIN32K_H
@@ -15,10 +15,12 @@
 W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 
 /* Internal  Win32K Headers */
+#include <error.h>
 #include <wine/server_protocol.h>
-//#include <gdiobj.h>
-//#include <engobj.h>
-//#include <userobj.h>
+#include <win32.h>
+#include <heap.h>
+
+#include "winesup.h"
 
 /* client communication functions (from server.h) */
 struct __server_iovec
@@ -40,6 +42,5 @@ struct __server_request_info
     void                 *reply_data; /* reply data pointer */
     struct __server_iovec data[__SERVER_MAX_DATA];  /* request variable size data */
 };
-
 
 #endif

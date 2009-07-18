@@ -11,9 +11,9 @@
 /* Version Data */
 #undef __MSVCRT__
 #include <psdk/ntverp.h>
-//#define _WIN32_WINNT _WIN32_WINNT_WS03
+#define _WIN32_WINNT _WIN32_WINNT_WS03
 #define NTDDI_VERSION NTDDI_WS03SP1
-//#define WINVER 0x600
+#define WINVER 0x600
 
 /* Initial DDK/IFS Headers */
 #ifdef _MSC_VER
@@ -54,21 +54,21 @@ typedef LPVOID LPSURFACEALIGNMENT;
 #include <ntndk.h>
 
 /* SEH Support with PSEH */
-#include <pseh/pseh2.h>
+#include <pseh/pseh.h>
 
 /* CSRSS Header */
 #include <csrss/csrss.h>
 
 /* Helper Header */
-//#include <reactos/helper.h>
+#include <reactos/helper.h>
 
 /* Probe and capture */
-//#include <reactos/probe.h>
+#include <reactos/probe.h>
 
 /* Public Win32K Headers */
 #include <win32k/callback.h>
 #include <win32k/ntusrtyp.h>
-//#include <win32k/ntuser.h>
+#include <win32k/ntuser.h>
 #include <win32k/ntgdityp.h>
 #include <win32k/ntgdihdl.h>
 #define LANGPACK

@@ -17,11 +17,16 @@
 		<pch>win32k.h</pch>
 	</directory>
 	<directory name="gre">
+		<file>err.c</file>
 		<file>init.c</file>
+		<file>usrheap.c</file>
 	</directory>
 	<directory name="wine">
+		<file>class.c</file>
 		<file>main.c</file>
+		<file>object.c</file>
 		<file>stubs.c</file>
+		<file>winesup.c</file>
 	</directory>
 	<file>win32k.rc</file>
 </module>
