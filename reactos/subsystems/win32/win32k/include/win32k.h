@@ -34,7 +34,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <dde.h>
 #include <wincon.h>
 #define _NOCSECT_TYPE
-// #include <ddrawi.h>
+#include <ddrawi.h>
 
 /* SEH Support with PSEH */
 #include <pseh/pseh2.h>

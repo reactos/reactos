@@ -21,8 +21,8 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <wine/server_protocol.h>
 
 /* RosGdi syscalls */
-//#include <ntrosgdi.h>
-//#include <win32k/rosuser.h>
+#include <ntrosgdi.h>
+#include <win32k/rosuser.h>
 
 /* CSR interaction */
 #include <csr.h>
@@ -31,10 +31,9 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <heap.h>
 #include <tags.h>
 
-//#include <dib.h>
+#include <dib.h>
 
 /* Eng and GRE stuff */
-#if 0
 #include <driver.h>
 #include <engevent.h>
 #include <devobj.h>
@@ -48,7 +47,6 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <xformobj.h>
 #include <xlateobj.h>
 #include <gre.h>
-#endif
 
 #include "winesup.h"
 
