@@ -37,7 +37,6 @@ struct namespace;
 struct object;
 struct object_name;
 struct thread;
-struct process;
 struct token;
 struct file;
 struct wait_queue_entry;
@@ -68,9 +67,9 @@ struct object_ops
     /* remove a thread from the object wait queue */
     void (*remove_queue)(struct object *,struct wait_queue_entry *);
     /* is object signaled? */
-    int  (*signaled)(struct object *,struct thread *);
+    int  (*signaled)(struct object *,PTHREADINFO);
     /* wait satisfied; return 1 if abandoned */
-    int  (*satisfied)(struct object *,struct thread *);
+    int  (*satisfied)(struct object *,PTHREADINFO);
     /* signal an object */
     int  (*signal)(struct object *, unsigned int);
     /* return an fd object that can be used to read/write from the object */
@@ -87,7 +86,7 @@ struct object_ops
     struct object *(*open_file)(struct object *, unsigned int access, unsigned int sharing,
                                 unsigned int options);
     /* close a handle to this object */
-    int (*close_handle)(struct object *,struct process *,obj_handle_t);
+    int (*close_handle)(struct object *,PPROCESSINFO,obj_handle_t);
     /* destroy on refcount == 0 */
     void (*destroy)(struct object *);
 };
@@ -108,7 +107,7 @@ struct wait_queue_entry
 {
     struct list     entry;
     struct object  *obj;
-    struct thread  *thread;
+    PTHREADINFO     thread;
 };
 
 extern void *mem_alloc( size_t size );  /* malloc wrapper */
@@ -141,7 +140,7 @@ extern int default_set_sd( struct object *obj, const struct security_descriptor 
 extern struct object *no_lookup_name( struct object *obj, struct unicode_str *name, unsigned int attributes );
 extern struct object *no_open_file( struct object *obj, unsigned int access, unsigned int sharing,
                                     unsigned int options );
-extern int no_close_handle( struct object *obj, struct process *process, obj_handle_t handle );
+extern int no_close_handle( struct object *obj, PPROCESSINFO process, obj_handle_t handle );
 extern void no_destroy( struct object *obj );
 #ifdef DEBUG_OBJECTS
 extern void dump_objects(void);
@@ -155,7 +154,7 @@ struct event;
 extern struct event *create_event( struct directory *root, const struct unicode_str *name,
                                    unsigned int attr, int manual_reset, int initial_state,
                                    const struct security_descriptor *sd );
-extern struct event *get_event_obj( struct process *process, obj_handle_t handle, unsigned int access );
+extern struct event *get_event_obj( PPROCESSINFO process, obj_handle_t handle, unsigned int access );
 extern void pulse_event( struct event *event );
 extern void set_event( struct event *event );
 extern void reset_event( struct event *event );
@@ -174,9 +173,9 @@ extern void sock_init(void);
 
 /* debugger functions */
 
-extern int set_process_debugger( struct process *process, struct thread *debugger );
+extern int set_process_debugger( PPROCESSINFO process, struct thread *debugger );
 extern void generate_debug_event( struct thread *thread, int code, const void *arg );
-extern void generate_startup_debug_events( struct process *process, client_ptr_t entry );
+extern void generate_startup_debug_events( PPROCESSINFO process, client_ptr_t entry );
 extern void debug_exit_thread( struct thread *thread );
 
 /* mapping functions */
@@ -204,7 +203,7 @@ extern void release_global_atom( struct winstation *winstation, atom_t atom );
 
 /* directory functions */
 
-extern struct directory *get_directory_obj( struct process *process, obj_handle_t handle, unsigned int access );
+extern struct directory *get_directory_obj( PPROCESSINFO process, obj_handle_t handle, unsigned int access );
 extern struct object *find_object_dir( struct directory *root, const struct unicode_str *name,
                                        unsigned int attr, struct unicode_str *name_left );
 extern void *create_named_object_dir( struct directory *root, const struct unicode_str *name,

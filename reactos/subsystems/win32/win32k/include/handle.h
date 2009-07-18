@@ -22,7 +22,6 @@
 #define __WINE_SERVER_HANDLE_H
 
 #include <stdlib.h>
-#include "windef.h"
 #include "wine/server_protocol.h"
 
 struct process;
@@ -34,23 +33,23 @@ struct unicode_str;
 
 /* alloc_handle takes a void *obj for convenience, but you better make sure */
 /* that the thing pointed to starts with a struct object... */
-extern obj_handle_t alloc_handle( struct process *process, void *obj,
+extern obj_handle_t alloc_handle( PPROCESSINFO process, void *obj,
                                   unsigned int access, unsigned int attr );
-extern obj_handle_t alloc_handle_no_access_check( struct process *process, void *ptr,
+extern obj_handle_t alloc_handle_no_access_check( PPROCESSINFO process, void *ptr,
                                                   unsigned int access, unsigned int attr );
-extern int close_handle( struct process *process, obj_handle_t handle );
-extern struct object *get_handle_obj( struct process *process, obj_handle_t handle,
+extern int close_handle( PPROCESSINFO process, obj_handle_t handle );
+extern struct object *get_handle_obj( PPROCESSINFO process, obj_handle_t handle,
                                       unsigned int access, const struct object_ops *ops );
-extern unsigned int get_handle_access( struct process *process, obj_handle_t handle );
-extern obj_handle_t duplicate_handle( struct process *src, obj_handle_t src_handle, struct process *dst,
+extern unsigned int get_handle_access( PPROCESSINFO process, obj_handle_t handle );
+extern obj_handle_t duplicate_handle( PPROCESSINFO src, obj_handle_t src_handle, PPROCESSINFO dst,
                                       unsigned int access, unsigned int attr, unsigned int options );
 extern obj_handle_t open_object( const struct namespace *namespace, const struct unicode_str *name,
                                  const struct object_ops *ops, unsigned int access, unsigned int attr );
-extern obj_handle_t find_inherited_handle( struct process *process, const struct object_ops *ops );
-extern obj_handle_t enumerate_handles( struct process *process, const struct object_ops *ops,
+extern obj_handle_t find_inherited_handle( PPROCESSINFO process, const struct object_ops *ops );
+extern obj_handle_t enumerate_handles( PPROCESSINFO process, const struct object_ops *ops,
                                        unsigned int *index );
-extern struct handle_table *alloc_handle_table( struct process *process, int count );
-extern struct handle_table *copy_handle_table( struct process *process, struct process *parent );
-extern unsigned int get_handle_table_count( struct process *process);
+extern struct handle_table *alloc_handle_table( PPROCESSINFO process, int count );
+extern struct handle_table *copy_handle_table( PPROCESSINFO process, PPROCESSINFO parent );
+extern unsigned int get_handle_table_count( PPROCESSINFO process);
 
 #endif  /* __WINE_SERVER_HANDLE_H */
