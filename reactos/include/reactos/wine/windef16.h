@@ -28,7 +28,6 @@
 #endif
 #include <windef.h>
 #include <winbase.h>
-#include <exception.h> // ROS Hack
 /* Standard data types */
 
 typedef unsigned short  BOOL16;

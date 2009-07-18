@@ -165,58 +165,6 @@ typedef struct
     DWORD   dwAllocCount;
 } WINDEBUGINFO16, *LPWINDEBUGINFO16;
 
-/* definitions specific to Wine 16-bit relaying support */
-
-/* 32-bit stack layout after __wine_call_to_16() */
-typedef struct _STACK32FRAME
-{
-    DWORD   restore_addr;   /* 00 return address for restoring code selector */
-    DWORD   codeselector;   /* 04 code selector to restore */
-    EXCEPTION_REGISTRATION_RECORD frame;  /* 08 Exception frame */
-    SEGPTR  frame16;        /* 10 16-bit frame from last CallFrom16() */
-    DWORD   edi;            /* 14 saved registers */
-    DWORD   esi;            /* 18 */
-    DWORD   ebx;            /* 1c */
-    DWORD   ebp;            /* 20 saved 32-bit frame pointer */
-    DWORD   retaddr;        /* 24 return address */
-    DWORD   target;         /* 28 target address / CONTEXT86 pointer */
-    DWORD   nb_args;        /* 2c number of 16-bit argument bytes */
-} STACK32FRAME;
-
-/* 16-bit stack layout after __wine_call_from_16() */
-typedef struct _STACK16FRAME
-{
-    STACK32FRAME *frame32;        /* 00 32-bit frame from last CallTo16() */
-    DWORD         edx;            /* 04 saved registers */
-    DWORD         ecx;            /* 08 */
-    DWORD         ebp;            /* 0c */
-    WORD          ds;             /* 10 */
-    WORD          es;             /* 12 */
-    WORD          fs;             /* 14 */
-    WORD          gs;             /* 16 */
-    DWORD         callfrom_ip;    /* 18 callfrom tail IP */
-    DWORD         module_cs;      /* 1c module code segment */
-    DWORD         relay;          /* 20 relay function address */
-    WORD          entry_ip;       /* 22 entry point IP */
-    DWORD         entry_point;    /* 26 API entry point to call, reused as mutex count */
-    WORD          bp;             /* 2a 16-bit stack frame chain */
-    WORD          ip;             /* 2c return address */
-    WORD          cs;             /* 2e */
-} STACK16FRAME;
-
-/* argument type flags for relay debugging */
-enum arg_types
-{
-    ARG_NONE = 0, /* indicates end of arg list */
-    ARG_WORD,     /* unsigned word */
-    ARG_SWORD,    /* signed word */
-    ARG_LONG,     /* long or segmented pointer */
-    ARG_PTR,      /* linear pointer */
-    ARG_STR,      /* linear pointer to null-terminated string */
-    ARG_SEGSTR,   /* segmented pointer to null-terminated string */
-    ARG_VARARG    /* start of varargs */
-};
-
 #include <poppack.h>
 
 #define INVALID_HANDLE_VALUE16  ((HANDLE16) -1)
