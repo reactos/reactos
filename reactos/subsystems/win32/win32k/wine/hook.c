@@ -19,24 +19,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "winternl.h"
-
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
 #include "object.h"
-#include "process.h"
 #include "request.h"
 #include "user.h"
+
+#define NDEBUG
+#include <debug.h>
 
 struct hook_table;
 
@@ -44,9 +36,9 @@ struct hook
 {
     struct list         chain;    /* hook chain entry */
     user_handle_t       handle;   /* user handle for this hook */
-    struct process     *process;  /* process the hook is set to */
-    struct thread      *thread;   /* thread the hook is set to */
-    struct thread      *owner;    /* owner of the out of context hook */
+    PPROCESSINFO        process;  /* process the hook is set to */
+    PTHREADINFO         thread;   /* thread the hook is set to */
+    PTHREADINFO         owner;    /* owner of the out of context hook */
     struct hook_table  *table;    /* hook table that contains this hook */
     int                 index;    /* hook table index */
     int                 event_min;
@@ -111,7 +103,7 @@ static struct hook_table *alloc_hook_table(void)
     return table;
 }
 
-static struct hook_table *get_global_hooks( struct thread *thread )
+static struct hook_table *get_global_hooks( PTHREADINFO thread )
 {
     struct hook_table *table;
     struct desktop *desktop = get_thread_desktop( thread, 0 );
@@ -123,7 +115,7 @@ static struct hook_table *get_global_hooks( struct thread *thread )
 }
 
 /* create a new hook and add it to the specified table */
-static struct hook *add_hook( struct desktop *desktop, struct thread *thread, int index, int global )
+static struct hook *add_hook( struct desktop *desktop, PTHREADINFO thread, int index, int global )
 {
     struct hook *hook;
     struct hook_table *table = global ? desktop->global_hooks : get_queue_hooks(thread);
@@ -138,10 +130,12 @@ static struct hook *add_hook( struct desktop *desktop, struct thread *thread, in
 
     if (!(hook->handle = alloc_user_handle( hook, USER_HOOK )))
     {
-        free( hook );
+        ExFreePool( hook );
         return NULL;
     }
-    hook->thread = thread ? (struct thread *)grab_object( thread ) : NULL;
+    if (thread)
+        ObReferenceObjectByPointer(thread->peThread, 0, NULL, KernelMode);
+    hook->thread = thread;
     hook->table  = table;
     hook->index  = index;
     list_add_head( &table->hooks[index], &hook->chain );
@@ -153,21 +147,21 @@ static struct hook *add_hook( struct desktop *desktop, struct thread *thread, in
 static void free_hook( struct hook *hook )
 {
     free_user_handle( hook->handle );
-    free( hook->module );
+    ExFreePool( hook->module );
     if (hook->thread)
     {
         assert( hook->thread->desktop_users > 0 );
         hook->thread->desktop_users--;
-        release_object( hook->thread );
+        ObDereferenceObject(hook->thread->peThread);
     }
-    if (hook->process) release_object( hook->process );
-    release_object( hook->owner );
+    if (hook->process) ObDereferenceObject(hook->process->peProcess);
+    ObDereferenceObject(hook->owner->peThread);
     list_remove( &hook->chain );
-    free( hook );
+    ExFreePool( hook );
 }
 
 /* find a hook from its index and proc */
-static struct hook *find_hook( struct thread *thread, int index, client_ptr_t proc )
+static struct hook *find_hook( PTHREADINFO thread, int index, client_ptr_t proc )
 {
     struct list *p;
     struct hook_table *table = get_queue_hooks( thread );
@@ -193,6 +187,8 @@ static inline struct hook *get_first_hook( struct hook_table *table, int index )
 /* check if a given hook should run in the current thread */
 static inline int run_hook_in_current_thread( struct hook *hook )
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+
     if ((!hook->process || hook->process == current->process) &&
         (!(hook->flags & WINEVENT_SKIPOWNPROCESS) || hook->process != current->process))
     {
@@ -206,6 +202,8 @@ static inline int run_hook_in_current_thread( struct hook *hook )
 /* check if a given hook should run in the owner thread instead of the current thread */
 static inline int run_hook_in_owner_thread( struct hook *hook )
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+
     if ((hook->index == WH_MOUSE_LL - WH_MINHOOK ||
          hook->index == WH_KEYBOARD_LL - WH_MINHOOK))
         return hook->owner != current;
@@ -240,7 +238,7 @@ static inline struct hook *get_first_valid_hook( struct hook_table *table, int i
 }
 
 /* find the next hook in the chain, skipping the deleted ones */
-static struct hook *get_next_hook( struct thread *thread, struct hook *hook, int event,
+static struct hook *get_next_hook( PTHREADINFO thread, struct hook *hook, int event,
                                    user_handle_t win, int object_id, int child_id )
 {
     struct hook_table *global_hooks, *table = hook->table;
@@ -273,7 +271,7 @@ static struct hook *get_next_hook( struct thread *thread, struct hook *hook, int
 static void hook_table_dump( struct object *obj, int verbose )
 {
     /* struct hook_table *table = (struct hook_table *)obj; */
-    fprintf( stderr, "Hook table\n" );
+    DbgPrint( "Hook table\n" );
 }
 
 static void hook_table_destroy( struct object *obj )
@@ -318,7 +316,7 @@ static void release_hook_chain( struct hook_table *table, int index )
 }
 
 /* remove all global hooks owned by a given thread */
-void remove_thread_hooks( struct thread *thread )
+void remove_thread_hooks( PTHREADINFO thread )
 {
     struct hook_table *global_hooks = get_global_hooks( thread );
     int index;
@@ -354,6 +352,7 @@ static int is_hook_active( struct hook_table *table, int index )
 /* get a bitmap of all active hooks for the current thread */
 unsigned int get_active_hooks(void)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct hook_table *table = get_queue_hooks( current );
     struct hook_table *global_hooks = get_global_hooks( current );
     unsigned int ret = 1 << 31;  /* set high bit to indicate that the bitmap is valid */
@@ -371,13 +370,17 @@ unsigned int get_active_hooks(void)
 /* set a window hook */
 DECL_HANDLER(set_hook)
 {
-    struct process *process = NULL;
-    struct thread *thread = NULL;
+    PEPROCESS eprocess;
+    PETHREAD ethread;
+    PPROCESSINFO process = NULL;
+    PTHREADINFO thread = NULL;
     struct desktop *desktop;
     struct hook *hook;
     WCHAR *module;
     int global;
-    data_size_t module_size = get_req_data_size();
+    NTSTATUS status;
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    data_size_t module_size = get_req_data_size((void*)req);
 
     if (!req->proc || req->id < WH_MINHOOK || req->id > WH_WINEVENT)
     {
@@ -387,11 +390,23 @@ DECL_HANDLER(set_hook)
 
     if (!(desktop = get_thread_desktop( current, DESKTOP_HOOKCONTROL ))) return;
 
-    if (req->pid && !(process = get_process_from_id( req->pid ))) goto done;
+    //if (req->pid && !(process = get_process_from_id( req->pid ))) goto done;
+    if (req->pid)
+    {
+        status = PsLookupProcessByProcessId((HANDLE)req->pid, &eprocess);
+        if (!NT_SUCCESS(status)) goto done;
+        ObReferenceObjectByPointer(eprocess, 0, NULL, KernelMode);
+        process = (PPROCESSINFO)PsGetProcessWin32Process(eprocess);
+    }
 
     if (req->tid)
     {
-        if (!(thread = get_thread_from_id( req->tid ))) goto done;
+        //if (!(thread = get_thread_from_id( req->tid ))) goto done;
+        status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
+        if (!NT_SUCCESS(status)) goto done;
+        ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+        thread = (PTHREADINFO)PsGetThreadWin32Thread(ethread);
+
         if (process && process != thread->process)
         {
             set_error( STATUS_INVALID_PARAMETER );
@@ -439,8 +454,12 @@ DECL_HANDLER(set_hook)
 
     if ((hook = add_hook( desktop, thread, req->id - WH_MINHOOK, global )))
     {
-        hook->owner = (struct thread *)grab_object( current );
-        hook->process = process ? (struct process *)grab_object( process ) : NULL;
+        ObReferenceObjectByPointer(current->peThread, 0, NULL, KernelMode);
+        hook->owner = current;
+        //hook->process = process ? (struct process *)grab_object( process ) : NULL;
+        if (process)
+            ObReferenceObjectByPointer(process->peProcess, 0, NULL, KernelMode);
+        hook->process = process;
         hook->event_min   = req->event_min;
         hook->event_max   = req->event_max;
         hook->flags       = req->flags;
@@ -451,11 +470,11 @@ DECL_HANDLER(set_hook)
         reply->handle = hook->handle;
         reply->active_hooks = get_active_hooks();
     }
-    else free( module );
+    else ExFreePool( module );
 
 done:
-    if (process) release_object( process );
-    if (thread) release_object( thread );
+    if (process) ObDereferenceObject(process->peProcess);
+    if (thread) ObDereferenceObject(thread->peThread);
     release_object( desktop );
 }
 
@@ -463,6 +482,7 @@ done:
 /* remove a window hook */
 DECL_HANDLER(remove_hook)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct hook *hook;
 
     if (req->handle)
@@ -495,6 +515,7 @@ DECL_HANDLER(remove_hook)
 DECL_HANDLER(start_hook_chain)
 {
     struct hook *hook;
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct hook_table *table = get_queue_hooks( current );
 
     if (req->id < WH_MINHOOK || req->id > WH_WINEVENT)
@@ -529,13 +550,14 @@ DECL_HANDLER(start_hook_chain)
     reply->handle  = hook->handle;
     reply->unicode = hook->unicode;
     table->counts[hook->index]++;
-    if (hook->module) set_reply_data( hook->module, hook->module_size );
+    if (hook->module) set_reply_data( (void*)req, hook->module, hook->module_size );
 }
 
 
 /* finished calling a hook chain */
 DECL_HANDLER(finish_hook_chain)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct hook_table *table = get_queue_hooks( current );
     struct hook_table *global_hooks = get_global_hooks( current );
     int index = req->id - WH_MINHOOK;
@@ -553,6 +575,7 @@ DECL_HANDLER(finish_hook_chain)
 /* get the hook information */
 DECL_HANDLER(get_hook_info)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct hook *hook;
 
     if (!(hook = get_user_object( req->handle, USER_HOOK ))) return;
@@ -568,7 +591,7 @@ DECL_HANDLER(get_hook_info)
     reply->handle  = hook->handle;
     reply->id      = hook->index + WH_MINHOOK;
     reply->unicode = hook->unicode;
-    if (hook->module) set_reply_data( hook->module, min(hook->module_size,get_reply_max_size()) );
+    if (hook->module) set_reply_data( (void*)req, hook->module, min(hook->module_size,get_reply_max_size((void*)req)) );
     if (run_hook_in_owner_thread( hook ))
     {
         reply->pid  = get_process_id( hook->owner->process );

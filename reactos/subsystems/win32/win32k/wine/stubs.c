@@ -10,6 +10,9 @@
 
 #include <win32k.h>
 
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
+#include "object.h"
 #include "request.h"
 
 #define NDEBUG
@@ -108,16 +111,6 @@ DECL_HANDLER(queue_apc)
 }
 
 DECL_HANDLER(get_apc_result)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(close_handle)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_handle_info)
 {
     UNIMPLEMENTED;
 }
@@ -562,112 +555,12 @@ DECL_HANDLER(get_selector_entry)
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(add_atom)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(delete_atom)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(find_atom)
-{
-    UNIMPLEMENTED;
-}
-
 DECL_HANDLER(get_atom_information)
 {
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(set_atom_information)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(empty_atom_table)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(init_atom_table)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_msg_queue)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_queue_fd)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_queue_mask)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_queue_status)
-{
-    UNIMPLEMENTED;
-}
-
 DECL_HANDLER(get_process_idle_event)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(send_message)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(post_quit_message)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(send_hardware_message)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_message)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(reply_message)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(accept_hardware_message)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_message_reply)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_win_timer)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(kill_win_timer)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(is_window_hung)
 {
     UNIMPLEMENTED;
 }
@@ -712,307 +605,12 @@ DECL_HANDLER(get_named_pipe_info)
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(create_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(destroy_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_desktop_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_window_owner)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_info)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_window_info)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_parent)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_parents)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_children)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_children_from_point)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_tree)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_window_pos)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_rectangles)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_text)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_window_text)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_windows_offset)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_visible_region)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_region)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_window_region)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_update_region)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(update_window_zorder)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(redraw_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_window_property)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(remove_window_property)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_property)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_properties)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(create_winstation)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(open_winstation)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(close_winstation)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_process_winstation)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_process_winstation)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(enum_winstation)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(create_desktop)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(open_desktop)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(close_desktop)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_thread_desktop)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_thread_desktop)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(enum_desktop)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_user_object_info)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(attach_thread_input)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_thread_input)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_last_input_time)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_key_state)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_key_state)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_foreground_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_focus_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_active_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_capture_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_caret_window)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_caret_info)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_hook)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(remove_hook)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(start_hook_chain)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(finish_hook_chain)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_hook_info)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(create_class)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(destroy_class)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_class_info)
-{
-    UNIMPLEMENTED;
-}
-
 DECL_HANDLER(set_clipboard_info)
 {
     UNIMPLEMENTED;
 }
 
 DECL_HANDLER(open_token)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_global_windows)
 {
     UNIMPLEMENTED;
 }
@@ -1062,11 +660,6 @@ DECL_HANDLER(set_token_default_dacl)
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(set_security_object)
-{
-    UNIMPLEMENTED;
-}
-
 DECL_HANDLER(get_security_object)
 {
     UNIMPLEMENTED;
@@ -1082,21 +675,6 @@ DECL_HANDLER(set_mailslot_info)
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(create_directory)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(open_directory)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_directory_entry)
-{
-    UNIMPLEMENTED;
-}
-
 DECL_HANDLER(create_symlink)
 {
     UNIMPLEMENTED;
@@ -1108,16 +686,6 @@ DECL_HANDLER(open_symlink)
 }
 
 DECL_HANDLER(query_symlink)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_object_info)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(unlink_object)
 {
     UNIMPLEMENTED;
 }
@@ -1193,16 +761,6 @@ DECL_HANDLER(set_completion_info)
 }
 
 DECL_HANDLER(add_fd_completion)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(get_window_layered_info)
-{
-    UNIMPLEMENTED;
-}
-
-DECL_HANDLER(set_window_layered_info)
 {
     UNIMPLEMENTED;
 }

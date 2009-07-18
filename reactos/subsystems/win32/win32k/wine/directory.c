@@ -19,25 +19,19 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
+#include <limits.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "winternl.h"
-#include "ddk/wdm.h"
-
-#include "handle.h"
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
+#include "object.h"
 #include "request.h"
-#include "process.h"
-#include "file.h"
-#include "unicode.h"
+#include "handle.h"
+#include "user.h"
+
+#define NDEBUG
+#include <debug.h>
 
 #define HASH_SIZE 7  /* default hash size */
 
@@ -110,9 +104,9 @@ static void object_type_dump( struct object *obj, int verbose )
 {
     assert( obj->ops == &object_type_ops );
 
-    fputs( "Object type ", stderr );
+    DPRINT1( "Object type " );
     dump_object_name( obj );
-    fputc( '\n', stderr );
+    DbgPrint( "\n" );
 }
 
 static struct object_type *object_type_get_type( struct object *obj )
@@ -126,9 +120,9 @@ static void directory_dump( struct object *obj, int verbose )
 {
     assert( obj->ops == &directory_ops );
 
-    fputs( "Directory ", stderr );
+    DPRINT1( "Directory ");
     dump_object_name( obj );
-    fputc( '\n', stderr );
+    DbgPrint( "\n" );
 }
 
 static struct object_type *directory_get_type( struct object *obj )
@@ -185,7 +179,7 @@ static void directory_destroy( struct object *obj )
 {
     struct directory *dir = (struct directory *)obj;
     assert( obj->ops == &directory_ops );
-    free( dir->entries );
+    ExFreePool( dir->entries );
 }
 
 static struct directory *create_directory( struct directory *root, const struct unicode_str *name,
@@ -205,7 +199,7 @@ static struct directory *create_directory( struct directory *root, const struct 
     return dir;
 }
 
-struct directory *get_directory_obj( struct process *process, obj_handle_t handle, unsigned int access )
+struct directory *get_directory_obj( PPROCESSINFO process, obj_handle_t handle, unsigned int access )
 {
     return (struct directory *)get_handle_obj( process, handle, access, &directory_ops );
 }
@@ -367,37 +361,37 @@ void init_directories(void)
     static const WCHAR dir_driverW[] = {'D','r','i','v','e','r'};
     static const WCHAR dir_deviceW[] = {'D','e','v','i','c','e'};
     static const WCHAR dir_basenamedW[] = {'\\','B','a','s','e','N','a','m','e','d','O','b','j','e','c','t','s'};
-    static const WCHAR dir_named_pipeW[] = {'\\','D','e','v','i','c','e','\\','N','a','m','e','d','P','i','p','e'};
-    static const WCHAR dir_mailslotW[] = {'\\','D','e','v','i','c','e','\\','M','a','i','l','S','l','o','t'};
+    //static const WCHAR dir_named_pipeW[] = {'\\','D','e','v','i','c','e','\\','N','a','m','e','d','P','i','p','e'};
+    //static const WCHAR dir_mailslotW[] = {'\\','D','e','v','i','c','e','\\','M','a','i','l','S','l','o','t'};
     static const WCHAR dir_objtypeW[] = {'O','b','j','e','c','t','T','y','p','e','s',};
     static const struct unicode_str dir_global_str = {dir_globalW, sizeof(dir_globalW)};
     static const struct unicode_str dir_driver_str = {dir_driverW, sizeof(dir_driverW)};
     static const struct unicode_str dir_device_str = {dir_deviceW, sizeof(dir_deviceW)};
     static const struct unicode_str dir_basenamed_str = {dir_basenamedW, sizeof(dir_basenamedW)};
-    static const struct unicode_str dir_named_pipe_str = {dir_named_pipeW, sizeof(dir_named_pipeW)};
-    static const struct unicode_str dir_mailslot_str = {dir_mailslotW, sizeof(dir_mailslotW)};
+    //static const struct unicode_str dir_named_pipe_str = {dir_named_pipeW, sizeof(dir_named_pipeW)};
+    //static const struct unicode_str dir_mailslot_str = {dir_mailslotW, sizeof(dir_mailslotW)};
     static const struct unicode_str dir_objtype_str = {dir_objtypeW, sizeof(dir_objtypeW)};
 
     /* symlinks */
-    static const WCHAR link_dosdevW[] = {'D','o','s','D','e','v','i','c','e','s'};
-    static const WCHAR link_globalW[] = {'G','l','o','b','a','l'};
-    static const WCHAR link_localW[]  = {'L','o','c','a','l'};
-    static const WCHAR link_pipeW[]   = {'P','I','P','E'};
-    static const WCHAR link_mailslotW[] = {'M','A','I','L','S','L','O','T'};
-    static const struct unicode_str link_dosdev_str = {link_dosdevW, sizeof(link_dosdevW)};
-    static const struct unicode_str link_global_str = {link_globalW, sizeof(link_globalW)};
-    static const struct unicode_str link_local_str  = {link_localW, sizeof(link_localW)};
-    static const struct unicode_str link_pipe_str   = {link_pipeW, sizeof(link_pipeW)};
-    static const struct unicode_str link_mailslot_str = {link_mailslotW, sizeof(link_mailslotW)};
+    //static const WCHAR link_dosdevW[] = {'D','o','s','D','e','v','i','c','e','s'};
+    //static const WCHAR link_globalW[] = {'G','l','o','b','a','l'};
+    //static const WCHAR link_localW[]  = {'L','o','c','a','l'};
+    //static const WCHAR link_pipeW[]   = {'P','I','P','E'};
+    //static const WCHAR link_mailslotW[] = {'M','A','I','L','S','L','O','T'};
+    //static const struct unicode_str link_dosdev_str = {link_dosdevW, sizeof(link_dosdevW)};
+    //static const struct unicode_str link_global_str = {link_globalW, sizeof(link_globalW)};
+    //static const struct unicode_str link_local_str  = {link_localW, sizeof(link_localW)};
+    //static const struct unicode_str link_pipe_str   = {link_pipeW, sizeof(link_pipeW)};
+    //static const struct unicode_str link_mailslot_str = {link_mailslotW, sizeof(link_mailslotW)};
 
     /* devices */
-    static const WCHAR named_pipeW[] = {'N','a','m','e','d','P','i','p','e'};
-    static const WCHAR mailslotW[] = {'M','a','i','l','S','l','o','t'};
-    static const struct unicode_str named_pipe_str = {named_pipeW, sizeof(named_pipeW)};
-    static const struct unicode_str mailslot_str = {mailslotW, sizeof(mailslotW)};
+    //static const WCHAR named_pipeW[] = {'N','a','m','e','d','P','i','p','e'};
+    //static const WCHAR mailslotW[] = {'M','a','i','l','S','l','o','t'};
+    //static const struct unicode_str named_pipe_str = {named_pipeW, sizeof(named_pipeW)};
+    //static const struct unicode_str mailslot_str = {mailslotW, sizeof(mailslotW)};
 
     struct directory *dir_driver, *dir_device, *dir_global, *dir_basenamed;
-    struct symlink *link_dosdev, *link_global1, *link_global2, *link_local, *link_pipe, *link_mailslot;
+    //struct symlink *link_dosdev, *link_global1, *link_global2, *link_local;//, *link_pipe, *link_mailslot;
 
     root_directory = create_directory( NULL, NULL, 0, HASH_SIZE );
     dir_driver     = create_directory( root_directory, &dir_driver_str, 0, HASH_SIZE );
@@ -412,22 +406,22 @@ void init_directories(void)
     dir_basenamed  = create_directory( NULL, &dir_basenamed_str, 0, 37 );
 
     /* devices */
-    create_named_pipe_device( dir_device, &named_pipe_str );
-    create_mailslot_device( dir_device, &mailslot_str );
+    //create_named_pipe_device( dir_device, &named_pipe_str );
+    //create_mailslot_device( dir_device, &mailslot_str );
 
     /* symlinks */
-    link_dosdev    = create_symlink( root_directory, &link_dosdev_str, 0, &dir_global_str );
-    link_global1   = create_symlink( dir_global, &link_global_str, 0, &dir_global_str );
-    link_global2   = create_symlink( dir_basenamed, &link_global_str, 0, &dir_basenamed_str );
-    link_local     = create_symlink( dir_basenamed, &link_local_str, 0, &dir_basenamed_str );
-    link_pipe      = create_symlink( dir_global, &link_pipe_str, 0, &dir_named_pipe_str );
-    link_mailslot  = create_symlink( dir_global, &link_mailslot_str, 0, &dir_mailslot_str );
-    make_object_static( (struct object *)link_dosdev );
-    make_object_static( (struct object *)link_global1 );
-    make_object_static( (struct object *)link_global2 );
-    make_object_static( (struct object *)link_local );
-    make_object_static( (struct object *)link_pipe );
-    make_object_static( (struct object *)link_mailslot );
+    //link_dosdev    = create_symlink( root_directory, &link_dosdev_str, 0, &dir_global_str );
+    //link_global1   = create_symlink( dir_global, &link_global_str, 0, &dir_global_str );
+    //link_global2   = create_symlink( dir_basenamed, &link_global_str, 0, &dir_basenamed_str );
+    //link_local     = create_symlink( dir_basenamed, &link_local_str, 0, &dir_basenamed_str );
+    //link_pipe      = create_symlink( dir_global, &link_pipe_str, 0, &dir_named_pipe_str );
+    //link_mailslot  = create_symlink( dir_global, &link_mailslot_str, 0, &dir_mailslot_str );
+    //make_object_static( (struct object *)link_dosdev );
+    //make_object_static( (struct object *)link_global1 );
+    //make_object_static( (struct object *)link_global2 );
+    //make_object_static( (struct object *)link_local );
+    //make_object_static( (struct object *)link_pipe );
+    //make_object_static( (struct object *)link_mailslot );
 
     /* the symlinks or devices hold references so we can release these */
     release_object( dir_global );
@@ -440,15 +434,16 @@ DECL_HANDLER(create_directory)
 {
     struct unicode_str name;
     struct directory *dir, *root = NULL;
+    PPROCESSINFO current = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
 
     reply->handle = 0;
-    get_req_unicode_str( &name );
-    if (req->rootdir && !(root = get_directory_obj( current->process, req->rootdir, 0 )))
+    get_req_unicode_str( (void*)req, &name );
+    if (req->rootdir && !(root = get_directory_obj( current, req->rootdir, 0 )))
         return;
 
     if ((dir = create_directory( root, &name, req->attributes, HASH_SIZE )))
     {
-        reply->handle = alloc_handle( current->process, dir, req->access, req->attributes );
+        reply->handle = alloc_handle( current, dir, req->access, req->attributes );
         release_object( dir );
     }
 
@@ -460,14 +455,15 @@ DECL_HANDLER(open_directory)
 {
     struct unicode_str name;
     struct directory *dir, *root = NULL;
+    PPROCESSINFO current = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
 
-    get_req_unicode_str( &name );
-    if (req->rootdir && !(root = get_directory_obj( current->process, req->rootdir, 0 )))
+    get_req_unicode_str( (void*)req, &name );
+    if (req->rootdir && !(root = get_directory_obj( current, req->rootdir, 0 )))
         return;
 
     if ((dir = open_object_dir( root, &name, req->attributes, &directory_ops )))
     {
-        reply->handle = alloc_handle( current->process, &dir->obj, req->access, req->attributes );
+        reply->handle = alloc_handle( current, &dir->obj, req->access, req->attributes );
         release_object( dir );
     }
 
@@ -477,7 +473,9 @@ DECL_HANDLER(open_directory)
 /* get a directory entry by index */
 DECL_HANDLER(get_directory_entry)
 {
-    struct directory *dir = get_directory_obj( current->process, req->handle, DIRECTORY_QUERY );
+#if 0
+    PPROCESSINFO current = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
+    struct directory *dir = get_directory_obj( current, req->handle, DIRECTORY_QUERY );
     if (dir)
     {
         struct object *obj = find_object_index( dir->entries, req->index );
@@ -490,9 +488,9 @@ DECL_HANDLER(get_directory_entry)
 
             if (type) type_name = get_object_name( &type->obj, &type_len );
 
-            if (name_len + type_len <= get_reply_max_size())
+            if (name_len + type_len <= get_reply_max_size((void*)req))
             {
-                void *ptr = set_reply_data_size( name_len + type_len );
+                void *ptr = set_reply_data_size( (void*)req, name_len + type_len );
                 if (ptr)
                 {
                     reply->name_len = name_len;
@@ -507,12 +505,16 @@ DECL_HANDLER(get_directory_entry)
         }
         release_object( dir );
     }
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 /* unlink a named object */
 DECL_HANDLER(unlink_object)
 {
-    struct object *obj = get_handle_obj( current->process, req->handle, 0, NULL );
+    PPROCESSINFO current = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
+    struct object *obj = get_handle_obj( current, req->handle, 0, NULL );
 
     if (obj)
     {

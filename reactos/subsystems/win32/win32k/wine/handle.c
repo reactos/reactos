@@ -18,26 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
 #include <limits.h>
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winternl.h"
-
-#include "handle.h"
-#include "process.h"
-#include "thread.h"
-#include "security.h"
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
+#include "object.h"
 #include "request.h"
+#include "handle.h"
+
+#define NDEBUG
+#include <debug.h>
+
 
 struct handle_entry
 {
@@ -48,7 +41,7 @@ struct handle_entry
 struct handle_table
 {
     struct object        obj;         /* object header */
-    struct process      *process;     /* process owning this table */
+    PPROCESSINFO         process;     /* process owning this table */
     int                  count;       /* number of allocated entries */
     int                  last;        /* last used entry */
     int                  free;        /* first entry that may be free */
@@ -130,14 +123,14 @@ static void handle_table_dump( struct object *obj, int verbose )
 
     assert( obj->ops == &handle_table_ops );
 
-    fprintf( stderr, "Handle table last=%d count=%d process=%p\n",
+    DPRINT1( "Handle table last=%d count=%d process=%p\n",
              table->last, table->count, table->process );
     if (!verbose) return;
     entry = table->entries;
     for (i = 0; i <= table->last; i++, entry++)
     {
         if (!entry->ptr) continue;
-        fprintf( stderr, "    %04x: %p %08x ",
+        DPRINT1( "    %04x: %p %08x ",
                  index_to_handle(i), entry->ptr, entry->access );
         entry->ptr->ops->dump( entry->ptr, 0 );
     }
@@ -168,11 +161,11 @@ static void handle_table_destroy( struct object *obj )
         entry->ptr = NULL;
         if (obj) release_object( obj );
     }
-    free( table->entries );
+    ExFreePool( table->entries );
 }
 
 /* allocate a new handle table */
-struct handle_table *alloc_handle_table( struct process *process, int count )
+struct handle_table *alloc_handle_table( PPROCESSINFO process, int count )
 {
     struct handle_table *table;
 
@@ -191,6 +184,7 @@ struct handle_table *alloc_handle_table( struct process *process, int count )
 /* grow a handle table */
 static int grow_handle_table( struct handle_table *table )
 {
+#if 0
     struct handle_entry *new_entries;
     int count = min( table->count * 2, MAX_HANDLE_ENTRIES );
 
@@ -203,6 +197,10 @@ static int grow_handle_table( struct handle_table *table )
     table->entries = new_entries;
     table->count   = count;
     return 1;
+#else
+    UNIMPLEMENTED;
+    return 0;
+#endif
 }
 
 /* allocate the first free entry in the handle table */
@@ -227,7 +225,7 @@ static obj_handle_t alloc_entry( struct handle_table *table, void *obj, unsigned
 
 /* allocate a handle for an object, incrementing its refcount */
 /* return the handle, or 0 on error */
-obj_handle_t alloc_handle_no_access_check( struct process *process, void *ptr, unsigned int access, unsigned int attr )
+obj_handle_t alloc_handle_no_access_check( PPROCESSINFO process, void *ptr, unsigned int access, unsigned int attr )
 {
     struct object *obj = ptr;
 
@@ -244,7 +242,7 @@ obj_handle_t alloc_handle_no_access_check( struct process *process, void *ptr, u
 /* allocate a handle for an object, checking the dacl allows the process to */
 /* access it and incrementing its refcount */
 /* return the handle, or 0 on error */
-obj_handle_t alloc_handle( struct process *process, void *ptr, unsigned int access, unsigned int attr )
+obj_handle_t alloc_handle( PPROCESSINFO process, void *ptr, unsigned int access, unsigned int attr )
 {
     struct object *obj = ptr;
     access = obj->ops->map_access( obj, access );
@@ -275,7 +273,7 @@ static obj_handle_t alloc_global_handle( void *obj, unsigned int access )
 }
 
 /* return a handle entry, or NULL if the handle is invalid */
-static struct handle_entry *get_handle( struct process *process, obj_handle_t handle )
+static struct handle_entry *get_handle( PPROCESSINFO process, obj_handle_t handle )
 {
     struct handle_table *table = process->handles;
     struct handle_entry *entry;
@@ -302,6 +300,7 @@ static struct handle_entry *get_handle( struct process *process, obj_handle_t ha
 /* attempt to shrink a table */
 static void shrink_handle_table( struct handle_table *table )
 {
+#if 0
     struct handle_entry *entry = table->entries + table->last;
     struct handle_entry *new_entries;
     int count = table->count;
@@ -318,11 +317,14 @@ static void shrink_handle_table( struct handle_table *table )
     if (!(new_entries = realloc( table->entries, count * sizeof(*new_entries) ))) return;
     table->count   = count;
     table->entries = new_entries;
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 /* copy the handle table of the parent process */
 /* return 1 if OK, 0 on error */
-struct handle_table *copy_handle_table( struct process *process, struct process *parent )
+struct handle_table *copy_handle_table( PPROCESSINFO process, PPROCESSINFO parent )
 {
     struct handle_table *parent_table = parent->handles;
     struct handle_table *table;
@@ -352,7 +354,7 @@ struct handle_table *copy_handle_table( struct process *process, struct process 
 
 /* close a handle and decrement the refcount of the associated object */
 /* return 1 if OK, 0 on error */
-int close_handle( struct process *process, obj_handle_t handle )
+int close_handle( PPROCESSINFO process, obj_handle_t handle )
 {
     struct handle_table *table;
     struct handle_entry *entry;
@@ -384,17 +386,21 @@ static inline struct object *get_magic_handle( obj_handle_t handle )
     switch(handle)
     {
         case 0xfffffffe:  /* current thread pseudo-handle */
-            return &current->obj;
+            //return &current->obj;
+            UNIMPLEMENTED;
+            return NULL;
         case 0x7fffffff:  /* current process pseudo-handle */
         case 0xffffffff:  /* current process pseudo-handle */
-            return (struct object *)current->process;
+            //return (struct object *)current->process;
+            UNIMPLEMENTED;
+            return NULL;
         default:
             return NULL;
     }
 }
 
 /* retrieve the object corresponding to a handle, incrementing its refcount */
-struct object *get_handle_obj( struct process *process, obj_handle_t handle,
+struct object *get_handle_obj( PPROCESSINFO process, obj_handle_t handle,
                                unsigned int access, const struct object_ops *ops )
 {
     struct handle_entry *entry;
@@ -405,8 +411,9 @@ struct object *get_handle_obj( struct process *process, obj_handle_t handle,
         if (!(entry = get_handle( process, handle ))) return NULL;
         if ((entry->access & access) != access)
         {
-            set_error( STATUS_ACCESS_DENIED );
-            return NULL;
+            DPRINT1("get_handle_obj should deny access!\n");
+            //set_error( STATUS_ACCESS_DENIED );
+            //return NULL;
         }
         obj = entry->ptr;
     }
@@ -419,7 +426,7 @@ struct object *get_handle_obj( struct process *process, obj_handle_t handle,
 }
 
 /* retrieve the access rights of a given handle */
-unsigned int get_handle_access( struct process *process, obj_handle_t handle )
+unsigned int get_handle_access( PPROCESSINFO process, obj_handle_t handle )
 {
     struct handle_entry *entry;
 
@@ -430,7 +437,7 @@ unsigned int get_handle_access( struct process *process, obj_handle_t handle )
 
 /* find the first inherited handle of the given type */
 /* this is needed for window stations and desktops (don't ask...) */
-obj_handle_t find_inherited_handle( struct process *process, const struct object_ops *ops )
+obj_handle_t find_inherited_handle( PPROCESSINFO process, const struct object_ops *ops )
 {
     struct handle_table *table = process->handles;
     struct handle_entry *ptr;
@@ -449,7 +456,7 @@ obj_handle_t find_inherited_handle( struct process *process, const struct object
 
 /* enumerate handles of a given type */
 /* this is needed for window stations and desktops */
-obj_handle_t enumerate_handles( struct process *process, const struct object_ops *ops,
+obj_handle_t enumerate_handles( PPROCESSINFO process, const struct object_ops *ops,
                                 unsigned int *index )
 {
     struct handle_table *table = process->handles;
@@ -470,7 +477,7 @@ obj_handle_t enumerate_handles( struct process *process, const struct object_ops
 
 /* get/set the handle reserved flags */
 /* return the old flags (or -1 on error) */
-static int set_handle_flags( struct process *process, obj_handle_t handle, int mask, int flags )
+static int set_handle_flags( PPROCESSINFO process, obj_handle_t handle, int mask, int flags )
 {
     struct handle_entry *entry;
     unsigned int old_access;
@@ -490,7 +497,7 @@ static int set_handle_flags( struct process *process, obj_handle_t handle, int m
 }
 
 /* duplicate a handle */
-obj_handle_t duplicate_handle( struct process *src, obj_handle_t src_handle, struct process *dst,
+obj_handle_t duplicate_handle( PPROCESSINFO src, obj_handle_t src_handle, PPROCESSINFO dst,
                                unsigned int access, unsigned int attr, unsigned int options )
 {
     obj_handle_t res;
@@ -544,7 +551,7 @@ obj_handle_t open_object( const struct namespace *namespace, const struct unicod
         if (ops && obj->ops != ops)
             set_error( STATUS_OBJECT_TYPE_MISMATCH );
         else
-            handle = alloc_handle( current->process, obj, access, attr );
+            handle = alloc_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process() , obj, access, attr );
         release_object( obj );
     }
     else
@@ -553,7 +560,7 @@ obj_handle_t open_object( const struct namespace *namespace, const struct unicod
 }
 
 /* return the size of the handle table of a given process */
-unsigned int get_handle_table_count( struct process *process )
+unsigned int get_handle_table_count( PPROCESSINFO process )
 {
     if (!process->handles) return 0;
     return process->handles->count;
@@ -562,16 +569,17 @@ unsigned int get_handle_table_count( struct process *process )
 /* close a handle */
 DECL_HANDLER(close_handle)
 {
-    close_handle( current->process, req->handle );
+    close_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle );
 }
 
 /* set a handle information */
 DECL_HANDLER(set_handle_info)
 {
-    reply->old_flags = set_handle_flags( current->process, req->handle, req->mask, req->flags );
+    reply->old_flags = set_handle_flags( (PPROCESSINFO)PsGetCurrentProcessWin32Process() , req->handle, req->mask, req->flags );
 }
 
 /* duplicate a handle */
+#if 0
 DECL_HANDLER(dup_handle)
 {
     struct process *src, *dst;
@@ -601,22 +609,23 @@ DECL_HANDLER(dup_handle)
         release_object( src );
     }
 }
+#endif
 
 DECL_HANDLER(get_object_info)
 {
     struct object *obj;
 
-    if (!(obj = get_handle_obj( current->process, req->handle, 0, NULL ))) return;
+    if (!(obj = get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle, 0, NULL ))) return;
 
-    reply->access = get_handle_access( current->process, req->handle );
+    reply->access = get_handle_access( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle );
     reply->ref_count = obj->refcount;
     release_object( obj );
 }
 
 DECL_HANDLER(set_security_object)
 {
-    data_size_t sd_size = get_req_data_size();
-    const struct security_descriptor *sd = get_req_data();
+    data_size_t sd_size = get_req_data_size((void*)req);
+    const struct security_descriptor *sd = get_req_data((void*)req);
     struct object *obj;
     unsigned int access = 0;
 
@@ -634,12 +643,12 @@ DECL_HANDLER(set_security_object)
     if (req->security_info & DACL_SECURITY_INFORMATION)
         access |= WRITE_DAC;
 
-    if (!(obj = get_handle_obj( current->process, req->handle, access, NULL ))) return;
+    if (!(obj = get_handle_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle, access, NULL ))) return;
 
     obj->ops->set_sd( obj, sd, req->security_info );
     release_object( obj );
 }
-
+#if 0
 DECL_HANDLER(get_security_object)
 {
     const struct security_descriptor *sd;
@@ -653,7 +662,7 @@ DECL_HANDLER(get_security_object)
     if (req->security_info & SACL_SECURITY_INFORMATION)
         access |= ACCESS_SYSTEM_SECURITY;
 
-    if (!(obj = get_handle_obj( current->process, req->handle, access, NULL ))) return;
+    if (!(obj = get_handle_obj( (PPROCESSINFO)PsGetProcessWin32Process(), req->handle, access, NULL ))) return;
 
     sd = obj->ops->get_sd( obj );
     if (sd)
@@ -688,7 +697,7 @@ DECL_HANDLER(get_security_object)
 
         reply->sd_len = sizeof(req_sd) + req_sd.owner_len + req_sd.group_len +
             req_sd.sacl_len + req_sd.dacl_len;
-        if (reply->sd_len <= get_reply_max_size())
+        if (reply->sd_len <= get_reply_max_size(req))
         {
             char *ptr = set_reply_data_size(reply->sd_len);
 
@@ -708,3 +717,4 @@ DECL_HANDLER(get_security_object)
 
     release_object( obj );
 }
+#endif

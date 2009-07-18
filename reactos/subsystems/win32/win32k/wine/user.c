@@ -18,8 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "thread.h"
+#include <win32k.h>
+
+#include <limits.h>
+
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
+#include "object.h"
+#include "request.h"
+#include "handle.h"
 #include "user.h"
+
+#define NDEBUG
+#include <debug.h>
 
 struct user_handle
 {
@@ -68,7 +79,7 @@ static inline struct user_handle *alloc_user_entry(void)
         int growth = max( 32, allocated_handles / 2 );
         int new_size = min( allocated_handles + growth, (LAST_USER_HANDLE-FIRST_USER_HANDLE+1) >> 1 );
         if (new_size <= allocated_handles) return NULL;
-        if (!(new_handles = realloc( handles, new_size * sizeof(*handles) )))
+        if (!(new_handles = ExReallocPool( handles, new_size * sizeof(*handles), allocated_handles * sizeof(*handles) )))
             return NULL;
         handles = new_handles;
         allocated_handles = new_size;

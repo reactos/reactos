@@ -72,14 +72,19 @@ SOFTWARE.
 
 ************************************************************************/
 
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "winternl.h"
+#include <win32k.h>
+
+#include <limits.h>
+
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
+#include "object.h"
 #include "request.h"
+#include "handle.h"
 #include "user.h"
+
+#define NDEBUG
+#include <debug.h>
 
 struct region
 {
@@ -110,7 +115,7 @@ static inline rectangle_t *add_rect( struct region *reg )
 {
     if (reg->num_rects >= reg->size - 1)
     {
-        rectangle_t *new_rect = realloc( reg->rects, 2 * sizeof(rectangle_t) * reg->size );
+        rectangle_t *new_rect = ExReallocPool( reg->rects, 2 * sizeof(rectangle_t) * reg->size, sizeof(rectangle_t) * reg->size );
         if (!new_rect)
         {
             set_error( STATUS_NO_MEMORY );
@@ -324,7 +329,7 @@ static int region_op( struct region *newReg, const struct region *reg1, const st
     if ((newReg->num_rects < (newReg->size / 2)) && (newReg->size > 2))
     {
         new_size = max( newReg->num_rects, RGN_DEFAULT_RECTS );
-        if ((new_rects = realloc( newReg->rects, sizeof(*newReg->rects) * new_size )))
+        if ((new_rects = ExReallocPool( newReg->rects, sizeof(*newReg->rects) * new_size, sizeof(*newReg->rects) * newReg->size )))
         {
             newReg->rects = new_rects;
             newReg->size = new_size;
@@ -332,7 +337,7 @@ static int region_op( struct region *newReg, const struct region *reg1, const st
     }
     ret = 1;
 done:
-    free( old_rects );
+    ExFreePool( old_rects );
     return ret;
 }
 
@@ -568,7 +573,7 @@ struct region *create_empty_region(void)
     if (!(region = mem_alloc( sizeof(*region) ))) return NULL;
     if (!(region->rects = mem_alloc( RGN_DEFAULT_RECTS * sizeof(*region->rects) )))
     {
-        free( region );
+        ExFreePool( region );
         return NULL;
     }
     region->size = RGN_DEFAULT_RECTS;
@@ -602,7 +607,7 @@ struct region *create_region_from_req_data( const void *data, data_size_t size )
     alloc_rects = max( nb_rects, RGN_DEFAULT_RECTS );
     if (!(region->rects = mem_alloc( alloc_rects * sizeof(*region->rects) )))
     {
-        free( region );
+        ExFreePool( region );
         return NULL;
     }
     region->size = alloc_rects;
@@ -615,8 +620,8 @@ struct region *create_region_from_req_data( const void *data, data_size_t size )
 /* free a region */
 void free_region( struct region *region )
 {
-    free( region->rects );
-    free( region );
+    ExFreePool( region->rects );
+    ExFreePool( region );
 }
 
 /* set region to a simple rectangle */
@@ -665,17 +670,17 @@ rectangle_t *get_region_data_and_free( struct region *region, data_size_t max_si
         if (max_size >= sizeof(empty_rect))
         {
             ret = memdup( &empty_rect, sizeof(empty_rect) );
-            free( region->rects );
+            ExFreePool( region->rects );
         }
     }
 
     if (max_size < *total_size)
     {
-        free( region->rects );
+        ExFreePool( region->rects );
         set_error( STATUS_BUFFER_OVERFLOW );
         ret = NULL;
     }
-    free( region );
+    ExFreePool( region );
     return ret;
 }
 
@@ -718,7 +723,7 @@ struct region *copy_region( struct region *dst, const struct region *src )
 
     if (dst->size < src->num_rects)
     {
-        rectangle_t *rect = realloc( dst->rects, src->num_rects * sizeof(*rect) );
+        rectangle_t *rect = ExReallocPool( dst->rects, src->num_rects * sizeof(*rect), dst->size * sizeof(*rect) );
         if (!rect)
         {
             set_error( STATUS_NO_MEMORY );

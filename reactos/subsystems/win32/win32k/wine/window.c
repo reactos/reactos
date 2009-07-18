@@ -18,26 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
-#include <stdarg.h>
+#include <limits.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winternl.h"
-
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
 #include "object.h"
 #include "request.h"
-#include "thread.h"
-#include "process.h"
+#include "handle.h"
 #include "user.h"
-#include "unicode.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* a window property */
 struct property
@@ -63,7 +56,7 @@ struct window
     struct list      unlinked;        /* list of children not linked in the Z-order list */
     struct list      entry;           /* entry in parent's children list */
     user_handle_t    handle;          /* full handle for this window */
-    struct thread   *thread;          /* thread owning the window */
+    PTHREADINFO      thread;          /* thread owning the window */
     struct desktop  *desktop;         /* desktop that the window belongs to */
     struct window_class *class;       /* window class */
     atom_t           atom;            /* class atom */
@@ -250,7 +243,7 @@ static int add_handle_to_array( struct user_handle_array *array, user_handle_t h
         user_handle_t *new_array = realloc( array->handles, new_total * sizeof(*new_array) );
         if (!new_array)
         {
-            free( array->handles );
+            ExFreePool( array->handles );
             set_error( STATUS_NO_MEMORY );
             return 0;
         }
@@ -291,8 +284,9 @@ static void set_property( struct window *win, atom_t atom, lparam_t data, enum p
         if (win->prop_inuse >= win->prop_alloc)
         {
             /* need to grow the array */
-            if (!(new_props = realloc( win->properties,
-                                       sizeof(*new_props) * (win->prop_alloc + 16) )))
+            if (!(new_props = ExReallocPool( win->properties,
+                                       sizeof(*new_props) * (win->prop_alloc + 16),
+                                       sizeof(*new_props) * win->prop_alloc )))
             {
                 set_error( STATUS_NO_MEMORY );
                 release_global_atom( NULL, atom );
@@ -352,13 +346,13 @@ static inline void destroy_properties( struct window *win )
         if (win->properties[i].type == PROP_TYPE_FREE) continue;
         release_global_atom( NULL, win->properties[i].atom );
     }
-    free( win->properties );
+    ExFreePool( win->properties );
 }
 
 /* detach a window from its owner thread but keep the window around */
 static void detach_window_thread( struct window *win )
 {
-    struct thread *thread = win->thread;
+    PTHREADINFO thread = win->thread;
 
     if (!thread) return;
     if (thread->queue)
@@ -379,7 +373,7 @@ static void detach_window_thread( struct window *win )
 }
 
 /* get the process owning the top window of a given desktop */
-struct process *get_top_window_owner( struct desktop *desktop )
+PPROCESSINFO get_top_window_owner( struct desktop *desktop )
 {
     struct window *win = desktop->top_window;
     if (!win || !win->thread) return NULL;
@@ -402,10 +396,11 @@ static struct window *create_window( struct window *parent, struct window *owner
     struct window *win = NULL;
     struct desktop *desktop;
     struct window_class *class;
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
 
     if (!(desktop = get_thread_desktop( current, DESKTOP_CREATEWINDOW ))) return NULL;
 
-    if (!(class = grab_class( current->process, atom, instance, &extra_bytes )))
+    if (!(class = grab_class( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), atom, instance, &extra_bytes )))
     {
         release_object( desktop );
         return NULL;
@@ -499,7 +494,7 @@ failed:
     if (win)
     {
         if (win->handle) free_user_handle( win->handle );
-        free( win );
+        ExFreePool( win );
     }
     release_object( desktop );
     release_class( class );
@@ -507,7 +502,7 @@ failed:
 }
 
 /* destroy all windows belonging to a given thread */
-void destroy_thread_windows( struct thread *thread )
+void destroy_thread_windows( PTHREADINFO thread )
 {
     user_handle_t handle = 0;
     struct window *win;
@@ -521,7 +516,7 @@ void destroy_thread_windows( struct thread *thread )
 }
 
 /* get the desktop window */
-static struct window *get_desktop_window( struct thread *thread )
+static struct window *get_desktop_window( PTHREADINFO thread )
 {
     struct window *top_window;
     struct desktop *desktop = get_thread_desktop( thread, 0 );
@@ -693,6 +688,7 @@ user_handle_t window_from_point( struct desktop *desktop, int x, int y )
 }
 
 /* return list of all windows containing point (in absolute coords) */
+#if 0
 static int all_windows_from_point( struct window *top, int x, int y, struct user_handle_array *array )
 {
     struct window *ptr;
@@ -722,14 +718,15 @@ static int all_windows_from_point( struct window *top, int x, int y, struct user
     if (!add_handle_to_array( array, top->handle )) return 0;
     return 1;
 }
-
+#endif
 
 /* return the thread owning a window */
-struct thread *get_window_thread( user_handle_t handle )
+PTHREADINFO get_window_thread( user_handle_t handle )
 {
     struct window *win = get_user_object( handle, USER_WINDOW );
     if (!win || !win->thread) return NULL;
-    return (struct thread *)grab_object( win->thread );
+    ObReferenceObjectByPointer(win->thread->peThread, 0, NULL, KernelMode);
+    return win->thread;
 }
 
 
@@ -741,7 +738,7 @@ static inline int win_needs_repaint( struct window *win )
 
 
 /* find a child of the specified window that needs repainting */
-static struct window *find_child_to_repaint( struct window *parent, struct thread *thread )
+static struct window *find_child_to_repaint( struct window *parent, PTHREADINFO thread )
 {
     struct window *ptr, *ret = NULL;
 
@@ -771,7 +768,7 @@ static struct window *find_child_to_repaint( struct window *parent, struct threa
 
 
 /* find a window that needs to receive a WM_PAINT; also clear its internal paint flag */
-user_handle_t find_window_to_repaint( user_handle_t parent, struct thread *thread )
+user_handle_t find_window_to_repaint( user_handle_t parent, PTHREADINFO thread )
 {
     struct window *ptr, *win, *top_window = get_desktop_window( thread );
 
@@ -1736,7 +1733,7 @@ DECL_HANDLER(create_window)
             while (!is_desktop_window(owner->parent)) owner = owner->parent;
     }
 
-    get_req_unicode_str( &cls_name );
+    get_req_unicode_str( (void*)req, &cls_name );
     atom = cls_name.len ? find_global_atom( NULL, &cls_name ) : req->atom;
 
     if (!(win = create_window( parent, owner, atom, req->instance ))) return;
@@ -1775,7 +1772,7 @@ DECL_HANDLER(destroy_window)
     if (win)
     {
         if (!is_desktop_window(win)) destroy_window( win );
-        else if (win->thread == current) detach_window_thread( win );
+        else if (win->thread == (PTHREADINFO)PsGetCurrentThreadWin32Thread()) detach_window_thread( win );
         else set_error( STATUS_ACCESS_DENIED );
     }
 }
@@ -1784,7 +1781,7 @@ DECL_HANDLER(destroy_window)
 /* retrieve the desktop window for the current thread */
 DECL_HANDLER(get_desktop_window)
 {
-    struct desktop *desktop = get_thread_desktop( current, 0 );
+    struct desktop *desktop = get_thread_desktop( (PTHREADINFO)PsGetCurrentThreadWin32Thread(), 0 );
 
     if (!desktop) return;
 
@@ -1862,7 +1859,7 @@ DECL_HANDLER(set_window_info)
     struct window *win = get_window( req->handle );
 
     if (!win) return;
-    if (req->flags && is_desktop_window(win) && win->thread != current)
+    if (req->flags && is_desktop_window(win) && win->thread != (PTHREADINFO)PsGetCurrentThreadWin32Thread())
     {
         set_error( STATUS_ACCESS_DENIED );
         return;
@@ -1919,8 +1916,8 @@ DECL_HANDLER(get_window_parents)
     if (win) for (ptr = win->parent; ptr; ptr = ptr->parent) total++;
 
     reply->count = total;
-    len = min( get_reply_max_size(), total * sizeof(user_handle_t) );
-    if (len && ((data = set_reply_data_size( len ))))
+    len = min( get_reply_max_size((void*)req), total * sizeof(user_handle_t) );
+    if (len && ((data = set_reply_data_size( (void *)req, len ))))
     {
         for (ptr = win->parent; ptr && len; ptr = ptr->parent, len -= sizeof(*data))
             *data++ = ptr->handle;
@@ -1938,19 +1935,21 @@ DECL_HANDLER(get_window_children)
     struct unicode_str cls_name;
     atom_t atom = req->atom;
     struct desktop *desktop = NULL;
+    PTHREADINFO current_thread = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+    PPROCESSINFO current_process = (PPROCESSINFO)PsGetCurrentProcessWin32Process();
 
-    get_req_unicode_str( &cls_name );
+    get_req_unicode_str( (void*)req, &cls_name );
     if (cls_name.len && !(atom = find_global_atom( NULL, &cls_name ))) return;
 
     if (req->desktop)
     {
-        if (!(desktop = get_desktop_obj( current->process, req->desktop, DESKTOP_ENUMERATE ))) return;
+        if (!(desktop = get_desktop_obj( current_process, req->desktop, DESKTOP_ENUMERATE ))) return;
         parent = desktop->top_window;
     }
     else
     {
         if (req->parent && !(parent = get_window( req->parent ))) return;
-        if (!parent && !(desktop = get_thread_desktop( current, 0 ))) return;
+        if (!parent && !(desktop = get_thread_desktop( current_thread, 0 ))) return;
     }
 
     if (parent)
@@ -1960,8 +1959,8 @@ DECL_HANDLER(get_window_children)
                 get_children_windows( desktop->msg_window, atom, req->tid, NULL, 0 );
 
     reply->count = total;
-    len = min( get_reply_max_size(), total * sizeof(user_handle_t) );
-    if (len && ((data = set_reply_data_size( len ))))
+    len = min( get_reply_max_size((void*)req), total * sizeof(user_handle_t) );
+    if (len && ((data = set_reply_data_size( (void*)req, len ))))
     {
         if (parent) get_children_windows( parent, atom, req->tid, data, len / sizeof(user_handle_t) );
         else
@@ -1982,6 +1981,7 @@ DECL_HANDLER(get_window_children)
 /* get a list of the window children that contain a given point */
 DECL_HANDLER(get_window_children_from_point)
 {
+#if 0
     struct user_handle_array array;
     struct window *parent = get_window( req->parent );
     data_size_t len;
@@ -1994,9 +1994,12 @@ DECL_HANDLER(get_window_children_from_point)
     if (!all_windows_from_point( parent, req->x, req->y, &array )) return;
 
     reply->count = array.count;
-    len = min( get_reply_max_size(), array.count * sizeof(user_handle_t) );
-    if (len) set_reply_data_ptr( array.handles, len );
-    else free( array.handles );
+    len = min( get_reply_max_size((void*)req), array.count * sizeof(user_handle_t) );
+    if (len) set_reply_data_ptr( (void*)req, array.handles, len );
+    else ExFreePool( array.handles );
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 
@@ -2081,8 +2084,8 @@ DECL_HANDLER(set_window_pos)
         return;
     }
 
-    if (get_req_data_size() >= sizeof(rectangle_t)) visible_rect = get_req_data();
-    if (get_req_data_size() >= 3 * sizeof(rectangle_t)) valid_rects = visible_rect + 1;
+    if (get_req_data_size((void*)req) >= sizeof(rectangle_t)) visible_rect = get_req_data((void*)req);
+    if (get_req_data_size((void*)req) >= 3 * sizeof(rectangle_t)) valid_rects = visible_rect + 1;
 
     if (!visible_rect) visible_rect = &req->window;
     set_window_pos( win, previous, flags, &req->window, &req->client, visible_rect, valid_rects );
@@ -2113,8 +2116,8 @@ DECL_HANDLER(get_window_text)
     if (win && win->text)
     {
         data_size_t len = strlenW( win->text ) * sizeof(WCHAR);
-        if (len > get_reply_max_size()) len = get_reply_max_size();
-        set_reply_data( win->text, len );
+        if (len > get_reply_max_size((void*)req)) len = get_reply_max_size((void*)req);
+        set_reply_data( (void*)req, win->text, len );
     }
 }
 
@@ -2127,14 +2130,14 @@ DECL_HANDLER(set_window_text)
     if (win)
     {
         WCHAR *text = NULL;
-        data_size_t len = get_req_data_size() / sizeof(WCHAR);
+        data_size_t len = get_req_data_size((void*)req) / sizeof(WCHAR);
         if (len)
         {
             if (!(text = mem_alloc( (len+1) * sizeof(WCHAR) ))) return;
-            memcpy( text, get_req_data(), len * sizeof(WCHAR) );
+            memcpy( text, get_req_data((void*)req), len * sizeof(WCHAR) );
             text[len] = 0;
         }
-        free( win->text );
+        if (win->text) ExFreePool( win->text );
         win->text = text;
     }
 }
@@ -2182,8 +2185,8 @@ DECL_HANDLER(get_visible_region)
     {
         rectangle_t *data;
         map_win_region_to_screen( win, region );
-        data = get_region_data_and_free( region, get_reply_max_size(), &reply->total_size );
-        if (data) set_reply_data_ptr( data, reply->total_size );
+        data = get_region_data_and_free( region, get_reply_max_size((void*)req), &reply->total_size );
+        if (data) set_reply_data_ptr( (void*)req, data, reply->total_size );
     }
     reply->top_win  = top->handle;
     reply->top_rect = (top == win && (req->flags & DCX_WINDOW)) ? top->visible_rect : top->client_rect;
@@ -2213,8 +2216,8 @@ DECL_HANDLER(get_window_region)
 
     if (win->win_region)
     {
-        rectangle_t *data = get_region_data( win->win_region, get_reply_max_size(), &reply->total_size );
-        if (data) set_reply_data_ptr( data, reply->total_size );
+        rectangle_t *data = get_region_data( win->win_region, get_reply_max_size((void*)req), &reply->total_size );
+        if (data) set_reply_data_ptr( (void*)req, data, reply->total_size );
     }
 }
 
@@ -2227,9 +2230,9 @@ DECL_HANDLER(set_window_region)
 
     if (!win) return;
 
-    if (get_req_data_size())  /* no data means remove the region completely */
+    if (get_req_data_size((void*)req))  /* no data means remove the region completely */
     {
-        if (!(region = create_region_from_req_data( get_req_data(), get_req_data_size() )))
+        if (!(region = create_region_from_req_data( get_req_data((void*)req), get_req_data_size((void*)req) )))
             return;
     }
     set_window_region( win, region, req->redraw );
@@ -2286,9 +2289,9 @@ DECL_HANDLER(get_update_region)
             return;
         }
         map_win_region_to_screen( win, region );
-        if (!(data = get_region_data_and_free( region, get_reply_max_size(),
+        if (!(data = get_region_data_and_free( region, get_reply_max_size((void*)req),
                                                &reply->total_size ))) return;
-        set_reply_data_ptr( data, reply->total_size );
+        set_reply_data_ptr( (void*)req, data, reply->total_size );
     }
 
     if (reply->flags & (UPDATE_PAINT|UPDATE_INTERNALPAINT)) /* validate everything */
@@ -2347,9 +2350,9 @@ DECL_HANDLER(redraw_window)
 
     if (req->flags & (RDW_VALIDATE|RDW_INVALIDATE))
     {
-        if (get_req_data_size())  /* no data means whole rectangle */
+        if (get_req_data_size((void*)req))  /* no data means whole rectangle */
         {
-            if (!(region = create_region_from_req_data( get_req_data(), get_req_data_size() )))
+            if (!(region = create_region_from_req_data( get_req_data((void*)req), get_req_data_size((void*)req) )))
                 return;
         }
     }
@@ -2368,7 +2371,7 @@ DECL_HANDLER(set_window_property)
 
     if (!win) return;
 
-    get_req_unicode_str( &name );
+    get_req_unicode_str( (void*)req, &name );
     if (name.len)
     {
         atom_t atom = add_global_atom( NULL, &name );
@@ -2388,7 +2391,7 @@ DECL_HANDLER(remove_window_property)
     struct unicode_str name;
     struct window *win = get_window( req->window );
 
-    get_req_unicode_str( &name );
+    get_req_unicode_str( (void*)req, &name );
     if (win)
     {
         atom_t atom = name.len ? find_global_atom( NULL, &name ) : req->atom;
@@ -2403,7 +2406,7 @@ DECL_HANDLER(get_window_property)
     struct unicode_str name;
     struct window *win = get_window( req->window );
 
-    get_req_unicode_str( &name );
+    get_req_unicode_str( (void*)req, &name );
     if (win)
     {
         atom_t atom = name.len ? find_global_atom( NULL, &name ) : req->atom;
@@ -2416,7 +2419,7 @@ DECL_HANDLER(get_window_property)
 DECL_HANDLER(get_window_properties)
 {
     property_data_t *data;
-    int i, count, max = get_reply_max_size() / sizeof(*data);
+    int i, count, max = get_reply_max_size((void*)req) / sizeof(*data);
     struct window *win = get_window( req->window );
 
     reply->total = 0;
@@ -2427,7 +2430,7 @@ DECL_HANDLER(get_window_properties)
     reply->total = count;
 
     if (count > max) count = max;
-    if (!count || !(data = set_reply_data_size( count * sizeof(*data) ))) return;
+    if (!count || !(data = set_reply_data_size( (void*)req, count * sizeof(*data) ))) return;
 
     for (i = 0; i < win->prop_inuse && count; i++)
     {

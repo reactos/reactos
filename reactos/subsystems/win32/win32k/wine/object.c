@@ -18,27 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
 #include <limits.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdarg.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "winternl.h"
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
+#include "object.h"
 
-#include "file.h"
-#include "process.h"
-#include "thread.h"
-#include "unicode.h"
-#include "security.h"
-
+#define NDEBUG
+#include <debug.h>
 
 struct object_name
 {
@@ -62,6 +51,7 @@ static struct list static_object_list = LIST_INIT(static_object_list);
 
 void dump_objects(void)
 {
+#ifndef __REACTOS__
     struct list *p;
 
     LIST_FOR_EACH( p, &static_object_list )
@@ -76,6 +66,7 @@ void dump_objects(void)
         fprintf( stderr, "%p:%d: ", ptr, ptr->refcount );
         ptr->ops->dump( ptr, 1 );
     }
+#endif
 }
 
 void close_objects(void)
@@ -102,7 +93,7 @@ void close_objects(void)
 /* malloc replacement */
 void *mem_alloc( size_t size )
 {
-    void *ptr = malloc( size );
+    void *ptr = ExAllocatePool( PagedPool, size );
     if (ptr) memset( ptr, 0x55, size );
     else set_error( STATUS_NO_MEMORY );
     return ptr;
@@ -111,7 +102,7 @@ void *mem_alloc( size_t size )
 /* duplicate a block of memory */
 void *memdup( const void *data, size_t len )
 {
-    void *ptr = malloc( len );
+    void *ptr = ExAllocatePool( PagedPool, len );
     if (ptr) memcpy( ptr, data, len );
     else set_error( STATUS_NO_MEMORY );
     return ptr;
@@ -148,7 +139,7 @@ static void free_name( struct object *obj )
     struct object_name *ptr = obj->name;
     list_remove( &ptr->entry );
     if (ptr->parent) release_object( ptr->parent );
-    free( ptr );
+    ExFreePool( ptr );
 }
 
 /* set the name of an existing object */
@@ -203,7 +194,7 @@ void *create_object( struct namespace *namespace, const struct object_ops *ops,
         if (parent) name_ptr->parent = grab_object( parent );
     }
     else
-        free( name_ptr );
+        ExFreePool( name_ptr );
     return obj;
 }
 
@@ -236,6 +227,7 @@ void *create_named_object( struct namespace *namespace, const struct object_ops 
 /* dump the name of an object to stderr */
 void dump_object_name( struct object *obj )
 {
+#ifndef __REACTOS__
     if (!obj->name) fprintf( stderr, "name=\"\"" );
     else
     {
@@ -243,6 +235,7 @@ void dump_object_name( struct object *obj )
         dump_strW( obj->name->name, obj->name->len/sizeof(WCHAR), stderr, "\"\"" );
         fputc( '\"', stderr );
     }
+#endif
 }
 
 /* unlink a named object from its namespace, without freeing the object itself */
@@ -281,12 +274,12 @@ void release_object( void *ptr )
         assert( list_empty( &obj->wait_queue ));
         obj->ops->destroy( obj );
         if (obj->name) free_name( obj );
-        free( obj->sd );
+        if (obj->sd) ExFreePool( obj->sd );
 #ifdef DEBUG_OBJECTS
         list_remove( &obj->obj_list );
         memset( obj, 0xaa, obj->ops->size );
 #endif
-        free( obj );
+        ExFreePool( obj );
     }
 }
 
@@ -311,7 +304,7 @@ struct object *find_object( const struct namespace *namespace, const struct unic
         }
         else
         {
-            if (!memcmp( ptr->name, name->str, name->len ))
+            if (RtlCompareMemory( ptr->name, name->str, name->len ) == name->len)
                 return grab_object( ptr->obj );
         }
     }
@@ -413,7 +406,9 @@ int default_set_sd( struct object *obj, const struct security_descriptor *sd,
         new_sd.owner_len = sd->owner_len;
     else
     {
-        owner = token_get_user( current->process->token );
+        //owner = token_get_user( current->process->token );
+        DPRINT1("[TODO] Owner is not obtained!\n");
+        owner = NULL;
         new_sd.owner_len = FIELD_OFFSET(SID, SubAuthority[owner->SubAuthorityCount]);
         new_sd.control |= SE_OWNER_DEFAULTED;
     }
@@ -423,7 +418,9 @@ int default_set_sd( struct object *obj, const struct security_descriptor *sd,
         new_sd.group_len = sd->group_len;
     else
     {
-        group = token_get_primary_group( current->process->token );
+        //group = token_get_primary_group( current->process->token );
+        DPRINT1("[TODO] group is not obtained!\n");
+        group = NULL;
         new_sd.group_len = FIELD_OFFSET(SID, SubAuthority[group->SubAuthorityCount]);
         new_sd.control |= SE_GROUP_DEFAULTED;
     }
@@ -457,8 +454,9 @@ int default_set_sd( struct object *obj, const struct security_descriptor *sd,
             new_sd.dacl_len = obj->sd->dacl_len;
         else
         {
-            dacl = token_get_default_dacl( current->process->token );
-            new_sd.dacl_len = dacl->AclSize;
+            //dacl = token_get_default_dacl( current->process->token );
+            DPRINT1("[TODO] token_get_default_dacl not obtained!\n");
+            new_sd.dacl_len = 0;//dacl->AclSize;
             new_sd.control |= SE_DACL_DEFAULTED;
         }
     }
@@ -478,7 +476,7 @@ int default_set_sd( struct object *obj, const struct security_descriptor *sd,
     ptr += new_sd.sacl_len;
     memcpy( ptr, dacl, new_sd.dacl_len );
 
-    free( obj->sd );
+    ExFreePool( obj->sd );
     obj->sd = new_sd_ptr;
     return 1;
 }
@@ -496,7 +494,7 @@ struct object *no_open_file( struct object *obj, unsigned int access, unsigned i
     return NULL;
 }
 
-int no_close_handle( struct object *obj, struct process *process, obj_handle_t handle )
+int no_close_handle( struct object *obj, PPROCESSINFO process, obj_handle_t handle )
 {
     return 1;  /* ok to close */
 }

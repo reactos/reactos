@@ -18,28 +18,19 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <win32k.h>
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <limits.h>
 
-#include "ntstatus.h"
-#define WIN32_NO_STATUS
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winternl.h"
-
-#include "handle.h"
-#include "file.h"
-#include "thread.h"
-#include "process.h"
+#undef LIST_FOR_EACH
+#undef LIST_FOR_EACH_SAFE
+#include "object.h"
 #include "request.h"
+#include "handle.h"
 #include "user.h"
+
+#define NDEBUG
+#include <debug.h>
 
 #define WM_NCMOUSEFIRST WM_NCMOUSEMOVE
 #define WM_NCMOUSELAST  (WM_NCMOUSEFIRST+(WM_MOUSELAST-WM_MOUSEFIRST))
@@ -134,13 +125,13 @@ struct msg_queue
 static void msg_queue_dump( struct object *obj, int verbose );
 static int msg_queue_add_queue( struct object *obj, struct wait_queue_entry *entry );
 static void msg_queue_remove_queue( struct object *obj, struct wait_queue_entry *entry );
-static int msg_queue_signaled( struct object *obj, struct thread *thread );
-static int msg_queue_satisfied( struct object *obj, struct thread *thread );
+static int msg_queue_signaled( struct object *obj, PTHREADINFO thread );
+static int msg_queue_satisfied( struct object *obj, PTHREADINFO thread );
 static void msg_queue_destroy( struct object *obj );
 static void msg_queue_poll_event( struct fd *fd, int event );
 static void thread_input_dump( struct object *obj, int verbose );
 static void thread_input_destroy( struct object *obj );
-static void timer_callback( void *private );
+static VOID NTAPI timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 );
 
 static const struct object_ops msg_queue_ops =
 {
@@ -217,7 +208,7 @@ static void set_caret_window( struct thread_input *input, user_handle_t win )
 }
 
 /* create a thread input object */
-static struct thread_input *create_thread_input( struct thread *thread )
+static struct thread_input *create_thread_input( PTHREADINFO thread )
 {
     struct thread_input *input;
 
@@ -242,7 +233,7 @@ static struct thread_input *create_thread_input( struct thread *thread )
 }
 
 /* release the thread input data of a given thread */
-static inline void release_thread_input( struct thread *thread )
+static inline void release_thread_input( PTHREADINFO thread )
 {
     struct thread_input *input = thread->queue->input;
 
@@ -252,7 +243,7 @@ static inline void release_thread_input( struct thread *thread )
 }
 
 /* create a message queue object */
-static struct msg_queue *create_msg_queue( struct thread *thread, struct thread_input *input )
+static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_input *input )
 {
     struct msg_queue *queue;
     int i;
@@ -272,7 +263,7 @@ static struct msg_queue *create_msg_queue( struct thread *thread, struct thread_
         queue->timeout         = NULL;
         queue->input           = (struct thread_input *)grab_object( input );
         queue->hooks           = NULL;
-        queue->last_get_msg    = current_time;
+        KeQuerySystemTime((PLARGE_INTEGER)&queue->last_get_msg);
         list_init( &queue->send_result );
         list_init( &queue->callback_result );
         list_init( &queue->pending_timers );
@@ -288,9 +279,9 @@ static struct msg_queue *create_msg_queue( struct thread *thread, struct thread_
 }
 
 /* free the message queue of a thread at thread exit */
-void free_msg_queue( struct thread *thread )
+void free_msg_queue( PTHREADINFO thread )
 {
-    struct process *process = thread->process;
+    PPROCESSINFO process = thread->process;
 
     remove_thread_hooks( thread );
     if (!thread->queue) return;
@@ -310,14 +301,14 @@ void free_msg_queue( struct thread *thread )
 }
 
 /* get the hook table for a given thread */
-struct hook_table *get_queue_hooks( struct thread *thread )
+struct hook_table *get_queue_hooks( PTHREADINFO thread )
 {
     if (!thread->queue) return NULL;
     return thread->queue->hooks;
 }
 
 /* set the hook table for a given thread, allocating the queue if needed */
-void set_queue_hooks( struct thread *thread, struct hook_table *hooks )
+void set_queue_hooks( PTHREADINFO thread, struct hook_table *hooks )
 {
     struct msg_queue *queue = thread->queue;
     if (!queue && !(queue = create_msg_queue( thread, NULL ))) return;
@@ -384,6 +375,7 @@ static inline int get_hardware_msg_bit( struct message *msg )
 /* get the current thread queue, creating it if needed */
 static inline struct msg_queue *get_current_queue(void)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct msg_queue *queue = current->queue;
     if (!queue) queue = create_msg_queue( current, NULL );
     return queue;
@@ -428,9 +420,9 @@ static int merge_message( struct thread_input *input, const struct message *msg 
 static void free_result( struct message_result *result )
 {
     if (result->timeout) remove_timeout_user( result->timeout );
-    free( result->data );
+    if (result->data) ExFreePool( result->data );
     if (result->callback_msg) free_message( result->callback_msg );
-    free( result );
+    ExFreePool( result );
 }
 
 /* remove the result from the sender list it is on */
@@ -490,8 +482,8 @@ static void free_message( struct message *msg )
         }
         else free_result( result );
     }
-    free( msg->data );
-    free( msg );
+    if (msg->data) ExFreePool( msg->data );
+    ExFreePool( msg );
 }
 
 /* remove (and free) a message from a message list */
@@ -513,9 +505,11 @@ static void remove_queue_message( struct msg_queue *queue, struct message *msg,
 }
 
 /* message timed out without getting a reply */
-static void result_timeout( void *private )
+static VOID
+NTAPI
+result_timeout( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2)
 {
-    struct message_result *result = private;
+    struct message_result *result = Context;
 
     assert( !result->replied );
 
@@ -561,7 +555,7 @@ static struct message_result *alloc_message_result( struct msg_queue *send_queue
 
             if (!callback_msg)
             {
-                free( result );
+                ExFreePool( result );
                 return NULL;
             }
             callback_msg->type      = MSG_CALLBACK_RESULT;
@@ -569,7 +563,7 @@ static struct message_result *alloc_message_result( struct msg_queue *send_queue
             callback_msg->msg       = msg->msg;
             callback_msg->wparam    = 0;
             callback_msg->lparam    = 0;
-            callback_msg->time      = get_tick_count();
+            callback_msg->time      = EngGetTickCount();
             callback_msg->result    = NULL;
             /* steal the data from the original message */
             callback_msg->data      = msg->data;
@@ -593,13 +587,13 @@ static struct message_result *alloc_message_result( struct msg_queue *send_queue
 }
 
 /* receive a message, removing it from the sent queue */
-static void receive_message( struct msg_queue *queue, struct message *msg,
+static void receive_message( void *req, struct msg_queue *queue, struct message *msg,
                              struct get_message_reply *reply )
 {
     struct message_result *result = msg->result;
 
     reply->total = msg->data_size;
-    if (msg->data_size > get_reply_max_size())
+    if (msg->data_size > get_reply_max_size(req))
     {
         set_error( STATUS_BUFFER_OVERFLOW );
         return;
@@ -611,7 +605,7 @@ static void receive_message( struct msg_queue *queue, struct message *msg,
     reply->lparam = msg->lparam;
     reply->time   = msg->time;
 
-    if (msg->data) set_reply_data_ptr( msg->data, msg->data_size );
+    if (msg->data) set_reply_data_ptr( req, msg->data, msg->data_size );
 
     list_remove( &msg->entry );
     /* put the result on the receiver result stack */
@@ -621,7 +615,7 @@ static void receive_message( struct msg_queue *queue, struct message *msg,
         result->recv_next  = queue->recv_result;
         queue->recv_result = result;
     }
-    free( msg );
+    ExFreePool( msg );
     if (list_empty( &queue->msg_list[SEND_MESSAGE] )) clear_queue_bits( queue, QS_SENDMESSAGE );
 }
 
@@ -657,7 +651,7 @@ static int match_window( user_handle_t win, user_handle_t msg_win )
 }
 
 /* retrieve a posted message */
-static int get_posted_message( struct msg_queue *queue, user_handle_t win,
+static int get_posted_message( void *req, struct msg_queue *queue, user_handle_t win,
                                unsigned int first, unsigned int last, unsigned int flags,
                                struct get_message_reply *reply )
 {
@@ -675,7 +669,7 @@ static int get_posted_message( struct msg_queue *queue, user_handle_t win,
     /* return it to the app */
 found:
     reply->total = msg->data_size;
-    if (msg->data_size > get_reply_max_size())
+    if (msg->data_size > get_reply_max_size(req))
     {
         set_error( STATUS_BUFFER_OVERFLOW );
         return 1;
@@ -691,13 +685,13 @@ found:
     {
         if (msg->data)
         {
-            set_reply_data_ptr( msg->data, msg->data_size );
+            set_reply_data_ptr( (void*)req, msg->data, msg->data_size );
             msg->data = NULL;
             msg->data_size = 0;
         }
         remove_queue_message( queue, msg, POST_MESSAGE );
     }
-    else if (msg->data) set_reply_data( msg->data, msg->data_size );
+    else if (msg->data) set_reply_data( (void*)req, msg->data, msg->data_size );
 
     return 1;
 }
@@ -713,7 +707,7 @@ static int get_quit_message( struct msg_queue *queue, unsigned int flags,
         reply->msg    = WM_QUIT;
         reply->wparam = queue->exit_code;
         reply->lparam = 0;
-        reply->time   = get_tick_count();
+        reply->time   = EngGetTickCount();
 
         if (flags & PM_REMOVE)
         {
@@ -763,8 +757,11 @@ static void cleanup_results( struct msg_queue *queue )
 static int is_queue_hung( struct msg_queue *queue )
 {
     struct wait_queue_entry *entry;
+    LARGE_INTEGER current_time;
 
-    if (current_time - queue->last_get_msg <= 5 * TICKS_PER_SEC)
+    KeQuerySystemTime(&current_time);
+
+    if (current_time.QuadPart - queue->last_get_msg <= 5 * TICKS_PER_SEC)
         return 0;  /* less than 5 seconds since last get message -> not hung */
 
     LIST_FOR_EACH_ENTRY( entry, &queue->obj.wait_queue, struct wait_queue_entry, entry )
@@ -778,7 +775,7 @@ static int is_queue_hung( struct msg_queue *queue )
 static int msg_queue_add_queue( struct object *obj, struct wait_queue_entry *entry )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
-    struct process *process = entry->thread->process;
+    PPROCESSINFO process = entry->thread->process;
 
     /* a thread can only wait on its own queue */
     if (entry->thread->queue != queue)
@@ -800,7 +797,7 @@ static int msg_queue_add_queue( struct object *obj, struct wait_queue_entry *ent
 static void msg_queue_remove_queue(struct object *obj, struct wait_queue_entry *entry )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
-    struct process *process = entry->thread->process;
+    PPROCESSINFO process = entry->thread->process;
 
     remove_queue( obj, entry );
     if (queue->fd && list_empty( &obj->wait_queue ))  /* last on the queue is gone */
@@ -818,11 +815,11 @@ static void msg_queue_remove_queue(struct object *obj, struct wait_queue_entry *
 static void msg_queue_dump( struct object *obj, int verbose )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
-    fprintf( stderr, "Msg queue bits=%x mask=%x\n",
+    DPRINT1( "Msg queue bits=%x mask=%x\n",
              queue->wake_bits, queue->wake_mask );
 }
 
-static int msg_queue_signaled( struct object *obj, struct thread *thread )
+static int msg_queue_signaled( struct object *obj, PTHREADINFO thread )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
     int ret = 0;
@@ -839,7 +836,7 @@ static int msg_queue_signaled( struct object *obj, struct thread *thread )
     return ret || is_signaled( queue );
 }
 
-static int msg_queue_satisfied( struct object *obj, struct thread *thread )
+static int msg_queue_satisfied( struct object *obj, PTHREADINFO thread )
 {
     struct msg_queue *queue = (struct msg_queue *)obj;
     queue->wake_mask = 0;
@@ -860,13 +857,13 @@ static void msg_queue_destroy( struct object *obj )
     {
         struct timer *timer = LIST_ENTRY( ptr, struct timer, entry );
         list_remove( &timer->entry );
-        free( timer );
+        ExFreePool( timer );
     }
     while ((ptr = list_head( &queue->expired_timers )))
     {
         struct timer *timer = LIST_ENTRY( ptr, struct timer, entry );
         list_remove( &timer->entry );
-        free( timer );
+        ExFreePool( timer );
     }
     if (queue->timeout) remove_timeout_user( queue->timeout );
     if (queue->input) release_object( queue->input );
@@ -887,7 +884,7 @@ static void msg_queue_poll_event( struct fd *fd, int event )
 static void thread_input_dump( struct object *obj, int verbose )
 {
     struct thread_input *input = (struct thread_input *)obj;
-    fprintf( stderr, "Thread input focus=%08x capture=%08x active=%08x\n",
+    DPRINT1( "Thread input focus=%08x capture=%08x active=%08x\n",
              input->focus, input->capture, input->active );
 }
 
@@ -916,7 +913,7 @@ static inline void thread_input_cleanup_window( struct msg_queue *queue, user_ha
 /* check if the specified window can be set in the input data of a given queue */
 static int check_queue_input_window( struct msg_queue *queue, user_handle_t window )
 {
-    struct thread *thread;
+    PTHREADINFO thread;
     int ret = 0;
 
     if (!window) return 1;  /* we can always clear the data */
@@ -925,7 +922,7 @@ static int check_queue_input_window( struct msg_queue *queue, user_handle_t wind
     {
         ret = (queue->input == thread->queue->input);
         if (!ret) set_error( STATUS_ACCESS_DENIED );
-        release_object( thread );
+        ObDereferenceObject(thread->peThread);
     }
     else set_error( STATUS_INVALID_HANDLE );
 
@@ -933,14 +930,14 @@ static int check_queue_input_window( struct msg_queue *queue, user_handle_t wind
 }
 
 /* make sure the specified thread has a queue */
-int init_thread_queue( struct thread *thread )
+int init_thread_queue( PTHREADINFO thread )
 {
     if (thread->queue) return 1;
     return (create_msg_queue( thread, NULL ) != NULL);
 }
 
 /* attach two thread input data structures */
-int attach_thread_input( struct thread *thread_from, struct thread *thread_to )
+int attach_thread_input( PTHREADINFO thread_from, PTHREADINFO thread_to )
 {
     struct desktop *desktop;
     struct thread_input *input;
@@ -971,7 +968,7 @@ int attach_thread_input( struct thread *thread_from, struct thread *thread_to )
 }
 
 /* detach two thread input data structures */
-void detach_thread_input( struct thread *thread_from )
+void detach_thread_input( PTHREADINFO thread_from )
 {
     struct thread_input *input;
 
@@ -1027,9 +1024,12 @@ static struct timer *find_timer( struct msg_queue *queue, user_handle_t win,
 }
 
 /* callback for the next timer expiration */
-static void timer_callback( void *private )
+static
+VOID
+NTAPI
+timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 )
 {
-    struct msg_queue *queue = private;
+    struct msg_queue *queue = Context;
     struct list *ptr;
 
     queue->timeout = NULL;
@@ -1057,15 +1057,18 @@ static void link_timer( struct msg_queue *queue, struct timer *timer )
 static void free_timer( struct msg_queue *queue, struct timer *timer )
 {
     list_remove( &timer->entry );
-    free( timer );
+    ExFreePool( timer );
     set_next_timer( queue );
 }
 
 /* restart an expired timer */
 static void restart_timer( struct msg_queue *queue, struct timer *timer )
 {
+    LARGE_INTEGER current_time;
+    KeQuerySystemTime(&current_time);
+
     list_remove( &timer->entry );
-    while (timer->when <= current_time) timer->when += (timeout_t)timer->rate * 10000;
+    while (timer->when <= current_time.QuadPart) timer->when += (timeout_t)timer->rate * 10000;
     link_timer( queue, timer );
     set_next_timer( queue );
 }
@@ -1093,11 +1096,14 @@ static struct timer *find_expired_timer( struct msg_queue *queue, user_handle_t 
 /* add a timer */
 static struct timer *set_timer( struct msg_queue *queue, unsigned int rate )
 {
+    LARGE_INTEGER current_time;
+    KeQuerySystemTime(&current_time);
+
     struct timer *timer = mem_alloc( sizeof(*timer) );
     if (timer)
     {
         timer->rate = max( rate, 1 );
-        timer->when = current_time + (timeout_t)timer->rate * 10000;
+        timer->when = current_time.QuadPart + (timeout_t)timer->rate * 10000;
         link_timer( queue, timer );
         /* check if we replaced the next timer */
         if (list_head( &queue->pending_timers ) == &timer->entry) set_next_timer( queue );
@@ -1212,7 +1218,7 @@ static void release_hardware_message( struct msg_queue *queue, unsigned int hw_i
 
     if (new_win)  /* set the new window */
     {
-        struct thread *owner = get_window_thread( new_win );
+        PTHREADINFO owner = get_window_thread( new_win );
         if (owner)
         {
             msg->win = new_win;
@@ -1222,14 +1228,14 @@ static void release_hardware_message( struct msg_queue *queue, unsigned int hw_i
                 if (msg->msg == WM_MOUSEMOVE && merge_message( owner->queue->input, msg ))
                 {
                     free_message( msg );
-                    release_object( owner );
+                    ObDereferenceObject(owner->peThread);
                     return;
                 }
                 list_add_tail( &owner->queue->input->msg_list, &msg->entry );
             }
             set_queue_bits( owner->queue, get_hardware_msg_bit( msg ));
             remove = 0;
-            release_object( owner );
+            ObDereferenceObject(owner->peThread);
         }
     }
     if (remove)
@@ -1273,28 +1279,29 @@ static void queue_hardware_message( struct msg_queue *queue, struct message *msg
                                     struct hardware_msg_data *data )
 {
     user_handle_t win;
-    struct thread *thread;
+    PTHREADINFO thread;
     struct thread_input *input = queue ? queue->input : foreground_input;
     unsigned int msg_code;
 
-    last_input_time = get_tick_count();
+    last_input_time = EngGetTickCount();
     win = find_hardware_message_window( input, msg, data, &msg_code );
     if (!win || !(thread = get_window_thread(win)))
     {
         if (input) update_input_key_state( input, msg );
-        free( msg );
+        ExFreePool( msg );
         return;
     }
     input = thread->queue->input;
 
-    if (msg->msg == WM_MOUSEMOVE && merge_message( input, msg )) free( msg );
+    if (msg->msg == WM_MOUSEMOVE && merge_message( input, msg ))
+        ExFreePool( msg );
     else
     {
         msg->unique_id = 0;  /* will be set once we return it to the app */
         list_add_tail( &input->msg_list, &msg->entry );
         set_queue_bits( thread->queue, get_hardware_msg_bit(msg) );
     }
-    release_object( thread );
+    ObDereferenceObject(thread->peThread);
 }
 
 /* check message filter for a hardware message */
@@ -1333,11 +1340,11 @@ static int check_hw_message_filter( user_handle_t win, unsigned int msg_code,
 
 
 /* find a hardware message for the given queue */
-static int get_hardware_message( struct thread *thread, unsigned int hw_id, user_handle_t filter_win,
+static int get_hardware_message( void *req, PTHREADINFO thread, unsigned int hw_id, user_handle_t filter_win,
                                  unsigned int first, unsigned int last, struct get_message_reply *reply )
 {
     struct thread_input *input = thread->queue->input;
-    struct thread *win_thread;
+    PTHREADINFO win_thread;
     struct list *ptr;
     user_handle_t win;
     int clear_bits, got_one = 0;
@@ -1391,10 +1398,10 @@ static int get_hardware_message( struct thread *thread, unsigned int hw_id, user
                 list_remove( &msg->entry );
                 free_message( msg );
             }
-            release_object( win_thread );
+            ObDereferenceObject(win_thread->peThread);
             continue;
         }
-        release_object( win_thread );
+        ObDereferenceObject(win_thread->peThread);
 
         /* if we already got a message for another thread, or if it doesn't
          * match the filter we skip it */
@@ -1413,7 +1420,7 @@ static int get_hardware_message( struct thread *thread, unsigned int hw_id, user
         reply->time   = msg->time;
 
         data->hw_id = msg->unique_id;
-        set_reply_data( msg->data, msg->data_size );
+        set_reply_data( req, msg->data, msg->data_size );
         return 1;
     }
     /* nothing found, clear the hardware queue bits */
@@ -1422,7 +1429,7 @@ static int get_hardware_message( struct thread *thread, unsigned int hw_id, user
 }
 
 /* increment (or decrement if 'incr' is negative) the queue paint count */
-void inc_queue_paint_count( struct thread *thread, int incr )
+void inc_queue_paint_count( PTHREADINFO thread, int incr )
 {
     struct msg_queue *queue = thread->queue;
 
@@ -1438,7 +1445,7 @@ void inc_queue_paint_count( struct thread *thread, int incr )
 
 
 /* remove all messages and timers belonging to a certain window */
-void queue_cleanup_window( struct thread *thread, user_handle_t win )
+void queue_cleanup_window( PTHREADINFO thread, user_handle_t win )
 {
     struct msg_queue *queue = thread->queue;
     struct list *ptr;
@@ -1484,7 +1491,7 @@ void queue_cleanup_window( struct thread *thread, user_handle_t win )
 void post_message( user_handle_t win, unsigned int message, lparam_t wparam, lparam_t lparam )
 {
     struct message *msg;
-    struct thread *thread = get_window_thread( win );
+    PTHREADINFO thread = get_window_thread( win );
 
     if (!thread) return;
 
@@ -1495,7 +1502,7 @@ void post_message( user_handle_t win, unsigned int message, lparam_t wparam, lpa
         msg->msg       = message;
         msg->wparam    = wparam;
         msg->lparam    = lparam;
-        msg->time      = get_tick_count();
+        msg->time      = EngGetTickCount();
         msg->result    = NULL;
         msg->data      = NULL;
         msg->data_size = 0;
@@ -1503,11 +1510,11 @@ void post_message( user_handle_t win, unsigned int message, lparam_t wparam, lpa
         list_add_tail( &thread->queue->msg_list[POST_MESSAGE], &msg->entry );
         set_queue_bits( thread->queue, QS_POSTMESSAGE|QS_ALLPOSTMESSAGE );
     }
-    release_object( thread );
+    ObDereferenceObject(thread->peThread);
 }
 
 /* post a win event */
-void post_win_event( struct thread *thread, unsigned int event,
+void post_win_event( PTHREADINFO thread, unsigned int event,
                      user_handle_t win, unsigned int object_id,
                      unsigned int child_id, client_ptr_t hook_proc,
                      const WCHAR *module, data_size_t module_size,
@@ -1524,13 +1531,13 @@ void post_win_event( struct thread *thread, unsigned int event,
         msg->msg       = event;
         msg->wparam    = object_id;
         msg->lparam    = child_id;
-        msg->time      = get_tick_count();
+        msg->time      = EngGetTickCount();
         msg->result    = NULL;
 
-        if ((data = malloc( sizeof(*data) + module_size )))
+        if ((data = ExAllocatePool( PagedPool, sizeof(*data) + module_size )))
         {
             data->hook = hook;
-            data->tid  = get_thread_id( current );
+            data->tid  = get_thread_id( (PTHREADINFO)PsGetCurrentThreadWin32Thread() );
             data->hook_proc = hook_proc;
             memcpy( data + 1, module, module_size );
 
@@ -1538,13 +1545,13 @@ void post_win_event( struct thread *thread, unsigned int event,
             msg->data_size = sizeof(*data) + module_size;
 
             if (debug_level > 1)
-                fprintf( stderr, "post_win_event: tid %04x event %04x win %08x object_id %d child_id %d\n",
+                DPRINT1( "post_win_event: tid %04x event %04x win %08x object_id %d child_id %d\n",
                          get_thread_id(thread), event, win, object_id, child_id );
             list_add_tail( &thread->queue->msg_list[SEND_MESSAGE], &msg->entry );
             set_queue_bits( thread->queue, QS_SENDMESSAGE );
         }
         else
-            free( msg );
+            ExFreePool( msg );
     }
 }
 
@@ -1552,13 +1559,13 @@ void post_win_event( struct thread *thread, unsigned int event,
 /* check if the thread owning the window is hung */
 DECL_HANDLER(is_window_hung)
 {
-    struct thread *thread;
+    PTHREADINFO thread;
 
     thread = get_window_thread( req->win );
     if (thread)
     {
         reply->is_hung = is_queue_hung( thread->queue );
-        release_object( thread );
+        ObDereferenceObject(thread->peThread);
     }
     else reply->is_hung = 0;
 }
@@ -1570,13 +1577,14 @@ DECL_HANDLER(get_msg_queue)
     struct msg_queue *queue = get_current_queue();
 
     reply->handle = 0;
-    if (queue) reply->handle = alloc_handle( current->process, queue, SYNCHRONIZE, 0 );
+    if (queue) reply->handle = alloc_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), queue, SYNCHRONIZE, 0 );
 }
 
 
 /* set the file descriptor associated to the current thread queue */
 DECL_HANDLER(set_queue_fd)
 {
+#if 0
     struct msg_queue *queue = get_current_queue();
     struct file *file;
     int unix_fd;
@@ -1586,7 +1594,7 @@ DECL_HANDLER(set_queue_fd)
         set_error( STATUS_ACCESS_DENIED );
         return;
     }
-    if (!(file = get_file_obj( current->process, req->handle, SYNCHRONIZE ))) return;
+    if (!(file = get_file_obj( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), req->handle, SYNCHRONIZE ))) return;
 
     if ((unix_fd = get_file_unix_fd( file )) != -1)
     {
@@ -1596,6 +1604,9 @@ DECL_HANDLER(set_queue_fd)
             file_set_error();
     }
     release_object( file );
+#else
+    UNIMPLEMENTED;
+#endif
 }
 
 
@@ -1613,7 +1624,7 @@ DECL_HANDLER(set_queue_mask)
         if (is_signaled( queue ))
         {
             /* if skip wait is set, do what would have been done in the subsequent wait */
-            if (req->skip_wait) msg_queue_satisfied( &queue->obj, current );
+            if (req->skip_wait) msg_queue_satisfied( &queue->obj, (PTHREADINFO)PsGetCurrentThreadWin32Thread() );
             else wake_up( &queue->obj, 0 );
         }
     }
@@ -1623,6 +1634,7 @@ DECL_HANDLER(set_queue_mask)
 /* get the current message queue status */
 DECL_HANDLER(get_queue_status)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct msg_queue *queue = current->queue;
     if (queue)
     {
@@ -1640,20 +1652,26 @@ DECL_HANDLER(send_message)
     struct message *msg;
     struct msg_queue *send_queue = get_current_queue();
     struct msg_queue *recv_queue = NULL;
-    struct thread *thread = NULL;
+    PETHREAD ethread = NULL;
+    PTHREADINFO thread = NULL;
+    NTSTATUS status;
 
-    if (!(thread = get_thread_from_id( req->id ))) return;
+    status = PsLookupThreadByThreadId((HANDLE)req->id, &ethread);
+    if (!NT_SUCCESS(status)) return;
+    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
+
+    ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
 
     if (!(recv_queue = thread->queue))
     {
         set_error( STATUS_INVALID_PARAMETER );
-        release_object( thread );
+        ObDereferenceObject(thread->peThread);
         return;
     }
     if ((req->flags & SEND_MSG_ABORT_IF_HUNG) && is_queue_hung(recv_queue))
     {
         set_error( STATUS_TIMEOUT );
-        release_object( thread );
+        ObDereferenceObject(thread->peThread);
         return;
     }
 
@@ -1664,15 +1682,15 @@ DECL_HANDLER(send_message)
         msg->msg       = req->msg;
         msg->wparam    = req->wparam;
         msg->lparam    = req->lparam;
-        msg->time      = get_tick_count();
+        msg->time      = EngGetTickCount();
         msg->result    = NULL;
         msg->data      = NULL;
-        msg->data_size = get_req_data_size();
+        msg->data_size = get_req_data_size((void*)req);
 
-        if (msg->data_size && !(msg->data = memdup( get_req_data(), msg->data_size )))
+        if (msg->data_size && !(msg->data = memdup( get_req_data((void*)req), msg->data_size )))
         {
-            free( msg );
-            release_object( thread );
+            ExFreePool( msg );
+            ObDereferenceObject(thread->peThread);
             return;
         }
 
@@ -1700,11 +1718,11 @@ DECL_HANDLER(send_message)
         case MSG_CALLBACK_RESULT:  /* cannot send this one */
         default:
             set_error( STATUS_INVALID_PARAMETER );
-            free( msg );
+            ExFreePool( msg );
             break;
         }
     }
-    release_object( thread );
+    ObDereferenceObject(thread->peThread);
 }
 
 /* send a hardware message to a thread queue */
@@ -1712,24 +1730,30 @@ DECL_HANDLER(send_hardware_message)
 {
     struct message *msg;
     struct msg_queue *recv_queue = NULL;
-    struct thread *thread = NULL;
+    PETHREAD ethread = NULL;
+    PTHREADINFO thread = NULL;
     struct hardware_msg_data *data;
+    NTSTATUS status;
 
     if (req->id)
     {
-        if (!(thread = get_thread_from_id( req->id ))) return;
+        status = PsLookupThreadByThreadId((HANDLE)req->id, &ethread);
+        if (!NT_SUCCESS(status)) return;
+
+        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
+        ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
     }
 
     if (thread && !(recv_queue = thread->queue))
     {
         set_error( STATUS_INVALID_PARAMETER );
-        release_object( thread );
+        ObDereferenceObject(thread->peThread);
         return;
     }
 
     if (!(data = mem_alloc( sizeof(*data) )))
     {
-        if (thread) release_object( thread );
+        if (thread) ObDereferenceObject(thread->peThread);
         return;
     }
     memset( data, 0, sizeof(*data) );
@@ -1750,9 +1774,9 @@ DECL_HANDLER(send_hardware_message)
         msg->data_size = sizeof(*data);
         queue_hardware_message( recv_queue, msg, data );
     }
-    else free( data );
+    else ExFreePool( data );
 
-    if (thread) release_object( thread );
+    if (thread) ObDereferenceObject(thread->peThread);
 }
 
 /* post a quit message to the current queue */
@@ -1771,6 +1795,7 @@ DECL_HANDLER(post_quit_message)
 /* get a message from the current queue */
 DECL_HANDLER(get_message)
 {
+    LARGE_INTEGER current_time;
     struct timer *timer;
     struct list *ptr;
     struct msg_queue *queue = get_current_queue();
@@ -1780,14 +1805,15 @@ DECL_HANDLER(get_message)
     reply->active_hooks = get_active_hooks();
 
     if (!queue) return;
-    queue->last_get_msg = current_time;
+    KeQuerySystemTime(&current_time);
+    queue->last_get_msg = current_time.QuadPart;
     if (!filter) filter = QS_ALLINPUT;
 
     /* first check for sent messages */
     if ((ptr = list_head( &queue->msg_list[SEND_MESSAGE] )))
     {
         struct message *msg = LIST_ENTRY( ptr, struct message, entry );
-        receive_message( queue, msg, reply );
+        receive_message( (void*)req, queue, msg, reply );
         return;
     }
 
@@ -1802,7 +1828,7 @@ DECL_HANDLER(get_message)
 
     /* then check for posted messages */
     if ((filter & QS_POSTMESSAGE) &&
-        get_posted_message( queue, get_win, req->get_first, req->get_last, req->flags, reply ))
+        get_posted_message( (void*)req, queue, get_win, req->get_first, req->get_last, req->flags, reply ))
         return;
 
     /* only check for quit messages if not posted messages pending.
@@ -1813,20 +1839,20 @@ DECL_HANDLER(get_message)
     /* then check for any raw hardware message */
     if ((filter & QS_INPUT) &&
         filter_contains_hw_range( req->get_first, req->get_last ) &&
-        get_hardware_message( current, req->hw_id, get_win, req->get_first, req->get_last, reply ))
+        get_hardware_message( (void*)req, (PTHREADINFO)PsGetCurrentThreadWin32Thread(), req->hw_id, get_win, req->get_first, req->get_last, reply ))
         return;
 
     /* now check for WM_PAINT */
     if ((filter & QS_PAINT) &&
         queue->paint_count &&
         check_msg_filter( WM_PAINT, req->get_first, req->get_last ) &&
-        (reply->win = find_window_to_repaint( get_win, current )))
+        (reply->win = find_window_to_repaint( get_win, (PTHREADINFO)PsGetCurrentThreadWin32Thread() )))
     {
         reply->type   = MSG_POSTED;
         reply->msg    = WM_PAINT;
         reply->wparam = 0;
         reply->lparam = 0;
-        reply->time   = get_tick_count();
+        reply->time   = EngGetTickCount();
         return;
     }
 
@@ -1840,7 +1866,7 @@ DECL_HANDLER(get_message)
         reply->msg    = timer->msg;
         reply->wparam = timer->id;
         reply->lparam = timer->lparam;
-        reply->time   = get_tick_count();
+        reply->time   = EngGetTickCount();
         return;
     }
 
@@ -1853,16 +1879,18 @@ DECL_HANDLER(get_message)
 /* reply to a sent message */
 DECL_HANDLER(reply_message)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (!current->queue) set_error( STATUS_ACCESS_DENIED );
     else if (current->queue->recv_result)
         reply_message( current->queue, req->result, 0, req->remove,
-                       get_req_data(), get_req_data_size() );
+                       get_req_data((void*)req), get_req_data_size((void*)req) );
 }
 
 
 /* accept the current hardware message */
 DECL_HANDLER(accept_hardware_message)
 {
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     if (current->queue)
         release_hardware_message( current->queue, req->hw_id, req->remove, req->new_win );
     else
@@ -1875,6 +1903,7 @@ DECL_HANDLER(get_message_reply)
 {
     struct message_result *result;
     struct list *entry;
+    PTHREADINFO current = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
     struct msg_queue *queue = current->queue;
 
     if (queue)
@@ -1893,8 +1922,8 @@ DECL_HANDLER(get_message_reply)
                 set_error( result->error );
                 if (result->data)
                 {
-                    data_size_t data_len = min( result->data_size, get_reply_max_size() );
-                    set_reply_data_ptr( result->data, data_len );
+                    data_size_t data_len = min( result->data_size, get_reply_max_size((void*)req) );
+                    set_reply_data_ptr( (void*)req, result->data, data_len );
                     result->data = NULL;
                     result->data_size = 0;
                 }
@@ -1919,7 +1948,7 @@ DECL_HANDLER(set_win_timer)
 {
     struct timer *timer;
     struct msg_queue *queue;
-    struct thread *thread = NULL;
+    PTHREADINFO thread = NULL;
     user_handle_t win = 0;
     lparam_t id = req->id;
 
@@ -1930,9 +1959,9 @@ DECL_HANDLER(set_win_timer)
             set_error( STATUS_INVALID_HANDLE );
             return;
         }
-        if (thread->process != current->process)
+        if (thread->process != ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->process)
         {
-            release_object( thread );
+            ObDereferenceObject(thread->peThread);
             set_error( STATUS_ACCESS_DENIED );
             return;
         }
@@ -1969,14 +1998,14 @@ DECL_HANDLER(set_win_timer)
         timer->lparam = req->lparam;
         reply->id     = id;
     }
-    if (thread) release_object( thread );
+    if (thread) ObDereferenceObject(thread->peThread);
 }
 
 /* kill a window timer */
 DECL_HANDLER(kill_win_timer)
 {
     struct timer *timer;
-    struct thread *thread;
+    PTHREADINFO thread;
     user_handle_t win = 0;
 
     if (req->win)
@@ -1986,34 +2015,52 @@ DECL_HANDLER(kill_win_timer)
             set_error( STATUS_INVALID_HANDLE );
             return;
         }
-        if (thread->process != current->process)
+        if (thread->process != ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->process)
         {
-            release_object( thread );
+            ObDereferenceObject(thread->peThread);
             set_error( STATUS_ACCESS_DENIED );
             return;
         }
     }
-    else thread = (struct thread *)grab_object( current );
+    else
+    {
+        //thread = (PTHREADINFO)grab_object( current );
+        thread = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
+        DPRINT1("Fixme: referencing thread object is missing!\n");
+    }
 
     if (thread->queue && (timer = find_timer( thread->queue, win, req->msg, req->id )))
         free_timer( thread->queue, timer );
     else
         set_error( STATUS_INVALID_PARAMETER );
 
-    release_object( thread );
+    ObDereferenceObject(thread->peThread);
 }
 
 
 /* attach (or detach) thread inputs */
 DECL_HANDLER(attach_thread_input)
 {
-    struct thread *thread_from = get_thread_from_id( req->tid_from );
-    struct thread *thread_to = get_thread_from_id( req->tid_to );
+    PTHREADINFO thread_from, thread_to;
+    PETHREAD ethread_from, ethread_to;
+    NTSTATUS status;
+
+    status = PsLookupThreadByThreadId((HANDLE)req->tid_from, &ethread_from);
+    if (!NT_SUCCESS(status)) return;
+
+    status = PsLookupThreadByThreadId((HANDLE)req->tid_to, &ethread_to);
+    if (!NT_SUCCESS(status)) return;
+
+    ObReferenceObjectByPointer(ethread_from, 0, NULL, KernelMode);
+    ObReferenceObjectByPointer(ethread_to, 0, NULL, KernelMode);
+
+    thread_from = (PTHREADINFO)ethread_from->Tcb.Win32Thread;
+    thread_to = (PTHREADINFO)ethread_to->Tcb.Win32Thread;
 
     if (!thread_from || !thread_to)
     {
-        if (thread_from) release_object( thread_from );
-        if (thread_to) release_object( thread_to );
+        if (thread_from) ObDereferenceObject(thread_from->peThread);
+        if (thread_to) ObDereferenceObject(thread_to->peThread);
         return;
     }
     if (thread_from != thread_to)
@@ -2029,20 +2076,26 @@ DECL_HANDLER(attach_thread_input)
         }
     }
     else set_error( STATUS_ACCESS_DENIED );
-    release_object( thread_from );
-    release_object( thread_to );
+    ObDereferenceObject(thread_from->peThread);
+    ObDereferenceObject(thread_to->peThread);
 }
 
 
 /* get thread input data */
 DECL_HANDLER(get_thread_input)
 {
-    struct thread *thread = NULL;
+    PTHREADINFO thread = NULL;
     struct thread_input *input;
+    PETHREAD ethread = NULL;
+    NTSTATUS status;
 
     if (req->tid)
     {
-        if (!(thread = get_thread_from_id( req->tid ))) return;
+        status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
+        if (!NT_SUCCESS(status)) return;
+        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
+        ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+
         input = thread->queue ? thread->queue->input : NULL;
     }
     else input = foreground_input;  /* get the foreground thread info */
@@ -2069,48 +2122,60 @@ DECL_HANDLER(get_thread_input)
     }
     /* foreground window is active window of foreground thread */
     reply->foreground = foreground_input ? foreground_input->active : 0;
-    if (thread) release_object( thread );
+    if (thread) ObDereferenceObject(thread->peThread);
 }
 
 
 /* retrieve queue keyboard state for a given thread */
 DECL_HANDLER(get_key_state)
 {
-    struct thread *thread;
+    PTHREADINFO thread;
+    PETHREAD ethread;
     struct thread_input *input;
+    NTSTATUS status;
 
-    if (!(thread = get_thread_from_id( req->tid ))) return;
+    status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
+    if (!NT_SUCCESS(status)) return;
+    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
+    ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+
     input = thread->queue ? thread->queue->input : NULL;
     if (input)
     {
         if (req->key >= 0) reply->state = input->keystate[req->key & 0xff];
-        set_reply_data( input->keystate, min( get_reply_max_size(), sizeof(input->keystate) ));
+        set_reply_data( (void*)req, input->keystate, min( get_reply_max_size((void*)req), sizeof(input->keystate) ));
     }
-    release_object( thread );
+    ObDereferenceObject(thread->peThread);
 }
 
 
 /* set queue keyboard state for a given thread */
 DECL_HANDLER(set_key_state)
 {
-    struct thread *thread = NULL;
+    PTHREADINFO thread;
+    PETHREAD ethread;
     struct thread_input *input;
+    NTSTATUS status;
 
-    if (!(thread = get_thread_from_id( req->tid ))) return;
+    status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
+    if (!NT_SUCCESS(status)) return;
+    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
+    ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+
     input = thread->queue ? thread->queue->input : NULL;
     if (input)
     {
-        data_size_t size = min( sizeof(input->keystate), get_req_data_size() );
-        if (size) memcpy( input->keystate, get_req_data(), size );
+        data_size_t size = min( sizeof(input->keystate), get_req_data_size((void*)req) );
+        if (size) memcpy( input->keystate, get_req_data((void*)req), size );
     }
-    release_object( thread );
+    ObDereferenceObject(thread->peThread);
 }
 
 
 /* set the system foreground window */
 DECL_HANDLER(set_foreground_window)
 {
-    struct thread *thread;
+    PTHREADINFO thread;
     struct msg_queue *queue = get_current_queue();
 
     reply->previous = foreground_input ? foreground_input->active : 0;
@@ -2122,7 +2187,7 @@ DECL_HANDLER(set_foreground_window)
     {
         foreground_input = thread->queue->input;
         reply->send_msg_new = (foreground_input != queue->input);
-        release_object( thread );
+        ObDereferenceObject(thread->peThread);
     }
     else set_win32_error( ERROR_INVALID_WINDOW_HANDLE );
 }
