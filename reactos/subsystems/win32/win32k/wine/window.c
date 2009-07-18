@@ -1703,9 +1703,9 @@ void destroy_window( struct window *win )
     if (win->win_region) free_region( win->win_region );
     if (win->update_region) free_region( win->update_region );
     if (win->class) release_class( win->class );
-    free( win->text );
+    ExFreePool( win->text );
     memset( win, 0x55, sizeof(*win) + win->nb_extra_bytes - 1 );
-    free( win );
+    ExFreePool( win );
 }
 
 
