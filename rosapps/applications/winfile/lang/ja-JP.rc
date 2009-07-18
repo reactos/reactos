@@ -1,4 +1,4 @@
-/*
+﻿/*
  * WineFile
  * Japanese Language Support
  *
@@ -261,5 +261,3 @@ STRINGTABLE
 
     IDS_FREE_SPACE_FMT      "%s of %s free"
 }
-
-#pragma code_page(default)
