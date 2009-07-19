@@ -429,6 +429,8 @@ extern "C" {
 #define PROOF_QUALITY	2
 #define NONANTIALIASED_QUALITY 3
 #define ANTIALIASED_QUALITY 4
+#define CLEARTYPE_QUALITY          5
+#define CLEARTYPE_NATURAL_QUALITY  6
 #define DEFAULT_PITCH	0
 #define FIXED_PITCH	1
 #define VARIABLE_PITCH	2
@@ -842,6 +844,13 @@ extern "C" {
 #define GGO_GRAY8_BITMAP 6
 #define GGO_GLYPH_INDEX 128
 #define GGO_UNHINTED 256
+#ifdef __WINESRC__
+#define WINE_GGO_GRAY16_BITMAP 0x10
+#define WINE_GGO_HRGB_BITMAP   0x11
+#define WINE_GGO_HBGR_BITMAP   0x12
+#define WINE_GGO_VRGB_BITMAP   0x13
+#define WINE_GGO_VBGR_BITMAP   0x14
+#endif
 #define GM_COMPATIBLE 1
 #define GM_ADVANCED 2
 #define GM_LAST     2
@@ -866,6 +875,12 @@ extern "C" {
 #define PT_CLOSEFIGURE 1
 #define TT_AVAILABLE 1
 #define TT_ENABLED 2
+
+#ifdef __WINESRC__
+#define WINE_TT_SUBPIXEL_RENDERING_ENABLED 0x4000
+#define WINE_TT_HINTER_ENABLED 0x8000
+#endif
+
 #define BLACK_BRUSH 4
 #define DKGRAY_BRUSH 3
 #define GRAY_BRUSH 2
