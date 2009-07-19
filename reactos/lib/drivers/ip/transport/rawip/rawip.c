@@ -59,7 +59,7 @@ NTSTATUS AddGenericHeaderIPv4(
     /* Length of header and data */
     IPHeader->TotalLength = WH2N((USHORT)IPPacket->TotalSize);
     /* Identification */
-    IPHeader->Id = 0;
+    IPHeader->Id = (USHORT)Random();
     /* One fragment at offset 0 */
     IPHeader->FlagsFragOfs = 0;
     /* Time-to-Live is 128 */
