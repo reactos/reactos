@@ -291,6 +291,11 @@ NTSTATUS FileOpenAddress(
       AddrFile->Send = UDPSendDatagram;
       break;
 
+  case IPPROTO_ICMP:
+    AddrFile->Port = 0;
+    AddrFile->Send = ICMPSendDatagram;
+    break;
+
   default:
     /* Use raw IP for all other protocols */
     AddrFile->Port = 0;

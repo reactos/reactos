@@ -646,6 +646,7 @@ VOID NTAPI TiUnload(
   TCPShutdown();
   UDPShutdown();
   RawIPShutdown();
+  ICMPShutdown();
 
   /* Shutdown network level protocol subsystem */
   IPShutdown();
@@ -871,6 +872,23 @@ DriverEntry(
 
   Status = TCPStartup();
   if( !NT_SUCCESS(Status) ) {
+        UDPShutdown();
+        RawIPShutdown();
+        IPShutdown();
+        ChewShutdown();
+        IoDeleteDevice(IPDeviceObject);
+        IoDeleteDevice(RawIPDeviceObject);
+        IoDeleteDevice(UDPDeviceObject);
+        IoDeleteDevice(TCPDeviceObject);
+        exFreePool(EntityList);
+        NdisFreePacketPool(GlobalPacketPool);
+        NdisFreeBufferPool(GlobalBufferPool);
+	return Status;
+  }
+
+  Status = ICMPStartup();
+  if( !NT_SUCCESS(Status) ) {
+        TCPShutdown();
         UDPShutdown();
         RawIPShutdown();
         IPShutdown();

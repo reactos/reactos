@@ -126,7 +126,7 @@ NTSTATUS BuildRawIpPacket(
 	Status = AddGenericHeaderIPv4
             (RemoteAddress, RemotePort,
              LocalAddress, LocalPort, Packet, DataLen,
-             IPPROTO_ICMP, /* XXX Figure out a better way to do this */
+             IPPROTO_RAW,
              0, (PVOID *)&Payload );
 	break;
     case IP_ADDRESS_V6:
@@ -332,7 +332,7 @@ NTSTATUS RawIPStartup(VOID)
 #endif
 
   /* Register this protocol with IP layer */
-  IPRegisterProtocol(IPPROTO_ICMP, RawIpReceive);
+  IPRegisterProtocol(IPPROTO_RAW, RawIpReceive);
 
   return STATUS_SUCCESS;
 }
@@ -346,7 +346,7 @@ NTSTATUS RawIPShutdown(VOID)
  */
 {
   /* Deregister this protocol with IP layer */
-  IPRegisterProtocol(IPPROTO_ICMP, NULL);
+  IPRegisterProtocol(IPPROTO_RAW, NULL);
 
   return STATUS_SUCCESS;
 }

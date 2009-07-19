@@ -14,7 +14,7 @@ NTSTATUS RawIPSendDatagram(
     ULONG DataSize,
     PULONG DataUsed);
 
-VOID RawIPReceive(
+VOID RawIpReceive(
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket);
 

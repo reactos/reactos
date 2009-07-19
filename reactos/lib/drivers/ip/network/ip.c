@@ -113,11 +113,6 @@ VOID IPDispatchProtocol(
     {
        /* Call the appropriate protocol handler */
        (*ProtocolTable[Protocol])(Interface, IPPacket);
-
-       /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
-        * must be handled here. */
-        if( Protocol == IPPROTO_ICMP )
-            ICMPReceive( Interface, IPPacket );
     }
 }
 
