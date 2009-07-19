@@ -2607,6 +2607,7 @@ static void update_font_info(void)
 
 static void populate_system_links(HKEY hkey, const WCHAR *name, const WCHAR *const *values)
 {
+#if 0
     const WCHAR *value;
     int i;
     FontSubst *psub;
@@ -2678,10 +2679,12 @@ static void populate_system_links(HKEY hkey, const WCHAR *name, const WCHAR *con
             TRACE("no SystemLink fonts found for %s\n", debugstr_w(name));
     } else
         TRACE("removed SystemLink for %s\n", debugstr_w(name));
+#endif
 }
 
 static void update_system_links(void)
 {
+#if 0
     HKEY hkey = 0;
     UINT i, j;
     BOOL done = FALSE;
@@ -2727,6 +2730,7 @@ static void update_system_links(void)
             WARN("there is no SystemLink default list for MS Shell Dlg %s\n", debugstr_w(psub->to.name));
     } else
         WARN("failed to create SystemLink key\n");
+#endif
 }
 
 
