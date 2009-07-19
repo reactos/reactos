@@ -11,7 +11,7 @@
 #include "w32csr.h"
 #include <debug.h>
 
-#define DESKTOP_WINDOW_ATOM 32769 //32880
+#define DESKTOP_WINDOW_ATOM 32769
 
 #define PM_SHOW_DESKTOP 1
 #define PM_HIDE_DESKTOP 2
@@ -39,7 +39,7 @@ typedef struct tagPRIVATE_NOTIFY_DESKTOP
 static BOOL BgInitialized = FALSE;
 static HWND VisibleDesktopWindow = NULL;
 
-static LRESULT CALLBACK
+LRESULT CALLBACK
 DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   switch(Msg)
@@ -119,12 +119,13 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 static BOOL FASTCALL
 DtbgInit()
 {
-  WNDCLASSEXW Class;
-  ATOM ClassAtom;
+  //WNDCLASSEXW Class;
+  //ATOM ClassAtom;
 
   /*
    * Create the desktop window class
    */
+#if 0
   Class.cbSize = sizeof(WNDCLASSEXW);
   Class.style = 0;
   Class.lpfnWndProc = DtbgWindowProc;
@@ -143,6 +144,7 @@ DtbgInit()
               GetLastError());
       return FALSE;
     }
+#endif
   VisibleDesktopWindow = NULL;
 
   return TRUE;
