@@ -566,7 +566,7 @@ HWND FASTCALL IntGetMessageWindow(VOID)
       DPRINT("No active desktop\n");
       return NULL;
    }
-   return pdo->spwndMessage;
+   return pdo->spwndMessage->hdr.Handle;
 }
 
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
@@ -898,7 +898,6 @@ NtUserCreateDesktop(
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    PTHREADINFO W32Thread;
-   HWND hwndMessage;
    PWINSTATION_OBJECT WinStaObject;
    PDESKTOP DesktopObject;
    UNICODE_STRING DesktopName;
@@ -916,6 +915,7 @@ NtUserCreateDesktop(
    PPROCESSINFO pi = GetW32ProcessInfo();
    WNDCLASSEXW wc;
    PWINDOWCLASS Class;
+   PWINDOW pWnd;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
@@ -1149,27 +1149,27 @@ NtUserCreateDesktop(
       DPRINT1("!!! Registering Message system class failed!\n");
    }
 
-   hwndMessage = co_IntCreateWindowEx( 0,
-                                       &ClassName,
-                                       &WindowName,
-                                      (WS_POPUP|WS_CLIPCHILDREN),
-                                       0,
-                                       0,
-                                       100,
-                                       100,
-                                       NULL,
-                                       NULL,
-                                       pi->hModUser, // hModClient;
-                                       NULL,
-                                       0,
-                                       TRUE);
-   if (!hwndMessage)
+   pWnd = co_IntCreateWindowEx( 0,
+                               &ClassName,
+                               &WindowName,
+                                (WS_POPUP|WS_CLIPCHILDREN),
+                                0,
+                                0,
+                                100,
+                                100,
+                                NULL,
+                                NULL,
+                                pi->hModUser, // hModClient;
+                                NULL,
+                                0,
+                                TRUE);
+   if (!pWnd)
    {
       DPRINT1("Failed to create Message window handle\n");
    }
    else
    {
-      DesktopObject->spwndMessage = hwndMessage;
+      DesktopObject->spwndMessage = pWnd;
    }
 
    RETURN( Desktop);

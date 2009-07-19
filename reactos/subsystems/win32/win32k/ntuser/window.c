@@ -1518,7 +1518,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Window, RECTL *rc, BOOL 
 /*
  * @implemented
  */
-HWND APIENTRY
+PWINDOW APIENTRY
 co_IntCreateWindowEx(DWORD dwExStyle,
                      PUNICODE_STRING ClassName,
                      PUNICODE_STRING WindowName,
@@ -1558,7 +1558,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    CBT_CREATEWNDW CbtCreate;
    LRESULT Result;
    BOOL MenuChanged;
-   DECLARE_RETURN(HWND);
+   DECLARE_RETURN(PWINDOW);
    BOOL HasOwner;
    USER_REFERENCE_ENTRY ParentRef, Ref;
    PTHREADINFO pti;
@@ -1595,7 +1595,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
       SetLastWin32Error(ERROR_TLW_WITH_WSCHILD);
-      RETURN( (HWND)0);  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
+      RETURN( (PWINDOW)0);  /* WS_CHILD needs a parent, but WS_POPUP doesn't */
    }
 
    if (ParentWindowHandle)
@@ -1616,7 +1616,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    if (ti == NULL || pti->Desktop == NULL)
    {
       DPRINT1("Thread is not attached to a desktop! Cannot create window!\n");
-      RETURN( (HWND)0);
+      RETURN( (PWINDOW)0);
    }
 
    /* Check the class. */
@@ -1639,7 +1639,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       }
 
       SetLastWin32Error(ERROR_CANNOT_FIND_WND_CLASS);
-      RETURN((HWND)0);
+      RETURN((PWINDOW)0);
    }
 
    Class = IntReferenceClass(Class,
@@ -1657,9 +1657,10 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    ObReferenceObjectByPointer(WinSta, KernelMode, ExWindowStationObjectType, 0);
 
    /* Create the window object. */
-   Window = (PWINDOW_OBJECT)
-            UserCreateObject(gHandleTable, (PHANDLE)&hWnd,
-                            otWindow, sizeof(WINDOW_OBJECT));
+   Window = (PWINDOW_OBJECT) UserCreateObject( gHandleTable,
+                                               (PHANDLE)&hWnd,
+                                               otWindow,
+                                               sizeof(WINDOW_OBJECT));
    if (Window)
    {
        Window->Wnd = DesktopHeapAlloc(pti->Desktop,
@@ -1668,7 +1669,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
            goto AllocErr;
        RtlZeroMemory(Window->Wnd,
                      sizeof(WINDOW) + Class->WndExtra);
-       Window->Wnd->hdr.Handle = hWnd; /* FIXME: Remove hack */
+       Window->Wnd->hdr.Handle = hWnd; /* FIXME: Remove hack , are you sure?*/
        Wnd = Window->Wnd;
 
        Wnd->ti = ti;
@@ -1683,7 +1684,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 AllocErr:
       ObDereferenceObject(WinSta);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      RETURN( (HWND)0);
+      RETURN( (PWINDOW)0);
    }
 
    UserRefObjectCo(Window, &Ref);
@@ -1775,7 +1776,7 @@ AllocErr:
       if (Wnd->WindowName.Buffer == NULL)
       {
           SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-          RETURN( (HWND)0);
+          RETURN( (PWINDOW)0);
       }
 
       Wnd->WindowName.Buffer[WindowName->Length / sizeof(WCHAR)] = L'\0';
@@ -1885,7 +1886,7 @@ AllocErr:
          /* FIXME - Delete window object and remove it from the thread windows list */
          /* FIXME - delete allocated DCE */
          DPRINT1("CBT-hook returned !0\n");
-         RETURN( (HWND) NULL);
+         RETURN( (PWINDOW) NULL);
       }
    }
    x = Cs.x;
@@ -2052,7 +2053,7 @@ AllocErr:
    {
       /* FIXME: Cleanup. */
       DPRINT1("IntCreateWindowEx(): NCCREATE message failed. No cleanup performed!\n");
-      RETURN((HWND)0);
+      RETURN((PWINDOW)0);
    }
 
    /* Calculate the non-client size. */
@@ -2116,7 +2117,7 @@ AllocErr:
       /* FIXME: Cleanup. */
       DPRINT1("IntCreateWindowEx(): send CREATE message failed. No cleanup performed!\n");
       IntUnlinkWindow(Window);
-      RETURN((HWND)0);
+      RETURN((PWINDOW)0);
    }
 
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window->hSelf, OBJID_WINDOW, 0);
@@ -2254,7 +2255,7 @@ AllocErr:
 
    DPRINT("IntCreateWindow(): = %X\n", hWnd);
    DPRINT("WindowObject->SystemMenu = 0x%x\n", Window->SystemMenu);
-   RETURN(hWnd);
+   RETURN( Wnd);
 
 CLEANUP:
    if (!_ret_ && Window && Window->Wnd && ti)
@@ -2297,7 +2298,8 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    NTSTATUS Status;
    UNICODE_STRING WindowName;
    UNICODE_STRING ClassName;
-   HWND NewWindow;
+   HWND NewWindow = NULL;
+   PWINDOW pNewWindow;
    DECLARE_RETURN(HWND);
 
    DPRINT("Enter NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
@@ -2344,8 +2346,22 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       RtlInitUnicodeString(&WindowName, NULL);
    }
 
-   NewWindow = co_IntCreateWindowEx(dwExStyle, &ClassName, &WindowName, dwStyle, x, y, nWidth, nHeight,
-                                    hWndParent, hMenu, hInstance, lpParam, dwShowMode, bUnicodeWindow);
+   pNewWindow = co_IntCreateWindowEx( dwExStyle,
+                                     &ClassName,
+                                     &WindowName,
+                                      dwStyle,
+                                      x,
+                                      y,
+                                      nWidth,
+                                      nHeight,
+                                      hWndParent,
+                                      hMenu,
+                                      hInstance,
+                                      lpParam,
+                                      dwShowMode,
+                                      bUnicodeWindow);
+
+   if (pNewWindow) NewWindow = pNewWindow->hdr.Handle;
 
    if (WindowName.Buffer)
    {
