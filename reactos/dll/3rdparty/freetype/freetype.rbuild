@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="freetype" type="staticlibrary" allowwarnings="true">
+<module name="freetype" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_FREETYPE}" installbase="system32" installname="freetype.dll" allowwarnings="true" crt="msvcrt">
+	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTDRIVER__" />
@@ -12,6 +13,7 @@
 	<if property="NSWPAT" value="1">
 		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
 	</if>
+	<library>kernel32</library>
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>setjmplongjmp.s</file>
@@ -101,4 +103,6 @@
 			<file>winfnt.c</file>
 		</directory>
 	</directory>
+	<file>rosglue.c</file>
+	<file>freetype.rc</file>
 </module>

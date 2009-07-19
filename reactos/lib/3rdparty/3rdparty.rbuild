@@ -10,9 +10,6 @@
 	<directory name="expat">
 		<xi:include href="expat/expat.rbuild" />
 	</directory>
-	<directory name="freetype">
-		<xi:include href="freetype/freetype.rbuild" />
-	</directory>
 	<directory name="icu4ros">
 		<xi:include href="icu4ros/icu4ros.rbuild" />
 	</directory>
