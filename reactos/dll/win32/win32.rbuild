@@ -574,6 +574,9 @@
 <directory name="winemp3.acm">
 	<xi:include href="winemp3.acm/winemp3.acm.rbuild" />
 </directory>
+<directory name="winent.drv">
+	<xi:include href="winent.drv/winent.rbuild" />
+</directory>
 <directory name="winex11.drv">
 	<xi:include href="winex11.drv/winex11.rbuild" />
 </directory>
