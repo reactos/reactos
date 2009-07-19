@@ -93,37 +93,43 @@
 #define HAVE_FPCLASS 1
 
 /* Define if FreeType 2 is installed */
-/* #undef HAVE_FREETYPE */
+#define HAVE_FREETYPE 1
 
 /* Define to 1 if you have the <freetype/freetype.h> header file. */
-/* #undef HAVE_FREETYPE_FREETYPE_H */
+#define HAVE_FREETYPE_FREETYPE_H 1
 
 /* Define to 1 if you have the <freetype/ftglyph.h> header file. */
-/* #undef HAVE_FREETYPE_FTGLYPH_H */
+#define HAVE_FREETYPE_FTGLYPH_H 1
+
+/* Define to 1 if you have the <freetype/ftlcdfil.h> header file. */
+#define HAVE_FREETYPE_FTLCDFIL_H 1
+
+/* Define to 1 if you have the <freetype/ftmodapi.h> header file. */
+#define HAVE_FREETYPE_FTMODAPI_H 1
 
 /* Define to 1 if you have the <freetype/ftnames.h> header file. */
 /* #undef HAVE_FREETYPE_FTNAMES_H */
 
 /* Define to 1 if you have the <freetype/ftoutln.h> header file. */
-/* #undef HAVE_FREETYPE_FTOUTLN_H */
+#define HAVE_FREETYPE_FTOUTLN_H 1
 
 /* Define to 1 if you have the <freetype/ftsnames.h> header file. */
-/* #undef HAVE_FREETYPE_FTSNAMES_H */
+#define HAVE_FREETYPE_FTSNAMES_H 1
 
 /* Define if you have the <freetype/fttrigon.h> header file. */
-/* #undef HAVE_FREETYPE_FTTRIGON_H */
+#define HAVE_FREETYPE_FTTRIGON_H 1
 
 /* Define to 1 if you have the <freetype/ftwinfnt.h> header file. */
-/* #undef HAVE_FREETYPE_FTWINFNT_H */
+#define HAVE_FREETYPE_FTWINFNT_H 1
 
 /* Define to 1 if you have the <freetype/internal/sfnt.h> header file. */
-/* #undef HAVE_FREETYPE_INTERNAL_SFNT_H */
+/* #define HAVE_FREETYPE_INTERNAL_SFNT_H 1 */
 
 /* Define to 1 if you have the <freetype/ttnameid.h> header file. */
-/* #undef HAVE_FREETYPE_TTNAMEID_H */
+#define HAVE_FREETYPE_TTNAMEID_H 1
 
 /* Define to 1 if you have the <freetype/tttables.h> header file. */
-/* #undef HAVE_FREETYPE_TTTABLES_H */
+#define HAVE_FREETYPE_TTTABLES_H 1
 
 /* Define to 1 if the system has the type `fsblkcnt_t'. */
 /* #undef HAVE_FSBLKCNT_T */
@@ -138,7 +144,13 @@
 /* #undef HAVE_FSTATVFS */
 
 /* Define to 1 if you have the <ft2build.h> header file. */
-/* #undef HAVE_FT2BUILD_H */
+#define HAVE_FT2BUILD_H 1
+
+/* Define to 1 if you have the `FT_Load_Sfnt_Table' function. */
+/* #undef HAVE_FT_LOAD_SFNT_TABLE */
+
+/* Define to 1 if the system has the type `FT_TrueTypeEngineType'. */
+#define HAVE_FT_TRUETYPEENGINETYPE 1
 
 /* Define to 1 if you have the `ftruncate' function. */
 #define HAVE_FTRUNCATE 1
@@ -277,8 +289,6 @@
 
 /* Define if you have the libxml2 library */
 #define HAVE_LIBXML2
-#define HAVE_XMLNEWDOCPI
-#define HAVE_XMLREADMEMORY
 
 /* Define to 1 if you have the <libxml/parser.h> header file. */
 #define HAVE_LIBXML_PARSER_H
@@ -296,10 +306,10 @@
 /* #undef HAVE_LIBXSLT */
 
 /* Define to 1 if you have the <libxslt/pattern.h> header file. */
-#define HAVE_LIBXSLT_PATTERN_H
+/* #undef HAVE_LIBXSLT_PATTERN_H */
 
 /* Define to 1 if you have the <libxslt/transform.h> header file. */
-#define HAVE_LIBXSLT_TRANSFORM_H
+/* #undef HAVE_LIBXSLT_TRANSFORM_H */
 
 /* Define if you have the Xxf86dga library version 2 */
 /* #undef HAVE_LIBXXF86DGA2 */
