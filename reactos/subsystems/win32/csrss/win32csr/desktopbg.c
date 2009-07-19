@@ -183,6 +183,9 @@ DtbgDesktopThread(PVOID Data)
       return 1;
     }
 
+  /* Set window proc */
+  SetWindowLongPtrW( BackgroundWnd, GWLP_WNDPROC, (LONG_PTR)DtbgWindowProc );
+
   ThreadData->Status = STATUS_SUCCESS;
   SetEvent(ThreadData->Event);
 
