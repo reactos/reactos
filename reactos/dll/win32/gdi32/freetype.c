@@ -1006,7 +1006,6 @@ static void split_subst_info(NameCs *nc, LPSTR str)
 
 static void LoadSubstList(void)
 {
-#if 0
     FontSubst *psub;
     HKEY hkey;
     DWORD valuelen, datalen, i = 0, type, dlen, vlen;
@@ -1052,9 +1051,6 @@ static void LoadSubstList(void)
 	HeapFree(GetProcessHeap(), 0, value);
 	RegCloseKey(hkey);
     }
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 
@@ -1587,7 +1583,6 @@ static void DumpFontList(void)
  */
 static void LoadReplaceList(void)
 {
-#if 0
     HKEY hkey;
     DWORD valuelen, datalen, i = 0, type, dlen, vlen;
     LPWSTR value;
@@ -1638,9 +1633,6 @@ static void LoadReplaceList(void)
 	HeapFree(GetProcessHeap(), 0, value);
 	RegCloseKey(hkey);
     }
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*************************************************************
@@ -1648,7 +1640,7 @@ static void LoadReplaceList(void)
  */
 static BOOL init_system_links(void)
 {
-    HKEY hkey;
+    HANDLE hkey;
     BOOL ret = FALSE;
     DWORD type, max_val, max_data, val_len, data_len, index;
     WCHAR *value, *data;
@@ -1681,7 +1673,7 @@ static BOOL init_system_links(void)
         {
             ERR("NtQueryKey failed with Status 0x%08X\n", Status);
             NtClose(hkey);
-            return;
+            return FALSE;
         }
 
         max_val = FullInfo->MaxValueNameLen / sizeof(WCHAR) + 1;
@@ -1791,7 +1783,7 @@ static BOOL init_system_links(void)
 
         HeapFree(GetProcessHeap(), 0, value);
         HeapFree(GetProcessHeap(), 0, data);
-        NtClose(hkey);
+        RegCloseKey(hkey);
     }
 
     /* Explicitly add an entry for the system font, this links to Tahoma and any links
@@ -1833,12 +1825,12 @@ static BOOL init_system_links(void)
 static BOOL ReadFontDir(const char *dirname, BOOL external_fonts)
 {
    HANDLE file;
-   WIN32_FIND_DATA find_data;
+   WIN32_FIND_DATAA find_data;
    CHAR search_path[MAX_PATH];
 
    TRACE("Loading fonts from %s\n", debugstr_a(dirname));
 
-   snprintf(search_path, MAX_PATH, "%s\\*", dirname);
+   _snprintf(search_path, MAX_PATH, "%s\\*", dirname);
 
    file = FindFirstFileA(search_path, &find_data);
 
@@ -1856,7 +1848,7 @@ static BOOL ReadFontDir(const char *dirname, BOOL external_fonts)
             continue;
 
        TRACE("Found %s in %s\n", find_data.cFileName, debugstr_a(dirname));
-       snprintf(path, MAX_PATH, "%s\\%s", dirname, find_data.cFileName);
+       _snprintf(path, MAX_PATH, "%s\\%s", dirname, find_data.cFileName);
 
        if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
        {
@@ -1994,7 +1986,6 @@ static BOOL load_font_from_winfonts_dir(LPCWSTR file)
 
 static void load_system_fonts(void)
 {
-#if 0
     HKEY hkey;
     WCHAR data[MAX_PATH], windowsdir[MAX_PATH], pathW[MAX_PATH];
     char pathA[MAX_PATH];
@@ -2020,7 +2011,6 @@ static void load_system_fonts(void)
         }
         RegCloseKey(hkey);
     }
-#endif
 }
 
 /*************************************************************
@@ -2032,7 +2022,6 @@ static void load_system_fonts(void)
  */
 static void update_reg_entries(void)
 {
-#if 0
     HKEY winnt_key = 0, win9x_key = 0, external_key = 0;
     LPWSTR valueW;
     DWORD len, len_fam;
@@ -2108,14 +2097,10 @@ static void update_reg_entries(void)
     if(win9x_key) RegCloseKey(win9x_key);
     if(winnt_key) RegCloseKey(winnt_key);
     return;
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 static void delete_external_font_keys(void)
 {
-#if 0
     HKEY winnt_key = 0, win9x_key = 0, external_key = 0;
     DWORD dlen, vlen, datalen, valuelen, i, type;
     LPWSTR valueW;
@@ -2168,9 +2153,6 @@ static void delete_external_font_keys(void)
  end:
     if(win9x_key) RegCloseKey(win9x_key);
     if(winnt_key) RegCloseKey(winnt_key);
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /*************************************************************
@@ -2185,22 +2167,16 @@ INT WineEngAddFontResourceEx(LPCWSTR file, DWORD flags, PVOID pdv)
 
     if (ft_handle)  /* do it only if we have freetype up and running */
     {
-        char *unixname;
+        CHAR filename[MAX_PATH];
 
         if(flags)
             FIXME("Ignoring flags %x\n", flags);
 
-#if 0
-        if((unixname = wine_get_unix_file_name(file)))
-        {
-            EnterCriticalSection( &freetype_cs );
-            ret = AddFontFileToList(unixname, NULL, NULL, ADDFONT_FORCE_BITMAP);
-            LeaveCriticalSection( &freetype_cs );
-            HeapFree(GetProcessHeap(), 0, unixname);
-        }
-#else
-        UNIMPLEMENTED;
-#endif
+        _snprintf(filename, MAX_PATH, "%S", file);
+        EnterCriticalSection( &freetype_cs );
+        ret = AddFontFileToList(filename, NULL, NULL, ADDFONT_FORCE_BITMAP);
+        LeaveCriticalSection( &freetype_cs );
+
         if (!ret && !strchrW(file, '\\')) {
             /* Try in %WINDIR%/fonts, needed for Fotobuch Designer */
             ret = load_font_from_winfonts_dir(file);
@@ -2460,8 +2436,8 @@ static inline HKEY create_fonts_NT_registry_key(void)
 {
     HKEY hkey = 0;
 
-    //RegCreateKeyExW(HKEY_LOCAL_MACHINE, winnt_font_reg_key, 0, NULL,
-    //                0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    RegCreateKeyExW(HKEY_LOCAL_MACHINE, winnt_font_reg_key, 0, NULL,
+                    0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
     return hkey;
 }
 
@@ -2478,30 +2454,29 @@ static inline HKEY create_config_fonts_registry_key(void)
 {
     HKEY hkey = 0;
 
-    //RegCreateKeyExW(HKEY_CURRENT_CONFIG, system_fonts_reg_key, 0, NULL,
-    //                0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
+    RegCreateKeyExW(HKEY_CURRENT_CONFIG, system_fonts_reg_key, 0, NULL,
+                    0, KEY_ALL_ACCESS, NULL, &hkey, NULL);
     return hkey;
 }
 
 static void add_font_list(HKEY hkey, const struct nls_update_font_list *fl)
 {
-    //RegSetValueExA(hkey, "Courier", 0, REG_SZ, (const BYTE *)fl->courier, strlen(fl->courier)+1);
-    //RegSetValueExA(hkey, "MS Serif", 0, REG_SZ, (const BYTE *)fl->serif, strlen(fl->serif)+1);
-    //RegSetValueExA(hkey, "MS Sans Serif", 0, REG_SZ, (const BYTE *)fl->sserif, strlen(fl->sserif)+1);
-    //RegSetValueExA(hkey, "Small Fonts", 0, REG_SZ, (const BYTE *)fl->small, strlen(fl->small)+1);
+    RegSetValueExA(hkey, "Courier", 0, REG_SZ, (const BYTE *)fl->courier, strlen(fl->courier)+1);
+    RegSetValueExA(hkey, "MS Serif", 0, REG_SZ, (const BYTE *)fl->serif, strlen(fl->serif)+1);
+    RegSetValueExA(hkey, "MS Sans Serif", 0, REG_SZ, (const BYTE *)fl->sserif, strlen(fl->sserif)+1);
+    RegSetValueExA(hkey, "Small Fonts", 0, REG_SZ, (const BYTE *)fl->small, strlen(fl->small)+1);
 }
 
 static void set_value_key(HKEY hkey, const char *name, const char *value)
 {
-    //if (value)
-    //    RegSetValueExA(hkey, name, 0, REG_SZ, (const BYTE *)value, strlen(value) + 1);
-    //else if (name)
-    //    RegDeleteValueA(hkey, name);
+    if (value)
+        RegSetValueExA(hkey, name, 0, REG_SZ, (const BYTE *)value, strlen(value) + 1);
+    else if (name)
+        RegDeleteValueA(hkey, name);
 }
 
 static void update_font_info(void)
 {
-#if 0
     char buf[40], cpbuf[40];
     DWORD len, type;
     HKEY hkey = 0;
@@ -2598,14 +2573,10 @@ static void update_font_info(void)
 
     /* Clear out system links */
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, system_link);
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 static void populate_system_links(HKEY hkey, const WCHAR *name, const WCHAR *const *values)
 {
-#if 0
     const WCHAR *value;
     int i;
     FontSubst *psub;
@@ -2677,12 +2648,10 @@ static void populate_system_links(HKEY hkey, const WCHAR *name, const WCHAR *con
             TRACE("no SystemLink fonts found for %s\n", debugstr_w(name));
     } else
         TRACE("removed SystemLink for %s\n", debugstr_w(name));
-#endif
 }
 
 static void update_system_links(void)
 {
-#if 0
     HKEY hkey = 0;
     UINT i, j;
     BOOL done = FALSE;
@@ -2728,7 +2697,6 @@ static void update_system_links(void)
             WARN("there is no SystemLink default list for MS Shell Dlg %s\n", debugstr_w(psub->to.name));
     } else
         WARN("failed to create SystemLink key\n");
-#endif
 }
 
 
@@ -2835,10 +2803,9 @@ BOOL WineEngInit(void)
     static const WCHAR pathW[] = {'P','a','t','h',0};
     HKEY hkey;
     DWORD valuelen, datalen, i = 0, type, dlen, vlen;
-    WCHAR windowsdir[MAX_PATH];
-    char *unixname;
+    WCHAR windowsdirW[MAX_PATH];
+    CHAR windowsdir[MAX_PATH];
     HANDLE font_mutex;
-    const char *data_dir;
 
     TRACE("\n");
 
@@ -2859,8 +2826,9 @@ BOOL WineEngInit(void)
     load_system_fonts();
 
     /* load in the fonts from %WINDOWSDIR%\\Fonts first of all */
-    GetWindowsDirectoryW(windowsdir, sizeof(windowsdir) / sizeof(WCHAR));
-    strcatW(windowsdir, fontsW);
+    GetWindowsDirectoryW(windowsdirW, sizeof(windowsdirW) / sizeof(WCHAR));
+    strcatW(windowsdirW, fontsW);
+    _snprintf(windowsdir, MAX_PATH, "%S", windowsdirW);
     ReadFontDir(windowsdir, FALSE);
 
     /* load the system truetype fonts */
@@ -2879,7 +2847,6 @@ BOOL WineEngInit(void)
        for any fonts not installed in %WINDOWSDIR%\Fonts.  They will have their
        full path as the entry.  Also look for any .fon fonts, since ReadFontDir
        will skip these. */
-#if 0
     if(RegOpenKeyW(HKEY_LOCAL_MACHINE,
                    is_win9x() ? win9x_font_reg_key : winnt_font_reg_key,
 		   &hkey) == ERROR_SUCCESS) {
@@ -2898,16 +2865,19 @@ BOOL WineEngInit(void)
                                 &dlen) == ERROR_SUCCESS) {
                 if(data[0] && (data[1] == ':'))
                 {
-                    AddFontFileToList(data, NULL, NULL, ADDFONT_FORCE_BITMAP);
+                    LPSTR dataA = HeapAlloc(GetProcessHeap(), 0, datalen);
+                    _snprintf(dataA, datalen, "%S", data);
+                    AddFontFileToList(dataA, NULL, NULL, ADDFONT_FORCE_BITMAP);
+                    HeapFree(GetProcessHeap(), 0, dataA);
                 }
                 else if(dlen / 2 >= 6 && !strcmpiW(data + dlen / 2 - 5, dot_fonW))
                 {
-                    WCHAR pathW[MAX_PATH];
-                    static const WCHAR fmtW[] = {'%','s','\\','%','s','\0'};
+                    CHAR path[MAX_PATH];
+                    static const CHAR fmt[] = {'%','s','\\','%','S','\0'};
                     BOOL added = FALSE;
 
-                    sprintfW(pathW, fmtW, windowsdir, data);
-                    added = AddFontFileToList(pathW, NULL, NULL, ADDFONT_FORCE_BITMAP);
+                    _snprintf(path, MAX_PATH, fmt, windowsdir, data);
+                    added = AddFontFileToList(path, NULL, NULL, ADDFONT_FORCE_BITMAP);
                     if (!added)
                         load_font_from_data_dir(data);
                 }
@@ -2920,12 +2890,11 @@ BOOL WineEngInit(void)
         HeapFree(GetProcessHeap(), 0, valueW);
 	RegCloseKey(hkey);
     }
-#endif
+
     load_fontconfig_fonts();
 
     /* then look in any directories that we've specified in the config file */
     /* @@ Wine registry key: HKCU\Software\Wine\Fonts */
-#if 0
     if(RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Fonts", &hkey) == ERROR_SUCCESS)
     {
         DWORD len;
@@ -2956,7 +2925,6 @@ BOOL WineEngInit(void)
         }
         RegCloseKey(hkey);
     }
-#endif
 
     DumpFontList();
     LoadSubstList();
