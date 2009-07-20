@@ -1144,10 +1144,10 @@ IntMouseInput(MOUSEINPUT *mi)
 
       if (DesktopWindow)
       {
-         if(MousePos.x >= DesktopWindow->Wnd->ClientRect.right)
-            MousePos.x = DesktopWindow->Wnd->ClientRect.right - 1;
-         if(MousePos.y >= DesktopWindow->Wnd->ClientRect.bottom)
-            MousePos.y = DesktopWindow->Wnd->ClientRect.bottom - 1;
+         if(MousePos.x >= DesktopWindow->Wnd->rcClient.right)
+            MousePos.x = DesktopWindow->Wnd->rcClient.right - 1;
+         if(MousePos.y >= DesktopWindow->Wnd->rcClient.bottom)
+            MousePos.y = DesktopWindow->Wnd->rcClient.bottom - 1;
          UserDereferenceObject(DesktopWindow);
       }
 

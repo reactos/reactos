@@ -120,12 +120,12 @@ UserGetInsideRectNC(PWINDOW Wnd, RECT *rect)
     ULONG Style;
     ULONG ExStyle;
 
-    Style = Wnd->Style;
+    Style = Wnd->style;
     ExStyle = Wnd->ExStyle;
 
     rect->top    = rect->left = 0;
-    rect->right  = Wnd->WindowRect.right - Wnd->WindowRect.left;
-    rect->bottom = Wnd->WindowRect.bottom - Wnd->WindowRect.top;
+    rect->right  = Wnd->rcWindow.right - Wnd->rcWindow.left;
+    rect->bottom = Wnd->rcWindow.bottom - Wnd->rcWindow.top;
 
     if (Style & WS_ICONIC)
     {
@@ -268,9 +268,9 @@ DefWndStartSizeMove(HWND hWnd, PWINDOW Wnd, WPARAM wParam, POINT *capturePoint)
   POINT pt;
   MSG msg;
   RECT rectWindow;
-  ULONG Style = Wnd->Style;
+  ULONG Style = Wnd->style;
 
-  rectWindow = Wnd->WindowRect;
+  rectWindow = Wnd->rcWindow;
 
   if ((wParam & 0xfff0) == SC_MOVE)
     {
@@ -415,7 +415,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   if (!Wnd)
       return;
 
-  Style = Wnd->Style;
+  Style = Wnd->style;
   ExStyle = Wnd->ExStyle;
   iconic = (Style & WS_MINIMIZE) != 0;
 
@@ -467,7 +467,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   /* Get min/max info */
 
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
-  sizingRect = Wnd->WindowRect;
+  sizingRect = Wnd->rcWindow;
   if (Style & WS_CHILD)
     {
       hWndParent = GetParent(hwnd);
@@ -1690,11 +1690,11 @@ User32DefWindowProc(HWND hWnd,
                     break;
             }
 
-            if ((Wnd->Style & WS_CHILD) && Wnd->Parent != NULL)
+            if ((Wnd->style & WS_CHILD) && Wnd->spwndParent != NULL)
             {
                 /* We're a child window and we need to pass this message down until
                    we reach the root */
-                hWnd = UserHMGetHandle((PWINDOW)DesktopPtrToUser(Wnd->Parent));
+                hWnd = UserHMGetHandle((PWINDOW)DesktopPtrToUser(Wnd->spwndParent));
             }
             else
             {
@@ -1893,13 +1893,13 @@ DefWindowProcA(HWND hWnd,
             ULONG len;
 
             Wnd = ValidateHwnd(hWnd);
-            if (Wnd != NULL && Wnd->WindowName.Length != 0)
+            if (Wnd != NULL && Wnd->strName.Length != 0)
             {
-                buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                buf = DesktopPtrToUser(Wnd->strName.Buffer);
                 if (buf != NULL &&
                     NT_SUCCESS(RtlUnicodeToMultiByteSize(&len,
                                                          buf,
-                                                         Wnd->WindowName.Length)))
+                                                         Wnd->strName.Length)))
                 {
                     Result = (LRESULT) len;
                 }
@@ -1918,16 +1918,16 @@ DefWindowProcA(HWND hWnd,
             Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && wParam != 0)
             {
-                if (Wnd->WindowName.Buffer != NULL)
-                    buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                if (Wnd->strName.Buffer != NULL)
+                    buf = DesktopPtrToUser(Wnd->strName.Buffer);
                 else
                     outbuf[0] = L'\0';
 
                 if (buf != NULL)
                 {
-                    if (Wnd->WindowName.Length != 0)
+                    if (Wnd->strName.Length != 0)
                     {
-                        copy = min(Wnd->WindowName.Length / sizeof(WCHAR), wParam - 1);
+                        copy = min(Wnd->strName.Length / sizeof(WCHAR), wParam - 1);
                         Result = WideCharToMultiByte(CP_ACP,
                                                      0,
                                                      buf,
@@ -2041,15 +2041,15 @@ DefWindowProcW(HWND hWnd,
             ULONG len;
 
             Wnd = ValidateHwnd(hWnd);
-            if (Wnd != NULL && Wnd->WindowName.Length != 0)
+            if (Wnd != NULL && Wnd->strName.Length != 0)
             {
-                buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                buf = DesktopPtrToUser(Wnd->strName.Buffer);
                 if (buf != NULL &&
                     NT_SUCCESS(RtlUnicodeToMultiByteSize(&len,
                                                          buf,
-                                                         Wnd->WindowName.Length)))
+                                                         Wnd->strName.Length)))
                 {
-                    Result = (LRESULT) (Wnd->WindowName.Length / sizeof(WCHAR));
+                    Result = (LRESULT) (Wnd->strName.Length / sizeof(WCHAR));
                 }
             }
             else Result = 0L;
@@ -2065,16 +2065,16 @@ DefWindowProcW(HWND hWnd,
             Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL && wParam != 0)
             {
-                if (Wnd->WindowName.Buffer != NULL)
-                    buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                if (Wnd->strName.Buffer != NULL)
+                    buf = DesktopPtrToUser(Wnd->strName.Buffer);
                 else
                     outbuf[0] = L'\0';
 
                 if (buf != NULL)
                 {
-                    if (Wnd->WindowName.Length != 0)
+                    if (Wnd->strName.Length != 0)
                     {
-                        Result = min(Wnd->WindowName.Length / sizeof(WCHAR), wParam - 1);
+                        Result = min(Wnd->strName.Length / sizeof(WCHAR), wParam - 1);
                         RtlCopyMemory(outbuf,
                                       buf,
                                       Result * sizeof(WCHAR));

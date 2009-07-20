@@ -88,7 +88,7 @@ IntEngWndUpdateClipObj(
   hVisRgn = VIS_ComputeVisibleRegion(Window, TRUE, TRUE, TRUE);
   if (hVisRgn != NULL)
   {
-    NtGdiOffsetRgn(hVisRgn, Window->Wnd->ClientRect.left, Window->Wnd->ClientRect.top);
+    NtGdiOffsetRgn(hVisRgn, Window->Wnd->rcClient.left, Window->Wnd->rcClient.top);
     visRgn = REGION_LockRgn(hVisRgn);
     if (visRgn != NULL)
     {
@@ -125,8 +125,8 @@ IntEngWndUpdateClipObj(
   if (ClipObj == NULL)
   {
     /* Fall back to client rect */
-    ClipObj = IntEngCreateClipRegion(1, &Window->Wnd->ClientRect,
-                                     &Window->Wnd->ClientRect);
+    ClipObj = IntEngCreateClipRegion(1, &Window->Wnd->rcClient,
+                                     &Window->Wnd->rcClient);
   }
 
   if (ClipObj == NULL)
@@ -136,7 +136,7 @@ IntEngWndUpdateClipObj(
   }
 
   RtlCopyMemory(&WndObjInt->WndObj.coClient, ClipObj, sizeof (CLIPOBJ));
-  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->ClientRect, sizeof (RECT));
+  RtlCopyMemory(&WndObjInt->WndObj.rclClient, &Window->Wnd->rcClient, sizeof (RECT));
   OldClipObj = InterlockedExchangePointer(&WndObjInt->ClientClipObj, ClipObj);
   if (OldClipObj != NULL)
     IntEngDeleteClipRegion(OldClipObj);

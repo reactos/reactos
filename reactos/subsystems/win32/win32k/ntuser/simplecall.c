@@ -252,7 +252,7 @@ NtUserCallOneParam(
                RETURN( FALSE);
             }
 
-            Result = (DWORD)Window->Wnd->Instance;
+            Result = (DWORD)Window->Wnd->hModule;
             RETURN( Result);
          }
 
@@ -686,7 +686,7 @@ NtUserCallHwndLock(
             PMENU_OBJECT Menu;
             DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
             Ret = FALSE;
-            if (!((Wnd->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
+            if (!((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
                break;
 
             if(!(Menu = UserGetMenuObject((HMENU) Wnd->IDMenu)))

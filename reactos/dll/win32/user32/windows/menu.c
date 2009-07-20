@@ -573,7 +573,7 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
 
   if (0 != (Item->fType & MF_SYSMENU))
     {
-      if ( (Wnd->Style & WS_MINIMIZE))
+      if ( (Wnd->style & WS_MINIMIZE))
         {
           UserGetInsideRectNC(Wnd, &Rect);
           UserDrawSysMenuButton(hWnd, Dc, &Rect,

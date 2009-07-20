@@ -174,11 +174,11 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 {
    if (!Wnd->Wnd) return NULL;
 
-   if (Wnd->Wnd->Style & WS_POPUP)
+   if (Wnd->Wnd->style & WS_POPUP)
    {
       return UserGetWindowObject(Wnd->hOwner);
    }
-   else if (Wnd->Wnd->Style & WS_CHILD)
+   else if (Wnd->Wnd->style & WS_CHILD)
    {
       return Wnd->Parent;
    }
@@ -325,13 +325,13 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
         ClientInfo->CallbackWnd.pvWnd = NULL;
     }
 
-   if (Wnd->WindowName.Buffer != NULL)
+   if (Wnd->strName.Buffer != NULL)
    {
-       Wnd->WindowName.Length = 0;
-       Wnd->WindowName.MaximumLength = 0;
+       Wnd->strName.Length = 0;
+       Wnd->strName.MaximumLength = 0;
        DesktopHeapFree(Wnd->pdesktop,
-                       Wnd->WindowName.Buffer);
-       Wnd->WindowName.Buffer = NULL;
+                       Wnd->strName.Buffer);
+       Wnd->strName.Buffer = NULL;
    }
 
     DesktopHeapFree(Wnd->pdesktop, Wnd);
@@ -369,7 +369,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
       return 0;
    }
    Window->Status |= WINDOWSTATUS_DESTROYING;
-   Wnd->Style &= ~WS_VISIBLE;
+   Wnd->style &= ~WS_VISIBLE;
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
       in IntDestroyWindow() */
@@ -457,7 +457,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    TIMER_RemoveWindowTimers(Window->hSelf);
 #endif
 
-   if (!(Wnd->Style & WS_CHILD) && Wnd->IDMenu
+   if (!(Wnd->style & WS_CHILD) && Wnd->IDMenu
        && (Menu = UserGetMenuObject((HMENU)Wnd->IDMenu)))
    {
       IntDestroyMenuObject(Menu, TRUE, TRUE);
@@ -486,10 +486,10 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    IntDestroyScrollBars(Window);
 
    /* dereference the class */
-   IntDereferenceClass(Wnd->Class,
+   IntDereferenceClass(Wnd->pcls,
                        Window->ti->pDeskInfo,
                        Window->ti->ppi);
-   Wnd->Class = NULL;
+   Wnd->pcls = NULL;
 
    if(Window->WindowRegion)
    {
@@ -510,19 +510,19 @@ VOID FASTCALL
 IntGetWindowBorderMeasures(PWINDOW_OBJECT Window, UINT *cx, UINT *cy)
 {
    PWINDOW Wnd = Window->Wnd;
-   if(HAS_DLGFRAME(Wnd->Style, Wnd->ExStyle) && !(Wnd->Style & WS_MINIMIZE))
+   if(HAS_DLGFRAME(Wnd->style, Wnd->ExStyle) && !(Wnd->style & WS_MINIMIZE))
    {
       *cx = UserGetSystemMetrics(SM_CXDLGFRAME);
       *cy = UserGetSystemMetrics(SM_CYDLGFRAME);
    }
    else
    {
-      if(HAS_THICKFRAME(Wnd->Style, Wnd->ExStyle)&& !(Wnd->Style & WS_MINIMIZE))
+      if(HAS_THICKFRAME(Wnd->style, Wnd->ExStyle)&& !(Wnd->style & WS_MINIMIZE))
       {
          *cx = UserGetSystemMetrics(SM_CXFRAME);
          *cy = UserGetSystemMetrics(SM_CYFRAME);
       }
-      else if(HAS_THINFRAME(Wnd->Style, Wnd->ExStyle))
+      else if(HAS_THINFRAME(Wnd->style, Wnd->ExStyle))
       {
          *cx = UserGetSystemMetrics(SM_CXBORDER);
          *cy = UserGetSystemMetrics(SM_CYBORDER);
@@ -544,13 +544,13 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
 
     if (Wnd->IsSystem)
     {
-        return (Ansi ? Wnd->WndProcExtra : Wnd->WndProc);
+        return (Ansi ? Wnd->WndProcExtra : Wnd->lpfnWndProc);
     }
     else
     {
         if (!Ansi == Wnd->Unicode)
         {
-            return Wnd->WndProc;
+            return Wnd->lpfnWndProc;
         }
         else
         {
@@ -564,13 +564,13 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
             {
                 PCALLPROC NewCallProc, CallProc;
 
-                NewCallProc = UserFindCallProc(Wnd->Class,
-                                               Wnd->WndProc,
+                NewCallProc = UserFindCallProc(Wnd->pcls,
+                                               Wnd->lpfnWndProc,
                                                Wnd->Unicode);
                 if (NewCallProc == NULL)
                 {
                     NewCallProc = CreateCallProc(Wnd->ti->pDeskInfo,
-                                                 Wnd->WndProc,
+                                                 Wnd->lpfnWndProc,
                                                  Wnd->Unicode,
                                                  Wnd->ti->ppi);
                     if (NewCallProc == NULL)
@@ -579,7 +579,7 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
                         return NULL;
                     }
 
-                    UserAddCallProcToClass(Wnd->Class,
+                    UserAddCallProcToClass(Wnd->pcls,
                                            NewCallProc);
                 }
 
@@ -598,13 +598,13 @@ IntGetWindowInfo(PWINDOW_OBJECT Window, PWINDOWINFO pwi)
    PWINDOW Wnd = Window->Wnd;
 
    pwi->cbSize = sizeof(WINDOWINFO);
-   pwi->rcWindow = Window->Wnd->WindowRect;
-   pwi->rcClient = Window->Wnd->ClientRect;
-   pwi->dwStyle = Wnd->Style;
+   pwi->rcWindow = Window->Wnd->rcWindow;
+   pwi->rcClient = Window->Wnd->rcClient;
+   pwi->dwStyle = Wnd->style;
    pwi->dwExStyle = Wnd->ExStyle;
    pwi->dwWindowStatus = (UserGetForegroundWindow() == Window->hSelf); /* WS_ACTIVECAPTION */
    IntGetWindowBorderMeasures(Window, &pwi->cxWindowBorders, &pwi->cyWindowBorders);
-   pwi->atomWindowType = (Wnd->Class ? Wnd->Class->Atom : 0);
+   pwi->atomWindowType = (Wnd->pcls ? Wnd->pcls->Atom : 0);
    pwi->wCreatorVersion = 0x400; /* FIXME - return a real version number */
    return TRUE;
 }
@@ -618,7 +618,7 @@ IntSetMenu(
    PMENU_OBJECT OldMenu, NewMenu = NULL;
    PWINDOW Wnd = Window->Wnd;
 
-   if ((Wnd->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+   if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
@@ -733,8 +733,8 @@ IntGetClientRect(PWINDOW_OBJECT Window, RECTL *Rect)
    ASSERT( Rect );
 
    Rect->left = Rect->top = 0;
-   Rect->right = Window->Wnd->ClientRect.right - Window->Wnd->ClientRect.left;
-   Rect->bottom = Window->Wnd->ClientRect.bottom - Window->Wnd->ClientRect.top;
+   Rect->right = Window->Wnd->rcClient.right - Window->Wnd->rcClient.left;
+   Rect->bottom = Window->Wnd->rcClient.bottom - Window->Wnd->rcClient.top;
 }
 
 
@@ -880,7 +880,7 @@ IntIsChildWindow(PWINDOW_OBJECT Parent, PWINDOW_OBJECT BaseWindow)
       {
          return(TRUE);
       }
-      if(!(Wnd->Style & WS_CHILD))
+      if(!(Wnd->style & WS_CHILD))
       {
          break;
       }
@@ -901,11 +901,11 @@ IntIsWindowVisible(PWINDOW_OBJECT BaseWindow)
    while(Window)
    {
       Wnd = Window->Wnd;
-      if(!(Wnd->Style & WS_CHILD))
+      if(!(Wnd->style & WS_CHILD))
       {
          break;
       }
-      if(!(Wnd->Style & WS_VISIBLE))
+      if(!(Wnd->style & WS_VISIBLE))
       {
          return FALSE;
       }
@@ -913,7 +913,7 @@ IntIsWindowVisible(PWINDOW_OBJECT BaseWindow)
       Window = Window->Parent;
    }
 
-   if(Window && Wnd->Style & WS_VISIBLE)
+   if(Window && Wnd->style & WS_VISIBLE)
    {
       return TRUE;
    }
@@ -933,7 +933,7 @@ IntLinkWindow(
    PWINDOW_OBJECT Parent;
 
    Wnd->Parent = WndParent;
-   Wnd->Wnd->Parent = WndParent ? WndParent->Wnd : NULL;
+   Wnd->Wnd->spwndParent = WndParent ? WndParent->Wnd : NULL;
    if ((Wnd->PrevSibling = WndPrevSibling))
    {
       /* link after WndPrevSibling */
@@ -990,12 +990,12 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
    if((WndNewOwner = UserGetWindowObject(hWndNewOwner)))
    {
       Wnd->hOwner = hWndNewOwner;
-      Wnd->Wnd->Owner = WndNewOwner->Wnd;
+      Wnd->Wnd->spwndOwner = WndNewOwner->Wnd;
    }
    else
    {
       Wnd->hOwner = NULL;
-      Wnd->Wnd->Owner = NULL;
+      Wnd->Wnd->spwndOwner = NULL;
    }
 
    UserDereferenceObject(Wnd);
@@ -1140,7 +1140,7 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
 
    Wnd->PrevSibling = Wnd->NextSibling = Wnd->Parent = NULL;
    if (Wnd->Wnd)
-       Wnd->Wnd->Parent = NULL;
+       Wnd->Wnd->spwndParent = NULL;
 }
 
 BOOL FASTCALL
@@ -1155,7 +1155,7 @@ IntAnyPopup(VOID)
 
    for(Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
-      if(Child->hOwner && Child->Wnd->Style & WS_VISIBLE)
+      if(Child->hOwner && Child->Wnd->style & WS_VISIBLE)
       {
          /*
           * The desktop has a popup window if one of them has
@@ -1191,28 +1191,28 @@ IntGetWindowPlacement(PWINDOW_OBJECT Window, WINDOWPLACEMENT *lpwndpl)
    }
 
    lpwndpl->flags = 0;
-   if (0 == (Wnd->Style & WS_VISIBLE))
+   if (0 == (Wnd->style & WS_VISIBLE))
    {
       lpwndpl->showCmd = SW_HIDE;
    }
    else if (0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
-            0 != (Wnd->Style & WS_MAXIMIZE))
+            0 != (Wnd->style & WS_MAXIMIZE))
    {
       lpwndpl->showCmd = SW_MAXIMIZE;
    }
-   else if (0 != (Wnd->Style & WS_MINIMIZE))
+   else if (0 != (Wnd->style & WS_MINIMIZE))
    {
       lpwndpl->showCmd = SW_MINIMIZE;
    }
-   else if (0 != (Wnd->Style & WS_VISIBLE))
+   else if (0 != (Wnd->style & WS_VISIBLE))
    {
       lpwndpl->showCmd = SW_SHOWNORMAL;
    }
 
-   Size.x = Wnd->WindowRect.left;
-   Size.y = Wnd->WindowRect.top;
+   Size.x = Wnd->rcWindow.left;
+   Size.y = Wnd->rcWindow.top;
    WinPosInitInternalPos(Window, &Size,
-                         &Wnd->WindowRect);
+                         &Wnd->rcWindow);
 
    lpwndpl->rcNormalPosition = Wnd->InternalPos.NormalRect;
    lpwndpl->ptMinPosition = Wnd->InternalPos.IconPos;
@@ -1423,8 +1423,8 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
 
    if(Parent->hSelf != IntGetDesktopWindow())
    {
-      Pt.x += Parent->Wnd->ClientRect.left;
-      Pt.y += Parent->Wnd->ClientRect.top;
+      Pt.x += Parent->Wnd->rcClient.left;
+      Pt.y += Parent->Wnd->rcClient.top;
    }
 
    if(!IntPtInWindow(Parent, Pt.x, Pt.y))
@@ -1442,11 +1442,11 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
          if((Child = UserGetWindowObject(*phWnd)))
          {
             ChildWnd = Child->Wnd;
-            if(!(ChildWnd->Style & WS_VISIBLE) && (uiFlags & CWP_SKIPINVISIBLE))
+            if(!(ChildWnd->style & WS_VISIBLE) && (uiFlags & CWP_SKIPINVISIBLE))
             {
                continue;
             }
-            if((ChildWnd->Style & WS_DISABLED) && (uiFlags & CWP_SKIPDISABLED))
+            if((ChildWnd->style & WS_DISABLED) && (uiFlags & CWP_SKIPDISABLED))
             {
                continue;
             }
@@ -1479,7 +1479,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Window, RECTL *rc, BOOL 
 
    if(Parent != NULL)
    {
-      RECTL_bIntersectRect(rc, rc, &Parent->Wnd->ClientRect);
+      RECTL_bIntersectRect(rc, rc, &Parent->Wnd->rcClient);
 
       if(IncPos)
       {
@@ -1702,41 +1702,41 @@ AllocErr:
     * Fill out the structure describing it.
     */
    Window->ti = ti;
-   Wnd->Class = Class;
+   Wnd->pcls = Class;
    Class = NULL;
 
    Window->SystemMenu = (HMENU)0;
    Wnd->ContextHelpId = 0;
    Wnd->IDMenu = 0;
-   Wnd->Instance = hInstance;
+   Wnd->hModule = hInstance;
    Window->hSelf = hWnd;
 
    Window->MessageQueue = pti->MessageQueue;
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
-   Wnd->Parent = ParentWindow ? ParentWindow->Wnd : NULL;
-   if (Wnd->Parent != NULL && hWndParent != 0)
+   Wnd->spwndParent = ParentWindow ? ParentWindow->Wnd : NULL;
+   if (Wnd->spwndParent != NULL && hWndParent != 0)
    {
-       Wnd->HideFocus = Wnd->Parent->HideFocus;
-       Wnd->HideAccel = Wnd->Parent->HideAccel;
+       Wnd->HideFocus = Wnd->spwndParent->HideFocus;
+       Wnd->HideAccel = Wnd->spwndParent->HideAccel;
    }
 
    if((OwnerWindow = UserGetWindowObject(OwnerWindowHandle)))
    {
       Window->hOwner = OwnerWindowHandle;
-      Wnd->Owner = OwnerWindow->Wnd;
+      Wnd->spwndOwner = OwnerWindow->Wnd;
       HasOwner = TRUE;
    }
    else
    {
       Window->hOwner = NULL;
-      Wnd->Owner = NULL;
+      Wnd->spwndOwner = NULL;
       HasOwner = FALSE;
    }
 
-   Wnd->UserData = 0;
+   Wnd->dwUserData = 0;
 
-   Wnd->IsSystem = Wnd->Class->System;
+   Wnd->IsSystem = Wnd->pcls->System;
 
    /* BugBoy Comments: Comment below say that System classes are always created as UNICODE.
       In windows, creating a window with the ANSI version of CreateWindow sets the window
@@ -1745,17 +1745,17 @@ AllocErr:
       No where can I see in code or through testing does the window change back to ANSI
       after being created as UNICODE in ROS. I didnt do more testing to see what problems this would cause.*/
     // See NtUserDefSetText! We convert to Unicode all the time and never use Mix. (jt)
-   if (Wnd->Class->System)
+   if (Wnd->pcls->System)
    {
        /* NOTE: Always create a unicode window for system classes! */
        Wnd->Unicode = TRUE;
-       Wnd->WndProc = Wnd->Class->WndProc;
-       Wnd->WndProcExtra = Wnd->Class->WndProcExtra;
+       Wnd->lpfnWndProc = Wnd->pcls->WndProc;
+       Wnd->WndProcExtra = Wnd->pcls->WndProcExtra;
    }
    else
    {
-       Wnd->Unicode = Wnd->Class->Unicode;
-       Wnd->WndProc = Wnd->Class->WndProc;
+       Wnd->Unicode = Wnd->pcls->Unicode;
+       Wnd->lpfnWndProc = Wnd->pcls->WndProc;
        Wnd->CallProc = NULL;
    }
 
@@ -1764,33 +1764,33 @@ AllocErr:
    Window->LastChild = NULL;
    Window->PrevSibling = NULL;
    Window->NextSibling = NULL;
-   Wnd->ExtraDataSize = Wnd->Class->WndExtra;
+   Wnd->cbwndExtra = Wnd->pcls->WndExtra;
 
    InitializeListHead(&Wnd->PropListHead);
    InitializeListHead(&Window->WndObjListHead);
 
    if ( NULL != WindowName->Buffer && WindowName->Length > 0 )
    {
-      Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
+      Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
                                                 WindowName->Length + sizeof(UNICODE_NULL));
-      if (Wnd->WindowName.Buffer == NULL)
+      if (Wnd->strName.Buffer == NULL)
       {
           SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
           RETURN( (PWINDOW)0);
       }
 
-      Wnd->WindowName.Buffer[WindowName->Length / sizeof(WCHAR)] = L'\0';
+      Wnd->strName.Buffer[WindowName->Length / sizeof(WCHAR)] = L'\0';
       _SEH2_TRY
       {
-          RtlCopyMemory(Wnd->WindowName.Buffer,
+          RtlCopyMemory(Wnd->strName.Buffer,
                         WindowName->Buffer,
                         WindowName->Length);
-          Wnd->WindowName.Length = WindowName->Length;
+          Wnd->strName.Length = WindowName->Length;
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
           WindowName->Length = 0;
-          Wnd->WindowName.Buffer[0] = L'\0';
+          Wnd->strName.Buffer[0] = L'\0';
       }
       _SEH2_END;
    }
@@ -1837,7 +1837,7 @@ AllocErr:
          IntSetMenu(Window, hMenu, &MenuChanged);
       else
       {
-          hMenu = Wnd->Class->hMenu;
+          hMenu = Wnd->pcls->hMenu;
           if (hMenu) IntSetMenu(Window, hMenu, &MenuChanged);
       }
    }
@@ -1848,10 +1848,10 @@ AllocErr:
    InsertTailList (&pti->WindowListHead, &Window->ThreadListEntry);
 
    /*  Handle "CS_CLASSDC", it is tested first. */
-   if ((Wnd->Class->Style & CS_CLASSDC) && !(Wnd->Class->Dce)) // One DCE per class to have CLASS.
-      Wnd->Class->Dce = DceAllocDCE(Window, DCE_CLASS_DC);
+   if ((Wnd->pcls->Style & CS_CLASSDC) && !(Wnd->pcls->Dce)) // One DCE per class to have CLASS.
+      Wnd->pcls->Dce = DceAllocDCE(Window, DCE_CLASS_DC);
    /* Allocate a DCE for this window. */
-   else if ( Wnd->Class->Style & CS_OWNDC)
+   else if ( Wnd->pcls->Style & CS_OWNDC)
       Window->Dce = DceAllocDCE(Window, DCE_WINDOW_DC);
 
    Pos.x = x;
@@ -1860,7 +1860,7 @@ AllocErr:
    Size.cy = nHeight;
 
    Wnd->ExStyle = dwExStyle;
-   Wnd->Style = dwStyle & ~WS_VISIBLE;
+   Wnd->style = dwStyle & ~WS_VISIBLE;
 
    /* call hook */
    Cs.lpCreateParams = lpParam;
@@ -1871,7 +1871,7 @@ AllocErr:
    Cs.cy = Size.cy;
    Cs.x = Pos.x;
    Cs.y = Pos.y;
-   Cs.style = Wnd->Style;
+   Cs.style = Wnd->style;
 //   Cs.lpszName = (LPCWSTR) WindowName->Buffer;
 //   Cs.lpszClass = (LPCWSTR) ClassName->Buffer;
    Cs.lpszName = (LPCWSTR) WindowName;
@@ -1897,7 +1897,7 @@ AllocErr:
 //   hwndInsertAfter = CbtCreate.hwndInsertAfter;
 
    /* default positioning for overlapped windows */
-   if(!(Wnd->Style & (WS_POPUP | WS_CHILD)))
+   if(!(Wnd->style & (WS_POPUP | WS_CHILD)))
    {
       RECTL rc, WorkArea;
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
@@ -1991,16 +1991,16 @@ AllocErr:
    }
 
    /* Initialize the window dimensions. */
-   Wnd->WindowRect.left = Pos.x;
-   Wnd->WindowRect.top = Pos.y;
-   Wnd->WindowRect.right = Pos.x + Size.cx;
-   Wnd->WindowRect.bottom = Pos.y + Size.cy;
-   if (0 != (Wnd->Style & WS_CHILD) && ParentWindow)
+   Wnd->rcWindow.left = Pos.x;
+   Wnd->rcWindow.top = Pos.y;
+   Wnd->rcWindow.right = Pos.x + Size.cx;
+   Wnd->rcWindow.bottom = Pos.y + Size.cy;
+   if (0 != (Wnd->style & WS_CHILD) && ParentWindow)
    {
-      RECTL_vOffsetRect(&(Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
-                       ParentWindow->Wnd->ClientRect.top);
+      RECTL_vOffsetRect(&(Wnd->rcWindow), ParentWindow->Wnd->rcClient.left,
+                       ParentWindow->Wnd->rcClient.top);
    }
-   Wnd->ClientRect = Wnd->WindowRect;
+   Wnd->rcClient = Wnd->rcWindow;
 
    /*
     * Get the size and position of the window.
@@ -2026,16 +2026,16 @@ AllocErr:
          Size.cy = 0;
    }
 
-   Wnd->WindowRect.left = Pos.x;
-   Wnd->WindowRect.top = Pos.y;
-   Wnd->WindowRect.right = Pos.x + Size.cx;
-   Wnd->WindowRect.bottom = Pos.y + Size.cy;
-   if (0 != (Wnd->Style & WS_CHILD) && ParentWindow)
+   Wnd->rcWindow.left = Pos.x;
+   Wnd->rcWindow.top = Pos.y;
+   Wnd->rcWindow.right = Pos.x + Size.cx;
+   Wnd->rcWindow.bottom = Pos.y + Size.cy;
+   if (0 != (Wnd->style & WS_CHILD) && ParentWindow)
    {
-      RECTL_vOffsetRect(&(Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
-                       ParentWindow->Wnd->ClientRect.top);
+      RECTL_vOffsetRect(&(Wnd->rcWindow), ParentWindow->Wnd->rcClient.left,
+                       ParentWindow->Wnd->rcClient.top);
    }
-   Wnd->ClientRect = Wnd->WindowRect;
+   Wnd->rcClient = Wnd->rcWindow;
 
    /* FIXME: Initialize the window menu. */
 
@@ -2057,19 +2057,19 @@ AllocErr:
    }
 
    /* Calculate the non-client size. */
-   MaxPos.x = Window->Wnd->WindowRect.left;
-   MaxPos.y = Window->Wnd->WindowRect.top;
+   MaxPos.x = Window->Wnd->rcWindow.left;
+   MaxPos.y = Window->Wnd->rcWindow.top;
 
 
    DPRINT("IntCreateWindowEx(): About to get non-client size.\n");
    /* WinPosGetNonClientSize SENDS THE WM_NCCALCSIZE message */
    Result = co_WinPosGetNonClientSize(Window,
-                                      &Window->Wnd->WindowRect,
-                                      &Window->Wnd->ClientRect);
+                                      &Window->Wnd->rcWindow,
+                                      &Window->Wnd->rcClient);
 
-   RECTL_vOffsetRect(&Window->Wnd->WindowRect,
-                    MaxPos.x - Window->Wnd->WindowRect.left,
-                    MaxPos.y - Window->Wnd->WindowRect.top);
+   RECTL_vOffsetRect(&Window->Wnd->rcWindow,
+                    MaxPos.x - Window->Wnd->rcWindow.left,
+                    MaxPos.y - Window->Wnd->rcWindow.top);
 
 
    if (NULL != ParentWindow)
@@ -2129,30 +2129,30 @@ AllocErr:
 
       DPRINT("IntCreateWindow(): About to send WM_SIZE\n");
 
-      if ((Window->Wnd->ClientRect.right - Window->Wnd->ClientRect.left) < 0 ||
-            (Window->Wnd->ClientRect.bottom - Window->Wnd->ClientRect.top) < 0)
+      if ((Window->Wnd->rcClient.right - Window->Wnd->rcClient.left) < 0 ||
+            (Window->Wnd->rcClient.bottom - Window->Wnd->rcClient.top) < 0)
       {
          DPRINT("Sending bogus WM_SIZE\n");
       }
 
-      lParam = MAKE_LONG(Window->Wnd->ClientRect.right -
-                         Window->Wnd->ClientRect.left,
-                         Window->Wnd->ClientRect.bottom -
-                         Window->Wnd->ClientRect.top);
+      lParam = MAKE_LONG(Window->Wnd->rcClient.right -
+                         Window->Wnd->rcClient.left,
+                         Window->Wnd->rcClient.bottom -
+                         Window->Wnd->rcClient.top);
       co_IntSendMessage(Window->hSelf, WM_SIZE, SIZE_RESTORED,
                         lParam);
 
       DPRINT("IntCreateWindow(): About to send WM_MOVE\n");
 
-      if (0 != (Wnd->Style & WS_CHILD) && ParentWindow)
+      if (0 != (Wnd->style & WS_CHILD) && ParentWindow)
       {
-         lParam = MAKE_LONG(Wnd->ClientRect.left - ParentWindow->Wnd->ClientRect.left,
-                            Wnd->ClientRect.top - ParentWindow->Wnd->ClientRect.top);
+         lParam = MAKE_LONG(Wnd->rcClient.left - ParentWindow->Wnd->rcClient.left,
+                            Wnd->rcClient.top - ParentWindow->Wnd->rcClient.top);
       }
       else
       {
-         lParam = MAKE_LONG(Wnd->ClientRect.left,
-                            Wnd->ClientRect.top);
+         lParam = MAKE_LONG(Wnd->rcClient.left,
+                            Wnd->rcClient.top);
       }
 
       co_IntSendMessage(Window->hSelf, WM_MOVE, 0, lParam);
@@ -2162,17 +2162,17 @@ AllocErr:
    }
 
    /* Show or maybe minimize or maximize the window. */
-   if (Wnd->Style & (WS_MINIMIZE | WS_MAXIMIZE))
+   if (Wnd->style & (WS_MINIMIZE | WS_MAXIMIZE))
    {
       RECTL NewPos;
       UINT16 SwFlag;
 
-      SwFlag = (Wnd->Style & WS_MINIMIZE) ? SW_MINIMIZE :
+      SwFlag = (Wnd->style & WS_MINIMIZE) ? SW_MINIMIZE :
                SW_MAXIMIZE;
 
       co_WinPosMinMaximize(Window, SwFlag, &NewPos);
 
-      SwFlag = ((Wnd->Style & WS_CHILD) || UserGetActiveWindow()) ?
+      SwFlag = ((Wnd->style & WS_CHILD) || UserGetActiveWindow()) ?
                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
                 SWP_NOZORDER | SWP_FRAMECHANGED;
 
@@ -2183,7 +2183,7 @@ AllocErr:
    }
 
    /* Notify the parent window of a new child. */
-   if ((Wnd->Style & WS_CHILD) &&
+   if ((Wnd->style & WS_CHILD) &&
        (!(Wnd->ExStyle & WS_EX_NOPARENTNOTIFY)) && ParentWindow)
    {
       DPRINT("IntCreateWindow(): About to notify parent\n");
@@ -2204,20 +2204,20 @@ AllocErr:
    }
 
    /* Initialize and show the window's scrollbars */
-   if (Wnd->Style & WS_VSCROLL)
+   if (Wnd->style & WS_VSCROLL)
    {
       co_UserShowScrollBar(Window, SB_VERT, TRUE);
    }
-   if (Wnd->Style & WS_HSCROLL)
+   if (Wnd->style & WS_HSCROLL)
    {
       co_UserShowScrollBar(Window, SB_HORZ, TRUE);
    }
 
    if (dwStyle & WS_VISIBLE)
    {
-      if (Wnd->Style & WS_MAXIMIZE)
+      if (Wnd->style & WS_MAXIMIZE)
          dwShowMode = SW_SHOW;
-      else if (Wnd->Style & WS_MINIMIZE)
+      else if (Wnd->style & WS_MINIMIZE)
          dwShowMode = SW_SHOWMINIMIZED;
 
       DPRINT("IntCreateWindow(): About to show window\n");
@@ -2237,8 +2237,8 @@ AllocErr:
    if (ClassAtom == gpsi->atomSysClass[ICLS_EDIT])
    {
       PCALLPROC CallProc;
-      //CallProc = CreateCallProc(NULL, Wnd->WndProc, bUnicodeWindow, Wnd->ti->ppi);
-      CallProc = CreateCallProc(NULL, Wnd->WndProc, Wnd->Unicode , Wnd->ti->ppi);
+      //CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, bUnicodeWindow, Wnd->ti->ppi);
+      CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, Wnd->Unicode , Wnd->ti->ppi);
 
       if (!CallProc)
       {
@@ -2247,7 +2247,7 @@ AllocErr:
       }
       else
       {
-         UserAddCallProcToClass(Wnd->Class, CallProc);
+         UserAddCallProcToClass(Wnd->pcls, CallProc);
          Wnd->CallProc = CallProc;
          Wnd->IsSystem = FALSE;
       }
@@ -2447,7 +2447,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    IntDereferenceMessageQueue(Window->MessageQueue);
 
    IntEngWindowChanged(Window, WOC_DELETE);
-   isChild = (0 != (Wnd->Style & WS_CHILD));
+   isChild = (0 != (Wnd->style & WS_CHILD));
 
 #if 0 /* FIXME */
 
@@ -2510,7 +2510,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
                if (Child->hOwner != NULL)
                {
                   Child->hOwner = NULL;
-                  Child->Wnd->Owner = NULL;
+                  Child->Wnd->spwndOwner = NULL;
                }
 
             }
@@ -2655,8 +2655,8 @@ IntFindWindow(PWINDOW_OBJECT Parent,
          /* Do not send WM_GETTEXT messages in the kernel mode version!
             The user mode version however calls GetWindowText() which will
             send WM_GETTEXT messages to windows belonging to its processes */
-         if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->Wnd->WindowName), TRUE)) &&
-               (!ClassAtom || Child->Wnd->Class->Atom == ClassAtom))
+         if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->Wnd->strName), TRUE)) &&
+               (!ClassAtom || Child->Wnd->pcls->Atom == ClassAtom))
          {
             Ret = Child->hSelf;
             break;
@@ -2827,9 +2827,9 @@ NtUserFindWindowEx(HWND hwndParent,
                    The user mode version however calls GetWindowText() which will
                    send WM_GETTEXT messages to windows belonging to its processes */
                 WindowMatches = !CheckWindowName || !RtlCompareUnicodeString(
-                                   &WindowName, &TopLevelWindow->Wnd->WindowName, TRUE);
+                                   &WindowName, &TopLevelWindow->Wnd->strName, TRUE);
                 ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
-                               ClassAtom == TopLevelWindow->Wnd->Class->Atom;
+                               ClassAtom == TopLevelWindow->Wnd->pcls->Atom;
 
                 if (WindowMatches && ClassMatches)
                 {
@@ -3596,7 +3596,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
    if ((INT)Index >= 0)
    {
-      if ((Index + sizeof(LONG)) > Window->Wnd->ExtraDataSize)
+      if ((Index + sizeof(LONG)) > Window->Wnd->cbwndExtra)
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return 0;
@@ -3612,7 +3612,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
             break;
 
          case GWL_STYLE:
-            Result = Wnd->Style;
+            Result = Wnd->style;
             break;
 
          case GWL_WNDPROC:
@@ -3621,7 +3621,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
             break;
 
          case GWL_HINSTANCE:
-            Result = (LONG) Wnd->Instance;
+            Result = (LONG) Wnd->hModule;
             break;
 
          case GWL_HWNDPARENT:
@@ -3640,7 +3640,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
             break;
 
          case GWL_USERDATA:
-            Result = Wnd->UserData;
+            Result = Wnd->dwUserData;
             break;
 
          default:
@@ -3709,23 +3709,23 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
     /* attempt to get the previous window proc */
     if (Wnd->IsSystem)
     {
-        Ret = (Ansi ? Wnd->WndProcExtra : Wnd->WndProc);
+        Ret = (Ansi ? Wnd->WndProcExtra : Wnd->lpfnWndProc);
     }
     else
     {
         if (!Ansi == Wnd->Unicode)
         {
-            Ret = Wnd->WndProc;
+            Ret = Wnd->lpfnWndProc;
         }
         else
         {
-            CallProc = UserFindCallProc(Wnd->Class,
-                                        Wnd->WndProc,
+            CallProc = UserFindCallProc(Wnd->pcls,
+                                        Wnd->lpfnWndProc,
                                         Wnd->Unicode);
             if (CallProc == NULL)
             {
                 CallProc = CreateCallProc(NULL,
-                                          Wnd->WndProc,
+                                          Wnd->lpfnWndProc,
                                           Wnd->Unicode,
                                           Wnd->ti->ppi);
                 if (CallProc == NULL)
@@ -3734,13 +3734,13 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                     return NULL;
                 }
 
-                UserAddCallProcToClass(Wnd->Class,
+                UserAddCallProcToClass(Wnd->pcls,
                                        CallProc);
             }
             /* BugBoy Comments: Added this if else, see below comments */
             if (!Wnd->CallProc)
             {
-               Ret = Wnd->WndProc;
+               Ret = Wnd->lpfnWndProc;
             }
             else
             {
@@ -3756,17 +3756,17 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
         }
     }
 
-    if (Wnd->Class->System)
+    if (Wnd->pcls->System)
     {
         /* check if the new procedure matches with the one in the
            window class. If so, we need to restore both procedures! */
-        Wnd->IsSystem = (NewWndProc == Wnd->Class->WndProc ||
-                         NewWndProc == Wnd->Class->WndProcExtra);
+        Wnd->IsSystem = (NewWndProc == Wnd->pcls->WndProc ||
+                         NewWndProc == Wnd->pcls->WndProcExtra);
 
         if (Wnd->IsSystem)
         {
-            Wnd->WndProc = Wnd->Class->WndProc;
-            Wnd->WndProcExtra = Wnd->Class->WndProcExtra;
+            Wnd->lpfnWndProc = Wnd->pcls->WndProc;
+            Wnd->WndProcExtra = Wnd->pcls->WndProcExtra;
             Wnd->Unicode = !Ansi;
             return Ret;
         }
@@ -3775,7 +3775,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
     ASSERT(!Wnd->IsSystem);
 
     /* update the window procedure */
-    Wnd->WndProc = NewWndProc;
+    Wnd->lpfnWndProc = NewWndProc;
     Wnd->Unicode = !Ansi;
 
     return Ret;
@@ -3808,7 +3808,7 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
    if ((INT)Index >= 0)
    {
-      if ((Index + sizeof(LONG)) > Wnd->ExtraDataSize)
+      if ((Index + sizeof(LONG)) > Wnd->cbwndExtra)
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return( 0);
@@ -3841,11 +3841,11 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             break;
 
          case GWL_STYLE:
-            OldValue = (LONG) Wnd->Style;
+            OldValue = (LONG) Wnd->style;
             Style.styleOld = OldValue;
             Style.styleNew = NewValue;
             co_IntSendMessage(hWnd, WM_STYLECHANGING, GWL_STYLE, (LPARAM) &Style);
-            Wnd->Style = (DWORD)Style.styleNew;
+            Wnd->style = (DWORD)Style.styleNew;
             co_IntSendMessage(hWnd, WM_STYLECHANGED, GWL_STYLE, (LPARAM) &Style);
             break;
 
@@ -3859,8 +3859,8 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
          }
 
          case GWL_HINSTANCE:
-            OldValue = (LONG) Wnd->Instance;
-            Wnd->Instance = (HINSTANCE) NewValue;
+            OldValue = (LONG) Wnd->hModule;
+            Wnd->hModule = (HINSTANCE) NewValue;
             break;
 
          case GWL_HWNDPARENT:
@@ -3877,8 +3877,8 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             break;
 
          case GWL_USERDATA:
-            OldValue = Wnd->UserData;
-            Wnd->UserData = NewValue;
+            OldValue = Wnd->dwUserData;
+            Wnd->dwUserData = NewValue;
             break;
 
          default:
@@ -3959,7 +3959,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
          }
    }
 
-   if (Index > Window->Wnd->ExtraDataSize - sizeof(WORD))
+   if (Index > Window->Wnd->cbwndExtra - sizeof(WORD))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       RETURN( 0);
@@ -4011,29 +4011,29 @@ NtUserGetWindowPlacement(HWND hWnd,
    }
 
    Safepl.flags = 0;
-   if (0 == (Wnd->Style & WS_VISIBLE))
+   if (0 == (Wnd->style & WS_VISIBLE))
    {
       Safepl.showCmd = SW_HIDE;
    }
    else if ((0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
-            0 != (Wnd->Style & WS_MAXIMIZE)) &&
-            0 == (Wnd->Style & WS_MINIMIZE))
+            0 != (Wnd->style & WS_MAXIMIZE)) &&
+            0 == (Wnd->style & WS_MINIMIZE))
    {
       Safepl.showCmd = SW_SHOWMAXIMIZED;
    }
-   else if (0 != (Wnd->Style & WS_MINIMIZE))
+   else if (0 != (Wnd->style & WS_MINIMIZE))
    {
       Safepl.showCmd = SW_SHOWMINIMIZED;
    }
-   else if (0 != (Wnd->Style & WS_VISIBLE))
+   else if (0 != (Wnd->style & WS_VISIBLE))
    {
       Safepl.showCmd = SW_SHOWNORMAL;
    }
 
-   Size.x = Wnd->WindowRect.left;
-   Size.y = Wnd->WindowRect.top;
+   Size.x = Wnd->rcWindow.left;
+   Size.y = Wnd->rcWindow.top;
    WinPosInitInternalPos(Window, &Size,
-                         &Wnd->WindowRect);
+                         &Wnd->rcWindow);
 
    Safepl.rcNormalPosition = Wnd->InternalPos.NormalRect;
    Safepl.ptMinPosition = Wnd->InternalPos.IconPos;
@@ -4327,14 +4327,14 @@ NtUserSetWindowFNID(HWND hWnd,
    }
    Wnd = Window->Wnd;
 
-   if (Wnd->Class)
+   if (Wnd->pcls)
    {  // From user land we only set these.
       if ((fnID != FNID_DESTROY) || ((fnID < FNID_BUTTON) && (fnID > FNID_IME)) )
       {
          RETURN( FALSE);
       }
       else
-         Wnd->Class->fnID |= fnID;
+         Wnd->pcls->fnID |= fnID;
    }
    RETURN( TRUE);
 
@@ -4381,7 +4381,7 @@ NtUserSetWindowPlacement(HWND hWnd,
 
    UserRefObjectCo(Window, &Ref);
 
-   if ((Wnd->Style & (WS_MAXIMIZE | WS_MINIMIZE)) == 0)
+   if ((Wnd->style & (WS_MAXIMIZE | WS_MINIMIZE)) == 0)
    {
       co_WinPosSetWindowPos(Window, NULL,
                             Safepl.rcNormalPosition.left, Safepl.rcNormalPosition.top,
@@ -4483,10 +4483,10 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    Wnd = Window->Wnd;
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
-   NtGdiOffsetRgn(VisRgn, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
+   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+   NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
-   if(Window->WindowRegion && !(Wnd->Style & WS_MINIMIZE))
+   if(Window->WindowRegion && !(Wnd->style & WS_MINIMIZE))
       NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
    /* Copy the region into hRgn */
    NtGdiCombineRgn(hRgn, VisRgn, NULL, RGN_COPY);
@@ -4524,10 +4524,10 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECTL *Rect)
    Wnd = Window->Wnd;
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
-   NtGdiOffsetRgn(VisRgn, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
+   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->rcWindow);
+   NtGdiOffsetRgn(VisRgn, -Window->Wnd->rcWindow.left, -Window->Wnd->rcWindow.top);
    /* if there's a region assigned to the window, combine them both */
-   if(Window->WindowRegion && !(Wnd->Style & WS_MINIMIZE))
+   if(Window->WindowRegion && !(Wnd->style & WS_MINIMIZE))
       NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
 
    if((pRgn = REGION_LockRgn(VisRgn)))
@@ -4798,38 +4798,38 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
 
    if (UnicodeString.Length != 0)
    {
-      if (Wnd->WindowName.MaximumLength > 0 &&
-          UnicodeString.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
+      if (Wnd->strName.MaximumLength > 0 &&
+          UnicodeString.Length <= Wnd->strName.MaximumLength - sizeof(UNICODE_NULL))
       {
-         ASSERT(Wnd->WindowName.Buffer != NULL);
+         ASSERT(Wnd->strName.Buffer != NULL);
 
-         Wnd->WindowName.Length = UnicodeString.Length;
-         Wnd->WindowName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
-         RtlCopyMemory(Wnd->WindowName.Buffer,
+         Wnd->strName.Length = UnicodeString.Length;
+         Wnd->strName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
+         RtlCopyMemory(Wnd->strName.Buffer,
                               UnicodeString.Buffer,
                               UnicodeString.Length);
       }
       else
       {
          PWCHAR buf;
-         Wnd->WindowName.MaximumLength = Wnd->WindowName.Length = 0;
-         buf = Wnd->WindowName.Buffer;
-         Wnd->WindowName.Buffer = NULL;
+         Wnd->strName.MaximumLength = Wnd->strName.Length = 0;
+         buf = Wnd->strName.Buffer;
+         Wnd->strName.Buffer = NULL;
          if (buf != NULL)
          {
             DesktopHeapFree(Wnd->pdesktop, buf);
          }
 
-         Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
+         Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
                                                    UnicodeString.Length + sizeof(UNICODE_NULL));
-         if (Wnd->WindowName.Buffer != NULL)
+         if (Wnd->strName.Buffer != NULL)
          {
-            Wnd->WindowName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
-            RtlCopyMemory(Wnd->WindowName.Buffer,
+            Wnd->strName.Buffer[UnicodeString.Length / sizeof(WCHAR)] = L'\0';
+            RtlCopyMemory(Wnd->strName.Buffer,
                                  UnicodeString.Buffer,
                                  UnicodeString.Length);
-            Wnd->WindowName.MaximumLength = UnicodeString.Length + sizeof(UNICODE_NULL);
-            Wnd->WindowName.Length = UnicodeString.Length;
+            Wnd->strName.MaximumLength = UnicodeString.Length + sizeof(UNICODE_NULL);
+            Wnd->strName.Length = UnicodeString.Length;
          }
          else
          {
@@ -4841,9 +4841,9 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
    }
    else
    {
-      Wnd->WindowName.Length = 0;
-      if (Wnd->WindowName.Buffer != NULL)
-          Wnd->WindowName.Buffer[0] = L'\0';
+      Wnd->strName.Length = 0;
+      if (Wnd->strName.Buffer != NULL)
+          Wnd->strName.Buffer[0] = L'\0';
    }
 
    // HAX! FIXME! Windows does not do this in here!
@@ -4894,7 +4894,7 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
    }
    Wnd = Window->Wnd;
 
-   Result = Wnd->WindowName.Length / sizeof(WCHAR);
+   Result = Wnd->strName.Length / sizeof(WCHAR);
    if(lpString)
    {
       const WCHAR Terminator = L'\0';
@@ -4904,7 +4904,7 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
       Copy = min(nMaxCount - 1, Result);
       if(Copy > 0)
       {
-         Status = MmCopyToCaller(Buffer, Wnd->WindowName.Buffer, Copy * sizeof(WCHAR));
+         Status = MmCopyToCaller(Buffer, Wnd->strName.Buffer, Copy * sizeof(WCHAR));
          if(!NT_SUCCESS(Status))
          {
             SetLastNtError(Status);
@@ -4971,7 +4971,7 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
       }
       else
       {
-         if (pWnd->Wnd->Style & WS_VISIBLE)
+         if (pWnd->Wnd->style & WS_VISIBLE)
          {
             /* In Windows, ShowOwnedPopups(FALSE) generates
              * WM_SHOWWINDOW messages with SW_PARENTCLOSING,

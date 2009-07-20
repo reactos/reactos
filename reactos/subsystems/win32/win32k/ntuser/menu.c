@@ -1335,13 +1335,13 @@ intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
 
         bti->rgstate[0] = STATE_SYSTEM_FOCUSABLE;
 
-        dwStyle = pWindowObject->Wnd->Style;
+        dwStyle = pWindowObject->Wnd->style;
         dwExStyle = pWindowObject->Wnd->ExStyle;
 
         bti->rcTitleBar.top  = 0;
         bti->rcTitleBar.left = 0;
-        bti->rcTitleBar.right  = pWindowObject->Wnd->WindowRect.right - pWindowObject->Wnd->WindowRect.left;
-        bti->rcTitleBar.bottom = pWindowObject->Wnd->WindowRect.bottom - pWindowObject->Wnd->WindowRect.top;
+        bti->rcTitleBar.right  = pWindowObject->Wnd->rcWindow.right - pWindowObject->Wnd->rcWindow.left;
+        bti->rcTitleBar.bottom = pWindowObject->Wnd->rcWindow.bottom - pWindowObject->Wnd->rcWindow.top;
 
         /* is it iconiced ? */ 
         if ((dwStyle & WS_ICONIC)!=WS_ICONIC)
@@ -1382,9 +1382,9 @@ intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
             }
         }
 
-        bti->rcTitleBar.top += pWindowObject->Wnd->WindowRect.top;
-        bti->rcTitleBar.left += pWindowObject->Wnd->WindowRect.left;
-        bti->rcTitleBar.right += pWindowObject->Wnd->WindowRect.left;
+        bti->rcTitleBar.top += pWindowObject->Wnd->rcWindow.top;
+        bti->rcTitleBar.left += pWindowObject->Wnd->rcWindow.left;
+        bti->rcTitleBar.right += pWindowObject->Wnd->rcWindow.left;
 
         bti->rcTitleBar.bottom = bti->rcTitleBar.top;
         if (dwExStyle & WS_EX_TOOLWINDOW)
@@ -1425,7 +1425,7 @@ intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
                 {
                     bti->rgstate[4] = STATE_SYSTEM_INVISIBLE;
                 }
-                if (pWindowObject->Wnd->Class->Style & CS_NOCLOSE)
+                if (pWindowObject->Wnd->pcls->Style & CS_NOCLOSE)
                 {
                     bti->rgstate[5] = STATE_SYSTEM_UNAVAILABLE;
                 }
@@ -2122,13 +2122,13 @@ NtUserGetMenuItemRect(
 
    if(MenuItem->fType & MF_POPUP)
    {
-     XMove = ReferenceWnd->Wnd->ClientRect.left;
-     YMove = ReferenceWnd->Wnd->ClientRect.top;
+     XMove = ReferenceWnd->Wnd->rcClient.left;
+     YMove = ReferenceWnd->Wnd->rcClient.top;
    }
    else
    {
-     XMove = ReferenceWnd->Wnd->WindowRect.left;
-     YMove = ReferenceWnd->Wnd->WindowRect.top;
+     XMove = ReferenceWnd->Wnd->rcWindow.left;
+     YMove = ReferenceWnd->Wnd->rcWindow.top;
    }
 
    Rect.left   += XMove;
@@ -2309,8 +2309,8 @@ NtUserMenuItemFromPoint(
       RETURN( -1);
    }
 
-   X -= Window->Wnd->WindowRect.left;
-   Y -= Window->Wnd->WindowRect.top;
+   X -= Window->Wnd->rcWindow.left;
+   Y -= Window->Wnd->rcWindow.top;
 
    mi = Menu->MenuItemList;
    for (i = 0; NULL != mi; i++)

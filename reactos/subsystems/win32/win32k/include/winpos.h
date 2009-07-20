@@ -8,13 +8,13 @@
 #define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000140)
 
 #define IntPtInWindow(WndObject,x,y) \
-  ((x) >= (WndObject)->Wnd->WindowRect.left && \
-   (x) < (WndObject)->Wnd->WindowRect.right && \
-   (y) >= (WndObject)->Wnd->WindowRect.top && \
-   (y) < (WndObject)->Wnd->WindowRect.bottom && \
-   (!(WndObject)->WindowRegion || ((WndObject)->Wnd->Style & WS_MINIMIZE) || \
-    NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->Wnd->WindowRect.left), \
-                    (INT)((y) - (WndObject)->Wnd->WindowRect.top))))
+  ((x) >= (WndObject)->Wnd->rcWindow.left && \
+   (x) < (WndObject)->Wnd->rcWindow.right && \
+   (y) >= (WndObject)->Wnd->rcWindow.top && \
+   (y) < (WndObject)->Wnd->rcWindow.bottom && \
+   (!(WndObject)->WindowRegion || ((WndObject)->Wnd->style & WS_MINIMIZE) || \
+    NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->Wnd->rcWindow.left), \
+                    (INT)((y) - (WndObject)->Wnd->rcWindow.top))))
 
 UINT
 FASTCALL co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent);

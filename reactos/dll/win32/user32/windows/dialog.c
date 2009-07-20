@@ -153,7 +153,7 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
     {
         pWindow = ValidateHwnd( hWnd );
 
-        if (pWindow && pWindow->ExtraDataSize >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
+        if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
         {
             if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
                 return NULL;

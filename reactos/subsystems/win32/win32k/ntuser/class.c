@@ -2169,11 +2169,11 @@ NtUserGetClassLong(IN HWND hWnd,
     Window = UserGetWindowObject(hWnd);
     if (Window != NULL)
     {
-        Ret = UserGetClassLongPtr(Window->Wnd->Class,
+        Ret = UserGetClassLongPtr(Window->Wnd->pcls,
                                   Offset,
                                   Ansi);
 
-        if (Ret != 0 && Offset == GCLP_MENUNAME && Window->Wnd->Class->MenuNameIsString)
+        if (Ret != 0 && Offset == GCLP_MENUNAME && Window->Wnd->pcls->MenuNameIsString)
         {
             Ret = (ULONG_PTR)UserHeapAddressToUser((PVOID)Ret);
         }
@@ -2247,7 +2247,7 @@ InvalidParameter:
                 dwNewLong = (ULONG_PTR)&Value;
             }
 
-            Ret = UserSetClassLongPtr(Window->Wnd->Class,
+            Ret = UserSetClassLongPtr(Window->Wnd->pcls,
                                       Offset,
                                       dwNewLong,
                                       Ansi);
@@ -2458,7 +2458,7 @@ NtUserGetClassName (IN HWND hWnd,
             CapturedClassName = *ClassName;
 
             /* get the class name */
-            Ret = UserGetClassName(Window->Wnd->Class,
+            Ret = UserGetClassName(Window->Wnd->pcls,
                                    &CapturedClassName,
                                    Ansi);
 

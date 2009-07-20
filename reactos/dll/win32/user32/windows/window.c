@@ -850,8 +850,8 @@ GetAncestor(HWND hwnd, UINT gaFlags)
         switch (gaFlags)
         {
             case GA_PARENT:
-                if (Wnd->Parent != NULL)
-                    Ancestor = DesktopPtrToUser(Wnd->Parent);
+                if (Wnd->spwndParent != NULL)
+                    Ancestor = DesktopPtrToUser(Wnd->spwndParent);
                 break;
 
             default:
@@ -887,8 +887,8 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
     if (Wnd != NULL)
     {
         lpRect->left = lpRect->top = 0;
-        lpRect->right = Wnd->ClientRect.right - Wnd->ClientRect.left;
-        lpRect->bottom = Wnd->ClientRect.bottom - Wnd->ClientRect.top;
+        lpRect->right = Wnd->rcClient.right - Wnd->rcClient.left;
+        lpRect->bottom = Wnd->rcClient.bottom - Wnd->rcClient.top;
         return TRUE;
     }
 
@@ -938,15 +938,15 @@ GetParent(HWND hWnd)
         _SEH2_TRY
         {
             WndParent = NULL;
-            if (Wnd->Style & WS_CHILD)
+            if (Wnd->style & WS_CHILD)
             {
-                if (Wnd->Parent != NULL)
-                    WndParent = DesktopPtrToUser(Wnd->Parent);
+                if (Wnd->spwndParent != NULL)
+                    WndParent = DesktopPtrToUser(Wnd->spwndParent);
             }
-            else if (Wnd->Style & WS_POPUP)
+            else if (Wnd->style & WS_POPUP)
             {
-                if (Wnd->Owner != NULL)
-                    WndParent = DesktopPtrToUser(Wnd->Owner);
+                if (Wnd->spwndOwner != NULL)
+                    WndParent = DesktopPtrToUser(Wnd->spwndOwner);
             }
 
             if (WndParent != NULL)
@@ -1002,8 +1002,8 @@ GetWindow(HWND hWnd,
         switch (uCmd)
         {
             case GW_OWNER:
-                if (Wnd->Owner != NULL)
-                    FoundWnd = DesktopPtrToUser(Wnd->Owner);
+                if (Wnd->spwndOwner != NULL)
+                    FoundWnd = DesktopPtrToUser(Wnd->spwndOwner);
                 break;
 
             default:
@@ -1099,7 +1099,7 @@ GetWindowRect(HWND hWnd,
 
     if (Wnd != NULL)
     {
-        *lpRect = Wnd->WindowRect;
+        *lpRect = Wnd->rcWindow;
         return TRUE;
     }
 
@@ -1131,10 +1131,10 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
             if (nMaxCount > 0)
             {
                 /* do not send WM_GETTEXT messages to other processes */
-                Length = Wnd->WindowName.Length / sizeof(WCHAR);
+                Length = Wnd->strName.Length / sizeof(WCHAR);
                 if (Length != 0)
                 {
-                    Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                    Buffer = DesktopPtrToUser(Wnd->strName.Buffer);
                     if (Buffer != NULL)
                     {
                         if (!WideCharToMultiByte(CP_ACP,
@@ -1221,10 +1221,10 @@ GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
             if (nMaxCount > 0)
             {
                 /* do not send WM_GETTEXT messages to other processes */
-                Length = Wnd->WindowName.Length / sizeof(WCHAR);
+                Length = Wnd->strName.Length / sizeof(WCHAR);
                 if (Length != 0)
                 {
-                    Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                    Buffer = DesktopPtrToUser(Wnd->strName.Buffer);
                     if (Buffer != NULL)
                     {
                         RtlCopyMemory(lpString,
@@ -1312,9 +1312,9 @@ IsChild(HWND hWndParent,
     {
         while (Wnd != NULL)
         {
-            if (Wnd->Parent != NULL)
+            if (Wnd->spwndParent != NULL)
             {
-                Wnd = DesktopPtrToUser(Wnd->Parent);
+                Wnd = DesktopPtrToUser(Wnd->spwndParent);
                 if (Wnd == WndParent)
                 {
                     Ret = TRUE;
@@ -1344,7 +1344,7 @@ IsIconic(HWND hWnd)
     PWINDOW Wnd = ValidateHwnd(hWnd);
 
     if (Wnd != NULL)
-        return (Wnd->Style & WS_MINIMIZE) != 0;
+        return (Wnd->style & WS_MINIMIZE) != 0;
 
     return FALSE;
 }
@@ -1399,14 +1399,14 @@ IsWindowVisible(HWND hWnd)
 
             do
             {
-                if (!(Wnd->Style & WS_VISIBLE))
+                if (!(Wnd->style & WS_VISIBLE))
                 {
                     Ret = FALSE;
                     break;
                 }
 
-                if (Wnd->Parent != NULL)
-                    Wnd = DesktopPtrToUser(Wnd->Parent);
+                if (Wnd->spwndParent != NULL)
+                    Wnd = DesktopPtrToUser(Wnd->spwndParent);
                 else
                     break;
 
@@ -1690,8 +1690,8 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
     if (!ToWnd)
         return 0;
 
-    Delta.x = FromWnd->ClientRect.left - ToWnd->ClientRect.left;
-    Delta.y = FromWnd->ClientRect.top - ToWnd->ClientRect.top;
+    Delta.x = FromWnd->rcClient.left - ToWnd->rcClient.left;
+    Delta.y = FromWnd->rcClient.top - ToWnd->rcClient.top;
 
     for (i = 0; i != cPoints; i++)
     {
@@ -1717,8 +1717,8 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 
     DesktopWnd = GetThreadDesktopWnd();
 
-    lpPoint->x += DesktopWnd->ClientRect.left - Wnd->ClientRect.left;
-    lpPoint->y += DesktopWnd->ClientRect.top - Wnd->ClientRect.top;
+    lpPoint->x += DesktopWnd->rcClient.left - Wnd->rcClient.left;
+    lpPoint->y += DesktopWnd->rcClient.top - Wnd->rcClient.top;
 
     return TRUE;
 }
@@ -1738,8 +1738,8 @@ ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 
     DesktopWnd = GetThreadDesktopWnd();
 
-    lpPoint->x += Wnd->ClientRect.left - DesktopWnd->ClientRect.left;
-    lpPoint->y += Wnd->ClientRect.top - DesktopWnd->ClientRect.top;
+    lpPoint->x += Wnd->rcClient.left - DesktopWnd->rcClient.left;
+    lpPoint->y += Wnd->rcClient.top - DesktopWnd->rcClient.top;
 
     return TRUE;
 }

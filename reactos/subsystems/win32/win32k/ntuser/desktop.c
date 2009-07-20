@@ -694,7 +694,7 @@ IntHideDesktop(PDESKTOP Desktop)
       return ERROR_INVALID_WINDOW_HANDLE;
    }
    DesktopWnd = DesktopWindow->Wnd;
-   DesktopWnd->Style &= ~WS_VISIBLE;
+   DesktopWnd->style &= ~WS_VISIBLE;
 
    return STATUS_SUCCESS;
 #endif
@@ -1498,7 +1498,7 @@ NtUserPaintDesktop(HDC hDC)
       RETURN(FALSE);
    }
 
-   DesktopBrush = (HBRUSH)UserGetClassLongPtr(WndDesktop->Wnd->Class, GCL_HBRBACKGROUND, FALSE);
+   DesktopBrush = (HBRUSH)UserGetClassLongPtr(WndDesktop->Wnd->pcls, GCL_HBRBACKGROUND, FALSE);
 
 
    /*
@@ -1517,8 +1517,8 @@ NtUserPaintDesktop(HDC hDC)
          int x, y;
          HDC hWallpaperDC;
 
-         sz.cx = DeskWin->Wnd->WindowRect.right - DeskWin->Wnd->WindowRect.left;
-         sz.cy = DeskWin->Wnd->WindowRect.bottom - DeskWin->Wnd->WindowRect.top;
+         sz.cx = DeskWin->Wnd->rcWindow.right - DeskWin->Wnd->rcWindow.left;
+         sz.cy = DeskWin->Wnd->rcWindow.bottom - DeskWin->Wnd->rcWindow.top;
 
          if (WinSta->WallpaperMode == wmStretch ||
              WinSta->WallpaperMode == wmTile)

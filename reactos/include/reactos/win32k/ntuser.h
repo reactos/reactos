@@ -137,13 +137,100 @@ typedef struct _WINDOWCLASS
 } WINDOWCLASS, *PWINDOWCLASS;
 
 
-// Flags !Not Implemented!
-#define WNDF_CALLPROC 0x0004 // Call proc inside win32k.
+// State Flags !Not Implemented!
+#define WNDS_HASMENU                 0X00000001
+#define WNDS_HASVERTICALSCROOLLBAR   0X00000002
+#define WNDS_HASHORIZONTALSCROLLBAR  0X00000004
+#define WNDS_HASCAPTION              0X00000008
+#define WNDS_SENDSIZEMOVEMSGS        0X00000010
+#define WNDS_MSGBOX                  0X00000020
+#define WNDS_ACTIVEFRAME             0X00000040
+#define WNDS_HASSPB                  0X00000080
+#define WNDS_NONCPAINT               0X00000100
+#define WNDS_SENDERASEBACKGROUND     0X00000200
+#define WNDS_ERASEBACKGROUND         0X00000400
+#define WNDS_SENDNCPAINT             0X00000800
+#define WNDS_INTERNALPAINT           0X00001000
+#define WNDS_UPDATEDIRTY             0X00002000
+#define WNDS_HIDDENPOPUP             0X00004000
+#define WNDS_FORCEMENUDRAW           0X00008000
+#define WNDS_DIALOGWINDOW            0X00010000
+#define WNDS_HASCREATESTRUCTNAME     0X00020000
+#define WNDS_SERVERSIDEWINDOWPROC    0x00040000 // Call proc inside win32k.
+#define WNDS_ANSIWINDOWPROC          0x00080000
+#define WNDS_BEGINGACTIVATED         0x00100000
+#define WNDS_HASPALETTE              0x00200000
+#define WNDS_PAINTNOTPROCESSED       0x00400000
+#define WNDS_SYNCPAINTPENDING        0x00800000
+#define WNDS_RECIEVEDQUERYSUSPENDMSG 0x01000000
+#define WNDS_RECIEVEDSUSPENDMSG      0x02000000
+#define WNDS_TOGGLETOPMOST           0x04000000
+#define WNDS_REDRAWIFHUNG            0x08000000
+#define WNDS_REDRAWFRAMEIFHUNG       0x10000000
+#define WNDS_ANSICREATOR             0x20000000
+#define WNDS_MAXIMIZESTOMONITOR      0x40000000
+#define WNDS_DESTROYED               0x80000000
+
+// State2 Flags !Not Implemented!
+#define WNDS2_WMPAINTSENT               0X00000001
+#define WNDS2_ENDPAINTINVALIDATE        0X00000002
+#define WNDS2_STARTPAINT                0X00000004
+#define WNDS2_OLDUI                     0X00000008
+#define WNDS2_HASCLIENTEDGE             0X00000010
+#define WNDS2_BOTTOMMOST                0X00000020
+#define WNDS2_FULLSCREEN                0X00000040
+#define WNDS2_INDESTROY                 0X00000080
+#define WNDS2_WIN31COMPAT               0X00000100
+#define WNDS2_WIN40COMPAT               0X00000200
+#define WNDS2_WIN50COMPAT               0X00000400
+#define WNDS2_MAXIMIZEDMONITORREGION    0X00000800
+#define WNDS2_CLOSEBUTTONDOWN           0X00001000
+#define WNDS2_MAXIMIZEBUTTONDOWN        0X00002000
+#define WNDS2_MINIMIZEBUTTONDOWN        0X00004000
+#define WNDS2_HELPBUTTONDOWN            0X00008000
+#define WNDS2_SCROLLBARLINEUPBTNDOWN    0X00010000
+#define WNDS2_SCROLLBARPAGEUPBTNDOWN    0X00020000
+#define WNDS2_SCROLLBARPAGEDOWNBTNDOWN  0X00040000
+#define WNDS2_SCROLLBARLINEDOWNBTNDOWN  0X00080000
+#define WNDS2_ANYSCROLLBUTTONDOWN       0X00100000
+#define WNDS2_SCROLLBARVERTICALTRACKING 0X00200000
+#define WNDS2_FORCENCPAINT              0X00400000
+#define WNDS2_FORCEFULLNCPAINTCLIPRGN   0X00800000
+#define WNDS2_FULLSCREENMODE            0X01000000
+#define WNDS2_CAPTIONTEXTTRUNCATED      0X08000000
+#define WNDS2_NOMINMAXANIMATERECTS      0X10000000
+#define WNDS2_SMALLICONFROMWMQUERYDRAG  0X20000000
+#define WNDS2_SHELLHOOKREGISTERED       0X40000000
+#define WNDS2_WMCREATEMSGPROCESSED      0X80000000
+
+/* Non SDK ExStyles */
+#define WS_EX_MAKEVISIBLEWHENUNGHOSTED 0x00000800
+#define WS_EX_UISTATEACTIVE            0x04000000
+#define WS_EX_REDIRECTED               0X20000000
+#define WS_EX_UISTATEKBACCELHIDDEN     0X40000000
+#define WS_EX_UISTATEFOCUSRECTHIDDEN   0X80000000
+
+/* Non SDK Styles */
+#define WS_MAXIMIZED  0X01000000
+#define WS_MINIMIZED  0X20000000
+
+/* ExStyles2 */
+#define WS_EX2_CLIPBOARDLISTENER        0X00000001
+#define WS_EX2_LAYEREDINVALIDATE        0X00000002
+#define WS_EX2_REDIRECTEDFORPRINT       0X00000004
+#define WS_EX2_LINKED                   0X00000008
+#define WS_EX2_LAYEREDFORDWM            0X00000010
+#define WS_EX2_LAYEREDLIMBO             0X00000020
+#define WS_EX2_HIGHTDPI_UNAWAR          0X00000040
+#define WS_EX2_VERTICALLYMAXIMIZEDLEFT  0X00000080
+#define WS_EX2_VERTICALLYMAXIMIZEDRIGHT 0X00000100
+#define WS_EX2_HASOVERLAY               0X00000200
+#define WS_EX2_CONSOLEWINDOW            0X00000400
+#define WS_EX2_CHILDNOACTIVATE          0X00000800
 
 typedef struct _WINDOW
 {
     USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
-
     /* NOTE: This structure is located in the desktop heap and will
              eventually replace WINDOW_OBJECT. Right now WINDOW_OBJECT
              keeps a reference to this structure until all the information
@@ -151,10 +238,24 @@ typedef struct _WINDOW
     struct _PROCESSINFO *pi; /* FIXME: Move to object header some day */
     struct _W32THREADINFO *ti;
     struct _DESKTOP *pdesktop;
-    RECT WindowRect;
-    RECT ClientRect;
 
-    WNDPROC WndProc;
+    DWORD state;
+    DWORD state2;
+    /* Extended style. */
+    DWORD ExStyle;
+    /* Style. */
+    DWORD style;
+    /* Handle of the module that created the window. */
+    HINSTANCE hModule;
+    DWORD fnid;
+    struct _WINDOW *spwndNext;
+    struct _WINDOW *spwndPrev;
+    struct _WINDOW *spwndParent;
+    struct _WINDOW *spwndChild;
+    struct _WINDOW *spwndOwner;
+    RECT rcWindow;
+    RECT rcClient;
+    WNDPROC lpfnWndProc;
     union
     {
         /* Pointer to a call procedure handle */
@@ -163,31 +264,32 @@ typedef struct _WINDOW
         WNDPROC WndProcExtra;
     };
 
-    struct _WINDOW *Parent;
-    struct _WINDOW *Owner;
-
-    /* Size of the extra data associated with the window. */
-    ULONG ExtraDataSize;
-    /* Style. */
-    DWORD Style;
-    /* Extended style. */
-    DWORD ExStyle;
-    /* Handle of the module that created the window. */
-    HINSTANCE Instance;
-    /* Window menu handle or window id */
-    UINT IDMenu;
-    LONG UserData;
     /* Pointer to the window class. */
-    PWINDOWCLASS Class;
-    /* Window name. */
-    UNICODE_STRING WindowName;
-    /* Context help id */
-    DWORD ContextHelpId;
-
-    HWND hWndLastActive;
+    PWINDOWCLASS pcls;
+    HRGN hrgnUpdate;
     /* Property list head.*/
     LIST_ENTRY PropListHead;
     ULONG PropListItems;
+    /* Window menu handle or window id */
+    UINT IDMenu;
+    //PMENU spmenuSys;
+    //PMENU spmenu;
+    HRGN      hrgnClip;
+    /* Window name. */
+    UNICODE_STRING strName;
+    /* Size of the extra data associated with the window. */
+    ULONG cbwndExtra;
+    HWND hWndLastActive;
+    struct _WINDOW *spwndLastActive;
+    //HIMC hImc; // Input context associated with this window.
+    LONG dwUserData;
+    //PACTIVATION_CONTEXT pActCtx;
+    //PD3DMATRIX pTransForm;
+    struct _WINDOW *spwndClipboardListener;
+    DWORD ExStyle2;
+
+    /* Context help id */
+    DWORD ContextHelpId;
 
     struct
     {
@@ -196,12 +298,12 @@ typedef struct _WINDOW
         POINT MaxPos;
     } InternalPos;
 
-    UINT Unicode : 1;
+    UINT Unicode : 1; // !WNDS_ANSICREATOR ?
     /* Indicates whether the window is derived from a system class */
-    UINT IsSystem : 1;
+    UINT IsSystem : 1; // System class ?
     UINT InternalPosInitialized : 1;
-    UINT HideFocus : 1;
-    UINT HideAccel : 1;
+    UINT HideFocus : 1; // WS_EX_UISTATEFOCUSRECTHIDDEN ?
+    UINT HideAccel : 1; // WS_EX_UISTATEKBACCELHIDDEN ?
 } WINDOW, *PWINDOW;
 
 typedef struct _PFNCLIENT

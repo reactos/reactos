@@ -202,7 +202,7 @@ GetClassLongA(HWND hWnd, int nIndex)
 
     _SEH2_TRY
     {
-        Class = DesktopPtrToUser(Wnd->Class);
+        Class = DesktopPtrToUser(Wnd->pcls);
         if (Class != NULL)
         {
             if (nIndex >= 0)
@@ -315,7 +315,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
 
     _SEH2_TRY
     {
-        Class = DesktopPtrToUser(Wnd->Class);
+        Class = DesktopPtrToUser(Wnd->pcls);
         if (Class != NULL)
         {
             if (nIndex >= 0)
@@ -504,7 +504,7 @@ GetWindowLongA ( HWND hWnd, int nIndex )
 
     if (nIndex >= 0)
     {
-        if ((DWORD)nIndex + sizeof(LONG) > Wnd->ExtraDataSize)
+        if ((DWORD)nIndex + sizeof(LONG) > Wnd->cbwndExtra)
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             return 0;
@@ -519,13 +519,13 @@ GetWindowLongA ( HWND hWnd, int nIndex )
             case GWL_EXSTYLE:
                 return Wnd->ExStyle;
             case GWL_STYLE:
-                return Wnd->Style;
+                return Wnd->style;
             case GWL_HINSTANCE:
-                return (LONG)Wnd->Instance;
+                return (LONG)Wnd->hModule;
             case GWL_ID:
                 return Wnd->IDMenu;
             case GWL_USERDATA:
-                return Wnd->UserData;
+                return Wnd->dwUserData;
 
             case GWL_HWNDPARENT:
             {
@@ -561,7 +561,7 @@ GetWindowLongW(HWND hWnd, int nIndex)
 
     if (nIndex >= 0)
     {
-        if ((DWORD)nIndex + sizeof(LONG) > Wnd->ExtraDataSize)
+        if ((DWORD)nIndex + sizeof(LONG) > Wnd->cbwndExtra)
         {
             SetLastError(ERROR_INVALID_PARAMETER);
             return 0;
@@ -576,13 +576,13 @@ GetWindowLongW(HWND hWnd, int nIndex)
             case GWL_EXSTYLE:
                 return Wnd->ExStyle;
             case GWL_STYLE:
-                return Wnd->Style;
+                return Wnd->style;
             case GWL_HINSTANCE:
-                return (LONG)Wnd->Instance;
+                return (LONG)Wnd->hModule;
             case GWL_ID:
                 return Wnd->IDMenu;
             case GWL_USERDATA:
-                return Wnd->UserData;
+                return Wnd->dwUserData;
 
             case GWL_HWNDPARENT:
             {

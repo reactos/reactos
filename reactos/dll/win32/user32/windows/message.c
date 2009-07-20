@@ -1311,12 +1311,12 @@ IntCallMessageProc(IN PWINDOW Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, 
 
     if (Wnd->IsSystem)
     {
-        WndProc = (Ansi ? Wnd->WndProcExtra : Wnd->WndProc);
+        WndProc = (Ansi ? Wnd->WndProcExtra : Wnd->lpfnWndProc);
         IsAnsi = Ansi;
     }
     else
     {
-        WndProc = Wnd->WndProc;
+        WndProc = Wnd->lpfnWndProc;
         IsAnsi = !Wnd->Unicode;
     }
 
@@ -1361,7 +1361,7 @@ DispatchMessageA(CONST MSG *lpmsg)
     else if (Wnd != NULL)
     {
        // FIXME Need to test for calling proc inside win32k!
-       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->flags & WNDF_CALLPROC) )
+       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
        {
            Ret = IntCallMessageProc(Wnd,
                                     lpmsg->hwnd,
@@ -1422,7 +1422,7 @@ DispatchMessageW(CONST MSG *lpmsg)
     else if (Wnd != NULL)
     {
        // FIXME Need to test for calling proc inside win32k!
-       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->flags & W32K_CALLPROC) )
+       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
        {
            Ret = IntCallMessageProc(Wnd,
                                     lpmsg->hwnd,

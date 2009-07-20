@@ -127,8 +127,8 @@ IntDefWindowProc(
       }
       case WM_SHOWWINDOW:
       {
-         if ((Wnd->Style & WS_VISIBLE) && wParam) break;
-         if (!(Wnd->Style & WS_VISIBLE) && !wParam) break;
+         if ((Wnd->style & WS_VISIBLE) && wParam) break;
+         if (!(Wnd->style & WS_VISIBLE) && !wParam) break;
          if (!Window->hOwner) break;
          if (LOWORD(lParam))
          {

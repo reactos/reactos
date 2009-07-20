@@ -694,7 +694,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
    {
       /* generate double click messages, if necessary */
       if ((((*HitTest) != HTCLIENT) ||
-            (Window->Wnd->Class->Style & CS_DBLCLKS)) &&
+            (Window->Wnd->pcls->Style & CS_DBLCLKS)) &&
             MsqIsDblClk(Msg, Remove))
       {
          Msg->message += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
@@ -724,8 +724,8 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
       {
          /* NOTE: Msg->pt should remain in screen coordinates. -- FiN */
          Msg->lParam = MAKELONG(
-                          Msg->pt.x - (WORD)Window->Wnd->ClientRect.left,
-                          Msg->pt.y - (WORD)Window->Wnd->ClientRect.top);
+                          Msg->pt.x - (WORD)Window->Wnd->rcClient.left,
+                          Msg->pt.y - (WORD)Window->Wnd->rcClient.top);
       }
    }
 
@@ -1553,7 +1553,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
           RETURN( FALSE);
       }
 
-      Result = (ULONG_PTR)co_IntCallWindowProc(Window->Wnd->WndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
+      Result = (ULONG_PTR)co_IntCallWindowProc(Window->Wnd->lpfnWndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
                lParamPacked,lParamBufferSize);
 
       if(uResult)
@@ -1764,12 +1764,12 @@ co_IntDoSendMessage(HWND hWnd,
 
       if (Window->Wnd->IsSystem)
       {
-          Info.Proc = (!Info.Ansi ? Window->Wnd->WndProc : Window->Wnd->WndProcExtra);
+          Info.Proc = (!Info.Ansi ? Window->Wnd->lpfnWndProc : Window->Wnd->WndProcExtra);
       }
       else
       {
           Info.Ansi = !Window->Wnd->Unicode;
-          Info.Proc = Window->Wnd->WndProc;
+          Info.Proc = Window->Wnd->lpfnWndProc;
       }
 
       IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, &Result);
