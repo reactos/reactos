@@ -41,6 +41,7 @@
 	<file>pen.c</file>
 	<file>printdrv.c</file>
 	<file>region.c</file>
+	<file>regglue.c</file>
 
 	<file>gdi32.rc</file>
 </module>
