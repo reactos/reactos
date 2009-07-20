@@ -138,9 +138,9 @@ extern "C"
 #include <mmreg.h>
 #undef NOBITMAP
 
+#include <punknown.h>
 #include <ks.h>
 #include <ksmedia.h>
-#include <punknown.h>
 #include <drmk.h>
 
 #ifdef __cplusplus

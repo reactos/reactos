@@ -3670,10 +3670,10 @@ KsGetOuterUnknown(
 PUNKNOWN
 NTAPI
 KsDeviceGetOuterUnknown(
-    IN  PKSDEVICE Device)
-{
-    return KsGetOuterUnknown((PVOID) Device);
-}
+    IN  PKSDEVICE Device);
+//{
+//    return KsGetOuterUnknown((PVOID) Device);
+//}
 
 KSDDKAPI
 PUNKNOWN
