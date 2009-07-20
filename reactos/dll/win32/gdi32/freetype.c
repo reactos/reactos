@@ -1832,47 +1832,45 @@ static BOOL init_system_links(void)
 
 static BOOL ReadFontDir(const char *dirname, BOOL external_fonts)
 {
-#if 0
-    DIR *dir;
-    struct dirent *dent;
-    char path[MAX_PATH];
+   HANDLE file;
+   WIN32_FIND_DATA find_data;
+   CHAR search_path[MAX_PATH];
 
-    TRACE("Loading fonts from %s\n", debugstr_a(dirname));
+   TRACE("Loading fonts from %s\n", debugstr_a(dirname));
 
-    dir = opendir(dirname);
-    if(!dir) {
-        WARN("Can't open directory %s\n", debugstr_a(dirname));
-	return FALSE;
-    }
-    while((dent = readdir(dir)) != NULL) {
-	struct stat statbuf;
+   snprintf(search_path, MAX_PATH, "%s\\*", dirname);
 
-        if(!strcmp(dent->d_name, ".") || !strcmp(dent->d_name, ".."))
-	    continue;
+   file = FindFirstFileA(search_path, &find_data);
 
-	TRACE("Found %s in %s\n", debugstr_a(dent->d_name), debugstr_a(dirname));
+   if (file == INVALID_HANDLE_VALUE) 
+   {
+      WARN("Can't open directory %s\n", debugstr_a(dirname));
+      return FALSE;
+   } 
 
-	sprintf(path, "%s/%s", dirname, dent->d_name);
+    do
+   {
+       CHAR path[MAX_PATH];
 
-	if(stat(path, &statbuf) == -1)
-	{
-	    WARN("Can't stat %s\n", debugstr_a(path));
-	    continue;
-	}
-	if(S_ISDIR(statbuf.st_mode))
-	    ReadFontDir(path, external_fonts);
-	else
-	    AddFontFileToList(path, NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
-    }
-    closedir(dir);
+       if(strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0)
+            continue;
+
+       TRACE("Found %s in %s\n", find_data.cFileName, debugstr_a(dirname));
+       snprintf(path, MAX_PATH, "%s\\%s", dirname, find_data.cFileName);
+
+       if(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+       {
+           ReadFontDir(path, external_fonts);
+       }
+       else
+       {
+           AddFontFileToList(path, NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
+       }
+   }
+   while (FindNextFileA(file, &find_data));
+
+    FindClose(file);
     return TRUE;
-#else
-    AddFontFileToList("C:\\ReactOS\\fonts\\tahoma.ttf", NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
-    AddFontFileToList("C:\\ReactOS\\fonts\\symbol.ttf", NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
-    AddFontFileToList("C:\\ReactOS\\fonts\\Marlett.ttf", NULL, NULL, external_fonts ? ADDFONT_EXTERNAL_FONT : 0);
-    UNIMPLEMENTED;
-    return TRUE;
-#endif
 }
 
 static void load_fontconfig_fonts(void)
