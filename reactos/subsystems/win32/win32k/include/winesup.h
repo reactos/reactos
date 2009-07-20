@@ -123,7 +123,12 @@ struct object;
 static inline int check_object_access(struct object *obj, unsigned int *access) { return TRUE; };
 
 // timeout stuff
-struct timeout_user;
+struct timeout_user
+{
+    KTIMER Timer;
+    KDPC Dpc;
+};
+
 enum timeout_t;
 typedef PKDEFERRED_ROUTINE timeout_callback;
 #define TICKS_PER_SEC 10000000

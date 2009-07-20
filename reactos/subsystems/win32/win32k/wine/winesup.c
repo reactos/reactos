@@ -40,35 +40,36 @@ const SID *token_get_user( void *token )
 
 struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, void *private )
 {
-    PKTIMER Timer;
-    PKDPC Dpc;
     LARGE_INTEGER DueTime;
+    struct timeout_user *TimeoutUser;
 
     DueTime.QuadPart = (LONGLONG)when;
 
-    DPRINT1("add_timeout_user(when %I64d, func %p)\n", when, func);
+    DPRINT1("add_timeout_user(when %I64d, func %p), current time %I64d\n", when, func, CurrentTime.QuadPart);
 
-    Timer = ExAllocatePool(NonPagedPool, sizeof(KTIMER));
-    KeInitializeTimer(Timer);
+    /* Allocate memory for timeout structure */
+    TimeoutUser = ExAllocatePool(NonPagedPool, sizeof(struct timeout_user));
 
-    Dpc = ExAllocatePool(NonPagedPool, sizeof(KDPC));
-    KeInitializeDpc(Dpc, func, private);
+    /* Initialize timer and DPC objects */
+    KeInitializeTimer(&TimeoutUser->Timer);
+    KeInitializeDpc(&TimeoutUser->Dpc, func, private);
 
-    KeSetTimer(Timer, DueTime, Dpc);
+    /* Set the timer */
+    KeSetTimer(&TimeoutUser->Timer, DueTime, &TimeoutUser->Dpc);
 
-    return (struct timeout_user *)Timer;
+    return TimeoutUser;
 }
 
 /* remove a timeout user */
 void remove_timeout_user( struct timeout_user *user )
 {
-    PKTIMER Timer = (PKTIMER)user;
     DPRINT1("remove_timeout_user %p\n", user);
 
-    KeCancelTimer(Timer);
-    ExFreePool(Timer);
+    /* Cancel the timer */
+    KeCancelTimer(&user->Timer);
 
-    // FIXME: Dpc memory is not freed!
+    /* Free memory */
+    ExFreePool(user);
 }
 
 /* default map_access() routine for objects that behave like an fd */
