@@ -114,14 +114,17 @@ BOOLEAN PrepareNextFragment(
 
         RtlCopyMemory(IFC->Data, IFC->DatagramData, DataSize); // SAFE
 
-        FragOfs = (USHORT)IFC->Position; // Swap?
+        /* Fragment offset is in 8 byte blocks */
+        FragOfs = (USHORT)(IFC->Position / 8);
+
         if (MoreFragments)
             FragOfs |= IPv4_MF_MASK;
         else
             FragOfs &= ~IPv4_MF_MASK;
 
         Header = IFC->Header;
-        Header->FlagsFragOfs = FragOfs;
+        Header->FlagsFragOfs = WH2N(FragOfs);
+        Header->TotalLength = WH2N((USHORT)(DataSize + IFC->HeaderSize));
 
         /* FIXME: Handle options */
 
@@ -249,22 +252,6 @@ NTSTATUS IPSendDatagram(PIP_PACKET IPPacket, PNEIGHBOR_CACHE_ENTRY NCE,
 
     /* Fetch path MTU now, because it may change */
     TI_DbgPrint(MID_TRACE,("PathMTU: %d\n", NCE->Interface->MTU));
-
-    if ((IPPacket->Flags & IP_PACKET_FLAG_RAW) == 0) {
-	/* Calculate checksum of IP header */
-	TI_DbgPrint(MID_TRACE,("-> not IP_PACKET_FLAG_RAW\n"));
-	((PIPv4_HEADER)IPPacket->Header)->Checksum = 0;
-
-	((PIPv4_HEADER)IPPacket->Header)->Checksum = (USHORT)
-	    IPv4Checksum(IPPacket->Header, IPPacket->HeaderSize, 0);
-	TI_DbgPrint(MID_TRACE,("IP Check: %x\n", ((PIPv4_HEADER)IPPacket->Header)->Checksum));
-
-	TI_DbgPrint(MAX_TRACE, ("Sending packet (length is %d).\n",
-				WN2H(((PIPv4_HEADER)IPPacket->Header)->TotalLength)));
-    } else {
-	TI_DbgPrint(MAX_TRACE, ("Sending raw packet (flags are 0x%X).\n",
-				IPPacket->Flags));
-    }
 
     NdisQueryPacket(IPPacket->NdisPacket,
                     NULL,
