@@ -542,8 +542,10 @@ typedef enum
     Properties/Methods/Events
 */
 
-#define KSPROPSETID_StreamAllocator \
+#define STATIC_KSPROPSETID_StreamAllocator\
     0xcf6e4342L, 0xec87, 0x11cf, 0xa1, 0x30, 0x00, 0x20, 0xaf, 0xd1, 0x56, 0xe4
+DEFINE_GUIDSTRUCT("cf6e4342-ec87-11cf-a130-0020afd156e4", KSPROPSETID_StreamAllocator);
+#define KSPROPSETID_StreamAllocator DEFINE_GUIDNAMED(KSPROPSETID_StreamAllocator)
 
 typedef enum
 {
@@ -1463,6 +1465,7 @@ typedef struct
 
 typedef
 BOOLEAN
+NTAPI
 (*PFNKSFASTHANDLER)(
     IN PFILE_OBJECT FileObject,
     IN PKSIDENTIFIER Request,
@@ -1536,13 +1539,17 @@ typedef struct
 
 typedef struct
 {
-    ULONG               CountItems;         // count of FramingItem-s below.
+    ULONG               CountItems;
     ULONG               PinFlags;
     KS_COMPRESSION      OutputCompression;
-    ULONG               PinWeight;          // this pin framing's Weight graph-wide
+    ULONG               PinWeight;
     KS_FRAMING_ITEM     FramingItem[1]; 
 } KSALLOCATOR_FRAMING_EX, *PKSALLOCATOR_FRAMING_EX;
 
+#define KSALLOCATOR_FLAG_PARTIAL_READ_SUPPORT       0x00000010
+#define KSALLOCATOR_FLAG_DEVICE_SPECIFIC            0x00000020
+#define KSALLOCATOR_FLAG_CAN_ALLOCATE               0x00000040
+#define KSALLOCATOR_FLAG_INSIST_ON_FRAMESIZE_RATIO  0x00000080
 
 /* ===============================================================
     Quality
@@ -1739,7 +1746,7 @@ typedef struct
     PKSOBJECT_CREATE_ITEM    CreateItemsList;
 } KSOBJECT_CREATE, *PKSOBJECT_CREATE;
 
-typedef VOID (*PFNKSITEMFREECALLBACK)(
+typedef VOID (NTAPI *PFNKSITEMFREECALLBACK)(
     IN  PKSOBJECT_CREATE_ITEM CreateItem);
 
 #endif
@@ -2401,7 +2408,7 @@ DEFINE_KSPROPERTY_TABLE(TopologySet) {\
 /* TODO */
 typedef void* UNKNOWN;
 
-typedef PVOID (*PFNKSINITIALIZEALLOCATOR)(
+typedef PVOID NTAPI(*PFNKSINITIALIZEALLOCATOR)(
     IN  PVOID InitialContext,
     IN  PKSALLOCATOR_FRAMING AllocatorFraming,
     OUT PVOID* Context);
@@ -2421,18 +2428,30 @@ typedef NTSTATUS (*PFNKINTERSECTHANDLEREX)(
     IN  ULONG DataBufferSize,
     OUT PVOID Data OPTIONAL,
     OUT PULONG DataSize);
+
+
+typedef
+NTSTATUS
+NTAPI
+(*PFNALLOCATOR_ALLOCATEFRAME)(
+    IN PFILE_OBJECT FileObject,
+    PVOID *Frame
+    );
+
+typedef
+VOID
+NTAPI
+(*PFNALLOCATOR_FREEFRAME)(
+    IN PFILE_OBJECT FileObject,
+    IN PVOID Frame
+    );
+
+typedef struct {
+    PFNALLOCATOR_ALLOCATEFRAME  AllocateFrame;
+    PFNALLOCATOR_FREEFRAME      FreeFrame;
+} KSSTREAMALLOCATOR_FUNCTIONTABLE, *PKSSTREAMALLOCATOR_FUNCTIONTABLE;
+
 #endif
-
-typedef UNKNOWN PFNALLOCATORE_ALLOCATEFRAME;
-typedef UNKNOWN PFNALLOCATOR_FREEFRAME;
-
-/*
-typedef struct
-{
-    PFNALLOCATOR_ALLOCATEFRAME AllocateFrame;
-    PFNALLOCATOR_FREEFRAME FreeFrame;
-}
-*/
 
 typedef struct
 {
@@ -2472,6 +2491,21 @@ struct _KSMAPPING {
     ULONG Alignment;
 };
 #endif
+
+
+typedef struct {
+    GUID ProtocolId;
+    PVOID Argument1;
+    PVOID Argument2;
+} KSHANDSHAKE, *PKSHANDSHAKE;
+
+typedef struct _KSGATE KSGATE, *PKSGATE;
+typedef struct _KSPROCESSPIN_INDEXENTRY KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
+
+struct _KSGATE {
+    LONG Count;
+    PKSGATE NextGate;
+};
 
 struct _KSSTREAM_POINTER_OFFSET
 {
@@ -2514,11 +2548,11 @@ struct _KSPROCESSPIN
     BOOLEAN Terminate;
 };
 
-typedef struct
+struct _KSPROCESSPIN_INDEXENTRY
 {
     PKSPROCESSPIN* Pins;
     ULONG Count;
-} KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
+};
 #endif
 
 /* ===============================================================
@@ -2671,9 +2705,11 @@ struct _KSFILTER_DESCRIPTOR
 
 struct _KSDEVICE_DESCRIPTOR
 {
-  const KSDEVICE_DISPATCH*  Dispatch;
-  ULONG  FilterDescriptorsCount;
-  const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
+    const KSDEVICE_DISPATCH*  Dispatch;
+    ULONG  FilterDescriptorsCount;
+    const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
+    ULONG  Version;
+    ULONG  Flags;
 };
 
 struct _KSFILTERFACTORY {
@@ -3462,6 +3498,17 @@ KsInitializeDriver(
 
 typedef struct _KSFILTERFACTORY KSFILTERFACTORY, *PKSFILTERFACTORY; //FIXME
 
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsInitializeDevice (
+    IN PDEVICE_OBJECT  FunctionalDeviceObject,
+    IN PDEVICE_OBJECT  PhysicalDeviceObject,
+    IN PDEVICE_OBJECT  NextDeviceObject,
+    IN const KSDEVICE_DESCRIPTOR*  Descriptor OPTIONAL);
+
+
 typedef void (*PFNKSFILTERFACTORYPOWER)(
     IN  PKSFILTERFACTORY FilterFactory,
     IN  DEVICE_POWER_STATE State);
@@ -3551,7 +3598,7 @@ KsCreateFilterFactory(
     IN  ULONG CreateItemFlags,
     IN  PFNKSFILTERFACTORYPOWER SleepCallback OPTIONAL,
     IN  PFNKSFILTERFACTORYPOWER WakeCallback OPTIONAL,
-    OUT PKSFILTERFACTORY FilterFactory OPTIONAL);
+    OUT PKSFILTERFACTORY *FilterFactory OPTIONAL);
 
 KSDDKAPI
 NTSTATUS
@@ -3560,6 +3607,23 @@ KsDefaultAddEventHandler(
     IN  PIRP Irp,
     IN  PKSEVENTDATA EventData,
     IN  OUT PKSEVENT_ENTRY EventEntry);
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsDispatchQuerySecurity(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    );
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsDispatchSetSecurity(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    );
+
 
 
 #define KsDeleteFilterFactory(FilterFactory)                                           \
@@ -3618,7 +3682,49 @@ KsDeviceRegisterAggregatedClientUnknown(
     IN  PKSDEVICE Device,
     IN  PUNKNOWN ClientUnknown);
 
+
 #endif
+
+#undef INTERFACE
+#define INTERFACE IKsControl
+
+DEFINE_GUID(IID_IKsControl, 0x28F54685L, 0x06FD, 0x11D2, 0xB2, 0x7A, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96);
+
+DECLARE_INTERFACE_(IKsControl,IUnknown)
+{
+    STDMETHOD_(NTSTATUS, QueryInterface)( THIS_ 
+        REFIID InterfaceId,
+        PVOID* Interface)PURE;
+
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+    STDMETHOD_(NTSTATUS, KsProperty)(THIS_
+        IN PKSPROPERTY Property,
+        IN ULONG PropertyLength,
+        IN OUT PVOID PropertyData,
+        IN ULONG DataLength,
+        OUT ULONG* BytesReturned
+        ) PURE;
+    STDMETHOD_(NTSTATUS, KsMethod)(THIS_
+        IN PKSMETHOD Method,
+        IN ULONG MethodLength,
+        IN OUT PVOID MethodData,
+        IN ULONG DataLength,
+        OUT ULONG* BytesReturned
+        ) PURE;
+    STDMETHOD_(NTSTATUS, KsEvent)(THIS_
+        IN PKSEVENT Event OPTIONAL,
+        IN ULONG EventLength,
+        IN OUT PVOID EventData,
+        IN ULONG DataLength,
+        OUT ULONG* BytesReturned
+        ) PURE;
+};
+
+#undef INTERFACE
+typedef IKsControl* PIKSCONTROL;
 
 KSDDKAPI
 VOID
