@@ -45,7 +45,7 @@ struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, vo
 
     DueTime.QuadPart = (LONGLONG)when;
 
-    DPRINT1("add_timeout_user(when %I64d, func %p), current time %I64d\n", when, func, CurrentTime.QuadPart);
+    DPRINT1("add_timeout_user(when %I64d, func %p)\n", when, func);
 
     /* Allocate memory for timeout structure */
     TimeoutUser = ExAllocatePool(NonPagedPool, sizeof(struct timeout_user));
