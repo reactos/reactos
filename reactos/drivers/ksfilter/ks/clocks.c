@@ -1,12 +1,43 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/ksfilter/ks/clocks.c
+ * PURPOSE:         KS Clocks functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "priv.h"
 
 typedef struct
 {
+    LONGLONG Time;
+    KSPIN_LOCK TimeLock;
+    KSSTATE State;
+    KTIMER Timer;
+    LONG ReferenceCount;
 
-}KS_DEFAULT_CLOCK;
+    PVOID Context;
+    PFNKSSETTIMER SetTimer;
+    PFNKSCANCELTIMER CancelTimer;
+    PFNKSCORRELATEDTIME CorrelatedTime;
+    KSRESOLUTION* Resolution;
+    ULONG Flags;
+
+}KSIDEFAULTCLOCK, *PKSIDEFAULTCLOCK;
+
+typedef struct
+{
+    IKsClock *lpVtbl;
+    LONG ref;
+    PKSCLOCK_CREATE ClockCreate;
+    PKSIDEFAULTCLOCK DefaultClock;
+    PKSIOBJECT_HEADER ObjectHeader;
+}KSICLOCK, *PKSICLOCK;
+
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI NTSTATUS NTAPI
 KsCreateClock(
@@ -14,36 +45,136 @@ KsCreateClock(
     IN  PKSCLOCK_CREATE ClockCreate,
     OUT PHANDLE ClockHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    return KspCreateObjectType(ConnectionHandle,
+                               L"{53172480-4791-11D0-A5D6-28DB04C10000}", /* KSName_Clock */
+                               ClockCreate,
+                               sizeof(KSCLOCK_CREATE),
+                               GENERIC_READ,
+                               ClockHandle);
 }
 
 /*
     @unimplemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsValidateClockCreateRequest(
+    IN  PIRP Irp,
+    OUT PKSCLOCK_CREATE* ClockCreate)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+IKsClock_DispatchDeviceIoControl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    UNIMPLEMENTED
+
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+IKsClock_DispatchClose(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    UNIMPLEMENTED
+
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+
+static KSDISPATCH_TABLE DispatchTable =
+{
+    IKsClock_DispatchDeviceIoControl,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    IKsClock_DispatchClose,
+    KsDispatchQuerySecurity,
+    KsDispatchSetSecurity,
+    KsDispatchFastIoDeviceControlFailure,
+    KsDispatchFastReadFailure,
+    KsDispatchFastReadFailure,
+};
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsCreateDefaultClock(
     IN  PIRP Irp,
     IN  PKSDEFAULTCLOCK DefaultClock)
 {
     NTSTATUS Status;
     PKSCLOCK_CREATE ClockCreate;
+    PKSICLOCK Clock;
+    PKSOBJECT_CREATE_ITEM CreateItem;
 
     Status = KsValidateClockCreateRequest(Irp, &ClockCreate);
     if (!NT_SUCCESS(Status))
         return Status;
 
-//    ExAllocatePoolWithTag(NonPagedPool, sizeof(KS_DEFAULT_CLOCK), 0);
+    /* let's allocate the clock struct */
+    Clock = AllocateItem(NonPagedPool, sizeof(KSICLOCK));
+    if (!Clock)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
+    /* now allocate the object header */
+    Status = KsAllocateObjectHeader((PVOID*)&Clock->ObjectHeader, 0, NULL, Irp, &DispatchTable);
 
+    /* did it work */
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        FreeItem(Clock);
+        return Status;
+    }
 
-    return STATUS_UNSUCCESSFUL;
+    /* initialize clock */
+    /* FIXME IKsClock */
+    Clock->ObjectHeader->Unknown = (PUNKNOWN)&Clock->lpVtbl;
+    Clock->ref = 1;
+    Clock->ClockCreate = ClockCreate;
+    Clock->DefaultClock = (PKSIDEFAULTCLOCK)DefaultClock;
+
+    /* increment reference count */
+    InterlockedIncrement(&Clock->DefaultClock->ReferenceCount);
+
+    /* get create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+
+    if (CreateItem)
+    {
+        /* store create item */
+        Clock->ObjectHeader->CreateItem = CreateItem;
+        Clock->ObjectHeader->ItemCount = 1;
+    }
+
+    return Status;
 }
 
 /*
     @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsAllocateDefaultClock(
     OUT PKSDEFAULTCLOCK* DefaultClock)
 {
@@ -53,7 +184,9 @@ KsAllocateDefaultClock(
 /*
     @unimplemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsAllocateDefaultClockEx(
     OUT PKSDEFAULTCLOCK* DefaultClock,
     IN  PVOID Context OPTIONAL,
@@ -63,72 +196,113 @@ KsAllocateDefaultClockEx(
     IN  const KSRESOLUTION* Resolution OPTIONAL,
     IN  ULONG Flags)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSIDEFAULTCLOCK Clock;
+
+    if (!DefaultClock)
+       return STATUS_INVALID_PARAMETER_1;
+
+    /* allocate default clock */
+    Clock = AllocateItem(NonPagedPool, sizeof(KSIDEFAULTCLOCK));
+    if (!Clock)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* initialize default clock */
+    KeInitializeSpinLock(&Clock->TimeLock);
+    KeInitializeTimer(&Clock->Timer);
+    Clock->ReferenceCount = 1;
+    Clock->Context = Context;
+    Clock->SetTimer = SetTimer;
+    Clock->CancelTimer = CancelTimer;
+    Clock->CorrelatedTime = CorrelatedTime;
+    Clock->Resolution = (PKSRESOLUTION)Resolution;
+    Clock->Flags = Flags;
+
+    *DefaultClock = (PKSDEFAULTCLOCK)Clock;
+    return STATUS_SUCCESS;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI VOID NTAPI
+KSDDKAPI
+VOID
+NTAPI
 KsFreeDefaultClock(
     IN  PKSDEFAULTCLOCK DefaultClock)
 {
-    UNIMPLEMENTED;
+    PKSIDEFAULTCLOCK Clock = (PKSIDEFAULTCLOCK)DefaultClock;
+
+    InterlockedDecrement(&Clock->ReferenceCount);
+
+    if (Clock->ReferenceCount == 0)
+    {
+        /* free default clock */
+        FreeItem(Clock);
+    }
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
-KsValidateClockCreateRequest(
-    IN  PIRP Irp,
-    OUT PKSCLOCK_CREATE* ClockCreate)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI KSSTATE NTAPI
+KSDDKAPI
+KSSTATE
+NTAPI
 KsGetDefaultClockState(
     IN  PKSDEFAULTCLOCK DefaultClock)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSIDEFAULTCLOCK Clock = (PKSIDEFAULTCLOCK)DefaultClock;
+    return Clock->State;
 }
 
 /*
     @unimplemented
 */
-KSDDKAPI VOID NTAPI
+KSDDKAPI
+VOID
+NTAPI
 KsSetDefaultClockState(
     IN  PKSDEFAULTCLOCK DefaultClock,
     IN  KSSTATE State)
 {
-    UNIMPLEMENTED;
+    PKSIDEFAULTCLOCK Clock = (PKSIDEFAULTCLOCK)DefaultClock;
+
+    if (State != Clock->State)
+    {
+         /* FIXME set time etc */
+         Clock->State = State;
+    }
+
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI LONGLONG NTAPI
+KSDDKAPI
+LONGLONG
+NTAPI
 KsGetDefaultClockTime(
     IN  PKSDEFAULTCLOCK DefaultClock)
 {
-    UNIMPLEMENTED;
-    return 0;
+    LONGLONG Time = 0LL;
+    PKSIDEFAULTCLOCK Clock = (PKSIDEFAULTCLOCK)DefaultClock;
+
+    Time = ExInterlockedCompareExchange64(&Clock->Time, &Time, &Time, &Clock->TimeLock);
+
+    return Time;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI VOID NTAPI
+KSDDKAPI
+VOID
+NTAPI
 KsSetDefaultClockTime(
     IN  PKSDEFAULTCLOCK DefaultClock,
     IN  LONGLONG Time)
 {
-    UNIMPLEMENTED;
+    PKSIDEFAULTCLOCK Clock = (PKSIDEFAULTCLOCK)DefaultClock;
+
+    /* set the time safely */
+    ExInterlockedCompareExchange64(&Clock->Time, &Time, &Clock->Time, &Clock->TimeLock);
 }

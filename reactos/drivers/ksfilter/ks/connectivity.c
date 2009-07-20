@@ -1,3 +1,12 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/ksfilter/ks/connectivity.c
+ * PURPOSE:         KS Pin functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "priv.h"
 
 /*
@@ -437,9 +446,13 @@ KsPinDataIntersection(
     return STATUS_NO_MATCH;
 }
 
-/* Does this belong here? */
+/*
+    @unimplemented
+*/
 
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsHandleSizedListQuery(
     IN  PIRP Irp,
     IN  ULONG DataItemsCount,

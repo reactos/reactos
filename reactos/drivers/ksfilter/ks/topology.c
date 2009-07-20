@@ -1,8 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/ksfilter/ks/topoology.c
+ * PURPOSE:         KS Allocator functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "priv.h"
 
-/* ===============================================================
-    Topology Functions
-*/
 
 NTSTATUS
 NTAPI
@@ -290,4 +296,15 @@ KsTopologyPropertyHandler(
 
 
     return Status;
+}
+
+NTSTATUS
+NTAPI
+KspTopologyPropertyHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data)
+{
+
+    return STATUS_NOT_IMPLEMENTED;
 }

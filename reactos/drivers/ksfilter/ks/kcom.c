@@ -1,6 +1,11 @@
-/* ===============================================================
-    Kernel-mode COM
-*/
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/ksfilter/ks/allocators.c
+ * PURPOSE:         KS Allocator functions
+ * PROGRAMMER:      Johannes Anderwald
+                    Andrew Greenwood
+ */
 
 #include "priv.h"
 

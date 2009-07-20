@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/ksfilter/ks/methods.c
- * PURPOSE:         KS Allocator functions
+ * FILE:            drivers/ksfilter/ks/event.c
+ * PURPOSE:         KS property handling functions
  * PROGRAMMER:      Johannes Anderwald
  */
 
@@ -14,14 +14,15 @@
 KSDDKAPI
 NTSTATUS
 NTAPI
-KsMethodHandler(
+KsPropertyHandler(
     IN  PIRP Irp,
-    IN  ULONG MethodSetsCount,
-    IN  PKSMETHOD_SET MethodSet)
+    IN  ULONG PropertySetsCount,
+    IN  const KSPROPERTY_SET* PropertySet)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
+
 
 /*
     @unimplemented
@@ -29,12 +30,12 @@ KsMethodHandler(
 KSDDKAPI
 NTSTATUS
 NTAPI
-KsMethodHandlerWithAllocator(
+KsPropertyHandlerWithAllocator(
     IN  PIRP Irp,
-    IN  ULONG MethodSetsCount,
-    IN  PKSMETHOD_SET MethodSet,
+    IN  ULONG PropertySetsCount,
+    IN  PKSPROPERTY_SET PropertySet,
     IN  PFNKSALLOCATOR Allocator OPTIONAL,
-    IN  ULONG MethodItemSize OPTIONAL)
+    IN  ULONG PropertyItemSize OPTIONAL)
 {
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
@@ -46,15 +47,15 @@ KsMethodHandlerWithAllocator(
 KSDDKAPI
 BOOLEAN
 NTAPI
-KsFastMethodHandler(
+KsFastPropertyHandler(
     IN  PFILE_OBJECT FileObject,
-    IN  PKSMETHOD UNALIGNED Method,
-    IN  ULONG MethodLength,
+    IN  PKSPROPERTY UNALIGNED Property,
+    IN  ULONG PropertyLength,
     IN  OUT PVOID UNALIGNED Data,
     IN  ULONG DataLength,
     OUT PIO_STATUS_BLOCK IoStatus,
-    IN  ULONG MethodSetsCount,
-    IN  const KSMETHOD_SET* MethodSet)
+    IN  ULONG PropertySetsCount,
+    IN  const KSPROPERTY_SET* PropertySet)
 {
     UNIMPLEMENTED;
     return FALSE;
