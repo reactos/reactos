@@ -172,10 +172,10 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
     // FIXME: LP->DP missing!
     //IntLPtoDP(pDest, (LPPOINT)&DestRect, 2);
 
-    DestRect.left += pDest->ptVportOrg.x + pDest->rcDcRect.left;
-    DestRect.top += pDest->ptVportOrg.y + pDest->rcDcRect.top;
-    DestRect.right += pDest->ptVportOrg.x + pDest->rcDcRect.left;
-    DestRect.bottom += pDest->ptVportOrg.y + pDest->rcDcRect.top;
+    DestRect.left += pDest->rcVport.left + pDest->rcDcRect.left;
+    DestRect.top += pDest->rcVport.top + pDest->rcDcRect.top;
+    DestRect.right += pDest->rcVport.left + pDest->rcDcRect.left;
+    DestRect.bottom += pDest->rcVport.top + pDest->rcDcRect.top;
 
     SourcePoint.x = XSrc;
     SourcePoint.y = YSrc;
@@ -238,11 +238,10 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
             DestRect.bottom = YLeft + 1;
         }
 
-        //IntLPtoDP(pDC, (LPPOINT)&DestRect, 2);
-        DestRect.left += pDC->ptVportOrg.x + pDC->rcDcRect.left;
-        DestRect.top += pDC->ptVportOrg.y + pDC->rcDcRect.top;
-        DestRect.right += pDC->ptVportOrg.x + pDC->rcDcRect.left;
-        DestRect.bottom += pDC->ptVportOrg.y + pDC->rcDcRect.top;
+        DestRect.left += pDC->rcVport.left + pDC->rcDcRect.left;
+        DestRect.top += pDC->rcVport.top + pDC->rcDcRect.top;
+        DestRect.right += pDC->rcVport.left + pDC->rcDcRect.left;
+        DestRect.bottom += pDC->rcVport.top + pDC->rcDcRect.top;
 
         //BrushOrigin.x = BrushObj->ptOrigin.x + pDC->ptVportOrg.x;
         //BrushOrigin.y = BrushObj->ptOrigin.y + pDC->ptVportOrg.y;
@@ -300,12 +299,12 @@ GreStretchBltMask(
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest+WidthDest;
     DestRect.bottom = YOriginDest+HeightDest;
-    IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
+    IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2); // FIXME: Why?
 
-    DestRect.left   += DCDest->ptVportOrg.x + DCDest->rcDcRect.left;
-    DestRect.top    += DCDest->ptVportOrg.y + DCDest->rcDcRect.top;
-    DestRect.right  += DCDest->ptVportOrg.x + DCDest->rcDcRect.left;
-    DestRect.bottom += DCDest->ptVportOrg.y + DCDest->rcDcRect.top;
+    DestRect.left   += DCDest->rcVport.left + DCDest->rcDcRect.left;
+    DestRect.top    += DCDest->rcVport.top + DCDest->rcDcRect.top;
+    DestRect.right  += DCDest->rcVport.left + DCDest->rcDcRect.left;
+    DestRect.bottom += DCDest->rcVport.top + DCDest->rcDcRect.top;
 
     SourceRect.left   = XOriginSrc;
     SourceRect.top    = YOriginSrc;
@@ -316,10 +315,10 @@ GreStretchBltMask(
     {
         IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
 
-        SourceRect.left   += DCSrc->ptVportOrg.x + DCSrc->rcDcRect.left;
-        SourceRect.top    += DCSrc->ptVportOrg.y + DCSrc->rcDcRect.top;
-        SourceRect.right  += DCSrc->ptVportOrg.x + DCSrc->rcDcRect.left;
-        SourceRect.bottom += DCSrc->ptVportOrg.y + DCSrc->rcDcRect.top;
+        SourceRect.left   += DCSrc->rcVport.left + DCSrc->rcDcRect.left;
+        SourceRect.top    += DCSrc->rcVport.top + DCSrc->rcDcRect.top;
+        SourceRect.right  += DCSrc->rcVport.left + DCSrc->rcDcRect.left;
+        SourceRect.bottom += DCSrc->rcVport.top + DCSrc->rcDcRect.top;
     }
 
     BrushOrigin.x = 0;
@@ -348,8 +347,8 @@ GreStretchBltMask(
     }
 
     /* Offset the brush */
-    BrushOrigin.x += DCDest->ptVportOrg.x + DCDest->rcDcRect.left;
-    BrushOrigin.y += DCDest->ptVportOrg.y + DCDest->rcDcRect.top;
+    BrushOrigin.x += DCDest->rcVport.left + DCDest->rcDcRect.left;
+    BrushOrigin.y += DCDest->rcVport.top + DCDest->rcDcRect.top;
 
     /* Make mask surface for source surface */
     if (BitmapSrc && DCMask)

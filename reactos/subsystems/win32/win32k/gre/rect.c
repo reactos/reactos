@@ -152,17 +152,6 @@ GrePolygon(PDC pDC,
     }
 }
 
-
-VOID
-NTAPI
-RECTL_vSetEmptyRect(RECTL *prcl)
-{
-    prcl->left = 0;
-    prcl->top = 0;
-    prcl->right = 0;
-    prcl->bottom = 0;
-}
-
 BOOLEAN
 NTAPI
 RECTL_bIntersectRect(RECTL* prclDst, const RECTL* prcl1, const RECTL* prcl2)

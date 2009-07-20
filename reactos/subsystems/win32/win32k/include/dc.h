@@ -17,11 +17,8 @@ typedef struct _DC
     COLORREF     crBackgroundClr;
 
     /* Origins and extents */
-    SIZE  szVportExt;
-    POINT ptVportOrg;
-    SIZE  szWndExt;
-    POINT ptWndOrg;
-    RECT rcDcRect;
+    RECT rcDcRect; /* Relative to Vport */
+    RECT rcVport;
 
     /* Combined clipping region */
     CLIPOBJ *CombinedClip;

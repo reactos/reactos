@@ -88,10 +88,10 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     pt[1].x = x2; pt[1].y = y2;
 
     /* Add DC origin */
-    pt[0].x += pDC->ptVportOrg.x + pDC->rcDcRect.left;
-    pt[0].y += pDC->ptVportOrg.y + pDC->rcDcRect.top;
-    pt[1].x += pDC->ptVportOrg.x + pDC->rcDcRect.left;
-    pt[1].y += pDC->ptVportOrg.y + pDC->rcDcRect.top;
+    pt[0].x += pDC->rcVport.left + pDC->rcDcRect.left;
+    pt[0].y += pDC->rcVport.top + pDC->rcDcRect.top;
+    pt[1].x += pDC->rcVport.left + pDC->rcDcRect.left;
+    pt[1].y += pDC->rcVport.top + pDC->rcDcRect.top;
 
     GreLineTo(&pDC->pBitmap->SurfObj,
               pClipObj,

@@ -113,22 +113,33 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     /* Check if it's a compatible DC */
     if (*pdev)
     {
-        DPRINT1("Creating a compatible with %x DC\n", *pdev);
-        slSize.cx = 1; slSize.cy = 1;
-        hStockBitmap = GreCreateBitmap(slSize, 1, 1, 0, NULL);
-        pNewDC->pBitmap = GDI_GetObjPtr(hStockBitmap, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+        DPRINT1("Creating a compatible with %x DC!\n", *pdev);
     }
-    else if (dc->dwType == OBJ_MEMDC)
+
+    if (dc->dwType == OBJ_MEMDC)
     {
         DPRINT1("Creating a memory DC %x\n", hNewDC);
         slSize.cx = 1; slSize.cy = 1;
         hStockBitmap = GreCreateBitmap(slSize, 1, 1, 0, NULL);
         pNewDC->pBitmap = GDI_GetObjPtr(hStockBitmap, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+
+        /* Set DC rectangles */
+        pNewDC->rcDcRect.left = 0; pNewDC->rcDcRect.top = 0;
+        pNewDC->rcDcRect.right = 1; pNewDC->rcDcRect.bottom = 1;
+        pNewDC->rcVport = pNewDC->rcDcRect;
     }
     else
     {
         DPRINT1("Creating a display DC %x\n", hNewDC);
         pNewDC->pBitmap = GDI_GetObjPtr(PrimarySurface.pSurface, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+
+        /* Set DC rectangles */
+        pNewDC->rcVport.left = 0;
+        pNewDC->rcVport.top = 0;
+        pNewDC->rcVport.right = PrimarySurface.GDIInfo.ulHorzRes;
+        pNewDC->rcVport.bottom = PrimarySurface.GDIInfo.ulVertRes;
+
+        pNewDC->rcDcRect = pNewDC->rcVport;
     }
 
     /* Give handle to the caller */
@@ -187,6 +198,13 @@ VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
 
     /* Select it */
     pDC->pBitmap = pSurface;
+
+    /* Set DC rectangles */
+    pDC->rcVport.left = 0;
+    pDC->rcVport.top = 0;
+    pDC->rcVport.right = pSurface->SurfObj.sizlBitmap.cx;
+    pDC->rcVport.bottom = pSurface->SurfObj.sizlBitmap.cy;
+    pDC->rcDcRect = pDC->rcVport;
 
     /* Release the DC object */
     GDI_ReleaseObj(physDev);
@@ -379,7 +397,7 @@ COLORREF APIENTRY RosGdiSetTextColor( HDC physDev, COLORREF color )
     return color;
 }
 
-VOID APIENTRY RosGdiSetDcRect( HDC physDev, RECT *rcDcRect )
+VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
 {
     PDC pDC;
 
@@ -387,19 +405,23 @@ VOID APIENTRY RosGdiSetDcRect( HDC physDev, RECT *rcDcRect )
     pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
 
     /* Set DC rectangle */
-    if (rcDcRect->left && rcDcRect->top && rcDcRect->right && rcDcRect->bottom)
+    if (rcDcRect)
     {
         pDC->rcDcRect = *rcDcRect;
-    }
-    else
-    {
+
+#if 0
         /* Set back to full screen */
         pDC->rcDcRect.top = 0;
         pDC->rcDcRect.left = 0;
         pDC->rcDcRect.right = pDC->szVportExt.cx;
         pDC->rcDcRect.top = pDC->szVportExt.cy;
+#endif
+    }
 
-        DPRINT1("right/top %d %d\n", pDC->szVportExt.cx, pDC->szVportExt.cy);
+    /* Set viewport rectangle */
+    if (rcVport)
+    {
+        pDC->rcVport = *rcVport;
     }
 
     /* Release the object */

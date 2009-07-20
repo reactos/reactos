@@ -191,7 +191,6 @@ BOOL CDECL RosDrv_EnumDeviceFonts( NTDRV_PDEVICE *physDev, LPLOGFONTW plf,
 INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LPCVOID in_data,
                             INT out_count, LPVOID out_data )
 {
-    RECT dc_rect;
     switch(escape)
     {
     case NTDRV_ESCAPE:
@@ -203,14 +202,9 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
                 if (in_count >= sizeof(struct ntdrv_escape_set_drawable))
                 {
                     const struct ntdrv_escape_set_drawable *data = in_data;
-                    dc_rect = data->dc_rect;
-                    RosGdiSetDcRect(physDev->hKernelDC, &dc_rect);
-                    //physDev->dc_rect = data->dc_rect;
-                    //physDev->drawable = data->drawable;
-                    //physDev->drawable_rect = data->drawable_rect;
-                    //TRACE( "SET_DRAWABLE hdc %p drawable %lx gl_drawable %lx pf %u dc_rect %s drawable_rect %s\n",
-                    //       physDev->hdc, physDev->drawable, physDev->gl_drawable, physDev->current_pf,
-                    //       wine_dbgstr_rect(&physDev->dc_rect), wine_dbgstr_rect(&physDev->drawable_rect) );
+                    RosGdiSetDcRects(physDev->hKernelDC, &data->dc_rect, &data->drawable_rect);
+                    TRACE( "SET_DRAWABLE hdc %p dc_rect %s drawable_rect %s\n",
+                           physDev->hUserDC, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );
                     return TRUE;
                 }
                 break;

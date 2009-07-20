@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <win32k.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -59,10 +59,14 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
                 } while (bits & bitsMask);
                 rcBounds.left = xspan; rcBounds.top = y;
                 rcBounds.right = xspan+lenspan; rcBounds.bottom = y+1;
+                RECTL_vOffsetRect(&rcBounds, physDev->rcVport.left, physDev->rcVport.top);
                 GreLineTo(&physDev->pBitmap->SurfObj,
                     NULL,
                     &physDev->pLineBrush->BrushObj,
-                    xspan, y, xspan+lenspan, y,
+                    xspan + physDev->rcVport.left,
+                    y + physDev->rcVport.top,
+                    xspan + lenspan + physDev->rcVport.left,
+                    y + physDev->rcVport.top,
                     &rcBounds,
                     0);
                 xspan += lenspan;

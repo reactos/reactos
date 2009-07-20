@@ -30,7 +30,7 @@ RosGdiSetDeviceGammaRamp           2
 RosGdiSetPixel                     4
 RosGdiSetPixelFormat               3
 RosGdiSetTextColor                 2
-RosGdiSetDcRect                    2
+RosGdiSetDcRects                   3
 RosGdiChoosePixelFormat            2
 RosGdiDescribePixelFormat          4
 RosGdiEnumDeviceFonts              4
