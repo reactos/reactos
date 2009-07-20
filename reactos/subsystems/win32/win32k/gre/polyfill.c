@@ -27,7 +27,7 @@
  *                 21/2/2003: Created
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -430,22 +430,21 @@ POLYGONFILL_FillScanLineAlternate(
       BoundRect.right = x2;
 
       //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-      IntEngLineTo(&psurf->SurfObj,
-                   dc->rosdc.CombinedClip,
-                   BrushObj,
-                   x1,
-                   ScanLine,
-                   x2,
-                   ScanLine,
-                   &BoundRect, // Bounding rectangle
-                   RopMode); // MIX
+      GreLineTo(&psurf->SurfObj,
+                NULL,//dc->rosdc.CombinedClip,
+                BrushObj,
+                x1,
+                ScanLine,
+                x2,
+                ScanLine,
+                &BoundRect, // Bounding rectangle
+                RopMode); // MIX
     }
     pLeft = pRight->pNext;
     pRight = pLeft ? pLeft->pNext : NULL;
   }
 }
 
-static
 void
 APIENTRY
 POLYGONFILL_FillScanLineWinding(
@@ -503,15 +502,15 @@ POLYGONFILL_FillScanLineWinding(
 	BoundRect.right = x2;
 
 	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-	IntEngLineTo(&psurf->SurfObj,
-                     dc->rosdc.CombinedClip,
-                     BrushObj,
-                     x1,
-                     ScanLine,
-                     x2,
-                     ScanLine,
-                     &BoundRect, // Bounding rectangle
-                     RopMode); // MIX
+	GreLineTo(&psurf->SurfObj,
+              NULL,//dc->rosdc.CombinedClip,
+              BrushObj,
+              x1,
+              ScanLine,
+              x2,
+              ScanLine,
+              &BoundRect, // Bounding rectangle
+              RopMode); // MIX
 
 	x1 = newx1;
 	x2 = newx2;
@@ -526,15 +525,15 @@ POLYGONFILL_FillScanLineWinding(
   BoundRect.right = x2;
 
   //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
-  IntEngLineTo(&psurf->SurfObj,
-               dc->rosdc.CombinedClip,
-               BrushObj,
-               x1,
-               ScanLine,
-               x2,
-               ScanLine,
-               &BoundRect, // Bounding rectangle
-               RopMode); // MIX
+  GreLineTo(&psurf->SurfObj,
+            NULL, //dc->rosdc.CombinedClip,
+            BrushObj,
+            x1,
+            ScanLine,
+            x2,
+            ScanLine,
+            &BoundRect, // Bounding rectangle
+            RopMode); // MIX
 }
 
 //When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and
@@ -560,7 +559,7 @@ FillPolygon(
   FILL_EDGE_LIST *list = 0;
   FILL_EDGE *ActiveHead = 0;
   int ScanLine;
-  PDC_ATTR pdcattr = dc->pdcattr;
+  //PDC_ATTR pdcattr = dc->pdcattr;
   void
   (APIENTRY *FillScanLine)(
     PDC dc,
@@ -578,9 +577,9 @@ FillPolygon(
   if (NULL == list)
     return FALSE;
 
-  if ( WINDING == pdcattr->jFillMode )
-    FillScanLine = POLYGONFILL_FillScanLineWinding;
-  else /* default */
+  //if ( WINDING == pdcattr->jFillMode )
+    //FillScanLine = POLYGONFILL_FillScanLineWinding;
+  //else /* default */
     FillScanLine = POLYGONFILL_FillScanLineAlternate;
 
   /* For each Scanline from BoundRect.bottom to BoundRect.top,
@@ -599,12 +598,12 @@ FillPolygon(
   return TRUE;
 }
 
-BOOL FASTCALL
-IntFillPolygon(
+BOOL NTAPI
+GrepFillPolygon(
     PDC dc,
-    SURFACE *psurf,
+    SURFOBJ *psurf,
     BRUSHOBJ *BrushObj,
-    CONST PPOINT Points,
+    CONST POINT *Points,
     int Count,
     RECTL DestRect, 
     POINTL *BrushOrigin)
@@ -617,7 +616,7 @@ IntFillPolygon(
     //DPRINT("IntFillPolygon\n");
 
     /* Create Edge List. */
-    list = POLYGONFILL_MakeEdgeList(Points, Count);
+    list = POLYGONFILL_MakeEdgeList((PPOINT)Points, Count);
     /* DEBUG_PRINT_EDGELIST(list); */
     if (NULL == list)
         return FALSE;
@@ -647,17 +646,18 @@ IntFillPolygon(
                 LineRect.left = x1;
                 LineRect.right = x2;
 
-                IntEngBitBlt(&psurf->SurfObj,
-                                 NULL,
-                                 NULL,
-                                 dc->rosdc.CombinedClip,
-                                 NULL,
-                                 &LineRect,
-                                 NULL,
-                                 NULL,
-                                 BrushObj,
-                                 BrushOrigin,
-                                 ROP3_TO_ROP4(PATCOPY));
+                GrepBitBltEx(psurf,
+                             NULL,
+                             NULL,
+                             NULL,//dc->rosdc.CombinedClip,
+                             NULL,
+                             &LineRect,
+                             NULL,
+                             NULL,
+                             BrushObj,
+                             BrushOrigin,
+                             ROP3_TO_ROP4(PATCOPY),
+                             TRUE);
             }
             pLeft = pRight->pNext;
             pRight = pLeft ? pLeft->pNext : NULL;

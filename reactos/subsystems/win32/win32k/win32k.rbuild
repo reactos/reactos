@@ -101,6 +101,7 @@
 		<file>gdiobj.c</file>
 		<file>lineto.c</file>
 		<file>palobj.c</file>
+		<file>polyfill.c</file>
 		<file>rect.c</file>
 		<file>surfobj.c</file>
 		<file>xformobj.c</file>

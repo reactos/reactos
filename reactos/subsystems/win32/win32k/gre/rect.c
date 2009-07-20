@@ -100,7 +100,7 @@ GrePolygon(PDC pDC,
     RECTL DestRect;
     MIX Mix;
     INT i;
-    //POINT BrushOrigin = {0, 0};
+    POINT BrushOrigin = {0, 0};
 
     // HACK
     DestRect.left = 0;
@@ -116,20 +116,13 @@ GrePolygon(PDC pDC,
             //BrushOrigin = *((PPOINTL)&pbrFill->ptOrigin);
             //BrushOrigin.x += dc->ptlDCOrig.x;
             //BrushOrigin.y += dc->ptlDCOrig.y;
-#if 0
-            bRet = GrepBitBltEx(&pDC->pBitmap->SurfObj,
-                               NULL,
-                               NULL,
-                               NULL,//dc->rosdc.CombinedClip,
-                               NULL,
-                               &DestRect,
-                               NULL,
-                               NULL,
-                               &pDC->pFillBrush->BrushObj,
-                               &BrushOrigin,
-                               ROP3_TO_ROP4(PATCOPY),
-                               TRUE);
-#endif
+            GrepFillPolygon(pDC,
+                            &pDC->pBitmap->SurfObj,
+                            &pDC->pFillBrush->BrushObj,
+                            ptPoints,
+                            count,
+                            DestRect,
+                            &BrushOrigin);
         }
     }
 

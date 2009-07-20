@@ -80,6 +80,17 @@ GreLineTo(SURFOBJ *psoDest,
           RECTL *RectBounds,
           MIX Mix);
 
+/* polyfill.c */
+BOOL NTAPI
+GrepFillPolygon(
+    PDC dc,
+    SURFOBJ *psurf,
+    BRUSHOBJ *BrushObj,
+    CONST POINT *Points,
+    int Count,
+    RECTL DestRect,
+    POINTL *BrushOrigin);
+
 /* rect.c */
 VOID NTAPI
 GreRectangle(PDC dc,
