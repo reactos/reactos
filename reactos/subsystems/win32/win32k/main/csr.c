@@ -206,4 +206,18 @@ CsrNotifyCreateDesktop(HDESK Desktop)
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+CsrNotifyShowDesktop(HWND DesktopWindow, ULONG Width, ULONG Height)
+{
+   CSR_API_MESSAGE Request;
+
+   Request.Type = MAKE_CSR_API(SHOW_DESKTOP, CSR_GUI);
+   Request.Data.ShowDesktopRequest.DesktopWindow = DesktopWindow;
+   Request.Data.ShowDesktopRequest.Width = Width;
+   Request.Data.ShowDesktopRequest.Height = Height;
+
+   return co_CsrNotify(&Request);
+}
+
 /* EOF */

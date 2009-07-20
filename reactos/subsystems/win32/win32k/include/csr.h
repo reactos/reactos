@@ -5,4 +5,8 @@
 NTSTATUS NTAPI
 CsrNotifyCreateDesktop(HDESK Desktop);
 
+/* Notifies CSR about a show desktop event */
+NTSTATUS NTAPI
+CsrNotifyShowDesktop(HWND DesktopWindow, ULONG Width, ULONG Height);
+
 #endif
