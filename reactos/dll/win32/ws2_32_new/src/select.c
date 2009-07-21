@@ -83,7 +83,7 @@ select(IN INT s,
                                                                readfds, 
                                                                writefds,
                                                                exceptfds, 
-                                                               timeout, 
+                                                               (struct timeval *)timeout, 
                                                                &ErrorCode);
                 /* Deference the Socket Context */
                 WsSockDereference(Socket);
