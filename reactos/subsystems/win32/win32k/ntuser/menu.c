@@ -1425,7 +1425,7 @@ intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
                 {
                     bti->rgstate[4] = STATE_SYSTEM_INVISIBLE;
                 }
-                if (pWindowObject->Wnd->pcls->Style & CS_NOCLOSE)
+                if (pWindowObject->Wnd->pcls->style & CS_NOCLOSE)
                 {
                     bti->rgstate[5] = STATE_SYSTEM_UNAVAILABLE;
                 }

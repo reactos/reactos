@@ -90,15 +90,15 @@ static VOID
 IntDestroyClass(IN OUT PWINDOWCLASS Class)
 {
     /* there shouldn't be any clones anymore */
-    ASSERT(Class->Windows == 0);
-    ASSERT(Class->Clone == NULL);
+    ASSERT(Class->cWndReferenceCount == 0);
+    ASSERT(Class->pclsClone == NULL);
 
-    if (Class->Base == Class)
+    if (Class->pclsBase == Class)
     {
         PCALLPROC CallProc, NextCallProc;
 
         /* Destroy allocated callproc handles */
-        CallProc = Class->CallProcList;
+        CallProc = Class->spcpdFirst;
         while (CallProc != NULL)
         {
             NextCallProc = CallProc->Next;
@@ -110,10 +110,10 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
             CallProc = NextCallProc;
         }
 
-        if (Class->Dce)
+        if (Class->pdce)
         {
-           DceFreeClassDCE(((PDCE)Class->Dce)->hDC);
-           Class->Dce = NULL;
+           DceFreeClassDCE(((PDCE)Class->pdce)->hDC);
+           Class->pdce = NULL;
         }
 
         IntFreeClassMenuName(Class);
@@ -144,9 +144,9 @@ void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
         Class = pi->LocalClassList;
         while (Class != NULL)
         {
-            pi->LocalClassList = Class->Next;
+            pi->LocalClassList = Class->pclsNext;
 
-            ASSERT(Class->Base == Class);
+            ASSERT(Class->pclsBase == Class);
             IntDestroyClass(Class);
 
             Class = pi->LocalClassList;
@@ -156,9 +156,9 @@ void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
         Class = pi->GlobalClassList;
         while (Class != NULL)
         {
-            pi->GlobalClassList = Class->Next;
+            pi->GlobalClassList = Class->pclsNext;
 
-            ASSERT(Class->Base == Class);
+            ASSERT(Class->pclsBase == Class);
             IntDestroyClass(Class);
 
             Class = pi->GlobalClassList;
@@ -168,9 +168,9 @@ void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
         Class = pi->SystemClassList;
         while (Class != NULL)
         {
-            pi->SystemClassList = Class->Next;
+            pi->SystemClassList = Class->pclsNext;
 
-            ASSERT(Class->Base == Class);
+            ASSERT(Class->pclsBase == Class);
             IntDestroyClass(Class);
 
             Class = pi->SystemClassList;
@@ -245,7 +245,7 @@ UserFindCallProc(IN PWINDOWCLASS Class,
 {
     PCALLPROC CallProc;
 
-    CallProc = Class->CallProcList;
+    CallProc = Class->spcpdFirst;
     while (CallProc != NULL)
     {
         if (CallProc->WndProc == WndProc &&
@@ -268,17 +268,17 @@ UserAddCallProcToClass(IN OUT PWINDOWCLASS Class,
 
     ASSERT(CallProc->Next == NULL);
 
-    BaseClass = Class->Base;
+    BaseClass = Class->pclsBase;
     ASSERT(CallProc->Next == NULL);
-    CallProc->Next = BaseClass->CallProcList;
-    BaseClass->CallProcList = CallProc;
+    CallProc->Next = BaseClass->spcpdFirst;
+    BaseClass->spcpdFirst = CallProc;
 
     /* Update all clones */
-    Class = Class->Clone;
+    Class = Class->pclsClone;
     while (Class != NULL)
     {
-        Class->CallProcList = BaseClass->CallProcList;
-        Class = Class->Next;
+        Class->spcpdFirst = BaseClass->spcpdFirst;
+        Class = Class->pclsNext;
     }
 }
 
@@ -289,7 +289,7 @@ IntSetClassAtom(IN OUT PWINDOWCLASS Class,
     RTL_ATOM Atom = (RTL_ATOM)0;
 
     /* update the base class first */
-    Class = Class->Base;
+    Class = Class->pclsBase;
 
     if (!IntRegisterClassAtom(ClassName,
                               &Atom))
@@ -297,17 +297,17 @@ IntSetClassAtom(IN OUT PWINDOWCLASS Class,
         return FALSE;
     }
 
-    IntDeregisterClassAtom(Class->Atom);
+    IntDeregisterClassAtom(Class->atomClassName);
 
-    Class->Atom = Atom;
+    Class->atomClassName = Atom;
 
     /* update the clones */
-    Class = Class->Clone;
+    Class = Class->pclsClone;
     while (Class != NULL)
     {
-        Class->Atom = Atom;
+        Class->atomClassName = Atom;
 
-        Class = Class->Next;
+        Class = Class->pclsNext;
     }
 
     return TRUE;
@@ -322,13 +322,13 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
 
     if (Class->System)
     {
-        return (Ansi ? Class->WndProcExtra : Class->WndProc);
+        return (Ansi ? Class->WndProcExtra : Class->lpfnWndProc);
     }
     else
     {
         if (!Ansi == Class->Unicode)
         {
-            return Class->WndProc;
+            return Class->lpfnWndProc;
         }
         else
         {
@@ -336,7 +336,7 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
 
             /* make sure the call procedures are located on the desktop
                of the base class! */
-            BaseClass = Class->Base;
+            BaseClass = Class->pclsBase;
             Class = BaseClass;
 
             if (Class->CallProc != NULL)
@@ -351,12 +351,12 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
                     return NULL;
 
                 NewCallProc = UserFindCallProc(Class,
-                                               Class->WndProc,
+                                               Class->lpfnWndProc,
                                                Class->Unicode);
                 if (NewCallProc == NULL)
                 {
                     NewCallProc = CreateCallProc(NULL,
-                                                 Class->WndProc,
+                                                 Class->lpfnWndProc,
                                                  Class->Unicode,
                                                  pi);
                     if (NewCallProc == NULL)
@@ -372,12 +372,12 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
                 Class->CallProc = NewCallProc;
 
                 /* update the clones */
-                Class = Class->Clone;
+                Class = Class->pclsClone;
                 while (Class != NULL)
                 {
                     Class->CallProc = NewCallProc;
 
-                    Class = Class->Next;
+                    Class = Class->pclsNext;
                 }
 
                 return GetCallProcHandle(NewCallProc);
@@ -395,13 +395,13 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 
     if (Class->System)
     {
-        DPRINT1("Attempted to change window procedure of system window class 0x%p!\n", Class->Atom);
+        DPRINT1("Attempted to change window procedure of system window class 0x%p!\n", Class->atomClassName);
         SetLastWin32Error(ERROR_ACCESS_DENIED);
         return NULL;
     }
 
     /* update the base class first */
-    Class = Class->Base;
+    Class = Class->pclsBase;
 
     /* resolve any callproc handle if possible */
     if (IsCallProcHandle(WndProc))
@@ -426,16 +426,16 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 
     /* update the class info */
     Class->Unicode = !Ansi;
-    Class->WndProc = WndProc;
+    Class->lpfnWndProc = WndProc;
 
     /* update the clones */
-    Class = Class->Clone;
+    Class = Class->pclsClone;
     while (Class != NULL)
     {
         Class->Unicode = !Ansi;
-        Class->WndProc = WndProc;
+        Class->lpfnWndProc = WndProc;
 
-        Class = Class->Next;
+        Class = Class->pclsNext;
     }
 
     return Ret;
@@ -450,7 +450,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
     PWINDOWCLASS Class;
 
     ASSERT(Desktop != NULL);
-    ASSERT(BaseClass->Base == BaseClass);
+    ASSERT(BaseClass->pclsBase == BaseClass);
 
     if (BaseClass->rpdeskParent == Desktop)
     {
@@ -462,8 +462,8 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
 
     if (BaseClass->rpdeskParent == NULL)
     {
-        ASSERT(BaseClass->Windows == 0);
-        ASSERT(BaseClass->Clone == NULL);
+        ASSERT(BaseClass->cWndReferenceCount == 0);
+        ASSERT(BaseClass->pclsClone == NULL);
 
         /* Classes are also located in the shared heap when the class
            was created before the thread attached to a desktop. As soon
@@ -476,17 +476,17 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
     {
         /* The user is asking for a class object on a different desktop,
            try to find one! */
-        Class = BaseClass->Clone;
+        Class = BaseClass->pclsClone;
         while (Class != NULL)
         {
             if (Class->rpdeskParent == Desktop)
             {
-                ASSERT(Class->Base == BaseClass);
-                ASSERT(Class->Clone == NULL);
+                ASSERT(Class->pclsBase == BaseClass);
+                ASSERT(Class->pclsClone == NULL);
                 break;
             }
 
-            Class = Class->Next;
+            Class = Class->pclsNext;
         }
     }
 
@@ -494,7 +494,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
     {
         /* The window is created on a different desktop, we need to
            clone the class object to the desktop heap of the window! */
-        ClassSize = sizeof(*BaseClass) + (SIZE_T)BaseClass->ClsExtra;
+        ClassSize = sizeof(*BaseClass) + (SIZE_T)BaseClass->cbclsExtra;
 
         Class = DesktopHeapAlloc(Desktop,
                                  ClassSize);
@@ -507,7 +507,7 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
 
             /* update some pointers and link the class */
             Class->rpdeskParent = Desktop;
-            Class->Windows = 0;
+            Class->cWndReferenceCount = 0;
 
             if (BaseClass->rpdeskParent == NULL)
             {
@@ -515,27 +515,27 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                    heap anymore, delete it so the only class left is
                    the clone we just created, which now serves as the
                    new base class */
-                ASSERT(BaseClass->Clone == NULL);
-                ASSERT(Class->Clone == NULL);
-                Class->Base = Class;
-                Class->Next = BaseClass->Next;
+                ASSERT(BaseClass->pclsClone == NULL);
+                ASSERT(Class->pclsClone == NULL);
+                Class->pclsBase = Class;
+                Class->pclsNext = BaseClass->pclsNext;
 
                 /* replace the base class */
                 (void)InterlockedExchangePointer((PVOID*)ClassLink,
                                                  Class);
 
                 /* destroy the obsolete copy on the shared heap */
-                BaseClass->Base = NULL;
-                BaseClass->Clone = NULL;
+                BaseClass->pclsBase = NULL;
+                BaseClass->pclsClone = NULL;
                 IntDestroyClass(BaseClass);
             }
             else
             {
                 /* link in the clone */
-                Class->Clone = NULL;
-                Class->Base = BaseClass;
-                Class->Next = BaseClass->Clone;
-                (void)InterlockedExchangePointer(&BaseClass->Clone,
+                Class->pclsClone = NULL;
+                Class->pclsBase = BaseClass;
+                Class->pclsNext = BaseClass->pclsClone;
+                (void)InterlockedExchangePointer(&BaseClass->pclsClone,
                                                  Class);
             }
         }
@@ -555,14 +555,14 @@ IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
 {
     PWINDOWCLASS Class;
 
-    ASSERT(BaseClass->Base == BaseClass);
+    ASSERT(BaseClass->pclsBase == BaseClass);
 
     Class = IntGetClassForDesktop(BaseClass,
                                   ClassLink,
                                   Desktop);
     if (Class != NULL)
     {
-        Class->Windows++;
+        Class->cWndReferenceCount++;
     }
 
     return Class;
@@ -575,34 +575,34 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 {
     PWINDOWCLASS Clone, BaseClass;
 
-    ASSERT(Class->Base != Class);
-    ASSERT(Class->Base->Clone != NULL);
+    ASSERT(Class->pclsBase != Class);
+    ASSERT(Class->pclsBase->pclsClone != NULL);
     ASSERT(Class->rpdeskParent != NULL);
-    ASSERT(Class->Windows != 0);
-    ASSERT(Class->Base->rpdeskParent != NULL);
-    ASSERT(Class->Base->Windows == 0);
+    ASSERT(Class->cWndReferenceCount != 0);
+    ASSERT(Class->pclsBase->rpdeskParent != NULL);
+    ASSERT(Class->pclsBase->cWndReferenceCount == 0);
 
     /* unlink the clone */
-    *CloneLink = Class->Next;
-    Class->Clone = Class->Base->Clone;
+    *CloneLink = Class->pclsNext;
+    Class->pclsClone = Class->pclsBase->pclsClone;
 
-    BaseClass = Class->Base;
+    BaseClass = Class->pclsBase;
 
     /* update the class information to make it a base class */
-    Class->Base = Class;
-    Class->Next = (*BaseClassLink)->Next;
+    Class->pclsBase = Class;
+    Class->pclsNext = (*BaseClassLink)->pclsNext;
 
     /* update all clones */
-    Clone = Class->Clone;
+    Clone = Class->pclsClone;
     while (Clone != NULL)
     {
-        ASSERT(Clone->Clone == NULL);
-        Clone->Base = Class;
+        ASSERT(Clone->pclsClone == NULL);
+        Clone->pclsBase = Class;
 
         if (!Class->System)
             Clone->CallProc = Class->CallProc;
 
-        Clone = Clone->Next;
+        Clone = Clone->pclsNext;
     }
 
     /* link in the new base class */
@@ -617,19 +617,19 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
 {
     PWINDOWCLASS *PrevLink, BaseClass, CurrentClass;
 
-    BaseClass = Class->Base;
+    BaseClass = Class->pclsBase;
 
-    if (--Class->Windows == 0)
+    if (--Class->cWndReferenceCount == 0)
     {
         if (BaseClass == Class)
         {
-            ASSERT(Class->Base == Class);
+            ASSERT(Class->pclsBase == Class);
 
             /* check if there are clones of the class on other desktops,
                link the first clone in if possible. If there are no clones
                then leave the class on the desktop heap. It will get moved
                to the shared heap when the thread detaches. */
-            if (BaseClass->Clone != NULL)
+            if (BaseClass->pclsClone != NULL)
             {
                 if (BaseClass->System)
                     PrevLink = &pi->SystemClassList;
@@ -643,45 +643,45 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
                 {
                     ASSERT(CurrentClass != NULL);
 
-                    PrevLink = &CurrentClass->Next;
-                    CurrentClass = CurrentClass->Next;
+                    PrevLink = &CurrentClass->pclsNext;
+                    CurrentClass = CurrentClass->pclsNext;
                 }
 
                 ASSERT(*PrevLink == BaseClass);
 
                 /* make the first clone become the new base class */
-                IntMakeCloneBaseClass(BaseClass->Clone,
+                IntMakeCloneBaseClass(BaseClass->pclsClone,
                                       PrevLink,
-                                      &BaseClass->Clone);
+                                      &BaseClass->pclsClone);
 
                 /* destroy the class, there's still another clone of the class
                    that now serves as a base class. Make sure we don't destruct
                    resources shared by all classes (Base = NULL)! */
-                BaseClass->Base = NULL;
-                BaseClass->Clone = NULL;
+                BaseClass->pclsBase = NULL;
+                BaseClass->pclsClone = NULL;
                 IntDestroyClass(BaseClass);
             }
         }
         else
         {
             /* locate the cloned class and unlink it */
-            PrevLink = &BaseClass->Clone;
-            CurrentClass = BaseClass->Clone;
+            PrevLink = &BaseClass->pclsClone;
+            CurrentClass = BaseClass->pclsClone;
             while (CurrentClass != Class)
             {
                 ASSERT(CurrentClass != NULL);
 
-                PrevLink = &CurrentClass->Next;
-                CurrentClass = CurrentClass->Next;
+                PrevLink = &CurrentClass->pclsNext;
+                CurrentClass = CurrentClass->pclsNext;
             }
 
             ASSERT(CurrentClass == Class);
 
             (void)InterlockedExchangePointer((PVOID*)PrevLink,
-                                             Class->Next);
+                                             Class->pclsNext);
 
-            ASSERT(Class->Base == BaseClass);
-            ASSERT(Class->Clone == NULL);
+            ASSERT(Class->pclsBase == BaseClass);
+            ASSERT(Class->pclsClone == NULL);
 
             /* the class was just a clone, we don't need it anymore */
             IntDestroyClass(Class);
@@ -696,12 +696,12 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
     PWINDOWCLASS NewClass;
     SIZE_T ClassSize;
 
-    ASSERT(Class->Base == Class);
+    ASSERT(Class->pclsBase == Class);
     ASSERT(Class->rpdeskParent != NULL);
-    ASSERT(Class->Windows == 0);
-    ASSERT(Class->Clone == NULL);
+    ASSERT(Class->cWndReferenceCount == 0);
+    ASSERT(Class->pclsClone == NULL);
 
-    ClassSize = sizeof(*Class) + (SIZE_T)Class->ClsExtra;
+    ClassSize = sizeof(*Class) + (SIZE_T)Class->cbclsExtra;
 
     /* allocate the new base class on the shared heap */
     NewClass = UserHeapAlloc(ClassSize);
@@ -712,15 +712,15 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
                       ClassSize);
 
         NewClass->rpdeskParent = NULL;
-        NewClass->Base = NewClass;
+        NewClass->pclsBase = NewClass;
 
         /* replace the class in the list */
         (void)InterlockedExchangePointer((PVOID*)*ClassLinkPtr,
                                          NewClass);
-        *ClassLinkPtr = &NewClass->Next;
+        *ClassLinkPtr = &NewClass->pclsNext;
 
         /* free the obsolete class on the desktop heap */
-        Class->Base = NULL;
+        Class->pclsBase = NULL;
         IntDestroyClass(Class);
         return TRUE;
     }
@@ -749,15 +749,15 @@ IntCheckDesktopClasses(IN PDESKTOP Desktop,
     Class = *Link;
     while (Class != NULL)
     {
-        NextClass = Class->Next;
+        NextClass = Class->pclsNext;
 
-        ASSERT(Class->Base == Class);
+        ASSERT(Class->pclsBase == Class);
 
         if (Class->rpdeskParent == Desktop &&
-            Class->Windows == 0)
+            Class->cWndReferenceCount == 0)
         {
             /* there shouldn't be any clones around anymore! */
-            ASSERT(Class->Clone == NULL);
+            ASSERT(Class->pclsClone == NULL);
 
             /* FIXME - If process is terminating, don't move the class but rather destroy it! */
             /* FIXME - We could move the class to another desktop heap if there's still desktops
@@ -771,27 +771,27 @@ IntCheckDesktopClasses(IN PDESKTOP Desktop,
             }
             else
             {
-                ASSERT(NextClass == Class->Next);
+                ASSERT(NextClass == Class->pclsNext);
 
                 if (FreeOnFailure)
                 {
                     /* unlink the base class */
                     (void)InterlockedExchangePointer((PVOID*)Link,
-                                                     Class->Next);
+                                                     Class->pclsNext);
 
                     /* we can free the old base class now */
-                    Class->Base = NULL;
+                    Class->pclsBase = NULL;
                     IntDestroyClass(Class);
                 }
                 else
                 {
-                    Link = &Class->Next;
+                    Link = &Class->pclsNext;
                     *Ret = FALSE;
                 }
             }
         }
         else
-            Link = &Class->Next;
+            Link = &Class->pclsNext;
 
         Class = NextClass;
     }
@@ -889,8 +889,8 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                       ClassSize);
 
         Class->rpdeskParent = Desktop;
-        Class->Base = Class;
-        Class->Atom = Atom;
+        Class->pclsBase = Class;
+        Class->atomClassName = Atom;
 
         if (dwFlags & REGISTERCLASS_SYSTEM)
         {
@@ -906,11 +906,11 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             /* need to protect with SEH since accessing the WNDCLASSEX structure
                and string buffers might raise an exception! We don't want to
                leak memory... */
-            Class->WndProc = lpwcx->lpfnWndProc;
-            Class->Style = lpwcx->style;
-            Class->ClsExtra = lpwcx->cbClsExtra;
-            Class->WndExtra = lpwcx->cbWndExtra;
-            Class->hInstance = lpwcx->hInstance;
+            Class->lpfnWndProc = lpwcx->lpfnWndProc;
+            Class->style = lpwcx->style;
+            Class->cbclsExtra = lpwcx->cbClsExtra;
+            Class->cbwndExtra = lpwcx->cbWndExtra;
+            Class->hModule = lpwcx->hInstance;
             Class->hIcon = lpwcx->hIcon; /* FIXME */
             Class->hIconSm = lpwcx->hIconSm; /* FIXME */
             Class->hCursor = lpwcx->hCursor; /* FIXME */
@@ -957,7 +957,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             if (!(dwFlags & REGISTERCLASS_ANSI))
                 Class->Unicode = TRUE;
 
-            if (Class->Style & CS_GLOBALCLASS)
+            if (Class->style & CS_GLOBALCLASS)
                 Class->Global = TRUE;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1009,19 +1009,19 @@ IntFindClass(IN RTL_ATOM Atom,
     Class = *PrevLink;
     while (Class != NULL)
     {
-        if (Class->Atom == Atom &&
-            (hInstance == NULL || Class->hInstance == hInstance) &&
+        if (Class->atomClassName == Atom &&
+            (hInstance == NULL || Class->hModule == hInstance) &&
             !Class->Destroying)
         {
-            ASSERT(Class->Base == Class);
+            ASSERT(Class->pclsBase == Class);
 
             if (Link != NULL)
                 *Link = PrevLink;
             break;
         }
 
-        PrevLink = &Class->Next;
-        Class = Class->Next;
+        PrevLink = &Class->pclsNext;
+        Class = Class->pclsNext;
     }
 
     return Class;
@@ -1250,11 +1250,11 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
         else
             List = &pi->LocalClassList;
 
-        Class->Next = *List;
+        Class->pclsNext = *List;
         (void)InterlockedExchangePointer((PVOID*)List,
                                          Class);
 
-        Ret = Class->Atom;
+        Ret = Class->atomClassName;
     }
 
     return Ret;
@@ -1291,20 +1291,20 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 
     ASSERT(Class != NULL);
 
-    if (Class->Windows != 0 ||
-        Class->Clone != NULL)
+    if (Class->cWndReferenceCount != 0 ||
+        Class->pclsClone != NULL)
     {
         SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
         return FALSE;
     }
 
     /* must be a base class! */
-    ASSERT(Class->Base == Class);
+    ASSERT(Class->pclsBase == Class);
 
     /* unlink the class */
-    *Link = Class->Next;
+    *Link = Class->pclsNext;
 
-    if (NT_SUCCESS(IntDeregisterClassAtom(Class->Atom)))
+    if (NT_SUCCESS(IntDeregisterClassAtom(Class->atomClassName)))
     {
         /* finally free the resources */
         IntDestroyClass(Class);
@@ -1342,7 +1342,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
 
             /* find out how big the buffer needs to be */
             Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                             Class->Atom,
+                                             Class->atomClassName,
                                              NULL,
                                              NULL,
                                              szStaticTemp,
@@ -1368,7 +1368,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
 
                 /* query the class name */
                 Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                                 Class->Atom,
+                                                 Class->atomClassName,
                                                  NULL,
                                                  NULL,
                                                  szTemp,
@@ -1402,7 +1402,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
 
             /* query the atom name */
             Status = RtlQueryAtomInAtomTable(gAtomTable,
-                                             Class->Atom,
+                                             Class->atomClassName,
                                              NULL,
                                              NULL,
                                              ClassName->Buffer,
@@ -1444,7 +1444,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
 
         TRACE("GetClassLong(%d)\n", Index);
         if (Index + sizeof(ULONG_PTR) < Index ||
-            Index + sizeof(ULONG_PTR) > Class->ClsExtra)
+            Index + sizeof(ULONG_PTR) > Class->cbclsExtra)
         {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return 0;
@@ -1463,11 +1463,11 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
     switch (Index)
     {
         case GCL_CBWNDEXTRA:
-            Ret = (ULONG_PTR)Class->WndExtra;
+            Ret = (ULONG_PTR)Class->cbwndExtra;
             break;
 
         case GCL_CBCLSEXTRA:
-            Ret = (ULONG_PTR)Class->ClsExtra;
+            Ret = (ULONG_PTR)Class->cbclsExtra;
             break;
 
         case GCLP_HBRBACKGROUND:
@@ -1490,7 +1490,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
             break;
 
         case GCLP_HMODULE:
-            Ret = (ULONG_PTR)Class->hInstance;
+            Ret = (ULONG_PTR)Class->hModule;
             break;
 
         case GCLP_MENUNAME:
@@ -1502,7 +1502,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
             break;
 
         case GCL_STYLE:
-            Ret = (ULONG_PTR)Class->Style;
+            Ret = (ULONG_PTR)Class->style;
             break;
 
         case GCLP_WNDPROC:
@@ -1512,7 +1512,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
             break;
 
         case GCW_ATOM:
-            Ret = (ULONG_PTR)Class->Atom;
+            Ret = (ULONG_PTR)Class->atomClassName;
             break;
 
         default:
@@ -1530,7 +1530,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
     BOOL Ret = FALSE;
 
     /* change the base class first */
-    Class = Class->Base;
+    Class = Class->pclsBase;
 
     if (MenuName->Length != 0)
     {
@@ -1581,14 +1581,14 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
                 Class->MenuNameIsString = TRUE;
 
                 /* update the clones */
-                Class = Class->Clone;
+                Class = Class->pclsClone;
                 while (Class != NULL)
                 {
                     Class->MenuName = strBufW;
                     Class->AnsiMenuName = AnsiString.Buffer;
                     Class->MenuNameIsString = TRUE;
 
-                    Class = Class->Next;
+                    Class = Class->pclsNext;
                 }
             }
             else
@@ -1611,14 +1611,14 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
         Class->MenuNameIsString = FALSE;
 
         /* update the clones */
-        Class = Class->Clone;
+        Class = Class->pclsClone;
         while (Class != NULL)
         {
             Class->MenuName = MenuName->Buffer;
             Class->AnsiMenuName = (PSTR)MenuName->Buffer;
             Class->MenuNameIsString = FALSE;
 
-            Class = Class->Next;
+            Class = Class->pclsNext;
         }
 
         Ret = TRUE;
@@ -1638,7 +1638,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
     /* NOTE: For GCLP_MENUNAME and GCW_ATOM this function may raise an exception! */
 
     /* change the information in the base class first, then update the clones */
-    Class = Class->Base;
+    Class = Class->pclsBase;
 
     if (Index >= 0)
     {
@@ -1647,7 +1647,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
         TRACE("SetClassLong(%d, %x)\n", Index, NewLong);
 
         if (Index + sizeof(ULONG_PTR) < Index ||
-            Index + sizeof(ULONG_PTR) > Class->ClsExtra)
+            Index + sizeof(ULONG_PTR) > Class->cbclsExtra)
         {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return 0;
@@ -1662,11 +1662,11 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
         *Data = NewLong;
 
         /* update the clones */
-        Class = Class->Clone;
+        Class = Class->pclsClone;
         while (Class != NULL)
         {
             *(PULONG_PTR)((ULONG_PTR)(Class + 1) + Index) = NewLong;
-            Class = Class->Next;
+            Class = Class->pclsNext;
         }
 
         return Ret;
@@ -1675,15 +1675,15 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
     switch (Index)
     {
         case GCL_CBWNDEXTRA:
-            Ret = (ULONG_PTR)Class->WndExtra;
-            Class->WndExtra = (INT)NewLong;
+            Ret = (ULONG_PTR)Class->cbwndExtra;
+            Class->cbwndExtra = (INT)NewLong;
 
             /* update the clones */
-            Class = Class->Clone;
+            Class = Class->pclsClone;
             while (Class != NULL)
             {
-                Class->WndExtra = (INT)NewLong;
-                Class = Class->Next;
+                Class->cbwndExtra = (INT)NewLong;
+                Class = Class->pclsNext;
             }
 
             break;
@@ -1697,11 +1697,11 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
             Class->hbrBackground = (HBRUSH)NewLong;
 
             /* update the clones */
-            Class = Class->Clone;
+            Class = Class->pclsClone;
             while (Class != NULL)
             {
                 Class->hbrBackground = (HBRUSH)NewLong;
-                Class = Class->Next;
+                Class = Class->pclsNext;
             }
             break;
 
@@ -1711,11 +1711,11 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
             Class->hCursor = (HANDLE)NewLong;
 
             /* update the clones */
-            Class = Class->Clone;
+            Class = Class->pclsClone;
             while (Class != NULL)
             {
                 Class->hCursor = (HANDLE)NewLong;
-                Class = Class->Next;
+                Class = Class->pclsNext;
             }
             break;
 
@@ -1725,11 +1725,11 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
             Class->hIcon = (HANDLE)NewLong;
 
             /* update the clones */
-            Class = Class->Clone;
+            Class = Class->pclsClone;
             while (Class != NULL)
             {
                 Class->hIcon = (HANDLE)NewLong;
-                Class = Class->Next;
+                Class = Class->pclsNext;
             }
             break;
 
@@ -1739,24 +1739,24 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
             Class->hIconSm = (HANDLE)NewLong;
 
             /* update the clones */
-            Class = Class->Clone;
+            Class = Class->pclsClone;
             while (Class != NULL)
             {
                 Class->hIconSm = (HANDLE)NewLong;
-                Class = Class->Next;
+                Class = Class->pclsNext;
             }
             break;
 
         case GCLP_HMODULE:
-            Ret = (ULONG_PTR)Class->hInstance;
-            Class->hInstance = (HINSTANCE)NewLong;
+            Ret = (ULONG_PTR)Class->hModule;
+            Class->hModule = (HINSTANCE)NewLong;
 
            /* update the clones */
-            Class = Class->Clone;
+            Class = Class->pclsClone;
             while (Class != NULL)
             {
-                Class->hInstance = (HINSTANCE)NewLong;
-                Class = Class->Next;
+                Class->hModule = (HINSTANCE)NewLong;
+                Class = Class->pclsNext;
             }
             break;
 
@@ -1775,8 +1775,8 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
         }
 
         case GCL_STYLE:
-            Ret = (ULONG_PTR)Class->Style;
-            Class->Style = (UINT)NewLong;
+            Ret = (ULONG_PTR)Class->style;
+            Class->style = (UINT)NewLong;
 
             /* FIXME - what if the CS_GLOBALCLASS style is changed? should we
                        move the class to the appropriate list? For now, we save
@@ -1784,11 +1784,11 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
                        locate the appropriate list */
 
            /* update the clones */
-            Class = Class->Clone;
+            Class = Class->pclsClone;
             while (Class != NULL)
             {
-                Class->Style = (UINT)NewLong;
-                Class = Class->Next;
+                Class->style = (UINT)NewLong;
+                Class = Class->pclsNext;
             }
             break;
 
@@ -1802,7 +1802,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
         {
             PUNICODE_STRING Value = (PUNICODE_STRING)NewLong;
 
-            Ret = (ULONG_PTR)Class->Atom;
+            Ret = (ULONG_PTR)Class->atomClassName;
             if (!IntSetClassAtom(Class,
                                  Value))
             {
@@ -1827,15 +1827,15 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
 {
     PPROCESSINFO pi;
 
-    lpwcx->style = Class->Style;
+    lpwcx->style = Class->style;
 
     pi = GetW32ProcessInfo();
     lpwcx->lpfnWndProc = IntGetClassWndProc(Class,
                                             pi,
                                             Ansi);
 
-    lpwcx->cbClsExtra = Class->ClsExtra;
-    lpwcx->cbWndExtra = Class->WndExtra;
+    lpwcx->cbClsExtra = Class->cbclsExtra;
+    lpwcx->cbWndExtra = Class->cbwndExtra;
     lpwcx->hIcon = Class->hIcon; /* FIXME - get handle from pointer */
     lpwcx->hCursor = Class->hCursor; /* FIXME - get handle from pointer */
     lpwcx->hbrBackground = Class->hbrBackground;
@@ -1845,12 +1845,12 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
     else
         lpwcx->lpszMenuName = Class->MenuName;
 
-    if (Class->hInstance == pi->hModUser)
+    if (Class->hModule == pi->hModUser)
         lpwcx->hInstance = NULL;
     else
-        lpwcx->hInstance = Class->hInstance;
+        lpwcx->hInstance = Class->hModule;
 
-    lpwcx->lpszClassName = (LPCWSTR)((ULONG_PTR)Class->Atom); /* FIXME - return the string? */
+    lpwcx->lpszClassName = (LPCWSTR)((ULONG_PTR)Class->atomClassName); /* FIXME - return the string? */
 
     lpwcx->hIconSm = Class->hIconSm; /* FIXME - get handle from pointer */
 
@@ -1908,14 +1908,14 @@ UserRegisterSystemClasses(IN ULONG Count,
         {
             int iCls;
 
-            Class->fnID = SystemClasses[i].ClassId;
-            if (LockupFnIdToiCls(Class->fnID, &iCls))
+            Class->fnid = SystemClasses[i].ClassId;
+            if (LockupFnIdToiCls(Class->fnid, &iCls))
             {
-                gpsi->atomSysClass[iCls] = Class->Atom;
+                gpsi->atomSysClass[iCls] = Class->atomClassName;
             }
 
             ASSERT(Class->System);
-            Class->Next = pi->SystemClassList;
+            Class->pclsNext = pi->SystemClassList;
             (void)InterlockedExchangePointer((PVOID*)&pi->SystemClassList,
                                              Class);
         }

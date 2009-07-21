@@ -1140,7 +1140,7 @@ NtUserCreateDesktop(
    if (Class != NULL)
    {
       ASSERT(Class->System);
-      Class->Next = pi->SystemClassList;
+      Class->pclsNext = pi->SystemClassList;
       (void)InterlockedExchangePointer((PVOID*)&pi->SystemClassList,
                                              Class);
    }

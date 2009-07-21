@@ -604,7 +604,7 @@ IntGetWindowInfo(PWINDOW_OBJECT Window, PWINDOWINFO pwi)
    pwi->dwExStyle = Wnd->ExStyle;
    pwi->dwWindowStatus = (UserGetForegroundWindow() == Window->hSelf); /* WS_ACTIVECAPTION */
    IntGetWindowBorderMeasures(Window, &pwi->cxWindowBorders, &pwi->cyWindowBorders);
-   pwi->atomWindowType = (Wnd->pcls ? Wnd->pcls->Atom : 0);
+   pwi->atomWindowType = (Wnd->pcls ? Wnd->pcls->atomClassName : 0);
    pwi->wCreatorVersion = 0x400; /* FIXME - return a real version number */
    return TRUE;
 }
@@ -1664,11 +1664,11 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    if (Window)
    {
        Window->Wnd = DesktopHeapAlloc(pti->Desktop,
-                                      sizeof(WINDOW) + Class->WndExtra);
+                                      sizeof(WINDOW) + Class->cbwndExtra);
        if (!Window->Wnd)
            goto AllocErr;
        RtlZeroMemory(Window->Wnd,
-                     sizeof(WINDOW) + Class->WndExtra);
+                     sizeof(WINDOW) + Class->cbwndExtra);
        Window->Wnd->hdr.Handle = hWnd; /* FIXME: Remove hack , are you sure?*/
        Wnd = Window->Wnd;
 
@@ -1749,13 +1749,13 @@ AllocErr:
    {
        /* NOTE: Always create a unicode window for system classes! */
        Wnd->Unicode = TRUE;
-       Wnd->lpfnWndProc = Wnd->pcls->WndProc;
+       Wnd->lpfnWndProc = Wnd->pcls->lpfnWndProc;
        Wnd->WndProcExtra = Wnd->pcls->WndProcExtra;
    }
    else
    {
        Wnd->Unicode = Wnd->pcls->Unicode;
-       Wnd->lpfnWndProc = Wnd->pcls->WndProc;
+       Wnd->lpfnWndProc = Wnd->pcls->lpfnWndProc;
        Wnd->CallProc = NULL;
    }
 
@@ -1764,7 +1764,7 @@ AllocErr:
    Window->LastChild = NULL;
    Window->PrevSibling = NULL;
    Window->NextSibling = NULL;
-   Wnd->cbwndExtra = Wnd->pcls->WndExtra;
+   Wnd->cbwndExtra = Wnd->pcls->cbwndExtra;
 
    InitializeListHead(&Wnd->PropListHead);
    InitializeListHead(&Window->WndObjListHead);
@@ -1848,10 +1848,10 @@ AllocErr:
    InsertTailList (&pti->WindowListHead, &Window->ThreadListEntry);
 
    /*  Handle "CS_CLASSDC", it is tested first. */
-   if ((Wnd->pcls->Style & CS_CLASSDC) && !(Wnd->pcls->Dce)) // One DCE per class to have CLASS.
-      Wnd->pcls->Dce = DceAllocDCE(Window, DCE_CLASS_DC);
+   if ((Wnd->pcls->style & CS_CLASSDC) && !(Wnd->pcls->pdce)) // One DCE per class to have CLASS.
+      Wnd->pcls->pdce = DceAllocDCE(Window, DCE_CLASS_DC);
    /* Allocate a DCE for this window. */
-   else if ( Wnd->pcls->Style & CS_OWNDC)
+   else if ( Wnd->pcls->style & CS_OWNDC)
       Window->Dce = DceAllocDCE(Window, DCE_WINDOW_DC);
 
    Pos.x = x;
@@ -2656,7 +2656,7 @@ IntFindWindow(PWINDOW_OBJECT Parent,
             The user mode version however calls GetWindowText() which will
             send WM_GETTEXT messages to windows belonging to its processes */
          if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->Wnd->strName), TRUE)) &&
-               (!ClassAtom || Child->Wnd->pcls->Atom == ClassAtom))
+               (!ClassAtom || Child->Wnd->pcls->atomClassName == ClassAtom))
          {
             Ret = Child->hSelf;
             break;
@@ -2829,7 +2829,7 @@ NtUserFindWindowEx(HWND hwndParent,
                 WindowMatches = !CheckWindowName || !RtlCompareUnicodeString(
                                    &WindowName, &TopLevelWindow->Wnd->strName, TRUE);
                 ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
-                               ClassAtom == TopLevelWindow->Wnd->pcls->Atom;
+                               ClassAtom == TopLevelWindow->Wnd->pcls->atomClassName;
 
                 if (WindowMatches && ClassMatches)
                 {
@@ -3760,12 +3760,12 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
     {
         /* check if the new procedure matches with the one in the
            window class. If so, we need to restore both procedures! */
-        Wnd->IsSystem = (NewWndProc == Wnd->pcls->WndProc ||
+        Wnd->IsSystem = (NewWndProc == Wnd->pcls->lpfnWndProc ||
                          NewWndProc == Wnd->pcls->WndProcExtra);
 
         if (Wnd->IsSystem)
         {
-            Wnd->lpfnWndProc = Wnd->pcls->WndProc;
+            Wnd->lpfnWndProc = Wnd->pcls->lpfnWndProc;
             Wnd->WndProcExtra = Wnd->pcls->WndProcExtra;
             Wnd->Unicode = !Ansi;
             return Ret;
@@ -4334,7 +4334,7 @@ NtUserSetWindowFNID(HWND hWnd,
          RETURN( FALSE);
       }
       else
-         Wnd->pcls->fnID |= fnID;
+         Wnd->pcls->fnid |= fnID;
    }
    RETURN( TRUE);
 

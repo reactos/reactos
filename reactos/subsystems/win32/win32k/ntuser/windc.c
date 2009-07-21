@@ -342,20 +342,20 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);
       if (!(Flags & DCX_WINDOW)) // not window rectangle
       {
-         if (Wnd->pcls->Style & CS_PARENTDC)
+         if (Wnd->pcls->style & CS_PARENTDC)
          {
             Flags |= DCX_PARENTCLIP;
          }
 
          if (!(Flags & DCX_CACHE) && // Not on the cheap wine list.
-             !(Wnd->pcls->Style & CS_OWNDC) )
+             !(Wnd->pcls->style & CS_OWNDC) )
          {
-            if (!(Wnd->pcls->Style & CS_CLASSDC))
+            if (!(Wnd->pcls->style & CS_CLASSDC))
             // The window is not POWNED or has any CLASS, so we are looking for cheap wine.
                Flags |= DCX_CACHE;
             else
             {
-               if (Wnd->pcls->Dce) hDC = ((PDCE)Wnd->pcls->Dce)->hDC;
+               if (Wnd->pcls->pdce) hDC = ((PDCE)Wnd->pcls->pdce)->hDC;
                DPRINT("We have CLASS!!\n");
             }
          }
@@ -646,7 +646,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
       {
          if (!(pDCE->DCXFlags & DCX_CACHE)) /* owned or Class DCE*/
          {
-            if (Window->Wnd->pcls->Style & CS_CLASSDC ||
+            if (Window->Wnd->pcls->style & CS_CLASSDC ||
                 Window->Wnd->style & CS_CLASSDC) /* Test Class first */
             {
                if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) /* Class DCE*/
@@ -657,7 +657,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
                pDCE->DCXFlags = DCX_DCEEMPTY;
                pDCE->hwndCurrent = 0;
             }
-            else if (Window->Wnd->pcls->Style & CS_OWNDC ||
+            else if (Window->Wnd->pcls->style & CS_OWNDC ||
                      Window->Wnd->style & CS_OWNDC) /* owned DCE*/
             {
                pDCE = DceFreeDCE(pDCE, FALSE);

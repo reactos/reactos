@@ -136,6 +136,8 @@ GetClassInfoA(
     WNDCLASSEXA wcex;
     BOOL retval;
 
+    if (!hInstance) hInstance = User32Instance;
+
     retval = GetClassInfoExA(hInstance, lpClassName, &wcex);
     if (retval)
     {
@@ -143,7 +145,7 @@ GetClassInfoA(
         lpWndClass->lpfnWndProc   = wcex.lpfnWndProc;
         lpWndClass->cbClsExtra    = wcex.cbClsExtra;
         lpWndClass->cbWndExtra    = wcex.cbWndExtra;
-        lpWndClass->hInstance     = wcex.hInstance;
+        lpWndClass->hInstance     = (User32Instance == hInstance) ? 0 : wcex.hInstance;
         lpWndClass->hIcon         = wcex.hIcon;
         lpWndClass->hCursor       = wcex.hCursor;
         lpWndClass->hbrBackground = wcex.hbrBackground;
@@ -167,6 +169,8 @@ GetClassInfoW(
     WNDCLASSEXW wcex;
     BOOL retval;
 
+    if (!hInstance) hInstance = User32Instance;
+
     retval = GetClassInfoExW(hInstance, lpClassName, &wcex);
     if (retval)
     {
@@ -174,7 +178,7 @@ GetClassInfoW(
         lpWndClass->lpfnWndProc   = wcex.lpfnWndProc;
         lpWndClass->cbClsExtra    = wcex.cbClsExtra;
         lpWndClass->cbWndExtra    = wcex.cbWndExtra;
-        lpWndClass->hInstance     = wcex.hInstance;
+        lpWndClass->hInstance     = (User32Instance == hInstance) ? 0 : wcex.hInstance;
         lpWndClass->hIcon         = wcex.hIcon;
         lpWndClass->hCursor       = wcex.hCursor;
         lpWndClass->hbrBackground = wcex.hbrBackground;
@@ -208,7 +212,7 @@ GetClassLongA(HWND hWnd, int nIndex)
             if (nIndex >= 0)
             {
                 if (nIndex + sizeof(ULONG_PTR) < nIndex ||
-                    nIndex + sizeof(ULONG_PTR) > Class->ClsExtra)
+                    nIndex + sizeof(ULONG_PTR) > Class->cbclsExtra)
                 {
                     SetLastError(ERROR_INVALID_PARAMETER);
                 }
@@ -220,11 +224,11 @@ GetClassLongA(HWND hWnd, int nIndex)
                 switch (nIndex)
                 {
                     case GCL_CBWNDEXTRA:
-                        Ret = (ULONG_PTR)Class->WndExtra;
+                        Ret = (ULONG_PTR)Class->cbwndExtra;
                         break;
 
                     case GCL_CBCLSEXTRA:
-                        Ret = (ULONG_PTR)Class->ClsExtra;
+                        Ret = (ULONG_PTR)Class->cbclsExtra;
                         break;
 
                     case GCL_HBRBACKGROUND:
@@ -234,7 +238,7 @@ GetClassLongA(HWND hWnd, int nIndex)
                         break;
 
                     case GCL_HMODULE:
-                        Ret = (ULONG_PTR)Class->hInstance;
+                        Ret = (ULONG_PTR)Class->hModule;
                         break;
 
                     case GCL_MENUNAME:
@@ -242,11 +246,11 @@ GetClassLongA(HWND hWnd, int nIndex)
                         break;
 
                     case GCL_STYLE:
-                        Ret = (ULONG_PTR)Class->Style;
+                        Ret = (ULONG_PTR)Class->style;
                         break;
 
                     case GCW_ATOM:
-                        Ret = (ULONG_PTR)Class->Atom;
+                        Ret = (ULONG_PTR)Class->atomClassName;
                         break;
 
                     case GCLP_HCURSOR:
@@ -321,7 +325,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
             if (nIndex >= 0)
             {
                 if (nIndex + sizeof(ULONG_PTR) < nIndex ||
-                    nIndex + sizeof(ULONG_PTR) > Class->ClsExtra)
+                    nIndex + sizeof(ULONG_PTR) > Class->cbclsExtra)
                 {
                     SetLastError(ERROR_INVALID_PARAMETER);
                 }
@@ -333,11 +337,11 @@ GetClassLongW ( HWND hWnd, int nIndex )
                 switch (nIndex)
                 {
                     case GCL_CBWNDEXTRA:
-                        Ret = (ULONG_PTR)Class->WndExtra;
+                        Ret = (ULONG_PTR)Class->cbwndExtra;
                         break;
 
                     case GCL_CBCLSEXTRA:
-                        Ret = (ULONG_PTR)Class->ClsExtra;
+                        Ret = (ULONG_PTR)Class->cbclsExtra;
                         break;
 
                     case GCL_HBRBACKGROUND:
@@ -347,7 +351,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
                         break;
 
                     case GCL_HMODULE:
-                        Ret = (ULONG_PTR)Class->hInstance;
+                        Ret = (ULONG_PTR)Class->hModule;
                         break;
 
                     case GCL_MENUNAME:
@@ -355,11 +359,11 @@ GetClassLongW ( HWND hWnd, int nIndex )
                         break;
 
                     case GCL_STYLE:
-                        Ret = (ULONG_PTR)Class->Style;
+                        Ret = (ULONG_PTR)Class->style;
                         break;
 
                     case GCW_ATOM:
-                        Ret = (ULONG_PTR)Class->Atom;
+                        Ret = (ULONG_PTR)Class->atomClassName;
                         break;
 
                     case GCLP_HCURSOR:

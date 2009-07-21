@@ -98,40 +98,52 @@ typedef struct _CALLPROC
     UINT Unicode : 1;
 } CALLPROC, *PCALLPROC;
 
+#define CSF_SERVERSIDEPROC      0x0001
+#define CSF_ANSIPROC            0x0002
+#define CSF_WOWDEFERDESTROY     0x0004
+#define CSF_SYSTEMCLASS         0x0008
+#define CSF_WOWCLASS            0x0010
+#define CSF_WOWEXTRA            0x0020
+#define CSF_CACHEDSMICON        0x0040
+#define CSF_WIN40COMPAT         0x0080
+
 typedef struct _WINDOWCLASS
 {
-    struct _WINDOWCLASS *Next;
-    struct _WINDOWCLASS *Clone;
-    struct _WINDOWCLASS *Base;
+    struct _WINDOWCLASS *pclsNext;
+    RTL_ATOM atomClassName;
+    ATOM atomNVClassName;
+    DWORD fnid; // New ClassId
     struct _DESKTOP *rpdeskParent;
-    RTL_ATOM Atom;
-    ULONG Windows;
-
-    UINT Style;
-    WNDPROC WndProc;
+    PVOID pdce;
+    DWORD CSF_flags;
+    PSTR  lpszClientAnsiMenuName;
+    PWSTR lpszClientUnicodeMenuName;
+    HANDLE hMenu; /* FIXME - Use pointer! */
+    PCALLPROC spcpdFirst;
+    struct _WINDOWCLASS *pclsBase;
+    struct _WINDOWCLASS *pclsClone;
+    ULONG cWndReferenceCount;
+    UINT style;
+    WNDPROC lpfnWndProc;
     union
     {
         WNDPROC WndProcExtra;
         PCALLPROC CallProc;
     };
-    PCALLPROC CallProcList;
-    INT ClsExtra;
-    INT WndExtra;
-    PVOID Dce;
-    DWORD fnID; // New ClassId
-    HINSTANCE hInstance;
+    INT cbclsExtra;
+    INT cbwndExtra;
+    HINSTANCE hModule;
     HANDLE hIcon; /* FIXME - Use pointer! */
-    HANDLE hIconSm; /* FIXME - Use pointer! */
     HANDLE hCursor; /* FIXME - Use pointer! */
     HBRUSH hbrBackground;
-    HANDLE hMenu; /* FIXME - Use pointer! */
     PWSTR MenuName;
     PSTR AnsiMenuName;
+    HANDLE hIconSm; /* FIXME - Use pointer! */
 
     UINT Destroying : 1;
     UINT Unicode : 1;
-    UINT System : 1;
-    UINT Global : 1;
+    UINT System : 1;  // CSF_SYSTEMCLASS
+    UINT Global : 1;  // CS_GLOBALCLASS
     UINT MenuNameIsString : 1;
     UINT NotUsed : 27;
 } WINDOWCLASS, *PWINDOWCLASS;

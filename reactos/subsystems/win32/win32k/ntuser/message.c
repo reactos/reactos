@@ -694,7 +694,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
    {
       /* generate double click messages, if necessary */
       if ((((*HitTest) != HTCLIENT) ||
-            (Window->Wnd->pcls->Style & CS_DBLCLKS)) &&
+            (Window->Wnd->pcls->style & CS_DBLCLKS)) &&
             MsqIsDblClk(Msg, Remove))
       {
          Msg->message += WM_LBUTTONDBLCLK - WM_LBUTTONDOWN;
