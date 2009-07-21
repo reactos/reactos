@@ -21,8 +21,8 @@
 
 /* PSDK and NDK Headers */
 #include <winsock2.h>
-#include <Ws2tcpip.h>
-#include <Ws2spi.h>
+#include <ws2tcpip.h>
+#include <ws2spi.h>
 #include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
 
