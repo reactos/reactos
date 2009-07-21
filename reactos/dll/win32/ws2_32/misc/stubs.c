@@ -775,8 +775,8 @@ WSCGetProviderPath(IN      LPGUID lpProviderId,
  */
 INT
 EXPORT
-WSCInstallProvider(IN  CONST LPGUID lpProviderId,
-                   IN  CONST LPWSTR lpszProviderDllPath,
+WSCInstallProvider(IN  LPGUID lpProviderId,
+                   IN  CONST WCHAR* lpszProviderDllPath,
                    IN  CONST LPWSAPROTOCOL_INFOW lpProtocolInfoList,
                    IN  DWORD dwNumberOfEntries,
                    OUT LPINT lpErrno)
