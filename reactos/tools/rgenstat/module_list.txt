@@ -7,7 +7,6 @@ appwiz dll\cpl\appwiz
 desk dll\cpl\desk
 hdwwiz dll\cpl\hdwwiz
 intl dll\cpl\intl
-intl_new dll\cpl\intl_new
 main dll\cpl\main
 mmsys dll\cpl\mmsys
 ncpa dll\cpl\ncpa
@@ -32,7 +31,6 @@ kbdhe dll\keyboard\kbdhe
 kbdheb dll\keyboard\kbdheb
 kbdhu dll\keyboard\kbdhu
 kbdru dll\keyboard\kbdru
-kbdse dll\keyboard\kbdse
 kbdsg dll\keyboard\kbdsg
 kbdsk dll\keyboard\kbdsk
 kbduk dll\keyboard\kbduk
@@ -50,7 +48,7 @@ avifil32 dll\win32\avifil32
 cabinet dll\win32\cabinet
 cards dll\win32\cards
 cfgmgr32 dll\win32\cfgmgr32
-console dll\win32\console
+console dll\cpl\console
 comctl32 dll\win32\comctl32
 comdlg32 dll\win32\comdlg32
 crtdll dll\win32\crtdll
@@ -75,7 +73,7 @@ lz32 dll\win32\lz32
 mapi32 dll\win32\mapi32
 mmdrv dll\win32\mmdrv
 mpr dll\win32\mpr
-msacm32 dll\win32\msacm
+msacm32 dll\win32\msacm32
 msafd dll\win32\msafd
 msgina dll\win32\msgina
 msi dll\win32\msi
@@ -131,6 +129,6 @@ ws2_32 dll\win32\ws2_32
 ws2help dll\win32\ws2help
 wshirda dll\win32\wshirda
 wsock32 dll\win32\wsock32
-wshtcpip drivers\network\wshtcpip
+wshtcpip dll\win32\wshtcpip
 framebuf drivers\video\displays\framebuf
 vgaddi drivers\video\displays\vga
