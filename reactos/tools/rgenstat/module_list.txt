@@ -1,6 +1,5 @@
 clb base\applications\regedit\clb
 notifyhook base\shell\explorer\notifyhook
-freetype dll\3rdparty\freetype
 mesa32 dll\3rdparty\mesa32
 access dll\cpl\access
 appwiz dll\cpl\appwiz
@@ -49,6 +48,7 @@ cabinet dll\win32\cabinet
 cards dll\win32\cards
 cfgmgr32 dll\win32\cfgmgr32
 console dll\cpl\console
+slayer dll\shellext\slayer
 comctl32 dll\win32\comctl32
 comdlg32 dll\win32\comdlg32
 crtdll dll\win32\crtdll
@@ -106,7 +106,6 @@ serialui dll\win32\serialui
 setupapi dll\win32\setupapi
 shdocvw dll\win32\shdocvw
 shell32 dll\win32\shell32
-slayer dll\win32\shellext\slayer
 shfolder dll\win32\shfolder
 shlwapi dll\win32\shlwapi
 smdll dll\win32\smdll
@@ -121,12 +120,14 @@ vdmdbg dll\win32\vdmdbg
 version dll\win32\version
 wininet dll\win32\wininet
 midimap dll\win32\winmm\midimap
-wavemap dll\win32\winmm\wavemap
+wavemap dll\win32\msacm32\msacm32.drv
 winmm dll\win32\winmm
 winspool dll\win32\winspool
 wintrust dll\win32\wintrust
 ws2_32 dll\win32\ws2_32
+ws2_32_new dll\win32\ws2_32_new
 ws2help dll\win32\ws2help
+ws2help_new dll\win32\ws2help_new
 wshirda dll\win32\wshirda
 wsock32 dll\win32\wsock32
 wshtcpip dll\win32\wshtcpip
