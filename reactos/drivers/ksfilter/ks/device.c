@@ -607,11 +607,6 @@ IKsDevice_Create(
     return STATUS_UNSUCCESSFUL;
 }
 
-
-
-
-
-
 /*
     @unimplemented
 */

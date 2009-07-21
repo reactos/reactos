@@ -65,9 +65,8 @@ KsReleaseDeviceSecurityLock(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-
 KSDDKAPI
 NTSTATUS
 NTAPI
@@ -75,46 +74,54 @@ KsDefaultDispatchPnp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
     PIO_STACK_LOCATION IoStack;
-    NTSTATUS Status = STATUS_SUCCESS;
+    PDEVICE_OBJECT PnpDeviceObject;
+    NTSTATUS Status;
+    ULONG MinorFunction;
 
+    /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    //FIXME
-    //REWRITE
+    /* caller wants to add the target device */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    DPRINT1("KsDefaultDispatchPnp entered with func %x\n", IoStack->MinorFunction);
+    /* get device header */
+    DeviceHeader = (PKSIDEVICE_HEADER)DeviceExtension->DeviceHeader;
 
-    switch(IoStack->MinorFunction)
+    /* backup PnpBaseObject */
+    PnpDeviceObject = DeviceHeader->PnpDeviceObject;
+
+
+    /* backup minor function code */
+    MinorFunction = IoStack->MinorFunction;
+
+    if(MinorFunction == IRP_MN_REMOVE_DEVICE)
     {
-        case IRP_MN_QUERY_DEVICE_RELATIONS:
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        case IRP_MN_REMOVE_DEVICE:
-            // FIXME
-            // destroy device header, detach device and delete device
-        case IRP_MN_START_DEVICE:
-        case IRP_MN_QUERY_REMOVE_DEVICE:
-        case IRP_MN_CANCEL_STOP_DEVICE:
-        case IRP_MN_SURPRISE_REMOVAL:
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_SUCCESS;
-        default:
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            //Status = IoCallDriver(NULL /* PnpBaseObject */, Irp);
+        /* remove the device */
+        KsFreeDeviceHeader((KSDEVICE_HEADER)DeviceHeader);
     }
 
+    /* skip current irp stack */
+    IoSkipCurrentIrpStackLocation(Irp);
+
+    /* call attached pnp device object */
+    Status = IoCallDriver(PnpDeviceObject, Irp);
+
+    if (MinorFunction == IRP_MN_REMOVE_DEVICE)
+    {
+        /* time is over */
+        IoDetachDevice(PnpDeviceObject);
+        /* delete device */
+        IoDeleteDevice(DeviceObject);
+    }
+    /* done */
     return Status;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -123,16 +130,59 @@ KsDefaultDispatchPower(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    PKSIOBJECT_HEADER ObjectHeader;
+    PIO_STACK_LOCATION IoStack;
+    PLIST_ENTRY ListEntry;
+    NTSTATUS Status;
 
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* caller wants to add the target device */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get device header */
+    DeviceHeader = (PKSIDEVICE_HEADER)DeviceExtension->DeviceHeader;
+
+    /* FIXME locks */
+
+    /* loop our power dispatch list and call registered notification functions */
+    ListEntry = DeviceHeader->PowerDispatchList.Flink;
+    /* let's go */
+    while(ListEntry != &DeviceHeader->PowerDispatchList)
+    {
+        /* get object header */
+        ObjectHeader = (PKSIOBJECT_HEADER)CONTAINING_RECORD(ListEntry, KSIOBJECT_HEADER, PowerDispatchEntry);
+
+        /* does it have still a cb */
+        if (ObjectHeader->PowerDispatch)
+        {
+            /* call the power cb */
+            Status = ObjectHeader->PowerDispatch(ObjectHeader->PowerContext, Irp);
+            ASSERT(NT_SUCCESS(Status));
+        }
+
+        /* iterate to next entry */
+        ListEntry = ListEntry->Flink;
+    }
+
+    /* start next power irp */
+    PoStartNextPowerIrp(Irp);
+
+    /* skip current irp stack location */
+    IoSkipCurrentIrpStackLocation(Irp);
+
+    /* let's roll */
+    Status = PoCallDriver(DeviceHeader->PnpDeviceObject, Irp);
+
+    /* done */
+    return Status;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -141,11 +191,24 @@ KsDefaultForwardIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSIDEVICE_HEADER DeviceHeader;
+    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* caller wants to add the target device */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get device header */
+    DeviceHeader = (PKSIDEVICE_HEADER)DeviceExtension->DeviceHeader;
+
+    /* forward the request to the PDO */
+    Status = IoCallDriver(DeviceHeader->PnpDeviceObject, Irp);
+
+    return Status;
 }
 
 /*
@@ -161,8 +224,8 @@ KsSetDevicePnpAndBaseObject(
 {
     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
-    DeviceHeader->PhysicalDeviceObject = PnpDeviceObject;
-    DeviceHeader->NextDeviceObject = BaseDevice;
+    DeviceHeader->PnpDeviceObject = PnpDeviceObject;
+    DeviceHeader->BaseDevice = BaseDevice;
 }
 
 /*
@@ -176,8 +239,8 @@ KsQueryDevicePnpObject(
 {
     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
-    /* return next device header */
-    return DeviceHeader->NextDeviceObject;
+    /* return PnpDeviceObject */
+    return DeviceHeader->PnpDeviceObject;
 
 }
 

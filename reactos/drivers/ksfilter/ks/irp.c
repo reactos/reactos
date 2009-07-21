@@ -169,7 +169,7 @@ KsDispatchSpecificMethod(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -184,8 +184,88 @@ KsReadFile(
     IN  ULONG Key OPTIONAL,
     IN  KPROCESSOR_MODE RequestorMode)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp;
+    NTSTATUS Status;
+    BOOLEAN Result;
+    KEVENT LocalEvent;
+
+    if (Event)
+    {
+        /* make sure event is reset */
+        KeClearEvent(Event);
+    }
+
+    if (RequestorMode == UserMode)
+    {
+        /* probe the user buffer */
+        _SEH2_TRY
+        {
+            ProbeForWrite(Buffer, Length, sizeof(UCHAR));
+            Status = STATUS_SUCCESS;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+         if (!NT_SUCCESS(Status))
+         {
+             DPRINT1("Invalid user buffer provided\n");
+             return Status;
+         }
+    }
+
+    /* get corresponding device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* fast-io read is only available for kernel mode clients */
+    if (RequestorMode == KernelMode && ExGetPreviousMode() == KernelMode &&
+        DeviceObject->DriverObject->FastIoDispatch->FastIoRead)
+    {
+        /* call fast io write */
+        Result = DeviceObject->DriverObject->FastIoDispatch->FastIoRead(FileObject, &FileObject->CurrentByteOffset, Length, TRUE, Key, Buffer, IoStatusBlock, DeviceObject);
+
+        if (Result && NT_SUCCESS(IoStatusBlock->Status))
+        {
+            /* request was handeled and succeeded */
+            return STATUS_SUCCESS;
+        }
+    }
+
+    /* do the slow way */
+    if (!Event)
+    {
+        /* initialize temp event */
+        KeInitializeEvent(&LocalEvent, NotificationEvent, FALSE);
+        Event = &LocalEvent;
+    }
+
+    /* build the irp packet */
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ, DeviceObject, Buffer, Length, &FileObject->CurrentByteOffset, Event, IoStatusBlock);
+    if (!Irp)
+    {
+        /* not enough resources */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* send the packet */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    if (Status == STATUS_PENDING)
+    {
+        /* operation is pending, is sync file object */
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+        {
+            /* it is so wait */
+            KeWaitForSingleObject(Event, Executive, RequestorMode, FALSE, NULL);
+            Status = IoStatusBlock->Status;
+        }
+    }
+    /* return result */
+    return Status;
 }
 
 /*
@@ -256,7 +336,6 @@ KsWriteFile(
     }
 
     /* do the slow way */
-
     if (!Event)
     {
         /* initialize temp event */
@@ -301,12 +380,45 @@ KsQueryInformationFile(
     IN  ULONG Length,
     IN  FILE_INFORMATION_CLASS FileInformationClass)
 {
-    UNIMPLEMENTED;
+    PDEVICE_OBJECT DeviceObject;
+    PFAST_IO_DISPATCH FastIoDispatch;
+    IO_STATUS_BLOCK IoStatus;
+
+    /* get related file object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* get fast i/o table */
+    FastIoDispatch = DeviceObject->DriverObject->FastIoDispatch;
+
+    /* is there a fast table */
+    if (FastIoDispatch)
+    {
+        /* check the class */
+        if (FileInformationClass == FileBasicInformation)
+        {
+            /* use FastIoQueryBasicInfo routine */
+            if (FastIoDispatch->FastIoQueryBasicInfo)
+            {
+                return FastIoDispatch->FastIoQueryBasicInfo(FileObject, TRUE, (PFILE_BASIC_INFORMATION)FileInformation, &IoStatus, DeviceObject);
+            }
+        }
+        else if (FileInformationClass == FileStandardInformation)
+        {
+            /* use FastIoQueryBasicInfo routine */
+            if (FastIoDispatch->FastIoQueryBasicInfo)
+            {
+                return FastIoDispatch->FastIoQueryStandardInfo(FileObject, TRUE, (PFILE_STANDARD_INFORMATION)FileInformation, &IoStatus, DeviceObject);
+            }
+        }
+    }
+
+    /* Implement Me */
+
     return STATUS_UNSUCCESSFUL;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -317,8 +429,84 @@ KsSetInformationFile(
     IN  ULONG Length,
     IN  FILE_INFORMATION_CLASS FileInformationClass)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_OBJECT DeviceObject;
+    PIRP Irp;
+    PVOID Buffer;
+    KEVENT Event;
+    LARGE_INTEGER Offset;
+    IO_STATUS_BLOCK IoStatus;
+    NTSTATUS Status;
+
+    /* get related device object */
+    DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* copy file information */
+    Buffer = AllocateItem(NonPagedPool, Length);
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    _SEH2_TRY
+    {
+        ProbeForRead(Buffer, Length, sizeof(UCHAR));
+        RtlMoveMemory(Buffer, FileInformation, Length);
+        Status = STATUS_SUCCESS;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Exception, get the error code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* invalid user buffer */
+        FreeItem(Buffer);
+        return Status;
+    }
+
+    /* initialize the event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* zero offset */
+    Offset.QuadPart = 0LL;
+
+    /* build the irp */
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SET_INFORMATION, DeviceObject, NULL, 0, &Offset, &Event, &IoStatus);
+
+    if (!Irp)
+    {
+        /* failed to allocate irp */
+        FreeItem(Buffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    /* set irp parameters */
+    IoStack->Parameters.SetFile.FileInformationClass = FileInformationClass;
+    IoStack->Parameters.SetFile.Length = Length;
+    IoStack->Parameters.SetFile.FileObject = FileObject;
+    Irp->AssociatedIrp.SystemBuffer = Buffer;
+    Irp->UserBuffer = FileInformation;
+
+    /* dispatch the irp */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    if (Status == STATUS_PENDING)
+    {
+        /* wait untill the operation has completed */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        /* is a sync file object */
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+            Status = FileObject->FinalStatus;
+        else
+            Status = IoStatus.Status;
+    }
+    /* done */
+    return Status;
 }
 
 /*
@@ -845,57 +1033,6 @@ KspCreate(
 
 NTAPI
 NTSTATUS
-KspClose(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIOBJECT_HEADER ObjectHeader;
-    PDEVICE_EXTENSION DeviceExtension;
-    PKSIDEVICE_HEADER DeviceHeader;
-    NTSTATUS Status;
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
-    /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
-
-
-    DPRINT("KS / CLOSE\n");
-
-    if (IoStack->FileObject && IoStack->FileObject->FsContext)
-    {
-        /* get object header */
-        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
-        /* store create item */
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-        /* call object close method */
-        Status = ObjectHeader->DispatchTable.Close(DeviceObject, Irp);
-        /* FIXME decrease reference count on original create item */
-
-        /* return result */
-        return Status;
-    }
-    else
-    {
-#if 0
-        DPRINT1("Expected Object Header FileObject %p FsContext %p\n", IoStack->FileObject, IoStack->FileObject->FsContext);
-        KeBugCheckEx(0, 0, 0, 0, 0);
-#else
-        DPRINT("Using reference string hack\n");
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        Irp->IoStatus.Information = 0;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
-#endif
-        return STATUS_SUCCESS;
-    }
-}
-
-NTAPI
-NTSTATUS
 KspDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -910,14 +1047,14 @@ KspDeviceControl(
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
     /* hack for bug 4566 */
     if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL && IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_OBJECT_CLASS)
     {
-        /* get device extension */
-        DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
-        /* get device header */
-        DeviceHeader = DeviceExtension->DeviceHeader;
-
         /* retrieve all available reference strings registered */
         Length = 0;
 
@@ -978,142 +1115,87 @@ KspDeviceControl(
 
 NTAPI
 NTSTATUS
-KspRead(
+KspDispatchIrp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
     PKSIOBJECT_HEADER ObjectHeader;
+    PKSIDEVICE_HEADER DeviceHeader;
+    PDRIVER_DISPATCH Dispatch;
+    NTSTATUS Status;
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    DPRINT("KS / Read\n");
-    if (IoStack->FileObject && IoStack->FileObject->FsContext)
-    {
-        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
 
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-        return ObjectHeader->DispatchTable.Read(DeviceObject, Irp);
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+
+    if (!ObjectHeader)
+    {
+        /* hack for bug 4566 */
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        /* complete and forget */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_SUCCESS;
+    }
+
+    /* sanity check */
+    ASSERT(ObjectHeader);
+    /* store create item */
+    KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+
+    /* retrieve matching dispatch function */
+    switch(IoStack->MajorFunction)
+    {
+        case IRP_MJ_CLOSE:
+            Dispatch = ObjectHeader->DispatchTable.Close;
+            break;
+        case IRP_MJ_DEVICE_CONTROL:
+            Dispatch = ObjectHeader->DispatchTable.DeviceIoControl;
+            break;
+        case IRP_MJ_READ:
+            Dispatch = ObjectHeader->DispatchTable.Read;
+            break;
+        case IRP_MJ_WRITE:
+            Dispatch = ObjectHeader->DispatchTable.Write;
+            break;
+        case IRP_MJ_FLUSH_BUFFERS :
+            Dispatch = ObjectHeader->DispatchTable.Flush;
+            break;
+        case IRP_MJ_QUERY_SECURITY:
+            Dispatch = ObjectHeader->DispatchTable.QuerySecurity;
+            break;
+        case IRP_MJ_SET_SECURITY:
+            Dispatch = ObjectHeader->DispatchTable.SetSecurity;
+            break;
+        case IRP_MJ_PNP:
+            Dispatch = KsDefaultDispatchPnp;
+        default:
+            Dispatch = NULL;
+    }
+
+    /* is the request supported */
+    if (Dispatch)
+    {
+        /* now call the dispatch function */
+        Status = Dispatch(DeviceObject, Irp);
     }
     else
     {
-        DPRINT1("Expected Object Header\n");
-        KeBugCheckEx(0, 0, 0, 0, 0);
-        return STATUS_SUCCESS;
+        /* not supported request */
+        Status = KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
     }
-}
 
-NTAPI
-NTSTATUS
-KspWrite(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIOBJECT_HEADER ObjectHeader;
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("KS / Write\n");
-    if (IoStack->FileObject && IoStack->FileObject->FsContext)
-    {
-        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
-
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-        return ObjectHeader->DispatchTable.Write(DeviceObject, Irp);
-    }
-    else
-    {
-        DPRINT1("Expected Object Header %p\n", IoStack->FileObject);
-        KeBugCheckEx(0, 0, 0, 0, 0);
-        return STATUS_SUCCESS;
-    }
-}
-
-NTAPI
-NTSTATUS
-KspFlushBuffers(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIOBJECT_HEADER ObjectHeader;
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("KS / FlushBuffers\n");
-    if (IoStack->FileObject && IoStack->FileObject->FsContext)
-    {
-        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
-
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-        return ObjectHeader->DispatchTable.Flush(DeviceObject, Irp);
-    }
-    else
-    {
-        DPRINT1("Expected Object Header\n");
-        KeBugCheckEx(0, 0, 0, 0, 0);
-        return STATUS_SUCCESS;
-    }
-}
-
-NTAPI
-NTSTATUS
-KspQuerySecurity(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIOBJECT_HEADER ObjectHeader;
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("KS / QuerySecurity\n");
-    if (IoStack->FileObject && IoStack->FileObject->FsContext)
-    {
-        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
-
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-        return ObjectHeader->DispatchTable.QuerySecurity(DeviceObject, Irp);
-    }
-    else
-    {
-        DPRINT1("Expected Object Header\n");
-        KeBugCheckEx(0, 0, 0, 0, 0);
-        return STATUS_SUCCESS;
-    }
-}
-
-NTAPI
-NTSTATUS
-KspSetSecurity(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIOBJECT_HEADER ObjectHeader;
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("KS / SetSecurity\n");
-    if (IoStack->FileObject && IoStack->FileObject->FsContext)
-    {
-        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
-
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-        return ObjectHeader->DispatchTable.SetSecurity(DeviceObject, Irp);
-    }
-    else
-    {
-        DPRINT1("Expected Object Header\n");
-        KeBugCheckEx(0, 0, 0, 0, 0);
-        return STATUS_SUCCESS;
-    }
+    /* done */
+    return Status;
 }
 
 /*
@@ -1131,28 +1213,18 @@ KsSetMajorFunctionHandler(
         case IRP_MJ_CREATE:
             DriverObject->MajorFunction[MajorFunction] = KspCreate;
             break;
-        case IRP_MJ_CLOSE:
-            DriverObject->MajorFunction[MajorFunction] = KspClose;
             break;
         case IRP_MJ_DEVICE_CONTROL:
             DriverObject->MajorFunction[MajorFunction] = KspDeviceControl;
             break;
+        case IRP_MJ_CLOSE:
         case IRP_MJ_READ:
-            DriverObject->MajorFunction[MajorFunction] = KspRead;
-            break;
         case IRP_MJ_WRITE:
-            DriverObject->MajorFunction[MajorFunction] = KspWrite;
-            break;
         case IRP_MJ_FLUSH_BUFFERS :
-            DriverObject->MajorFunction[MajorFunction] = KspFlushBuffers;
-            break;
         case IRP_MJ_QUERY_SECURITY:
-            DriverObject->MajorFunction[MajorFunction] = KspQuerySecurity;
-            break;
         case IRP_MJ_SET_SECURITY:
-            DriverObject->MajorFunction[MajorFunction] = KspSetSecurity;
+            DriverObject->MajorFunction[MajorFunction] = KspDispatchIrp;
             break;
-
         default:
             return STATUS_INVALID_PARAMETER;
     };
@@ -1171,37 +1243,93 @@ KsDispatchIrp(
     IN  PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    PKSIDEVICE_HEADER DeviceHeader;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    //FIXME REWRITE
-
-    switch (IoStack->MajorFunction)
+    if (IoStack->MajorFunction <= IRP_MJ_DEVICE_CONTROL)
     {
-        case IRP_MJ_CREATE:
-            return KspCreate(DeviceObject, Irp);
-        case IRP_MJ_CLOSE:
-            return KspClose(DeviceObject, Irp);
-            break;
-        case IRP_MJ_DEVICE_CONTROL:
+        if (IoStack->MajorFunction == IRP_MJ_CREATE)
+        {
+            /* check internal type */
+            if (DeviceHeader->lpVtblIKsDevice) /* FIXME improve check */
+            {
+                /* AVStream client */
+                return IKsDevice_Create(DeviceObject, Irp);
+            }
+            else
+            {
+                /* external client (portcls) */
+                return KspCreate(DeviceObject, Irp);
+            }
+        }
+
+        if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL)
+        {
+            /* handle device requests */
             return KspDeviceControl(DeviceObject, Irp);
-            break;
-        case IRP_MJ_READ:
-            return KspRead(DeviceObject, Irp);
-            break;
-        case IRP_MJ_WRITE:
-            return KspWrite(DeviceObject, Irp);
-            break;
-        case IRP_MJ_FLUSH_BUFFERS:
-            return KspFlushBuffers(DeviceObject, Irp);
-            break;
-        case IRP_MJ_QUERY_SECURITY:
-            return KspQuerySecurity(DeviceObject, Irp);
-            break;
-        case IRP_MJ_SET_SECURITY:
-            return KspSetSecurity(DeviceObject, Irp);
-            break;
-        default:
-            return STATUS_INVALID_PARAMETER;    /* is this right? */
-    };
+        }
+
+        switch (IoStack->MajorFunction)
+        {
+            case IRP_MJ_CLOSE:
+            case IRP_MJ_READ:
+            case IRP_MJ_WRITE:
+            case IRP_MJ_FLUSH_BUFFERS:
+            case IRP_MJ_QUERY_SECURITY:
+            case IRP_MJ_SET_SECURITY:
+            case IRP_MJ_PNP:
+                return KspDispatchIrp(DeviceObject, Irp);
+            default:
+                return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
+        }
+    }
+
+    /* dispatch power */
+    if (IoStack->MajorFunction == IRP_MJ_POWER)
+    {
+        /* check internal type */
+        if (DeviceHeader->lpVtblIKsDevice) /* FIXME improve check */
+        {
+            /* AVStream client */
+            return IKsDevice_Power(DeviceObject, Irp);
+        }
+        else
+        {
+            /* external client (portcls) */
+            return KsDefaultDispatchPower(DeviceObject, Irp);
+        }
+    }
+    else if (IoStack->MajorFunction == IRP_MJ_PNP) /* dispatch pnp */
+    {
+        /* check internal type */
+        if (DeviceHeader->lpVtblIKsDevice) /* FIXME improve check */
+        {
+            /* AVStream client */
+            return IKsDevice_Pnp(DeviceObject, Irp);
+        }
+        else
+        {
+            /* external client (portcls) */
+            return KsDefaultDispatchPnp(DeviceObject, Irp);
+        }
+    }
+    else if (IoStack->MajorFunction == IRP_MJ_SYSTEM_CONTROL)
+    {
+        /* forward irp */
+        return KsDefaultForwardIrp(DeviceObject, Irp);
+    }
+    else
+    {
+        /* not supported */
+        return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
+    }
 }

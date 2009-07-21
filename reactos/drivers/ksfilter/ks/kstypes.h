@@ -43,8 +43,8 @@ typedef struct
     ULONG DeviceIndex;
     KSPIN_LOCK ItemListLock;
 
-    PDEVICE_OBJECT PhysicalDeviceObject;
-    PDEVICE_OBJECT NextDeviceObject;
+    PDEVICE_OBJECT PnpDeviceObject;
+    PDEVICE_OBJECT BaseDevice;
 
     KSTARGET_STATE TargetState;
     LIST_ENTRY TargetDeviceList;
