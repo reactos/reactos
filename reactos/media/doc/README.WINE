@@ -52,6 +52,7 @@ reactos/dll/win32/comdlg32        # Autosync
 reactos/dll/win32/compstui        # Autosync
 reactos/dll/win32/credui          # Autosync
 reactos/dll/win32/crypt32         # Synced to Wine-1_1_21
+reactos/dll/win32/cryptdlg        # Autosync
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/cryptui         # Autosync
