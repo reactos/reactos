@@ -854,6 +854,34 @@ dowait:
 }
 
 
+typedef struct _QUEUE_USER_WORKITEM_CONTEXT
+{
+    LPTHREAD_START_ROUTINE Function;
+    PVOID Context;
+} QUEUE_USER_WORKITEM_CONTEXT, *PQUEUE_USER_WORKITEM_CONTEXT;
+
+static VOID
+NTAPI
+InternalWorkItemTrampoline(PVOID Context)
+{
+    QUEUE_USER_WORKITEM_CONTEXT Info;
+
+    ASSERT(Context);
+
+    /* Save the context to the stack */
+    Info = *(volatile QUEUE_USER_WORKITEM_CONTEXT *)Context;
+
+    /* Free the context before calling the callback. This avoids
+       a memory leak in case the thread dies... */
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                Context);
+
+    /* Call the real callback */
+    Info.Function(Info.Context);
+}
+
+
 /*
  * @implemented
  */
@@ -865,13 +893,34 @@ QueueUserWorkItem(
     ULONG Flags
     )
 {
+    PQUEUE_USER_WORKITEM_CONTEXT WorkItemContext;
     NTSTATUS Status;
 
-    Status = RtlQueueWorkItem((WORKERCALLBACKFUNC)Function,
-                              Context,
+    /* Save the context for the trampoline function */
+    WorkItemContext = RtlAllocateHeap(RtlGetProcessHeap(),
+                                      0,
+                                      sizeof(*WorkItemContext));
+    if (WorkItemContext == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    WorkItemContext->Function = Function;
+    WorkItemContext->Context = Context;
+
+    /* NOTE: Don't use Function directly since the callback signature
+             differs. This might cause problems on certain platforms... */
+    Status = RtlQueueWorkItem(InternalWorkItemTrampoline,
+                              WorkItemContext,
                               Flags);
     if (!NT_SUCCESS(Status))
     {
+        /* Free the allocated context in case of failure */
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    WorkItemContext);
+
         SetLastErrorByStatus(Status);
         return FALSE;
     }
