@@ -1,7 +1,6 @@
-<module name="ws2_32_new" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32.dll" unicode="yes">
+<module name="ws2_32_new" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32_new.dll">
 	<importlibrary definition="ws2_32.spec" />
-	<include base="ws2_32">include</include>
-	<include base="ReactOS">include/reactos/wine</include>
+	<include base="ws2_32_new">inc</include>
 	<define name="LE" />
 	<library>wine</library>
 	<library>ntdll</library>
@@ -9,6 +8,7 @@
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>dnsapi</library>
+	<library>ws2help</library>
 	<directory name="src">
 		<file>addrconv.c</file>
 		<file>addrinfo.c</file>
