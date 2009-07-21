@@ -396,7 +396,6 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // This page is on the outskirts of initial nonpaged pool, so ignore it
         //
-        DPRINT1("End of initial frame\n");
         Pfn1 = NULL;
     }
     else
@@ -457,7 +456,6 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // Then we can't do anything or we'll risk underflowing
         //
-        DPRINT1("Start of of initial frame\n");
         Pfn1 = NULL;
     }
     else
