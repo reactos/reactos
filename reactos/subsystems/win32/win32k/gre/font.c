@@ -26,8 +26,11 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
     int             w;
     int             xspan, lenspan;
     RECTL           rcBounds;
+    BRUSHOBJ        textBrush;
 
-    DPRINT("%d, %d\n", x, y);
+    RtlZeroMemory(&textBrush, sizeof(textBrush));
+    textBrush.iSolidColor = physDev->crForegroundClr;
+
     x -= gi->x;
     y -= gi->y;
     while (height--)
@@ -62,7 +65,7 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
                 RECTL_vOffsetRect(&rcBounds, physDev->rcVport.left, physDev->rcVport.top);
                 GreLineTo(&physDev->pBitmap->SurfObj,
                     NULL,
-                    &physDev->pLineBrush->BrushObj,
+                    &textBrush,
                     xspan + physDev->rcVport.left,
                     y + physDev->rcVport.top,
                     xspan + lenspan + physDev->rcVport.left,
