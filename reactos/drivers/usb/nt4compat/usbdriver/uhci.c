@@ -667,7 +667,9 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
         }
     }
 
+#ifndef _MULTI_UHCI
 LBL_LOOPOUT:
+#endif
     if (pdev)
     {
         pdev_ext = pdev->DeviceExtension;
