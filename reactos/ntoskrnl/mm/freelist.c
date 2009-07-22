@@ -728,6 +728,7 @@ MmDumpPfnDatabase(VOID)
     PPHYSICAL_PAGE Pfn1;
     PCHAR State = "????", Consumer = "Unknown";
     KIRQL OldIrql;
+    ULONG Totals[5] = {0}, BiosPages = 0, FreePages = 0;
     
     KeRaiseIrql(HIGH_LEVEL, &OldIrql);
     
@@ -777,18 +778,21 @@ MmDumpPfnDatabase(VOID)
             case MM_PHYSICAL_PAGE_USED:
                 
                 State = "Used";
+                Totals[Pfn1->Flags.Consumer]++;
                 break;
                 
             case MM_PHYSICAL_PAGE_FREE:
                 
                 State = "Free";
                 Consumer = "Free";
+                FreePages++;
                 break;
                 
             case MM_PHYSICAL_PAGE_BIOS:
                 
                 State = "BIOS";
                 Consumer = "System Reserved";
+                BiosPages++;
                 break;
         }
 
@@ -804,6 +808,14 @@ MmDumpPfnDatabase(VOID)
                  Pfn1->LockCount,
                  Pfn1->RmapListHead);
     }
+    
+    DbgPrint("Nonpaged Pool:       %d pages\t[%d KB]\n", Totals[MC_NPPOOL], (Totals[MC_NPPOOL] << PAGE_SHIFT) / 1024);
+    DbgPrint("Paged Pool:          %d pages\t[%d KB]\n", Totals[MC_PPOOL],  (Totals[MC_PPOOL] << PAGE_SHIFT) / 1024);
+    DbgPrint("File System Cache:   %d pages\t[%d KB]\n", Totals[MC_CACHE],  (Totals[MC_CACHE]  << PAGE_SHIFT) / 1024);
+    DbgPrint("Process Working Set: %d pages\t[%d KB]\n", Totals[MC_USER],   (Totals[MC_USER]   << PAGE_SHIFT) / 1024);
+    DbgPrint("System:              %d pages\t[%d KB]\n", Totals[MC_SYSTEM], (Totals[MC_SYSTEM] << PAGE_SHIFT) / 1024);
+    DbgPrint("BIOS:                %d pages\t[%d KB]\n", BiosPages,         (BiosPages         << PAGE_SHIFT) / 1024);
+    DbgPrint("Free:                %d pages\t[%d KB]\n", FreePages,         (FreePages         << PAGE_SHIFT) / 1024);
     
     KeLowerIrql(OldIrql);
 }
