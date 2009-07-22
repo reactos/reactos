@@ -1842,7 +1842,6 @@ AllocErr:
 
           hMenu = co_IntCallLoadMenu( Wnd->pcls->hModule, &MenuName);
           if (hMenu) IntSetMenu(Window, hMenu, &MenuChanged);
-          if (MenuName.Buffer) RtlFreeUnicodeString(&MenuName);
       }
    }
    else // Not a child
