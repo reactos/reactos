@@ -350,48 +350,11 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top_win, const RECT *win_rect,
 DWORD CDECL RosDrv_MsgWaitForMultipleObjectsEx( DWORD count, const HANDLE *handles, DWORD timeout,
                                                         DWORD mask, DWORD flags )
 {
-    NTSTATUS status;
-    BOOL bWaitAll = FALSE, bAlertable = FALSE;
-    PLARGE_INTEGER TimePtr;
-    LARGE_INTEGER Time;
-
-    if (!count && !timeout) return WAIT_TIMEOUT;
-
     TRACE("WaitForMultipleObjectsEx(%d %p %d %x %x %x\n", count, handles, timeout, mask, flags);
 
-    /* Set waitall and alertable flags */
-    if (flags & MWMO_WAITALL) bWaitAll = TRUE;
-    if (flags & MWMO_ALERTABLE) bAlertable = TRUE;
-
-    /* Check if this is an infinite wait */
-    if (timeout == INFINITE)
-    {
-        /* Under NT, this means no timer argument */
-        TimePtr = NULL;
-    }
-    else
-    {
-        /* Otherwise, convert the time to NT Format */
-        Time.QuadPart = UInt32x32To64(-10000, timeout);
-        TimePtr = &Time;
-    }
-
-    /* Call Nt function, because the handle we got is a NtCreateEvent one */
-    status = NtWaitForMultipleObjects(count,
-                                      (PHANDLE)handles,
-                                      bWaitAll ? WaitAll : WaitAny,
-                                      bAlertable,
-                                      TimePtr);
-
-    if (!NT_SUCCESS(status))
-    {
-        /* Wait failed */
-        WARN("Wait failed with status 0x%08x\n", status);
-        //SetLastErrorByStatus (status);
-        return WAIT_FAILED;
-    }
-
-    return status;
+    if (!count && !timeout) return WAIT_TIMEOUT;
+    return WaitForMultipleObjectsEx( count, handles, flags & MWMO_WAITALL,
+                                     timeout, flags & MWMO_ALERTABLE );
 }
 
 void CDECL RosDrv_ReleaseDC( HWND hwnd, HDC hdc )
