@@ -45,7 +45,7 @@ struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, vo
 
     DueTime.QuadPart = (LONGLONG)when;
 
-    DPRINT1("add_timeout_user(when %I64d, func %p)\n", when, func);
+    DPRINT("add_timeout_user(when %I64d, func %p)\n", when, func);
 
     /* Allocate memory for timeout structure */
     TimeoutUser = ExAllocatePool(NonPagedPool, sizeof(struct timeout_user));
@@ -63,7 +63,7 @@ struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, vo
 /* remove a timeout user */
 void remove_timeout_user( struct timeout_user *user )
 {
-    DPRINT1("remove_timeout_user %p\n", user);
+    DPRINT("remove_timeout_user %p\n", user);
 
     /* Cancel the timer */
     KeCancelTimer(&user->Timer);
@@ -90,26 +90,6 @@ thread_id_t get_thread_id (PTHREADINFO Thread)
 process_id_t get_process_id(PPROCESSINFO Process)
 {
     return (process_id_t)Process->peProcess->UniqueProcessId;
-}
-
-void wake_up( struct object *obj, int max )
-{
-    DPRINT1("wake_up %p %d\n", obj, max);
-#if 0
-    struct list *ptr, *next;
-
-    LIST_FOR_EACH_SAFE( ptr, next, &obj->wait_queue )
-    {
-        struct wait_queue_entry *entry = LIST_ENTRY( ptr, struct wait_queue_entry, entry );
-        DPRINT1("wake_thread 0x%x / process 0x%x\n",
-            entry->thread->peThread->Tcb.Teb->ClientId.UniqueThread,
-            entry->thread->peThread->Tcb.Teb->ClientId.UniqueProcess);
-        /*if (wake_thread( entry->thread ))
-        {
-            if (max && !--max) break;
-        }*/
-    }
-#endif
 }
 
 void set_fd_events( struct fd *fd, int events )

@@ -135,8 +135,6 @@ typedef PKDEFERRED_ROUTINE timeout_callback;
 void remove_timeout_user( struct timeout_user *user );
 struct timeout_user *add_timeout_user( timeout_t when, timeout_callback func, void *private );
 
-void wake_up( struct object *obj, int max );
-
 thread_id_t get_thread_id (PTHREADINFO Thread);
 process_id_t get_process_id(PPROCESSINFO Process);
 
