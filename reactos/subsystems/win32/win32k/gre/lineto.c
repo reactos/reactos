@@ -124,10 +124,10 @@ GrePolyline(PDC pDC,
             bRet = GreLineTo(&pDC->pBitmap->SurfObj,
                              NULL,//dc->rosdc.CombinedClip,
                              &pDC->pLineBrush->BrushObj,
-                             ptPoints[i].x + pDC->rcDcRect.left,
-                             ptPoints[i].y + pDC->rcDcRect.top,
-                             ptPoints[i+1].x + pDC->rcDcRect.left,
-                             ptPoints[i+1].y + pDC->rcDcRect.top,
+                             ptPoints[i].x + pDC->rcDcRect.left + pDC->rcVport.left,
+                             ptPoints[i].y + pDC->rcDcRect.top + pDC->rcVport.top,
+                             ptPoints[i+1].x + pDC->rcDcRect.left + pDC->rcVport.left,
+                             ptPoints[i+1].y + pDC->rcDcRect.top + pDC->rcVport.top,
                              &DestRect, // Bounding rectangle
                              Mix);
         }

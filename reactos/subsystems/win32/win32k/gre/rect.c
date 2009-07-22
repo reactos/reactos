@@ -27,10 +27,10 @@ GreRectangle(PDC pDC,
     MIX Mix;
     POINT BrushOrigin = {0, 0};
 
-    DestRect.left = LeftRect + pDC->rcDcRect.left;
-    DestRect.right = RightRect + pDC->rcDcRect.left;
-    DestRect.top = TopRect + pDC->rcDcRect.top;
-    DestRect.bottom = BottomRect + pDC->rcDcRect.top;
+    DestRect.left = LeftRect + pDC->rcDcRect.left + pDC->rcVport.left;
+    DestRect.right = RightRect + pDC->rcDcRect.left + pDC->rcVport.left;
+    DestRect.top = TopRect + pDC->rcDcRect.top + pDC->rcVport.top;
+    DestRect.bottom = BottomRect + pDC->rcDcRect.top + pDC->rcVport.top;
 
     /* Draw brush-based rectangle */
     if (pDC->pFillBrush)

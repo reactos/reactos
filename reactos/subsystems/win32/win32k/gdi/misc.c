@@ -197,7 +197,7 @@ BOOL APIENTRY RosGdiPolyline( HDC physDev, const POINT* pt, INT count )
     /* Get a pointer to the DC */
     pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
 
-    /* Draw the polygon */
+    /* Draw the polyline */
     GrePolyline(pDC, pt, count);
 
     /* Release the object */

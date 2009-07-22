@@ -62,14 +62,13 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
                 } while (bits & bitsMask);
                 rcBounds.left = xspan; rcBounds.top = y;
                 rcBounds.right = xspan+lenspan; rcBounds.bottom = y+1;
-                RECTL_vOffsetRect(&rcBounds, physDev->rcVport.left, physDev->rcVport.top);
                 GreLineTo(&physDev->pBitmap->SurfObj,
                     NULL,
                     &textBrush,
-                    xspan + physDev->rcVport.left,
-                    y + physDev->rcVport.top,
-                    xspan + lenspan + physDev->rcVport.left,
-                    y + physDev->rcVport.top,
+                    xspan,
+                    y,
+                    xspan + lenspan,
+                    y,
                     &rcBounds,
                     0);
                 xspan += lenspan;
@@ -158,8 +157,8 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
             //sharp_glyph_fn = SharpGlyphGray;
 
         for(idx = 0; idx < count; idx++) {
-            sharp_glyph_fn(pDC, pDC->rcDcRect.left + x + xoff,
-                pDC->rcDcRect.top + y + yoff,
+            sharp_glyph_fn(pDC, pDC->rcDcRect.left + pDC->rcVport.left + x + xoff,
+                pDC->rcDcRect.top + pDC->rcVport.top + y + yoff,
                 formatEntry->bitmaps[wstr[idx]],
                 &formatEntry->gis[wstr[idx]]);
             if(lpDx) {

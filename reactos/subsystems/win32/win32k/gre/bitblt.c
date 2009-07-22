@@ -182,8 +182,8 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
 
     if (pSrc)
     {
-        SourcePoint.x += pSrc->rcDcRect.left;
-        SourcePoint.y += pSrc->rcDcRect.top;
+        SourcePoint.x += pSrc->rcDcRect.left + pSrc->rcVport.left;
+        SourcePoint.y += pSrc->rcDcRect.top + pSrc->rcVport.left;
     }
 
     /* Perform the bitblt operation */
