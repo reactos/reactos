@@ -368,7 +368,7 @@ KsCreateAllocator(
     OUT PHANDLE AllocatorHandle)
 {
     return KspCreateObjectType(ConnectionHandle,
-                               L"{642F5D00-4791-11D0-A5D6-28DB04C10000}", //KSNAME_Allocator
+                               KSSTRING_Allocator,
                                (PVOID)AllocatorFraming,
                                sizeof(KSALLOCATOR_FRAMING),
                                GENERIC_READ,
@@ -386,15 +386,47 @@ KsCreateDefaultAllocator(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsValidateAllocatorCreateRequest(
     IN  PIRP Irp,
-    OUT PKSALLOCATOR_FRAMING* AllocatorFraming)
+    OUT PKSALLOCATOR_FRAMING* OutAllocatorFraming)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSALLOCATOR_FRAMING AllocatorFraming;
+    ULONG Size;
+    NTSTATUS Status;
+    ULONG SupportedFlags;
+
+    /* set minimum request size */
+    Size = sizeof(KSALLOCATOR_FRAMING);
+
+    Status = KspCopyCreateRequest(Irp,
+                                  KSSTRING_Allocator,
+                                  &Size,
+                                  (PVOID*)&AllocatorFraming);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* allowed supported flags */
+    SupportedFlags = (KSALLOCATOR_OPTIONF_COMPATIBLE | KSALLOCATOR_OPTIONF_SYSTEM_MEMORY |
+                      KSALLOCATOR_REQUIREMENTF_INPLACE_MODIFIER | KSALLOCATOR_REQUIREMENTF_SYSTEM_MEMORY | KSALLOCATOR_REQUIREMENTF_FRAME_INTEGRITY | 
+                      KSALLOCATOR_REQUIREMENTF_MUST_ALLOCATE);
+
+
+    if (!AllocatorFraming->FrameSize || (AllocatorFraming->OptionsFlags & (~SupportedFlags)))
+    {
+        FreeItem(AllocatorFraming);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* store result */
+    *OutAllocatorFraming = AllocatorFraming;
+
+    return Status;
 }
 
 NTSTATUS

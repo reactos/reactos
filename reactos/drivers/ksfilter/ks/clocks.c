@@ -46,7 +46,7 @@ KsCreateClock(
     OUT PHANDLE ClockHandle)
 {
     return KspCreateObjectType(ConnectionHandle,
-                               L"{53172480-4791-11D0-A5D6-28DB04C10000}", /* KSName_Clock */
+                               KSSTRING_Clock,
                                ClockCreate,
                                sizeof(KSCLOCK_CREATE),
                                GENERIC_READ,
@@ -54,17 +54,40 @@ KsCreateClock(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsValidateClockCreateRequest(
     IN  PIRP Irp,
-    OUT PKSCLOCK_CREATE* ClockCreate)
+    OUT PKSCLOCK_CREATE* OutClockCreate)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSCLOCK_CREATE ClockCreate;
+    NTSTATUS Status;
+    ULONG Size;
+
+    /* minimum request size */
+    Size = sizeof(KSCLOCK_CREATE);
+
+    /* copy create request */
+    Status = KspCopyCreateRequest(Irp, 
+                                  KSSTRING_Clock,
+                                  &Size,
+                                  (PVOID*)&ClockCreate);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (ClockCreate->CreateFlags != 0)
+    {
+        /* flags must be zero */
+        FreeItem(ClockCreate);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    *OutClockCreate = ClockCreate;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

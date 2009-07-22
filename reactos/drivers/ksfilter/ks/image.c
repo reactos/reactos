@@ -9,7 +9,7 @@
 #include "priv.h"
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS

@@ -613,7 +613,7 @@ IKsDevice_Create(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS

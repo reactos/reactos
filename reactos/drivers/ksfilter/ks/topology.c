@@ -84,7 +84,7 @@ KsCreateTopologyNode(
     OUT PHANDLE NodeHandle)
 {
     return KspCreateObjectType(ParentHandle,
-                               L"{0621061A-EE75-11D0-B915-00A0C9223196}",
+                               KSSTRING_TopologyNode,
                                (PVOID)NodeCreate,
                                sizeof(KSNODE_CREATE),
                                DesiredAccess,
@@ -92,16 +92,47 @@ KsCreateTopologyNode(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsValidateTopologyNodeCreateRequest(
     IN  PIRP Irp,
     IN  PKSTOPOLOGY Topology,
-    OUT PKSNODE_CREATE* NodeCreate)
+    OUT PKSNODE_CREATE* OutNodeCreate)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSNODE_CREATE NodeCreate;
+    ULONG Size;
+    NTSTATUS Status;
+
+    /* did the caller miss the topology */
+    if (!Topology)
+        return STATUS_INVALID_PARAMETER;
+
+    /* set create param  size */
+    Size = sizeof(KSNODE_CREATE);
+
+    /* fetch create parameters */
+    Status = KspCopyCreateRequest(Irp,
+                                  KSSTRING_TopologyNode,
+                                  &Size,
+                                  (PVOID*)&NodeCreate);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (NodeCreate->CreateFlags != 0 || (NodeCreate->Node >= Topology->TopologyNodesCount && NodeCreate->Node != (ULONG)-1))
+    {
+        /* invalid node create */
+        FreeItem(NodeCreate);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* store result */
+    *OutNodeCreate = NodeCreate;
+
+    return Status;
 }
 
 /*

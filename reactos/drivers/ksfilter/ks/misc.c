@@ -98,3 +98,44 @@ KsPinDataIntersectionEx(
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
+
+
+NTSTATUS
+KspCopyCreateRequest(
+    IN PIRP Irp,
+    IN LPWSTR ObjectClass,
+    IN OUT PULONG Size,
+    OUT PVOID * Result)
+{
+    PIO_STACK_LOCATION IoStack;
+    ULONG ObjectLength, ParametersLength;
+    PVOID Buffer;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get object class length */
+    ObjectLength = (wcslen(ObjectClass) + 2) * sizeof(WCHAR);
+
+    /* check for minium length requirement */
+    if (ObjectLength  + *Size > IoStack->FileObject->FileName.MaximumLength)
+        return STATUS_UNSUCCESSFUL;
+
+    /* extract parameters length */
+    ParametersLength = IoStack->FileObject->FileName.MaximumLength - ObjectLength;
+
+    /* allocate buffer */
+    Buffer = AllocateItem(NonPagedPool, ParametersLength);
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* copy parameters */
+    RtlMoveMemory(Buffer, &IoStack->FileObject->FileName.Buffer[ObjectLength / sizeof(WCHAR)], ParametersLength);
+
+    /* store result */
+    *Result = Buffer;
+    *Size = ParametersLength;
+
+    return STATUS_SUCCESS;
+}
+

@@ -107,4 +107,11 @@ FindMatchingCreateItem(
     LPWSTR Buffer,
     OUT PCREATE_ITEM_ENTRY *OutCreateItem);
 
+NTSTATUS
+KspCopyCreateRequest(
+    IN PIRP Irp,
+    IN LPWSTR ObjectClass,
+    IN OUT PULONG Size,
+    OUT PVOID * Result);
+
 #endif

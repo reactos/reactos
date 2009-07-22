@@ -779,7 +779,7 @@ KsAddObjectCreateItemToDeviceHeader(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS

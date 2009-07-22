@@ -31,7 +31,7 @@ KsCreatePin(
     }
 
     return KspCreateObjectType(FilterHandle,
-                               L"{146F1A80-4791-11D0-A5D6-28DB04C10000}", //KSNAME_Pin
+                               KSSTRING_Pin,
                                (PVOID)Connect,
                                ConnectSize,
                                DesiredAccess,
