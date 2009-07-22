@@ -11,19 +11,17 @@
 
 typedef struct
 {
-    IKsFilterFactoryVtbl *lpVtbl;
+    KSBASIC_HEADER Header;
     KSFILTERFACTORY FilterFactory;
-    PKSIDEVICE_HEADER DeviceHeader;
 
+    IKsFilterFactoryVtbl *lpVtbl;
     LONG ref;
-
+    PKSIDEVICE_HEADER DeviceHeader;
     PFNKSFILTERFACTORYPOWER SleepCallback;
     PFNKSFILTERFACTORYPOWER WakeCallback;
 
     LIST_ENTRY SymbolicLinkList;
     LIST_ENTRY FilterInstanceList;
-
-
 }IKsFilterFactoryImpl;
 
 typedef struct
@@ -178,10 +176,17 @@ IKsFilterFactory_fnInitialize(
 
     IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
 
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     /* initialize filterfactory */
     This->SleepCallback = SleepCallback;
     This->WakeCallback = WakeCallback;
     This->FilterFactory.FilterDescriptor = Descriptor;
+    This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
+    This->Header.Type = KsObjectTypeFilterFactory;
+    This->DeviceHeader = DeviceExtension->DeviceHeader;
+
     InitializeListHead(&This->SymbolicLinkList);
     InitializeListHead(&This->FilterInstanceList);
 
@@ -205,9 +210,6 @@ IKsFilterFactory_fnInitialize(
 
         FreeString = TRUE;
     }
-
-    /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* now register the device interface */
     Status = KspRegisterDeviceInterfaces(DeviceExtension->DeviceHeader->KsDevice.PhysicalDeviceObject,

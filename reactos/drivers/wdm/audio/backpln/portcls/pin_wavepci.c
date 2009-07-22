@@ -249,9 +249,9 @@ SetStreamWorkerRoutine(
             /* get current data threshold */
             MinimumDataThreshold = This->IrpQueue->lpVtbl->GetMinimumDataThreshold(This->IrpQueue);
             /* get maximum data threshold */
-            MaximumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)This->Format)->WaveFormatEx.nAvgBytesPerSec * 3;
-            /* increase minimum data threshold by a third sec */
-            MinimumDataThreshold += ((PKSDATAFORMAT_WAVEFORMATEX)This->Format)->WaveFormatEx.nAvgBytesPerSec / 3;
+            MaximumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)This->Format)->WaveFormatEx.nAvgBytesPerSec;
+            /* increase minimum data threshold by 10 frames */
+            MinimumDataThreshold += This->AllocatorFraming.FrameSize * 10;
 
             /* assure it has not exceeded */
             MinimumDataThreshold = min(MinimumDataThreshold, MaximumDataThreshold);
@@ -432,48 +432,48 @@ NTSTATUS
 NTAPI
 IPortPinWavePci_HandleKsProperty(
     IN IPortPinWavePci * iface,
-    IN PIRP Irp)
+    IN PVOID InputBuffer,
+    IN ULONG InputBufferLength,
+    IN PVOID OutputBuffer,
+    IN ULONG OutputBufferLength,
+    IN PIO_STATUS_BLOCK IoStatusBlock)
 {
     PKSPROPERTY Property;
     NTSTATUS Status;
     UNICODE_STRING GuidString;
-    PIO_STACK_LOCATION IoStack;
 
     IPortPinWavePciImpl * This = (IPortPinWavePciImpl*)iface;
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     DPRINT("IPortPinWavePci_HandleKsProperty entered\n");
 
-    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY))
+    if (InputBufferLength < sizeof(KSPROPERTY))
     {
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        IoStatusBlock->Information = 0;
+        IoStatusBlock->Status = STATUS_INVALID_PARAMETER;
         return STATUS_INVALID_PARAMETER;
     }
 
-    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    Property = (PKSPROPERTY)InputBuffer;
 
     if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Connection))
     {
         if (Property->Id == KSPROPERTY_CONNECTION_STATE)
         {
-            PKSSTATE State = (PKSSTATE)Irp->UserBuffer;
+            PKSSTATE State = (PKSSTATE)OutputBuffer;
 
             ASSERT_IRQL(DISPATCH_LEVEL);
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSSTATE))
+            if (OutputBufferLength < sizeof(KSSTATE))
             {
-                Irp->IoStatus.Information = sizeof(KSSTATE);
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                IoStatusBlock->Information = sizeof(KSSTATE);
+                IoStatusBlock->Status = STATUS_BUFFER_TOO_SMALL;
                 return STATUS_BUFFER_TOO_SMALL;
             }
 
             if (Property->Flags & KSPROPERTY_TYPE_SET)
             {
                 Status = STATUS_UNSUCCESSFUL;
-                Irp->IoStatus.Information = 0;
+                IoStatusBlock->Information = 0;
 
                 if (This->Stream)
                 {
@@ -485,39 +485,35 @@ IPortPinWavePci_HandleKsProperty(
                         This->State = *State;
                     }
                 }
-                Irp->IoStatus.Status = Status;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                IoStatusBlock->Status = Status;
                 return Status;
             }
             else if (Property->Flags & KSPROPERTY_TYPE_GET)
             {
                 *State = This->State;
-                Irp->IoStatus.Information = sizeof(KSSTATE);
-                Irp->IoStatus.Status = STATUS_SUCCESS;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                IoStatusBlock->Information = sizeof(KSSTATE);
+                IoStatusBlock->Status = STATUS_SUCCESS;
                 return STATUS_SUCCESS;
             }
         }
         else if (Property->Id == KSPROPERTY_CONNECTION_DATAFORMAT)
         {
-            PKSDATAFORMAT DataFormat = (PKSDATAFORMAT)Irp->UserBuffer;
+            PKSDATAFORMAT DataFormat = (PKSDATAFORMAT)OutputBuffer;
             if (Property->Flags & KSPROPERTY_TYPE_SET)
             {
                 PKSDATAFORMAT NewDataFormat;
                 if (!RtlCompareMemory(DataFormat, This->Format, DataFormat->FormatSize))
                 {
-                    Irp->IoStatus.Information = DataFormat->FormatSize;
-                    Irp->IoStatus.Status = STATUS_SUCCESS;
-                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    IoStatusBlock->Information = DataFormat->FormatSize;
+                    IoStatusBlock->Status = STATUS_SUCCESS;
                     return STATUS_SUCCESS;
                 }
 
                 NewDataFormat = AllocateItem(NonPagedPool, DataFormat->FormatSize, TAG_PORTCLASS);
                 if (!NewDataFormat)
                 {
-                    Irp->IoStatus.Information = 0;
-                    Irp->IoStatus.Status = STATUS_NO_MEMORY;
-                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    IoStatusBlock->Information = 0;
+                    IoStatusBlock->Status = STATUS_NO_MEMORY;
                     return STATUS_NO_MEMORY;
                 }
                 RtlMoveMemory(NewDataFormat, DataFormat, DataFormat->FormatSize);
@@ -543,16 +539,14 @@ IPortPinWavePci_HandleKsProperty(
 
                         This->IrpQueue->lpVtbl->UpdateFormat(This->IrpQueue, (PKSDATAFORMAT)NewDataFormat);
                         This->Format = NewDataFormat;
-                        Irp->IoStatus.Information = DataFormat->FormatSize;
-                        Irp->IoStatus.Status = STATUS_SUCCESS;
-                        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                        IoStatusBlock->Information = DataFormat->FormatSize;
+                        IoStatusBlock->Status = STATUS_SUCCESS;
                         return STATUS_SUCCESS;
                     }
                 }
                 DPRINT1("Failed to set format\n");
-                Irp->IoStatus.Information = 0;
-                Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                IoStatusBlock->Information = 0;
+                IoStatusBlock->Status = STATUS_UNSUCCESSFUL;
                 return STATUS_UNSUCCESSFUL;
             }
             else if (Property->Flags & KSPROPERTY_TYPE_GET)
@@ -560,45 +554,40 @@ IPortPinWavePci_HandleKsProperty(
                 if (!This->Format)
                 {
                     DPRINT1("No format\n");
-                    Irp->IoStatus.Information = 0;
-                    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    IoStatusBlock->Information = 0;
+                    IoStatusBlock->Status = STATUS_UNSUCCESSFUL;
                     return STATUS_UNSUCCESSFUL;
                 }
-                if (This->Format->FormatSize > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+                if (This->Format->FormatSize > OutputBufferLength)
                 {
-                    Irp->IoStatus.Information = This->Format->FormatSize;
-                    Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                    IoStatusBlock->Information = This->Format->FormatSize;
+                    IoStatusBlock->Status = STATUS_BUFFER_TOO_SMALL;
                     return STATUS_BUFFER_TOO_SMALL;
                 }
 
                 RtlMoveMemory(DataFormat, This->Format, This->Format->FormatSize);
-                Irp->IoStatus.Information = DataFormat->FormatSize;
-                Irp->IoStatus.Status = STATUS_SUCCESS;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                IoStatusBlock->Information = DataFormat->FormatSize;
+                IoStatusBlock->Status = STATUS_SUCCESS;
                 return STATUS_SUCCESS;
             }
         }
         else if (Property->Id == KSPROPERTY_CONNECTION_ALLOCATORFRAMING)
         {
-            PKSALLOCATOR_FRAMING Framing = (PKSALLOCATOR_FRAMING)Irp->UserBuffer;
+            PKSALLOCATOR_FRAMING Framing = (PKSALLOCATOR_FRAMING)OutputBuffer;
 
             ASSERT_IRQL(DISPATCH_LEVEL);
             /* Validate input buffer */
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSALLOCATOR_FRAMING))
+            if (OutputBufferLength < sizeof(KSALLOCATOR_FRAMING))
             {
-                Irp->IoStatus.Information = sizeof(KSALLOCATOR_FRAMING);
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                IoStatusBlock->Information = sizeof(KSALLOCATOR_FRAMING);
+                IoStatusBlock->Status = STATUS_BUFFER_TOO_SMALL;
                 return STATUS_BUFFER_TOO_SMALL;
             }
             /* copy frame allocator struct */
             RtlMoveMemory(Framing, &This->AllocatorFraming, sizeof(KSALLOCATOR_FRAMING));
 
-            Irp->IoStatus.Information = sizeof(KSALLOCATOR_FRAMING);
-            Irp->IoStatus.Status = STATUS_SUCCESS;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            IoStatusBlock->Information = sizeof(KSALLOCATOR_FRAMING);
+            IoStatusBlock->Status = STATUS_SUCCESS;
             return STATUS_SUCCESS;
         }
     }
@@ -607,9 +596,8 @@ IPortPinWavePci_HandleKsProperty(
     DPRINT1("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     RtlFreeUnicodeString(&GuidString);
 
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoStatusBlock->Status = STATUS_NOT_IMPLEMENTED;
+    IoStatusBlock->Information = 0;
     return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -624,12 +612,15 @@ IPortPinWavePci_fnDeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     if (IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY)
     {
-       return IPortPinWavePci_HandleKsProperty(iface, Irp);
+       Status = IPortPinWavePci_HandleKsProperty(iface, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, IoStack->Parameters.DeviceIoControl.InputBufferLength, Irp->UserBuffer, IoStack->Parameters.DeviceIoControl.OutputBufferLength, &Irp->IoStatus);
+       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+       return Status;
     }
 
 
@@ -850,7 +841,17 @@ IPortPinWavePci_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED
+    NTSTATUS Status;
+
+    if (IoControlCode == IOCTL_KS_PROPERTY)
+    {
+       Status = IPortPinWavePci_HandleKsProperty(iface, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, StatusBlock);
+       if (NT_SUCCESS(Status))
+       {
+           return TRUE;
+       }
+    }
+
     return FALSE;
 }
 
@@ -917,6 +918,7 @@ IPortPinWavePci_fnFastWrite(
     NTSTATUS Status;
     PCONTEXT_WRITE Packet;
     PIRP Irp;
+    ULONG MinimumDataThreshold;
     IPortPinWavePciImpl * This = (IPortPinWavePciImpl*)iface;
 
     DPRINT("IPortPinWavePci_fnFastWrite entered Total %u Pre %u Post %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted);
@@ -955,9 +957,15 @@ IPortPinWavePci_fnFastWrite(
 
     if (This->IrpQueue->lpVtbl->HasLastMappingFailed(This->IrpQueue))
     {
-        /* notify port driver that new mapping is available */
-        DPRINT("Notifying of new mapping\n");
-        This->Stream->lpVtbl->MappingAvailable(This->Stream);
+        /* get minimum data threshold */
+        MinimumDataThreshold = This->IrpQueue->lpVtbl->GetMinimumDataThreshold(This->IrpQueue);
+
+        if (MinimumDataThreshold < This->IrpQueue->lpVtbl->NumData(This->IrpQueue))
+        {
+            /* notify port driver that new mapping is available */
+            DPRINT("Notifying of new mapping\n");
+            This->Stream->lpVtbl->MappingAvailable(This->Stream);
+        }
     }
 
     return TRUE;

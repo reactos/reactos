@@ -532,12 +532,12 @@ IKsDevice_Create(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PIRP Irp)
 {
+    PCREATE_ITEM_ENTRY CreateItemEntry;
     PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER DeviceHeader;
-    ULONG Index;
+    PKSIOBJECT_HEADER ObjectHeader;
     NTSTATUS Status;
-    ULONG Length;
 
     DPRINT("KS / CREATE\n");
     /* get current stack location */
@@ -553,49 +553,54 @@ IKsDevice_Create(
     /* sanity check */
     ASSERT(IoStack->FileObject);
 
-    /* loop all device items */
-    for(Index = 0; Index < DeviceHeader->MaxItems; Index++)
+    /* check if the request is relative */
+    if (IoStack->FileObject->RelatedFileObject != NULL)
     {
-        /* is there a create item */
-        if (DeviceHeader->ItemList[Index].CreateItem == NULL)
-            continue;
+        /* request is to instantiate a pin / node / clock / allocator */
+        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext;
 
-        /* check if the create item is initialized */
-        if (!DeviceHeader->ItemList[Index].CreateItem->Create)
-            continue;
+        /* sanity check */
+        ASSERT(ObjectHeader);
 
-        ASSERT(DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer);
-        DPRINT("CreateItem %p Request %S\n", DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer,
-                                              IoStack->FileObject->FileName.Buffer);
-
-        /* get object class length */
-        Length = wcslen(DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer);
-        /* now check if the object class is the same */
-        if (!_wcsnicmp(DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer, &IoStack->FileObject->FileName.Buffer[1], Length) ||
-            (DeviceHeader->ItemList[Index].CreateItem->Flags & KSCREATE_ITEM_WILDCARD))
-        {
-            /* setup create parameters */
-            DeviceHeader->DeviceIndex = Index;
-             /* set object create item */
-            KSCREATE_ITEM_IRP_STORAGE(Irp) = DeviceHeader->ItemList[Index].CreateItem;
-
-            /* call create function */
-            Status = DeviceHeader->ItemList[Index].CreateItem->Create(DeviceObject, Irp);
-
-            /* release lock */
-            IKsDevice_fnRelease((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
-
-            /* did we succeed */
-            if (NT_SUCCESS(Status))
-            {
-                /* increment create item reference count */
-                InterlockedIncrement((PLONG)&DeviceHeader->ItemList[Index].ReferenceCount);
-            }
-
-            /* return result */
-            return Status;
-        }
+        /* find a matching a create item */
+        Status = FindMatchingCreateItem(&ObjectHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
     }
+    else
+    {
+        /* request to create a filter */
+        Status = FindMatchingCreateItem(&DeviceHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
+    }
+
+    if (NT_SUCCESS(Status))
+    {
+        /* set object create item */
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = CreateItemEntry->CreateItem;
+
+        /* call create function */
+        Status = CreateItemEntry->CreateItem->Create(DeviceObject, Irp);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* increment create item reference count */
+            InterlockedIncrement(&CreateItemEntry->ReferenceCount);
+        }
+
+        /* acquire list lock */
+        IKsDevice_fnReleaseDevice((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
+
+        return Status;
+    }
+
+    /* acquire list lock */
+    IKsDevice_fnReleaseDevice((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
+
+    DPRINT1("No item found for Request %p\n", IoStack->FileObject->FileName.Buffer);
+
+    Irp->IoStatus.Information = 0;
+    /* set return status */
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
 
     /* release lock */
     IKsDevice_fnRelease((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
@@ -641,6 +646,7 @@ KsInitializeDevice(
     KsSetDevicePnpAndBaseObject(Header, PhysicalDeviceObject, NextDeviceObject);
     /* initialize IKsDevice interface */
     Header->lpVtblIKsDevice = &vt_IKsDevice;
+    Header->Type = KsObjectTypeDevice;
     Header->ref = 1;
 
     /* FIXME Power state */

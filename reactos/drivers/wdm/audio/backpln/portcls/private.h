@@ -162,7 +162,8 @@ NTAPI
 NewDispatchObject(
     IN PIRP Irp,
     IN IIrpTarget * Target,
-    IN LPWSTR Name);
+    IN ULONG ObjectCreateItemCount,
+    IN PKSOBJECT_CREATE_ITEM ObjectCreateItem);
 
 PMINIPORTWAVECYCLIC
 GetWaveCyclicMiniport(

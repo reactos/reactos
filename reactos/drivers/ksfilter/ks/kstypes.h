@@ -5,8 +5,9 @@ typedef struct
 {
     KSDISPATCH_TABLE DispatchTable;
     KSOBJECTTYPE Type;
-    ULONG ItemCount;
-    PKSOBJECT_CREATE_ITEM CreateItem;
+
+    LONG ItemListCount;
+    LIST_ENTRY ItemList;
 
     UNICODE_STRING ObjectClass;
     PUNKNOWN Unknown;
@@ -24,32 +25,38 @@ typedef struct
 
 typedef struct
 {
+    LIST_ENTRY Entry;
     PKSOBJECT_CREATE_ITEM CreateItem;
     PFNKSITEMFREECALLBACK ItemFreeCallback;
     LONG ReferenceCount;
-}DEVICE_ITEM, *PDEVICE_ITEM;
-
-
+    LIST_ENTRY ObjectItemList;
+}CREATE_ITEM_ENTRY, *PCREATE_ITEM_ENTRY;
 
 typedef struct
 {
+    KSOBJECTTYPE Type;
+    PKSDEVICE KsDevice;
+}KSBASIC_HEADER, *PKSBASIC_HEADER;
+
+typedef struct
+{
+    KSOBJECTTYPE Type;
+    KSDEVICE KsDevice;
     IKsDeviceVtbl *lpVtblIKsDevice;
+
     LONG ref;
     ERESOURCE SecurityLock;
 
-    USHORT MaxItems;
-    DEVICE_ITEM *ItemList;
+    LONG ItemListCount;
+    LIST_ENTRY ItemList;
 
     ULONG DeviceIndex;
-    KSPIN_LOCK ItemListLock;
-
     PDEVICE_OBJECT PnpDeviceObject;
     PDEVICE_OBJECT BaseDevice;
 
     KSTARGET_STATE TargetState;
     LIST_ENTRY TargetDeviceList;
 
-    KSDEVICE KsDevice;
     KMUTEX DeviceMutex;
     KSDEVICE_DESCRIPTOR* Descriptor;
 

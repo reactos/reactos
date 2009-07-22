@@ -269,7 +269,7 @@ KsReadFile(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -903,19 +903,85 @@ KsGetChildCreateParameter(
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+FindMatchingCreateItem(
+    PLIST_ENTRY ListHead,
+    ULONG BufferSize,
+    LPWSTR Buffer,
+    OUT PCREATE_ITEM_ENTRY *OutCreateItem)
+{
+    PLIST_ENTRY Entry;
+    PCREATE_ITEM_ENTRY CreateItemEntry;
+
+    /* remove '\' slash */
+    Buffer++;
+    BufferSize -= sizeof(WCHAR);
+
+    /* point to first entry */
+    Entry = ListHead->Flink;
+
+    /* loop all device items */
+    while(Entry != ListHead)
+    {
+        /* get create item entry */
+        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
+
+        ASSERT(CreateItemEntry->CreateItem);
+
+        if(CreateItemEntry->CreateItem->Flags & KSCREATE_ITEM_WILDCARD)
+        {
+            /* create item is default */
+            *OutCreateItem = CreateItemEntry;
+            return STATUS_SUCCESS;
+        }
+
+        if (!CreateItemEntry->CreateItem->Create)
+        {
+            /* skip free create item */
+            Entry = Entry->Flink;
+            continue;
+        }
+
+        ASSERT(CreateItemEntry->CreateItem->ObjectClass.Buffer);
+
+        DPRINT1("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
+                                                           CreateItemEntry->CreateItem->ObjectClass.Length,
+                                                           Buffer,
+                                                           BufferSize);
+
+        if (CreateItemEntry->CreateItem->ObjectClass.Length > BufferSize)
+        {
+            /* create item doesnt match in length */
+            Entry = Entry->Flink;
+            continue;
+        }
+
+         /* now check if the object class is the same */
+        if (RtlCompareMemory(CreateItemEntry->CreateItem->ObjectClass.Buffer, Buffer, CreateItemEntry->CreateItem->ObjectClass.Length) == CreateItemEntry->CreateItem->ObjectClass.Length)
+        {
+            /* found matching create item */
+            *OutCreateItem = CreateItemEntry;
+            return STATUS_SUCCESS;
+        }
+        /* iterate to next */
+        Entry = Entry->Flink;
+    }
+
+    return STATUS_NOT_FOUND;
+}
+
 NTAPI
 NTSTATUS
 KspCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PCREATE_ITEM_ENTRY CreateItemEntry;
     PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER DeviceHeader;
-    ULONG Index;
+    PKSIOBJECT_HEADER ObjectHeader;
     NTSTATUS Status;
-    KIRQL OldLevel;
-    ULONG Length;
 
     DPRINT("KS / CREATE\n");
     /* get current stack location */
@@ -925,41 +991,36 @@ KspCreate(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
-    /* acquire list lock */
-    KeAcquireSpinLock(&DeviceHeader->ItemListLock, &OldLevel);
-
-    /* sanity check */
-    ASSERT(IoStack->FileObject);
-
-    if (IoStack->FileObject->FileName.Buffer == NULL && DeviceHeader->MaxItems == 1)
+    if (IoStack->FileObject->FileName.Buffer == NULL && DeviceHeader->ItemListCount == 1)
     {
         /* hack for bug 4566 */
-        if (!DeviceHeader->ItemList[0].CreateItem || !DeviceHeader->ItemList[0].CreateItem->Create)
+        ASSERT(!IsListEmpty(&DeviceHeader->ItemList));
+        /* get create item entry */
+        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(DeviceHeader->ItemList.Flink, CREATE_ITEM_ENTRY, Entry);
+
+        ASSERT(CreateItemEntry->CreateItem);
+
+        if (!CreateItemEntry->CreateItem->Create)
         {
             /* no valid create item */
             Irp->IoStatus.Information = 0;
             Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
             IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            /* release lock */
-            KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
             /* return status */
             return STATUS_UNSUCCESSFUL;
         }
 
         /* set object create item */
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = DeviceHeader->ItemList[0].CreateItem;
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = CreateItemEntry->CreateItem;
 
         /* call create function */
-        Status = DeviceHeader->ItemList[0].CreateItem->Create(DeviceObject, Irp);
+        Status = CreateItemEntry->CreateItem->Create(DeviceObject, Irp);
 
         if (NT_SUCCESS(Status))
         {
             /* increment create item reference count */
-            InterlockedIncrement((PLONG)&DeviceHeader->ItemList[0].ReferenceCount);
+            InterlockedIncrement(&CreateItemEntry->ReferenceCount);
         }
-
-        /* release lock */
-        KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
         /* return result */
         return Status;
     }
@@ -969,8 +1030,6 @@ KspCreate(
     if (IoStack->FileObject->FileName.Buffer == NULL)
     {
         DPRINT("Using reference string hack\n");
-        /* release lock */
-        KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
         Irp->IoStatus.Information = 0;
         /* set return status */
         Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -978,57 +1037,121 @@ KspCreate(
         return STATUS_SUCCESS;
     }
 
-    /* loop all device items */
-    for(Index = 0; Index < DeviceHeader->MaxItems; Index++)
+
+    if (IoStack->FileObject->RelatedFileObject != NULL)
     {
-        /* is there a create item */
-        if (DeviceHeader->ItemList[Index].CreateItem == NULL)
-            continue;
+        /* request is to instantiate a pin / node / clock / allocator */
+        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext;
 
-        /* check if the create item is initialized */
-        if (!DeviceHeader->ItemList[Index].CreateItem->Create)
-            continue;
+        /* sanity check */
+        ASSERT(ObjectHeader);
 
-        ASSERT(DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer);
-        DPRINT("CreateItem %p Request %S\n", DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer,
-                                              IoStack->FileObject->FileName.Buffer);
-
-        /* get object class length */
-        Length = wcslen(DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer);
-        /* now check if the object class is the same */
-        if (!_wcsnicmp(DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer, &IoStack->FileObject->FileName.Buffer[1], Length) ||
-            (DeviceHeader->ItemList[Index].CreateItem->Flags & KSCREATE_ITEM_WILDCARD))
-        {
-            /* setup create parameters */
-            DeviceHeader->DeviceIndex = Index;
-             /* set object create item */
-            KSCREATE_ITEM_IRP_STORAGE(Irp) = DeviceHeader->ItemList[Index].CreateItem;
-
-            /* call create function */
-            Status = DeviceHeader->ItemList[Index].CreateItem->Create(DeviceObject, Irp);
-
-            if (NT_SUCCESS(Status))
-            {
-                /* increment create item reference count */
-                InterlockedIncrement((PLONG)&DeviceHeader->ItemList[Index].ReferenceCount);
-            }
-
-            /* release lock */
-            KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
-
-            /* return result */
-            return Status;
-        }
+        /* find a matching a create item */
+        Status = FindMatchingCreateItem(&ObjectHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
+    }
+    else
+    {
+        /* request to create a filter */
+        Status = FindMatchingCreateItem(&DeviceHeader->ItemList, IoStack->FileObject->FileName.Length, IoStack->FileObject->FileName.Buffer, &CreateItemEntry);
     }
 
-    /* release lock */
-    KeReleaseSpinLock(&DeviceHeader->ItemListLock, OldLevel);
+    if (NT_SUCCESS(Status))
+    {
+        /* set object create item */
+        KSCREATE_ITEM_IRP_STORAGE(Irp) = CreateItemEntry->CreateItem;
+
+        /* call create function */
+        Status = CreateItemEntry->CreateItem->Create(DeviceObject, Irp);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* increment create item reference count */
+            InterlockedIncrement(&CreateItemEntry->ReferenceCount);
+        }
+        return Status;
+    }
+
 
     Irp->IoStatus.Information = 0;
     /* set return status */
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+RosDeviceInterfaceReferenceStringHack(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    PIO_STACK_LOCATION IoStack;
+    PKSIDEVICE_HEADER DeviceHeader;
+    PDEVICE_EXTENSION DeviceExtension;
+    PCREATE_ITEM_ENTRY CreateItemEntry;
+    PLIST_ENTRY Entry;
+    LPWSTR Buffer;
+    ULONG Length;
+
+    /* get current stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+    /* retrieve all available reference strings registered */
+    Length = 0;
+    Entry = DeviceHeader->ItemList.Flink;
+    while(Entry != &DeviceHeader->ItemList)
+    {
+        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
+
+        ASSERT(CreateItemEntry->CreateItem);
+        if (CreateItemEntry->CreateItem->Create && CreateItemEntry->CreateItem->ObjectClass.Buffer)
+            Length += wcslen(CreateItemEntry->CreateItem->ObjectClass.Buffer) + 1;
+
+        Entry = Entry->Flink;
+    }
+
+    /* add extra zero */
+    Length += 1;
+
+    /* allocate the buffer */
+    Buffer = ExAllocatePool(NonPagedPool, Length * sizeof(WCHAR));
+    if (!Buffer)
+    {
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+
+    *((LPWSTR*)Irp->UserBuffer) = Buffer;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = sizeof(LPWSTR);
+
+    Entry = DeviceHeader->ItemList.Flink;
+    while(Entry != &DeviceHeader->ItemList)
+    {
+        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
+
+        ASSERT(CreateItemEntry->CreateItem);
+        if (CreateItemEntry->CreateItem->Create && CreateItemEntry->CreateItem->ObjectClass.Buffer)
+        {
+            wcscpy(Buffer, CreateItemEntry->CreateItem->ObjectClass.Buffer);
+            Buffer += wcslen(Buffer) + 1;
+        }
+        Entry = Entry->Flink;
+    }
+
+
+
+    *Buffer = L'\0';
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+
 }
 
 NTAPI
@@ -1041,8 +1164,8 @@ KspDeviceControl(
     PKSIOBJECT_HEADER ObjectHeader;
     PKSIDEVICE_HEADER DeviceHeader;
     PDEVICE_EXTENSION DeviceExtension;
-    ULONG Length, Index;
-    LPWSTR Buffer;
+
+
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1052,65 +1175,18 @@ KspDeviceControl(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
-    /* hack for bug 4566 */
     if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL && IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_OBJECT_CLASS)
     {
-        /* retrieve all available reference strings registered */
-        Length = 0;
-
-        for(Index = 0; Index < DeviceHeader->MaxItems; Index++)
-        {
-            if (!DeviceHeader->ItemList[Index].CreateItem || !DeviceHeader->ItemList[Index].CreateItem->Create || !DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer)
-                continue;
-
-            Length += wcslen(DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer) + 1;
-        }
-
-        /* add extra zero */
-        Length += 1;
-
-        /* allocate the buffer */
-        Buffer = ExAllocatePool(NonPagedPool, Length * sizeof(WCHAR));
-        if (!Buffer)
-        {
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        *((LPWSTR*)Irp->UserBuffer) = Buffer;
-        Irp->IoStatus.Status = STATUS_SUCCESS;
-        Irp->IoStatus.Information = sizeof(LPWSTR);
-
-        for(Index = 0; Index < DeviceHeader->MaxItems; Index++)
-        {
-            if (!DeviceHeader->ItemList[Index].CreateItem || !DeviceHeader->ItemList[Index].CreateItem->Create || !DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer)
-                continue;
-
-            wcscpy(Buffer, DeviceHeader->ItemList[Index].CreateItem->ObjectClass.Buffer);
-            Buffer += wcslen(Buffer) + 1;
-        }
-        *Buffer = L'\0';
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_SUCCESS;
+        /* hack for bug 4566 */
+        return RosDeviceInterfaceReferenceStringHack(DeviceObject, Irp);
     }
 
-    DPRINT("KS / DeviceControl\n");
-    if (IoStack->FileObject && IoStack->FileObject->FsContext)
-    {
-        ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
 
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+    ASSERT(ObjectHeader);
+    //KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
 
-        return ObjectHeader->DispatchTable.DeviceIoControl(DeviceObject, Irp);
-    }
-    else
-    {
-        DPRINT1("Expected Object Header\n");
-        KeBugCheckEx(0, 0, 0, 0, 0);
-        return STATUS_SUCCESS;
-    }
+    return ObjectHeader->DispatchTable.DeviceIoControl(DeviceObject, Irp);
 }
 
 NTAPI
@@ -1150,7 +1226,7 @@ KspDispatchIrp(
     /* sanity check */
     ASSERT(ObjectHeader);
     /* store create item */
-    KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
+    //KSCREATE_ITEM_IRP_STORAGE(Irp) = (PKSOBJECT_CREATE_ITEM)0x12345678; //ObjectHeader->CreateItem;
 
     /* retrieve matching dispatch function */
     switch(IoStack->MajorFunction)

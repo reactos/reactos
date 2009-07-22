@@ -121,9 +121,9 @@ PinPropertyHandler(
     IN PKSIDENTIFIER  Request,
     IN OUT PVOID  Data)
 {
-    PKSOBJECT_CREATE_ITEM CreateItem;
-    PSUBDEVICE_DESCRIPTOR Descriptor;
     PIO_STACK_LOCATION IoStack;
+    //PKSOBJECT_CREATE_ITEM CreateItem;
+    PSUBDEVICE_DESCRIPTOR Descriptor;
     IIrpTarget * IrpTarget;
     IPort *Port;
     ISubdevice *SubDevice;
@@ -134,10 +134,11 @@ PinPropertyHandler(
     Descriptor = (PSUBDEVICE_DESCRIPTOR)KSPROPERTY_ITEM_IRP_STORAGE(Irp);
     ASSERT(Descriptor);
 
-    /* Access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     /* Get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    IrpTarget = (IIrpTarget*)IoStack->FileObject->FsContext2;
     /* Get the parent */
     Status = IrpTarget->lpVtbl->QueryInterface(IrpTarget, &IID_IPort, (PVOID*)&Port);
     if (!NT_SUCCESS(Status))

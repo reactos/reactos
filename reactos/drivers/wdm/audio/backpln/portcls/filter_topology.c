@@ -242,7 +242,43 @@ IPortFilterTopology_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    return FALSE;
+    ULONG Index;
+    PKSPROPERTY Property;
+    NTSTATUS Status;
+    ISubdevice * SubDevice = NULL;
+    PSUBDEVICE_DESCRIPTOR Descriptor = NULL;
+    IPortFilterTopologyImpl * This = (IPortFilterTopologyImpl*)iface;
+
+    Property = (PKSPROPERTY)InputBuffer;
+
+    if (InputBufferLength < sizeof(KSPROPERTY))
+        return FALSE;
+
+
+    /* get private interface */
+    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    /* get descriptor */
+    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        SubDevice->lpVtbl->Release(SubDevice);
+        return FALSE;
+    }
+
+    for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
+    {
+        if (IsEqualGUIDAligned(&Property->Set, Descriptor->FilterPropertySet.Properties[Index].Set))
+        {
+            FastPropertyHandler(FileObject, (PKSPROPERTY)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, StatusBlock,
+                                1,
+                                &Descriptor->FilterPropertySet.Properties[Index],
+                                Descriptor, SubDevice);
+        }
+    }
+    return TRUE;
 }
 
 /*

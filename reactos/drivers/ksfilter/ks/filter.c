@@ -11,13 +11,15 @@
 
 typedef struct
 {
+    KSBASIC_HEADER Header;
+    KSFILTER Filter;
+
     IKsFilterVtbl *lpVtbl;
     IKsControlVtbl *lpVtblKsControl;
     IKsFilterFactory * FilterFactory;
     LONG ref;
 
     PKSIOBJECT_HEADER ObjectHeader;
-    KSFILTER Filter;
     KSTOPOLOGY Topology;
     KSPIN_DESCRIPTOR * PinDescriptors;
     ULONG PinDescriptorCount;
@@ -831,8 +833,11 @@ KspCreateFilter(
     IKsFilterImpl * This;
     PKSFILTERFACTORY Factory;
     PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
 
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
     /* get the filter factory */
     Factory = iface->lpVtbl->GetStruct(iface);
@@ -859,6 +864,8 @@ KspCreateFilter(
     This->Factory = Factory;
     This->FilterFactory = iface;
     This->FileObject = IoStack->FileObject;
+    This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
+    This->Header.Type = KsObjectTypeFilter;
 
     /* allocate the stream descriptors */
     Status = IKsFilter_CreateDescriptors(This, (PKSFILTER_DESCRIPTOR)Factory->FilterDescriptor);
@@ -908,6 +915,8 @@ KspCreateFilter(
     }
 
     /* initialize object header */
+    This->Header.Type = KsObjectTypeFilter;
+    This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->ObjectHeader->Type = KsObjectTypeFilter;
     This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
 

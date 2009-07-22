@@ -260,7 +260,7 @@ SetStreamWorkerRoutine(
             /* get maximum data threshold */
             MaximumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)This->Format)->WaveFormatEx.nAvgBytesPerSec;
             /* increase minimum data threshold by a third sec */
-            MinimumDataThreshold += ((PKSDATAFORMAT_WAVEFORMATEX)This->Format)->WaveFormatEx.nAvgBytesPerSec / 3;
+            MinimumDataThreshold += This->FrameSize * 10;
 
             /* assure it has not exceeded */
             MinimumDataThreshold = min(MinimumDataThreshold, MaximumDataThreshold);
@@ -970,7 +970,7 @@ IPortPinWaveCyclic_fnFastWrite(
     PrePostRatio = (This->PreCompleted * 100) / This->TotalPackets;
     MinData = This->IrpQueue->lpVtbl->NumData(This->IrpQueue);
 
-    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u Ratio %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue), PrePostRatio);
+    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u Ratio %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue), PrePostRatio);
 
     Packet = (PCONTEXT_WRITE)Buffer;
 

@@ -419,7 +419,7 @@ static KSDISPATCH_TABLE PinTable =
 };
 
 NTSTATUS
-CreateDispatcher(
+CreateSysAudioPin(
     IN PIRP Irp)
 {
     NTSTATUS Status;

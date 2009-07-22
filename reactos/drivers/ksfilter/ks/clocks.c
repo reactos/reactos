@@ -159,13 +159,6 @@ KsCreateDefaultClock(
     /* get create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
 
-    if (CreateItem)
-    {
-        /* store create item */
-        Clock->ObjectHeader->CreateItem = CreateItem;
-        Clock->ObjectHeader->ItemCount = 1;
-    }
-
     return Status;
 }
 

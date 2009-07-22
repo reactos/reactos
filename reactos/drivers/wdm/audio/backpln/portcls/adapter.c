@@ -183,7 +183,7 @@ PcAddAdapterDevice(
     if (PrevDeviceObject)
     {
         /* store the device object in the device header */
-        //KsSetDevicePnpBaseObject(portcls_ext->KsDeviceHeader, PrevDeviceObject, fdo);
+        //KsSetDevicePnpBaseObject(portcls_ext->KsDeviceHeader, fdo, PrevDeviceObject);
         portcls_ext->PrevDeviceObject = PrevDeviceObject;
     }
     else

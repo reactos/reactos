@@ -550,7 +550,6 @@ KsCreateDefaultAllocatorEx(
     NTSTATUS Status;
     PKSALLOCATOR_FRAMING AllocatorFraming;
     PALLOCATOR Allocator;
-    PKSOBJECT_CREATE_ITEM CreateItem;
     PVOID Ctx;
 
     /* first validate connect request */
@@ -568,6 +567,7 @@ KsCreateDefaultAllocatorEx(
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* allocate object header */
+    
     Status = KsAllocateObjectHeader((KSOBJECT_HEADER*)&Allocator->Header, 0, NULL, Irp, &DispatchTable);
     if (!NT_SUCCESS(Status))
     {
@@ -618,16 +618,6 @@ KsCreateDefaultAllocatorEx(
 
     /* backup allocator framing */
     RtlMoveMemory(&Allocator->Status.Framing, AllocatorFraming, sizeof(KSALLOCATOR_FRAMING));
-
-    /* get create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-
-    if (CreateItem)
-    {
-        /* store create item */
-        Allocator->Header->CreateItem = CreateItem;
-        Allocator->Header->ItemCount = 1;
-    }
 
     return Status;
 }

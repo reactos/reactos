@@ -141,7 +141,7 @@ CreateMixerPinAndSetFormat(
     HANDLE PinHandle;
     PFILE_OBJECT FileObject;
 
-    Status = KsCreatePin(KMixerHandle, PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle);//, L"KMixer");
+    Status = KsCreatePin(KMixerHandle, PinConnect, GENERIC_READ | GENERIC_WRITE, &PinHandle);
 
     if (!NT_SUCCESS(Status))
     {

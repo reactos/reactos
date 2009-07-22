@@ -414,6 +414,65 @@ KsQueryObjectCreateItem(
     return NULL;
 }
 
+NTSTATUS
+KspAddCreateItemToList(
+    OUT PLIST_ENTRY ListHead,
+    IN ULONG ItemsCount,
+    IN  PKSOBJECT_CREATE_ITEM ItemsList)
+{
+    ULONG Index;
+    PCREATE_ITEM_ENTRY Entry;
+
+    /* add the items */
+    for(Index = 0; Index < ItemsCount; Index++)
+    {
+        /* allocate item */
+        Entry = AllocateItem(NonPagedPool, sizeof(CREATE_ITEM_ENTRY));
+        if (!Entry)
+        {
+            /* no memory */
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* initialize entry */
+        InitializeListHead(&Entry->ObjectItemList);
+        Entry->CreateItem = &ItemsList[Index];
+        Entry->ReferenceCount = 0;
+        Entry->ItemFreeCallback = NULL;
+
+        InsertTailList(ListHead, &Entry->Entry);
+    }
+    return STATUS_SUCCESS;
+}
+
+VOID
+KspFreeCreateItems(
+    PLIST_ENTRY ListHead)
+{
+    PCREATE_ITEM_ENTRY Entry;
+
+    while(!IsListEmpty(ListHead))
+    {
+        /* remove create item from list */
+        Entry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(RemoveHeadList(ListHead), CREATE_ITEM_ENTRY, Entry);
+
+        /* caller shouldnt have any references */
+        ASSERT(Entry->ReferenceCount == 0);
+        ASSERT(IsListEmpty(&Entry->ObjectItemList));
+
+        /* does the creator wish notification */
+        if (Entry->ItemFreeCallback)
+        {
+            /* notify creator */
+            Entry->ItemFreeCallback(Entry->CreateItem);
+        }
+
+        /* free create item entry */
+         FreeItem(Entry);
+    }
+
+}
+
 /*
     @implemented
 */
@@ -425,7 +484,7 @@ KsAllocateDeviceHeader(
     IN  ULONG ItemsCount,
     IN  PKSOBJECT_CREATE_ITEM ItemsList OPTIONAL)
 {
-    ULONG Index = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
     PKSIDEVICE_HEADER Header;
 
     if (!OutHeader)
@@ -441,9 +500,6 @@ KsAllocateDeviceHeader(
     /* clear all memory */
     RtlZeroMemory(Header, sizeof(KSIDEVICE_HEADER));
 
-    /* initialize spin lock */
-    KeInitializeSpinLock(&Header->ItemListLock); //FIXME
-
     /* initialize device mutex */
     KeInitializeMutex(&Header->DeviceMutex, 0);
 
@@ -452,34 +508,34 @@ KsAllocateDeviceHeader(
     /* initialize power dispatch list */
     InitializeListHead(&Header->PowerDispatchList);
 
+    /* initialize create item list */
+    InitializeListHead(&Header->ItemList);
+
     /* are there any create items provided */
     if (ItemsCount && ItemsList)
     {
-        /* allocate space for device item list */
-        Header->ItemList = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_ITEM) * ItemsCount, TAG_DEVICE_HEADER);
-        if (!Header->ItemList)
-        {
-            ExFreePoolWithTag(Header, TAG_DEVICE_HEADER);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        RtlZeroMemory(Header->ItemList, sizeof(DEVICE_ITEM) * ItemsCount);
+        Status = KspAddCreateItemToList(&Header->ItemList, ItemsCount, ItemsList);
 
-        for(Index = 0; Index < ItemsCount; Index++)
+        if (NT_SUCCESS(Status))
         {
-            /* store provided create items */
-            Header->ItemList[Index].CreateItem = &ItemsList[Index];
+            /* store item count */
+            Header->ItemListCount = ItemsCount;
         }
-        Header->MaxItems = ItemsCount;
+        else
+        {
+            /* release create items */
+            KspFreeCreateItems(&Header->ItemList);
+        }
     }
 
     /* store result */
     *OutHeader = Header;
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -494,7 +550,7 @@ KsFreeDeviceHeader(
     if (!DevHeader)
         return;
 
-    ExFreePoolWithTag(Header->ItemList, TAG_DEVICE_HEADER);
+    KspFreeCreateItems(&Header->ItemList);
     ExFreePoolWithTag(Header, TAG_DEVICE_HEADER);
 }
 
@@ -515,6 +571,8 @@ KsAllocateObjectHeader(
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER DeviceHeader;
     PKSIOBJECT_HEADER ObjectHeader;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    NTSTATUS Status;
 
     if (!Header)
         return STATUS_INVALID_PARAMETER_1;
@@ -544,6 +602,12 @@ KsAllocateObjectHeader(
     /* initialize object header */
     RtlZeroMemory(ObjectHeader, sizeof(KSIOBJECT_HEADER));
 
+    /* initialize create item list */
+    InitializeListHead(&ObjectHeader->ItemList);
+
+    /* get create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+
     /* do we have a name */
     if (IoStack->FileObject->FileName.Buffer)
     {
@@ -560,27 +624,33 @@ KsAllocateObjectHeader(
 
     /* copy dispatch table */
     RtlCopyMemory(&ObjectHeader->DispatchTable, Table, sizeof(KSDISPATCH_TABLE));
+
     /* store create items */
     if (ItemsCount && ItemsList)
     {
-        ObjectHeader->ItemCount = ItemsCount;
-        ObjectHeader->CreateItem = ItemsList;
-    }
+        Status = KspAddCreateItemToList(&ObjectHeader->ItemList, ItemsCount, ItemsList);
 
+        if (NT_SUCCESS(Status))
+        {
+            /* store item count */
+            ObjectHeader->ItemListCount = ItemsCount;
+        }
+        else
+        {
+            /* destroy header*/
+            KsFreeObjectHeader(ObjectHeader);
+            return Status;
+        }
+    }
     /* store the object in the file object */
     ASSERT(IoStack->FileObject->FsContext == NULL);
     IoStack->FileObject->FsContext = ObjectHeader;
-
-    /* the object header is for a audio filter */
-    ASSERT(DeviceHeader->DeviceIndex < DeviceHeader->MaxItems);
 
     /* store parent device */
     ObjectHeader->ParentDeviceObject = IoGetRelatedDeviceObject(IoStack->FileObject);
 
     /* store result */
     *Header = ObjectHeader;
-
-
 
     DPRINT("KsAllocateObjectHeader ObjectClass %S FileObject %p, ObjectHeader %p\n", ObjectHeader->ObjectClass.Buffer, IoStack->FileObject, ObjectHeader);
 
@@ -611,11 +681,57 @@ KsFreeObjectHeader(
         ObjectHeader->Unknown->lpVtbl->Release(ObjectHeader->Unknown);
     }
 
-    /* FIXME free create items */
+    /* free create items */
+    KspFreeCreateItems(&ObjectHeader->ItemList);
 
     /* free object header */
     ExFreePoolWithTag(ObjectHeader, TAG_DEVICE_HEADER);
 
+}
+
+NTSTATUS
+KspAddObjectCreateItemToList(
+    PLIST_ENTRY ListHead,
+    IN  PDRIVER_DISPATCH Create,
+    IN  PVOID Context,
+    IN  PWCHAR ObjectClass,
+    IN  PSECURITY_DESCRIPTOR SecurityDescriptor)
+{
+   PLIST_ENTRY Entry;
+   PCREATE_ITEM_ENTRY CreateEntry;
+
+    /* point to first entry */
+    Entry = ListHead->Flink;
+
+    while(Entry != ListHead)
+    {
+        /* get create entry */
+        CreateEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
+        /* if the create item has no create routine, then it is free to use */
+        if (CreateEntry->CreateItem->Create == NULL)
+        {
+            /* sanity check */
+            ASSERT(IsListEmpty(&CreateEntry->ObjectItemList));
+            ASSERT(CreateEntry->ReferenceCount == 0);
+            /* use free entry */
+            CreateEntry->CreateItem->Context = Context;
+            CreateEntry->CreateItem->Create = Create;
+            RtlInitUnicodeString(&CreateEntry->CreateItem->ObjectClass, ObjectClass);
+            CreateEntry->CreateItem->SecurityDescriptor = SecurityDescriptor;
+
+            return STATUS_SUCCESS;
+        }
+
+        if (!wcsicmp(ObjectClass, CreateEntry->CreateItem->ObjectClass.Buffer))
+        {
+            /* the same object class already exists */
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+
+        /* iterate to next entry */
+        Entry = Entry->Flink;
+    }
+    return STATUS_ALLOTTED_SPACE_EXCEEDED;
 }
 
 /*
@@ -632,7 +748,7 @@ KsAddObjectCreateItemToDeviceHeader(
     IN  PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
     PKSIDEVICE_HEADER Header;
-    ULONG FreeIndex, Index;
+    NTSTATUS Status;
 
     Header = (PKSIDEVICE_HEADER)DevHeader;
 
@@ -650,39 +766,16 @@ KsAddObjectCreateItemToDeviceHeader(
     if (!ObjectClass)
         return STATUS_INVALID_PARAMETER_4;
 
-    FreeIndex = (ULONG)-1;
-    /* now scan the list and check for a free item */
-    for(Index = 0; Index < Header->MaxItems; Index++)
-    {
-        ASSERT(Header->ItemList[Index].CreateItem);
+    /* let others do the work */
+    Status = KspAddObjectCreateItemToList(&Header->ItemList, Create, Context, ObjectClass, SecurityDescriptor);
 
-        if (Header->ItemList[Index].CreateItem->Create == NULL)
-        {
-            FreeIndex = Index;
-            break;
-        }
-
-        if (!wcsicmp(ObjectClass, Header->ItemList[Index].CreateItem->ObjectClass.Buffer))
-        {
-            /* the same object class already exists */
-            return STATUS_OBJECT_NAME_COLLISION;
-        }
-    }
-    /* found a free index */
-    if (FreeIndex == (ULONG)-1)
+    if (NT_SUCCESS(Status))
     {
-        /* no empty space found */
-        return STATUS_ALLOTTED_SPACE_EXCEEDED;
+        /* increment create item count */
+        InterlockedIncrement(&Header->ItemListCount);
     }
 
-    /* initialize create item */
-    Header->ItemList[FreeIndex].CreateItem->Create = Create;
-    Header->ItemList[FreeIndex].CreateItem->Context = Context;
-    RtlInitUnicodeString(&Header->ItemList[FreeIndex].CreateItem->ObjectClass, ObjectClass);
-    Header->ItemList[FreeIndex].CreateItem->SecurityDescriptor = SecurityDescriptor;
-
-
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 /*
@@ -692,14 +785,41 @@ KSDDKAPI
 NTSTATUS
 NTAPI
 KsAddObjectCreateItemToObjectHeader(
-    IN  KSOBJECT_HEADER Header,
+    IN  KSOBJECT_HEADER ObjectHeader,
     IN  PDRIVER_DISPATCH Create,
     IN  PVOID Context,
     IN  PWCHAR ObjectClass,
     IN  PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSIOBJECT_HEADER Header;
+    NTSTATUS Status;
+
+    Header = (PKSIOBJECT_HEADER)ObjectHeader;
+
+    DPRINT1("KsAddObjectCreateItemToDeviceHeader entered\n");
+
+     /* check if a device header has been provided */
+    if (!Header)
+        return STATUS_INVALID_PARAMETER_1;
+
+    /* check if a create item has been provided */
+    if (!Create)
+        return STATUS_INVALID_PARAMETER_2;
+
+    /* check if a object class has been provided */
+    if (!ObjectClass)
+        return STATUS_INVALID_PARAMETER_4;
+
+    /* let's work */
+    Status = KspAddObjectCreateItemToList(&Header->ItemList, Create, Context, ObjectClass, SecurityDescriptor);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* increment create item count */
+        InterlockedIncrement(&Header->ItemListCount);
+    }
+
+    return Status;
 }
 
 /*
@@ -714,10 +834,9 @@ KsAllocateObjectCreateItem(
     IN  BOOLEAN AllocateEntry,
     IN  PFNKSITEMFREECALLBACK ItemFreeCallback OPTIONAL)
 {
+    PCREATE_ITEM_ENTRY CreateEntry;
     PKSIDEVICE_HEADER Header;
     PKSOBJECT_CREATE_ITEM Item;
-    PDEVICE_ITEM ItemList;
-    KIRQL OldLevel;
 
     Header = (PKSIDEVICE_HEADER)DevHeader;
 
@@ -727,35 +846,25 @@ KsAllocateObjectCreateItem(
     if (!CreateItem)
         return STATUS_INVALID_PARAMETER_2;
 
-    /* acquire list lock */
-    KeAcquireSpinLock(&Header->ItemListLock, &OldLevel);
+    /* first allocate a create entry */
+    CreateEntry = AllocateItem(NonPagedPool, sizeof(PCREATE_ITEM_ENTRY));
 
-    ItemList = ExAllocatePool(NonPagedPool, sizeof(DEVICE_ITEM) * (Header->MaxItems + 1));
-    if (!ItemList)
+    /* check for allocation success */
+    if (!CreateEntry)
     {
+        /* not enough resources */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+
     if (AllocateEntry)
     {
-        if (!ItemFreeCallback)
-        {
-            /* caller must be notified */
-            ExFreePool(ItemList);
-            /* release lock */
-            KeReleaseSpinLock(&Header->ItemListLock, OldLevel);
-
-            return STATUS_INVALID_PARAMETER_4;
-        }
         /* allocate create item */
         Item = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
         if (!Item)
         {
             /* no memory */
-            ExFreePool(ItemList);
-            /* release lock */
-            KeReleaseSpinLock(&Header->ItemListLock, OldLevel);
-
+            ExFreePool(CreateEntry);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -772,15 +881,11 @@ KsAllocateObjectCreateItem(
         if (!Item->ObjectClass.Buffer)
         {
             /* release resources */
-            ExFreePool(Item);
-            ExFreePool(ItemList);
-
-            /* release lock */
-            KeReleaseSpinLock(&Header->ItemListLock, OldLevel);
+            FreeItem(Item);
+            FreeItem(CreateEntry);
 
             return STATUS_INSUFFICIENT_RESOURCES;
         }
-
         RtlCopyUnicodeString(&Item->ObjectClass, &CreateItem->ObjectClass);
     }
     else
@@ -788,39 +893,25 @@ KsAllocateObjectCreateItem(
         if (ItemFreeCallback)
         {
             /* callback is only accepted when the create item is copied */
-            ExFreePool(ItemList);
-            /* release lock */
-            KeReleaseSpinLock(&Header->ItemListLock, OldLevel);
-
-            return STATUS_INVALID_PARAMETER_4;
+            ItemFreeCallback = NULL;
         }
-
+        /* use passed create item */
         Item = CreateItem;
     }
 
+    /* initialize create item entry */
+    InitializeListHead(&CreateEntry->ObjectItemList);
+    CreateEntry->ItemFreeCallback = ItemFreeCallback;
+    CreateEntry->CreateItem = Item;
+    CreateEntry->ReferenceCount = 0;
 
-    if (Header->MaxItems)
-    {
-        /* copy old create items */
-        RtlMoveMemory(ItemList, Header->ItemList, sizeof(DEVICE_ITEM) * Header->MaxItems);
-    }
+    /* now insert the create item entry */
+    InsertTailList(&Header->ItemList, &CreateEntry->Entry);
 
-    /* initialize item entry */
-    ItemList[Header->MaxItems].CreateItem = Item;
-    ItemList[Header->MaxItems].ItemFreeCallback = ItemFreeCallback;
-
-
-    /* free old item list */
-    ExFreePool(Header->ItemList);
-
-    Header->ItemList = ItemList;
-    Header->MaxItems++;
-
-    /* release lock */
-    KeReleaseSpinLock(&Header->ItemListLock, OldLevel);
+    /* increment item count */
+    InterlockedIncrement(&Header->ItemListCount);
 
     return STATUS_SUCCESS;
-
 }
 
 NTSTATUS
@@ -990,7 +1081,7 @@ KsSynchronousIoControlDevice(
         /* it is send the request */
         Status = ObjectHeader->DispatchTable.FastDeviceIoControl(FileObject, TRUE, InBuffer, InSize, OutBuffer, OutSize, IoControl, &IoStatusBlock, DeviceObject);
         /* check if the request was handled */
-        DPRINT("Handled %u Status %x Length %u\n", Status, IoStatusBlock.Status, IoStatusBlock.Information);
+        //DPRINT("Handled %u Status %x Length %u\n", Status, IoStatusBlock.Status, IoStatusBlock.Information);
         if (Status)
         {
             /* store bytes returned */

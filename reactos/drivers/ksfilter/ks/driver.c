@@ -43,6 +43,22 @@ KsGetDeviceForDeviceObject(
     @implemented
 */
 KSDDKAPI
+PKSDEVICE
+NTAPI
+KsGetDevice(
+    IN PVOID Object)
+{
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)(ULONG_PTR)Object - sizeof(KSBASIC_HEADER);
+
+    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == BasicHeader->Type);
+
+    return BasicHeader->KsDevice;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
 NTSTATUS
 NTAPI
 KsCreateDevice(
