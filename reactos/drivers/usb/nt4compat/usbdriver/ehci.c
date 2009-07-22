@@ -3482,7 +3482,7 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
             KeSynchronizeExecution(pdev_ext->ehci_int, ehci_cal_cpu_freq, NULL);
         }
     }
-    return NULL;
+    return pdev;
 }
 
 PDEVICE_OBJECT

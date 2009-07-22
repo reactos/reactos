@@ -679,7 +679,7 @@ LBL_LOOPOUT:
             KeSynchronizeExecution(pdev_ext->uhci_int, uhci_cal_cpu_freq, NULL);
         }
     }
-    return NULL;
+    return pdev;
 }
 
 PDEVICE_OBJECT
