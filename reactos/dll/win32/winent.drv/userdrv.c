@@ -10,11 +10,14 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
 #include "winuser16.h"
 #include "wingdi.h"
+#define NTOS_USER_MODE
+#include <ndk/ntndk.h>
 #include "ntrosgdi.h"
 #include "winent.h"
 #include "wine/debug.h"
@@ -28,7 +31,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(rosuserdrv);
  *
  * Move the window bits when a window is moved.
  */
-static void move_window_bits( HWND hwnd, const RECT *old_rect, const RECT *new_rect,
+void move_window_bits( HWND hwnd, const RECT *old_rect, const RECT *new_rect,
                               const RECT *old_client_rect )
 {
     RECT src_rect = *old_rect;
@@ -347,8 +350,48 @@ void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top_win, const RECT *win_rect,
 DWORD CDECL RosDrv_MsgWaitForMultipleObjectsEx( DWORD count, const HANDLE *handles, DWORD timeout,
                                                         DWORD mask, DWORD flags )
 {
-    return WaitForMultipleObjectsEx( count, handles, flags & MWMO_WAITALL,
-                                     timeout, flags & MWMO_ALERTABLE );
+    NTSTATUS status;
+    BOOL bWaitAll = FALSE, bAlertable = FALSE;
+    PLARGE_INTEGER TimePtr;
+    LARGE_INTEGER Time;
+
+    if (!count && !timeout) return WAIT_TIMEOUT;
+
+    TRACE("WaitForMultipleObjectsEx(%d %p %d %x %x %x\n", count, handles, timeout, mask, flags);
+
+    /* Set waitall and alertable flags */
+    if (flags & MWMO_WAITALL) bWaitAll = TRUE;
+    if (flags & MWMO_ALERTABLE) bAlertable = TRUE;
+
+    /* Check if this is an infinite wait */
+    if (timeout == INFINITE)
+    {
+        /* Under NT, this means no timer argument */
+        TimePtr = NULL;
+    }
+    else
+    {
+        /* Otherwise, convert the time to NT Format */
+        Time.QuadPart = UInt32x32To64(-10000, timeout);
+        TimePtr = &Time;
+    }
+
+    /* Call Nt function, because the handle we got is a NtCreateEvent one */
+    status = NtWaitForMultipleObjects(count,
+                                      (PHANDLE)handles,
+                                      bWaitAll ? WaitAll : WaitAny,
+                                      bAlertable,
+                                      TimePtr);
+
+    if (!NT_SUCCESS(status))
+    {
+        /* Wait failed */
+        WARN("Wait failed with status 0x%08x\n", status);
+        //SetLastErrorByStatus (status);
+        return WAIT_FAILED;
+    }
+
+    return status;
 }
 
 void CDECL RosDrv_ReleaseDC( HWND hwnd, HDC hdc )
@@ -501,23 +544,21 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
                                     const RECT *window_rect, const RECT *rectClient,
                                     const RECT *visible_rect, const RECT *valid_rects )
 {
-    void WINAPI DbgBreakPoint(void);
-
+#if 0
     RECT old_whole_rect, old_client_rect;
     RECT whole_rect = *visible_rect;
     RECT client_rect = *rectClient;
 
     old_whole_rect = whole_rect;
     old_client_rect = client_rect;
+#endif
 
-    ERR("called\n");
     if (valid_rects)
     {
         ERR("valid_rects[0] (%d, %d)-(%d,%d)\n",
             valid_rects[0].top, valid_rects[0].left, valid_rects[0].bottom, valid_rects[0].right);
-        //DbgBreakPoint();
     }
-
+#if 0
     if (!IsRectEmpty( &valid_rects[0] ))
     {
         int x_offset = old_whole_rect.left - whole_rect.left;
@@ -540,6 +581,7 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
         else
             move_window_bits( hwnd, &valid_rects[1], &valid_rects[0], &old_client_rect );
     }
+#endif
 }
 
 /* EOF */
