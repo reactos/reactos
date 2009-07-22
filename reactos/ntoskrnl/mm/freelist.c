@@ -713,8 +713,8 @@ MmAllocEarlyPage(VOID)
     PFN_TYPE Pfn;
 
     /* Use one of our highest usable pages */
-    Pfn = MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount - 1;
-    MiFreeDescriptor->PageCount--;
+    Pfn = MxFreeDescriptor->BasePage + MxFreeDescriptor->PageCount - 1;
+    MxFreeDescriptor->PageCount--;
 
     /* Return it */
     return Pfn;
@@ -813,7 +813,6 @@ NTAPI
 MmInitializePageList(VOID)
 {
     ULONG i;
-    ULONG Reserved;
     NTSTATUS Status;
     PFN_TYPE Pfn = 0;
     PHYSICAL_PAGE UsedPage;
@@ -824,12 +823,9 @@ MmInitializePageList(VOID)
     InitializeListHead(&UserPageListHead);
     InitializeListHead(&FreeUnzeroedPageListHead);
     InitializeListHead(&FreeZeroedPageListHead);
- 
-    /* Set the size and start of the PFN Database */
-    Reserved = PAGE_ROUND_UP((MmHighestPhysicalPage * sizeof(PHYSICAL_PAGE))) / PAGE_SIZE;
 
     /* Loop every page required to hold the PFN database */
-    for (i = 0; i < Reserved; i++)
+    for (i = 0; i < MxPfnAllocation; i++)
     {
         PVOID Address = (char*)MmPfnDatabase + (i * PAGE_SIZE);
 
@@ -924,10 +920,10 @@ MmInitializePageList(VOID)
             }
         }
     }
-
+    
     /* Finally handle the pages describing the PFN database themselves */
-    for (i = (MiFreeDescriptor->BasePage + MiFreeDescriptor->PageCount);
-         i < (MiFreeDescriptorOrg.BasePage + MiFreeDescriptorOrg.PageCount);
+    for (i = (MxFreeDescriptor->BasePage + MxFreeDescriptor->PageCount);
+         i < (MxOldFreeDescriptor.BasePage + MxOldFreeDescriptor.PageCount);
          i++)
     {
         /* Ensure this page was not added previously */

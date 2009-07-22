@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/ARM3/init.c
- * PURPOSE:         ARM Memory Manager Initialization
+ * FILE:            ntoskrnl/mm/ARM3/i386/init.c
+ * PURPOSE:         ARM Memory Manager Initialization for x86
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
@@ -109,14 +109,25 @@ ULONG MmNumberOfSystemPtes;
 ULONG MxPfnAllocation;
 
 //
-// The ARM³ PFN Database
-//
-PMMPFN MmArmPfnDatabase;
-
-//
 // This structure describes the different pieces of RAM-backed address space
 //
 PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
+
+//
+// Before we have a PFN database, memory comes straight from our physical memory
+// blocks, which is nice because it's guaranteed contiguous and also because once
+// we take a page from here, the system doesn't see it anymore.
+// However, once the fun is over, those pages must be re-integrated back into
+// PFN society life, and that requires us keeping a copy of the original layout
+// so that we can parse it later.
+//
+PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
+MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
+
+//
+// This is where we keep track of the most basic physical layout markers
+//
+ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -141,6 +152,35 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
         MmGlobalKernelPageDirectory[Pde] = ((PULONG)PDE_BASE)[Pde];
         Pde++;
     }
+}
+
+PFN_NUMBER
+NTAPI
+MxGetNextPage(IN PFN_NUMBER PageCount)
+{
+    PFN_NUMBER Pfn;
+ 
+    //
+    // Make sure we have enough pages
+    //
+    if (PageCount > MxFreeDescriptor->PageCount)
+    {
+        //
+        // Crash the system
+        //
+        KeBugCheckEx(INSTALL_MORE_MEMORY,
+                     MmNumberOfPhysicalPages,
+                     MxFreeDescriptor->PageCount,
+                     MxOldFreeDescriptor.PageCount,
+                     PageCount);
+    }
+    
+    //
+    // Use our highest usable free pages
+    //
+    Pfn = MxFreeDescriptor->BasePage + MxFreeDescriptor->PageCount - PageCount;
+    MxFreeDescriptor->PageCount -= PageCount;
+    return Pfn;
 }
 
 PPHYSICAL_MEMORY_DESCRIPTOR
@@ -284,8 +324,11 @@ NTAPI
 MmArmInitSystem(IN ULONG Phase,
                 IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+    ULONG FreePages = 0;
     PMEMORY_AREA MArea;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple, Low, High;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
     PFN_NUMBER PageFrameIndex;
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde = HyperTemplatePte, TempPte = HyperTemplatePte;
@@ -294,8 +337,7 @@ MmArmInitSystem(IN ULONG Phase,
     ULONG OldCount;
     BOOLEAN IncludeType[LoaderMaximum];
     ULONG i;
-    BoundaryAddressMultiple.QuadPart = Low.QuadPart = 0;
-    High.QuadPart = -1;
+    BoundaryAddressMultiple.QuadPart = 0;
     
     if (Phase == 0)
     {
@@ -312,6 +354,95 @@ MmArmInitSystem(IN ULONG Phase,
         StartPde = MiAddressToPde(0);
         EndPde = MiAddressToPde(KSEG0_BASE);
         RtlZeroMemory(StartPde, (EndPde - StartPde) * sizeof(MMPTE));
+        
+        //
+        // Loop the memory descriptors
+        //
+        NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+        while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
+        {
+            //
+            // Get the memory block
+            //
+            MdBlock = CONTAINING_RECORD(NextEntry,
+                                        MEMORY_ALLOCATION_DESCRIPTOR,
+                                        ListEntry);
+            
+            //
+            // Skip invisible memory
+            //
+            if ((MdBlock->MemoryType != LoaderFirmwarePermanent) &&
+                (MdBlock->MemoryType != LoaderSpecialMemory) &&
+                (MdBlock->MemoryType != LoaderHALCachedMemory) &&
+                (MdBlock->MemoryType != LoaderBBTMemory))
+            {
+                //
+                // Check if BURNMEM was used
+                //
+                if (MdBlock->MemoryType != LoaderBad)
+                {
+                    //
+                    // Count this in the total of pages
+                    //
+                    MmNumberOfPhysicalPages += MdBlock->PageCount;
+                }
+                
+                //
+                // Check if this is the new lowest page
+                //
+                if (MdBlock->BasePage < MmLowestPhysicalPage)
+                {
+                    //
+                    // Update the lowest page
+                    //
+                    MmLowestPhysicalPage = MdBlock->BasePage;
+                }
+                
+                //
+                // Check if this is the new highest page
+                //
+                PageFrameIndex = MdBlock->BasePage + MdBlock->PageCount;
+                if (PageFrameIndex > MmHighestPhysicalPage)
+                {
+                    //
+                    // Update the highest page
+                    //
+                    MmHighestPhysicalPage = PageFrameIndex - 1;
+                }
+                
+                //
+                // Check if this is free memory
+                //
+                if ((MdBlock->MemoryType == LoaderFree) ||
+                    (MdBlock->MemoryType == LoaderLoadedProgram) ||
+                    (MdBlock->MemoryType == LoaderFirmwareTemporary) ||
+                    (MdBlock->MemoryType == LoaderOsloaderStack))
+                {
+                    //
+                    // Check if this is the largest memory descriptor
+                    //
+                    if (MdBlock->PageCount > FreePages)
+                    {
+                        //
+                        // For now, it is
+                        //
+                        FreePages = MdBlock->PageCount;
+                        MxFreeDescriptor = MdBlock;
+                    }
+                }
+            }
+            
+            //
+            // Keep going
+            //
+            NextEntry = MdBlock->ListEntry.Flink;
+        }
+        
+        //
+        // Save original values of the free descriptor, since it'll be
+        // altered by early allocations
+        //
+        MxOldFreeDescriptor = *MxFreeDescriptor;
         
         //
         // Check if this is a machine with less than 19MB of RAM
@@ -436,6 +567,16 @@ MmArmInitSystem(IN ULONG Phase,
         MxPfnAllocation >>= PAGE_SHIFT;
         
         //
+        // We have to add one to the count here, because in the process of
+        // shifting down to the page size, we actually ended up getting the
+        // lower aligned size (so say, 0x5FFFF bytes is now 0x5F pages).
+        // Later on, we'll shift this number back into bytes, which would cause
+        // us to end up with only 0x5F000 bytes -- when we actually want to have
+        // 0x60000 bytes.
+        //
+        MxPfnAllocation++;
+        
+        //
         // Now calculate the nonpaged pool expansion VA region
         //
         MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmNonPagedPoolEnd -
@@ -482,35 +623,23 @@ MmArmInitSystem(IN ULONG Phase,
         // with the old memory manager, so we'll create a "Shadow PFN Database"
         // instead, and arbitrarly start it at 0xB0000000.
         //
-        MmArmPfnDatabase = (PVOID)0xB0000000;
-        ASSERT(((ULONG_PTR)MmArmPfnDatabase & ((4 * 1024 * 1024) - 1)) == 0);
+        MmPfnDatabase = (PVOID)0xB0000000;
+        ASSERT(((ULONG_PTR)MmPfnDatabase & ((4 * 1024 * 1024) - 1)) == 0);
                 
         //
         // Non paged pool comes after the PFN database
         //
-        MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmArmPfnDatabase +
+        MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmPfnDatabase +
                                       (MxPfnAllocation << PAGE_SHIFT));
 
         //
         // Now we actually need to get these many physical pages. Nonpaged pool
         // is actually also physically contiguous (but not the expansion)
         //
-        PageFrameIndex = MmGetContinuousPages(MmSizeOfNonPagedPoolInBytes +
-                                              (MxPfnAllocation << PAGE_SHIFT),
-                                              Low,
-                                              High,
-                                              BoundaryAddressMultiple,
-                                              FALSE);
+        PageFrameIndex = MxGetNextPage(MxPfnAllocation +
+                                       (MmSizeOfNonPagedPoolInBytes >> PAGE_SHIFT));
         ASSERT(PageFrameIndex != 0);
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmArmPfnDatabase,
-                (ULONG_PTR)MmArmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
-                "Shadow PFN Database");
         DPRINT("PFN DB PA PFN begins at: %lx\n", PageFrameIndex);
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmNonPagedPoolStart,
-                 (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
-                "ARM Non Paged Pool");
         DPRINT("NP PA PFN begins at: %lx\n", PageFrameIndex + MxPfnAllocation);
 
         //
@@ -529,7 +658,7 @@ MmArmInitSystem(IN ULONG Phase,
             //
             // Get a page
             //
-            TempPde.u.Hard.PageFrameNumber = MmAllocPage(MC_SYSTEM, 0);
+            TempPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
             ASSERT(TempPde.u.Hard.Valid == 1);
             *StartPde = TempPde;
             
@@ -548,7 +677,7 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Now we need pages for the page tables which will map initial NP
         //
-        StartPde = MiAddressToPde(MmArmPfnDatabase);
+        StartPde = MiAddressToPde(MmPfnDatabase);
         EndPde = MiAddressToPde((PVOID)((ULONG_PTR)MmNonPagedPoolStart +
                                         MmSizeOfNonPagedPoolInBytes - 1));
         while (StartPde <= EndPde)
@@ -561,7 +690,7 @@ MmArmInitSystem(IN ULONG Phase,
             //
             // Get a page
             //
-            TempPde.u.Hard.PageFrameNumber = MmAllocPage(MC_SYSTEM, 0);
+            TempPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
             ASSERT(TempPde.u.Hard.Valid == 1);
             *StartPde = TempPde;
             
@@ -581,12 +710,6 @@ MmArmInitSystem(IN ULONG Phase,
         // Now remember where the expansion starts
         //
         MmNonPagedPoolExpansionStart = NonPagedPoolExpansionVa;
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
-                "System PTE Space");
-        DPRINT1("          0x%p - 0x%p\t%s\n",
-                MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
-                "Non Paged Pool Expansion PTE Space");
 
         //
         // Last step is to actually map the nonpaged pool
@@ -646,6 +769,13 @@ MmArmInitSystem(IN ULONG Phase,
         // Now go ahead and initialize the ARM pool
         //
         MiInitializeArmPool();
+    }
+    else if (Phase == 1) // IN BETWEEN, THE PFN DATABASE IS NOW CREATED
+    {        
+        //
+        // Initialize the nonpaged pool
+        //
+        InitializePool(NonPagedPool, 0);
         
         //
         // We PDE-aligned the nonpaged system start VA, so haul some extra PTEs!
@@ -707,36 +837,28 @@ MmArmInitSystem(IN ULONG Phase,
         // Sync us up with ReactOS Mm
         //
         MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
-        MiSyncARM3WithROS(MmArmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
+        MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
         MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
-        
+
         //
-        // Initialize the nonpaged pool
+        // Print the memory layout
         //
-        InitializePool(NonPagedPool, 0);
-        
-        //
-        // Do a little test of the nonpaged pool allocator
-        //
-        if (0)
-        {
-            ULONG i = 0;
-            PVOID Buffers[4096];
-            while (TRUE)
-            {
-                Buffers[i] = MiAllocatePoolPages(NonPagedPool, PAGE_SIZE);
-                if (!Buffers[i]) break;
-                if (i == 4096) break;
-                i++;
-            }
-            
-            while (i--)
-            {
-                MiFreePoolPages(Buffers[i]);
-            }
-        }
+        DPRINT1("          0x%p - 0x%p\t%s\n",
+                MmPfnDatabase,
+                (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
+                "PFN Database");
+        DPRINT1("          0x%p - 0x%p\t%s\n",
+                MmNonPagedPoolStart,
+                (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
+                "ARM Non Paged Pool");
+        DPRINT1("          0x%p - 0x%p\t%s\n",
+                MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
+                "System PTE Space");
+        DPRINT1("          0x%p - 0x%p\t%s\n",
+                MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
+                "Non Paged Pool Expansion PTE Space");
     }
-    else
+    else // NOW WE HAVE NONPAGED POOL
     {
         //
         // Instantiate memory that we don't consider RAM/usable

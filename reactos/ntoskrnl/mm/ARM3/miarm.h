@@ -105,6 +105,9 @@ extern PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 extern ULONG MmBootImageSize;
 extern PMMPTE MmSystemPtesStart[MaximumPtePoolTypes];
 extern PMMPTE MmSystemPtesEnd[MaximumPtePoolTypes];
+extern PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
+extern MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
+extern ULONG MxPfnAllocation;
 
 VOID
 NTAPI
