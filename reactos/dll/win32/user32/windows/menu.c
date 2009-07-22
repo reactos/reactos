@@ -3945,6 +3945,19 @@ MenuSetItemData(
   return TRUE;
 }
 
+NTSTATUS WINAPI
+User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  PLOADMENU_CALLBACK_ARGUMENTS Common;
+  LRESULT Result;  
+
+  Common = (PLOADMENU_CALLBACK_ARGUMENTS) Arguments;
+  
+  Result = (LRESULT)LoadMenuW(Common->hModule, (LPCWSTR)&Common->MenuName);
+
+  return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
+}
+
 
 /* FUNCTIONS *****************************************************************/
 

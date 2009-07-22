@@ -241,7 +241,7 @@ User32CreateWindowEx(DWORD dwExStyle,
                                   hInstance,
                                   lpParam,
                                   SW_SHOW,
-                                  FALSE,
+                                  Unicode,
                                   0);
 
 #if 0
@@ -1762,13 +1762,7 @@ SetWindowContextHelpId(HWND hwnd,
 DWORD WINAPI
 GetWindowContextHelpId(HWND hwnd)
 {
-    PWINDOW Wnd = ValidateHwnd(hwnd);
-    if (Wnd != NULL)
-    {
-        return Wnd->ContextHelpId;
-    }
-
-    return 0;
+    return NtUserCallHwnd(hwnd, HWND_ROUTINE_GETWNDCONTEXTHLPID);
 }
 
 /*

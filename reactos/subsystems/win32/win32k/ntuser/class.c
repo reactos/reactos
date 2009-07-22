@@ -892,9 +892,9 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         Class->pclsBase = Class;
         Class->atomClassName = Atom;
 
-        if (dwFlags & REGISTERCLASS_SYSTEM)
+        if (dwFlags & CSF_SYSTEMCLASS)
         {
-            dwFlags &= ~REGISTERCLASS_ANSI;
+            dwFlags &= ~CSF_ANSIPROC;
             Class->WndProcExtra = wpExtra;
             Class->System = TRUE;
         }
@@ -954,7 +954,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             else
                 Class->AnsiMenuName = (PSTR)MenuName->Buffer;
 
-            if (!(dwFlags & REGISTERCLASS_ANSI))
+            if (!(dwFlags & CSF_ANSIPROC))
                 Class->Unicode = TRUE;
 
             if (Class->style & CS_GLOBALCLASS)
@@ -1177,7 +1177,6 @@ RTL_ATOM
 UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN PUNICODE_STRING ClassName,
                   IN PUNICODE_STRING MenuName,
-                  IN HANDLE hMenu, /* FIXME */
                   IN WNDPROC wpExtra,
                   IN DWORD dwFlags)
 {
@@ -1238,9 +1237,6 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
     if (Class != NULL)
     {
         PWINDOWCLASS *List;
-
-        /* FIXME - pass the PMENU pointer to IntCreateClass instead! */
-        Class->hMenu = hMenu;
 
         /* Register the class */
         if (Class->System)
@@ -1901,7 +1897,7 @@ UserRegisterSystemClasses(IN ULONG Count,
                                &ClassName,
                                &MenuName,
                                SystemClasses[i].ProcA,
-                               REGISTERCLASS_SYSTEM,
+                               CSF_SYSTEMCLASS,
                                NULL,
                                pi);
         if (Class != NULL)
@@ -1933,15 +1929,16 @@ UserRegisterSystemClasses(IN ULONG Count,
 
 /* SYSCALLS *****************************************************************/
 
-
-RTL_ATOM APIENTRY
-NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
-                      IN PUNICODE_STRING ClassName,
-                      IN PUNICODE_STRING MenuName,
-                      IN WNDPROC wpExtra,
-                      IN DWORD Flags,
-                      IN HMENU hMenu)
-
+RTL_ATOM
+APIENTRY
+NtUserRegisterClassExWOW(
+    WNDCLASSEXW* lpwcx,
+    PUNICODE_STRING ClassName,
+    PUNICODE_STRING ClsNVersion,
+    PCLSMENUNAME pClassMenuName,
+    DWORD fnID,
+    DWORD Flags,
+    LPDWORD pWow)
 /*
  * FUNCTION:
  *   Registers a new class with the window manager
@@ -1949,7 +1946,6 @@ NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
  *   lpwcx          = Win32 extended window class structure
  *   bUnicodeClass = Whether to send ANSI or unicode strings
  *                   to window procedures
- *   wpExtra       = Extra window procedure, if this is not null, its used for the second window procedure for standard controls.
  * RETURNS:
  *   Atom identifying the new class
  */
@@ -1957,8 +1953,9 @@ NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
     WNDCLASSEXW CapturedClassInfo = {0};
     UNICODE_STRING CapturedName = {0}, CapturedMenuName = {0};
     RTL_ATOM Ret = (RTL_ATOM)0;
+    WNDPROC wpExtra = NULL;
 
-    if (Flags & ~REGISTERCLASS_ALL)
+    if (Flags & ~(CSF_ANSIPROC))
     {
         SetLastWin32Error(ERROR_INVALID_FLAGS);
         return Ret;
@@ -1982,14 +1979,22 @@ NtUserRegisterClassEx(IN CONST WNDCLASSEXW* lpwcx,
                       sizeof(WNDCLASSEXW));
 
         CapturedName = ProbeForReadUnicodeString(ClassName);
-        CapturedMenuName = ProbeForReadUnicodeString(MenuName);
 
-        if (CapturedName.Length & 1 || CapturedMenuName.Length & 1 ||
-            CapturedClassInfo.cbClsExtra < 0 ||
-            CapturedClassInfo.cbClsExtra + CapturedName.Length +
-                CapturedMenuName.Length + sizeof(WINDOWCLASS) < CapturedClassInfo.cbClsExtra ||
-            CapturedClassInfo.cbWndExtra < 0 ||
-            CapturedClassInfo.hInstance == NULL)
+        ProbeForRead(pClassMenuName,
+                     sizeof(CLSMENUNAME),
+                     1);
+
+        CapturedMenuName = ProbeForReadUnicodeString(pClassMenuName->pusMenuName);
+
+        if ( CapturedName.Length & 1 ||
+             CapturedMenuName.Length & 1 ||
+             CapturedClassInfo.cbClsExtra < 0 ||
+             CapturedClassInfo.cbClsExtra +
+                CapturedName.Length +
+                CapturedMenuName.Length +
+                sizeof(WINDOWCLASS) < CapturedClassInfo.cbClsExtra ||
+             CapturedClassInfo.cbWndExtra < 0 ||
+             CapturedClassInfo.hInstance == NULL)
         {
             goto InvalidParameter;
         }
@@ -2021,12 +2026,10 @@ InvalidParameter:
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             _SEH2_LEAVE;
         }
-
         /* Register the class */
         Ret = UserRegisterClass(&CapturedClassInfo,
                                 &CapturedName,
                                 &CapturedMenuName,
-                                hMenu, /* FIXME - pass pointer */
                                 wpExtra,
                                 Flags);
 
@@ -2041,113 +2044,6 @@ InvalidParameter:
 
     return Ret;
 }
-
-
-RTL_ATOM
-APIENTRY
-NtUserRegisterClassExWOW(
-    WNDCLASSEXW* lpwcx,
-    PUNICODE_STRING ClassName,
-    PUNICODE_STRING ClsNVersion,
-    PCLSMENUNAME pClassMenuName,
-    DWORD fnID,
-    DWORD Flags,
-    LPDWORD pWow)
-{
-    WNDCLASSEXW CapturedClassInfo = {0};
-    UNICODE_STRING CapturedName = {0}, ClassnametoVersion = {0};
-    RTL_ATOM Ret = (RTL_ATOM)0;
-
-    UserEnterExclusive();
-
-    _SEH2_TRY
-    {
-        /* Probe the parameters and basic parameter checks */
-        if (ProbeForReadUint(&lpwcx->cbSize) != sizeof(WNDCLASSEXW))
-        {
-            goto InvalidParameter;
-        }
-        if (!pClassMenuName)
-        {
-            goto InvalidParameter;
-        }
-
-        ProbeForRead(lpwcx,
-                     sizeof(WNDCLASSEXW),
-                     sizeof(ULONG));
-        RtlCopyMemory(&CapturedClassInfo,
-                      lpwcx,
-                      sizeof(WNDCLASSEXW));
-        /*
-          Need to watch this. When UnregisterClass is called these pointers
-          are freed by the caller in user space. So, we just probe the data
-          for now and pass it on and copy it to the shared class structure.
-         */
-        ProbeForRead(pClassMenuName,
-                     sizeof(CLSMENUNAME),
-                     sizeof(ULONG));
-
-        CapturedName = ProbeForReadUnicodeString(ClassName);
-        ClassnametoVersion = ProbeForReadUnicodeString(ClsNVersion);
-
-        if (CapturedName.Length & 1 || ClassnametoVersion.Length & 1 ||
-            CapturedClassInfo.cbClsExtra < 0 ||
-            CapturedClassInfo.cbClsExtra + CapturedName.Length +
-                ClassnametoVersion.Length + sizeof(WINDOWCLASS) < CapturedClassInfo.cbClsExtra ||
-            CapturedClassInfo.cbWndExtra < 0 ||
-            CapturedClassInfo.hInstance == NULL)
-        {
-            goto InvalidParameter;
-        }
-
-        if (CapturedName.Length != 0)
-        {
-            ProbeForRead(CapturedName.Buffer,
-                         CapturedName.Length,
-                         sizeof(WCHAR));
-        }
-        else
-        {
-            if (!IS_ATOM(CapturedName.Buffer))
-            {
-                goto InvalidParameter;
-            }
-        }
-
-        if (ClassnametoVersion.Length != 0)
-        {
-            ProbeForRead(ClassnametoVersion.Buffer,
-                         ClassnametoVersion.Length,
-                         sizeof(WCHAR));
-        }
-        else if (ClassnametoVersion.Buffer != NULL &&
-                 !IS_INTRESOURCE(ClassnametoVersion.Buffer))
-        {
-InvalidParameter:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH2_LEAVE;
-        }
-
-        /* Register the class */
-//        Ret = UserRegisterClass(&CapturedClassInfo,
-//                                &CapturedName,
-//                                &ClassnametoVersion,
-//                                hMenu, /* FIXME - pass pointer */
-//                                wpExtra,
-//                                Flags);
-
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        SetLastNtError(_SEH2_GetExceptionCode());
-    }
-    _SEH2_END;
-
-    UserLeave();
-
-    return Ret;
-}
-
 
 ULONG_PTR APIENTRY
 NtUserGetClassLong(IN HWND hWnd,

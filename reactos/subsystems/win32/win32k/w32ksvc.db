@@ -696,7 +696,6 @@ NtUserMenuInfo                          3
 NtUserMenuItemInfo                      5
 NtUserMonitorFromPoint                  3
 NtUserMonitorFromRect                   2
-NtUserRegisterClassEx                   6
 NtUserMonitorFromWindow                 2
 NtUserSendMessage                       5
 NtUserSendMessageTimeout                8

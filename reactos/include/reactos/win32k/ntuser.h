@@ -118,7 +118,6 @@ typedef struct _WINDOWCLASS
     DWORD CSF_flags;
     PSTR  lpszClientAnsiMenuName;
     PWSTR lpszClientUnicodeMenuName;
-    HANDLE hMenu; /* FIXME - Use pointer! */
     PCALLPROC spcpdFirst;
     struct _WINDOWCLASS *pclsBase;
     struct _WINDOWCLASS *pclsClone;
@@ -283,7 +282,7 @@ typedef struct _WINDOW
     LIST_ENTRY PropListHead;
     ULONG PropListItems;
     /* Window menu handle or window id */
-    UINT IDMenu;
+    UINT IDMenu; // Use spmenu
     //PMENU spmenuSys;
     //PMENU spmenu;
     HRGN      hrgnClip;
@@ -300,9 +299,6 @@ typedef struct _WINDOW
     struct _WINDOW *spwndClipboardListener;
     DWORD ExStyle2;
 
-    /* Context help id */
-    DWORD ContextHelpId;
-
     struct
     {
         RECT NormalRect;
@@ -310,7 +306,7 @@ typedef struct _WINDOW
         POINT MaxPos;
     } InternalPos;
 
-    UINT Unicode : 1; // !WNDS_ANSICREATOR ?
+    UINT Unicode : 1; // !(WNDS_ANSICREATOR|WNDS_ANSIWINDOWPROC) ?
     /* Indicates whether the window is derived from a system class */
     UINT IsSystem : 1; // System class ?
     UINT InternalPosInitialized : 1;
@@ -1344,7 +1340,7 @@ NtUserCreateWindowEx(
   HMENU hMenu,
   HINSTANCE hInstance,
   LPVOID lpParam,
-  DWORD dwFlags,
+  DWORD dwFlags, // |= 1 == Ansi
   PVOID acbiBuffer);
 #endif
 
@@ -2993,7 +2989,6 @@ typedef struct tagKMDDELPARAM
 #define ONEPARAM_ROUTINE_CREATECURICONHANDLE  0xfffe0025 // CREATE_EMPTY_CURSOR_OBJECT ?
 #define ONEPARAM_ROUTINE_MSQSETWAKEMASK       0xfffe0027
 #define ONEPARAM_ROUTINE_REGISTERUSERMODULE   0xfffe0031
-#define ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID   0xfffe0047 // use HWND_ROUTINE_GETWNDCONTEXTHLPID
 #define ONEPARAM_ROUTINE_GETCURSORPOSITION    0xfffe0048 // use ONEPARAM_ or TWOPARAM routine ?
 #define TWOPARAM_ROUTINE_GETWINDOWRGNBOX    0xfffd0048 // user mode
 #define TWOPARAM_ROUTINE_GETWINDOWRGN       0xfffd0049 // user mode
@@ -3163,22 +3158,6 @@ NTAPI
 NtUserMonitorFromWindow(
   IN HWND hWnd,
   IN DWORD dwFlags);
-
-
-/* FIXME: These flag constans aren't what Windows uses. */
-#define REGISTERCLASS_ANSI	2
-#define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI)
-
-RTL_ATOM
-NTAPI
-NtUserRegisterClassEx(   // Need to use NtUserRegisterClassExWOW.
-   CONST WNDCLASSEXW* lpwcx,
-   PUNICODE_STRING ClassName,
-   PUNICODE_STRING MenuName,
-   WNDPROC wpExtra,
-   DWORD Flags,
-   HMENU hMenu);
-
 
 
 typedef struct tagNTUSERSENDMESSAGEINFO

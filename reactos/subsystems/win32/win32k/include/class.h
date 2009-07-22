@@ -58,7 +58,6 @@ RTL_ATOM
 UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN PUNICODE_STRING ClassName,
                   IN PUNICODE_STRING MenuName,
-                  IN HANDLE hMenu,
                   IN WNDPROC wpExtra,
                   IN DWORD dwFlags);
 
@@ -77,8 +76,6 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN PPROCESSINFO pi  OPTIONAL,
                 OUT PWINDOWCLASS *BaseClass  OPTIONAL,
                 OUT PWINDOWCLASS **Link  OPTIONAL);
-
-#define REGISTERCLASS_SYSTEM 0x4
 
 PWINDOWCLASS
 FASTCALL

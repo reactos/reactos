@@ -230,6 +230,8 @@ Init(VOID)
       (PVOID)User32CallHookProcFromKernel;
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
       (PVOID)User32CallEventProcFromKernel;
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
+      (PVOID)User32CallLoadMenuFromKernel;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,

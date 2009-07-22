@@ -826,8 +826,83 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
                     WORD fnID,
                     DWORD dwFlags)
 {
-  RTL_ATOM Atom = 0;
-  return (ATOM)Atom;
+   ATOM Atom;
+   WNDCLASSEXW WndClass;
+   UNICODE_STRING ClassName;
+   UNICODE_STRING MenuName = {0};
+   CLSMENUNAME clsMenuName;
+   ANSI_STRING AnsiMenuName;
+
+   if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXW) ||
+       lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0 ||
+       lpwcx->lpszClassName == NULL)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+
+   if (lpwcx->hInstance == User32Instance)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+
+   /* Yes, this is correct. We should modify the passed structure. */
+   if (lpwcx->hInstance == NULL)
+      ((WNDCLASSEXW*)lpwcx)->hInstance = GetModuleHandleW(NULL);
+
+   RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
+
+   if (NULL == WndClass.hIconSm)
+   {
+      WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
+   }
+
+   if (WndClass.lpszMenuName != NULL)
+   {
+      if (!IS_INTRESOURCE(WndClass.lpszMenuName))
+      {
+         if (WndClass.lpszMenuName[0])
+         {
+            RtlInitUnicodeString(&MenuName, WndClass.lpszMenuName);
+         }
+      }
+      else
+      {
+         MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
+      }
+   }
+
+   if (IS_ATOM(WndClass.lpszClassName))
+   {
+      ClassName.Length =
+      ClassName.MaximumLength = 0;
+      ClassName.Buffer = (LPWSTR)WndClass.lpszClassName;
+   }
+   else
+   {
+      RtlInitUnicodeString(&ClassName, WndClass.lpszClassName);
+   }
+
+   RtlUnicodeStringToAnsiString( &AnsiMenuName, &MenuName, TRUE);
+
+   clsMenuName.pszClientAnsiMenuName = AnsiMenuName.Buffer;
+   clsMenuName.pwszClientUnicodeMenuName = MenuName.Buffer;
+   clsMenuName.pusMenuName = &MenuName;
+   
+   Atom = NtUserRegisterClassExWOW( &WndClass,
+                                    &ClassName,  
+                                     NULL, //PUNICODE_STRING ClsNVersion,
+                                    &clsMenuName,
+                                     fnID,
+                                     dwFlags,
+                                     pdwWowData);
+
+   TRACE("atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
+          Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
+          lpwcx->style, lpwcx->cbClsExtra, lpwcx->cbWndExtra, WndClass);
+
+   return Atom;
 }
 
 /*
@@ -840,7 +915,8 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
    WNDCLASSEXA WndClass;
    UNICODE_STRING ClassName;
    UNICODE_STRING MenuName = {0};
-   HMENU hMenu = NULL;
+   CLSMENUNAME clsMenuName;
+   ANSI_STRING AnsiMenuName;
 
    if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXA) ||
        lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0 ||
@@ -850,14 +926,6 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       return 0;
    }
 
-   /*
-    * On real Windows this looks more like:
-    *    if (lpwcx->hInstance == User32Instance &&
-    *        *(PULONG)((ULONG_PTR)NtCurrentTeb() + 0x6D4) & 0x400)
-    * But since I have no idea what the magic field in the
-    * TEB structure means, I rather decided to omit that.
-    * -- Filip Navara
-    */
    if (lpwcx->hInstance == User32Instance)
    {
       SetLastError(ERROR_INVALID_PARAMETER);
@@ -888,9 +956,6 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       {
          MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
       }
-
-      if (MenuName.Buffer != NULL)
-         hMenu = LoadMenuA(WndClass.hInstance, WndClass.lpszMenuName);
    }
 
    if (IS_ATOM(WndClass.lpszClassName))
@@ -904,19 +969,29 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       RtlCreateUnicodeStringFromAsciiz(&ClassName, WndClass.lpszClassName);
    }
 
-   Atom = NtUserRegisterClassEx((WNDCLASSEXW*)&WndClass,
-                                &ClassName,
-                                &MenuName,
-                                NULL,
-                                REGISTERCLASS_ANSI,
-                                hMenu);
+   RtlUnicodeStringToAnsiString( &AnsiMenuName, &MenuName, TRUE);
 
-    TRACE("atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
+   clsMenuName.pszClientAnsiMenuName = AnsiMenuName.Buffer;
+   clsMenuName.pwszClientUnicodeMenuName = MenuName.Buffer;
+   clsMenuName.pusMenuName = &MenuName;
+
+   Atom = NtUserRegisterClassExWOW( (WNDCLASSEXW*)&WndClass,
+                                    &ClassName,  
+                                     NULL, //PUNICODE_STRING ClsNVersion,
+                                    &clsMenuName,
+                                     0,
+                                     CSF_ANSIPROC,
+                                     0);
+
+   TRACE("A atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
           Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
           lpwcx->style, lpwcx->cbClsExtra, lpwcx->cbWndExtra, WndClass);
 
    if (!IS_INTRESOURCE(WndClass.lpszMenuName))
+   {
       RtlFreeUnicodeString(&MenuName);
+      RtlFreeAnsiString(&AnsiMenuName);
+   }
    if (!IS_ATOM(WndClass.lpszClassName))
       RtlFreeUnicodeString(&ClassName);
 
@@ -933,7 +1008,8 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
    WNDCLASSEXW WndClass;
    UNICODE_STRING ClassName;
    UNICODE_STRING MenuName = {0};
-   HMENU hMenu = NULL;
+   CLSMENUNAME clsMenuName;
+   ANSI_STRING AnsiMenuName;
 
    if (lpwcx == NULL || lpwcx->cbSize != sizeof(WNDCLASSEXW) ||
        lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0 ||
@@ -950,6 +1026,8 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
     * But since I have no idea what the magic field in the
     * TEB structure means, I rather decided to omit that.
     * -- Filip Navara
+
+       GetWin32ClientInfo()->ulWindowsVersion & (WINVER == 400)
     */
    if (lpwcx->hInstance == User32Instance)
    {
@@ -981,9 +1059,6 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       {
          MenuName.Buffer = (LPWSTR)WndClass.lpszMenuName;
       }
-
-      if (MenuName.Buffer != NULL)
-         hMenu = LoadMenuW(WndClass.hInstance, WndClass.lpszMenuName);
    }
 
    if (IS_ATOM(WndClass.lpszClassName))
@@ -997,14 +1072,21 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       RtlInitUnicodeString(&ClassName, WndClass.lpszClassName);
    }
 
-   Atom = (ATOM)NtUserRegisterClassEx(&WndClass,
-                                      &ClassName,
-                                      &MenuName,
-                                      NULL,
-                                      0,
-                                      hMenu);
+   RtlUnicodeStringToAnsiString( &AnsiMenuName, &MenuName, TRUE);
 
-    TRACE("atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
+   clsMenuName.pszClientAnsiMenuName = AnsiMenuName.Buffer;
+   clsMenuName.pwszClientUnicodeMenuName = MenuName.Buffer;
+   clsMenuName.pusMenuName = &MenuName;
+
+   Atom = NtUserRegisterClassExWOW( &WndClass,
+                                    &ClassName,  
+                                     NULL, //PUNICODE_STRING ClsNVersion,
+                                    &clsMenuName,
+                                     0,
+                                     0,
+                                     0);
+
+   TRACE("W atom=%04x wndproc=%p hinst=%p bg=%p style=%08x clsExt=%d winExt=%d class=%p\n",
           Atom, lpwcx->lpfnWndProc, lpwcx->hInstance, lpwcx->hbrBackground,
           lpwcx->style, lpwcx->cbClsExtra, lpwcx->cbWndExtra, WndClass);
 

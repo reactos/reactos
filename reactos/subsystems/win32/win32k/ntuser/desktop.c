@@ -1134,7 +1134,7 @@ NtUserCreateDesktop(
                            &ClassName,
                            &MenuName,
                            NULL,
-                           REGISTERCLASS_SYSTEM,
+                           CSF_SYSTEMCLASS,
                            NULL,
                            pi);
    if (Class != NULL)

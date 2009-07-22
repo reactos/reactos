@@ -37,10 +37,12 @@ InitUserAtoms(VOID)
   gpsi->atomSysClass[ICLS_ICONTITLE] = 32772;
   gpsi->atomSysClass[ICLS_TOOLTIPS]  = 32774;
   
+  /* System Message Atom */
   AtomMessage = IntAddGlobalAtom(L"Message", TRUE);
   gpsi->atomSysClass[ICLS_HWNDMESSAGE] = AtomMessage;
 
-  DPRINT("AtomMessage -> %x\n", AtomMessage);
+  /* System Context Help Id Atom */
+  gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
 
   return STATUS_SUCCESS;
 }

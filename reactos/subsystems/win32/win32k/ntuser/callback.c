@@ -666,4 +666,57 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    return Result;
 }
 
+//
+// Callback Load Menu and results.
+//
+HMENU
+APIENTRY
+co_IntCallLoadMenu( HINSTANCE hModule,
+                    PUNICODE_STRING pMenuName )
+{
+   LRESULT Result = 0;
+   NTSTATUS Status;
+   PLOADMENU_CALLBACK_ARGUMENTS Common;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+
+   ArgumentLength = sizeof(LOADMENU_CALLBACK_ARGUMENTS);
+
+   ArgumentLength += pMenuName->Length + sizeof(WCHAR);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      DPRINT1("EventProc callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;
+
+
+   Common->hModule = hModule;
+   RtlCopyMemory(&Common->MenuName, pMenuName->Buffer, pMenuName->Length);
+
+   ResultPointer = NULL;
+   ResultLength = sizeof(LRESULT);
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_LOADMENU,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   UserEnterCo();
+
+   IntCbFreeMemory(Argument);
+  
+   if (!NT_SUCCESS(Status))
+   {
+      return 0;
+   }
+
+   return (HMENU)Result;
+}
+
 /* EOF */

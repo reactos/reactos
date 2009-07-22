@@ -210,22 +210,6 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_WINDOWFROMDC:
          RETURN( (DWORD)IntWindowFromDC((HDC)Param));
 
-      case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD Result;
-
-            Window = UserGetWindowObject((HWND)Param);
-            if(!Window)
-            {
-               RETURN( FALSE);
-            }
-
-            Result = Window->Wnd->ContextHelpId;
-
-            RETURN( Result);
-         }
-
       case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
          {
             DWORD Result;
@@ -556,7 +540,10 @@ NtUserCallTwoParam(
             RETURN( (DWORD)FALSE);
          }
 
-         Window->Wnd->ContextHelpId = Param2;
+         if ( Param2 )
+            IntSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param2);
+         else
+            IntRemoveProp(Window, gpsi->atomContextHelpIdProp);
 
          RETURN( (DWORD)TRUE);
 
@@ -786,6 +773,27 @@ NtUserCallHwnd(
 {
    switch (Routine)
    {
+      case HWND_ROUTINE_GETWNDCONTEXTHLPID:
+      {
+         PWINDOW_OBJECT Window;
+         PPROPERTY HelpId;
+         USER_REFERENCE_ENTRY Ref;
+
+         UserEnterExclusive();
+
+         if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+         {
+            UserLeave();
+            return 0;
+         }
+         UserRefObjectCo(Window, &Ref);
+
+         HelpId = IntGetProp(Window, gpsi->atomContextHelpIdProp);
+         
+         UserDerefObjectCo(Window);
+         UserLeave();
+         return (DWORD)HelpId;
+      }
       case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
          if (IntIsWindow(hWnd))
             return IntRegisterShellHookWindow(hWnd);

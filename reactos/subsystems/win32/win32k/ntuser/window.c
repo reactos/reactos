@@ -1706,7 +1706,6 @@ AllocErr:
    Class = NULL;
 
    Window->SystemMenu = (HMENU)0;
-   Wnd->ContextHelpId = 0;
    Wnd->IDMenu = 0;
    Wnd->hModule = hInstance;
    Window->hSelf = hWnd;
@@ -1835,14 +1834,19 @@ AllocErr:
    {
       if (hMenu)
          IntSetMenu(Window, hMenu, &MenuChanged);
-      else
+      else // Take it from the parent.
       {
-          hMenu = Wnd->pcls->hMenu;
+          UNICODE_STRING MenuName;
+
+          RtlInitUnicodeString( &MenuName, Wnd->pcls->MenuName);
+
+          hMenu = co_IntCallLoadMenu( Wnd->pcls->hModule, &MenuName);
           if (hMenu) IntSetMenu(Window, hMenu, &MenuChanged);
+          if (MenuName.Buffer) RtlFreeUnicodeString(&MenuName);
       }
    }
-   else
-       Wnd->IDMenu = (UINT) hMenu;
+   else // Not a child
+      Wnd->IDMenu = (UINT) hMenu;
 
    /* Insert the window into the thread's window list. */
    InsertTailList (&pti->WindowListHead, &Window->ThreadListEntry);
