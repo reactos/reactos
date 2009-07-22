@@ -53,6 +53,7 @@ struct message_result
     void                  *data;          /* message reply data */
     unsigned int           data_size;     /* size of message reply data */
     struct timeout_user   *timeout;       /* result timeout */
+    PWORK_QUEUE_ITEM       work_item;     /* work item pointer to free */
 };
 
 struct message
@@ -102,6 +103,8 @@ struct msg_queue
 {
     struct object          obj;             /* object header */
     struct fd             *fd;              /* optional file descriptor to poll */
+    HANDLE                 wake_event;      /* wakeup event handle */
+    PKEVENT                wake_event_ptr;  /* wakeup event pointer */
     unsigned int           wake_bits;       /* wakeup bits */
     unsigned int           wake_mask;       /* wakeup mask */
     unsigned int           changed_bits;    /* changed wakeup bits */
@@ -120,6 +123,7 @@ struct msg_queue
     struct thread_input   *input;           /* thread input descriptor */
     struct hook_table     *hooks;           /* hook table */
     timeout_t              last_get_msg;    /* time of last get message call */
+    PWORK_QUEUE_ITEM       work_item;       /* work item pointer to free */
 };
 
 static void msg_queue_dump( struct object *obj, int verbose );
@@ -252,6 +256,14 @@ static struct msg_queue *create_msg_queue( PTHREADINFO thread, struct thread_inp
     if ((queue = alloc_object( &msg_queue_ops )))
     {
         queue->fd              = NULL;
+        ZwCreateEvent(&queue->wake_event, EVENT_ALL_ACCESS, NULL, NotificationEvent, FALSE);
+        /* Get a pointer to the object itself */
+        ObReferenceObjectByHandle(queue->wake_event,
+                                  EVENT_ALL_ACCESS,
+                                  NULL,
+                                  KernelMode,
+                                  (PVOID)&queue->wake_event_ptr,
+                                  NULL);
         queue->wake_bits       = 0;
         queue->wake_mask       = 0;
         queue->changed_bits    = 0;
@@ -327,7 +339,10 @@ static inline void set_queue_bits( struct msg_queue *queue, unsigned int bits )
 {
     queue->wake_bits |= bits;
     queue->changed_bits |= bits;
-    if (is_signaled( queue )) wake_up( &queue->obj, 0 );
+    if (is_signaled( queue ))
+    {
+        KePulseEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
+    }
 }
 
 /* clear some queue bits */
@@ -504,16 +519,18 @@ static void remove_queue_message( struct msg_queue *queue, struct message *msg,
     free_message( msg );
 }
 
-/* message timed out without getting a reply */
-static VOID
+VOID
 NTAPI
-result_timeout( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2)
+result_timeout_worker( PVOID Context )
 {
     struct message_result *result = Context;
 
     assert( !result->replied );
 
     result->timeout = NULL;
+
+    /* Free work item memory */
+    ExFreePool(result->work_item);
 
     if (result->msg)  /* not received yet */
     {
@@ -533,12 +550,27 @@ result_timeout( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArg
     store_message_result( result, 0, STATUS_TIMEOUT );
 }
 
+/* message timed out without getting a reply */
+static VOID
+NTAPI
+result_timeout( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2)
+{
+    struct message_result *result = Context;
+
+    /* Allocate memory for the work iteam */
+    result->work_item = ExAllocatePool(NonPagedPool, sizeof(WORK_QUEUE_ITEM));
+
+    /* Queue a work item */
+    ExInitializeWorkItem(result->work_item, result_timeout_worker, result);
+    ExQueueWorkItem(result->work_item, DelayedWorkQueue);
+}
+
 /* allocate and fill a message result structure */
 static struct message_result *alloc_message_result( struct msg_queue *send_queue,
                                                     struct msg_queue *recv_queue,
                                                     struct message *msg, timeout_t timeout )
 {
-    struct message_result *result = mem_alloc( sizeof(*result) );
+    struct message_result *result = ExAllocatePool( NonPagedPool, sizeof(*result) );
     if (result)
     {
         result->msg       = msg;
@@ -756,7 +788,7 @@ static void cleanup_results( struct msg_queue *queue )
 /* check if the thread owning the queue is hung (not checking for messages) */
 static int is_queue_hung( struct msg_queue *queue )
 {
-    struct wait_queue_entry *entry;
+    //struct wait_queue_entry *entry;
     LARGE_INTEGER current_time;
 
     KeQuerySystemTime(&current_time);
@@ -764,11 +796,15 @@ static int is_queue_hung( struct msg_queue *queue )
     if (current_time.QuadPart - queue->last_get_msg <= 5 * TICKS_PER_SEC)
         return 0;  /* less than 5 seconds since last get message -> not hung */
 
+#if 0
     LIST_FOR_EACH_ENTRY( entry, &queue->obj.wait_queue, struct wait_queue_entry, entry )
     {
         if (entry->thread->queue == queue)
             return 0;  /* thread is waiting on queue -> not hung */
     }
+#endif
+    DPRINT1("TODO: Check if anyone is waiting on queue is missing!\n");
+
     return 1;
 }
 
@@ -853,6 +889,9 @@ static void msg_queue_destroy( struct object *obj )
     cleanup_results( queue );
     for (i = 0; i < NB_MSG_KINDS; i++) empty_msg_list( &queue->msg_list[i] );
 
+    ObDereferenceObject(queue->wake_event_ptr);
+    ZwClose(queue->wake_event);
+
     while ((ptr = list_head( &queue->pending_timers )))
     {
         struct timer *timer = LIST_ENTRY( ptr, struct timer, entry );
@@ -878,7 +917,7 @@ static void msg_queue_poll_event( struct fd *fd, int event )
 
     if (event & (POLLERR | POLLHUP)) set_fd_events( fd, -1 );
     else set_fd_events( queue->fd, 0 );
-    wake_up( &queue->obj, 0 );
+    KePulseEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
 }
 
 static void thread_input_dump( struct object *obj, int verbose )
@@ -1027,10 +1066,13 @@ static struct timer *find_timer( struct msg_queue *queue, user_handle_t win,
 static
 VOID
 NTAPI
-timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 )
+timer_callback_worker( PVOID Context )
 {
     struct msg_queue *queue = Context;
     struct list *ptr;
+
+    /* Free workitem */
+    ExFreePool(queue->work_item);
 
     queue->timeout = NULL;
     /* move on to the next timer */
@@ -1038,6 +1080,21 @@ timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArg
     list_remove( ptr );
     list_add_tail( &queue->expired_timers, ptr );
     set_next_timer( queue );
+}
+
+static
+VOID
+NTAPI
+timer_callback( PKDPC Dpc, PVOID Context, PVOID SystemArgument1, PVOID SystemArgument2 )
+{
+    struct msg_queue *queue = Context;
+
+    /* Allocate memory for the work iteam */
+    queue->work_item = ExAllocatePool(NonPagedPool, sizeof(WORK_QUEUE_ITEM));
+
+    /* Queue a work item */
+    ExInitializeWorkItem(queue->work_item, timer_callback_worker, queue);
+    ExQueueWorkItem(queue->work_item, DelayedWorkQueue);
 }
 
 /* link a timer at its rightful place in the queue list */
@@ -1495,7 +1552,7 @@ void post_message( user_handle_t win, unsigned int message, lparam_t wparam, lpa
 
     if (!thread) return;
 
-    if (thread->queue && (msg = mem_alloc( sizeof(*msg) )))
+    if (thread->queue && (msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
     {
         msg->type      = MSG_POSTED;
         msg->win       = get_user_full_handle( win );
@@ -1522,7 +1579,7 @@ void post_win_event( PTHREADINFO thread, unsigned int event,
 {
     struct message *msg;
 
-    if (thread->queue && (msg = mem_alloc( sizeof(*msg) )))
+    if (thread->queue && (msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
     {
         struct winevent_msg_data *data;
 
@@ -1577,7 +1634,8 @@ DECL_HANDLER(get_msg_queue)
     struct msg_queue *queue = get_current_queue();
 
     reply->handle = 0;
-    if (queue) reply->handle = alloc_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), queue, SYNCHRONIZE, 0 );
+    //if (queue) reply->handle = alloc_handle( (PPROCESSINFO)PsGetCurrentProcessWin32Process(), queue, SYNCHRONIZE, 0 );
+    if (queue) reply->handle = (obj_handle_t)queue->wake_event;
 }
 
 
@@ -1624,8 +1682,14 @@ DECL_HANDLER(set_queue_mask)
         if (is_signaled( queue ))
         {
             /* if skip wait is set, do what would have been done in the subsequent wait */
-            if (req->skip_wait) msg_queue_satisfied( &queue->obj, (PTHREADINFO)PsGetCurrentThreadWin32Thread() );
-            else wake_up( &queue->obj, 0 );
+            if (req->skip_wait)
+            {
+                msg_queue_satisfied( &queue->obj, (PTHREADINFO)PsGetCurrentThreadWin32Thread() );
+            }
+            else
+            {
+                KePulseEvent(queue->wake_event_ptr, EVENT_INCREMENT, FALSE);
+            }
         }
     }
 }
@@ -1675,7 +1739,7 @@ DECL_HANDLER(send_message)
         return;
     }
 
-    if ((msg = mem_alloc( sizeof(*msg) )))
+    if ((msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
     {
         msg->type      = req->type;
         msg->win       = get_user_full_handle( req->win );
@@ -1761,7 +1825,7 @@ DECL_HANDLER(send_hardware_message)
     data->y    = req->y;
     data->info = req->info;
 
-    if ((msg = mem_alloc( sizeof(*msg) )))
+    if ((msg = ExAllocatePool( NonPagedPool, sizeof(*msg) )))
     {
         msg->type      = MSG_HARDWARE;
         msg->win       = get_user_full_handle( req->win );

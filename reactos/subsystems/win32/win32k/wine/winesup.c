@@ -94,6 +94,8 @@ process_id_t get_process_id(PPROCESSINFO Process)
 
 void wake_up( struct object *obj, int max )
 {
+    DPRINT1("wake_up %p %d\n", obj, max);
+#if 0
     struct list *ptr, *next;
 
     LIST_FOR_EACH_SAFE( ptr, next, &obj->wait_queue )
@@ -107,6 +109,7 @@ void wake_up( struct object *obj, int max )
             if (max && !--max) break;
         }*/
     }
+#endif
 }
 
 void set_fd_events( struct fd *fd, int events )
