@@ -651,9 +651,8 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
 #ifdef _MULTI_UHCI
                     {
                         pdev = uhci_alloc(drvr_obj, reg_path, ((bus << 8) | (i << 3) | j), dev_mgr);
-                        count++;
-                        if (!pdev)
-                            return NULL;
+                        if (pdev)
+                            count++;
                     }
 #else
                     pdev = uhci_alloc(drvr_obj, reg_path, ((bus << 8) | (i << 3) | j), dev_mgr);
