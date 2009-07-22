@@ -566,7 +566,7 @@ MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
   PWCHAR Text;
   BOOL flat_menu = FALSE;
   int bkgnd;
-  PWINDOW Wnd = ValidateHwnd(hWnd);
+  PWND Wnd = ValidateHwnd(hWnd);
 
   if (!Wnd)
       return;

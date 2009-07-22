@@ -194,8 +194,8 @@ GetClassInfoW(
 DWORD WINAPI
 GetClassLongA(HWND hWnd, int nIndex)
 {
-    PWINDOW Wnd;
-    PWINDOWCLASS Class;
+    PWND Wnd;
+    PCLS Class;
     ULONG_PTR Ret = 0;
 
     TRACE("%p %d\n", hWnd, nIndex);
@@ -307,8 +307,8 @@ GetClassLongA(HWND hWnd, int nIndex)
 DWORD WINAPI
 GetClassLongW ( HWND hWnd, int nIndex )
 {
-    PWINDOW Wnd;
-    PWINDOWCLASS Class;
+    PWND Wnd;
+    PCLS Class;
     ULONG_PTR Ret = 0;
 
     TRACE("%p %d\n", hWnd, nIndex);
@@ -500,7 +500,7 @@ LONG
 WINAPI
 GetWindowLongA ( HWND hWnd, int nIndex )
 {
-    PWINDOW Wnd;
+    PWND Wnd;
 
     Wnd = ValidateHwnd(hWnd);
     if (Wnd == NULL)
@@ -557,7 +557,7 @@ LONG
 WINAPI
 GetWindowLongW(HWND hWnd, int nIndex)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
 
     Wnd = ValidateHwnd(hWnd);
     if (Wnd == NULL)

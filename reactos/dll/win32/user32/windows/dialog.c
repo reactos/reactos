@@ -146,7 +146,7 @@ const struct builtin_class_descr DIALOG_builtin_class =
 */
 DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
 {
-    PWINDOW pWindow;
+    PWND pWindow;
     DIALOGINFO* dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
 
     if(!dlgInfo && create)

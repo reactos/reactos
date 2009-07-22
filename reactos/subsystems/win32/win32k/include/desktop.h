@@ -28,12 +28,12 @@ typedef struct _DESKTOP
     PWIN32HEAP pheapDesktop;
     PSECTION_OBJECT DesktopHeapSection;
     PDESKTOPINFO DesktopInfo;
-    PWINDOW spwndMessage;
+    PWND spwndMessage;
 } DESKTOP, *PDESKTOP;
 
 extern PDESKTOP InputDesktop;
 extern HDESK InputDesktopHandle;
-extern PWINDOWCLASS DesktopWindowClass;
+extern PCLS DesktopWindowClass;
 extern HDC ScreenDeviceContext;
 extern BOOL g_PaintDesktopVersion;
 

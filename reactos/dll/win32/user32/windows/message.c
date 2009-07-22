@@ -1304,7 +1304,7 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 
 
 static LRESULT WINAPI
-IntCallMessageProc(IN PWINDOW Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam, IN BOOL Ansi)
+IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam, IN BOOL Ansi)
 {
     WNDPROC WndProc;
     BOOL IsAnsi;
@@ -1335,7 +1335,7 @@ DispatchMessageA(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
     MSG UnicodeMsg;
-    PWINDOW Wnd;
+    PWND Wnd;
 
     if (lpmsg->hwnd != NULL)
     {
@@ -1396,7 +1396,7 @@ LRESULT WINAPI
 DispatchMessageW(CONST MSG *lpmsg)
 {
     LRESULT Ret = 0;
-    PWINDOW Wnd;
+    PWND Wnd;
 
     if (lpmsg->hwnd != NULL)
     {
@@ -1797,7 +1797,7 @@ SendMessageW(HWND Wnd,
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
-      PWINDOW Window;
+      PWND Window;
       PW32THREADINFO ti = GetW32ThreadInfo();
 
       Window = ValidateHwnd(Wnd);
@@ -1861,7 +1861,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
   if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
   {
-      PWINDOW Window;
+      PWND Window;
       PW32THREADINFO ti = GetW32ThreadInfo();
 
       Window = ValidateHwnd(Wnd);

@@ -196,7 +196,7 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    HWND hWndFocus = FocusWindow->hSelf;
    HWND hWndFocusPrev = NULL;
    PUSER_MESSAGE_QUEUE PrevForegroundQueue;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
 
@@ -273,7 +273,7 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
    HWND Top;
    PWINDOW_OBJECT TopWindow;
    USER_REFERENCE_ENTRY Ref;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
 
@@ -319,7 +319,7 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    PUSER_MESSAGE_QUEUE ThreadQueue;
    HWND hWndPrev;
    HWND hWnd = 0;
-   PWINDOW Wnd;
+   PWND Wnd;
    CBTACTIVATESTRUCT cbt;
 
    if (Window)
@@ -577,7 +577,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
       HWND hWndPrev;
       PWINDOW_OBJECT TopWnd;
       USER_REFERENCE_ENTRY Ref;
-      PWINDOW Wnd;
+      PWND Wnd;
 
       ASSERT_REFS_CO(Window);
 

@@ -115,7 +115,7 @@ DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi)
 }
 
 void
-UserGetInsideRectNC(PWINDOW Wnd, RECT *rect)
+UserGetInsideRectNC(PWND Wnd, RECT *rect)
 {
     ULONG Style;
     ULONG ExStyle;
@@ -262,7 +262,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
 }
 
 static LONG
-DefWndStartSizeMove(HWND hWnd, PWINDOW Wnd, WPARAM wParam, POINT *capturePoint)
+DefWndStartSizeMove(HWND hWnd, PWND Wnd, WPARAM wParam, POINT *capturePoint)
 {
   LONG hittest = 0;
   POINT pt;
@@ -409,7 +409,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   DWORD dwPoint = GetMessagePos();
   BOOL DragFullWindows = FALSE;
   HWND hWndParent = NULL;
-  PWINDOW Wnd;
+  PWND Wnd;
 
   Wnd = ValidateHwnd(hwnd);
   if (!Wnd)
@@ -1616,7 +1616,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_QUERYUISTATE:
         {
             LRESULT Ret = 0;
-            PWINDOW Wnd = ValidateHwnd(hWnd);
+            PWND Wnd = ValidateHwnd(hWnd);
             if (Wnd != NULL)
             {
                 if (Wnd->HideFocus)
@@ -1632,7 +1632,7 @@ User32DefWindowProc(HWND hWnd,
             BOOL AlwaysShowCues = FALSE;
             WORD Action = LOWORD(wParam);
             WORD Flags = HIWORD(wParam);
-            PWINDOW Wnd;
+            PWND Wnd;
 
             SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &AlwaysShowCues, 0);
             if (AlwaysShowCues)
@@ -1694,7 +1694,7 @@ User32DefWindowProc(HWND hWnd,
             {
                 /* We're a child window and we need to pass this message down until
                    we reach the root */
-                hWnd = UserHMGetHandle((PWINDOW)DesktopPtrToUser(Wnd->spwndParent));
+                hWnd = UserHMGetHandle((PWND)DesktopPtrToUser(Wnd->spwndParent));
             }
             else
             {
@@ -1714,7 +1714,7 @@ User32DefWindowProc(HWND hWnd,
             BOOL AlwaysShowCues = FALSE;
             WORD Action = LOWORD(wParam);
             WORD Flags = HIWORD(wParam);
-            PWINDOW Wnd;
+            PWND Wnd;
 
             SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &AlwaysShowCues, 0);
             if (AlwaysShowCues)
@@ -1870,7 +1870,7 @@ DefWindowProcA(HWND hWnd,
 	       LPARAM lParam)
 {
     LRESULT Result = 0;
-    PWINDOW Wnd;
+    PWND Wnd;
 
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
@@ -2019,7 +2019,7 @@ DefWindowProcW(HWND hWnd,
 	       LPARAM lParam)
 {
     LRESULT Result = 0;
-    PWINDOW Wnd;
+    PWND Wnd;
 
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)

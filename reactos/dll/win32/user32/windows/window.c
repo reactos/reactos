@@ -515,7 +515,7 @@ EndDeferWindowPos(HDWP hWinPosInfo)
 HWND WINAPI
 GetDesktopWindow(VOID)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     HWND Ret = NULL;
 
     _SEH2_TRY
@@ -838,7 +838,7 @@ HWND WINAPI
 GetAncestor(HWND hwnd, UINT gaFlags)
 {
     HWND Ret = NULL;
-    PWINDOW Ancestor, Wnd;
+    PWND Ancestor, Wnd;
     
     Wnd = ValidateHwnd(hwnd);
     if (!Wnd)
@@ -882,7 +882,7 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 BOOL WINAPI
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
-    PWINDOW Wnd = ValidateHwnd(hWnd);
+    PWND Wnd = ValidateHwnd(hWnd);
 
     if (Wnd != NULL)
     {
@@ -902,7 +902,7 @@ GetClientRect(HWND hWnd, LPRECT lpRect)
 HWND WINAPI
 GetLastActivePopup(HWND hWnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     HWND Ret = hWnd;
 
     Wnd = ValidateHwnd(hWnd);
@@ -929,7 +929,7 @@ GetLastActivePopup(HWND hWnd)
 HWND WINAPI
 GetParent(HWND hWnd)
 {
-    PWINDOW Wnd, WndParent;
+    PWND Wnd, WndParent;
     HWND Ret = NULL;
 
     Wnd = ValidateHwnd(hWnd);
@@ -989,7 +989,7 @@ HWND WINAPI
 GetWindow(HWND hWnd,
           UINT uCmd)
 {
-    PWINDOW Wnd, FoundWnd;
+    PWND Wnd, FoundWnd;
     HWND Ret = NULL;
 
     Wnd = ValidateHwnd(hWnd);
@@ -1095,7 +1095,7 @@ BOOL WINAPI
 GetWindowRect(HWND hWnd,
               LPRECT lpRect)
 {
-    PWINDOW Wnd = ValidateHwnd(hWnd);
+    PWND Wnd = ValidateHwnd(hWnd);
 
     if (Wnd != NULL)
     {
@@ -1113,7 +1113,7 @@ GetWindowRect(HWND hWnd,
 int WINAPI
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCWSTR Buffer;
     INT Length = 0;
 
@@ -1203,7 +1203,7 @@ GetWindowTextLengthW(HWND hWnd)
 int WINAPI
 GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCWSTR Buffer;
     INT Length = 0;
 
@@ -1264,7 +1264,7 @@ GetWindowThreadProcessId(HWND hWnd,
 {
     DWORD Ret = 0;
     PW32THREADINFO ti;
-    PWINDOW pWnd = ValidateHwnd(hWnd);
+    PWND pWnd = ValidateHwnd(hWnd);
 
     if (!pWnd) return Ret;
 
@@ -1298,7 +1298,7 @@ BOOL WINAPI
 IsChild(HWND hWndParent,
     HWND hWnd)
 {
-    PWINDOW WndParent, Wnd;
+    PWND WndParent, Wnd;
     BOOL Ret = FALSE;
 
     WndParent = ValidateHwnd(hWndParent);
@@ -1341,7 +1341,7 @@ IsChild(HWND hWndParent,
 BOOL WINAPI
 IsIconic(HWND hWnd)
 {
-    PWINDOW Wnd = ValidateHwnd(hWnd);
+    PWND Wnd = ValidateHwnd(hWnd);
 
     if (Wnd != NULL)
         return (Wnd->style & WS_MINIMIZE) != 0;
@@ -1356,7 +1356,7 @@ IsIconic(HWND hWnd)
 BOOL WINAPI
 IsWindow(HWND hWnd)
 {
-    PWINDOW Wnd = ValidateHwndNoErr(hWnd);
+    PWND Wnd = ValidateHwndNoErr(hWnd);
     if (Wnd != NULL)
     {
         /* FIXME: If window is being destroyed return FALSE! */
@@ -1373,7 +1373,7 @@ IsWindow(HWND hWnd)
 BOOL WINAPI
 IsWindowUnicode(HWND hWnd)
 {
-    PWINDOW Wnd = ValidateHwnd(hWnd);
+    PWND Wnd = ValidateHwnd(hWnd);
 
     if (Wnd != NULL)
         return Wnd->Unicode;
@@ -1389,7 +1389,7 @@ BOOL WINAPI
 IsWindowVisible(HWND hWnd)
 {
     BOOL Ret = FALSE;
-    PWINDOW Wnd = ValidateHwnd(hWnd);
+    PWND Wnd = ValidateHwnd(hWnd);
 
     if (Wnd != NULL)
     {
@@ -1678,7 +1678,7 @@ WindowFromPoint(POINT Point)
 int WINAPI
 MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 {
-    PWINDOW FromWnd, ToWnd;
+    PWND FromWnd, ToWnd;
     POINT Delta;
     UINT i;
 
@@ -1709,7 +1709,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 BOOL WINAPI
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
-    PWINDOW Wnd, DesktopWnd;
+    PWND Wnd, DesktopWnd;
 
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)
@@ -1730,7 +1730,7 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 BOOL WINAPI
 ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
-    PWINDOW Wnd, DesktopWnd;
+    PWND Wnd, DesktopWnd;
 
     Wnd = ValidateHwnd(hWnd);
     if (!Wnd)

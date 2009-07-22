@@ -39,7 +39,7 @@ VIS_ComputeVisibleRegion(
 {
    HRGN VisRgn, ClipRgn;
    PWINDOW_OBJECT PreviousWindow, CurrentWindow, CurrentSibling;
-   PWINDOW Wnd, CurrentWnd, PreviousWnd, CurrentSiblingWnd;
+   PWND Wnd, CurrentWnd, PreviousWnd, CurrentSiblingWnd;
 
    Wnd = Window->Wnd;
 
@@ -151,7 +151,7 @@ co_VIS_WindowLayoutChanged(
    HRGN Temp;
    PWINDOW_OBJECT Parent;
    USER_REFERENCE_ENTRY Ref;
-   PWINDOW Wnd, ParentWnd;
+   PWND Wnd, ParentWnd;
 
    ASSERT_REFS_CO(Window);
 

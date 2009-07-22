@@ -3,7 +3,7 @@
 
 typedef struct _PROCESSINFO *PPROCESSINFO;
 struct _W32THREADINFO;
-struct _WINDOW;
+struct _WND;
 
 typedef struct _LARGE_UNICODE_STRING
 {
@@ -75,7 +75,7 @@ typedef struct _DESKTOPINFO
     HWND hTaskManWindow;
     HWND hProgmanWindow;
     HWND hShellWindow;
-    struct _WINDOW *Wnd;
+    struct _WND *Wnd;
 
     union
     {
@@ -107,9 +107,9 @@ typedef struct _CALLPROC
 #define CSF_CACHEDSMICON        0x0040
 #define CSF_WIN40COMPAT         0x0080
 
-typedef struct _WINDOWCLASS
+typedef struct _CLS
 {
-    struct _WINDOWCLASS *pclsNext;
+    struct _CLS *pclsNext;
     RTL_ATOM atomClassName;
     ATOM atomNVClassName;
     DWORD fnid; // New ClassId
@@ -119,8 +119,8 @@ typedef struct _WINDOWCLASS
     PSTR  lpszClientAnsiMenuName;
     PWSTR lpszClientUnicodeMenuName;
     PCALLPROC spcpdFirst;
-    struct _WINDOWCLASS *pclsBase;
-    struct _WINDOWCLASS *pclsClone;
+    struct _CLS *pclsBase;
+    struct _CLS *pclsClone;
     ULONG cWndReferenceCount;
     UINT style;
     WNDPROC lpfnWndProc;
@@ -145,7 +145,7 @@ typedef struct _WINDOWCLASS
     UINT Global : 1;  // CS_GLOBALCLASS
     UINT MenuNameIsString : 1;
     UINT NotUsed : 27;
-} WINDOWCLASS, *PWINDOWCLASS;
+} CLS, *PCLS;
 
 
 // State Flags !Not Implemented!
@@ -239,7 +239,7 @@ typedef struct _WINDOWCLASS
 #define WS_EX2_CONSOLEWINDOW            0X00000400
 #define WS_EX2_CHILDNOACTIVATE          0X00000800
 
-typedef struct _WINDOW
+typedef struct _WND
 {
     USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
     /* NOTE: This structure is located in the desktop heap and will
@@ -259,11 +259,11 @@ typedef struct _WINDOW
     /* Handle of the module that created the window. */
     HINSTANCE hModule;
     DWORD fnid;
-    struct _WINDOW *spwndNext;
-    struct _WINDOW *spwndPrev;
-    struct _WINDOW *spwndParent;
-    struct _WINDOW *spwndChild;
-    struct _WINDOW *spwndOwner;
+    struct _WND *spwndNext;
+    struct _WND *spwndPrev;
+    struct _WND *spwndParent;
+    struct _WND *spwndChild;
+    struct _WND *spwndOwner;
     RECT rcWindow;
     RECT rcClient;
     WNDPROC lpfnWndProc;
@@ -276,7 +276,7 @@ typedef struct _WINDOW
     };
 
     /* Pointer to the window class. */
-    PWINDOWCLASS pcls;
+    PCLS pcls;
     HRGN hrgnUpdate;
     /* Property list head.*/
     LIST_ENTRY PropListHead;
@@ -291,12 +291,12 @@ typedef struct _WINDOW
     /* Size of the extra data associated with the window. */
     ULONG cbwndExtra;
     HWND hWndLastActive;
-    struct _WINDOW *spwndLastActive;
+    struct _WND *spwndLastActive;
     //HIMC hImc; // Input context associated with this window.
     LONG dwUserData;
     //PACTIVATION_CONTEXT pActCtx;
     //PD3DMATRIX pTransForm;
-    struct _WINDOW *spwndClipboardListener;
+    struct _WND *spwndClipboardListener;
     DWORD ExStyle2;
 
     struct
@@ -312,7 +312,7 @@ typedef struct _WINDOW
     UINT InternalPosInitialized : 1;
     UINT HideFocus : 1; // WS_EX_UISTATEFOCUSRECTHIDDEN ?
     UINT HideAccel : 1; // WS_EX_UISTATEKBACCELHIDDEN ?
-} WINDOW, *PWINDOW;
+} WND, *PWND;
 
 typedef struct _PFNCLIENT
 {

@@ -686,7 +686,7 @@ IntHideDesktop(PDESKTOP Desktop)
 #else
 
    PWINDOW_OBJECT DesktopWindow;
-   PWINDOW DesktopWnd;
+   PWND DesktopWnd;
 
    DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
    if (! DesktopWindow)
@@ -914,8 +914,8 @@ NtUserCreateDesktop(
    UNICODE_STRING ClassName, WindowName, MenuName;
    PPROCESSINFO pi = GetW32ProcessInfo();
    WNDCLASSEXW wc;
-   PWINDOWCLASS Class;
-   PWINDOW pWnd;
+   PCLS Class;
+   PWND pWnd;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);

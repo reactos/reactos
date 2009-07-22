@@ -101,9 +101,9 @@ typedef struct _PROCESSINFO
     W32PROCESS          XzyxW32Process; /* Place holder. */
     /* ReactOS */
     HINSTANCE    hModUser;
-    PWINDOWCLASS LocalClassList;
-    PWINDOWCLASS GlobalClassList;
-    PWINDOWCLASS SystemClassList;
+    PCLS LocalClassList;
+    PCLS GlobalClassList;
+    PCLS SystemClassList;
                     
     UINT RegisteredSysClasses : 1;
                         

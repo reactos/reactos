@@ -75,7 +75,7 @@ LockupFnIdToiCls(int FnId, int *iCls )
 /* WINDOWCLASS ***************************************************************/
 
 static VOID
-IntFreeClassMenuName(IN OUT PWINDOWCLASS Class)
+IntFreeClassMenuName(IN OUT PCLS Class)
 {
     /* free the menu name, if it was changed and allocated */
     if (Class->MenuName != NULL && Class->MenuNameIsString)
@@ -87,7 +87,7 @@ IntFreeClassMenuName(IN OUT PWINDOWCLASS Class)
 }
 
 static VOID
-IntDestroyClass(IN OUT PWINDOWCLASS Class)
+IntDestroyClass(IN OUT PCLS Class)
 {
     /* there shouldn't be any clones anymore */
     ASSERT(Class->cWndReferenceCount == 0);
@@ -135,7 +135,7 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
 /* clean all process classes. all process windows must cleaned first!! */
 void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
 {
-    PWINDOWCLASS Class;
+    PCLS Class;
     PPROCESSINFO pi = (PPROCESSINFO)Process;
 
     if (pi != NULL)
@@ -239,7 +239,7 @@ IntDeregisterClassAtom(IN RTL_ATOM Atom)
 }
 
 PCALLPROC
-UserFindCallProc(IN PWINDOWCLASS Class,
+UserFindCallProc(IN PCLS Class,
                  IN WNDPROC WndProc,
                  IN BOOL bUnicode)
 {
@@ -261,10 +261,10 @@ UserFindCallProc(IN PWINDOWCLASS Class,
 }
 
 VOID
-UserAddCallProcToClass(IN OUT PWINDOWCLASS Class,
+UserAddCallProcToClass(IN OUT PCLS Class,
                        IN PCALLPROC CallProc)
 {
-    PWINDOWCLASS BaseClass;
+    PCLS BaseClass;
 
     ASSERT(CallProc->Next == NULL);
 
@@ -283,7 +283,7 @@ UserAddCallProcToClass(IN OUT PWINDOWCLASS Class,
 }
 
 static BOOL
-IntSetClassAtom(IN OUT PWINDOWCLASS Class,
+IntSetClassAtom(IN OUT PCLS Class,
                 IN PUNICODE_STRING ClassName)
 {
     RTL_ATOM Atom = (RTL_ATOM)0;
@@ -314,7 +314,7 @@ IntSetClassAtom(IN OUT PWINDOWCLASS Class,
 }
 
 static WNDPROC
-IntGetClassWndProc(IN PWINDOWCLASS Class,
+IntGetClassWndProc(IN PCLS Class,
                    IN PPROCESSINFO pi,
                    IN BOOL Ansi)
 {
@@ -332,7 +332,7 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
         }
         else
         {
-            PWINDOWCLASS BaseClass;
+            PCLS BaseClass;
 
             /* make sure the call procedures are located on the desktop
                of the base class! */
@@ -387,7 +387,7 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
 }
 
 static WNDPROC
-IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
+IntSetClassWndProc(IN OUT PCLS Class,
                    IN WNDPROC WndProc,
                    IN BOOL Ansi)
 {
@@ -441,13 +441,13 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
     return Ret;
 }
 
-static PWINDOWCLASS
-IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
-                      IN OUT PWINDOWCLASS *ClassLink,
+static PCLS
+IntGetClassForDesktop(IN OUT PCLS BaseClass,
+                      IN OUT PCLS *ClassLink,
                       IN PDESKTOP Desktop)
 {
     SIZE_T ClassSize;
-    PWINDOWCLASS Class;
+    PCLS Class;
 
     ASSERT(Desktop != NULL);
     ASSERT(BaseClass->pclsBase == BaseClass);
@@ -548,12 +548,12 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
     return Class;
 }
 
-PWINDOWCLASS
-IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
-                  IN OUT PWINDOWCLASS *ClassLink,
+PCLS
+IntReferenceClass(IN OUT PCLS BaseClass,
+                  IN OUT PCLS *ClassLink,
                   IN PDESKTOP Desktop)
 {
-    PWINDOWCLASS Class;
+    PCLS Class;
 
     ASSERT(BaseClass->pclsBase == BaseClass);
 
@@ -569,11 +569,11 @@ IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
 }
 
 static VOID
-IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
-                      IN OUT PWINDOWCLASS *BaseClassLink,
-                      IN OUT PWINDOWCLASS *CloneLink)
+IntMakeCloneBaseClass(IN OUT PCLS Class,
+                      IN OUT PCLS *BaseClassLink,
+                      IN OUT PCLS *CloneLink)
 {
-    PWINDOWCLASS Clone, BaseClass;
+    PCLS Clone, BaseClass;
 
     ASSERT(Class->pclsBase != Class);
     ASSERT(Class->pclsBase->pclsClone != NULL);
@@ -611,11 +611,11 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 }
 
 VOID
-IntDereferenceClass(IN OUT PWINDOWCLASS Class,
+IntDereferenceClass(IN OUT PCLS Class,
                     IN PDESKTOPINFO Desktop,
                     IN PPROCESSINFO pi)
 {
-    PWINDOWCLASS *PrevLink, BaseClass, CurrentClass;
+    PCLS *PrevLink, BaseClass, CurrentClass;
 
     BaseClass = Class->pclsBase;
 
@@ -690,10 +690,10 @@ IntDereferenceClass(IN OUT PWINDOWCLASS Class,
 }
 
 static BOOL
-IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
-                         IN OUT PWINDOWCLASS **ClassLinkPtr)
+IntMoveClassToSharedHeap(IN OUT PCLS Class,
+                         IN OUT PCLS **ClassLinkPtr)
 {
-    PWINDOWCLASS NewClass;
+    PCLS NewClass;
     SIZE_T ClassSize;
 
     ASSERT(Class->pclsBase == Class);
@@ -730,11 +730,11 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
 
 static VOID
 IntCheckDesktopClasses(IN PDESKTOP Desktop,
-                       IN OUT PWINDOWCLASS *ClassList,
+                       IN OUT PCLS *ClassList,
                        IN BOOL FreeOnFailure,
                        OUT BOOL *Ret)
 {
-    PWINDOWCLASS Class, NextClass, *Link;
+    PCLS Class, NextClass, *Link;
 
     /* NOTE: We only need to check base classes! When classes are no longer needed
              on a desktop, the clones will be freed automatically as soon as possible.
@@ -835,7 +835,7 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
     return Ret;
 }
 
-PWINDOWCLASS
+PCLS
 FASTCALL
 IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING ClassName,
@@ -846,7 +846,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PPROCESSINFO pi)
 {
     SIZE_T ClassSize;
-    PWINDOWCLASS Class = NULL;
+    PCLS Class = NULL;
     RTL_ATOM Atom;
     PWSTR pszMenuName = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -998,13 +998,13 @@ NoMem:
     return Class;
 }
 
-static PWINDOWCLASS
+static PCLS
 IntFindClass(IN RTL_ATOM Atom,
              IN HINSTANCE hInstance,
-             IN PWINDOWCLASS *ClassList,
-             OUT PWINDOWCLASS **Link  OPTIONAL)
+             IN PCLS *ClassList,
+             OUT PCLS **Link  OPTIONAL)
 {
-    PWINDOWCLASS Class, *PrevLink = ClassList;
+    PCLS Class, *PrevLink = ClassList;
 
     Class = *PrevLink;
     while (Class != NULL)
@@ -1097,8 +1097,8 @@ RTL_ATOM
 IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN HINSTANCE hInstance  OPTIONAL,
                 IN PPROCESSINFO pi  OPTIONAL,
-                OUT PWINDOWCLASS *BaseClass  OPTIONAL,
-                OUT PWINDOWCLASS **Link  OPTIONAL)
+                OUT PCLS *BaseClass  OPTIONAL,
+                OUT PCLS **Link  OPTIONAL)
 {
     RTL_ATOM Atom = (RTL_ATOM)0;
 
@@ -1108,7 +1108,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                                    &Atom) &&
         Atom != (RTL_ATOM)0)
     {
-        PWINDOWCLASS Class;
+        PCLS Class;
 
         /* attempt to locate the class object */
 
@@ -1183,7 +1183,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
     PTHREADINFO pti;
     PW32THREADINFO ti;
     PPROCESSINFO pi;
-    PWINDOWCLASS Class;
+    PCLS Class;
     RTL_ATOM ClassAtom;
     RTL_ATOM Ret = (RTL_ATOM)0;
 
@@ -1236,7 +1236,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
     if (Class != NULL)
     {
-        PWINDOWCLASS *List;
+        PCLS *List;
 
         /* Register the class */
         if (Class->System)
@@ -1260,10 +1260,10 @@ BOOL
 UserUnregisterClass(IN PUNICODE_STRING ClassName,
                     IN HINSTANCE hInstance)
 {
-    PWINDOWCLASS *Link;
+    PCLS *Link;
     PPROCESSINFO pi;
     RTL_ATOM ClassAtom;
-    PWINDOWCLASS Class;
+    PCLS Class;
 
     pi = GetW32ProcessInfo();
     if (pi == NULL)
@@ -1310,7 +1310,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
 }
 
 INT
-UserGetClassName(IN PWINDOWCLASS Class,
+UserGetClassName(IN PCLS Class,
                  IN OUT PUNICODE_STRING ClassName,
                  IN BOOL Ansi)
 {
@@ -1428,7 +1428,7 @@ UserGetClassName(IN PWINDOWCLASS Class,
 }
 
 ULONG_PTR
-UserGetClassLongPtr(IN PWINDOWCLASS Class,
+UserGetClassLongPtr(IN PCLS Class,
                     IN INT Index,
                     IN BOOL Ansi)
 {
@@ -1520,7 +1520,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
 }
 
 static BOOL
-IntSetClassMenuName(IN PWINDOWCLASS Class,
+IntSetClassMenuName(IN PCLS Class,
                     IN PUNICODE_STRING MenuName)
 {
     BOOL Ret = FALSE;
@@ -1624,7 +1624,7 @@ IntSetClassMenuName(IN PWINDOWCLASS Class,
 }
 
 ULONG_PTR
-UserSetClassLongPtr(IN PWINDOWCLASS Class,
+UserSetClassLongPtr(IN PCLS Class,
                     IN INT Index,
                     IN ULONG_PTR NewLong,
                     IN BOOL Ansi)
@@ -1816,7 +1816,7 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
 }
 
 static BOOL
-UserGetClassInfo(IN PWINDOWCLASS Class,
+UserGetClassInfo(IN PCLS Class,
                  OUT PWNDCLASSEXW lpwcx,
                  IN BOOL Ansi,
                  HINSTANCE hInstance)
@@ -1862,7 +1862,7 @@ UserRegisterSystemClasses(IN ULONG Count,
     UNICODE_STRING ClassName, MenuName;
     PPROCESSINFO pi = GetW32ProcessInfo();
     WNDCLASSEXW wc;
-    PWINDOWCLASS Class;
+    PCLS Class;
     BOOL Ret = TRUE;
 
     if (pi->RegisteredSysClasses || pi->hModUser == NULL)
@@ -1992,7 +1992,7 @@ NtUserRegisterClassExWOW(
              CapturedClassInfo.cbClsExtra +
                 CapturedName.Length +
                 CapturedMenuName.Length +
-                sizeof(WINDOWCLASS) < CapturedClassInfo.cbClsExtra ||
+                sizeof(CLS) < CapturedClassInfo.cbClsExtra ||
              CapturedClassInfo.cbWndExtra < 0 ||
              CapturedClassInfo.hInstance == NULL)
         {
@@ -2231,7 +2231,7 @@ NtUserGetClassInfo(
    BOOL Ansi)
 {
     UNICODE_STRING CapturedClassName;
-    PWINDOWCLASS Class;
+    PCLS Class;
     RTL_ATOM ClassAtom;
     PPROCESSINFO pi;
     BOOL Ret = FALSE;

@@ -109,11 +109,11 @@ GetThreadDesktopInfo(VOID)
 }
 
 PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
-PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
-PWINDOW FASTCALL ValidateHwndOrDesk(HWND hwnd);
-PWINDOW FASTCALL GetThreadDesktopWnd(VOID);
+PWND FASTCALL ValidateHwnd(HWND hwnd);
+PWND FASTCALL ValidateHwndOrDesk(HWND hwnd);
+PWND FASTCALL GetThreadDesktopWnd(VOID);
 PVOID FASTCALL ValidateHandleNoErr(HANDLE handle, UINT uType);
-PWINDOW FASTCALL ValidateHwndNoErr(HWND hwnd);
+PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
-BOOL FASTCALL TestWindowProcess(PWINDOW);
+BOOL FASTCALL TestWindowProcess(PWND);

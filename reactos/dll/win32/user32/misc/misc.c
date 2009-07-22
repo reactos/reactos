@@ -268,7 +268,7 @@ IsGUIThread(
 
 BOOL
 FASTCALL
-TestWindowProcess(PWINDOW Wnd)
+TestWindowProcess(PWND Wnd)
 {
    if (Wnd->ti == (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
       return TRUE;
@@ -440,11 +440,11 @@ ValidateCallProc(HANDLE hCallProc)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwnd(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -479,11 +479,11 @@ ValidateHwnd(HWND hwnd)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndNoErr(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -515,11 +515,11 @@ ValidateHwndNoErr(HWND hwnd)
     return NULL;
 }
 
-PWINDOW
+PWND
 FASTCALL
 GetThreadDesktopWnd(VOID)
 {
-    PWINDOW Wnd = GetThreadDesktopInfo()->Wnd;
+    PWND Wnd = GetThreadDesktopInfo()->Wnd;
     if (Wnd != NULL)
         Wnd = DesktopPtrToUser(Wnd);
     return Wnd;
@@ -528,7 +528,7 @@ GetThreadDesktopWnd(VOID)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndOrDesk(HWND hwnd)
 {

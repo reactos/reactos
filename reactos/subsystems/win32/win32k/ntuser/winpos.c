@@ -137,7 +137,7 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
    PWINDOW_OBJECT WndTo = NULL;
    HWND Fg;
    USER_REFERENCE_ENTRY Ref;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
 
@@ -209,7 +209,7 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
    for( i = 0; List[i]; i++)
    {
       PWINDOW_OBJECT WndChild;
-      PWINDOW ChildWnd;
+      PWND ChildWnd;
 
       if (!(WndChild = UserGetWindowObject(List[i])))
          continue;
@@ -252,7 +252,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, RECTL *RestoreRect)
 {
     PWINDOW_OBJECT Parent;
     UINT XInc, YInc;
-    PWINDOW Wnd = Window->Wnd;
+    PWND Wnd = Window->Wnd;
 
    if (!Wnd->InternalPosInitialized)
    {
@@ -299,7 +299,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 {
    POINT Size;
    UINT SwpFlags = 0;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
    Wnd = Window->Wnd;
@@ -505,7 +505,7 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 {
    PWINDOW_OBJECT Parent;
    UINT wvrFlags = 0;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
    Wnd = Window->Wnd;
@@ -584,7 +584,7 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
                           PRECTL ClientRect)
 {
    INT X, Y;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
    Wnd = Window->Wnd;
@@ -760,7 +760,7 @@ static
 BOOL FASTCALL
 WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 {
-   PWINDOW Wnd = Window->Wnd;
+   PWND Wnd = Window->Wnd;
 
    if (!Wnd) return FALSE;
 
@@ -1327,7 +1327,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    RECTL NewPos;
    BOOLEAN ShowFlag;
    //  HRGN VisibleRgn;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
    Wnd = Window->Wnd;
@@ -1553,7 +1553,7 @@ co_WinPosSearchChildren(
    )
 {
    PWINDOW_OBJECT Current;
-   PWINDOW CurrentWnd;
+   PWND CurrentWnd;
    HWND *List, *phWnd;
    USER_REFERENCE_ENTRY Ref;
 
@@ -1680,7 +1680,7 @@ NtUserGetMinMaxInfo(
 {
    POINT Size;
    PWINDOW_OBJECT Window = NULL;
-   PWINDOW Wnd;
+   PWND Wnd;
    MINMAXINFO SafeMinMax;
    NTSTATUS Status;
    BOOL ret;

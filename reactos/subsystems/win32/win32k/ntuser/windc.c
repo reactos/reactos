@@ -73,7 +73,7 @@ PDCE FASTCALL
 DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
 {
   PDCE pDce;
-  PWINDOW Wnd = NULL;
+  PWND Wnd = NULL;
 
   if (Window) Wnd = Window->Wnd;
 
@@ -137,7 +137,7 @@ static VOID APIENTRY
 DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
                BOOL SetClipOrigin)
 {
-  PWINDOW Wnd;
+  PWND Wnd;
   DC *dc = DC_LockDc(hDC);
   if(!dc)
       return;
@@ -240,7 +240,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
    if (Flags & DCX_PARENTCLIP)
    {
       PWINDOW_OBJECT Parent;
-      PWINDOW ParentWnd;
+      PWND ParentWnd;
 
       Parent = Window->Parent;
       if(!Parent)
@@ -323,7 +323,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    DCE* Dce = NULL;
    BOOL UpdateVisRgn = TRUE;
    BOOL UpdateClipOrigin = FALSE;
-   PWINDOW Wnd = NULL;
+   PWND Wnd = NULL;
    HDC hDC = NULL;   
 
    if (NULL == Window)

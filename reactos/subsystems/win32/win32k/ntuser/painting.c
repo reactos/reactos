@@ -58,7 +58,7 @@ BOOL FASTCALL
 IntIntersectWithParents(PWINDOW_OBJECT Child, RECTL *WindowRect)
 {
    PWINDOW_OBJECT ParentWindow;
-   PWINDOW ParentWnd;
+   PWND ParentWnd;
 
    ParentWindow = Child->Parent;
    while (ParentWindow != NULL)
@@ -87,7 +87,7 @@ BOOL FASTCALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse)
 {
    PWINDOW_OBJECT ParentWindow = Child->Parent;
-   PWINDOW ParentWnd;
+   PWND ParentWnd;
 
    while (ParentWindow)
    {
@@ -119,7 +119,7 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN hValidateRgn, BOOL Recurse)
 HRGN FASTCALL
 IntCalcWindowRgn(PWINDOW_OBJECT Window, BOOL Client)
 {
-   PWINDOW Wnd;
+   PWND Wnd;
    HRGN hRgnWindow;
    UINT RgnType;
 
@@ -241,7 +241,7 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags, BOOL Recurse)
    HDC hDC;
    HWND hWnd = Window->hSelf;
    HRGN TempRegion;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    Wnd = Window->Wnd;
 
@@ -339,7 +339,7 @@ VOID FASTCALL
 IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 {
    INT RgnType;
-   PWINDOW Wnd;
+   PWND Wnd;
    BOOL HadPaintMessage, HadNCPaintMessage;
    BOOL HasPaintMessage, HasNCPaintMessage;
 
@@ -511,7 +511,7 @@ BOOL FASTCALL
 IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
    PWINDOW_OBJECT WndObject;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    for (WndObject = Window; WndObject != NULL; WndObject = WndObject->Parent)
    {
@@ -628,7 +628,7 @@ co_UserRedrawWindow(PWINDOW_OBJECT Window, const RECTL* UpdateRect, HRGN UpdateR
 BOOL FASTCALL
 IntIsWindowDirty(PWINDOW_OBJECT Window)
 {
-   PWINDOW Wnd = Window->Wnd;
+   PWND Wnd = Window->Wnd;
    return (Wnd->style & WS_VISIBLE) &&
           ((Window->UpdateRegion != NULL) ||
            (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT) ||
@@ -640,7 +640,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PTHREADINFO Thread)
 {
    HWND hChild;
    PWINDOW_OBJECT TempWindow;
-   PWINDOW Wnd, TempWnd;
+   PWND Wnd, TempWnd;
 
    for (; Window != NULL; Window = Window->NextSibling)
    {
@@ -773,7 +773,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    NTSTATUS Status;
    DECLARE_RETURN(HDC);
    USER_REFERENCE_ENTRY Ref;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    DPRINT("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
@@ -1623,7 +1623,7 @@ BOOL UserDrawCaption(
    RECTL r = *lpRc;
    LONG ButtonWidth, IconWidth;
    BOOL HasIcon;
-   PWINDOW Wnd = NULL;
+   PWND Wnd = NULL;
 
    //ASSERT(pWnd != NULL);
 

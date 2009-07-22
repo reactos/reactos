@@ -60,7 +60,7 @@ BOOL FASTCALL
 IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, RECTL *lprect)
 {
    BOOL vertical;
-   PWINDOW Wnd = Window->Wnd;
+   PWND Wnd = Window->Wnd;
    RECTL ClientRect = Window->Wnd->rcClient;
    RECTL WindowRect = Window->Wnd->rcWindow;
 
@@ -105,7 +105,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, RECTL *lprect)
 BOOL FASTCALL
 IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
 {
-   PWINDOW Wnd = Window->Wnd;
+   PWND Wnd = Window->Wnd;
    INT Thumb, ThumbBox, ThumbPos, cxy, mx;
    RECTL ClientRect;
 
@@ -829,7 +829,7 @@ DWORD FASTCALL
 co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
 {
    DWORD Style, OldStyle;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
 

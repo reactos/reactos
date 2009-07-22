@@ -108,7 +108,7 @@ IntDefWindowProc(
    LPARAM lParam,
    BOOL Ansi)
 {
-   PWINDOW Wnd;
+   PWND Wnd;
    LRESULT lResult = 0;
 
    if (Msg > WM_USER) return 0;

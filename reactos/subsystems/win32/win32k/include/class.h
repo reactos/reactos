@@ -44,13 +44,13 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
 void FASTCALL
 DestroyProcessClasses(PW32PROCESS Process );
 
-PWINDOWCLASS
-IntReferenceClass(IN OUT PWINDOWCLASS BaseClass,
-                  IN OUT PWINDOWCLASS *ClassLink,
+PCLS
+IntReferenceClass(IN OUT PCLS BaseClass,
+                  IN OUT PCLS *ClassLink,
                   IN PDESKTOP Desktop);
 
 VOID
-IntDereferenceClass(IN OUT PWINDOWCLASS Class,
+IntDereferenceClass(IN OUT PCLS Class,
                     IN PDESKTOPINFO Desktop,
                     IN PPROCESSINFO pi);
 
@@ -66,7 +66,7 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
                     IN HINSTANCE hInstance);
 
 ULONG_PTR
-UserGetClassLongPtr(IN PWINDOWCLASS Class,
+UserGetClassLongPtr(IN PCLS Class,
                     IN INT Index,
                     IN BOOL Ansi);
 
@@ -74,10 +74,10 @@ RTL_ATOM
 IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN HINSTANCE hInstance  OPTIONAL,
                 IN PPROCESSINFO pi  OPTIONAL,
-                OUT PWINDOWCLASS *BaseClass  OPTIONAL,
-                OUT PWINDOWCLASS **Link  OPTIONAL);
+                OUT PCLS *BaseClass  OPTIONAL,
+                OUT PCLS **Link  OPTIONAL);
 
-PWINDOWCLASS
+PCLS
 FASTCALL
 IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING ClassName,
@@ -88,7 +88,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PPROCESSINFO pi);
 
 PCALLPROC
-UserFindCallProc(IN PWINDOWCLASS Class,
+UserFindCallProc(IN PCLS Class,
                  IN WNDPROC WndProc,
                  IN BOOL bUnicode);
 
@@ -97,7 +97,7 @@ UserRegisterSystemClasses(IN ULONG Count,
                           IN PREGISTER_SYSCLASS SystemClasses);
 
 VOID
-UserAddCallProcToClass(IN OUT PWINDOWCLASS Class,
+UserAddCallProcToClass(IN OUT PCLS Class,
                        IN PCALLPROC CallProc);
 
 BOOL
