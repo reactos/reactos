@@ -135,10 +135,10 @@ GrePolygon(PDC pDC,
             bRet = GreLineTo(&pDC->pBitmap->SurfObj,
                              NULL,//dc->rosdc.CombinedClip,
                              &pDC->pLineBrush->BrushObj,
-                             ptPoints[i].x + pDC->rcDcRect.left,
-                             ptPoints[i].y + pDC->rcDcRect.top,
-                             ptPoints[i+1].x + pDC->rcDcRect.left,
-                             ptPoints[i+1].y + pDC->rcDcRect.top,
+                             ptPoints[i].x,
+                             ptPoints[i].y,
+                             ptPoints[i+1].x,
+                             ptPoints[i+1].y,
                              &DestRect, // Bounding rectangle
                              Mix);
         }

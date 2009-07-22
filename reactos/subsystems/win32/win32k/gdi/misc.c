@@ -129,19 +129,64 @@ BOOL APIENTRY RosGdiPolyPolyline( HDC physDev, const POINT* pt, const DWORD* cou
     return FALSE;
 }
 
-BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pt, INT count )
+BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
 {
     PDC pDC;
+    NTSTATUS Status = STATUS_SUCCESS;
+    POINT pStackBuf[16];
+    POINT *pPoints = pStackBuf;
+    ULONG i;
 
     /* Get a pointer to the DC */
     pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
 
+    /* Capture the points buffer */
+    _SEH2_TRY
+    {
+        ProbeForRead(pUserBuffer, count * sizeof(POINT), 1);
+
+        /* Use pool allocated buffer if data doesn't fit */
+        if (count > sizeof(*pStackBuf) / sizeof(POINT))
+            pPoints = ExAllocatePool(PagedPool, sizeof(POINT) * count);
+
+        /* Copy points data */
+        RtlCopyMemory(pPoints, pUserBuffer, count * sizeof(POINT));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* Release the object */
+        GDI_ReleaseObj(physDev);
+
+        /* Free the buffer if it was allocated */
+        if (pPoints != pStackBuf) ExFreePool(pPoints);
+
+        /* Return failure */
+        return FALSE;
+    }
+
+    /* Offset points data */
+    for (i=0; i<count; i++)
+    {
+        pPoints[i].x += pDC->rcDcRect.left + pDC->rcVport.left;
+        pPoints[i].y += pDC->rcDcRect.top + pDC->rcVport.top;
+    }
+
     /* Draw the polygon */
-    GrePolygon(pDC, pt, count);
+    GrePolygon(pDC, pPoints, count);
 
     /* Release the object */
     GDI_ReleaseObj(physDev);
 
+    /* Free the buffer if it was allocated */
+    if (pPoints != pStackBuf) ExFreePool(pPoints);
+
+    /* Return success */
     return TRUE;
 }
 
