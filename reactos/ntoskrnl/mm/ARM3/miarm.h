@@ -13,11 +13,28 @@
 #define MI_MAX_NONPAGED_POOL_SIZE              (128 * 1024 * 1024)
 #define MI_MAX_FREE_PAGE_LISTS                 4
 
+#define MI_MIN_INIT_PAGED_POOLSIZE             (32 * 1024 * 1024)
+
+#define MI_SESSION_VIEW_SIZE                   (20 * 1024 * 1024)
+#define MI_SESSION_POOL_SIZE                   (16 * 1024 * 1024)
+#define MI_SESSION_IMAGE_SIZE                  (8 * 1024 * 1024)
+#define MI_SESSION_WORKING_SET_SIZE            (4 * 1024 * 1024)
+#define MI_SESSION_SIZE                        (MI_SESSION_VIEW_SIZE + \
+                                                MI_SESSION_POOL_SIZE + \
+                                                MI_SESSION_IMAGE_SIZE + \
+                                                MI_SESSION_WORKING_SET_SIZE)
+
+#define MI_SYSTEM_VIEW_SIZE                    (16 * 1024 * 1024)
+
+#define MI_PAGED_POOL_START                    (PVOID)0xE1000000
+#define MI_NONPAGED_POOL_END                   (PVOID)0xFFBE0000
+
 //
 // FIXFIX: These should go in ex.h after the pool merge
 //
-#define POOL_BLOCK_SIZE     8
-#define POOL_LISTS_PER_PAGE (PAGE_SIZE / POOL_BLOCK_SIZE)
+#define POOL_LISTS_PER_PAGE (PAGE_SIZE / sizeof(LIST_ENTRY))
+#define BASE_POOL_TYPE_MASK 1
+#define POOL_MAX_ALLOC (PAGE_SIZE - (sizeof(POOL_HEADER) + sizeof(LIST_ENTRY)))
 
 typedef struct _POOL_DESCRIPTOR
 {
@@ -59,6 +76,13 @@ typedef struct _POOL_HEADER
         };
     };
 } POOL_HEADER, *PPOOL_HEADER;
+
+//
+// Everything depends on this
+//
+C_ASSERT(sizeof(POOL_HEADER) == 8);
+C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
+
 //
 // END FIXFIX
 //
@@ -108,6 +132,7 @@ extern PMMPTE MmSystemPtesEnd[MaximumPtePoolTypes];
 extern PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 extern ULONG MxPfnAllocation;
+extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
 
 VOID
 NTAPI

@@ -23,6 +23,8 @@ PFN_NUMBER MmNumberOfFreeNonPagedPool, MiExpansionPoolPagesInitialCharge;
 PVOID MmNonPagedPoolEnd0;
 PFN_NUMBER MiStartOfInitialPoolFrame, MiEndOfInitialPoolFrame;
 
+MM_PAGED_POOL_INFO MmPagedPoolInfo;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID

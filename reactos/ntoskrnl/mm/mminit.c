@@ -47,15 +47,12 @@ MemType[] =
 
 PVOID MiNonPagedPoolStart;
 ULONG MiNonPagedPoolLength;
-ULONG MmBootImageSize;
-ULONG MmUserProbeAddress = 0;
-PVOID MmHighestUserAddress = NULL;
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
-PVOID MmSystemRangeStart = NULL;
 ULONG MmReadClusterSize;
 MM_STATS MmStats;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;
+extern ULONG MmBootImageSize;
 BOOLEAN MiDbgEnableMdDump =
 #ifdef _ARM_
 TRUE;
@@ -139,7 +136,7 @@ VOID
 INIT_FUNCTION
 NTAPI
 MmInit1(VOID)
-{
+{   
     /* Initialize the kernel address space */
     KeInitializeGuardedMutex(&PsGetCurrentProcess()->AddressCreationLock);
     MmKernelAddressSpace = MmGetCurrentAddressSpace();
@@ -147,15 +144,6 @@ MmInit1(VOID)
     
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
-
-    /* Get the size of FreeLDR's image allocations */
-    MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
-    MmBootImageSize *= PAGE_SIZE;
-
-    /* Set memory limits */
-    MmSystemRangeStart = (PVOID)KSEG0_BASE;
-    MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
-    MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
     
     //
     // Initialize ARM³ in phase 0
@@ -164,10 +152,10 @@ MmInit1(VOID)
     
     /* Intialize system memory areas */
     MiInitSystemMemoryAreas();
-        
+
     /* Initialize the page list */
     MmInitializePageList();
-    
+       
     //
     // Initialize ARM³ in phase 1
     //
@@ -181,15 +169,15 @@ MmInit1(VOID)
     /* Initialize nonpaged pool */                                // DEPRECATED
     MiInitializeNonPagedPool();                                   // DEPRECATED
                                                                   // DEPRECATED
-    //
-    // Initialize ARM³ in phase 2
-    //
-    MmArmInitSystem(2, KeLoaderBlock);
-    
     /* Put the paged pool after nonpaged pool */
     MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MiNonPagedPoolStart +
                                            MiNonPagedPoolLength);
     MmPagedPoolSize = MM_PAGED_POOL_SIZE;
+
+    //
+    // Initialize ARM³ in phase 2
+    //
+    MmArmInitSystem(2, KeLoaderBlock);
     
     /* Initialize paged pool */
     MmInitializePagedPool();
