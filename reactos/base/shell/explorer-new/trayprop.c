@@ -38,8 +38,7 @@ UpdateTaskbarBitmap(PPROPSHEET_INFO pPropInfo)
     HWND hwndBitmap;
     BOOL bLock, bHide, bGroup, bShowQL;
     LPTSTR lpImageName = NULL;
-    RECT BitmapRect;
-    BOOL bRet = FALSE;
+    BOOL bRet = FALSE; 
 
     hwndLock = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_LOCK);
     hwndHide = GetDlgItem(pPropInfo->hTaskbarWnd, IDC_TASKBARPROP_HIDE);
@@ -318,7 +317,6 @@ DisplayTrayProperties(ITrayWindow *Tray)
     PROPSHEETHEADER psh;
     PROPSHEETPAGE psp[4];
     TCHAR szCaption[256];
-    HWND hwnd = 0;
 
     pPropInfo = (PPROPSHEET_INFO)HeapAlloc(hProcessHeap,
                                            HEAP_ZERO_MEMORY,

@@ -59,14 +59,14 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Taskbar"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Taskbar appearance", IDC_STATIC, 6,6,240,121,
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21,
-    AUTOCHECKBOX    "&Lock the taskbar", IDC_TASKBARPROP_LOCK, 13,45,200,10,
-    AUTOCHECKBOX    "A&uto-hide the taskbar", IDC_TASKBARPROP_HIDE, 13,58,200,10,
-    AUTOCHECKBOX    "Keep the &taskbar on top of other windows", IDC_TASKBARPROP_ONTOP, 13,71,200,10,
-    AUTOCHECKBOX    "&Group similar taskbar buttons", IDC_TASKBARPROP_GROUP, 13,84,200,10,
-    AUTOCHECKBOX    "Show &Quick Launch", IDC_TASKBARPROP_SHOWQL, 13,97,200,10, 
-    AUTOCHECKBOX    "&Show window previews (thumbnails)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10,
+    GROUPBOX        "Taskbar appearance", IDC_STATIC, 6,6,240,121
+    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
+    AUTOCHECKBOX    "&Lock the taskbar", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX    "A&uto-hide the taskbar", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX    "Keep the &taskbar on top of other windows", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX    "&Group similar taskbar buttons", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "Show &Quick Launch", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "&Show window previews (thumbnails)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
