@@ -150,10 +150,11 @@ DtbgInit()
   return TRUE;
 }
 
+HWND BackgroundWnd;
+
 static DWORD WINAPI
 DtbgDesktopThread(PVOID Data)
 {
-  HWND BackgroundWnd;
   MSG msg;
   PDTBG_THREAD_DATA ThreadData = (PDTBG_THREAD_DATA) Data;
 
@@ -244,6 +245,26 @@ CSR_API(CsrCreateDesktop)
 
   WaitForSingleObject(ThreadData.Event, INFINITE);
   CloseHandle(ThreadData.Event);
+
+  /* Show the desktop immediately */
+  {
+  PRIVATE_NOTIFY_DESKTOP nmh;
+
+  nmh.hdr.hwndFrom = BackgroundWnd;
+  nmh.hdr.idFrom = 0;
+  nmh.hdr.code = PM_SHOW_DESKTOP;
+
+  nmh.ShowDesktop.Width = 800;
+  nmh.ShowDesktop.Height = 600;
+
+  SendMessageW(BackgroundWnd,
+                      WM_NOTIFY,
+                      (WPARAM)nmh.hdr.hwndFrom,
+                      (LPARAM)&nmh)
+         ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
+
+  RedrawWindow(BackgroundWnd, NULL, 0, RDW_INVALIDATE | RDW_FRAME | RDW_ERASENOW | RDW_ALLCHILDREN);
+  }
 
   return ThreadData.Status;
 }
