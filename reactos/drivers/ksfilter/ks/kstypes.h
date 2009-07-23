@@ -74,12 +74,6 @@ typedef struct
 typedef struct
 {
     LIST_ENTRY Entry;
-    PIRP Irp;
-}QUEUE_ENTRY, *PQUEUE_ENTRY;
-
-typedef struct
-{
-    LIST_ENTRY Entry;
     UNICODE_STRING SymbolicLink;
 }SYMBOLIC_LINK_ENTRY, *PSYMBOLIC_LINK_ENTRY;
 

@@ -746,7 +746,7 @@ KsDispatchFastReadFailure(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -755,11 +755,55 @@ KsCancelIo(
     IN  OUT PLIST_ENTRY QueueHead,
     IN  PKSPIN_LOCK SpinLock)
 {
-    UNIMPLEMENTED;
+    PDRIVER_CANCEL OldDriverCancel;
+    PIO_STACK_LOCATION IoStack;
+    PLIST_ENTRY Entry;
+    PIRP Irp;
+    KIRQL OldLevel;
+
+    /* acquire spinlock */
+    KeAcquireSpinLock(SpinLock, &OldLevel);
+    /* point to first entry */
+    Entry = QueueHead->Flink;
+    /* loop all items */
+    while(Entry != QueueHead)
+    {
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(Entry, IRP, Tail.Overlay.ListEntry);
+
+        /* set cancelled bit */
+        Irp->Cancel = TRUE;
+
+        /* now set the cancel routine */
+        OldDriverCancel = IoSetCancelRoutine(Irp, NULL);
+        if (OldDriverCancel)
+        {
+            /* this irp hasnt been yet used, so free to cancel */
+            KeReleaseSpinLock(SpinLock, OldLevel);
+
+            /* get current irp stack */
+            IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+            /* acquire cancel spinlock */
+            IoAcquireCancelSpinLock(&Irp->CancelIrql);
+
+            /* call provided cancel routine */
+            OldDriverCancel(IoStack->DeviceObject, Irp);
+
+            /* re-acquire spinlock */
+            KeAcquireSpinLock(SpinLock, &OldLevel);
+        }
+        /* move on to next entry */
+        Entry = Entry->Flink;
+    }
+
+    /* the irp has already been canceled */
+    KeReleaseSpinLock(SpinLock, OldLevel);
+
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -768,7 +812,51 @@ KsReleaseIrpOnCancelableQueue(
     IN  PIRP Irp,
     IN  PDRIVER_CANCEL DriverCancel OPTIONAL)
 {
-    UNIMPLEMENTED;
+    PKSPIN_LOCK SpinLock;
+    PDRIVER_CANCEL OldDriverCancel;
+    PIO_STACK_LOCATION IoStack;
+    KIRQL OldLevel;
+
+    /* check for required parameters */
+    if (!Irp)
+        return;
+
+    if (!DriverCancel)
+    {
+        /* default to KsCancelRoutine */
+        DriverCancel = KsCancelRoutine;
+    }
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get internal queue lock
+     * see KsAddIrpToCancelableQueue
+     */
+    SpinLock = (PKSPIN_LOCK)Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink;
+
+    /* acquire spinlock */
+    KeAcquireSpinLock(SpinLock, &OldLevel);
+
+    /* now set the cancel routine */
+    OldDriverCancel = IoSetCancelRoutine(Irp, DriverCancel);
+
+    if (Irp->Cancel && OldDriverCancel == NULL)
+    {
+        /* the irp has already been canceled */
+        KeReleaseSpinLock(SpinLock, OldLevel);
+
+        /* cancel routine requires that cancel spinlock is held */
+        IoAcquireCancelSpinLock(&Irp->CancelIrql);
+
+        /* cancel irp */
+        DriverCancel(IoStack->DeviceObject, Irp);
+    }
+    else
+    {
+        /* done */
+        KeReleaseSpinLock(SpinLock, OldLevel);
+    }
 }
 
 /*
@@ -783,49 +871,95 @@ KsRemoveIrpFromCancelableQueue(
     IN  KSLIST_ENTRY_LOCATION ListLocation,
     IN  KSIRP_REMOVAL_OPERATION RemovalOperation)
 {
-    PQUEUE_ENTRY Entry = NULL;
     PIRP Irp;
+    PLIST_ENTRY CurEntry;
     KIRQL OldIrql;
 
+    /* check parameters */
     if (!QueueHead || !SpinLock)
         return NULL;
 
+    /* check if parameter ListLocation is valid */
     if (ListLocation != KsListEntryTail && ListLocation != KsListEntryHead)
         return NULL;
 
-    if (RemovalOperation != KsAcquireOnly && RemovalOperation != KsAcquireAndRemove)
-        return NULL;
-
+    /* acquire list lock */
     KeAcquireSpinLock(SpinLock, &OldIrql);
 
-    if (!IsListEmpty(QueueHead))
+    /* point to queue head */
+    CurEntry = QueueHead;
+
+    do
     {
-        if (RemovalOperation == KsAcquireOnly)
+        /* reset irp to null */
+        Irp = NULL;
+
+        /* iterate to next entry */
+        if (ListLocation == KsListEntryHead)
+            CurEntry = CurEntry->Flink;
+        else
+            CurEntry = CurEntry->Blink;
+
+        /* is the end of list reached */
+        if (CurEntry == QueueHead)
         {
-            if (ListLocation == KsListEntryHead)
-                Entry = (PQUEUE_ENTRY)QueueHead->Flink;
-            else
-                Entry = (PQUEUE_ENTRY)QueueHead->Blink;
+            /* reached end of list */
+            break;
         }
-        else if (RemovalOperation == KsAcquireAndRemove)
+
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(Irp, IRP, Tail.Overlay.ListEntry);
+
+        if (Irp->Cancel)
         {
-            if (ListLocation == KsListEntryTail)
-                Entry = (PQUEUE_ENTRY)RemoveTailList(QueueHead);
-            else
-                Entry = (PQUEUE_ENTRY)RemoveHeadList(QueueHead);
+            /* irp has been canceled */
+            break;
         }
-    }
+
+        if (Irp->CancelRoutine)
+        {
+            /* remove cancel routine */
+            Irp->CancelRoutine = NULL;
+
+            if (RemovalOperation == KsAcquireAndRemove || RemovalOperation == KsAcquireAndRemoveOnlySingleItem)
+            {
+                /* remove irp from list */
+                RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+            }
+
+            if (RemovalOperation == KsAcquireAndRemoveOnlySingleItem || RemovalOperation == KsAcquireOnlySingleItem)
+                break;
+        }
+
+    }while(TRUE);
+
+    /* release lock */
     KeReleaseSpinLock(SpinLock, OldIrql);
 
-    if (!Entry)
-        return NULL;
+    if (!Irp || Irp->CancelRoutine == NULL)
+    {
+        /* either an irp has been acquired or nothing found */
+        return Irp;
+    }
 
-    Irp = Entry->Irp;
+    /* time to remove the canceled irp */
+    IoAcquireCancelSpinLock(&OldIrql);
+    /* acquire list lock */
+    KeAcquireSpinLockAtDpcLevel(SpinLock);
 
-    if (RemovalOperation == KsAcquireAndRemove)
-        ExFreePool(Entry);
+    if (RemovalOperation == KsAcquireAndRemove || RemovalOperation == KsAcquireAndRemoveOnlySingleItem)
+    {
+        /* remove it */
+        RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+    }
 
-    return Irp;
+    /* release list lock */
+    KeReleaseSpinLockFromDpcLevel(SpinLock);
+
+    /* release cancel spinlock */
+    IoReleaseCancelSpinLock(OldIrql);
+    /* no non canceled irp has been found */
+    return NULL;
 }
 
 /*
@@ -848,7 +982,7 @@ KsMoveIrpsOnCancelableQueue(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -856,7 +990,22 @@ NTAPI
 KsRemoveSpecificIrpFromCancelableQueue(
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED;
+    PKSPIN_LOCK SpinLock;
+    KIRQL OldLevel;
+
+    /* get internal queue lock
+     * see KsAddIrpToCancelableQueue
+     */
+    SpinLock = (PKSPIN_LOCK)Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink;
+
+    /* acquire spinlock */
+    KeAcquireSpinLock(SpinLock, &OldLevel);
+
+    /* remove the irp from the list */
+    RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+
+    /* release spinlock */
+    KeReleaseSpinLock(SpinLock, OldLevel);
 }
 
 
@@ -873,11 +1022,66 @@ KsAddIrpToCancelableQueue(
     IN  KSLIST_ENTRY_LOCATION ListLocation,
     IN  PDRIVER_CANCEL DriverCancel OPTIONAL)
 {
-    UNIMPLEMENTED;
+    PDRIVER_CANCEL OldDriverCancel;
+    PIO_STACK_LOCATION IoStack;
+    KIRQL OldLevel;
+
+    /* check for required parameters */
+    if (!QueueHead || !SpinLock || !Irp)
+        return;
+
+    if (!DriverCancel)
+    {
+        /* default to KsCancelRoutine */
+        DriverCancel = KsCancelRoutine;
+    }
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* acquire spinlock */
+    KeAcquireSpinLock(SpinLock, &OldLevel);
+
+    if (ListLocation == KsListEntryTail)
+    {
+        /* insert irp to tail of list */
+        InsertTailList(QueueHead, &Irp->Tail.Overlay.ListEntry);
+    }
+    else
+    {
+        /* insert irp to head of list */
+        InsertHeadList(QueueHead, &Irp->Tail.Overlay.ListEntry);
+    }
+
+    /* store the spinlock in the device queue list entry, 
+     * as other fields may have been internally been used
+     * used in KsCancelRoutine
+     */
+    Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink = (PLIST_ENTRY)SpinLock;
+
+    /* now set the cancel routine */
+    OldDriverCancel = IoSetCancelRoutine(Irp, DriverCancel);
+
+    if (Irp->Cancel && OldDriverCancel == NULL)
+    {
+        /* the irp has already been canceled */
+        KeReleaseSpinLock(SpinLock, OldLevel);
+
+        /* cancel routine requires that cancel spinlock is held */
+        IoAcquireCancelSpinLock(&Irp->CancelIrql);
+
+        /* cancel irp */
+        DriverCancel(IoStack->DeviceObject, Irp);
+    }
+    else
+    {
+        /* done */
+        KeReleaseSpinLock(SpinLock, OldLevel);
+    }
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -886,7 +1090,36 @@ KsCancelRoutine(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    UNIMPLEMENTED;
+    PKSPIN_LOCK SpinLock;
+    KIRQL OldLevel;
+
+    /* get internal queue lock
+     * see KsAddIrpToCancelableQueue
+     */
+    SpinLock = (PKSPIN_LOCK)Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink;
+
+    /* acquire spinlock */
+    KeAcquireSpinLock(SpinLock, &OldLevel);
+
+    /* sanity check */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* release cancel spinlock */
+    IoReleaseCancelSpinLock(DISPATCH_LEVEL);
+
+    /* remove the irp from the list */
+    RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+
+    /* release spinlock */
+    KeReleaseSpinLock(SpinLock, OldLevel);
+
+    /* has the irp already been canceled */
+    if (Irp->IoStatus.Status != STATUS_CANCELLED)
+    {
+        /* let's complete it */
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 }
 
 /*
