@@ -1155,4 +1155,371 @@ KsCacheMedium(
     return STATUS_UNSUCCESSFUL;
 }
 
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+DllInitialize(
+    PUNICODE_STRING  RegistryPath)
+{
+    return STATUS_SUCCESS;
+}
 
+
+/*
+    @unimplemented
+*/
+COMDDKAPI
+NTSTATUS
+NTAPI
+KoDeviceInitialize(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+COMDDKAPI
+NTSTATUS
+NTAPI
+KoDriverInitialize(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PUNICODE_STRING RegistryPathName,
+    IN KoCreateObjectHandler CreateObjectHandler)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+COMDDKAPI
+VOID
+NTAPI
+KoRelease(
+    IN REFCLSID ClassId)
+{
+
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsAcquireControl(
+    IN PVOID Object)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsAcquireDevice(
+    IN PKSDEVICE Device)
+{
+    UNIMPLEMENTED
+}
+
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsCompletePendingRequest(
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsCreateBusEnumObject(
+    IN PWCHAR BusIdentifier,
+    IN PDEVICE_OBJECT BusDeviceObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject,
+    IN PDEVICE_OBJECT PnpDeviceObject OPTIONAL,
+    IN REFGUID InterfaceGuid OPTIONAL,
+    IN PWCHAR ServiceRelativePath OPTIONAL)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+ULONG
+NTAPI
+KsDeviceSetBusData(
+    IN PKSDEVICE Device,
+    IN ULONG DataType,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length)
+{
+    UNIMPLEMENTED
+    return 0;
+}
+
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+ULONG
+NTAPI
+KsDeviceGetBusData(
+    IN PKSDEVICE Device,
+    IN ULONG DataType,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length)
+{
+    UNIMPLEMENTED
+    return 0;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+void
+NTAPI
+KsDeviceRegisterAdapterObject(
+    IN PKSDEVICE Device,
+    IN PADAPTER_OBJECT AdapterObject,
+    IN ULONG MaxMappingsByteCount,
+    IN ULONG MappingTableStride)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+_KsEdit(
+    IN KSOBJECT_BAG ObjectBag,
+    IN OUT PVOID* PointerToPointerToItem,
+    IN ULONG NewSize,
+    IN ULONG OldSize,
+    IN ULONG Tag)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsGetBusEnumIdentifier(
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsGetBusEnumParentFDOFromChildPDO(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PDEVICE_OBJECT *FunctionalDeviceObject)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsGetBusEnumPnpDeviceObject(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PDEVICE_OBJECT *PnpDeviceObject)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+PVOID
+NTAPI
+KsGetFirstChild(
+    IN PVOID Object)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+PVOID
+NTAPI
+KsGetNextSibling(
+    IN PVOID Object)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsInstallBusEnumInterface(
+    PIRP Irp)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsIsBusEnumChildDevice(
+    IN PDEVICE_OBJECT DeviceObject,
+    OUT PBOOLEAN ChildDevice)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+KsMergeAutomationTables(
+    OUT PKSAUTOMATION_TABLE  *AutomationTableAB,
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL,
+    IN KSOBJECT_BAG  Bag OPTIONAL)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsServiceBusEnumCreateRequest(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsServiceBusEnumPnpRequest(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN OUT PIRP Irp)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI 
+NTSTATUS
+NTAPI
+KsRemoveBusEnumInterface(
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}
+
+
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+PUNKNOWN
+NTAPI
+KsRegisterAggregatedClientUnknown(
+    IN PVOID  Object,
+    IN PUNKNOWN  ClientUnknown)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+/*
+    @unimplemented
+*/
+VOID
+NTAPI
+KsReleaseControl(
+    IN PVOID  Object)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+KsRegisterFilterWithNoKSPins(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN const GUID*  InterfaceClassGUID,
+    IN ULONG  PinCount,
+    IN BOOL*  PinDirection,
+    IN KSPIN_MEDIUM*  MediumList,
+    IN GUID*  CategoryList OPTIONAL)
+{
+    UNIMPLEMENTED
+    return STATUS_UNSUCCESSFUL;
+}

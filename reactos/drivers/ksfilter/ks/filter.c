@@ -924,3 +924,154 @@ KspCreateFilter(
     /* completed initialization */
     return Status;
 }
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsFilterAcquireProcessingMutex(
+    IN PKSFILTER Filter)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsFilterReleaseProcessingMutex(
+    IN PKSFILTER Filter)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsFilterAddTopologyConnections (
+    IN PKSFILTER Filter,
+    IN ULONG NewConnectionsCount,
+    IN const KSTOPOLOGY_CONNECTION *const NewTopologyConnections)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsFilterAttemptProcessing(
+    IN PKSFILTER Filter,
+    IN BOOLEAN Asynchronous)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsFilterCreateNode (
+    IN PKSFILTER Filter,
+    IN const KSNODE_DESCRIPTOR *const NodeDescriptor,
+    OUT PULONG NodeID)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsFilterCreatePinFactory (
+    IN PKSFILTER Filter,
+    IN const KSPIN_DESCRIPTOR_EX *const PinDescriptor,
+    OUT PULONG PinID)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+PKSGATE
+NTAPI
+KsFilterGetAndGate(
+    IN PKSFILTER Filter)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+ULONG
+NTAPI
+KsFilterGetChildPinCount(
+    IN PKSFILTER Filter,
+    IN ULONG PinId)
+{
+    UNIMPLEMENTED
+    return 0;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+PKSPIN
+NTAPI
+KsFilterGetFirstChildPin(
+    IN PKSFILTER Filter,
+    IN ULONG PinId)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsFilterRegisterPowerCallbacks(
+    IN PKSFILTER Filter,
+    IN PFNKSFILTERPOWER Sleep OPTIONAL,
+    IN PFNKSFILTERPOWER Wake OPTIONAL)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+PKSFILTER
+NTAPI
+KsGetFilterFromIrp(
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+

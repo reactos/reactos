@@ -26,6 +26,7 @@
 	<file>irp.c</file>
 	<file>methods.c</file>
 	<file>misc.c</file>
+	<file>pin.c</file>
 	<file>property.c</file>
 	<file>topology.c</file>
 	<file>worker.c</file>

@@ -121,6 +121,9 @@ KsGenerateDataEvent(
     return STATUS_UNSUCCESSFUL;
 }
 
+/*
+    @unimplemented
+*/
 KSDDKAPI
 VOID
 NTAPI
@@ -134,3 +137,47 @@ KsGenerateEventList(
     UNIMPLEMENTED
 }
 
+/*
+    @unimplemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsAddEvent(
+    IN PVOID Object,
+    IN PKSEVENT_ENTRY EventEntry)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+KsDefaultAddEventHandler(
+    IN PIRP  Irp,
+    IN PKSEVENTDATA  EventData,
+    IN OUT PKSEVENT_ENTRY  EventEntry)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+void
+NTAPI
+KsGenerateEvents(
+    IN PVOID Object,
+    IN const GUID* EventSet OPTIONAL,
+    IN ULONG EventId,
+    IN ULONG DataSize,
+    IN PVOID Data OPTIONAL,
+    IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL,
+    IN PVOID CallBackContext OPTIONAL)
+{
+    UNIMPLEMENTED
+}

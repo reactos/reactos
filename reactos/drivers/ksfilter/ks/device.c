@@ -680,5 +680,40 @@ KsInitializeDevice(
    return Status;
 }
 
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsTerminateDevice(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    UNIMPLEMENTED
+}
+
+/*
+    @implemented
+*/
+VOID
+NTAPI
+KsReleaseDevice(
+    IN PKSDEVICE  Device)
+{
+    UNIMPLEMENTED
+}
 
 
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsReferenceSoftwareBusObject(
+    IN KSDEVICE_HEADER  Header)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}

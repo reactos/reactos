@@ -35,6 +35,18 @@ KsDereferenceBusObject(
 }
 
 /*
+    @unimplemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsDereferenceSoftwareBusObject(
+    IN KSDEVICE_HEADER  Header)
+{
+    UNIMPLEMENTED;
+}
+
+/*
     @implemented
 */
 KSDDKAPI
@@ -1632,4 +1644,30 @@ KsDispatchIrp(
         /* not supported */
         return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
     }
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+ULONG
+NTAPI
+KsGetNodeIdFromIrp(
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    return (ULONG)-1;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+PKSPIN
+NTAPI
+KsGetPinFromIrp(
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    return NULL;
 }

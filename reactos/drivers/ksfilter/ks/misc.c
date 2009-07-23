@@ -139,3 +139,68 @@ KspCopyCreateRequest(
     return STATUS_SUCCESS;
 }
 
+/*
+    @unimplemented
+*/
+KSDDKAPI
+PVOID
+NTAPI
+KsGetObjectFromFileObject(
+    IN PFILE_OBJECT FileObject)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+KSOBJECTTYPE
+NTAPI
+KsGetObjectTypeFromFileObject(
+    IN PFILE_OBJECT FileObject)
+{
+    UNIMPLEMENTED
+    return (KSOBJECTTYPE)-1;
+}
+
+/*
+    @unimplemented
+*/
+KSOBJECTTYPE
+NTAPI
+KsGetObjectTypeFromIrp(
+    IN PIRP  Irp)
+{
+    UNIMPLEMENTED
+    return (KSOBJECTTYPE)-1;
+}
+
+/*
+    @unimplemented
+*/
+PUNKNOWN
+NTAPI
+KsGetOuterUnknown(
+    IN PVOID  Object)
+{
+    UNIMPLEMENTED
+    return NULL;
+
+}
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+PVOID
+NTAPI
+KsGetParent(
+    IN PVOID Object)
+{
+    UNIMPLEMENTED
+    return NULL;
+}
+
+

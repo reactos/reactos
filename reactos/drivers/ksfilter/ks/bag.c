@@ -9,47 +9,37 @@
 
 #include "priv.h"
 
-
-#if 0
-typedef struct
-{
-   LIST_ENTRY Entry;
-   PVOID Item;
-   PFNKSFREE Free;
-   LONG ReferenceCount;
-}KSOBJECT_BAG_ENTRY;
-
-typedef struct
-{
-    LIST_ENTRY ListHead;
-    KMUTEX Lock;
-}KSOBJECT_BAG_IMPL;
-
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
 NTAPI
-KsAddItemToObjectBag(
-    IN KSOBJECT_BAG ObjectBag,
-    IN PVOID Item,
-    IN PFNKSFREE Free OPTIONAL)
+KsAllocateObjectBag(
+    IN PKSDEVICE Device,
+    OUT KSOBJECT_BAG* ObjectBag)
 {
-    KSOBJECT_BAG_ENTRY * Entry;
-    KSOBJECT_BAG_IMPL * Bag = (KSOBJECT_BAG_IMPL)ObjectBag;
-
-    Entry = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_BAG_ENTRY));
-    if (!Entry)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    Entry->Free = Free;
-    Entry->Item = Item;
-
-    InsertTailList(&Bag->ListHead, &Entry->Entry);
-    return STATUS_SUCCESS;
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
 }
 
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+KsAddItemToObjectBag(
+    IN KSOBJECT_BAG  ObjectBag,
+    IN PVOID  Item,
+    IN PFNKSFREE  Free  OPTIONAL)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+    @unimplemented
+*/
 KSDDKAPI
 ULONG
 NTAPI
@@ -58,10 +48,32 @@ KsRemoveItemFromObjectBag(
     IN PVOID Item,
     IN BOOLEAN Free)
 {
-    KSOBJECT_BAG_IMPL * Bag = (KSOBJECT_BAG_IMPL)ObjectBag;
-
-    
-
-
+    UNIMPLEMENTED
+    return 0;
 }
-#endif
+
+/*
+    @unimplemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsCopyObjectBagItems(
+    IN KSOBJECT_BAG ObjectBagDestination,
+    IN KSOBJECT_BAG ObjectBagSource)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+KSDDKAPI
+VOID
+NTAPI
+KsFreeObjectBag(
+    IN KSOBJECT_BAG ObjectBag)
+{
+    UNIMPLEMENTED
+}
+
+
+
