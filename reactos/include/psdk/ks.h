@@ -3761,6 +3761,8 @@ KsDeviceRegisterAggregatedClientUnknown(
 
 #endif
 
+#if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
+
 typedef interface IKsReferenceClock* PIKSREFERENCECLOCK;
 
 #undef INTERFACE
@@ -3827,6 +3829,8 @@ DECLARE_INTERFACE_(IKsControl,IUnknown)
 
 #undef INTERFACE
 typedef IKsControl* PIKSCONTROL;
+
+#endif
 
 KSDDKAPI
 VOID
