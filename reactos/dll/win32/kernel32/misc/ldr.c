@@ -266,14 +266,7 @@ LoadLibraryExW (
              * 'native' libraries only
              */
             Status = LoadLibraryAsDatafile(SearchPath, DllName.Buffer, &hInst);
-            RtlFreeUnicodeString(&DllName);
-            if (!NT_SUCCESS(Status))
-            {
-                SetLastErrorByStatus(Status);
-                return NULL;
-            }
-
-            return hInst;
+            goto done;
         }
     }
 
@@ -292,6 +285,7 @@ LoadLibraryExW (
         Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
     }
 
+done:
 	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
 	if (FreeString)
 		RtlFreeUnicodeString(&DllName);
