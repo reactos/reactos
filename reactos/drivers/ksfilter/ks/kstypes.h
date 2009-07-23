@@ -20,6 +20,8 @@ typedef struct
     PFNKSCONTEXT_DISPATCH PowerDispatch;
     PVOID PowerContext;
     LIST_ENTRY PowerDispatchEntry;
+    PKSOBJECT_CREATE_ITEM OriginalCreateItem;
+    ACCESS_MASK AccessMask;
 
 }KSIOBJECT_HEADER, *PKSIOBJECT_HEADER;
 

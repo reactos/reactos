@@ -830,10 +830,8 @@ KsReleaseIrpOnCancelableQueue(
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    /* get internal queue lock
-     * see KsAddIrpToCancelableQueue
-     */
-    SpinLock = (PKSPIN_LOCK)Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink;
+    /* get internal queue lock */
+    SpinLock = KSQUEUE_SPINLOCK_IRP_STORAGE(Irp);
 
     /* acquire spinlock */
     KeAcquireSpinLock(SpinLock, &OldLevel);
@@ -993,10 +991,8 @@ KsRemoveSpecificIrpFromCancelableQueue(
     PKSPIN_LOCK SpinLock;
     KIRQL OldLevel;
 
-    /* get internal queue lock
-     * see KsAddIrpToCancelableQueue
-     */
-    SpinLock = (PKSPIN_LOCK)Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink;
+    /* get internal queue lock */
+    SpinLock = KSQUEUE_SPINLOCK_IRP_STORAGE(Irp);
 
     /* acquire spinlock */
     KeAcquireSpinLock(SpinLock, &OldLevel);
@@ -1053,11 +1049,8 @@ KsAddIrpToCancelableQueue(
         InsertHeadList(QueueHead, &Irp->Tail.Overlay.ListEntry);
     }
 
-    /* store the spinlock in the device queue list entry, 
-     * as other fields may have been internally been used
-     * used in KsCancelRoutine
-     */
-    Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink = (PLIST_ENTRY)SpinLock;
+    /* store internal queue lock */
+    KSQUEUE_SPINLOCK_IRP_STORAGE(Irp) = SpinLock;
 
     /* now set the cancel routine */
     OldDriverCancel = IoSetCancelRoutine(Irp, DriverCancel);
@@ -1093,10 +1086,8 @@ KsCancelRoutine(
     PKSPIN_LOCK SpinLock;
     KIRQL OldLevel;
 
-    /* get internal queue lock
-     * see KsAddIrpToCancelableQueue
-     */
-    SpinLock = (PKSPIN_LOCK)Irp->Tail.Overlay.DeviceQueueEntry.DeviceListEntry.Flink;
+    /* get internal queue lock */
+    SpinLock = KSQUEUE_SPINLOCK_IRP_STORAGE(Irp);
 
     /* acquire spinlock */
     KeAcquireSpinLock(SpinLock, &OldLevel);

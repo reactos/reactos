@@ -245,7 +245,7 @@ KsQueryDevicePnpObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 ACCESS_MASK
@@ -253,8 +253,11 @@ NTAPI
 KsQueryObjectAccessMask(
     IN KSOBJECT_HEADER Header)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSIOBJECT_HEADER ObjectHeader = (PKSIOBJECT_HEADER)Header;
+
+    /* return access mask */
+    return ObjectHeader->AccessMask;
+
 }
 
 /*
@@ -402,7 +405,7 @@ KsSetPowerDispatch(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PKSOBJECT_CREATE_ITEM
@@ -410,8 +413,8 @@ NTAPI
 KsQueryObjectCreateItem(
     IN KSOBJECT_HEADER Header)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    PKSIOBJECT_HEADER ObjectHeader = (PKSIOBJECT_HEADER)Header;
+    return ObjectHeader->OriginalCreateItem;
 }
 
 NTSTATUS
@@ -648,6 +651,13 @@ KsAllocateObjectHeader(
 
     /* store parent device */
     ObjectHeader->ParentDeviceObject = IoGetRelatedDeviceObject(IoStack->FileObject);
+
+    /* store originating create item */
+    ObjectHeader->OriginalCreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+
+    /* FIXME store access mask see KsQueryObjectAccessMask */
+    ObjectHeader->AccessMask = IoStack->Parameters.Create.SecurityContext->DesiredAccess;
+
 
     /* store result */
     *Header = ObjectHeader;
@@ -1144,4 +1154,5 @@ KsCacheMedium(
     UNIMPLEMENTED;
     return STATUS_UNSUCCESSFUL;
 }
+
 
