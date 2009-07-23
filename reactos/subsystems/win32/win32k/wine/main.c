@@ -130,13 +130,18 @@ wine_server_call(void *req_ptr)
     if (reqinfo->data_count > 1) ExFreePool(RequestData);
 
     /* Copy back the reply data if any */
-    if (ReplySize)
+    if (ReplySize && reqinfo->reply_data)
     {
         /* Copy it */
         RtlCopyMemory(reqinfo->reply_data, ReplyData, ReplySize);
 
         /* Free temp storage */
         ExFreePool(ReplyData);
+    }
+    else if (ReplySize)
+    {
+        DPRINT1("Caller didn't provide any storage for output data, not transferring anything.\n");
+        ReplySize = 0;
     }
 
     /* Set reply's error flag and size */
