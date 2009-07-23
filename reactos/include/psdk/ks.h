@@ -1928,6 +1928,47 @@ typedef struct _KSSTREAM_POINTER_OFFSET KSSTREAM_POINTER_OFFSET, *PKSSTREAM_POIN
 typedef struct _KSMAPPING KSMAPPING, *PKSMAPPING;
 typedef struct _KSPROCESSPIN KSPROCESSPIN, *PKSPROCESSPIN;
 
+#define IOCTL_KS_HANDSHAKE             CTL_CODE(FILE_DEVICE_KS, 0x007, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+typedef struct {
+    GUID ProtocolId;
+    PVOID Argument1;
+    PVOID Argument2;
+} KSHANDSHAKE, *PKSHANDSHAKE;
+
+typedef
+NTSTATUS
+(*PFNKSPINHANDSHAKE)(
+    IN PKSPIN Pin,
+    IN PKSHANDSHAKE In,
+    IN PKSHANDSHAKE Out
+    );
+
+typedef
+void
+(*PFNKSPINPOWER)(
+    IN PKSPIN Pin,
+    IN DEVICE_POWER_STATE State
+    );
+
+typedef
+void
+(*PFNKSPINFRAMERETURN)(
+    IN PKSPIN Pin,
+    IN PVOID Data OPTIONAL,
+    IN ULONG Size OPTIONAL,
+    IN PMDL Mdl OPTIONAL,
+    IN PVOID Context OPTIONAL,
+    IN NTSTATUS Status
+    );
+
+typedef
+void
+(*PFNKSPINIRPCOMPLETION)(
+    IN PKSPIN Pin,
+    IN PIRP Irp
+    );
+
 typedef
 NTSTATUS
 (*PFNKSPINIRP)(
@@ -2502,12 +2543,10 @@ struct _KSMAPPING {
 };
 #endif
 
-
-typedef struct {
-    GUID ProtocolId;
-    PVOID Argument1;
-    PVOID Argument2;
-} KSHANDSHAKE, *PKSHANDSHAKE;
+typedef enum {
+    KSSTREAM_POINTER_STATE_UNLOCKED = 0,
+    KSSTREAM_POINTER_STATE_LOCKED
+} KSSTREAM_POINTER_STATE;
 
 typedef struct _KSGATE KSGATE, *PKSGATE;
 typedef struct _KSPROCESSPIN_INDEXENTRY KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
@@ -2666,6 +2705,13 @@ struct _KSFILTER
     KSOBJECT_BAG Bag;
     PVOID Context;
 };
+
+typedef
+void
+(*PFNKSFILTERPOWER)(
+    IN PKSFILTER Filter,
+    IN DEVICE_POWER_STATE State
+    );
 
 typedef NTSTATUS (*PFNKSFILTERIRP)(
     IN PKSFILTER Filter,
@@ -2953,9 +2999,28 @@ KsFastPropertyHandler(
 #define KSSTREAM_SYNCHRONOUS    0x00001000
 #define KSSTREAM_FAILUREEXCEPTION 0x00002000
 
+typedef
+BOOLEAN
+(*PFNKSGENERATEEVENTCALLBACK)(
+    IN PVOID Context,
+    IN PKSEVENT_ENTRY EventEntry
+    );
+
 KSDDKAPI NTSTATUS NTAPI
 KsGenerateEvent(
     IN  PKSEVENT_ENTRY EntryEvent);
+
+KSDDKAPI void NTAPI
+KsGenerateEvents(
+    IN PVOID Object,
+    IN const GUID* EventSet OPTIONAL,
+    IN ULONG EventId,
+    IN ULONG DataSize,
+    IN PVOID Data OPTIONAL,
+    IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL,
+    IN PVOID CallBackContext OPTIONAL
+    );
+
 
 KSDDKAPI NTSTATUS NTAPI
 KsEnableEventWithAllocator(
@@ -3509,6 +3574,7 @@ KsInitializeDriver(
 typedef struct _KSFILTERFACTORY KSFILTERFACTORY, *PKSFILTERFACTORY; //FIXME
 
 
+
 KSDDKAPI
 NTSTATUS
 NTAPI
@@ -3694,6 +3760,32 @@ KsDeviceRegisterAggregatedClientUnknown(
 
 
 #endif
+
+typedef interface IKsReferenceClock* PIKSREFERENCECLOCK;
+
+#undef INTERFACE
+#define INTERFACE IKsReferenceClock
+DECLARE_INTERFACE_(IKsReferenceClock,IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN() // For C
+
+    STDMETHOD_(LONGLONG,GetTime)(THIS
+        ) PURE;
+    STDMETHOD_(LONGLONG,GetPhysicalTime)(THIS
+        ) PURE;
+    STDMETHOD_(LONGLONG,GetCorrelatedTime)(THIS_
+        OUT PLONGLONG SystemTime
+        ) PURE;
+    STDMETHOD_(LONGLONG,GetCorrelatedPhysicalTime)(THIS_
+        OUT PLONGLONG SystemTime
+        ) PURE;
+    STDMETHOD_(NTSTATUS, GetResolution)(THIS_
+        OUT PKSRESOLUTION Resolution
+        ) PURE;
+    STDMETHOD_(NTSTATUS, GetState)(THIS_
+        OUT PKSSTATE State
+        ) PURE;
+};
 
 #undef INTERFACE
 #define INTERFACE IKsControl
