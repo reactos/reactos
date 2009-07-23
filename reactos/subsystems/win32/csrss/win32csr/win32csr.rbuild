@@ -13,7 +13,6 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
-	<library>win32ksys</library>
 	<library>psapi</library>
 	<pch>w32csr.h</pch>
 	<file>alias.c</file>
