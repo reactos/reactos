@@ -926,7 +926,7 @@ KspCreateFilter(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 VOID
@@ -938,7 +938,7 @@ KsFilterAcquireProcessingMutex(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 VOID
@@ -950,7 +950,7 @@ KsFilterReleaseProcessingMutex(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
@@ -965,7 +965,7 @@ KsFilterAddTopologyConnections (
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 VOID
@@ -978,7 +978,7 @@ KsFilterAttemptProcessing(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
@@ -993,7 +993,7 @@ KsFilterCreateNode (
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1008,7 +1008,7 @@ KsFilterCreatePinFactory (
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 PKSGATE
@@ -1021,7 +1021,7 @@ KsFilterGetAndGate(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 ULONG
@@ -1035,7 +1035,7 @@ KsFilterGetChildPinCount(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 PKSPIN
@@ -1049,7 +1049,7 @@ KsFilterGetFirstChildPin(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 VOID
@@ -1063,7 +1063,7 @@ KsFilterRegisterPowerCallbacks(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 PKSFILTER

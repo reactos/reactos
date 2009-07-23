@@ -1220,7 +1220,7 @@ KsAcquireControl(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1228,8 +1228,64 @@ NTAPI
 KsAcquireDevice(
     IN PKSDEVICE Device)
 {
-    UNIMPLEMENTED
+    IKsDevice *KsDevice;
+    PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
+
+    /* get device interface*/
+    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+
+    /* acquire device mutex */
+    KsDevice->lpVtbl->AcquireDevice(KsDevice);
 }
+
+/*
+    @implemented
+*/
+VOID
+NTAPI
+KsReleaseDevice(
+    IN PKSDEVICE  Device)
+{
+    IKsDevice *KsDevice;
+    PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
+
+    /* get device interface*/
+    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+
+    /* release device mutex */
+    KsDevice->lpVtbl->ReleaseDevice(KsDevice);
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsTerminateDevice(
+    IN PDEVICE_OBJECT DeviceObject)
+{
+    IKsDevice *KsDevice;
+    PKSIDEVICE_HEADER DeviceHeader;
+    PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* get device header */
+    DeviceHeader = DeviceExtension->DeviceHeader;
+
+    /* get device interface*/
+    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+
+    /* now free device header */
+    KsFreeDeviceHeader((KSDEVICE_HEADER)DeviceHeader);
+
+    /* release interface when available */
+    if (KsDevice)
+    {
+        /* delete IKsDevice interface */
+        KsDevice->lpVtbl->Release(KsDevice);
+    }
+}
+
 
 
 /*

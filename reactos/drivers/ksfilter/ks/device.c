@@ -681,32 +681,7 @@ KsInitializeDevice(
 }
 
 /*
-    @implemented
-*/
-KSDDKAPI
-VOID
-NTAPI
-KsTerminateDevice(
-    IN PDEVICE_OBJECT DeviceObject)
-{
-    UNIMPLEMENTED
-}
-
-/*
-    @implemented
-*/
-VOID
-NTAPI
-KsReleaseDevice(
-    IN PKSDEVICE  Device)
-{
-    UNIMPLEMENTED
-}
-
-
-
-/*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
