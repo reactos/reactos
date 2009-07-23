@@ -1,22 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998 - 2006 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
@@ -34,6 +16,9 @@
 #define TRACE DPRINT
 #define WARN DPRINT1
 #define ERR DPRINT1
+
+PCLS SystemClassList = NULL;
+BOOL RegisteredSysClasses = FALSE;
 
 static struct
 {
@@ -137,43 +122,31 @@ void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
 {
     PCLS Class;
     PPROCESSINFO pi = (PPROCESSINFO)Process;
-
+     
     if (pi != NULL)
     {
         /* free all local classes */
-        Class = pi->LocalClassList;
+        Class = pi->pclsPrivateList;
         while (Class != NULL)
         {
-            pi->LocalClassList = Class->pclsNext;
+            pi->pclsPrivateList = Class->pclsNext;
 
             ASSERT(Class->pclsBase == Class);
             IntDestroyClass(Class);
 
-            Class = pi->LocalClassList;
+            Class = pi->pclsPrivateList;
         }
 
         /* free all global classes */
-        Class = pi->GlobalClassList;
+        Class = pi->pclsPublicList;
         while (Class != NULL)
         {
-            pi->GlobalClassList = Class->pclsNext;
+            pi->pclsPublicList = Class->pclsNext;
 
             ASSERT(Class->pclsBase == Class);
             IntDestroyClass(Class);
 
-            Class = pi->GlobalClassList;
-        }
-
-        /* free all system classes */
-        Class = pi->SystemClassList;
-        while (Class != NULL)
-        {
-            pi->SystemClassList = Class->pclsNext;
-
-            ASSERT(Class->pclsBase == Class);
-            IntDestroyClass(Class);
-
-            Class = pi->SystemClassList;
+            Class = pi->pclsPublicList;
         }
     }
 }
@@ -632,11 +605,11 @@ IntDereferenceClass(IN OUT PCLS Class,
             if (BaseClass->pclsClone != NULL)
             {
                 if (BaseClass->System)
-                    PrevLink = &pi->SystemClassList;
+                    PrevLink = &SystemClassList;
                 else if (BaseClass->Global)
-                    PrevLink = &pi->GlobalClassList;
+                    PrevLink = &pi->pclsPublicList;
                 else
-                    PrevLink = &pi->LocalClassList;
+                    PrevLink = &pi->pclsPrivateList;
 
                 CurrentClass = *PrevLink;
                 while (CurrentClass != BaseClass)
@@ -810,19 +783,19 @@ IntCheckProcessDesktopClasses(IN PDESKTOP Desktop,
 
     /* check all local classes */
     IntCheckDesktopClasses(Desktop,
-                           &pi->LocalClassList,
+                           &pi->pclsPrivateList,
                            FreeOnFailure,
                            &Ret);
 
     /* check all global classes */
     IntCheckDesktopClasses(Desktop,
-                           &pi->GlobalClassList,
+                           &pi->pclsPublicList,
                            FreeOnFailure,
                            &Ret);
 
     /* check all system classes */
     IntCheckDesktopClasses(Desktop,
-                           &pi->SystemClassList,
+                           &SystemClassList,
                            FreeOnFailure,
                            &Ret);
 
@@ -891,6 +864,8 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         Class->rpdeskParent = Desktop;
         Class->pclsBase = Class;
         Class->atomClassName = Atom;
+
+        Class->CSF_flags = dwFlags;
 
         if (dwFlags & CSF_SYSTEMCLASS)
         {
@@ -1117,7 +1092,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
         /* Step 1: try to find an exact match of locally registered classes */
         Class = IntFindClass(Atom,
                              hInstance,
-                             &pi->LocalClassList,
+                             &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
         {
@@ -1128,7 +1103,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                    is not relevant for global classes */
         Class = IntFindClass(Atom,
                              NULL,
-                             &pi->GlobalClassList,
+                             &pi->pclsPublicList,
                              Link);
         if (Class != NULL)
         {
@@ -1137,8 +1112,8 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
 
         /* Step 3: try to find any local class registered by user32 */
         Class = IntFindClass(Atom,
-                             pi->hModUser,
-                             &pi->LocalClassList,
+                             hModClient,
+                             &pi->pclsPrivateList,
                              Link);
         if (Class != NULL)
         {
@@ -1147,8 +1122,8 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
 
         /* Step 4: try to find any global class registered by user32 */
         Class = IntFindClass(Atom,
-                             pi->hModUser,
-                             &pi->GlobalClassList,
+                             hModClient,
+                             &pi->pclsPublicList,
                              Link);
         if (Class != NULL)
         {
@@ -1158,7 +1133,7 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
         /* Step 5: try to find a system class */
         Class = IntFindClass(Atom,
                              NULL,
-                             &pi->SystemClassList,
+                             &SystemClassList,
                              Link);
         if (Class == NULL)
         {
@@ -1191,7 +1166,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
     pti = PsGetCurrentThreadWin32Thread();
     ti = GetW32ThreadInfo();
-    if (ti == NULL || !ti->ppi->RegisteredSysClasses)
+    if (ti == NULL || !RegisteredSysClasses)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return (RTL_ATOM)0;
@@ -1240,11 +1215,11 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
         /* Register the class */
         if (Class->System)
-            List = &pi->SystemClassList;
+            List = &SystemClassList;
         else if (Class->Global)
-            List = &pi->GlobalClassList;
+            List = &pi->pclsPublicList;
         else
-            List = &pi->LocalClassList;
+            List = &pi->pclsPrivateList;
 
         Class->pclsNext = *List;
         (void)InterlockedExchangePointer((PVOID*)List,
@@ -1763,7 +1738,7 @@ UserSetClassLongPtr(IN PCLS Class,
             if (!IntSetClassMenuName(Class,
                                      Value))
             {
-                DPRINT("Setting the class menu name failed!\n");
+                DPRINT1("Setting the class menu name failed!\n");
             }
 
             /* FIXME - really return NULL? Wine does so... */
@@ -1841,10 +1816,10 @@ UserGetClassInfo(IN PCLS Class,
     else
         lpwcx->lpszMenuName = Class->MenuName;
 
-    if (Class->hModule == pi->hModUser)
+    if (hInstance == hModClient)
         lpwcx->hInstance = NULL;
     else
-        lpwcx->hInstance = Class->hModule;
+        lpwcx->hInstance = hInstance;
 
     lpwcx->lpszClassName = (LPCWSTR)((ULONG_PTR)Class->atomClassName); /* FIXME - return the string? */
 
@@ -1865,8 +1840,11 @@ UserRegisterSystemClasses(IN ULONG Count,
     PCLS Class;
     BOOL Ret = TRUE;
 
-    if (pi->RegisteredSysClasses || pi->hModUser == NULL)
+    if ( hModClient == NULL)
         return FALSE;
+    /* Init System Classes once only*/
+    if (RegisteredSysClasses)
+       return TRUE;
 
     RtlZeroMemory(&MenuName, sizeof(MenuName));
 
@@ -1885,7 +1863,7 @@ UserRegisterSystemClasses(IN ULONG Count,
         wc.lpfnWndProc = SystemClasses[i].ProcW;
         wc.cbClsExtra = 0;
         wc.cbWndExtra = SystemClasses[i].ExtraBytes;
-        wc.hInstance = pi->hModUser;
+        wc.hInstance = hModClient;
         wc.hIcon = NULL;
         wc.hCursor = SystemClasses[i].hCursor;
         wc.hbrBackground = SystemClasses[i].hBrush;
@@ -1911,8 +1889,8 @@ UserRegisterSystemClasses(IN ULONG Count,
             }
 
             ASSERT(Class->System);
-            Class->pclsNext = pi->SystemClassList;
-            (void)InterlockedExchangePointer((PVOID*)&pi->SystemClassList,
+            Class->pclsNext = SystemClassList;
+            (void)InterlockedExchangePointer((PVOID*)&SystemClassList,
                                              Class);
         }
         else
@@ -1923,7 +1901,7 @@ UserRegisterSystemClasses(IN ULONG Count,
     }
 
     if (Ret)
-        pi->RegisteredSysClasses = TRUE;
+        RegisteredSysClasses = TRUE;
     return Ret;
 }
 
@@ -2294,8 +2272,8 @@ InvalidParameter:
                                     NULL);
         if (ClassAtom != (RTL_ATOM)0)
         {
-            if (hInstance == NULL)
-                hInstance = pi->hModUser;
+           if (hInstance == NULL)
+               hInstance = hModClient;
 
             Ret = UserGetClassInfo(Class,
                                    lpWndClassEx,
@@ -2313,7 +2291,8 @@ InvalidParameter:
                                                                            (PVOID)Class->AnsiMenuName :
                                                                            (PVOID)Class->MenuName);
                 }
-
+                // From Wine:
+                /* We must return the atom of the class here instead of just TRUE. */
                 /* Undocumented behavior! Return the class atom as a BOOL! */
                 Ret = (BOOL)ClassAtom;
             }

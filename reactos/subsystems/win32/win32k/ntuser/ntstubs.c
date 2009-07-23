@@ -366,6 +366,9 @@ NtUserInitializeClientPfnArrays(
 {
    NTSTATUS Status = STATUS_SUCCESS;
    DPRINT("Enter NtUserInitializeClientPfnArrays User32 0x%x\n",hmodUser);
+
+   if (ClientPfnInit) return Status;
+
    UserEnterExclusive();
 
    _SEH2_TRY
@@ -378,6 +381,7 @@ NtUserInitializeClientPfnArrays(
       RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
 
       hModClient = hmodUser;
+      ClientPfnInit = TRUE;
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {

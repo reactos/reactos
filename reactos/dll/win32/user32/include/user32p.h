@@ -70,9 +70,6 @@
 #define NtUserSetCaretBlinkTime(uMSeconds) \
   (BOOL)NtUserCallOneParam((DWORD)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME)
 
-#define NtUserRegisterUserModule(hInstance) \
-  (BOOL)NtUserCallOneParam((DWORD)hInstance, ONEPARAM_ROUTINE_REGISTERUSERMODULE)
-
 /*
 #define NtUserEnumClipboardFormats(format) \
   (UINT)NtUserCallOneParam(format, ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS)

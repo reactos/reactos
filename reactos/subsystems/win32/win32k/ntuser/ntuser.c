@@ -22,6 +22,7 @@ ERESOURCE UserLock;
 ATOM AtomMessage; // Window Message atom.
 BOOL gbInitialized;
 HINSTANCE hModClient = NULL;
+BOOL ClientPfnInit = FALSE;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

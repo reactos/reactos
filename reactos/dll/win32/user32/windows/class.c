@@ -136,8 +136,6 @@ GetClassInfoA(
     WNDCLASSEXA wcex;
     BOOL retval;
 
-    if (!hInstance) hInstance = User32Instance;
-
     retval = GetClassInfoExA(hInstance, lpClassName, &wcex);
     if (retval)
     {
@@ -145,7 +143,7 @@ GetClassInfoA(
         lpWndClass->lpfnWndProc   = wcex.lpfnWndProc;
         lpWndClass->cbClsExtra    = wcex.cbClsExtra;
         lpWndClass->cbWndExtra    = wcex.cbWndExtra;
-        lpWndClass->hInstance     = (User32Instance == hInstance) ? 0 : wcex.hInstance;
+        lpWndClass->hInstance     = wcex.hInstance;
         lpWndClass->hIcon         = wcex.hIcon;
         lpWndClass->hCursor       = wcex.hCursor;
         lpWndClass->hbrBackground = wcex.hbrBackground;
@@ -169,8 +167,6 @@ GetClassInfoW(
     WNDCLASSEXW wcex;
     BOOL retval;
 
-    if (!hInstance) hInstance = User32Instance;
-
     retval = GetClassInfoExW(hInstance, lpClassName, &wcex);
     if (retval)
     {
@@ -178,7 +174,7 @@ GetClassInfoW(
         lpWndClass->lpfnWndProc   = wcex.lpfnWndProc;
         lpWndClass->cbClsExtra    = wcex.cbClsExtra;
         lpWndClass->cbWndExtra    = wcex.cbWndExtra;
-        lpWndClass->hInstance     = (User32Instance == hInstance) ? 0 : wcex.hInstance;
+        lpWndClass->hInstance     = wcex.hInstance;
         lpWndClass->hIcon         = wcex.hIcon;
         lpWndClass->hCursor       = wcex.hCursor;
         lpWndClass->hbrBackground = wcex.hbrBackground;

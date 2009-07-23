@@ -1122,7 +1122,7 @@ NtUserCreateDesktop(
    wc.lpfnWndProc = gpsi->apfnClientW.pfnDesktopWndProc; // Use User32 Desktop Proc.
    wc.cbClsExtra = 0;
    wc.cbWndExtra = 0;
-   wc.hInstance = pi->hModUser; // hModClient;
+   wc.hInstance = hModClient;
    wc.hIcon = NULL;
    wc.hCursor = NULL;
    wc.hbrBackground = 0;
@@ -1140,8 +1140,8 @@ NtUserCreateDesktop(
    if (Class != NULL)
    {
       ASSERT(Class->System);
-      Class->pclsNext = pi->SystemClassList;
-      (void)InterlockedExchangePointer((PVOID*)&pi->SystemClassList,
+      Class->pclsNext = SystemClassList;
+      (void)InterlockedExchangePointer((PVOID*)&SystemClassList,
                                              Class);
    }
    else
@@ -1159,7 +1159,7 @@ NtUserCreateDesktop(
                                 100,
                                 NULL,
                                 NULL,
-                                pi->hModUser, // hModClient;
+                                hModClient, 
                                 NULL,
                                 0,
                                 TRUE);

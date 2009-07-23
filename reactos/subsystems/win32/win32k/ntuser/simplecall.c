@@ -344,25 +344,6 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
          RETURN( (DWORD)UserGetKeyboardLayout(Param));
 
-      case ONEPARAM_ROUTINE_REGISTERUSERMODULE:
-      {
-          PW32THREADINFO ti;
-
-          ti = GetW32ThreadInfo();
-          if (ti == NULL)
-          {
-              DPRINT1("Cannot register user32 module instance!\n");
-              SetLastWin32Error(ERROR_INVALID_PARAMETER);
-              RETURN(FALSE);
-          }
-
-          if (InterlockedCompareExchangePointer(&ti->ppi->hModUser,
-                                                (HINSTANCE)Param,
-                                                NULL) == NULL)
-          {
-              RETURN(TRUE);
-          }
-      }
       case ONEPARAM_ROUTINE_RELEASEDC:
          RETURN (UserReleaseDC(NULL, (HDC) Param, FALSE));
 

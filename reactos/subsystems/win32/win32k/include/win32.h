@@ -1,7 +1,11 @@
 #ifndef __INCLUDE_NAPI_WIN32_H
 #define __INCLUDE_NAPI_WIN32_H
 
-extern HINSTANCE hModClient; // This should replace (PROCESSINFO)->hModUser
+extern BOOL ClientPfnInit;
+extern HINSTANCE hModClient;
+extern HANDLE hModuleWin;    // This Win32k Instance.
+extern PCLS SystemClassList;
+extern BOOL RegisteredSysClasses;
 
 typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
 
@@ -99,14 +103,11 @@ typedef struct _W32PROCESS
 typedef struct _PROCESSINFO
 {
     W32PROCESS          XzyxW32Process; /* Place holder. */
+
+    PCLS                pclsPrivateList;
+    PCLS                pclsPublicList;
     /* ReactOS */
-    HINSTANCE    hModUser;
-    PCLS LocalClassList;
-    PCLS GlobalClassList;
-    PCLS SystemClassList;
-                    
-    UINT RegisteredSysClasses : 1;
-                        
+
 } PROCESSINFO;
 
 #endif /* __INCLUDE_NAPI_WIN32_H */
