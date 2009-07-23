@@ -173,7 +173,7 @@ MiniportQueryInformation(
 
     case OID_GEN_LINK_SPEED:
         {
-          GenericULONG = 100000;  /* 10Mbps */
+          GenericULONG = Adapter->MediaSpeed * 10000;
           break;
         }
 

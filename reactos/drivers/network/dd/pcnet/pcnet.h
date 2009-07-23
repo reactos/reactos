@@ -60,6 +60,8 @@ typedef struct _ADAPTER
   ULONG_PTR PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
   NDIS_MEDIA_STATE MediaState;
+  UINT MediaSpeed;
+  BOOLEAN FullDuplex;
   NDIS_MINIPORT_TIMER MediaDetectionTimer;
   ULONG CurrentReceiveDescriptorIndex;
   ULONG CurrentPacketFilter;
@@ -128,6 +130,14 @@ MiSetMulticast(
 NDIS_MEDIA_STATE
 NTAPI
 MiGetMediaState(PADAPTER Adapter);
+
+UINT
+NTAPI
+MiGetMediaSpeed(PADAPTER Adapter);
+
+BOOLEAN
+NTAPI
+MiGetMediaDuplex(PADAPTER Adapter);
 
 /* operational constants */
 #define NUMBER_OF_BUFFERS     0x20
