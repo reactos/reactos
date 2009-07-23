@@ -34,6 +34,8 @@ GreCreatePen(
     static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0};
     static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38};*/
     PBRUSHGDI pBrush;
+    XLATEOBJ *pXlate;
+    HPALETTE hPalette;
 
     /* Allocate memory for the object */
     pBrush = EngAllocMem(FL_ZERO_MEMORY, sizeof(BRUSHGDI), TAG_BRUSHOBJ);
@@ -82,7 +84,12 @@ GreCreatePen(
 
     case PS_SOLID:
         pBrush->flAttrs |= GDIBRUSH_IS_SOLID;
-        pBrush->BrushObj.iSolidColor = ulColor;
+
+        // FIXME: Take hDIBPalette in account if it exists!
+        hPalette = pPrimarySurface->DevInfo.hpalDefault;
+        pXlate = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
+        pBrush->BrushObj.iSolidColor = XLATEOBJ_iXlate(pXlate, ulColor);
+        EngDeleteXlate(pXlate);
         break;
 
     case PS_ALTERNATE:
@@ -135,6 +142,8 @@ NTAPI
 GreCreateSolidBrush(COLORREF crColor)
 {
     PBRUSHGDI pBrush;
+    XLATEOBJ *pXlate;
+    HPALETTE hPalette;
 
     /* Allocate memory for the object */
     pBrush = EngAllocMem(FL_ZERO_MEMORY, sizeof(BRUSHGDI), TAG_BRUSHOBJ);
@@ -144,7 +153,11 @@ GreCreateSolidBrush(COLORREF crColor)
     pBrush->flAttrs |= GDIBRUSH_IS_SOLID;
 
     /* Set color */
-    pBrush->BrushObj.iSolidColor = crColor;
+    // FIXME: Take hDIBPalette in account if it exists!
+    hPalette = pPrimarySurface->DevInfo.hpalDefault;
+    pXlate = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
+    pBrush->BrushObj.iSolidColor = XLATEOBJ_iXlate(pXlate, crColor);
+    EngDeleteXlate(pXlate);
 
     /* Return newly created brush */
     return pBrush;

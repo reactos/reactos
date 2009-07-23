@@ -15,7 +15,7 @@
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static void SharpGlyphMono(PDC physDev, INT x, INT y,
-                           void *bitmap, GlyphInfo *gi)
+                           void *bitmap, GlyphInfo *gi, BRUSHGDI *pTextBrush)
 {
 #if 1
     unsigned char   *srcLine = bitmap, *src;
@@ -26,10 +26,6 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
     int             w;
     int             xspan, lenspan;
     RECTL           rcBounds;
-    BRUSHOBJ        textBrush;
-
-    RtlZeroMemory(&textBrush, sizeof(textBrush));
-    textBrush.iSolidColor = physDev->crForegroundClr;
 
     x -= gi->x;
     y -= gi->y;
@@ -64,7 +60,7 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
                 rcBounds.right = xspan+lenspan; rcBounds.bottom = y+1;
                 GreLineTo(&physDev->pBitmap->SurfObj,
                     NULL,
-                    &textBrush,
+                    &pTextBrush->BrushObj,
                     xspan,
                     y,
                     xspan + lenspan,
@@ -143,13 +139,14 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
     AA_Type aa_type = AA_None;
     INT idx;
     /*double*/ int cosEsc = 1, sinEsc = 0;
+    BRUSHGDI *pTextPen;
 
-    //wine_tsx11_lock();
-    //XSetForeground( gdi_display, physDev->gc, textPixel );
+    /* Create pen for text output */
+    pTextPen = GreCreatePen(PS_SOLID, 1, 0, pDC->crForegroundClr, 0, 0, 0, NULL, 0, TRUE);
 
     if(aa_type == AA_None || pDC->pBitmap->SurfObj.iBitmapFormat == BMF_1BPP)
     {
-        void (* sharp_glyph_fn)(PDC, INT, INT, void *, GlyphInfo *);
+        void (* sharp_glyph_fn)(PDC, INT, INT, void *, GlyphInfo *, BRUSHGDI *);
 
         //if(aa_type == AA_None)
             sharp_glyph_fn = SharpGlyphMono;
@@ -160,7 +157,8 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
             sharp_glyph_fn(pDC, pDC->rcDcRect.left + pDC->rcVport.left + x + xoff,
                 pDC->rcDcRect.top + pDC->rcVport.top + y + yoff,
                 formatEntry->bitmaps[wstr[idx]],
-                &formatEntry->gis[wstr[idx]]);
+                &formatEntry->gis[wstr[idx]],
+                pTextPen);
             if(lpDx) {
                 offset += lpDx[idx];
                 xoff = offset * cosEsc;
@@ -282,7 +280,8 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
 #endif
     }
 //no_image:
-    //wine_tsx11_unlock();
+
+    GreFreeBrush(pTextPen);
 }
 
 /* EOF */
