@@ -300,10 +300,10 @@ static struct handle_entry *get_handle( PPROCESSINFO process, obj_handle_t handl
 /* attempt to shrink a table */
 static void shrink_handle_table( struct handle_table *table )
 {
-#if 0
     struct handle_entry *entry = table->entries + table->last;
     struct handle_entry *new_entries;
     int count = table->count;
+    int count_old = table->count;
 
     while (table->last >= 0)
     {
@@ -314,12 +314,10 @@ static void shrink_handle_table( struct handle_table *table )
     if (table->last >= count / 4) return;  /* no need to shrink */
     if (count < MIN_HANDLE_ENTRIES * 2) return;  /* too small to shrink */
     count /= 2;
-    if (!(new_entries = realloc( table->entries, count * sizeof(*new_entries) ))) return;
+    if (!(new_entries =
+        ExReallocPool( table->entries, count * sizeof(*new_entries), count_old * sizeof(*new_entries) ))) return;
     table->count   = count;
     table->entries = new_entries;
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 /* copy the handle table of the parent process */
