@@ -139,8 +139,7 @@ MiniportQueryInformation(
 
     case OID_GEN_HARDWARE_STATUS:
         {
-          /* TODO: implement this... */
-          GenericULONG = (ULONG)NdisHardwareStatusReady;
+          GenericULONG = (ULONG)((Adapter->MediaState == NdisMediaStateConnected) ? NdisHardwareStatusReady : NdisHardwareStatusNotReady);
           break;
         }
 
