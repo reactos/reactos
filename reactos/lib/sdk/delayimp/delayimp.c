@@ -1,3 +1,12 @@
+/*
+ * PROJECT:         ReactOS SDK Library
+ * LICENSE:         LGPL, see LGPL.txt in top level directory.
+ * FILE:            lib/sdk/delayimp/delayimp.c
+ * PURPOSE:         Library for delay importing from dlls
+ * PROGRAMMERS:     Timo Kreuzer <timo.kreuzer@reactos.org>
+ *
+ */
+
 #include <windows.h>
 #include "delayimp.h"
 
