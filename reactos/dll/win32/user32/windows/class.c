@@ -25,6 +25,7 @@ GetClassInfoExA(
 {
     UNICODE_STRING ClassName = {0};
     BOOL Ret;
+    LPCSTR pszMenuName;
 
     TRACE("%p class/atom: %s/%04x %p\n", hInstance,
         IS_ATOM(lpszClass) ? NULL : lpszClass,
@@ -62,8 +63,13 @@ GetClassInfoExA(
     Ret = NtUserGetClassInfo(hInstance,
                              &ClassName,
                              (LPWNDCLASSEXW)lpwcx,
-                             NULL,
+                             (LPWSTR *)&pszMenuName,
                              TRUE);
+    if (Ret)
+    {
+       lpwcx->lpszClassName = lpszClass;
+//       lpwcx->lpszMenuName  = pszMenuName;
+    }
 
     if (!IS_ATOM(lpszClass))
     {
@@ -85,6 +91,8 @@ GetClassInfoExW(
   LPWNDCLASSEXW lpwcx)
 {
     UNICODE_STRING ClassName = {0};
+    BOOL Ret;
+    LPWSTR pszMenuName;
 
     TRACE("%p class/atom: %S/%04x %p\n", hInstance,
         IS_ATOM(lpszClass) ? NULL : lpszClass,
@@ -115,11 +123,17 @@ GetClassInfoExW(
                              lpszClass);
     }
 
-    return NtUserGetClassInfo(hInstance,
+    Ret = NtUserGetClassInfo( hInstance,
                               &ClassName,
                               lpwcx,
-                              NULL,
+                              &pszMenuName,
                               FALSE);
+    if (Ret)
+    {
+       lpwcx->lpszClassName = lpszClass;
+//       lpwcx->lpszMenuName  = pszMenuName;
+    }
+    return Ret;
 }
 
 
@@ -238,7 +252,7 @@ GetClassLongA(HWND hWnd, int nIndex)
                         break;
 
                     case GCL_MENUNAME:
-                        Ret = (ULONG_PTR)Class->AnsiMenuName;
+                        Ret = (ULONG_PTR)Class->lpszClientAnsiMenuName;
                         break;
 
                     case GCL_STYLE:
@@ -351,7 +365,7 @@ GetClassLongW ( HWND hWnd, int nIndex )
                         break;
 
                     case GCL_MENUNAME:
-                        Ret = (ULONG_PTR)Class->MenuName;
+                        Ret = (ULONG_PTR)Class->lpszClientUnicodeMenuName;
                         break;
 
                     case GCL_STYLE:

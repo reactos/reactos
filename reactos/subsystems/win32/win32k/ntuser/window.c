@@ -1838,7 +1838,7 @@ AllocErr:
       {
           UNICODE_STRING MenuName;
 
-          RtlInitUnicodeString( &MenuName, Wnd->pcls->MenuName);
+          RtlInitUnicodeString( &MenuName, Wnd->pcls->lpszMenuName);
 
           hMenu = co_IntCallLoadMenu( Wnd->pcls->hModule, &MenuName);
           if (hMenu) IntSetMenu(Window, hMenu, &MenuChanged);

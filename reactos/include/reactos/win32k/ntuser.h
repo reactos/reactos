@@ -116,8 +116,8 @@ typedef struct _CLS
     struct _DESKTOP *rpdeskParent;
     PVOID pdce;
     DWORD CSF_flags;
-    PSTR  lpszClientAnsiMenuName;
-    PWSTR lpszClientUnicodeMenuName;
+    PSTR  lpszClientAnsiMenuName;    // For client use
+    PWSTR lpszClientUnicodeMenuName; // "   "      "
     PCALLPROC spcpdFirst;
     struct _CLS *pclsBase;
     struct _CLS *pclsClone;
@@ -135,11 +135,11 @@ typedef struct _CLS
     HANDLE hIcon; /* FIXME - Use pointer! */
     HANDLE hCursor; /* FIXME - Use pointer! */
     HBRUSH hbrBackground;
-    PWSTR MenuName;
-    PSTR AnsiMenuName;
+    PWSTR lpszMenuName;     // kernel use
+    PSTR lpszAnsiClassName; // " 
     HANDLE hIconSm; /* FIXME - Use pointer! */
 
-    UINT Destroying : 1;
+    UINT Destroying : 1; // CSF_WOWDEFERDESTROY
     UINT Unicode : 1;
     UINT System : 1;  // CSF_SYSTEMCLASS
     UINT Global : 1;  // CS_GLOBALCLASS
@@ -1962,11 +1962,11 @@ NtUserGetWindowPlacement(
   HWND hWnd,
   WINDOWPLACEMENT *lpwndpl);
 
-DWORD
+PCLS
 NTAPI
 NtUserGetWOWClass(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HINSTANCE hInstance,
+  PUNICODE_STRING ClassName);
 
 DWORD
 NTAPI

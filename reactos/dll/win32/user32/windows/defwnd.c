@@ -970,7 +970,7 @@ static void DefWndPrint( HWND hwnd, HDC hdc, ULONG uFlags)
    * Client area
    */
   if ( uFlags & PRF_CLIENT)
-    SendMessageW(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, PRF_CLIENT);
+    SendMessageW(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, uFlags);
 }
 
 static BOOL CALLBACK

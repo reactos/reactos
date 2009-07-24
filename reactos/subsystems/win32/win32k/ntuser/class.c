@@ -63,11 +63,11 @@ static VOID
 IntFreeClassMenuName(IN OUT PCLS Class)
 {
     /* free the menu name, if it was changed and allocated */
-    if (Class->MenuName != NULL && Class->MenuNameIsString)
+    if (Class->lpszClientUnicodeMenuName != NULL && Class->MenuNameIsString)
     {
-        UserHeapFree(Class->MenuName);
-        Class->MenuName = NULL;
-        Class->AnsiMenuName = NULL;
+        UserHeapFree(Class->lpszClientUnicodeMenuName);
+        Class->lpszClientUnicodeMenuName = NULL;
+        Class->lpszClientAnsiMenuName = NULL;
     }
 }
 
@@ -891,30 +891,31 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
             Class->hCursor = lpwcx->hCursor; /* FIXME */
             Class->hbrBackground = lpwcx->hbrBackground;
 
+
             /* make a copy of the string */
             if (pszMenuNameBuffer != NULL)
             {
                 Class->MenuNameIsString = TRUE;
 
-                Class->MenuName = pszMenuNameBuffer;
-                RtlCopyMemory(Class->MenuName,
+                Class->lpszClientUnicodeMenuName = pszMenuNameBuffer;
+                RtlCopyMemory(Class->lpszClientUnicodeMenuName,
                               MenuName->Buffer,
                               MenuName->Length);
-                Class->MenuName[MenuName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+                Class->lpszClientUnicodeMenuName[MenuName->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
                 pszMenuNameBuffer += (MenuName->Length / sizeof(WCHAR)) + 1;
             }
             else
-                Class->MenuName = MenuName->Buffer;
+                Class->lpszClientUnicodeMenuName = MenuName->Buffer;
 
             /* save an ansi copy of the string */
             if (pszMenuNameBuffer != NULL)
             {
                 ANSI_STRING AnsiString;
 
-                Class->AnsiMenuName = (PSTR)pszMenuNameBuffer;
+                Class->lpszClientAnsiMenuName = (PSTR)pszMenuNameBuffer;
                 AnsiString.MaximumLength = RtlUnicodeStringToAnsiSize(MenuName);
-                AnsiString.Buffer = Class->AnsiMenuName;
+                AnsiString.Buffer = Class->lpszClientAnsiMenuName;
                 Status = RtlUnicodeStringToAnsiString(&AnsiString,
                                                       MenuName,
                                                       FALSE);
@@ -927,7 +928,11 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                 }
             }
             else
-                Class->AnsiMenuName = (PSTR)MenuName->Buffer;
+                Class->lpszClientAnsiMenuName = (PSTR)MenuName->Buffer;
+
+            /* Save kernel use menu name and ansi class name */
+            Class->lpszMenuName = Class->lpszClientUnicodeMenuName; // Fixme!
+            //Class->lpszAnsiClassName = Fixme!
 
             if (!(dwFlags & CSF_ANSIPROC))
                 Class->Unicode = TRUE;
@@ -1467,9 +1472,9 @@ UserGetClassLongPtr(IN PCLS Class,
         case GCLP_MENUNAME:
             /* NOTE: Returns pointer in kernel heap! */
             if (Ansi)
-                Ret = (ULONG_PTR)Class->AnsiMenuName;
+                Ret = (ULONG_PTR)Class->lpszClientAnsiMenuName;
             else
-                Ret = (ULONG_PTR)Class->MenuName;
+                Ret = (ULONG_PTR)Class->lpszClientUnicodeMenuName;
             break;
 
         case GCL_STYLE:
@@ -1547,16 +1552,16 @@ IntSetClassMenuName(IN PCLS Class,
             {
                 /* update the base class */
                 IntFreeClassMenuName(Class);
-                Class->MenuName = strBufW;
-                Class->AnsiMenuName = AnsiString.Buffer;
+                Class->lpszClientUnicodeMenuName = strBufW;
+                Class->lpszClientAnsiMenuName = AnsiString.Buffer;
                 Class->MenuNameIsString = TRUE;
 
                 /* update the clones */
                 Class = Class->pclsClone;
                 while (Class != NULL)
                 {
-                    Class->MenuName = strBufW;
-                    Class->AnsiMenuName = AnsiString.Buffer;
+                    Class->lpszClientUnicodeMenuName = strBufW;
+                    Class->lpszClientAnsiMenuName = AnsiString.Buffer;
                     Class->MenuNameIsString = TRUE;
 
                     Class = Class->pclsNext;
@@ -1577,16 +1582,16 @@ IntSetClassMenuName(IN PCLS Class,
 
         /* update the base class */
         IntFreeClassMenuName(Class);
-        Class->MenuName = MenuName->Buffer;
-        Class->AnsiMenuName = (PSTR)MenuName->Buffer;
+        Class->lpszClientUnicodeMenuName = MenuName->Buffer;
+        Class->lpszClientAnsiMenuName = (PSTR)MenuName->Buffer;
         Class->MenuNameIsString = FALSE;
 
         /* update the clones */
         Class = Class->pclsClone;
         while (Class != NULL)
         {
-            Class->MenuName = MenuName->Buffer;
-            Class->AnsiMenuName = (PSTR)MenuName->Buffer;
+            Class->lpszClientUnicodeMenuName = MenuName->Buffer;
+            Class->lpszClientAnsiMenuName = (PSTR)MenuName->Buffer;
             Class->MenuNameIsString = FALSE;
 
             Class = Class->pclsNext;
@@ -1810,18 +1815,31 @@ UserGetClassInfo(IN PCLS Class,
     lpwcx->hIcon = Class->hIcon; /* FIXME - get handle from pointer */
     lpwcx->hCursor = Class->hCursor; /* FIXME - get handle from pointer */
     lpwcx->hbrBackground = Class->hbrBackground;
-
+/*
+    FIXME!
+    Cls: lpszMenuName and lpszAnsiClassName should be used by kernel space.
+    lpszClientXxxMenuName should already be mapped to user space.
+ */
     if (Ansi)
-        ((PWNDCLASSEXA)lpwcx)->lpszMenuName = Class->AnsiMenuName;
+       ((PWNDCLASSEXA)lpwcx)->lpszMenuName = Class->lpszClientAnsiMenuName;
     else
-        lpwcx->lpszMenuName = Class->MenuName;
+       lpwcx->lpszMenuName = Class->lpszClientUnicodeMenuName;
+
+    if ( Class->lpszClientUnicodeMenuName != NULL && 
+         Class->MenuNameIsString)
+    {
+       lpwcx->lpszMenuName = UserHeapAddressToUser(Ansi ?
+                                 (PVOID)Class->lpszClientAnsiMenuName :
+                                 (PVOID)Class->lpszClientUnicodeMenuName);
+    }
 
     if (hInstance == hModClient)
         lpwcx->hInstance = NULL;
     else
         lpwcx->hInstance = hInstance;
 
-    lpwcx->lpszClassName = (LPCWSTR)((ULONG_PTR)Class->atomClassName); /* FIXME - return the string? */
+    /* FIXME - return the string? Okay! This is performed in User32!*/
+    //lpwcx->lpszClassName = (LPCWSTR)((ULONG_PTR)Class->atomClassName);
 
     lpwcx->hIconSm = Class->hIconSm; /* FIXME - get handle from pointer */
 
@@ -2010,7 +2028,6 @@ InvalidParameter:
                                 &CapturedMenuName,
                                 wpExtra,
                                 Flags);
-
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2146,6 +2163,9 @@ NtUserSetClassWord(
   INT nIndex,
   WORD wNewWord)
 {
+/*
+ * NOTE: Obsoleted in 32-bit windows
+ */
    return(0);
 }
 
@@ -2195,7 +2215,6 @@ InvalidParameter:
     _SEH2_END;
 
     UserLeave();
-
     return Ret;
 }
 
@@ -2208,107 +2227,134 @@ NtUserGetClassInfo(
    LPWSTR *ppszMenuName,
    BOOL Ansi)
 {
-    UNICODE_STRING CapturedClassName;
-    PCLS Class;
-    RTL_ATOM ClassAtom;
-    PPROCESSINFO pi;
-    BOOL Ret = FALSE;
+   UNICODE_STRING CapturedClassName, SafeClassName;
+   WNDCLASSEXW Safewcexw;
+   PCLS Class;
+   RTL_ATOM ClassAtom = 0;
+   PPROCESSINFO pi;
+   BOOL Ret = TRUE;
 
-    /* NOTE: need exclusive lock because getting the wndproc might require the
-             creation of a call procedure handle */
-    UserEnterExclusive();
+   /* NOTE: need exclusive lock because getting the wndproc might require the
+            creation of a call procedure handle */
+   UserEnterExclusive();
 
-    pi = GetW32ProcessInfo();
-    if (pi == NULL)
-    {
-        ERR("GetW32ProcessInfo() returned NULL!\n");
-        goto Cleanup;
-    }
-    _SEH2_TRY
-    {
-        /* probe the paramters */
-        CapturedClassName = ProbeForReadUnicodeString(ClassName);
+   pi = GetW32ProcessInfo();
+   if (pi == NULL)
+   {
+      ERR("GetW32ProcessInfo() returned NULL!\n");
+      goto Cleanup;
+   }
 
-        if (CapturedClassName.Length == 0)
-            TRACE("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
-        else
-            TRACE("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
+   _SEH2_TRY
+   {
+      /* probe the paramters */
+      CapturedClassName = ProbeForReadUnicodeString(ClassName);
 
-        if (CapturedClassName.Length & 1)
-        {
+      if (CapturedClassName.Length == 0)
+         TRACE("hInst %p atom %04X lpWndClassEx %p Ansi %d\n", hInstance, CapturedClassName.Buffer, lpWndClassEx, Ansi);
+      else
+         TRACE("hInst %p class %wZ lpWndClassEx %p Ansi %d\n", hInstance, &CapturedClassName, lpWndClassEx, Ansi);
+
+      if (CapturedClassName.Length & 1)
+      {
+         goto InvalidParameter;
+      }
+
+      if (CapturedClassName.Length != 0)
+      {
+         ProbeForRead( CapturedClassName.Buffer,
+                       CapturedClassName.Length,
+                       sizeof(WCHAR));
+
+         RtlInitUnicodeString( &SafeClassName, CapturedClassName.Buffer);
+
+         SafeClassName.Buffer = ExAllocatePoolWithTag( PagedPool,
+                                                       SafeClassName.MaximumLength,
+                                                       TAG_STRING);
+         RtlCopyMemory( SafeClassName.Buffer,
+                        CapturedClassName.Buffer,
+                        SafeClassName.MaximumLength);
+      }
+      else
+      {
+         if (!IS_ATOM(CapturedClassName.Buffer))
+         {
+            ERR("NtUserGetClassInfo() got ClassName instead of Atom!\n");
             goto InvalidParameter;
-        }
+         }
 
-        if (CapturedClassName.Length != 0)
-        {
-            ProbeForRead(CapturedClassName.Buffer,
-                         CapturedClassName.Length,
-                         sizeof(WCHAR));
-        }
-        else
-        {
-            if (!IS_ATOM(CapturedClassName.Buffer))
-            {
-                ERR("NtUserGetClassInfo() got ClassName instead of Atom!\n");
-                goto InvalidParameter;
-            }
-        }
+         SafeClassName.Buffer = CapturedClassName.Buffer;
+         SafeClassName.Length = 0;
+         SafeClassName.MaximumLength = 0;
+      }
 
-        if (ProbeForReadUint(&lpWndClassEx->cbSize) != sizeof(WNDCLASSEXW))
-        {
+      if (ProbeForReadUint(&lpWndClassEx->cbSize) != sizeof(WNDCLASSEXW))
+      {
 InvalidParameter:
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            _SEH2_LEAVE;
-        }
+         SetLastWin32Error(ERROR_INVALID_PARAMETER);
+         Ret = FALSE;
+         _SEH2_LEAVE;
+      }
 
-        ProbeForWrite(lpWndClassEx,
-                      sizeof(WNDCLASSEXW),
-                      sizeof(ULONG));
+      ProbeForWrite( lpWndClassEx, sizeof(WNDCLASSEXW), sizeof(ULONG));
 
-        ClassAtom = IntGetClassAtom(&CapturedClassName,
+      RtlCopyMemory( &Safewcexw, lpWndClassEx, sizeof(WNDCLASSEXW));
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+      Ret = FALSE;
+   }
+   _SEH2_END;
+
+   if (Ret)
+   {
+      ClassAtom = IntGetClassAtom( &SafeClassName,
                                     hInstance,
                                     pi,
-                                    &Class,
+                                   &Class,
                                     NULL);
-        if (ClassAtom != (RTL_ATOM)0)
-        {
-           if (hInstance == NULL)
-               hInstance = hModClient;
+      if (ClassAtom != (RTL_ATOM)0)
+      {
+         if (hInstance == NULL) hInstance = hModClient;
 
-            Ret = UserGetClassInfo(Class,
-                                   lpWndClassEx,
-                                   Ansi,
-                                   hInstance);
-
-            if (Ret)
-            {
-                lpWndClassEx->lpszClassName = CapturedClassName.Buffer;
-                /* FIXME - handle Class->Desktop == NULL!!!!! */
-
-                if (Class->MenuName != NULL && Class->MenuNameIsString)
-                {
-                    lpWndClassEx->lpszMenuName = UserHeapAddressToUser(Ansi ?
-                                                                           (PVOID)Class->AnsiMenuName :
-                                                                           (PVOID)Class->MenuName);
-                }
-                // From Wine:
-                /* We must return the atom of the class here instead of just TRUE. */
-                /* Undocumented behavior! Return the class atom as a BOOL! */
-                Ret = (BOOL)ClassAtom;
-            }
-         }
-         else
-            SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
+         Ret = UserGetClassInfo( Class,
+                                &Safewcexw,
+                                 Ansi,
+                                 hInstance);
+      }
+      else
+      {
          SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-    }
-    _SEH2_END;
+         Ret = FALSE;
+      }
+   }
+   _SEH2_TRY
+   {
+      if (Ret)
+      {
+         /* Emulate Function. */
+         if (ppszMenuName) *ppszMenuName = (LPWSTR)Safewcexw.lpszMenuName;
+
+         RtlCopyMemory(lpWndClassEx, &Safewcexw, sizeof(WNDCLASSEXW));
+
+         // From Wine:
+         /* We must return the atom of the class here instead of just TRUE. */
+         /* Undocumented behavior! Return the class atom as a BOOL! */
+         Ret = (BOOL)ClassAtom;
+      }
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+      Ret = FALSE;
+   }
+   _SEH2_END;
 
 Cleanup:
-    UserLeave();
-    return Ret;
+   if (SafeClassName.Length) ExFreePoolWithTag(SafeClassName.Buffer, TAG_STRING);
+   UserLeave();
+   return Ret;
 }
 
 
@@ -2355,11 +2401,85 @@ NtUserGetClassName (IN HWND hWnd,
     return Ret;
 }
 
-DWORD APIENTRY
-NtUserGetWOWClass(DWORD Unknown0,
-                  DWORD Unknown1)
+/* Return Pointer to Class structure. */
+PCLS APIENTRY
+NtUserGetWOWClass(HINSTANCE hInstance,
+                  PUNICODE_STRING ClassName)
 {
-   return(0);
+  UNICODE_STRING SafeClassName;
+  PPROCESSINFO pi;
+  PCLS Class = NULL;
+  RTL_ATOM ClassAtom = 0;
+  BOOL Hit = FALSE;
+
+  UserEnterExclusive();
+
+  pi = GetW32ProcessInfo();
+  if (pi == NULL)
+  {
+     ERR("GetW32ProcessInfo() returned NULL!\n");
+     goto Cleanup;
+  }
+
+  _SEH2_TRY
+  {
+     if (ClassName->Length != 0)
+     {
+        ProbeForRead( ClassName->Buffer,
+                      ClassName->Length,
+                      sizeof(WCHAR));
+
+        RtlInitUnicodeString( &SafeClassName, ClassName->Buffer);
+
+        SafeClassName.Buffer = ExAllocatePoolWithTag( PagedPool,
+                                                      SafeClassName.MaximumLength,
+                                                      TAG_STRING);
+        RtlCopyMemory( SafeClassName.Buffer,
+                       ClassName->Buffer,
+                       SafeClassName.MaximumLength);
+     }
+     else
+     {
+        if (!IS_ATOM(ClassName->Buffer))
+        {
+           ERR("NtUserGetWOWClass() got ClassName instead of Atom!\n");
+           Hit = TRUE;
+        }
+        else
+        {
+           SafeClassName.Buffer = ClassName->Buffer;
+           SafeClassName.Length = 0;
+           SafeClassName.MaximumLength = 0;
+        }
+     }
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+     SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+     Hit = TRUE;
+  }
+  _SEH2_END;
+
+  if (!Hit)
+  {
+     ClassAtom = IntGetClassAtom( &SafeClassName,
+                                   hInstance,
+                                   pi,
+                                  &Class,
+                                   NULL);
+     if (!ClassAtom)
+     {
+        SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
+     }
+  }
+
+Cleanup:
+  if (SafeClassName.Length) ExFreePoolWithTag(SafeClassName.Buffer, TAG_STRING);
+  UserLeave();
+//
+// Don't forget to use DesktopPtrToUser( ? ) with return pointer in user space.
+//
+  return Class;
 }
 
 /* EOF */
