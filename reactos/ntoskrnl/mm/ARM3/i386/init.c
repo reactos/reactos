@@ -250,9 +250,10 @@ MxGetNextPage(IN PFN_NUMBER PageCount)
     }
     
     //
-    // Use our highest usable free pages
+    // Use our lowest usable free pages
     //
-    Pfn = MxFreeDescriptor->BasePage + MxFreeDescriptor->PageCount - PageCount;
+    Pfn = MxFreeDescriptor->BasePage;
+    MxFreeDescriptor->BasePage += PageCount;
     MxFreeDescriptor->PageCount -= PageCount;
     return Pfn;
 }
