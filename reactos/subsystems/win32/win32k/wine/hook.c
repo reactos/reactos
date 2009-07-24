@@ -390,21 +390,17 @@ DECL_HANDLER(set_hook)
 
     if (!(desktop = get_thread_desktop( current, DESKTOP_HOOKCONTROL ))) return;
 
-    //if (req->pid && !(process = get_process_from_id( req->pid ))) goto done;
     if (req->pid)
     {
         status = PsLookupProcessByProcessId((HANDLE)req->pid, &eprocess);
         if (!NT_SUCCESS(status)) goto done;
-        ObReferenceObjectByPointer(eprocess, 0, NULL, KernelMode);
         process = (PPROCESSINFO)PsGetProcessWin32Process(eprocess);
     }
 
     if (req->tid)
     {
-        //if (!(thread = get_thread_from_id( req->tid ))) goto done;
         status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
         if (!NT_SUCCESS(status)) goto done;
-        ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
         thread = (PTHREADINFO)PsGetThreadWin32Thread(ethread);
 
         if (process && process != thread->process)

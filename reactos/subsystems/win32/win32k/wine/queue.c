@@ -1722,9 +1722,11 @@ DECL_HANDLER(send_message)
 
     status = PsLookupThreadByThreadId((HANDLE)req->id, &ethread);
     if (!NT_SUCCESS(status)) return;
-    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
-
-    ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+    {
+        ObDereferenceObject(ethread);
+        return;
+    }
 
     if (!(recv_queue = thread->queue))
     {
@@ -1804,8 +1806,11 @@ DECL_HANDLER(send_hardware_message)
         status = PsLookupThreadByThreadId((HANDLE)req->id, &ethread);
         if (!NT_SUCCESS(status)) return;
 
-        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
-        ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+        {
+            ObDereferenceObject(ethread);
+            return;
+        }
     }
 
     if (thread && !(recv_queue = thread->queue))
@@ -2113,10 +2118,11 @@ DECL_HANDLER(attach_thread_input)
     if (!NT_SUCCESS(status)) return;
 
     status = PsLookupThreadByThreadId((HANDLE)req->tid_to, &ethread_to);
-    if (!NT_SUCCESS(status)) return;
-
-    ObReferenceObjectByPointer(ethread_from, 0, NULL, KernelMode);
-    ObReferenceObjectByPointer(ethread_to, 0, NULL, KernelMode);
+    if (!NT_SUCCESS(status))
+    {
+        ObDereferenceObject(ethread_from);
+        return;
+    }
 
     thread_from = (PTHREADINFO)ethread_from->Tcb.Win32Thread;
     thread_to = (PTHREADINFO)ethread_to->Tcb.Win32Thread;
@@ -2157,9 +2163,11 @@ DECL_HANDLER(get_thread_input)
     {
         status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
         if (!NT_SUCCESS(status)) return;
-        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
-        ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
-
+        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+        {
+            ObDereferenceObject(ethread);
+            return;
+        }
         input = thread->queue ? thread->queue->input : NULL;
     }
     else input = foreground_input;  /* get the foreground thread info */
@@ -2200,8 +2208,11 @@ DECL_HANDLER(get_key_state)
 
     status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
     if (!NT_SUCCESS(status)) return;
-    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
-    ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+    {
+        ObDereferenceObject(ethread);
+        return;
+    }
 
     input = thread->queue ? thread->queue->input : NULL;
     if (input)
@@ -2223,8 +2234,11 @@ DECL_HANDLER(set_key_state)
 
     status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
     if (!NT_SUCCESS(status)) return;
-    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
-    ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+    {
+        ObDereferenceObject(ethread);
+        return;
+    }
 
     input = thread->queue ? thread->queue->input : NULL;
     if (input)

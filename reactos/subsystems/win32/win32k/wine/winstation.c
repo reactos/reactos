@@ -615,8 +615,11 @@ DECL_HANDLER(get_thread_desktop)
 
     status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
     if (!NT_SUCCESS(status)) return;
-    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread)) return;
-    ObReferenceObjectByPointer(ethread, 0, NULL, KernelMode);
+    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+    {
+        ObDereferenceObject(ethread);
+        return;
+    }
 
     reply->handle = thread->desktop;
 
