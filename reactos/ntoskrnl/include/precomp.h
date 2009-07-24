@@ -31,9 +31,6 @@
 /* FIXME: Temporary until Winldr is used */
 #include <rosldr.h>
 
-/* Disk Dump Driver Header */
-#include <diskdump/diskdump.h>
-
 /* C Headers */
 #include <stdlib.h>
 #include <stdio.h>
