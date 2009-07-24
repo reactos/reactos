@@ -249,18 +249,45 @@ static struct object_type *desktop_get_type( struct object *obj )
 
 static int desktop_close_handle( struct object *obj, PPROCESSINFO process, obj_handle_t handle )
 {
-#if 0
-    struct thread *thread;
+    PLIST_ENTRY ListHead, Entry;
+    PETHREAD FoundThread = NULL;
+    PTHREADINFO ThreadInfo;
 
     /* check if the handle is currently used by the process or one of its threads */
     if (process->desktop == handle) return 0;
-    LIST_FOR_EACH_ENTRY( thread, &process->thread_list, struct thread, proc_entry )
-        if (thread->desktop == handle) return 0;
+
+    // FIXME: This code relies on ETHREAD internals!
+
+    /* Lock the process */
+    KeEnterCriticalRegion();
+    ExfAcquirePushLockShared(&process->peProcess->ProcessLock);
+
+    Entry = process->peProcess->ThreadListHead.Flink;
+
+    ListHead = &process->peProcess->ThreadListHead;
+    while (ListHead != Entry)
+    {
+        /* Get the Thread */
+        FoundThread = CONTAINING_RECORD(Entry, ETHREAD, ThreadListEntry);
+        ThreadInfo = PsGetThreadWin32Thread(FoundThread);
+        if (ThreadInfo && ThreadInfo->desktop == handle)
+        {
+            /* Unlock the process */
+            ExfReleasePushLockShared(&process->peProcess->ProcessLock);
+            KeLeaveCriticalRegion();
+
+            return 0;
+        }
+
+        /* Go to the next thread */
+        Entry = Entry->Flink;
+    }
+
+    /* Unlock the process */
+    ExfReleasePushLockShared(&process->peProcess->ProcessLock);
+    KeLeaveCriticalRegion();
+
     return 1;
-#else
-    UNIMPLEMENTED;
-    return 1;
-#endif
 }
 
 static void desktop_destroy( struct object *obj )
@@ -306,6 +333,8 @@ void set_process_default_desktop( PPROCESSINFO process, struct desktop *desktop,
 
     if (!(old_desktop = get_desktop_obj( process, process->desktop, 0 ))) clear_error();
     process->desktop = handle;
+
+    // FIXME: This code relies on ETHREAD internals!
 
     /* Lock the process */
     KeEnterCriticalRegion();
