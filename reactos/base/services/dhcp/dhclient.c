@@ -129,8 +129,6 @@ static SERVICE_TABLE_ENTRY ServiceTable[2] =
 int
 main(int argc, char *argv[])
 {
-    int i = 0;
-    PDHCP_ADAPTER Adapter;
         ApiInit();
         AdapterInit();
         PipeInit();
@@ -144,31 +142,6 @@ main(int argc, char *argv[])
 	inaddr_any.s_addr = INADDR_ANY;
 
         DH_DbgPrint(MID_TRACE,("DHCP Service Started\n"));
-
-        for (Adapter = AdapterGetFirst();
-             Adapter != NULL;
-             Adapter = AdapterGetNext(Adapter))
-        {
-	   read_client_conf(&Adapter->DhclientInfo);
-
-	   if (!interface_link_status(Adapter->DhclientInfo.name)) {
-               DH_DbgPrint(MID_TRACE,("%s: no link ", Adapter->DhclientInfo.name));
-               Sleep(1000);
-               while (!interface_link_status(Adapter->DhclientInfo.name)) {
-                    DH_DbgPrint(MID_TRACE,("."));
-                    if (++i > 10) {
-                        DH_DbgPrint(MID_TRACE,("Giving up for now on adapter [%s]\n", Adapter->DhclientInfo.name));
-                    }
-                    Sleep(1000);
-               }
-               DH_DbgPrint(MID_TRACE,("Got link on [%s]\n", Adapter->DhclientInfo.name));
-	   }
-
-           DH_DbgPrint(MID_TRACE,("Discover Interfaces\n"));
-
-           /* set up the interface */
-           discover_interfaces(&Adapter->DhclientInfo);
-        }
 
 	bootp_packet_handler = do_packet;
 
@@ -611,8 +584,6 @@ bind_lease(struct interface_info *ip)
     else warning("Could not find adapter for info %p\n", ip);
 
     set_name_servers( Adapter, new_lease );
-
-    reinitialize_interfaces();
 }
 
 /*
@@ -1102,7 +1073,6 @@ state_panic(void *ipp)
                             note("bound: immediate renewal.");
                             state_bound(ip);
                         }
-                        reinitialize_interfaces();
                         return;
 		}
 
