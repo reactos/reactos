@@ -2,8 +2,6 @@
 #include <ntdddisk.h>
 #include <debug.h>
 
-#include <ccros.h>
-
 #define USE_ROS_CC_AND_FS
 
 #define ROUND_DOWN(n, align) \
