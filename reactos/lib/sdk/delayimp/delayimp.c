@@ -8,7 +8,7 @@
  */
 
 #include <windows.h>
-#include "delayimp.h"
+#include <delayimp.h>
 
 /**** load helper ****/
 
