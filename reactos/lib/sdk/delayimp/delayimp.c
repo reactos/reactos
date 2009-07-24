@@ -10,21 +10,6 @@
 #include <windows.h>
 #include "delayimp.h"
 
-inline
-unsigned
-IndexFromPImgThunkData(PCImgThunkData pData, PCImgThunkData pBase)
-{
-	return pData - pBase;
-}
-
-extern const IMAGE_DOS_HEADER _image_base__;
-
-inline PVOID
-PFromRva(RVA rva)
-{
-	return (PVOID)(((ULONG_PTR)(rva)) + ((ULONG_PTR)&_image_base__));
-}
-
 /**** load helper ****/
 
 FARPROC WINAPI

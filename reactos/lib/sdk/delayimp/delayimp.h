@@ -1,14 +1,15 @@
-#ifndef _DELAYIMP_H_
-#define _DELAYIMP_H_
+#ifndef _delayimp_h
+#define _delayimp_h
 
-typedef void *RVA;
+#define DELAYLOAD_VERSION 0x200
 
+typedef DWORD RVA;
 typedef IMAGE_THUNK_DATA *PImgThunkData;
 typedef const IMAGE_THUNK_DATA *PCImgThunkData;
 
-enum
+enum DLAttr
 {
-	dlattrRva
+	dlattrRva = 0x1,
 };
 
 /* Notification codes */
@@ -59,7 +60,24 @@ typedef struct DelayLoadInfo
 
 typedef FARPROC (WINAPI *PfnDliHook)(unsigned, PDelayLoadInfo);
 
+static __inline__
+unsigned
+IndexFromPImgThunkData(PCImgThunkData pData, PCImgThunkData pBase)
+{
+	return pData - pBase;
+}
+
+extern const IMAGE_DOS_HEADER __ImageBase;
+
+static __inline__
+PVOID
+PFromRva(RVA rva)
+{
+	return (PVOID)(((ULONG_PTR)(rva)) + ((ULONG_PTR)&__ImageBase));
+}
+
+
 extern PfnDliHook __pfnDliNotifyHook2;
 extern PfnDliHook __pfnDliFailureHook2;
 
-#endif /* not _DELAYIMP_H_ */
+#endif /* not _delayimp_h */
