@@ -40,7 +40,7 @@ static VOID
 NTAPI
 CmpFree (PVOID Ptr, IN ULONG Quota)
 {
-  return MmHeapFree(Ptr);
+  MmHeapFree(Ptr);
 }
 
 static BOOLEAN

@@ -110,12 +110,22 @@
 #include <bytesex.h>
 
 /* arch defines */
+#ifdef __GNUC__
 #ifdef _X86_
-#define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
+#define Ke386EraseFlags()     __asm__ __volatile__("pushl $0 ; popfl\n")
 #endif
 
 #ifdef _M_AMD64
-#define KeAmd64EraseFlags(x)     __asm__ __volatile__("pushq $0 ; popfq\n")
+#define KeAmd64EraseFlags()     __asm__ __volatile__("pushq $0 ; popfq\n")
+#endif
+#else
+#ifdef _X86_
+#define Ke386EraseFlags() __asm push 0; __asm popf;
+#endif
+
+#ifdef _M_AMD64
+#error FIXME
+#endif
 #endif
 
 VOID BootMain(LPSTR CmdLine);

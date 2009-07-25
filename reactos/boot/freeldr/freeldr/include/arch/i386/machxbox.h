@@ -29,8 +29,8 @@ UCHAR XboxFont8x16[256 * 16];
 VOID XboxMachInit(const char *CmdLine);
 
 VOID XboxConsPutChar(int Ch);
-BOOLEAN XboxConsKbHit();
-int XboxConsGetCh();
+BOOLEAN XboxConsKbHit(VOID);
+int XboxConsGetCh(VOID);
 
 VOID XboxVideoInit(VOID);
 VOID XboxVideoClearScreen(UCHAR Attr);

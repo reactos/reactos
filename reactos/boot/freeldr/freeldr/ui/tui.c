@@ -27,9 +27,9 @@ PVOID	TextVideoBuffer = NULL;
  */
 int TuiPrintf(const char *format, ... )
 {
+	char c, *ptr, str[16];
 	va_list ap;
 	va_start(ap,format);
-	char c, *ptr, str[16];
 
 	while ((c = *(format++)))
 	{

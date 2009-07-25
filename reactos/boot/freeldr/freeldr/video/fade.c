@@ -38,7 +38,10 @@ VOID VideoFadeIn(PPALETTE_ENTRY Palette, ULONG ColorCount)
 {
 	ULONG				Index;
 	ULONG				Color;
-	PALETTE_ENTRY	PaletteColors[ColorCount];
+	PPALETTE_ENTRY	PaletteColors;
+
+	PaletteColors = MmHeapAlloc(sizeof(PALETTE_ENTRY) * ColorCount);
+	if (!PaletteColors) return;
 
 	for (Index=0; Index<RGB_MAX; Index++)
 	{
