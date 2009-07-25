@@ -65,7 +65,7 @@ DrvMovePointer(
    IN LONG y,
    IN RECTL *prcl)
 {
-   return EngMovePointer(pso, x, y, prcl);
+   EngMovePointer(pso, x, y, prcl);
 }
 
 #else
