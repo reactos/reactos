@@ -63,7 +63,6 @@ int main( int argc, char **argv ) {
 
   free( WcharResult );
   free( CharResult );
-  free( ValueNameWC );
 
   return 0;
 }

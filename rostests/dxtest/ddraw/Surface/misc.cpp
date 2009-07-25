@@ -2,7 +2,7 @@ BOOL CreateSurface(LPDIRECTDRAWSURFACE7* pSurface);
 
 BOOL Test_Misc (INT* passed, INT* failed)
 {
-	LPDIRECTDRAWSURFACE7 Surface;
+    LPDIRECTDRAWSURFACE7 Surface;
     if(!CreateSurface(&Surface))
         return FALSE;
 
@@ -12,7 +12,7 @@ BOOL Test_Misc (INT* passed, INT* failed)
     DDSCAPS2 Caps;
     TEST (Surface->GetCaps((DDSCAPS2*)0xdeadbeef) == DDERR_INVALIDPARAMS);
     TEST (Surface->GetCaps(&Caps) == DD_OK && Caps.dwCaps == 0x10004040
-        && Caps.dwCaps2 == Caps.dwCaps3 == Caps.dwCaps4 == 0); // FIXME: Replace 0x10004040
+          && Caps.dwCaps2 == 0 && Caps.dwCaps3 == 0 && Caps.dwCaps4 == 0); // FIXME: Replace 0x10004040
 
     // GetDC / ReleaseDC
     HDC hdc;
