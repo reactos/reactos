@@ -1045,9 +1045,13 @@ PMMPFN
 MiGetPfnEntry(IN PFN_TYPE Pfn)
 {
     PMMPFN Page;
+    extern RTL_BITMAP MiPfnBitMap;
 
     /* Make sure the PFN number is valid */
     if (Pfn > MmHighestPhysicalPage) return NULL;
+    
+    /* Make sure this page actually has a PFN entry */
+    if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, Pfn))) return NULL;
 
     /* Get the entry */
     Page = &MmPfnDatabase[Pfn];

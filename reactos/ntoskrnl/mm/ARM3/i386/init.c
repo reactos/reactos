@@ -171,6 +171,20 @@ ULONG MmNumberOfSystemPtes;
 ULONG MxPfnAllocation;
 
 //
+// Unlike the old ReactOS Memory Manager, ARM³ (and Windows) does not keep track
+// of pages that are not actually valid physical memory, such as ACPI reserved
+// regions, BIOS address ranges, or holes in physical memory address space which
+// could indicate device-mapped I/O memory.
+//
+// In fact, the lack of a PFN entry for a page usually indicates that this is
+// I/O space instead.
+//
+// A bitmap, called the PFN bitmap, keeps track of all page frames by assigning
+// a bit to each. If the bit is set, then the page is valid physical RAM.
+//
+RTL_BITMAP MiPfnBitMap;
+
+//
 // This structure describes the different pieces of RAM-backed address space
 //
 PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
@@ -596,6 +610,9 @@ MmArmInitSystem(IN ULONG Phase,
     ULONG OldCount;
     BOOLEAN IncludeType[LoaderMaximum];
     ULONG i;
+    PVOID Bitmap;
+    PPHYSICAL_MEMORY_RUN Run;
+    PFN_NUMBER FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
     BoundaryAddressMultiple.QuadPart = 0;
     
     if (Phase == 0)
@@ -1108,9 +1125,138 @@ MmArmInitSystem(IN ULONG Phase,
         // Now go ahead and initialize the ARM³ nonpaged pool
         //
         MiInitializeArmPool();
+
+        //
+        // Get current page data, since we won't be using MxGetNextPage as it
+        // would corrupt our state
+        //
+        FreePage = MxFreeDescriptor->BasePage;
+        FreePageCount = MxFreeDescriptor->PageCount;
+        PagesLeft = 0;
+        
+        //
+        // Loop the memory descriptors
+        //
+        NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
+        while (NextEntry != &KeLoaderBlock->MemoryDescriptorListHead)
+        {
+            //
+            // Get the descriptor
+            //
+            MdBlock = CONTAINING_RECORD(NextEntry,
+                                        MEMORY_ALLOCATION_DESCRIPTOR,
+                                        ListEntry);
+            if ((MdBlock->MemoryType == LoaderFirmwarePermanent) ||
+                (MdBlock->MemoryType == LoaderBBTMemory) ||
+                (MdBlock->MemoryType == LoaderSpecialMemory))
+            {
+                //
+                // These pages are not part of the PFN database
+                //
+                NextEntry = MdBlock->ListEntry.Flink;
+                continue;
+            }
+            
+            //
+            // Next, check if this is our special free descriptor we've found
+            //
+            if (MdBlock == MxFreeDescriptor)
+            {
+                //
+                // Use the real numbers instead
+                //
+                BasePage = MxOldFreeDescriptor.BasePage;
+                PageCount = MxOldFreeDescriptor.PageCount;
+            }
+            else
+            {
+                //
+                // Use the descriptor's numbers
+                //
+                BasePage = MdBlock->BasePage;
+                PageCount = MdBlock->PageCount;
+            }
+            
+            //
+            // Get the PTEs for this range
+            //
+            PointerPte = MiAddressToPte(&MmPfnDatabase[BasePage]);
+            LastPte = MiAddressToPte(((ULONG_PTR)&MmPfnDatabase[BasePage + PageCount]) - 1);
+            DPRINT("MD Type: %lx Base: %lx Count: %lx\n", MdBlock->MemoryType, BasePage, PageCount);
+            
+            //
+            // Loop them
+            //
+            while (PointerPte <= LastPte)
+            {
+                //
+                // We'll only touch PTEs that aren't already valid
+                //
+                if (PointerPte->u.Hard.Valid == 0)
+                {
+                    //
+                    // Use the next free page
+                    //
+                    TempPte.u.Hard.PageFrameNumber = FreePage;
+                    ASSERT(FreePageCount != 0);
+                    
+                    //
+                    // Consume free pages
+                    //
+                    FreePage++;
+                    FreePageCount--;
+                    if (!FreePageCount)
+                    {
+                        //
+                        // Out of memory
+                        //
+                        KeBugCheckEx(INSTALL_MORE_MEMORY,
+                                     MmNumberOfPhysicalPages,
+                                     FreePageCount,
+                                     MxOldFreeDescriptor.PageCount,
+                                     1);
+                    }
+                    
+                    //
+                    // Write out this PTE
+                    //
+                    PagesLeft++;
+                    ASSERT(PointerPte->u.Hard.Valid == 0);
+                    ASSERT(TempPte.u.Hard.Valid == 1);
+                    *PointerPte = TempPte;
+                    
+                    //
+                    // Zero this page
+                    //
+                    RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
+                }
+                
+                //
+                // Next!
+                //
+                PointerPte++;
+            }
+            
+            //
+            // Do the next address range
+            //
+            NextEntry = MdBlock->ListEntry.Flink;
+        }
+        
+        //
+        // Now update the free descriptors to consume the pages we used up during
+        // the PFN allocation loop
+        //
+        MxFreeDescriptor->BasePage = FreePage;
+        MxFreeDescriptor->PageCount = FreePageCount;
     }
     else if (Phase == 1) // IN BETWEEN, THE PFN DATABASE IS NOW CREATED
-    {        
+    {
+        //
+        // Reset the descriptor back so we can create the correct memory blocks
+        //
+        *MxFreeDescriptor = MxOldFreeDescriptor;
+        
         //
         // Initialize the nonpaged pool
         //
@@ -1197,16 +1343,57 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MmPhysicalMemoryBlock = MmInitializeMemoryLimits(LoaderBlock,
                                                          IncludeType);
+         
+        //
+        // Allocate enough buffer for the PFN bitmap
+        // Align it up to a 32-bit boundary
+        //
+        Bitmap = ExAllocatePoolWithTag(NonPagedPool,
+                                       (((MmHighestPhysicalPage + 1) + 31) / 32) * 4,
+                                       '  mM');
+        if (!Bitmap)
+        {
+            //
+            // This is critical
+            //
+            KeBugCheckEx(INSTALL_MORE_MEMORY,
+                         MmNumberOfPhysicalPages,
+                         MmLowestPhysicalPage,
+                         MmHighestPhysicalPage,
+                         0x101);
+        }
+        
+        //
+        // Initialize it and clear all the bits to begin with
+        //
+        RtlInitializeBitMap(&MiPfnBitMap,
+                            Bitmap,
+                            MmHighestPhysicalPage + 1);
+        RtlClearAllBits(&MiPfnBitMap);
+        
+        //
+        // Loop physical memory runs
+        //
         for (i = 0; i < MmPhysicalMemoryBlock->NumberOfRuns; i++)
         {
             //
-            // Dump it for debugging
+            // Get the run
             //
-            PPHYSICAL_MEMORY_RUN Run;
             Run = &MmPhysicalMemoryBlock->Run[i];
             DPRINT("PHYSICAL RAM [0x%08p to 0x%08p]\n",
                    Run->BasePage << PAGE_SHIFT,
                    (Run->BasePage + Run->PageCount) << PAGE_SHIFT);
+
+            //
+            // Make sure it has pages inside it
+            //
+            if (Run->PageCount)
+            {
+                //
+                // Set the bits in the PFN bitmap
+                //
+                RtlSetBits(&MiPfnBitMap, Run->BasePage, Run->PageCount);
+            }
         }
         
         //
