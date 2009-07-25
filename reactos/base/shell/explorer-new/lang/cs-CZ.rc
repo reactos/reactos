@@ -1,6 +1,7 @@
-/* FILE:        shell/explorer-new/lang/cs-CZ.rc
+/*
+ * FILE:        base/shell/explorer-new/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-07-27
+ * UPDATED:     2009-07-15
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -10,7 +11,7 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM SEPARATOR
-        MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM "Spr·vce ˙loh", ID_SHELL_CMD_OPEN_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Uzamknout hlavnÌ panel", ID_LOCKTASKBAR
         MENUITEM "Vl&astnosti", ID_SHELL_CMD_PROPERTIES
@@ -61,17 +62,17 @@ END
 
 IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Taskbar"
+CAPTION "HlavnÌ panel"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Taskbar appearance", IDC_STATIC, 6,6,240,121, WS_DISABLED
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21, WS_DISABLED
-    AUTOCHECKBOX    "&Lock the taskbar", IDC_TASKBARPROP_LOCK, 13,45,200,10, WS_DISABLED
-    AUTOCHECKBOX    "A&uto-hide the taskbar", IDC_TASKBARPROP_HIDE, 13,58,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Keep the &taskbar on top of other windows", IDC_TASKBARPROP_ONTOP, 13,71,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Group similar taskbar buttons", IDC_TASKBARPROP_GROUP, 13,84,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Show &Quick Launch", IDC_TASKBARPROP_SHOWQL, 13,97,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Show window previews (thumbnails)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10, WS_DISABLED
+    GROUPBOX        "Vzhled hlavnÌho panelu", IDC_STATIC, 6,6,240,121
+    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
+    AUTOCHECKBOX    "Uzamknout &hlavnÌ panel", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX    "&Automaticky skt˝vat hlavnÌ panel", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX    "&Zobrazit hlavnÌ panel nad ostatnÌmi okny", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX    "&Seskupovat podobn· tlaËÌtka hlavnÌho panelu", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "Zobrazit &panel SnadnÈ spuötÏnÌ", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "Zobrazit &n·hledy oken", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -79,42 +80,42 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Start Menu"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    AUTORADIOBUTTON "&Start menu", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
-    LTEXT           "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_STATIC, 20,17,150,24, WS_DISABLED
-    PUSHBUTTON      "&Customize...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
-    AUTORADIOBUTTON "Classic Start &menu", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "This menu style gives you the classic look and functionality",-1,20,57,150,24, WS_DISABLED
-    PUSHBUTTON      "&Customize...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
-    GROUPBOX        "Privacy",IDC_STATIC, 7,100,238,42
-    AUTOCHECKBOX    "Store and display a list of recently opened &files", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
-    AUTOCHECKBOX    "Store and display a list of recently opened &programs",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+    AUTORADIOBUTTON "Start &menu", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
+    LTEXT           "Tento styl menu umoûÚuje snadn˝ p¯Ìstup ke sloûk·m, oblÌben˝m program˘m a vyhled·v·nÌ.", IDC_STATIC, 20,17,150,24, WS_DISABLED
+    PUSHBUTTON      "&Upravit...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
+    AUTORADIOBUTTON "&KlasickÈ Start menu", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
+    LTEXT           "Tento styl menu umoûÚuje pouûÌvat klasick˝ vzhled a funkce",-1,20,57,150,24, WS_DISABLED
+    PUSHBUTTON      "Up&ravit...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
+    GROUPBOX        "SoukromÌ",IDC_STATIC, 7,100,238,42
+    AUTOCHECKBOX    "Uloûit a zobrazit seznam naposledy otev¯en˝ch &soubor˘", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
+    AUTOCHECKBOX    "Uloûit a zobrazit seznam naposledy spuötÏn˝ch &program˘",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Notification Area"
+CAPTION "OznamovacÌ oblast"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
-    GROUPBOX        "Icons", IDC_STATIC, 6,33,240,58, WS_DISABLED
-    LTEXT           "You can keep the notification area uncluttered by hiding icons that you have not clicked recently.", IDC_STATIC, 13,48,223,16, WS_DISABLED
-    AUTOCHECKBOX    "&Hide inactive icons", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
-    PUSHBUTTON      "&Customize...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
-    GROUPBOX        "System icons", IDC_STATIC, 6,97,240,84, WS_DISABLED
-    LTEXT           "Select which system icons to always show.", IDC_STATIC, 13,112,223,16, WS_DISABLED
-    AUTOCHECKBOX    "Cloc&k", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Volume", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Network", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Power", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
+    GROUPBOX        "Ikony", IDC_STATIC, 6,33,240,58, WS_DISABLED
+    LTEXT           "P¯ehledost oznamovacÌ oblasti lze zachovat pomocÌ skrytÌ nepouûÌvan˝ch ikon.", IDC_STATIC, 13,48,223,16, WS_DISABLED
+    AUTOCHECKBOX    "Sk&r˝t neaktivnÌ ikony", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
+    PUSHBUTTON      "&Upravit...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
+    GROUPBOX        "SystÈmovÈ ikony", IDC_STATIC, 6,97,240,84, WS_DISABLED
+    LTEXT           "Vyberte systÈmovÈ ikony, kterÈ se majÌ vûdy zobrazit.", IDC_STATIC, 13,112,223,16, WS_DISABLED
+    AUTOCHECKBOX    "&Hodiny", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
+    AUTOCHECKBOX    "H&lasitost", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
+    AUTOCHECKBOX    "S&Ìù", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Nap·jenÌ", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
 
 END
 
 IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Toolbars"
+CAPTION "Panely n·stroj˘"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Select which toolbars to add to the taskbar.", IDC_STATIC, 7,7,223,12, WS_DISABLED
+    LTEXT           "Vyberte panely n·stroj˘, kterÈ majÌ b˝t p¯Ìd·ny na hlavnÌ panel.", IDC_STATIC, 7,7,223,12, WS_DISABLED
     CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
 END
 
@@ -129,5 +130,5 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Taskbar and Start Menu Properties"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Vlastnosti hlavnÌho panelu a Start menu"
 END

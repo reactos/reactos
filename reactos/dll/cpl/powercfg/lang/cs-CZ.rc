@@ -36,40 +36,40 @@ END
 
 IDD_PROPPAGEALARMS DIALOGEX DISCARDABLE  0, 0, 250, 220
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Alarms"
+CAPTION "Varování"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Low battery alarm",-1,10,15,235,95
-    CONTROL         "Activate &low battery alarm when power level reaches:",IDC_ALARM1,
+    GROUPBOX        "Varování o nízkém stavu baterie",-1,10,15,235,95
+    CONTROL         "Aktivovat &varování o nízkém stavu baterie, když úroveò nabití dosáhne:",IDC_ALARM1,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
-    LTEXT           "unknown",IDC_ALARMVALUE1,200,25,40,10
+    LTEXT           "neznámá",IDC_ALARMVALUE1,200,25,40,10
     LTEXT           "0%",-1,20,40,15,15
     CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
-    PUSHBUTTON      "Alar&m Action...",-1,20,70,70,15,WS_DISABLED
-    LTEXT           "Notification:",-1,95,70,50,10
-    LTEXT           "Unknown",IDC_ALARMMSG1,145,70,95,10
-    LTEXT           "Action:",-1,95,80,45,10
-    LTEXT           "Unknown",IDC_ALARMAKTION1,145,80,95,10
-    LTEXT           "Run Program:",-1,95,90,50,10
-    LTEXT           "Unknown",IDC_ALARMPROG1,150,90,40,10
+    PUSHBUTTON      "&Akce pøi varování...",-1,20,70,70,15,WS_DISABLED
+    LTEXT           "Oznámení:",-1,95,70,50,10
+    LTEXT           "Neznámé",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Akce:",-1,95,80,45,10
+    LTEXT           "Neznámá",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Spustit program:",-1,95,90,50,10
+    LTEXT           "Neznámý",IDC_ALARMPROG1,150,90,40,10
 
-    GROUPBOX        "Critical battery alarm",-1,10,115,235,95
-    CONTROL         "Activate &low battery alarm when power level reaches:",IDC_ALARM2,
+    GROUPBOX        "Varování o kritickém stavu baterie",-1,10,115,235,95
+    CONTROL         "Aktivovat varování o &kritickém stavu baterie, když úroveò nabití dosáhne:",IDC_ALARM2,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
-    LTEXT           "unknown",IDC_ALARMVALUE2,200,125,40,10
+    LTEXT           "neznámá",IDC_ALARMVALUE2,200,125,40,10
     LTEXT           "0%",-1,20,140,15,15
     CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
-    PUSHBUTTON      "Alar&m Action...",-1,20,170,70,15,WS_DISABLED
-    LTEXT           "Notification:",-1,95,170,50,10
-    LTEXT           "Unknown",IDC_ALARMMSG2,145,170,95,10
-    LTEXT           "Action:",-1,95,180,45,10
-    LTEXT           "Unknown",IDC_ALARMAKTION2,145,180,95,10
-    LTEXT           "Run Program:",-1,95,190,50,10
-    LTEXT           "Unknown",IDC_ALARMPROG2,150,190,40,10
+    PUSHBUTTON      "Akce &pøi varování...",-1,20,170,70,15,WS_DISABLED
+    LTEXT           "Oznámení:",-1,95,170,50,10
+    LTEXT           "Neznámé",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Akce:",-1,95,180,45,10
+    LTEXT           "Neznámá",IDC_ALARMAKTION2,145,180,95,10
+    LTEXT           "Spustit program:",-1,95,190,50,10
+    LTEXT           "Neznámý",IDC_ALARMPROG2,150,190,40,10
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX DISCARDABLE  0, 0, 250, 220
@@ -130,7 +130,7 @@ BEGIN
   IDS_SIZEBYTS "%i bytù"
   IDS_SIZEMB "%i MB"
 
-  IDS_NOACTION "Nedìlej nic"
+  IDS_NOACTION "Nedìlat nic"
 
   IDS_PowerActionNone1 "Žádná akce"
   IDS_PowerActionUnknown "Neznámý"
@@ -159,8 +159,8 @@ BEGIN
   IDS_TIMEOUT15 "Po 5 hodinách"
   IDS_TIMEOUT16 "Nikdy"
 
-  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
-  IDS_DEL_SCHEME_TITLE "Delete Scheme"
+  IDS_DEL_SCHEME "Urèitì chcete vymazat toto schéma napájení?"
+  IDS_DEL_SCHEME_TITLE "Smazat schéma"
 END
 
 
