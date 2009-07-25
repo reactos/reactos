@@ -63,7 +63,7 @@ void (*bootp_packet_handler)(struct interface_info *,
 void
 dispatch(void)
 {
-    int count, i, to_msec, nfds;
+    int count, i, to_msec, nfds, err;
     struct protocol *l;
     fd_set fds;
     time_t howlong, cur_time;
@@ -122,10 +122,9 @@ dispatch(void)
         }
 
         if (i == 0) {
-            /* No interfaces for now, set the select timeout reasonably so
-             * we can recover from that condition later. */
-            timeval.tv_sec = 5;
-            timeval.tv_usec = 0;
+            /* Wait for 5 seconds before looking for more interfaces */
+            Sleep(5000);
+            continue;
         } else {
             /* Wait for a packet or a timeout... XXX */
             timeval.tv_sec = to_msec / 1000;
@@ -156,12 +155,9 @@ dispatch(void)
 
         /* Not likely to be transitory... */
         if (count == SOCKET_ERROR) {
-            if (errno == EAGAIN || errno == EINTR) {
-                continue;
-            } else {
-                error("poll: %s", strerror(errno));
-                break;
-            }
+            err = WSAGetLastError();
+            error("poll: %d", err);
+            break;
         }
 
         i = 0;
