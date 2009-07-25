@@ -1206,8 +1206,8 @@ FindMatchingCreateItem(
     return STATUS_NOT_FOUND;
 }
 
-NTAPI
 NTSTATUS
+NTAPI
 KspCreate(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -1390,8 +1390,8 @@ RosDeviceInterfaceReferenceStringHack(
 
 }
 
-NTAPI
 NTSTATUS
+NTAPI
 KspDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -1425,8 +1425,8 @@ KspDeviceControl(
     return ObjectHeader->DispatchTable.DeviceIoControl(DeviceObject, Irp);
 }
 
-NTAPI
 NTSTATUS
+NTAPI
 KspDispatchIrp(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)

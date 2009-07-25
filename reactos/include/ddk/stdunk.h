@@ -94,20 +94,20 @@ class CUnknown : public INonDelegatingUnknown
 
 #else   /* Not C++ - this is probably very buggy... */
 
-STDMETHODCALLTYPE
 NTSTATUS
+STDMETHODCALLTYPE
 Unknown_QueryInterface(
     IUnknown* this,
     IN  REFIID refiid,
     OUT PVOID* output);
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 Unknown_AddRef(
     IUnknown* unknown_this);
 
-STDMETHODCALLTYPE
 ULONG
+STDMETHODCALLTYPE
 Unknown_Release(
     IUnknown* unknown_this);
 

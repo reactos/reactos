@@ -26,11 +26,6 @@
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define TAG_PORTCLASS TAG('P', 'C', 'L', 'S')
 
-#ifdef _MSC_VER
-  #define STDCALL
-  #define DDKAPI
-#endif
-
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 NTSTATUS

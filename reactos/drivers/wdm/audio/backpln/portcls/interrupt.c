@@ -154,8 +154,8 @@ IInterruptSync_fnCallSynchronizedRoutine(
         return STATUS_UNSUCCESSFUL;
 }
 
-NTAPI
 PKINTERRUPT
+NTAPI
 IInterruptSync_fnGetKInterrupt(
     IN IInterruptSync * iface)
 {

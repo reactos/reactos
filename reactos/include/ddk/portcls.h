@@ -239,7 +239,7 @@ struct _PCPROPERTY_REQUEST;
 
 typedef struct _PCPROPERTY_REQUEST PCPROPERTY_REQUEST, *PPCPROPERTY_REQUEST;
 
-typedef NTSTATUS NTAPI(*PCPFNPROPERTY_HANDLER)(
+typedef NTSTATUS (NTAPI *PCPFNPROPERTY_HANDLER)(
     IN  PPCPROPERTY_REQUEST PropertyRequest);
 
 typedef struct
@@ -281,7 +281,7 @@ struct _PCPROPERTY_REQUEST
 
 struct _PCEVENT_REQUEST;
 
-typedef NTSTATUS NTAPI(*PCPFNEVENT_HANDLER)(
+typedef NTSTATUS (NTAPI *PCPFNEVENT_HANDLER)(
     IN  struct _PCEVENT_REQUEST* EventRequest);
 
 typedef struct _PCEVENT_ITEM
@@ -307,7 +307,7 @@ typedef struct _PCEVENT_REQUEST
 
 struct _PCMETHOD_REQUEST;
 
-typedef NTSTATUS NTAPI(*PCPFNMETHOD_HANDLER)(
+typedef NTSTATUS (NTAPI *PCPFNMETHOD_HANDLER)(
     IN  struct _PCMETHOD_REQUEST* MethodRequest);
 
 typedef struct _PCMETHOD_ITEM
@@ -834,7 +834,7 @@ typedef enum
 
 struct IInterruptSync;
 
-typedef NTSTATUS NTAPI(*PINTERRUPTSYNCROUTINE)(
+typedef NTSTATUS (NTAPI *PINTERRUPTSYNCROUTINE)(
     IN  struct IInterruptSync* InterruptSync,
     IN  PVOID DynamicContext);
 
@@ -2048,7 +2048,7 @@ typedef IPortClsVersion *PPORTCLSVERSION;
     PortCls API Functions
 */
 
-typedef NTSTATUS NTAPI(*PCPFNSTARTDEVICE)(
+typedef NTSTATUS (NTAPI *PCPFNSTARTDEVICE)(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp,
     IN  PRESOURCELIST ResourceList);
