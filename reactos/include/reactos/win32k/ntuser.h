@@ -263,7 +263,6 @@ typedef struct _WND
              eventually replace WINDOW_OBJECT. Right now WINDOW_OBJECT
              keeps a reference to this structure until all the information
              is moved to this structure */
-    struct _PROCESSINFO *pi; // head.pti->ppi
     struct _W32THREADINFO *pti; // head.pti
     struct _DESKTOP *rpdesk; // head.rpdesk
 
@@ -380,8 +379,7 @@ typedef struct _PFNCLIENTWORKER
     WNDPROC_EX pfnCtfHookProc;
 } PFNCLIENTWORKER, *PPFNCLIENTWORKER;
 
-struct _WND;
-typedef LONG_PTR (NTAPI *PFN_FNID)(struct _WND*, UINT, WPARAM, LPARAM, ULONG_PTR);
+typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 
 // FNID's for NtUserSetWindowFNID, NtUserMessageCall
 #define FNID_FIRST                  0x029A

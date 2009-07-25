@@ -1673,7 +1673,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        Wnd = Window->Wnd;
 
        Wnd->pti = ti;
-       Wnd->pi = ti->ppi;
        Wnd->rpdesk = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
    }
