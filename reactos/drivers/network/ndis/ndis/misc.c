@@ -462,8 +462,8 @@ ndisProcWorkItemHandler(PVOID pContext)
     pNdisItem->Routine(pNdisItem, pNdisItem->Context);
 }
 
-EXPORT
 NDIS_STATUS
+EXPORT
 NdisScheduleWorkItem(
     IN PNDIS_WORK_ITEM  pWorkItem)
 {
