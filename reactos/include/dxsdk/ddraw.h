@@ -8,8 +8,8 @@
 #include <objbase.h>
 #else
 #define IUnknown void
-#if !defined(NT_BUILD_ENVIRONMENT) && !defined(_WINNT_H)
-        #define CO_E_NOTINITIALIZED 0x800401F0L
+#if !defined(NT_BUILD_ENVIRONMENT) && !defined(WINNT)
+        #define CO_E_NOTINITIALIZED 0x800401F0
 #endif
 #endif
 
@@ -37,7 +37,7 @@
   #endif
 #endif
 
-#if defined(_WINNT_H) || !defined(WIN32)
+#if defined(WINNT) || !defined(WIN32)
 #ifndef _HRESULT_DEFINED
 #define _HRESULT_DEFINED
   typedef long HRESULT;
