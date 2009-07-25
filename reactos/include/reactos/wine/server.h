@@ -58,6 +58,8 @@ extern void CDECL wine_server_release_fd( HANDLE handle, int unix_fd );
 /* do a server call and set the last error code */
 static inline unsigned int wine_server_call_err( void *req_ptr )
 {
+    NTSYSAPI ULONG NTAPI RtlNtStatusToDosError(IN NTSTATUS Status);
+
     unsigned int res = wine_server_call( req_ptr );
     if (res) SetLastError( RtlNtStatusToDosError(res) );
     return res;
