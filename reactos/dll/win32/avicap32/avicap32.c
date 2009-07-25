@@ -6,29 +6,14 @@
  */
 
 #include <windows.h>
+#include <winternl.h>
 #include <vfw.h>
 
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(avicap32);
+#define CAP_DESC_MAX 32
 
-/*
- * unimplemented
- */
-HWND
-VFWAPI
-capCreateCaptureWindowA(LPCSTR lpszWindowName,
-                        DWORD dwStyle,
-                        INT x,
-                        INT y,
-                        INT nWidth,
-                        INT nHeight,
-                        HWND hWnd,
-                        INT nID)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
+WINE_DEFAULT_DEBUG_CHANNEL(avicap32);
 
 
 /*
@@ -49,20 +34,38 @@ capCreateCaptureWindowW(LPCWSTR lpszWindowName,
     return NULL;
 }
 
-
 /*
- * unimplemented
+ * implemented
  */
-BOOL
+HWND
 VFWAPI
-capGetDriverDescriptionA(WORD wDriverIndex,
-                         LPSTR lpszName,
-                         INT cbName,
-                         LPSTR lpszVer,
-                         INT cbVer)
+capCreateCaptureWindowA(LPCSTR lpszWindowName,
+                        DWORD dwStyle,
+                        INT x,
+                        INT y,
+                        INT nWidth,
+                        INT nHeight,
+                        HWND hWnd,
+                        INT nID)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    UNICODE_STRING Name;
+    HWND Wnd;
+
+    if (lpszWindowName)
+        RtlCreateUnicodeStringFromAsciiz(&Name, lpszWindowName);
+    else
+        Name.Buffer = NULL;
+
+    Wnd = capCreateCaptureWindowW(Name.Buffer,
+                                  dwStyle,
+                                  x, y,
+                                  nWidth,
+                                  nHeight,
+                                  hWnd,
+                                  nID);
+
+    RtlFreeUnicodeString(&Name);
+    return Wnd;
 }
 
 
@@ -79,6 +82,31 @@ capGetDriverDescriptionW(WORD wDriverIndex,
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+
+/*
+ * implemented
+ */
+BOOL
+VFWAPI
+capGetDriverDescriptionA(WORD wDriverIndex,
+                         LPSTR lpszName,
+                         INT cbName,
+                         LPSTR lpszVer,
+                         INT cbVer)
+{
+    WCHAR DevName[CAP_DESC_MAX], DevVer[CAP_DESC_MAX];
+    BOOL Result;
+
+    Result = capGetDriverDescriptionW(wDriverIndex, DevName, CAP_DESC_MAX, DevVer, CAP_DESC_MAX);
+    if (Result)
+    {
+        WideCharToMultiByte(CP_ACP, 0, DevName, -1, lpszName, cbName, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, DevVer, -1, lpszVer, cbVer, NULL, NULL);
+    }
+
+    return Result;
 }
 
 
