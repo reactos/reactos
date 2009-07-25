@@ -256,6 +256,7 @@ dll\win32\advpack\advpack.dll                       1
 dll\win32\actxprxy\actxprxy.dll                     1
 dll\win32\atl\atl.dll                               1
 dll\win32\authz\authz.dll                           1
+dll\win32\avicap32\avicap32.dll                     1
 dll\win32\avifil32\avifil32.dll                     1
 dll\win32\beepmidi\beepmidi.dll                     1
 dll\win32\browseui\browseui.dll                     1
@@ -659,6 +660,10 @@ subsystems\win32\win32k\win32k.sys                  1
 modules\optional\kvmnet.inf                         6  optional
 modules\optional\kvmnet.sys                         2  optional
 modules\optional\mfc42.dll                          1  optional
+modules\optional\mfc42u.dll                         1  optional
+modules\optional\msvbvm50.dll                       1  optional
+modules\optional\msvbvm60.dll                       1  optional
+modules\optional\msvcirt.dll                        1  optional
 modules\optional\Systema.ttf                        3  optional
 modules\optional\vmx_fb.dll                         1  optional
 modules\optional\vmx_mode.dll                       1  optional
