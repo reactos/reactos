@@ -108,7 +108,7 @@ GetThreadDesktopInfo(VOID)
     return di;
 }
 
-PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
+PCALLPROCDATA FASTCALL ValidateCallProc(HANDLE hCallProc);
 PWND FASTCALL ValidateHwnd(HWND hwnd);
 PWND FASTCALL ValidateHwndOrDesk(HWND hwnd);
 PWND FASTCALL GetThreadDesktopWnd(VOID);

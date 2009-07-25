@@ -329,12 +329,12 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
    {
        Wnd->strName.Length = 0;
        Wnd->strName.MaximumLength = 0;
-       DesktopHeapFree(Wnd->pdesktop,
+       DesktopHeapFree(Wnd->rpdesk,
                        Wnd->strName.Buffer);
        Wnd->strName.Buffer = NULL;
    }
 
-    DesktopHeapFree(Wnd->pdesktop, Wnd);
+    DesktopHeapFree(Wnd->rpdesk, Wnd);
     WindowObject->Wnd = NULL;
 }
 
@@ -562,17 +562,17 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
                on a function that I thought is only suppose to return the current Windows Proc? */
             else
             {
-                PCALLPROC NewCallProc, CallProc;
+                PCALLPROCDATA NewCallProc, CallProc;
 
                 NewCallProc = UserFindCallProc(Wnd->pcls,
                                                Wnd->lpfnWndProc,
                                                Wnd->Unicode);
                 if (NewCallProc == NULL)
                 {
-                    NewCallProc = CreateCallProc(Wnd->ti->pDeskInfo,
+                    NewCallProc = CreateCallProc(Wnd->pti->pDeskInfo,
                                                  Wnd->lpfnWndProc,
                                                  Wnd->Unicode,
-                                                 Wnd->ti->ppi);
+                                                 Wnd->pti->ppi);
                     if (NewCallProc == NULL)
                     {
                         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -1672,9 +1672,9 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        Window->Wnd->hdr.Handle = hWnd; /* FIXME: Remove hack , are you sure?*/
        Wnd = Window->Wnd;
 
-       Wnd->ti = ti;
+       Wnd->pti = ti;
        Wnd->pi = ti->ppi;
-       Wnd->pdesktop = pti->Desktop;
+       Wnd->rpdesk = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
    }
 
@@ -1770,7 +1770,7 @@ AllocErr:
 
    if ( NULL != WindowName->Buffer && WindowName->Length > 0 )
    {
-      Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
+      Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->rpdesk,
                                                 WindowName->Length + sizeof(UNICODE_NULL));
       if (Wnd->strName.Buffer == NULL)
       {
@@ -2239,9 +2239,9 @@ AllocErr:
       Dont understand why it does this. */
    if (ClassAtom == gpsi->atomSysClass[ICLS_EDIT])
    {
-      PCALLPROC CallProc;
+      PCALLPROCDATA CallProc;
       //CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, bUnicodeWindow, Wnd->ti->ppi);
-      CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, Wnd->Unicode , Wnd->ti->ppi);
+      CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, Wnd->Unicode , Wnd->pti->ppi);
 
       if (!CallProc)
       {
@@ -3693,7 +3693,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                  BOOL Ansi)
 {
     WNDPROC Ret;
-    PCALLPROC CallProc;
+    PCALLPROCDATA CallProc;
     PWND Wnd = Window->Wnd;
 
     /* resolve any callproc handle if possible */
@@ -3730,7 +3730,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                 CallProc = CreateCallProc(NULL,
                                           Wnd->lpfnWndProc,
                                           Wnd->Unicode,
-                                          Wnd->ti->ppi);
+                                          Wnd->pti->ppi);
                 if (CallProc == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -4820,10 +4820,10 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
          Wnd->strName.Buffer = NULL;
          if (buf != NULL)
          {
-            DesktopHeapFree(Wnd->pdesktop, buf);
+            DesktopHeapFree(Wnd->rpdesk, buf);
          }
 
-         Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->pdesktop,
+         Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->rpdesk,
                                                    UnicodeString.Length + sizeof(UNICODE_NULL));
          if (Wnd->strName.Buffer != NULL)
          {

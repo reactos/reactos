@@ -270,7 +270,7 @@ BOOL
 FASTCALL
 TestWindowProcess(PWND Wnd)
 {
-   if (Wnd->ti == (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
+   if (Wnd->pti == (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
       return TRUE;
    else
       return (NtUserQueryWindow(Wnd->hdr.Handle, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
@@ -426,15 +426,20 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
 //
 // Validate a callproc handle and return the pointer to the object.
 //
-PCALLPROC
+PCALLPROCDATA
 FASTCALL
 ValidateCallProc(HANDLE hCallProc)
 {
-    PCALLPROC CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
-    if (CallProc != NULL && CallProc->pi == g_ppi)
-        return CallProc;
+  PUSER_HANDLE_ENTRY pEntry;
 
-    return NULL;
+  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
+
+  pEntry = GetUser32Handle(hCallProc);
+
+  if (CallProc != NULL && pEntry->ppi == g_ppi)
+     return CallProc;
+
+  return NULL;
 }
 
 //

@@ -418,7 +418,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    // Window nz, check to see if we still own this or it is just cheap wine tonight.
    if (!(Flags & DCX_CACHE))
    {
-      if ( Wnd->ti != GetW32ThreadInfo())
+      if ( Wnd->pti != GetW32ThreadInfo())
          Flags |= DCX_CACHE; // Ah~ Not Powned! Forced to be cheap~
    }
 

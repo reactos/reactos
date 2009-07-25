@@ -27,7 +27,7 @@
 #define NDEBUG
 #include <debug.h>
 
-int usedHandles=0;
+//int usedHandles=0;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 
 
@@ -55,14 +55,14 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
 
-   DPRINT("handles used %i\n",usedHandles);
+   DPRINT("handles used %i\n",gpsi->cHandleEntries);
 
    if (ht->freelist)
    {
       entry = ht->freelist;
       ht->freelist = entry->ptr;
 
-      usedHandles++;
+      gpsi->cHandleEntries++;
       return entry;
    }
 
@@ -72,7 +72,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
       int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0,
           iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0, iTimer = 0;
  /**/
-      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", usedHandles, ht->nb_handles);
+      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", gpsi->cHandleEntries, ht->nb_handles);
 //#if 0
       for(i = 0; i < ht->nb_handles; i++)
       {
@@ -131,7 +131,7 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 
    entry->generation = 1;
 
-   usedHandles++;
+   gpsi->cHandleEntries++;
 
    return entry;
 }
@@ -154,7 +154,7 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    entry->pi = NULL;
    ht->freelist  = entry;
 
-   usedHandles--;
+   gpsi->cHandleEntries--;
 
    return ret;
 }
@@ -387,7 +387,7 @@ BOOL FASTCALL UserDereferenceObject(PVOID obj)
 
    if (hdr->RefCount == 0 && hdr->destroyed)
    {
-//      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",usedHandles);
+//      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",gpsi->cHandleEntries);
 
       memset(hdr, 0x55, sizeof(USER_OBJECT_HEADER));
 

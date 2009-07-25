@@ -80,15 +80,15 @@ IntDestroyClass(IN OUT PCLS Class)
 
     if (Class->pclsBase == Class)
     {
-        PCALLPROC CallProc, NextCallProc;
+        PCALLPROCDATA CallProc, NextCallProc;
 
         /* Destroy allocated callproc handles */
         CallProc = Class->spcpdFirst;
         while (CallProc != NULL)
         {
-            NextCallProc = CallProc->Next;
+            NextCallProc = CallProc->spcpdNext;
 
-            CallProc->Next = NULL;
+            CallProc->spcpdNext = NULL;
             DestroyCallProc(NULL,
                             CallProc);
 
@@ -211,23 +211,23 @@ IntDeregisterClassAtom(IN RTL_ATOM Atom)
                                       Atom);
 }
 
-PCALLPROC
+PCALLPROCDATA
 UserFindCallProc(IN PCLS Class,
                  IN WNDPROC WndProc,
                  IN BOOL bUnicode)
 {
-    PCALLPROC CallProc;
+    PCALLPROCDATA CallProc;
 
     CallProc = Class->spcpdFirst;
     while (CallProc != NULL)
     {
-        if (CallProc->WndProc == WndProc &&
+        if (CallProc->pfnClientPrevious == WndProc &&
             CallProc->Unicode == (UINT)bUnicode)
         {
             return CallProc;
         }
 
-        CallProc = CallProc->Next;
+        CallProc = CallProc->spcpdNext;
     }
 
     return NULL;
@@ -235,15 +235,15 @@ UserFindCallProc(IN PCLS Class,
 
 VOID
 UserAddCallProcToClass(IN OUT PCLS Class,
-                       IN PCALLPROC CallProc)
+                       IN PCALLPROCDATA CallProc)
 {
     PCLS BaseClass;
 
-    ASSERT(CallProc->Next == NULL);
+    ASSERT(CallProc->spcpdNext == NULL);
 
     BaseClass = Class->pclsBase;
-    ASSERT(CallProc->Next == NULL);
-    CallProc->Next = BaseClass->spcpdFirst;
+    ASSERT(CallProc->spcpdNext == NULL);
+    CallProc->spcpdNext = BaseClass->spcpdFirst;
     BaseClass->spcpdFirst = CallProc;
 
     /* Update all clones */
@@ -289,21 +289,22 @@ IntSetClassAtom(IN OUT PCLS Class,
 static WNDPROC
 IntGetClassWndProc(IN PCLS Class,
                    IN PPROCESSINFO pi,
-                   IN BOOL Ansi)
+                   IN BOOL Ansi) // This is what we are looking for?!?
 {
     ASSERT(UserIsEnteredExclusive() == TRUE);
-
+    /* System Classes */
     if (Class->System)
     {
+       // FIXME! System class have gpsi->apfnClientA/W to pick from.
         return (Ansi ? Class->WndProcExtra : Class->lpfnWndProc);
     }
-    else
-    {
+    else 
+    {   /* Unicode Proc */
         if (!Ansi == Class->Unicode)
         {
             return Class->lpfnWndProc;
         }
-        else
+        else // Ansi?
         {
             PCLS BaseClass;
 
@@ -318,7 +319,7 @@ IntGetClassWndProc(IN PCLS Class,
             }
             else
             {
-                PCALLPROC NewCallProc;
+                PCALLPROCDATA NewCallProc;
 
                 if (pi == NULL)
                     return NULL;

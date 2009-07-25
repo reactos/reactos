@@ -272,18 +272,6 @@ NtUserGetControlColor(
 
 DWORD
 APIENTRY
-NtUserGetCPD(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-APIENTRY
 NtUserGetImeHotKey(
    DWORD Unknown0,
    DWORD Unknown1,

@@ -1118,8 +1118,8 @@ NtUserCreateDesktop(
    RtlZeroMemory(&WindowName, sizeof(WindowName));
 
    wc.cbSize = sizeof(wc);
-   wc.style = CS_DBLCLKS|CS_PARENTDC;
-   wc.lpfnWndProc = gpsi->apfnClientW.pfnDesktopWndProc; // Use User32 Desktop Proc.
+   wc.style = 0;
+   wc.lpfnWndProc = gpsi->apfnClientW.pfnDesktopWndProc; // Use pfnMessageWindowProc
    wc.cbClsExtra = 0;
    wc.cbWndExtra = 0;
    wc.hInstance = hModClient;

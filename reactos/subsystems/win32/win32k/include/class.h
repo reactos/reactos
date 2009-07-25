@@ -21,17 +21,17 @@ IsCallProcHandle(IN WNDPROC lpWndProc)
 }
 
 WNDPROC
-GetCallProcHandle(IN PCALLPROC CallProc);
+GetCallProcHandle(IN PCALLPROCDATA CallProc);
 
 VOID
 DestroyCallProc(IN PDESKTOPINFO Desktop,
-                IN OUT PCALLPROC CallProc);
+                IN OUT PCALLPROCDATA CallProc);
 
-PCALLPROC
+PCALLPROCDATA
 CloneCallProc(IN PDESKTOPINFO Desktop,
-              IN PCALLPROC CallProc);
+              IN PCALLPROCDATA CallProc);
 
-PCALLPROC
+PCALLPROCDATA
 CreateCallProc(IN PDESKTOPINFO Desktop,
                IN WNDPROC WndProc,
                IN BOOL Unicode,
@@ -87,7 +87,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PDESKTOP Desktop,
                IN PPROCESSINFO pi);
 
-PCALLPROC
+PCALLPROCDATA
 UserFindCallProc(IN PCLS Class,
                  IN WNDPROC WndProc,
                  IN BOOL bUnicode);
@@ -98,7 +98,7 @@ UserRegisterSystemClasses(IN ULONG Count,
 
 VOID
 UserAddCallProcToClass(IN OUT PCLS Class,
-                       IN PCALLPROC CallProc);
+                       IN PCALLPROCDATA CallProc);
 
 BOOL
 IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,

@@ -3,6 +3,7 @@
 
 typedef struct _PROCESSINFO *PPROCESSINFO;
 struct _W32THREADINFO;
+struct _DESKTOP;
 struct _WND;
 
 typedef struct _LARGE_UNICODE_STRING
@@ -89,14 +90,29 @@ typedef struct _DESKTOPINFO
     WCHAR szDesktopName[1];
 } DESKTOPINFO, *PDESKTOPINFO;
 
-typedef struct _CALLPROC
+typedef enum _GETCPD
 {
+    UserGetCPDU2A      = 0x01,
+    UserGetCPDA2U      = 0X02,
+    UserGetCPDClass    = 0X10,
+    UserGetCPDWindow   = 0X20,
+    UserGetCPDDialog   = 0X40,
+    UserGetCPDWndtoCls = 0X80
+} GETCPD, *PGETCPD;
+
+typedef struct _CALLPROCDATA
+{
+//    PROCDESKHEAD head; // Use this once new handle manager is implemented!!!
     USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
-    struct _PROCESSINFO *pi;
-    WNDPROC WndProc;
-    struct _CALLPROC *Next;
-    UINT Unicode : 1;
-} CALLPROC, *PCALLPROC;
+//
+    struct _CALLPROCDATA *spcpdNext;
+    WNDPROC pfnClientPrevious;
+    union
+    {
+       GETCPD wType;
+       UINT Unicode : 1;
+    };
+} CALLPROCDATA, *PCALLPROCDATA;
 
 #define CSF_SERVERSIDEPROC      0x0001
 #define CSF_ANSIPROC            0x0002
@@ -118,7 +134,7 @@ typedef struct _CLS
     DWORD CSF_flags;
     PSTR  lpszClientAnsiMenuName;    // For client use
     PWSTR lpszClientUnicodeMenuName; // "   "      "
-    PCALLPROC spcpdFirst;
+    PCALLPROCDATA spcpdFirst;
     struct _CLS *pclsBase;
     struct _CLS *pclsClone;
     ULONG cWndReferenceCount;
@@ -127,7 +143,7 @@ typedef struct _CLS
     union
     {
         WNDPROC WndProcExtra;
-        PCALLPROC CallProc;
+        PCALLPROCDATA CallProc;
     };
     INT cbclsExtra;
     INT cbwndExtra;
@@ -241,14 +257,15 @@ typedef struct _CLS
 
 typedef struct _WND
 {
+    //THRDESKHEAD head; // head.h == handle
     USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
     /* NOTE: This structure is located in the desktop heap and will
              eventually replace WINDOW_OBJECT. Right now WINDOW_OBJECT
              keeps a reference to this structure until all the information
              is moved to this structure */
-    struct _PROCESSINFO *pi; /* FIXME: Move to object header some day */
-    struct _W32THREADINFO *ti;
-    struct _DESKTOP *pdesktop;
+    struct _PROCESSINFO *pi; // head.pti->ppi
+    struct _W32THREADINFO *pti; // head.pti
+    struct _DESKTOP *rpdesk; // head.rpdesk
 
     DWORD state;
     DWORD state2;
@@ -270,7 +287,7 @@ typedef struct _WND
     union
     {
         /* Pointer to a call procedure handle */
-        PCALLPROC CallProc;
+        PCALLPROCDATA CallProc;
         /* Extra Wnd proc (windows of system classes) */
         WNDPROC WndProcExtra;
     };
@@ -545,7 +562,7 @@ typedef struct _CLIENTTHREADINFO
     WORD  fsWakeBits;
     WORD  fsWakeBitsJournal;
     WORD  fsWakeMask;
-    LONG  timeLastRead;
+    ULONG tickLastMsgChecked;
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
@@ -1379,14 +1396,16 @@ NtUserDdeSetQualityOfService(
   OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev);
 
 HDWP NTAPI
-NtUserDeferWindowPos(HDWP WinPosInfo,
-		     HWND Wnd,
-		     HWND WndInsertAfter,
-		     int x,
-         int y,
-         int cx,
-         int cy,
-		     UINT Flags);
+NtUserDeferWindowPos(
+  HDWP WinPosInfo,
+  HWND Wnd,
+  HWND WndInsertAfter,
+  int x,
+  int y,
+  int cx,
+  int cy,
+  UINT Flags);
+
 BOOL NTAPI
 NtUserDefSetText(HWND WindowHandle, PLARGE_STRING WindowText);
 
@@ -1680,12 +1699,12 @@ NtUserGetControlColor(
    HDC hdc,
    UINT CtlMsg);
 
-DWORD
+ULONG_PTR
 NTAPI
 NtUserGetCPD(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  HWND hWnd,
+  GETCPD Flags,   
+  ULONG_PTR Proc);
 
 DWORD
 NTAPI
@@ -3025,7 +3044,7 @@ NtUserCreateCursorIconHandle(
   BOOL Indirect);
 
 
-/* Should be done in usermode */
+/* Should be done in usermode and use NtUserGetCPD. */
 ULONG_PTR
 NTAPI
 NtUserGetClassLong(HWND hWnd, INT Offset, BOOL Ansi);
@@ -3067,7 +3086,7 @@ HWND
 NTAPI
 NtUserGetWindow(HWND hWnd, UINT Relationship);
 
-/* Should be done in usermode */
+/* Should be done in usermode and use NtUserGetCPD. */
 LONG
 NTAPI
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
