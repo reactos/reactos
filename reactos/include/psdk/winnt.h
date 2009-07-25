@@ -1311,10 +1311,10 @@ typedef enum {
 #define RTL_CRITSECT_TYPE 0
 #define RTL_RESOURCE_TYPE 1
 /* Also in winddk.h */
-#ifndef __GNUC__
-#define FIELD_OFFSET(t,f) ((LONG_PTR)&(((t*)0)->f))
+#if !defined(__GNUC__)
+#define FIELD_OFFSET(t,f) ((LONG)(LONG_PTR)&(((t*) 0)->f))
 #else
-#define FIELD_OFFSET(t,f) __builtin_offsetof(t,f)
+#define FIELD_OFFSET(t,f) ((LONG)__builtin_offsetof(t,f))
 #endif
 #ifndef CONTAINING_RECORD
 #define CONTAINING_RECORD(address, type, field) \
