@@ -54,6 +54,7 @@
 #include "wine/winbase16.h"
 #include "wine/winuser16.h"
 #include "wownt32.h"
+#include "winternl.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
 #include "wine/exception.h"

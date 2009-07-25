@@ -29,6 +29,7 @@
 #include "wownt32.h"
 #include "wine/unicode.h"
 #include "wine/winuser16.h"
+#include "winternl.h"
 #include "wine/server.h"
 
 /* size of buffer needed to store an atom string */

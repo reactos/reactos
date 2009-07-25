@@ -30,6 +30,7 @@
 #include "wine/winbase16.h"
 #include "wine/winuser16.h"
 #include "wownt32.h"
+#include "winternl.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
 #include "win.h"
@@ -3400,9 +3401,9 @@ BOOL WINAPI SwitchDesktop( HDESK hDesktop)
 {
     HWND hWnd;
 
-    FIXME("SwitchDesktop(hwnd %p) stub!\n", hDesktop);
-
     hWnd = GetDesktopWindow(/*hDesktop*/);
+
+    FIXME("SwitchDesktop(hDesktop %p, desk window %x) stub!\n", hDesktop, hWnd);
 
     SetWindowPos(hWnd,
                  NULL, 0, 0,
@@ -3411,6 +3412,7 @@ BOOL WINAPI SwitchDesktop( HDESK hDesktop)
                  SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
     UpdateWindow(hWnd);
 
+    RedrawWindow(NULL, NULL, 0, RDW_INVALIDATE | RDW_FRAME | RDW_ERASENOW | RDW_ALLCHILDREN);
 
     return TRUE;
 }

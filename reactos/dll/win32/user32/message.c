@@ -38,6 +38,7 @@
 #include "imm.h"
 #include "ddk/imm.h"
 #include "wine/unicode.h"
+#include "winternl.h"
 #include "wine/server.h"
 #include "user_private.h"
 #include "win.h"
