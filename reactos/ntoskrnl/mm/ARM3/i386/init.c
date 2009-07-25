@@ -96,6 +96,12 @@ PVOID MmNonPagedPoolExpansionStart;
 PVOID MmNonPagedPoolEnd = MI_NONPAGED_POOL_END;
 
 //
+// Old ReactOS Mm nonpaged pool
+//
+extern PVOID MiNonPagedPoolStart;
+extern ULONG MiNonPagedPoolLength;
+
+//
 // This is where paged pool starts by default
 //
 PVOID MmPagedPoolStart = MI_PAGED_POOL_START;
@@ -1211,8 +1217,6 @@ MmArmInitSystem(IN ULONG Phase,
         //
         // Print the memory layout
         //
-        extern PVOID MiNonPagedPoolStart;
-        extern ULONG MiNonPagedPoolLength;
         DPRINT1("          0x%p - 0x%p\t%s\n",
                 MmSystemRangeStart,
                 (ULONG_PTR)MmSystemRangeStart + MmBootImageSize,
