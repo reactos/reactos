@@ -146,6 +146,7 @@
 		<library>kernel32_base</library>
 		<library>wine</library>
 		<library>pseh</library>
+		<library>win32ksys</library>
 
 		<file>kernel32.rc</file>
 
