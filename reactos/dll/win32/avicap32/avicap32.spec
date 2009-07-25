@@ -1,6 +1,6 @@
-@ stub AppCleanup
-@ stdcall capCreateCaptureWindowA(str  long long long long long long long)
+@ stdcall AppCleanup(ptr)
+@ stdcall capCreateCaptureWindowA(str long long long long long long long)
 @ stdcall capCreateCaptureWindowW(wstr long long long long long long long)
 @ stdcall capGetDriverDescriptionA(long ptr long ptr long)
 @ stdcall capGetDriverDescriptionW(long ptr long ptr long)
-@ stub videoThunk32
+@ stdcall videoThunk32(long long long long long)
