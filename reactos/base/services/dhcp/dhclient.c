@@ -1540,7 +1540,7 @@ rewrite_client_leases(struct interface_info *ifi)
 	if (!leaseFile) {
 		leaseFile = fopen(path_dhclient_db, "w");
 		if (!leaseFile)
-			error("can't create %s: %s", path_dhclient_db, strerror(errno));
+			error("can't create %s", path_dhclient_db);
 	} else {
 		fflush(leaseFile);
 		rewind(leaseFile);
@@ -1577,7 +1577,7 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 	if (!leaseFile) {	/* XXX */
 		leaseFile = fopen(path_dhclient_db, "w");
 		if (!leaseFile)
-			error("can't create %s: %s", path_dhclient_db, strerror(errno));
+			error("can't create %s", path_dhclient_db);
 	}
 
 	fprintf(leaseFile, "lease {\n");
@@ -1632,7 +1632,7 @@ script_init(char *reason, struct string_list *medium)
 	    sizeof(size_t) + strlen(reason);
 
 	if ((buf = buf_open(hdr.len)) == NULL)
-		error("buf_open: %s", strerror(errno));
+		return;
 
 	errs = 0;
 	errs += buf_add(buf, &hdr, sizeof(hdr));
@@ -1644,10 +1644,10 @@ script_init(char *reason, struct string_list *medium)
 	errs += buf_add(buf, reason, len);
 
 	if (errs)
-		error("buf_add: %s", strerror(errno));
+		error("buf_add: %d", WSAGetLastError());
 
 	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %s", strerror(errno));
+		error("buf_close: %d", WSAGetLastError());
 }
 
 void
@@ -1822,7 +1822,7 @@ script_write_params(char *prefix, struct client_lease *lease)
 	scripttime = time(NULL);
 
 	if ((buf = buf_open(hdr.len)) == NULL)
-		error("buf_open: %s", strerror(errno));
+		return;
 
 	errs = 0;
 	errs += buf_add(buf, &hdr, sizeof(hdr));
@@ -1842,10 +1842,10 @@ script_write_params(char *prefix, struct client_lease *lease)
 	}
 
 	if (errs)
-		error("buf_add: %s", strerror(errno));
+		error("buf_add: %d", WSAGetLastError());
 
 	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %s", strerror(errno));
+		error("buf_close: %d", WSAGetLastError());
 }
 
 int
@@ -2075,41 +2075,3 @@ toobig:
 	return "<error>";
 }
 
-#if 0
-int
-fork_privchld(int fd, int fd2)
-{
-	struct pollfd pfd[1];
-	int nfds;
-
-	switch (fork()) {
-	case -1:
-		error("cannot fork");
-	case 0:
-		break;
-	default:
-		return (0);
-	}
-
-	setproctitle("%s [priv]", ifi->name);
-
-	dup2(nullfd, STDIN_FILENO);
-	dup2(nullfd, STDOUT_FILENO);
-	dup2(nullfd, STDERR_FILENO);
-	close(nullfd);
-	close(fd2);
-
-	for (;;) {
-		pfd[0].fd = fd;
-		pfd[0].events = POLLIN;
-		if ((nfds = poll(pfd, 1, INFTIM)) == -1)
-			if (errno != EINTR)
-				error("poll error");
-
-		if (nfds == 0 || !(pfd[0].revents & POLLIN))
-			continue;
-
-		dispatch_imsg(fd);
-	}
-}
-#endif
