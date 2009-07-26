@@ -1835,43 +1835,6 @@ VOID WINAPI InitializeSRWLock(PSRWLOCK);
 #define InterlockedCompareExchangeAcquire64 InterlockedCompareExchange64
 #define InterlockedCompareExchangeRelease64 InterlockedCompareExchange64
 
-#else // !(defined (_M_AMD64) || defined (_M_IA64))
-
-LONG WINAPI InterlockedOr(IN OUT LONG volatile *,LONG);
-LONG WINAPI InterlockedAnd(IN OUT LONG volatile *,LONG);
-LONG WINAPI InterlockedCompareExchange(IN OUT LONG volatile *,LONG,LONG);
-LONG WINAPI InterlockedDecrement(IN OUT LONG volatile *);
-LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
-#if defined(_WIN64)
- /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
- #define InterlockedExchangePointer(t,v) \
-    (PVOID)_InterlockedExchange64((LONGLONG*)(t),(LONGLONG)(v))
- /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
- #define InterlockedCompareExchangePointer(d,e,c) \
-    (PVOID)_InterlockedCompareExchange64((LONGLONG*)(d),(LONGLONG)(e),(LONGLONG)(c))
-#else
- /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
- #define InterlockedExchangePointer(t,v) \
-    (PVOID)InterlockedExchange((LPLONG)(t),(LONG)(v))
- /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
- #define InterlockedCompareExchangePointer(d,e,c) \
-    (PVOID)InterlockedCompareExchange((LPLONG)(d),(LONG)(e),(LONG)(c))
-#endif
-LONG WINAPI InterlockedExchangeAdd(IN OUT LONG volatile *,LONG);
-#if (_WIN32_WINNT >= 0x0501)
-PSLIST_ENTRY WINAPI InterlockedFlushSList(PSLIST_HEADER);
-#endif
-LONG WINAPI InterlockedIncrement(IN OUT LONG volatile *);
-#if (_WIN32_WINNT >= 0x0501)
-PSLIST_ENTRY WINAPI InterlockedPopEntrySList(PSLIST_HEADER);
-PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
-#endif
-
-#endif // !(defined (_M_AMD64) || defined (_M_IA64))
-
-VOID WINAPI InitializeSListHead(PSLIST_HEADER);
-USHORT WINAPI QueryDepthSList(PSLIST_HEADER);
-
 #if !defined(InterlockedAnd)
 #define InterlockedAnd InterlockedAnd_Inline
 FORCEINLINE
@@ -1917,6 +1880,43 @@ InterlockedOr_Inline(IN OUT volatile LONG *Target,
     return j;
 }
 #endif
+
+#else // !(defined (_M_AMD64) || defined (_M_IA64))
+
+LONG WINAPI InterlockedOr(IN OUT LONG volatile *,LONG);
+LONG WINAPI InterlockedAnd(IN OUT LONG volatile *,LONG);
+LONG WINAPI InterlockedCompareExchange(IN OUT LONG volatile *,LONG,LONG);
+LONG WINAPI InterlockedDecrement(IN OUT LONG volatile *);
+LONG WINAPI InterlockedExchange(IN OUT LONG volatile *,LONG);
+#if defined(_WIN64)
+ /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
+ #define InterlockedExchangePointer(t,v) \
+    (PVOID)_InterlockedExchange64((LONGLONG*)(t),(LONGLONG)(v))
+ /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
+ #define InterlockedCompareExchangePointer(d,e,c) \
+    (PVOID)_InterlockedCompareExchange64((LONGLONG*)(d),(LONGLONG)(e),(LONGLONG)(c))
+#else
+ /* PVOID WINAPI InterlockedExchangePointer(PVOID*,PVOID); */
+ #define InterlockedExchangePointer(t,v) \
+    (PVOID)InterlockedExchange((LPLONG)(t),(LONG)(v))
+ /* PVOID WINAPI InterlockedCompareExchangePointer(PVOID*,PVOID,PVOID); */
+ #define InterlockedCompareExchangePointer(d,e,c) \
+    (PVOID)InterlockedCompareExchange((LPLONG)(d),(LONG)(e),(LONG)(c))
+#endif
+LONG WINAPI InterlockedExchangeAdd(IN OUT LONG volatile *,LONG);
+#if (_WIN32_WINNT >= 0x0501)
+PSLIST_ENTRY WINAPI InterlockedFlushSList(PSLIST_HEADER);
+#endif
+LONG WINAPI InterlockedIncrement(IN OUT LONG volatile *);
+#if (_WIN32_WINNT >= 0x0501)
+PSLIST_ENTRY WINAPI InterlockedPopEntrySList(PSLIST_HEADER);
+PSLIST_ENTRY WINAPI InterlockedPushEntrySList(PSLIST_HEADER,PSLIST_ENTRY);
+#endif
+
+#endif // !(defined (_M_AMD64) || defined (_M_IA64))
+
+VOID WINAPI InitializeSListHead(PSLIST_HEADER);
+USHORT WINAPI QueryDepthSList(PSLIST_HEADER);
 
 #endif /* __INTERLOCKED_DECLARED */
 

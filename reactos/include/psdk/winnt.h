@@ -4901,7 +4901,7 @@ extern struct _TEB * NtCurrentTeb(void);
 
 #if (_MSC_FULL_VER >= 13012035)
 
-DWORD __readfsdword(DWORD);
+unsigned long __readfsdword(const unsigned long Offset);
 #pragma intrinsic(__readfsdword)
 
 __inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
