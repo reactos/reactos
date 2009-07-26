@@ -20,9 +20,10 @@ NTAPI
 FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject,
                   IN ULONG SectorSize)
 {
-    PUCHAR Buffer = NULL;
+    PVOLSTRUCTDESC VolumeStructDesc = NULL;
     LARGE_INTEGER Offset;
     ULONG State = 0;
+    PAGED_CODE();
 
     Offset.QuadPart = UDFS_VRS_START_OFFSET;
     while (TRUE)
@@ -31,7 +32,7 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject,
                             &Offset,
                             SectorSize,
                             SectorSize,
-                            (PVOID)&Buffer,
+                            (PVOID)&VolumeStructDesc,
                             NULL))
         {
             break;
@@ -41,28 +42,27 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject,
         {
             case 0:
 
-                if ((Buffer[1] == 'B') &&
-                    (Buffer[2] == 'E') &&
-                    (Buffer[3] == 'A') &&
-                    (Buffer[4] == '0') &&
-                    (Buffer[5] == '1'))
+                if (!strncmp((const char*)VolumeStructDesc->Ident,
+                             VSD_STD_ID_BEA01,
+                             VSD_STD_ID_LEN))
                 {
                     State = 1;
                 }
                 else
                 {
-                    ExFreePool(Buffer);
+                    ExFreePool(VolumeStructDesc);
                     return FALSE;
                 }
                 break;
 
             case 1:
 
-                if ((Buffer[1] == 'N') &&
-                    (Buffer[2] == 'S') &&
-                    (Buffer[3] == 'R') &&
-                    (Buffer[4] == '0') &&
-                    ((Buffer[5] == '2') || (Buffer[5] == '3')))
+                if (!strncmp((const char*)VolumeStructDesc->Ident,
+                             VSD_STD_ID_NSR03,
+                             VSD_STD_ID_LEN) ||
+                    !strncmp((const char*)VolumeStructDesc->Ident,
+                             VSD_STD_ID_NSR02,
+                             VSD_STD_ID_LEN))
                 {
                     State = 2;
                 }
@@ -70,13 +70,11 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject,
 
             case 2:
 
-                if ((Buffer[1] == 'T') &&
-                    (Buffer[2] == 'E') &&
-                    (Buffer[3] == 'A') &&
-                    (Buffer[4] == '0') &&
-                    (Buffer[5] == '1'))
+                if (!strncmp((const char*)VolumeStructDesc->Ident,
+                             VSD_STD_ID_TEA01,
+                             VSD_STD_ID_LEN))
                 {
-                    ExFreePool(Buffer);
+                    ExFreePool(VolumeStructDesc);
                     return TRUE;
                 }
                 break;
@@ -85,12 +83,12 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject,
         Offset.QuadPart += SectorSize;
         if (Offset.QuadPart == UDFS_AVDP_SECTOR)
         {
-            ExFreePool(Buffer);
+            ExFreePool(VolumeStructDesc);
             return FALSE;
         }
     }
 
-    ExFreePool(Buffer);
+    ExFreePool(VolumeStructDesc);
     return TRUE;
 }
 
