@@ -71,13 +71,9 @@ co_CsrNotify(PCSR_API_MESSAGE Request)
       KeAttachProcess(&CsrProcess->Pcb);
    }
 
-   UserLeave();
-
    Status = ZwRequestWaitReplyPort(WindowsApiPort,
                                    &Request->Header,
                                    &Request->Header);
-
-   UserEnterExclusive();
 
    if (CsrProcess != OldProcess)
    {

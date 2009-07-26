@@ -71,6 +71,7 @@ wine_server_call(void *req_ptr)
     enum request req = reqinfo->u.req.request_header.req;
     UCHAR i;
     ULONG DataWritten=0;
+    BOOLEAN FreeReqData = FALSE;
 
     DPRINT("WineServer call of type 0x%x\n", req);
 
@@ -106,6 +107,9 @@ wine_server_call(void *req_ptr)
             /* Advance to the next data block */
             DataWritten += reqinfo->data[i].size;
         }
+
+        /* Set the allocation flag so we free this memory later */
+        FreeReqData = TRUE;
     }
     else
     {
@@ -127,7 +131,7 @@ wine_server_call(void *req_ptr)
     }
 
     /* Free the request data area if needed */
-    if (reqinfo->data_count > 1) ExFreePool(RequestData);
+    if (FreeReqData) ExFreePool(RequestData);
 
     /* Copy back the reply data if any */
     if (ReplySize && reqinfo->reply_data)
@@ -154,11 +158,12 @@ wine_server_call(void *req_ptr)
     /* Release lock */
     UserLeave();
 
-    //if (reply.reply_header.error)
-    //    DPRINT1("returning error 0x%08X\n", reply.reply_header.error);
-
-    //if (reply.reply_header.error == 0x103 ||
-    //    reply.reply_header.error == STATUS_ACCESS_DENIED) DbgBreakPoint();
+    /* Perform any pending notifies without holding the lock */
+    if (req == REQ_create_desktop)
+    {
+        if (reply.reply_header.error != STATUS_OBJECT_NAME_EXISTS)
+            CsrNotifyCreateDesktop((HDESK)((struct create_desktop_reply *)&reply)->handle);
+    }
 
     return reply.reply_header.error;
 }
