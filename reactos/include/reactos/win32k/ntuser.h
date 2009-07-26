@@ -130,8 +130,8 @@ typedef struct _CALLBACKWND
 
 typedef struct _CLIENTINFO
 {
-    ULONG CI_flags;
-    ULONG cSpins;
+    ULONG_PTR CI_flags;
+    ULONG_PTR cSpins;
     DWORD dwExpWinVer;
     DWORD dwCompatFlags;
     DWORD dwCompatFlags2;
@@ -146,15 +146,16 @@ typedef struct _CLIENTINFO
     PCLIENTTHREADINFO pClientThreadInfo;
     ULONG_PTR dwHookData;
     DWORD dwKeyCache;
-    DWORD afKeyState[2];
+    BYTE afKeyState[8];
     DWORD dwAsyncKeyCache;
-    DWORD afAsyncKeyState[2];
-    DWORD afAsyncKeyStateRecentDow[2];
+    BYTE afAsyncKeyState[8];
+    BYTE afAsyncKeyStateRecentDow[8];
     HKL hKL;
     USHORT CodePage;
-    USHORT achDbcsCF;
+    UCHAR achDbcsCF[2];
     MSG msgDbcsCB;
-    ULONG Win32ClientInfo3[28];
+    LPDWORD lpdwRegisteredClasses;
+    ULONG Win32ClientInfo3[27];
 /* It's just a pointer reference not to be used w the structure in user space. */
     PPROCESSINFO ppi;
 } CLIENTINFO, *PCLIENTINFO;
