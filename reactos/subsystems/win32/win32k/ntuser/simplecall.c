@@ -15,7 +15,7 @@
 
 
 /* registered Logon process */
-PW32PROCESS LogonProcess = NULL;
+PPROCESSINFO LogonProcess = NULL;
 
 BOOL FASTCALL
 co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
@@ -41,12 +41,12 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
          return FALSE;
       }
 
-      LogonProcess = (PW32PROCESS)Process->Win32Process;
+      LogonProcess = (PPROCESSINFO)Process->Win32Process;
    }
    else
    {
       /* Deregister the logon process */
-      if (LogonProcess != (PW32PROCESS)Process->Win32Process)
+      if (LogonProcess != (PPROCESSINFO)Process->Win32Process)
       {
          ObDereferenceObject(Process);
          return FALSE;
@@ -314,7 +314,7 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
          {
             BOOL Enable;
-            PW32PROCESS Process = PsGetCurrentProcessWin32Process();
+            PPROCESSINFO Process = PsGetCurrentProcessWin32Process();
 
             if(Process != NULL)
             {

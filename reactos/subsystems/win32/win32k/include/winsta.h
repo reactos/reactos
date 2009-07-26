@@ -62,7 +62,7 @@ typedef struct _WINSTATION_OBJECT
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;
-extern PW32PROCESS LogonProcess;
+extern PPROCESSINFO LogonProcess;
 
 NTSTATUS FASTCALL
 InitWindowStationImpl(VOID);

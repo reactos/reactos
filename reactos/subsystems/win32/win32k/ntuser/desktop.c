@@ -1134,6 +1134,7 @@ NtUserCreateDesktop(
                            &ClassName,
                            &MenuName,
                            NULL,
+                           FNID_MESSAGEWND,
                            CSF_SYSTEMCLASS,
                            NULL,
                            pi);
@@ -1846,7 +1847,7 @@ static NTSTATUS
 IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 {
     PW32THREADINFO ti;
-    PW32PROCESS CurrentWin32Process;
+    PPROCESSINFO CurrentWin32Process;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1897,7 +1898,7 @@ static NTSTATUS
 IntMapDesktopView(IN PDESKTOP DesktopObject)
 {
     PW32THREADINFO ti;
-    PW32PROCESS CurrentWin32Process;
+    PPROCESSINFO CurrentWin32Process;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     PVOID UserBase = NULL;
     SIZE_T ViewSize = 0;

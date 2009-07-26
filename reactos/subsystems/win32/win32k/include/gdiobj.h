@@ -44,7 +44,7 @@ typedef struct _BASEOBJECT
   ULONG       ulShareCount;
   USHORT      cExclusiveLock;
   USHORT      BaseFlags;
-  PW32THREAD  Tid;
+  PTHREADINFO Tid;
 } BASEOBJECT, *POBJ;
 
 typedef struct _CLIENTOBJ

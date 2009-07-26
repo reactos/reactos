@@ -260,7 +260,7 @@ NtUserGetGuiResources(
    DWORD uiFlags)
 {
    PEPROCESS Process;
-   PW32PROCESS W32Process;
+   PPROCESSINFO W32Process;
    NTSTATUS Status;
    DWORD Ret = 0;
    DECLARE_RETURN(DWORD);
@@ -281,7 +281,7 @@ NtUserGetGuiResources(
       RETURN( 0);
    }
 
-   W32Process = (PW32PROCESS)Process->Win32Process;
+   W32Process = (PPROCESSINFO)Process->Win32Process;
    if(!W32Process)
    {
       ObDereferenceObject(Process);

@@ -2224,7 +2224,7 @@ NtUserWaitForInputIdle(
    IN BOOL Unknown2)
 {
   PEPROCESS Process;
-  PW32PROCESS W32Process;
+  PPROCESSINFO W32Process;
   NTSTATUS Status;
   HANDLE Handles[2];
   LARGE_INTEGER Timeout;
@@ -2246,7 +2246,7 @@ NtUserWaitForInputIdle(
      return WAIT_FAILED;
   }
 
-  W32Process = (PW32PROCESS)Process->Win32Process;
+  W32Process = (PPROCESSINFO)Process->Win32Process;
   if (!W32Process)
   {
       ObDereferenceObject(Process);

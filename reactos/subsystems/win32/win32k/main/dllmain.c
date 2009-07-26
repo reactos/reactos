@@ -55,7 +55,7 @@ APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kProcessCallback\n");

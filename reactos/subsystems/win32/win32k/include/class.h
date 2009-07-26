@@ -42,7 +42,7 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
                     OUT PWNDPROC_INFO wpInfo);
 
 void FASTCALL
-DestroyProcessClasses(PW32PROCESS Process );
+DestroyProcessClasses(PPROCESSINFO Process );
 
 PCLS
 IntReferenceClass(IN OUT PCLS BaseClass,
@@ -59,6 +59,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN PUNICODE_STRING ClassName,
                   IN PUNICODE_STRING MenuName,
                   IN WNDPROC wpExtra,
+                  IN DWORD fnID,
                   IN DWORD dwFlags);
 
 BOOL
@@ -83,6 +84,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING ClassName,
                IN PUNICODE_STRING MenuName,
                IN WNDPROC wpExtra,
+               IN DWORD fnID,
                IN DWORD dwFlags,
                IN PDESKTOP Desktop,
                IN PPROCESSINFO pi);

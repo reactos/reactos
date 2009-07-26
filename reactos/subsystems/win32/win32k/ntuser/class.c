@@ -26,17 +26,17 @@ static struct
     int ClsId;
 }  FnidToiCls[] =
 {
- { FNID_BUTTON,    ICLS_BUTTON},
- { FNID_EDIT,      ICLS_EDIT}, 
- { FNID_STATIC,    ICLS_STATIC},
- { FNID_LISTBOX,   ICLS_LISTBOX},
- { FNID_SCROLLBAR, ICLS_SCROLLBAR},
- { FNID_COMBOBOX,  ICLS_COMBOBOX},
- { FNID_MDICLIENT, ICLS_MDICLIENT},
- { FNID_COMBOLBOX, ICLS_COMBOLBOX},
- { FNID_DIALOG,    ICLS_DIALOG},  
- { FNID_MENU,      ICLS_MENU},
- { FNID_ICONTITLE, ICLS_ICONTITLE}
+ { FNID_BUTTON,     ICLS_BUTTON},
+ { FNID_EDIT,       ICLS_EDIT}, 
+ { FNID_STATIC,     ICLS_STATIC},
+ { FNID_LISTBOX,    ICLS_LISTBOX},
+ { FNID_SCROLLBAR,  ICLS_SCROLLBAR},
+ { FNID_COMBOBOX,   ICLS_COMBOBOX},
+ { FNID_MDICLIENT,  ICLS_MDICLIENT},
+ { FNID_COMBOLBOX,  ICLS_COMBOLBOX},
+ { FNID_DIALOG,     ICLS_DIALOG},  
+ { FNID_MENU,       ICLS_MENU},
+ { FNID_ICONTITLE,  ICLS_ICONTITLE}
 };
 
 static 
@@ -118,7 +118,7 @@ IntDestroyClass(IN OUT PCLS Class)
 
 
 /* clean all process classes. all process windows must cleaned first!! */
-void FASTCALL DestroyProcessClasses(PW32PROCESS Process )
+void FASTCALL DestroyProcessClasses(PPROCESSINFO Process )
 {
     PCLS Class;
     PPROCESSINFO pi = (PPROCESSINFO)Process;
@@ -815,6 +815,7 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING ClassName,
                IN PUNICODE_STRING MenuName,
                IN WNDPROC wpExtra,
+               IN DWORD fnID,
                IN DWORD dwFlags,
                IN PDESKTOP Desktop,
                IN PPROCESSINFO pi)
@@ -865,14 +866,21 @@ IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
         Class->rpdeskParent = Desktop;
         Class->pclsBase = Class;
         Class->atomClassName = Atom;
-
+        Class->fnid = fnID;
         Class->CSF_flags = dwFlags;
 
         if (dwFlags & CSF_SYSTEMCLASS)
         {
+            int iCls;
+
             dwFlags &= ~CSF_ANSIPROC;
             Class->WndProcExtra = wpExtra;
             Class->System = TRUE;
+    /* Now set the Atom table, notice only non ntuser.c atoms can go in.*/
+            if (LockupFnIdToiCls(Class->fnid, &iCls))
+            {
+                gpsi->atomSysClass[iCls] = Class->atomClassName;
+            }
         }
 
         _SEH2_TRY
@@ -1159,6 +1167,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN PUNICODE_STRING ClassName,
                   IN PUNICODE_STRING MenuName,
                   IN WNDPROC wpExtra,
+                  IN DWORD fnID,
                   IN DWORD dwFlags)
 {
     PTHREADINFO pti;
@@ -1211,6 +1220,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                            ClassName,
                            MenuName,
                            wpExtra,
+                           fnID,
                            dwFlags,
                            pti->Desktop,
                            pi);
@@ -1894,19 +1904,12 @@ UserRegisterSystemClasses(IN ULONG Count,
                                &ClassName,
                                &MenuName,
                                SystemClasses[i].ProcA,
+                               SystemClasses[i].ClassId,
                                CSF_SYSTEMCLASS,
                                NULL,
                                pi);
         if (Class != NULL)
         {
-            int iCls;
-
-            Class->fnid = SystemClasses[i].ClassId;
-            if (LockupFnIdToiCls(Class->fnid, &iCls))
-            {
-                gpsi->atomSysClass[iCls] = Class->atomClassName;
-            }
-
             ASSERT(Class->System);
             Class->pclsNext = SystemClassList;
             (void)InterlockedExchangePointer((PVOID*)&SystemClassList,
@@ -2028,6 +2031,7 @@ InvalidParameter:
                                 &CapturedName,
                                 &CapturedMenuName,
                                 wpExtra,
+                                fnID,
                                 Flags);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)

@@ -421,7 +421,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
     if (Characteristics & FR_PRIVATE)
     {
-        PW32PROCESS Win32Process = PsGetCurrentProcessWin32Process();
+        PPROCESSINFO Win32Process = PsGetCurrentProcessWin32Process();
         IntLockProcessPrivateFonts(Win32Process);
         InsertTailList(&Win32Process->PrivateFontListHead, &Entry->ListEntry);
         IntUnLockProcessPrivateFonts(Win32Process);
@@ -940,7 +940,7 @@ FindFaceNameInList(PUNICODE_STRING FaceName, PLIST_ENTRY Head)
 static PFONTGDI FASTCALL
 FindFaceNameInLists(PUNICODE_STRING FaceName)
 {
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     PFONTGDI Font;
 
     /* Search the process local list */
@@ -2690,7 +2690,7 @@ TextIntRealizeFont(HFONT FontHandle, PTEXTOBJ pTextObj)
     NTSTATUS Status = STATUS_SUCCESS;
     PTEXTOBJ TextObj;
     UNICODE_STRING FaceName;
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     UINT MatchScore;
 
     if (!pTextObj)
@@ -3003,7 +3003,7 @@ NtGdiGetFontFamilyInfo(HDC Dc,
     LOGFONTW LogFont;
     PFONTFAMILYINFO Info;
     DWORD Count;
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
 
     /* Make a safe copy */
     Status = MmCopyFromCaller(&LogFont, UnsafeLogFont, sizeof(LOGFONTW));

@@ -290,7 +290,7 @@ IntSetupCurIconHandles(PWINSTATION_OBJECT WinSta)
 static BOOLEAN FASTCALL
 ReferenceCurIconByProcess(PCURICON_OBJECT CurIcon)
 {
-   PW32PROCESS Win32Process;
+   PPROCESSINFO Win32Process;
    PCURICON_PROCESS Current;
 
    Win32Process = PsGetCurrentProcessWin32Process();
@@ -387,7 +387,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
    HBITMAP bmpMask, bmpColor;
    BOOLEAN Ret;
    PCURICON_PROCESS Current = NULL;
-   PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
+   PPROCESSINFO W32Process = PsGetCurrentProcessWin32Process();
 
    /* Private objects can only be destroyed by their own process */
    if (NULL == CurIcon->hModule)
@@ -464,7 +464,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
 }
 
 VOID FASTCALL
-IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
+IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
 {
    PWINSTATION_OBJECT WinSta;
    PCURICON_OBJECT CurIcon, tmp;

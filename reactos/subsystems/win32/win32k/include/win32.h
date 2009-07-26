@@ -34,7 +34,7 @@ typedef struct _W32THREAD
 
 typedef struct _THREADINFO
 {
-    W32THREAD           W32Thread;
+    W32THREAD;
     PTL                 ptl;
     PVOID               ppi; // FIXME: use PPROCESSINFO
     struct _USER_MESSAGE_QUEUE* MessageQueue;
@@ -53,7 +53,7 @@ typedef struct _THREADINFO
     LIST_ENTRY          PtiLink;
 
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
-
+  /* ReactOS */
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   BOOLEAN IsExiting;
@@ -89,7 +89,15 @@ typedef struct _W32PROCESS
   RTL_AVL_TABLE GDIEngUserMemAllocTable;  /* Process AVL Table. */
   LIST_ENTRY    GDIDcAttrFreeList;
   LIST_ENTRY    GDIBrushAttrFreeList;
-/* ReactOS, will move to PROCESSINFO */
+} W32PROCESS, *PW32PROCESS;
+
+typedef struct _PROCESSINFO
+{
+  W32PROCESS;
+
+  PCLS                pclsPrivateList;
+  PCLS                pclsPublicList;
+  /* ReactOS */
   LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
@@ -98,16 +106,6 @@ typedef struct _W32PROCESS
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout;
   W32HEAP_USER_MAPPING HeapMappings;
-} W32PROCESS, *PW32PROCESS;
-
-typedef struct _PROCESSINFO
-{
-    W32PROCESS          XzyxW32Process; /* Place holder. */
-
-    PCLS                pclsPrivateList;
-    PCLS                pclsPublicList;
-    /* ReactOS */
-
 } PROCESSINFO;
 
 #endif /* __INCLUDE_NAPI_WIN32_H */

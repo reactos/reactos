@@ -6,7 +6,7 @@
 typedef struct tagCURICON_PROCESS
 {
   LIST_ENTRY ListEntry;
-  PW32PROCESS Process;
+  PPROCESSINFO Process;
 } CURICON_PROCESS, *PCURICON_PROCESS;
 
 typedef struct _CURICON_OBJECT
@@ -69,7 +69,7 @@ typedef struct _SYSTEM_CURSORINFO
 HCURSOR FASTCALL IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange);
 BOOL FASTCALL IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject);
 PCURICON_OBJECT FASTCALL IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject);
-VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
+VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL FASTCALL IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc);
 

@@ -71,7 +71,7 @@ IdlePing(VOID)
 {
   HWND hWnd;
   PWINDOW_OBJECT Window;
-  PW32PROCESS W32d = PsGetCurrentProcessWin32Process();
+  PPROCESSINFO W32d = PsGetCurrentProcessWin32Process();
 
   hWnd = UserGetForegroundWindow();
 

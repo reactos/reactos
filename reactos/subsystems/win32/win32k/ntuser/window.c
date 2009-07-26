@@ -348,7 +348,7 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
 
  */
 static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
-                                   PW32PROCESS ProcessData,
+                                   PPROCESSINFO ProcessData,
                                    PTHREADINFO ThreadData,
                                    BOOLEAN SendMessages)
 {

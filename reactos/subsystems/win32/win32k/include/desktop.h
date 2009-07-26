@@ -198,7 +198,7 @@ DesktopHeapGetUserDelta(VOID)
 {
     PW32HEAP_USER_MAPPING Mapping;
     PTHREADINFO pti;
-    PW32PROCESS W32Process;
+    PPROCESSINFO W32Process;
     PWIN32HEAP pheapDesktop;
     ULONG_PTR Delta = 0;
 
@@ -228,7 +228,7 @@ static __inline PVOID
 DesktopHeapAddressToUser(PVOID lpMem)
 {
     PW32HEAP_USER_MAPPING Mapping;
-    PW32PROCESS W32Process;
+    PPROCESSINFO W32Process;
 
     W32Process = PsGetCurrentProcessWin32Process();
     Mapping = W32Process->HeapMappings.Next;

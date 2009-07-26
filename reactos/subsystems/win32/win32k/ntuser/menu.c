@@ -313,7 +313,7 @@ PMENU_OBJECT FASTCALL
 IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 {
    PMENU_OBJECT Menu;
-   PW32PROCESS CurrentWin32Process;
+   PPROCESSINFO CurrentWin32Process;
 
    Menu = (PMENU_OBJECT)UserCreateObject(
              gHandleTable, Handle,
@@ -418,7 +418,7 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
 PMENU_OBJECT FASTCALL
 IntCloneMenu(PMENU_OBJECT Source)
 {
-   PW32PROCESS CurrentWin32Process;
+   PPROCESSINFO CurrentWin32Process;
    HANDLE hMenu;
    PMENU_OBJECT Menu;
 
@@ -1284,7 +1284,7 @@ IntSetMenuItemRect(PMENU_OBJECT Menu, UINT Item, BOOL fByPos, RECTL *rcRect)
  * Internal function. Called when the process is destroyed to free the remaining menu handles.
 */
 BOOL FASTCALL
-IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
+IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
 {
    PEPROCESS CurrentProcess;
    PLIST_ENTRY LastHead = NULL;

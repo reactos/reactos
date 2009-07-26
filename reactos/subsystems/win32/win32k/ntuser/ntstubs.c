@@ -874,7 +874,7 @@ NtUserProcessConnect(
   {
      UserEnterShared();
      GetW32ThreadInfo();
-     PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
+     PPROCESSINFO W32Process = PsGetCurrentProcessWin32Process();
      _SEH2_TRY
      {
         pUserConnect->siClient.psi = gpsi;
