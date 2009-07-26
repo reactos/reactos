@@ -5,6 +5,7 @@
 	<importlibrary definition="dmusic.spec" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<define name="__WINESRC__" />
+	<compilerflag>-Wno-format</compilerflag>
 	<include base="dmusic">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
