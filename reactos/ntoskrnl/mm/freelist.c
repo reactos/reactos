@@ -38,7 +38,6 @@
 #define Type                 CacheAttribute
 #define Zero                 PrototypePte
 #define LockCount            u3.e1.PageColor
-#define MapCount             u2.ShareCount
 #define RmapListHead         AweReferenceCount
 #define SavedSwapEntry       u4.EntireFrame
 #define Flags                u3.e1
@@ -264,7 +263,6 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             Pfn1->Flags.Consumer = MC_NPPOOL;
                             Pfn1->ReferenceCount = 1;
                             Pfn1->LockCount = 0;
-                            Pfn1->MapCount = 0;
                             Pfn1->SavedSwapEntry = 0;
                             
                             //
@@ -452,7 +450,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             // Make sure it's really free
             //
             ASSERT(Pfn1->Flags.Type == MM_PHYSICAL_PAGE_FREE);
-            ASSERT(Pfn1->MapCount == 0);
             ASSERT(Pfn1->ReferenceCount == 0);
             
             //
@@ -464,7 +461,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             Pfn1->Flags.EndOfAllocation = 1;
             Pfn1->ReferenceCount = 1;
             Pfn1->LockCount = 0;
-            Pfn1->MapCount = 0;
             Pfn1->SavedSwapEntry = 0;
             
             //
@@ -507,7 +503,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 //
                 // Sanity checks
                 //
-                ASSERT(Pfn1->MapCount == 0);
                 ASSERT(Pfn1->ReferenceCount == 0);
                 
                 //
@@ -519,7 +514,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
                 Pfn1->Flags.StartOfAllocation = 1;
                 Pfn1->Flags.EndOfAllocation = 1;
                 Pfn1->LockCount = 0;
-                Pfn1->MapCount = 0;
                 Pfn1->SavedSwapEntry = 0;
                 
                 //
@@ -678,12 +672,11 @@ MmDumpPfnDatabase(VOID)
         //
         // Pretty-print the page
         //
-        DbgPrint("0x%08p:\t%04s\t%20s\t(%02d.%02d.%02d) [%08p])\n",
+        DbgPrint("0x%08p:\t%04s\t%20s\t(%02d.%02d) [%08p])\n",
                  i << PAGE_SHIFT,
                  State,
                  Consumer,
                  Pfn1->ReferenceCount,
-                 Pfn1->MapCount,
                  Pfn1->LockCount,
                  Pfn1->RmapListHead);
     }
@@ -716,8 +709,7 @@ MmInitializePageList(VOID)
     RtlZeroMemory(&UsedPage, sizeof(UsedPage));
     UsedPage.Flags.Type = MM_PHYSICAL_PAGE_USED;
     UsedPage.Flags.Consumer = MC_NPPOOL;
-    UsedPage.ReferenceCount = 2;
-    UsedPage.MapCount = 1;
+    UsedPage.ReferenceCount = 1;
 
     /* Loop the memory descriptors */
     for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
@@ -810,61 +802,6 @@ MmGetRmapListHeadPage(PFN_TYPE Pfn)
    KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
     
    return(ListHead);
-}
-
-VOID
-NTAPI
-MmMarkPageMapped(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   if (Pfn <= MmHighestPhysicalPage)
-   {
-	   oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      Page = MiGetPfnEntry(Pfn);
-      if (Page)
-      {
-          if (Page->Flags.Type == MM_PHYSICAL_PAGE_FREE)
-          {
-              DPRINT1("Mapping non-used page\n");
-              KeBugCheck(MEMORY_MANAGEMENT);
-          }
-          Page->MapCount++;
-          Page->ReferenceCount++;
-      }
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   }
-}
-
-VOID
-NTAPI
-MmMarkPageUnmapped(PFN_TYPE Pfn)
-{
-   KIRQL oldIrql;
-   PPHYSICAL_PAGE Page;
-
-   if (Pfn <= MmHighestPhysicalPage)
-   {
-	  oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-      Page = MiGetPfnEntry(Pfn);
-      if (Page)
-      {
-          if (Page->Flags.Type == MM_PHYSICAL_PAGE_FREE)
-          {
-              DPRINT1("Unmapping non-used page\n");
-              KeBugCheck(MEMORY_MANAGEMENT);
-          }
-          if (Page->MapCount == 0)
-          {
-              DPRINT1("Unmapping not mapped page\n");
-              KeBugCheck(MEMORY_MANAGEMENT);
-          }
-          Page->MapCount--;
-          Page->ReferenceCount--;
-      }
-      KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-   }
 }
 
 VOID
@@ -998,12 +935,6 @@ MmDereferencePage(PFN_TYPE Pfn)
       if (Page->RmapListHead != (LONG)NULL)
       {
          DPRINT1("Freeing page with rmap entries.\n");
-         KeBugCheck(MEMORY_MANAGEMENT);
-      }
-      if (Page->MapCount != 0)
-      {
-         DPRINT1("Freeing mapped page (0x%x count %d)\n",
-                  Pfn << PAGE_SHIFT, Page->MapCount);
          KeBugCheck(MEMORY_MANAGEMENT);
       }
       if (Page->LockCount > 0)
@@ -1162,11 +1093,6 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
       DPRINT1("Got non-free page from freelist\n");
       KeBugCheck(MEMORY_MANAGEMENT);
    }
-   if (PageDescriptor->MapCount != 0)
-   {
-      DPRINT1("Got mapped page from freelist\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
-   }
    if (PageDescriptor->ReferenceCount != 0)
    {
       DPRINT1("%d\n", PageDescriptor->ReferenceCount);
@@ -1176,7 +1102,6 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
    PageDescriptor->Flags.Consumer = Consumer;
    PageDescriptor->ReferenceCount = 1;
    PageDescriptor->LockCount = 0;
-   PageDescriptor->MapCount = 0;
    PageDescriptor->SavedSwapEntry = SwapEntry;
 
    MmStats.NrSystemPages++;
@@ -1188,11 +1113,6 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SwapEntry)
    if ((NeedClear) && (Consumer != MC_SYSTEM))
    {
       MiZeroPage(PfnOffset);
-   }
-   if (PageDescriptor->MapCount != 0)
-   {
-      DPRINT1("Returning mapped page.\n");
-      KeBugCheck(MEMORY_MANAGEMENT);
    }
    return PfnOffset;
 }
@@ -1247,12 +1167,7 @@ MmZeroPageThreadMain(PVOID Ignored)
          Status = MiZeroPage(Pfn);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-         if (PageDescriptor->MapCount != 0)
-         {
-            DPRINT1("Mapped page on freelist.\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-         }
-	 PageDescriptor->Flags.Zero = 1;
+         PageDescriptor->Flags.Zero = 1;
          PageDescriptor->Flags.Type = MM_PHYSICAL_PAGE_FREE;
          if (NT_SUCCESS(Status))
          {
