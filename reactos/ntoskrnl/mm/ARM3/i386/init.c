@@ -203,7 +203,7 @@ MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 //
 // This is where we keep track of the most basic physical layout markers
 //
-ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage;
+ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
 
 //
 // The total number of pages mapped by the boot loader, which include the kernel
