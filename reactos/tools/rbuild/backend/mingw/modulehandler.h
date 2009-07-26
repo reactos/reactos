@@ -57,7 +57,8 @@ public:
 
 	static const FileLocation* GetImportLibraryFilename (
 		const Module& module,
-		string_list* pclean_files );
+		string_list* pclean_files,
+		bool delayimp );
 
 	static std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines, std::set<std::string> &used_defs );
 	static std::string GenerateDefineParametersFromVector ( const std::vector<Define*>& defines, CompilerType compiler );
@@ -95,7 +96,7 @@ protected:
 	std::string GetBasename ( const std::string& filename ) const;
 	std::string GetCompilationUnitDependencies ( const CompilationUnit& compilationUnit ) const;
 	const FileLocation* GetModuleArchiveFilename () const;
-	std::string GetImportLibraryDependency ( const Module& importedModule );
+	std::string GetImportLibraryDependency ( const Module& importedModule, bool delayimp );
 	void GetTargets ( const Module& dependencyModule,
 	                  string_list& targets );
 	void GetModuleDependencies ( string_list& dependencies );
@@ -118,6 +119,7 @@ protected:
 	void GeneratePhonyTarget() const;
 	void GenerateBuildMapCode ( const FileLocation *mapTarget = NULL );
 	void GenerateRules ();
+	void GenerateImportLibraryTarget (const FileLocation *defFilename, const FileLocation *library_target, bool delayimp);
 	void GenerateImportLibraryTargetIfNeeded ();
 	void GetDefinitionDependencies ( std::vector<FileLocation>& dependencies ) const;
 	std::string GetLinkingDependencies () const;

@@ -377,6 +377,7 @@ public:
 	std::string buildtype;
 	ModuleType type;
 	ImportLibrary* importLibrary;
+	ImportLibrary* delayImportLibrary;
 	Metadata* metadata;
 	Bootsector* bootSector;
 	bool mangledSymbols;
@@ -429,6 +430,7 @@ public:
 	std::string GetDllName() const;
 private:
 	void SetImportLibrary ( ImportLibrary* importLibrary );
+	void SetDelayImportLibrary ( ImportLibrary* importLibrary );
 	DirectoryLocation GetTargetDirectoryTree () const;
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;
@@ -555,6 +557,7 @@ public:
 	const Module& module;
 	std::string name;
 	const Module* importedModule;
+	bool delayimp;
 
 	Library ( const XMLElement& _node,
 	          const Module& _module,
@@ -655,10 +658,12 @@ public:
 	const Module* module;
 	std::string dllname;
 	FileLocation *source;
+	FileLocation *target;
 
 	ImportLibrary ( const Project& project,
 	                const XMLElement& node,
-	                const Module* module );
+	                const Module* module,
+	                bool delayimp );
 	~ImportLibrary ();
 };
 

@@ -260,6 +260,7 @@ Module::Module ( const Project& project,
 	: project (project),
 	  node (moduleNode),
 	  importLibrary (NULL),
+	  delayImportLibrary (NULL),
 	  metadata (NULL),
 	  bootSector (NULL),
 	  bootstrap (NULL),
@@ -715,7 +716,10 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
+		const XMLAttribute* att = e.GetAttribute ( "delayimport", false );
 		Library* pLibrary = new Library ( e, *this, e.value );
+		if ( att && !stricmp ( att->value.c_str(), "true" ) )
+			pLibrary->delayimp = true;
 		non_if_data.libraries.push_back ( pLibrary );
 		subs_invalid = true;
 	}
@@ -780,7 +784,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				e.location,
 				"Only one <importlibrary> is valid per module" );
 		}
-		SetImportLibrary ( new ImportLibrary ( project, e, this ) );
+		SetImportLibrary ( new ImportLibrary ( project, e, this, false ) );
+		SetDelayImportLibrary ( new ImportLibrary ( project, e, this, true ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "if" || e.name == "ifnot" )
@@ -1420,6 +1425,12 @@ Module::SetImportLibrary ( ImportLibrary* importLibrary )
 	                                HasImportLibrary () ? "lib" + name + ".a" : output->name );
 }
 
+void
+Module::SetDelayImportLibrary ( ImportLibrary* importLibrary )
+{
+	this->delayImportLibrary = importLibrary;
+}
+
 std::string
 Module::GetDllName () const
 {
@@ -1482,7 +1493,8 @@ Library::Library ( const XMLElement& _node,
 	: node(&_node),
 	  module(_module),
 	  name(_name),
-	  importedModule(_module.project.LocateModule(_name))
+	  importedModule(_module.project.LocateModule(_name)),
+	  delayimp(false)
 {
 	if ( module.name == name )
 	{
@@ -1506,7 +1518,8 @@ Library::Library ( const Module& _module,
 	: node(NULL),
 	  module(_module),
 	  name(_name),
-	  importedModule(_module.project.LocateModule(_name))
+	  importedModule(_module.project.LocateModule(_name)),
+	  delayimp(false)
 {
 	if ( !importedModule )
 	{
@@ -1817,12 +1830,14 @@ Metadata::Metadata ( const XMLElement& _node,
 ImportLibrary::~ImportLibrary ()
 {
 	delete source;
+	delete target;
 }
 
 
 ImportLibrary::ImportLibrary ( const Project& project,
                                const XMLElement& node,
-                               const Module* module )
+                               const Module* module,
+                               bool delayimp )
 	: XmlNode ( project, node ),
 	  module (module)
 {
@@ -1889,6 +1904,11 @@ ImportLibrary::ImportLibrary ( const Project& project,
 		                            name,
 		                            &node );
 	}
+
+	target = new FileLocation ( IntermediateDirectory,
+	                            base->output->relative_path,
+	                            "lib" + module->name + (delayimp ? ".delayimp.a" :  ".a" ));
+
 }
 
 
