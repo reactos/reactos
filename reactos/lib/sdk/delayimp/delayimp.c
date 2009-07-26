@@ -48,7 +48,7 @@ __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
 	pProc = __pfnDliNotifyHook2(dliStartProcessing, &dli);
 	if (pProc)
 	{
-		pIAT[index].u1.Function = (DWORD)pProc;
+		pIAT[index].u1.Function = (DWORD_PTR)pProc;
 		return pProc;
 	}
 
@@ -77,7 +77,7 @@ __delayLoadHelper2(PCImgDelayDescr pidd, PImgThunkData pIATEntry)
 		// FIXME: handle return value & raise exception
 		return NULL;
 	}
-	pIAT[index].u1.Function = (DWORD)pProc;
+	pIAT[index].u1.Function = (DWORD_PTR)pProc;
 
 	return pProc;
 }
