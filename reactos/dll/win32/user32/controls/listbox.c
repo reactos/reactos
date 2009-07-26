@@ -138,8 +138,8 @@ typedef enum
 
 static TIMER_DIRECTION LISTBOX_Timer = LB_TIMER_NONE;
 
-static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam,LPARAM lParam );
+//static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 static LRESULT LISTBOX_GetItemRect( const LB_DESCR *descr, INT index, RECT *rect );
 
@@ -2659,8 +2659,8 @@ static BOOL LISTBOX_Destroy( LB_DESCR *descr )
 /***********************************************************************
  *           ListBoxWndProc_common
  */
-static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
-                                      WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
+                                   WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     LB_DESCR *descr = (LB_DESCR *)GetWindowLongPtrW( hwnd, 0 );
     LPHEADCOMBO lphc = 0;
@@ -3446,7 +3446,7 @@ static LRESULT ListBoxWndProc_common( HWND hwnd, UINT msg,
 /***********************************************************************
  *           ListBoxWndProcA
  */
-static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ListBoxWndProc_common( hwnd, msg, wParam, lParam, FALSE );
 }
@@ -3454,7 +3454,7 @@ static LRESULT WINAPI ListBoxWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARA
 /***********************************************************************
  *           ListBoxWndProcW
  */
-static LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ListBoxWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
     return ListBoxWndProc_common( hwnd, msg, wParam, lParam, TRUE );
 }

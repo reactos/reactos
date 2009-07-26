@@ -382,7 +382,7 @@ BOOL FASTCALL UserDereferenceObject(PVOID obj)
    if (!hdr->destroyed && hdr->RefCount == 0)
    {
       hdr->RefCount++; // BOUNCE!!!!!
-      DPRINT1("warning! Dereference to zero without deleting!\n");
+      DPRINT1("warning! Dereference to zero without deleting! Obj -> 0x%x\n", obj);
    }
 
    if (hdr->RefCount == 0 && hdr->destroyed)

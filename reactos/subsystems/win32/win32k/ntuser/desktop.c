@@ -566,7 +566,7 @@ HWND FASTCALL IntGetMessageWindow(VOID)
       DPRINT("No active desktop\n");
       return NULL;
    }
-   return pdo->spwndMessage->hdr.Handle;
+   return pdo->spwndMessage->head.h;
 }
 
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
@@ -1119,7 +1119,7 @@ NtUserCreateDesktop(
 
    wc.cbSize = sizeof(wc);
    wc.style = 0;
-   wc.lpfnWndProc = gpsi->apfnClientW.pfnDesktopWndProc; // Use pfnMessageWindowProc
+   wc.lpfnWndProc = gpsi->apfnClientW.pfnMessageWindowProc;
    wc.cbClsExtra = 0;
    wc.cbWndExtra = 0;
    wc.hInstance = hModClient;

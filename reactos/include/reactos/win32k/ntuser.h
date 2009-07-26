@@ -2,7 +2,6 @@
 #define __WIN32K_NTUSER_H
 
 typedef struct _PROCESSINFO *PPROCESSINFO;
-struct _W32THREADINFO;
 struct _DESKTOP;
 struct _WND;
 
@@ -36,36 +35,6 @@ VOID NTAPI RtlInitLargeAnsiString(IN OUT PLARGE_ANSI_STRING,IN PCSZ,IN INT);
 VOID NTAPI RtlInitLargeUnicodeString(IN OUT PLARGE_UNICODE_STRING,IN PCWSTR,IN INT);
 BOOL NTAPI RtlLargeStringToUnicodeString( PUNICODE_STRING, PLARGE_STRING);
 
-/* FIXME: UserHMGetHandle needs to be updated once the new handle manager is implemented */
-#define UserHMGetHandle(obj) ((obj)->hdr.Handle)
-
-typedef struct _REGISTER_SYSCLASS
-{
-    /* This is a reactos specific class used to initialize the
-       system window classes during user32 initialization */
-    UNICODE_STRING ClassName;
-    UINT Style;
-    WNDPROC ProcW;
-    WNDPROC ProcA;
-    UINT ExtraBytes;
-    HICON hCursor;
-    HBRUSH hBrush;
-    UINT ClassId;
-} REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
-
-typedef struct _CLSMENUNAME
-{
-  LPSTR     pszClientAnsiMenuName;
-  LPWSTR    pwszClientUnicodeMenuName;
-  PUNICODE_STRING pusMenuName;
-} CLSMENUNAME, *PCLSMENUNAME;
-
-typedef struct _USER_OBJHDR
-{
-    /* This is the common header for all user handle objects */
-    HANDLE Handle;
-} USER_OBJHDR, PUSER_OBJHDR;
-
 typedef struct _DESKTOPINFO
 {
     PVOID pvDesktopBase;
@@ -90,6 +59,132 @@ typedef struct _DESKTOPINFO
     WCHAR szDesktopName[1];
 } DESKTOPINFO, *PDESKTOPINFO;
 
+#define CTI_INSENDMESSAGE 0x0002
+
+typedef struct _CLIENTTHREADINFO
+{
+    DWORD CTI_flags;
+    WORD  fsChangeBits;
+    WORD  fsWakeBits;
+    WORD  fsWakeBitsJournal;
+    WORD  fsWakeMask;
+    ULONG tickLastMsgChecked;
+    DWORD dwcPumpHook;
+} CLIENTTHREADINFO, *PCLIENTTHREADINFO;
+
+typedef struct _W32THREADINFO
+{
+    PPROCESSINFO ppi; /* [KERNEL] */
+    PDESKTOPINFO pDeskInfo;
+    ULONG fsHooks;
+} W32THREADINFO, *PW32THREADINFO;
+
+typedef struct _HEAD
+{
+  HANDLE h;
+  DWORD  cLockObj;
+} HEAD, *PHEAD;
+
+typedef struct _THRDESKHEAD
+{
+  HANDLE h;
+  DWORD  cLockObj;
+  PW32THREADINFO pti;
+  struct _DESKTOP *rpdesk;
+  PVOID       pSelf;
+} THRDESKHEAD, *PTHRDESKHEAD;
+
+typedef struct _PROCDESKHEAD
+{
+  HANDLE h;
+  DWORD  cLockObj;  
+  DWORD hTaskWow;
+  struct _DESKTOP *rpdesk;
+  PVOID       pSelf;
+} PROCDESKHEAD, *PPROCDESKHEAD;
+
+#define UserHMGetHandle(obj) ((obj)->head.h)
+
+/* Window Client Information structure */
+struct  _ETHREAD;
+
+typedef struct tagHOOK
+{
+  THRDESKHEAD    head;
+  LIST_ENTRY     Chain;      /* Hook chain entry */
+  struct _ETHREAD* Thread;   /* Thread owning the hook */
+  int            HookId;     /* Hook table index */
+  HOOKPROC       Proc;       /* Hook function */
+  BOOLEAN        Ansi;       /* Is it an Ansi hook? */
+  ULONG          Flags;      /* Some internal flags */
+  UNICODE_STRING ModuleName; /* Module name for global hooks */
+} HOOK, *PHOOK;
+
+typedef struct _CALLBACKWND
+{
+     HWND hWnd;
+     PVOID pvWnd;
+} CALLBACKWND, *PCALLBACKWND;
+
+#define CI_CURTHPRHOOK    0x00000010
+
+typedef struct _CLIENTINFO
+{
+    ULONG CI_flags;
+    ULONG cSpins;
+    DWORD dwExpWinVer;
+    DWORD dwCompatFlags;
+    DWORD dwCompatFlags2;
+    DWORD dwTIFlags;
+    PDESKTOPINFO pDeskInfo;
+    ULONG_PTR ulClientDelta;
+    PHOOK phkCurrent;
+    ULONG fsHooks;
+    CALLBACKWND CallbackWnd;
+    DWORD dwHookCurrent;
+    INT cInDDEMLCallback;
+    PCLIENTTHREADINFO pClientThreadInfo;
+    ULONG_PTR dwHookData;
+    DWORD dwKeyCache;
+    DWORD afKeyState[2];
+    DWORD dwAsyncKeyCache;
+    DWORD afAsyncKeyState[2];
+    DWORD afAsyncKeyStateRecentDow[2];
+    HKL hKL;
+    USHORT CodePage;
+    USHORT achDbcsCF;
+    MSG msgDbcsCB;
+    ULONG Win32ClientInfo3[28];
+/* It's just a pointer reference not to be used w the structure in user space. */
+    PPROCESSINFO ppi;
+} CLIENTINFO, *PCLIENTINFO;
+
+/* Make sure it fits exactly into the TEB */
+C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
+
+#define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
+
+typedef struct _REGISTER_SYSCLASS
+{
+    /* This is a reactos specific class used to initialize the
+       system window classes during user32 initialization */
+    UNICODE_STRING ClassName;
+    UINT Style;
+    WNDPROC ProcW;
+    WNDPROC ProcA;
+    UINT ExtraBytes;
+    HICON hCursor;
+    HBRUSH hBrush;
+    UINT ClassId;
+} REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
+
+typedef struct _CLSMENUNAME
+{
+  LPSTR     pszClientAnsiMenuName;
+  LPWSTR    pwszClientUnicodeMenuName;
+  PUNICODE_STRING pusMenuName;
+} CLSMENUNAME, *PCLSMENUNAME;
+
 typedef enum _GETCPD
 {
     UserGetCPDU2A      = 0x01,
@@ -102,9 +197,7 @@ typedef enum _GETCPD
 
 typedef struct _CALLPROCDATA
 {
-//    PROCDESKHEAD head; // Use this once new handle manager is implemented!!!
-    USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
-//
+    PROCDESKHEAD head;
     struct _CALLPROCDATA *spcpdNext;
     WNDPROC pfnClientPrevious;
     union
@@ -257,15 +350,7 @@ typedef struct _CLS
 
 typedef struct _WND
 {
-    //THRDESKHEAD head; // head.h == handle
-    USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
-    /* NOTE: This structure is located in the desktop heap and will
-             eventually replace WINDOW_OBJECT. Right now WINDOW_OBJECT
-             keeps a reference to this structure until all the information
-             is moved to this structure */
-    struct _W32THREADINFO *pti; // head.pti
-    struct _DESKTOP *rpdesk; // head.rpdesk
-
+    THRDESKHEAD head;
     DWORD state;
     DWORD state2;
     /* Extended style. */
@@ -388,6 +473,7 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define FNID_MENU                   0x029C
 #define FNID_DESKTOP                0x029D
 #define FNID_DEFWINDOWPROC          0x029E
+#define FNID_MESSAGEWND             0x029F
 #define FNID_SWITCH                 0x02A0
 #define FNID_BUTTON                 0x02A1
 #define FNID_COMBOBOX               0x02A2
@@ -398,17 +484,20 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define FNID_MDICLIENT              0x02A7
 #define FNID_STATIC                 0x02A8
 #define FNID_IME                    0x02A9
-#define FNID_CALLWNDPROC            0x02AA
-#define FNID_CALLWNDPROCRET         0x02AB
-#define FNID_HKINLPCWPEXSTRUCT      0x02AC
-#define FNID_HKINLPCWPRETEXSTRUCT   0x02AD
-#define FNID_SENDMESSAGE            0x02B0
+#define FNID_GHOST                  0x02AA
+#define FNID_CALLWNDPROC            0x02AB
+#define FNID_CALLWNDPROCRET         0x02AC
+#define FNID_HKINLPCWPEXSTRUCT      0x02AD
+#define FNID_HKINLPCWPRETEXSTRUCT   0x02AE
+#define FNID_MB_DLGPROC             0x02AF
+#define FNID_MDIACTIVATEDLGPROC     0x02B0
+#define FNID_SENDMESSAGE            0x02B1
+#define FNID_SENDMESSAGEFF          0x02B2
 // Kernel has option to use TimeOut or normal msg send, based on type of msg.
-#define FNID_SENDMESSAGEWTOOPTION   0x02B1
-#define FNID_SENDMESSAGETIMEOUT     0x02B2
-#define FNID_BROADCASTSYSTEMMESSAGE 0x02B4
-#define FNID_TOOLTIPS               0x02B5
-#define FNID_UNKNOWN                0x02B6
+#define FNID_SENDMESSAGEWTOOPTION   0x02B3
+#define FNID_SENDMESSAGETIMEOUT     0x02B4
+#define FNID_BROADCASTSYSTEMMESSAGE 0x02B5
+#define FNID_TOOLTIPS               0x02B6 
 #define FNID_SENDNOTIFYMESSAGE      0x02B7
 #define FNID_SENDMESSAGECALLBACK    0x02B8
 #define FNID_LAST                   0x02B9
@@ -551,85 +640,6 @@ typedef struct tagSERVERINFO
     PERUSERSERVERINFO;
 } SERVERINFO, *PSERVERINFO;
 
-#define CTI_INSENDMESSAGE 0x0002
-
-typedef struct _CLIENTTHREADINFO
-{
-    DWORD CTI_flags;
-    WORD  fsChangeBits;
-    WORD  fsWakeBits;
-    WORD  fsWakeBitsJournal;
-    WORD  fsWakeMask;
-    ULONG tickLastMsgChecked;
-    DWORD dwcPumpHook;
-} CLIENTTHREADINFO, *PCLIENTTHREADINFO;
-
-typedef struct _W32THREADINFO
-{
-    PPROCESSINFO ppi; /* [KERNEL] */
-    PDESKTOPINFO pDeskInfo;
-    ULONG fsHooks;
-} W32THREADINFO, *PW32THREADINFO;
-
-/* Window Client Information structure */
-struct  _ETHREAD;
-
-
-typedef struct tagHOOK
-{
-  LIST_ENTRY     Chain;      /* Hook chain entry */
-  HHOOK          Self;       /* user handle for this hook */
-  struct _ETHREAD* Thread;   /* Thread owning the hook */
-  int            HookId;     /* Hook table index */
-  HOOKPROC       Proc;       /* Hook function */
-  BOOLEAN        Ansi;       /* Is it an Ansi hook? */
-  ULONG          Flags;      /* Some internal flags */
-  UNICODE_STRING ModuleName; /* Module name for global hooks */
-} HOOK, *PHOOK;
-
-typedef struct _CALLBACKWND
-{
-     HWND hWnd;
-     PVOID pvWnd;
-} CALLBACKWND, *PCALLBACKWND;
-
-#define CI_CURTHPRHOOK    0x00000010
-
-typedef struct _CLIENTINFO
-{
-    ULONG CI_flags;
-    ULONG cSpins;
-    DWORD dwExpWinVer;
-    DWORD dwCompatFlags;
-    DWORD dwCompatFlags2;
-    DWORD dwTIFlags;
-    PDESKTOPINFO pDeskInfo;
-    ULONG_PTR ulClientDelta;
-    PHOOK phkCurrent;
-    ULONG fsHooks;
-    CALLBACKWND CallbackWnd;
-    DWORD dwHookCurrent;
-    INT cInDDEMLCallback;
-    PCLIENTTHREADINFO pClientThreadInfo;
-    ULONG_PTR dwHookData;
-    DWORD dwKeyCache;
-    DWORD afKeyState[2];
-    DWORD dwAsyncKeyCache;
-    DWORD afAsyncKeyState[2];
-    DWORD afAsyncKeyStateRecentDow[2];
-    HKL hKL;
-    USHORT CodePage;
-    USHORT achDbcsCF;
-    MSG msgDbcsCB;
-    ULONG Win32ClientInfo3[28];
-/* It's just a pointer reference not to be used w the structure in user space. */
-    PPROCESSINFO ppi;
-} CLIENTINFO, *PCLIENTINFO;
-
-/* Make sure it fits exactly into the TEB */
-C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
-
-#define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
 // Server event activity bits.
 #define SRV_EVENT_MENU            0x0001

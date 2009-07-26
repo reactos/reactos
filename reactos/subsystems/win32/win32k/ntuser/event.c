@@ -4,6 +4,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define WINEVENT_INIT      0x40000000
+#define WINEVENT_DESTROYED 0x80000000
+
 typedef struct _EVENTPACK
 {
   PEVENTHOOK pEH; 
@@ -126,10 +129,13 @@ IntRemoveEvent(PEVENTHOOK pEH)
 {
    if (pEH)
    {
+      DPRINT("IntRemoveEvent pEH 0x%x\n",pEH);
+      KeEnterCriticalRegion();
       RemoveEntryList(&pEH->Chain);
       GlobalEvents->Counts--;
       if (!GlobalEvents->Counts) gpsi->dwInstalledEventHooks = 0;
-      UserDeleteObject(pEH->Self, otEvent);
+      UserDeleteObject(pEH->head.h, otEvent);
+      KeLeaveCriticalRegion();
       return TRUE;
    }
    return FALSE;
@@ -150,14 +156,14 @@ co_EVENT_CallEvents( DWORD event,
 
    pEH = pEP->pEH;
    
-   Result = co_IntCallEventProc( pEH->Self,
-                                     event,
-                                      hwnd,
-                             pEP->idObject,
-                              pEP->idChild,
+   Result = co_IntCallEventProc( pEH->head.h,
+                                       event,
+                                        hwnd,
+                               pEP->idObject,
+                                pEP->idChild,
  (DWORD)(NtCurrentTeb()->ClientId).UniqueThread,
-                  (DWORD)EngGetTickCount(),
-                                 pEH->Proc);
+                    (DWORD)EngGetTickCount(),
+                                   pEH->Proc);
    return Result;
 }
 
@@ -165,19 +171,32 @@ VOID
 FASTCALL
 IntNotifyWinEvent(
    DWORD Event,
-   HWND  hWnd,
+   PWND  pWnd,
    LONG  idObject,
    LONG  idChild)
 {
    PEVENTHOOK pEH;
    LRESULT Result;
 
+   DPRINT("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
+
+   if (!pWnd) return;
+
+   if (pWnd && pWnd->state & WNDS_DESTROYED) return;
+
    if (!GlobalEvents || !GlobalEvents->Counts) return;
 
-   pEH = (PEVENTHOOK)GlobalEvents->Events.Flink;
+   if (!UserIsEntered()) return;
 
+   pEH = (PEVENTHOOK)GlobalEvents->Events.Flink;
+   DPRINT("IntNotifyWinEvent pEH 0x%x\n",pEH);
    do
    { 
+     if (pEH->Flags & WINEVENT_INIT)
+     {
+        DPRINT("IntNotifyWinEvent is still in INIT MODE!! pEH 0x%x\n",pEH);
+     }
+
      UserReferenceObject(pEH);
      // Must be inside the event window.
      if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
@@ -187,7 +206,7 @@ IntNotifyWinEvent(
            if (!(pEH->idProcess) || !(pEH->idThread) || 
                (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
            {
-              Result = IntCallLowLevelEvent(pEH, Event, hWnd, idObject, idChild);
+              Result = IntCallLowLevelEvent(pEH, Event, UserHMGetHandle(pWnd), idObject, idChild);
            }
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
@@ -196,14 +215,16 @@ IntNotifyWinEvent(
                      !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
                      !pEH->idProcess ) )
         {
-           Result = co_IntCallEventProc( pEH->Self,
-                                             Event,
-                                              hWnd,
-                                          idObject,
-                                           idChild,
+
+           Result = co_IntCallEventProc( pEH->head.h,
+                                               Event,
+                               UserHMGetHandle(pWnd),
+                                            idObject,
+                                             idChild,
              PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
-                          (DWORD)EngGetTickCount(),
-                                         pEH->Proc);
+                            (DWORD)EngGetTickCount(),
+                                           pEH->Proc);
+
         }
      }
      UserDereferenceObject(pEH);
@@ -234,7 +255,7 @@ NtUserNotifyWinEvent(
    if (gpsi->dwInstalledEventHooks & GetMaskFromEvent(Event))
    {
       UserRefObjectCo(Window, &Ref);
-      IntNotifyWinEvent( Event, Window->hSelf, idObject, idChild);
+      IntNotifyWinEvent( Event, Window->Wnd, idObject, idChild);
       UserDerefObjectCo(Window);
    }
    UserLeave();
@@ -309,7 +330,10 @@ NtUserSetWinEventHook(
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);
       GlobalEvents->Counts++;
 
-      pEH->Self      = Handle;
+      pEH->Flags     = dwflags|WINEVENT_INIT;
+      pEH->head.h    = Handle;
+//      pEH->head.pti  =?
+//      pEH->head.rpdesk
       if (Thread)
          pEH->Thread = Thread;
       else
@@ -318,8 +342,6 @@ NtUserSetWinEventHook(
       pEH->eventMax  = eventMax;
       pEH->idProcess = idProcess;
       pEH->idThread  = idThread;
-      pEH->Flags     = dwflags;
-
 
       if (NULL != hmodWinEventProc)
       {
@@ -370,6 +392,8 @@ NtUserSetWinEventHook(
       }
       else
          pEH->Proc = lpfnWinEventProc;
+
+      pEH->Flags &= ~WINEVENT_INIT;
 
       UserDereferenceObject(pEH);
 

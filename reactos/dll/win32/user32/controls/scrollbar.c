@@ -69,8 +69,8 @@ static BOOL ScrollTrackVertical;
 
 HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
-static LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ScrollBarWndProcW( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ScrollBarWndProcA( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
@@ -1248,7 +1248,7 @@ ScrollTrackScrollBar(HWND Wnd, INT SBType, POINT Pt)
 /***********************************************************************
  *           ScrollBarWndProc
  */
-static LRESULT WINAPI
+LRESULT WINAPI
 ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   if (! IsWindow(Wnd))
@@ -1457,13 +1457,13 @@ ScrollBarWndProc(WNDPROC DefWindowProc, HWND Wnd, UINT Msg, WPARAM wParam, LPARA
   return 0;
 }
 
-static LRESULT WINAPI
+LRESULT WINAPI
 ScrollBarWndProcW(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   return ScrollBarWndProc(DefWindowProcW, Wnd, Msg, wParam, lParam);
 }
 
-static LRESULT WINAPI
+LRESULT WINAPI
 ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   return ScrollBarWndProc(DefWindowProcA, Wnd, Msg, wParam, lParam);

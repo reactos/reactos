@@ -55,8 +55,8 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintBitmapfn( HWND hwnd, HDC hdc, DWORD style );
 //static void STATIC_PaintEnhMetafn( HWND hwnd, HDC hdc, DWORD style );
 static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style );
-static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 static COLORREF color_3dshadow, color_3ddkshadow, color_3dhighlight;
 
@@ -436,7 +436,7 @@ static BOOL hasTextStyle( DWORD style )
 /***********************************************************************
  *           StaticWndProc_common
  */
-static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
+LRESULT WINAPI StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
                                      LPARAM lParam, BOOL unicode )
 {
     LRESULT lResult = 0;
@@ -663,7 +663,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
 /***********************************************************************
  *           StaticWndProcA
  */
-static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     if (!IsWindow( hWnd )) return 0;
     return StaticWndProc_common(hWnd, uMsg, wParam, lParam, FALSE);
@@ -672,7 +672,7 @@ static LRESULT WINAPI StaticWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 /***********************************************************************
  *           StaticWndProcW
  */
-static LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI StaticWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     if (!IsWindow( hWnd )) return 0;
     return StaticWndProc_common(hWnd, uMsg, wParam, lParam, TRUE);

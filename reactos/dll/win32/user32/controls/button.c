@@ -102,8 +102,8 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void UB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void OB_Paint( HWND hwnd, HDC hDC, UINT action );
 static void BUTTON_CheckAutoRadioButton( HWND hwnd );
-static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 #define MAX_BTN_TYPE  12
 
@@ -249,8 +249,8 @@ static BOOL button_update_uistate(HWND hwnd, BOOL unicode)
 /***********************************************************************
  *           ButtonWndProc_common
  */
-static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
-                                    WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
+                                  WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
     RECT rect;
     POINT pt;
@@ -591,7 +591,7 @@ static LRESULT ButtonWndProc_common(HWND hWnd, UINT uMsg,
  * the passed HWND and calls the real window procedure (with a WND*
  * pointer pointing to the locked windowstructure).
  */
-static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     if (!IsWindow( hWnd )) return 0;
     return ButtonWndProc_common( hWnd, uMsg, wParam, lParam, TRUE );
@@ -601,7 +601,7 @@ static LRESULT WINAPI ButtonWndProcW( HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 /***********************************************************************
  *           ButtonWndProcA
  */
-static LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ButtonWndProcA( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 {
     if (!IsWindow( hWnd )) return 0;
     return ButtonWndProc_common( hWnd, uMsg, wParam, lParam, FALSE );

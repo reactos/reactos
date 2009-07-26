@@ -1268,7 +1268,7 @@ GetWindowThreadProcessId(HWND hWnd,
 
     if (!pWnd) return Ret;
 
-    ti = SharedPtrToUser(pWnd->pti);
+    ti = SharedPtrToUser(pWnd->head.pti);
  
     if (ti)
     {

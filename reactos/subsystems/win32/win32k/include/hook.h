@@ -2,19 +2,6 @@
 #define _WIN32K_HOOK_H
 
 #define HOOK_THREAD_REFERENCED	(0x1)
-#if 0
-typedef struct tagHOOK
-{
-  LIST_ENTRY Chain;          /* Hook chain entry */
-  HHOOK      Self;           /* user handle for this hook */
-  PETHREAD   Thread;         /* Thread owning the hook */
-  int        HookId;         /* Hook table index */
-  HOOKPROC   Proc;           /* Hook function */
-  BOOLEAN    Ansi;           /* Is it an Ansi hook? */
-  ULONG      Flags;          /* Some internal flags */
-  UNICODE_STRING ModuleName; /* Module name for global hooks */
-} HOOK, *PHOOK;
-#endif
 #define NB_HOOKS (WH_MAXHOOK-WH_MINHOOK+1)
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
 #define HOOKID_TO_FLAG(HookId) (1 << ((HookId) + 1))
@@ -29,7 +16,6 @@ typedef struct tagHOOKTABLE
 typedef struct tagEVENTHOOK
 {
   LIST_ENTRY     Chain;      /* Event chain entry */
-  HWINEVENTHOOK  Self;       /* user handle for this event */
   PETHREAD       Thread;     /* Thread owning the event */
   UINT           eventMin;
   UINT           eventMax; 
@@ -39,6 +25,7 @@ typedef struct tagEVENTHOOK
   ULONG          Flags;      /* Some internal flags */
   ULONG_PTR      offPfn;
   INT            ihmod;
+  THRDESKHEAD    head; // FIXME When on top it creates problems
   UNICODE_STRING ModuleName; /* Module name for global events */
 } EVENTHOOK, *PEVENTHOOK;
 

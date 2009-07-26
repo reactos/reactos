@@ -104,7 +104,9 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         return NULL;
     }
 
-    Hook->Self = Handle;
+//    Hook->head.pti =?
+//    Hook->head.rpdesk
+    Hook->head.h = Handle;
     Hook->Thread = Thread;
     Hook->HookId = HookId;
 
@@ -218,7 +220,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
     }
 
     /* Close handle */
-    UserDeleteObject(Hook->Self, otHook);
+    UserDeleteObject(Hook->head.h, otHook);
 }
 
 /* remove a hook, freeing it if the chain is not in use */
@@ -1282,7 +1284,7 @@ NtUserSetWindowsHookEx(HINSTANCE Mod,
         Hook->Proc = HookProc;
 
     Hook->Ansi = Ansi;
-    Handle = Hook->Self;
+    Handle = Hook->head.h;
 
     /* Clear the client threads next hook. */
     ClientInfo->phkCurrent = 0;
@@ -1333,7 +1335,7 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
         RETURN( FALSE);
     }
 
-    ASSERT(Hook == HookObj->Self);
+    ASSERT(Hook == HookObj->head.h);
 
     IntRemoveHook(HookObj, WinStaObj, FALSE);
 

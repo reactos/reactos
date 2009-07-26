@@ -1340,7 +1340,7 @@ DispatchMessageA(CONST MSG *lpmsg)
     if (lpmsg->hwnd != NULL)
     {
         Wnd = ValidateHwnd(lpmsg->hwnd);
-        if (!Wnd || SharedPtrToUser(Wnd->pti) != GetW32ThreadInfo())
+        if (!Wnd || SharedPtrToUser(Wnd->head.pti) != GetW32ThreadInfo())
             return 0;
     }
     else
@@ -1401,7 +1401,7 @@ DispatchMessageW(CONST MSG *lpmsg)
     if (lpmsg->hwnd != NULL)
     {
         Wnd = ValidateHwnd(lpmsg->hwnd);
-        if (!Wnd || SharedPtrToUser(Wnd->pti) != GetW32ThreadInfo())
+        if (!Wnd || SharedPtrToUser(Wnd->head.pti) != GetW32ThreadInfo())
             return 0;
     }
     else
@@ -1801,7 +1801,7 @@ SendMessageW(HWND Wnd,
       PW32THREADINFO ti = GetW32ThreadInfo();
 
       Window = ValidateHwnd(Wnd);
-      if (Window != NULL && SharedPtrToUser(Window->pti) == ti && !IsThreadHooked(GetWin32ClientInfo()))
+      if (Window != NULL && SharedPtrToUser(Window->head.pti) == ti && !IsThreadHooked(GetWin32ClientInfo()))
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:
@@ -1865,7 +1865,7 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       PW32THREADINFO ti = GetW32ThreadInfo();
 
       Window = ValidateHwnd(Wnd);
-      if (Window != NULL && SharedPtrToUser(Window->pti) == ti && !IsThreadHooked(GetWin32ClientInfo()))
+      if (Window != NULL && SharedPtrToUser(Window->head.pti) == ti && !IsThreadHooked(GetWin32ClientInfo()))
       {
           /* NOTE: We can directly send messages to the window procedure
                    if *all* the following conditions are met:

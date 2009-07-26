@@ -72,8 +72,8 @@ typedef struct
   POINT Pt;
 } MTRACKER;
 
-static LRESULT WINAPI PopupMenuWndProcA(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
-static LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+//static LRESULT WINAPI PopupMenuWndProcA(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+//static LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 /*********************************************************************
  * PopupMenu class descriptor
@@ -972,7 +972,7 @@ MenuDrawPopupMenu(HWND Wnd, HDC Dc, HMENU Menu)
     }
 }
 
-static LRESULT WINAPI
+LRESULT WINAPI
 PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
   TRACE("YES! hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
@@ -1036,7 +1036,7 @@ PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
   return 0;
 }
 
-static LRESULT WINAPI
+LRESULT WINAPI
 PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
   TRACE("hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);

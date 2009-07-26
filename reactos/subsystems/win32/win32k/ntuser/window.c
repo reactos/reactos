@@ -329,12 +329,12 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
    {
        Wnd->strName.Length = 0;
        Wnd->strName.MaximumLength = 0;
-       DesktopHeapFree(Wnd->rpdesk,
+       DesktopHeapFree(Wnd->head.rpdesk,
                        Wnd->strName.Buffer);
        Wnd->strName.Buffer = NULL;
    }
 
-    DesktopHeapFree(Wnd->rpdesk, Wnd);
+    DesktopHeapFree(Wnd->head.rpdesk, Wnd);
     WindowObject->Wnd = NULL;
 }
 
@@ -370,6 +370,9 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    }
    Window->Status |= WINDOWSTATUS_DESTROYING;
    Wnd->style &= ~WS_VISIBLE;
+
+   IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Wnd, OBJID_WINDOW, 0);
+
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
       in IntDestroyWindow() */
@@ -378,8 +381,6 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
 
    IntDeRegisterShellHookWindow(Window->hSelf);
-
-   IntNotifyWinEvent(EVENT_OBJECT_DESTROY, Window->hSelf, OBJID_WINDOW, 0);
 
    if(SendMessages)
    {
@@ -428,6 +429,8 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    /* from now on no messages can be sent to this window anymore */
    Window->Status |= WINDOWSTATUS_DESTROYED;
+   Wnd->state |= WNDS_DESTROYED;
+
    /* don't remove the WINDOWSTATUS_DESTROYING bit */
 
    /* reset shell window handles */
@@ -569,10 +572,10 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
                                                Wnd->Unicode);
                 if (NewCallProc == NULL)
                 {
-                    NewCallProc = CreateCallProc(Wnd->pti->pDeskInfo,
+                    NewCallProc = CreateCallProc(Wnd->head.pti->pDeskInfo,
                                                  Wnd->lpfnWndProc,
                                                  Wnd->Unicode,
-                                                 Wnd->pti->ppi);
+                                                 Wnd->head.pti->ppi);
                     if (NewCallProc == NULL)
                     {
                         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -1669,11 +1672,11 @@ co_IntCreateWindowEx(DWORD dwExStyle,
            goto AllocErr;
        RtlZeroMemory(Window->Wnd,
                      sizeof(WND) + Class->cbwndExtra);
-       Window->Wnd->hdr.Handle = hWnd; /* FIXME: Remove hack , are you sure?*/
+       Window->Wnd->head.h = hWnd;
        Wnd = Window->Wnd;
 
-       Wnd->pti = ti;
-       Wnd->rpdesk = pti->Desktop;
+       Wnd->head.pti = ti;
+       Wnd->head.rpdesk = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
    }
 
@@ -1769,7 +1772,7 @@ AllocErr:
 
    if ( NULL != WindowName->Buffer && WindowName->Length > 0 )
    {
-      Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->rpdesk,
+      Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->head.rpdesk,
                                                 WindowName->Length + sizeof(UNICODE_NULL));
       if (Wnd->strName.Buffer == NULL)
       {
@@ -2122,7 +2125,7 @@ AllocErr:
       RETURN((PWND)0);
    }
 
-   IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window->hSelf, OBJID_WINDOW, 0);
+   IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window->Wnd, OBJID_WINDOW, 0);
 
    /* Send move and size messages. */
    if (!(Window->Flags & WINDOWOBJECT_NEED_SIZE))
@@ -2240,7 +2243,7 @@ AllocErr:
    {
       PCALLPROCDATA CallProc;
       //CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, bUnicodeWindow, Wnd->ti->ppi);
-      CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, Wnd->Unicode , Wnd->pti->ppi);
+      CallProc = CreateCallProc(NULL, Wnd->lpfnWndProc, Wnd->Unicode , Wnd->head.pti->ppi);
 
       if (!CallProc)
       {
@@ -2363,7 +2366,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
                                       dwShowMode,
                                       bUnicodeWindow);
 
-   if (pNewWindow) NewWindow = pNewWindow->hdr.Handle;
+   if (pNewWindow) NewWindow = UserHMGetHandle(pNewWindow);
 
    if (WindowName.Buffer)
    {
@@ -3729,7 +3732,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                 CallProc = CreateCallProc(NULL,
                                           Wnd->lpfnWndProc,
                                           Wnd->Unicode,
-                                          Wnd->pti->ppi);
+                                          Wnd->head.pti->ppi);
                 if (CallProc == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -4819,10 +4822,10 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
          Wnd->strName.Buffer = NULL;
          if (buf != NULL)
          {
-            DesktopHeapFree(Wnd->rpdesk, buf);
+            DesktopHeapFree(Wnd->head.rpdesk, buf);
          }
 
-         Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->rpdesk,
+         Wnd->strName.Buffer = DesktopHeapAlloc(Wnd->head.rpdesk,
                                                    UnicodeString.Length + sizeof(UNICODE_NULL));
          if (Wnd->strName.Buffer != NULL)
          {

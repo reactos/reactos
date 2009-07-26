@@ -451,7 +451,8 @@ typedef struct _PATRECT
   RECT r;
   HBRUSH hBrush;
 } PATRECT, * PPATRECT;
-
+#endif
+#ifndef __WIN32K_NTUSER_H
 typedef struct _W32CLIENTINFO
 {
     ULONG CI_flags;
@@ -462,7 +463,6 @@ typedef struct _W32CLIENTINFO
     ULONG W32ClientInfo[57];
 } W32CLIENTINFO, *PW32CLIENTINFO;
 #endif
-
 typedef struct _GDIBSPPATBLT
 {
   GDIBATCHHDR gbHdr;
