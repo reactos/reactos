@@ -799,18 +799,6 @@ BRUSHOBJ_hGetColorTransform(
 /*
  * @unimplemented
  */
-VOID
-APIENTRY
-EngClearEvent(
-   IN PEVENT Event)
-{
-    /* Forward to the kernel */
-    KeClearEvent((PKEVENT)Event);
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 EngDeleteFile(
@@ -928,17 +916,6 @@ EngQueryFileTimeStamp(IN LPWSTR FileName)
 /*
  * @unimplemented
  */
-LONG APIENTRY
-EngReadStateEvent(
-   IN PEVENT Event)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL APIENTRY
 EngUnmapFile(
    IN ULONG_PTR File)
@@ -1010,18 +987,6 @@ HT_Get8BPPMaskPalette(
    UNIMPLEMENTED;
    return 0;
 }
-
-/*
- * @unimplemented
- */
-HANDLE APIENTRY
-XLATEOBJ_hGetColorTransform(
-   IN XLATEOBJ *XlateObj)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
 
 /*
  * @unimplemented
@@ -2770,7 +2735,7 @@ EngFntCacheAlloc(IN ULONG FastCheckSum,
     UNIMPLEMENTED;
     return NULL;
 }
- 
+
 VOID
 APIENTRY
 EngFntCacheFault(IN ULONG ulFastCheckSum,
@@ -2778,7 +2743,7 @@ EngFntCacheFault(IN ULONG ulFastCheckSum,
 {
     UNIMPLEMENTED;
 }
- 
+
 PVOID
 APIENTRY
 EngFntCacheLookUp(IN ULONG FastCheckSum,
@@ -2795,7 +2760,7 @@ FLOATOBJ_AddFloatObj(PFLOATOBJ pFloatObj1,
 {
     UNIMPLEMENTED;
 }
- 
+
 VOID
 APIENTRY
 FLOATOBJ_DivFloatObj(PFLOATOBJ pFloatObj1,
@@ -2803,7 +2768,7 @@ FLOATOBJ_DivFloatObj(PFLOATOBJ pFloatObj1,
 {
     UNIMPLEMENTED;
 }
- 
+
 VOID
 APIENTRY
 FLOATOBJ_MulFloatObj(PFLOATOBJ pFloatObj1,
@@ -2811,7 +2776,7 @@ FLOATOBJ_MulFloatObj(PFLOATOBJ pFloatObj1,
 {
     UNIMPLEMENTED;
 }
- 
+
 VOID
 APIENTRY
 FLOATOBJ_SubFloatObj(PFLOATOBJ pFloatObj1,
@@ -2819,7 +2784,7 @@ FLOATOBJ_SubFloatObj(PFLOATOBJ pFloatObj1,
 {
     UNIMPLEMENTED;
 }
- 
+
 PVOID
 APIENTRY
 EngAllocSectionMem(IN PVOID SectionObject,
@@ -2830,7 +2795,7 @@ EngAllocSectionMem(IN PVOID SectionObject,
     UNIMPLEMENTED;
     return NULL;
 }
- 
+
 NTSTATUS
 APIENTRY
 EngFileIoControl(IN PFILE_OBJECT FileObject,
@@ -2844,7 +2809,7 @@ EngFileIoControl(IN PFILE_OBJECT FileObject,
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
 }
- 
+
 VOID
 APIENTRY
 EngFileWrite(IN PFILE_OBJECT FileObject,
@@ -2854,7 +2819,7 @@ EngFileWrite(IN PFILE_OBJECT FileObject,
 {
     UNIMPLEMENTED;
 }
- 
+
 BOOLEAN
 APIENTRY
 EngFreeSectionMem(IN PVOID SectionObject OPTIONAL,
@@ -2879,7 +2844,7 @@ EngGetTickCount(VOID)
     return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
             (Multiplier * (TickCount.HighPart << 8)));
 }
- 
+
 BOOLEAN
 APIENTRY
 EngMapSection(IN PVOID Section,
@@ -2890,7 +2855,7 @@ EngMapSection(IN PVOID Section,
     UNIMPLEMENTED;
     return FALSE;
 }
- 
+
 BOOLEAN
 APIENTRY
 EngNineGrid(IN SURFOBJ* pDestSurfaceObj,

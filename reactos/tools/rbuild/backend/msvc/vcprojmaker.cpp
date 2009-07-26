@@ -400,11 +400,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, ";" );
 
 			string unescaped = *it1;
-			defines.erase(unescaped);
-			const string& escaped = _replace_str(unescaped, "\"","");
-
-			defines.insert(escaped);
-			fprintf ( OUT, "%s", escaped.c_str() );
+			fprintf ( OUT, "%s", _replace_str(unescaped, "\"","").c_str() );
 		}
 		fprintf ( OUT, "\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tForcedIncludeFiles=\"%s\"\r\n", "warning.h");

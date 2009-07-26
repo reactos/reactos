@@ -280,21 +280,19 @@ SetSystemTimer( PWINDOW_OBJECT Window,
 
 BOOL
 FASTCALL
-PostTimerMessages(HWND hWnd)
+PostTimerMessages(PWINDOW_OBJECT Window)
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
   MSG Msg;
   PTHREADINFO pti;
-  PWINDOW_OBJECT pWnd = NULL;
   BOOL Hit = FALSE;
   PTIMER pTmr = FirstpTmr;
 
   if (!pTmr) return FALSE;
 
-  if (hWnd)
+  if (Window && (int)Window != 1)
   {
-     pWnd = UserGetWindowObject(hWnd);
-     if (!pWnd || !pWnd->Wnd) return FALSE;
+     if (!Window->Wnd) return FALSE;
   }
 
   pti = PsGetCurrentThreadWin32Thread();
@@ -305,9 +303,9 @@ PostTimerMessages(HWND hWnd)
   {
      if ( (pTmr->flags & TMRF_READY) &&
           (pTmr->pti == pti) &&
-          (pTmr->pWnd == pWnd))
+          (pTmr->pWnd == Window))
         {
-           Msg.hwnd    = hWnd;
+           Msg.hwnd    = Window->hSelf;
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;

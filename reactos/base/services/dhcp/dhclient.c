@@ -72,8 +72,6 @@
 #define	domainchar(c) ((c) > 0x20 && (c) < 0x7f)
 
 unsigned long debug_trace_level = 0; /* DEBUG_ULTRA */
-time_t cur_time;
-time_t default_lease_time = 43200; /* 12 hours... */
 
 char *path_dhclient_conf = _PATH_DHCLIENT_CONF;
 char *path_dhclient_db = NULL;
@@ -85,7 +83,6 @@ int privfd;
 struct iaddr iaddr_broadcast = { 4, { 255, 255, 255, 255 } };
 struct in_addr inaddr_any;
 struct sockaddr_in sockaddr_broadcast;
-unsigned long old_default_route = 0;
 
 /*
  * ASSERT_STATE() does nothing now; it used to be
@@ -99,8 +96,6 @@ int		log_priority;
 int		no_daemon;
 int		unknown_ok = 1;
 int		routefd;
-
-struct interface_info	*ifi = NULL;
 
 void		 usage(void);
 int		 check_option(struct client_lease *l, int option);
@@ -134,13 +129,11 @@ static SERVICE_TABLE_ENTRY ServiceTable[2] =
 int
 main(int argc, char *argv[])
 {
-    int i = 0;
         ApiInit();
         AdapterInit();
         PipeInit();
 
 	tzset();
-	time(&cur_time);
 
 	memset(&sockaddr_broadcast, 0, sizeof(sockaddr_broadcast));
 	sockaddr_broadcast.sin_family = AF_INET;
@@ -149,34 +142,6 @@ main(int argc, char *argv[])
 	inaddr_any.s_addr = INADDR_ANY;
 
         DH_DbgPrint(MID_TRACE,("DHCP Service Started\n"));
-
-	read_client_conf();
-
-	if (!interface_link_status(ifi->name)) {
-            DH_DbgPrint(MID_TRACE,("%s: no link ", ifi->name));
-            Sleep(1000);
-            while (!interface_link_status(ifi->name)) {
-                DH_DbgPrint(MID_TRACE,("."));
-                if (++i > 10) {
-                    DH_DbgPrint(MID_TRACE,("Giving up for now on adapter [%s]\n", ifi->name));
-                }
-                Sleep(1000);
-            }
-            DH_DbgPrint(MID_TRACE,("Got link on [%s]\n", ifi->name));
-	}
-
-        DH_DbgPrint(MID_TRACE,("Discover Interfaces\n"));
-
-        /* If no adapters were found, just idle for now ... If any show up,
-         * then we'll start it later */
-        if( ifi ) {
-            /* set up the interface */
-            discover_interfaces(ifi);
-
-            DH_DbgPrint
-                (MID_TRACE,
-                 ("Setting init state and restarting interface %p\n",ifi));
-        }
 
 	bootp_packet_handler = do_packet;
 
@@ -253,7 +218,7 @@ state_reboot(void *ipp)
 	   flags. */
 	make_request(ip, ip->client->active);
 	ip->client->destination = iaddr_broadcast;
-	ip->client->first_sending = cur_time;
+	time(&ip->client->first_sending);
 	ip->client->interval = ip->client->config->initial_interval;
 
 	/* Zap the medium list... */
@@ -280,7 +245,7 @@ state_init(void *ipp)
 	ip->client->xid = ip->client->packet.xid;
 	ip->client->destination = iaddr_broadcast;
 	ip->client->state = S_SELECTING;
-	ip->client->first_sending = cur_time;
+	time(&ip->client->first_sending);
 	ip->client->interval = ip->client->config->initial_interval;
 
 	/* Add an immediate timeout to cause the first DHCPDISCOVER packet
@@ -297,8 +262,11 @@ state_selecting(void *ipp)
 {
 	struct interface_info *ip = ipp;
 	struct client_lease *lp, *next, *picked;
+        time_t cur_time;
 
 	ASSERT_STATE(state, S_SELECTING);
+
+        time(&cur_time);
 
 	/* Cancel state_selecting and send_discover timeouts, since either
 	   one could have got us here. */
@@ -375,6 +343,9 @@ dhcpack(struct packet *packet)
 {
 	struct interface_info *ip = packet->interface;
 	struct client_lease *lease;
+        time_t cur_time;
+
+        time(&cur_time);
 
 	/* If we're not receptive to an offer right now, or if the offer
 	   has an unrecognizable transaction id, then just drop it. */
@@ -408,7 +379,7 @@ dhcpack(struct packet *packet)
 		ip->client->new->expiry = getULong(
 		    ip->client->new->options[DHO_DHCP_LEASE_TIME].data);
 	else
-		ip->client->new->expiry = default_lease_time;
+		ip->client->new->expiry = DHCP_DEFAULT_LEASE_TIME;
 	/* A number that looks negative here is really just very large,
 	   because the lease expiry offset is unsigned. */
 	if (ip->client->new->expiry < 0)
@@ -466,8 +437,6 @@ void set_name_servers( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
         int i, addrs =
             new_lease->options[DHO_DOMAIN_NAME_SERVERS].len / sizeof(ULONG);
 
-               /* XXX I'm setting addrs to 1 until we are ready up the chain */
-               addrs = 1;
         nsbuf = malloc( addrs * sizeof(IP_ADDRESS_STRING) );
 
         if( nsbuf) {
@@ -545,28 +514,24 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
     }
 
     if( new_lease->options[DHO_ROUTERS].len ) {
-        MIB_IPFORWARDROW RouterMib;
         NTSTATUS Status;
 
-        RouterMib.dwForwardDest = 0; /* Default route */
-        RouterMib.dwForwardMask = 0;
-        RouterMib.dwForwardMetric1 = 1;
+        Adapter->RouterMib.dwForwardDest = 0; /* Default route */
+        Adapter->RouterMib.dwForwardMask = 0;
+        Adapter->RouterMib.dwForwardMetric1 = 1;
 
-        if( old_default_route ) {
+        if( Adapter->RouterMib.dwForwardNextHop ) {
             /* If we set a default route before, delete it before continuing */
-            RouterMib.dwForwardDest = old_default_route;
-            DeleteIpForwardEntry( &RouterMib );
+            DeleteIpForwardEntry( &Adapter->RouterMib );
         }
 
-        RouterMib.dwForwardNextHop =
+        Adapter->RouterMib.dwForwardNextHop =
             *((ULONG*)new_lease->options[DHO_ROUTERS].data);
 
-        Status = CreateIpForwardEntry( &RouterMib );
+        Status = CreateIpForwardEntry( &Adapter->RouterMib );
 
         if( !NT_SUCCESS(Status) )
             warning("CreateIpForwardEntry: %lx\n", Status);
-        else
-            old_default_route = RouterMib.dwForwardNextHop;
 
         if (hkey) {
             Buffer[0] = '\0';
@@ -591,6 +556,9 @@ bind_lease(struct interface_info *ip)
 {
     PDHCP_ADAPTER Adapter;
     struct client_lease *new_lease = ip->client->new;
+    time_t cur_time;
+
+    time(&cur_time);
 
     /* Remember the medium. */
     ip->client->new->medium = ip->client->medium;
@@ -616,8 +584,6 @@ bind_lease(struct interface_info *ip)
     else warning("Could not find adapter for info %p\n", ip);
 
     set_name_servers( Adapter, new_lease );
-
-    reinitialize_interfaces();
 }
 
 /*
@@ -644,7 +610,7 @@ state_bound(void *ipp)
 	} else
 		ip->client->destination = iaddr_broadcast;
 
-	ip->client->first_sending = cur_time;
+	time(&ip->client->first_sending);
 	ip->client->interval = ip->client->config->initial_interval;
 	ip->client->state = S_RENEWING;
 
@@ -717,6 +683,9 @@ dhcpoffer(struct packet *packet)
 	int arp_timeout_needed = 0, stop_selecting;
 	char *name = packet->options[DHO_DHCP_MESSAGE_TYPE].len ?
 	    "DHCPOFFER" : "BOOTREPLY";
+        time_t cur_time;
+
+        time(&cur_time);
 
 	/* If we're not receptive to an offer right now, or if the offer
 	   has an unrecognizable transaction id, then just drop it. */
@@ -955,8 +924,11 @@ send_discover(void *ipp)
 {
 	struct interface_info *ip = ipp;
 	int interval, increase = 1;
+        time_t cur_time;
 
         DH_DbgPrint(MID_TRACE,("Doing discover on interface %p\n",ip));
+
+        time(&cur_time);
 
 	/* Figure out how long it's been since we started transmitting. */
 	interval = cur_time - ip->client->first_sending;
@@ -1059,8 +1031,11 @@ state_panic(void *ipp)
 	struct interface_info *ip = ipp;
 	struct client_lease *loop = ip->client->active;
 	struct client_lease *lp;
+        time_t cur_time;
 
 	note("No DHCPOFFERS received.");
+
+        time(&cur_time);
 
 	/* We may not have an active lease, but we may have some
 	   predefined leases that we can try. */
@@ -1098,7 +1073,6 @@ state_panic(void *ipp)
                             note("bound: immediate renewal.");
                             state_bound(ip);
                         }
-                        reinitialize_interfaces();
                         return;
 		}
 
@@ -1146,6 +1120,9 @@ send_request(void *ipp)
 	struct sockaddr_in destination;
 	struct in_addr from;
 	int interval;
+        time_t cur_time;
+
+        time(&cur_time); 
 
 	/* Figure out how long it's been since we started transmitting. */
 	interval = cur_time - ip->client->first_sending;
@@ -1556,14 +1533,14 @@ free_client_lease(struct client_lease *lease)
 FILE *leaseFile;
 
 void
-rewrite_client_leases(void)
+rewrite_client_leases(struct interface_info *ifi)
 {
 	struct client_lease *lp;
 
 	if (!leaseFile) {
 		leaseFile = fopen(path_dhclient_db, "w");
 		if (!leaseFile)
-			error("can't create %s: %s", path_dhclient_db, strerror(errno));
+			error("can't create %s", path_dhclient_db);
 	} else {
 		fflush(leaseFile);
 		rewind(leaseFile);
@@ -1587,7 +1564,7 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 
 	if (!rewrite) {
 		if (leases_written++ > 20) {
-			rewrite_client_leases();
+			rewrite_client_leases(ip);
 			leases_written = 0;
 		}
 	}
@@ -1600,7 +1577,7 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 	if (!leaseFile) {	/* XXX */
 		leaseFile = fopen(path_dhclient_db, "w");
 		if (!leaseFile)
-			error("can't create %s: %s", path_dhclient_db, strerror(errno));
+			error("can't create %s", path_dhclient_db);
 	}
 
 	fprintf(leaseFile, "lease {\n");
@@ -1655,7 +1632,7 @@ script_init(char *reason, struct string_list *medium)
 	    sizeof(size_t) + strlen(reason);
 
 	if ((buf = buf_open(hdr.len)) == NULL)
-		error("buf_open: %s", strerror(errno));
+		return;
 
 	errs = 0;
 	errs += buf_add(buf, &hdr, sizeof(hdr));
@@ -1667,26 +1644,23 @@ script_init(char *reason, struct string_list *medium)
 	errs += buf_add(buf, reason, len);
 
 	if (errs)
-		error("buf_add: %s", strerror(errno));
+		error("buf_add: %d", WSAGetLastError());
 
 	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %s", strerror(errno));
+		error("buf_close: %d", WSAGetLastError());
 }
 
 void
-priv_script_init(char *reason, char *medium)
+priv_script_init(struct interface_info *ip, char *reason, char *medium)
 {
-	struct interface_info *ip = ifi;
-
 	if (ip) {
             // XXX Do we need to do anything?
         }
 }
 
 void
-priv_script_write_params(char *prefix, struct client_lease *lease)
+priv_script_write_params(struct interface_info *ip, char *prefix, struct client_lease *lease)
 {
-	struct interface_info *ip = ifi;
 	u_int8_t dbuf[1500];
 	int i, len = 0;
 
@@ -1848,7 +1822,7 @@ script_write_params(char *prefix, struct client_lease *lease)
 	scripttime = time(NULL);
 
 	if ((buf = buf_open(hdr.len)) == NULL)
-		error("buf_open: %s", strerror(errno));
+		return;
 
 	errs = 0;
 	errs += buf_add(buf, &hdr, sizeof(hdr));
@@ -1868,10 +1842,10 @@ script_write_params(char *prefix, struct client_lease *lease)
 	}
 
 	if (errs)
-		error("buf_add: %s", strerror(errno));
+		error("buf_add: %d", WSAGetLastError());
 
 	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %s", strerror(errno));
+		error("buf_close: %d", WSAGetLastError());
 }
 
 int
@@ -2101,41 +2075,3 @@ toobig:
 	return "<error>";
 }
 
-#if 0
-int
-fork_privchld(int fd, int fd2)
-{
-	struct pollfd pfd[1];
-	int nfds;
-
-	switch (fork()) {
-	case -1:
-		error("cannot fork");
-	case 0:
-		break;
-	default:
-		return (0);
-	}
-
-	setproctitle("%s [priv]", ifi->name);
-
-	dup2(nullfd, STDIN_FILENO);
-	dup2(nullfd, STDOUT_FILENO);
-	dup2(nullfd, STDERR_FILENO);
-	close(nullfd);
-	close(fd2);
-
-	for (;;) {
-		pfd[0].fd = fd;
-		pfd[0].events = POLLIN;
-		if ((nfds = poll(pfd, 1, INFTIM)) == -1)
-			if (errno != EINTR)
-				error("poll error");
-
-		if (nfds == 0 || !(pfd[0].revents & POLLIN))
-			continue;
-
-		dispatch_imsg(fd);
-	}
-}
-#endif

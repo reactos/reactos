@@ -55,8 +55,6 @@ static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 
 /* FUNCTIONS *****************************************************************/
-ULONG FASTCALL
-IntSystemParametersInfo(UINT uiAction, UINT uiParam,PVOID pvParam, UINT fWinIni);
 DWORD IntLastInputTick(BOOL LastInputTickSetGet);
 
 #define ClearMouseInput(mi) \
@@ -885,7 +883,7 @@ RawInputThreadMain(PVOID StartContext)
 
   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
   if (!MasterTimer)
-  {   
+  {
      DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
      return;
   }
@@ -1066,18 +1064,6 @@ CLEANUP:
 }
 
 BOOL FASTCALL
-IntSwapMouseButton(PWINSTATION_OBJECT WinStaObject, BOOL Swap)
-{
-   PSYSTEM_CURSORINFO CurInfo;
-   BOOL res;
-
-   CurInfo = IntGetSysCursorInfo(WinStaObject);
-   res = CurInfo->SwapButtons;
-   CurInfo->SwapButtons = Swap;
-   return res;
-}
-
-BOOL FASTCALL
 IntMouseInput(MOUSEINPUT *mi)
 {
    const UINT SwapBtnMsg[2][2] =
@@ -1158,10 +1144,10 @@ IntMouseInput(MOUSEINPUT *mi)
 
       if (DesktopWindow)
       {
-         if(MousePos.x >= DesktopWindow->Wnd->ClientRect.right)
-            MousePos.x = DesktopWindow->Wnd->ClientRect.right - 1;
-         if(MousePos.y >= DesktopWindow->Wnd->ClientRect.bottom)
-            MousePos.y = DesktopWindow->Wnd->ClientRect.bottom - 1;
+         if(MousePos.x >= DesktopWindow->Wnd->rcClient.right)
+            MousePos.x = DesktopWindow->Wnd->rcClient.right - 1;
+         if(MousePos.y >= DesktopWindow->Wnd->rcClient.bottom)
+            MousePos.y = DesktopWindow->Wnd->rcClient.bottom - 1;
          UserDereferenceObject(DesktopWindow);
       }
 

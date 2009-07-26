@@ -63,6 +63,10 @@ extern "C" {
 #else
 #define PSH_WIZARD97	0x01000000
 #endif
+#ifdef _WINE
+#define PSH_WIZARD97_OLD 0x00002000
+#define PSH_WIZARD97_NEW 0x01000000
+#endif
 #endif /* _WIN32_IE >= 0x0400 */
 #if (_WIN32_IE >= 0x0500)
 #define PSH_WIZARD_LITE	0x400000

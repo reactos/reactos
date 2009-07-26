@@ -5,6 +5,7 @@
 	<include base="videoprt">.</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_VIDEOPORT_" />
+	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<pch>videoprt.h</pch>

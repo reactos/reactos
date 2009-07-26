@@ -90,6 +90,8 @@ IntEngGradientFill(SURFOBJ *psoDest,
                    POINTL *pptlDitherOrg,
                    ULONG ulMode);
 
+VOID InitXlateImpl(VOID);
+
 XLATEOBJ* FASTCALL
 IntEngCreateXlate(USHORT DestPalType,
                   USHORT SourcePalType,
@@ -106,6 +108,9 @@ XLATEOBJ* FASTCALL
 IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG Color0,
                          ULONG Color1);
+
+XLATEOBJ*
+IntCreateBrushXlate(BRUSH *pbrush, SURFACE * psurf, COLORREF crBackgroundClr);
 
 HPALETTE FASTCALL
 IntEngGetXlatePalette(XLATEOBJ *XlateObj,

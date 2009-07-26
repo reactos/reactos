@@ -8,9 +8,9 @@
 	<library>ntoskrnl</library>
 	<library>ks</library>
 	<library>drmk</library>
-	<library>rtl</library>
 	<library>hal</library>
 	<library>libcntpr</library>
+	<library>pseh</library>
 	<file>adapter.c</file>
 	<file>api.c</file>
 	<file>connection.c</file>
@@ -41,7 +41,6 @@
 	<file>port_topology.c</file>
 	<file>port_wavecyclic.c</file>
 	<file>port_wavepci.c</file>
-	<file>port_wavepcistream.c</file>
 	<file>port_wavert.c</file>
 	<file>port_wavertstream.c</file>
 	<file>power.c</file>
@@ -50,6 +49,7 @@
 	<file>resource.c</file>
 	<file>service_group.c</file>
 	<file>undoc.c</file>
+	<file>unregister.c</file>
 	<file>version.c</file>
 	<file>portcls.rc</file>
 </module>

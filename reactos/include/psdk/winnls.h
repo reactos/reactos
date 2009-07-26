@@ -174,6 +174,9 @@ extern "C" {
 #endif
 
 #define CP_ACP 0
+#ifdef _WINE
+#define CP_UNIXCP CP_ACP
+#endif
 #define CP_OEMCP 1
 #define CP_MACCP 2
 #define CP_THREAD_ACP 3

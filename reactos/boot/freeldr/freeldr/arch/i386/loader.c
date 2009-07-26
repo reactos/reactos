@@ -27,7 +27,6 @@
 extern PAGE_DIRECTORY_X86 startup_pagedirectory;
 extern PAGE_DIRECTORY_X86 lowmem_pagetable;
 extern PAGE_DIRECTORY_X86 kernel_pagetable;
-extern PAGE_DIRECTORY_X86 hyperspace_pagetable;
 extern PAGE_DIRECTORY_X86 apic_pagetable;
 extern PAGE_DIRECTORY_X86 kpcr_pagetable;
 extern PAGE_DIRECTORY_X86 kuser_pagetable;
@@ -149,11 +148,6 @@ FrLdrSetupPageDirectory(VOID)
     PageDir->Pde[StartupPageTableIndex].Valid = 1;
     PageDir->Pde[StartupPageTableIndex].Write = 1;
     PageDir->Pde[StartupPageTableIndex].PageFrameNumber = PaPtrToPfn(startup_pagedirectory);
-
-    /* Set up the Hyperspace PDE */
-    PageDir->Pde[HyperspacePageTableIndex].Valid = 1;
-    PageDir->Pde[HyperspacePageTableIndex].Write = 1;
-    PageDir->Pde[HyperspacePageTableIndex].PageFrameNumber = PaPtrToPfn(hyperspace_pagetable);
 
     /* Set up the HAL PDE */
     PageDir->Pde[HalPageTableIndex].Valid = 1;

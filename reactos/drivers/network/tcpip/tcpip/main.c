@@ -646,6 +646,7 @@ VOID NTAPI TiUnload(
   TCPShutdown();
   UDPShutdown();
   RawIPShutdown();
+  ICMPShutdown();
 
   /* Shutdown network level protocol subsystem */
   IPShutdown();
@@ -725,10 +726,6 @@ DriverEntry(
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   TrackingInit();
-  TrackTag(NDIS_BUFFER_TAG);
-  TrackTag(NDIS_PACKET_TAG);
-  TrackTag(FBSD_MALLOC);
-  TrackTag(EXALLOC_TAG);
 
   /* TdiInitialize() ? */
 
@@ -889,52 +886,21 @@ DriverEntry(
 	return Status;
   }
 
-  /* Register protocol with NDIS */
-  /* This used to be IP_DEVICE_NAME but the DDK says it has to match your entry in the SCM */
-  Status = LANRegisterProtocol(&strNdisDeviceName);
-  if (!NT_SUCCESS(Status)) {
-	  TI_DbgPrint(MIN_TRACE,("Failed to register protocol with NDIS; status 0x%x\n", Status));
-	  TiWriteErrorLog(
-      DriverObject,
-      EVENT_TRANSPORT_REGISTER_FAILED,
-      TI_ERROR_DRIVERENTRY,
-      Status,
-      NULL,
-      0,
-      NULL);
-    TCPShutdown();
-    UDPShutdown();
-    RawIPShutdown();
-    IPShutdown();
-    ChewShutdown();
-    IoDeleteDevice(IPDeviceObject);
-    IoDeleteDevice(RawIPDeviceObject);
-    IoDeleteDevice(UDPDeviceObject);
-    IoDeleteDevice(TCPDeviceObject);
-    exFreePool(EntityList);
-    NdisFreePacketPool(GlobalPacketPool);
-    NdisFreeBufferPool(GlobalBufferPool);
-    return Status;
-  }
-
-  /* Open loopback adapter */
-  Status = LoopRegisterAdapter(NULL, NULL);
-  if (!NT_SUCCESS(Status)) {
-    TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
-    TCPShutdown();
-    UDPShutdown();
-    RawIPShutdown();
-    IPShutdown();
-    ChewShutdown();
-    IoDeleteDevice(IPDeviceObject);
-    IoDeleteDevice(RawIPDeviceObject);
-    IoDeleteDevice(UDPDeviceObject);
-    IoDeleteDevice(TCPDeviceObject);
-    exFreePool(EntityList);
-    NdisFreePacketPool(GlobalPacketPool);
-    NdisFreeBufferPool(GlobalBufferPool);
-    LANUnregisterProtocol();
-    return Status;
+  Status = ICMPStartup();
+  if( !NT_SUCCESS(Status) ) {
+        TCPShutdown();
+        UDPShutdown();
+        RawIPShutdown();
+        IPShutdown();
+        ChewShutdown();
+        IoDeleteDevice(IPDeviceObject);
+        IoDeleteDevice(RawIPDeviceObject);
+        IoDeleteDevice(UDPDeviceObject);
+        IoDeleteDevice(TCPDeviceObject);
+        exFreePool(EntityList);
+        NdisFreePacketPool(GlobalPacketPool);
+        NdisFreeBufferPool(GlobalBufferPool);
+	return Status;
   }
 
   /* Use direct I/O */
@@ -962,6 +928,53 @@ DriverEntry(
      relative expiration time of IP_TIMEOUT milliseconds */
   DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
   KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
+
+  /* Open loopback adapter */
+  Status = LoopRegisterAdapter(NULL, NULL);
+  if (!NT_SUCCESS(Status)) {
+    TI_DbgPrint(MIN_TRACE, ("Failed to create loopback adapter. Status (0x%X).\n", Status));
+    TCPShutdown();
+    UDPShutdown();
+    RawIPShutdown();
+    IPShutdown();
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
+    exFreePool(EntityList);
+    NdisFreePacketPool(GlobalPacketPool);
+    NdisFreeBufferPool(GlobalBufferPool);
+    return Status;
+  }
+
+  /* Register protocol with NDIS */
+  /* This used to be IP_DEVICE_NAME but the DDK says it has to match your entry in the SCM */
+  Status = LANRegisterProtocol(&strNdisDeviceName);
+  if (!NT_SUCCESS(Status)) {
+	  TI_DbgPrint(MIN_TRACE,("Failed to register protocol with NDIS; status 0x%x\n", Status));
+	  TiWriteErrorLog(
+      DriverObject,
+      EVENT_TRANSPORT_REGISTER_FAILED,
+      TI_ERROR_DRIVERENTRY,
+      Status,
+      NULL,
+      0,
+      NULL);
+    TCPShutdown();
+    UDPShutdown();
+    RawIPShutdown();
+    IPShutdown();
+    ChewShutdown();
+    IoDeleteDevice(IPDeviceObject);
+    IoDeleteDevice(RawIPDeviceObject);
+    IoDeleteDevice(UDPDeviceObject);
+    IoDeleteDevice(TCPDeviceObject);
+    exFreePool(EntityList);
+    NdisFreePacketPool(GlobalPacketPool);
+    NdisFreeBufferPool(GlobalBufferPool);
+    return Status;
+  }
 
   return STATUS_SUCCESS;
 }

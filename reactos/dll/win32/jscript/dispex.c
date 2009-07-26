@@ -293,7 +293,7 @@ static HRESULT prop_get(DispatchEx *This, dispex_prop_t *prop, LCID lcid, DISPPA
     case PROP_BUILTIN:
         if(prop->u.p->flags & PROPF_METHOD) {
             DispatchEx *obj;
-            hres = create_builtin_function(This->ctx, prop->u.p->invoke, prop->u.p->flags, NULL, &obj);
+            hres = create_builtin_function(This->ctx, prop->u.p->invoke, NULL, prop->u.p->flags, NULL, &obj);
             if(FAILED(hres))
                 break;
 

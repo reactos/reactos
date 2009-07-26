@@ -329,7 +329,7 @@ static LRESULT CALLBACK WDML_EventProc(HWND hwndEvent, UINT uMsg, WPARAM wParam,
  *
  */
 UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
-		     DWORD afCmd, DWORD ulRes, BOOL bUnicode, BOOL b16)
+		     DWORD afCmd, DWORD ulRes, BOOL bUnicode)
 {
     WDML_INSTANCE*		pInstance;
     WDML_INSTANCE*		reference_inst;
@@ -365,7 +365,6 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
     pInstance->threadID = GetCurrentThreadId();
     pInstance->callback = *pfnCallback;
     pInstance->unicode = bUnicode;
-    pInstance->win16 = b16;
     pInstance->nodeList = NULL; /* node will be added later */
     pInstance->monitorFlags = afCmd & MF_MASK;
     pInstance->wStatus = 0;
@@ -579,7 +578,7 @@ UINT WDML_Initialize(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 UINT WINAPI DdeInitializeA(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 			   DWORD afCmd, DWORD ulRes)
 {
-    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, FALSE, FALSE);
+    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, FALSE);
 }
 
 /******************************************************************************
@@ -599,7 +598,7 @@ UINT WINAPI DdeInitializeA(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 UINT WINAPI DdeInitializeW(LPDWORD pidInst, PFNCALLBACK pfnCallback,
 			   DWORD afCmd, DWORD ulRes)
 {
-    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, TRUE, FALSE);
+    return WDML_Initialize(pidInst, pfnCallback, afCmd, ulRes, TRUE);
 }
 
 /*****************************************************************
@@ -716,12 +715,10 @@ HDDEDATA 	WDML_InvokeCallback(WDML_INSTANCE* pInstance, UINT uType, UINT uFmt, H
     if (pInstance == NULL)
 	return NULL;
 
-    TRACE("invoking CB%d[%p] (%x %x %p %p %p %p %lx %lx)\n",
-	  pInstance->win16 ? 16 : 32, pInstance->callback, uType, uFmt,
+    TRACE("invoking CB[%p] (%x %x %p %p %p %p %lx %lx)\n",
+	  pInstance->callback, uType, uFmt,
 	  hConv, hsz1, hsz2, hdata, dwData1, dwData2);
-
 	ret = pInstance->callback(uType, uFmt, hConv, hsz1, hsz2, hdata, dwData1, dwData2);
-
     TRACE("done => %p\n", ret);
     return ret;
 }
@@ -1629,7 +1626,7 @@ HGLOBAL WDML_DataHandle2Global(HDDEDATA hDdeData, BOOL fResponse, BOOL fRelease,
  */
 WDML_SERVER*	WDML_AddServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTopic)
 {
-    static const WCHAR fmtW[] = {'%','s','(','0','x','%','0','8','l','x',')',0};
+    static const WCHAR fmtW[] = {'%','s','(','0','x','%','*','x',')',0};
     WDML_SERVER* 	pServer;
     WCHAR		buf1[256];
     WCHAR		buf2[256];

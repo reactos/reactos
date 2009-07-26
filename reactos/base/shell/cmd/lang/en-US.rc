@@ -563,7 +563,7 @@ title         new title\n"
 
 STRING_HELP1, "List of all available commands (+ description)\n\n\
   command /?     For more information on a specific command\n\n\
-?        List all available commands without description).\n\
+?        List all available commands (without description).\n\
 ALIAS    Sets, removes or shows aliases.\n\
 ATTRIB   Displays or changes file attributes.\n\
 BEEP     Beep the speaker.\n\

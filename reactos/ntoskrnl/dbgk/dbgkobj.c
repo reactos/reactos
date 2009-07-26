@@ -1512,7 +1512,7 @@ NTAPI
 NtCreateDebugObject(OUT PHANDLE DebugHandle,
                     IN ACCESS_MASK DesiredAccess,
                     IN POBJECT_ATTRIBUTES ObjectAttributes,
-                    IN BOOLEAN KillProcessOnExit)
+                    IN ULONG Flags)
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PDEBUG_OBJECT DebugObject;
@@ -1536,6 +1536,9 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
         } _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
+
+    /* Check for invalid flags */
+    if (Flags & ~DBGK_ALL_FLAGS) return STATUS_INVALID_PARAMETER;
 
     /* Create the Object */
     Status = ObCreateObject(PreviousMode,
@@ -1561,7 +1564,7 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                           FALSE);
 
         /* Set the Flags */
-        DebugObject->KillProcessOnExit = KillProcessOnExit;
+        DebugObject->Flags = Flags;
 
         /* Insert it */
         Status = ObInsertObject((PVOID)DebugObject,

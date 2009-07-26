@@ -40,6 +40,7 @@ typedef struct
     ULONG OutOfMapping;
     ULONG MaxFrameSize;
     ULONG Alignment;
+    ULONG MinimumDataThreshold;
 
 }IIrpQueueImpl;
 
@@ -128,6 +129,7 @@ IIrpQueue_fnInit(
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
     This->MaxFrameSize = FrameSize;
     This->Alignment = Alignment;
+    This->MinimumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)DataFormat)->WaveFormatEx.nAvgBytesPerSec / 3;
 
     InitializeListHead(&This->ListHead);
     InitializeListHead(&This->FreeHead);
@@ -296,10 +298,11 @@ IIrpQueue_fnNumMappings(
 
 ULONG
 NTAPI
-IIrpQueue_fnMinMappings(
+IIrpQueue_fnNumData(
     IN IIrpQueue *iface)
 {
-    return 25;
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+    return This->NumDataAvailable;
 }
 
 
@@ -314,14 +317,15 @@ IIrpQueue_fnMinimumDataAvailable(
     if (This->StartStream)
         return TRUE;
 
-    if (This->DataFormat->WaveFormatEx.nAvgBytesPerSec < This->NumDataAvailable)
+    if (This->MinimumDataThreshold < This->NumDataAvailable)
     {
         This->StartStream = TRUE;
         Result = TRUE;
     }
     else
+    {
         Result = FALSE;
-
+    }
     return Result;
 }
 
@@ -344,8 +348,9 @@ IIrpQueue_fnUpdateFormat(
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
+    This->MinimumDataThreshold = This->DataFormat->WaveFormatEx.nAvgBytesPerSec / 3;
     This->StartStream = FALSE;
-
+    This->NumDataAvailable = 0;
 }
 
 NTSTATUS
@@ -472,6 +477,27 @@ IIrpQueue_fnPrintQueueStatus(
     DPRINT("IIrpQueue_fnPrintQueueStatus ===============\n");
 }
 
+VOID
+NTAPI
+IIrpQueue_fnSetMinimumDataThreshold(
+    IN IIrpQueue *iface,
+    ULONG MinimumDataThreshold)
+{
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+
+    This->MinimumDataThreshold = MinimumDataThreshold;
+}
+
+ULONG
+NTAPI
+IIrpQueue_fnGetMinimumDataThreshold(
+    IN IIrpQueue *iface)
+{
+    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+
+    return This->MinimumDataThreshold;
+}
+
 
 static IIrpQueueVtbl vt_IIrpQueue =
 {
@@ -483,17 +509,17 @@ static IIrpQueueVtbl vt_IIrpQueue =
     IIrpQueue_fnGetMapping,
     IIrpQueue_fnUpdateMapping,
     IIrpQueue_fnNumMappings,
-    IIrpQueue_fnMinMappings,
+    IIrpQueue_fnNumData,
     IIrpQueue_fnMinimumDataAvailable,
     IIrpQueue_fnCancelBuffers,
     IIrpQueue_fnUpdateFormat,
     IIrpQueue_fnGetMappingWithTag,
     IIrpQueue_fnReleaseMappingWithTag,
     IIrpQueue_fnHasLastMappingFailed,
-    IIrpQueue_fnPrintQueueStatus
-
+    IIrpQueue_fnPrintQueueStatus,
+    IIrpQueue_fnSetMinimumDataThreshold,
+    IIrpQueue_fnGetMinimumDataThreshold
 };
-
 
 NTSTATUS
 NTAPI
@@ -512,44 +538,3 @@ NewIrpQueue(
 
 }
 
-NTSTATUS
-NewIrpStreamPhysical(
-    OUT IIrpStreamPhysical ** OutIIrpStreamPhysical,
-    IN IUnknown *OuterUnknown)
-{
-    return STATUS_UNSUCCESSFUL;
-}
-
-
-/*
- * @implemented
- */
-
-NTSTATUS
-NTAPI
-PcNewIrpStreamPhysical(
-    OUT IIrpStreamPhysical ** OutIrpStreamPhysical,
-    IN IUnknown * OuterUnknown,
-    IN BOOLEAN Wait,
-    IN KSPIN_CONNECT *ConnectDetails,
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PDMA_ADAPTER DmaAdapter)
-{
-    NTSTATUS Status;
-    IIrpStreamPhysical * Irp;
-
-    Status = NewIrpStreamPhysical(&Irp, OuterUnknown);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-
-    Status = Irp->lpVtbl->Init(Irp, Wait, ConnectDetails, DeviceObject, DmaAdapter);
-    if (!NT_SUCCESS(Status))
-    {
-        Irp->lpVtbl->Release(Irp);
-        return Status;
-    }
-
-    *OutIrpStreamPhysical = Irp;
-    return Status;
-}

@@ -1,11 +1,13 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDC_MAGNIFIER MENU
 BEGIN
-    POPUP "&Fiºier"
+    POPUP "&FiÈ™ier"
     BEGIN
-        MENUITEM "Ieºire",                       IDM_EXIT
-        MENUITEM "&Opþiuni",                    IDM_OPTIONS
+        MENUITEM "IeÈ™ire",                       IDM_EXIT
+        MENUITEM "&OpÈ›iuni",                    IDM_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Despre ...",                  IDM_ABOUT
     END
@@ -30,21 +32,21 @@ END
 
 IDD_DIALOGOPTIONS DIALOGEX 0, 0, 153, 182
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_MINIMIZEBOX | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Setãri Lupã"
+CAPTION "SetÄƒri LupÄƒ"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Ieºire",IDOK,96,161,50,14
+    DEFPUSHBUTTON   "IeÈ™ire",IDOK,96,161,50,14
     PUSHBUTTON      "Ajutor",IDC_BUTTON_HELP,38,161,50,14
-    LTEXT           "Nivel mãrire:",IDC_STATIC,6,8,68,8
+    LTEXT           "Nivel mÄƒrire:",IDC_STATIC,6,8,68,8
     COMBOBOX        IDC_ZOOM,72,6,63,66,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Urmãrire",IDC_STATIC,7,25,139,59
+    GROUPBOX        "UrmÄƒrire",IDC_STATIC,7,25,139,59
     GROUPBOX        "Presentare",IDC_STATIC,7,87,139,57
-    CONTROL         "Urmãrire cursor maus",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
-    CONTROL         "Urmãrire focalizare tastaturã",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
-    CONTROL         "Urmãrire editare text",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
+    CONTROL         "UrmÄƒrire cursor maus",IDC_FOLLOWMOUSECHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,42,114,10
+    CONTROL         "UrmÄƒrire focalizare tastaturÄƒ",IDC_FOLLOWKEYBOARDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,54,114,10
+    CONTROL         "UrmÄƒrire editare text",IDC_FOLLOWTEXTEDITINGCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,66,114,10
     CONTROL         "Inversare culori",IDC_INVERTCOLORSCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,102,114,10
     CONTROL         "Pornire minimizat",IDC_STARTMINIMIZEDCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,114,114,10
-    CONTROL         "Afiºare lupã",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
+    CONTROL         "AfiÈ™are lupÄƒ",IDC_SHOWMAGNIFIERCHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,18,126,114,10
 END
 
 IDD_WARNINGDIALOG DIALOGEX 0, 0, 250, 97
@@ -54,11 +56,13 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,193,76,50,14
     ICON            IDI_ICON,IDC_STATIC,7,17,20,20
-    LTEXT           "Acest instrument este destinat celor cu deficienþe vizuale minore. Pentru rezultate mai bune, folosiþi un instrument mai sofisticat.",IDC_STATIC,36,7,207,33
-    CONTROL         "Nu mai afiºa acest mesaj",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
+    LTEXT           "Acest instrument este destinat celor cu deficienÈ›e vizuale minore. Pentru rezultate mai bune, folosiÈ›i un instrument mai sofisticat.",IDC_STATIC,36,7,207,33
+    CONTROL         "Nu mai afiÈ™a acest mesaj",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE           "Lupã"
+    IDS_APP_TITLE           "LupÄƒ"
 END
+
+#pragma code_page(default)

@@ -7,6 +7,7 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<include base="console">.</include>
+	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>

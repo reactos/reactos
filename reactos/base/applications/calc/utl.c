@@ -21,9 +21,9 @@ void prepare_rpn_result_2(calc_number_t *rpn, TCHAR *buffer, int size, int base)
         /* calculate the width of integer number */
         width = (rpn->f==0) ? 1 : (int)log10(fabs(rpn->f))+1;
         if (calc.sci_out == TRUE || width > MAX_LD_WIDTH || width < -MAX_LD_WIDTH)
-            ptr = buffer + _stprintf(buffer, TEXT("%#le"), rpn->f);
+            ptr = buffer + _stprintf(buffer, TEXT("%#e"), rpn->f);
         else {
-            ptr = buffer + _stprintf(buffer, TEXT("%#*.*lf"), width, ((MAX_LD_WIDTH-width-1)>=0) ? MAX_LD_WIDTH-width-1 : 0, rpn->f);
+            ptr = buffer + _stprintf(buffer, TEXT("%#*.*f"), width, ((MAX_LD_WIDTH-width-1)>=0) ? MAX_LD_WIDTH-width-1 : 0, rpn->f);
             dst = _tcschr(buffer, TEXT('.'));
             while (--ptr > dst)
                 if (*ptr != TEXT('0'))

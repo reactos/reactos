@@ -36,9 +36,6 @@ extern "C" {
 
 
 /* DECLARATIONS */
-LONG WINAPI ExtDeviceMode( HWND hWnd, HANDLE hInst, LPDEVMODEA pDevModeOutput,
-    LPSTR pDeviceName, LPSTR pPort, LPDEVMODEA pDevModeInput, LPSTR pProfile,
-    DWORD fMode);
 
 LPSTR WINAPI StartDocDlgA(HANDLE hPrinter, DOCINFOA *doc);
 LPWSTR WINAPI StartDocDlgW(HANDLE hPrinter, DOCINFOW *doc);

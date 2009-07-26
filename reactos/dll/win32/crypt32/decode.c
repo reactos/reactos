@@ -523,7 +523,7 @@ static BOOL CRYPT_AsnDecodeSequence(struct AsnDecodeSequenceItem items[],
                 for (i = 0; i < cItem; i++)
                 {
                     bytesNeeded += items[i].size;
-                    structSize += items[i].minSize;
+                    structSize = max( structSize, items[i].offset + items[i].minSize );
                 }
                 if (pcbDecoded)
                     *pcbDecoded = 1 + lenBytes + cbDecoded;

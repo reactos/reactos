@@ -23,7 +23,7 @@
 /* Base Addres of Kernel in Physical Memory */
 #define KERNEL_BASE_PHYS 0x800000
 
-#if !defined(_M_AMD64)
+#if defined(_M_IX86)
 
 /* Bits to shift to convert a Virtual Address into an Offset in the Page Table */
 #define PFN_SHIFT 12
@@ -41,13 +41,11 @@
     ((p) >> PFN_SHIFT)
 
 #define STARTUP_BASE                0xC0000000
-#define HYPERSPACE_BASE             0xC0400000
 #define HAL_BASE                    0xFFC00000
 #define APIC_BASE                   0xFFFE0000
 
 #define LowMemPageTableIndex        0
 #define StartupPageTableIndex       (STARTUP_BASE >> 22)
-#define HyperspacePageTableIndex    (HYPERSPACE_BASE >> 22)
 #define HalPageTableIndex           (HAL_BASE >> 22)
 
 typedef struct _PAGE_DIRECTORY_X86

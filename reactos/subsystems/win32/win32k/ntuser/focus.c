@@ -93,8 +93,8 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       if (Window->Wnd)
       {  // Set last active for window and it's owner.
          Window->Wnd->hWndLastActive = hWnd;
-         if (Window->Wnd->Owner)
-            Window->Wnd->Owner->hWndLastActive = hWnd;
+         if (Window->Wnd->spwndOwner)
+            Window->Wnd->spwndOwner->hWndLastActive = hWnd;
       }
 
       if (Window && WindowPrev)
@@ -196,7 +196,7 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    HWND hWndFocus = FocusWindow->hSelf;
    HWND hWndFocusPrev = NULL;
    PUSER_MESSAGE_QUEUE PrevForegroundQueue;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
 
@@ -204,13 +204,13 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
 
    Wnd = Window->Wnd;
 
-   if ((Wnd->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+   if ((Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
       DPRINT("Failed - Child\n");
       return FALSE;
    }
 
-   if (0 == (Wnd->Style & WS_VISIBLE) &&
+   if (0 == (Wnd->style & WS_VISIBLE) &&
        Window->OwnerThread->ThreadsProcess != CsrProcess)
    {
       DPRINT("Failed - Invisible\n");
@@ -273,12 +273,12 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
    HWND Top;
    PWINDOW_OBJECT TopWindow;
    USER_REFERENCE_ENTRY Ref;
-   PWINDOW Wnd;
+   PWND Wnd;
 
    ASSERT_REFS_CO(Window);
 
    Wnd = Window->Wnd;
-   if(Wnd->Style & WS_DISABLED)
+   if(Wnd->style & WS_DISABLED)
    {
       BOOL Ret;
       PWINDOW_OBJECT TopWnd;
@@ -319,7 +319,8 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    PUSER_MESSAGE_QUEUE ThreadQueue;
    HWND hWndPrev;
    HWND hWnd = 0;
-   PWINDOW Wnd;
+   PWND Wnd;
+   CBTACTIVATESTRUCT cbt;
 
    if (Window)
       ASSERT_REFS_CO(Window);
@@ -331,9 +332,9 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    if (Window != 0)
    {
       Wnd = Window->Wnd;
-      if ((!(Wnd->Style & WS_VISIBLE) &&
+      if ((!(Wnd->style & WS_VISIBLE) &&
            Window->OwnerThread->ThreadsProcess != CsrProcess) ||
-          (Wnd->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
+          (Wnd->style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
          return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
       }
@@ -346,7 +347,11 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
       return hWndPrev;
    }
 
-   /* FIXME: Call hooks. */
+   /* call CBT hook chain */
+   cbt.fMouse     = FALSE;
+   cbt.hWndActive = hWndPrev;
+   if (co_HOOK_CallHooks( WH_CBT, HCBT_ACTIVATE, (WPARAM)hWnd, (LPARAM)&cbt))
+      return 0;
 
    ThreadQueue->ActiveWindow = hWnd;
 
@@ -382,6 +387,9 @@ co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
          return hWndPrev;
       }
 
+     if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)Window->hSelf, (LPARAM)hWndPrev))
+        return 0;
+
       ThreadQueue->FocusWindow = Window->hSelf;
 
       co_IntSendKillFocusMessages(hWndPrev, Window->hSelf);
@@ -390,6 +398,9 @@ co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
    else
    {
       ThreadQueue->FocusWindow = 0;
+
+     if (co_HOOK_CallHooks( WH_CBT, HCBT_SETFOCUS, (WPARAM)0, (LPARAM)hWndPrev))
+        return 0;
 
       co_IntSendKillFocusMessages(hWndPrev, 0);
    }
@@ -566,7 +577,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
       HWND hWndPrev;
       PWINDOW_OBJECT TopWnd;
       USER_REFERENCE_ENTRY Ref;
-      PWINDOW Wnd;
+      PWND Wnd;
 
       ASSERT_REFS_CO(Window);
 
@@ -574,7 +585,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
       ThreadQueue = pti->MessageQueue;
 
       Wnd = Window->Wnd;
-      if (Wnd->Style & (WS_MINIMIZE | WS_DISABLED))
+      if (Wnd->style & (WS_MINIMIZE | WS_DISABLED))
       {
          return( (ThreadQueue ? ThreadQueue->FocusWindow : 0));
       }

@@ -829,9 +829,6 @@ ObpAllocateObject(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
                                                    HighWaterNumberOfObjects);
     }
 
-    /* OMG-Hack-Of-Doom */
-    RtlZeroMemory(&Header->Body, ObjectSize);
-
     /* Return Header */
     *ObjectHeader = Header;
     return STATUS_SUCCESS;

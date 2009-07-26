@@ -1,9 +1,6 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *  Portions from Linux video.S - Display adapter & video mode setup, version 2.13 (14-May-99)
- *  Copyright (C) 1995 -- 1999 Martin Mares <mj@ucw.cz>
- *  Based on the original setup.S code (C) Linus Torvalds and Mats Anderson
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,12 +22,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/* non-standard specifier from windef.h -- please deprecate */
-#undef PACKED
-#ifdef __GNUC__
-#define PACKED __attribute__((packed))
-#endif
-
+#include <pshpack2.h>
 typedef struct
 {
 	UCHAR	Signature[4];				// (ret) signature ("VESA")
@@ -58,7 +50,8 @@ typedef struct
 									// accelerated video modes (list of words terminated with FFFFh)
 	UCHAR	Reserved[216];				// reserved for VBE implementation
 	UCHAR	ScratchPad[256];			// OEM scratchpad (for OEM strings, etc.)
-} PACKED VESA_SVGA_INFO, *PVESA_SVGA_INFO;
+} VESA_SVGA_INFO, *PVESA_SVGA_INFO;
+#include <poppack.h>
 
 // Bitfields for VESA capabilities:
 //

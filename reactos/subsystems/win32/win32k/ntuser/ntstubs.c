@@ -272,18 +272,6 @@ NtUserGetControlColor(
 
 DWORD
 APIENTRY
-NtUserGetCPD(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-APIENTRY
 NtUserGetImeHotKey(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -364,9 +352,39 @@ NtUserInitializeClientPfnArrays(
   PPFNCLIENTWORKER pfnClientWorker,
   HINSTANCE hmodUser)
 {
-   UNIMPLEMENTED
+   NTSTATUS Status = STATUS_SUCCESS;
+   DPRINT("Enter NtUserInitializeClientPfnArrays User32 0x%x\n",hmodUser);
 
-   return STATUS_UNSUCCESSFUL;
+   if (ClientPfnInit) return Status;
+
+   UserEnterExclusive();
+
+   _SEH2_TRY
+   {
+      ProbeForRead( pfnClientA, sizeof(PFNCLIENT), 1);
+      ProbeForRead( pfnClientW, sizeof(PFNCLIENT), 1);
+      ProbeForRead( pfnClientWorker, sizeof(PFNCLIENTWORKER), 1);
+      RtlCopyMemory(&gpsi->apfnClientA, pfnClientA, sizeof(PFNCLIENT));
+      RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
+      RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
+
+      hModClient = hmodUser;
+      ClientPfnInit = TRUE;
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Status =_SEH2_GetExceptionCode();
+   }
+   _SEH2_END
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed reading Client Pfns from user space.\n");
+      SetLastNtError(Status);
+   }
+   
+   UserLeave();
+   return Status;
 }
 
 DWORD
@@ -809,44 +827,6 @@ NtUserHardErrorControl(
     return 0;
 }
 
-/*
-    Called from win32csr.
- */
-NTSTATUS
-APIENTRY
-NtUserInitialize(
-  DWORD   dwWinVersion,
-  HANDLE  hPowerRequestEvent,
-  HANDLE  hMediaRequestEvent)
-{
-    UserEnterExclusive();
-    UNIMPLEMENTED;
-// Check to see we have the right version.
-// Initialize Power Request List.
-// Initialize Media Change.
-// Initialize CSRSS
-// {
-//    Startup DxGraphics.
-//    calls ** IntGdiGetLanguageID() and sets it **.
-//    Enables Fonts drivers, Initialize Font table & Stock Fonts.
-// }
-// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
-// Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
-// Create Event for Diconnect Desktop.
-// Initialize Video.
-// {
-//     DrvInitConsole.
-//     DrvChangeDisplaySettings.
-//     Update Shared Device Caps.
-//     Initialize User Screen.
-// }
-// Create ThreadInfo for this Thread!
-// Set Global SERVERINFO Error flags.
-// Load Resources.
-    UserLeave();
-    return STATUS_SUCCESS;
-}
-
 DWORD
 APIENTRY
 NtUserMinMaximize(
@@ -894,7 +874,7 @@ NtUserProcessConnect(
   {
      UserEnterShared();
      GetW32ThreadInfo();
-     PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
+     PPROCESSINFO W32Process = PsGetCurrentProcessWin32Process();
      _SEH2_TRY
      {
         pUserConnect->siClient.psi = gpsi;

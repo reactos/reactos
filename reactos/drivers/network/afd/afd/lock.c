@@ -73,13 +73,14 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     BOOLEAN LockFailed = FALSE;
+    PAFD_MAPBUF MapBuf;
 
     AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
 
     if( NewBuf ) {
         RtlZeroMemory(NewBuf, Size * 2);
 
-	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
+	MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
         _SEH2_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );

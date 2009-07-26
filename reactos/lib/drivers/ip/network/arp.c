@@ -147,7 +147,7 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
         Interface->Address,              /* Sender's (local) hardware address */
         &Interface->Unicast.Address.IPv4Address,/* Sender's (local) protocol address */
         NULL,                            /* Don't care */
-        &Address->Address,               /* Target's (remote) protocol address */
+        &Address->Address.IPv4Address,   /* Target's (remote) protocol address */
         ARP_OPCODE_REQUEST);             /* ARP request */
 
     if( !NdisPacket ) return FALSE;

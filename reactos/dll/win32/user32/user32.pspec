@@ -483,8 +483,8 @@
 @ stdcall MapVirtualKeyW(long long)
 @ stdcall MapWindowPoints(long long ptr long)
 @ stdcall MenuItemFromPoint(long long double) ; Direct call NtUserMenuItemFromPoint
-@ stdcall MenuWindowProcA (long long long long)
-@ stdcall MenuWindowProcW (long long long long)
+@ stdcall MenuWindowProcA (long ptr long long long)
+@ stdcall MenuWindowProcW (long ptr long long long)
 @ stdcall MessageBeep(long)
 @ stdcall MessageBoxA(long str str long)
 @ stdcall MessageBoxExA(long str str long long)
@@ -712,8 +712,8 @@
 @ stdcall UnregisterHotKey(long long) NtUserUnregisterHotKey
 @ stub UnregisterMessagePumpHook
 @ stub UnregisterUserApiHook
-@ stdcall UpdateLayeredWindow(long long ptr ptr long ptr long ptr long) NtUserUpdateLayeredWindow
-@ stub UpdateLayeredWindowIndirect
+@ stdcall UpdateLayeredWindow(long long ptr ptr long ptr long ptr long)
+@ stdcall UpdateLayeredWindowIndirect(long ptr)
 @ stdcall UpdatePerUserSystemParameters(long long)
 @ stdcall UpdateWindow(long)
 @ stdcall User32InitializeImmEntryTable(ptr)
@@ -740,6 +740,7 @@
 @ stdcall WinHelpW(long wstr long long)
 @ stdcall WindowFromDC(long)
 @ stdcall WindowFromPoint(double)
+@ stdcall WindowFromPhysicalPoint(double) NtUserWindowFromPhysicalPoint
 @ stdcall keybd_event(long long long long)
 @ stdcall mouse_event(long long long long long)
 @ varargs wsprintfA(str str)

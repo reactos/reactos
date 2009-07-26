@@ -259,7 +259,7 @@ LoggedOnWindowProc(
 		}
 		case WM_CLOSE:
 		{
-			EndDialog(hwndDlg, IDNO);
+			EndDialog(hwndDlg, WLX_SAS_ACTION_NONE);
 			return TRUE;
 		}
 	}

@@ -71,8 +71,7 @@ typedef struct tagPageSet
 
 typedef struct tagWinHelp
 {
-    LPCSTR              lpszName;
-
+    unsigned            ref_count;
     WINHELP_BUTTON*     first_button;
     HLPFILE_PAGE*       page;
 
@@ -153,6 +152,8 @@ void WINHELP_DeleteBackSet(WINHELP_WINDOW*);
 HLPFILE* WINHELP_LookupHelpFile(LPCSTR lpszFile);
 HLPFILE_WINDOWINFO* WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name);
 void WINHELP_LayoutMainWindow(WINHELP_WINDOW* win);
+WINHELP_WINDOW* WINHELP_GrabWindow(WINHELP_WINDOW*);
+BOOL WINHELP_ReleaseWindow(WINHELP_WINDOW*);
 
 extern const char MAIN_WIN_CLASS_NAME[];
 extern const char BUTTON_BOX_WIN_CLASS_NAME[];

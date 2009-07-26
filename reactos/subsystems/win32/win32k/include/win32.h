@@ -1,6 +1,12 @@
 #ifndef __INCLUDE_NAPI_WIN32_H
 #define __INCLUDE_NAPI_WIN32_H
 
+extern BOOL ClientPfnInit;
+extern HINSTANCE hModClient;
+extern HANDLE hModuleWin;    // This Win32k Instance.
+extern PCLS SystemClassList;
+extern BOOL RegisteredSysClasses;
+
 typedef struct _WIN32HEAP WIN32HEAP, *PWIN32HEAP;
 
 #include <pshpack1.h>
@@ -28,7 +34,7 @@ typedef struct _W32THREAD
 
 typedef struct _THREADINFO
 {
-    W32THREAD           W32Thread;
+    W32THREAD;
     PTL                 ptl;
     PVOID               ppi; // FIXME: use PPROCESSINFO
     struct _USER_MESSAGE_QUEUE* MessageQueue;
@@ -43,10 +49,11 @@ typedef struct _THREADINFO
     UINT                cPaintsReady; /* Count of paints pending. */
     UINT                cTimersReady; /* Count of timers pending. */
     ULONG               fsHooks;
+    PHOOK               sphkCurrent;
     LIST_ENTRY          PtiLink;
 
     CLIENTTHREADINFO    cti;  // Used only when no Desktop or pcti NULL.
-
+  /* ReactOS */
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   BOOLEAN IsExiting;
@@ -72,17 +79,25 @@ typedef struct _W32PROCESS
   ULONG         W32PF_flags;
   PKEVENT       InputIdleEvent;
   DWORD         StartCursorHideTime;
-  DWORD         NextStart;
+  struct _W32PROCESS * NextStart;
   PVOID         pDCAttrList;
   PVOID         pBrushAttrList;
   DWORD         W32Pid;
   LONG          GDIHandleCount;
   LONG          UserHandleCount;
-  DWORD         cSimpleLock;  /* Locking Process during access to structure. */
-  RTL_AVL_TABLE rtlAvlTable;  /* Process AVL Table. */
-  LIST_ENTRY    leDCAttrList;
-  LIST_ENTRY    leObjAttrList;
-/* ReactOS */
+  PEX_PUSH_LOCK GDIPushLock;  /* Locking Process during access to structure. */
+  RTL_AVL_TABLE GDIEngUserMemAllocTable;  /* Process AVL Table. */
+  LIST_ENTRY    GDIDcAttrFreeList;
+  LIST_ENTRY    GDIBrushAttrFreeList;
+} W32PROCESS, *PW32PROCESS;
+
+typedef struct _PROCESSINFO
+{
+  W32PROCESS;
+
+  PCLS                pclsPrivateList;
+  PCLS                pclsPublicList;
+  /* ReactOS */
   LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
@@ -91,19 +106,6 @@ typedef struct _W32PROCESS
   LIST_ENTRY DriverObjListHead;
   struct _KBL* KeyboardLayout;
   W32HEAP_USER_MAPPING HeapMappings;
-} W32PROCESS, *PW32PROCESS;
-
-typedef struct _PROCESSINFO
-{
-    W32PROCESS          XzyxW32Process; /* Place holder. */
-    /* ReactOS */
-    HINSTANCE    hModUser;
-    PWINDOWCLASS LocalClassList;
-    PWINDOWCLASS GlobalClassList;
-    PWINDOWCLASS SystemClassList;
-                    
-    UINT RegisteredSysClasses : 1;
-                        
 } PROCESSINFO;
 
 #endif /* __INCLUDE_NAPI_WIN32_H */

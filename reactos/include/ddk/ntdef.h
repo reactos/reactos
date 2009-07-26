@@ -155,20 +155,20 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 //
 // Returns the byte offset of the specified structure's member
 //
-#ifndef FIELD_OFFSET
 #ifndef __GNUC__
-#define FIELD_OFFSET(Type, Field) \
-  ((LONG)(LONG_PTR) (&(((Type *) 0)->Field)))
+#define FIELD_OFFSET(Type, Field) ((LONG)(LONG_PTR)&(((Type*) 0)->Field))
 #else
 #define FIELD_OFFSET(Type, Field) __builtin_offsetof(Type, Field)
-#endif
 #endif
 
 //
 // Returns the type's alignment
 //
+#if defined(_MSC_VER) && (_MSC_VER >= 1300)
+#define TYPE_ALIGNMENT(t) __alignof(t)
+#else
 #define TYPE_ALIGNMENT(t) FIELD_OFFSET( struct { char x; t test; }, test )
-
+#endif
 
 //
 // Calling Conventions

@@ -20,6 +20,7 @@ typedef struct tagLOADPARMS32 {
 } LOADPARMS32;
 
 extern BOOLEAN InWindows;
+extern WaitForInputIdleType lpfnGlobalRegisterWaitForInputIdle;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -31,7 +32,7 @@ extern BOOLEAN InWindows;
  * @remarks Returned pointer must be freed by caller.
  */
 
-LPWSTR WINAPI
+LPWSTR
 GetDllLoadPath(LPCWSTR lpModule)
 {
 	ULONG Pos = 0, Length = 0;
@@ -161,6 +162,49 @@ LoadLibraryW (
 }
 
 
+static
+NTSTATUS
+LoadLibraryAsDatafile(PWSTR path, LPCWSTR name, HMODULE* hmod)
+{
+    static const WCHAR dotDLL[] = {'.','d','l','l',0};
+
+    WCHAR filenameW[MAX_PATH];
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    HANDLE mapping;
+    HMODULE module;
+
+    *hmod = 0;
+
+    if (!SearchPathW( path, name, dotDLL, sizeof(filenameW) / sizeof(filenameW[0]),
+                     filenameW, NULL ))
+    {
+        return NtCurrentTeb()->LastStatusValue;
+    }
+
+    hFile = CreateFileW( filenameW, GENERIC_READ, FILE_SHARE_READ,
+                         NULL, OPEN_EXISTING, 0, 0 );
+
+    if (hFile == INVALID_HANDLE_VALUE) return NtCurrentTeb()->LastStatusValue;
+
+    mapping = CreateFileMappingW( hFile, NULL, PAGE_READONLY, 0, 0, NULL );
+    CloseHandle( hFile );
+    if (!mapping) return NtCurrentTeb()->LastStatusValue;
+
+    module = MapViewOfFile( mapping, FILE_MAP_READ, 0, 0, 0 );
+    CloseHandle( mapping );
+    if (!module) return NtCurrentTeb()->LastStatusValue;
+
+    /* make sure it's a valid PE file */
+    if (!RtlImageNtHeader(module))
+    {
+        UnmapViewOfFile( module );
+        return STATUS_INVALID_IMAGE_FORMAT;
+    }
+    *hmod = (HMODULE)((char *)module + 1);  /* set low bit of handle to indicate datafile module */
+    return STATUS_SUCCESS;
+}
+
+
 /*
  * @implemented
  */
@@ -200,6 +244,7 @@ LoadLibraryExW (
 	  dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH ? lpLibFileName : NULL);
 
 	RtlInitUnicodeString(&DllName, (LPWSTR)lpLibFileName);
+
 	if (DllName.Buffer[DllName.Length/sizeof(WCHAR) - 1] == L' ')
 	{
 		RtlCreateUnicodeString(&DllName, (LPWSTR)lpLibFileName);
@@ -211,6 +256,21 @@ LoadLibraryExW (
 		DllName.Buffer[DllName.Length/sizeof(WCHAR)] = UNICODE_NULL;
 		FreeString = TRUE;
 	}
+
+    if (dwFlags & LOAD_LIBRARY_AS_DATAFILE)
+    {
+        Status = LdrGetDllHandle(SearchPath, NULL, &DllName, (PVOID*)&hInst);
+        if (!NT_SUCCESS(Status))
+        {
+            /* The method in load_library_as_datafile allows searching for the
+             * 'native' libraries only
+             */
+            Status = LoadLibraryAsDatafile(SearchPath, DllName.Buffer, &hInst);
+            goto done;
+        }
+    }
+
+    /* HACK!!! FIXME */
     if (InWindows)
     {
         /* Call the API Properly */
@@ -224,6 +284,8 @@ LoadLibraryExW (
         /* Call the ROS API. NOTE: Don't fix this, I have a patch to merge later. */
         Status = LdrLoadDll(SearchPath, &dwFlags, &DllName, (PVOID*)&hInst);
     }
+
+done:
 	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
 	if (FreeString)
 		RtlFreeUnicodeString(&DllName);
@@ -267,7 +329,7 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError( RtlNtStatusToDosError( Status ) );
+		SetLastErrorByStatus(Status);
 		fnExp = NULL;
 	}
 
@@ -282,8 +344,31 @@ BOOL
 WINAPI
 FreeLibrary( HMODULE hLibModule )
 {
-	LdrUnloadDll(hLibModule);
-	return TRUE;
+    PVOID Module = (PVOID)((ULONG_PTR)hLibModule & ~1);
+    NTSTATUS Status;
+
+    if ((ULONG_PTR)hLibModule & 1)
+    {
+        if (!RtlImageNtHeader(Module))
+        {
+            SetLastErrorByStatus(STATUS_INVALID_IMAGE_FORMAT);
+            return FALSE;
+        }
+
+        Status = NtUnmapViewOfSection(NtCurrentProcess(), Module);
+    }
+    else
+    {
+        Status = LdrUnloadDll(hLibModule);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -297,10 +382,8 @@ FreeLibraryAndExitThread (
 	DWORD	dwExitCode
 	)
 {
-	if ( FreeLibrary(hLibModule) )
-		ExitThread(dwExitCode);
-	for (;;)
-		;
+    FreeLibrary(hLibModule);
+    ExitThread(dwExitCode);
 }
 
 
@@ -636,7 +719,7 @@ LoadModule (
   }
 
   Length = (BYTE)LoadParams->lpCmdLine[0];
-  if(!(CommandLine = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+  if(!(CommandLine = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY,
                                strlen(lpModuleName) + Length + 2)))
   {
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -660,7 +743,7 @@ LoadModule (
   {
     DWORD Error;
 
-    HeapFree(GetProcessHeap(), 0, CommandLine);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, CommandLine);
     /* return the right value */
     Error = GetLastError();
     switch(Error)
@@ -678,14 +761,16 @@ LoadModule (
     return 0;
   }
 
-  HeapFree(GetProcessHeap(), 0, CommandLine);
+  RtlFreeHeap(RtlGetProcessHeap(), 0, CommandLine);
 
   /* Wait up to 15 seconds for the process to become idle */
-  /* FIXME: This is user32! Windows soft-loads this only if required. */
-  //WaitForInputIdle(ProcessInformation.hProcess, 15000);
+  if (NULL != lpfnGlobalRegisterWaitForInputIdle)
+  {
+    lpfnGlobalRegisterWaitForInputIdle(ProcessInformation.hProcess, 15000);
+  }
 
-  CloseHandle(ProcessInformation.hThread);
-  CloseHandle(ProcessInformation.hProcess);
+  NtClose(ProcessInformation.hThread);
+  NtClose(ProcessInformation.hProcess);
 
   return 33;
 }

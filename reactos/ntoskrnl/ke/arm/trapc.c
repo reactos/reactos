@@ -100,7 +100,7 @@ KiSwapProcess(IN PKPROCESS NewProcess,
     //
     // Update the page directory base
     //
-    TtbRegister.AsUlong = (ULONG)NewProcess->DirectoryTableBase.LowPart;
+    TtbRegister.AsUlong = NewProcess->DirectoryTableBase[0];
     ASSERT(TtbRegister.Reserved == 0);
     KeArmTranslationTableRegisterSet(TtbRegister);
     
@@ -148,8 +148,8 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         //
         // Check if address space switch is needed
         //
-        if (OldProcess->DirectoryTableBase.LowPart !=
-            NewProcess->DirectoryTableBase.LowPart)
+        if (OldProcess->DirectoryTableBase[0] !=
+            NewProcess->DirectoryTableBase[0])
         {
             //
             // FIXME-USER: Support address space switch

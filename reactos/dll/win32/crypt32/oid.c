@@ -665,6 +665,16 @@ error_close_key:
 }
 
 /***********************************************************************
+ *             CryptRegisterOIDInfo (CRYPT32.@)
+ */
+BOOL WINAPI CryptRegisterOIDInfo(PCCRYPT_OID_INFO pInfo, DWORD dwFlags)
+{
+    FIXME("(%p, %x): stub\n", pInfo, dwFlags );
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+/***********************************************************************
  *             CryptUnregisterOIDFunction (CRYPT32.@)
  */
 BOOL WINAPI CryptUnregisterOIDFunction(DWORD dwEncodingType, LPCSTR pszFuncName,

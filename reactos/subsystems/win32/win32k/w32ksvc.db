@@ -235,7 +235,7 @@ NtGdiMonoBitmap                                  1
 NtGdiMoveTo                                      4
 NtGdiOffsetClipRgn                               3
 NtGdiOffsetRgn                                   3
-NtGdiOpenDCW                                     7
+NtGdiOpenDCW                                     8
 NtGdiPatBlt                                      6
 NtGdiPolyPatBlt                                  5
 NtGdiPathToRegion                                1
@@ -583,7 +583,7 @@ NtUserUnregisterUserApiHook                      0
 NtUserUnregisterHotKey                           2
 NtUserUpdateInputContext                         3
 NtUserUpdateInstance                             3
-NtUserUpdateLayeredWindow                        9
+NtUserUpdateLayeredWindow                        10
 NtUserGetLayeredWindowAttributes                 4
 NtUserSetLayeredWindowAttributes                 4
 NtUserUpdatePerUserSystemParameters              2
@@ -596,6 +596,7 @@ NtUserWaitForInputIdle                           3
 NtUserWaitForMsgAndEvent                         1
 NtUserWaitMessage                                0
 NtUserWin32PoolAllocationStats                   6
+NtUserWindowFromPhysicalPoint                    2
 NtUserWindowFromPoint                            2
 NtUserYieldTask                                  0
 NtUserRemoteConnect                              3
@@ -695,9 +696,7 @@ NtUserMenuInfo                          3
 NtUserMenuItemInfo                      5
 NtUserMonitorFromPoint                  3
 NtUserMonitorFromRect                   2
-NtUserRegisterClassEx                   6
 NtUserMonitorFromWindow                 2
 NtUserSendMessage                       5
 NtUserSendMessageTimeout                8
-NtUserSendNotifyMessage                 4
 NtUserSetScrollBarInfo                  3

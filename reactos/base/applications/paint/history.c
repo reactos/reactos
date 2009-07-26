@@ -91,27 +91,30 @@ void insertReversible(HBITMAP hbm)
     setImgXYRes(GetDIBWidth(hBms[currInd]), GetDIBHeight(hBms[currInd]));
 }
 
-void cropReversible(int x, int y)//FIXME: This function is broken
+void cropReversible(int width, int height, int xOffset, int yOffset)
 {
-    HBITMAP oldBitmap;
+    HDC hdc;
     HPEN oldPen;
     HBRUSH oldBrush;
 
     SelectObject(hDrawingDC, hBms[currInd]);
     DeleteObject(hBms[(currInd+1)%4]);
-    hBms[(currInd+1)%4] = CreateDIBWithProperties(x, y);
+    hBms[(currInd+1)%4] = CreateDIBWithProperties(width, height);
     currInd = (currInd+1)%4;
     if (undoSteps<3) undoSteps++;
     redoSteps = 0;
     
-    oldBitmap = SelectObject(hSelDC, hBms[currInd]);
-    oldPen = SelectObject(hSelDC, CreatePen(PS_SOLID, 1, bgColor));
-    oldBrush = SelectObject(hSelDC, CreateSolidBrush(bgColor));
-    Rectangle(hSelDC, 0, 0, x, y);
-    DeleteObject(SelectObject(hSelDC, oldBrush));
-    DeleteObject(SelectObject(hSelDC, oldPen));
-    BitBlt(hDrawingDC, 0, 0, imgXRes, imgYRes, hSelDC, 0, 0, SRCCOPY);
-    SelectObject(hDrawingDC, SelectObject(hSelDC, oldBitmap));
+    hdc = CreateCompatibleDC(hDrawingDC);
+    SelectObject(hdc, hBms[currInd]);
     
-    setImgXYRes(x, y);
+    oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, bgColor));
+    oldBrush = SelectObject(hdc, CreateSolidBrush(bgColor));
+    Rectangle(hdc, 0, 0, width, height);
+    BitBlt(hdc, -xOffset, -yOffset, imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
+    DeleteObject(SelectObject(hdc, oldBrush));
+    DeleteObject(SelectObject(hdc, oldPen));
+    DeleteDC(hdc);
+    SelectObject(hDrawingDC, hBms[currInd]);
+    
+    setImgXYRes(width, height);
 }

@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  02-02-2008
- * LAST CHANGE:  17-06-2008
+ * LAST CHANGE:  14-06-2009
  * ______________________________________________
  * NOTE:        this file is not fully translated
  */
@@ -12,23 +12,23 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "R˝chlosù"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Character repeat", -1, 5, 5, 230, 130
+  GROUPBOX "Opakovanie znakov", -1, 5, 5, 230, 130
   ICON IDI_REPEAT_DELAY, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-  LTEXT "Repeat &delay", -1, 40, 15, 50, 10
-  LTEXT "Long", -1, 40, 30, 20, 10
-  LTEXT "Short", -1, 200, 30, 20, 10
+  LTEXT "Oneskorenie pre&d opakovanÌm:", -1, 40, 15, 50, 10
+  LTEXT "dlhÈ", -1, 40, 30, 20, 10
+  LTEXT "kr·tke", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
   ICON IDI_REPEAT_RATE, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-  LTEXT "&Repeat rate", -1, 40, 70, 50, 10
-  LTEXT "Slow", -1, 40, 85, 20, 10
-  LTEXT "Fast", -1, 200, 85, 20, 10
+  LTEXT "&R˝chlosù opakovania:", -1, 40, 70, 50, 10
+  LTEXT "mal·", -1, 40, 85, 20, 10 //pomaly
+  LTEXT "veæk·", -1, 200, 85, 20, 10 //r˝chlo
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-  LTEXT "Click here and hold down a key to &test repeat rate:", -1, 15, 105, 150, 10
+  LTEXT "Kliknite sem a podrûte kl·ves k o&testovaniu r˝chlosti opakovania:", -1, 15, 105, 150, 10
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  GROUPBOX "Cursor &blink rate:", -1, 5, 145, 230, 50
+  GROUPBOX "&Blikanie kurzora:", -1, 5, 145, 230, 50
   LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-  LTEXT "None", -1, 40, 165, 30, 10
-  LTEXT "Fast", -1, 200, 165, 30, 10
+  LTEXT "ûiadne", -1, 40, 165, 30, 10
+  LTEXT "r˝chle", -1, 200, 165, 30, 10
   CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 

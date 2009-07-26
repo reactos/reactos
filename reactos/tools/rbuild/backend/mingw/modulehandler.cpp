@@ -2806,7 +2806,7 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	if (Environment::GetArch() == "arm")
 	{
 		fprintf ( fMakefile,
-		         "\t${gcc} -Wl,--subsystem,native -Wl,--section-start,startup=0x8000 -o %s %s %s %s\n",
+		         "\t${gcc} -Wl,--subsystem,native -o %s %s %s %s\n",
 		         backend->GetFullName ( junk_tmp ).c_str (),
 		         objectsMacro.c_str (),
 		         libsMacro.c_str (),

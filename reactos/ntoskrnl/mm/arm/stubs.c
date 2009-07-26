@@ -15,7 +15,8 @@
 /* GLOBALS ********************************************************************/
 
 ULONG MmGlobalKernelPageDirectory[1024];
-MMPTE MiArmTemplatePte, MiArmTemplatePde;
+MMPTE MiArmTemplatePte;
+MMPDE_HARDWARE MiArmTemplatePde;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -67,8 +68,10 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
                          IN BOOLEAN Create)
 {
     //ULONG PdeOffset;
-    PMMPTE PointerPde, PointerPte;
-    MMPTE TempPde, TempPte;
+    PMMPTE PointerPte;
+    PMMPDE_HARDWARE PointerPde;
+    MMPDE_HARDWARE TempPde;
+    MMPTE TempPte;
     NTSTATUS Status;
     PFN_NUMBER Pfn;
     
@@ -95,7 +98,7 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
     // Get the PDE
     //
     PointerPde = MiGetPdeAddress(Address);
-    if (PointerPde->u.Hard.L1.Fault.Type == FaultPte)
+    if (PointerPde->u.Hard.Coarse.Valid)
     {
         //
         // Invalid PDE, is this a kernel address?
@@ -125,13 +128,13 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
                 //
                 // Setup the PFN
                 //
-                TempPde.u.Hard.L1.Coarse.BaseAddress = (Pfn << PAGE_SHIFT) >> CPT_SHIFT;
+                TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn << PAGE_SHIFT) >> CPT_SHIFT;
                 
                 //
                 // Write the PDE
                 //
-                ASSERT(PointerPde->u.Hard.L1.Fault.Type == FaultPte);
-                ASSERT(TempPde.u.Hard.L1.Coarse.Type == CoarsePte);
+                ASSERT(PointerPde->u.Hard.Coarse.Valid == 0);
+                ASSERT(TempPde.u.Hard.Coarse.Valid == 1);
                 *PointerPde = TempPde;
                 
                 //
@@ -153,13 +156,13 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
                 //
                 // Write the PFN of the PDE
                 //
-                TempPte.u.Hard.L2.Small.BaseAddress = Pfn;
+                TempPte.u.Hard.PageFrameNumber = Pfn;
                 
                 //
                 // Write the PTE
                 //
-                ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-                ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
+                ASSERT(PointerPte->u.Hard.Valid == 0);
+                ASSERT(TempPte.u.Hard.Valid == 1);
                 *PointerPte = TempPte;
 /////
             }
@@ -191,12 +194,12 @@ MiGetPageTableForProcess(IN PEPROCESS Process,
             //
             // Make the entry valid
             //
-            TempPte.u.Hard.AsUlong = 0xDEADBEEF;
+            TempPde.u.Hard.AsUlong = 0xDEADBEEF;
             
             //
             // Set it
             //
-            *PointerPde = TempPte;
+            *PointerPde = TempPde;
         }
     }
     
@@ -239,7 +242,7 @@ NTAPI
 MmDeletePageTable(IN PEPROCESS Process,
                   IN PVOID Address)
 {
-    PMMPTE PointerPde;
+    PMMPDE_HARDWARE PointerPde;
     
     //
     // Not valid for kernel addresses
@@ -266,37 +269,37 @@ MmDeletePageTable(IN PEPROCESS Process,
     //
     // On ARM, we use a section mapping for the original low-memory mapping
     //
-    if ((Address) || (PointerPde->u.Hard.L1.Section.Type != SectionPte))
+    if ((Address) || (PointerPde->u.Hard.Section.Valid == 0))
     {
         //
         // Make sure it's valid
         //
-        ASSERT(PointerPde->u.Hard.L1.Coarse.Type == CoarsePte);
+        ASSERT(PointerPde->u.Hard.Coarse.Valid == 1);
     }
     
     //
     // Clear the PDE
     //
     PointerPde->u.Hard.AsUlong = 0;
-    ASSERT(PointerPde->u.Hard.L1.Fault.Type == FaultPte);
+    ASSERT(PointerPde->u.Hard.Coarse.Valid == 0);
     
     //
     // Invalidate the TLB entry
     //
-    MiFlushTlb(PointerPde, MiGetPteAddress(Address));
+    MiFlushTlb((PMMPTE)PointerPde, MiGetPteAddress(Address));
 }
 
 BOOLEAN
 NTAPI
 MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
-                            IN PLARGE_INTEGER DirectoryTableBase)
+                            IN PULONG DirectoryTableBase)
 {
     NTSTATUS Status;
     ULONG i;
     PFN_NUMBER Pfn[2];
-    PMMPTE PageDirectory, PointerPde;
-    MMPTE TempPde;
+    PMMPDE_HARDWARE PageDirectory, PointerPde;
+    MMPDE_HARDWARE TempPde;
     ASSERT(FALSE);
     
     //
@@ -329,27 +332,27 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     // Setup the PDE for the table base
     //
     TempPde = MiArmTemplatePde;
-    TempPde.u.Hard.L1.Coarse.BaseAddress = (Pfn[0] << PAGE_SHIFT) >> CPT_SHIFT;
+    TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn[0] << PAGE_SHIFT) >> CPT_SHIFT;
     PointerPde = &PageDirectory[MiGetPdeOffset(PTE_BASE)];
     
     //
     // Write the PDE
     //
-    ASSERT(PointerPde->u.Hard.L1.Fault.Type == FaultPte);
-    ASSERT(TempPde.u.Hard.L1.Coarse.Type == CoarsePte);
+    ASSERT(PointerPde->u.Hard.Coarse.Valid == 0);
+    ASSERT(TempPde.u.Hard.Coarse.Valid == 1);
     *PointerPde = TempPde;
     
     //
     // Setup the PDE for the hyperspace
     //
-    TempPde.u.Hard.L1.Coarse.BaseAddress = (Pfn[1] << PAGE_SHIFT) >> CPT_SHIFT;
+    TempPde.u.Hard.Coarse.PageFrameNumber = (Pfn[1] << PAGE_SHIFT) >> CPT_SHIFT;
     PointerPde = &PageDirectory[MiGetPdeOffset(HYPER_SPACE)];
     
     //
     // Write the PDE
     //
-    ASSERT(PointerPde->u.Hard.L1.Fault.Type == FaultPte);
-    ASSERT(TempPde.u.Hard.L1.Coarse.Type == CoarsePte);
+    ASSERT(PointerPde->u.Hard.Coarse.Valid == 0);
+    ASSERT(TempPde.u.Hard.Coarse.Valid == 1);
     *PointerPde = TempPde;
 
     //
@@ -360,7 +363,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     //
     // Return the page table base
     //
-    DirectoryTableBase->QuadPart = Pfn[0] << PAGE_SHIFT;
+    DirectoryTableBase[0] = Pfn[0] << PAGE_SHIFT;
     return TRUE;
 }
 
@@ -391,12 +394,13 @@ Mmi386ReleaseMmInfo(IN PEPROCESS Process)
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PLARGE_INTEGER DirectoryTableBase)
+                             IN PULONG DirectoryTableBase)
 {
     //
     // Share the directory base with the idle process
     //
-    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
+    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
+    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
     
     //
     // Initialize the Addresss Space
@@ -514,13 +518,13 @@ MmCreateVirtualMappingInternal(IN PEPROCESS Process,
         //
         // Set the PFN
         //
-        TempPte.u.Hard.L2.Small.BaseAddress = *Pages++;
+        TempPte.u.Hard.PageFrameNumber = *Pages++;
         
         //
         // Write the PTE
         //
-        ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-        ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
+        ASSERT(PointerPte->u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Hard.Valid == 1);
         *PointerPte = TempPte;
         
         //
@@ -625,7 +629,7 @@ MmRawDeleteVirtualMapping(IN PVOID Address)
     // Get the PTE
     //
     PointerPte = MiGetPageTableForProcess(NULL, Address, FALSE);
-    if ((PointerPte) && (PointerPte->u.Hard.L2.Fault.Type != FaultPte))
+    if ((PointerPte) && (PointerPte->u.Hard.Valid))
     {
         //
         // Destroy it
@@ -671,7 +675,7 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
         //
         // Unmap the PFN
         //
-        Pfn = Pte.u.Hard.L2.Small.BaseAddress;
+        Pfn = Pte.u.Hard.PageFrameNumber;
         if (Pfn) MmMarkPageUnmapped(Pfn);
         
         //
@@ -685,93 +689,6 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
     //
     if (WasDirty) *WasDirty = FALSE; // LIE!!!
     if (Page) *Page = Pfn;
-}
-
-PVOID
-NTAPI
-MmCreateHyperspaceMapping(IN PFN_TYPE Page)
-{
-    PMMPTE PointerPte, FirstPte, LastPte;
-    MMPTE TempPte;
-    PVOID Address;
-    
-    //
-    // Loop hyperspace PTEs (1MB)
-    //
-    FirstPte = PointerPte = MiGetPteAddress((PVOID)HYPER_SPACE);
-    LastPte = PointerPte + 256;
-    while (PointerPte <= LastPte)
-    {
-        //
-        // Find a free slot
-        //
-        if (PointerPte->u.Hard.L2.Fault.Type == FaultPte)
-        {
-            //
-            // Use this entry
-            //
-            break;
-        }
-        
-        //
-        // Try the next one
-        //
-        PointerPte++;
-    }
-    
-    //
-    // Check if we didn't find anything
-    //
-    if (PointerPte > LastPte) return NULL;
-    
-    //
-    // Create the mapping
-    //
-    TempPte = MiArmTemplatePte;
-    TempPte.u.Hard.L2.Small.BaseAddress = Page;
-    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-    ASSERT(TempPte.u.Hard.L2.Small.Type == SmallPte);
-    *PointerPte = TempPte;
-    
-    //
-    // Return the address
-    //
-    Address = (PVOID)(HYPER_SPACE + ((PointerPte - FirstPte) * PAGE_SIZE));
-    KeArmInvalidateTlbEntry(Address);
-    DPRINT("[HMAP]: %p %lx\n", Address, Page);
-    return Address;
-}
-
-PFN_TYPE
-NTAPI
-MmDeleteHyperspaceMapping(IN PVOID Address)
-{
-    PFN_TYPE Pfn;
-    PMMPTE PointerPte;
-    DPRINT("[HUNMAP]: %p\n", Address);
-    
-    //
-    // Get the PTE
-    //
-    PointerPte = MiGetPteAddress(Address);
-    ASSERT(PointerPte->u.Hard.L2.Small.Type == SmallPte);
-    
-    //
-    // Save the PFN
-    //
-    Pfn = PointerPte->u.Hard.L2.Small.BaseAddress;
-    
-    //
-    // Destroy the PTE
-    //
-    PointerPte->u.Hard.AsUlong = 0;
-    ASSERT(PointerPte->u.Hard.L2.Fault.Type == FaultPte);
-    
-    //
-    // Flush the TLB entry and return the PFN
-    //
-    KeArmInvalidateTlbEntry(Address);
-    return Pfn;
 }
 
 VOID
@@ -812,12 +729,12 @@ MmGetPfnForProcess(IN PEPROCESS Process,
     // Get the PTE
     //
     Pte = MiGetPageEntryForProcess(Process, Address);
-    if (Pte.u.Hard.L2.Fault.Type == FaultPte) return 0;
+    if (Pte.u.Hard.Valid == 0) return 0;
     
     //
     // Return PFN
     //
-    return Pte.u.Hard.L2.Small.BaseAddress;
+    return Pte.u.Hard.PageFrameNumber;
 }
 
 BOOLEAN
@@ -865,7 +782,7 @@ MmIsPagePresent(IN PEPROCESS Process,
     //
     // Fault PTEs are 0, which is FALSE (non-present)
     //
-    return MiGetPageEntryForProcess(Process, Address).u.Hard.L2.Fault.Type;
+    return MiGetPageEntryForProcess(Process, Address).u.Hard.Valid;
 }
 
 BOOLEAN
@@ -881,9 +798,9 @@ MmIsPageSwapEntry(IN PEPROCESS Process,
     Pte = MiGetPageEntryForProcess(Process, Address);
     
     //
-    // Make sure it's valid, but faulting
+    // Make sure it exists, but is faulting
     //
-    return (Pte.u.Hard.L2.Fault.Type == FaultPte) && (Pte.u.Hard.AsUlong);
+    return (Pte.u.Hard.Valid == 0) && (Pte.u.Hard.AsUlong);
 }
 
 ULONG
@@ -1020,10 +937,10 @@ MmGetPhysicalAddress(IN PVOID Address)
         //
         // ARM Hack while we still use a section PTE
         //
-        PMMPTE PointerPte;
-        PointerPte = MiGetPdeAddress(PCR);
-        ASSERT(PointerPte->u.Hard.L1.Section.Type == SectionPte);
-        PhysicalAddress.QuadPart = PointerPte->u.Hard.L1.Section.BaseAddress;
+        PMMPDE_HARDWARE PointerPde;
+        PointerPde = MiGetPdeAddress(PCR);
+        ASSERT(PointerPde->u.Hard.Section.Valid == 1);
+        PhysicalAddress.QuadPart = PointerPde->u.Hard.Section.PageFrameNumber;
         PhysicalAddress.QuadPart <<= CPT_SHIFT;
         PhysicalAddress.LowPart += BYTE_OFFSET(Address);
         return PhysicalAddress;
@@ -1033,13 +950,12 @@ MmGetPhysicalAddress(IN PVOID Address)
     // Get the PTE
     //
     Pte = MiGetPageEntryForProcess(NULL, Address);
-    if ((Pte.u.Hard.AsUlong) && (Pte.u.Hard.L2.Fault.Type != FaultPte))
+    if (Pte.u.Hard.Valid)
     {
         //
         // Return the information
         //
-        ASSERT(Pte.u.Hard.L2.Small.Type == SmallPte);
-        PhysicalAddress.QuadPart = Pte.u.Hard.L2.Small.BaseAddress;
+        PhysicalAddress.QuadPart = Pte.u.Hard.PageFrameNumber;
         PhysicalAddress.QuadPart <<= PAGE_SHIFT;
         PhysicalAddress.LowPart += BYTE_OFFSET(Address);
     }

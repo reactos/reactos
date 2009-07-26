@@ -19,23 +19,9 @@ UINT MaxLLHeaderSize; /* Largest maximum header size */
 UINT MinLLFrameSize;  /* Largest minimum frame size */
 BOOLEAN IPInitialized = FALSE;
 BOOLEAN IpWorkItemQueued = FALSE;
-NPAGED_LOOKASIDE_LIST IPPacketList;
 /* Work around calling timer at Dpc level */
 
 IP_PROTOCOL_HANDLER ProtocolTable[IP_PROTOCOL_TABLE_SIZE];
-
-
-VOID FreePacket(
-    PVOID Object)
-/*
- * FUNCTION: Frees an IP packet object
- * ARGUMENTS:
- *     Object = Pointer to an IP packet structure
- */
-{
-    exFreeToNPagedLookasideList(&IPPacketList, Object);
-}
-
 
 VOID DontFreePacket(
     PVOID Object)
@@ -56,34 +42,6 @@ VOID FreeIF(
  */
 {
     exFreePool(Object);
-}
-
-
-PIP_PACKET IPCreatePacket(ULONG Type)
-/*
- * FUNCTION: Creates an IP packet object
- * ARGUMENTS:
- *     Type = Type of IP packet
- * RETURNS:
- *     Pointer to the created IP packet. NULL if there was not enough free resources.
- */
-{
-  PIP_PACKET IPPacket;
-
-  IPPacket = exAllocateFromNPagedLookasideList(&IPPacketList);
-  if (!IPPacket)
-    return NULL;
-
-    /* FIXME: Is this needed? */
-  RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
-
-  INIT_TAG(IPPacket, TAG('I','P','K','T'));
-
-  IPPacket->Free       = FreePacket;
-  IPPacket->Type       = Type;
-  IPPacket->HeaderSize = 20;
-
-  return IPPacket;
 }
 
 PIP_PACKET IPInitializePacket(
@@ -155,11 +113,6 @@ VOID IPDispatchProtocol(
     {
        /* Call the appropriate protocol handler */
        (*ProtocolTable[Protocol])(Interface, IPPacket);
-
-       /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
-        * must be handled here. */
-        if( Protocol == IPPROTO_ICMP )
-            ICMPReceive( Interface, IPPacket );
     }
 }
 
@@ -284,7 +237,7 @@ BOOLEAN IPRegisterInterface(
  */
 {
     KIRQL OldIrql;
-    UINT ChosenIndex = 1;
+    UINT ChosenIndex = 0;
     BOOLEAN IndexHasBeenChosen;
     IF_LIST_ITER(Interface);
 
@@ -365,6 +318,8 @@ VOID DefaultProtocolHandler(
 {
     TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
 			    "discarded.\n", Interface));
+
+    Interface->Stats.InDiscardedUnknownProto++;
 }
 
 
@@ -413,15 +368,6 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    0,                              /* Flags */
 	    sizeof(IPDATAGRAM_REASSEMBLY),  /* Size of each entry */
 	    TAG('I','P','D','R'),           /* Tag */
-	    0);                             /* Depth */
-
-    ExInitializeNPagedLookasideList(
-      &IPPacketList,                  /* Lookaside list */
-	    NULL,                           /* Allocate routine */
-	    NULL,                           /* Free routine */
-	    0,                              /* Flags */
-	    sizeof(IP_PACKET),              /* Size of each entry */
-	    TAG('I','P','P','K'),           /* Tag */
 	    0);                             /* Depth */
 
     ExInitializeNPagedLookasideList(
@@ -491,7 +437,6 @@ NTSTATUS IPShutdown(
     /* Destroy lookaside lists */
     ExDeleteNPagedLookasideList(&IPHoleList);
     ExDeleteNPagedLookasideList(&IPDRList);
-    ExDeleteNPagedLookasideList(&IPPacketList);
     ExDeleteNPagedLookasideList(&IPFragmentList);
 
     IPInitialized = FALSE;

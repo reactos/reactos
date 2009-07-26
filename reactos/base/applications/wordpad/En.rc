@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -177,10 +179,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "Rich text format (*.rtf)"
+    STRING_ALL_FILES,              "All documents (*.*)"
     STRING_TEXT_FILES_TXT,         "Text documents (*.txt)"
     STRING_TEXT_FILES_UNICODE_TXT, "Unicode text document (*.txt)"
-    STRING_ALL_FILES,              "All documents (*.*)"
+    STRING_RICHTEXT_FILES_RTF,     "Rich text format (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "Rich text document"
+    STRING_NEWFILE_TXT,            "Text document"
+    STRING_NEWFILE_TXT_UNICODE,    "Unicode text document"
+    STRING_PRINTER_FILES_PRN,      "Printer files (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -188,18 +194,6 @@ BEGIN
     STRING_ALIGN_LEFT,            "Left"
     STRING_ALIGN_RIGHT,           "Right"
     STRING_ALIGN_CENTER,          "Center"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_NEWFILE_RICHTEXT,     "Rich text document"
-    STRING_NEWFILE_TXT,          "Text document"
-    STRING_NEWFILE_TXT_UNICODE,  "Unicode text document"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_PRINTER_FILES_PRN,        "Printer files (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -217,11 +211,7 @@ BEGIN
     STRING_PREVIEW_TWOPAGES,         "Two pages"
     STRING_PREVIEW_ONEPAGE,          "One page"
     STRING_PREVIEW_CLOSE,            "Close"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_UNITS_CM,             "cm"
+    STRING_UNITS_CM,                 "cm"
 END
 
 STRINGTABLE DISCARDABLE
@@ -241,4 +231,13 @@ BEGIN
     STRING_OPEN_ACCESS_DENIED,        "You do not have access to open the file."
     STRING_PRINTING_NOT_IMPLEMENTED,  "Printing not implemented"
     STRING_MAX_TAB_STOPS,             "Cannot add more than 32 tab stops."
+END
+
+LANGUAGE LANG_ENGLISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    STRING_ALIGN_LEFT,            "Left"
+    STRING_ALIGN_RIGHT,           "Right"
+    STRING_ALIGN_CENTER,          "Centre"
 END

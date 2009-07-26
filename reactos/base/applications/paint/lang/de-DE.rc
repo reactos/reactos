@@ -46,13 +46,19 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Zoom"
         BEGIN
-            MENUITEM "12,5%", IDM_VIEWZOOM125
-            MENUITEM "25%", IDM_VIEWZOOM25
-            MENUITEM "50%", IDM_VIEWZOOM50
-            MENUITEM "100%", IDM_VIEWZOOM100
-            MENUITEM "200%", IDM_VIEWZOOM200
-            MENUITEM "400%", IDM_VIEWZOOM400
-            MENUITEM "800%", IDM_VIEWZOOM800
+            POPUP "Benutzerdefiniert"
+            BEGIN
+                MENUITEM "12,5%", IDM_VIEWZOOM125
+                MENUITEM "25%", IDM_VIEWZOOM25
+                MENUITEM "50%", IDM_VIEWZOOM50
+                MENUITEM "100%", IDM_VIEWZOOM100
+                MENUITEM "200%", IDM_VIEWZOOM200
+                MENUITEM "400%", IDM_VIEWZOOM400
+                MENUITEM "800%", IDM_VIEWZOOM800
+            END
+            MENUITEM SEPARATOR
+            MENUITEM "Raster anzeigen", IDM_VIEWSHOWGRID
+            MENUITEM "Miniaturansicht anzeigen", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Gesamtbild\tStrg+G", IDM_VIEWFULLSCREEN
     END
@@ -172,6 +178,7 @@ BEGIN
     IDS_INFOTEXT, "Paint für ReactOS steht unter der GNU Lesser General Public License (LGPL) Version 3. (siehe www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Möchten Sie die Änderungen an %s speichern?"
     IDS_DEFAULTFILENAME, "Unbenannt.bmp"
+    IDS_MINIATURETITLE, "Miniaturansicht"
     IDS_TOOLTIP1, "Freie Auswahl"
     IDS_TOOLTIP2, "Auswahl"
     IDS_TOOLTIP3, "Radierer"

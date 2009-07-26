@@ -254,7 +254,7 @@ BEGIN
     PUSHBUTTON      "キャンセル(&C)",IDCANCEL,151,153,50,14
 END
 
-IDD_MDI_SDI DIALOGEX 0, 0, 194, 138
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE DS_SHELLFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "エクスプローラのウィンドウ モードの選択"
@@ -327,10 +327,10 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
-    IDS_START               "ｽﾀｰﾄ"
+    IDS_START               "スタート"
     IDS_LOGOFF              "ログオフ..."
     IDS_SHUTDOWN            "シャットダウン..."
-    IDS_RESTART             "Restart..."
+    IDS_RESTART             "再起動..."
     IDS_LAUNCH              "ファイル名を指定して実行..."
     IDS_START_HELP          "ヘルプ"
     IDS_SEARCH_FILES        "ファイルやフォルダ..."
@@ -381,9 +381,9 @@ BEGIN
     IDS_DESKTOPBAR_SETTINGS "デスクトップの設定"
     IDS_DESKTOP             "デスクトップ"
     IDS_TASKBAR             "タスクバー"
-    IDS_NAMECOLUMN          "Name"
-    IDS_PATHCOLUMN          "Path"
-    IDS_MENUCOLUMN          "Menu path"
+    IDS_NAMECOLUMN          "名前"
+    IDS_PATHCOLUMN          "パス"
+    IDS_MENUCOLUMN          "メニューパス"
 END
 
 #endif    // Japanese resources

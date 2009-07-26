@@ -54,8 +54,6 @@ VOID
 IntDrawScrollBar(HWND hWnd, HDC hDC, INT nBar);
 DWORD
 IntScrollHitTest(HWND hWnd, INT nBar, POINT pt, BOOL bDragging);
-HPEN WINAPI
-GetSysColorPen(int nIndex);
 
 BOOL WINAPI GdiGradientFill(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
 
@@ -432,7 +430,8 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
       if(!(Style & WS_MINIMIZE))
       {
         /* Line under caption */
-        PreviousPen = SelectObject(hDC, GetSysColorPen(
+        PreviousPen = SelectObject(hDC, GetStockObject(DC_PEN));
+        SetDCPenColor(hDC, GetSysColor(
            ((ExStyle & (WS_EX_STATICEDGE | WS_EX_CLIENTEDGE |
                         WS_EX_DLGMODALFRAME)) == WS_EX_STATICEDGE) ?
            COLOR_WINDOWFRAME : COLOR_3DFACE));

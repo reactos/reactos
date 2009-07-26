@@ -54,4 +54,6 @@ IntCbAllocateMemory(ULONG Size);
 VOID FASTCALL
 IntCbFreeMemory(PVOID Data);
 
+HMENU APIENTRY co_IntCallLoadMenu(HINSTANCE,PUNICODE_STRING);
+
 #endif /* _WIN32K_CALLBACK_H */

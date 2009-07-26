@@ -78,9 +78,6 @@ BOOL FASTCALL
 IntGetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 BOOL FASTCALL
-IntIsMenu(HMENU hMenu);
-
-BOOL FASTCALL
 IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 int FASTCALL
@@ -100,7 +97,7 @@ IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECTL *rcRec
 DWORD APIENTRY UserInsertMenuItem(HMENU hMenu, UINT uItem, BOOL fByPosition, LPCMENUITEMINFOW lpmii);
 
 BOOL FASTCALL
-IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);
+IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process);
 
 BOOL FASTCALL
 IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,

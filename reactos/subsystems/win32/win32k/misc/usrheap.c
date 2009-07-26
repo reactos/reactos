@@ -28,7 +28,7 @@ IntUserHeapCommitRoutine(IN PVOID Base,
                          IN OUT PVOID *CommitAddress,
                          IN OUT PSIZE_T CommitSize)
 {
-    PW32PROCESS W32Process;
+    PPROCESSINFO W32Process;
     PW32HEAP_USER_MAPPING Mapping;
     PVOID UserBase = NULL;
     NTSTATUS Status;

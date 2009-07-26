@@ -923,7 +923,7 @@ IntGdiGradientFill(
     PalDestGDI = PALETTE_LockPalette(hDestPalette);
     if (PalDestGDI)
     {
-        Mode = PalDestGDI->Mode;
+        Mode = 0;
         PALETTE_UnlockPalette(PalDestGDI);
     }
     else

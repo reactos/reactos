@@ -351,7 +351,7 @@ VOID APICDump(VOID)
 BOOLEAN VerifyLocalAPIC(VOID)
 {
    SIZE_T reg0, reg1;
-   ULONG l, h;
+   ULONG l = 0, h = 0;
    /* The version register is read-only in a real APIC */
    reg0 = APICRead(APIC_VER);
    DPRINT1("Getting VERSION: %x\n", reg0);
@@ -416,7 +416,7 @@ BOOLEAN VerifyLocalAPIC(VOID)
 #ifdef CONFIG_SMP
 VOID APICSendIPI(ULONG Target, ULONG Mode)
 {
-   ULONG tmp, i, flags;
+   ULONG tmp, i, flags = 0;
 
    /* save flags and disable interrupts */
    Ke386SaveFlags(flags);

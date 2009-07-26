@@ -1,5 +1,6 @@
-/* TRANSLATOR:  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
- * DATE OF TR:  29-05-2008
+/* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  29-05-2008
+ * LAST CHANGE:  14-06-2009
  */
 
 /*
@@ -32,11 +33,11 @@ BEGIN
     IDS_PROGRAMS       "Ponuka Štart\\Programy"
     IDS_ADMINTOOLS     "Ponuka Štart\\Programy\\Nástroje na správu"
     IDS_STARTUP        "Ponuka Štart\\Programy\\Po spustení"
-    IDS_MYDOCUMENTS    "My Documents"
-    IDS_MYPICTURES     "My Documents\\My Pictures"
-    IDS_MYMUSIC        "My Documents\\My Music"
-    IDS_MYVIDEOS       "My Documents\\My Videos"
-    IDS_TEMPLATES      "Templates"
+    IDS_MYDOCUMENTS    "Moje dokumenty"
+    IDS_MYPICTURES     "Moje dokumenty\\Obrázky"
+    IDS_MYMUSIC        "Moje dokumenty\\Hudba"
+    IDS_MYVIDEOS       "Moje dokumenty\\Videá"
+    IDS_TEMPLATES      "Šablóny"
     IDS_RECENT         "Recent"
     IDS_SENDTO         "SendTo"
     IDS_PRINTHOOD      "PrintHood"

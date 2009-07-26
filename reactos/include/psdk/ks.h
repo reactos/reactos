@@ -249,17 +249,6 @@ typedef KSIDENTIFIER KSDEGRADE, *PKSDEGRADE;
 typedef KSIDENTIFIER KSPIN_INTERFACE, *PKSPIN_INTERFACE;
 typedef KSIDENTIFIER KSPIN_MEDIUM, *PKSPIN_MEDIUM;
 
-#if !defined( _MSC_VER ) 
-typedef struct {
-    ULONG   FormatSize;
-    ULONG   Flags;
-    ULONG   SampleSize;
-    ULONG   Reserved;
-    GUID    MajorFormat;
-    GUID    SubFormat;
-    GUID    Specifier;
-} KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
-#else
 typedef union {
     struct {
         ULONG   FormatSize;
@@ -272,7 +261,7 @@ typedef union {
     };
     LONGLONG    Alignment;
 } KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
-#endif
+
 
 typedef struct
 {
@@ -553,8 +542,10 @@ typedef enum
     Properties/Methods/Events
 */
 
-#define KSPROPSETID_StreamAllocator \
+#define STATIC_KSPROPSETID_StreamAllocator\
     0xcf6e4342L, 0xec87, 0x11cf, 0xa1, 0x30, 0x00, 0x20, 0xaf, 0xd1, 0x56, 0xe4
+DEFINE_GUIDSTRUCT("cf6e4342-ec87-11cf-a130-0020afd156e4", KSPROPSETID_StreamAllocator);
+#define KSPROPSETID_StreamAllocator DEFINE_GUIDNAMED(KSPROPSETID_StreamAllocator)
 
 typedef enum
 {
@@ -1113,7 +1104,7 @@ typedef enum
 
 #if defined(_NTDDK_)
 /* MOVE ME */
-typedef NTSTATUS (*PFNKSCONTEXT_DISPATCH)(
+typedef NTSTATUS (NTAPI *PFNKSCONTEXT_DISPATCH)(
     IN PVOID Context,
     IN PIRP Irp);
 #endif
@@ -1268,20 +1259,20 @@ typedef struct
 #define KSPROPERTY_ATTRIBUTES_IRP_STORAGE(Irp) (*(PKSATTRIBUTE_LIST*)&(Irp)->Tail.Overlay.DriverContext[2])
 
 typedef 
-VOID 
-(*PFNREFERENCEDEVICEOBJECT)( 
+VOID
+(NTAPI *PFNREFERENCEDEVICEOBJECT)( 
     IN PVOID Context
     );
     
 typedef 
-VOID 
-(*PFNDEREFERENCEDEVICEOBJECT)( 
+VOID
+(NTAPI *PFNDEREFERENCEDEVICEOBJECT)( 
     IN PVOID Context
     );
     
 typedef
 NTSTATUS
-(*PFNQUERYREFERENCESTRING)( 
+(NTAPI *PFNQUERYREFERENCESTRING)( 
     IN PVOID Context,
     IN OUT PWCHAR *String
     );
@@ -1445,7 +1436,7 @@ typedef struct {
 } KSPROPERTY_VALUES, *PKSPROPERTY_VALUES;
 
 #if defined(_NTDDK_)
-typedef NTSTATUS (*PFNKSHANDLER)(
+typedef NTSTATUS (NTAPI *PFNKSHANDLER)(
     IN  PIRP Irp,
     IN  PKSIDENTIFIER Request,
     IN  OUT PVOID Data);
@@ -1474,7 +1465,7 @@ typedef struct
 
 typedef
 BOOLEAN
-(*PFNKSFASTHANDLER)(
+(NTAPI *PFNKSFASTHANDLER)(
     IN PFILE_OBJECT FileObject,
     IN PKSIDENTIFIER Request,
     IN ULONG RequestLength,
@@ -1547,13 +1538,27 @@ typedef struct
 
 typedef struct
 {
-    ULONG               CountItems;         // count of FramingItem-s below.
+    ULONG               CountItems;
     ULONG               PinFlags;
     KS_COMPRESSION      OutputCompression;
-    ULONG               PinWeight;          // this pin framing's Weight graph-wide
+    ULONG               PinWeight;
     KS_FRAMING_ITEM     FramingItem[1]; 
 } KSALLOCATOR_FRAMING_EX, *PKSALLOCATOR_FRAMING_EX;
 
+#define KSALLOCATOR_REQUIREMENTF_INPLACE_MODIFIER   0x00000001
+#define KSALLOCATOR_REQUIREMENTF_SYSTEM_MEMORY      0x00000002
+#define KSALLOCATOR_REQUIREMENTF_FRAME_INTEGRITY    0x00000004
+#define KSALLOCATOR_REQUIREMENTF_MUST_ALLOCATE      0x00000008
+#define KSALLOCATOR_REQUIREMENTF_PREFERENCES_ONLY   0x80000000
+
+#define KSALLOCATOR_OPTIONF_COMPATIBLE              0x00000001
+#define KSALLOCATOR_OPTIONF_SYSTEM_MEMORY           0x00000002
+#define KSALLOCATOR_OPTIONF_VALID                   0x00000003
+
+#define KSALLOCATOR_FLAG_PARTIAL_READ_SUPPORT       0x00000010
+#define KSALLOCATOR_FLAG_DEVICE_SPECIFIC            0x00000020
+#define KSALLOCATOR_FLAG_CAN_ALLOCATE               0x00000040
+#define KSALLOCATOR_FLAG_INSIST_ON_FRAMESIZE_RATIO  0x00000080
 
 /* ===============================================================
     Quality
@@ -1730,6 +1735,11 @@ typedef struct
     Objects ??? SORT ME!
 */
 
+#define KSCREATE_ITEM_SECURITYCHANGED       0x1
+#define KSCREATE_ITEM_WILDCARD              0x2
+#define KSCREATE_ITEM_NOPARAMETERS          0x4
+#define KSCREATE_ITEM_FREEONSTOP            0x8
+
 typedef struct
 {
     PDRIVER_DISPATCH       Create;
@@ -1745,7 +1755,7 @@ typedef struct
     PKSOBJECT_CREATE_ITEM    CreateItemsList;
 } KSOBJECT_CREATE, *PKSOBJECT_CREATE;
 
-typedef VOID (*PFNKSITEMFREECALLBACK)(
+typedef VOID (NTAPI *PFNKSITEMFREECALLBACK)(
     IN  PKSOBJECT_CREATE_ITEM CreateItem);
 
 #endif
@@ -1857,14 +1867,14 @@ typedef struct
     LONGLONG        Interval;
 } KSEVENT_TIME_INTERVAL, *PKSEVENT_TIME_INTERVAL;
 
-typedef NTSTATUS (*PFNKSADDEVENT)(
+typedef NTSTATUS (NTAPI *PFNKSADDEVENT)(
     IN  PIRP Irp,
     IN  PKSEVENTDATA EventData,
     IN  struct _KSEVENT_ENTRY* EventEntry);
 
 typedef
 VOID
-(*PFNKSREMOVEEVENT)(
+(NTAPI *PFNKSREMOVEEVENT)(
     IN PFILE_OBJECT FileObject,
     IN struct _KSEVENT_ENTRY* EventEntry
     );
@@ -1917,28 +1927,69 @@ typedef struct _KSSTREAM_POINTER_OFFSET KSSTREAM_POINTER_OFFSET, *PKSSTREAM_POIN
 typedef struct _KSMAPPING KSMAPPING, *PKSMAPPING;
 typedef struct _KSPROCESSPIN KSPROCESSPIN, *PKSPROCESSPIN;
 
+#define IOCTL_KS_HANDSHAKE             CTL_CODE(FILE_DEVICE_KS, 0x007, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+typedef struct {
+    GUID ProtocolId;
+    PVOID Argument1;
+    PVOID Argument2;
+} KSHANDSHAKE, *PKSHANDSHAKE;
+
 typedef
 NTSTATUS
-(*PFNKSPINIRP)(
+(NTAPI *PFNKSPINHANDSHAKE)(
+    IN PKSPIN Pin,
+    IN PKSHANDSHAKE In,
+    IN PKSHANDSHAKE Out
+    );
+
+typedef
+void
+(NTAPI *PFNKSPINPOWER)(
+    IN PKSPIN Pin,
+    IN DEVICE_POWER_STATE State
+    );
+
+typedef
+void
+(NTAPI *PFNKSPINFRAMERETURN)(
+    IN PKSPIN Pin,
+    IN PVOID Data OPTIONAL,
+    IN ULONG Size OPTIONAL,
+    IN PMDL Mdl OPTIONAL,
+    IN PVOID Context OPTIONAL,
+    IN NTSTATUS Status
+    );
+
+typedef
+void
+(NTAPI *PFNKSPINIRPCOMPLETION)(
     IN PKSPIN Pin,
     IN PIRP Irp
     );
 
 typedef
 NTSTATUS
-(*PFNKSPIN)(
+(NTAPI *PFNKSPINIRP)(
+    IN PKSPIN Pin,
+    IN PIRP Irp
+    );
+
+typedef
+NTSTATUS
+(NTAPI *PFNKSPIN)(
     IN PKSPIN Pin
     );
 
 typedef
 void
-(*PFNKSPINVOID)(
+(NTAPI *PFNKSPINVOID)(
     IN PKSPIN Pin
     );
 
 typedef
 void
-(*PFNKSSTREAMPOINTER)(
+(NTAPI *PFNKSSTREAMPOINTER)(
     IN PKSSTREAM_POINTER StreamPointer
     );
 
@@ -1949,7 +2000,7 @@ typedef struct {
 
 typedef
 NTSTATUS
-(*PFNKSPINSETDATAFORMAT)(
+(NTAPI *PFNKSPINSETDATAFORMAT)(
     IN PKSPIN Pin,
     IN PKSDATAFORMAT OldFormat OPTIONAL,
     IN PKSMULTIPLE_ITEM OldAttributeList OPTIONAL,
@@ -1959,7 +2010,7 @@ NTSTATUS
 
 typedef
 NTSTATUS
-(*PFNKSPINSETDEVICESTATE)(
+(NTAPI *PFNKSPINSETDEVICESTATE)(
     IN PKSPIN Pin,
     IN KSSTATE ToState,
     IN KSSTATE FromState
@@ -1984,7 +2035,7 @@ typedef struct
 
 typedef
 BOOLEAN
-(*PFNKSPINSETTIMER)(
+(NTAPI *PFNKSPINSETTIMER)(
     IN PKSPIN Pin,
     IN PKTIMER Timer,
     IN LARGE_INTEGER DueTime,
@@ -1993,7 +2044,7 @@ BOOLEAN
 
 typedef
 BOOLEAN
-(*PFNKSPINCANCELTIMER)(
+(NTAPI *PFNKSPINCANCELTIMER)(
     IN PKSPIN Pin,
     IN PKTIMER Timer
     );
@@ -2007,7 +2058,7 @@ LONGLONG
 
 typedef
 void
-(*PFNKSPINRESOLUTION)(
+(NTAPI *PFNKSPINRESOLUTION)(
     IN PKSPIN Pin,
     OUT PKSRESOLUTION Resolution
     );
@@ -2021,19 +2072,19 @@ struct _KSCLOCK_DISPATCH {
 
 typedef
 NTSTATUS
-(*PFNKSPININITIALIZEALLOCATOR)(
+(NTAPI *PFNKSPININITIALIZEALLOCATOR)(
     IN PKSPIN Pin,
     IN PKSALLOCATOR_FRAMING AllocatorFraming,
     OUT PVOID* Context
     );
 
-typedef PVOID (*PFNKSDELETEALLOCATOR)(
+typedef PVOID (NTAPI *PFNKSDELETEALLOCATOR)(
     IN  PVOID Context);
 
-typedef PVOID (*PFNKSDEFAULTALLOCATE)(
+typedef PVOID (NTAPI *PFNKSDEFAULTALLOCATE)(
     IN  PVOID Context);
 
-typedef PVOID (*PFNKSDEFAULTFREE)(
+typedef PVOID (NTAPI *PFNKSDEFAULTFREE)(
     IN  PVOID Context,
     IN  PVOID Buffer);
 
@@ -2085,7 +2136,7 @@ typedef struct
 
 typedef
 NTSTATUS
-(*PFNKSINTERSECTHANDLER)(
+(NTAPI *PFNKSINTERSECTHANDLER)(
     IN PIRP Irp,
     IN PKSP_PIN Pin,
     IN PKSDATARANGE DataRange,
@@ -2094,7 +2145,7 @@ NTSTATUS
 
 typedef
 NTSTATUS
-(*PFNKSINTERSECTHANDLEREX)(
+(NTAPI *PFNKSINTERSECTHANDLEREX)(
     IN PVOID Context,
     IN PIRP Irp,
     IN PKSP_PIN Pin,
@@ -2315,7 +2366,7 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
 
 typedef
 void
-(*PFNKSFREE)(
+(NTAPI *PFNKSFREE)(
     IN PVOID Data
     );
 
@@ -2407,18 +2458,18 @@ DEFINE_KSPROPERTY_TABLE(TopologySet) {\
 /* TODO */
 typedef void* UNKNOWN;
 
-typedef PVOID (*PFNKSINITIALIZEALLOCATOR)(
+typedef PVOID (NTAPI *PFNKSINITIALIZEALLOCATOR)(
     IN  PVOID InitialContext,
     IN  PKSALLOCATOR_FRAMING AllocatorFraming,
     OUT PVOID* Context);
 
 #if defined(_NTDDK_)
-typedef NTSTATUS (*PFNKSALLOCATOR)(
+typedef NTSTATUS (NTAPI *PFNKSALLOCATOR)(
     IN  PIRP Irp,
     IN  ULONG BufferSize,
     IN  BOOLEAN InputOperation);
 
-typedef NTSTATUS (*PFNKINTERSECTHANDLEREX)(
+typedef NTSTATUS (NTAPI *PFNKINTERSECTHANDLEREX)(
     IN  PVOID Context,
     IN  PIRP Irp,
     IN  PKSP_PIN Pin,
@@ -2427,18 +2478,28 @@ typedef NTSTATUS (*PFNKINTERSECTHANDLEREX)(
     IN  ULONG DataBufferSize,
     OUT PVOID Data OPTIONAL,
     OUT PULONG DataSize);
+
+
+typedef
+NTSTATUS
+(NTAPI *PFNALLOCATOR_ALLOCATEFRAME)(
+    IN PFILE_OBJECT FileObject,
+    PVOID *Frame
+    );
+
+typedef
+VOID
+(NTAPI *PFNALLOCATOR_FREEFRAME)(
+    IN PFILE_OBJECT FileObject,
+    IN PVOID Frame
+    );
+
+typedef struct {
+    PFNALLOCATOR_ALLOCATEFRAME  AllocateFrame;
+    PFNALLOCATOR_FREEFRAME      FreeFrame;
+} KSSTREAMALLOCATOR_FUNCTIONTABLE, *PKSSTREAMALLOCATOR_FUNCTIONTABLE;
+
 #endif
-
-typedef UNKNOWN PFNALLOCATORE_ALLOCATEFRAME;
-typedef UNKNOWN PFNALLOCATOR_FREEFRAME;
-
-/*
-typedef struct
-{
-    PFNALLOCATOR_ALLOCATEFRAME AllocateFrame;
-    PFNALLOCATOR_FREEFRAME FreeFrame;
-}
-*/
 
 typedef struct
 {
@@ -2478,6 +2539,19 @@ struct _KSMAPPING {
     ULONG Alignment;
 };
 #endif
+
+typedef enum {
+    KSSTREAM_POINTER_STATE_UNLOCKED = 0,
+    KSSTREAM_POINTER_STATE_LOCKED
+} KSSTREAM_POINTER_STATE;
+
+typedef struct _KSGATE KSGATE, *PKSGATE;
+typedef struct _KSPROCESSPIN_INDEXENTRY KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
+
+struct _KSGATE {
+    LONG Count;
+    PKSGATE NextGate;
+};
 
 struct _KSSTREAM_POINTER_OFFSET
 {
@@ -2520,11 +2594,11 @@ struct _KSPROCESSPIN
     BOOLEAN Terminate;
 };
 
-typedef struct
+struct _KSPROCESSPIN_INDEXENTRY
 {
     PKSPROCESSPIN* Pins;
     ULONG Count;
-} KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
+};
 #endif
 
 /* ===============================================================
@@ -2542,32 +2616,32 @@ typedef struct _KSNODE_DESCRIPTOR KSNODE_DESCRIPTOR, *PKSNODE_DESCRIPTOR;
 typedef struct _KSFILTER_DESCRIPTOR KSFILTER_DESCRIPTOR, *PKSFILTER_DESCRIPTOR;
 typedef struct _KSDEVICE_DESCRIPTOR KSDEVICE_DESCRIPTOR, *PKSDEVICE_DESCRIPTOR;
 
-typedef NTSTATUS (*PFNKSDEVICECREATE)(
+typedef NTSTATUS (NTAPI *PFNKSDEVICECREATE)(
     IN PKSDEVICE Device);
 
-typedef NTSTATUS (*PFNKSDEVICEPNPSTART)(
+typedef NTSTATUS (NTAPI *PFNKSDEVICEPNPSTART)(
     IN PKSDEVICE Device,
     IN PIRP Irp,
     IN PCM_RESOURCE_LIST TranslatedResourceList OPTIONAL,
     IN PCM_RESOURCE_LIST UntranslatedResourceList OPTIONAL);
 
-typedef NTSTATUS (*PFNKSDEVICE)(
+typedef NTSTATUS (NTAPI *PFNKSDEVICE)(
     IN PKSDEVICE Device);
 
-typedef NTSTATUS (*PFNKSDEVICEIRP)(
+typedef NTSTATUS (NTAPI *PFNKSDEVICEIRP)(
     IN PKSDEVICE Device,
     IN PIRP Irp);
 
-typedef VOID (*PFNKSDEVICEIRPVOID)(
+typedef VOID (NTAPI *PFNKSDEVICEIRPVOID)(
     IN PKSDEVICE Device,
     IN PIRP Irp);
 
-typedef NTSTATUS (*PFNKSDEVICEQUERYCAPABILITIES)(
+typedef NTSTATUS (NTAPI *PFNKSDEVICEQUERYCAPABILITIES)(
     IN PKSDEVICE Device,
     IN PIRP Irp,
     IN OUT PDEVICE_CAPABILITIES Capabilities);
 
-typedef NTSTATUS (*PFNKSDEVICEQUERYPOWER)(
+typedef NTSTATUS (NTAPI *PFNKSDEVICEQUERYPOWER)(
     IN PKSDEVICE Device,
     IN PIRP Irp,
     IN DEVICE_POWER_STATE DeviceTo,
@@ -2576,7 +2650,7 @@ typedef NTSTATUS (*PFNKSDEVICEQUERYPOWER)(
     IN SYSTEM_POWER_STATE SystemFrom,
     IN POWER_ACTION Action);
 
-typedef VOID (*PFNKSDEVICESETPOWER)(
+typedef VOID (NTAPI *PFNKSDEVICESETPOWER)(
     IN PKSDEVICE Device,
     IN PIRP Irp,
     IN DEVICE_POWER_STATE To,
@@ -2629,15 +2703,22 @@ struct _KSFILTER
     PVOID Context;
 };
 
-typedef NTSTATUS (*PFNKSFILTERIRP)(
+typedef
+void
+(NTAPI *PFNKSFILTERPOWER)(
+    IN PKSFILTER Filter,
+    IN DEVICE_POWER_STATE State
+    );
+
+typedef NTSTATUS (NTAPI *PFNKSFILTERIRP)(
     IN PKSFILTER Filter,
     IN PIRP Irp);
 
-typedef NTSTATUS (*PFNKSFILTERPROCESS)(
-    IN PKSFILTER FIlter,
+typedef NTSTATUS (NTAPI *PFNKSFILTERPROCESS)(
+    IN PKSFILTER Filter,
     IN PKSPROCESSPIN_INDEXENTRY ProcessPinsIndex);
 
-typedef NTSTATUS (*PFNKSFILTERVOID)(
+typedef NTSTATUS (NTAPI *PFNKSFILTERVOID)(
     IN PKSFILTER Filter);
 
 struct _KSFILTER_DISPATCH
@@ -2677,9 +2758,11 @@ struct _KSFILTER_DESCRIPTOR
 
 struct _KSDEVICE_DESCRIPTOR
 {
-  const KSDEVICE_DISPATCH*  Dispatch;
-  ULONG  FilterDescriptorsCount;
-  const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
+    const KSDEVICE_DISPATCH*  Dispatch;
+    ULONG  FilterDescriptorsCount;
+    const  KSFILTER_DESCRIPTOR*const* FilterDescriptors;
+    ULONG  Version;
+    ULONG  Flags;
 };
 
 struct _KSFILTERFACTORY {
@@ -2693,12 +2776,12 @@ struct _KSFILTERFACTORY {
     Minidriver Callbacks
 */
 #if defined(_NTDDK_)
-typedef NTSTATUS (*KStrMethodHandler)(
+typedef NTSTATUS (NTAPI *KStrMethodHandler)(
     IN  PIRP Irp,
     IN  PKSIDENTIFIER Request,
     IN  OUT PVOID Data);
 
-typedef NTSTATUS (*KStrSupportHandler)(
+typedef NTSTATUS (NTAPI *KStrSupportHandler)(
     IN  PIRP Irp,
     IN  PKSIDENTIFIER Request,
     IN  OUT PVOID Data);
@@ -2743,13 +2826,13 @@ KsValidateAllocatorFramingEx(
     Clock Functions
 */
 #if defined(_NTDDK_)
-typedef BOOLEAN (*PFNKSSETTIMER)(
+typedef BOOLEAN (NTAPI *PFNKSSETTIMER)(
     IN  PVOID Context,
     IN  PKTIMER Timer,
     IN  LARGE_INTEGER DueTime,
     IN  PKDPC Dpc);
 
-typedef BOOLEAN (*PFNKSCANCELTIMER)(
+typedef BOOLEAN (NTAPI *PFNKSCANCELTIMER)(
     IN  PVOID Context,
     IN  PKTIMER Timer);
 
@@ -2913,9 +2996,28 @@ KsFastPropertyHandler(
 #define KSSTREAM_SYNCHRONOUS    0x00001000
 #define KSSTREAM_FAILUREEXCEPTION 0x00002000
 
+typedef
+BOOLEAN
+(NTAPI *PFNKSGENERATEEVENTCALLBACK)(
+    IN PVOID Context,
+    IN PKSEVENT_ENTRY EventEntry
+    );
+
 KSDDKAPI NTSTATUS NTAPI
 KsGenerateEvent(
     IN  PKSEVENT_ENTRY EntryEvent);
+
+KSDDKAPI void NTAPI
+KsGenerateEvents(
+    IN PVOID Object,
+    IN const GUID* EventSet OPTIONAL,
+    IN ULONG EventId,
+    IN ULONG DataSize,
+    IN PVOID Data OPTIONAL,
+    IN PFNKSGENERATEEVENTCALLBACK CallBack OPTIONAL,
+    IN PVOID CallBackContext OPTIONAL
+    );
+
 
 KSDDKAPI NTSTATUS NTAPI
 KsEnableEventWithAllocator(
@@ -3047,7 +3149,7 @@ KsHandleSizedListQuery(
     IRP Helper Functions
 */
 
-typedef NTSTATUS (*PFNKSIRPLISTCALLBACK)(
+typedef NTSTATUS (NTAPI *PFNKSIRPLISTCALLBACK)(
     IN  PIRP Irp,
     IN  PVOID Context);
 
@@ -3468,7 +3570,19 @@ KsInitializeDriver(
 
 typedef struct _KSFILTERFACTORY KSFILTERFACTORY, *PKSFILTERFACTORY; //FIXME
 
-typedef void (*PFNKSFILTERFACTORYPOWER)(
+
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsInitializeDevice (
+    IN PDEVICE_OBJECT  FunctionalDeviceObject,
+    IN PDEVICE_OBJECT  PhysicalDeviceObject,
+    IN PDEVICE_OBJECT  NextDeviceObject,
+    IN const KSDEVICE_DESCRIPTOR*  Descriptor OPTIONAL);
+
+
+typedef void (NTAPI *PFNKSFILTERFACTORYPOWER)(
     IN  PKSFILTERFACTORY FilterFactory,
     IN  DEVICE_POWER_STATE State);
 
@@ -3557,7 +3671,7 @@ KsCreateFilterFactory(
     IN  ULONG CreateItemFlags,
     IN  PFNKSFILTERFACTORYPOWER SleepCallback OPTIONAL,
     IN  PFNKSFILTERFACTORYPOWER WakeCallback OPTIONAL,
-    OUT PKSFILTERFACTORY FilterFactory OPTIONAL);
+    OUT PKSFILTERFACTORY *FilterFactory OPTIONAL);
 
 KSDDKAPI
 NTSTATUS
@@ -3566,6 +3680,23 @@ KsDefaultAddEventHandler(
     IN  PIRP Irp,
     IN  PKSEVENTDATA EventData,
     IN  OUT PKSEVENT_ENTRY EventEntry);
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsDispatchQuerySecurity(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    );
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsDispatchSetSecurity(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp
+    );
+
 
 
 #define KsDeleteFilterFactory(FilterFactory)                                           \
@@ -3608,9 +3739,9 @@ KsGetOuterUnknown(
     IN PVOID Object
     );
 
-
+static
+__inline
 PUNKNOWN
-NTAPI
 KsDeviceGetOuterUnknown(
     IN  PKSDEVICE Device)
 {
@@ -3623,6 +3754,78 @@ NTAPI
 KsDeviceRegisterAggregatedClientUnknown(
     IN  PKSDEVICE Device,
     IN  PUNKNOWN ClientUnknown);
+
+
+#endif
+
+#if defined(_UNKNOWN_H_) || defined(__IUnknown_INTERFACE_DEFINED__)
+
+typedef interface IKsReferenceClock* PIKSREFERENCECLOCK;
+
+#undef INTERFACE
+#define INTERFACE IKsReferenceClock
+DECLARE_INTERFACE_(IKsReferenceClock,IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN() // For C
+
+    STDMETHOD_(LONGLONG,GetTime)(THIS
+        ) PURE;
+    STDMETHOD_(LONGLONG,GetPhysicalTime)(THIS
+        ) PURE;
+    STDMETHOD_(LONGLONG,GetCorrelatedTime)(THIS_
+        OUT PLONGLONG SystemTime
+        ) PURE;
+    STDMETHOD_(LONGLONG,GetCorrelatedPhysicalTime)(THIS_
+        OUT PLONGLONG SystemTime
+        ) PURE;
+    STDMETHOD_(NTSTATUS, GetResolution)(THIS_
+        OUT PKSRESOLUTION Resolution
+        ) PURE;
+    STDMETHOD_(NTSTATUS, GetState)(THIS_
+        OUT PKSSTATE State
+        ) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IKsControl
+
+DEFINE_GUID(IID_IKsControl, 0x28F54685L, 0x06FD, 0x11D2, 0xB2, 0x7A, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96);
+
+DECLARE_INTERFACE_(IKsControl,IUnknown)
+{
+    STDMETHOD_(NTSTATUS, QueryInterface)( THIS_ 
+        REFIID InterfaceId,
+        PVOID* Interface)PURE;
+
+    STDMETHOD_(ULONG, AddRef)(THIS) PURE;
+
+    STDMETHOD_(ULONG, Release)(THIS) PURE;
+
+    STDMETHOD_(NTSTATUS, KsProperty)(THIS_
+        IN PKSPROPERTY Property,
+        IN ULONG PropertyLength,
+        IN OUT PVOID PropertyData,
+        IN ULONG DataLength,
+        OUT ULONG* BytesReturned
+        ) PURE;
+    STDMETHOD_(NTSTATUS, KsMethod)(THIS_
+        IN PKSMETHOD Method,
+        IN ULONG MethodLength,
+        IN OUT PVOID MethodData,
+        IN ULONG DataLength,
+        OUT ULONG* BytesReturned
+        ) PURE;
+    STDMETHOD_(NTSTATUS, KsEvent)(THIS_
+        IN PKSEVENT Event OPTIONAL,
+        IN ULONG EventLength,
+        IN OUT PVOID EventData,
+        IN ULONG DataLength,
+        OUT ULONG* BytesReturned
+        ) PURE;
+};
+
+#undef INTERFACE
+typedef IKsControl* PIKSCONTROL;
 
 #endif
 
@@ -3667,7 +3870,7 @@ NTAPI
 KsFilterAddTopologyConnections(
     IN  PKSFILTER Filter,
     IN  ULONG NewConnectionsCount,
-    IN  const KSTOPOLOGY_CONNECTION* NewTopologyConnections);
+    IN  const KSTOPOLOGY_CONNECTION *const NewTopologyConnections);
 
 KSDDKAPI
 VOID
@@ -3681,7 +3884,7 @@ NTSTATUS
 NTAPI
 KsFilterCreateNode(
     IN  PKSFILTER Filter,
-    IN  const KSNODE_DESCRIPTOR* NodeDescriptor,
+    IN  const KSNODE_DESCRIPTOR *const NodeDescriptor,
     OUT PULONG NodeID);
 
 KSDDKAPI
@@ -3689,7 +3892,7 @@ NTSTATUS
 NTAPI
 KsFilterCreatePinFactory(
     IN  PKSFILTER Filter,
-    IN  const KSPIN_DESCRIPTOR_EX* PinDescriptor,
+    IN  const KSPIN_DESCRIPTOR_EX *const PinDescriptor,
     OUT PULONG PinID);
 
 KSDDKAPI

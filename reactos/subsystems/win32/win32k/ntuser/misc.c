@@ -141,31 +141,16 @@ APIENTRY
 NtUserGetDoubleClickTime(VOID)
 {
    UINT Result;
-   NTSTATUS Status;
-   PWINSTATION_OBJECT WinStaObject;
-   PSYSTEM_CURSORINFO CurInfo;
-   DECLARE_RETURN(UINT);
 
    DPRINT("Enter NtUserGetDoubleClickTime\n");
    UserEnterShared();
 
-   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                           KernelMode,
-                                           0,
-                                           &WinStaObject);
-   if (!NT_SUCCESS(Status))
-      RETURN( (DWORD)FALSE);
+   // FIXME: Check if this works on non-interactive winsta
+   Result = gspv.iDblClickTime;
 
-   CurInfo = IntGetSysCursorInfo(WinStaObject);
-   Result = CurInfo->DblClickSpeed;
-
-   ObDereferenceObject(WinStaObject);
-   RETURN( Result);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetDoubleClickTime, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserGetDoubleClickTime, ret=%i\n", Result);
    UserLeave();
-   END_CLEANUP;
+   return Result;
 }
 
 BOOL
@@ -280,7 +265,7 @@ NtUserGetGuiResources(
    DWORD uiFlags)
 {
    PEPROCESS Process;
-   PW32PROCESS W32Process;
+   PPROCESSINFO W32Process;
    NTSTATUS Status;
    DWORD Ret = 0;
    DECLARE_RETURN(DWORD);
@@ -301,7 +286,7 @@ NtUserGetGuiResources(
       RETURN( 0);
    }
 
-   W32Process = (PW32PROCESS)Process->Win32Process;
+   W32Process = (PPROCESSINFO)Process->Win32Process;
    if(!W32Process)
    {
       ObDereferenceObject(Process);

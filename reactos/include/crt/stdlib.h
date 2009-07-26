@@ -152,7 +152,7 @@ extern "C" {
   _CRTIMP extern char *_sys_errlist[];
   _CRTIMP extern int _sys_nerr;
 
-#if (defined(_X86_) || defined(__x86_64)) // HACK
+//#if !defined(__x86_64)// hack here!
   _CRTIMP int *__cdecl __p___argc(void);
   _CRTIMP char ***__cdecl __p___argv(void);
   _CRTIMP wchar_t ***__cdecl __p___wargv(void);
@@ -160,7 +160,7 @@ extern "C" {
   _CRTIMP wchar_t ***__cdecl __p__wenviron(void);
   _CRTIMP char **__cdecl __p__pgmptr(void);
   _CRTIMP wchar_t **__cdecl __p__wpgmptr(void);
-#endif
+//#endif
 #ifndef __argc
 #ifdef _MSVCRT_
   extern int __argc;

@@ -1353,7 +1353,7 @@ MUI_ERROR csCZErrorEntries[] =
           "\n"
           "Vytv ıen¡ nebo odstraåov n¡ odd¡l… m…§e tuto tabulku odd¡l… zniŸit.\n"
           "\n"
-          "  \x07  Stisknut¡m F3 ukonŸ¡te instalaci."
+          "  \x07  Stisknut¡m F3 ukonŸ¡te instalaci.\n"
           "  \x07  Stisknut¡m ENTER budete pokraŸovat v instalaci.",
           "F3= UkonŸit  ENTER = PokraŸovat"
     },

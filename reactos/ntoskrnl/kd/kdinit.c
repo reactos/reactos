@@ -44,47 +44,6 @@ PKDP_INIT_ROUTINE InitRoutines[KdMax] = {KdpScreenInit,
 
 PCHAR
 NTAPI
-KdpGetWrapperDebugMode(PCHAR Currentp2,
-                       PLOADER_PARAMETER_BLOCK LoaderBlock)
-{
-    PCHAR p2 = Currentp2;
-
-    /* Check for GDB Debugging */
-    if (!_strnicmp(p2, "GDB", 3))
-    {
-        /* Enable it */
-        p2 += 3;
-        KdpDebugMode.Gdb = TRUE;
-
-        /* Enable Debugging */
-        KdDebuggerEnabled = TRUE;
-        KdDebuggerNotPresent = FALSE;
-        WrapperInitRoutine = KdpGdbStubInit;
-    }
-
-    /* Check for PICE Debugging */
-    else if (!_strnicmp(p2, "PICE", 4))
-    {
-        /* Enable it */
-        p2 += 4;
-        KdpDebugMode.Pice = TRUE;
-
-        /* Enable Debugging */
-        KdDebuggerEnabled = TRUE;
-        KdDebuggerNotPresent = FALSE;
-    }
-
-#ifdef KDBG
-    /* Get the KDBG Settings and enable it */
-    KdDebuggerEnabled = TRUE;
-    KdDebuggerNotPresent = FALSE;
-    KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
-#endif
-    return p2;
-}
-
-PCHAR
-NTAPI
 KdpGetDebugMode(PCHAR Currentp2)
 {
     PCHAR p2 = Currentp2;
@@ -127,6 +86,31 @@ KdpGetDebugMode(PCHAR Currentp2)
         /* Enable It */
         p2 += 5;
         KdpDebugMode.Bochs = TRUE;
+    }
+
+    /* Check for GDB Debugging */
+    else if (!_strnicmp(p2, "GDB", 3))
+    {
+        /* Enable it */
+        p2 += 3;
+        KdpDebugMode.Gdb = TRUE;
+
+        /* Enable Debugging */
+        KdDebuggerEnabled = TRUE;
+        KdDebuggerNotPresent = FALSE;
+        WrapperInitRoutine = KdpGdbStubInit;
+    }
+
+    /* Check for PICE Debugging */
+    else if (!_strnicmp(p2, "PICE", 4))
+    {
+        /* Enable it */
+        p2 += 4;
+        KdpDebugMode.Pice = TRUE;
+
+        /* Enable Debugging */
+        KdDebuggerEnabled = TRUE;
+        KdDebuggerNotPresent = FALSE;
     }
 
     return p2;
@@ -179,7 +163,7 @@ KdInitSystem(ULONG BootPhase,
         /* Upcase it */
         _strupr(CommandLine);
 
-        /* Check for settings that we support */
+        /* XXX Check for settings that we support */
         if (strstr(CommandLine, "BREAK")) KdpEarlyBreak = TRUE;
         if (strstr(CommandLine, "NODEBUG")) KdDebuggerEnabled = FALSE;
         if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
@@ -190,16 +174,23 @@ KdInitSystem(ULONG BootPhase,
             KdpDebugMode.Serial = TRUE;
         }
 
+#ifdef KDBG
+        /* Get the KDBG Settings and enable it */
+        KdDebuggerEnabled = TRUE;
+        KdDebuggerNotPresent = FALSE;
+        KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
+#endif
+
         /* Get the port and baud rate */
         Port = strstr(CommandLine, "DEBUGPORT");
         BaudRate = strstr(CommandLine, "BAUDRATE");
         Irq = strstr(CommandLine, "IRQ");
 
-        /* Check if we got the /DEBUGPORT parameter */
-        if (Port)
+        /* Check if we got the /DEBUGPORT parameter(s) */
+        while (Port)
         {
             /* Move past the actual string, to reach the port*/
-            Port += strlen("DEBUGPORT");
+            Port += sizeof("DEBUGPORT") - 1;
 
             /* Now get past any spaces and skip the equal sign */
             while (*Port == ' ') Port++;
@@ -207,15 +198,14 @@ KdInitSystem(ULONG BootPhase,
 
             /* Get the debug mode and wrapper */
             Port = KdpGetDebugMode(Port);
-            Port = KdpGetWrapperDebugMode(Port, LoaderBlock);
-            KdDebuggerEnabled = TRUE;
+            Port = strstr(Port, "DEBUGPORT");
         }
 
         /* Check if we got a baud rate */
         if (BaudRate)
         {
             /* Move past the actual string, to reach the rate */
-            BaudRate += strlen("BAUDRATE");
+            BaudRate += sizeof("BAUDRATE") - 1;
 
             /* Now get past any spaces */
             while (*BaudRate == ' ') BaudRate++;
@@ -233,7 +223,7 @@ KdInitSystem(ULONG BootPhase,
         if (Irq)
         {
             /* Move past the actual string, to reach the rate */
-            Irq += strlen("IRQ");
+            Irq += sizeof("IRQ") - 1;
 
             /* Now get past any spaces */
             while (*Irq == ' ') Irq++;
@@ -257,7 +247,7 @@ KdInitSystem(ULONG BootPhase,
         if (WrapperInitRoutine) WrapperInitRoutine(&WrapperTable, 0);
         return TRUE;
     }
-    else
+    else /* BootPhase > 0 */
     {
 #ifdef _M_IX86
         KdpEnableSafeMem();
@@ -271,4 +261,4 @@ KdInitSystem(ULONG BootPhase,
     return TRUE;
 }
 
- /* EOF */
+/* EOF */

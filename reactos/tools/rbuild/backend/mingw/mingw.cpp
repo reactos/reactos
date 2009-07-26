@@ -455,9 +455,8 @@ MingwBackend::GenerateGlobalVariables () const
 
 	if ( ProjectNode.configuration.Compiler == GnuGcc )
 	{
-		fprintf ( fMakefile, "PROJECT_CFLAGS += -Wall\n" );
-		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -Wall\n" );
 		fprintf ( fMakefile, "ifneq ($(OARCH),)\n" );
+		fprintf ( fMakefile, "PROJECT_ASFLAGS += -march=$(OARCH)\n" );
 		fprintf ( fMakefile, "PROJECT_CFLAGS += -march=$(OARCH)\n" );
 		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -march=$(OARCH)\n" );
 		fprintf ( fMakefile, "endif\n" );
@@ -465,10 +464,6 @@ MingwBackend::GenerateGlobalVariables () const
 		fprintf ( fMakefile, "PROJECT_CFLAGS += -mtune=$(TUNE)\n" );
 		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -mtune=$(TUNE)\n" );
 		fprintf ( fMakefile, "endif\n" );
-
-		fprintf ( fMakefile, "PROJECT_CFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
-		fprintf ( fMakefile, "PROJECT_CXXFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
-		fprintf ( fMakefile, "PROJECT_ASFLAGS += -g%s\n", Environment::GetArch() == "amd64" ? "dwarf-2" : "stabs+" );
 
 		if ( usePipe )
 		{
@@ -505,7 +500,7 @@ MingwBackend::GenerateGlobalVariables () const
 		{
 				fprintf ( fMakefile,
 						  "MODULETYPE%d_%sFLAGS:=%s\n",
-						  i,
+						  (int)i,
 						  "C",
 						  ModuleHandlerInformations[i].cflags );
 		}
@@ -514,7 +509,7 @@ MingwBackend::GenerateGlobalVariables () const
 		{
 				fprintf ( fMakefile,
 						  "MODULETYPE%d_%sFLAGS:=%s\n",
-						  i,
+						  (int)i,
 						  "CXX",
 						  ModuleHandlerInformations[i].cflags );
 		}
@@ -523,7 +518,7 @@ MingwBackend::GenerateGlobalVariables () const
 		{
 				fprintf ( fMakefile,
 						  "MODULETYPE%d_%sFLAGS:=%s\n",
-						  i,
+						  (int)i,
 						  "NASM",
 						  ModuleHandlerInformations[i].nasmflags );
 		}

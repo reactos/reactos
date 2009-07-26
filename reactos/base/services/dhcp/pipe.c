@@ -89,7 +89,7 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
 }
 
 HANDLE PipeInit() {
-    CommPipe = CreateNamedPipe
+    CommPipe = CreateNamedPipeW
         ( DHCP_PIPE_NAME,
           PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
           PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,

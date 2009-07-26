@@ -60,7 +60,7 @@ static BOOL streams_set_table_size(MSISTREAMSVIEW *sv, UINT size)
     if (size >= sv->max_streams)
     {
         sv->max_streams *= 2;
-        sv->streams = msi_realloc(sv->streams, sv->max_streams * sizeof(STREAM *));
+        sv->streams = msi_realloc_zero(sv->streams, sv->max_streams * sizeof(STREAM *));
         if (!sv->streams)
             return FALSE;
     }
@@ -387,7 +387,7 @@ static UINT STREAMS_delete(struct tagMSIVIEW *view)
 
     for (i = 0; i < sv->num_rows; i++)
     {
-        if (sv->streams[i]->stream)
+        if (sv->streams[i] && sv->streams[i]->stream)
             IStream_Release(sv->streams[i]->stream);
         msi_free(sv->streams[i]);
     }
@@ -462,7 +462,7 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
         return -1;
 
     sv->max_streams = 1;
-    sv->streams = msi_alloc(sizeof(STREAM *));
+    sv->streams = msi_alloc_zero(sizeof(STREAM *));
     if (!sv->streams)
         return -1;
 

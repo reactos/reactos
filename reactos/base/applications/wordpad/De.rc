@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
@@ -242,6 +244,5 @@ BEGIN
     STRING_OPEN_FAILED,          "Die Datei konnte nicht geöffnet werden."
     STRING_OPEN_ACCESS_DENIED,   "Sie haben keine ausreichende Zugriffsberechtigung um die Datei zu öffnen."
     STRING_PRINTING_NOT_IMPLEMENTED, "Drucken ist nicht implementiert"
+    STRING_MAX_TAB_STOPS,            "Es können nur maximal 32 Tabstopps definiert werden."
 END
-
-#pragma code_page(default)

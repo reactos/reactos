@@ -86,7 +86,7 @@ static NTSTATUS VfatLockControl(
 
 Fail:;
    IrpContext->Irp->IoStatus.Status = Status;
-   IofCompleteRequest(IrpContext->Irp, (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
+   IoCompleteRequest(IrpContext->Irp, (CCHAR)(NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT));
    VfatFreeIrpContext(IrpContext);
    return Status;
 }

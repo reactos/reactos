@@ -4,8 +4,6 @@
 #define NDEBUG
 #include <reactos/debug.h>
 
-extern struct interface_info *ifi;
-
 char *piaddr( struct iaddr addr ) {
     struct sockaddr_in sa;
     memcpy(&sa.sin_addr,addr.iabuf,sizeof(sa.sin_addr));
@@ -96,7 +94,7 @@ int addr_eq( struct iaddr a, struct iaddr b ) {
 
 void *dmalloc( int size, char *name ) { return malloc( size ); }
 
-int read_client_conf(void) {
+int read_client_conf(struct interface_info *ifi) {
        /* What a strange dance */
        struct client_config *config;
        char ComputerName [MAX_COMPUTERNAME_LENGTH + 1];

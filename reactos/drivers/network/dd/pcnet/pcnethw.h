@@ -250,6 +250,7 @@
 #define BCR2_DXCVRCTL  0x20     /* dxcvr control */
 #define BCR2_INTLEVEL  0x80     /* interrupt level/edge */
 #define BCR2_APROMWE   0x100    /* address prom write enable */
+#define BCR2_LEDPE     0x1000   /* LED programming enable */
 #define BCR2_TMAULOOP  0x4000   /* t-mau transmit on loopback */
 
 /* BCR4 bits */
@@ -263,6 +264,7 @@
 #define BCR4_PSE       0x80     /* pulse stretcher enable */
 #define BCR4_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR4_MPSE      0x200    /* magic packet status enable */
+#define BCR4_E100      0x1000   /* link speed */
 #define BCR4_LEDDIS    0x2000   /* led disable */
 #define BCR4_LEDPOL    0x4000   /* led polarity */
 #define BCR4_LEDOUT    0x8000   /* led output pin value */
@@ -278,6 +280,7 @@
 #define BCR5_PSE       0x80     /* pulse stretcher enable */
 #define BCR5_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR5_MPSE      0x200    /* magic packet status enable */
+#define BCR5_E100      0x1000   /* link speed */
 #define BCR5_LEDDIS    0x2000   /* led disable */
 #define BCR5_LEDPOL    0x4000   /* led polarity */
 #define BCR5_LEDOUT    0x8000   /* led output pin value */
@@ -293,6 +296,7 @@
 #define BCR6_PSE       0x80     /* pulse stretcher enable */
 #define BCR6_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR6_MPSE      0x200    /* magic packet status enable */
+#define BCR6_E100      0x1000   /* link speed */
 #define BCR6_LEDDIS    0x2000   /* led disable */
 #define BCR6_LEDPOL    0x4000   /* led polarity */
 #define BCR6_LEDOUT    0x8000   /* led output pin value */
@@ -308,6 +312,7 @@
 #define BCR7_PSE       0x80     /* pulse stretcher enable */
 #define BCR7_FDLSE     0x100    /* full-duplex link status enable */
 #define BCR7_MPSE      0x200    /* magic packet status enable */
+#define BCR7_E100      0x1000   /* link speed */
 #define BCR7_LEDDIS    0x2000   /* led disable */
 #define BCR7_LEDPOL    0x4000   /* led polarity */
 #define BCR7_LEDOUT    0x8000   /* led output pin value */

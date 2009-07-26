@@ -154,7 +154,7 @@ HRESULT create_object_constr(script_ctx_t *ctx, DispatchEx **ret)
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, ObjectConstr_value, PROPF_CONSTR, object, ret);
+    hres = create_builtin_function(ctx, ObjectConstr_value, NULL, PROPF_CONSTR, object, ret);
 
     jsdisp_release(object);
     return hres;

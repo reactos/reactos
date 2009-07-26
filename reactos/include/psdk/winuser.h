@@ -1334,21 +1334,6 @@ extern "C" {
 #define SPI_SETICONTITLELOGFONT 0x0022
 #define SPI_GETFASTTASKSWITCH 0x0023
 #define SPI_SETFASTTASKSWITCH 0x0024
-#define SPI_GETFILTERKEYS 0x0032
-#define SPI_SETFILTERKEYS 0x0033
-#define SPI_GETTOGGLEKEYS 0x0034
-#define SPI_SETTOGGLEKEYS 0x0035
-#define SPI_GETMOUSEKEYS 0x0036
-#define SPI_SETMOUSEKEYS 0x0037
-#define SPI_GETSHOWSOUNDS 0x0038
-#define SPI_SETSHOWSOUNDS 0x0039
-#define SPI_GETSTICKYKEYS 0x003A
-#define SPI_SETSTICKYKEYS 0x003B
-#define SPI_GETACCESSTIMEOUT 0x003C
-#define SPI_SETACCESSTIMEOUT 0x003D
-#define SPI_GETSOUNDSENTRY 0x0040
-#define SPI_SETSOUNDSENTRY 0x0041
-
 #if(WINVER >= 0x0400)
     #define SPI_SETDRAGFULLWINDOWS 0x0025
     #define SPI_GETDRAGFULLWINDOWS 0x0026
@@ -1361,6 +1346,26 @@ extern "C" {
     #define SPI_SETWORKAREA 0x002F
     #define SPI_GETWORKAREA 0x0030
     #define SPI_SETPENWINDOWS 0x0031
+#endif
+#define SPI_GETFILTERKEYS 0x0032
+#define SPI_SETFILTERKEYS 0x0033
+#define SPI_GETTOGGLEKEYS 0x0034
+#define SPI_SETTOGGLEKEYS 0x0035
+#define SPI_GETMOUSEKEYS 0x0036
+#define SPI_SETMOUSEKEYS 0x0037
+#define SPI_GETSHOWSOUNDS 0x0038
+#define SPI_SETSHOWSOUNDS 0x0039
+#define SPI_GETSTICKYKEYS 0x003A
+#define SPI_SETSTICKYKEYS 0x003B
+#define SPI_GETACCESSTIMEOUT 0x003C
+#define SPI_SETACCESSTIMEOUT 0x003D
+#if(WINVER >= 0x0400)
+    #define SPI_GETSERIALKEYS 0x003E
+    #define SPI_SETSERIALKEYS 0x003F
+#endif
+#define SPI_GETSOUNDSENTRY 0x0040
+#define SPI_SETSOUNDSENTRY 0x0041
+#if(WINVER >= 0x0400)
     #define SPI_GETHIGHCONTRAST 0x0042
     #define SPI_SETHIGHCONTRAST 0x0043
     #define SPI_GETKEYBOARDPREF 0x0044
@@ -1390,17 +1395,15 @@ extern "C" {
     #define SPI_GETWINDOWSEXTENSION 0x005C
     #define SPI_SETMOUSETRAILS 0x005D
     #define SPI_GETMOUSETRAILS 0x005E
-    #define SPI_SCREENSAVERRUNNING 0x0061
-    #define SPI_SETSCREENSAVERRUNNING SPI_SCREENSAVERRUNNING
-    #define SPI_GETSERIALKEYS 0x003E
-    #define SPI_SETSERIALKEYS 0x003F
 #endif
-
 #if(_WIN32_WINNT >= 0x0400)
     #define SPI_GETSNAPTODEFBUTTON 0x005F
     #define SPI_SETSNAPTODEFBUTTON 0x0060
 #endif
-
+#if(WINVER >= 0x0400)
+    #define SPI_SCREENSAVERRUNNING 0x0061
+    #define SPI_SETSCREENSAVERRUNNING SPI_SCREENSAVERRUNNING
+#endif
 #if (_WIN32_WINNT >= 0x0400) || (_WIN32_WINDOWS > 0x0400)
     #define SPI_GETMOUSEHOVERWIDTH 0x0062
     #define SPI_SETMOUSEHOVERWIDTH 0x0063
@@ -1412,20 +1415,25 @@ extern "C" {
     #define SPI_SETWHEELSCROLLLINES 0x0069
     #define SPI_GETMENUSHOWDELAY 0x006A
     #define SPI_SETMENUSHOWDELAY 0x006B
+    #if (_WIN32_WINNT >= 0x0600)
+        #define SPI_GETWHEELSCROLLCHARS 0x006C
+        #define SPI_SETWHEELSCROLLCHARS 0x006D
+    #endif
     #define SPI_GETSHOWIMEUI 0x006E
     #define SPI_SETSHOWIMEUI 0x006F
-    /* Correct ? */
-    #define SPI_GETWHEELSCROLLCHARS 0x006C
-    #define SPI_SETWHEELSCROLLCHARS 0x006D
 #endif
-
 #if(WINVER >= 0x0500)
     #define SPI_GETMOUSESPEED 0x0070
     #define SPI_SETMOUSESPEED 0x0071
     #define SPI_GETSCREENSAVERRUNNING 0x0072
     #define SPI_GETDESKWALLPAPER 0x0073
 #endif
-
+#if(WINVER >= 0x0600)
+    #define SPI_GETAUDIODESCRIPTION 0x0074
+    #define SPI_SETAUDIODESCRIPTION 0x0075
+    #define SPI_GETSCREENSAVESECURE 0x0076
+    #define SPI_SETSCREENSAVESECURE 0x0077
+#endif
 #if(WINVER >= 0x0500)
     #define SPI_GETACTIVEWINDOWTRACKING 0x1000
     #define SPI_SETACTIVEWINDOWTRACKING 0x1001
@@ -1455,17 +1463,6 @@ extern "C" {
     #define SPI_SETTOOLTIPFADE 0x1019
     #define SPI_GETCURSORSHADOW 0x101A
     #define SPI_SETCURSORSHADOW 0x101B
-    #define SPI_GETUIEFFECTS 0x103E
-    #define SPI_SETUIEFFECTS 0x103F
-    #define SPI_GETFOREGROUNDLOCKTIMEOUT 0x2000
-    #define SPI_SETFOREGROUNDLOCKTIMEOUT 0x2001
-    #define SPI_GETACTIVEWNDTRKTIMEOUT 0x2002
-    #define SPI_SETACTIVEWNDTRKTIMEOUT 0x2003
-    #define SPI_GETFOREGROUNDFLASHCOUNT 0x2004
-    #define SPI_SETFOREGROUNDFLASHCOUNT 0x2005
-    #define SPI_GETCARETWIDTH 0x2006
-    #define SPI_SETCARETWIDTH 0x2007
-
     #if(_WIN32_WINNT >= 0x0501)
         #define SPI_GETMOUSESONAR 0x101C
         #define SPI_SETMOUSESONAR 0x101D
@@ -1480,13 +1477,31 @@ extern "C" {
         #define SPI_GETBLOCKSENDINPUTRESETS 0x1026
         #define SPI_SETBLOCKSENDINPUTRESETS 0x1027
     #endif
-
+    #define SPI_GETUIEFFECTS 0x103E
+    #define SPI_SETUIEFFECTS 0x103F
+    #if(_WIN32_WINNT >= 0x0600)
+        #define SPI_GETDISABLEOVERLAPPEDCONTENT 0x1040
+        #define SPI_SETDISABLEOVERLAPPEDCONTENT 0x1041
+        #define SPI_GETCLIENTAREAANIMATION 0x1042
+        #define SPI_SETCLIENTAREAANIMATION 0x1043
+        #define SPI_GETCLEARTYPE 0x1048
+        #define SPI_SETCLEARTYPE 0x1049
+        #define SPI_GETSPEECHRECOGNITION 0x104A
+        #define SPI_SETSPEECHRECOGNITION 0x104B
+    #endif
+    #define SPI_GETFOREGROUNDLOCKTIMEOUT 0x2000
+    #define SPI_SETFOREGROUNDLOCKTIMEOUT 0x2001
+    #define SPI_GETACTIVEWNDTRKTIMEOUT 0x2002
+    #define SPI_SETACTIVEWNDTRKTIMEOUT 0x2003
+    #define SPI_GETFOREGROUNDFLASHCOUNT 0x2004
+    #define SPI_SETFOREGROUNDFLASHCOUNT 0x2005
+    #define SPI_GETCARETWIDTH 0x2006
+    #define SPI_SETCARETWIDTH 0x2007
     #if(_WIN32_WINNT >= 0x0501)
         #define SPI_GETMOUSECLICKLOCKTIME 0x2008
         #define SPI_SETMOUSECLICKLOCKTIME 0x2009
         #define SPI_GETFONTSMOOTHINGTYPE 0x200A
         #define SPI_SETFONTSMOOTHINGTYPE 0x200B
-
         #define SPI_GETFONTSMOOTHINGCONTRAST 0x200C
         #define SPI_SETFONTSMOOTHINGCONTRAST 0x200D
         #define SPI_GETFOCUSBORDERWIDTH 0x200E
@@ -1923,6 +1938,9 @@ extern "C" {
 #define EN_VSCROLL 1538
 #define LB_ADDFILE 406
 #define LB_ADDSTRING 384
+#ifdef _WINE
+#define LB_CARETOFF 420
+#endif
 #define LB_DELETESTRING 386
 #define LB_DIR 397
 #define LB_FINDSTRING 399
@@ -2012,6 +2030,9 @@ extern "C" {
 #define DCX_VALIDATE 0x200000
 #define DCX_USESTYLE 0x00010000
 #define DCX_EXCLUDEUPDATE   0x100
+#ifdef _WINE
+#define DCX_USESTYLE     0x10000
+#endif
 #define GMDI_GOINTOPOPUPS 2
 #define GMDI_USEDISABLED 1
 #define FKF_AVAILABLE 2
@@ -2519,6 +2540,8 @@ extern "C" {
 #endif /* (_WIN32_WINNT >= 0x0400) */
 #if (WINVER >= 0x0400)
 #define ENDSESSION_LOGOFF 0x80000000
+#define ENDSESSION_CRITICAL 0x40000000
+#define ENDSESSION_CLOSEAPP 0x00000001
 #endif
 #if (WINVER >= 0x0500)
 #define CHILDID_SELF 0
@@ -2760,20 +2783,24 @@ typedef void(CALLBACK *SENDASYNCPROC)(HWND,UINT,DWORD,LRESULT);
 DECLARE_HANDLE(HHOOK);
 DECLARE_HANDLE(HDWP);
 DECLARE_HANDLE(HDEVNOTIFY);
+
 typedef struct tagACCEL {
 	BYTE fVirt;
 	WORD key;
 	WORD cmd;
 } ACCEL,*LPACCEL;
+
 typedef struct tagACCESSTIMEOUT {
 	UINT cbSize;
 	DWORD dwFlags;
 	DWORD iTimeOutMSec;
 } ACCESSTIMEOUT, *LPACCESSTIMEOUT;
+
 typedef struct tagANIMATIONINFO {
 	UINT cbSize;
 	int iMinAnimate;
 } ANIMATIONINFO,*LPANIMATIONINFO;
+
 typedef struct tagCREATESTRUCTA {
 	LPVOID	lpCreateParams;
 	HINSTANCE	hInstance;
@@ -2788,6 +2815,7 @@ typedef struct tagCREATESTRUCTA {
 	LPCSTR	lpszClass;
 	DWORD	dwExStyle;
 } CREATESTRUCTA,*LPCREATESTRUCTA;
+
 typedef struct tagCREATESTRUCTW {
 	LPVOID	lpCreateParams;
 	HINSTANCE	hInstance;
@@ -2802,22 +2830,27 @@ typedef struct tagCREATESTRUCTW {
 	LPCWSTR	lpszClass;
 	DWORD	dwExStyle;
 } CREATESTRUCTW,*LPCREATESTRUCTW;
+
 typedef struct tagCBT_CREATEWNDA {
 	LPCREATESTRUCTA lpcs;
 	HWND	hwndInsertAfter;
 } CBT_CREATEWNDA, *LPCBT_CREATEWNDA;
+
 typedef struct tagCBT_CREATEWNDW {
 	LPCREATESTRUCTW lpcs;
 	HWND	hwndInsertAfter;
 } CBT_CREATEWNDW, *LPCBT_CREATEWNDW;
+
 typedef struct tagCBTACTIVATESTRUCT {
 	BOOL fMouse;
 	HWND hWndActive;
 } CBTACTIVATESTRUCT,*LPCBTACTIVATESTRUCT;
+
 typedef struct tagCLIENTCREATESTRUCT {
 	HANDLE	hWindowMenu;
 	UINT	idFirstChild;
 } CLIENTCREATESTRUCT,*LPCLIENTCREATESTRUCT;
+
 typedef struct tagCOMPAREITEMSTRUCT {
 	UINT	CtlType;
 	UINT	CtlID;
@@ -2828,11 +2861,13 @@ typedef struct tagCOMPAREITEMSTRUCT {
 	ULONG_PTR	itemData2;
 	DWORD	dwLocaleId;
 } COMPAREITEMSTRUCT,*LPCOMPAREITEMSTRUCT;
+
 typedef struct tagCOPYDATASTRUCT {
 	ULONG_PTR dwData;
 	DWORD cbData;
 	PVOID lpData;
 } COPYDATASTRUCT,*PCOPYDATASTRUCT;
+
 typedef struct tagCURSORSHAPE {
 	int xHotSpot;
 	int yHotSpot;
@@ -2842,6 +2877,7 @@ typedef struct tagCURSORSHAPE {
     BYTE Planes;
     BYTE BitsPixel;
 } CURSORSHAPE,*LPCURSORSHAPE;
+
 typedef struct tagCWPRETSTRUCT {
 	LRESULT lResult;
 	LPARAM lParam;
@@ -2849,12 +2885,14 @@ typedef struct tagCWPRETSTRUCT {
 	DWORD message;
 	HWND hwnd;
 } CWPRETSTRUCT,*PCWPRETSTRUCT, *LPCWPRETSTRUCT;
+
 typedef struct tagCWPSTRUCT {
 	LPARAM lParam;
 	WPARAM wParam;
 	UINT message;
 	HWND hwnd;
 } CWPSTRUCT,*PCWPSTRUCT, *LPCWPSTRUCT;
+
 typedef struct tagDEBUGHOOKINFO {
 	DWORD idThread;
 	DWORD idThreadInstaller;
@@ -2862,6 +2900,7 @@ typedef struct tagDEBUGHOOKINFO {
 	WPARAM wParam;
 	int code;
 } DEBUGHOOKINFO,*PDEBUGHOOKINFO,*LPDEBUGHOOKINFO;
+
 typedef struct tagDELETEITEMSTRUCT {
 	UINT CtlType;
 	UINT CtlID;
@@ -2869,7 +2908,8 @@ typedef struct tagDELETEITEMSTRUCT {
 	HWND hwndItem;
 	ULONG_PTR itemData;
 } DELETEITEMSTRUCT,*PDELETEITEMSTRUCT,*LPDELETEITEMSTRUCT;
-#pragma pack(push,2)
+
+#include <pshpack2.h>
 typedef struct {
 	DWORD style;
 	DWORD dwExtendedStyle;
@@ -2879,6 +2919,7 @@ typedef struct {
 	short cy;
 	WORD id;
 } DLGITEMTEMPLATE,*LPDLGITEMTEMPLATE;
+
 typedef struct {
 	DWORD style;
 	DWORD dwExtendedStyle;
@@ -2888,14 +2929,17 @@ typedef struct {
 	short cx;
 	short cy;
 } DLGTEMPLATE,*LPDLGTEMPLATE,*LPDLGTEMPLATEA,*LPDLGTEMPLATEW;
+
 typedef const DLGTEMPLATE *LPCDLGTEMPLATEA;
 typedef const DLGTEMPLATE *LPCDLGTEMPLATEW;
+
 #ifdef UNICODE
 typedef LPCDLGTEMPLATEW LPCDLGTEMPLATE;
 #else
 typedef LPCDLGTEMPLATEA LPCDLGTEMPLATE;
 #endif // UNICODE
-#pragma pack(pop)
+#include <poppack.h>
+
 typedef struct tagDRAWITEMSTRUCT {
 	UINT CtlType;
 	UINT CtlID;
@@ -2907,6 +2951,7 @@ typedef struct tagDRAWITEMSTRUCT {
 	RECT rcItem;
 	ULONG_PTR itemData;
 } DRAWITEMSTRUCT,*LPDRAWITEMSTRUCT,*PDRAWITEMSTRUCT;
+
 typedef struct {
 	UINT cbSize;
 	int iTabLength;
@@ -2914,6 +2959,7 @@ typedef struct {
 	int iRightMargin;
 	UINT uiLengthDrawn;
 } DRAWTEXTPARAMS,*LPDRAWTEXTPARAMS;
+
 typedef struct tagPAINTSTRUCT {
 	HDC	hdc;
 	BOOL fErase;
@@ -2922,6 +2968,7 @@ typedef struct tagPAINTSTRUCT {
 	BOOL fIncUpdate;
 	BYTE rgbReserved[32];
 } PAINTSTRUCT,*LPPAINTSTRUCT;
+
 typedef struct tagMSG {
 	HWND hwnd;
 	UINT message;
@@ -2930,6 +2977,7 @@ typedef struct tagMSG {
 	DWORD time;
 	POINT pt;
 } MSG,*LPMSG,*PMSG;
+
 typedef struct _ICONINFO {
 	BOOL fIcon;
 	DWORD xHotspot;
@@ -2937,11 +2985,13 @@ typedef struct _ICONINFO {
 	HBITMAP hbmMask;
 	HBITMAP hbmColor;
 } ICONINFO,*PICONINFO;
+
 typedef struct tagNMHDR {
 	HWND hwndFrom;
 	UINT_PTR idFrom;
 	UINT code;
 } NMHDR,*LPNMHDR;
+
 typedef struct _WNDCLASSA {
 	UINT style;
 	WNDPROC lpfnWndProc;
@@ -2954,6 +3004,7 @@ typedef struct _WNDCLASSA {
 	LPCSTR lpszMenuName;
 	LPCSTR lpszClassName;
 } WNDCLASSA,*LPWNDCLASSA,*PWNDCLASSA;
+
 typedef struct _WNDCLASSW {
 	UINT style;
 	WNDPROC lpfnWndProc;
@@ -2966,6 +3017,7 @@ typedef struct _WNDCLASSW {
 	LPCWSTR lpszMenuName;
 	LPCWSTR lpszClassName;
 } WNDCLASSW,*LPWNDCLASSW,*PWNDCLASSW;
+
 typedef struct _WNDCLASSEXA {
 	UINT cbSize;
 	UINT style;
@@ -2980,6 +3032,7 @@ typedef struct _WNDCLASSEXA {
 	LPCSTR lpszClassName;
 	HICON hIconSm;
 } WNDCLASSEXA,*LPWNDCLASSEXA,*PWNDCLASSEXA;
+
 typedef struct _WNDCLASSEXW {
 	UINT cbSize;
 	UINT style;
@@ -2994,6 +3047,7 @@ typedef struct _WNDCLASSEXW {
 	LPCWSTR lpszClassName;
 	HICON hIconSm;
 } WNDCLASSEXW,*LPWNDCLASSEXW,*PWNDCLASSEXW;
+
 typedef struct tagMENUITEMINFOA {
 	UINT cbSize;
 	UINT fMask;
@@ -3011,6 +3065,7 @@ typedef struct tagMENUITEMINFOA {
 #endif
 } MENUITEMINFOA,*LPMENUITEMINFOA;
 typedef const MENUITEMINFOA *LPCMENUITEMINFOA;
+
 typedef struct tagMENUITEMINFOW {
 	UINT cbSize;
 	UINT fMask;
@@ -3027,7 +3082,9 @@ typedef struct tagMENUITEMINFOW {
 	HBITMAP hbmpItem;
 #endif
 } MENUITEMINFOW,*LPMENUITEMINFOW;
+
 typedef const MENUITEMINFOW *LPCMENUITEMINFOW;
+
 typedef struct tagSCROLLINFO {
 	UINT cbSize;
 	UINT fMask;
@@ -3038,6 +3095,7 @@ typedef struct tagSCROLLINFO {
 	int nTrackPos;
 } SCROLLINFO,*LPSCROLLINFO;
 typedef const SCROLLINFO *LPCSCROLLINFO;
+
 typedef struct _WINDOWPLACEMENT {
 	UINT length;
 	UINT flags;
@@ -3046,16 +3104,20 @@ typedef struct _WINDOWPLACEMENT {
 	POINT ptMaxPosition;
 	RECT rcNormalPosition;
 } WINDOWPLACEMENT,*LPWINDOWPLACEMENT,*PWINDOWPLACEMENT;
+
 typedef struct {
 	WORD versionNumber;
 	WORD offset;
 } MENUITEMTEMPLATEHEADER;
+
 typedef struct {
 	WORD mtOption;
 	WORD mtID;
 	WCHAR mtString[1];
 } MENUITEMTEMPLATE;
+
 typedef void MENUTEMPLATE,MENUTEMPLATEA,MENUTEMPLATEW,*LPMENUTEMPLATEA,*LPMENUTEMPLATEW,*LPMENUTEMPLATE;
+
 typedef struct tagHELPINFO {
 	UINT cbSize;
 	int iContextType;
@@ -3064,7 +3126,9 @@ typedef struct tagHELPINFO {
 	DWORD_PTR dwContextId;
 	POINT MousePos;
 } HELPINFO,*LPHELPINFO;
+
 typedef void(CALLBACK *MSGBOXCALLBACK)(LPHELPINFO);
+
 typedef struct {
 	UINT cbSize;
 	HWND hwndOwner;
@@ -3077,6 +3141,7 @@ typedef struct {
 	MSGBOXCALLBACK lpfnMsgBoxCallback;
 	DWORD dwLanguageId;
 } MSGBOXPARAMSA,*PMSGBOXPARAMSA,*LPMSGBOXPARAMSA;
+
 typedef struct {
 	UINT cbSize;
 	HWND hwndOwner;
@@ -3089,11 +3154,13 @@ typedef struct {
 	MSGBOXCALLBACK lpfnMsgBoxCallback;
 	DWORD dwLanguageId;
 } MSGBOXPARAMSW,*PMSGBOXPARAMSW,*LPMSGBOXPARAMSW;
+
 typedef struct tagUSEROBJECTFLAGS {
 	BOOL fInherit;
 	BOOL fReserved;
 	DWORD dwFlags;
 } USEROBJECTFLAGS;
+
 typedef struct tagFILTERKEYS {
 	UINT cbSize;
 	DWORD dwFlags;
@@ -3102,16 +3169,19 @@ typedef struct tagFILTERKEYS {
 	DWORD iRepeatMSec;
 	DWORD iBounceMSec;
 } FILTERKEYS, *LPFILTERKEYS;
+
 typedef struct tagHIGHCONTRASTA {
 	UINT cbSize;
 	DWORD dwFlags;
 	LPSTR lpszDefaultScheme;
 } HIGHCONTRASTA,*LPHIGHCONTRASTA;
+
 typedef struct tagHIGHCONTRASTW {
 	UINT cbSize;
 	DWORD dwFlags;
 	LPWSTR lpszDefaultScheme;
 } HIGHCONTRASTW,*LPHIGHCONTRASTW;
+
 #if defined(_WINGDI_) && !defined(NOGDI)
 typedef struct tagICONMETRICSA {
 	UINT cbSize;
@@ -3120,6 +3190,7 @@ typedef struct tagICONMETRICSA {
 	int iTitleWrap;
 	LOGFONTA lfFont;
 } ICONMETRICSA, *PICONMETRICSA, *LPICONMETRICSA;
+
 typedef struct tagICONMETRICSW {
 	UINT cbSize;
 	int iHorzSpacing;
@@ -3127,12 +3198,14 @@ typedef struct tagICONMETRICSW {
 	int iTitleWrap;
 	LOGFONTW lfFont;
 } ICONMETRICSW, *PICONMETRICSW, *LPICONMETRICSW;
+
 #ifdef UNICODE
 typedef ICONMETRICSW ICONMETRICS,*LPICONMETRICS;
 #else /* UNICODE */
 typedef ICONMETRICSA ICONMETRICS,*LPICONMETRICS;
 #endif /* UNICODE */
 #endif /*  NOGDI */
+
 typedef struct tagMINIMIZEDMETRICS {
 	UINT cbSize;
 	int iWidth;
@@ -3140,6 +3213,7 @@ typedef struct tagMINIMIZEDMETRICS {
 	int iVertGap;
 	int iArrange;
 } MINIMIZEDMETRICS,*LPMINIMIZEDMETRICS;
+
 typedef struct tagMOUSEKEYS{
 	UINT cbSize;
 	DWORD dwFlags;
@@ -3149,6 +3223,7 @@ typedef struct tagMOUSEKEYS{
 	DWORD dwReserved1;
 	DWORD dwReserved2;
 } MOUSEKEYS,*LPMOUSEKEYS;
+
 #if defined(_WINGDI_) && !defined(NOGDI)
 typedef struct tagNONCLIENTMETRICSA {
 	UINT cbSize;
@@ -3167,6 +3242,7 @@ typedef struct tagNONCLIENTMETRICSA {
 	LOGFONTA lfStatusFont;
 	LOGFONTA lfMessageFont;
 } NONCLIENTMETRICSA,*LPNONCLIENTMETRICSA;
+
 typedef struct tagNONCLIENTMETRICSW {
 	UINT cbSize;
 	int iBorderWidth;
@@ -3184,12 +3260,14 @@ typedef struct tagNONCLIENTMETRICSW {
 	LOGFONTW lfStatusFont;
 	LOGFONTW lfMessageFont;
 } NONCLIENTMETRICSW,*LPNONCLIENTMETRICSW;
+
 #ifdef UNICODE
 typedef NONCLIENTMETRICSW NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #else /* UNICODE */
 typedef NONCLIENTMETRICSA NONCLIENTMETRICS,*LPNONCLIENTMETRICS;
 #endif /* UNICODE */
 #endif
+
 typedef struct tagSERIALKEYSA {
 	UINT cbSize;
 	DWORD dwFlags;
@@ -3199,6 +3277,7 @@ typedef struct tagSERIALKEYSA {
 	UINT iPortState;
 	UINT iActive;
 } SERIALKEYSA,*LPSERIALKEYSA;
+
 typedef struct tagSERIALKEYSW {
 	UINT cbSize;
 	DWORD dwFlags;
@@ -3208,6 +3287,7 @@ typedef struct tagSERIALKEYSW {
 	UINT iPortState;
 	UINT iActive;
 } SERIALKEYSW,*LPSERIALKEYSW;
+
 typedef struct tagSOUNDSENTRYA {
 	UINT cbSize;
 	DWORD dwFlags;
@@ -3222,6 +3302,7 @@ typedef struct tagSOUNDSENTRYA {
 	LPSTR lpszWindowsEffectDLL;
 	DWORD iWindowsEffectOrdinal;
 } SOUNDSENTRYA,*LPSOUNDSENTRYA;
+
 typedef struct tagSOUNDSENTRYW {
 	UINT cbSize;
 	DWORD dwFlags;
@@ -3236,20 +3317,24 @@ typedef struct tagSOUNDSENTRYW {
 	LPWSTR lpszWindowsEffectDLL;
 	DWORD iWindowsEffectOrdinal;
 } SOUNDSENTRYW,*LPSOUNDSENTRYW;
+
 typedef struct tagSTICKYKEYS {
 	DWORD cbSize;
 	DWORD dwFlags;
 } STICKYKEYS,*LPSTICKYKEYS;
+
 typedef struct tagTOGGLEKEYS {
 	DWORD cbSize;
 	DWORD dwFlags;
 } TOGGLEKEYS, *LPTOGGLEKEYS;
+
 typedef struct tagMOUSEHOOKSTRUCT {
 	POINT pt;
 	HWND hwnd;
 	UINT wHitTestCode;
 	ULONG_PTR dwExtraInfo;
 } MOUSEHOOKSTRUCT,*LPMOUSEHOOKSTRUCT,*PMOUSEHOOKSTRUCT;
+
 #if ( _WIN32_WINNT >= 0x0500 )
 #ifdef __cplusplus
 typedef struct tagMOUSEHOOKSTRUCTEX : public tagMOUSEHOOKSTRUCT
@@ -3264,16 +3349,19 @@ typedef struct tagMOUSEHOOKSTRUCTEX
 } MOUSEHOOKSTRUCTEX, *LPMOUSEHOOKSTRUCTEX, *PMOUSEHOOKSTRUCTEX;
 #endif
 #endif
+
 typedef struct tagTRACKMOUSEEVENT {
 	DWORD cbSize;
 	DWORD dwFlags;
 	HWND  hwndTrack;
 	DWORD dwHoverTime;
 } TRACKMOUSEEVENT,*LPTRACKMOUSEEVENT;
+
 typedef struct tagTPMPARAMS {
 	UINT cbSize;
 	RECT rcExclude;
 } TPMPARAMS,*LPTPMPARAMS;
+
 typedef struct tagEVENTMSG {
 	UINT message;
 	UINT paramL;
@@ -3281,6 +3369,7 @@ typedef struct tagEVENTMSG {
 	DWORD time;
 	HWND hwnd;
 } EVENTMSG,*PEVENTMSGMSG,*LPEVENTMSGMSG,*PEVENTMSG,*LPEVENTMSG;
+
 typedef struct _WINDOWPOS {
 	HWND hwnd;
 	HWND hwndInsertAfter;
@@ -3290,10 +3379,12 @@ typedef struct _WINDOWPOS {
 	int cy;
 	UINT flags;
 } WINDOWPOS,*PWINDOWPOS,*LPWINDOWPOS;
+
 typedef struct tagNCCALCSIZE_PARAMS {
 	RECT rgrc[3];
 	PWINDOWPOS lppos;
 } NCCALCSIZE_PARAMS, *LPNCCALCSIZE_PARAMS;
+
 typedef struct tagMDICREATESTRUCTA {
 	LPCSTR szClass;
 	LPCSTR szTitle;
@@ -3305,6 +3396,7 @@ typedef struct tagMDICREATESTRUCTA {
 	DWORD style;
 	LPARAM lParam;
 } MDICREATESTRUCTA,*LPMDICREATESTRUCTA;
+
 typedef struct tagMDICREATESTRUCTW {
 	LPCWSTR szClass;
 	LPCWSTR szTitle;
@@ -3316,6 +3408,7 @@ typedef struct tagMDICREATESTRUCTW {
 	DWORD style;
 	LPARAM lParam;
 } MDICREATESTRUCTW,*LPMDICREATESTRUCTW;
+
 typedef struct tagMINMAXINFO {
 	POINT ptReserved;
 	POINT ptMaxSize;
@@ -3323,11 +3416,13 @@ typedef struct tagMINMAXINFO {
 	POINT ptMinTrackSize;
 	POINT ptMaxTrackSize;
 } MINMAXINFO,*PMINMAXINFO,*LPMINMAXINFO;
+
 typedef struct tagMDINEXTMENU {
 	HMENU hmenuIn;
 	HMENU hmenuNext;
 	HWND hwndNext;
 } MDINEXTMENU,*PMDINEXTMENU,*LPMDINEXTMENU;
+
 typedef struct tagMEASUREITEMSTRUCT {
 	UINT CtlType;
 	UINT CtlID;
@@ -3336,6 +3431,7 @@ typedef struct tagMEASUREITEMSTRUCT {
 	UINT itemHeight;
 	ULONG_PTR itemData;
 } MEASUREITEMSTRUCT,*PMEASUREITEMSTRUCT,*LPMEASUREITEMSTRUCT;
+
 typedef struct tagDROPSTRUCT {
 	HWND hwndSource;
 	HWND hwndSink;
@@ -3344,17 +3440,20 @@ typedef struct tagDROPSTRUCT {
 	POINT ptDrop;
 	DWORD dwControlData;
 } DROPSTRUCT,*PDROPSTRUCT,*LPDROPSTRUCT;
+
 typedef DWORD HELPPOLY;
 typedef struct tagMULTIKEYHELPA {
 	DWORD mkSize;
 	CHAR mkKeylist;
 	CHAR szKeyphrase[1];
 } MULTIKEYHELPA,*PMULTIKEYHELPA,*LPMULTIKEYHELPA;
+
 typedef struct tagMULTIKEYHELPW {
 	DWORD mkSize;
 	WCHAR mkKeylist;
 	WCHAR szKeyphrase[1];
 } MULTIKEYHELPW,*PMULTIKEYHELPW,*LPMULTIKEYHELPW;
+
 typedef struct tagHELPWININFOA {
 	int wStructSize;
 	int x;
@@ -3364,6 +3463,7 @@ typedef struct tagHELPWININFOA {
 	int wMax;
 	CHAR rgchMember[2];
 } HELPWININFOA,*PHELPWININFOA,*LPHELPWININFOA;
+
 typedef struct tagHELPWININFOW {
 	int wStructSize;
 	int x;
@@ -3373,10 +3473,12 @@ typedef struct tagHELPWININFOW {
 	int wMax;
 	WCHAR rgchMember[2];
 } HELPWININFOW,*PHELPWININFOW,*LPHELPWININFOW;
+
 typedef struct tagSTYLESTRUCT {
 	DWORD styleOld;
 	DWORD styleNew;
 } STYLESTRUCT,*LPSTYLESTRUCT;
+
 typedef struct tagALTTABINFO {
 	DWORD cbSize;
 	int   cItems;
@@ -3388,6 +3490,7 @@ typedef struct tagALTTABINFO {
 	int   cyItem;
 	POINT ptStart;
 } ALTTABINFO,*PALTTABINFO,*LPALTTABINFO;
+
 typedef struct tagCOMBOBOXINFO {
 	DWORD cbSize;
 	RECT rcItem;
@@ -3397,12 +3500,14 @@ typedef struct tagCOMBOBOXINFO {
 	HWND hwndItem;
 	HWND hwndList;
 } COMBOBOXINFO,*PCOMBOBOXINFO,*LPCOMBOBOXINFO;
+
 typedef struct tagCURSORINFO {
 	DWORD cbSize;
 	DWORD flags;
 	HCURSOR hCursor;
 	POINT ptScreenPos;
 } CURSORINFO,*PCURSORINFO,*LPCURSORINFO;
+
 typedef struct tagMENUBARINFO {
 	DWORD cbSize;
 	RECT  rcBar;
@@ -3411,6 +3516,7 @@ typedef struct tagMENUBARINFO {
 	BOOL  fBarFocused:1;
 	BOOL  fFocused:1;
 } MENUBARINFO,*PMENUBARINFO;
+
 typedef struct tagMENUINFO {
 	DWORD cbSize;
 	DWORD fMask;
@@ -3420,8 +3526,10 @@ typedef struct tagMENUINFO {
 	DWORD   dwContextHelpID;
 	ULONG_PTR dwMenuData;
 } MENUINFO,*LPMENUINFO;
+
 typedef MENUINFO CONST *LPCMENUINFO;
 #define CCHILDREN_SCROLLBAR 5
+
 typedef struct tagSCROLLBARINFO {
 	DWORD cbSize;
 	RECT  rcScrollBar;
@@ -3431,12 +3539,15 @@ typedef struct tagSCROLLBARINFO {
 	int   reserved;
 	DWORD rgstate[CCHILDREN_SCROLLBAR+1];
 } SCROLLBARINFO,*PSCROLLBARINFO,*LPSCROLLBARINFO;
+
 #define CCHILDREN_TITLEBAR 5
+
 typedef struct tagTITLEBARINFO {
 	DWORD cbSize;
 	RECT  rcTitleBar;
 	DWORD rgstate[CCHILDREN_TITLEBAR+1];
 } TITLEBARINFO,*PTITLEBARINFO,*LPTITLEBARINFO;
+
 typedef struct tagWINDOWINFO {
 	DWORD cbSize;
 	RECT  rcWindow;
@@ -3449,16 +3560,19 @@ typedef struct tagWINDOWINFO {
 	ATOM  atomWindowType;
 	WORD  wCreatorVersion;
 } WINDOWINFO,*PWINDOWINFO,*LPWINDOWINFO;
+
 typedef struct tagLASTINPUTINFO {
 	UINT cbSize;
 	DWORD dwTime;
 } LASTINPUTINFO,*PLASTINPUTINFO;
+
 typedef struct tagMONITORINFO {
 	DWORD cbSize;
 	RECT rcMonitor;
 	RECT rcWork;
 	DWORD dwFlags;
 } MONITORINFO,*LPMONITORINFO;
+
 #define CCHDEVICENAME 32
 typedef struct tagMONITORINFOEXA {
 	DWORD	cbSize;
@@ -3467,6 +3581,7 @@ typedef struct tagMONITORINFOEXA {
 	DWORD	dwFlags;
 	CHAR	szDevice[CCHDEVICENAME];
 } MONITORINFOEXA,*LPMONITORINFOEXA;
+
 typedef struct tagMONITORINFOEXW {
 	DWORD	cbSize;
 	RECT	rcMonitor;
@@ -3474,6 +3589,7 @@ typedef struct tagMONITORINFOEXW {
 	DWORD	dwFlags;
 	WCHAR	szDevice[CCHDEVICENAME];
 } MONITORINFOEXW,*LPMONITORINFOEXW;
+
 typedef struct tagKBDLLHOOKSTRUCT {
 	DWORD vkCode;
 	DWORD scanCode;
@@ -3481,6 +3597,7 @@ typedef struct tagKBDLLHOOKSTRUCT {
 	DWORD time;
 	ULONG_PTR dwExtraInfo;
 } KBDLLHOOKSTRUCT,*LPKBDLLHOOKSTRUCT,*PKBDLLHOOKSTRUCT;
+
 typedef struct tagMSLLHOOKSTRUCT
 {
 	POINT pt;
@@ -3489,6 +3606,7 @@ typedef struct tagMSLLHOOKSTRUCT
 	DWORD time;
 	ULONG_PTR dwExtraInfo;
 } MSLLHOOKSTRUCT, *LPMSLLHOOKSTRUCT, *PMSLLHOOKSTRUCT;
+
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0410)
 typedef struct {
   UINT  cbSize;
@@ -3498,6 +3616,7 @@ typedef struct {
   DWORD dwTimeout;
 } FLASHWINFO,*PFLASHWINFO;
 #endif /* (WINVER >= 0x0500 || _WIN32_WINDOWS >= 0x0410) */
+
 #if (_WIN32_WINNT >= 0x0500 || _WIN32_WINDOWS >= 0x0490)
 typedef struct tagMOUSEMOVEPOINT {
   int x;
@@ -3506,6 +3625,7 @@ typedef struct tagMOUSEMOVEPOINT {
   ULONG_PTR dwExtraInfo;
 } MOUSEMOVEPOINT,*PMOUSEMOVEPOINT,*LPMOUSEMOVEPOINT;
 #endif
+
 #if (_WIN32_WINNT >= 0x0400)
 typedef struct tagMOUSEINPUT {
   LONG dx;
@@ -3515,6 +3635,7 @@ typedef struct tagMOUSEINPUT {
   DWORD time;
   ULONG_PTR dwExtraInfo;
 } MOUSEINPUT,*PMOUSEINPUT;
+
 typedef struct tagKEYBDINPUT {
   WORD wVk;
   WORD wScan;
@@ -3522,11 +3643,13 @@ typedef struct tagKEYBDINPUT {
   DWORD time;
   ULONG_PTR dwExtraInfo;
 } KEYBDINPUT,*PKEYBDINPUT;
+
 typedef struct tagHARDWAREINPUT {
   DWORD uMsg;
   WORD wParamL;
   WORD wParamH;
 } HARDWAREINPUT,*PHARDWAREINPUT;
+
 typedef struct tagINPUT {
   DWORD type;
   _ANONYMOUS_UNION union {
@@ -3536,6 +3659,7 @@ typedef struct tagINPUT {
   } DUMMYUNIONNAME;
 } INPUT,*PINPUT,*LPINPUT;
 #endif /* (_WIN32_WINNT >= 0x0400) */
+
 #if (WINVER >= 0x0500)
 typedef struct tagGUITHREADINFO {
 	DWORD cbSize;
@@ -3548,8 +3672,10 @@ typedef struct tagGUITHREADINFO {
 	HWND hwndCaret;
 	RECT rcCaret;
 } GUITHREADINFO,*PGUITHREADINFO,*LPGUITHREADINFO;
+
 typedef VOID (CALLBACK *WINEVENTPROC)(HWINEVENTHOOK,DWORD,HWND,LONG,LONG,DWORD,DWORD);
 #endif /* (WINVER >= 0x0500) */
+
 #if (_WIN32_WINNT >= 0x0501)
 typedef struct {
 	UINT  cbSize;
@@ -3558,12 +3684,14 @@ typedef struct {
 	LUID  luid;
 } BSMINFO,*PBSMINFO;
 DECLARE_HANDLE(HRAWINPUT);
+
 typedef struct tagRAWINPUTHEADER {
 	DWORD dwType;
 	DWORD dwSize;
 	HANDLE hDevice;
 	WPARAM wParam;
 } RAWINPUTHEADER,*PRAWINPUTHEADER;
+
 typedef struct tagRAWMOUSE {
 	USHORT usFlags;
 	_ANONYMOUS_UNION union {
@@ -3578,6 +3706,7 @@ typedef struct tagRAWMOUSE {
 	LONG lLastY;
 	ULONG ulExtraInformation;
 } RAWMOUSE,*PRAWMOUSE,*LPRAWMOUSE;
+
 typedef struct tagRAWKEYBOARD {
 	USHORT MakeCode;
 	USHORT Flags;
@@ -3586,11 +3715,13 @@ typedef struct tagRAWKEYBOARD {
 	UINT Message;
 	ULONG ExtraInformation;
 } RAWKEYBOARD,*PRAWKEYBOARD,*LPRAWKEYBOARD;
+
 typedef struct tagRAWHID {
 	DWORD dwSizeHid;
 	DWORD dwCount;
 	BYTE bRawData;
 } RAWHID,*PRAWHID,*LPRAWHID;
+
 typedef struct tagRAWINPUT {
 	RAWINPUTHEADER header;
 	union {
@@ -3599,13 +3730,16 @@ typedef struct tagRAWINPUT {
 		RAWHID      hid;
 	} data;
 } RAWINPUT,*PRAWINPUT,*LPRAWINPUT;
+
 typedef struct tagRAWINPUTDEVICE {
 	USHORT usUsagePage;
 	USHORT usUsage;
 	DWORD dwFlags;
 	HWND hwndTarget;
 } RAWINPUTDEVICE,*PRAWINPUTDEVICE,*LPRAWINPUTDEVICE;
+
 typedef const RAWINPUTDEVICE *PCRAWINPUTDEVICE;
+
 typedef struct tagRAWINPUTDEVICELIST {
 	HANDLE hDevice;
 	DWORD dwType;
@@ -4137,6 +4271,8 @@ BOOL WINAPI PostThreadMessageW(DWORD,UINT,WPARAM,LPARAM);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI PrintWindow(HWND,HDC,UINT);
 #endif
+UINT WINAPI PrivateExtractIconsA(LPCSTR,int,int,int,HICON*,UINT*,UINT,UINT);
+UINT WINAPI PrivateExtractIconsW(LPCWSTR,int,int,int,HICON*,UINT*,UINT,UINT);
 BOOL WINAPI PtInRect(LPCRECT,POINT);
 HWND WINAPI RealChildWindowFromPoint(HWND,POINT);
 UINT WINAPI RealGetWindowClassA(HWND,LPSTR,UINT);
@@ -4258,6 +4394,7 @@ int WINAPI SetWindowRgn(HWND,HRGN,BOOL);
 HHOOK WINAPI SetWindowsHookA(int,HOOKPROC);
 HHOOK WINAPI SetWindowsHookExA(int,HOOKPROC,HINSTANCE,DWORD);
 HHOOK WINAPI SetWindowsHookExW(int,HOOKPROC,HINSTANCE,DWORD);
+HHOOK WINAPI SetWindowsHookW(int,HOOKPROC);
 BOOL WINAPI SetWindowTextA(HWND,LPCSTR);
 BOOL WINAPI SetWindowTextW(HWND,LPCWSTR);
 WORD WINAPI SetWindowWord(HWND,int,WORD);
@@ -4312,6 +4449,9 @@ SHORT WINAPI VkKeyScanW(WCHAR);
 DWORD WINAPI WaitForInputIdle(HANDLE,DWORD);
 BOOL WINAPI WaitMessage(void);
 HWND WINAPI WindowFromDC(HDC hDC);
+#if (_WIN32_WINNT >= 0x0600)
+HWND WINAPI WindowFromPhysicalPoint(POINT);
+#endif
 HWND WINAPI WindowFromPoint(POINT);
 UINT WINAPI WinExec(LPCSTR,UINT);
 BOOL WINAPI WinHelpA(HWND,LPCSTR,UINT,ULONG_PTR);
@@ -4473,6 +4613,7 @@ typedef MONITORINFOEXW MONITORINFOEX, *LPMONITORINFOEX;
 #define PostAppMessage PostAppMessageW
 #define PostMessage PostMessageW
 #define PostThreadMessage PostThreadMessageW
+#define PrivateExtractIcons PrivateExtractIconsW
 #define RealGetWindowClass RealGetWindowClassW
 #define RegisterClass RegisterClassW
 #define RegisterClassEx RegisterClassExW
@@ -4640,6 +4781,7 @@ typedef MONITORINFOEXA MONITORINFOEX, *LPMONITORINFOEX;
 #define PostAppMessage PostAppMessageA
 #define PostMessage PostMessageA
 #define PostThreadMessage PostThreadMessageA
+#define PrivateExtractIcons PrivateExtractIconsA
 #define RealGetWindowClass RealGetWindowClassA
 #define RegisterClass RegisterClassA
 #define RegisterClassEx RegisterClassExA

@@ -1,35 +1,69 @@
 #ifndef KSTYPES_H__
 #define KSTYPES_H__
 
-struct KSIDEVICE_HEADER;
-
 typedef struct
 {
     KSDISPATCH_TABLE DispatchTable;
-    LPWSTR ObjectClass;
-    ULONG ItemCount;
-    PKSOBJECT_CREATE_ITEM CreateItem;
+    KSOBJECTTYPE Type;
+
+    LONG ItemListCount;
+    LIST_ENTRY ItemList;
+
+    UNICODE_STRING ObjectClass;
+    PUNKNOWN Unknown;
+
+    PDEVICE_OBJECT TargetDevice;
+    LIST_ENTRY TargetDeviceListEntry;
+
+    PDEVICE_OBJECT ParentDeviceObject;
+
+    PFNKSCONTEXT_DISPATCH PowerDispatch;
+    PVOID PowerContext;
+    LIST_ENTRY PowerDispatchEntry;
+    PKSOBJECT_CREATE_ITEM OriginalCreateItem;
+    ACCESS_MASK AccessMask;
 
 }KSIOBJECT_HEADER, *PKSIOBJECT_HEADER;
 
 typedef struct
 {
-    BOOL bCreated;
-    PKSIOBJECT_HEADER ObjectHeader;
-    KSOBJECT_CREATE_ITEM CreateItem;
-}DEVICE_ITEM, *PDEVICE_ITEM;
-
+    LIST_ENTRY Entry;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    PFNKSITEMFREECALLBACK ItemFreeCallback;
+    LONG ReferenceCount;
+    LIST_ENTRY ObjectItemList;
+}CREATE_ITEM_ENTRY, *PCREATE_ITEM_ENTRY;
 
 typedef struct
 {
-    USHORT MaxItems;
-    DEVICE_ITEM *ItemList;
+    KSOBJECTTYPE Type;
+    PKSDEVICE KsDevice;
+}KSBASIC_HEADER, *PKSBASIC_HEADER;
+
+typedef struct
+{
+    KSOBJECTTYPE Type;
+    KSDEVICE KsDevice;
+    IKsDeviceVtbl *lpVtblIKsDevice;
+
+    LONG ref;
+    ERESOURCE SecurityLock;
+
+    LONG ItemListCount;
+    LIST_ENTRY ItemList;
 
     ULONG DeviceIndex;
-    KSPIN_LOCK ItemListLock;
+    PDEVICE_OBJECT PnpDeviceObject;
+    PDEVICE_OBJECT BaseDevice;
 
-    PDEVICE_OBJECT NextDeviceObject;
-    ERESOURCE SecurityLock;
+    KSTARGET_STATE TargetState;
+    LIST_ENTRY TargetDeviceList;
+
+    KMUTEX DeviceMutex;
+    KSDEVICE_DESCRIPTOR* Descriptor;
+
+    LIST_ENTRY PowerDispatchList;
+
 }KSIDEVICE_HEADER, *PKSIDEVICE_HEADER;
 
 
@@ -42,8 +76,14 @@ typedef struct
 typedef struct
 {
     LIST_ENTRY Entry;
-    PIRP Irp;
-}QUEUE_ENTRY, *PQUEUE_ENTRY;
+    UNICODE_STRING SymbolicLink;
+}SYMBOLIC_LINK_ENTRY, *PSYMBOLIC_LINK_ENTRY;
+
+typedef struct
+{
+    PKSIDEVICE_HEADER DeviceHeader;
+    PIO_WORKITEM WorkItem;
+}PNP_POSTSTART_CONTEXT, *PPNP_POSTSTART_CONTEXT;
 
 
 #endif

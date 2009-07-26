@@ -20,28 +20,6 @@
 /*
  * @implemented
  */
-VOID
-WINAPI
-SetLastError (DWORD dwErrorCode)
-{
-    NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrorCode;
-}
-
-
-/*
- * @implemented
- */
-DWORD
-WINAPI
-GetLastError (VOID)
-{
-    return (DWORD) (NtCurrentTeb ()->LastErrorValue);
-}
-
-
-/*
- * @implemented
- */
 BOOL
 WINAPI
 Beep (DWORD dwFreq, DWORD dwDuration)

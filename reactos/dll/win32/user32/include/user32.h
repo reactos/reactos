@@ -90,9 +90,9 @@ SharedPtrToKernel(PVOID Ptr)
 }
 
 static __inline BOOL
-IsThreadHooked(PW32THREADINFO ti)
+IsThreadHooked(PCLIENTINFO pci)
 {
-    return ti->fsHooks != 0;
+    return pci->fsHooks != 0;
 }
 
 static __inline PDESKTOPINFO
@@ -108,12 +108,12 @@ GetThreadDesktopInfo(VOID)
     return di;
 }
 
-PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
-PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
-PWINDOW FASTCALL ValidateHwndOrDesk(HWND hwnd);
-PWINDOW FASTCALL GetThreadDesktopWnd(VOID);
+PCALLPROCDATA FASTCALL ValidateCallProc(HANDLE hCallProc);
+PWND FASTCALL ValidateHwnd(HWND hwnd);
+PWND FASTCALL ValidateHwndOrDesk(HWND hwnd);
+PWND FASTCALL GetThreadDesktopWnd(VOID);
 PVOID FASTCALL ValidateHandleNoErr(HANDLE handle, UINT uType);
-PWINDOW FASTCALL ValidateHwndNoErr(HWND hwnd);
+PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
-BOOL FASTCALL TestWindowProcess(PWINDOW);
+BOOL FASTCALL TestWindowProcess(PWND);

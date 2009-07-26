@@ -132,13 +132,13 @@ CallMsgFilterA(
         CBT_CREATEWNDA *cbtcwA = (CBT_CREATEWNDA *)lpMsg->lParam;
         CBT_CREATEWNDW cbtcwW;
         CREATESTRUCTW csW;
-	MSG Msg;
+        MSG Msg;
 
-	Msg.hwnd = lpMsg->hwnd;
-	Msg.message = lpMsg->message;
-	Msg.time = lpMsg->time;
-	Msg.pt = lpMsg->pt;
-	Msg.wParam = lpMsg->wParam;
+        Msg.hwnd = lpMsg->hwnd;
+        Msg.message = lpMsg->message;
+        Msg.time = lpMsg->time;
+        Msg.pt = lpMsg->pt;
+        Msg.wParam = lpMsg->wParam;
 
         cbtcwW.lpcs = &csW;
         cbtcwW.hwndInsertAfter = cbtcwA->hwndInsertAfter;
@@ -219,13 +219,13 @@ CallNextHookEx(
      {
         PCWPSTRUCT pCWP = (PCWPSTRUCT)lParam;
 
-        lResult = NtUserMessageCall( pCWP->hwnd,
-                                  pCWP->message,
-                                   pCWP->wParam,
-                                   pCWP->lParam, 
-                                              0,
-                               FNID_CALLWNDPROC,
-                                    pHook->Ansi);
+        NtUserMessageCall( pCWP->hwnd,
+                           pCWP->message,
+                           pCWP->wParam,
+                           pCWP->lParam, 
+                          (ULONG_PTR)&lResult,
+                           FNID_CALLWNDPROC,
+                           pHook->Ansi);
      }
      else
      {
@@ -233,13 +233,13 @@ CallNextHookEx(
 
         ClientInfo->dwHookData = pCWPR->lResult;
 
-        lResult = NtUserMessageCall( pCWPR->hwnd,
-                                  pCWPR->message,
-                                   pCWPR->wParam,
-                                   pCWPR->lParam, 
-                                               0,
-                             FNID_CALLWNDPROCRET,
-                                     pHook->Ansi);
+        NtUserMessageCall( pCWPR->hwnd,
+                           pCWPR->message,
+                           pCWPR->wParam,
+                           pCWPR->lParam, 
+                          (ULONG_PTR)&lResult,
+                           FNID_CALLWNDPROCRET,
+                           pHook->Ansi);
      }
      ClientInfo->CI_flags ^= ((ClientInfo->CI_flags ^ Flags) & CI_CURTHPRHOOK);
      ClientInfo->dwHookData = Save;
@@ -316,7 +316,7 @@ NotifyWinEvent(
 // "Servers call NotifyWinEvent to announce the event to the system after the
 // event has occurred; they must never notify the system of an event before
 // the event has occurred." msdn on NotifyWinEvent.
-  if (g_psi->SrvEventActivity & GetMaskFromEvent(event)) // Check to see.
+  if (g_psi->dwInstalledEventHooks & GetMaskFromEvent(event)) // Check to see.
       NtUserNotifyWinEvent(event, hwnd, idObject, idChild);
 }
 
@@ -371,7 +371,7 @@ IsWinEventHookInstalled(
 {
   if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
   {
-     return (g_psi->SrvEventActivity & GetMaskFromEvent(event)) != 0;
+     return (g_psi->dwInstalledEventHooks & GetMaskFromEvent(event)) != 0;
   }
   return FALSE;
 }
@@ -412,91 +412,97 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   LRESULT Result;
   CREATESTRUCTW Csw;
   CBT_CREATEWNDW CbtCreatewndw;
-  UNICODE_STRING UString;
   CREATESTRUCTA Csa;
   CBT_CREATEWNDA CbtCreatewnda;
-  ANSI_STRING AString;
-  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra;
-  WPARAM wParam;
-  LPARAM lParam;
+  PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
+  WPARAM wParam = 0;
+  LPARAM lParam = 0;
   PKBDLLHOOKSTRUCT KeyboardLlData;
   PMSLLHOOKSTRUCT MouseLlData;
   PMSG Msg;
   PMOUSEHOOKSTRUCT MHook;
   PCWPSTRUCT CWP;
   PCWPRETSTRUCT CWPR;
+  PRECTL prl;  
+  LPCBTACTIVATESTRUCT pcbtas;
 
   Common = (PHOOKPROC_CALLBACK_ARGUMENTS) Arguments;
 
   switch(Common->HookId)
-    {
+  {
     case WH_CBT:
+    {
       switch(Common->Code)
-        {
+      {
         case HCBT_CREATEWND:
           CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS)
                               ((PCHAR) Common + Common->lParam);
           Csw = CbtCreatewndExtra->Cs;
           if (NULL != CbtCreatewndExtra->Cs.lpszName)
-            {
+          {
               Csw.lpszName = (LPCWSTR)((PCHAR) CbtCreatewndExtra
                                        + (ULONG) CbtCreatewndExtra->Cs.lpszName);
-            }
+          }
           if (0 != HIWORD(CbtCreatewndExtra->Cs.lpszClass))
-            {
+          {
               Csw.lpszClass = (LPCWSTR)((PCHAR) CbtCreatewndExtra
                                          + LOWORD((ULONG) CbtCreatewndExtra->Cs.lpszClass));
-            }
+          }
           wParam = Common->wParam;
           if (Common->Ansi)
-            {
+          {
               memcpy(&Csa, &Csw, sizeof(CREATESTRUCTW));
-              if (NULL != Csw.lpszName)
-                {
-                  RtlInitUnicodeString(&UString, Csw.lpszName);
-                  RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
-                  Csa.lpszName = AString.Buffer;
-                }
-              if (0 != HIWORD(Csw.lpszClass))
-                {
-                  RtlInitUnicodeString(&UString, Csw.lpszClass);
-                  RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
-                  Csa.lpszClass = AString.Buffer;
-                }
               CbtCreatewnda.lpcs = &Csa;
               CbtCreatewnda.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
               lParam = (LPARAM) &CbtCreatewnda;
-            }
+          }
           else
-            {
+          {
               CbtCreatewndw.lpcs = &Csw;
               CbtCreatewndw.hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
               lParam = (LPARAM) &CbtCreatewndw;
-            }
+          }
           break;
+        case HCBT_CLICKSKIPPED:
+            MHook = (PMOUSEHOOKSTRUCT)((PCHAR) Common + Common->lParam);
+            lParam = (LPARAM) MHook;
+            break;
+        case HCBT_MOVESIZE:
+            prl = (PRECTL)((PCHAR) Common + Common->lParam);
+            lParam = (LPARAM) prl;
+            break;
+        case HCBT_ACTIVATE:
+            pcbtas = (LPCBTACTIVATESTRUCT)((PCHAR) Common + Common->lParam);
+            lParam = (LPARAM) pcbtas;
+            break;
+        case HCBT_KEYSKIPPED:
+        case HCBT_MINMAX:
+        case HCBT_SETFOCUS:
+        case HCBT_SYSCOMMAND:
+        case HCBT_DESTROYWND:
+        case HCBT_QS:
+            wParam = Common->wParam;
+            lParam = Common->lParam;
+            break;
         default:
+          ERR("HCBT_ not supported = %d\n", Common->Code);
           return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
-        }
+      }
 
-      Result = Common->Proc(Common->Code, wParam, lParam);
-
+      if (Common->Proc)
+         Result = Common->Proc(Common->Code, wParam, lParam);
+      else
+      {
+         ERR("Common = 0x%x, Proc = 0x%x\n",Common,Common->Proc);
+      }
       switch(Common->Code)
-        {
+      {
         case HCBT_CREATEWND:
-          if (Common->Ansi)
-            {
-              if (0 != HIWORD(Csa.lpszClass))
-                {
-                  RtlFreeHeap(GetProcessHeap(), 0, (LPSTR) Csa.lpszClass);
-                }
-              if (NULL != Csa.lpszName)
-                {
-                  RtlFreeHeap(GetProcessHeap(), 0, (LPSTR) Csa.lpszName);
-                }
-            }
+          CbtCreatewndExtra->WndInsertAfter = CbtCreatewndw.hwndInsertAfter; 
           break;
-        }
+      }
       break;
+    }
     case WH_KEYBOARD_LL:
       KeyboardLlData = (PKBDLLHOOKSTRUCT)((PCHAR) Common + Common->lParam);
       Result = Common->Proc(Common->Code, Common->wParam, (LPARAM) KeyboardLlData);
@@ -531,7 +537,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
       break;
     default:
       return ZwCallbackReturn(NULL, 0, STATUS_NOT_SUPPORTED);
-    }
+  }
 
   return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
 }
@@ -542,15 +548,15 @@ User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   PEVENTPROC_CALLBACK_ARGUMENTS Common;
 
   Common = (PEVENTPROC_CALLBACK_ARGUMENTS) Arguments;
-  
+
   Common->Proc(Common->hook,
-              Common->event,
+               Common->event,
                Common->hwnd,
-           Common->idObject,
-            Common->idChild,
-      Common->dwEventThread,
-      Common->dwmsEventTime);
-  
+               Common->idObject,
+               Common->idChild,
+               Common->dwEventThread,
+               Common->dwmsEventTime);
+
   return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);
 }
 

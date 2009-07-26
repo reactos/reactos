@@ -45,6 +45,28 @@ static GUID InterfaceGuids[3] =
     }
 };
 
+DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterDMusTopologySet, TopologyPropertyHandler);
+DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PortFilterDMusPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
+
+KSPROPERTY_SET PortDMusPropertySet[] =
+{
+    {
+        &KSPROPSETID_Topology,
+        sizeof(PortFilterDMusTopologySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterDMusTopologySet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Pin,
+        sizeof(PortFilterDMusPinSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterDMusPinSet,
+        0,
+        NULL
+    }
+};
+
+
 //---------------------------------------------------------------
 // IUnknown interface functions
 //
@@ -82,6 +104,14 @@ IPortDMus_fnQueryInterface(
     else if (IsEqualGUIDAligned(refiid, &IID_IPortClsVersion))
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IUnregisterSubdevice))
+    {
+        return NewIUnregisterSubdevice((PUNREGISTERSUBDEVICE*)Output);
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IUnregisterPhysicalConnection))
+    {
+        return NewIUnregisterPhysicalConnection((PUNREGISTERPHYSICALCONNECTION*)Output);
     }
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
@@ -241,8 +271,8 @@ IPortDMus_fnInit(
                                          InterfaceGuids, 
                                          0, 
                                          NULL,
-                                         0, 
-                                         NULL,
+                                         2, 
+                                         PortDMusPropertySet,
                                          0,
                                          0,
                                          0,

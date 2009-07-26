@@ -528,78 +528,14 @@ static PARSED_COMMAND *ParseRem(void)
 	return NULL;
 }
 
-static PARSED_COMMAND *ParseCommandPart(void)
+static DECLSPEC_NOINLINE PARSED_COMMAND *ParseCommandPart(REDIRECTION *RedirList)
 {
 	TCHAR ParsedLine[CMDLINE_LENGTH];
-	TCHAR *Pos;
-	DWORD TailOffset;
 	PARSED_COMMAND *Cmd;
 	PARSED_COMMAND *(*Func)(void);
-	REDIRECTION *RedirList = NULL;
-	int Type;
 
-	while (IsSeparator(CurChar))
-	{
-		if (CurChar == _T('\n'))
-			return NULL;
-		ParseChar();
-	}
-
-	if (!CurChar)
-		return NULL;
-
-	if (CurChar == _T(':'))
-	{
-		/* "Ignore" the rest of the line.
-		 * (Line continuations will still be parsed, though.) */
-		while (ParseToken(0, NULL) != TOK_END)
-			;
-		return NULL;
-	}
-
-	if (CurChar == _T('@'))
-	{
-		ParseChar();
-		Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
-		Cmd->Type = C_QUIET;
-		Cmd->Next = NULL;
-		/* @ acts like a unary operator with low precedence,
-		 * so call the top-level parser */
-		Cmd->Subcommands = ParseCommandOp(C_OP_LOWEST);
-		Cmd->Redirections = NULL;
-		return Cmd;
-	}
-
-	/* Get the head of the command */
-	while (1)
-	{
-		Type = ParseToken(_T('('), STANDARD_SEPS);
-		if (Type == TOK_NORMAL)
-		{
-			Pos = _stpcpy(ParsedLine, CurrentToken) + 1;
-			break;
-		}
-		else if (Type == TOK_REDIRECTION)
-		{
-			if (!ParseRedirection(&RedirList))
-				return NULL;
-		}
-		else if (Type == TOK_BEGIN_BLOCK)
-		{
-			return ParseBlock(RedirList);
-		}
-		else if (Type == TOK_END_BLOCK && !RedirList)
-		{
-			return NULL;
-		}
-		else
-		{
-			ParseError();
-			FreeRedirection(RedirList);
-			return NULL;
-		}
-	}
-	TailOffset = Pos - ParsedLine;
+	TCHAR *Pos = _stpcpy(ParsedLine, CurrentToken) + 1;
+	DWORD TailOffset = Pos - ParsedLine;
 
 	/* Check for special forms */
 	if ((Func = ParseFor, _tcsicmp(ParsedLine, _T("for")) == 0) ||
@@ -624,7 +560,7 @@ static PARSED_COMMAND *ParseCommandPart(void)
 	/* Now get the tail */
 	while (1)
 	{
-		Type = ParseToken(0, NULL);
+		int Type = ParseToken(0, NULL);
 		if (Type == TOK_NORMAL)
 		{
 			if (Pos + _tcslen(CurrentToken) >= &ParsedLine[CMDLINE_LENGTH])
@@ -657,12 +593,68 @@ static PARSED_COMMAND *ParseCommandPart(void)
 	return Cmd;
 }
 
+static PARSED_COMMAND *ParsePrimary(void)
+{
+	REDIRECTION *RedirList = NULL;
+	int Type;
+
+	while (IsSeparator(CurChar))
+	{
+		if (CurChar == _T('\n'))
+			return NULL;
+		ParseChar();
+	}
+
+	if (!CurChar)
+		return NULL;
+
+	if (CurChar == _T(':'))
+	{
+		/* "Ignore" the rest of the line.
+		 * (Line continuations will still be parsed, though.) */
+		while (ParseToken(0, NULL) != TOK_END)
+			;
+		return NULL;
+	}
+
+	if (CurChar == _T('@'))
+	{
+		ParseChar();
+		PARSED_COMMAND *Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
+		Cmd->Type = C_QUIET;
+		Cmd->Next = NULL;
+		/* @ acts like a unary operator with low precedence,
+		 * so call the top-level parser */
+		Cmd->Subcommands = ParseCommandOp(C_OP_LOWEST);
+		Cmd->Redirections = NULL;
+		return Cmd;
+	}
+
+	/* Process leading redirections and get the head of the command */
+	while ((Type = ParseToken(_T('('), STANDARD_SEPS)) == TOK_REDIRECTION)
+	{
+		if (!ParseRedirection(&RedirList))
+			return NULL;
+	}
+
+	if (Type == TOK_NORMAL)
+		return ParseCommandPart(RedirList);
+	else if (Type == TOK_BEGIN_BLOCK)
+		return ParseBlock(RedirList);
+	else if (Type == TOK_END_BLOCK && !RedirList)
+		return NULL;
+
+	ParseError();
+	FreeRedirection(RedirList);
+	return NULL;
+}
+
 static PARSED_COMMAND *ParseCommandOp(int OpType)
 {
 	PARSED_COMMAND *Cmd, *Left, *Right;
 
 	if (OpType == C_OP_HIGHEST)
-		Cmd = ParseCommandPart();
+		Cmd = ParsePrimary();
 	else
 		Cmd = ParseCommandOp(OpType + 1);
 

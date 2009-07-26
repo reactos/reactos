@@ -7,7 +7,6 @@
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />
 	<define name="__NO_CTYPE_INLINES" />
-	<define name="WIN9X_COMPAT_SPINLOCK" />
 	<define name="_IN_KERNEL_" />
 	<if property="_WINKD_" value="1">
 		<define name="_WINKD_" />
@@ -412,26 +411,42 @@
 				<file>page.c</file>
 			</directory>
 		</if>
+		<directory name="ARM3">
+			<if property="ARCH" value="i386">
+				<directory name="i386">
+					<file>init.c</file>
+				</directory>
+			</if>
+			<if property="ARCH" value="arm">
+				<directory name="arm">
+					<file>init.c</file>
+				</directory>
+			</if>
+			<file>contmem.c</file>
+			<file>drvmgmt.c</file>
+			<file>dynamic.c</file>
+			<file>expool.c</file>
+			<file>hypermap.c</file>
+			<file>iosup.c</file>
+			<file>mdlsup.c</file>
+			<file>ncache.c</file>
+			<file>pool.c</file>
+			<file>procsup.c</file>
+			<file>syspte.c</file>
+		</directory>
 		<file>anonmem.c</file>
 		<file>balance.c</file>
-		<file>cont.c</file>
 		<file>dbgpool.c</file>
-		<file>drvlck.c</file>
 		<file>freelist.c</file>
-		<file>hypermap.c</file>
-		<file>iospace.c</file>
-		<file>kmap.c</file>
 		<file>marea.c</file>
-		<file>mdlsup.c</file>
-		<file>mm.c</file>
+		<file>mmfault.c</file>
+		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
-		<file>ncache.c</file>
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pe.c</file>
-		<file>physical.c</file>
 		<file>pool.c</file>
 		<file>ppool.c</file>
 		<file>procsup.c</file>
@@ -439,9 +454,7 @@
 		<file>rmap.c</file>
 		<file>section.c</file>
 		<file>sysldr.c</file>
-		<file>verifier.c</file>
 		<file>virtual.c</file>
-		<file>wset.c</file>
 		<if property="_ELF_" value="1">
 			<file>elf32.c</file>
 			<file>elf64.c</file>

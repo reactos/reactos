@@ -9,6 +9,7 @@
 	<include base="freetype">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
+	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
@@ -47,13 +48,13 @@
 		<file>alphablend.c</file>
 		<file>bitblt.c</file>
 		<file>engbrush.c</file>
+		<file>engevent.c</file>
 		<file>clip.c</file>
 		<file>copybits.c</file>
 		<file>debug.c</file>
 		<file>device.c</file>
 		<file>driverobj.c</file>
 		<file>error.c</file>
-		<file>event.c</file>
 		<file>float.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -66,7 +67,6 @@
 		<file>engmisc.c</file>
 		<file>mouse.c</file>
 		<file>paint.c</file>
-		<file>palette.c</file>
 		<file>perfcnt.c</file>
 		<file>semaphor.c</file>
 		<file>sort.c</file>
@@ -86,9 +86,11 @@
 	<directory name="misc">
 		<file>driver.c</file>
 		<file>err.c</file>
+		<file>file.c</file>
 		<file>math.c</file>
 		<file>rtlstr.c</file>
 		<file>copy.c</file>
+		<file>registry.c</file>
 		<file>usrheap.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -160,7 +162,6 @@
 		<file>bitmaps.c</file>
 		<file>brush.c</file>
 		<file>cliprgn.c</file>
-		<file>color.c</file>
 		<file>coord.c</file>
 		<file>dcattr.c</file>
 		<file>dclife.c</file>
@@ -178,7 +179,7 @@
 		<file>icm.c</file>
 		<file>line.c</file>
 		<file>metafile.c</file>
-		<file>palobj.c</file>
+		<file>palette.c</file>
 		<file>path.c</file>
 		<file>pen.c</file>
 		<file>polyfill.c</file>

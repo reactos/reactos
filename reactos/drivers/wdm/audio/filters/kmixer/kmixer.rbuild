@@ -5,7 +5,6 @@
 	<include base="libsamplerate">.</include>
 	<library>ntoskrnl</library>
 	<library>ks</library>
-	<library>rtl</library>
 	<library>hal</library>
 	<library>libcntpr</library>
 	<library>libsamplerate</library>

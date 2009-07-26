@@ -168,7 +168,7 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 	int ro = 0;
 	int isize;
 
-	double frac, intr;
+	double num2, frac, intr;
 	double p;
 
 	char c, sign, digits[66];
@@ -185,7 +185,12 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' )
 	{
 		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
-		exponent = ie/3.321928;
+		if (*n.__n == 0.0)
+			exponent = 0.0;
+		else
+		{
+			exponent = ie/3.321928;
+		}
 	}
 
 	if ( exp_sign == 'g' || exp_sign == 'G' )
@@ -201,17 +206,27 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 	if ( exp_sign == 'e' ||  exp_sign == 'E' )
 	{
 		frac = modf(exponent,&e);
-		/* FIXME: this exponent over-/underflow scheme doesn't comply with the wanted behaviour 
-		 * needed at all or completely different in original? */
-#if 0
-		if ( frac > 0.5 )
-			e++;
-		else if (  frac < -0.5  )
+		if (num < 0.0)
 			e--;
-#endif
+		if (frac >= 0.5)
+			e++;
+		else if (frac < -0.5)
+			e--;
+
+		num2 = num/pow(10.0L,(long double)e);
+		if (num2 < 1.0 && num2 > -1.0)
+		{
+			e--;
+			num2 = num/pow(10.0L,(long double)e);
+		}
+		else if (num2 < -10.0 && num2 > 10.0)
+		{
+			e++;
+			num2 = num/pow(10.0L,(long double)e);
+		}
 
 		/* size-5 because "e+abc" is going to follow */
-		buf = numberf(buf, end, num/pow(10.0L,(long double)e), 'f', size-5, precision, type);
+		buf = numberf(buf, end, num2, 'f', size-5, precision, type);
 		isize = 4;
 		while(*(buf-1) == ' ')
 		{

@@ -142,7 +142,7 @@ HRESULT create_bool_constr(script_ctx_t *ctx, DispatchEx **ret)
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, BoolConstr_value, PROPF_CONSTR, &bool->dispex, ret);
+    hres = create_builtin_function(ctx, BoolConstr_value, NULL, PROPF_CONSTR, &bool->dispex, ret);
 
     jsdisp_release(&bool->dispex);
     return hres;

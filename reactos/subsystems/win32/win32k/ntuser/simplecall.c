@@ -15,7 +15,7 @@
 
 
 /* registered Logon process */
-PW32PROCESS LogonProcess = NULL;
+PPROCESSINFO LogonProcess = NULL;
 
 BOOL FASTCALL
 co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
@@ -41,12 +41,12 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
          return FALSE;
       }
 
-      LogonProcess = (PW32PROCESS)Process->Win32Process;
+      LogonProcess = (PPROCESSINFO)Process->Win32Process;
    }
    else
    {
       /* Deregister the logon process */
-      if (LogonProcess != (PW32PROCESS)Process->Win32Process)
+      if (LogonProcess != (PPROCESSINFO)Process->Win32Process)
       {
          ObDereferenceObject(Process);
          return FALSE;
@@ -210,41 +210,14 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_WINDOWFROMDC:
          RETURN( (DWORD_PTR)IntWindowFromDC((HDC)Param));
 
-      case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD_PTR Result;
-
-            Window = UserGetWindowObject((HWND)Param);
-            if(!Window)
-            {
-               RETURN( FALSE);
-            }
-
-            Result = Window->Wnd->ContextHelpId;
-
-            RETURN( Result);
-         }
-
       case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
          {
-            PWINSTATION_OBJECT WinSta;
-            NTSTATUS Status;
             DWORD_PTR Result;
 
-            Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
-                                                    KernelMode,
-                                                    0,
-                                                    &WinSta);
-            if (!NT_SUCCESS(Status))
-               RETURN( (DWORD_PTR)FALSE);
-
-            /* FIXME
-            Result = (DWORD_PTR)IntSwapMouseButton(WinStaObject, (BOOL)Param); */
-            Result = 0;
-
-            ObDereferenceObject(WinSta);
-            RETURN( Result);
+            Result = gspv.bMouseBtnSwap;
+            gspv.bMouseBtnSwap = Param ? TRUE : FALSE;
+            gpsi->aiSysMet[SM_SWAPBUTTON] = gspv.bMouseBtnSwap;
+            RETURN(Result);
          }
 
       case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
@@ -263,7 +236,7 @@ NtUserCallOneParam(
                RETURN( FALSE);
             }
 
-            Result = (DWORD_PTR)Window->Wnd->Instance;
+            Result = (DWORD_PTR)Window->Wnd->hModule;
             RETURN( Result);
          }
 
@@ -341,7 +314,7 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
          {
             BOOL Enable;
-            PW32PROCESS Process = PsGetCurrentProcessWin32Process();
+            PPROCESSINFO Process = PsGetCurrentProcessWin32Process();
 
             if(Process != NULL)
             {
@@ -371,25 +344,6 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
          RETURN( (DWORD_PTR)UserGetKeyboardLayout(Param));
 
-      case ONEPARAM_ROUTINE_REGISTERUSERMODULE:
-      {
-          PW32THREADINFO ti;
-
-          ti = GetW32ThreadInfo();
-          if (ti == NULL)
-          {
-              DPRINT1("Cannot register user32 module instance!\n");
-              SetLastWin32Error(ERROR_INVALID_PARAMETER);
-              RETURN(FALSE);
-          }
-
-          if (InterlockedCompareExchangePointer(&ti->ppi->hModUser,
-                                                (HINSTANCE)Param,
-                                                NULL) == NULL)
-          {
-              RETURN(TRUE);
-          }
-      }
       case ONEPARAM_ROUTINE_RELEASEDC:
          RETURN (UserReleaseDC(NULL, (HDC) Param, FALSE));
 
@@ -430,7 +384,7 @@ NtUserCallOneParam(
           }
           _SEH2_END;
           RETURN(Ret);
-      }      
+      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
@@ -567,7 +521,10 @@ NtUserCallTwoParam(
             RETURN( (DWORD_PTR)FALSE);
          }
 
-         Window->Wnd->ContextHelpId = Param2;
+         if ( Param2 )
+            IntSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param2);
+         else
+            IntRemoveProp(Window, gpsi->atomContextHelpIdProp);
 
          RETURN( (DWORD_PTR)TRUE);
 
@@ -618,55 +575,6 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
          RETURN( (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
-
-      case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
-      case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
-      case TWOPARAM_ROUTINE_GETSYSCOLORS:
-         {
-            DWORD_PTR Ret = 0;
-            union
-            {
-               PVOID Pointer;
-               HBRUSH *Brushes;
-               HPEN *Pens;
-               COLORREF *Colors;
-            } Buffer;
-
-            /* FIXME - we should make use of SEH here... */
-
-            Buffer.Pointer = ExAllocatePool(PagedPool, Param2 * sizeof(HANDLE));
-            if(Buffer.Pointer != NULL)
-            {
-               switch(Routine)
-               {
-                  case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
-                     Ret = (DWORD_PTR)IntGetSysColorBrushes(Buffer.Brushes, (UINT)Param2);
-                     break;
-                  case TWOPARAM_ROUTINE_GETSYSCOLORPENS:
-                     Ret = (DWORD_PTR)IntGetSysColorPens(Buffer.Pens, (UINT)Param2);
-                     break;
-                  case TWOPARAM_ROUTINE_GETSYSCOLORS:
-                     Ret = (DWORD_PTR)IntGetSysColors(Buffer.Colors, (UINT)Param2);
-                     break;
-                  default:
-                     Ret = 0;
-                     break;
-               }
-
-               if(Ret > 0)
-               {
-                  Status = MmCopyToCaller((PVOID)Param1, Buffer.Pointer, Param2 * sizeof(HANDLE));
-                  if(!NT_SUCCESS(Status))
-                  {
-                     SetLastNtError(Status);
-                     Ret = 0;
-                  }
-               }
-
-               ExFreePool(Buffer.Pointer);
-            }
-            RETURN( Ret);
-         }
 
       case TWOPARAM_ROUTINE_ROS_REGSYSCLASSES:
       {
@@ -719,7 +627,7 @@ NtUserCallHwndLock(
 {
    BOOL Ret = 0;
    PWINDOW_OBJECT Window;
-   PWINDOW Wnd;
+   PWND Wnd;
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(BOOLEAN);
 
@@ -746,7 +654,7 @@ NtUserCallHwndLock(
             PMENU_OBJECT Menu;
             DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
             Ret = FALSE;
-            if (!((Wnd->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
+            if (!((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
                break;
 
             if(!(Menu = UserGetMenuObject((HMENU)(DWORD_PTR) Wnd->IDMenu)))
@@ -771,7 +679,7 @@ NtUserCallHwndLock(
       case HWNDLOCK_ROUTINE_REDRAWFRAME:
          co_WinPosSetWindowPos( Window,
                                 HWND_DESKTOP,
-                                0,0,0,0, 
+                                0,0,0,0,
                                 SWP_NOSIZE|
                                 SWP_NOMOVE|
                                 SWP_NOZORDER|
@@ -783,7 +691,7 @@ NtUserCallHwndLock(
       case HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK:
          co_WinPosSetWindowPos( Window,
                                 HWND_DESKTOP,
-                                0,0,0,0, 
+                                0,0,0,0,
                                 SWP_NOSIZE|
                                 SWP_NOMOVE|
                                 SWP_NOZORDER|
@@ -846,6 +754,27 @@ NtUserCallHwnd(
 {
    switch (Routine)
    {
+      case HWND_ROUTINE_GETWNDCONTEXTHLPID:
+      {
+         PWINDOW_OBJECT Window;
+         PPROPERTY HelpId;
+         USER_REFERENCE_ENTRY Ref;
+
+         UserEnterExclusive();
+
+         if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+         {
+            UserLeave();
+            return 0;
+         }
+         UserRefObjectCo(Window, &Ref);
+
+         HelpId = IntGetProp(Window, gpsi->atomContextHelpIdProp);
+         
+         UserDerefObjectCo(Window);
+         UserLeave();
+         return (DWORD)HelpId;
+      }
       case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
          if (IntIsWindow(hWnd))
             return IntRegisterShellHookWindow(hWnd);

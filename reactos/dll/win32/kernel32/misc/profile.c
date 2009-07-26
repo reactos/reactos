@@ -488,6 +488,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
             {
                 len = (int)(szLineEnd - szValueStart);
                 key->value = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
+                if (!key->value) break;
                 memcpy(key->value, szValueStart, len * sizeof(WCHAR));
                 key->value[len] = '\0';
             }
@@ -1155,6 +1156,7 @@ static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
            int len = (int)(p - def_val) + 1;
 
            defval_tmp = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+           if (!defval_tmp) return 0;
 		   memcpy(defval_tmp, def_val, len * sizeof(WCHAR));
            defval_tmp[len] = '\0';
            def_val = defval_tmp;
@@ -1384,6 +1386,12 @@ DWORD WINAPI GetPrivateProfileSectionA( LPCSTR section, LPSTR buffer,
     }
 
     bufferW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    if (!bufferW)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
     RtlCreateUnicodeStringFromAsciiz(&sectionW, section);
     if (filename) RtlCreateUnicodeStringFromAsciiz(&filenameW, filename);
     else filenameW.Buffer = NULL;

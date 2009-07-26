@@ -222,6 +222,14 @@ IPortWaveRT_fnQueryInterface(
     {
         return NewIDrmPort((PDRMPORT2*)Output);
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IUnregisterSubdevice))
+    {
+        return NewIUnregisterSubdevice((PUNREGISTERSUBDEVICE*)Output);
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IUnregisterPhysicalConnection))
+    {
+        return NewIUnregisterPhysicalConnection((PUNREGISTERPHYSICALCONNECTION*)Output);
+    }
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {

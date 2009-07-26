@@ -138,7 +138,7 @@ struct cred_dialog_params
     BOOL fBalloonTipActive;
 };
 
-static void CredDialogFillUsernameCombo(HWND hwndUsername, struct cred_dialog_params *params)
+static void CredDialogFillUsernameCombo(HWND hwndUsername, const struct cred_dialog_params *params)
 {
     DWORD count;
     DWORD i;

@@ -4,7 +4,10 @@ IDM_TRAYWND MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Blocca la barra dei task", ID_LOCKTASKBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Task Manager", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Blocca la Barra delle applicazioni", ID_LOCKTASKBAR
         MENUITEM "&Proprietà", ID_SHELL_CMD_PROPERTIES
     END
 END
@@ -56,4 +59,70 @@ BEGIN
     IDS_PROPERTIES        "&Proprietà"
     IDS_OPEN_ALL_USERS    "&Apri tutti gli utenti"
     IDS_EXPLORE_ALL_USERS "&Esplora tutti gli utenti"
+END
+
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Barra delle applicazioni"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Aspetto della Barra delle applicazioni", IDC_STATIC, 6,6,240,121, WS_DISABLED
+    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21, WS_DISABLED
+    AUTOCHECKBOX    "&Bloccare la Barra delle applicazioni", IDC_TASKBARPROP_LOCK, 13,45,200,10, WS_DISABLED
+    AUTOCHECKBOX    "N&ascondere automaticamente", IDC_TASKBARPROP_HIDE, 13,58,200,10, WS_DISABLED
+    AUTOCHECKBOX    "Mantenere la Barra delle applicazioni in &primo piano", IDC_TASKBARPROP_ONTOP, 13,71,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Raggruppare pulsanti simili", IDC_TASKBARPROP_GROUP, 13,84,200,10, WS_DISABLED
+    AUTOCHECKBOX    "Mostrare Avvio &veloce", IDC_TASKBARPROP_SHOWQL, 13,97,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Mostrare anteprima delle finestre (miniature)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10, WS_DISABLED
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Menù avvio"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    AUTORADIOBUTTON "&Menù avvio", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
+    LTEXT           "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_STATIC, 20,17,150,24, WS_DISABLED
+    PUSHBUTTON      "&Personalizzare...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
+    AUTORADIOBUTTON "Menù avvio &classico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
+    LTEXT           "This menu style gives you the classic look and functionality",-1,20,57,150,24, WS_DISABLED
+    PUSHBUTTON      "&Customize...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
+    GROUPBOX        "Privacy",IDC_STATIC, 7,100,238,42
+    AUTOCHECKBOX    "Store and display a list of recently opened &files", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
+    AUTOCHECKBOX    "Store and display a list of recently opened &programs",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+END
+
+IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Area di notifica"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
+    GROUPBOX        "Icone", IDC_STATIC, 6,33,240,58, WS_DISABLED
+    LTEXT           "Puoi tenere libera l'area di notifica nascondendo icone non usate recentemente.", IDC_STATIC, 13,48,223,16, WS_DISABLED
+    AUTOCHECKBOX    "&Nascondere icone inattive", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
+    PUSHBUTTON      "&Personalizzare...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
+    GROUPBOX        "Icone di sistema", IDC_STATIC, 6,97,240,84, WS_DISABLED
+    LTEXT           "Scegli che icone di sistema mostrare sempre.", IDC_STATIC, 13,112,223,16, WS_DISABLED
+    AUTOCHECKBOX    "Orolog&io", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Volume", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Rete", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Alimentazione", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
+
+END
+
+IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Barre degli strumenti"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Scegliere che barre degli strumenti aggiungere alla Barra delle applicazioni.", IDC_STATIC, 7,7,223,12, WS_DISABLED
+    CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Proprietà della Barra delle applicazioni e del Menú di avvio"
 END

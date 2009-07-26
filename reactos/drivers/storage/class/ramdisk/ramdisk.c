@@ -1012,7 +1012,8 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
         IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
         Irp->IoStatus.Status = Status;
         Irp->IoStatus.Information = 0;
-        return IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        return;
     }
     
     //
@@ -1020,7 +1021,8 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
     //
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
-    return IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return;
 }
 
 NTSTATUS

@@ -1,8 +1,10 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Generalitãþi"
+CAPTION "GeneralitÄƒÈ›i"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
@@ -17,8 +19,8 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL     "Vedeþi <A HREF=""http://www.reactos.org/"">pagina de web ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 8
-    PUSHBUTTON  "&Licenþã...", IDC_LICENCE, 170, 199, 78, 13
+    CONTROL     "VedeÈ›i <A HREF=""http://www.reactos.org/"">pagina de web ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 140, 8
+    PUSHBUTTON  "&LicenÈ›Äƒ...", IDC_LICENCE, 170, 199, 78, 13
 END
 
 
@@ -29,17 +31,17 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX    "Gestionarul de dispozitive", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT       "Gestionarul de dispozitive afiºeazã toate dispozitivele instalate. Folosiþi-l pentru a schimba proprietãþile oricãrui dispozitiv.", IDC_STATIC, 42, 18, 204, 24
+    LTEXT       "Gestionarul de dispozitive afiÈ™eazÄƒ toate dispozitivele instalate. FolosiÈ›i-l pentru a schimba proprietÄƒÈ›ile oricÄƒrui dispozitiv.", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON  "&Gestionar dispozitive", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
 
     GROUPBOX    "Expert hardware", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT       "Expertul hardware vã permite sã instalaþi, dezinstalaþi, reparaþi sau deconectaþi dispozitivele dvs.", IDC_STATIC, 42, 90, 204, 24
+    LTEXT       "Expertul hardware vÄƒ permite sÄƒ instalaÈ›i, dezinstalaÈ›i, reparaÈ›i sau deconectaÈ›i dispozitivele dvs.", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON  "&Expert hardware", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
 
     GROUPBOX    "Profile hardware", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT       "Profilele hardware vã permit sã stabiliþi ºi sã stocaþi setãrile de hardware.", IDC_STATIC, 42, 160, 204, 24
+    LTEXT       "Profilele hardware vÄƒ permit sÄƒ stabiliÈ›i È™i sÄƒ stocaÈ›i setÄƒrile de hardware.", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON  "&Profile hardware", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
@@ -49,18 +51,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Avansat"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Privilegii de administrator sunt necesare pentru majoriteatea setãrilor de aici.", IDC_STATIC, 12, 5, 236, 8
-    GROUPBOX    "Performanþã", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Opþiunile de performanþã afecteazã cum folosesc aplicaþiile memoria ºi astfel viteza computerului.", IDC_STATIC, 16, 29, 228, 17
-    PUSHBUTTON  "Seãri", IDC_PERFOR, 194, 48, 50, 15
+    LTEXT       "Privilegii de administrator sunt necesare pentru majoriteatea setÄƒrilor de aici.", IDC_STATIC, 12, 5, 236, 8
+    GROUPBOX    "PerformanÈ›Äƒ", IDC_STATIC, 6, 18, 244, 50
+    LTEXT       "OpÈ›iunile de performanÈ›Äƒ afecteazÄƒ cum folosesc aplicaÈ›iile memoria È™i astfel viteza computerului.", IDC_STATIC, 16, 29, 228, 17
+    PUSHBUTTON  "SeÄƒri", IDC_PERFOR, 194, 48, 50, 15
 
     GROUPBOX    "Profile utilizator", IDC_STATIC, 6,75,244,48
-    LTEXT       "Setãri legate de contul dumneavoastrã", IDC_STATIC, 16, 88, 228, 20
-    PUSHBUTTON  "Setãri", IDC_USERPROFILE, 194, 103, 50, 15
+    LTEXT       "SetÄƒri legate de contul dumneavoastrÄƒ", IDC_STATIC, 16, 88, 228, 20
+    PUSHBUTTON  "SetÄƒri", IDC_USERPROFILE, 194, 103, 50, 15
 
-    GROUPBOX    "Pornire ºi Recuperare", IDC_STATIC, 6, 131, 244, 52
-    LTEXT       "Aceste setãri regleazã modul cum porneºte ReactOS dar ºi ce sã facã ReactOS când întâlneºte o eroare gravã.", IDC_STATIC, 16, 144, 228, 19
-    PUSHBUTTON  "Setãri", IDC_STAREC, 194, 162, 50, 15
+    GROUPBOX    "Pornire È™i Recuperare", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Aceste setÄƒri regleazÄƒ modul cum porneÈ™te ReactOS dar È™i ce sÄƒ facÄƒ ReactOS cÃ¢nd Ã®ntÃ¢lneÈ™te o eroare gravÄƒ.", IDC_STATIC, 16, 144, 228, 19
+    PUSHBUTTON  "SetÄƒri", IDC_STAREC, 194, 162, 50, 15
 
     PUSHBUTTON  "Variabile de mediu", IDC_ENVVAR, 84, 192, 80, 15
     PUSHBUTTON  "Raportarea erorilor", IDC_ERRORREPORT, 170, 192, 80, 15
@@ -73,20 +75,20 @@ CAPTION "Profile de hardware"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT       "Puteþi stabili profile de hardware pentru diverse configurãri de hardware. La pornire puteþi alege ce profil vreþi sã folosiþi.", IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "PuteÈ›i stabili profile de hardware pentru diverse configurÄƒri de hardware. La pornire puteÈ›i alege ce profil vreÈ›i sÄƒ folosiÈ›i.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "Profile disponibile:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
     PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
-    PUSHBUTTON  "&Proprietãþi", IDC_HRDPROFPROP, 8, 106, 50, 14
+    PUSHBUTTON  "&ProprietÄƒÈ›i", IDC_HRDPROFPROP, 8, 106, 50, 14
     PUSHBUTTON  "&Copiere", IDC_HRDPROFCOPY, 63, 106, 50, 14
     PUSHBUTTON  "&Redenumire", IDC_HRDPROFRENAME, 118, 106, 50, 14
     PUSHBUTTON  "&Eliminare", IDC_HRDPROFDEL, 173, 106, 50, 14
 
-    GROUPBOX    "Selecþie profile de hardware", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "Când ReactOS porneºte:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "Se &aºteaptã pânã când aleg eu profilul", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
-    AUTORADIOBUTTON "&Se alege primul profil dacã eu nu selectez niciunul", IDC_HRDPROFSELECT, 14, 173, 190, 8
+    GROUPBOX    "SelecÈ›ie profile de hardware", IDC_STATIC, 7, 130, 240, 75
+    LTEXT       "CÃ¢nd ReactOS porneÈ™te:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "Se &aÈ™teaptÄƒ pÃ¢nÄƒ cÃ¢nd aleg eu profilul", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Se alege primul profil dacÄƒ eu nu selectez niciunul", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT       "secunde", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -117,16 +119,16 @@ CAPTION "Profile utilizator"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT       "Profilele conþin setãri personale legate de interfaþã dar ºi alte setãri legate de contul dvs. Poate fi creat câte un profil pentru fiecare computer pe care îl folosiþi sau puteþi avea un profil cãlãtor, universal.",
+    LTEXT       "Profilele conÈ›in setÄƒri personale legate de interfaÈ›Äƒ dar È™i alte setÄƒri legate de contul dvs. Poate fi creat cÃ¢te un profil pentru fiecare computer pe care Ã®l folosiÈ›i sau puteÈ›i avea un profil cÄƒlÄƒtor, universal.",
                     IDC_STATIC, 40, 11, 211, 35
     LTEXT       "Profile stocate pe acest computer:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Schimbare tip", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
     PUSHBUTTON  "Eliminare", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
-    PUSHBUTTON  "Copiere în", IDC_USERPROFILE_COPY, 200, 156, 50, 13
+    PUSHBUTTON  "Copiere Ã®n", IDC_USERPROFILE_COPY, 200, 156, 50, 13
 
-    CONTROL     "Pentru a crea conturi de utilizator noi, vedeþi <A>Conturi de utilizator</A> în Panoul de control.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
+    CONTROL     "Pentru a crea conturi de utilizator noi, vedeÈ›i <A>Conturi de utilizator</A> Ã®n Panoul de control.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
 
     DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
     PUSHBUTTON  "Anulare", IDCANCEL, 196, 200, 54, 13
@@ -135,33 +137,33 @@ END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Pornire ºi Recuperare"
+CAPTION "Pornire È™i Recuperare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX    "Pornire sistem", IDC_STATIC, 7, 12, 238, 95
     LTEXT       "Sistem de operare implicit:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    AUTOCHECKBOX "&Cât timp se afiºeazã lista cu sistemele de operare:", IDC_STRECLIST, 14, 56, 160, 8
+    AUTOCHECKBOX "&CÃ¢t timp se afiÈ™eazÄƒ lista cu sistemele de operare:", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sec.", IDC_STATIC, 223, 56, 18, 8
-    AUTOCHECKBOX "Cât timp se afiºeazã &opþiunile de recuperare când sunt necesare:", IDC_STRRECREC, 14, 70, 170, 8
+    AUTOCHECKBOX "CÃ¢t timp se afiÈ™eazÄƒ &opÈ›iunile de recuperare cÃ¢nd sunt necesare:", IDC_STRRECREC, 14, 70, 170, 8
     EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sec.", IDC_STATIC, 223, 70, 18, 8
-    LTEXT       "Pentru a edita opþiunile de pornire manual, apãsaþi Editare.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT       "Pentru a edita opÈ›iunile de pornire manual, apÄƒsaÈ›i Editare.", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON  "&Editare", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Erori grave", IDC_STATIC, 7, 111, 238, 140
-    AUTOCHECKBOX "&Consemnare eveniment în jurnalul de sistem", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
-    AUTOCHECKBOX "T&rimitere alertã administrativã", IDC_STRRECSENDALERT, 14, 138, 148, 10
-    AUTOCHECKBOX "Repornire &automatã", IDC_STRRECRESTART, 14, 152, 145, 10
+    AUTOCHECKBOX "&Consemnare eveniment Ã®n jurnalul de sistem", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    AUTOCHECKBOX "T&rimitere alertÄƒ administrativÄƒ", IDC_STRRECSENDALERT, 14, 138, 148, 10
+    AUTOCHECKBOX "Repornire &automatÄƒ", IDC_STRRECRESTART, 14, 152, 145, 10
 
-    GROUPBOX    "Scriere informaþii depanare", IDC_STATIC, 12, 167, 227, 76
+    GROUPBOX    "Scriere informaÈ›ii depanare", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
-    LTEXT       "&Fiºier:", IDC_STATIC, 17, 202, 150, 8
+    LTEXT       "&FiÈ™ier:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    AUTOCHECKBOX "&Suprascriere fiºier", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "&Suprascriere fiÈ™ier", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Anulare", IDCANCEL, 195, 259, 50, 14
@@ -170,27 +172,27 @@ END
 
 IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Memorie virtualã"
+CAPTION "Memorie virtualÄƒ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Partiþie  [Etichetã]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT       "Mãrime fiº. paginare (MO)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT       "PartiÈ›ie  [EtichetÄƒ]", IDC_STATIC, 12, 5, 96, 9
+    LTEXT       "MÄƒrime fiÈ™. paginare (MO)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX    "Mãrime fiºier paginare pt. partiþia selectatã", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "Partiþie:", IDC_STATIC, 20, 80, 20, 8
+    GROUPBOX    "MÄƒrime fiÈ™ier paginare pt. partiÈ›ia selectatÄƒ", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT       "PartiÈ›ie:", IDC_STATIC, 20, 80, 20, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT       "Spaþiu disponibil:", IDC_STATIC, 20, 92, 56, 9
+    LTEXT       "SpaÈ›iu disponibil:", IDC_STATIC, 20, 92, 56, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "&Mãrime iniþialã (MO):", -1, 22, 118, 75, 9
-    LTEXT       "Mã&rime maximã (MO):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Mãrime particularizatã", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
-    AUTORADIOBUTTON "Mãrime gestionatã de sistem", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Fãrã fiºier paginare", IDC_NOPAGEFILE, 20, 158, 78,9
+    LTEXT       "&MÄƒrime iniÈ›ialÄƒ (MO):", -1, 22, 118, 75, 9
+    LTEXT       "MÄƒ&rime maximÄƒ (MO):", -1, 22, 131, 75, 9
+    AUTORADIOBUTTON "&MÄƒrime particularizatÄƒ", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    AUTORADIOBUTTON "MÄƒrime gestionatÄƒ de sistem", IDC_SYSMANSIZE, 20, 145, 88, 9
+    AUTORADIOBUTTON "&FÄƒrÄƒ fiÈ™ier paginare", IDC_NOPAGEFILE, 20, 158, 78,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Setare", IDC_SET, 158, 155, 50, 13
 
-    GROUPBOX    "Fiºier paginare total", IDC_TOTALGROUP, 10, 177, 204, 46
+    GROUPBOX    "FiÈ™ier paginare total", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Minim permis:", IDC_STATIC, 18, 188, 58, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT       "Recomandat:", IDC_STATIC, 18, 199, 52, 9
@@ -215,7 +217,7 @@ BEGIN
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "&Nou...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
     PUSHBUTTON  "&Editare...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
-    PUSHBUTTON  "&ªtergere", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
+    PUSHBUTTON  "&Åžtergere", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
     GROUPBOX    "Variabile de sistem", IDC_STATIC, 7, 116, 238, 100
 
     CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
@@ -223,7 +225,7 @@ BEGIN
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
     PUSHBUTTON  "No&u...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
     PUSHBUTTON  "Ed&itare...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
-    PUSHBUTTON  "ªte&rgere", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
+    PUSHBUTTON  "Åžte&rgere", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
     DEFPUSHBUTTON  "OK", IDOK, 141, 224, 50, 14, WS_GROUP
     PUSHBUTTON  "Anulare", IDCANCEL, 195, 224, 50, 14
 END
@@ -234,9 +236,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Edit Variable"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT       "Nume &variabilã:", IDC_STATIC, 7, 14, 50, 8
+    LTEXT       "Nume &variabilÄƒ:", IDC_STATIC, 7, 14, 50, 8
     EDITTEXT    IDC_VARIABLE_NAME, 75, 12, 145, 12, ES_AUTOHSCROLL
-    LTEXT       "Valoare &variabilã:", IDC_STATIC, 7, 32, 50, 8
+    LTEXT       "Valoare &variabilÄƒ:", IDC_STATIC, 7, 32, 50, 8
     EDITTEXT    IDC_VARIABLE_VALUE, 75, 30, 145, 12, ES_AUTOHSCROLL
     DEFPUSHBUTTON  "OK", IDOK, 116, 50, 50, 14
     PUSHBUTTON  "Anulare", IDCANCEL, 170, 50, 50, 14
@@ -244,7 +246,7 @@ END
 
 
 IDD_LICENCE DIALOGEX 6, 5, 267, 159
-CAPTION "Licenþã"
+CAPTION "LicenÈ›Äƒ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 STYLE DS_SHELLFONT | WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
@@ -256,20 +258,22 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Sistem"
-    IDS_CPLSYSTEMDESCRIPTION "Afiºeazã informaþii despre sistem ºi schimbã anumite setãri de sistem sau hardware."
+    IDS_CPLSYSTEMDESCRIPTION "AfiÈ™eazÄƒ informaÈ›ii despre sistem È™i schimbÄƒ anumite setÄƒri de sistem sau hardware."
     IDS_MEGABYTE "MO de RAM"
     IDS_GIGABYTE "GO de RAM"
     IDS_TERABYTE "TO de RAM"
     IDS_PETABYTE "PO de RAM"
-    IDS_VARIABLE "Variabilã"
+    IDS_VARIABLE "VariabilÄƒ"
     IDS_VALUE    "Valoare"
     IDS_NO_DUMP "(nimic)"
     IDS_MINI_DUMP "Minidump(64KO)"
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Dump complet"
     IDS_USERPROFILE_NAME "Nume"
-    IDS_USERPROFILE_SIZE "Mãrime"
+    IDS_USERPROFILE_SIZE "MÄƒrime"
     IDS_USERPROFILE_TYPE "Tip"
     IDS_USERPROFILE_STATUS "Stare"
     IDS_USERPROFILE_MODIFIED "Modificat"
 END
+
+#pragma code_page(default)

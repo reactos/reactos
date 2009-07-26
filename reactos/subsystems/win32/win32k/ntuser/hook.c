@@ -104,7 +104,9 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         return NULL;
     }
 
-    Hook->Self = Handle;
+//    Hook->head.pti =?
+//    Hook->head.rpdesk
+    Hook->head.h = Handle;
     Hook->Thread = Thread;
     Hook->HookId = HookId;
 
@@ -218,7 +220,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
     }
 
     /* Close handle */
-    UserDeleteObject(Hook->Self, otHook);
+    UserDeleteObject(Hook->head.h, otHook);
 }
 
 /* remove a hook, freeing it if the chain is not in use */
@@ -529,7 +531,7 @@ IntCallDebugHook(PHOOK Hook,
 
                 case HCBT_CREATEWND: /* Handle Ansi? */
                     Size = sizeof(CBT_CREATEWND);
-                    /* What shall we do? Size += sizeof(CREATESTRUCTEX); */
+                    /* What shall we do? Size += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS); same as CREATESTRUCTEX */
                     break;
 
                 default:
@@ -785,19 +787,78 @@ UserCallNextHookEx(PHOOK Hook,
         }
 
         case WH_CBT:
-            DPRINT1("HOOK WH_CBT!\n");
+            DPRINT("HOOK WH_CBT!\n");
             switch (Code)
             {
-                case HCBT_CREATEWND: /* Use Ansi. */
-                    DPRINT1("HOOK HCBT_CREATEWND\n");
-                    /* lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam); */
+                case HCBT_CREATEWND:
+                {
+                    LPCBT_CREATEWNDW pcbtcww = (LPCBT_CREATEWNDW)lParam;
+
+                    DPRINT("HOOK HCBT_CREATEWND\n");
+                    _SEH2_TRY
+                    {
+                        if (Ansi)
+                        {
+                            ProbeForRead( pcbtcww,
+                                          sizeof(CBT_CREATEWNDA),
+                                          1);
+                            ProbeForWrite(pcbtcww->lpcs,
+                                          sizeof(CREATESTRUCTA),
+                                          1);
+                            ProbeForRead( pcbtcww->lpcs->lpszName,
+                                          sizeof(CHAR),
+                                          1);
+
+                            if (!IS_ATOM(pcbtcww->lpcs->lpszClass))
+                            {
+                               ProbeForRead( pcbtcww->lpcs->lpszClass,
+                                             sizeof(CHAR),
+                                             1);
+                            }
+                        }
+                        else
+                        {
+                            ProbeForRead( pcbtcww,
+                                          sizeof(CBT_CREATEWNDW),
+                                          1);
+                            ProbeForWrite(pcbtcww->lpcs,
+                                          sizeof(CREATESTRUCTW),
+                                          1);
+                            ProbeForRead( pcbtcww->lpcs->lpszName,
+                                          sizeof(WCHAR),
+                                          1);
+
+                            if (!IS_ATOM(pcbtcww->lpcs->lpszClass))
+                            {
+                               ProbeForRead( pcbtcww->lpcs->lpszClass,
+                                             sizeof(WCHAR),
+                                             1);
+                            }
+                        }
+                    }
+                    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                    {
+                        BadChk = TRUE;
+                    }
+                    _SEH2_END;
+
+                    if (BadChk)
+                    {
+                        DPRINT1("HOOK HCBT_CREATEWND write ERROR!\n");
+                    }
+                    /* The next call handles the structures. */
+                    if (!BadChk && Hook->Proc)
+                    {
+                       lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
+                    }
                     break;
+                }
 
                 case HCBT_MOVESIZE:
                 {
                     RECTL rt;
 
-                    DPRINT1("HOOK HCBT_MOVESIZE\n");
+                    DPRINT("HOOK HCBT_MOVESIZE\n");
 
                     if (lParam)
                     {
@@ -834,7 +895,7 @@ UserCallNextHookEx(PHOOK Hook,
                 {
                     CBTACTIVATESTRUCT CbAs;
 
-                    DPRINT1("HOOK HCBT_ACTIVATE\n");
+                    DPRINT("HOOK HCBT_ACTIVATE\n");
                     if (lParam)
                     {
                         _SEH2_TRY
@@ -868,7 +929,7 @@ UserCallNextHookEx(PHOOK Hook,
 
                 /* The rest just use default. */
                 default:
-                    DPRINT1("HOOK HCBT_ %d\n",Code);
+                    DPRINT("HOOK HCBT_ %d\n",Code);
                     lResult = co_HOOK_CallHookNext(Hook, Code, wParam, lParam);
                     break;
             }
@@ -1223,7 +1284,7 @@ NtUserSetWindowsHookEx(HINSTANCE Mod,
         Hook->Proc = HookProc;
 
     Hook->Ansi = Ansi;
-    Handle = Hook->Self;
+    Handle = Hook->head.h;
 
     /* Clear the client threads next hook. */
     ClientInfo->phkCurrent = 0;
@@ -1274,7 +1335,7 @@ NtUserUnhookWindowsHookEx(HHOOK Hook)
         RETURN( FALSE);
     }
 
-    ASSERT(Hook == HookObj->Self);
+    ASSERT(Hook == HookObj->head.h);
 
     IntRemoveHook(HookObj, WinStaObj, FALSE);
 

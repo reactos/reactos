@@ -1,7 +1,11 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Economizor Siglã"
-    IDS_TEXT        "Acest economizor nu are opþiuni."
+    IDS_DESCRIPTION "Ecran de veghe SiglÄƒ"
+    IDS_TEXT        "Acest ecran de veghe nu are opÈ›iuni."
 END
+
+#pragma code_page(default)

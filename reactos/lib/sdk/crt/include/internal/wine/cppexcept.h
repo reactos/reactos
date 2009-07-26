@@ -52,6 +52,7 @@
 #define EH_STACK_INVALID    0x08
 #define EH_NESTED_CALL      0x10
 
+#ifndef _M_ARM
 static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
 #if defined(__i386__)
@@ -77,6 +78,7 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
 	return frame->Next;
 #endif
 }
+#endif
 
 #define __TRY _SEH2_TRY
 #define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))

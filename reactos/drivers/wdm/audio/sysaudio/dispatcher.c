@@ -181,6 +181,25 @@ static KSDISPATCH_TABLE DispatchTable =
 
 NTSTATUS
 NTAPI
+DispatchCreateSysAudioPin(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    NTSTATUS Status;
+
+    DPRINT("DispatchCreateSysAudio entered\n");
+    /* create the virtual pin */
+    Status = CreateSysAudioPin(Irp);
+
+    /* store result */
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 DispatchCreateSysAudio(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -188,30 +207,10 @@ DispatchCreateSysAudio(
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
     PKSOBJECT_CREATE_ITEM CreateItem;
-    PIO_STACK_LOCATION IoStatus;
-    LPWSTR Buffer;
-    PSYSAUDIODEVEXT DeviceExtension;
+
     static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
-    IoStatus = IoGetCurrentIrpStackLocation(Irp);
-    Buffer = IoStatus->FileObject->FileName.Buffer;
-
     DPRINT("DispatchCreateSysAudio entered\n");
-
-    if (Buffer)
-    {
-        /* is the request for a new pin */
-        if (!wcsncmp(KS_NAME_PIN, Buffer, wcslen(KS_NAME_PIN)))
-        {
-            Status = CreateDispatcher(Irp);
-            DPRINT("Virtual pin Status %x FileObject %p\n", Status, IoStatus->FileObject);
-
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
-        }
-    }
 
     /* allocate create item */
     CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
@@ -223,14 +222,12 @@ DispatchCreateSysAudio(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* get device extension */
-    DeviceExtension = (PSYSAUDIODEVEXT) DeviceObject->DeviceExtension;
-
     /* zero create struct */
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
 
-    /* store create context */
-    RtlInitUnicodeString(&CreateItem->ObjectClass, L"SysAudio");
+    /* setup create context */
+    CreateItem->Create = DispatchCreateSysAudioPin;
+    RtlInitUnicodeString(&CreateItem->ObjectClass, KS_NAME_PIN);
 
     /* allocate object header */
     Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
@@ -259,6 +256,7 @@ SysAudioAllocateDeviceHeader(
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
     CreateItem->Create = DispatchCreateSysAudio;
     RtlInitUnicodeString(&CreateItem->ObjectClass, L"SysAudio");
+    CreateItem->Flags = KSCREATE_ITEM_WILDCARD;
 
     Status = KsAllocateDeviceHeader(&DeviceExtension->KsDeviceHeader,
                                     1,
@@ -271,7 +269,6 @@ SysAudioOpenKMixer(
     IN SYSAUDIODEVEXT *DeviceExtension)
 {
     NTSTATUS Status;
-    
     UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\kmixer");
     UNICODE_STRING DevicePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\kmixer");
 

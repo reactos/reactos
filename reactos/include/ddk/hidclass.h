@@ -98,11 +98,11 @@ enum DeviceObjectState {
   DeviceObjectRemoved
 };
 
-typedef VOID DDKAPI (*PHID_STATUS_CHANGE)(
+typedef VOID (DDKAPI *PHID_STATUS_CHANGE)(
   PVOID  Context,
   enum DeviceObjectState  State);
 
-typedef NTSTATUS DDKAPI (*PHIDP_GETCAPS)(
+typedef NTSTATUS (DDKAPI *PHIDP_GETCAPS)(
   IN PHIDP_PREPARSED_DATA  PreparsedData,
   OUT PHIDP_CAPS  Capabilities);
 

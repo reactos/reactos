@@ -113,6 +113,7 @@ wodMessage(
 
         case WODM_GETPOS :
         {
+            Result = MmeGetPosition(WAVE_OUT_DEVICE_TYPE, DeviceId, PrivateHandle, (MMTIME*)Parameter1, Parameter2);
             break;
         }
     }

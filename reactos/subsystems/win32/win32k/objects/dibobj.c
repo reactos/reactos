@@ -314,7 +314,7 @@ IntSetDIBits(
     }
 
     // Determine XLATEOBJ for color translation
-    XlateObj = IntEngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
+    XlateObj = IntEngCreateXlate(0, 0, DDB_Palette, DIB_Palette);
     if (NULL == XlateObj)
     {
         PALETTE_FreePaletteByHandle(DIB_Palette);
@@ -1579,7 +1579,7 @@ DIB_CreateDIBSection(
         *bits = bm.bmBits;
     }
 
-//  if (res) pdcattr->ulDirty_ |= DC_DIBSECTION;
+    if (res) pdcattr->ulDirty_ |= DC_DIBSECTION;
 
     return res;
 }

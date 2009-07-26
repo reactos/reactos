@@ -38,7 +38,6 @@ VOID UntrackFL( PCHAR File, ULONG Line, PVOID Thing, ULONG Tag );
 #define Untrack(Thing) UntrackFL(__FILE__,__LINE__,Thing)
 VOID TrackDumpFL( PCHAR File, ULONG Line );
 #define TrackDump() TrackDumpFL(__FILE__,__LINE__)
-VOID TrackTag( ULONG Tag );
 
 static __inline PVOID ExAllocateFromNPagedLookasideListX( PNPAGED_LOOKASIDE_LIST List, PCHAR File, ULONG Line ) {
     PVOID Out = ExAllocateFromNPagedLookasideList( List );
@@ -62,14 +61,12 @@ static __inline VOID ExFreePoolX( PVOID Data, PCHAR File, ULONG Line ) {
     ExFreePool( Data );
 }
 
-#define MEMTRACK_MAX_TAGS_TO_TRACK 64
 #else
 #define MTMARK()
 #define Track(x,y)
 #define TrackingInit()
 #define TrackDump()
 #define Untrack(x)
-#define TrackTag(x)
 #define exAllocatePoolWithTag(x,y,z) ExAllocatePoolWithTag(x,y,z)
 #define exAllocatePool(x,y) ExAllocatePool(x,y)
 #define exFreePool(x) ExFreePool(x)

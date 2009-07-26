@@ -25,6 +25,9 @@
 <directory name="authz">
 	<xi:include href="authz/authz.rbuild" />
 </directory>
+<directory name="avicap32">
+	<xi:include href="avicap32/avicap32.rbuild" />
+</directory>
 <directory name="avifil32">
 	<xi:include href="avifil32/avifil32.rbuild" />
 </directory>

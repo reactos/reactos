@@ -48,6 +48,6 @@ typedef union _COMM_DHCP_REPLY {
     } GetAdapterInfo;
 } COMM_DHCP_REPLY;
 
-#define DHCP_PIPE_NAME "\\\\.\\pipe\\dhcpclient"
+#define DHCP_PIPE_NAME L"\\\\.\\pipe\\dhcpclient"
 
 #endif/*ROSDHCP_PUBLIC_H*/

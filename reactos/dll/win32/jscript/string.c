@@ -1370,7 +1370,7 @@ HRESULT create_string_constr(script_ctx_t *ctx, DispatchEx **ret)
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, StringConstr_value, PROPF_CONSTR, &string->dispex, ret);
+    hres = create_builtin_function(ctx, StringConstr_value, NULL, PROPF_CONSTR, &string->dispex, ret);
 
     jsdisp_release(&string->dispex);
     return hres;

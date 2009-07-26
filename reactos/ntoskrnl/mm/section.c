@@ -2375,10 +2375,9 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
+   RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
-   Section->Segment = NULL;
-   Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
    Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                    TAG_MM_SECTION_SEGMENT);
@@ -2448,9 +2447,9 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
+   RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
-   Section->Segment = NULL;
 
    /*
     * Check file access required
@@ -3375,6 +3374,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
    /*
     * Initialize it
     */
+   RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
 
@@ -3731,6 +3731,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    PMMSUPPORT AddressSpace;
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG tmpProtect;
+   ACCESS_MASK DesiredAccess;
 
    /*
     * Check the protection
@@ -3809,8 +3810,27 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
 
    AddressSpace = &Process->Vm;
 
+   /* Convert NT Protection Attr to Access Mask */
+   if (Protect == PAGE_READONLY)
+   {
+      DesiredAccess = SECTION_MAP_READ;
+   }
+   else if (Protect == PAGE_READWRITE)
+   {
+      DesiredAccess = SECTION_MAP_WRITE;
+   }
+   else if (Protect == PAGE_WRITECOPY)
+   {
+      DesiredAccess = SECTION_QUERY;
+   }
+   /* FIXME: Handle other Protection Attributes. For now keep previous behavior */
+   else
+   {
+      DesiredAccess = SECTION_MAP_READ;
+   }
+
    Status = ObReferenceObjectByHandle(SectionHandle,
-                                      SECTION_MAP_READ,
+                                      DesiredAccess,
                                       MmSectionObjectType,
                                       PreviousMode,
                                       (PVOID*)(PVOID)&Section,
@@ -4410,7 +4430,7 @@ NtExtendSection(IN HANDLE SectionHandle,
 
    if (!(Section->AllocationAttributes & SEC_FILE))
    {
-      ObfDereferenceObject(Section);
+      ObDereferenceObject(Section);
       return STATUS_INVALID_PARAMETER;
    }
 

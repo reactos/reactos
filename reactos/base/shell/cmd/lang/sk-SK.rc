@@ -1,7 +1,7 @@
 /* Slovak translation for CMD
  * TRANSLATOR:  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  21-03-2009
- * LastChange:  27-05-2009
+ * LastChange:  21-06-2009
  * _________________________________________________________________
  * NOTE      :  this file is not really translated (only scrap yet)
  */
@@ -78,7 +78,7 @@ CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
   text          Prompt string to display.\n\n\
 ERRORLEVEL is set to offset of key user presses in choices.\n"
 
-STRING_CLS_HELP, "Clears the screen.\n\nCLS\n"
+STRING_CLS_HELP, "Vymaže obrazovku.\n\nCLS\n"
 
 STRING_CMD_HELP1, "\nInternal commands available:\n"
 
@@ -123,7 +123,7 @@ dec  hex  name       dec  hex  name\n\
 
 STRING_COPY_HELP1,  "Overwrite %s (Yes/No/All)? "
 
-STRING_COPY_HELP2, "Copies one or more files to another location.\n\n\
+STRING_COPY_HELP2, "Skopíruje jeden alebo viac súborov na iné umiestnenie.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
      [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n\
   source       Specifies the file or files to be copied.\n\
@@ -566,8 +566,8 @@ title         new title\n"
 
 
 STRING_HELP1, "Zoznam všetkých dostupných príkazov (+ popis)\n\n\
-  command /?     For more information on a specific command\n\n\
-?        List all available commands without description).\n\
+  príkaz /?     Pre viac informácií o konkrétnom príkaze\n\n\
+?        Zoznam všetkých dostupných príkazov (bez popisu).\n\
 ALIAS    Sets, removes or shows aliases.\n\
 ATTRIB   Displays or changes file attributes.\n\
 BEEP     Pípnutie reproduktora.\n\
@@ -575,10 +575,10 @@ CALL     Calls one batch program from another.\n\
 CD       Displays the name of or changes the current directory.\n\
 CHCP     Displays or sets the active code page number.\n\
 CHOICE   Waits for the user to choose one of a set of choices.\n\
-CLS      Clears the screen.\n\
+CLS      Vymaže obrazovku.\n\
 CMD      Starts a new instance of the ReactOS command interpreter.\n\
 COLOR    Sets the default console foreground and background colors.\n\
-COPY     Copies one or more files to another location.\n\
+COPY     Skopíruje jeden alebo viac súborov na iné umiestnenie.\n\
 DATE     Displays or sets the date.\n\
 DELETE   Deletes one or more files.\n\
 DIR      Displays a list of files and subdirectories in a directory.\n\

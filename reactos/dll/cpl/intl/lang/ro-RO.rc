@@ -1,28 +1,30 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Opþiuni regionale"
+CAPTION "OpÈ›iuni regionale"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Standarde ºi formate", -1, 5, 5, 234, 162
-    LTEXT "Aceastã opþiune afecteazã cum anumite aplicaþii vor afiºa numerele, valutele, data ºi timpul.", -1, 14, 17, 220, 25
-    LTEXT "Alegeþi un element pentru a seta automat sau faceþi clic pe Particularizat pentru a vã alege propriile formate:", -1, 14, 37, 220, 22
+    GROUPBOX "Standarde È™i formate", -1, 5, 5, 234, 162
+    LTEXT "AceastÄƒ opÈ›iune afecteazÄƒ cum anumite aplicaÈ›ii vor afiÈ™a numerele, valutele, data È™i timpul.", -1, 14, 17, 220, 25
+    LTEXT "AlegeÈ›i un element pentru a seta automat sau faceÈ›i clic pe Particularizat pentru a vÄƒ alege propriile formate:", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "&Particularizat", IDC_SETUP_BUTTON, 178, 56, 52, 13
-    LTEXT "Eºantioane", -1, 14, 73, 70, 10
-    LTEXT "Numãr:", -1, 16, 86, 48, 10
-    LTEXT "Valutã:", -1, 16, 101, 48, 10
+    LTEXT "EÈ™antioane", -1, 14, 73, 70, 10
+    LTEXT "NumÄƒr:", -1, 16, 86, 48, 10
+    LTEXT "ValutÄƒ:", -1, 16, 101, 48, 10
     LTEXT "Timp:", -1, 16, 116, 48, 10
-    LTEXT "Datã scurtã:", -1, 16, 131, 48, 10
-    LTEXT "Datã lungã:", -1, 16, 146, 48, 10
+    LTEXT "DatÄƒ scurtÄƒ:", -1, 16, 131, 48, 10
+    LTEXT "DatÄƒ lungÄƒ:", -1, 16, 146, 48, 10
     EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 101, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    GROUPBOX "Locaþie geograficã", -1, 5, 172, 234, 55
-    LTEXT "Setaþi-vã poziþionarea geograficã astfel încât unele servicii sã vã poatã oferi servicii locale, cum ar fi ºtiri sau informaþii meteo.", -1, 14, 184, 210, 24
+    GROUPBOX "LocaÈ›ie geograficÄƒ", -1, 5, 172, 234, 55
+    LTEXT "SetaÈ›i-vÄƒ poziÈ›ionarea geograficÄƒ astfel Ã®ncÃ¢t unele servicii sÄƒ vÄƒ poatÄƒ oferi servicii locale, cum ar fi È™tiri sau informaÈ›ii meteo.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -31,12 +33,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Limbi"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Limbi ºi servicii pentru textul introdus", -1, 5, 5, 234, 52
+    GROUPBOX "Limbi È™i servicii pentru textul introdus", -1, 5, 5, 234, 52
     LTEXT "Pentru a vedea/modifica metodele de introducere text clic pe""Detalii""", -1, 12, 15, 220, 18
     PUSHBUTTON "De&talii...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Suport adiþional", -1, 5, 62, 234, 82
-    LTEXT "Majoritatea limbilor sunt suportate de la bun început. Pentru a instala altele, bifaþi casetele de mai jos.", -1, 12, 72, 220, 18
-    CHECKBOX "I&nstalare suport pt. scripturi complexe ºi limbi cu scriere inversã", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
+    GROUPBOX "Suport adiÈ›ional", -1, 5, 62, 234, 82
+    LTEXT "Majoritatea limbilor sunt suportate de la bun Ã®nceput. Pentru a instala altele, bifaÈ›i casetele de mai jos.", -1, 12, 72, 220, 18
+    CHECKBOX "I&nstalare suport pt. scripturi complexe È™i limbi cu scriere inversÄƒ", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "In&stalare suport pt. limbi est-asiatice", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
 END
 
@@ -47,12 +49,12 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Limba pentru programele non-Unicode", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Aceastã setare permite programelor non-Unicode sã afiºeze textul în limba utilizatorului. Aceastã setare nu afecteazã aplicaþiile Unicode, în schimb afecteazã toþi utilizatorii.", -1, 14, 18, 223, 33
-    LTEXT "Alegeþi versiunea de limbã pentru aplicaþiile non-Unicode pe care o doriþi:", -1, 14, 55, 223, 18
+    LTEXT "AceastÄƒ setare permite programelor non-Unicode sÄƒ afiÈ™eze textul Ã®n limba utilizatorului. AceastÄƒ setare nu afecteazÄƒ aplicaÈ›iile Unicode, Ã®n schimb afecteazÄƒ toÈ›i utilizatorii.", -1, 14, 18, 223, 33
+    LTEXT "AlegeÈ›i versiunea de limbÄƒ pentru aplicaÈ›iile non-Unicode pe care o doriÈ›i:", -1, 14, 55, 223, 18
     GROUPBOX "Tabele conversie cod", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Setãri implicite utilizator", -1, 5, 193, 234, 30
-    CHECKBOX "Applicare setãri la toþi utilizatorii", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
+    GROUPBOX "SetÄƒri implicite utilizator", -1, 5, 193, 234, 30
+    CHECKBOX "Applicare setÄƒri la toÈ›i utilizatorii", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -60,12 +62,12 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Numere"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Eºantion", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
+    GROUPBOX "EÈ™antion", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
     LTEXT "Pozitiv:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Negativ:", -1, 120, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "&Virgulã:", -1, 8, 67, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&VirgulÄƒ:", -1, 8, 67, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "C&ifre zecimale:", -1, 8, 83, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -77,34 +79,34 @@ BEGIN
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "Format numere negative:", -1, 8, 149, 100, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Zerouri de început:", -1, 8, 166, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&Zerouri de Ã®nceput:", -1, 8, 166, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Separator listã:", -1, 8, 181, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&Separator listÄƒ:", -1, 8, 181, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Sistem de mãsurare:", -1, 8, 197, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&Sistem de mÄƒsurare:", -1, 8, 197, 96, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 IDD_CURRENCYPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Valutã"
+CAPTION "ValutÄƒ"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Eºantion", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    GROUPBOX "EÈ™antion", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
     LTEXT "Pozitiv:", -1, 13, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Negativ:", -1, 120, 21, 31, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "&Simbol valutã:", -1, 10, 51, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&Simbol valutÄƒ:", -1, 10, 51, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Valoare pozitivã:", -1, 10, 68, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&Valoare pozitivÄƒ:", -1, 10, 68, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Valoare negativã:", -1, 10, 85, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&Valoare negativÄƒ:", -1, 10, 85, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Separator zecimale:", -1, 10, 111, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Numãr zecimale:", -1, 10, 128, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
+    LTEXT "&NumÄƒr zecimale:", -1, 10, 128, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     LTEXT "&Simbol grupare:", -1, 10, 156, 121, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
@@ -118,7 +120,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Timp"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Eºantion", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
+    GROUPBOX "EÈ™antion", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
     LTEXT "Timp:", -1, 13, 21, 54, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "&Format timp:", -1, 13, 52, 130, 10, WS_CHILD |WS_VISIBLE | WS_GROUP
@@ -130,42 +132,42 @@ BEGIN
     LTEXT "&Simbol PM:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
-    LTEXT "Notaþie format timp\n\n\
-h = orã     m = minut    s = secundã   t = am sau pm\n\n\
+    LTEXT "NotaÈ›ie format timp\n\n\
+h = orÄƒ     m = minut    s = secundÄƒ   t = am sau pm\n\n\
 h = 12 ore    H = 24 ore \n\
-hh, mm, ss = cu zerouri   h, m, s = fãrã zerouri",
+hh, mm, ss = cu zerouri   h, m, s = fÄƒrÄƒ zerouri",
         -1, 13, 150, 214, 50, WS_CHILD |WS_VISIBLE | WS_GROUP
 END
 
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Datã"
+CAPTION "DatÄƒ"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Calendar", -1, 7, 7, 230, 74
-    LTEXT "Dacã anul e scris ca 2 cifre se considerã cã e între:", -1, 13, 18, 215, 8
+    LTEXT "DacÄƒ anul e scris ca 2 cifre se considerÄƒ cÄƒ e Ã®ntre:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
-    LTEXT "ºi", -1, 55, 32, 17, 8
+    LTEXT "È™i", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
     LTEXT "Tip calendar:", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Calendar islamic:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Format datã scurtã", -1, 7, 83, 230, 81
-    LTEXT "Eºantion:", -1, 13, 95, 63, 10
+    GROUPBOX "Format datÄƒ scurtÄƒ", -1, 7, 83, 230, 81
+    LTEXT "EÈ™antion:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Eºantion - dreapta la stânga:", -1, 13, 109, 60, 16
+    LTEXT "EÈ™antion - dreapta la stÃ¢nga:", -1, 13, 109, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "Format scurt:", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    LTEXT "Separator componente datã:", -1, 13, 148, 113, 10
+    LTEXT "Separator componente datÄƒ:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Format datã lungã", -1, 7, 167, 230, 64
-    LTEXT "Eºantion:", -1, 13, 179, 61, 10
+    GROUPBOX "Format datÄƒ lungÄƒ", -1, 7, 167, 230, 64
+    LTEXT "EÈ™antion:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    LTEXT "Eºantion - dreapta la stânga:", -1, 13, 193, 61, 16
+    LTEXT "EÈ™antion - dreapta la stÃ¢nga:", -1, 13, 193, 61, 16
     EDITTEXT IDC_LONGDATERTOL_EDIT, 77, 195, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "Format lung:", -1, 13, 215, 60, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
@@ -178,20 +180,22 @@ CAPTION "Sortare"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Sortare", -1, 7, 7, 230, 74
-    LTEXT "Metodele de sortare reprezintã ordinea de sortare pentru litere, cuvinte ºi fiºiere.", -1, 14, 17, 220, 25
-    LTEXT "Selectaþi o metodã pentru limba dvs.:", -1, 14, 37, 220, 22
+    LTEXT "Metodele de sortare reprezintÄƒ ordinea de sortare pentru litere, cuvinte È™i fiÈ™iere.", -1, 14, 17, 220, 25
+    LTEXT "SelectaÈ›i o metodÄƒ pentru limba dvs.:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "Particularizare opþiuni"
-    IDS_SPAIN "Spaniolã (Spainia)"
+    IDS_CUSTOMIZE_TITLE "Particularizare opÈ›iuni"
+    IDS_SPAIN "SpaniolÄƒ (Spainia)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Opþiuni regionale"
-    IDS_CPLDESCRIPTION "Setãri limbi ºi formatare numere, valute, datã ºi timp."
+    IDS_CPLNAME "OpÈ›iuni regionale"
+    IDS_CPLDESCRIPTION "SetÄƒri limbi È™i formatare numere, valute, datÄƒ È™i timp."
 END
+
+#pragma code_page(default)

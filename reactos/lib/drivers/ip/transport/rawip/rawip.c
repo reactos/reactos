@@ -59,7 +59,7 @@ NTSTATUS AddGenericHeaderIPv4(
     /* Length of header and data */
     IPHeader->TotalLength = WH2N((USHORT)IPPacket->TotalSize);
     /* Identification */
-    IPHeader->Id = 0;
+    IPHeader->Id = (USHORT)Random();
     /* One fragment at offset 0 */
     IPHeader->FlagsFragOfs = 0;
     /* Time-to-Live is 128 */
@@ -126,7 +126,7 @@ NTSTATUS BuildRawIpPacket(
 	Status = AddGenericHeaderIPv4
             (RemoteAddress, RemotePort,
              LocalAddress, LocalPort, Packet, DataLen,
-             IPPROTO_ICMP, /* XXX Figure out a better way to do this */
+             IPPROTO_RAW,
              0, (PVOID *)&Payload );
 	break;
     case IP_ADDRESS_V6:
@@ -210,11 +210,19 @@ NTSTATUS RawIPSendDatagram(
 	return STATUS_UNSUCCESSFUL;
     }
 
+    TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
+
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	return STATUS_NETWORK_UNREACHABLE;
+
     LocalAddress = AddrFile->Address;
     if (AddrIsUnspecified(&LocalAddress))
     {
-        if (!IPGetDefaultAddress(&LocalAddress))
-            return STATUS_UNSUCCESSFUL;
+        /* If the local address is unspecified (0),
+         * then use the unicast address of the
+         * interface we're sending over
+         */
+        LocalAddress = NCE->Interface->Unicast;
     }
 
     Status = BuildRawIpPacket( &Packet,
@@ -227,13 +235,6 @@ NTSTATUS RawIPSendDatagram(
 
     if( !NT_SUCCESS(Status) )
 	return Status;
-
-    TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
-
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
-        FreeNdisPacket(Packet.NdisPacket);
-	return STATUS_NETWORK_UNREACHABLE;
-    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
@@ -331,7 +332,7 @@ NTSTATUS RawIPStartup(VOID)
 #endif
 
   /* Register this protocol with IP layer */
-  IPRegisterProtocol(IPPROTO_ICMP, RawIpReceive);
+  IPRegisterProtocol(IPPROTO_RAW, RawIpReceive);
 
   return STATUS_SUCCESS;
 }
@@ -345,7 +346,7 @@ NTSTATUS RawIPShutdown(VOID)
  */
 {
   /* Deregister this protocol with IP layer */
-  IPRegisterProtocol(IPPROTO_ICMP, NULL);
+  IPRegisterProtocol(IPPROTO_RAW, NULL);
 
   return STATUS_SUCCESS;
 }

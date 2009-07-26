@@ -22,7 +22,6 @@ typedef struct
 
     PMINIPORTWAVEPCI Miniport;
     PDEVICE_OBJECT pDeviceObject;
-    KDPC Dpc;
     BOOL bInitialized;
     PRESOURCELIST pResourceList;
     PSERVICEGROUP ServiceGroup;
@@ -31,6 +30,10 @@ typedef struct
     PPCFILTER_DESCRIPTOR pDescriptor;
     PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
     IPortFilterWavePci * Filter;
+
+    LIST_ENTRY EventList;
+    KSPIN_LOCK EventListLock;
+
 }IPortWavePciImpl;
 
 static GUID InterfaceGuids[3] = 
@@ -134,8 +137,14 @@ IPortEvents_fnAddEventToEventList(
     IPortEvents* iface,
     IN PKSEVENT_ENTRY EventEntry)
 {
-    UNIMPLEMENTED
+    KIRQL OldIrql;
+    IPortWavePciImpl * This = (IPortWavePciImpl*)CONTAINING_RECORD(iface, IPortWavePciImpl, lpVtblPortEvents);
+
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
+    KeAcquireSpinLock(&This->EventListLock, &OldIrql);
+    InsertTailList(&This->EventList, &EventEntry->ListEntry);
+    KeReleaseSpinLock(&This->EventListLock, OldIrql);
 }
 
 
@@ -287,6 +296,14 @@ IPortWavePci_fnQueryInterface(
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IUnregisterSubdevice))
+    {
+        return NewIUnregisterSubdevice((PUNREGISTERSUBDEVICE*)Output);
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IUnregisterPhysicalConnection))
+    {
+        return NewIUnregisterPhysicalConnection((PUNREGISTERPHYSICALCONNECTION*)Output);
+    }
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
@@ -331,26 +348,6 @@ IPortWavePci_fnRelease(
     return This->ref;
 }
 
-VOID
-NTAPI
-ServiceNotifyRoutine(
-    IN struct _KDPC  *Dpc,
-    IN PVOID  DeferredContext,
-    IN PVOID  SystemArgument1,
-    IN PVOID  SystemArgument2)
-{
-    DPRINT("ServiceNotifyRoutine entered %p %p %p\n", DeferredContext, SystemArgument1, SystemArgument2);
-
-    IPortWavePciImpl * This = (IPortWavePciImpl*)DeferredContext;
-    if (This->ServiceGroup && This->bInitialized)
-    {
-        DPRINT("ServiceGroup %p\n", This->ServiceGroup);
-        This->ServiceGroup->lpVtbl->RequestService(This->ServiceGroup);
-    }
-}
-
-
-
 NTSTATUS
 NTAPI
 IPortWavePci_fnInit(
@@ -385,15 +382,13 @@ IPortWavePci_fnInit(
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* initialize the dpc */
-    KeInitializeDpc(&This->Dpc, ServiceNotifyRoutine, (PVOID)This);
-
     /* Initialize port object */
     This->Miniport = Miniport;
     This->pDeviceObject = DeviceObject;
     This->bInitialized = TRUE;
     This->pResourceList = ResourceList;
-
+    InitializeListHead(&This->EventList);
+    KeInitializeSpinLock(&This->EventListLock);
 
     /* increment reference on miniport adapter */
     Miniport->lpVtbl->AddRef(Miniport);

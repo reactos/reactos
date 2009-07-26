@@ -146,6 +146,7 @@ WdmAudControlOpen(
     KSDATAFORMAT_WAVEFORMATEX * DataFormat;
     ULONG FilterId;
     ULONG PinId;
+    ULONG FreeIndex;
 
     if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
     {
@@ -158,6 +159,12 @@ WdmAudControlOpen(
         return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
     }
 
+    if (DeviceInfo->u.WaveFormatEx.wFormatTag != WAVE_FORMAT_PCM)
+    {
+        DPRINT("FIXME: Only WAVE_FORMAT_PCM is supported RequestFormat %x\n", DeviceInfo->u.WaveFormatEx.wFormatTag);
+        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
+    }
+
     Status = GetFilterIdAndPinId(DeviceObject, DeviceInfo, ClientInfo, &FilterId, &PinId);
     if (!NT_SUCCESS(Status))
     {
@@ -166,12 +173,14 @@ WdmAudControlOpen(
     }
 
     /* close pin handle which uses same virtual audio device id and pin id */
+    FreeIndex = (ULONG)-1;
     for(Index = 0; Index < ClientInfo->NumPins; Index++)
     {
-        if (ClientInfo->hPins[Index].FilterId == FilterId && ClientInfo->hPins[Index].PinId == PinId && ClientInfo->hPins[Index].Handle)
+        if (ClientInfo->hPins[Index].FilterId == FilterId && ClientInfo->hPins[Index].PinId == PinId && ClientInfo->hPins[Index].Handle && ClientInfo->hPins[Index].Type == DeviceInfo->DeviceType)
         {
             ZwClose(ClientInfo->hPins[Index].Handle);
             ClientInfo->hPins[Index].Handle = NULL;
+            FreeIndex = Index;
         }
     }
 
@@ -191,17 +200,6 @@ WdmAudControlOpen(
     InstanceInfo->DeviceNumber = FilterId;
 
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* failed to acquire audio device */
-        DPRINT1("KsSynchronousIoControlDevice failed with %x\n", Status);
-        ExFreePool(InstanceInfo);
-        return SetIrpIoStatus(Irp, Status, 0);
-    }
-
     if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
@@ -245,9 +243,6 @@ WdmAudControlOpen(
     DataFormat->DataFormat.Reserved = 0;
     DataFormat->DataFormat.MajorFormat = KSDATAFORMAT_TYPE_AUDIO;
 
-    if (DeviceInfo->u.WaveFormatEx.wFormatTag != WAVE_FORMAT_PCM)
-        DPRINT1("FIXME\n");
-
     DataFormat->DataFormat.SubFormat = KSDATAFORMAT_SUBTYPE_PCM;
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
@@ -259,15 +254,16 @@ WdmAudControlOpen(
     {
         PWDMAUD_HANDLE Handels;
 
-        for(Index = 0; Index < ClientInfo->NumPins; Index++)
+        if (FreeIndex != (ULONG)-1)
         {
-            if (ClientInfo->hPins[Index].Handle == PinHandle)
-            {
-                /* the pin handle has been re-used */
-                DeviceInfo->hDevice = PinHandle;
-                return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
-            }
+            /* re-use a free index */
+            ClientInfo->hPins[Index].Handle = PinHandle;
+            ClientInfo->hPins[Index].FilterId = FilterId;
+            ClientInfo->hPins[Index].PinId = PinId;
+            ClientInfo->hPins[Index].Type = DeviceInfo->DeviceType;
 
+            DeviceInfo->hDevice = PinHandle;
+            return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
         }
 
         Handels = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
@@ -382,14 +378,11 @@ WdmAudControlDeviceType(
         }
     }
 
-
-    if (NT_SUCCESS(Status))
-        DeviceInfo->DeviceCount = Result;
-    else
-        DeviceInfo->DeviceCount = 0;
+    /* store result count */
+    DeviceInfo->DeviceCount = Result;
 
     DPRINT1("WdmAudControlDeviceType Status %x Devices %u\n", Status, DeviceInfo->DeviceCount);
-    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
 }
 
 NTSTATUS
@@ -418,7 +411,7 @@ WdmAudControlDeviceState(
     Property.Id = KSPROPERTY_CONNECTION_STATE;
     Property.Flags = KSPROPERTY_TYPE_SET;
 
-    State = DeviceInfo->State;
+    State = DeviceInfo->u.State;
 
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&State, sizeof(KSSTATE), &BytesReturned);
 
@@ -604,6 +597,49 @@ WdmAudIoctlClose(
 
 NTSTATUS
 NTAPI
+WdmAudFrameSize(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo,
+    IN  PWDMAUD_CLIENT ClientInfo)
+{
+    PFILE_OBJECT FileObject;
+    KSPROPERTY Property;
+    ULONG BytesReturned;
+    KSALLOCATOR_FRAMING Framing;
+    NTSTATUS Status;
+
+    /* Get sysaudio pin file object */
+    Status = ObReferenceObjectByHandle(DeviceInfo->hDevice, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Invalid buffer handle %x\n", DeviceInfo->hDevice);
+        return SetIrpIoStatus(Irp, Status, 0);
+    }
+
+    /* Setup get framing request */
+    Property.Id = KSPROPERTY_CONNECTION_ALLOCATORFRAMING;
+    Property.Flags = KSPROPERTY_TYPE_GET;
+    Property.Set = KSPROPSETID_Connection;
+
+    Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&Property, sizeof(KSPROPERTY), (PVOID)&Framing, sizeof(KSALLOCATOR_FRAMING), &BytesReturned);
+    /* Did we succeed */
+    if (NT_SUCCESS(Status))
+    {
+        /* Store framesize */
+        DeviceInfo->u.FrameSize = Framing.FrameSize;
+    }
+
+    /* Release file object */
+    ObDereferenceObject(FileObject);
+
+    return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+
+}
+
+
+NTSTATUS
+NTAPI
 WdmAudDeviceControl(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -654,6 +690,9 @@ WdmAudDeviceControl(
             return WdmAudCapabilities(DeviceObject, Irp, DeviceInfo, ClientInfo);
         case IOCTL_CLOSE_WDMAUD:
             return WdmAudIoctlClose(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETFRAMESIZE:
+            return WdmAudFrameSize(DeviceObject, Irp, DeviceInfo, ClientInfo);
+        case IOCTL_GETPOS:
         case IOCTL_GETDEVID:
         case IOCTL_GETVOLUME:
         case IOCTL_SETVOLUME:
@@ -798,4 +837,3 @@ WdmAudWrite(
     ObDereferenceObject(FileObject);
     return IoStatusBlock.Status;
 }
-

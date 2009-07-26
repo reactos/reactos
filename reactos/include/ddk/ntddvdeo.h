@@ -426,6 +426,17 @@ typedef struct _VIDEO_HARDWARE_STATE {
 #define VIDEO_DUALVIEW_PRIMARY            0x80000000
 #define VIDEO_DUALVIEW_SECONDARY          0x40000000
 
+#ifndef _WINDDI_
+typedef struct _ENG_EVENT *PEVENT;
+#endif
+
+typedef struct _ENG_EVENT
+{
+    PVOID pKEvent;
+    ULONG fFlags;
+} ENG_EVENT, *PENG_EVENT;
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -35,7 +35,16 @@
 	<file>str.c</file>
 	<file>ctl.c</file>
 	<file>message.c</file>
-	<file>crypt32.rc</file>
+	<file>crypt32_De.rc</file>
+	<file>crypt32_En.rc</file>
+	<file>crypt32_Fr.rc</file>
+	<file>crypt32_Ko.rc</file>
+	<file>crypt32_Nl.rc</file>
+	<file>crypt32_No.rc</file>
+	<file>crypt32_Pt.rc</file>
+	<file>crypt32_Ro.rc</file>
+	<file>crypt32_Sv.rc</file>
+	<file>version.rc</file>
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
 	<compilerflag compilerset="gcc">-fno-unit-at-a-time</compilerflag>
 </module>

@@ -49,6 +49,8 @@ typedef UINT_PTR	SOCKET;
 #define FD_SETSIZE	64
 #endif
 
+#define	WSAAPI	WINAPI
+
 /* shutdown() how types */
 #define SD_RECEIVE      0x00
 #define SD_SEND         0x01
@@ -519,6 +521,47 @@ struct sockproto {
 
 #endif /* !WSABASEERR */
 
+#if !defined(NS_ALL)
+#define NS_ALL         0
+#define NS_SAP         1
+#define NS_NDS         2
+#define NS_PEER_BROWSE 3
+#define NS_SLP         5
+#define NS_DHCP        6
+#define NS_TCPIP_LOCAL 10
+#define NS_TCPIP_HOSTS 11
+#define NS_DNS         12
+#define NS_NETBT       13
+#define NS_WINS        14
+#define NS_NLA         15
+#define NS_NBP         20
+#define NS_MS          30
+#define NS_STDA        31
+#define NS_NTDS        32
+#define NS_X500        40
+#define NS_NIS         41
+#define NS_NISPLUS     42
+#define NS_WRQ         50
+#define NS_NETDES      60
+#endif /* !defined(NS_ALL) */
+
+#define LUP_DEEP                0x0001
+#define LUP_CONTAINERS          0x0002
+#define LUP_NOCONTAINERS        0x0004
+#define LUP_NEAREST             0x0008
+#define LUP_RETURN_NAME         0x0010
+#define LUP_RETURN_TYPE         0x0020
+#define LUP_RETURN_VERSION      0x0040
+#define LUP_RETURN_COMMENT      0x0080
+#define LUP_RETURN_ADDR         0x0100
+#define LUP_RETURN_BLOB         0x0200
+#define LUP_RETURN_ALIASES      0x0400
+#define LUP_RETURN_QUERY_STRING 0x0800
+#define LUP_RETURN_ALL          0x0FF0
+#define LUP_RES_SERVICE         0x8000
+#define LUP_FLUSHCACHE          0x1000
+#define LUP_FLUSHPREVIOUS       0x2000
+
 #define WSANO_ADDRESS	WSANO_DATA
 #if !(defined (__INSIDE_CYGWIN__) || defined (__INSIDE_MSYS__))
 #define h_errno WSAGetLastError()
@@ -556,6 +599,13 @@ int PASCAL WSAStartup(WORD,LPWSADATA);
 int PASCAL WSACleanup(void);
 void PASCAL WSASetLastError(int);
 int PASCAL WSAGetLastError(void);
+typedef int (WSAAPI *LPFN_WSAGETLASTERROR)(void);
+typedef int (WSAAPI *LPFN_WSACANCELBLOCKINGCALL)(void);
+typedef FARPROC (WSAAPI *LPFN_WSASETBLOCKINGHOOK)(FARPROC);
+typedef int (WSAAPI *LPFN_SELECT)(int nfds,fd_set FAR*,fd_set FAR*,fd_set FAR*,const struct timeval FAR*);
+typedef int (WSAAPI *LPFN_WSASTARTUP)(WORD,LPWSADATA);
+typedef int (WSAAPI *LPFN_WSACLEANUP)(void);
+typedef int (WSAAPI *LPFN_GETSOCKOPT)(SOCKET,int,int,char FAR*,int FAR*);
 /*
  * Pseudo-blocking functions are deprecated in WinSock2
  * spec. Use threads instead.
@@ -647,7 +697,6 @@ typedef struct timeval *LPTIMEVAL;
 #define	MSG_INTERRUPT	0x10
 #define	MSG_MAXIOVLEN	16
 
-#define	WSAAPI	WINAPI
 #define WSAEVENT	HANDLE
 #define	LPWSAEVENT	LPHANDLE
 #define	WSAOVERLAPPED	OVERLAPPED

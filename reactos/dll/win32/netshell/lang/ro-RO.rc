@@ -1,0 +1,126 @@
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 246
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_COMPONENTSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOCOLUMNHEADER | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 9, 71, 230, 55
+    LTEXT "Connectare folosing:", -1, 9,9,217,8
+    EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_BORDER | WS_TABSTOP | ES_READONLY
+    PUSHBUTTON "&Configurare", IDC_CONFIGURE, 189, 38, 50, 14
+    LTEXT "Componentele verificate sunt folosite de aceastã conexiune:", -1, 9, 59, 217, 8
+    PUSHBUTTON "&Instalare", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Dezinstalare", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
+    PUSHBUTTON "&Proprietãþi", IDC_PROPERTIES, 174, 130, 65, 14
+    GROUPBOX "Descriere", -1, 9, 153, 230, 46, BS_GROUPBOX
+    LTEXT "Descriere...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+    CHECKBOX "&Afiºare pictogramã în tray", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "&Notificare la probleme de conectivitate", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+END
+
+IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Conexiune", -1, 9, 8, 182, 58, BS_GROUPBOX
+    LTEXT "Stare:", -1, 19, 20, 60, 8
+    LTEXT "Duratã:", -1, 19, 34, 60, 8
+    LTEXT "Vitezã:", -1, 19, 48, 60, 8
+    GROUPBOX "Activitate", -1, 9, 74, 182, 70, BS_GROUPBOX
+    RTEXT "Trimis", -1, 26, 90, 60, 8
+    ICON IDI_NETSTAT, -1, 110, 85, 32, 32
+    LTEXT "Primit", -1, 149, 90, 37, 8
+    LTEXT "Octeþi:", -1, 17, 115, 32, 8
+    RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
+    RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
+    PUSHBUTTON "&Proprietãþi", IDC_STATUS_PROPERTIES, 10, 150, 50, 14
+    PUSHBUTTON "&Dezactivare", IDC_ENDISABLE, 66, 150, 50, 14
+    RTEXT "",IDC_STATUS,83,20,98,8
+    RTEXT "",IDC_DURATION,83,34,98,8
+    RTEXT "",IDC_SPEED,83,48,98,8
+END
+
+IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Suport"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Stare conexiune", -1, 9, 8, 200, 88, BS_GROUPBOX
+    LTEXT "Tip adresã:", -1, 22, 20, 80, 8
+    LTEXT "Adresã IP:", -1, 22, 34, 80, 8
+    LTEXT "Mascã subreþea:", -1, 22, 48, 80, 8
+    LTEXT "Poartã implicitã:", -1, 22, 62, 80, 8
+
+    RTEXT "fãrã", IDC_DETAILSTYPE, 122, 20, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
+    RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
+    RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+
+    PUSHBUTTON "&Detalii...", IDC_DETAILS, 22, 76, 62, 14
+END
+
+IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Detalii conexiune reþea"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Detalii conexiune reþea:", -1, 15, 9, 170, 12
+    CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
+    PUSHBUTTON "&Închidere", IDC_CLOSE, 125, 165, 62, 14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_PHYSICAL_ADDRESS        "Adresã fizicã"
+    IDS_IP_ADDRESS              "Adresã de IP"
+    IDS_SUBNET_MASK             "Mascã subreþea"
+    IDS_DEF_GATEWAY             "Poartã implicitã"
+    IDS_DHCP_SERVER             "Server DHCP"
+    IDS_LEASE_OBTAINED          "Permis obþinut"
+    IDS_LEASE_EXPIRES           "Permis expirã"
+    IDS_DNS_SERVERS             "Servere DNS"
+    IDS_WINS_SERVERS            "Servere WINS"
+    IDS_PROPERTY                "Proprietate"
+    IDS_VALUE                   "Valoare"
+    IDS_NETWORKCONNECTION       "Conexiuni la reþea"
+    IDS_SHV_COLUMN_NAME         "Nume"
+    IDS_SHV_COLUMN_TYPE         "Tipe"
+    IDS_SHV_COLUMN_STATE        "Stare"
+    IDS_SHV_COLUMN_DEVNAME      "Nume dispozitiv"
+    IDS_SHV_COLUMN_PHONE        "Nr. tel. sau adresã de gazdã"
+    IDS_SHV_COLUMN_OWNER        "Proprietar"
+    IDS_TYPE_ETHERNET           "LAN sau internet de mare vitezã"
+    IDS_STATUS_NON_OPERATIONAL  "Dezactivat"
+    IDS_STATUS_UNREACHABLE      "Neconectat"
+    IDS_STATUS_DISCONNECTED     "Cablu de reþea scos"
+    IDS_STATUS_CONNECTING       "Determinare adresã reþea"
+    IDS_STATUS_CONNECTED        "Conectat"
+    IDS_STATUS_OPERATIONAL      "Conectat"
+
+    IDS_NET_ACTIVATE            "Activare"
+    IDS_NET_DEACTIVATE          "Dezactivare"
+    IDS_NET_STATUS              "Stare"
+    IDS_NET_REPAIR              "Reparare"
+    IDS_NET_CREATELINK          "Creare legãturã"
+    IDS_NET_DELETE              "ªtergere"
+    IDS_NET_RENAME              "Redenumire"
+    IDS_NET_PROPERTIES          "Proprietãþi"
+
+    IDS_FORMAT_BIT              "%u Biþi/s"
+    IDS_FORMAT_KBIT             "%u KBiþi/s"
+    IDS_FORMAT_MBIT             "%u MBiþi/s"
+    IDS_FORMAT_GBIT             "%u GBiþi/s"
+    IDS_DURATION_DAY            "%d zi %s"
+    IDS_DURATION_DAYS           "%d zile %s"
+    IDS_ASSIGNED_DHCP           "Atribuit de DHCP"
+    IDS_ASSIGNED_MANUAL         "Configurat manual"
+END

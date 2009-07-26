@@ -28,7 +28,7 @@ KIRQL NTAPI KeGetCurrentIrql (VOID)
  */
 {
   KIRQL irql;
-  ULONG Flags;
+  ULONG Flags = 0;
 
   Ke386SaveFlags(Flags);
   _disable();
@@ -53,7 +53,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
  * PURPOSE: Sets the current irq level without taking any action
  */
 {
-  ULONG Flags;
+  ULONG Flags = 0;
   if (NewIrql > HIGH_LEVEL)
   {
     DPRINT1 ("NewIrql %x\n", NewIrql);
@@ -71,7 +71,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
 VOID 
 HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
 {
-  ULONG Flags;
+  ULONG Flags = 0;
   UCHAR DpcRequested;
   if (NewIrql >= DISPATCH_LEVEL)
     {
@@ -188,7 +188,7 @@ KIRQL FASTCALL
 KfRaiseIrql (KIRQL	NewIrql)
 {
   KIRQL OldIrql;
-  ULONG Flags;
+  ULONG Flags = 0;
  
   Ke386SaveFlags(Flags);
   _disable();
@@ -295,7 +295,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 			 ULONG Vector,
 			 PKIRQL OldIrql)
 {
-  ULONG Flags;
+  ULONG Flags = 0;
   DPRINT("Vector (0x%X)  Irql (0x%X)\n", Vector, Irql);
   
   if (KeGetCurrentIrql () >= Irql)
@@ -324,7 +324,7 @@ HalEndSystemInterrupt (KIRQL Irql,
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
 {
-  ULONG Flags;
+  ULONG Flags = 0;
   Ke386SaveFlags(Flags);
 
   if (Flags & EFLAGS_INTERRUPT_MASK)

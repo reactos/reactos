@@ -49,6 +49,9 @@
 #pragma alloc_text(INIT, MmInitMemoryAreas)
 #endif
 
+MEMORY_AREA MiStaticMemoryAreas[MI_STATIC_MEMORY_AREAS];
+ULONG MiStaticMemoryAreaCount;
+
 /* #define VALIDATE_MEMORY_AREAS */
 
 /* FUNCTIONS *****************************************************************/
@@ -986,9 +989,28 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
          return STATUS_CONFLICTING_ADDRESSES;
       }
    }
-
-   MemoryArea = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
-                                      TAG_MAREA);
+    
+    //
+    // Is this a static memory area?
+    //
+    if (Type & MEMORY_AREA_STATIC)
+    {
+        //
+        // Use the static array instead of the pool
+        //
+        ASSERT(MiStaticMemoryAreaCount < MI_STATIC_MEMORY_AREAS);
+        MemoryArea = &MiStaticMemoryAreas[MiStaticMemoryAreaCount++];
+    }
+    else
+    {
+        //
+        // Allocate the memory area from nonpaged pool
+        //
+        MemoryArea = ExAllocatePoolWithTag(NonPagedPool,
+                                           sizeof(MEMORY_AREA),
+                                           TAG_MAREA);
+    }
+    
    RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
    MemoryArea->Type = Type;
    MemoryArea->StartingAddress = *BaseAddress;

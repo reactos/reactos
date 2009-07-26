@@ -606,7 +606,7 @@ BOOLEAN Ext2ReadSuperBlock(VOID)
 	{
 		return FALSE;
 	}
-	RtlCopyMemory(Ext2SuperBlock, (PVOID)(DISKREADBUFFER + 1024), 1024);
+	RtlCopyMemory(Ext2SuperBlock, (PVOID)((ULONG_PTR)DISKREADBUFFER + 1024), 1024);
 
 	DPRINTM(DPRINT_FILESYSTEM, "Dumping super block:\n");
 
@@ -951,7 +951,7 @@ BOOLEAN Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer)
 	}
 
 	// Copy the data to their buffer
-	RtlCopyMemory(InodeBuffer, (PVOID)(ULONG_PTR)(FILESYSBUFFER + (InodeOffsetInBlock * EXT3_INODE_SIZE(Ext2SuperBlock))), sizeof(EXT2_INODE));
+	RtlCopyMemory(InodeBuffer, (PVOID)((ULONG_PTR)FILESYSBUFFER + (InodeOffsetInBlock * EXT3_INODE_SIZE(Ext2SuperBlock))), sizeof(EXT2_INODE));
 
 	DPRINTM(DPRINT_FILESYSTEM, "Dumping inode information:\n");
 	DPRINTM(DPRINT_FILESYSTEM, "i_mode = 0x%x\n", InodeBuffer->i_mode);

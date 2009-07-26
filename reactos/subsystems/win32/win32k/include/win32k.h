@@ -35,6 +35,7 @@
 #include <include/palette.h>
 #include <include/pdevobj.h>
 #include <include/rect.h>
+#include <include/sysparams.h>
 #include <include/win32.h>
 #include <include/window.h>
 #include <include/winsta.h>
@@ -75,6 +76,7 @@
 #include <include/misc.h>
 #include <include/gdifloat.h>
 #include <include/engobjects.h>
+#include <include/engevent.h>
 #include <dib/dib.h>
 
 #endif /* __WIN32K_H */

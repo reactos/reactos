@@ -1,7 +1,7 @@
 /*
  * Slovak Language resource file
- * Translated by: M·rio KaËm·r /Mario Kacmar/ aka Kario
- * Last changed:  27-05-2009
+ * Translated by: M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * Last changed:  02-07-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -47,13 +47,19 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Lupa" //Zoom
         BEGIN
-            MENUITEM "12,5%", IDM_VIEWZOOM125
-            MENUITEM "25%", IDM_VIEWZOOM25
-            MENUITEM "50%", IDM_VIEWZOOM50
-            MENUITEM "100%", IDM_VIEWZOOM100
-            MENUITEM "200%", IDM_VIEWZOOM200
-            MENUITEM "400%", IDM_VIEWZOOM400
-            MENUITEM "800%", IDM_VIEWZOOM800
+            POPUP "VlastnÈ zv‰Ëöenie" //PouûÌvateæom definovanÈ
+            BEGIN
+                MENUITEM "12,5%", IDM_VIEWZOOM125
+                MENUITEM "25%", IDM_VIEWZOOM25
+                MENUITEM "50%", IDM_VIEWZOOM50
+                MENUITEM "100%", IDM_VIEWZOOM100
+                MENUITEM "200%", IDM_VIEWZOOM200
+                MENUITEM "400%", IDM_VIEWZOOM400
+                MENUITEM "800%", IDM_VIEWZOOM800
+            END
+            MENUITEM SEPARATOR
+            MENUITEM "Zobraziù mrieûku\tCtrl+G", IDM_VIEWSHOWGRID
+            MENUITEM "Zobraziù miniat˙ru", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Cel· obrazovka\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -96,6 +102,7 @@ BEGIN
     "^A", IDM_EDITSELECTALL
     "^T", IDM_VIEWTOOLBOX
     "^L", IDM_VIEWCOLORPALETTE
+    "^G", IDM_VIEWSHOWGRID
     "^F", IDM_VIEWFULLSCREEN
     "^R", IDM_IMAGEROTATEMIRROR
     "^W", IDM_IMAGECHANGESIZE
@@ -173,6 +180,7 @@ BEGIN
     IDS_INFOTEXT, "Skic·r systÈmu ReactOS je dostupn˝ za podmienok GNU Lesser General Public License (LGPL) verzia 3 (viÔ www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Chcete uloûiù vykonanÈ zmeny do %s?"
     IDS_DEFAULTFILENAME, "Bez n·zvu.bmp"
+    IDS_MINIATURETITLE, "Miniature"
     IDS_TOOLTIP1, "Voæn˝ v˝ber"
     IDS_TOOLTIP2, "V˝ber"
     IDS_TOOLTIP3, "Guma"

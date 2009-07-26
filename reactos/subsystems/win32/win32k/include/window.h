@@ -13,7 +13,9 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 #include <include/prop.h>
 #include <include/scroll.h>
 
-BOOL FASTCALL UserUpdateUiState(PWINDOW Wnd, WPARAM wParam);
+extern ATOM AtomMessage;
+
+BOOL FASTCALL UserUpdateUiState(PWND Wnd, WPARAM wParam);
 
 typedef struct _WINDOW_OBJECT
 {
@@ -21,7 +23,7 @@ typedef struct _WINDOW_OBJECT
            is a pointer to the WINDOW structure that eventually replaces
            the WINDOW_OBJECT structure! USER32 expects this pointer to
            be here until WINDOW_OBJECT has completely been superseded! */
-  PWINDOW Wnd;
+  PWND Wnd;
 
   /* Pointer to the thread information */
   PW32THREADINFO ti;
@@ -167,8 +169,9 @@ IntShowOwnedPopups( PWINDOW_OBJECT owner, BOOL fShow );
 LRESULT FASTCALL
 IntDefWindowProc( PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Ansi);
 
-VOID FASTCALL IntNotifyWinEvent(DWORD, PWINDOW_OBJECT, LONG, LONG);
+VOID FASTCALL IntNotifyWinEvent(DWORD, PWND, LONG, LONG);
 
+PWND APIENTRY co_IntCreateWindowEx(DWORD,PUNICODE_STRING,PUNICODE_STRING,DWORD,LONG,LONG,LONG,LONG,HWND,HMENU,HINSTANCE,LPVOID,DWORD,BOOL);
 #endif /* _WIN32K_WINDOW_H */
 
 /* EOF */

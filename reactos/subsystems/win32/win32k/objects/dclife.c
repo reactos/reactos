@@ -100,27 +100,31 @@ DC_AllocDC(PUNICODE_STRING Driver)
     /* Create the default fill brush */
     pdcattr->hbrush = NtGdiGetStockObject(WHITE_BRUSH);
     NewDC->dclevel.pbrFill = BRUSH_ShareLockBrush(pdcattr->hbrush);
-    EBRUSHOBJ_vInit(&NewDC->eboFill, NewDC->dclevel.pbrFill, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboFill, NewDC->dclevel.pbrFill, NewDC);
 
     /* Create the default pen / line brush */
     pdcattr->hpen = NtGdiGetStockObject(BLACK_PEN);
     NewDC->dclevel.pbrLine = PEN_ShareLockPen(pdcattr->hpen);
-    EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrLine, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboLine, NewDC->dclevel.pbrLine, NewDC);
 
     /* Create the default text brush */
     pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(BLACK_BRUSH));
-    EBRUSHOBJ_vInit(&NewDC->eboText, pbrush, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboText, pbrush, NewDC);
     pdcattr->ulDirty_ |= DIRTY_TEXT;
 
     /* Create the default background brush */
     pbrush = BRUSH_ShareLockBrush(NtGdiGetStockObject(WHITE_BRUSH));
-    EBRUSHOBJ_vInit(&NewDC->eboBackground, pbrush, NULL);
+    EBRUSHOBJ_vInit(&NewDC->eboBackground, pbrush, NewDC);
 
     pdcattr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
     TextIntRealizeFont(pdcattr->hlfntNew,NULL);
 
     NewDC->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
-    NewDC->dclevel.laPath.eMiterLimit = 10.0;
+    NewDC->dclevel.ppal = PALETTE_ShareLockPalette(NewDC->dclevel.hpal);
+    /* This should never fail */
+    ASSERT(NewDC->dclevel.ppal);
+
+    NewDC->dclevel.laPath.eMiterLimit = 10.0; // FIXME: use FLOATL or FLOATOBJ!
 
     NewDC->dclevel.lSaveDepth = 1;
 
@@ -153,14 +157,21 @@ DC_Cleanup(PVOID ObjectBody)
     if (pDC->rosdc.DriverName.Buffer)
         ExFreePoolWithTag(pDC->rosdc.DriverName.Buffer, TAG_DC);
 
-    /* Clean up selected objects */
+    /* Deselect dc objects */
     DC_vSelectSurface(pDC, NULL);
     DC_vSelectFillBrush(pDC, NULL);
     DC_vSelectLineBrush(pDC, NULL);
+    DC_vSelectPalette(pDC, NULL);
 
     /* Dereference default brushes */
     BRUSH_ShareUnlockBrush(pDC->eboText.pbrush);
     BRUSH_ShareUnlockBrush(pDC->eboBackground.pbrush);
+
+    /* Cleanup the dc brushes */
+    EBRUSHOBJ_vCleanup(&pDC->eboFill);
+    EBRUSHOBJ_vCleanup(&pDC->eboLine);
+    EBRUSHOBJ_vCleanup(&pDC->eboText);
+    EBRUSHOBJ_vCleanup(&pDC->eboBackground);
 
     return TRUE;
 }
@@ -358,6 +369,7 @@ NtGdiOpenDCW(
     DEVMODEW *InitData,
     PUNICODE_STRING pustrLogAddr,
     ULONG iType,
+    BOOL bDisplay,
     HANDLE hspool,
     VOID *pDriverInfo2,
     VOID *pUMdhpdev)
@@ -367,6 +379,8 @@ NtGdiOpenDCW(
     PVOID Dhpdev;
     HDC Ret;
     NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!Device) return UserGetDesktopDC(iType,FALSE,TRUE);
 
     if (InitData)
     {
@@ -432,6 +446,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
 
 //
 // If NULL, first time through! Build the default (was window) dc!
+// Setup clean DC state for the system.
 //
     if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
     { // This is a cheesy way to do this.
@@ -498,10 +513,6 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
         NtGdiSelectBrush (DCHandle, STOCK_WHITE_BRUSH);
         NtGdiSelectFont (DCHandle, STOCK_SYSTEM_FONT);
         DC_LockDC (DCHandle); NtGdiSelectXxx does not recognize stock objects yet  */
-        if (DCToDelete->rosdc.XlateBrush != NULL)
-            EngDeleteXlate(DCToDelete->rosdc.XlateBrush);
-        if (DCToDelete->rosdc.XlatePen != NULL)
-            EngDeleteXlate(DCToDelete->rosdc.XlatePen);
     }
     if (DCToDelete->rosdc.hClipRgn)
     {
@@ -717,7 +728,7 @@ NewNtGdiDeleteObjectApp(HANDLE DCHandle)
           return GreDeleteObject((HGDIOBJ) DCHandle);
 
         default:
-          return FALSE; 
+          return FALSE;
      }
   }
   return (DCHandle != NULL);

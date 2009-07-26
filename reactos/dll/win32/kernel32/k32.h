@@ -27,6 +27,7 @@
 
 /* C Headers */
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <wchar.h>
 

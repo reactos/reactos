@@ -1,8 +1,10 @@
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 IDD_STATUSWINDOW_DLG DIALOGEX 0,0,274,26
 STYLE NOT WS_VISIBLE | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_BORDER | WS_CAPTION | WS_DLGFRAME | WS_POPUP
-CAPTION "Vã rugãm aºteptaþi..."
+CAPTION "VÄƒ rugÄƒm aÈ™teptaÈ›i..."
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     LTEXT           "",IDC_STATUSLABEL,7,8,234,12,SS_WORDELLIPSIS
@@ -14,7 +16,7 @@ CAPTION "Bun venit la ReactOS"
 FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     ICON            IDI_LOCKICON, -1, 7, 5, 32, 32
-    LTEXT           "Apãsaþi combinaþia de taste Ctrl-Alt-Del",IDC_STATIC, 38, 10, 144, 14
+    LTEXT           "ApÄƒsaÈ›i combinaÈ›ia de taste Ctrl-Alt-Del",IDC_STATIC, 38, 10, 144, 14
 END
 
 IDD_LOGGEDOUT_DLG DIALOGEX 0,0,275,147
@@ -24,9 +26,9 @@ FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     PUSHBUTTON      "OK",IDOK,51,122,50,14,BS_DEFPUSHBUTTON
     PUSHBUTTON      "Anulare",IDCANCEL,115,122,50,14
-    PUSHBUTTON      "Închidere",IDC_SHUTDOWN,179,122,50,14
+    PUSHBUTTON      "ÃŽnchidere",IDC_SHUTDOWN,179,122,50,14
     LTEXT           "Nume utilizator:",IDC_STATIC,36,75,40,8
-    LTEXT           "Parolã:",IDC_STATIC,36,93,42,8
+    LTEXT           "ParolÄƒ:",IDC_STATIC,36,93,42,8
     EDITTEXT        IDC_USERNAME,84,72,119,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_PASSWORD,84,91,119,14,ES_AUTOHSCROLL | ES_PASSWORD
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,275,59
@@ -39,10 +41,10 @@ FONT 8,"MS Shell Dlg",400,0,1
 BEGIN
     PUSHBUTTON      "Anulare",IDCANCEL,170,95,70,14
     PUSHBUTTON      "Deautentificare",IDC_LOGOFF,90,76,70,14
-    PUSHBUTTON      "Închidere",IDC_SHUTDOWN,170,76,70,14
-    LTEXT           "Ce vreþi sã faceþi?",IDC_STATIC,86,60,87,8
+    PUSHBUTTON      "ÃŽnchidere",IDC_SHUTDOWN,170,76,70,14
+    LTEXT           "Ce vreÈ›i sÄƒ faceÈ›i?",IDC_STATIC,86,60,87,8
     PUSHBUTTON      "Blocare computer",IDC_LOCK,10,76,70,14
-    PUSHBUTTON      "Gestionar activitãþi",IDC_TASKMGR,90,95,70,14
+    PUSHBUTTON      "Gestionar activitÄƒÈ›i",IDC_TASKMGR,90,95,70,14
     CONTROL         IDI_ROSLOGO,IDC_ROSLOGO,"Static",SS_BITMAP,0,0,247,53
 END
 
@@ -50,8 +52,10 @@ STRINGTABLE
 BEGIN
     IDS_LOGGEDOUTSAS "Bun venit!"
     IDS_LOCKEDSAS "Computerul este acum blocat."
-    IDS_PRESSCTRLALTDELETE "Apãsaþi Control+Alt+Delete pentru a vã autentifica."
+    IDS_PRESSCTRLALTDELETE "ApÄƒsaÈ›i Control+Alt+Delete pentru a vÄƒ autentifica."
     IDS_ASKFORUSER "Nume utilizator: "
-    IDS_ASKFORPASSWORD "Parolã: "
-    IDS_FORCELOGOFF "Aceastã acþiune va deautentifica utilizatorul curent ºi va pierde datele nesalvat. Sigur continuaþi?"
+    IDS_ASKFORPASSWORD "ParolÄƒ: "
+    IDS_FORCELOGOFF "AceastÄƒ acÈ›iune va Ã®nchide sesiunea utilizatorului curent È™i va pierde datele nesalvate de acesta. Sigur continuaÈ›i?"
 END
+
+#pragma code_page(default)

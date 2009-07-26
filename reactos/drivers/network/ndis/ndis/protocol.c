@@ -341,14 +341,16 @@ ProRequest(
 #endif
 }
 
-
+
 NDIS_STATUS NTAPI
 ProReset(
     IN  NDIS_HANDLE MacBindingHandle)
 {
-    UNIMPLEMENTED
+    PADAPTER_BINDING AdapterBinding = MacBindingHandle;
 
-    return NDIS_STATUS_FAILURE;
+    /* FIXME: Wait for all packets to be sent */
+
+    return MiniReset(AdapterBinding->Adapter);
 }
 
 VOID NTAPI
@@ -507,7 +509,7 @@ ProSend(
     } else {
         if (Adapter->NdisMiniportBlock.ScatterGatherListSize != 0)
         {
-            NDIS_DbgPrint(MAX_TRACE, ("Using Scatter/Gather DMA\n"));
+            NDIS_DbgPrint(MIN_TRACE, ("Using Scatter/Gather DMA\n"));
 
             NdisQueryPacket(Packet,
                             NULL,

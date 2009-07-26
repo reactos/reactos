@@ -28,12 +28,8 @@
 #define TEXT(s) L##s
 #include <regstr.h>
 
-/* FIXME: Temporary until CC Ros is gone */
-#include <ccros.h>
+/* FIXME: Temporary until Winldr is used */
 #include <rosldr.h>
-
-/* Disk Dump Driver Header */
-#include <diskdump/diskdump.h>
 
 /* C Headers */
 #include <stdlib.h>

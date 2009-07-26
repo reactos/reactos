@@ -230,6 +230,8 @@ Init(VOID)
       (PVOID)User32CallHookProcFromKernel;
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
       (PVOID)User32CallEventProcFromKernel;
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
+      (PVOID)User32CallLoadMenuFromKernel;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
@@ -287,7 +289,7 @@ DllMain(
    {
       case DLL_PROCESS_ATTACH:
          User32Instance = hInstanceDll;
-         if (!NtUserRegisterUserModule(hInstanceDll) ||
+         if (!RegisterClientPFN() ||
              !RegisterSystemControls())
          {
              return FALSE;
@@ -348,5 +350,6 @@ GetConnected(VOID)
   g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
   g_psi = SharedPtrToUser(UserCon.siClient.psi);
   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
-  gHandleEntries = SharedPtrToUser(gHandleTable->handles);
+  gHandleEntries = SharedPtrToUser(gHandleTable->handles);  
+  
 }

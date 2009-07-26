@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2008 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2006-2009 by Alexander N. SÃ¸rnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "wordpad.h"
+
+#pragma code_page(65001)
+
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -23,12 +27,12 @@ BEGIN
     POPUP "&Fil"
     BEGIN
         MENUITEM "&Ny...\tCtrl+N",            ID_FILE_NEW
-        MENUITEM "&Åpne...\tCtrl+O",       ID_FILE_OPEN
+        MENUITEM "&Ã…pne...\tCtrl+O",       ID_FILE_OPEN
         MENUITEM "&Lagre\tCtrl+S",            ID_FILE_SAVE
         MENUITEM "Lagre &som...",          ID_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "&Skriv ut...\tCtrl+P",   ID_PRINT
-        MENUITEM "&Forhåndsvisning...",    ID_PREVIEW
+        MENUITEM "&ForhÃ¥ndsvisning...",    ID_PREVIEW
         MENUITEM "&Utskriftformat...",     ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Avslutt",                  ID_FILE_EXIT
@@ -44,8 +48,8 @@ BEGIN
         MENUITEM "&Fjern\tDEL",               ID_EDIT_CLEAR
         MENUITEM "&Merk alt\tCtrl+A",         ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Søk etter...\tCrtl+F",  ID_FIND
-        MENUITEM "Søk etter &neste\tF3",      ID_FIND_NEXT
+        MENUITEM "&SÃ¸k etter...\tCrtl+F",  ID_FIND
+        MENUITEM "SÃ¸k etter &neste\tF3",      ID_FIND_NEXT
         MENUITEM "E&rstatt...\tCtrl+H",    ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "S&krivebeskyttet",          ID_EDIT_READONLY
@@ -53,7 +57,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Ekstra"
         BEGIN
-            MENUITEM "&Info om merket område",             ID_EDIT_SELECTIONINFO
+            MENUITEM "&Info om merket omrÃ¥de",             ID_EDIT_SELECTIONINFO
             MENUITEM "Tegn&format",           ID_EDIT_CHARFORMAT
             MENUITEM "Stan&dard tegnformat",           ID_EDIT_DEFCHARFORMAT
             MENUITEM "&Avsnittformat",           ID_EDIT_PARAFORMAT
@@ -62,7 +66,7 @@ BEGIN
     END
     POPUP "&Vis"
     BEGIN
-        MENUITEM "Verk&tøylinje",     ID_TOGGLE_TOOLBAR
+        MENUITEM "Verk&tÃ¸ylinje",     ID_TOGGLE_TOOLBAR
         MENUITEM "&Formatlinje",      ID_TOGGLE_FORMATBAR
         MENUITEM "&Linjal",           ID_TOGGLE_RULER
         MENUITEM "&Statuslinje",      ID_TOGGLE_STATUSBAR
@@ -134,9 +138,9 @@ BEGIN
     GROUPBOX "Innrykk", -1, 10, 10, 120, 68
     LTEXT "Venstre", -1, 15, 22, 40, 13
     EDITTEXT IDC_PARA_LEFT, 55, 20, 60, 13
-    LTEXT "Høyre", -1, 15, 40, 40, 13
+    LTEXT "HÃ¸yre", -1, 15, 40, 40, 13
     EDITTEXT IDC_PARA_RIGHT, 55, 38, 60, 13
-    LTEXT "Første linje", -1, 15, 58, 40, 13
+    LTEXT "FÃ¸rste linje", -1, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
     LTEXT "Justering", -1, 15, 87, 40, 13
     COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
@@ -167,8 +171,8 @@ BEGIN
     RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
     RADIOBUTTON "Bryt tekst etter v&indusbredden", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "Bryt tekst etter &margen", IDC_PAGEFMT_WM, 18, 65, 117, 15
-    GROUPBOX "Verktøylinjer", -1, 150, 10, 120, 85
-    CHECKBOX "&Verktøylinje", IDC_PAGEFMT_TB, 160, 20, 80, 15
+    GROUPBOX "VerktÃ¸ylinjer", -1, 150, 10, 120, 85
+    CHECKBOX "&VerktÃ¸ylinje", IDC_PAGEFMT_TB, 160, 20, 80, 15
     CHECKBOX "&Formatlinje", IDC_PAGEFMT_FB, 160, 38, 80, 15
     CHECKBOX "&Linjal", IDC_PAGEFMT_RU, 160, 56, 80, 15
     CHECKBOX "&Statuslinje", IDC_PAGEFMT_SB, 160, 74, 80, 15
@@ -193,7 +197,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_ALIGN_LEFT,            "Venstrestilt"
-    STRING_ALIGN_RIGHT,           "Høyrestilt"
+    STRING_ALIGN_RIGHT,           "HÃ¸yrestilt"
     STRING_ALIGN_CENTER,          "Midtstilt"
 END
 
@@ -215,7 +219,7 @@ BEGIN
     STRING_PREVIEW_NEXTPAGE,         "Neste side"
     STRING_PREVIEW_PREVPAGE,         "Forrige side"
     STRING_PREVIEW_TWOPAGES,         "To sider"
-    STRING_PREVIEW_ONEPAGE,          "Én side"
+    STRING_PREVIEW_ONEPAGE,          "Ã‰n side"
     STRING_PREVIEW_CLOSE,            "Lukk"
 END
 
@@ -227,16 +231,18 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Dokument"
-    STRING_PROMPT_SAVE_CHANGES,  "Lagre endringer i «%s»?"
-    STRING_SEARCH_FINISHED,      "Ferdig med å søke i dokumentet."
+    STRING_PROMPT_SAVE_CHANGES,  "Lagre endringer i Â«%sÂ»?"
+    STRING_SEARCH_FINISHED,      "Ferdig med Ã¥ sÃ¸ke i dokumentet."
     STRING_LOAD_RICHED_FAILED,   "Klarte ikke laste RichEdit-biblioteket."
-    STRING_SAVE_LOSEFORMATTING,  "Du har valgt å lagre i rent tekstformat, noe som " \
-                                 "vil føre til at all formatering går tapt. Er du " \
-                                 "sikker på at du vil fortsette?"
+    STRING_SAVE_LOSEFORMATTING,  "Du har valgt Ã¥ lagre i rent tekstformat, noe som " \
+                                 "vil fÃ¸re til at all formatering gÃ¥r tapt. Er du " \
+                                 "sikker pÃ¥ at du vil fortsette?"
     STRING_INVALID_NUMBER,       "Ugyldig tallformat"
     STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
     STRING_WRITE_FAILED,              "Klarte ikke lagre filen."
-    STRING_WRITE_ACCESS_DENIED,       "Du har ikke tilgang til å lagre filen."
-    STRING_OPEN_FAILED,               "Klarte ikke åpne filen."
-    STRING_OPEN_ACCESS_DENIED,        "Du har ikke tilgang til å åpne filen."
+    STRING_WRITE_ACCESS_DENIED,       "Du har ikke tilgang til Ã¥ lagre filen."
+    STRING_OPEN_FAILED,               "Klarte ikke Ã¥pne filen."
+    STRING_OPEN_ACCESS_DENIED,        "Du har ikke tilgang til Ã¥ Ã¥pne filen."
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Utskriftfunksjonen er ikke laget ennÃ¥."
+    STRING_MAX_TAB_STOPS,             "Kan ikke legge til mer enn 32 tabulatorstopp."
 END

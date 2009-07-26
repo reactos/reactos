@@ -74,8 +74,8 @@ static UINT	CBitHeight, CBitWidth;
 #define COMBO_EDITBUTTONSPACE()  0
 #define EDIT_CONTROL_PADDING()   1
 
-static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
-static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
+//static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
 /*********************************************************************
  * combo class descriptor
@@ -1836,8 +1836,8 @@ static char *strdupA(LPCSTR str)
 /***********************************************************************
  *           ComboWndProc_common
  */
-static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
-                                    WPARAM wParam, LPARAM lParam, BOOL unicode )
+LRESULT WINAPI ComboWndProc_common( HWND hwnd, UINT message,
+                                  WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
       LPHEADCOMBO lphc = (LPHEADCOMBO)GetWindowLongPtrW( hwnd, 0 );
 
@@ -2361,7 +2361,7 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
  * This is just a wrapper for the real ComboWndProc which locks/unlocks
  * window structs.
  */
-static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     if (!IsWindow(hwnd)) return 0;
     return ComboWndProc_common( hwnd, message, wParam, lParam, FALSE );
@@ -2370,7 +2370,7 @@ static LRESULT WINAPI ComboWndProcA( HWND hwnd, UINT message, WPARAM wParam, LPA
 /***********************************************************************
  *           ComboWndProcW
  */
-static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
+LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     if (!IsWindow(hwnd)) return 0;
     return ComboWndProc_common( hwnd, message, wParam, lParam, TRUE );

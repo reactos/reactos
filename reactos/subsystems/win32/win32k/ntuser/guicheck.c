@@ -45,7 +45,7 @@ static LONG NrGuiAppsRunning = 0;
 /* FUNCTIONS *****************************************************************/
 
 static BOOL FASTCALL
-co_AddGuiApp(PW32PROCESS W32Data)
+co_AddGuiApp(PPROCESSINFO W32Data)
 {
    W32Data->W32PF_flags |= W32PF_CREATEDWINORDC;
    if (InterlockedIncrement(&NrGuiAppsRunning) == 1)
@@ -65,7 +65,7 @@ co_AddGuiApp(PW32PROCESS W32Data)
 }
 
 static void FASTCALL
-RemoveGuiApp(PW32PROCESS W32Data)
+RemoveGuiApp(PPROCESSINFO W32Data)
 {
    W32Data->W32PF_flags &= ~W32PF_CREATEDWINORDC;
    if (InterlockedDecrement(&NrGuiAppsRunning) == 0)
@@ -77,7 +77,7 @@ RemoveGuiApp(PW32PROCESS W32Data)
 BOOL FASTCALL
 co_IntGraphicsCheck(BOOL Create)
 {
-   PW32PROCESS W32Data;
+   PPROCESSINFO W32Data;
 
    W32Data = PsGetCurrentProcessWin32Process();
    if (Create)
@@ -102,7 +102,7 @@ VOID
 FASTCALL
 IntUserManualGuiCheck(LONG Check)
 {
-   PW32PROCESS W32Data;
+   PPROCESSINFO W32Data;
 
    DPRINT("Enter IntUserManualGuiCheck\n");
 

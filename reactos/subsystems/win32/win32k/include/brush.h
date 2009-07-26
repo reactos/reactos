@@ -67,9 +67,6 @@ typedef struct _EBRUSHOBJ
     DWORD       ulUnique;
 //    DWORD       dwUnknown54;
 //    DWORD       dwUnknown58;
-
-    /* Ros specific */
-    XLATEOBJ *XlateObject;
 } EBRUSHOBJ, *PEBRUSHOBJ;
 
 /* GDI Brush Attributes */
@@ -105,19 +102,30 @@ typedef struct _EBRUSHOBJ
 INT FASTCALL BRUSH_GetObject (PBRUSH GdiObject, INT Count, LPLOGBRUSH Buffer);
 BOOL INTERNAL_CALL BRUSH_Cleanup(PVOID ObjectBody);
 
-VOID FASTCALL
-EBRUSHOBJ_vInit(EBRUSHOBJ *BrushInst, PBRUSH BrushObj, XLATEOBJ *XlateObj);
+struct _DC;
+
+VOID
+NTAPI
+EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, struct _DC *);
 
 VOID
 FASTCALL
 EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor, XLATEOBJ *pxlo);
 
 VOID
-FASTCALL
-EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, XLATEOBJ *pxlo);
+NTAPI
+EBRUSHOBJ_vUpdate(EBRUSHOBJ *pebo, PBRUSH pbrush, struct _DC *pdc);
 
 BOOL
-FASTCALL
-EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo);
+NTAPI
+EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver);
+
+VOID
+NTAPI
+EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo);
+
+PVOID
+NTAPI
+EBRUSHOBJ_pvGetEngBrush(EBRUSHOBJ *pebo);
 
 #endif

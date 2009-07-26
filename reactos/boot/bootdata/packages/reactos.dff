@@ -92,6 +92,7 @@ Signature = "$ReactOS$"
 ;base\services\tcpsvcs\quotes                        5
 ;base\services\umpnpmgr\umpnpmgr.exe                 1
 ;base\services\wlansvc\wlansvc.exe                   1
+base\services\svchost\svchost.exe                   1
 
 ;base\setup\setup\setup.exe                          1
 ;base\setup\vmwinst\vmwinst.exe                      1
@@ -642,7 +643,22 @@ boot\bootdata\bootcdregtest\regtest.cmd             7   optional
 ;subsystems\ntvdm\ntvdm.exe                          1
 ;subsystems\win32\win32k\win32k.sys                  1
 
-; Modules
+; Optional/proprietary files
+modules\optional\kvmnet.inf                         6  optional
+modules\optional\kvmnet.sys                         2  optional
+modules\optional\mfc42.dll                          1  optional
+modules\optional\mfc42u.dll                         1  optional
+modules\optional\msvbvm50.dll                       1  optional
+modules\optional\msvbvm60.dll                       1  optional
+modules\optional\msvcirt.dll                        1  optional
+modules\optional\Systema.ttf                        3  optional
+modules\optional\vmx_fb.dll                         1  optional
+modules\optional\vmx_mode.dll                       1  optional
+modules\optional\vmx_svga.inf                       6  optional
+modules\optional\vmx_svga.sys                       2  optional
+modules\optional\wine_gecko-0.9.1.cab               4  optional
+
+; Rosapps
 modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional
 modules\rosapps\applications\screensavers\matrix\matrix.scr                1   optional
 modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   optional
@@ -709,6 +725,7 @@ modules\rosapps\dflat32\edit.exe                                           1   o
 modules\rosapps\drivers\green\green.sys                                    2   optional
 modules\rosapps\templates\dialog\dialog.exe                                1   optional
 
+; Rostests
 modules\rostests\rosautotest\rosautotest.exe                               1   optional
 modules\rostests\tests\pseh2\pseh2_test.exe                                7   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
@@ -764,15 +781,3 @@ modules\rostests\winetests\wlanapi\wlanapi_winetest.exe                    7   o
 modules\rostests\winetests\ws2_32\ws2_32_winetest.exe                      7   optional
 
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
-
-; Native libraries
-modules\windows\mfc42.dll                                                  1   optional
-modules\windows\vmx_fb.dll                                                 1   optional
-modules\windows\vmx_mode.dll                                               1   optional
-modules\windows\vmx_svga.sys                                               2   optional
-modules\windows\vmx_svga.inf                                               6   optional
-modules\windows\kvmnet.sys                                                 2   optional
-modules\windows\kvmnet.inf                                                 6   optional
-
-; Gecko
-modules\windows\wine_gecko-0.9.1.cab                                       4   optional

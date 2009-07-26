@@ -178,7 +178,7 @@ typedef struct _AFD_STORED_DATAGRAM {
 
 typedef struct _AFD_FCB {
     BOOLEAN Locked, Critical, Overread;
-    UINT State, Flags;
+    UINT State, Flags, BlockingMode;
     KIRQL OldIrql;
     UINT LockCount;
     PVOID CurrentThread;
@@ -234,6 +234,10 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
+	    PIO_STACK_LOCATION IrpSp );
+
+NTSTATUS NTAPI
+AfdSetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp );
 
 NTSTATUS NTAPI

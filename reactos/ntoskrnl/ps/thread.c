@@ -113,8 +113,7 @@ PspUserThreadStartup(IN PKSTART_ROUTINE StartRoutine,
     }
 }
 
-static
-int
+LONG
 PspUnhandledExceptionInSystemThread(PEXCEPTION_POINTERS ExceptionPointers)
 {
     /* Print debugging information */

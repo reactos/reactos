@@ -85,6 +85,10 @@ KdpServiceDispatcher(ULONG Service,
                 case EnterDebugger:
                     DbgBreakPoint();
                     break;
+                    
+                case ThatsWhatSheSaid:
+                    MmDumpPfnDatabase();
+                    break;
 
                 default:
                     break;
@@ -116,7 +120,7 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
                           IN KPROCESSOR_MODE PreviousMode,
                           IN BOOLEAN SecondChance)
 {
-    KD_CONTINUE_TYPE Return;
+    KD_CONTINUE_TYPE Return = kdHandleException;
     ULONG ExceptionCommand = ExceptionRecord->ExceptionInformation[0];
 #ifdef _M_IX86
     ULONG EipOld;
@@ -137,7 +141,13 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
             KdpServiceDispatcher(BREAKPOINT_PRINT,
                                  (PVOID)ExceptionRecord->ExceptionInformation[1],
                                  ExceptionRecord->ExceptionInformation[2]);
+#ifdef _M_IX86
             Context->Eax = STATUS_SUCCESS;
+#elif _M_ARM
+            Context->R0 = STATUS_SUCCESS;
+#else
+#error Please be portable when modifying code
+#endif
         }
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
@@ -163,12 +173,22 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
     EipOld = Context->Eip;
 #endif
 
+#ifdef KDBG
     /* Call KDBG if available */
     Return = KdbEnterDebuggerException(ExceptionRecord,
                                        PreviousMode,
                                        Context,
                                        TrapFrame,
                                        !SecondChance);
+#else /* not KDBG */
+    if (WrapperInitRoutine)
+    {
+        /* Call GDB */
+        Return = WrapperTable.KdpExceptionRoutine(ExceptionRecord,
+                                                  Context,
+                                                  TrapFrame);
+    }
+#endif /* not KDBG */
 
     /* Bump EIP over int 3 if debugger did not already change it */
     if (ExceptionRecord->ExceptionCode == STATUS_BREAKPOINT)

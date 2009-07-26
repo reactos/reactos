@@ -189,5 +189,8 @@ BasepMapFile(IN LPCWSTR lpApplicationName,
 PCODEPAGE_ENTRY FASTCALL
 IntGetCodePageEntry(UINT CodePage);
 
+LPWSTR
+GetDllLoadPath(LPCWSTR lpModule);
+
 #endif /* ndef _KERNEL32_INCLUDE_KERNEL32_H */
 

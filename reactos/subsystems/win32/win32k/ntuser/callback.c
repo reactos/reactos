@@ -346,9 +346,11 @@ co_IntCallHookProc(INT HookId,
    PHOOKPROC_CALLBACK_ARGUMENTS Common;
    CBT_CREATEWNDW *CbtCreateWnd =NULL;
    PCHAR Extra;
-   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra ;
-   PUNICODE_STRING WindowName = NULL;
-   PUNICODE_STRING ClassName = NULL;
+   PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS CbtCreatewndExtra = NULL;
+   UNICODE_STRING WindowName;
+   UNICODE_STRING ClassName;
+   PANSI_STRING asWindowName;
+   PANSI_STRING asClassName;
 
    ArgumentLength = sizeof(HOOKPROC_CALLBACK_ARGUMENTS) - sizeof(WCHAR)
                     + ModuleName->Length;
@@ -360,13 +362,53 @@ co_IntCallHookProc(INT HookId,
             case HCBT_CREATEWND:
                CbtCreateWnd = (CBT_CREATEWNDW *) lParam;
                ArgumentLength += sizeof(HOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS);
-               WindowName = (PUNICODE_STRING) (CbtCreateWnd->lpcs->lpszName);
-               ArgumentLength += WindowName->Length + sizeof(WCHAR);
-               ClassName = (PUNICODE_STRING) (CbtCreateWnd->lpcs->lpszClass);
-               if (! IS_ATOM(ClassName->Buffer))
+
+               asWindowName = (PANSI_STRING)&WindowName;
+               asClassName = (PANSI_STRING)&ClassName;
+
+               if (Ansi)
                {
-                  ArgumentLength += ClassName->Length + sizeof(WCHAR);
+                  RtlInitAnsiString(asWindowName, (PCSZ)CbtCreateWnd->lpcs->lpszName);
+                  ArgumentLength += WindowName.Length + sizeof(CHAR);
                }
+               else
+               {
+                  RtlInitUnicodeString(&WindowName, CbtCreateWnd->lpcs->lpszName);
+                  ArgumentLength += WindowName.Length + sizeof(WCHAR);
+               }
+
+               if (! IS_ATOM(CbtCreateWnd->lpcs->lpszClass))
+               {
+                  if (Ansi)
+                  {
+                     RtlInitAnsiString(asClassName, (PCSZ)CbtCreateWnd->lpcs->lpszClass);
+                     ArgumentLength += ClassName.Length + sizeof(CHAR);
+                  }
+                  else
+                  {
+                     RtlInitUnicodeString(&ClassName, CbtCreateWnd->lpcs->lpszClass);
+                     ArgumentLength += ClassName.Length + sizeof(WCHAR);
+                  }
+               }
+               break;
+
+            case HCBT_MOVESIZE:
+               ArgumentLength += sizeof(RECTL);
+               break;
+            case HCBT_ACTIVATE:
+               ArgumentLength += sizeof(CBTACTIVATESTRUCT);
+               break;
+            case HCBT_CLICKSKIPPED:
+               ArgumentLength += sizeof(MOUSEHOOKSTRUCT);
+               break;
+/*   ATM pass on */
+            case HCBT_KEYSKIPPED:
+            case HCBT_MINMAX:
+            case HCBT_SETFOCUS:
+            case HCBT_SYSCOMMAND:
+/*   These types pass through. */
+            case HCBT_DESTROYWND:
+            case HCBT_QS:
                break;
             default:
                DPRINT1("Trying to call unsupported CBT hook %d\n", Code);
@@ -427,23 +469,48 @@ co_IntCallHookProc(INT HookId,
             case HCBT_CREATEWND:
                Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                CbtCreatewndExtra = (PHOOKPROC_CBT_CREATEWND_EXTRA_ARGUMENTS) Extra;
-               CbtCreatewndExtra->Cs = *(CbtCreateWnd->lpcs);
+               RtlCopyMemory( &CbtCreatewndExtra->Cs, CbtCreateWnd->lpcs, sizeof(CREATESTRUCTW) );
                CbtCreatewndExtra->WndInsertAfter = CbtCreateWnd->hwndInsertAfter;
                Extra = (PCHAR) (CbtCreatewndExtra + 1);
-               RtlCopyMemory(Extra, WindowName->Buffer, WindowName->Length);
+               RtlCopyMemory(Extra, WindowName.Buffer, WindowName.Length);
                CbtCreatewndExtra->Cs.lpszName = (LPCWSTR) (Extra - (PCHAR) CbtCreatewndExtra);
-               CbtCreatewndExtra->Cs.lpszClass = ClassName->Buffer;
-               Extra += WindowName->Length;
-               *((WCHAR *) Extra) = L'\0';
-               Extra += sizeof(WCHAR);
-               if (! IS_ATOM(ClassName->Buffer))
+               CbtCreatewndExtra->Cs.lpszClass = ClassName.Buffer;
+               Extra += WindowName.Length;
+               if (Ansi)
                {
-                  RtlCopyMemory(Extra, ClassName->Buffer, ClassName->Length);
+                 *((CHAR *) Extra) = '\0';
+                 Extra += sizeof(CHAR);
+               }
+               else
+               {
+                 *((WCHAR *) Extra) = L'\0';
+                 Extra += sizeof(WCHAR);
+               }
+
+               if (! IS_ATOM(ClassName.Buffer))
+               {
+                  RtlCopyMemory(Extra, ClassName.Buffer, ClassName.Length);
                   CbtCreatewndExtra->Cs.lpszClass =
                      (LPCWSTR)(ULONG_PTR) MAKELONG(Extra - (PCHAR) CbtCreatewndExtra, 1);
-                  Extra += ClassName->Length;
-                  *((WCHAR *) Extra) = L'\0';
+                  Extra += ClassName.Length;
+
+                  if (Ansi)
+                     *((CHAR *) Extra) = '\0';
+                  else
+                     *((WCHAR *) Extra) = L'\0';
                }
+               break;
+            case HCBT_CLICKSKIPPED:
+               RtlCopyMemory(Extra, (PVOID) lParam, sizeof(MOUSEHOOKSTRUCT));
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+               break;
+            case HCBT_MOVESIZE:
+               RtlCopyMemory(Extra, (PVOID) lParam, sizeof(RECTL));
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
+               break;
+            case HCBT_ACTIVATE:
+               RtlCopyMemory(Extra, (PVOID) lParam, sizeof(CBTACTIVATESTRUCT));
+               Common->lParam = (LPARAM) (Extra - (PCHAR) Common);
                break;
          }
          break;
@@ -510,11 +577,37 @@ co_IntCallHookProc(INT HookId,
       return 0;
    }
 
+   if (HookId == WH_CBT && Code == HCBT_CREATEWND)
+   {
+      if (CbtCreatewndExtra)
+      {
+         _SEH2_TRY
+         { /*
+              The parameters could have been changed, include the coordinates
+              and dimensions of the window. We copy it back.
+            */
+            CbtCreateWnd->hwndInsertAfter = CbtCreatewndExtra->WndInsertAfter;
+            CbtCreateWnd->lpcs->x  = CbtCreatewndExtra->Cs.x;
+            CbtCreateWnd->lpcs->y  = CbtCreatewndExtra->Cs.y;
+            CbtCreateWnd->lpcs->cx = CbtCreatewndExtra->Cs.cx;
+            CbtCreateWnd->lpcs->cy = CbtCreatewndExtra->Cs.cy;
+         }
+         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+         {
+            Result = 0;
+         }
+         _SEH2_END;
+      }
+   }
+
    if (Argument) IntCbFreeMemory(Argument);
 
    return Result;
 }
 
+//
+// Events are notifications w/o results.
+//
 LRESULT
 APIENTRY
 co_IntCallEventProc(HWINEVENTHOOK hook,
@@ -526,11 +619,11 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                    DWORD dwmsEventTime,
                      WINEVENTPROC Proc)
 {
-   LRESULT Result;
+   LRESULT Result = 0;
    NTSTATUS Status;
    PEVENTPROC_CALLBACK_ARGUMENTS Common;
    ULONG ArgumentLength, ResultLength;
-   PVOID Argument, ResultPointer, pWnd;
+   PVOID Argument, ResultPointer;
 
    ArgumentLength = sizeof(EVENTPROC_CALLBACK_ARGUMENTS);
 
@@ -553,8 +646,6 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);
 
-   IntSetTebWndCallback (&hWnd, &pWnd);
-
    UserLeaveCo();
 
    Status = KeUserModeCallback(USER32_CALLBACK_EVENTPROC,
@@ -563,12 +654,7 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
                                &ResultPointer,
                                &ResultLength);
 
-   /* Simulate old behaviour: copy into our local buffer */
-   Result = *(LRESULT*)ResultPointer;
-
    UserEnterCo();
-
-   IntRestoreTebWndCallback (hWnd, pWnd);
 
    IntCbFreeMemory(Argument);
 
@@ -578,6 +664,59 @@ co_IntCallEventProc(HWINEVENTHOOK hook,
    }
 
    return Result;
+}
+
+//
+// Callback Load Menu and results.
+//
+HMENU
+APIENTRY
+co_IntCallLoadMenu( HINSTANCE hModule,
+                    PUNICODE_STRING pMenuName )
+{
+   LRESULT Result = 0;
+   NTSTATUS Status;
+   PLOADMENU_CALLBACK_ARGUMENTS Common;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+
+   ArgumentLength = sizeof(LOADMENU_CALLBACK_ARGUMENTS);
+
+   ArgumentLength += pMenuName->Length + sizeof(WCHAR);
+
+   Argument = IntCbAllocateMemory(ArgumentLength);
+   if (NULL == Argument)
+   {
+      DPRINT1("EventProc callback failed: out of memory\n");
+      return 0;
+   }
+   Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;
+
+
+   Common->hModule = hModule;
+   RtlCopyMemory(&Common->MenuName, pMenuName->Buffer, pMenuName->Length);
+
+   ResultPointer = NULL;
+   ResultLength = sizeof(LRESULT);
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_LOADMENU,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   UserEnterCo();
+
+   IntCbFreeMemory(Argument);
+  
+   if (!NT_SUCCESS(Status))
+   {
+      return 0;
+   }
+
+   return (HMENU)Result;
 }
 
 /* EOF */

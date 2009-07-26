@@ -1015,7 +1015,7 @@ IPortPinDMus_fnFastWrite(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI

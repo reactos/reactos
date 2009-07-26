@@ -146,14 +146,14 @@ const struct builtin_class_descr DIALOG_builtin_class =
 */
 DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
 {
-    PWINDOW pWindow;
+    PWND pWindow;
     DIALOGINFO* dlgInfo = (DIALOGINFO *)GetWindowLongPtrW( hWnd, DWLP_ROS_DIALOGINFO );
 
     if(!dlgInfo && create)
     {
         pWindow = ValidateHwnd( hWnd );
 
-        if (pWindow && pWindow->ExtraDataSize >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
+        if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
         {
             if (!(dlgInfo = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*dlgInfo) )))
                 return NULL;

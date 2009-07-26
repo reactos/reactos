@@ -26,6 +26,8 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
+#if !defined (__arm__)
+
 #if defined(__GNUC__)
 struct _EXCEPTION_RECORD;
 struct _EXCEPTION_POINTERS;
@@ -197,16 +199,18 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 #define __SEH_ENTER_SCOPE(TRYLEVEL_) (_SEHTopTryLevel ? __SEH_ENTER_FRAME_AND_TRYLEVEL(TRYLEVEL_) : __SEH_ENTER_TRYLEVEL(TRYLEVEL_))
 #define __SEH_ENTER_HANDLE_SCOPE(TRYLEVEL_, HANDLE_) (({ __SEH_BARRIER; __asm__ __volatile__("mov %%esp, %0" : "=m" ((TRYLEVEL_)->SHT_Esp)); __SEH_BARRIER; }), (_SEHTopTryLevel ? __SEH_ENTER_FRAME_AND_HANDLE_TRYLEVEL((TRYLEVEL_), (HANDLE_)) : __SEH_ENTER_HANDLE_TRYLEVEL((TRYLEVEL_), (HANDLE_))))
 
-#define __SEH_LEAVE_SCOPE() \
+#define __SEH_LEAVE_TRYLEVEL() \
+	if(!_SEHTopTryLevel) \
+	{ \
+		__SEH_SET_TRYLEVEL(_SEHPrevTryLevelP); \
+	} \
+
+#define __SEH_LEAVE_FRAME() \
 	if(_SEHTopTryLevel) \
 	{ \
 		_SEH2LeaveFrame(); \
 		__asm__ __volatile__("mov %0, %%esp" : : "g" (_SEHStackPointer)); \
-	} \
-	else \
-	{ \
-		__SEH_SET_TRYLEVEL(_SEHPrevTryLevelP); \
-	} \
+	}
 
 #define __SEH_END_SCOPE_CHAIN \
 	static __attribute__((unused)) const int _SEH2ScopeKind = 1; \
@@ -292,7 +296,7 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
  \
 		_SEHAbnormalTermination = 0; \
  \
-		__SEH_LEAVE_SCOPE(); \
+		__SEH_LEAVE_TRYLEVEL(); \
  \
 		_SEHFinally(); \
 		goto _SEHEndExcept; \
@@ -365,7 +369,7 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 		__attribute__((unused)) __SEH_DEFINE_FINALLY(_SEHFinally) { __SEH_RETURN_FINALLY(); } \
  \
 		_SEHAfterTry:; \
-		__SEH_LEAVE_SCOPE(); \
+		__SEH_LEAVE_TRYLEVEL(); \
  \
 		goto _SEHEndExcept; \
  \
@@ -380,6 +384,8 @@ void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
 		} \
  \
 		_SEHEndExcept:; \
+ \
+		__SEH_LEAVE_FRAME(); \
 	} \
 	__SEH_END_SCOPE;
 
@@ -404,10 +410,10 @@ __SEH_END_SCOPE_CHAIN;
 
 #include <excpt.h>
 
-#define _SEH2_TRY __try
-#define _SEH2_FINALLY __finally
-#define _SEH2_EXCEPT(...) __except(__VA_ARGS__)
-#define _SEH2_END
+#define _SEH2_TRY __try {
+#define _SEH2_FINALLY } __finally {
+#define _SEH2_EXCEPT(...) } __except(__VA_ARGS__) {
+#define _SEH2_END }
 
 #define _SEH2_GetExceptionInformation() (GetExceptionInformation())
 #define _SEH2_GetExceptionCode() (GetExceptionCode())
@@ -418,7 +424,23 @@ __SEH_END_SCOPE_CHAIN;
 
 #endif
 
+#else
+
+#define _SEH2_TRY  {
+#define _SEH2_FINALLY }  {
+#define _SEH2_EXCEPT(...) } if (0) {
+#define _SEH2_END }
+
+#define _SEH2_GetExceptionInformation() 
+#define _SEH2_GetExceptionCode() STATUS_SUCCESS
+#define _SEH2_AbnormalTermination() 
+
+#define _SEH2_YIELD(STMT_) STMT_
+#define _SEH2_LEAVE
+
 #endif
 
 #endif
+#endif
+
 /* EOF */

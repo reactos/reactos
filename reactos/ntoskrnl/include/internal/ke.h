@@ -790,6 +790,7 @@ KeTrapFrameToContext(
     IN OUT PCONTEXT Context
 );
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckWithTf(

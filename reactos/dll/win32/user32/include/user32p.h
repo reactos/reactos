@@ -64,17 +64,11 @@
 #define NtUserGetSysColorBrushes(HBrushes, count) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)(HBrushes), (DWORD_PTR)(count), TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES)
 
-#define NtUserGetSysColorPens(HPens, count) \
-  (BOOL)NtUserCallTwoParam((DWORD_PTR)(HPens), (DWORD_PTR)(count), TWOPARAM_ROUTINE_GETSYSCOLORPENS)
-
 #define NtUserGetSysColors(ColorRefs, count) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)(ColorRefs), (DWORD_PTR)(count), TWOPARAM_ROUTINE_GETSYSCOLORS)
 
 #define NtUserSetCaretBlinkTime(uMSeconds) \
   (BOOL)NtUserCallOneParam((DWORD_PTR)uMSeconds, ONEPARAM_ROUTINE_SETCARETBLINKTIME)
-
-#define NtUserRegisterUserModule(hInstance) \
-  (BOOL)NtUserCallOneParam((DWORD_PTR)hInstance, ONEPARAM_ROUTINE_REGISTERUSERMODULE)
 
 /*
 #define NtUserEnumClipboardFormats(format) \
@@ -229,7 +223,6 @@ extern PUSER_HANDLE_ENTRY gHandleEntries;
 PUSER_HANDLE_ENTRY FASTCALL GetUser32Handle(HANDLE);
 PVOID FASTCALL ValidateHandle(HANDLE, UINT);
 
-#define SYSCOLOR_GetPen(index) GetSysColorPen(index)
 #define WIN_GetFullHandle(h) ((HWND)(h))
 
 #ifndef __ms_va_list

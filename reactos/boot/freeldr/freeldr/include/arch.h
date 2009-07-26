@@ -48,8 +48,8 @@
 #define DISKREADBUFFER		0x90000	/* Buffer to store data read in from the disk via the BIOS */
 #elif defined(_M_PPC) || defined(_M_MIPS) || defined(_M_ARM)
 extern PVOID FsStaticBufferDisk, FsStaticBufferData;
-#define DISKREADBUFFER		FsStaticBufferDisk
-#define FILESYSBUFFER           FsStaticBufferData
+#define DISKREADBUFFER		    0x80000000
+#define FILESYSBUFFER           0x80000000
 #endif
 
 /* Makes "x" a global variable or label */

@@ -885,11 +885,6 @@ DllMain(HANDLE hInstDll,
 
         case DLL_PROCESS_DETACH:
         {
-            p = NtCurrentTeb()->WinSockData;
-
-            if (p)
-              HeapFree(GlobalHeap, 0, p);
-
             DestroyCatalog();
 
             FreeProviderHandleTable();

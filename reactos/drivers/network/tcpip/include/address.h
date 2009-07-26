@@ -58,8 +58,6 @@ BOOLEAN AddrIsEqualIPv4(
 BOOLEAN AddrLocateADEv4(
     IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address);
 
-BOOLEAN IPGetDefaultAddress( PIP_ADDRESS Address );
-
 PADDRESS_FILE AddrSearchFirst(
     PIP_ADDRESS Address,
     USHORT Port,

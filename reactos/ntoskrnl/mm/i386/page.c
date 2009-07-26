@@ -71,12 +71,6 @@ MiFlushTlb(PULONG Pt, PVOID Address)
     }
 }
 
-PULONG
-MmGetPageDirectory(VOID)
-{
-    return (PULONG)(ULONG_PTR)__readcr3();
-}
-
 static ULONG
 ProtectToPTE(ULONG flProtect)
 {
@@ -226,32 +220,6 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     return TRUE;
 }
 
-VOID
-NTAPI
-MmDeletePageTable(PEPROCESS Process, PVOID Address)
-{
-    PEPROCESS CurrentProcess = PsGetCurrentProcess();
-    
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeAttachProcess(&Process->Pcb);
-    }
-    
-    MiAddressToPde(Address)->u.Long = 0;
-    MiFlushTlb((PULONG)MiAddressToPde(Address),
-               MiAddressToPte(Address));
-    
-    if (Address >= MmSystemRangeStart)
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-        //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
-    }
-    if (Process != NULL && Process != CurrentProcess)
-    {
-        KeDetachProcess();
-    }
-}
-
 static PULONG
 MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 {
@@ -310,7 +278,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 {
                     return NULL;
                 }
-                Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn);
+                Status = MmRequestPageMemoryConsumer(MC_SYSTEM, FALSE, &Pfn);
                 if (!NT_SUCCESS(Status) || Pfn == 0)
                 {
                     KeBugCheck(MEMORY_MANAGEMENT);
@@ -322,8 +290,11 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
                 }
                 if(0 != InterlockedCompareExchangePte(&MmGlobalKernelPageDirectory[PdeOffset], Entry, 0))
                 {
-                    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
+                    MmReleasePageMemoryConsumer(MC_SYSTEM, Pfn);
                 }
+                InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
+                RtlZeroMemory(MiPteToAddress(PageDir), PAGE_SIZE);
+                return (PULONG)MiAddressToPte(Address);
             }
             InterlockedExchangePte(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
         }
@@ -494,7 +465,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     if (WasValid)
     {
         Pfn = PTE_TO_PFN(Pte);
-        MmMarkPageUnmapped(Pfn);
     }
     else
     {
@@ -797,10 +767,6 @@ MmCreatePageFileMapping(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
     Pte = *Pt;
-    if (PAGE_MASK((Pte)) != 0)
-    {
-        MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
-    }
     InterlockedExchangePte(Pt, SwapEntry << 1);
     if (Pte != 0)
     {
@@ -911,15 +877,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         oldPdeOffset = PdeOffset;
         
         Pte = *Pt;
-        MmMarkPageMapped(Pages[i]);
         if (PAGE_MASK(Pte) != 0 && !(Pte & PA_PRESENT) && (Pte & 0x800))
         {
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        if (PAGE_MASK(Pte) != 0)
-        {
-            MmMarkPageUnmapped(PTE_TO_PFN(Pte));
         }
         InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         if (Pte != 0)
@@ -1078,6 +1039,18 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
     ULONG StartOffset, EndOffset, Offset;
     PULONG Pde;
+    
+    //
+    // Check if the process isn't there anymore
+    // This is probably a bad sign, since it means the caller is setting cr3 to
+    // 0 or something...
+    //
+    if ((PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]) == 0) && (Process != PsGetCurrentProcess()))
+    {
+        DPRINT1("Process: %16s is dead: %p\n", Process->ImageFileName, Process->Pcb.DirectoryTableBase[0]);
+        ASSERT(FALSE);
+        return;
+    }
 
     if (Address < MmSystemRangeStart)
     {
@@ -1158,7 +1131,7 @@ MiInitPageDirectoryMap(VOID)
     BoundaryAddressMultiple.QuadPart = 0;
     BaseAddress = (PVOID)PAGETABLE_MAP;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
                                 &BaseAddress,
                                 0x400000,
                                 PAGE_READWRITE,
@@ -1172,7 +1145,7 @@ MiInitPageDirectoryMap(VOID)
     }
     BaseAddress = (PVOID)HYPERSPACE;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                                MEMORY_AREA_SYSTEM,
+                                MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
                                 &BaseAddress,
                                 0x400000,
                                 PAGE_READWRITE,

@@ -4,6 +4,7 @@
  * FILE:        base/shell/explorer-new/lang/es-ES.rc
  * PURPOSE:     Spanish Language File for ReactOS Explorer
  * TRANSLATOR:  2007 Marc Piulachs (marc [dot] piulachs [at] codexchange [dot] net)
+ *  updated July 2009: Gabriel ilardi gabrielilardi [at] hotmail [dot] it
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -12,6 +13,9 @@ IDM_TRAYWND MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "Administrador de tareas", ID_SHELL_CMD_OPEN_TASKMGR
+        MENUITEM SEPARATOR
         MENUITEM "&Bloquear la barra de tareas", ID_LOCKTASKBAR
         MENUITEM "P&ropiedades", ID_SHELL_CMD_PROPERTIES
     END
@@ -64,4 +68,70 @@ BEGIN
     IDS_PROPERTIES        "P&ropiedades"
     IDS_OPEN_ALL_USERS    "A&brir todos los usuarios"
     IDS_EXPLORE_ALL_USERS "E&xplorar todos los usuarios"
+END
+
+
+IDD_TASKBARPROP_TASKBAR DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Taskbar"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Apariencia de la Barra de tareas", IDC_STATIC, 6,6,240,121, WS_DISABLED
+    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21, WS_DISABLED
+    AUTOCHECKBOX    "&Bloquear la barra de tareas", IDC_TASKBARPROP_LOCK, 13,45,200,10, WS_DISABLED
+    AUTOCHECKBOX    "E&sconder automaticamente la barra", IDC_TASKBARPROP_HIDE, 13,58,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Mantener la barra de tareas en primer plano", IDC_TASKBARPROP_ONTOP, 13,71,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Agrupar botones similares", IDC_TASKBARPROP_GROUP, 13,84,200,10, WS_DISABLED
+    AUTOCHECKBOX    "Mostrar &Inicio rápido", IDC_TASKBARPROP_SHOWQL, 13,97,200,10, WS_DISABLED
+    AUTOCHECKBOX    "M&ostrar vista previa de las ventanas (miniaturas)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10, WS_DISABLED
+END
+
+IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Menú inicio"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    AUTORADIOBUTTON "&Menú inicio", IDC_TASKBARPROP_STARTMENU, 7,7,105,10
+    LTEXT           "Este estilo de menú te da un acceso fácil a tus carpetas, programas favoritos, y búsqueda.", IDC_STATIC, 20,17,150,24, WS_DISABLED
+    PUSHBUTTON      "&Personalizar...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
+    AUTORADIOBUTTON "Menú Inicio &clásico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
+    LTEXT           "Este estilo de menú te da la apariencia y funcionalidad clásicas",-1,20,57,150,24, WS_DISABLED
+    PUSHBUTTON      "P&ersonalizar...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
+    GROUPBOX        "Privacidad",IDC_STATIC, 7,100,238,42
+    AUTOCHECKBOX    "Guardar y mostrar una lista de los &ficheros abiertos recientemente", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
+    AUTOCHECKBOX    "Guardar y mostrar una lista de los &programas abiertos recientemente",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+END
+
+IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Area de notificación"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         "", IDC_TASKBARPROP_NOTIFICATIONBITMAP, "Static", SS_BITMAP | SS_SUNKEN,7,6,238,21, WS_DISABLED
+    GROUPBOX        "Iconos", IDC_STATIC, 6,33,240,58, WS_DISABLED
+    LTEXT           "Puedes mantener libre el área de notifación escondiendo iconos que no has usado recientemente.", IDC_STATIC, 13,48,223,16, WS_DISABLED
+    AUTOCHECKBOX    "&Esconder inconos inactivos", IDC_TASKBARPROP_HIDEICONS, 13,70,125,10, WS_DISABLED
+    PUSHBUTTON      "&Personalizar...", IDC_TASKBARPROP_ICONCUST, 188,70,50,14, WS_DISABLED
+    GROUPBOX        "Iconos de sistema", IDC_STATIC, 6,97,240,84, WS_DISABLED
+    LTEXT           "Elije que iconos de sistema mostrar siempre.", IDC_STATIC, 13,112,223,16, WS_DISABLED
+    AUTOCHECKBOX    "Relo&j", IDC_TASKBARPROP_CLOCK, 13,126,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Volumen", IDC_TASKBARPROP_VOLUME, 13,139,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Red", IDC_TASKBARPROP_NETWORK, 13,152,200,10, WS_DISABLED
+    AUTOCHECKBOX    "&Alimentación", IDC_TASKBARPROP_POWER, 13,164,200,10, WS_DISABLED
+
+END
+
+IDD_TASKBARPROP_TOOLBARS DIALOGEX 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Toolbars"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LTEXT           "Elije que barra de herramientas agregar a la Barra de tareas.", IDC_STATIC, 7,7,223,12, WS_DISABLED
+    CONTROL         "", IDC_TASKBARPROP_DESKBANDLIST, "SysTreeView32",WS_BORDER | WS_TABSTOP | WS_DISABLED, 7,20,236,160, WS_EX_CLIENTEDGE
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Propiedades de la Barra de tareas y del Menú inicio"
 END

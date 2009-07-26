@@ -95,8 +95,8 @@
 #define DDNOTIFY_CLOSEVIDEOPORT                   0x0200
 #define DDNOTIFY_CLOSECAPTURE                     0x0400
 
-typedef DWORD (*LPDXAPI)(DWORD dwFunctionNum, LPVOID lpvInBuffer, DWORD cbInBuffer, LPVOID  lpvOutBuffer, DWORD  cbOutBuffer);
-typedef ULONG (*LPDD_NOTIFYCALLBACK) (DWORD dwFlags, PVOID pContext, DWORD dwParam1, DWORD dwParam2);
+typedef DWORD (PASCAL *LPDXAPI)(DWORD dwFunctionNum, LPVOID lpvInBuffer, DWORD cbInBuffer, LPVOID  lpvOutBuffer, DWORD  cbOutBuffer);
+typedef ULONG (PASCAL *LPDD_NOTIFYCALLBACK) (DWORD dwFlags, PVOID pContext, DWORD dwParam1, DWORD dwParam2);
 
 typedef struct _DDCAPBUFFINFO
 {

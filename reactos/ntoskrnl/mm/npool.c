@@ -1699,6 +1699,22 @@ MiInitializeNonPagedPool(VOID)
    PVOID Address;
    HDR_USED* used;
    HDR_FREE* free;
+   PVOID BaseAddress;
+   PHYSICAL_ADDRESS BoundaryAddressMultiple;
+   PMEMORY_AREA MArea;
+   BoundaryAddressMultiple.QuadPart = 0;
+    
+   BaseAddress = MiNonPagedPoolStart;
+   MmCreateMemoryArea(MmGetKernelAddressSpace(),
+                      MEMORY_AREA_SYSTEM | MEMORY_AREA_STATIC,
+                      &BaseAddress,
+                      MiNonPagedPoolLength,
+                      PAGE_READWRITE,
+                      &MArea,
+                      TRUE,
+                      0,
+                      BoundaryAddressMultiple);
+    
 #ifdef TAG_STATISTICS_TRACKING
 
    for (i = 0; i < TAG_HASH_TABLE_SIZE; i++)

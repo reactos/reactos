@@ -138,7 +138,7 @@ UserHeapReAlloc(PVOID lpMem,
 static __inline PVOID
 UserHeapAddressToUser(PVOID lpMem)
 {
-    PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
+    PPROCESSINFO W32Process = PsGetCurrentProcessWin32Process();
     return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)GlobalUserHeap) +
                    (ULONG_PTR)W32Process->HeapMappings.UserMapping);
 }

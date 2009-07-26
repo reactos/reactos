@@ -1,7 +1,7 @@
 #ifndef _WIN32K_WINSTA_H
 #define _WIN32K_WINSTA_H
 
-#include "msgqueue.h"
+#include "window.h"
 #include "clipboard.h"
 
 #define WINSTA_ROOT_NAME	L"\\Windows\\WindowStations"
@@ -41,7 +41,6 @@ typedef struct _WINSTATION_OBJECT
     BOOL DropShadow;
     BOOL DragFullWindows;
     BOOL FlatMenu;
-    USERPREFERENCESMASK UserPreferences;
 
     /* ScreenSaver */
     BOOL ScreenSaverRunning;
@@ -63,7 +62,7 @@ typedef struct _WINSTATION_OBJECT
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;
-extern PW32PROCESS LogonProcess;
+extern PPROCESSINFO LogonProcess;
 
 NTSTATUS FASTCALL
 InitWindowStationImpl(VOID);

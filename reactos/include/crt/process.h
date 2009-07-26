@@ -40,7 +40,7 @@ extern "C" {
 #pragma push_macro("abort")
 #undef abort
 #endif
-  void __cdecl __declspec(noreturn) abort(void);
+  __declspec(noreturn) void __cdecl abort(void);
 #if __MINGW_GNUC_PREREQ(4,4)
 #pragma pop_macro("abort")
 #undef abort

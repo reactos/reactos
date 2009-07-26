@@ -122,6 +122,7 @@ VOID RunLoader(VOID)
 			// to have different install methods, etc.
 			LoadReactOSSetup();
 		}
+#ifdef __i386__
 		else if (_stricmp(SettingValue, "ReactOSSetup2") == 0)
 		{
 #ifdef __i386__
@@ -129,6 +130,7 @@ VOID RunLoader(VOID)
 			LoadReactOSSetup2();
 #endif
 		}
+#endif
 #endif
 #ifdef __i386__
 		else if (_stricmp(SettingValue, "WindowsNT40") == 0)

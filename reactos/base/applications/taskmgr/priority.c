@@ -25,30 +25,14 @@
 
 void DoSetPriority(DWORD priority)
 {
-    LVITEM  lvitem;
-    ULONG   Index;
     DWORD   dwProcessId;
     HANDLE  hProcess;
     WCHAR   szText[260];
     WCHAR   szTitle[256];
 
-    for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
-    {
-        ZeroMemory(&lvitem, sizeof(LVITEM));
+    dwProcessId = GetSelectedProcessId();
 
-        lvitem.mask = LVIF_STATE;
-        lvitem.stateMask = LVIS_SELECTED;
-        lvitem.iItem = Index;
-
-        (void)ListView_GetItem(hProcessPageListCtrl, &lvitem);
-
-        if (lvitem.state & LVIS_SELECTED)
-            break;
-    }
-
-    dwProcessId = PerfDataGetProcessId(Index);
-
-    if ((ListView_GetSelectedCount(hProcessPageListCtrl) != 1) || (dwProcessId == 0))
+    if (dwProcessId == 0)
         return;
 
     LoadStringW(hInst, IDS_MSG_TASKMGRWARNING, szTitle, 256);

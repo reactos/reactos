@@ -24,4 +24,6 @@ extern VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex );
 extern SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToRead );
 extern VOID RecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex );
 
+#define ASSERT_LOCKED(x) ASSERT((x)->Locked)
+
 #endif/*_ROSRTL_RECMUTEX_H*/

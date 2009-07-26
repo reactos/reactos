@@ -23,9 +23,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             IN ACCESS_MASK DesiredAccess,
             IN POBJECT_ATTRIBUTES ObjectAttributes,
             IN ULONG TitleIndex,
-            IN PUNICODE_STRING Class,
+            IN PUNICODE_STRING Class OPTIONAL,
             IN ULONG CreateOptions,
-            OUT PULONG Disposition)
+            OUT PULONG Disposition OPTIONAL)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -58,6 +58,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             ProbeForRead(ObjectAttributes,
                          sizeof(OBJECT_ATTRIBUTES),
                          sizeof(ULONG));
+
+            if (Disposition) ProbeForWriteUlong(Disposition);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -228,6 +230,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
                IN ULONG Length,
                OUT PULONG ResultLength)
 {
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PCM_KEY_BODY KeyObject;
     REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
@@ -253,6 +256,29 @@ NtEnumerateKey(IN HANDLE KeyHandle,
                                        (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWriteUlong(ResultLength);
+            ProbeForWrite(KeyInformation,
+                          Length,
+                          sizeof(ULONG));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Dereference and return status */
+            ObDereferenceObject(KeyObject);
+            return Status;
+        }
+    }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -293,6 +319,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                     IN ULONG Length,
                     OUT PULONG ResultLength)
 {
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PCM_KEY_BODY KeyObject;
     REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
@@ -318,6 +345,29 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                                        (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWriteUlong(ResultLength);
+            ProbeForWrite(KeyValueInformation,
+                          Length,
+                          sizeof(ULONG));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Dereference and return status */
+            ObDereferenceObject(KeyObject);
+            return Status;
+        }
+    }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -358,6 +408,7 @@ NtQueryKey(IN HANDLE KeyHandle,
            IN ULONG Length,
            OUT PULONG ResultLength)
 {
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PCM_KEY_BODY KeyObject;
     REG_QUERY_KEY_INFORMATION QueryKeyInfo;
@@ -414,6 +465,29 @@ NtQueryKey(IN HANDLE KeyHandle,
     /* Quit on failure */
     if (!NT_SUCCESS(Status)) return Status;
 
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWriteUlong(ResultLength);
+            ProbeForWrite(KeyInformation,
+                          Length,
+                          sizeof(ULONG));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Dereference and return status */
+            ObDereferenceObject(KeyObject);
+            return Status;
+        }
+    }
+
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
     QueryKeyInfo.Object = (PVOID)KeyObject;
@@ -452,6 +526,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 IN ULONG Length,
                 OUT PULONG ResultLength)
 {
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
     PCM_KEY_BODY KeyObject;
     REG_QUERY_VALUE_KEY_INFORMATION QueryValueKeyInfo;
@@ -469,6 +544,29 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                                        (PVOID*)&KeyObject,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH2_TRY
+        {
+            ProbeForWriteUlong(ResultLength);
+            ProbeForWrite(KeyValueInformation,
+                          Length,
+                          sizeof(ULONG));
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* Dereference and return status */
+            ObDereferenceObject(KeyObject);
+            return Status;
+        }
+    }
 
     /* Make sure the name is aligned properly */
     if ((ValueNameCopy.Length & (sizeof(WCHAR) - 1)))

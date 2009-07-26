@@ -29,6 +29,7 @@ void selectTool(int tool)
 {
     ShowWindow(hSelection, SW_HIDE);
     activeTool = tool;
+    pointSP = 0; // resets the point-buffer of the polygon and bezier functions
     SendMessage(hToolSettings, WM_PAINT, 0, 0);
 }
 
@@ -60,6 +61,12 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             PostQuitMessage (0);       /* send a WM_QUIT to the message queue */
             break;
         case WM_CLOSE:
+            if (hwnd==hwndMiniature)
+            {
+                ShowWindow(hwndMiniature, SW_HIDE);
+                showMiniature = FALSE;
+                break;
+            }
             if (undoSteps>0)
             {
                 TCHAR programname[20];
@@ -144,6 +151,44 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         CheckMenuItem(GetMenu(hMainWnd), IDM_IMAGEDRAWOPAQUE, MF_UNCHECKED | MF_BYCOMMAND);
                     break;
             }
+            if (showGrid)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSHOWGRID, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSHOWGRID, MF_UNCHECKED | MF_BYCOMMAND);
+            if (showMiniature)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSHOWMINIATURE, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWSHOWMINIATURE, MF_UNCHECKED | MF_BYCOMMAND);
+
+            if (zoom==125)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM125, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM125, MF_UNCHECKED | MF_BYCOMMAND);
+            if (zoom==250)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM25, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM25, MF_UNCHECKED | MF_BYCOMMAND);
+            if (zoom==500)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM50, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM50, MF_UNCHECKED | MF_BYCOMMAND);
+            if (zoom==1000)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM100, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM100, MF_UNCHECKED | MF_BYCOMMAND);
+            if (zoom==2000)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM200, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM200, MF_UNCHECKED | MF_BYCOMMAND);
+            if (zoom==4000)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM400, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM400, MF_UNCHECKED | MF_BYCOMMAND);
+            if (zoom==8000)
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM800, MF_CHECKED | MF_BYCOMMAND);
+            else
+                CheckMenuItem(GetMenu(hMainWnd), IDM_VIEWZOOM800, MF_UNCHECKED | MF_BYCOMMAND);
+
             break;
         case WM_SIZE:
             if (hwnd==hMainWnd)
@@ -153,6 +198,33 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 SendMessage(hStatusBar, SB_SETPARTS, 3, (int)&test);
                 MoveWindow(hScrollbox, 56, 49,LOWORD(lParam)-56, HIWORD(lParam)-72, TRUE);
                 //InvalidateRect(hwnd, NULL, TRUE);
+            }
+            if (hwnd==hImageArea)
+            {
+                MoveWindow(hSizeboxLeftTop, 
+                    0, 
+                    0, 3, 3, TRUE);
+                MoveWindow(hSizeboxCenterTop, 
+                    imgXRes*zoom/2000+3*3/4, 
+                    0, 3, 3, TRUE);
+                MoveWindow(hSizeboxRightTop, 
+                    imgXRes*zoom/1000+3, 
+                    0, 3, 3, TRUE);
+                MoveWindow(hSizeboxLeftCenter, 
+                    0, 
+                    imgYRes*zoom/2000+3*3/4, 3, 3, TRUE);
+                MoveWindow(hSizeboxRightCenter, 
+                    imgXRes*zoom/1000+3, 
+                    imgYRes*zoom/2000+3*3/4, 3, 3, TRUE);
+                MoveWindow(hSizeboxLeftBottom, 
+                    0, 
+                    imgYRes*zoom/1000+3, 3, 3, TRUE);
+                MoveWindow(hSizeboxCenterBottom, 
+                    imgXRes*zoom/2000+3*3/4, 
+                    imgYRes*zoom/1000+3, 3, 3, TRUE);
+                MoveWindow(hSizeboxRightBottom, 
+                    imgXRes*zoom/1000+3, 
+                    imgYRes*zoom/1000+3, 3, 3, TRUE);
             }
             if ((hwnd==hImageArea)||(hwnd==hScrollbox))
             {
@@ -218,8 +290,34 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             {
                 HDC hdc = GetDC(hImageArea);
                 StretchBlt(hdc, 0, 0, imgXRes*zoom/1000, imgYRes*zoom/1000, hDrawingDC, 0, 0, imgXRes, imgYRes, SRCCOPY);
+                if (showGrid && (zoom>=4000))
+                {
+                    HPEN oldPen = SelectObject(hdc, CreatePen(PS_SOLID, 1, 0x00a0a0a0));
+                    int counter;
+                    for (counter = 0; counter <= imgYRes; counter++)
+                    {
+                        MoveToEx(hdc, 0, counter*zoom/1000, NULL);
+                        LineTo(hdc, imgXRes*zoom/1000, counter*zoom/1000);
+                    }
+                    for (counter = 0; counter <= imgXRes; counter++)
+                    {
+                        MoveToEx(hdc, counter*zoom/1000, 0, NULL);
+                        LineTo(hdc, counter*zoom/1000, imgYRes*zoom/1000);
+                    }
+                    DeleteObject(SelectObject(hdc, oldPen));
+                }
                 ReleaseDC(hImageArea, hdc);
                 SendMessage(hSelection, WM_PAINT, 0, 0);
+                SendMessage(hwndMiniature, WM_PAINT, 0, 0);
+            }else
+            if (hwnd==hwndMiniature)
+            {
+                long mclient[4];
+                GetClientRect(hwndMiniature, (LPRECT)&mclient);
+                HDC hdc = GetDC(hwndMiniature);
+                BitBlt(hdc, -min(imgXRes*GetScrollPos(hScrollbox, SB_HORZ)/10000, imgXRes-mclient[2]), 
+                    -min(imgYRes*GetScrollPos(hScrollbox, SB_VERT)/10000, imgYRes-mclient[3]), imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
+                ReleaseDC(hwndMiniature, hdc);
             }
             break; 
             
@@ -257,7 +355,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
-                    startPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
+                    startPaintingL(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 }else
                 {
                     SendMessage(hwnd, WM_LBUTTONUP, wParam, lParam);
@@ -274,7 +372,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
-                    startPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, bgColor, fgColor);
+                    startPaintingR(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 }else
                 {
                     SendMessage(hwnd, WM_RBUTTONUP, wParam, lParam);
@@ -289,7 +387,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             { 
                 ReleaseCapture();
                 drawing = FALSE;
-                endPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
+                endPaintingL(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if (activeTool==5)
                 {
@@ -305,7 +403,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             { 
                 ReleaseCapture();
                 drawing = FALSE;
-                endPainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, bgColor, fgColor);
+                endPaintingR(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
                 if (activeTool==5)
                 {
@@ -329,7 +427,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 {
                     if ((wParam&MK_LBUTTON)!=0)
                     {
-                        whilePainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, fgColor, bgColor);
+                        whilePaintingL(hDrawingDC, (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if ((activeTool>=10)||(activeTool==2))
                         {
@@ -340,7 +438,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                     }
                     if ((wParam&MK_RBUTTON)!=0)
                     {
-                        whilePainting(hDrawingDC, LOWORD(lParam)*1000/zoom, HIWORD(lParam)*1000/zoom, bgColor, fgColor);
+                        whilePaintingR(hDrawingDC, (short)LOWORD(lParam)*1000/zoom, (short)HIWORD(lParam)*1000/zoom, fgColor, bgColor);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         if (activeTool>=10)
                         {
@@ -467,9 +565,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case IDM_EDITSELECTALL:
                     if (activeTool==2)
                     {
-                        startPainting(hDrawingDC, 0, 0, fgColor, bgColor);
-                        whilePainting(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
-                        endPainting(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
+                        startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
+                        whilePaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
+                        endPaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);
                     }
                     break;
                 case IDM_EDITCOPYTO:
@@ -521,9 +619,7 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                         int retVal = attributesDlg();
                         if ((LOWORD(retVal)!=0)&&(HIWORD(retVal)!=0))
                         {
-                            // cropReversible broken, dirty hack:
-                            // insertReversible(CopyImage(hBms[currInd], IMAGE_BITMAP, LOWORD(retVal), HIWORD(retVal), 0));
-                            cropReversible(LOWORD(retVal), HIWORD(retVal));
+                            cropReversible(LOWORD(retVal), HIWORD(retVal), 0, 0);
                             updateCanvasAndScrollbars();
                         }
                     }
@@ -545,6 +641,17 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case IDM_IMAGECROP:
                     insertReversible(CopyImage(hSelBm, IMAGE_BITMAP, 0, 0, LR_COPYRETURNORG));
                     updateCanvasAndScrollbars();
+                    break;
+
+                case IDM_VIEWSHOWGRID:
+                    showGrid = !showGrid;
+                    break;
+                case IDM_VIEWSHOWMINIATURE:
+                    showMiniature = !showMiniature;
+                    if (showMiniature)
+                        ShowWindow(hwndMiniature, SW_SHOW);
+                    else
+                        ShowWindow(hwndMiniature, SW_HIDE);
                     break;
                     
                 case IDM_VIEWZOOM125:

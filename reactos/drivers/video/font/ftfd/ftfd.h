@@ -52,11 +52,15 @@ typedef struct
 ULONG
 DbgPrint(IN PCHAR Format, IN ...);
 
-static __inline__
-void
-DbgBreakPoint(void)
+FORCEINLINE
+VOID
+DbgBreakPoint(VOID)
 {
+#ifdef __GNUC__
     asm volatile ("int $3");
+#else
+   __asm int 3;
+#endif
 }
 
 DHPDEV

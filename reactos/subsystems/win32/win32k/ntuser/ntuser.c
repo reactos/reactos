@@ -1,27 +1,8 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
- *  $Id: painting.c 16320 2005-06-29 07:09:25Z navaraf $
- *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
  *  PURPOSE:          ntuser init. and main funcs.
- *  FILE:             subsys/win32k/ntuser/ntuser.c
+ *  FILE:             subsystems/win32/win32k/ntuser/ntuser.c
  *  REVISION HISTORY:
  *       16 July 2005   Created (hardon)
  */
@@ -33,9 +14,41 @@
 #define NDEBUG
 #include <debug.h>
 
-ERESOURCE UserLock;
+BOOL InitSysParams();
 
-/* FUNCTIONS **********************************************************/
+/* GLOBALS *******************************************************************/
+
+ERESOURCE UserLock;
+ATOM AtomMessage; // Window Message atom.
+BOOL gbInitialized;
+HINSTANCE hModClient = NULL;
+BOOL ClientPfnInit = FALSE;
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+static
+NTSTATUS FASTCALL
+InitUserAtoms(VOID)
+{
+
+  gpsi->atomSysClass[ICLS_MENU]      = 32768;
+  gpsi->atomSysClass[ICLS_DESKTOP]   = 32769;
+  gpsi->atomSysClass[ICLS_DIALOG]    = 32770;
+  gpsi->atomSysClass[ICLS_SWITCH]    = 32771;
+  gpsi->atomSysClass[ICLS_ICONTITLE] = 32772;
+  gpsi->atomSysClass[ICLS_TOOLTIPS]  = 32774;
+  
+  /* System Message Atom */
+  AtomMessage = IntAddGlobalAtom(L"Message", TRUE);
+  gpsi->atomSysClass[ICLS_HWNDMESSAGE] = AtomMessage;
+
+  /* System Context Help Id Atom */
+  gpsi->atomContextHelpIdProp = IntAddGlobalAtom(L"SysCH", TRUE);
+
+  return STATUS_SUCCESS;
+}
+
+/* FUNCTIONS *****************************************************************/
 
 
 NTSTATUS FASTCALL InitUserImpl(VOID)
@@ -66,8 +79,91 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
          DPRINT("Global Server Data -> %x\n", gpsi);
       }
    }
+
+   InitUserAtoms();
+
+   InitSysParams();
+
    return STATUS_SUCCESS;
 }
+
+
+NTSTATUS
+NTAPI
+UserInitialize(
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent)
+{
+// Set W32PF_Flags |= (W32PF_READSCREENACCESSGRANTED | W32PF_IOWINSTA)
+// Create Object Directory,,, Looks like create workstation. "\\Windows\\WindowStations"
+// Create Event for Diconnect Desktop.
+// Initialize Video.
+// {
+//     DrvInitConsole.
+//     DrvChangeDisplaySettings.
+//     Update Shared Device Caps.
+//     Initialize User Screen.
+// }
+// Create ThreadInfo for this Thread!
+// Set Global SERVERINFO Error flags.
+// Load Resources.
+
+    NtUserUpdatePerUserSystemParameters(0, TRUE);
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    Called from win32csr.
+ */
+NTSTATUS
+APIENTRY
+NtUserInitialize(
+  DWORD   dwWinVersion,
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent)
+{
+    NTSTATUS Status;
+
+    DPRINT1("Enter NtUserInitialize(%lx, %p, %p)\n",
+            dwWinVersion, hPowerRequestEvent, hMediaRequestEvent);
+
+    /* Check the Windows version */
+    if (dwWinVersion != 0)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Acquire exclusive lock */
+    UserEnterExclusive();
+
+    /* Check if we are already initialized */
+    if (gbInitialized)
+    {
+        UserLeave();
+        return STATUS_UNSUCCESSFUL;
+    }
+
+// Initialize Power Request List.
+// Initialize Media Change.
+// InitializeGreCSRSS();
+// {
+//    Startup DxGraphics.
+//    calls ** IntGdiGetLanguageID() and sets it **.
+//    Enables Fonts drivers, Initialize Font table & Stock Fonts.
+// }
+
+    /* Initialize USER */
+    Status = UserInitialize(hPowerRequestEvent, hMediaRequestEvent);
+
+    /* Set us as initialized */
+    gbInitialized = TRUE;
+
+    /* Return */
+    UserLeave();
+    return Status;
+}
+
 
 /*
 RETURN

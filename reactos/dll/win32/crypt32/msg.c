@@ -1340,7 +1340,7 @@ static BOOL CSignedEncodeMsg_Update(HCRYPTMSG hCryptMsg, const BYTE *pbData,
 }
 
 static HCRYPTMSG CSignedEncodeMsg_Open(DWORD dwFlags,
- const void *pvMsgEncodeInfo, LPSTR pszInnerContentObjID,
+ const void *pvMsgEncodeInfo, LPCSTR pszInnerContentObjID,
  PCMSG_STREAM_INFO pStreamInfo)
 {
     const CMSG_SIGNED_ENCODE_INFO_WITH_CMS *info = pvMsgEncodeInfo;
@@ -1553,7 +1553,7 @@ static BOOL CDecodeMsg_CopyData(CRYPT_DATA_BLOB *blob, const BYTE *pbData,
     return ret;
 }
 
-static BOOL CDecodeMsg_DecodeDataContent(CDecodeMsg *msg, CRYPT_DER_BLOB *blob)
+static BOOL CDecodeMsg_DecodeDataContent(CDecodeMsg *msg, const CRYPT_DER_BLOB *blob)
 {
     BOOL ret;
     CRYPT_DATA_BLOB *data;
@@ -1613,7 +1613,7 @@ static inline void CRYPT_FixUpAlgorithmID(CRYPT_ALGORITHM_IDENTIFIER *id)
 }
 
 static BOOL CDecodeMsg_DecodeHashedContent(CDecodeMsg *msg,
- CRYPT_DER_BLOB *blob)
+ const CRYPT_DER_BLOB *blob)
 {
     BOOL ret;
     CRYPT_DIGESTED_DATA *digestedData;

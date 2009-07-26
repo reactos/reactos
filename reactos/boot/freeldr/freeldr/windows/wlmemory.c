@@ -922,8 +922,8 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	Ke386SetInterruptDescriptorTable(IdtDesc);
 
 	// Jump to proper CS and clear prefetch queue
-	asm("ljmp	$0x08, $mb1\n"
-		"mb1:\n");
+	asm("ljmp	$0x08, $1f\n"
+		"1:\n");
 
 	// Set SS selector
 	asm(".intel_syntax noprefix\n");

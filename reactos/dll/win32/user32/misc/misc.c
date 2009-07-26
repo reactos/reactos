@@ -268,12 +268,12 @@ IsGUIThread(
 
 BOOL
 FASTCALL
-TestWindowProcess(PWINDOW Wnd)
+TestWindowProcess(PWND Wnd)
 {
-   if (Wnd->ti == (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
+   if (Wnd->head.pti == (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
       return TRUE;
    else
-      return (NtUserQueryWindow(Wnd->hdr.Handle, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
+      return (NtUserQueryWindow(Wnd->head.h, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
               (DWORD)NtCurrentTeb()->ClientId.UniqueProcess );
 }
 
@@ -426,25 +426,30 @@ ValidateHandleNoErr(HANDLE handle, UINT uType)
 //
 // Validate a callproc handle and return the pointer to the object.
 //
-PCALLPROC
+PCALLPROCDATA
 FASTCALL
 ValidateCallProc(HANDLE hCallProc)
 {
-    PCALLPROC CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
-    if (CallProc != NULL && CallProc->pi == g_ppi)
-        return CallProc;
+  PUSER_HANDLE_ENTRY pEntry;
 
-    return NULL;
+  PCALLPROCDATA CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
+
+  pEntry = GetUser32Handle(hCallProc);
+
+  if (CallProc != NULL && pEntry->ppi == g_ppi)
+     return CallProc;
+
+  return NULL;
 }
 
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwnd(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -479,11 +484,11 @@ ValidateHwnd(HWND hwnd)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndNoErr(HWND hwnd)
 {
-    PWINDOW Wnd;
+    PWND Wnd;
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -515,11 +520,11 @@ ValidateHwndNoErr(HWND hwnd)
     return NULL;
 }
 
-PWINDOW
+PWND
 FASTCALL
 GetThreadDesktopWnd(VOID)
 {
-    PWINDOW Wnd = GetThreadDesktopInfo()->Wnd;
+    PWND Wnd = GetThreadDesktopInfo()->Wnd;
     if (Wnd != NULL)
         Wnd = DesktopPtrToUser(Wnd);
     return Wnd;
@@ -528,7 +533,7 @@ GetThreadDesktopWnd(VOID)
 //
 // Validate a window handle and return the pointer to the object.
 //
-PWINDOW
+PWND
 FASTCALL
 ValidateHwndOrDesk(HWND hwnd)
 {

@@ -2,10 +2,22 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="write" type="win32gui" installbase="system32" installname="write.exe" unicode="yes">
 	<include base="write">.</include>
-	<library>kernel32</library>
 	<library>user32</library>
-	<library>advapi32</library>
-	<library>shell32</library>
+	<library>gdi32</library>
+	<library>kernel32</library>
 	<file>write.c</file>
-	<file>rsrc.rc</file>
+	<file>De.rc</file>
+	<file>En.rc</file>
+	<file>Fr.rc</file>
+	<file>Ja.rc</file>
+	<file>Ko.rc</file>
+	<file>Lt.rc</file>
+	<file>Nl.rc</file>
+	<file>No.rc</file>
+	<file>Pl.rc</file>
+	<file>Pt.rc</file>
+	<file>Ro.rc</file>
+	<file>Ru.rc</file>
+	<file>Si.rc</file>
+	<file>Sv.rc</file>
 </module>

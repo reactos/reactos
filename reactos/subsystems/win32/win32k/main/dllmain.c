@@ -27,6 +27,8 @@
 #define NDEBUG
 #include <debug.h>
 
+HANDLE hModuleWin;
+
 PGDI_HANDLE_TABLE INTERNAL_CALL GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject);
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 /* FIXME */
@@ -53,7 +55,7 @@ APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
-    PW32PROCESS Win32Process;
+    PPROCESSINFO Win32Process;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kProcessCallback\n");
@@ -387,6 +389,8 @@ DriverEntry (
       return STATUS_UNSUCCESSFUL;
     }
 
+  hModuleWin = MmPageEntireDriver(DriverEntry);
+
     /*
      * Register Object Manager Callbacks
      */
@@ -527,6 +531,8 @@ DriverEntry (
       DPRINT1("Unable to initialize font support\n");
       return STATUS_UNSUCCESSFUL;
     }
+
+  InitXlateImpl();
 
   /* Create stock objects, ie. precreated objects commonly
      used by win32 applications */
