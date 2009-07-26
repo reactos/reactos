@@ -15,6 +15,7 @@ typedef struct tagHOOKTABLE
 
 typedef struct tagEVENTHOOK
 {
+  THRDESKHEAD    head;
   LIST_ENTRY     Chain;      /* Event chain entry */
   PETHREAD       Thread;     /* Thread owning the event */
   UINT           eventMin;
@@ -25,8 +26,6 @@ typedef struct tagEVENTHOOK
   ULONG          Flags;      /* Some internal flags */
   ULONG_PTR      offPfn;
   INT            ihmod;
-  THRDESKHEAD    head; // FIXME When on top it creates problems
-  UNICODE_STRING ModuleName; /* Module name for global events */
 } EVENTHOOK, *PEVENTHOOK;
 
 typedef struct tagEVENTTABLE

@@ -185,6 +185,21 @@ typedef struct _CLSMENUNAME
   PUNICODE_STRING pusMenuName;
 } CLSMENUNAME, *PCLSMENUNAME;
 
+typedef struct tagSBDATA
+{
+  INT posMin;
+  INT posMax;  
+  INT page;
+  INT pos;
+} SBDATA, *PSBDATA;
+
+typedef struct tagSBINFO
+{
+  INT WSBflags;
+  SBDATA Horz;
+  SBDATA Vert;
+} SBINFO, *PSBINFO;
+
 typedef enum _GETCPD
 {
     UserGetCPDU2A      = 0x01,
@@ -221,7 +236,7 @@ typedef struct _CLS
     struct _CLS *pclsNext;
     RTL_ATOM atomClassName;
     ATOM atomNVClassName;
-    DWORD fnid; // New ClassId
+    DWORD fnid;
     struct _DESKTOP *rpdeskParent;
     PVOID pdce;
     DWORD CSF_flags;
@@ -242,14 +257,17 @@ typedef struct _CLS
     INT cbwndExtra;
     HINSTANCE hModule;
     HANDLE hIcon; /* FIXME - Use pointer! */
+    //PCURSOR spicn;
     HANDLE hCursor; /* FIXME - Use pointer! */
+    //PCURSOR spcur;
     HBRUSH hbrBackground;
     PWSTR lpszMenuName;     // kernel use
     PSTR lpszAnsiClassName; // " 
     HANDLE hIconSm; /* FIXME - Use pointer! */
+    //PCURSOR spicnSm;
 
     UINT Destroying : 1; // CSF_WOWDEFERDESTROY
-    UINT Unicode : 1;
+    UINT Unicode : 1; // !CSF_ANSIPROC
     UINT System : 1;  // CSF_SYSTEMCLASS
     UINT Global : 1;  // CS_GLOBALCLASS
     UINT MenuNameIsString : 1;
@@ -382,11 +400,16 @@ typedef struct _WND
     /* Property list head.*/
     LIST_ENTRY PropListHead;
     ULONG PropListItems;
+    /* Scrollbar info */
+    PSBINFO pSBInfo;
+    /* system menu handle. */
+    HMENU SystemMenu;
+    //PMENU spmenuSys;
     /* Window menu handle or window id */
     UINT IDMenu; // Use spmenu
-    //PMENU spmenuSys;
     //PMENU spmenu;
-    HRGN      hrgnClip;
+    HRGN hrgnClip;
+    HRGN hrgnNewFrame;
     /* Window name. */
     UNICODE_STRING strName;
     /* Size of the extra data associated with the window. */

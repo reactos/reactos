@@ -4,9 +4,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#define WINEVENT_INIT      0x40000000
-#define WINEVENT_DESTROYED 0x80000000
-
 typedef struct _EVENTPACK
 {
   PEVENTHOOK pEH; 
@@ -176,6 +173,7 @@ IntNotifyWinEvent(
    LONG  idChild)
 {
    PEVENTHOOK pEH;
+   PLIST_ENTRY pLE;
    LRESULT Result;
 
    DPRINT("IntNotifyWinEvent GlobalEvents = 0x%x pWnd 0x%x\n",GlobalEvents, pWnd);
@@ -186,17 +184,10 @@ IntNotifyWinEvent(
 
    if (!GlobalEvents || !GlobalEvents->Counts) return;
 
-   if (!UserIsEntered()) return;
-
-   pEH = (PEVENTHOOK)GlobalEvents->Events.Flink;
-   DPRINT("IntNotifyWinEvent pEH 0x%x\n",pEH);
+   pLE = GlobalEvents->Events.Flink;
+   pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
    do
    { 
-     if (pEH->Flags & WINEVENT_INIT)
-     {
-        DPRINT("IntNotifyWinEvent is still in INIT MODE!! pEH 0x%x\n",pEH);
-     }
-
      UserReferenceObject(pEH);
      // Must be inside the event window.
      if ( (pEH->eventMin <= Event) && (pEH->eventMax >= Event))
@@ -206,7 +197,11 @@ IntNotifyWinEvent(
            if (!(pEH->idProcess) || !(pEH->idThread) || 
                (NtCurrentTeb()->ClientId.UniqueProcess == (PVOID)pEH->idProcess))
            {
-              Result = IntCallLowLevelEvent(pEH, Event, UserHMGetHandle(pWnd), idObject, idChild);
+              Result = IntCallLowLevelEvent( pEH,
+                                             Event,
+                                             UserHMGetHandle(pWnd),
+                                             idObject,
+                                             idChild);
            }
         }// if ^skip own thread && ((Pid && CPid == Pid && ^skip own process) || all process)
         else if ( !(pEH->Flags & WINEVENT_SKIPOWNTHREAD) &&
@@ -215,22 +210,20 @@ IntNotifyWinEvent(
                      !(pEH->Flags & WINEVENT_SKIPOWNPROCESS)) ||
                      !pEH->idProcess ) )
         {
-
-           Result = co_IntCallEventProc( pEH->head.h,
-                                               Event,
-                               UserHMGetHandle(pWnd),
-                                            idObject,
-                                             idChild,
+           Result = co_IntCallEventProc( UserHMGetHandle(pEH),
+                                                        Event,
+                                        UserHMGetHandle(pWnd),
+                                                     idObject,
+                                                      idChild,
              PtrToUint(NtCurrentTeb()->ClientId.UniqueThread),
-                            (DWORD)EngGetTickCount(),
-                                           pEH->Proc);
-
+                                     (DWORD)EngGetTickCount(),
+                                                    pEH->Proc);
         }
      }
      UserDereferenceObject(pEH);
-
-     pEH = (PEVENTHOOK)pEH->Chain.Flink;
-   } while (pEH != (PEVENTHOOK)&GlobalEvents->Events.Flink);
+     pLE = pEH->Chain.Flink;
+     pEH = CONTAINING_RECORD(pLE, EVENTHOOK, Chain);
+   } while (pLE != &GlobalEvents->Events);
 }            
 
 VOID
@@ -275,7 +268,6 @@ NtUserSetWinEventHook(
 {
    PEVENTHOOK pEH;
    HWINEVENTHOOK Ret = NULL;
-   UNICODE_STRING ModuleName;
    NTSTATUS Status;
    HANDLE Handle;
    PETHREAD Thread = NULL;
@@ -330,8 +322,7 @@ NtUserSetWinEventHook(
       InsertTailList(&GlobalEvents->Events, &pEH->Chain);
       GlobalEvents->Counts++;
 
-      pEH->Flags     = dwflags|WINEVENT_INIT;
-      pEH->head.h    = Handle;
+      UserHMGetHandle(pEH) = Handle;
 //      pEH->head.pti  =?
 //      pEH->head.rpdesk
       if (Thread)
@@ -342,58 +333,16 @@ NtUserSetWinEventHook(
       pEH->eventMax  = eventMax;
       pEH->idProcess = idProcess;
       pEH->idThread  = idThread;
+      pEH->Flags     = dwflags;
 
       if (NULL != hmodWinEventProc)
       {
-         Status = MmCopyFromCaller(&ModuleName,
-                                      puString,
-                        sizeof(UNICODE_STRING));
-
-         if (! NT_SUCCESS(Status))
-         {
-            UserDereferenceObject(pEH);
-            IntRemoveEvent(pEH);
-            SetLastNtError(Status);
-            goto SetEventExit;
-         }
-
-         pEH->ModuleName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                   ModuleName.MaximumLength,
-                                   TAG_HOOK);
-
-         if (NULL == pEH->ModuleName.Buffer)
-         {
-            UserDereferenceObject(pEH);
-            IntRemoveEvent(pEH);
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-            goto SetEventExit;
-          }
-
-         pEH->ModuleName.MaximumLength = ModuleName.MaximumLength;
-
-         Status = MmCopyFromCaller(pEH->ModuleName.Buffer,
-                                   ModuleName.Buffer,
-                                   ModuleName.MaximumLength);
-
-         if (! NT_SUCCESS(Status))
-         {
-            ExFreePoolWithTag(pEH->ModuleName.Buffer, TAG_HOOK);
-            UserDereferenceObject(pEH);
-            IntRemoveEvent(pEH);
-            SetLastNtError(Status);
-            goto SetEventExit;
-         }
-
-         pEH->ModuleName.Length = ModuleName.Length;
-
          pEH->offPfn = (ULONG_PTR)((char *)lpfnWinEventProc - (char *)hmodWinEventProc);
          pEH->ihmod = (INT)hmodWinEventProc;
          pEH->Proc = lpfnWinEventProc;
       }
       else
          pEH->Proc = lpfnWinEventProc;
-
-      pEH->Flags &= ~WINEVENT_INIT;
 
       UserDereferenceObject(pEH);
 
