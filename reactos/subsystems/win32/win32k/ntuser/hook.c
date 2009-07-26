@@ -1082,7 +1082,7 @@ NtUserSetWindowsHookEx(HINSTANCE Mod,
         Mod = NULL;
         Global = FALSE;
 
-        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE) ThreadId, &Thread)))
+        if (!NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)(DWORD_PTR) ThreadId, &Thread)))
         {
             DPRINT1("Invalid thread id 0x%x\n", ThreadId);
             SetLastWin32Error(ERROR_INVALID_PARAMETER);

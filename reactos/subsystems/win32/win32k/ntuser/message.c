@@ -978,7 +978,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    PWINDOW_OBJECT Window;
    PMSGMEMORY MsgMemoryEntry;
    PVOID UserMem;
-   UINT Size;
+   SIZE_T Size;
    USER_MESSAGE Msg;
    DECLARE_RETURN(BOOL);
 
@@ -1021,18 +1021,18 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
          Info.LParamSize = Size;
          UserMem = NULL;
          Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &UserMem, 0,
-                                          &Info.LParamSize, MEM_COMMIT, PAGE_READWRITE);
+                                          &Size, MEM_COMMIT, PAGE_READWRITE);
          if (! NT_SUCCESS(Status))
          {
             SetLastNtError(Status);
             RETURN( (BOOL) -1);
          }
          /* Transfer lParam data to user-mode mem */
-         Status = MmCopyToCaller(UserMem, (PVOID) Info.Msg.lParam, Size);
+         Status = MmCopyToCaller(UserMem, (PVOID) Info.Msg.lParam, Info.LParamSize);
          if (! NT_SUCCESS(Status))
          {
             ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &UserMem,
-                                &Info.LParamSize, MEM_RELEASE);
+                                &Size, MEM_RELEASE);
             SetLastNtError(Status);
             RETURN( (BOOL) -1);
          }
@@ -1111,7 +1111,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    PWINDOW_OBJECT Window = NULL;
    PMSGMEMORY MsgMemoryEntry;
    PVOID UserMem;
-   UINT Size;
+   SIZE_T Size;
    USER_MESSAGE Msg;
    DECLARE_RETURN(BOOL);
 //   USER_REFERENCE_ENTRY Ref;
@@ -1155,7 +1155,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
             Info.LParamSize = Size;
             UserMem = NULL;
             Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &UserMem, 0,
-                                             &Info.LParamSize, MEM_COMMIT, PAGE_READWRITE);
+                                             &Size, MEM_COMMIT, PAGE_READWRITE);
 
             if (! NT_SUCCESS(Status))
             {
@@ -1163,11 +1163,11 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                RETURN( (BOOL) -1);
             }
             /* Transfer lParam data to user-mode mem */
-            Status = MmCopyToCaller(UserMem, (PVOID) Info.Msg.lParam, Size);
+            Status = MmCopyToCaller(UserMem, (PVOID) Info.Msg.lParam, Info.LParamSize);
             if (! NT_SUCCESS(Status))
             {
                ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &UserMem,
-                                   &Info.LParamSize, MEM_DECOMMIT);
+                                   &Size, MEM_DECOMMIT);
                SetLastNtError(Status);
                RETURN( (BOOL) -1);
             }
@@ -1409,7 +1409,7 @@ NtUserPostThreadMessage(DWORD idThread,
    DPRINT("Enter NtUserPostThreadMessage\n");
    UserEnterExclusive();
 
-   Status = PsLookupThreadByThreadId((HANDLE)idThread,&peThread);
+   Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread,&peThread);
 
    if( Status == STATUS_SUCCESS )
    {

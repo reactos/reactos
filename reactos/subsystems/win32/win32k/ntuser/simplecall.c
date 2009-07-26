@@ -749,7 +749,7 @@ NtUserCallHwndLock(
             if (!((Wnd->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
                break;
 
-            if(!(Menu = UserGetMenuObject((HMENU) Wnd->IDMenu)))
+            if(!(Menu = UserGetMenuObject((HMENU)(DWORD_PTR) Wnd->IDMenu)))
                break;
 
             Menu->MenuInfo.WndOwner = hWnd;
