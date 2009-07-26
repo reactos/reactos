@@ -5424,11 +5424,18 @@ Return Value:
             // Fill in vendor identification fields.
             //
 
-            for (i = 0; i < 20; i += 2) {
+            for (i = 0; i < 8; i += 2) {
                inquiryData->VendorId[i] =
                    ((PUCHAR)identifyData->ModelNumber)[i + 1];
                inquiryData->VendorId[i+1] =
                    ((PUCHAR)identifyData->ModelNumber)[i];
+            }
+
+            for (i = 0; i < 12; i += 2) {
+               inquiryData->ProductId[i] =
+                   ((PUCHAR)identifyData->ModelNumber)[i + 8 + 1];
+               inquiryData->ProductId[i+1] =
+                   ((PUCHAR)identifyData->ModelNumber)[i + 8];
             }
 
             //
