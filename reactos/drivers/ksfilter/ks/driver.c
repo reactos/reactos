@@ -11,17 +11,6 @@
 #include "ksfunc.h"
 
 
-NTSTATUS
-NTAPI
-DriverEntry(
-    IN PDRIVER_OBJECT Driver,
-    IN PUNICODE_STRING Registry_path
-)
-{
-    DPRINT1("ks.sys loaded\n");
-    return STATUS_SUCCESS;
-}
-
 /*
     @implemented
 */
