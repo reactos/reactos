@@ -195,8 +195,13 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
 
-        /* We're done, for now */
-        DPRINT("Mm0: COMPLETE\n");
+        /* Setup shared user data settings that NT does as well */
+        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
+        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
+        SharedUserData->LargePageMinimum = 0;
+        
+        /* For now, we assume that we're always Server */
+        SharedUserData->NtProductType = NtProductServer;
     }
     else if (Phase == 1)
     {
@@ -204,32 +209,23 @@ MmInitSystem(IN ULONG Phase,
         MmInitializePageOp();
         MmInitSectionImplementation();
         MmInitPagingFile();
-        MmCreatePhysicalMemorySection();
-
-        /* Setup shared user data settings that NT does as well */
-        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
-        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
-        SharedUserData->LargePageMinimum = 0;
-
-        /* For now, we assume that we're always Workstation */
-        SharedUserData->NtProductType = NtProductWinNt;
+        
+        /*
+         * Unmap low memory
+         */
+        MiInitBalancerThread();
+        
+        /*
+         * Initialise the modified page writer.
+         */
+        MmInitMpwThread();
+        
+        /* Initialize the balance set manager */
+        MmInitBsmThread();
     }
     else if (Phase == 2)
     {
-        /*
-        * Unmap low memory
-        */
-        MiInitBalancerThread();
 
-        /*
-        * Initialise the modified page writer.
-        */
-        MmInitMpwThread();
-
-        /* Initialize the balance set manager */
-        MmInitBsmThread();
-
-        /* FIXME: Read parameters from memory */
     }
 
     return TRUE;

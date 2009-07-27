@@ -2328,6 +2328,8 @@ MmInitSectionImplementation(VOID)
    ObjectTypeInitializer.CloseProcedure = MmpCloseSection;
    ObjectTypeInitializer.ValidAccessMask = SECTION_ALL_ACCESS;
    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &MmSectionObjectType);
+    
+   MmCreatePhysicalMemorySection();
 
    return(STATUS_SUCCESS);
 }
