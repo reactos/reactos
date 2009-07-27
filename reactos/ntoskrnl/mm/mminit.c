@@ -48,6 +48,7 @@ MemType[] =
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
 MM_STATS MmStats;
+PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;
 extern ULONG MmBootImageSize;
@@ -181,6 +182,11 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    extern MMPTE HyperTemplatePte;
+    PMMPTE PointerPte;
+    MMPTE TempPte = HyperTemplatePte;
+    PFN_NUMBER PageFrameNumber;
+    
     if (Phase == 0)
     {
         /* Initialize Mm bootstrap */
@@ -209,6 +215,31 @@ MmInitSystem(IN ULONG Phase,
         MmInitializePageOp();
         MmInitSectionImplementation();
         MmInitPagingFile();
+        
+        //
+        // Create a PTE to double-map the shared data section. We allocate it
+        // from paged pool so that we can't fault when trying to touch the PTE
+        // itself (to map it), since paged pool addresses will already be mapped
+        // by the fault handler.
+        //
+        MmSharedUserDataPte = ExAllocatePoolWithTag(PagedPool,
+                                                    sizeof(MMPTE),
+                                                    '  mM');
+        if (!MmSharedUserDataPte) return FALSE;
+        
+        //
+        // Now get the PTE for shared data, and read the PFN that holds it
+        //
+        PointerPte = MiAddressToPte(KI_USER_SHARED_DATA);
+        ASSERT(PointerPte->u.Hard.Valid == 1);
+        PageFrameNumber = PFN_FROM_PTE(PointerPte);
+        
+        //
+        // Now write a copy of it
+        //
+        TempPte.u.Hard.Owner = 1;
+        TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+        *MmSharedUserDataPte = TempPte;
         
         /*
          * Unmap low memory
