@@ -553,8 +553,6 @@ DECL_HANDLER(create_desktop)
         if ((desktop = create_desktop( &name, req->attributes, req->flags, winstation )))
         {
             reply->handle = alloc_handle( current, desktop, req->access, req->attributes );
-            if (get_error() != STATUS_OBJECT_NAME_EXISTS)
-                CsrNotifyCreateDesktop((HDESK)reply->handle);
             release_object( desktop );
         }
         release_object( winstation );
