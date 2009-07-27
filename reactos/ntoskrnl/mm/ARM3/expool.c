@@ -88,7 +88,6 @@ ExAllocateArmPoolWithTag(IN POOL_TYPE PoolType,
                          IN SIZE_T NumberOfBytes,
                          IN ULONG Tag)
 {
-    POOL_TYPE PoolType;
     PPOOL_DESCRIPTOR PoolDesc;
     PLIST_ENTRY ListHead;
     PPOOL_HEADER Entry, NextEntry, FragmentEntry;
