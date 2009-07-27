@@ -54,24 +54,8 @@ KdpServiceDispatcher(ULONG Service,
         {
             switch ((ULONG)Buffer1)
             {
-                case DumpNonPagedPool:
-                    MiDebugDumpNonPagedPool(FALSE);
-                    break;
-
                 case ManualBugCheck:
                     KeBugCheck(MANUALLY_INITIATED_CRASH);
-                    break;
-
-                case DumpNonPagedPoolStats:
-                    MiDebugDumpNonPagedPoolStats(FALSE);
-                    break;
-
-                case DumpNewNonPagedPool:
-                    MiDebugDumpNonPagedPool(TRUE);
-                    break;
-
-                case DumpNewNonPagedPoolStats:
-                    MiDebugDumpNonPagedPoolStats(TRUE);
                     break;
 
                 case DumpAllThreads:
