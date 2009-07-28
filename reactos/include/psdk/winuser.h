@@ -1843,6 +1843,8 @@ extern "C" {
 #define WM_APP 32768
 #define WM_GETTITLEBARINFOEX 0x033F
 
+#define XBUTTON1      0x0001
+#define XBUTTON2      0x0002
 
 #if (_WIN32_WINNT >= 0x0400)
 #define WHEEL_DELTA 120
