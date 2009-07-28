@@ -38,3 +38,11 @@ FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
            const RECT *lprect, LPCWSTR wstr, UINT count,
            const INT *lpDx );
 
+void RosDrv_send_mouse_input( HWND hwnd, DWORD flags, DWORD x, DWORD y,
+                              DWORD data, DWORD time, DWORD extra_info, UINT injected_flags );
+
+BOOL CDECL RosDrv_SetCursorPos( INT x, INT y );
+
+LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL unicode );
+
+BOOL CDECL RosDrv_GetCursorPos( LPPOINT pt );

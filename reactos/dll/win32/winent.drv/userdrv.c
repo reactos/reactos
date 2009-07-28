@@ -19,6 +19,7 @@
 #define NTOS_USER_MODE
 #include <ndk/ntndk.h>
 #include "ntrosgdi.h"
+#include "win32k/rosuser.h"
 #include "winent.h"
 #include "wine/server.h"
 #include "wine/debug.h"
@@ -129,8 +130,26 @@ UINT CDECL RosDrv_MapVirtualKeyEx( UINT code, UINT type, HKL layout )
 
 UINT CDECL RosDrv_SendInput( UINT count, LPINPUT inputs, int size )
 {
-    UNIMPLEMENTED;
-    return 0;
+    UINT i;
+
+    for (i = 0; i < count; i++, inputs++)
+    {
+        switch(inputs->type)
+        {
+        case INPUT_MOUSE:
+            RosDrv_send_mouse_input( 0, inputs->mi.dwFlags, inputs->mi.dx, inputs->mi.dy,
+                                     inputs->mi.mouseData, inputs->mi.time,
+                                     inputs->mi.dwExtraInfo, LLMHF_INJECTED );
+            break;
+        case INPUT_KEYBOARD:
+            FIXME( "INPUT_KEYBOARD not supported\n" );
+            break;
+        case INPUT_HARDWARE:
+            FIXME( "INPUT_HARDWARE not supported\n" );
+            break;
+        }
+    }
+    return count;
 }
 
 INT CDECL RosDrv_ToUnicodeEx( UINT virt, UINT scan, const BYTE *state, LPWSTR str,
@@ -152,27 +171,45 @@ SHORT CDECL RosDrv_VkKeyScanEx( WCHAR ch, HKL layout )
     return -1;
 }
 
-void CDECL RosDrv_SetCursor( CURSORICONINFO *info )
+void CDECL RosDrv_SetCursor( HCURSOR hCursor )
 {
-    UNIMPLEMENTED;
+    ICONINFO IconInfo;
+    BITMAP bitmap;
+
+    if (hCursor == NULL)
+    {
+        RosUserSetCursor(NULL);
+    }
+    else
+    {
+        if( GetIconInfo(hCursor, &IconInfo) )
+        {
+            /* Create handle mappings for IconInfo.hbmMask and
+               IconInfo.hbmColor in kernel mode */
+            if( GetObjectW(IconInfo.hbmMask, sizeof(bitmap), &bitmap))
+                RosGdiCreateBitmap(NULL, IconInfo.hbmMask, &bitmap, bitmap.bmBits);
+
+            if( GetObjectW(IconInfo.hbmColor, sizeof(bitmap), &bitmap))
+                RosGdiCreateBitmap(NULL, IconInfo.hbmColor, &bitmap, bitmap.bmBits);
+
+            RosUserSetCursor( &IconInfo );
+        }
+    }
 }
 
 BOOL CDECL RosDrv_GetCursorPos( LPPOINT pt )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return RosUserGetCursorPos( pt );
 }
 
 BOOL CDECL RosDrv_SetCursorPos( INT x, INT y )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return RosUserSetCursorPos( x, y );
 }
 
 BOOL CDECL RosDrv_ClipCursor( LPCRECT clip )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return RosUserClipCursor( clip );
 }
 
 BOOL CDECL RosDrv_GetScreenSaveActive(void)

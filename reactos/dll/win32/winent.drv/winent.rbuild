@@ -9,6 +9,7 @@
 	<file>gdidrv.c</file>
 	<file>main.c</file>
 	<file>userdrv.c</file>
+	<file>mouse.c</file>
 
 	<file>winent.rc</file>
 
