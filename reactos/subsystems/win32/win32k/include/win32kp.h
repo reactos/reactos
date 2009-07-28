@@ -46,6 +46,7 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <floatobj.h>
 #include <xformobj.h>
 #include <xlateobj.h>
+#include <cursor.h>
 #include <gre.h>
 
 #include "winesup.h"

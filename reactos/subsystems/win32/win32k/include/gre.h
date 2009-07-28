@@ -212,5 +212,15 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* pbo, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate);
 
+BOOL NTAPI
+GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo);
+
+VOID NTAPI
+GreMovePointer(
+    SURFOBJ *pso,
+    LONG x,
+    LONG y,
+    RECTL *prcl);
+
 
 #endif

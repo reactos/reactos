@@ -106,12 +106,14 @@
 		<file>surfobj.c</file>
 		<file>xformobj.c</file>
 		<file>xlateobj.c</file>
+		<file>cursoricon.c</file>
 	</directory>
 	<directory name="main">
 		<file>csr.c</file>
 		<file>err.c</file>
 		<file>init.c</file>
 		<file>usrheap.c</file>
+		<file>cursor.c</file>
 	</directory>
 	<directory name="wine">
 		<file>atom.c</file>

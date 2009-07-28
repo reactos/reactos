@@ -62,3 +62,7 @@ RosGdiRoundRect                    7
 RosGdiSwapBuffers                  1
 RosGdiUnrealizePalette             1
 RosUserConnectCsrss                0
+RosUserGetCursorPos                1
+RosUserSetCursorPos                2
+RosUserClipCursor                  1
+RosUserSetCursor                   1
