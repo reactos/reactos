@@ -25,7 +25,11 @@ typedef struct
     ULONG PinDescriptorCount;
     PKSFILTERFACTORY Factory;
     PFILE_OBJECT FileObject;
+    KMUTEX ProcessingMutex;
 
+
+    PFNKSFILTERPOWER Sleep;
+    PFNKSFILTERPOWER Wake;
 
     ULONG *PinInstanceCount;
 }IKsFilterImpl;
@@ -882,6 +886,8 @@ KspCreateFilter(
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
     This->Header.Type = KsObjectTypeFilter;
+    KeInitializeMutex(&This->ProcessingMutex, 0);
+
 
     /* allocate the stream descriptors */
     Status = IKsFilter_CreateDescriptors(This, (PKSFILTER_DESCRIPTOR)Factory->FilterDescriptor);
@@ -943,7 +949,7 @@ KspCreateFilter(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -951,11 +957,13 @@ NTAPI
 KsFilterAcquireProcessingMutex(
     IN PKSFILTER Filter)
 {
-    UNIMPLEMENTED
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -963,7 +971,9 @@ NTAPI
 KsFilterReleaseProcessingMutex(
     IN PKSFILTER Filter)
 {
-    UNIMPLEMENTED
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
 }
 
 /*
@@ -1038,7 +1048,7 @@ KsFilterGetAndGate(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 ULONG
@@ -1047,8 +1057,15 @@ KsFilterGetChildPinCount(
     IN PKSFILTER Filter,
     IN ULONG PinId)
 {
-    UNIMPLEMENTED
-    return 0;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    if (PinId >= This->PinDescriptorCount)
+    {
+        /* index is out of bounds */
+        return 0;
+    }
+    /* return pin instance count */
+    return This->PinInstanceCount[PinId];
 }
 
 /*
@@ -1066,7 +1083,7 @@ KsFilterGetFirstChildPin(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1076,11 +1093,14 @@ KsFilterRegisterPowerCallbacks(
     IN PFNKSFILTERPOWER Sleep OPTIONAL,
     IN PFNKSFILTERPOWER Wake OPTIONAL)
 {
-    UNIMPLEMENTED
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    This->Sleep = Sleep;
+    This->Wake = Wake;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PKSFILTER
@@ -1088,7 +1108,31 @@ NTAPI
 KsGetFilterFromIrp(
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return NULL;
-}
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
 
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(IoStack->FileObject);
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+
+    if (ObjectHeader->Type == KsObjectTypeFilter)
+    {
+        /* irp is targeted at the filter */
+        return (PKSFILTER)ObjectHeader->ObjectType;
+    }
+    else if (ObjectHeader->Type == KsObjectTypePin)
+    {
+        /* irp is for a pin */
+        return KsPinGetParentFilter((PKSPIN)ObjectHeader->ObjectType);
+    }
+    else
+    {
+        /* irp is unappropiate to retrieve a filter */
+        return NULL;
+    }
+}
