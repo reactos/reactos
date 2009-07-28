@@ -688,7 +688,7 @@ KsInitializeDevice(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -712,7 +712,7 @@ KsReferenceSoftwareBusObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -737,7 +737,7 @@ KsReferenceBusObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -759,7 +759,7 @@ KsDereferenceBusObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID

@@ -3,6 +3,23 @@
 
 typedef struct
 {
+    KoCreateObjectHandler CreateObjectHandler;
+}KO_DRIVER_EXTENSION, *PKO_DRIVER_EXTENSION;
+
+typedef struct
+{
+    const KSDEVICE_DESCRIPTOR  *Descriptor;
+}KS_DRIVER_EXTENSION, *PKS_DRIVER_EXTENSION;
+
+typedef struct
+{
+    KSOBJECT_HEADER ObjectHeader;
+    KSOBJECT_CREATE_ITEM CreateItem;
+}KO_OBJECT_HEADER, *PKO_OBJECT_HEADER;
+
+
+typedef struct
+{
     KSDISPATCH_TABLE DispatchTable;
     KSOBJECTTYPE Type;
 

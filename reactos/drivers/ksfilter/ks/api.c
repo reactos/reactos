@@ -9,7 +9,6 @@
 
 #include "priv.h"
 
-
 /*
     @unimplemented
 */
@@ -1167,8 +1166,209 @@ DllInitialize(
 }
 
 
+NTSTATUS
+NTAPI
+KopDispatchClose(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PKO_OBJECT_HEADER Header;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get ko object header */
+    Header = (PKO_OBJECT_HEADER)IoStack->FileObject->FsContext2;
+
+    /* free ks object header */
+    KsFreeObjectHeader(Header->ObjectHeader);
+
+    /* free ko object header */
+    FreeItem(Header);
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* release bus object */
+    KsDereferenceBusObject((KSDEVICE_HEADER)DeviceExtension->DeviceHeader);
+
+    /* complete request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
+}
+
+
+
+static KSDISPATCH_TABLE KoDispatchTable =
+{
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KopDispatchClose,
+    KsDispatchQuerySecurity,
+    KsDispatchSetSecurity,
+    KsDispatchFastIoDeviceControlFailure,
+    KsDispatchFastReadFailure,
+    KsDispatchFastReadFailure,
+};
+
+
+NTSTATUS
+NTAPI
+KopDispatchCreate(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PKO_OBJECT_HEADER Header = NULL;
+    PIO_STACK_LOCATION IoStack;
+    PKO_DRIVER_EXTENSION DriverObjectExtension;
+    NTSTATUS Status;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (!IoStack->FileObject)
+    {
+        DPRINT1("FileObject not attached!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+
+    /* get driver object extension */
+    DriverObjectExtension = (PKO_DRIVER_EXTENSION)IoGetDriverObjectExtension(DeviceObject->DriverObject, (PVOID)KoDriverInitialize);
+    if (!DriverObjectExtension)
+    {
+        DPRINT1("FileObject not attached!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+
+    /* allocate ko object header */
+    Header = (PKO_OBJECT_HEADER)AllocateItem(NonPagedPool, sizeof(KO_OBJECT_HEADER));
+    if (!Header)
+    {
+        DPRINT1("failed to allocate KO_OBJECT_HEADER\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    /* initialize create item */
+    Header->CreateItem.Create = KopDispatchCreate;
+    RtlInitUnicodeString(&Header->CreateItem.ObjectClass, KOSTRING_CreateObject);
+
+
+    /* now allocate the object header */
+    Status = KsAllocateObjectHeader(&Header->ObjectHeader, 1, &Header->CreateItem, Irp, &KoDispatchTable);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        goto cleanup;
+    }
+
+    /* FIXME
+     * extract clsid and interface id from irp
+     * call the standard create handler
+     */
+
+    UNIMPLEMENTED
+
+    IoStack->FileObject->FsContext2 = (PVOID)Header;
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+
+cleanup:
+
+    if (Header && Header->ObjectHeader)
+        KsFreeObjectHeader(Header->ObjectHeader);
+
+    if (Header)
+        FreeItem(Header);
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+
+
+NTSTATUS
+NTAPI
+KopAddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    NTSTATUS Status = STATUS_DEVICE_REMOVED;
+    PDEVICE_OBJECT FunctionalDeviceObject= NULL;
+    PDEVICE_OBJECT NextDeviceObject;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+
+    /* create the device object */
+    Status = IoCreateDevice(DriverObject, sizeof(DEVICE_EXTENSION), NULL, FILE_DEVICE_KS, FILE_DEVICE_SECURE_OPEN, FALSE, &FunctionalDeviceObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* allocate the create item */
+    CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+
+    if (!CreateItem)
+    {
+        /* not enough memory */
+        IoDeleteDevice(FunctionalDeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* initialize create item */
+    CreateItem->Create = KopDispatchCreate;
+    RtlInitUnicodeString(&CreateItem->ObjectClass, KOSTRING_CreateObject);
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)FunctionalDeviceObject->DeviceExtension;
+
+    /* now allocate the device header */
+    Status = KsAllocateDeviceHeader((KSDEVICE_HEADER*)&DeviceExtension->DeviceHeader, 1, CreateItem);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        IoDeleteDevice(FunctionalDeviceObject);
+        FreeItem(CreateItem);
+        return Status;
+    }
+
+    /* now attach to device stack */
+    NextDeviceObject = IoAttachDeviceToDeviceStack(FunctionalDeviceObject, PhysicalDeviceObject);
+    if (NextDeviceObject)
+    {
+        /* store pnp base object */
+         KsSetDevicePnpAndBaseObject((KSDEVICE_HEADER)DeviceExtension->DeviceHeader, NextDeviceObject, FunctionalDeviceObject);
+        /* set device flags */
+        FunctionalDeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
+        FunctionalDeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;
+    }
+    else
+    {
+        /* failed */
+        KsFreeDeviceHeader((KSDEVICE_HEADER)DeviceExtension->DeviceHeader);
+        FreeItem(CreateItem);
+        IoDeleteDevice(FunctionalDeviceObject);
+        Status =  STATUS_DEVICE_REMOVED;
+    }
+
+    /* return result */
+    return Status;
+}
+
+
 /*
-    @unimplemented
+    @implemented
 */
 COMDDKAPI
 NTSTATUS
@@ -1176,12 +1376,16 @@ NTAPI
 KoDeviceInitialize(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    return KsAddObjectCreateItemToDeviceHeader((KSDEVICE_HEADER)DeviceExtension->DeviceHeader, KopDispatchCreate, NULL, KOSTRING_CreateObject, NULL);
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 COMDDKAPI
 NTSTATUS
@@ -1191,8 +1395,38 @@ KoDriverInitialize(
     IN PUNICODE_STRING RegistryPathName,
     IN KoCreateObjectHandler CreateObjectHandler)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKO_DRIVER_EXTENSION DriverObjectExtension;
+    NTSTATUS Status;
+
+    /* allocate driver object extension */
+    Status = IoAllocateDriverObjectExtension(DriverObject, (PVOID)KoDriverInitialize, sizeof(KO_DRIVER_EXTENSION), (PVOID*)&DriverObjectExtension);
+
+    /* did it work */
+    if (NT_SUCCESS(Status))
+    {
+        /* store create handler */
+        DriverObjectExtension->CreateObjectHandler = CreateObjectHandler;
+
+         /* Setting our IRP handlers */
+        DriverObject->MajorFunction[IRP_MJ_PNP] = KsDefaultDispatchPnp;
+        DriverObject->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
+        DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp;
+
+        /* The driver unload routine */
+        DriverObject->DriverUnload = KsNullDriverUnload;
+
+        /* The driver-supplied AddDevice */
+        DriverObject->DriverExtension->AddDevice = KopAddDevice;
+
+        /* KS handles these */
+        DPRINT1("Setting KS function handlers\n");
+        KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CREATE);
+        KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
+        KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
+
+    }
+
+    return Status;
 }
 
 /*

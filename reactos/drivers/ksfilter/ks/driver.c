@@ -116,13 +116,16 @@ KsAddDevice(
     IN  PDRIVER_OBJECT DriverObject,
     IN  PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    PKSDEVICE_DESCRIPTOR *DriverObjectExtension;
-    PKSDEVICE_DESCRIPTOR Descriptor = NULL;
+    PKS_DRIVER_EXTENSION DriverObjectExtension;
+    const KSDEVICE_DESCRIPTOR *Descriptor = NULL;
 
+    /* get stored driver object extension */
     DriverObjectExtension = IoGetDriverObjectExtension(DriverObject, (PVOID)KsAddDevice);
+
     if (DriverObjectExtension)
     {
-        Descriptor = *DriverObjectExtension;
+        /* get the stored descriptor see KsInitializeDriver */
+        Descriptor = DriverObjectExtension->Descriptor;
     }
 
     return KsCreateDevice(DriverObject, PhysicalDeviceObject, Descriptor, 0, NULL);
@@ -140,17 +143,18 @@ KsInitializeDriver(
     IN const KSDEVICE_DESCRIPTOR  *Descriptor OPTIONAL
 )
 {
-    PKSDEVICE_DESCRIPTOR *DriverObjectExtension;
+    PKS_DRIVER_EXTENSION DriverObjectExtension;
     NTSTATUS Status;
 
     if (Descriptor)
     {
-        Status = IoAllocateDriverObjectExtension(DriverObject, (PVOID)KsAddDevice, sizeof(PKSDEVICE_DESCRIPTOR), (PVOID*)&DriverObjectExtension);
+        Status = IoAllocateDriverObjectExtension(DriverObject, (PVOID)KsAddDevice, sizeof(KS_DRIVER_EXTENSION), (PVOID*)&DriverObjectExtension);
         if (NT_SUCCESS(Status))
         {
-            *DriverObjectExtension = (KSDEVICE_DESCRIPTOR*)Descriptor;
+            DriverObjectExtension->Descriptor = Descriptor;
         }
     }
+
     /* Setting our IRP handlers */
     DriverObject->MajorFunction[IRP_MJ_CREATE] = IKsDevice_Create;
     DriverObject->MajorFunction[IRP_MJ_PNP] = IKsDevice_Pnp;
