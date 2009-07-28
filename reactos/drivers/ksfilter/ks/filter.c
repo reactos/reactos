@@ -831,6 +831,7 @@ KspCreateFilter(
     IN IKsFilterFactory *iface)
 {
     IKsFilterImpl * This;
+    IKsDevice *KsDevice;
     PKSFILTERFACTORY Factory;
     PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
@@ -856,10 +857,24 @@ KspCreateFilter(
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+
+    /* initialize object bag */
+    This->Filter.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
+    if (!This->Filter.Bag)
+    {
+        /* no memory */
+        FreeItem(This);
+        return STATUS_INSUFFICIENT_RESOURCES;	
+    }
+
+    KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+    KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->Filter.Bag, NULL);
+
     /* initialize filter instance */
     This->ref = 1;
     This->lpVtbl = &vt_IKsFilter;
     This->lpVtblKsControl = &vt_IKsControl;
+
     This->Filter.Descriptor = Factory->FilterDescriptor;
     This->Factory = Factory;
     This->FilterFactory = iface;

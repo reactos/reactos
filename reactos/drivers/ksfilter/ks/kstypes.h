@@ -1,6 +1,9 @@
 #ifndef KSTYPES_H__
 #define KSTYPES_H__
 
+#include <ntddk.h>
+#include <ks.h>
+
 typedef struct
 {
     KoCreateObjectHandler CreateObjectHandler;
@@ -87,9 +90,9 @@ typedef struct
     KSDEVICE_DESCRIPTOR* Descriptor;
 
     LIST_ENTRY PowerDispatchList;
+    LIST_ENTRY ObjectBags;
 
 }KSIDEVICE_HEADER, *PKSIDEVICE_HEADER;
-
 
 typedef struct
 {

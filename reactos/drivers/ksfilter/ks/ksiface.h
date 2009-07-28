@@ -14,6 +14,15 @@
     STDMETHOD_(ULONG,Release)(THIS) PURE;
 #endif
 
+typedef struct
+{
+    LIST_ENTRY Entry;
+    LIST_ENTRY ObjectList;
+    PRKMUTEX BagMutex;
+    PVOID DeviceHeader;
+}KSIOBJECT_BAG, *PKSIOBJECT_BAG;
+
+
 /*****************************************************************************
  * IKsAllocator
  *****************************************************************************
@@ -199,7 +208,6 @@ DECLARE_INTERFACE_(IKsPowerNotify, IUnknown)
 #undef INTERFACE
 #define INTERFACE IKsDevice
 
-struct KSIOBJECTBAG;
 struct KSPOWER_ENTRY;
 
 DECLARE_INTERFACE_(IKsDevice, IUnknown)
@@ -209,8 +217,8 @@ DECLARE_INTERFACE_(IKsDevice, IUnknown)
     STDMETHOD_(KSDEVICE*,GetStruct)(THIS) PURE;
 
     STDMETHOD_(NTSTATUS, InitializeObjectBag)(THIS_
-        IN struct KSIOBJECTBAG *Bag,
-        IN KMUTANT * Mutant) PURE;
+        IN PKSIOBJECT_BAG Bag,
+        IN PRKMUTEX Mutex) PURE;
 
     STDMETHOD_(NTSTATUS,AcquireDevice)(THIS) PURE;
     STDMETHOD_(NTSTATUS,ReleaseDevice)(THIS) PURE;

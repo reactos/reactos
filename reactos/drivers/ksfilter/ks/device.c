@@ -66,13 +66,26 @@ NTSTATUS
 NTAPI
 IKsDevice_fnInitializeObjectBag(
     IN IKsDevice * iface,
-    IN struct KSIOBJECTBAG *Bag,
-    IN KMUTANT * Mutant)
+    IN PKSIOBJECT_BAG Bag,
+    IN PRKMUTEX Mutex)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
 
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    if (!Mutex)
+    {
+        /* use device mutex */
+        Mutex = &This->DeviceMutex;
+    }
+
+    /* initialize object bag */
+    Bag->BagMutex = Mutex;
+    Bag->DeviceHeader = (PKSIDEVICE_HEADER)This;
+    InitializeListHead(&Bag->ObjectList);
+
+    /* insert bag into device list */
+    InsertTailList(&This->ObjectBags, &Bag->Entry);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -627,6 +640,7 @@ KsInitializeDevice(
     PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER Header;
     ULONG Index;
+    IKsDevice * KsDevice;
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* get device extension */
@@ -645,15 +659,30 @@ KsInitializeDevice(
         return Status;
     }
 
+    /* initialize IKsDevice interface */
+    Header->lpVtblIKsDevice = &vt_IKsDevice;
+    Header->ref = 1;
+
+    /* initialize object bag */
+    Header->KsDevice.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
+    if (!Header->KsDevice.Bag)
+    {
+        /* no memory */
+        KsFreeDeviceHeader((KSDEVICE_HEADER*)&DeviceExtension->DeviceHeader);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+    KsDevice->lpVtbl->InitializeObjectBag(KsDevice, Header->KsDevice.Bag, NULL);
+
+
     /* initialize device header */
     Header->KsDevice.FunctionalDeviceObject = FunctionalDeviceObject;
     Header->KsDevice.PhysicalDeviceObject = PhysicalDeviceObject;
     Header->KsDevice.NextDeviceObject = NextDeviceObject;
     Header->KsDevice.Descriptor = Descriptor;
     KsSetDevicePnpAndBaseObject(Header, PhysicalDeviceObject, NextDeviceObject);
-    /* initialize IKsDevice interface */
-    Header->lpVtblIKsDevice = &vt_IKsDevice;
-    Header->ref = 1;
+
 
     /* FIXME Power state */
 

@@ -509,6 +509,8 @@ KsAllocateDeviceHeader(
     InitializeListHead(&Header->TargetDeviceList);
     /* initialize power dispatch list */
     InitializeListHead(&Header->PowerDispatchList);
+    /* initialize object bag lists */
+    InitializeListHead(&Header->ObjectBags);
 
     /* initialize create item list */
     InitializeListHead(&Header->ItemList);
