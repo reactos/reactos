@@ -1564,7 +1564,11 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
                           FALSE);
 
         /* Set the Flags */
-        DebugObject->Flags = Flags;
+        DebugObject->Flags = 0;
+        if (Flags & DBGK_KILL_PROCESS_ON_EXIT)
+        {
+            DebugObject->KillProcessOnExit = TRUE;
+        }
 
         /* Insert it */
         Status = ObInsertObject((PVOID)DebugObject,
