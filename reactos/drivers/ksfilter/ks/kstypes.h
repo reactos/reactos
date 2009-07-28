@@ -28,6 +28,7 @@ typedef struct
 
     UNICODE_STRING ObjectClass;
     PUNKNOWN Unknown;
+    PVOID ObjectType;
 
     PDEVICE_OBJECT TargetDevice;
     LIST_ENTRY TargetDeviceListEntry;
@@ -55,11 +56,17 @@ typedef struct
 {
     KSOBJECTTYPE Type;
     PKSDEVICE KsDevice;
+    union
+    {
+        PKSDEVICE KsDevice;
+        PKSFILTERFACTORY KsFilterFactory;
+        PKSFILTER KsFilter;
+    }Parent;
 }KSBASIC_HEADER, *PKSBASIC_HEADER;
 
 typedef struct
 {
-    KSOBJECTTYPE Type;
+    KSBASIC_HEADER BasicHeader;
     KSDEVICE KsDevice;
     IKsDeviceVtbl *lpVtblIKsDevice;
 

@@ -865,6 +865,7 @@ KspCreateFilter(
     This->FilterFactory = iface;
     This->FileObject = IoStack->FileObject;
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
+    This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
     This->Header.Type = KsObjectTypeFilter;
 
     /* allocate the stream descriptors */
@@ -919,6 +920,7 @@ KspCreateFilter(
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->ObjectHeader->Type = KsObjectTypeFilter;
     This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
+    This->ObjectHeader->ObjectType = (PVOID)&This->Filter;
 
 
     /* completed initialization */

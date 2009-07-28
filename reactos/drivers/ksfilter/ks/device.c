@@ -653,7 +653,6 @@ KsInitializeDevice(
     KsSetDevicePnpAndBaseObject(Header, PhysicalDeviceObject, NextDeviceObject);
     /* initialize IKsDevice interface */
     Header->lpVtblIKsDevice = &vt_IKsDevice;
-    Header->Type = KsObjectTypeDevice;
     Header->ref = 1;
 
     /* FIXME Power state */

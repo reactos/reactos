@@ -513,6 +513,11 @@ KsAllocateDeviceHeader(
     /* initialize create item list */
     InitializeListHead(&Header->ItemList);
 
+    /* initialize basic header */
+    Header->BasicHeader.Type = KsObjectTypeDevice;
+    Header->BasicHeader.KsDevice = &Header->KsDevice;
+    Header->BasicHeader.Parent.KsDevice = &Header->KsDevice;
+
     /* are there any create items provided */
     if (ItemsCount && ItemsList)
     {

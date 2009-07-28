@@ -185,6 +185,7 @@ IKsFilterFactory_fnInitialize(
     This->FilterFactory.FilterDescriptor = Descriptor;
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Type = KsObjectTypeFilterFactory;
+    This->Header.Parent.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->DeviceHeader = DeviceExtension->DeviceHeader;
 
     InitializeListHead(&This->SymbolicLinkList);
