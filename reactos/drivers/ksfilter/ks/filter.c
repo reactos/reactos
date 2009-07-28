@@ -773,7 +773,6 @@ IKsFilter_CreateDescriptors(
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-
         /* allocate pin descriptor array */
         This->PinDescriptors = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * FilterDescriptor->PinDescriptorsCount);
         if(!This->PinDescriptors)
@@ -828,6 +827,80 @@ IKsFilter_CreateDescriptors(
 }
 
 NTSTATUS
+IKsFilter_CopyFilterDescriptor(
+    IKsFilterImpl * This,
+    const KSFILTER_DESCRIPTOR* FilterDescriptor)
+{
+    This->Filter.Descriptor = (const KSFILTER_DESCRIPTOR*)AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
+    if (!This->Filter.Descriptor)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* copy all fields */
+    RtlMoveMemory((PVOID)This->Filter.Descriptor, FilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
+
+
+    /* perform deep copy of pin descriptors */
+    if (FilterDescriptor->PinDescriptorsCount)
+    {
+        KSPIN_DESCRIPTOR_EX * PinDescriptors = (KSPIN_DESCRIPTOR_EX *)AllocateItem(NonPagedPool, FilterDescriptor->PinDescriptorSize * FilterDescriptor->PinDescriptorsCount);
+
+
+        if (!PinDescriptors)
+        {
+            FreeItem((PVOID)This->Filter.Descriptor);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlMoveMemory((PVOID)PinDescriptors, FilterDescriptor->PinDescriptors, FilterDescriptor->PinDescriptorSize * FilterDescriptor->PinDescriptorsCount);
+
+        /* brain-dead gcc hack */
+        RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptors, PinDescriptors, sizeof(PKSPIN_DESCRIPTOR_EX));
+
+    }
+
+    /* perform deep copy of node descriptors */
+    if (FilterDescriptor->NodeDescriptorsCount)
+    {
+        KSNODE_DESCRIPTOR* NodeDescriptor = AllocateItem(NonPagedPool, FilterDescriptor->NodeDescriptorsCount * FilterDescriptor->NodeDescriptorSize);
+        if (!NodeDescriptor)
+        {
+            if (This->Filter.Descriptor->PinDescriptors)
+                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+            FreeItem((PVOID)This->Filter.Descriptor);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlMoveMemory((PVOID)NodeDescriptor, FilterDescriptor->NodeDescriptors, FilterDescriptor->NodeDescriptorsCount * FilterDescriptor->NodeDescriptorSize);
+
+        /* brain-dead gcc hack */
+        RtlMoveMemory((PVOID)&This->Filter.Descriptor->NodeDescriptors, NodeDescriptor, sizeof(PKSNODE_DESCRIPTOR));
+    }
+
+    /* perform deep copy of connections descriptors */
+    if (FilterDescriptor->NodeDescriptorsCount)
+    {
+        KSTOPOLOGY_CONNECTION* Connections = AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescriptor->ConnectionsCount);
+        if (!Connections)
+        {
+            if (This->Filter.Descriptor->PinDescriptors)
+                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+
+            if (This->Filter.Descriptor->NodeDescriptors)
+                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+
+            FreeItem((PVOID)This->Filter.Descriptor);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        RtlMoveMemory((PVOID)Connections, FilterDescriptor->Connections, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescriptor->ConnectionsCount);
+
+        /* brain-dead gcc hack */
+        RtlMoveMemory((PVOID)&This->Filter.Descriptor->Connections, Connections, sizeof(PKSTOPOLOGY_CONNECTION));
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
 NTAPI
 KspCreateFilter(
     IN PDEVICE_OBJECT DeviceObject,
@@ -858,6 +931,15 @@ KspCreateFilter(
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    /* copy filter descriptor */
+    Status = IKsFilter_CopyFilterDescriptor(This, Factory->FilterDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        /* not enough memory */
+        FreeItem(This);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -868,8 +950,10 @@ KspCreateFilter(
     {
         /* no memory */
         FreeItem(This);
-        return STATUS_INSUFFICIENT_RESOURCES;	
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+
 
     KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
     KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->Filter.Bag, NULL);
@@ -977,7 +1061,7 @@ KsFilterReleaseProcessingMutex(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -987,8 +1071,41 @@ KsFilterAddTopologyConnections (
     IN ULONG NewConnectionsCount,
     IN const KSTOPOLOGY_CONNECTION *const NewTopologyConnections)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Count;
+    KSTOPOLOGY_CONNECTION * Connections;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    Count = This->Filter.Descriptor->ConnectionsCount + NewConnectionsCount;
+
+    /* allocate array */
+    Connections = AllocateItem(NonPagedPool, Count * sizeof(KSTOPOLOGY_CONNECTION));
+    if (!Connections)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* FIXME verify connections */
+
+    if (This->Filter.Descriptor->ConnectionsCount)
+    {
+        /* copy old connections */
+        RtlMoveMemory(Connections, This->Filter.Descriptor->Connections, sizeof(KSTOPOLOGY_CONNECTION) * This->Filter.Descriptor->ConnectionsCount);
+    }
+
+    /* add new connections */
+    RtlMoveMemory((PVOID)(Connections + This->Filter.Descriptor->ConnectionsCount), NewTopologyConnections, NewConnectionsCount);
+
+    /* add the new connections */
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->ConnectionsCount, &Count, sizeof(ULONG)); /* brain-dead gcc hack */
+
+    /* free old connections array */
+    if (This->Filter.Descriptor->ConnectionsCount)
+    {
+        FreeItem((PVOID)This->Filter.Descriptor->Connections);
+    }
+
+    /* brain-dead gcc hack */
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->Connections, Connections, sizeof(KSTOPOLOGY_CONNECTION*));
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -1020,18 +1137,82 @@ KsFilterCreateNode (
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsFilterCreatePinFactory (
     IN PKSFILTER Filter,
-    IN const KSPIN_DESCRIPTOR_EX *const PinDescriptor,
+    IN const KSPIN_DESCRIPTOR_EX *const InPinDescriptor,
     OUT PULONG PinID)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Count;
+    ULONG *PinInstanceCount;
+    KSPIN_DESCRIPTOR_EX * PinDescriptorsEx;
+    KSPIN_DESCRIPTOR * PinDescriptors;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    /* calculate existing count */
+    Count = This->PinDescriptorCount + 1;
+
+    /* allocate pin descriptors array */
+    PinDescriptorsEx = AllocateItem(NonPagedPool, max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * Count);
+    if (!PinDescriptorsEx)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* allocate pin instance count array */
+    PinInstanceCount = AllocateItem(NonPagedPool, sizeof(ULONG) * Count);
+    if (!PinInstanceCount)
+    {
+        /* not enough memory */
+        FreeItem(PinDescriptorsEx);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate pin descriptor array for pin property handling */
+    PinDescriptors = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * Count);
+    if (!PinDescriptors)
+    {
+        /* not enough memory */
+        FreeItem(PinDescriptorsEx);
+        FreeItem(PinInstanceCount);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* now copy all fields */
+    if (Count > 1)
+    {
+        /* copy old descriptors */
+        RtlMoveMemory(PinDescriptorsEx, This->Filter.Descriptor->PinDescriptors, max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * This->PinDescriptorCount);
+        RtlMoveMemory(PinInstanceCount, This->PinInstanceCount, This->PinDescriptorCount * sizeof(ULONG));
+        RtlMoveMemory(PinDescriptors, This->PinDescriptors, sizeof(KSPIN_DESCRIPTOR) * This->PinDescriptorCount);
+
+        /* now free old descriptors */
+        FreeItem(This->PinInstanceCount);
+        FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+        FreeItem(This->PinDescriptors);
+    }
+
+    /* add new pin factory */
+    RtlMoveMemory((PVOID)((ULONG_PTR)PinDescriptorsEx + max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * This->PinDescriptorCount), InPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+    RtlMoveMemory((PVOID)(PinDescriptors + This->PinDescriptorCount), &InPinDescriptor->PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+
+    /* replace old descriptor by using a gcc-compliant hack */
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptors, PinDescriptorsEx, sizeof(KSPIN_DESCRIPTOR_EX*));
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptorsCount, &Count, sizeof(ULONG));
+
+    This->PinDescriptors = PinDescriptors;
+    This->PinInstanceCount = PinInstanceCount;
+
+    /* store new pin id */
+    *PinID = This->PinDescriptorCount;
+
+    /* increment pin descriptor count */
+    This->PinDescriptorCount++;
+
+    return STATUS_SUCCESS;
+
 }
 
 /*
