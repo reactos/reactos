@@ -240,7 +240,9 @@ static int add_handle_to_array( struct user_handle_array *array, user_handle_t h
     if (array->count >= array->total)
     {
         int new_total = max( array->total * 2, 32 );
-        user_handle_t *new_array = realloc( array->handles, new_total * sizeof(*new_array) );
+        user_handle_t *new_array = ExReallocPool(array->handles, 
+                                                 new_total * sizeof(user_handle_t), 
+                                                 array->total * sizeof(user_handle_t));
         if (!new_array)
         {
             ExFreePool( array->handles );
@@ -688,7 +690,6 @@ user_handle_t window_from_point( struct desktop *desktop, int x, int y )
 }
 
 /* return list of all windows containing point (in absolute coords) */
-#if 0
 static int all_windows_from_point( struct window *top, int x, int y, struct user_handle_array *array )
 {
     struct window *ptr;
@@ -718,7 +719,6 @@ static int all_windows_from_point( struct window *top, int x, int y, struct user
     if (!add_handle_to_array( array, top->handle )) return 0;
     return 1;
 }
-#endif
 
 /* return the thread owning a window */
 PTHREADINFO get_window_thread( user_handle_t handle )
@@ -1981,7 +1981,6 @@ DECL_HANDLER(get_window_children)
 /* get a list of the window children that contain a given point */
 DECL_HANDLER(get_window_children_from_point)
 {
-#if 0
     struct user_handle_array array;
     struct window *parent = get_window( req->parent );
     data_size_t len;
@@ -1997,9 +1996,6 @@ DECL_HANDLER(get_window_children_from_point)
     len = min( get_reply_max_size((void*)req), array.count * sizeof(user_handle_t) );
     if (len) set_reply_data_ptr( (void*)req, array.handles, len );
     else ExFreePool( array.handles );
-#else
-    UNIMPLEMENTED;
-#endif
 }
 
 

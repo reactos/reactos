@@ -138,10 +138,11 @@ static atom_t add_atom_entry( struct atom_table *table, struct atom_entry *entry
         if (new_size > MAX_ATOMS) new_size = MAX_ATOMS;
         if (new_size > table->count)
         {
-            //new_table = ExAllocatePool(PagedPool, sizeof(*table->handles) * new_size);
-            //RtlCopyMemory(new_table, table, sizeof(*table->handles));
-            //new_table = realloc( table->handles, sizeof(*table->handles) * new_size );
-            UNIMPLEMENTED;
+            new_table = ExAllocatePool(PagedPool, sizeof(*table->handles) * new_size);
+            RtlCopyMemory(new_table, table, sizeof(*table->handles));
+            new_table = ExReallocPool(table->handles ,
+                                      sizeof(*table->handles) * new_size,
+                                      sizeof(*table->handles) * table->count);
         }
         if (!new_table)
         {

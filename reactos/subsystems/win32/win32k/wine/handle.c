@@ -184,12 +184,13 @@ struct handle_table *alloc_handle_table( PPROCESSINFO process, int count )
 /* grow a handle table */
 static int grow_handle_table( struct handle_table *table )
 {
-#if 0
     struct handle_entry *new_entries;
     int count = min( table->count * 2, MAX_HANDLE_ENTRIES );
 
     if (count == table->count ||
-        !(new_entries = realloc( table->entries, count * sizeof(struct handle_entry) )))
+        !(new_entries = ExReallocPool( table->entries, 
+		                               count * sizeof(struct handle_entry) ,
+									   table->count * sizeof(struct handle_entry))))
     {
         set_error( STATUS_INSUFFICIENT_RESOURCES );
         return 0;
@@ -197,10 +198,6 @@ static int grow_handle_table( struct handle_table *table )
     table->entries = new_entries;
     table->count   = count;
     return 1;
-#else
-    UNIMPLEMENTED;
-    return 0;
-#endif
 }
 
 /* allocate the first free entry in the handle table */
