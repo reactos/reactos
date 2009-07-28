@@ -37,6 +37,18 @@ RosUserGetMonitorInfo(
 );
 #endif
 
+BOOL NTAPI 
+RosUserGetCursorPos( LPPOINT pt );
+
+BOOL NTAPI 
+RosUserSetCursorPos( INT x, INT y );
+
+BOOL NTAPI 
+RosUserClipCursor( LPCRECT clip );
+
+void NTAPI 
+RosUserSetCursor( ICONINFO* IconInfo );
+
 VOID NTAPI
 RosUserConnectCsrss();
 
