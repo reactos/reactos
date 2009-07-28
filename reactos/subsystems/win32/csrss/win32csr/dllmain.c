@@ -575,6 +575,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     return TRUE;
 }
 
+void CsrInitInputSupport();
 
 BOOL WINAPI
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
@@ -597,6 +598,8 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
   *ObjectDefinitions = Win32CsrObjectDefinitions;
   *InitComplete = Win32CsrInitComplete;
   *HardError = Win32CsrHardError;
+
+  CsrInitInputSupport();
 
   return TRUE;
 }
