@@ -3407,9 +3407,9 @@ BOOL WINAPI SwitchDesktop( HDESK hDesktop)
 
     SetWindowPos(hWnd,
                  NULL, 0, 0,
-                 800,//nmh->ShowDesktop.Width,
-                 600,//nmh->ShowDesktop.Height,
-                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
+                 0,
+                 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     UpdateWindow(hWnd);
 
     RedrawWindow(NULL, NULL, 0, RDW_INVALIDATE | RDW_FRAME | RDW_ERASENOW | RDW_ALLCHILDREN);
