@@ -3135,6 +3135,12 @@ KsPinDataIntersectionEx(
     IN  PFNKSINTERSECTHANDLEREX IntersectHandler OPTIONAL,
     IN  PVOID HandlerContext OPTIONAL);
 
+KSDDKAPI PKSFILTER NTAPI
+KsPinGetParentFilter(
+    IN PKSPIN Pin
+    );
+
+
 /* Does this belong here? */
 
 KSDDKAPI NTSTATUS NTAPI
@@ -3863,6 +3869,7 @@ VOID
 NTAPI
 KsFilterAcquireProcessingMutex(
     IN  PKSFILTER Filter);
+
 
 KSDDKAPI
 NTSTATUS
