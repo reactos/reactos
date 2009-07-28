@@ -192,6 +192,9 @@ IKsFilterFactory_fnInitialize(
     InitializeListHead(&This->SymbolicLinkList);
     InitializeListHead(&This->FilterInstanceList);
 
+    /* initialize filter factory control mutex */
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
+
     /* does the device use a reference string */
     if (RefString || !Descriptor->ReferenceGuid)
     {

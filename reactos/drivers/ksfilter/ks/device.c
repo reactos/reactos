@@ -683,7 +683,6 @@ KsInitializeDevice(
     Header->KsDevice.Descriptor = Descriptor;
     KsSetDevicePnpAndBaseObject(Header, PhysicalDeviceObject, NextDeviceObject);
 
-
     /* FIXME Power state */
 
     if (Descriptor)

@@ -1449,7 +1449,7 @@ KoRelease(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1457,8 +1457,32 @@ NTAPI
 KsAcquireControl(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    KeWaitForSingleObject(&BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
+
 }
+
+/*
+    @implemented
+*/
+VOID
+NTAPI
+KsReleaseControl(
+    IN PVOID  Object)
+{
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    KeReleaseMutex(&BasicHeader->ControlMutex, FALSE);
+}
+
+
 
 /*
     @implemented
@@ -1791,17 +1815,6 @@ KsRegisterAggregatedClientUnknown(
 {
     UNIMPLEMENTED
     return NULL;
-}
-
-/*
-    @unimplemented
-*/
-VOID
-NTAPI
-KsReleaseControl(
-    IN PVOID  Object)
-{
-    UNIMPLEMENTED
 }
 
 /*

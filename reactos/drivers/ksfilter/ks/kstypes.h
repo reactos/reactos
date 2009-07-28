@@ -59,6 +59,7 @@ typedef struct
 {
     KSOBJECTTYPE Type;
     PKSDEVICE KsDevice;
+    KMUTEX ControlMutex;
     union
     {
         PKSDEVICE KsDevice;

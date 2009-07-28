@@ -899,6 +899,60 @@ IKsFilter_CopyFilterDescriptor(
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+IKsFilter_DispatchCreatePin(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    IKsFilterImpl * This;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    PKSPIN_CONNECT Connect;
+    NTSTATUS Status;
+
+    /* get the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+
+    /* get the filter object */
+    This = (IKsFilterImpl*)CreateItem->Context;
+
+    /* acquire control mutex */
+    KeWaitForSingleObject(&This->Header.ControlMutex, Executive, KernelMode, FALSE, NULL);
+
+    /* now validate the connect request */
+    Status = KsValidateConnectRequest(Irp, This->PinDescriptorCount, This->PinDescriptors, &Connect);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* create the pin */
+        Status = KspCreatePin(DeviceObject, Irp, This->Header.KsDevice, This->FilterFactory, (IKsFilter*)&This->lpVtbl, Connect);
+    }
+
+    /* release control mutex */
+    KeReleaseMutex(&This->Header.ControlMutex, FALSE);
+
+    if (Status != STATUS_PENDING)
+    {
+        /* complete request */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    /* done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+IKsFilter_DispatchCreateNode(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
+
 
 NTSTATUS
 NTAPI
@@ -913,6 +967,7 @@ KspCreateFilter(
     PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
+    PKSOBJECT_CREATE_ITEM CreateItem;
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -943,7 +998,6 @@ KspCreateFilter(
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-
     /* initialize object bag */
     This->Filter.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
     if (!This->Filter.Bag)
@@ -953,6 +1007,25 @@ KspCreateFilter(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* allocate create items */
+    CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM) * 2);
+    if (!CreateItem)
+    {
+        /* no memory */
+        FreeItem(This);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* initialize pin create item */
+    CreateItem[0].Create = IKsFilter_DispatchCreatePin;
+    CreateItem[0].Context = (PVOID)This;
+    CreateItem[0].Flags = KSCREATE_ITEM_FREEONSTOP;
+    RtlInitUnicodeString(&CreateItem[0].ObjectClass, KSSTRING_Pin);
+    /* initialize node create item */
+    CreateItem[1].Create = IKsFilter_DispatchCreateNode;
+    CreateItem[1].Context = (PVOID)This;
+    CreateItem[1].Flags = KSCREATE_ITEM_FREEONSTOP;
+    RtlInitUnicodeString(&CreateItem[1].ObjectClass, KSSTRING_TopologyNode);
 
 
     KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
@@ -970,6 +1043,7 @@ KspCreateFilter(
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
     This->Header.Type = KsObjectTypeFilter;
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
     KeInitializeMutex(&This->ProcessingMutex, 0);
 
 
@@ -979,6 +1053,7 @@ KspCreateFilter(
     {
         /* what can go wrong, goes wrong */
         FreeItem(This);
+        FreeItem(CreateItem);
         return Status;
     }
 
@@ -989,7 +1064,7 @@ KspCreateFilter(
     {
         /* failed to add filter */
         FreeItem(This);
-
+        FreeItem(CreateItem);
         return Status;
     }
 
@@ -1006,12 +1081,12 @@ KspCreateFilter(
 
         /* free filter instance */
         FreeItem(This);
-
+        FreeItem(CreateItem);
         return Status;
     }
 
     /* now allocate the object header */
-    Status = KsAllocateObjectHeader((PVOID*)&This->ObjectHeader, 0, NULL, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader((PVOID*)&This->ObjectHeader, 2, CreateItem, Irp, &DispatchTable);
     if (!NT_SUCCESS(Status))
     {
         /* failed to allocate object header */
