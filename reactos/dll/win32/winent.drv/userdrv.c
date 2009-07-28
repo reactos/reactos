@@ -20,6 +20,7 @@
 #include <ndk/ntndk.h>
 #include "ntrosgdi.h"
 #include "winent.h"
+#include "wine/server.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosuserdrv);
@@ -281,7 +282,37 @@ BOOL CDECL RosDrv_GetMonitorInfo( HMONITOR handle, LPMONITORINFO info )
 
 BOOL CDECL RosDrv_CreateDesktopWindow( HWND hwnd )
 {
-    WARN("RosDrv_CreateDesktopWindow(%x)\n", hwnd);
+    unsigned int width, height;
+
+    /* retrieve the real size of the desktop */
+    SERVER_START_REQ( get_window_rectangles )
+    {
+        req->handle = wine_server_user_handle( hwnd );
+        wine_server_call( req );
+        width  = reply->window.right - reply->window.left;
+        height = reply->window.bottom - reply->window.top;
+    }
+    SERVER_END_REQ;
+
+    TRACE("RosDrv_CreateDesktopWindow(%x), w %d h %d\n", hwnd, width, height);
+
+    if (!width && !height)  /* not initialized yet */
+    {
+        SERVER_START_REQ( set_window_pos )
+        {
+            req->handle        = wine_server_user_handle( hwnd );
+            req->previous      = 0;
+            req->flags         = SWP_NOZORDER;
+            req->window.left   = 0;
+            req->window.top    = 0;
+            req->window.right  = 800; // FIXME: Use primary surface's dimensions!
+            req->window.bottom = 600;
+            req->client        = req->window;
+            wine_server_call( req );
+        }
+        SERVER_END_REQ;
+    }
+
     return TRUE;
 }
 
