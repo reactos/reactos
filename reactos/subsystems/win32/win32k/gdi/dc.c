@@ -113,12 +113,12 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     /* Check if it's a compatible DC */
     if (*pdev)
     {
-        DPRINT1("Creating a compatible with %x DC!\n", *pdev);
+        DPRINT("Creating a compatible with %x DC!\n", *pdev);
     }
 
     if (dc->dwType == OBJ_MEMDC)
     {
-        DPRINT1("Creating a memory DC %x\n", hNewDC);
+        DPRINT("Creating a memory DC %x\n", hNewDC);
         slSize.cx = 1; slSize.cy = 1;
         hStockBitmap = GreCreateBitmap(slSize, 1, 1, 0, NULL);
         pNewDC->pBitmap = GDI_GetObjPtr(hStockBitmap, (SHORT)GDI_OBJECT_TYPE_BITMAP);
@@ -130,7 +130,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     }
     else
     {
-        DPRINT1("Creating a display DC %x\n", hNewDC);
+        DPRINT("Creating a display DC %x\n", hNewDC);
         pNewDC->pBitmap = GDI_GetObjPtr(PrimarySurface.pSurface, (SHORT)GDI_OBJECT_TYPE_BITMAP);
 
         /* Set DC rectangles */
@@ -196,6 +196,8 @@ VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
         hBmpKern = GreCreateBitmap(slSize, 1, 1, 0, NULL);
     }
 
+    DPRINT("Selecting %x bitmap to hdc %x\n", hBmpKern, physDev);
+
     /* Get a pointer to the DC and the bitmap*/
     pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
     pSurface = GDI_GetObjPtr(hBmpKern, (SHORT)GDI_OBJECT_TYPE_BITMAP);
@@ -246,7 +248,7 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
         break;
 
     case BS_HATCHED:
-        DPRINT("BS_HATCHED\n" );
+        DPRINT1("BS_HATCHED\n" );
         //GreCreateHatchedBrush();
         UNIMPLEMENTED;
         break;

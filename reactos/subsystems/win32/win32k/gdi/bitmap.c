@@ -29,7 +29,7 @@ BOOL APIENTRY RosGdiBitBlt( HDC physDevDst, INT xDst, INT yDst,
     BOOLEAN bRes;
     PDC pSrc, pDst;
 
-    DPRINT1("BitBlt %x -> %x\n", physDevSrc, physDevDst);
+    DPRINT("BitBlt %x -> %x\n", physDevSrc, physDevDst);
 
     /* Get a pointer to the DCs */
     pSrc = GDI_GetObjPtr(physDevSrc, (SHORT)GDI_OBJECT_TYPE_DC);
@@ -206,7 +206,7 @@ INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hUserBitmap, UINT StartScan,
     /* Get a pointer to the DCs */
     pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
 
-    DPRINT1("RosGdiSetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d\n",
+    DPRINT("RosGdiSetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d\n",
         hBitmap, hUserBitmap, StartScan, ScanLines);
 
     /* Set the bits */
