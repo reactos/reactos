@@ -184,12 +184,16 @@ VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
     PDC pDC;
     PSURFACE pSurface;
     HGDIOBJ hBmpKern;
+    SIZEL slSize;
 
     hBmpKern = GDI_MapUserHandle(hbitmap);
     if (!hBmpKern)
     {
         DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", hbitmap, physDev);
-        return;
+
+        /* It probably is a stock bitmap, so select it */
+        slSize.cx = 1; slSize.cy = 1;
+        hBmpKern = GreCreateBitmap(slSize, 1, 1, 0, NULL);
     }
 
     /* Get a pointer to the DC and the bitmap*/
@@ -222,13 +226,18 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
     DPRINT("RosGdiSelectBrush(): dc %x, brush style %x, brush color %x\n", physDev, pLogBrush->lbStyle, pLogBrush->lbColor);
 
     /* Free previous brush */
-    if (pDC->pFillBrush) GreFreeBrush(pDC->pFillBrush);
+    if (pDC->pFillBrush)
+    {
+        GreFreeBrush(pDC->pFillBrush);
+        pDC->pFillBrush = NULL;
+    }
 
     /* Create the brush */
     switch(pLogBrush->lbStyle)
     {
     case BS_NULL:
         DPRINT("BS_NULL\n" );
+        pDC->pFillBrush = GreCreateNullBrush();
         break;
 
     case BS_SOLID:
@@ -278,14 +287,16 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
 
     DPRINT("RosGdiSelectPen(): dc %x, pen style %x, pen color %x\n", physDev, pLogPen->lopnStyle, pLogPen->lopnColor);
 
-    /* Free previous brush */
-    if (pDC->pLineBrush) GreFreeBrush(pDC->pLineBrush);
-
     if (pExtLogPen)
     {
         DPRINT1("Ext pens aren't supported yet!");
+        /* Release the object */
+        GDI_ReleaseObj(physDev);
         return;
     }
+
+    /* Free previous brush */
+    if (pDC->pLineBrush) GreFreeBrush(pDC->pLineBrush);
 
     /* Create the pen */
     pDC->pLineBrush =
