@@ -494,13 +494,7 @@ void CDECL RosDrv_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
     if (offset == GWL_STYLE && (changed & WS_VISIBLE) && (style->styleNew & WS_VISIBLE))
     {
         /* Do some magic... */
-        ERR("Window %x is being made visible\n", hwnd);
-        GetWindowRect(hwnd, &rcWnd);
-        GetClientRect(hwnd, &rcClient);
-        //x=rcWnd.left;y=rcWnd.top;cx=rcWnd.right-rcWnd.left;cy=rcWnd.bottom-rcWnd.top;
-        x=0;y=0;cx=300;cy=300;
-        //ERR("x %d, y %d, cx %d, cy %d\n", x, y, cx, cy);
-        //SetWindowPos( hwnd, 0, x+1, y+1, cx, cy, SWP_NOACTIVATE | SWP_NOZORDER );
+        TRACE("Window %x is being made visible\n", hwnd);
     }
 
     if (offset == GWL_STYLE && (changed & WS_DISABLED))
@@ -586,7 +580,7 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
 
     if (valid_rects)
     {
-        ERR("valid_rects[0] (%d, %d)-(%d,%d)\n",
+        TRACE("valid_rects[0] (%d, %d)-(%d,%d)\n",
             valid_rects[0].top, valid_rects[0].left, valid_rects[0].bottom, valid_rects[0].right);
     }
 #if 0

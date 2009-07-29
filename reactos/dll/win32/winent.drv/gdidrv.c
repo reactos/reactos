@@ -424,7 +424,7 @@ BOOL CDECL RosDrv_Polyline( NTDRV_PDEVICE *physDev, const POINT* pt, INT count )
 
 UINT CDECL RosDrv_RealizeDefaultPalette( NTDRV_PDEVICE *physDev )
 {
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
     return FALSE;
 }
 
