@@ -426,7 +426,8 @@ EngSetPointerShape(
     }
     else
     {
-        pgp->XlateObject = pxlo;
+        pgp->XlateObject = EngAllocMem(0, sizeof(XLATEOBJ), TAG_XLATEOBJ);
+        memcpy(pgp->XlateObject, pxlo, sizeof(XLATEOBJ));
     }
 
     /* Create surface for saving the pixels under the cursor. */
