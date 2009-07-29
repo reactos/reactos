@@ -136,11 +136,8 @@ GreCreateBitmap(IN SIZEL Size,
         return 0;
 
     /* Allocate storage for surface object */
-    pSurface = ExAllocatePool(PagedPool, sizeof(SURFACE));
+    pSurface = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFACE), TAG_SURFOBJ);
     if (!pSurface) return NULL;
-
-    /* Zero it */
-    RtlZeroMemory(pSurface, sizeof(SURFACE));
 
     /* Create a handle for it */
     hSurface = alloc_gdi_handle(&pSurface->BaseObject, (SHORT)GDI_OBJECT_TYPE_BITMAP);
@@ -222,7 +219,7 @@ GreDeleteBitmap(HGDIOBJ hBitmap)
     pSurf = free_gdi_handle(hBitmap);
 
     /* Free its storage */
-    ExFreePool(pSurf);
+    EngFreeMem(pSurf);
 }
 
 LONG FASTCALL

@@ -80,7 +80,6 @@ GrepBitBltEx(
 
     if (bRemoveMouse)
     {
-#if 0
         SURFACE_LockBitmapBits(psurfTrg);
 
         if (psoSrc)
@@ -94,7 +93,6 @@ GrepBitBltEx(
         }
         MouseSafetyOnDrawStart(psoTrg, rclClipped.left, rclClipped.top,
                                rclClipped.right, rclClipped.bottom);
-#endif
     }
 
     /* Is the target surface device managed? */
@@ -113,6 +111,7 @@ GrepBitBltEx(
     /* Is the source surface device managed? */
     else if (psoSrc && psurfSrc->flHooks & HOOK_BITBLT)
     {
+        DPRINT1("psoSrc %p\n", psoSrc);
         pfnBitBlt = GDIDEVFUNCS(psoSrc).BitBlt;
     }
     else
@@ -132,7 +131,6 @@ GrepBitBltEx(
                         pptlBrush,
                         rop4);
 
-#if 0
     if (bRemoveMouse)
     {
         MouseSafetyOnDrawEnd(psoTrg);
@@ -147,7 +145,6 @@ GrepBitBltEx(
 
         SURFACE_UnlockBitmapBits(psurfTrg);
     }
-#endif
 
     return bResult;
 }

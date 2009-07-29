@@ -55,6 +55,9 @@ GreCreateSolidBrush(COLORREF crColor);
 PBRUSHGDI NTAPI
 GreCreatePatternBrush(PSURFACE pSurface);
 
+PBRUSHGDI NTAPI
+GreCreateNullBrush();
+
 VOID NTAPI
 GreFreeBrush(PBRUSHGDI pBrush);
 

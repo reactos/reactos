@@ -139,6 +139,24 @@ GreCreatePen(
 
 PBRUSHGDI
 NTAPI
+GreCreateNullBrush()
+{
+    PBRUSHGDI pBrush;
+
+    /* Allocate memory for the object */
+    pBrush = EngAllocMem(FL_ZERO_MEMORY, sizeof(BRUSHGDI), TAG_BRUSHOBJ);
+    if (!pBrush) return NULL;
+
+    /* Set NULL flag */
+    pBrush->flAttrs |= GDIBRUSH_IS_NULL;
+
+    /* Return newly created brush */
+    return pBrush;
+}
+
+
+PBRUSHGDI
+NTAPI
 GreCreateSolidBrush(COLORREF crColor)
 {
     PBRUSHGDI pBrush;
