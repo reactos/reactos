@@ -420,7 +420,6 @@ DECL_HANDLER(find_atom)
 }
 
 /* get global atom name */
-#if 0
 DECL_HANDLER(get_atom_information)
 {
     struct atom_table *table = get_table( req->table, 0 );
@@ -439,7 +438,7 @@ DECL_HANDLER(get_atom_information)
         release_object( table );
     }
 }
-#endif
+
 /* set global atom name */
 DECL_HANDLER(set_atom_information)
 {
