@@ -33,10 +33,10 @@ EngCreatePalette(
 
 BOOL
 APIENTRY
-EngDeletePalette(IN HPALETTE  hpal)
+EngDeletePalette(IN HPALETTE hpal)
 {
-    UNIMPLEMENTED;
-	return FALSE;
+    PALETTE_FreePaletteByHandle(hpal);
+    return TRUE;
 }
 
 ULONG
