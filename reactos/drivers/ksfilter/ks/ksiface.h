@@ -63,6 +63,20 @@ DECLARE_INTERFACE_(IKsClock, IUnknown)
 };
 
 /*****************************************************************************
+ * IKsTransport
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IKsTransport
+
+DECLARE_INTERFACE_(IKsTransport, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+};
+
+
+/*****************************************************************************
  * IKsPin
  *****************************************************************************
  */
@@ -70,9 +84,60 @@ DECLARE_INTERFACE_(IKsClock, IUnknown)
 #undef INTERFACE
 #define INTERFACE IKsPin
 
+struct KSPTRANSPORTCONFIG;
+
 DECLARE_INTERFACE_(IKsPin, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS, TransferKsIrp)(THIS_
+        IN PIRP Irp,
+        IN IKsTransport **OutTransport) PURE;
+
+    STDMETHOD_(VOID, DiscardKsIrp)(THIS_
+        IN PIRP Irp,
+        IN IKsTransport * *OutTransport) PURE;
+
+    STDMETHOD_(NTSTATUS, Connect)(THIS_
+        IN IKsTransport * TransportIn,
+        OUT IKsTransport ** OutTransportIn,
+        OUT IKsTransport * *OutTransportOut,
+        IN KSPIN_DATAFLOW DataFlow) PURE;
+
+    STDMETHOD_(NTSTATUS, SetDeviceState)(THIS_
+        IN KSSTATE OldState,
+        IN KSSTATE NewState,
+        IN IKsTransport * *OutTransport) PURE;
+
+    STDMETHOD_(VOID, SetResetState)(THIS_ 
+        IN KSRESET ResetState,
+        OUT IKsTransport * * OutTransportOut) PURE;
+
+    STDMETHOD_(NTSTATUS, GetTransportConfig)(THIS_
+        IN struct KSPTRANSPORTCONFIG * TransportConfig,
+        OUT IKsTransport ** OutTransportIn,
+        OUT IKsTransport ** OutTransportOut) PURE;
+
+    STDMETHOD_(NTSTATUS, SetTransportConfig)(THIS_
+        IN struct KSPTRANSPORTCONFIG const * TransportConfig,
+        OUT IKsTransport ** OutTransportIn,
+        OUT IKsTransport ** OutTransportOut) PURE;
+
+    STDMETHOD_(NTSTATUS, ResetTransportConfig)(THIS_
+        OUT IKsTransport ** OutTransportIn,
+        OUT IKsTransport ** OutTransportOut) PURE;
+
+    STDMETHOD_(PKSPIN, GetStruct)(THIS) PURE;
+    STDMETHOD_(PKSPROCESSPIN, GetProcessPin)(THIS) PURE;
+    STDMETHOD_(NTSTATUS, AttemptBypass)(THIS) PURE;
+    STDMETHOD_(NTSTATUS, AttemptUnbypass)(THIS) PURE;
+
+    STDMETHOD_(VOID, GenerateConnectionEvents)(THIS_
+        IN ULONG EventMask) PURE;
+
+    STDMETHOD_(NTSTATUS, ClientSetDeviceState)(THIS_
+        IN KSSTATE StateIn,
+        IN KSSTATE StateOut) PURE;
 };
 
 /*****************************************************************************

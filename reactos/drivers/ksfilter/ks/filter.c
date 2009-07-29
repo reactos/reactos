@@ -924,8 +924,22 @@ IKsFilter_DispatchCreatePin(
 
     if (NT_SUCCESS(Status))
     {
-        /* create the pin */
-        Status = KspCreatePin(DeviceObject, Irp, This->Header.KsDevice, This->FilterFactory, (IKsFilter*)&This->lpVtbl, Connect);
+        if (This->PinInstanceCount[Connect->PinId] < This->Filter.Descriptor->PinDescriptors[Connect->PinId].InstancesPossible)
+        {
+            /* create the pin */
+            Status = KspCreatePin(DeviceObject, Irp, This->Header.KsDevice, This->FilterFactory, (IKsFilter*)&This->lpVtbl, Connect, (KSPIN_DESCRIPTOR_EX*)&This->Filter.Descriptor->PinDescriptors[Connect->PinId]);
+
+            if (NT_SUCCESS(Status))
+            {
+                /* successfully created pin, increment pin instance count */
+                This->PinInstanceCount[Connect->PinId]++;
+            }
+        }
+        else
+        {
+            /* maximum instance count reached, bye-bye */
+            Status = STATUS_UNSUCCESSFUL;
+        }
     }
 
     /* release control mutex */
@@ -1040,11 +1054,13 @@ KspCreateFilter(
     This->Factory = Factory;
     This->FilterFactory = iface;
     This->FileObject = IoStack->FileObject;
+    KeInitializeMutex(&This->ProcessingMutex, 0);
+    /* initialize basic header */
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
     This->Header.Type = KsObjectTypeFilter;
     KeInitializeMutex(&This->Header.ControlMutex, 0);
-    KeInitializeMutex(&This->ProcessingMutex, 0);
+
 
 
     /* allocate the stream descriptors */
@@ -1095,9 +1111,7 @@ KspCreateFilter(
         return Status;
     }
 
-    /* initialize object header */
-    This->Header.Type = KsObjectTypeFilter;
-    This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
+    /* initialize object header extra fields */
     This->ObjectHeader->Type = KsObjectTypeFilter;
     This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
     This->ObjectHeader->ObjectType = (PVOID)&This->Filter;

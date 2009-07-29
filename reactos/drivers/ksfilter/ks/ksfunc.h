@@ -121,7 +121,8 @@ KspCreatePin(
     IN PKSDEVICE KsDevice,
     IN IKsFilterFactory * FilterFactory, 
     IN IKsFilter* Filter,
-    IN PKSPIN_CONNECT Connect);
+    IN PKSPIN_CONNECT Connect,
+    IN KSPIN_DESCRIPTOR_EX* Descriptor);
 
 
 #endif
