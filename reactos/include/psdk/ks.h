@@ -3477,6 +3477,11 @@ KsMapModuleName(
     Misc. Helper Functions
 */
 
+KSDDKAPI PVOID NTAPI
+KsGetNextSibling(
+    IN PVOID Object);
+
+
 KSDDKAPI NTSTATUS NTAPI
 KsCacheMedium(
     IN  PUNICODE_STRING SymbolicLink,
@@ -3642,6 +3647,13 @@ NTAPI
 KsAllocateObjectBag(
     IN  PKSDEVICE Device,
     OUT KSOBJECT_BAG* ObjectBag);
+
+KSDDKAPI
+VOID
+NTAPI
+KsFreeObjectBag(
+    IN KSOBJECT_BAG ObjectBag
+    );
 
 KSDDKAPI
 VOID
