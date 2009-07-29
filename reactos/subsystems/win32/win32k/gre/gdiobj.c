@@ -167,8 +167,8 @@ void *GDI_GetObjPtr( HGDIOBJ handle, SHORT type )
     GDIOBJHDR *ptr = NULL;
     int i;
 
-    //KeEnterCriticalRegion();
-    //ExAcquireResourceExclusiveLite(GDI_resource, TRUE);
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(GDI_resource, TRUE);
 
     i = ((UINT_PTR)handle >> 2) - FIRST_LARGE_HANDLE;
     if (i >= 0 && i < MAX_LARGE_HANDLES)
@@ -179,11 +179,12 @@ void *GDI_GetObjPtr( HGDIOBJ handle, SHORT type )
 
     if (!ptr)
     {
-        //ExReleaseResourceLite(GDI_resource);
-        //KeLeaveCriticalRegion();
         DPRINT1( "Invalid handle %p\n", handle );
     }
     //else TRACE("(%p): enter %d\n", handle, GDI_level.crst.RecursionCount);
+
+    ExReleaseResourceLite(GDI_resource);
+    KeLeaveCriticalRegion();
 
     return ptr;
 }
