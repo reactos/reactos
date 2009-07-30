@@ -223,14 +223,12 @@ DECL_HANDLER(set_class_info)
     struct window_class *class = get_window_class( req->window );
 
     if (!class) return;
-DPRINT1("Fixme!\n");
-#if 0
     if (req->flags && class->process != PsGetCurrentProcessWin32Process())
     {
-        set_error( STATUS_ACCESS_DENIED );
-        return;
+        //set_error( STATUS_ACCESS_DENIED );
+        //return;
+        DPRINT1("Fixme, should deny access!\n");
     }
-#endif
     if (req->extra_size > sizeof(req->extra_value) ||
         req->extra_offset < -1 ||
         req->extra_offset > class->nb_extra_bytes - (int)req->extra_size)
