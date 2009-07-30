@@ -61,7 +61,10 @@ DC_vUpdateFillBrush(PDC pdc)
         EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr, pxlo);
     }
 
-    EngDeleteXlate(pxlo);
+    if (pxlo != NULL)
+    {
+        EngDeleteXlate(pxlo);
+    }
 
     /* Clear flags */
     pdcattr->ulDirty_ &= ~(DIRTY_FILL | DC_BRUSH_DIRTY);
@@ -117,7 +120,10 @@ DC_vUpdateLineBrush(PDC pdc)
         EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr, pxlo);
     }
 
-    EngDeleteXlate(pxlo);
+    if (pxlo != NULL)
+    {
+        EngDeleteXlate(pxlo);
+    }
 
     /* Clear flags */
     pdcattr->ulDirty_ &= ~(DIRTY_LINE | DC_PEN_DIRTY);
