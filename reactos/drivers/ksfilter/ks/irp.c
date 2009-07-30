@@ -1622,15 +1622,3 @@ KsGetNodeIdFromIrp(
     return (ULONG)-1;
 }
 
-/*
-    @unimplemented
-*/
-KSDDKAPI
-PKSPIN
-NTAPI
-KsGetPinFromIrp(
-    IN PIRP Irp)
-{
-    UNIMPLEMENTED
-    return NULL;
-}

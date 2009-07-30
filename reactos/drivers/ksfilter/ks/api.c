@@ -1583,8 +1583,80 @@ KsCreateBusEnumObject(
     return STATUS_UNSUCCESSFUL;
 }
 
+ NTSTATUS
+NTAPI
+KspSetGetBusDataCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    /* signal completion */
+    KeSetEvent((PRKEVENT)Context, IO_NO_INCREMENT, FALSE);
+
+    /* more work needs be done, so dont free the irp */
+    return STATUS_MORE_PROCESSING_REQUIRED;
+
+}
+
+NTSTATUS
+KspDeviceSetGetBusData(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DataType,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length,
+    IN BOOL bGet)
+{
+    PIO_STACK_LOCATION IoStack;
+    PIRP Irp;
+    NTSTATUS Status;
+    KEVENT Event;
+
+    /* allocate the irp */
+    Irp = IoAllocateIrp(1, /*FIXME */
+                        FALSE);
+
+    if (!Irp)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* initialize the event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    /* setup a completion routine */
+    IoSetCompletionRoutine(Irp, KspSetGetBusDataCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+
+    /* setup parameters */
+    IoStack->Parameters.ReadWriteConfig.Buffer = Buffer;
+    IoStack->Parameters.ReadWriteConfig.Length = Length;
+    IoStack->Parameters.ReadWriteConfig.Offset = Offset;
+    IoStack->Parameters.ReadWriteConfig.WhichSpace = DataType;
+    /* setup function code */
+    IoStack->MajorFunction = IRP_MJ_PNP;
+    IoStack->MinorFunction = (bGet ? IRP_MN_READ_CONFIG : IRP_MN_WRITE_CONFIG);
+
+    /* lets call the driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    /* is the request still pending */
+    if (Status == STATUS_PENDING) 
+    {
+        /* have a nap */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        /* update status */
+        Status = Irp->IoStatus.Status;
+    }
+
+    /* free the irp */
+    IoFreeIrp(Irp);
+    /* done */
+    return Status;
+}
+
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 ULONG
@@ -1596,13 +1668,13 @@ KsDeviceSetBusData(
     IN ULONG Offset,
     IN ULONG Length)
 {
-    UNIMPLEMENTED
-    return 0;
+    return KspDeviceSetGetBusData(Device->PhysicalDeviceObject, /* is this right? */
+                                  DataType, Buffer, Offset, Length, FALSE);
 }
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 ULONG
@@ -1614,8 +1686,9 @@ KsDeviceGetBusData(
     IN ULONG Offset,
     IN ULONG Length)
 {
-    UNIMPLEMENTED
-    return 0;
+    return KspDeviceSetGetBusData(Device->PhysicalDeviceObject, /* is this right? */
+                                  DataType, Buffer, Offset, Length, TRUE);
+
 }
 
 /*
@@ -1788,6 +1861,28 @@ KsServiceBusEnumPnpRequest(
     return STATUS_UNSUCCESSFUL;
 }
 
+VOID
+NTAPI
+KspRemoveBusInterface(
+    PVOID Ctx)
+{
+    PKSREMOVE_BUS_INTERFACE_CTX Context =(PKSREMOVE_BUS_INTERFACE_CTX)Ctx;
+
+    /* TODO
+     * get SWENUM_INSTALL_INTERFACE struct
+     * open device key and delete the keys
+     */
+
+    UNIMPLEMENTED
+
+    /* set status */
+    Context->Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+
+
+    /* signal completion */
+    KeSetEvent(&Context->Event, IO_NO_INCREMENT, FALSE);
+}
+
 /*
     @unimplemented
 */
@@ -1797,10 +1892,42 @@ NTAPI
 KsRemoveBusEnumInterface(
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
+    KPROCESSOR_MODE Mode;
+    LUID luid;
+    KSREMOVE_BUS_INTERFACE_CTX Ctx;
+    WORK_QUEUE_ITEM WorkItem;
 
+    /* get previous mode */
+    Mode = ExGetPreviousMode();
+
+    /* convert to luid */
+    luid = RtlConvertUlongToLuid(SE_LOAD_DRIVER_PRIVILEGE);
+
+    /* perform access check */
+    if (!SeSinglePrivilegeCheck(luid, Mode))
+    {
+        /* insufficient privileges */
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+    /* initialize event */
+    KeInitializeEvent(&Ctx.Event, NotificationEvent, FALSE);
+
+    /* store irp in ctx */
+    Ctx.Irp = Irp;
+
+    /* initialize work item */
+    ExInitializeWorkItem(&WorkItem, KspRemoveBusInterface, (PVOID)&Ctx);
+
+    /* now queue the work item */
+    ExQueueWorkItem(&WorkItem, DelayedWorkQueue);
+
+    /* wait for completion */
+    KeWaitForSingleObject(&Ctx.Event, Executive, KernelMode, FALSE, NULL);
+
+    /* return result */
+    return Ctx.Irp->IoStatus.Status;
+
+}
 
 
 /*

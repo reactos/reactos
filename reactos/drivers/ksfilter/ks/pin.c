@@ -511,6 +511,27 @@ KsPinReleaseProcessingMutex(
 }
 
 /*
+    @implemented
+*/
+KSDDKAPI
+PKSPIN
+NTAPI
+KsGetPinFromIrp(
+    IN PIRP Irp)
+{
+    PKSIOBJECT_HEADER ObjectHeader;
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    /* return object type */
+    return (PKSPIN)ObjectHeader->ObjectType;
+
+}
+
+
+
+/*
     @unimplemented
 */
 VOID
