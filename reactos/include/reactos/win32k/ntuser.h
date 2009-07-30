@@ -549,19 +549,19 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define ICLS_DDEMLSERVERA 13
 #define ICLS_DDEMLSERVERW 14
 #define ICLS_IME          15
-#define ICLS_DESKTOP      16
-#define ICLS_DIALOG       17
-#define ICLS_MENU         18
-#define ICLS_SWITCH       19
-#define ICLS_ICONTITLE    20
-#define ICLS_TOOLTIPS     21
+#define ICLS_GHOST        16
+#define ICLS_DESKTOP      17
+#define ICLS_DIALOG       18
+#define ICLS_MENU         19
+#define ICLS_SWITCH       20
+#define ICLS_ICONTITLE    21
+#define ICLS_TOOLTIPS     22
 #if (_WIN32_WINNT <= 0x0501)
 #define ICLS_UNKNOWN      22
 #define ICLS_NOTUSED      23
 #else
-#define ICLS_SYSSHADOW    22
-#define ICLS_HWNDMESSAGE  23
-#define ICLS_UNKNOWN      24
+#define ICLS_SYSSHADOW    23
+#define ICLS_HWNDMESSAGE  24
 #define ICLS_NOTUSED      25
 #endif
 #define ICLS_END          31
