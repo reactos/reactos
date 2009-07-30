@@ -161,6 +161,8 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
     POINT BrushOrigin = {0,0};
     POINT SourcePoint;
     RECTL DestRect;
+    XLATEOBJ *XlateObj = NULL;
+    BOOL UsesSource = ROP3_USES_SOURCE(rop);
 
     DestRect.left   = XDest;
     DestRect.top    = YDest;
@@ -183,13 +185,27 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
         SourcePoint.y += pSrc->rcDcRect.top + pSrc->rcVport.left;
     }
 
+    /* Create the XLATEOBJ */
+    if (UsesSource)
+    {
+        XlateObj = IntCreateXlateForBlt(pDest, pSrc, pDest->pBitmap, pSrc->pBitmap);
+
+        if (XlateObj == (XLATEOBJ*)-1)
+        {
+            DPRINT1("couldn't create XlateObj\n");
+            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+            XlateObj = NULL;
+            return FALSE;
+        }
+    }
+
     /* Perform the bitblt operation */
     bRet = GrepBitBltEx(
         &pDest->pBitmap->SurfObj,
         pSrc ? &pSrc->pBitmap->SurfObj : NULL,
         NULL,
         NULL,//dc->rosdc.CombinedClip,
-        NULL,//XlateObj
+        XlateObj,
         &DestRect,
         &SourcePoint,
         NULL,
@@ -197,6 +213,10 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
         &BrushOrigin,
         ROP3_TO_ROP4(rop),
         TRUE);
+
+    /* Free XlateObj if it was created */
+    if (UsesSource && XlateObj)
+        EngDeleteXlate(XlateObj);
 
     return bRet;
 }

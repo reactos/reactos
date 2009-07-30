@@ -29,4 +29,7 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 VOID FASTCALL
 EngDeleteXlate(XLATEOBJ *XlateObj);
 
+XLATEOBJ* FASTCALL
+IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurfSrc);
+
 #endif
