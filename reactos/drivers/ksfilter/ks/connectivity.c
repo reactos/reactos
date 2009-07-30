@@ -402,34 +402,42 @@ KsPinDataIntersection(
     ULONG Index;
     NTSTATUS Status;
 
+    /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
+    /* calculate minimum data size */
     Size = sizeof(KSP_PIN) + sizeof(KSMULTIPLE_ITEM) + sizeof(KSDATARANGE);
     if (IoStack->Parameters.DeviceIoControl.InputBufferLength < Size)
     {
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+        /* buffer too small */
+        Irp->IoStatus.Information = Size;
+        Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
         return STATUS_BUFFER_TOO_SMALL;
     }
-
+    /* is pin id out of bounds */
     if (Pin->PinId >= DescriptorsCount)
     {
+        /* it is */
         Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
         Irp->IoStatus.Information = 0;
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* get start item */
     Item = (KSMULTIPLE_ITEM*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+    /* get first data range */
     DataRange = (KSDATARANGE*)(Item + 1);
-
+    /* iterate through all data ranges */
     for(Index = 0; Index < Item->Count; Index++, DataRange++)
     {
+        /* call intersect handler */
         Status = IntersectHandler(Irp, Pin, DataRange, Data);
         if (NT_SUCCESS(Status))
         {
-            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSDATARANGE))
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < DataRange->FormatSize)
             {
-                Irp->IoStatus.Information = sizeof(KSDATARANGE);
+                /* buffer is too small */
+                Irp->IoStatus.Information = DataRange->FormatSize;
                 Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
                 return STATUS_BUFFER_TOO_SMALL;
             }
@@ -447,7 +455,7 @@ KsPinDataIntersection(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 
 KSDDKAPI
@@ -459,5 +467,35 @@ KsHandleSizedListQuery(
     IN  ULONG DataItemSize,
     IN  const VOID* DataItems)
 {
+    ULONG Size;
+    PIO_STACK_LOCATION IoStack;
+    PKSMULTIPLE_ITEM Item;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    Size = DataItemSize * DataItemsCount + sizeof(KSMULTIPLE_ITEM);
+
+
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < Size)
+    {
+        /* buffer too small */
+        Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+        Irp->IoStatus.Information = Size;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* get multiple item */
+    Item = (PKSMULTIPLE_ITEM)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+
+    Item->Count = DataItemsCount;
+    Item->Size = DataItemSize;
+    /* copy items */
+    RtlMoveMemory((PVOID)(Item + 1), DataItems, DataItemSize * DataItemsCount);
+    /* store result */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = Size;
+    /* done */
     return STATUS_SUCCESS;
 }
+

@@ -1140,20 +1140,6 @@ KsCancelRoutine(
     }
 }
 
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsGetChildCreateParameter(
-    IN  PIRP Irp,
-    OUT PVOID* CreateParameter)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
 NTSTATUS
 FindMatchingCreateItem(
     PLIST_ENTRY ListHead,

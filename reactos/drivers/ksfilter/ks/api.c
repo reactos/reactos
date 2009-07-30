@@ -9,6 +9,9 @@
 
 #include "priv.h"
 
+const GUID GUID_NULL              = {0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+const GUID KSMEDIUMSETID_Standard = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+
 /*
     @implemented
 */
@@ -1163,7 +1166,7 @@ KsSynchronousIoControlDevice(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1179,7 +1182,7 @@ KsUnserializeObjectPropertiesFromRegistry(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1189,8 +1192,83 @@ KsCacheMedium(
     IN  PKSPIN_MEDIUM Medium,
     IN  ULONG PinDirection)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    HANDLE hKey;
+    UNICODE_STRING Path;
+    UNICODE_STRING BasePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\MediumCache\\");
+    UNICODE_STRING GuidString;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    BOOLEAN PathAdjusted = FALSE;
+    ULONG Value = 0;
+
+    /* first check if the medium is standard */
+    if (IsEqualGUIDAligned(&KSMEDIUMSETID_Standard, &Medium->Set) ||
+        IsEqualGUIDAligned(&GUID_NULL, &Medium->Set))
+    {
+        /* no need to cache that */
+        return STATUS_SUCCESS;
+    }
+
+    /* convert guid to string */
+    Status = RtlStringFromGUID(&Medium->Set, &GuidString);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* allocate path buffer */
+    Path.Length = 0;
+    Path.MaximumLength = BasePath.MaximumLength + GuidString.MaximumLength + 10 * sizeof(WCHAR);
+    Path.Buffer = AllocateItem(PagedPool, Path.MaximumLength);
+    if (!Path.Buffer)
+    {
+        /* not enough resources */
+        RtlFreeUnicodeString(&GuidString);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&Path, &BasePath);
+    RtlAppendUnicodeStringToString(&Path, &GuidString);
+    RtlAppendUnicodeToString(&Path, L"-");
+    /* FIXME append real instance id */
+    RtlAppendUnicodeToString(&Path, L"0");
+    RtlAppendUnicodeToString(&Path, L"-");
+    /* FIXME append real instance id */
+    RtlAppendUnicodeToString(&Path, L"0");
+
+    /* free guid string */
+    RtlFreeUnicodeString(&GuidString);
+
+    /* initialize object attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &Path, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+    /* create the key */
+    Status = ZwCreateKey(&hKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
+
+    /* free path buffer */
+    FreeItem(Path.Buffer);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* store symbolic link */
+        if (SymbolicLink->Buffer[1] == L'?' && SymbolicLink->Buffer[2] == L'?')
+        {
+            /* replace kernel path with user mode path */
+            SymbolicLink->Buffer[1] = L'\\';
+            PathAdjusted = TRUE;
+        }
+
+        /* store the key */
+        Status = ZwSetValueKey(hKey, SymbolicLink, 0, REG_DWORD, &Value, sizeof(ULONG));
+
+        if (PathAdjusted)
+        {
+            /* restore kernel path */
+            SymbolicLink->Buffer[1] = L'?';
+        }
+
+        ZwClose(hKey);
+    }
+
+    /* done */
+    return Status;
 }
 
 /*
