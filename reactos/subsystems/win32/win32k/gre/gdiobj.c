@@ -209,6 +209,7 @@ typedef struct _HMAPPING
 {
     HGDIOBJ hUser;
     HGDIOBJ hKernel;
+    HANDLE hProcessId;
     LIST_ENTRY Entry;
 } HMAPPING, *PHMAPPING;
 
@@ -223,12 +224,19 @@ GDI_InitHandleMapping()
 VOID NTAPI
 GDI_AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser)
 {
+    HGDIOBJ hExisting;
     PHMAPPING pMapping = ExAllocatePool(NonPagedPool, sizeof(HMAPPING));
     if (!pMapping) return;
 
     /* Set mapping */
     pMapping->hUser = hUser;
     pMapping->hKernel = hKernel;
+    pMapping->hProcessId = PsGetCurrentProcessId();
+
+    /* Debug check: see if we already have this mapping */
+    hExisting = GDI_MapUserHandle(hUser);
+    if (hExisting)
+        DPRINT1("Trying to map already existing mapping %x -> %x to %x!\n", hUser, hExisting, hKernel);
 
     /* Add it to the list */
     ExInterlockedInsertHeadList(&HandleMapping, &pMapping->Entry, &HandleMappingLock);
@@ -241,6 +249,7 @@ GDI_MapUserHandle(HGDIOBJ hUser)
     PLIST_ENTRY Current;
     PHMAPPING Mapping;
     HGDIOBJ Found = 0;
+    HANDLE hProcessId = PsGetCurrentProcessId();
 
     /* Acquire the lock and check if the list is empty */
     KeAcquireSpinLock(&HandleMappingLock, &OldIrql);
@@ -252,7 +261,7 @@ GDI_MapUserHandle(HGDIOBJ hUser)
         Mapping = CONTAINING_RECORD(Current, HMAPPING, Entry);
 
         /* Check if it's our entry */
-        if (Mapping->hUser == hUser)
+        if (Mapping->hUser == hUser && Mapping->hProcessId == hProcessId)
         {
             /* Found it, save it and break out of the loop */
             Found = Mapping->hKernel;
@@ -274,6 +283,7 @@ GDI_RemoveHandleMapping(HGDIOBJ hUser)
     KIRQL OldIrql;
     PLIST_ENTRY Current;
     PHMAPPING Mapping;
+    HANDLE hProcessId = PsGetCurrentProcessId();
 
     /* Acquire the lock and check if the list is empty */
     KeAcquireSpinLock(&HandleMappingLock, &OldIrql);
@@ -285,7 +295,7 @@ GDI_RemoveHandleMapping(HGDIOBJ hUser)
         Mapping = CONTAINING_RECORD(Current, HMAPPING, Entry);
 
         /* Check if it's our entry */
-        if (Mapping->hUser == hUser)
+        if (Mapping->hUser == hUser && Mapping->hProcessId == hProcessId)
         {
             /* Remove and free it */
             RemoveEntryList(Current);
