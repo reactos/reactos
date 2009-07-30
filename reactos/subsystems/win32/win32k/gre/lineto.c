@@ -118,7 +118,7 @@ GrePolyline(PDC pDC,
     /* Draw pen-based polygon */
     if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
     {
-        Mix = 0;//ROP2_TO_MIX(pdcattr->jROP2);
+        Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {
             bRet = GreLineTo(&pDC->pBitmap->SurfObj,
