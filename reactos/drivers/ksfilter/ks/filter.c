@@ -430,7 +430,7 @@ IKsFilter_DispatchClose(
         Status = This->Factory->FilterDescriptor->Dispatch->Close(&This->Filter, Irp);
     }
 
-    if (Status != STATUS_PENDING)
+    if (NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {
         /* save the result */
         Irp->IoStatus.Status = Status;
@@ -439,9 +439,6 @@ IKsFilter_DispatchClose(
 
         /* remove our instance from the filter factory */
         This->FilterFactory->lpVtbl->RemoveFilterInstance(This->FilterFactory, Filter);
-
-        /* now release the acquired interface */
-        Filter->lpVtbl->Release(Filter);
 
         /* free object header */
         KsFreeObjectHeader(This->ObjectHeader);

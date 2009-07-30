@@ -594,7 +594,7 @@ KsProbeStreamIrp(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -604,8 +604,60 @@ KsAllocateExtraData(
     IN  ULONG ExtraSize,
     OUT PVOID* ExtraBuffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Count, Index;
+    PUCHAR Buffer, BufferOrg;
+    PKSSTREAM_HEADER Header;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSSTREAM_HEADER));
+
+    /* get total length */
+    Count = IoStack->Parameters.DeviceIoControl.InputBufferLength / sizeof(KSSTREAM_HEADER);
+
+    /* allocate buffer */
+    Buffer = BufferOrg = AllocateItem(NonPagedPool, Count * (sizeof(KSSTREAM_HEADER) + ExtraSize));
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    _SEH2_TRY
+    {
+        /* get input buffer */
+        Header = (PKSSTREAM_HEADER)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        for(Index = 0; Index < Count; Index++)
+        {
+            /* copy stream header */
+            RtlMoveMemory(Buffer, Header, sizeof(KSSTREAM_HEADER));
+
+            /* move to next header */
+            Header++;
+            /* increment output buffer offset */
+            Buffer += sizeof(KSSTREAM_HEADER) + ExtraSize;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Exception, get the error code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* free buffer on exception */
+        FreeItem(Buffer);
+        return Status;
+    }
+
+    /* store result */
+    *ExtraBuffer = BufferOrg;
+
+    /* done */
+    return STATUS_SUCCESS;
 }
 
 /*

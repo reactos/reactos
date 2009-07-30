@@ -597,32 +597,22 @@ IKsDevice_Create(
             /* increment create item reference count */
             InterlockedIncrement(&CreateItemEntry->ReferenceCount);
         }
-
-        /* acquire list lock */
-        IKsDevice_fnReleaseDevice((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
-
-        return Status;
     }
 
     /* acquire list lock */
     IKsDevice_fnReleaseDevice((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
 
-    DPRINT1("No item found for Request %p\n", IoStack->FileObject->FileName.Buffer);
+    if (Status != STATUS_PENDING)
+    {
+        Irp->IoStatus.Information = 0;
+        /* set return status */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
-    Irp->IoStatus.Information = 0;
-    /* set return status */
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
+    return Status;
 
-    /* release lock */
-    IKsDevice_fnRelease((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
 
-    Irp->IoStatus.Information = 0;
-    /* set return status */
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
 }
 
 /*

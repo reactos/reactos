@@ -10,7 +10,7 @@
 #include "priv.h"
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -19,8 +19,40 @@ KsAcquireResetValue(
     IN  PIRP Irp,
     OUT KSRESET* ResetValue)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    KSRESET* Value;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* check if there is reset value provided */
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSRESET))
+        return STATUS_INVALID_PARAMETER;
+
+    if (Irp->RequestorMode == UserMode)
+    {
+        /* need to probe the buffer */
+        _SEH2_TRY
+        {
+            ProbeForRead(IoStack->Parameters.DeviceIoControl.Type3InputBuffer, sizeof(KSRESET), sizeof(UCHAR));
+            Value = (KSRESET*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+            *ResetValue = *Value;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        Value = (KSRESET*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        *ResetValue = *Value;
+    }
+
+    return Status;
 }
 
 /*
@@ -1551,10 +1583,8 @@ KsTerminateDevice(
     }
 }
 
-
-
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1562,7 +1592,35 @@ NTAPI
 KsCompletePendingRequest(
     IN PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
+
+    if (IoStack->MajorFunction != IRP_MJ_CLOSE)
+    {
+        /* can be completed immediately */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return;
+    }
+
+    /* did close operation fail */
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        /* closing failed, complete irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return;
+    }
+
+    /* FIXME 
+     * delete object / device header 
+     * remove dead pin / filter instance
+     */
     UNIMPLEMENTED
+
 }
 
 /*
