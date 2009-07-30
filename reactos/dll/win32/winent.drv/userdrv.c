@@ -171,29 +171,100 @@ SHORT CDECL RosDrv_VkKeyScanEx( WCHAR ch, HKL layout )
     return -1;
 }
 
-void CDECL RosDrv_SetCursor( HCURSOR hCursor )
+/***********************************************************************
+ *           get_bitmap_width_bytes
+ *
+ * Return number of bytes taken by a scanline of 16-bit aligned Windows DDB
+ * data.
+ * from user32/cursoricon.c:168
+ */
+static int get_bitmap_width_bytes( int width, int bpp )
+{
+    switch(bpp)
+    {
+    case 1:
+        return 2 * ((width+15) / 16);
+    case 4:
+        return 2 * ((width+3) / 4);
+    case 24:
+        width *= 3;
+        /* fall through */
+    case 8:
+        return width + (width & 1);
+    case 16:
+    case 15:
+        return width * 2;
+    case 32:
+        return width * 4;
+    default:
+        WARN("Unknown depth %d, please report.\n", bpp );
+    }
+    return -1;
+}
+
+VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
+{
+    INT height;
+    BITMAP bitmap;
+    static const WORD ICON_HOTSPOT = 0x4242; /* From user32/cursoricon.c:128 */
+
+    TRACE("%p => %dx%d, %d bpp\n", ciconinfo,
+          ciconinfo->nWidth, ciconinfo->nHeight, ciconinfo->bBitsPerPixel);
+
+    if ( (ciconinfo->ptHotSpot.x == ICON_HOTSPOT) &&
+         (ciconinfo->ptHotSpot.y == ICON_HOTSPOT) )
+    {
+      iconinfo->fIcon    = TRUE;
+      iconinfo->xHotspot = ciconinfo->nWidth / 2;
+      iconinfo->yHotspot = ciconinfo->nHeight / 2;
+    }
+    else
+    {
+      iconinfo->fIcon    = FALSE;
+      iconinfo->xHotspot = ciconinfo->ptHotSpot.x;
+      iconinfo->yHotspot = ciconinfo->ptHotSpot.y;
+    }
+
+    height = ciconinfo->nHeight;
+
+    if (ciconinfo->bBitsPerPixel > 1)
+    {
+        iconinfo->hbmColor = CreateBitmap( ciconinfo->nWidth, ciconinfo->nHeight,
+                                ciconinfo->bPlanes, ciconinfo->bBitsPerPixel,
+                                (char *)(ciconinfo + 1)
+                                + ciconinfo->nHeight *
+                                get_bitmap_width_bytes (ciconinfo->nWidth,1) );
+        if( GetObjectW(iconinfo->hbmColor, sizeof(bitmap), &bitmap))
+            RosGdiCreateBitmap(NULL, iconinfo->hbmColor, &bitmap, bitmap.bmBits);
+    }
+    else
+    {
+        iconinfo->hbmColor = 0;
+        height *= 2;
+    }
+
+    /* Create the mask bitmap */
+    iconinfo->hbmMask = CreateBitmap ( ciconinfo->nWidth, height,
+                                1, 1, ciconinfo + 1);
+    if( GetObjectW(iconinfo->hbmMask, sizeof(bitmap), &bitmap))
+        RosGdiCreateBitmap(NULL, iconinfo->hbmMask, &bitmap, bitmap.bmBits);
+}
+
+void CDECL RosDrv_SetCursor( CURSORICONINFO *lpCursor )
 {
     ICONINFO IconInfo;
-    BITMAP bitmap;
 
-    if (hCursor == NULL)
+    if (lpCursor == NULL)
     {
         RosUserSetCursor(NULL);
     }
     else
     {
-        if( GetIconInfo(hCursor, &IconInfo) )
-        {
-            /* Create handle mappings for IconInfo.hbmMask and
-               IconInfo.hbmColor in kernel mode */
-            if( GetObjectW(IconInfo.hbmMask, sizeof(bitmap), &bitmap))
-                RosGdiCreateBitmap(NULL, IconInfo.hbmMask, &bitmap, bitmap.bmBits);
+        /* Create cursor bitmaps */
+        RosDrv_GetIconInfo( lpCursor, &IconInfo );
 
-            if( GetObjectW(IconInfo.hbmColor, sizeof(bitmap), &bitmap))
-                RosGdiCreateBitmap(NULL, IconInfo.hbmColor, &bitmap, bitmap.bmBits);
-
-            RosUserSetCursor( &IconInfo );
-        }
+        /* Set the cursor */
+        RosUserSetCursor( &IconInfo );
     }
 }
 
@@ -485,8 +556,6 @@ void CDECL RosDrv_SetWindowIcon( HWND hwnd, UINT type, HICON icon )
 void CDECL RosDrv_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
 {
     DWORD changed;
-    RECT rcWnd, rcClient;
-    INT x,y,cx,cy;
 
     if (hwnd == GetDesktopWindow()) return;
     changed = style->styleNew ^ style->styleOld;
