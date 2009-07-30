@@ -22,6 +22,9 @@ typedef struct
     KMUTEX ProcessingMutex;
     PFILE_OBJECT FileObject;
 
+    PKSGATE AttachedGate;
+    BOOL OrGate;
+
     PFNKSPINPOWER  Sleep;
     PFNKSPINPOWER  Wake;
     PFNKSPINHANDSHAKE  Handshake;
@@ -262,7 +265,7 @@ KsPinAcquireProcessingMutex(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 VOID
 NTAPI
@@ -270,11 +273,16 @@ KsPinAttachAndGate(
     IN PKSPIN Pin,
     IN PKSGATE AndGate OPTIONAL)
 {
-    UNIMPLEMENTED
+    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
+
+    /* FIXME attach to filter's and gate (filter-centric processing) */
+
+    This->AttachedGate = AndGate;
+    This->OrGate = FALSE;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 VOID
 NTAPI
@@ -282,8 +290,27 @@ KsPinAttachOrGate(
     IN PKSPIN Pin,
     IN PKSGATE OrGate OPTIONAL)
 {
-    UNIMPLEMENTED
+    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
+
+    /* FIXME attach to filter's and gate (filter-centric processing) */
+
+    This->AttachedGate = OrGate;
+    This->OrGate = TRUE;
 }
+
+/*
+    @implemented
+*/
+PKSGATE
+NTAPI
+KsPinGetAndGate(
+    IN PKSPIN  Pin)
+{
+    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
+
+    return This->AttachedGate;
+}
+
 /*
     @unimplemented
 */
@@ -322,18 +349,6 @@ KsPinGetConnectedFilterInterface(
 {
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-PKSGATE
-NTAPI
-KsPinGetAndGate(
-    IN PKSPIN  Pin)
-{
-    UNIMPLEMENTED
-    return NULL;
 }
 
 /*
@@ -887,7 +902,6 @@ static KSDISPATCH_TABLE PinDispatchTable =
     KsDispatchFastReadFailure
 };
 
-
 NTSTATUS
 KspCreatePin(
     IN PDEVICE_OBJECT DeviceObject,
@@ -940,6 +954,8 @@ KspCreatePin(
     This->BasicHeader.Type = KsObjectTypePin;
     This->BasicHeader.Parent.KsFilter = Filter->lpVtbl->GetStruct(Filter);
     KeInitializeMutex(&This->BasicHeader.ControlMutex, 0);
+    InitializeListHead(&This->BasicHeader.EventList);
+    KeInitializeSpinLock(&This->BasicHeader.EventListLock);
 
     /* initialize pin */
     This->lpVtbl = &vt_IKsPin;

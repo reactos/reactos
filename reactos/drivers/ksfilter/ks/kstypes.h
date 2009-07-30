@@ -60,6 +60,9 @@ typedef struct
     KSOBJECTTYPE Type;
     PKSDEVICE KsDevice;
     KMUTEX ControlMutex;
+    LIST_ENTRY EventList;
+    KSPIN_LOCK EventListLock;
+
     union
     {
         PKSDEVICE KsDevice;

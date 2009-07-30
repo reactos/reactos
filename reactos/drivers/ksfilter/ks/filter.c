@@ -1060,6 +1060,10 @@ KspCreateFilter(
     This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
     This->Header.Type = KsObjectTypeFilter;
     KeInitializeMutex(&This->Header.ControlMutex, 0);
+    InitializeListHead(&This->Header.EventList);
+    KeInitializeSpinLock(&This->Header.EventListLock);
+
+
 
 
 

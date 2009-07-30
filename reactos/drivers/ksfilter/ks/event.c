@@ -138,7 +138,7 @@ KsGenerateEventList(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -147,7 +147,9 @@ KsAddEvent(
     IN PVOID Object,
     IN PKSEVENT_ENTRY EventEntry)
 {
-    UNIMPLEMENTED
+    PKSBASIC_HEADER Header = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    ExInterlockedInsertTailList(&Header->EventList, &EventEntry->ListEntry, &Header->EventListLock);
 }
 
 /*
@@ -160,9 +162,30 @@ KsDefaultAddEventHandler(
     IN PKSEVENTDATA  EventData,
     IN OUT PKSEVENT_ENTRY  EventEntry)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+    PKSBASIC_HEADER Header;
+
+    /* first get the io stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* now get the object header */
+    ObjectHeader =(PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+
+    /* sanity check */
+    ASSERT(ObjectHeader->ObjectType);
+
+    /* obtain basic header */
+    Header = (PKSBASIC_HEADER)((ULONG_PTR)ObjectHeader->ObjectType - sizeof(KSBASIC_HEADER));
+
+    /* now insert the event entry */
+    ExInterlockedInsertTailList(&Header->EventList, &EventEntry->ListEntry, &Header->EventListLock);
+
+    /* done */
+    return STATUS_SUCCESS;
 }
+
+
 
 /*
     @unimplemented

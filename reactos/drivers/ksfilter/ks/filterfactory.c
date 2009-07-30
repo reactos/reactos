@@ -189,6 +189,12 @@ IKsFilterFactory_fnInitialize(
     This->Header.Parent.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->DeviceHeader = DeviceExtension->DeviceHeader;
 
+    /* unused fields */
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
+    InitializeListHead(&This->Header.EventList);
+    KeInitializeSpinLock(&This->Header.EventListLock);
+
+
     InitializeListHead(&This->SymbolicLinkList);
     InitializeListHead(&This->FilterInstanceList);
 
