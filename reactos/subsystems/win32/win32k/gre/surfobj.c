@@ -235,4 +235,18 @@ GreGetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits)
     return ulBytes;
 }
 
+LONG FASTCALL
+GreSetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits)
+{
+    /* Check ulBytes */
+    if (!ulBytes) return 0;
 
+    /* Don't copy more bytes than the surface has */
+    ulBytes = min(ulBytes, pSurf->SurfObj.cjBits);
+
+    /* Copy actual bits */
+    RtlCopyMemory(pSurf->SurfObj.pvBits, pBits, ulBytes);
+
+    /* Return amount copied */
+    return ulBytes;
+}

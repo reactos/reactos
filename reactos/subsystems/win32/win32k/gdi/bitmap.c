@@ -51,6 +51,8 @@ BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hUserBitmap, BITMAP *pBit
     HBITMAP hBitmap;
     SIZEL slSize;
     ULONG ulFormat;
+    ULONG ulFlags = 0;
+    PSURFACE pSurface;
 
     DPRINT("RosGdiCreateBitmap %dx%d %d bpp, bmBits %p\n", pBitmap->bmWidth, pBitmap->bmHeight, pBitmap->bmBitsPixel, bmBits);
 
@@ -61,15 +63,32 @@ BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hUserBitmap, BITMAP *pBit
     /* Convert format */
     ulFormat = GrepBitmapFormat(pBitmap->bmBitsPixel, BI_RGB);
 
+    /* Set flags */
+    if (bmBits) ulFlags |= BMF_NOZEROINIT;
+    if (pBitmap->bmHeight < 0) ulFlags |= BMF_TOPDOWN;
+
     /* Call GRE to create the bitmap object */
     hBitmap = GreCreateBitmap(slSize,
                               pBitmap->bmWidthBytes,
                               ulFormat,
-                              (pBitmap->bmHeight < 0 ? BMF_TOPDOWN : 0),
+                              ulFlags,
                               NULL);
 
     /* Return failure if no bitmap was created */
     if (!hBitmap) return FALSE;
+
+    /* Set its bits if any */
+    if (bmBits)
+    {
+        /* Get the object pointer */
+        pSurface = GDI_GetObjPtr(hBitmap, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+
+        /* Copy bits */
+        GreSetBitmapBits(pSurface, pSurface->SurfObj.cjBits, bmBits);
+
+        /* Release the surface */
+        GDI_ReleaseObj(hBitmap);
+    }
 
     /* Map handles */
     GDI_AddHandleMapping(hBitmap, hUserBitmap);

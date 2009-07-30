@@ -25,6 +25,9 @@ GreDeleteBitmap(HGDIOBJ hBitmap);
 LONG FASTCALL
 GreGetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits);
 
+LONG FASTCALL
+GreSetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits);
+
 INT FASTCALL
 BITMAP_GetWidthBytes(INT bmWidth, INT bpp);
 
