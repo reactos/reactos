@@ -1221,26 +1221,19 @@ static HICON CURSORICON_Load(HINSTANCE hInstance, LPCWSTR name,
  */
 static HICON CURSORICON_Copy( HINSTANCE16 hInst16, HICON hIcon )
 {
-#if 0
     char *ptrOld, *ptrNew;
     int size;
-    HICON16 hOld = HICON_16(hIcon);
-    HICON16 hNew;
+    HICON hOld = hIcon;
+    HICON hNew;
 
-    if (!(ptrOld = GlobalLock16( hOld ))) return 0;
-    if (hInst16 && !(hInst16 = GetExePtr( hInst16 ))) return 0;
-    size = GlobalSize16( hOld );
-    hNew = GlobalAlloc16( GMEM_MOVEABLE, size );
-    FarSetOwner16( hNew, hInst16 );
-    ptrNew = GlobalLock16( hNew );
+    if (!(ptrOld = GlobalLock( hOld ))) return 0;
+    size = GlobalSize( hOld );
+    hNew = GlobalAlloc( GMEM_MOVEABLE, size );
+    ptrNew = GlobalLock( hNew );
     memcpy( ptrNew, ptrOld, size );
-    GlobalUnlock16( hOld );
-    GlobalUnlock16( hNew );
-    return HICON_32(hNew);
-#else
-    ERR("CURSORICON_Copy unimplemented!\n");
-    return 0;
-#endif
+    GlobalUnlock( hOld );
+    GlobalUnlock( hNew );
+    return hNew;
 }
 
 /*************************************************************************
