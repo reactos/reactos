@@ -24,18 +24,27 @@ EngCreatePalette(
   IN FLONG  flGreen,
   IN FLONG  flBlue)
 {
-   HPALETTE Palette;
+    HPALETTE Palette;
 
-   Palette = PALETTE_AllocPalette(iMode, cColors, pulColors, flRed, flGreen, flBlue);
+    Palette = PALETTE_AllocPalette(iMode, cColors, pulColors, flRed, flGreen, flBlue);
 
-   return Palette;
+    /* Make it global */
+    GDIOBJ_SetOwnership(Palette, NULL);
+
+    return Palette;
 }
 
 BOOL
 APIENTRY
 EngDeletePalette(IN HPALETTE hpal)
 {
+    /* Get ownership */
+    GDIOBJ_SetOwnership(hpal, PsGetCurrentProcess());
+
+    /* Free palette by handle */
     PALETTE_FreePaletteByHandle(hpal);
+
+    /* Report success */
     return TRUE;
 }
 

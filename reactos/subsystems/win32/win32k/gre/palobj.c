@@ -28,13 +28,10 @@ PALETTE_AllocPalette(ULONG Mode,
     HPALETTE NewPalette;
     PPALETTE PalGDI;
 
-    PalGDI = ExAllocatePool(PagedPool, sizeof(PALETTE));
-    if (!PalGDI)
-    {
-        return NULL;
-    }
+    PalGDI = (PPALETTE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PALETTE);
+    if (!PalGDI) return NULL;
 
-    NewPalette = alloc_gdi_handle(&PalGDI->BaseObject, (SHORT)GDI_OBJECT_TYPE_PALETTE);
+    NewPalette = PalGDI->BaseObject.hHmgr;
 
     PalGDI->Self = NewPalette;
     PalGDI->Mode = Mode;
@@ -61,21 +58,9 @@ PALETTE_AllocPalette(ULONG Mode,
         PalGDI->BlueMask = Blue;
     }
 
+    PALETTE_UnlockPalette(PalGDI);
+
     return NewPalette;
-}
-
-VOID
-FASTCALL
-PALETTE_FreePaletteByHandle(HGDIOBJ hPalette)
-{
-    PPALETTE pPal;
-    DPRINT("RosGdiDeleteDC(%x)\n", hPalette);
-
-    /* Free the handle */
-    pPal = free_gdi_handle(hPalette);
-
-    /* Free its storage */
-    ExFreePool(pPal);
 }
 
 HPALETTE
@@ -87,13 +72,10 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
     PPALETTE PalGDI;
     UINT i;
 
-    PalGDI = ExAllocatePool(PagedPool, sizeof(PALETTE));
-    if (!PalGDI)
-    {
-        return NULL;
-    }
+    PalGDI = (PPALETTE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_PALETTE);
+    if (!PalGDI) return NULL;
 
-    NewPalette = alloc_gdi_handle(&PalGDI->BaseObject, (SHORT)GDI_OBJECT_TYPE_PALETTE);
+    NewPalette = PalGDI->BaseObject.hHmgr;
 
     PalGDI->Self = NewPalette;
     PalGDI->Mode = PAL_INDEXED;
@@ -117,6 +99,8 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
     }
 
     PalGDI->NumColors = NumColors;
+
+    PALETTE_UnlockPalette(PalGDI);
 
     return NewPalette;
 }

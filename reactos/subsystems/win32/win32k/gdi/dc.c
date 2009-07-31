@@ -85,12 +85,11 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
         return STATUS_UNSUCCESSFUL;
 
     /* Allocate storage for DC structure */
-    pNewDC = ExAllocatePool(PagedPool, sizeof(DC));
+    pNewDC = (PDC)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_DC);
     if (!pNewDC) return FALSE;
-    RtlZeroMemory(pNewDC, sizeof(DC));
 
-    /* Allocate a handle for it */
-    hNewDC = alloc_gdi_handle(&pNewDC->BaseObject, (SHORT)GDI_OBJECT_TYPE_DC);
+    /* Save a handle to it */
+    hNewDC = pNewDC->BaseObject.hHmgr;
 
     /* Set physical device pointer */
     pNewDC->pPDevice = (PVOID)&PrimarySurface;
@@ -121,7 +120,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
         DPRINT("Creating a memory DC %x\n", hNewDC);
         slSize.cx = 1; slSize.cy = 1;
         hStockBitmap = GreCreateBitmap(slSize, 1, 1, 0, NULL);
-        pNewDC->pBitmap = GDI_GetObjPtr(hStockBitmap, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+        pNewDC->pBitmap = SURFACE_ShareLock(hStockBitmap);
 
         /* Set DC rectangles */
         pNewDC->rcDcRect.left = 0; pNewDC->rcDcRect.top = 0;
@@ -131,7 +130,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     else
     {
         DPRINT("Creating a display DC %x\n", hNewDC);
-        pNewDC->pBitmap = GDI_GetObjPtr(PrimarySurface.pSurface, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+        pNewDC->pBitmap = SURFACE_ShareLock(PrimarySurface.pSurface);
 
         /* Set DC rectangles */
         pNewDC->rcVport.left = 0;
@@ -145,23 +144,27 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     /* Give handle to the caller */
     *pdev = hNewDC;
 
+    /* Unlock the DC */
+    DC_Unlock(pNewDC);
+
     /* Indicate success */
     return TRUE;
 }
 
 BOOL APIENTRY RosGdiDeleteDC( HDC physDev )
 {
-    PDC pDC;
+    PDC pDC = DC_Lock(physDev);
+
     DPRINT("RosGdiDeleteDC(%x)\n", physDev);
 
-    /* Free the handle */
-    pDC = free_gdi_handle((HGDIOBJ)physDev);
-
     /* Release the surface */
-    GDI_ReleaseObj(pDC->pBitmap);
+    SURFACE_ShareUnlock(pDC->pBitmap);
 
-    /* Free its storage */
-    ExFreePool(pDC);
+    /* Unlock DC */
+    DC_Unlock(pDC);
+
+    /* Free DC */
+    GDIOBJ_FreeObjByHandle(physDev, GDI_OBJECT_TYPE_DC);
 
     /* Indicate success */
     return TRUE;
@@ -199,8 +202,8 @@ VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
     DPRINT("Selecting %x bitmap to hdc %x\n", hBmpKern, physDev);
 
     /* Get a pointer to the DC and the bitmap*/
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
-    pSurface = GDI_GetObjPtr(hBmpKern, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+    pDC = DC_Lock(physDev);
+    pSurface = SURFACE_ShareLock(hBmpKern);
 
     /* Select it */
     pDC->pBitmap = pSurface;
@@ -213,7 +216,7 @@ VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
     pDC->rcDcRect = pDC->rcVport;
 
     /* Release the DC object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 }
 
 VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
@@ -223,7 +226,7 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
     PSURFACE pSurface;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     DPRINT("RosGdiSelectBrush(): dc %x, brush style %x, brush color %x\n", physDev, pLogBrush->lbStyle, pLogBrush->lbColor);
 
@@ -261,7 +264,7 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
             DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", pLogBrush->lbHatch, physDev);
             break;
         }
-        pSurface = GDI_GetObjPtr(hBmpKern, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+        pSurface = SURFACE_Lock(hBmpKern);
         pDC->pFillBrush = GreCreatePatternBrush(pSurface);
         break;
 
@@ -271,7 +274,7 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
     }
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 }
 
 HFONT APIENTRY RosGdiSelectFont( HDC physDev, HFONT hfont, HANDLE gdiFont )
@@ -285,7 +288,7 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     DPRINT("RosGdiSelectPen(): dc %x, pen style %x, pen color %x\n", physDev, pLogPen->lopnStyle, pLogPen->lopnColor);
 
@@ -293,7 +296,7 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
     {
         DPRINT1("Ext pens aren't supported yet!");
         /* Release the object */
-        GDI_ReleaseObj(physDev);
+        DC_Unlock(pDC);
         return;
     }
 
@@ -314,7 +317,7 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
                      TRUE);
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 }
 
 COLORREF APIENTRY RosGdiSetBkColor( HDC physDev, COLORREF color )
@@ -322,13 +325,13 @@ COLORREF APIENTRY RosGdiSetBkColor( HDC physDev, COLORREF color )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Set the color */
     pDC->crBackgroundClr = color;
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     /* Return the color set */
     return color;
@@ -357,7 +360,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Delete old clipping region */
     if (pDC->CombinedClip)
@@ -370,7 +373,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
         physDev, rcBounds->left, rcBounds->bottom, rcBounds->right, rcBounds->top);
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 }
 
 BOOL APIENTRY RosGdiSetDeviceGammaRamp(HDC physDev, LPVOID ramp)
@@ -398,13 +401,13 @@ COLORREF APIENTRY RosGdiSetTextColor( HDC physDev, COLORREF color )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Set the color */
     pDC->crForegroundClr = color;
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     /* Return the color set */
     return color;
@@ -415,7 +418,7 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Set DC rectangle */
     if (rcDcRect)
@@ -438,7 +441,7 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     }
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 }
 
 /* EOF */

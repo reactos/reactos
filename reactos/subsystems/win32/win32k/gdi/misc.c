@@ -55,13 +55,13 @@ BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Call GRE routine */
     GreTextOut(pDC, x, y, flags, lprect, wstr, count, lpDx, formatEntry);
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     return TRUE;
 }
@@ -76,7 +76,7 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     DPRINT("LineTo: (%d,%d)-(%d,%d)\n", x1, y1, x2, y2);
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     scrRect.left = scrRect.top = 0;
     scrRect.right = 800;
@@ -105,7 +105,7 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     IntEngDeleteClipRegion(pClipObj);
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     return TRUE;
 }
@@ -138,7 +138,7 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     ULONG i;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Capture the points buffer */
     _SEH2_TRY
@@ -161,7 +161,7 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     if (!NT_SUCCESS(Status))
     {
         /* Release the object */
-        GDI_ReleaseObj(physDev);
+        DC_Unlock(pDC);
 
         /* Free the buffer if it was allocated */
         if (pPoints != pStackBuf) ExFreePool(pPoints);
@@ -181,7 +181,7 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     GrePolygon(pDC, pPoints, count);
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     /* Free the buffer if it was allocated */
     if (pPoints != pStackBuf) ExFreePool(pPoints);
@@ -195,13 +195,13 @@ BOOL APIENTRY RosGdiPolyline( HDC physDev, const POINT* pt, INT count )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Draw the polyline */
     GrePolyline(pDC, pt, count);
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     return TRUE;
 }
@@ -223,13 +223,13 @@ BOOL APIENTRY RosGdiRectangle(HDC physDev, PRECT rc)
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     /* Draw the rectangle */
     GreRectangle(pDC, rc->left, rc->top, rc->right, rc->bottom);
 
     /* Release the object */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     return TRUE;
 }

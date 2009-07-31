@@ -32,15 +32,15 @@ BOOL APIENTRY RosGdiBitBlt( HDC physDevDst, INT xDst, INT yDst,
     DPRINT("BitBlt %x -> %x\n", physDevSrc, physDevDst);
 
     /* Get a pointer to the DCs */
-    pSrc = GDI_GetObjPtr(physDevSrc, (SHORT)GDI_OBJECT_TYPE_DC);
-    pDst = GDI_GetObjPtr(physDevDst, (SHORT)GDI_OBJECT_TYPE_DC);
+    pSrc = DC_Lock(physDevSrc);
+    pDst = DC_Lock(physDevDst);
 
     /* Call the internal helper */
     bRes = GreBitBlt(pDst, xDst, yDst, width, height, pSrc, xSrc, ySrc, rop);
 
     /* Release DC objects */
-    GDI_ReleaseObj(physDevDst);
-    GDI_ReleaseObj(physDevSrc);
+    DC_Unlock(pDst);
+    DC_Unlock(pSrc);
 
     /* Return status */
     return bRes;
@@ -81,13 +81,13 @@ BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hUserBitmap, BITMAP *pBit
     if (bmBits)
     {
         /* Get the object pointer */
-        pSurface = GDI_GetObjPtr(hBitmap, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+        pSurface = SURFACE_Lock(hBitmap);
 
         /* Copy bits */
         GreSetBitmapBits(pSurface, pSurface->SurfObj.cjBits, bmBits);
 
         /* Release the surface */
-        GDI_ReleaseObj(hBitmap);
+        SURFACE_Unlock(pSurface);
     }
 
     /* Map handles */
@@ -143,11 +143,8 @@ LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG Bytes )
         return 0;
     }
 
-    psurf = GDI_GetObjPtr(hKernel, (SHORT)GDI_OBJECT_TYPE_BITMAP);
-    if (!psurf)
-    {
-        return 0;
-    }
+    psurf = SURFACE_Lock(hKernel);
+    if (!psurf) return 0;
 
     bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx,
              BitsPerFormat(psurf->SurfObj.iBitmapFormat)) *
@@ -156,7 +153,7 @@ LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG Bytes )
     /* If the bits vector is null, the function should return the read size */
     if (buffer == NULL)
     {
-        GDI_ReleaseObj(psurf);
+        SURFACE_Unlock(psurf);
         return bmSize;
     }
 
@@ -167,7 +164,7 @@ LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG Bytes )
     ret = GreGetBitmapBits(psurf, Bytes, buffer);
 
     /* Release bitmap pointer */
-    GDI_ReleaseObj(psurf);
+    SURFACE_Unlock(psurf);
 
     return ret;
 }
@@ -191,13 +188,13 @@ BOOL APIENTRY RosGdiPatBlt( HDC physDev, INT left, INT top, INT width, INT heigh
     PDC pDst;
 
     /* Get a pointer to the DCs */
-    pDst = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDst = DC_Lock(physDev);
 
     /* Call the internal helper */
     bRet = GrePatBlt(pDst, left, top, width, height, rop, pDst->pLineBrush);
 
     /* Release DC objects */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDst);
 
     /* Return status */
     return bRet;
@@ -223,7 +220,7 @@ INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hUserBitmap, UINT StartScan,
     HGDIOBJ hBitmap = GDI_MapUserHandle(hUserBitmap);
 
     /* Get a pointer to the DCs */
-    pDC = GDI_GetObjPtr(physDev, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDC = DC_Lock(physDev);
 
     DPRINT("RosGdiSetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d\n",
         hBitmap, hUserBitmap, StartScan, ScanLines);
@@ -238,7 +235,7 @@ INT APIENTRY RosGdiSetDIBits(HDC physDev, HBITMAP hUserBitmap, UINT StartScan,
                  ColorUse);
 
     /* Release DC objects */
-    GDI_ReleaseObj(physDev);
+    DC_Unlock(pDC);
 
     /* Return amount of lines set */
     return ScanLines;
@@ -268,11 +265,10 @@ BOOL APIENTRY RosGdiStretchBlt( HDC physDevDst, INT xDst, INT yDst,
     }
 
     /* Get a pointer to the DCs */
-    pDcDest = GDI_GetObjPtr(physDevDst, (SHORT)GDI_OBJECT_TYPE_DC);
+    pDcDest = DC_Lock(physDevDst);
 
     if (physDevSrc)
-        pDcSrc = GDI_GetObjPtr(physDevSrc, (SHORT)GDI_OBJECT_TYPE_DC);
-
+        pDcSrc = DC_Lock(physDevSrc);
 
     bRet = GreStretchBltMask(
                 pDcDest,
@@ -290,8 +286,8 @@ BOOL APIENTRY RosGdiStretchBlt( HDC physDevDst, INT xDst, INT yDst,
                 NULL);
 
     /* Release DC objects */
-    GDI_ReleaseObj(physDevDst);
-    if (physDevSrc) GDI_ReleaseObj(physDevSrc);
+    DC_Unlock(pDcDest);
+    if (pDcSrc) DC_Unlock(pDcSrc);
 
     /* Return result */
     return bRet;

@@ -22,6 +22,7 @@ typedef struct _PROCESSINFO
   struct msg_queue    *queue;           /* main message queue */
   obj_handle_t         winstation;      /* main handle to process window station */
   obj_handle_t         desktop;         /* handle to desktop to use for new threads */
+  LONG                 GDIHandleCount;  /* kernelmode GDI handles count */
 } PROCESSINFO;
 
 #include <pshpack1.h>

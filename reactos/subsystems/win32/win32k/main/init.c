@@ -26,6 +26,8 @@ NTSTATUS FASTCALL InitDcImpl(VOID);
 
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
+PGDI_HANDLE_TABLE GdiHandleTable = NULL;
+PSECTION_OBJECT GdiTableSection = NULL;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -333,7 +335,15 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     init_directories();
 
     /* Initialize GDI objects implementation */
-    if (!GDIOBJ_Init()) return STATUS_UNSUCCESSFUL;
+    GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
+    if (GdiHandleTable == NULL)
+    {
+        DPRINT1("Failed to initialize the GDI handle table.\n");
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Initialize handle-mapping */
+    GDI_InitHandleMapping();
 
     /* Init video driver implementation */
     InitDcImpl();

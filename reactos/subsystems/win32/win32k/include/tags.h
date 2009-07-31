@@ -5,9 +5,11 @@
 #define TAG_CLIP        TAG('C', 'L', 'I', 'P') /* clipping */
 #define TAG_CLIPOBJ     TAG('C', 'L', 'P', 'O') /* clip object */
 #define TAG_COLORMAP    TAG('C', 'O', 'L', 'M') /* color map */
+#define TAG_DC          TAG('D', 'C', ' ', ' ') /* DC */
 #define TAG_DFSM        TAG('D', 'f', 's', 'm') /* Eng event allocation */
 #define TAG_DIB         TAG('D', 'I', 'B', ' ') /* dib */
 #define TAG_DRIVER      TAG('G', 'D', 'R', 'V') /* video drivers */
+#define TAG_GDIHNDTBLE  TAG('G', 'D', 'I', 'H') /* gdi handle table */
 #define TAG_GSEM        TAG('G', 's', 'e', 'm') /* Gdi Semaphore */
 #define TAG_SURFOBJ     TAG('S', 'R', 'F', 'O') /* surface object */
 #define TAG_PALETTE     TAG('G', 'l', 'a', '8')

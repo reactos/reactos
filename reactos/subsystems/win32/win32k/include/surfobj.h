@@ -4,7 +4,7 @@
 
 typedef struct _SURFACE
 {
-    GDIOBJHDR BaseObject;
+    BASEOBJECT BaseObject;
 
     SURFOBJ SurfObj;
     FLONG   flHooks;
@@ -33,6 +33,14 @@ BITMAP_GetWidthBytes(INT bmWidth, INT bpp);
 
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 
+#define  SURFACE_Lock(hBMObj) \
+  ((PSURFACE) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
+#define  SURFACE_ShareLock(hBMObj) \
+  ((PSURFACE) GDIOBJ_ShareLockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
+#define  SURFACE_Unlock(pBMObj)  \
+  GDIOBJ_UnlockObjByPtr ((PBASEOBJECT)pBMObj)
+#define  SURFACE_ShareUnlock(pBMObj)  \
+  GDIOBJ_ShareUnlockObjByPtr ((PBASEOBJECT)pBMObj)
 
 #define SURFACE_LockBitmapBits(x)
 #define SURFACE_UnlockBitmapBits(x)

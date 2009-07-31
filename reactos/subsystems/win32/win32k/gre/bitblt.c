@@ -427,7 +427,7 @@ GreSetDIBits(
     INT         DIBWidth;
 
     // Check parameters
-    if (!(bitmap = GDI_GetObjPtr(hBitmap, (SHORT)GDI_OBJECT_TYPE_BITMAP)))
+    if (!(bitmap = SURFACE_Lock(hBitmap)))
     {
         return 0;
     }
@@ -454,7 +454,7 @@ GreSetDIBits(
                                    (PVOID) Bits);
     if (0 == SourceBitmap)
     {
-        GDI_ReleaseObj(bitmap);
+        SURFACE_Unlock(bitmap);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
@@ -463,7 +463,7 @@ GreSetDIBits(
     if (NULL == SourceSurf)
     {
         EngDeleteSurface((HSURF)SourceBitmap);
-        GDI_ReleaseObj(bitmap);
+        SURFACE_Unlock(bitmap);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
@@ -484,7 +484,7 @@ GreSetDIBits(
     {
         EngUnlockSurface(SourceSurf);
         EngDeleteSurface((HSURF)SourceBitmap);
-        GDI_ReleaseObj(bitmap);
+        SURFACE_Unlock(bitmap);
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return 0;
     }
@@ -497,7 +497,7 @@ GreSetDIBits(
     {
         EngUnlockSurface(SourceSurf);
         EngDeleteSurface((HSURF)SourceBitmap);
-        GDI_ReleaseObj(bitmap);
+        SURFACE_Unlock(bitmap);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
@@ -509,7 +509,7 @@ GreSetDIBits(
         PALETTE_FreePaletteByHandle(DIB_Palette);
         EngUnlockSurface(SourceSurf);
         EngDeleteSurface((HSURF)SourceBitmap);
-        GDI_ReleaseObj(bitmap);
+        SURFACE_Unlock(bitmap);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
@@ -538,7 +538,7 @@ GreSetDIBits(
     EngUnlockSurface(SourceSurf);
     EngDeleteSurface((HSURF)SourceBitmap);
 
-    GDI_ReleaseObj(bitmap);
+    SURFACE_Unlock(bitmap);
 
     return result;
 }

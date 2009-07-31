@@ -3,7 +3,7 @@
 
 typedef struct _PALETTE
 {
-  GDIOBJHDR    BaseObject;
+  BASEOBJECT    BaseObject;
 
   PALOBJ PalObj;
   //XLATEOBJ *logicalToSystem;
@@ -24,9 +24,6 @@ HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
                                        ULONG Green,
                                        ULONG Blue);
 
-VOID FASTCALL
-PALETTE_FreePaletteByHandle(HGDIOBJ hPalette);
-
 HPALETTE FASTCALL
 PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
                                CONST RGBQUAD *Colors);
@@ -37,8 +34,15 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi);
 HPALETTE NTAPI
 BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType);
 
-#define  PALETTE_LockPalette(hPalette) ((PPALETTE)GDI_GetObjPtr(hPalette, (SHORT)GDI_OBJECT_TYPE_PALETTE))
-#define  PALETTE_UnlockPalette(pPalette) GDI_ReleaseObj((HANDLE)pPalette)
+VOID
+FORCEINLINE
+PALETTE_FreePaletteByHandle(HGDIOBJ hPalette)
+{
+    GDIOBJ_FreeObjByHandle(hPalette, GDI_OBJECT_TYPE_PALETTE);
+}
+
+#define  PALETTE_LockPalette(hPalette) ((PPALETTE)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
+#define  PALETTE_UnlockPalette(pPalette) GDIOBJ_UnlockObjByPtr((PBASEOBJECT)pPalette)
 
 
 #endif

@@ -30,6 +30,9 @@ EngCreateBitmap(IN SIZEL Size,
     /* Call the internal routine */
     hNewBitmap = GreCreateBitmap(Size, Width, Format, Flags, Bits);
 
+    /* Make it global */
+    GDIOBJ_SetOwnership(hNewBitmap, NULL);
+
     return hNewBitmap;
 }
 
@@ -240,6 +243,9 @@ BOOL
 APIENTRY
 EngDeleteSurface(IN HSURF hSurf)
 {
+    /* Get ownership */
+    GDIOBJ_SetOwnership(hSurf, PsGetCurrentProcess());
+
     /* Delete this bitmap */
     GreDeleteBitmap((HGDIOBJ)hSurf);
 
@@ -255,7 +261,7 @@ EngLockSurface(IN HSURF hSurf)
     DPRINT("EngLockSurface(%x)\n", hSurf);
 
     /* Get a pointer to the surface */
-    Surface = GDI_GetObjPtr(hSurf, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+    Surface = SURFACE_ShareLock(hSurf);
 
     /* Return pointer to SURFOBJ object */
     return &Surface->SurfObj;
@@ -263,12 +269,13 @@ EngLockSurface(IN HSURF hSurf)
 
 VOID
 APIENTRY
-EngUnlockSurface(IN SURFOBJ* Surface)
+EngUnlockSurface(IN SURFOBJ* pSurfObj)
 {
-    DPRINT("EngUnlockSurface(%p)\n", Surface);
+    SURFACE *pSurface = CONTAINING_RECORD(pSurfObj, SURFACE, SurfObj);
+    DPRINT("EngUnlockSurface(%p)\n", pSurface);
 
     /* Release the surface */
-    GDI_ReleaseObj(0);
+    SURFACE_ShareUnlock(pSurface);
 }
 
 BOOL
@@ -282,7 +289,7 @@ EngAssociateSurface(IN HSURF hSurf,
     DPRINT("EngAssociateSurface(%x %x)\n", hSurf, hDev);
 
     /* Get a pointer to the surface */
-    pSurface = GDI_GetObjPtr(hSurf, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+    pSurface = SURFACE_Lock(hSurf);
 
     /* Associate it */
     pSurface->SurfObj.hdev = hDev;
@@ -294,7 +301,7 @@ EngAssociateSurface(IN HSURF hSurf,
     DPRINT1("flHooks: 0x%x\n", flHooks);
 
     /* Release the pointer */
-    GDI_ReleaseObj(hSurf);
+    SURFACE_Unlock(pSurface);
 
     /* Indicate success */
     return TRUE;

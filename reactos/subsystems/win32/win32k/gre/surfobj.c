@@ -136,11 +136,11 @@ GreCreateBitmap(IN SIZEL Size,
         return 0;
 
     /* Allocate storage for surface object */
-    pSurface = EngAllocMem(FL_ZERO_MEMORY, sizeof(SURFACE), TAG_SURFOBJ);
-    if (!pSurface) return NULL;
+    pSurface = (PSURFACE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP);
+    if (!pSurface) return 0;
 
-    /* Create a handle for it */
-    hSurface = alloc_gdi_handle(&pSurface->BaseObject, (SHORT)GDI_OBJECT_TYPE_BITMAP);
+    /* Save a handle to it */
+    hSurface = pSurface->BaseObject.hHmgr;
 
     /* Check the format */
     if (Format == BMF_4RLE || Format == BMF_8RLE)
@@ -148,8 +148,7 @@ GreCreateBitmap(IN SIZEL Size,
         DPRINT1("Bitmaps with format 0x%x aren't supported yet!\n", Format);
 
         /* Cleanup and exit */
-        free_gdi_handle(hSurface);
-        ExFreePool(pSurface);
+        GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
         return 0;
     }
 
@@ -184,8 +183,7 @@ GreCreateBitmap(IN SIZEL Size,
         if (!pSurfObj->pvBits)
         {
             /* Cleanup and exit */
-            free_gdi_handle(hSurface);
-            ExFreePool(pSurface);
+            GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
             return 0;
         }
     }
@@ -206,6 +204,9 @@ GreCreateBitmap(IN SIZEL Size,
     /* Set the format */
     pSurfObj->iBitmapFormat = Format;
 
+    /* Unlock the surface */
+    SURFACE_Unlock(pSurface);
+
     /* Return handle to it */
     return hSurface;
 }
@@ -213,13 +214,7 @@ GreCreateBitmap(IN SIZEL Size,
 VOID FASTCALL
 GreDeleteBitmap(HGDIOBJ hBitmap)
 {
-    PSURFACE pSurf;
-
-    /* Free the handle */
-    pSurf = free_gdi_handle(hBitmap);
-
-    /* Free its storage */
-    EngFreeMem(pSurf);
+    GDIOBJ_FreeObjByHandle(hBitmap, GDI_OBJECT_TYPE_BITMAP);
 }
 
 LONG FASTCALL
