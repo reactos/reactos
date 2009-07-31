@@ -110,7 +110,6 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
    }
    else
    {
-       FIXME("loading %d bpp color cursor\n", IconImage->icHeader.biBitCount);
        IconInfo.hbmColor = CreateDIBitmap(hDC, &IconImage->icHeader, CBM_INIT,
                                           ImageData, (BITMAPINFO*)IconImage,
                                           DIB_RGB_COLORS);
