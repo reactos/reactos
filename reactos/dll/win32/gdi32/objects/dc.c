@@ -1539,7 +1539,7 @@ SelectObject(HDC hDC,
 {
     PDC_ATTR pDc_Attr;
     HGDIOBJ hOldObj = NULL;
-    UINT uType
+    UINT uType;
 //    PTEB pTeb;
 
     if(!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
