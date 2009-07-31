@@ -31,6 +31,7 @@
 		<file>dib32bpp.c</file>
 		<file>dibXXbpp.c</file>
 		<file>dib.c</file>
+		<file>floodfill.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">

@@ -1072,12 +1072,11 @@ NtGdiExtFloodFill(
     PDC dc;
     PDC_ATTR pdcattr;
     SURFACE *psurf = NULL;
-    PBRUSH pbrFill = NULL;
+    HPALETTE Pal = 0;
+    XLATEOBJ *XlateObj = NULL;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
     POINTL     Pt;
-
-    DPRINT1("FIXME: NtGdiExtFloodFill is UNIMPLEMENTED\n");
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -1110,17 +1109,21 @@ NtGdiExtFloodFill(
     else
         goto cleanup;
 
-    pbrFill = dc->dclevel.pbrFill;
-    if (!pbrFill)
-    {
-        Ret = FALSE;
-        goto cleanup;
-    }
     psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
         Ret = FALSE;
         goto cleanup;
+    }
+
+    Pal = dc->dclevel.pSurface->hDIBPalette;
+    if (!Pal) Pal = pPrimarySurface->DevInfo.hpalDefault;
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, Pal);
+
+    if (XlateObj != NULL)
+    {
+        Ret = DIB_XXBPP_FloodFill(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, XlateObj, Color, FillType);
+        EngDeleteXlate(XlateObj);
     }
 
 cleanup:
