@@ -291,7 +291,7 @@ ExFreePoolWithTag(
 #endif
             ExFreePagedPool(Block);
     }
-    else if (Block) return ExFreeArmPoolWithTag(Block, Tag);
+    else if (Block) ExFreeArmPoolWithTag(Block, Tag);
     else
     {
         /* Warn only for NULL pointers */

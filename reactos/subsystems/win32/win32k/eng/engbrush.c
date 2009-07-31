@@ -156,7 +156,9 @@ EngRealizeBrush(
     }
 
     /* Copy the bits to the new format bitmap */
-    rclDest = (RECTL){0, 0, psoPattern->sizlBitmap.cx, psoPattern->sizlBitmap.cy};
+    rclDest.left = rclDest.top = 0;
+    rclDest.right = psoPattern->sizlBitmap.cx;
+    rclDest.bottom = psoPattern->sizlBitmap.cy;
     EngCopyBits(psoRealize, psoPattern, NULL, pxlo, &rclDest, &ptlSrc);
 
     /* Unlock the bitmap again */

@@ -349,6 +349,9 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     POBJ  newObject = NULL;
     HANDLE CurrentProcessId, LockedProcessId;
     UCHAR TypeIndex;
+    UINT Index;
+    PGDI_TABLE_ENTRY Entry;
+    LONG TypeInfo;
 
     GDIDBG_INITLOOPTRACE();
 
@@ -372,10 +375,6 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
         DPRINT1("Not enough memory to allocate gdi object!\n");
         return NULL;
     }
-
-    UINT Index;
-    PGDI_TABLE_ENTRY Entry;
-    LONG TypeInfo;
 
     CurrentProcessId = PsGetCurrentProcessId();
     LockedProcessId = (HANDLE)((ULONG_PTR)CurrentProcessId | 0x1);

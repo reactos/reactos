@@ -250,7 +250,7 @@ EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
                       OUT PUSHORT AnsiCodePage)
 {
     /* Forward to kernel */
-    return RtlGetDefaultCodePage(AnsiCodePage, OemCodePage);
+    RtlGetDefaultCodePage(AnsiCodePage, OemCodePage);
 }
 
 /* EOF */

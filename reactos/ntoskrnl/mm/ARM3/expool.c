@@ -379,7 +379,11 @@ ExFreeArmPoolWithTag(IN PVOID P,
     //
     // Quickly deal with big page allocations
     //
-    if (PAGE_ALIGN(P) == P) return (VOID)MiFreePoolPages(P);
+    if (PAGE_ALIGN(P) == P)
+    {
+        (VOID)MiFreePoolPages(P);
+        return;
+    }
     
     //
     // Get the entry for this pool allocation
@@ -497,7 +501,8 @@ ExFreeArmPoolWithTag(IN PVOID P,
         // In this case, release the nonpaged pool lock, and free the page
         //
         KeReleaseQueuedSpinLock(LockQueueNonPagedPoolLock, OldIrql);
-        return (VOID)MiFreePoolPages(Entry);
+        (VOID)MiFreePoolPages(Entry);
+        return;
     }
 
     //

@@ -127,8 +127,8 @@ IntGdiModifyWorldTransform(
     CONST LPXFORM lpXForm,
     DWORD Mode)
 {
-    ASSERT(pDc);
     XFORM xformWorld2Wnd;
+    ASSERT(pDc);
 
     switch (Mode)
     {

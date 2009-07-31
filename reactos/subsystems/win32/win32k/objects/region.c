@@ -2081,7 +2081,7 @@ VOID FASTCALL
 REGION_Delete(PROSRGNDATA pRgn)
 {
   if ( pRgn == prgnDefault) return;
-  return REGION_FreeRgn(pRgn);
+  REGION_FreeRgn(pRgn);
 }
 
 

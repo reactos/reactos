@@ -61,9 +61,11 @@ SharedPtrToUser(PVOID Ptr)
 static __inline PVOID
 DesktopPtrToUser(PVOID Ptr)
 {
+    PCLIENTINFO pci;
+    PDESKTOPINFO pdi;
     GetW32ThreadInfo();
-    PCLIENTINFO pci = GetWin32ClientInfo();
-    PDESKTOPINFO pdi = pci->pDeskInfo;
+    pci = GetWin32ClientInfo();
+    pdi = pci->pDeskInfo;
 
     ASSERT(Ptr != NULL);
     ASSERT(pdi != NULL);

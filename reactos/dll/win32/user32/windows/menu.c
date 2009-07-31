@@ -1234,9 +1234,10 @@ User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   HMENU hmenu = LoadMenuW(User32Instance, L"SYSMENU");
   LRESULT Result = (LRESULT)hmenu;
+  MENUINFO menuinfo = {0};
+  MENUITEMINFOW info = {0};
 
   // removing space for checkboxes from menu
-  MENUINFO menuinfo = {0};
   menuinfo.cbSize = sizeof(menuinfo);
   menuinfo.fMask = MIM_STYLE;
   GetMenuInfo(hmenu, &menuinfo);
@@ -1244,7 +1245,6 @@ User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength)
   SetMenuInfo(hmenu, &menuinfo);
 
   // adding bitmaps to menu items
-  MENUITEMINFOW info = {0};
   info.cbSize = sizeof(info);
   info.fMask |= MIIM_BITMAP;
   info.hbmpItem = HBMMENU_POPUP_MINIMIZE;

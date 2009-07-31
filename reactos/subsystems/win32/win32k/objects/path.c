@@ -64,8 +64,9 @@ BOOL
 FASTCALL
 PATH_Delete(HPATH hPath)
 {
+  PPATH pPath;
   if (!hPath) return FALSE;
-  PPATH pPath = PATH_LockPath( hPath );
+  pPath = PATH_LockPath( hPath );
   if (!pPath) return FALSE;
   PATH_DestroyGdiPath( pPath );
   PATH_UnlockPath( pPath );

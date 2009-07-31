@@ -658,7 +658,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
     pdcattrNew->ulDirty_        = pdcattrOld->ulDirty_;
     pdcattrNew->iCS_CP          = pdcattrOld->iCS_CP;
 
-    pdcNew->erclWindow = (RECTL){0, 0, 1, 1};
+    pdcNew->erclWindow.left = pdcNew->erclWindow.top = 0;
+    pdcNew->erclWindow.right = pdcNew->erclWindow.bottom = 1;
 
     DC_UnlockDc(pdcNew);
     DC_UnlockDc(pdcOld);

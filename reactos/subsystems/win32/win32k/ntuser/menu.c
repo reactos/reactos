@@ -292,6 +292,7 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
                                          NULL);
       if(NT_SUCCESS(Status))
       {
+         BOOL ret;
          if (Menu->MenuInfo.Wnd)
          {
             Window = UserGetWindowObject(Menu->MenuInfo.Wnd);
@@ -301,7 +302,7 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
             }
          }
 //         UserDereferenceObject(Menu);
-         BOOL ret = UserDeleteObject(Menu->MenuInfo.Self, otMenu);
+         ret = UserDeleteObject(Menu->MenuInfo.Self, otMenu);
          ObDereferenceObject(WindowStation);
          return ret;
       }
