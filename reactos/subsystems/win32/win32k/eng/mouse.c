@@ -513,7 +513,7 @@ EngMovePointer(
         if (prcl != NULL)
         {
             prcl->left = x - pgp->HotSpot.x;
-            prcl->top = y - pgp->HotSpot.x;
+            prcl->top = y - pgp->HotSpot.y;
             prcl->right = prcl->left + pgp->Size.cx;
             prcl->bottom = prcl->top + pgp->Size.cy;
         }
