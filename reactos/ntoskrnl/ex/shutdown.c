@@ -28,7 +28,7 @@ KiHaltProcessorDpcRoutine(IN PKDPC Dpc,
    while (TRUE)
      {
        KeRaiseIrql(SYNCH_LEVEL, &OldIrql);
-#if defined(_M_X86)
+#if defined(_M_IX86)
        Ke386HaltProcessor();
 #else
        HalProcessorIdle();
