@@ -1848,23 +1848,6 @@ KsDeviceRegisterAdapterObject(
 KSDDKAPI
 NTSTATUS
 NTAPI
-_KsEdit(
-    IN KSOBJECT_BAG ObjectBag,
-    IN OUT PVOID* PointerToPointerToItem,
-    IN ULONG NewSize,
-    IN ULONG OldSize,
-    IN ULONG Tag)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
 KsGetBusEnumIdentifier(
     IN PIRP Irp)
 {
@@ -2093,6 +2076,62 @@ KsRegisterFilterWithNoKSPins(
     IN KSPIN_MEDIUM*  MediumList,
     IN GUID*  CategoryList OPTIONAL)
 {
+    ULONG Size, Index;
+    NTSTATUS Status;
+    PWSTR SymbolicLinkList;
+    //PUCHAR Buffer;
+    HANDLE hKey;
+    UNICODE_STRING InterfaceString;
+    //UNICODE_STRING FilterData = RTL_CONSTANT_STRING(L"FilterData");
+
+    if (!InterfaceClassGUID || !PinCount || !PinDirection || !MediumList)
+    {
+        /* all these parameters are required */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* calculate filter data value size */
+    Size = PinCount * sizeof(KSPIN_MEDIUM);
+    if (CategoryList)
+    {
+        /* add category list */
+        Size += PinCount * sizeof(GUID);
+    }
+
+    /* FIXME generate filter data blob */
     UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+
+    /* get symbolic link list */
+    Status = IoGetDeviceInterfaces(InterfaceClassGUID, DeviceObject, DEVICE_INTERFACE_INCLUDE_NONACTIVE, &SymbolicLinkList);
+    if (NT_SUCCESS(Status))
+    {
+        /* initialize first symbolic link */
+        RtlInitUnicodeString(&InterfaceString, SymbolicLinkList);
+
+        /* open first device interface registry key */
+        Status = IoOpenDeviceInterfaceRegistryKey(&InterfaceString, GENERIC_WRITE, &hKey);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* write filter data */
+            //Status = ZwSetValueKey(hKey, &FilterData, 0, REG_BINARY, Buffer, Size);
+
+            /* close the key */
+            ZwClose(hKey);
+        }
+
+        if (PinCount)
+        {
+            /* update medium cache */
+            for(Index = 0; Index < PinCount; Index++)
+            {
+                KsCacheMedium(&InterfaceString, &MediumList[Index], PinDirection[Index]);
+            }
+        }
+
+        /* free the symbolic link list */
+        ExFreePool(SymbolicLinkList);
+    }
+
+    return Status;
 }

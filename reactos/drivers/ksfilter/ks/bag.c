@@ -298,5 +298,94 @@ KsFreeObjectBag(
     FreeItem(Bag);
 }
 
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+_KsEdit(
+    IN KSOBJECT_BAG ObjectBag,
+    IN OUT PVOID* PointerToPointerToItem,
+    IN ULONG NewSize,
+    IN ULONG OldSize,
+    IN ULONG Tag)
+{
+    PKSIOBJECT_BAG Bag;
+    PKSIOBJECT_BAG_ENTRY BagEntry;
+    PVOID Item;
+    NTSTATUS Status;
+
+    /* get real object bag */
+    Bag = (PKSIOBJECT_BAG)ObjectBag;
+
+    /* acquire bag mutex */
+    KeWaitForSingleObject(Bag->BagMutex, Executive, KernelMode, FALSE, NULL);
+
+
+    if (*PointerToPointerToItem)
+    {
+        /* search object bag for this entry */
+        BagEntry = KspFindObjectBagItem(&Bag->ObjectList, *PointerToPointerToItem);
+    }
+    else
+    {
+        /* pointer to null, allocate new entry */
+        BagEntry = NULL;
+    }
+
+    if (!BagEntry || NewSize > OldSize)
+    {
+        /* entry does not exist or new entry must be allocated */
+        Item = AllocateItem(NonPagedPool, NewSize);
+
+        if (!Item)
+        {
+            /* not enough resources */
+            KeReleaseMutex(Bag->BagMutex, FALSE);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* now add the item to the object bag */
+        Status = KsAddItemToObjectBag((KSOBJECT_BAG)Bag, Item, NULL);
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* failed to add item */
+            FreeItem(Item);
+            KeReleaseMutex(Bag->BagMutex, FALSE);
+            return Status;
+        }
+
+        if (*PointerToPointerToItem)
+        {
+            /* object exists */
+            if (OldSize >= NewSize)
+            {
+                /* copy old contents */
+                RtlMoveMemory(Item, *PointerToPointerToItem, NewSize);
+            }
+            else
+            {
+                /* copy new contents */
+                RtlMoveMemory(Item, *PointerToPointerToItem, OldSize);
+            }
+        }
+
+        if (BagEntry)
+        {
+            /* remove old entry */
+            KsRemoveItemFromObjectBag(ObjectBag, BagEntry->Item, TRUE);
+        }
+
+        /* store item */
+       *PointerToPointerToItem = Item;
+    }
+
+    /* release bag mutex */
+    KeReleaseMutex(Bag->BagMutex, FALSE);
+
+    return STATUS_SUCCESS;
+}
 
 
