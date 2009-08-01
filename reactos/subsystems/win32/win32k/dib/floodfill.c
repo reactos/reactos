@@ -27,76 +27,72 @@ typedef struct _floodItem
     ULONG y;
 } FLOODITEM;
 
-static ULONG floodLen = 0;
-static FLOODITEM *floodStart = NULL, *floodData = NULL;
+typedef struct _floodInfo
+{
+    ULONG floodLen;
+    FLOODITEM *floodStart;
+    FLOODITEM *floodData;
+} FLOODINFO;
 
-static __inline BOOL initFlood(RECTL *DstRect)
+static __inline BOOL initFlood(FLOODINFO *info, RECTL *DstRect)
 {
     ULONG width = DstRect->right - DstRect->left;
     ULONG height = DstRect->bottom - DstRect->top;
-    floodData = ExAllocatePoolWithTag(NonPagedPool, width * height * sizeof(FLOODITEM), TAG_DIB); 
-    if (floodData == NULL)
+    info->floodData = ExAllocatePoolWithTag(NonPagedPool, width * height * sizeof(FLOODITEM), TAG_DIB); 
+    if (info->floodData == NULL)
     {
         return FALSE;
     }
-    floodStart = (FLOODITEM*)((PBYTE)floodData + (width * height * sizeof(FLOODITEM)));
+    info->floodStart = (FLOODITEM*)((PBYTE)info->floodData + (width * height * sizeof(FLOODITEM)));
     return TRUE;
 }
-static __inline VOID finalizeFlood()
+static __inline VOID finalizeFlood(FLOODINFO *info)
 {
-    ExFreePoolWithTag(floodData, TAG_DIB);
+    ExFreePoolWithTag(info->floodData, TAG_DIB);
 }
-static __inline VOID addItemFlood(ULONG x, 
+static __inline VOID addItemFlood(FLOODINFO *info,
+                                  ULONG x, 
                                   ULONG y, 
                                   SURFOBJ *DstSurf, 
                                   RECTL *DstRect, 
-                                  XLATEOBJ* ColorTranslation, 
-                                  COLORREF Color, 
+                                  ULONG Color, 
                                   BOOL isSurf)
 {
     if (x >= DstRect->left && x <= DstRect->right &&
         y >= DstRect->top && y <= DstRect->bottom)
     {
-        if (isSurf == TRUE && XLATEOBJ_iXlate(ColorTranslation, 
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y)) != Color)
+        if (isSurf == TRUE && 
+            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != Color)
         {
             return;
         }
-        else if (isSurf == FALSE && XLATEOBJ_iXlate(ColorTranslation, 
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y)) == Color)
+        else if (isSurf == FALSE &&
+            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) == Color)
         {
             return;
         }
-        floodStart--;
-        floodStart->x = x;
-        floodStart->y = y;
-        floodLen++;
+        info->floodStart--;
+        info->floodStart->x = x;
+        info->floodStart->y = y;
+        info->floodLen++;
     }
 }
-static __inline VOID removeItemFlood()
+static __inline VOID removeItemFlood(FLOODINFO *info)
 {
-    floodStart++;
-    floodLen--;
-}
-static __inline BOOL isEmptyFlood()
-{
-    if (floodLen == 0)
-    {
-        return TRUE;
-    }
-    return FALSE;
+    info->floodStart++;
+    info->floodLen--;
 }
 
-BOOLEAN DIB_XXBPP_FloodFill(SURFOBJ *DstSurf, 
-                            BRUSHOBJ *Brush, 
-                            RECTL *DstRect, 
-                            POINTL *Origin,
-                            XLATEOBJ *ColorTranslation,
-                            COLORREF Color, 
-                            UINT FillType)
+BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf, 
+                                 BRUSHOBJ *Brush, 
+                                 RECTL *DstRect, 
+                                 POINTL *Origin,
+                                 ULONG ConvColor, 
+                                 UINT FillType)
 {
     ULONG x, y;
     ULONG BrushColor;
+    FLOODINFO flood = {0, NULL, NULL};
 
     BrushColor = Brush->iSolidColor;
     x = Origin->x;
@@ -105,59 +101,66 @@ BOOLEAN DIB_XXBPP_FloodFill(SURFOBJ *DstSurf,
     if (FillType == FLOODFILLBORDER)
     {
         /* Check if the start pixel has the border color */
-        if (XLATEOBJ_iXlate(ColorTranslation, 
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y)) == Color)
+        if (DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) == ConvColor)
         {
             return FALSE;
         }
 
-        if (initFlood(DstRect) == FALSE)
+        if (initFlood(&flood, DstRect) == FALSE)
         {
             return FALSE;
         }
-        addItemFlood(x, y, DstSurf, DstRect, ColorTranslation, Color, FALSE);
-        while (!isEmptyFlood()) 
+        addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, FALSE);
+        while (flood.floodLen != 0) 
         {
-            x = floodStart->x;
-            y = floodStart->y;
-            removeItemFlood();
+            x = flood.floodStart->x;
+            y = flood.floodStart->y;
+            removeItemFlood(&flood);
 
             DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
-            addItemFlood(x, y + 1, DstSurf, DstRect, ColorTranslation, Color, FALSE);
-            addItemFlood(x, y - 1, DstSurf, DstRect, ColorTranslation, Color, FALSE);
-            addItemFlood(x + 1, y, DstSurf, DstRect, ColorTranslation, Color, FALSE);
-            addItemFlood(x - 1, y, DstSurf, DstRect, ColorTranslation, Color, FALSE);
+            addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, FALSE);
+            addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, FALSE);
+            addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, FALSE);
+            addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, FALSE);
+            if (flood.floodStart <= flood.floodData)
+            {   
+                DPRINT1("Couldn't finish flooding!\n");
+                return FALSE;
+            }
         }
-        finalizeFlood();
+        finalizeFlood(&flood);
     }
     else if (FillType == FLOODFILLSURFACE)
     {
         /* Check if the start pixel has the surface color */
-        if (XLATEOBJ_iXlate(ColorTranslation, 
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y)) != Color)
+        if (DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != ConvColor)
         {
             return FALSE;
         }
 
-        if (initFlood(DstRect) == FALSE)
+        if (initFlood(&flood, DstRect) == FALSE)
         {
             return FALSE;
         }
-        addItemFlood(x, y, DstSurf, DstRect, ColorTranslation, Color, TRUE);
-        while (!isEmptyFlood()) 
+        addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, TRUE);
+        while (flood.floodLen != 0) 
         {
-            x = floodStart->x;
-            y = floodStart->y;
-            removeItemFlood();
+            x = flood.floodStart->x;
+            y = flood.floodStart->y;
+            removeItemFlood(&flood);
 
             DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
-            addItemFlood(x, y + 1, DstSurf, DstRect, ColorTranslation, Color, TRUE);
-            addItemFlood(x, y - 1, DstSurf, DstRect, ColorTranslation, Color, TRUE);
-            addItemFlood(x + 1, y, DstSurf, DstRect, ColorTranslation, Color, TRUE);
-            addItemFlood(x - 1, y, DstSurf, DstRect, ColorTranslation, Color, TRUE);
-
+            addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, TRUE);
+            addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, TRUE);
+            addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, TRUE);
+            addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, TRUE);
+            if (flood.floodStart <= flood.floodData)
+            {   
+                DPRINT1("Couldn't finish flooding!\n");
+                return FALSE;
+            }
         }
-        finalizeFlood();
+        finalizeFlood(&flood);
     }
     else
     {

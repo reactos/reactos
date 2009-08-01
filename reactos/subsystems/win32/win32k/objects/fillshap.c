@@ -1070,13 +1070,14 @@ NtGdiExtFloodFill(
     UINT  FillType)
 {
     PDC dc;
-    PDC_ATTR pdcattr;
-    SURFACE *psurf = NULL;
-    HPALETTE Pal = 0;
-    XLATEOBJ *XlateObj = NULL;
+    PDC_ATTR   pdcattr;
+    SURFACE    *psurf = NULL;
+    HPALETTE   Pal = 0;
+    XLATEOBJ   *XlateObj = NULL;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
     POINTL     Pt;
+    ULONG      ConvColor;
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -1118,11 +1119,16 @@ NtGdiExtFloodFill(
 
     Pal = dc->dclevel.pSurface->hDIBPalette;
     if (!Pal) Pal = pPrimarySurface->DevInfo.hpalDefault;
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, Pal);
+    XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, PAL_RGB, Pal, NULL);
 
+    /* Only solid fills supported for now
+     * How to support pattern brushes and non standard surfaces (not offering dib functions):
+     * Version a (most likely slow): call DrvPatBlt for every pixel
+     * Version b: create a flood mask and let MaskBlt blit a masked brush */
     if (XlateObj != NULL)
     {
-        Ret = DIB_XXBPP_FloodFill(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, XlateObj, Color, FillType);
+        ConvColor = XLATEOBJ_iXlate(XlateObj, Color);
+        Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, ConvColor, FillType);
         EngDeleteXlate(XlateObj);
     }
 
