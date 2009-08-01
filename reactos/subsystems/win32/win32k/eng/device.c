@@ -534,14 +534,17 @@ IntCreatePrimarySurface()
     SurfaceRect.bottom = SurfObj->sizlBitmap.cy;
     //EngEraseSurface(SurfObj, &SurfaceRect, 0);
 
-    /* Put the pointer in the center of the screen */
-    //gpsi->ptCursor.x = (SurfaceRect.right - SurfaceRect.left) / 2;
-    //gpsi->ptCursor.y = (SurfaceRect.bottom - SurfaceRect.top) / 2;
-
     /* Give the PDEV a MovePointer function */
     PrimarySurface.pfnMovePointer = PrimarySurface.DriverFunctions.MovePointer;
     if (!PrimarySurface.pfnMovePointer)
         PrimarySurface.pfnMovePointer = EngMovePointer;
+
+    /* attach monitor */
+    AttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
+
+    /* Put the pointer in the center of the screen */
+    RosUserSetCursorPos((SurfaceRect.right - SurfaceRect.left) / 2,
+                        (SurfaceRect.bottom - SurfaceRect.top) / 2);
 
     EngUnlockSurface(SurfObj);
 

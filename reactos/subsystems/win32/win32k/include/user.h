@@ -35,7 +35,8 @@ struct clipboard;
 enum user_object
 {
     USER_WINDOW = 1,
-    USER_HOOK
+    USER_HOOK,
+    USER_MONITOR
 };
 
 #define DESKTOP_ATOM  ((atom_t)32769)

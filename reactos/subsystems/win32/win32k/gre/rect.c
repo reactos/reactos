@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PDEVOBJ PrimarySurface;
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 VOID
@@ -105,8 +107,8 @@ GrePolygon(PDC pDC,
     // HACK
     DestRect.left = 0;
     DestRect.top = 0;
-    DestRect.bottom = 600;
-    DestRect.right = 800;
+    DestRect.bottom = PrimarySurface.GDIInfo.ulVertRes;
+    DestRect.right = PrimarySurface.GDIInfo.ulHorzRes;
 
     /* Draw brush-based polygon */
     if (pDC->pFillBrush)

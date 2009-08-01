@@ -49,6 +49,19 @@ RosUserClipCursor( LPCRECT clip );
 void NTAPI 
 RosUserSetCursor( ICONINFO* IconInfo );
 
+INT
+APIENTRY
+RosUserEnumDisplayMonitors(
+   OPTIONAL OUT HMONITOR *hMonitorList,
+   OPTIONAL OUT PRECTL monitorRectList,
+   OPTIONAL IN DWORD listSize);
+
+BOOL
+APIENTRY
+RosUserGetMonitorInfo(
+   IN HMONITOR hMonitor,
+   OUT LPMONITORINFO pMonitorInfo);
+
 VOID NTAPI
 RosUserConnectCsrss();
 

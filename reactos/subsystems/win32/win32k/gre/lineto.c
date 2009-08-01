@@ -14,6 +14,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PDEVOBJ PrimarySurface;
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 BOOLEAN
@@ -112,8 +114,8 @@ GrePolyline(PDC pDC,
     // HACK
     DestRect.left = 0;
     DestRect.top = 0;
-    DestRect.bottom = 600;
-    DestRect.right = 800;
+    DestRect.bottom = PrimarySurface.GDIInfo.ulVertRes;
+    DestRect.right = PrimarySurface.GDIInfo.ulHorzRes;
 
     /* Draw pen-based polygon */
     if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))

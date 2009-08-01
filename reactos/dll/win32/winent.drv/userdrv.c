@@ -89,7 +89,7 @@ HKL CDECL RosDrv_ActivateKeyboardLayout( HKL layout, UINT flags )
 
 void CDECL RosDrv_Beep(void)
 {
-    UNIMPLEMENTED;
+    Beep(500, 100);
 }
 
 SHORT CDECL RosDrv_GetAsyncKeyState( INT key )
@@ -361,12 +361,62 @@ LONG CDECL RosDrv_ChangeDisplaySettingsEx( LPCWSTR name, LPDEVMODEW mode, HWND h
 
 BOOL CDECL RosDrv_EnumDisplayMonitors( HDC hdc, LPRECT rect, MONITORENUMPROC proc, LPARAM lp )
 {
-    RECT monrect = {0, 0, 640, 480};
+    int i;
+    int nb_monitors;
+    HMONITOR *monitors;
+    RECT *monitors_rect;
 
-    FIXME("RosDrv_EnumDisplayMonitors is a hack\n");
+    /* Get the count of the display monitors */
+    nb_monitors = RosUserEnumDisplayMonitors(NULL, NULL, 0);
+    if (nb_monitors <= 0)
+    {
+        return FALSE;
+    }
 
-    proc((HMONITOR)1, hdc, &monrect, lp);
+    /* Allocate the buffers that will be filled by RosUserEnumDisplayMonitors */
+    monitors = HeapAlloc( GetProcessHeap(), 0, nb_monitors * sizeof(HMONITOR));
+    monitors_rect = HeapAlloc( GetProcessHeap(), 0, nb_monitors * sizeof(RECT));
+    if(!monitors || !monitors_rect)
+    {
+        return FALSE;
+    }
 
+    /* Fill the buffers with the handles and the rects of all display monitors */
+    nb_monitors = RosUserEnumDisplayMonitors(monitors, (PRECTL)monitors_rect, nb_monitors);
+    if (nb_monitors <= 0)
+    {
+        return FALSE;
+    }
+
+    if (hdc)
+    {
+        POINT origin;
+        RECT limit;
+
+        if (!GetDCOrgEx( hdc, &origin )) return FALSE;
+        if (GetClipBox( hdc, &limit ) == ERROR) return FALSE;
+
+        if (rect && !IntersectRect( &limit, &limit, rect )) return TRUE;
+
+        for (i = 0; i < nb_monitors; i++)
+        {
+            RECT monrect = monitors_rect[i];
+            OffsetRect( &monrect, -origin.x, -origin.y );
+            if (IntersectRect( &monrect, &monrect, &limit ))
+                if (!proc( monitors[i], hdc, &monrect, lp ))
+                    return FALSE;
+        }
+    }
+    else
+    {
+        for (i = 0; i < nb_monitors; i++)
+        {
+            RECT unused;
+            if (!rect || IntersectRect( &unused, &monitors_rect[i], rect ))
+                if (!proc( monitors[i], 0, &monitors_rect[i], lp ))
+                    return FALSE;
+        }
+    }
     return TRUE;
 }
 
@@ -378,14 +428,7 @@ BOOL CDECL RosDrv_EnumDisplaySettingsEx( LPCWSTR name, DWORD num, LPDEVMODEW mod
 
 BOOL CDECL RosDrv_GetMonitorInfo( HMONITOR handle, LPMONITORINFO info )
 {
-    RECT monrect = {0, 0, 640, 480};
-
-    FIXME("RosDrv_GetMonitorInfo(%x %p) is a hack\n", handle, info);
-
-    info->rcMonitor = monrect;
-    info->rcWork = monrect;
-
-    return TRUE;
+    return RosUserGetMonitorInfo(handle, info);
 }
 
 BOOL CDECL RosDrv_CreateDesktopWindow( HWND hwnd )
@@ -413,8 +456,8 @@ BOOL CDECL RosDrv_CreateDesktopWindow( HWND hwnd )
             req->flags         = SWP_NOZORDER;
             req->window.left   = 0;
             req->window.top    = 0;
-            req->window.right  = 800; // FIXME: Use primary surface's dimensions!
-            req->window.bottom = 600;
+            req->window.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+            req->window.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
             req->client        = req->window;
             wine_server_call( req );
         }

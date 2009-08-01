@@ -114,6 +114,7 @@
 		<file>init.c</file>
 		<file>usrheap.c</file>
 		<file>cursor.c</file>
+		<file>monitor.c</file>
 	</directory>
 	<directory name="wine">
 		<file>atom.c</file>

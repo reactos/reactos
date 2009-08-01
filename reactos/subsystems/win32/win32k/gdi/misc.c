@@ -12,6 +12,8 @@
 #define NDEBUG
 #include <debug.h>
 
+extern PDEVOBJ PrimarySurface;
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 BOOL APIENTRY RosGdiArc( HDC physDev, INT left, INT top, INT right, INT bottom,
@@ -79,8 +81,8 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     pDC = DC_Lock(physDev);
 
     scrRect.left = scrRect.top = 0;
-    scrRect.right = 800;
-    scrRect.bottom = 600;
+    scrRect.right = PrimarySurface.GDIInfo.ulHorzRes;
+    scrRect.bottom = PrimarySurface.GDIInfo.ulVertRes;
 
     pClipObj = IntEngCreateClipRegion(1, NULL, &scrRect);
 

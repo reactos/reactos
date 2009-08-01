@@ -183,8 +183,6 @@ void CsrInitInputSupport()
     HANDLE MouseThreadHandle;
 
     ClipCursor(NULL);
-    SetCursorPos(GetSystemMetrics( SM_CXVIRTUALSCREEN ) /2,
-                 GetSystemMetrics( SM_CYVIRTUALSCREEN ) /2);
 
     MouseThreadHandle = CreateThread(NULL, 0, MouseInputThread, NULL, 0,NULL);
 }
