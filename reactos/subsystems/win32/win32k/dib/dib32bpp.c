@@ -294,6 +294,19 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 }
 
 BOOLEAN
+DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
+{
+    ULONG DestY;
+
+    for (DestY = DestRect->top; DestY < DestRect->bottom; DestY++)
+    {
+        DIB_32BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);
+    }
+
+    return TRUE;
+}
+
+BOOLEAN
 DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                          RECTL*  DestRect,  RECTL *SourceRect,
                          XLATEOBJ *ColorTranslation, ULONG iTransColor)

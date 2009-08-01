@@ -43,7 +43,6 @@
 			<directory name="i386">
 				<file>dib24bpp_hline.s</file>
 				<file>dib32bpp_hline.s</file>
-				<file>dib32bpp_colorfill.s</file>
 			</directory>
 		</if>
 		<ifnot property="ARCH" value="i386">
