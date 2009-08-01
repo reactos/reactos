@@ -1148,7 +1148,7 @@ User32DefWindowProc(HWND hWnd,
             else
             {
                 POINT Pt;
-                DWORD Style;
+                LONG_PTR Style;
                 LONG HitCode;
 
                 Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
@@ -1352,7 +1352,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SETCURSOR:
         {
-            ULONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+            LONG_PTR Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
 
             if (Style & WS_CHILD)
             {
