@@ -1245,7 +1245,14 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SETREDRAW:
         {
-            DefWndSetRedraw(hWnd, wParam);
+            LONG_PTR Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+            if (wParam) SetWindowLongPtr(hWnd, GWL_STYLE, Style | WS_VISIBLE);
+            else
+            {
+                RedrawWindow(hWnd, NULL, 0, RDW_ALLCHILDREN | RDW_VALIDATE);
+                Style &= ~WS_VISIBLE;
+                SetWindowLongPtr(hWnd, GWL_STYLE, Style);
+            }
             return (0);
         }
 
