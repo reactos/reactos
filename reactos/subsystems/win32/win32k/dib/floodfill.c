@@ -43,7 +43,8 @@ static __inline BOOL initFlood(FLOODINFO *info, RECTL *DstRect)
     {
         return FALSE;
     }
-    info->floodStart = (FLOODITEM*)((PBYTE)info->floodData + (width * height * sizeof(FLOODITEM)));
+    info->floodStart = info->floodData + (width * height);
+    DPRINT("Allocated flood stack from %p to %p\n", info->floodData, info->floodStart);
     return TRUE;
 }
 static __inline VOID finalizeFlood(FLOODINFO *info)
@@ -118,15 +119,16 @@ BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf,
             removeItemFlood(&flood);
 
             DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
+            if (flood.floodStart - 4 < flood.floodData)
+            {   
+                DPRINT1("Can't finish flooding!\n");
+                finalizeFlood(&flood);
+                return FALSE;
+            }
             addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, FALSE);
             addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, FALSE);
             addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, FALSE);
             addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, FALSE);
-            if (flood.floodStart <= flood.floodData)
-            {   
-                DPRINT1("Couldn't finish flooding!\n");
-                return FALSE;
-            }
         }
         finalizeFlood(&flood);
     }
@@ -150,15 +152,16 @@ BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf,
             removeItemFlood(&flood);
 
             DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
+            if (flood.floodStart - 4 < flood.floodData)
+            {
+                DPRINT1("Can't finish flooding!\n");
+                finalizeFlood(&flood);
+                return FALSE;
+            }
             addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, TRUE);
             addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, TRUE);
             addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, TRUE);
             addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, TRUE);
-            if (flood.floodStart <= flood.floodData)
-            {   
-                DPRINT1("Couldn't finish flooding!\n");
-                return FALSE;
-            }
         }
         finalizeFlood(&flood);
     }
