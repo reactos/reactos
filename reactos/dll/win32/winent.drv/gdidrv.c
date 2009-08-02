@@ -313,16 +313,8 @@ BOOL CDECL RosDrv_GetTextExtentExPoint( NTDRV_PDEVICE *physDev, LPCWSTR str, INT
 
 BOOL CDECL RosDrv_GetTextMetrics(NTDRV_PDEVICE *physDev, TEXTMETRICW *metrics)
 {
-    UNIMPLEMENTED;
-
-    // HACK
-    metrics->tmMaxCharWidth = 9;
-    metrics->tmHeight = 18;
-    metrics->tmExternalLeading = 0;
-
-
-    return TRUE;
-    //return FALSE;
+    /* Let GDI font engine do the work */
+    return FALSE;
 }
 
 BOOL CDECL RosDrv_LineTo( NTDRV_PDEVICE *physDev, INT x, INT y )
@@ -482,8 +474,7 @@ HFONT CDECL RosDrv_SelectFont( NTDRV_PDEVICE *physDev, HFONT hfont, HANDLE gdiFo
     /* We don't have a kernelmode font engine */
     if (gdiFont == 0)
     {
-        UNIMPLEMENTED;
-        //RosGdiSelectFont(physDev->hKernelDC, hfont, gdiFont);
+        /*RosGdiSelectFont(physDev->hKernelDC, hfont, gdiFont);*/
     }
     else
     {
@@ -611,10 +602,6 @@ void CDECL RosDrv_SetDeviceClipping( NTDRV_PDEVICE *physDev, HRGN vis_rgn, HRGN 
         DeleteObject(dc_rgn);
         return;
     }
-
-    // FIXME: What to do with origin?
-    //XSetClipRectangles( gdi_display, physDev->gc, physDev->dc_rect.left, physDev->dc_rect.top,
-    //                    (XRectangle *)data->Buffer, data->rdh.nCount, YXBanded );
 
     /* Set clipping */
     RosGdiSetDeviceClipping(physDev->hKernelDC, data->rdh.nCount, (RECTL *)data->Buffer, (RECTL *)&data->rdh.rcBound);
