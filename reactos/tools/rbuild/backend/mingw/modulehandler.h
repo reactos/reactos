@@ -90,6 +90,8 @@ public:
 
 	void OutputCopyCommand ( const FileLocation& source,
 	                         const FileLocation& destination );
+	void OutputCopyCommandSingle ( const FileLocation& source,
+	                               const FileLocation& destination );
 protected:
 	virtual void GetModuleSpecificCompilationUnits ( std::vector<CompilationUnit*>& compilationUnits );
 	std::string GetWorkingDirectory () const;
@@ -335,11 +337,15 @@ private:
 	void GenerateLiveIsoModuleTarget ();
 	void CreateDirectory ( const std::string& directory );
 	void OutputModuleCopyCommands ( std::string& livecdDirectory,
-	                                std::string& livecdReactos );
+	                                std::string& livecdReactos,
+	                                std::vector<FileLocation>& destinations );
 	void OutputNonModuleCopyCommands ( std::string& livecdDirectory,
-	                                   std::string& livecdReactos );
-	void OutputProfilesDirectoryCommands ( std::string& livecdDirectory );
-	void OutputLoaderCommands ( std::string& livecdDirectory );
+	                                   std::string& livecdReactos,
+	                                   std::vector<FileLocation>& destinations );
+	void OutputProfilesDirectoryCommands ( std::string& livecdDirectory,
+	                                       std::vector<FileLocation>& destinations );
+	void OutputLoaderCommands ( std::string& livecdDirectory,
+	                            std::vector<FileLocation>& destinations );
 	void OutputRegistryCommands ( std::string& livecdDirectory );
 };
 
