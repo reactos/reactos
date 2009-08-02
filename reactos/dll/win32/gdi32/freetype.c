@@ -469,10 +469,12 @@ struct font_mapping
 {
     struct list entry;
     int         refcount;
-    dev_t       dev;
-    ino_t       ino;
+    DWORD       volumeserial;
+    DWORD       indexhigh;
+    DWORD       indexlow;
     void       *data;
     size_t      size;
+    HANDLE      file;
 };
 
 static struct list mappings_list = LIST_INIT( mappings_list );
@@ -2983,22 +2985,25 @@ static LONG calc_ppem_for_height(FT_Face ft_face, LONG height)
 static struct font_mapping *map_font_file( const char *name )
 {
     struct font_mapping *mapping;
-    //struct stat st;
+    BY_HANDLE_FILE_INFORMATION hfi;
     HANDLE file, mapped_file;
 
     file = CreateFileA( name, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0 );
     if (!file) return NULL;
 
+    if (!GetFileInformationByHandle( file, &hfi ))
+        return NULL;
+
     LIST_FOR_EACH_ENTRY( mapping, &mappings_list, struct font_mapping, entry )
     {
-#if 0
-        if (mapping->dev == st.st_dev && mapping->ino == st.st_ino)
+        if (mapping->volumeserial == hfi.dwVolumeSerialNumber &&
+            mapping->indexhigh == hfi.nFileIndexHigh &&
+            mapping->indexlow == hfi.nFileIndexLow )
         {
             mapping->refcount++;
             CloseHandle( file );
             return mapping;
         }
-#endif
     }
     if (!(mapping = HeapAlloc( GetProcessHeap(), 0, sizeof(*mapping) )))
         goto error;
@@ -3013,9 +3018,11 @@ static struct font_mapping *map_font_file( const char *name )
         return NULL;
     }
     mapping->refcount = 1;
-    //mapping->dev = st.st_dev;
-    //mapping->ino = st.st_ino;
-    //mapping->size = st.st_size;
+    mapping->volumeserial = hfi.dwVolumeSerialNumber;
+    mapping->indexhigh = hfi.nFileIndexHigh;
+    mapping->indexlow = hfi.nFileIndexLow;
+    mapping->file = mapped_file;
+    mapping->size = hfi.nFileSizeLow;
     list_add_tail( &mappings_list, &mapping->entry );
     return mapping;
 
@@ -3026,14 +3033,14 @@ error:
 
 static void unmap_font_file( struct font_mapping *mapping )
 {
-#if 0
     if (!--mapping->refcount)
     {
         list_remove( &mapping->entry );
-        munmap( mapping->data, mapping->size );
+        if (!UnmapViewOfFile(mapping->data))
+            ERR("Unmapping view of file failed with error %x\n", GetLastError());
+        CloseHandle(mapping->file);
         HeapFree( GetProcessHeap(), 0, mapping );
     }
-#endif
 }
 
 static LONG load_VDMX(GdiFont*, LONG);
