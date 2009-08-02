@@ -141,6 +141,9 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
         pNewDC->rcDcRect = pNewDC->rcVport;
     }
 
+    /* Create an empty combined clipping region */
+    pNewDC->CombinedClip = EngCreateClip();
+
     /* Give handle to the caller */
     *pdev = hNewDC;
 
@@ -358,22 +361,83 @@ COLORREF APIENTRY RosGdiSetDCPenColor( HDC physDev, COLORREF crColor )
 void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, PRECTL rcBounds )
 {
     PDC pDC;
+    RECTL pStackBuf[8];
+    RECTL *pSafeRects = pStackBuf;
+    RECTL rcSafeBounds;
+    ULONG i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     /* Get a pointer to the DC */
     pDC = DC_Lock(physDev);
+
+    /* Capture the rects buffer */
+    _SEH2_TRY
+    {
+        ProbeForRead(pRects, count * sizeof(RECTL), 1);
+
+        /* Use pool allocated buffer if data doesn't fit */
+        if (count > sizeof(*pStackBuf) / sizeof(RECTL))
+            pSafeRects = ExAllocatePool(PagedPool, sizeof(RECTL) * count);
+
+        /* Copy points data */
+        RtlCopyMemory(pSafeRects, pRects, count * sizeof(RECTL));
+
+        /* Copy bounding rect */
+        ProbeForRead(rcBounds, sizeof(RECTL), 1);
+        rcSafeBounds = *rcBounds;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* Release the object */
+        DC_Unlock(pDC);
+
+        /* Free the buffer if it was allocated */
+        if (pSafeRects != pStackBuf) ExFreePool(pSafeRects);
+
+        /* Return failure */
+        return;
+    }
+
+    /* Offset all rects */
+    for (i=0; i<count; i++)
+    {
+        RECTL_vOffsetRect(&pSafeRects[i],
+                          pDC->rcDcRect.left + pDC->rcVport.left,
+                          pDC->rcDcRect.top + pDC->rcVport.top);
+    }
+
+    /* Offset bounding rect */
+    RECTL_vOffsetRect(&rcSafeBounds,
+                      pDC->rcDcRect.left + pDC->rcVport.left,
+                      pDC->rcDcRect.top + pDC->rcVport.top);
 
     /* Delete old clipping region */
     if (pDC->CombinedClip)
         IntEngDeleteClipRegion(pDC->CombinedClip);
 
     /* Set the clipping object */
-    pDC->CombinedClip = IntEngCreateClipRegion(count, pRects, rcBounds);
+    pDC->CombinedClip = IntEngCreateClipRegion(count, pSafeRects, &rcSafeBounds);
 
     DPRINT("RosGdiSetDeviceClipping() for DC %x, bounding rect (%d,%d)-(%d, %d)\n",
-        physDev, rcBounds->left, rcBounds->bottom, rcBounds->right, rcBounds->top);
+        physDev, rcSafeBounds.left, rcSafeBounds.top, rcSafeBounds.right, rcSafeBounds.bottom);
+
+    DPRINT("rects: %d\n", count);
+    for (i=0; i<count; i++)
+    {
+        DPRINT("%d: (%d,%d)-(%d, %d)\n", i, pSafeRects[i].left, pSafeRects[i].top, pSafeRects[i].right, pSafeRects[i].bottom);
+    }
 
     /* Release the object */
     DC_Unlock(pDC);
+
+    /* Free the buffer if it was allocated */
+    if (pSafeRects != pStackBuf) ExFreePool(pSafeRects);
 }
 
 BOOL APIENTRY RosGdiSetDeviceGammaRamp(HDC physDev, LPVOID ramp)
@@ -422,23 +486,11 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
 
     /* Set DC rectangle */
     if (rcDcRect)
-    {
         pDC->rcDcRect = *rcDcRect;
-
-#if 0
-        /* Set back to full screen */
-        pDC->rcDcRect.top = 0;
-        pDC->rcDcRect.left = 0;
-        pDC->rcDcRect.right = pDC->szVportExt.cx;
-        pDC->rcDcRect.top = pDC->szVportExt.cy;
-#endif
-    }
 
     /* Set viewport rectangle */
     if (rcVport)
-    {
         pDC->rcVport = *rcVport;
-    }
 
     /* Release the object */
     DC_Unlock(pDC);
