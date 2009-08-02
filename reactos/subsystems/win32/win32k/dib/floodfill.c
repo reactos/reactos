@@ -1,10 +1,10 @@
 /* 
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS win32 subsystem
- * PURPOSE:           Flood filling support
- * FILE:              subsystems/win32/win32k/dib/floodfill.c
- * PROGRAMMER:        Gregor Schneider, <grschneider AT gmail DOT com>
- */
+* COPYRIGHT:         See COPYING in the top level directory
+* PROJECT:           ReactOS win32 subsystem
+* PURPOSE:           Flood filling support
+* FILE:              subsystems/win32/win32k/dib/floodfill.c
+* PROGRAMMER:        Gregor Schneider, <grschneider AT gmail DOT com>
+*/
 
 #include <w32k.h>
 
@@ -23,33 +23,33 @@
 /* Floodfil helper structures and functions */
 typedef struct _floodItem
 {
-    ULONG x;
-    ULONG y;
+  ULONG x;
+  ULONG y;
 } FLOODITEM;
 
 typedef struct _floodInfo
 {
-    ULONG floodLen;
-    FLOODITEM *floodStart;
-    FLOODITEM *floodData;
+  ULONG floodLen;
+  FLOODITEM *floodStart;
+  FLOODITEM *floodData;
 } FLOODINFO;
 
 static __inline BOOL initFlood(FLOODINFO *info, RECTL *DstRect)
 {
-    ULONG width = DstRect->right - DstRect->left;
-    ULONG height = DstRect->bottom - DstRect->top;
-    info->floodData = ExAllocatePoolWithTag(NonPagedPool, width * height * sizeof(FLOODITEM), TAG_DIB); 
-    if (info->floodData == NULL)
-    {
-        return FALSE;
-    }
-    info->floodStart = info->floodData + (width * height);
-    DPRINT("Allocated flood stack from %p to %p\n", info->floodData, info->floodStart);
-    return TRUE;
+  ULONG width = DstRect->right - DstRect->left;
+  ULONG height = DstRect->bottom - DstRect->top;
+  info->floodData = ExAllocatePoolWithTag(NonPagedPool, width * height * sizeof(FLOODITEM), TAG_DIB); 
+  if (info->floodData == NULL)
+  {
+    return FALSE;
+  }
+  info->floodStart = info->floodData + (width * height);
+  DPRINT("Allocated flood stack from %p to %p\n", info->floodData, info->floodStart);
+  return TRUE;
 }
 static __inline VOID finalizeFlood(FLOODINFO *info)
 {
-    ExFreePoolWithTag(info->floodData, TAG_DIB);
+  ExFreePoolWithTag(info->floodData, TAG_DIB);
 }
 static __inline VOID addItemFlood(FLOODINFO *info,
                                   ULONG x, 
@@ -59,29 +59,29 @@ static __inline VOID addItemFlood(FLOODINFO *info,
                                   ULONG Color, 
                                   BOOL isSurf)
 {
-    if (x >= DstRect->left && x <= DstRect->right &&
-        y >= DstRect->top && y <= DstRect->bottom)
+  if (x >= DstRect->left && x <= DstRect->right &&
+    y >= DstRect->top && y <= DstRect->bottom)
+  {
+    if (isSurf == TRUE && 
+      DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != Color)
     {
-        if (isSurf == TRUE && 
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != Color)
-        {
-            return;
-        }
-        else if (isSurf == FALSE &&
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) == Color)
-        {
-            return;
-        }
-        info->floodStart--;
-        info->floodStart->x = x;
-        info->floodStart->y = y;
-        info->floodLen++;
+      return;
     }
+    else if (isSurf == FALSE &&
+      DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) == Color)
+    {
+      return;
+    }
+    info->floodStart--;
+    info->floodStart->x = x;
+    info->floodStart->y = y;
+    info->floodLen++;
+  }
 }
 static __inline VOID removeItemFlood(FLOODINFO *info)
 {
-    info->floodStart++;
-    info->floodLen--;
+  info->floodStart++;
+  info->floodLen--;
 }
 
 BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf, 
@@ -91,84 +91,84 @@ BOOLEAN DIB_XXBPP_FloodFillSolid(SURFOBJ *DstSurf,
                                  ULONG ConvColor, 
                                  UINT FillType)
 {
-    ULONG x, y;
-    ULONG BrushColor;
-    FLOODINFO flood = {0, NULL, NULL};
+  ULONG x, y;
+  ULONG BrushColor;
+  FLOODINFO flood = {0, NULL, NULL};
 
-    BrushColor = Brush->iSolidColor;
-    x = Origin->x;
-    y = Origin->y;
+  BrushColor = Brush->iSolidColor;
+  x = Origin->x;
+  y = Origin->y;
 
-    if (FillType == FLOODFILLBORDER)
+  if (FillType == FLOODFILLBORDER)
+  {
+    /* Check if the start pixel has the border color */
+    if (DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) == ConvColor)
     {
-        /* Check if the start pixel has the border color */
-        if (DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) == ConvColor)
-        {
-            return FALSE;
-        }
-
-        if (initFlood(&flood, DstRect) == FALSE)
-        {
-            return FALSE;
-        }
-        addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, FALSE);
-        while (flood.floodLen != 0) 
-        {
-            x = flood.floodStart->x;
-            y = flood.floodStart->y;
-            removeItemFlood(&flood);
-
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
-            if (flood.floodStart - 4 < flood.floodData)
-            {   
-                DPRINT1("Can't finish flooding!\n");
-                finalizeFlood(&flood);
-                return FALSE;
-            }
-            addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, FALSE);
-            addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, FALSE);
-            addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, FALSE);
-            addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, FALSE);
-        }
-        finalizeFlood(&flood);
+      return FALSE;
     }
-    else if (FillType == FLOODFILLSURFACE)
+
+    if (initFlood(&flood, DstRect) == FALSE)
     {
-        /* Check if the start pixel has the surface color */
-        if (DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != ConvColor)
-        {
-            return FALSE;
-        }
-
-        if (initFlood(&flood, DstRect) == FALSE)
-        {
-            return FALSE;
-        }
-        addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, TRUE);
-        while (flood.floodLen != 0) 
-        {
-            x = flood.floodStart->x;
-            y = flood.floodStart->y;
-            removeItemFlood(&flood);
-
-            DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
-            if (flood.floodStart - 4 < flood.floodData)
-            {
-                DPRINT1("Can't finish flooding!\n");
-                finalizeFlood(&flood);
-                return FALSE;
-            }
-            addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, TRUE);
-            addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, TRUE);
-            addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, TRUE);
-            addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, TRUE);
-        }
-        finalizeFlood(&flood);
+      return FALSE;
     }
-    else
+    addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, FALSE);
+    while (flood.floodLen != 0) 
     {
-        DPRINT1("Unsupported FloodFill type!\n");
+      x = flood.floodStart->x;
+      y = flood.floodStart->y;
+      removeItemFlood(&flood);
+
+      DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
+      if (flood.floodStart - 4 < flood.floodData)
+      {   
+        DPRINT1("Can't finish flooding!\n");
+        finalizeFlood(&flood);
         return FALSE;
+      }
+      addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, FALSE);
+      addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, FALSE);
+      addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, FALSE);
+      addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, FALSE);
     }
-    return TRUE;
+    finalizeFlood(&flood);
+  }
+  else if (FillType == FLOODFILLSURFACE)
+  {
+    /* Check if the start pixel has the surface color */
+    if (DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_GetPixel(DstSurf, x, y) != ConvColor)
+    {
+      return FALSE;
+    }
+
+    if (initFlood(&flood, DstRect) == FALSE)
+    {
+      return FALSE;
+    }
+    addItemFlood(&flood, x, y, DstSurf, DstRect, ConvColor, TRUE);
+    while (flood.floodLen != 0) 
+    {
+      x = flood.floodStart->x;
+      y = flood.floodStart->y;
+      removeItemFlood(&flood);
+
+      DibFunctionsForBitmapFormat[DstSurf->iBitmapFormat].DIB_PutPixel(DstSurf, x, y, BrushColor);
+      if (flood.floodStart - 4 < flood.floodData)
+      {
+        DPRINT1("Can't finish flooding!\n");
+        finalizeFlood(&flood);
+        return FALSE;
+      }
+      addItemFlood(&flood, x, y + 1, DstSurf, DstRect, ConvColor, TRUE);
+      addItemFlood(&flood, x, y - 1, DstSurf, DstRect, ConvColor, TRUE);
+      addItemFlood(&flood, x + 1, y, DstSurf, DstRect, ConvColor, TRUE);
+      addItemFlood(&flood, x - 1, y, DstSurf, DstRect, ConvColor, TRUE);
+    }
+    finalizeFlood(&flood);
+  }
+  else
+  {
+    DPRINT1("Unsupported FloodFill type!\n");
+    return FALSE;
+  }
+  return TRUE;
 }

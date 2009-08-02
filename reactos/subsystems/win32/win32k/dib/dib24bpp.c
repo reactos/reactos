@@ -1,22 +1,12 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * PROJECT:         Win32 subsystem
+ * LICENSE:         See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/dib/dib24bpp.c
+ * PURPOSE:         Device Independant Bitmap functions, 24bpp
+ * PROGRAMMERS:     Jason Filby
+ *                  Thomas Bluemel
+ *                  Gregor Anich
  */
-/* $Id$ */
 
 #include <w32k.h>
 
@@ -47,7 +37,8 @@ DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
   LONG lDelta = SurfObj->lDelta;
 
   c &= 0xFFFFFF;
-  while(y1++ < y2) {
+  while(y1++ < y2) 
+  {
     *(PUSHORT)(addr) = c & 0xFFFF;
     *(addr + 2) = c >> 16;
 
@@ -129,7 +120,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           *DestBits = xColor & 0xff;
           *(PWORD)(DestBits + 1) = xColor >> 8;
           SourceBits += 1;
-	  DestBits += 3;
+          DestBits += 3;
         }
 
         SourceLine += BltInfo->SourceSurface->lDelta;
@@ -162,44 +153,44 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     case BMF_24BPP:
       if (NULL == BltInfo->XlateSourceToDest || 0 != (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL))
       {
-	if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)
-	  {
-	    SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
-	    for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
-	      {
-		RtlMoveMemory(DestBits, SourceBits, 3 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
-		SourceBits += BltInfo->SourceSurface->lDelta;
-		DestBits += BltInfo->DestSurface->lDelta;
-	      }
-	  }
-	else
-	  {
-	    SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0 + ((BltInfo->SourcePoint.y + BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
-	    DestBits = (PBYTE)BltInfo->DestSurface->pvScan0 + ((BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta) + 3 * BltInfo->DestRect.left;
-	    for (j = BltInfo->DestRect.bottom - 1; BltInfo->DestRect.top <= j; j--)
-	      {
-		RtlMoveMemory(DestBits, SourceBits, 3 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
-		SourceBits -= BltInfo->SourceSurface->lDelta;
-		DestBits -= BltInfo->DestSurface->lDelta;
-	      }
-	  }
+        if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)
+        {
+          SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
+          for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
+          {
+            RtlMoveMemory(DestBits, SourceBits, 3 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
+            SourceBits += BltInfo->SourceSurface->lDelta;
+            DestBits += BltInfo->DestSurface->lDelta;
+          }
+        }
+        else
+        {
+          SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0 + ((BltInfo->SourcePoint.y + BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
+          DestBits = (PBYTE)BltInfo->DestSurface->pvScan0 + ((BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta) + 3 * BltInfo->DestRect.left;
+          for (j = BltInfo->DestRect.bottom - 1; BltInfo->DestRect.top <= j; j--)
+          {
+            RtlMoveMemory(DestBits, SourceBits, 3 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
+            SourceBits -= BltInfo->SourceSurface->lDelta;
+            DestBits -= BltInfo->DestSurface->lDelta;
+          }
+        }
       }
       else
       {
         sx = BltInfo->SourcePoint.x;
         sy = BltInfo->SourcePoint.y;
 
-      for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
-      {
-        sx = BltInfo->SourcePoint.x;
-        for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
+        for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
         {
-           DWORD pixel = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
-           DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, pixel));
-          sx++;
+          sx = BltInfo->SourcePoint.x;
+          for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
+          {
+            DWORD pixel = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
+            DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, pixel));
+            sx++;
+          }
+          sy++;
         }
-        sy++;
-      }
       }
       break;
 
@@ -218,7 +209,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           *DestBits = xColor & 0xff;
           *(PWORD)(DestBits + 1) = xColor >> 8;
           SourceBits += 4;
-	  DestBits += 3;
+          DestBits += 3;
         }
 
         SourceLine += BltInfo->SourceSurface->lDelta;
@@ -333,17 +324,17 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
           addr += 1;
         }
     }
-  else
+    else
     {
       /* Align to 4-byte address */
       while (0 != ((ULONG_PTR) addr & 0x3))
-        {
-          *(PUSHORT)(addr) = color;
-          addr += 2;
-          *(addr) = color >> 16;
-          addr += 1;
-          Count--;
-        }
+      {
+        *(PUSHORT)(addr) = color;
+        addr += 2;
+        *(addr) = color >> 16;
+        addr += 1;
+        Count--;
+      }
       /* If the color we need to fill with is 0ABC, then the final mem pattern
        * (note little-endianness) would be:
        *
@@ -384,22 +375,22 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   : "=m"(addr)
   : "m"(color), "m"(Count), "m"(addr)
   : "%eax", "%ebx", "%ecx", "%edx", "%edi");
-   Count = Count & 0x03;
+      Count = Count & 0x03;
       while (0 != Count--)
-        {
-          *(PUSHORT)(addr) = color;
-          addr += 2;
-          *(addr) = color >> 16;
-          addr += 1;
-        }
+      {
+        *(PUSHORT)(addr) = color;
+        addr += 2;
+        *(addr) = color >> 16;
+        addr += 1;
+      }
     }
   }
 #else
 
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-    {
-      DIB_24BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);
-    }
+  {
+    DIB_24BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);
+  }
 #endif
   return TRUE;
 }

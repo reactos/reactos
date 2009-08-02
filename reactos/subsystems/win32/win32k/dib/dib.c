@@ -1,22 +1,11 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * PROJECT:         Win32 subsystem
+ * LICENSE:         See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/dib/dib.c
+ * PURPOSE:         ROP handling, function pointer arrays, misc
+ * PROGRAMMERS:     Ge van Geldorp
  */
-/* $Id$ */
+
 
 #include <w32k.h>
 
@@ -30,72 +19,72 @@ unsigned char altnotmask[2] = { 0xf0, 0x0f };
 
 DIB_FUNCTIONS DibFunctionsForBitmapFormat[] =
 {
-   /* 0 */
-   {
-      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
-      Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
-      Dummy_ColorFill, Dummy_AlphaBlend
-   },
-   /* BMF_1BPP */
-   {
-      DIB_1BPP_PutPixel, DIB_1BPP_GetPixel, DIB_1BPP_HLine, DIB_1BPP_VLine,
-      DIB_1BPP_BitBlt, DIB_1BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
-      DIB_1BPP_TransparentBlt, DIB_1BPP_ColorFill, DIB_1BPP_AlphaBlend
-   },
-   /* BMF_4BPP */
-   {
-      DIB_4BPP_PutPixel, DIB_4BPP_GetPixel, DIB_4BPP_HLine, DIB_4BPP_VLine,
-      DIB_4BPP_BitBlt, DIB_4BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
-      DIB_4BPP_TransparentBlt, DIB_4BPP_ColorFill, DIB_4BPP_AlphaBlend
-   },
-   /* BMF_8BPP */
-   {
-      DIB_8BPP_PutPixel, DIB_8BPP_GetPixel, DIB_8BPP_HLine, DIB_8BPP_VLine,
-      DIB_8BPP_BitBlt, DIB_8BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
-      DIB_8BPP_TransparentBlt, DIB_8BPP_ColorFill, DIB_8BPP_AlphaBlend
-   },
-   /* BMF_16BPP */
-   {
-      DIB_16BPP_PutPixel, DIB_16BPP_GetPixel, DIB_16BPP_HLine, DIB_16BPP_VLine,
-      DIB_16BPP_BitBlt, DIB_16BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
-      DIB_16BPP_TransparentBlt, DIB_16BPP_ColorFill, DIB_16BPP_AlphaBlend
-   },
-   /* BMF_24BPP */
-   {
-      DIB_24BPP_PutPixel, DIB_24BPP_GetPixel, DIB_24BPP_HLine, DIB_24BPP_VLine,
-      DIB_24BPP_BitBlt, DIB_24BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
-      DIB_24BPP_TransparentBlt, DIB_24BPP_ColorFill, DIB_24BPP_AlphaBlend
-   },
-   /* BMF_32BPP */
-   {
-      DIB_32BPP_PutPixel, DIB_32BPP_GetPixel, DIB_32BPP_HLine, DIB_32BPP_VLine,
-      DIB_32BPP_BitBlt, DIB_32BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
-      DIB_32BPP_TransparentBlt, DIB_32BPP_ColorFill, DIB_32BPP_AlphaBlend
-   },
-   /* BMF_4RLE */
-   {
-      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
-      Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
-      Dummy_ColorFill, Dummy_AlphaBlend
-   },
-   /* BMF_8RLE */
-   {
-      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
-      Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
-      Dummy_ColorFill, Dummy_AlphaBlend
-   },
-   /* BMF_JPEG */
-   {
-      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
-      Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
-      Dummy_ColorFill, Dummy_AlphaBlend
-   },
-   /* BMF_PNG */
-   {
-      Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
-      Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
-      Dummy_ColorFill, Dummy_AlphaBlend
-   }
+  /* 0 */
+  {
+    Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+    Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
+    Dummy_ColorFill, Dummy_AlphaBlend
+  },
+  /* BMF_1BPP */
+  {
+    DIB_1BPP_PutPixel, DIB_1BPP_GetPixel, DIB_1BPP_HLine, DIB_1BPP_VLine,
+    DIB_1BPP_BitBlt, DIB_1BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
+    DIB_1BPP_TransparentBlt, DIB_1BPP_ColorFill, DIB_1BPP_AlphaBlend
+  },
+  /* BMF_4BPP */
+  {
+    DIB_4BPP_PutPixel, DIB_4BPP_GetPixel, DIB_4BPP_HLine, DIB_4BPP_VLine,
+    DIB_4BPP_BitBlt, DIB_4BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
+    DIB_4BPP_TransparentBlt, DIB_4BPP_ColorFill, DIB_4BPP_AlphaBlend
+  },
+  /* BMF_8BPP */
+  {
+    DIB_8BPP_PutPixel, DIB_8BPP_GetPixel, DIB_8BPP_HLine, DIB_8BPP_VLine,
+    DIB_8BPP_BitBlt, DIB_8BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
+    DIB_8BPP_TransparentBlt, DIB_8BPP_ColorFill, DIB_8BPP_AlphaBlend
+  },
+  /* BMF_16BPP */
+  {
+    DIB_16BPP_PutPixel, DIB_16BPP_GetPixel, DIB_16BPP_HLine, DIB_16BPP_VLine,
+    DIB_16BPP_BitBlt, DIB_16BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
+    DIB_16BPP_TransparentBlt, DIB_16BPP_ColorFill, DIB_16BPP_AlphaBlend
+  },
+  /* BMF_24BPP */
+  {
+    DIB_24BPP_PutPixel, DIB_24BPP_GetPixel, DIB_24BPP_HLine, DIB_24BPP_VLine,
+    DIB_24BPP_BitBlt, DIB_24BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
+    DIB_24BPP_TransparentBlt, DIB_24BPP_ColorFill, DIB_24BPP_AlphaBlend
+  },
+  /* BMF_32BPP */
+  {
+    DIB_32BPP_PutPixel, DIB_32BPP_GetPixel, DIB_32BPP_HLine, DIB_32BPP_VLine,
+    DIB_32BPP_BitBlt, DIB_32BPP_BitBltSrcCopy, DIB_XXBPP_StretchBlt,
+    DIB_32BPP_TransparentBlt, DIB_32BPP_ColorFill, DIB_32BPP_AlphaBlend
+  },
+  /* BMF_4RLE */
+  {
+    Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+    Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
+    Dummy_ColorFill, Dummy_AlphaBlend
+  },
+  /* BMF_8RLE */
+  {
+    Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+    Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
+    Dummy_ColorFill, Dummy_AlphaBlend
+  },
+  /* BMF_JPEG */
+  {
+    Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+    Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
+    Dummy_ColorFill, Dummy_AlphaBlend
+  },
+  /* BMF_PNG */
+  {
+    Dummy_PutPixel, Dummy_GetPixel, Dummy_HLine, Dummy_VLine,
+    Dummy_BitBlt, Dummy_BitBlt, Dummy_StretchBlt, Dummy_TransparentBlt,
+    Dummy_ColorFill, Dummy_AlphaBlend
+  }
 };
 
 ULONG
@@ -104,7 +93,7 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
   ULONG ResultNibble;
   ULONG Result;
   ULONG i;
-  static const ULONG ExpandDest[16] =
+static const ULONG ExpandDest[16] =
     {
       0x55555555 /* 0000 */,
       0x555555AA /* 0001 */,
@@ -187,14 +176,14 @@ DIB_DoRop(ULONG Rop, ULONG Dest, ULONG Source, ULONG Pattern)
   /* Do the operation on four bits simultaneously. */
   Result = 0;
   for (i = 0; i < 8; i++)
-    {
-      ResultNibble = Rop & ExpandDest[Dest & 0xF] & ExpandSource[Source & 0xF] & ExpandPattern[Pattern & 0xF];
-      Result |= (((ResultNibble & 0xFF000000) ? 0x8 : 0x0) | ((ResultNibble & 0x00FF0000) ? 0x4 : 0x0) |
-	((ResultNibble & 0x0000FF00) ? 0x2 : 0x0) | ((ResultNibble & 0x000000FF) ? 0x1 : 0x0)) << (i * 4);
-      Dest >>= 4;
-      Source >>= 4;
-      Pattern >>= 4;
-    }
+  {
+    ResultNibble = Rop & ExpandDest[Dest & 0xF] & ExpandSource[Source & 0xF] & ExpandPattern[Pattern & 0xF];
+    Result |= (((ResultNibble & 0xFF000000) ? 0x8 : 0x0) | ((ResultNibble & 0x00FF0000) ? 0x4 : 0x0) |
+    ((ResultNibble & 0x0000FF00) ? 0x2 : 0x0) | ((ResultNibble & 0x000000FF) ? 0x1 : 0x0)) << (i * 4);
+    Dest >>= 4;
+    Source >>= 4;
+    Pattern >>= 4;
+  }
   return(Result);
 }
 
