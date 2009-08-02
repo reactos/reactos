@@ -266,12 +266,6 @@ IPortWaveCyclic_fnRelease(
 
     if (This->ref == 0)
     {
-        if (This->pPinCount)
-            This->pPinCount->lpVtbl->Release(This->pPinCount);
-
-        if (This->pPowerNotify)
-            This->pPowerNotify->lpVtbl->Release(This->pPowerNotify);
-
         FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
@@ -342,9 +336,6 @@ IPortWaveCyclic_fnInit(
     This->pDeviceObject = DeviceObject;
     This->bInitialized = TRUE;
     This->pResourceList = ResourceList;
-
-    /* increment reference on miniport adapter */
-    Miniport->lpVtbl->AddRef(Miniport);
 
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
@@ -644,10 +635,29 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    //IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    DPRINT("ISubDevice_fnReleaseChildren ref %u\n", This->ref);
+
+    /* release the filter */
+    This->Filter->lpVtbl->Release(This->Filter);
+
+    if (This->pPinCount)
+    {
+        /* release pincount interface */
+        This->pPinCount->lpVtbl->Release(This->pPinCount);
+    }
+
+    if (This->pPowerNotify)
+    {
+        /* release power notify interface */
+        This->pPowerNotify->lpVtbl->Release(This->pPowerNotify);
+    }
+
+    /* now release the miniport */
+    This->pMiniport->lpVtbl->Release(This->pMiniport);
+
+    return STATUS_SUCCESS;
 }
 
 static

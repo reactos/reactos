@@ -124,7 +124,6 @@ IPortTopology_fnAddRef(
     IPortTopology* iface)
 {
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
-
     return InterlockedIncrement(&This->ref);
 }
 
@@ -136,6 +135,7 @@ IPortTopology_fnRelease(
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
 
     InterlockedDecrement(&This->ref);
+    DPRINT("Reference Count %u\n", This->ref);
 
     if (This->ref == 0)
     {
@@ -208,9 +208,7 @@ IPortTopology_fnInit(
     This->pDeviceObject = DeviceObject;
     This->bInitialized = TRUE;
 
-    /* increment reference on miniport adapter */
-    Miniport->lpVtbl->AddRef(Miniport);
-
+    /* now initialize the miniport driver */
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
     {
@@ -394,10 +392,17 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    //IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    DPRINT1("ISubDevice_fnReleaseChildren with ref %u\n", This->ref);
+
+    /* release the filter */
+    This->Filter->lpVtbl->Release(This->Filter);
+
+    /* release the miniport */
+    DPRINT("Refs %u %u\n", This->pMiniport->lpVtbl->Release(This->pMiniport), This->ref);
+
+    return STATUS_SUCCESS;
 }
 
 static

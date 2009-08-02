@@ -17,6 +17,7 @@ typedef struct
     IPortWaveCyclic* Port;
     IPortPinWaveCyclic ** Pins;
     SUBDEVICE_DESCRIPTOR * Descriptor;
+    ISubdevice * SubDevice;
 
 }IPortFilterWaveCyclicImpl;
 
@@ -161,24 +162,12 @@ IPortFilterWaveCyclic_fnDeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    ISubdevice *SubDevice = NULL;
-    SUBDEVICE_DESCRIPTOR * Descriptor;
-    NTSTATUS Status;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
-    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
-    ASSERT(Status == STATUS_SUCCESS);
-    ASSERT(SubDevice != NULL);
 
-    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
-    ASSERT(Status == STATUS_SUCCESS);
-    ASSERT(Descriptor != NULL);
-
-    SubDevice->lpVtbl->Release(SubDevice);
-
-    return PcPropertyHandler(Irp, Descriptor);
+    return PcPropertyHandler(Irp, This->Descriptor);
 }
 
 /*
@@ -231,7 +220,7 @@ IPortFilterWaveCyclic_fnClose(
     IN PIRP Irp)
 {
     ULONG Index;
-    //PMINIPORTWAVECYCLIC Miniport;
+    NTSTATUS Status = STATUS_SUCCESS;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
     for(Index = 0; Index < This->Descriptor->Factory.PinDescriptorCount; Index++)
@@ -240,16 +229,18 @@ IPortFilterWaveCyclic_fnClose(
         ASSERT(This->Pins[Index] == NULL);
     }
 
-    /* release reference to port */
-    //This->Port->lpVtbl->Release(This->Port);
+    DPRINT("IPortFilterWaveCyclic_fnClose ref %u\n", This->ref);
 
-    /* get the miniport driver */
-    //Miniport = GetWaveCyclicMiniport(This->Port);
-    /* release miniport driver */
-    //Miniport->lpVtbl->Release(Miniport);
+    if (This->ref == 1)
+    {
+        /* release reference to port */
+        This->SubDevice->lpVtbl->Release(This->SubDevice);
 
+        /* time to shutdown the audio system */
+        Status = This->SubDevice->lpVtbl->ReleaseChildren(This->SubDevice);
+    }
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -358,18 +349,16 @@ IPortFilterWaveCyclic_fnInit(
     NTSTATUS Status;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl*)iface;
 
-    This->Port = Port;
-
     /* get our private interface */
-    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
+    Status = Port->lpVtbl->QueryInterface(Port, &IID_ISubdevice, (PVOID*)&ISubDevice);
     if (!NT_SUCCESS(Status))
         return STATUS_UNSUCCESSFUL;
 
     /* get the subdevice descriptor */
     Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
 
-    /* release subdevice interface */
-    ISubDevice->lpVtbl->Release(ISubDevice);
+    /* store subdevice interface */
+    This->SubDevice = ISubDevice;
 
     if (!NT_SUCCESS(Status))
         return STATUS_UNSUCCESSFUL;
@@ -383,8 +372,8 @@ IPortFilterWaveCyclic_fnInit(
     if (!This->Pins)
         return STATUS_UNSUCCESSFUL;
 
-    /* increment reference count */
-    Port->lpVtbl->AddRef(Port);
+    /* store port driver */
+    This->Port = Port;
 
     return STATUS_SUCCESS;
 }

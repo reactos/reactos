@@ -777,6 +777,12 @@ CloseStreamRoutine(
     /* free work item ctx */
     FreeItem(Ctx, TAG_PORTCLASS);
 
+    /* release reference to port driver */
+    This->Port->lpVtbl->Release(This->Port);
+
+    /* release reference to filter instance */
+    This->Filter->lpVtbl->Release(This->Filter);
+
     if (This->Stream)
     {
         Stream = This->Stream;
@@ -1013,11 +1019,6 @@ IPortPinWaveCyclic_fnInit(
 
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    Port->lpVtbl->AddRef(Port);
-    Filter->lpVtbl->AddRef(Filter);
-
-    This->Port = Port;
-    This->Filter = Filter;
     This->KsPinDescriptor = KsPinDescriptor;
     This->ConnectDetails = ConnectDetails;
     This->Miniport = GetWaveCyclicMiniport(Port);
@@ -1115,11 +1116,18 @@ IPortPinWaveCyclic_fnInit(
        return Status;
     }
 
+    Port->lpVtbl->AddRef(Port);
+    Filter->lpVtbl->AddRef(Filter);
+
+    This->Port = Port;
+    This->Filter = Filter;
+
     //This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
     DPRINT1("Setting state to acquire %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_ACQUIRE));
     DPRINT1("Setting state to pause %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
     This->State = KSSTATE_PAUSE;
 
+    //This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, This->Delay);
 
     return STATUS_SUCCESS;
 }

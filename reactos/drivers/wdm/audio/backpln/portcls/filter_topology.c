@@ -16,6 +16,7 @@ typedef struct
 
     IPortTopology* Port;
     SUBDEVICE_DESCRIPTOR * Descriptor;
+    ISubdevice *SubDevice;
 
 }IPortFilterTopologyImpl;
 
@@ -112,24 +113,12 @@ IPortFilterTopology_fnDeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    ISubdevice *SubDevice = NULL;
-    SUBDEVICE_DESCRIPTOR * Descriptor;
-    NTSTATUS Status;
     IPortFilterTopologyImpl * This = (IPortFilterTopologyImpl *)iface;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
-    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
-    ASSERT(Status == STATUS_SUCCESS);
-    ASSERT(SubDevice != NULL);
 
-    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
-    ASSERT(Status == STATUS_SUCCESS);
-    ASSERT(Descriptor != NULL);
-
-    SubDevice->lpVtbl->Release(SubDevice);
-
-    return PcPropertyHandler(Irp, Descriptor);
+    return PcPropertyHandler(Irp, This->Descriptor);
 }
 
 /*
@@ -181,18 +170,21 @@ IPortFilterTopology_fnClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    //PMINIPORTTOPOLOGY Miniport;
-    //IPortFilterTopologyImpl * This = (IPortFilterTopologyImpl *)iface;
+    NTSTATUS Status = STATUS_SUCCESS;
+    IPortFilterTopologyImpl * This = (IPortFilterTopologyImpl *)iface;
 
-    /* release reference to port */
-    //This->Port->lpVtbl->Release(This->Port);
+    /* FIXME handle DirectSound */
 
-    /* get the miniport driver */
-    //Miniport = GetTopologyMiniport(This->Port);
-    /* release miniport driver */
-    //Miniport->lpVtbl->Release(Miniport);
+    if (This->ref == 1)
+    {
+        /* release reference to port */
+        This->SubDevice->lpVtbl->Release(This->SubDevice);
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+        /* time to shutdown the audio system */
+        Status = This->SubDevice->lpVtbl->ReleaseChildren(This->SubDevice);
+    }
+
+    Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
@@ -244,9 +236,6 @@ IPortFilterTopology_fnFastDeviceIoControl(
 {
     ULONG Index;
     PKSPROPERTY Property;
-    NTSTATUS Status;
-    ISubdevice * SubDevice = NULL;
-    PSUBDEVICE_DESCRIPTOR Descriptor = NULL;
     IPortFilterTopologyImpl * This = (IPortFilterTopologyImpl*)iface;
 
     Property = (PKSPROPERTY)InputBuffer;
@@ -254,28 +243,14 @@ IPortFilterTopology_fnFastDeviceIoControl(
     if (InputBufferLength < sizeof(KSPROPERTY))
         return FALSE;
 
-
-    /* get private interface */
-    Status = This->Port->lpVtbl->QueryInterface(This->Port, &IID_ISubdevice, (PVOID*)&SubDevice);
-    if (!NT_SUCCESS(Status))
-        return FALSE;
-
-    /* get descriptor */
-    Status = SubDevice->lpVtbl->GetDescriptor(SubDevice, &Descriptor);
-    if (!NT_SUCCESS(Status))
+    for(Index = 0; Index < This->Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
     {
-        SubDevice->lpVtbl->Release(SubDevice);
-        return FALSE;
-    }
-
-    for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
-    {
-        if (IsEqualGUIDAligned(&Property->Set, Descriptor->FilterPropertySet.Properties[Index].Set))
+        if (IsEqualGUIDAligned(&Property->Set, This->Descriptor->FilterPropertySet.Properties[Index].Set))
         {
             FastPropertyHandler(FileObject, (PKSPROPERTY)InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, StatusBlock,
                                 1,
-                                &Descriptor->FilterPropertySet.Properties[Index],
-                                Descriptor, SubDevice);
+                                &This->Descriptor->FilterPropertySet.Properties[Index],
+                                This->Descriptor, This->SubDevice);
         }
     }
     return TRUE;
@@ -342,17 +317,14 @@ IPortFilterTopology_fnInit(
     /* get the subdevice descriptor */
     Status = ISubDevice->lpVtbl->GetDescriptor(ISubDevice, &Descriptor);
 
-    /* release subdevice interface */
-    ISubDevice->lpVtbl->Release(ISubDevice);
+    /* store subdevice interface */
+    This->SubDevice = ISubDevice;
 
     if (!NT_SUCCESS(Status))
         return STATUS_UNSUCCESSFUL;
 
     /* save descriptor */
     This->Descriptor = Descriptor;
-
-    /* increment reference count */
-    Port->lpVtbl->AddRef(Port);
 
     /* store port object */
     This->Port = Port;
