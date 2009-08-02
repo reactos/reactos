@@ -431,7 +431,7 @@ POLYGONFILL_FillScanLineAlternate(
 
       //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
       GreLineTo(&psurf->SurfObj,
-                NULL,//dc->rosdc.CombinedClip,
+                dc->CombinedClip,
                 BrushObj,
                 x1,
                 ScanLine,
@@ -503,7 +503,7 @@ POLYGONFILL_FillScanLineWinding(
 
 	//DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
 	GreLineTo(&psurf->SurfObj,
-              NULL,//dc->rosdc.CombinedClip,
+              dc->CombinedClip,
               BrushObj,
               x1,
               ScanLine,
@@ -526,7 +526,7 @@ POLYGONFILL_FillScanLineWinding(
 
   //DPRINT("Fill Line (%d, %d) to (%d, %d)\n",x1, ScanLine, x2, ScanLine);
   GreLineTo(&psurf->SurfObj,
-            NULL, //dc->rosdc.CombinedClip,
+            dc->CombinedClip,
             BrushObj,
             x1,
             ScanLine,
@@ -649,7 +649,7 @@ GrepFillPolygon(
                 GrepBitBltEx(psurf,
                              NULL,
                              NULL,
-                             NULL,//dc->rosdc.CombinedClip,
+                             dc->CombinedClip,
                              NULL,
                              &LineRect,
                              NULL,

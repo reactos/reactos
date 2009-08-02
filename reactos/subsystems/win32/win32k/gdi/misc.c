@@ -71,7 +71,6 @@ BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
 BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
 {
     PDC pDC;
-    CLIPOBJ *pClipObj;
     RECTL scrRect;
     POINT pt[2];
 
@@ -80,12 +79,7 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     /* Get a pointer to the DC */
     pDC = DC_Lock(physDev);
 
-    scrRect.left = scrRect.top = 0;
-    scrRect.right = PrimarySurface.GDIInfo.ulHorzRes;
-    scrRect.bottom = PrimarySurface.GDIInfo.ulVertRes;
-
-    pClipObj = IntEngCreateClipRegion(1, NULL, &scrRect);
-
+    /* Set points */
     pt[0].x = x1; pt[0].y = y1;
     pt[1].x = x2; pt[1].y = y2;
 
@@ -96,15 +90,12 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     pt[1].y += pDC->rcVport.top + pDC->rcDcRect.top;
 
     GreLineTo(&pDC->pBitmap->SurfObj,
-              pClipObj,
-              //pDC->CombinedClip,
+              pDC->CombinedClip,
               &(pDC->pLineBrush->BrushObj),
               pt[0].x, pt[0].y,
               pt[1].x, pt[1].y,
               &scrRect,
               0);
-
-    IntEngDeleteClipRegion(pClipObj);
 
     /* Release the object */
     DC_Unlock(pDC);

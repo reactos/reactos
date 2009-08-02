@@ -111,14 +111,12 @@ GrepBitBltEx(
     /* Is the source surface device managed? */
     else if (psoSrc && psurfSrc->flHooks & HOOK_BITBLT)
     {
-        DPRINT1("psoSrc %p\n", psoSrc);
         pfnBitBlt = GDIDEVFUNCS(psoSrc).BitBlt;
     }
     else
     {
         pfnBitBlt = EngBitBlt;
     }
-
     bResult = pfnBitBlt(psoTrg,
                         psoSrc,
                         psoMask,
@@ -204,7 +202,7 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
         &pDest->pBitmap->SurfObj,
         pSrc ? &pSrc->pBitmap->SurfObj : NULL,
         NULL,
-        NULL,//dc->rosdc.CombinedClip,
+        pDest->CombinedClip,
         XlateObj,
         &DestRect,
         &SourcePoint,
@@ -230,6 +228,8 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
     RECTL DestRect;
     POINTL BrushOrigin = {0, 0};
     BOOLEAN bRet = FALSE;
+
+    DPRINT("GrePatBlt %p %d %d %d %d %x %p\n", pDC, XLeft, YLeft, Width, Height, ROP, BrushObj);
 
     if (!(BrushObj->flAttrs & GDIBRUSH_IS_NULL))
     {
@@ -267,7 +267,7 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
             &pDC->pBitmap->SurfObj,
             NULL,
             NULL,
-            NULL,//dc->rosdc.CombinedClip,
+            pDC->CombinedClip,
             NULL,
             &DestRect,
             NULL,
@@ -354,13 +354,13 @@ GreStretchBltMask(
         }
 
         /* Create the XLATEOBJ. */
-        XlateObj = NULL;/*IntCreateXlateForBlt(DCDest, DCSrc, BitmapDest, BitmapSrc);
+        XlateObj = IntCreateXlateForBlt(DCDest, DCSrc, BitmapDest, BitmapSrc);
         if (XlateObj == (XLATEOBJ*)-1)
         {
             SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
             XlateObj = NULL;
             goto failed;
-        }*/
+        }
     }
 
     /* Offset the brush */
@@ -384,7 +384,7 @@ GreStretchBltMask(
     Status = EngpStretchBlt(&BitmapDest->SurfObj,
                             &BitmapSrc->SurfObj,
                             BitmapMask ? &BitmapMask->SurfObj : NULL,
-                            NULL,//DCDest->CombinedClip,
+                            DCDest->CombinedClip,
                             XlateObj,
                             &DestRect,
                             &SourceRect,

@@ -124,7 +124,7 @@ GrePolyline(PDC pDC,
         for (i=0; i<count-1; i++)
         {
             bRet = GreLineTo(&pDC->pBitmap->SurfObj,
-                             NULL,//dc->rosdc.CombinedClip,
+                             pDC->CombinedClip,
                              &pDC->pLineBrush->BrushObj,
                              ptPoints[i].x + pDC->rcDcRect.left + pDC->rcVport.left,
                              ptPoints[i].y + pDC->rcDcRect.top + pDC->rcVport.top,

@@ -373,14 +373,17 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     /* Capture the rects buffer */
     _SEH2_TRY
     {
-        ProbeForRead(pRects, count * sizeof(RECTL), 1);
+        if (count > 0)
+        {
+            ProbeForRead(pRects, count * sizeof(RECTL), 1);
 
-        /* Use pool allocated buffer if data doesn't fit */
-        if (count > sizeof(*pStackBuf) / sizeof(RECTL))
-            pSafeRects = ExAllocatePool(PagedPool, sizeof(RECTL) * count);
+            /* Use pool allocated buffer if data doesn't fit */
+            if (count > sizeof(*pStackBuf) / sizeof(RECTL))
+                pSafeRects = ExAllocatePool(PagedPool, sizeof(RECTL) * count);
 
-        /* Copy points data */
-        RtlCopyMemory(pSafeRects, pRects, count * sizeof(RECTL));
+            /* Copy points data */
+            RtlCopyMemory(pSafeRects, pRects, count * sizeof(RECTL));
+        }
 
         /* Copy bounding rect */
         ProbeForRead(rcBounds, sizeof(RECTL), 1);
@@ -421,8 +424,25 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     if (pDC->CombinedClip)
         IntEngDeleteClipRegion(pDC->CombinedClip);
 
-    /* Set the clipping object */
-    pDC->CombinedClip = IntEngCreateClipRegion(count, pSafeRects, &rcSafeBounds);
+    if (count == 0)
+    {
+        /* Special case, set it to full screen then */
+        RECTL_vSetRect(&rcSafeBounds,
+                       pDC->rcVport.left,
+                       pDC->rcVport.top,
+                       pDC->rcVport.right,
+                       pDC->rcVport.bottom);
+
+        /* Set the clipping object */
+        pDC->CombinedClip = IntEngCreateClipRegion(1, &rcSafeBounds, &rcSafeBounds);
+
+        DPRINT1("FIXME: Setting device clipping to NULL region, using full screen instead\n");
+    }
+    else
+    {
+        /* Set the clipping object */
+        pDC->CombinedClip = IntEngCreateClipRegion(count, pSafeRects, &rcSafeBounds);
+    }
 
     DPRINT("RosGdiSetDeviceClipping() for DC %x, bounding rect (%d,%d)-(%d, %d)\n",
         physDev, rcSafeBounds.left, rcSafeBounds.top, rcSafeBounds.right, rcSafeBounds.bottom);

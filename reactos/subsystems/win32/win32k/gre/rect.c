@@ -45,7 +45,7 @@ GreRectangle(PDC pDC,
             bRet = GrepBitBltEx(&pDC->pBitmap->SurfObj,
                                NULL,
                                NULL,
-                               NULL,//dc->rosdc.CombinedClip,
+                               pDC->CombinedClip,
                                NULL,
                                &DestRect,
                                NULL,
@@ -63,28 +63,28 @@ GreRectangle(PDC pDC,
     {
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         GreLineTo(&pDC->pBitmap->SurfObj,
-                  NULL,//dc->rosdc.CombinedClip,
+                  pDC->CombinedClip,
                   &pDC->pLineBrush->BrushObj,
                   DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                   &DestRect, // Bounding rectangle
                   Mix);
 
         GreLineTo(&pDC->pBitmap->SurfObj,
-                  NULL,//dc->rosdc.CombinedClip,
+                  pDC->CombinedClip,
                   &pDC->pLineBrush->BrushObj,
                   DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                   &DestRect, // Bounding rectangle
                   Mix);
 
         GreLineTo(&pDC->pBitmap->SurfObj,
-                  NULL,//dc->rosdc.CombinedClip,
+                  pDC->CombinedClip,
                   &pDC->pLineBrush->BrushObj,
                   DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                   &DestRect, // Bounding rectangle
                   Mix);
 
         GreLineTo(&pDC->pBitmap->SurfObj,
-                  NULL,//dc->rosdc.CombinedClip,
+                  pDC->CombinedClip,
                   &pDC->pLineBrush->BrushObj,
                   DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
                   &DestRect, // Bounding rectangle
@@ -135,7 +135,7 @@ GrePolygon(PDC pDC,
         for (i=0; i<count-1; i++)
         {
             bRet = GreLineTo(&pDC->pBitmap->SurfObj,
-                             NULL,//dc->rosdc.CombinedClip,
+                             pDC->CombinedClip,
                              &pDC->pLineBrush->BrushObj,
                              ptPoints[i].x,
                              ptPoints[i].y,
