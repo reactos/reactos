@@ -622,16 +622,21 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     }
 #endif
 
-    if(flags & ETO_OPAQUE)
+    if((flags & ETO_OPAQUE) && lprect)
     {
-#if 0
-        wine_tsx11_lock();
-        XSetForeground( gdi_display, physDev->gc, backgroundPixel );
-        XFillRectangle( gdi_display, physDev->drawable, physDev->gc,
-            physDev->dc_rect.left + lprect->left, physDev->dc_rect.top + lprect->top,
-            lprect->right - lprect->left, lprect->bottom - lprect->top );
-        wine_tsx11_unlock();
-#endif
+        HBRUSH brush, oldBrush;
+        HPEN pen, oldPen;
+
+        brush = CreateSolidBrush(GetBkColor(physDev->hUserDC));
+        oldBrush = SelectObject(physDev->hUserDC, brush);
+
+        pen = CreatePen(PS_NULL, 0, 0);
+        oldPen = SelectObject(physDev->hUserDC, pen);
+
+        RosGdiRectangle(physDev->hKernelDC, lprect);
+
+        DeleteObject(SelectObject(physDev->hUserDC, oldBrush));
+        DeleteObject(SelectObject(physDev->hUserDC, oldPen));
     }
 
     if(count == 0)
