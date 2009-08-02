@@ -706,6 +706,28 @@ WdmAudDeviceControl(
 
 NTSTATUS
 NTAPI
+WdmAudWriteCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP LowerIrp,
+    IN PVOID  Context)
+{
+    PIRP Irp;
+    ASSERT(LowerIrp->PendingReturned == FALSE);
+    /* get original irp */
+    Irp = (PIRP)Context;
+
+    /* save status */
+    Irp->IoStatus.Status = LowerIrp->IoStatus.Status;
+    Irp->IoStatus.Information = LowerIrp->IoStatus.Information;
+    /* complete request */
+    IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
+    /* return success to free irp */
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
 WdmAudWrite(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
@@ -715,11 +737,13 @@ WdmAudWrite(
     PWDMAUD_CLIENT ClientInfo;
     NTSTATUS Status = STATUS_SUCCESS;
     PUCHAR Buffer;
-    PCONTEXT_WRITE Packet;
     PFILE_OBJECT FileObject;
-    IO_STATUS_BLOCK IoStatusBlock;
     PMDL Mdl;
+    //PIRP LowerIrp;
+    PCONTEXT_WRITE Packet;
     PVOID SystemBuffer;
+    //LARGE_INTEGER Offset;
+    IO_STATUS_BLOCK IoStatusBlock;
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -826,14 +850,51 @@ WdmAudWrite(
         ExFreePool(Packet);
         IoFreeMdl(Mdl);
         ObDereferenceObject(FileObject);
-        return SetIrpIoStatus(Irp, Status, 0);
+        return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
     }
 
     RtlMoveMemory(Buffer, SystemBuffer, DeviceInfo->BufferSize);
     MmUnlockPages(Mdl);
     IoFreeMdl(Mdl);
 
-    KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, KernelMode);
+#if 1
+    KsStreamIo(FileObject, NULL, NULL, NULL, NULL, 0, &IoStatusBlock, Packet, sizeof(CONTEXT_WRITE), KSSTREAM_WRITE, UserMode);
+    /* dereference file object */
     ObDereferenceObject(FileObject);
     return IoStatusBlock.Status;
+#else
+    Offset.QuadPart = 0L;
+
+    /* now build the irp */
+    LowerIrp = IoBuildAsynchronousFsdRequest (IRP_MJ_WRITE,
+                                              IoGetRelatedDeviceObject(FileObject),
+                                              Packet, 
+                                              sizeof(KSSTREAM_HEADER), 
+                                              &Offset,
+                                              NULL);
+
+    if (!LowerIrp)
+    {
+        /* failed to create an associated irp */
+        ExFreePool(Buffer);
+        ExFreePool(Packet);
+        ObDereferenceObject(FileObject);
+
+        return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
+    }
+
+    /* set a completion routine */
+    IoSetCompletionRoutine(LowerIrp, WdmAudWriteCompletion, (PVOID)Irp, TRUE, TRUE, TRUE);
+
+    /* mark irp as pending */
+    IoMarkIrpPending(Irp);
+
+    /* call the driver */
+    Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), LowerIrp);
+
+    /* dereference file object */
+    ObDereferenceObject(FileObject);
+
+    return STATUS_PENDING;
+#endif
 }

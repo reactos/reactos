@@ -668,6 +668,8 @@ Pin_fnFastWrite(
         }
     }
 
+    IoStatus->Status = Status;
+
     if (NT_SUCCESS(Status))
         return TRUE;
     else

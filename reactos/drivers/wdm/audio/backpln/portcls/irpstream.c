@@ -8,17 +8,6 @@
 
 #include "private.h"
 
-typedef struct _IRP_MAPPING_
-{
-    LIST_ENTRY Entry;
-    PVOID Buffer;
-    ULONG BufferSize;
-    ULONG OriginalBufferSize;
-    PVOID OriginalBuffer;
-    PIRP Irp;
-
-    PVOID Tag;
-}IRP_MAPPING, *PIRP_MAPPING;
 
 typedef struct
 {
@@ -33,9 +22,11 @@ typedef struct
     KSPIN_CONNECT *ConnectDetails;
     PKSDATAFORMAT_WAVEFORMATEX DataFormat;
 
-    KSPIN_LOCK Lock;
-    LIST_ENTRY ListHead;
-    LIST_ENTRY FreeHead;
+    KSPIN_LOCK IrpListLock;
+    LIST_ENTRY IrpList;
+    LIST_ENTRY FreeIrpList;
+    PIRP Irp;
+    PVOID SilenceBuffer;
 
     ULONG OutOfMapping;
     ULONG MaxFrameSize;
@@ -43,28 +34,6 @@ typedef struct
     ULONG MinimumDataThreshold;
 
 }IIrpQueueImpl;
-
-VOID
-NTAPI
-FreeMappingRoutine(
-    PIRP_MAPPING CurMapping)
-{
-    ASSERT(CurMapping);
-
-    if (CurMapping->Irp)
-    {
-        CurMapping->Irp->IoStatus.Information = CurMapping->OriginalBufferSize;
-        CurMapping->Irp->IoStatus.Status = STATUS_SUCCESS;
-        IoCompleteRequest(CurMapping->Irp, IO_SOUND_INCREMENT);
-    }
-
-    if (CurMapping->OriginalBuffer)
-    {
-        ExFreePool(CurMapping->OriginalBuffer);
-    }
-
-    ExFreePool(CurMapping);
-}
 
 NTSTATUS
 NTAPI
@@ -121,19 +90,21 @@ IIrpQueue_fnInit(
     IN PKSDATAFORMAT DataFormat,
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG FrameSize,
-    IN ULONG Alignment)
+    IN ULONG Alignment,
+    IN PVOID SilenceBuffer)
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     This->ConnectDetails = ConnectDetails;
     This->DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat;
     This->MaxFrameSize = FrameSize;
+    This->SilenceBuffer = SilenceBuffer;
     This->Alignment = Alignment;
     This->MinimumDataThreshold = ((PKSDATAFORMAT_WAVEFORMATEX)DataFormat)->WaveFormatEx.nAvgBytesPerSec / 3;
 
-    InitializeListHead(&This->ListHead);
-    InitializeListHead(&This->FreeHead);
-    KeInitializeSpinLock(&This->Lock);
+    InitializeListHead(&This->IrpList);
+    InitializeListHead(&This->FreeIrpList);
+    KeInitializeSpinLock(&This->IrpListLock);
 
     return STATUS_SUCCESS;
 }
@@ -146,84 +117,35 @@ IIrpQueue_fnAddMapping(
     IN ULONG BufferSize,
     IN PIRP Irp)
 {
-    PIRP_MAPPING Mapping = NULL;
-    KSSTREAM_HEADER * Header = (KSSTREAM_HEADER*)Buffer;
-    ULONG Index, NumMappings, Offset;
+    PKSSTREAM_HEADER Header;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
+    /* FIXME
+     * irp should contain the stream header...
+     */
 
-    if (This->MaxFrameSize)
-    {
-        if (This->MaxFrameSize > Header->DataUsed)
-        {
-            /* small mapping */
-            NumMappings = 1;
-        }
-        else
-        {
-            ULONG Rest = Header->DataUsed % This->MaxFrameSize;
+    /* get stream header */
+    Header = (KSSTREAM_HEADER*)Buffer;
 
-            NumMappings = Header->DataUsed / This->MaxFrameSize;
-            if (Rest)
-            {
-                NumMappings++;
-            }
-        }
-    }
-    else
-    {
-        /* no framesize restriction */
-        NumMappings = 1;
-    }
+    /* dont exceed max frame size */
+    ASSERT(This->MaxFrameSize >= Header->DataUsed);
 
-    for(Index = 0; Index < NumMappings; Index++)
-    {
-        Mapping = AllocateItem(NonPagedPool, sizeof(IRP_MAPPING), TAG_PORTCLASS);
-        if (!Mapping)
-        {
-            DPRINT("OutOfMemory\n");
-            return STATUS_UNSUCCESSFUL;
-        }
+    /* hack untill stream probing is ready */
+    Irp->Tail.Overlay.DriverContext[2] = (PVOID)Header;
 
-        if (Index)
-            Offset = Index * This->MaxFrameSize;
-        else
-            Offset = 0;
+    /* increment num mappings */
+    InterlockedIncrement(&This->NumMappings);
 
-        Mapping->Buffer = (PVOID)UlongToPtr((PtrToUlong(Header->Data) + Offset + 3) & ~(0x3));
+    /* increment num data available */
+    This->NumDataAvailable += Header->DataUsed;
 
-        if (This->MaxFrameSize)
-            Mapping->BufferSize = min(Header->DataUsed - Offset, This->MaxFrameSize);
-        else
-            Mapping->BufferSize = Header->DataUsed;
+    /* mark irp as pending */
+    IoMarkIrpPending(Irp);
 
-        Mapping->OriginalBufferSize = Header->FrameExtent;
-        Mapping->OriginalBuffer = NULL;
-        Mapping->Irp = NULL;
-        Mapping->Tag = NULL;
+    /* add irp to cancelable queue */
+    KsAddIrpToCancelableQueue(&This->IrpList, &This->IrpListLock, Irp, KsListEntryTail, NULL);
 
-        This->NumDataAvailable += Mapping->BufferSize;
-
-        if (Index == NumMappings - 1)
-        {
-            /* last mapping should free the irp if provided */
-            Mapping->OriginalBuffer = Header->Data;
-            Mapping->Irp = Irp;
-        }
-
-        ExInterlockedInsertTailList(&This->ListHead, &Mapping->Entry, &This->Lock);
-        (void)InterlockedIncrement((volatile long*)&This->NumMappings);
-
-        DPRINT("IIrpQueue_fnAddMapping NumMappings %u SizeOfMapping %lu NumDataAvailable %lu Mapping %p FrameSize %u\n", This->NumMappings, Mapping->BufferSize, This->NumDataAvailable, Mapping, This->MaxFrameSize);
-    }
-
-    if (Irp)
-    {
-        Irp->IoStatus.Status = STATUS_PENDING;
-        Irp->IoStatus.Information = 0;
-        IoMarkIrpPending(Irp);
-    }
-
+    /* done */
     return STATUS_SUCCESS;
 }
 
@@ -234,29 +156,56 @@ IIrpQueue_fnGetMapping(
     OUT PUCHAR * Buffer,
     OUT PULONG BufferSize)
 {
-
-    PIRP_MAPPING CurMapping;
+    PIRP Irp;
+    ULONG Offset;
+    PKSSTREAM_HEADER StreamHeader;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
-    PLIST_ENTRY CurEntry;
 
-    CurEntry = ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
-    if (!CurEntry)
+    /* check if there is an irp in the partially processed */
+    if (This->Irp)
     {
-        This->StartStream = FALSE;
-        This->OutOfMapping = TRUE;
-        return STATUS_UNSUCCESSFUL;
+        /* use last irp */
+        Irp = This->Irp;
+        Offset = This->CurrentOffset;
+        /* TODO cancel irp when required */
+        ASSERT(Irp->Cancel == FALSE);
+    }
+    else
+    {
+        /* get a fresh new irp from the queue */
+        This->Irp = Irp = KsRemoveIrpFromCancelableQueue(&This->IrpList, &This->IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
+        This->CurrentOffset = Offset = 0;
     }
 
-    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
-    *Buffer = (PUCHAR)CurMapping->Buffer + This->CurrentOffset;
-    *BufferSize = CurMapping->BufferSize - This->CurrentOffset;
-    ExInterlockedInsertHeadList(&This->ListHead, &CurMapping->Entry, &This->Lock);
+    if (!Irp)
+    {
+        /* no irp available, use silence buffer */
+        *Buffer = This->SilenceBuffer;
+        *BufferSize = This->MaxFrameSize;
+        /* flag for port wave pci driver */
+        This->OutOfMapping = TRUE;
+        /* indicate flag to restart fast buffering */
+        This->StartStream = FALSE;
+        return STATUS_SUCCESS;
+    }
+
+    /* HACK get stream header */
+    StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];
+
+    /* sanity check */
+    ASSERT(StreamHeader);
+
+    /* store buffersize */
+    *BufferSize = StreamHeader->DataUsed - Offset;
+
+    /* store buffer */
+    *Buffer = &((PUCHAR)StreamHeader->Data)[Offset];
+
+    /* unset flag that no irps are available */
     This->OutOfMapping = FALSE;
 
     return STATUS_SUCCESS;
 }
-
-
 
 VOID
 NTAPI
@@ -264,25 +213,45 @@ IIrpQueue_fnUpdateMapping(
     IN IIrpQueue *iface,
     IN ULONG BytesWritten)
 {
-    PLIST_ENTRY CurEntry;
-    PIRP_MAPPING CurMapping;
+    PKSSTREAM_HEADER StreamHeader;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
-    CurEntry = ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
-    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+    if (!This->Irp)
+    {
+        /* silence buffer was used */
+        return;
+    }
 
+    /* HACK get stream header */
+    StreamHeader = (PKSSTREAM_HEADER)This->Irp->Tail.Overlay.DriverContext[2];
+
+    /* add to current offset */
     This->CurrentOffset += BytesWritten;
+
+    /* decrement available data counter */
     This->NumDataAvailable -= BytesWritten;
 
-    if (CurMapping->BufferSize <= This->CurrentOffset)
+    if (This->CurrentOffset >= StreamHeader->DataUsed)
     {
+        /* irp has been processed completly */
+        This->Irp->IoStatus.Status = STATUS_SUCCESS;
+
+        /* frame extend contains the original request size, DataUsed contains the real buffer size
+         * is different when kmixer performs channel conversion, upsampling etc
+         */
+        This->Irp->IoStatus.Information = StreamHeader->FrameExtent;
+
+        /* free stream data, no tag as wdmaud.drv does it atm */
+        ExFreePool(StreamHeader->Data);
+
+        /* free stream header, no tag as wdmaud.drv allocates it atm */
+        ExFreePool(StreamHeader);
+
+        /* complete the request */
+        IoCompleteRequest(This->Irp, IO_SOUND_INCREMENT);
+        /* remove irp as it is complete */
+        This->Irp = NULL;
         This->CurrentOffset = 0;
-        InterlockedDecrement(&This->NumMappings);
-        FreeMappingRoutine(CurMapping);
-    }
-    else
-    {
-        ExInterlockedInsertHeadList(&This->ListHead, &CurMapping->Entry, &This->Lock);
     }
 }
 
@@ -293,6 +262,7 @@ IIrpQueue_fnNumMappings(
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
+    /* returns the amount of mappings available */
     return This->NumMappings;
 }
 
@@ -302,6 +272,7 @@ IIrpQueue_fnNumData(
     IN IIrpQueue *iface)
 {
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
+    /* returns the amount of audio stream data available */
     return This->NumDataAvailable;
 }
 
@@ -363,50 +334,45 @@ IIrpQueue_fnGetMappingWithTag(
     OUT PULONG  ByteCount,
     OUT PULONG  Flags)
 {
-    PIRP_MAPPING CurMapping;
-    PLIST_ENTRY CurEntry;
+    PKSSTREAM_HEADER StreamHeader;
+    PIRP Irp;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     *Flags = 0;
     ASSERT(Tag != NULL);
 
+    /* get an irp from the queue */
+    Irp = KsRemoveIrpFromCancelableQueue(&This->IrpList, &This->IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
 
-    CurEntry = ExInterlockedRemoveHeadList(&This->ListHead, &This->Lock);
-    if (!CurEntry)
+    /* check if there is an irp */
+    if (!Irp)
     {
+        /* no irp available */
         This->OutOfMapping = TRUE;
         This->StartStream = FALSE;
         return STATUS_UNSUCCESSFUL;
     }
 
-    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
+    /* HACK get stream header */
+    StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];
 
-    *PhysicalAddress = MmGetPhysicalAddress(CurMapping->Buffer);
-    *VirtualAddress = CurMapping->Buffer;
-    *ByteCount = CurMapping->BufferSize;
+    /* store mapping in the free list */
+    ExInterlockedInsertTailList(&This->FreeIrpList, &Irp->Tail.Overlay.ListEntry, &This->IrpListLock);
 
+    /* return mapping */
+    *PhysicalAddress = MmGetPhysicalAddress(StreamHeader->Data);
+    *VirtualAddress = StreamHeader->Data;
+    *ByteCount = StreamHeader->DataUsed;
+
+    /* decrement mapping count */
     InterlockedDecrement(&This->NumMappings);
-    This->NumDataAvailable -= CurMapping->BufferSize;
+    /* decrement num data available */
+    This->NumDataAvailable -= StreamHeader->DataUsed;
 
-    if (CurMapping->OriginalBuffer)
-    {
-        /* last partial buffer */
-        *Flags = 1;
+    /* store tag in irp */
+    Irp->Tail.Overlay.DriverContext[3] = Tag;
 
-        /* store tag */
-        CurMapping->Tag = Tag;
-
-        /* insert into list to free later */
-        ExInterlockedInsertTailList(&This->FreeHead, &CurMapping->Entry, &This->Lock);
-        DPRINT("IIrpQueue_fnGetMappingWithTag Tag %p Mapping %p\n", Tag, CurMapping);
-    }
-    else
-    {
-        /* we can free this entry now */
-        FreeItem(CurMapping, TAG_PORTCLASS);
-        DPRINT("IIrpQueue_fnGetMappingWithTag Tag %p Mapping %p FREED\n", Tag, CurMapping);
-    }
-
+    /* done */
     return STATUS_SUCCESS;
 }
 
@@ -416,30 +382,44 @@ IIrpQueue_fnReleaseMappingWithTag(
     IN IIrpQueue *iface,
     IN PVOID Tag)
 {
-    PIRP_MAPPING CurMapping = NULL;
+    PIRP Irp;
     PLIST_ENTRY CurEntry;
+    PKSSTREAM_HEADER StreamHeader;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
     DPRINT("IIrpQueue_fnReleaseMappingWithTag Tag %p\n", Tag);
 
-    CurEntry = ExInterlockedRemoveHeadList(&This->FreeHead, &This->Lock);
-    if (!CurMapping)
-    {
-        return STATUS_SUCCESS;
-    }
+    /* remove irp from used list */
+    CurEntry = ExInterlockedRemoveHeadList(&This->FreeIrpList, &This->IrpListLock);
+    /* sanity check */
+    ASSERT(CurEntry);
 
-    CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
-    if (CurMapping->Tag != Tag)
-    {
-        /* the released mapping is not the last one */
-        ExInterlockedInsertHeadList(&This->FreeHead, &CurMapping->Entry, &This->Lock);
-        return STATUS_SUCCESS;
-    }
+    /* get irp from list entry */
+    Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
 
-    /* last mapping of the irp, free irp */
-    DPRINT("IIrpQueue_fnReleaseMappingWithTag Tag %p Mapping %p FREED\n", Tag, CurMapping);
+    /* HACK get stream header */
+    StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];
 
-    FreeMappingRoutine(CurMapping);
+    /* driver must release items in the same order */
+    ASSERT(Irp->Tail.Overlay.DriverContext[3] == Tag);
+
+    /* irp has been processed completly */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    /* frame extend contains the original request size, DataUsed contains the real buffer size
+     * is different when kmixer performs channel conversion, upsampling etc
+     */
+    Irp->IoStatus.Information = StreamHeader->FrameExtent;
+
+    /* free stream data, no tag as wdmaud.drv does it atm */
+    ExFreePool(StreamHeader->Data);
+
+    /* free stream header, no tag as wdmaud.drv allocates it atm */
+    ExFreePool(StreamHeader);
+
+    /* complete the request */
+    IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
+
     return STATUS_SUCCESS;
 }
 
@@ -457,24 +437,7 @@ NTAPI
 IIrpQueue_fnPrintQueueStatus(
     IN IIrpQueue *iface)
 {
-    PIRP_MAPPING CurMapping = NULL;
-    PLIST_ENTRY CurEntry;
 
-    IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
-    KeAcquireSpinLockAtDpcLevel(&This->Lock);
-
-    CurEntry = This->ListHead.Flink;
-    DPRINT("IIrpQueue_fnPrintQueueStatus  % u ===============\n", This->NumMappings);
-
-    while (CurEntry != &This->ListHead)
-    {
-        CurMapping = CONTAINING_RECORD(CurEntry, IRP_MAPPING, Entry);
-        DPRINT("Mapping %p Size %u Original %p\n", CurMapping, CurMapping->BufferSize, CurMapping->OriginalBuffer);
-        CurEntry = CurEntry->Flink;
-    }
-
-    KeReleaseSpinLockFromDpcLevel(&This->Lock);
-    DPRINT("IIrpQueue_fnPrintQueueStatus ===============\n");
 }
 
 VOID

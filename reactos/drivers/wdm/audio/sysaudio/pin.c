@@ -161,7 +161,7 @@ Pin_fnWrite(
 
     /* call the portcls audio pin */
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
-                                          MmGetMdlVirtualAddress(Irp->MdlAddress),
+                                          Irp->UserBuffer,
                                           IoStack->Parameters.Write.Length,
                                           NULL,
                                           0,
@@ -379,13 +379,14 @@ Pin_fnFastWrite(
         Status = ObReferenceObjectByHandle(Context->hMixerPin, GENERIC_WRITE, IoFileObjectType, KernelMode, (PVOID*)&RealFileObject, NULL);
         if (NT_SUCCESS(Status))
         {
-            Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+            Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, UserMode);
             ObDereferenceObject(RealFileObject);
         }
 
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Mixing stream failed with %lx\n", Status);
+            DbgBreakPoint();
             return FALSE;
         }
     }
@@ -394,11 +395,11 @@ Pin_fnFastWrite(
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, KernelMode);
+    Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, UserMode);
 
     ObDereferenceObject(RealFileObject);
 
-    if (Status == STATUS_SUCCESS)
+    if (NT_SUCCESS(Status))
         return TRUE;
     else
         return FALSE;

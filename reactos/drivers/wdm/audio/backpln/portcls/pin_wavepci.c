@@ -1069,7 +1069,7 @@ IPortPinWavePci_fnInit(
     if (!NT_SUCCESS(Status))
         return Status;
 
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, This->AllocatorFraming.FrameSize, This->AllocatorFraming.FileAlignment);
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, This->AllocatorFraming.FrameSize, This->AllocatorFraming.FileAlignment, NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IrpQueue_Init failed with %x\n", Status);
