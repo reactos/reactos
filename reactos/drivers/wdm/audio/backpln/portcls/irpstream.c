@@ -165,10 +165,18 @@ IIrpQueue_fnGetMapping(
     if (This->Irp)
     {
         /* use last irp */
-        Irp = This->Irp;
-        Offset = This->CurrentOffset;
-        /* TODO cancel irp when required */
-        ASSERT(Irp->Cancel == FALSE);
+        if (This->Irp->Cancel == FALSE)
+        {
+            Irp = This->Irp;
+            Offset = This->CurrentOffset;
+        }
+        else
+        {
+            /* irp has been cancelled */
+            This->Irp->IoStatus.Status = STATUS_CANCELLED;
+            IoCompleteRequest(This->Irp, IO_NO_INCREMENT);
+            This->Irp = Irp = NULL;
+        }
     }
     else
     {

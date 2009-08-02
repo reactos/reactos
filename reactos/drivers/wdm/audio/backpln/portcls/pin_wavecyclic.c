@@ -970,7 +970,7 @@ IPortPinWaveCyclic_fnFastWrite(
     PrePostRatio = (This->PreCompleted * 100) / This->TotalPackets;
     MinData = This->IrpQueue->lpVtbl->NumData(This->IrpQueue);
 
-    DPRINT1("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u Ratio %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue), PrePostRatio);
+    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u Ratio %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue), PrePostRatio);
 
     Packet = (PCONTEXT_WRITE)Buffer;
     Irp = Packet->Irp;

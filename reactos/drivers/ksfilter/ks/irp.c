@@ -1287,25 +1287,24 @@ KsCancelRoutine(
     IN  PIRP Irp)
 {
     PKSPIN_LOCK SpinLock;
-    KIRQL OldLevel;
 
     /* get internal queue lock */
     SpinLock = KSQUEUE_SPINLOCK_IRP_STORAGE(Irp);
 
     /* acquire spinlock */
-    KeAcquireSpinLock(SpinLock, &OldLevel);
+    KeAcquireSpinLockAtDpcLevel(SpinLock);
 
     /* sanity check */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* release cancel spinlock */
-    IoReleaseCancelSpinLock(DISPATCH_LEVEL);
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     /* remove the irp from the list */
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     /* release spinlock */
-    KeReleaseSpinLock(SpinLock, OldLevel);
+    KeReleaseSpinLockFromDpcLevel(SpinLock);
 
     /* has the irp already been canceled */
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
