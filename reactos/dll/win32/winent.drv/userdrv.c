@@ -552,8 +552,8 @@ void CDECL RosDrv_ReleaseDC( HWND hwnd, HDC hdc )
     escape.dc_rect.bottom       = 0;
     escape.drawable_rect.left   = 0;
     escape.drawable_rect.top    = 0;
-    escape.drawable_rect.right  = 0;
-    escape.drawable_rect.bottom = 0;
+    escape.drawable_rect.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    escape.drawable_rect.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     ExtEscape( hdc, NTDRV_ESCAPE, sizeof(escape), (LPSTR)&escape, 0, NULL );
 }
