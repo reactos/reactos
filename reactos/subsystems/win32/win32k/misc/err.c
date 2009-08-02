@@ -61,22 +61,4 @@ GetLastNtError()
   return 0;
 }
 
-VOID
-APIENTRY
-W32kRaiseStatus(NTSTATUS Status)
-{
-    EXCEPTION_RECORD ExceptionRecord;
-
-    /* Create an exception record */
-    ExceptionRecord.ExceptionCode  = Status;
-    ExceptionRecord.ExceptionRecord = NULL;
-    ExceptionRecord.NumberParameters = 0;
-    ExceptionRecord.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-
-    RtlRaiseException(&ExceptionRecord);
-
-    /* If we returned, raise a status */
-    W32kRaiseStatus(Status);
-}
-
 /* EOF */

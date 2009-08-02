@@ -36,6 +36,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 
 #include <winerror.h>
 #include <wingdi.h>
+#define NT_BUILD_ENVIRONMENT
 #include <winddi.h>
 #include <winuser.h>
 #include <prntfont.h>
