@@ -17,8 +17,13 @@ typedef struct _PDEVOBJ
     };
     ULONG         DisplayNumber;
     DEVMODEW      DMW;
-    PFILE_OBJECT VideoFileObject;
+    PFILE_OBJECT  VideoFileObject;
     BOOLEAN       PreparedDriver;
+    GDIPOINTER    Pointer;
+    /* Stuff to keep track of software cursors; win32k gdi part */
+    UINT SafetyRemoveLevel; /* at what level was the cursor removed?
+                              0 for not removed */
+    UINT SafetyRemoveCount;
 } PDEVOBJ, *PPDEVOBJ;
 
 extern PPDEVOBJ pPrimarySurface;

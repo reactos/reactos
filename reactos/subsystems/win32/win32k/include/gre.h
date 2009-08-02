@@ -212,6 +212,8 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
        BRUSHOBJ* pbo, LONG x, LONG y, LONG deltax, LONG deltay,
        POINTL* Translate);
 
+/* Mouse pointer */
+
 BOOL NTAPI
 GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo);
 
@@ -222,5 +224,14 @@ GreMovePointer(
     LONG y,
     RECTL *prcl);
 
+INT FASTCALL
+MouseSafetyOnDrawStart(SURFOBJ *pso,
+                       LONG HazardX1,
+                       LONG HazardY1,
+                       LONG HazardX2,
+                       LONG HazardY2);
+
+INT FASTCALL
+MouseSafetyOnDrawEnd(SURFOBJ *pso);
 
 #endif

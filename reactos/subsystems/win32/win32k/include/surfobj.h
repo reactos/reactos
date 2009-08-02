@@ -45,7 +45,4 @@ BITMAP_GetWidthBytes(INT bmWidth, INT bpp);
 #define SURFACE_LockBitmapBits(x)
 #define SURFACE_UnlockBitmapBits(x)
 
-#define MouseSafetyOnDrawStart(srf, a, b, c, d)
-#define MouseSafetyOnDrawEnd(srf)
-
 #endif

@@ -36,6 +36,7 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 /* Eng and GRE stuff */
 #include <driver.h>
 #include <engevent.h>
+#include <cursor.h>
 #include <devobj.h>
 #include <gdiobj.h>
 #include <surfobj.h>
@@ -46,7 +47,6 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <floatobj.h>
 #include <xformobj.h>
 #include <xlateobj.h>
-#include <cursor.h>
 #include <gre.h>
 #include <monitor.h>
 

@@ -17,7 +17,6 @@
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-GDIPOINTER    Pointer;
 POINTL        ptlPointer;
 
 VOID
@@ -33,7 +32,7 @@ IntHideMousePointer(
     ASSERT(ppdev);
     ASSERT(psoDest);
 
-    pgp = &Pointer;
+    pgp = &ppdev->Pointer;
 
     if (!pgp->Enabled)
     {
@@ -83,8 +82,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
     ASSERT(ppdev);
     ASSERT(psoDest);
 
-
-    pgp = &Pointer;
+    pgp = &ppdev->Pointer;
 
     if (pgp->Enabled)
     {
@@ -172,6 +170,91 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 }
 
 /*
+ * FUNCTION: Notify the mouse driver that drawing is about to begin in
+ * a rectangle on a particular surface.
+ */
+INT FASTCALL
+MouseSafetyOnDrawStart(SURFOBJ *pso,
+                       LONG HazardX1,
+                       LONG HazardY1,
+                       LONG HazardX2,
+                       LONG HazardY2)
+{
+    LONG tmp;
+    PDEVOBJ *ppdev;
+    GDIPOINTER *pgp;
+
+    ASSERT(pso != NULL);
+
+    ppdev = GDIDEV(pso);
+    if (!ppdev) return FALSE;
+
+    pgp = &ppdev->Pointer;
+
+    if (pgp->Exclude.right == -1)
+        return FALSE;
+
+    ppdev->SafetyRemoveCount++;
+
+    if (ppdev->SafetyRemoveLevel != 0)
+        return FALSE;
+
+    if (HazardX1 > HazardX2)
+    {
+        tmp = HazardX2;
+        HazardX2 = HazardX1;
+        HazardX1 = tmp;
+    }
+    if (HazardY1 > HazardY2)
+    {
+        tmp = HazardY2;
+        HazardY2 = HazardY1;
+        HazardY1 = tmp;
+    }
+
+    if (pgp->Exclude.right >= HazardX1
+        && pgp->Exclude.left <= HazardX2
+        && pgp->Exclude.bottom >= HazardY1
+        && pgp->Exclude.top <= HazardY2)
+    {
+        ppdev->SafetyRemoveLevel = ppdev->SafetyRemoveCount;
+        ppdev->pfnMovePointer(pso, -1, -1, NULL);
+    }
+
+    return TRUE;
+}
+
+/*
+ * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
+ */
+INT FASTCALL
+MouseSafetyOnDrawEnd(SURFOBJ *pso)
+{
+    PDEVOBJ *ppdev;
+    GDIPOINTER *pgp;
+
+    ASSERT(pso != NULL);
+
+    ppdev = (PDEVOBJ*)pso->hdev;
+
+    if (!ppdev) return FALSE;
+
+    pgp = &ppdev->Pointer;
+
+    if (pgp->Exclude.right == -1)
+        return FALSE;
+
+    if (--ppdev->SafetyRemoveCount >= ppdev->SafetyRemoveLevel)
+        return FALSE;
+
+    ppdev->pfnMovePointer(pso, ptlPointer.x, ptlPointer.y, &pgp->Exclude);
+
+    ppdev->SafetyRemoveLevel = 0;
+
+    return TRUE;
+}
+
+/*
  * @implemented
  */
 ULONG APIENTRY
@@ -197,7 +280,7 @@ EngSetPointerShape(
     ASSERT(pso);
 
     ppdev = GDIDEV(pso);
-    pgp = &Pointer;
+    pgp = &ppdev->Pointer;
 
     IntHideMousePointer(ppdev, pso);
 
@@ -386,7 +469,7 @@ EngMovePointer(
     ppdev = GDIDEV(pso);
     ASSERT(ppdev);
 
-    pgp = &Pointer;
+    pgp = &ppdev->Pointer;
 
     IntHideMousePointer(ppdev, pso);
 
