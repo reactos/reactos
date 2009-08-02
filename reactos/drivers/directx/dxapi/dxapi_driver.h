@@ -10,6 +10,7 @@
 #include <windef.h>
 #include <winerror.h>
 #include <wingdi.h>
+#define NT_BUILD_ENVIRONMENT
 #include <winddi.h>
 #include <prntfont.h>
 #include <dde.h>

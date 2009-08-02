@@ -11,6 +11,7 @@
 #define STARTF_USESIZE 2
 #define STARTF_USEPOSITION 4
 #define INTERNAL_CALL NTAPI
+#define NT_BUILD_ENVIRONMENT
 
 #include <stdarg.h>
 #include <windef.h>
