@@ -164,7 +164,10 @@ v2s ( const Backend* backend, const vector<FileLocation>& files, int wrap_at )
 	{
 		const FileLocation& file = files[i];
 		if ( wrap_at > 0 && wrap_count++ == wrap_at )
+		{
 			s += " \\\n\t\t";
+			wrap_count = 1;
+		}
 		else if ( s.size() )
 			s += " ";
 		s += backend->GetFullName ( file );
@@ -185,7 +188,10 @@ v2s ( const string_list& v, int wrap_at )
 		if ( !v[i].size() )
 			continue;
 		if ( wrap_at > 0 && wrap_count++ == wrap_at )
+		{
 			s += " \\\n\t\t";
+			wrap_count = 1;
+		}
 		else if ( s.size() )
 			s += " ";
 		s += v[i];
