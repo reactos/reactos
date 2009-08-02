@@ -332,7 +332,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
 
     hUser32 = LoadLibrary(_T("user32.dll"));
     if(hUser32 == NULL)
-        return FALSE;
+        return;
 
     DrawCaptionTemp = (DCT_PROC)GetProcAddress(hUser32, (LPCSTR)DCT_ORD);
     DrawMenuBarTemp = (DMBT_PROC)GetProcAddress(hUser32, (LPCSTR)DMBT_ORD);

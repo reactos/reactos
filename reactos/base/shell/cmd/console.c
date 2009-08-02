@@ -125,20 +125,36 @@ static VOID ConWrite(TCHAR *str, DWORD len, DWORD nStdHandle)
 	if (bUnicodeOutput)
 	{
 #ifndef _UNICODE
-		WCHAR buffer[len];
+		WCHAR *buffer = cmd_alloc(len * sizeof(WCHAR));
+		if (!buffer)
+		{
+			error_out_of_memory();
+			return;
+		}
 		len = MultiByteToWideChar(OutputCodePage, 0, str, len, buffer, len, NULL, NULL);
 		str = (PVOID)buffer;
 #endif
 		WriteFile(hOutput, str, len * sizeof(WCHAR), &dwWritten, NULL);
+#ifndef _UNICODE
+		cmd_free(buffer);
+#endif
 	}
 	else
 	{
 #ifdef _UNICODE
-		CHAR buffer[len * MB_LEN_MAX];
+		CHAR *buffer = cmd_alloc(len * MB_LEN_MAX * sizeof(CHAR));
+		if (!buffer)
+		{
+			error_out_of_memory();
+			return;
+		}
 		len = WideCharToMultiByte(OutputCodePage, 0, str, len, buffer, len * MB_LEN_MAX, NULL, NULL);
 		str = (PVOID)buffer;
 #endif
 		WriteFile(hOutput, str, len, &dwWritten, NULL);
+#ifdef _UNICODE
+		cmd_free(buffer);
+#endif
 	}
 }
 

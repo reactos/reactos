@@ -326,10 +326,11 @@ static PARSED_COMMAND *ParseBlock(REDIRECTION *RedirList)
 static PARSED_COMMAND *ParseIf(void)
 {
 	PARSED_COMMAND *Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
+	int Type;
 	memset(Cmd, 0, sizeof(PARSED_COMMAND));
 	Cmd->Type = C_IF;
 
-	int Type = CurrentTokenType;
+	Type = CurrentTokenType;
 	if (_tcsicmp(CurrentToken, _T("/I")) == 0)
 	{
 		Cmd->If.Flags |= IFFLAG_IGNORECASE;
@@ -619,8 +620,9 @@ static PARSED_COMMAND *ParsePrimary(void)
 
 	if (CurChar == _T('@'))
 	{
+		PARSED_COMMAND *Cmd;
 		ParseChar();
-		PARSED_COMMAND *Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
+		Cmd = cmd_alloc(sizeof(PARSED_COMMAND));
 		Cmd->Type = C_QUIET;
 		Cmd->Next = NULL;
 		/* @ acts like a unary operator with low precedence,

@@ -31,6 +31,7 @@
 <module name="mingw_main" type="staticlibrary" isstartuplib="true" crt="dll">
 	<define name="_CRTBLD" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
+	<compilerflag compilerset="msc">/wd4733</compilerflag>
 	<file>crt0_c.c</file>
 	<file>crtexe.c</file>
 	<file>dllargv.c</file>

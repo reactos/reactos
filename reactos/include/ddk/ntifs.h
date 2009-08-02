@@ -1093,7 +1093,7 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
     ULONG           FileAttributes;
     ULONG           FileNameLength;
     ULONG           EaSize;
-    WCHAR           FileName[0];
+    WCHAR           FileName[ANYSIZE_ARRAY];
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
     
 typedef struct _FILE_ID_FULL_DIR_INFORMATION {

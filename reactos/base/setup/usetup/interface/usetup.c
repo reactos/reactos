@@ -3133,6 +3133,7 @@ PAGE_NUMBER
 FileCopyPage(PINPUT_RECORD Ir)
 {
     COPYCONTEXT CopyContext;
+    unsigned int mem_bar_width;
 
     MUIDisplayPage(FILE_COPY_PAGE);
 
@@ -3153,7 +3154,7 @@ FileCopyPage(PINPUT_RECORD Ir)
                                                 MUIGetString(STRING_SETUPCOPYINGFILES));
 
     // fit memory bars to screen width, distribute them uniform
-    unsigned int mem_bar_width = (xScreen - 26) / 5;
+    mem_bar_width = (xScreen - 26) / 5;
     mem_bar_width -= mem_bar_width % 2;  // make even
     /* ATTENTION: The following progress bars are debug stuff, which should not be translated!! */
     /* Create the paged pool progress bar */

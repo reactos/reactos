@@ -123,6 +123,7 @@ Ke386Wrmsr(IN ULONG Register,
            IN ULONG Var1,
            IN ULONG Var2)
 {
+    __asm mov ecx, Register;
     __asm mov eax, Var1;
     __asm mov edx, Var2;
     __asm wrmsr;
@@ -134,6 +135,7 @@ Ke386Rdmsr(IN ULONG Register,
            IN ULONG Var1,
            IN ULONG Var2)
 {
+    __asm mov ecx, Register;
     __asm mov eax, Var1;
     __asm mov edx, Var2;
     __asm rdmsr;

@@ -683,7 +683,7 @@ WSPSelect(int nfds,
           fd_set *readfds,
           fd_set *writefds,
           fd_set *exceptfds,
-          struct timeval *timeout,
+          const LPTIMEVAL timeout,
           LPINT lpErrno)
 {
     IO_STATUS_BLOCK     IOSB;
