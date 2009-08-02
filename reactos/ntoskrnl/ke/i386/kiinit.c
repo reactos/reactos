@@ -712,34 +712,18 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Ke386SetDs(KGDT_R3_DATA | RPL_MASK);
     Ke386SetEs(KGDT_R3_DATA | RPL_MASK);
 
-    /* HACK compensates for KiRosPrepareForSystemStartup hack */
-    if ((ULONG)Idt == KiIdtDescriptor.Base)
-    {
-        USHORT FlippedSelector;
+    /* Save NMI and double fault traps */
+    RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
+    RtlCopyMemory(&DoubleFaultEntry, &Idt[8], sizeof(KIDTENTRY));
 
-        FlippedSelector = KiIdt[2].Selector;
-        KiIdt[2].Selector = KiIdt[2].ExtendedOffset;
-        KiIdt[2].ExtendedOffset = FlippedSelector;
+    /* Copy kernel's trap handlers */
+    RtlCopyMemory(Idt,
+                  (PVOID)KiIdtDescriptor.Base,
+                  KiIdtDescriptor.Limit + 1);
 
-        FlippedSelector = KiIdt[8].Selector;
-        KiIdt[8].Selector = KiIdt[8].ExtendedOffset;
-        KiIdt[8].ExtendedOffset = FlippedSelector;
-    }
-    else
-    {
-        /* Save NMI and double fault traps */
-        RtlCopyMemory(&NmiEntry, &Idt[2], sizeof(KIDTENTRY));
-        RtlCopyMemory(&DoubleFaultEntry, &Idt[8], sizeof(KIDTENTRY));
-
-        /* Copy kernel's trap handlers */
-        RtlCopyMemory(Idt,
-                      (PVOID)KiIdtDescriptor.Base,
-                      KiIdtDescriptor.Limit + 1);
-
-        /* Restore NMI and double fault */
-        RtlCopyMemory(&Idt[2], &NmiEntry, sizeof(KIDTENTRY));
-        RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
-    }
+    /* Restore NMI and double fault */
+    RtlCopyMemory(&Idt[2], &NmiEntry, sizeof(KIDTENTRY));
+    RtlCopyMemory(&Idt[8], &DoubleFaultEntry, sizeof(KIDTENTRY));
 
 AppCpuInit:
     /* Loop until we can release the freeze lock */
