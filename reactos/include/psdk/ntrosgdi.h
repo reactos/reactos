@@ -101,7 +101,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
 BOOL APIENTRY RosGdiDeleteDC( HDC physDev );
 BOOL APIENTRY RosGdiGetDCOrgEx( HDC physDev, LPPOINT lpp );
 BOOL APIENTRY RosGdiPaintRgn( HDC physDev, HRGN hrgn );
-VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap );
+BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL stock );
 VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush );
 HFONT APIENTRY RosGdiSelectFont( HDC physDev, HFONT hfont, HANDLE gdiFont );
 VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogPen );

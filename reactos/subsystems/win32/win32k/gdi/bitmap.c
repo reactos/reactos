@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+HGDIOBJ hStockBmp;
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 BOOL APIENTRY RosGdiAlphaBlend(HDC devDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
@@ -293,5 +296,17 @@ BOOL APIENTRY RosGdiStretchBlt( HDC physDevDst, INT xDst, INT yDst,
     return bRet;
 }
 
+VOID
+CreateStockBitmap()
+{
+    SIZE slSize;
+
+    /* Create 1x1 bitmap */
+    slSize.cx = 1; slSize.cy = 1;
+    hStockBmp = GreCreateBitmap(slSize, 1, 1, 0, NULL);
+
+    /* Convert it to a stock object */
+    GDIOBJ_ConvertToStockObj(&hStockBmp);
+}
 
 /* EOF */

@@ -345,6 +345,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Initialize handle-mapping */
     GDI_InitHandleMapping();
 
+    /* Create stock objects */
+    CreateStockBitmap();
+
     /* Init video driver implementation */
     InitDcImpl();
 

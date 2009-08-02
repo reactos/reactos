@@ -185,21 +185,26 @@ BOOL APIENTRY RosGdiPaintRgn( HDC physDev, HRGN hrgn )
     return FALSE;
 }
 
-VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
+BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
 {
     PDC pDC;
     PSURFACE pSurface;
     HGDIOBJ hBmpKern;
-    SIZEL slSize;
 
-    hBmpKern = GDI_MapUserHandle(hbitmap);
-    if (!hBmpKern)
+    if (bStock)
     {
-        DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", hbitmap, physDev);
-
-        /* It probably is a stock bitmap, so select it */
-        slSize.cx = 1; slSize.cy = 1;
-        hBmpKern = GreCreateBitmap(slSize, 1, 1, 0, NULL);
+        /* Selecting stock bitmap */
+        hBmpKern = hStockBmp;
+    }
+    else
+    {
+        /* Selecting usual bitmap */
+        hBmpKern = GDI_MapUserHandle(hbitmap);
+        if (!hBmpKern)
+        {
+            DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", hbitmap, physDev);
+            return FALSE;
+        }
     }
 
     DPRINT("Selecting %x bitmap to hdc %x\n", hBmpKern, physDev);
@@ -220,6 +225,8 @@ VOID APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap )
 
     /* Release the DC object */
     DC_Unlock(pDC);
+
+    return TRUE;
 }
 
 VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )

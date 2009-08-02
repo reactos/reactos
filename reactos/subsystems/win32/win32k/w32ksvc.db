@@ -17,7 +17,7 @@ RosGdiCreateDC                     6
 RosGdiDeleteDC                     1
 RosGdiGetDCOrgEx                   2
 RosGdiPaintRgn                     2
-RosGdiSelectBitmap                 2
+RosGdiSelectBitmap                 3
 RosGdiSelectBrush                  2
 RosGdiSelectFont                   3
 RosGdiSelectPen                    3

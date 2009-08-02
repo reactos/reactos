@@ -20,6 +20,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosgdidrv);
 
+/* GLOBALS ****************************************************************/
+HANDLE hStockBitmap;
+
 /* FUNCTIONS **************************************************************/
 
 BOOL CDECL RosDrv_AlphaBlend(NTDRV_PDEVICE *devDst, INT xDst, INT yDst, INT widthDst, INT heightDst,
@@ -123,6 +126,10 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
         hKernelDC = (*pdev)->hKernelDC;
     else
         hKernelDC = 0;
+
+    /* Save stock bitmap's handle */
+    if (dcInfo.dwType == OBJ_MEMDC && !hStockBitmap)
+        hStockBitmap = GetCurrentObject( hdc, OBJ_BITMAP );
 
     /* Call the win32 kernel */
     bRet = RosGdiCreateDC(&dcInfo, &hKernelDC, driver, device, output, initData);
@@ -453,8 +460,18 @@ BOOL CDECL RosDrv_RoundRect( NTDRV_PDEVICE *physDev, INT left, INT top, INT righ
 
 HBITMAP CDECL RosDrv_SelectBitmap( NTDRV_PDEVICE *physDev, HBITMAP hbitmap )
 {
-    RosGdiSelectBitmap(physDev->hKernelDC, hbitmap);
+    BOOL bRes, bStock = FALSE;
 
+    /* Check if it's a stock bitmap */
+    if (hbitmap == hStockBitmap) bStock = TRUE;
+
+    /* Select the bitmap into the DC */
+    bRes = RosGdiSelectBitmap(physDev->hKernelDC, hbitmap, bStock);
+
+    /* If there was an error, return 0 */
+    if (!bRes) return 0;
+
+    /* Return handle of selected bitmap as a success*/
     return hbitmap;
 }
 

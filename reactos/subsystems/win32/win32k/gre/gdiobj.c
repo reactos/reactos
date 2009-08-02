@@ -1050,6 +1050,139 @@ GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 }
 
 BOOL APIENTRY
+GDIOBJ_ConvertToStockObj(HGDIOBJ *phObj)
+{
+    /*
+     * FIXME !!!!! THIS FUNCTION NEEDS TO BE FIXED - IT IS NOT SAFE WHEN OTHER THREADS
+     *             MIGHT ATTEMPT TO LOCK THE OBJECT DURING THIS CALL!!!
+     */
+    PGDI_TABLE_ENTRY Entry;
+    HANDLE ProcessId, LockedProcessId, PrevProcId;
+    PTHREADINFO Thread;
+    HGDIOBJ hObj;
+
+    GDIDBG_INITLOOPTRACE();
+
+    ASSERT(phObj);
+    hObj = *phObj;
+
+    DPRINT("GDIOBJ_ConvertToStockObj: hObj: 0x%08x\n", hObj);
+
+    Thread = PsGetCurrentThreadWin32Thread();
+
+    if (!GDI_HANDLE_IS_STOCKOBJ(hObj))
+    {
+        ProcessId = PsGetCurrentProcessId();
+        LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
+
+        Entry = GDI_HANDLE_GET_ENTRY(GdiHandleTable, hObj);
+
+LockHandle:
+        /* lock the object, we must not convert stock objects, so don't check!!! */
+        PrevProcId = InterlockedCompareExchangePointer((PVOID*)&Entry->ProcessId, LockedProcessId, ProcessId);
+        if (PrevProcId == ProcessId)
+        {
+            LONG NewType, PrevType, OldType;
+
+            /* we're locking an object that belongs to our process. First calculate
+               the new object type including the stock object flag and then try to
+               exchange it.*/
+            /* On Windows the higher 16 bit of the type field don't contain the
+               full type from the handle, but the base type.
+               (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
+            OldType = ((ULONG)hObj & GDI_HANDLE_BASETYPE_MASK) | ((ULONG)hObj >> GDI_ENTRY_UPPER_SHIFT);
+            /* We are currently not using bits 24..31 (flags) of the type field, but for compatibility
+               we copy them as we can't get them from the handle */
+            OldType |= Entry->Type & GDI_ENTRY_FLAGS_MASK;
+
+            /* As the object should be a stock object, set it's flag, but only in the lower 16 bits */
+            NewType = OldType | GDI_ENTRY_STOCK_MASK;
+
+            /* Try to exchange the type field - but only if the old (previous type) matches! */
+            PrevType = InterlockedCompareExchange(&Entry->Type, NewType, OldType);
+            if (PrevType == OldType && Entry->KernelData != NULL)
+            {
+                PTHREADINFO PrevThread;
+                PBASEOBJECT Object;
+
+                /* We successfully set the stock object flag.
+                   KernelData should never be NULL here!!! */
+                ASSERT(Entry->KernelData);
+
+                Object = Entry->KernelData;
+
+                PrevThread = Object->Tid;
+                if (Object->cExclusiveLock == 0 || PrevThread == Thread)
+                {
+                    /* dereference the process' object counter */
+                    if (PrevProcId != GDI_GLOBAL_PROCESS)
+                    {
+                        PEPROCESS OldProcess;
+                        PPROCESSINFO W32Process;
+                        NTSTATUS Status;
+
+                        /* FIXME */
+                        Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
+                        if (NT_SUCCESS(Status))
+                        {
+                            W32Process = (PPROCESSINFO)OldProcess->Win32Process;
+                            if (W32Process != NULL)
+                            {
+                                InterlockedDecrement(&W32Process->GDIHandleCount);
+                            }
+                            ObDereferenceObject(OldProcess);
+                        }
+                    }
+
+                    hObj = (HGDIOBJ)((ULONG)(hObj) | GDI_HANDLE_STOCK_MASK);
+                    *phObj = hObj;
+                    Object->hHmgr = hObj;
+
+                    /* remove the process id lock and make it global */
+                    (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, GDI_GLOBAL_PROCESS);
+
+                    /* we're done, successfully converted the object */
+                    return TRUE;
+                }
+                else
+                {
+                    GDIDBG_TRACELOOP(hObj, PrevThread, Thread);
+
+                    /* WTF?! The object is already locked by a different thread!
+                       Release the lock, wait a bit and try again!
+                       FIXME - we should give up after some time unless we want to wait forever! */
+                    (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
+
+                    DelayExecution();
+                    goto LockHandle;
+                }
+            }
+            else
+            {
+                DPRINT1("Attempted to convert object 0x%x that is deleted! Should never get here!!!\n", hObj);
+                DPRINT1("OldType = 0x%x, Entry->Type = 0x%x, NewType = 0x%x, Entry->KernelData = 0x%x\n", OldType, Entry->Type, NewType, Entry->KernelData);
+            }
+        }
+        else if (PrevProcId == LockedProcessId)
+        {
+            GDIDBG_TRACELOOP(hObj, PrevProcId, ProcessId);
+
+            /* the object is currently locked, wait some time and try again.
+               FIXME - we shouldn't loop forever! Give up after some time! */
+            DelayExecution();
+            /* try again */
+            goto LockHandle;
+        }
+        else
+        {
+            DPRINT1("Attempted to convert invalid handle: 0x%x\n", hObj);
+        }
+    }
+
+    return FALSE;
+}
+
+BOOL APIENTRY
 GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 {
     PGDI_TABLE_ENTRY Entry;

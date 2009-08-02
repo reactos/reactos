@@ -62,6 +62,10 @@ GreSetDIBits(
 INT FASTCALL
 BitsPerFormat(ULONG Format);
 
+/* bitmap.c */
+extern HGDIOBJ hStockBmp;
+VOID CreateStockBitmap();
+
 /* font.c */
 VOID NTAPI
 GreTextOut(PDC pDC, INT x, INT y, UINT flags,
