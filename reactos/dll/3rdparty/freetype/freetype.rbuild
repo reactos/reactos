@@ -4,7 +4,6 @@
 	<importlibrary definition="freetype.def" />
 	<include base="freetype">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__NTDRIVER__" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="FT2_BUILD_LIBRARY"  />
 	<if property="NSWPAT" value="0">
