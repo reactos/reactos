@@ -157,6 +157,12 @@ PsSetProcessPriorityByClass(
     IN PSPROCESSPRIORITYMODE Type
 );
 
+HANDLE
+NTAPI
+PsGetProcessInheritedFromUniqueProcessId(
+    IN PEPROCESS Process
+);
+
 //
 // Quota Functions
 //
