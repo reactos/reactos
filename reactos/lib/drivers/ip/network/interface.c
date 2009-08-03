@@ -152,6 +152,26 @@ BOOLEAN HasPrefix(
     return TRUE;
 }
 
+static PIP_INTERFACE GetDefaultInterface(VOID)
+{
+   KIRQL OldIrql;
+   IF_LIST_ITER(CurrentIF);
+
+   TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
+   ForEachInterface(CurrentIF) {
+      if (CurrentIF->Context) {
+          TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+          return CurrentIF;
+      }
+   } EndFor(CurrentIF);
+   TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+   /* There are no physical interfaces on the system
+    * so we must pick the loopback interface */
+
+   return Loopback;
+}
+
 PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
 /*
  * FUNCTION: Checks all on-link prefixes to find out if an address is on-link
@@ -166,6 +186,9 @@ PIP_INTERFACE FindOnLinkInterface(PIP_ADDRESS Address)
 
     TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)\n", Address));
     TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)\n", A2S(Address)));
+
+    if (AddrIsUnspecified(Address))
+        return GetDefaultInterface();
 
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
