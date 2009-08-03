@@ -30,6 +30,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HDC hdc, hdcMem;
             BITMAP bitmap;
             HBRUSH brush, brush2;
+            INT l;
 
             hdc = BeginPaint(hWnd, &ps);
             hdcMem = CreateCompatibleDC(hdc);
@@ -42,7 +43,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PatBlt(hdc, 30, 0, 4*bitmap.bmWidth*2, 4*bitmap.bmHeight, PATCOPY);
 
             /* hatched brushes */
-            INT l = 66;
+            l = 66;
             brush = CreateHatchBrush(HS_DIAGCROSS, RGB(255,0,0));
             SelectObject(hdc, brush);
             PatBlt(hdc, 0, 0, 30, l, PATCOPY);

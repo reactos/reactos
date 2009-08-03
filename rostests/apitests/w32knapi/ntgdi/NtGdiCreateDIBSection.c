@@ -46,6 +46,10 @@ Test_NtGdiCreateDIBSection(PTESTINFO pti)
     PBITMAPV4HEADER pbV4h = (PBITMAPV4HEADER)&bmi.bmiHeader;
     PBITMAPV5HEADER pbV5h = (PBITMAPV5HEADER)&bmi.bmiHeader;
 
+    HANDLE hSection;
+    NTSTATUS Status;
+    LARGE_INTEGER MaximumSize;
+
     hDC = GetDC(0);
     pbih->biSize = sizeof(BITMAPINFOHEADER);
     pbih->biWidth = 2;
@@ -441,10 +445,6 @@ printf("dib with bitfileds: %p\n", hbmp);
     if (hbmp) DeleteObject(hbmp);
 
     /* Test section */
-    HANDLE hSection;
-    NTSTATUS Status;
-    LARGE_INTEGER MaximumSize;
-    
     MaximumSize.QuadPart = 4096;
     Status = ZwCreateSection(&hSection,
                              SECTION_ALL_ACCESS,

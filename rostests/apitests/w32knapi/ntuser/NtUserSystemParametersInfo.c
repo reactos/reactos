@@ -66,6 +66,7 @@ Test_NtUserSystemParametersInfo_Params(PTESTINFO pti)
 //	UINT uint;
 	DWORD data[1000];
 	UINT i, uint;
+	ACCESSTIMEOUT ato;
 #if 1
 	/* Test normal */
 	SetLastError(ERROR_SUCCESS);
@@ -78,7 +79,6 @@ Test_NtUserSystemParametersInfo_Params(PTESTINFO pti)
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
 	/* Test wrong cbSize member */
-	ACCESSTIMEOUT ato;
 	ato.cbSize = 1;
 	SetLastError(ERROR_SUCCESS);
 	TEST(NtUserSystemParametersInfo(SPI_GETACCESSTIMEOUT, 0, &ato, 0) == FALSE);

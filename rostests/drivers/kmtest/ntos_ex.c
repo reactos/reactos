@@ -39,8 +39,8 @@ TestTimerApcRoutine(IN PVOID TimerContext,
                     IN LONG TimerHighValue)
 
 {
-    DPRINT("Timer Apc called!\n");
     ULONG *ApcCount = (ULONG *)TimerContext;
+    DPRINT("Timer Apc called!\n");
     (*ApcCount)++;
 }
 

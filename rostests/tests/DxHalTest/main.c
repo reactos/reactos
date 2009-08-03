@@ -70,14 +70,6 @@ typedef struct _DD_MISCELLANEOUSCALLBACKS {
 int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 					LPSTR lpCmdLine, int nCmdShow)
 {
-	/* get the functions we need */
-//	DD_GETDRIVERINFODATA drv;
-	HMODULE lib = LoadLibrary("gdi32.dll");
-	DdCreateDirectDrawObject = (BOOL (APIENTRY*)(LPDDRAWI_DIRECTDRAW_GBL,   HDC))GetProcAddress(lib, "GdiEntry1");
-	DdQueryDirectDrawObject  = (BOOL (APIENTRY*)(LPDDRAWI_DIRECTDRAW_GBL,   LPDDHALINFO,LPDDHAL_DDCALLBACKS,LPDDHAL_DDSURFACECALLBACKS,LPDDHAL_DDPALETTECALLBACKS,LPD3DHAL_CALLBACKS,LPD3DHAL_GLOBALDRIVERDATA,LPDDHAL_DDEXEBUFCALLBACKS,LPDDSURFACEDESC,LPDWORD,LPVIDMEM))GetProcAddress(lib, "GdiEntry2");
-    DdAttachSurface          = (BOOL (APIENTRY*)(LPDDRAWI_DDRAWSURFACE_LCL, LPDDRAWI_DDRAWSURFACE_LCL))GetProcAddress(lib, "GdiEntry11");
-    DdResetVisrgn            = (BOOL (APIENTRY*)(LPDDRAWI_DDRAWSURFACE_LCL, HWND))GetProcAddress(lib, "GdiEntry6");
-
     /* HAL Startup process */
     DEVMODE devmode;
     HBITMAP hbmp;
@@ -90,7 +82,21 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	//DWORD Status; /* for create surface */
 	UINT i;
 	UINT j;
+	UINT cSurfaces;
 
+	DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface;
+	DDHAL_UPDATEOVERLAYDATA mDdUpdateOverlay;
+	DDRAWI_DDRAWSURFACE_LCL *pDDSurface;
+	DDHAL_CREATESURFACEDATA mDdCreateSurface;
+
+
+	/* get the functions we need */
+//	DD_GETDRIVERINFODATA drv;
+	HMODULE lib = LoadLibrary("gdi32.dll");
+	DdCreateDirectDrawObject = (BOOL (APIENTRY*)(LPDDRAWI_DIRECTDRAW_GBL,   HDC))GetProcAddress(lib, "GdiEntry1");
+	DdQueryDirectDrawObject  = (BOOL (APIENTRY*)(LPDDRAWI_DIRECTDRAW_GBL,   LPDDHALINFO,LPDDHAL_DDCALLBACKS,LPDDHAL_DDSURFACECALLBACKS,LPDDHAL_DDPALETTECALLBACKS,LPD3DHAL_CALLBACKS,LPD3DHAL_GLOBALDRIVERDATA,LPDDHAL_DDEXEBUFCALLBACKS,LPDDSURFACEDESC,LPDWORD,LPVIDMEM))GetProcAddress(lib, "GdiEntry2");
+    DdAttachSurface          = (BOOL (APIENTRY*)(LPDDRAWI_DDRAWSURFACE_LCL, LPDDRAWI_DDRAWSURFACE_LCL))GetProcAddress(lib, "GdiEntry11");
+    DdResetVisrgn            = (BOOL (APIENTRY*)(LPDDRAWI_DDRAWSURFACE_LCL, HWND))GetProcAddress(lib, "GdiEntry6");
 
 	printf("This apps showing how to start up directx draw/d3d interface and some other as well\n");
 	printf("This code have been releae to some close applactons with my premtions, if any company\n");
@@ -364,7 +370,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
    mddsdPrimary.dwFlags     = DDSD_CAPS;
    mddsdPrimary.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY | DDSCAPS_VISIBLE;
 
-   DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
+   mDdCanCreateSurface;
    mDdCanCreateSurface.lpDD = &mDDrawGlobal;
    mDdCanCreateSurface.CanCreateSurface = mCallbacks.HALDD.CanCreateSurface;
    mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
@@ -405,7 +411,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
   mpPrimaryLocals[0] = &mPrimaryLocal;
 
-  DDHAL_CREATESURFACEDATA      mDdCreateSurface;
+  mDdCreateSurface;
   mDdCreateSurface.lpDD = &mDDrawGlobal;
   mDdCreateSurface.CreateSurface = mCallbacks.HALDD.CreateSurface;
   mDdCreateSurface.lpDDSurfaceDesc = &mddsdPrimary;//pDDSD;
@@ -500,7 +506,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   mOverlayGlobal.ddpfSurface = mddsdOverlay.ddpfPixelFormat;
 
   // setup front- and backbuffer surfaces
-  UINT cSurfaces = mddsdOverlay.dwBackBufferCount + 1;
+  cSurfaces = mddsdOverlay.dwBackBufferCount + 1;
   for ( i = 0; i < cSurfaces; i++)
   {
      memset(&mOverlayMore[i], 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
@@ -565,7 +571,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   }
 
 
-  DDHAL_UPDATEOVERLAYDATA      mDdUpdateOverlay;
+  mDdUpdateOverlay;
   mDdUpdateOverlay.lpDD = &mDDrawGlobal;
   mDdUpdateOverlay.UpdateOverlay = mCallbacks.HALDDSurface.UpdateOverlay;
   mDdUpdateOverlay.lpDDDestSurface = mpPrimaryLocals[0];
@@ -607,7 +613,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   /* blt */
 
 
-  DDRAWI_DDRAWSURFACE_LCL *pDDSurface = mpPrimaryLocals[0];
+  pDDSurface = mpPrimaryLocals[0];
 
   if (!DdResetVisrgn(pDDSurface, NULL))
   {

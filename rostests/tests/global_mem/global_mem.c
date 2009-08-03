@@ -597,8 +597,8 @@ TEST_STATUS TestGlobalReAllocMovable()
 */
 TEST_STATUS TestGlobalReAlloc()
 {
-    OUTPUT_Banner("Testing GlobalReAlloc()");
     TEST_STATUS result = SKIPPED;
+    OUTPUT_Banner("Testing GlobalReAlloc()");
 
     result = TEST_CombineStatus(result, TestGlobalReAllocFixed());
     result = TEST_CombineStatus(result, TestGlobalReAllocMovable());
@@ -767,8 +767,8 @@ TEST_STATUS TestGlobalFlagsFixed()
 */
 TEST_STATUS TestGlobalFlags()
 {
-    OUTPUT_Banner("Testing GlobalFlags()");
     TEST_STATUS result = SKIPPED;
+    OUTPUT_Banner("Testing GlobalFlags()");
 
     result = TEST_CombineStatus(result, TestGlobalFlagsFixed());
     result = TEST_CombineStatus(result, TestGlobalFlagsMoveable());
