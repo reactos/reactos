@@ -146,30 +146,12 @@ static NTSTATUS TdiOpenDevice(
     }
 
     if (!NT_SUCCESS(Status)) {
-        *Handle = NULL;
+        *Handle = INVALID_HANDLE_VALUE;
         *Object = NULL;
     }
 
     return Status;
 }
-
-
-NTSTATUS TdiCloseDevice(
-    HANDLE Handle,
-    PFILE_OBJECT FileObject)
-{
-    AFD_DbgPrint(MAX_TRACE, ("Called. Handle (0x%X)  FileObject (0x%X)\n",
-							 Handle, FileObject));
-
-    if (Handle)
-        ZwClose(Handle);
-
-    if (FileObject)
-        ObDereferenceObject(FileObject);
-
-    return STATUS_SUCCESS;
-}
-
 
 NTSTATUS TdiOpenAddressFile(
     PUNICODE_STRING DeviceName,
