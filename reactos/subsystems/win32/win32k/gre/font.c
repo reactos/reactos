@@ -59,7 +59,7 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
                 rcBounds.left = xspan; rcBounds.top = y;
                 rcBounds.right = xspan+lenspan; rcBounds.bottom = y+1;
                 GreLineTo(&physDev->pBitmap->SurfObj,
-                    NULL,
+                    physDev->CombinedClip,
                     &pTextBrush->BrushObj,
                     xspan,
                     y,
