@@ -3,6 +3,21 @@
 #include <windows.h>
 #include <wine/test.h>
 
+enum
+{
+    BMF_1BPP = 0,
+    BMF_4BPP = 1,
+    BMF_8BPP = 2,
+    BMF_16BPP_555 = 3,
+    BMF_16BPP_565 = 4,
+    BMF_24BPP_RGB = 5,
+    BMF_24BPP_BGR = 6,
+    BMF_32BPP_RGB = 7,
+    BMF_32BPP_BGR = 8
+};
+
+ULONG bpp[] = {1, 4, 8, 15, 16, 24, 24, 32, 32};
+
 static BYTE ajBits1[] = {0xAA, 0xAA, 0xAA, 0xAA, 0,0,0,0};
 static BYTE ajBits8[] = {0x00, 0xFF, 0x80, 0xCC, 0,0,0,0};
 static WORD ajBits16[] = {0x0000, 0xFFFF, 0x1000, 0x0C0C, 0,0,0,0};
@@ -14,7 +29,7 @@ static HBITMAP hbmp16bpp_a, hbmp16bpp_b;
 static HBITMAP hbmp24bpp_a, hbmp24bpp_b;
 static HBITMAP hbmp32bpp_a, hbmp32bpp_b;
 static HDC hdcSrc, hdcDst;
-static ULONG dstbpp;
+static ULONG iDcFormat;
 
 ULONG
 GetRealColorDepth()
@@ -39,28 +54,45 @@ GetRealColorDepth()
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     GetDIBits(hdc, hbmp, 0, 1, NULL, pbmi, DIB_RGB_COLORS);
 
+    /* Call again to fill in the bitfields */
+    GetDIBits(hdc, hbmp, 0, 1, NULL, pbmi, DIB_RGB_COLORS);
+
     /* Get the basic color depth */
     ulColorDepth = bmi.bmiHeader.biBitCount;
 
-    /* Special case 16 bpp */
-    if (ulColorDepth == 16)
-    {
-        /* Call again to fill in the bitfields */
-        GetDIBits(hdc, hbmp, 0, 1, NULL, pbmi, DIB_RGB_COLORS);
+    DeleteObject(hbmp);
 
-        /* Check the red mask */
-        if (bmi.aulMasks[0] == 0x7c00)
-            ulColorDepth = 15;
+    switch (ulColorDepth)
+    {
+        case 1:
+            return BMF_1BPP;
+        case 4:
+            return BMF_4BPP;
+        case 8:
+            return BMF_8BPP;
+        case 16:
+            /* Check the red mask */
+            if (bmi.aulMasks[0] == 0x7c00)
+                return BMF_16BPP_555;
+            else
+                return BMF_16BPP_565;
+        case 24:
+            return BMF_4BPP;
+        case 32:
+            if (bmi.bmiHeader.biCompression == BI_BITFIELDS &&
+                bmi.aulMasks[0] == 0xff)
+                return BMF_32BPP_RGB;
+            else
+                return BMF_32BPP_BGR;
     }
 
     /* Cleanup and return */
-    DeleteObject(hbmp);
-    return ulColorDepth;
+    return BMF_32BPP_RGB;
 }
 
 static
 ULONG
-GetClosestColor(ULONG bpp, COLORREF crColor)
+iXlateFromRGB(ULONG iFormat, COLORREF crColor)
 {
     ULONG ulRed, ulGreen, ulBlue;
     
@@ -68,38 +100,109 @@ GetClosestColor(ULONG bpp, COLORREF crColor)
     ulGreen = GetGValue(crColor);
     ulBlue = GetBValue(crColor);
 
-    switch (bpp)
+    switch (iFormat)
     {
-        case 1:
+        case BMF_1BPP:
             return crColor ? 0xffffff : 0;
-        case 8:
-        case 15:
-            ulRed &= 0xF8;
-            ulGreen &= 0xF8;
-            ulBlue &= 0xF8;
-            printf("ulRed = %lx\n", ulRed);
-            ulRed |= ulRed >> 5;
-            ulGreen |= ulGreen >> 5;
-            ulBlue |= ulBlue >> 5;
-            printf("ulRed = %lx\n", ulRed);
-            return RGB(ulRed, ulGreen, ulBlue);
 
-        case 16:
-            ulRed &= 0xF8;
-            ulGreen &= 0xFC;
-            ulBlue &= 0xF8;
-            ulRed |= ulRed >> 5;
-            ulGreen |= ulGreen >> 6;
-            ulBlue |= ulBlue >> 5;
-            return RGB(ulRed, ulGreen, ulBlue);
+        case BMF_4BPP:
+        case BMF_8BPP:
+        case BMF_16BPP_555:
+            ulRed = (ulRed & 0xF8) >> 3;
+            ulGreen = (ulGreen & 0xF8) >> 3;
+            ulBlue = (ulBlue & 0xF8) >> 3;
+            return ulRed << 10 | ulGreen << 5 | ulBlue;
 
-        case 24:
-        case 32:
+        case BMF_16BPP_565:
+            ulRed = (ulRed & 0xF8) >> 3;
+            ulGreen = (ulGreen & 0xFC) >> 2;
+            ulBlue = (ulBlue & 0xF8) >> 3;
+            return ulRed << 11 | ulGreen << 5 | ulBlue;
+
+        case BMF_24BPP_RGB:
+        case BMF_32BPP_RGB:
             return crColor;
+
+        case BMF_24BPP_BGR:
+        case BMF_32BPP_BGR:
+            return RGB(ulBlue, ulGreen, ulRed);
     }
     return 0;
 }
 
+static
+COLORREF
+iXlateToRGB(ULONG iFormat, ULONG ulColor)
+{
+    ULONG ulRed, ulGreen, ulBlue;
+    
+    switch (iFormat)
+    {
+        case BMF_1BPP:
+            return ulColor ? 0xffffff : 0;
+
+        case BMF_4BPP:
+        case BMF_8BPP:
+        case BMF_16BPP_555:
+            ulRed = (ulColor & 0x7C00) >> 7;
+            ulRed |= ulRed >> 5;
+            ulGreen = (ulColor & 0x3E0) >> 2;
+            ulGreen |= ulGreen >> 5;
+            ulBlue = (ulColor & 0x1F) << 3;
+            ulBlue |= ulBlue >> 5;
+            return RGB(ulRed, ulGreen, ulBlue);
+
+        case BMF_16BPP_565:
+            ulRed = (ulColor & 0xF800) >> 8;
+            ulRed |= ulRed >> 5;
+            ulGreen = (ulColor & 0x7E0) >> 3;
+            ulGreen |= ulGreen >> 6;
+            ulBlue = (ulColor & 0x1F) << 3;
+            ulBlue |= ulBlue >> 5;
+            return RGB(ulRed, ulGreen, ulBlue);
+
+        case BMF_24BPP_RGB:
+        case BMF_32BPP_RGB:
+            return ulColor;
+
+        case BMF_24BPP_BGR:
+        case BMF_32BPP_BGR:
+            ulRed = GetRValue(ulColor);
+            ulGreen = GetGValue(ulColor);
+            ulBlue = GetBValue(ulColor);
+            return RGB(ulBlue, ulGreen, ulRed);
+    }
+    return 0;
+}
+
+static
+ULONG
+GetClosestColor(ULONG iFormat, COLORREF crColor)
+{
+    return iXlateToRGB(iFormat, iXlateFromRGB(iFormat, crColor));
+}
+
+ULONG
+GetDIBPixel(ULONG iFormat, PVOID pvBits, ULONG x)
+{
+    switch (iFormat)
+    {
+        case BMF_1BPP:
+            // 
+        case BMF_16BPP_555:
+        case BMF_16BPP_565:
+            return *(WORD*)((PCHAR)pvBits + x * sizeof(WORD));
+
+        case BMF_24BPP_RGB:
+        case BMF_24BPP_BGR:
+            return (*(DWORD*)((PCHAR)pvBits + x * 3)) & 0xffffff;
+
+        case BMF_32BPP_RGB:
+        case BMF_32BPP_BGR:
+            return *(DWORD*)((PCHAR)pvBits + x * sizeof(DWORD));
+    }
+    return 0;
+}
 
 static
 void
@@ -108,7 +211,7 @@ Initialize()
     hdcSrc = CreateCompatibleDC(0);
     hdcDst = CreateCompatibleDC(0);
 
-    dstbpp = GetRealColorDepth();
+    iDcFormat = GetRealColorDepth();
 
     hbmp1bpp_a = CreateBitmap(4, 2, 1, 1, ajBits1);
     ok(hbmp1bpp_a != 0, "CreateBitmap failed\n");
@@ -144,12 +247,12 @@ Initialize()
 }
 
 void
-Test_SrcMono1(UINT cBits, HBITMAP hbmpDst)
+Test_SrcMono1(ULONG iBmpFormat, HBITMAP hbmpDst, PVOID pvBits)
 {
-    ULONG c, expected;
+    COLORREF c, expected;
+    ULONG cBits = bpp[iBmpFormat];
     HBRUSH hbr;
     RECT rect;
-    ULONG dstbpp = GetDeviceCaps(hdcDst, BITSPIXEL);
     struct
     {
         BITMAPINFOHEADER bmiHeader;
@@ -167,40 +270,76 @@ Test_SrcMono1(UINT cBits, HBITMAP hbmpDst)
     SetBkColor(hdcDst, 0xffffff);
 
     /* Do a bitblt operation */
-    ok(BitBlt(hdcDst, 0, 0, 2, 2, hdcSrc, 0, 0, SRCCOPY), "%dbpp: BitBlt failed", cBits);
+    ok(BitBlt(hdcDst, 0, 0, 2, 2, hdcSrc, 0, 0, SRCCOPY), "(%ld): BitBlt failed", iBmpFormat);
 
-    /* Check resulting colors */
+    /* Test background color */
     c = GetPixel(hdcDst, 0, 0);
-    ok(c == RGB(255, 255, 255), "%dbpp: wrong color, expected 0, got %lx\n", cBits, c);
+    expected = 0xffffff;
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+    /* Test foreground color */
     c = GetPixel(hdcDst, 1, 0);
-    ok(c == RGB(0, 0, 0), "%dbpp: wrong color, expected ffffff, got %lx\n", cBits, c);
+    expected = 0x000000;
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+    if (pvBits)
+    {
+        c = GetDIBPixel(iBmpFormat, pvBits, 0);
+        expected = iXlateFromRGB(iBmpFormat,  GetBkColor(hdcSrc));
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+        c = GetDIBPixel(iBmpFormat, pvBits, 1);
+        expected = iXlateFromRGB(iBmpFormat, GetTextColor(hdcSrc));
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+    }
 
     /* Set different dc fore and back colors */
     SetTextColor(hdcSrc, 0xf00f0f);
     SetBkColor(hdcSrc, 0xf0ff0f);
-    SetTextColor(hdcDst, 0xffFFff);
-    SetBkColor(hdcDst, 0x000000);
+    SetTextColor(hdcDst, 0xefFee5);
+    SetBkColor(hdcDst, 0x100121);
 
     /* Make sure this alone didn't affect the resulting colors */
     c = GetPixel(hdcDst, 0, 0);
-    ok(c == RGB(255, 255, 255), "%dbpp: wrong color, expected 0, got %lx\n", cBits, c);
+    ok(c == 0xffffff, "(%ld): wrong color, expected 0, got %lx\n", iBmpFormat, c);
     c = GetPixel(hdcDst, 1, 0);
-    ok(c == RGB(0, 0, 0), "%dbpp: wrong color, expected ffffff, got %lx\n", cBits, c);
+    ok(c == 0x000000, "(%ld): wrong color, expected ffffff, got %lx\n", iBmpFormat, c);
 
     /* Repeat the bitblt operation */
-    ok(BitBlt(hdcDst, 0, 0, 2, 2, hdcSrc, 0, 0, SRCCOPY), "%dbpp: BitBlt failed", cBits);
+    ok(BitBlt(hdcDst, 0, 0, 2, 2, hdcSrc, 0, 0, SRCCOPY), "(%ld): BitBlt failed", iBmpFormat);
 
-    /* Finally test effect of the fore / cack color on the operation */
+    /* Test background color */
     c = GetPixel(hdcDst, 0, 0);
-    expected = cBits >= dstbpp ? GetBkColor(hdcDst) : 0xffffff;
-    ok(c == expected, "%dbpp: wrong color, expected %lx, got %lx\n", cBits, expected, c);
+    if (pvBits)
+        expected = GetClosestColor(iBmpFormat, GetBkColor(hdcDst));
+    else
+        expected = cBits >= bpp[iDcFormat] ? GetClosestColor(iDcFormat, GetBkColor(hdcDst)) : 0xffffff;
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+    /* Test foreground color */
     c = GetPixel(hdcDst, 1, 0);
-    expected = cBits >= dstbpp ? GetTextColor(hdcDst) : 0;
-    ok(c == expected, "%dbpp: wrong color, expected %lx, got %lx\n", cBits, expected, c);
+    if (pvBits)
+        expected = GetClosestColor(iBmpFormat, GetTextColor(hdcDst));
+    else
+        expected = cBits >= bpp[iDcFormat] ? GetClosestColor(iDcFormat, GetTextColor(hdcDst)) : 0;
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+    if (pvBits)
+    {
+        c = GetDIBPixel(iBmpFormat, pvBits, 0);
+        expected = iXlateFromRGB(iBmpFormat, GetBkColor(hdcDst));
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+        c = GetDIBPixel(iBmpFormat, pvBits, 1);
+        expected = iXlateFromRGB(iBmpFormat, GetTextColor(hdcDst));
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+    }
+
+/* Hatch brush ****************************************************************/
 
     /* Set dc fore and back colors */
     SetTextColor(hdcDst, 0x102030);
-    SetBkColor(hdcDst, 0xeeccee);
+    SetBkColor(hdcDst, 0xeeccdd);
     SetBkMode(hdcDst, OPAQUE);
 
     /* Create a hatch brush */
@@ -213,17 +352,36 @@ Test_SrcMono1(UINT cBits, HBITMAP hbmpDst)
 
     /* Test the fore color of the hatch brush */
     c = GetPixel(hdcDst, 0, 0);
-    expected = cBits >= dstbpp ? 0x123456 : 0;
-    expected = GetClosestColor(dstbpp, expected);
-    ok(c == expected, "%dbpp: wrong color, expected %lx, got %lx\n", cBits, expected, c);
+    expected = cBits >= bpp[iDcFormat] ? 0x123456 : 0;
+    if (pvBits)
+        expected = GetClosestColor(iBmpFormat, 0x123456);
+    else
+        expected = GetClosestColor(iDcFormat, expected);
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
 
     /* Test the back color of the hatch brush */
     c = GetPixel(hdcDst, 1, 0);
-    expected = cBits >= dstbpp ? GetBkColor(hdcDst) : 0xffffff;
-    expected = GetClosestColor(dstbpp, expected);
-    ok(c == expected, "%dbpp: wrong color, expected %lx, got %lx\n", cBits, expected, c);
+    expected = cBits >= bpp[iDcFormat] ? GetBkColor(hdcDst) : 0xffffff;
+    if (pvBits)
+        expected = GetClosestColor(iBmpFormat, GetBkColor(hdcDst));
+    else
+        expected = GetClosestColor(iDcFormat, expected);
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+    if (pvBits)
+    {
+        c = GetDIBPixel(iBmpFormat, pvBits, 0);
+        expected = iXlateFromRGB(iBmpFormat, 0x123456);
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+        c = GetDIBPixel(iBmpFormat, pvBits, 1);
+        expected = iXlateFromRGB(iBmpFormat, GetBkColor(hdcDst));
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+    }
 
     DeleteObject(hbr);
+
+/* DIB brush ******************************************************************/
 
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = 8;
@@ -246,36 +404,121 @@ Test_SrcMono1(UINT cBits, HBITMAP hbmpDst)
     rect.bottom = rect.right = 4;
     ok(FillRect(hdcDst, &rect, hbr),"FillRect failed\n");
 
-    /* Test the fore and back color of the dib brush */
-    c = GetPixel(hdcDst, 0, 1);
-    expected = cBits >= dstbpp ? bmi.bmiColors[1] : 0;
-    expected = GetClosestColor(dstbpp, expected);
-    ok(c == expected, "%dbpp: wrong color, expected %lx, got %lx\n", cBits, expected, c);
+    /* Test color 1 of the dib brush */
+    c = GetPixel(hdcDst, 0, 0);
+    expected = cBits >= bpp[iDcFormat] ? bmi.bmiColors[1] : 0;
+    if (pvBits)
+        expected = GetClosestColor(iBmpFormat, bmi.bmiColors[1]);
+    else
+        expected = GetClosestColor(iDcFormat, expected);
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
 
+    /* Test color 0 of the dib brush */
     c = GetPixel(hdcDst, 1, 0);
-    expected = cBits >= dstbpp ? bmi.bmiColors[0] : 0xffffff;
-    expected = GetClosestColor(dstbpp, expected);
-    ok(c == expected, "%dbpp: wrong color, expected %lx, got %lx\n", cBits, expected, c);
+    expected = cBits >= bpp[iDcFormat] ? bmi.bmiColors[0] : 0xffffff;
+    if (pvBits)
+        expected = GetClosestColor(iBmpFormat, bmi.bmiColors[0]);
+    else
+        expected = GetClosestColor(iDcFormat, expected);
+    ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+    if (pvBits)
+    {
+        c = GetDIBPixel(iBmpFormat, pvBits, 0);
+        expected = iXlateFromRGB(iBmpFormat, bmi.bmiColors[1]);
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+
+        c = GetDIBPixel(iBmpFormat, pvBits, 1);
+        expected = iXlateFromRGB(iBmpFormat, bmi.bmiColors[0]);
+        ok(c == expected, "(%ld): wrong color, expected %lx, got %lx\n", iBmpFormat, expected, c);
+    }
 
     DeleteObject(hbr);
 
 
-
 }
-
 
 void
 Test_SrcMono()
 {
- 
-    Test_SrcMono1(1, hbmp1bpp_b);
-    Test_SrcMono1(8, hbmp8bpp_b);
-    Test_SrcMono1(16, hbmp16bpp_b);
-    Test_SrcMono1(24, hbmp24bpp_b);
-    Test_SrcMono1(32, hbmp32bpp_b);
+    HBITMAP hbmp;
+    struct
+    {
+        BITMAPINFOHEADER bmiHeader;
+        ULONG bmiColors[3];
+    } bmi;
+    PVOID pvBits;
+    ULONG c, expected;
 
+    SelectObject(hdcSrc, hbmp1bpp_a);
+
+    Test_SrcMono1(BMF_1BPP, hbmp1bpp_b, 0);
+    Test_SrcMono1(BMF_8BPP, hbmp8bpp_b, 0);
+    Test_SrcMono1(BMF_16BPP_565, hbmp16bpp_b, 0);
+    Test_SrcMono1(BMF_24BPP_RGB, hbmp24bpp_b, 0);
+    Test_SrcMono1(BMF_32BPP_RGB, hbmp32bpp_b, 0);
+
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = 2;
+    bmi.bmiHeader.biHeight = -2;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 16;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage = 0;
+    bmi.bmiHeader.biXPelsPerMeter = 1;
+    bmi.bmiHeader.biYPelsPerMeter = 1;
+    bmi.bmiHeader.biClrUsed = 0;
+    bmi.bmiHeader.biClrImportant = 0;
+    hbmp = CreateDIBSection(hdcDst, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    ok(hbmp != 0, "CreateDIBSection failed\n");
+    memset(pvBits, 0x55555555, 8 * 8 * 2);
+
+    SelectObject(hdcDst, hbmp);
+
+    c = GetPixel(hdcDst, 0, 0);
+    expected = iXlateToRGB(BMF_16BPP_555, 0x5555);
+    ok(c == expected, "expected %lx, got %lx\n", expected, c);
+
+    expected = 0x123456;
+    SetPixel(hdcDst, 0, 0, expected);
+    expected = iXlateFromRGB(BMF_16BPP_555, expected);
+    c = *(volatile WORD*)pvBits;
+    ok(c == expected, "expected %lx, got %lx\n", expected, c);
+
+    Test_SrcMono1(BMF_16BPP_555, hbmp, pvBits);
+ 
+    DeleteObject(hbmp);
+
+    /* Create a 565 DIB section */
+    bmi.bmiHeader.biCompression = BI_BITFIELDS;
+    bmi.bmiHeader.biClrUsed = 3;
+    bmi.bmiHeader.biClrImportant = 3;
+    bmi.bmiColors[0] = 0xF800;
+    bmi.bmiColors[1] = 0x7E0;
+    bmi.bmiColors[2] = 0x1F;
+    hbmp = CreateDIBSection(hdcDst, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    ok(hbmp != 0, "CreateDIBSection failed\n");
+    SelectObject(hdcDst, hbmp);
+
+    Test_SrcMono1(BMF_16BPP_565, hbmp, pvBits);
+
+    DeleteObject(hbmp);
+
+    /* Create a 32 bpp DIB section */
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biClrUsed = 0;
+    bmi.bmiHeader.biClrImportant = 0;
+    hbmp = CreateDIBSection(hdcDst, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, &pvBits, NULL, 0);
+    ok(hbmp != 0, "CreateDIBSection failed\n");
+    SelectObject(hdcDst, hbmp);
+
+    Test_SrcMono1(BMF_32BPP_BGR, hbmp, pvBits);
+
+    DeleteObject(hbmp);
 
 }
+
 
 START_TEST(xlate)
 {
@@ -283,3 +526,6 @@ START_TEST(xlate)
 
  	Test_SrcMono(); 
 }
+
+// trunk: 41 failures
+
