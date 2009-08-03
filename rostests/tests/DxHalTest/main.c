@@ -370,7 +370,6 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
    mddsdPrimary.dwFlags     = DDSD_CAPS;
    mddsdPrimary.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_VIDEOMEMORY | DDSCAPS_VISIBLE;
 
-   mDdCanCreateSurface;
    mDdCanCreateSurface.lpDD = &mDDrawGlobal;
    mDdCanCreateSurface.CanCreateSurface = mCallbacks.HALDD.CanCreateSurface;
    mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
@@ -411,7 +410,6 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
   mpPrimaryLocals[0] = &mPrimaryLocal;
 
-  mDdCreateSurface;
   mDdCreateSurface.lpDD = &mDDrawGlobal;
   mDdCreateSurface.CreateSurface = mCallbacks.HALDD.CreateSurface;
   mDdCreateSurface.lpDDSurfaceDesc = &mddsdPrimary;//pDDSD;
@@ -571,7 +569,6 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   }
 
 
-  mDdUpdateOverlay;
   mDdUpdateOverlay.lpDD = &mDDrawGlobal;
   mDdUpdateOverlay.UpdateOverlay = mCallbacks.HALDDSurface.UpdateOverlay;
   mDdUpdateOverlay.lpDDDestSurface = mpPrimaryLocals[0];
