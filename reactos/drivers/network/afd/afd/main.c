@@ -96,8 +96,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     FCB->DeviceExt = DeviceExt;
     FCB->Recv.Size = DEFAULT_RECEIVE_WINDOW_SIZE;
     FCB->Send.Size = DEFAULT_SEND_WINDOW_SIZE;
-    FCB->AddressFile.Handle = INVALID_HANDLE_VALUE;
-    FCB->Connection.Handle = INVALID_HANDLE_VALUE;
 
     KeInitializeSpinLock( &FCB->SpinLock );
     ExInitializeFastMutex( &FCB->Mutex );
@@ -224,20 +222,14 @@ VOID CleanupSocket( PAFD_FCB FCB ) {
         FCB->RemoteAddress = NULL;
     }
     if( FCB->Connection.Object ) {
+	ZwClose(FCB->Connection.Handle);
 	ObDereferenceObject(FCB->Connection.Object);
         FCB->Connection.Object = NULL;
     }
     if( FCB->AddressFile.Object ) {
+	ZwClose(FCB->AddressFile.Handle);
 	ObDereferenceObject(FCB->AddressFile.Object);
         FCB->AddressFile.Object = NULL;
-    }
-    if( FCB->AddressFile.Handle != INVALID_HANDLE_VALUE ) {
-        ZwClose(FCB->AddressFile.Handle);
-        FCB->AddressFile.Handle = INVALID_HANDLE_VALUE;
-    }
-    if( FCB->Connection.Handle != INVALID_HANDLE_VALUE ) {
-        ZwClose(FCB->Connection.Handle);
-        FCB->Connection.Handle = INVALID_HANDLE_VALUE;
     }
 
     SocketStateUnlock( FCB );
