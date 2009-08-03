@@ -108,12 +108,22 @@ __report_gsfailure (ULONGLONG StackCookie)
   else
 #endif
     {
+#ifdef __GNUC__
 #ifdef _WIN64
       GS_ContextRecord.Rip = (ULONGLONG) __builtin_return_address (0);
       GS_ContextRecord.Rsp = (ULONGLONG) __builtin_frame_address (0) + 8;
 #else
       GS_ContextRecord.Eip = (DWORD) __builtin_return_address (0);
       GS_ContextRecord.Esp = (DWORD) __builtin_frame_address (0) + 4;
+#endif
+#else
+#ifdef _WIN64
+      GS_ContextRecord.Rip = (ULONGLONG) _ReturnAddress();
+      GS_ContextRecord.Rsp = (ULONGLONG) _AddressOfReturnAddress();
+#else
+      GS_ContextRecord.Eip = (DWORD) _ReturnAddress();
+      GS_ContextRecord.Esp = (DWORD) _AddressOfReturnAddress();
+#endif
 #endif
     }
 
