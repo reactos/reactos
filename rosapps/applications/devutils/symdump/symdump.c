@@ -807,6 +807,7 @@ DumpParams(PSYMBOL_INFO pSymInfo, PENUMINFO pei)
 {
 	IMAGEHLP_STACK_FRAME sf;
 	BOOL bRet;
+	INT NumLocals = 0; // the number of local variables found
 
 	sf.InstructionOffset = pSymInfo->Address;
 
@@ -821,8 +822,6 @@ DumpParams(PSYMBOL_INFO pSymInfo, PENUMINFO pei)
 	printf("Address == 0x%x, ReturnOffset = 0x%x", (UINT)pSymInfo->Address, (UINT)sf.ReturnOffset);
 
 	// Enumerate local variables
-
-	INT NumLocals = 0; // the number of local variables found
 
 	bRet = SymEnumSymbols(pei->hProcess, 0, 0, EnumParamsProc, &NumLocals);
 
