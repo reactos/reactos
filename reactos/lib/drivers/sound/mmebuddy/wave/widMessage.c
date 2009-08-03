@@ -22,7 +22,8 @@
     Standard MME driver entry-point for messages relating to wave audio
     input.
 */
-APIENTRY DWORD
+DWORD
+APIENTRY
 widMessage(
     DWORD DeviceId,
     DWORD Message,

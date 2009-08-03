@@ -292,9 +292,9 @@ VolumeDlgProc(HWND hwndDlg,
               LPARAM lParam)
 {
     static IMGINFO ImgInfo;
+    PGLOBAL_DATA pGlobalData;
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
-    PGLOBAL_DATA pGlobalData;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 

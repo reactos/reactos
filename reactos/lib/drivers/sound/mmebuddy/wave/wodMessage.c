@@ -31,7 +31,8 @@ MMRESULT HelloWorld(PSOUND_DEVICE_INSTANCE Instance, PVOID String)
     Standard MME driver entry-point for messages relating to wave audio
     output.
 */
-APIENTRY DWORD
+DWORD
+APIENTRY
 wodMessage(
     DWORD DeviceId,
     DWORD Message,

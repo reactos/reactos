@@ -21,7 +21,8 @@
 /*
     Standard MME driver entry-point for messages relating to MIDI input.
 */
-APIENTRY DWORD
+DWORD
+APIENTRY
 midMessage(
     DWORD DeviceId,
     DWORD Message,

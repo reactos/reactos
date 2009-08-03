@@ -364,8 +364,9 @@ LangSelDlgProc(HWND hwndDlg,
 
                     if (tindex != CB_ERR)
                     {
+                        WORD LangID;
                         SetupData.SelectedLangId = SendMessage(hList, CB_GETITEMDATA, (WPARAM) tindex, (LPARAM) 0);
-                        WORD LangID = _tcstol(SetupData.pLanguages[SetupData.SelectedLangId].LangId, NULL, 16);
+                        LangID = _tcstol(SetupData.pLanguages[SetupData.SelectedLangId].LangId, NULL, 16);
                         SetThreadLocale(MAKELCID(LangID, SORT_DEFAULT));
                         // FIXME: need to reload all resource to force
                         // the new language setting
