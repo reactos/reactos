@@ -1283,7 +1283,7 @@ MiGetMediaSpeed(PADAPTER Adapter)
 {
   ULONG Data;
 
-  NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR4);
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR6);
   NdisRawReadPortUshort(Adapter->PortOffset + BDP, &Data);
 
   return Data & BCR6_LEDOUT ? 100 : 10;
