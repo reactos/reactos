@@ -136,11 +136,15 @@ VOID DGDeliverData(
 			     &SrcAddress->Address.IPv4Address,
 			     sizeof(SrcAddress->Address.IPv4Address) );
 
+              TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+
               /* Complete the receive request */
               if (Current->BufferSize < DataSize)
                   Current->Complete(Current->Context, STATUS_BUFFER_OVERFLOW, Current->BufferSize);
               else
                   Current->Complete(Current->Context, STATUS_SUCCESS, DataSize);
+
+              TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 	  }
       }
 
