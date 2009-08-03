@@ -50,6 +50,7 @@
 #include "xvidmode.h"
 //#include "xrandr.h"
 #include "xcomposite.h"
+#include "winternl.h"
 #include "wine/server.h"
 #include "wine/debug.h"
 #include "wine/library.h"

@@ -45,6 +45,7 @@
 #include "x11drv.h"
 #include "xcomposite.h"
 #include "wine/debug.h"
+#include "winternl.h"
 #include "wine/server.h"
 #include "mwm.h"
 

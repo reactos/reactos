@@ -47,6 +47,7 @@
 #include "winreg.h"
 #include "winnls.h"
 #include "x11drv.h"
+#include "winternl.h"
 #include "wine/server.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"

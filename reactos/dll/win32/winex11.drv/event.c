@@ -51,6 +51,7 @@
 #include "shlobj.h"  /* DROPFILES */
 #include "shellapi.h"
 
+#include "winternl.h"
 #include "wine/server.h"
 #include "wine/debug.h"
 

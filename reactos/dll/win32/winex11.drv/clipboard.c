@@ -78,6 +78,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winternl.h"
 #include "wine/wingdi16.h"
 #include "x11drv.h"
 #include "wine/debug.h"

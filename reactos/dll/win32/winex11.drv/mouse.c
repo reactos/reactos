@@ -42,6 +42,7 @@ MAKE_FUNCPTR(XcursorImageLoadCursor);
 #include "wine/winuser16.h"
 
 #include "x11drv.h"
+#include "winternl.h"
 #include "wine/server.h"
 #include "wine/library.h"
 #include "wine/debug.h"
