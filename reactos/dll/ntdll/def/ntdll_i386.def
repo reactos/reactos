@@ -827,7 +827,7 @@ RtlQueueWorkItem@12
 RtlRaiseException@4
 RtlRaiseStatus@4
 RtlRandom@4
-RtlRandomEx=RtlRandom@4
+RtlRandomEx@4
 RtlReAllocateHeap@16
 ;RtlReadMemoryStream
 ;RtlReadOutOfProcessMemoryStream
