@@ -291,7 +291,7 @@ EngSetPointerShape(
         pgp->psurfColor->pvBits = 0;
 
         EngDeleteSurface(pgp->psurfColor->hsurf);
-        //SURFACE_ShareUnlockSurface(pgp->psurfColor);
+        SURFACE_ShareUnlock(pgp->psurfColor);
         pgp->psurfColor = NULL;
     }
 
@@ -302,14 +302,14 @@ EngSetPointerShape(
         pgp->psurfMask->pvBits = 0;
 
         EngDeleteSurface(pgp->psurfMask->hsurf);
-        //SURFACE_ShareUnlockSurface(pgp->psurfMask);
+        SURFACE_ShareUnlock(pgp->psurfMask);
         pgp->psurfMask = NULL;
     }
 
     if (pgp->psurfSave != NULL)
     {
         EngDeleteSurface(pgp->psurfSave->hsurf);
-        //SURFACE_ShareUnlockSurface(pgp->psurfSave);
+        SURFACE_ShareUnlock(pgp->psurfSave);
         pgp->psurfSave = NULL;
     }
 

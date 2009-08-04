@@ -146,8 +146,8 @@ BltMask(SURFOBJ* psoDest,
         }
     }
 
-    //if (psurfPattern)
-      //  SURFACE_UnlockSurface(psurfPattern);
+    if (psurfPattern)
+        SURFACE_Unlock(psurfPattern);
 
     return TRUE;
 }
@@ -228,7 +228,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     /* Pattern brush */
     if (psurfPattern != NULL)
     {
-        //SURFACE_UnlockSurface(psurfPattern);
+        SURFACE_Unlock(psurfPattern);
     }
 
     return Result;
