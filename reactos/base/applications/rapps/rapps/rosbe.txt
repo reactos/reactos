@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = ReactOS Build Environment
+Version = 1.2
+Licence = Unknown
+Description = Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.
+Size = Unknown
+Category = 7
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-1.2.exe
+CDPath = none

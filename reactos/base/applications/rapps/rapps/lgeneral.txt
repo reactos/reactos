@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = LGeneral
+Version = 1.1
+Licence = Unknown
+Description = Panzer General Clone using SDL libs.
+Size = Unknown
+Category = 4
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lgeneral-1.1-win32.exe
+CDPath = none

@@ -1,0 +1,17 @@
+﻿; UTF-8
+
+[Section]
+Name = Mozilla SeaMonkey
+Version = 1.1.16
+Licence = Unknown
+Description = Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.
+Size = 12.4M
+Category = 5
+URLSite = http://www.mozilla.com/en-US/
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.16/seamonkey-1.1.16.en-US.win32.installer.exe
+CDPath = none
+
+[Section.0419]
+Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
+Licence = Неизвестно
+URLSite = http://www.mozilla-europe.org/ru/

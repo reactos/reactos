@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Samba TNG
+Version = Unknown
+Licence = Unknown
+Description = This tool allows you to access your Windows shared folders/printers with ReactOS.
+Size = Unknown
+Category = 5
+URLSite = Unknown
+URLDownload = http://svn.reactos.org/packages/samba-tng.exe
+CDPath = none

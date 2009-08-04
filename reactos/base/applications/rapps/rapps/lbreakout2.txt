@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = LBreakout2
+Version = 2.4.1
+Licence = Unknown
+Description = Breakout Clone using SDL libs.
+Size = Unknown
+Category = 4
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lbreakout2-2.4.1-win32.exe
+CDPath = none

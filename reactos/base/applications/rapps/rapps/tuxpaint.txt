@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = TuxPaint
+Version = 0.9.19
+Licence = Unknown
+Description = An Open Source bitmap graphics editor geared towards young children.
+Size = Unknown
+Category = 3
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.19-win32-installer.exe
+CDPath = none

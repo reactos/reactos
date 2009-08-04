@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Diablo II
+Version = 1.4
+Licence = Shareware
+Description = Diablo 2 Shareware. zeckensack's glide wrapper is req. to run it.
+Size = Unknown
+Category = 4
+URLSite = Unknown
+URLDownload = http://ftp.freenet.de./pub/filepilot/windows/spiele/diabloiidemo.exe
+CDPath = none

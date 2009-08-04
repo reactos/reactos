@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Tile World
+Version = Unknown
+Licence = Unknown
+Description = Nice Clone of Chip's Challenge originally made for the Atari Lynx. Includes free CCLP2 Graphics Pack, so you dont need the copyrighted Original.
+Size = Unknown
+Category = 4
+URLSite = Unknown
+URLDownload = http://www.muppetlabs.com/~breadbox/pub/software/tworld/tworld-1.3.0-win32-CCLP2.exe
+CDPath = none

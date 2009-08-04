@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Visual Studio 6 Runtime
+Version = 6.0
+Licence = Unknown
+Description = Visual Studio 6 Runtime.
+Size = Unknown
+Category = 14
+URLSite = Unknown
+URLDownload = http://download.microsoft.com/download/vc60pro/update/1/w9xnt4/en-us/vc6redistsetup_enu.exe
+CDPath = none

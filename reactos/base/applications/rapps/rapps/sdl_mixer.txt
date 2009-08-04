@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Simple Direct Media Layer (SDL) Mixer
+Version = 1.2.8
+Licence = Unknown
+Description = Needed for some Open Source Games to run. You need 7-Zip or a similar Utility to extract it.
+Size = Unknown
+Category = 14
+URLSite = Unknown
+URLDownload = http://www.libsdl.org/projects/SDL_mixer/release/SDL_mixer-1.2.8-win32.zip
+CDPath = none

@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = IrfanView Plugins
+Version = 4.22
+Licence = Unknown
+Description = Additional Plugins for supporting more file types.
+Size = Unknown
+Category = 3
+URLSite = http://www.irfanview.com
+URLDownload = http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_422_setup.exe
+CDPath = none

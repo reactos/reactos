@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = SMPlayer
+Version = 0.6.7
+Licence = Unknown
+Description = SMPlayer.
+Size = Unknown
+Category = 1
+URLSite = Unknown
+URLDownload = http://dfn.dl.sourceforge.net/sourceforge/smplayer/smplayer_0.6.7_setup.exe
+CDPath = none

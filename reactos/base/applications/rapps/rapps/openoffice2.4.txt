@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = OpenOffice 2.4
+Version = 2.4.2
+Licence = Unknown
+Description = THE Open Source Office Suite.
+Size = Unknown
+Category = 6
+URLSite = http://www.openoffice.org
+URLDownload = http://ftp.plusline.de/OpenOffice/stable/2.4.2/OOo_2.4.2_Win32Intel_install_wJRE_en-US.exe
+CDPath = none

@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = GlidewrapZbag
+Version = 0.84c
+Licence = Unknown
+Description = glidewrapper needed to run Diablo 2 on ReactOS.
+Size = Unknown
+Category = 3
+URLSite = Unknown
+URLDownload = http://www.zeckensack.de/glide/archive/GlideWrapper084c.exe
+CDPath = none
