@@ -77,8 +77,6 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     HGDIOBJ hNewDC;
     PDC pNewDC;
     XFORM xformWorld2Vport, xformVport2World;
-    HBITMAP hStockBitmap;
-    SIZEL slSize;
 
     /* TESTING: Create primary surface */
     if (!PrimarySurface.pSurface && !IntCreatePrimarySurface())
@@ -118,9 +116,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     if (dc->dwType == OBJ_MEMDC)
     {
         DPRINT("Creating a memory DC %x\n", hNewDC);
-        slSize.cx = 1; slSize.cy = 1;
-        hStockBitmap = GreCreateBitmap(slSize, 1, 1, 0, NULL);
-        pNewDC->pBitmap = SURFACE_ShareLock(hStockBitmap);
+        pNewDC->pBitmap = SURFACE_ShareLock(hStockBmp);
 
         /* Set DC rectangles */
         pNewDC->rcDcRect.left = 0; pNewDC->rcDcRect.top = 0;
