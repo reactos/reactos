@@ -1,22 +1,18 @@
 /*
- * PROGRAMMERS:
- *                  David Welch
- *                  Eric Kohl
- *                  Gregor Schneider
- *
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PURPOSE:          CRT's vsnprintf
+ * FILE:             lib/sdk/crt/stdio/lnx_printf.c
+ * PROGRAMERS:       David Welch
+                     Eric Kohl
+                     Gregor Schneider
  * TODO:
  *   - Verify the implementation of '%Z'.
  */
 
-/*
- *  linux/lib/vsprintf.c
- *
- *  Copyright (C) 1991, 1992  Linus Torvalds
- */
-
-/* vsprintf.c -- Lars Wirzenius & Linus Torvalds. */
-/*
- * Wirzenius wrote this portably, Torvalds fucked it up :-)
+/* 
+ *  Parts from linux/lib/vsprintf.c
+ *  Lars Wirzenius & Linus Torvalds
+ *  Wirzenius wrote this portably, Torvalds fucked it up :-)
  */
 
 #include <precomp.h>
@@ -156,11 +152,49 @@ typedef struct {
 	unsigned int sign:1;
 } ieee_double_t;
 
+static __inline void fracrnd(double *number, int prec)
+{
+    /* Shifts fractional digits to decimal places and compares to round table */
+    /* Only suitable to determine the exponent with more precision, not for normal rounding */
+    /* Incoming numbers are expected to range from approx -10.0 to 10.0 */
+    int lpos = 1, ubound, sign = 1;
+    long decimal = abs((long)*number);
+    double frac = (*number - decimal) * 10;
+    long rt[] = 
+    {
+        0,
+        9,
+        99,
+        999,
+        9999,
+        99999,
+        999999,
+        9999999,
+        99999999,
+        999999999
+    };
+
+    if (*number < 0) 
+    {
+        sign = -1;
+    }
+    ubound = min(prec, sizeof(rt)/sizeof(*rt) - 1);
+    while ((long)frac % 10 != 0 && lpos < ubound)
+    {
+            frac *= 10;
+            lpos++;
+    }
+    if (abs((long)frac) == rt[lpos])
+    {
+        *number = sign * (decimal + 1);
+    }
+}
+
 static char *
 numberf(char * buf, char * end, double num, char exp_sign, int size, int precision, int type)
 {
 	double exponent = 0.0;
-	double e;
+	double e = 0.0;
 	long ie;
 
 	int i = 0;
@@ -185,9 +219,7 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 	if ( exp_sign == 'g' || exp_sign == 'G' || exp_sign == 'e' || exp_sign == 'E' )
 	{
 		ie = ((unsigned int)n.n->exponent - (unsigned int)0x3ff);
-		if (*n.__n == 0.0)
-			exponent = 0.0;
-		else
+		if (num != 0.0)
 		{
 			exponent = ie/3.321928;
 		}
@@ -205,28 +237,25 @@ numberf(char * buf, char * end, double num, char exp_sign, int size, int precisi
 
 	if ( exp_sign == 'e' ||  exp_sign == 'E' )
 	{
-		frac = modf(exponent,&e);
-		if (num < 0.0)
-			e--;
-		if (frac >= 0.5)
-			e++;
-		else if (frac < -0.5)
-			e--;
-
-		num2 = num/pow(10.0L,(long double)e);
-		if (num2 < 1.0 && num2 > -1.0)
-		{
-			e--;
-			num2 = num/pow(10.0L,(long double)e);
-		}
-		else if (num2 < -10.0 && num2 > 10.0)
-		{
-			e++;
-			num2 = num/pow(10.0L,(long double)e);
-		}
+        if (num != 0.0)
+        {
+            /* Find a suitable exponent */
+            frac = modf(exponent, &e);
+            num2 = num/pow(10.0L, (long double)e);
+            /* Check if rounding is possible */
+            fracrnd(&num2, precision);
+            if (num2 < 1.0 && num2 > -1.0)
+            {
+                e--;
+            }
+            else if (num2 <= -10.0 || num2 >= 10.0)
+            {
+                e++;
+            }
+        }
 
 		/* size-5 because "e+abc" is going to follow */
-		buf = numberf(buf, end, num2, 'f', size-5, precision, type);
+		buf = numberf(buf, end, num/pow(10.0L,(long double)e), 'f', size-5, precision, type);
 		isize = 4;
 		while(*(buf-1) == ' ')
 		{
