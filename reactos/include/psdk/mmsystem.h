@@ -911,8 +911,6 @@ extern "C" {
 #define MCI_OVLY_WHERE_FRAME              0x80000
 #define MCI_OVLY_WHERE_VIDEO              0x100000
 #ifdef _WINE
-#define MCI_OPEN_DRIVER                   0x0801
-#define MCI_CLOSE_DRIVER                  0x0802
 #define MCI_SOUND                         0x0812
 #define MCI_SOUND_NAME                    0x00000100L
 #endif
@@ -1883,6 +1881,10 @@ BOOL WINAPI mciGetErrorStringW(MCIERROR,LPWSTR,UINT);
 BOOL WINAPI mciSetYieldProc(MCIDEVICEID,YIELDPROC,DWORD);
 HTASK WINAPI mciGetCreatorTask(MCIDEVICEID);
 YIELDPROC WINAPI mciGetYieldProc(MCIDEVICEID,PDWORD);
+
+#ifdef _WINE
+DWORD WINAPI GetDriverFlags(HDRVR hDriver);
+#endif
 
 typedef struct tagMCI_SEQ_SET_PARMS {
 	DWORD dwCallback;
