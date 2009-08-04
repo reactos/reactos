@@ -284,17 +284,21 @@ NTSTATUS FileOpenAddress(
 NTSTATUS FileCloseAddress(
   PTDI_REQUEST Request)
 {
-  KIRQL OldIrql;
   PADDRESS_FILE AddrFile;
   NTSTATUS Status = STATUS_SUCCESS;
-  PDATAGRAM_SEND_REQUEST SendRequest;
+  KIRQL OldIrql;
   PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-  PLIST_ENTRY CurrentEntry;
-  PLIST_ENTRY NextEntry;
+  PDATAGRAM_SEND_REQUEST SendRequest;
+  PLIST_ENTRY CurrentEntry, NextEntry;
+
+  AddrFile = Request->Handle.AddressHandle;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  AddrFile = Request->Handle.AddressHandle;
+  /* Remove address file from the global list */
+  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+  RemoveEntryList(&AddrFile->ListEntry);
+  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
   TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
@@ -311,7 +315,7 @@ NTSTATUS FileCloseAddress(
     ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
     /* Abort the request and free its resources */
     TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-    (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_ADDRESS_CLOSED, 0);
+    (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_CANCELLED, 0);
     TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
     CurrentEntry = NextEntry;
   }
@@ -326,42 +330,13 @@ NTSTATUS FileCloseAddress(
 				    DATAGRAM_SEND_REQUEST, ListEntry);
     /* Abort the request and free its resources */
     TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-    (*SendRequest->Complete)(SendRequest->Context, STATUS_ADDRESS_CLOSED, 0);
+    (*SendRequest->Complete)(SendRequest->Context, STATUS_CANCELLED, 0);
     exFreePool(SendRequest);
     TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
     CurrentEntry = NextEntry;
   }
 
   TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-
-  return Status;
-}
-
-
-/*
- * FUNCTION: Closes an address file object
- * ARGUMENTS:
- *     Request = Pointer to TDI request structure for this request
- * RETURNS:
- *     Status of operation
- */
-NTSTATUS FileFreeAddress(
-  PTDI_REQUEST Request)
-{
-  PADDRESS_FILE AddrFile;
-  NTSTATUS Status = STATUS_SUCCESS;
-  KIRQL OldIrql;
-
-  AddrFile = Request->Handle.AddressHandle;
-
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  /* Remove address file from the global list */
-  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
-  RemoveEntryList(&AddrFile->ListEntry);
-  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
 
   /* Protocol specific handling */
   switch (AddrFile->Protocol) {
@@ -474,33 +449,7 @@ NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request)
 {
   PCONNECTION_ENDPOINT Connection;
-
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  Connection = Request->Handle.ConnectionContext;
-
-  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-  TCPClose( Connection );
-  TcpipRecursiveMutexLeave( &TCPLock );
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-
-  return STATUS_SUCCESS;
-}
-
-
-/*
- * FUNCTION: Frees an connection file object
- * ARGUMENTS:
- *     Request = Pointer to TDI request structure for this request
- * RETURNS:
- *     Status of operation
- */
-NTSTATUS FileFreeConnection(
-  PTDI_REQUEST Request)
-{
   KIRQL OldIrql;
-  PCONNECTION_ENDPOINT Connection;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -509,6 +458,10 @@ NTSTATUS FileFreeConnection(
   TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
   RemoveEntryList(&Connection->ListEntry);
   TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
+
+  TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+  TCPClose( Connection );
+  TcpipRecursiveMutexLeave( &TCPLock );
 
   TCPFreeConnectionEndpoint(Connection);
 
@@ -565,7 +518,7 @@ NTSTATUS FileOpenControlChannel(
  * RETURNS:
  *     Status of operation
  */
-NTSTATUS FileFreeControlChannel(
+NTSTATUS FileCloseControlChannel(
   PTDI_REQUEST Request)
 {
   PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;

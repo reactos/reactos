@@ -33,11 +33,6 @@ NTSTATUS WarmSocketForBind( PAFD_FCB FCB ) {
                                 &FCB->AddressFile.Handle,
                                 &FCB->AddressFile.Object );
 
-	if (NT_SUCCESS(Status)) 
-	{
-		ObReferenceObject(FCB->AddressFile.Object);
-	}
-
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
     return Status;
