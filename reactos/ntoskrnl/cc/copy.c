@@ -24,6 +24,7 @@ static PFN_TYPE CcZeroPage = 0;
 /* void * alloca(size_t size); */
 #elif defined(_MSC_VER)
 void* _alloca(size_t size);
+#define alloca _alloca
 #else
 #error Unknown compiler for alloca intrinsic stack allocation "function"
 #endif
