@@ -222,6 +222,7 @@ InterfaceConnected(MIB_IFROW IfEntry)
         IfEntry.dwOperStatus == IF_OPER_STATUS_OPERATIONAL)
         return 1;
 
+    DH_DbgPrint(MID_TRACE,("Interface %d is down\n", IfEntry.dwIndex));
     return 0;
 }
 
