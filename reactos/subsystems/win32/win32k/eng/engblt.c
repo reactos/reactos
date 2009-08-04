@@ -71,7 +71,7 @@ BltMask(SURFOBJ* psoDest,
     {
         pebo = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
 
-        psurfPattern = pebo->pPattern;
+        psurfPattern = SURFACE_Lock(pebo->hbmPattern);
         if (psurfPattern != NULL)
         {
             psoPattern = &psurfPattern->SurfObj;
@@ -208,7 +208,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
         GdiBrush = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
-        if ((psurfPattern = GdiBrush->pPattern))
+        if ((psurfPattern = SURFACE_Lock(GdiBrush->hbmPattern)))
         {
             BltInfo.PatternSurface = &psurfPattern->SurfObj;
         }
@@ -226,10 +226,8 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
 
     /* Pattern brush */
-    if (psurfPattern != NULL)
-    {
+    if (psurfPattern)
         SURFACE_Unlock(psurfPattern);
-    }
 
     return Result;
 }
@@ -265,7 +263,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
         GdiBrush = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
-        psurfPattern = GdiBrush->pPattern;
+        psurfPattern = SURFACE_Lock(GdiBrush->hbmPattern);
         if (psurfPattern)
         {
             PatternSurface = &psurfPattern->SurfObj;

@@ -32,7 +32,7 @@ typedef struct _BRUSHGDI
     ULONG ulPenStyle;
     DWORD *pStyle;
     ULONG dwStyleCount;
-    PSURFACE pPattern;
+    HBITMAP hbmPattern;
     XLATEOBJ *XlateObject;
 } BRUSHGDI, *PBRUSHGDI;
 
@@ -53,7 +53,7 @@ PBRUSHGDI NTAPI
 GreCreateSolidBrush(COLORREF crColor);
 
 PBRUSHGDI NTAPI
-GreCreatePatternBrush(PSURFACE pSurface);
+GreCreatePatternBrush(HBITMAP hbmPattern);
 
 PBRUSHGDI NTAPI
 GreCreateNullBrush();

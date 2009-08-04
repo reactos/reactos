@@ -28,14 +28,16 @@ GreCreatePen(
    IN ULONG cjDIB,
    IN BOOL bOldStylePen)
 {
-    /*static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55};
+    static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55};
     static const BYTE PatternDash[] = {0xFF, 0xFF, 0xC0};
     static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38};
     static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0};
-    static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38};*/
+    static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38};
     PBRUSHGDI pBrush;
     XLATEOBJ *pXlate;
     HPALETTE hPalette;
+    SIZEL szPatSize;
+    PSURFACE pPattern;
 
     /* Allocate memory for the object */
     pBrush = EngAllocMem(FL_ZERO_MEMORY, sizeof(BRUSHGDI), TAG_BRUSHOBJ);
@@ -68,6 +70,9 @@ GreCreatePen(
 
     pBrush->flAttrs = bOldStylePen? GDIBRUSH_IS_OLDSTYLEPEN : GDIBRUSH_IS_PEN;
 
+    /* Initialize default pattern bitmap size */
+    szPatSize.cx = 1; szPatSize.cy = 1;
+
     // If dwPenStyle is PS_COSMETIC, the width must be set to 1.
     if ( !(bOldStylePen) && ((dwPenStyle & PS_TYPE_MASK) == PS_COSMETIC) && ( dwWidth != 1) )
     {
@@ -94,32 +99,42 @@ GreCreatePen(
 
     case PS_ALTERNATE:
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
-        UNIMPLEMENTED;
-        //pBrush->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternAlternate);
+        pBrush->hbmPattern = GreCreateBitmap(szPatSize, 1, BMF_24BPP, BMF_NOZEROINIT, NULL);
+        pPattern = SURFACE_Lock(pBrush->hbmPattern);
+        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternAlternate);
+        SURFACE_Unlock(pPattern);
         break;
 
     case PS_DOT:
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
-        UNIMPLEMENTED;
-        //pBrush->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDot);
+        pBrush->hbmPattern = GreCreateBitmap(szPatSize, 1, BMF_24BPP, BMF_NOZEROINIT, NULL);
+        pPattern = SURFACE_Lock(pBrush->hbmPattern);
+        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternDot);
+        SURFACE_Unlock(pPattern);
         break;
 
     case PS_DASH:
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
-        UNIMPLEMENTED;
-        //pBrush->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDash);
+        pBrush->hbmPattern = GreCreateBitmap(szPatSize, 1, BMF_24BPP, BMF_NOZEROINIT, NULL);
+        pPattern = SURFACE_Lock(pBrush->hbmPattern);
+        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternDash);
+        SURFACE_Unlock(pPattern);
         break;
 
     case PS_DASHDOT:
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
-        UNIMPLEMENTED;
-        //pBrush->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDot);
+        pBrush->hbmPattern = GreCreateBitmap(szPatSize, 1, BMF_24BPP, BMF_NOZEROINIT, NULL);
+        pPattern = SURFACE_Lock(pBrush->hbmPattern);
+        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternDashDot);
+        SURFACE_Unlock(pPattern);
         break;
 
     case PS_DASHDOTDOT:
         pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
-        UNIMPLEMENTED;
-        //pBrush->hbmPattern = IntGdiCreateBitmap(24, 1, 1, 1, (LPBYTE)PatternDashDotDot);
+        pBrush->hbmPattern = GreCreateBitmap(szPatSize, 1, BMF_24BPP, BMF_NOZEROINIT, NULL);
+        pPattern = SURFACE_Lock(pBrush->hbmPattern);
+        GreSetBitmapBits(pPattern, sizeof(PatternDashDotDot), (PVOID)PatternDashDotDot);
+        SURFACE_Unlock(pPattern);
         break;
 
     case PS_INSIDEFRAME:
@@ -183,7 +198,7 @@ GreCreateSolidBrush(COLORREF crColor)
 
 PBRUSHGDI
 NTAPI
-GreCreatePatternBrush(PSURFACE pSurface)
+GreCreatePatternBrush(HBITMAP hbmPattern)
 {
     PBRUSHGDI pBrush;
 
@@ -195,7 +210,7 @@ GreCreatePatternBrush(PSURFACE pSurface)
     pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
 
     /* Set bitmap */
-    pBrush->pPattern = pSurface;
+    pBrush->hbmPattern = hbmPattern;
 
     /* Set color to the reserved value */
     pBrush->BrushObj.iSolidColor = 0xFFFFFFFF;

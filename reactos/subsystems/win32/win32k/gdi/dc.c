@@ -113,6 +113,10 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
         DPRINT("Creating a compatible with %x DC!\n", *pdev);
     }
 
+    /* Create default NULL brushes */
+    pNewDC->pLineBrush = GreCreateNullBrush();
+    pNewDC->pFillBrush = GreCreateNullBrush();
+
     if (dc->dwType == OBJ_MEMDC)
     {
         DPRINT("Creating a memory DC %x\n", hNewDC);
@@ -229,7 +233,6 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
 {
     PDC pDC;
     HGDIOBJ hBmpKern;
-    PSURFACE pSurface;
 
     /* Get a pointer to the DC */
     pDC = DC_Lock(physDev);
@@ -270,8 +273,7 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
             DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", pLogBrush->lbHatch, physDev);
             break;
         }
-        pSurface = SURFACE_Lock(hBmpKern);
-        pDC->pFillBrush = GreCreatePatternBrush(pSurface);
+        pDC->pFillBrush = GreCreatePatternBrush(hBmpKern);
         break;
 
     case BS_DIBPATTERN:
@@ -293,34 +295,47 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
 {
     PDC pDC;
 
+    /* Check parameters */
+    if (!pLogPen && !pExtLogPen) return;
+
     /* Get a pointer to the DC */
     pDC = DC_Lock(physDev);
 
     DPRINT("RosGdiSelectPen(): dc %x, pen style %x, pen color %x\n", physDev, pLogPen->lopnStyle, pLogPen->lopnColor);
 
-    if (pExtLogPen)
-    {
-        DPRINT1("Ext pens aren't supported yet!");
-        /* Release the object */
-        DC_Unlock(pDC);
-        return;
-    }
-
     /* Free previous brush */
     if (pDC->pLineBrush) GreFreeBrush(pDC->pLineBrush);
 
     /* Create the pen */
-    pDC->pLineBrush =
-        GreCreatePen(pLogPen->lopnStyle,
-                     pLogPen->lopnWidth.x,
-                     BS_SOLID,
-                     pLogPen->lopnColor,
-                     0,
-                     0,
-                     0,
-                     NULL,
-                     0,
-                     TRUE);
+    if (pLogPen)
+    {
+        pDC->pLineBrush =
+            GreCreatePen(pLogPen->lopnStyle,
+                         pLogPen->lopnWidth.x,
+                         BS_SOLID,
+                         pLogPen->lopnColor,
+                         0,
+                         0,
+                         0,
+                         NULL,
+                         0,
+                         TRUE);
+    }
+    else
+    {
+        /* Extended pen information */
+        pDC->pLineBrush =
+            GreCreatePen(pExtLogPen->elpPenStyle,
+                         pExtLogPen->elpWidth,
+                         pExtLogPen->elpBrushStyle,
+                         pExtLogPen->elpColor,
+                         0,
+                         pExtLogPen->elpHatch,
+                         pExtLogPen->elpNumEntries,
+                         pExtLogPen->elpStyleEntry,
+                         0,
+                         FALSE);
+    }
 
     /* Release the object */
     DC_Unlock(pDC);
