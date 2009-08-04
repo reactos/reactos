@@ -478,7 +478,10 @@ EXLATEOBJ_vInitialize(
             if (pexlo->xlo.flXlate & XO_TRIVIAL)
             {
                 if (pexlo->xlo.pulXlate != pexlo->aulXlate)
+                {
                     EngFreeMem(pexlo->xlo.pulXlate);
+                    pexlo->xlo.pulXlate = pexlo->aulXlate;
+                }
                 pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
                 pexlo->xlo.flXlate = XO_TRIVIAL;
                 return;
@@ -760,7 +763,7 @@ EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
     {
         EngFreeMem(pexlo->xlo.pulXlate);
     }
-    pexlo->xlo.pulXlate = NULL;
+    pexlo->xlo.pulXlate = pexlo->aulXlate;
 }
 
 VOID
