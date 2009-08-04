@@ -73,7 +73,7 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     bResult = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
                psoDest, psoSource, Mask, PatternSurface,
                OutputRect, InputRect, MaskOrigin, pbo, &RealBrushOrigin,
-               ColorTranslation, NULL, Rop4);
+               ColorTranslation, Rop4);
 
     /* Pattern brush */
     if (psurfPattern)

@@ -188,7 +188,6 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     if (ROP3_TO_ROP4(SRCCOPY) == Rop4)
         return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
-    BltInfo.XlatePatternToDest = NULL;
     BltInfo.Brush = pbo;
     BltInfo.BrushOrigin = *BrushOrigin;
     BltInfo.Rop4 = Rop4;

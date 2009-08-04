@@ -133,7 +133,6 @@ EngCopyBits(SURFOBJ *psoDest,
   BltInfo.SourceSurface = psoSource;
   BltInfo.PatternSurface = NULL;
   BltInfo.XlateSourceToDest = ColorTranslation;
-  BltInfo.XlatePatternToDest = NULL;
   BltInfo.Rop4 = SRCCOPY;
 
   switch(clippingType)

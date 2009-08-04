@@ -18,7 +18,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
                             RECTL *DestRect, RECTL *SourceRect,
                             POINTL *MaskOrigin, BRUSHOBJ *Brush,
                             POINTL *BrushOrigin, XLATEOBJ *ColorTranslation,
-                            XLATEOBJ *XlatePatternToDest, ROP4 ROP)
+                            ROP4 ROP)
 {
   LONG sx = 0;
   LONG sy = 0;
@@ -148,7 +148,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
       {
         if (PatternSurface)
         {
-          Pattern = XLATEOBJ_iXlate(XlatePatternToDest, fnPattern_GetPixel(PatternSurface, PatternX, PatternY));
+          Pattern = fnPattern_GetPixel(PatternSurface, PatternX, PatternY);
           PatternX++;
           PatternX %= PatternSurface->sizlBitmap.cx;
         }
