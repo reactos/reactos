@@ -243,7 +243,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        &pgp->psurfColor->SurfObj,
                        &pgp->psurfMask->SurfObj,
                        NULL,
-                       pgp->XlateObject,
+                       NULL,
                        &rclSurf,
                        (POINTL*)&rclPointer,
                        (POINTL*)&rclPointer,
@@ -258,7 +258,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        &pgp->psurfMask->SurfObj,
                        NULL,
                        NULL,
-                       pgp->XlateObject,
+                       NULL,
                        &rclSurf,
                        (POINTL*)&rclPointer,
                        NULL,
@@ -273,7 +273,7 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
                        &pgp->psurfMask->SurfObj,
                        NULL,
                        NULL,
-                       pgp->XlateObject,
+                       NULL,
                        &rclSurf,
                        (POINTL*)&rclPointer,
                        NULL,
@@ -302,10 +302,10 @@ EngSetPointerShape(
 {
     PDEVOBJ *ppdev;
     GDIPOINTER *pgp;
-    PBYTE Bits;
     SIZEL Size;
     LONG lDelta;
     HBITMAP hbmp;
+    RECTL rcl;
 
     ASSERT(pso);
 
@@ -316,10 +316,6 @@ EngSetPointerShape(
 
     if (pgp->psurfColor)
     {
-        /* FIXME: let GDI allocate/free memory */
-        EngFreeMem(pgp->psurfColor->SurfObj.pvBits);
-        pgp->psurfColor->SurfObj.pvBits = 0;
-
         EngDeleteSurface(pgp->psurfColor->BaseObject.hHmgr);
         SURFACE_ShareUnlockSurface(pgp->psurfColor);
         pgp->psurfColor = NULL;
@@ -327,10 +323,6 @@ EngSetPointerShape(
 
     if (pgp->psurfMask)
     {
-        /* FIXME: let GDI allocate/free memory */
-        EngFreeMem(pgp->psurfMask->SurfObj.pvBits);
-        pgp->psurfMask->SurfObj.pvBits = 0;
-
         EngDeleteSurface(pgp->psurfMask->BaseObject.hHmgr);
         SURFACE_ShareUnlockSurface(pgp->psurfMask);
         pgp->psurfMask = NULL;
@@ -341,12 +333,6 @@ EngSetPointerShape(
         EngDeleteSurface(pgp->psurfSave->BaseObject.hHmgr);
         SURFACE_ShareUnlockSurface(pgp->psurfSave);
         pgp->psurfSave = NULL;
-    }
-
-    if (pgp->XlateObject != NULL)
-    {
-        EngDeleteXlate(pgp->XlateObject);
-        pgp->XlateObject = NULL;
     }
 
     /* See if we are being asked to hide the pointer. */
@@ -367,70 +353,15 @@ EngSetPointerShape(
     pgp->Size.cx = abs(psoMask->lDelta) << 3;
     pgp->Size.cy = (psoMask->cjBits / abs(psoMask->lDelta)) >> 1;
 
-    if (psoColor != NULL)
-    {
-        /* FIXME: let GDI allocate/free memory */
-        Bits = EngAllocMem(0, psoColor->cjBits, TAG_MOUSE);
-        if (Bits == NULL)
-        {
-            return SPS_ERROR;
-        }
-
-        memcpy(Bits, psoColor->pvBits, psoColor->cjBits);
-
-        hbmp = EngCreateBitmap(pgp->Size,
-                               psoColor->lDelta,
-                               psoColor->iBitmapFormat,
-                               psoColor->lDelta < 0 ? 0 : BMF_TOPDOWN,
-                               Bits);
-
-        pgp->psurfColor = SURFACE_ShareLockSurface(hbmp);
-    }
-    else
-    {
-        pgp->psurfColor = NULL;
-    }
-
     Size.cx = pgp->Size.cx;
     Size.cy = pgp->Size.cy << 1;
-    Bits = EngAllocMem(0, psoMask->cjBits, TAG_MOUSE);
-    if (Bits == NULL)
-    {
-        return SPS_ERROR;
-    }
 
-    memcpy(Bits, psoMask->pvBits, psoMask->cjBits);
+    rcl.left = 0;
+    rcl.top = 0;
+    rcl.right = Size.cx;
+    rcl.bottom = Size.cy;
 
-    hbmp = EngCreateBitmap(Size,
-                           psoMask->lDelta,
-                           psoMask->iBitmapFormat,
-                           psoMask->lDelta < 0 ? 0 : BMF_TOPDOWN,
-                           Bits);
-
-    pgp->psurfMask = SURFACE_ShareLockSurface(hbmp);
-
-    /* Create an XLATEOBJ that will be used for drawing masks.
-     * FIXME: We should get this in pxlo parameter! */
-    if (pxlo == NULL)
-    {
-        HPALETTE BWPalette, DestPalette;
-        ULONG BWColors[] = {0, 0xFFFFFF};
-
-        BWPalette = EngCreatePalette(PAL_INDEXED, sizeof(BWColors) / sizeof(ULONG),
-                                     BWColors, 0, 0, 0);
-
-        DestPalette = ppdev->DevInfo.hpalDefault;
-        pgp->XlateObject = IntEngCreateXlate(0, 0,
-                                             DestPalette, BWPalette);
-        EngDeletePalette(BWPalette);
-    }
-    else
-    {
-        pgp->XlateObject = EngAllocMem(0, sizeof(XLATEOBJ), TAG_XLATEOBJ);
-        memcpy(pgp->XlateObject, pxlo, sizeof(XLATEOBJ));
-    }
-
-    /* Create surface for saving the pixels under the cursor. */
+    /* Calculate lDelta for our surfaces. */
     switch (pso->iBitmapFormat)
     {
         case BMF_1BPP:
@@ -456,13 +387,70 @@ EngSetPointerShape(
             break;
     }
 
+    /* Create surface for saving the pixels under the cursor. */
     hbmp = EngCreateBitmap(pgp->Size,
                            lDelta,
                            pso->iBitmapFormat,
                            BMF_TOPDOWN | BMF_NOZEROINIT,
                            NULL);
-
     pgp->psurfSave = SURFACE_ShareLockSurface(hbmp);
+
+    /* Create a mask surface */
+    if (psoMask)
+    {
+        EXLATEOBJ exlo;
+        PPALETTE ppal;
+
+        ppal = PALETTE_LockPalette(ppdev->DevInfo.hpalDefault);
+        EXLATEOBJ_vInitialize(&exlo,
+                              &gpalMono,
+                              ppal,
+                              0,
+                              RGB(0xff,0xff,0xff),
+                              RGB(0,0,0));
+
+        hbmp = EngCreateBitmap(Size,
+                               lDelta,
+                               pso->iBitmapFormat,
+                               0,
+                               NULL);
+        pgp->psurfMask = SURFACE_ShareLockSurface(hbmp);
+        IntEngCopyBits(&pgp->psurfMask->SurfObj,
+                       psoMask,
+                       NULL,
+                       &exlo.xlo,
+                       &rcl,
+                       (POINTL*)&rcl);
+
+        EXLATEOBJ_vCleanup(&exlo);
+        if (ppal)
+            PALETTE_UnlockPalette(ppal);
+    }
+    else
+    {
+        pgp->psurfMask = NULL;
+    }
+
+    /* Create a color surface */
+    if (psoColor)
+    {
+        hbmp = EngCreateBitmap(pgp->Size,
+                               lDelta,
+                               pso->iBitmapFormat,
+                               BMF_TOPDOWN | BMF_NOZEROINIT,
+                               NULL);
+        pgp->psurfColor = SURFACE_ShareLockSurface(hbmp);
+        IntEngCopyBits(&pgp->psurfColor->SurfObj,
+                       psoColor,
+                       NULL,
+                       pxlo,
+                       &rcl,
+                       (POINTL*)&rcl);
+    }
+    else
+    {
+        pgp->psurfColor = NULL;
+    }
 
     if (x != -1)
     {
@@ -475,8 +463,11 @@ EngSetPointerShape(
             prcl->right = prcl->left + pgp->Size.cx;
             prcl->bottom = prcl->top + pgp->Size.cy;
         }
-    } else if (prcl != NULL)
+    }
+    else if (prcl != NULL)
+    {
         prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
+    }
 
     return SPS_ACCEPT_NOEXCLUDE;
 }

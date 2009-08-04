@@ -44,8 +44,8 @@ NtGdiAlphaBlend(
     PDC DCSrc;
     SURFACE *BitmapDest, *BitmapSrc;
     RECTL DestRect, SourceRect;
-    BOOL Status;
-    XLATEOBJ *XlateObj;
+    BOOL bResult;
+    EXLATEOBJ exlo;
     BLENDOBJ BlendObj;
     BlendObj.BlendFunction = BlendFunc;
 
@@ -147,31 +147,23 @@ NtGdiAlphaBlend(
     }
 
     /* Create the XLATEOBJ. */
-    XlateObj = IntCreateXlateForBlt(DCDest, DCSrc, BitmapDest, BitmapSrc);
+    EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
-    if (XlateObj == (XLATEOBJ*)-1)
-    {
-        DPRINT1("couldn't create XlateObj\n");
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        XlateObj = NULL;
-        Status = FALSE;
-    }
-    else
-    {
-        /* Perform the alpha blend operation */
-        Status = IntEngAlphaBlend(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-            DCDest->rosdc.CombinedClip, XlateObj,
-            &DestRect, &SourceRect, &BlendObj);
-    }
+    /* Perform the alpha blend operation */
+    bResult = IntEngAlphaBlend(&BitmapDest->SurfObj,
+                               &BitmapSrc->SurfObj,
+                               DCDest->rosdc.CombinedClip,
+                               &exlo.xlo,
+                               &DestRect,
+                               &SourceRect,
+                               &BlendObj);
 
-    if (XlateObj != NULL)
-        EngDeleteXlate(XlateObj);
-
+    EXLATEOBJ_vCleanup(&exlo);
     DC_UnlockDc(DCDest);
     if (hDCSrc != hDCDest)
         DC_UnlockDc(DCSrc);
 
-    return Status;
+    return bResult;
 }
 
 BOOL APIENTRY
@@ -195,6 +187,7 @@ NtGdiBitBlt(
     RECTL DestRect;
     POINTL SourcePoint;
     BOOL Status = FALSE;
+    EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
 
@@ -281,15 +274,8 @@ NtGdiBitBlt(
     /* Create the XLATEOBJ. */
     if (UsesSource)
     {
-        XlateObj = IntCreateXlateForBlt(DCDest, DCSrc, BitmapDest, BitmapSrc);
-
-        if (XlateObj == (XLATEOBJ*)-1)
-        {
-            DPRINT1("couldn't create XlateObj\n");
-            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-            XlateObj = NULL;
-            goto cleanup;
-        }
+        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        XlateObj = &exlo.xlo;
     }
 
     /* Perform the bitblt operation */
@@ -306,9 +292,8 @@ NtGdiBitBlt(
                           ROP3_TO_ROP4(ROP));
 
 cleanup:
-    if (UsesSource && XlateObj != NULL)
-        EngDeleteXlate(XlateObj);
-
+    if (UsesSource)
+        EXLATEOBJ_vCleanup(&exlo);
     if (UsesSource && hDCSrc != hDCDest)
     {
         DC_UnlockDc(DCSrc);
@@ -335,12 +320,12 @@ NtGdiTransparentBlt(
     PDC DCDest, DCSrc;
     RECTL rcDest, rcSrc;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
-    XLATEOBJ *XlateObj = NULL;
     HPALETTE SourcePalette = 0, DestPalette = 0;
     PPALETTE PalDestGDI, PalSourceGDI;
     USHORT PalDestMode, PalSrcMode;
     ULONG TransparentColor = 0;
     BOOL Ret = FALSE;
+    EXLATEOBJ exlo;
 
     if(!(DCDest = DC_LockDc(hdcDst)))
     {
@@ -418,17 +403,15 @@ NtGdiTransparentBlt(
     else
     {
         PalDestMode = PalSrcMode;
+        PalDestGDI = PalSourceGDI;
     }
 
     /* Translate Transparent (RGB) Color to the source palette */
-    if((XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalSrcMode, PAL_RGB, SourcePalette, NULL)))
-    {
-        TransparentColor = XLATEOBJ_iXlate(XlateObj, (ULONG)TransColor);
-        EngDeleteXlate(XlateObj);
-    }
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, PalSourceGDI, 0, 0, 0);
+    TransparentColor = XLATEOBJ_iXlate(&exlo.xlo, (ULONG)TransColor);
+    EXLATEOBJ_vCleanup(&exlo);
 
-    /* Create the XLATE object to convert colors between source and destination */
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
+    EXLATEOBJ_vInitialize(&exlo, PalSourceGDI, PalDestGDI, 0, 0, 0);
 
     rcDest.left   = xDst;
     rcDest.top    = yDst;
@@ -453,7 +436,7 @@ NtGdiTransparentBlt(
     rcSrc.bottom += DCSrc->ptlDCOrig.y;
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
-        DCDest->rosdc.CombinedClip, XlateObj, &rcDest, &rcSrc,
+        DCDest->rosdc.CombinedClip, &exlo.xlo, &rcDest, &rcSrc,
         TransparentColor, 0);
 
 done:
@@ -462,10 +445,7 @@ done:
     {
         DC_UnlockDc(DCDest);
     }
-    if(XlateObj)
-    {
-        EngDeleteXlate(XlateObj);
-    }
+    EXLATEOBJ_vCleanup(&exlo);
     return Ret;
 }
 
@@ -734,6 +714,7 @@ GreStretchBltMask(
     RECTL DestRect;
     RECTL SourceRect;
     BOOL Status = FALSE;
+    EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     POINTL BrushOrigin;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
@@ -825,20 +806,13 @@ GreStretchBltMask(
         goto failed;
     if (UsesSource)
     {
-        {
-            BitmapSrc = DCSrc->dclevel.pSurface;
-            if (BitmapSrc == NULL)
-                goto failed;
-        }
+        BitmapSrc = DCSrc->dclevel.pSurface;
+        if (BitmapSrc == NULL)
+            goto failed;
 
         /* Create the XLATEOBJ. */
-        XlateObj = IntCreateXlateForBlt(DCDest, DCSrc, BitmapDest, BitmapSrc);
-        if (XlateObj == (XLATEOBJ*)-1)
-        {
-            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-            XlateObj = NULL;
-            goto failed;
-        }
+        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        XlateObj = &exlo.xlo;
     }
 
     /* Offset the brush */
@@ -876,9 +850,9 @@ GreStretchBltMask(
                               ROP3_TO_ROP4(ROP));
 
 failed:
-    if (XlateObj)
+    if (UsesSource)
     {
-        EngDeleteXlate(XlateObj);
+        EXLATEOBJ_vCleanup(&exlo);
     }
     if (UsesSource && hDCSrc != hDCDest)
     {

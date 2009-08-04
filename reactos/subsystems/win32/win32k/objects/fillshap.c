@@ -44,7 +44,7 @@ IntGdiPolygon(PDC    dc,
     POINTL BrushOrigin;
 //    int Left;
 //    int Top;
-    
+
     ASSERT(dc); // caller's responsibility to pass a valid dc
 
     if (!Points || Count < 2 )
@@ -848,10 +848,10 @@ IntGdiGradientFill(
 {
     SURFACE *psurf;
     PPALETTE PalDestGDI;
-    XLATEOBJ *XlateObj;
+    EXLATEOBJ exlo;
     RECTL Extent;
     POINTL DitherOrg;
-    ULONG Mode, i;
+    ULONG i;
     BOOL Ret;
     HPALETTE hDestPalette;
 
@@ -921,20 +921,11 @@ IntGdiGradientFill(
     if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
 
     PalDestGDI = PALETTE_LockPalette(hDestPalette);
-    if (PalDestGDI)
-    {
-        Mode = 0;
-        PALETTE_UnlockPalette(PalDestGDI);
-    }
-    else
-        Mode = PAL_RGB;
-
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(Mode, PAL_RGB, hDestPalette, NULL);
-    ASSERT(XlateObj);
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, PalDestGDI, 0, 0, 0);
 
     Ret = IntEngGradientFill(&psurf->SurfObj,
                              dc->rosdc.CombinedClip,
-                             XlateObj,
+                             &exlo.xlo,
                              pVertex,
                              uVertex,
                              pMesh,
@@ -943,7 +934,10 @@ IntGdiGradientFill(
                              &DitherOrg,
                              ulMode);
 
-    EngDeleteXlate(XlateObj);
+    EXLATEOBJ_vCleanup(&exlo);
+
+    if (PalDestGDI)
+        PALETTE_UnlockPalette(PalDestGDI);
 
     return Ret;
 }
@@ -1072,8 +1066,9 @@ NtGdiExtFloodFill(
     PDC dc;
     PDC_ATTR   pdcattr;
     SURFACE    *psurf = NULL;
-    HPALETTE   Pal = 0;
-    XLATEOBJ   *XlateObj = NULL;
+    HPALETTE   hpal;
+    PPALETTE   ppal;
+    EXLATEOBJ  exlo;
     BOOL       Ret = FALSE;
     RECTL      DestRect;
     POINTL     Pt;
@@ -1117,20 +1112,21 @@ NtGdiExtFloodFill(
         goto cleanup;
     }
 
-    Pal = dc->dclevel.pSurface->hDIBPalette;
-    if (!Pal) Pal = pPrimarySurface->DevInfo.hpalDefault;
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, PAL_RGB, Pal, NULL);
+    hpal = dc->dclevel.pSurface->hDIBPalette;
+    if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
+    ppal = PALETTE_ShareLockPalette(hpal);
+    
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0xffffff, 0);
 
     /* Only solid fills supported for now
      * How to support pattern brushes and non standard surfaces (not offering dib functions):
      * Version a (most likely slow): call DrvPatBlt for every pixel
      * Version b: create a flood mask and let MaskBlt blit a masked brush */
-    if (XlateObj != NULL)
-    {
-        ConvColor = XLATEOBJ_iXlate(XlateObj, Color);
-        Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, ConvColor, FillType);
-        EngDeleteXlate(XlateObj);
-    }
+    ConvColor = XLATEOBJ_iXlate(&exlo.xlo, Color);
+    Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, &Pt, ConvColor, FillType);
+
+    EXLATEOBJ_vCleanup(&exlo);
+    PALETTE_ShareUnlockPalette(ppal);
 
 cleanup:
     DC_UnlockDc(dc);

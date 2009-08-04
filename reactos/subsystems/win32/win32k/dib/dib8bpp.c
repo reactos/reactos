@@ -401,8 +401,8 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
   register NICEPIXEL32 SrcPixel32;
   register NICEPIXEL16 SrcPixel16;
   UCHAR Alpha, SrcBpp;
-  XLATEGDI* XlateGDI;
-  XLATEOBJ* SrcXlateObj;
+  EXLATEOBJ exloDst2Src;
+  EXLATEOBJ* pexlo;
 
   DPRINT("DIB_8BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
     SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
@@ -439,14 +439,8 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
     return FALSE;
   }
 
-  XlateGDI = ObjToGDI(ColorTranslation, XLATE);
-  SrcXlateObj = IntEngCreateXlate(0, 0, XlateGDI->SourcePal, XlateGDI->DestPal);
-
-  if (!SrcXlateObj)
-  {
-    DPRINT1("IntEngCreateXlate failed\n");
-    return FALSE;
-  }
+  pexlo = CONTAINING_RECORD(ColorTranslation, EXLATEOBJ, xlo);
+  EXLATEOBJ_vInitialize(&exloDst2Src, pexlo->ppalDst, pexlo->ppalSrc, 0, 0, 0);
 
   Dst = (PUCHAR)((ULONG_PTR)Dest->pvScan0 + (DestRect->top * Dest->lDelta) +
     DestRect->left);
@@ -480,7 +474,7 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
       Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
         SrcPixel32.col.alpha : BlendFunc.SourceConstantAlpha;
 
-      DstPixel32.ul = XLATEOBJ_iXlate(SrcXlateObj, *Dst);
+      DstPixel32.ul = XLATEOBJ_iXlate(&exloDst2Src.xlo, *Dst);
       SrcPixel32.col.red = Clamp8(DstPixel32.col.red * (255 - Alpha) / 255 + SrcPixel32.col.red);
       SrcPixel32.col.green = Clamp8(DstPixel32.col.green * (255 - Alpha) / 255 + SrcPixel32.col.green);
       SrcPixel32.col.blue = Clamp8(DstPixel32.col.blue * (255 - Alpha) / 255 +  SrcPixel32.col.blue);
@@ -490,8 +484,7 @@ DIB_8BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
     SrcY++;
   }
 
-  if (SrcXlateObj)
-    EngDeleteXlate(SrcXlateObj);
+  EXLATEOBJ_vCleanup(&exloDst2Src);
 
   return TRUE;
 }

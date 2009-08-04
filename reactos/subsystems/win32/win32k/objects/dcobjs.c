@@ -17,7 +17,6 @@ DC_vUpdateFillBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
     PBRUSH pbrFill;
-    XLATEOBJ *pxlo = NULL;
 
     /* Check if the brush handle has changed */
     if (pdcattr->hbrush != pdc->dclevel.pbrFill->BaseObject.hHmgr)
@@ -40,30 +39,19 @@ DC_vUpdateFillBrush(PDC pdc)
         }
     }
 
-    /* ROS HACK, should use surf xlate */
-    pxlo = IntCreateBrushXlate(pdc->dclevel.pbrFill,
-                               pdc->dclevel.pSurface,
-                               pdc->pdcattr->crBackgroundClr);
-
     /* Check if the EBRUSHOBJ needs update */
     if (pdcattr->ulDirty_ & DIRTY_FILL)
     {
-        pbrFill = pdc->dclevel.pbrFill;
-
-        /* Update eboFill, realizing it, if needed */
-        EBRUSHOBJ_vUpdate(&pdc->eboFill, pbrFill, pdc);
+        /* Update eboFill */
+        EBRUSHOBJ_vUpdate(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
     }
 
     /* Check for DC brush */
     if (pdcattr->hbrush == StockObjects[DC_BRUSH])
     {
+        /* ROS HACK, should use surf xlate */
         /* Update the eboFill's solid color */
-        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr, pxlo);
-    }
-
-    if (pxlo != NULL)
-    {
-        EngDeleteXlate(pxlo);
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr);
     }
 
     /* Clear flags */
@@ -76,7 +64,6 @@ DC_vUpdateLineBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
     PBRUSH pbrLine;
-    XLATEOBJ *pxlo;
 
     /* Check if the pen handle has changed */
     if (pdcattr->hpen != pdc->dclevel.pbrLine->BaseObject.hHmgr)
@@ -99,30 +86,18 @@ DC_vUpdateLineBrush(PDC pdc)
         }
     }
 
-    /* ROS HACK, should use surf xlate */
-    pxlo = IntCreateBrushXlate(pdc->dclevel.pbrFill,
-                               pdc->dclevel.pSurface,
-                               pdc->pdcattr->crBackgroundClr);
-
     /* Check if the EBRUSHOBJ needs update */
     if (pdcattr->ulDirty_ & DIRTY_LINE)
     {
-        pbrLine = pdc->dclevel.pbrLine;
-
-        /* Update eboLine, realizing it, if needed */
-        EBRUSHOBJ_vUpdate(&pdc->eboLine, pbrLine, pdc);
+        /* Update eboLine */
+        EBRUSHOBJ_vUpdate(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
     }
 
     /* Check for DC pen */
     if (pdcattr->hpen == StockObjects[DC_PEN])
     {
         /* Update the eboLine's solid color */
-        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr, pxlo);
-    }
-
-    if (pxlo != NULL)
-    {
-        EngDeleteXlate(pxlo);
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr);
     }
 
     /* Clear flags */
@@ -134,25 +109,9 @@ FASTCALL
 DC_vUpdateTextBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
-    XLATEOBJ *pxlo = NULL;
-    SURFACE *psurf;
-    HPALETTE hpal;
-
-    psurf = pdc->dclevel.pSurface;
-    if (psurf)
-    {
-        hpal = psurf->hDIBPalette;
-        if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
-        pxlo = IntEngCreateXlate(0, PAL_RGB, hpal, NULL);
-    }
 
     /* Update the eboText's solid color */
-    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr, pxlo);
-
-    if (pxlo)
-    {
-        EngDeleteXlate(pxlo);
-    }
+    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
 
     /* Clear flag */
     pdcattr->ulDirty_ &= ~DIRTY_TEXT;
@@ -163,25 +122,9 @@ FASTCALL
 DC_vUpdateBackgroundBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
-    XLATEOBJ *pxlo = NULL;
-    SURFACE *psurf;
-    HPALETTE hpal;
-
-    psurf = pdc->dclevel.pSurface;
-    if (psurf)
-    {
-        hpal = psurf->hDIBPalette;
-        if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
-        pxlo = IntEngCreateXlate(0, PAL_RGB, hpal, NULL);
-    }
 
     /* Update the eboBackground's solid color */
-    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr, pxlo);
-
-    if (pxlo)
-    {
-        EngDeleteXlate(pxlo);
-    }
+    EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr);
 
     /* Clear flag */
     pdcattr->ulDirty_ &= ~DIRTY_BACKGROUND;

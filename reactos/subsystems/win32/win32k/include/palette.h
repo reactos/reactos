@@ -49,10 +49,13 @@ typedef struct _PALETTE
   ULONG RedMask;
   ULONG GreenMask;
   ULONG BlueMask;
+  ULONG ulRedShift;
+  ULONG ulGreenShift;
+  ULONG ulBlueShift;
   HDEV  hPDev;
 } PALETTE, *PPALETTE;
 
-extern PALETTE gpalRGB, gpalBGR;
+extern PALETTE gpalRGB, gpalBGR, gpalMono;
 
 
 HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
@@ -84,10 +87,23 @@ INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 
 INT FASTCALL PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);
 ULONG NTAPI PALETTE_ulGetNearestPaletteIndex(PALETTE* ppal, ULONG iColor);
+ULONG NTAPI PALETTE_ulGetNearestIndex(PALETTE* ppal, ULONG iColor);
 VOID NTAPI PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors);
 
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
 HPALETTE FASTCALL GdiSelectPalette(HDC, HPALETTE, BOOL);
+
+ULONG
+FORCEINLINE
+CalculateShift(ULONG ulMask1, ULONG ulMask2)
+{
+    ULONG ulShift1, ulShift2;
+    BitScanReverse(&ulShift1, ulMask1);
+    BitScanReverse(&ulShift2, ulMask2);
+    ulShift2 -= ulShift1;
+    if ((INT)ulShift2 < 0) ulShift2 += 32;
+    return ulShift2;
+}
 
 FORCEINLINE
 ULONG

@@ -14,7 +14,7 @@
 
 static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the pallete and restore it */
 
-PALETTE gpalRGB, gpalBGR;
+PALETTE gpalRGB, gpalBGR, gpalMono;
 
 const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
 {
@@ -110,6 +110,9 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     gpalBGR.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalBGR.BlueMask = RGB(0xFF, 0x00, 0x00);
 
+    memset(&gpalMono, 0, sizeof(PALETTE));
+    gpalMono.Mode = PAL_MONOCHROME;
+
     return hpalette;
 }
 
@@ -166,6 +169,11 @@ PALETTE_AllocPalette(ULONG Mode,
         PalGDI->RedMask = Red;
         PalGDI->GreenMask = Green;
         PalGDI->BlueMask = Blue;
+        
+        if (Red == 0x7c00 && Green == 0x3E0 && Blue == 0x1F)
+            PalGDI->Mode |= PAL_RGB16_555;
+        else if (Red == 0xF800 && Green == 0x7E0 && Blue == 0x1F)
+            PalGDI->Mode |= PAL_RGB16_565;
     }
 
     PALETTE_UnlockPalette(PalGDI);
@@ -273,32 +281,57 @@ PALETTE_ulGetNearestPaletteIndex(PALETTE* ppal, ULONG iColor)
     return ulBestIndex;
 }
 
+ULONG
+NTAPI
+PALETTE_ulGetNearestBitFieldsIndex(PALETTE* ppal, ULONG ulColor)
+{
+    ULONG ulNewColor;
+
+    // FIXME: HACK, should be stored already
+    ppal->ulRedShift = CalculateShift(RGB(0xff,0,0), ppal->RedMask);
+    ppal->ulGreenShift = CalculateShift(RGB(0,0xff,0), ppal->GreenMask);
+    ppal->ulBlueShift = CalculateShift(RGB(0,0,0xff), ppal->BlueMask);
+
+    ulNewColor = _rotl(ulColor, ppal->ulRedShift) & ppal->RedMask;
+    ulNewColor |= _rotl(ulColor, ppal->ulGreenShift) & ppal->GreenMask;
+    ulNewColor |= _rotl(ulColor, ppal->ulBlueShift) & ppal->BlueMask;
+
+   return ulNewColor;
+}
+
+ULONG
+NTAPI
+PALETTE_ulGetNearestIndex(PALETTE* ppal, ULONG ulColor)
+{
+    if (ppal->Mode & PAL_INDEXED) // use fl & PALINDEXED
+        return PALETTE_ulGetNearestPaletteIndex(ppal, ulColor);
+    else
+        return PALETTE_ulGetNearestBitFieldsIndex(ppal, ulColor);
+}
+
 VOID
 NTAPI
 PALETTE_vGetBitMasks(PPALETTE ppal, PULONG pulColors)
 {
     ASSERT(pulColors);
 
-    switch (ppal->Mode)
+    if (ppal->Mode & PAL_INDEXED || ppal->Mode & PAL_RGB)
     {
-        case PAL_INDEXED:
-        case PAL_RGB:
-            pulColors[0] = RGB(0xFF, 0x00, 0x00);
-            pulColors[1] = RGB(0x00, 0xFF, 0x00);
-            pulColors[2] = RGB(0x00, 0x00, 0xFF);
-            break;
-
-        case PAL_BGR:
-            pulColors[0] = RGB(0x00, 0x00, 0xFF);
-            pulColors[1] = RGB(0x00, 0xFF, 0x00);
-            pulColors[2] = RGB(0xFF, 0x00, 0x00);
-            break;
-
-        case PAL_BITFIELDS:
-            pulColors[0] = ppal->RedMask;
-            pulColors[1] = ppal->GreenMask;
-            pulColors[2] = ppal->BlueMask;
-            break;
+        pulColors[0] = RGB(0xFF, 0x00, 0x00);
+        pulColors[1] = RGB(0x00, 0xFF, 0x00);
+        pulColors[2] = RGB(0x00, 0x00, 0xFF);
+    }
+    else if (ppal->Mode & PAL_BGR)
+    {
+        pulColors[0] = RGB(0x00, 0x00, 0xFF);
+        pulColors[1] = RGB(0x00, 0xFF, 0x00);
+        pulColors[2] = RGB(0xFF, 0x00, 0x00);
+    }
+    else if (ppal->Mode & PAL_BITFIELDS)
+    {
+        pulColors[0] = ppal->RedMask;
+        pulColors[1] = ppal->GreenMask;
+        pulColors[2] = ppal->BlueMask;
     }
 }
 
@@ -415,7 +448,6 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
     if (PalGDI != NULL)
     {
         PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
-        PalGDI->logicalToSystem = NULL;
         PALETTE_UnlockPalette(PalGDI);
     }
     else
@@ -614,28 +646,25 @@ COLORREF APIENTRY NtGdiGetNearestColor(HDC hDC, COLORREF Color)
          return nearest;
       }
 
-      switch (palGDI->Mode)
+      if (palGDI->Mode & PAL_INDEXED)
       {
-         case PAL_INDEXED:
-         {
-            ULONG index;
-            index = PALETTE_ulGetNearestPaletteIndex(palGDI, Color);
-            nearest = PALETTE_ulGetRGBColorFromIndex(palGDI, index);
-            break;
-         }
-         case PAL_BGR:
-         case PAL_RGB:
-            nearest = Color;
-            break;
-         case PAL_BITFIELDS:
-            RBits = 8 - GetNumberOfBits(palGDI->RedMask);
-            GBits = 8 - GetNumberOfBits(palGDI->GreenMask);
-            BBits = 8 - GetNumberOfBits(palGDI->BlueMask);
-            nearest = RGB(
-              (GetRValue(Color) >> RBits) << RBits,
-              (GetGValue(Color) >> GBits) << GBits,
-              (GetBValue(Color) >> BBits) << BBits);
-            break;
+         ULONG index;
+         index = PALETTE_ulGetNearestPaletteIndex(palGDI, Color);
+         nearest = PALETTE_ulGetRGBColorFromIndex(palGDI, index);
+      }
+      else if (palGDI->Mode & PAL_RGB || palGDI->Mode & PAL_BGR)
+      {
+         nearest = Color;
+      }
+      else if (palGDI->Mode & PAL_BITFIELDS)
+      {
+         RBits = 8 - GetNumberOfBits(palGDI->RedMask);
+         GBits = 8 - GetNumberOfBits(palGDI->GreenMask);
+         BBits = 8 - GetNumberOfBits(palGDI->BlueMask);
+         nearest = RGB(
+            (GetRValue(Color) >> RBits) << RBits,
+            (GetGValue(Color) >> GBits) << GBits,
+            (GetBValue(Color) >> BBits) << BBits);
       }
       PALETTE_UnlockPalette(palGDI);
       DC_UnlockDc(dc);
@@ -655,8 +684,12 @@ NtGdiGetNearestPaletteIndex(
 
     if (ppal)
     {
-        /* Return closest match for the given RGB color */
-        index = PALETTE_ulGetNearestPaletteIndex(ppal, crColor);
+        if (ppal->Mode & PAL_INDEXED)
+        {
+            /* Return closest match for the given RGB color */
+            index = PALETTE_ulGetNearestPaletteIndex(ppal, crColor);
+        }
+        // else SetLastError ?
         PALETTE_UnlockPalette(ppal);
     }
 
@@ -718,16 +751,6 @@ IntGdiRealizePalette(HDC hDC)
   palMode = palGDI->Mode;
   PALETTE_UnlockPalette(sysGDI);
   PALETTE_UnlockPalette(palGDI);
-
-  // Create the XLATEOBJ for device managed DCs
-  if(dc->dctype != DC_TYPE_MEMORY)
-  {
-    if (palGDI->logicalToSystem != NULL)
-    {
-        EngDeleteXlate(palGDI->logicalToSystem);
-    }
-    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->dclevel.hpal);
-  }
 
   DC_UnlockDc(dc);
 
@@ -937,9 +960,6 @@ IntSetPaletteEntries(
     }
     memcpy(palGDI->IndexedColors + Start, pe, Entries * sizeof(PALETTEENTRY));
     PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
-    if (palGDI->logicalToSystem)
-        ExFreePool(palGDI->logicalToSystem);
-    palGDI->logicalToSystem = NULL;
     PALETTE_UnlockPalette(palGDI);
 
     return Entries;

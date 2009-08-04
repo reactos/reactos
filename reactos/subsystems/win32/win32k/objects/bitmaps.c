@@ -335,8 +335,9 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     BOOL bInRect = FALSE;
     SURFACE *psurf;
     SURFOBJ *pso;
-    HPALETTE Pal = 0;
-    XLATEOBJ *XlateObj;
+    HPALETTE hpal = 0;
+    PPALETTE ppal;
+    EXLATEOBJ exlo;
     HBITMAP hBmpTmp;
 
     dc = DC_LockDc(hDC);
@@ -359,25 +360,33 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     {
         bInRect = TRUE;
         psurf = dc->dclevel.pSurface;
-        pso = &psurf->SurfObj;
         if (psurf)
         {
-            Pal = psurf->hDIBPalette;
-            if (!Pal) Pal = pPrimarySurface->DevInfo.hpalDefault;
+            pso = &psurf->SurfObj;
+            hpal = psurf->hDIBPalette;
+            if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
+            ppal = PALETTE_ShareLockPalette(hpal);
 
-            /* FIXME: Verify if it shouldn't be PAL_BGR! */
-            XlateObj = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, Pal);
-            if (XlateObj)
+            if (psurf->SurfObj.iBitmapFormat == BMF_1BPP && !psurf->hSecure)
             {
-                // check if this DC has a DIB behind it...
-                if (pso->pvScan0) // STYPE_BITMAP == pso->iType
-                {
-                    ASSERT(pso->lDelta);
-                    Result = XLATEOBJ_iXlate(XlateObj,
-                                             DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_GetPixel(pso, XPos, YPos));
-                }
-                EngDeleteXlate(XlateObj);
+                /* FIXME: palette should be gpalMono already ! */
+                EXLATEOBJ_vInitialize(&exlo, &gpalMono, &gpalRGB, 0, 0xffffff, 0);
             }
+            else
+            {
+                EXLATEOBJ_vInitialize(&exlo, ppal, &gpalRGB, 0, 0xffffff, 0);
+            }
+
+            // check if this DC has a DIB behind it...
+            if (pso->pvScan0) // STYPE_BITMAP == pso->iType
+            {
+                ASSERT(pso->lDelta);
+                Result = XLATEOBJ_iXlate(&exlo.xlo,
+                                         DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_GetPixel(pso, XPos, YPos));
+            }
+
+            EXLATEOBJ_vCleanup(&exlo);
+            PALETTE_ShareUnlockPalette(ppal);
         }
     }
     DC_UnlockDc(dc);
@@ -495,10 +504,10 @@ NtGdiGetBitmapBits(
         return 0;
     }
 
-    bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx, 
-             BitsPerFormat(psurf->SurfObj.iBitmapFormat)) * 
+    bmSize = BITMAP_GetWidthBytes(psurf->SurfObj.sizlBitmap.cx,
+             BitsPerFormat(psurf->SurfObj.iBitmapFormat)) *
              abs(psurf->SurfObj.sizlBitmap.cy);
-    
+
     /* If the bits vector is null, the function should return the read size */
     if (pUnsafeBits == NULL)
     {
@@ -545,7 +554,7 @@ IntSetBitmapBits(
         DPRINT("Calling device specific BitmapBits\n");
         if (psurf->DDBitmap->funcs->pBitmapBits)
         {
-            ret = psurf->DDBitmap->funcs->pBitmapBits(hBitmap, 
+            ret = psurf->DDBitmap->funcs->pBitmapBits(hBitmap,
                                                       (void *)Bits,
                                                       Bytes,
                                                       DDB_SET);

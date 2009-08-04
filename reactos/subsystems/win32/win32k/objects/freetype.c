@@ -3110,12 +3110,13 @@ GreExtTextOutW(
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj = NULL;
-    XLATEOBJ *XlateObj=NULL, *XlateObj2=NULL;
+    EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
     POINT Start;
     BOOL DoBreak = FALSE;
     HPALETTE hDestPalette;
+    PPALETTE ppalDst;
     USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
@@ -3184,20 +3185,6 @@ GreExtTextOutW(
 
     RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
-
-    /* Create the brushes */
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, PAL_RGB, hDestPalette, NULL);
-    if ( !XlateObj )
-    {
-        goto fail;
-    }
-    XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, hDestPalette);
-    if ( !XlateObj2 )
-    {
-        goto fail;
-    }
 
     SourcePoint.x = 0;
     SourcePoint.y = 0;
@@ -3397,6 +3384,15 @@ GreExtTextOutW(
     TextTop = YStart;
     BackgroundLeft = (RealXStart + 32) >> 6;
 
+    /* Create the xlateobj */
+    hDestPalette = psurf->hDIBPalette;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
+    ppalDst = PALETTE_LockPalette(hDestPalette);
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
+    PALETTE_UnlockPalette(ppalDst);
+
+
     /*
      * The main rendering loop.
      */
@@ -3416,7 +3412,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
                 IntUnLockFreeType;
-                goto fail;
+                goto fail2;
             }
             glyph = face->glyph;
             realglyph = ftGdiGlyphCacheSet(face,
@@ -3428,7 +3424,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
                 IntUnLockFreeType;
-                goto fail;
+                goto fail2;
             }
         }
 
@@ -3450,7 +3446,7 @@ GreExtTextOutW(
             if (error)
             {
                 DPRINT1("WARNING: Failed to render glyph!\n");
-                goto fail;
+                goto fail2;
             }
         }
         realglyph2 = (FT_BitmapGlyph)realglyph;
@@ -3508,7 +3504,7 @@ GreExtTextOutW(
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             // FT_Done_Glyph(realglyph);
             IntUnLockFreeType;
-            goto fail;
+            goto fail2;
         }
         SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
         if ( !SourceGlyphSurf )
@@ -3516,7 +3512,7 @@ GreExtTextOutW(
             EngDeleteSurface((HSURF)HSourceGlyph);
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             IntUnLockFreeType;
-            goto fail;
+            goto fail2;
         }
 
         /*
@@ -3539,8 +3535,8 @@ GreExtTextOutW(
             SurfObj,
             SourceGlyphSurf,
             dc->rosdc.CombinedClip,
-            XlateObj,
-            XlateObj2,
+            &exloRGB2Dst.xlo,
+            &exloDst2RGB.xlo,
             &DestRect,
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
@@ -3577,8 +3573,8 @@ GreExtTextOutW(
 
     IntUnLockFreeType;
 
-    EngDeleteXlate(XlateObj);
-    EngDeleteXlate(XlateObj2);
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 good:
@@ -3586,11 +3582,10 @@ good:
 
     return TRUE;
 
+fail2:
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
 fail:
-    if ( XlateObj2 != NULL )
-        EngDeleteXlate(XlateObj2);
-    if ( XlateObj != NULL )
-        EngDeleteXlate(XlateObj);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
     DC_UnlockDc(dc);

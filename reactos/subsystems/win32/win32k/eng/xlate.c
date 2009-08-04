@@ -1,736 +1,880 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI Color Translation Functions
- * FILE:             subsys/win32k/eng/xlate.c
- * PROGRAMER:        Jason Filby
- * REVISION HISTORY:
- *        8/20/1999: Created
+ * FILE:             subsystems/win32/win32k/eng/xlate.c
+ * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 #include <w32k.h>
 
+#include <intrin.h>
+
 #define NDEBUG
 #include <debug.h>
+
+
+/** Globals *******************************************************************/
+
+ULONG giUniqueXlate = 0;
+EXLATEOBJ gexloTrivial;
+XLATEOBJ* gpxloTrivial = &gexloTrivial.xlo;
+
+const BYTE gajXlate5to8[32] =
+{  0,  8, 16, 25, 33, 41, 49, 58, 66, 74, 82, 90, 99,107,115,123,
+ 132,140,148,156,165,173,181,189,197,206,214,222,231,239,247,255};
+
+const BYTE gajXlate6to8[64] =
+{ 0,  4,  8, 12, 16, 20, 24, 28, 32, 36, 40, 45, 49, 52, 57, 61,
+ 65, 69, 73, 77, 81, 85, 89, 93, 97,101,105,109,113,117,121,125,
+130,134,138,142,146,150,154,158,162,166,170,174,178,182,186,190,
+194,198,202,207,210,215,219,223,227,231,235,239,243,247,251,255};
+
+
+/** iXlate functions **********************************************************/
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateTrivial(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    return iColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateToMono(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    return (iColor == pexlo->xlo.pulXlate[0]);
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateTable(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    if (iColor >= pexlo->xlo.cEntries)
+    {
+        iColor %= pexlo->xlo.cEntries;
+    }
+    return pexlo->xlo.pulXlate[iColor];
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateRGBtoBGR(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy green */
+    iNewColor = iColor & 0x00ff00;
+
+    /* Mask red and blue */
+    iColor &= 0xff00ff;
+
+    /* Shift and copy red and blue */
+    iNewColor |= iColor >> 16;
+    iNewColor |= iColor << 16;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateRGBto555(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy red */
+    iColor <<= 7;
+    iNewColor = iColor & 0x7C00;
+
+    /* Copy green */
+    iColor >>= 13;
+    iNewColor |= iColor & 0x3E0;
+
+    /* Copy green */
+    iColor >>= 13;
+    iNewColor |= iColor & 0x1F;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateBGRto555(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iColor >>= 3;
+    iNewColor = iColor & 0x1f;
+
+    /* Copy green */
+    iColor >>= 3;
+    iNewColor |= (iColor & 0x3E0);
+
+    /* Copy red */
+    iColor >>= 3;
+    iNewColor |= (iColor & 0x7C00);
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateRGBto565(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy red */
+    iColor <<= 8;
+    iNewColor = iColor & 0xF800;
+
+    /* Copy green */
+    iColor >>= 13;
+    iNewColor |= iColor & 0x7E0;
+
+    /* Copy green */
+    iColor >>= 14;
+    iNewColor |= iColor & 0x1F;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateBGRto565(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iColor >>= 3;
+    iNewColor = iColor & 0x1f;
+
+    /* Copy green */
+    iColor >>= 2;
+    iNewColor |= (iColor & 0x7E0);
+
+    /* Copy red */
+    iColor >>= 3;
+    iNewColor |= (iColor & 0xF800);
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateRGBtoPal(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate555toRGB(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iNewColor = gajXlate5to8[iColor & 0x1F] << 16;
+
+    /* Copy green */
+    iColor >>= 5;
+    iNewColor |= gajXlate5to8[iColor & 0x1F] << 8;
+
+    /* Copy red */
+    iColor >>= 5;
+    iNewColor |= gajXlate5to8[iColor & 0x1F];
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate555toBGR(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iNewColor = gajXlate5to8[iColor & 0x1F];
+
+    /* Copy green */
+    iColor >>= 5;
+    iNewColor |= gajXlate5to8[iColor & 0x1F] << 8;
+
+    /* Copy red */
+    iColor >>= 5;
+    iNewColor |= gajXlate5to8[iColor & 0x1F] << 16;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate555to565(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iNewColor = iColor & 0x1f;
+
+    /* Copy red and green */
+    iColor <<= 1;
+    iNewColor |= iColor & 0xFFC0;
+
+    /* Duplicate highest green bit */
+    iColor >>= 5;
+    iNewColor |= (iColor & 0x20);
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate555toPal(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    iColor = EXLATEOBJ_iXlate555toRGB(pexlo, iColor);
+
+    return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate565to555(PEXLATEOBJ pxlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iNewColor = iColor & 0x1f;
+
+    /* Copy red and green */
+    iColor >>= 1;
+    iNewColor |= iColor & 0x7FE0;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate565toRGB(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iNewColor = gajXlate5to8[iColor & 0x1F] << 16;
+
+    /* Copy green */
+    iColor >>= 5;
+    iNewColor |= gajXlate6to8[iColor & 0x3F] << 8;
+
+    /* Copy red */
+    iColor >>= 6;
+    iNewColor |= gajXlate5to8[iColor & 0x1F];
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate565toBGR(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    /* Copy blue */
+    iNewColor = gajXlate5to8[iColor & 0x1F];
+
+    /* Copy green */
+    iColor >>= 5;
+    iNewColor |= gajXlate6to8[iColor & 0x3F] << 8;
+
+    /* Copy blue */
+    iColor >>= 6;
+    iNewColor |= gajXlate5to8[iColor & 0x1F] << 16;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlate565toPal(EXLATEOBJ *pexlo, ULONG iColor)
+{
+    iColor = EXLATEOBJ_iXlate565toRGB(pexlo, iColor);
+
+    return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateShiftAndMask(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    ULONG iNewColor;
+
+    iNewColor = _rotl(iColor, pexlo->ulRedShift) & pexlo->ulRedMask;
+    iNewColor |= _rotl(iColor, pexlo->ulGreenShift) & pexlo->ulGreenMask;
+    iNewColor |= _rotl(iColor, pexlo->ulBlueShift) & pexlo->ulBlueMask;
+
+    return iNewColor;
+}
+
+ULONG
+FASTCALL
+EXLATEOBJ_iXlateBitfieldsToPal(PEXLATEOBJ pexlo, ULONG iColor)
+{
+    /* Convert bitfields to RGB */
+    iColor = EXLATEOBJ_iXlateShiftAndMask(pexlo, iColor);
+
+    /* Return nearest index */
+    return PALETTE_ulGetNearestPaletteIndex(pexlo->ppalDst, iColor);
+}
+
+
+/** Private Functions *********************************************************/
+
+VOID
+NTAPI
+EXLATEOBJ_vInitTrivial(PEXLATEOBJ pexlo)
+{
+    pexlo->xlo.iUniq = InterlockedIncrement((LONG*)&giUniqueXlate);
+    pexlo->xlo.flXlate = XO_TRIVIAL;
+    pexlo->xlo.iSrcType = PAL_RGB;
+    pexlo->xlo.iDstType = PAL_RGB;
+    pexlo->xlo.cEntries = 0;
+    pexlo->xlo.pulXlate = pexlo->aulXlate;
+    pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
+    pexlo->ppalSrc = &gpalRGB;
+    pexlo->ppalDst = &gpalRGB;
+    pexlo->ppalDstDc = &gpalRGB;
+    pexlo->hColorTransform = NULL;
+}
+
+VOID
+NTAPI
+EXLATEOBJ_vInitialize(
+    PEXLATEOBJ pexlo,
+    PALETTE *ppalSrc,
+    PALETTE *ppalDst,
+    COLORREF crSrcBackColor,
+    COLORREF crDstBackColor,
+    COLORREF crDstForeColor)
+{
+    ULONG cEntries;
+    ULONG i, ulColor;
+
+    EXLATEOBJ_vInitTrivial(pexlo);
+
+    if (ppalDst == ppalSrc || !ppalSrc || !ppalDst ||
+        ((ppalDst->Mode == PAL_RGB || ppalDst->Mode == PAL_BGR) &&
+         ppalDst->Mode == ppalSrc->Mode))
+    {
+        return;
+    }
+
+    pexlo->ppalSrc = ppalSrc;
+    pexlo->ppalDst = ppalDst;
+    pexlo->xlo.iSrcType = ppalSrc->Mode;
+    pexlo->xlo.iDstType = ppalDst->Mode;
+
+    /* Chack if both of the pallettes are indexed */
+    if (!(ppalSrc->Mode & PAL_INDEXED) || !(ppalDst->Mode & PAL_INDEXED))
+    {
+        /* At least one palette is not indexed, calculate shifts/masks */
+        ULONG aulMasksSrc[3], aulMasksDst[3];
+
+        PALETTE_vGetBitMasks(ppalSrc, aulMasksSrc);
+        PALETTE_vGetBitMasks(ppalDst, aulMasksDst);
+
+        pexlo->ulRedMask = aulMasksDst[0];
+        pexlo->ulGreenMask = aulMasksDst[1];
+        pexlo->ulBlueMask = aulMasksDst[2];
+
+        pexlo->ulRedShift = CalculateShift(aulMasksSrc[0], aulMasksDst[0]);
+        pexlo->ulGreenShift = CalculateShift(aulMasksSrc[1], aulMasksDst[1]);
+        pexlo->ulBlueShift = CalculateShift(aulMasksSrc[2], aulMasksDst[2]);
+    }
+
+    if (ppalSrc->Mode & PAL_MONOCHROME)
+    {
+        /* This is a monochrome palette */
+        if (!(ppalDst->Mode & PAL_MONOCHROME))
+        {
+            /* Mono to color, use the dest DC's fore and back color */
+            pexlo->pfnXlate = EXLATEOBJ_iXlateTable;
+            pexlo->xlo.flXlate |= XO_TABLE;
+            pexlo->xlo.cEntries = 2;
+            pexlo->xlo.pulXlate[0] =
+                PALETTE_ulGetNearestIndex(ppalDst, crDstForeColor);
+            pexlo->xlo.pulXlate[1] =
+                PALETTE_ulGetNearestIndex(ppalDst, crDstBackColor);
+        }
+    }
+    else if (ppalDst->Mode & PAL_MONOCHROME)
+    {
+        pexlo->pfnXlate = EXLATEOBJ_iXlateToMono;
+        pexlo->xlo.flXlate |= XO_TO_MONO;
+        pexlo->xlo.cEntries = 1;
+
+        if (ppalSrc->Mode & PAL_INDEXED)
+        {
+            pexlo->aulXlate[0] =
+                PALETTE_ulGetNearestPaletteIndex(ppalSrc, crSrcBackColor);
+        }
+        else if (ppalSrc->Mode & PAL_BGR)
+        {
+            pexlo->aulXlate[0] = crSrcBackColor;
+        }
+        else if (ppalSrc->Mode & PAL_RGB)
+        {
+            pexlo->aulXlate[0] = RGB(GetBValue(crSrcBackColor),
+                                     GetGValue(crSrcBackColor),
+                                     GetRValue(crSrcBackColor));
+        }
+        else if (ppalSrc->Mode & PAL_BITFIELDS)
+        {
+            PALETTE_vGetBitMasks(ppalSrc, &pexlo->ulRedMask);
+            pexlo->ulRedShift = CalculateShift(0xFF, pexlo->ulRedMask);
+            pexlo->ulGreenShift = CalculateShift(0xFF00, pexlo->ulGreenMask);
+            pexlo->ulBlueShift = CalculateShift(0xFF0000, pexlo->ulBlueMask);
+
+            pexlo->aulXlate[0] = EXLATEOBJ_iXlateShiftAndMask(pexlo, crSrcBackColor);
+        }
+    }
+    else if (ppalSrc->Mode & PAL_INDEXED)
+    {
+        cEntries = ppalSrc->NumColors;
+
+        /* Allocate buffer if needed */
+        if (cEntries > 6)
+        {
+            pexlo->xlo.pulXlate = EngAllocMem(0,
+                                              cEntries * sizeof(ULONG),
+                                              TAG_XLATEOBJ);
+            if (!pexlo->xlo.pulXlate)
+            {
+                DPRINT1("Could not allocate pulXlate buffer.\n");
+                pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
+                pexlo->xlo.flXlate = XO_TRIVIAL;
+                return;
+            }
+        }
+        pexlo->xlo.cEntries = cEntries;
+
+        pexlo->pfnXlate = EXLATEOBJ_iXlateTable;
+        if (ppalDst->Mode & PAL_INDEXED)
+        {
+            pexlo->xlo.flXlate |= XO_TABLE;
+
+            for (i = 0; i < cEntries; i++)
+            {
+                ulColor = RGB(ppalSrc->IndexedColors[i].peRed,
+                              ppalSrc->IndexedColors[i].peGreen,
+                              ppalSrc->IndexedColors[i].peBlue);
+
+                pexlo->xlo.pulXlate[i] =
+                    PALETTE_ulGetNearestPaletteIndex(ppalDst, ulColor);
+
+                if (pexlo->xlo.pulXlate[i] != i)
+                    pexlo->xlo.flXlate &= ~XO_TRIVIAL;
+            }
+
+            if (pexlo->xlo.flXlate & XO_TRIVIAL)
+            {
+                if (pexlo->xlo.pulXlate != pexlo->aulXlate)
+                    EngFreeMem(pexlo->xlo.pulXlate);
+                pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
+                pexlo->xlo.flXlate = XO_TRIVIAL;
+                return;
+            }
+        }
+        else
+        {
+            // FIXME: use PALETTE_ulGetNearest
+            EXLATEOBJ exloTmp = *pexlo;
+            exloTmp.xlo.pulXlate = exloTmp.aulXlate;
+
+            pexlo->xlo.flXlate |= XO_TABLE;
+            for (i = 0; i < pexlo->xlo.cEntries; i++)
+            {
+                ulColor = RGB(ppalSrc->IndexedColors[i].peRed,
+                              ppalSrc->IndexedColors[i].peGreen,
+                              ppalSrc->IndexedColors[i].peBlue);
+                pexlo->xlo.pulXlate[i] =
+                    EXLATEOBJ_iXlateShiftAndMask(&exloTmp, ulColor);
+            }
+        }
+    }
+    else if (ppalSrc->Mode & PAL_RGB)
+    {
+        if (ppalDst->Mode & PAL_INDEXED)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateRGBtoPal;
+
+        else if (ppalDst->Mode & PAL_BGR)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateRGBtoBGR;
+
+        else if (ppalDst->Mode & PAL_RGB16_555)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateRGBto555;
+
+        else if (ppalDst->Mode & PAL_RGB16_565)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateRGBto565;
+
+        else if (ppalDst->Mode & PAL_BITFIELDS)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
+    }
+    else if (ppalSrc->Mode & PAL_BGR)
+    {
+        if (ppalDst->Mode & PAL_INDEXED)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateBitfieldsToPal;
+
+        else if (ppalDst->Mode & PAL_RGB)
+            /* The inverse function works the same */
+            pexlo->pfnXlate = EXLATEOBJ_iXlateRGBtoBGR;
+
+        else if (ppalDst->Mode & PAL_RGB16_555)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateBGRto555;
+
+        else if (ppalDst->Mode & PAL_RGB16_565)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateBGRto565;
+
+        else if (ppalDst->Mode & PAL_BITFIELDS)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
+    }
+    else if (ppalSrc->Mode & PAL_RGB16_555)
+    {
+        if (ppalDst->Mode & PAL_INDEXED)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate555toPal;
+
+        else if (ppalDst->Mode & PAL_RGB)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate555toRGB;
+
+        else if (ppalDst->Mode & PAL_BGR)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate555toBGR;
+
+        else if (ppalDst->Mode & PAL_RGB16_565)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate555to565;
+
+        else if (ppalDst->Mode & PAL_BITFIELDS)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
+    }
+    else if (ppalSrc->Mode & PAL_RGB16_565)
+    {
+        if (ppalDst->Mode & PAL_INDEXED)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate565toPal;
+
+        else if (ppalDst->Mode & PAL_RGB)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate565toRGB;
+
+        else if (ppalDst->Mode & PAL_BGR)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate565toBGR;
+
+        else if (ppalDst->Mode & PAL_RGB16_555)
+            pexlo->pfnXlate = EXLATEOBJ_iXlate565to555;
+
+        else if (ppalDst->Mode & PAL_BITFIELDS)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
+    }
+    else if (ppalSrc->Mode & PAL_BITFIELDS)
+    {
+        if (ppalDst->Mode & PAL_INDEXED)
+            pexlo->pfnXlate = EXLATEOBJ_iXlateBitfieldsToPal;
+        else
+            pexlo->pfnXlate = EXLATEOBJ_iXlateShiftAndMask;
+    }
+
+    /* Check for a trivial shift and mask operation */
+    if (pexlo->pfnXlate == EXLATEOBJ_iXlateShiftAndMask &&
+        !pexlo->ulRedShift && !pexlo->ulGreenShift && !pexlo->ulBlueShift)
+    {
+            pexlo->pfnXlate = EXLATEOBJ_iXlateTrivial;
+    }
+
+    /* Check for trivial xlate */
+    if (pexlo->pfnXlate == EXLATEOBJ_iXlateTrivial)
+        pexlo->xlo.flXlate = XO_TRIVIAL;
+    else
+        pexlo->xlo.flXlate &= ~XO_TRIVIAL;
+}
+
+VOID
+NTAPI
+EXLATEOBJ_vInitXlateFromDCs(
+    EXLATEOBJ* pexlo,
+    PDC pdcSrc,
+    PDC pdcDst)
+{
+    PSURFACE psurfDst, psurfSrc;
+    HPALETTE hpalSrc, hpalDst;
+    PPALETTE ppalSrc, ppalDst, ppalDstDc;
+
+    DPRINT("Enter EXLATEOBJ_vInitXlateFromDCs\n");
+
+    /* Do basic init */
+    EXLATEOBJ_vInitTrivial(pexlo);
+
+    psurfDst = pdcDst->dclevel.pSurface;
+    psurfSrc = pdcSrc->dclevel.pSurface;
+
+    if (psurfDst == psurfSrc)
+    {
+        return;
+    }
+
+    hpalSrc = psurfSrc->hDIBPalette;
+    if (!hpalSrc) 
+        hpalSrc = pPrimarySurface->DevInfo.hpalDefault;
+
+    ppalSrc = PALETTE_ShareLockPalette(hpalSrc);
+    if (!ppalSrc)
+        return;
+
+    hpalDst = psurfDst->hDIBPalette;
+    if (!hpalDst) hpalDst = pPrimarySurface->DevInfo.hpalDefault;
+
+    ppalDst = PALETTE_ShareLockPalette(hpalDst);
+    if (!ppalDst)
+    {
+        PALETTE_ShareUnlockPalette(ppalSrc);
+        return;
+    }
+
+    ppalDstDc = pdcDst->dclevel.ppal;
+    ASSERT(ppalDstDc);
+
+    /* KB41464 details how to convert between mono and color */
+    if (psurfDst->SurfObj.iBitmapFormat == BMF_1BPP)
+    {
+        if (psurfSrc->SurfObj.iBitmapFormat != BMF_1BPP)
+        {
+            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
+            EXLATEOBJ_vInitialize(pexlo,
+                                  ppalSrc,
+                                  &gpalMono,
+                                  pdcSrc->pdcattr->crBackgroundClr,
+                                  pdcDst->pdcattr->crBackgroundClr,
+                                  pdcDst->pdcattr->crForegroundClr);
+        }
+    }
+    else if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP && !psurfSrc->hSecure)
+    {
+        // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
+        EXLATEOBJ_vInitialize(pexlo,
+                              &gpalMono,
+                              ppalDst,
+                              0,
+                              pdcDst->pdcattr->crBackgroundClr,
+                              pdcDst->pdcattr->crForegroundClr);
+    }
+    else
+    {
+        EXLATEOBJ_vInitialize(pexlo, ppalSrc, ppalDst, 0, 0, 0);
+    }
+
+    PALETTE_ShareUnlockPalette(ppalDst);
+    PALETTE_ShareUnlockPalette(ppalSrc);
+}
+
+
+VOID
+NTAPI
+EXLATEOBJ_vInitBrushXlate(
+    PEXLATEOBJ pexlo,
+    BRUSH *pbrush,
+    SURFACE *psurfDst,
+    COLORREF crForegroundClr,
+    COLORREF crBackgroundClr)
+{
+    HPALETTE hpalDst = NULL;
+    PPALETTE ppalDst, ppalPattern;
+
+    ASSERT(pexlo);
+    ASSERT(pbrush);
+    ASSERT(psurfDst);
+    ASSERT(!(pbrush->flAttrs & (GDIBRUSH_IS_SOLID | GDIBRUSH_IS_NULL)));
+
+    EXLATEOBJ_vInitTrivial(pexlo);
+
+    hpalDst = psurfDst->hDIBPalette;
+    if (!hpalDst) hpalDst = pPrimarySurface->DevInfo.hpalDefault;
+    ppalDst = PALETTE_ShareLockPalette(hpalDst);
+    if (!ppalDst)
+    {
+        DPRINT1("No ppalDst!\n");
+        return;
+    }
+
+    SURFACE *psurfPattern = SURFACE_ShareLockSurface(pbrush->hbmPattern);
+    if (!psurfPattern)
+    {
+        PALETTE_ShareUnlockPalette(ppalDst);
+        return;
+    }
+
+#if 0
+    if (psurfDst->SurfObj.iBitmapFormat == BMF_1BPP)
+    {
+        if (psurfSrc->SurfObj.iBitmapFormat != BMF_1BPP)
+        {
+            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
+            EXLATEOBJ_vInitialize(pexlo,
+                                  ppalSrc,
+                                  &gpalMono,
+                                  0,
+                                  crBackgroundClr,
+                                  crForegroundClr);
+        }
+    }
+    else
+#endif
+    if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP &&
+        !(pbrush->flAttrs & GDIBRUSH_IS_DIB))
+    {
+        /* Special case: 1 bpp pattern, not a DIB brush. */
+        if (psurfDst->SurfObj.iBitmapFormat != BMF_1BPP)
+        {
+            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
+            EXLATEOBJ_vInitialize(pexlo,
+                                  &gpalMono,
+                                  ppalDst,
+                                  0,
+                                  crBackgroundClr,
+                                  crForegroundClr);
+        }
+    }
+    else
+    {
+        /* Default: use the patterns' palette */
+        ppalPattern = PALETTE_LockPalette(psurfPattern->hDIBPalette);
+        if (ppalPattern)
+        {
+            EXLATEOBJ_vInitialize(pexlo, &gpalRGB, ppalDst, 0, 0, 0);
+            PALETTE_UnlockPalette(ppalPattern);
+        }
+    }
+
+    PALETTE_ShareUnlockPalette(ppalDst);
+    SURFACE_ShareUnlockSurface(psurfPattern);
+}
+
+VOID
+NTAPI
+EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo)
+{
+    if (pexlo->xlo.pulXlate != pexlo->aulXlate)
+    {
+        EngFreeMem(pexlo->xlo.pulXlate);
+    }
+    pexlo->xlo.pulXlate = NULL;
+}
 
 VOID
 InitXlateImpl(VOID)
 {
-}
 
-static __inline ULONG
-ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
-{
-   ULONG TranslatedColor;
-
-   if (XlateGDI->RedShift < 0)
-      TranslatedColor = (Color >> -(XlateGDI->RedShift)) & XlateGDI->RedMask;
-   else
-      TranslatedColor = (Color << XlateGDI->RedShift) & XlateGDI->RedMask;
-   if (XlateGDI->GreenShift < 0)
-      TranslatedColor |= (Color >> -(XlateGDI->GreenShift)) & XlateGDI->GreenMask;
-   else
-      TranslatedColor |= (Color << XlateGDI->GreenShift) & XlateGDI->GreenMask;
-   if (XlateGDI->BlueShift < 0)
-      TranslatedColor |= (Color >> -(XlateGDI->BlueShift)) & XlateGDI->BlueMask;
-   else
-      TranslatedColor |= (Color << XlateGDI->BlueShift) & XlateGDI->BlueMask;
-
-   return TranslatedColor;
+    EXLATEOBJ_vInitTrivial(&gexloTrivial);
 }
 
 
-static __inline ULONG
-ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
-                  PALETTEENTRY *DestColors, ULONG NumColors)
+/** Public DDI Functions ******************************************************/
+
+#undef XLATEOBJ_iXlate
+ULONG
+NTAPI
+XLATEOBJ_iXlate(XLATEOBJ *pxlo, ULONG iColor)
 {
-   ULONG SourceRed, SourceGreen, SourceBlue;
-   ULONG cxRed, cxGreen, cxBlue, Rating, BestMatch = 0xFFFFFF;
-   ULONG CurrentIndex, BestIndex = 0;
+    PEXLATEOBJ pexlo = (PEXLATEOBJ)pxlo;
 
-   SourceRed = SourceColor->peRed;
-   SourceGreen = SourceColor->peGreen;
-   SourceBlue = SourceColor->peBlue;
+    if (!pxlo)
+        return iColor;
 
-   for (CurrentIndex = 0; CurrentIndex < NumColors; CurrentIndex++, DestColors++)
-   {
-      cxRed = abs((SHORT)SourceRed - (SHORT)DestColors->peRed);
-      cxRed *= cxRed;
-      cxGreen = abs((SHORT)SourceGreen - (SHORT)DestColors->peGreen);
-      cxGreen *= cxGreen;
-      cxBlue = abs((SHORT)SourceBlue - (SHORT)DestColors->peBlue);
-      cxBlue *= cxBlue;
-
-      Rating = cxRed + cxGreen + cxBlue;
-
-      if (Rating == 0)
-      {
-         /* Exact match */
-         BestIndex = CurrentIndex;
-         break;
-      }
-
-      if (Rating < BestMatch)
-      {
-         BestIndex = CurrentIndex;
-         BestMatch = Rating;
-      }
-   }
-
-   return BestIndex;
+    /* Call the iXlate function */
+    return pexlo->pfnXlate(pexlo, iColor);
 }
 
-static __inline VOID
-BitMasksFromPal(USHORT PalType, PPALETTE Palette,
-                PULONG RedMask, PULONG BlueMask, PULONG GreenMask)
+ULONG
+NTAPI
+XLATEOBJ_cGetPalette(XLATEOBJ *pxlo, ULONG iPal, ULONG cPal, ULONG *pPalOut)
 {
-   static const union { PALETTEENTRY Color; ULONG Mask; } Red   = {{0xFF, 0x00, 0x00}};
-   static const union { PALETTEENTRY Color; ULONG Mask; } Green = {{0x00, 0xFF, 0x00}};
-   static const union { PALETTEENTRY Color; ULONG Mask; } Blue  = {{0x00, 0x00, 0xFF}};
-
-   switch (PalType)
-   {
-      case PAL_RGB:
-         *RedMask   = RGB(0xFF, 0x00, 0x00);
-         *GreenMask = RGB(0x00, 0xFF, 0x00);
-         *BlueMask  = RGB(0x00, 0x00, 0xFF);
-         break;
-      case PAL_BGR:
-         *RedMask   = RGB(0x00, 0x00, 0xFF);
-         *GreenMask = RGB(0x00, 0xFF, 0x00);
-         *BlueMask  = RGB(0xFF, 0x00, 0x00);
-         break;
-      case PAL_BITFIELDS:
-         *RedMask = Palette->RedMask;
-         *GreenMask = Palette->GreenMask;
-         *BlueMask = Palette->BlueMask;
-         break;
-      case PAL_INDEXED:
-         *RedMask = Red.Mask;
-         *GreenMask = Green.Mask;
-         *BlueMask = Blue.Mask;
-         break;
-   }
-}
-
-/*
- * Calculate the number of bits Mask must be shift to the left to get a
- * 1 in the most significant bit position
- */
-static __inline INT
-CalculateShift(ULONG Mask)
-{
-   ULONG Shift = 0;
-   ULONG LeftmostBit = 1 << (8 * sizeof(ULONG) - 1);
-
-   while (0 == (Mask & LeftmostBit) && Shift < 8 * sizeof(ULONG))
-   {
-      Mask = Mask << 1;
-      Shift++;
-   }
-
-   return Shift;
-}
-
-XLATEOBJ* FASTCALL
-IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
-                  HPALETTE PaletteDest, HPALETTE PaletteSource)
-{
-   XLATEOBJ *XlateObj;
-   XLATEGDI *XlateGDI;
-   PALETTE *SourcePalGDI = 0;
-   PALETTE *DestPalGDI = 0;
-   ULONG SourceRedMask = 0, SourceGreenMask = 0, SourceBlueMask = 0;
-   ULONG DestRedMask = 0, DestGreenMask = 0, DestBlueMask = 0;
-   ULONG i;
-
-   ASSERT(SourcePalType || PaletteSource);
-   ASSERT(DestPalType || PaletteDest);
-
-   XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);
-   if (XlateGDI == NULL)
-   {
-      DPRINT1("Failed to allocate memory for a XLATE structure!\n");
-      return NULL;
-   }
-   XlateObj = GDIToObj(XlateGDI, XLATE);
-
-   if (PaletteSource != NULL)
-      SourcePalGDI = PALETTE_LockPalette(PaletteSource);
-   if (PaletteDest == PaletteSource)
-      DestPalGDI = SourcePalGDI;
-   else if (PaletteDest != NULL)
-      DestPalGDI = PALETTE_LockPalette(PaletteDest);
-
-   if (SourcePalType == 0)
-   {
-      if (!SourcePalGDI)
-      {
-          DPRINT1("Failed to lock source palette %p\n", PaletteSource);
-          return NULL;
-      }
-      SourcePalType = SourcePalGDI->Mode;
-   }
-   if (DestPalType == 0)
-   {
-      if (!DestPalGDI)
-      {
-          DPRINT1("Failed to lock dest palette %p\n", PaletteDest);
-          return NULL;
-      }
-      DestPalType = DestPalGDI->Mode;
-   }
-
-   XlateObj->iSrcType = SourcePalType;
-   XlateObj->iDstType = DestPalType;
-   XlateObj->flXlate = 0;
-   XlateObj->cEntries = 0;
-
-   /* Store handles of palettes in internal Xlate GDI object (or NULLs) */
-   XlateGDI->SourcePal = PaletteSource;
-   XlateGDI->DestPal = PaletteDest;
-
-   XlateGDI->UseShiftAndMask = FALSE;
-
-   /*
-    * Compute bit fiddeling constants unless both palettes are indexed, then
-    * we don't need them.
-    */
-   if (SourcePalType != PAL_INDEXED || DestPalType != PAL_INDEXED)
-   {
-      BitMasksFromPal(SourcePalType, SourcePalGDI, &SourceRedMask,
-                      &SourceBlueMask, &SourceGreenMask);
-      BitMasksFromPal(DestPalType, DestPalGDI, &DestRedMask,
-                      &DestBlueMask, &DestGreenMask);
-      XlateGDI->RedShift = CalculateShift(SourceRedMask) - CalculateShift(DestRedMask);
-      XlateGDI->RedMask = DestRedMask;
-      XlateGDI->GreenShift = CalculateShift(SourceGreenMask) - CalculateShift(DestGreenMask);
-      XlateGDI->GreenMask = DestGreenMask;
-      XlateGDI->BlueShift = CalculateShift(SourceBlueMask) - CalculateShift(DestBlueMask);
-      XlateGDI->BlueMask = DestBlueMask;
-   }
-
-   /* If source and destination palettes are the same or if they're RGB/BGR */
-   if (PaletteDest == PaletteSource ||
-       (DestPalType == PAL_RGB && SourcePalType == PAL_RGB) ||
-       (DestPalType == PAL_BGR && SourcePalType == PAL_BGR))
-   {
-      XlateObj->flXlate |= XO_TRIVIAL;
-      goto end;
-   }
-
-   /*
-    * If source and destination are bitfield based (RGB and BGR are just
-    * special bitfields) we can use simple shifting.
-    */
-   if ((DestPalType == PAL_RGB || DestPalType == PAL_BGR ||
-        DestPalType == PAL_BITFIELDS) &&
-       (SourcePalType == PAL_RGB || SourcePalType == PAL_BGR ||
-        SourcePalType == PAL_BITFIELDS))
-   {
-      if (SourceRedMask == DestRedMask &&
-          SourceBlueMask == DestBlueMask &&
-          SourceGreenMask == DestGreenMask)
-      {
-         XlateObj->flXlate |= XO_TRIVIAL;
-      }
-      XlateGDI->UseShiftAndMask = TRUE;
-      goto end;
-   }
-
-   /* Indexed -> Indexed */
-   if (SourcePalType == PAL_INDEXED && DestPalType == PAL_INDEXED)
-   {
-      XlateObj->cEntries = SourcePalGDI->NumColors;
-      XlateObj->pulXlate =
-         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, TAG_XLATEOBJ);
-
-      XlateObj->flXlate |= XO_TRIVIAL;
-      for (i = 0; i < XlateObj->cEntries; i++)
-      {
-         XlateObj->pulXlate[i] = ClosestColorMatch(
-            XlateGDI, SourcePalGDI->IndexedColors + i,
-            DestPalGDI->IndexedColors, DestPalGDI->NumColors);
-         if (XlateObj->pulXlate[i] != i)
-            XlateObj->flXlate &= ~XO_TRIVIAL;
-      }
-
-      XlateObj->flXlate |= XO_TABLE;
-      goto end;
-   }
-
-   /* Indexed -> Bitfields/RGB/BGR */
-   if (SourcePalType == PAL_INDEXED)
-   {
-      XlateObj->cEntries = SourcePalGDI->NumColors;
-      XlateObj->pulXlate =
-         EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, TAG_XLATEOBJ);
-      for (i = 0; i < XlateObj->cEntries; i++)
-         XlateObj->pulXlate[i] =
-            ShiftAndMask(XlateGDI, *((ULONG *)&SourcePalGDI->IndexedColors[i]));
-      XlateObj->flXlate |= XO_TABLE;
-      goto end;
-   }
-
-   /*
-    * Last case: Bitfields/RGB/BGR -> Indexed
-    * isn't handled here yet and all the logic is in XLATEOBJ_iXlate now.
-    */
-
-end:
-  if (PaletteDest != NULL)
-     if (PaletteDest != PaletteSource)
-         if (DestPalGDI != NULL)
-              PALETTE_UnlockPalette(DestPalGDI);
-
-
-   if (PaletteSource != NULL)
-      PALETTE_UnlockPalette(SourcePalGDI);
-
-   return XlateObj;
-}
-
-XLATEOBJ* FASTCALL
-IntEngCreateMonoXlate(
-   USHORT SourcePalType, HPALETTE PaletteDest, HPALETTE PaletteSource,
-   ULONG BackgroundColor)
-{
-   XLATEOBJ *XlateObj;
-   XLATEGDI *XlateGDI;
-   PALETTE *SourcePalGDI;
-
-   XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);
-   if (XlateGDI == NULL)
-   {
-      DPRINT1("Failed to allocate memory for a XLATE structure!\n");
-      return NULL;
-   }
-   XlateObj = GDIToObj(XlateGDI, XLATE);
-
-   SourcePalGDI = PALETTE_LockPalette(PaletteSource);
-   /* FIXME - SourcePalGDI can be NULL!!! Handle this case instead of ASSERT! */
-   ASSERT(SourcePalGDI);
-
-   if (SourcePalType == 0)
-      SourcePalType = SourcePalGDI->Mode;
-
-   XlateObj->iSrcType = SourcePalType;
-   XlateObj->iDstType = PAL_INDEXED;
-
-   /* Store handles of palettes in internal Xlate GDI object (or NULLs) */
-   XlateGDI->DestPal = PaletteDest;
-   XlateGDI->SourcePal = PaletteSource;
-
-   XlateObj->flXlate = XO_TO_MONO;
-   XlateObj->cEntries = 1;
-   XlateObj->pulXlate = &XlateGDI->BackgroundColor;
-   switch (SourcePalType)
-   {
-      case PAL_INDEXED:
-         XlateGDI->BackgroundColor = NtGdiGetNearestPaletteIndex(
-            PaletteSource, BackgroundColor);
-         break;
-      case PAL_BGR:
-         XlateGDI->BackgroundColor = BackgroundColor;
-         break;
-      case PAL_RGB:
-         XlateGDI->BackgroundColor =
-            ((BackgroundColor & 0xFF) << 16) |
-            ((BackgroundColor & 0xFF0000) >> 16) |
-            (BackgroundColor & 0xFF00);
-         break;
-      case PAL_BITFIELDS:
-         {
-            BitMasksFromPal(SourcePalType, SourcePalGDI, &XlateGDI->RedMask,
-               &XlateGDI->BlueMask, &XlateGDI->GreenMask);
-            XlateGDI->RedShift = CalculateShift(0xFF) - CalculateShift(XlateGDI->RedMask);
-            XlateGDI->GreenShift = CalculateShift(0xFF00) - CalculateShift(XlateGDI->GreenMask);
-            XlateGDI->BlueShift = CalculateShift(0xFF0000) - CalculateShift(XlateGDI->BlueMask);
-            XlateGDI->BackgroundColor = ShiftAndMask(XlateGDI, BackgroundColor);
-         }
-         break;
-   }
-
-   PALETTE_UnlockPalette(SourcePalGDI);
-
-   return XlateObj;
-}
-
-XLATEOBJ* FASTCALL
-IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
-                         ULONG Color0,
-                         ULONG Color1)
-{
-   XLATEOBJ *XlateObj;
-   XLATEGDI *XlateGDI;
-   PALETTE *DestPalGDI;
-
-   DestPalGDI = PALETTE_LockPalette(PaletteDest);
-   if (DestPalGDI == NULL)
-      return NULL;
-
-   XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);
-   if (XlateGDI == NULL)
-   {
-      PALETTE_UnlockPalette(DestPalGDI);
-      DPRINT1("Failed to allocate memory for a XLATE structure!\n");
-      return NULL;
-   }
-   XlateObj = GDIToObj(XlateGDI, XLATE);
-
-   XlateObj->cEntries = 2;
-   XlateObj->pulXlate = EngAllocMem(0, sizeof(ULONG) * XlateObj->cEntries, TAG_XLATEOBJ);
-   if (XlateObj->pulXlate == NULL)
-   {
-      PALETTE_UnlockPalette(DestPalGDI);
-      EngFreeMem(XlateGDI);
-      return NULL;
-   }
-
-   XlateObj->iSrcType = PAL_INDEXED;
-   XlateObj->iDstType = DestPalGDI->Mode;
-
-   /* Store handles of palettes in internal Xlate GDI object (or NULLs) */
-   XlateGDI->SourcePal = NULL;
-   XlateGDI->DestPal = PaletteDest;
-
-   XlateObj->flXlate = XO_TABLE;
-
-   BitMasksFromPal(DestPalGDI->Mode, DestPalGDI, &XlateGDI->RedMask,
-      &XlateGDI->BlueMask, &XlateGDI->GreenMask);
-
-   XlateGDI->RedShift =   CalculateShift(RGB(0xFF, 0x00, 0x00)) - CalculateShift(XlateGDI->RedMask);
-   XlateGDI->GreenShift = CalculateShift(RGB(0x00, 0xFF, 0x00)) - CalculateShift(XlateGDI->GreenMask);
-   XlateGDI->BlueShift =  CalculateShift(RGB(0x00, 0x00, 0xFF)) - CalculateShift(XlateGDI->BlueMask);
-
-   /* Yes, that's how Windows works, ... */
-   XlateObj->pulXlate[1] = ShiftAndMask(XlateGDI, Color1);
-   XlateObj->pulXlate[0] = ShiftAndMask(XlateGDI, Color0);
-
-   if (XlateObj->iDstType == PAL_INDEXED)
-   {
-      XlateObj->pulXlate[0] =
-         ClosestColorMatch(XlateGDI,
-                           (LPPALETTEENTRY)&XlateObj->pulXlate[0],
-                           DestPalGDI->IndexedColors,
-                           DestPalGDI->NumColors);
-      XlateObj->pulXlate[1] =
-         ClosestColorMatch(XlateGDI,
-                           (LPPALETTEENTRY)&XlateObj->pulXlate[1],
-                           DestPalGDI->IndexedColors,
-                           DestPalGDI->NumColors);
-   }
-
-   PALETTE_UnlockPalette(DestPalGDI);
-
-   return XlateObj;
-}
-
-HPALETTE FASTCALL
-IntEngGetXlatePalette(XLATEOBJ *XlateObj,
-                      ULONG Palette)
-{
-   XLATEGDI *XlateGDI = ObjToGDI(XlateObj, XLATE);
-   switch (Palette)
-   {
-   case XO_DESTPALETTE:
-      return XlateGDI->DestPal;
-      break;
-
-   case XO_SRCPALETTE:
-      return XlateGDI->SourcePal;
-      break;
-   }
-   return 0;
-}
-
-XLATEOBJ*
-FASTCALL
-IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurfSrc)
-{
-	XLATEOBJ *XlateObj;
-	HPALETTE DestPalette, SourcePalette;
-	PDC_ATTR pdcattr;
-
-	DPRINT("Enter IntCreateXlateFromDCs\n");
-
-	if (psurfDest == psurfSrc)
-	{
-		return NULL;
-	}
-
-	DestPalette = psurfDest->hDIBPalette;
-	if (!DestPalette) DestPalette = pPrimarySurface->DevInfo.hpalDefault;
-
-	SourcePalette = psurfSrc->hDIBPalette;
-	if (!SourcePalette) SourcePalette = pPrimarySurface->DevInfo.hpalDefault;
-
-	DPRINT("DestPalette = %p, SourcePalette = %p, DefaultPatelle = %p\n", DestPalette, SourcePalette, NtGdiGetStockObject((INT)DEFAULT_PALETTE));
-
-	/* KB41464 details how to convert between mono and color */
-	if (psurfDest->SurfObj.iBitmapFormat == BMF_1BPP)
-	{
-		if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP)
-		{
-			XlateObj = NULL;
-		}
-		else
-		{
-			pdcattr = pDCSrc->pdcattr;
-			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, pdcattr->crBackgroundClr);
-		}
-	}
-	else
-	{
-		if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP)
-		{
-			/* DIB sections need special handling */
-			if (psurfSrc->hSecure)
-			{
-				PPALETTE ppal = PALETTE_LockPalette(psurfSrc->hDIBPalette);
-				if (ppal)
-				{
-					XlateObj = IntEngCreateSrcMonoXlate(DestPalette, ((ULONG*)ppal->IndexedColors)[0], ((ULONG*)ppal->IndexedColors)[1]);
-					PALETTE_UnlockPalette(ppal);
-				}
-				else
-					XlateObj = NULL;
-			}
-			else
-			{
-				pdcattr = pDCDest->pdcattr;
-				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, pdcattr->crForegroundClr, pdcattr->crBackgroundClr);
-			}
-		}
-		else
-		{
-			XlateObj = IntEngCreateXlate(0, 0, DestPalette, SourcePalette);
-		}
-		if (!XlateObj)
-		{
-			return (XLATEOBJ*)-1;
-		}
-	}
-	return XlateObj;
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @implemented /// this is not a public function!
- */
-VOID FASTCALL
-EngDeleteXlate(XLATEOBJ *XlateObj)
-{
-   XLATEGDI *XlateGDI;
-
-   if (XlateObj == NULL)
-   {
-      DPRINT1("Trying to delete NULL XLATEOBJ\n");
-      return;
-   }
-
-   XlateGDI = ObjToGDI(XlateObj, XLATE);
-
-   if (!XlateGDI) return;
-
-   if ((XlateObj->flXlate & XO_TABLE) &&
-       XlateObj->pulXlate != NULL)
-   {
-      EngFreeMem(XlateObj->pulXlate);
-   }
-
-   EngFreeMem(XlateGDI);
-}
-
-/*
- * @implemented
- */
-PULONG APIENTRY
-XLATEOBJ_piVector(XLATEOBJ *XlateObj)
-{
-   if (XlateObj->iSrcType == PAL_INDEXED)
-   {
-      return XlateObj->pulXlate;
-   }
-
-   return NULL;
-}
-
-/*
- * @implemented
- */
-ULONG APIENTRY
-XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
-{
-   XLATEGDI *XlateGDI;
-   PALETTE *PalGDI;
-   ULONG Closest;
-
-   /* Return the original color if there's no color translation object. */
-   if (!XlateObj)
-      return Color;
-
-   if (XlateObj->flXlate & XO_TRIVIAL)
-      return Color;
-
-   if (XlateObj->flXlate & XO_TABLE)
-   {
-      if (Color >= XlateObj->cEntries)
-          Color %= XlateObj->cEntries;
-
-      return XlateObj->pulXlate[Color];
-   }
-
-
-   if (XlateObj->flXlate & XO_TO_MONO)
-      return Color == XlateObj->pulXlate[0];
-
-   XlateGDI = ObjToGDI(XlateObj, XLATE);
-
-   if (XlateGDI->UseShiftAndMask)
-      return ShiftAndMask(XlateGDI, Color);
-
-   if (XlateObj->iSrcType == PAL_RGB || XlateObj->iSrcType == PAL_BGR ||
-       XlateObj->iSrcType == PAL_BITFIELDS)
-   {
-      /* FIXME: should we cache colors used often? */
-      /* FIXME: won't work if destination isn't indexed */
-
-      /* Convert the source color to the palette RGB format. */
-      Color = ShiftAndMask(XlateGDI, Color);
-
-      /* Extract the destination palette. */
-      PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
-      if(PalGDI != NULL)
-      {
-         /* Return closest match for the given color. */
-         Closest = ClosestColorMatch(XlateGDI, (LPPALETTEENTRY)&Color, PalGDI->IndexedColors, PalGDI->NumColors);
-         PALETTE_UnlockPalette(PalGDI);
-         return Closest;
-      }
-   }
-
-   return 0;
-}
-
-/*
- * @implemented
- */
-ULONG APIENTRY
-XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
-   ULONG *OutPal)
-{
-   HPALETTE hPalette;
-   XLATEGDI *XlateGDI;
-   PALETTE *PalGDI;
-   ULONG *InPal;
-
-   XlateGDI = ObjToGDI(XlateObj, XLATE);
-   if (PalOutType == XO_SRCPALETTE)
-      hPalette = XlateGDI->SourcePal;
-   else if (PalOutType == XO_DESTPALETTE)
-      hPalette = XlateGDI->DestPal;
-   else
-   {
-      UNIMPLEMENTED;
-      return 0;
+    PEXLATEOBJ pexlo = (PEXLATEOBJ)pxlo;
+    PPALETTE ppal;
+    INT i;
+
+    if (!pxlo)
+    {
+        return 0;
     }
 
-   PalGDI = PALETTE_LockPalette(hPalette);
-   if(PalGDI != NULL)
-   {
-     /* copy the indexed colors into the buffer */
-
-     for(InPal = (ULONG*)PalGDI->IndexedColors;
-         cPal > 0;
-         cPal--, InPal++, OutPal++)
-     {
-       *OutPal = *InPal;
-     }
-
-     PALETTE_UnlockPalette(PalGDI);
-
-     return cPal;
-   }
-
-   return 0;
-}
-
-/*
- * @unimplemented
- */
-HANDLE APIENTRY
-XLATEOBJ_hGetColorTransform(
-   IN XLATEOBJ *XlateObj)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
-// HACK!
-XLATEOBJ*
-IntCreateBrushXlate(BRUSH *pbrush, SURFACE * psurf, COLORREF crBackgroundClr)
-{
-    XLATEOBJ *pxlo = NULL;
-    HPALETTE hPalette = NULL;
-
-    if (psurf)
+    if (iPal > 5)
     {
-        hPalette = psurf->hDIBPalette;
+       DPRINT1("XLATEOBJ_cGetPalette called with wrong iPal: %d\n", iPal);
+       return 0;
     }
-    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
 
-    if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
+    /* Get the requested palette */
+    if (iPal == XO_DESTDCPALETTE)
     {
-        pxlo = NULL;
+        ppal = pexlo->ppalDstDc;
     }
-    else if (pbrush->flAttrs & GDIBRUSH_IS_SOLID)
+    else if (iPal == XO_SRCPALETTE || iPal == XO_SRCBITFIELDS)
     {
-        pxlo = IntEngCreateXlate(0, PAL_RGB, hPalette, NULL);
+        ppal = pexlo->ppalSrc;
     }
     else
     {
-        SURFACE *psurfPattern = SURFACE_LockSurface(pbrush->hbmPattern);
-        if (psurfPattern == NULL)
-            return FALSE;
-
-        /* Special case: 1bpp pattern */
-        if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP)
-        {
-            pxlo = IntEngCreateSrcMonoXlate(hPalette,
-                                            crBackgroundClr,
-                                            pbrush->BrushAttr.lbColor);
-        }
-        else if (pbrush->flAttrs & GDIBRUSH_IS_DIB)
-        {
-            pxlo = IntEngCreateXlate(0, 0, hPalette, psurfPattern->hDIBPalette);
-        }
-
-        SURFACE_UnlockSurface(psurfPattern);
+        ppal = pexlo->ppalDst;
     }
 
-    return pxlo;
+    /* Verify palette type match */
+    if (!ppal ||
+        ((iPal == XO_SRCPALETTE || iPal == XO_DESTPALETTE)
+            && !(ppal->Mode & PAL_INDEXED)) ||
+        ((iPal == XO_SRCBITFIELDS || iPal == XO_DESTBITFIELDS)
+            && !(ppal->Mode & PAL_BITFIELDS)))
+    {
+        return 0;
+    }
+
+    if(!pPalOut)
+    {
+        return ppal->NumColors;
+    }
+
+    /* Copy the values into the buffer */
+    if (ppal->Mode & PAL_INDEXED)
+    {
+        cPal = min(cPal, ppal->NumColors);
+        for (i = 0; i < cPal; i++)
+        {
+            pPalOut[i] = RGB(ppal->IndexedColors[i].peRed,
+                             ppal->IndexedColors[i].peGreen,
+                             ppal->IndexedColors[i].peBlue);
+        }
+    }
+    else
+    {
+        // FIXME: should use the above code
+        pPalOut[0] = ppal->RedMask;
+        pPalOut[1] = ppal->GreenMask;
+        pPalOut[2] = ppal->BlueMask;
+    }
+
+    return cPal;
 }
 
+HANDLE
+NTAPI
+XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo)
+{
+    PEXLATEOBJ pexlo = (PEXLATEOBJ)pxlo;
+    return pexlo->hColorTransform;
+}
+
+PULONG
+NTAPI
+XLATEOBJ_piVector(XLATEOBJ *pxlo)
+{
+    if (pxlo->iSrcType == PAL_INDEXED)
+    {
+        return pxlo->pulXlate;
+    }
+
+    return NULL;
+}
 
 /* EOF */

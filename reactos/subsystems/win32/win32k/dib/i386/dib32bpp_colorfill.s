@@ -4,7 +4,7 @@
  * FILE:            subsystems/win32/win32k/dib/i386/dib32bpp_colorfill.c
  * PURPOSE:         ASM optimised 32bpp ColorFill
  * PROGRAMMERS:     Magnus Olsen
- *                  Timo Kreuzer (timo.kreuzer@rectos.org)
+ *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 .intel_syntax noprefix

@@ -23,6 +23,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     PWSTR Buf = NULL;
     XFORM xformTemplate;
     PBRUSH pbrush;
+    HSURF hsurf;
 
     if (Driver != NULL)
     {
@@ -128,6 +129,9 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
     NewDC->dclevel.lSaveDepth = 1;
 
+    hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
+    NewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
+
     return NewDC;
 }
 
@@ -223,7 +227,6 @@ IntGdiCreateDC(
     HRGN     hVisRgn;
     UNICODE_STRING StdDriver;
     BOOL calledFromUser;
-    HSURF hsurf;
 
     RtlInitUnicodeString(&StdDriver, L"DISPLAY");
 
@@ -296,8 +299,6 @@ IntGdiCreateDC(
     pdc->dhpdev = PrimarySurface.hPDev;
     if (pUMdhpdev) pUMdhpdev = pdc->dhpdev; // set DHPDEV for device.
     pdc->ppdev = (PVOID)&PrimarySurface;
-    hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
-    pdc->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
 
     // ATM we only have one display.
     pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
@@ -344,7 +345,7 @@ IntGdiCreateDC(
          */
         pdc->dctype = DC_TYPE_INFO;
 //    pdc->pSurfInfo =
-        DC_vSelectSurface(pdc, NULL);
+//        DC_vSelectSurface(pdc, NULL);
         pdcattr->crBackgroundClr = pdcattr->ulBackgroundClr = RGB(255, 255, 255);
         pdcattr->crForegroundClr = RGB(0, 0, 0);
         DC_UnlockDc(pdc);
@@ -451,6 +452,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
     if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
     { // This is a cheesy way to do this.
         PDC dc = DC_LockDc(hDC);
+        HSURF hsurf;
         defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
         if (!defaultDCstate)
         {
@@ -459,6 +461,8 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
         }
         RtlZeroMemory(defaultDCstate, sizeof(DC));
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
+        hsurf = (HSURF)PrimarySurface.pSurface; // HAX²
+        defaultDCstate->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
         DC_vCopyState(dc, defaultDCstate);
         DC_UnlockDc(dc);
     }
