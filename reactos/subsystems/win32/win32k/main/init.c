@@ -13,7 +13,9 @@
 /* System service call table */
 #include <include/napi.h>
 
+#include "object.h"
 #include <handle.h>
+#include <user.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -90,6 +92,7 @@ Win32kProcessCallout(PEPROCESS Process,
 
         InitializeListHead(&Win32Process->Classes);
         Win32Process->handles = alloc_handle_table(Win32Process, 0);
+        connect_process_winstation(Win32Process);
     }
     else
     {

@@ -376,20 +376,52 @@ void set_process_default_desktop( PPROCESSINFO process, struct desktop *desktop,
 }
 
 /* connect a process to its window station */
-void connect_process_winstation( PPROCESSINFO process, PTHREADINFO parent )
+void connect_process_winstation( PPROCESSINFO process )
 {
     struct winstation *winstation = NULL;
     struct desktop *desktop = NULL;
     obj_handle_t handle;
+    PPROCESSINFO parent = NULL;
+    PEPROCESS eparent;
+    HANDLE parent_handle;
+    NTSTATUS status;
+
+#if 0
+    PRTL_USER_PROCESS_PARAMETERS ProcessParams = (process->peProcess->Peb ? process->peProcess->Peb->ProcessParameters : NULL);
+    PUNICODE_STRING DesktopPath;
+
+      DesktopPath = (ProcessParams ? ((ProcessParams->DesktopInfo.Length > 0) ? &ProcessParams->DesktopInfo : NULL) : NULL);
+      if (DesktopPath)
+      {
+          DPRINT1("DesktopPath %wZ\n", DesktopPath);
+      }
+      /*Status = IntParseDesktopPath(Process,
+                                   DesktopPath,
+                                   &hWinSta,
+                                   &hDesk);*/
+#endif
+
+    /* get parent process */
+    parent_handle = PsGetProcessInheritedFromUniqueProcessId(process->peProcess);
+    if (parent_handle)
+    {
+        /* Lookup the process */
+        status = PsLookupProcessByProcessId(parent_handle, &eparent);
+        if (NT_SUCCESS(status))
+        {
+            /* get win32 process out of it */
+            parent = PsGetProcessWin32Process(eparent);
+        }
+    }
 
     /* check for an inherited winstation handle (don't ask...) */
     if ((handle = find_inherited_handle( process, &winstation_ops )))
     {
         winstation = (struct winstation *)get_handle_obj( process, handle, 0, &winstation_ops );
     }
-    else if (parent && parent->process->winstation)
+    else if (parent && parent->winstation)
     {
-        handle = duplicate_handle( parent->process, parent->process->winstation,
+        handle = duplicate_handle( parent, parent->winstation,
                                    process, 0, 0, DUP_HANDLE_SAME_ACCESS );
         winstation = (struct winstation *)get_handle_obj( process, handle, 0, &winstation_ops );
     }
@@ -403,17 +435,39 @@ void connect_process_winstation( PPROCESSINFO process, PTHREADINFO parent )
     }
     else if (parent && parent->desktop)
     {
-        desktop = get_desktop_obj( parent->process, parent->desktop, 0 );
+        desktop = get_desktop_obj( parent, parent->desktop, 0 );
         if (!desktop || desktop->winstation != winstation) goto done;
-        handle = duplicate_handle( parent->process, parent->desktop,
+        handle = duplicate_handle( parent, parent->desktop,
                                    process, 0, 0, DUP_HANDLE_SAME_ACCESS );
     }
 
     if (handle) set_process_default_desktop( process, desktop, handle );
 
+#if 0
+    {
+        // set default desktop differently. Just always assign a "default" desktop
+        WCHAR deskbuf[8];
+        struct unicode_str full_str, desktop_name;
+        WCHAR *full_name;
+
+        desktop_name.str = deskbuf;
+        desktop_name.len = sizeof(deskbuf);
+        wcscpy(deskbuf, L"Default");
+
+        if ((full_name = build_desktop_name( &desktop_name, winstation, &full_str )))
+        {
+            handle = open_object( winstation_namespace, &full_str, &desktop_ops, GENERIC_ALL,
+                                         OBJ_CASE_INSENSITIVE );
+            ExFreePool( full_name );
+            DPRINT1("handle %x\n", handle);
+        }
+    }
+#endif
+
 done:
     if (desktop) release_object( desktop );
     if (winstation) release_object( winstation );
+    if (eparent) ObDereferenceObject(eparent);
     clear_error();
 }
 

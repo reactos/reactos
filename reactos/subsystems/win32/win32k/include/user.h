@@ -156,7 +156,7 @@ extern client_ptr_t get_class_client_ptr( struct window_class *class );
 extern struct desktop *get_desktop_obj( PPROCESSINFO process, obj_handle_t handle, unsigned int access );
 extern struct winstation *get_process_winstation( PPROCESSINFO process, unsigned int access );
 extern struct desktop *get_thread_desktop( PTHREADINFO thread, unsigned int access );
-extern void connect_process_winstation( PPROCESSINFO process, PTHREADINFO parent );
+extern void connect_process_winstation( PPROCESSINFO process );
 extern void set_process_default_desktop( PPROCESSINFO process, struct desktop *desktop,
                                          obj_handle_t handle );
 extern void close_process_desktop( PPROCESSINFO process );
