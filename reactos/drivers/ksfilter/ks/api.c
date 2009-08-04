@@ -1936,8 +1936,299 @@ KsIsBusEnumChildDevice(
     return STATUS_UNSUCCESSFUL;
 }
 
+ULONG
+KspCountMethodSets(
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+        return AutomationTableB->MethodSetsCount;
+
+    if (!AutomationTableB)
+        return AutomationTableA->MethodSetsCount;
+
+    /* sanity check */
+    ASSERT(AutomationTableA->MethodItemSize  == AutomationTableB->MethodItemSize);
+
+    /* now iterate all property sets and compare their guids */
+    Count = AutomationTableA->MethodSetsCount;
+
+    for(Index = 0; Index < AutomationTableB->MethodSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->MethodSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->MethodSets[Index].Set, AutomationTableA->MethodSets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+            Count++;
+    }
+
+    return Count;
+}
+
+ULONG
+KspCountEventSets(
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+        return AutomationTableB->EventSetsCount;
+
+    if (!AutomationTableB)
+        return AutomationTableA->EventSetsCount;
+
+    /* sanity check */
+    ASSERT(AutomationTableA->EventItemSize == AutomationTableB->EventItemSize);
+
+    /* now iterate all Event sets and compare their guids */
+    Count = AutomationTableA->EventSetsCount;
+
+    for(Index = 0; Index < AutomationTableB->EventSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->EventSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->EventSets[Index].Set, AutomationTableA->EventSets[SubIndex].Set))
+            {
+                /* same Event set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+            Count++;
+    }
+
+    return Count;
+}
+
+
+ULONG
+KspCountPropertySets(
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+        return AutomationTableB->PropertySetsCount;
+
+    if (!AutomationTableB)
+        return AutomationTableA->PropertySetsCount;
+
+    /* sanity check */
+    ASSERT(AutomationTableA->PropertyItemSize == AutomationTableB->PropertyItemSize);
+
+    /* now iterate all property sets and compare their guids */
+    Count = AutomationTableA->PropertySetsCount;
+
+    for(Index = 0; Index < AutomationTableB->PropertySetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->PropertySetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->PropertySets[Index].Set, AutomationTableA->PropertySets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+            Count++;
+    }
+
+    return Count;
+}
+
+NTSTATUS
+KspCopyMethodSets(
+    OUT PKSAUTOMATION_TABLE  Table,
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableB->MethodSets, Table->MethodItemSize * AutomationTableB->MethodSetsCount);
+        return STATUS_SUCCESS;
+    }
+    else if (!AutomationTableB)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, Table->MethodItemSize * AutomationTableA->MethodSetsCount);
+        return STATUS_SUCCESS;
+    }
+
+    /* first copy all property items from dominant table */
+    RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, Table->MethodItemSize * AutomationTableA->MethodSetsCount);
+    /* set counter */
+    Count = AutomationTableA->MethodSetsCount;
+
+    /* now copy entries which arent available in the dominant table */
+    for(Index = 0; Index < AutomationTableB->MethodSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->MethodSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->MethodSets[Index].Set, AutomationTableA->MethodSets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            /* copy new property item set */
+            RtlMoveMemory((PVOID)&Table->MethodSets[Count], &AutomationTableB->MethodSets[Index], Table->MethodItemSize);
+            Count++;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+KspCopyPropertySets(
+    OUT PKSAUTOMATION_TABLE  Table,
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableB->PropertySets, Table->PropertyItemSize * AutomationTableB->PropertySetsCount);
+        return STATUS_SUCCESS;
+    }
+    else if (!AutomationTableB)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, Table->PropertyItemSize * AutomationTableA->PropertySetsCount);
+        return STATUS_SUCCESS;
+    }
+
+    /* first copy all property items from dominant table */
+    RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, Table->PropertyItemSize * AutomationTableA->PropertySetsCount);
+    /* set counter */
+    Count = AutomationTableA->PropertySetsCount;
+
+    /* now copy entries which arent available in the dominant table */
+    for(Index = 0; Index < AutomationTableB->PropertySetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->PropertySetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->PropertySets[Index].Set, AutomationTableA->PropertySets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            /* copy new property item set */
+            RtlMoveMemory((PVOID)&Table->PropertySets[Count], &AutomationTableB->PropertySets[Index], Table->PropertyItemSize);
+            Count++;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+KspCopyEventSets(
+    OUT PKSAUTOMATION_TABLE  Table,
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+    {
+        /* copy of Event set */
+        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableB->EventSets, Table->EventItemSize * AutomationTableB->EventSetsCount);
+        return STATUS_SUCCESS;
+    }
+    else if (!AutomationTableB)
+    {
+        /* copy of Event set */
+        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, Table->EventItemSize * AutomationTableA->EventSetsCount);
+        return STATUS_SUCCESS;
+    }
+
+    /* first copy all Event items from dominant table */
+    RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, Table->EventItemSize * AutomationTableA->EventSetsCount);
+    /* set counter */
+    Count = AutomationTableA->EventSetsCount;
+
+    /* now copy entries which arent available in the dominant table */
+    for(Index = 0; Index < AutomationTableB->EventSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->EventSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->EventSets[Index].Set, AutomationTableA->EventSets[SubIndex].Set))
+            {
+                /* same Event set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            /* copy new Event item set */
+            RtlMoveMemory((PVOID)&Table->EventSets[Count], &AutomationTableB->EventSets[Index], Table->EventItemSize);
+            Count++;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
@@ -1947,8 +2238,197 @@ KsMergeAutomationTables(
     IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL,
     IN KSOBJECT_BAG  Bag OPTIONAL)
 {
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    PKSAUTOMATION_TABLE Table;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!AutomationTableA && !AutomationTableB)
+    {
+        /* nothing to merge */
+        return STATUS_SUCCESS;
+    }
+
+    /* allocate an automation table */
+    Table = AllocateItem(NonPagedPool, sizeof(KSAUTOMATION_TABLE));
+    if (!Table)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (Bag)
+    {
+        /* add table to object bag */
+        Status = KsAddItemToObjectBag(Bag, Table, NULL);
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* free table */
+            FreeItem(Table);
+            return Status;
+        }
+    }
+
+    /* count property sets */
+    Table->PropertySetsCount = KspCountPropertySets(AutomationTableA, AutomationTableB);
+
+    if (Table->PropertySetsCount)
+    {
+        if (AutomationTableA)
+        {
+            /* use item size from dominant automation table */
+            Table->PropertyItemSize = AutomationTableA->PropertyItemSize;
+        }
+        else
+        {
+            /* use item size from 2nd automation table */
+            Table->PropertyItemSize = AutomationTableB->PropertyItemSize;
+        }
+
+        /* now allocate the property sets */
+        Table->PropertySets = AllocateItem(NonPagedPool, Table->PropertyItemSize * Table->PropertySetsCount);
+
+        if (!Table->PropertySets)
+        {
+            /* not enough memory */
+            goto cleanup;
+        }
+
+        if (Bag)
+        {
+            /* add set to property bag */
+            Status = KsAddItemToObjectBag(Bag, (PVOID)Table->PropertySets, NULL);
+            /* check for success */
+            if (!NT_SUCCESS(Status))
+            {
+                /* cleanup table */
+                goto cleanup;
+            }
+        }
+        /* now copy the property sets */
+        Status = KspCopyPropertySets(Table, AutomationTableA, AutomationTableB);
+        if(!NT_SUCCESS(Status))
+            goto cleanup;
+
+    }
+
+    /* now count the method sets */
+    Table->MethodSetsCount = KspCountMethodSets(AutomationTableA, AutomationTableB);
+
+    if (Table->MethodSetsCount)
+    {
+        if (AutomationTableA)
+        {
+            /* use item size from dominant automation table */
+            Table->MethodItemSize  = AutomationTableA->MethodItemSize;
+        }
+        else
+        {
+            /* use item size from 2nd automation table */
+            Table->MethodItemSize = AutomationTableB->MethodItemSize;
+        }
+
+        /* now allocate the property sets */
+        Table->MethodSets = AllocateItem(NonPagedPool, Table->MethodItemSize * Table->MethodSetsCount);
+
+        if (!Table->MethodSets)
+        {
+            /* not enough memory */
+            goto cleanup;
+        }
+
+        if (Bag)
+        {
+            /* add set to property bag */
+            Status = KsAddItemToObjectBag(Bag, (PVOID)Table->MethodSets, NULL);
+            /* check for success */
+            if (!NT_SUCCESS(Status))
+            {
+                /* cleanup table */
+                goto cleanup;
+            }
+        }
+        /* now copy the property sets */
+        Status = KspCopyMethodSets(Table, AutomationTableA, AutomationTableB);
+        if(!NT_SUCCESS(Status))
+            goto cleanup;
+    }
+
+
+    /* now count the event sets */
+    Table->EventSetsCount = KspCountEventSets(AutomationTableA, AutomationTableB);
+
+    if (Table->EventSetsCount)
+    {
+        if (AutomationTableA)
+        {
+            /* use item size from dominant automation table */
+            Table->EventItemSize  = AutomationTableA->EventItemSize;
+        }
+        else
+        {
+            /* use item size from 2nd automation table */
+            Table->EventItemSize = AutomationTableB->EventItemSize;
+        }
+
+        /* now allocate the property sets */
+        Table->EventSets = AllocateItem(NonPagedPool, Table->EventItemSize * Table->EventSetsCount);
+
+        if (!Table->EventSets)
+        {
+            /* not enough memory */
+            goto cleanup;
+        }
+
+        if (Bag)
+        {
+            /* add set to property bag */
+            Status = KsAddItemToObjectBag(Bag, (PVOID)Table->EventSets, NULL);
+            /* check for success */
+            if (!NT_SUCCESS(Status))
+            {
+                /* cleanup table */
+                goto cleanup;
+            }
+        }
+        /* now copy the property sets */
+        Status = KspCopyEventSets(Table, AutomationTableA, AutomationTableB);
+        if(!NT_SUCCESS(Status))
+            goto cleanup;
+    }
+
+    /* store result */
+    *AutomationTableAB = Table;
+
+    return Status;
+
+
+cleanup:
+
+    if (Table)
+    {
+        if (Table->PropertySets)
+        {
+            /* clean property sets */
+            if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, (PVOID)Table->PropertySets, TRUE)))
+                FreeItem((PVOID)Table->PropertySets);
+        }
+
+        if (Table->MethodSets)
+        {
+            /* clean property sets */
+            if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, (PVOID)Table->MethodSets, TRUE)))
+                FreeItem((PVOID)Table->MethodSets);
+        }
+
+        if (Table->EventSets)
+        {
+            /* clean property sets */
+            if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, (PVOID)Table->EventSets, TRUE)))
+                FreeItem((PVOID)Table->EventSets);
+        }
+
+        if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, Table, TRUE)))
+                FreeItem(Table);
+    }
+
+    return STATUS_INSUFFICIENT_RESOURCES;
 }
 
 /*
