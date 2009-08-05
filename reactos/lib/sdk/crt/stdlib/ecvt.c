@@ -14,16 +14,16 @@
 char *
 _ecvt (double value, int ndigits, int *decpt, int *sign)
 {
-  char *ecvtbuf, *cvtbuf;
-  char *s, *d;
+  static char ecvtbuf[DBL_MAX_10_EXP + 10];
+  char *cvtbuf, *s, *d;
 
   s = cvtbuf = (char*)malloc(ndigits + 18); /* sign, dot, null, 15 for alignment */
-  d = ecvtbuf = (char*)malloc(DBL_MAX_10_EXP + 10);
+  d = ecvtbuf;
 
   *sign = 0;
   *decpt = 0;
 
-  if (cvtbuf == NULL || ecvtbuf == NULL)
+  if (cvtbuf == NULL)
   {
     return NULL;
   }
@@ -91,6 +91,11 @@ _ecvt (double value, int ndigits, int *decpt, int *sign)
     {
       /* Need enhanced precision*/
       char* tbuf = (char*)malloc(ndigits + 18);
+      if (tbuf == NULL)
+      {
+        free(cvtbuf);
+        return NULL;
+      }
       sprintf(tbuf, "%-+.*E", ndigits + 2, value);
       if (tbuf[1] >= '5')
       {
