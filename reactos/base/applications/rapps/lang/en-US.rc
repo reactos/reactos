@@ -27,7 +27,7 @@ IDR_LINKMENU MENU
 BEGIN
 	POPUP "popup"
 	BEGIN
-		MENUITEM "&Open link in a brouser", ID_OPEN_LINK
+		MENUITEM "&Open link in a browser", ID_OPEN_LINK
 		MENUITEM "&Copy link to clipboard", ID_COPY_LINK
 	END
 END
