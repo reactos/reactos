@@ -114,6 +114,8 @@
 		<file>usrheap.c</file>
 		<file>cursor.c</file>
 		<file>monitor.c</file>
+		<file>kbdlayout.c</file>
+		<file>keyboard.c</file>
 	</directory>
 	<directory name="wine">
 		<file>atom.c</file>

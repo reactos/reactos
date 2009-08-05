@@ -177,12 +177,195 @@ DWORD WINAPI MouseInputThread(LPVOID lpParameter)
     }
 }
 
+/* Sends the keyboard commands to turn on/off the lights.
+ */
+static NTSTATUS APIENTRY
+IntKeyboardUpdateLeds(HANDLE KeyboardDeviceHandle,
+                      PKEYBOARD_INPUT_DATA KeyInput,
+                      PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans)
+{
+    NTSTATUS Status;
+    UINT Count;
+    static KEYBOARD_INDICATOR_PARAMETERS Indicators;
+    IO_STATUS_BLOCK Block;
+
+    if (!IndicatorTrans)
+        return STATUS_NOT_SUPPORTED;
+
+    if (KeyInput->Flags & (KEY_E0 | KEY_E1 | KEY_BREAK))
+        return STATUS_SUCCESS;
+
+    for (Count = 0; Count < IndicatorTrans->NumberOfIndicatorKeys; Count++)
+    {
+        if (KeyInput->MakeCode == IndicatorTrans->IndicatorList[Count].MakeCode)
+        {
+            Indicators.LedFlags ^=
+                IndicatorTrans->IndicatorList[Count].IndicatorFlags;
+
+            /* Update the lights on the hardware */
+
+            Status = NtDeviceIoControlFile(KeyboardDeviceHandle,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           &Block,
+                                           IOCTL_KEYBOARD_SET_INDICATORS,
+                                           &Indicators, sizeof(Indicators),
+                                           NULL, 0);
+
+            return Status;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+/* Asks the keyboard driver to send a small table that shows which
+ * lights should connect with which scancodes
+ */
+static NTSTATUS APIENTRY
+IntKeyboardGetIndicatorTrans(HANDLE KeyboardDeviceHandle,
+                             PKEYBOARD_INDICATOR_TRANSLATION *IndicatorTrans)
+{
+    NTSTATUS Status;
+    DWORD Size = 0;
+    IO_STATUS_BLOCK Block;
+    PKEYBOARD_INDICATOR_TRANSLATION Ret;
+
+    Size = sizeof(KEYBOARD_INDICATOR_TRANSLATION);
+
+    Ret = HeapAlloc(Win32CsrApiHeap, 0, Size);
+
+    while (Ret)
+    {
+        Status = NtDeviceIoControlFile(KeyboardDeviceHandle,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       &Block,
+                                       IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION,
+                                       NULL,
+                                       0,
+                                       Ret, Size);
+
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+            break;
+
+        HeapFree(Win32CsrApiHeap, 0, Ret);
+
+        Size += sizeof(KEYBOARD_INDICATOR_TRANSLATION);
+
+        Ret = HeapAlloc(Win32CsrApiHeap, 0, Size);
+    }
+
+    if (!Ret)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (Status != STATUS_SUCCESS)
+    {
+        HeapFree(Win32CsrApiHeap, 0, Ret);
+        return Status;
+    }
+
+    *IndicatorTrans = Ret;
+    return Status;
+}
+
+DWORD WINAPI KeyboardInputThread(LPVOID lpParameter)
+{
+    UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+    OBJECT_ATTRIBUTES KeyboardObjectAttributes;
+    IO_STATUS_BLOCK Iosb;
+    HANDLE KeyboardDeviceHandle;
+    NTSTATUS Status;
+    PKEYBOARD_INDICATOR_TRANSLATION IndicatorTrans = NULL;
+
+    InitializeObjectAttributes(&KeyboardObjectAttributes,
+                               &KeyboardDeviceName,
+                               0,
+                               NULL,
+                               NULL);
+
+    do
+    {
+        Sleep(1000);
+        Status = NtOpenFile(&KeyboardDeviceHandle,
+                            FILE_ALL_ACCESS,
+                            &KeyboardObjectAttributes,
+                            &Iosb,
+                            0,
+                            FILE_SYNCHRONOUS_IO_ALERT);
+    } while (!NT_SUCCESS(Status));
+
+    IntKeyboardGetIndicatorTrans(KeyboardDeviceHandle,
+        &IndicatorTrans);
+    while(1)
+    {
+        KEYBOARD_INPUT_DATA KeyInput;
+        DWORD flags;
+
+        Status = NtReadFile(KeyboardDeviceHandle,
+                            NULL,
+                            NULL,
+                            NULL,
+                            &Iosb,
+                            &KeyInput,
+                            sizeof(KEYBOARD_INPUT_DATA),
+                            NULL,
+                            NULL);
+
+        if(Status == STATUS_ALERTED)
+        {
+            break;
+        }
+        if(Status == STATUS_PENDING)
+        {
+            NtWaitForSingleObject(KeyboardDeviceHandle, FALSE, NULL);
+            Status = Iosb.Status;
+        }
+        if(!NT_SUCCESS(Status))
+        {
+            DPRINT1("Win32K: Failed to read from mouse.\n");
+            return Status;
+        }
+
+        DPRINT("KeyRaw: %s %04x\n",
+            (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
+            KeyInput.MakeCode );
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Win32K: Failed to read from keyboard.\n");
+            return Status;
+        }
+
+        IntKeyboardUpdateLeds(KeyboardDeviceHandle,
+                              &KeyInput,
+                              IndicatorTrans);
+
+        flags = 0;
+
+        if (KeyInput.Flags & KEY_E0)
+            flags |= KEYEVENTF_EXTENDEDKEY;
+
+        if (KeyInput.Flags & KEY_BREAK)
+            flags |= KEYEVENTF_KEYUP;
+
+        keybd_event(MapVirtualKey(KeyInput.MakeCode & 0xff, MAPVK_VSC_TO_VK), KeyInput.MakeCode & 0xff, flags , 0);
+    }
+
+    return Status;
+}
+
 
 void CsrInitInputSupport()
 {
-    HANDLE MouseThreadHandle;
+    HANDLE MouseThreadHandle, KeyboardThreadHandle;
 
     ClipCursor(NULL);
 
     MouseThreadHandle = CreateThread(NULL, 0, MouseInputThread, NULL, 0,NULL);
+    KeyboardThreadHandle = CreateThread(NULL, 0, KeyboardInputThread, NULL, 0,NULL);
 }
+
+/* EOF */

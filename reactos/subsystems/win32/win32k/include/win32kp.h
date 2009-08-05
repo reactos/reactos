@@ -27,6 +27,7 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 /* CSR interaction */
 #include <csr.h>
 
+#include <keyboard.h>
 #include <win32.h>
 #include <heap.h>
 #include <tags.h>

@@ -60,6 +60,12 @@ VOID UserInitialize(VOID)
     {
         DPRINT1("Failure initializing USER resource!\n");
     }
+
+    /* Initialize the default keyboard layout */
+    if(!UserInitDefaultKeyboardLayout())
+    {
+       DPRINT1("Failed to initialize default keyboard layout!\n");
+    }
 }
 
 UINT

@@ -11,6 +11,7 @@
 #define TAG_DRIVER      TAG('G', 'D', 'R', 'V') /* video drivers */
 #define TAG_GDIHNDTBLE  TAG('G', 'D', 'I', 'H') /* gdi handle table */
 #define TAG_GSEM        TAG('G', 's', 'e', 'm') /* Gdi Semaphore */
+#define TAG_STRING      TAG('S', 'T', 'R', ' ')
 #define TAG_SURFOBJ     TAG('S', 'R', 'F', 'O') /* surface object */
 #define TAG_PALETTE     TAG('G', 'l', 'a', '8')
 #define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v') /* RTL registry */

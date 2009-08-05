@@ -68,3 +68,15 @@ RosUserClipCursor                  1
 RosUserSetCursor                   1
 RosUserEnumDisplayMonitors         3
 RosUserGetMonitorInfo              2
+RosUserGetKeyboardLayout           1
+RosUserGetKeyboardLayoutName       1
+RosUserLoadKeyboardLayoutEx        7
+RosUserActivateKeyboardLayout      2
+RosUserUnloadKeyboardLayout        1
+RosUserSetAsyncKeyboardState       1
+RosUserGetAsyncKeyboardState       1
+RosUserVkKeyScanEx                 3
+RosUserGetKeyNameText              3
+RosUserToUnicodeEx                 7
+RosUserMapVirtualKeyEx             4
+RosUserGetAsyncKeyState            1

@@ -83,8 +83,7 @@ void move_window_bits( HWND hwnd, const RECT *old_rect, const RECT *new_rect,
 
 HKL CDECL RosDrv_ActivateKeyboardLayout( HKL layout, UINT flags )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserActivateKeyboardLayout(layout, flags);
 }
 
 void CDECL RosDrv_Beep(void)
@@ -94,38 +93,33 @@ void CDECL RosDrv_Beep(void)
 
 SHORT CDECL RosDrv_GetAsyncKeyState( INT key )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserGetAsyncKeyState( key );
 }
 
 INT CDECL RosDrv_GetKeyNameText( LONG lparam, LPWSTR buffer, INT size )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserGetKeyNameText(lparam, buffer, size);
 }
 
 HKL CDECL RosDrv_GetKeyboardLayout( DWORD layout )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserGetKeyboardLayout(layout);
 }
 
 BOOL CDECL RosDrv_GetKeyboardLayoutName( LPWSTR name )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return RosUserGetKeyboardLayoutName(name);
 }
 
 HKL CDECL RosDrv_LoadKeyboardLayout( LPCWSTR name, UINT flags )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserLoadKeyboardLayoutEx( NULL, 0, NULL, NULL, NULL,
+               wcstoul(name, NULL, 16), flags);
 }
 
 UINT CDECL RosDrv_MapVirtualKeyEx( UINT code, UINT type, HKL layout )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserMapVirtualKeyEx(code, type, 0, layout);
 }
 
 UINT CDECL RosDrv_SendInput( UINT count, LPINPUT inputs, int size )
@@ -137,12 +131,13 @@ UINT CDECL RosDrv_SendInput( UINT count, LPINPUT inputs, int size )
         switch(inputs->type)
         {
         case INPUT_MOUSE:
-            RosDrv_send_mouse_input( 0, inputs->mi.dwFlags, inputs->mi.dx, inputs->mi.dy,
+            NTDRV_SendMouseInput( 0, inputs->mi.dwFlags, inputs->mi.dx, inputs->mi.dy,
                                      inputs->mi.mouseData, inputs->mi.time,
                                      inputs->mi.dwExtraInfo, LLMHF_INJECTED );
             break;
         case INPUT_KEYBOARD:
-            FIXME( "INPUT_KEYBOARD not supported\n" );
+            NTDRV_SendKeyboardInput( inputs->ki.wVk, inputs->ki.wScan, inputs->ki.dwFlags,
+                                     inputs->ki.time, inputs->ki.dwExtraInfo, LLKHF_INJECTED );
             break;
         case INPUT_HARDWARE:
             FIXME( "INPUT_HARDWARE not supported\n" );
@@ -155,20 +150,17 @@ UINT CDECL RosDrv_SendInput( UINT count, LPINPUT inputs, int size )
 INT CDECL RosDrv_ToUnicodeEx( UINT virt, UINT scan, const BYTE *state, LPWSTR str,
                                       int size, UINT flags, HKL layout )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserToUnicodeEx(virt, scan, state, str, size, flags, layout);
 }
 
 BOOL CDECL RosDrv_UnloadKeyboardLayout( HKL layout )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosUserUnloadKeyboardLayout(layout);
 }
 
 SHORT CDECL RosDrv_VkKeyScanEx( WCHAR ch, HKL layout )
 {
-    UNIMPLEMENTED;
-    return -1;
+    return RosUserVkKeyScanEx(ch, layout, TRUE);
 }
 
 /***********************************************************************

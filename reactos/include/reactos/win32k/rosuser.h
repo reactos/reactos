@@ -62,6 +62,77 @@ RosUserGetMonitorInfo(
    IN HMONITOR hMonitor,
    OUT LPMONITORINFO pMonitorInfo);
 
+HKL 
+APIENTRY
+RosUserGetKeyboardLayout(
+   DWORD dwThreadId);
+
+BOOL
+APIENTRY
+RosUserGetKeyboardLayoutName(
+   LPWSTR lpszName);
+
+HKL
+APIENTRY
+RosUserLoadKeyboardLayoutEx(
+   IN HANDLE Handle,
+   IN DWORD offTable,
+   IN PUNICODE_STRING puszKeyboardName,
+   IN HKL hKL,
+   IN PUNICODE_STRING puszKLID,
+   IN DWORD dwKLID,
+   IN UINT Flags);
+
+HKL
+APIENTRY
+RosUserActivateKeyboardLayout(
+   HKL hKl,
+   ULONG Flags);
+
+BOOL
+APIENTRY
+RosUserUnloadKeyboardLayout(
+   HKL hKl);
+
+DWORD
+APIENTRY
+RosUserVkKeyScanEx(
+   WCHAR wChar,
+   HKL hKeyboardLayout,
+   BOOL UsehKL );
+
+DWORD
+APIENTRY
+RosUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize );
+
+int
+APIENTRY
+RosUserToUnicodeEx(
+   UINT wVirtKey,
+   UINT wScanCode,
+   PBYTE lpKeyState,
+   LPWSTR pwszBuff,
+   int cchBuff,
+   UINT wFlags,
+   HKL dwhkl );
+
+UINT
+APIENTRY
+RosUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl );
+
+SHORT
+APIENTRY
+RosUserGetAsyncKeyState(
+   INT key);
+
+BOOL
+APIENTRY
+RosUserSetAsyncKeyboardState(BYTE key_state_table[]);
+
+BOOL
+APIENTRY
+RosUserGetAsyncKeyboardState(BYTE key_state_table[]);
+
 VOID NTAPI
 RosUserConnectCsrss();
 

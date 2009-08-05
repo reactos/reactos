@@ -30,6 +30,7 @@ HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
+LIST_ENTRY GlobalDriverListHead;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -143,6 +144,7 @@ Win32kThreadCallout(PETHREAD Thread,
         Win32Thread->process = Win32Process;
         Win32Thread->peThread = Thread;
         Win32Thread->desktop = Win32Process->desktop;
+        Win32Thread->KeyboardLayout = UserGetDefaultKeyBoardLayout();
     }
     else
     {
@@ -320,6 +322,9 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* Register them */
     PsEstablishWin32Callouts(&CalloutData);
+
+    /* Initialize a list of loaded drivers in Win32 subsystem */
+    InitializeListHead(&GlobalDriverListHead);
 
     /* Initialize user implementation */
     UserInitialize();

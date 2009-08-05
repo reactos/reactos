@@ -34,6 +34,7 @@ typedef struct _THREADINFO
     struct msg_queue    *queue;         /* message queue */
     obj_handle_t        desktop;       /* desktop handle */
     int                 desktop_users; /* number of objects using the thread desktop */
+    struct _KBL*        KeyboardLayout;
 } THREADINFO, *PTHREADINFO;
 
 #include <poppack.h>
