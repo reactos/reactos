@@ -4,4 +4,7 @@
 	<directory name="gdi">
 		<xi:include href="gdi/gdi_regtest.rbuild" />
 	</directory>
+	<directory name="crt">
+		<xi:include href="crt/crt_regtest.rbuild" />
+	</directory>
 </group>
