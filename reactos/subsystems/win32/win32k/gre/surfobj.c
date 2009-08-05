@@ -160,20 +160,13 @@ GreCreateBitmap(IN SIZEL Size,
     pSurfObj->iType = STYPE_BITMAP;
     pSurfObj->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
 
+    /* Calculate byte width automatically if it was not provided */
+    if (Width == 0)
+        Width = BITMAP_GetWidthBytes(Size.cx, BitsPerFormat(Format));
+
     pSurfObj->lDelta = abs(Width);
     pSurfObj->cjBits = pSurfObj->lDelta * Size.cy;
 
-#if 0
-    if (!Bits)
-    {
-        DPRINT1("Bitmaps without Bits aren't supported yet!\n");
-
-        /* Cleanup and exit */
-        free_gdi_handle(hSurface);
-        ExFreePool(pSurface);
-        return 0;
-    }
-#endif
     if (!Bits)
     {
         /* Allocate memory for bitmap bits */
