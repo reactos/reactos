@@ -685,6 +685,7 @@ EXLATEOBJ_vInitBrushXlate(
 {
     HPALETTE hpalDst = NULL;
     PPALETTE ppalDst, ppalPattern;
+    SURFACE *psurfPattern;
 
     ASSERT(pexlo);
     ASSERT(pbrush);
@@ -702,7 +703,7 @@ EXLATEOBJ_vInitBrushXlate(
         return;
     }
 
-    SURFACE *psurfPattern = SURFACE_ShareLockSurface(pbrush->hbmPattern);
+    psurfPattern = SURFACE_ShareLockSurface(pbrush->hbmPattern);
     if (!psurfPattern)
     {
         PALETTE_ShareUnlockPalette(ppalDst);
