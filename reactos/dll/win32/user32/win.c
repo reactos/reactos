@@ -3405,6 +3405,10 @@ BOOL WINAPI SwitchDesktop( HDESK hDesktop)
 
     FIXME("SwitchDesktop(hDesktop %p, desk window %x) stub!\n", hDesktop, hWnd);
 
+    /* Set foreground window */
+    SetForegroundWindow(hWnd);
+
+    /* Bring it to top */
     SetWindowPos(hWnd,
                  NULL, 0, 0,
                  0,
