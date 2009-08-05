@@ -716,15 +716,6 @@ NTSTATUS DispTdiQueryInformation(
             TcpipRecursiveMutexLeave(&TCPLock);
             return STATUS_INVALID_PARAMETER;
         }
-
-        if (!AddrFile) {
-          TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
-          TcpipRecursiveMutexLeave(&TCPLock);
-          return STATUS_INVALID_PARAMETER;
-        }
-
-        TcpipRecursiveMutexLeave(&TCPLock);
-        return STATUS_SUCCESS;
       }
 
     case TDI_QUERY_CONNECTION_INFO:
@@ -747,6 +738,7 @@ NTSTATUS DispTdiQueryInformation(
         switch ((ULONG)IrpSp->FileObject->FsContext2) {
           case TDI_TRANSPORT_ADDRESS_FILE:
             AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+            Endpoint = AddrFile ? AddrFile->Connection : NULL;
             break;
 
           case TDI_CONNECTION_FILE:
