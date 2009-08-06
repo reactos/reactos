@@ -258,8 +258,17 @@ BOOL CDECL RosDrv_GetCharWidth( NTDRV_PDEVICE *physDev, UINT firstChar, UINT las
 
 BOOL CDECL RosDrv_GetDCOrgEx( NTDRV_PDEVICE *physDev, LPPOINT lpp )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    RECT dc_rect, drawable_rect;
+
+    /* Get DC rectangles */
+    RosGdiGetDcRects(physDev->hKernelDC, &dc_rect, &drawable_rect);
+
+    /* Calculate origin */
+    lpp->x = dc_rect.left + drawable_rect.left;
+    lpp->y = dc_rect.top + drawable_rect.top;
+
+    /* Report success */
+    return TRUE;
 }
 
 INT CDECL RosDrv_GetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT startscan, UINT lines,
