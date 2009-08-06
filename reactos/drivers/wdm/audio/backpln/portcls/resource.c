@@ -351,13 +351,31 @@ PcNewResourceList(
     IN  PCM_RESOURCE_LIST UntranslatedResourceList)
 {
     PCM_RESOURCE_LIST NewUntranslatedResources, NewTranslatedResources;
-    ULONG NewTranslatedSize, NewUntranslatedSize;
+    ULONG NewTranslatedSize, NewUntranslatedSize, ResourceCount;
     IResourceListImpl* NewList;
 
-    /* TODO: Validate parameters */
+    if (!TranslatedResourceList)
+    {
+        /* if the untranslated resource list is also not provided, it becomes an empty resource list */
+        if (UntranslatedResourceList)
+        {
+            /* invalid parameter mix */
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
+    else
+    {
+        /* if the translated resource list is also not provided, it becomes an empty resource list */
+        if (!UntranslatedResourceList)
+        {
+            /* invalid parameter mix */
+            return STATUS_INVALID_PARAMETER;
+        }
+    }
 
+    /* allocate resource list ctx */
     NewList = AllocateItem(PoolType, sizeof(IResourceListImpl), TAG_PORTCLASS);
-
+    /* check for success */
     if (!NewList)
     {
         DPRINT("AllocateItem failed\n");
@@ -365,11 +383,27 @@ PcNewResourceList(
     }
 
     /* Initialize */
+    NewList->lpVtbl = (IResourceListVtbl*)&vt_ResourceListVtbl;
+    NewList->ref = 1;
+    NewList->OuterUnknown = OuterUnknown;
+    NewList->PoolType = PoolType;
 
-    NewTranslatedSize = sizeof(CM_RESOURCE_LIST);
-    if (TranslatedResourceList[0].List->PartialResourceList.Count > 1)
-        NewTranslatedSize += (TranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    if (!TranslatedResourceList || !UntranslatedResourceList)
+    {
+        /* empty resource list */
+        *OutResourceList = (IResourceList*)&NewList->lpVtbl;
+        return STATUS_SUCCESS;
+    }
 
+    /* calculate translated resource list size */
+    ResourceCount = TranslatedResourceList->List[0].PartialResourceList.Count;
+    NewTranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+
+    /* calculate untranslated resouce list size */
+    ResourceCount = UntranslatedResourceList->List[0].PartialResourceList.Count;
+    NewUntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+
+    /* allocate translated resource list */
     NewTranslatedResources = AllocateItem(PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
     {
@@ -377,10 +411,7 @@ PcNewResourceList(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST);
-    if (UntranslatedResourceList[0].List->PartialResourceList.Count > 1)
-        NewUntranslatedSize += (UntranslatedResourceList[0].List->PartialResourceList.Count-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-
+    /* allocate untranslated resource list */
     NewUntranslatedResources = AllocateItem(PoolType, NewUntranslatedSize, TAG_PORTCLASS);
     if (!NewUntranslatedResources)
     {
@@ -389,15 +420,13 @@ PcNewResourceList(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* copy resource lists */
     RtlCopyMemory(NewTranslatedResources, TranslatedResourceList, NewTranslatedSize);
     RtlCopyMemory(NewUntranslatedResources, UntranslatedResourceList, NewUntranslatedSize);
 
-    NewList->lpVtbl = (IResourceListVtbl*)&vt_ResourceListVtbl;
-    NewList->ref = 1;
-    NewList->OuterUnknown = OuterUnknown;
+    /* store resource lists */
     NewList->TranslatedResourceList= NewTranslatedResources;
     NewList->UntranslatedResourceList = NewUntranslatedResources;
-    NewList->PoolType = PoolType;
 
     /* Increment our usage count and set the pointer to this object */
     *OutResourceList = (IResourceList*)&NewList->lpVtbl;
@@ -405,7 +434,9 @@ PcNewResourceList(
     return STATUS_SUCCESS;
 }
 
-PORTCLASSAPI NTSTATUS NTAPI
+PORTCLASSAPI
+NTSTATUS
+NTAPI
 PcNewResourceSublist(
     OUT PRESOURCELIST* OutResourceList,
     IN  PUNKNOWN OuterUnknown OPTIONAL,
