@@ -57,8 +57,8 @@ typedef union
 } timebuf_t;
 #pragma pack(pop)
 
+FORCEINLINE
 _TCHAR2
-static __inline__
 IntToChar2(int x)
 {
     union
@@ -73,8 +73,8 @@ IntToChar2(int x)
     return u.char2;
 }
 
+FORCEINLINE
 void
-static __inline__
 FillBuf(timebuf_t *buf, const struct tm *ptm)
 {
     /* Format looks like this: 
