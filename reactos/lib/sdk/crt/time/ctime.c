@@ -53,8 +53,8 @@
 #define fread_size_t    size_t
 #define fwrite_size_t   size_t
 
-#define ACCESS_MODE O_RDONLY|O_BINARY
-#define OPEN_MODE   O_RDONLY|O_BINARY
+#define ACCESS_MODE _O_RDONLY|_O_BINARY
+#define OPEN_MODE   _O_RDONLY|_O_BINARY
 
 /*
 ** Someone might make incorrect use of a time zone abbreviation:

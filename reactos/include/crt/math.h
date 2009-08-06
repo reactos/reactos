@@ -225,6 +225,8 @@ extern "C" {
 #define HUGE	_HUGE
   /*	double __cdecl cabs(struct _complex _X); */
   double __cdecl hypot(double _X,double _Y);
+  __CRT_INLINE float __cdecl hypotf (float x, float y)
+  { return (float) hypot (x, y);}
   _CRTIMP double __cdecl j0(double _X);
   _CRTIMP double __cdecl j1(double _X);
   _CRTIMP double __cdecl jn(int _X,double _Y);
@@ -448,8 +450,6 @@ __CRT_INLINE int isinf (double d) {
   extern float __cdecl cbrtf (float);
   extern long double __cdecl cbrtl (long double);
 
-  __CRT_INLINE float __cdecl hypotf (float x, float y)
-  { return (float) hypot (x, y);}
   extern long double __cdecl hypotl (long double, long double);
 
   extern long double __cdecl powl (long double, long double);
