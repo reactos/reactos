@@ -33,7 +33,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(rosuserdrv);
  *
  * Move the window bits when a window is moved.
  */
-void move_window_bits( HWND hwnd, const RECT *old_rect, const RECT *new_rect,
+void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const RECT *new_rect,
                               const RECT *old_client_rect )
 {
     RECT src_rect = *old_rect;
@@ -42,27 +42,27 @@ void move_window_bits( HWND hwnd, const RECT *old_rect, const RECT *new_rect,
     HRGN rgn = 0;
     HWND parent = 0;
 
-    if (FALSE)
+    if (TRUE)
     {
-        //OffsetRect( &dst_rect, -data->window_rect.left, -data->window_rect.top );
-        parent = GetAncestor( hwnd, GA_PARENT );
+        OffsetRect( &dst_rect, -data->window_rect.left, -data->window_rect.top );
+        parent = GetAncestor( data->hwnd, GA_PARENT );
         hdc_src = GetDCEx( parent, 0, DCX_CACHE );
-        hdc_dst = GetDCEx( hwnd, 0, DCX_CACHE | DCX_WINDOW );
+        hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE | DCX_WINDOW );
     }
     else
     {
-    //OffsetRect( &dst_rect, -data->client_rect.left, -data->client_rect.top );
-    /* make src rect relative to the old position of the window */
-    OffsetRect( &src_rect, -old_client_rect->left, -old_client_rect->top );
-    //if (dst_rect.left == src_rect.left && dst_rect.top == src_rect.top) return;
-    hdc_src = hdc_dst = GetDCEx( hwnd, 0, DCX_CACHE );
+        OffsetRect( &dst_rect, -data->client_rect.left, -data->client_rect.top );
+        /* make src rect relative to the old position of the window */
+        OffsetRect( &src_rect, -old_client_rect->left, -old_client_rect->top );
+        if (dst_rect.left == src_rect.left && dst_rect.top == src_rect.top) return;
+        hdc_src = hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE );
     }
 
     //code = X11DRV_START_EXPOSURES;
     //ExtEscape( hdc_dst, X11DRV_ESCAPE, sizeof(code), (LPSTR)&code, 0, NULL );
 
     ERR( "copying bits for win %p (parent %p)/ %s -> %s\n",
-           hwnd, parent,
+           data->hwnd, parent,
            wine_dbgstr_rect(&src_rect), wine_dbgstr_rect(&dst_rect) );
     BitBlt( hdc_dst, dst_rect.left, dst_rect.top,
             dst_rect.right - dst_rect.left, dst_rect.bottom - dst_rect.top,
@@ -71,12 +71,20 @@ void move_window_bits( HWND hwnd, const RECT *old_rect, const RECT *new_rect,
     //code = X11DRV_END_EXPOSURES;
     //ExtEscape( hdc_dst, X11DRV_ESCAPE, sizeof(code), (LPSTR)&code, sizeof(rgn), (LPSTR)&rgn );
 
-    ReleaseDC( hwnd, hdc_dst );
+    ReleaseDC( data->hwnd, hdc_dst );
     if (hdc_src != hdc_dst) ReleaseDC( parent, hdc_src );
 
     if (rgn)
     {
-        RedrawWindow( hwnd, NULL, rgn, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
+        if (/*!data->whole_window*/TRUE)
+        {
+            /* map region to client rect since we are using DCX_WINDOW */
+            OffsetRgn( rgn, data->window_rect.left - data->client_rect.left,
+                       data->window_rect.top - data->client_rect.top );
+            RedrawWindow( data->hwnd, NULL, rgn,
+                          RDW_INVALIDATE | RDW_FRAME | RDW_ERASE | RDW_ALLCHILDREN );
+        }
+        else RedrawWindow( data->hwnd, NULL, rgn, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN );
         DeleteObject( rgn );
     }
 }
@@ -592,12 +600,17 @@ void CDECL RosDrv_SetWindowIcon( HWND hwnd, UINT type, HICON icon )
 void CDECL RosDrv_SetWindowStyle( HWND hwnd, INT offset, STYLESTRUCT *style )
 {
     DWORD changed;
+    struct ntdrv_win_data *data;
 
     if (hwnd == GetDesktopWindow()) return;
     changed = style->styleNew ^ style->styleOld;
 
     if (offset == GWL_STYLE && (changed & WS_VISIBLE) && (style->styleNew & WS_VISIBLE))
     {
+        /* Create private win data if it's missing */
+        if (!(data = NTDRV_get_win_data( hwnd )) &&
+            !(data = NTDRV_create_win_data( hwnd ))) return;
+
         /* Do some magic... */
         TRACE("Window %x is being made visible\n", hwnd);
     }
@@ -683,53 +696,42 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
                                     const RECT *window_rect, const RECT *rectClient,
                                     const RECT *visible_rect, const RECT *valid_rects )
 {
-#if 0
     RECT old_whole_rect, old_client_rect;
-    RECT whole_rect = *visible_rect;
-    RECT client_rect = *rectClient;
-
-    old_whole_rect = whole_rect;
-    old_client_rect = client_rect;
-#endif
-    RECT old_whole_rect;
+    //RECT whole_rect = *visible_rect;
+    //RECT client_rect = *rectClient;
 
     struct ntdrv_win_data *data = NTDRV_get_win_data(hwnd);
 
-    if (valid_rects)
-    {
-        TRACE("valid_rects[0] (%d, %d)-(%d,%d)\n",
-            valid_rects[0].top, valid_rects[0].left, valid_rects[0].bottom, valid_rects[0].right);
-    }
-
     if (!data) return;
 
-    ERR("old rect %s, new rect %s\n",
-        wine_dbgstr_rect(&data->whole_rect), wine_dbgstr_rect(window_rect));
+    old_whole_rect  = data->whole_rect;
+    old_client_rect = data->client_rect;
+    data->window_rect = *window_rect;
+    data->whole_rect  = *visible_rect;
+    data->client_rect = *rectClient;
 
-#if 0
     if (!IsRectEmpty( &valid_rects[0] ))
     {
-        int x_offset = old_whole_rect.left - whole_rect.left;
-        int y_offset = old_whole_rect.top - whole_rect.top;
+        int x_offset = old_whole_rect.left - data->whole_rect.left;
+        int y_offset = old_whole_rect.top - data->whole_rect.top;
 
         /* if all that happened is that the whole window moved, copy everything */
         if (!(swp_flags & SWP_FRAMECHANGED) &&
-            old_whole_rect.right   - whole_rect.right   == x_offset &&
-            old_whole_rect.bottom  - whole_rect.bottom  == y_offset &&
-            old_client_rect.left   - client_rect.left   == x_offset &&
-            old_client_rect.right  - client_rect.right  == x_offset &&
-            old_client_rect.top    - client_rect.top    == y_offset &&
-            old_client_rect.bottom - client_rect.bottom == y_offset &&
-            !memcmp( &valid_rects[0], &client_rect, sizeof(RECT) ))
+            old_whole_rect.right   - data->whole_rect.right   == x_offset &&
+            old_whole_rect.bottom  - data->whole_rect.bottom  == y_offset &&
+            old_client_rect.left   - data->client_rect.left   == x_offset &&
+            old_client_rect.right  - data->client_rect.right  == x_offset &&
+            old_client_rect.top    - data->client_rect.top    == y_offset &&
+            old_client_rect.bottom - data->client_rect.bottom == y_offset &&
+            !memcmp( &valid_rects[0], &data->client_rect, sizeof(RECT) ))
         {
-            /* if we have an X window the bits will be moved by the X server */
-            //if (!data->whole_window)
-                move_window_bits( hwnd, &old_whole_rect, &whole_rect, &old_client_rect );
+             move_window_bits( data, &old_whole_rect, &data->whole_rect, &old_client_rect );
         }
         else
-            move_window_bits( hwnd, &valid_rects[1], &valid_rects[0], &old_client_rect );
+        {
+            move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
+        }
     }
-#endif
 }
 
 /* EOF */

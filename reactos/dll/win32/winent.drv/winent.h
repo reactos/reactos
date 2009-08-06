@@ -60,6 +60,6 @@ LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL uni
 BOOL CDECL RosDrv_GetCursorPos( LPPOINT pt );
 
 /* wnd.c */
-struct x11drv_win_data *X11DRV_get_win_data( HWND hwnd );
-struct x11drv_win_data *X11DRV_create_win_data( HWND hwnd );
+struct ntdrv_win_data *NTDRV_get_win_data( HWND hwnd );
+struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd );
 void NTDRV_destroy_win_data( HWND hwnd );
