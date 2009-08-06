@@ -12,6 +12,7 @@
 
 #define DAYSPERWEEK 7
 #define MONSPERYEAR 12
+#define HUNDREDYEAROFFSET 19
 
 static const _TCHAR wday_name[DAYSPERWEEK][4] =
 {
@@ -33,6 +34,7 @@ typedef unsigned long _TCHAR4;
 typedef unsigned short _TCHAR2;
 #endif
 
+#pragma pack(push,1)
 typedef union
 {
     _TCHAR text[26];
@@ -53,6 +55,7 @@ typedef union
         _TCHAR zt;
     };
 } timebuf_t;
+#pragma pack(pop)
 
 _TCHAR2
 static __inline__
@@ -80,13 +83,13 @@ FillBuf(timebuf_t *buf, const struct tm *ptm)
     buf->Month = *(_TCHAR4*)mon_name[ptm->tm_mon];
     buf->Day = IntToChar2(ptm->tm_mday);
     buf->Space1 = ' ';
-    buf->Hour = IntToChar2(ptm->tm_mday);
+    buf->Hour = IntToChar2(ptm->tm_hour);
     buf->Sep1 = ':';
-    buf->Minute = IntToChar2(ptm->tm_mday);
+    buf->Minute = IntToChar2(ptm->tm_min);
     buf->Sep2 = ':';
-    buf->Second = IntToChar2(ptm->tm_mday);
+    buf->Second = IntToChar2(ptm->tm_sec);
     buf->Space2 = ' ';
-    buf->Year[0] = IntToChar2(ptm->tm_year / 100);
+    buf->Year[0] = IntToChar2(ptm->tm_year / 100 + HUNDREDYEAROFFSET);
     buf->Year[1] = IntToChar2(ptm->tm_year % 100);
     buf->lb = '\n';
     buf->zt = '\0';
@@ -116,6 +119,7 @@ _tasctime_s(
         (unsigned int)ptm->tm_wday > 6 ||
         (unsigned int)ptm->tm_yday > 365)
     {
+#if 0
         _invalid_parameter(NULL,
 #ifdef UNICODE
                             L"_wasctime",
@@ -125,6 +129,7 @@ _tasctime_s(
                            _CRT_WIDE(__FILE__),
                            __LINE__,
                            0);
+#endif
         return EINVAL;
     }
 

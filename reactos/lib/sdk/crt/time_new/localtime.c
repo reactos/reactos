@@ -16,11 +16,13 @@ localtime_s(struct tm* _tm, const time_t *ptime)
     /* Validate parameters */
     if (!_tm || !ptime)
     {
+#if 0
         _invalid_parameter(NULL,
                            0,//__FUNCTION__, 
                            _CRT_WIDE(__FILE__), 
                            __LINE__, 
                            0);
+#endif
         return EINVAL;
     }
 

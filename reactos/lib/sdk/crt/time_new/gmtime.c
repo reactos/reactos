@@ -82,7 +82,7 @@ _gmtime_worker(struct tm *ptm, __time64_t time, int do_dst)
     ptm->tm_mday = 1 + dayinyear - padays[month];
 
     /* Get weekday */
-    ptm->tm_wday = (days + 4) % 7;
+    ptm->tm_wday = (days + 1) % 7;
 
     /* Calculate hour and second in hour */
     ptm->tm_hour = secondinday / SECONDSPERHOUR;

@@ -27,11 +27,13 @@ _ftime_s(struct _timeb *ptimeb)
     /* Validate parameters */
     if (!ptimeb)
     {
+#if 0
         _invalid_parameter(0,
                            0,//__FUNCTION__,
                            _CRT_WIDE(__FILE__),
                            __LINE__,
                            0);
+#endif
         return EINVAL;
     }
 
