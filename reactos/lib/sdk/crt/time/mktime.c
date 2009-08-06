@@ -18,6 +18,8 @@ mktime_worker(struct tm * ptm, int utc)
     struct tm *ptm2;
     __time64_t time;
     int mons, years, leapyears;
+    TIME_ZONE_INFORMATION tzi;
+    DWORD ret;
 
     /* Normalize year and month */
     if (ptm->tm_mon < 0)
@@ -84,7 +86,11 @@ mktime_worker(struct tm * ptm, int utc)
     *ptm = *ptm2;
 
     /* Finally adjust by the difference to GMT in seconds */
-    time += _timezone;
+    ret = GetTimeZoneInformation(&tzi);
+    if (ret != TIME_ZONE_ID_INVALID)
+    {
+        time += tzi.Bias * 60;
+    }
 
     return time;
 }
