@@ -32,6 +32,9 @@
 #define MINSPERHOUR        60
 #define HOURSPERDAY        24
 
+#define NDEBUG
+#include <debug.h>
+
 static int get_test_year(time_t *start)
 {
     time_t now = time(NULL);
@@ -285,11 +288,19 @@ static void test_wstrtime(void)
 START_TEST(time)
 {
     test_ctime();
+DPRINT1("test_ctime finished\n");
     test_gmtime();
+DPRINT1("test_gmtime finished\n");
     test_mktime();
+DPRINT1("test_mktime finished\n");
     test_localtime();
+DPRINT1("test_localtime finished\n");
     test_strdate();
+DPRINT1("test_strdate finished\n");
     test_strtime();
+DPRINT1("test_strtime finished\n");
     test_wstrdate();
+DPRINT1("test_wstrdate finished\n");
     test_wstrtime();
+DPRINT1("test_wstrtime finished\n");
 }
