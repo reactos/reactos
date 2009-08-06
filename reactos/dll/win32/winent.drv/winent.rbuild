@@ -10,6 +10,7 @@
 	<file>main.c</file>
 	<file>userdrv.c</file>
 	<file>mouse.c</file>
+	<file>wnd.c</file>
 
 	<file>winent.rc</file>
 

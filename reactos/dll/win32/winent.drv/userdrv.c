@@ -467,7 +467,8 @@ BOOL CDECL RosDrv_CreateWindow( HWND hwnd )
 
 void CDECL RosDrv_DestroyWindow( HWND hwnd )
 {
-    UNIMPLEMENTED;
+    /* Destroy its window data */
+    NTDRV_destroy_win_data( hwnd );
 }
 
 void CDECL RosDrv_GetDC( HDC hdc, HWND hwnd, HWND top_win, const RECT *win_rect,
@@ -665,7 +666,16 @@ void CDECL RosDrv_WindowPosChanging( HWND hwnd, HWND insert_after, UINT swp_flag
                                              const RECT *window_rect, const RECT *client_rect,
                                              RECT *visible_rect )
 {
-    //UNIMPLEMENTED;
+    DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
+    struct ntdrv_win_data *data = NTDRV_get_win_data(hwnd);
+
+    if (!data)
+    {
+        /* create the win data if the window is being made visible */
+        if (!(style & WS_VISIBLE) && !(swp_flags & SWP_SHOWWINDOW)) return;
+        if (!(data = NTDRV_create_win_data( hwnd ))) return;
+    }
+
     *visible_rect = *window_rect;
 }
 
@@ -681,12 +691,21 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
     old_whole_rect = whole_rect;
     old_client_rect = client_rect;
 #endif
+    RECT old_whole_rect;
+
+    struct ntdrv_win_data *data = NTDRV_get_win_data(hwnd);
 
     if (valid_rects)
     {
         TRACE("valid_rects[0] (%d, %d)-(%d,%d)\n",
             valid_rects[0].top, valid_rects[0].left, valid_rects[0].bottom, valid_rects[0].right);
     }
+
+    if (!data) return;
+
+    ERR("old rect %s, new rect %s\n",
+        wine_dbgstr_rect(&data->whole_rect), wine_dbgstr_rect(window_rect));
+
 #if 0
     if (!IsRectEmpty( &valid_rects[0] ))
     {

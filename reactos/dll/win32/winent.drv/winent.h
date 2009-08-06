@@ -29,6 +29,15 @@ struct ntdrv_escape_set_drawable
     int                      gl_copy;      /* whether the GL contents need explicit copying */
 };
 
+/* ntdrv private window data */
+struct ntdrv_win_data
+{
+    HWND        hwnd;           /* hwnd that this private data belongs to */
+    RECT        window_rect;    /* USER window rectangle relative to parent */
+    RECT        whole_rect;     /* X window rectangle for the whole window relative to parent */
+    RECT        client_rect;    /* client area relative to parent */
+};
+
 /* font.c */
 VOID
 FeSelectFont(NTDRV_PDEVICE *physDev, HFONT hFont);
@@ -49,3 +58,8 @@ BOOL CDECL RosDrv_SetCursorPos( INT x, INT y );
 LRESULT HOOK_CallHooks( INT id, INT code, WPARAM wparam, LPARAM lparam, BOOL unicode );
 
 BOOL CDECL RosDrv_GetCursorPos( LPPOINT pt );
+
+/* wnd.c */
+struct x11drv_win_data *X11DRV_get_win_data( HWND hwnd );
+struct x11drv_win_data *X11DRV_create_win_data( HWND hwnd );
+void NTDRV_destroy_win_data( HWND hwnd );
