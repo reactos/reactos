@@ -166,8 +166,6 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
     DestRect.top    = YDest;
     DestRect.right  = XDest+Width;
     DestRect.bottom = YDest+Height;
-    // FIXME: LP->DP missing!
-    //IntLPtoDP(pDest, (LPPOINT)&DestRect, 2);
 
     DestRect.left += pDest->rcVport.left + pDest->rcDcRect.left;
     DestRect.top += pDest->rcVport.top + pDest->rcDcRect.top;
@@ -316,7 +314,6 @@ GreStretchBltMask(
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest+WidthDest;
     DestRect.bottom = YOriginDest+HeightDest;
-    IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2); // FIXME: Why?
 
     DestRect.left   += DCDest->rcVport.left + DCDest->rcDcRect.left;
     DestRect.top    += DCDest->rcVport.top + DCDest->rcDcRect.top;
@@ -330,8 +327,6 @@ GreStretchBltMask(
 
     if (UsesSource)
     {
-        IntLPtoDP(DCSrc, (LPPOINT)&SourceRect, 2);
-
         SourceRect.left   += DCSrc->rcVport.left + DCSrc->rcDcRect.left;
         SourceRect.top    += DCSrc->rcVport.top + DCSrc->rcDcRect.top;
         SourceRect.right  += DCSrc->rcVport.left + DCSrc->rcDcRect.left;
