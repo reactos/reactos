@@ -244,7 +244,7 @@ LPSTR WINAPI CharLowerA(LPSTR str)
     __EXCEPT_PAGE_FAULT
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return NULL;
+        _SEH2_YIELD(return NULL;)
     }
     __ENDTRY
     return str;
@@ -270,7 +270,7 @@ LPSTR WINAPI CharUpperA(LPSTR str)
     __EXCEPT_PAGE_FAULT
     {
         SetLastError( ERROR_INVALID_PARAMETER );
-        return NULL;
+        _SEH2_YIELD(return NULL;)
     }
     __ENDTRY
     return str;
@@ -455,5 +455,5 @@ BOOL WINAPI IsCharAlphaA(CHAR x)
 BOOL WINAPI IsCharAlphaW(WCHAR x)
 {
     //return (get_char_typeW(x) & C1_ALPHA) != 0;
-    return iswalpha;
+    return iswalpha(x);
 }

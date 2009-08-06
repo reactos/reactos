@@ -791,7 +791,7 @@ static LPARAM DEFWND_GetTextA( WND *wndPtr, LPSTR dest, WPARAM wParam )
     }
     __EXCEPT_PAGE_FAULT
     {
-        return 0;
+        _SEH2_YIELD(return 0;)
     }
     __ENDTRY
     return result;
@@ -930,7 +930,7 @@ static LPARAM DEFWND_GetTextW( WND *wndPtr, LPWSTR dest, WPARAM wParam )
     }
     __EXCEPT_PAGE_FAULT
     {
-        return 0;
+        _SEH2_YIELD(return 0;)
     }
     __ENDTRY
 

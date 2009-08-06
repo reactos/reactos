@@ -837,7 +837,7 @@ static LRESULT LISTBOX_GetText( LB_DESCR *descr, INT index, LPWSTR buffer, BOOL 
         {
             WARN( "got an invalid buffer (Delphi bug?)\n" );
             SetLastError( ERROR_INVALID_PARAMETER );
-            return LB_ERR;
+            _SEH2_YIELD(return LB_ERR;)
         }
         __ENDTRY
     } else {
@@ -1027,7 +1027,7 @@ static LRESULT LISTBOX_GetSelCount( const LB_DESCR *descr )
     return count;
 }
 
-
+#if 0
 /***********************************************************************
  *           LISTBOX_GetSelItems16
  */
@@ -1041,7 +1041,7 @@ static LRESULT LISTBOX_GetSelItems16( const LB_DESCR *descr, INT16 max, LPINT16 
         if (item->selected) array[count++] = (INT16)i;
     return count;
 }
-
+#endif
 
 /***********************************************************************
  *           LISTBOX_GetSelItems
