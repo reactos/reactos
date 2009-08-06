@@ -14,13 +14,13 @@
 #define MONSPERYEAR 12
 #define HUNDREDYEAROFFSET 19
 
-static const _TCHAR wday_name[DAYSPERWEEK][4] =
+static const _TCHAR wday_name[DAYSPERWEEK][5] =
 {
     _T("Sun "), _T("Mon "), _T("Tue "), _T("Wed "), 
     _T("Thu "), _T("Fri "), _T("Sat ")
 };
 
-static const _TCHAR mon_name[MONSPERYEAR][4] = 
+static const _TCHAR mon_name[MONSPERYEAR][5] = 
 {
     _T("Jan "), _T("Feb "), _T("Mar "), _T("Apr "), _T("May "), _T("Jun "),
     _T("Jul "), _T("Aug "), _T("Sep "), _T("Oct "), _T("Nov "), _T("Dec ")
