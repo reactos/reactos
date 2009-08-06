@@ -22,6 +22,7 @@ typedef struct CResourceList
     POOL_TYPE PoolType;
     PCM_RESOURCE_LIST TranslatedResourceList;
     PCM_RESOURCE_LIST UntranslatedResourceList;
+    ULONG NumberOfEntries;
 } IResourceListImpl;
 
 /*
@@ -100,7 +101,7 @@ IResourceList_fnNumberOfEntries(IResourceList* iface)
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    return This->TranslatedResourceList->List[0].PartialResourceList.Count;
+    return This->NumberOfEntries;
 }
 
 ULONG
@@ -114,6 +115,12 @@ IResourceList_fnNumberOfEntriesOfType(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
+    if (!This->TranslatedResourceList)
+    {
+        /* no resource list */
+        return 0;
+    }
 
     /* I guess the translated and untranslated lists will be same length? */
     for (Index = 0; Index < This->TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
@@ -143,6 +150,12 @@ IResourceList_fnFindTranslatedEntry(
     PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
+
+    if (!This->TranslatedResourceList)
+    {
+        /* no resource list */
+        return NULL;
+    }
 
     for (DescIndex = 0; DescIndex < This->TranslatedResourceList->List[0].PartialResourceList.Count; DescIndex ++ )
     {
@@ -175,6 +188,12 @@ IResourceList_fnFindUntranslatedEntry(
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
+    if (!This->UntranslatedResourceList)
+    {
+        /* no resource list */
+        return NULL;
+    }
+
     for (DescIndex = 0; DescIndex < This->UntranslatedResourceList->List[0].PartialResourceList.Count; DescIndex ++ )
     {
         PartialDescriptor = &This->UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[DescIndex];
@@ -200,17 +219,29 @@ IResourceList_fnAddEntry(
     IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Untranslated)
 {
     PCM_RESOURCE_LIST NewUntranslatedResources, NewTranslatedResources;
-    ULONG NewTranslatedSize, NewUntranslatedSize;
+    ULONG NewTranslatedSize, NewUntranslatedSize, TranslatedSize, UntranslatedSize, ResourceCount;
     IResourceListImpl * This = (IResourceListImpl*)iface;
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + This->TranslatedResourceList[0].List->PartialResourceList.Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    /* calculate translated resource list size */
+    ResourceCount = This->TranslatedResourceList->List[0].PartialResourceList.Count;
+    NewTranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount+1]);
+    TranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+
+
     NewTranslatedResources = AllocateItem(This->PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) + This->UntranslatedResourceList[0].List->PartialResourceList.Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+
+    /* calculate untranslated resouce list size */
+    ResourceCount = This->UntranslatedResourceList->List[0].PartialResourceList.Count;
+    NewUntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount+1]);
+    UntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+
+
+    /* allocate untranslated resource list size */
     NewUntranslatedResources = AllocateItem(This->PoolType, NewUntranslatedSize, TAG_PORTCLASS);
     if (!NewUntranslatedResources)
     {
@@ -218,34 +249,28 @@ IResourceList_fnAddEntry(
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    RtlCopyMemory(NewTranslatedResources, This->TranslatedResourceList, sizeof(CM_RESOURCE_LIST));
-    if (This->TranslatedResourceList[0].List->PartialResourceList.Count > 1)
-    {
-        RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[0],
-                      &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[0], 
-                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * This->TranslatedResourceList->List[0].PartialResourceList.Count);
-    }
+    /* now copy translated resource list */
+    RtlMoveMemory(NewTranslatedResources, This->TranslatedResourceList, TranslatedSize);
+    RtlMoveMemory((PUCHAR)NewTranslatedResources + TranslatedSize, Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
-    RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->TranslatedResourceList[0].List->PartialResourceList.Count], Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    /* now copy untranslated resource list */
+    RtlMoveMemory(NewUntranslatedResources, This->UntranslatedResourceList, UntranslatedSize);
+    RtlMoveMemory((PUCHAR)NewUntranslatedResources + UntranslatedSize, Untranslated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
-    RtlCopyMemory(NewUntranslatedResources, This->UntranslatedResourceList, sizeof(CM_RESOURCE_LIST));
-    if (This->UntranslatedResourceList[0].List->PartialResourceList.Count > 1)
-    {
-        RtlCopyMemory(&NewUntranslatedResources->List[0].PartialResourceList.PartialDescriptors[0],
-                      &This->UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[0], 
-                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * This->UntranslatedResourceList->List[0].PartialResourceList.Count);
-    }
-
-    RtlCopyMemory(&NewUntranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->UntranslatedResourceList[0].List->PartialResourceList.Count], Untranslated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-
+    /* free old lists */
     FreeItem(This->TranslatedResourceList, TAG_PORTCLASS);
     FreeItem(This->UntranslatedResourceList, TAG_PORTCLASS);
 
+    /* store new lists */
     This->UntranslatedResourceList = NewUntranslatedResources;
     This->TranslatedResourceList = NewTranslatedResources;
 
+    /* increment descriptor count */
     NewUntranslatedResources->List[0].PartialResourceList.Count++;
     NewTranslatedResources->List[0].PartialResourceList.Count++;
+
+    /* add entry count */
+    This->NumberOfEntries++;
 
     return STATUS_SUCCESS;
 }
@@ -258,37 +283,21 @@ IResourceList_fnAddEntryFromParent(
     IN  CM_RESOURCE_TYPE Type,
     IN  ULONG Index)
 {
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated;
-    PCM_RESOURCE_LIST NewTranslatedResources;
-    ULONG NewTranslatedSize;
-    IResourceListImpl * This = (IResourceListImpl*)iface;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated, Untranslated;
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     Translated = Parent->lpVtbl->FindTranslatedEntry(Parent, Type, Index);
-    if (!Translated)
-        return STATUS_INVALID_PARAMETER;
+    Untranslated = Parent->lpVtbl->FindUntranslatedEntry(Parent, Type, Index);
 
-    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + This->TranslatedResourceList[0].List->PartialResourceList.Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    NewTranslatedResources = AllocateItem(This->PoolType, NewTranslatedSize, TAG_PORTCLASS);
-    if (!NewTranslatedResources)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    RtlCopyMemory(NewTranslatedResources, This->TranslatedResourceList, sizeof(CM_RESOURCE_LIST));
-    if (This->TranslatedResourceList[0].List->PartialResourceList.Count > 1)
+    if (Translated && Untranslated)
     {
-        RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[0],
-                      &This->TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[0], 
-                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * This->TranslatedResourceList->List[0].PartialResourceList.Count);
+        /* add entry from parent */
+        return iface->lpVtbl->AddEntry(iface, Translated, Untranslated);
     }
 
-    RtlCopyMemory(&NewTranslatedResources->List[0].PartialResourceList.PartialDescriptors[This->TranslatedResourceList[0].List->PartialResourceList.Count], Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-
-    FreeItem(This->TranslatedResourceList, TAG_PORTCLASS);
-    This->TranslatedResourceList = NewTranslatedResources;
-    NewTranslatedResources->List[0].PartialResourceList.Count++;
-
-    return STATUS_SUCCESS;
+    /* entry not found */
+    return STATUS_INVALID_PARAMETER;
 }
 
 PCM_RESOURCE_LIST
@@ -398,6 +407,9 @@ PcNewResourceList(
     /* calculate translated resource list size */
     ResourceCount = TranslatedResourceList->List[0].PartialResourceList.Count;
     NewTranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+
+    /* store resource count */
+    NewList->NumberOfEntries = ResourceCount;
 
     /* calculate untranslated resouce list size */
     ResourceCount = UntranslatedResourceList->List[0].PartialResourceList.Count;
