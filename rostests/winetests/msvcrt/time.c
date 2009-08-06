@@ -83,15 +83,15 @@ static void test_mktime(void)
     char buffer[64];
     int year;
     time_t ref, secs;
-
+DPRINT1("Entered test_mktime, getting test year\n");
     year = get_test_year( &ref );
     ref += SECSPERDAY;
-
+DPRINT1("Checking return value, testyear=%d, ref=%ld\n", year, ref);
     ok (res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
+DPRINT1("Converting StdName, tzi=%p, res=%ld\n", (char*)&tzinfo, res);
     WideCharToMultiByte( CP_ACP, 0, tzinfo.StandardName, -1, buffer, sizeof(buffer), NULL, NULL );
     trace( "bias %d std %d dst %d zone %s\n",
            tzinfo.Bias, tzinfo.StandardBias, tzinfo.DaylightBias, buffer );
-DPRINT1("Finshed 1st\n");
     /* Bias may be positive or negative, to use offset of one day */
     my_tm = *localtime(&ref);  /* retrieve current dst flag */
     secs = SECSPERDAY - tzinfo.Bias * SECSPERMIN;
@@ -112,7 +112,6 @@ DPRINT1("Finshed 1st\n");
     local_time = mktime(&my_tm);
     ok(local_time == ref, "mktime returned %u, expected %u\n",
        (DWORD)local_time, (DWORD)ref);
-DPRINT1("Finshed 2nd\n");
     /* now test some unnormalized struct tm's */
     my_tm = sav_tm;
     my_tm.tm_sec += 60;
@@ -128,7 +127,6 @@ DPRINT1("Finshed 2nd\n");
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
             sav_tm.tm_hour,sav_tm.tm_sec);
-DPRINT1("Finshed 3rd\n");
     my_tm = sav_tm;
     my_tm.tm_min -= 60;
     my_tm.tm_hour += 1;
@@ -143,7 +141,6 @@ DPRINT1("Finshed 3rd\n");
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
             sav_tm.tm_hour,sav_tm.tm_sec);
-DPRINT1("Finshed 4th\n");
     my_tm = sav_tm;
     my_tm.tm_mon -= 12;
     my_tm.tm_year += 1;
@@ -158,7 +155,6 @@ DPRINT1("Finshed 4th\n");
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
             sav_tm.tm_hour,sav_tm.tm_sec);
-DPRINT1("Finshed 5th\n");
     my_tm = sav_tm;
     my_tm.tm_mon += 12;
     my_tm.tm_year -= 1;
@@ -173,13 +169,12 @@ DPRINT1("Finshed 5th\n");
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
             sav_tm.tm_hour,sav_tm.tm_sec);
-DPRINT1("Finshed 6th\n");
     /* now a bad time example */
     my_tm = sav_tm;
     my_tm.tm_year = 69;
     local_time = mktime(&my_tm);
     ok((local_time == -1), "(bad time) mktime returned %d, expected -1\n", (int)local_time);
-DPRINT1("Finshed 7th\n");
+
     my_tm = sav_tm;
     /* TEST that we are independent from the TZ variable */
     /*Argh, msvcrt doesn't have setenv() */
@@ -187,7 +182,6 @@ DPRINT1("Finshed 7th\n");
     putenv("TZ=GMT");
     nulltime = mktime(&my_tm);
     ok(nulltime == ref,"mktime returned 0x%08x\n",(DWORD)nulltime);
-DPRINT1("Finshed 8th\n");
     putenv(TZ_env);
 }
 
@@ -294,20 +288,14 @@ static void test_wstrtime(void)
 
 START_TEST(time)
 {
+#if 0
     test_ctime();
-DPRINT1("test_ctime finished\n");
     test_gmtime();
-DPRINT1("test_gmtime finished\n");
+#endif
     test_mktime();
-DPRINT1("test_mktime finished\n");
     test_localtime();
-DPRINT1("test_localtime finished\n");
     test_strdate();
-DPRINT1("test_strdate finished\n");
     test_strtime();
-DPRINT1("test_strtime finished\n");
     test_wstrdate();
-DPRINT1("test_wstrdate finished\n");
     test_wstrtime();
-DPRINT1("test_wstrtime finished\n");
 }
