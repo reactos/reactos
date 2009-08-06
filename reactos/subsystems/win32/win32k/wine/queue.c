@@ -1722,7 +1722,7 @@ DECL_HANDLER(send_message)
 
     status = PsLookupThreadByThreadId((HANDLE)req->id, &ethread);
     if (!NT_SUCCESS(status)) return;
-    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+    if (!(thread = PsGetThreadWin32Thread(ethread)))
     {
         ObDereferenceObject(ethread);
         return;
@@ -1806,7 +1806,7 @@ DECL_HANDLER(send_hardware_message)
         status = PsLookupThreadByThreadId((HANDLE)req->id, &ethread);
         if (!NT_SUCCESS(status)) return;
 
-        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+        if (!(thread = PsGetThreadWin32Thread(ethread)))
         {
             ObDereferenceObject(ethread);
             return;
@@ -2124,8 +2124,8 @@ DECL_HANDLER(attach_thread_input)
         return;
     }
 
-    thread_from = (PTHREADINFO)ethread_from->Tcb.Win32Thread;
-    thread_to = (PTHREADINFO)ethread_to->Tcb.Win32Thread;
+    thread_from = PsGetThreadWin32Thread(ethread_from);
+    thread_to = PsGetThreadWin32Thread(ethread_to);
 
     if (!thread_from || !thread_to)
     {
@@ -2163,7 +2163,7 @@ DECL_HANDLER(get_thread_input)
     {
         status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
         if (!NT_SUCCESS(status)) return;
-        if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+        if (!(thread = PsGetThreadWin32Thread(ethread)))
         {
             ObDereferenceObject(ethread);
             return;
@@ -2208,7 +2208,7 @@ DECL_HANDLER(get_key_state)
 
     status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
     if (!NT_SUCCESS(status)) return;
-    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+    if (!(thread = PsGetThreadWin32Thread(ethread)))
     {
         ObDereferenceObject(ethread);
         return;
@@ -2234,7 +2234,7 @@ DECL_HANDLER(set_key_state)
 
     status = PsLookupThreadByThreadId((HANDLE)req->tid, &ethread);
     if (!NT_SUCCESS(status)) return;
-    if (!(thread = (PTHREADINFO)ethread->Tcb.Win32Thread))
+    if (!(thread = PsGetThreadWin32Thread(ethread)))
     {
         ObDereferenceObject(ethread);
         return;

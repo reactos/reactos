@@ -84,12 +84,12 @@ unsigned int default_fd_map_access( struct object *obj, unsigned int access )
 
 thread_id_t get_thread_id (PTHREADINFO Thread)
 {
-    return (thread_id_t)Thread->peThread->Cid.UniqueThread;
+    return (thread_id_t)PsGetThreadId(Thread->peThread);
 }
 
 process_id_t get_process_id(PPROCESSINFO Process)
 {
-    return (process_id_t)Process->peProcess->UniqueProcessId;
+    return (process_id_t)PsGetProcessId(Process->peProcess);
 }
 
 void set_fd_events( struct fd *fd, int events )
