@@ -1,5 +1,5 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
+ * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
  * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/mktime.c
  * PURPOSE:     Implementation of mktime, _mkgmtime
@@ -82,6 +82,9 @@ mktime_worker(struct tm * ptm, int utc)
         return -1;
     }
     *ptm = *ptm2;
+
+    /* Finally adjust by the difference to GMT in seconds */
+    time += _timezone;
 
     return time;
 }

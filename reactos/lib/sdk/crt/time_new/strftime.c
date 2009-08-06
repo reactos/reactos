@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
+ * PROJECT:     ReactOS CRT library
+ * FILE:        lib/sdk/crt/time/strftime.c
+ * PURPOSE:     
+ * PROGRAMER:   
+ */
 #include <precomp.h>
 #include <tchar.h>
 

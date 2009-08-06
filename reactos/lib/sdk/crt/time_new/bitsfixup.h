@@ -1,3 +1,10 @@
+/*
+ * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
+ * PROJECT:     ReactOS CRT library
+ * FILE:        lib/sdk/crt/time/bitsfixup.h
+ * PURPOSE:     definitions for different time_t versions
+ * PROGRAMERS:  Timo Kreuzer
+ */
 
 #if defined(_USE_EXPLITIT_32BIT_TIME) || defined(_USE_EXPLITIT_64BIT_TIME)
 #undef _timeb

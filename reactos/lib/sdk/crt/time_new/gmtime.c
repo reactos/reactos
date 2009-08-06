@@ -1,5 +1,5 @@
 /*
- * COPYRIGHT:   See COPYING in the top level directory
+ * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
  * PROJECT:     ReactOS CRT library
  * FILE:        lib/sdk/crt/time/gmtime.c
  * PURPOSE:     Implementation of gmtime, _gmtime32, _gmtime64
