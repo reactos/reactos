@@ -994,15 +994,6 @@ GetProcessWorkingSetSizeEx(IN HANDLE hProcess,
 
 BOOL
 WINAPI
-GetLogicalProcessorInformation(OUT PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer,
-                               IN OUT PDWORD ReturnLength)
-{
-    STUB;
-    return FALSE;
-}
-
-BOOL
-WINAPI
 GetNumaAvailableMemoryNode(IN UCHAR Node,
                            OUT PULONGLONG AvailableBytes)
 {
