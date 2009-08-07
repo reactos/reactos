@@ -15,7 +15,7 @@ double atan2 (double __y, double __x)
      "fld %%st(0)"
      : "=t" (__val) : "0" (__x), "u" (__y));
 #else
-  __val = linkme_atan2(__x, __y);
+#error IMPLEMENT ME
 #endif /*__GNUC__*/
   return __val;
 }

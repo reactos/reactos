@@ -42,6 +42,6 @@ double exp (double __x)
 
   return __value;
 #else
-  return linkme_exp(__x);
+#error IMPLEMENT ME
 #endif /*__GNUC__*/
 }
