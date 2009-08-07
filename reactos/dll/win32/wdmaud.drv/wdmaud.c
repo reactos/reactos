@@ -484,7 +484,8 @@ PopulateWdmDeviceList(
 
 
 
-APIENTRY LONG
+LONG
+APIENTRY
 DriverProc(
     DWORD DriverId,
     HANDLE DriverHandle,
