@@ -230,6 +230,27 @@ enum statement_type
     STMT_CPPQUOTE
 };
 
+enum type_basic_type
+{
+    TYPE_BASIC_INT8 = 1,
+    TYPE_BASIC_INT16,
+    TYPE_BASIC_INT32,
+    TYPE_BASIC_INT64,
+    TYPE_BASIC_INT,
+    TYPE_BASIC_CHAR,
+    TYPE_BASIC_HYPER,
+    TYPE_BASIC_BYTE,
+    TYPE_BASIC_WCHAR,
+    TYPE_BASIC_FLOAT,
+    TYPE_BASIC_DOUBLE,
+    TYPE_BASIC_ERROR_STATUS_T,
+    TYPE_BASIC_HANDLE,
+};
+
+#define TYPE_BASIC_MAX TYPE_BASIC_HANDLE
+#define TYPE_BASIC_INT_MIN TYPE_BASIC_INT8
+#define TYPE_BASIC_INT_MAX TYPE_BASIC_HYPER
+
 struct _loc_info_t
 {
     const char *input_name;
@@ -283,6 +304,7 @@ struct enumeration_details
 struct func_details
 {
   var_list_t *args;
+  struct _type_t *rettype;
   int idx;
 };
 
@@ -291,6 +313,7 @@ struct iface_details
   statement_list_t *stmts;
   func_list_t *disp_methods;
   var_list_t *disp_props;
+  struct _type_t *inherit;
 };
 
 struct module_details
@@ -301,13 +324,29 @@ struct module_details
 
 struct array_details
 {
-  unsigned long dim;
-  expr_t *size_is, *length_is;
+  expr_t *size_is;
+  expr_t *length_is;
+  struct _type_t *elem;
+  unsigned int dim;
+  unsigned char ptr_def_fc;
+  unsigned char declptr; /* if declared as a pointer */
 };
 
 struct coclass_details
 {
   ifref_list_t *ifaces;
+};
+
+struct basic_details
+{
+  enum type_basic_type type;
+  int sign;
+};
+
+struct pointer_details
+{
+  struct _type_t *ref;
+  unsigned char def_fc;
 };
 
 enum type_type
@@ -329,8 +368,7 @@ enum type_type
 
 struct _type_t {
   const char *name;
-  unsigned char type;
-  struct _type_t *ref;
+  enum type_type type_type;
   attr_list_t *attrs;
   union
   {
@@ -341,13 +379,14 @@ struct _type_t {
     struct module_details *module;
     struct array_details array;
     struct coclass_details coclass;
+    struct basic_details basic;
+    struct pointer_details pointer;
   } details;
   type_t *orig;                   /* dup'd types */
   unsigned int typestring_offset;
   unsigned int ptrdesc;           /* used for complex structs */
   int typelib_idx;
   loc_info_t loc_info;
-  unsigned int declarray : 1;     /* if declared as an array */
   unsigned int ignore : 1;
   unsigned int defined : 1;
   unsigned int written : 1;
@@ -355,7 +394,6 @@ struct _type_t {
   unsigned int tfswrite : 1;   /* if the type needs to be written to the TFS */
   unsigned int checked : 1;
   unsigned int is_alias : 1; /* is the type an alias? */
-  int sign : 2;
 };
 
 struct _var_t {
@@ -458,8 +496,14 @@ struct _statement_t {
     } u;
 };
 
-extern unsigned char pointer_default;
+typedef enum {
+    SYS_WIN16,
+    SYS_WIN32,
+    SYS_MAC,
+    SYS_WIN64
+} syskind_t;
 
+extern syskind_t typelib_kind;
 extern user_type_list_t user_type_list;
 void check_for_additional_prototype_types(const var_list_t *list);
 
@@ -475,9 +519,19 @@ int cant_be_null(const var_t *v);
 int is_struct(unsigned char tc);
 int is_union(unsigned char tc);
 
+#define tsENUM   1
+#define tsSTRUCT 2
+#define tsUNION  3
+
 var_t *find_const(const char *name, int f);
 type_t *find_type(const char *name, int t);
-type_t *make_type(unsigned char type, type_t *ref);
+type_t *make_type(enum type_type type);
+type_t *get_type(enum type_type type, char *name, int t);
+type_t *reg_type(type_t *type, const char *name, int t);
+void add_incomplete(type_t *t);
+
+var_t *make_var(char *name);
+var_list_t *append_var(var_list_t *list, var_t *var);
 
 void init_loc_info(loc_info_t *);
 
@@ -490,65 +544,7 @@ static inline enum type_type type_get_type_detect_alias(const type_t *type)
 {
     if (type->is_alias)
         return TYPE_ALIAS;
-    switch (type->type)
-    {
-    case 0:
-        return TYPE_VOID;
-    case RPC_FC_BYTE:
-    case RPC_FC_CHAR:
-    case RPC_FC_USMALL:
-    case RPC_FC_SMALL:
-    case RPC_FC_WCHAR:
-    case RPC_FC_USHORT:
-    case RPC_FC_SHORT:
-    case RPC_FC_ULONG:
-    case RPC_FC_LONG:
-    case RPC_FC_HYPER:
-    case RPC_FC_IGNORE:
-    case RPC_FC_FLOAT:
-    case RPC_FC_DOUBLE:
-    case RPC_FC_ERROR_STATUS_T:
-    case RPC_FC_BIND_PRIMITIVE:
-        return TYPE_BASIC;
-    case RPC_FC_ENUM16:
-    case RPC_FC_ENUM32:
-        return TYPE_ENUM;
-    case RPC_FC_RP:
-    case RPC_FC_UP:
-    case RPC_FC_FP:
-    case RPC_FC_OP:
-        return TYPE_POINTER;
-    case RPC_FC_STRUCT:
-    case RPC_FC_PSTRUCT:
-    case RPC_FC_CSTRUCT:
-    case RPC_FC_CPSTRUCT:
-    case RPC_FC_CVSTRUCT:
-    case RPC_FC_BOGUS_STRUCT:
-        return TYPE_STRUCT;
-    case RPC_FC_ENCAPSULATED_UNION:
-        return TYPE_ENCAPSULATED_UNION;
-    case RPC_FC_NON_ENCAPSULATED_UNION:
-        return TYPE_UNION;
-    case RPC_FC_SMFARRAY:
-    case RPC_FC_LGFARRAY:
-    case RPC_FC_SMVARRAY:
-    case RPC_FC_LGVARRAY:
-    case RPC_FC_CARRAY:
-    case RPC_FC_CVARRAY:
-    case RPC_FC_BOGUS_ARRAY:
-        return TYPE_ARRAY;
-    case RPC_FC_FUNCTION:
-        return TYPE_FUNCTION;
-    case RPC_FC_COCLASS:
-        return TYPE_COCLASS;
-    case RPC_FC_IP:
-        return TYPE_INTERFACE;
-    case RPC_FC_MODULE:
-        return TYPE_MODULE;
-    default:
-        assert(0);
-        return 0;
-    }
+    return type->type_type;
 }
 
 #define STATEMENTS_FOR_EACH_FUNC(stmt, stmts) \

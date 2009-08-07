@@ -50,6 +50,7 @@ static int indent = 0;
 
 /* FIXME: support generation of stubless proxies */
 
+static void print_proxy( const char *format, ... ) __attribute__((format (printf, 1, 2)));
 static void print_proxy( const char *format, ... )
 {
   va_list va;
@@ -122,12 +123,10 @@ static void init_proxy(const statement_list_t *stmts)
   print_proxy( "    void             *This;\n");
   print_proxy( "};\n");
   print_proxy( "\n");
-  print_proxy("#ifndef USE_COMPILER_EXCEPTIONS\n");
   print_proxy("static int __proxy_filter( struct __proxy_frame *__frame )\n");
   print_proxy( "{\n");
   print_proxy( "    return (__frame->_StubMsg.dwStubPhase != PROXY_SENDRECEIVE);\n");
   print_proxy( "}\n");
-  print_proxy("#endif /* USE_COMPILER_EXCEPTIONS */\n");
   print_proxy( "\n");
 }
 
@@ -154,44 +153,17 @@ int is_var_ptr(const var_t *v)
 
 int cant_be_null(const var_t *v)
 {
-  /* Search backwards for the most recent pointer attribute.  */
-  const attr_list_t *attrs = v->attrs;
-  const type_t *type = v->type;
-
-  /* context handles have their own checking so they can be null for the
-   * purposes of null ref pointer checking */
-  if (is_aliaschain_attr(type, ATTR_CONTEXTHANDLE))
-      return 0;
-
-  if (is_user_type(type))
-      return 0;
-
-  if (!attrs && is_ptr(type))
-  {
-    attrs = type->attrs;
-    type = type_pointer_get_ref(type);
-  }
-
-  while (attrs)
-  {
-    int t = get_attrv(attrs, ATTR_POINTERTYPE);
-
-    if (t == RPC_FC_FP || t == RPC_FC_OP || t == RPC_FC_UP)
-      return 0;
-
-    if (t == RPC_FC_RP)
-      return 1;
-
-    if (is_ptr(type))
+    switch (typegen_detect_type(v->type, v->attrs, TDT_IGNORE_STRINGS))
     {
-      attrs = type->attrs;
-      type = type_pointer_get_ref(type);
+    case TGT_ARRAY:
+    case TGT_POINTER:
+        return (get_pointer_fc(v->type, v->attrs, TRUE) == RPC_FC_RP);
+    case TGT_CTXT_HANDLE_POINTER:
+        return TRUE;
+    default:
+        return 0;
     }
-    else
-      attrs = NULL;
-  }
 
-  return 1;                             /* Default is RPC_FC_RP.  */
 }
 
 static int need_delegation(const type_t *iface)
@@ -253,22 +225,18 @@ static void free_variable( const var_t *arg, const char *local_var_prefix )
     return;
   }
 
-  switch( type->type )
+  switch (typegen_detect_type(type, arg->attrs, TDT_IGNORE_STRINGS))
   {
-  case RPC_FC_BYTE:
-  case RPC_FC_CHAR:
-  case RPC_FC_WCHAR:
-  case RPC_FC_SHORT:
-  case RPC_FC_USHORT:
-  case RPC_FC_ENUM16:
-  case RPC_FC_LONG:
-  case RPC_FC_ULONG:
-  case RPC_FC_ENUM32:
-  case RPC_FC_STRUCT:
+  case TGT_ENUM:
+  case TGT_BASIC:
     break;
 
-  case RPC_FC_FP:
-  case RPC_FC_IP:
+  case TGT_STRUCT:
+    if (get_struct_fc(type) != RPC_FC_STRUCT)
+      print_proxy("/* FIXME: %s code for %s struct type 0x%x missing */\n", __FUNCTION__, arg->name, get_struct_fc(type) );
+    break;
+
+  case TGT_IFACE_POINTER:
     iid = get_attrp( arg->attrs, ATTR_IIDIS );
     if( iid )
     {
@@ -276,13 +244,20 @@ static void free_variable( const var_t *arg, const char *local_var_prefix )
       write_expr(proxy, iid, 1, 1, NULL, NULL, local_var_prefix);
       print_proxy( ";\n\n" );
     }
-    print_proxy( "NdrClearOutParameters( &__frame->_StubMsg, ");
-    fprintf(proxy, "&__MIDL_TypeFormatString.Format[%u], ", type_offset );
-    fprintf(proxy, "(void*)%s );\n", arg->name );
+    /* fall through */
+  case TGT_POINTER:
+    if (get_pointer_fc(type, arg->attrs, TRUE) == RPC_FC_FP)
+    {
+      print_proxy( "NdrClearOutParameters( &__frame->_StubMsg, ");
+      fprintf(proxy, "&__MIDL_TypeFormatString.Format[%u], ", type_offset );
+      fprintf(proxy, "(void*)%s );\n", arg->name );
+    }
+    else
+      print_proxy("/* FIXME: %s code for %s type %d missing */\n", __FUNCTION__, arg->name, type_get_type(type) );
     break;
 
   default:
-    print_proxy("/* FIXME: %s code for %s type %d missing */\n", __FUNCTION__, arg->name, type->type );
+    print_proxy("/* FIXME: %s code for %s type %d missing */\n", __FUNCTION__, arg->name, type_get_type(type) );
   }
 }
 
@@ -327,9 +302,9 @@ static void gen_proxy(type_t *iface, const var_t *func, int idx,
   print_proxy( "struct __proxy_frame __f, * const __frame = &__f;\n" );
   /* local variables */
   if (has_ret) {
-    print_proxy( "" );
+    print_proxy( "%s", "" );
     write_type_decl_left(proxy, type_function_get_rettype(func->type));
-    print_proxy(" _RetVal;\n");
+    print_proxy( " _RetVal;\n");
   }
   print_proxy( "RPC_MESSAGE _RpcMessage;\n" );
   if (has_ret) {
@@ -483,8 +458,7 @@ static void gen_stub(type_t *iface, const var_t *func, const char *cas,
 
   print_proxy("*_pdwStubPhase = STUB_CALL_SERVER;\n");
   fprintf(proxy, "\n");
-  print_proxy("");
-  if (has_ret) fprintf(proxy, "__frame->_RetVal = ");
+  print_proxy( "%s", has_ret ? "__frame->_RetVal = " : "" );
   if (cas) fprintf(proxy, "%s_%s_Stub", iface->name, cas);
   else fprintf(proxy, "__frame->_This->lpVtbl->%s", get_name(func));
   fprintf(proxy, "(__frame->_This");
@@ -492,7 +466,7 @@ static void gen_stub(type_t *iface, const var_t *func, const char *cas,
   if (type_get_function_args(func->type))
   {
       LIST_FOR_EACH_ENTRY( arg, type_get_function_args(func->type), const var_t, entry )
-          fprintf(proxy, ", %s__frame->%s", arg->type->declarray ? "*" : "", arg->name);
+          fprintf(proxy, ", %s__frame->%s", is_array(arg->type) && !type_array_is_decl_as_ptr(arg->type) ? "*" :"" , arg->name);
   }
   fprintf(proxy, ");\n");
   fprintf(proxy, "\n");
@@ -653,7 +627,7 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
   print_proxy( "static const CINTERFACE_PROXY_VTABLE(%d) _%sProxyVtbl =\n", count, iface->name);
   print_proxy( "{\n");
   indent++;
-  print_proxy( "{\n", iface->name);
+  print_proxy( "{\n");
   indent++;
   print_proxy( "&IID_%s,\n", iface->name);
   indent--;
@@ -688,7 +662,7 @@ static void write_proxy(type_t *iface, unsigned int *proc_offset)
   print_proxy( "%d,\n", count);
   print_proxy( "&%s_table[-3],\n", iface->name);
   indent--;
-  print_proxy( "},\n", iface->name);
+  print_proxy( "},\n");
   print_proxy( "{\n");
   indent++;
   print_proxy( "CStdStubBuffer_%s\n", need_delegation_indirect(iface) ? "DELEGATING_METHODS" : "METHODS");
@@ -711,7 +685,7 @@ static int does_any_iface(const statement_list_t *stmts, type_pred_t pred)
           if (does_any_iface(stmt->u.lib->stmts, pred))
               return TRUE;
       }
-      else if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP)
+      else if (stmt->type == STMT_TYPE && type_get_type(stmt->u.type) == TYPE_INTERFACE)
       {
         if (pred(stmt->u.type))
           return TRUE;
@@ -748,7 +722,7 @@ static void write_proxy_stmts(const statement_list_t *stmts, unsigned int *proc_
   {
     if (stmt->type == STMT_LIBRARY)
       write_proxy_stmts(stmt->u.lib->stmts, proc_offset);
-    else if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP)
+    else if (stmt->type == STMT_TYPE && type_get_type(stmt->u.type) == TYPE_INTERFACE)
     {
       if (need_proxy(stmt->u.type))
         write_proxy(stmt->u.type, proc_offset);
@@ -774,7 +748,7 @@ static void build_iface_list( const statement_list_t *stmts, type_t **ifaces[], 
     {
         if (stmt->type == STMT_LIBRARY)
             build_iface_list(stmt->u.lib->stmts, ifaces, count);
-        else if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP)
+        else if (stmt->type == STMT_TYPE && type_get_type(stmt->u.type) == TYPE_INTERFACE)
         {
             type_t *iface = stmt->u.type;
             if (type_iface_get_inherit(iface) && need_proxy(iface))

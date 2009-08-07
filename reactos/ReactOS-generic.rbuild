@@ -91,6 +91,7 @@
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
 		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
 		<compilerflag compiler="as">-gstabs+</compilerflag>
+		<compilerflag compiler="midl">--win32</compilerflag>
 	</group>
 
 	<group compilerset="msc">

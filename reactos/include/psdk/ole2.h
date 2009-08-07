@@ -122,6 +122,9 @@ HRESULT     WINAPI WriteFmtUserTypeStg(LPSTORAGE pstg, CLIPFORMAT cf, LPOLESTR l
 HRESULT     WINAPI OleTranslateAccelerator (LPOLEINPLACEFRAME lpFrame, LPOLEINPLACEFRAMEINFO lpFrameInfo, struct tagMSG* lpmsg);
 HRESULT     WINAPI OleCreateFromData(LPDATAOBJECT pSrcDataObj, REFIID riid, DWORD renderopt, LPFORMATETC pFormatEtc,
                 LPOLECLIENTSITE pClientSite, LPSTORAGE pStg, LPVOID* ppvObj);
+HRESULT     WINAPI OleCreateFromDataEx(LPDATAOBJECT pSrcDataObj, REFIID riid, DWORD dwFlags, DWORD renderopt, ULONG num_formats,
+                                       DWORD *adv_flags, LPFORMATETC fmts, IAdviseSink *sink, DWORD *conns,
+                                       LPOLECLIENTSITE pClientSite, LPSTORAGE pStg, LPVOID* ppvObj);
 HRESULT     WINAPI OleCreateDefaultHandler(REFCLSID  clsid,
 					   LPUNKNOWN pUnkOuter,
 					   REFIID    riid,

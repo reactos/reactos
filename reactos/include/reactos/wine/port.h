@@ -150,14 +150,16 @@ struct statfs;
 
 /* Macros to define assembler functions somewhat portably */
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__INTERIX) && !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(__APPLE__)
 # define __ASM_GLOBAL_FUNC(name,code) \
-      __asm__( ".align 4\n\t" \
+      __asm__( ".text\n\t" \
+               ".align 4\n\t" \
                ".globl " __ASM_NAME(#name) "\n\t" \
                __ASM_FUNC(#name) "\n" \
                __ASM_NAME(#name) ":\n\t" \
-               code );
-#else  /* __GNUC__ */
+               code \
+               "\n\t.previous" );
+#else  /* defined(__GNUC__) && !defined(__MINGW32__) && !defined(__APPLE__)  */
 # define __ASM_GLOBAL_FUNC(name,code) \
       void __asm_dummy_##name(void) { \
           asm( ".align 4\n\t" \

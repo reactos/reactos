@@ -3009,7 +3009,7 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     {
         /*
          * Special cases for when left variant is VT_NULL
-         * (NULL & 0 = NULL, NULL & value = value)
+         * (VT_NULL & 0 = VT_NULL, VT_NULL & value = value)
          */
         if (leftvt == VT_NULL)
         {

@@ -2442,7 +2442,7 @@ interface IContext : IUnknown
         [in] CPFLAGS flags,
         [in] IUnknown *pUnk);
 
-    HRESULT RemovePropert(
+    HRESULT RemoveProperty(
         [in] REFGUID policyId);
 
     HRESULT GetProperty(

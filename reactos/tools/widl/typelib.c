@@ -108,17 +108,20 @@ static unsigned short builtin_vt(const type_t *t)
   }
   if (is_string_type (t->attrs, t))
   {
-    unsigned char fc;
+    const type_t *elem_type;
     if (is_array(t))
-      fc = type_array_get_element(t)->type;
+      elem_type = type_array_get_element(t);
     else
-      fc = type_pointer_get_ref(t)->type;
-    switch (fc)
+      elem_type = type_pointer_get_ref(t);
+    if (type_get_type(elem_type) == TYPE_BASIC)
+    {
+      switch (type_basic_get_type(elem_type))
       {
-      case RPC_FC_CHAR: return VT_LPSTR;
-      case RPC_FC_WCHAR: return VT_LPWSTR;
+      case TYPE_BASIC_CHAR: return VT_LPSTR;
+      case TYPE_BASIC_WCHAR: return VT_LPWSTR;
       default: break;
       }
+    }
   }
   return 0;
 }
@@ -142,74 +145,89 @@ unsigned short get_type_vt(type_t *t)
   if (type_is_alias(t) && is_attr(t->attrs, ATTR_PUBLIC))
     return VT_USERDEFINED;
 
-  switch (t->type) {
-  case RPC_FC_BYTE:
-  case RPC_FC_USMALL:
-    return VT_UI1;
-  case RPC_FC_CHAR:
-  case RPC_FC_SMALL:
-    return VT_I1;
-  case RPC_FC_WCHAR:
-    return VT_I2; /* mktyplib seems to parse wchar_t as short */
-  case RPC_FC_SHORT:
-    return VT_I2;
-  case RPC_FC_USHORT:
-    return VT_UI2;
-  case RPC_FC_LONG:
-    if (match(t->name, "int")) return VT_INT;
-    return VT_I4;
-  case RPC_FC_ULONG:
-    if (match(t->name, "int")) return VT_UINT;
-    return VT_UI4;
-  case RPC_FC_HYPER:
-    if (t->sign < 0) return VT_UI8;
-    if (match(t->name, "MIDL_uhyper")) return VT_UI8;
-    return VT_I8;
-  case RPC_FC_FLOAT:
-    return VT_R4;
-  case RPC_FC_DOUBLE:
-    return VT_R8;
-  case RPC_FC_RP:
-  case RPC_FC_UP:
-  case RPC_FC_OP:
-  case RPC_FC_FP:
-  case RPC_FC_SMFARRAY:
-  case RPC_FC_LGFARRAY:
-  case RPC_FC_SMVARRAY:
-  case RPC_FC_LGVARRAY:
-  case RPC_FC_CARRAY:
-  case RPC_FC_CVARRAY:
-  case RPC_FC_BOGUS_ARRAY:
-    if(t->ref)
-    {
-      if (match(t->ref->name, "SAFEARRAY"))
-        return VT_SAFEARRAY;
-      return VT_PTR;
+  switch (type_get_type(t)) {
+  case TYPE_BASIC:
+    switch (type_basic_get_type(t)) {
+    case TYPE_BASIC_BYTE:
+      return VT_UI1;
+    case TYPE_BASIC_CHAR:
+    case TYPE_BASIC_INT8:
+      if (type_basic_get_sign(t) > 0)
+        return VT_UI1;
+      else
+        return VT_I1;
+    case TYPE_BASIC_WCHAR:
+      return VT_I2; /* mktyplib seems to parse wchar_t as short */
+    case TYPE_BASIC_INT16:
+      if (type_basic_get_sign(t) > 0)
+        return VT_UI2;
+      else
+        return VT_I2;
+    case TYPE_BASIC_INT:
+      if (type_basic_get_sign(t) > 0)
+        return VT_UINT;
+      else
+        return VT_INT;
+    case TYPE_BASIC_INT32:
+    case TYPE_BASIC_ERROR_STATUS_T:
+      if (type_basic_get_sign(t) > 0)
+        return VT_UI4;
+      else
+        return VT_I4;
+    case TYPE_BASIC_INT64:
+    case TYPE_BASIC_HYPER:
+      if (type_basic_get_sign(t) > 0)
+        return VT_UI8;
+      else
+        return VT_I8;
+    case TYPE_BASIC_FLOAT:
+      return VT_R4;
+    case TYPE_BASIC_DOUBLE:
+      return VT_R8;
+    case TYPE_BASIC_HANDLE:
+      error("handles can't be used in typelibs\n");
     }
-
-    error("get_type_vt: unknown-deref-type: %d\n", t->ref->type);
     break;
-  case RPC_FC_IP:
+
+  case TYPE_POINTER:
+    return VT_PTR;
+
+  case TYPE_ARRAY:
+    if (type_array_is_decl_as_ptr(t))
+    {
+      if (match(type_array_get_element(t)->name, "SAFEARRAY"))
+        return VT_SAFEARRAY;
+    }
+    else
+      error("get_type_vt: array types not supported\n");
+    return VT_PTR;
+
+  case TYPE_INTERFACE:
     if(match(t->name, "IUnknown"))
       return VT_UNKNOWN;
     if(match(t->name, "IDispatch"))
       return VT_DISPATCH;
     return VT_USERDEFINED;
 
-  case RPC_FC_ENUM16:
-  case RPC_FC_STRUCT:
-  case RPC_FC_PSTRUCT:
-  case RPC_FC_CSTRUCT:
-  case RPC_FC_CPSTRUCT:
-  case RPC_FC_CVSTRUCT:
-  case RPC_FC_BOGUS_STRUCT:
-  case RPC_FC_COCLASS:
-  case RPC_FC_MODULE:
+  case TYPE_ENUM:
+  case TYPE_STRUCT:
+  case TYPE_COCLASS:
+  case TYPE_MODULE:
+  case TYPE_UNION:
+  case TYPE_ENCAPSULATED_UNION:
     return VT_USERDEFINED;
-  case 0:
+
+  case TYPE_VOID:
     return VT_VOID;
-  default:
-    error("get_type_vt: unknown type: 0x%02x\n", t->type);
+
+  case TYPE_ALIAS:
+    /* aliases should be filtered out by the type_get_type call above */
+    assert(0);
+    break;
+
+  case TYPE_FUNCTION:
+    error("get_type_vt: functions not supported\n");
+    break;
   }
   return 0;
 }

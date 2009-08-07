@@ -41,6 +41,7 @@
 static FILE* client;
 static int indent = 0;
 
+static void print_client( const char *format, ... ) __attribute__((format (printf, 1, 2)));
 static void print_client( const char *format, ... )
 {
     va_list va;
@@ -166,7 +167,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         /* declare return value '_RetVal' */
         if (!is_void(type_function_get_rettype(func->type)))
         {
-            print_client("");
+            print_client("%s", "");
             write_type_decl_left(client, type_function_get_rettype(func->type));
             fprintf(client, " _RetVal;\n");
         }
@@ -387,7 +388,7 @@ static void write_stubdescriptor(type_t *iface, int expr_eval_routines)
 
 static void write_clientinterfacedecl(type_t *iface)
 {
-    unsigned long ver = get_attrv(iface->attrs, ATTR_VERSION);
+    unsigned int ver = get_attrv(iface->attrs, ATTR_VERSION);
     const UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
     const str_list_t *endpoints = get_attrp(iface->attrs, ATTR_ENDPOINT);
 
@@ -397,7 +398,7 @@ static void write_clientinterfacedecl(type_t *iface)
     print_client("{\n");
     indent++;
     print_client("sizeof(RPC_CLIENT_INTERFACE),\n");
-    print_client("{{0x%08lx,0x%04x,0x%04x,{0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x}},{%d,%d}},\n",
+    print_client("{{0x%08x,0x%04x,0x%04x,{0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x}},{%d,%d}},\n",
                  uuid->Data1, uuid->Data2, uuid->Data3, uuid->Data4[0], uuid->Data4[1],
                  uuid->Data4[2], uuid->Data4[3], uuid->Data4[4], uuid->Data4[5], uuid->Data4[6],
                  uuid->Data4[7], MAJORVERSION(ver), MINORVERSION(ver));
@@ -468,7 +469,7 @@ static void write_client_ifaces(const statement_list_t *stmts, int expr_eval_rou
     const statement_t *stmt;
     if (stmts) LIST_FOR_EACH_ENTRY( stmt, stmts, const statement_t, entry )
     {
-        if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP)
+        if (stmt->type == STMT_TYPE && type_get_type(stmt->u.type) == TYPE_INTERFACE)
         {
             int has_func = 0;
             const statement_t *stmt2;

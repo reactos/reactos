@@ -43,7 +43,7 @@
 #include <host/typedefs.h>
 #include <host/nls.h>
 
-#include "widltypes.h"
+#include "widl.h"
 #include "typelib.h"
 #include "typelib_struct.h"
 #include "utils.h"
@@ -929,18 +929,10 @@ static int encode_type(
 
     case VT_SAFEARRAY:
 	{
-	int next_vt;
+	type_t *element_type = type_alias_get_aliasee(type_array_get_element(type));
+	int next_vt = get_type_vt(element_type);
 
-	/* skip over SAFEARRAY type straight to element type */
-	type = type->ref;
-
-	for(next_vt = 0; type->ref; type = type->ref) {
-	    next_vt = get_type_vt(type->ref);
-	    if (next_vt != 0)
-	        break;
-	}
-
-	encode_type(typelib, next_vt, type->ref, &target_type, NULL, NULL, &child_size);
+	encode_type(typelib, next_vt, type_alias_get_aliasee(type_array_get_element(type)), &target_type, NULL, NULL, &child_size);
 
 	for (typeoffset = 0; typeoffset < typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length; typeoffset += 8) {
 	    typedata = (void *)&typelib->typelib_segment_data[MSFT_SEG_TYPEDESC][typeoffset];
@@ -981,34 +973,27 @@ static int encode_type(
         while (type->typelib_idx < 0 && type_is_alias(type) && !is_attr(type->attrs, ATTR_PUBLIC))
           type = type_alias_get_aliasee(type);
 
-        chat("encode_type: VT_USERDEFINED - type %p name = %s type->type %d idx %d\n", type,
-             type->name, type->type, type->typelib_idx);
+        chat("encode_type: VT_USERDEFINED - type %p name = %s real type %d idx %d\n", type,
+             type->name, type_get_type(type), type->typelib_idx);
 
         if(type->typelib_idx == -1) {
             chat("encode_type: trying to ref not added type\n");
-            switch(type->type) {
-            case RPC_FC_STRUCT:
-            case RPC_FC_PSTRUCT:
-            case RPC_FC_CSTRUCT:
-            case RPC_FC_CPSTRUCT:
-            case RPC_FC_CVSTRUCT:
-            case RPC_FC_BOGUS_STRUCT:
+            switch (type_get_type(type)) {
+            case TYPE_STRUCT:
                 add_structure_typeinfo(typelib, type);
                 break;
-            case RPC_FC_IP:
+            case TYPE_INTERFACE:
                 add_interface_typeinfo(typelib, type);
                 break;
-            case RPC_FC_ENUM16:
+            case TYPE_ENUM:
                 add_enum_typeinfo(typelib, type);
                 break;
-            case RPC_FC_COCLASS:
+            case TYPE_COCLASS:
                 add_coclass_typeinfo(typelib, type);
                 break;
-            case 0:
-                error("encode_type: VT_USERDEFINED - can't yet add typedef's on the fly\n");
-                break;
             default:
-                error("encode_type: VT_USERDEFINED - unhandled type %d\n", type->type);
+                error("encode_type: VT_USERDEFINED - unhandled type %d\n",
+                      type_get_type(type));
             }
         }
 
@@ -1045,8 +1030,7 @@ static int encode_type(
 
 static void dump_type(type_t *t)
 {
-    chat("dump_type: %p name %s type %d ref %p attrs %p\n", t, t->name, t->type, t->ref, t->attrs);
-    if(t->ref) dump_type(t->ref);
+    chat("dump_type: %p name %s type %d attrs %p\n", t, t->name, type_get_type(t), t->attrs);
 }
 
 static int encode_var(
@@ -1070,29 +1054,33 @@ static int encode_var(
     if (!decoded_size) decoded_size = &scratch;
     *decoded_size = 0;
 
-    chat("encode_var: var %p type %p type->name %s type->ref %p\n",
-         var, type, type->name ? type->name : "NULL", type->ref);
+    chat("encode_var: var %p type %p type->name %s\n",
+         var, type, type->name ? type->name : "NULL");
 
-    if (type->declarray) {
+    if (is_array(type) && !type_array_is_decl_as_ptr(type)) {
         int num_dims, elements = 1, arrayoffset;
         type_t *atype;
         int *arraydata;
 
         num_dims = 0;
-        for (atype = type; atype->declarray; atype = type_array_get_element(atype))
+        for (atype = type;
+             is_array(atype) && !type_array_is_decl_as_ptr(atype);
+             atype = type_array_get_element(atype))
             ++num_dims;
 
         chat("array with %d dimensions\n", num_dims);
         encode_var(typelib, atype, var, &target_type, width, alignment, NULL);
-        arrayoffset = ctl2_alloc_segment(typelib, MSFT_SEG_ARRAYDESC, (2 + 2 * num_dims) * sizeof(long), 0);
+        arrayoffset = ctl2_alloc_segment(typelib, MSFT_SEG_ARRAYDESC, (2 + 2 * num_dims) * sizeof(int), 0);
         arraydata = (void *)&typelib->typelib_segment_data[MSFT_SEG_ARRAYDESC][arrayoffset];
 
         arraydata[0] = target_type;
         arraydata[1] = num_dims;
-        arraydata[1] |= ((num_dims * 2 * sizeof(long)) << 16);
+        arraydata[1] |= ((num_dims * 2 * sizeof(int)) << 16);
 
         arraydata += 2;
-        for (atype = type; atype->declarray; atype = type_array_get_element(atype))
+        for (atype = type;
+             is_array(atype) && !type_array_is_decl_as_ptr(atype);
+             atype = type_array_get_element(atype))
         {
             arraydata[0] = type_array_get_dim(atype);
             arraydata[1] = 0;
@@ -1480,7 +1468,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
               {
                 int vt;
                 expr_t *expr = (expr_t *)attr->u.pval;
-                if (arg->type->type == RPC_FC_ENUM16)
+                if (type_get_type(arg->type) == TYPE_ENUM)
                     vt = VT_INT;
                 else
                     vt = get_type_vt(arg->type);
@@ -1553,7 +1541,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
 
     /* adjust size of VTBL */
     if(funckind != 0x3 /* FUNC_STATIC */)
-        typeinfo->typeinfo->cbSizeVft += 4;
+        typeinfo->typeinfo->cbSizeVft += pointer_size;
 
     /* Increment the number of function elements */
     typeinfo->typeinfo->cElement += 1;
@@ -2041,7 +2029,7 @@ static void add_interface_typeinfo(msft_typelib_t *typelib, type_t *interface)
         }
     }
     msft_typeinfo->typeinfo->datatype2 = num_funcs << 16 | num_parents;
-    msft_typeinfo->typeinfo->cbSizeVft = num_funcs * 4;
+    msft_typeinfo->typeinfo->cbSizeVft = num_funcs * pointer_size;
 
     STATEMENTS_FOR_EACH_FUNC( stmt_func, type_iface_get_stmts(interface) ) {
         var_t *func = stmt_func->u.var;
@@ -2209,42 +2197,25 @@ static void add_module_typeinfo(msft_typelib_t *typelib, type_t *module)
 
 static void add_type_typeinfo(msft_typelib_t *typelib, type_t *type)
 {
-    switch (type->type) {
-    case RPC_FC_IP:
+    switch (type_get_type(type)) {
+    case TYPE_INTERFACE:
         add_interface_typeinfo(typelib, type);
         break;
-    case RPC_FC_STRUCT:
+    case TYPE_STRUCT:
         add_structure_typeinfo(typelib, type);
         break;
-    case RPC_FC_ENUM16:
-    case RPC_FC_ENUM32:
+    case TYPE_ENUM:
         add_enum_typeinfo(typelib, type);
         break;
-    case RPC_FC_COCLASS:
+    case TYPE_COCLASS:
         add_coclass_typeinfo(typelib, type);
         break;
-    case RPC_FC_BYTE:
-    case RPC_FC_CHAR:
-    case RPC_FC_USMALL:
-    case RPC_FC_SMALL:
-    case RPC_FC_WCHAR:
-    case RPC_FC_USHORT:
-    case RPC_FC_SHORT:
-    case RPC_FC_ULONG:
-    case RPC_FC_LONG:
-    case RPC_FC_HYPER:
-    case RPC_FC_IGNORE:
-    case RPC_FC_FLOAT:
-    case RPC_FC_DOUBLE:
-    case RPC_FC_ERROR_STATUS_T:
-    case RPC_FC_BIND_PRIMITIVE:
-    case RPC_FC_RP:
-    case RPC_FC_UP:
-    case RPC_FC_OP:
-    case RPC_FC_FP:
+    case TYPE_BASIC:
+    case TYPE_POINTER:
         break;
     default:
-        error("add_entry: unhandled type 0x%x for %s\n", type->type, type->name);
+        error("add_entry: unhandled type 0x%x for %s\n",
+              type_get_type(type), type->name);
         break;
     }
 }
@@ -2566,6 +2537,8 @@ int create_msft_typelib(typelib_t *typelib)
     GUID midl_time_guid    = {0xde77ba63,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
     GUID midl_version_guid = {0xde77ba64,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
 
+    pointer_size = (typelib_kind == SYS_WIN64) ? 8 : 4;
+
     msft = xmalloc(sizeof(*msft));
     memset(msft, 0, sizeof(*msft));
     msft->typelib = typelib;
@@ -2573,7 +2546,7 @@ int create_msft_typelib(typelib_t *typelib)
     ctl2_init_header(msft);
     ctl2_init_segdir(msft);
 
-    msft->typelib_header.varflags |= SYS_WIN32;
+    msft->typelib_header.varflags |= typelib_kind;
 
     /*
      * The following two calls return an offset or -1 if out of memory. We

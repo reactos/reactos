@@ -34,7 +34,6 @@ extern int debuglevel;
 #define DEBUGLEVEL_PPLEX	0x0010
 #define DEBUGLEVEL_PPTRACE	0x0020
 
-extern int win32;
 extern int pedantic;
 extern int do_everything;
 extern int do_header;
