@@ -1,21 +1,7 @@
-/*
- * Copyright (C) 2004 Filip Navara
- *               2007 Kamil Hornicek
- *               2008 Radek Liska
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+/* FILE:        dll/win32/syssetup/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * UPDATED:     2009-08-02
+ * THANKS TO:   Filip Navara and Kamil Hornicek, who translated major part of this file
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -100,13 +86,13 @@ BEGIN
     LTEXT "Lokalizace systému by mìla souhlasit s jazykem aplikací, "\
           "které chcete používat. Localizace urèí jak budou zobrazena "\
           "èísla, mìny a kalendáøní data.", IDC_STATIC, 53, 7, 253, 20
-    LTEXT "<locale text>", IDC_LOCALETEXT, 53, 29, 250, 16
+    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "Pro zmìnu lokalizace systému kliknìte na Zmìnit.",
           IDC_STATIC, 53, 60, 184, 8
     PUSHBUTTON "&Zmìnit...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
     LTEXT "Rozložení kláves urèí znaky, které se zobrazí, když píšete.",
           IDC_STATIC, 53, 86, 253, 8
-    LTEXT "<layout text>", IDC_LAYOUTTEXT, 53, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "Pro zmìnu rozložení kláves, kliknìte na Zmìnit.",
           IDC_STATIC, 53, 126, 184, 8
     PUSHBUTTON "Z&mìnit...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
@@ -203,101 +189,101 @@ BEGIN
     IDS_ACCESSORIES     "Pøíslušenství"
     IDS_CMT_CALC        "Spustit Kalkulaèku"
     IDS_CMT_CMD         "Otevøít Pøíkazový øádek"
-    IDS_CMT_EXPLORER    "Spustit Explorer"
-    IDS_CMT_NOTEPAD     "Spustit Textový editor"
-    IDS_CMT_REGEDIT     "Spustit Editor registru"
-    IDS_CMT_WORDPAD     "Spustit Editor dokumentù"
-    IDS_CMT_SCREENSHOT  "Sejmout obrazovku"
     IDS_CMT_DEVMGMT     "Spustit Správce zaøízení"
-    IDS_CMT_SERVMAN     "Spustit Správce služeb"
+    IDS_CMT_EVENTVIEW   "Spustit Prohlížeè událostí"
+    IDS_CMT_EXPLORER    "Spustit Prùzkumníka"
+    IDS_CMT_MSCONFIG    "Spustit Nástroj pro konfiguraci systému"
+    IDS_CMT_NOTEPAD     "Spustit Textový editor"
+    IDS_CMT_PAINT       "Spustit Malování"
     IDS_CMT_RDESKTOP    "Spustit Vzdálenou plochu"
-    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
-    IDS_CMT_MSCONFIG    "Launch System Configuration program"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_REGEDIT     "Spustit Editor registru"
+    IDS_CMT_SCREENSHOT  "Sejmout obrazovku"
+    IDS_CMT_SERVMAN     "Spustit Správce služeb"
+    IDS_CMT_WORDPAD     "Spustit WordPad"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Hry"
-    IDS_CMT_SOLITAIRE	"Solitaire"
-    IDS_CMT_WINEMINE	"WineMine"
+    IDS_GAMES           "Hry"
+    IDS_CMT_SOLITAIRE   "Solitaire"
+    IDS_CMT_WINEMINE    "WineMine"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Systémové nástroje"
-	IDS_CMT_CHARMAP      "Mapa znakù"
-	IDS_CMT_KBSWITCH     "Pøepínaè rozložení klávesnice"
-    IDS_CMT_DXDIAG       "Launch ReactX-Diagnostic program"
+    IDS_SYS_TOOLS      "Systémové nástroje"
+    IDS_CMT_CHARMAP    "Mapa znakù"
+    IDS_CMT_KBSWITCH   "Pøepínaè rozložení klávesnice"
+    IDS_CMT_DXDIAG     "Spustit Nástroj pro diagnostiku ReactX"
 END
 
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Usnadnìní"
-	IDS_CMT_MAGNIFY      	     "Lupa"
+    IDS_SYS_ACCESSIBILITY      "Usnadnìní"
+    IDS_CMT_MAGNIFY            "Lupa"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SYS_ENTERTAINMENT       "Entertainment"
-    IDS_CMT_MPLAY32             "Launch Multimedia Player"
-    IDS_CMT_SNDVOL32            "Launch Volume Control"
+    IDS_SYS_ENTERTAINMENT       "Zábava"
+    IDS_CMT_MPLAY32             "Spustit Pøehrávaè multimédií"
+    IDS_CMT_SNDVOL32            "Spustit Ovládání hlasitosti"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "ReactOS Instalátor"
+    IDS_REACTOS_SETUP           "ReactOS Instalátor"
     IDS_UNKNOWN_ERROR           "Neznámá chyba"
     IDS_REGISTERING_COMPONENTS  "Registruji souèásti..."
-    IDS_LOADLIBRARY_FAILED	    "LoadLibrary failed: "
-    IDS_GETPROCADDR_FAILED	    "GetProcAddr failed: "
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary failed: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr failed: "
     IDS_REGSVR_FAILED           "DllRegisterServer failed: "
-    IDS_DLLINSTALL_FAILED	    "DllInstall failed: "
-    IDS_TIMEOUT			        "Vypršel èasový limit registrace"
+    IDS_DLLINSTALL_FAILED       "DllInstall failed: "
+    IDS_TIMEOUT                 "Vypršel èasový limit registrace"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
-    IDS_SHORT_CMD        "Pøíkazový øádek.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Prùzkumník.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
-    IDS_SHORT_SERVICE    "Správce služeb.lnk"
-    IDS_SHORT_DEVICE     "Správce zaøízení.lnk"
     IDS_SHORT_CALC       "Kalkulaèka.lnk"
-    IDS_SHORT_REGEDIT    "Regedit.lnk"
+    IDS_SHORT_CHARMAP    "Mapa znakù.lnk"
+    IDS_SHORT_CMD        "Pøíkazový øádek.lnk"
+    IDS_SHORT_DEVICE     "Správce zaøízení.lnk"
+    IDS_SHORT_DOWNLOADER "Download!.lnk"
+    IDS_SHORT_DXDIAG     "Diagnostika ReactX.lnk"
+    IDS_SHORT_EVENTVIEW  "Prohlížeè událostí.lnk"
+    IDS_SHORT_EXPLORER   "ReactOS Prùzkumník.lnk"
+    IDS_SHORT_KBSWITCH   "Pøepínaè rozložení klávesnice.lnk"
+    IDS_SHORT_MAGNIFY    "Lupa.lnk"
+    IDS_SHORT_MPLAY32    "Pøehrávaè multimédií.lnk"
+    IDS_SHORT_MSCONFIG   "Nastavení systému.lnk"
     IDS_SHORT_NOTEPAD    "Poznámkový blok.lnk"
-    IDS_SHORT_WORDPAD    "WordPad.lnk"
-    IDS_SHORT_SNAP       "SnapShot.lnk"
+    IDS_SHORT_PAINT      "Malování.lnk"
+    IDS_SHORT_RDESKTOP   "Vzdálená plocha.lnk"
+    IDS_SHORT_REGEDIT    "Editor registru.lnk"
+    IDS_SHORT_SERVICE    "Správce služeb.lnk"
+    IDS_SHORT_SNAP       "Sejmout obrazovku.lnk"
+    IDS_SHORT_SNDVOL32   "Ovládání hlasitosti.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-    IDS_SHORT_CHARMAP    "Mapa znakù.lnk"
-    IDS_SHORT_MAGNIFY    "Lupa.lnk"
-    IDS_SHORT_RDESKTOP   "Vzdálená plocha.lnk"
-    IDS_SHORT_KBSWITCH   "Pøepínaè rozložení klávesnice.lnk"
-    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
-    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
-    IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
-    IDS_SHORT_SNDVOL32   "Volume Control.lnk"
-    IDS_SHORT_DXDIAG     "ReactX Diagnostic.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
+    IDS_SHORT_WORDPAD    "WordPad.lnk"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Instalace nemùže pokraèovat, dokud nezadáte své jméno."
+    IDS_WZD_NAME             "Instalace nemùže pokraèovat, dokud nezadáte své jméno."
     IDS_WZD_SETCOMPUTERNAME  "Instalátor nedokázal nastavit jméno poèítaèe."
-    IDS_WZD_COMPUTERNAME  "Instalace nemùže pokraèovat, dokud nezadáte jméno poèítaèe."
-    IDS_WZD_PASSWORDEMPTY  "Musíte zadat heslo!"
-    IDS_WZD_PASSWORDMATCH  "Zadaná hesla nesouhlasí. Zadejte požadované heslo znovu."
-    IDS_WZD_PASSWORDCHAR  "Zadané heslo obsahuje nepovolené znaky. Zadejte upravené heslo."
-    IDS_WZD_LOCALTIME    "Instalátor nedokázal nastavit èas."
+    IDS_WZD_COMPUTERNAME     "Instalace nemùže pokraèovat, dokud nezadáte jméno poèítaèe."
+    IDS_WZD_PASSWORDEMPTY    "Musíte zadat heslo!"
+    IDS_WZD_PASSWORDMATCH    "Zadaná hesla nesouhlasí. Zadejte požadované heslo znovu."
+    IDS_WZD_PASSWORDCHAR     "Zadané heslo obsahuje nepovolené znaky. Zadejte upravené heslo."
+    IDS_WZD_LOCALTIME        "Instalátor nedokázal nastavit èas."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_STATUS_INSTALL_DEV "Instaluji zaøízení..."
+    IDS_STATUS_INSTALL_DEV   "Instaluji zaøízení..."
 END
 
 /* EOF */

@@ -74,7 +74,7 @@ BEGIN
         MENUITEM "Vybrat vš&e\tCtrl+A", CMD_SELECT_ALL
         MENUITEM "È&as/Datum\tF5",      CMD_TIME_DATE
     END
-    POPUP "F&ormat"
+    POPUP "F&ormát"
     BEGIN
         MENUITEM "Zalo&mit dlouhé øádky", CMD_WRAP
         MENUITEM "&Písmo...",             CMD_FONT
@@ -155,7 +155,7 @@ BEGIN
                     -1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,46,7,232,39
     CONTROL         " ",
                     -1,"Static",0x50000000,8,48,272,11
-    DEFPUSHBUTTON   "Close",IDOK,114,149,44,15,WS_GROUP
+    DEFPUSHBUTTON   "Zavøít",IDOK,114,149,44,15,WS_GROUP
     ICON            IDI_NPICON,-1,12,9,20,30
     EDITTEXT        IDC_LICENSE,8,64,272,81,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
@@ -205,5 +205,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
-STRING_LINE_COLUMN,                             "Line %d, column %d"
+STRING_LINE_COLUMN,                             "Øádek %d, sloupec %d"
 END

@@ -1,0 +1,48 @@
+/*
+ * Copyright (C) 2004 Eric Kohl
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_PROFILEPATH    "%SystemDrive%\\Documents and Settings"
+    IDS_APPDATA        "Dados de aplicativos"
+    IDS_DESKTOP        "Desktop"
+    IDS_FAVORITES      "Favoritos"
+    IDS_STARTMENU      "Menu Iniciar"
+    IDS_PROGRAMS       "Menu Iniciar\\Programas"
+    IDS_ADMINTOOLS     "Menu Iniciar\\Programas\\Ferramentas Administrativas"
+    IDS_STARTUP        "Menu Iniciar\\Programas\\Inicializar"
+    IDS_MYDOCUMENTS    "Meus Documentos"
+    IDS_MYPICTURES     "Meus Documentos\\Minhas imagens"
+    IDS_MYMUSIC        "Meus Documentos\\Minhas músicas"
+    IDS_MYVIDEOS       "Meus Documentos\\Meus vídeos"
+    IDS_TEMPLATES      "Modelos"
+    IDS_RECENT         "Documentos recentes"
+    IDS_SENDTO         "SendTo"
+    IDS_PRINTHOOD      "Ambiente de impressão"
+    IDS_NETHOOD        "Ambiente de rede"
+    IDS_LOCALSETTINGS  "Configurações locais"
+    IDS_LOCALAPPDATA   "Configurações locais\\Dados de aplicativos"
+    IDS_TEMP           "Configurações locais\\Temp"
+    IDS_CACHE          "Configurações locais\\Temporary Internet Files"
+    IDS_HISTORY        "Configurações locais\\Histórico"
+    IDS_COOKIES        "Cookies"
+    IDS_PROGRAMFILES   "%SystemDrive%\\Arquivos de programas"
+    IDS_COMMONFILES    "Arquivos comuns"
+END
