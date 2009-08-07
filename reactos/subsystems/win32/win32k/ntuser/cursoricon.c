@@ -76,8 +76,6 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
     return CurIcon;
 }
 
-
-#define COLORCURSORS_ALLOWED FALSE
 HCURSOR
 FASTCALL
 IntSetCursor(
