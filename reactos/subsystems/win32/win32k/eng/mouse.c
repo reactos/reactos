@@ -331,7 +331,7 @@ EngSetPointerShape(
         if (psoMask)
         {
             // CHECKME: Is this really required? if we have a color surface,
-            // we only need the and part of the mask.
+            // we only need the AND part of the mask.
             /* Check if the sizes match as they should */
             if (psoMask->sizlBitmap.cx != psoColor->sizlBitmap.cx ||
                 psoMask->sizlBitmap.cy != psoColor->sizlBitmap.cy * 2)
@@ -429,7 +429,7 @@ EngSetPointerShape(
         hbmp = EngCreateBitmap(psoMask->sizlBitmap,
                                lDelta,
                                pso->iBitmapFormat,
-                               0,
+                               BMF_TOPDOWN | BMF_NOZEROINIT,
                                NULL);
         pgp->psurfMask = SURFACE_ShareLockSurface(hbmp);
 
@@ -443,7 +443,7 @@ EngSetPointerShape(
                                   RGB(0xff,0xff,0xff),
                                   RGB(0,0,0));
 
-            rcl.bottom = pgp->Size.cy * 2;
+            rcl.bottom = psoMask->sizlBitmap.cy;
             IntEngCopyBits(&pgp->psurfMask->SurfObj,
                            psoMask,
                            NULL,
@@ -472,7 +472,7 @@ EngSetPointerShape(
         pgp->psurfColor = SURFACE_ShareLockSurface(hbmp);
         if (pgp->psurfColor)
         {
-            rcl.bottom = pgp->Size.cy;
+            rcl.bottom = psoColor->sizlBitmap.cy;
             IntEngCopyBits(&pgp->psurfColor->SurfObj,
                            psoColor,
                            NULL,
