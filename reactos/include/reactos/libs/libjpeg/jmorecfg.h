@@ -24,7 +24,6 @@
 
 #if (defined (_MSC_VER) && (_MSC_VER >= 800))
 #define HAVE_UNSIGNED_CHAR
-#define HAVE_ALL_INTS
 #define EXTERN(type)  extern type __cdecl
 #endif
 
@@ -240,7 +239,7 @@ typedef unsigned int JDIMENSION;
 /* a function referenced thru EXTERNs: */
 #define GLOBAL(type)          type JPEG_API
 /* a reference to a GLOBAL function: */
-#ifndef EXTERN 
+#ifndef EXTERN
 # define EXTERN(type)          extern JPEG_IMPEXP type JPEG_API
 /* a reference to a "GLOBAL" function exported by sourcefiles of utility progs */
 #endif /* EXTERN */
