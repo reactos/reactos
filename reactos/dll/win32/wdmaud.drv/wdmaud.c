@@ -205,6 +205,16 @@ CloseWdmSoundDevice(
         DeviceInfo.DeviceType = DeviceType;
         DeviceInfo.hDevice = SoundDeviceInstance->Handle;
 
+         /* First stop the stream */
+         DeviceInfo.u.State = KSSTATE_STOP;
+         SyncOverlappedDeviceIoControl(KernelHandle,
+                                       IOCTL_SETDEVICE_STATE,
+                                       (LPVOID) &DeviceInfo,
+                                       sizeof(WDMAUD_DEVICE_INFO),
+                                       (LPVOID) &DeviceInfo,
+                                       sizeof(WDMAUD_DEVICE_INFO),
+                                       NULL);
+
         SyncOverlappedDeviceIoControl(KernelHandle,
                                       IOCTL_CLOSE_WDMAUD,
                                       (LPVOID) &DeviceInfo,
@@ -318,6 +328,15 @@ SetWdmWaveDeviceFormat(
         }
     }
 
+    /* Now start the stream */
+    DeviceInfo.u.State = KSSTATE_RUN;
+    SyncOverlappedDeviceIoControl(KernelHandle,
+                                  IOCTL_SETDEVICE_STATE,
+                                  (LPVOID) &DeviceInfo,
+                                  sizeof(WDMAUD_DEVICE_INFO),
+                                  (LPVOID) &DeviceInfo,
+                                  sizeof(WDMAUD_DEVICE_INFO),
+                                  NULL);
 
     return MMSYSERR_NOERROR;
 }
