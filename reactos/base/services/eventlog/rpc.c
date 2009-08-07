@@ -369,6 +369,7 @@ NTSTATUS ElfrReportEventW(
     DWORD dwStringsSize = 0;
     DWORD dwError = ERROR_SUCCESS;
     WCHAR *lpStrings;
+    int pos = 0;
 
     lpEventSource = ElfGetEventLogSourceEntryByHandle(LogHandle);
     if (!lpEventSource)
@@ -418,7 +419,6 @@ NTSTATUS ElfrReportEventW(
         return STATUS_NO_MEMORY;
     }
 
-    int pos = 0;
     for (i = 0; i < NumStrings; i++)
     {
         wcscpy((WCHAR*)(lpStrings + pos), Strings[i]->Buffer);
