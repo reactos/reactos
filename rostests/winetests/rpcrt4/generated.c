@@ -1,4 +1,4 @@
-/* File generated automatically from tools/winapi/test.dat; do not edit! */
+/* File generated automatically from tools/winapi/tests.dat; do not edit! */
 /* This file can be copied, modified and distributed without restriction. */
 
 /*
@@ -33,21 +33,13 @@
  */
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
-# define FIELD_ALIGNMENT(type, field) __alignof(((type*)0)->field)
-#elif defined(__GNUC__)
-# define FIELD_ALIGNMENT(type, field) __alignof__(((type*)0)->field)
-#else
-/* FIXME: Not sure if is possible to do without compiler extension */
-#endif
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
 # define _TYPE_ALIGNMENT(type) __alignof(type)
 #elif defined(__GNUC__)
 # define _TYPE_ALIGNMENT(type) __alignof__(type)
 #else
 /*
- * FIXME: Not sure if is possible to do without compiler extension
- *        (if type is not just a name that is, if so the normal)
+ * FIXME: May not be possible without a compiler extension
+ *        (if type is not just a name that is, otherwise the normal
  *         TYPE_ALIGNMENT can be used)
  */
 #endif
@@ -64,84 +56,70 @@
  * Test helper macros
  */
 
-#ifdef FIELD_ALIGNMENT
-# define TEST_FIELD_ALIGNMENT(type, field, align) \
-   ok(FIELD_ALIGNMENT(type, field) == align, \
-       "FIELD_ALIGNMENT(" #type ", " #field ") == %d (expected " #align ")\n", \
-           (int)FIELD_ALIGNMENT(type, field))
+#ifdef _WIN64
+
+# define TEST_TYPE_SIZE(type, size)
+# define TEST_TYPE_ALIGN(type, align)
+# define TEST_TARGET_ALIGN(type, align)
+# define TEST_FIELD_ALIGN(type, field, align)
+# define TEST_FIELD_OFFSET(type, field, offset)
+
 #else
-# define TEST_FIELD_ALIGNMENT(type, field, align) do { } while (0)
+
+# define TEST_TYPE_SIZE(type, size)             C_ASSERT(sizeof(type) == size);
+
+# ifdef TYPE_ALIGNMENT
+#  define TEST_TYPE_ALIGN(type, align)          C_ASSERT(TYPE_ALIGNMENT(type) == align);
+# else
+#  define TEST_TYPE_ALIGN(type, align)
+# endif
+
+# ifdef _TYPE_ALIGNMENT
+#  define TEST_TARGET_ALIGN(type, align)        C_ASSERT(_TYPE_ALIGNMENT(*(type)0) == align);
+#  define TEST_FIELD_ALIGN(type, field, align)  C_ASSERT(_TYPE_ALIGNMENT(((type*)0)->field) == align);
+# else
+#  define TEST_TARGET_ALIGN(type, align)
+#  define TEST_FIELD_ALIGN(type, field, align)
+# endif
+
+# define TEST_FIELD_OFFSET(type, field, offset) C_ASSERT(FIELD_OFFSET(type, field) == offset);
+
 #endif
 
-#define TEST_FIELD_OFFSET(type, field, offset) \
-    ok(FIELD_OFFSET(type, field) == offset, \
-        "FIELD_OFFSET(" #type ", " #field ") == %ld (expected " #offset ")\n", \
-             (long int)FIELD_OFFSET(type, field))
+#define TEST_TARGET_SIZE(type, size)            TEST_TYPE_SIZE(*(type)0, size)
+#define TEST_FIELD_SIZE(type, field, size)      TEST_TYPE_SIZE((((type*)0)->field), size)
+#define TEST_TYPE_SIGNED(type)                  C_ASSERT((type) -1 < 0);
+#define TEST_TYPE_UNSIGNED(type)                C_ASSERT((type) -1 > 0);
 
-#ifdef _TYPE_ALIGNMENT
-#define TEST__TYPE_ALIGNMENT(type, align) \
-    ok(_TYPE_ALIGNMENT(type) == align, "TYPE_ALIGNMENT(" #type ") == %d (expected " #align ")\n", (int)_TYPE_ALIGNMENT(type))
-#else
-# define TEST__TYPE_ALIGNMENT(type, align) do { } while (0)
-#endif
-
-#ifdef TYPE_ALIGNMENT
-#define TEST_TYPE_ALIGNMENT(type, align) \
-    ok(TYPE_ALIGNMENT(type) == align, "TYPE_ALIGNMENT(" #type ") == %d (expected " #align ")\n", (int)TYPE_ALIGNMENT(type))
-#else
-# define TEST_TYPE_ALIGNMENT(type, align) do { } while (0)
-#endif
-
-#define TEST_TYPE_SIZE(type, size) \
-    ok(sizeof(type) == size, "sizeof(" #type ") == %d (expected " #size ")\n", ((int) sizeof(type)))
-
-/***********************************************************************
- * Test macros
- */
-
-#define TEST_FIELD(type, field_type, field_name, field_offset, field_size, field_align) \
-  TEST_TYPE_SIZE(field_type, field_size); \
-  TEST_FIELD_ALIGNMENT(type, field_name, field_align); \
-  TEST_FIELD_OFFSET(type, field_name, field_offset); \
-
-#define TEST_TYPE(type, size, align) \
-  TEST_TYPE_ALIGNMENT(type, align); \
-  TEST_TYPE_SIZE(type, size)
-
-#define TEST_TYPE_POINTER(type, size, align) \
-    TEST__TYPE_ALIGNMENT(*(type)0, align); \
-    TEST_TYPE_SIZE(*(type)0, size)
-
-#define TEST_TYPE_SIGNED(type) \
-    ok((type) -1 < 0, "(" #type ") -1 < 0\n");
-
-#define TEST_TYPE_UNSIGNED(type) \
-     ok((type) -1 > 0, "(" #type ") -1 > 0\n");
 
 static void test_pack_I_RPC_HANDLE(void)
 {
     /* I_RPC_HANDLE */
-    TEST_TYPE(I_RPC_HANDLE, 4, 4);
+    TEST_TYPE_SIZE   (I_RPC_HANDLE, 4)
+    TEST_TYPE_ALIGN  (I_RPC_HANDLE, 4)
 }
 
 static void test_pack_RPC_STATUS(void)
 {
     /* RPC_STATUS */
-    TEST_TYPE(RPC_STATUS, 4, 4);
-    TEST_TYPE_SIGNED(RPC_STATUS);
+    TEST_TYPE_SIZE   (RPC_STATUS, 4)
+    TEST_TYPE_ALIGN  (RPC_STATUS, 4)
 }
 
 static void test_pack_PRPC_POLICY(void)
 {
     /* PRPC_POLICY */
-    TEST_TYPE(PRPC_POLICY, 4, 4);
-    TEST_TYPE_POINTER(PRPC_POLICY, 12, 4);
+    TEST_TYPE_SIZE   (PRPC_POLICY, 4)
+    TEST_TYPE_ALIGN  (PRPC_POLICY, 4)
+    TEST_TARGET_SIZE (PRPC_POLICY, 12)
+    TEST_TARGET_ALIGN(PRPC_POLICY, 4)
 }
 
 static void test_pack_RPC_AUTH_IDENTITY_HANDLE(void)
 {
     /* RPC_AUTH_IDENTITY_HANDLE */
-    TEST_TYPE(RPC_AUTH_IDENTITY_HANDLE, 4, 4);
+    TEST_TYPE_SIZE   (RPC_AUTH_IDENTITY_HANDLE, 4)
+    TEST_TYPE_ALIGN  (RPC_AUTH_IDENTITY_HANDLE, 4)
 }
 
 static void test_pack_RPC_AUTH_KEY_RETRIEVAL_FN(void)
@@ -152,95 +130,168 @@ static void test_pack_RPC_AUTH_KEY_RETRIEVAL_FN(void)
 static void test_pack_RPC_AUTHZ_HANDLE(void)
 {
     /* RPC_AUTHZ_HANDLE */
-    TEST_TYPE(RPC_AUTHZ_HANDLE, 4, 4);
+    TEST_TYPE_SIZE   (RPC_AUTHZ_HANDLE, 4)
+    TEST_TYPE_ALIGN  (RPC_AUTHZ_HANDLE, 4)
 }
 
 static void test_pack_RPC_BINDING_HANDLE(void)
 {
     /* RPC_BINDING_HANDLE */
-    TEST_TYPE(RPC_BINDING_HANDLE, 4, 4);
+    TEST_TYPE_SIZE   (RPC_BINDING_HANDLE, 4)
+    TEST_TYPE_ALIGN  (RPC_BINDING_HANDLE, 4)
 }
 
 static void test_pack_RPC_BINDING_VECTOR(void)
 {
     /* RPC_BINDING_VECTOR (pack 4) */
-    TEST_TYPE(RPC_BINDING_VECTOR, 8, 4);
-    TEST_FIELD(RPC_BINDING_VECTOR, unsigned long, Count, 0, 4, 4);
-    TEST_FIELD(RPC_BINDING_VECTOR, RPC_BINDING_HANDLE[1], BindingH, 4, 4, 4);
+    TEST_TYPE_SIZE   (RPC_BINDING_VECTOR, 8)
+    TEST_TYPE_ALIGN  (RPC_BINDING_VECTOR, 4)
+    TEST_FIELD_SIZE  (RPC_BINDING_VECTOR, Count, 4)
+    TEST_FIELD_ALIGN (RPC_BINDING_VECTOR, Count, 4)
+    TEST_FIELD_OFFSET(RPC_BINDING_VECTOR, Count, 0)
+    TEST_FIELD_SIZE  (RPC_BINDING_VECTOR, BindingH, 4)
+    TEST_FIELD_ALIGN (RPC_BINDING_VECTOR, BindingH, 4)
+    TEST_FIELD_OFFSET(RPC_BINDING_VECTOR, BindingH, 4)
 }
 
 static void test_pack_RPC_IF_HANDLE(void)
 {
     /* RPC_IF_HANDLE */
-    TEST_TYPE(RPC_IF_HANDLE, 4, 4);
+    TEST_TYPE_SIZE   (RPC_IF_HANDLE, 4)
+    TEST_TYPE_ALIGN  (RPC_IF_HANDLE, 4)
 }
 
 static void test_pack_RPC_IF_ID(void)
 {
     /* RPC_IF_ID (pack 4) */
+    TEST_TYPE_SIZE   (RPC_IF_ID, 20)
+    TEST_TYPE_ALIGN  (RPC_IF_ID, 4)
+    TEST_FIELD_SIZE  (RPC_IF_ID, Uuid, 16)
+    TEST_FIELD_ALIGN (RPC_IF_ID, Uuid, 4)
+    TEST_FIELD_OFFSET(RPC_IF_ID, Uuid, 0)
+    TEST_FIELD_SIZE  (RPC_IF_ID, VersMajor, 2)
+    TEST_FIELD_ALIGN (RPC_IF_ID, VersMajor, 2)
+    TEST_FIELD_OFFSET(RPC_IF_ID, VersMajor, 16)
+    TEST_FIELD_SIZE  (RPC_IF_ID, VersMinor, 2)
+    TEST_FIELD_ALIGN (RPC_IF_ID, VersMinor, 2)
+    TEST_FIELD_OFFSET(RPC_IF_ID, VersMinor, 18)
 }
 
 static void test_pack_RPC_POLICY(void)
 {
     /* RPC_POLICY (pack 4) */
-    TEST_TYPE(RPC_POLICY, 12, 4);
-    TEST_FIELD(RPC_POLICY, unsigned int, Length, 0, 4, 4);
-    TEST_FIELD(RPC_POLICY, unsigned long, EndpointFlags, 4, 4, 4);
-    TEST_FIELD(RPC_POLICY, unsigned long, NICFlags, 8, 4, 4);
+    TEST_TYPE_SIZE   (RPC_POLICY, 12)
+    TEST_TYPE_ALIGN  (RPC_POLICY, 4)
+    TEST_FIELD_SIZE  (RPC_POLICY, Length, 4)
+    TEST_FIELD_ALIGN (RPC_POLICY, Length, 4)
+    TEST_FIELD_OFFSET(RPC_POLICY, Length, 0)
+    TEST_FIELD_SIZE  (RPC_POLICY, EndpointFlags, 4)
+    TEST_FIELD_ALIGN (RPC_POLICY, EndpointFlags, 4)
+    TEST_FIELD_OFFSET(RPC_POLICY, EndpointFlags, 4)
+    TEST_FIELD_SIZE  (RPC_POLICY, NICFlags, 4)
+    TEST_FIELD_ALIGN (RPC_POLICY, NICFlags, 4)
+    TEST_FIELD_OFFSET(RPC_POLICY, NICFlags, 8)
 }
 
 static void test_pack_UUID_VECTOR(void)
 {
     /* UUID_VECTOR (pack 4) */
-    TEST_TYPE(UUID_VECTOR, 8, 4);
-    TEST_FIELD(UUID_VECTOR, unsigned long, Count, 0, 4, 4);
-    TEST_FIELD(UUID_VECTOR, UUID *[1], Uuid, 4, 4, 4);
+    TEST_TYPE_SIZE   (UUID_VECTOR, 8)
+    TEST_TYPE_ALIGN  (UUID_VECTOR, 4)
+    TEST_FIELD_SIZE  (UUID_VECTOR, Count, 4)
+    TEST_FIELD_ALIGN (UUID_VECTOR, Count, 4)
+    TEST_FIELD_OFFSET(UUID_VECTOR, Count, 0)
+    TEST_FIELD_SIZE  (UUID_VECTOR, Uuid, 4)
+    TEST_FIELD_ALIGN (UUID_VECTOR, Uuid, 4)
+    TEST_FIELD_OFFSET(UUID_VECTOR, Uuid, 4)
 }
 
 static void test_pack_PRPC_CLIENT_INTERFACE(void)
 {
     /* PRPC_CLIENT_INTERFACE */
-    TEST_TYPE(PRPC_CLIENT_INTERFACE, 4, 4);
+    TEST_TYPE_SIZE   (PRPC_CLIENT_INTERFACE, 4)
+    TEST_TYPE_ALIGN  (PRPC_CLIENT_INTERFACE, 4)
+    TEST_TARGET_SIZE (PRPC_CLIENT_INTERFACE, 68)
+    TEST_TARGET_ALIGN(PRPC_CLIENT_INTERFACE, 4)
 }
 
 static void test_pack_PRPC_DISPATCH_TABLE(void)
 {
     /* PRPC_DISPATCH_TABLE */
-    TEST_TYPE(PRPC_DISPATCH_TABLE, 4, 4);
-    TEST_TYPE_POINTER(PRPC_DISPATCH_TABLE, 12, 4);
+    TEST_TYPE_SIZE   (PRPC_DISPATCH_TABLE, 4)
+    TEST_TYPE_ALIGN  (PRPC_DISPATCH_TABLE, 4)
+    TEST_TARGET_SIZE (PRPC_DISPATCH_TABLE, 12)
+    TEST_TARGET_ALIGN(PRPC_DISPATCH_TABLE, 4)
 }
 
 static void test_pack_PRPC_MESSAGE(void)
 {
     /* PRPC_MESSAGE */
-    TEST_TYPE(PRPC_MESSAGE, 4, 4);
-    TEST_TYPE_POINTER(PRPC_MESSAGE, 44, 4);
+    TEST_TYPE_SIZE   (PRPC_MESSAGE, 4)
+    TEST_TYPE_ALIGN  (PRPC_MESSAGE, 4)
+    TEST_TARGET_SIZE (PRPC_MESSAGE, 44)
+    TEST_TARGET_ALIGN(PRPC_MESSAGE, 4)
 }
 
 static void test_pack_PRPC_PROTSEQ_ENDPOINT(void)
 {
     /* PRPC_PROTSEQ_ENDPOINT */
-    TEST_TYPE(PRPC_PROTSEQ_ENDPOINT, 4, 4);
-    TEST_TYPE_POINTER(PRPC_PROTSEQ_ENDPOINT, 8, 4);
+    TEST_TYPE_SIZE   (PRPC_PROTSEQ_ENDPOINT, 4)
+    TEST_TYPE_ALIGN  (PRPC_PROTSEQ_ENDPOINT, 4)
+    TEST_TARGET_SIZE (PRPC_PROTSEQ_ENDPOINT, 8)
+    TEST_TARGET_ALIGN(PRPC_PROTSEQ_ENDPOINT, 4)
 }
 
 static void test_pack_PRPC_SERVER_INTERFACE(void)
 {
     /* PRPC_SERVER_INTERFACE */
-    TEST_TYPE(PRPC_SERVER_INTERFACE, 4, 4);
+    TEST_TYPE_SIZE   (PRPC_SERVER_INTERFACE, 4)
+    TEST_TYPE_ALIGN  (PRPC_SERVER_INTERFACE, 4)
+    TEST_TARGET_SIZE (PRPC_SERVER_INTERFACE, 68)
+    TEST_TARGET_ALIGN(PRPC_SERVER_INTERFACE, 4)
 }
 
 static void test_pack_PRPC_SYNTAX_IDENTIFIER(void)
 {
     /* PRPC_SYNTAX_IDENTIFIER */
-    TEST_TYPE(PRPC_SYNTAX_IDENTIFIER, 4, 4);
-    TEST_TYPE_POINTER(PRPC_SYNTAX_IDENTIFIER, 20, 4);
+    TEST_TYPE_SIZE   (PRPC_SYNTAX_IDENTIFIER, 4)
+    TEST_TYPE_ALIGN  (PRPC_SYNTAX_IDENTIFIER, 4)
+    TEST_TARGET_SIZE (PRPC_SYNTAX_IDENTIFIER, 20)
+    TEST_TARGET_ALIGN(PRPC_SYNTAX_IDENTIFIER, 4)
 }
 
 static void test_pack_RPC_CLIENT_INTERFACE(void)
 {
     /* RPC_CLIENT_INTERFACE (pack 4) */
-    TEST_FIELD(RPC_CLIENT_INTERFACE, unsigned int, Length, 0, 4, 4);
+    TEST_TYPE_SIZE   (RPC_CLIENT_INTERFACE, 68)
+    TEST_TYPE_ALIGN  (RPC_CLIENT_INTERFACE, 4)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, Length, 4)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, Length, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, Length, 0)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, InterfaceId, 20)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, InterfaceId, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, InterfaceId, 4)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, TransferSyntax, 20)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, TransferSyntax, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, TransferSyntax, 24)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, DispatchTable, 4)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, DispatchTable, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, DispatchTable, 44)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, RpcProtseqEndpointCount, 4)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, RpcProtseqEndpointCount, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, RpcProtseqEndpointCount, 48)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, RpcProtseqEndpoint, 4)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, RpcProtseqEndpoint, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, RpcProtseqEndpoint, 52)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, Reserved, 4)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, Reserved, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, Reserved, 56)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, InterpreterInfo, 4)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, InterpreterInfo, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, InterpreterInfo, 60)
+    TEST_FIELD_SIZE  (RPC_CLIENT_INTERFACE, Flags, 4)
+    TEST_FIELD_ALIGN (RPC_CLIENT_INTERFACE, Flags, 4)
+    TEST_FIELD_OFFSET(RPC_CLIENT_INTERFACE, Flags, 64)
 }
 
 static void test_pack_RPC_DISPATCH_FUNCTION(void)
@@ -251,86 +302,184 @@ static void test_pack_RPC_DISPATCH_FUNCTION(void)
 static void test_pack_RPC_DISPATCH_TABLE(void)
 {
     /* RPC_DISPATCH_TABLE (pack 4) */
-    TEST_TYPE(RPC_DISPATCH_TABLE, 12, 4);
-    TEST_FIELD(RPC_DISPATCH_TABLE, unsigned int, DispatchTableCount, 0, 4, 4);
-    TEST_FIELD(RPC_DISPATCH_TABLE, RPC_DISPATCH_FUNCTION*, DispatchTable, 4, 4, 4);
-    TEST_FIELD(RPC_DISPATCH_TABLE, LONG_PTR, Reserved, 8, 4, 4);
+    TEST_TYPE_SIZE   (RPC_DISPATCH_TABLE, 12)
+    TEST_TYPE_ALIGN  (RPC_DISPATCH_TABLE, 4)
+    TEST_FIELD_SIZE  (RPC_DISPATCH_TABLE, DispatchTableCount, 4)
+    TEST_FIELD_ALIGN (RPC_DISPATCH_TABLE, DispatchTableCount, 4)
+    TEST_FIELD_OFFSET(RPC_DISPATCH_TABLE, DispatchTableCount, 0)
+    TEST_FIELD_SIZE  (RPC_DISPATCH_TABLE, DispatchTable, 4)
+    TEST_FIELD_ALIGN (RPC_DISPATCH_TABLE, DispatchTable, 4)
+    TEST_FIELD_OFFSET(RPC_DISPATCH_TABLE, DispatchTable, 4)
+    TEST_FIELD_SIZE  (RPC_DISPATCH_TABLE, Reserved, 4)
+    TEST_FIELD_ALIGN (RPC_DISPATCH_TABLE, Reserved, 4)
+    TEST_FIELD_OFFSET(RPC_DISPATCH_TABLE, Reserved, 8)
 }
 
 static void test_pack_RPC_MESSAGE(void)
 {
     /* RPC_MESSAGE (pack 4) */
-    TEST_TYPE(RPC_MESSAGE, 44, 4);
-    TEST_FIELD(RPC_MESSAGE, RPC_BINDING_HANDLE, Handle, 0, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, unsigned long, DataRepresentation, 4, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, void*, Buffer, 8, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, unsigned int, BufferLength, 12, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, unsigned int, ProcNum, 16, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, PRPC_SYNTAX_IDENTIFIER, TransferSyntax, 20, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, void*, RpcInterfaceInformation, 24, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, void*, ReservedForRuntime, 28, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, RPC_MGR_EPV*, ManagerEpv, 32, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, void*, ImportContext, 36, 4, 4);
-    TEST_FIELD(RPC_MESSAGE, unsigned long, RpcFlags, 40, 4, 4);
+    TEST_TYPE_SIZE   (RPC_MESSAGE, 44)
+    TEST_TYPE_ALIGN  (RPC_MESSAGE, 4)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, Handle, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, Handle, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, Handle, 0)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, DataRepresentation, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, DataRepresentation, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, DataRepresentation, 4)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, Buffer, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, Buffer, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, Buffer, 8)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, BufferLength, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, BufferLength, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, BufferLength, 12)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, ProcNum, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, ProcNum, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, ProcNum, 16)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, TransferSyntax, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, TransferSyntax, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, TransferSyntax, 20)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, RpcInterfaceInformation, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, RpcInterfaceInformation, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, RpcInterfaceInformation, 24)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, ReservedForRuntime, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, ReservedForRuntime, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, ReservedForRuntime, 28)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, ManagerEpv, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, ManagerEpv, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, ManagerEpv, 32)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, ImportContext, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, ImportContext, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, ImportContext, 36)
+    TEST_FIELD_SIZE  (RPC_MESSAGE, RpcFlags, 4)
+    TEST_FIELD_ALIGN (RPC_MESSAGE, RpcFlags, 4)
+    TEST_FIELD_OFFSET(RPC_MESSAGE, RpcFlags, 40)
 }
 
 static void test_pack_RPC_PROTSEQ_ENDPOINT(void)
 {
     /* RPC_PROTSEQ_ENDPOINT (pack 4) */
-    TEST_TYPE(RPC_PROTSEQ_ENDPOINT, 8, 4);
-    TEST_FIELD(RPC_PROTSEQ_ENDPOINT, unsigned char*, RpcProtocolSequence, 0, 4, 4);
-    TEST_FIELD(RPC_PROTSEQ_ENDPOINT, unsigned char*, Endpoint, 4, 4, 4);
+    TEST_TYPE_SIZE   (RPC_PROTSEQ_ENDPOINT, 8)
+    TEST_TYPE_ALIGN  (RPC_PROTSEQ_ENDPOINT, 4)
+    TEST_FIELD_SIZE  (RPC_PROTSEQ_ENDPOINT, RpcProtocolSequence, 4)
+    TEST_FIELD_ALIGN (RPC_PROTSEQ_ENDPOINT, RpcProtocolSequence, 4)
+    TEST_FIELD_OFFSET(RPC_PROTSEQ_ENDPOINT, RpcProtocolSequence, 0)
+    TEST_FIELD_SIZE  (RPC_PROTSEQ_ENDPOINT, Endpoint, 4)
+    TEST_FIELD_ALIGN (RPC_PROTSEQ_ENDPOINT, Endpoint, 4)
+    TEST_FIELD_OFFSET(RPC_PROTSEQ_ENDPOINT, Endpoint, 4)
 }
 
 static void test_pack_RPC_SERVER_INTERFACE(void)
 {
     /* RPC_SERVER_INTERFACE (pack 4) */
-    TEST_FIELD(RPC_SERVER_INTERFACE, unsigned int, Length, 0, 4, 4);
+    TEST_TYPE_SIZE   (RPC_SERVER_INTERFACE, 68)
+    TEST_TYPE_ALIGN  (RPC_SERVER_INTERFACE, 4)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, Length, 4)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, Length, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, Length, 0)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, InterfaceId, 20)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, InterfaceId, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, InterfaceId, 4)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, TransferSyntax, 20)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, TransferSyntax, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, TransferSyntax, 24)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, DispatchTable, 4)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, DispatchTable, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, DispatchTable, 44)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, RpcProtseqEndpointCount, 4)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, RpcProtseqEndpointCount, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, RpcProtseqEndpointCount, 48)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, RpcProtseqEndpoint, 4)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, RpcProtseqEndpoint, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, RpcProtseqEndpoint, 52)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, DefaultManagerEpv, 4)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, DefaultManagerEpv, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, DefaultManagerEpv, 56)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, InterpreterInfo, 4)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, InterpreterInfo, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, InterpreterInfo, 60)
+    TEST_FIELD_SIZE  (RPC_SERVER_INTERFACE, Flags, 4)
+    TEST_FIELD_ALIGN (RPC_SERVER_INTERFACE, Flags, 4)
+    TEST_FIELD_OFFSET(RPC_SERVER_INTERFACE, Flags, 64)
 }
 
 static void test_pack_RPC_SYNTAX_IDENTIFIER(void)
 {
     /* RPC_SYNTAX_IDENTIFIER (pack 4) */
-    TEST_TYPE(RPC_SYNTAX_IDENTIFIER, 20, 4);
-    TEST_FIELD(RPC_SYNTAX_IDENTIFIER, GUID, SyntaxGUID, 0, 16, 4);
-    TEST_FIELD(RPC_SYNTAX_IDENTIFIER, RPC_VERSION, SyntaxVersion, 16, 4, 2);
+    TEST_TYPE_SIZE   (RPC_SYNTAX_IDENTIFIER, 20)
+    TEST_TYPE_ALIGN  (RPC_SYNTAX_IDENTIFIER, 4)
+    TEST_FIELD_SIZE  (RPC_SYNTAX_IDENTIFIER, SyntaxGUID, 16)
+    TEST_FIELD_ALIGN (RPC_SYNTAX_IDENTIFIER, SyntaxGUID, 4)
+    TEST_FIELD_OFFSET(RPC_SYNTAX_IDENTIFIER, SyntaxGUID, 0)
+    TEST_FIELD_SIZE  (RPC_SYNTAX_IDENTIFIER, SyntaxVersion, 4)
+    TEST_FIELD_ALIGN (RPC_SYNTAX_IDENTIFIER, SyntaxVersion, 2)
+    TEST_FIELD_OFFSET(RPC_SYNTAX_IDENTIFIER, SyntaxVersion, 16)
 }
 
 static void test_pack_RPC_VERSION(void)
 {
     /* RPC_VERSION (pack 4) */
-    TEST_TYPE(RPC_VERSION, 4, 2);
-    TEST_FIELD(RPC_VERSION, unsigned short, MajorVersion, 0, 2, 2);
-    TEST_FIELD(RPC_VERSION, unsigned short, MinorVersion, 2, 2, 2);
+    TEST_TYPE_SIZE   (RPC_VERSION, 4)
+    TEST_TYPE_ALIGN  (RPC_VERSION, 2)
+    TEST_FIELD_SIZE  (RPC_VERSION, MajorVersion, 2)
+    TEST_FIELD_ALIGN (RPC_VERSION, MajorVersion, 2)
+    TEST_FIELD_OFFSET(RPC_VERSION, MajorVersion, 0)
+    TEST_FIELD_SIZE  (RPC_VERSION, MinorVersion, 2)
+    TEST_FIELD_ALIGN (RPC_VERSION, MinorVersion, 2)
+    TEST_FIELD_OFFSET(RPC_VERSION, MinorVersion, 2)
 }
 
 static void test_pack_ARRAY_INFO(void)
 {
     /* ARRAY_INFO (pack 4) */
-    TEST_TYPE(ARRAY_INFO, 24, 4);
-    TEST_FIELD(ARRAY_INFO, LONG, Dimension, 0, 4, 4);
-    TEST_FIELD(ARRAY_INFO, ULONG *, BufferConformanceMark, 4, 4, 4);
-    TEST_FIELD(ARRAY_INFO, ULONG *, BufferVarianceMark, 8, 4, 4);
-    TEST_FIELD(ARRAY_INFO, ULONG *, MaxCountArray, 12, 4, 4);
-    TEST_FIELD(ARRAY_INFO, ULONG *, OffsetArray, 16, 4, 4);
-    TEST_FIELD(ARRAY_INFO, ULONG *, ActualCountArray, 20, 4, 4);
+    TEST_TYPE_SIZE   (ARRAY_INFO, 24)
+    TEST_TYPE_ALIGN  (ARRAY_INFO, 4)
+    TEST_FIELD_SIZE  (ARRAY_INFO, Dimension, 4)
+    TEST_FIELD_ALIGN (ARRAY_INFO, Dimension, 4)
+    TEST_FIELD_OFFSET(ARRAY_INFO, Dimension, 0)
+    TEST_FIELD_SIZE  (ARRAY_INFO, BufferConformanceMark, 4)
+    TEST_FIELD_ALIGN (ARRAY_INFO, BufferConformanceMark, 4)
+    TEST_FIELD_OFFSET(ARRAY_INFO, BufferConformanceMark, 4)
+    TEST_FIELD_SIZE  (ARRAY_INFO, BufferVarianceMark, 4)
+    TEST_FIELD_ALIGN (ARRAY_INFO, BufferVarianceMark, 4)
+    TEST_FIELD_OFFSET(ARRAY_INFO, BufferVarianceMark, 8)
+    TEST_FIELD_SIZE  (ARRAY_INFO, MaxCountArray, 4)
+    TEST_FIELD_ALIGN (ARRAY_INFO, MaxCountArray, 4)
+    TEST_FIELD_OFFSET(ARRAY_INFO, MaxCountArray, 12)
+    TEST_FIELD_SIZE  (ARRAY_INFO, OffsetArray, 4)
+    TEST_FIELD_ALIGN (ARRAY_INFO, OffsetArray, 4)
+    TEST_FIELD_OFFSET(ARRAY_INFO, OffsetArray, 16)
+    TEST_FIELD_SIZE  (ARRAY_INFO, ActualCountArray, 4)
+    TEST_FIELD_ALIGN (ARRAY_INFO, ActualCountArray, 4)
+    TEST_FIELD_OFFSET(ARRAY_INFO, ActualCountArray, 20)
 }
 
 static void test_pack_COMM_FAULT_OFFSETS(void)
 {
     /* COMM_FAULT_OFFSETS (pack 4) */
-    TEST_TYPE(COMM_FAULT_OFFSETS, 4, 2);
-    TEST_FIELD(COMM_FAULT_OFFSETS, short, CommOffset, 0, 2, 2);
-    TEST_FIELD(COMM_FAULT_OFFSETS, short, FaultOffset, 2, 2, 2);
+    TEST_TYPE_SIZE   (COMM_FAULT_OFFSETS, 4)
+    TEST_TYPE_ALIGN  (COMM_FAULT_OFFSETS, 2)
+    TEST_FIELD_SIZE  (COMM_FAULT_OFFSETS, CommOffset, 2)
+    TEST_FIELD_ALIGN (COMM_FAULT_OFFSETS, CommOffset, 2)
+    TEST_FIELD_OFFSET(COMM_FAULT_OFFSETS, CommOffset, 0)
+    TEST_FIELD_SIZE  (COMM_FAULT_OFFSETS, FaultOffset, 2)
+    TEST_FIELD_ALIGN (COMM_FAULT_OFFSETS, FaultOffset, 2)
+    TEST_FIELD_OFFSET(COMM_FAULT_OFFSETS, FaultOffset, 2)
 }
 
 static void test_pack_CS_STUB_INFO(void)
 {
     /* CS_STUB_INFO (pack 4) */
-    TEST_TYPE(CS_STUB_INFO, 12, 4);
-    TEST_FIELD(CS_STUB_INFO, ULONG, WireCodeset, 0, 4, 4);
-    TEST_FIELD(CS_STUB_INFO, ULONG, DesiredReceivingCodeset, 4, 4, 4);
-    TEST_FIELD(CS_STUB_INFO, void *, CSArrayInfo, 8, 4, 4);
+    TEST_TYPE_SIZE   (CS_STUB_INFO, 12)
+    TEST_TYPE_ALIGN  (CS_STUB_INFO, 4)
+    TEST_FIELD_SIZE  (CS_STUB_INFO, WireCodeset, 4)
+    TEST_FIELD_ALIGN (CS_STUB_INFO, WireCodeset, 4)
+    TEST_FIELD_OFFSET(CS_STUB_INFO, WireCodeset, 0)
+    TEST_FIELD_SIZE  (CS_STUB_INFO, DesiredReceivingCodeset, 4)
+    TEST_FIELD_ALIGN (CS_STUB_INFO, DesiredReceivingCodeset, 4)
+    TEST_FIELD_OFFSET(CS_STUB_INFO, DesiredReceivingCodeset, 4)
+    TEST_FIELD_SIZE  (CS_STUB_INFO, CSArrayInfo, 4)
+    TEST_FIELD_ALIGN (CS_STUB_INFO, CSArrayInfo, 4)
+    TEST_FIELD_OFFSET(CS_STUB_INFO, CSArrayInfo, 8)
 }
 
 static void test_pack_EXPR_EVAL(void)
@@ -341,11 +490,20 @@ static void test_pack_EXPR_EVAL(void)
 static void test_pack_FULL_PTR_TO_REFID_ELEMENT(void)
 {
     /* FULL_PTR_TO_REFID_ELEMENT (pack 4) */
-    TEST_TYPE(FULL_PTR_TO_REFID_ELEMENT, 16, 4);
-    TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, struct _FULL_PTR_TO_REFID_ELEMENT *, Next, 0, 4, 4);
-    TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, void *, Pointer, 4, 4, 4);
-    TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, ULONG, RefId, 8, 4, 4);
-    TEST_FIELD(FULL_PTR_TO_REFID_ELEMENT, unsigned char, State, 12, 1, 1);
+    TEST_TYPE_SIZE   (FULL_PTR_TO_REFID_ELEMENT, 16)
+    TEST_TYPE_ALIGN  (FULL_PTR_TO_REFID_ELEMENT, 4)
+    TEST_FIELD_SIZE  (FULL_PTR_TO_REFID_ELEMENT, Next, 4)
+    TEST_FIELD_ALIGN (FULL_PTR_TO_REFID_ELEMENT, Next, 4)
+    TEST_FIELD_OFFSET(FULL_PTR_TO_REFID_ELEMENT, Next, 0)
+    TEST_FIELD_SIZE  (FULL_PTR_TO_REFID_ELEMENT, Pointer, 4)
+    TEST_FIELD_ALIGN (FULL_PTR_TO_REFID_ELEMENT, Pointer, 4)
+    TEST_FIELD_OFFSET(FULL_PTR_TO_REFID_ELEMENT, Pointer, 4)
+    TEST_FIELD_SIZE  (FULL_PTR_TO_REFID_ELEMENT, RefId, 4)
+    TEST_FIELD_ALIGN (FULL_PTR_TO_REFID_ELEMENT, RefId, 4)
+    TEST_FIELD_OFFSET(FULL_PTR_TO_REFID_ELEMENT, RefId, 8)
+    TEST_FIELD_SIZE  (FULL_PTR_TO_REFID_ELEMENT, State, 1)
+    TEST_FIELD_ALIGN (FULL_PTR_TO_REFID_ELEMENT, State, 1)
+    TEST_FIELD_OFFSET(FULL_PTR_TO_REFID_ELEMENT, State, 12)
 }
 
 static void test_pack_FULL_PTR_XLAT_TABLES(void)
@@ -356,8 +514,12 @@ static void test_pack_FULL_PTR_XLAT_TABLES(void)
 static void test_pack_GENERIC_BINDING_INFO(void)
 {
     /* GENERIC_BINDING_INFO (pack 4) */
-    TEST_FIELD(GENERIC_BINDING_INFO, void *, pObj, 0, 4, 4);
-    TEST_FIELD(GENERIC_BINDING_INFO, unsigned int, Size, 4, 4, 4);
+    TEST_FIELD_SIZE  (GENERIC_BINDING_INFO, pObj, 4)
+    TEST_FIELD_ALIGN (GENERIC_BINDING_INFO, pObj, 4)
+    TEST_FIELD_OFFSET(GENERIC_BINDING_INFO, pObj, 0)
+    TEST_FIELD_SIZE  (GENERIC_BINDING_INFO, Size, 4)
+    TEST_FIELD_ALIGN (GENERIC_BINDING_INFO, Size, 4)
+    TEST_FIELD_OFFSET(GENERIC_BINDING_INFO, Size, 4)
 }
 
 static void test_pack_GENERIC_BINDING_ROUTINE_PAIR(void)
@@ -373,73 +535,170 @@ static void test_pack_MALLOC_FREE_STRUCT(void)
 static void test_pack_MIDL_FORMAT_STRING(void)
 {
     /* MIDL_FORMAT_STRING (pack 4) */
-    TEST_FIELD(MIDL_FORMAT_STRING, short, Pad, 0, 2, 2);
+    TEST_FIELD_SIZE  (MIDL_FORMAT_STRING, Pad, 2)
+    TEST_FIELD_ALIGN (MIDL_FORMAT_STRING, Pad, 2)
+    TEST_FIELD_OFFSET(MIDL_FORMAT_STRING, Pad, 0)
 }
 
 static void test_pack_MIDL_SERVER_INFO(void)
 {
     /* MIDL_SERVER_INFO (pack 4) */
-    TEST_TYPE(MIDL_SERVER_INFO, 32, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, PMIDL_STUB_DESC, pStubDesc, 0, 4, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, SERVER_ROUTINE *, DispatchTable, 4, 4, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, PFORMAT_STRING, ProcString, 8, 4, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, unsigned short *, FmtStringOffset, 12, 4, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, STUB_THUNK *, ThunkTable, 16, 4, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, PRPC_SYNTAX_IDENTIFIER, pTransferSyntax, 20, 4, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, ULONG_PTR, nCount, 24, 4, 4);
-    TEST_FIELD(MIDL_SERVER_INFO, PMIDL_SYNTAX_INFO, pSyntaxInfo, 28, 4, 4);
+    TEST_TYPE_SIZE   (MIDL_SERVER_INFO, 32)
+    TEST_TYPE_ALIGN  (MIDL_SERVER_INFO, 4)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, pStubDesc, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, pStubDesc, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, pStubDesc, 0)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, DispatchTable, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, DispatchTable, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, DispatchTable, 4)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, ProcString, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, ProcString, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, ProcString, 8)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, FmtStringOffset, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, FmtStringOffset, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, FmtStringOffset, 12)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, ThunkTable, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, ThunkTable, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, ThunkTable, 16)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, pTransferSyntax, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, pTransferSyntax, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, pTransferSyntax, 20)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, nCount, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, nCount, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, nCount, 24)
+    TEST_FIELD_SIZE  (MIDL_SERVER_INFO, pSyntaxInfo, 4)
+    TEST_FIELD_ALIGN (MIDL_SERVER_INFO, pSyntaxInfo, 4)
+    TEST_FIELD_OFFSET(MIDL_SERVER_INFO, pSyntaxInfo, 28)
 }
 
 static void test_pack_MIDL_STUB_DESC(void)
 {
     /* MIDL_STUB_DESC (pack 4) */
-    TEST_FIELD(MIDL_STUB_DESC, void *, RpcInterfaceInformation, 0, 4, 4);
+    TEST_FIELD_SIZE  (MIDL_STUB_DESC, RpcInterfaceInformation, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_DESC, RpcInterfaceInformation, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_DESC, RpcInterfaceInformation, 0)
 }
 
 static void test_pack_MIDL_STUB_MESSAGE(void)
 {
     /* MIDL_STUB_MESSAGE (pack 4) */
-    TEST_FIELD(MIDL_STUB_MESSAGE, PRPC_MESSAGE, RpcMsg, 0, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, Buffer, 4, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, BufferStart, 8, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, BufferEnd, 12, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, BufferMark, 16, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, BufferLength, 20, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, MemorySize, 24, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, Memory, 28, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, int, ReuseBuffer, 36, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, struct NDR_ALLOC_ALL_NODES_CONTEXT *, pAllocAllNodesContext, 40, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, struct NDR_POINTER_QUEUE_STATE *, pPointerQueueState, 44, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, int, IgnoreEmbeddedPointers, 48, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char *, PointerBufferMark, 52, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char, CorrDespIncrement, 56, 1, 1);
-    TEST_FIELD(MIDL_STUB_MESSAGE, unsigned char, uFlags, 57, 1, 1);
-    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG_PTR, MaxCount, 60, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, Offset, 64, 4, 4);
-    TEST_FIELD(MIDL_STUB_MESSAGE, ULONG, ActualCount, 68, 4, 4);
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, RpcMsg, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, RpcMsg, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, RpcMsg, 0)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, Buffer, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, Buffer, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, Buffer, 4)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, BufferStart, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, BufferStart, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, BufferStart, 8)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, BufferEnd, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, BufferEnd, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, BufferEnd, 12)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, BufferMark, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, BufferMark, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, BufferMark, 16)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, BufferLength, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, BufferLength, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, BufferLength, 20)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, MemorySize, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, MemorySize, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, MemorySize, 24)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, Memory, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, Memory, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, Memory, 28)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, ReuseBuffer, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, ReuseBuffer, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, ReuseBuffer, 36)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, pAllocAllNodesContext, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, pAllocAllNodesContext, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, pAllocAllNodesContext, 40)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, pPointerQueueState, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, pPointerQueueState, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, pPointerQueueState, 44)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, IgnoreEmbeddedPointers, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, IgnoreEmbeddedPointers, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, IgnoreEmbeddedPointers, 48)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, PointerBufferMark, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, PointerBufferMark, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, PointerBufferMark, 52)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, CorrDespIncrement, 1)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, CorrDespIncrement, 1)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, CorrDespIncrement, 56)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, uFlags, 1)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, uFlags, 1)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, uFlags, 57)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, MaxCount, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, MaxCount, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, MaxCount, 60)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, Offset, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, Offset, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, Offset, 64)
+    TEST_FIELD_SIZE  (MIDL_STUB_MESSAGE, ActualCount, 4)
+    TEST_FIELD_ALIGN (MIDL_STUB_MESSAGE, ActualCount, 4)
+    TEST_FIELD_OFFSET(MIDL_STUB_MESSAGE, ActualCount, 68)
 }
 
 static void test_pack_MIDL_STUBLESS_PROXY_INFO(void)
 {
     /* MIDL_STUBLESS_PROXY_INFO (pack 4) */
-    TEST_TYPE(MIDL_STUBLESS_PROXY_INFO, 24, 4);
-    TEST_FIELD(MIDL_STUBLESS_PROXY_INFO, PMIDL_STUB_DESC, pStubDesc, 0, 4, 4);
-    TEST_FIELD(MIDL_STUBLESS_PROXY_INFO, PFORMAT_STRING, ProcFormatString, 4, 4, 4);
-    TEST_FIELD(MIDL_STUBLESS_PROXY_INFO, unsigned short *, FormatStringOffset, 8, 4, 4);
-    TEST_FIELD(MIDL_STUBLESS_PROXY_INFO, PRPC_SYNTAX_IDENTIFIER, pTransferSyntax, 12, 4, 4);
-    TEST_FIELD(MIDL_STUBLESS_PROXY_INFO, ULONG_PTR, nCount, 16, 4, 4);
-    TEST_FIELD(MIDL_STUBLESS_PROXY_INFO, PMIDL_SYNTAX_INFO, pSyntaxInfo, 20, 4, 4);
+    TEST_TYPE_SIZE   (MIDL_STUBLESS_PROXY_INFO, 24)
+    TEST_TYPE_ALIGN  (MIDL_STUBLESS_PROXY_INFO, 4)
+    TEST_FIELD_SIZE  (MIDL_STUBLESS_PROXY_INFO, pStubDesc, 4)
+    TEST_FIELD_ALIGN (MIDL_STUBLESS_PROXY_INFO, pStubDesc, 4)
+    TEST_FIELD_OFFSET(MIDL_STUBLESS_PROXY_INFO, pStubDesc, 0)
+    TEST_FIELD_SIZE  (MIDL_STUBLESS_PROXY_INFO, ProcFormatString, 4)
+    TEST_FIELD_ALIGN (MIDL_STUBLESS_PROXY_INFO, ProcFormatString, 4)
+    TEST_FIELD_OFFSET(MIDL_STUBLESS_PROXY_INFO, ProcFormatString, 4)
+    TEST_FIELD_SIZE  (MIDL_STUBLESS_PROXY_INFO, FormatStringOffset, 4)
+    TEST_FIELD_ALIGN (MIDL_STUBLESS_PROXY_INFO, FormatStringOffset, 4)
+    TEST_FIELD_OFFSET(MIDL_STUBLESS_PROXY_INFO, FormatStringOffset, 8)
+    TEST_FIELD_SIZE  (MIDL_STUBLESS_PROXY_INFO, pTransferSyntax, 4)
+    TEST_FIELD_ALIGN (MIDL_STUBLESS_PROXY_INFO, pTransferSyntax, 4)
+    TEST_FIELD_OFFSET(MIDL_STUBLESS_PROXY_INFO, pTransferSyntax, 12)
+    TEST_FIELD_SIZE  (MIDL_STUBLESS_PROXY_INFO, nCount, 4)
+    TEST_FIELD_ALIGN (MIDL_STUBLESS_PROXY_INFO, nCount, 4)
+    TEST_FIELD_OFFSET(MIDL_STUBLESS_PROXY_INFO, nCount, 16)
+    TEST_FIELD_SIZE  (MIDL_STUBLESS_PROXY_INFO, pSyntaxInfo, 4)
+    TEST_FIELD_ALIGN (MIDL_STUBLESS_PROXY_INFO, pSyntaxInfo, 4)
+    TEST_FIELD_OFFSET(MIDL_STUBLESS_PROXY_INFO, pSyntaxInfo, 20)
 }
 
 static void test_pack_MIDL_SYNTAX_INFO(void)
 {
     /* MIDL_SYNTAX_INFO (pack 4) */
+    TEST_TYPE_SIZE   (MIDL_SYNTAX_INFO, 48)
+    TEST_TYPE_ALIGN  (MIDL_SYNTAX_INFO, 4)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, TransferSyntax, 20)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, TransferSyntax, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, TransferSyntax, 0)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, DispatchTable, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, DispatchTable, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, DispatchTable, 20)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, ProcString, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, ProcString, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, ProcString, 24)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, FmtStringOffset, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, FmtStringOffset, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, FmtStringOffset, 28)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, TypeString, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, TypeString, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, TypeString, 32)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, aUserMarshalQuadruple, 36)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pReserved1, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pReserved1, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pReserved1, 40)
+    TEST_FIELD_SIZE  (MIDL_SYNTAX_INFO, pReserved2, 4)
+    TEST_FIELD_ALIGN (MIDL_SYNTAX_INFO, pReserved2, 4)
+    TEST_FIELD_OFFSET(MIDL_SYNTAX_INFO, pReserved2, 44)
 }
 
 static void test_pack_NDR_CCONTEXT(void)
 {
     /* NDR_CCONTEXT */
-    TEST_TYPE(NDR_CCONTEXT, 4, 4);
+    TEST_TYPE_SIZE   (NDR_CCONTEXT, 4)
+    TEST_TYPE_ALIGN  (NDR_CCONTEXT, 4)
 }
 
 static void test_pack_NDR_NOTIFY_ROUTINE(void)
@@ -460,123 +719,157 @@ static void test_pack_NDR_RUNDOWN(void)
 static void test_pack_NDR_SCONTEXT(void)
 {
     /* NDR_SCONTEXT */
-    TEST_TYPE(NDR_SCONTEXT, 4, 4);
+    TEST_TYPE_SIZE   (NDR_SCONTEXT, 4)
+    TEST_TYPE_ALIGN  (NDR_SCONTEXT, 4)
 }
 
 static void test_pack_NDR_USER_MARSHAL_INFO(void)
 {
     /* NDR_USER_MARSHAL_INFO (pack 4) */
-    TEST_FIELD(NDR_USER_MARSHAL_INFO, ULONG, InformationLevel, 0, 4, 4);
+    TEST_FIELD_SIZE  (NDR_USER_MARSHAL_INFO, InformationLevel, 4)
+    TEST_FIELD_ALIGN (NDR_USER_MARSHAL_INFO, InformationLevel, 4)
+    TEST_FIELD_OFFSET(NDR_USER_MARSHAL_INFO, InformationLevel, 0)
 }
 
 static void test_pack_NDR_USER_MARSHAL_INFO_LEVEL1(void)
 {
     /* NDR_USER_MARSHAL_INFO_LEVEL1 (pack 4) */
-    TEST_FIELD(NDR_USER_MARSHAL_INFO_LEVEL1, void *, Buffer, 0, 4, 4);
-    TEST_FIELD(NDR_USER_MARSHAL_INFO_LEVEL1, ULONG, BufferSize, 4, 4, 4);
+    TEST_FIELD_SIZE  (NDR_USER_MARSHAL_INFO_LEVEL1, Buffer, 4)
+    TEST_FIELD_ALIGN (NDR_USER_MARSHAL_INFO_LEVEL1, Buffer, 4)
+    TEST_FIELD_OFFSET(NDR_USER_MARSHAL_INFO_LEVEL1, Buffer, 0)
+    TEST_FIELD_SIZE  (NDR_USER_MARSHAL_INFO_LEVEL1, BufferSize, 4)
+    TEST_FIELD_ALIGN (NDR_USER_MARSHAL_INFO_LEVEL1, BufferSize, 4)
+    TEST_FIELD_OFFSET(NDR_USER_MARSHAL_INFO_LEVEL1, BufferSize, 4)
 }
 
 static void test_pack_PARRAY_INFO(void)
 {
     /* PARRAY_INFO */
-    TEST_TYPE(PARRAY_INFO, 4, 4);
-    TEST_TYPE_POINTER(PARRAY_INFO, 24, 4);
+    TEST_TYPE_SIZE   (PARRAY_INFO, 4)
+    TEST_TYPE_ALIGN  (PARRAY_INFO, 4)
+    TEST_TARGET_SIZE (PARRAY_INFO, 24)
+    TEST_TARGET_ALIGN(PARRAY_INFO, 4)
 }
 
 static void test_pack_PFORMAT_STRING(void)
 {
     /* PFORMAT_STRING */
-    TEST_TYPE(PFORMAT_STRING, 4, 4);
+    TEST_TYPE_SIZE   (PFORMAT_STRING, 4)
+    TEST_TYPE_ALIGN  (PFORMAT_STRING, 4)
 }
 
 static void test_pack_PFULL_PTR_TO_REFID_ELEMENT(void)
 {
     /* PFULL_PTR_TO_REFID_ELEMENT */
-    TEST_TYPE(PFULL_PTR_TO_REFID_ELEMENT, 4, 4);
-    TEST_TYPE_POINTER(PFULL_PTR_TO_REFID_ELEMENT, 16, 4);
+    TEST_TYPE_SIZE   (PFULL_PTR_TO_REFID_ELEMENT, 4)
+    TEST_TYPE_ALIGN  (PFULL_PTR_TO_REFID_ELEMENT, 4)
+    TEST_TARGET_SIZE (PFULL_PTR_TO_REFID_ELEMENT, 16)
+    TEST_TARGET_ALIGN(PFULL_PTR_TO_REFID_ELEMENT, 4)
 }
 
 static void test_pack_PFULL_PTR_XLAT_TABLES(void)
 {
     /* PFULL_PTR_XLAT_TABLES */
-    TEST_TYPE(PFULL_PTR_XLAT_TABLES, 4, 4);
+    TEST_TYPE_SIZE   (PFULL_PTR_XLAT_TABLES, 4)
+    TEST_TYPE_ALIGN  (PFULL_PTR_XLAT_TABLES, 4)
 }
 
 static void test_pack_PGENERIC_BINDING_INFO(void)
 {
     /* PGENERIC_BINDING_INFO */
-    TEST_TYPE(PGENERIC_BINDING_INFO, 4, 4);
+    TEST_TYPE_SIZE   (PGENERIC_BINDING_INFO, 4)
+    TEST_TYPE_ALIGN  (PGENERIC_BINDING_INFO, 4)
 }
 
 static void test_pack_PGENERIC_BINDING_ROUTINE_PAIR(void)
 {
     /* PGENERIC_BINDING_ROUTINE_PAIR */
-    TEST_TYPE(PGENERIC_BINDING_ROUTINE_PAIR, 4, 4);
+    TEST_TYPE_SIZE   (PGENERIC_BINDING_ROUTINE_PAIR, 4)
+    TEST_TYPE_ALIGN  (PGENERIC_BINDING_ROUTINE_PAIR, 4)
 }
 
 static void test_pack_PMIDL_SERVER_INFO(void)
 {
     /* PMIDL_SERVER_INFO */
-    TEST_TYPE(PMIDL_SERVER_INFO, 4, 4);
-    TEST_TYPE_POINTER(PMIDL_SERVER_INFO, 32, 4);
+    TEST_TYPE_SIZE   (PMIDL_SERVER_INFO, 4)
+    TEST_TYPE_ALIGN  (PMIDL_SERVER_INFO, 4)
+    TEST_TARGET_SIZE (PMIDL_SERVER_INFO, 32)
+    TEST_TARGET_ALIGN(PMIDL_SERVER_INFO, 4)
 }
 
 static void test_pack_PMIDL_STUB_DESC(void)
 {
     /* PMIDL_STUB_DESC */
-    TEST_TYPE(PMIDL_STUB_DESC, 4, 4);
+    TEST_TYPE_SIZE   (PMIDL_STUB_DESC, 4)
+    TEST_TYPE_ALIGN  (PMIDL_STUB_DESC, 4)
 }
 
 static void test_pack_PMIDL_STUB_MESSAGE(void)
 {
     /* PMIDL_STUB_MESSAGE */
-    TEST_TYPE(PMIDL_STUB_MESSAGE, 4, 4);
+    TEST_TYPE_SIZE   (PMIDL_STUB_MESSAGE, 4)
+    TEST_TYPE_ALIGN  (PMIDL_STUB_MESSAGE, 4)
 }
 
 static void test_pack_PMIDL_STUBLESS_PROXY_INFO(void)
 {
     /* PMIDL_STUBLESS_PROXY_INFO */
-    TEST_TYPE(PMIDL_STUBLESS_PROXY_INFO, 4, 4);
-    TEST_TYPE_POINTER(PMIDL_STUBLESS_PROXY_INFO, 24, 4);
+    TEST_TYPE_SIZE   (PMIDL_STUBLESS_PROXY_INFO, 4)
+    TEST_TYPE_ALIGN  (PMIDL_STUBLESS_PROXY_INFO, 4)
+    TEST_TARGET_SIZE (PMIDL_STUBLESS_PROXY_INFO, 24)
+    TEST_TARGET_ALIGN(PMIDL_STUBLESS_PROXY_INFO, 4)
 }
 
 static void test_pack_PMIDL_SYNTAX_INFO(void)
 {
     /* PMIDL_SYNTAX_INFO */
-    TEST_TYPE(PMIDL_SYNTAX_INFO, 4, 4);
+    TEST_TYPE_SIZE   (PMIDL_SYNTAX_INFO, 4)
+    TEST_TYPE_ALIGN  (PMIDL_SYNTAX_INFO, 4)
+    TEST_TARGET_SIZE (PMIDL_SYNTAX_INFO, 48)
+    TEST_TARGET_ALIGN(PMIDL_SYNTAX_INFO, 4)
 }
 
 static void test_pack_PNDR_ASYNC_MESSAGE(void)
 {
     /* PNDR_ASYNC_MESSAGE */
-    TEST_TYPE(PNDR_ASYNC_MESSAGE, 4, 4);
+    TEST_TYPE_SIZE   (PNDR_ASYNC_MESSAGE, 4)
+    TEST_TYPE_ALIGN  (PNDR_ASYNC_MESSAGE, 4)
 }
 
 static void test_pack_PNDR_CORRELATION_INFO(void)
 {
     /* PNDR_CORRELATION_INFO */
-    TEST_TYPE(PNDR_CORRELATION_INFO, 4, 4);
+    TEST_TYPE_SIZE   (PNDR_CORRELATION_INFO, 4)
+    TEST_TYPE_ALIGN  (PNDR_CORRELATION_INFO, 4)
 }
 
 static void test_pack_PSCONTEXT_QUEUE(void)
 {
     /* PSCONTEXT_QUEUE */
-    TEST_TYPE(PSCONTEXT_QUEUE, 4, 4);
-    TEST_TYPE_POINTER(PSCONTEXT_QUEUE, 8, 4);
+    TEST_TYPE_SIZE   (PSCONTEXT_QUEUE, 4)
+    TEST_TYPE_ALIGN  (PSCONTEXT_QUEUE, 4)
+    TEST_TARGET_SIZE (PSCONTEXT_QUEUE, 8)
+    TEST_TARGET_ALIGN(PSCONTEXT_QUEUE, 4)
 }
 
 static void test_pack_PXMIT_ROUTINE_QUINTUPLE(void)
 {
     /* PXMIT_ROUTINE_QUINTUPLE */
-    TEST_TYPE(PXMIT_ROUTINE_QUINTUPLE, 4, 4);
+    TEST_TYPE_SIZE   (PXMIT_ROUTINE_QUINTUPLE, 4)
+    TEST_TYPE_ALIGN  (PXMIT_ROUTINE_QUINTUPLE, 4)
 }
 
 static void test_pack_SCONTEXT_QUEUE(void)
 {
     /* SCONTEXT_QUEUE (pack 4) */
-    TEST_TYPE(SCONTEXT_QUEUE, 8, 4);
-    TEST_FIELD(SCONTEXT_QUEUE, ULONG, NumberOfObjects, 0, 4, 4);
-    TEST_FIELD(SCONTEXT_QUEUE, NDR_SCONTEXT *, ArrayOfObjects, 4, 4, 4);
+    TEST_TYPE_SIZE   (SCONTEXT_QUEUE, 8)
+    TEST_TYPE_ALIGN  (SCONTEXT_QUEUE, 4)
+    TEST_FIELD_SIZE  (SCONTEXT_QUEUE, NumberOfObjects, 4)
+    TEST_FIELD_ALIGN (SCONTEXT_QUEUE, NumberOfObjects, 4)
+    TEST_FIELD_OFFSET(SCONTEXT_QUEUE, NumberOfObjects, 0)
+    TEST_FIELD_SIZE  (SCONTEXT_QUEUE, ArrayOfObjects, 4)
+    TEST_FIELD_ALIGN (SCONTEXT_QUEUE, ArrayOfObjects, 4)
+    TEST_FIELD_OFFSET(SCONTEXT_QUEUE, ArrayOfObjects, 4)
 }
 
 static void test_pack_SERVER_ROUTINE(void)
@@ -592,10 +885,18 @@ static void test_pack_STUB_THUNK(void)
 static void test_pack_USER_MARSHAL_CB(void)
 {
     /* USER_MARSHAL_CB (pack 4) */
-    TEST_FIELD(USER_MARSHAL_CB, ULONG, Flags, 0, 4, 4);
-    TEST_FIELD(USER_MARSHAL_CB, PMIDL_STUB_MESSAGE, pStubMsg, 4, 4, 4);
-    TEST_FIELD(USER_MARSHAL_CB, PFORMAT_STRING, pReserve, 8, 4, 4);
-    TEST_FIELD(USER_MARSHAL_CB, ULONG, Signature, 12, 4, 4);
+    TEST_FIELD_SIZE  (USER_MARSHAL_CB, Flags, 4)
+    TEST_FIELD_ALIGN (USER_MARSHAL_CB, Flags, 4)
+    TEST_FIELD_OFFSET(USER_MARSHAL_CB, Flags, 0)
+    TEST_FIELD_SIZE  (USER_MARSHAL_CB, pStubMsg, 4)
+    TEST_FIELD_ALIGN (USER_MARSHAL_CB, pStubMsg, 4)
+    TEST_FIELD_OFFSET(USER_MARSHAL_CB, pStubMsg, 4)
+    TEST_FIELD_SIZE  (USER_MARSHAL_CB, pReserve, 4)
+    TEST_FIELD_ALIGN (USER_MARSHAL_CB, pReserve, 4)
+    TEST_FIELD_OFFSET(USER_MARSHAL_CB, pReserve, 8)
+    TEST_FIELD_SIZE  (USER_MARSHAL_CB, Signature, 4)
+    TEST_FIELD_ALIGN (USER_MARSHAL_CB, Signature, 4)
+    TEST_FIELD_OFFSET(USER_MARSHAL_CB, Signature, 12)
 }
 
 static void test_pack_USER_MARSHAL_FREEING_ROUTINE(void)
@@ -719,5 +1020,9 @@ static void test_pack(void)
 
 START_TEST(generated)
 {
+#ifdef _WIN64
+    ok(0, "The type size / alignment tests don't support Win64 yet\n");
+#else
     test_pack();
+#endif
 }

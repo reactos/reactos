@@ -121,6 +121,7 @@ cpp_quote("#endif")
   int test_list_length(test_list_t *ls);
   int sum_fixed_int_3d(int m[2][3][4]);
   int sum_conf_array([size_is(n)] int x[], int n);
+  int sum_conf_ptr_by_conf_ptr(int n1, [size_is(n1)] int *n2_then_x1, [size_is(*n2_then_x1)] int *x2);
   int sum_unique_conf_array([size_is(n), unique] int x[], int n);
   int sum_unique_conf_ptr([size_is(n), unique] int *x, int n);
   int sum_var_array([length_is(n)] int x[20], int n);
@@ -334,7 +335,6 @@ cpp_quote("#endif")
     [size_is(size), length_is(length)] pints_t numbers[];
   } numbers_struct_t;
 
-  void get_5numbers([in] int count, [out, length_is(count)] pints_t pn[5]);
   void get_numbers([in] int length, [in] int size, [out, length_is(length), size_is(size)] pints_t pn[]);
   void get_numbers_struct([out] numbers_struct_t **ns);
 
