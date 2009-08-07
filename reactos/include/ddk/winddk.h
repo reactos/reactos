@@ -8304,6 +8304,13 @@ KeEnterCriticalRegion(
 #define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
 #define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
 
+NTKERNELAPI
+VOID
+NTAPI
+KeFlushQueuedDpcs(
+    VOID
+);
+
 NTHALAPI
 VOID
 NTAPI

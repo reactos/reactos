@@ -3956,13 +3956,6 @@ FsRtlUninitializeOplock (
     IN OUT POPLOCK Oplock
 );
 
-NTHALAPI
-VOID
-NTAPI
-HalDisplayString (
-    IN PCHAR String
-);
-
 NTKERNELAPI
 UCHAR
 NTAPI
