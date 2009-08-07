@@ -1229,8 +1229,8 @@ IntChangeDisplaySettings(
     {
         /* Dynamically change graphics mode */
         DPRINT1("flag 0 UNIMPLEMENTED\n");
-        return DISP_CHANGE_FAILED;
         SetLastWin32Error(ERROR_CALL_NOT_IMPLEMENTED);
+        return DISP_CHANGE_FAILED;
     }
 
     if ((dwflags & CDS_TEST) == CDS_TEST)

@@ -121,7 +121,8 @@ NtUserChangeDisplaySettings(
    DWORD dwflags,
    LPVOID lParam)
 {
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
+   LPDEVMODEW lpSafeDevMode = NULL;
    DEVMODEW DevMode;
    PUNICODE_STRING pSafeDeviceName = NULL;
    UNICODE_STRING SafeDeviceName;
@@ -147,23 +148,32 @@ NtUserChangeDisplaySettings(
    }
 
    /* Copy devmode */
-   Status = MmCopyFromCaller(&DevMode.dmSize, &lpDevMode->dmSize, sizeof (DevMode.dmSize));
-   if (!NT_SUCCESS(Status))
+   if (lpDevMode != NULL)
    {
-      SetLastNtError(Status);
-      return DISP_CHANGE_BADPARAM;
-   }
-   DevMode.dmSize = min(sizeof (DevMode), DevMode.dmSize);
-   Status = MmCopyFromCaller(&DevMode, lpDevMode, DevMode.dmSize);
-   if (!NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      return DISP_CHANGE_BADPARAM;
-   }
-   if (DevMode.dmDriverExtra > 0)
-   {
-      DbgPrint("(%s:%i) WIN32K: %s lpDevMode->dmDriverExtra is IGNORED!\n", __FILE__, __LINE__, __FUNCTION__);
-      DevMode.dmDriverExtra = 0;
+      _SEH2_TRY
+      {
+          ProbeForRead(lpDevMode, sizeof(DevMode.dmSize), 1);
+          DevMode.dmSize = lpDevMode->dmSize;
+          DevMode.dmSize = min(sizeof(DevMode), DevMode.dmSize);
+          ProbeForRead(lpDevMode, DevMode.dmSize, 1);
+          RtlCopyMemory(&DevMode, lpDevMode, DevMode.dmSize);
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+          Status = _SEH2_GetExceptionCode();
+      }
+      _SEH2_END
+      if (!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         return DISP_CHANGE_BADPARAM;
+      }
+      if (DevMode.dmDriverExtra > 0)
+      {
+         DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
+         DevMode.dmDriverExtra = 0;
+      }
+      lpSafeDevMode = &DevMode;
    }
 
    /* Copy the device name */
@@ -179,7 +189,7 @@ NtUserChangeDisplaySettings(
    }
 
    /* Call internal function */
-   Ret = IntChangeDisplaySettings(pSafeDeviceName, &DevMode, dwflags, lParam);
+   Ret = IntChangeDisplaySettings(pSafeDeviceName, lpSafeDevMode, dwflags, lParam);
 
    if (pSafeDeviceName != NULL)
       RtlFreeUnicodeString(pSafeDeviceName);
