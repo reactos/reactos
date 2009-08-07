@@ -239,10 +239,12 @@ extern "C" {
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
   || !defined __STRICT_ANSI__ || defined __GLIBCPP__
 
+#if !defined(_MSC_VER)
 #define NAN (0.0F/0.0F)
 #define HUGE_VALF (1.0F/0.0F)
 #define HUGE_VALL (1.0L/0.0L)
 #define INFINITY (1.0F/0.0F)
+#endif
 
 
 #define FP_NAN		0x0100
