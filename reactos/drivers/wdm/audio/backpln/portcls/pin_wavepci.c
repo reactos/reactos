@@ -888,14 +888,8 @@ IPortPinWavePci_fnFastRead(
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
-    {
-        /* some should initiate a state request but didnt do it */
-        DPRINT1("Starting stream with %lu mappings\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
-
-        This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_RUN);
-        This->State = KSSTATE_RUN;
-    }
+    /* set pending status as result */
+    StatusBlock->Status = STATUS_PENDING;
     return TRUE;
 }
 
@@ -948,12 +942,7 @@ IPortPinWavePci_fnFastWrite(
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
-    {
-        SetStreamState(This, KSSTATE_RUN);
-        /* some should initiate a state request but didnt do it */
-        DPRINT1("Starting stream with %lu mappings Status %x\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), Status);
-    }
+    StatusBlock->Status = STATUS_PENDING;
 
     if (This->IrpQueue->lpVtbl->HasLastMappingFailed(This->IrpQueue))
     {
