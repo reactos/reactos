@@ -24,12 +24,7 @@
 #define _NTIFS_
 #define _GNU_NTIFS_
 
-#ifdef _NTOSKRNL_
-/* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
-#define NTKERNELAPI
-#else
 #define NTKERNELAPI DECLSPEC_IMPORT
-#endif
 
 #include <ntddk.h>
 
@@ -42,10 +37,6 @@ extern "C" {
 
 #ifndef VER_PRODUCTBUILD
 #define VER_PRODUCTBUILD 10000
-#endif
-
-#ifndef NTSYSAPI
-#define NTSYSAPI
 #endif
 
 #define EX_PUSH_LOCK ULONG_PTR

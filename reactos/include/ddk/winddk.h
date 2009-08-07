@@ -67,18 +67,6 @@ extern "C" {
 # define _DDK_DUMMYUNION_N_MEMBER(n, name) name
 #endif
 
-#if !defined(_NTSYSTEM_)
-#define NTSYSAPI     DECLSPEC_IMPORT
-#define NTSYSCALLAPI DECLSPEC_IMPORT
-#else
-#define NTSYSAPI
-#if defined(_NTDLLBUILD_)
-#define NTSYSCALLAPI
-#else
-#define NTSYSCALLAPI DECLSPEC_ADDRSAFE
-#endif
-#endif
-
 /*
  * Alignment Macros
  */
@@ -2866,7 +2854,7 @@ typedef struct {
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
 #if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTHAL_)
-extern DECLSPEC_IMPORT PHAL_DISPATCH HalDispatchTable;
+extern NTSYSAPI PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
 extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;

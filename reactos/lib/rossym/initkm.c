@@ -7,7 +7,9 @@
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 
-#define _NTOSKRNL_
+#include <ntdef.h>
+#undef DECLSPEC_IMPORT
+#define DECLSPEC_IMPORT
 #include <ntddk.h>
 #include <reactos/rossym.h>
 #include "rossympriv.h"
