@@ -1,11 +1,7 @@
 
 #include <ntddk.h>
+#include <windef.h>
 #include <ks.h>
-
-/* FIXME */
-typedef unsigned long DWORD;
-typedef UCHAR BYTE;
-
 #include <bdatypes.h>
 #include <bdamedia.h>
 #include <bdasup.h>
