@@ -78,153 +78,70 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
 
 
 #define COLORCURSORS_ALLOWED FALSE
-HCURSOR FASTCALL
-IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
-             BOOL ForceChange)
+HCURSOR
+FASTCALL
+IntSetCursor(
+    PWINSTATION_OBJECT WinSta,
+    PCURICON_OBJECT NewCursor,
+    BOOL ForceChange)
 {
-    SURFACE *psurf;
-    SURFOBJ *pso;
-    PDEVINFO DevInfo;
-    PSURFACE MaskBmpObj = NULL;
     PSYSTEM_CURSORINFO CurInfo;
     PCURICON_OBJECT OldCursor;
-    HCURSOR Ret = (HCURSOR)0;
-    HBITMAP hMask = 0;
-    SURFOBJ *soMask = NULL, *soColor = NULL;
-    XLATEOBJ *XlateObj = NULL;
-    HDC Screen;
-    PDC dc;
-    ULONG Status;
+    HCURSOR hOldCursor = (HCURSOR)0;
+    HDC hdcScreen;
+    BOOL bResult;
 
     CurInfo = IntGetSysCursorInfo(WinSta);
     OldCursor = CurInfo->CurrentCursorObject;
     if (OldCursor)
     {
-        Ret = (HCURSOR)OldCursor->Self;
+        hOldCursor = (HCURSOR)OldCursor->Self;
     }
 
-    if (!ForceChange && OldCursor == NewCursor)
+    /* Is the new cursor the same as the old cursor? */
+    if (OldCursor == NewCursor)
     {
-        return Ret;
+        /* Nothing to to do in this case */
+        return hOldCursor;
     }
 
-    if (!(Screen = IntGetScreenDC()))
+    /* Get the screen DC */
+    if(!(hdcScreen = IntGetScreenDC()))
     {
         return (HCURSOR)0;
     }
-    /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-    dc = DC_LockDc(Screen);
 
-    if (!dc)
+    /* Do we have a new cursor? */
+    if (NewCursor)
     {
-        return Ret;
-    }
-    DevInfo = (PDEVINFO)&dc->ppdev->DevInfo;
+        UserReferenceObject(NewCursor);
 
-    psurf = dc->dclevel.pSurface;
-    if (!psurf)
-    {
-        DC_UnlockDc(dc);
-        return (HCURSOR)0;
-    }
-    pso = &psurf->SurfObj;
-
-    if (!NewCursor)
-    {
-        if (CurInfo->CurrentCursorObject || ForceChange)
-        {
-            if (CurInfo->CurrentCursorObject)
-            {
-                UserDereferenceObject(CurInfo->CurrentCursorObject);
-                if (CurInfo->ShowingCursor)
-                {
-                    DPRINT("Removing pointer!\n");
-                    /* Remove the cursor if it was displayed */
-                    IntEngMovePointer(pso, -1, -1, &GDIDEV(pso)->Pointer.Exclude);
-                }
-            }
-
-            CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
-            CurInfo->ShowingCursor = 0;
-        }
-
-        DC_UnlockDc(dc);
-        return Ret;
-    }
-
-    /* TODO: Fixme. Logic is screwed above */
-
-    MaskBmpObj = SURFACE_LockSurface(NewCursor->IconInfo.hbmMask);
-    if (MaskBmpObj)
-    {
-        const int maskBpp = BitsPerFormat(MaskBmpObj->SurfObj.iBitmapFormat);
-        SURFACE_UnlockSurface(MaskBmpObj);
-        if (maskBpp != 1)
-        {
-            DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
-            DC_UnlockDc(dc);
-            return Ret;
-        }
-
-        if ((DevInfo->flGraphicsCaps2 & GCAPS2_ALPHACURSOR) &&
-                pso->iBitmapFormat >= BMF_16BPP &&
-                pso->iBitmapFormat <= BMF_32BPP &&
-                NewCursor->Shadow && COLORCURSORS_ALLOWED)
-        {
-            /* FIXME - Create a color pointer, only 32bit bitmap, set alpha bits!
-                       Do not pass a mask bitmap to DrvSetPointerShape()!
-                       Create a XLATEOBJ that describes the colors of the bitmap. */
-            DPRINT1("SetCursor: (Colored) alpha cursors are not supported!\n");
-        }
-        else
-        {
-            if (NewCursor->IconInfo.hbmColor
-                    && COLORCURSORS_ALLOWED)
-            {
-                /* FIXME - Create a color pointer, create only one 32bit bitmap!
-                           Do not pass a mask bitmap to DrvSetPointerShape()!
-                           Create a XLATEOBJ that describes the colors of the bitmap.
-                           (16bit bitmaps are propably allowed) */
-                DPRINT1("SetCursor: Cursors with colors are not supported!\n");
-            }
-            else
-            {
-                MaskBmpObj = SURFACE_LockSurface(NewCursor->IconInfo.hbmMask);
-                if (MaskBmpObj)
-                {
-                    RECTL DestRect = {0, 0, MaskBmpObj->SurfObj.sizlBitmap.cx, MaskBmpObj->SurfObj.sizlBitmap.cy};
-                    POINTL SourcePoint = {0, 0};
-
-                    /*
-                     * NOTE: For now we create the cursor in top-down bitmap,
-                     * because VMware driver rejects it otherwise. This should
-                     * be fixed later.
-                     */
-                    hMask = EngCreateBitmap(
-                                MaskBmpObj->SurfObj.sizlBitmap, abs(MaskBmpObj->SurfObj.lDelta),
-                                MaskBmpObj->SurfObj.iBitmapFormat, BMF_TOPDOWN,
-                                NULL);
-                    if (!hMask)
-                    {
-                        SURFACE_UnlockSurface(MaskBmpObj);
-                        DC_UnlockDc(dc);
-                        return (HCURSOR)0;
-                    }
-                    soMask = EngLockSurface((HSURF)hMask);
-                    IntEngCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
-                                   &DestRect, &SourcePoint);
-                    SURFACE_UnlockSurface(MaskBmpObj);
-                }
-            }
-        }
         CurInfo->ShowingCursor = CURSOR_SHOWING;
         CurInfo->CurrentCursorObject = NewCursor;
-        UserReferenceObject(NewCursor);
+
+        /* Call GDI to set the new screen cursor */
+        bResult = GreSetPointerShape(hdcScreen,
+                                     NewCursor->IconInfo.hbmMask,
+                                     NewCursor->IconInfo.hbmColor,
+                                     NewCursor->IconInfo.xHotspot,
+                                     NewCursor->IconInfo.yHotspot,
+                                     gpsi->ptCursor.x,
+                                     gpsi->ptCursor.y);
+
+
     }
     else
     {
-        CurInfo->ShowingCursor = 0;
+        /* Check if were diplaying a cursor */
+        if (OldCursor && CurInfo->ShowingCursor)
+        {
+            /* Remove the cursor */
+            GreMovePointer(hdcScreen, -1, -1);
+            DPRINT("Removing pointer!\n");
+        }
+
         CurInfo->CurrentCursorObject = NULL;
+        CurInfo->ShowingCursor = 0;
     }
 
     /* OldCursor is not in use anymore */
@@ -233,35 +150,10 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
         UserDereferenceObject(OldCursor);
     }
 
-    Status  = IntEngSetPointerShape(pso,
-                                    soMask,
-                                    soColor,
-                                    XlateObj,
-                                    NewCursor->IconInfo.xHotspot,
-                                    NewCursor->IconInfo.yHotspot,
-                                    gpsi->ptCursor.x,
-                                    gpsi->ptCursor.y,
-                                    &(GDIDEV(pso)->Pointer.Exclude),
-                                    SPS_CHANGE);
-
-    if (Status != SPS_ACCEPT_NOEXCLUDE)
-    {
-        DPRINT1("IntEngSetPointerShape returned %lx\n", Status);
-    }
-
-    if (hMask)
-    {
-        EngUnlockSurface(soMask);
-        EngDeleteSurface((HSURF)hMask);
-    }
-    if (XlateObj)
-    {
-        EngDeleteXlate(XlateObj);
-    }
-
-    DC_UnlockDc(dc);
-    return Ret;
+    /* Return handle of the old cursor */
+    return hOldCursor;
 }
+
 
 BOOL FASTCALL
 IntSetupCurIconHandles(PWINSTATION_OBJECT WinSta)
