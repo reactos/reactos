@@ -8,6 +8,7 @@
 	<define name="HAVE_WIN32_THREADS" />
 	<define name="_REENTRANT" />
 	<define name="LIBXML_STATIC" />
+	<define name="__MINGW32__" />
 	<include base="libxml2">include</include>
 	<include base="libxml2">.</include>
 	<file>c14n.c</file>
