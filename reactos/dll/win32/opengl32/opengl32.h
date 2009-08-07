@@ -103,7 +103,7 @@ extern "C" {
 #ifdef APIENTRY
 #undef APIENTRY
 #endif /* APIENTRY */
-#define APIENTRY EXPORT __stdcall
+#define APIENTRY __stdcall
 
 /* Called by the driver to set the dispatch table */
 typedef DWORD (WINAPI *SetContextCallBack)( const ICDTable * );
@@ -192,7 +192,7 @@ BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc );
 
 /* empty gl functions from gl.c */
-int WINAPI glEmptyFunc0();
+int WINAPI glEmptyFunc0( void );
 int WINAPI glEmptyFunc4( long );
 int WINAPI glEmptyFunc8( long, long );
 int WINAPI glEmptyFunc12( long, long, long );
@@ -216,7 +216,7 @@ int WINAPI glEmptyFunc56( long, long, long, long, long, long, long, long,
 
 #ifdef OPENGL32_GL_FUNC_PROTOTYPES
 
-#define X(func,ret,typeargs,args,icdidx,tebidx,stack) EXPORT ret WINAPI func typeargs;
+#define X(func,ret,typeargs,args,icdidx,tebidx,stack) ret WINAPI func typeargs;
 GLFUNCS_MACRO
 #undef X
 

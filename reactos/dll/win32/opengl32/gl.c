@@ -19,12 +19,12 @@
  *
  * On other machines we use C to forward the calls (slow...)
  */
- 
+
 #include "opengl32.h"
 
 C_ASSERT(FIELD_OFFSET(TEB, glTable) == 0xbe8);
 
-int WINAPI glEmptyFunc0() { return 0; }
+int WINAPI glEmptyFunc0( void ) { return 0; }
 int WINAPI glEmptyFunc4( long l1 ) { return 0; }
 int WINAPI glEmptyFunc8( long l1, long l2 ) { return 0; }
 int WINAPI glEmptyFunc12( long l1, long l2, long l3 ) { return 0; }
@@ -59,7 +59,7 @@ int WINAPI glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
 #if defined(_M_IX86)
 # define FOO(x) #x
 
-#if __MINGW32__
+#ifdef __GNUC__
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack) \
 __asm__(".align 4"                                    "\n\t" \
         ".globl _"#func"@"#stack                      "\n\t" \
@@ -67,6 +67,14 @@ __asm__(".align 4"                                    "\n\t" \
         "       movl %fs:0x18, %eax"                  "\n\t" \
         "       movl 0xbe8(%eax), %eax"               "\n\t" \
         "       jmp *"FOO((icdidx*4))"(%eax)"         "\n\t");
+#elif defined(_MSC_VER)
+# define X(func, ret, typeargs, args, icdidx, tebidx, stack) \
+__declspec(naked) ret WINAPI func typeargs                   \
+{                                                            \
+	__asm { mov eax, dword ptr fs:[18h] };                   \
+	__asm { mov eax, dword ptr [eax+0be8h] };                \
+	__asm { jmp dword ptr [eax+icdidx*4] };                  \
+}
 #else
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack) \
 ret WINAPI func typeargs                                     \
