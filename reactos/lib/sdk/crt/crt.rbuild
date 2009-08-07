@@ -81,7 +81,6 @@
 		<file>copysign.c</file>
 		<file>fpclass.c</file>
 		<file>fpecode.c</file>
-		<file>fpreset.c</file>
 		<file>isnan.c</file>
 		<file>nafter.c</file>
 		<file>scalb.c</file>
@@ -89,6 +88,7 @@
 			<directory name="i386">
 				<file>clearfp.c</file>
 				<file>cntrlfp.c</file>
+				<file>fpreset.c</file>
 				<file>logb.c</file>
 				<file>statfp.c</file>
 			</directory>
@@ -97,6 +97,7 @@
 			<directory name="i386">
 				<file>clearfp.c</file>
 				<file>cntrlfp.c</file>
+				<file>fpreset.c</file>
 				<file>logb.c</file>
 				<file>statfp.c</file>
 			</directory>

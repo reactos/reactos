@@ -15,9 +15,9 @@
  */
 void CDECL _fpreset(void)
 {
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(__GNUC__)
   __asm__ __volatile__( "fninit" );
 #else
-  FIXME(":Not Implemented!\n");
+  __asm fninit;
 #endif
 }

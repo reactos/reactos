@@ -29,6 +29,10 @@ double _logb (double __x)
     ("fxtract\n\t"
      : "=t" (__junk), "=u" (__val) : "0" (__x));
 #else
+  __asm fld [__x];
+  __asm fxtract;
+  __asm fstp st(0);
+  __asm fstp [__val];
 #endif /*__GNUC__*/
   return __val;
 }
