@@ -830,7 +830,7 @@ NTSTATUS TdiSend
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoCompleteRequest(*Irp, IO_NO_INCREMENT);
@@ -911,7 +911,7 @@ NTSTATUS TdiReceive(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoCompleteRequest(*Irp, IO_NO_INCREMENT);
@@ -1011,7 +1011,7 @@ NTSTATUS TdiReceiveDatagram(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         IoCompleteRequest(*Irp, IO_NO_INCREMENT);
@@ -1109,7 +1109,7 @@ NTSTATUS TdiSendDatagram(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
 
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
