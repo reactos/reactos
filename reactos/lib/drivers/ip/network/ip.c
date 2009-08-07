@@ -222,8 +222,12 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
 
     if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
 	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
-        return;
     }
+
+    /* Send a gratuitous ARP packet to update the route caches of
+     * other computers */
+    if (IF != Loopback)
+       ARPTransmit(NULL, IF);
 }
 
 BOOLEAN IPRegisterInterface(

@@ -123,6 +123,11 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
 
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
+    /* If Address is NULL then the caller wants an
+     * gratuitous ARP packet sent */
+    if (!Address)
+        Address = &Interface->Unicast;
+
     switch (Address->Type) {
         case IP_ADDRESS_V4:
             ProtoType    = (USHORT)ETYPE_IPv4; /* IPv4 */
