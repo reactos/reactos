@@ -1776,6 +1776,16 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
        /* Store its DriverSection, so that it could be unloaded */
        DriverObject->DriverSection = ModuleObject;
    }
+   else
+   {
+      DPRINT("DriverObject already exist in ObjectManager\n");
+      /* IopGetDriverObject references the DriverObject, so dereference it. */
+      ObDereferenceObject(DriverObject);
+      IopFreeDeviceNode(DeviceNode);
+      LoadParams->Status = STATUS_IMAGE_ALREADY_LOADED;
+      (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
+      return;
+   }
 
    IopInitializeDevice(DeviceNode, DriverObject);
    LoadParams->Status = IopStartDevice(DeviceNode);
