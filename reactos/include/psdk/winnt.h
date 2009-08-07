@@ -197,7 +197,7 @@ typedef WORD LANGID;
 #endif
 #undef __int64
 #define __int64 long long
-#elif defined(__WATCOMC__) && (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64 )
+#elif (defined(__WATCOMC__) || defined(_MSC_VER)) && (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64 )
 #define _HAVE_INT64
 #endif /* __GNUC__/__WATCOMC */
 #if defined(_HAVE_INT64) || (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64)
@@ -2841,7 +2841,7 @@ typedef struct _CONTEXT {
 #ifndef PAGE_SIZE
 #define PAGE_SIZE                         0x1000 // FIXME: This should probably go elsewhere
 #endif
-    
+
 /* The following flags control the contents of the CONTEXT structure. */
 
 #define CONTEXT_ARM    0x0000040
