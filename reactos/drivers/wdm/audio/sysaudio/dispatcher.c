@@ -255,7 +255,11 @@ SysAudioAllocateDeviceHeader(
     /* initialize create item struct */
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
     CreateItem->Create = DispatchCreateSysAudio;
-    RtlInitUnicodeString(&CreateItem->ObjectClass, L"SysAudio");
+
+    /* FIXME Sysaudio doesnt need a named create item because it installs itself
+     * via the device interface
+     */
+    RtlInitUnicodeString(&CreateItem->ObjectClass, L"GLOBAL");
     CreateItem->Flags = KSCREATE_ITEM_WILDCARD;
 
     Status = KsAllocateDeviceHeader(&DeviceExtension->KsDeviceHeader,
@@ -269,14 +273,14 @@ SysAudioOpenKMixer(
     IN SYSAUDIODEVEXT *DeviceExtension)
 {
     NTSTATUS Status;
-    UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\kmixer");
+    UNICODE_STRING DeviceInstanceName = RTL_CONSTANT_STRING(L"\\Device\\kmixer\\GLOBAL");
     UNICODE_STRING DevicePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\kmixer");
 
     Status = ZwLoadDriver(&DevicePath);
 
     if (NT_SUCCESS(Status))
     {
-        Status = OpenDevice(&DeviceName, &DeviceExtension->KMixerHandle, &DeviceExtension->KMixerFileObject);
+        Status = OpenDevice(&DeviceInstanceName, &DeviceExtension->KMixerHandle, &DeviceExtension->KMixerFileObject);
         if (!NT_SUCCESS(Status))
         {
             DeviceExtension->KMixerHandle = NULL;

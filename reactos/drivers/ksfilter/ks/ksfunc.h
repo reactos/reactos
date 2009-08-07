@@ -124,5 +124,14 @@ KspCreatePin(
     IN PKSPIN_CONNECT Connect,
     IN KSPIN_DESCRIPTOR_EX* Descriptor);
 
+NTSTATUS
+KspAddCreateItemToList(
+    OUT PLIST_ENTRY ListHead,
+    IN ULONG ItemsCount,
+    IN  PKSOBJECT_CREATE_ITEM ItemsList);
+
+VOID
+KspFreeCreateItems(
+    IN PLIST_ENTRY ListHead);
 
 #endif

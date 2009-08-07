@@ -5,6 +5,7 @@
 #include <portcls.h>
 #include <ks.h>
 #include <ksmedia.h>
+#include <swenum.h>
 #define YDEBUG
 #include <debug.h>
 

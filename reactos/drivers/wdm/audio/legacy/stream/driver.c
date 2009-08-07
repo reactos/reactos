@@ -56,7 +56,7 @@ StreamClassAddDevice(
     /* Zero Create item */
     RtlZeroMemory(ItemList, sizeof(KSOBJECT_CREATE_ITEM));
     /* Setup object class */
-    RtlInitUnicodeString(&ItemList->ObjectClass, L"STREAMCLASS");
+    RtlInitUnicodeString(&ItemList->ObjectClass, L"GLOBAL");
     /* Setup CreateDispatch routine */
     ItemList->Create = StreamClassCreateFilter;
 

@@ -28,47 +28,6 @@ Dispatch_fnDeviceIoControl(
 
 NTSTATUS
 NTAPI
-Dispatch_fnRead(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    UNIMPLEMENTED
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-Dispatch_fnWrite(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    UNIMPLEMENTED
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-Dispatch_fnFlush(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    UNIMPLEMENTED
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 Dispatch_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -81,102 +40,18 @@ Dispatch_fnClose(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
-Dispatch_fnQuerySecurity(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    UNIMPLEMENTED
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-Dispatch_fnSetSecurity(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-
-    UNIMPLEMENTED
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-BOOLEAN
-NTAPI
-Dispatch_fnFastDeviceIoControl(
-    PFILE_OBJECT FileObject,
-    BOOLEAN Wait,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength,
-    ULONG IoControlCode,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    UNIMPLEMENTED
-
-
-    return FALSE;
-}
-
-
-BOOLEAN
-NTAPI
-Dispatch_fnFastRead(
-    PFILE_OBJECT FileObject,
-    PLARGE_INTEGER FileOffset,
-    ULONG Length,
-    BOOLEAN Wait,
-    ULONG LockKey,
-    PVOID Buffer,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    UNIMPLEMENTED
-
-    return FALSE;
-
-}
-
-BOOLEAN
-NTAPI
-Dispatch_fnFastWrite(
-    PFILE_OBJECT FileObject,
-    PLARGE_INTEGER FileOffset,
-    ULONG Length,
-    BOOLEAN Wait,
-    ULONG LockKey,
-    PVOID Buffer,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    UNIMPLEMENTED
-
-    return FALSE;
-}
-
 static KSDISPATCH_TABLE DispatchTable =
 {
     Dispatch_fnDeviceIoControl,
-    Dispatch_fnRead,
-    Dispatch_fnWrite,
-    Dispatch_fnFlush,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
     Dispatch_fnClose,
-    Dispatch_fnQuerySecurity,
-    Dispatch_fnSetSecurity,
-    Dispatch_fnFastDeviceIoControl,
-    Dispatch_fnFastRead,
-    Dispatch_fnFastWrite,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchFastIoDeviceControlFailure,
+    KsDispatchFastWriteFailure,
+    KsDispatchFastWriteFailure,
 };
 
 NTSTATUS
@@ -192,9 +67,30 @@ DispatchCreateKMixPin(
     /* create the pin */
     Status = CreatePin(Irp);
 
-    Irp->IoStatus.Information = 0;
+    /* save result */
     Irp->IoStatus.Status = Status;
+    /* complete the request */
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    /* done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+DispatchCreateKMixAllocator(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    NTSTATUS Status;
+
+    /* create the allocator */
+    Status = KsCreateDefaultAllocator(Irp);
+
+    /* save result */
+    Irp->IoStatus.Status = Status;
+    /* complete the request */
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    /* done */
     return Status;
 }
 
@@ -207,15 +103,42 @@ DispatchCreateKMix(
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
     PKSOBJECT_CREATE_ITEM CreateItem;
-
-    static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
+    PKMIXER_DEVICE_EXT DeviceExtension;
 
     DPRINT("DispatchCreateKMix entered\n");
 
+    /* check if the request was from usermode */
+    if (Irp->RequestorMode == UserMode)
+    {
+        /* deny access from usermode */
+        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* get device extension */
+    DeviceExtension = (PKMIXER_DEVICE_EXT)DeviceObject->DeviceExtension;
+
+#if 0
+    /* reference the software bus object */
+    Status = KsReferenceSoftwareBusObject(DeviceExtension->KsDeviceHeader);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to reference bus object */
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+#endif
+
    /* allocate create item */
-    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM) * 2);
     if (!CreateItem)
     {
+        /* not enough memory */
         Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -223,15 +146,23 @@ DispatchCreateKMix(
     }
 
     /* zero create struct */
-    RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
+    RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM) * 2);
 
     /* initialize pin create item */
-    CreateItem->Create = DispatchCreateKMixPin;
-    RtlInitUnicodeString(&CreateItem->ObjectClass, KS_NAME_PIN);
-
+    CreateItem[0].Create = DispatchCreateKMixPin;
+    RtlInitUnicodeString(&CreateItem[0].ObjectClass, KSSTRING_Pin);
+    CreateItem[1].Create = DispatchCreateKMixAllocator;
+    RtlInitUnicodeString(&CreateItem[1].ObjectClass, KSSTRING_Allocator);
 
     /* allocate object header */
-    Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader(&ObjectHeader, 2, CreateItem, Irp, &DispatchTable);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to allocate object header */
+        ExFreePool(CreateItem);
+        KsDereferenceSoftwareBusObject(DeviceExtension->KsDeviceHeader);
+    }
 
     DPRINT("KsAllocateObjectHeader result %x\n", Status);
     /* complete the irp */
@@ -250,18 +181,19 @@ KMixAllocateDeviceHeader(
     PKSOBJECT_CREATE_ITEM CreateItem;
 
     /* allocate create item */
-    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM) * 2);
     if (!CreateItem)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* initialize create item struct */
-    RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
-    CreateItem->Create = DispatchCreateKMix;
-    CreateItem->Flags = KSCREATE_ITEM_WILDCARD;
-    RtlInitUnicodeString(&CreateItem->ObjectClass, L"KMixer");
+    RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM) * 2);
+    CreateItem[0].Create = DispatchCreateKMix;
+    RtlInitUnicodeString(&CreateItem[0].ObjectClass, L"GLOBAL");
+    CreateItem[1].Create = DispatchCreateKMix;
+    RtlInitUnicodeString(&CreateItem[1].ObjectClass, KSSTRING_Filter);
 
     Status = KsAllocateDeviceHeader(&DeviceExtension->KsDeviceHeader,
-                                    1,
+                                    2,
                                     CreateItem);
     return Status;
 }

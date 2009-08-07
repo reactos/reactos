@@ -118,20 +118,30 @@ IIrpQueue_fnAddMapping(
     IN PIRP Irp)
 {
     PKSSTREAM_HEADER Header;
+    //PIO_STACK_LOCATION IoStack;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
-    /* FIXME
-     * irp should contain the stream header...
-     */
+#if 0
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSSTREAM_HEADER));
 
     /* get stream header */
+    Header = (KSSTREAM_HEADER*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+#else
+    /* HACK get stream header */
     Header = (KSSTREAM_HEADER*)Buffer;
 
-    /* dont exceed max frame size */
-    ASSERT(This->MaxFrameSize >= Header->DataUsed);
-
-    /* hack untill stream probing is ready */
+    /* HACK untill stream probing is ready */
     Irp->Tail.Overlay.DriverContext[2] = (PVOID)Header;
+#endif
+
+    /* sanity check */
+    ASSERT(Header);
+
+    /* dont exceed max frame size */
+    //ASSERT(This->MaxFrameSize >= Header->DataUsed);
 
     /* increment num mappings */
     InterlockedIncrement(&This->NumMappings);
@@ -158,6 +168,7 @@ IIrpQueue_fnGetMapping(
 {
     PIRP Irp;
     ULONG Offset;
+    //PIO_STACK_LOCATION IoStack;
     PKSSTREAM_HEADER StreamHeader;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
@@ -197,8 +208,16 @@ IIrpQueue_fnGetMapping(
         return STATUS_SUCCESS;
     }
 
+#if 0
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get stream header */
+    StreamHeader = (PKSSTREAM_HEADER)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+#else
     /* HACK get stream header */
     StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];
+#endif
 
     /* sanity check */
     ASSERT(StreamHeader);
@@ -221,6 +240,7 @@ IIrpQueue_fnUpdateMapping(
     IN IIrpQueue *iface,
     IN ULONG BytesWritten)
 {
+    //PIO_STACK_LOCATION IoStack;
     PKSSTREAM_HEADER StreamHeader;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
@@ -230,8 +250,19 @@ IIrpQueue_fnUpdateMapping(
         return;
     }
 
+#if 0
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(This->Irp);
+
+    /* get stream header */
+    StreamHeader = (PKSSTREAM_HEADER)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+#else
     /* HACK get stream header */
     StreamHeader = (PKSSTREAM_HEADER)This->Irp->Tail.Overlay.DriverContext[2];
+#endif
+
+    /* sanity check */
+    ASSERT(StreamHeader);
 
     /* add to current offset */
     This->CurrentOffset += BytesWritten;

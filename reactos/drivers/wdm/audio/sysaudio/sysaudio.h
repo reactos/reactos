@@ -89,6 +89,13 @@ typedef struct
     PKSAUDIO_DEVICE_ENTRY DeviceEntry;
 }FILTER_WORKER_CONTEXT, *PFILTER_WORKER_CONTEXT;
 
+typedef struct
+{
+    PIRP Irp;
+    IO_STATUS_BLOCK StatusBlock;
+}COMPLETION_CONTEXT, *PCOMPLETION_CONTEXT;
+
+
 
 NTSTATUS
 SysAudioAllocateDeviceHeader(

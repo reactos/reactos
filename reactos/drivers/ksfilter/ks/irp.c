@@ -1403,41 +1403,6 @@ KspCreate(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
-    if (IoStack->FileObject->FileName.Buffer == NULL && DeviceHeader->ItemListCount == 1)
-    {
-        /* hack for bug 4566 */
-        ASSERT(!IsListEmpty(&DeviceHeader->ItemList));
-        /* get create item entry */
-        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(DeviceHeader->ItemList.Flink, CREATE_ITEM_ENTRY, Entry);
-
-        ASSERT(CreateItemEntry->CreateItem);
-
-        if (!CreateItemEntry->CreateItem->Create)
-        {
-            /* no valid create item */
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            /* return status */
-            return STATUS_UNSUCCESSFUL;
-        }
-
-        /* set object create item */
-        KSCREATE_ITEM_IRP_STORAGE(Irp) = CreateItemEntry->CreateItem;
-
-        /* call create function */
-        Status = CreateItemEntry->CreateItem->Create(DeviceObject, Irp);
-
-        if (NT_SUCCESS(Status))
-        {
-            /* increment create item reference count */
-            InterlockedIncrement(&CreateItemEntry->ReferenceCount);
-        }
-        /* return result */
-        return Status;
-    }
-
-
     /* hack for bug 4566 */
     if (IoStack->FileObject->FileName.Buffer == NULL)
     {
@@ -1448,7 +1413,6 @@ KspCreate(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return STATUS_SUCCESS;
     }
-
 
     if (IoStack->FileObject->RelatedFileObject != NULL)
     {

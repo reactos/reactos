@@ -35,8 +35,6 @@ typedef struct
     BOOL Capture;
 
     ULONG TotalPackets;
-    ULONG PreCompleted;
-    ULONG PostCompleted;
     ULONG StopCount;
 
     ULONG Delay;
@@ -267,11 +265,11 @@ SetStreamWorkerRoutine(
             /* store minimum data threshold */
             This->IrpQueue->lpVtbl->SetMinimumDataThreshold(This->IrpQueue, MinimumDataThreshold);
 
-            DPRINT1("Stopping PreCompleted %u PostCompleted %u StopCount %u MinimumDataThreshold %u\n", This->PreCompleted, This->PostCompleted, This->StopCount, MinimumDataThreshold);
+            DPRINT1("Stopping TotalPackets %u StopCount %u\n", This->TotalPackets, This->StopCount);
         }
         if (This->State == KSSTATE_RUN)
         {
-            DPRINT1("State RUN %x MinAvailable %u\n", State, This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue));
+            DPRINT1("State RUN %x MinAvailable %u CommonBufferSize %u Offset %u\n", State, This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue), This->CommonBufferSize, This->CommonBufferOffset);
         }
     }
 }
@@ -339,7 +337,7 @@ IServiceSink_fnRequestService(
     Status = This->IrpQueue->lpVtbl->GetMapping(This->IrpQueue, &Buffer, &BufferSize);
     if (!NT_SUCCESS(Status))
     {
-        SetStreamState(This, KSSTATE_STOP);
+        //SetStreamState(This, KSSTATE_STOP);
         return;
     }
 
@@ -633,11 +631,24 @@ IPortPinWaveCyclic_HandleKsStream(
     IN IPortPinWaveCyclic * iface,
     IN PIRP Irp)
 {
+    NTSTATUS Status;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    DPRINT("IPortPinWaveCyclic_HandleKsStream entered State %u Stream %p\n", This->State, This->Stream);
+    InterlockedIncrement((PLONG)&This->TotalPackets);
 
-    return STATUS_PENDING;
+    DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u Pre %u Post %u State %x MinData %u\n", This->TotalPackets, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue));
+
+    Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, NULL, 0, Irp);
+
+    /* check if pin is in run state */
+    if (This->State != KSSTATE_RUN)
+    {
+        /* HACK set pin into run state if caller forgot it */
+        SetStreamState(This, KSSTATE_RUN);
+        DPRINT1("Starting stream with %lu mappings Status %x\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), Status);
+    }
+
+    return Status;
 }
 
 /*
@@ -900,7 +911,6 @@ IPortPinWaveCyclic_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    //UNIMPLEMENTED
     return FALSE;
 }
 
@@ -924,6 +934,8 @@ IPortPinWaveCyclic_fnFastRead(
     PCONTEXT_WRITE Packet;
     PIRP Irp;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    /* HACK to be removed */
 
     DPRINT("IPortPinWaveCyclic_fnFastRead entered\n");
 
@@ -967,16 +979,13 @@ IPortPinWaveCyclic_fnFastWrite(
     NTSTATUS Status;
     PCONTEXT_WRITE Packet;
     PIRP Irp;
-    ULONG PrePostRatio;
-    ULONG MinData;
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
+
+    /* HACK to be removed */
 
     InterlockedIncrement((PLONG)&This->TotalPackets);
 
-    PrePostRatio = (This->PreCompleted * 100) / This->TotalPackets;
-    MinData = This->IrpQueue->lpVtbl->NumData(This->IrpQueue);
-
-    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u Ratio %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue), PrePostRatio);
+    DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u State %x MinData %u\n", This->TotalPackets, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue));
 
     Packet = (PCONTEXT_WRITE)Buffer;
     Irp = Packet->Irp;
@@ -999,7 +1008,7 @@ IPortPinWaveCyclic_fnFastWrite(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
