@@ -147,7 +147,7 @@ EngCopyBits(SURFOBJ *psoDest,
 
         DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
-        //MouseSafetyOnDrawEnd(psoDest);
+        MouseSafetyOnDrawEnd(psoDest);
         if (psoDest != psoSource)
         {
             SURFACE_UnlockBitmapBits(psurfDest);
