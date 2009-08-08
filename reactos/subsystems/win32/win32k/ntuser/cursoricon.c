@@ -434,6 +434,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
             /* Copy bitmaps and size info */
             if (Indirect)
             {
+                // FIXME: WTF?
                 CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
                 CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
             }
@@ -496,10 +497,9 @@ NtUserGetIconInfo(
 {
     ICONINFO ii;
     PCURICON_OBJECT CurIcon;
-    PWINSTATION_OBJECT WinSta;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOL Ret = FALSE;
-    DECLARE_RETURN(BOOL);
+    DWORD colorBpp = 0;
 
     DPRINT("Enter NtUserGetIconInfo\n");
     UserEnterExclusive();
@@ -507,19 +507,12 @@ NtUserGetIconInfo(
     if (!IconInfo)
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        RETURN(FALSE);
-    }
-
-    WinSta = IntGetWinStaObj();
-    if (WinSta == NULL)
-    {
-        RETURN(FALSE);
+        goto leave;
     }
 
     if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
     {
-        ObDereferenceObject(WinSta);
-        RETURN(FALSE);
+        goto leave;
     }
 
     RtlCopyMemory(&ii, &CurIcon->IconInfo, sizeof(ICONINFO));
@@ -527,6 +520,18 @@ NtUserGetIconInfo(
     /* Copy bitmaps */
     ii.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
     ii.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
+
+    if (pbpp)
+    {
+        PSURFACE psurfBmp;
+
+        psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor);
+        if (psurfBmp)
+        {
+            colorBpp = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
+            SURFACE_UnlockSurface(psurfBmp);
+        }
+    }
 
     /* Copy fields */
     _SEH2_TRY
@@ -536,21 +541,9 @@ NtUserGetIconInfo(
 
         if (pbpp)
         {
-            PSURFACE psurfBmp;
-            int colorBpp = 0;
-
             ProbeForWrite(pbpp, sizeof(DWORD), 1);
-
-            psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor);
-            if (psurfBmp)
-            {
-                colorBpp = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
-                SURFACE_UnlockSurface(psurfBmp);
-            }
-
-            RtlCopyMemory(pbpp, &colorBpp, sizeof(DWORD));
+            *pbpp = colorBpp;
         }
-
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -564,13 +557,12 @@ NtUserGetIconInfo(
         SetLastNtError(Status);
 
     UserDereferenceObject(CurIcon);
-    ObDereferenceObject(WinSta);
-    RETURN(Ret);
 
-CLEANUP:
-    DPRINT("Leave NtUserGetIconInfo, ret=%i\n",_ret_);
+leave:
+    DPRINT("Leave NtUserGetIconInfo, ret=%i\n", Ret);
     UserLeave();
-    END_CLEANUP;
+
+    return Ret;
 }
 
 
