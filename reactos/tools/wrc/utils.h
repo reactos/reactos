@@ -36,7 +36,8 @@ char *xstrdup(const char *str);
 int parser_error(const char *s, ...) __attribute__((format (printf, 1, 2)));
 int parser_warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void internal_error(const char *file, int line, const char *s, ...) __attribute__((format (printf, 3, 4), noreturn));
-void error(const char *s, ...) __attribute__((format (printf, 1, 2)));
+void fatal_perror( const char *msg, ... ) __attribute__((format (printf, 1, 2), noreturn));
+void error(const char *s, ...) __attribute__((format (printf, 1, 2), noreturn));
 void warning(const char *s, ...) __attribute__((format (printf, 1, 2)));
 void chat(const char *s, ...) __attribute__((format (printf, 1, 2)));
 
