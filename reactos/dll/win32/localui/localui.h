@@ -21,8 +21,6 @@
 #ifndef __WINE_LOCALUI__
 #define __WINE_LOCALUI__
 
-#include <windef.h>
-#include <winuser.h>
 
 /* ## Resource-ID ## */
 #define ADDPORT_DIALOG  100
