@@ -130,70 +130,70 @@ NtUserChangeDisplaySettings(
 
    /* Check arguments */
 #ifdef CDS_VIDEOPARAMETERS
-
-   if (dwflags != CDS_VIDEOPARAMETERS && lParam != NULL)
+    if (dwflags != CDS_VIDEOPARAMETERS && lParam != NULL)
 #else
-
-   if (lParam != NULL)
+    if (lParam != NULL)
 #endif
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return DISP_CHANGE_BADPARAM;
+    }
 
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return DISP_CHANGE_BADPARAM;
-   }
-   if (hwnd != NULL)
-   {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return DISP_CHANGE_BADPARAM;
-   }
+    if (hwnd != NULL)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return DISP_CHANGE_BADPARAM;
+    }
 
-   /* Copy devmode */
-   if (lpDevMode != NULL)
-   {
-      _SEH2_TRY
-      {
-          ProbeForRead(lpDevMode, sizeof(DevMode.dmSize), 1);
-          DevMode.dmSize = lpDevMode->dmSize;
-          DevMode.dmSize = min(sizeof(DevMode), DevMode.dmSize);
-          ProbeForRead(lpDevMode, DevMode.dmSize, 1);
-          RtlCopyMemory(&DevMode, lpDevMode, DevMode.dmSize);
-      }
-      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-      {
-          Status = _SEH2_GetExceptionCode();
-      }
-      _SEH2_END
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         return DISP_CHANGE_BADPARAM;
-      }
-      if (DevMode.dmDriverExtra > 0)
-      {
-         DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
-         DevMode.dmDriverExtra = 0;
-      }
-      lpSafeDevMode = &DevMode;
-   }
+    /* Copy devmode */
+    if (lpDevMode != NULL)
+    {
+        _SEH2_TRY
+        {
+            ProbeForRead(lpDevMode, sizeof(DevMode.dmSize), 1);
+            DevMode.dmSize = lpDevMode->dmSize;
+            DevMode.dmSize = min(sizeof(DevMode), DevMode.dmSize);
+            ProbeForRead(lpDevMode, DevMode.dmSize, 1);
+            RtlCopyMemory(&DevMode, lpDevMode, DevMode.dmSize);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END
 
-   /* Copy the device name */
-   if (lpszDeviceName != NULL)
-   {
-      Status = IntSafeCopyUnicodeString(&SafeDeviceName, lpszDeviceName);
-      if (!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         return DISP_CHANGE_BADPARAM;
-      }
-      pSafeDeviceName = &SafeDeviceName;
-   }
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            return DISP_CHANGE_BADPARAM;
+        }
 
-   /* Call internal function */
-   Ret = IntChangeDisplaySettings(pSafeDeviceName, lpSafeDevMode, dwflags, lParam);
+        if (DevMode.dmDriverExtra > 0)
+        {
+            DPRINT1("lpDevMode->dmDriverExtra is IGNORED!\n");
+            DevMode.dmDriverExtra = 0;
+        }
+        lpSafeDevMode = &DevMode;
+    }
 
-   if (pSafeDeviceName != NULL)
-      RtlFreeUnicodeString(pSafeDeviceName);
+    /* Copy the device name */
+    if (lpszDeviceName != NULL)
+    {
+        Status = IntSafeCopyUnicodeString(&SafeDeviceName, lpszDeviceName);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            return DISP_CHANGE_BADPARAM;
+        }
+        pSafeDeviceName = &SafeDeviceName;
+    }
 
-   return Ret;
+    /* Call internal function */
+    Ret = IntChangeDisplaySettings(pSafeDeviceName, lpSafeDevMode, dwflags, lParam);
+
+    if (pSafeDeviceName != NULL)
+        RtlFreeUnicodeString(pSafeDeviceName);
+
+    return Ret;
 }
 
