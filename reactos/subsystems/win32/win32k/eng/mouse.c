@@ -382,30 +382,8 @@ EngSetPointerShape(
     pgp->HotSpot.y = yHot;
 
     /* Calculate lDelta for our surfaces. */
-    switch (pso->iBitmapFormat)
-    {
-        case BMF_1BPP:
-            lDelta = pgp->Size.cx >> 3;
-            break;
-        case BMF_4BPP:
-            lDelta = pgp->Size.cx >> 1;
-            break;
-        case BMF_8BPP:
-            lDelta = pgp->Size.cx;
-            break;
-        case BMF_16BPP:
-            lDelta = pgp->Size.cx << 1;
-            break;
-        case BMF_24BPP:
-            lDelta = pgp->Size.cx * 3;
-            break;
-        case BMF_32BPP:
-            lDelta = pgp->Size.cx << 2;
-            break;
-        default:
-            lDelta = 0;
-            break;
-    }
+    lDelta = DIB_GetDIBWidthBytes(pgp->Size.cx, 
+                                  BitsPerFormat(pso->iBitmapFormat));
 
     rcl.left = 0;
     rcl.top = 0;
@@ -690,7 +668,7 @@ GreSetPointerShape(
                                      x,
                                      y,
                                      &pdc->ppdev->Pointer.Exclude,
-                                     fl);
+                                     fl | SPS_CHANGE);
 
     /* Cleanup */
     if (hbmColor)
