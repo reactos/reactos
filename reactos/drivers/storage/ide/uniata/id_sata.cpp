@@ -425,7 +425,15 @@ UniataAhciSetupFIS(
         deviceExtension->lun[ldev].IdentifyData.FeaturesSupport.Address48) {
         i++;
     } else {
+#ifdef _MSC_VER
+#pragma message ("HACK HACK HACK Disabling warning HACK HACK HACK")
+#pragma warning(push)
+#pragma warning(disable:4333)
+#endif
         fis[7] |= (plba[3] >> 24) & 0x0f;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
     }
 
     fis[8] = plba[3];
