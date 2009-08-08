@@ -3241,7 +3241,7 @@ typedef struct _MEMORY_BASIC_INFORMATION {
 	PVOID BaseAddress;
 	PVOID AllocationBase;
 	DWORD AllocationProtect;
-	DWORD RegionSize;
+	SIZE_T RegionSize;
 	DWORD State;
 	DWORD Protect;
 	DWORD Type;

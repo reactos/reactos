@@ -756,7 +756,7 @@ typedef struct _MEMORY_BASIC_INFORMATION
     PVOID BaseAddress;
     PVOID AllocationBase;
     ULONG AllocationProtect;
-    ULONG RegionSize;
+    SIZE_T RegionSize;
     ULONG State;
     ULONG Protect;
     ULONG Type;
