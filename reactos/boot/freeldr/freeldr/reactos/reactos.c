@@ -67,7 +67,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     FilePointer = FsOpenFile(szFileName);
 
     /* Try under the system root in the main dir and drivers */
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
     strcpy(value, SystemRoot);
     if(value[strlen(value)-1] != '\\')
@@ -76,7 +76,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     FilePointer = FsOpenFile(value);
     }
 
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
     strcpy(value, SystemRoot);
     if(value[strlen(value)-1] != '\\')
@@ -86,7 +86,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     FilePointer = FsOpenFile(value);
     }
 
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
     strcpy(value, SystemRoot);
     if(value[strlen(value)-1] != '\\')
@@ -97,7 +97,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     }
 
     /* Make sure we did */
-    if (FilePointer == NULL) {
+    if (!FilePointer) {
 
         /* Fail if file wasn't opened */
         strcpy(value, szFileName);
@@ -201,7 +201,7 @@ FrLdrLoadNlsFile(PCSTR szFileName,
     FilePointer = FsOpenFile(szFileName);
 
     /* Make sure we did */
-    if (FilePointer == NULL) {
+    if (!FilePointer) {
 
         /* Fail if file wasn't opened */
         strcpy(value, szFileName);
@@ -847,7 +847,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	DPRINTM(DPRINT_REACTOS, "SystemHive: '%s'", szFileName);
 
     FilePointer = FsOpenFile(szFileName);
-    if (FilePointer == NULL)
+    if (!FilePointer)
     {
         UiMessageBox("Could not find the System hive!");
         return;

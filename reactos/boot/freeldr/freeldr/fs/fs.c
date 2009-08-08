@@ -62,7 +62,7 @@ PFILE FsOpenFile(PCSTR FileName)
 	if (ret == ESUCCESS)
 		return (PFILE)FileId;
 	else
-		return NULL;
+		return (PFILE)0;
 }
 
 VOID FsCloseFile(PFILE FileHandle)

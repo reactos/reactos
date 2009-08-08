@@ -21,12 +21,12 @@
 #include <debug.h>
 
 BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
-FILE*	Ext2OpenFile(PCSTR FileName);
+PEXT2_FILE_INFO	Ext2OpenFile(PCSTR FileName);
 BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
 BOOLEAN	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
 BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
 
-BOOLEAN	Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
+BOOLEAN	Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
 BOOLEAN	Ext2ReadSuperBlock(VOID);
 BOOLEAN	Ext2ReadGroupDescriptors(VOID);
 BOOLEAN	Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
@@ -102,7 +102,7 @@ BOOLEAN Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG
  * Tries to open the file 'name' and returns true or false
  * for success and failure respectively
  */
-FILE* Ext2OpenFile(PCSTR FileName)
+PEXT2_FILE_INFO Ext2OpenFile(PCSTR FileName)
 {
 	EXT2_FILE_INFO		TempExt2FileInfo;
 	PEXT2_FILE_INFO		FileHandle;
@@ -194,7 +194,7 @@ FILE* Ext2OpenFile(PCSTR FileName)
 
 		RtlCopyMemory(FileHandle, &TempExt2FileInfo, sizeof(EXT2_FILE_INFO));
 
-		return (FILE*)FileHandle;
+		return FileHandle;
 	}
 }
 
@@ -360,9 +360,8 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOLEAN Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer)
+BOOLEAN Ext2ReadFileBig(PEXT2_FILE_INFO Ext2FileInfo, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer)
 {
-	PEXT2_FILE_INFO	Ext2FileInfo = (PEXT2_FILE_INFO)FileHandle;
 	ULONG				BlockNumber;
 	ULONG				BlockNumberIndex;
 	ULONG				OffsetInBlock;
@@ -1223,7 +1222,7 @@ LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
 LONG Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
-	PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+	PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 	ULONGLONG BytesReadBig;
 	BOOLEAN ret;
 

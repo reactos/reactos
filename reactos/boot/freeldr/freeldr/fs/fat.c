@@ -33,7 +33,7 @@ ULONG*	FatGetClusterChainArray(ULONG StartCluster);
 BOOLEAN	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
 BOOLEAN	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
 BOOLEAN	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
-BOOLEAN	FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+BOOLEAN	FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
 BOOLEAN gCacheEnabled = FALSE;
@@ -1224,9 +1224,8 @@ BOOLEAN FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG L
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOLEAN FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
-	PFAT_FILE_INFO	FatFileInfo = (PFAT_FILE_INFO)FileHandle;
 	ULONG			ClusterNumber;
 	ULONG			OffsetInCluster;
 	ULONG			LengthInCluster;

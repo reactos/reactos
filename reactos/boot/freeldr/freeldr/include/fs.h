@@ -34,8 +34,7 @@ typedef struct tagDEVVTBL
 #define	FS_EXT2			3
 #define FS_ISO9660		5
 
-#define FILE			VOID
-#define PFILE			FILE *
+#define PFILE			ULONG
 
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
 VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific);

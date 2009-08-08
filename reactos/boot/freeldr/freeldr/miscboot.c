@@ -58,7 +58,7 @@ VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 	}
 
 	FilePointer = FsOpenFile(FileName);
-	if (FilePointer == NULL)
+	if (!FilePointer)
 	{
 		strcat(FileName, " not found.");
 		UiMessageBox(FileName);

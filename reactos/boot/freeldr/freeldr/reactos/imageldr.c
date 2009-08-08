@@ -65,7 +65,7 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
 
 ULONG_PTR
 NTAPI
-FrLdrLoadModule(FILE *ModuleImage,
+FrLdrLoadModule(PFILE ModuleImage,
                 LPCSTR ModuleName,
                 PULONG ModuleSize)
 {
@@ -435,7 +435,7 @@ LdrPEFixupImports(IN PVOID DllBase,
 
 PVOID
 NTAPI
-FrLdrReadAndMapImage(IN FILE *Image,
+FrLdrReadAndMapImage(IN PFILE Image,
                      IN PCHAR Name,
                      IN ULONG ImageType)
 {
@@ -674,7 +674,7 @@ FrLdrReMapImage(IN PVOID Base,
 
 PVOID
 NTAPI
-FrLdrMapImage(IN FILE *Image,
+FrLdrMapImage(IN PFILE Image,
               IN PCHAR Name,
               IN ULONG ImageType)
 {
