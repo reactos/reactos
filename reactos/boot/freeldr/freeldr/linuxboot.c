@@ -73,9 +73,9 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 		UiMessageBox("Invalid boot path");
 		goto LinuxBootFailed;
 	}
-	if (!FsOpenSystemVolume(LinuxBootPath, NULL, NULL))
+	if (!MachDiskGetSystemVolume(LinuxBootPath, NULL, NULL))
 	{
-		UiMessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to get system volume.");
 		goto LinuxBootFailed;
 	}
 

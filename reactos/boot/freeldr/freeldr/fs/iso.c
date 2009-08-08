@@ -271,9 +271,6 @@ LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
 	DPRINTM(DPRINT_FILESYSTEM, "IsoOpen() FileName = %s\n", Path);
 
-	if (*Path == '\\')
-		Path++;
-
 	RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
 	ret = IsoLookupFile(Path, DeviceId, &TempFileInfo);
 	if (ret != ESUCCESS)
@@ -507,7 +504,7 @@ const DEVVTBL* IsoMount(ULONG DeviceId)
 	//
 	// Check if PVD is valid. If yes, return ISO9660 function table
 	//
-	if (Pvd->VdType == 1 && RtlCompareMemory(Pvd->StandardId, "CD001", 5) == 5)
+	if (Pvd->VdType == 1 && RtlEqualMemory(Pvd->StandardId, "CD001", 5))
 		return &Iso9660FuncTable;
 	else
 		return NULL;

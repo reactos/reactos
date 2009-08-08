@@ -760,74 +760,156 @@ BOOLEAN NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG
     return TRUE;
 }
 
-FILE* NtfsOpenFile(PCSTR FileName)
+LONG NtfsClose(ULONG FileId)
+{
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
+
+    NtfsReleaseAttributeContext(FileHandle->DataContext);
+    MmHeapFree(FileHandle);
+
+    return ESUCCESS;
+}
+
+LONG NtfsGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
+
+    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    Information->EndingAddress.LowPart = (ULONG)NtfsGetAttributeSize(&FileHandle->DataContext->Record);
+    Information->CurrentAddress.LowPart = FileHandle->Offset;
+
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsGetFileInformation() FileSize = %d\n",
+        Information->EndingAddress.LowPart);
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsGetFileInformation() FilePointer = %d\n",
+        Information->CurrentAddress.LowPart);
+
+    return ESUCCESS;
+}
+
+LONG NtfsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 {
     PNTFS_FILE_HANDLE FileHandle;
     PNTFS_MFT_RECORD MftRecord;
+    ULONG DeviceId;
 
+    //
+    // Check parameters
+    //
+    if (OpenMode != OpenReadOnly)
+        return EACCES;
+
+    //
+    // Get underlying device
+    //
+    DeviceId = FsGetDeviceId(*FileId);
+
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsOpen() FileName = %s\n", Path);
+
+    //
+    // Allocate file structure
+    //
     FileHandle = MmHeapAlloc(sizeof(NTFS_FILE_HANDLE) + NtfsMftRecordSize);
-    if (FileHandle == NULL)
+    if (!FileHandle)
     {
-        return NULL;
+        return ENOMEM;
     }
+    RtlZeroMemory(FileHandle, sizeof(NTFS_FILE_HANDLE) + NtfsMftRecordSize);
 
+    //
+    // Search file entry
+    //
     MftRecord = (PNTFS_MFT_RECORD)(FileHandle + 1);
-    if (!NtfsLookupFile(FileName, MftRecord, &FileHandle->DataContext))
+    if (!NtfsLookupFile(Path, MftRecord, &FileHandle->DataContext))
     {
         MmHeapFree(FileHandle);
-        return NULL;
+        return ENOENT;
     }
 
-    FileHandle->Offset = 0;
-
-    return (FILE*)FileHandle;
+    return ESUCCESS;
 }
 
-VOID NtfsCloseFile(FILE *File)
+LONG NtfsRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    NtfsReleaseAttributeContext(FileHandle->DataContext);
-    MmHeapFree(FileHandle);
-}
-
-BOOLEAN NtfsReadFile(FILE *File, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
-{
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
     ULONGLONG BytesRead64;
-    BytesRead64 = NtfsReadAttribute(FileHandle->DataContext, FileHandle->Offset, Buffer, BytesToRead);
-    if (BytesRead64)
-    {
-        *BytesRead = (ULONG)BytesRead64;
-        FileHandle->Offset += BytesRead64;
-        return TRUE;
-    }
-    return FALSE;
+
+    //
+    // Read file
+    //
+    BytesRead64 = NtfsReadAttribute(FileHandle->DataContext, FileHandle->Offset, Buffer, N);
+    *Count = (ULONG)BytesRead64;
+
+    //
+    // Check for success
+    //
+    if (BytesRead64 > 0)
+        return ESUCCESS;
+    else
+        return EIO;
 }
 
-ULONG NtfsGetFileSize(FILE *File)
+LONG NtfsSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    return (ULONG)NtfsGetAttributeSize(&FileHandle->DataContext->Record);
+    PNTFS_FILE_HANDLE FileHandle = FsGetDeviceSpecific(FileId);
+
+    DPRINTM(DPRINT_FILESYSTEM, "NtfsSeek() NewFilePointer = %lu\n", Position->LowPart);
+
+    if (SeekMode != SeekAbsolute)
+        return EINVAL;
+    if (Position->HighPart != 0)
+        return EINVAL;
+    if (Position->LowPart >= (ULONG)NtfsGetAttributeSize(&FileHandle->DataContext->Record))
+        return EINVAL;
+
+    FileHandle->Offset = Position->LowPart;
+    return ESUCCESS;
 }
 
-VOID NtfsSetFilePointer(FILE *File, ULONG NewFilePointer)
+const DEVVTBL NtfsFuncTable =
 {
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    FileHandle->Offset = NewFilePointer;
-}
-
-ULONG NtfsGetFilePointer(FILE *File)
-{
-    PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
-    return FileHandle->Offset;
-}
-
-const FS_VTBL NtfsVtbl = {
-	NtfsOpenVolume,
-	NtfsOpenFile,
-	NtfsCloseFile,
-	NtfsReadFile,
-	NtfsGetFileSize,
-	NtfsSetFilePointer,
-	NtfsGetFilePointer,
+    NtfsClose,
+    NtfsGetFileInformation,
+    NtfsOpen,
+    NtfsRead,
+    NtfsSeek,
 };
+
+const DEVVTBL* NtfsMount(ULONG DeviceId)
+{
+    NTFS_BOOTSECTOR BootSector;
+    LARGE_INTEGER Position;
+    ULONG Count;
+    LONG ret;
+
+    //
+    // Read the BootSector
+    //
+    Position.HighPart = 0;
+    Position.LowPart = 0;
+    ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+    if (ret != ESUCCESS)
+        return NULL;
+    ret = ArcRead(DeviceId, &BootSector, sizeof(BootSector), &Count);
+    if (ret != ESUCCESS || Count != sizeof(BootSector))
+        return NULL;
+
+    //
+    // Check if BootSector is valid. If yes, return NTFS function table
+    //
+    if (RtlEqualMemory(BootSector.SystemId, "NTFS", 4))
+    {
+        //
+        // Compatibility hack as long as FS is not using underlying device DeviceId
+        //
+        ULONG DriveNumber;
+        ULONGLONG StartSector;
+        ULONGLONG SectorCount;
+        int Type;
+        if (!MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+            return NULL;
+        NtfsOpenVolume(DriveNumber, StartSector, SectorCount);
+        return &NtfsFuncTable;
+    }
+    else
+        return NULL;
+}

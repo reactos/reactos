@@ -241,22 +241,19 @@ DiskBootingFromFloppy(VOID)
 
 BOOLEAN DiskGetSystemVolume(char *SystemPath,
                             char *RemainingPath,
-                            PULONG Device,
-                            PULONG DriveNumber,
-                            PULONGLONG StartSector,
-                            PULONGLONG SectorCount,
-                            int *FsType)
+                            PULONG Device)
 {
 	ULONG PartitionNumber;
 	PARTITION_TABLE_ENTRY PartitionTableEntry;
 	UCHAR VolumeType;
 	CHAR BootPath[256];
 	unsigned i, RosPartition;
+	ULONG DriveNumber;
     
 	/*
 	 * Verify system path
 	 */
-	if (!DissectArcPath(SystemPath, BootPath, DriveNumber, &PartitionNumber))
+	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
 	{
 		return FALSE;
 	}
@@ -278,7 +275,7 @@ BOOLEAN DiskGetSystemVolume(char *SystemPath,
 		RosPartition = 0;
 		while (1)
 		{
-			if (!MachDiskGetPartitionEntry(*DriveNumber, ++i, &PartitionTableEntry))
+			if (!MachDiskGetPartitionEntry(DriveNumber, ++i, &PartitionTableEntry))
 			{
 				return FALSE;
 			}
@@ -294,33 +291,28 @@ BOOLEAN DiskGetSystemVolume(char *SystemPath,
 	}
     
 	/* Check for ISO9660 file system type */
-	if (*DriveNumber >= 0x80 && FsRecIsIso9660(*DriveNumber))
+	if (DriveNumber >= 0x80 && FsRecIsIso9660(DriveNumber))
 	{
 		DPRINTM(DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n");
         
 		if (NULL != Device)
 		{
-			((char *)Device)[0] = (char)(*DriveNumber);
+			((char *)Device)[0] = (char)DriveNumber;
 			((char *)Device)[1] = (char)i;
 		}
-		*StartSector = 0;
-		*SectorCount = 0;
-		*FsType = FS_ISO9660;
 		return TRUE;
 	}
     
-	if (!FsRecognizeVolume(*DriveNumber, PartitionTableEntry.SectorCountBeforePartition, &VolumeType))
+	if (!FsRecognizeVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition, &VolumeType))
 	{
 		return FALSE;
 	}
     
 	if (NULL != Device)
 	{
-		((char *)Device)[0] = (char)(*DriveNumber);
+		((char *)Device)[0] = (char)DriveNumber;
 		((char *)Device)[1] = (char)i;
 	}
-	*StartSector = PartitionTableEntry.SectorCountBeforePartition;
-	*SectorCount = PartitionTableEntry.PartitionSectorCount;
     
 	switch (VolumeType)
 	{
@@ -330,16 +322,10 @@ BOOLEAN DiskGetSystemVolume(char *SystemPath,
         case PARTITION_XINT13:
         case PARTITION_FAT32:
         case PARTITION_FAT32_XINT13:
-            *FsType = FS_FAT;
-            return TRUE;
         case PARTITION_EXT2:
-            *FsType = FS_EXT2;
-            return TRUE;
         case PARTITION_NTFS:
-            *FsType = FS_NTFS;
             return TRUE;
         default:
-            *FsType = 0;
             return FALSE;
 	}
     

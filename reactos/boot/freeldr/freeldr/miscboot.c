@@ -51,9 +51,9 @@ VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 		return;
 	}
 
-	if (!FsOpenSystemVolume(FileName, FileName, NULL))
+	if (!MachDiskGetSystemVolume(FileName, FileName, NULL))
 	{
-		UiMessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to get system volume.");
 		return;
 	}
 

@@ -99,8 +99,6 @@ typedef struct
 	ULONG		DriveNumber;
 } ISO_FILE_INFO, * PISO_FILE_INFO;
 
-extern const FS_VTBL Iso9660Vtbl;
-
 const DEVVTBL* IsoMount(ULONG DeviceId);
 
 #endif // #defined __FAT_H

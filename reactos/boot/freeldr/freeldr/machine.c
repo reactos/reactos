@@ -333,15 +333,9 @@ MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG Sec
 BOOLEAN
 MachDiskGetSystemVolume(char *SystemPath,
                         char *RemainingPath,
-                        PULONG Device,
-                        PULONG DriveNumber,
-                        PULONGLONG StartSector,
-                        PULONGLONG SectorCount,
-                        int *FsType)
+                        PULONG Device)
 {
-  return MachVtbl.DiskGetSystemVolume(SystemPath, RemainingPath, Device,
-                                      DriveNumber, StartSector, SectorCount,
-                                      FsType);
+  return MachVtbl.DiskGetSystemVolume(SystemPath, RemainingPath, Device);
 }
 
 BOOLEAN

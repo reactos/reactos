@@ -20,6 +20,31 @@
 #include <freeldr.h>
 #include <debug.h>
 
+BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
+FILE*	Ext2OpenFile(PCSTR FileName);
+BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
+BOOLEAN	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
+BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
+
+BOOLEAN	Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
+BOOLEAN	Ext2ReadSuperBlock(VOID);
+BOOLEAN	Ext2ReadGroupDescriptors(VOID);
+BOOLEAN	Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
+BOOLEAN	Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer);
+BOOLEAN	Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
+ULONG		Ext2GetGroupDescBlockNumber(ULONG Group);
+ULONG		Ext2GetGroupDescOffsetInBlock(ULONG Group);
+ULONG		Ext2GetInodeGroupNumber(ULONG Inode);
+ULONG		Ext2GetInodeBlockNumber(ULONG Inode);
+ULONG		Ext2GetInodeOffsetInBlock(ULONG Inode);
+BOOLEAN	Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer);
+BOOLEAN	Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer);
+ULONG*	Ext2ReadBlockPointerList(PEXT2_INODE Inode);
+ULONGLONG		Ext2GetInodeFileSize(PEXT2_INODE Inode);
+BOOLEAN	Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock);
+BOOLEAN	Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
+BOOLEAN	Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
+
 GEOMETRY			Ext2DiskGeometry;				// Ext2 file system disk geometry
 
 PEXT2_SUPER_BLOCK	Ext2SuperBlock = NULL;			// Ext2 file system super block
@@ -517,43 +542,6 @@ BOOLEAN Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* Byte
 	}
 
 	return TRUE;
-}
-
-BOOLEAN	Ext2ReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
-{
-	BOOLEAN	Success;
-	ULONGLONG BytesReadBig;
-
-	Success = Ext2ReadFileBig(FileHandle, BytesToRead, &BytesReadBig, Buffer);
-	*BytesRead = (ULONG)BytesReadBig;
-	return Success;
-}
-
-ULONG Ext2GetFileSize(FILE *FileHandle)
-{
-	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFileSize() FileSize = %d\n", Ext2FileHandle->FileSize);
-
-	return Ext2FileHandle->FileSize;
-}
-
-VOID Ext2SetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
-{
-	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2SetFilePointer() NewFilePointer = %d\n", NewFilePointer);
-
-	Ext2FileHandle->FilePointer = NewFilePointer;
-}
-
-ULONG Ext2GetFilePointer(FILE *FileHandle)
-{
-	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFilePointer() FilePointer = %d\n", Ext2FileHandle->FilePointer);
-
-	return Ext2FileHandle->FilePointer;
 }
 
 BOOLEAN Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer)
@@ -1178,12 +1166,144 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 	return TRUE;
 }
 
-const FS_VTBL Ext2Vtbl = {
-	Ext2OpenVolume,
-	Ext2OpenFile,
-	NULL,
-	Ext2ReadFile,
-	Ext2GetFileSize,
-	Ext2SetFilePointer,
-	Ext2GetFilePointer,
+LONG Ext2Close(ULONG FileId)
+{
+	PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+
+	MmHeapFree(FileHandle);
+
+	return ESUCCESS;
+}
+
+LONG Ext2GetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+	PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+
+	RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+	Information->EndingAddress.LowPart = FileHandle->FileSize;
+	Information->CurrentAddress.LowPart = FileHandle->FilePointer;
+
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFileInformation() FileSize = %d\n",
+	    Information->EndingAddress.LowPart);
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2GetFileInformation() FilePointer = %d\n",
+	    Information->CurrentAddress.LowPart);
+
+	return ESUCCESS;
+}
+
+LONG Ext2Open(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+	PEXT2_FILE_INFO FileHandle;
+	ULONG DeviceId;
+
+	if (OpenMode != OpenReadOnly)
+		return EACCES;
+
+	DeviceId = FsGetDeviceId(*FileId);
+
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2Open() FileName = %s\n", Path);
+
+	//
+	// Call old open method
+	//
+	FileHandle = Ext2OpenFile(Path);
+
+	//
+	// Check for error
+	//
+	if (!FileHandle)
+		return ENOENT;
+
+	//
+	// Success. Remember the handle
+	//
+	FsSetDeviceSpecific(*FileId, FileHandle);
+	return ESUCCESS;
+}
+
+LONG Ext2Read(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+{
+	PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+	ULONGLONG BytesReadBig;
+	BOOLEAN ret;
+
+	//
+	// Read data
+	//
+	ret = Ext2ReadFileBig(FileHandle, N, &BytesReadBig, Buffer);
+	*Count = (ULONG)BytesReadBig;
+
+	//
+	// Check for success
+	//
+	if (ret)
+		return ESUCCESS;
+	else
+		return EIO;
+}
+
+LONG Ext2Seek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+{
+	PEXT2_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+
+	DPRINTM(DPRINT_FILESYSTEM, "Ext2Seek() NewFilePointer = %lu\n", Position->LowPart);
+
+	if (SeekMode != SeekAbsolute)
+		return EINVAL;
+	if (Position->HighPart != 0)
+		return EINVAL;
+	if (Position->LowPart >= FileHandle->FileSize)
+		return EINVAL;
+
+	FileHandle->FilePointer = Position->LowPart;
+	return ESUCCESS;
+}
+
+const DEVVTBL Ext2FuncTable =
+{
+	Ext2Close,
+	Ext2GetFileInformation,
+	Ext2Open,
+	Ext2Read,
+	Ext2Seek,
 };
+
+const DEVVTBL* Ext2Mount(ULONG DeviceId)
+{
+	EXT2_SUPER_BLOCK SuperBlock;
+	LARGE_INTEGER Position;
+	ULONG Count;
+	LONG ret;
+
+	//
+	// Read the SuperBlock
+	//
+	Position.HighPart = 0;
+	Position.LowPart = 2 * 512;
+	ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+	if (ret != ESUCCESS)
+		return NULL;
+	ret = ArcRead(DeviceId, &SuperBlock, sizeof(SuperBlock), &Count);
+	if (ret != ESUCCESS || Count != sizeof(SuperBlock))
+		return NULL;
+
+	//
+	// Check if SuperBlock is valid. If yes, return Ext2 function table
+	//
+	if (SuperBlock.s_magic == EXT3_SUPER_MAGIC)
+	{
+		//
+		// Compatibility hack as long as FS is not using underlying device DeviceId
+		//
+		ULONG DriveNumber;
+		ULONGLONG StartSector;
+		ULONGLONG SectorCount;
+		int Type;
+		if (!MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+			return NULL;
+		Ext2OpenVolume(DriveNumber, StartSector, SectorCount);
+		return &Ext2FuncTable;
+	}
+	else
+		return NULL;
+}

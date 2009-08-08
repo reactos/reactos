@@ -50,8 +50,6 @@ LONG ArcRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count);
 LONG ArcSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode);
 
 VOID	FileSystemError(PCSTR ErrorString);
-BOOLEAN	FsOpenBootVolume();
-BOOLEAN	FsOpenSystemVolume(PCHAR SystemPath, PCHAR RemainingPath, PULONG BootDevice);
 PFILE	FsOpenFile(PCSTR FileName);
 VOID	FsCloseFile(PFILE FileHandle);
 BOOLEAN	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
@@ -61,16 +59,5 @@ ULONG		FsGetFilePointer(PFILE FileHandle);
 BOOLEAN	FsIsEndOfFile(PFILE FileHandle);
 ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
-
-typedef struct
-{
-	BOOLEAN (*OpenVolume)(UCHAR DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount);
-	PFILE (*OpenFile)(PCSTR FileName);
-	VOID (*CloseFile)(PFILE FileHandle);
-	BOOLEAN (*ReadFile)(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-	ULONG (*GetFileSize)(PFILE FileHandle);
-	VOID (*SetFilePointer)(PFILE FileHandle, ULONG NewFilePointer);
-	ULONG (*GetFilePointer)(PFILE FileHandle);
-} FS_VTBL;
 
 #endif // #defined __FS_H

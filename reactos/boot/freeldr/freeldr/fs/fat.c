@@ -22,6 +22,20 @@
 #define NDEBUG
 #include <debug.h>
 
+ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
+PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
+BOOLEAN	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+LONG FatLookupFile(PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer);
+void	FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
+BOOLEAN	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
+ULONG	FatCountClustersInChain(ULONG StartCluster);
+ULONG*	FatGetClusterChainArray(ULONG StartCluster);
+BOOLEAN	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
+BOOLEAN	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
+BOOLEAN	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
+BOOLEAN	FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+
 BOOLEAN gCacheEnabled = FALSE;
 
 ULONG			BytesPerSector;			/* Number of bytes per sector */
@@ -778,11 +792,10 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dir
 /*
  * FatLookupFile()
  * This function searches the file system for the
- * specified filename and fills in a FAT_FILE_INFO structure
- * with info describing the file, etc. returns true
- * if the file exists or false otherwise
+ * specified filename and fills in an FAT_FILE_INFO structure
+ * with info describing the file, etc. returns ARC error code
  */
-BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+LONG FatLookupFile(PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	UINT32		i;
 	ULONG		NumberOfPathParts;
@@ -825,7 +838,7 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 		DirectoryBuffer = FatBufferDirectory(DirectoryStartCluster, &DirectorySize, (i == 0) );
 		if (DirectoryBuffer == NULL)
 		{
-			return FALSE;
+			return ENOMEM;
 		}
 
 		//
@@ -836,7 +849,7 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 			if (!FatXSearchDirectoryBufferForFile(DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
 				MmHeapFree(DirectoryBuffer);
-				return FALSE;
+				return ENOENT;
 			}
 		}
 		else
@@ -844,7 +857,7 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 			if (!FatSearchDirectoryBufferForFile(DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
 				MmHeapFree(DirectoryBuffer);
-				return FALSE;
+				return ENOENT;
 			}
 		}
 
@@ -863,7 +876,7 @@ BOOLEAN FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 
 	memcpy(FatFileInfoPointer, &FatFileInfo, sizeof(FAT_FILE_INFO));
 
-	return TRUE;
+	return ESUCCESS;
 }
 
 /*
@@ -1006,35 +1019,6 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 	*ClusterPointer = fat;
 
 	return TRUE;
-}
-
-/*
- * FatOpenFile()
- * Tries to open the file 'name' and returns true or false
- * for success and failure respectively
- */
-FILE* FatOpenFile(PCSTR FileName)
-{
-	FAT_FILE_INFO		TempFatFileInfo;
-	PFAT_FILE_INFO		FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "FatOpenFile() FileName = %s\n", FileName);
-
-	if (!FatLookupFile(FileName, &TempFatFileInfo))
-	{
-		return NULL;
-	}
-
-	FileHandle = MmHeapAlloc(sizeof(FAT_FILE_INFO));
-
-	if (FileHandle == NULL)
-	{
-		return NULL;
-	}
-
-	memcpy(FileHandle, &TempFatFileInfo, sizeof(FAT_FILE_INFO));
-
-	return (FILE*)FileHandle;
 }
 
 ULONG FatCountClustersInChain(ULONG StartCluster)
@@ -1394,33 +1378,6 @@ BOOLEAN FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID
 	return TRUE;
 }
 
-ULONG FatGetFileSize(FILE *FileHandle)
-{
-	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "FatGetFileSize() FileSize = %d\n", FatFileHandle->FileSize);
-
-	return FatFileHandle->FileSize;
-}
-
-VOID FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
-{
-	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "FatSetFilePointer() NewFilePointer = %d\n", NewFilePointer);
-
-	FatFileHandle->FilePointer = NewFilePointer;
-}
-
-ULONG FatGetFilePointer(FILE *FileHandle)
-{
-	PFAT_FILE_INFO	FatFileHandle = (PFAT_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "FatGetFilePointer() FilePointer = %d\n", FatFileHandle->FilePointer);
-
-	return FatFileHandle->FilePointer;
-}
-
 BOOLEAN FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 	if (gCacheEnabled)
@@ -1443,12 +1400,147 @@ BOOLEAN FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG Sector
 	}
 }
 
-const FS_VTBL FatVtbl = {
-	FatOpenVolume,
-	FatOpenFile,
-	NULL,
-	FatReadFile,
-	FatGetFileSize,
-	FatSetFilePointer,
-	FatGetFilePointer,
+LONG FatClose(ULONG FileId)
+{
+	PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+
+	MmHeapFree(FileHandle);
+
+	return ESUCCESS;
+}
+
+LONG FatGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+	PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+
+	RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+	Information->EndingAddress.LowPart = FileHandle->FileSize;
+	Information->CurrentAddress.LowPart = FileHandle->FilePointer;
+
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetFileInformation() FileSize = %d\n",
+	    Information->EndingAddress.LowPart);
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetFileInformation() FilePointer = %d\n",
+	    Information->CurrentAddress.LowPart);
+
+	return ESUCCESS;
+}
+
+LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+	FAT_FILE_INFO TempFileInfo;
+	PFAT_FILE_INFO FileHandle;
+	ULONG DeviceId;
+	LONG ret;
+
+	if (OpenMode != OpenReadOnly)
+		return EACCES;
+
+	DeviceId = FsGetDeviceId(*FileId);
+
+	DPRINTM(DPRINT_FILESYSTEM, "FatOpen() FileName = %s\n", Path);
+
+	RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
+	ret = FatLookupFile(Path, DeviceId, &TempFileInfo);
+	if (ret != ESUCCESS)
+		return ENOENT;
+
+	FileHandle = MmHeapAlloc(sizeof(FAT_FILE_INFO));
+	if (!FileHandle)
+		return ENOMEM;
+
+	RtlCopyMemory(FileHandle, &TempFileInfo, sizeof(FAT_FILE_INFO));
+
+	FsSetDeviceSpecific(*FileId, FileHandle);
+	return ESUCCESS;
+}
+
+LONG FatRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
+{
+	PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+	BOOLEAN ret;
+
+	//
+	// Call old read method
+	//
+	ret = FatReadFile(FileHandle, N, Count, Buffer);
+
+	//
+	// Check for success
+	//
+	if (ret)
+		return ESUCCESS;
+	else
+		return EIO;
+}
+
+LONG FatSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
+{
+	PFAT_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+
+	DPRINTM(DPRINT_FILESYSTEM, "FatSeek() NewFilePointer = %lu\n", Position->LowPart);
+
+	if (SeekMode != SeekAbsolute)
+		return EINVAL;
+	if (Position->HighPart != 0)
+		return EINVAL;
+	if (Position->LowPart >= FileHandle->FileSize)
+		return EINVAL;
+
+	FileHandle->FilePointer = Position->LowPart;
+	return ESUCCESS;
+}
+
+const DEVVTBL FatFuncTable =
+{
+	FatClose,
+	FatGetFileInformation,
+	FatOpen,
+	FatRead,
+	FatSeek,
 };
+
+const DEVVTBL* FatMount(ULONG DeviceId)
+{
+	UCHAR Buffer[512];
+	PFAT_BOOTSECTOR BootSector = (PFAT_BOOTSECTOR)Buffer;
+	PFAT32_BOOTSECTOR BootSector32 = (PFAT32_BOOTSECTOR)Buffer;
+	PFATX_BOOTSECTOR BootSectorX = (PFATX_BOOTSECTOR)Buffer;
+	LARGE_INTEGER Position;
+	ULONG Count;
+	LONG ret;
+
+	//
+	// Read the BootSector
+	//
+	Position.HighPart = 0;
+	Position.LowPart = 0;
+	ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+	if (ret != ESUCCESS)
+		return NULL;
+	ret = ArcRead(DeviceId, Buffer, sizeof(Buffer), &Count);
+	if (ret != ESUCCESS || Count != sizeof(Buffer))
+		return NULL;
+
+	//
+	// Check if BootSector is valid. If yes, return FAT function table
+	//
+	if (RtlEqualMemory(BootSector->FileSystemType, "FAT12   ", 8) ||
+	    RtlEqualMemory(BootSector->FileSystemType, "FAT16   ", 8) ||
+	    RtlEqualMemory(BootSector32->FileSystemType, "FAT32   ", 8) ||
+	    RtlEqualMemory(BootSectorX->FileSystemType, "FATX", 4))
+	{
+		//
+		// Compatibility hack as long as FS is not using underlying device DeviceId
+		//
+		ULONG DriveNumber;
+		ULONGLONG StartSector;
+		ULONGLONG SectorCount;
+		int Type;
+		if (!MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+			return NULL;
+		FatOpenVolume(DriveNumber, StartSector, SectorCount);
+		return &FatFuncTable;
+	}
+	else
+		return NULL;
+}

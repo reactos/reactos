@@ -668,37 +668,6 @@ typedef struct
 	EXT2_INODE	Inode;				// File's inode
 } EXT2_FILE_INFO, * PEXT2_FILE_INFO;
 
-
-
-BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
-FILE*	Ext2OpenFile(PCSTR FileName);
-BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
-BOOLEAN	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
-BOOLEAN	Ext2ReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-ULONG		Ext2GetFileSize(FILE *FileHandle);
-VOID	Ext2SetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG		Ext2GetFilePointer(FILE *FileHandle);
-BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
-
-BOOLEAN	Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
-BOOLEAN	Ext2ReadSuperBlock(VOID);
-BOOLEAN	Ext2ReadGroupDescriptors(VOID);
-BOOLEAN	Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
-BOOLEAN	Ext2ReadBlock(ULONG BlockNumber, PVOID Buffer);
-BOOLEAN	Ext2ReadPartialBlock(ULONG BlockNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
-ULONG		Ext2GetGroupDescBlockNumber(ULONG Group);
-ULONG		Ext2GetGroupDescOffsetInBlock(ULONG Group);
-ULONG		Ext2GetInodeGroupNumber(ULONG Inode);
-ULONG		Ext2GetInodeBlockNumber(ULONG Inode);
-ULONG		Ext2GetInodeOffsetInBlock(ULONG Inode);
-BOOLEAN	Ext2ReadInode(ULONG Inode, PEXT2_INODE InodeBuffer);
-BOOLEAN	Ext2ReadGroupDescriptor(ULONG Group, PEXT2_GROUP_DESC GroupBuffer);
-ULONG*	Ext2ReadBlockPointerList(PEXT2_INODE Inode);
-ULONGLONG		Ext2GetInodeFileSize(PEXT2_INODE Inode);
-BOOLEAN	Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock);
-BOOLEAN	Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
-BOOLEAN	Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
-
-extern const FS_VTBL Ext2Vtbl;
+const DEVVTBL* Ext2Mount(ULONG DeviceId);
 
 #endif // #defined __EXT2_H

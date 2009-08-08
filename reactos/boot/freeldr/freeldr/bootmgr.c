@@ -31,12 +31,6 @@ VOID RunLoader(VOID)
 	LONG		TimeOut;
 	ULONG		SelectedOperatingSystem;
 
-	if (!FsOpenBootVolume())
-	{
-		UiMessageBoxCritical("Error opening boot partition for file access.");
-		return;
-	}
-
 	// FIXME: if possible, only detect and register ARC devices...
 	if (!MachHwDetect())
 	{

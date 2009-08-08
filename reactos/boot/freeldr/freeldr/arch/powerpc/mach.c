@@ -264,11 +264,7 @@ BOOLEAN PpcDiskGetBootVolume( PULONG DriveNumber, PULONGLONG StartSector, PULONG
 
 BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
                              char *RemainingPath,
-                             PULONG Device,
-                             PULONG DriveNumber,
-                             PULONGLONG StartSector,
-                             PULONGLONG SectorCount,
-                             int *FsType ) {
+                             PULONG Device ) {
     char *remain = strchr(SystemPath, '\\');
     if( remain ) {
 	strcpy( RemainingPath, remain+1 );
@@ -278,7 +274,7 @@ BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
     *Device = 0;
     // Hack to be a bit easier on ram
     CacheSizeLimit = 64 * 1024;
-    return MachDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
+    return TRUE;
 }
 
 BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {

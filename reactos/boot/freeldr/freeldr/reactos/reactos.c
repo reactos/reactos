@@ -756,11 +756,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     RamDiskSwitchFromBios();
 
     /*
-     * Try to open system drive
+     * Try to get system volume
      */
-    if (!FsOpenSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
+    if (!MachDiskGetSystemVolume(SystemPath, szBootPath, &LoaderBlock.BootDevice))
     {
-        UiMessageBox("Failed to open system drive.");
+        UiMessageBox("Failed to get system volume.");
         return;
     }
 

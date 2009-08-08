@@ -130,9 +130,7 @@ extern ULONG BootPartition;
 BOOLEAN DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector,
                           PULONGLONG SectorCount, int *FsType);
 BOOLEAN DiskGetSystemVolume(char *SystemPath, char *RemainingPath,
-                            PULONG Device, PULONG DriveNumber,
-                            PULONGLONG StartSector,
-                            PULONGLONG SectorCount, int *FsType);
+                            PULONG Device);
 BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
 VOID DiskGetBootDevice(PULONG BootDevice);
 BOOLEAN DiskBootingFromFloppy(VOID);
