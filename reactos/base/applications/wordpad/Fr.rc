@@ -247,3 +247,4 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "L'impression n'est pas implémentée"
     STRING_MAX_TAB_STOPS,             "Impossible d'ajouter plus de 32 taquets de tabulation."
 END
+#pragma code_page(default)

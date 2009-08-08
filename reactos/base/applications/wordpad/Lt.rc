@@ -247,3 +247,4 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "Spausdinimas nerealizuotas"
     STRING_MAX_TAB_STOPS,             "Negalima pridėti daugiau negu 32-jų tabuliavimo pozicijų."
 END
+#pragma code_page(default)

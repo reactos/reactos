@@ -247,3 +247,4 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "プリントが実装されていません。"
     STRING_MAX_TAB_STOPS,             "32以上なタブを追加できません。"
 END
+#pragma code_page(default)

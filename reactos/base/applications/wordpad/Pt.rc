@@ -248,3 +248,4 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "Impressão não implementada"
     STRING_MAX_TAB_STOPS,             "Não pode adicionar mais de 32 tabs."
 END
+#pragma code_page(default)

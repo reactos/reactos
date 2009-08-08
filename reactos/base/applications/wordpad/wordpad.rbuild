@@ -13,22 +13,5 @@
 	<file>print.c</file>
 	<file>registry.c</file>
 	<file>wordpad.c</file>
-	<file>Da.rc</file>
-	<file>De.rc</file>
-	<file>En.rc</file>
-	<file>Fr.rc</file>
-	<file>Hu.rc</file>
-	<file>Ja.rc</file>
-	<file>Ko.rc</file>
-	<file>Lt.rc</file>
-	<file>Nl.rc</file>
-	<file>No.rc</file>
-	<file>Pl.rc</file>
-	<file>Pt.rc</file>
-	<file>Ru.rc</file>
-	<file>Si.rc</file>
-	<file>Sv.rc</file>
-	<file>Tr.rc</file>
-	<file>Zh.rc</file>
 	<file>rsrc.rc</file>
 </module>
