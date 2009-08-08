@@ -54,8 +54,6 @@ VOID	FsCloseFile(PFILE FileHandle);
 BOOLEAN	FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		FsGetFileSize(PFILE FileHandle);
 VOID	FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
-ULONG		FsGetFilePointer(PFILE FileHandle);
-BOOLEAN	FsIsEndOfFile(PFILE FileHandle);
 ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 

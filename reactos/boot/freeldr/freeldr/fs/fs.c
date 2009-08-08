@@ -144,41 +144,6 @@ VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
 	//
 }
 
-ULONG FsGetFilePointer(PFILE FileHandle)
-{
-	ULONG FileId = (ULONG)FileHandle;
-	FILEINFORMATION Information;
-	LONG ret;
-
-	//
-	// Query file informations
-	//
-	ret = ArcGetFileInformation(FileId, &Information);
-
-	//
-	// Check for error
-	//
-	if (ret != ESUCCESS || Information.CurrentAddress.HighPart != 0)
-		return 0;
-
-	//
-	// Return file pointer position
-	//
-	return Information.CurrentAddress.LowPart;
-}
-
-BOOLEAN FsIsEndOfFile(PFILE FileHandle)
-{
-	if (FsGetFilePointer(FileHandle) >= FsGetFileSize(FileHandle))
-	{
-		return TRUE;
-	}
-	else
-	{
-		return FALSE;
-	}
-}
-
 /*
  * FsGetNumPathParts()
  * This function parses a path in the form of dir1\dir2\file1.ext
