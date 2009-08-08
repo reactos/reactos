@@ -2,9 +2,11 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 	<module name="rpcrt4_winetest_server" type="rpcserver" allowwarnings="true">
+		<define name="__ROS_LONG64__" />
 		<file>server.idl</file>
 	</module>
 	<module name="rpcrt4_winetest_client" type="rpcclient">
+		<define name="__ROS_LONG64__" />
 		<file>server.idl</file>
 	</module>
 	<module name="rpcrt4_winetest" type="win32cui" installbase="bin" installname="rpcrt4_winetest.exe" allowwarnings="true">

@@ -167,7 +167,7 @@
 		<xi:include href="riched32/riched32.rbuild" />
 	</directory>
 	<directory name="rpcrt4">
-		<!-- xi:include href="rpcrt4/rpcrt4.rbuild" / -->
+		<xi:include href="rpcrt4/rpcrt4.rbuild" />
 	</directory>
 	<directory name="rsabase">
 		<xi:include href="rsabase/rsabase.rbuild" />
