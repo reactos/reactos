@@ -60,6 +60,22 @@ ok(tmp === "abc", "encodeURI('abc') = " + tmp);
 
 tmp = "" + new Object();
 ok(tmp === "[object Object]", "'' + new Object() = " + tmp);
+(tmp = new Array).f = Object.prototype.toString;
+ok(tmp.f() === "[object Array]", "tmp.f() = " + tmp.f());
+(tmp = new Boolean).f = Object.prototype.toString;
+ok(tmp.f() === "[object Boolean]", "tmp.f() = " + tmp.f());
+(tmp = new Date).f = Object.prototype.toString;
+ok(tmp.f() === "[object Date]", "tmp.f() = " + tmp.f());
+(tmp = function() {}).f = Object.prototype.toString;
+ok(tmp.f() === "[object Function]", "tmp.f() = " + tmp.f());
+Math.f = Object.prototype.toString;
+ok(Math.f() === "[object Math]", "tmp.f() = " + tmp.f());
+(tmp = new Number).f = Object.prototype.toString;
+ok(tmp.f() === "[object Number]", "tmp.f() = " + tmp.f());
+(tmp = new RegExp("")).f = Object.prototype.toString;
+ok(tmp.f() === "[object RegExp]", "tmp.f() = " + tmp.f());
+(tmp = new String).f = Object.prototype.toString;
+ok(tmp.f() === "[object String]", "tmp.f() = " + tmp.f());
 
 ok("".length === 0, "\"\".length = " + "".length);
 ok(getVT("".length) == "VT_I4", "\"\".length = " + "".length);
@@ -269,6 +285,19 @@ ok(tmp === "TEST", "''.toUpperCase() = " + tmp);
 tmp = "tEsT".toUpperCase(3);
 ok(tmp === "TEST", "''.toUpperCase(3) = " + tmp);
 
+tmp = "".anchor();
+ok(tmp === "<A NAME=\"undefined\"></A>", "''.anchor() = " + tmp);
+tmp = "".anchor(3);
+ok(tmp === "<A NAME=\"3\"></A>", "''.anchor(3) = " + tmp);
+tmp = "".anchor("red");
+ok(tmp === "<A NAME=\"red\"></A>", "''.anchor('red') = " + tmp);
+tmp = "test".anchor();
+ok(tmp === "<A NAME=\"undefined\">test</A>", "'test'.anchor() = " + tmp);
+tmp = "test".anchor(3);
+ok(tmp === "<A NAME=\"3\">test</A>", "'test'.anchor(3) = " + tmp);
+tmp = "test".anchor("green");
+ok(tmp === "<A NAME=\"green\">test</A>", "'test'.anchor('green') = " + tmp);
+
 tmp = "".big();
 ok(tmp === "<BIG></BIG>", "''.big() = " + tmp);
 tmp = "".big(3);
@@ -305,6 +334,35 @@ ok(tmp === "<TT>test</TT>", "'test'.fixed() = " + tmp);
 tmp = "test".fixed(3);
 ok(tmp === "<TT>test</TT>", "'test'.fixed(3) = " + tmp);
 
+tmp = "".fontcolor();
+ok(tmp === "<FONT COLOR=\"undefined\"></FONT>", "''.fontcolor() = " + tmp);
+tmp = "".fontcolor(3);
+ok(tmp === "<FONT COLOR=\"3\"></FONT>", "''.fontcolor(3) = " + tmp);
+tmp = "".fontcolor("red");
+ok(tmp === "<FONT COLOR=\"red\"></FONT>", "''.fontcolor('red') = " + tmp);
+tmp = "test".fontcolor();
+ok(tmp === "<FONT COLOR=\"undefined\">test</FONT>", "'test'.fontcolor() = " + tmp);
+tmp = "test".fontcolor(3);
+ok(tmp === "<FONT COLOR=\"3\">test</FONT>", "'test'.fontcolor(3) = " + tmp);
+tmp = "test".fontcolor("green");
+ok(tmp === "<FONT COLOR=\"green\">test</FONT>", "'test'.fontcolor('green') = " + tmp);
+
+tmp = "".fontsize();
+ok(tmp === "<FONT SIZE=\"undefined\"></FONT>", "''.fontsize() = " + tmp);
+tmp = "".fontsize(3);
+ok(tmp === "<FONT SIZE=\"3\"></FONT>", "''.fontsize(3) = " + tmp);
+tmp = "".fontsize("red");
+ok(tmp === "<FONT SIZE=\"red\"></FONT>", "''.fontsize('red') = " + tmp);
+tmp = "test".fontsize();
+ok(tmp === "<FONT SIZE=\"undefined\">test</FONT>", "'test'.fontsize() = " + tmp);
+tmp = "test".fontsize(3);
+ok(tmp === "<FONT SIZE=\"3\">test</FONT>", "'test'.fontsize(3) = " + tmp);
+tmp = "test".fontsize("green");
+ok(tmp === "<FONT SIZE=\"green\">test</FONT>", "'test'.fontsize('green') = " + tmp);
+
+tmp = ("".fontcolor()).fontsize();
+ok(tmp === "<FONT SIZE=\"undefined\"><FONT COLOR=\"undefined\"></FONT></FONT>", "(''.fontcolor()).fontsize() = " + tmp);
+
 tmp = "".italics();
 ok(tmp === "<I></I>", "''.italics() = " + tmp);
 tmp = "".italics(3);
@@ -313,6 +371,19 @@ tmp = "test".italics();
 ok(tmp === "<I>test</I>", "'test'.italics() = " + tmp);
 tmp = "test".italics(3);
 ok(tmp === "<I>test</I>", "'test'.italics(3) = " + tmp);
+
+tmp = "".link();
+ok(tmp === "<A HREF=\"undefined\"></A>", "''.link() = " + tmp);
+tmp = "".link(3);
+ok(tmp === "<A HREF=\"3\"></A>", "''.link(3) = " + tmp);
+tmp = "".link("red");
+ok(tmp === "<A HREF=\"red\"></A>", "''.link('red') = " + tmp);
+tmp = "test".link();
+ok(tmp === "<A HREF=\"undefined\">test</A>", "'test'.link() = " + tmp);
+tmp = "test".link(3);
+ok(tmp === "<A HREF=\"3\">test</A>", "'test'.link(3) = " + tmp);
+tmp = "test".link("green");
+ok(tmp === "<A HREF=\"green\">test</A>", "'test'.link('green') = " + tmp);
 
 tmp = "".small();
 ok(tmp === "<SMALL></SMALL>", "''.small() = " + tmp);
@@ -349,6 +420,13 @@ tmp = "test".sup();
 ok(tmp === "<SUP>test</SUP>", "'test'.sup() = " + tmp);
 tmp = "test".sup(3);
 ok(tmp === "<SUP>test</SUP>", "'test'.sup(3) = " + tmp);
+
+ok(String.fromCharCode() === "", "String.fromCharCode() = " + String.fromCharCode());
+ok(String.fromCharCode(65,"66",67) === "ABC", "String.fromCharCode(65,'66',67) = " + String.fromCharCode(65,"66",67));
+ok(String.fromCharCode(1024*64+65, -1024*64+65) === "AA",
+        "String.fromCharCode(1024*64+65, -1024*64+65) = " + String.fromCharCode(1024*64+65, -1024*64+65));
+ok(String.fromCharCode(65, NaN, undefined).length === 3,
+        "String.fromCharCode(65, NaN, undefined).length = " + String.fromCharCode(65, NaN, undefined).length);
 
 var arr = new Array();
 ok(typeof(arr) === "object", "arr () is not object");
@@ -439,6 +517,19 @@ ok(arr.sort() === arr, "arr.sort() !== arr");
 for(var i=0; i < arr.length; i++)
     ok(arr[i] === tmp[i], "arr[" + i + "] = " + arr[i] + " expected " + tmp[i]);
 
+arr = ["1", "2", "3"];
+arr.length = 1;
+ok(arr.length === 1, "arr.length = " + arr.length);
+arr.length = 3;
+ok(arr.length === 3, "arr.length = " + arr.length);
+ok(arr.toString() === "1,,", "arr.toString() = " + arr.toString());
+
+arr = Array("a","b","c");
+ok(arr.toString() === "a,b,c", "arr.toString() = " + arr.toString());
+
+ok(arr.valueOf === Object.prototype.valueOf, "arr.valueOf !== Object.prototype.valueOf");
+ok(arr === arr.valueOf(), "arr !== arr.valueOf");
+
 var num = new Number(6);
 arr = [0,1,2];
 tmp = arr.concat(3, [4,5], num);
@@ -455,6 +546,23 @@ arr = [1,];
 tmp = arr.concat([2]);
 ok(tmp.length === 3, "tmp.length = " + tmp.length);
 ok(tmp[1] === undefined, "tmp[1] = " + tmp[1]);
+
+arr = [1,false,'a',null,undefined,'a'];
+ok(arr.slice(0,6).toString() === "1,false,a,,,a", "arr.slice(0,6).toString() = " + arr.slice(0,6));
+ok(arr.slice(0,6).length === 6, "arr.slice(0,6).length = " + arr.slice(0,6).length);
+ok(arr.slice().toString() === "1,false,a,,,a", "arr.slice().toString() = " + arr.slice());
+ok(arr.slice("abc").toString() === "1,false,a,,,a", "arr.slice(\"abc\").toString() = " + arr.slice("abc"));
+ok(arr.slice(3,8).toString() === ",,a", "arr.slice(3,8).toString() = " + arr.slice(3,8));
+ok(arr.slice(3,8).length === 3, "arr.slice(3,8).length = " + arr.slice(3,8).length);
+ok(arr.slice(1).toString() === "false,a,,,a", "arr.slice(1).toString() = " + arr.slice(1));
+ok(arr.slice(-2).toString() === ",a", "arr.slice(-2).toString() = " + arr.slice(-2));
+ok(arr.slice(3,1).toString() === "", "arr.slice(3,1).toString() = " + arr.slice(3,1));
+tmp = arr.slice(0,6);
+for(var i=0; i < arr.length; i++)
+    ok(arr[i] === tmp[i], "arr[" + i + "] = " + arr[i] + " expected " + tmp[i]);
+arr[12] = 2;
+ok(arr.slice(5).toString() === "a,,,,,,,2", "arr.slice(5).toString() = " + arr.slice(5).toString());
+ok(arr.slice(5).length === 8, "arr.slice(5).length = " + arr.slice(5).length);
 
 var num = new Number(2);
 ok(num.toString() === "2", "num(2).toString !== 2");
@@ -473,6 +581,61 @@ tmp = (new Number()).valueOf();
 ok(tmp === 0, "(new Number()).valueOf = " + tmp);
 tmp = Number.prototype.valueOf();
 ok(tmp === 0, "Number.prototype.valueOf = " + tmp);
+
+function equals(val, base) {
+    var i;
+    var num = 0;
+    var str = val.toString(base);
+
+    for(i=0; i<str.length; i++) {
+        if(str.substring(i, i+1) == '(') break;
+        if(str.substring(i, i+1) == '.') break;
+        num = num*base + parseInt(str.substring(i, i+1));
+    }
+
+    if(str.substring(i, i+1) == '.') {
+        var mult = base;
+        for(i++; i<str.length; i++) {
+            if(str.substring(i, i+1) == '(') break;
+            num += parseInt(str.substring(i, i+1))/mult;
+            mult *= base;
+        }
+    }
+
+    if(str.substring(i, i+1) == '(') {
+        exp = parseInt(str.substring(i+2));
+        num *= Math.pow(base, exp);
+    }
+
+    ok(num>val-val/1000 && num<val+val/1000, "equals: num = " + num);
+}
+
+ok((10).toString(11) === "a", "(10).toString(11) = " + (10).toString(11));
+ok((213213433).toString(17) === "8e2ddcb", "(213213433).toString(17) = " + (213213433).toString(17));
+ok((-3254343).toString(33) === "-2oicf", "(-3254343).toString(33) = " + (-3254343).toString(33));
+ok((NaN).toString(12) === "NaN", "(NaN).toString(11) = " + (NaN).toString(11));
+ok((Infinity).toString(13) === "Infinity", "(Infinity).toString(11) = " + (Infinity).toString(11));
+for(i=2; i<10; i++) {
+    equals(1.123, i);
+    equals(2305843009200000000, i);
+    equals(5.123, i);
+    equals(21711, i);
+    equals(1024*1024*1024*1024*1024*1024*1.9999, i);
+    equals(748382, i);
+    equals(0.6, i);
+    equals(4.65661287308e-10, i);
+    ok((0).toString(i) === "0", "(0).toString("+i+") = " + (0).toString(i));
+}
+
+ok(parseFloat('123') === 123, "parseFloat('123') = " + parseFloat('123'));
+ok(parseFloat('-13.7') === -13.7, "parseFloat('-13.7') = " + parseFloat('-13.7'));
+ok(parseFloat('-0.01e-2') === -0.01e-2, "parseFloat('-0.01e-2') = " + parseFloat('-0.01e-2'));
+ok(parseFloat('-12e+5') === -12e+5, "parseFloat('-12e+5') = " + parseFloat('-12e+5'));
+ok(parseFloat('1E5 not parsed') === 1E5, "parseFloat('1E5 not parsed') = " + parseFloat('1E5 not parsed'));
+ok(isNaN(parseFloat('not a number')), "parseFloat('not a number') is not NaN");
+ok(parseFloat('+13.2e-3') === 13.2e-3, "parseFloat('+13.2e-3') = " + parseFloat('+13.2e-3'));
+ok(parseFloat('.12') === 0.12, "parseFloat('.12') = " + parseFloat('.12'));
+ok(parseFloat('1e') === 1, "parseFloat('1e') = " + parseFloat('1e'));
 
 tmp = Math.min(1);
 ok(tmp === 1, "Math.min(1) = " + tmp);
@@ -914,16 +1077,18 @@ ok(isNaN(tmp), "Math.tan(-Infinity) is not NaN");
 var func = function  (a) {
         var a = 1;
         if(a) return;
-    }.toString();
+    };
 ok(func.toString() === "function  (a) {\n        var a = 1;\n        if(a) return;\n    }",
    "func.toString() = " + func.toString());
 ok("" + func === "function  (a) {\n        var a = 1;\n        if(a) return;\n    }",
    "'' + func.toString() = " + func);
 
+ok(func.valueOf === Object.prototype.valueOf, "func.valueOf !== Object.prototype.valueOf");
+ok(func === func.valueOf(), "func !== func.valueOf()");
+
 function testFuncToString(x,y) {
     return x+y;
 }
-
 ok(testFuncToString.toString() === "function testFuncToString(x,y) {\n    return x+y;\n}",
    "testFuncToString.toString() = " + testFuncToString.toString());
 ok("" + testFuncToString === "function testFuncToString(x,y) {\n    return x+y;\n}",
@@ -940,6 +1105,24 @@ date = new Date(8.64e15+1);
 ok(isNaN(0+date.getTime()), "date.getTime() is not NaN");
 date = new Date(Infinity);
 ok(isNaN(0+date.getTime()), "date.getTime() is not NaN");
+date = new Date("3 July 2009 22:28:00 UTC+0100");
+ok(date.getTime() === 1246656480000, "date.getTime() = " + date.getTime());
+date = new Date(1984, 11, 29, 13, 51, 24, 120);
+ok(date.getFullYear() === 1984, "date.getFullYear() = " + date.getFullYear());
+ok(date.getMonth() === 11, "date.getMonth() = " + date.getMonth());
+ok(date.getDate() === 29, "date.getDate() = " + date.getDate());
+ok(date.getHours() === 13, "date.getHours() = " + date.getHours());
+ok(date.getMinutes() === 51, "date.getMinutes() = " + date.getMinutes());
+ok(date.getSeconds() === 24, "date.getSeconds() = " + date.getSeconds());
+ok(date.getMilliseconds() === 120, "date.getMilliseconds() = " + date.getMilliseconds());
+date = new Date(731, -32, 40, -1, 70, 65, -13);
+ok(date.getFullYear() === 728, "date.getFullYear() = " + date.getFullYear());
+ok(date.getMonth() === 5, "date.getMonth() = " + date.getMonth());
+ok(date.getDate() === 9, "date.getDate() = " + date.getDate());
+ok(date.getHours() === 0, "date.getHours() = " + date.getHours());
+ok(date.getMinutes() === 11, "date.getMinutes() = " + date.getMinutes());
+ok(date.getSeconds() === 4, "date.getSeconds() = " + date.getSeconds());
+ok(date.getMilliseconds() === 987, "date.getMilliseconds() = " + date.getMilliseconds());
 
 ok(date.setTime(123) === 123, "date.setTime(123) !== 123");
 ok(date.setTime("123", NaN) === 123, "date.setTime(\"123\") !== 123");
@@ -985,21 +1168,44 @@ ok(isNaN(date.getUTCMilliseconds()), "date.getUTCMilliseconds() is not NaN");
 ok(isNaN(date.setMilliseconds(0)), "date.setMilliseconds() is not NaN");
 
 date.setTime(0);
-date.setMilliseconds(-10, 2);
+date.setUTCMilliseconds(-10, 2);
 ok(date.getUTCMilliseconds() === 990, "date.getUTCMilliseconds() = " + date.getUTCMilliseconds());
-ok(date.setMilliseconds(10) === date.setUTCMilliseconds(10), "date.setUTCMilliseconds(10) !== date.setUTCMilliseconds(10)");
-date.setSeconds(-10);
+date.setUTCMilliseconds(10);
+ok(date.getUTCMilliseconds() === 10, "date.getUTCMilliseconds() = " + date.getUTCMilliseconds());
+date.setUTCSeconds(-10);
 ok(date.getUTCSeconds() === 50, "date.getUTCSeconds() = " + date.getUTCSeconds());
-ok(date.setSeconds(10) === date.setUTCSeconds(10), "date.setUTCSeconds(10) !== date.setUTCSeconds(10)");
-date.setMinutes(-10);
+date.setUTCMinutes(-10);
 ok(date.getUTCMinutes() === 50, "date.getUTCMinutes() = " + date.getUTCMinutes());
-ok(date.setMinutes(10) === date.setUTCMinutes(10), "date.setUTCMinutes(10) !== date.setUTCMinutes(10)");
 date.setUTCHours(-10);
 ok(date.getUTCHours() === 14, "date.getUTCHours() = " + date.getUTCHours());
 date.setUTCHours(-123);
-ok(date.getTime() === -614989990, "date.getTime() = " + date.getTime());
-date.setHours(20);
-ok(date.getHours() === 20, "date.getHours() = " + date.getHours());
+ok(date.getTime() === -612549990, "date.getTime() = " + date.getTime());
+date.setUTCHours(20);
+ok(date.getUTCHours() === 20, "date.getUTCHours() = " + date.getUTCHours());
+date.setUTCDate(32);
+ok(date.getUTCDate() === 1, "date.getUTCDate() = " + date.getUTCDate());
+date.setUTCMonth(22, 37);
+ok(date.getTime() === 60987050010, "date.getTime() = " + date.getTime());
+date.setUTCFullYear(83, 21, 321);
+ok(date.getTime() === -59464984149990, "date.getTime() = " + date.getTime());
+ok(Math.abs(date) === 59464984149990, "Math.abs(date) = " + Math.abs(date));
+ok(getVT(date+1) === "VT_BSTR", "getVT(date+1) = " + getVT(date+1));
+
+ok(isNaN(Date.parse()), "Date.parse() is not NaN");
+ok(isNaN(Date.parse("")), "Date.parse(\"\") is not NaN");
+ok(isNaN(Date.parse("Jan Jan 20 2009")), "Date.parse(\"Jan Jan 20 2009\") is not NaN");
+ok(Date.parse("Jan 20 2009 UTC") === 1232409600000, "Date.parse(\"Jan 20 2009 UTC\") = " + Date.parse("Jan 20 2009 UTC"));
+ok(Date.parse("Jan 20 2009 GMT") === 1232409600000, "Date.parse(\"Jan 20 2009 GMT\") = " + Date.parse("Jan 20 2009 GMT"));
+ok(Date.parse("Jan 20 2009 UTC-0") === 1232409600000, "Date.parse(\"Jan 20 2009 UTC-0\") = " + Date.parse("Jan 20 2009 UTC-0"));
+ok(Date.parse("Jan 20 2009 UTC+0000") === 1232409600000, "Date.parse(\"Jan 20 2009 UTC+0000\") = " + Date.parse("Jan 20 2009 UTC+0000"));
+ok(Date.parse("Ju 13 79 UTC") === 300672000000, "Date.parse(\"Ju 13 79 UTC\") = " + Date.parse("Ju 13 79 UTC"));
+ok(Date.parse("12Au91 UTC") === 681955200000, "Date.parse(\"12Au91 UTC\") = " + Date.parse("12Au91 UTC"));
+ok(Date.parse("7/02/17 UTC") === -1656806400000, "Date.parse(\"7/02/17 UTC\") = " + Date.parse("7/02/17 UTC"));
+ok(Date.parse("Se001   70 12:31:17 UTC") === 21040277000, "Date.parse(\"Se001   70 12:31:17 UTC\") = " + Date.parse("Se001   70 12:31:17 UTC"));
+ok(Date.parse("February 31   UTC, 2000 12:31:17 PM") === 952000277000,
+        "Date.parse(\"February 31   UTC, 2000 12:31:17 PM\") = " + Date.parse("February 31   UTC, 2000 12:31:17 PM"));
+ok(Date.parse("71 11:32AM Dec 12 UTC BC ") === -64346358480000, "Date.parse(\"71 11:32AM Dec 12 UTC BC \") = " + Date.parse("71 11:32AM Dec 12 UTC BC "));
+ok(Date.parse("23/71/2000 11::32::UTC") === 1010662320000, "Date.parse(\"23/71/2000 11::32::UTC\") = " + Date.parse("23/71/2000 11::32::UTC"));
 
 ok(typeof(Math.PI) === "number", "typeof(Math.PI) = " + typeof(Math.PI));
 ok(Math.floor(Math.PI*100) === 314, "Math.PI = " + Math.PI);
@@ -1040,5 +1246,103 @@ ok(typeof(Math.SQRT1_2) === "number", "typeof(Math.SQRT1_2) = " + typeof(Math.SQ
 ok(Math.floor(Math.SQRT1_2*100) === 70, "Math.SQRT1_2 = " + Math.SQRT1_2);
 Math.SQRT1_2 = "test";
 ok(Math.floor(Math.SQRT1_2*100) === 70, "modified Math.SQRT1_2 = " + Math.SQRT1_2);
+
+var bool = new Boolean();
+ok(bool.toString() === "false", "bool.toString() = " + bool.toString());
+var bool = new Boolean("false");
+ok(bool.toString() === "true", "bool.toString() = " + bool.toString());
+ok(bool.valueOf() === Boolean(1), "bool.valueOf() = " + bool.valueOf());
+ok(bool.toLocaleString() === bool.toString(), "bool.toLocaleString() = " + bool.toLocaleString());
+
+ok(Error.prototype !== TypeError.prototype, "Error.prototype === TypeError.prototype");
+ok(RangeError.prototype !== TypeError.prototype, "RangeError.prototype === TypeError.prototype");
+ok(Error.prototype.toLocaleString === Object.prototype.toLocaleString,
+        "Error.prototype.toLocaleString !== Object.prototype.toLocaleString");
+err = new Error();
+ok(err.valueOf === Object.prototype.valueOf, "err.valueOf !== Object.prototype.valueOf");
+ok(Error.prototype.name === "Error", "Error.prototype.name = " + Error.prototype.name);
+ok(err.name === "Error", "err.name = " + err.name);
+EvalError.prototype.message = "test";
+ok(err.toString !== Object.prototype.toString, "err.toString === Object.prototype.toString");
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+err = new EvalError();
+ok(EvalError.prototype.name === "EvalError", "EvalError.prototype.name = " + EvalError.prototype.name);
+ok(err.name === "EvalError", "err.name = " + err.name);
+ok(err.toString === Error.prototype.toString, "err.toString !== Error.prototype.toString");
+ok(err.message === "", "err.message != ''");
+err.message = date;
+ok(err.message === date, "err.message != date");
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+ok(err.toString !== Object.prototype.toString, "err.toString === Object.prototype.toString");
+err = new RangeError();
+ok(RangeError.prototype.name === "RangeError", "RangeError.prototype.name = " + RangeError.prototype.name);
+ok(err.name === "RangeError", "err.name = " + err.name);
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+err = new ReferenceError();
+ok(ReferenceError.prototype.name === "ReferenceError", "ReferenceError.prototype.name = " + ReferenceError.prototype.name);
+ok(err.name === "ReferenceError", "err.name = " + err.name);
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+err = new SyntaxError();
+ok(SyntaxError.prototype.name === "SyntaxError", "SyntaxError.prototype.name = " + SyntaxError.prototype.name);
+ok(err.name === "SyntaxError", "err.name = " + err.name);
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+err = new TypeError();
+ok(TypeError.prototype.name === "TypeError", "TypeError.prototype.name = " + TypeError.prototype.name);
+ok(err.name === "TypeError", "err.name = " + err.name);
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+err = new URIError();
+ok(URIError.prototype.name === "URIError", "URIError.prototype.name = " + URIError.prototype.name);
+ok(err.name === "URIError", "err.name = " + err.name);
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+err = new Error("message");
+ok(err.message === "message", "err.message !== 'message'");
+ok(err.toString() === "[object Error]", "err.toString() = " + err.toString());
+err = new Error(123);
+ok(err.number === 123, "err.number = " + err.number);
+err = new Error(0, "message");
+ok(err.number === 0, "err.number = " + err.number);
+ok(err.message === "message", "err.message = " + err.message);
+ok(err.description === "message", "err.description = " + err.description);
+
+function exception_test(func, type, number) {
+    ret = "";
+    num = "";
+    try {
+        func();
+    } catch(e) {
+        ret = e.name;
+        num = e.number;
+    }
+    ok(ret === type, "Exception test, ret = " + ret + ", expected " + type +". Executed function: " + func.toString());
+    ok(num === number, "Exception test, num = " + num + ", expected " + number + ". Executed function: " + func.toString());
+}
+exception_test(function() {arr.toString = Date.prototype.toString; arr.toString();}, "TypeError", -2146823282);
+exception_test(function() {Array(-3);}, "RangeError", -2146823259);
+exception_test(function() {arr.toString = Boolean.prototype.toString; arr.toString();}, "TypeError", -2146823278);
+exception_test(function() {date.setTime();}, "TypeError", -2146827839);
+exception_test(function() {arr.test();}, "TypeError", -2146827850);
+exception_test(function() {arr.toString = Number.prototype.toString; arr.toString();}, "TypeError", -2146823287);
+exception_test(function() {(new Number(3)).toString(1);}, "TypeError", -2146828283);
+exception_test(function() {not_existing_variable.something();}, "TypeError", -2146823279);
+exception_test(function() {arr.toString = Function.prototype.toString; arr.toString();}, "TypeError", -2146823286);
+exception_test(function() {date();}, "TypeError", -2146823286);
+exception_test(function() {arr();}, "TypeError", -2146823286);
+exception_test(function() {eval("for(i=0;) {}");}, "SyntaxError", -2146827286);
+exception_test(function() {eval("function {};");}, "SyntaxError", -2146827283);
+exception_test(function() {eval("if");}, "SyntaxError", -2146827283);
+exception_test(function() {eval("do i=0; while");}, "SyntaxError", -2146827283);
+exception_test(function() {eval("while");}, "SyntaxError", -2146827283);
+exception_test(function() {eval("for");}, "SyntaxError", -2146827283);
+exception_test(function() {eval("with");}, "SyntaxError", -2146827283);
+exception_test(function() {eval("switch");}, "SyntaxError", -2146827283);
+exception_test(function() {eval("if(false");}, "SyntaxError", -2146827282);
+exception_test(function() {eval("for(i=0; i<10; i++");}, "SyntaxError", -2146827282);
+exception_test(function() {eval("while(true");}, "SyntaxError", -2146827282);
+exception_test(function() {test = function() {}}, "ReferenceError", -2146823280);
+exception_test(function() {eval("for(i=0")}, "SyntaxError", -2146827284);
+exception_test(function() {eval("for(i=0;i<10")}, "SyntaxError", -2146827284);
+exception_test(function() {eval("while(")}, "SyntaxError", -2146827286);
+exception_test(function() {eval("if(")}, "SyntaxError", -2146827286);
+exception_test(function() {eval("'unterminated")}, "SyntaxError", -2146827273);
 
 reportSuccess();

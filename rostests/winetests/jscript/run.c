@@ -73,6 +73,7 @@ DEFINE_EXPECT(GetItemInfo_testVal);
 #define DISPID_GLOBAL_OK            0x1004
 #define DISPID_GLOBAL_GETVT         0x1005
 #define DISPID_GLOBAL_TESTOBJ       0x1006
+#define DISPID_GLOBAL_NULL_BSTR     0x1007
 
 static const WCHAR testW[] = {'t','e','s','t',0};
 static const CHAR testA[] = "test";
@@ -283,6 +284,10 @@ static HRESULT WINAPI Global_GetDispID(IDispatchEx *iface, BSTR bstrName, DWORD 
         *pid = DISPID_GLOBAL_TESTOBJ;
         return S_OK;
     }
+    if(!strcmp_wa(bstrName, "createNullBSTR")) {
+        *pid = DISPID_GLOBAL_NULL_BSTR;
+        return S_OK;
+    }
 
     if(strict_dispid_check)
         ok(0, "unexpected call %s\n", debugstr_w(bstrName));
@@ -428,6 +433,13 @@ static HRESULT WINAPI Global_InvokeEx(IDispatchEx *iface, DISPID id, LCID lcid, 
 
         V_VT(pvarRes) = VT_DISPATCH;
         V_DISPATCH(pvarRes) = (IDispatch*)&testObj;
+        return S_OK;
+
+    case DISPID_GLOBAL_NULL_BSTR:
+        if(pvarRes) {
+            V_VT(pvarRes) = VT_BSTR;
+            V_BSTR(pvarRes) = NULL;
+        }
         return S_OK;
     }
 

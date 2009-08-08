@@ -31,7 +31,7 @@ ok(m["0"] === "ab", "m[0] is not \"ab\"");
 
 m = "abcabc".match(/ab/g);
 ok(typeof(m) === "object", "typeof m is not object");
-ok(m.length === 2, "m.length is not 1");
+ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
 
@@ -41,7 +41,7 @@ ok(m === null, "m is not null");
 
 m = "abcabc".match(/Ab/gi);
 ok(typeof(m) === "object", "typeof m is not object");
-ok(m.length === 2, "m.length is not 1");
+ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
 
@@ -64,21 +64,29 @@ ok(m["0"] === "ab", "m[0] is not \"ab\"");
 
 m = "abcabc".match(new RegExp("ab","g"));
 ok(typeof(m) === "object", "typeof m is not object");
-ok(m.length === 2, "m.length is not 1");
+ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
 
 m = "abcabc".match(new RegExp(/ab/g));
 ok(typeof(m) === "object", "typeof m is not object");
-ok(m.length === 2, "m.length is not 1");
+ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
 
 m = "abcabc".match(new RegExp("ab","g", "test"));
 ok(typeof(m) === "object", "typeof m is not object");
-ok(m.length === 2, "m.length is not 1");
+ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
+
+m = "abcabcg".match("ab", "g");
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 1, "m.length is not 1");
+ok(m["0"] === "ab", "m[0] is not \"ab\"");
+
+m = "abcabc".match();
+ok(m === null, "m is not null");
 
 r = "- [test] -".replace(/\[([^\[]+)\]/g, "success");
 ok(r === "- success -", "r = " + r + " expected '- success -'");
