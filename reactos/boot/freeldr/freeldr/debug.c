@@ -102,15 +102,14 @@ VOID DebugPrintChar(UCHAR Character)
 ULONG
 DbgPrint(const char *Format, ...)
 {
+	int i;
+	int Length;
 	va_list ap;
 	CHAR Buffer[512];
-	ULONG Length;
-	char *ptr = Buffer;
 
 	va_start(ap, Format);
-
-	/* Construct a string */
-	Length = _vsnprintf(Buffer, 512, Format, ap);
+	Length = _vsnprintf(Buffer, sizeof(Buffer), Format, ap);
+	va_end(ap);
 
 	/* Check if we went past the buffer */
 	if (Length == -1)
@@ -122,12 +121,11 @@ DbgPrint(const char *Format, ...)
 		Length = sizeof(Buffer);
 	}
 
-	while (*ptr)
+	for (i = 0; i < Length; i++)
 	{
-		DebugPrintChar(*ptr++);
+		DebugPrintChar(Buffer[i]);
 	}
 
-	va_end(ap);
 	return 0;
 }
 
@@ -199,7 +197,7 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 	// Print the header if we have started a new line
 	if (DebugStartOfLine)
 	{
-        DbgPrint("(%s:%d) ", g_file, g_line);
+		DbgPrint("(%s:%d) ", g_file, g_line);
 		DebugPrintHeader(Mask);
 		DebugStartOfLine = FALSE;
 	}
@@ -207,6 +205,7 @@ VOID DbgPrintMask(ULONG Mask, char *format, ...)
 	va_start(ap, format);
 	vsprintf(Buffer, format, ap);
 	va_end(ap);
+
 	while (*ptr)
 	{
 		DebugPrintChar(*ptr++);

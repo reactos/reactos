@@ -871,7 +871,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		UiMessageBox("Could not load the System hive!\n");
 		return;
 	}
-	DPRINTM(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size);
+	DPRINTM(DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u\n", (unsigned)Base, (unsigned)Size);
 
     /*
      * Import the loaded system hive
