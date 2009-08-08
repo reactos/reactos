@@ -10,11 +10,13 @@
 	<dependency>jsglobal</dependency>
 	<library>wine</library>
 	<library>kernel32</library>
+	<library>user32</library>
 	<library>oleaut32</library>
 	<library>advapi32</library>
 	<file>date.c</file>
 	<file>dispex.c</file>
 	<file>engine.c</file>
+	<file>error.c</file>
 	<file>jscript.c</file>
 	<file>jscript_main.c</file>
 	<file>jsutils.c</file>

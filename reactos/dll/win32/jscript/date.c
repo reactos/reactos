@@ -1,5 +1,6 @@
 /*
  * Copyright 2008 Jacek Caban for CodeWeavers
+ * Copyright 2009 Piotr Caban
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -86,6 +87,7 @@ static const WCHAR setMonthW[] = {'s','e','t','M','o','n','t','h',0};
 static const WCHAR setUTCMonthW[] = {'s','e','t','U','T','C','M','o','n','t','h',0};
 static const WCHAR setFullYearW[] = {'s','e','t','F','u','l','l','Y','e','a','r',0};
 static const WCHAR setUTCFullYearW[] = {'s','e','t','U','T','C','F','u','l','l','Y','e','a','r',0};
+static const WCHAR getYearW[] = {'g','e','t','Y','e','a','r',0};
 
 static const WCHAR UTCW[] = {'U','T','C',0};
 static const WCHAR parseW[] = {'p','a','r','s','e',0};
@@ -454,9 +456,7 @@ static SYSTEMTIME create_systemtime(DOUBLE time)
     return st;
 }
 
-/* ECMA-262 3rd Edition    15.9.1.2 */
-static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+static inline HRESULT date_to_string(DOUBLE time, BOOL show_offset, int offset, VARIANT *retv)
 {
     static const WCHAR NaNW[] = { 'N','a','N',0 };
     static const WCHAR formatW[] = { '%','s',' ','%','s',' ','%','d',' ',
@@ -465,6 +465,9 @@ static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
     static const WCHAR formatUTCW[] = { '%','s',' ','%','s',' ','%','d',' ',
         '%','0','2','d',':','%','0','2','d',':','%','0','2','d',' ',
         'U','T','C',' ','%','d','%','s',0 };
+    static const WCHAR formatNoOffsetW[] = { '%','s',' ','%','s',' ',
+        '%','d',' ','%','0','2','d',':','%','0','2','d',':',
+        '%','0','2','d',' ','%','d','%','s',0 };
     static const WCHAR ADW[] = { 0 };
     static const WCHAR BCW[] = { ' ','B','.','C','.',0 };
 
@@ -480,23 +483,12 @@ static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
 
     BOOL formatAD = TRUE;
     BSTR week, month;
-    DateInstance *date;
     BSTR date_str;
-    DOUBLE time;
-    int len, size, year, day, offset;
+    int len, size, year, day;
     DWORD lcid_en, week_id, month_id;
     WCHAR sign = '-';
 
-    TRACE("\n");
-
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
-
-    date = (DateInstance*)dispex;
-
-    if(isnan(date->time)) {
+    if(isnan(time)) {
         if(retv) {
             V_VT(retv) = VT_BSTR;
             V_BSTR(retv) = SysAllocString(NaNW);
@@ -505,8 +497,6 @@ static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
         }
         return S_OK;
     }
-
-    time = local_time(date->time, date);
 
     if(retv) {
         len = 21;
@@ -553,10 +543,8 @@ static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
         } while(day);
         day = date_from_time(time);
 
-        offset = date->bias +
-            daylight_saving_ta(time, date);
-
-        if(offset == 0) len -= 5;
+        if(!show_offset) len -= 9;
+        else if(offset == 0) len -= 5;
         else if(offset < 0) {
             sign = '+';
             offset = -offset;
@@ -569,15 +557,19 @@ static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
             return E_OUTOFMEMORY;
         }
 
-        if(offset)
+        if(!show_offset)
+            sprintfW(date_str, formatNoOffsetW, week, month, day,
+                    (int)hour_from_time(time), (int)min_from_time(time),
+                    (int)sec_from_time(time), year, formatAD?ADW:BCW);
+        else if(offset)
             sprintfW(date_str, formatW, week, month, day,
                     (int)hour_from_time(time), (int)min_from_time(time),
                     (int)sec_from_time(time), sign, offset/60, offset%60,
                     year, formatAD?ADW:BCW);
         else
             sprintfW(date_str, formatUTCW, week, month, day,
-            (int)hour_from_time(time), (int)min_from_time(time),
-            (int)sec_from_time(time), year, formatAD?ADW:BCW);
+                    (int)hour_from_time(time), (int)min_from_time(time),
+                    (int)sec_from_time(time), year, formatAD?ADW:BCW);
 
         SysFreeString(week);
         SysFreeString(month);
@@ -586,6 +578,27 @@ static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
         V_BSTR(retv) = date_str;
     }
     return S_OK;
+}
+
+/* ECMA-262 3rd Edition    15.9.1.2 */
+static HRESULT Date_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+{
+    DateInstance *date;
+    DOUBLE time;
+    int offset;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
+
+    date = (DateInstance*)dispex;
+    time = local_time(date->time, date);
+    offset = date->bias +
+        daylight_saving_ta(time, date);
+
+    return date_to_string(time, TRUE, offset, retv);
 }
 
 /* ECMA-262 3rd Edition    15.9.1.5 */
@@ -600,10 +613,8 @@ static HRESULT Date_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DI
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     date = (DateInstance*)dispex;
 
@@ -662,8 +673,16 @@ static HRESULT Date_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DIS
 static HRESULT Date_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
+
+    if(retv) {
+        DateInstance *date = (DateInstance*)dispex;
+        num_set_val(retv, date->time);
+    }
+    return S_OK;
 }
 
 /* ECMA-262 3rd Edition    15.9.5.42 */
@@ -695,10 +714,8 @@ static HRESULT Date_toUTCString(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     date = (DateInstance*)dispex;
 
@@ -804,10 +821,8 @@ static HRESULT Date_toDateString(DispatchEx *dispex, LCID lcid, WORD flags, DISP
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     date = (DateInstance*)dispex;
 
@@ -902,10 +917,8 @@ static HRESULT Date_toTimeString(DispatchEx *dispex, LCID lcid, WORD flags, DISP
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     date = (DateInstance*)dispex;
 
@@ -961,10 +974,8 @@ static HRESULT Date_toLocaleDateString(DispatchEx *dispex, LCID lcid, WORD flags
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     date = (DateInstance*)dispex;
 
@@ -1008,10 +1019,8 @@ static HRESULT Date_toLocaleTimeString(DispatchEx *dispex, LCID lcid, WORD flags
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     date = (DateInstance*)dispex;
 
@@ -1049,10 +1058,8 @@ static HRESULT Date_getTime(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1067,10 +1074,8 @@ static HRESULT Date_getFullYear(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1087,10 +1092,8 @@ static HRESULT Date_getUTCFullYear(DispatchEx *dispex, LCID lcid, WORD flags, DI
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1105,10 +1108,8 @@ static HRESULT Date_getMonth(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1125,10 +1126,8 @@ static HRESULT Date_getUTCMonth(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1143,10 +1142,8 @@ static HRESULT Date_getDate(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1163,10 +1160,8 @@ static HRESULT Date_getUTCDate(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1181,10 +1176,8 @@ static HRESULT Date_getDay(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1201,10 +1194,8 @@ static HRESULT Date_getUTCDay(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1219,10 +1210,8 @@ static HRESULT Date_getHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1239,10 +1228,8 @@ static HRESULT Date_getUTCHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1257,10 +1244,8 @@ static HRESULT Date_getMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1277,10 +1262,8 @@ static HRESULT Date_getUTCMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DIS
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1295,10 +1278,8 @@ static HRESULT Date_getSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1315,10 +1296,8 @@ static HRESULT Date_getUTCSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DIS
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1333,10 +1312,8 @@ static HRESULT Date_getMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags, D
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1353,10 +1330,8 @@ static HRESULT Date_getUTCMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1371,10 +1346,8 @@ static HRESULT Date_getTimezoneOffset(DispatchEx *dispex, LCID lcid, WORD flags,
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
     if(retv) {
         DateInstance *date = (DateInstance*)dispex;
@@ -1394,16 +1367,11 @@ static HRESULT Date_setTime(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
@@ -1429,16 +1397,11 @@ static HRESULT Date_setMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags, D
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
@@ -1467,16 +1430,11 @@ static HRESULT Date_setUTCMilliseconds(DispatchEx *dispex, LCID lcid, WORD flags
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
@@ -1505,16 +1463,11 @@ static HRESULT Date_setSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = local_time(date->time, date);
@@ -1553,16 +1506,11 @@ static HRESULT Date_setUTCSeconds(DispatchEx *dispex, LCID lcid, WORD flags, DIS
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = date->time;
@@ -1601,16 +1549,11 @@ static HRESULT Date_setMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = local_time(date->time, date);
@@ -1657,16 +1600,11 @@ static HRESULT Date_setUTCMinutes(DispatchEx *dispex, LCID lcid, WORD flags, DIS
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = date->time;
@@ -1713,16 +1651,11 @@ static HRESULT Date_setHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = local_time(date->time, date);
@@ -1776,16 +1709,11 @@ static HRESULT Date_setUTCHours(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = date->time;
@@ -1839,16 +1767,11 @@ static HRESULT Date_setDate(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
@@ -1877,16 +1800,11 @@ static HRESULT Date_setUTCDate(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
     if(FAILED(hres))
@@ -1915,16 +1833,11 @@ static HRESULT Date_setMonth(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = local_time(date->time, date);
@@ -1963,16 +1876,11 @@ static HRESULT Date_setUTCMonth(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = date->time;
@@ -2011,16 +1919,11 @@ static HRESULT Date_setFullYear(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = local_time(date->time, date);
@@ -2066,16 +1969,11 @@ static HRESULT Date_setUTCFullYear(DispatchEx *dispex, LCID lcid, WORD flags, DI
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_DATE)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
 
-    if(!arg_cnt(dp)) {
-        FIXME("throw ArgumentNotOptional\n");
-        if(retv) num_set_nan(retv);
-        return S_OK;
-    }
+    if(!arg_cnt(dp))
+        return throw_type_error(dispex->ctx, ei, IDS_ARG_NOT_OPT, NULL);
 
     date = (DateInstance*)dispex;
     t = date->time;
@@ -2110,11 +2008,49 @@ static HRESULT Date_setUTCFullYear(DispatchEx *dispex, LCID lcid, WORD flags, DI
     return S_OK;
 }
 
+/* ECMA-262 3rd Edition    B2.4 */
+static HRESULT Date_getYear(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
+{
+    DateInstance *date;
+    DOUBLE t, year;
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_DATE))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_DATE, NULL);
+
+    date = (DateInstance*)dispex;
+    t = local_time(date->time, date);
+
+
+    if(isnan(t)) {
+        if(retv)
+            num_set_nan(retv);
+        return S_OK;
+    }
+
+    year = year_from_time(t);
+    if(retv)
+        num_set_val(retv, (1900<=year && year<2000)?year-1900:year);
+
+    return S_OK;
+}
+
 static HRESULT Date_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *caller)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    switch(flags) {
+    case INVOKE_FUNC:
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
+    default:
+        FIXME("unimplemented flags %x\n", flags);
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
 }
 
 static const builtin_prop_t Date_props[] = {
@@ -2136,6 +2072,7 @@ static const builtin_prop_t Date_props[] = {
     {getUTCMinutesW,         Date_getUTCMinutes,         PROPF_METHOD},
     {getUTCMonthW,           Date_getUTCMonth,           PROPF_METHOD},
     {getUTCSecondsW,         Date_getUTCSeconds,         PROPF_METHOD},
+    {getYearW,               Date_getYear,               PROPF_METHOD},
     {hasOwnPropertyW,        Date_hasOwnProperty,        PROPF_METHOD},
     {isPrototypeOfW,         Date_isPrototypeOf,         PROPF_METHOD},
     {propertyIsEnumerableW,  Date_propertyIsEnumerable,  PROPF_METHOD},
@@ -2205,11 +2142,288 @@ static HRESULT create_date(script_ctx_t *ctx, BOOL use_constr, DOUBLE time, Disp
     return S_OK;
 }
 
+static inline HRESULT date_parse(BSTR input, VARIANT *retv) {
+    static const DWORD string_ids[] = { LOCALE_SMONTHNAME12, LOCALE_SMONTHNAME11,
+        LOCALE_SMONTHNAME10, LOCALE_SMONTHNAME9, LOCALE_SMONTHNAME8,
+        LOCALE_SMONTHNAME7, LOCALE_SMONTHNAME6, LOCALE_SMONTHNAME5,
+        LOCALE_SMONTHNAME4, LOCALE_SMONTHNAME3, LOCALE_SMONTHNAME2,
+        LOCALE_SMONTHNAME1, LOCALE_SDAYNAME7, LOCALE_SDAYNAME1,
+        LOCALE_SDAYNAME2, LOCALE_SDAYNAME3, LOCALE_SDAYNAME4,
+        LOCALE_SDAYNAME5, LOCALE_SDAYNAME6 };
+    BSTR strings[sizeof(string_ids)/sizeof(DWORD)];
+
+    BSTR parse;
+    int input_len, parse_len = 0, nest_level = 0, i, size;
+    int year = 0, month = 0, day = 0, hour = 0, min = 0, sec = 0;
+    int ms = 0, offset = 0, hour_adjust = 0;
+    BOOL set_year = FALSE, set_month = FALSE, set_day = FALSE, set_hour = FALSE;
+    BOOL set_offset = FALSE, set_era = FALSE, ad = TRUE, set_am = FALSE, am = TRUE;
+    BOOL set_hour_adjust = TRUE;
+    TIME_ZONE_INFORMATION tzi;
+    DateInstance di;
+    DWORD lcid_en;
+
+    if(retv) num_set_nan(retv);
+
+    input_len = SysStringLen(input);
+    for(i=0; i<input_len; i++) {
+        if(input[i] == '(') nest_level++;
+        else if(input[i] == ')') {
+            nest_level--;
+            if(nest_level<0)
+                return S_OK;
+        }
+        else if(!nest_level) parse_len++;
+    }
+
+    parse = SysAllocStringLen(NULL, parse_len);
+    if(!parse)
+        return E_OUTOFMEMORY;
+    nest_level = 0;
+    parse_len = 0;
+    for(i=0; i<input_len; i++) {
+        if(input[i] == '(') nest_level++;
+        else if(input[i] == ')') nest_level--;
+        else if(!nest_level) parse[parse_len++] = toupperW(input[i]);
+    }
+
+    GetTimeZoneInformation(&tzi);
+    di.bias = tzi.Bias;
+    di.standardDate = tzi.StandardDate;
+    di.standardBias = tzi.StandardBias;
+    di.daylightDate = tzi.DaylightDate;
+    di.daylightBias = tzi.DaylightBias;
+
+    lcid_en = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
+    for(i=0; i<sizeof(string_ids)/sizeof(DWORD); i++) {
+        size = GetLocaleInfoW(lcid_en, string_ids[i], NULL, 0);
+        strings[i] = SysAllocStringLen(NULL, size);
+        if(!strings[i]) {
+            i--;
+            while(i-- >= 0)
+                SysFreeString(strings[i]);
+            SysFreeString(parse);
+            return E_OUTOFMEMORY;
+        }
+        GetLocaleInfoW(lcid_en, string_ids[i], strings[i], size);
+    }
+
+    for(i=0; i<parse_len;) {
+        while(isspaceW(parse[i])) i++;
+        if(parse[i] == ',') {
+            while(parse[i] == ',') i++;
+            continue;
+        }
+
+        if(parse[i]>='0' && parse[i]<='9') {
+            int tmp = atoiW(&parse[i]);
+            while(parse[i]>='0' && parse[i]<='9') i++;
+            while(isspaceW(parse[i])) i++;
+
+            if(parse[i] == ':') {
+                /* Time */
+                if(set_hour) break;
+                set_hour = TRUE;
+
+                hour = tmp;
+
+                while(parse[i] == ':') i++;
+                while(isspaceW(parse[i])) i++;
+                if(parse[i]>='0' && parse[i]<='9') {
+                    min = atoiW(&parse[i]);
+                    while(parse[i]>='0' && parse[i]<='9') i++;
+                }
+
+                while(isspaceW(parse[i])) i++;
+                while(parse[i] == ':') i++;
+                while(isspaceW(parse[i])) i++;
+                if(parse[i]>='0' && parse[i]<='9') {
+                    sec = atoiW(&parse[i]);
+                    while(parse[i]>='0' && parse[i]<='9') i++;
+                }
+            }
+            else if(parse[i]=='-' || parse[i]=='/') {
+                /* Short date */
+                if(set_day || set_month || set_year) break;
+                set_day = TRUE;
+                set_month = TRUE;
+                set_year = TRUE;
+
+                month = tmp-1;
+
+                while(isspaceW(parse[i])) i++;
+                while(parse[i]=='-' || parse[i]=='/') i++;
+                while(isspaceW(parse[i])) i++;
+                if(parse[i]<'0' || parse[i]>'9') break;
+                day = atoiW(&parse[i]);
+                while(parse[i]>='0' && parse[i]<='9') i++;
+
+                while(parse[i]=='-' || parse[i]=='/') i++;
+                while(isspaceW(parse[i])) i++;
+                if(parse[i]<'0' || parse[i]>'9') break;
+                year = atoiW(&parse[i]);
+                while(parse[i]>='0' && parse[i]<='9') i++;
+            }
+            else if(tmp<0) break;
+            else if(tmp<70) {
+                /* Day */
+                if(set_day) break;
+                set_day = TRUE;
+                day = tmp;
+            }
+            else {
+                /* Year */
+                if(set_year) break;
+                set_year = TRUE;
+                year = tmp;
+            }
+        }
+        else {
+            if(parse[i]<'A' || parse[i]>'Z') break;
+            else if(parse[i]=='B' && (parse[i+1]=='C' ||
+                        (parse[i+1]=='.' && parse[i+2]=='C'))) {
+                /* AD/BC */
+                if(set_era) break;
+                set_era = TRUE;
+                ad = FALSE;
+
+                i++;
+                if(parse[i] == '.') i++;
+                i++;
+                if(parse[i] == '.') i++;
+            }
+            else if(parse[i]=='A' && (parse[i+1]=='D' ||
+                        (parse[i+1]=='.' && parse[i+2]=='D'))) {
+                /* AD/BC */
+                if(set_era) break;
+                set_era = TRUE;
+
+                i++;
+                if(parse[i] == '.') i++;
+                i++;
+                if(parse[i] == '.') i++;
+            }
+            else if(parse[i+1]<'A' || parse[i+1]>'Z') {
+                /* Timezone */
+                if(set_offset) break;
+                set_offset = TRUE;
+
+                if(parse[i] <= 'I') hour_adjust = parse[i]-'A'+2;
+                else if(parse[i] == 'J') break;
+                else if(parse[i] <= 'M') hour_adjust = parse[i]-'K'+11;
+                else if(parse[i] <= 'Y') hour_adjust = parse[i]-'N';
+                else hour_adjust = 1;
+
+                i++;
+                if(parse[i] == '.') i++;
+            }
+            else if(parse[i]=='A' && parse[i+1]=='M') {
+                /* AM/PM */
+                if(set_am) break;
+                set_am = TRUE;
+                am = TRUE;
+                i += 2;
+            }
+            else if(parse[i]=='P' && parse[i+1]=='M') {
+                /* AM/PM */
+                if(set_am) break;
+                set_am = TRUE;
+                am = FALSE;
+                i += 2;
+            }
+            else if((parse[i]=='U' && parse[i+1]=='T' && parse[i+2]=='C')
+                    || (parse[i]=='G' && parse[i+1]=='M' && parse[i+2]=='T')) {
+                /* Timezone */
+                BOOL positive = TRUE;
+
+                if(set_offset) break;
+                set_offset = TRUE;
+                set_hour_adjust = FALSE;
+
+                i += 3;
+                while(isspaceW(parse[i])) i++;
+                if(parse[i] == '-')  positive = FALSE;
+                else if(parse[i] != '+') continue;
+
+                i++;
+                while(isspaceW(parse[i])) i++;
+                if(parse[i]<'0' || parse[i]>'9') break;
+                offset = atoiW(&parse[i]);
+                while(parse[i]>='0' && parse[i]<='9') i++;
+
+                if(offset<24) offset *= 60;
+                else offset = (offset/100)*60 + offset%100;
+
+                if(positive) offset = -offset;
+            }
+            else {
+                /* Month or garbage */
+                int j;
+
+                for(size=i; parse[size]>='A' && parse[size]<='Z'; size++);
+                size -= i;
+
+                for(j=0; j<sizeof(string_ids)/sizeof(DWORD); j++)
+                    if(!memicmpW(&parse[i], strings[j], size)) break;
+
+                if(j < 12) {
+                    if(set_month) break;
+                    set_month = TRUE;
+                    month = 11-j;
+                }
+                else if(j == sizeof(string_ids)/sizeof(DWORD)) break;
+
+                i += size;
+            }
+        }
+    }
+
+    if(retv && i==parse_len && set_year && set_month
+            && set_day && (!set_am || hour<13)) {
+        if(set_am) {
+            if(hour == 12) hour = 0;
+            if(!am) hour += 12;
+        }
+
+        if(!ad) year = -year+1;
+        else if(year<100) year += 1900;
+
+        V_VT(retv) = VT_R8;
+        V_R8(retv) = time_clip(make_date(make_day(year, month, day),
+                    make_time(hour+hour_adjust, min, sec, ms)) + offset*MS_PER_MINUTE);
+
+        if(set_hour_adjust) V_R8(retv) = utc(V_R8(retv), &di);
+    }
+
+    for(i=0; i<sizeof(string_ids)/sizeof(DWORD); i++)
+        SysFreeString(strings[i]);
+    SysFreeString(parse);
+
+    return S_OK;
+}
+
 static HRESULT DateConstr_parse(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    BSTR parse_str;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    if(!arg_cnt(dp)) {
+        if(retv)
+            num_set_nan(retv);
+        return S_OK;
+    }
+
+    hres = to_string(dispex->ctx, get_arg(dp,0), ei, &parse_str);
+    if(FAILED(hres))
+        return hres;
+
+    hres = date_parse(parse_str, retv);
+
+    SysFreeString(parse_str);
+    return hres;
 }
 
 static HRESULT DateConstr_UTC(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -2333,16 +2547,15 @@ static HRESULT DateConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
         case 1: {
             VARIANT prim, num;
 
-            hres = to_primitive(dispex->ctx, get_arg(dp,0), ei, &prim);
+            hres = to_primitive(dispex->ctx, get_arg(dp,0), ei, &prim, NO_HINT);
             if(FAILED(hres))
                 return hres;
 
-            if(V_VT(&prim) == VT_BSTR) {
-                FIXME("VT_BSTR not supported\n");
-                return E_NOTIMPL;
-            }
+            if(V_VT(&prim) == VT_BSTR)
+                hres = date_parse(V_BSTR(&prim), &num);
+            else
+                hres = to_number(dispex->ctx, &prim, ei, &num);
 
-            hres = to_number(dispex->ctx, &prim, ei, &num);
             VariantClear(&prim);
             if(FAILED(hres))
                 return hres;
@@ -2372,6 +2585,18 @@ static HRESULT DateConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
         V_VT(retv) = VT_DISPATCH;
         V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(date);
         return S_OK;
+
+    case INVOKE_FUNC: {
+        FILETIME system_time, local_time;
+        LONGLONG lltime;
+
+        GetSystemTimeAsFileTime(&system_time);
+        FileTimeToLocalFileTime(&system_time, &local_time);
+        lltime = ((LONGLONG)local_time.dwHighDateTime<<32)
+            + local_time.dwLowDateTime;
+
+        return date_to_string(lltime/10000-TIME_EPOCH, FALSE, 0, retv);
+    }
 
     default:
         FIXME("unimplemented flags %x\n", flags);

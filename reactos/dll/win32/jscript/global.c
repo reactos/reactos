@@ -20,6 +20,7 @@
 #include "wine/port.h"
 
 #include <math.h>
+#include <limits.h>
 
 #include "jscript.h"
 #include "engine.h"
@@ -28,11 +29,20 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
+#define LONGLONG_MAX (((LONGLONG)0x7fffffff<<32)|0xffffffff)
+
 static const WCHAR NaNW[] = {'N','a','N',0};
 static const WCHAR InfinityW[] = {'I','n','f','i','n','i','t','y',0};
 static const WCHAR ArrayW[] = {'A','r','r','a','y',0};
 static const WCHAR BooleanW[] = {'B','o','o','l','e','a','n',0};
 static const WCHAR DateW[] = {'D','a','t','e',0};
+static const WCHAR ErrorW[] = {'E','r','r','o','r',0};
+static const WCHAR EvalErrorW[] = {'E','v','a','l','E','r','r','o','r',0};
+static const WCHAR RangeErrorW[] = {'R','a','n','g','e','E','r','r','o','r',0};
+static const WCHAR ReferenceErrorW[] = {'R','e','f','e','r','e','n','c','e','E','r','r','o','r',0};
+static const WCHAR SyntaxErrorW[] = {'S','y','n','t','a','x','E','r','r','o','r',0};
+static const WCHAR TypeErrorW[] = {'T','y','p','e','E','r','r','o','r',0};
+static const WCHAR URIErrorW[] = {'U','R','I','E','r','r','o','r',0};
 static const WCHAR FunctionW[] = {'F','u','n','c','t','i','o','n',0};
 static const WCHAR NumberW[] = {'N','u','m','b','e','r',0};
 static const WCHAR ObjectW[] = {'O','b','j','e','c','t',0};
@@ -165,6 +175,62 @@ static HRESULT JSGlobal_Date(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
     return constructor_call(dispex->ctx->date_constr, lcid, flags, dp, retv, ei, sp);
 }
 
+static HRESULT JSGlobal_Error(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    return constructor_call(dispex->ctx->error_constr, lcid, flags, dp, retv, ei, sp);
+}
+
+static HRESULT JSGlobal_EvalError(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    return constructor_call(dispex->ctx->eval_error_constr, lcid, flags, dp, retv, ei, sp);
+}
+
+static HRESULT JSGlobal_RangeError(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    return constructor_call(dispex->ctx->range_error_constr, lcid, flags, dp, retv, ei, sp);
+}
+
+static HRESULT JSGlobal_ReferenceError(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    return constructor_call(dispex->ctx->reference_error_constr, lcid, flags, dp, retv, ei, sp);
+}
+
+static HRESULT JSGlobal_SyntaxError(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    return constructor_call(dispex->ctx->syntax_error_constr, lcid, flags, dp, retv, ei, sp);
+}
+
+static HRESULT JSGlobal_TypeError(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    return constructor_call(dispex->ctx->type_error_constr, lcid, flags, dp, retv, ei, sp);
+}
+
+static HRESULT JSGlobal_URIError(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
+        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    return constructor_call(dispex->ctx->uri_error_constr, lcid, flags, dp, retv, ei, sp);
+}
+
 static HRESULT JSGlobal_Function(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
@@ -267,7 +333,7 @@ static HRESULT JSGlobal_eval(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
     hres = script_parse(dispex->ctx, V_BSTR(arg), NULL, &parser_ctx);
     if(FAILED(hres)) {
         WARN("parse (%s) failed: %08x\n", debugstr_w(V_BSTR(arg)), hres);
-        return hres;
+        return throw_syntax_error(dispex->ctx, ei, hres, NULL);
     }
 
     hres = exec_source(dispex->ctx->exec_ctx, parser_ctx, parser_ctx->source, ei, retv);
@@ -411,8 +477,103 @@ static HRESULT JSGlobal_parseInt(DispatchEx *dispex, LCID lcid, WORD flags, DISP
 static HRESULT JSGlobal_parseFloat(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    LONGLONG d = 0, hlp;
+    int exp = 0, length;
+    VARIANT *arg;
+    WCHAR *str;
+    BSTR val_str = NULL;
+    BOOL ret_nan = TRUE, positive = TRUE;
+    HRESULT hres;
+
+    if(!arg_cnt(dp)) {
+        if(retv)
+            num_set_nan(retv);
+        return S_OK;
+    }
+
+    arg = get_arg(dp, 0);
+    hres = to_string(dispex->ctx, arg, ei, &val_str);
+    if(FAILED(hres))
+        return hres;
+
+    str = val_str;
+    length = SysStringLen(val_str);
+
+    while(isspaceW(*str)) str++;
+
+    if(*str == '+')
+        str++;
+    else if(*str == '-') {
+        positive = FALSE;
+        str++;
+    }
+
+    if(isdigitW(*str))
+        ret_nan = FALSE;
+
+    while(isdigitW(*str)) {
+        hlp = d*10 + *(str++) - '0';
+        if(d>LONGLONG_MAX/10 || hlp<0) {
+            exp++;
+            break;
+        }
+        else
+            d = hlp;
+    }
+    while(isdigitW(*str)) {
+        exp++;
+        str++;
+    }
+
+    if(*str == '.') str++;
+
+    if(isdigitW(*str))
+        ret_nan = FALSE;
+
+    while(isdigitW(*str)) {
+        hlp = d*10 + *(str++) - '0';
+        if(d>LONGLONG_MAX/10 || hlp<0)
+            break;
+
+        d = hlp;
+        exp--;
+    }
+    while(isdigitW(*str))
+        str++;
+
+    if(*str && !ret_nan && (*str=='e' || *str=='E')) {
+        int sign = 1, e = 0;
+
+        str++;
+        if(*str == '+')
+            str++;
+        else if(*str == '-') {
+            sign = -1;
+            str++;
+        }
+
+        while(isdigitW(*str)) {
+            if(e>INT_MAX/10 || (e = e*10 + *str++ - '0')<0)
+                e = INT_MAX;
+        }
+        e *= sign;
+
+        if(exp<0 && e<0 && exp+e>0) exp = INT_MIN;
+        else if(exp>0 && e>0 && exp+e<0) exp = INT_MAX;
+        else exp += e;
+    }
+
+    SysFreeString(val_str);
+
+    if(ret_nan) {
+        if(retv)
+            num_set_nan(retv);
+        return S_OK;
+    }
+
+    V_VT(retv) = VT_R8;
+    V_R8(retv) = (double)(positive?d:-d)*pow(10, exp);
+    return S_OK;
 }
 
 static HRESULT JSGlobal_unescape(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -541,6 +702,8 @@ static const builtin_prop_t JSGlobal_props[] = {
     {CollectGarbageW,            JSGlobal_CollectGarbage,            PROPF_METHOD},
     {DateW,                      JSGlobal_Date,                      PROPF_CONSTR},
     {EnumeratorW,                JSGlobal_Enumerator,                PROPF_METHOD},
+    {ErrorW,                     JSGlobal_Error,                     PROPF_CONSTR},
+    {EvalErrorW,                 JSGlobal_EvalError,                 PROPF_CONSTR},
     {FunctionW,                  JSGlobal_Function,                  PROPF_CONSTR},
     {_GetObjectW,                JSGlobal_GetObject,                 PROPF_METHOD},
     {InfinityW,                  JSGlobal_Infinity,                  0},
@@ -548,12 +711,17 @@ static const builtin_prop_t JSGlobal_props[] = {
     {NaNW,                       JSGlobal_NaN,                       0},
     {NumberW,                    JSGlobal_Number,                    PROPF_CONSTR},
     {ObjectW,                    JSGlobal_Object,                    PROPF_CONSTR},
+    {RangeErrorW,                JSGlobal_RangeError,                PROPF_CONSTR},
+    {ReferenceErrorW,            JSGlobal_ReferenceError,            PROPF_CONSTR},
     {RegExpW,                    JSGlobal_RegExp,                    PROPF_CONSTR},
     {ScriptEngineW,              JSGlobal_ScriptEngine,              PROPF_METHOD},
     {ScriptEngineBuildVersionW,  JSGlobal_ScriptEngineBuildVersion,  PROPF_METHOD},
     {ScriptEngineMajorVersionW,  JSGlobal_ScriptEngineMajorVersion,  PROPF_METHOD},
     {ScriptEngineMinorVersionW,  JSGlobal_ScriptEngineMinorVersion,  PROPF_METHOD},
     {StringW,                    JSGlobal_String,                    PROPF_CONSTR},
+    {SyntaxErrorW,               JSGlobal_SyntaxError,               PROPF_CONSTR},
+    {TypeErrorW,                 JSGlobal_TypeError,                 PROPF_CONSTR},
+    {URIErrorW,                  JSGlobal_URIError,                  PROPF_CONSTR},
     {VBArrayW,                   JSGlobal_VBArray,                   PROPF_METHOD},
     {encodeURIW,                 JSGlobal_encodeURI,                 PROPF_METHOD},
     {escapeW,                    JSGlobal_escape,                    PROPF_METHOD},
@@ -574,11 +742,15 @@ static const builtin_info_t JSGlobal_info = {
     NULL
 };
 
-static HRESULT init_constructors(script_ctx_t *ctx)
+static HRESULT init_constructors(script_ctx_t *ctx, DispatchEx *object_prototype)
 {
     HRESULT hres;
 
-    hres = init_function_constr(ctx);
+    hres = init_function_constr(ctx, object_prototype);
+    if(FAILED(hres))
+        return hres;
+
+    hres = create_object_constr(ctx, object_prototype, &ctx->object_constr);
     if(FAILED(hres))
         return hres;
 
@@ -594,11 +766,11 @@ static HRESULT init_constructors(script_ctx_t *ctx)
     if(FAILED(hres))
         return hres;
 
-    hres = create_number_constr(ctx, &ctx->number_constr);
+    hres = init_error_constr(ctx);
     if(FAILED(hres))
         return hres;
 
-    hres = create_object_constr(ctx, &ctx->object_constr);
+    hres = create_number_constr(ctx, &ctx->number_constr);
     if(FAILED(hres))
         return hres;
 
@@ -615,14 +787,19 @@ static HRESULT init_constructors(script_ctx_t *ctx)
 
 HRESULT init_global(script_ctx_t *ctx)
 {
-    DispatchEx *math;
+    DispatchEx *math, *object_prototype;
     VARIANT var;
     HRESULT hres;
 
     if(ctx->global)
         return S_OK;
 
-    hres = init_constructors(ctx);
+    hres = create_object_prototype(ctx, &object_prototype);
+    if(FAILED(hres))
+        return hres;
+
+    hres = init_constructors(ctx, object_prototype);
+    jsdisp_release(object_prototype);
     if(FAILED(hres))
         return hres;
 

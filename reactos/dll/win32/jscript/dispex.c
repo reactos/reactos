@@ -828,7 +828,7 @@ HRESULT jsdisp_call_value(DispatchEx *disp, LCID lcid, WORD flags, DISPPARAMS *d
     return disp->builtin_info->value_prop.invoke(disp, lcid, flags, dp, retv, ei, caller);
 }
 
-static HRESULT jsdisp_call(DispatchEx *disp, DISPID id, LCID lcid, WORD flags, DISPPARAMS *dp, VARIANT *retv,
+HRESULT jsdisp_call(DispatchEx *disp, DISPID id, LCID lcid, WORD flags, DISPPARAMS *dp, VARIANT *retv,
         jsexcept_t *ei, IServiceProvider *caller)
 {
     dispex_prop_t *prop;
@@ -1009,4 +1009,20 @@ HRESULT disp_propget(IDispatch *disp, DISPID id, LCID lcid, VARIANT *val, jsexce
     IDispatchEx_Release(dispex);
 
     return hres;
+}
+
+HRESULT jsdisp_delete_idx(DispatchEx *obj, DWORD idx)
+{
+    static const WCHAR formatW[] = {'%','d',0};
+    WCHAR buf[12];
+    dispex_prop_t *prop;
+    HRESULT hres;
+
+    sprintfW(buf, formatW, idx);
+
+    hres = find_prop_name(obj, buf, &prop);
+    if(FAILED(hres) || !prop)
+        return hres;
+
+    return delete_prop(prop);
 }

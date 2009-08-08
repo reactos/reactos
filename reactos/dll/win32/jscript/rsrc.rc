@@ -21,3 +21,10 @@ REGINST REGINST jscript.inf
 
 /* @makedep: jsglobal.tlb */
 1 TYPELIB LOADONCALL DISCARDABLE jsglobal.tlb
+
+#include "jscript_De.rc"
+#include "jscript_En.rc"
+#include "jscript_Fr.rc"
+#include "jscript_Lt.rc"
+#include "jscript_Nl.rc"
+#include "jscript_Pt.rc"
