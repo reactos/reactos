@@ -139,8 +139,6 @@ OpenJobObjectW(DWORD dwDesiredAccess,
                            dwDesiredAccess,
                            &ObjectAttributes);
 
-  RtlFreeUnicodeString(&JobName);
-
   if(!NT_SUCCESS(Status))
   {
     SetLastErrorByStatus(Status);

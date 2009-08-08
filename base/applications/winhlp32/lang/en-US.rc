@@ -39,6 +39,22 @@ MAIN_MENU MENU LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
  POPUP "&Bookmark" {
    MENUITEM "&Define...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "&Help" {
    MENUITEM "Help &on help", MNID_HELP_HELPON
    MENUITEM "Always on &top", MNID_HELP_HELPTOP
@@ -72,7 +88,6 @@ STID_HLPFILE_ERROR_s, 	"Error while reading the help file `%s'"
 STID_CONTENTS, 		"&Contents"
 STID_SEARCH, 		"&Search"
 STID_BACK, 		"&Back"
-STID_HISTORY, 		"&History"
 STID_TOPICS,		"&Topics"
 STID_ALL_FILES, 	"All files (*.*)"
 STID_HELP_FILES_HLP, 	"Help files (*.hlp)"

@@ -285,7 +285,7 @@ void registry_set_filelist(LPCWSTR newFile, HWND hMainWnd)
                 pFiles[0] = newFile;
             } else
             {
-                for(i = 0; pFiles[i] && i < FILELIST_ENTRIES-1; i++)
+                for(i = 0; i < FILELIST_ENTRIES-1; i++)
                     pFiles[FILELIST_ENTRIES-1-i] = pFiles[FILELIST_ENTRIES-2-i];
 
                 pFiles[0] = newFile;

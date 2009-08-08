@@ -40,6 +40,22 @@ MAIN_MENU MENU LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
  POPUP "&Marcador" {
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "A&yuda" {
    MENUITEM "&Ayuda sobre la ayuda", MNID_HELP_HELPON
    MENUITEM "&Siempre visible", MNID_HELP_HELPTOP
@@ -63,7 +79,6 @@ STID_HLPFILE_ERROR_s, 	"Error al leer el archivo de ayuda `%s'"
 STID_CONTENTS, 		"&Índice"
 STID_SEARCH, 		"&Buscar"
 STID_BACK, 		"&Anterior"
-STID_HISTORY, 		"&Historial"
 STID_TOPICS,		"&Temas"
 STID_ALL_FILES, 	"Todos los archivos (*.*)"
 STID_HELP_FILES_HLP, 	"Archivos de ayuda (*.hlp)"

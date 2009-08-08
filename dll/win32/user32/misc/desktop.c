@@ -468,35 +468,34 @@ CreateDesktopA(LPCSTR lpszDesktop,
 	       ACCESS_MASK dwDesiredAccess,
 	       LPSECURITY_ATTRIBUTES lpsa)
 {
-  ANSI_STRING DesktopNameA;
-  UNICODE_STRING DesktopNameU;
-  HDESK hDesktop;
-  LPDEVMODEW DevmodeW = NULL;
+    UNICODE_STRING DesktopNameU;
+    HDESK hDesktop;
+    LPDEVMODEW DevmodeW = NULL;
 
-  if (lpszDesktop != NULL)
+    if (lpszDesktop)
     {
-      RtlInitAnsiString(&DesktopNameA, (LPSTR)lpszDesktop);
-      RtlAnsiStringToUnicodeString(&DesktopNameU, &DesktopNameA, TRUE);
+        /* After conversion, the buffer is zero-terminated */
+        RtlCreateUnicodeStringFromAsciiz(&DesktopNameU, lpszDesktop);
     }
-  else
+    else
     {
-      RtlInitUnicodeString(&DesktopNameU, NULL);
-    }
-
-  if (pDevmode)
-    {
-      DevmodeW = GdiConvertToDevmodeW(pDevmode);
+        RtlInitUnicodeString(&DesktopNameU, NULL);
     }
 
-  hDesktop = CreateDesktopW(DesktopNameU.Buffer,
-			    NULL,
-			    DevmodeW,
-			    dwFlags,
-			    dwDesiredAccess,
-			    lpsa);
+    if (pDevmode)
+        DevmodeW = GdiConvertToDevmodeW(pDevmode);
 
-  RtlFreeUnicodeString(&DesktopNameU);
-  return(hDesktop);
+    hDesktop = CreateDesktopW(DesktopNameU.Buffer,
+                              NULL,
+                              DevmodeW,
+                              dwFlags,
+                              dwDesiredAccess,
+                              lpsa);
+
+    /* Free the string, if it was allocated */
+    if (lpszDesktop) RtlFreeUnicodeString(&DesktopNameU);
+
+    return hDesktop;
 }
 
 
@@ -580,26 +579,28 @@ OpenDesktopA(
   BOOL fInherit,
   ACCESS_MASK dwDesiredAccess)
 {
-  ANSI_STRING DesktopNameA;
-  UNICODE_STRING DesktopNameU;
-  HDESK hDesktop;
+    UNICODE_STRING DesktopNameU;
+    HDESK hDesktop;
 
-	if (lpszDesktop != NULL) {
-		RtlInitAnsiString(&DesktopNameA, lpszDesktop);
-		RtlAnsiStringToUnicodeString(&DesktopNameU, &DesktopNameA, TRUE);
-  } else {
-    RtlInitUnicodeString(&DesktopNameU, NULL);
-  }
+    if (lpszDesktop)
+    {
+        /* After conversion, the buffer is zero-terminated */
+        RtlCreateUnicodeStringFromAsciiz(&DesktopNameU, lpszDesktop);
+    }
+    else
+    {
+        RtlInitUnicodeString(&DesktopNameU, NULL);
+    }
 
-  hDesktop = OpenDesktopW(
-    DesktopNameU.Buffer,
-    dwFlags,
-    fInherit,
-    dwDesiredAccess);
+    hDesktop = OpenDesktopW(DesktopNameU.Buffer,
+                            dwFlags,
+                            fInherit,
+                            dwDesiredAccess);
 
-	RtlFreeUnicodeString(&DesktopNameU);
+    /* Free the string, if it was allocated */
+    if (lpszDesktop) RtlFreeUnicodeString(&DesktopNameU);
 
-  return hDesktop;
+    return hDesktop;
 }
 
 

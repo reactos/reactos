@@ -42,6 +42,22 @@ MAIN_MENU MENU
  POPUP "&Signet" {
    MENUITEM "&Définir...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Aide toujours visible"
+   BEGIN
+     MENUITEM "Par défaut",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "Historique",	MNID_OPTS_HISTORY
+  POPUP    "Polices"
+  BEGIN
+    MENUITEM "Petite",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normale",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Utiliser les couleurs système", MNID_OPTS_SYSTEM_COLORS
+}
  POPUP "Aid&e" {
    MENUITEM "&Utiliser l'aide", MNID_HELP_HELPON
    MENUITEM "&Toujours visible", MNID_HELP_HELPTOP
@@ -75,7 +91,6 @@ STID_HLPFILE_ERROR_s, 	"Une erreur est survenue en lisant le fichier d'aide « %s
 STID_CONTENTS, 		"&Index"
 STID_SEARCH, 		"&Rechercher"
 STID_BACK, 		"&Précédent"
-STID_HISTORY, 		"&Historique"
 STID_TOPICS,		"&Sujets"
 STID_ALL_FILES, 	"Tous fichiers (*.*)"
 STID_HELP_FILES_HLP, 	"Fichiers d'aide (*.hlp)"

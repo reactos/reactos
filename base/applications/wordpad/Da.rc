@@ -23,13 +23,13 @@ BEGIN
     POPUP "&Fil"
     BEGIN
         MENUITEM "&Ny...\tCtrl+N",            ID_FILE_NEW
-        MENUITEM "&Åben ...\tCtrl+O",         ID_FILE_OPEN
+        MENUITEM "&Åben...\tCtrl+O",          ID_FILE_OPEN
         MENUITEM "&Gemme\tCtrl+S",            ID_FILE_SAVE
-        MENUITEM "Gemme &som ...",            ID_FILE_SAVEAS
+        MENUITEM "Gemme &som...",             ID_FILE_SAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "&Udskriv  ...\tCtrl+P",     ID_PRINT
-        MENUITEM "&Forhåndsvisning ...",      ID_PREVIEW
-        MENUITEM "&Side indstillinger ...",   ID_PRINTSETUP
+        MENUITEM "&Udskriv...\tCtrl+P",       ID_PRINT
+        MENUITEM "&Forhåndsvisning...",       ID_PREVIEW
+        MENUITEM "&Side indstillinger...",    ID_PRINTSETUP
         MENUITEM SEPARATOR
         MENUITEM "&Afslut",                   ID_FILE_EXIT
     END
@@ -44,9 +44,9 @@ BEGIN
         MENUITEM "&Fjern\tDEL",               ID_EDIT_CLEAR
         MENUITEM "&Marker alt\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "&Søg efter ...\tCrtl+F",    ID_FIND
+        MENUITEM "&Søg efter...\tCrtl+F",     ID_FIND
         MENUITEM "Søg efter &næste\tF3",      ID_FIND_NEXT
-        MENUITEM "E&rstat ...\tCtrl+H",       ID_REPLACE
+        MENUITEM "E&rstat...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "S&krivebeskyttet",          ID_EDIT_READONLY
         MENUITEM "Æ&ndret",                   ID_EDIT_MODIFIED
@@ -67,18 +67,18 @@ BEGIN
         MENUITEM "&Lineal",                   ID_TOGGLE_RULER
         MENUITEM "&Statuslinie",              ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Alternativer ...",         ID_VIEWPROPERTIES
+        MENUITEM "&Alternativer...",          ID_VIEWPROPERTIES
     END
     POPUP "&Indsæt"
     BEGIN
-        MENUITEM "&Dato og tid ...",          ID_DATETIME
+        MENUITEM "&Dato og tid...",           ID_DATETIME
     END
     POPUP "F&ormat"
     BEGIN
-        MENUITEM "&Skrifttype ...",           ID_FONTSETTINGS
+        MENUITEM "&Skrifttype...",            ID_FONTSETTINGS
         MENUITEM "&Bullets"                   ID_BULLET
-        MENUITEM "&Afsnit ..."                ID_PARAFORMAT
-        MENUITEM "&Tabulatorer ..."           ID_TABSTOPS
+        MENUITEM "&Afsnit..."                 ID_PARAFORMAT
+        MENUITEM "&Tabulatorer..."            ID_TABSTOPS
         POPUP "&Baggrund"
         BEGIN
             MENUITEM "&System\tCtrl+1",       ID_BACK_1
@@ -100,7 +100,7 @@ BEGIN
         MENUITEM "&Indsæt"              ID_EDIT_PASTE
         MENUITEM SEPARATOR
         MENUITEM "&Bullets"             ID_BULLET
-        MENUITEM "&Afsnit ..."          ID_PARAFORMAT
+        MENUITEM "&Afsnit..."           ID_PARAFORMAT
     END
 END
 
@@ -139,7 +139,7 @@ BEGIN
     LTEXT "Første linie", 0, 15, 58, 40, 13
     EDITTEXT IDC_PARA_FIRST, 55, 56, 60, 13
     LTEXT "Justering", 0, 15, 87, 40, 13
-    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 13, CBS_DROPDOWNLIST
+    COMBOBOX IDC_PARA_ALIGN, 55, 85, 60, 60, CBS_DROPDOWNLIST
     PUSHBUTTON "&OK", IDOK, 137, 15, 50, 15
     PUSHBUTTON "&Annuller", IDCANCEL, 137, 33, 50, 15
 END

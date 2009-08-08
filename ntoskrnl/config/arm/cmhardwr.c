@@ -20,6 +20,8 @@ NTSTATUS
 NTAPI
 CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    //
+    // Nothing to do on ARM
+    //
+    return STATUS_SUCCESS;
 }

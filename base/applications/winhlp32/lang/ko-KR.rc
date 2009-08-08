@@ -39,6 +39,22 @@ MAIN_MENU MENU LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
  POPUP "책갈피(&B)" {
    MENUITEM "정의(&D)...", MNID_BKMK_DEFINE
  }
+ POPUP "옵션(&O)" {
+   POPUP	"가능한 도움말 보이기"
+   BEGIN
+     MENUITEM "기본",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "보이기",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "보여주지 않기",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "기록",		MNID_OPTS_HISTORY
+  POPUP    "글꼴"
+  BEGIN
+    MENUITEM "작게",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "보통",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "크게",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "시스템 색상 사용",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "도움말(&H)" {
    MENUITEM "도움말 사용법(&O)", MNID_HELP_HELPON
    MENUITEM "항상 위(&T)", MNID_HELP_HELPTOP
@@ -75,7 +91,6 @@ STID_HLPFILE_ERROR_s, 	"도움말 파일 `%s'를 읽는 도중 오류 발생"
 STID_CONTENTS, 		"목차(&C)"
 STID_SEARCH, 		"찾기(&S)"
 STID_BACK, 		"뒤로(&B)"
-STID_HISTORY, 		"히스토리(&H)"
 STID_TOPICS,		"목차(&T)"
 STID_ALL_FILES, 	"모든 파일 (*.*)"
 STID_HELP_FILES_HLP, 	"도움말 파일 (*.hlp)"

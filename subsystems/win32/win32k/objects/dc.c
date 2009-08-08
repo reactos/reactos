@@ -1955,6 +1955,9 @@ NtGdiSelectBitmap(
         pDC->w.bitsPerPixel = BitsPerFormat(pBmp->SurfObj.iBitmapFormat);
     }
 
+    hVisRgn = NtGdiCreateRectRgn(0, 0, pBmp->SurfObj.sizlBitmap.cx, pBmp->SurfObj.sizlBitmap.cy);
+    BITMAPOBJ_UnlockBitmap(pBmp);
+
     /* Regenerate the XLATEOBJs. */
     pBrush = BRUSHOBJ_LockBrush(pDc_Attr->hbrush);
     if (pBrush)
@@ -1979,9 +1982,6 @@ NtGdiSelectBitmap(
     }
 
     DC_UnlockDc(pDC);
-
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pBmp->SurfObj.sizlBitmap.cx, pBmp->SurfObj.sizlBitmap.cy);
-    BITMAPOBJ_UnlockBitmap(pBmp);
 
     if (hVisRgn)
     {

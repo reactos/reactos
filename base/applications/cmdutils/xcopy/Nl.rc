@@ -47,7 +47,7 @@ STRINGTABLE
 "XCOPY - Copiëerd bron bestanden of directory bomen naar een bestemming\n\
 \n\
 Gebruik:\n\
-XCOPY bron [bestemming] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+XCOPY bron [bestemming] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Parameters:\n\
@@ -70,7 +70,7 @@ Parameters:\n\
 [/H]  Inclusief verborgen en systeem bestanden\n\
 [/C]  Ga door zelfs als er een fout optreed tijdens het copiëren\n\
 [/A]  Copiëer alleen bestanden met archiverings attribuut aan\n\
-[/M]  Copiëer alleen bestanden met archiverings attribuut aan, verwijderd \n\
+[/M]  Copiëer alleen bestanden met archiverings attribuut aan, verwijderd\n\
 \tdit archiverings attribuut\n\
 [/D | /D:m-d-y] Copiëer nieuwe bestanden of die gewijzigd zijn na de opgegeven\n\
 \t\tdatum. Als geen detum wordt gegeven, copiëer alleen als bron nieuwer is.\n\n"

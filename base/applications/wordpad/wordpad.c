@@ -219,20 +219,22 @@ static void set_caption(LPCWSTR wszNewFileName)
 
 static BOOL validate_endptr(LPCSTR endptr, BOOL units)
 {
-    if(!endptr || !*endptr)
+    if(!endptr)
+        return FALSE;
+    if(!*endptr)
         return TRUE;
 
     while(*endptr == ' ')
         endptr++;
 
     if(!units)
-        return *endptr != '\0';
+        return *endptr == '\0';
 
     /* FIXME: Allow other units and convert between them */
     if(!lstrcmpA(endptr, units_cmA))
         endptr += 2;
 
-    return *endptr != '\0';
+    return *endptr == '\0';
 }
 
 static BOOL number_from_string(LPCWSTR string, float *num, BOOL units)
@@ -246,7 +248,7 @@ static BOOL number_from_string(LPCWSTR string, float *num, BOOL units)
     errno = 0;
     ret = strtod(buffer, &endptr);
 
-    if((ret == 0 && errno != 0) || endptr == buffer || validate_endptr(endptr, units))
+    if((ret == 0 && errno != 0) || endptr == buffer || !validate_endptr(endptr, units))
     {
         return FALSE;
     } else
@@ -265,6 +267,32 @@ static void set_size(float size)
     fmt.dwMask = CFM_SIZE;
     fmt.yHeight = (int)(size * 20.0);
     SendMessageW(hEditorWnd, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&fmt);
+}
+
+static void on_sizelist_modified(HWND hwndSizeList, LPWSTR wszNewFontSize)
+{
+    WCHAR sizeBuffer[MAX_STRING_LEN];
+    CHARFORMAT2W format;
+
+    ZeroMemory(&format, sizeof(format));
+    format.cbSize = sizeof(format);
+    SendMessageW(hEditorWnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&format);
+
+    wsprintfW(sizeBuffer, stringFormat, format.yHeight / 20);
+    if(lstrcmpW(sizeBuffer, wszNewFontSize))
+    {
+        float size = 0;
+        if(number_from_string((LPCWSTR) wszNewFontSize, &size, FALSE)
+           && size > 0)
+        {
+            set_size(size);
+        } else
+        {
+            SetWindowTextW(hwndSizeList, sizeBuffer);
+            MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER),
+                        wszAppTitle, MB_OK | MB_ICONINFORMATION);
+        }
+    }
 }
 
 static void add_size(HWND hSizeListWnd, unsigned size)
@@ -437,6 +465,17 @@ static void set_default_font(void)
     lstrcpyW(fmt.szFaceName, font);
 
     SendMessageW(hEditorWnd, EM_SETCHARFORMAT,  SCF_DEFAULT, (LPARAM)&fmt);
+}
+
+static void on_fontlist_modified(HWND hwndFontList, LPWSTR wszNewFaceName)
+{
+    CHARFORMAT2W format;
+    ZeroMemory(&format, sizeof(format));
+    format.cbSize = sizeof(format);
+    SendMessageW(hEditorWnd, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&format);
+
+    if(lstrcmpW(format.szFaceName, wszNewFaceName))
+        set_font((LPCWSTR) wszNewFaceName);
 }
 
 static void add_font(LPCWSTR fontName, DWORD fontType, HWND hListWnd, NEWTEXTMETRICEXW *ntmc)
@@ -1215,6 +1254,45 @@ static void number_with_units(LPWSTR buffer, int number)
     MultiByteToWideChar(CP_ACP, 0, string, -1, buffer, MAX_STRING_LEN);
 }
 
+static BOOL get_comboexlist_selection(HWND hComboEx, LPWSTR wszBuffer, UINT bufferLength)
+{
+    HANDLE hHeap;
+    COMBOBOXEXITEM cbItem;
+    COMBOBOXINFO cbInfo;
+    HWND hCombo, hList;
+    int idx, result;
+    char *szBuffer;
+    hCombo = (HWND)SendMessage(hComboEx, CBEM_GETCOMBOCONTROL, 0, 0);
+    if (!hCombo)
+        return FALSE;
+    cbInfo.cbSize = sizeof(COMBOBOXINFO);
+    result = SendMessage(hCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbInfo);
+    if (!result)
+        return FALSE;
+    hList = cbInfo.hwndList;
+    idx = SendMessage(hList, LB_GETCURSEL, 0, 0);
+    if (idx < 0)
+        return FALSE;
+
+    hHeap = GetProcessHeap();
+    szBuffer = HeapAlloc(hHeap, HEAP_ZERO_MEMORY, bufferLength);
+    ZeroMemory(&cbItem, sizeof(cbItem));
+    cbItem.mask = CBEIF_TEXT;
+    cbItem.iItem = idx;
+    cbItem.pszText = szBuffer;
+    cbItem.cchTextMax = bufferLength-1;
+    result = SendMessage(hComboEx, CBEM_GETITEM, 0, (LPARAM)&cbItem);
+    if (!result)
+    {
+        HeapFree(hHeap, 0, szBuffer);
+        return FALSE;
+    }
+
+    result = MultiByteToWideChar(CP_ACP, 0, szBuffer, -1, wszBuffer, bufferLength);
+    HeapFree(hHeap, 0, szBuffer);
+    return result != 0;
+}
+
 static INT_PTR CALLBACK datetime_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch(message)
@@ -1311,6 +1389,8 @@ static INT_PTR CALLBACK newfile_proc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
 static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static const WORD ALIGNMENT_VALUES[] = {PFA_LEFT, PFA_RIGHT, PFA_CENTER};
+
     switch(message)
     {
         case WM_INITDIALOG:
@@ -1337,7 +1417,7 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
 
                 pf.cbSize = sizeof(pf);
                 pf.dwMask = PFM_ALIGNMENT | PFM_OFFSET | PFM_RIGHTINDENT |
-                            PFM_OFFSETINDENT;
+                            PFM_STARTINDENT;
                 SendMessageW(hEditorWnd, EM_GETPARAFORMAT, 0, (LPARAM)&pf);
 
                 if(pf.wAlignment == PFA_RIGHT)
@@ -1347,11 +1427,11 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
 
                 SendMessageW(hListWnd, CB_SETCURSEL, index, 0);
 
-                number_with_units(buffer, pf.dxOffset);
+                number_with_units(buffer, pf.dxStartIndent + pf.dxOffset);
                 SetWindowTextW(hLeftWnd, buffer);
                 number_with_units(buffer, pf.dxRightIndent);
                 SetWindowTextW(hRightWnd, buffer);
-                number_with_units(buffer, pf.dxStartIndent - pf.dxOffset);
+                number_with_units(buffer, -pf.dxOffset);
                 SetWindowTextW(hFirstWnd, buffer);
             }
             break;
@@ -1361,13 +1441,18 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
             {
                 case IDOK:
                     {
+                        HWND hListWnd = GetDlgItem(hWnd, IDC_PARA_ALIGN);
                         HWND hLeftWnd = GetDlgItem(hWnd, IDC_PARA_LEFT);
                         HWND hRightWnd = GetDlgItem(hWnd, IDC_PARA_RIGHT);
                         HWND hFirstWnd = GetDlgItem(hWnd, IDC_PARA_FIRST);
                         WCHAR buffer[MAX_STRING_LEN];
+                        int index;
                         float num;
                         int ret = 0;
                         PARAFORMAT pf;
+
+                        index = SendMessageW(hListWnd, CB_GETCURSEL, 0, 0);
+                        pf.wAlignment = ALIGNMENT_VALUES[index];
 
                         GetWindowTextW(hLeftWnd, buffer, MAX_STRING_LEN);
                         if(number_from_string(buffer, &num, TRUE))
@@ -1389,9 +1474,31 @@ static INT_PTR CALLBACK paraformat_proc(HWND hWnd, UINT message, WPARAM wParam, 
                             return FALSE;
                         } else
                         {
+                            if (pf.dxOffset + pf.dxStartIndent < 0
+                                && pf.dxStartIndent < 0)
+                            {
+                                /* The first line is before the left edge, so
+                                 * make sure it is at the left edge. */
+                                pf.dxOffset = -pf.dxStartIndent;
+                            } else if (pf.dxOffset < 0) {
+                                /* The second and following lines are before
+                                 * the left edge, so set it to be at the left
+                                 * edge, and adjust the first line since it
+                                 * is relative to it. */
+                                pf.dxStartIndent = max(pf.dxStartIndent + pf.dxOffset, 0);
+                                pf.dxOffset = 0;
+                            }
+                            /* Internally the dxStartIndent is the absolute
+                             * offset for the first line and dxOffset is
+                             * to it value as opposed how it is displayed with
+                             * the first line being the relative value.
+                             * These two lines make the adjustments. */
                             pf.dxStartIndent = pf.dxStartIndent + pf.dxOffset;
+                            pf.dxOffset = pf.dxOffset - pf.dxStartIndent;
+
                             pf.cbSize = sizeof(pf);
-                            pf.dwMask = PFM_OFFSET | PFM_OFFSETINDENT | PFM_RIGHTINDENT;
+                            pf.dwMask = PFM_ALIGNMENT | PFM_OFFSET | PFM_RIGHTINDENT |
+                                        PFM_STARTINDENT;
                             SendMessageW(hEditorWnd, EM_SETPARAFORMAT, 0, (LPARAM)&pf);
                         }
                     }
@@ -1682,7 +1789,8 @@ static LRESULT OnCreate( HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
 
     hEditorWnd = CreateWindowExW(WS_EX_CLIENTEDGE, wszRichEditClass, NULL,
-      WS_CHILD|WS_VISIBLE|ECO_SELECTIONBAR|ES_MULTILINE|ES_AUTOVSCROLL|ES_WANTRETURN|WS_VSCROLL,
+      WS_CHILD|WS_VISIBLE|ES_SELECTIONBAR|ES_MULTILINE|ES_AUTOVSCROLL
+      |ES_WANTRETURN|WS_VSCROLL|ES_NOHIDESEL,
       0, 0, 1000, 100, hWnd, (HMENU)IDC_EDITOR, hInstance, NULL);
 
     if (!hEditorWnd)
@@ -1771,38 +1879,18 @@ static LRESULT OnNotify( HWND hWnd, WPARAM wParam, LPARAM lParam)
     NMHDR *pHdr = (NMHDR *)lParam;
     HWND hwndFontList = GetDlgItem(hwndReBar, IDC_FONTLIST);
     HWND hwndSizeList = GetDlgItem(hwndReBar, IDC_SIZELIST);
-    WCHAR sizeBuffer[MAX_PATH];
 
     if (pHdr->hwndFrom == hwndFontList || pHdr->hwndFrom == hwndSizeList)
     {
         if (pHdr->code == CBEN_ENDEDITW)
         {
-            CHARFORMAT2W format;
             NMCBEENDEDIT *endEdit = (NMCBEENDEDIT *)lParam;
-
-            ZeroMemory(&format, sizeof(format));
-            format.cbSize = sizeof(format);
-            SendMessageW(hwndEditor, EM_GETCHARFORMAT, SCF_SELECTION, (LPARAM)&format);
-
             if(pHdr->hwndFrom == hwndFontList)
             {
-                if(lstrcmpW(format.szFaceName, (LPWSTR)endEdit->szText))
-                    set_font((LPCWSTR) endEdit->szText);
+                on_fontlist_modified(hwndFontList, (LPWSTR)endEdit->szText);
             } else if (pHdr->hwndFrom == hwndSizeList)
             {
-                wsprintfW(sizeBuffer, stringFormat, format.yHeight / 20);
-                if(lstrcmpW(sizeBuffer, (LPWSTR)endEdit->szText))
-                {
-                    float size = 0;
-                    if(number_from_string((LPWSTR)endEdit->szText, &size, FALSE))
-                    {
-                        set_size(size);
-                    } else
-                    {
-                        SetWindowTextW(hwndSizeList, sizeBuffer);
-                        MessageBoxW(hMainWnd, MAKEINTRESOURCEW(STRING_INVALID_NUMBER), wszAppTitle, MB_OK | MB_ICONINFORMATION);
-                    }
-                }
+                on_sizelist_modified(hwndSizeList, (LPWSTR)endEdit->szText);
             }
         }
         return 0;
@@ -2188,6 +2276,26 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     case ID_VIEWPROPERTIES:
         dialog_viewproperties();
+        break;
+
+    case IDC_FONTLIST:
+        if (HIWORD(wParam) == CBN_SELENDOK)
+        {
+            WCHAR buffer[LF_FACESIZE];
+            HWND hwndFontList = (HWND)lParam;
+            get_comboexlist_selection(hwndFontList, buffer, LF_FACESIZE);
+            on_fontlist_modified(hwndFontList, buffer);
+        }
+        break;
+
+    case IDC_SIZELIST:
+        if (HIWORD(wParam) == CBN_SELENDOK)
+        {
+            WCHAR buffer[MAX_STRING_LEN+1];
+            HWND hwndSizeList = (HWND)lParam;
+            get_comboexlist_selection(hwndSizeList, buffer, MAX_STRING_LEN+1);
+            on_sizelist_modified(hwndSizeList, buffer);
+        }
         break;
 
     default:

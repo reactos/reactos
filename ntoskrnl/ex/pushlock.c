@@ -155,6 +155,9 @@ ExfWakePushLock(PEX_PUSH_LOCK PushLock,
 
             /* Remove waking bit from pushlock */
             InterlockedAnd((PLONG)PushLock, ~EX_PUSH_LOCK_WAKING);
+
+            /* Leave the loop */
+            break;
         }
     }
 

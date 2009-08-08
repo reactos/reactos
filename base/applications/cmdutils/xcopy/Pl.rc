@@ -48,7 +48,7 @@ STRINGTABLE
 "XCOPY - kopiuje pliki lub drzewa katalogów\n\
 \n\
 Sk³adnia:\n\
-XCOPY Ÿród³o [cel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+XCOPY Ÿród³o [cel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Gdzie:\n\

@@ -39,6 +39,22 @@ MAIN_MENU MENU LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
  POPUP "书签（&B）" {
    MENUITEM "定义（&D）...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "帮助（&H）" {
    MENUITEM "如何使用帮助（&O）", MNID_HELP_HELPON
    MENUITEM "总是在最前面（&T）", MNID_HELP_HELPTOP
@@ -62,7 +78,6 @@ STID_HLPFILE_ERROR_s, 	"读入帮助文件 ‘%s’ 时发生错误"
 STID_CONTENTS, 		"内容（&C）"
 STID_SEARCH, 		"搜索（&S）"
 STID_BACK, 		"返回（&B）"
-STID_HISTORY, 		"历史（&H）"
 STID_TOPICS,		"主题（&T）"
 STID_ALL_FILES, 	"所有文件 (*.*)"
 STID_HELP_FILES_HLP, 	"帮助文件 (*.hlp)"

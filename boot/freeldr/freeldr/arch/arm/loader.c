@@ -1163,6 +1163,7 @@ ArmPrepareForReactOS(IN BOOLEAN Setup)
     // Setup registry data
     //
     ArmLoaderBlock->RegistryBase = (PVOID)((ULONG_PTR)RegistryData | KSEG0_BASE);
+    ArmLoaderBlock->RegistryLength = RegistrySize;
     
     //
     // Create an MD for it

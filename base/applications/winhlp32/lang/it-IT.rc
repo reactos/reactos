@@ -39,6 +39,22 @@ MAIN_MENU MENU LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
  POPUP "&Segnalibro" {
    MENUITEM "&Definisci...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "&?" {
    MENUITEM "&Aiuto sulla guida", MNID_HELP_HELPON
    MENUITEM "Sempre in primo &piano", MNID_HELP_HELPTOP
@@ -63,7 +79,6 @@ STID_HLPFILE_ERROR_s, 	"Errore di lettura del file della Guida `%s'"
 STID_CONTENTS, 		"&Sommario"
 STID_SEARCH, 		"&Trova"
 STID_BACK, 		"&Precedente"
-STID_HISTORY, 		"&Cronologia"
 STID_TOPICS,		"&Argomenti"
 STID_ALL_FILES, 	"Tutti i file (*.*)"
 STID_HELP_FILES_HLP, 	"File della Guida (*.hlp)"

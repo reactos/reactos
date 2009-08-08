@@ -931,7 +931,8 @@ NtUserCreateDesktop(
    {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WinStaObject);
-      RtlFreeUnicodeString(&SafeDesktopName);
+	  if (lpszDesktopName)
+         RtlFreeUnicodeString(&SafeDesktopName);
       RETURN( NULL);
    }
    RtlFreeUnicodeString(&SafeDesktopName);

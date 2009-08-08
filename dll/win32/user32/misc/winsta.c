@@ -32,29 +32,28 @@ CreateWindowStationA(LPSTR lpwinsta,
 		     ACCESS_MASK dwDesiredAccess,
 		     LPSECURITY_ATTRIBUTES lpsa)
 {
-  ANSI_STRING WindowStationNameA;
-  UNICODE_STRING WindowStationNameU;
-  HWINSTA hWinSta;
+    UNICODE_STRING WindowStationNameU;
+    HWINSTA hWinSta;
 
-  if (lpwinsta != NULL)
+    if (lpwinsta)
     {
-      RtlInitAnsiString(&WindowStationNameA, lpwinsta);
-      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA,
-				   TRUE);
+        /* After conversion, the buffer is zero-terminated */
+        RtlCreateUnicodeStringFromAsciiz(&WindowStationNameU, lpwinsta);
     }
-  else
+    else
     {
-      RtlInitUnicodeString(&WindowStationNameU, NULL);
+        RtlInitUnicodeString(&WindowStationNameU, NULL);
     }
 
-  hWinSta = CreateWindowStationW(WindowStationNameU.Buffer,
-				 dwReserved,
-				 dwDesiredAccess,
-				 lpsa);
+    hWinSta = CreateWindowStationW(WindowStationNameU.Buffer,
+                                   dwReserved,
+                                   dwDesiredAccess,
+                                   lpsa);
 
-  RtlFreeUnicodeString(&WindowStationNameU);
+    /* Free the string, if it was allocated */
+    if (lpwinsta) RtlFreeUnicodeString(&WindowStationNameU);
 
-  return hWinSta;
+    return hWinSta;
 }
 
 
@@ -291,28 +290,27 @@ OpenWindowStationA(LPSTR lpszWinSta,
 		   BOOL fInherit,
 		   ACCESS_MASK dwDesiredAccess)
 {
-  ANSI_STRING WindowStationNameA;
-  UNICODE_STRING WindowStationNameU;
-  HWINSTA hWinSta;
+    UNICODE_STRING WindowStationNameU;
+    HWINSTA hWinSta;
 
-  if (lpszWinSta != NULL)
+    if (lpszWinSta)
     {
-      RtlInitAnsiString(&WindowStationNameA, lpszWinSta);
-      RtlAnsiStringToUnicodeString(&WindowStationNameU, &WindowStationNameA,
-				   TRUE);
+        /* After conversion, the buffer is zero-terminated */
+        RtlCreateUnicodeStringFromAsciiz(&WindowStationNameU, lpszWinSta);
     }
-  else
+    else
     {
-      RtlInitUnicodeString(&WindowStationNameU, NULL);
+        RtlInitUnicodeString(&WindowStationNameU, NULL);
     }
 
-  hWinSta = OpenWindowStationW(WindowStationNameU.Buffer,
-			       fInherit,
-			       dwDesiredAccess);
+    hWinSta = OpenWindowStationW(WindowStationNameU.Buffer,
+                                 fInherit,
+                                 dwDesiredAccess);
 
-  RtlFreeUnicodeString(&WindowStationNameU);
+    /* Free the string, if it was allocated */
+    if (lpszWinSta) RtlFreeUnicodeString(&WindowStationNameU);
 
-  return hWinSta;
+    return hWinSta;
 }
 
 

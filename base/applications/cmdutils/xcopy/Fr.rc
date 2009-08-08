@@ -48,7 +48,7 @@ STRINGTABLE
 "XCOPY - Copie les fichiers ou répertoires source vers une destination\n\
 \n\
 Syntaxe :\n\
-XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Où :\n\
@@ -71,7 +71,7 @@ Où :\n\
 [/H]  Inclure les fichiers cachés et système dans la copie\n\
 [/C]  Continue même si une erreur survient pendant la copie\n\
 [/A]  Copie uniquement les fichiers qui ont l'attribut archive défini\n\
-[/M]  Copie uniquement les fichiers qui ont l'attribut archive défini, supprime \n\
+[/M]  Copie uniquement les fichiers qui ont l'attribut archive défini, supprime\n\
 \tensuite l'attribut\n\
 [/D | /D:m-d-y] Copie uniquement les fichiers nouveaux ou ceux modifiés après la date spécifiée.\n\
 \t\tSi aucune date n'est spécifiée, copie uniquement lorsque le fichier de destination est plus vieux\n\

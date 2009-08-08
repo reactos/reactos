@@ -48,7 +48,7 @@ STRINGTABLE
 "XCOPY - Kopiert Dateien oder Verzeichnisse an einen Zielort\n\
 \n\
 Syntax:\n\
-XCOPY Quelle [Ziel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+XCOPY Quelle [Ziel] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
 \n\
 Mit:\n\

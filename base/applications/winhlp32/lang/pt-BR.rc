@@ -45,6 +45,22 @@ MAIN_MENU MENU
  POPUP "In&dicador" {
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "Aj&uda" {
    MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
    MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
@@ -76,6 +92,22 @@ MAIN_MENU MENU
  POPUP "In&dicador" {
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
+ POPUP "&Options" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "History",		MNID_OPTS_HISTORY
+  POPUP    "Fonts"
+  BEGIN
+    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+ }
  POPUP "Aj&uda" {
    MENUITEM "Ajuda &na ajuda", MNID_HELP_HELPON
    MENUITEM "Sempre &visível", MNID_HELP_HELPTOP
@@ -102,7 +134,6 @@ STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do arquivo de ajuda '%s'"
 STID_CONTENTS, 		"&Conteúdo"
 STID_SEARCH, 		"&Procurar"
 STID_BACK, 		"&Voltar"
-STID_HISTORY, 		"&Histórico"
 STID_TOPICS,		"&Tópicos"
 STID_ALL_FILES, 	"Todos os arquivos (*.*)"
 STID_HELP_FILES_HLP, 	"Arquivos de ajuda (*.hlp)"
@@ -123,7 +154,6 @@ STID_HLPFILE_ERROR_s, 	"Erro encontrado na leitura do ficheiro de ajuda '%s'"
 STID_CONTENTS, 		"&Conteúdo"
 STID_SEARCH, 		"&Procurar"
 STID_BACK, 		"&Voltar"
-STID_HISTORY, 		"&Histórico"
 STID_TOPICS,		"&Tópicos"
 STID_ALL_FILES, 	"Todos os ficheiros (*.*)"
 STID_HELP_FILES_HLP, 	"Ficheiros de ajuda (*.hlp)"

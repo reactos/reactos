@@ -25,6 +25,18 @@ KiSystemCall(
     IN ULONG ArgumentCount
 );
 
+VOID
+FASTCALL
+KiRetireDpcList(
+    IN PKPRCB Prcb
+);
+
+VOID
+FASTCALL
+KiQuantumEnd(
+    VOID
+);
+
 /* FUNCTIONS ******************************************************************/
 
 VOID
@@ -58,10 +70,9 @@ KiIdleLoop(VOID)
             HalClearSoftwareInterrupt(DISPATCH_LEVEL);
         
             //
-            // FIXME: TODO
+            // Retire DPCs
             //
-            DPRINT1("DPC/Timer Delivery!\n");
-            while (TRUE);
+            KiRetireDpcList(Prcb);
         }
     
         //
@@ -242,10 +253,9 @@ KiDispatchInterrupt(VOID)
         (Prcb->DeferredReadyListHead.Next))
     {
         //
-        // FIXME: TODO
+        // Retire DPCs
         //
-        DPRINT1("DPC/Timer Delivery!\n");
-        while (TRUE);
+        KiRetireDpcList(Prcb);
     }
     
     //
@@ -259,10 +269,10 @@ KiDispatchInterrupt(VOID)
     if (Prcb->QuantumEnd)
     {
         //
-        // FIXME: TODO
+        // Handle quantum end
         //
-        DPRINT1("Quantum End!\n");
-        while (TRUE);
+        Prcb->QuantumEnd = FALSE;
+        KiQuantumEnd();
         return;
     }
     
@@ -310,6 +320,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     KIRQL OldIrql, Irql;
     ULONG InterruptCause, InterruptMask;
     PKPCR Pcr;
+    PKTRAP_FRAME OldTrapFrame;
 
     //
     // Increment interrupt count
@@ -339,12 +350,18 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     // Raise to the new IRQL
     //
     KfRaiseIrql(Irql);
+    
+    //
+    // The clock ISR wants the trap frame as a parameter
+    //
+    OldTrapFrame = KeGetCurrentThread()->TrapFrame;
+    KeGetCurrentThread()->TrapFrame = TrapFrame;
 
     //
     // Check if this interrupt is at DISPATCH or higher
     //
     if (Irql > DISPATCH_LEVEL)
-    {        
+    {   
         //
         // FIXME: Switch to interrupt stack
         //
@@ -358,11 +375,13 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
         //DPRINT1("[DPC/APC]\n");
         HalClearSoftwareInterrupt(Irql);
     }
-        
+
     //
     // Call the registered interrupt routine
     //
     Pcr->InterruptRoutine[Irql]();
+    ASSERT(KeGetCurrentThread()->TrapFrame == TrapFrame);
+    KeGetCurrentThread()->TrapFrame = OldTrapFrame;
 //    DPRINT1("[ISR RETURN]\n");
     
     //
