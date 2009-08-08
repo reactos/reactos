@@ -1,6 +1,7 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2009       Hervé Poussineau  <hpoussin@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,39 +22,6 @@
 #include <debug.h>
 
 #define SECTORSIZE 2048
-
-static ULONG		IsoRootSector;		// Starting sector of the root directory
-static ULONG		IsoRootLength;		// Length of the root directory
-
-ULONG			IsoDriveNumber = 0;
-
-
-BOOLEAN IsoOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
-{
-	PPVD Pvd = (PPVD)DISKREADBUFFER;
-
-	DPRINTM(DPRINT_FILESYSTEM, "IsoOpenVolume() DriveNumber = 0x%x VolumeStartSector = 16\n", DriveNumber);
-
-	// Store the drive number
-	IsoDriveNumber = DriveNumber;
-
-	IsoRootSector = 0;
-	IsoRootLength = 0;
-
-	if (!MachDiskReadLogicalSectors(DriveNumber, 16, 1, Pvd))
-	{
-		FileSystemError("Failed to read the PVD.");
-		return FALSE;
-	}
-
-	IsoRootSector = Pvd->RootDirRecord.ExtentLocationL;
-	IsoRootLength = Pvd->RootDirRecord.DataLengthL;
-
-	DPRINTM(DPRINT_FILESYSTEM, "IsoRootSector = %u  IsoRootLegth = %u\n", IsoRootSector, IsoRootLength);
-
-	return TRUE;
-}
-
 
 static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryLength, PCHAR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 {
@@ -119,16 +87,18 @@ static BOOLEAN IsoSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dire
 /*
  * IsoBufferDirectory()
  * This function allocates a buffer, reads the specified directory
- * and returns a pointer to that buffer. The function returns NULL
- * if allocation or read fails. The directory is specified by its
- * starting sector and length.
+ * and returns a pointer to that buffer into pDirectoryBuffer. The
+ * function returns an ARC error code. The directory is specified
+ * by its starting sector and length.
  */
-static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLength)
+static LONG IsoBufferDirectory(ULONG DeviceId, ULONG DirectoryStartSector, ULONG DirectoryLength,
+    PVOID* pDirectoryBuffer)
 {
-	PVOID	DirectoryBuffer;
-	PVOID	Ptr;
-	ULONG	SectorCount;
-	ULONG	i;
+	PVOID DirectoryBuffer;
+	ULONG SectorCount;
+	LARGE_INTEGER Position;
+	ULONG Count;
+	ULONG ret;
 
 	DPRINTM(DPRINT_FILESYSTEM, "IsoBufferDirectory() DirectoryStartSector = %d DirectoryLength = %d\n", DirectoryStartSector, DirectoryLength);
 
@@ -140,26 +110,29 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
 	//
 	DPRINTM(DPRINT_FILESYSTEM, "Trying to allocate (DirectoryLength) %d bytes.\n", DirectoryLength);
 	DirectoryBuffer = MmHeapAlloc(DirectoryLength);
-
-	if (DirectoryBuffer == NULL)
-	{
-		return NULL;
-	}
+	if (!DirectoryBuffer)
+		return ENOMEM;
 
 	//
 	// Now read directory contents into DirectoryBuffer
 	//
-	for (i = 0, Ptr = DirectoryBuffer; i < SectorCount; i++, Ptr = (PVOID)((ULONG_PTR)Ptr + SECTORSIZE))
+	Position.HighPart = 0;
+	Position.LowPart = DirectoryStartSector * SECTORSIZE;
+	ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+	if (ret != ESUCCESS)
 	{
-		if (!MachDiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
-		{
-			MmHeapFree(DirectoryBuffer);
-			return NULL;
-		}
-		RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, SECTORSIZE);
+		MmHeapFree(DirectoryBuffer);
+		return ret;
+	}
+	ret = ArcRead(DeviceId, DirectoryBuffer, SectorCount * SECTORSIZE, &Count);
+	if (ret != ESUCCESS || Count != SectorCount * SECTORSIZE)
+	{
+		MmHeapFree(DirectoryBuffer);
+		return EIO;
 	}
 
-	return DirectoryBuffer;
+	*pDirectoryBuffer = DirectoryBuffer;
+	return ESUCCESS;
 }
 
 
@@ -167,11 +140,12 @@ static PVOID IsoBufferDirectory(ULONG DirectoryStartSector, ULONG DirectoryLengt
  * IsoLookupFile()
  * This function searches the file system for the
  * specified filename and fills in an ISO_FILE_INFO structure
- * with info describing the file, etc. returns true
- * if the file exists or false otherwise
+ * with info describing the file, etc. returns ARC error code
  */
-static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
+static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFileInfoPointer)
 {
+	UCHAR Buffer[SECTORSIZE];
+	PPVD Pvd = (PPVD)Buffer;
 	UINT32		i;
 	ULONG			NumberOfPathParts;
 	CHAR		PathPart[261];
@@ -179,18 +153,33 @@ static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 	ULONG		DirectorySector;
 	ULONG		DirectoryLength;
 	ISO_FILE_INFO	IsoFileInfo;
+	LARGE_INTEGER Position;
+	ULONG Count;
+	LONG ret;
 
 	DPRINTM(DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
 
 	//
+	// Read The Primary Volume Descriptor
+	//
+	Position.HighPart = 0;
+	Position.LowPart = 16 * SECTORSIZE;
+	ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+	if (ret != ESUCCESS)
+		return ret;
+	ret = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
+	if (ret != ESUCCESS || Count < sizeof(PVD))
+		return EIO;
+
+	DirectorySector = Pvd->RootDirRecord.ExtentLocationL;
+	DirectoryLength = Pvd->RootDirRecord.DataLengthL;
+
+	//
 	// Figure out how many sub-directories we are nested in
 	//
 	NumberOfPathParts = FsGetNumPathParts(FileName);
-
-	DirectorySector = IsoRootSector;
-	DirectoryLength = IsoRootLength;
 
 	//
 	// Loop once for each part
@@ -213,11 +202,9 @@ static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 		//
 		// Buffer the directory contents
 		//
-		DirectoryBuffer = IsoBufferDirectory(DirectorySector, DirectoryLength);
-		if (DirectoryBuffer == NULL)
-		{
-			return FALSE;
-		}
+		ret = IsoBufferDirectory(DeviceId, DirectorySector, DirectoryLength, &DirectoryBuffer);
+		if (ret != ESUCCESS)
+			return ret;
 
 		//
 		// Search for file name in directory
@@ -225,7 +212,7 @@ static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 		if (!IsoSearchDirectoryBufferForFile(DirectoryBuffer, DirectoryLength, PathPart, &IsoFileInfo))
 		{
 			MmHeapFree(DirectoryBuffer);
-			return FALSE;
+			return ENOENT;
 		}
 
 		MmHeapFree(DirectoryBuffer);
@@ -244,78 +231,101 @@ static BOOLEAN IsoLookupFile(PCSTR FileName, PISO_FILE_INFO IsoFileInfoPointer)
 
 	RtlCopyMemory(IsoFileInfoPointer, &IsoFileInfo, sizeof(ISO_FILE_INFO));
 
-	return TRUE;
+	return ESUCCESS;
 }
 
-
-/*
- * IsoOpenFile()
- * Tries to open the file 'name' and returns true or false
- * for success and failure respectively
- */
-FILE* IsoOpenFile(PCSTR FileName)
+LONG IsoClose(ULONG FileId)
 {
-	ISO_FILE_INFO		TempFileInfo;
-	PISO_FILE_INFO		FileHandle;
+	PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoOpenFile() FileName = %s\n", FileName);
+	MmHeapFree(FileHandle);
 
-	if (!IsoLookupFile(FileName, &TempFileInfo))
-	{
-		return NULL;
-	}
+	return ESUCCESS;
+}
+
+LONG IsoGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
+{
+	PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+
+	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFileInformation() FileSize = %d\n", FileHandle->FileSize);
+	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFileInformation() FilePointer = %d\n", FileHandle->FilePointer);
+
+	RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+	Information->EndingAddress.LowPart = FileHandle->FileSize;
+	Information->CurrentAddress.LowPart = FileHandle->FilePointer;
+
+	return ESUCCESS;
+}
+
+LONG IsoOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
+{
+	ISO_FILE_INFO TempFileInfo;
+	PISO_FILE_INFO FileHandle;
+	ULONG DeviceId;
+	LONG ret;
+
+	if (OpenMode != OpenReadOnly)
+		return EACCES;
+
+	DeviceId = FsGetDeviceId(*FileId);
+
+	DPRINTM(DPRINT_FILESYSTEM, "IsoOpen() FileName = %s\n", Path);
+
+	if (*Path == '\\')
+		Path++;
+
+	RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
+	ret = IsoLookupFile(Path, DeviceId, &TempFileInfo);
+	if (ret != ESUCCESS)
+		return ENOENT;
 
 	FileHandle = MmHeapAlloc(sizeof(ISO_FILE_INFO));
-
-	if (FileHandle == NULL)
-	{
-		return NULL;
-	}
+	if (!FileHandle)
+		return ENOMEM;
 
 	RtlCopyMemory(FileHandle, &TempFileInfo, sizeof(ISO_FILE_INFO));
 
-	return (FILE*)FileHandle;
+	FsSetDeviceSpecific(*FileId, FileHandle);
+	return ESUCCESS;
 }
 
-
-/*
- * IsoReadFile()
- * Reads BytesToRead from open file and
- * returns the number of bytes read in BytesRead
- */
-BOOLEAN IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+LONG IsoRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
-	PISO_FILE_INFO	IsoFileInfo = (PISO_FILE_INFO)FileHandle;
+	PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
+	UCHAR SectorBuffer[SECTORSIZE];
+	LARGE_INTEGER Position;
+	ULONG DeviceId;
+	ULONG FilePointer;
 	ULONG		SectorNumber;
 	ULONG		OffsetInSector;
 	ULONG		LengthInSector;
 	ULONG		NumberOfSectors;
-	ULONG		i;
+	ULONG BytesRead;
+	LONG ret;
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoReadFile() BytesToRead = %d Buffer = 0x%x\n", BytesToRead, Buffer);
+	DPRINTM(DPRINT_FILESYSTEM, "IsoRead() Buffer = %p, N = %lu\n", Buffer, N);
 
-	if (BytesRead != NULL)
-	{
-		*BytesRead = 0;
-	}
+	DeviceId = FsGetDeviceId(FileId);
+	*Count = 0;
 
 	//
 	// If they are trying to read past the
 	// end of the file then return success
-	// with BytesRead == 0
+	// with Count == 0
 	//
-	if (IsoFileInfo->FilePointer >= IsoFileInfo->FileSize)
+	FilePointer = FileHandle->FilePointer;
+	if (FilePointer >= FileHandle->FileSize)
 	{
-		return TRUE;
+		return ESUCCESS;
 	}
 
 	//
 	// If they are trying to read more than there is to read
 	// then adjust the amount to read
 	//
-	if ((IsoFileInfo->FilePointer + BytesToRead) > IsoFileInfo->FileSize)
+	if (FilePointer + N > FileHandle->FileSize)
 	{
-		BytesToRead = (IsoFileInfo->FileSize - IsoFileInfo->FilePointer);
+		N = FileHandle->FileSize - FilePointer;
 	}
 
 	//
@@ -332,7 +342,7 @@ BOOLEAN IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID
 	//    |                                    |
 	//    +---------------+--------------------+
 	//                    |
-	// BytesToRead -------+
+	// N -----------------+
 	//
 	// 1 - The first calculation (and read) will align
 	//     the file pointer with the next sector
@@ -351,129 +361,154 @@ BOOLEAN IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID
 	// Only do the first read if we
 	// aren't aligned on a cluster boundary
 	//
-	if (IsoFileInfo->FilePointer % SECTORSIZE)
+	if (FilePointer % SECTORSIZE)
 	{
 		//
 		// Do the math for our first read
 		//
-		SectorNumber = IsoFileInfo->FileStart + (IsoFileInfo->FilePointer / SECTORSIZE);
-		OffsetInSector = IsoFileInfo->FilePointer % SECTORSIZE;
-		LengthInSector = (BytesToRead > (SECTORSIZE - OffsetInSector)) ? (SECTORSIZE - OffsetInSector) : BytesToRead;
+		SectorNumber = FileHandle->FileStart + (FilePointer / SECTORSIZE);
+		OffsetInSector = FilePointer % SECTORSIZE;
+		LengthInSector = (N > (SECTORSIZE - OffsetInSector)) ? (SECTORSIZE - OffsetInSector) : N;
 
 		//
-		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
+		// Now do the read and update Count, N, FilePointer, & Buffer
 		//
-		if (!MachDiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+		Position.HighPart = 0;
+		Position.LowPart = SectorNumber * SECTORSIZE;
+		ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+		if (ret != ESUCCESS)
 		{
-			return FALSE;
+			return ret;
 		}
-		RtlCopyMemory(Buffer, (PVOID)((ULONG_PTR)DISKREADBUFFER + OffsetInSector), LengthInSector);
-		if (BytesRead != NULL)
+		ret = ArcRead(DeviceId, SectorBuffer, SECTORSIZE, &BytesRead);
+		if (ret != ESUCCESS || BytesRead != SECTORSIZE)
 		{
-			*BytesRead += LengthInSector;
+			return EIO;
 		}
-		BytesToRead -= LengthInSector;
-		IsoFileInfo->FilePointer += LengthInSector;
+		RtlCopyMemory(Buffer, SectorBuffer + OffsetInSector, LengthInSector);
+		*Count += LengthInSector;
+		N -= LengthInSector;
+		FilePointer += LengthInSector;
 		Buffer = (PVOID)((ULONG_PTR)Buffer + LengthInSector);
 	}
 
 	//
 	// Do the math for our second read (if any data left)
 	//
-	if (BytesToRead > 0)
+	if (N > 0)
 	{
 		//
 		// Determine how many full clusters we need to read
 		//
-		NumberOfSectors = (BytesToRead / SECTORSIZE);
+		NumberOfSectors = (N / SECTORSIZE);
 
-		for (i = 0; i < NumberOfSectors; i++)
+		SectorNumber = FileHandle->FileStart + (FilePointer / SECTORSIZE);
+
+		//
+		// Now do the read and update Count, N, FilePointer, & Buffer
+		//
+		Position.HighPart = 0;
+		Position.LowPart = SectorNumber * SECTORSIZE;
+		ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+		if (ret != ESUCCESS)
 		{
-			SectorNumber = IsoFileInfo->FileStart + (IsoFileInfo->FilePointer / SECTORSIZE);
-
-			//
-			// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
-			//
-			if (!MachDiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
-			{
-				return FALSE;
-			}
-
-			RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SECTORSIZE);
-
-			if (BytesRead != NULL)
-			{
-				*BytesRead += SECTORSIZE;
-			}
-			BytesToRead -= SECTORSIZE;
-			IsoFileInfo->FilePointer += SECTORSIZE;
-			Buffer = (PVOID)((ULONG_PTR)Buffer + SECTORSIZE);
+			return ret;
 		}
+		ret = ArcRead(DeviceId, Buffer, NumberOfSectors * SECTORSIZE, &BytesRead);
+		if (ret != ESUCCESS || BytesRead != NumberOfSectors * SECTORSIZE)
+		{
+			return EIO;
+		}
+
+		*Count += NumberOfSectors * SECTORSIZE;
+		N -= NumberOfSectors * SECTORSIZE;
+		FilePointer += NumberOfSectors * SECTORSIZE;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + NumberOfSectors * SECTORSIZE);
 	}
 
 	//
 	// Do the math for our third read (if any data left)
 	//
-	if (BytesToRead > 0)
+	if (N > 0)
 	{
-		SectorNumber = IsoFileInfo->FileStart + (IsoFileInfo->FilePointer / SECTORSIZE);
+		SectorNumber = FileHandle->FileStart + (FilePointer / SECTORSIZE);
 
 		//
-		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
+		// Now do the read and update Count, N, FilePointer, & Buffer
 		//
-		if (!MachDiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+		Position.HighPart = 0;
+		Position.LowPart = SectorNumber * SECTORSIZE;
+		ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+		if (ret != ESUCCESS)
 		{
-			return FALSE;
+			return ret;
 		}
-		RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, BytesToRead);
-		if (BytesRead != NULL)
+		ret = ArcRead(DeviceId, SectorBuffer, SECTORSIZE, &BytesRead);
+		if (ret != ESUCCESS || BytesRead != SECTORSIZE)
 		{
-			*BytesRead += BytesToRead;
+			return EIO;
 		}
-		IsoFileInfo->FilePointer += BytesToRead;
-		BytesToRead -= BytesToRead;
-		Buffer = (PVOID)((ULONG_PTR)Buffer + BytesToRead);
+		RtlCopyMemory(Buffer, SectorBuffer, N);
+		*Count += N;
+		FilePointer += N;
 	}
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoReadFile() done\n");
+	DPRINTM(DPRINT_FILESYSTEM, "IsoRead() done\n");
 
-	return TRUE;
+	return ESUCCESS;
 }
 
-
-ULONG IsoGetFileSize(FILE *FileHandle)
+LONG IsoSeek(ULONG FileId, LARGE_INTEGER* Position, SEEKMODE SeekMode)
 {
-	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
+	PISO_FILE_INFO FileHandle = FsGetDeviceSpecific(FileId);
 
-	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFileSize() FileSize = %d\n", IsoFileHandle->FileSize);
+	DPRINTM(DPRINT_FILESYSTEM, "IsoSeek() NewFilePointer = %lu\n", Position->LowPart);
 
-	return IsoFileHandle->FileSize;
+	if (SeekMode != SeekAbsolute)
+		return EINVAL;
+	if (Position->HighPart != 0)
+		return EINVAL;
+	if (Position->LowPart >= FileHandle->FileSize)
+		return EINVAL;
+
+	FileHandle->FilePointer = Position->LowPart;
+	return ESUCCESS;
 }
 
-VOID IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
+const DEVVTBL Iso9660FuncTable =
 {
-	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "IsoSetFilePointer() NewFilePointer = %d\n", NewFilePointer);
-
-	IsoFileHandle->FilePointer = NewFilePointer;
-}
-
-ULONG IsoGetFilePointer(FILE *FileHandle)
-{
-	PISO_FILE_INFO	IsoFileHandle = (PISO_FILE_INFO)FileHandle;
-
-	DPRINTM(DPRINT_FILESYSTEM, "IsoGetFilePointer() FilePointer = %d\n", IsoFileHandle->FilePointer);
-
-	return IsoFileHandle->FilePointer;
-}
-
-const FS_VTBL Iso9660Vtbl = {
-	IsoOpenVolume,
-	IsoOpenFile,
-	NULL,
-	IsoReadFile,
-	IsoGetFileSize,
-	IsoSetFilePointer,
-	IsoGetFilePointer,
+	IsoClose,
+	IsoGetFileInformation,
+	IsoOpen,
+	IsoRead,
+	IsoSeek,
 };
+
+const DEVVTBL* IsoMount(ULONG DeviceId)
+{
+	UCHAR Buffer[SECTORSIZE];
+	PPVD Pvd = (PPVD)Buffer;
+	LARGE_INTEGER Position;
+	ULONG Count;
+	LONG ret;
+
+	//
+	// Read The Primary Volume Descriptor
+	//
+	Position.HighPart = 0;
+	Position.LowPart = 16 * SECTORSIZE;
+	ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
+	if (ret != ESUCCESS)
+		return NULL;
+	ret = ArcRead(DeviceId, Pvd, SECTORSIZE, &Count);
+	if (ret != ESUCCESS || Count < sizeof(PVD))
+		return NULL;
+
+	//
+	// Check if PVD is valid. If yes, return ISO9660 function table
+	//
+	if (Pvd->VdType == 1 && RtlCompareMemory(Pvd->StandardId, "CD001", 5) == 5)
+		return &Iso9660FuncTable;
+	else
+		return NULL;
+}

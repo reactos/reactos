@@ -202,7 +202,7 @@ static BOOLEAN FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG 
 		pFSVtbl = &Ext2Vtbl;
 		break;
 	case FS_ISO9660:
-		pFSVtbl = &Iso9660Vtbl;
+		pFSVtbl = &CompatArcVtbl;
 		break;
 	default:
 		pFSVtbl = NULL;
@@ -638,8 +638,12 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                 }
 
                 /* Try to detect the file system */
-                /* FIXME: we link there to old infrastructure... */
-                FileData[DeviceId].FileFuncTable = &CompatFsFuncTable;
+                FileData[DeviceId].FileFuncTable = IsoMount(DeviceId);
+                if (!FileData[DeviceId].FileFuncTable)
+                {
+                    /* FIXME: we link there to old infrastructure... */
+                    FileData[DeviceId].FileFuncTable = &CompatFsFuncTable;
+                }
 
                 pDevice->DeviceId = DeviceId;
             }
