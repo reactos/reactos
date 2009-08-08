@@ -873,91 +873,107 @@ InfOpenFile(PHINF InfHandle,
 	    PCSTR FileName,
 	    PULONG ErrorLine)
 {
-  PFILE FileHandle;
-  PCHAR FileBuffer;
-  ULONG FileSize;
-  PINFCACHE Cache;
-  BOOLEAN Success;
+    FILEINFORMATION Information;
+    ULONG FileId;
+    PCHAR FileBuffer;
+    ULONG FileSize, Count;
+    PINFCACHE Cache;
+    BOOLEAN Success;
+    LONG ret;
 
+    *InfHandle = NULL;
+    *ErrorLine = (ULONG)-1;
 
-  *InfHandle = NULL;
-  *ErrorLine = (ULONG)-1;
-
-
-  /* Open the inf file */
-  FileHandle = FsOpenFile (FileName);
-  if (FileHandle == NULL)
+    //
+    // Open the .inf file
+    //
+    FileId = FsOpenFile(FileName);
+    if (!FileId)
     {
-//      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
-      return FALSE;
+        return FALSE;
     }
 
-//  DPRINT("NtOpenFile() successful\n");
-
-  /* Query file size */
-  FileSize = FsGetFileSize (FileHandle);
-  if (FileSize == 0)
+    //
+    // Query file size
+    //
+    ret = ArcGetFileInformation(FileId, &Information);
+    if (ret != ESUCCESS || Information.EndingAddress.HighPart != 0)
     {
-//      DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
-      FsCloseFile (FileHandle);
-      return FALSE;
+        ArcClose(FileId);
+        return FALSE;
+    }
+    FileSize = Information.EndingAddress.LowPart;
+
+    //
+    // Allocate buffer to cache the file
+    //
+    FileBuffer = MmHeapAlloc(FileSize + 1);
+    if (!FileBuffer)
+    {
+        ArcClose(FileId);
+        return FALSE;
     }
 
-//  DPRINT("File size: %lu\n", FileLength);
-
-  /* Allocate file buffer */
-  FileBuffer = MmHeapAlloc (FileSize + 1);
-  if (FileBuffer == NULL)
+    //
+    // Read file into memory
+    //
+    ret = ArcRead(FileId, FileBuffer, FileSize, &Count);
+    if (ret != ESUCCESS || Count != FileSize)
     {
-//      DPRINT1("RtlAllocateHeap() failed\n");
-      FsCloseFile (FileHandle);
-      return FALSE;
+        ArcClose(FileId);
+        MmHeapFree(FileBuffer);
+        return FALSE;
     }
 
-  /* Read file */
-  Success = FsReadFile(FileHandle, FileSize, NULL, FileBuffer);
+    //
+    // We don't need the file anymore. Close it
+    //
+    ArcClose(FileId);
 
-  FsCloseFile (FileHandle);
-  if (!Success)
+    //
+    // Append string terminator
+    //
+    FileBuffer[FileSize] = 0;
+
+    //
+    // Allocate infcache header
+    //
+    Cache = (PINFCACHE)MmHeapAlloc(sizeof(INFCACHE));
+    if (!Cache)
     {
-//      DPRINT("FsReadFile() failed\n");
-      MmHeapFree (FileBuffer);
-      return FALSE;
+        MmHeapFree (FileBuffer);
+        return FALSE;
     }
 
-  /* Append string terminator */
-  FileBuffer[FileSize] = 0;
+    //
+    // Initialize inicache header
+    //
+    RtlZeroMemory(Cache, sizeof(INFCACHE));
 
-  /* Allocate infcache header */
-  Cache = (PINFCACHE)MmHeapAlloc (sizeof(INFCACHE));
-  if (Cache == NULL)
+    //
+    // Parse the inf buffer
+    //
+    Success = InfpParseBuffer(Cache,
+                              FileBuffer,
+                              FileBuffer + FileSize,
+                              ErrorLine);
+    if (!Success)
     {
-//      DPRINT("RtlAllocateHeap() failed\n");
-      MmHeapFree (FileBuffer);
-      return FALSE;
+        MmHeapFree(Cache);
+        Cache = NULL;
     }
 
-  /* Initialize inicache header */
-  RtlZeroMemory(Cache,
-		sizeof(INFCACHE));
+    //
+    // Free file buffer, as it has been parsed
+    //
+    MmHeapFree(FileBuffer);
 
-  /* Parse the inf buffer */
-  Success = InfpParseBuffer (Cache,
-			     FileBuffer,
-			     FileBuffer + FileSize,
-			     ErrorLine);
-  if (!Success)
-    {
-      MmHeapFree (Cache);
-      Cache = NULL;
-    }
+    //
+    // Return .inf parsed contents
+    //
+    *InfHandle = (HINF)Cache;
 
-  /* Free file buffer */
-  MmHeapFree (FileBuffer);
-
-  *InfHandle = (HINF)Cache;
-
-  return Success;
+    return Success;
 }
 
 
