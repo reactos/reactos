@@ -59,6 +59,17 @@ GreSetDIBits(
     CONST BITMAPINFO  *bmi,
     UINT  ColorUse);
 
+INT
+NTAPI
+GreGetDIBits(
+    PDC   DC,
+    HBITMAP  hBitmap,
+    UINT  StartScan,
+    UINT  ScanLines,
+    VOID  *Bits,
+    BITMAPINFO  *bmi,
+    UINT  ColorUse);
+
 INT FASTCALL
 BitsPerFormat(ULONG Format);
 

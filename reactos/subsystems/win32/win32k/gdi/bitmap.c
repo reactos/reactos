@@ -121,7 +121,7 @@ HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
     hbmDIB = GreCreateBitmap(szSize,
                              dib->dsBm.bmWidthBytes, ulFormat,
                              BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
-                             (dib->dsBmih.biHeight < 0 ? BMF_TOPDOWN : 0),
+                             0,
                              dib->dsBm.bmBits);
 
     /* Map handles */
@@ -196,11 +196,33 @@ LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG Bytes )
     return ret;
 }
 
-INT APIENTRY RosGdiGetDIBits( HDC physDev, HBITMAP hbitmap, UINT startscan, UINT lines,
-                            LPVOID bits, BITMAPINFO *info, UINT coloruse )
+INT APIENTRY RosGdiGetDIBits( HDC physDev, HBITMAP hUserBitmap, UINT StartScan, UINT ScanLines,
+                            LPVOID Bits, BITMAPINFO *bmi, UINT ColorUse, DIBSECTION *dib )
 {
-    UNIMPLEMENTED;
-    return 0;
+    PDC pDC;
+
+    HGDIOBJ hBitmap = GDI_MapUserHandle(hUserBitmap);
+
+    /* Get a pointer to the DCs */
+    pDC = DC_Lock(physDev);
+
+    DPRINT1("RosGdiGetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d, height %d\n",
+        hBitmap, hUserBitmap, StartScan, ScanLines, dib->dsBm.bmHeight);
+
+    /* Set the bits */
+    GreGetDIBits(pDC,
+                 hBitmap,
+                 StartScan,
+                 ScanLines,
+                 Bits,
+                 bmi,
+                 ColorUse);
+
+    /* Release DC objects */
+    DC_Unlock(pDC);
+
+    /* Return amount of lines set */
+    return ScanLines;
 }
 
 COLORREF APIENTRY RosGdiGetPixel( HDC physDev, INT x, INT y )

@@ -308,8 +308,14 @@ BOOL CDECL RosDrv_GetDCOrgEx( NTDRV_PDEVICE *physDev, LPPOINT lpp )
 INT CDECL RosDrv_GetDIBits( NTDRV_PDEVICE *physDev, HBITMAP hbitmap, UINT startscan, UINT lines,
                             LPVOID bits, BITMAPINFO *info, UINT coloruse )
 {
-    UNIMPLEMENTED;
-    return 0;
+    size_t obj_size;
+    DIBSECTION dib;
+
+    /* Check if this bitmap has a DIB section */
+    if (!(obj_size = GetObjectW( hbitmap, sizeof(dib), &dib ))) return 0;
+
+    /* Perform GetDIBits */
+    return RosGdiGetDIBits(physDev->hKernelDC, hbitmap, startscan, lines, bits, info, coloruse, &dib);
 }
 
 INT CDECL RosDrv_GetDeviceCaps( NTDRV_PDEVICE *physDev, INT cap )

@@ -5,7 +5,7 @@ RosGdiCreateBitmap                 4
 RosGdiCreateDIBSection             5
 RosGdiDeleteBitmap                 1
 RosGdiGetBitmapBits                3
-RosGdiGetDIBits                    7
+RosGdiGetDIBits                    8
 RosGdiGetPixel                     3
 RosGdiPatBlt                       6
 RosGdiSetBitmapBits                3
