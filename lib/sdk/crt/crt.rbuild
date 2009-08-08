@@ -267,6 +267,7 @@
 		<file>mbstowcs.c</file>
 		<file>obsol.c</file>
 		<file>putenv.c</file>
+		<file>qsort.c</file>
 		<file>rot.c</file>
 		<file>senv.c</file>
 		<file>swab.c</file>

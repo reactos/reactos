@@ -214,8 +214,7 @@ static void ctl2_init_header(
     This->typelib_header.magic1 = 0x5446534d;
     This->typelib_header.magic2 = 0x00010002;
     This->typelib_header.posguid = -1;
-    This->typelib_header.lcid = 0x0409; /* or do we use the current one? */
-    This->typelib_header.lcid2 = 0x0409;
+    This->typelib_header.lcid = This->typelib_header.lcid2 = GetUserDefaultLCID();
     This->typelib_header.varflags = 0x40;
     This->typelib_header.version = 0;
     This->typelib_header.flags = 0;
@@ -1276,6 +1275,8 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetDocString(
     int offset;
 
     TRACE("(%p,%s)\n", iface, debugstr_w(pStrDoc));
+    if (!pStrDoc)
+        return E_INVALIDARG;
 
     offset = ctl2_alloc_string(This->typelib, pStrDoc);
     if (offset == -1) return E_OUTOFMEMORY;
@@ -3155,6 +3156,8 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetDocString(ICreateTypeLib2 * iface, LP
     int offset;
 
     TRACE("(%p,%s)\n", iface, debugstr_w(szDoc));
+    if (!szDoc)
+        return E_INVALIDARG;
 
     offset = ctl2_alloc_string(This, szDoc);
     if (offset == -1) return E_OUTOFMEMORY;
@@ -3189,8 +3192,11 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetHelpFileName(ICreateTypeLib2 * iface,
  */
 static HRESULT WINAPI ICreateTypeLib2_fnSetHelpContext(ICreateTypeLib2 * iface, DWORD dwHelpContext)
 {
-    FIXME("(%p,%d), stub!\n", iface, dwHelpContext);
-    return E_OUTOFMEMORY;
+    ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
+
+    TRACE("(%p,%d)\n", iface, dwHelpContext);
+    This->typelib_header.helpcontext = dwHelpContext;
+    return S_OK;
 }
 
 /******************************************************************************
@@ -3204,7 +3210,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetLcid(ICreateTypeLib2 * iface, LCID lc
 
     TRACE("(%p,%d)\n", iface, lcid);
 
-    This->typelib_header.lcid2 = lcid;
+    This->typelib_header.lcid = This->typelib_header.lcid2 = lcid;
 
     return S_OK;
 }

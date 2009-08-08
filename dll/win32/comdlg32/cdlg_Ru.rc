@@ -46,7 +46,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Сохранить как ..."
+CAPTION "Сохранить как..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Имя файла:", 1090, 6, 6, 76, 9
@@ -370,7 +370,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Файла не существует\nХотите ли Вы его создать?"
     IDS_OVERWRITEFILE       "Файл уже существует.\nЗаменить его?"
     IDS_INVALID_FILENAME_TITLE "Некорректный символ в записи пути"
-    IDS_INVALID_FILENAME    "Имя файла не может содержать следующие символы: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Имя файла не может содержать следующие символы:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Путь не существует"
     IDS_FILENOTEXISTING     "Файл не существует"
 }

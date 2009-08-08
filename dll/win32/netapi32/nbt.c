@@ -46,7 +46,7 @@
  *   name.  Although it allows sessions to be created with '*' as the calling
  *   name, doing so results in timeouts for all receives, because the
  *   application never gets them.
- *   So, a well-behaved Netbios application will typically want to register a
+ *   So, a well-behaved NetBIOS application will typically want to register a
  *   name.  I should probably support a do-nothing name list that allows
  *   NCBADDNAME to add to it, but doesn't actually register the name, or does
  *   attempt to register it without being able to defend it.

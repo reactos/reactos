@@ -807,7 +807,7 @@ static BufferBSC *create_bufferbsc(IMoniker *mon)
     return ret;
 }
 
-HRESULT bind_mon_to_buffer(HTMLDocument *doc, IMoniker *mon, void **buf)
+HRESULT bind_mon_to_buffer(HTMLDocument *doc, IMoniker *mon, void **buf, DWORD *size)
 {
     BufferBSC *bsc = create_bufferbsc(mon);
     HRESULT hres;
@@ -820,6 +820,7 @@ HRESULT bind_mon_to_buffer(HTMLDocument *doc, IMoniker *mon, void **buf)
         if(SUCCEEDED(hres)) {
             *buf = bsc->buf;
             bsc->buf = NULL;
+            *size = bsc->bsc.readed;
             bsc->size = 0;
         }
     }

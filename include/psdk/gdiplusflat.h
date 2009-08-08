@@ -78,6 +78,8 @@ GpStatus WINGDIPAPI GdipDrawArc(GpGraphics*,GpPen*,REAL,REAL,REAL,REAL,REAL,REAL
 GpStatus WINGDIPAPI GdipDrawArcI(GpGraphics*,GpPen*,INT,INT,INT,INT,REAL,REAL);
 GpStatus WINGDIPAPI GdipDrawBezier(GpGraphics*,GpPen*,REAL,REAL,REAL,REAL,REAL,REAL,REAL,REAL);
 GpStatus WINGDIPAPI GdipDrawBezierI(GpGraphics*,GpPen*,INT,INT,INT,INT,INT,INT,INT,INT);
+GpStatus WINGDIPAPI GdipDrawBeziers(GpGraphics*,GpPen*,GDIPCONST GpPointF*,INT);
+GpStatus WINGDIPAPI GdipDrawBeziersI(GpGraphics*,GpPen*,GDIPCONST GpPoint*,INT);
 GpStatus WINGDIPAPI GdipDrawCurve(GpGraphics*,GpPen*,GDIPCONST GpPointF*,INT);
 GpStatus WINGDIPAPI GdipDrawCurveI(GpGraphics*,GpPen*,GDIPCONST GpPoint*,INT);
 GpStatus WINGDIPAPI GdipDrawCurve2(GpGraphics*,GpPen*,GDIPCONST GpPointF*,INT,REAL);
@@ -282,6 +284,8 @@ GpStatus WINGDIPAPI GdipPathIterCopyData(GpPathIterator*,INT*,GpPointF*,BYTE*,
 GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator*,INT*,INT*,INT*,BOOL*);
 GpStatus WINGDIPAPI GdipPathIterRewind(GpPathIterator*);
 GpStatus WINGDIPAPI GdipPathIterGetCount(GpPathIterator*,INT*);
+GpStatus WINGDIPAPI GdipPathIterEnumerate(GpPathIterator*,INT*,GpPointF*,BYTE*,INT);
+GpStatus WINGDIPAPI GdipPathIterHasCurve(GpPathIterator*,BOOL*);
 
 GpStatus WINGDIPAPI GdipCloneCustomLineCap(GpCustomLineCap*,GpCustomLineCap**);
 GpStatus WINGDIPAPI GdipCreateCustomLineCap(GpPath*,GpPath*,GpLineCap,REAL,
@@ -344,6 +348,7 @@ GpStatus WINGDIPAPI GdipSaveImageToStream(GpImage*,IStream*,
     GDIPCONST CLSID*,GDIPCONST EncoderParameters*);
 GpStatus WINGDIPAPI GdipSetImagePalette(GpImage*,GDIPCONST ColorPalette*);
 
+GpStatus WINGDIPAPI GdipCloneImage(GpImage*, GpImage**);
 GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes*,GpImageAttributes**);
 GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes**);
 GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes*);
@@ -390,6 +395,8 @@ GpStatus WINGDIPAPI GdipCloneStringFormat(GDIPCONST GpStringFormat*,GpStringForm
 GpStatus WINGDIPAPI GdipGetDpiX(GpGraphics*,REAL*);
 GpStatus WINGDIPAPI GdipGetDpiY(GpGraphics*,REAL*);
 
+GpStatus WINGDIPAPI GdipCloneRegion(GpRegion *, GpRegion **);
+GpStatus WINGDIPAPI GdipCombineRegionPath(GpRegion *, GpPath *, CombineMode);
 GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *, GDIPCONST GpRectF *, CombineMode);
 GpStatus WINGDIPAPI GdipCombineRegionRectI(GpRegion *, GDIPCONST GpRect *, CombineMode);
 GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *, GpRegion *, CombineMode);
@@ -397,12 +404,22 @@ GpStatus WINGDIPAPI GdipCreateRegion(GpRegion **);
 GpStatus WINGDIPAPI GdipCreateRegionPath(GpPath *, GpRegion **);
 GpStatus WINGDIPAPI GdipCreateRegionRect(GDIPCONST GpRectF *, GpRegion **);
 GpStatus WINGDIPAPI GdipCreateRegionRectI(GDIPCONST GpRect *, GpRegion **);
+GpStatus WINGDIPAPI GdipCreateRegionRgnData(GDIPCONST BYTE *, INT, GpRegion **);
+GpStatus WINGDIPAPI GdipCreateRegionHrgn(HRGN, GpRegion **);
 GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *);
+GpStatus WINGDIPAPI GdipGetRegionBounds(GpRegion *, GpGraphics *, GpRectF *);
+GpStatus WINGDIPAPI GdipGetRegionBoundsI(GpRegion *, GpGraphics *, GpRect *);
 GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *, BYTE *, UINT, UINT *);
 GpStatus WINGDIPAPI GdipGetRegionDataSize(GpRegion *, UINT *);
 GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *, GpGraphics *, HRGN *);
+GpStatus WINGDIPAPI GdipIsEmptyRegion(GpRegion *, GpGraphics *, BOOL *);
+GpStatus WINGDIPAPI GdipIsEqualRegion(GpRegion *, GpRegion *, GpGraphics *, BOOL *);
+GpStatus WINGDIPAPI GdipIsInfiniteRegion(GpRegion *, GpGraphics *, BOOL *);
 GpStatus WINGDIPAPI GdipSetEmpty(GpRegion *);
 GpStatus WINGDIPAPI GdipSetInfinite(GpRegion *);
+GpStatus WINGDIPAPI GdipTransformRegion(GpRegion *, GpMatrix *);
+GpStatus WINGDIPAPI GdipTranslateRegion(GpRegion *, REAL, REAL);
+GpStatus WINGDIPAPI GdipTranslateRegionI(GpRegion *, INT, INT);
 
 GpStatus WINGDIPAPI GdipFlush(GpGraphics*, GpFlushIntention);
 

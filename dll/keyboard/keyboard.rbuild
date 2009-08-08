@@ -118,6 +118,9 @@
 	<directory name="kbdinmal">
 		<xi:include href="kbdinmal/kbdinmal.rbuild" />
 	</directory>
+	<directory name="kbdir">
+		<xi:include href="kbdir/kbdir.rbuild" />
+	</directory>
 	<directory name="kbdit">
 		<xi:include href="kbdit/kbdit.rbuild" />
 	</directory>
@@ -126,6 +129,9 @@
 	</directory>
 	<directory name="kbdkaz">
 		<xi:include href="kbdkaz/kbdkaz.rbuild" />
+	</directory>
+	<directory name="kbdla">
+		<xi:include href="kbdla/kbdla.rbuild" />
 	</directory>
 	<directory name="kbdlt">
 		<xi:include href="kbdlt/kbdlt.rbuild" />
@@ -169,8 +175,17 @@
 	<directory name="kbdtat">
 		<xi:include href="kbdtat/kbdtat.rbuild" />
 	</directory>
-	<directory name="kbdth">
-		<xi:include href="kbdth/kbdth.rbuild" />
+	<directory name="kbdth0">
+		<xi:include href="kbdth0/kbdth0.rbuild" />
+	</directory>
+	<directory name="kbdth1">
+		<xi:include href="kbdth1/kbdth1.rbuild" />
+	</directory>
+	<directory name="kbdth2">
+		<xi:include href="kbdth2/kbdth2.rbuild" />
+	</directory>
+	<directory name="kbdth3">
+		<xi:include href="kbdth3/kbdth3.rbuild" />
 	</directory>
 	<directory name="kbdtuf">
 		<xi:include href="kbdtuf/kbdtuf.rbuild" />

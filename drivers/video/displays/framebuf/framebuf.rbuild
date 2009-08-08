@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="framebuf" type="kernelmodedll" entrypoint="_DrvEnableDriver@12" installbase="system32" installname="framebuf.dll">
+<module name="framebuf" type="kernelmodedll" entrypoint="DrvEnableDriver@12" installbase="system32" installname="framebuf.dll">
 	<importlibrary definition="framebuf.def" />
 	<include base="framebuf">.</include>
 	<library>win32k</library>

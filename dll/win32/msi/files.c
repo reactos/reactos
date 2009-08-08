@@ -459,24 +459,22 @@ done:
     return ret;
 }
 
-static VOID set_file_source(MSIPACKAGE* package, MSIFILE* file, LPCWSTR path)
+/* compares the version of a file read from the filesystem and
+ * the version specified in the File table
+ */
+static int msi_compare_file_version(MSIFILE *file)
 {
-    if (!file->IsCompressed)
-    {
-        LPWSTR p, path;
-        p = resolve_folder(package, file->Component->Directory, TRUE, FALSE, TRUE, NULL);
-        path = build_directory_name(2, p, file->ShortName);
-        if (file->LongName &&
-            INVALID_FILE_ATTRIBUTES == GetFileAttributesW( path ))
-        {
-            msi_free(path);
-            path = build_directory_name(2, p, file->LongName);
-        }
-        file->SourcePath = path;
-        msi_free(p);
-    }
-    else
-        file->SourcePath = build_directory_name(2, path, file->File);
+    WCHAR version[MAX_PATH];
+    DWORD size;
+    UINT r;
+
+    size = MAX_PATH;
+    version[0] = '\0';
+    r = MsiGetFileVersionW(file->TargetPath, version, &size, NULL, NULL);
+    if (r != ERROR_SUCCESS)
+        return 0;
+
+    return lstrcmpW(version, file->Version);
 }
 
 void msi_free_media_info( MSIMEDIAINFO *mi )
@@ -564,10 +562,9 @@ UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
         options |= MSISOURCETYPE_NETWORK;
     }
 
-    if (mi->type == DRIVE_CDROM || mi->type == DRIVE_REMOVABLE)
-        msi_package_add_media_disk(package, package->Context,
-                                   MSICODE_PRODUCT, mi->disk_id,
-                                   mi->volume_label, mi->disk_prompt);
+    msi_package_add_media_disk(package, package->Context,
+                               MSICODE_PRODUCT, mi->disk_id,
+                               mi->volume_label, mi->disk_prompt);
 
     msi_package_add_info(package, package->Context,
                          options, INSTALLPROPERTY_LASTUSEDSOURCEW, source);
@@ -577,7 +574,7 @@ UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
 }
 
 /* FIXME: search NETWORK and URL sources as well */
-static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
+UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
 {
     WCHAR source[MAX_PATH];
     WCHAR volume[MAX_PATH];
@@ -586,6 +583,7 @@ static UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi)
     DWORD index, size, id;
     UINT r;
 
+    size = MAX_PATH;
     r = MsiSourceListGetInfoW(package->ProductCode, NULL,
                               package->Context, MSICODE_PRODUCT,
                               INSTALLPROPERTY_LASTUSEDSOURCEW, source, &size);
@@ -822,6 +820,13 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             continue;
         }
 
+        if (MsiGetFileVersionW(file->TargetPath, NULL, NULL, NULL, NULL) == ERROR_SUCCESS &&
+            msi_compare_file_version(file) >= 0)
+        {
+            TRACE("Destination file version greater, not overwriting\n");
+            continue;
+        }
+
         if (file->Sequence > mi->last_sequence || mi->is_continuous ||
             (file->IsCompressed && !mi->is_extracted))
         {
@@ -846,13 +851,11 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             }
         }
 
-        set_file_source(package, file, mi->source);
-
-        TRACE("file paths %s to %s\n",debugstr_w(file->SourcePath),
-              debugstr_w(file->TargetPath));
-
         if (!file->IsCompressed)
         {
+            TRACE("file paths %s to %s\n", debugstr_w(file->SourcePath),
+                  debugstr_w(file->TargetPath));
+
             msi_file_update_ui(package, file, szInstallFiles);
             rc = copy_install_file(file);
             if (rc != ERROR_SUCCESS)
@@ -992,24 +995,6 @@ UINT ACTION_DuplicateFiles(MSIPACKAGE *package)
     msiobj_release(&view->hdr);
 
     return rc;
-}
-
-/* compares the version of a file read from the filesystem and
- * the version specified in the File table
- */
-static int msi_compare_file_version( MSIFILE *file )
-{
-    WCHAR version[MAX_PATH];
-    DWORD size;
-    UINT r;
-
-    size = MAX_PATH;
-    version[0] = '\0';
-    r = MsiGetFileVersionW( file->TargetPath, version, &size, NULL, NULL );
-    if ( r != ERROR_SUCCESS )
-        return 0;
-
-    return lstrcmpW( version, file->Version );
 }
 
 UINT ACTION_RemoveFiles( MSIPACKAGE *package )

@@ -517,7 +517,7 @@ void CALLBACK MACRO_Find(void)
 
 void CALLBACK MACRO_Finder(void)
 {
-    WINHELP_CreateIndexWindow();
+    WINHELP_CreateIndexWindow(FALSE);
 }
 
 void CALLBACK MACRO_FloatingMenu(void)
@@ -880,7 +880,7 @@ void CALLBACK MACRO_SaveMark(LPCSTR str)
 
 void CALLBACK MACRO_Search(void)
 {
-    WINE_FIXME("()\n");
+    WINHELP_CreateIndexWindow(TRUE);
 }
 
 void CALLBACK MACRO_SetContents(LPCSTR str, LONG u)

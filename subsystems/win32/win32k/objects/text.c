@@ -2085,7 +2085,8 @@ fail:
       EngDeleteXlate(XlateObj);
    if(TextObj != NULL)
      TEXTOBJ_UnlockText(TextObj);
-   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   if (BitmapObj != NULL)
+     BITMAPOBJ_UnlockBitmap(BitmapObj);
    if (hBrushBg != NULL)
    {
       BRUSHOBJ_UnlockBrush(BrushBg);

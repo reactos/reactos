@@ -32,11 +32,9 @@
 
 /*
  * Characteristics of the char data type.
- *
- * TODO: Is MB_LEN_MAX correct?
  */
 #define CHAR_BIT	8
-#define MB_LEN_MAX	2
+#define MB_LEN_MAX	5
 
 #define SCHAR_MIN	(-128)
 #define SCHAR_MAX	127

@@ -46,7 +46,7 @@ typedef struct BindCtxObject{
 
 } BindCtxObject;
 
-/* BindCtx data strucrture */
+/* BindCtx data structure */
 typedef struct BindCtxImpl{
 
     const IBindCtxVtbl *lpVtbl; /* VTable relative to the IBindCtx interface.*/
@@ -611,6 +611,9 @@ HRESULT WINAPI BindMoniker(LPMONIKER pmk, DWORD grfOpt, REFIID riid, LPVOID * pp
 
     res = CreateBindCtx(grfOpt, &pbc);
     if (SUCCEEDED(res))
+    {
         res = IMoniker_BindToObject(pmk, pbc, NULL, riid, ppvResult);
+        IBindCtx_Release(pbc);
+    }
     return res;
 }

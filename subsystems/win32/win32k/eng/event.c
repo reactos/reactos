@@ -17,7 +17,7 @@ BOOL
 STDCALL
 EngCreateEvent ( OUT PEVENT *Event )
 {
-  (*Event) = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+  (*Event) = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_DFSM);
   if ((*Event) == NULL)
     {
       return FALSE;
@@ -45,6 +45,9 @@ EngMapEvent(IN HDEV    Dev,
   NTSTATUS Status;
   PKEVENT Event;
 
+  Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_DFSM);
+  if (!Event) return NULL;
+
   Status = ObReferenceObjectByHandle(UserObject,
 				     EVENT_MODIFY_STATE,
 				     ExEventObjectType,
@@ -52,9 +55,15 @@ EngMapEvent(IN HDEV    Dev,
 				     (PVOID*)&Event,
 				     NULL);
   if (!NT_SUCCESS(Status))
-    {
-      return NULL;
-    }
+  {
+     ExFreePool(Event);
+     return NULL;
+  }
+  else
+     KePulseEvent(Event, EVENT_INCREMENT, FALSE);
+
+  if (Reserved1) Reserved1 = Event;
+
   return (PEVENT)Event;
 }
 
@@ -70,6 +79,7 @@ STDCALL
 EngUnmapEvent ( IN PEVENT Event )
 {
   ObDereferenceObject((PVOID)Event);
+  ExFreePool(Event);
   return TRUE;
 }
 
@@ -79,6 +89,8 @@ EngWaitForSingleObject (IN PEVENT          Event,
 			IN PLARGE_INTEGER  TimeOut)
 {
   NTSTATUS Status;
+
+  if (!Event) return FALSE;
 
   Status = KeWaitForSingleObject(Event,
 				 Executive,

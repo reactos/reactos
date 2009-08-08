@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Messages
@@ -857,6 +856,10 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    }
 
    Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+   // The WH_GETMESSAGE hook enables an application to monitor messages about to
+   // be returned by the GetMessage or PeekMessage function.
+   co_HOOK_CallHooks( WH_GETMESSAGE, HC_ACTION, RemoveMsg & PM_REMOVE, (LPARAM)&Msg);
+
    if (Present)
    {
       Info.Msg = Msg.Msg;
@@ -1053,20 +1056,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-LRESULT STDCALL
-NtUserMessageCall(
-   HWND hWnd,
-   UINT Msg,
-   WPARAM wParam,
-   LPARAM lParam,
-   ULONG_PTR ResultInfo,
-   DWORD dwType,
-   BOOL Ansi)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
 
 static NTSTATUS FASTCALL
 CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry)
@@ -1550,6 +1539,8 @@ co_IntDoSendMessage(HWND hWnd,
          MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
          return 0;
       }
+      if (!Window->Wnd)
+         return 0;
    }
 
    /* FIXME: Check for an exiting window. */
@@ -1843,6 +1834,164 @@ IntUninitMessagePumpHook()
       return TRUE;
    }
    return FALSE;
+}
+
+
+LRESULT STDCALL
+NtUserMessageCall(
+   HWND hWnd,
+   UINT Msg,
+   WPARAM wParam,
+   LPARAM lParam,
+   ULONG_PTR ResultInfo,
+   DWORD dwType, // fnID?
+   BOOL Ansi)
+{
+   LRESULT lResult = 0;
+   PWINDOW_OBJECT Window = NULL;
+   USER_REFERENCE_ENTRY Ref;
+
+   UserEnterExclusive();
+
+   /* Validate input */
+   if (hWnd && (hWnd != INVALID_HANDLE_VALUE) && !(Window = UserGetWindowObject(hWnd)))
+   {
+      return 0;
+   }   
+   UserRefObjectCo(Window, &Ref);
+   switch(dwType)
+   {
+      case NUMC_DEFWINDOWPROC:
+         lResult = IntDefWindowProc(Window, Msg, wParam, lParam);
+      break;
+   }
+   UserDerefObjectCo(Window);
+   UserLeave();
+   return lResult;
+}
+
+#define INFINITE 0xFFFFFFFF
+#define WAIT_FAILED ((DWORD)0xFFFFFFFF)
+
+DWORD
+NTAPI
+NtUserWaitForInputIdle(
+   IN HANDLE hProcess,
+   IN DWORD dwMilliseconds,
+   IN BOOL Unknown2)
+{
+  PEPROCESS Process;
+  PW32PROCESS W32Process;
+  NTSTATUS Status;
+  HANDLE Handles[2];
+  LARGE_INTEGER Timeout; 
+  ULONGLONG StartTime, Run, Elapsed = 0;
+
+  UserEnterExclusive();
+
+  Status = ObReferenceObjectByHandle(hProcess,
+                                     PROCESS_QUERY_INFORMATION,
+                                     PsProcessType,
+                                     UserMode,
+                                     (PVOID*)&Process,
+                                     NULL);
+
+  if (!NT_SUCCESS(Status))
+  {
+     SetLastNtError(Status);
+     return WAIT_FAILED;
+  }
+
+  W32Process = (PW32PROCESS)Process->Win32Process;
+  if (!W32Process)
+  {
+      ObDereferenceObject(Process);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return WAIT_FAILED;
+  }
+
+  EngCreateEvent((PEVENT *)&W32Process->InputIdleEvent);
+
+  Handles[0] = hProcess;
+  Handles[1] = W32Process->InputIdleEvent;
+
+  if (!Handles[1]) return STATUS_SUCCESS;  /* no event to wait on */
+
+  StartTime = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
+                          SharedUserData->TickCountMultiplier / 16777216);
+
+  Run = dwMilliseconds;
+
+  DPRINT("WFII: waiting for %p\n", Handles[1] );
+  do
+  {
+     Timeout.QuadPart = Run - Elapsed;
+     UserLeave();
+     Status = KeWaitForMultipleObjects( 2,
+                                        Handles,
+                                        WaitAny,
+                                        UserRequest,
+                                        UserMode,
+                                        FALSE,
+                             dwMilliseconds == INFINITE ? NULL : &Timeout,
+                                        NULL);
+     UserEnterExclusive();
+
+     if (!NT_SUCCESS(Status))
+     {
+        SetLastNtError(Status);
+        Status = WAIT_FAILED;
+        goto WaitExit;
+     }
+
+     switch (Status)
+     {
+        case STATUS_WAIT_0:
+           Status = WAIT_FAILED;
+           goto WaitExit;
+
+        case STATUS_WAIT_2:
+        {
+           USER_MESSAGE Msg;
+           co_IntPeekMessage( &Msg, 0, 0, 0, PM_REMOVE | PM_QS_SENDMESSAGE );
+           break;
+        }
+
+        case STATUS_USER_APC:
+        case STATUS_ALERTED:
+        case STATUS_TIMEOUT:
+           DPRINT1("WFII: timeout\n");
+           Status = STATUS_TIMEOUT;
+           goto WaitExit;
+
+        default:
+           DPRINT1("WFII: finished\n");
+           Status = STATUS_SUCCESS;
+           goto WaitExit;
+     }
+
+     if (dwMilliseconds != INFINITE)
+     {
+        Elapsed = ((ULONGLONG)SharedUserData->TickCountLowDeprecated *
+                              SharedUserData->TickCountMultiplier / 16777216) 
+                              - StartTime;
+
+        if (Elapsed > Run)
+           Status = STATUS_TIMEOUT;
+           break;
+     }
+  }
+  while (1);
+
+WaitExit:
+  if (W32Process->InputIdleEvent)
+  {
+     EngDeleteEvent((PEVENT)W32Process->InputIdleEvent);
+     W32Process->InputIdleEvent = NULL;
+  }
+  ObDereferenceObject(Process);
+  UserLeave();
+  return Status;
 }
 
 /* EOF */

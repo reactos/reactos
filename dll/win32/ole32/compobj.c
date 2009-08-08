@@ -206,7 +206,7 @@ static void COMPOBJ_InitProcess( void )
     /* Dispatching to the correct thread in an apartment is done through
      * window messages rather than RPC transports. When an interface is
      * marshalled into another apartment in the same process, a window of the
-     * following class is created. The *caller* of CoMarshalInterface (ie the
+     * following class is created. The *caller* of CoMarshalInterface (i.e., the
      * application) is responsible for pumping the message loop in that thread.
      * The WM_USER messages which point to the RPCs are then dispatched to
      * COM_AptWndProc by the user's code from the apartment in which the interface
@@ -591,9 +591,9 @@ static DWORD CALLBACK apartment_hostobject_thread(LPVOID p)
     {
         if (!msg.hwnd && (msg.message == DM_HOSTOBJECT))
         {
-            struct host_object_params *params = (struct host_object_params *)msg.lParam;
-            params->hr = apartment_hostobject(apt, params);
-            SetEvent(params->event);
+            struct host_object_params *obj_params = (struct host_object_params *)msg.lParam;
+            obj_params->hr = apartment_hostobject(apt, obj_params);
+            SetEvent(obj_params->event);
         }
         else
         {
@@ -724,7 +724,7 @@ HRESULT apartment_createwindowifneeded(struct apartment *apt)
     {
         HWND hwnd = CreateWindowW(wszAptWinClass, NULL, 0,
                                   0, 0, 0, 0,
-                                  0, 0, OLE32_hInstance, NULL);
+                                  HWND_MESSAGE, 0, OLE32_hInstance, NULL);
         if (!hwnd)
         {
             ERR("CreateWindow failed with error %d\n", GetLastError());
@@ -1231,7 +1231,9 @@ HRESULT WINAPI CoDisconnectObject( LPUNKNOWN lpUnk, DWORD reserved )
  */
 HRESULT WINAPI CoCreateGuid(GUID *pguid)
 {
-    return UuidCreate(pguid);
+    DWORD status = UuidCreate(pguid);
+    if (status == RPC_S_OK || status == RPC_S_UUID_LOCAL_ONLY) return S_OK;
+    return HRESULT_FROM_WIN32( status );
 }
 
 /******************************************************************************
@@ -1690,8 +1692,8 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
     }
     RegCloseKey(hkey);
 
-    /* We have the CLSid we want back from the registry as a string, so
-       lets convert it into a CLSID structure */
+    /* We have the CLSID we want back from the registry as a string, so
+       let's convert it into a CLSID structure */
     if (CLSIDFromString(value, pclsid) != NOERROR)
         return REGDB_E_IIDNOTREG;
 
@@ -1779,11 +1781,6 @@ static HRESULT COM_GetRegisteredClassObject(const struct apartment *apt, REFCLSI
 {
   HRESULT hr = S_FALSE;
   RegisteredClass *curClass;
-
-  /*
-   * Sanity check
-   */
-  assert(ppUnk!=0);
 
   EnterCriticalSection( &csRegisteredClassList );
 
@@ -2657,9 +2654,9 @@ HRESULT WINAPI CoLockObjectExternal(
     if (stubmgr)
     {
         if (fLock)
-            stub_manager_ext_addref(stubmgr, 1);
+            stub_manager_ext_addref(stubmgr, 1, FALSE);
         else
-            stub_manager_ext_release(stubmgr, 1, fLastUnlockReleases);
+            stub_manager_ext_release(stubmgr, 1, FALSE, fLastUnlockReleases);
         
         stub_manager_int_release(stubmgr);
 
@@ -2671,7 +2668,7 @@ HRESULT WINAPI CoLockObjectExternal(
 
         if (stubmgr)
         {
-            stub_manager_ext_addref(stubmgr, 1);
+            stub_manager_ext_addref(stubmgr, 1, FALSE);
             stub_manager_int_release(stubmgr);
         }
 
@@ -2860,7 +2857,7 @@ HRESULT WINAPI CoGetTreatAsClass(REFCLSID clsidOld, LPCLSID clsidNew)
     LONG len = sizeof(szClsidNew);
 
     FIXME("(%s,%p)\n", debugstr_guid(clsidOld), clsidNew);
-    memcpy(clsidNew,clsidOld,sizeof(CLSID)); /* copy over old value */
+    *clsidNew = *clsidOld; /* copy over old value */
 
     res = COM_OpenKeyForCLSID(clsidOld, wszTreatAs, KEY_READ, &hkey);
     if (FAILED(res))
@@ -3437,8 +3434,8 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
 
         if (message_loop)
         {
-            DWORD wait_flags = (dwFlags & COWAIT_WAITALL) ? MWMO_WAITALL : 0 |
-                    (dwFlags & COWAIT_ALERTABLE ) ? MWMO_ALERTABLE : 0;
+            DWORD wait_flags = ((dwFlags & COWAIT_WAITALL) ? MWMO_WAITALL : 0) |
+                    ((dwFlags & COWAIT_ALERTABLE ) ? MWMO_ALERTABLE : 0);
 
             TRACE("waiting for rpc completion or window message\n");
 
@@ -3534,7 +3531,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags, DWORD dwTimeout,
 /***********************************************************************
  *           CoGetObject [OLE32.@]
  *
- * Gets the object named by coverting the name to a moniker and binding to it.
+ * Gets the object named by converting the name to a moniker and binding to it.
  *
  * PARAMS
  *  pszName      [I] String representing the object.
@@ -3738,6 +3735,18 @@ HRESULT WINAPI CoGetObjectContext(REFIID riid, void **ppv)
 
     return hr;
 }
+
+
+/***********************************************************************
+ *           CoGetContextToken [OLE32.@]
+ */
+HRESULT WINAPI CoGetContextToken( ULONG_PTR *token )
+{
+    FIXME( "stub\n" );
+    if (token) *token = 0;
+    return E_NOTIMPL;
+}
+
 
 /***********************************************************************
  *		DllMain (OLE32.@)

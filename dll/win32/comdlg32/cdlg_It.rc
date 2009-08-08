@@ -48,7 +48,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Salva con nome ..."
+CAPTION "Salva con nome..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Nome file:", 1090, 6, 6, 76, 9
@@ -371,7 +371,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Il file non esiste\nCreare il file"
     IDS_OVERWRITEFILE       "Il file esiste già.\nSovrascriverlo?"
     IDS_INVALID_FILENAME_TITLE "Caratteri invalidi nel percorso"
-    IDS_INVALID_FILENAME    "Il nome di un file non può contenere i seguenrti caratteri: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Il nome di un file non può contenere i seguenrti caratteri:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Il percorso specificato non esiste"
     IDS_FILENOTEXISTING     "Il file non esiste"
 }

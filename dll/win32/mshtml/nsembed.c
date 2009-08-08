@@ -301,6 +301,65 @@ static void set_lang(nsIPrefBranch *pref)
         ERR("SetCharPref failed: %08x\n", nsres);
 }
 
+static void set_proxy(nsIPrefBranch *pref)
+{
+    char proxy[512];
+    char * proxy_port;
+    int proxy_port_num;
+    DWORD enabled = 0, res, size, type;
+    HKEY hkey;
+    nsresult nsres;
+
+    static const WCHAR proxy_keyW[] =
+        {'S','o','f','t','w','a','r','e',
+         '\\','M','i','c','r','o','s','o','f','t',
+         '\\','W','i','n','d','o','w','s',
+         '\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n',
+         '\\','I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0};
+
+    res = RegOpenKeyW(HKEY_CURRENT_USER, proxy_keyW, &hkey);
+    if(res != ERROR_SUCCESS)
+        return;
+
+    size = sizeof(enabled);
+    res = RegQueryValueExA(hkey, "ProxyEnable", 0, &type, (LPBYTE)&enabled, &size);
+    if(res != ERROR_SUCCESS || type != REG_DWORD || enabled == 0)
+    {
+        RegCloseKey(hkey);
+        return;
+    }
+
+    size = sizeof(proxy);
+    res = RegQueryValueExA(hkey, "ProxyServer", 0, &type, (LPBYTE)proxy, &size);
+    RegCloseKey(hkey);
+    if(res != ERROR_SUCCESS || type != REG_SZ)
+        return;
+
+    proxy_port = strchr(proxy, ':');
+    if (!proxy_port)
+        return;
+
+    *proxy_port = 0;
+    proxy_port_num = atoi(proxy_port + 1);
+    TRACE("Setting proxy to %s, port %d\n", debugstr_a(proxy), proxy_port_num);
+
+    nsres = nsIPrefBranch_SetIntPref(pref, "network.proxy.type", 1);
+    if(NS_FAILED(nsres))
+        ERR("SetIntPref network.proxy.type failed: %08x\n", nsres);
+    nsres = nsIPrefBranch_SetCharPref(pref, "network.proxy.http", proxy);
+    if(NS_FAILED(nsres))
+        ERR("SetCharPref network.proxy.http failed: %08x\n", nsres);
+    nsres = nsIPrefBranch_SetIntPref(pref, "network.proxy.http_port", proxy_port_num);
+    if(NS_FAILED(nsres))
+        ERR("SetIntPref network.proxy.http_port failed: %08x\n", nsres);
+    nsres = nsIPrefBranch_SetCharPref(pref, "network.proxy.ssl", proxy);
+    if(NS_FAILED(nsres))
+        ERR("SetCharPref network.proxy.ssl failed: %08x\n", nsres);
+    nsres = nsIPrefBranch_SetIntPref(pref, "network.proxy.ssl_port", proxy_port_num);
+    if(NS_FAILED(nsres))
+        ERR("SetIntPref network.proxy.ssl_port failed: %08x\n", nsres);
+}
+
 static void set_bool_pref(nsIPrefBranch *pref, const char *pref_name, BOOL val)
 {
     nsresult nsres;
@@ -347,6 +406,7 @@ static void set_profile(void)
     }
 
     set_lang(pref);
+    set_proxy(pref);
     set_bool_pref(pref, "security.warn_entering_secure", FALSE);
     set_bool_pref(pref, "security.warn_submit_insecure", FALSE);
 
@@ -1073,7 +1133,7 @@ static nsresult NSAPI nsContextMenuListener_OnShowContextMenu(nsIContextMenuList
         FIXME("aContextFlags=%08x\n", aContextFlags);
     };
 
-    show_context_menu(This->doc, dwID, &pt, (IDispatch*)HTMLDOMNODE(get_node(This->doc, aNode)));
+    show_context_menu(This->doc, dwID, &pt, (IDispatch*)HTMLDOMNODE(get_node(This->doc, aNode, TRUE)));
 
     return NS_OK;
 }
@@ -1418,7 +1478,7 @@ static nsrefcnt NSAPI nsTooltipListener_AddRef(nsITooltipListener *iface)
 static nsrefcnt NSAPI nsTooltipListener_Release(nsITooltipListener *iface)
 {
     NSContainer *This = NSTOOLTIP_THIS(iface);
-    return nsIWebBrowserChrome_AddRef(NSWBCHROME(This));
+    return nsIWebBrowserChrome_Release(NSWBCHROME(This));
 }
 
 static nsresult NSAPI nsTooltipListener_OnShowTooltip(nsITooltipListener *iface,
@@ -1583,7 +1643,7 @@ NSContainer *NSContainer_Create(HTMLDocument *doc, NSContainer *parent)
     if(!load_gecko(FALSE))
         return NULL;
 
-    ret = heap_alloc(sizeof(NSContainer));
+    ret = heap_alloc_zero(sizeof(NSContainer));
 
     ret->lpWebBrowserChromeVtbl      = &nsWebBrowserChromeVtbl;
     ret->lpContextMenuListenerVtbl   = &nsContextMenuListenerVtbl;
@@ -1596,11 +1656,6 @@ NSContainer *NSContainer_Create(HTMLDocument *doc, NSContainer *parent)
 
     ret->doc = doc;
     ret->ref = 1;
-    ret->bscallback = NULL;
-    ret->content_listener = NULL;
-    ret->editor_controller = NULL;
-    ret->editor = NULL;
-    ret->reset_focus = NULL;
 
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr, NS_WEBBROWSER_CONTRACTID,
             NULL, &IID_nsIWebBrowser, (void**)&ret->webbrowser);
@@ -1692,6 +1747,8 @@ NSContainer *NSContainer_Create(HTMLDocument *doc, NSContainer *parent)
 void NSContainer_Release(NSContainer *This)
 {
     TRACE("(%p)\n", This);
+
+    This->doc = NULL;
 
     ShowWindow(This->hwnd, SW_HIDE);
     SetParent(This->hwnd, NULL);

@@ -41,6 +41,39 @@ APPLET Applets[NUM_APPLETS] =
     {IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };
 
+/* Property page dialog callback */
+INT_PTR CALLBACK
+TelephonPageProc(HWND hwndDlg,
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+
+static VOID
+InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
+{
+    ZeroMemory(psp, sizeof(PROPSHEETPAGE));
+    psp->dwSize = sizeof(PROPSHEETPAGE);
+    psp->dwFlags = PSP_DEFAULT;
+    psp->hInstance = hApplet;
+    psp->pszTemplate = MAKEINTRESOURCE(idDlg);
+    psp->pfnDlgProc = DlgProc;
+}
+
+
 /* First Applet */
 LONG CALLBACK
 SystemApplet(VOID)
@@ -63,7 +96,7 @@ SystemApplet(VOID)
     psh.ppsp = psp;
     psh.pfnCallback = NULL;
 
-    //InitPropSheetPage(&psp[0], IDD_PROPPAGE, (DLGPROC)PageProc);
+    InitPropSheetPage(&psp[0], IDD_PROPPAGE, (DLGPROC)TelephonPageProc);
 
     return (LONG)(PropertySheet(&psh) != -1);
 }

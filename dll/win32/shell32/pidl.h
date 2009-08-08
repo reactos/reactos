@@ -207,20 +207,20 @@ BOOL	_ILIsMyComputer		(LPCITEMIDLIST pidl);
 BOOL    _ILIsMyDocuments       (LPCITEMIDLIST pidl);
 BOOL    _ILIsControlPanel       (LPCITEMIDLIST pidl);
 BOOL    _ILIsBitBucket      (LPCITEMIDLIST pidl);
+BOOL    _ILIsNetHood      (LPCITEMIDLIST pidl);
 BOOL	_ILIsDrive		(LPCITEMIDLIST pidl);
 BOOL	_ILIsFolder		(LPCITEMIDLIST pidl);
 BOOL	_ILIsValue		(LPCITEMIDLIST pidl);
 BOOL	_ILIsSpecialFolder	(LPCITEMIDLIST pidl);
 BOOL	_ILIsPidlSimple		(LPCITEMIDLIST pidl);
 BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl);
-static inline
-BOOL    _ILIsEqualSimple        (LPCITEMIDLIST pidlA, LPCITEMIDLIST pidlB)
+static BOOL __inline _ILIsEqualSimple        (LPCITEMIDLIST pidlA, LPCITEMIDLIST pidlB)
 {
     return (pidlA->mkid.cb > 0 && !memcmp(pidlA, pidlB, pidlA->mkid.cb)) ||
             (!pidlA->mkid.cb && !pidlB->mkid.cb);
 }
-static inline
-BOOL    _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl); }
+static 
+BOOL  __inline _ILIsEmpty              (LPCITEMIDLIST pidl) { return _ILIsDesktop(pidl); }
 
 /*
  * simple pidls

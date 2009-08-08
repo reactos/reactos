@@ -45,7 +45,7 @@ typedef struct _NBNameCacheEntry
 
 /* Functions that create, manipulate, and destroy a name cache.  Thread-safe,
  * with the exception of NBNameCacheDestroy--ensure that no other threads are
- * manipulating the cache before destoying it.
+ * manipulating the cache before destroying it.
  */
 
 /* Allocates a new name cache from heap, and sets the expire time on new

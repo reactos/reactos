@@ -46,7 +46,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Farklý Kaydet ..."
+CAPTION "Farklý Kaydet..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Dosya &Adý:", 1090, 6, 6, 76, 9
@@ -371,7 +371,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Dosya mevcut deðil\nDosyayý oluþturmak ister misiniz?"
     IDS_OVERWRITEFILE       "Dosya zaten var.\nDeðiþtirmek ister misiniz?"
     IDS_INVALID_FILENAME_TITLE "Dosya yolunda geçersiz karakter(ler)"
-    IDS_INVALID_FILENAME    "Bir dosya adý aþaðýdaki karakterleri içeremez: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Bir dosya adý aþaðýdaki karakterleri içeremez:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Dosya yolu mevcut deðil"
     IDS_FILENOTEXISTING     "Dosya mevcut deðil"
 }

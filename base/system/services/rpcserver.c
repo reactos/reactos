@@ -395,7 +395,7 @@ DWORD RDeleteService(
         return ERROR_INVALID_HANDLE;
 
     if (!RtlAreAllAccessesGranted(hSvc->Handle.DesiredAccess,
-                                  STANDARD_RIGHTS_REQUIRED))
+                                  DELETE))
         return ERROR_ACCESS_DENIED;
 
     lpService = hSvc->ServiceEntry;

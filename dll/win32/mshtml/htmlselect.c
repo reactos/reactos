@@ -68,16 +68,16 @@ static ULONG WINAPI HTMLSelectElement_Release(IHTMLSelectElement *iface)
 static HRESULT WINAPI HTMLSelectElement_GetTypeInfoCount(IHTMLSelectElement *iface, UINT *pctinfo)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->element.node.dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLSelectElement_GetTypeInfo(IHTMLSelectElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->element.node.dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLSelectElement_GetIDsOfNames(IHTMLSelectElement *iface, REFIID riid,
@@ -85,9 +85,8 @@ static HRESULT WINAPI HTMLSelectElement_GetIDsOfNames(IHTMLSelectElement *iface,
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->element.node.dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLSelectElement_Invoke(IHTMLSelectElement *iface, DISPID dispIdMember,
@@ -95,9 +94,9 @@ static HRESULT WINAPI HTMLSelectElement_Invoke(IHTMLSelectElement *iface, DISPID
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+
+    return IDispatchEx_Invoke(DISPATCHEX(&This->element.node.dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLSelectElement_put_size(IHTMLSelectElement *iface, long v)
@@ -177,8 +176,10 @@ static HRESULT WINAPI HTMLSelectElement_get_options(IHTMLSelectElement *iface, I
 static HRESULT WINAPI HTMLSelectElement_put_onchange(IHTMLSelectElement *iface, VARIANT v)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->()\n", This);
+
+    return set_node_event(&This->element.node, EVENTID_CHANGE, &v);
 }
 
 static HRESULT WINAPI HTMLSelectElement_get_onchange(IHTMLSelectElement *iface, VARIANT *p)
@@ -221,15 +222,43 @@ static HRESULT WINAPI HTMLSelectElement_get_selectedIndex(IHTMLSelectElement *if
 static HRESULT WINAPI HTMLSelectElement_get_type(IHTMLSelectElement *iface, BSTR *p)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    const PRUnichar *type;
+    nsAString type_str;
+    nsresult nsres;
+    HRESULT hres = S_OK;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&type_str, NULL);
+    nsres = nsIDOMHTMLSelectElement_GetType(This->nsselect, &type_str);
+    if(NS_SUCCEEDED(nsres)) {
+        nsAString_GetData(&type_str, &type);
+        *p = *type ? SysAllocString(type) : NULL;
+    }else {
+        ERR("GetType failed: %08x\n", nsres);
+        hres = E_FAIL;
+    }
+
+    nsAString_Finish(&type_str);
+
+    return hres;
 }
 
 static HRESULT WINAPI HTMLSelectElement_put_value(IHTMLSelectElement *iface, BSTR v)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString value_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_Init(&value_str, v);
+    nsres = nsIDOMHTMLSelectElement_SetValue(This->nsselect, &value_str);
+    nsAString_Finish(&value_str);
+    if(NS_FAILED(nsres))
+        ERR("SetValue failed: %08x\n", nsres);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLSelectElement_get_value(IHTMLSelectElement *iface, BSTR *p)
@@ -246,7 +275,7 @@ static HRESULT WINAPI HTMLSelectElement_get_value(IHTMLSelectElement *iface, BST
     nsres = nsIDOMHTMLSelectElement_GetValue(This->nsselect, &value_str);
     if(NS_SUCCEEDED(nsres)) {
         nsAString_GetData(&value_str, &value);
-        *p = SysAllocString(value);
+        *p = *value ? SysAllocString(value) : NULL;
     }else {
         ERR("GetValue failed: %08x\n", nsres);
     }
@@ -420,16 +449,33 @@ static const NodeImplVtbl HTMLSelectElementImplVtbl = {
     HTMLSelectElement_destructor
 };
 
+static const tid_t HTMLSelectElement_tids[] = {
+    IHTMLDOMNode_tid,
+    IHTMLDOMNode2_tid,
+    IHTMLElement_tid,
+    IHTMLElement2_tid,
+    IHTMLSelectElement_tid,
+    0
+};
+
+static dispex_static_data_t HTMLSelectElement_dispex = {
+    NULL,
+    DispHTMLSelectElement_tid,
+    NULL,
+    HTMLSelectElement_tids
+};
+
 HTMLElement *HTMLSelectElement_Create(nsIDOMHTMLElement *nselem)
 {
-    HTMLSelectElement *ret = heap_alloc(sizeof(HTMLSelectElement));
+    HTMLSelectElement *ret = heap_alloc_zero(sizeof(HTMLSelectElement));
     nsresult nsres;
-
-    HTMLElement_Init(&ret->element);
 
     ret->lpHTMLSelectElementVtbl = &HTMLSelectElementVtbl;
     ret->element.node.vtbl = &HTMLSelectElementImplVtbl;
-    
+
+    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLSELECT(ret), &HTMLSelectElement_dispex);
+    HTMLElement_Init(&ret->element);
+
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLSelectElement,
                                              (void**)&ret->nsselect);
     if(NS_FAILED(nsres))

@@ -221,6 +221,15 @@ ME_Style *ME_ApplyStyle(ME_Style *sSrc, CHARFORMAT2W *style)
       s->fmt.bUnderlineType = (style->dwEffects & CFM_UNDERLINE) ?
           CFU_CF1UNDERLINE : CFU_UNDERLINENONE;
   }
+  if (style->dwMask & CFM_BOLD && !(style->dwMask & CFM_WEIGHT))
+  {
+      s->fmt.wWeight = (style->dwEffects & CFE_BOLD) ? FW_BOLD : FW_NORMAL;
+  } else if (style->dwMask & CFM_WEIGHT && !(style->dwMask & CFM_BOLD)) {
+      if (style->wWeight > FW_NORMAL)
+          s->fmt.dwEffects |= CFE_BOLD;
+      else
+          s->fmt.dwEffects &= ~CFE_BOLD;
+  }
   return s;
 }
 

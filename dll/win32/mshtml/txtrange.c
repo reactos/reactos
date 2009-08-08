@@ -202,11 +202,6 @@ static void wstrbuf_append_len(wstrbuf_t *buf, LPCWSTR str, int len)
     buf->buf[buf->len] = 0;
 }
 
-static inline void wstrbuf_append(wstrbuf_t *buf, LPCWSTR str)
-{
-    wstrbuf_append_len(buf, str, strlenW(str));
-}
-
 static void wstrbuf_append_nodetxt(wstrbuf_t *buf, LPCWSTR str, int len)
 {
     const WCHAR *s = str;
@@ -616,6 +611,7 @@ static WCHAR next_char(const dompos_t *pos, dompos_t *new_pos)
         case TEXT_NODE:
             tmp_pos.node = iter;
             tmp_pos.type = TEXT_NODE;
+            tmp_pos.off = 0;
             dompos_addref(&tmp_pos);
 
             p = tmp_pos.p;
@@ -731,6 +727,7 @@ static WCHAR prev_char(HTMLTxtRange *This, const dompos_t *pos, dompos_t *new_po
 
             tmp_pos.node = iter;
             tmp_pos.type = TEXT_NODE;
+            tmp_pos.off = 0;
             dompos_addref(&tmp_pos);
 
             p = tmp_pos.p + strlenW(tmp_pos.p)-1;
@@ -1183,7 +1180,7 @@ static HRESULT WINAPI HTMLTxtRange_parentElement(IHTMLTxtRange *iface, IHTMLElem
         return S_OK;
     }
 
-    node = get_node(This->doc, nsnode);
+    node = get_node(This->doc, nsnode, TRUE);
     nsIDOMNode_Release(nsnode);
 
     return IHTMLDOMNode_QueryInterface(HTMLDOMNODE(node), &IID_IHTMLElement, (void**)parent);

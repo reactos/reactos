@@ -327,13 +327,13 @@ GetConsoleAliasW (LPWSTR	lpSource,
 		  LPWSTR	lpExeName)
 {
   PCSR_API_MESSAGE Request; 
+  PCSR_CAPTURE_BUFFER CaptureBuffer;
   ULONG CsrRequest;
   NTSTATUS Status;
   ULONG Size;
   ULONG ExeLength;
   ULONG SourceLength;
   ULONG RequestLength;
-  //PVOID CaptureBuffer;
   WCHAR * Ptr;
 
   DPRINT("GetConsoleAliasW entered lpSource %S lpExeName %S\n", lpSource, lpExeName);
@@ -343,12 +343,11 @@ GetConsoleAliasW (LPWSTR	lpSource,
   ExeLength = wcslen(lpExeName) + 1;
   SourceLength = wcslen(lpSource) + 1;
 
-  Size = (ExeLength + SourceLength + CSRSS_MAX_ALIAS_TARGET_LENGTH) * sizeof(WCHAR);
+  Size = (ExeLength + SourceLength) * sizeof(WCHAR);
 
   RequestLength = Size + sizeof(CSR_API_MESSAGE);
   Request = RtlAllocateHeap(GetProcessHeap(), 0, RequestLength);
   
-#if 0  
   CaptureBuffer = CsrAllocateCaptureBuffer(1, TargetBufferLength);
   if (!CaptureBuffer)
   {
@@ -363,36 +362,32 @@ GetConsoleAliasW (LPWSTR	lpSource,
                           (PVOID*)&Request->Data.GetConsoleAlias.TargetBuffer);
   Request->Data.GetConsoleAlias.TargetBufferLength = TargetBufferLength;
 
-#endif
-
   Ptr = (LPWSTR)((ULONG_PTR)Request + sizeof(CSR_API_MESSAGE));
   wcscpy(Ptr, lpSource);
   Ptr += SourceLength;
   wcscpy(Ptr, lpExeName);
-  Ptr += ExeLength;
 
   Request->Data.GetConsoleAlias.ExeLength = ExeLength;
-  Request->Data.GetConsoleAlias.TargetBufferLength = CSRSS_MAX_ALIAS_TARGET_LENGTH * sizeof(WCHAR);
   Request->Data.GetConsoleAlias.SourceLength = SourceLength;
 
   Status = CsrClientCallServer(Request,
-			       NULL, //CaptureBuffer,
+			       CaptureBuffer,
 			       CsrRequest,
 			       sizeof(CSR_API_MESSAGE) + Size);
 
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
   {
     RtlFreeHeap(GetProcessHeap(), 0, Request);
-    //CsrFreeCaptureBuffer(CaptureBuffer);
+    CsrFreeCaptureBuffer(CaptureBuffer);
     SetLastErrorByStatus(Status);
     return 0;
   }
 
-  wcscpy(lpTargetBuffer, Ptr);
+  wcscpy(lpTargetBuffer, Request->Data.GetConsoleAlias.TargetBuffer);
   RtlFreeHeap(GetProcessHeap(), 0, Request);
-  //CsrFreeCaptureBuffer(CaptureBuffer);
+  CsrFreeCaptureBuffer(CaptureBuffer);
 
-  return Size;
+  return Request->Data.GetConsoleAlias.BytesWritten;
 }
 
 
@@ -424,13 +419,13 @@ GetConsoleAliasA (LPSTR	lpSource,
 
   lpwTargetBuffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, TargetBufferLength * sizeof(WCHAR));
 
-  dwResult = GetConsoleAliasW(lpwSource, lpwTargetBuffer, TargetBufferLength, lpwExeName);
+  dwResult = GetConsoleAliasW(lpwSource, lpwTargetBuffer, TargetBufferLength * sizeof(WCHAR), lpwExeName);
 
   HeapFree(GetProcessHeap(), 0, lpwSource);
   HeapFree(GetProcessHeap(), 0, lpwExeName);
 
   if (dwResult)
-     dwResult = WideCharToMultiByte(CP_ACP, 0, lpwTargetBuffer, dwResult, lpTargetBuffer, TargetBufferLength, NULL, NULL);
+     dwResult = WideCharToMultiByte(CP_ACP, 0, lpwTargetBuffer, dwResult / sizeof(WCHAR), lpTargetBuffer, TargetBufferLength, NULL, NULL);
 
   HeapFree(GetProcessHeap(), 0, lpwTargetBuffer);
 
@@ -446,27 +441,42 @@ GetConsoleAliasExesW (LPWSTR lpExeNameBuffer,
 		      DWORD	ExeNameBufferLength)
 {
   CSR_API_MESSAGE Request; 
+  PCSR_CAPTURE_BUFFER CaptureBuffer;
   ULONG CsrRequest;
   NTSTATUS Status;
 
   DPRINT("GetConsoleAliasExesW entered\n");
 
+  CaptureBuffer = CsrAllocateCaptureBuffer(1, ExeNameBufferLength);
+  if (!CaptureBuffer)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+
   CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIASES_EXES, CSR_NATIVE);
-  Request.Data.GetConsoleAliasesExes.ExeNames = lpExeNameBuffer;
+  CsrAllocateMessagePointer(CaptureBuffer,
+                            ExeNameBufferLength,
+                            (PVOID*)&Request.Data.GetConsoleAliasesExes.ExeNames);
   Request.Data.GetConsoleAliasesExes.Length = ExeNameBufferLength;
 
   Status = CsrClientCallServer(& Request,
-			       NULL,
+			       CaptureBuffer,
 			       CsrRequest,
 			       sizeof(CSR_API_MESSAGE));
 
   if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
   {
     SetLastErrorByStatus(Status);
+    CsrFreeCaptureBuffer(CaptureBuffer);
     return 0;
   }
 
-  return Request.Data.GetConsoleAliasesExes.BytesWritten / sizeof(WCHAR);
+  memcpy(lpExeNameBuffer,
+         Request.Data.GetConsoleAliasesExes.ExeNames,
+         Request.Data.GetConsoleAliasesExes.BytesWritten);
+  CsrFreeCaptureBuffer(CaptureBuffer);
+  return Request.Data.GetConsoleAliasesExes.BytesWritten;
 }
 
 
@@ -484,10 +494,10 @@ GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
 
   lpwExeNameBuffer = HeapAlloc(GetProcessHeap(), 0, ExeNameBufferLength * sizeof(WCHAR));
 
-  dwResult = GetConsoleAliasExesW(lpwExeNameBuffer, ExeNameBufferLength);
+  dwResult = GetConsoleAliasExesW(lpwExeNameBuffer, ExeNameBufferLength * sizeof(WCHAR));
 
   if (dwResult)
-      dwResult = WideCharToMultiByte(CP_ACP, 0, lpwExeNameBuffer, dwResult, lpExeNameBuffer, ExeNameBufferLength, NULL, NULL);
+      dwResult = WideCharToMultiByte(CP_ACP, 0, lpwExeNameBuffer, dwResult / sizeof(WCHAR), lpExeNameBuffer, ExeNameBufferLength, NULL, NULL);
 
   HeapFree(GetProcessHeap(), 0, lpwExeNameBuffer);
   return dwResult;

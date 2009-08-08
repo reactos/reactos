@@ -25,6 +25,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE103
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoDisplayClass",0x00000000,"1"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E975-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}",,0x00000000,"Ramdisk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Class",0x00000000,"Ramdisk"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}","Icon",0x00000000,"-5"
+
 ; Default computer name settings
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName","ComputerName",0x00000002,"COMPUTERNAME"
@@ -123,9 +127,17 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050409","Layout Id",  
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050409","Layout Text",0x00000000,"US English (IBM Arabic 238_L)"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00050409","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5123"
 
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout File",0x00000000,"kbdir.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout Text",0x00000000,"Irish"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00001809","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5014"
+
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040a","Layout File",0x00000000,"kbdes.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040a","Layout Text",0x00000000,"Spanish"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5020"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000080a","Layout File",0x00000000,"kbdla.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000080a","Layout Text",0x00000000,"Latin American"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000080a","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5017"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040b","Layout File",0x00000000,"kbdfi.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000040b","Layout Text",0x00000000,"Finnish"
@@ -212,9 +224,21 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout File",
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout Text",0x00000000,"Swedish"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041d","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5022"
 
-HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041e","Layout File",0x00000000,"kbdth.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041e","Layout File",0x00000000,"kbdth0.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041e","Layout Text",0x00000000,"Thai Kedmanee"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0000041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5079"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041e","Layout File",0x00000000,"kbdth1.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041e","Layout Text",0x00000000,"Thai Pattachote"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0001041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5080"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002041e","Layout File",0x00000000,"kbdth2.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002041e","Layout Text",0x00000000,"Thai Kedmanee (non-ShiftLock)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0002041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5081"
+
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0003041e","Layout File",0x00000000,"kbdth3.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0003041e","Layout Text",0x00000000,"Thai Pattachote (non-ShiftLock)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\0003041e","Layout Display Name",0x00000000,"@%SystemRoot%\system32\input.dll,-5082"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000422","Layout File",0x00000000,"kbdur.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layouts\00000422","Layout Text",0x00000000,"Ukrainian"

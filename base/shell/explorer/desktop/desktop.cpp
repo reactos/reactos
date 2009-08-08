@@ -656,6 +656,7 @@ HRESULT DesktopShellView::DoDesktopContextMenu(int x, int y)
 				}
 			} else
 				_cm_ifs.reset();
+			DestroyMenu(hmenu);
 		}
 
 		pcm->Release();

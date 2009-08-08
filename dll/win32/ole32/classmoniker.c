@@ -627,9 +627,9 @@ static ULONG WINAPI ClassMonikerROTData_Release(IROTData* iface)
 }
 
 /******************************************************************************
- *        ClassMonikerIROTData_GetComparaisonData
+ *        ClassMonikerIROTData_GetComparisonData
  ******************************************************************************/
-static HRESULT WINAPI ClassMonikerROTData_GetComparaisonData(IROTData* iface,
+static HRESULT WINAPI ClassMonikerROTData_GetComparisonData(IROTData* iface,
                                                          BYTE* pbData,
                                                          ULONG cbMax,
                                                          ULONG* pcbData)
@@ -687,7 +687,7 @@ static const IROTDataVtbl ROTDataVtbl =
     ClassMonikerROTData_QueryInterface,
     ClassMonikerROTData_AddRef,
     ClassMonikerROTData_Release,
-    ClassMonikerROTData_GetComparaisonData
+    ClassMonikerROTData_GetComparisonData
 };
 
 /******************************************************************************

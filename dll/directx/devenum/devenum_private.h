@@ -67,7 +67,7 @@ typedef struct
 typedef struct
 {
     IEnumMonikerVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
     DWORD index;
     HKEY hkey;
 } EnumMonikerImpl;
@@ -76,7 +76,7 @@ typedef struct
 {
     IMonikerVtbl *lpVtbl;
 
-    ULONG ref;
+    LONG ref;
     HKEY hkey;
 } MediaCatMoniker;
 

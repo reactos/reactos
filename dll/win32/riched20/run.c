@@ -241,11 +241,7 @@ void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p)
   assert(p->member.run.nCharOfs != -1);
   ME_GetParagraph(p)->member.para.nFlags |= MEPF_REWRAP;
 
-  /* if we were at the end of screen line, and the next run is in the new
-	 * line, then it's not the end of the line anymore */  
-	if (editor->bCaretAtEnd && editor->pCursors[0].pRun == pNext)
-    editor->bCaretAtEnd = FALSE;
-	/* Update all cursors so that they don't contain the soon deleted run */
+  /* Update all cursors so that they don't contain the soon deleted run */
   for (i=0; i<editor->nCursors; i++) {
     if (editor->pCursors[i].pRun == pNext) {
       editor->pCursors[i].pRun = p;
@@ -682,9 +678,9 @@ static SIZE ME_GetRunSizeCommon(ME_Context *c, const ME_Paragraph *para, ME_Run 
       }
       else
       {
-        pos += 720-(pos%720);
+        pos += lDefaultTab - (pos % lDefaultTab);
       }
-      ppos = ME_twips2pointsX(c, pos);
+      ppos = ME_twips2pointsX(c, pos) + c->editor->selofs;
       if (ppos > startx + run->pt.x) {
         size.cx = ppos - startx - run->pt.x;
         break;
@@ -838,6 +834,7 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
   ME_Style *style;
   ME_UndoItem *undo;
 
+  /* FIXME: Should this be removed? It breaks a test. */
   assert(mod->cbSize == sizeof(CHARFORMAT2W));
   undo = ME_AddUndoItem(editor, diUndoSetDefaultCharFormat, NULL);
   if (undo) {
@@ -857,6 +854,16 @@ void ME_SetDefaultCharFormat(ME_TextEditor *editor, CHARFORMAT2W *mod)
 static void ME_GetRunCharFormat(ME_TextEditor *editor, ME_DisplayItem *run, CHARFORMAT2W *pFmt)
 {
   ME_CopyCharFormat(pFmt, &run->member.run.style->fmt);
+  if ((pFmt->dwMask & CFM_UNDERLINETYPE) && (pFmt->bUnderlineType == CFU_CF1UNDERLINE))
+  {
+    pFmt->dwMask |= CFM_UNDERLINE;
+    pFmt->dwEffects |= CFE_UNDERLINE;
+  }
+  if ((pFmt->dwMask & CFM_UNDERLINETYPE) && (pFmt->bUnderlineType == CFU_UNDERLINENONE))
+  {
+    pFmt->dwMask |= CFM_UNDERLINE;
+    pFmt->dwEffects &= ~CFE_UNDERLINE;
+  }
 }
 
 /******************************************************************************
@@ -928,7 +935,7 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
   do {
     /* FIXME add more style feature comparisons */
     int nAttribs = CFM_SIZE | CFM_FACE | CFM_COLOR | CFM_UNDERLINETYPE;
-    int nEffects = CFM_BOLD | CFM_ITALIC;
+    int nEffects = CFM_BOLD | CFM_ITALIC | CFM_UNDERLINE | CFM_STRIKEOUT | CFM_PROTECTED | CFM_LINK | CFM_SUPERSCRIPT;
 
     run = ME_FindItemFwd(run, diRun);
 
@@ -937,7 +944,6 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
     ME_GetRunCharFormat(editor, run, &tmp);
 
     assert((tmp.dwMask & nAttribs) == nAttribs);
-    assert((tmp.dwMask & nEffects) == nEffects);
     /* reset flags that differ */
 
     if (pFmt->yHeight != tmp.yHeight)
@@ -964,6 +970,7 @@ void ME_GetCharFormat(ME_TextEditor *editor, int nFrom, int nTo, CHARFORMAT2W *p
     }
 
     pFmt->dwMask &= ~((pFmt->dwEffects ^ tmp.dwEffects) & nEffects);
+    pFmt->dwEffects = tmp.dwEffects;
 
   } while(run != run_end);
 }

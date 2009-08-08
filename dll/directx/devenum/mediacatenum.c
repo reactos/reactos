@@ -40,7 +40,7 @@ static ULONG WINAPI DEVENUM_IPropertyBag_AddRef(LPPROPERTYBAG iface);
 typedef struct
 {
     IPropertyBagVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
     HKEY hkey;
 } RegPropBagImpl;
 
@@ -103,7 +103,7 @@ static HRESULT WINAPI DEVENUM_IPropertyBag_Read(
     IErrorLog* pErrorLog)
 {
     LPVOID pData = NULL;
-    LONG received;
+    DWORD received;
     DWORD type = 0;
     RegPropBagImpl *This = (RegPropBagImpl *)iface;
     HRESULT res = S_OK;

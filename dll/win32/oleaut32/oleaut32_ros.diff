@@ -1,39 +1,3 @@
-Index: oleaut32_Gr.rc
-===================================================================
---- oleaut32_Gr.rc	(revision 23782)
-+++ oleaut32_Gr.rc	(working copy)
-@@ -0,0 +1,31 @@
-+/*
-+ * Greek resources for oleaut32
-+ *
-+ * Copyright 2006 Dj Apal®
-+ *
-+ * This library is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU Lesser General Public
-+ * License as published by the Free Software Foundation; either
-+ * version 2.1 of the License, or (at your option) any later version.
-+ *
-+ * This library is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * Lesser General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU Lesser General Public
-+ * License along with this library; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ */
-+
-+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
-+
-+STRINGTABLE DISCARDABLE
-+{
-+  IDS_TRUE  "Αληθές"
-+  IDS_FALSE "Ψευδές"
-+  IDS_YES   "Ναι"
-+  IDS_NO    "Όχι"
-+  IDS_ON    "Ανοιχτό"
-+  IDS_OFF   "Κλειστό"
-+}
 Index: oleaut32_Ja.rc
 ===================================================================
 --- oleaut32_Ja.rc	(revision 23782)
@@ -90,11 +54,10 @@ Index: oleaut32.rc
 ===================================================================
 --- oleaut32.rc	(revision 23782)
 +++ oleaut32.rc	(working copy)
-@@ -32,8 +32,10 @@
+@@ -32,8 +32,9 @@
  #include "oleaut32_Es.rc"
  #include "oleaut32_Cz.rc"
  #include "oleaut32_Fr.rc"
-+#include "oleaut32_Gr.rc"
  #include "oleaut32_Hu.rc"
  #include "oleaut32_It.rc"
 +#include "oleaut32_Ja.rc"

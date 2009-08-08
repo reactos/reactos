@@ -1149,7 +1149,8 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
       WndParent->FirstChild = Wnd->NextSibling;
 
    Wnd->PrevSibling = Wnd->NextSibling = Wnd->Parent = NULL;
-   Wnd->Wnd->Parent = NULL;
+   if (Wnd->Wnd)
+       Wnd->Wnd->Parent = NULL;
 }
 
 BOOL FASTCALL
@@ -1627,6 +1628,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
        Wnd->ti = ti;
        Wnd->pi = ti->kpi;
+       Wnd->hWndLastActive = hWnd;
    }
 
    DPRINT("Created object with handle %X\n", hWnd);
@@ -1709,7 +1711,7 @@ AllocErr:
    Window->NextSibling = NULL;
    Wnd->ExtraDataSize = Wnd->Class->WndExtra;
 
-   InitializeListHead(&Window->PropListHead);
+   InitializeListHead(&Wnd->PropListHead);
    InitializeListHead(&Window->WndObjListHead);
 
    if (NULL != WindowName->Buffer && WindowName->Length > 0)
@@ -2504,13 +2506,16 @@ NtUserEndDeferWindowPosEx(DWORD Unknown0,
 
 
 /*
+ * FillWindow: Called from User; Dialog, Edit and ListBox procs during a WM_ERASEBKGND.
+ */
+/*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserFillWindow(DWORD Unknown0,
-                 DWORD Unknown1,
-                 DWORD Unknown2,
-                 DWORD Unknown3)
+BOOL STDCALL
+NtUserFillWindow(HWND hWndPaint,
+                 HWND hWndPaint1,
+                 HDC  hDC,
+                 HBRUSH hBrush)
 {
    UNIMPLEMENTED
 
@@ -2788,8 +2793,8 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserFlashWindowEx(DWORD Unknown0)
+BOOL STDCALL
+NtUserFlashWindowEx(IN PFLASHWINFO pfwi)
 {
    UNIMPLEMENTED
 
@@ -2948,9 +2953,9 @@ CLEANUP:
  * @unimplemented
  */
 DWORD STDCALL
-NtUserGetInternalWindowPos(DWORD Unknown0,
-                           DWORD Unknown1,
-                           DWORD Unknown2)
+NtUserGetInternalWindowPos( HWND hwnd,
+                            LPRECT rectWnd,
+                            LPPOINT ptIcon)
 {
    UNIMPLEMENTED
 
@@ -3075,7 +3080,14 @@ CLEANUP:
 
 
 
-
+/*
+ * UserGetShellWindow
+ *
+ * Returns a handle to shell window that was set by NtUserSetShellWindowEx.
+ *
+ * Status
+ *    @implemented
+ */
 HWND FASTCALL UserGetShellWindow()
 {
    PWINSTATION_OBJECT WinStaObject;
@@ -3098,32 +3110,6 @@ HWND FASTCALL UserGetShellWindow()
    return( Ret);
 }
 
-
-/*
- * NtUserGetShellWindow
- *
- * Returns a handle to shell window that was set by NtUserSetShellWindowEx.
- *
- * Status
- *    @implemented
- */
-
-HWND STDCALL
-NtUserGetShellWindow()
-{
-   DECLARE_RETURN(HWND);
-
-   DPRINT("Enter NtUserGetShellWindow\n");
-   UserEnterShared();
-
-   RETURN( UserGetShellWindow() );
-
-CLEANUP:
-   DPRINT("Leave NtUserGetShellWindow, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
 /*
  * NtUserSetShellWindowEx
  *
@@ -3133,7 +3119,6 @@ CLEANUP:
  * Status
  *    @implemented
  */
-
 BOOL STDCALL
 NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
@@ -3142,6 +3127,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status;
+   PW32THREADINFO ti;;
 
    DPRINT("Enter NtUserSetShellWindowEx\n");
    UserEnterExclusive();
@@ -3202,6 +3188,9 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 
    WinStaObject->ShellWindow = hwndShell;
    WinStaObject->ShellListView = hwndListView;
+
+   ti = GetW32ThreadInfo();
+   if (ti->Desktop) ((PDESKTOP)ti->Desktop)->hShellWindow = hwndShell;
 
    UserDerefObjectCo(WndShell);
 
@@ -3634,6 +3623,8 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
    Wnd = Window->Wnd;
 
+   if (!Wnd) return 0; // No go on zero.
+
    if ((INT)Index >= 0)
    {
       if ((Index + sizeof(LONG)) > Wnd->ExtraDataSize)
@@ -3883,39 +3874,6 @@ CLEANUP:
 
 
 /*
- * @implemented
- */
-DWORD STDCALL
-NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
-{
-   PWINDOW_OBJECT Wnd;
-   DWORD tid, pid;
-   DECLARE_RETURN(DWORD);
-
-   DPRINT("Enter NtUserGetWindowThreadProcessId\n");
-   UserEnterShared();
-
-   if (!(Wnd = UserGetWindowObject(hWnd)))
-   {
-      RETURN( 0);
-   }
-
-   tid = (DWORD)IntGetWndThreadId(Wnd);
-   pid = (DWORD)IntGetWndProcessId(Wnd);
-
-   if (UnsafePid)
-      MmCopyToCaller(UnsafePid, &pid, sizeof(DWORD));
-
-   RETURN( tid);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetWindowThreadProcessId, ret=%i\n",_ret_);
-   UserLeave();
-   END_CLEANUP;
-}
-
-
-/*
  * @unimplemented
  */
 DWORD STDCALL
@@ -3949,12 +3907,14 @@ NtUserMoveWindow(
 
  0 = QWUniqueProcessId
  1 = QWUniqueThreadId
+ 2 = QWActiveWindow
+ 3 = QWFocusWindow
  4 = QWIsHung            Implements IsHungAppWindow found
                                 by KJK::Hyperion.
 
-        9 = QWKillWindow        When I called this with hWnd ==
-                                DesktopWindow, it shutdown the system
-                                and rebooted.
+ 9 = QWKillWindow        When I called this with hWnd ==
+                           DesktopWindow, it shutdown the system
+                           and rebooted.
 */
 /*
  * @implemented
@@ -3982,6 +3942,14 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 
       case QUERY_WINDOW_UNIQUE_THREAD_ID:
          Result = (DWORD)IntGetWndThreadId(Window);
+         break;
+
+      case QUERY_WINDOW_ACTIVE:
+         Result = (DWORD)UserGetActiveWindow();
+         break;
+
+      case QUERY_WINDOW_FOCUS:
+         Result = (DWORD)IntGetFocusWindow();
          break;
 
       case QUERY_WINDOW_ISHUNG:
@@ -4072,10 +4040,11 @@ NtUserSetImeOwnerWindow(DWORD Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-NtUserSetInternalWindowPos(DWORD Unknown0,
-                           DWORD Unknown1,
-                           DWORD Unknown2,
-                           DWORD Unknown3)
+NtUserSetInternalWindowPos(
+   HWND    hwnd,
+   UINT    showCmd,
+   LPRECT  rect,
+   LPPOINT pt)
 {
    UNIMPLEMENTED
 
@@ -4087,23 +4056,22 @@ NtUserSetInternalWindowPos(DWORD Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserSetLayeredWindowAttributes(DWORD Unknown0,
-                                 DWORD Unknown1,
-                                 DWORD Unknown2,
-                                 DWORD Unknown3)
+BOOL STDCALL
+NtUserSetLayeredWindowAttributes(HWND hwnd,
+			   COLORREF crKey,
+			   BYTE bAlpha,
+			   DWORD dwFlags)
 {
-   UNIMPLEMENTED
-
-   return 0;
+  UNIMPLEMENTED;
+  return FALSE;
 }
 
 
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserSetLogonNotifyWindow(DWORD Unknown0)
+BOOL STDCALL
+NtUserSetLogonNotifyWindow(HWND hWnd)
 {
    UNIMPLEMENTED
 
@@ -4478,23 +4446,23 @@ NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserUpdateLayeredWindow(DWORD Unknown0,
-                          DWORD Unknown1,
-                          DWORD Unknown2,
-                          DWORD Unknown3,
-                          DWORD Unknown4,
-                          DWORD Unknown5,
-                          DWORD Unknown6,
-                          DWORD Unknown7,
-                          DWORD Unknown8)
+BOOL
+STDCALL
+NtUserUpdateLayeredWindow(
+   HWND hwnd,
+   HDC hdcDst,
+   POINT *pptDst,
+   SIZE *psize,
+   HDC hdcSrc,
+   POINT *pptSrc,
+   COLORREF crKey,
+   BLENDFUNCTION *pblend,
+   DWORD dwFlags)
 {
    UNIMPLEMENTED
 
    return 0;
 }
-
-
 
 
 /*
@@ -4733,7 +4701,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
 
 BOOL
 FASTCALL
@@ -4743,9 +4710,9 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
    PWINDOW_OBJECT pWnd;
    HWND *win_array;
 
-   ASSERT(OwnerWnd);
+//   ASSERT(OwnerWnd);
 
-   win_array = IntWinListChildren(OwnerWnd);//faxme: use desktop?
+   win_array = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
 
    if (!win_array)
       return TRUE;

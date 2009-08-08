@@ -20,6 +20,7 @@
 #include "winuser.h"
 #include "msvideo_private.h"
 
+#include "msvfw32_Da.rc"
 #include "msvfw32_De.rc"
 #include "msvfw32_En.rc"
 #include "msvfw32_Es.rc"
@@ -29,5 +30,7 @@
 #include "msvfw32_Nl.rc"
 #include "msvfw32_No.rc"
 #include "msvfw32_Pl.rc"
+#include "msvfw32_Ru.rc"
+#include "msvfw32_Si.rc"
 #include "msvfw32_Sv.rc"
 #include "msvfw32_Tr.rc"

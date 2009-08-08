@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/window.c
@@ -916,13 +915,29 @@ GetGUIThreadInfo(DWORD idThread,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 GetLastActivePopup(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return 0;
+    PWINDOW Wnd;
+    HWND Ret = hWnd;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (Wnd != NULL)
+    {
+        _SEH_TRY
+        {
+            if (Wnd->hWndLastActive)
+               Ret = Wnd->hWndLastActive;
+        }
+        _SEH_HANDLE
+        {
+            /* Do nothing */
+        }
+        _SEH_END;
+    }
+    return Ret;
 }
 
 
@@ -1279,7 +1294,32 @@ DWORD STDCALL
 GetWindowThreadProcessId(HWND hWnd,
 			 LPDWORD lpdwProcessId)
 {
-   return NtUserGetWindowThreadProcessId(hWnd, lpdwProcessId);
+  DWORD Ret = 0;
+  PW32THREADINFO ti;
+  PWINDOW pWnd = ValidateHwnd(hWnd);
+
+  if (!pWnd) return Ret;
+
+  ti = SharedPtrToUser(pWnd->ti);
+ 
+  if ( ti )
+  {
+    if ( ti == GetW32ThreadInfo() )
+    { // We are current.
+      //FIXME("Current!\n");
+      if ( lpdwProcessId )
+        *lpdwProcessId = (DWORD)NtCurrentTeb()->Cid.UniqueProcess;
+      Ret = (DWORD)NtCurrentTeb()->Cid.UniqueThread;
+    }
+    else
+    { // Ask kernel for info.
+      //FIXME("Kernel call!\n");
+      if ( lpdwProcessId )
+        *lpdwProcessId = NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_PROCESS_ID);
+      Ret = NtUserQueryWindow(hWnd, QUERY_WINDOW_UNIQUE_THREAD_ID);
+    }
+  }
+  return Ret;
 }
 
 
@@ -1533,20 +1573,6 @@ SetForegroundWindow(HWND hWnd)
 
 
 /*
- * @unimplemented
- */
-BOOL STDCALL
-SetLayeredWindowAttributes(HWND hwnd,
-			   COLORREF crKey,
-			   BYTE bAlpha,
-			   DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
  * @implemented
  */
 HWND STDCALL
@@ -1603,7 +1629,7 @@ SetWindowTextA(HWND hWnd,
 	       LPCSTR lpString)
 {
   DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  if(!GetWindowThreadProcessId(hWnd, &ProcessId))
   {
     return FALSE;
   }
@@ -1643,7 +1669,7 @@ SetWindowTextW(HWND hWnd,
 	       LPCWSTR lpString)
 {
   DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+  if(!GetWindowThreadProcessId(hWnd, &ProcessId))
   {
     return FALSE;
   }

@@ -56,7 +56,7 @@ static BOOL RICHED32_Register(void)
     WNDCLASSA wndClass;
 
     ZeroMemory(&wndClass, sizeof(WNDCLASSA));
-    wndClass.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
+    wndClass.style = CS_DBLCLKS | CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
     wndClass.lpfnWndProc = RichEdit10ANSIWndProc;
     wndClass.cbClsExtra = 0;
     wndClass.cbWndExtra = 4;

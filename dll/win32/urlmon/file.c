@@ -109,6 +109,10 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
+    if(!szUrl || lstrlenW(szUrl) < sizeof(wszFile)/sizeof(WCHAR)
+            || memcmp(szUrl, wszFile, sizeof(wszFile)))
+        return E_INVALIDARG;
+
     memset(&bindinfo, 0, sizeof(bindinfo));
     bindinfo.cbSize = sizeof(BINDINFO);
     hres = IInternetBindInfo_GetBindInfo(pOIBindInfo, &grfBINDF, &bindinfo);
@@ -118,13 +122,6 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     }
 
     ReleaseBindInfo(&bindinfo);
-
-    if(!szUrl || !*szUrl)
-        return E_INVALIDARG;
-
-    if(lstrlenW(szUrl) < sizeof(wszFile)/sizeof(WCHAR)
-            || memcmp(szUrl, wszFile, sizeof(wszFile)))
-        return MK_E_SYNTAX;
 
     len = lstrlenW(szUrl)+16;
     url = heap_alloc(len*sizeof(WCHAR));

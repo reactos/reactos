@@ -489,7 +489,7 @@ char *setlocale(int category, const char *locale)
 
   MSVCRT_current_lc_all_lcid = lcid;
 
-  snprintf(MSVCRT_current_lc_all,MAX_LOCALE_LENGTH,"%s_%s.%s",
+  _snprintf(MSVCRT_current_lc_all,MAX_LOCALE_LENGTH,"%s_%s.%s",
 	   lc.found_language,lc.found_country,lc.found_codepage);
 
   switch (category) {

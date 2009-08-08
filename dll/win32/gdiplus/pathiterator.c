@@ -87,6 +87,24 @@ GpStatus WINGDIPAPI GdipPathIterCopyData(GpPathIterator* iterator,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipPathIterHasCurve(GpPathIterator* iterator, BOOL* hasCurve)
+{
+    INT i;
+
+    if(!iterator)
+        return InvalidParameter;
+
+    *hasCurve = FALSE;
+
+    for(i = 0; i < iterator->pathdata.Count; i++)
+        if((iterator->pathdata.Types[i] & PathPointTypePathTypeMask) == PathPointTypeBezier){
+            *hasCurve = TRUE;
+            break;
+        }
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator* iterator,
     INT *resultCount, INT* startIndex, INT* endIndex, BOOL* isClosed)
 {
@@ -130,4 +148,28 @@ GpStatus WINGDIPAPI GdipPathIterRewind(GpPathIterator *iterator)
     iterator->pathtype_pos = 0;
 
     return Ok;
+}
+
+GpStatus WINGDIPAPI GdipPathIterGetCount(GpPathIterator* iterator, INT* count)
+{
+    if(!iterator || !count)
+        return InvalidParameter;
+
+    *count = iterator->pathdata.Count;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipPathIterEnumerate(GpPathIterator* iterator, INT* resultCount,
+    GpPointF *points, BYTE *types, INT count)
+{
+    if((count < 0) || !resultCount)
+        return InvalidParameter;
+
+    if(count == 0){
+        *resultCount = 0;
+        return Ok;
+    }
+
+    return GdipPathIterCopyData(iterator, resultCount, points, types, 0, count-1);
 }

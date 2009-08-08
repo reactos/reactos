@@ -20,7 +20,7 @@
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -46,7 +46,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Spara som ..."
+CAPTION "Spara som..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Filnamn:", 1090, 6, 6, 76, 9
@@ -363,7 +363,7 @@ STRINGTABLE DISCARDABLE
  IDS_CREATEFILE          "Filen finns inte\nVill du skapa fil"
  IDS_OVERWRITEFILE       "Filen finns redan.\nVill du ersätta den?"
  IDS_INVALID_FILENAME_TITLE "Illegalt tecken i sökväg"
- IDS_INVALID_FILENAME    "Ett filnamn kan inte innehålla någon av följande tecken: \n                                               / : < > |"
+ IDS_INVALID_FILENAME    "Ett filnamn kan inte innehålla någon av följande tecken:\n                                               / : < > |"
  IDS_PATHNOTEXISTING     "Sökvägen finns inte"
  IDS_FILENOTEXISTING     "Filen finns inte"
 }

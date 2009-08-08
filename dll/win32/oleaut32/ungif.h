@@ -44,7 +44,7 @@
  * History:
  * 14 Jun 89 - Version 1.0 by Gershon Elber.
  *  3 Sep 90 - Version 1.1 by Gershon Elber (Support for Gif89, Unique names)
- * 15 Sep 90 - Version 2.0 by Eric S. Raymond (Changes to suoport GIF slurp)
+ * 15 Sep 90 - Version 2.0 by Eric S. Raymond (Changes to support GIF slurp)
  * 26 Jun 96 - Version 3.0 by Eric S. Raymond (Full GIF89 support)
  * 17 Dec 98 - Version 4.0 by Toshio Kuratomi (Fix extension writing code)
  *****************************************************************************/

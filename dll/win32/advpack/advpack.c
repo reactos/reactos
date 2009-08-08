@@ -68,9 +68,9 @@ static void strip_quotes(WCHAR *buffer, DWORD *size)
 static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dwSize)
 {
     INFCONTEXT context;
-    WCHAR key[MAX_PATH], value[MAX_PATH];
-    WCHAR prefix[PREFIX_LEN];
-    HKEY root, subkey;
+    WCHAR key[MAX_PATH + 2], value[MAX_PATH + 2];
+    WCHAR prefix[PREFIX_LEN + 2];
+    HKEY root, subkey = 0;
     DWORD size;
 
     static const WCHAR hklm[] = {'H','K','L','M',0};
@@ -78,11 +78,11 @@ static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dw
 
     /* load the destination parameters */
     SetupFindFirstLineW(hInf, pszSection, NULL, &context);
-    SetupGetStringFieldW(&context, 1, prefix, PREFIX_LEN, &size);
+    SetupGetStringFieldW(&context, 1, prefix, PREFIX_LEN + 2, &size);
     strip_quotes(prefix, &size);
-    SetupGetStringFieldW(&context, 2, key, MAX_PATH, &size);
+    SetupGetStringFieldW(&context, 2, key, MAX_PATH + 2, &size);
     strip_quotes(key, &size);
-    SetupGetStringFieldW(&context, 3, value, MAX_PATH, &size);
+    SetupGetStringFieldW(&context, 3, value, MAX_PATH + 2, &size);
     strip_quotes(value, &size);
 
     if (!lstrcmpW(prefix, hklm))
@@ -102,7 +102,7 @@ static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dw
         strip_quotes(pszBuffer, &size);
     }
 
-    RegCloseKey(subkey);
+    if (subkey) RegCloseKey(subkey);
 }
 
 /* loads the LDIDs specified in the install section of an INF */

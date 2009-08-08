@@ -2,12 +2,16 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-/* String Tables */
-
-STRINGTABLE DISCARDABLE
+IDD_STARTPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "ReactOS Setup"
+FONT 8, "MS Shell Dlg"
 BEGIN
-    IDS_CAPTION  "ReactOS Setup"
-    IDS_TEXT     "ReactOS kann nicht direkt von dieser CD installiert werden!\n\nBitte starten Sie Ihren Computer mit dieser CD um ReactOS zu installieren."
+    LTEXT "Willkommen beim ReactOS Setup Assistenten.", IDC_STARTTITLE, 115, 8, 195, 24
+    LTEXT "ReactOS kann noch nicht direkt von dieser CD installiert werden! "\
+          "Bitte starten Sie Ihren Computer mit dieser CD um ReactOS zu "\
+          "installieren.", IDC_STATIC, 115, 40, 195, 100
+    LTEXT "Klicken Sie auf Beenden um das Setup zu verlassen.", IDC_STATIC, 115, 169, 195, 17
 END
 
 /* EOF */

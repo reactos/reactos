@@ -967,16 +967,14 @@ static HFONT SYSLINK_SetFont (SYSLINK_INFO *infoPtr, HFONT hFont, BOOL bRedraw)
  */
 static LRESULT SYSLINK_SetText (SYSLINK_INFO *infoPtr, LPCWSTR Text)
 {
-    int textlen;
-
     /* clear the document */
     SYSLINK_ClearDoc(infoPtr);
-    
-    if(Text == NULL || (textlen = lstrlenW(Text)) == 0)
+
+    if(Text == NULL || *Text == 0)
     {
         return TRUE;
     }
-    
+
     /* let's parse the string and create a document */
     if(SYSLINK_ParseText(infoPtr, Text) > 0)
     {

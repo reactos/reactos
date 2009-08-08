@@ -33,6 +33,7 @@ static const WCHAR key_text[] = {'T','e','x','t',0};
 static const WCHAR var_file[] = {'F','i','l','e','%','d',0};
 static const WCHAR var_framerect[] = {'F','r','a','m','e','R','e','c','t',0};
 static const WCHAR var_barstate0[] = {'B','a','r','S','t','a','t','e','0',0};
+static const WCHAR var_maximized[] = {'M','a','x','i','m','i','z','e','d',0};
 
 static LRESULT registry_get_handle(HKEY *hKey, LPDWORD action, LPCWSTR subKey)
 {
@@ -82,11 +83,15 @@ void registry_set_options(HWND hMainWnd)
 
     if(registry_get_handle(&hKey, &action, (LPWSTR)key_options) == ERROR_SUCCESS)
     {
-        RECT rc;
+        WINDOWPLACEMENT wp;
+        DWORD isMaximized;
 
-        GetWindowRect(hMainWnd, &rc);
+        wp.length = sizeof(WINDOWPLACEMENT);
+        GetWindowPlacement(hMainWnd, &wp);
+        isMaximized = (wp.showCmd == SW_SHOWMAXIMIZED);
 
-        RegSetValueExW(hKey, var_framerect, 0, REG_BINARY, (LPBYTE)&rc, sizeof(RECT));
+        RegSetValueExW(hKey, var_framerect, 0, REG_BINARY, (LPBYTE)&wp.rcNormalPosition, sizeof(RECT));
+        RegSetValueExW(hKey, var_maximized, 0, REG_DWORD, (LPBYTE)&isMaximized, sizeof(DWORD));
 
         registry_set_pagemargins(hKey);
     }
@@ -107,6 +112,21 @@ void registry_read_winrect(RECT* rc)
         rc->left = 0;
         rc->bottom = 300;
         rc->right = 600;
+    }
+
+    RegCloseKey(hKey);
+}
+
+void registry_read_maximized(DWORD *bMaximized)
+{
+    HKEY hKey;
+    DWORD size = sizeof(DWORD);
+
+    if(registry_get_handle(&hKey, 0, (LPWSTR)key_options) != ERROR_SUCCESS ||
+       RegQueryValueExW(hKey, var_maximized, 0, NULL, (LPBYTE)bMaximized, &size) !=
+       ERROR_SUCCESS || size != sizeof(DWORD))
+    {
+        *bMaximized = FALSE;
     }
 
     RegCloseKey(hKey);

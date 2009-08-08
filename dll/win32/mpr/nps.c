@@ -76,14 +76,10 @@ static INT_PTR WINAPI NPS_ProxyPasswordDialog(
     case WM_COMMAND:
         if( wParam == IDOK )
         {
-            WCHAR username[0x20], password[0x20];
-
-            username[0] = 0;
             hitem = GetDlgItem( hdlg, IDC_USERNAME );
             if( hitem )
                 GetWindowTextA( hitem, lpAuthDlgStruct->lpUsername, lpAuthDlgStruct->cbUsername );
-            
-            password[0] = 0;
+
             hitem = GetDlgItem( hdlg, IDC_PASSWORD );
             if( hitem )
                 GetWindowTextA( hitem, lpAuthDlgStruct->lpPassword, lpAuthDlgStruct->cbPassword );

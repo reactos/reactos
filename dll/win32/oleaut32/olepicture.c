@@ -22,7 +22,7 @@
  *
  * BUGS
  *
- * Support PICTYPE_BITMAP and PICTYPE_ICON, altough only bitmaps very well..
+ * Support PICTYPE_BITMAP and PICTYPE_ICON, although only bitmaps very well..
  * Lots of methods are just stubs.
  *
  *
@@ -45,6 +45,22 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef SONAME_LIBJPEG
+/* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
+#define XMD_H
+#define UINT8 JPEG_UINT8
+#define UINT16 JPEG_UINT16
+#define boolean jpeg_boolean
+# include <jpeglib.h>
+#undef UINT8
+#undef UINT16
+#undef boolean
+#endif
+
+#ifdef HAVE_PNG_H
+#include <png.h>
+#endif
+
 /* Must be before wine includes, the header has things conflicting with
  * WINE headers.
  */
@@ -66,23 +82,6 @@
 #include "wine/unicode.h"
 
 #include "wine/wingdi16.h"
-
-#ifdef SONAME_LIBJPEG
-/* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
-#define XMD_H
-#define UINT8 JPEG_UINT8
-#define UINT16 JPEG_UINT16
-#undef FAR
-#define boolean jpeg_boolean
-# include <jpeglib.h>
-#undef jpeg_boolean
-#undef UINT16
-#endif
-
-#ifdef HAVE_PNG_H
-#undef FAR
-#include <png.h>
-#endif
 
 #include "ungif.h"
 
@@ -316,7 +315,7 @@ static OLEPictureImpl* OLEPictureImpl_Construct(LPPICTDESC pictDesc, BOOL fOwn)
   newObject->bIsDirty = FALSE;
 
   if (pictDesc) {
-      memcpy(&newObject->desc, pictDesc, sizeof(PICTDESC));
+      newObject->desc = *pictDesc;
 
       switch(pictDesc->picType) {
       case PICTYPE_BITMAP:
@@ -955,7 +954,7 @@ static HRESULT WINAPI OLEPictureImpl_GetClassID(
   IPersistStream* iface,CLSID* pClassID)
 {
   TRACE("(%p)\n", pClassID);
-  memcpy(pClassID, &CLSID_StdPicture, sizeof(*pClassID));
+  *pClassID = CLSID_StdPicture;
   return S_OK;
 }
 
@@ -1008,7 +1007,7 @@ static void *load_libjpeg(void)
 /* for the jpeg decompressor source manager. */
 static void _jpeg_init_source(j_decompress_ptr cinfo) { }
 
-static boolean _jpeg_fill_input_buffer(j_decompress_ptr cinfo) {
+static jpeg_boolean _jpeg_fill_input_buffer(j_decompress_ptr cinfo) {
     ERR("(), should not get here.\n");
     return FALSE;
 }
@@ -1019,7 +1018,7 @@ static void _jpeg_skip_input_data(j_decompress_ptr cinfo,long num_bytes) {
     cinfo->src->bytes_in_buffer -= num_bytes;
 }
 
-static boolean _jpeg_resync_to_restart(j_decompress_ptr cinfo, int desired) {
+static jpeg_boolean _jpeg_resync_to_restart(j_decompress_ptr cinfo, int desired) {
     ERR("(desired=%d), should not get here.\n",desired);
     return FALSE;
 }
@@ -1742,6 +1741,17 @@ static HRESULT OLEPictureImpl_LoadAPM(OLEPictureImpl *This,
 }
 
 /************************************************************************
+ * BITMAP FORMAT FLAGS -
+ *   Flags that differentiate between different types of bitmaps.
+ */
+
+#define BITMAP_FORMAT_BMP   0x4d42 /* "BM" */
+#define BITMAP_FORMAT_JPEG  0xd8ff
+#define BITMAP_FORMAT_GIF   0x4947
+#define BITMAP_FORMAT_PNG   0x5089
+#define BITMAP_FORMAT_APM   0xcdd7
+
+/************************************************************************
  * OLEPictureImpl_IPersistStream_Load (IUnknown)
  *
  * Loads the binary data from the IStream. Starts at current position.
@@ -1887,19 +1897,19 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   This->loadtime_format = magic;
 
   switch (magic) {
-  case 0x4947: /* GIF */
+  case BITMAP_FORMAT_GIF: /* GIF */
     hr = OLEPictureImpl_LoadGif(This, xbuf, xread);
     break;
-  case 0xd8ff: /* JPEG */
+  case BITMAP_FORMAT_JPEG: /* JPEG */
     hr = OLEPictureImpl_LoadJpeg(This, xbuf, xread);
     break;
-  case 0x4d42: /* Bitmap */
+  case BITMAP_FORMAT_BMP: /* Bitmap */
     hr = OLEPictureImpl_LoadDIB(This, xbuf, xread);
     break;
-  case 0x5089: /* PNG */
+  case BITMAP_FORMAT_PNG: /* PNG */
     hr = OLEPictureImpl_LoadPNG(This, xbuf, xread);
     break;
-  case 0xcdd7: /* APM */
+  case BITMAP_FORMAT_APM: /* APM */
     hr = OLEPictureImpl_LoadAPM(This, xbuf, xread);
     break;
   case 0x0000: { /* ICON , first word is dwReserved */
@@ -1975,7 +1985,7 @@ static int serializeBMP(HBITMAP hBitmap, void ** ppBuffer, unsigned int * pLengt
 
     /* Fill the BITMAPFILEHEADER */
     pFileHeader = (BITMAPFILEHEADER *)(*ppBuffer);
-    pFileHeader->bfType = 0x4d42;
+    pFileHeader->bfType = BITMAP_FORMAT_BMP;
     pFileHeader->bfSize = *pLength;
     pFileHeader->bfOffBits =
         sizeof(BITMAPFILEHEADER) +
@@ -2066,7 +2076,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 
 			/* Fill out the BITMAPINFOHEADER */
 			pIconBitmapHeader = (BITMAPINFOHEADER *)(pIconData + 3 * sizeof(WORD) + sizeof(CURSORICONFILEDIRENTRY));
-			memcpy(pIconBitmapHeader, &pInfoBitmap->bmiHeader, sizeof(BITMAPINFOHEADER));
+			*pIconBitmapHeader = pInfoBitmap->bmiHeader;
 
 			/*	Find out whether a palette exists for the bitmap */
 			if (	(pInfoBitmap->bmiHeader.biBitCount == 16 && pInfoBitmap->bmiHeader.biCompression == BI_RGB)
@@ -2187,17 +2197,17 @@ static HRESULT WINAPI OLEPictureImpl_Save(
         break;
     case PICTYPE_BITMAP:
         if (This->bIsDirty) {
-            switch (This->keepOrigFormat ? This->loadtime_format : 0x4d42) {
-            case 0x4d42:
+            switch (This->keepOrigFormat ? This->loadtime_format : BITMAP_FORMAT_BMP) {
+            case BITMAP_FORMAT_BMP:
                 iSerializeResult = serializeBMP(This->desc.u.bmp.hbitmap, &pIconData, &iDataSize);
                 break;
-            case 0xd8ff:
+            case BITMAP_FORMAT_JPEG:
                 FIXME("(%p,%p,%d), PICTYPE_BITMAP (format JPEG) not implemented!\n",This,pStm,fClearDirty);
                 break;
-            case 0x4947:
+            case BITMAP_FORMAT_GIF:
                 FIXME("(%p,%p,%d), PICTYPE_BITMAP (format GIF) not implemented!\n",This,pStm,fClearDirty);
                 break;
-            case 0x5089:
+            case BITMAP_FORMAT_PNG:
                 FIXME("(%p,%p,%d), PICTYPE_BITMAP (format PNG) not implemented!\n",This,pStm,fClearDirty);
                 break;
             default:

@@ -50,13 +50,13 @@ DragDetect(
   POINT pt)
 {
 #if 0
-  return NtUserDragDetect(hWnd, pt.x, pt.y);
+  return NtUserDragDetect(hWnd, pt);
 #else
   MSG msg;
   RECT rect;
   POINT tmp;
-  ULONG dx = NtUserGetSystemMetrics(SM_CXDRAG);
-  ULONG dy = NtUserGetSystemMetrics(SM_CYDRAG);
+  ULONG dx = GetSystemMetrics(SM_CXDRAG);
+  ULONG dy = GetSystemMetrics(SM_CYDRAG);
 
   rect.left = pt.x - dx;
   rect.right = pt.x + dx;
@@ -67,12 +67,15 @@ DragDetect(
 
   for (;;)
   {
-    while (PeekMessageW(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE))
+    while (
+    PeekMessageW(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) ||
+    PeekMessageW(&msg, 0, WM_KEYFIRST,   WM_KEYLAST,   PM_REMOVE)
+    )
     {
       if (msg.message == WM_LBUTTONUP)
       {
         ReleaseCapture();
-        return 0;
+        return FALSE;
       }
       if (msg.message == WM_MOUSEMOVE)
       {
@@ -81,8 +84,16 @@ DragDetect(
         if (!PtInRect(&rect, tmp))
         {
           ReleaseCapture();
-          return 1;
+          return TRUE;
         }
+      }
+      if (msg.message == WM_KEYDOWN)
+      {
+         if (msg.wParam == VK_ESCAPE)
+         {
+             ReleaseCapture();
+             return TRUE;
+         }
       }
     }
     WaitMessage();

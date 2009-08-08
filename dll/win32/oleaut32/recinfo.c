@@ -211,12 +211,12 @@ static HRESULT WINAPI IRecordInfoImpl_RecordClear(IRecordInfo *iface, PVOID pvEx
         var = ((PBYTE)pvExisting)+This->fields[i].offset;
         switch(This->fields[i].vt) {
             case VT_BSTR:
-                /* NOTE: Windows implementatino reads DWORD (len) before string,
-                 *       but it seems to do nothing with this */
+               SysFreeString(*(BSTR*)var);
                 *(BSTR*)var = NULL;
                 break;
             case VT_I2:
             case VT_I4:
+            case VT_R4:
             case VT_R8:
             case VT_CY:
             case VT_DATE:
@@ -268,7 +268,7 @@ static HRESULT WINAPI IRecordInfoImpl_GetGuid(IRecordInfo *iface, GUID *pguid)
     if(!pguid)
         return E_INVALIDARG;
 
-    memcpy(pguid, &This->guid, sizeof(GUID));
+    *pguid = This->guid;
     return S_OK;
 }
 
@@ -467,8 +467,13 @@ static HRESULT WINAPI IRecordInfoImpl_RecordCreateCopy(IRecordInfo *iface, PVOID
 static HRESULT WINAPI IRecordInfoImpl_RecordDestroy(IRecordInfo *iface, PVOID pvRecord)
 {
     IRecordInfoImpl *This = (IRecordInfoImpl*)iface;
+    HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, pvRecord);
+
+    hres = IRecordInfo_RecordClear(iface, pvRecord);
+    if(FAILED(hres))
+        return hres;
 
     if(!HeapFree(GetProcessHeap(), 0, pvRecord))
         return E_INVALIDARG;
@@ -557,7 +562,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
 
     if(typeattr->typekind == TKIND_ALIAS) {
         hres = ITypeInfo_GetRefTypeInfo(pTI, typeattr->tdescAlias.u.hreftype, &pTypeInfo);
-        memcpy(&guid, &typeattr->guid, sizeof(GUID));
+        guid = typeattr->guid;
         ITypeInfo_ReleaseTypeAttr(pTI, typeattr);
         if(FAILED(hres)) {
             WARN("GetRefTypeInfo failed: %08x\n", hres);
@@ -567,7 +572,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
     }else  {
         pTypeInfo = pTI;
         ITypeInfo_AddRef(pTypeInfo);
-        memcpy(&guid, &typeattr->guid, sizeof(GUID));
+        guid = typeattr->guid;
     }
 
     if(typeattr->typekind != TKIND_RECORD) {
@@ -585,7 +590,7 @@ HRESULT WINAPI GetRecordInfoFromTypeInfo(ITypeInfo* pTI, IRecordInfo** ppRecInfo
     ret->size = typeattr->cbSizeInstance;
     ITypeInfo_ReleaseTypeAttr(pTypeInfo, typeattr);
 
-    memcpy(&ret->guid, &guid, sizeof(GUID));
+    ret->guid = guid;
 
     /* NOTE: Windows implementation calls ITypeInfo::GetCantainingTypeLib and
      *       ITypeLib::GetLibAttr, but we currently don't need this.

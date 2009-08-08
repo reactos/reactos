@@ -19,12 +19,10 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * TODO:
- * - IRunningObjectTable should work interprocess, but currently doesn't.
- *   Native (on Win2k at least) uses an undocumented RPC interface, IROT, to
- *   communicate with RPCSS which contains the table of marshalled data.
  */
+
+#include "config.h"
+#include "wine/port.h"
 
 #include <stdarg.h>
 #include <string.h>
@@ -50,19 +48,13 @@
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 /* see MSDN docs for IROTData::GetComparisonData, which states what this
- * constant is (http://msdn2.microsoft.com/en-us/library/ms693773.aspx) */
+ * constant is
+ */
 #define MAX_COMPARISON_DATA 2048
 
-static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *__eptr)
+static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *eptr)
 {
-    switch (GetExceptionCode())
-    {
-    case EXCEPTION_ACCESS_VIOLATION:
-    case EXCEPTION_ILLEGAL_INSTRUCTION:
-        return EXCEPTION_CONTINUE_SEARCH;
-    default:
-        return EXCEPTION_EXECUTE_HANDLER;
-    }
+    return I_RpcExceptionFilter(eptr->ExceptionRecord->ExceptionCode);
 }
 
 /* define the structure of the running object table elements */
@@ -980,9 +972,9 @@ HRESULT WINAPI RunningObjectTableImpl_Initialize(void)
     /* initialize the virtual table function */
     runningObjectTableInstance->lpVtbl = &VT_RunningObjectTableImpl;
 
-    /* the initial reference is set to "1" ! because if set to "0" it will be not practis when */
-    /* the ROT referred many times not in the same time (all the objects in the ROT will  */
-    /* be removed every time the ROT is removed ) */
+    /* the initial reference is set to "1" so that it isn't destroyed after its
+     * first use until the process is destroyed, as the running object table is
+     * a process-wide cache of a global table */
     runningObjectTableInstance->ref = 1;
 
     list_init(&runningObjectTableInstance->rot);
@@ -1219,9 +1211,9 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
 
         return res;
     }
-    /* if the file is not a storage object then attemps to match various bits in the file against a
-       pattern in the registry. this case is not frequently used ! so I present only the psodocode for
-       this case
+    /* If the file is not a storage object then attempt to match various bits in the file against a
+       pattern in the registry. This case is not frequently used, so I present only the pseudocode for
+       this case.
 
      for(i=0;i<nFileTypes;i++)
 
@@ -1248,7 +1240,7 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
     nbElm=FileMonikerImpl_DecomposePath(filePathName,&pathDec);
     absFile=pathDec[nbElm-1];
 
-    /* failed if the path represente a directory and not an absolute file name*/
+    /* failed if the path represents a directory and not an absolute file name*/
     if (!lstrcmpW(absFile, bkslashW))
         return MK_E_INVALIDEXTENSION;
 

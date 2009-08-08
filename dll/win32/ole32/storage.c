@@ -304,7 +304,7 @@ static void _create_istream16(LPSTREAM16 *str);
  * directory searches while not using a more efficient file
  * block locating system than FAT (seedling/sapling/tree
  * would result in a massive improvement - in fact we have
- * an alternative to DocFiles that we use internally that
+ * an alternative to docfiles that we use internally that
  * uses seedling/sapling/tree and *is* far more efficient).
  *
  * It is worth noting that the MS implementation of red-black

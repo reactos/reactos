@@ -483,6 +483,9 @@ static HRESULT WINAPI AboutProtocolInfo_QueryInfo(IInternetProtocolInfo *iface, 
     case QUERY_IS_SAFE:
         FIXME("Unsupported option QUERY_IS_SAFE\n");
         return E_NOTIMPL;
+    case QUERY_USES_HISTORYFOLDER:
+        FIXME("Unsupported option QUERY_USES_HISTORYFOLDER\n");
+        return E_FAIL;
     default:
         return E_FAIL;
     }

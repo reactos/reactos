@@ -288,7 +288,7 @@ static const NodeImplVtbl HTMLScriptElementImplVtbl = {
 
 HTMLElement *HTMLScriptElement_Create(nsIDOMHTMLElement *nselem)
 {
-    HTMLScriptElement *ret = heap_alloc(sizeof(HTMLScriptElement));
+    HTMLScriptElement *ret = heap_alloc_zero(sizeof(HTMLScriptElement));
     nsresult nsres;
 
     HTMLElement_Init(&ret->element);

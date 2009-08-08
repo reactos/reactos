@@ -172,6 +172,9 @@
 <directory name="msvcrt20">
 	<xi:include href="msvcrt20/msvcrt20.rbuild" />
 </directory>
+<directory name="msvcrt40">
+	<xi:include href="msvcrt40/msvcrt40.rbuild" />
+</directory>
 <directory name="msvfw32">
 	<xi:include href="msvfw32/msvfw32.rbuild" />
 </directory>

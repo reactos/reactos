@@ -1,4 +1,4 @@
-; 
+;
 ;   kernel32.def
 ;
 ;   Exports for KERNEL32 DLL
@@ -7,14 +7,14 @@
 ;
 ;   Author:  Scott Christley <scottc@net-community.com>
 ;   Date: 1996
-;   
+;
 ;   This file is part of the Windows32 API Library.
 ;
 ;   This library is free software; you can redistribute it and/or
 ;   modify it under the terms of the GNU Library General Public
 ;   License as published by the Free Software Foundation; either
 ;   version 2 of the License, or (at your option) any later version.
-;   
+;
 ;   This library is distributed in the hope that it will be useful,
 ;   but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -22,10 +22,10 @@
 ;
 ;   If you are interested in a warranty or support for this source code,
 ;   contact Scott Christley <scottc@net-community.com> for more information.
-;   
+;
 ;   You should have received a copy of the GNU Library General Public
 ;   License along with this library; see the file COPYING.LIB.
-;   If not, write to the Free Software Foundation, 
+;   If not, write to the Free Software Foundation,
 ;   59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 ;
 LIBRARY KERNEL32.DLL
@@ -419,6 +419,7 @@ GetLastError@0
 GetLocalTime@4
 GetLocaleInfoA@16
 GetLocaleInfoW@16
+GetLocaleInfoEx@16
 GetLogicalDriveStringsA@8
 GetLogicalDriveStringsW@8
 GetLogicalDrives@0

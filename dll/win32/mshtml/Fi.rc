@@ -25,4 +25,6 @@ STRINGTABLE DISCARDABLE
 {
     IDS_HTMLDISABLED    "HTML:n näyttäminen on tällähetkellä poistettu käytöstä."
     IDS_HTMLDOCUMENT    "HTML Dokumentti"
+    IDS_DOWNLOADING     "Downloading..."
+    IDS_INSTALLING      "Installing..."
 }

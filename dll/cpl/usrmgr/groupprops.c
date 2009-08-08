@@ -61,6 +61,84 @@ GetTextSid(PSID pSid,
 
 
 static VOID
+RemoveUserFromGroup(HWND hwndDlg,
+                    PGENERAL_GROUP_DATA pGroupData)
+{
+    TCHAR szUserName[UNLEN];
+    TCHAR szText[256];
+    LOCALGROUP_MEMBERS_INFO_3 memberInfo;
+    HWND hwndLV;
+    INT nItem;
+    NET_API_STATUS status;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_GROUP_GENERAL_MEMBERS);
+    nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (nItem == -1)
+        return;
+
+    /* Get the new user name */
+    ListView_GetItemText(hwndLV,
+                         nItem, 0,
+                         szUserName,
+                         UNLEN);
+
+    /* Display a warning message because the remove operation cannot be reverted */
+    wsprintf(szText, TEXT("Do you really want to remove the user \"%s\" from the group \"%s\"?"),
+             szUserName, pGroupData->szGroupName);
+    if (MessageBox(NULL, szText, TEXT("User Accounts"), MB_ICONWARNING | MB_YESNO) == IDNO)
+        return;
+
+    memberInfo.lgrmi3_domainandname = szUserName;
+
+    status = NetLocalGroupDelMembers(NULL, pGroupData->szGroupName,
+                                     3, (LPBYTE)&memberInfo, 1);
+    if (status != NERR_Success)
+    {
+        TCHAR szText[256];
+        wsprintf(szText, TEXT("Error: %u"), status);
+        MessageBox(NULL, szText, TEXT("NetLocalGroupDelMembers"), MB_ICONERROR | MB_OK);
+        return;
+    }
+
+    (void)ListView_DeleteItem(hwndLV, nItem);
+
+    if (ListView_GetItemCount(hwndLV) == 0)
+        EnableWindow(GetDlgItem(hwndDlg, IDC_GROUP_GENERAL_REMOVE), FALSE);
+}
+
+
+static BOOL
+OnNotify(HWND hwndDlg,
+         PGENERAL_GROUP_DATA pGroupData,
+         LPARAM lParam)
+{
+    LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)lParam;
+
+    switch (((LPNMHDR)lParam)->idFrom)
+    {
+        case IDC_GROUP_GENERAL_MEMBERS:
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case NM_CLICK:
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GROUP_GENERAL_REMOVE), (lpnmlv->iItem != -1));
+                    break;
+
+                case LVN_KEYDOWN:
+                    if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_DELETE)
+                    {
+                        RemoveUserFromGroup(hwndDlg, pGroupData);
+                    }
+                    break;
+
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
+static VOID
 GetGeneralGroupData(HWND hwndDlg,
                     PGENERAL_GROUP_DATA pGroupData)
 {
@@ -216,6 +294,10 @@ GroupGeneralPageProc(HWND hwndDlg,
                     if (HIWORD(wParam) == EN_CHANGE)
                         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                     break;
+
+                case IDC_GROUP_GENERAL_REMOVE:
+                    RemoveUserFromGroup(hwndDlg, pGroupData);
+                    break;
             }
             break;
 
@@ -224,6 +306,10 @@ GroupGeneralPageProc(HWND hwndDlg,
             {
                 SetGeneralGroupData(hwndDlg, pGroupData);
                 return TRUE;
+            }
+            else
+            {
+                return OnNotify(hwndDlg, pGroupData, lParam);
             }
             break;
 

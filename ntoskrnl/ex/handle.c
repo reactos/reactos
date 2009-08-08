@@ -209,8 +209,9 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
 {
     PEPROCESS Process = HandleTable->QuotaProcess;
     ULONG i, j;
-    ULONG TableLevel = (ULONG)(HandleTable->TableCode & 3);
-    ULONG_PTR TableBase = HandleTable->TableCode & ~3;
+    ULONG_PTR TableCode = HandleTable->TableCode;
+    ULONG TableLevel = TableCode & 3;
+    ULONG_PTR TableBase = TableCode & ~3;
     PHANDLE_TABLE_ENTRY Level1, *Level2, **Level3;
     PAGED_CODE();
 
@@ -497,8 +498,9 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
     PHANDLE_TABLE_ENTRY Low = NULL, *Mid, **High, *SecondLevel, **ThirdLevel;
     ULONG NewFree, FirstFree;
     PVOID Value;
-    ULONG_PTR TableBase = HandleTable->TableCode & ~3;
-    ULONG TableLevel = (ULONG)(TableBase & 3);
+    ULONG_PTR TableCode = HandleTable->TableCode;
+    ULONG_PTR TableBase = TableCode & ~3;
+    ULONG TableLevel = (ULONG)(TableCode & 3);
     PAGED_CODE();
 
     /* Check how many levels we already have */

@@ -54,7 +54,7 @@ typedef struct CompositeMonikerImpl{
 
     LONG ref; /* reference counter for this object */
 
-    IMoniker** tabMoniker; /* dynamaic table containing all components (monikers) of this composite moniker */
+    IMoniker** tabMoniker; /* dynamic table containing all components (monikers) of this composite moniker */
 
     ULONG    tabSize;      /* size of tabMoniker */
 
@@ -903,7 +903,7 @@ CompositeMonikerImpl_CommonPrefixWith(IMoniker* iface, IMoniker* pmkOther,
 
         IEnumMoniker_Next(enumMoniker1,1,&tempMk1,NULL);
 
-        /* if we have more than one commun moniker the result will be a composite moniker */
+        /* if we have more than one common moniker the result will be a composite moniker */
         if (nbCommonMk>1){
 
             /* initialize the common prefix moniker with the composite of two first moniker (from the left)*/
@@ -928,7 +928,7 @@ CompositeMonikerImpl_CommonPrefixWith(IMoniker* iface, IMoniker* pmkOther,
             return S_OK;
         }
         else{
-            /* if we have only one commun moniker the result will be a simple moniker which is the most-left one*/
+            /* if we have only one common moniker the result will be a simple moniker which is the most-left one*/
             *ppmkPrefix=tempMk1;
 
             return S_OK;

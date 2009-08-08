@@ -372,7 +372,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Plik nie istnieje.t\nCzy chcesz go utworzyæ?"
     IDS_OVERWRITEFILE       "Plik istnieje.\nCzy chcesz go zast¹piæ?"
     IDS_INVALID_FILENAME_TITLE "B³êdny(e) znak(i) w nazwie"
-    IDS_INVALID_FILENAME    "Nazwa pliku nie mo¿e zawieraæ znaków: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Nazwa pliku nie mo¿e zawieraæ znaków:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Katalog nie istnieje"
     IDS_FILENOTEXISTING     "Plik nie istnieje"
 }

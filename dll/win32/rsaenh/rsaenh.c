@@ -3822,7 +3822,7 @@ cleanup:
     return res;
 }
 
-static const WCHAR szProviderKeys[5][104] = {
+static const WCHAR szProviderKeys[6][116] = {
     {   'S','o','f','t','w','a','r','e','\\',
         'M','i','c','r','o','s','o','f','t','\\','C','r','y','p','t','o','g','r',
         'a','p','h','y','\\','D','e','f','a','u','l','t','s','\\','P','r','o','v',
@@ -3851,7 +3851,13 @@ static const WCHAR szProviderKeys[5][104] = {
         'C','r','y','p','t','o','g','r','a','p','h','y','\\','D','e','f','a','u','l','t','s','\\',
         'P','r','o','v','i','d','e','r','\\','M','i','c','r','o','s','o','f','t',' ',
         'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',
-        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 },
+    {   'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+        'C','r','y','p','t','o','g','r','a','p','h','y','\\','D','e','f','a','u','l','t','s','\\',
+        'P','r','o','v','i','d','e','r','\\','M','i','c','r','o','s','o','f','t',' ',
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',
+        ' ','(','P','r','o','t','o','t','y','p','e',')',0 }
 };
 static const WCHAR szDefaultKeys[3][65] = {
     {   'S','o','f','t','w','a','r','e','\\',
@@ -3897,7 +3903,7 @@ HRESULT WINAPI DllRegisterServer(void)
     long apiRet;
     int i;
 
-    for (i=0; i<5; i++) {
+    for (i=0; i<6; i++) {
         apiRet = RegCreateKeyExW(HKEY_LOCAL_MACHINE, szProviderKeys[i], 0, NULL,
             REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key, &dp);
 
@@ -3917,6 +3923,7 @@ HRESULT WINAPI DllRegisterServer(void)
                         type=PROV_RSA_SCHANNEL;
                         break;
                     case 4:
+                    case 5:
                         type=PROV_RSA_AES;
                         break;
                     default:
@@ -3993,6 +4000,7 @@ HRESULT WINAPI DllUnregisterServer(void)
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[2]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[3]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[4]);
+    RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[5]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szDefaultKeys[0]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szDefaultKeys[1]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szDefaultKeys[2]);

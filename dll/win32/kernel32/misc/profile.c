@@ -435,7 +435,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
 
         /* get rid of white space */
         while (szLineStart < szLineEnd && PROFILE_isspaceW(*szLineStart)) szLineStart++;
-        while ((szLineEnd > szLineStart) && ((szLineEnd[-1] == '\n') || PROFILE_isspaceW(szLineEnd[-1]))) szLineEnd--;
+        while ((szLineEnd > szLineStart) && ((szLineEnd[-1] == '\n') || (PROFILE_isspaceW(szLineEnd[-1]) && szLineEnd[-1] != ' '))) szLineEnd--;
 
         if (szLineStart >= szLineEnd)
             continue;

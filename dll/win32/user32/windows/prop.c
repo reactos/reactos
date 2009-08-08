@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
  * PURPOSE:         Input
@@ -32,13 +31,38 @@
 
 #include <wine/debug.h>
 
-typedef struct _PROPLISTITEM
-{
-  ATOM Atom;
-  HANDLE Data;
-} PROPLISTITEM, *PPROPLISTITEM;
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 #define ATOM_BUFFER_SIZE 256
+
+/* INTERNAL FUNCTIONS ********************************************************/
+
+HANDLE
+FASTCALL
+IntGetProp(HWND hWnd, ATOM Atom)
+{
+  PLIST_ENTRY ListEntry, temp;
+  PPROPERTY Property;
+  PWINDOW pWnd;
+  int i;
+
+  pWnd = ValidateHwnd(hWnd);
+  if (!pWnd) return NULL;
+
+  ListEntry = SharedPtrToUser(pWnd->PropListHead.Flink);
+  for (i = 0; i < pWnd->PropListItems; i++ )
+  {
+      Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
+      if (Property->Atom == Atom)
+      {
+         return(Property);
+      }
+      temp = ListEntry->Flink;
+      ListEntry = SharedPtrToUser(temp);
+  }
+  return NULL;
+}
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -345,15 +369,19 @@ HANDLE STDCALL
 GetPropW(HWND hWnd, LPCWSTR lpString)
 {
   ATOM Atom;
+  HANDLE Data = NULL;
+  PPROPERTY Prop;
   if (HIWORD(lpString))
-    {
-      Atom = GlobalFindAtomW(lpString);
-    }
+  {
+     Atom = GlobalFindAtomW(lpString);
+  }
   else
-    {
-      Atom = LOWORD((DWORD)lpString);
-    }
-  return(NtUserGetProp(hWnd, Atom));
+  {
+     Atom = LOWORD((DWORD)lpString);
+  }
+  Prop = IntGetProp(hWnd, Atom);
+  if (Prop != NULL) Data = Prop->Data;
+  return Data;
 }
 
 

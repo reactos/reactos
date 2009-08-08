@@ -23,6 +23,12 @@ typedef struct _PROFILE_USER_DATA
     TCHAR szUserName[1];
 } PROFILE_USER_DATA, *PPROFILE_USER_DATA;
 
+typedef struct _MEMBERSHIP_USER_DATA
+{
+    PLOCALGROUP_USERS_INFO_0 pGroupData;
+    DWORD dwGroupCount;
+    TCHAR szUserName[1];
+} MEMBERSHIP_USER_DATA, *PMEMBERSHIP_USER_DATA;
 
 
 static VOID
@@ -258,11 +264,9 @@ UserProfilePageProc(HWND hwndDlg,
 
 
 static VOID
-GetMembershipData(HWND hwndDlg, LPTSTR lpUserName)
+GetUserMembershipData(HWND hwndDlg, PMEMBERSHIP_USER_DATA pUserData)
 {
-    PLOCALGROUP_USERS_INFO_0 usersInfo = NULL;
     NET_API_STATUS status;
-    DWORD dwRead;
     DWORD dwTotal;
     DWORD i;
     HIMAGELIST hImgList;
@@ -293,28 +297,328 @@ GetMembershipData(HWND hwndDlg, LPTSTR lpUserName)
     (void)ListView_InsertColumn(hwndLV, 0, &column);
 
 
-    status = NetUserGetLocalGroups(NULL, lpUserName, 0, 0,
-                                   (LPBYTE*)&usersInfo,
+    status = NetUserGetLocalGroups(NULL, pUserData->szUserName, 0, 0,
+                                   (LPBYTE*)&pUserData->pGroupData,
                                    MAX_PREFERRED_LENGTH,
-                                   &dwRead,
+                                   &pUserData->dwGroupCount,
                                    &dwTotal);
     if (status != NERR_Success)
         return;
 
-    for (i = 0; i < dwRead; i++)
+    for (i = 0; i < pUserData->dwGroupCount; i++)
     {
         ZeroMemory(&lvi, sizeof(lvi));
         lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
-        lvi.pszText = usersInfo[i].lgrui0_name;
+        lvi.pszText = pUserData->pGroupData[i].lgrui0_name;
         lvi.state = 0;
         lvi.iImage = 0; 
 
         (void)ListView_InsertItem(hwndLV, &lvi);
     }
+}
 
 
-    NetApiBufferFree(usersInfo);
+static VOID
+RemoveGroupFromUser(HWND hwndDlg,
+                    PMEMBERSHIP_USER_DATA pUserData)
+{
+    TCHAR szGroupName[UNLEN];
+    TCHAR szText[256];
+    LOCALGROUP_MEMBERS_INFO_3 memberInfo;
+    HWND hwndLV;
+    INT nItem;
+    NET_API_STATUS status;
 
+    hwndLV = GetDlgItem(hwndDlg, IDC_USER_MEMBERSHIP_LIST);
+    nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+    if (nItem == -1)
+        return;
+
+    /* Get the new user name */
+    ListView_GetItemText(hwndLV,
+                         nItem, 0,
+                         szGroupName,
+                         UNLEN);
+
+    /* Display a warning message because the remove operation cannot be reverted */
+    wsprintf(szText, TEXT("Do you really want to remove the user \"%s\" from the group \"%s\"?"),
+             pUserData->szUserName, szGroupName);
+    if (MessageBox(NULL, szText, TEXT("User Accounts"), MB_ICONWARNING | MB_YESNO) == IDNO)
+        return;
+
+    memberInfo.lgrmi3_domainandname = pUserData->szUserName;
+
+    status = NetLocalGroupDelMembers(NULL, szGroupName,
+                                     3, (LPBYTE)&memberInfo, 1);
+    if (status != NERR_Success)
+    {
+        TCHAR szText[256];
+        wsprintf(szText, TEXT("Error: %u"), status);
+        MessageBox(NULL, szText, TEXT("NetLocalGroupDelMembers"), MB_ICONERROR | MB_OK);
+        return;
+    }
+
+    (void)ListView_DeleteItem(hwndLV, nItem);
+
+    if (ListView_GetItemCount(hwndLV) == 0)
+        EnableWindow(GetDlgItem(hwndDlg, IDC_USER_MEMBERSHIP_REMOVE), FALSE);
+}
+
+
+static VOID
+InitUserGroupsList(HWND hwndDlg)
+{
+    HWND hwndLV;
+    LV_COLUMN column;
+    RECT rect;
+    TCHAR szStr[32];
+
+    NET_API_STATUS netStatus;
+    PLOCALGROUP_INFO_1 pBuffer;
+    DWORD entriesread;
+    DWORD totalentries;
+    DWORD resume_handle = 0;
+    DWORD i;
+    LV_ITEM lvi;
+    INT iItem;
+
+    HIMAGELIST hImgList;
+    HICON hIcon;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_USER_ADD_MEMBERSHIP_LIST);
+    GetClientRect(hwndLV, &rect);
+
+    hImgList = ImageList_Create(16,16,ILC_COLOR8 | ILC_MASK,5,5);
+    hIcon = LoadImage(hApplet,MAKEINTRESOURCE(IDI_GROUP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
+    ImageList_AddIcon(hImgList,hIcon);
+    DestroyIcon(hIcon);
+
+    (void)ListView_SetImageList(hwndLV, hImgList, LVSIL_SMALL);
+    (void)ListView_SetExtendedListViewStyle(hwndLV, LVS_EX_FULLROWSELECT);
+
+    memset(&column, 0x00, sizeof(column));
+    column.mask = LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_TEXT;
+    column.fmt = LVCFMT_LEFT;
+    column.cx = (INT)((rect.right - rect.left) * 0.40);
+    column.iSubItem = 0;
+    LoadString(hApplet, IDS_NAME, szStr, sizeof(szStr) / sizeof(szStr[0]));
+    column.pszText = szStr;
+    (void)ListView_InsertColumn(hwndLV, 0, &column);
+
+    column.cx = (INT)((rect.right - rect.left) * 0.60);
+    column.iSubItem = 1;
+    LoadString(hApplet, IDS_DESCRIPTION, szStr, sizeof(szStr) / sizeof(szStr[0]));
+    column.pszText = szStr;
+    (void)ListView_InsertColumn(hwndLV, 1, &column);
+
+    for (;;)
+    {
+        netStatus = NetLocalGroupEnum(NULL, 1, (LPBYTE*)&pBuffer,
+                                      1024, &entriesread,
+                                      &totalentries, &resume_handle);
+        if (netStatus != NERR_Success && netStatus != ERROR_MORE_DATA)
+            break;
+
+        for (i = 0; i < entriesread; i++)
+        {
+           memset(&lvi, 0x00, sizeof(lvi));
+           lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
+           lvi.pszText = pBuffer[i].lgrpi1_name;
+           lvi.state = 0;
+           lvi.iImage = 0;
+           iItem = ListView_InsertItem(hwndLV, &lvi);
+
+           ListView_SetItemText(hwndLV, iItem, 1,
+                                pBuffer[i].lgrpi1_comment);
+        }
+
+        NetApiBufferFree(&pBuffer);
+
+        /* No more data left */
+        if (netStatus != ERROR_MORE_DATA)
+            break;
+    }
+}
+
+
+static BOOL
+AddSelectedGroupsToUser(HWND hwndDlg,
+                        PMEMBERSHIP_USER_DATA pUserData)
+{
+    HWND hwndLV;
+    INT nItem;
+    TCHAR szGroupName[UNLEN];
+    BOOL bResult = FALSE;
+    BOOL bFound;
+    DWORD i;
+    LOCALGROUP_MEMBERS_INFO_3 memberInfo;
+    NET_API_STATUS status;
+
+    hwndLV = GetDlgItem(hwndDlg, IDC_USER_ADD_MEMBERSHIP_LIST);
+
+    if (ListView_GetSelectedCount(hwndLV) > 0)
+    {
+        nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+        while (nItem != -1)
+        {
+            /* Get the new user name */
+            ListView_GetItemText(hwndLV,
+                                 nItem, 0,
+                                 szGroupName,
+                                 UNLEN);
+
+            bFound = FALSE;
+            for (i = 0; i < pUserData->dwGroupCount; i++)
+            {
+                if (_tcscmp(pUserData->pGroupData[i].lgrui0_name, szGroupName) == 0)
+                    bFound = TRUE;
+            }
+
+            if (!bFound)
+            {
+                memberInfo.lgrmi3_domainandname = pUserData->szUserName;
+
+                status = NetLocalGroupAddMembers(NULL, szGroupName, 3,
+                                                 (LPBYTE)&memberInfo, 1);
+                if (status == NERR_Success)
+                {
+                    DebugPrintf(_TEXT("Selected group: %s"), szGroupName);
+                    bResult = TRUE;
+                }
+                else
+                {
+                    TCHAR szText[256];
+                    wsprintf(szText, TEXT("Error: %u"), status);
+                    MessageBox(NULL, szText, TEXT("NetLocalGroupAddMembers"), MB_ICONERROR | MB_OK);
+                }
+            }
+
+            nItem = ListView_GetNextItem(hwndLV, nItem, LVNI_SELECTED);
+        }
+    }
+
+    return bResult;
+}
+
+
+INT_PTR CALLBACK
+AddGroupToUserDlgProc(HWND hwndDlg,
+                      UINT uMsg,
+                      WPARAM wParam,
+                      LPARAM lParam)
+{
+    PMEMBERSHIP_USER_DATA pUserData;
+
+    UNREFERENCED_PARAMETER(wParam);
+
+    pUserData= (PMEMBERSHIP_USER_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            pUserData= (PMEMBERSHIP_USER_DATA)lParam;
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pUserData);
+            InitUserGroupsList(hwndDlg);
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    if (AddSelectedGroupsToUser(hwndDlg, pUserData))
+                        EndDialog(hwndDlg, IDOK);
+                    else
+                        EndDialog(hwndDlg, IDCANCEL);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, IDCANCEL);
+                    break;
+            }
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+static VOID
+AddGroupToUser(HWND hwndDlg,
+               PMEMBERSHIP_USER_DATA pUserData)
+{
+    HWND hwndLV;
+    NET_API_STATUS status;
+    DWORD i;
+    DWORD dwTotal;
+    LV_ITEM lvi;
+
+    if (DialogBoxParam(hApplet,
+                       MAKEINTRESOURCE(IDD_USER_ADD_MEMBERSHIP),
+                       hwndDlg,
+                       AddGroupToUserDlgProc,
+                       (LPARAM)pUserData) == IDOK)
+    {
+        // TODO: Update Membership list!
+        hwndLV = GetDlgItem(hwndDlg, IDC_USER_MEMBERSHIP_LIST);
+
+        if (pUserData->pGroupData)
+            NetApiBufferFree(pUserData->pGroupData);
+
+        (void)ListView_DeleteAllItems(hwndLV);
+
+        status = NetUserGetLocalGroups(NULL, pUserData->szUserName, 0, 0,
+                                       (LPBYTE*)&pUserData->pGroupData,
+                                       MAX_PREFERRED_LENGTH,
+                                       &pUserData->dwGroupCount,
+                                       &dwTotal);
+        if (status != NERR_Success)
+            return;
+
+        for (i = 0; i < pUserData->dwGroupCount; i++)
+        {
+            ZeroMemory(&lvi, sizeof(lvi));
+            lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE;
+            lvi.pszText = pUserData->pGroupData[i].lgrui0_name;
+            lvi.state = 0;
+            lvi.iImage = 0; 
+
+            (void)ListView_InsertItem(hwndLV, &lvi);
+        }
+    }
+}
+
+
+static BOOL
+OnNotify(HWND hwndDlg,
+         PMEMBERSHIP_USER_DATA pUserData,
+         LPARAM lParam)
+{
+    LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)lParam;
+
+    switch (((LPNMHDR)lParam)->idFrom)
+    {
+        case IDC_USER_MEMBERSHIP_LIST:
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case NM_CLICK:
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_USER_MEMBERSHIP_REMOVE), (lpnmlv->iItem != -1));
+                    break;
+
+                case LVN_KEYDOWN:
+                    if (((LPNMLVKEYDOWN)lParam)->wVKey == VK_DELETE)
+                    {
+                        RemoveGroupFromUser(hwndDlg, pUserData);
+                    }
+                    break;
+
+            }
+            break;
+    }
+
+    return FALSE;
 }
 
 
@@ -324,18 +628,59 @@ UserMembershipPageProc(HWND hwndDlg,
                        WPARAM wParam,
                        LPARAM lParam)
 {
+    PMEMBERSHIP_USER_DATA pUserData;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(hwndDlg);
 
+    pUserData= (PMEMBERSHIP_USER_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            GetMembershipData(hwndDlg,
-                              (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
+            pUserData = (PMEMBERSHIP_USER_DATA)HeapAlloc(GetProcessHeap(),
+                                                         HEAP_ZERO_MEMORY,
+                                                         sizeof(MEMBERSHIP_USER_DATA) + 
+                                                         lstrlen((LPTSTR)((PROPSHEETPAGE *)lParam)->lParam) * sizeof(TCHAR));
+            lstrcpy(pUserData->szUserName, (LPTSTR)((PROPSHEETPAGE *)lParam)->lParam);
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (INT_PTR)pUserData);
+
+            GetUserMembershipData(hwndDlg, pUserData);
             break;
 
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_USER_MEMBERSHIP_ADD:
+                    AddGroupToUser(hwndDlg, pUserData);
+                    break;
+
+                case IDC_USER_MEMBERSHIP_REMOVE:
+                    RemoveGroupFromUser(hwndDlg, pUserData);
+                    break;
+            }
+            break;
+
+        case WM_NOTIFY:
+            if (((LPPSHNOTIFY)lParam)->hdr.code == PSN_APPLY)
+            {
+                return TRUE;
+            }
+            else
+            {
+                return OnNotify(hwndDlg, pUserData, lParam);
+            }
+            break;
+
+
+        case WM_DESTROY:
+            if (pUserData->pGroupData)
+                NetApiBufferFree(pUserData->pGroupData);
+
+            HeapFree(GetProcessHeap(), 0, pUserData);
+            break;
     }
 
     return FALSE;

@@ -6,7 +6,7 @@
  * Copyright 2005 Daniel Remenak
  * Copyright 2006 Google (Benjamin Arai)
  *
- * The alorithm for conversion from Julian days to day/month/year is based on
+ * The algorithm for conversion from Julian days to day/month/year is based on
  * that devised by Henry Fliegel, as implemented in PostgreSQL, which is
  * Copyright 1994-7 Regents of the University of California
  *
@@ -1108,7 +1108,7 @@ static HRESULT VARIANT_RollUdate(UDATE *lpUd)
     {
       lpUd->st.wMonth--; /* Previous month */
       if (lpUd->st.wMonth == 2 && IsLeapYear(lpUd->st.wYear))
-        lpUd->st.wDay = 29; /* Februaury has 29 days on leap years */
+        lpUd->st.wDay = 29; /* February has 29 days on leap years */
       else
         lpUd->st.wDay = days[lpUd->st.wMonth]; /* Last day of the month */
     }
@@ -1119,7 +1119,7 @@ static HRESULT VARIANT_RollUdate(UDATE *lpUd)
 
     /* Possibly need to roll the date forward */
     if (lpUd->st.wMonth == 2 && IsLeapYear(lpUd->st.wYear))
-      rollForward = lpUd->st.wDay - 29; /* Februaury has 29 days on leap years */
+      rollForward = lpUd->st.wDay - 29; /* February has 29 days on leap years */
     else
       rollForward = lpUd->st.wDay - days[lpUd->st.wMonth];
 
@@ -1254,7 +1254,7 @@ INT WINAPI SystemTimeToVariantTime(LPSYSTEMTIME lpSt, double *pDateOut)
   if (lpSt->wMonth > 12)
     return FALSE;
 
-  memcpy(&ud.st, lpSt, sizeof(ud.st));
+  ud.st = *lpSt;
   return !VarDateFromUdate(&ud, 0, pDateOut);
 }
 
@@ -1280,7 +1280,7 @@ INT WINAPI VariantTimeToSystemTime(double dateIn, LPSYSTEMTIME lpSt)
   if (FAILED(VarUdateFromDate(dateIn, 0, &ud)))
     return FALSE;
 
-  memcpy(lpSt, &ud.st, sizeof(ud.st));
+  *lpSt = ud.st;
   return TRUE;
 }
 
@@ -1312,8 +1312,8 @@ HRESULT WINAPI VarDateFromUdateEx(UDATE *pUdateIn, LCID lcid, ULONG dwFlags, DAT
 
   if (lcid != MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT))
     FIXME("lcid possibly not handled, treating as en-us\n");
-      
-  memcpy(&ud, pUdateIn, sizeof(ud));
+
+  ud = *pUdateIn;
 
   if (dwFlags & VAR_VALIDDATE)
     WARN("Ignoring VAR_VALIDDATE\n");
@@ -1468,8 +1468,24 @@ HRESULT WINAPI VarUdateFromDate(DATE dateIn, ULONG dwFlags, UDATE *lpUdate)
 static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID lcid, DWORD dwFlags)
 {
   static const VARIANT_NUMBER_CHARS defaultChars = { '-','+','.',',','$',0,'.',',' };
+  static CRITICAL_SECTION csLastChars = { NULL, -1, 0, 0, 0, 0 };
+  static VARIANT_NUMBER_CHARS lastChars;
+  static LCID lastLcid = -1;
+  static DWORD lastFlags = 0;
   LCTYPE lctype = dwFlags & LOCALE_NOUSEROVERRIDE;
   WCHAR buff[4];
+
+  /* To make caching thread-safe, a critical section is needed */
+  EnterCriticalSection(&csLastChars);
+
+  /* Asking for default locale entries is very expensive: It is a registry
+     server call. So cache one locally, as Microsoft does it too */
+  if(lcid == lastLcid && dwFlags == lastFlags)
+  {
+    memcpy(lpChars, &lastChars, sizeof(defaultChars));
+    LeaveCriticalSection(&csLastChars);
+    return;
+  }
 
   memcpy(lpChars, &defaultChars, sizeof(defaultChars));
   GET_NUMBER_TEXT(LOCALE_SNEGATIVESIGN, cNegativeSymbol);
@@ -1490,6 +1506,11 @@ static void VARIANT_GetLocalisedNumberChars(VARIANT_NUMBER_CHARS *lpChars, LCID 
   }
   TRACE("lcid 0x%x, cCurrencyLocal =%d,%d '%c','%c'\n", lcid, lpChars->cCurrencyLocal,
         lpChars->cCurrencyLocal2, lpChars->cCurrencyLocal, lpChars->cCurrencyLocal2);
+
+  memcpy(&lastChars, lpChars, sizeof(defaultChars));
+  lastLcid = lcid;
+  lastFlags = dwFlags;
+  LeaveCriticalSection(&csLastChars);
 }
 
 /* Number Parsing States */
@@ -1915,7 +1936,7 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
  * NOTES
  *  - The smallest favoured type present in dwVtBits that can represent the
  *    number in pNumprs without losing precision is used.
- *  - Signed types are preferrred over unsigned types of the same size.
+ *  - Signed types are preferred over unsigned types of the same size.
  *  - Preferred types in order are: integer, float, double, currency then decimal.
  *  - Rounding (dropping of decimal points) occurs without error. See VarI8FromR8()
  *    for details of the rounding method.
@@ -1924,7 +1945,7 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
  *    design?): If some other VTBIT's for integers are specified together
  *    with VTBIT_I8 and the number will fit only in a VT_I8 Windows will "cast"
  *    the number to the smallest requested integer truncating this way the
- *    number.  Wine dosn't implement this "feature" (yet?).
+ *    number.  Wine doesn't implement this "feature" (yet?).
  */
 HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
                                   ULONG dwVtBits, VARIANT *pVarDst)
@@ -2517,7 +2538,7 @@ HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
     else
         hres = DISP_E_BADVARTYPE;
 
-    /* if resutl type is not S_OK, then no need to go further */
+    /* if result type is not S_OK, then no need to go further */
     if (hres != S_OK)
     {
         V_VT(out) = resultvt;
@@ -2666,8 +2687,8 @@ static HRESULT _VarChangeTypeExWrap (VARIANTARG* pvargDest,
  *  Failure:     An HRESULT error code indicating the error.
  *
  * NOTES
- *  Native VarCmp up to and including WinXP dosn't like as input variants
- *  I1, UI2, VT_UI4, UI8 and UINT. INT is accepted only as left variant.
+ *  Native VarCmp up to and including WinXP doesn't like I1, UI2, VT_UI4,
+ *  UI8 and UINT as input variants. INT is accepted only as left variant.
  *
  *  If both input variants are ERROR then VARCMP_EQ will be returned, else
  *  an ERROR variant will trigger an error.
@@ -3115,10 +3136,10 @@ VarAnd_Exit:
  *  Failure: An HRESULT error code indicating the error.
  *
  * NOTES
- *  Native VarAdd up to and including WinXP dosn't like as input variants
- *  I1, UI2, UI4, UI8, INT and UINT.
+ *  Native VarAdd up to and including WinXP doesn't like I1, UI2, UI4,
+ *  UI8, INT and UINT as input variants.
  *
- *  Native VarAdd dosn't check for NULL in/out pointers and crashes. We do the
+ *  Native VarAdd doesn't check for NULL in/out pointers and crashes. We do the
  *  same here.
  *
  * FIXME
@@ -3330,10 +3351,10 @@ end:
  *  Failure: An HRESULT error code indicating the error.
  *
  * NOTES
- *  Native VarMul up to and including WinXP dosn't like as input variants
- *  I1, UI2, UI4, UI8, INT and UINT. But it can multiply apples with oranges.
+ *  Native VarMul up to and including WinXP doesn't like I1, UI2, UI4,
+ *  UI8, INT and UINT as input variants. But it can multiply apples with oranges.
  *
- *  Native VarMul dosn't check for NULL in/out pointers and crashes. We do the
+ *  Native VarMul doesn't check for NULL in/out pointers and crashes. We do the
  *  same here.
  *
  * FIXME

@@ -25,8 +25,8 @@ STRINGTABLE DISCARDABLE
 {
     IDS_HTMLDISABLED    "HTML-tegning er for øyeblikket deaktivert."
     IDS_HTMLDOCUMENT    "HTML-dokument"
-    IDS_DOWNLOADING     "Laster ned . . ."
-    IDS_INSTALLING      "Installerer . . ."
+    IDS_DOWNLOADING     "Laster ned..."
+    IDS_INSTALLING      "Installerer..."
 }
 
 ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 85

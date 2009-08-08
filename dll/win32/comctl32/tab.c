@@ -1715,12 +1715,12 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
       if(lStyle & TCS_VERTICAL)
       {
         center_offset_h = ((drawRect->bottom - drawRect->top) - (cy + infoPtr->uHItemPadding + (rcText.right  - rcText.left))) / 2;
-        center_offset_v = (drawRect->left + (drawRect->right - drawRect->left) - cx) / 2;
+        center_offset_v = ((drawRect->right - drawRect->left) - cx) / 2;
       }
       else
       {
         center_offset_h = ((drawRect->right - drawRect->left) - (cx + infoPtr->uHItemPadding + (rcText.right  - rcText.left))) / 2;
-        center_offset_v = (drawRect->top + (drawRect->bottom - drawRect->top) - cy) / 2;
+        center_offset_v = ((drawRect->bottom - drawRect->top) - cy) / 2;
       }
 
       /* if an item is selected, the icon is shifted up instead of down */

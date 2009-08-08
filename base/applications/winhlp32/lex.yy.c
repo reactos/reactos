@@ -403,6 +403,7 @@ char *yytext;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+#define YY_NO_INPUT 1
 #define YY_NO_UNPUT 1
 #define quote 1
 
@@ -429,7 +430,7 @@ struct lexret  yylval;
 #define YY_INPUT(buf,result,max_size)\
   if ((result = *macroptr ? 1 : 0)) buf[0] = *macroptr++;
 
-#line 433 "lex.yy.c"
+#line 434 "lex.yy.c"
 
 /* Macros after this point can all be overridden by user definitions in
  * section 1.
@@ -583,7 +584,7 @@ YY_DECL
 #line 49 "macro.lex.l"
 
 
-#line 587 "lex.yy.c"
+#line 588 "lex.yy.c"
 
 	if ( yy_init )
 		{
@@ -753,7 +754,7 @@ YY_RULE_SETUP
 #line 97 "macro.lex.l"
 ECHO;
 	YY_BREAK
-#line 757 "lex.yy.c"
+#line 758 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

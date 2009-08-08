@@ -103,7 +103,7 @@ static void wprint_mac(WCHAR* buffer, int len, const MIB_IFROW *ifRow)
 
 /* Theoretically this could be too short, except that MS defines
  * MAX_ADAPTER_NAME as 128, and MAX_INTERFACE_NAME_LEN as 256, and both
- * represent a count of WCHARs, so even with an extroardinarily long header
+ * represent a count of WCHARs, so even with an extraordinarily long header
  * this will be plenty
  */
 #define MAX_TRANSPORT_NAME MAX_INTERFACE_NAME_LEN
@@ -348,7 +348,6 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
     {
         PWKSTA_USER_INFO_1 ui;
         PWKSTA_USER_INFO_0 ui0;
-        DWORD dwSize;
         LSA_OBJECT_ATTRIBUTES ObjectAttributes;
         LSA_HANDLE PolicyHandle;
         PPOLICY_ACCOUNT_DOMAIN_INFO DomainInfo;
@@ -405,7 +404,6 @@ NET_API_STATUS WINAPI NetWkstaUserGetInfo(LMSTR reserved, DWORD level,
             oth_domains_sz * sizeof(WCHAR));
 
         /* get data */
-        dwSize = username_sz;
         lstrcpyW(ui->wkui1_username, ui0->wkui0_username);
         NetApiBufferFree(ui0);
 

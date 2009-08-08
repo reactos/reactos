@@ -231,7 +231,7 @@ fast_mp_montgomery_reduce (mp_int * x, const mp_int * n, mp_digit rho)
     /* a = a + mu * m * b**i
      *
      * This is computed in place and on the fly.  The multiplication
-     * by b**i is handled by offseting which columns the results
+     * by b**i is handled by offsetting which columns the results
      * are added to.
      *
      * Note the comba method normally doesn't handle carries in the
@@ -367,7 +367,7 @@ fast_s_mp_mul_digs (const mp_int * a, const mp_int * b, mp_int * c, int digs)
       tmpx = a->dp + tx;
       tmpy = b->dp + ty;
 
-      /* this is the number of times the loop will iterrate, essentially its 
+      /* This is the number of times the loop will iterate, essentially it's
          while (tx++ < a->used && ty-- >= 0) { ... }
        */
       iy = MIN(a->used-tx, ty+1);
@@ -444,7 +444,7 @@ fast_s_mp_mul_high_digs (const mp_int * a, const mp_int * b, mp_int * c, int dig
       tmpx = a->dp + tx;
       tmpy = b->dp + ty;
 
-      /* this is the number of times the loop will iterrate, essentially its 
+      /* This is the number of times the loop will iterate, essentially it's
          while (tx++ < a->used && ty-- >= 0) { ... }
        */
       iy = MIN(a->used-tx, ty+1);
@@ -544,7 +544,7 @@ int fast_s_mp_sqr (const mp_int * a, mp_int * b)
       tmpx = a->dp + tx;
       tmpy = a->dp + ty;
 
-      /* this is the number of times the loop will iterrate, essentially its 
+      /* This is the number of times the loop will iterate, essentially it's
          while (tx++ < a->used && ty-- >= 0) { ... }
        */
       iy = MIN(a->used-tx, ty+1);
@@ -2259,7 +2259,7 @@ __ERR:mp_clear_multi (&x, &y, &u, &v, &A, &B, &C, &D, NULL);
  * are saved.  Note also that the call to mp_mul can end up back 
  * in this function if the a0, a1, b0, or b1 are above the threshold.  
  * This is known as divide-and-conquer and leads to the famous 
- * O(N**lg(3)) or O(N**1.584) work which is asymptopically lower than 
+ * O(N**lg(3)) or O(N**1.584) work which is asymptotically lower than
  * the standard O(N**2) that the baseline/comba methods use.  
  * Generally though the overhead of this method doesn't pay off 
  * until a certain size (N ~ 80) is reached.

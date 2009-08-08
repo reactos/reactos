@@ -3449,7 +3449,6 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       PropSheetInfo* psInfo = (PropSheetInfo*) lParam;
       WCHAR* strCaption = (WCHAR*)Alloc(MAX_CAPTION_LENGTH*sizeof(WCHAR));
       HWND hwndTabCtrl = GetDlgItem(hwnd, IDC_TABCONTROL);
-      LPCPROPSHEETPAGEW ppshpage;
       int idx;
       LOGFONTW logFont;
 
@@ -3545,7 +3544,6 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					      PSCB_INITIALIZED, (LPARAM)0);
 
       idx = psInfo->active_page;
-      ppshpage = (LPCPROPSHEETPAGEW)psInfo->proppage[idx].hpage;
       psInfo->active_page = -1;
 
       PROPSHEET_SetCurSel(hwnd, idx, 1, psInfo->proppage[idx].hpage);

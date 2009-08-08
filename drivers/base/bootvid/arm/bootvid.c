@@ -51,7 +51,7 @@ VGA_COLOR VidpVga8To16BitTransform[16] =
     {0x00, 0x08, 0x08}, // Cyan
     {0x08, 0x00, 0x00}, // Red
     {0x08, 0x00, 0x08}, // Magenta
-    {0x08, 0x08, 0x00}, // Brown
+    {0x0B, 0x0D, 0x0F}, // Brown
     {0x10, 0x10, 0x10}, // Light Gray
     {0x08, 0x08, 0x08}, // Dark Gray
     {0x00, 0x00, 0x1F}, // Light Blue
@@ -269,23 +269,6 @@ VidpInitializeDisplay(VOID)
                          LCDCONTROL_LCDTFT |
                          LCDCONTROL_LCDPWR |
                          LCDCONTROL_LCDBPP(4));
-    
-#if DBG
-    //
-    // Draw an RGB test pattern
-    //
-    int y, x;
-	for (y = 0; y < 480; y += 40)
-	{
-        for (x = 0; x < 640; x++)
-        {
-            VidpSetPixel(x, y, 12);
-            VidpSetPixel(x, y + 10, 9);
-            VidpSetPixel(x, y + 20, 10);
-            VidpSetPixel(x, y + 30, 15);
-        }
-	}
-#endif
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

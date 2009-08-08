@@ -19,14 +19,26 @@
     //
     
     //
-    // Save volatile registers for the OLD thread
+    // Make space for the trap frame
     //
-    sub sp, sp, #(4*8)
-    mrs ip, spsr_all
-    stmia sp, {ip, lr}
-    sub sp, sp, #(4*2)
-    stmia sp, {r4-r11}
+    sub sp, sp, #ExceptionFrameLength
     
+    //
+    // Build exception frame
+    // FIXME: Change to stmdb later
+    //
+    str r4, [sp, #ExR4]
+    str r5, [sp, #ExR5]
+    str r6, [sp, #ExR6]
+    str r7, [sp, #ExR7]
+    str r8, [sp, #ExR8]
+    str r9, [sp, #ExR9]
+    str r10, [sp, #ExR10]
+    str r11, [sp, #ExR11]
+    str lr, [sp, #ExLr]
+    mrs r4, spsr_all
+    str r4, [sp, #ExSpsr]
+
     //
     // Switch stacks
     //
@@ -39,13 +51,29 @@
     bl KiSwapContextInternal
 
     //
-    // Restore volatile registers for the NEW thread
+    // Get the SPSR and restore it
     //
-    ldmia sp, {r4-r11}
-    add sp, sp, #(4*8)
-    ldmia sp, {ip, lr}
-    msr spsr_all, ip
-    add sp, sp, #(4*2)
+    ldr r4, [sp, #ExSpsr]
+    msr spsr_all, r4
+    
+    //
+    // Restore the registers
+    // FIXME: Use LDMIA later
+    //
+    ldr r4, [sp, #ExR4]
+    ldr r5, [sp, #ExR5]
+    ldr r6, [sp, #ExR6]
+    ldr r7, [sp, #ExR7]
+    ldr r8, [sp, #ExR8]
+    ldr r9, [sp, #ExR9]
+    ldr r10, [sp, #ExR10]
+    ldr r11, [sp, #ExR11]
+    ldr lr, [sp, #ExLr]
+    
+    //
+    // Restore stack
+    //
+    add sp, sp, #ExceptionFrameLength
     
     //
     // Jump to saved restore address

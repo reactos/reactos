@@ -70,16 +70,16 @@ static ULONG WINAPI HTMLInputElement_Release(IHTMLInputElement *iface)
 static HRESULT WINAPI HTMLInputElement_GetTypeInfoCount(IHTMLInputElement *iface, UINT *pctinfo)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->element.node.dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLInputElement_GetTypeInfo(IHTMLInputElement *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->element.node.dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLInputElement_GetIDsOfNames(IHTMLInputElement *iface, REFIID riid,
@@ -87,9 +87,9 @@ static HRESULT WINAPI HTMLInputElement_GetIDsOfNames(IHTMLInputElement *iface, R
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-                                        lcid, rgDispId);
-    return E_NOTIMPL;
+
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->element.node.dispex), riid, rgszNames,
+            cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLInputElement_Invoke(IHTMLInputElement *iface, DISPID dispIdMember,
@@ -97,9 +97,9 @@ static HRESULT WINAPI HTMLInputElement_Invoke(IHTMLInputElement *iface, DISPID d
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-            lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+
+    return IDispatchEx_Invoke(DISPATCHEX(&This->element.node.dispex), dispIdMember, riid, lcid, wFlags,
+            pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLInputElement_put_type(IHTMLInputElement *iface, BSTR v)
@@ -137,8 +137,18 @@ static HRESULT WINAPI HTMLInputElement_get_type(IHTMLInputElement *iface, BSTR *
 static HRESULT WINAPI HTMLInputElement_put_value(IHTMLInputElement *iface, BSTR v)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, debugstr_w(v));
-    return E_NOTIMPL;
+    nsAString val_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, debugstr_w(v));
+
+    nsAString_Init(&val_str, v);
+    nsres = nsIDOMHTMLInputElement_SetValue(This->nsinput, &val_str);
+    nsAString_Finish(&val_str);
+    if(NS_FAILED(nsres))
+        ERR("SetValue failed: %08x\n", nsres);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLInputElement_get_value(IHTMLInputElement *iface, BSTR *p)
@@ -216,15 +226,28 @@ static HRESULT WINAPI HTMLInputElement_get_status(IHTMLInputElement *iface, VARI
 static HRESULT WINAPI HTMLInputElement_put_disabled(IHTMLInputElement *iface, VARIANT_BOOL v)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%x)\n", This, v);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%x)\n", This, v);
+
+    nsres = nsIDOMHTMLInputElement_SetDisabled(This->nsinput, v != VARIANT_FALSE);
+    if(NS_FAILED(nsres))
+        ERR("SetDisabled failed: %08x\n", nsres);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLInputElement_get_disabled(IHTMLInputElement *iface, VARIANT_BOOL *p)
 {
     HTMLInputElement *This = HTMLINPUT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    PRBool disabled = FALSE;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsIDOMHTMLInputElement_GetDisabled(This->nsinput, &disabled);
+
+    *p = disabled ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLInputElement_get_form(IHTMLInputElement *iface, IHTMLFormElement **p)
@@ -1053,15 +1076,31 @@ static const NodeImplVtbl HTMLInputElementImplVtbl = {
     HTMLInputElement_destructor
 };
 
+static const tid_t HTMLInputElement_iface_tids[] = {
+    IHTMLDOMNode_tid,
+    IHTMLDOMNode2_tid,
+    IHTMLElement_tid,
+    IHTMLElement2_tid,
+    IHTMLInputElement_tid,
+    0
+};
+static dispex_static_data_t HTMLInputElement_dispex = {
+    NULL,
+    DispHTMLInputElement_tid,
+    NULL,
+    HTMLInputElement_iface_tids
+};
+
 HTMLElement *HTMLInputElement_Create(nsIDOMHTMLElement *nselem)
 {
-    HTMLInputElement *ret = heap_alloc(sizeof(HTMLInputElement));
+    HTMLInputElement *ret = heap_alloc_zero(sizeof(HTMLInputElement));
     nsresult nsres;
-
-    HTMLElement_Init(&ret->element);
 
     ret->lpHTMLInputElementVtbl = &HTMLInputElementVtbl;
     ret->element.node.vtbl = &HTMLInputElementImplVtbl;
+
+    init_dispex(&ret->element.node.dispex, (IUnknown*)HTMLINPUT(ret), &HTMLInputElement_dispex);
+    HTMLElement_Init(&ret->element);
 
     nsres = nsIDOMHTMLElement_QueryInterface(nselem, &IID_nsIDOMHTMLInputElement,
                                              (void**)&ret->nsinput);

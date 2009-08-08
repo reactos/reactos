@@ -663,6 +663,11 @@ struct PopupMenu
 	{
 	}
 
+	~PopupMenu()
+	{
+		DestroyMenu(_hmenu);
+	}
+
 	PopupMenu(UINT nid);
 
 	operator HMENU() {return _hmenu;}

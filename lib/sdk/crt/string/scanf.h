@@ -149,6 +149,8 @@ _FUNCTION_ {
 	    }
 	    /* read type */
             switch(*format) {
+	    case 'p':
+	    case 'P': /* pointer. */
 	    case 'x':
 	    case 'X': /* hexadecimal integer. */
 		base = 16;
@@ -179,7 +181,7 @@ _FUNCTION_ {
 			if (width>0) width--;
                     }
 		    /* look for leading indication of base */
-		    if (width!=0 && nch == '0') {
+		    if (width!=0 && nch == '0' && *format != 'p' && *format != 'P') {
                         nch = _GETC_(file);
 			if (width>0) width--;
 			seendigit=1;

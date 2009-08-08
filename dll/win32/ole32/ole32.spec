@@ -24,6 +24,7 @@
 @ stdcall CoGetCallContext(ptr ptr)
 @ stub CoGetCallerTID
 @ stdcall CoGetClassObject(ptr long ptr ptr ptr)
+@ stdcall CoGetContextToken(ptr)
 @ stub CoGetCurrentLogicalThreadId
 @ stdcall CoGetCurrentProcess()
 @ stub CoGetInstanceFromFile      #@ stdcall (ptr ptr ptr long wstr long ptr) return 0,ERR_NOTIMPLEMENTED

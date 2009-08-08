@@ -180,9 +180,11 @@ dll\keyboard\kbdinben\kbdinben.dll                  1
 dll\keyboard\kbdindev\kbdindev.dll                  1
 dll\keyboard\kbdinguj\kbdinguj.dll                  1
 dll\keyboard\kbdinmal\kbdinmal.dll                  1
+dll\keyboard\kbdir\kbdir.dll                        1
 dll\keyboard\kbdit\kbdit.dll                        1
 dll\keyboard\kbdja\kbdja.dll                        1
 dll\keyboard\kbdkaz\kbdkaz.dll                      1
+dll\keyboard\kbdla\kbdla.dll                        1
 dll\keyboard\kbdlt\kbdlt.dll                        1
 dll\keyboard\kbdlv\kbdlv.dll                        1
 dll\keyboard\kbdmac\kbdmac.dll                      1
@@ -197,7 +199,10 @@ dll\keyboard\kbdsg\kbdsg.dll                        1
 dll\keyboard\kbdsk\kbdsk.dll                        1
 dll\keyboard\kbdsw\kbdsw.dll                        1
 dll\keyboard\kbdtat\kbdtat.dll                      1
-dll\keyboard\kbdth\kbdth.dll                        1
+dll\keyboard\kbdth0\kbdth0.dll                      1
+dll\keyboard\kbdth1\kbdth1.dll                      1
+dll\keyboard\kbdth2\kbdth2.dll                      1
+dll\keyboard\kbdth3\kbdth3.dll                      1
 dll\keyboard\kbdtuf\kbdtuf.dll                      1
 dll\keyboard\kbdtuq\kbdtuq.dll                      1
 dll\keyboard\kbduk\kbduk.dll                        1
@@ -272,6 +277,7 @@ dll\win32\msi\msi.dll                               1
 dll\win32\msimg32\msimg32.dll                       1
 dll\win32\msvcrt\msvcrt.dll                         1
 dll\win32\msvcrt20\msvcrt20.dll                     1
+dll\win32\msvcrt40\msvcrt40.dll                     1
 dll\win32\msvfw32\msvfw32.dll                       1
 dll\win32\mswsock\mswsock.dll                       1
 dll\win32\msxml3\msxml3.dll                         1
@@ -560,70 +566,69 @@ modules\rosapps\applications\screensavers\blankscr\scrnsave.scr            1   o
 modules\rosapps\applications\screensavers\starfield\starfield.scr          1   optional
 modules\rosapps\applications\screensavers\mazescr\mazescr.scr              1   optional
 modules\rosapps\applications\screensavers\butterflies\butterflies.scr      1   optional
-modules\rosapps\cmdutils\comp\comp.exe                                     1   optional
-modules\rosapps\cmdutils\mode\mode.exe                                     1   optional
-modules\rosapps\cmdutils\sort\sort.exe                                     1   optional
-modules\rosapps\cmdutils\tee\tee.exe                                       1   optional
-modules\rosapps\cmdutils\touch\touch.exe                                   1   optional
-modules\rosapps\cmdutils\uptime\uptime.exe                                 1   optional
-modules\rosapps\cmdutils\y\y.exe                                           1   optional
+modules\rosapps\applications\cmdutils\comp\comp.exe                                     1   optional
+modules\rosapps\applications\cmdutils\mode\mode.exe                                     1   optional
+modules\rosapps\applications\cmdutils\sort\sort.exe                                     1   optional
+modules\rosapps\applications\cmdutils\tee\tee.exe                                       1   optional
+modules\rosapps\applications\cmdutils\touch\touch.exe                                   1   optional
+modules\rosapps\applications\cmdutils\uptime\uptime.exe                                 1   optional
+modules\rosapps\applications\cmdutils\y\y.exe                                           1   optional
+modules\rosapps\applications\devutils\cputointel\cputointel.exe                         1   optional
+modules\rosapps\applications\devutils\gdb2\gdb2.exe                                     1   optional
+modules\rosapps\applications\devutils\gdihv\gdihv.exe                                   1   optional
+modules\rosapps\applications\devutils\genguid\genguid.exe                               1   optional
+modules\rosapps\applications\devutils\roswebparser\roswebparser.exe                     1   optional
+modules\rosapps\applications\devutils\zoomin\zoomin.exe                                 1   optional
+modules\rosapps\applications\downloader\downloader.exe                                  1   optional
+modules\rosapps\applications\downloader\downloader.xml                                  1   optional
+modules\rosapps\applications\fontview\fontview.exe                                      1   optional
+modules\rosapps\applications\gettype\gettype.exe                                        1   optional
+modules\rosapps\applications\imagesoft\imagesoft.exe                                    1   optional
+modules\rosapps\applications\net\ncftp\ncftp.exe                                        1   optional
+modules\rosapps\applications\net\netreg\netreg.exe                                      1   optional
+modules\rosapps\applications\net\niclist\niclist.exe                                    1   optional
+modules\rosapps\applications\net\roshttpd\roshttpd.exe                                      1   optional
+modules\rosapps\applications\notevil\notevil.exe                                        1   optional
+modules\rosapps\applications\magnify\magnify.exe                                        1   optional
+modules\rosapps\applications\packmgr\cmd-line\rosget.exe                                1   optional
+modules\rosapps\applications\packmgr\gui\packmgr.exe                                    1   optional
+modules\rosapps\applications\packmgr\lib\package.dll                                    1   optional
+modules\rosapps\applications\sysutils\chkdsk\chkdsk.exe                                 1   optional
+modules\rosapps\applications\sysutils\systeminfo\systeminfo.exe                         1   optional
+modules\rosapps\applications\sysutils\chklib\chklib.exe                                 1   optional
+modules\rosapps\applications\sysutils\ctm\ctm.exe                                       1   optional
+modules\rosapps\applications\sysutils\kill\kill.exe                                     1   optional
+modules\rosapps\applications\sysutils\lsdd\lsdd.exe                                     1   optional
+modules\rosapps\applications\sysutils\man\man.exe                                       1   optional
+modules\rosapps\applications\sysutils\pedump\pedump.exe                                 1   optional
+modules\rosapps\applications\sysutils\regexpl\regexpl.exe                               1   optional
+modules\rosapps\applications\sysutils\tcat\tcat.exe                                     1   optional
+modules\rosapps\applications\sysutils\tlist\tlist.exe                                   1   optional
+modules\rosapps\applications\sysutils\screenshot\screenshot.exe                                  1   optional
+modules\rosapps\applications\sysutils\utils\binpatch\binpatch.exe                       1   optional
+modules\rosapps\applications\sysutils\utils\cat\cat.exe                                 1   optional
+modules\rosapps\applications\sysutils\utils\driver\load\load.exe                        1   optional
+modules\rosapps\applications\sysutils\utils\driver\unload\unload.exe                    1   optional
+modules\rosapps\applications\sysutils\utils\infinst\infinst.exe                         1   optional
+modules\rosapps\applications\sysutils\utils\nts2w32err\nts2w32err.exe                   1   optional
+modules\rosapps\applications\sysutils\utils\objdir\objdir.exe                           1   optional
+modules\rosapps\applications\sysutils\utils\partinfo\partinfo.exe                       1   optional
+modules\rosapps\applications\sysutils\utils\ps\ps.exe                                   1   optional
+modules\rosapps\applications\sysutils\utils\rosperf\rosperf.exe                         1   optional
+modules\rosapps\applications\sysutils\utils\stats\stats.exe                             1   optional
+modules\rosapps\applications\sysutils\utils\tickcount\tickcount.exe                     1   optional
+modules\rosapps\applications\winfile\winfile.exe                                        1   optional
+modules\rosapps\applications\winver\winver.exe                                          1   optional
+modules\rosapps\applications\write\write.exe                                            1   optional
 modules\rosapps\demos\ddraw\ddraw_demo.exe                                 1   optional
 modules\rosapps\demos\maze\maze.exe                                        1   optional
-modules\rosapps\devutils\cputointel\cputointel.exe                         1   optional
-modules\rosapps\devutils\gdb2\gdb2.exe                                     1   optional
-modules\rosapps\devutils\gdihv\gdihv.exe                                   1   optional
-modules\rosapps\devutils\genguid\genguid.exe                               1   optional
-modules\rosapps\devutils\roswebparser\roswebparser.exe                     1   optional
-modules\rosapps\devutils\zoomin\zoomin.exe                                 1   optional
 modules\rosapps\dflat32\edit.exe                                           1   optional
-modules\rosapps\downloader\downloader.exe                                  1   optional
-modules\rosapps\downloader\downloader.xml                                  1   optional
 modules\rosapps\drivers\avtest\avtest.sys                                  1   optional
 modules\rosapps\drivers\ramdrv\ramdrv.sys                                  1   optional
 modules\rosapps\drivers\green\green.sys                                    1   optional
-modules\rosapps\fontview\fontview.exe                                      1   optional
-modules\rosapps\gettype\gettype.exe                                        1   optional
-modules\rosapps\imagesoft\imagesoft.exe                                    1   optional
 modules\rosapps\lib\dflat32\dflat32.dll                                    1   optional
-modules\rosapps\mc\mc.exe                                                  1   optional
-modules\rosapps\net\ncftp\ncftp.exe                                        1   optional
-modules\rosapps\net\netreg\netreg.exe                                      1   optional
-modules\rosapps\net\niclist\niclist.exe                                    1   optional
-modules\rosapps\notevil\notevil.exe                                        1   optional
-modules\rosapps\magnify\magnify.exe                                        1   optional
-modules\rosapps\packmgr\cmd-line\rosget.exe                                1   optional
-modules\rosapps\packmgr\gui\packmgr.exe                                    1   optional
-modules\rosapps\packmgr\lib\package.dll                                    1   optional
-modules\rosapps\roshttpd\roshttpd.exe                                      1   optional
-modules\rosapps\screenshot\screenshot.exe                                  1   optional
-modules\rosapps\sysutils\chkdsk\chkdsk.exe                                 1   optional
-modules\rosapps\sysutils\systeminfo\systeminfo.exe                         1   optional
-modules\rosapps\sysutils\chklib\chklib.exe                                 1   optional
-modules\rosapps\sysutils\ctm\ctm.exe                                       1   optional
-modules\rosapps\sysutils\kill\kill.exe                                     1   optional
-modules\rosapps\sysutils\lsdd\lsdd.exe                                     1   optional
-modules\rosapps\sysutils\man\man.exe                                       1   optional
-modules\rosapps\sysutils\pedump\pedump.exe                                 1   optional
-modules\rosapps\sysutils\regexpl\regexpl.exe                               1   optional
-modules\rosapps\sysutils\tcat\tcat.exe                                     1   optional
-modules\rosapps\sysutils\tlist\tlist.exe                                   1   optional
-modules\rosapps\sysutils\utils\binpatch\binpatch.exe                       1   optional
-modules\rosapps\sysutils\utils\cat\cat.exe                                 1   optional
-modules\rosapps\sysutils\utils\driver\load\load.exe                        1   optional
-modules\rosapps\sysutils\utils\driver\unload\unload.exe                    1   optional
-modules\rosapps\sysutils\utils\infinst\infinst.exe                         1   optional
-modules\rosapps\sysutils\utils\nts2w32err\nts2w32err.exe                   1   optional
-modules\rosapps\sysutils\utils\objdir\objdir.exe                           1   optional
-modules\rosapps\sysutils\utils\partinfo\partinfo.exe                       1   optional
-modules\rosapps\sysutils\utils\ps\ps.exe                                   1   optional
-modules\rosapps\sysutils\utils\rosperf\rosperf.exe                         1   optional
-modules\rosapps\sysutils\utils\stats\stats.exe                             1   optional
-modules\rosapps\sysutils\utils\tickcount\tickcount.exe                     1   optional
 modules\rosapps\templates\dialog.exe                                       1   optional
 modules\rosapps\templates\mdi.exe                                          1   optional
-modules\rosapps\winfile\winfile.exe                                        1   optional
-modules\rosapps\winver\winver.exe                                          1   optional
-modules\rosapps\write\write.exe                                            1   optional
 modules\rostests\winetests\advapi32\advapi32_winetest.exe                  7   optional
 modules\rostests\winetests\advpack\advpack_winetest.exe                    7   optional
 modules\rostests\winetests\browseui\browseui_winetest.exe                  7   optional

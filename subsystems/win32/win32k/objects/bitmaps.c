@@ -47,17 +47,25 @@ IntGdiCreateBitmap(
    BitsPixel = BITMAPOBJ_GetRealBitsPixel(BitsPixel * Planes);
 
    /* Check parameters */
-   if (BitsPixel == 0 || Width < 0)
+   if (BitsPixel == 0 || Width <= 0 || Width >= 0x8000000 || Height == 0)
    {
       DPRINT1("Width = %d, Height = %d BitsPixel = %d\n", Width, Height, BitsPixel);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
    }
 
-   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, Planes * BitsPixel);
+   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, BitsPixel);
 
-   Size.cx = abs(Width);
+   Size.cx = Width;
    Size.cy = abs(Height);
+
+   /* Make sure that cjBits will not overflow */
+   if ((ULONGLONG)WidthBytes * Size.cy >= 0x100000000ULL)
+   {
+      DPRINT1("Width = %d, Height = %d BitsPixel = %d\n", Width, Height, BitsPixel);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
 
    /* Create the bitmap object. */
    hBitmap = IntCreateBitmap(Size, WidthBytes,
@@ -133,13 +141,11 @@ BITMAP_Cleanup(PVOID ObjectBody)
 	{
 		if (pBmp->dib == NULL)
 		{
-			if (pBmp->SurfObj.pvBits != NULL)
-			    ExFreePool(pBmp->SurfObj.pvBits);
+			ExFreePool(pBmp->SurfObj.pvBits);
 		}
 		else
 		{
-			if (pBmp->SurfObj.pvBits != NULL)
-				EngFreeUserMem(pBmp->SurfObj.pvBits);
+			EngFreeUserMem(pBmp->SurfObj.pvBits);
 		}
 		if (pBmp->hDIBPalette != NULL)
 		{
@@ -153,6 +159,9 @@ BITMAP_Cleanup(PVOID ObjectBody)
 		pBmp->BitsLock = NULL;
 	}
 
+	if (pBmp->dib)
+		ExFreePoolWithTag(pBmp->dib, TAG_DIB);
+
 	return TRUE;
 }
 
@@ -165,18 +174,10 @@ IntCreateCompatibleBitmap(
 {
 	HBITMAP Bmp;
 
-	Bmp = NULL;
-
-	if ((Width >= 0x10000) || (Height >= 0x10000))
-	{
-		DPRINT1("got bad width %d or height %d, please look for reason\n", Width, Height);
-		return NULL;
-	}
-
 	/* MS doc says if width or height is 0, return 1-by-1 pixel, monochrome bitmap */
 	if (0 == Width || 0 == Height)
 	{
-		Bmp = IntGdiCreateBitmap (1, 1, 1, 1, NULL);
+		Bmp = NtGdiGetStockObject(DEFAULT_BITMAP);
 	}
 	else
 	{
@@ -218,18 +219,32 @@ NtGdiGetBitmapDimension(
 	LPSIZE  Dimension)
 {
 	PBITMAPOBJ  bmp;
+	BOOL Ret = TRUE;
+
+	if (hBitmap == NULL)
+		return FALSE;
 
 	bmp = BITMAPOBJ_LockBitmap(hBitmap);
 	if (bmp == NULL)
 	{
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
 
-	*Dimension = bmp->dimension;
+	_SEH_TRY
+	{
+		ProbeForWrite(Dimension, sizeof(SIZE), 1);
+		*Dimension = bmp->dimension;
+	}
+	_SEH_HANDLE
+	{
+		Ret = FALSE;
+	}
+	_SEH_END
 
 	BITMAPOBJ_UnlockBitmap(bmp);
 
-	return  TRUE;
+	return Ret;
 }
 
 COLORREF STDCALL
@@ -504,23 +519,39 @@ NtGdiSetBitmapDimension(
 	LPSIZE  Size)
 {
 	PBITMAPOBJ  bmp;
+	BOOL Ret = TRUE;
+
+	if (hBitmap == NULL)
+		return FALSE;
 
 	bmp = BITMAPOBJ_LockBitmap(hBitmap);
 	if (bmp == NULL)
 	{
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
 
 	if (Size)
 	{
-		*Size = bmp->dimension;
+		_SEH_TRY
+		{
+			ProbeForWrite(Size, sizeof(SIZE), 1);
+			*Size = bmp->dimension;
+		}
+		_SEH_HANDLE
+		{
+			Ret = FALSE;
+		}
+		_SEH_END
 	}
+
+	/* The dimension is changed even if writing the old value failed */
 	bmp->dimension.cx = Width;
 	bmp->dimension.cy = Height;
 
 	BITMAPOBJ_UnlockBitmap (bmp);
 
-	return TRUE;
+	return Ret;
 }
 
 BOOL STDCALL
@@ -571,15 +602,11 @@ NtGdiSetPixel(
 
 /*  Internal Functions  */
 
-INT FASTCALL
-BITMAPOBJ_GetRealBitsPixel(INT nBitsPixel)
+UINT FASTCALL
+BITMAPOBJ_GetRealBitsPixel(UINT nBitsPixel)
 {
-	if (nBitsPixel < 0)
-		return 0;
 	if (nBitsPixel <= 1)
 		return 1;
-	if (nBitsPixel <= 2)
-		return 2;
 	if (nBitsPixel <= 4)
 		return 4;
 	if (nBitsPixel <= 8)
@@ -746,8 +773,11 @@ NtGdiGetDCforBitmap(
 {
   HDC hDC = NULL;
   PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hsurf );
-  hDC = bmp->hDC;
-  BITMAPOBJ_UnlockBitmap( bmp );
+  if (bmp)
+  {
+    hDC = bmp->hDC;
+    BITMAPOBJ_UnlockBitmap( bmp );
+  }
   return hDC;
 }
 

@@ -27,12 +27,6 @@ typedef struct _ThreadData
 
   int fpecode;                  /* fp exception code */
 
-  /* qsort variables */
-  int (*qcmp)(const void *, const void *);  /* the comparison routine */
-  int qsz;                      /* size of each record */
-  int thresh;                   /* THRESHold in chars */
-  int mthresh;                  /* MTHRESHold in chars */
-
   EXCEPTION_RECORD *exc_record; /* Head of exception record list */
 
 } THREADDATA, *PTHREADDATA;

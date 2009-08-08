@@ -106,7 +106,7 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     CLSID clsid;
     HRESULT hres;
 
-    static const WCHAR wszMK[] = {'m','k',':'};
+    static const WCHAR wszMK[] = {'m','k',':','@'};
 
     TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
@@ -133,10 +133,6 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     }
 
     ptr2 = szUrl + sizeof(wszMK)/sizeof(WCHAR);
-    if(*ptr2 != '@')
-        return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);
-    ptr2++;
-
     ptr = strchrW(ptr2, ':');
     if(!ptr)
         return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);

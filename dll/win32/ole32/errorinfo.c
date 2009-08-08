@@ -250,7 +250,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetGUID(
 	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 	TRACE("(%p)->(count=%u)\n",This,This->ref);
 	if(!pGUID )return E_INVALIDARG;
-	memcpy(pGUID, &This->m_Guid, sizeof(GUID));
+	*pGUID = This->m_Guid;
 	return S_OK;
 }
 
@@ -354,7 +354,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetGUID(
 {
 	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p)->(%s)\n", This, debugstr_guid(rguid));
-	memcpy(&This->m_Guid,  rguid, sizeof(GUID));
+	This->m_Guid = *rguid;
 	return S_OK;
 }
 

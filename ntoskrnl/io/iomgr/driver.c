@@ -1301,7 +1301,7 @@ try_again:
     Status = ObInsertObject(DriverObject,
                             NULL,
                             FILE_READ_DATA,
-                            OBJ_KERNEL_HANDLE,
+                            0,
                             NULL,
                             &hDriver);
 

@@ -535,18 +535,27 @@ void WINAPI DrawStatusTextW (HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style)
     if (text) {
         int oldbkmode = SetBkMode (hdc, TRANSPARENT);
         UINT align = DT_LEFT;
-        if (*text == '\t') {
-	    text++;
-	    align = DT_CENTER;
-            if (*text == '\t') {
-	        text++;
-	        align = DT_RIGHT;
-	    }
-        }
-        r.left += 3;
+        int strCnt = 0;
+
         if (style & SBT_RTLREADING)
-	    FIXME("Unsupported RTL style!\n");
-        DrawTextW (hdc, text, -1, &r, align|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
+            FIXME("Unsupported RTL style!\n");
+        r.left += 3;
+        do {
+            if (*text == '\t') {
+                if (strCnt) {
+                    DrawTextW (hdc, text - strCnt, strCnt, &r, align|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
+                    strCnt = 0;
+                }
+                if (align==DT_RIGHT) {
+                    break;
+                }
+                align = (align==DT_LEFT ? DT_CENTER : DT_RIGHT);
+            } else {
+                strCnt++;
+            }
+        } while(*text++);
+
+        if (strCnt) DrawTextW (hdc, text - strCnt, -1, &r, align|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
 	SetBkMode(hdc, oldbkmode);
     }
 }

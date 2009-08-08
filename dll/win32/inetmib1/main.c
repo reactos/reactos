@@ -29,26 +29,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(inetmib1);
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-	TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
-
-	switch (fdwReason)
-	{
-		case DLL_WINE_PREATTACH:
-			return FALSE;    /* prefer native version */
-		case DLL_PROCESS_ATTACH:
-			DisableThreadLibraryCalls(hinstDLL);
-			break;
-		case DLL_PROCESS_DETACH:
-			break;
-		default:
-			break;
-	}
-
-	return TRUE;
-}
-
 /**
  * Utility functions
  */
@@ -115,6 +95,7 @@ struct mibImplementation
     AsnObjectIdentifier name;
     void              (*init)(void);
     varqueryfunc        query;
+    void              (*cleanup)(void);
 };
 
 static UINT mib2IfNumber[] = { 1,3,6,1,2,1,2,1 };
@@ -130,6 +111,11 @@ static void mib2IfNumberInit(void)
         if (ifTable)
             GetIfTable(ifTable, &size, FALSE);
     }
+}
+
+static void mib2IfNumberCleanup(void)
+{
+    HeapFree(GetProcessHeap(), 0, ifTable);
 }
 
 static BOOL mib2IfNumberQuery(BYTE bPduType, SnmpVarBind *pVarBind,
@@ -352,18 +338,18 @@ static UINT findValueInTable(AsnObjectIdentifier *oid,
 }
 
 /* Given an OID and a base OID that it must begin with, finds the item and
- * element of the table whose IP address matches the instance from the OID.
- * E.g., given an OID foo.1.2.3.4.5 and a base OID foo, returns item 1 and the
- * index of the entry in the table whose IP address is 2.3.4.5.
+ * element of the table whose value matches the instance from the OID.
+ * The OID is converted to a key with the function makeKey, and compared
+ * against entries in the table with the function compare.
  * If bPduType is not SNMP_PDU_GETNEXT and either the item or instance is
  * missing, returns SNMP_ERRORSTATUS_NOSUCHNAME.
  * If bPduType is SNMP_PDU_GETNEXT, returns the successor to the item and
  * instance, or item 1, instance 1 if either is missing.
  */
-static AsnInteger32 getItemAndIpAddressInstanceFromOid(AsnObjectIdentifier *oid,
-    AsnObjectIdentifier *base, BYTE bPduType, struct GenericTable *table,
-    size_t tableEntrySize, oidToKeyFunc makeKey, compareFunc compare,
-    UINT *item, UINT *instance)
+static AsnInteger32 getItemAndInstanceFromTable(AsnObjectIdentifier *oid,
+    AsnObjectIdentifier *base, UINT instanceLen, BYTE bPduType,
+    struct GenericTable *table, size_t tableEntrySize, oidToKeyFunc makeKey,
+    compareFunc compare, UINT *item, UINT *instance)
 {
     AsnInteger32 ret = SNMP_ERRORSTATUS_NOERROR;
 
@@ -380,7 +366,7 @@ static AsnInteger32 getItemAndIpAddressInstanceFromOid(AsnObjectIdentifier *oid,
             *instance = 1;
         }
         else if (!SnmpUtilOidNCmp(oid, base, base->idLength) &&
-            oid->idLength < base->idLength + 5)
+            oid->idLength < base->idLength + instanceLen + 1)
         {
             /* Either the table or an item is specified, but the instance is
              * not.
@@ -396,7 +382,7 @@ static AsnInteger32 getItemAndIpAddressInstanceFromOid(AsnObjectIdentifier *oid,
                 *item = 1;
         }
         else if (!SnmpUtilOidNCmp(oid, base, base->idLength) &&
-            oid->idLength == base->idLength + 5)
+            oid->idLength == base->idLength + instanceLen + 1)
         {
             *item = oid->ids[base->idLength];
             if (!*item)
@@ -406,8 +392,8 @@ static AsnInteger32 getItemAndIpAddressInstanceFromOid(AsnObjectIdentifier *oid,
             }
             else
             {
-                AsnObjectIdentifier ipOid = { 4, oid->ids + base->idLength + 1
-                    };
+                AsnObjectIdentifier ipOid = { instanceLen,
+                    oid->ids + base->idLength + 1 };
 
                 *instance = findValueInTable(&ipOid, table, tableEntrySize,
                     makeKey, compare) + 1;
@@ -420,15 +406,15 @@ static AsnInteger32 getItemAndIpAddressInstanceFromOid(AsnObjectIdentifier *oid,
         break;
     default:
         if (!SnmpUtilOidNCmp(oid, base, base->idLength) &&
-            oid->idLength == base->idLength + 5)
+            oid->idLength == base->idLength + instanceLen + 1)
         {
             *item = oid->ids[base->idLength];
             if (!*item)
                 ret = SNMP_ERRORSTATUS_NOSUCHNAME;
             else
             {
-                AsnObjectIdentifier ipOid = { 4, oid->ids + base->idLength + 1
-                    };
+                AsnObjectIdentifier ipOid = { instanceLen,
+                    oid->ids + base->idLength + 1 };
 
                 *instance = findValueInTable(&ipOid, table, tableEntrySize,
                     makeKey, compare);
@@ -653,6 +639,11 @@ static void mib2IpAddrInit(void)
     }
 }
 
+static void mib2IpAddrCleanup(void)
+{
+    HeapFree(GetProcessHeap(), 0, ipAddrTable);
+}
+
 static void oidToIpAddrRow(AsnObjectIdentifier *oid, void *dst)
 {
     MIB_IPADDRROW *row = dst;
@@ -680,8 +671,8 @@ static BOOL mib2IpAddrQuery(BYTE bPduType, SnmpVarBind *pVarBind,
     {
     case SNMP_PDU_GET:
     case SNMP_PDU_GETNEXT:
-        *pErrorStatus = getItemAndIpAddressInstanceFromOid(&pVarBind->name,
-            &myOid, bPduType, (struct GenericTable *)ipAddrTable,
+        *pErrorStatus = getItemAndInstanceFromTable(&pVarBind->name,
+            &myOid, 4, bPduType, (struct GenericTable *)ipAddrTable,
             sizeof(MIB_IPADDRROW), oidToIpAddrRow, compareIpAddrRow, &item,
             &tableIndex);
         if (!*pErrorStatus)
@@ -736,6 +727,11 @@ static void mib2IpRouteInit(void)
     }
 }
 
+static void mib2IpRouteCleanup(void)
+{
+    HeapFree(GetProcessHeap(), 0, ipRouteTable);
+}
+
 static void oidToIpForwardRow(AsnObjectIdentifier *oid, void *dst)
 {
     MIB_IPFORWARDROW *row = dst;
@@ -763,8 +759,8 @@ static BOOL mib2IpRouteQuery(BYTE bPduType, SnmpVarBind *pVarBind,
     {
     case SNMP_PDU_GET:
     case SNMP_PDU_GETNEXT:
-        *pErrorStatus = getItemAndIpAddressInstanceFromOid(&pVarBind->name,
-            &myOid, bPduType, (struct GenericTable *)ipRouteTable,
+        *pErrorStatus = getItemAndInstanceFromTable(&pVarBind->name,
+            &myOid, 4, bPduType, (struct GenericTable *)ipRouteTable,
             sizeof(MIB_IPFORWARDROW), oidToIpForwardRow, compareIpForwardRow,
             &item, &tableIndex);
         if (!*pErrorStatus)
@@ -809,6 +805,11 @@ static void mib2IpNetInit(void)
         if (ipNetTable)
             GetIpNetTable(ipNetTable, &size, FALSE);
     }
+}
+
+static void mib2IpNetCleanup(void)
+{
+    HeapFree(GetProcessHeap(), 0, ipNetTable);
 }
 
 static BOOL mib2IpNetQuery(BYTE bPduType, SnmpVarBind *pVarBind,
@@ -1037,17 +1038,119 @@ static BOOL mib2UdpQuery(BYTE bPduType, SnmpVarBind *pVarBind,
     return TRUE;
 }
 
+static UINT mib2UdpEntry[] = { 1,3,6,1,2,1,7,5,1 };
+static PMIB_UDPTABLE udpTable;
+
+static void mib2UdpEntryInit(void)
+{
+    DWORD size = 0, ret = GetUdpTable(NULL, &size, TRUE);
+
+    if (ret == ERROR_INSUFFICIENT_BUFFER)
+    {
+        udpTable = HeapAlloc(GetProcessHeap(), 0, size);
+        if (udpTable)
+            GetUdpTable(udpTable, &size, TRUE);
+    }
+}
+
+static void mib2UdpEntryCleanup(void)
+{
+    HeapFree(GetProcessHeap(), 0, udpTable);
+}
+
+static struct structToAsnValue mib2UdpEntryMap[] = {
+    { FIELD_OFFSET(MIB_UDPROW, dwLocalAddr), copyIpAddr },
+    { FIELD_OFFSET(MIB_UDPROW, dwLocalPort), copyInt },
+};
+
+static void oidToUdpRow(AsnObjectIdentifier *oid, void *dst)
+{
+    MIB_UDPROW *row = dst;
+
+    assert(oid && oid->idLength >= 5);
+    row->dwLocalAddr = oidToIpAddr(oid);
+    row->dwLocalPort = oid->ids[4];
+}
+
+static int compareUdpRow(const void *a, const void *b)
+{
+    const MIB_UDPROW *key = a, *value = b;
+    int ret;
+
+    ret = key->dwLocalAddr - value->dwLocalAddr;
+    if (ret == 0)
+        ret = key->dwLocalPort - value->dwLocalPort;
+    return ret;
+}
+
+static BOOL mib2UdpEntryQuery(BYTE bPduType, SnmpVarBind *pVarBind,
+    AsnInteger32 *pErrorStatus)
+{
+    AsnObjectIdentifier myOid = DEFINE_OID(mib2UdpEntry);
+
+    TRACE("(0x%02x, %s, %p)\n", bPduType, SnmpUtilOidToA(&pVarBind->name),
+        pErrorStatus);
+
+    switch (bPduType)
+    {
+    case SNMP_PDU_GET:
+    case SNMP_PDU_GETNEXT:
+        if (!udpTable)
+            *pErrorStatus = SNMP_ERRORSTATUS_NOSUCHNAME;
+        else
+        {
+            UINT tableIndex = 0, item = 0;
+
+            *pErrorStatus = getItemAndInstanceFromTable(&pVarBind->name, &myOid,
+                5, bPduType, (struct GenericTable *)udpTable,
+                sizeof(MIB_UDPROW), oidToUdpRow, compareUdpRow, &item,
+                &tableIndex);
+            if (!*pErrorStatus)
+            {
+                assert(tableIndex);
+                assert(item);
+                *pErrorStatus = mapStructEntryToValue(mib2UdpEntryMap,
+                    DEFINE_SIZEOF(mib2UdpEntryMap),
+                    &udpTable->table[tableIndex - 1], item, bPduType, pVarBind);
+                if (!*pErrorStatus && bPduType == SNMP_PDU_GETNEXT)
+                {
+                    AsnObjectIdentifier oid;
+
+                    setOidWithItemAndIpAddr(&pVarBind->name, &myOid, item,
+                        udpTable->table[tableIndex - 1].dwLocalAddr);
+                    oid.idLength = 1;
+                    oid.ids = &udpTable->table[tableIndex - 1].dwLocalPort;
+                    SnmpUtilOidAppend(&pVarBind->name, &oid);
+                }
+            }
+        }
+        break;
+    case SNMP_PDU_SET:
+        *pErrorStatus = SNMP_ERRORSTATUS_READONLY;
+        break;
+    default:
+        FIXME("0x%02x: unsupported PDU type\n", bPduType);
+        *pErrorStatus = SNMP_ERRORSTATUS_NOSUCHNAME;
+    }
+    return TRUE;
+}
+
 /* This list MUST BE lexicographically sorted */
 static struct mibImplementation supportedIDs[] = {
-    { DEFINE_OID(mib2IfNumber), mib2IfNumberInit, mib2IfNumberQuery },
-    { DEFINE_OID(mib2IfEntry), NULL, mib2IfEntryQuery },
-    { DEFINE_OID(mib2Ip), mib2IpStatsInit, mib2IpStatsQuery },
-    { DEFINE_OID(mib2IpAddr), mib2IpAddrInit, mib2IpAddrQuery },
-    { DEFINE_OID(mib2IpRoute), mib2IpRouteInit, mib2IpRouteQuery },
-    { DEFINE_OID(mib2IpNet), mib2IpNetInit, mib2IpNetQuery },
-    { DEFINE_OID(mib2Icmp), mib2IcmpInit, mib2IcmpQuery },
-    { DEFINE_OID(mib2Tcp), mib2TcpInit, mib2TcpQuery },
-    { DEFINE_OID(mib2Udp), mib2UdpInit, mib2UdpQuery },
+    { DEFINE_OID(mib2IfNumber), mib2IfNumberInit, mib2IfNumberQuery,
+      mib2IfNumberCleanup },
+    { DEFINE_OID(mib2IfEntry), NULL, mib2IfEntryQuery, NULL },
+    { DEFINE_OID(mib2Ip), mib2IpStatsInit, mib2IpStatsQuery, NULL },
+    { DEFINE_OID(mib2IpAddr), mib2IpAddrInit, mib2IpAddrQuery,
+      mib2IpAddrCleanup },
+    { DEFINE_OID(mib2IpRoute), mib2IpRouteInit, mib2IpRouteQuery,
+      mib2IpRouteCleanup },
+    { DEFINE_OID(mib2IpNet), mib2IpNetInit, mib2IpNetQuery, mib2IpNetCleanup },
+    { DEFINE_OID(mib2Icmp), mib2IcmpInit, mib2IcmpQuery, NULL },
+    { DEFINE_OID(mib2Tcp), mib2TcpInit, mib2TcpQuery, NULL },
+    { DEFINE_OID(mib2Udp), mib2UdpInit, mib2UdpQuery, NULL },
+    { DEFINE_OID(mib2UdpEntry), mib2UdpEntryInit, mib2UdpEntryQuery,
+      mib2UdpEntryCleanup },
 };
 static UINT minSupportedIDLength;
 
@@ -1071,6 +1174,15 @@ BOOL WINAPI SnmpExtensionInit(DWORD dwUptimeReference,
     *phSubagentTrapEvent = NULL;
     SnmpUtilOidCpy(pFirstSupportedRegion, &myOid);
     return TRUE;
+}
+
+static void cleanup(void)
+{
+    UINT i;
+
+    for (i = 0; i < sizeof(supportedIDs) / sizeof(supportedIDs[0]); i++)
+        if (supportedIDs[i].cleanup)
+            supportedIDs[i].cleanup();
 }
 
 static struct mibImplementation *findSupportedQuery(UINT *ids, UINT idLength,
@@ -1167,5 +1279,24 @@ BOOL WINAPI SnmpExtensionQuery(BYTE bPduType, SnmpVarBindList *pVarBindList,
     }
     *pErrorStatus = error;
     *pErrorIndex = errorIndex;
+    return TRUE;
+}
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    TRACE("(0x%p, %d, %p)\n", hinstDLL, fdwReason, lpvReserved);
+
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDLL);
+            break;
+        case DLL_PROCESS_DETACH:
+            cleanup();
+            break;
+        default:
+            break;
+    }
+
     return TRUE;
 }

@@ -28,6 +28,9 @@
 	<directory name="inflib">
 		<xi:include href="inflib/inflib.rbuild" />
 	</directory>
+	<directory name="nls">
+		<xi:include href="nls/nls.rbuild" />
+	</directory>
 	<directory name="ntdllsys">
 		<xi:include href="ntdllsys/ntdllsys.rbuild" />
 	</directory>

@@ -141,7 +141,8 @@ ClockWndProc(HWND hwnd,
              LPARAM lParam)
 {
     PCLOCKDATA pClockData;
-    HDC hdc;
+    HDC hdc, dcMem;
+    HBITMAP bmMem, bmOld;
     PAINTSTRUCT ps;
 
     pClockData = (PCLOCKDATA)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
@@ -168,15 +169,38 @@ ClockWndProc(HWND hwnd,
 
         case WM_TIMER:
             GetLocalTime(&pClockData->stCurrent);
-            InvalidateRect(hwnd, NULL, TRUE);
+            //InvalidateRect(hwnd, NULL, TRUE);
+            InvalidateRect(hwnd, NULL, FALSE);
             pClockData->stPrevious = pClockData->stCurrent;
             break;
 
         case WM_PAINT:
             hdc = BeginPaint(hwnd, &ps);
-            SetIsotropic(hdc, pClockData);
-            DrawClock(hdc, pClockData);
-            DrawHands(hdc, &pClockData->stPrevious, TRUE);
+
+	    /* Use an offscreen dc to avoid flicker */
+
+	    dcMem = CreateCompatibleDC(hdc);
+	    bmMem = CreateCompatibleBitmap(hdc, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top);
+
+	    bmOld = SelectObject(dcMem, bmMem);
+	    SetViewportOrgEx(dcMem, -ps.rcPaint.left, -ps.rcPaint.top, NULL);
+	    FillRect(dcMem, &ps.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
+
+            SetIsotropic(dcMem, pClockData);
+            DrawClock(dcMem, pClockData);
+            DrawHands(dcMem, &pClockData->stPrevious, TRUE);
+            
+	    /* Blit the changes to the screen */
+	    BitBlt(hdc, 
+		ps.rcPaint.left, ps.rcPaint.top,
+		ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top,
+		dcMem,
+		ps.rcPaint.left, ps.rcPaint.top,
+		SRCCOPY);
+
+            SelectObject(dcMem, bmOld);
+	    DeleteObject(bmMem);
+	    DeleteObject(dcMem);
             EndPaint(hwnd, &ps);
             break;
 
@@ -202,7 +226,7 @@ ClockWndProc(HWND hwnd,
             CopyMemory(&pClockData->stPrevious, (LPSYSTEMTIME)lParam, sizeof(SYSTEMTIME));
 
             /* Redraw the clock */
-            InvalidateRect(hwnd, NULL, TRUE);
+            InvalidateRect(hwnd, NULL, FALSE);
             break;
 
         default:

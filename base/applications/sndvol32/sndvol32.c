@@ -848,7 +848,7 @@ _tWinMain(HINSTANCE hInstance,
             }
             else
             {
-                DPRINT("Failed to creat application window (LastError: %d)!\n", GetLastError());
+                DPRINT("Failed to create application window (LastError: %d)!\n", GetLastError());
             }
 
             UnregisterApplicationClasses();

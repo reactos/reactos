@@ -146,7 +146,7 @@ BOOL WINHELP_CreateHelpWindow(WINHELP_WNDPAGE*, int, BOOL);
 BOOL WINHELP_OpenHelpWindow(HLPFILE_PAGE* (*)(HLPFILE*, LONG, ULONG*),
                             HLPFILE*, LONG, HLPFILE_WINDOWINFO*, int);
 BOOL WINHELP_GetOpenFileName(LPSTR, int);
-BOOL WINHELP_CreateIndexWindow(void);
+BOOL WINHELP_CreateIndexWindow(BOOL);
 void WINHELP_DeleteBackSet(WINHELP_WINDOW*);
 INT  WINHELP_MessageBoxIDS_s(UINT, LPCSTR, UINT, WORD);
 HLPFILE* WINHELP_LookupHelpFile(LPCSTR lpszFile);

@@ -49,7 +49,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Salvare ca ..."
+CAPTION "Salvare ca..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "&Nume fișier:", 1090, 6, 6, 76, 9
@@ -373,7 +373,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Fişierul nu există.\nDoriți să creați acest fișier?"
     IDS_OVERWRITEFILE       "Fișierul există deja.\nDoriți să îl înlocuiți?"
     IDS_INVALID_FILENAME_TITLE "Caracter(e) invalid(e) în cale"
-    IDS_INVALID_FILENAME    "Numele de fișier nu poate conține caracterele următoare: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Numele de fișier nu poate conține caracterele următoare:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Calea nu există"
     IDS_FILENOTEXISTING     "Fişierul nu există"
 }

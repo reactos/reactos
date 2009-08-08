@@ -847,7 +847,7 @@ getaddrinfo(const char FAR * nodename,
 {
     UNIMPLEMENTED
 
-    return 0;
+    return EAI_NONAME;
 }
 
 /*

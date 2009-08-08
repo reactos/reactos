@@ -883,7 +883,7 @@ static INT
 TOOLTIPS_GetToolFromInfoA (const TOOLTIPS_INFO *infoPtr, const TTTOOLINFOA *lpToolInfo)
 {
     TTTOOL_INFO *toolPtr;
-    INT nTool;
+    UINT nTool;
 
     for (nTool = 0; nTool < infoPtr->uNumTools; nTool++) {
 	toolPtr = &infoPtr->tools[nTool];
@@ -910,7 +910,7 @@ static INT
 TOOLTIPS_GetToolFromInfoW (const TOOLTIPS_INFO *infoPtr, const TTTOOLINFOW *lpToolInfo)
 {
     TTTOOL_INFO *toolPtr;
-    INT nTool;
+    UINT nTool;
 
     for (nTool = 0; nTool < infoPtr->uNumTools; nTool++) {
 	toolPtr = &infoPtr->tools[nTool];
@@ -937,7 +937,7 @@ static INT
 TOOLTIPS_GetToolFromPoint (const TOOLTIPS_INFO *infoPtr, HWND hwnd, const POINT *lpPt)
 {
     TTTOOL_INFO *toolPtr;
-    INT  nTool;
+    UINT nTool;
 
     for (nTool = 0; nTool < infoPtr->uNumTools; nTool++) {
 	toolPtr = &infoPtr->tools[nTool];

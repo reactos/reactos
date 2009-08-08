@@ -404,7 +404,7 @@ DGifGetImageDesc(GifFileType * GifFile) {
     }
 
     sp = &GifFile->SavedImages[GifFile->ImageCount];
-    memcpy(&sp->ImageDesc, &GifFile->Image, sizeof(GifImageDesc));
+    sp->ImageDesc = GifFile->Image;
     if (GifFile->Image.ColorMap != NULL) {
         sp->ImageDesc.ColorMap = MakeMapObject(
                                  GifFile->Image.ColorMap->ColorCount,
@@ -616,7 +616,7 @@ DGifDecompressLine(GifFileType * GifFile,
     LastCode = Private->LastCode;
 
     if (StackPtr != 0) {
-        /* Let pop the stack off before continueing to read the gif file: */
+        /* Let pop the stack off before continuing to read the gif file: */
         while (StackPtr != 0 && i < LineLen)
             Line[i++] = Stack[--StackPtr];
     }
@@ -626,7 +626,7 @@ DGifDecompressLine(GifFileType * GifFile,
             return GIF_ERROR;
 
         if (CrntCode == EOFCode) {
-            /* Note however that usually we will not be here as we will stop
+            /* Note, however, that usually we will not be here as we will stop
              * decoding as soon as we got all the pixel, or EOF code will
              * not be read at all, and DGifGetLine/Pixel clean everything.  */
             if (i != LineLen - 1 || Private->PixelCount != 0) {

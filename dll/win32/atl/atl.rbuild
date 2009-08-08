@@ -13,17 +13,20 @@
 	<file>atl_main.c</file>
 	<file>registrar.c</file>
 	<file>rsrc.rc</file>
-	<file>atliface.idl</file>
 	<include base="atl" root="intermediate">.</include>
 	<file>atl.spec</file>
 	<library>wine</library>
+	<library>uuid</library>
 	<library>ole32</library>
 	<library>oleaut32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
 	<library>kernel32</library>
-	<library>uuid</library>
 	<library>ntdll</library>
+	<dependency>atl_atliface_header</dependency>
+</module>
+<module name="atl_atliface_header" type="idlheader" allowwarnings="true">
+	<file>atliface.idl</file>
 </module>
 </group>

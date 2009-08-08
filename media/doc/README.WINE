@@ -43,6 +43,7 @@ reactos/dll/win32/compstui        # Autosync
 reactos/dll/win32/crypt32         # Synced to Wine-1_0-rc1
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
+reactos/dll/win32/cryptui         # Autosync
 reactos/dll/win32/dbghelp         # Synced to Wine-20080106
 reactos/dll/win32/dciman32        # Synced to Wine-1_0-rc2
 reactos/dll/win32/gdiplus         # Autosync

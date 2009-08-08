@@ -1629,8 +1629,8 @@ static body_t *create_sub_body(MimeMessage *msg, IStream *pStm, BODYOFFSETS *off
                     IStream *sub_stream;
                     ULARGE_INTEGER start, length;
 
-                    start.u.LowPart = cur->offsets.cbHeaderStart;
-                    length.u.LowPart = cur->offsets.cbBodyEnd - cur->offsets.cbHeaderStart;
+                    start.QuadPart = cur->offsets.cbHeaderStart;
+                    length.QuadPart = cur->offsets.cbBodyEnd - cur->offsets.cbHeaderStart;
                     create_sub_stream(pStm, start, length, &sub_stream);
                     sub_body = create_sub_body(msg, sub_stream, &cur->offsets, body);
                     IStream_Release(sub_stream);

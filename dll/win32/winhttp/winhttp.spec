@@ -4,8 +4,8 @@
 @ stdcall -private DllUnregisterServer()
 @ stub WinHttpAddRequestHeaders
 @ stdcall WinHttpCheckPlatform()
-@ stub WinHttpCloseHandle
-@ stub WinHttpConnect
+@ stdcall WinHttpCloseHandle(ptr)
+@ stdcall WinHttpConnect(ptr wstr long long)
 @ stub WinHttpCrackUrl
 @ stub WinHttpCreateUrl
 @ stdcall WinHttpDetectAutoProxyConfigUrl(long ptr)
@@ -13,17 +13,17 @@
 @ stdcall WinHttpGetIEProxyConfigForCurrentUser(ptr)
 @ stub WinHttpGetProxyForUrl
 @ stdcall WinHttpOpen(wstr long wstr wstr long)
-@ stub WinHttpOpenRequest
+@ stdcall WinHttpOpenRequest(ptr wstr wstr wstr wstr ptr long)
 @ stub WinHttpQueryAuthSchemes
-@ stub WinHttpQueryDataAvailable
+@ stdcall WinHttpQueryDataAvailable(ptr ptr)
 @ stub WinHttpQueryHeaders
-@ stub WinHttpQueryOption
-@ stub WinHttpReadData
-@ stub WinHttpReceiveResponse
-@ stub WinHttpSendRequest
+@ stdcall WinHttpQueryOption(ptr long ptr ptr)
+@ stdcall WinHttpReadData(ptr ptr long ptr)
+@ stdcall WinHttpReceiveResponse(ptr ptr)
+@ stdcall WinHttpSendRequest(ptr wstr long ptr long long ptr)
 @ stub WinHttpSetCredentials
 @ stub WinHttpSetDefaultProxyConfiguration
-@ stub WinHttpSetOption
+@ stdcall WinHttpSetOption(ptr long ptr long)
 @ stub WinHttpSetStatusCallback
 @ stub WinHttpSetTimeouts
 @ stub WinHttpTimeFromSystemTime

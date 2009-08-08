@@ -921,6 +921,8 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
             ComponentList *clist;
             MSIFEATURE *f;
 
+            component->hasLocalFeature = FALSE;
+
             msi_component_set_state( component, newstate );
 
             /*if any other feature wants is local we need to set it local*/
@@ -939,6 +941,7 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
                           f->ActionRequest == INSTALLSTATE_SOURCE) )
                     {
                         TRACE("Saved by %s\n", debugstr_w(f->Feature));
+                        component->hasLocalFeature = TRUE;
 
                         if (component->Attributes & msidbComponentAttributesOptional)
                         {
@@ -1159,6 +1162,16 @@ UINT msi_extract_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR destdir)
     r = msi_load_media_info(package, file, mi);
     if (r != ERROR_SUCCESS)
         goto done;
+
+    if (GetFileAttributesW(mi->source) == INVALID_FILE_ATTRIBUTES)
+    {
+        r = find_published_source(package, mi);
+        if (r != ERROR_SUCCESS)
+        {
+            ERR("Cabinet not found: %s\n", debugstr_w(mi->source));
+            return ERROR_INSTALL_FAILURE;
+        }
+    }
 
     data.package = package;
     data.mi = mi;

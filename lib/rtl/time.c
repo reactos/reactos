@@ -52,6 +52,15 @@ static __inline int IsLeapYear(int Year)
    return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0;
 }
 
+static int DaysSinceEpoch(int Year)
+{
+   int Days;
+   Year--; /* Don't include a leap day from the current year */
+   Days = Year * DAYSPERNORMALYEAR + Year / 4 - Year / 100 + Year / 400;
+   Days -= (EPOCHYEAR - 1) * DAYSPERNORMALYEAR + (EPOCHYEAR - 1) / 4 - (EPOCHYEAR - 1) / 100 + (EPOCHYEAR - 1) / 400;
+   return Days;
+}
+
 static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
       CSHORT *CarryField,
       int Modulus)
@@ -170,11 +179,9 @@ RtlTimeFieldsToTime(
    IN PTIME_FIELDS TimeFields,
    OUT PLARGE_INTEGER Time)
 {
-   int CurYear;
    int CurMonth;
    TIME_FIELDS IntTimeFields;
 
-   Time->QuadPart = 0;
    memcpy(&IntTimeFields,
           TimeFields,
           sizeof(TIME_FIELDS));
@@ -213,13 +220,10 @@ RtlTimeFieldsToTime(
    }
 
    /* Compute the time */
-   for (CurYear = EPOCHYEAR; CurYear < IntTimeFields.Year; CurYear++)
-   {
-      Time->QuadPart += YearLengths[IsLeapYear(CurYear)];
-   }
+   Time->QuadPart = DaysSinceEpoch(IntTimeFields.Year);
    for (CurMonth = 1; CurMonth < IntTimeFields.Month; CurMonth++)
    {
-      Time->QuadPart += MonthLengths[IsLeapYear(CurYear)][CurMonth - 1];
+      Time->QuadPart += MonthLengths[IsLeapYear(IntTimeFields.Year)][CurMonth - 1];
    }
    Time->QuadPart += IntTimeFields.Day - 1;
    Time->QuadPart *= SECSPERDAY;
@@ -317,11 +321,7 @@ RtlTimeToTimeFields(
    /* compute year */
    CurYear = EPOCHYEAR;
    CurYear += Days / DAYSPERLEAPYEAR;
-   Days -= (CurYear - EPOCHYEAR) * DAYSPERLEAPYEAR;
-   CurYear--; /* The next calculation needs CurYear - 1 */
-   Days += CurYear - CurYear / 4 + CurYear / 100 - CurYear / 400;
-   CurYear++;
-   Days -= EPOCHYEAR - 1 - (EPOCHYEAR -1) / 4 + (EPOCHYEAR -1) / 100 - (EPOCHYEAR - 1) / 400;
+   Days -= DaysSinceEpoch(CurYear);
    while (1)
    {
       LeapYear = IsLeapYear(CurYear);

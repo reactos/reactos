@@ -128,7 +128,7 @@ ME_String *ME_VSplitString(ME_String *orig, int charidx)
   assert(charidx>=0);
   assert(charidx<=orig->nLen);
 
-  s = ME_MakeString(orig->szData+charidx);
+  s = ME_MakeStringN(orig->szData+charidx, orig->nLen-charidx);
   orig->nLen = charidx;
   orig->szData[charidx] = '\0';
   return s;
@@ -317,18 +317,10 @@ ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
       return start;
     case WB_RIGHT:
     case WB_MOVEWORDRIGHT:
-      if (start && ME_IsWSpace(s[start - 1]))
-      {
-        while (start < len && ME_IsWSpace(s[start]))
-          start++;
-      }
-      else
-      {
-        while (start < len && !ME_IsWSpace(s[start]))
-          start++;
-        while (start < len && ME_IsWSpace(s[start]))
-          start++;
-      }
+      while (start < len && !ME_IsWSpace(s[start]))
+        start++;
+      while (start < len && ME_IsWSpace(s[start]))
+        start++;
       return start;
   }
   return 0;

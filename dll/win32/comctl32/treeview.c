@@ -1019,7 +1019,6 @@ static void
 TREEVIEW_FreeItem(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 {
     DPA_DeletePtr(infoPtr->items, DPA_GetPtrIndex(infoPtr->items, item));
-    Free(item);
     if (infoPtr->selectedItem == item)
         infoPtr->selectedItem = NULL;
     if (infoPtr->hotItem == item)
@@ -1032,6 +1031,7 @@ TREEVIEW_FreeItem(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
         infoPtr->dropItem = NULL;
     if (infoPtr->insertMarkItem == item)
         infoPtr->insertMarkItem = NULL;
+    Free(item);
 }
 
 
@@ -3292,7 +3292,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
         scrollDist = nextItem->rect.top - orgNextTop;
         scrollRect.top = orgNextTop;
 
-        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, NULL,
+        ScrollWindowEx (infoPtr->hwnd, 0, scrollDist, &scrollRect, &scrollRect,
                        NULL, NULL, SW_ERASE | SW_INVALIDATE);
         TREEVIEW_Invalidate (infoPtr, wineItem);
     } else {
@@ -3573,12 +3573,11 @@ TREEVIEW_Command(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	    TREEVIEW_ITEM *editItem = infoPtr->selectedItem;
 	    HDC hdc = GetDC(infoPtr->hwndEdit);
 	    SIZE sz;
-	    int len;
 	    HFONT hFont, hOldFont = 0;
 
 	    infoPtr->bLabelChanged = TRUE;
 
-	    len = GetWindowTextW(infoPtr->hwndEdit, buffer, sizeof(buffer)/sizeof(buffer[0]));
+	    GetWindowTextW(infoPtr->hwndEdit, buffer, sizeof(buffer)/sizeof(buffer[0]));
 
 	    /* Select font to get the right dimension of the string */
 	    hFont = (HFONT)SendMessageW(infoPtr->hwndEdit, WM_GETFONT, 0, 0);

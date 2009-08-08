@@ -53,9 +53,6 @@ typedef struct _WINDOW_OBJECT
   HWND hOwner;
   /* DC Entries (DCE) */
   PDCE Dce;
-  /* Property list head.*/
-  LIST_ENTRY PropListHead;
-  ULONG PropListItems;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
   PETHREAD OwnerThread;
@@ -166,6 +163,9 @@ IntIsWindowInDestroy(PWINDOW_OBJECT Window);
 
 BOOL FASTCALL
 IntShowOwnedPopups( PWINDOW_OBJECT owner, BOOL fShow );
+
+LRESULT FASTCALL
+IntDefWindowProc( PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 #endif /* _WIN32K_WINDOW_H */
 

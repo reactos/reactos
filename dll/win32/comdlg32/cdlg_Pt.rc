@@ -73,7 +73,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Salvar Como ..."
+CAPTION "Salvar Como..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Nome do &Arquivo:", 1090, 6, 6, 76, 9
@@ -96,7 +96,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Gravar Como ..."
+CAPTION "Gravar Como..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "Nome do &Ficheiro:", 1090, 6, 6, 76, 9
@@ -760,7 +760,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE	"Arquivo não existe\nVocê gostaria de cria-lo"
     IDS_OVERWRITEFILE       "Arquivo já existe.\nGostaria de substituí-lo?"
     IDS_INVALID_FILENAME_TITLE "Caracter(es) inválidos no caminho"
-    IDS_INVALID_FILENAME    "Um nome de arquivo não pode conter quaisquer dos seguintes caracteres: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Um nome de arquivo não pode conter quaisquer dos seguintes caracteres:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Caminho não existe"
     IDS_FILENOTEXISTING     "Arquivo não existe"
 }
@@ -776,7 +776,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE	"O ficheiro não existe\nGostaria de o criar"
     IDS_OVERWRITEFILE       "O ficheiro já existe.\nGostaria de o substituir?"
     IDS_INVALID_FILENAME_TITLE "Caracter(es) inválidos na localização"
-    IDS_INVALID_FILENAME    "Um nome de ficheiro não pode conter quaisquer dos seguintes caracteres: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Um nome de ficheiro não pode conter quaisquer dos seguintes caracteres:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "A localização não existe"
     IDS_FILENOTEXISTING     "O ficheiro não existe"
 }

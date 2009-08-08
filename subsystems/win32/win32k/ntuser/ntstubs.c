@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native User stubs
@@ -24,12 +23,13 @@ NtUserAssociateInputContext(
     return 0;
 }
 
-DWORD
-STDCALL
+
+BOOL
+NTAPI
 NtUserAttachThreadInput(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+    IN DWORD idAttach,
+    IN DWORD idAttachTo,
+    IN BOOL fAttach)
 {
    UNIMPLEMENTED
 
@@ -106,12 +106,12 @@ NtUserCreateLocalMemHandle(
    return 0;
 }
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserDdeGetQualityOfService(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+   IN HWND hwndClient,
+   IN HWND hWndServer,
+   OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev)
 {
    UNIMPLEMENTED
 
@@ -132,12 +132,12 @@ NtUserDdeInitialize(
    return 0;
 }
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserDdeSetQualityOfService(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+   IN  HWND hwndClient,
+   IN  PSECURITY_QUALITY_OF_SERVICE pqosNew,
+   OUT PSECURITY_QUALITY_OF_SERVICE pqosPrev)
 {
    UNIMPLEMENTED
 
@@ -145,7 +145,7 @@ NtUserDdeSetQualityOfService(
 }
 
 DWORD
-STDCALL
+NTAPI
 NtUserDragObject(
    HWND    hwnd1,
    HWND    hwnd2,
@@ -159,13 +159,13 @@ NtUserDragObject(
    return 0;
 }
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserDrawAnimatedRects(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
+   HWND hwnd,
+   INT idAni,
+   RECT *lprcFrom,
+   RECT *lprcTo)
 {
    UNIMPLEMENTED
 
@@ -216,50 +216,54 @@ NtUserEvent(
 }
 
 DWORD
-STDCALL
+NTAPI
 NtUserExcludeUpdateRgn(
-   DWORD Unknown0,
-   DWORD Unknown1)
+  HDC hDC,
+  HWND hWnd)
 {
    UNIMPLEMENTED
 
    return 0;
 }
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserGetAltTabInfo(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3,
-   DWORD Unknown4,
-   DWORD Unknown5)
+   HWND hwnd,
+   INT  iItem,
+   PALTTABINFO pati,
+   LPTSTR pszItemText,
+   UINT   cchItemText,
+   BOOL   Ansi)
 {
    UNIMPLEMENTED
 
    return 0;
 }
 
-DWORD
-STDCALL
+HBRUSH
+NTAPI
 NtUserGetControlBrush(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+   HWND hwnd,
+   HDC  hdc,
+   UINT ctlType)
 {
    UNIMPLEMENTED
 
    return 0;
 }
 
-DWORD
+
+/*
+ * Called from PaintRect, works almost like wine PaintRect16 but returns hBrush.
+ */
+HBRUSH
 STDCALL
 NtUserGetControlColor(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
+   HWND hwndParent,
+   HWND hwnd, 
+   HDC hdc,
+   UINT CtlMsg) // Wine PaintRect: WM_CTLCOLORMSGBOX + hbrush
 {
    UNIMPLEMENTED
 
@@ -337,11 +341,11 @@ NtUserGetMouseMovePointsEx(
 
 
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserImpersonateDdeClientWindow(
-   DWORD Unknown0,
-   DWORD Unknown1)
+   HWND hWndClient,
+   HWND hWndServer)
 {
    UNIMPLEMENTED
 
@@ -382,8 +386,8 @@ NtUserInitTask(
    return 0;
 }
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserLockWorkStation(VOID)
 {
    UNIMPLEMENTED
@@ -540,6 +544,7 @@ NtUserSetSysColors(
      ProbeForRead(lpaRgbValues,
                    sizeof(INT),
                    1);
+// Developers: We are thread locked and calling gdi.
      Ret = IntSetSysColors(cElements, (INT*)lpaElements, (COLORREF*)lpaRgbValues);
   }
   _SEH_HANDLE
@@ -551,6 +556,10 @@ NtUserSetSysColors(
   {
       SetLastNtError(Status);
       Ret = FALSE;
+  }
+  if (Ret)
+  {
+     UserPostMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
   }
   UserLeave();
   return Ret;
@@ -567,10 +576,10 @@ NtUserSetThreadState(
    return 0;
 }
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserTrackMouseEvent(
-   DWORD Unknown0)
+   LPTRACKMOUSEEVENT lpEventTrack)
 {
    UNIMPLEMENTED
 
@@ -602,24 +611,12 @@ NtUserUpdateInstance(
    return 0;
 }
 
-DWORD
-STDCALL
+BOOL
+NTAPI
 NtUserUserHandleGrantAccess(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-STDCALL
-NtUserWaitForInputIdle(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2)
+   IN HANDLE hUserHandle,
+   IN HANDLE hJob,
+   IN BOOL bGrant)
 {
    UNIMPLEMENTED
 
@@ -721,8 +718,8 @@ NtUserGetAppImeLevel(
 DWORD
 NTAPI
 NtUserGetAtomName(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    ATOM nAtom,
+    LPWSTR lpBuffer)
 {
     UNIMPLEMENTED;
     return 0;
@@ -741,9 +738,9 @@ NtUserGetImeInfoEx(
 DWORD
 NTAPI
 NtUserGetRawInputBuffer(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    PRAWINPUT pData,
+    PUINT pcbSize,
+    UINT cbSizeHeader)
 {
     UNIMPLEMENTED;
     return 0;
@@ -752,11 +749,11 @@ NtUserGetRawInputBuffer(
 DWORD
 NTAPI
 NtUserGetRawInputData(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5)
+    HRAWINPUT hRawInput,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize,
+    UINT cbSizeHeader)
 {
     UNIMPLEMENTED;
     return 0;
@@ -765,10 +762,11 @@ NtUserGetRawInputData(
 DWORD
 NTAPI
 NtUserGetRawInputDeviceInfo(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+    HANDLE hDevice,
+    UINT uiCommand,
+    LPVOID pData,
+    PUINT pcbSize
+)
 {
     UNIMPLEMENTED;
     return 0;
@@ -777,9 +775,9 @@ NtUserGetRawInputDeviceInfo(
 DWORD
 NTAPI
 NtUserGetRawInputDeviceList(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    PRAWINPUTDEVICELIST pRawInputDeviceList,
+    PUINT puiNumDevices,
+    UINT cbSize)
 {
     UNIMPLEMENTED;
     return 0;
@@ -788,9 +786,9 @@ NtUserGetRawInputDeviceList(
 DWORD
 NTAPI
 NtUserGetRegisteredRawInputDevices(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    PRAWINPUTDEVICE pRawInputDevices,
+    PUINT puiNumDevices,
+    UINT cbSize)
 {
     UNIMPLEMENTED;
     return 0;
@@ -821,9 +819,9 @@ NtUserInitialize(
 DWORD
 NTAPI
 NtUserMinMaximize(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    HWND hWnd,
+    UINT cmd, // Wine SW_ commands
+    BOOL Hide)
 {
     UNIMPLEMENTED;
     return 0;
@@ -841,12 +839,12 @@ NtUserNotifyProcessCreate(
     return 0;
 }
 
-DWORD
+BOOL
 NTAPI
 NtUserPrintWindow(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    HWND hwnd,
+    HDC  hdcBlt,
+    UINT nFlags)
 {
     UNIMPLEMENTED;
     return 0;
@@ -910,22 +908,6 @@ NtUserRealWaitMessageEx(
     return 0;
 }
 
-/* http://www.reactos.org/pipermail/ros-kernel/2003-November/000589.html */
-HWINSTA
-NTAPI
-NtUserRegisterClassExWOW(
-    CONST WNDCLASSEXW* lpwcx,
-    BOOL bUnicodeClass,
-    WNDPROC wpExtra,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6,
-    DWORD dwUnknown7)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 DWORD
 NTAPI
 NtUserRegisterUserApiHook(
@@ -936,12 +918,12 @@ NtUserRegisterUserApiHook(
     return 0;
 }
 
-DWORD
+BOOL
 NTAPI
 NtUserRegisterRawInputDevices(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3)
+    IN PCRAWINPUTDEVICE pRawInputDevices,
+    IN UINT uiNumDevices,
+    IN UINT cbSize)
 {
     UNIMPLEMENTED;
     return 0;
@@ -1012,7 +994,7 @@ NtUserSetThreadLayoutHandles(
     return 0;
 }
 
-DWORD
+BOOL
 NTAPI
 NtUserSoundSentry(VOID)
 {
@@ -1065,13 +1047,13 @@ NtUserUnregisterUserApiHook(VOID)
     return 0;
 }
 
-DWORD
+BOOL
 NTAPI
 NtUserGetLayeredWindowAttributes(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4)
+    HWND hwnd,
+    COLORREF *pcrKey,
+    BYTE *pbAlpha,
+    DWORD *pdwFlags)
 {
     UNIMPLEMENTED;
     return 0;

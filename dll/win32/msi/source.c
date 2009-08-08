@@ -304,15 +304,14 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
 
     if (pcchDiskPrompt)
     {
-        data = ptr;
-        if (!*data)
-            data++;
+        if (!*ptr)
+            ptr++;
 
-        size = lstrlenW(data);
+        size = lstrlenW(ptr);
         if (size >= *pcchDiskPrompt)
             r = ERROR_MORE_DATA;
         else if (szDiskPrompt)
-            lstrcpyW(szDiskPrompt, data);
+            lstrcpyW(szDiskPrompt, ptr);
 
         *pcchDiskPrompt = size;
     }

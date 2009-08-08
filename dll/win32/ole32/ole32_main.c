@@ -30,6 +30,7 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "objbase.h"
+#include "ole2.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);

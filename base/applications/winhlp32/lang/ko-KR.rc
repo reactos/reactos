@@ -88,14 +88,14 @@ STID_WARNING,  		"경고"
 STID_INFO,  		"정보"
 STID_NOT_IMPLEMENTED, 	"구현되지 않았음"
 STID_HLPFILE_ERROR_s, 	"도움말 파일 `%s'를 읽는 도중 오류 발생"
-STID_CONTENTS, 		"목차(&C)"
-STID_SEARCH, 		"찾기(&S)"
+STID_INDEX, 		"목차(&C)"
+STID_CONTENTS,		"요약"
 STID_BACK, 		"뒤로(&B)"
-STID_TOPICS,		"목차(&T)"
 STID_ALL_FILES, 	"모든 파일 (*.*)"
 STID_HELP_FILES_HLP, 	"도움말 파일 (*.hlp)"
 STID_FILE_NOT_FOUND_s	"%s을 찾을 수 없습니다'. 이 파일을 직접 찾겠습니까?"
 STID_NO_RICHEDIT	"richedit  구현을 찾을수 업습니다.. 취소중"
+STID_PSH_INDEX,		"도움말 목차: "
 }
 
 CONTEXT_MENU MENU LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL

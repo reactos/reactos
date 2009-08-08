@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="psdk" type="idlheader">
+	<file>activaut.idl</file>
+	<file>activdbg.idl</file>
 	<file>activscp.idl</file>
 	<file>control.idl</file>
 	<file>dimm.idl</file>

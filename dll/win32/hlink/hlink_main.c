@@ -481,8 +481,8 @@ static const IClassFactoryVtbl hlcfvt =
     HLinkCF_fnLockServer
 };
 
-static CFImpl HLink_cf = { &hlcfvt, &HLink_Constructor };
-static CFImpl HLinkBrowseContext_cf = { &hlcfvt, &HLinkBrowseContext_Constructor };
+static CFImpl HLink_cf = { &hlcfvt, HLink_Constructor };
+static CFImpl HLinkBrowseContext_cf = { &hlcfvt, HLinkBrowseContext_Constructor };
 
 /***********************************************************************
  *             DllGetClassObject (HLINK.@)

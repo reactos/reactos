@@ -46,7 +46,7 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Αποθήκευση ως ..."
+CAPTION "Αποθήκευση ως..."
 FONT 8, "MS Shell Dlg"
 {
  LTEXT "File &Όνομα:", 1090, 6, 6, 76, 9
@@ -277,6 +277,7 @@ BEGIN
     LTEXT           "Κατάσταση:",     stc8,  16, 36,  36,10, SS_NOPREFIX
     LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Τύπος:",         stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Dummy Type",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Που:",           stc10, 16, 60,  36,10, SS_NOPREFIX
     LTEXT           "Dummy Location", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
     LTEXT           "Σχόλιο:",        stc9,  16, 72,  36,10, SS_NOPREFIX
@@ -369,7 +370,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Το αρχείο δεν υπάρχει.\nΘέλετε να δημιουργήσετε το αρχείο;"
     IDS_OVERWRITEFILE       "Το αρχείο υπάρχει ήδη.\nΘέλετε να το αντικαταστήσετε;"
     IDS_INVALID_FILENAME_TITLE "Μη έγγυρος(οι) χαρακτήρας(ες) στο μονοπάτι"
-    IDS_INVALID_FILENAME    "Ένα όνομα αρχείο δε μπορεί να περιέχει κάποιον από τους παρακάτω χαρακτήρες: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Ένα όνομα αρχείο δε μπορεί να περιέχει κάποιον από τους παρακάτω χαρακτήρες:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Το μονοπάτι δεν υπάρχει"
     IDS_FILENOTEXISTING     "Το αρχείο δεν υπάρχει"
 }

@@ -189,8 +189,6 @@ IntSetSysColors(UINT nColors, INT *Elements, COLORREF *Colors)
     Elements++;
     Colors++;
   }
-  UserPostMessage(HWND_BROADCAST, WM_SYSCOLORCHANGE, 0, 0);
-
   return nColors > 0;
 }
 

@@ -30,7 +30,7 @@ HKCR,"CLSID\{D969A300-E7FF-11d0-A93B-00A0C90F2719}\InProcServer32","ThreadingMod
 ; Rich Text Files
 HKCR,".rtf","",0x00000000,"rtffile"
 HKCR,".rtf\shellnew","",0x00000000,""
-HKCR,".rft\shellnew","Data",0x00020000,"{\rtf1}"
+HKCR,".rtf\shellnew","Data",0x00020000,"{\rtf1}"
 HKCR,"rtffile","",0x00000000,"Rich Text Document"
 HKCR,"rtffile","FriendlyTypeName",0x00020000,"@%SystemRoot%\system32\wordpad.exe,-1404"
 HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-2"

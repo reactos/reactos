@@ -181,7 +181,7 @@ void ME_HideCaret(ME_TextEditor *ed);
 void ME_ShowCaret(ME_TextEditor *ed);
 void ME_MoveCaret(ME_TextEditor *ed);
 int ME_CharFromPos(ME_TextEditor *editor, int x, int y);
-void ME_LButtonDown(ME_TextEditor *editor, int x, int y);
+void ME_LButtonDown(ME_TextEditor *editor, int x, int y, int clickNum);
 void ME_MouseMove(ME_TextEditor *editor, int x, int y);
 void ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars);
 void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
@@ -214,8 +214,6 @@ void ME_DestroyContext(ME_Context *c, HWND release);
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
 void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor);
 void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
-int  ME_twips2pointsX(ME_Context *c, int x);
-int  ME_twips2pointsY(ME_Context *c, int y);
 
 /* para.c */
 ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
@@ -244,6 +242,8 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun);
 void ME_InvalidateSelection(ME_TextEditor *editor);
 void ME_QueueInvalidateFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator);
+int  ME_twips2pointsX(ME_Context *c, int x);
+int  ME_twips2pointsY(ME_Context *c, int y);
 
 /* scroll functions in paint.c */
 
@@ -279,12 +279,19 @@ void ME_StreamInFill(ME_InStream *stream);
 int ME_AutoURLDetect(ME_TextEditor *editor, WCHAR curChar);
 extern int me_debug;
 extern void DoWrap(ME_TextEditor *editor);
+extern BOOL ME_FindNextURLCandidate(ME_TextEditor *editor, int sel_min, int sel_max,
+        int * candidate_min, int * candidate_max);
+extern BOOL ME_IsCandidateAnURL(ME_TextEditor *editor, int sel_min, int sel_max);
+BOOL ME_UpdateLinkAttribute(ME_TextEditor *editor, int sel_min, int sel_max);
+void ME_UpdateSelectionLinkAttribute(ME_TextEditor *editor);
 
 /* undo.c */
 ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_DisplayItem *pdi);
 void ME_CommitUndo(ME_TextEditor *editor);
-void ME_Undo(ME_TextEditor *editor);
-void ME_Redo(ME_TextEditor *editor);
+void ME_ContinueCoalescingTransaction(ME_TextEditor *editor);
+void ME_CommitCoalescingUndo(ME_TextEditor *editor);
+BOOL ME_Undo(ME_TextEditor *editor);
+BOOL ME_Redo(ME_TextEditor *editor);
 void ME_EmptyUndoStack(ME_TextEditor *editor);
 
 /* writer.c */

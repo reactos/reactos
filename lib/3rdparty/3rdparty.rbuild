@@ -10,6 +10,9 @@
 	<directory name="expat">
 		<xi:include href="expat/expat.rbuild" />
 	</directory>
+	<directory name="icu4ros">
+		<xi:include href="icu4ros/icu4ros.rbuild" />
+	</directory>
 	<directory name="libwine">
 		<xi:include href="libwine/libwine.rbuild" />
 	</directory>

@@ -767,12 +767,13 @@ extern UINT MSIREG_OpenUserProductsKey(LPCWSTR szProduct, HKEY* key, BOOL create
 extern UINT MSIREG_OpenUserPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserDataFeaturesKey(LPCWSTR szProduct, HKEY *key, BOOL create);
-extern UINT MSIREG_OpenComponents(HKEY* key);
 extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL create);
+extern UINT MSIREG_OpenLocalUserDataComponentKey(LPCWSTR szComponent, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenUserDataComponentKey(LPCWSTR szComponent, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenProductsKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenPatchesKey(LPCWSTR szPatch, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserDataProductKey(LPCWSTR szProduct, HKEY* key, BOOL create);
+extern UINT MSIREG_OpenLocalUserDataProductKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenCurrentUserInstallProps(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenLocalSystemInstallProps(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserFeaturesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
@@ -785,9 +786,15 @@ extern UINT MSIREG_DeleteUserDataProductKey(LPCWSTR szProduct);
 extern UINT MSIREG_OpenLocalSystemProductKey(LPCWSTR szProductCode, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenLocalSystemComponentKey(LPCWSTR szComponent, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenLocalClassesProductKey(LPCWSTR szProductCode, HKEY *key, BOOL create);
+extern UINT MSIREG_OpenLocalClassesFeaturesKey(LPCWSTR szProductCode, HKEY *key, BOOL create);
 extern UINT MSIREG_OpenLocalManagedProductKey(LPCWSTR szProductCode, HKEY *key, BOOL create);
+extern UINT MSIREG_OpenManagedFeaturesKey(LPCWSTR szProductCode, HKEY *key, BOOL create);
+extern UINT MSIREG_OpenLocalUserDataFeaturesKey(LPCWSTR szProduct, HKEY *key, BOOL create);
 extern UINT MSIREG_DeleteUserFeaturesKey(LPCWSTR szProduct);
+extern UINT MSIREG_DeleteLocalUserDataComponentKey(LPCWSTR szComponent);
 extern UINT MSIREG_DeleteUserDataComponentKey(LPCWSTR szComponent);
+extern UINT MSIREG_DeleteUserUpgradeCodesKey(LPCWSTR szUpgradeCode);
+extern UINT MSIREG_OpenClassesUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL create);
 
 extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name );
 extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val);
@@ -908,6 +915,7 @@ extern UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO
 extern void msi_free_media_info(MSIMEDIAINFO *mi);
 extern BOOL msi_cabextract(MSIPACKAGE* package, MSIMEDIAINFO *mi, PFNFDINOTIFY notify, LPVOID data);
 extern UINT msi_extract_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR destdir);
+extern UINT find_published_source(MSIPACKAGE *package, MSIMEDIAINFO *mi);
 
 /* control event stuff */
 extern VOID ControlEvent_FireSubscribedEvent(MSIPACKAGE *package, LPCWSTR event,

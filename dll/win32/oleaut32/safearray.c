@@ -483,7 +483,7 @@ HRESULT WINAPI SafeArrayAllocDescriptor(UINT cDims, SAFEARRAY **ppsaOut)
  *  Failure: An HRESULT error code indicating the error.
  *
  * NOTES
- *  - This function does not chack that vt is an allowed VARTYPE.
+ *  - This function does not check that vt is an allowed VARTYPE.
  *  - Unlike SafeArrayAllocDescriptor(), vt is associated with the array.
  *  See SafeArray.
  */

@@ -577,6 +577,11 @@ static HRESULT WINAPI IDirectSoundImpl_SetCooperativeLevel(
     IDirectSoundImpl *This = (IDirectSoundImpl *)iface;
     TRACE("(%p,%p,%s)\n",This,hwnd,dumpCooperativeLevel(level));
 
+    if (This->device == NULL) {
+        WARN("not initialized\n");
+        return DSERR_UNINITIALIZED;
+    }
+
     if (level==DSSCL_PRIORITY || level==DSSCL_EXCLUSIVE) {
         WARN("level=%s not fully supported\n",
              level==DSSCL_PRIORITY ? "DSSCL_PRIORITY" : "DSSCL_EXCLUSIVE");

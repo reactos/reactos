@@ -174,6 +174,8 @@ struct GpImageAttributes{
 
 struct GpFont{
     LOGFONTW lfw;
+    REAL emSize;
+    Unit unit;
 };
 
 struct GpStringFormat{
@@ -183,6 +185,15 @@ struct GpStringFormat{
     StringTrimming trimming;
     HotkeyPrefix hkprefix;
     StringAlignment vertalign;
+};
+
+struct GpFontCollection{
+    GpFontFamily* FontFamilies;
+};
+
+struct GpFontFamily{
+    TEXTMETRICW tmw;
+    WCHAR* FamilyName;
 };
 
 #endif

@@ -54,6 +54,7 @@
 			</directory>
 		</if>
 		<file>abs.c</file>
+		<file>div.c</file>
 		<file>labs.c</file>
 		<file>rand_nt.c</file>
 	</directory>
@@ -81,6 +82,10 @@
 	<directory name="search">
 		<file>bsearch.c</file>
 		<file>lfind.c</file>
+	</directory>
+
+	<directory name="stdlib">
+		<file>qsort.c</file>
 	</directory>
 
 	<directory name="string">

@@ -346,7 +346,7 @@ UserDelete(HWND hwndDlg)
                          UNLEN);
 
     /* Display a warning message because the delete operation cannot be reverted */
-    wsprintf(szText, TEXT("Dou you really want to delete the user \"%s\"?"), szUserName);
+    wsprintf(szText, TEXT("Do you really want to delete the user \"%s\"?"), szUserName);
     if (MessageBox(NULL, szText, TEXT("User Accounts"), MB_ICONWARNING | MB_YESNO) == IDNO)
         return FALSE;
 

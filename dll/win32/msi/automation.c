@@ -405,7 +405,7 @@ static HRESULT WINAPI AutomationObject_Invoke(
              (hr == DISP_E_PARAMNOTFOUND ||
               hr == DISP_E_EXCEPTION)) {
         static const WCHAR szComma[] = { ',',0 };
-        static WCHAR szExceptionSource[] = {'M','s','i',' ','A','P','I',' ','E','r','r','o','r',0};
+        static const WCHAR szExceptionSource[] = {'M','s','i',' ','A','P','I',' ','E','r','r','o','r',0};
         WCHAR szExceptionDescription[MAX_PATH];
         BSTR bstrParamNames[MAX_FUNC_PARAMS];
         unsigned namesNo, i;

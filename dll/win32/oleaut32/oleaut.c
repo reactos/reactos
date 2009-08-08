@@ -287,7 +287,7 @@ BSTR WINAPI SysAllocStringLen(const OLECHAR *str, unsigned int len)
  *
  * NOTES
  *  See BSTR(), SysAllocStringByteLen().
- *  *pbstr may be changed by this function.
+ *  *old may be changed by this function.
  */
 int WINAPI SysReAllocStringLen(BSTR* old, const OLECHAR* str, unsigned int len)
 {
@@ -301,7 +301,7 @@ int WINAPI SysReAllocStringLen(BSTR* old, const OLECHAR* str, unsigned int len)
       *old = (BSTR)(ptr+1);
       *ptr = newbytelen;
       if (str) {
-        memcpy(*old, str, newbytelen);
+        memmove(*old, str, newbytelen);
         (*old)[len] = 0;
       } else {
 	/* Subtle hidden feature: The old string data is still there

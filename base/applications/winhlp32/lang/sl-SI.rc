@@ -86,14 +86,14 @@ STID_WARNING,  		"OPOZORILO"
 STID_INFO,  		"Informacija"
 STID_NOT_IMPLEMENTED, 	"Ni (še) na voljo"
 STID_HLPFILE_ERROR_s, 	"Napaka pri branju datoteke s pomočjo `%s'"
-STID_CONTENTS, 		"&Teme pomoči"
-STID_SEARCH, 		"&Iskanje"
+STID_INDEX, 		"&Teme pomoči"
+STID_CONTENTS, 		"Summart"
 STID_BACK, 		"&Nazaj"
-STID_TOPICS,		"&Vsebina"
 STID_ALL_FILES, 	"Vse datoteke (*.*)"
 STID_HELP_FILES_HLP, 	"Datoteke s pomočjo (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Ne najdem datoteke '%s'. Ali jo želite poiskati sami?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_PSH_INDEX,		"Help topics: "
 }
 
 #pragma code_page(default)

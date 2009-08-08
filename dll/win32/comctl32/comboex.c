@@ -530,13 +530,11 @@ static UINT COMBOEX_GetListboxText(COMBOEX_INFO *infoPtr, int n, LPWSTR buf)
 
 static INT COMBOEX_DeleteItem (COMBOEX_INFO *infoPtr, INT index)
 {
-    CBE_ITEMDATA const *item;
-
     TRACE("(index=%d)\n", index);
 
     /* if item number requested does not exist then return failure */
     if ((index >= infoPtr->nb_items) || (index < 0)) return CB_ERR;
-    if (!(item = COMBOEX_FindItem(infoPtr, index))) return CB_ERR;
+    if (!COMBOEX_FindItem(infoPtr, index)) return CB_ERR;
 
     /* doing this will result in WM_DELETEITEM being issued */
     SendMessageW (infoPtr->hwndCombo, CB_DELETESTRING, (WPARAM)index, 0);
@@ -1269,6 +1267,9 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lPa
 	InvalidateRect (infoPtr->hwndCombo, 0, 0);
 	return 0;
 
+    case CBN_SETFOCUS:
+        return SendMessageW (parent, WM_COMMAND, wParam, (LPARAM)infoPtr->hwndSelf);
+
     default:
 	/*
 	 * We have to change the handle since we are the control
@@ -1602,9 +1603,11 @@ static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
     if (infoPtr->defaultFont)
 	DeleteObject (infoPtr->defaultFont);
 
+    SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
+
     /* free comboex info data */
     Free (infoPtr);
-    SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
+
     return 0;
 }
 
@@ -1635,7 +1638,7 @@ static LRESULT COMBOEX_NCCreate (HWND hwnd)
     oldstyle = (DWORD)GetWindowLongW (hwnd, GWL_STYLE);
     newstyle = oldstyle & ~(WS_VSCROLL | WS_HSCROLL | WS_BORDER);
     if (newstyle != oldstyle) {
-	TRACE("req style %08x, reseting style %08x\n",
+	TRACE("req style %08x, resetting style %08x\n",
 	      oldstyle, newstyle);
 	SetWindowLongW (hwnd, GWL_STYLE, newstyle);
     }

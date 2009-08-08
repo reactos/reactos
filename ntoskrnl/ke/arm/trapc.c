@@ -18,13 +18,6 @@
 #define KiGetPreviousMode(tf) \
     ((tf->Spsr & CPSR_MODES) == CPSR_USER_MODE) ? UserMode: KernelMode
 
-NTSTATUS
-KiSystemCall(
-    IN PVOID Handler,
-    IN PULONG Arguments,
-    IN ULONG ArgumentCount
-);
-
 VOID
 FASTCALL
 KiRetireDpcList(
@@ -35,6 +28,13 @@ VOID
 FASTCALL
 KiQuantumEnd(
     VOID
+);
+
+VOID
+KiSystemService(
+    IN PKTHREAD Thread,
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Instruction
 );
 
 /* FUNCTIONS ******************************************************************/
@@ -99,10 +99,7 @@ KiIdleLoop(VOID)
             // because we're calling this from C code and not assembly.
             // This is similar to how it gets called for unwaiting, on x86
             //
-            DPRINT1("Swapping context!\n");
             KiSwapContext(OldThread, NewThread);
-            DPRINT1("Back\n");
-            ASSERT(FALSE);
         }
         else
         {
@@ -117,34 +114,9 @@ BOOLEAN
 KiSwapContextInternal(IN PKTHREAD OldThread,
                       IN PKTHREAD NewThread)
 {
-    PKEXCEPTION_FRAME ExFrame = NewThread->KernelStack;
     PKPCR Pcr = (PKPCR)KeGetPcr();
     PKPRCB Prcb = Pcr->Prcb;
     PKPROCESS OldProcess, NewProcess;
-    DPRINT1("Switching from: %p to %p\n", OldThread, NewThread);
-    DPRINT1("Stacks: %p %p\n", OldThread->KernelStack, NewThread->KernelStack);
-    DPRINT1("Thread Registers:\n"
-            "R4: %lx\n"
-            "R5: %lx\n"
-            "R6: %lx\n"
-            "R7: %lx\n"
-            "R8: %lx\n"
-            "R9: %lx\n"
-            "R10: %lx\n"
-            "R11: %lx\n"
-            "Psr: %lx\n"
-            "Lr: %lx\n",
-            ExFrame->R4,
-            ExFrame->R5,
-            ExFrame->R6,
-            ExFrame->R7,
-            ExFrame->R8,
-            ExFrame->R9,
-            ExFrame->R10,
-            ExFrame->R11,
-            ExFrame->Psr,
-            ExFrame->Lr);
-    DPRINT1("Old priority: %lx\n", OldThread->Priority);
     
     //
     // Increase context switch count
@@ -237,7 +209,7 @@ KiApcInterrupt(VOID)
     KPROCESSOR_MODE PreviousMode;
     KEXCEPTION_FRAME ExceptionFrame;
     PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
-    DPRINT1("[APC]\n");
+    //DPRINT1("[APC]\n");
        
     //
     // Isolate previous mode
@@ -345,10 +317,7 @@ KiDispatchInterrupt(VOID)
         // because we're calling this from C code and not assembly.
         // This is similar to how it gets called for unwaiting, on x86
         //
-        DPRINT1("Swapping context!\n");
         KiSwapContext(OldThread, NewThread);
-        DPRINT1("Back\n");
-        ASSERT(FALSE);
     }
 }
 
@@ -360,6 +329,7 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
     ULONG InterruptCause, InterruptMask;
     PKPCR Pcr;
     PKTRAP_FRAME OldTrapFrame;
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
 
     //
     // Increment interrupt count
@@ -424,10 +394,89 @@ KiInterruptHandler(IN PKTRAP_FRAME TrapFrame,
 //    DPRINT1("[ISR RETURN]\n");
     
     //
-    // Re-enable interrupts and return IRQL
+    // Restore IRQL and interrupts
     //
     KeLowerIrql(OldIrql);
     _enable();
+}
+
+NTSTATUS
+KiPrefetchAbortHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+    ULONG Instruction = *(PULONG)TrapFrame->Pc;
+    ULONG DebugType, Parameter0;
+    EXCEPTION_RECORD ExceptionRecord;
+    
+    //
+    // What we *SHOULD* do is look at the instruction fault status register
+    // and see if it's equal to 2 (debug trap). Unfortunately QEMU doesn't seem
+    // to emulate this behaviour properly, so we use a workaround.
+    //
+    //if (KeArmInstructionFaultStatusRegisterGet() == 2)
+    if (Instruction & 0xE1200070) // BKPT
+    {
+        //
+        // Okay, we know this is a breakpoint, extract the index
+        //
+        DebugType = Instruction & 0xF;
+        if (DebugType == BREAKPOINT_PRINT)
+        {
+            //
+            // Debug Service
+            //
+            Parameter0 = TrapFrame->R0;
+            TrapFrame->Pc += sizeof(ULONG);
+        }
+        else
+        {
+            //
+            // Standard INT3 (emulate x86 behavior)
+            //
+            Parameter0 = STATUS_SUCCESS;
+        }
+        
+        //
+        // Build the exception record
+        //
+        ExceptionRecord.ExceptionCode = STATUS_BREAKPOINT;
+        ExceptionRecord.ExceptionFlags = 0;
+        ExceptionRecord.ExceptionRecord = NULL;
+        ExceptionRecord.ExceptionAddress = (PVOID)TrapFrame->Pc;
+        ExceptionRecord.NumberParameters = 3;
+        
+        //
+        // Build the parameters
+        //
+        ExceptionRecord.ExceptionInformation[0] = Parameter0;
+        ExceptionRecord.ExceptionInformation[1] = TrapFrame->R1;
+        ExceptionRecord.ExceptionInformation[2] = TrapFrame->R2;
+        
+        //
+        // Dispatch the exception
+        //
+        KiDispatchException(&ExceptionRecord,
+                            NULL,
+                            TrapFrame,
+                            KiGetPreviousMode(TrapFrame),
+                            TRUE);
+
+        //
+        // We're done
+        //
+        return STATUS_SUCCESS;
+    }
+    
+    //
+    // Unhandled
+    //
+    while (TRUE);
+    DPRINT1("[PREFETCH ABORT] (%x) @ %p/%p/%p\n",
+            KeArmInstructionFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -435,9 +484,8 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
 {
     NTSTATUS Status;
     PVOID Address = (PVOID)KeArmFaultAddressRegisterGet();
-    DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
-            KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
-    
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
+   
     //
     // Check if this is a page fault
     //
@@ -445,147 +493,19 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     {
         Status = MmAccessFault(FALSE,
                                Address,
-                               KernelMode,
+                               KiGetPreviousMode(TrapFrame),
                                TrapFrame);
         if (Status == STATUS_SUCCESS) return Status;
     }
-    
+
+    //
+    // Unhandled
+    //
+    DPRINT1("[ABORT] (%x) @ %p/%p/%p\n",
+            KeArmFaultStatusRegisterGet(), Address, TrapFrame->SvcLr, TrapFrame->Pc);
     UNIMPLEMENTED;
     ASSERT(FALSE);
     return STATUS_SUCCESS;
-}
-
-VOID
-KiSystemService(IN PKTHREAD Thread,
-                IN PKTRAP_FRAME TrapFrame,
-                IN ULONG Instruction)
-{
-    ULONG Id, Number, ArgumentCount, i;
-    PKPCR Pcr;
-    ULONG_PTR ServiceTable, Offset;
-    PKSERVICE_TABLE_DESCRIPTOR DescriptorTable;
-    PVOID SystemCall;
-    PULONG Argument;
-    ULONG Arguments[16]; // Maximum 20 arguments
-    
-    //
-    // Increase count of system calls
-    //
-    Pcr = (PKPCR)KeGetPcr();
-    Pcr->Prcb->KeSystemCalls++;
-    
-    //
-    // Get the system call ID
-    //
-    Id = Instruction & 0xFFFFF;
-    DPRINT1("[SWI] (%x) %p (%d) \n", Id, Thread, Thread->PreviousMode);
-    
-    //
-    // Get the descriptor table
-    //
-    ServiceTable = (ULONG_PTR)Thread->ServiceTable;
-    Offset = ((Id >> SERVICE_TABLE_SHIFT) & SERVICE_TABLE_MASK);
-    ServiceTable += Offset;
-    DescriptorTable = (PVOID)ServiceTable;
-    
-    //
-    // Get the service call number and validate it
-    //
-    Number = Id & SERVICE_NUMBER_MASK;
-    if (Number > DescriptorTable->Limit)
-    {
-        //
-        // Check if this is a GUI call
-        //
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-    }
-    
-    //
-    // Save the function responsible for handling this system call
-    //
-    SystemCall = (PVOID)DescriptorTable->Base[Number];
-    
-    //
-    // Check if this is a GUI call
-    //
-    if (Offset & SERVICE_TABLE_TEST)
-    {
-        //
-        // TODO
-        //
-        UNIMPLEMENTED;
-        ASSERT(FALSE);
-    }
-    
-    //
-    // Check how many arguments this system call takes
-    //
-    ArgumentCount = DescriptorTable->Number[Number] / 4;
-    ASSERT(ArgumentCount <= 20);
-    
-    //
-    // Copy the register-arguments first
-    // First four arguments are in a1, a2, a3, a4
-    //
-    Argument = &TrapFrame->R0;
-    for (i = 0; (i < ArgumentCount) && (i < 4); i++)
-    {
-        //
-        // Copy them into the kernel stack
-        //
-        DPRINT1("Argument: %p\n", *Argument);
-        Arguments[i] = *Argument;
-        Argument++;
-    }
-    
-    //
-    // If more than four, we'll have some on the user stack
-    //
-    if (ArgumentCount > 4)
-    {
-        //
-        // Check where the stack is
-        //
-        if (Thread->PreviousMode == UserMode)
-        {
-            //
-            // FIXME: Validate the user stack
-            //
-            Argument = (PULONG)TrapFrame->UserSp;
-        }
-        else
-        {
-            //
-            // We were called from the kernel
-            //
-            Argument = (PULONG)TrapFrame->SvcSp;
-            
-            //
-            // Bias for the values we saved
-            //
-            Argument += 2;
-        }
-
-        //
-        // Copy the rest
-        //
-        for (i = 4; i < ArgumentCount; i++)
-        {
-            //
-            // Copy into kernel stack
-            //
-            DPRINT1("Argument: %p\n", *Argument);
-            Arguments[i] = *Argument;
-            Argument++;
-        }
-    }
-    
-    //
-    // Do the system call and save result in EAX
-    //
-    TrapFrame->R0 = KiSystemCall(SystemCall, Arguments, ArgumentCount);
-    DPRINT1("Returned: %lx\n", TrapFrame->R0);
 }
 
 VOID
@@ -594,6 +514,7 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PKTHREAD Thread;
     KPROCESSOR_MODE PreviousMode;
     ULONG Instruction;
+    ASSERT(TrapFrame->DbgArgMark == 0xBADB0D00);
     
     //
     // Get the current thread
@@ -606,9 +527,9 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PreviousMode = KiGetPreviousMode(TrapFrame);
     
     //
-    // FIXME: Save old previous mode
+    // Save old previous mode
     //
-    //TrapFrame->PreviousMode = PreviousMode;
+    TrapFrame->PreviousMode = PreviousMode;
     
     //
     // Save previous mode and trap frame

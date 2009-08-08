@@ -42,7 +42,7 @@
 @ stub I_RpcConnectionSetSockBuffSize
 @ stub I_RpcDeleteMutex
 @ stub I_RpcEnableWmiTrace # wxp
-@ stub I_RpcExceptionFilter # wxp
+@ stdcall I_RpcExceptionFilter(long)
 @ stdcall I_RpcFree(ptr)
 @ stdcall I_RpcFreeBuffer(ptr)
 @ stub I_RpcFreePipeBuffer

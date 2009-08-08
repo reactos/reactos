@@ -442,7 +442,7 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT 
   RECT *days=&dayrect;
   RECT rtoday;
   int i, j, m, mask, day, firstDay, weeknum, weeknum1,prevMonth;
-  int textHeight = infoPtr->textHeight, textWidth = infoPtr->textWidth;
+  int textHeight = infoPtr->textHeight;
   SIZE size;
   HBRUSH hbr;
   HFONT currentFont;
@@ -659,13 +659,11 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT 
  * date if necessary */
 
   if(!(dwStyle & MCS_NOTODAY))  {
-    int offset = 0;
     if(!(dwStyle & MCS_NOTODAYCIRCLE))  {
       /*day is the number of days from nextmonth we put on the calendar */
       MONTHCAL_CircleDay(infoPtr, hdc,
 			 day+MONTHCAL_MonthLength(infoPtr->currentMonth,infoPtr->currentYear),
 			 infoPtr->currentMonth);
-      offset+=textWidth;
     }
     if (!LoadStringW(COMCTL32_hModule,IDM_TODAY,buf1,countof(buf1)))
       {

@@ -45,9 +45,12 @@ extern const CLSID CLSID_DfMarshal;
 /* number of refs given out for normal marshaling */
 #define NORMALEXTREFS 5
 
+
+/* private flag indicating that the object was marshaled as table-weak */
+#define SORFP_TABLEWEAK SORF_OXRES1
 /* private flag indicating that the caller does not want to notify the stub
  * when the proxy disconnects or is destroyed */
-#define SORFP_NOLIFETIMEMGMT SORF_OXRES1
+#define SORFP_NOLIFETIMEMGMT SORF_OXRES2
 
 static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
                                 MSHCTX dest_context, void *dest_context_data,
@@ -131,10 +134,11 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
         }
     }
 
+    stdobjref->flags = SORF_NULL;
+    if (mshlflags & MSHLFLAGS_TABLEWEAK)
+        stdobjref->flags |= SORFP_TABLEWEAK;
     if (mshlflags & MSHLFLAGS_NOPING)
-        stdobjref->flags = SORF_NOPING;
-    else
-        stdobjref->flags = SORF_NULL;
+        stdobjref->flags |= SORF_NOPING;
 
     if ((manager = get_stub_manager_from_object(apt, object)))
         TRACE("registering new ifstub on pre-existing manager\n");
@@ -167,20 +171,22 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
         stub_manager_int_release(manager);
         /* destroy the stub manager if it has no ifstubs by releasing
          * zero external references */
-        stub_manager_ext_release(manager, 0, TRUE);
+        stub_manager_ext_release(manager, 0, FALSE, TRUE);
         return E_OUTOFMEMORY;
     }
 
     if (!tablemarshal)
     {
         stdobjref->cPublicRefs = NORMALEXTREFS;
-        stub_manager_ext_addref(manager, stdobjref->cPublicRefs);
+        stub_manager_ext_addref(manager, stdobjref->cPublicRefs, FALSE);
     }
     else
     {
         stdobjref->cPublicRefs = 0;
         if (mshlflags & MSHLFLAGS_TABLESTRONG)
-            stub_manager_ext_addref(manager, 1);
+            stub_manager_ext_addref(manager, 1, FALSE);
+        else
+            stub_manager_ext_addref(manager, 0, TRUE);
     }
 
     /* FIXME: check return value */
@@ -279,7 +285,7 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
         /* get IRemUnknown proxy so we can communicate with the remote object */
         hr = proxy_manager_get_remunknown(This, &remunk);
 
-        if (hr == S_OK)
+        if (SUCCEEDED(hr))
         {
             hr = IRemUnknown_RemQueryInterface(remunk, ipid, NORMALEXTREFS,
                                                nonlocal_mqis, iids, &qiresults);
@@ -1330,7 +1336,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
       
         /* unref the ifstub. FIXME: only do this on success? */
         if (!stub_manager_is_table_marshaled(stubmgr, &stdobjref.ipid))
-            stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs, TRUE);
+            stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs, stdobjref.flags & SORFP_TABLEWEAK, TRUE);
 
         stub_manager_int_release(stubmgr);
         return hres;
@@ -1407,7 +1413,7 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
         return RPC_E_INVALID_OBJREF;
     }
 
-    stub_manager_release_marshal_data(stubmgr, stdobjref.cPublicRefs, &stdobjref.ipid);
+    stub_manager_release_marshal_data(stubmgr, stdobjref.cPublicRefs, &stdobjref.ipid, stdobjref.flags & SORFP_TABLEWEAK);
 
     stub_manager_int_release(stubmgr);
     apartment_release(apt);

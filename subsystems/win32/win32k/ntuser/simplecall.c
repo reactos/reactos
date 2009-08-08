@@ -511,31 +511,6 @@ NtUserCallTwoParam(
          RETURN( (DWORD)IntShowOwnedPopups(Window, (BOOL) Param2));
       }
 
-      case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
-         {
-#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
-            DPRINT1("ROS_SHOWWINDOW\n");
-
-            if (!(Window = UserGetWindowObject((HWND)Param1)))
-            {
-               RETURN( 1 );
-            }
-
-            if (Param2)
-            {
-               if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP))
-               {
-                  RETURN( -1 );
-               }
-               Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
-            }
-            else
-               Window->Flags |= WIN_NEEDS_SHOW_OWNEDPOPUP;
-
-            DPRINT1("ROS_SHOWWINDOW ---> 0x%x\n",Window->Flags);
-            RETURN( 0 );
-         }
-
       case TWOPARAM_ROUTINE_ROS_UPDATEUISTATE:
       {
           WPARAM wParam;

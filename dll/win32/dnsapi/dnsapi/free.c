@@ -13,24 +13,29 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID WINAPI DnsFree
-( PVOID Data, DNS_FREE_TYPE FreeType ) {
-  switch( FreeType ) {
-  case DnsFreeFlat:
-    RtlFreeHeap( RtlGetProcessHeap(), 0, Data );
-    break;
+VOID WINAPI
+DnsFree(PVOID Data,
+        DNS_FREE_TYPE FreeType)
+{
+    switch(FreeType)
+    {
+        case DnsFreeFlat:
+            RtlFreeHeap( RtlGetProcessHeap(), 0, Data );
+            break;
 
-  case DnsFreeRecordList:
-    DnsIntFreeRecordList( (PDNS_RECORD)Data );
-    break;
+        case DnsFreeRecordList:
+            DnsIntFreeRecordList( (PDNS_RECORD)Data );
+            break;
 
-  case DnsFreeParsedMessageFields:
-    /* assert( FALSE ); XXX arty not yet implemented. */
-    break;
-  }
+        case DnsFreeParsedMessageFields:
+            /* assert( FALSE ); XXX arty not yet implemented. */
+            break;
+    }
 }
 
-VOID WINAPI DnsRecordListFree
-( PDNS_RECORD Data, DNS_FREE_TYPE FreeType ) {
-  DnsFree( Data, FreeType );
+VOID WINAPI
+DnsRecordListFree(PDNS_RECORD Data,
+                  DNS_FREE_TYPE FreeType)
+{
+    DnsFree(Data, FreeType);
 }

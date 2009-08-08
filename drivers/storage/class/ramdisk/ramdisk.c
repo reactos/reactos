@@ -8,6 +8,7 @@
 
 /* INCLUDES *******************************************************************/
 
+#include <initguid.h>
 #include <ntddk.h>
 #include <ntdddisk.h>
 #include <scsi.h>
@@ -16,11 +17,49 @@
 #include <mountmgr.h>
 #include <helper.h>
 #include <ketypes.h>
+#include <iotypes.h>
+#include <rtlfuncs.h>
 #include <arc/arc.h>
+#include <reactos/drivers/ntddrdsk.h>
 #define NDEBUG
 #include <debug.h>
 
 /* GLOBALS ********************************************************************/
+
+typedef enum _RAMDISK_DEVICE_TYPE
+{
+    RamdiskFdo,
+    RamdiskPdo
+} RAMDISK_DEVICE_TYPE;
+
+typedef enum _RAMDISK_DEVICE_STATE
+{
+    RamdiskStateUninitialized,
+    RamdiskStateStarted,
+    RamdiskStatePaused,
+    RamdiskStateStopped,
+    RamdiskStateRemoved,
+    RamdiskStateBusRemoved,
+} RAMDISK_DEVICE_STATE;
+
+DEFINE_GUID(RamdiskBusInterface,
+		    0x5DC52DF0,
+			0x2F8A,
+			0x410F,
+			0x80, 0xE4, 0x05, 0xF8, 0x10, 0xE7, 0xA8, 0x8A);
+
+typedef struct _RAMDISK_EXTENSION
+{
+    RAMDISK_DEVICE_TYPE Type;
+    RAMDISK_DEVICE_STATE State;
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT AttachedDevice;
+    IO_REMOVE_LOCK RemoveLock;
+    UNICODE_STRING SymbolicLinkName;
+    FAST_MUTEX DiskListLock;
+    LIST_ENTRY DiskListHead;
+} RAMDISK_EXTENSION, *PRAMDISK_EXTENSION;
 
 ULONG MaximumViewLength;
 ULONG MaximumPerDiskViewLength;
@@ -34,6 +73,7 @@ ULONG DefaultViewLength;
 UNICODE_STRING DriverRegistryPath;
 BOOLEAN ExportBootDiskAsCd;
 BOOLEAN IsWinPEBoot;
+PDEVICE_OBJECT RamdiskBusFdo;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -194,10 +234,14 @@ QueryParameters(IN PUNICODE_STRING RegistryPath)
 NTSTATUS
 NTAPI
 RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
-                   IN PIRP Irp)
+                 IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
+    //
+    // Complete the IRP
+    //
+    Irp->IoStatus.Information = 1;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
     return STATUS_SUCCESS;
 }
 
@@ -213,8 +257,10 @@ RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
-RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
-                     IN PIRP Irp)
+RamdiskCreateDiskDevice(IN PRAMDISK_EXTENSION DeviceExtension,
+						IN PRAMDISK_CREATE_INPUT Input,
+						IN BOOLEAN ValidateOnly,
+						OUT PDEVICE_OBJECT *DeviceObject)
 {
     UNIMPLEMENTED;
     while (TRUE);
@@ -223,12 +269,402 @@ RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS
 NTAPI
+RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp,
+					 IN BOOLEAN ValidateOnly)
+{
+	PRAMDISK_CREATE_INPUT Input;
+	ULONG Length;
+	PRAMDISK_EXTENSION DeviceExtension; 
+	ULONG DiskType;
+	PWCHAR FileNameStart, FileNameEnd;
+	NTSTATUS Status;
+	PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+	
+	//
+	// Get the device extension and our input data
+	//
+	DeviceExtension = (PRAMDISK_EXTENSION)DeviceObject->DeviceExtension;
+	Length = IoStackLocation->Parameters.DeviceIoControl.InputBufferLength;
+	Input = (PRAMDISK_CREATE_INPUT)Irp->AssociatedIrp.SystemBuffer;
+	
+	//
+	// Validate input parameters
+	//
+	if ((Length < sizeof(RAMDISK_CREATE_INPUT)) ||
+		(Input->Version != sizeof(RAMDISK_CREATE_INPUT)))
+	{
+		//
+		// Invalid input
+		//
+		return STATUS_INVALID_PARAMETER;
+	}
+	
+	//
+	// Validate the disk type
+	//
+	DiskType = Input->DiskType;
+	if (DiskType == FILE_DEVICE_CONTROLLER) return STATUS_INVALID_PARAMETER;
+	
+	//
+	// Look at the disk type
+	//
+	if (DiskType == FILE_DEVICE_CD_ROM_FILE_SYSTEM)
+	{
+		//
+		// We only allow this as an early-init boot
+		//
+		if (!KeLoaderBlock) return STATUS_INVALID_PARAMETER;
+		
+		//
+		// Save command-line flags
+		//
+		if (ExportBootDiskAsCd) Input->Options.ExportAsCd = TRUE;
+		if (IsWinPEBoot) Input->Options.NoDriveLetter = TRUE;
+	}
+    
+	//
+	// Validate the disk type
+	//
+	if ((Input->Options.ExportAsCd) && (DiskType != FILE_DEVICE_CD_ROM_FILE_SYSTEM))
+	{
+		//
+		// If the type isn't CDFS, it has to at least be raw CD
+		//
+		if (DiskType != FILE_DEVICE_CD_ROM) return STATUS_INVALID_PARAMETER;
+	}
+	
+	//
+	// Check if this is an actual file
+	//
+	if (DiskType <= FILE_DEVICE_CD_ROM)
+	{
+		//
+		// Validate the file name
+		//
+		FileNameStart = (PWCHAR)((ULONG_PTR)Input + Length);
+		FileNameEnd = Input->FileName + 1;
+		while ((FileNameEnd < FileNameStart) && *(FileNameEnd)) FileNameEnd++;
+		if (FileNameEnd == FileNameStart) return STATUS_INVALID_PARAMETER;
+	}
+    
+	//
+	// Create the actual device
+	//
+	Status = RamdiskCreateDiskDevice(DeviceExtension,
+									 Input, 
+									 ValidateOnly,
+									 &DeviceObject);
+	if (NT_SUCCESS(Status))
+	{
+		//
+		// Invalidate and set success
+		//
+		IoInvalidateDeviceRelations(DeviceExtension->PhysicalDeviceObject, 0);
+		Irp->IoStatus.Information = STATUS_SUCCESS;
+	}
+	
+	//
+	// We're done
+	//
+	return Status;
+}
+
+NTSTATUS
+NTAPI
+RamdiskDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+                     IN PIRP Irp)
+{
+    NTSTATUS Status;
+    PIO_STACK_LOCATION IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    PRAMDISK_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+    ULONG Information = 0;
+    
+    //
+    // Grab the remove lock
+    //
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // Fail the IRP
+        //
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+    
+    //
+    // Check if this is an FDO or PDO
+    //
+    if (DeviceExtension->Type == RamdiskFdo)
+    {
+        //
+        // Check what the request is
+        //
+        switch (IoStackLocation->Parameters.DeviceIoControl.IoControlCode)
+        {
+            //
+            // Request to create a ramdisk
+            //
+            case FSCTL_CREATE_RAM_DISK:
+                
+                //
+                // Do it
+                //
+                Status = RamdiskCreateRamdisk(DeviceObject, Irp, TRUE);
+                if (!NT_SUCCESS(Status)) goto CompleteRequest;
+                break;
+                
+            default:
+                
+                //
+                // We don't handle anything else yet
+                //
+                ASSERT(FALSE);
+                while (TRUE);
+        }
+    }
+    else
+    {
+        //
+        // PDO code not yet done
+        //
+        ASSERT(FALSE);
+    }
+    
+    //
+    // Queue the request to our worker thread
+    //
+    UNIMPLEMENTED;
+    while (TRUE);
+    
+CompleteRequest:
+    //
+    // Release the lock
+    //
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (Status != STATUS_PENDING)
+    {
+        //
+        // Complete the request
+        //
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = Information;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    
+    //
+    // Return status
+    //
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 RamdiskPnp(IN PDEVICE_OBJECT DeviceObject,
            IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;
+    PIO_STACK_LOCATION IoStackLocation;
+    PRAMDISK_EXTENSION DeviceExtension;
+    NTSTATUS Status;
+    UCHAR Minor;
+    
+    //
+    // Get the device extension and stack location
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    Minor = IoStackLocation->MinorFunction;
+    
+    //
+    // Check if the bus is removed
+    //
+    if (DeviceExtension->State == RamdiskStateBusRemoved)
+    {
+        //
+        // Only remove-device and query-id are allowed
+        //
+        if ((Minor != IRP_MN_REMOVE_DEVICE) || (Minor != IRP_MN_QUERY_ID))
+        {
+            //
+            // Fail anything else
+            //
+            Status = STATUS_NO_SUCH_DEVICE;
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+    }
+    
+    //
+    // Acquire the remove lock
+    //
+    Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    if (!NT_SUCCESS(Status))
+    {
+        //
+        // Fail the IRP
+        //
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+    
+    //
+    // Query the IRP type
+    //
+    switch (Minor)
+    {
+        case IRP_MN_START_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_STOP_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_CANCEL_STOP_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_STOP_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_REMOVE_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_CANCEL_REMOVE_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_REMOVE_DEVICE:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+
+        case IRP_MN_SURPRISE_REMOVAL:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_ID:
+            
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }
+            break;
+            
+        case IRP_MN_QUERY_BUS_INFORMATION:
+            
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }
+            break;
+            
+        case IRP_MN_EJECT:
+            
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);
+            break;
+            
+        case IRP_MN_QUERY_DEVICE_TEXT:
+            
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }
+            break;
+            
+        case IRP_MN_QUERY_DEVICE_RELATIONS:
+
+            DPRINT1("PnP IRP: %lx\n", Minor);
+            while (TRUE);            
+            break;
+            
+        case IRP_MN_QUERY_CAPABILITIES:
+            
+            //
+            // Are we a PDO?
+            //
+            if (DeviceExtension->Type == RamdiskPdo)
+            {
+                DPRINT1("PnP IRP: %lx\n", Minor);
+                while (TRUE);
+            }
+            break;
+            
+        case IRP_MN_QUERY_RESOURCES:
+        case IRP_MN_QUERY_RESOURCE_REQUIREMENTS:
+            
+            //
+            // Complete immediately without touching it
+            //
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            goto ReleaseAndReturn;
+            
+        default:
+            
+            DPRINT1("Illegal IRP: %lx\n", Minor);
+            break;
+    }
+    
+    //
+    // Are we an FDO?
+    //
+    if (DeviceExtension->Type == RamdiskFdo)
+    {
+        //
+        // Do we have an attached device?
+        //
+        if (DeviceExtension->AttachedDevice)
+        {
+            //
+            // Forward the IRP
+            //
+            IoSkipCurrentIrpStackLocation(Irp);
+            Status = IoCallDriver(DeviceExtension->AttachedDevice, Irp);
+        }
+    }
+    
+    //
+    // Release the lock and return status
+    //
+ReleaseAndReturn:
+    IoReleaseRemoveLock(&DeviceExtension->RemoveLock, Irp);
+    return Status;
 }
 
 NTSTATUS
@@ -284,9 +720,114 @@ NTAPI
 RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject, 
                  IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_SUCCESS;    
+	PRAMDISK_EXTENSION DeviceExtension;
+	PDEVICE_OBJECT AttachedDevice;
+	NTSTATUS Status; 
+	UNICODE_STRING DeviceName;
+	PDEVICE_OBJECT DeviceObject;
+	
+	//
+	// Only create the FDO once
+	//
+	if (RamdiskBusFdo) return STATUS_DEVICE_ALREADY_ATTACHED;
+	
+	//
+	// Create the FDO
+	//
+	RtlInitUnicodeString(&DeviceName, L"\\Device\\Ramdisk");
+	Status = IoCreateDevice(DriverObject,
+						    sizeof(RAMDISK_EXTENSION),
+							&DeviceName,
+							FILE_DEVICE_BUS_EXTENDER,
+							FILE_DEVICE_SECURE_OPEN,
+							0,
+							&DeviceObject);
+	if (NT_SUCCESS(Status))
+	{
+		//
+		// Initialize the FDO extension
+		//
+	    DeviceExtension = (PRAMDISK_EXTENSION)DeviceObject->DeviceExtension;
+	    RtlZeroMemory(DeviceObject->DeviceExtension, sizeof(RAMDISK_EXTENSION));
+
+		//
+		// Set FDO flags
+		//
+	    DeviceObject->Flags |= DO_POWER_PAGABLE | DO_DIRECT_IO;
+
+		//
+		// Setup the FDO extension
+		//
+	    DeviceExtension->Type = RamdiskFdo;
+		ExInitializeFastMutex(&DeviceExtension->DiskListLock);
+	    IoInitializeRemoveLock(&DeviceExtension->RemoveLock,
+                               TAG('R', 'a', 'm', 'd'),
+                               0,
+                               1);
+		InitializeListHead(&DeviceExtension->DiskListHead);
+	    DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+	    DeviceExtension->DeviceObject = DeviceObject;
+
+		//
+		// Register the RAM disk device interface
+		//
+	    Status = IoRegisterDeviceInterface(PhysicalDeviceObject,
+										   &RamdiskBusInterface,
+										   NULL,
+										   &DeviceExtension->SymbolicLinkName);
+	    if (!NT_SUCCESS(Status))
+	    {
+			//
+			// Fail
+			//
+			IoDeleteDevice(DeviceObject);
+			return Status;
+	    }
+
+		//
+		// Attach us to the device stack
+		//
+	    AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject,
+													 PhysicalDeviceObject);
+	    DeviceExtension->AttachedDevice = AttachedDevice;
+	    if (!AttachedDevice)
+	    {
+			//
+			// Fail
+			//
+			IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, 0);
+			RtlFreeUnicodeString(&DeviceExtension->SymbolicLinkName);
+			IoDeleteDevice(DeviceObject);
+			return STATUS_NO_SUCH_DEVICE;
+	    }
+
+		//
+		// FDO is initialized
+		//
+	    RamdiskBusFdo = DeviceObject;
+
+		//
+		// Loop for loader block
+		//
+	    if (KeLoaderBlock)
+	    {
+			//
+			// Are we being booted from setup? Not yet supported
+			//
+			ASSERT (!KeLoaderBlock->SetupLdrBlock);
+	    }
+
+		//
+		// All done
+		//
+	    DeviceObject->Flags &= DO_DEVICE_INITIALIZING;
+	    Status = STATUS_SUCCESS;
+	}
+
+	//
+	// Return status
+	//
+	return Status;
 }
 
 NTSTATUS
@@ -295,7 +836,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             IN PUNICODE_STRING RegistryPath)
 {
     PCHAR BootDeviceName, CommandLine;
-    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject = NULL;
     NTSTATUS Status;
     
     //
@@ -388,7 +929,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     //
     // Installing from Ramdisk isn't supported yet
     //
-    ASSERT(KeLoaderBlock->SetupLdrBlock);
+    ASSERT(!KeLoaderBlock->SetupLdrBlock);
     
     //
     // Are we reporting the device
@@ -408,6 +949,15 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                                         &PhysicalDeviceObject);
         if (NT_SUCCESS(Status))
         {
+            //
+            // ReactOS Fix
+            // The ReactOS Plug and Play Manager is broken and does not create
+            // the required keys when reporting a detected device.
+            // We hack around this ourselves.
+            //
+            RtlCreateUnicodeString(&((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode->InstancePath,
+                                   L"Root\\UNKNOWN\\0000");
+            
             //
             // Create the device object
             //

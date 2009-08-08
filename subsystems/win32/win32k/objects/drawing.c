@@ -1395,7 +1395,6 @@ IntFillRoundRect( PDC dc,
         app_fill_ellipse(dc, r, FillBrushObj);
      else // > W < H
      {
-
        app_fill_arc(dc, rect( r.x, r.y, r.width - 1, Hellipse),
                         0, 180, FillBrushObj,FALSE);
        app_fill_arc(dc, rect(r.x, Bottom - Hellipse - 1, r.width - 1, Hellipse),
@@ -1411,17 +1410,17 @@ IntFillRoundRect( PDC dc,
   }
   else // < W < H
   {
-     app_fill_arc(dc, rect(r.x, r.y, Wellipse, Hellipse),
+     app_fill_arc(dc, rect(r.x, r.y, rx+rx, ry+ry),
                       90, 180, FillBrushObj, FALSE);
 
-     app_fill_arc(dc, rect(r.x, Bottom - Hellipse - 1, Wellipse, Hellipse),
+     app_fill_arc(dc, rect(r.x, r.y+r.height-ry-ry, rx+rx, ry+ry),
                       180, 270, FillBrushObj, FALSE);
 
-     app_fill_arc(dc, rect(Right - Wellipse - 1, Bottom - Hellipse - 1, Wellipse, Hellipse),
+     app_fill_arc(dc, rect(r.x+r.width-rx-rx, r.y+r.height-ry-ry, rx+rx, ry+ry),
                       270, 360, FillBrushObj,FALSE);
 
-     app_fill_arc(dc, rect(Right - Wellipse - 1, r.y, Wellipse, Hellipse ),
-                      0, 90, FillBrushObj,FALSE);
+     app_fill_arc(dc, rect(r.x+r.width-rx-rx, r.y, rx+rx, ry+ry),
+                      0, 90, FillBrushObj,FALSE);   
   }
   if (Wellipse < r.width)
   {
@@ -1463,7 +1462,6 @@ IntDrawRoundRect( PDC dc,
         app_draw_ellipse(dc, r, PenBrushObj);
      else // > W < H
      {
-
         app_draw_arc(dc, rect( r.x, r.y, r.width - 1, Hellipse - 1),
                          0, 180, PenBrushObj, FALSE);
         app_draw_arc(dc, rect(r.x, Bottom - Hellipse, r.width - 1, Hellipse - 1),
@@ -1479,16 +1477,16 @@ IntDrawRoundRect( PDC dc,
   }
   else // < W < H
   {
-     app_draw_arc(dc, rect(r.x, r.y, Wellipse-1, Hellipse - 1),
+     app_draw_arc(dc, rect(r.x, r.y, rx+rx, ry+ry),
                       90, 180, PenBrushObj, FALSE);
 
-     app_draw_arc(dc, rect(r.x, Bottom - Hellipse, Wellipse - 1, Hellipse - 1),
+     app_draw_arc(dc, rect(r.x,r.y+r.height-ry-ry,rx+rx,ry+ry),
                       180, 270, PenBrushObj, FALSE);
 
-     app_draw_arc(dc, rect(Right - Wellipse, Bottom - Hellipse, Wellipse - 1, Hellipse - 1),
+     app_draw_arc(dc, rect(r.x+r.width-rx-rx, r.y+r.height-ry-ry, rx+rx, ry+ry),
                       270, 360, PenBrushObj, FALSE);
 
-     app_draw_arc(dc, rect(Right - Wellipse, r.y, Wellipse - 1, Hellipse - 1 ),
+     app_draw_arc(dc, rect(r.x+r.width-rx-rx,r.y,rx+rx,ry+ry),
                       0, 90, PenBrushObj, FALSE);
   }
   if ( Hellipse < r.height)

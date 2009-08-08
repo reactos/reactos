@@ -16,7 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id$
  */
 
 #include <w32k.h>
@@ -61,13 +60,16 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 VOID FASTCALL
 co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
-   USER_REFERENCE_ENTRY Ref;
-   PWINDOW_OBJECT Window;
+   USER_REFERENCE_ENTRY Ref, RefPrev;
+   PWINDOW_OBJECT Window, WindowPrev = NULL;
 
    if ((Window = UserGetWindowObject(hWnd)))
-   {
-
+   { 
       UserRefObjectCo(Window, &Ref);
+
+      WindowPrev = UserGetWindowObject(hWndPrev);
+
+      if (WindowPrev) UserRefObjectCo(WindowPrev, &RefPrev);
 
       /* Send palette messages */
       if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
@@ -83,6 +85,51 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       if (!IntGetOwner(Window) && !IntGetParent(Window))
       {
          co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (LPARAM) hWnd);
+      }
+
+      if (Window->Wnd)
+      {  // Set last active for window and it's owner.
+         Window->Wnd->hWndLastActive = hWnd;
+         if (Window->Wnd->Owner)
+            Window->Wnd->Owner->hWndLastActive = hWnd;
+      }
+
+      if (Window && WindowPrev)
+      {
+         PWINDOW_OBJECT cWindow;
+         HWND *List, *phWnd;
+         HANDLE OldTID = IntGetWndThreadId(WindowPrev);
+         HANDLE NewTID = IntGetWndThreadId(Window);
+
+ DPRINT("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
+
+         if (OldTID != NewTID)
+         {
+            List = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
+            if (List)
+            {
+               for (phWnd = List; *phWnd; ++phWnd)
+               {
+                  cWindow = UserGetWindowObject(*phWnd);
+                  if (cWindow && (IntGetWndThreadId(cWindow) == OldTID))
+                  {  // FALSE if the window is being deactivated,
+                     // ThreadId that owns the window being activated.
+                    co_IntPostOrSendMessage(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)NewTID);
+                  }
+               }
+               for (phWnd = List; *phWnd; ++phWnd)
+               {
+                  cWindow = UserGetWindowObject(*phWnd);
+                  if (cWindow && (IntGetWndThreadId(cWindow) == NewTID))
+                  { // TRUE if the window is being activated,
+                    // ThreadId that owns the window being deactivated.
+                    co_IntPostOrSendMessage(*phWnd, WM_ACTIVATEAPP, TRUE, (LPARAM)OldTID);
+                  }
+               }
+               ExFreePool(List);
+            }
+         }
+         UserDerefObjectCo(WindowPrev); // Now allow the previous window to die.
       }
 
       UserDerefObjectCo(Window);

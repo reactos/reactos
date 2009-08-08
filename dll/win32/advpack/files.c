@@ -996,8 +996,8 @@ HRESULT WINAPI GetVersionFromFileExW(LPCWSTR lpszFilename, LPDWORD pdwMSVer,
     BOOL bFileCopied = FALSE;
     UINT uValueLen;
 
-    static WCHAR backslash[] = {'\\',0};
-    static WCHAR translation[] = {
+    static const WCHAR backslash[] = {'\\',0};
+    static const WCHAR translation[] = {
         '\\','V','a','r','F','i','l','e','I','n','f','o',
         '\\','T','r','a','n','s','l','a','t','i','o','n',0
     };

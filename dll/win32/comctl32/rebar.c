@@ -2848,7 +2848,6 @@ REBAR_Create (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     LPCREATESTRUCTW cs = (LPCREATESTRUCTW) lParam;
     RECT wnrc1, clrc1;
-    HTHEME theme;
 
     if (TRACE_ON(rebar)) {
 	GetWindowRect(infoPtr->hwndSelf, &wnrc1);
@@ -2859,8 +2858,8 @@ REBAR_Create (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     }
 
     TRACE("created!\n");
-    
-    if ((theme = OpenThemeData (infoPtr->hwndSelf, themeClass)))
+
+    if (OpenThemeData (infoPtr->hwndSelf, themeClass))
     {
         /* native seems to clear WS_BORDER when themed */
         infoPtr->dwStyle &= ~WS_BORDER;

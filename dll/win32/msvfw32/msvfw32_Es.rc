@@ -1,5 +1,6 @@
 /*
  * Copyright 2007 Luis Carlos Busquets Pérez
+ * Copyright 2008 José Manuel Ferrer Ortiz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,11 +37,11 @@ FONT 8, "MS Shell Dlg"
 
     LTEXT "C&alidad de compresión:",886,9,34,80,8
 
-    CONTROL "C&uadro clave cada",887,"Botón",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
+    CONTROL "C&uadro clave cada",887,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,60,66,12
     EDITTEXT 888,78,60,22,12
     LTEXT "cuadros",889,103,62,26,10
 
-    CONTROL "&Velocidad de datos",894,"Botón",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
+    CONTROL "&Tasa de datos",894,"Button",BS_AUTOCHECKBOX|WS_TABSTOP,9,76,66,12
     EDITTEXT 895,78,76,22,12
     LTEXT "KB/s",896,102,78,26,10
 }

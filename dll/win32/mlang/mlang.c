@@ -704,10 +704,13 @@ static inline INT lcid_to_rfc1766A( LCID lcid, LPSTR rfc1766, INT len )
 static inline INT lcid_to_rfc1766W( LCID lcid, LPWSTR rfc1766, INT len )
 {
     INT n = GetLocaleInfoW( lcid, LOCALE_SISO639LANGNAME, rfc1766, len );
+    INT save = n;
     if (n)
     {
         rfc1766[n - 1] = '-';
         n += GetLocaleInfoW( lcid, LOCALE_SISO3166CTRYNAME, rfc1766 + n, len - n );
+        if (n == save)
+            rfc1766[n - 1] = '\0';
         LCMapStringW( LOCALE_USER_DEFAULT, LCMAP_LOWERCASE, rfc1766, n, rfc1766, len );
         return n;
     }

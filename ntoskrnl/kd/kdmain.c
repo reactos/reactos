@@ -140,6 +140,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
         /* This we can handle: simply bump EIP */
 #ifdef _M_IX86
         Context->Eip++;
+#elif _M_ARM
+        Context->Pc += sizeof(ULONG);
 #endif
         return TRUE;
     }

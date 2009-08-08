@@ -27,17 +27,17 @@ STRINGTABLE DISCARDABLE
     IDS_INSTALLING      "Установка..."
 }
 
-ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 85
+ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 261, 85
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Установка Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT "Эта программа пытается отобразить HTML страницу. Для её отображения Wine необходимо " \
           "установить Gecko (Mozilla HTML engine). Нажмите кнопку установить если вы хотите, что бы Wine " \
-          "автоматически загрузил и установил Gecko.", ID_DWL_STATUS, 10, 10, 240, 30, SS_LEFT
-    CONTROL "Прогресс", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 40, 240, 12
-    DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 200, 60, 50, 15, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Отмена", IDCANCEL, 140, 60, 50, 15, WS_GROUP | WS_TABSTOP
+          "автоматически загрузил и установил Gecko.", ID_DWL_STATUS, 10, 10, 240, 33, SS_LEFT
+    CONTROL "Прогресс", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 46, 240, 12
+    DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 200, 63, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Отмена", IDCANCEL, 140, 63, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
 IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65

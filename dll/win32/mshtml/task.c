@@ -28,6 +28,7 @@
 #include "winuser.h"
 #include "ole2.h"
 #include "mshtmcid.h"
+#include "shlguid.h"
 
 #include "wine/debug.h"
 
@@ -36,6 +37,17 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 #define WM_PROCESSTASK 0x8008
+#define TIMER_ID 0x3000
+
+typedef struct {
+    HTMLDocument *doc;
+    DWORD id;
+    DWORD time;
+    DWORD interval;
+    IDispatch *disp;
+
+    struct list entry;
+} task_timer_t;
 
 void push_task(task_t *task)
 {
@@ -66,10 +78,32 @@ static task_t *pop_task(void)
     return task;
 }
 
+static void release_task_timer(HWND thread_hwnd, task_timer_t *timer)
+{
+    list_remove(&timer->entry);
+
+    IDispatch_Release(timer->disp);
+
+    heap_free(timer);
+}
+
 void remove_doc_tasks(const HTMLDocument *doc)
 {
     thread_data_t *thread_data = get_thread_data(FALSE);
+    struct list *liter, *ltmp;
+    task_timer_t *timer;
     task_t *iter, *tmp;
+
+    LIST_FOR_EACH_SAFE(liter, ltmp, &thread_data->timer_list) {
+        timer = LIST_ENTRY(liter, task_timer_t, entry);
+        if(timer->doc == doc)
+            release_task_timer(thread_data->thread_hwnd, timer);
+    }
+
+    if(!list_empty(&thread_data->timer_list)) {
+        timer = LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry);
+        SetTimer(thread_data->thread_hwnd, TIMER_ID, timer->time - GetTickCount(), NULL);
+    }
 
     if(!thread_data)
         return;
@@ -88,6 +122,70 @@ void remove_doc_tasks(const HTMLDocument *doc)
         if(!iter->next)
             thread_data->task_queue_tail = iter;
     }
+}
+
+static BOOL queue_timer(thread_data_t *thread_data, task_timer_t *timer)
+{
+    task_timer_t *iter;
+
+    if(list_empty(&thread_data->timer_list)
+       || LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry)->time > timer->time) {
+
+        list_add_head(&thread_data->timer_list, &timer->entry);
+        return TRUE;
+    }
+
+    LIST_FOR_EACH_ENTRY(iter, &thread_data->timer_list, task_timer_t, entry) {
+        if(iter->time > timer->time) {
+            list_add_tail(&iter->entry, &timer->entry);
+            return FALSE;
+        }
+    }
+
+    list_add_tail(&thread_data->timer_list, &timer->entry);
+    return FALSE;
+}
+
+DWORD set_task_timer(HTMLDocument *doc, DWORD msec, BOOL interval, IDispatch *disp)
+{
+    thread_data_t *thread_data = get_thread_data(TRUE);
+    task_timer_t *timer;
+    DWORD tc = GetTickCount();
+
+    static DWORD id_cnt = 0x20000000;
+
+    timer = heap_alloc(sizeof(task_timer_t));
+    timer->id = id_cnt++;
+    timer->doc = doc;
+    timer->time = tc + msec;
+    timer->interval = interval ? msec : 0;
+
+    IDispatch_AddRef(disp);
+    timer->disp = disp;
+
+    if(queue_timer(thread_data, timer))
+        SetTimer(thread_data->thread_hwnd, TIMER_ID, msec, NULL);
+
+    return timer->id;
+}
+
+HRESULT clear_task_timer(HTMLDocument *doc, BOOL interval, DWORD id)
+{
+    thread_data_t *thread_data = get_thread_data(FALSE);
+    task_timer_t *iter;
+
+    if(!thread_data)
+        return S_OK;
+
+    LIST_FOR_EACH_ENTRY(iter, &thread_data->timer_list, task_timer_t, entry) {
+        if(iter->id == id && iter->doc == doc && (iter->interval == 0) == !interval) {
+            release_task_timer(thread_data->thread_hwnd, iter);
+            return S_OK;
+        }
+    }
+
+    WARN("timet not found\n");
+    return S_OK;
 }
 
 static void set_downloading(HTMLDocument *doc)
@@ -126,6 +224,27 @@ static void set_downloading(HTMLDocument *doc)
     }
 }
 
+/* Calls undocumented 69 cmd of CGID_Explorer */
+static void call_explorer_69(HTMLDocument *doc)
+{
+    IOleCommandTarget *olecmd;
+    VARIANT var;
+    HRESULT hres;
+
+    if(!doc->client)
+        return;
+
+    hres = IOleClientSite_QueryInterface(doc->client, &IID_IOleCommandTarget, (void**)&olecmd);
+    if(FAILED(hres))
+        return;
+
+    VariantInit(&var);
+    hres = IOleCommandTarget_Exec(olecmd, &CGID_Explorer, 69, 0, NULL, &var);
+    IOleCommandTarget_Release(olecmd);
+    if(SUCCEEDED(hres) && V_VT(&var) != VT_NULL)
+        FIXME("handle result\n");
+}
+
 static void set_parsecomplete(HTMLDocument *doc)
 {
     IOleCommandTarget *olecmd = NULL;
@@ -135,7 +254,9 @@ static void set_parsecomplete(HTMLDocument *doc)
     if(doc->usermode == EDITMODE)
         init_editor(doc);
 
+    call_explorer_69(doc);
     call_property_onchanged(&doc->cp_propnotif, 1005);
+    call_explorer_69(doc);
 
     doc->readystate = READYSTATE_INTERACTIVE;
     call_property_onchanged(&doc->cp_propnotif, DISPID_READYSTATE);
@@ -156,6 +277,7 @@ static void set_parsecomplete(HTMLDocument *doc)
         IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_SETDOWNLOADSTATE, OLECMDEXECOPT_DONTPROMPTUSER,
                                &state, NULL);
 
+        IOleCommandTarget_Exec(olecmd, &CGID_ShellDocView, 103, 0, NULL, NULL);
         IOleCommandTarget_Exec(olecmd, &CGID_MSHTML, IDM_PARSECOMPLETE, 0, NULL, NULL);
         IOleCommandTarget_Exec(olecmd, NULL, OLECMDID_HTTPEQUIV_DONE, 0, NULL, NULL);
 
@@ -238,6 +360,40 @@ static void process_task(task_t *task)
     }
 }
 
+static LRESULT process_timer(void)
+{
+    thread_data_t *thread_data = get_thread_data(TRUE);
+    DWORD tc;
+    task_timer_t *timer;
+
+    TRACE("\n");
+
+    while(!list_empty(&thread_data->timer_list)) {
+        timer = LIST_ENTRY(list_head(&thread_data->timer_list), task_timer_t, entry);
+
+        tc = GetTickCount();
+        if(timer->time > tc) {
+            SetTimer(thread_data->thread_hwnd, TIMER_ID, timer->time-tc, NULL);
+            return 0;
+        }
+
+        list_remove(&timer->entry);
+        list_init(&timer->entry);
+
+        call_disp_func(timer->doc, timer->disp);
+
+        if(timer->interval) {
+            timer->time += timer->interval;
+            queue_timer(thread_data, timer);
+        }else {
+            release_task_timer(thread_data->thread_hwnd, timer);
+        }
+    }
+
+    KillTimer(thread_data->thread_hwnd, TIMER_ID);
+    return 0;
+}
+
 static LRESULT WINAPI hidden_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg) {
@@ -252,6 +408,8 @@ static LRESULT WINAPI hidden_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         }
 
         return 0;
+    case WM_TIMER:
+        return process_timer();
     }
 
     if(msg > WM_USER)
@@ -307,6 +465,7 @@ thread_data_t *get_thread_data(BOOL create)
     if(!thread_data && create) {
         thread_data = heap_alloc_zero(sizeof(thread_data_t));
         TlsSetValue(mshtml_tls, thread_data);
+        list_init(&thread_data->timer_list);
     }
 
     return thread_data;

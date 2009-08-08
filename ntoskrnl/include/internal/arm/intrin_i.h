@@ -40,6 +40,15 @@ KeArmFaultStatusRegisterGet(VOID)
 
 FORCEINLINE
 ULONG
+KeArmInstructionFaultStatusRegisterGet(VOID)
+{
+    ULONG Value;
+    __asm__ __volatile__ ("mrc p15, 0, %0, c5, c0, 1" : "=r"(Value) : : "cc");
+    return Value;
+}
+
+FORCEINLINE
+ULONG
 KeArmFaultAddressRegisterGet(VOID)
 {
     ULONG Value;
@@ -123,6 +132,13 @@ VOID
 KeArmInvalidateTlbEntry(IN PVOID Address)
 {
     __asm__ __volatile__ ("mcr p15, 0, %0, c8, c7, 1" : : "r"(Address) : "cc");
+}
+
+FORCEINLINE
+VOID
+KeArmInvalidateAllCaches(VOID)
+{
+    __asm__ __volatile__ ("mcr p15, 0, %0, c7, c7, 0" : : "r"(0) : "cc");
 }
 
 FORCEINLINE

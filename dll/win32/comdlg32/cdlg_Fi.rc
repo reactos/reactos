@@ -370,7 +370,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "Tiedostoa ei ole olemassa\nHaluatko luoda tiedoston"
     IDS_OVERWRITEFILE       "Tiedosto on jo olemassa.\nHaluatko ylikirjoitaa sen?"
     IDS_INVALID_FILENAME_TITLE "Kansio sis‰lt‰‰ ep‰kelpoja merkkej‰"
-    IDS_INVALID_FILENAME    "Tiedoston nimi ei voi sis‰lt‰‰ n‰it‰ merkkej‰: \n                          / : < > |"
+    IDS_INVALID_FILENAME    "Tiedoston nimi ei voi sis‰lt‰‰ n‰it‰ merkkej‰:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Kansiota ei ole"
     IDS_FILENOTEXISTING     "Tiedostoa ei ole"
 }
@@ -393,7 +393,7 @@ STRINGTABLE DISCARDABLE
     PD32_FROM_NOT_ABOVE_TO                "Alukuarvo ei voi olla suurempi kuin loppuarvo."
     PD32_MARGINS_OVERLAP                  "Marginaalit ovat p‰‰llek‰in tai ulkona paperin alueelta.\nM‰‰rit‰ marginaalit uudestaan."
     PD32_NR_OF_COPIES_EMPTY               "Kopioiden m‰‰r‰ t‰ytyy antaa."
-    PD32_TOO_LARGE_COPIES                 "Tulostin ei tue n‰in montaa kopiota. \nValitse arvo v‰lilt‰ 1 ja %d."
+    PD32_TOO_LARGE_COPIES                 "Tulostin ei tue n‰in montaa kopiota.\nValitse arvo v‰lilt‰ 1 ja %d."
     PD32_PRINT_ERROR                      "Tulostinvirhe."
     PD32_NO_DEFAULT_PRINTER               "Oletustulostinta ei ole m‰‰ritetty."
     PD32_CANT_FIND_PRINTER                "Tulostinta ei lˆydy."

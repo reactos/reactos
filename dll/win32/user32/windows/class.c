@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * FILE:            dll/win32/user32/windows/class.c
@@ -814,6 +813,17 @@ cleanup:
    }
 
    return SmallIcon;
+}
+
+
+ATOM STDCALL
+RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
+                    LPDWORD pdwWowData,
+                    WORD fnID,
+                    DWORD dwFlags)
+{
+  RTL_ATOM Atom = 0;
+  return (ATOM)Atom;
 }
 
 /*

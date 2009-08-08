@@ -125,6 +125,7 @@ static const IShellLinkDataListVtbl dlvt;
 static const IShellExtInitVtbl eivt;
 static const IContextMenuVtbl cmvt;
 static const IObjectWithSiteVtbl owsvt;
+static const IShellPropSheetExtVtbl pse;
 
 /* IShellLink Implementation */
 
@@ -138,6 +139,7 @@ typedef struct
 	const IShellExtInitVtbl *lpvtblShellExtInit;
 	const IContextMenuVtbl *lpvtblContextMenu;
 	const IObjectWithSiteVtbl *lpvtblObjectWithSite;
+	const IShellPropSheetExtVtbl * lpvtblPropSheetExt;
 
 	LONG            ref;
 
@@ -163,7 +165,6 @@ typedef struct
     BOOL          bRunAs;
 	BOOL          bDirty;
         INT           iIdOpen;  /* id of the "Open" entry in the context menu */
-        INT           iIdProperties; /* id of the "Properties" entry in the context menu */
 	IUnknown      *site;
 } IShellLinkImpl;
 
@@ -201,6 +202,12 @@ static inline IShellLinkImpl *impl_from_IObjectWithSite( IObjectWithSite *iface 
 {
     return (IShellLinkImpl *)((char*)iface - FIELD_OFFSET(IShellLinkImpl, lpvtblObjectWithSite));
 }
+
+static inline IShellLinkImpl *impl_from_IShellPropSheetExt( IShellPropSheetExt *iface )
+{
+    return (IShellLinkImpl *)((char*)iface - FIELD_OFFSET(IShellLinkImpl, lpvtblPropSheetExt));
+}
+
 
 static HRESULT ShellLink_UpdatePath(LPCWSTR sPathRel, LPCWSTR path, LPCWSTR sWorkDir, LPWSTR* psPath);
 
@@ -265,6 +272,10 @@ static HRESULT ShellLink_QueryInterface( IShellLinkImpl *This, REFIID riid,  LPV
     else if(IsEqualIID(riid, &IID_IObjectWithSite))
     {
         *ppvObj = &(This->lpvtblObjectWithSite);
+    }
+    else if(IsEqualIID(riid, &IID_IShellPropSheetExt))
+    {
+        *ppvObj = &(This->lpvtblPropSheetExt);
     }
 
     if(*ppvObj)
@@ -1222,6 +1233,7 @@ HRESULT WINAPI IShellLink_Constructor( IUnknown *pUnkOuter,
 	sl->lpvtblShellExtInit = &eivt;
 	sl->lpvtblContextMenu = &cmvt;
 	sl->lpvtblObjectWithSite = &owsvt;
+	sl->lpvtblPropSheetExt = &pse;
 	sl->iShowCmd = SW_SHOWNORMAL;
 	sl->bDirty = FALSE;
 	sl->iIdOpen = -1;
@@ -2475,8 +2487,7 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
                             UINT idCmdFirst, UINT idCmdLast, UINT uFlags )
 {
     IShellLinkImpl *This = impl_from_IContextMenu(iface);
-    static WCHAR szOpen[] = { 'O','p','e','n',0 };
-    static WCHAR szProperties[] = { 'P','r','o','p','e','r','t','i','e','s',0 };
+    WCHAR szOpen[20];
     MENUITEMINFOW mii;
     int id = 1;
 
@@ -2485,6 +2496,11 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
 
     if ( !hmenu )
         return E_INVALIDARG;
+
+    if (!LoadStringW(shell32_hInstance, IDS_OPEN_VERB, szOpen, sizeof(szOpen)/sizeof(WCHAR)))
+        szOpen[0] = L'\0';
+    else
+        szOpen[(sizeof(szOpen)/sizeof(WCHAR))-1] = L'\0';
 
     memset( &mii, 0, sizeof(mii) );
     mii.cbSize = sizeof (mii);
@@ -2497,18 +2513,6 @@ ShellLink_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT indexMenu,
     if (!InsertMenuItemW( hmenu, indexMenu, TRUE, &mii ))
         return E_FAIL;
     This->iIdOpen = 0;
-
-    mii.fState = MFS_ENABLED;
-    mii.dwTypeData = (LPWSTR)szProperties;
-    mii.cch = strlenW( mii.dwTypeData );
-    mii.wID = idCmdFirst + id++;
-    if (!InsertMenuItemW( hmenu, idCmdLast, TRUE, &mii ))
-    {
-        TRACE("ShellLink_QueryContextMenu failed to insert item properties");
-        return E_FAIL;
-    }
-    This->iIdProperties = 1;
-    id++;
 
     return MAKE_HRESULT( SEVERITY_SUCCESS, 0, id );
 }
@@ -2718,54 +2722,67 @@ SH_ShellLinkDlgProc(
 }
 
 /**************************************************************************
- * ShellLink_ShortcutDialog [Internal]
- *
- * creates a shortcut property dialog
+ * ShellLink_IShellPropSheetExt interface
  */
 
 static HRESULT WINAPI
-ShellLink_ShowProperties( IShellLinkImpl *This )
+ ShellLink_IShellPropSheetExt_QueryInterface( IShellPropSheetExt* iface, REFIID riid, void** ppvObject )
 {
-    PROPSHEETHEADERW pinfo;
-    HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
-    HPROPSHEETPAGE hpage;
-    UINT numpages = 0;
-
-    TRACE("ShellLink_ShortcutDialog entered\n");
-
-    memset(hppages, 0x0, sizeof(HPROPSHEETPAGE) * MAX_PROPERTY_SHEET_PAGE);
-
-    hpage = SH_CreatePropertySheetPage("SHELL_FILE_GENERAL_DLG", SH_FileGeneralDlgProc, (LPARAM)This->sLinkPath, NULL);
-    if ( hpage == NULL )
-        return E_FAIL;
-    else
-        hppages[numpages++] = hpage;
-
-	hpage = SH_CreatePropertySheetPage("SHELL_GENERAL_SHORTCUT_DLG", SH_ShellLinkDlgProc, (LPARAM)This, NULL);
-	if ( hpage == NULL )
-    {
-        ERR("SH_CreatePropertySheetPage failed\n");
-        DestroyPropertySheetPage(hppages[0]);
-        return E_FAIL;
-	}
-    hppages[numpages++] = hpage;
-
-    ///FIXME
-    /// load extensions
-
-    memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
-    pinfo.dwSize = sizeof(PROPSHEETHEADERW);
-    pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
-    pinfo.nPages = numpages;
-	pinfo.u3.phpage = hppages;
-    pinfo.pszCaption = This->sDescription;
-    pinfo.u2.nStartPage = 1;
-
-    if ( PropertySheetW(&pinfo) < 0 )
-        return E_FAIL;
-	else
-        return S_OK;
+    IShellLinkImpl *This = impl_from_IShellPropSheetExt(iface);
+    return ShellLink_QueryInterface( This, riid, ppvObject );
 }
+
+static ULONG WINAPI
+ ShellLink_IShellPropSheetExt_AddRef( IShellPropSheetExt* iface )
+{
+    IShellLinkImpl *This = impl_from_IShellPropSheetExt(iface);
+    return ShellLink_AddRef( This );
+}
+
+static ULONG WINAPI
+ ShellLink_IShellPropSheetExt_Release( IShellPropSheetExt* iface )
+{
+    IShellLinkImpl *This = impl_from_IShellPropSheetExt(iface);
+    return ShellLink_Release( This );
+}
+
+static HRESULT WINAPI
+ ShellLink_IShellPropSheetExt_AddPages( IShellPropSheetExt *iface, LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam)
+{
+    HPROPSHEETPAGE hPage;
+    BOOL bRet;
+    IShellLinkImpl *This = impl_from_IShellPropSheetExt(iface);
+
+    hPage = SH_CreatePropertySheetPage("SHELL_GENERAL_SHORTCUT_DLG", SH_ShellLinkDlgProc, (LPARAM)This, NULL);
+    if (hPage == NULL)
+    {
+       ERR("failed to create property sheet page\n");
+       return E_FAIL;
+    }
+
+    bRet = pfnAddPage(hPage, lParam);
+    if (bRet)
+       return S_OK;
+    else
+       return E_FAIL;
+}
+
+static HRESULT WINAPI
+ ShellLink_IShellPropSheetExt_ReplacePages( IShellPropSheetExt *iface, UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam)
+{
+    IShellLinkImpl *This = impl_from_IShellPropSheetExt(iface);
+    TRACE("(%p) (uPageID %u, pfnReplacePage %p lParam %p\n", This, uPageID, pfnReplacePage, lParam);
+    return E_NOTIMPL;
+}
+
+static const IShellPropSheetExtVtbl pse =
+{
+    ShellLink_IShellPropSheetExt_QueryInterface,
+    ShellLink_IShellPropSheetExt_AddRef,
+    ShellLink_IShellPropSheetExt_Release,
+    ShellLink_IShellPropSheetExt_AddPages,
+    ShellLink_IShellPropSheetExt_ReplacePages
+};
 
 static HRESULT WINAPI
 ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
@@ -2782,12 +2799,6 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
 
     if ( lpici->cbSize < sizeof (CMINVOKECOMMANDINFO) )
         return E_INVALIDARG;
-
-    if ( lpici->lpVerb == MAKEINTRESOURCEA(This->iIdProperties))
-    {
-        ShellLink_ShowProperties(This);
-        return S_OK;
-    }
 
     if ( lpici->lpVerb != MAKEINTRESOURCEA(This->iIdOpen) )
     {

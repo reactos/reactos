@@ -311,10 +311,12 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     struct section *strings_section;
     struct line *line;
     struct field *field;
-    unsigned int i;
+    unsigned int i,j;
     int dirid;
     WCHAR *dirid_str, *end;
     const WCHAR *ret = NULL;
+    WCHAR StringLangId[13] = {'S','t','r','i','n','g','s','.',0};
+    TCHAR Lang[5];
 
     if (!*len)  /* empty string (%%) is replaced by single percent */
     {
@@ -323,16 +325,38 @@ static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *
     }
     if (file->strings_section == -1) goto not_found;
     strings_section = file->sections[file->strings_section];
-    for (i = 0, line = strings_section->lines; i < strings_section->nb_lines; i++, line++)
+    for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++)
     {
-        if (line->key_field == -1) continue;
-        if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
+	if (line->key_field == -1) continue;
+	if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue;
         if (!file->fields[line->key_field].text[*len]) break;
-    }
-    if (i == strings_section->nb_lines || !line->nb_fields) goto not_found;
-    field = &file->fields[line->first_field];
-    *len = strlenW( field->text );
-    return field->text;
+     }
+     if (j == strings_section->nb_lines || !line->nb_fields) goto not_found;
+     field = &file->fields[line->first_field];
+     GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_ILANGUAGE, Lang, sizeof(Lang)/sizeof(TCHAR)); // get the current system locale for translated strings
+     strcatW(StringLangId, Lang); // append the Language identifier from GetLocaleInfo
+     // now you have e.g. Strings.0407 for german translations
+     for (i = 0; i < file->nb_sections; i++) // search in all sections
+     {
+          if (!strcmpiW(file->sections[i]->name,StringLangId)) // if the section is a Strings.* section
+	  {
+             strings_section = file->sections[i]; // select this section for further use
+             for (j = 0, line = strings_section->lines; j < strings_section->nb_lines; j++, line++) // process all lines in this section
+             {
+                 if (line->key_field == -1) continue; // if no key then skip
+                 if (strncmpiW( str, file->fields[line->key_field].text, *len )) continue; // if wrong key name, then skip
+                 if (!file->fields[line->key_field].text[*len]) // if value exist
+		 {
+                     field = &file->fields[line->first_field]; // then extract value and
+                     break; // no more search necessary
+                 }
+             }
+	   }
+      }
+      *len = strlenW( field->text ); // set length
+      ret = field->text; // return the english or translated string
+      return ret;
+
 
  not_found:  /* check for integer id */
     if ((dirid_str = HeapAlloc( GetProcessHeap(), 0, (*len+1) * sizeof(WCHAR) )))

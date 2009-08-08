@@ -93,7 +93,7 @@ static void set_registry(LPCSTR install_dir)
     WCHAR mshtml_key[100];
     LPWSTR gecko_path;
     HKEY hkey;
-    DWORD res, len, size;
+    DWORD res, len;
 
     static const WCHAR wszGeckoPath[] = {'G','e','c','k','o','P','a','t','h',0};
     static const WCHAR wszWineGecko[] = {'w','i','n','e','_','g','e','c','k','o',0};
@@ -120,7 +120,6 @@ static void set_registry(LPCSTR install_dir)
 
     memcpy(gecko_path+len, wszWineGecko, sizeof(wszWineGecko));
 
-    size = len*sizeof(WCHAR)+sizeof(wszWineGecko);
     res = RegSetValueExW(hkey, wszGeckoPath, 0, REG_SZ, (LPVOID)gecko_path,
                        len*sizeof(WCHAR)+sizeof(wszWineGecko));
     heap_free(gecko_path);
@@ -203,7 +202,7 @@ static BOOL install_from_unix_file(const char *file_name)
     }
 
     dos_file_name = wine_get_dos_file_name(file_name);
-    if(!file_name) {
+    if(!dos_file_name) {
         ERR("Could not get dos file name of %s\n", debugstr_a(file_name));
         return FALSE;
     }

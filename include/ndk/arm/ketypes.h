@@ -59,13 +59,7 @@ Author:
 //
 typedef struct _KTRAP_FRAME
 {
-    ULONG OldIrql;
-    //  UCHAR PreviousMode;
-    //    ULONG Fpscr;
-    //    ULONG FpExc;
-    //    ULONG S[33];
-    //    ULONG FpExtra[8];    
-    ULONG Spsr;
+    ULONG DbgArgMark;
     ULONG R0;
     ULONG R1;
     ULONG R2;
@@ -84,6 +78,9 @@ typedef struct _KTRAP_FRAME
     ULONG SvcSp;
     ULONG SvcLr;
     ULONG Pc;
+    ULONG Spsr;
+    ULONG OldIrql;
+    ULONG PreviousMode;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 #ifndef NTOS_MODE_USER
@@ -93,6 +90,10 @@ typedef struct _KTRAP_FRAME
 //
 typedef struct _KEXCEPTION_FRAME
 {
+  //  ULONG R0;
+//    ULONG R1;
+//    ULONG R2;
+//    ULONG R3;    
     ULONG R4;
     ULONG R5;
     ULONG R6;
@@ -102,10 +103,8 @@ typedef struct _KEXCEPTION_FRAME
     ULONG R10;
     ULONG R11;
 //    ULONG R12;
-//    ULONG Sp;
-    ULONG Psr;
     ULONG Lr;
-//    ULONG SwapReturn;
+    ULONG Psr;
 } KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 //
