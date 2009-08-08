@@ -1884,13 +1884,17 @@ DefWindowProcA(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
-            /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
-             * may have child window IDs instead of window name */
-
-             DefSetText(hWnd, (PCWSTR)cs->lpszName, TRUE);
-
-            Result = 1;
+            if (lParam)
+            {
+                LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
+                /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
+                 * may have child window IDs instead of window name */
+                if (HIWORD(cs->lpszName))
+                {
+                    DefSetText(hWnd, (PCWSTR)cs->lpszName, TRUE);
+                }
+                Result = 1;
+            }
             break;
         }
 
