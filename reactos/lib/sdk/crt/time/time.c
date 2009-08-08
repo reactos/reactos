@@ -11,14 +11,15 @@
 
 time_t _time(time_t* ptime)
 {
-	FILETIME SystemTime;
-	time_t time = 0;
+    FILETIME SystemTime;
+    time_t time = 0;
+
+    GetSystemTimeAsFileTime(&SystemTime);
+    time = FileTimeToUnixTime(&SystemTime, NULL);
 
     if (ptime)
     {
-    	GetSystemTimeAsFileTime(&SystemTime);
-	    time = FileTimeToUnixTime(&SystemTime, NULL);
-		*ptime = time;
+        *ptime = time;
     }
-	return time;
+    return time;
 }
