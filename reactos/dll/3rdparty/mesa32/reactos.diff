@@ -3995,3 +3995,55 @@ Index: x86/common_x86.c
  
        if ( cpu_has_xmm ) {
  	 _mesa_debug(NULL, "Yes.\n");
+Index: main/imports.c
+===================================================================
+--- main/imports.c	(revision 42472)
++++ main/imports.c	(working copy)
+@@ -104,7 +104,7 @@
+ 
+    (void) posix_memalign(& mem, alignment, bytes);
+    return mem;
+-#elif defined(_WIN32) && defined(_MSC_VER)
++#elif 0/*defined(_WIN32) && defined(_MSC_VER)*/
+    return _aligned_malloc(bytes, alignment);
+ #else
+    uintptr_t ptr, buf;
+@@ -146,7 +146,7 @@
+    }
+ 
+    return mem;
+-#elif defined(_WIN32) && defined(_MSC_VER)
++#elif 0/*defined(_WIN32) && defined(_MSC_VER)*/
+    void *mem;
+ 
+    mem = _aligned_malloc(bytes, alignment);
+Index: main/imports.h
+===================================================================
+--- main/imports.h	(revision 42472)
++++ main/imports.h	(working copy)
+@@ -482,10 +482,10 @@
+ /* This function/macro is sensitive to precision.  Test very carefully
+  * if you change it!
+  */
+-#define UNCLAMPED_FLOAT_TO_UBYTE(UB, F)					\
++#define UNCLAMPED_FLOAT_TO_UBYTE(UB, F_)					\
+         do {								\
+            fi_type __tmp;						\
+-           __tmp.f = (F);						\
++           __tmp.f = (F_);						\
+            if (__tmp.i < 0)						\
+               UB = (GLubyte) 0;						\
+            else if (__tmp.i >= IEEE_0996)				\
+@@ -495,10 +495,10 @@
+               UB = (GLubyte) __tmp.i;					\
+            }								\
+         } while (0)
+-#define CLAMPED_FLOAT_TO_UBYTE(UB, F)					\
++#define CLAMPED_FLOAT_TO_UBYTE(UB, F_)					\
+         do {								\
+            fi_type __tmp;						\
+-           __tmp.f = (F) * (255.0F/256.0F) + 32768.0F;			\
++           __tmp.f = (F_) * (255.0F/256.0F) + 32768.0F;			\
+            UB = (GLubyte) __tmp.i;					\
+         } while (0)
+ #else
