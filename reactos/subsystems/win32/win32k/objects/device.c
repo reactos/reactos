@@ -1493,13 +1493,16 @@ IntEnumDisplaySettings(
         return Status;
     }
 
-    DPRINT("DevMode->dmSize = %d\n", pDevMode->dmSize);
-    DPRINT("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
-    if (pDevMode->dmSize != SIZEOF_DEVMODEW_300 &&
-            pDevMode->dmSize != SIZEOF_DEVMODEW_400 &&
-            pDevMode->dmSize != SIZEOF_DEVMODEW_500)
+    if (pDevMode != NULL)
     {
-        return STATUS_BUFFER_TOO_SMALL;
+        DPRINT("DevMode->dmSize = %d\n", pDevMode->dmSize);
+        DPRINT("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
+        if (pDevMode->dmSize != SIZEOF_DEVMODEW_300 &&
+                pDevMode->dmSize != SIZEOF_DEVMODEW_400 &&
+                pDevMode->dmSize != SIZEOF_DEVMODEW_500)
+        {
+            return STATUS_BUFFER_TOO_SMALL;
+        }
     }
 
     if (iModeNum == ENUM_CURRENT_SETTINGS)
@@ -1695,9 +1698,12 @@ IntEnumDisplaySettings(
 
     ASSERT(CachedMode != NULL);
 
-    RtlCopyMemory(pDevMode, CachedMode, min(pDevMode->dmSize, CachedMode->dmSize));
-    RtlZeroMemory(pDevMode + pDevMode->dmSize, pDevMode->dmDriverExtra);
-    RtlCopyMemory(pDevMode + min(pDevMode->dmSize, CachedMode->dmSize), CachedMode + CachedMode->dmSize, min(pDevMode->dmDriverExtra, CachedMode->dmDriverExtra));
+    if (pDevMode != NULL)
+    {
+        RtlCopyMemory(pDevMode, CachedMode, min(pDevMode->dmSize, CachedMode->dmSize));
+        RtlZeroMemory(pDevMode + pDevMode->dmSize, pDevMode->dmDriverExtra);
+        RtlCopyMemory(pDevMode + min(pDevMode->dmSize, CachedMode->dmSize), CachedMode + CachedMode->dmSize, min(pDevMode->dmDriverExtra, CachedMode->dmDriverExtra));
+    }
 
     return STATUS_SUCCESS;
 }
