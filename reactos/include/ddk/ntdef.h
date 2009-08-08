@@ -441,12 +441,12 @@ typedef struct _LARGE_INTEGER {
 typedef union _LARGE_INTEGER {
     _ANONYMOUS_STRUCT struct
     {
-        ULONG LowPart;
+        DWORD LowPart;
         LONG HighPart;
     } DUMMYSTRUCTNAME;
     struct
     {
-        ULONG LowPart;
+        DWORD LowPart;
         LONG HighPart;
     } u;
 #endif //MIDL_PASS
@@ -459,13 +459,13 @@ typedef struct _ULARGE_INTEGER {
 typedef union _ULARGE_INTEGER {
     _ANONYMOUS_STRUCT struct
     {
-        ULONG LowPart;
-        ULONG HighPart;
+        DWORD LowPart;
+        DWORD HighPart;
     } DUMMYSTRUCTNAME;
     struct
     {
-        ULONG LowPart;
-        ULONG HighPart;
+        DWORD LowPart;
+        DWORD HighPart;
     } u;
 #endif //MIDL_PASS
     ULONGLONG QuadPart;
