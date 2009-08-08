@@ -1,6 +1,7 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2008-2009  Hervé Poussineau  <hpoussin@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,6 +33,134 @@ PVOID FsStaticBufferDisk = 0, FsStaticBufferData = 0;
 /////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
 /////////////////////////////////////////////////////////////////////////////////////////////
+
+static BOOLEAN CompatArcOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
+{
+	//
+	// Always return success
+	//
+	return TRUE;
+}
+
+static FILE* CompatArcOpenFile(PCSTR FileName)
+{
+	CHAR FullPath[MAX_PATH];
+	ULONG FileId;
+	LONG ret;
+
+	//
+	// Create full file name
+	//
+	MachDiskGetBootPath(FullPath, sizeof(FullPath));
+	strcat(FullPath, FileName);
+
+	//
+	// Open the file
+	//
+	ret = ArcOpen(FullPath, OpenReadOnly, &FileId);
+
+	//
+	// Check for success
+	//
+	if (ret == ESUCCESS)
+		return (FILE*)FileId;
+	else
+		return NULL;
+}
+
+static BOOLEAN CompatArcReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+{
+	ULONG FileId = (ULONG)FileHandle;
+	LONG ret;
+
+	//
+	// Read the file
+	//
+	ret = ArcRead(FileId, Buffer, BytesToRead, BytesRead);
+
+	//
+	// Check for success
+	//
+	if (ret == ESUCCESS)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+ULONG CompatArcGetFileSize(FILE *FileHandle)
+{
+	ULONG FileId = (ULONG)FileHandle;
+	FILEINFORMATION Information;
+	LONG ret;
+
+	//
+	// Query file informations
+	//
+	ret = ArcGetFileInformation(FileId, &Information);
+
+	//
+	// Check for error
+	//
+	if (ret != ESUCCESS || Information.EndingAddress.HighPart != 0)
+		return 0;
+
+	//
+	// Return file size
+	//
+	return Information.EndingAddress.LowPart;
+}
+
+VOID CompatArcSetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
+{
+	ULONG FileId = (ULONG)FileHandle;
+	LARGE_INTEGER Position;
+
+	//
+	// Set file position
+	//
+	Position.HighPart = 0;
+	Position.LowPart = NewFilePointer;
+	ArcSeek(FileId, &Position, SeekAbsolute);
+
+	//
+	// Do not check for error; this function is
+	// supposed to always succeed
+	//
+}
+
+ULONG CompatArcGetFilePointer(FILE *FileHandle)
+{
+	ULONG FileId = (ULONG)FileHandle;
+	FILEINFORMATION Information;
+	LONG ret;
+
+	//
+	// Query file informations
+	//
+	ret = ArcGetFileInformation(FileId, &Information);
+
+	//
+	// Check for error
+	//
+	if (ret != ESUCCESS || Information.CurrentAddress.HighPart != 0)
+		return 0;
+
+	//
+	// Return file pointer position
+	//
+	return Information.CurrentAddress.LowPart;
+}
+
+static const FS_VTBL CompatArcVtbl =
+{
+	CompatArcOpenVolume,
+	CompatArcOpenFile,
+	NULL,
+	CompatArcReadFile,
+	CompatArcGetFileSize,
+	CompatArcSetFilePointer,
+	CompatArcGetFilePointer,
+};
 
 VOID FileSystemError(PCSTR ErrorString)
 {
@@ -385,7 +514,7 @@ const DEVVTBL CompatFsFuncTable = {
     CompatFsSeek,
 };
 
-#define MAX_FDS 20
+#define MAX_FDS 60
 typedef struct tagFILEDATA
 {
     ULONG DeviceId;
@@ -420,6 +549,7 @@ LONG ArcClose(ULONG FileId)
     {
         FileData[FileId].FuncTable = NULL;
         FileData[FileId].Specific = NULL;
+        FileData[FileId].DeviceId = -1;
     }
     return ret;
 }
@@ -443,6 +573,9 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     ULONG dwCount, dwLength;
     OPENMODE DeviceOpenMode;
     ULONG DeviceId;
+
+    /* Print status message */
+    DPRINTM(DPRINT_FILESYSTEM, "Opening file '%s'...\n", Path);
 
     *FileId = MAX_FDS;
 
@@ -535,6 +668,7 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
     /* Open the file */
     FileData[i].FuncTable = FileData[DeviceId].FileFuncTable;
+    FileData[i].DeviceId = DeviceId;
     *FileId = i;
     ret = FileData[i].FuncTable->Open(FileName, OpenMode, FileId);
     if (ret != ESUCCESS)
@@ -590,8 +724,20 @@ VOID* FsGetDeviceSpecific(ULONG FileId)
     return FileData[FileId].Specific;
 }
 
+ULONG FsGetDeviceId(ULONG FileId)
+{
+    if (FileId >= MAX_FDS)
+        return (ULONG)-1;
+    return FileData[FileId].DeviceId;
+}
+
 VOID FsInit(VOID)
 {
-    memset(FileData, 0, sizeof(FileData));
+    ULONG i;
+
+    RtlZeroMemory(FileData, sizeof(FileData));
+    for (i = 0; i < MAX_FDS; i++)
+        FileData[i].DeviceId = (ULONG)-1;
+
     InitializeListHead(&DeviceListHead);
 }

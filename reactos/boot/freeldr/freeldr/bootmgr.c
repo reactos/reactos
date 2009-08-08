@@ -37,6 +37,13 @@ VOID RunLoader(VOID)
 		return;
 	}
 
+	// FIXME: if possible, only detect and register ARC devices...
+	if (!MachHwDetect())
+	{
+		UiMessageBoxCritical("Error when detecting hardware");
+		return;
+	}
+
 	if (!IniFileInitialize())
 	{
 		UiMessageBoxCritical("Error initializing .ini file");

@@ -29,14 +29,10 @@ typedef struct tagDEVVTBL
   ARC_SEEK Seek;
 } DEVVTBL;
 
-//#define	EOF				-1
-
 #define	FS_FAT			1
 #define	FS_NTFS			2
 #define	FS_EXT2			3
-#define FS_REISER		4
 #define FS_ISO9660		5
-#define FS_PXE			6
 
 #define FILE			VOID
 #define PFILE			FILE *
@@ -44,6 +40,7 @@ typedef struct tagDEVVTBL
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
 VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
 VOID* FsGetDeviceSpecific(ULONG FileId);
+ULONG FsGetDeviceId(ULONG FileId);
 VOID FsInit(VOID);
 
 LONG ArcClose(ULONG FileId);

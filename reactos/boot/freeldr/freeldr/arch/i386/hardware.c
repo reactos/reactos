@@ -449,19 +449,26 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+    UCHAR* Ptr = (UCHAR*)Buffer;
+    ULONG i;
     BOOLEAN ret;
 
     *Count = 0;
     if (N & (Context->SectorSize - 1))
         return EINVAL;
 
-    ret = MachDiskReadLogicalSectors(
-        Context->DriveNumber,
-        Context->SectorNumber + Context->SectorOffset,
-        N / Context->SectorSize,
-        Buffer);
-    if (!ret)
-        return EIO;
+    for (i = 0; i < N / Context->SectorSize; i++)
+    {
+        ret = MachDiskReadLogicalSectors(
+            Context->DriveNumber,
+            Context->SectorNumber + Context->SectorOffset + i,
+            1,
+            (PVOID)DISKREADBUFFER);
+        if (!ret)
+            return EIO;
+        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Context->SectorSize);
+        Ptr += Context->SectorSize;
+    }
 
     *Count = N;
     return ESUCCESS;
