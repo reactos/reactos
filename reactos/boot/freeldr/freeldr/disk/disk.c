@@ -361,6 +361,8 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 	strcat(BootPath, MachDiskBootingFromFloppy() ? "fdisk" : "cdrom");
 	strcat(strcat(strcat(BootPath, "("), Device), ")");
     
+	if (strcmp(BootPath, "multi(0)disk(0)cdrom(128)") == 0)
+		strcpy(BootPath, "multi(0)disk(0)rdisk(0)partition(1)");
 	return TRUE;
 }
 
