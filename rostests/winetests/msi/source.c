@@ -283,7 +283,7 @@ static void test_MsiSourceListGetInfo(void)
     size = MAX_PATH;
     r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                               MSICODE_PRODUCT, INSTALLPROPERTY_PACKAGENAME, NULL, &size);
-    ok(r == ERROR_UNKNOWN_PRODUCT || ERROR_INVALID_PARAMETER,
+    ok(r == ERROR_UNKNOWN_PRODUCT || r == ERROR_INVALID_PARAMETER,
       "Expected ERROR_UNKNOWN_PRODUCT or ERROR_INVALID_PARAMETER, got %d\n", r);
 
     lstrcpyA(keypath, "Software\\Microsoft\\Installer\\Products\\");
