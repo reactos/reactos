@@ -139,7 +139,7 @@ static void ctl2_init_header(
     typelib->typelib_header.magic1 = 0x5446534d;
     typelib->typelib_header.magic2 = 0x00010002;
     typelib->typelib_header.posguid = -1;
-    typelib->typelib_header.lcid = 0x0409; /* or do we use the current one? */
+    typelib->typelib_header.lcid = 0x0409;
     typelib->typelib_header.lcid2 = 0x0;
     typelib->typelib_header.varflags = 0x40;
     typelib->typelib_header.version = 0;
@@ -1265,6 +1265,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
     unsigned int funckind, invokekind = 1 /* INVOKE_FUNC */;
     int help_context = 0, help_string_context = 0, help_string_offset = -1;
     int entry = -1, entry_is_ord = 0;
+    int lcid_retval_count = 0;
 
     chat("add_func_desc(%p,%d)\n", typeinfo, index);
 
@@ -1495,9 +1496,13 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
             case ATTR_OUT:
                 paramflags |= 0x02; /* PARAMFLAG_FOUT */
                 break;
+            case ATTR_PARAMLCID:
+                paramflags |= 0x04; /* PARAMFLAG_LCID */
+                lcid_retval_count++;
+                break;
             case ATTR_RETVAL:
                 paramflags |= 0x08; /* PARAMFLAG_FRETVAL */
-                typedata[4] |= 0x4000;
+                lcid_retval_count++;
                 break;
             default:
                 chat("unhandled param attr %d\n", attr->type);
@@ -1507,9 +1512,15 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
 	paramdata[1] = -1;
 	paramdata[2] = paramflags;
 	typedata[3] += decoded_size << 16;
+
         i++;
       }
     }
+
+    if(lcid_retval_count == 1)
+        typedata[4] |= 0x4000;
+    else if(lcid_retval_count == 2)
+        typedata[4] |= 0x8000;
 
     if(typeinfo->funcs_allocated == 0) {
         typeinfo->funcs_allocated = 10;
@@ -2349,7 +2360,11 @@ static void set_help_string_context(msft_typelib_t *typelib)
 static void set_lcid(msft_typelib_t *typelib)
 {
     const expr_t *lcid_expr = get_attrp( typelib->typelib->attrs, ATTR_LIBLCID );
-    typelib->typelib_header.lcid2 = lcid_expr ? lcid_expr->cval : 0x0;
+    if(lcid_expr)
+    {
+        typelib->typelib_header.lcid  = lcid_expr->cval;
+        typelib->typelib_header.lcid2 = lcid_expr->cval;
+    }
 }
 
 static void set_lib_flags(msft_typelib_t *typelib)
