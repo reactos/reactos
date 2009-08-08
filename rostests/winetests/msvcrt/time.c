@@ -32,9 +32,6 @@
 #define MINSPERHOUR        60
 #define HOURSPERDAY        24
 
-#define NDEBUG
-#include <debug.h>
-
 static int get_test_year(time_t *start)
 {
     time_t now = time(NULL);
@@ -83,12 +80,11 @@ static void test_mktime(void)
     char buffer[64];
     int year;
     time_t ref, secs;
-DPRINT1("Entered test_mktime, getting test year\n");
+
     year = get_test_year( &ref );
     ref += SECSPERDAY;
-DPRINT1("Checking return value, testyear=%d, ref=%ld\n", year, ref);
+
     ok (res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
-DPRINT1("Converting StdName, tzi=%p, res=%ld\n", (char*)&tzinfo, res);
     WideCharToMultiByte( CP_ACP, 0, tzinfo.StandardName, -1, buffer, sizeof(buffer), NULL, NULL );
     trace( "bias %d std %d dst %d zone %s\n",
            tzinfo.Bias, tzinfo.StandardBias, tzinfo.DaylightBias, buffer );
@@ -288,10 +284,8 @@ static void test_wstrtime(void)
 
 START_TEST(time)
 {
-#if 0
     test_ctime();
     test_gmtime();
-#endif
     test_mktime();
     test_localtime();
     test_strdate();
