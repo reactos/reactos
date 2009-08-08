@@ -49,6 +49,13 @@ GpStatus WINGDIPAPI GdipSetPenLineJoin(GpPen*,GpLineJoin);
 GpStatus WINGDIPAPI GdipSetPenMiterLimit(GpPen*,REAL);
 GpStatus WINGDIPAPI GdipSetPenStartCap(GpPen*,GpLineCap);
 GpStatus WINGDIPAPI GdipSetPenWidth(GpPen*,REAL);
+GpStatus WINGDIPAPI GdipGetPenDashCap197819(GpPen*,GpDashCap*);
+GpStatus WINGDIPAPI GdipGetPenEndCap(GpPen*,GpLineCap*);
+GpStatus WINGDIPAPI GdipGetPenLineJoin(GpPen*,GpLineJoin*);
+GpStatus WINGDIPAPI GdipGetPenMiterLimit(GpPen*,REAL*);
+GpStatus WINGDIPAPI GdipGetPenStartCap(GpPen*,GpLineCap*);
+GpStatus WINGDIPAPI GdipGetPenUnit(GpPen*,GpUnit*);
+GpStatus WINGDIPAPI GdipGetPenWidth(GpPen*,REAL*);
 
 GpStatus WINGDIPAPI GdipCreateFromHDC(HDC,GpGraphics**);
 GpStatus WINGDIPAPI GdipCreateFromHDC2(HDC,HANDLE,GpGraphics**);
@@ -146,6 +153,8 @@ GpStatus WINGDIPAPI GdipSetCompositingQuality(GpGraphics*,CompositingQuality);
 GpStatus WINGDIPAPI GdipSetInterpolationMode(GpGraphics*,InterpolationMode);
 GpStatus WINGDIPAPI GdipSetPageScale(GpGraphics*,REAL);
 GpStatus WINGDIPAPI GdipSetPageUnit(GpGraphics*,GpUnit);
+GpStatus WINGDIPAPI GdipSetPathMarker(GpPath*);
+GpStatus WINGDIPAPI GdipClearPathMarkers(GpPath*);
 GpStatus WINGDIPAPI GdipSetPixelOffsetMode(GpGraphics*,PixelOffsetMode);
 GpStatus WINGDIPAPI GdipSetSmoothingMode(GpGraphics*,SmoothingMode);
 GpStatus WINGDIPAPI GdipSetTextRenderingHint(GpGraphics*,TextRenderingHint);
@@ -213,8 +222,12 @@ GpStatus WINGDIPAPI GdipAddPathLine2(GpPath*,GDIPCONST GpPointF*,INT);
 GpStatus WINGDIPAPI GdipAddPathLine2I(GpPath*,GDIPCONST GpPoint*,INT);
 GpStatus WINGDIPAPI GdipAddPathLineI(GpPath*,INT,INT,INT,INT);
 GpStatus WINGDIPAPI GdipAddPathPath(GpPath*,GDIPCONST GpPath*,BOOL);
+GpStatus WINGDIPAPI GdipAddPathPolygon(GpPath*,GDIPCONST GpPointF*,INT);
+GpStatus WINGDIPAPI GdipAddPathPolygonI(GpPath*,GDIPCONST GpPoint*,INT);
 GpStatus WINGDIPAPI GdipAddPathRectangle(GpPath*,REAL,REAL,REAL,REAL);
 GpStatus WINGDIPAPI GdipAddPathRectangleI(GpPath*,INT,INT,INT,INT);
+GpStatus WINGDIPAPI GdipAddPathRectangles(GpPath*,GDIPCONST GpRectF*,INT);
+GpStatus WINGDIPAPI GdipAddPathRectanglesI(GpPath*,GDIPCONST GpRect*,INT);
 GpStatus WINGDIPAPI GdipClonePath(GpPath*,GpPath**);
 GpStatus WINGDIPAPI GdipClosePathFigure(GpPath*);
 GpStatus WINGDIPAPI GdipClosePathFigures(GpPath*);
@@ -223,7 +236,9 @@ GpStatus WINGDIPAPI GdipCreatePath2(GDIPCONST GpPointF*,GDIPCONST BYTE*,INT,
     GpFillMode,GpPath**);
 GpStatus WINGDIPAPI GdipCreatePath2I(GDIPCONST GpPoint*,GDIPCONST BYTE*,INT,GpFillMode,GpPath**);
 GpStatus WINGDIPAPI GdipDeletePath(GpPath*);
+GpStatus WINGDIPAPI GdipGetPathData(GpPath*,GpPathData*);
 GpStatus WINGDIPAPI GdipGetPathFillMode(GpPath*,GpFillMode*);
+GpStatus WINGDIPAPI GdipGetPathLastPoint(GpPath*,GpPointF*);
 GpStatus WINGDIPAPI GdipGetPathPoints(GpPath*,GpPointF*,INT);
 GpStatus WINGDIPAPI GdipGetPathPointsI(GpPath*,GpPoint*,INT);
 GpStatus WINGDIPAPI GdipGetPathTypes(GpPath*,BYTE*,INT);
@@ -266,6 +281,7 @@ GpStatus WINGDIPAPI GdipPathIterCopyData(GpPathIterator*,INT*,GpPointF*,BYTE*,
     INT,INT);
 GpStatus WINGDIPAPI GdipPathIterNextSubpath(GpPathIterator*,INT*,INT*,INT*,BOOL*);
 GpStatus WINGDIPAPI GdipPathIterRewind(GpPathIterator*);
+GpStatus WINGDIPAPI GdipPathIterGetCount(GpPathIterator*,INT*);
 
 GpStatus WINGDIPAPI GdipCloneCustomLineCap(GpCustomLineCap*,GpCustomLineCap**);
 GpStatus WINGDIPAPI GdipCreateCustomLineCap(GpPath*,GpPath*,GpLineCap,REAL,
@@ -315,6 +331,7 @@ GpStatus WINGDIPAPI GdipGetMetafileHeaderFromStream(IStream*,MetafileHeader*);
 GpStatus WINGDIPAPI GdipGetMetafileHeaderFromWmf(HMETAFILE,GDIPCONST WmfPlaceableFileHeader*,MetafileHeader*);
 GpStatus WINGDIPAPI GdipGetPropertyItemSize(GpImage*,PROPID,UINT*);
 GpStatus WINGDIPAPI GdipImageGetFrameCount(GpImage*,GDIPCONST GUID*,UINT*);
+GpStatus WINGDIPAPI GdipImageGetFrameDimensionsCount(GpImage*,UINT*);
 GpStatus WINGDIPAPI GdipImageGetFrameDimensionsList(GpImage*,GUID*,UINT);
 GpStatus WINGDIPAPI GdipImageSelectActiveFrame(GpImage*,GDIPCONST GUID*,UINT);
 GpStatus WINGDIPAPI GdipLoadImageFromFile(GDIPCONST WCHAR*,GpImage**);
@@ -327,6 +344,7 @@ GpStatus WINGDIPAPI GdipSaveImageToStream(GpImage*,IStream*,
     GDIPCONST CLSID*,GDIPCONST EncoderParameters*);
 GpStatus WINGDIPAPI GdipSetImagePalette(GpImage*,GDIPCONST ColorPalette*);
 
+GpStatus WINGDIPAPI GdipCloneImageAttributes(GDIPCONST GpImageAttributes*,GpImageAttributes**);
 GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes**);
 GpStatus WINGDIPAPI GdipDisposeImageAttributes(GpImageAttributes*);
 GpStatus WINGDIPAPI GdipSetImageAttributesColorKeys(GpImageAttributes*,
@@ -337,12 +355,25 @@ GpStatus WINGDIPAPI GdipSetImageAttributesColorMatrix(GpImageAttributes*,
 GpStatus WINGDIPAPI GdipSetImageAttributesWrapMode(GpImageAttributes*,WrapMode,
     ARGB,BOOL);
 
+GpStatus WINGDIPAPI GdipCreateFont(GDIPCONST GpFontFamily*, REAL, INT, Unit,
+    GpFont**);
 GpStatus WINGDIPAPI GdipCreateFontFromDC(HDC,GpFont**);
 GpStatus WINGDIPAPI GdipCreateFontFromLogfontA(HDC,GDIPCONST LOGFONTA*,GpFont**);
 GpStatus WINGDIPAPI GdipCreateFontFromLogfontW(HDC,GDIPCONST LOGFONTW*,GpFont**);
 GpStatus WINGDIPAPI GdipDeleteFont(GpFont*);
 GpStatus WINGDIPAPI GdipGetLogFontW(GpFont*,GpGraphics*,LOGFONTW*);
 GpStatus WINGDIPAPI GdipCloneFont(GpFont*,GpFont**);
+GpStatus WINGDIPAPI GdipGetFontUnit(GpFont*, Unit*);
+GpStatus WINGDIPAPI GdipGetFontSize(GpFont*, REAL*);
+
+GpStatus WINGDIPAPI GdipCreateFontFamilyFromName(GDIPCONST WCHAR*,
+    GpFontCollection*, GpFontFamily**);
+GpStatus WINGDIPAPI GdipDeleteFontFamily(GpFontFamily*);
+GpStatus WINGDIPAPI GdipGetFamilyName(GDIPCONST GpFontFamily*, WCHAR*, LANGID);
+
+GpStatus WINGDIPAPI GdipGetGenericFontFamilySansSerif(GpFontFamily**);
+GpStatus WINGDIPAPI GdipGetGenericFontFamilySerif(GpFontFamily**);
+GpStatus WINGDIPAPI GdipGetGenericFontFamilyMonospace(GpFontFamily**);
 
 GpStatus WINGDIPAPI GdipCreateStringFormat(INT,LANGID,GpStringFormat**);
 GpStatus WINGDIPAPI GdipDeleteStringFormat(GpStringFormat*);
@@ -359,13 +390,21 @@ GpStatus WINGDIPAPI GdipCloneStringFormat(GDIPCONST GpStringFormat*,GpStringForm
 GpStatus WINGDIPAPI GdipGetDpiX(GpGraphics*,REAL*);
 GpStatus WINGDIPAPI GdipGetDpiY(GpGraphics*,REAL*);
 
+GpStatus WINGDIPAPI GdipCombineRegionRect(GpRegion *, GDIPCONST GpRectF *, CombineMode);
+GpStatus WINGDIPAPI GdipCombineRegionRectI(GpRegion *, GDIPCONST GpRect *, CombineMode);
+GpStatus WINGDIPAPI GdipCombineRegionRegion(GpRegion *, GpRegion *, CombineMode);
 GpStatus WINGDIPAPI GdipCreateRegion(GpRegion **);
 GpStatus WINGDIPAPI GdipCreateRegionPath(GpPath *, GpRegion **);
+GpStatus WINGDIPAPI GdipCreateRegionRect(GDIPCONST GpRectF *, GpRegion **);
+GpStatus WINGDIPAPI GdipCreateRegionRectI(GDIPCONST GpRect *, GpRegion **);
 GpStatus WINGDIPAPI GdipDeleteRegion(GpRegion *);
+GpStatus WINGDIPAPI GdipGetRegionData(GpRegion *, BYTE *, UINT, UINT *);
+GpStatus WINGDIPAPI GdipGetRegionDataSize(GpRegion *, UINT *);
 GpStatus WINGDIPAPI GdipGetRegionHRgn(GpRegion *, GpGraphics *, HRGN *);
 GpStatus WINGDIPAPI GdipSetEmpty(GpRegion *);
 GpStatus WINGDIPAPI GdipSetInfinite(GpRegion *);
 
+GpStatus WINGDIPAPI GdipFlush(GpGraphics*, GpFlushIntention);
 
 #ifdef __cplusplus
 }

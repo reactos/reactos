@@ -35,6 +35,8 @@ typedef struct _ROS_LOADER_PARAMETER_BLOCK
     UCHAR Syms[12];
     ULONG MmapLength;
     ULONG MmapAddr;
+    ULONG RdLength;
+    ULONG RdAddr;
     ULONG DrivesCount;
     PARC_DISK_SIGNATURE DrivesAddr;
     ULONG ConfigTable;

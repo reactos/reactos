@@ -1,10 +1,6 @@
 #include "calc.h"
 
 #define HTMLHELP_PATH(_pt)  TEXT("%systemroot%\\Help\\calc.chm::") TEXT(_pt)
-#define WM_CLOSE_STATS      (WM_APP+1)
-#define WM_HANDLE_CLIPBOARD (WM_APP+2)
-#define WM_INSERT_STAT      (WM_APP+3)
-#define WM_LOAD_STAT        (WM_APP+4)
 
 #define MAKE_BITMASK4(_show_b16, _show_b10, _show_b8, _show_b2) \
     (((_show_b2)  << 0) | \
@@ -158,6 +154,7 @@ static const WORD operator_codes[] = {
     IDC_BUTTON_XOR,     // RPN_OPERATOR_XOR
     IDC_BUTTON_AND,     // RPN_OPERATOR_AND
     IDC_BUTTON_LSH,     // RPN_OPERATOR_LSH
+    IDC_BUTTON_RSH,     // RPN_OPERATOR_RSH
     IDC_BUTTON_ADD,     // RPN_OPERATOR_ADD
     IDC_BUTTON_SUB,     // RPN_OPERATOR_SUB
     IDC_BUTTON_MULT,    // RPN_OPERATOR_MULT
@@ -390,8 +387,12 @@ KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 static void update_lcd_display(HWND hwnd)
 {
-    /* +20 is the additional space for separator mode */
-    TCHAR *tmp = (TCHAR *)alloca((calc.ptr-calc.buffer+3+20)*sizeof(TCHAR));
+    /*
+     * muliply size of calc.buffer by 2 because it may
+     * happen that separator is used between each digit.
+     * Also added little additional space for dot and '\0'.
+     */
+    TCHAR *tmp = (TCHAR *)alloca(sizeof(calc.buffer)*2+2*sizeof(TCHAR));
 
     if (calc.buffer[0] == TEXT('\0'))
         _tcscpy(tmp, TEXT("0"));
@@ -513,8 +514,12 @@ static void build_operand(HWND hwnd, DWORD idc)
                 calc.esp = (calc.esp * 10 + (key2code[i].key-'0')) % LOCAL_EXP_SIZE;
             if (calc.ptr == calc.buffer)
                 _stprintf(calc.ptr, TEXT("0.e%+d"), calc.esp);
-            else
+            else {
+                /* adds the dot at the end if the number has no decimal part */
+                if (!_tcschr(calc.buffer, TEXT('.')))
+                    *calc.ptr++ = TEXT('.');
                 _stprintf(calc.ptr, TEXT("e%+d"), calc.esp);
+            }
             update_lcd_display(hwnd);
             return;
         }
@@ -590,6 +595,7 @@ static const struct _update_check_menus {
 } upd[] = {
     { &calc.layout, IDM_VIEW_STANDARD,   CALC_LAYOUT_STANDARD },
     { &calc.layout, IDM_VIEW_SCIENTIFIC, CALC_LAYOUT_SCIENTIFIC },
+    { &calc.layout, IDM_VIEW_CONVERSION, CALC_LAYOUT_CONVERSION },
     /*-----------------------------------------*/
     { &calc.base, IDM_VIEW_HEX, IDC_RADIO_HEX, },
     { &calc.base, IDM_VIEW_DEC, IDC_RADIO_DEC, },
@@ -776,6 +782,78 @@ static void delete_stat_item(int n)
     }
 }
 
+static char *ReadConversion(const char *formula)
+{
+    unsigned int  len = 256, n;
+    char         *str;
+    char         *code = NULL;
+    const char   *p = formula;
+    char          c;
+    calc_number_t x;
+    TCHAR         buffer[SIZEOF(calc.buffer)];
+#ifdef UNICODE
+    char          cbuffer[SIZEOF(calc.buffer)];
+#endif
+
+    str = (char *)malloc(len);
+    if (str == NULL)
+        return NULL;
+
+    /* prepare code string */
+    rpn_alloc(&x);
+    convert_text2number(&x);
+    prepare_rpn_result(&x,
+                   buffer, SIZEOF(buffer),
+                   calc.base);
+    rpn_free(&x);
+
+#ifdef UNICODE
+    WideCharToMultiByte(CP_ACP, 0, buffer, -1, cbuffer, SIZEOF(cbuffer), NULL, NULL);
+#endif
+
+    str[0] = '(';
+    n = 1;
+    while (1) {
+        if (code != NULL) {
+            c = *code++;
+            if (*code == '\0')
+                code = NULL;
+        } else
+            c = *p++;
+
+        if (c == '\0') {
+            str[n++] = ')';
+            if (n >= len-1) {
+                str = (char *)realloc(str, len += 16);
+                if (str == NULL)
+                    return NULL;
+            }
+            break;
+        } else
+        if (c == '$') {
+#ifdef UNICODE
+            code = cbuffer;
+#else
+            code = buffer;
+#endif
+            continue;
+        }
+        str[n++] = c;
+        if (n >= len-1) {
+            str = (char *)realloc(str, len += 16);
+            if (str == NULL)
+                return NULL;
+        }
+    }
+    str[n] = '\0';
+
+    /* clear display content before proceeding */
+    calc.ptr = calc.buffer;
+    calc.buffer[0] = TEXT('\0');
+
+    return str;
+}
+
 static LRESULT CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     TCHAR buffer[SIZEOF(calc.buffer)];
@@ -854,8 +932,11 @@ static void CopyMemToClipboard(void *ptr)
 	    buffer = (TCHAR *)GlobalLock(clipbuffer);
 	    _tcscpy(buffer, ptr);
 	    GlobalUnlock(clipbuffer);
-
-        SetClipboardData(CF_TCHAR, clipbuffer);
+#ifdef UNICODE
+	    SetClipboardData(CF_UNICODETEXT,clipbuffer);
+#else
+	    SetClipboardData(CF_TEXT,clipbuffer);
+#endif
 	    CloseClipboard();
     }
 }
@@ -865,23 +946,23 @@ static void handle_copy_command(HWND hWnd)
     TCHAR display[sizeof(calc.buffer)];
 
     SendDlgItemMessage(hWnd, IDC_TEXT_OUTPUT, WM_GETTEXT, (WPARAM)SIZEOF(display), (LPARAM)display);
-    if (calc.base == IDC_RADIO_DEC && _tcschr(calc.buffer, '.') == NULL)
+    if (calc.base == IDC_RADIO_DEC && _tcschr(calc.buffer, _T('.')) == NULL)
         display[_tcslen(display)-calc.sDecimal_len] = TEXT('\0');
     CopyMemToClipboard(display);
 }
 
-static TCHAR *ReadClipboard(void)
+static char *ReadClipboard(void)
 {
-    TCHAR *buffer = NULL;
+    char *buffer = NULL;
 
     if (OpenClipboard(NULL)) {
-	    HANDLE  hData = GetClipboardData(CF_TCHAR);
-        TCHAR *fromClipboard;
+	    HANDLE  hData = GetClipboardData(CF_TEXT);
+        char   *fromClipboard;
 
         if (hData != NULL) {
-            fromClipboard = (TCHAR *)GlobalLock(hData);
-            if (_tcslen(fromClipboard))
-    	        buffer = _tcsupr(_tcsdup(fromClipboard));
+            fromClipboard = (char *)GlobalLock(hData);
+            if (strlen(fromClipboard))
+    	        buffer = _strupr(_strdup(fromClipboard));
 	        GlobalUnlock( hData );
         }
 	    CloseClipboard();
@@ -889,11 +970,10 @@ static TCHAR *ReadClipboard(void)
     return buffer;
 }
 
-static void handle_clipboard_input(HWND hwnd)
+static char *handle_sequence_input(HWND hwnd, sequence_t *seq)
 {
-    TCHAR *ptr = calc.ClipPtr;
-    TCHAR ch;
-    INT x;
+    char *ptr = seq->ptr;
+    int ch, x;
 
     ch = *ptr++;
     if (ch == '\\')
@@ -922,13 +1002,14 @@ static void handle_clipboard_input(HWND hwnd)
             }
         }
     }
-    calc.ClipPtr = ptr;
+    seq->ptr = ptr;
     if (*ptr != '\0')
-        PostMessage(hwnd, WM_HANDLE_CLIPBOARD, 0, 0);
+        PostMessage(hwnd, seq->wm_msg, 0, 0);
     else {
-        free(calc.Clipboard);
-        calc.Clipboard = NULL;
+        free(seq->data);
+        seq->data = seq->ptr = ptr = NULL;
     }
+    return ptr;
 }
 
 static void run_dat_sta(calc_number_t *a)
@@ -952,31 +1033,41 @@ static void run_dat_sta(calc_number_t *a)
 
 static void run_mp(calc_number_t *c)
 {
-    run_operator(&calc.memory, &calc.memory, c, RPN_OPERATOR_ADD);
+    calc_node_t cn;
+
+    cn.number = *c;
+    cn.base = calc.base;
+    run_operator(&calc.memory, &calc.memory, &cn, RPN_OPERATOR_ADD);
     update_memory_flag(calc.hWnd, TRUE);
 }
 
 static void run_mm(calc_number_t *c)
 {
-    run_operator(&calc.memory, &calc.memory, c, RPN_OPERATOR_SUB);
+    calc_node_t cn;
+
+    cn.number = *c;
+    cn.base = calc.base;
+    run_operator(&calc.memory, &calc.memory, &cn, RPN_OPERATOR_SUB);
     update_memory_flag(calc.hWnd, TRUE);
 }
 
 static void run_ms(calc_number_t *c)
 {
-    rpn_copy(&calc.memory, c);
-    update_memory_flag(calc.hWnd, rpn_is_zero(&calc.memory) ? FALSE : TRUE);
+    rpn_copy(&calc.memory.number, c);
+    calc.memory.base = calc.base;
+    update_memory_flag(calc.hWnd, rpn_is_zero(&calc.memory.number) ? FALSE : TRUE);
 }
 
 static void run_mw(calc_number_t *c)
 {
     calc_number_t tmp;
 
-    rpn_copy(&tmp, &calc.memory);
-    rpn_copy(&calc.memory, c);
+    rpn_copy(&tmp, &calc.memory.number);
+    rpn_copy(&calc.memory.number, c);
+    calc.memory.base = calc.base;
     if (calc.is_memory)
         rpn_copy(c, &tmp);
-    update_memory_flag(calc.hWnd, rpn_is_zero(&calc.memory) ? FALSE : TRUE);
+    update_memory_flag(calc.hWnd, rpn_is_zero(&calc.memory.number) ? FALSE : TRUE);
 }
 
 static statistic_t *upload_stat_number(int n)
@@ -1040,6 +1131,7 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
                                 hWnd,
                                 NULL);
     DestroyMenu(hMenu);
+#ifndef DISABLE_HTMLHELP_SUPPORT
     if (idm != 0) {
         HH_POPUP popup;
 
@@ -1054,8 +1146,9 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
         popup.rcMargins.left   = -1;
         popup.rcMargins.right  = -1;
         popup.idString = GetWindowLong((HWND)wp, GWL_ID);
-//        HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
+        HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
     }
+#endif
 } 
 
 static void run_canc(calc_number_t *c)
@@ -1095,7 +1188,8 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
          * little exception: 1/x has different color
          * in standard and scientific modes
          */
-        if (calc.layout == CALC_LAYOUT_STANDARD &&
+        if ((calc.layout == CALC_LAYOUT_STANDARD ||
+             calc.layout == CALC_LAYOUT_CONVERSION) &&
             IDC_BUTTON_RX == dis->CtlID) {
             SetTextColor(dis->hDC, CALC_CLR_BLUE);
         } else
@@ -1133,6 +1227,7 @@ static LRESULT CALLBACK SubclassButtonProc(HWND hWnd, WPARAM wp, LPARAM lp)
 static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     unsigned int x;
+    RECT         rc;
 
     switch (msg) {
     case WM_DRAWITEM:
@@ -1168,15 +1263,39 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         SendMessage(hWnd, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(calc.hInstance, MAKEINTRESOURCE(IDI_CALC_SMALL)));
         /* update text for decimal button */
         SendDlgItemMessage(hWnd, IDC_BUTTON_DOT, WM_SETTEXT, (WPARAM)0, (LPARAM)calc.sDecimal);
+        /* Fill combo box for conversion */
+        if (calc.layout == CALC_LAYOUT_CONVERSION)
+            ConvInit(hWnd);
+        /* Restore the window at the same position it was */
+        if (calc.x_coord >= 0 && calc.y_coord >= 0) {
+            int w, h, sw, sh;
+
+            GetWindowRect(hWnd, &rc);
+            w = rc.right-rc.left;
+            h = rc.bottom-rc.top;
+            sw = GetSystemMetrics(SM_CXSCREEN);
+            sh = GetSystemMetrics(SM_CYSCREEN);
+            if (calc.x_coord+w > sw) calc.x_coord = sw - w;
+            if (calc.y_coord+h > sh) calc.y_coord = sh - h;
+            MoveWindow(hWnd, calc.x_coord, calc.y_coord, w, h, FALSE);
+        }
         break;
     case WM_CTLCOLORSTATIC:
         if ((HWND)lp == GetDlgItem(hWnd, IDC_TEXT_OUTPUT))
             return (LRESULT)GetStockObject(WHITE_BRUSH);
         break;
     case WM_HANDLE_CLIPBOARD:
-        handle_clipboard_input(hWnd);
+        handle_sequence_input(hWnd, &calc.Clipboard);
         return TRUE;
     case WM_COMMAND:
+        /*
+         * if selection of category is changed, we must
+         * updatethe content of the "from/to" combo boxes.
+         */
+        if (wp == MAKEWPARAM(IDC_COMBO_CATEGORY, CBN_SELCHANGE)) {
+            ConvAdjust(hWnd, SendDlgItemMessage(hWnd, IDC_COMBO_CATEGORY, CB_GETCURSEL, 0, 0));
+            return TRUE;
+        }
         if (HIWORD(wp) != BN_CLICKED && HIWORD(wp) != BN_DBLCLK)
             break;
         /* avoid flicker if the user selects from keyboard */
@@ -1187,7 +1306,9 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             DialogBox(calc.hInstance,MAKEINTRESOURCE(IDD_DIALOG_ABOUT), hWnd, AboutDlgProc);
             return TRUE;
         case IDM_HELP_HELP:
-//            HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
+#ifndef DISABLE_HTMLHELP_SUPPORT
+            HtmlHelp(hWnd, HTMLHELP_PATH("/general_information.htm"), HH_DISPLAY_TOPIC, (DWORD_PTR)NULL);
+#endif
             return TRUE;
         case IDM_VIEW_STANDARD:
             calc.layout = CALC_LAYOUT_STANDARD;
@@ -1202,7 +1323,10 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             save_config();
             return TRUE;
         case IDM_VIEW_CONVERSION:
-            /* UNIMPLEMENTED */
+            calc.layout = CALC_LAYOUT_CONVERSION;
+            calc.action = IDM_VIEW_CONVERSION;
+            DestroyWindow(hWnd);
+            save_config();
             return TRUE;
         case IDM_VIEW_HEX:
         case IDM_VIEW_DEC:
@@ -1221,12 +1345,15 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             handle_copy_command(hWnd);
             return TRUE;
         case IDM_EDIT_PASTE:
-            if (calc.Clipboard != NULL)
+            if (calc.Clipboard.data != NULL)
                 break;
-            calc.Clipboard = ReadClipboard();
-            if (calc.Clipboard != NULL) {
-                calc.ClipPtr = calc.Clipboard;
-                handle_clipboard_input(hWnd);
+            calc.Clipboard.data = ReadClipboard();
+            if (calc.Clipboard.data != NULL) {
+                /* clear the content of the display before pasting */
+                PostMessage(hWnd, WM_COMMAND, IDC_BUTTON_CE, 0);
+                calc.Clipboard.ptr = calc.Clipboard.data;
+                calc.Clipboard.wm_msg = WM_HANDLE_CLIPBOARD;
+                handle_sequence_input(hWnd, &calc.Clipboard);
             }
             return TRUE;
         case IDM_VIEW_GROUP:
@@ -1234,6 +1361,9 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             update_menu(hWnd);
             update_lcd_display(hWnd);
             save_config();
+            return TRUE;
+        case IDC_BUTTON_CONVERT:
+            ConvExecute(hWnd);
             return TRUE;
         case IDC_BUTTON_CE: {
             calc_number_t tmp;
@@ -1317,8 +1447,19 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         case IDC_BUTTON_OR:
         case IDC_BUTTON_XOR:
         case IDC_BUTTON_LSH:
+        case IDC_BUTTON_RSH:
         case IDC_BUTTON_EQU:
             if (calc.is_nan) break;
+            /*
+             * LSH button holds the RSH function too with INV modifier,
+             * but since it's a two operand operator, it must be handled here.
+             */
+            if (LOWORD(wp) == IDC_BUTTON_LSH &&
+                (get_modifiers(hWnd) & MODIFIER_INV)) {
+                PostMessage(hWnd, WM_COMMAND, MAKEWPARAM(IDC_BUTTON_RSH, BN_CLICKED), 0);
+                SendDlgItemMessage(hWnd, IDC_CHECK_INV, BM_SETCHECK, 0, 0);
+                break;
+            }
             for (x=0; x<SIZEOF(operator_codes); x++) {
                 if (LOWORD(wp) == operator_codes[x]) {
                     convert_text2number(&calc.code);
@@ -1371,13 +1512,13 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             }
             return TRUE;
         case IDC_BUTTON_MC:
-            rpn_zero(&calc.memory);
+            rpn_zero(&calc.memory.number);
             update_memory_flag(hWnd, FALSE);
             return TRUE;
         case IDC_BUTTON_MR:
             if (calc.is_memory) {
                 calc.is_nan = FALSE;
-                rpn_copy(&calc.code, &calc.memory);
+                rpn_copy(&calc.code, &calc.memory.number);
                 display_rpn_result(hWnd, &calc.code);
             }
             return TRUE;
@@ -1500,11 +1641,32 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         if (upload_stat_number((int)LOWORD(wp)) != NULL)
             display_rpn_result(hWnd, &calc.code);
         return TRUE;
+    case WM_START_CONV:
+        x = LOWORD(lp);
+        calc.Convert[x].data = ReadConversion(calc.Convert[x].data);
+        if (calc.Convert[x].data != NULL) {
+            calc.Convert[x].ptr = calc.Convert[x].data;
+            PostMessage(hWnd, HIWORD(lp), 0, 0);
+        }
+        return TRUE;
+    case WM_HANDLE_FROM:
+        if (handle_sequence_input(hWnd, &calc.Convert[0]) == NULL) {
+            PostMessage(hWnd, WM_START_CONV, 0,
+                        MAKELPARAM(0x0001, WM_HANDLE_TO));
+        }
+        return TRUE;
+    case WM_HANDLE_TO:
+        handle_sequence_input(hWnd, &calc.Convert[1]);
+        return TRUE;
     case WM_CLOSE:
         calc.action = IDC_STATIC;
         DestroyWindow(hWnd);
         return TRUE;
     case WM_DESTROY:
+        /* Get (x,y) position of the calculator */
+        GetWindowRect(hWnd, &rc);
+        calc.x_coord = rc.left;
+        calc.y_coord = rc.top;
 #ifdef USE_KEYBOARD_HOOK
         UnhookWindowsHookEx(calc.hKeyboardHook);
 #endif
@@ -1520,7 +1682,7 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
         EnableMenuItem(GetSubMenu(GetMenu(hWnd), 0),
                        IDM_EDIT_PASTE,
                        MF_BYCOMMAND|
-                       (IsClipboardFormatAvailable(CF_TCHAR) ?
+                       (IsClipboardFormatAvailable(CF_TEXT) ?
                        MF_ENABLED : MF_GRAYED));
         break;
     case WM_EXITMENULOOP:
@@ -1533,8 +1695,12 @@ static LRESULT CALLBACK DlgMainProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
 {
     MSG msg;
+    DWORD dwLayout;
 
     calc.hInstance = hInstance;
+
+    calc.x_coord = -1;
+    calc.y_coord = -1;
 
     load_config();
     start_rpn_engine();
@@ -1542,9 +1708,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
     do {
         /* ignore hwnd: dialogs are already visible! */
         if (calc.layout == CALC_LAYOUT_SCIENTIFIC)
-            CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOG_SCIENTIFIC), NULL, (DLGPROC)DlgMainProc);
+            dwLayout = IDD_DIALOG_SCIENTIFIC;
         else
-            CreateDialog(hInstance, MAKEINTRESOURCE(IDD_DIALOG_STANDARD), NULL, (DLGPROC)DlgMainProc);
+        if (calc.layout == CALC_LAYOUT_CONVERSION)
+            dwLayout = IDD_DIALOG_CONVERSION;
+        else
+            dwLayout = IDD_DIALOG_STANDARD;
+
+        CreateDialog(hInstance, MAKEINTRESOURCE(dwLayout), NULL, (DLGPROC)DlgMainProc);
 
         while (GetMessage(&msg, NULL, 0, 0)) {
 #ifndef USE_KEYBOARD_HOOK

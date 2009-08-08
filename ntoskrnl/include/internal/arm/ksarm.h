@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/include/internal/arm/ksarm.h
  * PURPOSE:         Definitions and offsets for ARM Assembly and C code
  * PROGRAMMERS:     ReactOS Portable Systems Group
@@ -59,6 +59,29 @@
  * KTHREAD Offsets
  */
 .equ ThKernelStack,        0x20
+
+/*
+ * CONTEXT Offsets
+ */
+.equ CONTEXT_FULL,         0x43
+.equ CsContextFlags,       0x00
+.equ CsR0,                 0x04
+.equ CsR1,                 0x08
+.equ CsR2,                 0x0C
+.equ CsR3,                 0x10
+.equ CsR4,                 0x14
+.equ CsR5,                 0x18
+.equ CsR6,                 0x1C
+.equ CsR7,                 0x20
+.equ CsR8,                 0x24
+.equ CsR9,                 0x28
+.equ CsR10,                0x2C
+.equ CsR11,                0x30
+.equ CsR12,                0x34
+.equ CsSp,                 0x38
+.equ CsLr,                 0x3C
+.equ CsPc,                 0x40
+.equ CsPsr,                0x44
 
 #else
 

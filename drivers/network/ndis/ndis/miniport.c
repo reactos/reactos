@@ -1418,6 +1418,17 @@ NdisIPnPStartDevice(
     }
   NdisCloseConfiguration(ConfigHandle);
 
+  /* Set handlers (some NDIS macros require these) */
+  Adapter->NdisMiniportBlock.EthRxCompleteHandler = EthFilterDprIndicateReceiveComplete;
+  Adapter->NdisMiniportBlock.EthRxIndicateHandler = EthFilterDprIndicateReceive;
+  Adapter->NdisMiniportBlock.SendCompleteHandler  = MiniSendComplete;
+  Adapter->NdisMiniportBlock.SendResourcesHandler = MiniSendResourcesAvailable;
+  Adapter->NdisMiniportBlock.ResetCompleteHandler = MiniResetComplete;
+  Adapter->NdisMiniportBlock.TDCompleteHandler    = MiniTransferDataComplete;
+  Adapter->NdisMiniportBlock.PacketIndicateHandler= MiniIndicateReceivePacket;
+  Adapter->NdisMiniportBlock.StatusHandler        = MiniStatus;
+  Adapter->NdisMiniportBlock.StatusCompleteHandler= MiniStatusComplete;
+
   /*
    * Call MiniportInitialize.
    */
@@ -1436,18 +1447,6 @@ NdisIPnPStartDevice(
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
       return (NTSTATUS)NdisStatus;
     }
-
-  /* Set handlers (some NDIS macros require these) */
-
-  Adapter->NdisMiniportBlock.EthRxCompleteHandler = EthFilterDprIndicateReceiveComplete;
-  Adapter->NdisMiniportBlock.EthRxIndicateHandler = EthFilterDprIndicateReceive;
-  Adapter->NdisMiniportBlock.SendCompleteHandler  = MiniSendComplete;
-  Adapter->NdisMiniportBlock.SendResourcesHandler = MiniSendResourcesAvailable;
-  Adapter->NdisMiniportBlock.ResetCompleteHandler = MiniResetComplete;
-  Adapter->NdisMiniportBlock.TDCompleteHandler    = MiniTransferDataComplete;
-  Adapter->NdisMiniportBlock.PacketIndicateHandler= MiniIndicateReceivePacket;
-  Adapter->NdisMiniportBlock.StatusHandler        = MiniStatus;
-  Adapter->NdisMiniportBlock.StatusCompleteHandler= MiniStatusComplete;
 
   Adapter->NdisMiniportBlock.MediaType = MediaArray[SelectedMediumIndex];
 

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ex/fastinterlck.c
  * PURPOSE:         Portable Ex*Interlocked and REGISTER routines for non-x86
  * PROGRAMMERS:     ReactOS Portable Systems Group

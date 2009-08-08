@@ -7,7 +7,6 @@
 	<library>nt</library>
 	<library>smlib</library>
 	<library>ntdll</library>
-	<linkerflag>-lgcc</linkerflag>
 	<pch>smss.h</pch>
 	<compilationunit name="unit.c">
 		<file>client.c</file>

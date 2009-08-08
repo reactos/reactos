@@ -460,7 +460,7 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
 	      };
 	      SID_IDENTIFIER_AUTHORITY localSidAuthority = {SECURITY_NT_AUTHORITY};
 
-	      struct di * xdi = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(xdi));
+	      struct di * xdi = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
               HKEY key;
               BOOL useDefault = TRUE;
               LONG ret;

@@ -41,6 +41,7 @@
   <property name="BASEADDRESS_APPWIZ" value="0x65100000" />
   <property name="BASEADDRESS_MLANG" value="0x65140000" />
   <property name="BASEADDRESS_ACCESS" value="0x65180000" />
+  <property name="BASEADDRESS_INETMIB1" value="0x666f0000" />
   <property name="BASEADDRESS_WSHTCPIP" value="0x677b0000" />
   <property name="BASEADDRESS_CRYPT32" value="0x67ab0000" />
   <property name="BASEADDRESS_HID" value="0x688f0000" />
@@ -75,6 +76,7 @@
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
   <property name="BASEADDRESS_COMPSTUI" value="0x6ec10000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
+  <property name="BASEADDRESS_FONTEXT" value="0x6f7b0000" />
   <property name="BASEADDRESS_CARDS" value="0x701a0000" />
   <property name="BASEADDRESS_WININET" value="0x70200000" />
   <property name="BASEADDRESS_WINHTTP" value="0x70c60000" />

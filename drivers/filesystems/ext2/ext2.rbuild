@@ -3,7 +3,6 @@
 <module name="ext2fs" type="kernelmodedriver" installbase="system32/drivers" installname="ext2.sys" allowwarnings="true">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="ext2fs">inc</include>
-	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="src">

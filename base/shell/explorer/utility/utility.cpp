@@ -260,7 +260,7 @@ String get_windows_version_str()
 
 	switch(osvi.dwPlatformId) {
 	  case VER_PLATFORM_WIN32_NT:
-#ifdef _ROS_	// This work around can be removed if ReactOS gets a unique version number.
+#ifdef __REACTOS__	// This work around can be removed if ReactOS gets a unique version number.
 		str = TEXT("ReactOS");
 #else
 		if (osvi.dwMajorVersion <= 4)

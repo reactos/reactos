@@ -43,7 +43,7 @@ BEGIN
             MENUITEM "&Impresoras y faxes", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
             MENUITEM "&Barra de tareas y menú Inicio", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
         END
-        POPUP "Sear&ch", IDM_SEARCH
+        POPUP "&Buscar", IDM_SEARCH
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
         END
@@ -53,8 +53,8 @@ BEGIN
         MENUITEM "S&incronizar", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "&Cerrar sessión de %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
         MENUITEM "D&esconectar...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
-        MENUITEM "Undock Comput&er", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
-        MENUITEM "A&pagar el equipo...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+        MENUITEM "De&sacoplar equipo", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "A&pagar equipo...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
     END
 END
 

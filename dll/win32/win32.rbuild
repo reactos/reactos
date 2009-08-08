@@ -115,6 +115,9 @@
 <directory name="inetcomm">
 	<xi:include href="inetcomm/inetcomm.rbuild" />
 </directory>
+<directory name="inetmib1">
+	<xi:include href="inetmib1/inetmib1.rbuild" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.rbuild" />
 </directory>

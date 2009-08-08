@@ -13,7 +13,7 @@
 	<define name="_X86_" />
 	<define name="__i386__" />
 
-	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
+	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
 
 	<if property="OPTIMIZE" value="1">
 		<compilerflag>-Os</compilerflag>

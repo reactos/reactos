@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/trapc.c
  * PURPOSE:         Implements the various trap handlers for ARM exceptions
  * PROGRAMMERS:     ReactOS Portable Systems Group
@@ -102,7 +102,7 @@ KiIdleLoop(VOID)
             DPRINT1("Swapping context!\n");
             KiSwapContext(OldThread, NewThread);
             DPRINT1("Back\n");
-            while (TRUE);
+            ASSERT(FALSE);
         }
         else
         {
@@ -160,7 +160,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         // FIXME: TODO
         //
         DPRINT1("WMI Tracing not supported\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -180,7 +180,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
             // FIXME: TODO
             //
             DPRINT1("Address space switch not implemented\n");
-            while (TRUE);
+            ASSERT(FALSE);
         }
     }
     
@@ -210,7 +210,7 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         // FIXME: FAIL
         //
         DPRINT1("DPCS ACTIVE!!!\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -222,13 +222,52 @@ KiSwapContextInternal(IN PKTHREAD OldThread,
         // FIXME: TODO
         //
         DPRINT1("APCs pending!\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
     // Return
     //
     return FALSE;
+}
+
+VOID
+KiApcInterrupt(VOID)
+{
+    KPROCESSOR_MODE PreviousMode;
+    KEXCEPTION_FRAME ExceptionFrame;
+    PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
+    DPRINT1("[APC]\n");
+       
+    //
+    // Isolate previous mode
+    //
+    PreviousMode = KiGetPreviousMode(TrapFrame);
+    
+    //
+    // FIXME No use-mode support
+    //
+    if (PreviousMode == UserMode) ASSERT(FALSE);
+    
+    //
+    // Disable interrupts
+    //
+    _disable();
+
+    //
+    // Clear APC interrupt
+    //
+    HalClearSoftwareInterrupt(APC_LEVEL);
+    
+    //
+    // Re-enable interrupts
+    //
+    _enable();
+    
+    //
+    // Deliver APCs
+    //
+    KiDeliverApc(PreviousMode, &ExceptionFrame, TrapFrame);
 }
 
 VOID
@@ -309,7 +348,7 @@ KiDispatchInterrupt(VOID)
         DPRINT1("Swapping context!\n");
         KiSwapContext(OldThread, NewThread);
         DPRINT1("Back\n");
-        while (TRUE);
+        ASSERT(FALSE);
     }
 }
 
@@ -412,7 +451,7 @@ KiDataAbortHandler(IN PKTRAP_FRAME TrapFrame)
     }
     
     UNIMPLEMENTED;
-    while (TRUE);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
@@ -459,7 +498,7 @@ KiSystemService(IN PKTHREAD Thread,
         // Check if this is a GUI call
         //
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -476,7 +515,7 @@ KiSystemService(IN PKTHREAD Thread,
         // TODO
         //
         UNIMPLEMENTED;
-        while (TRUE);
+        ASSERT(FALSE);
     }
     
     //
@@ -567,7 +606,7 @@ KiSoftwareInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     PreviousMode = KiGetPreviousMode(TrapFrame);
     
     //
-    // Save old previous mode
+    // FIXME: Save old previous mode
     //
     //TrapFrame->PreviousMode = PreviousMode;
     

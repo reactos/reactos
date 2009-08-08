@@ -182,7 +182,7 @@ NtLockVirtualMemory(
 NTSTATUS
 NTAPI
 NtMapUserPhysicalPages(
-    IN PVOID *VirtualAddresses,
+    IN PVOID VirtualAddresses,
     IN ULONG NumberOfPages,
     IN OUT PULONG UserPfnArray
 );

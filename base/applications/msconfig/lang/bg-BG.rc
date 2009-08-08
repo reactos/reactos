@@ -69,9 +69,9 @@ BEGIN
  CONTROL "&Нормално пускане – зареждане на всички водачи (драйвери) и услуги", IDC_CBX_NORMAL_START, "Button", 0x50010009, 20, 30, 260, 10
  CONTROL "&Разследващо пускане- зареждане само на основните водачи и услуги ", IDC_CBX_DIAGNOSTIC_START, "Button", 0x50010009, 20, 45, 260, 10
  CONTROL "Избираемо пускане", IDC_CBX_SELECTIVE_STARTUP, "Button", 0x50010009, 20, 60, 260, 10
- CHECKBOX "Зареждане на файл SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
- CHECKBOX "&Зареждане на системните услуги", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
- CHECKBOX "Зареждане на пусковите предмети", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
+ AUTOCHECKBOX "Зареждане на файл SYSTEM.INI", IDC_CBX_SYSTEM_INI, 30, 80, 260, 10
+ AUTOCHECKBOX "&Зареждане на системните услуги", IDC_CBX_SYSTEM_SERVICE, 30, 95, 260, 10
+ AUTOCHECKBOX "Зареждане на пусковите предмети", IDC_CBX_STARTUP_ITEM, 30, 110, 260, 10
 END
 
 IDD_FREELDR_PAGE DIALOGEX DISCARDABLE  0, 0, 362, 175

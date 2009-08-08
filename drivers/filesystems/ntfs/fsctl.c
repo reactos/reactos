@@ -249,7 +249,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
                            TRUE);
   if (!NT_SUCCESS(Status))
   {
-    ExFreePool (MftRecord);
+    ExFreePool(MftRecord);
     return Status;
   }
 

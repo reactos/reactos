@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/kiinit.c
  * PURPOSE:         Implements the kernel entry point for ARM machines
  * PROGRAMMERS:     ReactOS Portable Systems Group
@@ -23,8 +23,13 @@ extern PVOID KiArmVectorTable;
 
 /* FUNCTIONS ******************************************************************/
 
+//
+// FIXME: Header cleanup
+//
 VOID
-KiIdleLoop(VOID);
+KiIdleLoop(
+    VOID
+);
 
 VOID
 DebugService(IN ULONG ServiceType,
@@ -34,10 +39,22 @@ DebugService(IN ULONG ServiceType,
              IN ULONG Level)
 {
     //
-    // ARM Bring-up Hack
+    // FIXME: ARM Bring-up Hack
     //
     void arm_kprintf(const char *fmt, ...);
     arm_kprintf("%s", Buffer);
+}
+
+VOID
+DebugService2(IN ULONG Arg1,
+              IN ULONG Arg2,
+              IN ULONG Service)
+{
+    //
+    // FIXME: ARM Bring-up Hack
+    //
+    void arm_kprintf(const char *fmt, ...);
+    arm_kprintf("Loading symbols for %Z...\n", (PCHAR)Arg1);
 }
 
 VOID
@@ -230,7 +247,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     else
     {
         //
-        // FIXME
+        // FIXME: No MP Support
         //
         DPRINT1("ARM MPCore not supported\n");
     }

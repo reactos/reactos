@@ -1,6 +1,4 @@
 <module name="crtdll" type="win32dll" baseaddress="${BASEADDRESS_CRTDLL}" mangledsymbols="true" installbase="system32" installname="crtdll.dll">
-	<linkerflag>-nostartfiles</linkerflag>
-	<linkerflag>-lgcc</linkerflag>
 	<importlibrary definition="crtdll.def" />
 	<include base="crtdll">.</include>
 	<include base="crt">include</include>

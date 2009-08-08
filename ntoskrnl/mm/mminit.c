@@ -41,7 +41,8 @@ MemType[] =
     "NlsData           ",
     "SpecialMemory     ",
     "BBTMemory         ",
-    "LoaderReserve     "
+    "LoaderReserve     ",
+    "LoaderXIPRom      "
 };
 
 BOOLEAN IsThisAnNtAsSystem = FALSE;

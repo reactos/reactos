@@ -555,13 +555,14 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
 	success = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette(
 		dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
 
-  } else {
+/* See bug 733, keep the code for now.
+   } else {
     if( ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette)
     {
       ASSERT(palGDI->NumColors <= 256);
       success = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette(
         dc->PDev, palPtr, 0, 0, palGDI->NumColors);
-    }
+    }*/
   }
 
   // need to pass this to IntEngCreateXlate with palettes unlocked

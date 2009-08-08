@@ -70,7 +70,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     PFN_NUMBER MdlBuffer[(sizeof(MDL) / sizeof(PFN_NUMBER)) + MI_MAPPED_COPY_PAGES + 1];
     PMDL Mdl = (PMDL)MdlBuffer;
     ULONG TotalSize, CurrentSize, RemainingSize;
-    BOOLEAN FailedInProbe = FALSE, FailedInMapping = FALSE, FailedInMoving;
+    volatile BOOLEAN FailedInProbe = FALSE, FailedInMapping = FALSE, FailedInMoving;
     BOOLEAN PagesLocked;
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
     PVOID MdlAddress;
@@ -172,7 +172,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             {
                 /* Exit */
                 Status = _SEH_GetExceptionCode();
-                _SEH_YIELD();
+                _SEH_YIELD(return Status);
             }
 
             /* Otherwise, we failed  probably during the move */
@@ -225,7 +225,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
 {
     UCHAR StackBuffer[MI_POOL_COPY_BYTES];
     ULONG TotalSize, CurrentSize, RemainingSize;
-    BOOLEAN FailedInProbe = FALSE, FailedInMoving, HavePoolAddress = FALSE;
+    volatile BOOLEAN FailedInProbe = FALSE, FailedInMoving, HavePoolAddress = FALSE;
     PVOID CurrentAddress = SourceAddress, CurrentTargetAddress = TargetAddress;
     PVOID PoolAddress;
     KAPC_STATE ApcState;
@@ -319,7 +319,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             {
                 /* Exit */
                 Status = _SEH_GetExceptionCode();
-                _SEH_YIELD();
+                _SEH_YIELD(return Status);
             }
 
             /* Otherwise, we failed  probably during the move */

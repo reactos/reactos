@@ -155,6 +155,7 @@
 		<file>dc.c</file>
 		<file>dcutil.c</file>
 		<file>dibobj.c</file>
+		<file>drawing.c</file>
 		<file>fillshap.c</file>
 		<file>gdibatch.c</file>
 		<file>gdiobj.c</file>
@@ -181,7 +182,7 @@
 	<library>win32k_base</library>
 	<library>pseh</library>
 	<library>ntoskrnl</library>
-	<library>ntdll</library>
+	<library>libcntpr</library>
 	<library>hal</library>
 	<library>freetype</library>
 	<library>dxguid</library>

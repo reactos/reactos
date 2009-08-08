@@ -4,7 +4,7 @@ ReactOS Calc has several features including:
 - Internal precision with 17 decimal numbers (standard IEEE math library).
 - Up to 512 bits of internal precision and 64 decimal digits displayed in the output display (with GNU multi-precision libraries).
 - Robust RPN (reverse polish notation) engine which allows a virtually unlimited number of arithmetic and algebraic sub-expressions.
-- Two different interfaces: standard or scientific.
+- Three different interfaces: standard, scientific or conversion.
 - Many common arithmetic, algebraic and statistical functions are included.
 
 The following topics will be discussed:
@@ -27,7 +27,7 @@ PERCENT MODE
 HOW TO INPUT NUMBERS
 --------------------
 The ReactOS Calc provides some buttons for typing numbers and expressions.
-However, some of them are available only into Standard or Scientific modes, or when the calculator is in a specific state.
+However, some of them are available only into Standard, Conversion or Scientific modes, or when the calculator is in a specific state.
 [0], [1], [2], [3], [4], [5], [6], [7], [8], [9]
 Digit buttons: they are used for entering digits into the display.
 [A], [B], [C], [D], [E], [F]
@@ -124,7 +124,7 @@ Square function. It calculates the square of the number shown on the output disp
 [Inv]+[x^2]
 It returns the positive square root of the number shown on the output display.
 If the current number is negative, then the error message will be displayed.
-When working with standard layout, the [sqrt] button is a shortcut to this function.
+When working with standard and conversion layouts, the [sqrt] button is a shortcut to this function.
 [x^3]
 Cube function. It calculates the cube of the number shown on the output display.
 [Inv]+[x^3]
@@ -218,7 +218,7 @@ MEMORY FUNCTION
 ReactOS Calc reserves for the user a memory region for storing data.
 With this feature, the user can store frequently used numbers (typically, these numbers are constants) and recall them at any time, without the need to re-enter them manually.
 If the memory function is currently in use, the text "M" will appear in the right box underneath the base change option set.
-The memory is preserved when switching between standard and scientific mode, but its content is lost when ReactOS Calc application is closed.
+The memory is preserved when switching between standard, conversion and scientific modes, but its content is lost when ReactOS Calc application is closed.
 Four keys are available with memory function support.
 [MC]
 Memory Clear: clears the content of the memory.
@@ -246,7 +246,7 @@ The calculator will be restored to normal mode by pressing [F-E] button again or
 
 PERCENT
 -------
-The [%] button is available only with standard mode and it's used as modifier for the four basic arithmetic operators.
+The [%] button is available only with standard and conversion layouts and it's used as modifier for the four basic arithmetic operators.
 The input sequence for a percent calculation is:
 "first" "operator" "second" "percent"
 The modification applied by the percent button for each operator are:

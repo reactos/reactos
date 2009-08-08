@@ -148,12 +148,59 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR * filext)
         return FALSE;
     if (RegOpenKeyW(HKEY_CLASSES_ROOT, value, &hKey) == ERROR_SUCCESS)
     {
-        lvalue = lname = MAX_PATH;
-        result = RegEnumValueW(hKey,0, name, &lname, NULL, NULL, (LPBYTE)value, &lvalue);
+        if (RegLoadMUIStringW(hKey, L"FriendlyTypeName", value, MAX_PATH, NULL, 0, NULL) != ERROR_SUCCESS)
+        {
+            lvalue = lname = MAX_PATH;
+            result = RegEnumValueW(hKey,0, name, &lname, NULL, NULL, (LPBYTE)value, &lvalue);
+        }
+        lname = MAX_PATH;
+        if (RegGetValueW(hKey, L"DefaultIcon", NULL, RRF_RT_REG_SZ, NULL, name, &lname) == ERROR_SUCCESS)
+        {
+            UINT IconIndex;
+            WCHAR szBuffer[MAX_PATH];
+            WCHAR * Offset;
+            HICON hIcon = 0;
+            HRSRC hResource;
+            LPVOID pResource = NULL;
+            HGLOBAL hGlobal;
+            HANDLE hLibrary;
+            Offset = wcsrchr(name, L',');
+            if (Offset)
+            {
+                IconIndex = _wtoi(Offset + 2);
+                *Offset = L'\0';
+                name[MAX_PATH-1] = L'\0';
+                if (ExpandEnvironmentStringsW(name, szBuffer, MAX_PATH))
+                {
+                    szBuffer[MAX_PATH-1] = L'\0';
+                    hLibrary = LoadLibraryExW(szBuffer, NULL, LOAD_LIBRARY_AS_DATAFILE);
+                    if (hLibrary)
+                    {
+                        hResource = FindResourceW(hLibrary, MAKEINTRESOURCEW(IconIndex), (LPCWSTR)RT_ICON);
+                        if (hResource)
+                        {
+                            hGlobal = LoadResource(shell32_hInstance, hResource);
+                            if (hGlobal)
+                            {
+                                pResource = LockResource(hGlobal);
+                                if (pResource != NULL)
+                                {
+                                    hIcon = CreateIconFromResource(pResource, SizeofResource(shell32_hInstance, hResource), TRUE, 0x00030000);
+                                    TRACE("hIcon %p,- szBuffer %s IconIndex %u error %u icon %p hResource %p pResource %p\n", hIcon, debugstr_w(szBuffer), IconIndex, MAKEINTRESOURCEW(IconIndex), hResource, pResource);
+                                    SendDlgItemMessageW(hwndDlg, 14000, STM_SETICON, (WPARAM)hIcon, 0);
+                                }
+                            }
+                        }
+                        FreeLibrary(hLibrary);
+                    }
+                }
+            }
+        }
         RegCloseKey(hKey);
     }
 
     /* file extension type */
+    value[MAX_PATH-1] = L'\0';
     SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)value);
     return TRUE;
 }
@@ -620,8 +667,9 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
     HPROPSHEETPAGE hppages[MAX_PROPERTY_SHEET_PAGE];
     HPROPSHEETPAGE hpage;
     WCHAR wFileName[MAX_PATH];
-	UINT num_pages = 0;
-	DWORD dwHandle = 0;
+    UINT num_pages = 0;
+    DWORD dwHandle = 0;
+    WCHAR * pFileName;
 
     TRACE("SH_ShowPropertiesDialog entered filename %s\n", debugstr_w(lpf));
 
@@ -643,10 +691,10 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
 
         *dst = '\0';
     }
-	else
-	{
-	    strcpyW(wFileName, lpf);
-	}
+    else
+    {
+        strcpyW(wFileName, lpf);
+    }
 
     if (PathIsDirectoryW(wFileName) || strlenW(wFileName) == 3)
     {
@@ -661,19 +709,27 @@ SH_ShowPropertiesDialog(PCWSTR lpf)
     hppages[num_pages] = hpage;
     num_pages++;
     if ( GetFileVersionInfoSizeW(lpf, &dwHandle) )
-	{
-         if ( (hpage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)lpf, NULL))!= NULL)
-         {
-              hppages[num_pages] = hpage;
-		      num_pages++;
-         }
-	}
+    {
+        if ( (hpage = SH_CreatePropertySheetPage("SHELL_FILE_VERSION_DLG",SH_FileVersionDlgProc, (LPARAM)wFileName, NULL))!= NULL)
+        {
+            hppages[num_pages] = hpage;
+            num_pages++;
+        }
+    }
+
+    pFileName = wcsrchr(wFileName, '\\');
+    if (!pFileName)
+        pFileName = wFileName;
+    else
+        pFileName++;
+
+
     memset(&pinfo, 0x0, sizeof(PROPSHEETHEADERW));
     pinfo.dwSize = sizeof(PROPSHEETHEADERW);
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE;
     pinfo.nPages = num_pages;
     pinfo.u3.phpage = hppages;
-    pinfo.pszCaption = wFileName;
+    pinfo.pszCaption = pFileName;
     return (PropertySheetW(&pinfo) != -1);
 }
 /*EOF */

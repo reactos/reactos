@@ -42,7 +42,7 @@
 	<include>include/reactos/arm</include>
 
 	<property name="WINEBUILD_FLAGS" value="--kill-at"/>
-	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
+	<property name="NTOSKRNL_SHARED" value="-file-alignment=0x1000 -section-alignment=0x1000 -shared"/>
 
 	<if property="SARCH" value="versatile">
 		<define name="BOARD_CONFIG_VERSATILE"/>
@@ -68,7 +68,6 @@
 	<compilerflag>-Wno-attributes</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<linkerflag>-s</linkerflag>
-	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-static</linkerflag>
 	
 	<directory name="media">
@@ -147,36 +146,15 @@
 	</directory>
 	<directory name="drivers">
 		<directory name="storage">
-			<directory name="scsiport">
-				<xi:include href="drivers/storage/scsiport/scsiport.rbuild" />			
-			</directory>
-			<directory name="port">
-				<directory name="buslogic">
-					<xi:include href="drivers/storage/port/buslogic/buslogic.rbuild" />			
-				</directory>
-			</directory>
-			<directory name="ide">
-				<directory name="atapi">
-					<xi:include href="drivers/storage/ide/atapi/atapi.rbuild" />			
-				</directory>
-			</directory>
 			<directory name="class">
-				<directory name="class2">
-					<xi:include href="drivers/storage/class/class2/class2.rbuild" />			
-				</directory>
-				<directory name="disk">
-					<xi:include href="drivers/storage/class/disk/disk.rbuild" />			
+				<directory name="ramdisk">
+					<xi:include href="drivers/storage/class/ramdisk/ramdisk.rbuild" />
 				</directory>
 			</directory>
 		</directory>
 		<directory name="filesystems">
-			<directory name="fastfat">
-				<xi:include href="drivers/filesystems/fastfat/vfatfs.rbuild" />			
-			</directory>
-		</directory>
-		<directory name="network">
-			<directory name="ndis">
-				<xi:include href="drivers/network/ndis/ndis.rbuild" />			
+			<directory name="cdfs">
+				<xi:include href="drivers/filesystems/cdfs/cdfs.rbuild" />
 			</directory>
 		</directory>
 		<directory name="base">
@@ -187,7 +165,5 @@
 				<xi:include href="drivers/base/bootvid/bootvid.rbuild" />
 			</directory>
 		</directory>
-	</directory>
-
-	
+	</directory>	
 </project>

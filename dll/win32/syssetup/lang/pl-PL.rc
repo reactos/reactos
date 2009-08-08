@@ -36,7 +36,7 @@ BEGIN
    LTEXT "Witamy w programie instalacyjnym ReactOS.", IDC_WELCOMETITLE, 115, 8, 195, 24
    LTEXT "Ten program pomo¿e w instalacji systemu ReactOS. W tym celu "\
          "konieczne bêdzie zebranie informacji o twoim komputerze, by "\
-         "prawid³owo skonfigurowaæ system operacyjny.", IDC_STATIC, 115, 40, 195, 100
+         "prawid³owo skonfigurowaæ system operacyjny.", IDC_STATIC, 115, 40, 168, 100
    LTEXT "Naciœnij Dalej, by kontynuowaæ.", IDC_STATIC, 115, 169, 195, 17
 END
 
@@ -53,7 +53,7 @@ BEGIN
                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL
    LTEXT           "ReactOS oparty jest na licencji GPL, wiêc by w ca³oœci lub czêœciowo wykorzystaæ Ÿród³a "\
                    "ReactOS, musisz przestrzegaæ postanowieñ licencji.",
-                   IDC_STATIC,15,110,227,19
+                   IDC_STATIC,15,110,247,19
    PUSHBUTTON      "Poka¿ &GPL..",IDC_VIEWGPL,251,110,50,19
    LTEXT           "Naciœnij Dalej, by kontynuowaæ.",IDC_STATIC,15,136,
                    195,17
@@ -103,7 +103,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
    LTEXT "Lokalizacja systemu powinna byæ zgodna (jêzykowo) z aplikacjami, "\
          "których planujesz u¿ywaæ. Lokalizacja odpowiada równie¿ za wyœwietlanie "\
-         "danych, liczb i walut.", IDC_STATIC, 53, 7, 253, 20
+         "danych, liczb i walut.", IDC_STATIC, 53, 7, 238, 25
    LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
    LTEXT "By zmieniæ lokalizacjê systemu, naciœnij Ustaw.",
          IDC_STATIC, 53, 60, 184, 8
@@ -193,7 +193,7 @@ BEGIN
    IDS_LOCALESUBTITLE   "Mo¿esz ustawiæ ReactOS pod k¹tem jêzyka i sposobu wyœwietlania danych."
    IDS_DATETIMETITLE    "Data i czas"
    IDS_DATETIMESUBTITLE "Ustaw prawid³ow¹ datê i czas."
-   IDS_PROCESSTITLE     "Tytu³ strony"
+   IDS_PROCESSTITLE     "Rejestracja sk³adników"
    IDS_PROCESSSUBTITLE  "Podtytu³ strony"
 END
 

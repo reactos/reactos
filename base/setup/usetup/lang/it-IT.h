@@ -424,7 +424,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6, 
         24,
-        "\"Confermare la configurazione delle periferiche\" e premere INVIO.",
+        "\"Procedere con questa configurazione\" e premere INVIO.",
         TEXT_STYLE_NORMAL
     },
     {

@@ -4,7 +4,6 @@
 	<importlibrary definition="unbzip2.def" />
 	<define name="BZ_NO_STDIO" />
 	<define name="BZ_DECOMPRESS_ONLY" />
-	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>bzlib.c</file>

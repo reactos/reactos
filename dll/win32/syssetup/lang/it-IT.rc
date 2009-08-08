@@ -36,8 +36,8 @@ BEGIN
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "ReactOS è soggetto alla licenza GPL, per cui se si desidera riusarlo o ridistribuirlo "\
                     "(in tutto o in parte) è necessario rispettare la GPL",
-                    IDC_STATIC,20,110,227,19
-    PUSHBUTTON      "&Mostra la GPL...",IDC_VIEWGPL,251,110,50,19
+                    IDC_STATIC,20,110,217,22
+    PUSHBUTTON      "&Mostra la GPL...",IDC_VIEWGPL,241,110,60,19
     LTEXT           "Selezionare Avanti per proseguire con la configurazione.",IDC_STATIC,20,136,
                     195,17
 END
@@ -71,7 +71,7 @@ BEGIN
           "Si potrà usare questo account se si necessita l'accesso completo al computer.",
           IDC_STATIC, 20, 57, 250, 25
     LTEXT "Scrivere una password per Administrator che sia lunga al massimo 14 caratteri.",
-          IDC_STATIC, 20, 87, 250, 8
+          IDC_STATIC, 20, 87, 280, 8
     LTEXT "Password per &Administrator:", IDC_STATIC, 20, 105, 95, 8
     EDITTEXT IDC_ADMINPASSWORD1, 140, 100, 160, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "C&onfermare la password:", IDC_STATIC, 20, 125, 95, 8
@@ -86,17 +86,17 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Le impostazioni linguistiche del sistema devono coincidere con la lingua degli applicativi "\
           "che si desidera usare. Le impostazioni linguistiche dell'utente stabiliscono come appaiono "\
-          "i numeri, i valori monetari e le date.", IDC_STATIC, 20, 7, 253, 20
-    LTEXT "", IDC_LOCALETEXT, 20, 29, 250, 16
+          "i numeri, i valori monetari e le date.", IDC_STATIC, 20, 7, 253, 26
+    LTEXT "", IDC_LOCALETEXT, 20, 35, 250, 16
     LTEXT "Per cambiare le impostazioni linguistiche del sistema o dell'utente, selezionare Personalizza.",
-          IDC_STATIC, 20, 50, 184, 16
-    PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 250, 50, 50, 16
+          IDC_STATIC, 20, 55, 184, 16
+    PUSHBUTTON "&Personalizza...", IDC_CUSTOMLOCALE, 240, 55, 60, 16
     LTEXT "Il formato della tastiera stabilisce i caratteri che appaiono quando si preme un tasto.",
           IDC_STATIC, 20, 86, 253, 16
-    LTEXT "", IDC_LAYOUTTEXT, 20, 100, 250, 16
+    LTEXT "", IDC_LAYOUTTEXT, 20, 110, 250, 10
     LTEXT "Per cambiare il formato della tastiera, selezionare Personalizza.",
-          IDC_STATIC, 20, 110, 184, 16
-    PUSHBUTTON "P&ersonalizza...", IDC_CUSTOMLAYOUT, 250, 110, 50, 16
+          IDC_STATIC, 20, 120, 184, 16
+    PUSHBUTTON "P&ersonalizza...", IDC_CUSTOMLAYOUT, 240, 120, 60, 16
 END
 
 

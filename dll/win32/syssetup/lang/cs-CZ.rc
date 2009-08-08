@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2004 Filip Navara
  *               2007 Kamil Hornicek
+ *               2008 Radek Liska
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -198,13 +199,13 @@ BEGIN
     IDS_CMT_CALC        "Spustit Kalkulaèku"
     IDS_CMT_CMD         "Otevøít Pøíkazový øádek"
     IDS_CMT_EXPLORER    "Spustit Explorer"
-    IDS_CMT_NOTEPAD     "spustit Textový editor"
+    IDS_CMT_NOTEPAD     "Spustit Textový editor"
     IDS_CMT_REGEDIT     "Spustit Editor registru"
     IDS_CMT_WORDPAD     "Spustit Editor dokumentù"
     IDS_CMT_SCREENSHOT  "Sejmout obrazovku"
     IDS_CMT_DEVMGMT     "Spustit Správce zaøízení"
     IDS_CMT_SERVMAN     "Spustit Správce služeb"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_RDESKTOP    "Spustit Vzdálenou plochu"
 END
 
 STRINGTABLE
@@ -216,16 +217,16 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+	IDS_SYS_TOOLS        "Systémové nástroje"
+	IDS_CMT_CHARMAP      "Mapa znakù"
+	IDS_CMT_KBSWITCH     "Pøepínaè rozložení klávesnice"
 END
 
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_SYS_ACCESSIBILITY        "Usnadnìní"
+	IDS_CMT_MAGNIFY      	     "Lupa"
 END
 
 STRINGTABLE
@@ -244,21 +245,21 @@ END
 STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Pøíkazový øádek.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
+    IDS_SHORT_EXPLORER   "ReactOS Prùzkumník.lnk"
     IDS_SHORT_DOWNLOADER "Download !.lnk"
     IDS_SHORT_SERVICE    "Správce služeb.lnk"
     IDS_SHORT_DEVICE     "Správce zaøízení.lnk"
     IDS_SHORT_CALC       "Kalkulaèka.lnk"
     IDS_SHORT_REGEDIT    "Regedit.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
+    IDS_SHORT_NOTEPAD    "Poznámkový blok.lnk"
     IDS_SHORT_WORDPAD    "WordPad.lnk"
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "CharMap.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+	IDS_SHORT_CHARMAP    "Mapa znakù.lnk"
+	IDS_SHORT_MAGNIFY    "Lupa.lnk"
+    IDS_SHORT_RDESKTOP   "Vzdálená plocha.lnk"
+	IDS_SHORT_KBSWITCH   "Pøepínaè rozložení klávesnice.lnk"
 END
 
 STRINGTABLE

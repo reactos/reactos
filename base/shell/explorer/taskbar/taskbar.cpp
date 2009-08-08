@@ -469,7 +469,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 
 		entry._fsState = btn.fsState;
 
-#ifdef _ROS_	// now handled by activating the ARW_HIDE flag with SystemParametersInfo(SPI_SETMINIMIZEDMETRICS)
+#ifdef __REACTOS__	// now handled by activating the ARW_HIDE flag with SystemParametersInfo(SPI_SETMINIMIZEDMETRICS)
 		 // move minimized windows out of sight
 		if (IsIconic(hwnd)) {
 			RECT rect;

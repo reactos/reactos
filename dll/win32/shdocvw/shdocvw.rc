@@ -24,6 +24,7 @@
 #include "version.rc"
 
 #include "Bg.rc"
+#include "Cs.rc"
 #include "De.rc"
 #include "En.rc"
 #include "Es.rc"

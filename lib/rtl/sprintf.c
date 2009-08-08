@@ -691,20 +691,8 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	if (str <= end)
 		*str = '\0';
 	else if (cnt > 0)
-	{
 		/* don't write out a null byte if the buf size is zero */
-		//*end = '\0';
-	   if (str-buf >cnt )
-       {
-		 *end = '\0';
-       }
-       else
-       {
-           end++;
-          *end = '\0';
-       }
-
-    }
+		*end = '\0';
 	return str-buf;
 }
 

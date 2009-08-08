@@ -9,7 +9,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="_WIN32_WINNT">0x0502</define>
 	<define name="__NO_CTYPE_INLINES" />
-	<linkerflag>-lgcc</linkerflag>
 	<library>zlib</library>
 	<library>inflib</library>
 	<library>ext2lib</library>

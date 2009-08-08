@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Boot Loader
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            boot/freeldr/arch/arm/boot.s
  * PURPOSE:         Implements the entry point for ARM machines
  * PROGRAMMERS:     ReactOS Portable Systems Group

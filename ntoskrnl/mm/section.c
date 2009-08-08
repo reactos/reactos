@@ -4964,7 +4964,7 @@ NtAllocateUserPhysicalPages(IN HANDLE ProcessHandle,
 
 NTSTATUS
 NTAPI
-NtMapUserPhysicalPages(IN PVOID *VirtualAddresses,
+NtMapUserPhysicalPages(IN PVOID VirtualAddresses,
                        IN ULONG NumberOfPages,
                        IN OUT PULONG UserPfnArray)
 {

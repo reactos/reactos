@@ -406,8 +406,8 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
     {
       /* Round-down to cylinder size */
       LastUnusedPartitionLength =
-      ROUND_DOWN (DiskEntry->DiskSize - (LastStartingOffset + LastPartitionLength),
-      DiskEntry->CylinderSize);
+        (DiskEntry->DiskSize - (LastStartingOffset + LastPartitionLength))
+        & ~(DiskEntry->CylinderSize - 1);
 
       if (LastUnusedPartitionLength >= DiskEntry->CylinderSize)
       {

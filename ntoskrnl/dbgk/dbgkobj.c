@@ -865,6 +865,9 @@ DbgkpConvertKernelToUserStateChange(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
             /* Copy the exception record */
             WaitStateChange->StateInfo.Exception.ExceptionRecord =
                 DebugEvent->ApiMsg.Exception.ExceptionRecord;
+            /* Copy FirstChance flag */
+            WaitStateChange->StateInfo.Exception.FirstChance =
+                DebugEvent->ApiMsg.Exception.FirstChance;
             break;
 
         /* Process exited */
@@ -1598,7 +1601,7 @@ NtDebugContinue(IN HANDLE DebugHandle,
             if (NeedsWake)
             {
                 /* Set the continue status */
-                DebugEvent->ApiMsg.ReturnedStatus = Status;
+                DebugEvent->ApiMsg.ReturnedStatus = ContinueStatus;
                 DebugEvent->Status = STATUS_SUCCESS;
 
                 /* Wake the target */

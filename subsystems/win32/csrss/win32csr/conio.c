@@ -27,11 +27,14 @@ Win32CsrInsertObject2(PCSRSS_PROCESS_DATA, PHANDLE, Object_t *);
 #define ConioIsRectEmpty(Rect) \
   (((Rect)->left > (Rect)->right) || ((Rect)->top > (Rect)->bottom))
 
-#define ConsoleUnicodeCharToAnsiChar(Console, dChar, sWChar) \
+#define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
   WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
+#define ConsoleUnicodeCharToAnsiChar(Console, dChar, sWChar) \
+  WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
+
 #define ConsoleAnsiCharToUnicodeChar(Console, sWChar, dChar) \
-  MultiByteToWideChar((Console)->CodePage, 0, (dChar), 1, (sWChar), 1)
+  MultiByteToWideChar((Console)->OutputCodePage, 0, (dChar), 1, (sWChar), 1)
 
 
 /* FUNCTIONS *****************************************************************/
@@ -398,20 +401,20 @@ CSR_API(CsrFreeConsole)
 static VOID FASTCALL
 ConioNextLine(PCSRSS_SCREEN_BUFFER Buff, RECT *UpdateRect, UINT *ScrolledLines)
 {
-  /* slide the viewable screen */
-  if (((Buff->CurrentY - Buff->ShowY + Buff->MaxY) % Buff->MaxY) == (ULONG)Buff->MaxY - 1)
+  if (++Buff->CurrentY == Buff->MaxY)
+    {
+      Buff->CurrentY = 0;
+    }
+  /* If we hit bottom, slide the viewable screen */
+  if (Buff->CurrentY == Buff->ShowY)
     {
       if (++Buff->ShowY == Buff->MaxY)
         {
           Buff->ShowY = 0;
         }
       (*ScrolledLines)++;
+      ClearLineBuffer(Buff);
     }
-  if (++Buff->CurrentY == Buff->MaxY)
-    {
-      Buff->CurrentY = 0;
-    }
-  ClearLineBuffer(Buff);
   UpdateRect->left = 0;
   UpdateRect->right = Buff->MaxX - 1;
   if (UpdateRect->top == (LONG)Buff->CurrentY)
@@ -510,6 +513,7 @@ ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
               while (Buff->CurrentX < EndX)
                 {
                   Buff->Buffer[Offset] = ' ';
+                  Buff->Buffer[Offset + 1] = Buff->DefaultAttrib;
                   Offset += 2;
                   Buff->CurrentX++;
                 }
@@ -726,14 +730,6 @@ ConioPhysicalToLogical(PCSRSS_SCREEN_BUFFER Buff,
      }
 }
 
-BOOLEAN __inline ConioIsEqualRect(
-  RECT *Rect1,
-  RECT *Rect2)
-{
-  return ((Rect1->left == Rect2->left) && (Rect1->right == Rect2->right) &&
-    (Rect1->top == Rect2->top) && (Rect1->bottom == Rect2->bottom));
-}
-
 BOOLEAN __inline ConioGetIntersection(
   RECT *Intersection,
   RECT *Rect1,
@@ -793,138 +789,65 @@ BOOLEAN __inline ConioGetUnion(
   return TRUE;
 }
 
-BOOLEAN __inline ConioSubtractRect(
-  RECT *Subtraction,
-  RECT *Rect1,
-  RECT *Rect2)
-{
-  RECT tmp;
-
-  if (ConioIsRectEmpty(Rect1))
-    {
-      ConioInitRect(Subtraction, 0, -1, 0, -1);
-      return FALSE;
-    }
-  *Subtraction = *Rect1;
-  if (ConioGetIntersection(&tmp, Rect1, Rect2))
-    {
-      if (ConioIsEqualRect(&tmp, Subtraction))
-        {
-          ConioInitRect(Subtraction, 0, -1, 0, -1);
-          return FALSE;
-        }
-      if ((tmp.top == Subtraction->top) && (tmp.bottom == Subtraction->bottom))
-        {
-          if (tmp.left == Subtraction->left)
-            {
-              Subtraction->left = tmp.right;
-            }
-          else if (tmp.right == Subtraction->right)
-            {
-              Subtraction->right = tmp.left;
-            }
-        }
-      else if ((tmp.left == Subtraction->left) && (tmp.right == Subtraction->right))
-        {
-          if (tmp.top == Subtraction->top)
-            {
-              Subtraction->top = tmp.bottom;
-            }
-          else if (tmp.bottom == Subtraction->bottom)
-            {
-              Subtraction->bottom = tmp.top;
-            }
-        }
-    }
-
-  return TRUE;
-}
-
+/* Move from one rectangle to another. We must be careful about the order that
+ * this is done, to avoid overwriting parts of the source before they are moved. */
 static VOID FASTCALL
-ConioCopyRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
+ConioMoveRegion(PCSRSS_SCREEN_BUFFER ScreenBuffer,
                 RECT *SrcRegion,
-                RECT *DstRegion)
+                RECT *DstRegion,
+                RECT *ClipRegion,
+                WORD Fill)
 {
-  SHORT SrcY, DstY;
-  DWORD SrcOffset;
-  DWORD DstOffset;
-  DWORD BytesPerLine;
-  LONG i;
+  int Width = ConioRectWidth(SrcRegion);
+  int Height = ConioRectHeight(SrcRegion);
+  int SX, SY;
+  int DX, DY;
+  int XDelta, YDelta;
+  int i, j;
 
-  DstY = DstRegion->top;
-  BytesPerLine = ConioRectWidth(DstRegion) * 2;
-
-  SrcY = (SrcRegion->top + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
-  DstY = (DstRegion->top + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
-  SrcOffset = (SrcY * ScreenBuffer->MaxX + SrcRegion->left + ScreenBuffer->ShowX) * 2;
-  DstOffset = (DstY * ScreenBuffer->MaxX + DstRegion->left + ScreenBuffer->ShowX) * 2;
-
-  for (i = SrcRegion->top; i <= SrcRegion->bottom; i++)
+  SY = SrcRegion->top;
+  DY = DstRegion->top;
+  YDelta = 1;
+  if (SY < DY)
     {
-      RtlCopyMemory(
-        &ScreenBuffer->Buffer[DstOffset],
-        &ScreenBuffer->Buffer[SrcOffset],
-        BytesPerLine);
-
-      if (++DstY == ScreenBuffer->MaxY)
-        {
-          DstY = 0;
-          DstOffset = (DstRegion->left + ScreenBuffer->ShowX) * 2;
-        }
-      else
-        {
-          DstOffset += ScreenBuffer->MaxX * 2;
-        }
-
-      if (++SrcY == ScreenBuffer->MaxY)
-        {
-          SrcY = 0;
-          SrcOffset = (SrcRegion->left + ScreenBuffer->ShowX) * 2;
-        }
-      else
-        {
-          SrcOffset += ScreenBuffer->MaxX * 2;
-        }
+      /* Moving down: work from bottom up */
+      SY = SrcRegion->bottom;
+      DY = DstRegion->bottom;
+      YDelta = -1;
     }
-}
-
-static VOID FASTCALL
-ConioFillRegion(PCSRSS_CONSOLE Console,
-                PCSRSS_SCREEN_BUFFER ScreenBuffer,
-                RECT *Region,
-                CHAR_INFO *CharInfo,
-                BOOL bUnicode)
-{
-  SHORT X, Y;
-  DWORD Offset;
-  DWORD Delta;
-  LONG i;
-  CHAR Char;
-
-  if(bUnicode)
-    ConsoleUnicodeCharToAnsiChar(Console, &Char, &CharInfo->Char.UnicodeChar);
-  else
-    Char = CharInfo->Char.AsciiChar;
-
-  Y = (Region->top + ScreenBuffer->ShowY) % ScreenBuffer->MaxY;
-  Offset = (Y * ScreenBuffer->MaxX + Region->left + ScreenBuffer->ShowX) * 2;
-  Delta = (ScreenBuffer->MaxX - ConioRectWidth(Region)) * 2;
-
-  for (i = Region->top; i <= Region->bottom; i++)
+  for (i = 0; i < Height; i++)
     {
-      for (X = Region->left; X <= Region->right; X++)
+      PWORD SRow = (PWORD)&ScreenBuffer->Buffer[((SY + ScreenBuffer->ShowY) % ScreenBuffer->MaxY) * ScreenBuffer->MaxX * 2];
+      PWORD DRow = (PWORD)&ScreenBuffer->Buffer[((DY + ScreenBuffer->ShowY) % ScreenBuffer->MaxY) * ScreenBuffer->MaxX * 2];
+
+      SX = SrcRegion->left;
+      DX = DstRegion->left;
+      XDelta = 1;
+      if (SX < DX)
         {
-          SET_CELL_BUFFER(ScreenBuffer, Offset, Char, CharInfo->Attributes);
+          /* Moving right: work from right to left */
+          SX = SrcRegion->right;
+          DX = DstRegion->right;
+          XDelta = -1;
         }
-      if (++Y == ScreenBuffer->MaxY)
+      for (j = 0; j < Width; j++)
         {
-          Y = 0;
-          Offset = (Region->left + ScreenBuffer->ShowX) * 2;
+          WORD Cell = SRow[SX];
+          if (SX >= ClipRegion->left && SX <= ClipRegion->right
+              && SY >= ClipRegion->top && SY <= ClipRegion->bottom)
+            {
+              SRow[SX] = Fill;
+            }
+          if (DX >= ClipRegion->left && DX <= ClipRegion->right
+              && DY >= ClipRegion->top && DY <= ClipRegion->bottom)
+            {
+              DRow[DX] = Cell;
+            }
+          SX += XDelta;
+          DX += XDelta;
         }
-      else
-        {
-          Offset += Delta;
-        }
+      SY += YDelta;
+      DY += YDelta;
     }
 }
 
@@ -935,9 +858,9 @@ ConioInputEventToAnsi(PCSRSS_CONSOLE Console, PINPUT_RECORD InputEvent)
     {
       WCHAR UnicodeChar = InputEvent->Event.KeyEvent.uChar.UnicodeChar;
       InputEvent->Event.KeyEvent.uChar.UnicodeChar = 0;
-      ConsoleUnicodeCharToAnsiChar(Console,
-                                   &InputEvent->Event.KeyEvent.uChar.AsciiChar,
-                                   &UnicodeChar);
+      ConsoleInputUnicodeCharToAnsiChar(Console,
+                                        &InputEvent->Event.KeyEvent.uChar.AsciiChar,
+                                        &UnicodeChar);
     }
 }
 
@@ -974,14 +897,14 @@ CSR_API(CsrWriteConsole)
 
   if(Request->Data.WriteConsoleRequest.Unicode)
     {
-      Length = WideCharToMultiByte(Console->CodePage, 0,
+      Length = WideCharToMultiByte(Console->OutputCodePage, 0,
                                    (PWCHAR)Request->Data.WriteConsoleRequest.Buffer,
                                    Request->Data.WriteConsoleRequest.NrCharactersToWrite,
                                    NULL, 0, NULL, NULL);
       Buffer = RtlAllocateHeap(GetProcessHeap(), 0, Length);
       if (Buffer)
         {
-          WideCharToMultiByte(Console->CodePage, 0,
+          WideCharToMultiByte(Console->OutputCodePage, 0,
                               (PWCHAR)Request->Data.WriteConsoleRequest.Buffer,
                               Request->Data.WriteConsoleRequest.NrCharactersToWrite,
                               Buffer, Length, NULL, NULL);
@@ -1585,14 +1508,14 @@ CSR_API(CsrWriteConsoleOutputChar)
     {
       if(Request->Data.WriteConsoleOutputCharRequest.Unicode)
         {
-          Length = WideCharToMultiByte(Console->CodePage, 0,
+          Length = WideCharToMultiByte(Console->OutputCodePage, 0,
                                       (PWCHAR)Request->Data.WriteConsoleOutputCharRequest.String,
                                        Request->Data.WriteConsoleOutputCharRequest.Length,
                                        NULL, 0, NULL, NULL);
           tmpString = String = RtlAllocateHeap(GetProcessHeap(), 0, Length);
           if (String)
             {
-              WideCharToMultiByte(Console->CodePage, 0,
+              WideCharToMultiByte(Console->OutputCodePage, 0,
                                   (PWCHAR)Request->Data.WriteConsoleOutputCharRequest.String,
                                   Request->Data.WriteConsoleOutputCharRequest.Length,
                                   String, Length, NULL, NULL);
@@ -2257,14 +2180,14 @@ CSR_API(CsrSetScreenBuffer)
   if (! NT_SUCCESS(Status))
     {
       ConioUnlockConsole(Console);
-      return Request->Status;
+      return Request->Status = Status;
     }
 
   if (Buff == Console->ActiveBuffer)
     {
       ConioUnlockScreenBuffer(Buff);
       ConioUnlockConsole(Console);
-      return STATUS_SUCCESS;
+      return Request->Status = STATUS_SUCCESS;
     }
 
   /* drop reference to old buffer, maybe delete */
@@ -2528,15 +2451,15 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   RECT ScreenBuffer;
   RECT SrcRegion;
   RECT DstRegion;
-  RECT FillRegion;
+  RECT UpdateRegion;
   RECT ScrollRectangle;
   RECT ClipRectangle;
   NTSTATUS Status;
-  BOOLEAN DoFill;
   HANDLE ConsoleHandle;
   BOOLEAN UseClipRectangle;
   COORD DestinationOrigin;
   CHAR_INFO Fill;
+  CHAR FillChar;
 
   DPRINT("CsrScrollConsoleScreenBuffer\n");
 
@@ -2567,10 +2490,6 @@ CSR_API(CsrScrollConsoleScreenBuffer)
   ScrollRectangle.top = Request->Data.ScrollConsoleScreenBufferRequest.ScrollRectangle.Top;
   ScrollRectangle.right = Request->Data.ScrollConsoleScreenBufferRequest.ScrollRectangle.Right;
   ScrollRectangle.bottom = Request->Data.ScrollConsoleScreenBufferRequest.ScrollRectangle.Bottom;
-  ClipRectangle.left = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Left;
-  ClipRectangle.top = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Top;
-  ClipRectangle.right = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Right;
-  ClipRectangle.bottom = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Bottom;
 
   /* Make sure source rectangle is inside the screen buffer */
   ConioInitRect(&ScreenBuffer, 0, 0, Buff->MaxY - 1, Buff->MaxX - 1);
@@ -2581,63 +2500,60 @@ CSR_API(CsrScrollConsoleScreenBuffer)
         {
           ConioUnlockConsole(Console);
         }
-      return Request->Status = STATUS_INVALID_PARAMETER;
-    }
-
-  if (UseClipRectangle && ! ConioGetIntersection(&SrcRegion, &SrcRegion, &ClipRectangle))
-    {
-      if (NULL != Console)
-        {
-          ConioUnlockConsole(Console);
-        }
-      ConioUnlockScreenBuffer(Buff);
       return Request->Status = STATUS_SUCCESS;
     }
 
+  /* If the source was clipped on the left or top, adjust the destination accordingly */
+  if (ScrollRectangle.left < 0)
+    {
+      DestinationOrigin.X -= ScrollRectangle.left;
+    }
+  if (ScrollRectangle.top < 0)
+    {
+      DestinationOrigin.Y -= ScrollRectangle.top;
+    }
+
+  if (UseClipRectangle)
+    {
+      ClipRectangle.left = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Left;
+      ClipRectangle.top = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Top;
+      ClipRectangle.right = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Right;
+      ClipRectangle.bottom = Request->Data.ScrollConsoleScreenBufferRequest.ClipRectangle.Bottom;
+      if (!ConioGetIntersection(&ClipRectangle, &ClipRectangle, &ScreenBuffer))
+        {
+          if (NULL != Console)
+            {
+              ConioUnlockConsole(Console);
+            }
+          ConioUnlockScreenBuffer(Buff);
+          return Request->Status = STATUS_SUCCESS;
+      }
+    }
+  else
+    {
+      ClipRectangle = ScreenBuffer;
+    }
 
   ConioInitRect(&DstRegion,
                DestinationOrigin.Y,
                DestinationOrigin.X,
-               DestinationOrigin.Y + ConioRectHeight(&ScrollRectangle) - 1,
-               DestinationOrigin.X + ConioRectWidth(&ScrollRectangle) - 1);
+               DestinationOrigin.Y + ConioRectHeight(&SrcRegion) - 1,
+               DestinationOrigin.X + ConioRectWidth(&SrcRegion) - 1);
 
-  /* Make sure destination rectangle is inside the screen buffer */
-  if (! ConioGetIntersection(&DstRegion, &DstRegion, &ScreenBuffer))
-    {
-      if (NULL != Console)
-        {
-          ConioUnlockConsole(Console);
-        }
-      ConioUnlockScreenBuffer(Buff);
-      return Request->Status = STATUS_INVALID_PARAMETER;
-    }
+  if (Request->Data.ScrollConsoleScreenBufferRequest.Unicode)
+    ConsoleUnicodeCharToAnsiChar(Console, &FillChar, &Fill.Char.UnicodeChar);
+  else
+    FillChar = Fill.Char.AsciiChar;
 
-  ConioCopyRegion(Buff, &SrcRegion, &DstRegion);
-
-  /* Get the region that should be filled with the specified character and attributes */
-
-  DoFill = FALSE;
-
-  ConioGetUnion(&FillRegion, &SrcRegion, &DstRegion);
-
-  if (ConioSubtractRect(&FillRegion, &FillRegion, &DstRegion))
-    {
-      /* FIXME: The subtracted rectangle is off by one line */
-      FillRegion.top += 1;
-
-      ConioFillRegion(Console, Buff, &FillRegion, &Fill, Request->Data.ScrollConsoleScreenBufferRequest.Unicode);
-      DoFill = TRUE;
-    }
+  ConioMoveRegion(Buff, &SrcRegion, &DstRegion, &ClipRectangle, Fill.Attributes << 8 | (BYTE)FillChar);
 
   if (NULL != Console && Buff == Console->ActiveBuffer)
     {
-      /* Draw destination region */
-      ConioDrawRegion(Console, &DstRegion);
-
-      if (DoFill)
+      ConioGetUnion(&UpdateRegion, &SrcRegion, &DstRegion);
+      if (ConioGetIntersection(&UpdateRegion, &UpdateRegion, &ClipRectangle))
         {
-          /* Draw filled region */
-          ConioDrawRegion(Console, &FillRegion);
+          /* Draw update region */
+          ConioDrawRegion(Console, &UpdateRegion);
         }
     }
 

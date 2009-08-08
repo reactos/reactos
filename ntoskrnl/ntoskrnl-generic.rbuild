@@ -258,6 +258,7 @@
 			<file>iowork.c</file>
 			<file>irp.c</file>
 			<file>irq.c</file>
+			<file>ramdisk.c</file>
 			<file>rawfs.c</file>
 			<file>remlock.c</file>
 			<file>util.c</file>
@@ -460,8 +461,5 @@
 		<file>wmi.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
-	<linkerflag>-nostartfiles</linkerflag>
-	<linkerflag>-nostdlib</linkerflag>
-	<linkerflag>-lgcc</linkerflag>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </group>

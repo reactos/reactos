@@ -29,6 +29,7 @@ static const WCHAR GroupOrderListKey[] = {'S','Y','S','T','E','M','\\','C','u','
 static const WCHAR InfDirectory[] = {'i','n','f','\\',0};
 static const WCHAR OemFileMask[] = {'o','e','m','*','.','i','n','f',0};
 static const WCHAR OemFileSpecification[] = {'o','e','m','%','l','u','.','i','n','f',0};
+static const WCHAR DotLnk[] = {'.','l','n','k',0};
 
 static const WCHAR DependenciesKey[] = {'D','e','p','e','n','d','e','n','c','i','e','s',0};
 static const WCHAR DescriptionKey[] = {'D','e','s','c','r','i','p','t','i','o','n',0};
@@ -888,7 +889,9 @@ profile_items_callback(
     INFCONTEXT Context;
     LPWSTR LinkSubDir = NULL, LinkName = NULL;
     INT LinkAttributes = 0;
+    INT LinkFolder = 0;
     INT FileDirId = 0;
+    INT CSIDL = CSIDL_COMMON_PROGRAMS;
     LPWSTR FileSubDir = NULL;
     INT DirId = 0;
     LPWSTR SubDirPart = NULL, NamePart = NULL;
@@ -919,6 +922,11 @@ profile_items_callback(
     if (SetupGetFieldCount(&Context) >= 2)
     {
         if (!SetupGetIntField(&Context, 2, &LinkAttributes))
+            goto cleanup;
+    }
+    if (SetupGetFieldCount(&Context) >= 3)
+    {
+        if (!SetupGetIntField(&Context, 3, &LinkFolder))
             goto cleanup;
     }
 
@@ -1054,6 +1062,8 @@ profile_items_callback(
         if (SUCCEEDED(hr))
             hr = IShellLinkW_SetPath(psl, FullFileName);
         if (SUCCEEDED(hr))
+            hr = IShellLinkW_SetArguments(psl, L"");
+        if (SUCCEEDED(hr))
             hr = IShellLinkW_SetWorkingDirectory(psl, FullWorkingDir);
         if (SUCCEEDED(hr))
             hr = IShellLinkW_SetIconLocation(psl, FullIconName, IconIdx);
@@ -1076,10 +1086,15 @@ profile_items_callback(
                 {
                     if (LinkAttributes & (FLG_PROFITEM_DELETE | FLG_PROFITEM_GROUP))
                         FIXME("Need to handle FLG_PROFITEM_DELETE and FLG_PROFITEM_GROUP\n");
+                    if (LinkAttributes & FLG_PROFITEM_CSIDL)
+                        CSIDL = LinkFolder;
+                    else if (LinkAttributes & FLG_PROFITEM_CURRENTUSER)
+                        CSIDL = CSIDL_PROGRAMS;
+
                     if (SHGetSpecialFolderPathW(
                         NULL,
                         FullLinkName,
-                        LinkAttributes & FLG_PROFITEM_CURRENTUSER ? CSIDL_PROGRAMS : CSIDL_COMMON_PROGRAMS,
+                        CSIDL,
                         TRUE))
                     {
                         if (FullLinkName[wcslen(FullLinkName) - 1] != '\\')
@@ -1091,6 +1106,7 @@ profile_items_callback(
                                 wcscat(FullLinkName, BackSlash);
                         }
                         wcscat(FullLinkName, LinkName);
+                        wcscat(FullLinkName, DotLnk);
                         hr = IPersistFile_Save(ppf, FullLinkName, TRUE);
                     }
                     else

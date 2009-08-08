@@ -190,12 +190,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "Customize Regional Options"
+    IDS_CUSTOMIZE_TITLE "PrispÙsobiù miestne nastavenia"
     IDS_SPAIN "Spanish (Spain)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Regional Options"
+    IDS_CPLNAME "Miestne a jazykovÈ nastavenia"
     IDS_CPLDESCRIPTION "Select languages and format numbers, currencies, times and date."
 END

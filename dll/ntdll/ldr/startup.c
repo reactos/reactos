@@ -484,6 +484,10 @@ LdrpInit(PCONTEXT Context,
            ZwTerminateProcess(NtCurrentProcess(), STATUS_INVALID_IMAGE_FORMAT);
          }
      }
+
+   /* Break into debugger */
+   if (Peb->BeingDebugged) DbgBreakPoint();
+
    /* attach the thread */
    RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
    LdrpAttachThread();

@@ -16,9 +16,6 @@
 		<library>ntdllsys</library>
 		<library>libcntpr</library>
 		<library>pseh</library>
-		<linkerflag>-lgcc</linkerflag>
-		<linkerflag>-nostdlib</linkerflag>
-		<linkerflag>-nostartfiles</linkerflag>
 		<dependency>ntstatus</dependency>
 		<directory name="csr">
 			<file>api.c</file>

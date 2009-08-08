@@ -135,6 +135,11 @@ GetServices ( void )
                 item.lParam = 0;
                 item.iItem = ListView_InsertItem(hServicesListCtrl, &item);
 
+                if (pServiceStatus[Index].ServiceStatusProcess.dwCurrentState == SERVICE_RUNNING)
+                {
+                    ListView_SetCheckState(hServicesListCtrl, item.iItem, TRUE);
+                }
+
                 BytesNeeded = 0;
                 hService = OpenService(ScHandle, pServiceStatus[Index].lpServiceName, SC_MANAGER_CONNECT);
                 if (hService != INVALID_HANDLE_VALUE)

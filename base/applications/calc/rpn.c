@@ -1,11 +1,6 @@
 #include "calc.h"
 
 typedef struct {
-    calc_number_t   number;
-    unsigned int    operation;
-} calc_node_t;
-
-typedef struct {
     calc_node_t     node;
     void           *next;
 } stack_node_t;
@@ -34,6 +29,7 @@ static void rpn_and_f(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_or_f (calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_xor_f(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_shl_f(calc_number_t *r, calc_number_t *a, calc_number_t *b);
+static void rpn_shr_f(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 
 /* Integer mode calculations */
 static void rpn_add_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
@@ -45,6 +41,7 @@ static void rpn_and_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_or_i (calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_xor_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 static void rpn_shl_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
+static void rpn_shr_i(calc_number_t *r, calc_number_t *a, calc_number_t *b);
 
 /* Percentage mode calculations */
 static void rpn_add_p(calc_number_t *r, calc_number_t *a, calc_number_t *b);
@@ -60,6 +57,7 @@ static const calc_operator_t operator_list[] = {
     { 2, rpn_xor_f, rpn_xor_i, NULL,      }, // RPN_OPERATOR_XOR
     { 3, rpn_and_f, rpn_and_i, NULL,      }, // RPN_OPERATOR_AND
     { 4, rpn_shl_f, rpn_shl_i, NULL,      }, // RPN_OPERATOR_LSH
+    { 4, rpn_shr_f, rpn_shr_i, NULL,      }, // RPN_OPERATOR_RSH
     { 5, rpn_add_f, rpn_add_i, rpn_add_p, }, // RPN_OPERATOR_ADD
     { 5, rpn_sub_f, rpn_sub_i, rpn_sub_p, }, // RPN_OPERATOR_SUB
     { 6, rpn_mul_f, rpn_mul_i, rpn_mul_p, }, // RPN_OPERATOR_MULT
@@ -172,12 +170,20 @@ static void rpn_xor_f(calc_number_t *r, calc_number_t *a, calc_number_t *b)
 
 static void rpn_shl_f(calc_number_t *r, calc_number_t *a, calc_number_t *b)
 {
-    calc_number_t ai, bi;
+    calc_number_t n;
 
-    ai.i = logic_dbl2int(a);
-    bi.i = logic_dbl2int(b);
+    modf(b->f, &n.f);
 
-    r->f = (long double)(ai.i << bi.i);
+    r->f = a->f * pow(2., n.f);
+}
+
+static void rpn_shr_f(calc_number_t *r, calc_number_t *a, calc_number_t *b)
+{
+    calc_number_t n;
+
+    modf(b->f, &n.f);
+
+    r->f = a->f / pow(2., n.f);
 }
 
 static void rpn_pow_f(calc_number_t *r, calc_number_t *a, calc_number_t *b)
@@ -250,6 +256,11 @@ static void rpn_shl_i(calc_number_t *r, calc_number_t *a, calc_number_t *b)
     r->i = a->i << b->i;
 }
 
+static void rpn_shr_i(calc_number_t *r, calc_number_t *a, calc_number_t *b)
+{
+    r->i = a->i >> b->i;
+}
+
 /* Percent mode calculations */
 static void rpn_add_p(calc_number_t *r, calc_number_t *a, calc_number_t *b)
 {
@@ -274,23 +285,45 @@ static void rpn_div_p(calc_number_t *r, calc_number_t *a, calc_number_t *b)
         r->f = a->f * 100. / b->f;
 }
 
-
-void run_operator(calc_number_t *result,
-                  calc_number_t *a,
-                  calc_number_t *b,
-                  unsigned int   operation)
+void run_operator(calc_node_t *result,
+                  calc_node_t *a,
+                  calc_node_t *b,
+                  unsigned int operation)
 {
-    if (calc.base == IDC_RADIO_DEC) {
+    calc_number_t da, db, dc;
+    DWORD         base = calc.base;
+
+    da = a->number;
+    db = b->number;
+    if (a->base == IDC_RADIO_DEC && b->base != IDC_RADIO_DEC) {
+        db.f = logic_int2dbl(&b->number);
+        base = IDC_RADIO_DEC;
+    } else
+    if (a->base != IDC_RADIO_DEC && b->base == IDC_RADIO_DEC) {
+        da.f = logic_int2dbl(&a->number);
+        base = IDC_RADIO_DEC;
+    }
+
+    if (base == IDC_RADIO_DEC) {
         if (percent_mode) {
             percent_mode = FALSE;
-            operator_list[operation].op_p(result, a, b);
+            operator_list[operation].op_p(&dc, &da, &db);
         } else
-            operator_list[operation].op_f(result, a, b);
+            operator_list[operation].op_f(&dc, &da, &db);
     } else {
-        operator_list[operation].op_i(result, a, b);
+        operator_list[operation].op_i(&dc, &da, &db);
         /* apply final limitator to result */
-        apply_int_mask(result);
+        apply_int_mask(&dc);
     }
+
+    if (a->base == IDC_RADIO_DEC && b->base != IDC_RADIO_DEC) {
+        result->number.i = logic_dbl2int(&dc);
+        apply_int_mask(&result->number);
+    } else
+    if (a->base != IDC_RADIO_DEC && b->base == IDC_RADIO_DEC)
+        result->number.f = dc.f;
+    else
+        result->number = dc;
 }
 
 static void evalStack(calc_number_t *number)
@@ -309,7 +342,7 @@ static void evalStack(calc_number_t *number)
             if (op->node.operation == RPN_OPERATOR_PARENT) continue;
 
             calc.prev = ip.node.number;
-            run_operator(&ip.node.number, &op->node.number, &ip.node.number, op->node.operation);
+            run_operator(&ip.node, &op->node, &ip.node, op->node.operation);
             if (calc.is_nan) {
                 flush_postfix();
                 return;
@@ -341,6 +374,7 @@ int exec_infix2postfix(calc_number_t *number, unsigned int func)
     }
 
     tmp.node.number = *number;
+    tmp.node.base = calc.base;
     tmp.node.operation = func;
 
     push(&tmp);
@@ -371,13 +405,14 @@ void exec_closeparent(calc_number_t *number)
     stack_node_t *op, ip;
 
     ip.node.number = *number;
+    ip.node.base = calc.base;
     while (!is_stack_empty()) {
         op = pop();
 
         if (op->node.operation == RPN_OPERATOR_PARENT)
             break;
 
-        run_operator(&ip.node.number, &op->node.number, &ip.node.number, op->node.operation);
+        run_operator(&ip.node, &op->node, &ip.node, op->node.operation);
         if (calc.is_nan) {
             flush_postfix();
             return;

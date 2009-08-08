@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/arm_kprintf.c
  * PURPOSE:         Early serial printf-style kernel debugging (ARM bringup)
  * PROGRAMMERS:     ReactOS Portable Systems Group

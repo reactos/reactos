@@ -145,11 +145,11 @@ BEGIN
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     //CHECKBOX    "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
     CONTROL     "Διάρκεια προβο&λής λίστας :", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 150, 8
-    EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
+    EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "δευτ.", IDC_STATIC, 215, 56, 25, 8
     CONTROL     "Διάρκεια προ&βολής επιλογών αποκατάστασης:", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
-    EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
+    EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "δευτ.", IDC_STATIC, 215, 70, 25, 8
     LTEXT       "Για μη αυτόματη επεξεργασία των επιλογών εκκίνησης, κάντε κλικ στο κουμπί Επεξεργασία.", IDC_STATIC, 14, 89, 187, 8

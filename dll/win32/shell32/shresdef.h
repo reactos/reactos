@@ -132,6 +132,7 @@
 #define IDS_INI_FILE                169
 #define IDS_LNK_FILE                170
 #define IDS_SYS_FILE                171
+#define IDS_EMPTY_BITBUCKET         172
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

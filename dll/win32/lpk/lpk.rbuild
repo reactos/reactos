@@ -13,8 +13,5 @@
 	<file>dllmain.c</file>
 	<file>stub.c</file>
 
-	<linkerflag>-lgcc</linkerflag>
-	<linkerflag>-nostartfiles</linkerflag>
-	<linkerflag>-nostdlib</linkerflag>
 	<file>lpk.rc</file>
 </module>

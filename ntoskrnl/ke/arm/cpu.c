@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
  * FILE:            ntoskrnl/ke/arm/cpu.c
  * PURPOSE:         Implements routines for ARM CPU support
  * PROGRAMMERS:     ReactOS Portable Systems Group
@@ -114,4 +114,17 @@ KeFlushTb(VOID)
     // Flush the entire TLB
     //
     KeArmFlushTlb();
+}
+
+VOID
+NTAPI
+KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
+{
+    //
+    // Save some critical stuff we use
+    //
+    ProcessorState->SpecialRegisters.ControlRegister = KeArmControlRegisterGet();
+    ProcessorState->SpecialRegisters.LockdownRegister = KeArmLockdownRegisterGet();
+    ProcessorState->SpecialRegisters.CacheRegister = KeArmCacheRegisterGet();
+    ProcessorState->SpecialRegisters.StatusRegister = KeArmStatusRegisterGet();
 }
