@@ -7,6 +7,11 @@
 #ifndef _CSRSERVER_H
 #define _CSRSERVER_H
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning (disable:4201)
+#endif
+
 /* DEPENDENCIES **************************************************************/
 
 /* TYPES **********************************************************************/
@@ -42,7 +47,7 @@ typedef struct _CSR_PROCESS
     ULONG Reserved;
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
-    PVOID ServerData[];
+    PVOID ServerData[ANYSIZE_ARRAY];
 } CSR_PROCESS, *PCSR_PROCESS;
 
 typedef struct _CSR_THREAD
@@ -324,5 +329,9 @@ CsrServerInitialization(
     ULONG ArgumentCount,
     PCHAR Arguments[]
 );
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif
