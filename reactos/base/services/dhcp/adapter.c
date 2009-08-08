@@ -229,12 +229,13 @@ InterfaceConnected(MIB_IFROW IfEntry)
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
-void AdapterDiscover() {
+BOOLEAN AdapterDiscover() {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size = sizeof(MIB_IFTABLE);
     PDHCP_ADAPTER Adapter = NULL;
     struct interface_info *ifi = NULL;
     int i;
+    BOOLEAN ret = TRUE;
 
     DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
 
@@ -245,7 +246,10 @@ void AdapterDiscover() {
         Table = (PMIB_IFTABLE) malloc( Size );
     }
 
-    if( Error != NO_ERROR ) goto term;
+    if( Error != NO_ERROR ) {
+        ret = FALSE;
+        goto term;
+    }
 
     DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
@@ -335,6 +339,7 @@ void AdapterDiscover() {
 
 term:
     if( Table ) free( Table );
+    return ret;
 }
 
 void AdapterStop() {

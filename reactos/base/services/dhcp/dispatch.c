@@ -77,7 +77,10 @@ dispatch(void)
          * a timeout registered, time out the select call then.
          */
     another:
-        AdapterDiscover();
+        if (!AdapterDiscover()) {
+            AdapterStop();
+            break;
+        }
 
         for (l = protocols, nfds = 0; l; l = l->next)
             nfds++;
