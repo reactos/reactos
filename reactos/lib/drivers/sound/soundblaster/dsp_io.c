@@ -25,11 +25,10 @@ SbDspReset(
     IN  ULONG Timeout)
 {
     ULONG Expiry;
-    KIRQL CurrentIrqLevel = KeGetCurrentIrql();
     BOOLEAN DataAvailable = FALSE;
 
     /* Should be called from DriverEntry with this IRQL */
-    ASSERT(CurrentIrqLevel == PASSIVE_LEVEL);
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     WRITE_SB_DSP_RESET(BasePort, 0x01);
     SleepMs(50);   /* Should be enough */
