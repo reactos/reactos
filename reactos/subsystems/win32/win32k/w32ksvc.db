@@ -2,7 +2,7 @@ wine_server_call                   1
 RosGdiAlphaBlend                  11
 RosGdiBitBlt                       9
 RosGdiCreateBitmap                 4
-RosGdiCreateDIBSection             4
+RosGdiCreateDIBSection             5
 RosGdiDeleteBitmap                 1
 RosGdiGetBitmapBits                3
 RosGdiGetDIBits                    7

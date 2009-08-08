@@ -174,12 +174,22 @@ BOOL CDECL RosDrv_CreateDC( HDC hdc, NTDRV_PDEVICE **pdev, LPCWSTR driver, LPCWS
 HBITMAP CDECL RosDrv_CreateDIBSection( NTDRV_PDEVICE *physDev, HBITMAP hbitmap,
                                        const BITMAPINFO *bmi, UINT usage )
 {
-    UNIMPLEMENTED;
-    return 0;
+    DIBSECTION dib;
+
+    GetObjectW( hbitmap, sizeof(dib), &dib );
+
+    return RosGdiCreateDIBSection(physDev->hKernelDC, hbitmap, bmi, usage, &dib);
 }
 
 BOOL CDECL RosDrv_DeleteBitmap( HBITMAP hbitmap )
 {
+    DIBSECTION dib;
+
+    if (GetObjectW( hbitmap, sizeof(dib), &dib ) == sizeof(dib))
+    {
+        FIXME("TODO: Delete existing DIB section!\n");
+    }
+
     return RosGdiDeleteBitmap(hbitmap);
 }
 

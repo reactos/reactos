@@ -103,10 +103,34 @@ BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hUserBitmap, BITMAP *pBit
 }
 
 HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
-                                       const BITMAPINFO *bmi, UINT usage )
+                                       const BITMAPINFO *bmi, UINT usage, DIBSECTION *dib )
 {
-    UNIMPLEMENTED;
-    return 0;
+    SIZEL szSize;
+    ULONG ulFormat;
+    HBITMAP hbmDIB;
+
+    /* Get DIB section size */
+    szSize.cx = dib->dsBm.bmWidth;
+    szSize.cy = abs(dib->dsBm.bmHeight);
+
+    /* Get its format */
+    ulFormat = GrepBitmapFormat(dib->dsBmih.biBitCount * dib->dsBmih.biPlanes,
+                                dib->dsBmih.biCompression);
+
+    /* Create the bitmap */
+    hbmDIB = GreCreateBitmap(szSize,
+                             dib->dsBm.bmWidthBytes, ulFormat,
+                             BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
+                             (dib->dsBmih.biHeight < 0 ? BMF_TOPDOWN : 0),
+                             dib->dsBm.bmBits);
+
+    /* Map handles */
+    GDI_AddHandleMapping(hbmDIB, hbitmap);
+
+    DPRINT("Created bitmap %x (user handle %x) for DIB section\n", hbmDIB, hbitmap);
+
+    /* Return success */
+    return hbitmap;
 }
 
 BOOL APIENTRY RosGdiDeleteBitmap( HBITMAP hbitmap )

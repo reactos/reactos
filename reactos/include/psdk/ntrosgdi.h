@@ -75,7 +75,7 @@ BOOL APIENTRY RosGdiBitBlt( HDC physDevDst, INT xDst, INT yDst,
                     INT xSrc, INT ySrc, DWORD rop );
 BOOL APIENTRY RosGdiCreateBitmap( HDC physDev, HBITMAP hBitmap, BITMAP *pBitmap, LPVOID bmBits );
 HBITMAP APIENTRY RosGdiCreateDIBSection( HDC physDev, HBITMAP hbitmap,
-                                       const BITMAPINFO *bmi, UINT usage );
+                                       const BITMAPINFO *bmi, UINT usage, DIBSECTION *dib );
 BOOL APIENTRY RosGdiDeleteBitmap( HBITMAP hbitmap );
 LONG APIENTRY RosGdiGetBitmapBits( HBITMAP hbitmap, void *buffer, LONG count );
 INT APIENTRY RosGdiGetDIBits( HDC physDev, HBITMAP hbitmap, UINT startscan, UINT lines,
