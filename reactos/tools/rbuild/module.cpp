@@ -525,6 +525,8 @@ Module::~Module ()
 		delete linkerFlags[i];
 	for ( i = 0; i < stubbedComponents.size(); i++ )
 		delete stubbedComponents[i];
+	for ( i = 0; i < cdfiles.size (); i++ )
+		delete cdfiles[i];
 	if ( linkerScript )
 		delete linkerScript;
 	if ( pch )
@@ -917,6 +919,12 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		autoRegister = new AutoRegister ( project, this, e );
 		subs_invalid = true;
 	}
+	else if ( e.name == "cdfile" )
+	{
+		CDFile* cdfile = new CDFile ( project, e, subpath );
+		cdfiles.push_back ( cdfile );
+		subs_invalid = true;
+	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 	{
 		throw XMLInvalidBuildFileException (
@@ -924,6 +932,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
 	}
+	for ( size_t i = 0; i < cdfiles.size (); i++ )
+		cdfiles[i]->ProcessXML ();
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXMLSubElement ( *e.subElements[i], subdirectory, subpath, parseContext );
 	parseContext.compilationUnit = pOldCompilationUnit;
@@ -972,10 +982,6 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Iso;
 	if ( attribute.value == "liveiso" )
 		return LiveIso;
-	if ( attribute.value == "isoregtest" )
-		return IsoRegTest;
-	if ( attribute.value == "liveisoregtest" )
-		return LiveIsoRegTest;
 	if ( attribute.value == "test" )
 		return Test;
 	if ( attribute.value == "rpcserver" )
@@ -1026,8 +1032,6 @@ Module::GetTargetDirectoryTree () const
 		case BootProgram:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case ElfExecutable:
 		case Cabinet:
 			return OutputDirectory;
@@ -1089,8 +1093,6 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 			return ".iso";
 		case Test:
 			return ".exe";
@@ -1149,8 +1151,6 @@ Module::GetDefaultModuleEntrypoint () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1202,8 +1202,6 @@ Module::GetDefaultModuleBaseaddress () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1259,8 +1257,6 @@ Module::GetDefaultModuleCRT () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1317,8 +1313,6 @@ Module::IsDLL () const
 		case BootProgram:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1762,9 +1756,7 @@ bool
 Bootsector::IsSupportedModuleType ( ModuleType type )
 {
 	if ( type == Iso ||
-	     type == LiveIso ||
- 	     type == IsoRegTest ||
-		 type == LiveIsoRegTest )
+	     type == LiveIso )
 	{
 		return true;
 	}

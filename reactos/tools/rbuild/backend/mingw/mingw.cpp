@@ -59,8 +59,6 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "" }, // Win32SCR
 	{ HostFalse, "", "", "" }, // IdlHeader
 	{ HostFalse, "", "", "" }, // IdlInterface
-	{ HostFalse, "", "", "" }, // IsoRegTest
-	{ HostFalse, "", "", "" }, // LiveIsoRegTest
 	{ HostFalse, "", "", "" }, // EmbeddedTypeLib
 	{ HostFalse, "", "", "" }, // ElfExecutable
 	{ HostFalse, "", "", "" }, // RpcProxy
@@ -543,10 +541,6 @@ MingwBackend::IncludeInAllTarget ( const Module& module ) const
 	if ( module.type == Iso )
 		return false;
 	if ( module.type == LiveIso )
-		return false;
-	if ( module.type == IsoRegTest )
-		return false;
-	if ( module.type == LiveIsoRegTest )
 		return false;
 	if ( module.type == Test )
 		return false;

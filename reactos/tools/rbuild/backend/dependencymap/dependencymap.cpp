@@ -98,9 +98,7 @@ DepMapBackend::_generate_depmap ( FILE* OUT )
 	{
 		Module& module = *p->second;
 		if ((module.type != Iso) &&
-			(module.type != LiveIso) &&
-			(module.type != IsoRegTest) &&
-			(module.type != LiveIsoRegTest))
+			(module.type != LiveIso))
 		{
 			vector<const IfableData*> ifs_list;
 			ifs_list.push_back ( &module.project.non_if_data );
