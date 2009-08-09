@@ -30,7 +30,7 @@
 
 #ifdef INCLUDE_CMD_CLS
 
-INT cmd_cls (LPTSTR cmd, LPTSTR param)
+INT cmd_cls (LPTSTR param)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 	COORD coPos;

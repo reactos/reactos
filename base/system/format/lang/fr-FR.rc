@@ -11,7 +11,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Utilisation : %S disque: [-FS:système de fichier] [-V:nom] [-Q] [-A:taille] [-C]\n\n\
+STRING_HELP,  "Utilisation : %s disque: [-FS:système de fichier] [-V:nom] [-Q] [-A:taille] [-C]\n\n\
   [disque:]        Indique le disque à formater.\n\
   -FS:système de fichier  Indique le type de système de fichier (%s).\n\
   -V:nom           Détermine le nom du disque.\n\
@@ -31,7 +31,7 @@ STRING_NO_SUPPORT  "Fontion Non Supportée"
 
 STRING_FMIFS_FAIL  "Impossible de trouver les points d'entrée FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Argument inconnu : %S\n"
+STRING_UNKNOW_ARG  "Argument inconnu : %s\n"
 
 STRING_DRIVE_PARM  "Le disque à formater n'est pas indiqué.\n\n"
 
@@ -43,7 +43,7 @@ STRING_NO_VOLUME         "Impossible de trouver le disque"
 
 STRING_NO_VOLUME_SIZE    "Impossible de déterminer la taille du disque"
 
-STRING_FILESYSTEM        "Le type de système de fichier est %S.\n"
+STRING_FILESYSTEM        "Le type de système de fichier est %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Donner un nom pour le disque %C : "
 

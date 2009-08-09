@@ -1,11 +1,9 @@
-#include <roscfg.h>
 #include <limits.h>
 #include <ntddk.h>
 #include <ntifs.h>
 #include <tdi.h>
 #include <tdistat.h>
 #include <../recmutex/recmutex.h>
-#include <roscfg.h>
 #include <tcpip.h>
 #include <loopback.h>
 #include <ip.h>
@@ -32,7 +30,6 @@
 #include <fileobjs.h>
 #include <lock.h>
 #include <wait.h>
-#include <bug.h>
 #include <memtrack.h>
 #include <oskittcp.h>
 #include <interface.h>

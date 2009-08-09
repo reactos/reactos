@@ -1,0 +1,126 @@
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+
+IDD_NETPROPERTIES DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generelt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Forbind til Netværket/Internettet med:", -1, 9,9,217,8
+ EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_DISABLED | WS_BORDER | WS_TABSTOP
+ PUSHBUTTON "&Konfigure", IDC_CONFIGURE, 189, 38, 50, 14
+ LTEXT "Komponeter mærkeret med et flueben er brugt af den forbindelse:", -1, 9, 59, 217, 8
+ LISTBOX IDC_COMPONENTSLIST, 9, 71, 230, 55, LBS_NOTIFY | WS_VSCROLL | WS_BORDER | LBS_NOINTEGRALHEIGHT
+ PUSHBUTTON "&Installere", IDC_INSTALL, 9, 133, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Afinstallere", IDC_UNINSTALL, 90, 133, 65, 14, WS_DISABLED | WS_TABSTOP
+ PUSHBUTTON "&Egenskaber", IDC_PROPERTIES, 174, 133, 65, 14
+ GROUPBOX "Beskrivelse", -1, 9, 153, 230, 46, BS_GROUPBOX
+ LTEXT "Komponent Beskrivelse Her...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
+ CHECKBOX "Vis Ikon i System Tray ved forbindelse.", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP
+END
+
+IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Generelt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Aktiv Forbindelse", -1, 9, 8, 182, 58, BS_GROUPBOX
+ LTEXT "Status:", -1, 19, 20, 60, 8
+ LTEXT "Tids Periode:", -1, 19, 34, 60, 8
+ LTEXT "Hastighed:", -1, 19, 48, 60, 8
+ GROUPBOX "Netværks Aktivitet", -1, 9, 74, 182, 70, BS_GROUPBOX
+ RTEXT "Sendt", -1, 26, 90, 60, 8
+ ICON IDI_NETSTAT, -1, 110, 85, 32, 32
+ LTEXT " Modtaget", -1, 149, 90, 37, 8
+ LTEXT "Bytes:", -1, 73, 115, 44, 8
+ RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
+ RTEXT "000.000.000", IDC_RECEIVED, 134, 115, 44, 8
+ PUSHBUTTON "&Egenskaber", IDC_PROPERTIES, 10, 150, 50, 14
+ PUSHBUTTON "&Deaktiver", IDC_ENDISABLE, 66, 150, 50, 14
+ RTEXT "",IDC_STATUS,83,20,98,8
+ RTEXT "",IDC_DURATION,83,34,98,8
+ RTEXT "",IDC_SPEED,83,48,98,8
+END
+
+IDD_LAN_NETSTATUSADVANCED DIALOGEX DISCARDABLE  0, 0, 200,180
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Support"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ GROUPBOX "Connection Status", -1, 9, 8, 200, 88, BS_GROUPBOX
+ LTEXT "Address type:", -1, 22, 20, 80, 8
+ LTEXT "IP address:", -1, 22, 34, 80, 8
+ LTEXT "SubNet mask:", -1, 22, 48, 80, 8
+ LTEXT "Default gateway:", -1, 22, 62, 80, 8
+
+ RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
+ RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+
+ PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
+END
+
+IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+CAPTION "Network Connection Details"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+ CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
+ PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_PHYSICAL_ADDRESS        "Physical Address"
+	IDS_IP_ADDRESS              "IP Address"
+	IDS_SUBNET_MASK             "Subnet Mask"
+	IDS_DEF_GATEWAY             "Default Gateway"
+	IDS_DHCP_SERVER             "DHCP Server"
+	IDS_LEASE_OBTAINED          "Lease Obtained"
+	IDS_LEASE_EXPIRES           "Lease Expires"
+	IDS_DNS_SERVERS             "DNS Servers"
+	IDS_WINS_SERVERS            "WINS Servers"
+	IDS_PROPERTY                "Property"
+	IDS_VALUE                   "Value"
+	IDS_NETWORKCONNECTION       "Network Connection"
+	IDS_SHV_COLUMN_NAME         "Name"
+	IDS_SHV_COLUMN_TYPE         "Type"
+	IDS_SHV_COLUMN_STATE        "Status"
+	IDS_SHV_COLUMN_DEVNAME      "Device Name"
+	IDS_SHV_COLUMN_PHONE        "Phone # or Host Address"
+	IDS_SHV_COLUMN_OWNER        "Owner"
+	IDS_TYPE_ETHERNET           "LAN or High-Speed Internet"
+	IDS_STATUS_NON_OPERATIONAL  "Disabled"
+	IDS_STATUS_UNREACHABLE      "Not Connected"
+	IDS_STATUS_DISCONNECTED     "Network cable unplugged"
+	IDS_STATUS_CONNECTING       "Acquiring network address"
+	IDS_STATUS_CONNECTED        "Connected"
+	IDS_STATUS_OPERATIONAL      "Connected"
+
+	IDS_NET_ACTIVATE            "Enable"
+	IDS_NET_DEACTIVATE          "Disable"
+	IDS_NET_STATUS              "Status"
+	IDS_NET_REPAIR              "Repair"
+	IDS_NET_CREATELINK          "Create Shortcut"
+	IDS_NET_DELETE              "Delete"
+	IDS_NET_PROPERTIES          "Properties"
+
+	IDS_FORMAT_BIT              "%u Bit/s"
+	IDS_FORMAT_KBIT             "%u KBit/s"
+	IDS_FORMAT_MBIT             "%u MBit/s"
+	IDS_FORMAT_GBIT             "%u GBit/s"
+	IDS_DURATION_DAY            "%d Day %s"
+	IDS_DURATION_DAYS           "%d Days %s"
+	IDS_ASSIGNED_DHCP           "Assigned by DHCP"
+	IDS_ASSIGNED_MANUAL         "Manually configured"
+END
+
+

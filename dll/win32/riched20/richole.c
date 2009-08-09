@@ -52,6 +52,7 @@ DEFINE_GUID(IID_ITextRange, 0x8cc497c2, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 
 DEFINE_GUID(IID_ITextSelection, 0x8cc497c1, 0xa1df, 0x11ce, 0x80, 0x98, 0x00, 0xaa, 0x00, 0x47, 0xbe, 0x5d);
 
 typedef struct ITextSelectionImpl ITextSelectionImpl;
+typedef struct IOleClientSiteImpl IOleClientSiteImpl;
 
 typedef struct IRichEditOleImpl {
     const IRichEditOleVtbl *lpRichEditOleVtbl;
@@ -60,10 +61,18 @@ typedef struct IRichEditOleImpl {
 
     ME_TextEditor *editor;
     ITextSelectionImpl *txtSel;
+    IOleClientSiteImpl *clientSite;
 } IRichEditOleImpl;
 
 struct ITextSelectionImpl {
     const ITextSelectionVtbl *lpVtbl;
+    LONG ref;
+
+    IRichEditOleImpl *reOle;
+};
+
+struct IOleClientSiteImpl {
+    const IOleClientSiteVtbl *lpVtbl;
     LONG ref;
 
     IRichEditOleImpl *reOle;
@@ -126,6 +135,7 @@ IRichEditOle_fnRelease(IRichEditOle *me)
         TRACE ("Destroying %p\n", This);
         This->txtSel->reOle = NULL;
         ITextSelection_Release((ITextSelection *) This->txtSel);
+        IOleClientSite_Release((IOleClientSite *) This->clientSite);
         heap_free(This);
     }
     return ref;
@@ -157,12 +167,147 @@ IRichEditOle_fnConvertObject(IRichEditOle *me, LONG iob,
 }
 
 static HRESULT WINAPI
+IOleClientSite_fnQueryInterface(IOleClientSite *me, REFIID riid, LPVOID *ppvObj)
+{
+    TRACE("%p %s\n", me, debugstr_guid(riid) );
+
+    *ppvObj = NULL;
+    if (IsEqualGUID(riid, &IID_IUnknown) ||
+        IsEqualGUID(riid, &IID_IOleClientSite))
+        *ppvObj = me;
+    if (*ppvObj)
+    {
+        IOleClientSite_AddRef(me);
+        return S_OK;
+    }
+    FIXME("%p: unhandled interface %s\n", me, debugstr_guid(riid) );
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI
+IOleClientSite_fnAddRef(IOleClientSite *me)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI
+IOleClientSite_fnRelease(IOleClientSite *me)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    ULONG ref = InterlockedDecrement(&This->ref);
+    if (ref == 0)
+        heap_free(This);
+    return ref;
+}
+
+static HRESULT WINAPI
+IOleClientSite_fnSaveObject(IOleClientSite *me)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("stub %p\n",me);
+    return E_NOTIMPL;
+}
+
+
+static HRESULT WINAPI
+IOleClientSite_fnGetMoniker(IOleClientSite *me, DWORD dwAssign, DWORD dwWhichMoniker,
+    IMoniker **ppmk)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("stub %p\n",me);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+IOleClientSite_fnGetContainer(IOleClientSite *me, IOleContainer **ppContainer)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("stub %p\n",me);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+IOleClientSite_fnShowObject(IOleClientSite *me)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("stub %p\n",me);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+IOleClientSite_fnOnShowWindow(IOleClientSite *me, BOOL fShow)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("stub %p\n",me);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+IOleClientSite_fnRequestNewObjectLayout(IOleClientSite *me)
+{
+    IOleClientSiteImpl *This = (IOleClientSiteImpl *) me;
+    if (!This->reOle)
+        return CO_E_RELEASED;
+
+    FIXME("stub %p\n",me);
+    return E_NOTIMPL;
+}
+
+static const IOleClientSiteVtbl ocst = {
+    IOleClientSite_fnQueryInterface,
+    IOleClientSite_fnAddRef,
+    IOleClientSite_fnRelease,
+    IOleClientSite_fnSaveObject,
+    IOleClientSite_fnGetMoniker,
+    IOleClientSite_fnGetContainer,
+    IOleClientSite_fnShowObject,
+    IOleClientSite_fnOnShowWindow,
+    IOleClientSite_fnRequestNewObjectLayout
+};
+
+static IOleClientSiteImpl *
+CreateOleClientSite(IRichEditOleImpl *reOle)
+{
+    IOleClientSiteImpl *clientSite = heap_alloc(sizeof *clientSite);
+    if (!clientSite)
+        return NULL;
+
+    clientSite->lpVtbl = &ocst;
+    clientSite->ref = 1;
+    clientSite->reOle = reOle;
+    return clientSite;
+}
+
+static HRESULT WINAPI
 IRichEditOle_fnGetClientSite(IRichEditOle *me,
                LPOLECLIENTSITE *lplpolesite)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(me);
-    FIXME("stub %p\n",This);
-    return E_NOTIMPL;
+
+    TRACE("%p,%p\n",This, lplpolesite);
+
+    if(!lplpolesite)
+        return E_INVALIDARG;
+    *lplpolesite = (IOleClientSite *) This->clientSite;
+    IOleClientSite_fnAddRef(*lplpolesite);
+    return S_OK;
 }
 
 static HRESULT WINAPI
@@ -203,7 +348,7 @@ IRichEditOle_fnGetObjectCount(IRichEditOle *me)
 {
     IRichEditOleImpl *This = impl_from_IRichEditOle(me);
     FIXME("stub %p\n",This);
-    return E_NOTIMPL;
+    return 0;
 }
 
 static HRESULT WINAPI
@@ -1541,8 +1686,15 @@ LRESULT CreateIRichEditOle(ME_TextEditor *editor, LPVOID *ppObj)
         heap_free(reo);
         return 0;
     }
+    reo->clientSite = CreateOleClientSite(reo);
+    if (!reo->txtSel)
+    {
+        ITextSelection_Release((ITextSelection *) reo->txtSel);
+        heap_free(reo);
+        return 0;
+    }
     TRACE("Created %p\n",reo);
-    *ppObj = (LPVOID) reo;
+    *ppObj = reo;
 
     return 1;
 }

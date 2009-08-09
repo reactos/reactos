@@ -1,11 +1,11 @@
 Summary: Library providing XML and HTML support
 Name: libxml2
-Version: 2.6.20
+Version: 2.7.3
 Release: 1
 License: MIT
 Group: Development/Libraries
 Source: ftp://xmlsoft.org/libxml2-%{version}.tar.gz
-BuildRoot: %{_tmppath}/%{name}-%{version}-root
+BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: python python-devel zlib-devel
 URL: http://xmlsoft.org/
 Prefix: %{_prefix}
@@ -25,8 +25,9 @@ URI library.
 %package devel
 Summary: Libraries, includes, etc. to develop XML and HTML applications
 Group: Development/Libraries
-Requires: libxml2 = %{version}
+Requires: libxml2 = %{version}-%{release}
 Requires: zlib-devel
+Requires: pkgconfig
 
 %description devel
 Libraries, include files, etc you can use to develop XML applications.
@@ -43,8 +44,8 @@ URI library.
 %package python
 Summary: Python bindings for the libxml2 library
 Group: Development/Libraries
-Requires: libxml2 = %{version}
-Requires: %{_libdir}/python%(echo `python -c "import sys; print sys.version[0:3]"`)
+Requires: libxml2 = %{version}-%{release}
+Requires: python
 
 %description python
 The libxml2-python package contains a module that permits applications
@@ -60,35 +61,8 @@ at parse time or later once the document has been modified.
 %setup -q
 
 %build
-#
-# try to use compiler profiling, based on Arjan van de Ven <arjanv@redhat.com>
-# initial test spec. This really doesn't work okay for most tests done.
-#
-GCC_VERSION=`gcc --version | grep "^gcc" | awk '{ print $3 }' | sed 's+\([0-9]\)\.\([0-9]\)\..*+\1\2+'`
-if [ $GCC_VERSION -ge 34 ]
-then
-    PROF_GEN='-fprofile-generate'
-    PROF_USE='-fprofile-use'
-fi
-
-if [ "$PROF_GEN" != "" ]
-then
-    # First generate a profiling version
-    CFLAGS="${RPM_OPT_FLAGS} ${PROF_GEN}"  %configure
-    make
-    # Run a few sampling
-    make dba100000.xml
-    ./xmllint --noout  dba100000.xml
-    ./xmllint --stream  dba100000.xml
-    ./xmllint --noout --valid test/valid/REC-xml-19980210.xml
-    ./xmllint --stream --valid test/valid/REC-xml-19980210.xml
-    # Then generate code based on profile
-    CFLAGS="${RPM_OPT_FLAGS} ${PROF_USE}"  %configure
-    make
-else
-    %configure
-    make
-fi
+%configure
+make
 gzip -9 ChangeLog
 
 %install
@@ -128,6 +102,10 @@ rm -fr %{buildroot}
 %doc doc/*.html doc/html doc/*.gif doc/*.png
 %doc doc/tutorial doc/libxml2-api.xml.gz
 %doc doc/examples
+%doc %{_datadir}/gtk-doc/html/libxml2/*.devhelp
+%doc %{_datadir}/gtk-doc/html/libxml2/*.html
+%doc %{_datadir}/gtk-doc/html/libxml2/*.png
+%doc %{_datadir}/gtk-doc/html/libxml2/*.css
 
 %{_libdir}/lib*.so
 %{_libdir}/*a
@@ -140,8 +118,8 @@ rm -fr %{buildroot}
 %defattr(-, root, root)
 
 %doc AUTHORS ChangeLog.gz NEWS README Copyright
-%{_libdir}/python*/site-packages/libxml2.py
-%{_libdir}/python*/site-packages/drv_libxml2.py
+%{_libdir}/python*/site-packages/libxml2.py*
+%{_libdir}/python*/site-packages/drv_libxml2.py*
 %{_libdir}/python*/site-packages/libxml2mod*
 %doc python/TODO
 %doc python/libxml2class.txt
@@ -150,56 +128,6 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
-* Mon Jul 11 2005 Daniel Veillard <veillard@redhat.com>
-- upstream release 2.6.20 see http://xmlsoft.org/news.html
-
-* Thu Jan  2 2003 Daniel Veillard <veillard@redhat.com>
-- integrated drv_libxml2 xml.sax driver from Stéphane Bidoul
-- provides the new XmlTextReader interfaces based on C# XML APIs
-
-* Wed Oct 23 2002 Daniel Veillard <veillard@redhat.com>
-- revamped the spec file, cleaned up some rpm building problems
-
-* Fri Oct  4 2002 Jeremy Katz <katzj@redhat.com>
-- build with 'make LIBTOOL=/usr/bin/libtool' to use system libtool
-
-* Wed Sep  4 2002 Daniel Veillard <veillard@redhat.com>
-
-- library paths fixed for x86-64
-
-* Fri Feb  1 2002 Daniel Veillard <veillard@redhat.com>
-
-- Added the python package
-
-* Sun Nov  4 2001 Daniel Veillard <veillard@redhat.com>
-
-- cleaned up the specfile
-- 2.4.7 broke SGML catalogs badly. this fixes it.
-
-* Thu Apr 26 2001 Toshio Kuratomi <badger@prtr-13.ucsc.edu>
-
-[2.3.7]
-- Added libxml.m4 to the distribution file list
-- Moved the man pages from /usr/man to /usr/share/man to conform to FHS2.0
-- Moved programmer documentation into the devel package
-
-* Thu Sep 23 1999 Daniel Veillard <daniel@veillard.com>
-
-- corrected the spec file alpha stuff
-- switched to version 1.7.1
-- Added validation, XPath, nanohttp, removed memory leaks
-- Renamed CHAR to xmlChar
-
-* Wed Jun  2 1999 Daniel Veillard <daniel@veillard.com>
-
-- Switched to version 1.1: SAX extensions, better entities support, lots of
-  bug fixes.
-
-* Sun Oct  4 1998 Daniel Veillard <daniel@veillard.com>
-
-- Added xml-config to the package
-
-* Thu Sep 24 1998 Michael Fulbright <msf@redhat.com>
-
-- Built release 0.30
+* Sun Jan 18 2009 Daniel Veillard <veillard@redhat.com>
+- upstream release 2.7.3 see http://xmlsoft.org/news.html
 

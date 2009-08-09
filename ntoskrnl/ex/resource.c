@@ -6,14 +6,6 @@
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */
 
-/*
- * WARNING:
- * This implementation is the Windows NT 5.x one.
- * Vista has optimized the OwnerThread entry array and the internals of
- * ExpFindEntryForThread and ExpFindFreeEntry probably need to be modified
- * accordingly in order to support the WDK.
- */
-
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
@@ -28,8 +20,8 @@
 
 #if (!(defined(CONFIG_SMP)) && !(defined(DBG)))
 
-VOID
 FORCEINLINE
+VOID
 ExAcquireResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
@@ -40,8 +32,8 @@ ExAcquireResourceLock(IN PERESOURCE Resource,
     _disable();
 }
 
-VOID
 FORCEINLINE
+VOID
 ExReleaseResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
@@ -54,8 +46,8 @@ ExReleaseResourceLock(IN PERESOURCE Resource,
 
 #else
 
-VOID
 FORCEINLINE
+VOID
 ExAcquireResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
@@ -63,8 +55,8 @@ ExAcquireResourceLock(IN PERESOURCE Resource,
     KeAcquireInStackQueuedSpinLock(&Resource->SpinLock, LockHandle);
 }
 
-VOID
 FORCEINLINE
+VOID
 ExReleaseResourceLock(IN PERESOURCE Resource,
                       IN PKLOCK_QUEUE_HANDLE LockHandle)
 {
@@ -2207,6 +2199,66 @@ ExEnterCriticalRegionAndAcquireResourceExclusive(IN PERESOURCE Resource)
 }
 
 /*++
+ * @name ExEnterCriticalRegionAndAcquireResourceShared
+ * @implemented NT5.2
+ *
+ *     The ExEnterCriticalRegionAndAcquireResourceShared routine
+ *     enters a critical region and then acquires a resource shared.
+ *
+ * @param Resource
+ *        Pointer to the resource to acquire.
+ *
+ * @return Pointer to the Win32K thread pointer of the current thread.
+ *
+ * @remarks See ExAcquireResourceSharedLite.
+ *
+ *--*/
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireResourceShared(IN PERESOURCE Resource)
+{
+    /* Enter critical region */
+    KeEnterCriticalRegion();
+
+    /* Acquire the resource */
+    ExAcquireResourceSharedLite(Resource, TRUE);
+
+    /* Return the Win32 Thread */
+    return KeGetCurrentThread()->Win32Thread;
+}
+
+/*++
+ * @name ExEnterCriticalRegionAndAcquireSharedWaitForExclusive
+ * @implemented NT5.2
+ *
+ *     The ExEnterCriticalRegionAndAcquireSharedWaitForExclusive routine
+ *     enters a critical region and then acquires a resource shared if
+ *     shared access can be granted and there are no exclusive waiters.
+ *     It then acquires the resource exclusively.
+ *
+ * @param Resource
+ *        Pointer to the resource to acquire.
+ *
+ * @return Pointer to the Win32K thread pointer of the current thread.
+ *
+ * @remarks See ExAcquireSharedWaitForExclusive.
+ *
+ *--*/
+PVOID
+NTAPI
+ExEnterCriticalRegionAndAcquireSharedWaitForExclusive(IN PERESOURCE Resource)
+{
+    /* Enter critical region */
+    KeEnterCriticalRegion();
+
+    /* Acquire the resource */
+    ExAcquireSharedWaitForExclusive(Resource, TRUE);
+
+    /* Return the Win32 Thread */
+    return KeGetCurrentThread()->Win32Thread;
+}
+
+/*++
  * @name ExReleaseResourceAndLeaveCriticalRegion
  * @implemented NT5.1
  *
@@ -2231,6 +2283,3 @@ ExReleaseResourceAndLeaveCriticalRegion(IN PERESOURCE Resource)
     /* Leave critical region */
     KeLeaveCriticalRegion();
 }
-
-/* EOF */
-

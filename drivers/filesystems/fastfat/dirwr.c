@@ -25,7 +25,6 @@ VfatUpdateEntry(
     ULONG dirIndex;
 
     ASSERT(pFcb);
-    ASSERT(pFcb->parentFcb);
 
     if (pFcb->Flags & FCB_IS_FATX_ENTRY)
     {
@@ -137,7 +136,6 @@ vfatFindDirSpace(
         if (*start + nbSlots > count)
         {
             LARGE_INTEGER AllocationSize;
-            CHECKPOINT;
             /* extend the directory */
             if (vfatFCBIsRoot(pDirFcb) && DeviceExt->FatInfo.FatType != FAT32)
             {
@@ -270,7 +268,6 @@ FATAddEntry(
         if (i == 100) /* FIXME : what to do after this ? */
         {
             ExFreePoolWithTag(Buffer, TAG_VFAT);
-            CHECKPOINT;
             return STATUS_UNSUCCESSFUL;
         }
         IsNameLegal = RtlIsNameLegalDOS8Dot3(&DirContext.ShortNameU, &NameA, &SpacesFound);
@@ -440,7 +437,6 @@ FATAddEntry(
     if (DirContext.StartIndex / i == DirContext.DirIndex / i)
     {
         /* one cluster */
-        CHECKPOINT;
         CcPinRead(ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY),
                   TRUE, &Context, (PVOID*)&pFatEntry);
         if (nbSlots > 1)
@@ -452,7 +448,6 @@ FATAddEntry(
     else
     {
         /* two clusters */
-        CHECKPOINT;
         size = DeviceExt->FatInfo.BytesPerCluster -
                (DirContext.StartIndex * sizeof(FAT_DIR_ENTRY)) % DeviceExt->FatInfo.BytesPerCluster;
         i = size / sizeof(FAT_DIR_ENTRY);
@@ -483,7 +478,7 @@ FATAddEntry(
     if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
         FileOffset.QuadPart = 0;
-        CcMapData((*Fcb)->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE,
+        CcPinRead((*Fcb)->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE,
                   &Context, (PVOID*)&pFatEntry);
         /* clear the new directory cluster */
         RtlZeroMemory(pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
@@ -533,7 +528,6 @@ FATXAddEntry(
     if (DirContext.LongNameU.Length / sizeof(WCHAR) > 42)
     {
         /* name too long */
-        CHECKPOINT;
         return STATUS_NAME_TOO_LONG;
     }
 

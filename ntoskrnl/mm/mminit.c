@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -118,8 +118,6 @@ MmInitVirtualMemory()
 
    BoundaryAddressMultiple.QuadPart = 0;
 
-   MmInitMemoryAreas();
-
    DPRINT("NonPagedPool %x - %x, PagedPool %x - %x\n", MiNonPagedPoolStart, (ULONG_PTR)MiNonPagedPoolStart + MiNonPagedPoolLength - 1,
            MmPagedPoolBase, (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize - 1);
 
@@ -134,13 +132,14 @@ MmInitVirtualMemory()
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
                       MEMORY_AREA_SYSTEM,
                       &BaseAddress,
-                      PAGE_SIZE * MAXIMUM_PROCESSORS,
+                      PAGE_SIZE * KeNumberProcessors,
                       PAGE_READWRITE,
                       &MArea,
                       TRUE,
                       0,
                       BoundaryAddressMultiple);
 
+#if defined(_M_IX86)
    /* Local APIC base */
    BaseAddress = (PVOID)0xFEE00000;
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -164,17 +163,7 @@ MmInitVirtualMemory()
                       TRUE,
                       0,
                       BoundaryAddressMultiple);
-
-   BaseAddress = (PVOID)0xFF3A0000;
-   MmCreateMemoryArea(MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-                      0x20000,
-                      PAGE_READWRITE,
-                      &MArea,
-                      TRUE,
-                      0,
-                      BoundaryAddressMultiple);
+#endif
 
    BaseAddress = MiNonPagedPoolStart;
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
@@ -359,18 +348,24 @@ MiGetLastKernelAddress(VOID)
     return LastKrnlPhysAddr << PAGE_SHIFT;
 }
 
+
+VOID
+NTAPI
+MiInitHyperSpace(VOID);
+
 VOID
 INIT_FUNCTION
 NTAPI
 MmInit1(VOID)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
+    ULONG Dummy[2];
     
     /* Dump memory descriptors */
     if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
 
     /* Set the page directory */
-    PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
+    PsGetCurrentProcess()->Pcb.DirectoryTableBase[0] = (ULONG)MmGetPageDirectory();
 
     /* Get the size of FreeLDR's image allocations */
     MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
@@ -392,7 +387,8 @@ MmInit1(VOID)
     DbgPrint("Used memory %dKb\n", (MmNumberOfPhysicalPages * PAGE_SIZE) / 1024);
     
     /* Initialize the kernel address space */
-    MmInitializeKernelAddressSpace();
+    MmInitializeHandBuiltProcess(PsGetCurrentProcess(), Dummy);
+    MmKernelAddressSpace = MmGetCurrentAddressSpace();
     MmInitGlobalKernelPageDirectory();
     
     /* Get kernel address boundaries */
@@ -434,10 +430,13 @@ MmInit1(VOID)
     
     /* Dump kernel memory layout */
     MiDbgKernelLayout();
-    
+
+    /* Initialize hyperspace */
+    MiInitHyperSpace();
+
     /* Initialize the page list */
     MmInitializePageList();
-    
+
     /* Unmap low memory */
     MmDeletePageTable(NULL, 0);
 

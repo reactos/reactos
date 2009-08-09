@@ -1,0 +1,58 @@
+/*
+ * Copyright 2005-2006 Jacek Caban
+ * Copyright 2009 Michael Stefaniuc
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_HTMLDISABLED    "Afișarea de pagini HTML este în prezent dezactivată."
+    IDS_HTMLDOCUMENT    "Document HTML"
+    IDS_DOWNLOADING     "Descarc..."
+    IDS_INSTALLING      "Instalez..."
+}
+
+ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Instalator Wine Gecko"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "Această aplicație încearcă să afișeze o pagină HTML. Wine are nevoie de Gecko (motorul de HTML Mozilla) pentru a afișa această pagină. Apăsați „Instalează” dacă doriți ca Wine să descarce și să instaleze Gecko în mod automat.", ID_DWL_STATUS, 10, 10, 240, 40, SS_LEFT
+    CONTROL "Progres", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12
+    DEFPUSHBUTTON "&Instalează", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Renunță", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
+}
+
+IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
+STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Hiperlegătură"
+FONT 8, "MS Shell Dlg"
+{
+    GROUPBOX "Informații de hiperlegătură", -1, 5, 5, 190, 55
+    LTEXT "&Tip:", -1, 10, 22, 20, 10
+    COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
+    LTEXT "&URL:", -1, 10, 42, 20, 10
+    EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 200, 10, 45, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Renunță", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
+}
+
+#pragma code_page(default)

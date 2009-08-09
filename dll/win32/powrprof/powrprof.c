@@ -23,7 +23,7 @@
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <winternl.h>
+#include <ntndk.h>
 #include <powrprof.h>
 #include <wchar.h>
 #include <stdio.h>

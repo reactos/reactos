@@ -527,7 +527,7 @@ TestOpenDirect(void) {
     }
     ures_close(idna_rules);
 
-    errorCode = U_USING_FALLBACK_WARNING;;
+    errorCode = U_USING_FALLBACK_WARNING;
     idna_rules=ures_openDirect("testdata", "idna_rules", &errorCode);
     if(U_FAILURE(errorCode)) {
         log_err("ures_openDirect(\"idna_rules\") failed when U_USING_FALLBACK_WARNING was set prior to call: %s\n", u_errorName(errorCode));

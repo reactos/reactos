@@ -50,6 +50,10 @@ BOOL
 EvtGetLocalHandle(RPC_BINDING_HANDLE *BindingHandle);
 RPC_STATUS EvtUnbindLocalHandle(void);
 
+/* scm.c */
+DWORD
+ScmRpcStatusToWinError(RPC_STATUS Status);
+
 /* Interface to ntmarta.dll **************************************************/
 
 typedef struct _NTMARTA
@@ -66,7 +70,7 @@ typedef struct _NTMARTA
     /* 2E8 */PVOID GetAccessForTrustee;
     /* 2EC */PVOID GetExplicitEntries;
     /* 2F0 */
-    DWORD (STDCALL *RewriteGetNamedRights)(LPWSTR pObjectName,
+    DWORD (WINAPI *RewriteGetNamedRights)(LPWSTR pObjectName,
                                            SE_OBJECT_TYPE ObjectType,
                                            SECURITY_INFORMATION SecurityInfo,
                                            PSID* ppsidOwner,
@@ -76,13 +80,13 @@ typedef struct _NTMARTA
                                            PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
 
     /* 2F4 */
-    DWORD (STDCALL *RewriteSetNamedRights)(LPWSTR pObjectName,
+    DWORD (WINAPI *RewriteSetNamedRights)(LPWSTR pObjectName,
                                            SE_OBJECT_TYPE ObjectType,
                                            SECURITY_INFORMATION SecurityInfo,
                                            PSECURITY_DESCRIPTOR pSecurityDescriptor);
 
     /*2F8*/
-    DWORD (STDCALL *RewriteGetHandleRights)(HANDLE handle,
+    DWORD (WINAPI *RewriteGetHandleRights)(HANDLE handle,
                                             SE_OBJECT_TYPE ObjectType,
                                             SECURITY_INFORMATION SecurityInfo,
                                             PSID* ppsidOwner,
@@ -92,24 +96,24 @@ typedef struct _NTMARTA
                                             PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
 
     /* 2FC */
-    DWORD (STDCALL *RewriteSetHandleRights)(HANDLE handle,
+    DWORD (WINAPI *RewriteSetHandleRights)(HANDLE handle,
                                             SE_OBJECT_TYPE ObjectType,
                                             SECURITY_INFORMATION SecurityInfo,
                                             PSECURITY_DESCRIPTOR pSecurityDescriptor);
 
     /* 300 */
-    DWORD (STDCALL *RewriteSetEntriesInAcl)(ULONG cCountOfExplicitEntries,
+    DWORD (WINAPI *RewriteSetEntriesInAcl)(ULONG cCountOfExplicitEntries,
                                             PEXPLICIT_ACCESS_W pListOfExplicitEntries,
                                             PACL OldAcl,
                                             PACL* NewAcl);
 
     /* 304 */
-    DWORD (STDCALL *RewriteGetExplicitEntriesFromAcl)(PACL pacl,
+    DWORD (WINAPI *RewriteGetExplicitEntriesFromAcl)(PACL pacl,
                                                       PULONG pcCountOfExplicitEntries,
                                                       PEXPLICIT_ACCESS_W* pListOfExplicitEntries);
 
     /* 308 */
-    DWORD (STDCALL *TreeResetNamedSecurityInfo)(LPWSTR pObjectName,
+    DWORD (WINAPI *TreeResetNamedSecurityInfo)(LPWSTR pObjectName,
                                                 SE_OBJECT_TYPE ObjectType,
                                                 SECURITY_INFORMATION SecurityInfo,
                                                 PSID pOwner,
@@ -121,7 +125,7 @@ typedef struct _NTMARTA
                                                 PROG_INVOKE_SETTING ProgressInvokeSetting,
                                                 PVOID Args);
     /* 30C */
-    DWORD (STDCALL *GetInheritanceSource)(LPWSTR pObjectName,
+    DWORD (WINAPI *GetInheritanceSource)(LPWSTR pObjectName,
                                           SE_OBJECT_TYPE ObjectType,
                                           SECURITY_INFORMATION SecurityInfo,
                                           BOOL Container,
@@ -133,7 +137,7 @@ typedef struct _NTMARTA
                                           PINHERITED_FROMW pInheritArray);
 
     /* 310 */
-    DWORD (STDCALL *FreeIndexArray)(PINHERITED_FROMW pInheritArray,
+    DWORD (WINAPI *FreeIndexArray)(PINHERITED_FROMW pInheritArray,
                                     USHORT AceCnt,
                                     PFN_OBJECT_MGR_FUNCTS pfnArray  OPTIONAL);
 } NTMARTA, *PNTMARTA;

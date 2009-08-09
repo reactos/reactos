@@ -2,12 +2,11 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="uxtheme" type="win32dll" baseaddress="${BASEADDRESS_UXTHEME}" installbase="system32" installname="uxtheme.dll" allowwarnings="true">
-	<importlibrary definition="uxtheme.spec.def" />
+	<importlibrary definition="uxtheme.spec" />
 	<include base="uxtheme">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
+	<file>buffer.c</file>
 	<file>draw.c</file>
 	<file>main.c</file>
 	<file>metric.c</file>
@@ -17,7 +16,6 @@
 	<file>system.c</file>
 	<file>uxini.c</file>
 	<file>version.rc</file>
-	<file>uxtheme.spec</file>
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>

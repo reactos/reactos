@@ -271,24 +271,24 @@ VOID SystemTimeToEventTime(SYSTEMTIME * pSystemTime, DWORD * pEventTime)
     *pEventTime = (Time.ll - u1970.ll) / 10000000;
 }
 
-VOID PRINT_HEADER(PFILE_HEADER header)
+VOID PRINT_HEADER(PEVENTLOGHEADER header)
 {
-    DPRINT("SizeOfHeader = %d\n", header->SizeOfHeader);
+    DPRINT("HeaderSize = %d\n", header->HeaderSize);
     DPRINT("Signature = 0x%x\n", header->Signature);
     DPRINT("MajorVersion = %d\n", header->MajorVersion);
     DPRINT("MinorVersion = %d\n", header->MinorVersion);
-    DPRINT("FirstRecordOffset = %d\n", header->FirstRecordOffset);
-    DPRINT("EofOffset = 0x%x\n", header->EofOffset);
-    DPRINT("NextRecord = %d\n", header->NextRecord);
-    DPRINT("OldestRecord = %d\n", header->OldestRecord);
-    DPRINT("unknown1 = 0x%x\n", header->unknown1);
-    DPRINT("unknown2 = 0x%x\n", header->unknown2);
-    DPRINT("SizeOfHeader2 = %d\n", header->SizeOfHeader2);
+    DPRINT("StartOffset = %d\n", header->StartOffset);
+    DPRINT("EndOffset = 0x%x\n", header->EndOffset);
+    DPRINT("CurrentRecordNumber = %d\n", header->CurrentRecordNumber);
+    DPRINT("OldestRecordNumber = %d\n", header->OldestRecordNumber);
+    DPRINT("MaxSize = 0x%x\n", header->MaxSize);
+    DPRINT("Retention = 0x%x\n", header->Retention);
+    DPRINT("EndHeaderSize = %d\n", header->EndHeaderSize);
     DPRINT("Flags: ");
-    if (header->Flags & LOGFILE_FLAG1)  DPRINT("LOGFILE_FLAG1 ");
-    if (header->Flags & LOGFILE_FLAG2)  DPRINT("| LOGFILE_FLAG2 ");
-    if (header->Flags & LOGFILE_FLAG3)  DPRINT("| LOGFILE_FLAG3 ");
-    if (header->Flags & LOGFILE_FLAG4)  DPRINT("| LOGFILE_FLAG4");
+    if (header->Flags & ELF_LOGFILE_HEADER_DIRTY)  DPRINT("ELF_LOGFILE_HEADER_DIRTY");
+    if (header->Flags & ELF_LOGFILE_HEADER_WRAP)  DPRINT("| ELF_LOGFILE_HEADER_WRAP ");
+    if (header->Flags & ELF_LOGGFILE_LOGFULL_WRITTEN)  DPRINT("| ELF_LOGGFILE_LOGFULL_WRITTEN ");
+    if (header->Flags & ELF_LOGFILE_ARCHIVE_SET)  DPRINT("| ELF_LOGFILE_ARCHIVE_SET ");
     DPRINT("\n");
 }
 

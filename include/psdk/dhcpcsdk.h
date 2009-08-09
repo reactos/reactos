@@ -1,8 +1,5 @@
 #ifndef _DHCPCDSK_H
 #define _DHCPCDSK_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {

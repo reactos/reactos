@@ -1,7 +1,7 @@
 /* FILE:        dll/cpl/desk/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-04-21
- * THANKS TO:   Unknown translator, who translated major part of this file
+ * UPDATED:     2008-07-27
+ * THANKS TO:   potapnik, who translated major part of this file
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -160,6 +160,13 @@ END
 
 STRINGTABLE
 BEGIN
+    IDS_MULTIPLEMONITORS "(Nìkolik monitorù)"
+    IDS_UNKNOWNMONITOR "(Neznámý monitor)"
+    IDS_ADVANCEDTITLEFMT "%s a %s"
+END
+
+STRINGTABLE
+BEGIN
     IDS_CPLNAME "Obrazovka"
     IDS_CPLDESCRIPTION "Nastavení obrazovky, spoøièe, vzhledu a rozlišení."
     IDS_NONE "(Není)"
@@ -218,4 +225,11 @@ BEGIN
     IDS_ELEMENT_20 "Rozestup ikon (svisle)"
     IDS_ELEMENT_21 "Popis tlaèítek"
     IDS_ELEMENT_22 "Ikona"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Nastavení zobrazení"
+    IDS_APPLY_FAILED "Nepodaøilo se aplikovat nová nastavení..."
+    IDS_APPLY_NEEDS_RESTART "Aby se zmìny projevily, je tøeba restartovat poèítaè."
 END

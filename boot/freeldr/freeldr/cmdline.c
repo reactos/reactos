@@ -61,7 +61,7 @@ CmdLineParse(IN PCHAR CmdLine)
     // Get ramdisk base address
     //
     Setting = strstr(CmdLine, "rdbase=");
-    if (Setting) gRamDiskBase = (PVOID)strtoul(Setting +
+    if (Setting) gRamDiskBase = (PVOID)(ULONG_PTR)strtoull(Setting +
                                                sizeof("rdbase=") -
                                                sizeof(ANSI_NULL),
                                                NULL,

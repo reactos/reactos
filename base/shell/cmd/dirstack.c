@@ -140,7 +140,7 @@ INT GetDirectoryStackDepth (VOID)
 /*
  * pushd command
  */
-INT CommandPushd (LPTSTR first, LPTSTR rest)
+INT CommandPushd (LPTSTR rest)
 {
 	TCHAR curPath[MAX_PATH];
 	TCHAR newPath[MAX_PATH];
@@ -174,7 +174,7 @@ INT CommandPushd (LPTSTR first, LPTSTR rest)
 /*
  * popd command
  */
-INT CommandPopd (LPTSTR first, LPTSTR rest)
+INT CommandPopd (LPTSTR rest)
 {
 	TCHAR szPath[MAX_PATH];
 
@@ -201,7 +201,7 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
 /*
  * dirs command
  */
-INT CommandDirs (LPTSTR first, LPTSTR rest)
+INT CommandDirs (LPTSTR rest)
 {
 	LPDIRENTRY lpDir;
 

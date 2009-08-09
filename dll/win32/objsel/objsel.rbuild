@@ -3,11 +3,10 @@
 <group>
 <module name="objsel" type="win32dll" baseaddress="${BASEADDRESS_OBJSEL}" installbase="system32" installname="objsel.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="objsel.spec.def" />
+	<importlibrary definition="objsel.spec" />
 	<include base="objsel">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>ole32</library>
@@ -20,6 +19,5 @@
 	<file>objsel.c</file>
 	<file>regsvr.c</file>
 	<file>objsel.rc</file>
-	<file>objsel.spec</file>
 </module>
 </group>

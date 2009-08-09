@@ -181,7 +181,7 @@ KePPCInitThreadWithContext(IN PKTHREAD Thread,
     /* And set up the Context Switch Frame */
     CtxSwitchFrame->RetAddr = KiThreadStartup;
     CtxSwitchFrame->ApcBypassDisable = TRUE;
-    CtxSwitchFrame->ExceptionList = EXCEPTION_CHAIN_END;;
+    CtxSwitchFrame->ExceptionList = EXCEPTION_CHAIN_END;
 
     /* Save back the new value of the kernel stack. */
     Thread->KernelStack = (PVOID)CtxSwitchFrame;

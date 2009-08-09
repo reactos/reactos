@@ -358,11 +358,11 @@ static	DWORD	wodPrepare(WAVEMAPDATA* wom, LPWAVEHDR lpWaveHdrSrc, DWORD dwParam2
     ash->cbStruct = sizeof(*ash);
     ash->fdwStatus = 0L;
     ash->dwUser = (DWORD)lpWaveHdrSrc;
-    ash->pbSrc = lpWaveHdrSrc->lpData;
+    ash->pbSrc = (LPBYTE)lpWaveHdrSrc->lpData;
     ash->cbSrcLength = lpWaveHdrSrc->dwBufferLength;
     /* ash->cbSrcLengthUsed */
     ash->dwSrcUser = lpWaveHdrSrc->dwUser; /* FIXME ? */
-    ash->pbDst = (LPSTR)ash + sizeof(ACMSTREAMHEADER) + sizeof(WAVEHDR);
+    ash->pbDst = (LPBYTE)(LPSTR)ash + sizeof(ACMSTREAMHEADER) + sizeof(WAVEHDR);
     ash->cbDstLength = size;
     /* ash->cbDstLengthUsed */
     ash->dwDstUser = 0; /* FIXME ? */
@@ -373,7 +373,7 @@ static	DWORD	wodPrepare(WAVEMAPDATA* wom, LPWAVEHDR lpWaveHdrSrc, DWORD dwParam2
     }
 
     lpWaveHdrDst = (LPWAVEHDR)((LPSTR)ash + sizeof(ACMSTREAMHEADER));
-    lpWaveHdrDst->lpData = ash->pbDst;
+    lpWaveHdrDst->lpData = (LPSTR)ash->pbDst;
     lpWaveHdrDst->dwBufferLength = size; /* conversion is not done yet */
     lpWaveHdrDst->dwFlags = 0;
     lpWaveHdrDst->dwLoops = 0;
@@ -912,11 +912,11 @@ static	DWORD	widPrepare(WAVEMAPDATA* wim, LPWAVEHDR lpWaveHdrDst, DWORD dwParam2
     ash->cbStruct = sizeof(*ash);
     ash->fdwStatus = 0L;
     ash->dwUser = (DWORD)lpWaveHdrDst;
-    ash->pbSrc = (LPSTR)ash + sizeof(ACMSTREAMHEADER) + sizeof(WAVEHDR);
+    ash->pbSrc = (LPBYTE)(LPSTR)ash + sizeof(ACMSTREAMHEADER) + sizeof(WAVEHDR);
     ash->cbSrcLength = size;
     /* ash->cbSrcLengthUsed */
     ash->dwSrcUser = 0L; /* FIXME ? */
-    ash->pbDst = lpWaveHdrDst->lpData;
+    ash->pbDst = (LPBYTE)lpWaveHdrDst->lpData;
     ash->cbDstLength = lpWaveHdrDst->dwBufferLength;
     /* ash->cbDstLengthUsed */
     ash->dwDstUser = lpWaveHdrDst->dwUser; /* FIXME ? */
@@ -927,7 +927,7 @@ static	DWORD	widPrepare(WAVEMAPDATA* wim, LPWAVEHDR lpWaveHdrDst, DWORD dwParam2
     }
 
     lpWaveHdrSrc = (LPWAVEHDR)((LPSTR)ash + sizeof(ACMSTREAMHEADER));
-    lpWaveHdrSrc->lpData = ash->pbSrc;
+    lpWaveHdrSrc->lpData = (LPSTR)ash->pbSrc;
     lpWaveHdrSrc->dwBufferLength = size; /* conversion is not done yet */
     lpWaveHdrSrc->dwFlags = 0;
     lpWaveHdrSrc->dwLoops = 0;

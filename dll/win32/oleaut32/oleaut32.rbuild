@@ -1,14 +1,20 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="oleaut32" type="win32dll" baseaddress="${BASEADDRESS_OLEAUT32}" installbase="system32" installname="oleaut32.dll" allowwarnings="true">
+<module name="oleaut32" type="win32dll" baseaddress="${BASEADDRESS_OLEAUT32}" installbase="system32" installname="oleaut32.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="oleaut32.spec.def" />
+	<importlibrary definition="oleaut32.spec" />
 	<include base="oleaut32">.</include>
+	<include base="ReactOS">include/reactos/libs/libjpeg</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
+	<define name="PROXY_CLSID">CLSID_PSDispatch</define>
+	<define name="COM_NO_WINDOWS_H"/>
+	<define name="_OLEAUT32_"/>
+	<define name="PROXY_DELEGATION"/>
+	<define name="REGISTER_PROXY_DLL"/>
+	<define name="ENTRY_PREFIX">OLEAUTPS_</define>
 	<file>connpt.c</file>
 	<file>dispatch.c</file>
 	<file>hash.c</file>
@@ -30,9 +36,9 @@
 	<file>oleaut32.rc</file>
 	<file>oleaut32_oaidl.idl</file>
 	<include base="oleaut32" root="intermediate">.</include>
-	<file>oleaut32.spec</file>
-	<library>oleaut32_oleaut32_oaidl_proxy</library>
+	<library>oleaut32_proxy</library>
 	<library>wine</library>
+	<library>wineldr</library>
 	<library>ole32</library>
 	<library>rpcrt4</library>
 	<library>user32</library>
@@ -45,7 +51,14 @@
 	<library>uuid</library>
 	<library>pseh</library>
 </module>
-<module name="oleaut32_oleaut32_oaidl_proxy" type="rpcproxy" allowwarnings="true">
+<module name="oleaut32_proxy" type="rpcproxy" allowwarnings="true">
+	<define name="COM_NO_WINDOWS_H"/>
+	<define name="PROXY_CLSID">CLSID_PSDispatch</define>
+	<define name="_OLEAUT32_"/>
+	<define name="PROXY_DELEGATION"/>
+	<define name="REGISTER_PROXY_DLL"/>
+	<define name="ENTRY_PREFIX">OLEAUTPS_</define>
 	<file>oleaut32_oaidl.idl</file>
+	<file>oleaut32_ocidl.idl</file>
 </module>
 </group>

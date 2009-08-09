@@ -10,6 +10,7 @@
 MUI_LAYOUTS csCZLayouts[] =
 {
     { L"0405", L"00000405" },
+    { L"0405", L"00010405" },
     { L"0409", L"00000409" },
     { NULL, NULL }
 };
@@ -1478,6 +1479,11 @@ MUI_ERROR csCZErrorEntries[] =
         //ERROR_ADDING_KBLAYOUTS,
         "Nepodaýilo se pýidat rozlo§en¡ kl vesnice do registru.\n"
         "ENTER = Restartovat poŸ¡taŸ"
+    },
+    {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
     },
     {
         NULL,

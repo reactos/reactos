@@ -1,0 +1,6 @@
+@ stdcall drvCommConfigDialogA(str ptr ptr)
+@ stdcall drvCommConfigDialogW(wstr ptr ptr)
+@ stdcall drvSetDefaultCommConfigA(str ptr long)
+@ stdcall drvSetDefaultCommConfigW(wstr ptr long)
+@ stdcall drvGetDefaultCommConfigA(str ptr ptr)
+@ stdcall drvGetDefaultCommConfigW(wstr ptr ptr)

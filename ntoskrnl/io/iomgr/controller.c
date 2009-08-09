@@ -9,7 +9,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -36,7 +36,7 @@ IoAllocateController(IN PCONTROLLER_OBJECT ControllerObject,
 
     /* Insert the Device Queue */
     if (!KeInsertDeviceQueue(&ControllerObject->DeviceWaitQueue,
-                             &DeviceObject->Queue.Wcb.WaitQueueEntry));
+                             &DeviceObject->Queue.Wcb.WaitQueueEntry))
     {
         /* Call the execution routine */
         Result = ExecutionRoutine(DeviceObject,

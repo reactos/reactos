@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 Jacek Caban for CodeWeavers
+ * Copyright 2007-2008 Jacek Caban for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,7 @@
 #include "wine/unicode.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
@@ -129,9 +130,7 @@ static nsresult NSAPI handle_keypress(nsIDOMEventListener *iface,
 static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event)
 {
     NSContainer *This = NSEVENTLIST_THIS(iface)->This;
-    nsIDOMHTMLDocument *nshtmldoc;
     nsIDOMHTMLElement *nsbody = NULL;
-    nsIDOMDocument *nsdoc;
     task_t *task;
 
     TRACE("(%p)\n", This);
@@ -139,8 +138,8 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
     if(!This->doc)
         return NS_OK;
 
+    update_nsdocument(This->doc);
     connect_scripts(This->doc);
-    setup_nswindow(This->doc->window);
 
     if(This->editor_controller) {
         nsIController_Release(This->editor_controller);
@@ -162,52 +161,17 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
      */
     push_task(task);
 
+    if(!This->doc->nsdoc) {
+        ERR("NULL nsdoc\n");
+        return NS_ERROR_FAILURE;
+    }
 
-    nsIWebNavigation_GetDocument(This->navigation, &nsdoc);
-    nsIDOMDocument_QueryInterface(nsdoc, &IID_nsIDOMHTMLDocument, (void**)&nshtmldoc);
-    nsIDOMDocument_Release(nsdoc);
-
-    nsIDOMHTMLDocument_GetBody(nshtmldoc, &nsbody);
-    nsIDOMHTMLDocument_Release(nshtmldoc);
-
+    nsIDOMHTMLDocument_GetBody(This->doc->nsdoc, &nsbody);
     if(nsbody) {
         fire_event(This->doc, EVENTID_LOAD, (nsIDOMNode*)nsbody);
         nsIDOMHTMLElement_Release(nsbody);
     }
 
-    return NS_OK;
-}
-
-static nsresult NSAPI handle_node_insert(nsIDOMEventListener *iface, nsIDOMEvent *event)
-{
-    NSContainer *This = NSEVENTLIST_THIS(iface)->This;
-    nsIDOMHTMLScriptElement *script;
-    nsIDOMEventTarget *target;
-    nsIDOMElement *elem;
-    nsresult nsres;
-
-    TRACE("(%p %p)\n", This, event);
-
-    nsres = nsIDOMEvent_GetTarget(event, &target);
-    if(NS_FAILED(nsres)) {
-        ERR("GetTarget failed: %08x\n", nsres);
-        return NS_OK;
-    }
-
-    nsres = nsIDOMEventTarget_QueryInterface(target, &IID_nsIDOMElement, (void**)&elem);
-    nsIDOMEventTarget_Release(target);
-    if(NS_FAILED(nsres))
-        return NS_OK;
-
-    nsres = nsIDOMElement_QueryInterface(elem, &IID_nsIDOMHTMLScriptElement, (void**)&script);
-    if(SUCCEEDED(nsres)) {
-        doc_insert_script(This->doc, script);
-        nsIDOMHTMLScriptElement_Release(script);
-    }
-
-    check_event_attr(This->doc, elem);
-
-    nsIDOMNode_Release(elem);
     return NS_OK;
 }
 
@@ -261,7 +225,6 @@ static const nsIDOMEventListenerVtbl blur_vtbl =      EVENTLISTENER_VTBL(handle_
 static const nsIDOMEventListenerVtbl focus_vtbl =     EVENTLISTENER_VTBL(handle_focus);
 static const nsIDOMEventListenerVtbl keypress_vtbl =  EVENTLISTENER_VTBL(handle_keypress);
 static const nsIDOMEventListenerVtbl load_vtbl =      EVENTLISTENER_VTBL(handle_load);
-static const nsIDOMEventListenerVtbl node_insert_vtbl = EVENTLISTENER_VTBL(handle_node_insert);
 static const nsIDOMEventListenerVtbl htmlevent_vtbl = EVENTLISTENER_VTBL(handle_htmlevent);
 
 static void init_event(nsIDOMEventTarget *target, const PRUnichar *type,
@@ -318,14 +281,11 @@ void init_nsevents(NSContainer *This)
     static const PRUnichar wsz_focus[]     = {'f','o','c','u','s',0};
     static const PRUnichar wsz_keypress[]  = {'k','e','y','p','r','e','s','s',0};
     static const PRUnichar wsz_load[]      = {'l','o','a','d',0};
-    static const PRUnichar DOMNodeInsertedW[] =
-        {'D','O','M','N','o','d','e','I','n','s','e','r','t','e','d',0};
 
     init_listener(&This->blur_listener,        This, &blur_vtbl);
     init_listener(&This->focus_listener,       This, &focus_vtbl);
     init_listener(&This->keypress_listener,    This, &keypress_vtbl);
     init_listener(&This->load_listener,        This, &load_vtbl);
-    init_listener(&This->node_insert_listener, This, &node_insert_vtbl);
     init_listener(&This->htmlevent_listener,   This, &htmlevent_vtbl);
 
     nsres = nsIWebBrowser_GetContentDOMWindow(This->webbrowser, &dom_window);
@@ -345,7 +305,6 @@ void init_nsevents(NSContainer *This)
     init_event(target, wsz_focus,      NSEVENTLIST(&This->focus_listener),       TRUE);
     init_event(target, wsz_keypress,   NSEVENTLIST(&This->keypress_listener),    FALSE);
     init_event(target, wsz_load,       NSEVENTLIST(&This->load_listener),        TRUE);
-    init_event(target, DOMNodeInsertedW,NSEVENTLIST(&This->node_insert_listener),TRUE);
 
     nsIDOMEventTarget_Release(target);
 }

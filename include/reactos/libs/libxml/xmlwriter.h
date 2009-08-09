@@ -69,11 +69,13 @@ extern "C" {
     XMLPUBFUN int XMLCALL xmlTextWriterEndComment(xmlTextWriterPtr writer);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatComment(xmlTextWriterPtr writer,
-                                        const char *format, ...);
+                                        const char *format, ...)
+					ATTRIBUTE_PRINTF(2,3);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatComment(xmlTextWriterPtr writer,
                                          const char *format,
-                                         va_list argptr);
+                                         va_list argptr)
+					 ATTRIBUTE_PRINTF(2,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteComment(xmlTextWriterPtr
                                                     writer,
                                                     const xmlChar *
@@ -102,12 +104,14 @@ extern "C" {
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatElement(xmlTextWriterPtr writer,
                                         const xmlChar * name,
-                                        const char *format, ...);
+                                        const char *format, ...)
+					ATTRIBUTE_PRINTF(3,4);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatElement(xmlTextWriterPtr writer,
                                          const xmlChar * name,
                                          const char *format,
-                                         va_list argptr);
+                                         va_list argptr)
+					 ATTRIBUTE_PRINTF(3,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteElement(xmlTextWriterPtr
                                                     writer,
                                                     const xmlChar * name,
@@ -118,14 +122,16 @@ extern "C" {
                                           const xmlChar * prefix,
                                           const xmlChar * name,
                                           const xmlChar * namespaceURI,
-                                          const char *format, ...);
+                                          const char *format, ...)
+					  ATTRIBUTE_PRINTF(5,6);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatElementNS(xmlTextWriterPtr writer,
                                            const xmlChar * prefix,
                                            const xmlChar * name,
                                            const xmlChar * namespaceURI,
                                            const char *format,
-                                           va_list argptr);
+                                           va_list argptr)
+					   ATTRIBUTE_PRINTF(5,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteElementNS(xmlTextWriterPtr
                                                       writer,
                                                       const xmlChar *
@@ -141,10 +147,12 @@ extern "C" {
  */
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatRaw(xmlTextWriterPtr writer,
-                                    const char *format, ...);
+                                    const char *format, ...)
+				    ATTRIBUTE_PRINTF(2,3);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatRaw(xmlTextWriterPtr writer,
-                                     const char *format, va_list argptr);
+                                     const char *format, va_list argptr)
+				     ATTRIBUTE_PRINTF(2,0);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteRawLen(xmlTextWriterPtr writer,
                                  const xmlChar * content, int len);
@@ -154,12 +162,14 @@ extern "C" {
     XMLPUBFUN int XMLCALL xmlTextWriterWriteFormatString(xmlTextWriterPtr
                                                          writer,
                                                          const char
-                                                         *format, ...);
+                                                         *format, ...)
+							 ATTRIBUTE_PRINTF(2,3);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteVFormatString(xmlTextWriterPtr
                                                           writer,
                                                           const char
                                                           *format,
-                                                          va_list argptr);
+                                                          va_list argptr)
+							  ATTRIBUTE_PRINTF(2,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteString(xmlTextWriterPtr writer,
                                                    const xmlChar *
                                                    content);
@@ -193,12 +203,14 @@ extern "C" {
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatAttribute(xmlTextWriterPtr writer,
                                           const xmlChar * name,
-                                          const char *format, ...);
+                                          const char *format, ...)
+					  ATTRIBUTE_PRINTF(3,4);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatAttribute(xmlTextWriterPtr writer,
                                            const xmlChar * name,
                                            const char *format,
-                                           va_list argptr);
+                                           va_list argptr)
+					   ATTRIBUTE_PRINTF(3,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteAttribute(xmlTextWriterPtr
                                                       writer,
                                                       const xmlChar * name,
@@ -209,14 +221,16 @@ extern "C" {
                                             const xmlChar * prefix,
                                             const xmlChar * name,
                                             const xmlChar * namespaceURI,
-                                            const char *format, ...);
+                                            const char *format, ...)
+					    ATTRIBUTE_PRINTF(5,6);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatAttributeNS(xmlTextWriterPtr writer,
                                              const xmlChar * prefix,
                                              const xmlChar * name,
                                              const xmlChar * namespaceURI,
                                              const char *format,
-                                             va_list argptr);
+                                             va_list argptr)
+					     ATTRIBUTE_PRINTF(5,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteAttributeNS(xmlTextWriterPtr
                                                         writer,
                                                         const xmlChar *
@@ -242,11 +256,13 @@ extern "C" {
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatPI(xmlTextWriterPtr writer,
                                    const xmlChar * target,
-                                   const char *format, ...);
+                                   const char *format, ...)
+				   ATTRIBUTE_PRINTF(3,4);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatPI(xmlTextWriterPtr writer,
                                     const xmlChar * target,
-                                    const char *format, va_list argptr);
+                                    const char *format, va_list argptr)
+				    ATTRIBUTE_PRINTF(3,0);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWritePI(xmlTextWriterPtr writer,
                              const xmlChar * target,
@@ -270,10 +286,12 @@ extern "C" {
  */
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatCDATA(xmlTextWriterPtr writer,
-                                      const char *format, ...);
+                                      const char *format, ...)
+				      ATTRIBUTE_PRINTF(2,3);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatCDATA(xmlTextWriterPtr writer,
-                                       const char *format, va_list argptr);
+                                       const char *format, va_list argptr)
+				       ATTRIBUTE_PRINTF(2,0);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteCDATA(xmlTextWriterPtr writer,
                                 const xmlChar * content);
@@ -296,13 +314,15 @@ extern "C" {
                                     const xmlChar * name,
                                     const xmlChar * pubid,
                                     const xmlChar * sysid,
-                                    const char *format, ...);
+                                    const char *format, ...)
+				    ATTRIBUTE_PRINTF(5,6);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatDTD(xmlTextWriterPtr writer,
                                      const xmlChar * name,
                                      const xmlChar * pubid,
                                      const xmlChar * sysid,
-                                     const char *format, va_list argptr);
+                                     const char *format, va_list argptr)
+				     ATTRIBUTE_PRINTF(5,0);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteDTD(xmlTextWriterPtr writer,
                               const xmlChar * name,
@@ -332,12 +352,14 @@ extern "C" {
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatDTDElement(xmlTextWriterPtr writer,
                                            const xmlChar * name,
-                                           const char *format, ...);
+                                           const char *format, ...)
+					   ATTRIBUTE_PRINTF(3,4);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatDTDElement(xmlTextWriterPtr writer,
                                             const xmlChar * name,
                                             const char *format,
-                                            va_list argptr);
+                                            va_list argptr)
+					    ATTRIBUTE_PRINTF(3,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteDTDElement(xmlTextWriterPtr
                                                        writer,
                                                        const xmlChar *
@@ -360,12 +382,14 @@ extern "C" {
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatDTDAttlist(xmlTextWriterPtr writer,
                                            const xmlChar * name,
-                                           const char *format, ...);
+                                           const char *format, ...)
+					   ATTRIBUTE_PRINTF(3,4);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatDTDAttlist(xmlTextWriterPtr writer,
                                             const xmlChar * name,
                                             const char *format,
-                                            va_list argptr);
+                                            va_list argptr)
+					    ATTRIBUTE_PRINTF(3,0);
     XMLPUBFUN int XMLCALL xmlTextWriterWriteDTDAttlist(xmlTextWriterPtr
                                                        writer,
                                                        const xmlChar *
@@ -389,13 +413,15 @@ extern "C" {
         xmlTextWriterWriteFormatDTDInternalEntity(xmlTextWriterPtr writer,
                                                   int pe,
                                                   const xmlChar * name,
-                                                  const char *format, ...);
+                                                  const char *format, ...)
+						  ATTRIBUTE_PRINTF(4,5);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteVFormatDTDInternalEntity(xmlTextWriterPtr writer,
                                                    int pe,
                                                    const xmlChar * name,
                                                    const char *format,
-                                                   va_list argptr);
+                                                   va_list argptr)
+						   ATTRIBUTE_PRINTF(4,0);
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteDTDInternalEntity(xmlTextWriterPtr writer,
                                             int pe,

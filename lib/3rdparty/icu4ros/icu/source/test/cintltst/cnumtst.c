@@ -416,7 +416,7 @@ free(result);
     pattern=unum_open(UNUM_IGNORE,temp1, u_strlen(temp1), NULL, NULL,&status);
     if(U_FAILURE(status))
     {
-        log_err("error in unum_openPattern(): %s\n", myErrorName(status) );;
+        log_err("error in unum_openPattern(): %s\n", myErrorName(status) );
     }
     else
         log_verbose("Pass: unum_openPattern() works fine\n");
@@ -823,7 +823,7 @@ static void TestNumberFormatPadding()
     pattern=unum_open(UNUM_IGNORE,temp1, u_strlen(temp1), NULL, NULL,&status);
     if(U_SUCCESS(status))
     {
-        log_err("error in unum_openPattern(%s): %s\n", temp1, myErrorName(status) );;
+        log_err("error in unum_openPattern(%s): %s\n", temp1, myErrorName(status) );
     }
     else
     {
@@ -836,7 +836,7 @@ static void TestNumberFormatPadding()
     pattern=unum_open(UNUM_IGNORE,temp1, u_strlen(temp1), "en_US",NULL, &status);
     if(U_FAILURE(status))
     {
-        log_err("error in padding unum_openPattern(%s): %s\n", temp1, myErrorName(status) );;
+        log_err("error in padding unum_openPattern(%s): %s\n", temp1, myErrorName(status) );
     }
     else {
         log_verbose("Pass: padding unum_openPattern() works fine\n");

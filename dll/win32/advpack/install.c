@@ -39,7 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advpack);
 #define SPAPI_ERROR     0xE0000000L
 #define SPAPI_PREFIX    0x800F0000L
 #define SPAPI_MASK      0xFFFFL
-#define HRESULT_FROM_SPAPI(x)   ((x & SPAPI_MASK) | SPAPI_PREFIX)
+#define HRESULT_FROM_SPAPI(x)   ((HRESULT)((x & SPAPI_MASK) | SPAPI_PREFIX))
 
 #define ADV_HRESULT(x)  ((x & SPAPI_ERROR) ? HRESULT_FROM_SPAPI(x) : HRESULT_FROM_WIN32(x))
 
@@ -91,7 +91,7 @@ static HRESULT del_dirs_callback(HINF hinf, PCWSTR field, const void *arg)
                                MAX_INF_STRING_LENGTH, &size))
             continue;
 
-        if (DelNodeW(directory, ADN_DEL_IF_EMPTY))
+        if (DelNodeW(directory, ADN_DEL_IF_EMPTY) != S_OK)
             hr = E_FAIL;
     }
 
@@ -161,7 +161,7 @@ static HRESULT register_ocxs_callback(HINF hinf, PCWSTR field, const void *arg)
         hm = LoadLibraryExW(buffer, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
         if (hm)
         {
-            if (do_ocx_reg(hm, TRUE))
+            if (do_ocx_reg(hm, TRUE) != S_OK)
                 hr = E_FAIL;
 
             FreeLibrary(hm);
@@ -196,7 +196,7 @@ static HRESULT run_setup_commands_callback(HINF hinf, PCWSTR field, const void *
                                MAX_INF_STRING_LENGTH, &size))
             continue;
 
-        if (launch_exe(buffer, info->working_dir, NULL))
+        if (launch_exe(buffer, info->working_dir, NULL) != S_OK)
             hr = E_FAIL;
     }
 

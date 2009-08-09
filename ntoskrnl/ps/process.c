@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -365,7 +365,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     PDEBUG_OBJECT DebugObject;
     PSECTION_OBJECT SectionObject;
     NTSTATUS Status, AccessStatus;
-    PHYSICAL_ADDRESS DirectoryTableBase = {{0}};
+    ULONG DirectoryTableBase[2] = {0,0};
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
     PETHREAD CurrentThread = PsGetCurrentThread();
@@ -554,7 +554,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     Process->SectionObject = SectionObject;
 
     /* Set default exit code */
-    Process->ExitStatus = STATUS_TIMEOUT;
+    Process->ExitStatus = STATUS_PENDING;
 
     /* Check if this is the initial process being built */
     if (Parent)
@@ -562,7 +562,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         /* Create the address space for the child */
         if (!MmCreateProcessAddressSpace(MinWs,
                                          Process,
-                                         &DirectoryTableBase))
+                                         DirectoryTableBase))
         {
             /* Failed */
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -573,7 +573,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* Otherwise, we are the boot process, we're already semi-initialized */
         Process->ObjectTable = CurrentProcess->ObjectTable;
-        Status = MmInitializeHandBuiltProcess(Process, &DirectoryTableBase);
+        Status = MmInitializeHandBuiltProcess(Process, DirectoryTableBase);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
 
@@ -587,7 +587,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     KeInitializeProcess(&Process->Pcb,
                         PROCESS_PRIORITY_NORMAL,
                         Affinity,
-                        &DirectoryTableBase,
+                        DirectoryTableBase,
                         (BOOLEAN)(Process->DefaultHardErrorProcessing & 4));
 
     /* Duplicate Parent Token */
@@ -698,7 +698,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* FIXME: We need to insert this process */
         DPRINT1("Jobs not yet supported\n");
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Create PEB only for User-Mode Processes */
@@ -810,17 +810,20 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     KeQuerySystemTime(&Process->CreateTime);
 
     /* Protect against bad user-mode pointer */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Save the process handle */
        *ProcessHandle = hProcess;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the exception code */
-       Status = _SEH_GetExceptionCode();
+       Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
+
+    /* Run the Notification Routines */
+    PspRunCreateProcessNotifyRoutines(Process, TRUE);
 
 CleanupWithRef:
     /*
@@ -1118,11 +1121,11 @@ PsGetProcessSessionId(PEPROCESS Process)
 /*
  * @implemented
  */
-struct _W32PROCESS*
+PVOID
 NTAPI
 PsGetCurrentProcessWin32Process(VOID)
 {
-    return (struct _W32PROCESS*)PsGetCurrentProcess()->Win32Process;
+    return PsGetCurrentProcess()->Win32Process;
 }
 
 /*
@@ -1153,6 +1156,17 @@ NTAPI
 PsIsProcessBeingDebugged(PEPROCESS Process)
 {
     return Process->DebugPort != NULL;
+}
+
+/*
+ * @implemented
+ */
+BOOLEAN
+NTAPI
+PsIsSystemProcess(IN PEPROCESS Process)
+{
+    /* Return if this is the System Process */
+    return Process == PsInitialSystemProcess;
 }
 
 /*
@@ -1242,17 +1256,17 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
     /* Check if we came from user mode */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe process handle */
             ProbeForWriteHandle(ProcessHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -1343,7 +1357,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the thread handle */
             ProbeForWriteHandle(ProcessHandle);
@@ -1367,12 +1381,12 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
             HasObjectName = (ObjectAttributes->ObjectName != NULL);
             Attributes = ObjectAttributes->Attributes;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
     else
@@ -1478,17 +1492,17 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     if (NT_SUCCESS(Status))
     {
         /* Use SEH for write back */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write back the handle */
             *ProcessHandle = hProcess;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return status */

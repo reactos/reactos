@@ -23,7 +23,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#undef DbgPrint
 #define DbgPrint printf
 
 extern PVOID KernelBase;

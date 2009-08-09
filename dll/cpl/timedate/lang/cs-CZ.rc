@@ -62,6 +62,6 @@ BEGIN
     IDS_TIMEZONEUNKNOWN "Neznámé"
     IDS_INETTIMESUCSYNC "Èas byl úspìšnì synchronizován z %s %s v %s"
     IDS_INETTIMENEXTSYNC "Další synchronizace: %s v %s"
-    IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
-    IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
+    IDS_INETTIMESYNCING "Prosím èekejte, zatímco systém ReactOS synchronizuje èas s %s"
+    IDS_INETTIMEERROR "Pøi synchronizaci èasu s %s nastala chyba"
 END

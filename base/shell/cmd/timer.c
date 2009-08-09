@@ -63,7 +63,7 @@ PrintElapsedTime (DWORD time,INT format)
 }
 
 
-INT CommandTimer (LPTSTR cmd, LPTSTR param)
+INT CommandTimer (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 

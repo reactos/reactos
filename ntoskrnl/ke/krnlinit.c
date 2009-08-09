@@ -111,7 +111,7 @@ NTAPI
 KiComputeReciprocal(IN LONG Divisor,
                     OUT PUCHAR Shift)
 {
-    LARGE_INTEGER Reciprocal = {{0}};
+    LARGE_INTEGER Reciprocal = {{0, 0}};
     LONG BitCount = 0, Remainder = 1;
 
     /* Start by calculating the remainder */
@@ -140,7 +140,7 @@ KiComputeReciprocal(IN LONG Divisor,
     {
         /* Check if the current fraction value is too large */
         if ((Reciprocal.LowPart == 0xFFFFFFFF) &&
-            (Reciprocal.HighPart == 0xFFFFFFFF))
+            (Reciprocal.HighPart == (LONG)0xFFFFFFFF))
         {
             /* Set the high bit and reduce the bit count */
             Reciprocal.LowPart = 0;

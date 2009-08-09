@@ -29,11 +29,13 @@
 extern "C" {
 #endif
 
+struct slang_function_;
+
 typedef struct slang_struct_scope_
 {
-	struct slang_struct_ *structs;
+   struct slang_struct_ *structs;
    GLuint num_structs;
-	struct slang_struct_scope_ *outer_scope;
+   struct slang_struct_scope_ *outer_scope;
 } slang_struct_scope;
 
 extern GLvoid
@@ -45,9 +47,10 @@ struct slang_struct_ *slang_struct_scope_find (slang_struct_scope *, slang_atom,
 
 typedef struct slang_struct_
 {
-	slang_atom a_name;
-	struct slang_variable_scope_ *fields;
-	slang_struct_scope *structs;
+   slang_atom a_name;
+   struct slang_variable_scope_ *fields;
+   slang_struct_scope *structs;
+   struct slang_function_ *constructor;
 } slang_struct;
 
 int slang_struct_construct (slang_struct *);

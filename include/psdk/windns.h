@@ -1,8 +1,5 @@
 #ifndef _WINDNS_H
 #define _WINDNS_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -471,6 +468,27 @@ typedef struct _DnsRRSet {
 	PDNS_RECORD pFirstRR;
 	PDNS_RECORD pLastRR;
 } DNS_RRSET, *PDNS_RRSET;
+
+#define DNS_RRSET_INIT( rrset )                          \
+{                                                        \
+    PDNS_RRSET  _prrset = &(rrset);                      \
+    _prrset->pFirstRR = NULL;                            \
+    _prrset->pLastRR = (PDNS_RECORD) &_prrset->pFirstRR; \
+}
+
+#define DNS_RRSET_ADD( rrset, pnewRR ) \
+{                                      \
+    PDNS_RRSET  _prrset = &(rrset);    \
+    PDNS_RECORD _prrnew = (pnewRR);    \
+    _prrset->pLastRR->pNext = _prrnew; \
+    _prrset->pLastRR = _prrnew;        \
+}
+
+#define DNS_RRSET_TERMINATE( rrset ) \
+{                                    \
+    PDNS_RRSET  _prrset = &(rrset);  \
+    _prrset->pLastRR->pNext = NULL;  \
+}
 
 DNS_STATUS WINAPI DnsAcquireContextHandle_A(DWORD,PVOID,HANDLE*);
 DNS_STATUS WINAPI DnsAcquireContextHandle_W(DWORD,PVOID,HANDLE*);

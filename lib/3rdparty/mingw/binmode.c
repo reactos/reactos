@@ -1,5 +1,4 @@
+#define SPECIAL_CRTEXE
+
 #include <fcntl.h>
-
-/* Set default file mode to binary */
-
-int _fmode = _O_BINARY;
+#include <stdlib.h>

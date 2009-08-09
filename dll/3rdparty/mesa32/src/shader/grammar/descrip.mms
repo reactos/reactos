@@ -1,12 +1,13 @@
 # Makefile for core library for VMS
-# contributed by Jouk Jansen  joukj@hrem.stm.tudelft.nl
-# Last revision : 1 June 2005
+# contributed by Jouk Jansen  joukj@hrem.nano.tudelft.nl
+# Last revision : 29 September 2008
 
 .first
 	define gl [----.include.gl]
 	define math [--.math]
 	define swrast [--.swrast]
 	define array_cache [--.array_cache]
+	define main [--.main]
 
 .include [----]mms-config.
 

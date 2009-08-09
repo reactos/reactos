@@ -1,0 +1,17 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_APPTITLE    "Прегледът за снимки и факсове на РеактОС"
+    IDS_SETASDESKBG "Слагане като подкраска"
+
+    /* Tooltips */
+    IDS_TOOLTIP_NEXT_PIC   "Следващо изображение"
+    IDS_TOOLTIP_PREV_PIC   "Предходно изображение"
+    IDS_TOOLTIP_ZOOM_IN    "Увеличаване (+)"
+    IDS_TOOLTIP_ZOOM_OUT   "Намаляване (-)"
+    IDS_TOOLTIP_ROT_CLOCKW "Завъртане по часовника (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "Завъртане срещу часовника (Ctrl+L)"
+    IDS_TOOLTIP_PRINT      "Разпечатване (Ctrl+P)"
+    IDS_TOOLTIP_SAVEAS     "Записване като... (Ctrl+S)"
+END

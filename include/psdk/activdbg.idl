@@ -334,6 +334,85 @@ interface IDebugApplication32 : IRemoteDebugApplication
 }
 
 /************************************************************
+ *      interface IDebugApplication64
+ */
+[
+    object,
+    uuid(4dedc754-04c7-4f10-9e60-16a390fe6e62),
+    pointer_default(unique),
+    local
+]
+interface IDebugApplication64 : IRemoteDebugApplication
+{
+    HRESULT SetName(
+            [in] LPCOLESTR pstrName);
+
+    HRESULT StepOutComplete();
+
+    HRESULT DebugOutput(
+            [in] LPCOLESTR pstr);
+
+    HRESULT StartDebugSession();
+
+    HRESULT HandleBreakPoint(
+            [in]  BREAKREASON br,
+            [out] BREAKRESUMEACTION *pbra);
+
+    HRESULT Close();
+
+    HRESULT GetBreakFlags(
+            [out] APPBREAKFLAGS *pabf,
+            [out] IRemoteDebugApplicationThread **pprdatSteppingThread);
+
+    HRESULT GetCurrentThread(
+            [out] IDebugApplicationThread **pat);
+
+    HRESULT CreateAsyncDebugOperation(
+            [in]  IDebugSyncOperation *psdo,
+            [out] IDebugAsyncOperation **ppado);
+
+    HRESULT AddStackFrameSniffer(
+            [in]  IDebugStackFrameSniffer *pdsfs,
+            [out] DWORD *pdwCookie);
+
+    HRESULT RemoveStackFrameSniffer(
+            [in]  DWORD dwCookie);
+
+    HRESULT QueryCurrentThreadIsDebuggerThread();
+
+    HRESULT SynchronousCallInDebuggerThread(
+            [in]  IDebugThreadCall32 *pptc,
+            [in]  DWORDLONG dwParam1,
+            [in]  DWORDLONG dwParam2,
+            [in]  DWORDLONG dwParam3);
+
+    HRESULT CreateApplicationNode(
+            [out] IDebugApplicationNode **ppdanNew);
+
+    HRESULT FireDebuggerEvent(
+            [in]  REFGUID riid,
+            [in]  IUnknown *punk);
+
+    HRESULT HandleRuntimeError(
+            [in]  IActiveScriptErrorDebug *pErrorDebug,
+            [in]  IActiveScriptSite *pScriptSite,
+            [out] BREAKRESUMEACTION *pbra,
+            [out] ERRORRESUMEACTION *perra,
+            [out] BOOL *pfCallOnScriptError);
+
+    BOOL FCanJitDebug();
+
+    BOOL FIsAutoJitDebugEnabled();
+
+    HRESULT AddGlobalExpressionContextProvider(
+            [in]  IProvideExpressionContexts *pdsfs,
+            [out] DWORDLONG *pdwCookie);
+
+    HRESULT RemoveGlobalExpressionContextProvider(
+            [in]  DWORDLONG dwCookie);
+}
+
+/************************************************************
  *      interface IActiveScriptSiteDebug32
  */
 [
@@ -352,6 +431,35 @@ interface IActiveScriptSiteDebug32 : IUnknown
 
     HRESULT GetApplication(
             [out] IDebugApplication32 **ppda);
+
+    HRESULT GetRootApplicationNode(
+            [out] IDebugApplicationNode **ppdanRoot);
+
+    HRESULT OnScriptErrorDebug(
+            [in]  IActiveScriptErrorDebug *pErrorDebug,
+            [out] BOOL *pfEnterDebugger,
+            [out] BOOL *pfCallOnScriptErrorWhenContinuing);
+}
+
+/************************************************************
+ *      interface IActiveScriptSiteDebug64
+ */
+[
+    object,
+    uuid(d6b96b0a-7463-402c-92ac-89984226942f),
+    pointer_default(unique),
+    local
+]
+interface IActiveScriptSiteDebug64 : IUnknown
+{
+    HRESULT GetDocumentContextFromPosition(
+            [in]  DWORDLONG dwSourceContext,
+            [in]  ULONG uCharacterOffset,
+            [in]  ULONG uNumChars,
+            [out] IDebugDocumentContext **ppsc);
+
+    HRESULT GetApplication(
+            [out] IDebugApplication64 **ppda);
 
     HRESULT GetRootApplicationNode(
             [out] IDebugApplicationNode **ppdanRoot);

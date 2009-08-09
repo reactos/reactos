@@ -18,6 +18,8 @@ _cprintf(const char *fmt, ...)
   int written, resize = sizeof(buf), retval;
   va_list valist;
 
+  va_start( valist, fmt );
+
   while ((written = _vsnprintf( mem, resize, fmt, valist )) == -1 ||
           written > resize)
   {
@@ -26,9 +28,11 @@ _cprintf(const char *fmt, ...)
        free (mem);
     if (!(mem = (char *)malloc(resize)))
       return  EOF;
+
+    va_end ( valist );
     va_start( valist, fmt );
   }
-  va_end(valist);
+  va_end ( valist );
   retval = _cputs( mem );
   if (mem != buf)
       free (mem);

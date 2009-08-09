@@ -1281,8 +1281,8 @@ BOOLAPI HttpQueryInfoW(HINTERNET ,DWORD ,LPVOID ,LPDWORD ,LPDWORD);
 
 BOOLAPI InternetClearAllPerSiteCookieDecisions(VOID);
 
-BOOLAPI InternetEnumPerSiteCookieDecisionA(LPSTR,unsigned long *,unsigned long *,unsigned long);
-BOOLAPI InternetEnumPerSiteCookieDecisionW(LPWSTR,unsigned long *,unsigned long *,unsigned long);
+BOOLAPI InternetEnumPerSiteCookieDecisionA(LPSTR,ULONG *,ULONG *,ULONG);
+BOOLAPI InternetEnumPerSiteCookieDecisionW(LPWSTR,ULONG *,ULONG *,ULONG);
 #define InternetEnumPerSiteCookieDecision WINELIB_NAME_AW(InternetEnumPerSiteCookieDecision)
 
 #define INTERNET_COOKIE_IS_SECURE       0x00000001
@@ -1304,8 +1304,8 @@ DWORD WINAPI InternetSetCookieExA(LPCSTR,LPCSTR,LPCSTR,DWORD,DWORD_PTR);
 DWORD WINAPI InternetSetCookieExW(LPCWSTR,LPCWSTR,LPCWSTR,DWORD,DWORD_PTR);
 #define InternetSetCookieEx WINELIB_NAME_AW(InternetSetCookieEx)
 
-BOOLAPI InternetGetPerSiteCookieDecisionA(LPCSTR,unsigned long *);
-BOOLAPI InternetGetPerSiteCookieDecisionW(LPCWSTR,unsigned long *);
+BOOLAPI InternetGetPerSiteCookieDecisionA(LPCSTR,ULONG *);
+BOOLAPI InternetGetPerSiteCookieDecisionW(LPCWSTR,ULONG *);
 #define InternetGetPerSiteCookieDecision WINELIB_NAME_AW(InternetGetPerSiteCookieDecision)
 
 BOOLAPI InternetSetPerSiteCookieDecisionA(LPCSTR,DWORD);

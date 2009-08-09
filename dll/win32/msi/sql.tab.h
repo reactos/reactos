@@ -36,59 +36,60 @@
      TK_COMMA = 262,
      TK_CREATE = 263,
      TK_DELETE = 264,
-     TK_DISTINCT = 265,
-     TK_DOT = 266,
-     TK_EQ = 267,
-     TK_FREE = 268,
-     TK_FROM = 269,
-     TK_GE = 270,
-     TK_GT = 271,
-     TK_HOLD = 272,
-     TK_ADD = 273,
-     TK_ID = 274,
-     TK_ILLEGAL = 275,
-     TK_INSERT = 276,
-     TK_INT = 277,
-     TK_INTEGER = 278,
-     TK_INTO = 279,
-     TK_IS = 280,
-     TK_KEY = 281,
-     TK_LE = 282,
-     TK_LONG = 283,
-     TK_LONGCHAR = 284,
-     TK_LP = 285,
-     TK_LT = 286,
-     TK_LOCALIZABLE = 287,
-     TK_MINUS = 288,
-     TK_NE = 289,
-     TK_NOT = 290,
-     TK_NULL = 291,
-     TK_OBJECT = 292,
-     TK_OR = 293,
-     TK_ORDER = 294,
-     TK_PRIMARY = 295,
-     TK_RP = 296,
-     TK_SELECT = 297,
-     TK_SET = 298,
-     TK_SHORT = 299,
-     TK_SPACE = 300,
-     TK_STAR = 301,
-     TK_STRING = 302,
-     TK_TABLE = 303,
-     TK_TEMPORARY = 304,
-     TK_UPDATE = 305,
-     TK_VALUES = 306,
-     TK_WHERE = 307,
-     TK_WILDCARD = 308,
-     COLUMN = 310,
-     FUNCTION = 311,
-     COMMENT = 312,
-     UNCLOSED_STRING = 313,
-     SPACE = 314,
-     ILLEGAL = 315,
-     END_OF_FILE = 316,
-     TK_LIKE = 317,
-     TK_NEGATION = 318
+     TK_DROP = 265,
+     TK_DISTINCT = 266,
+     TK_DOT = 267,
+     TK_EQ = 268,
+     TK_FREE = 269,
+     TK_FROM = 270,
+     TK_GE = 271,
+     TK_GT = 272,
+     TK_HOLD = 273,
+     TK_ADD = 274,
+     TK_ID = 275,
+     TK_ILLEGAL = 276,
+     TK_INSERT = 277,
+     TK_INT = 278,
+     TK_INTEGER = 279,
+     TK_INTO = 280,
+     TK_IS = 281,
+     TK_KEY = 282,
+     TK_LE = 283,
+     TK_LONG = 284,
+     TK_LONGCHAR = 285,
+     TK_LP = 286,
+     TK_LT = 287,
+     TK_LOCALIZABLE = 288,
+     TK_MINUS = 289,
+     TK_NE = 290,
+     TK_NOT = 291,
+     TK_NULL = 292,
+     TK_OBJECT = 293,
+     TK_OR = 294,
+     TK_ORDER = 295,
+     TK_PRIMARY = 296,
+     TK_RP = 297,
+     TK_SELECT = 298,
+     TK_SET = 299,
+     TK_SHORT = 300,
+     TK_SPACE = 301,
+     TK_STAR = 302,
+     TK_STRING = 303,
+     TK_TABLE = 304,
+     TK_TEMPORARY = 305,
+     TK_UPDATE = 306,
+     TK_VALUES = 307,
+     TK_WHERE = 308,
+     TK_WILDCARD = 309,
+     COLUMN = 311,
+     FUNCTION = 312,
+     COMMENT = 313,
+     UNCLOSED_STRING = 314,
+     SPACE = 315,
+     ILLEGAL = 316,
+     END_OF_FILE = 317,
+     TK_LIKE = 318,
+     TK_NEGATION = 319
    };
 #endif
 /* Tokens.  */
@@ -99,59 +100,60 @@
 #define TK_COMMA 262
 #define TK_CREATE 263
 #define TK_DELETE 264
-#define TK_DISTINCT 265
-#define TK_DOT 266
-#define TK_EQ 267
-#define TK_FREE 268
-#define TK_FROM 269
-#define TK_GE 270
-#define TK_GT 271
-#define TK_HOLD 272
-#define TK_ADD 273
-#define TK_ID 274
-#define TK_ILLEGAL 275
-#define TK_INSERT 276
-#define TK_INT 277
-#define TK_INTEGER 278
-#define TK_INTO 279
-#define TK_IS 280
-#define TK_KEY 281
-#define TK_LE 282
-#define TK_LONG 283
-#define TK_LONGCHAR 284
-#define TK_LP 285
-#define TK_LT 286
-#define TK_LOCALIZABLE 287
-#define TK_MINUS 288
-#define TK_NE 289
-#define TK_NOT 290
-#define TK_NULL 291
-#define TK_OBJECT 292
-#define TK_OR 293
-#define TK_ORDER 294
-#define TK_PRIMARY 295
-#define TK_RP 296
-#define TK_SELECT 297
-#define TK_SET 298
-#define TK_SHORT 299
-#define TK_SPACE 300
-#define TK_STAR 301
-#define TK_STRING 302
-#define TK_TABLE 303
-#define TK_TEMPORARY 304
-#define TK_UPDATE 305
-#define TK_VALUES 306
-#define TK_WHERE 307
-#define TK_WILDCARD 308
-#define COLUMN 310
-#define FUNCTION 311
-#define COMMENT 312
-#define UNCLOSED_STRING 313
-#define SPACE 314
-#define ILLEGAL 315
-#define END_OF_FILE 316
-#define TK_LIKE 317
-#define TK_NEGATION 318
+#define TK_DROP 265
+#define TK_DISTINCT 266
+#define TK_DOT 267
+#define TK_EQ 268
+#define TK_FREE 269
+#define TK_FROM 270
+#define TK_GE 271
+#define TK_GT 272
+#define TK_HOLD 273
+#define TK_ADD 274
+#define TK_ID 275
+#define TK_ILLEGAL 276
+#define TK_INSERT 277
+#define TK_INT 278
+#define TK_INTEGER 279
+#define TK_INTO 280
+#define TK_IS 281
+#define TK_KEY 282
+#define TK_LE 283
+#define TK_LONG 284
+#define TK_LONGCHAR 285
+#define TK_LP 286
+#define TK_LT 287
+#define TK_LOCALIZABLE 288
+#define TK_MINUS 289
+#define TK_NE 290
+#define TK_NOT 291
+#define TK_NULL 292
+#define TK_OBJECT 293
+#define TK_OR 294
+#define TK_ORDER 295
+#define TK_PRIMARY 296
+#define TK_RP 297
+#define TK_SELECT 298
+#define TK_SET 299
+#define TK_SHORT 300
+#define TK_SPACE 301
+#define TK_STAR 302
+#define TK_STRING 303
+#define TK_TABLE 304
+#define TK_TEMPORARY 305
+#define TK_UPDATE 306
+#define TK_VALUES 307
+#define TK_WHERE 308
+#define TK_WILDCARD 309
+#define COLUMN 311
+#define FUNCTION 312
+#define COMMENT 313
+#define UNCLOSED_STRING 314
+#define SPACE 315
+#define ILLEGAL 316
+#define END_OF_FILE 317
+#define TK_LIKE 318
+#define TK_NEGATION 319
 
 
 
@@ -168,7 +170,7 @@ typedef union YYSTYPE {
     int integer;
 } YYSTYPE;
 /* Line 1447 of yacc.c.  */
-#line 172 "sql.tab.h"
+#line 174 "sql.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

@@ -51,6 +51,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitari per J Brown\n\nCardLib versio 1.0."
     IDS_SOL_QUIT    "Voleu sortir del joc actual?"
     IDS_SOL_WIN     "Felicitats, heu guanyat!!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

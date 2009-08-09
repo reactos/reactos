@@ -284,7 +284,7 @@ static UINT WPRINTF_GetLen( WPRINTF_FORMAT *format, WPRINTF_DATA *arg,
  *  Success: The number of characters written.
  *  Failure: -1.
  */
-INT WINAPI wvnsprintfA( LPSTR buffer, INT maxlen, LPCSTR spec, va_list args )
+INT WINAPI wvnsprintfA( LPSTR buffer, INT maxlen, LPCSTR spec, __ms_va_list args )
 {
     WPRINTF_FORMAT format;
     LPSTR p = buffer;
@@ -389,7 +389,7 @@ INT WINAPI wvnsprintfA( LPSTR buffer, INT maxlen, LPCSTR spec, va_list args )
  *
  * See wvnsprintfA.
  */
-INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, va_list args )
+INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, __ms_va_list args )
 {
     WPRINTF_FORMAT format;
     LPWSTR p = buffer;
@@ -504,12 +504,12 @@ INT WINAPI wvnsprintfW( LPWSTR buffer, INT maxlen, LPCWSTR spec, va_list args )
  */
 int WINAPIV wnsprintfA(LPSTR lpOut, int cchLimitIn, LPCSTR lpFmt, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     INT res;
 
-    va_start( valist, lpFmt );
+    __ms_va_start( valist, lpFmt );
     res = wvnsprintfA( lpOut, cchLimitIn, lpFmt, valist );
-    va_end( valist );
+    __ms_va_end( valist );
     return res;
 }
 
@@ -521,11 +521,11 @@ int WINAPIV wnsprintfA(LPSTR lpOut, int cchLimitIn, LPCSTR lpFmt, ...)
  */
 int WINAPIV wnsprintfW(LPWSTR lpOut, int cchLimitIn, LPCWSTR lpFmt, ...)
 {
-    va_list valist;
+    __ms_va_list valist;
     INT res;
 
-    va_start( valist, lpFmt );
+    __ms_va_start( valist, lpFmt );
     res = wvnsprintfW( lpOut, cchLimitIn, lpFmt, valist );
-    va_end( valist );
+    __ms_va_end( valist );
     return res;
 }

@@ -42,9 +42,16 @@ typedef enum _SYSTEM_DOCK_STATE
 //
 // Processor Power State Data
 //
+struct _PROCESSOR_POWER_STATE;
+
+typedef
+VOID
+(FASTCALL *PPROCESSOR_IDLE_FUNCTION)(
+    struct _PROCESSOR_POWER_STATE *PState);
+
 typedef struct _PROCESSOR_POWER_STATE
 {
-    PVOID IdleFunction;
+    PPROCESSOR_IDLE_FUNCTION IdleFunction;
     ULONG Idle0KernelTimeLimit;
     ULONG Idle0LastTime;
     PVOID IdleHandlers;
@@ -61,10 +68,10 @@ typedef struct _PROCESSOR_POWER_STATE
     UCHAR ThermalThrottleIndex;
     ULONG LastKernelUserTime;
     ULONG PerfIdleTime;
-    ULONG DebugDelta;
+    ULONGLONG DebugDelta;
     ULONG DebugCount;
     ULONG LastSysTime;
-    ULONG TotalIdleStateTime[3];
+    ULONGLONG TotalIdleStateTime[3];
     ULONG TotalIdleTransitions[3];
     ULONGLONG PreviousC3StateTime;
     UCHAR KneeThrottleIndex;
@@ -106,6 +113,22 @@ typedef struct _PO_DEVICE_NOTIFY
     ULONG ChildCount;
     ULONG ActiveChild;
 } PO_DEVICE_NOTIFY, *PPO_DEVICE_NOTIFY;
+
+//
+// Power IRP Queue
+//
+typedef struct _PO_IRP_QUEUE
+{
+    PIRP CurrentIrp;
+    PIRP PendingIrpList;
+} PO_IRP_QUEUE, *PPO_IRP_QUEUE;
+
+// Power IRP Manager
+typedef struct _PO_IRP_MANAGER
+{
+    PO_IRP_QUEUE DeviceIrpQueue;
+    PO_IRP_QUEUE SystemIrpQueue;
+} PO_IRP_MANAGER, *PPO_IRP_MANAGER;
 
 #endif // !NTOS_MODE_USER
 

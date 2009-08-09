@@ -14,26 +14,6 @@
 #include <mbstring.h>
 #include <mbctype.h>
 
-unsigned char _mbctype[257] = {
-    0,						     /* EOF */
-    0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 , /* 0 */
-    0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 , /* 1 */
-    B ,P ,P ,P ,P ,P ,P ,P ,P ,P ,P ,P ,P ,P ,P ,P , /* 2 */
-    D ,D ,D ,P ,D ,D ,D ,D ,D ,D ,P ,P ,P ,P ,P ,P , /* 3 */
-    PT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT, /* 4 */
-    AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,PT,PT,PT,PT,PT, /* 5 */
-    PT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT, /* 6 */
-    AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,AT,PT,PT,PT,PT,0 , /* 7 */
-    T ,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT, /* 8 */
-    LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT, /* 9 */
-    T ,GT,GT,GT,GT,GT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT, /* A */
-    KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT, /* B */
-    KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT, /* C */
-    KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,KT,GT,GT, /* D */
-    LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT, /* E */
-    LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,LT,0 ,0 ,0 ,  /* F */
-};
-
 /*
  * @implemented
  */

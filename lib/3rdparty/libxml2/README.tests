@@ -10,13 +10,14 @@ program has a different testing purpose:
   runtest.c : runs libxml2 basic internal regression tests
   runsuite.c: runs libxml2 against external regression tests
   testapi.c : exercises the library public entry points
+  testchar.c: exercise the check of character ranges and UTF-8 validation
 
 The command:
 
-  make -f Makefile.tests
+  make -f Makefile.tests check
 
 should be sufficient on an Unix system to build and exercise the tests
-for the version of the library installed on the system. Note however 
+for the version of the library installed on the system. Note however
 that there isn't backward compatibility provided so if the installed
 version is older to the testsuite one, failing to compile or run the tests
 is likely. In any event this won't work with an installed libxml2 older
@@ -26,4 +27,4 @@ like any other program using libxml2, running the test should be done
 simply by launching the resulting executables.
 
 Daniel Veillard
-Sun Jul 10 2005
+Thu Jul 24 2008

@@ -1,0 +1,29 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Bestand"
+	BEGIN
+		MENUITEM "&Openen...", IDM_OPEN_FILE
+		MENUITEM "&Sluiten", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&Afsluiten", IDM_EXIT
+	END
+	POPUP "&Help"
+	BEGIN
+		MENUITEM "&Over...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "Mediabestanden (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Afspelen"
+	IDS_TOOLTIP_STOP "Stoppen"
+	IDS_TOOLTIP_EJECT "Uitwerpen"
+	IDS_TOOLTIP_BACKWARD "Vorige"
+	IDS_TOOLTIP_SEEKBACK "Terugspoelen"
+	IDS_TOOLTIP_SEEKFORW "Vooruitspoelen"
+	IDS_TOOLTIP_FORWARD "Volgende"
+    IDS_APPTITLE "ReactOS Multimedia Player"
+END

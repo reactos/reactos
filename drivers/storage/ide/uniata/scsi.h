@@ -172,7 +172,7 @@ typedef union _CDB {
         } Byte2;
 
         UCHAR Reserved2[3];
-        UCHAR Start_TrackSes;;
+        UCHAR Start_TrackSes;
         UCHAR AllocationLength[2];
         UCHAR Control : 6;
         UCHAR Format : 2;

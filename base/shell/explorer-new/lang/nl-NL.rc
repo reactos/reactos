@@ -1,0 +1,59 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+IDM_TRAYWND MENU DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Takenbalk vergrendelen", ID_LOCKTASKBAR
+        MENUITEM "&Eigenschappen", ID_SHELL_CMD_PROPERTIES
+    END
+END
+
+IDM_STARTMENU MENUEX DISCARDABLE
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "", -1, MFT_SEPARATOR
+        POPUP "&Programma's", IDM_PROGRAMS
+        BEGIN
+            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "F&avorieten", IDM_FAVORITES
+        BEGIN
+            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Documenten", IDM_DOCUMENTS
+        BEGIN
+            MENUITEM "(Empty)", -1, MFT_STRING, MFS_GRAYED
+        END
+        POPUP "&Instellingen", IDM_SETTINGS
+        BEGIN
+            MENUITEM "&Configuratiescherm", IDM_CONTROLPANEL, MFT_STRING, MFS_GRAYED
+            MENUITEM "", -1, MFT_SEPARATOR
+            MENUITEM "&Beveiliging...", IDM_SECURITY, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Netwerkverbindingen", IDM_NETWORKCONNECTIONS, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Printers en Faxapparaten", IDM_PRINTERSANDFAXES, MFT_STRING, MFS_ENABLED
+            MENUITEM "&Takenbalk en het Start-Menu", IDM_TASKBARANDSTARTMENU, MFT_STRING, MFS_ENABLED
+        END
+        POPUP "&Zoeken", IDM_SEARCH
+        BEGIN
+            MENUITEM "", -1, MFT_SEPARATOR
+        END
+        MENUITEM "&Help en Ondersteuning", IDM_HELPANDSUPPORT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Uitvoeren...", IDM_RUN, MFT_STRING, MFS_ENABLED
+        MENUITEM "", 450, MFT_SEPARATOR, MFS_ENABLED
+        MENUITEM "&Synchroniseren", IDM_SYNCHRONIZE, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Afloggen %s...", IDM_LOGOFF, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Verbinding Verbreken...", IDM_DISCONNECT, MFT_STRING, MFS_ENABLED
+        MENUITEM "&Computer Ontkoppelen", IDM_UNDOCKCOMPUTER, MFT_STRING, MFS_ENABLED
+        MENUITEM "A&fsluiten...", IDM_SHUTDOWN, MFT_STRING, MFS_ENABLED
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_START             "&Start"
+    IDS_PROPERTIES        "&Eigenschappen"
+    IDS_OPEN_ALL_USERS    "&Open Alle Gebruikers"
+    IDS_EXPLORE_ALL_USERS "&Alle Gebruikers V&erkennen"
+END

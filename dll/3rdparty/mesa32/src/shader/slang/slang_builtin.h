@@ -26,14 +26,15 @@
 #ifndef SLANG_BUILTIN_H
 #define SLANG_BUILTIN_H
 
-#include "prog_parameter.h"
+#include "shader/prog_parameter.h"
 #include "slang_utility.h"
 #include "slang_ir.h"
 
 
 extern GLint
 _slang_alloc_statevar(slang_ir_node *n,
-                      struct gl_program_parameter_list *paramList);
+                      struct gl_program_parameter_list *paramList,
+                      GLboolean *direct);
 
 
 #endif /* SLANG_BUILTIN_H */

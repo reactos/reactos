@@ -20,5 +20,14 @@
 				<file>mb.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>drvmap.S</file>
+				<file>i386cpu.S</file>
+				<file>i386idt.S</file>
+				<file>i386trap.S</file>
+				<file>mb.S</file>
+			</directory>
+		</if>
 	</directory>
 </module>

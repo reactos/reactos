@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -29,11 +29,14 @@ UNICODE_STRING IopHardwareDatabaseKey =
 
 POBJECT_TYPE IoDriverObjectType = NULL;
 
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
+
 extern BOOLEAN ExpInTextModeSetup;
+extern BOOLEAN PnpSystemInit;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopInvalidDeviceRequest(
    PDEVICE_OBJECT DeviceObject,
    PIRP Irp)
@@ -246,7 +249,7 @@ IopNormalizeImagePath(
       RtlAppendUnicodeStringToString(ImagePath, &InputImagePath);
 
       /* Free caller's string */
-      RtlFreeUnicodeString(&InputImagePath);
+      ExFreePoolWithTag(InputImagePath.Buffer, TAG_RTLREGISTRY);
    }
 
    return STATUS_SUCCESS;
@@ -275,6 +278,7 @@ IopLoadServiceModule(
    UNICODE_STRING ServiceImagePath, CCSName;
    NTSTATUS Status;
    HANDLE CCSKey, ServiceKey;
+   PVOID BaseAddress;
 
    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
@@ -356,7 +360,7 @@ IopLoadServiceModule(
   else
   {
      DPRINT("Loading module\n");
-     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, NULL);
+     Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
   }
 
    ExFreePool(ServiceImagePath.Buffer);
@@ -479,7 +483,7 @@ IopInitializeDriverModule(
        DeviceObject = DeviceObject->NextDevice;
    }
 
-   IopReinitializeDrivers();
+   if (PnpSystemInit) IopReinitializeDrivers();
 
    return STATUS_SUCCESS;
 }
@@ -490,7 +494,7 @@ IopInitializeDriverModule(
  * Internal routine used by IopAttachFilterDrivers.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopAttachFilterDriversCallback(
    PWSTR ValueName,
    ULONG ValueType,
@@ -566,7 +570,7 @@ IopAttachFilterDrivers(
    PDEVICE_NODE DeviceNode,
    BOOLEAN Lower)
 {
-   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
+   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { NULL, 0, NULL, NULL, 0, NULL, 0 }, };
    UNICODE_STRING Class;
    WCHAR ClassBuffer[40];
    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
@@ -782,10 +786,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     LPWSTR FileExtension;
     PUNICODE_STRING ModuleName = &LdrEntry->BaseDllName;
     UNICODE_STRING ServiceName;
-#if 1 // Disable for FreeLDR 2.5
-    UNICODE_STRING ServiceNameWithExtension;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
-#endif
 
    /*
     * Display 'Loading XXX...' message
@@ -806,19 +806,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    }
 
    /*
-    * Load the module. 
-    */
-#if 1 // Remove for FreeLDR 2.5.
-   RtlCreateUnicodeString(&ServiceNameWithExtension, FileNameWithoutPath);
-   Status = LdrProcessDriverModule(LdrEntry, &ServiceNameWithExtension, &ModuleObject);
-   if (!NT_SUCCESS(Status))
-   {
-       CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
-       return Status;
-   }
-#endif
-
-   /*
     * Strip the file extension from ServiceName
     */
    RtlCreateUnicodeString(&ServiceName, FileNameWithoutPath);
@@ -836,7 +823,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
    if (!NT_SUCCESS(Status))
    {
-      CPRINT("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
+      DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
       return(Status);
    }
    DeviceNode->ServiceName = ServiceName;
@@ -844,7 +831,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
    /*
     * Initialize the driver
     */
-   DeviceNode->Flags |= DN_DRIVER_LOADED;
    Status = IopInitializeDriverModule(DeviceNode, LdrEntry,
       &DeviceNode->ServiceName, FALSE, &DriverObject);
 
@@ -983,7 +969,7 @@ IopInitializeBootDrivers(VOID)
  *    Guard the whole function by SEH.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
@@ -1025,21 +1011,25 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    /*
     * Find the driver object
     */
+   Status = ObReferenceObjectByName(&ObjectName,
+                                    0,
+                                    0,
+                                    0,
+                                    IoDriverObjectType,
+                                    KernelMode,
+                                    0,
+                                    (PVOID*)&DriverObject);
 
-   Status = ObReferenceObjectByName(&ObjectName, 0, 0, 0, IoDriverObjectType,
-      KernelMode, 0, (PVOID*)&DriverObject);
+   /*
+    * Free the buffer for driver object name
+    */
+   ExFreePool(ObjectName.Buffer);
 
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
       return Status;
    }
-
-   /*
-    * Free the buffer for driver object name
-    */
-
-   ExFreePool(ObjectName.Buffer);
 
    /*
     * Get path of service...
@@ -1111,6 +1101,18 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
          KeWaitForSingleObject(&LoadParams.Event, UserRequest, KernelMode,
              FALSE, NULL);
       }
+
+      /* Mark the driver object temporary, so it could be deleted later */
+      ObMakeTemporaryObject(DriverObject);
+
+      /* Dereference it 2 times */
+      ObDereferenceObject(DriverObject);
+      ObDereferenceObject(DriverObject);
+
+      /* Unload the driver */
+      MmUnloadSystemImage(DriverObject->DriverSection);
+
+      return STATUS_SUCCESS;
    }
 
    ObDereferenceObject(DriverObject);
@@ -1568,6 +1570,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    PDEVICE_NODE DeviceNode;
    PDRIVER_OBJECT DriverObject;
    PLDR_DATA_TABLE_ENTRY ModuleObject;
+   PVOID BaseAddress;
    WCHAR *cur;
 
    /* Check if it's an unload request */
@@ -1678,7 +1681,7 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
         * Load the driver module
         */
 
-       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
+       Status = MmLoadSystemImage(&ImagePath, NULL, NULL, 0, (PVOID)&ModuleObject, &BaseAddress);
        if (!NT_SUCCESS(Status) && Status != STATUS_IMAGE_ALREADY_LOADED)
        {
            DPRINT("MmLoadSystemImage() failed (Status %lx)\n", Status);
@@ -1718,8 +1721,8 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
            }
        }
 
-       /* We have a driver for this DeviceNode */
-       DeviceNode->Flags |= DN_DRIVER_LOADED;
+       /* Store its DriverSection, so that it could be unloaded */
+       DriverObject->DriverSection = ModuleObject;
    }
 
    IopInitializeDevice(DeviceNode, DriverObject);
@@ -1742,10 +1745,10 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
  * Status
  *    implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
-    UNICODE_STRING CapturedDriverServiceName = {0};
+    UNICODE_STRING CapturedDriverServiceName = { 0, 0, NULL };
     KPROCESSOR_MODE PreviousMode;
     LOAD_UNLOAD_PARAMS LoadParams;
     NTSTATUS Status;
@@ -1824,7 +1827,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
  *    implemented
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
 {
    return IopUnloadDriver(DriverServiceName, FALSE);

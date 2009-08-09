@@ -101,8 +101,8 @@ static void checkc_notcpbuf(adns_state ads) {
 
 static void checkc_global(adns_state ads) {
   int i;
-
-  assert(ads->udpsocket != INVALID_SOCKET);
+  
+  assert(ads->udpsocket >= 0);
 
   for (i=0; i<ads->nsortlist; i++)
     assert(!(ads->sortlist[i].base.s_addr & ~ads->sortlist[i].mask.s_addr));
@@ -111,16 +111,16 @@ static void checkc_global(adns_state ads) {
 
   switch (ads->tcpstate) {
   case server_connecting:
-    assert(ads->tcpsocket != INVALID_SOCKET);
+    assert(ads->tcpsocket >= 0);
     checkc_notcpbuf(ads);
     break;
   case server_disconnected:
   case server_broken:
-    assert(ads->tcpsocket == INVALID_SOCKET);
+    assert(ads->tcpsocket == -1);
     checkc_notcpbuf(ads);
     break;
   case server_ok:
-    assert(ads->tcpsocket != INVALID_SOCKET);
+    assert(ads->tcpsocket >= 0);
     assert(ads->tcprecv_skip <= ads->tcprecv.used);
     break;
   default:

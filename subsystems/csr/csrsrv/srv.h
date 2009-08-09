@@ -124,6 +124,10 @@ CsrSbCreateSession(IN PSB_API_MESSAGE ApiMessage);
 
 BOOLEAN
 NTAPI
+CsrSbTerminateSession(IN PSB_API_MESSAGE ApiMessage);
+
+BOOLEAN
+NTAPI
 CsrSbForeignSessionComplete(IN PSB_API_MESSAGE ApiMessage);
 
 BOOLEAN

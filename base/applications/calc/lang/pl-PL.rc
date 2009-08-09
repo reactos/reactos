@@ -16,14 +16,10 @@ MENU IDR_MENU_SCIENTIFIC_1
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "",IDC_STATIC,4,16,132,21
-    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,
-                    10
-    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,
-                    10
-    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,
-                    10
-    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,
-                    26,10
+    CONTROL         "Hex",IDC_RADIO_HEX,"Button",BS_AUTORADIOBUTTON,8,24,29,10
+    CONTROL         "Dec",IDC_RADIO_DEC,"Button",BS_AUTORADIOBUTTON,40,24,29,10
+    CONTROL         "Oct",IDC_RADIO_OCT,"Button",BS_AUTORADIOBUTTON,72,24,27,10
+    CONTROL         "Bin",IDC_RADIO_BIN,"Button",BS_AUTORADIOBUTTON,100,24,26,10
     GROUPBOX        "",IDC_STATIC,4,36,76,21
     CONTROL         "Inv",IDC_CHECK_INV,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,8,44,26,10
@@ -348,38 +344,37 @@ BEGIN
                     SS_SUNKEN
 END
 
-
 // Menus
 
 IDR_MENU_SCIENTIFIC_1 MENU DISCARDABLE 
 BEGIN
     POPUP "Edycja"
     BEGIN
-        MENUITEM "Kopiuj\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Kopiuj\tCTRL-C",              IDM_EDIT_COPY
         MENUITEM "Wklej\tCTRL-V",               IDM_EDIT_PASTE
     END
     POPUP "Wygl¹d"
     BEGIN
-        MENUITEM "Standardowy",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Naukowy",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Przeliczanie",                  IDM_VIEW_CONVERSION
+        MENUITEM "Standardowy",                 IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Naukowy",                     IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Przeliczanie",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Szesnastkowo\tF5",                     IDM_VIEW_HEX, CHECKED
-        MENUITEM "Dziesiêtnie\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Ósemkowo\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binarnie\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Szesnastkowo\tF5",            IDM_VIEW_HEX, CHECKED
+        MENUITEM "Dziesiêtnie\tF6",             IDM_VIEW_DEC, CHECKED
+        MENUITEM "Ósemkowo\tF7",                IDM_VIEW_OCT, CHECKED
+        MENUITEM "Binarnie\tF8",                IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Stopni\tF2",                 IDM_VIEW_DEG, CHECKED
-        MENUITEM "Radianów\tF3",                 IDM_VIEW_RAD, CHECKED
-        MENUITEM "Gradianów\tF4",                   IDM_VIEW_GRAD, CHECKED
+        MENUITEM "Stopni\tF2",                  IDM_VIEW_DEG, CHECKED
+        MENUITEM "Radianów\tF3",                IDM_VIEW_RAD, CHECKED
+        MENUITEM "Gradianów\tF4",               IDM_VIEW_GRAD, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grupowanie cyfr",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Grupowanie cyfr",             IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Pomoc"
     BEGIN
-        MENUITEM "Tematy pomocy",                 IDM_HELP_HELP
+        MENUITEM "Tematy pomocy",               IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O Kalkulatorze ReactOS",          IDM_HELP_ABOUT
+        MENUITEM "O Kalkulatorze ReactOS",      IDM_HELP_ABOUT
     END
 END
 
@@ -387,32 +382,32 @@ IDR_MENU_SCIENTIFIC_2 MENU DISCARDABLE
 BEGIN
     POPUP "Edycja"
     BEGIN
-        MENUITEM "Kopiuj\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Kopiuj\tCTRL-C",              IDM_EDIT_COPY
         MENUITEM "Wklej\tCTRL-V",               IDM_EDIT_PASTE
     END
     POPUP "Wygl¹d"
     BEGIN
-        MENUITEM "Standardowy",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Naukowy",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Przeliczanie",                  IDM_VIEW_CONVERSION
+        MENUITEM "Standardowy",                 IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Naukowy",                     IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Przeliczanie",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Szesnastkowo\tF5",                     IDM_VIEW_HEX, CHECKED
-        MENUITEM "Dziesiêtnie\tF6",                 IDM_VIEW_DEC, CHECKED
-        MENUITEM "Ósemkowo\tF7",                   IDM_VIEW_OCT, CHECKED
-        MENUITEM "Binarnie\tF8",                  IDM_VIEW_BIN, CHECKED
+        MENUITEM "Szesnastkowo\tF5",            IDM_VIEW_HEX, CHECKED
+        MENUITEM "Dziesiêtnie\tF6",             IDM_VIEW_DEC, CHECKED
+        MENUITEM "Ósemkowo\tF7",                IDM_VIEW_OCT, CHECKED
+        MENUITEM "Binarnie\tF8",                IDM_VIEW_BIN, CHECKED
         MENUITEM SEPARATOR
         MENUITEM "Qword\tF12",                  IDM_VIEW_QWORD, CHECKED
         MENUITEM "Dword\tF2",                   IDM_VIEW_DWORD, CHECKED
         MENUITEM "Word\tF3",                    IDM_VIEW_WORD, CHECKED
         MENUITEM "Bajt\tF4",                    IDM_VIEW_BYTE, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "Grupowanie cyfr",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Grupowanie cyfr",             IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Pomoc"
     BEGIN
-        MENUITEM "Tematy pomocy",                 IDM_HELP_HELP
+        MENUITEM "Tematy pomocy",               IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O Kalkulatorze ReactOS",          IDM_HELP_ABOUT
+        MENUITEM "O Kalkulatorze ReactOS",      IDM_HELP_ABOUT
     END
 END
 
@@ -420,22 +415,22 @@ IDR_MENU_STANDARD MENU DISCARDABLE
 BEGIN
     POPUP "Edycja"
     BEGIN
-        MENUITEM "Kopiuj\tCTRL-C",                IDM_EDIT_COPY
+        MENUITEM "Kopiuj\tCTRL-C",              IDM_EDIT_COPY
         MENUITEM "Wklej\tCTRL-V",               IDM_EDIT_PASTE
     END
     POPUP "Wygl¹d"
     BEGIN
-        MENUITEM "Standardowy",                    IDM_VIEW_STANDARD, CHECKED
-        MENUITEM "Naukowy",                  IDM_VIEW_SCIENTIFIC, CHECKED
-        MENUITEM "Przeliczanie",                  IDM_VIEW_CONVERSION
+        MENUITEM "Standardowy",                 IDM_VIEW_STANDARD, CHECKED
+        MENUITEM "Naukowy",                     IDM_VIEW_SCIENTIFIC, CHECKED
+        MENUITEM "Przeliczanie",                IDM_VIEW_CONVERSION
         MENUITEM SEPARATOR
-        MENUITEM "Grupowanie cyfr",                IDM_VIEW_GROUP, CHECKED
+        MENUITEM "Grupowanie cyfr",             IDM_VIEW_GROUP, CHECKED
     END
     POPUP "Pomoc"
     BEGIN
-        MENUITEM "Tematy pomocy",                 IDM_HELP_HELP
+        MENUITEM "Tematy pomocy",               IDM_HELP_HELP
         MENUITEM SEPARATOR
-        MENUITEM "O Kalkulatorze ReactOS",          IDM_HELP_ABOUT
+        MENUITEM "O Kalkulatorze ReactOS",      IDM_HELP_ABOUT
     END
 END
 
@@ -448,9 +443,10 @@ BEGIN
     IDS_QUICKHELP           "Szybka pomoc"
 END
 
-// types of conversion
+// Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_CONV_ANGLE          "K¹t"
     IDS_CONV_AREA           "Powierzchnia"
     IDS_CONV_CONSUMPTION    "Zu¿ycie (silniki)"
     IDS_CONV_CURRENCY       "Waluty"
@@ -459,9 +455,18 @@ BEGIN
     IDS_CONV_POWER          "Moc"
     IDS_CONV_PRESSURE       "Ciœnienie"
     IDS_CONV_TEMPERATURE    "Temperatura"
+    IDS_CONV_TIME           "Czas"
     IDS_CONV_VELOCITY       "Prêdkoœæ"
     IDS_CONV_VOLUME         "Objêtoœæ"
     IDS_CONV_WEIGHT         "Waga"
+END
+
+// TYPES OF ANGLES
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_ANGLE_DEGREES       "Stopni"
+    IDS_ANGLE_GRADIANS      "Gradianów"
+    IDS_ANGLE_RADIANS       "Radianów"
 END
 
 // TYPES OF AREAS
@@ -518,6 +523,7 @@ BEGIN
     IDS_CURRENCY_AUSTRIAN_SCHILLING "Austriacki szyling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgijski frank"
     IDS_CURRENCY_CYPRIOT_POUND      "Cypryjski funt"
+    IDS_CURRENCY_CZECH_KORUNA       "Czeska korona"
     IDS_CURRENCY_DEUTSCHE_MARK      "Niemiecka marka"
     IDS_CURRENCY_DUTCH_GUILDER      "Holenderki gulden"
     IDS_CURRENCY_EURO               "Euro"
@@ -529,6 +535,7 @@ BEGIN
     IDS_CURRENCY_LUXEMBOURG_FRANC   "Luksemburski frank"
     IDS_CURRENCY_MALTESE_LIRA       "Maltañskie liry"
     IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portugalskie escudo"
+    IDS_CURRENCY_SLOVAK_KORUNA      "S³owacka korona"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "S³oveñski tolar"
     IDS_CURRENCY_SPANISH_PESETA     "Hiszpañska peseta"
 END
@@ -536,9 +543,13 @@ END
 // TYPES OF ENERGIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_ENERGY_15_C_CALORIES        "15 ^C kalorii"
+    IDS_ENERGY_15_C_CALORIES        "15 °C kalorii"
+    IDS_ENERGY_BTUS                 "British Thermal Unit"
     IDS_ENERGY_ERGS                 "Ergów"
+    IDS_ENERGY_EVS                  "Elektronowolt"
+    IDS_ENERGY_FOOT_POUNDS          "Foot-pound"
     IDS_ENERGY_IT_CALORIES          "Miêdzynarodowa Tablica kalorii"
+    IDS_ENERGY_IT_KILOCALORIES      "Miêdzynarodowa Tablica kilokalorii"
     IDS_ENERGY_JOULES               "D¿uli"
     IDS_ENERGY_KILOJOULES           "Kilod¿uli"
     IDS_ENERGY_KILOWATT_HOURS       "Kilowatogodzin"
@@ -550,7 +561,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LENGTH_ANGSTROMS            "Angsztremów"
-    IDS_LENGTH_ASTRONOMILA_UNITS    "Jednostek Astronomicznych"
+    IDS_LENGTH_ASTRONOMICAL_UNITS   "Jednostek Astronomicznych"
     IDS_LENGTH_BARLEYCORNS          "Palców"
     IDS_LENGTH_CENTIMETERS          "Centimetrów"
     IDS_LENGTH_CHAINS_UK            "Chains (UK)"
@@ -576,6 +587,7 @@ BEGIN
     IDS_LENGTH_LIGHT_YEARS          "Lat œwietlnych"
     IDS_LENGTH_LINKS_UK             "Links (UK)"
     IDS_LENGTH_METERS               "Metrów"
+    IDS_LENGTH_MICRONS              "Mikrometrów"
     IDS_LENGTH_MILES                "Mil"
     IDS_LENGTH_MILLIMETERS          "Millimetrów"
     IDS_LENGTH_NAUTICAL_MILES       "Mil morskich"
@@ -584,6 +596,7 @@ BEGIN
     IDS_LENGTH_PICAS                "Picas"
     IDS_LENGTH_RI_JAPAN             "Ri (Japan)"
     IDS_LENGTH_RI_KOREA             "Ri (Korea)"
+    IDS_LENGTH_RODS                 "Rods"
     IDS_LENGTH_SAWK                 "Sawk"
     IDS_LENGTH_SEN                  "Sen"
     IDS_LENGTH_SHAKU                "Shaku"
@@ -599,6 +612,8 @@ END
 // TYPES OF POWERS
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_POWER_BTUS_PER_MINUTE       "BTU na minutê"
+    IDS_POWER_FPS_PER_MINUTE        "Foot-pound na minutê"
     IDS_POWER_HORSEPOWER            "Koni mechanicznych"
     IDS_POWER_KILOWATTS             "Kilowatów"
     IDS_POWER_MEGAWATTS             "Megawatów"
@@ -610,6 +625,8 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_PRESSURE_ATMOSPHERES        "Atmosfer"
     IDS_PRESSURE_BARS               "Barów"
+    IDS_PRESSURE_HECTOPASCALS       "Hektopaskali"
+    IDS_PRESSURE_KILOPASCALS        "Kilopaskali"
     IDS_PRESSURE_MM_OF_MERCURY      "Millimetrów s³upka rtêci"
     IDS_PRESSURE_PASCALS            "Paskali"
     IDS_PRESSURE_PSI                "Funtów na cal kwadratowy"
@@ -624,10 +641,25 @@ BEGIN
     IDS_TEMPERATURE_RANKINE         "Rankina"
 END
 
+// TYPES OF TIME
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_TIME_DAYS         "Dni"
+    IDS_TIME_HOURS        "Godzin"
+    IDS_TIME_MICROSECONDS "Mikrosekund"
+    IDS_TIME_MILLISECONDS "Milisekund"
+    IDS_TIME_MINUTES      "Minut"
+    IDS_TIME_SECONDS      "Sekund"
+    IDS_TIME_WEEKS        "Tygodni"
+    IDS_TIME_YEARS        "Lat"
+END
+
 // TYPES OF VELOCITIES
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_VELOCITY_CMS_SECOND         "Centimetrów/sekundê"
     IDS_VELOCITY_FEET_HOUR          "Stóp/godzinê"
+    IDS_VELOCITY_FEET_SECOND        "Stóp/sekundê"
     IDS_VELOCITY_KILOMETERS_HOUR    "Kilometrów/godzinê"
     IDS_VELOCITY_KNOTS              "Wêz³ów"
     IDS_VELOCITY_MACH               "Machów"

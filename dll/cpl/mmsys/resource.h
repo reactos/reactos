@@ -5,6 +5,7 @@
 #define IDI_CPLICON                3004
 #define IDI_PLAY_ICON              3005
 #define IDI_STOP_ICON              3006
+#define IDI_MIDICON                3007
 #define IDI_JOY_ICON               4361
 #define IDI_CAMERA_ICON            4364
 #define IDI_SHUTDOWN_ICON          3009
@@ -64,6 +65,11 @@
 #define IDB_SPEAKIMG               4624
 #define IDC_SPEAKIMG               4625
 #define IDC_MUTE_ICON              4626
+
+#define IDS_REACTOS_LOGON          5853
+#define IDS_REACTOS_LOGOFF         5852
+#define IDS_REACTOS_DEFAULT_SCHEME 5856
+
 
 /* Strings */
 #define IDS_CPLNAME                1000

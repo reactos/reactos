@@ -25,9 +25,9 @@
  *    Keith Whitwell <keithw@tungstengraphics.com>
  */
 
-#include "glheader.h"
-#include "context.h"
-#include "colormac.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/colormac.h"
 
 #include "t_context.h"
 #include "t_vertex.h"
@@ -233,7 +233,7 @@ void _tnl_get_attr( GLcontext *ctx, const void *vin,
       /* If the hardware vertex doesn't have point size then use size from
        * GLcontext.  XXX this will be wrong if drawing attenuated points!
        */
-      dest[0] = ctx->Point._Size;
+      dest[0] = ctx->Point.Size;
    }
    else {
       _mesa_memcpy( dest, ctx->Current.Attrib[attr], 4*sizeof(GLfloat));
@@ -376,6 +376,22 @@ void _tnl_notify_pipeline_output_change( GLcontext *ctx )
    invalidate_funcs(vtx);
 }
 
+
+static void adjust_input_ptrs( GLcontext *ctx, GLint diff)
+{
+   struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
+   struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
+   struct tnl_clipspace_attr *a = vtx->attr;
+   const GLuint count = vtx->attr_count;
+   int j;
+
+   diff -= 1;
+   for (j=0; j<count; ++j) {
+           register GLvector4f *vptr = VB->AttribPtr[a->attrib];
+	   (a++)->inputptr += diff*vptr->stride;
+   }
+}
+
 static void update_input_ptrs( GLcontext *ctx, GLuint start )
 {
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
@@ -431,11 +447,38 @@ void *_tnl_emit_vertices_to_buffer( GLcontext *ctx,
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
 
    update_input_ptrs(ctx, start);
-
    /* Note: dest should not be adjusted for non-zero 'start' values:
     */
    vtx->emit( ctx, end - start, (GLubyte*) dest );	
    return (void *)((GLubyte *)dest + vtx->vertex_size * (end - start));
+}
+
+/* Emit indexed VB vertices start..end to dest.  Note that VB vertex at
+ * postion start will be emitted to dest at position zero.
+ */
+
+void *_tnl_emit_indexed_vertices_to_buffer( GLcontext *ctx,
+					    const GLuint *elts,
+					    GLuint start,
+					    GLuint end,
+					    void *dest )
+{
+   struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
+   GLuint oldIndex;
+   GLubyte *cdest = dest;
+
+   update_input_ptrs(ctx, oldIndex = elts[start++]);
+   vtx->emit( ctx, 1, cdest );
+   cdest += vtx->vertex_size;
+
+   for (; start < end; ++start) {
+      adjust_input_ptrs(ctx, elts[start] - oldIndex);
+      oldIndex = elts[start];
+      vtx->emit( ctx, 1, cdest);
+      cdest += vtx->vertex_size;
+   }
+
+   return (void *) cdest;
 }
 
 

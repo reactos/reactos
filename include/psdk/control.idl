@@ -17,10 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-cpp_quote("#if 0")  /* FIXME: these files are not included on Windows */
-import "shldisp.idl";
-import "strmif.idl";
-cpp_quote("#endif")
+import "oaidl.idl";
 
 interface IMediaControl;
 interface IBasicAudio;
@@ -33,6 +30,11 @@ interface IMediaPosition;
 typedef long OAFilterState;
 typedef LONG_PTR OAHWND;
 typedef LONG_PTR OAEVENT;
+
+cpp_quote("#ifndef REFTIME_DEFINED")
+cpp_quote("#define REFTIME_DEFINED")
+typedef DOUBLE REFTIME;
+cpp_quote("#endif")
 
 /*****************************************************************************
  * IMediaControl interface
@@ -171,6 +173,17 @@ interface IBasicVideo : IDispatch
                              [out, size_is(*pBufferSize), length_is(*pBufferSize)] long *pDIBImage );
     HRESULT IsUsingDefaultSource();
     HRESULT IsUsingDefaultDestination();
+}
+
+[
+    uuid(329bb360-f6ea-11d1-9038-00a0c9697298),
+    helpstring("IBasicVideo2"),
+    odl
+]
+
+interface IBasicVideo2 : IBasicVideo
+{
+    HRESULT GetPreferredAspectRatio([out] LONG *plAspectX, [out] LONG *plAspectY);
 }
 
 

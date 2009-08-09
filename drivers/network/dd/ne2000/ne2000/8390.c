@@ -7,7 +7,6 @@
  * REVISIONS:
  *   CSH 27/08-2000 Created
  */
-#include <roscfg.h>
 #include <ne2000.h>
 #include <debug.h>
 
@@ -544,6 +543,8 @@ static VOID NICStartTransmit(
     UCHAR Tmp;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    if (Adapter->TXCurrent < 0) return;
 
 	//FrameStart = Adapter->TXStart + Adapter->TXCurrent * DRIVER_BLOCK_SIZE;
 	//FrameStart = Adapter->TXStart;
@@ -1299,7 +1300,7 @@ static VOID HandleTransmit(
 }
 
 
-VOID STDCALL MiniportHandleInterrupt(
+VOID NTAPI MiniportHandleInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Handler for deferred processing of interrupts

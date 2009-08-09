@@ -40,6 +40,7 @@ typedef struct _SERVICE
     PSERVICE_IMAGE lpImage;
     BOOL bDeleted;
     DWORD dwResumeCount;
+    DWORD dwRefCount;
 
     CLIENT_HANDLE hClient;
     SERVICE_STATUS Status;
@@ -76,7 +77,7 @@ DWORD ScmOpenServiceKey(LPWSTR lpServiceName,
                         REGSAM samDesired,
                         PHKEY phKey);
 
-DWORD ScmCreateServiceKey(LPWSTR lpServiceName,
+DWORD ScmCreateServiceKey(LPCWSTR lpServiceName,
                           REGSAM samDesired,
                           PHKEY phKey);
 
@@ -103,12 +104,13 @@ DWORD ScmStartService(PSERVICE Service,
                       DWORD argc,
                       LPWSTR *argv);
 
-PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
-PSERVICE ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName);
+PSERVICE ScmGetServiceEntryByName(LPCWSTR lpServiceName);
+PSERVICE ScmGetServiceEntryByDisplayName(LPCWSTR lpDisplayName);
 PSERVICE ScmGetServiceEntryByResumeCount(DWORD dwResumeCount);
-PSERVICE ScmGetServiceEntryByClientHandle(ULONG ThreadId);
-DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
+PSERVICE ScmGetServiceEntryByClientHandle(HANDLE Handle);
+DWORD ScmCreateNewServiceRecord(LPCWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
+VOID ScmDeleteServiceRecord(PSERVICE lpService);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 DWORD ScmControlService(PSERVICE Service,
@@ -128,7 +130,7 @@ DWORD ScmControlDriver(PSERVICE lpService,
 
 DWORD ScmCreateGroupList(VOID);
 DWORD ScmSetServiceGroup(PSERVICE lpService,
-                         LPWSTR lpGroupName);
+                         LPCWSTR lpGroupName);
 
 
 /* rpcserver.c */

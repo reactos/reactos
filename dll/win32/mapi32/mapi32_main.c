@@ -89,7 +89,7 @@ HRESULT WINAPI MAPIInitialize(LPVOID init)
 ULONG WINAPI MAPILogon(ULONG_PTR uiparam, LPSTR profile, LPSTR password,
     FLAGS flags, ULONG reserved, LPLHANDLE session)
 {
-    FIXME("(0x%08lx %s %p 0x%08lx 0x%08x %p) Stub\n", uiparam,
+    FIXME("(0x%08lx %s %p 0x%08x 0x%08x %p) Stub\n", uiparam,
           debugstr_a(profile), password, flags, reserved, session);
 
     if (session) *session = 1;
@@ -99,7 +99,7 @@ ULONG WINAPI MAPILogon(ULONG_PTR uiparam, LPSTR profile, LPSTR password,
 ULONG WINAPI MAPILogoff(LHANDLE session, ULONG_PTR uiparam, FLAGS flags,
     ULONG reserved )
 {
-    FIXME("(0x%08lx 0x%08lx 0x%08lx 0x%08x) Stub\n", session,
+    FIXME("(0x%08lx 0x%08lx 0x%08x 0x%08x) Stub\n", session,
           uiparam, flags, reserved);
     return SUCCESS_SUCCESS;
 }

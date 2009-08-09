@@ -35,14 +35,14 @@ extern "C" {
 // Win32K Process/Thread Functions
 //
 NTKERNELAPI
-struct _W32THREAD*
+PVOID
 NTAPI
 PsGetCurrentThreadWin32Thread(
     VOID
 );
 
 NTKERNELAPI
-struct _W32PROCESS*
+PVOID
 NTAPI
 PsGetCurrentProcessWin32Process(
     VOID
@@ -76,6 +76,13 @@ PVOID
 NTAPI
 PsGetThreadWin32Thread(
     PETHREAD Thread
+);
+
+NTKERNELAPI
+PTEB
+NTAPI
+PsGetThreadTeb(
+    IN PETHREAD Thread
 );
 
 NTKERNELAPI
@@ -133,6 +140,13 @@ PsLookupProcessThreadByCid(
 BOOLEAN
 NTAPI
 PsIsProtectedProcess(
+    IN PEPROCESS Process
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsSystemProcess(
     IN PEPROCESS Process
 );
 
@@ -314,6 +328,11 @@ NtCurrentTeb(VOID)
 
     return ret;
 #endif
+}
+#elif defined (_M_AMD64)
+FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
+{
+    return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
 }
 #endif
 #else

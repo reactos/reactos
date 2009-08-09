@@ -28,8 +28,6 @@
 
 #include "precomp.h"
 
-//#define NDEBUG
-#include <debug.h>
 #define _WINNT_H
 #include "wine/debug.h"
 
@@ -293,7 +291,7 @@ BOOL IMAGEAPI ImageGetCertificateHeader(
     const size_t cert_hdr_size = sizeof *Certificateheader -
                                  sizeof Certificateheader->bCertificate;
 
-    DPRINT("%p %ld %p\n", FileHandle, CertificateIndex, Certificateheader);
+    TRACE("%p %ld %p\n", FileHandle, CertificateIndex, Certificateheader);
 
     if( !IMAGEHLP_GetCertificateOffset( FileHandle, CertificateIndex, &ofs, &size ) )
         return FALSE;
@@ -354,7 +352,7 @@ CheckSumMappedFile(LPVOID BaseAddress,
   PIMAGE_NT_HEADERS Header;
   DWORD CalcSum;
   DWORD HdrSum;
-  DPRINT("stub\n");
+  TRACE("stub\n");
 
   CalcSum = (DWORD)CalcCheckSum(0,
                 BaseAddress,

@@ -1,14 +1,12 @@
-<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll">
+<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="Both" />
-	<importlibrary definition="shell32.spec.def" />
+	<importlibrary definition="shell32.spec" />
 	<include base="shell32">.</include>
 	<include base="recyclebin">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
-	<define name="WINVER">0x600</define>
 	<define name="_SHELL32_" />
 	<define name="COM_NO_WINDOWS_H" />
+	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>recyclebin</library>
@@ -24,6 +22,8 @@
 	<library>version</library>
 	<library>devmgr</library>
 	<library>winspool</library>
+	<library>winmm</library>
+	<pch>precomp.h</pch>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>
@@ -31,10 +31,10 @@
 	<file>classes.c</file>
 	<file>clipboard.c</file>
 	<file>control.c</file>
-	<file>cpanelfolder.c</file>
 	<file>dataobject.c</file>
 	<file>dde.c</file>
 	<file>debughlp.c</file>
+	<file>desktop.c</file>
 	<file>dialogs.c</file>
 	<file>dragdrophelper.c</file>
 	<file>enumidlist.c</file>
@@ -53,8 +53,13 @@
 	<file>shfldr_desktop.c</file>
 	<file>shfldr_fs.c</file>
 	<file>shfldr_mycomp.c</file>
-	<file>shlfldr_mydocuments.c</file>
+	<file>shfldr_mydocuments.c</file>
 	<file>shfldr_printers.c</file>
+	<file>shfldr_admintools.c</file>
+	<file>shfldr_netplaces.c</file>
+	<file>shfldr_fonts.c</file>
+	<file>shfldr_cpanel.c</file>
+	<file>shfldr_recyclebin.c</file>
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>
 	<file>shlfolder.c</file>
@@ -62,17 +67,14 @@
 	<file>shlmenu.c</file>
 	<file>shlview.c</file>
 	<file>shpolicy.c</file>
-	<file>shv_bg_cmenu.c</file>
-	<file>shv_item_cmenu.c</file>
+	<file>shv_def_cmenu.c</file>
 	<file>startmenu.c</file>
+	<file>stubs.c</file>
 	<file>ros-systray.c</file>
-	<file>shell32.rc</file>
-	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>
-	<file>recyclebin.c</file>
 	<file>she_ocmenu.c</file>
 	<file>shv_item_new.c</file>
 	<file>folder_options.c</file>
-	<file>shfldr_netplaces.c</file>
+	<file>shell32.rc</file>
 </module>

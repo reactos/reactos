@@ -47,7 +47,7 @@ VOID ChewShutdown() {
     KeReleaseSpinLock( &WorkQueueLock, OldIrql );
 }
 
-VOID STDCALL ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
+VOID NTAPI ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
     PWORK_ITEM WorkItem = ChewItem;
 
     RemoveEntryList( &WorkItem->Entry );
@@ -101,6 +101,7 @@ BOOLEAN ChewCreate
 
 VOID ChewRemove( PVOID Item ) {
     PWORK_ITEM WorkItem = Item;
+    RemoveEntryList( &WorkItem->Entry );
     IoFreeWorkItem( WorkItem->WorkItem );
     ExFreePool( WorkItem );
 }

@@ -13,9 +13,7 @@
 #include <limits.h>
 #include <accctrl.h>
 #include <objbase.h>
-#include <basetyps.h>
 #include <unknwn.h>
-#include <aclui.h>
 #include <aclapi.h>
 #include <commdlg.h>
 #include <cderr.h>

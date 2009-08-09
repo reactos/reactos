@@ -65,8 +65,11 @@ extern void
 _mesa_test_texobj_completeness( const GLcontext *ctx,
                                 struct gl_texture_object *obj );
 
-extern void _mesa_unlock_context_textures( GLcontext *ctx );
-extern void _mesa_lock_context_textures( GLcontext *ctx );
+extern void
+_mesa_unlock_context_textures( GLcontext *ctx );
+
+extern void
+_mesa_lock_context_textures( GLcontext *ctx );
 
 /*@}*/
 

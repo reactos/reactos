@@ -24,8 +24,6 @@
  */
 
 #include <precomp.h>
-
-#include <wchar.h>
 #include <ctype.h>
 
 // HACK for LIBCNT
@@ -183,7 +181,7 @@ int swscanf(const wchar_t *str, const wchar_t *format, ...)
 /*********************************************************************
  *		_cscanf (MSVCRT.@)
  */
-int _cscanf(/*const*/ char *format, ...)
+int _cscanf(const char *format, ...)
 {
     va_list valist;
     int res;

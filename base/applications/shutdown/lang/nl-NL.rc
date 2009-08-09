@@ -1,0 +1,14 @@
+LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_USAGE, "Usage: shutdown [-?] [-l | -s | -r] [-f]\n\n\
+  No arguments or -?\tDisplay this message\n\
+  -l\t\t\tLog off\n\
+  -s\t\t\tDe computer afsluiten\n\
+  -r\t\t\tOpnieuw opstarten\n\
+  -f\t\t\tProgrammas zonder waarschuwing afsluiten\n\
+    \t\t\tAls u geen andere optie hebt geselecteerd, dan zal deze functie\n\
+    \t\t\tu ook doen afmelden"
+END

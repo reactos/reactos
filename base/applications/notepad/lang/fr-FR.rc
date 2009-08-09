@@ -29,7 +29,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -40,54 +42,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Fichier"
-	BEGIN
-		MENUITEM "&Nouveau...",       CMD_NEW
-		MENUITEM "&Ouvrir\tCtrl+O",   CMD_OPEN
-		MENUITEM "&Enregistrer\tCtrl+S", CMD_SAVE
-		MENUITEM "Enregistrer &sous...", CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "Im&primer",         CMD_PRINT
-		MENUITEM "&Mise en page...",  CMD_PAGE_SETUP
-		MENUITEM "&Configuration de l'imprimante...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Quitter",          CMD_EXIT
-	END
-	POPUP "&Edition"
-	BEGIN
-		MENUITEM "&Annuler\tCtrl+Z",  CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "Co&uper\tCtrl+X",   CMD_CUT
-		MENUITEM "&Copier\tCtrl+C",   CMD_COPY
-		MENUITEM "C&oller\tCtrl+V",   CMD_PASTE
-		MENUITEM "&Effacer\tDel",     CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "&Rechercher\tCtrl+F", CMD_SEARCH
-		MENUITEM "&Suivant\tF3",      CMD_SEARCH_NEXT
-		MENUITEM "Remplacer\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Atteindre...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
-		MENUITEM "&Heure/Date\tF5",   CMD_TIME_DATE
-	END
-	POPUP "&Format"
-	BEGIN
-		MENUITEM "&Retour à la ligne", CMD_WRAP
-		MENUITEM "&Police...",        CMD_FONT
-	END
-	POPUP "Affichage"
-	BEGIN
-		MENUITEM "Barre d'état",    CMD_STATUSBAR
-	END
-	POPUP "&Aide"
-	BEGIN
-		MENUITEM "&Sommaire",         CMD_HELP_CONTENTS
-		MENUITEM "&Rechercher...",    CMD_HELP_SEARCH
-		MENUITEM "&Utiliser l'aide",  CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&À propos"             CMD_ABOUT
-		MENUITEM "Inf&o...",        CMD_ABOUT_WINE
-	END
+    POPUP "&Fichier"
+    BEGIN
+        MENUITEM "&Nouveau\tCtrl+N",                  CMD_NEW
+        MENUITEM "&Ouvrir\tCtrl+O",                   CMD_OPEN
+        MENUITEM "&Enregistrer\tCtrl+S",              CMD_SAVE
+        MENUITEM "Enregistrer &sous...",              CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "Im&primer\tCtrl+P",                 CMD_PRINT
+        MENUITEM "&Mise en page...",                  CMD_PAGE_SETUP
+        MENUITEM "&Configuration de l'imprimante...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Quitter",                          CMD_EXIT
+    END
+    POPUP "&Edition"
+    BEGIN
+        MENUITEM "&Annuler\tCtrl+Z",           CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "Co&uper\tCtrl+X",            CMD_CUT
+        MENUITEM "&Copier\tCtrl+C",            CMD_COPY
+        MENUITEM "C&oller\tCtrl+V",            CMD_PASTE
+        MENUITEM "&Effacer\tDel",              CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Rechercher\tCtrl+F",        CMD_SEARCH
+        MENUITEM "&Suivant\tF3",               CMD_SEARCH_NEXT
+        MENUITEM "Remplacer\tCtrl+H",          CMD_REPLACE
+        MENUITEM "Atteindre...\tCtrl+G",       CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Tout &sélectionner\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "&Heure/Date\tF5",            CMD_TIME_DATE
+    END
+    POPUP "&Format"
+    BEGIN
+        MENUITEM "&Retour à la ligne", CMD_WRAP
+        MENUITEM "&Police...",         CMD_FONT
+    END
+    POPUP "Affichage"
+    BEGIN
+        MENUITEM "Barre d'état", CMD_STATUSBAR
+    END
+    POPUP "&Aide"
+    BEGIN
+        MENUITEM "&Sommaire",        CMD_HELP_CONTENTS
+        MENUITEM "&Rechercher...",   CMD_HELP_SEARCH
+        MENUITEM "&Utiliser l'aide", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&À propos"         CMD_ABOUT
+        MENUITEM "Inf&o...",         CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -159,7 +161,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+  STRING_LICENSE, "Ce programme est un logiciel libre ; vous pouvez le redistribuer et/ou le modifier tout en respectant les termes de la ""GNU General Public License"" publiée par la Free Software Foundation; dans sa version 2  (ou selon votre préférence) toute version ultérieure.\r\n\r\nCe programme est distribué dans l'espoir qu'il sera utile, cependant SANS GARANTIE D'AUCUNE SORTE ; sans même une garantie implicite de COMMERCIABILITÉ ou DE CONFORMITÉ À UNE UTILISATION PARTICULIÈRE. \r\n\r\nVoir la Licence Publique Générale GNU pour plus de détails. Vous devriez avoir reçu un exemplaire de la Licence Publique Générale GNU avec ce programme ; si ce n'est pas le cas, écrivez à la Free Software Foundation Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 STRINGTABLE DISCARDABLE
@@ -201,4 +203,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
+STRING_LINE_COLUMN,                             "Ligne %d, colonne %d"
 END

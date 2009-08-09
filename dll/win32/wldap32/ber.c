@@ -325,12 +325,12 @@ ULONG CDECL WLDAP32_ber_skip_tag( BerElement *berelement, ULONG *len )
 INT CDECL WLDAP32_ber_printf( BerElement *berelement, PCHAR fmt, ... )
 {
 #ifdef HAVE_LDAP
-    va_list list;
+    __ms_va_list list;
     int ret = 0;
     char new_fmt[2];
 
     new_fmt[1] = 0;
-    va_start( list, fmt );
+    __ms_va_start( list, fmt );
     while (*fmt)
     {
         new_fmt[0] = *fmt++;
@@ -391,7 +391,7 @@ INT CDECL WLDAP32_ber_printf( BerElement *berelement, PCHAR fmt, ... )
         }
         if (ret == -1) break;
     }
-    va_end( list );
+    __ms_va_end( list );
     return ret;
 #else
     return LBER_ERROR;
@@ -420,12 +420,12 @@ INT CDECL WLDAP32_ber_printf( BerElement *berelement, PCHAR fmt, ... )
 INT CDECL WLDAP32_ber_scanf( BerElement *berelement, PCHAR fmt, ... )
 {
 #ifdef HAVE_LDAP
-    va_list list;
+    __ms_va_list list;
     int ret = 0;
     char new_fmt[2];
 
     new_fmt[1] = 0;
-    va_start( list, fmt );
+    __ms_va_start( list, fmt );
     while (*fmt)
     {
         new_fmt[0] = *fmt++;
@@ -491,7 +491,7 @@ INT CDECL WLDAP32_ber_scanf( BerElement *berelement, PCHAR fmt, ... )
         }
         if (ret == -1) break;
     }
-    va_end( list );
+    __ms_va_end( list );
     return ret;
 #else
     return LBER_ERROR;

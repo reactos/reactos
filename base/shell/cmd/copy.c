@@ -235,7 +235,7 @@ copy (TCHAR source[MAX_PATH],
         {
             ConOutResPuts(STRING_COPY_ERROR3);
 
-            cmd_free (buffer);
+            VirtualFree (buffer, 0, MEM_RELEASE);
             CloseHandle (hFileDest);
             CloseHandle (hFileSrc);
             nErrorLevel = 1;
@@ -295,7 +295,7 @@ static INT CopyOverwrite (LPTSTR fn)
 }
 
 
-INT cmd_copy (LPTSTR cmd, LPTSTR param)
+INT cmd_copy (LPTSTR param)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
     LPTSTR *arg;

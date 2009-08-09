@@ -31,11 +31,11 @@
 
 #include "glheader.h"
 #include "blend.h"
-#include "colormac.h"
 #include "context.h"
 #include "enums.h"
 #include "macros.h"
 #include "mtypes.h"
+#include "glapi/glapitable.h"
 
 
 /**
@@ -45,19 +45,11 @@
  * \param dfactor destination factor operator.
  *
  * \sa glBlendFunc, glBlendFuncSeparateEXT
- *
- * Swizzles the inputs and calls \c glBlendFuncSeparateEXT.  This is done
- * using the \c CurrentDispatch table in the context, so this same function
- * can be used while compiling display lists.  Therefore, there is no need
- * for the display list code to save and restore this function.
  */
 void GLAPIENTRY
 _mesa_BlendFunc( GLenum sfactor, GLenum dfactor )
 {
-   GET_CURRENT_CONTEXT(ctx);
-
-   (*ctx->CurrentDispatch->BlendFuncSeparateEXT)( sfactor, dfactor,
-						  sfactor, dfactor );
+   _mesa_BlendFuncSeparateEXT(sfactor, dfactor, sfactor, dfactor);
 }
 
 

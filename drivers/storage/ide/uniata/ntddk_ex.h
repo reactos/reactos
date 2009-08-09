@@ -1,13 +1,15 @@
 #ifndef __NTDDK_EX__H__
 #define __NTDDK_EX__H__
 
-#ifndef __REACTOS__
+#ifdef ASSERT
 #undef ASSERT
-#define ASSERT
-#else
-#undef ASSERT
-#define ASSERT //(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
-#endif //__REACTOS__
+#define ASSERT(x) ((void)0)
+// #define ASSERT(x) if (!(x)) { RtlAssert("#x",__FILE__,__LINE__, ""); }
+#endif
+
+#ifndef FILE_CHARACTERISTIC_PNP_DEVICE  // DDK 2003
+
+#define FILE_CHARACTERISTIC_PNP_DEVICE  0x00000800
 
 typedef enum _SYSTEM_INFORMATION_CLASS {
     SystemBasicInformation,
@@ -124,6 +126,8 @@ typedef enum _SYSTEM_INFORMATION_CLASS {
     MaxSystemInfoClass,
 #endif //__REACTOS__
 } SYSTEM_INFORMATION_CLASS;
+
+#endif // !FILE_CHARACTERISTIC_PNP_DEVICE
 
 
 NTSYSAPI

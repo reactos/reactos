@@ -124,7 +124,7 @@ UINT WINAPI OleUIInsertObjectA(LPOLEUIINSERTOBJECTA lpOleUIInsertObject)
  */
 INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  InsertObjectDlgInfo* pdlgInfo = (InsertObjectDlgInfo*) GetPropA(hwnd,OleUIInsertObjectInfoStr);
+  InsertObjectDlgInfo* pdlgInfo = GetPropA(hwnd,OleUIInsertObjectInfoStr);
 
   switch(uMsg)
   {
@@ -134,7 +134,7 @@ INT_PTR CALLBACK UIInsertObjectDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPAR
 
         pdlgInfo->hwndSelf = hwnd;
 
-        SetPropA(hwnd, OleUIInsertObjectInfoStr, (HANDLE) pdlgInfo);
+        SetPropA(hwnd, OleUIInsertObjectInfoStr, pdlgInfo);
 
         UIINSERTOBJECTDLG_InitDialog(pdlgInfo);
 
@@ -165,7 +165,7 @@ static LRESULT UIINSOBJDLG_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
   WORD wNotifyCode = HIWORD(wParam);
   WORD wID = LOWORD(wParam);
-  InsertObjectDlgInfo* pdlgInfo = (InsertObjectDlgInfo*) GetPropA(hwnd,OleUIInsertObjectInfoStr);
+  InsertObjectDlgInfo* pdlgInfo = GetPropA(hwnd,OleUIInsertObjectInfoStr);
 
   switch(wID)
   {
@@ -340,7 +340,7 @@ static BOOL UIINSERTOBJECTDLG_PopulateObjectTypes(InsertObjectDlgInfo* pdlgInfo)
   HKEY hkclsids;
   HKEY hkey;
   CLSID clsid;
-  HRESULT ret;
+  LSTATUS ret;
   WCHAR keydesc[MAX_PATH];
   WCHAR keyname[MAX_PATH];
   WCHAR szclsid[128];
@@ -399,12 +399,12 @@ static void UIINSERTOBJECTDLG_FreeObjectTypes(InsertObjectDlgInfo* pdlgInfo)
 {
   UINT i, count;
 
-  count = SendMessageA(pdlgInfo->hwndObjTypeLB, LB_GETCOUNT, (WPARAM)0, (LPARAM)0);
+  count = SendMessageA(pdlgInfo->hwndObjTypeLB, LB_GETCOUNT, 0, 0);
 
   for (i = 0; i < count; i++)
   {
       CLSID* lpclsid = (CLSID*) SendMessageA(pdlgInfo->hwndObjTypeLB, 
-         LB_GETITEMDATA, (WPARAM)i, (LPARAM)0);
+         LB_GETITEMDATA, i, 0);
       HeapFree(GetProcessHeap(), 0, lpclsid);
   }
 }
@@ -546,7 +546,7 @@ static void UIINSERTOBJECTDLG_BrowseFile(InsertObjectDlgInfo* pdlgInfo)
    fn.lpTemplateName = NULL;
 
    if (GetOpenFileNameA(&fn))
-      SendMessageA(pdlgInfo->hwndFileTB, WM_SETTEXT, (WPARAM)0, (LPARAM)fn.lpstrFile);
+      SendMessageA(pdlgInfo->hwndFileTB, WM_SETTEXT, 0, (LPARAM)fn.lpstrFile);
 }
 
 

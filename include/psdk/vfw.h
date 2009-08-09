@@ -1,8 +1,5 @@
 #ifndef _VFW_H
 #define _VFW_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifndef _WINDOWS_H
 #include <windows.h>
@@ -27,6 +24,8 @@ typedef struct IAVIStream *PAVISTREAM;
 typedef struct IAVIFile *PAVIFILE;
 typedef struct IGetFrame *PGETFRAME;
 typedef struct IAVIEditStream *PAVIEDITSTREAM;
+
+#define ICVERSION 0x0104
 
 #define	ICERR_OK	0
 #define	ICERR_DONTDRAW	1
@@ -185,21 +184,7 @@ typedef struct IAVIEditStream *PAVIEDITSTREAM;
 #define TWOCCFromFOURCC(fcc) HIWORD(fcc)
 #define ToHex(n) ((BYTE)(((n)>9)?((n)-10+'A'):((n)+'0')))
 #define MAKEAVICKID(tcc, stream) MAKELONG((ToHex((stream)&0x0f)<<8)|(ToHex(((stream)&0xf0)>>4)),tcc)
-#define AVIF_HASINDEX	0x10
-#define AVIF_MUSTUSEINDEX	0x20
-#define AVIF_ISINTERLEAVED	0x100
-#define AVIF_TRUSTCKTYPE	0x800
-#define AVIF_WASCAPTUREFILE	0x10000
-#define AVIF_COPYRIGHTED	0x20000
 #define AVI_HEADERSIZE	2048
-#define AVISF_DISABLED	0x01
-#define AVISF_VIDEO_PALCHANGES	0x10000
-#define AVIIF_LIST	0x01
-#define AVIIF_TWOCC	0x02
-#define AVIIF_KEYFRAME	0x10
-#define AVIIF_NOTIME	0x100
-#define AVIIF_COMPUSE	0xfff0000
-#define AVIIF_KEYFRAME	0x10
 #define	AVIGETFRAMEF_BESTDISPLAYFMT	1
 #define AVISTREAMINFO_DISABLED	0x01
 #define AVISTREAMINFO_FORMATCHANGES	0x10000
@@ -527,6 +512,15 @@ typedef struct {
 	LPVOID lpState;
 	LONG cbState;
 } COMPVARS, *PCOMPVARS;
+
+/* flags for dwFlags member of MainAVIHeader */
+#define AVIF_HASINDEX       0x00000010
+#define AVIF_MUSTUSEINDEX   0x00000020
+#define AVIF_ISINTERLEAVED  0x00000100
+#define AVIF_TRUSTCKTYPE    0x00000800
+#define AVIF_WASCAPTUREFILE 0x00010000
+#define AVIF_COPYRIGHTED    0x00020000
+
 typedef struct _MainAVIHeader
 {
 	DWORD dwMicroSecPerFrame;
@@ -541,6 +535,11 @@ typedef struct _MainAVIHeader
 	DWORD dwHeight;
 	DWORD dwReserved[4];
 } MainAVIHeader;
+
+/* flags for dwFlags member of AVIStreamHeader */
+#define AVISF_DISABLED         0x00000001
+#define AVISF_VIDEO_PALCHANGES 0x00010000
+
 typedef struct {
 	FOURCC fccType;
 	FOURCC fccHandler;
@@ -557,6 +556,17 @@ typedef struct {
 	DWORD dwSampleSize;
 	RECT rcFrame;
 } AVIStreamHeader;
+
+/* AVIINDEXENTRY.dwFlags */
+#define AVIIF_LIST	0x00000001	/* chunk is a 'LIST' */
+#define AVIIF_TWOCC	0x00000002
+#define AVIIF_KEYFRAME	0x00000010	/* this frame is a key frame. */
+#define AVIIF_FIRSTPART 0x00000020
+#define AVIIF_LASTPART  0x00000040
+#define AVIIF_MIDPART   (AVIIF_LASTPART|AVIIF_FIRSTPART)
+#define AVIIF_NOTIME	0x00000100	/* this frame doesn't take any time */
+#define AVIIF_COMPUSE	0x0FFF0000
+
 typedef struct _AVIINDEXENTRY {
 	DWORD ckid;
 	DWORD dwFlags;
@@ -709,7 +719,7 @@ DECLARE_INTERFACE_(IAVIStream, IUnknown)
 	STDMETHOD(WriteData)(THIS_ DWORD,LPVOID,LONG) PURE;
 	STDMETHOD(SetInfo)(THIS_ AVISTREAMINFOW*,LONG) PURE;
 };
-typedef IAVIStream *PAVISTREAM;
+#undef INTERFACE
 
 /*****************************************************************************
  * IAVIStreaming interface
@@ -749,7 +759,7 @@ DECLARE_INTERFACE_(IAVIEditStream, IUnknown)
 	STDMETHOD(Clone)(THIS_ PAVISTREAM*) PURE;
 	STDMETHOD(SetInfo)(THIS_ LPAVISTREAMINFOW,LONG) PURE;
 };
-typedef IAVIEditStream *PAVIEDITSTREAM;
+#undef INTERFACE
 
 #define INTERFACE IAVIFile
 DECLARE_INTERFACE_(IAVIFile, IUnknown)
@@ -766,7 +776,6 @@ DECLARE_INTERFACE_(IAVIFile, IUnknown)
 	STDMETHOD(DeleteStream)(THIS_ DWORD,LONG) PURE;
 };
 #undef INTERFACE
-typedef IAVIFile *PAVIFILE;
 
 #if !defined(__cplusplus) || defined(CINTERFACE)
 /*** IUnknown methods ***/
@@ -824,7 +833,7 @@ LONG VFWAPI InitVFW(VOID);
 LONG VFWAPI TermVFW(VOID);
 DWORD VFWAPIV ICCompress(HIC,DWORD,LPBITMAPINFOHEADER,LPVOID,LPBITMAPINFOHEADER,LPVOID,LPDWORD,LPDWORD,LONG,DWORD,DWORD,LPBITMAPINFOHEADER,LPVOID);
 DWORD VFWAPIV ICDecompress(HIC,DWORD,LPBITMAPINFOHEADER,LPVOID,LPBITMAPINFOHEADER,LPVOID);
-LRESULT	VFWAPI ICSendMessage(HIC,UINT,DWORD,DWORD);
+LRESULT	VFWAPI ICSendMessage(HIC,UINT,DWORD_PTR,DWORD_PTR);
 HANDLE VFWAPI ICImageCompress(HIC,UINT,LPBITMAPINFO,LPVOID,LPBITMAPINFO,LONG,LONG*);
 HANDLE VFWAPI ICImageDecompress(HIC,UINT,LPBITMAPINFO,LPVOID,LPBITMAPINFO);
 BOOL VFWAPI ICInfo(DWORD,DWORD,ICINFO*);
@@ -1064,14 +1073,14 @@ static __inline DWORD
 ICGetDefaultQuality(HIC hic)
 {
    DWORD dwICValue;
-   ICSendMessage(hic, ICM_GETDEFAULTQUALITY, (DWORD)(LPVOID)&dwICValue, sizeof(DWORD));
+   ICSendMessage(hic, ICM_GETDEFAULTQUALITY, (DWORD_PTR)(LPVOID)&dwICValue, sizeof(DWORD));
    return dwICValue;
 }
 static __inline DWORD
 ICGetDefaultKeyFrameRate(HIC hic)
 {
    DWORD dwICValue;
-   ICSendMessage(hic, ICM_GETDEFAULTKEYFRAMERATE, (DWORD)(LPVOID)&dwICValue, sizeof(DWORD));
+   ICSendMessage(hic, ICM_GETDEFAULTKEYFRAMERATE, (DWORD_PTR)(LPVOID)&dwICValue, sizeof(DWORD));
    return dwICValue;
 }
 static __inline LRESULT
@@ -1085,7 +1094,7 @@ ICDrawSuggestFormat(HIC hic,LPBITMAPINFOHEADER lpbiIn,LPBITMAPINFOHEADER lpbiOut
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
 	ic.hicDecompressor = hicDecomp;
-	return ICSendMessage(hic,ICM_DRAW_SUGGESTFORMAT,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DRAW_SUGGESTFORMAT,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICSetStatusProc(HIC hic,DWORD dwFlags,LRESULT lParam,LONG (CALLBACK *fpfnStatus)(LPARAM,UINT,LONG))
@@ -1094,7 +1103,7 @@ ICSetStatusProc(HIC hic,DWORD dwFlags,LRESULT lParam,LONG (CALLBACK *fpfnStatus)
 	ic.dwFlags = dwFlags;
 	ic.lParam = lParam;
 	ic.Status = fpfnStatus;
-	return ICSendMessage(hic,ICM_SET_STATUS_PROC,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_SET_STATUS_PROC,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICDecompressEx(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT xSrc,INT ySrc,INT dxSrc,INT dySrc,LPBITMAPINFOHEADER lpbiDst,LPVOID lpDst,INT xDst,INT yDst,INT dxDst,INT dyDst)
@@ -1113,7 +1122,7 @@ ICDecompressEx(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT
 	ic.yDst = yDst;
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
-	return ICSendMessage(hic,ICM_DECOMPRESSEX,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DECOMPRESSEX,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICDecompressExBegin(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT xSrc,INT ySrc,INT dxSrc,INT dySrc,LPBITMAPINFOHEADER lpbiDst,LPVOID lpDst,INT xDst,INT yDst,INT dxDst,INT dyDst)
@@ -1132,7 +1141,7 @@ ICDecompressExBegin(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSr
 	ic.yDst = yDst;
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
-	return ICSendMessage(hic,ICM_DECOMPRESSEX_BEGIN,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DECOMPRESSEX_BEGIN,(DWORD_PTR)&ic,sizeof(ic));
 }
 static __inline LRESULT
 ICDecompressExQuery(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSrc,INT xSrc,INT ySrc,INT dxSrc,INT dySrc,LPBITMAPINFOHEADER lpbiDst,LPVOID lpDst,INT xDst,INT yDst,INT dxDst,INT dyDst)
@@ -1151,7 +1160,7 @@ ICDecompressExQuery(HIC hic,DWORD dwFlags,LPBITMAPINFOHEADER lpbiSrc,LPVOID lpSr
 	ic.yDst = yDst;
 	ic.dxDst = dxDst;
 	ic.dyDst = dyDst;
-	return ICSendMessage(hic,ICM_DECOMPRESSEX_QUERY,(DWORD)&ic,sizeof(ic));
+	return ICSendMessage(hic,ICM_DECOMPRESSEX_QUERY,(DWORD_PTR)&ic,sizeof(ic));
 }
 
 #ifdef UNICODE

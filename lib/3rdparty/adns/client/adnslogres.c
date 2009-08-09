@@ -30,9 +30,6 @@
  *  subsequently.
  */
 
-static const char * const cvsid =
-	"$Id$";
-
 #ifdef ADNS_JGAA_WIN32
 # include "adns_win32.h"
 # include "getopt.h"
@@ -202,7 +199,7 @@ static void proclog(FILE *inf, FILE *outf, int maxpending, int opts) {
       } else {
 	err= adns_check(adns, &head->query, &answer, NULL);
       }
-      if (err == EAGAIN) break;
+      if ((err == EAGAIN) || (EWOULDBLOCK == err)) break;
       if (err) {
 	fprintf(stderr, "%s: adns_wait/check: %s", progname, strerror(err));
 	exit(1);

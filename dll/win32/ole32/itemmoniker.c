@@ -97,8 +97,8 @@ static HRESULT WINAPI ItemMonikerImpl_ParseDisplayName(IMoniker* iface,IBindCtx*
 static HRESULT WINAPI ItemMonikerImpl_IsSystemMoniker(IMoniker* iface,DWORD* pwdMksys);
 
 /* Local function used by ItemMoniker implementation */
-static HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* iface, LPCOLESTR lpszDelim,LPCOLESTR lpszPathName);
-static HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* iface);
+static HRESULT ItemMonikerImpl_Construct(ItemMonikerImpl* iface, LPCOLESTR lpszDelim,LPCOLESTR lpszPathName);
+static HRESULT ItemMonikerImpl_Destroy(ItemMonikerImpl* iface);
 
 /********************************************************************************/
 /* IROTData prototype functions                                                 */
@@ -176,7 +176,7 @@ HRESULT WINAPI ItemMonikerImpl_QueryInterface(IMoniker* iface,REFIID riid,void**
       *ppvObject = iface;
 
     else if (IsEqualIID(&IID_IROTData, riid))
-        *ppvObject = (IROTData*)&(This->lpvtbl2);
+        *ppvObject = &This->lpvtbl2;
     else if (IsEqualIID(&IID_IMarshal, riid))
     {
         HRESULT hr = S_OK;
@@ -391,7 +391,7 @@ HRESULT WINAPI ItemMonikerImpl_GetSizeMax(IMoniker* iface,
 /******************************************************************************
  *         ItemMoniker_Construct (local function)
  *******************************************************************************/
-static HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR lpszDelim,LPCOLESTR lpszItem)
+static HRESULT ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR lpszDelim,LPCOLESTR lpszItem)
 {
 
     int sizeStr1=lstrlenW(lpszItem), sizeStr2;
@@ -429,7 +429,7 @@ static HRESULT WINAPI ItemMonikerImpl_Construct(ItemMonikerImpl* This, LPCOLESTR
 /******************************************************************************
  *        ItemMoniker_Destroy (local function)
  *******************************************************************************/
-static HRESULT WINAPI ItemMonikerImpl_Destroy(ItemMonikerImpl* This)
+static HRESULT ItemMonikerImpl_Destroy(ItemMonikerImpl* This)
 {
     TRACE("(%p)\n",This);
 

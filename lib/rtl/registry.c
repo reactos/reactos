@@ -157,7 +157,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         }
 
         /* We can setup a default value... capture the defaults */
-        Name = QueryTable->Name;
+        Name = (PWCHAR)QueryTable->Name;
         Type = QueryTable->DefaultType;
         Data = QueryTable->DefaultData;
         Length = QueryTable->DefaultLength;
@@ -224,7 +224,7 @@ RtlpCallQueryRegistryRoutine(IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
         else
         {
             /* Just return the name */
-            Name = QueryTable->Name;
+            Name = (PWCHAR)QueryTable->Name;
         }
 
         /* Capture key data */

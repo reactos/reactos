@@ -23,6 +23,7 @@ Author:
 //
 #include <umtypes.h>
 #include <ifssupp.h>
+#include <potypes.h>
 
 //
 // I/O Completion Access Rights
@@ -320,6 +321,18 @@ typedef enum _FSINFOCLASS
 } FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
 #endif
+
+//
+// Dock Profile Status
+//
+typedef enum _PROFILE_STATUS
+{
+    DOCK_NOTDOCKDEVICE,
+    DOCK_QUIESCENT,
+    DOCK_ARRIVING,
+    DOCK_DEPARTING,
+    DOCK_EJECTIRP_COMPLETED
+} PROFILE_STATUS, *PPROFILE_STATUS;
 
 //
 // Device Node States
@@ -724,7 +737,7 @@ typedef struct _IO_TIMER
     PIO_TIMER_ROUTINE TimerRoutine;
     PVOID Context;
     PDEVICE_OBJECT DeviceObject;
-} IO_TIMER, *PIO_TIMER;
+} IO_TIMER;
 
 //
 // Driver Extension
@@ -740,17 +753,18 @@ typedef struct _IO_CLIENT_EXTENSION
 //
 typedef struct _DEVICE_NODE
 {
-    struct _DEVICE_NODE *Parent;
-    struct _DEVICE_NODE *PrevSibling;
-    struct _DEVICE_NODE *NextSibling;
+    struct _DEVICE_NODE *Sibling;
     struct _DEVICE_NODE *Child;
+    struct _DEVICE_NODE *Parent;
+    struct _DEVICE_NODE *LastChild;
     ULONG Level;
     struct _PO_DEVICE_NOTIFY *Notify;
+    PO_IRP_MANAGER PoIrpManager;
     PNP_DEVNODE_STATE State;
     PNP_DEVNODE_STATE PreviousState;
     PNP_DEVNODE_STATE StateHistory[20];
     ULONG StateHistoryEntry;
-    INT CompletionStatus;
+    NTSTATUS CompletionStatus;
     PIRP PendingIrp;
     ULONG Flags;
     ULONG UserFlags;
@@ -786,10 +800,13 @@ typedef struct _DEVICE_NODE
         struct _DEVICE_NODE *NextResourceDeviceNode;
     } OverUsed2;
     PCM_RESOURCE_LIST BootResources;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PCM_RESOURCE_LIST BootResourcesTranslated;
+#endif
     ULONG CapabilityFlags;
     struct
     {
-        ULONG DockStatus;
+        PROFILE_STATUS DockStatus;
         LIST_ENTRY ListEntry;
         WCHAR *SerialNumber;
     } DockInfo;
@@ -799,6 +816,9 @@ typedef struct _DEVICE_NODE
     ULONG DriverUnloadRetryCount;
     struct _DEVICE_NODE *PreviousParent;
     ULONG DeletedChidren;
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    ULONG NumaNodeIndex;
+#endif
 } DEVICE_NODE, *PDEVICE_NODE;
 
 //
@@ -1152,6 +1172,8 @@ typedef struct _EFI_DRIVER_ENTRY
     ULONG DriverFilePathOffset;
 } EFI_DRIVER_ENTRY, *PEFI_DRIVER_ENTRY;
 
+#ifdef NTOS_MODE_USER
+
 //
 // APC Callback for NtCreateFile
 //
@@ -1160,8 +1182,6 @@ typedef VOID
     IN PVOID ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,
     IN ULONG Reserved);
-
-#ifdef NTOS_MODE_USER
 
 //
 // Mailslot IOCTL Codes

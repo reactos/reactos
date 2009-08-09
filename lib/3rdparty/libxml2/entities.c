@@ -28,38 +28,38 @@
 
 static xmlEntity xmlEntityLt = {
     NULL, XML_ENTITY_DECL, BAD_CAST "lt",
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, 
     BAD_CAST "<", BAD_CAST "<", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0
+    NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityGt = {
     NULL, XML_ENTITY_DECL, BAD_CAST "gt",
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, 
     BAD_CAST ">", BAD_CAST ">", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0
+    NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityAmp = {
     NULL, XML_ENTITY_DECL, BAD_CAST "amp",
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, 
     BAD_CAST "&", BAD_CAST "&", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0
+    NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityQuot = {
     NULL, XML_ENTITY_DECL, BAD_CAST "quot",
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, 
     BAD_CAST "\"", BAD_CAST "\"", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0
+    NULL, NULL, NULL, NULL, 0, 1
 };
 static xmlEntity xmlEntityApos = {
     NULL, XML_ENTITY_DECL, BAD_CAST "apos",
-    NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, 
     BAD_CAST "'", BAD_CAST "'", 1,
     XML_INTERNAL_PREDEFINED_ENTITY,
-    NULL, NULL, NULL, NULL, 0
+    NULL, NULL, NULL, NULL, 0, 1
 };
 
 /**
@@ -139,6 +139,62 @@ xmlFreeEntity(xmlEntityPtr entity)
 }
 
 /*
+ * xmlCreateEntity:
+ *
+ * internal routine doing the entity node strutures allocations
+ */
+static xmlEntityPtr
+xmlCreateEntity(xmlDictPtr dict, const xmlChar *name, int type,
+	        const xmlChar *ExternalID, const xmlChar *SystemID,
+	        const xmlChar *content) {
+    xmlEntityPtr ret;
+
+    ret = (xmlEntityPtr) xmlMalloc(sizeof(xmlEntity));
+    if (ret == NULL) {
+        xmlEntitiesErrMemory("xmlCreateEntity: malloc failed");
+	return(NULL);
+    }
+    memset(ret, 0, sizeof(xmlEntity));
+    ret->type = XML_ENTITY_DECL;
+    ret->checked = 0;
+
+    /*
+     * fill the structure.
+     */
+    ret->etype = (xmlEntityType) type;
+    if (dict == NULL) {
+	ret->name = xmlStrdup(name);
+	if (ExternalID != NULL)
+	    ret->ExternalID = xmlStrdup(ExternalID);
+	if (SystemID != NULL)
+	    ret->SystemID = xmlStrdup(SystemID);
+    } else {
+        ret->name = xmlDictLookup(dict, name, -1);
+	if (ExternalID != NULL)
+	    ret->ExternalID = xmlDictLookup(dict, ExternalID, -1);
+	if (SystemID != NULL)
+	    ret->SystemID = xmlDictLookup(dict, SystemID, -1);
+    }
+    if (content != NULL) {
+        ret->length = xmlStrlen(content);
+	if ((dict != NULL) && (ret->length < 5))
+	    ret->content = (xmlChar *)
+	                   xmlDictLookup(dict, content, ret->length);
+	else
+	    ret->content = xmlStrndup(content, ret->length);
+     } else {
+        ret->length = 0;
+        ret->content = NULL;
+    }
+    ret->URI = NULL; /* to be computed by the layer knowing
+			the defining entity */
+    ret->orig = NULL;
+    ret->owner = 0;
+
+    return(ret);
+}
+
+/*
  * xmlAddEntity : register a new entity for an entities table.
  */
 static xmlEntityPtr
@@ -175,46 +231,9 @@ xmlAddEntity(xmlDtdPtr dtd, const xmlChar *name, int type,
     }
     if (table == NULL)
 	return(NULL);
-    ret = (xmlEntityPtr) xmlMalloc(sizeof(xmlEntity));
-    if (ret == NULL) {
-        xmlEntitiesErrMemory("xmlAddEntity:: malloc failed");
-	return(NULL);
-    }
-    memset(ret, 0, sizeof(xmlEntity));
-    ret->type = XML_ENTITY_DECL;
-
-    /*
-     * fill the structure.
-     */
-    ret->etype = (xmlEntityType) type;
-    if (dict == NULL) {
-	ret->name = xmlStrdup(name);
-	if (ExternalID != NULL)
-	    ret->ExternalID = xmlStrdup(ExternalID);
-	if (SystemID != NULL)
-	    ret->SystemID = xmlStrdup(SystemID);
-    } else {
-        ret->name = xmlDictLookup(dict, name, -1);
-	if (ExternalID != NULL)
-	    ret->ExternalID = xmlDictLookup(dict, ExternalID, -1);
-	if (SystemID != NULL)
-	    ret->SystemID = xmlDictLookup(dict, SystemID, -1);
-    }
-    if (content != NULL) {
-        ret->length = xmlStrlen(content);
-	if ((dict != NULL) && (ret->length < 5))
-	    ret->content = (xmlChar *)
-	                   xmlDictLookup(dict, content, ret->length);
-	else
-	    ret->content = xmlStrndup(content, ret->length);
-     } else {
-        ret->length = 0;
-        ret->content = NULL;
-    }
-    ret->URI = NULL; /* to be computed by the layer knowing
-			the defining entity */
-    ret->orig = NULL;
-    ret->owner = 0;
+    ret = xmlCreateEntity(dict, name, type, ExternalID, SystemID, content);
+    if (ret == NULL)
+        return(NULL);
     ret->doc = dtd->doc;
 
     if (xmlHashAddEntry(table, name, ret)) {
@@ -362,6 +381,44 @@ xmlAddDocEntity(xmlDocPtr doc, const xmlChar *name, int type,
 }
 
 /**
+ * xmlNewEntity:
+ * @doc:  the document
+ * @name:  the entity name
+ * @type:  the entity type XML_xxx_yyy_ENTITY
+ * @ExternalID:  the entity external ID if available
+ * @SystemID:  the entity system ID if available
+ * @content:  the entity content
+ *
+ * Create a new entity, this differs from xmlAddDocEntity() that if
+ * the document is NULL or has no internal subset defined, then an
+ * unlinked entity structure will be returned, it is then the responsability
+ * of the caller to link it to the document later or free it when not needed
+ * anymore.
+ *
+ * Returns a pointer to the entity or NULL in case of error
+ */
+xmlEntityPtr
+xmlNewEntity(xmlDocPtr doc, const xmlChar *name, int type,
+	     const xmlChar *ExternalID, const xmlChar *SystemID,
+	     const xmlChar *content) {
+    xmlEntityPtr ret;
+    xmlDictPtr dict;
+
+    if ((doc != NULL) && (doc->intSubset != NULL)) {
+	return(xmlAddDocEntity(doc, name, type, ExternalID, SystemID, content));
+    }
+    if (doc != NULL)
+        dict = doc->dict;
+    else
+        dict = NULL;
+    ret = xmlCreateEntity(dict, name, type, ExternalID, SystemID, content);
+    if (ret == NULL)
+        return(NULL);
+    ret->doc = doc;
+    return(ret);
+}
+
+/**
  * xmlGetEntityFromTable:
  * @table:  an entity table
  * @name:  the entity name
@@ -369,7 +426,7 @@ xmlAddDocEntity(xmlDocPtr doc, const xmlChar *name, int type,
  *
  * Do an entity lookup in the table.
  * returns the corresponding parameter entity, if found.
- *
+ * 
  * Returns A pointer to the entity structure or NULL if not found.
  */
 static xmlEntityPtr
@@ -384,7 +441,7 @@ xmlGetEntityFromTable(xmlEntitiesTablePtr table, const xmlChar *name) {
  *
  * Do an entity lookup in the internal and external subsets and
  * returns the corresponding parameter entity, if found.
- *
+ * 
  * Returns A pointer to the entity structure or NULL if not found.
  */
 xmlEntityPtr
@@ -415,7 +472,7 @@ xmlGetParameterEntity(xmlDocPtr doc, const xmlChar *name) {
  * Do an entity lookup in the DTD entity hash table and
  * returns the corresponding entity, if found.
  * Note: the first argument is the document node, not the DTD node.
- *
+ * 
  * Returns A pointer to the entity structure or NULL if not found.
  */
 xmlEntityPtr
@@ -439,7 +496,7 @@ xmlGetDtdEntity(xmlDocPtr doc, const xmlChar *name) {
  * Do an entity lookup in the document entity hash table and
  * returns the corresponding entity, otherwise a lookup is done
  * in the predefined entities too.
- *
+ * 
  * Returns A pointer to the entity structure or NULL if not found.
  */
 xmlEntityPtr
@@ -560,7 +617,7 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
 		    *out++ = xc;
 	        } else
 		 */
-		    *out++ = *cur;
+		*out++ = *cur;
 	    } else {
 		/*
 		 * We assume we have UTF-8 input.
@@ -616,10 +673,7 @@ xmlEncodeEntitiesReentrant(xmlDocPtr doc, const xmlChar *input) {
 		/*
 		 * We could do multiple things here. Just save as a char ref
 		 */
-		if (html)
-		    snprintf(buf, sizeof(buf), "&#%d;", val);
-		else
-		    snprintf(buf, sizeof(buf), "&#x%X;", val);
+		snprintf(buf, sizeof(buf), "&#x%X;", val);
 		buf[sizeof(buf) - 1] = 0;
 		ptr = buf;
 		while (*ptr != 0) *out++ = *ptr++;
@@ -766,7 +820,7 @@ xmlFreeEntitiesTable(xmlEntitiesTablePtr table) {
  * @ent:  An entity
  *
  * Build a copy of an entity
- *
+ * 
  * Returns the new xmlEntitiesPtr or NULL in case of error.
  */
 static xmlEntityPtr
@@ -802,7 +856,7 @@ xmlCopyEntity(xmlEntityPtr ent) {
  * @table:  An entity table
  *
  * Build a copy of an entity table.
- *
+ * 
  * Returns the new xmlEntitiesTablePtr or NULL in case of error.
  */
 xmlEntitiesTablePtr
@@ -951,7 +1005,7 @@ static void
 xmlDumpEntityDeclScan(xmlEntityPtr ent, xmlBufferPtr buf) {
     xmlDumpEntityDecl(buf, ent);
 }
-
+      
 /**
  * xmlDumpEntitiesTable:
  * @buf:  An XML buffer.

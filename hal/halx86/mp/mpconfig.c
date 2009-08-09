@@ -45,7 +45,7 @@ HaliMPIntSrcInfo(PMP_CONFIGURATION_INTSRC m)
   if (IRQCount > MAX_IRQ_SOURCE) 
   {
     DPRINT1("Max # of irq sources exceeded!!\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 
   IRQMap[IRQCount] = *m;
@@ -217,7 +217,7 @@ HaliMPIOApicInfo(PMP_CONFIGURATION_IOAPIC m)
     DPRINT("Max # of I/O APICs (%d) exceeded (found %d).\n",
            MAX_IOAPIC, IOAPICCount);
     DPRINT1("Recompile with bigger MAX_IOAPIC!.\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 
   IOAPICMap[IOAPICCount].ApicId = m->ApicId;
@@ -245,12 +245,12 @@ HaliMPIntLocalInfo(PMP_CONFIGURATION_INTLOCAL m)
   if ((m->IrqType == INT_EXTINT) && (m->DstApicLInt != 0)) 
   {
     DPRINT1("Invalid MP table!\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
   if ((m->IrqType == INT_NMI) && (m->DstApicLInt != 1)) 
   {
     DPRINT1("Invalid MP table!\n");
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 }
 
@@ -271,14 +271,14 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
        
        DPRINT1("Bad MP configuration block signature: %c%c%c%c\n",
 		pc[0], pc[1], pc[2], pc[3]);
-       KEBUGCHECKEX(0, pc[0], pc[1], pc[2], pc[3]);
+       KeBugCheckEx(0, pc[0], pc[1], pc[2], pc[3]);
        return FALSE;
      }
 
    if (MPChecksum((PUCHAR)Table, Table->Length))
      {
        DPRINT1("Bad MP configuration block checksum\n");
-       KEBUGCHECK(0);
+       ASSERT(FALSE);
        return FALSE;
      }
 
@@ -286,7 +286,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
      {
        DPRINT1("Bad MP configuration table version (%d)\n",
 	       Table->Specification);
-       KEBUGCHECK(0);
+       ASSERT(FALSE);
        return FALSE;
      }
 
@@ -294,7 +294,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
      {
        DPRINT1("APIC base address is at 0x%X. I cannot handle non-standard adresses\n", 
 	       Table->LocalAPICAddress);
-       KEBUGCHECK(0);
+       ASSERT(FALSE);
        return FALSE;
      }
 
@@ -346,7 +346,7 @@ HaliReadMPConfigTable(PMP_CONFIGURATION_TABLE Table)
 	 }
        default:
 	 DPRINT1("Unknown entry in MPC table\n");
-	 KEBUGCHECK(0);
+	 ASSERT(FALSE);
 	 return FALSE;
        }
    }
@@ -597,7 +597,7 @@ HaliGetSmpConfig(VOID)
    }
    else
    {
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
    }
    return TRUE;
 }    

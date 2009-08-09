@@ -17,7 +17,7 @@
 
 #ifdef INCLUDE_CMD_CHCP
 
-INT CommandChcp (LPTSTR cmd, LPTSTR param)
+INT CommandChcp (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;

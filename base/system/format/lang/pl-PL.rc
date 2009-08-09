@@ -8,7 +8,7 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Sposób u¿ycia: %S wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A:rozmiar] [-C]\n\n\
+STRING_HELP,  "Sposób u¿ycia: %s wolumin: [-FS:syst-plik] [-V:etykieta] [-Q] [-A:rozmiar] [-C]\n\n\
   [wolumin:]      Okreœla literê dysku przeznaczonego do formatowania.\n\
   -FS:syst-plik   Okreœla rodzaj systemu plików (%s).\n\
   -V:etykieta     Okreœla etykietê woluminu.\n\
@@ -32,7 +32,7 @@ STRING_NO_SUPPORT  "Operacja niewspierana"
 
 STRING_FMIFS_FAIL  "Nie mo¿na zlokalizowaæ punktów wejœciowych FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Nieprawid³owy parametr: %S\n"
+STRING_UNKNOW_ARG  "Nieprawid³owy parametr: %s\n"
 
 STRING_DRIVE_PARM  "Brakuj¹cy wymagany parametr dysku.\n\n"
 
@@ -44,7 +44,7 @@ STRING_NO_VOLUME         "Nie mo¿na odczytaæ woluminu"
 
 STRING_NO_VOLUME_SIZE    "Nie mo¿na odczytaæ rozmiaru woluminu"
 
-STRING_FILESYSTEM        "Rodzaj systemu plików to %S.\n"
+STRING_FILESYSTEM        "Rodzaj systemu plików to %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Podaj aktualn¹ etykietê woluminu dla dysku %C: "
 

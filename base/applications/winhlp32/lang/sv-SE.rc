@@ -4,7 +4,8 @@
  * Copyright 1996 Ulrich Schmid
  * Swedish language by Karl Backström <karl_b@geocities.com>
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
- * Copyright 2007 Daniel Nylander
+ * Copyright 2007, 2008 Daniel Nylander <po@danielnylander.se>
+ * Copyright 2009 Anders Jonsson
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,7 +27,7 @@
 MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 {
  POPUP "&Arkiv" {
-  MENUITEM "&Ã–ppna", MNID_FILE_OPEN
+  MENUITEM "&Öppna", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Skriv ut", MNID_FILE_PRINT
   MENUITEM "Skrivar&konfiguration...", MNID_FILE_SETUP
@@ -38,51 +39,90 @@ MAIN_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
    MENUITEM SEPARATOR
    MENUITEM "&Kommentera...", MNID_EDIT_ANNOTATE
  }
- POPUP "&BokmÃ¤rke" {
+ POPUP "&Bokmärke" {
    MENUITEM "&Definiera...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Help always visible"
+ POPUP "A&lternativ" {
+   POPUP	"Hjälpen alltid synlig"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "Standard",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Synlig",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Inte synlig",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "History",		MNID_OPTS_HISTORY
-  POPUP    "Fonts"
+  MENUITEM "Historik",		MNID_OPTS_HISTORY
+  POPUP    "Typsnitt"
   BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Litet",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normalt",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Stort",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "Använd systemfärger",	MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "&HjÃ¤lp" {
-   MENUITEM "HjÃ¤lp &fÃ¶r hjÃ¤lp", MNID_HELP_HELPON
-   MENUITEM "Alltid &Ã¶verst", MNID_HELP_HELPTOP
+ POPUP "&Hjälp" {
+   MENUITEM "Hjälp &för hjälp", MNID_HELP_HELPON
+   MENUITEM "Alltid &överst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Info...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "&Om WINE", MNID_HELP_WINE
+   MENUITEM "&Om Wine", MNID_HELP_WINE
 #endif
  }
+}
+
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Sök"
+{
+    LTEXT  "Inte implementerat ännu", -1, 10, 10, 180, 150
 }
 
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 {
-STID_WINE_HELP, 	"WINE HjÃ¤lp"
+STID_WINE_HELP, 	"Wine Hjälp"
 STID_WHERROR, 		"FEL"
 STID_WARNING,  		"VARNING"
 STID_INFO,  		"Information"
 STID_NOT_IMPLEMENTED, 	"Inte implementerat"
-STID_HLPFILE_ERROR_s, 	"Fel vid lÃ¤sning av hjÃ¤lpfilen `%s'"
-STID_INDEX, 		"&InnehÃ¥ll"
-STID_CONTENTS,		"Summary"
-STID_BACK, 		"&BakÃ¥t"
+STID_HLPFILE_ERROR_s, 	"Fel vid läsning av hjälpfilen `%s'"
+STID_INDEX, 		"&Innehåll"
+STID_CONTENTS,		"Sammandrag"
+STID_BACK, 		"&Bakåt"
 STID_ALL_FILES, 	"Alla filer (*.*)"
-STID_HELP_FILES_HLP, 	"HjÃ¤lpfiler (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du sÃ¶ka efter denna fil?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
+STID_HELP_FILES_HLP, 	"Hjälpfiler (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Kan inte hitta '%s'. Vill du söka efter denna fil?"
+STID_NO_RICHEDIT	"Kan inte hitta en implementation av richedit... Avslutar"
+STID_PSH_INDEX,		"Hjälprubriker: "
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Kommentar...",        MNID_CTXT_ANNOTATE
+        MENUITEM "Kopiera",              MNID_CTXT_COPY
+        MENUITEM "Skriv ut...",         MNID_CTXT_PRINT
+        POPUP    "Typsnitt"
+        BEGIN
+            MENUITEM "Litet",       MNID_CTXT_FONTS_SMALL
+            MENUITEM "Normalt",      MNID_CTXT_FONTS_NORMAL
+            MENUITEM "Stort",        MNID_CTXT_FONTS_LARGE
+        END
+        POPUP   "Hjälp alltid synlig"
+        BEGIN
+            MENUITEM "Standard",     MNID_CTXT_HELP_DEFAULT
+            MENUITEM "Synlig",       MNID_CTXT_HELP_VISIBLE
+            MENUITEM "Ej synlig",  MNID_CTXT_HELP_NONVISIBLE
+        END
+        MENUITEM "Använd systemfärger",   MNID_CTXT_SYSTEM_COLORS
+    END
+END

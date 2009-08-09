@@ -8,13 +8,12 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "w32csr.h"
-
 #define NDEBUG
+#include "w32csr.h"
 #include <debug.h>
 
 /* Not defined in any header file */
-extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
+extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
 
 /* GLOBALS *******************************************************************/
 
@@ -632,7 +631,7 @@ GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_
       Buffer->MaxX = 80;
       Buffer->MaxY = 25;
       Buffer->CursorInfo.bVisible = TRUE;
-      Buffer->CursorInfo.dwSize = 5;
+      Buffer->CursorInfo.dwSize = CSR_DEFAULT_CURSOR_SIZE;
     }
 }
 
@@ -1080,7 +1079,7 @@ GuiIntDrawRegion(PGUI_CONSOLE_DATA GuiData, HWND Wnd, RECT *Region)
   InvalidateRect(Wnd, &RegionRect, FALSE);
 }
 
-static VOID STDCALL
+static VOID WINAPI
 GuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
 {
   PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
@@ -1104,7 +1103,7 @@ GuiInvalidateCell(PGUI_CONSOLE_DATA GuiData, HWND Wnd, UINT x, UINT y)
   GuiIntDrawRegion(GuiData, Wnd, &CellRect);
 }
 
-static VOID STDCALL
+static VOID WINAPI
 GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
@@ -1172,7 +1171,7 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
     }
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 GuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 {
   RECT UpdateRect;
@@ -1189,7 +1188,7 @@ GuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
   return TRUE;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 GuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
 {
   RECT UpdateRect;
@@ -1213,7 +1212,7 @@ GuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
   return TRUE;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 GuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 {
     PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
@@ -1963,7 +1962,7 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 }
 
-static DWORD STDCALL
+static DWORD WINAPI
 GuiConsoleGuiThread(PVOID Data)
 {
   MSG msg;
@@ -2049,13 +2048,13 @@ GuiInit(VOID)
   return TRUE;
 }
 
-static VOID STDCALL
+static VOID WINAPI
 GuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 {
   Buffer->DefaultAttrib = DEFAULT_ATTRIB;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 GuiChangeTitle(PCSRSS_CONSOLE Console)
 {
   PWCHAR Buffer, Title;
@@ -2083,7 +2082,7 @@ GuiChangeTitle(PCSRSS_CONSOLE Console)
   return TRUE;
 }
 
-static BOOL STDCALL
+static BOOL WINAPI
 GuiChangeIcon(PCSRSS_CONSOLE Console)
 {
   SendMessageW(Console->hWindow, WM_SETICON, ICON_BIG, (LPARAM)Console->hWindowIcon);
@@ -2092,7 +2091,7 @@ GuiChangeIcon(PCSRSS_CONSOLE Console)
   return TRUE;
 }
 
-static VOID STDCALL
+static VOID WINAPI
 GuiCleanupConsole(PCSRSS_CONSOLE Console)
 {
   SendMessageW(NotifyWnd, PM_DESTROY_CONSOLE, 0, (LPARAM) Console);

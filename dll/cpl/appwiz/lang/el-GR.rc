@@ -24,7 +24,7 @@ CAPTION "Αλλαγή ή κατάργηση προγραμμάτων"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_CPLSYSTEM,-1,PROPSHEETPADDING,6,16,16
-	LTEXT "Τα παρακάτω προγράμματα μπορούν να καταργηθούν αυτόματα. Για να καταργήσετε ένα πρόγραμμα ή να αλλάξετε τα εγκατεστημένα στοιχεία του, επιλέξτε ένα από την λίστα και πατήστε Αλλαγή/Κατάργηση.",-1,36,3,PROPSHEETWIDTH-48,25	
+	LTEXT "Τα παρακάτω προγράμματα μπορούν να καταργηθούν αυτόματα. Για να καταργήσετε ένα πρόγραμμα ή να αλλάξετε τα εγκατεστημένα στοιχεία του, επιλέξτε ένα από τη λίστα και πατήστε 'Αλλαγή/Κατάργηση'.",-1,36,3,PROPSHEETWIDTH-48,25	
 	LTEXT "Εύρεση:",-1,PROPSHEETPADDING,33,30,8
 	EDITTEXT IDC_FIND_EDIT, PROPSHEETPADDING+30, 30, 180, 14, WS_VISIBLE | WS_TABSTOP
 	LTEXT "Προβολή:",-1,247,33,30,8
@@ -40,7 +40,7 @@ CAPTION "Κατάργηση ενημερώσεων"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_UPDATES,-1,PROPSHEETPADDING,6,16,16
-	LTEXT "Οι παρακάτω ενημερώσεις μπορούν να καταργηθούν αυτόματα. Για να καταργήσετε μια ενημέρωση επιλέξτε την από τη λίστα και πατήστε στο Κατάργηση",-1,36,7,PROPSHEETWIDTH-48,22
+	LTEXT "Οι παρακάτω ενημερώσεις μπορούν να καταργηθούν αυτόματα. Για να καταργήσετε μια ενημέρωση επιλέξτε την από τη λίστα και πατήστε 'Κατάργηση'",-1,36,7,PROPSHEETWIDTH-48,22
 	LTEXT "Εύρεση:",-1,PROPSHEETPADDING,33,30,8
 	EDITTEXT IDC_UPD_FIND_EDIT, PROPSHEETPADDING+30, 30, 180, 14, WS_VISIBLE | WS_TABSTOP
 	LTEXT "Προβολή:",-1,247,33,30,8
@@ -56,17 +56,17 @@ CAPTION "Προσθήκη νέων προγραμμάτων"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_CPLSYSTEM,-1,PROPSHEETPADDING,10,32,32
-	LTEXT "Για να εγκαταστήσετε ένα νεο πρόγραμμα, πατήστε στο ""Εγκατάσταση"".",-1,36,11,PROPSHEETWIDTH-48,8
-	PUSHBUTTON "&Install...", IDC_INSTALL, PROPSHEETWIDTH-(90), 46, 80, 14
+	LTEXT "Για να εγκαταστήσετε ένα νεο πρόγραμμα, πατήστε 'Εγκατάσταση'.",-1,36,11,PROPSHEETWIDTH-48,8
+	PUSHBUTTON "&Εγκατάσταση...", IDC_INSTALL, PROPSHEETWIDTH-(90), 46, 80, 14
 	LTEXT "", -1, PROPSHEETPADDING, 70, PROPSHEETWIDTH-12, 1, NOT WS_GROUP | SS_SUNKEN
 	ICON IDI_DOWNLOADICO,-1,PROPSHEETPADDING,80,32,32
-	LTEXT "Για να ""κατεβάσετε"" και να εγκαταστήσετε νεα προγράμματα , Πατήστε στο κουμπί ""Λήψη"".",-1,36,83,PROPSHEETWIDTH-48,17
+	LTEXT "Για να ""κατεβάσετε"" και να εγκαταστήσετε νέα προγράμματα, πατήστε το κουμπί 'Λήψη'.",-1,36,83,PROPSHEETWIDTH-48,17
 	PUSHBUTTON "&Λήψη", IDC_ADD_DOWNLOAD_BUTTON, PROPSHEETWIDTH-(90), 125, 80, 14, WS_DISABLED
 	LTEXT "", -1, PROPSHEETPADDING, 150, PROPSHEETWIDTH-12, 1, NOT WS_GROUP | SS_SUNKEN
 	ICON IDI_APPINETICO,-1,PROPSHEETPADDING,160,32,32
-	LTEXT "Πατήστε στο κουμπί ""Εύρεση στο διαδύκτιο"" για να βρείτε νέες εφαρμογές που είναι διαθέσιμες στο διαδύκτιο.",-1,36,161,PROPSHEETWIDTH-48,17
+	LTEXT "Πατήστε στο κουμπί ""Εύρεση στο διαδίκτυο"" για να βρείτε νέες εφαρμογές που είναι διαθέσιμες στο διαδίκτυο.",-1,36,161,PROPSHEETWIDTH-48,17
 	PUSHBUTTON "&Ιδιότητες...", IDC_ADD_PROP_BUTTON, PROPSHEETWIDTH-(175), 205, 80, 14, WS_DISABLED
-	PUSHBUTTON "&Εύρεση στο διαδύκτιο", IDC_ADD_FIND_BUTTON, PROPSHEETWIDTH-(90), 205, 80, 14, WS_DISABLED
+	PUSHBUTTON "&Εύρεση στο διαδίκτυο", IDC_ADD_FIND_BUTTON, PROPSHEETWIDTH-(90), 205, 80, 14, WS_DISABLED
 END
 
 IDD_PROPPAGEROSSETUP DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -102,11 +102,11 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Δημιουργία συντόμευσης"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "Αυτός ο οδηγός σας βοηθάει να δημιουργήσετε συντομεύσεις σε τοπικά προγράμματα ή προγράμματα δυκτίου, αρχεία, φακέλους, υπολογιστές ή διυθύνσεις στο διαδύκτιο.", -1, 120, 15, 200, 30
+  LTEXT "Αυτός ο οδηγός σας βοηθάει να δημιουργήσετε συντομεύσεις σε τοπικά προγράμματα ή προγράμματα δικτύου, αρχεία, φακέλους, υπολογιστές ή διευθύνσεις στο διαδίκτυο.", -1, 120, 15, 200, 30
   LTEXT "Εισάγετε την θέση του στοιχείου:", -1, 120, 50, 120, 10
   EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
   PUSHBUTTON "Αναζήτηση...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
-  LTEXT "Πατήστε στο Επόμενο για να συνεχίσετε.", -1, 120, 97, 162, 10
+  LTEXT "Πατήστε 'Επόμενο' για να συνεχίσετε.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -114,9 +114,9 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Επιλέξτε τίτλο για το πρόγραμμα"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-  LTEXT "&Πληκτρολογίστε ένα όνομα για την συντόμευση:", -1, 120, 15, 150, 10
+  LTEXT "&Πληκτρολογήστε ένα όνομα για τη συντόμευση:", -1, 120, 15, 150, 10
   EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Πατήστε στο Τέλος για να δημιουργήσετε την συντόμευση.", -1, 118, 97, 178, 17
+  LTEXT "Πατήστε 'Τέλος' για να δημιουργήσετε τη συντόμευση.", -1, 118, 97, 178, 17
 END
 
 IDD_INFORMATION DIALOGEX 5, 100, 269, 218
@@ -145,7 +145,7 @@ BEGIN
 	EDITTEXT IDS_INFO_README, PROPSHEETPADDING+97, 161, 160, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
 	LTEXT "Σχόλια:", -1, PROPSHEETPADDING, 180, 97, 8
 	EDITTEXT IDS_INFO_COMMENTS, PROPSHEETPADDING+97, 178, 160, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
-    PUSHBUTTON "&Κλείσημο", IDCANCEL, 212, 198, 50, 14
+    PUSHBUTTON "&Κλείσιμο", IDCANCEL, 212, 198, 50, 14
 END
 
 STRINGTABLE
@@ -161,7 +161,7 @@ BEGIN
 	IDS_LIST "Λίστα"
 	IDS_DETAILS "Λεπτομέρειες"
     IDS_CREATE_SHORTCUT "Δημιουργία συντόμευσης"
-    IDS_ERROR_NOT_FOUND "Το αρχείο %s δεν βρέθηκε."
+    IDS_ERROR_NOT_FOUND "Το αρχείο %s δε βρέθηκε."
 	IDS_UNABLEREAD_INFORMATION "Unable to open Information Keys"
 	IDS_NO_INFORMATION "Καμία πληροφορία"
 	IDS_NONE_APP "Δεν υπάρχουν εγκατεστημένες εφαρμογές."

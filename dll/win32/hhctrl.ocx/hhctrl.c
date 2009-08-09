@@ -249,11 +249,28 @@ HWND WINAPI HtmlHelpA(HWND caller, LPCSTR filename, UINT command, DWORD_PTR data
 int WINAPI doWinMain(HINSTANCE hInstance, LPSTR szCmdLine)
 {
     MSG msg;
+    int len, buflen;
+    WCHAR *filename;
+    char *endq = NULL;
 
     hh_process = TRUE;
 
     /* FIXME: Check szCmdLine for bad arguments */
-    HtmlHelpA(GetDesktopWindow(), szCmdLine, HH_DISPLAY_TOPIC, 0);
+    if (*szCmdLine == '\"')
+        endq = strchr(++szCmdLine, '\"');
+
+    if (endq)
+        len = endq - szCmdLine;
+    else
+        len = strlen(szCmdLine);
+    buflen = MultiByteToWideChar(CP_ACP, 0, szCmdLine, len, NULL, 0) + 1;
+    filename = heap_alloc(buflen * sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, szCmdLine, len, filename, buflen);
+    filename[buflen-1] = 0;
+
+    HtmlHelpW(GetDesktopWindow(), filename, HH_DISPLAY_TOPIC, 0);
+
+    heap_free(filename);
 
     while (GetMessageW(&msg, 0, 0, 0))
     {

@@ -120,7 +120,7 @@ BOOL IsConsoleShell(VOID)
         NextOption = wcschr(CurrentOption, L' ');
         if (NextOption)
             *NextOption = L'\0';
-        if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
+        if (_wcsicmp(CurrentOption, L"CONSOLE") == 0)
         {
             TRACE("Found 'CONSOLE' boot option\n");
             ret = TRUE;
@@ -263,7 +263,6 @@ TryToStartShell(
 
     StartAutoApplications(CSIDL_STARTUP);
     StartAutoApplications(CSIDL_COMMON_STARTUP);
-    WaitForSingleObject(pi.hProcess, INFINITE);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
     return TRUE;
@@ -581,9 +580,9 @@ wWinMain(IN HINSTANCE hInst,
          IN LPWSTR lpszCmdLine,
          IN int nCmdShow)
 {
-    NotifyLogon();
     SetUserSettings();
     StartShell();
+    NotifyLogon();
     return 0;
 }
 

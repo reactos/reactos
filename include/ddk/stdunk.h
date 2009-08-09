@@ -164,8 +164,8 @@ typedef struct CUnknown
     Custom "new" and "delete" C++ operators
 */
 
-#ifndef ALLOCATION_OPERATORS_DEFINED
-#define ALLOCATION_OPERATORS_DEFINED
+#ifndef _NEW_DELETE_OPERATORS_
+#define _NEW_DELETE_OPERATORS_
 
 inline PVOID
 KCOM_New(

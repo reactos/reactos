@@ -24,7 +24,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LockFile(HANDLE hFile,
          DWORD dwFileOffsetLow,
          DWORD dwFileOffsetHigh,
@@ -53,7 +53,7 @@ LockFile(HANDLE hFile,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LockFileEx(HANDLE hFile,
            DWORD dwFlags,
            DWORD dwReserved,
@@ -120,7 +120,7 @@ LockFileEx(HANDLE hFile,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnlockFile(HANDLE hFile,
            DWORD dwFileOffsetLow,
            DWORD dwFileOffsetHigh,
@@ -145,7 +145,7 @@ UnlockFile(HANDLE hFile,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnlockFileEx(HANDLE hFile,
              DWORD dwReserved,
              DWORD nNumberOfBytesToUnLockLow,

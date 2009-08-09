@@ -30,7 +30,7 @@
 extern HINSTANCE	COMDLG32_hInstance;
 
 void	COMDLG32_SetCommDlgExtendedError(DWORD err);
-LPVOID	COMDLG32_AllocMem(int size);
+LPVOID	COMDLG32_AllocMem(int size) __WINE_ALLOC_SIZE(1);
 
 /* handle<-handle16 conversion */
 #define HINSTANCE_32(h16)           ((HINSTANCE)(ULONG_PTR)(h16))
@@ -95,8 +95,8 @@ typedef struct {
 #define PD32_NR_OF_DOCUMENTS_IN_QUEUE         1583
 
 #define PD32_MARGINS_IN_INCHES                1585
-#define PD32_MARGINS_IN_MILIMETERS            1586
-#define PD32_MILIMETERS                       1587
+#define PD32_MARGINS_IN_MILLIMETERS           1586
+#define PD32_MILLIMETERS                      1587
 
 /* Charset names string IDs */
 
@@ -182,11 +182,7 @@ extern UINT (WINAPI *COMDLG32_PIDL_ILGetSize)(LPCITEMIDLIST);
 /* SHELL */
 extern LPVOID (WINAPI *COMDLG32_SHAlloc)(DWORD);
 extern DWORD (WINAPI *COMDLG32_SHFree)(LPVOID);
-extern BOOL (WINAPI *COMDLG32_SHGetFolderPathA)(HWND,int,HANDLE,DWORD,LPSTR);
 extern BOOL (WINAPI *COMDLG32_SHGetFolderPathW)(HWND,int,HANDLE,DWORD,LPWSTR);
-
-extern BOOL  WINAPI GetFileDialog95A(LPOPENFILENAMEA ofn,UINT iDlgType);
-extern BOOL  WINAPI GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType);
 
 /*
  * Internal Functions
@@ -197,8 +193,6 @@ BOOL CC_HookCallChk( const CHOOSECOLORW *lpcc );
 int CC_MouseCheckResultWindow( HWND hDlg, LPARAM lParam );
 LRESULT CC_WMLButtonDown( HWND hDlg, WPARAM wParam, LPARAM lParam );
 LRESULT CC_WMLButtonUp( HWND hDlg, WPARAM wParam, LPARAM lParam );
-LRESULT CC_WMCommand( HWND hDlg, WPARAM wParam, LPARAM lParam, WORD 
-						notifyCode, HWND hwndCtl );
 LRESULT CC_WMMouseMove( HWND hDlg, LPARAM lParam );
 LRESULT CC_WMPaint( HWND hDlg, WPARAM wParam, LPARAM lParam );
 void CC_SwitchToFullSize( HWND hDlg, COLORREF result, LPCRECT lprect );

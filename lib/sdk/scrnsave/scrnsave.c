@@ -36,10 +36,10 @@ static int ISSPACE(TCHAR c)
 
 #define ISNUM(c) ((c) >= '0' && c <= '9')
 
-static unsigned long _toul(const TCHAR *s)
+static ULONG_PTR _toulptr(const TCHAR *s)
 {
-    unsigned long res;
-    unsigned long n;
+    ULONG_PTR res;
+    ULONG_PTR n;
     const TCHAR *p;
 
     for (p = s; *p; p++)
@@ -185,15 +185,16 @@ static int LaunchScreenSaver(HWND hParent)
                                  0, 0, rc.right, rc.bottom, hParent, NULL,
                                  hMainInstance, NULL);
 
+    if(!hMainWindow)
+        return 1;
+
     // Display window and start pumping messages
-    if (hMainWindow)
-    {
-        ShowWindow(hMainWindow, SW_SHOW);
+    ShowWindow(hMainWindow, SW_SHOW);
+    if (!hParent)
         SetCursor(NULL);
 
-        while (GetMessage(&msg, NULL, 0, 0))
-            DispatchMessage(&msg);
-    }
+    while (GetMessage(&msg, NULL, 0, 0))
+        DispatchMessage(&msg);
 
     return msg.wParam;
 }
@@ -223,7 +224,7 @@ int APIENTRY _tWinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPTSTR CmdLine, int
                 fChildPreview = TRUE;
 
                 while (ISSPACE(*++p));
-                hParent = (HWND) _toul(p);
+                hParent = (HWND) _toulptr(p);
 
                 if (hParent && IsWindow(hParent))
                     return LaunchScreenSaver(hParent);

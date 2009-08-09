@@ -136,7 +136,7 @@ PdoQueryBusInformation(
 
   DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
   FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->Fdo->DeviceExtension;
-  BusInformation = ExAllocatePoolWithTag(PagedPool, sizeof(PNP_BUS_INFORMATION), TAG_PCI);
+  BusInformation = ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
   Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
   if (BusInformation != NULL)
   {

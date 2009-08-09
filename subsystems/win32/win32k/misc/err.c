@@ -62,7 +62,7 @@ GetLastNtError()
 }
 
 VOID
-NTAPI
+APIENTRY
 W32kRaiseStatus(NTSTATUS Status)
 {
     EXCEPTION_RECORD ExceptionRecord;

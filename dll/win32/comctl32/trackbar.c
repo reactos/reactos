@@ -146,12 +146,12 @@ notify_with_scroll (const TRACKBAR_INFO *infoPtr, UINT code)
     
 static void TRACKBAR_RecalculateTics (TRACKBAR_INFO *infoPtr)
 {
-    int i, tic, nrTics;
+    int tic;
+    unsigned nrTics, i;
 
     if (infoPtr->uTicFreq && infoPtr->lRangeMax >= infoPtr->lRangeMin)
     	nrTics=(infoPtr->lRangeMax - infoPtr->lRangeMin)/infoPtr->uTicFreq;
     else {
-        nrTics = 0;
         Free (infoPtr->tics);
         infoPtr->tics = NULL;
         infoPtr->uNumTics = 0;
@@ -1147,7 +1147,7 @@ TRACKBAR_SetPos (TRACKBAR_INFO *infoPtr, BOOL fPosition, LONG lPosition)
 	infoPtr->lPos = infoPtr->lRangeMax;
     infoPtr->flags |= TB_THUMBPOSCHANGED;
 
-    if (fPosition) TRACKBAR_InvalidateThumbMove(infoPtr, oldPos, lPosition);
+    if (fPosition && oldPos != lPosition) TRACKBAR_InvalidateThumbMove(infoPtr, oldPos, lPosition);
 
     return 0;
 }
@@ -1396,7 +1396,7 @@ TRACKBAR_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     TRACKBAR_INFO *infoPtr;
     DWORD dwStyle;
 
-    infoPtr = (TRACKBAR_INFO *)Alloc (sizeof(TRACKBAR_INFO));
+    infoPtr = Alloc (sizeof(TRACKBAR_INFO));
     if (!infoPtr) return -1;
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -1452,6 +1452,9 @@ TRACKBAR_Destroy (TRACKBAR_INFO *infoPtr)
     if (infoPtr->hwndToolTip)
     	DestroyWindow (infoPtr->hwndToolTip);
 
+    Free (infoPtr->tics);
+    infoPtr->tics = NULL;
+
     SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
     CloseThemeData (GetWindowTheme (infoPtr->hwndSelf));
     Free (infoPtr);
@@ -1461,7 +1464,7 @@ TRACKBAR_Destroy (TRACKBAR_INFO *infoPtr)
 
 
 static LRESULT
-TRACKBAR_KillFocus (TRACKBAR_INFO *infoPtr, HWND hwndGetFocus)
+TRACKBAR_KillFocus (TRACKBAR_INFO *infoPtr)
 {
     TRACE("\n");
     infoPtr->bFocussed = FALSE;
@@ -1471,7 +1474,7 @@ TRACKBAR_KillFocus (TRACKBAR_INFO *infoPtr, HWND hwndGetFocus)
 }
 
 static LRESULT
-TRACKBAR_LButtonDown (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
+TRACKBAR_LButtonDown (TRACKBAR_INFO *infoPtr, INT x, INT y)
 {
     POINT clickPoint;
 
@@ -1500,7 +1503,7 @@ TRACKBAR_LButtonDown (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
 
 
 static LRESULT
-TRACKBAR_LButtonUp (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
+TRACKBAR_LButtonUp (TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->flags & TB_DRAG_MODE) {
         notify_with_scroll (infoPtr, TB_THUMBPOSITION | (infoPtr->lPos<<16));
@@ -1548,7 +1551,7 @@ TRACKBAR_Paint (TRACKBAR_INFO *infoPtr, HDC hdc)
 
 
 static LRESULT
-TRACKBAR_SetFocus (TRACKBAR_INFO *infoPtr, HWND hwndLoseFocus)
+TRACKBAR_SetFocus (TRACKBAR_INFO *infoPtr)
 {
     TRACE("\n");
     infoPtr->bFocussed = TRUE;
@@ -1559,7 +1562,7 @@ TRACKBAR_SetFocus (TRACKBAR_INFO *infoPtr, HWND hwndLoseFocus)
 
 
 static LRESULT
-TRACKBAR_Size (TRACKBAR_INFO *infoPtr, DWORD fwSizeType, INT nWidth, INT nHeight)
+TRACKBAR_Size (TRACKBAR_INFO *infoPtr)
 {
     TRACKBAR_InitializeThumb (infoPtr);
     TRACKBAR_AlignBuddies (infoPtr);
@@ -1569,7 +1572,7 @@ TRACKBAR_Size (TRACKBAR_INFO *infoPtr, DWORD fwSizeType, INT nWidth, INT nHeight
 
 
 static LRESULT
-TRACKBAR_Timer (TRACKBAR_INFO *infoPtr, INT wTimerID, const TIMERPROC *tmrpc)
+TRACKBAR_Timer (TRACKBAR_INFO *infoPtr)
 {
     if (infoPtr->flags & TB_AUTO_PAGE) {
 	POINT pt;
@@ -1586,13 +1589,13 @@ static LRESULT theme_changed (const TRACKBAR_INFO* infoPtr)
 {
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
     CloseThemeData (theme);
-    theme = OpenThemeData (infoPtr->hwndSelf, themeClass);
+    OpenThemeData (infoPtr->hwndSelf, themeClass);
     return 0;
 }
 
 
 static LRESULT
-TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
+TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, INT x, INT y)
 {
     DWORD dwStyle = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE);
     INT clickPlace = (dwStyle & TBS_VERT) ? y : x;
@@ -1656,7 +1659,7 @@ TRACKBAR_MouseMove (TRACKBAR_INFO *infoPtr, DWORD fwKeys, INT x, INT y)
 }
 
 static BOOL
-TRACKBAR_KeyDown (TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
+TRACKBAR_KeyDown (TRACKBAR_INFO *infoPtr, INT nVirtKey)
 {
     DWORD style = GetWindowLongW (infoPtr->hwndSelf, GWL_STYLE);
     BOOL downIsLeft = style & TBS_DOWNISLEFT;
@@ -1712,7 +1715,7 @@ TRACKBAR_KeyDown (TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
 
 
 static inline BOOL
-TRACKBAR_KeyUp (const TRACKBAR_INFO *infoPtr, INT nVirtKey, DWORD lKeyData)
+TRACKBAR_KeyUp (const TRACKBAR_INFO *infoPtr, INT nVirtKey)
 {
     switch (nVirtKey) {
     case VK_LEFT:
@@ -1865,19 +1868,19 @@ TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return DLGC_WANTARROWS;
 
     case WM_KEYDOWN:
-        return TRACKBAR_KeyDown (infoPtr, (INT)wParam, (DWORD)lParam);
+        return TRACKBAR_KeyDown (infoPtr, (INT)wParam);
 
     case WM_KEYUP:
-        return TRACKBAR_KeyUp (infoPtr, (INT)wParam, (DWORD)lParam);
+        return TRACKBAR_KeyUp (infoPtr, (INT)wParam);
 
     case WM_KILLFOCUS:
-        return TRACKBAR_KillFocus (infoPtr, (HWND)wParam);
+        return TRACKBAR_KillFocus (infoPtr);
 
     case WM_LBUTTONDOWN:
-        return TRACKBAR_LButtonDown (infoPtr, wParam, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+        return TRACKBAR_LButtonDown (infoPtr, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
 
     case WM_LBUTTONUP:
-        return TRACKBAR_LButtonUp (infoPtr, wParam, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+        return TRACKBAR_LButtonUp (infoPtr);
 
     case WM_MOUSELEAVE:
         infoPtr->flags &= ~TB_THUMB_HOT; 
@@ -1885,29 +1888,29 @@ TRACKBAR_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         return 0;
     
     case WM_MOUSEMOVE:
-        return TRACKBAR_MouseMove (infoPtr, wParam, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+        return TRACKBAR_MouseMove (infoPtr, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
 
     case WM_PRINTCLIENT:
     case WM_PAINT:
         return TRACKBAR_Paint (infoPtr, (HDC)wParam);
 
     case WM_SETFOCUS:
-        return TRACKBAR_SetFocus (infoPtr, (HWND)wParam);
+        return TRACKBAR_SetFocus (infoPtr);
 
     case WM_SIZE:
-        return TRACKBAR_Size (infoPtr, wParam, LOWORD(lParam), HIWORD(lParam));
+        return TRACKBAR_Size (infoPtr);
 
     case WM_THEMECHANGED:
         return theme_changed (infoPtr);
 
     case WM_TIMER:
-	return TRACKBAR_Timer (infoPtr, (INT)wParam, (TIMERPROC *)lParam);
+	return TRACKBAR_Timer (infoPtr);
 
     case WM_WININICHANGE:
         return TRACKBAR_InitializeThumb (infoPtr);
 
     default:
-        if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+        if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
             ERR("unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
         return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }

@@ -23,10 +23,6 @@
 #ifndef __TDIKRNL_H
 #define __TDIKRNL_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "tdi.h"
 
 #ifdef __cplusplus
@@ -577,7 +573,7 @@ TdiDefaultSendPossibleHandler(
   IrpSubFunction, DeviceObject,           \
   FileObject, Event, IoStatusBlock)       \
   IoBuildDeviceIoControlRequest(          \
-		0x00000003, DeviceObject,             \
+		IrpSubFunction, DeviceObject,             \
 		NULL, 0, NULL, 0,                     \
 		TRUE, Event, IoStatusBlock)
 

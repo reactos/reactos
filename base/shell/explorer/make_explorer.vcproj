@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="9,00"
 	Name="make_explorer"
 	ProjectGUID="{E132A04B-8BC6-4D18-81F2-F0156B809871}"
 	Keyword="MakeFileProj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -169,11 +170,11 @@
 			>
 		</File>
 		<File
-			RelativePath="Makefile.MinGW"
+			RelativePath="Makefile-precomp"
 			>
 		</File>
 		<File
-			RelativePath="Makefile-precomp"
+			RelativePath="Makefile.MinGW"
 			>
 		</File>
 		<File

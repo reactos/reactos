@@ -17,23 +17,22 @@ extern BOOL RegInitialize(VOID);
 extern BOOL RegCleanup(VOID);
 extern VOID UnloadNtMarta(VOID);
 
-INT STDCALL
-DllMain(PVOID hinstDll,
-	ULONG dwReason,
-	PVOID reserved)
+BOOL WINAPI
+DllMain(HINSTANCE hinstDll,
+    DWORD dwReason,
+    LPVOID reserved)
 {
-   switch (dwReason)
-     {
-     case DLL_PROCESS_ATTACH:
-	DisableThreadLibraryCalls(hinstDll);
-	RegInitialize();
-	break;
-
-     case DLL_PROCESS_DETACH:
-	RegCleanup();
-	UnloadNtMarta();
-	break;
-     }
+    switch (dwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            DisableThreadLibraryCalls(hinstDll);
+            RegInitialize();
+            break;
+        case DLL_PROCESS_DETACH:
+            RegCleanup();
+            UnloadNtMarta();
+            break;
+    }
 
    return TRUE;
 }

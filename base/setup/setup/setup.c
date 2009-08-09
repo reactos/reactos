@@ -34,7 +34,7 @@
 #include <debug.h>
 
 
-typedef DWORD (STDCALL *PINSTALL_REACTOS)(HINSTANCE hInstance);
+typedef DWORD (WINAPI *PINSTALL_REACTOS)(HINSTANCE hInstance);
 
 
 /* FUNCTIONS ****************************************************************/
@@ -113,7 +113,7 @@ RunLiveCD (HINSTANCE hInstance)
   FreeLibrary (hDll);
 }
 
-int STDCALL
+int WINAPI
 _tWinMain (HINSTANCE hInstance,
 	 HINSTANCE hPrevInstance,
 	 LPTSTR lpCmdLine,

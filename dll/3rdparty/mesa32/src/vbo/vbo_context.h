@@ -53,8 +53,10 @@
 
 #include "vbo.h"
 #include "vbo_attrib.h"
-#include "vbo_save.h"
 #include "vbo_exec.h"
+#if FEATURE_dlist
+#include "vbo_save.h"
+#endif
 
 
 struct vbo_context {
@@ -74,7 +76,9 @@ struct vbo_context {
 
 
    struct vbo_exec_context exec;
+#if FEATURE_dlist
    struct vbo_save_context save;
+#endif
 
    /* Callback into the driver.  This must always succeed, the driver
     * is responsible for initiating any fallback actions required:

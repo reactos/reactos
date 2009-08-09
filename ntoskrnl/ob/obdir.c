@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/dirobj.c
+ * FILE:            ntoskrnl/ob/obdir.c
  * PURPOSE:         Manages the Object Manager's Directory Implementation,
  *                  such as functions for addition, deletion and lookup into
  *                  the Object Manager's namespace. These routines are separate
@@ -62,7 +62,7 @@ ObpInsertEntryDirectory(IN POBJECT_DIRECTORY Parent,
         /* Invalid context */
         DPRINT1("OB: ObpInsertEntryDirectory - invalid context %p %ld\n",
                 Context, Context->DirectoryLocked);
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
         return FALSE;
     }
 
@@ -252,7 +252,7 @@ ObpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,
         if ((SearchShadow) && (Directory->DeviceMap))
         {
             /* FIXME: We don't support this yet */
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
         }
     }
 
@@ -326,7 +326,7 @@ ObpDeleteEntryDirectory(POBP_LOOKUP_CONTEXT Context)
     CurrentEntry->ChainLink = NULL;
 
     /* Free it */
-    ExFreePool(CurrentEntry);
+    ExFreePoolWithTag(CurrentEntry, OB_DIR_TAG);
 
     /* Return */
     return TRUE;
@@ -368,17 +368,17 @@ NtOpenDirectoryObject(OUT PHANDLE DirectoryHandle,
     /* Check if we need to do any probing */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the return handle */
             ProbeForWriteHandle(DirectoryHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the error code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -392,17 +392,17 @@ NtOpenDirectoryObject(OUT PHANDLE DirectoryHandle,
                                 &Directory);
     if (NT_SUCCESS(Status))
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write back the handle to the caller */
             *DirectoryHandle = Directory;
         }
-        _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return the status to the caller */
@@ -485,7 +485,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     /* Check if we need to do any probing */
     if (PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the buffer (assuming it will hold Unicode characters) */
             ProbeForWrite(Buffer, BufferLength, sizeof(WCHAR));
@@ -497,12 +497,12 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
             /* Probe the return length if the caller specified one */
             if (ReturnLength) ProbeForWriteUlong(ReturnLength);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
     else if (!RestartScan)
@@ -529,7 +529,7 @@ NtQueryDirectoryObject(IN HANDLE DirectoryHandle,
     if (!NT_SUCCESS(Status))
     {
         /* Free the buffer and fail */
-        ExFreePool(LocalBuffer);
+        ExFreePoolWithTag(LocalBuffer, OB_NAME_TAG);
         return Status;
     }
 
@@ -679,7 +679,7 @@ Quickie:
         *Context = CurrentEntry;
     }
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Copy the buffer */
         RtlCopyMemory(Buffer,
@@ -690,18 +690,18 @@ Quickie:
         /* Check if the caller requested the return length and return it*/
         if (ReturnLength) *ReturnLength = TotalLength;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Unlock the directory */
     ObpReleaseDirectoryLock(Directory, &LookupContext);
 
     /* Dereference the directory and free our buffer */
     ObDereferenceObject(Directory);
-    ExFreePool(LocalBuffer);
+    ExFreePoolWithTag(LocalBuffer, OB_NAME_TAG);
 
     /* Return status to caller */
     return Status;
@@ -742,17 +742,17 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
     /* Check if we need to do any probing */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the return handle */
             ProbeForWriteHandle(DirectoryHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the error code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if(!NT_SUCCESS(Status)) return Status;
     }
 
@@ -782,17 +782,17 @@ NtCreateDirectoryObject(OUT PHANDLE DirectoryHandle,
                             &NewHandle);
 
     /* Enter SEH to protect write */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Return the handle back to the caller */
         *DirectoryHandle = NewHandle;
     }
-    _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
+    _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
         /* Get the exception code */
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return status to caller */
     return Status;

@@ -204,17 +204,19 @@ END
 
 STRINGTABLE
 BEGIN
-   IDS_ACCESSORIES     "Akcesoria"
-   IDS_CMT_CALC        "Uruchom Kalkulator"
-   IDS_CMT_CMD         "Uruchom konsolê"
-   IDS_CMT_EXPLORER    "Uruchom Eksplorator"
-   IDS_CMT_NOTEPAD     "Uruchom Edytor tekstu"
-   IDS_CMT_REGEDIT     "Uruchom Edytor rejestru"
-   IDS_CMT_WORDPAD     "Uruchom WordPada"
-   IDS_CMT_SCREENSHOT  "Zrzut ekranu"
-   IDS_CMT_DEVMGMT     "Uruchom Mened¿er urz¹dzeñ"
-   IDS_CMT_SERVMAN     "Uruchom Mened¿er us³ug"
-   IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_ACCESSORIES     "Akcesoria"
+    IDS_CMT_CALC        "Uruchom Kalkulator"
+    IDS_CMT_CMD         "Uruchom konsolê"
+    IDS_CMT_EXPLORER    "Uruchom Eksplorator"
+    IDS_CMT_NOTEPAD     "Uruchom Edytor tekstu"
+    IDS_CMT_REGEDIT     "Uruchom Edytor rejestru"
+    IDS_CMT_WORDPAD     "Uruchom WordPada"
+    IDS_CMT_SCREENSHOT  "Zrzut ekranu"
+    IDS_CMT_DEVMGMT     "Uruchom Mened¿er urz¹dzeñ"
+    IDS_CMT_SERVMAN     "Uruchom Mened¿er us³ug"
+    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 
@@ -265,9 +267,11 @@ BEGIN
     IDS_SHORT_SNAP       "Zrzut ekranu.lnk"
     IDS_SHORT_SOLITAIRE  "Pasjans.lnk"
     IDS_SHORT_WINEMINE   "Saper.lnk"
-	IDS_SHORT_MAGNIFY    "Lupa.lnk"
+    IDS_SHORT_MAGNIFY    "Lupa.lnk"
     IDS_SHORT_RDESKTOP   "Dostêp zdalny.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 STRINGTABLE

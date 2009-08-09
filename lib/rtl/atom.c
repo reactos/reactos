@@ -90,9 +90,9 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
    DPRINT("RtlpCheckIntegerAtom(AtomName '%S' AtomValue %p)\n",
           AtomName, AtomValue);
 
-   if (!((ULONG)AtomName & 0xFFFF0000))
+   if (!((ULONG_PTR)AtomName & 0xFFFF0000))
      {
-        LoValue = (USHORT)((ULONG)AtomName & 0xFFFF);
+        LoValue = (USHORT)((ULONG_PTR)AtomName & 0xFFFF);
 
         if (LoValue == 0)
           LoValue = 0xC000;

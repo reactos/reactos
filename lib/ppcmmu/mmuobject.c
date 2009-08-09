@@ -2,7 +2,6 @@
 #include "ppcmmu/mmu.h"
 #include "ppcmmu/mmuutil.h"
 #include "mmuobject.h"
-#include "helper.h"
 
 typedef unsigned long ULONG;
 

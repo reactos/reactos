@@ -434,7 +434,8 @@ _generic_read_RGBA_span_BGRA8888_REV_SSE2:
 	je	.L47
 
 	movq	(%ebx), %xmm0
-
+	addl	$8, %ebx
+        
 	movdqa	%xmm0, %xmm3
 	movdqa	%xmm0, %xmm4
 	andps	%xmm1, %xmm0
@@ -448,6 +449,7 @@ _generic_read_RGBA_span_BGRA8888_REV_SSE2:
 	orps	%xmm3, %xmm0
 
 	movq	%xmm0, (%ecx)
+	addl	$8, %ecx        
 .L47:
 
 	testl	$1, %edx

@@ -175,7 +175,7 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
                     IN PAUX_ACCESS_DATA AuxData,
                     IN ACCESS_MASK Access,
@@ -196,7 +196,7 @@ SeCreateAccessState(IN OUT PACCESS_STATE AccessState,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 SeDeleteAccessState(IN PACCESS_STATE AccessState)
 {
     PAUX_ACCESS_DATA AuxData;
@@ -226,7 +226,7 @@ SeDeleteAccessState(IN PACCESS_STATE AccessState)
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 SeSetAccessStateGenericMapping(IN PACCESS_STATE AccessState,
                                IN PGENERIC_MAPPING GenericMapping)
 {

@@ -122,8 +122,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Lancer le Programme d'Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Please specify the uninstall program location", IDC_UNINSTLOCTEXT, 9, 8, 235, 37
-    LTEXT "&Command line for the uninstall program:", IDC_LOCATIONITEM, 9, 57, 237, 8
+    LTEXT "Veuillez spécifier l'emplacement du programme de désinstallation", IDC_UNINSTLOCTEXT, 9, 8, 235, 37
+    LTEXT "Ligne de commande pour le programme de désinstallation :", IDC_LOCATIONITEM, 9, 57, 237, 8
     EDITTEXT IDC_LOCITEMEDIT, 7, 69, 165, 14, ES_AUTOHSCROLL
     PUSHBUTTON "P&arcourir...", IDC_LOCBROWSE, 178, 69, 66, 14
     DEFPUSHBUTTON "OK", IDOK, 118, 100, 60, 14

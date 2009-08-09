@@ -12,13 +12,13 @@ STRINGTABLE DISCARDABLE
 BEGIN
 
 IDS_UsageMessage, "%s\n\nUtilisation : regsvr32 [/u] [/s] [/c] [/n] [/i[:lignedecommande]] nomDLL\n\
-/u -	Serveur non enregistré\n\
+/u -	Désenregistrement du serveur\n\
 /s -	Silence; ne pas afficher les messages\n\
 /c -	Sortie sur la console\n\
 /i -	Installe la DLL avec des options dans la [:lignedecommande] ; si /u est présent, cela provoque la désinstallation de la DLL\n\
-/n -	Ne pas faire d'appel au serveur d'enregistrement ; cette option doit être utilisé avec l'option /i"
+/n -	Ne pas faire d'appel au serveur d'enregistrement ; cette option doit être utilisée avec l'option /i"
 
-IDS_NoDllSpecified,  "Pas de DLL indiqué."
+IDS_NoDllSpecified,  "Aucune indication de nom de DLL."
 
 IDS_InvalidFlag,     "Option non reconnue : %s"
 

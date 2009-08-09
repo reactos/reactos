@@ -20,6 +20,9 @@ _wtoi64 (const wchar_t *nptr)
    __int64 value;
    int sign;
 
+   if (nptr == NULL)
+       return 0;
+
    while (iswctype((int)*nptr, _SPACE))
         ++nptr;
 
@@ -41,5 +44,27 @@ _wtoi64 (const wchar_t *nptr)
    else
        return value;
 }
+
+
+/*
+ * @unimplemented
+ */
+__int64
+_wcstoi64 (const wchar_t *nptr, wchar_t **endptr, int base)
+{
+   TRACE("_wcstoi64 is UNIMPLEMENTED\n");
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+unsigned __int64
+_wcstoui64 (const wchar_t *nptr, wchar_t **endptr, int base)
+{
+   TRACE("_wcstoui64 is UNIMPLEMENTED\n");
+   return 0;
+}
+
 
 /* EOF */

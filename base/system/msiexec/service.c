@@ -132,7 +132,7 @@ static void WINAPI ServiceMain(DWORD argc, LPSTR *argv)
 
     UpdateSCMStatus(SERVICE_START_PENDING, NO_ERROR, 0);
 
-    kill_event = CreateEvent(0, TRUE, FALSE, 0);
+    kill_event = CreateEventW(0, TRUE, FALSE, 0);
     if (!kill_event)
     {
         fprintf(stderr, "Failed to create event\n");
@@ -156,7 +156,7 @@ DWORD DoService(void)
 {
     char service_name[] = "MSIServer";
 
-    const SERVICE_TABLE_ENTRY service[] =
+    const SERVICE_TABLE_ENTRYA service[] =
     {
         {service_name, ServiceMain},
         {NULL, NULL},
@@ -164,7 +164,7 @@ DWORD DoService(void)
 
     WINE_TRACE("Starting MSIServer service\n");
 
-    if (!StartServiceCtrlDispatcher(service))
+    if (!StartServiceCtrlDispatcherA(service))
     {
         fprintf(stderr, "Failed to start MSIServer service\n");
         return 1;

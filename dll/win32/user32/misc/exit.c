@@ -64,7 +64,7 @@
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 ExitWindowsEx(UINT uFlags,
 	      DWORD dwReserved)
 {
@@ -93,7 +93,7 @@ ExitWindowsEx(UINT uFlags,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 RegisterServicesProcess(DWORD ServicesProcessId)
 {
   CSR_API_MESSAGE Request;

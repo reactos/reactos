@@ -7,10 +7,9 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define COBJMACROS
+#include <precomp.h>
+
 #define CONST_VTABLE
-#include <shlobj.h>
-#include <debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -536,10 +535,10 @@ SHCreateDefaultExtractIcon(
     if (!s)
         return E_OUTOFMEMORY;
     memset(s, 0, sizeof(struct IconExtraction));
-    s->defaultExtractIconInitImpl.lpVtbl = &IconExtractionDefaultExtractIconInitVtbl;
-    s->extractIconAImpl.lpVtbl = &IconExtractionExtractIconAVtbl;
-    s->extractIconWImpl.lpVtbl = &IconExtractionExtractIconWVtbl;
-    s->persistFileImpl.lpVtbl = &IconExtractionPersistFileVtbl;
+    s->defaultExtractIconInitImpl.lpVtbl = (IDefaultExtractIconInitVtbl*)&IconExtractionDefaultExtractIconInitVtbl;
+    s->extractIconAImpl.lpVtbl = (IExtractIconAVtbl*)&IconExtractionExtractIconAVtbl;
+    s->extractIconWImpl.lpVtbl = (IExtractIconWVtbl*)&IconExtractionExtractIconWVtbl;
+    s->persistFileImpl.lpVtbl = (IPersistFileVtbl*)&IconExtractionPersistFileVtbl;
     s->ref = 1;
     *ppv = &s->defaultExtractIconInitImpl;
 

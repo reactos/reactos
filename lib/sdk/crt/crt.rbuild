@@ -1,12 +1,26 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<module name="chkstk" type="staticlibrary">
+	<directory name="except">
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>chkstk_asm.s</file>
+			</directory>
+		</if>
+	</directory>
+</module>
+
 <module name="crt" type="staticlibrary">
+	<library>chkstk</library>
 	<include base="crt">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__MINGW_IMPORT">extern</define>
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
 	<define name="USE_MSVCRT_PREFIX" />
 	<define name="_MSVCRT_LIB_" />
 	<define name="_MSVCRT_" />
@@ -53,6 +67,11 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>seh.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>seh.s</file>
 				<file>chkstk_asm.s</file>
 			</directory>
 		</if>
@@ -75,6 +94,14 @@
 				<file>statfp.c</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="i386">
+				<file>clearfp.c</file>
+				<file>cntrlfp.c</file>
+				<file>logb.c</file>
+				<file>statfp.c</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="locale">
 		<file>locale.c</file>
@@ -86,6 +113,7 @@
 		<file>cabs.c</file>
 		<file>cosh.c</file>
 		<file>div.c</file>
+		<file>fdivbug.c</file>
 		<file>frexp.c</file>
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
@@ -97,22 +125,51 @@
 		<file>rand.c</file>
 		<file>s_modf.c</file>
 		<file>sinh.c</file>
-		<file>stubs.c</file>
 		<file>tanh.c</file>
 		<file>pow_asm.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>alldiv_asm.s</file>
+				<file>alldvrm_asm.s</file>
+				<file>allmul_asm.s</file>
+				<file>allrem_asm.s</file>
+				<file>allshl_asm.s</file>
+				<file>allshr_asm.s</file>
+				<file>atan_asm.s</file>
+				<file>aulldiv_asm.s</file>
+				<file>aulldvrm_asm.s</file>
+				<file>aullrem_asm.s</file>
+				<file>aullshr_asm.s</file>
+				<file>ceil_asm.s</file>
+				<file>cos_asm.s</file>
+				<file>fabs_asm.s</file>
+				<file>floor_asm.s</file>
+				<file>ftol_asm.s</file>
+				<file>log_asm.s</file>
+				<file>log10_asm.s</file>
+				<file>pow_asm.s</file>
+				<file>sin_asm.s</file>
+				<file>sqrt_asm.s</file>
+				<file>tan_asm.s</file>
+
+				<file>atan2.c</file>
+				<file>ci.c</file>
+				<file>exp.c</file>
+				<file>fmod.c</file>
+				<file>ldexp.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="i386">
 				<file>atan2.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
 				<file>ldexp.c</file>
-				<file>atan_asm.s</file>
-				<file>pow_asm.s</file>
-				<file>log10_asm.s</file>
 			</directory>
 		</if>
 		<ifnot property="ARCH" value="i386">
+			<file>stubs.c</file>
 		</ifnot>
 	</directory>
 
@@ -237,17 +294,21 @@
 		<file>access.c</file>
 		<file>file.c</file>
 		<file>find.c</file>
+		<file>find64.c</file>
+		<file>findi64.c</file>
 		<file>fmode.c</file>
 		<file>lnx_sprintf.c</file>
-		<file>lnx_vfprintf.c</file>
-		<file>lnx_vfwprint.c</file>
-		<file>lnx_vsprintf.c</file>
-		<file>lnx_vswprintf.c</file>
 		<file>perror.c</file>
 		<file>popen.c</file>
+		<file>stat.c</file>
+		<file>stat64.c</file>
 		<file>waccess.c</file>
 		<file>wfind.c</file>
+		<file>wfind64.c</file>
+		<file>wfindi64.c</file>
 		<file>wpopen.c</file>
+		<file>wstat.c</file>
+		<file>wstat64.c</file>
 	</directory>
 	<directory name="stdlib">
 		<file>_exit.c</file>
@@ -338,6 +399,7 @@
 		<file>strdup.c</file>
 		<file>strerror.c</file>
 		<file>stricmp.c</file>
+		<file>string.c</file>
 		<file>strlwr.c</file>
 		<file>strncoll.c</file>
 		<file>strnicmp.c</file>
@@ -347,6 +409,7 @@
 		<file>strspn.c</file>
 		<file>strstr.c</file>
 		<file>strtod.c</file>
+		<file>strtoi64.c</file>
 		<file>strtok.c</file>
 		<file>strtol.c</file>
 		<file>strtoul.c</file>

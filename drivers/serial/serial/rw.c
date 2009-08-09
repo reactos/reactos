@@ -225,8 +225,8 @@ SerialRead(
 	if (WorkItem)
 	{
 		WorkItemData->IoWorkItem = WorkItem;
-		IoQueueWorkItem(WorkItem, SerialReadWorkItem, DelayedWorkQueue, WorkItemData);
 		IoMarkIrpPending(Irp);
+		IoQueueWorkItem(WorkItem, SerialReadWorkItem, DelayedWorkQueue, WorkItemData);
 		return STATUS_PENDING;
 	}
 

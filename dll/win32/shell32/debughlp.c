@@ -18,19 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include "windef.h"
-#include "wingdi.h"
-#include "pidl.h"
-#include "shldisp.h"
-#include "wine/debug.h"
-#include "debughlp.h"
-#include "docobj.h"
-#include "shell32_main.h"
-
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 
@@ -190,7 +178,7 @@ LPWSTR _dbg_ILGetSTextPointerW(LPCITEMIDLIST pidl)
 	      return NULL;
 
 	    case PT_VALUEW:
-	      return (LPWSTR)(pdata->u.file.szNames + lstrlenW ((LPWSTR)pdata->u.file.szNames) + 1);
+	      return (LPWSTR)(pdata->u.file.szNames + wcslen ((LPWSTR)pdata->u.file.szNames) + 1);
 	  }
 	}
 	return NULL;

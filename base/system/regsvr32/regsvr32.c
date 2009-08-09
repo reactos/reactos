@@ -220,7 +220,7 @@ LPTSTR *WINAPI CommandLineToArgvT(LPCTSTR lpCmdLine, int *lpArgc)
 // should not be modified until FreeConvertedWideChar has been called.
 #ifdef UNICODE
 #define ConvertToWideChar(lptString) (lptString)
-#define FreeConvertedWideChar(lpwString)
+#define FreeConvertedWideChar(lpwString) ((void) 0)
 #else
 
 LPWSTR ConvertToWideChar(LPCSTR lpString)

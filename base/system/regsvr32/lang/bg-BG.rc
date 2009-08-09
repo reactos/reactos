@@ -1,0 +1,28 @@
+#include "resource.h"
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_UsageMessage, "%s\n\nUsage: regsvr32 [/u] [/s] [/c] [/n] [/i[:cmdline]] dllname\n\
+/u -	Unregister server\n\
+/s -	Silent; display no message boxes\n\
+/c -	Console output\n\
+/i -	Call DllInstall passing it an optional [cmdline]; when used with /u calls dll uninstall\n\
+/n -	Do not call DllRegisterServer; this option must be used with /i"
+
+IDS_NoDllSpecified,  "Не е указано име на DLL."
+
+IDS_InvalidFlag,     "Неразпознат стяг: %s"
+
+IDS_SwitchN_NoI,     "Неразпознат стяг: /n стрябва да се използва с ключа /i"
+
+IDS_DllNotLoaded,    "Неуспешно LoadLibrary('%s').\nGetLastError връща 0x%08x."
+
+IDS_MissingEntry,    "%s бе зареден, но входната точка %s не е намерена.\n\n\
+Възможно е %s да е неизносим или в паметта да се намира повредена версия на %s. Можете да използвате PView, за да го откриете и премахнете."
+
+IDS_FailureMessage,  "%s в %s не успя.\nВърната грешка: 0x%08x"
+
+IDS_SuccessMessage   "%s в %s успя."
+END

@@ -221,8 +221,6 @@ Ext2MountVolume (
 	
 	PEXT2_GROUP_DESCRIPTOR	PtrGroupDescriptor = NULL;
 
-	PEXT2_INODE			PtrInode = NULL;
-
 	// Inititalising variables
 	
 	PtrVPB = IrpSp->Parameters.MountVolume.Vpb;
@@ -251,6 +249,14 @@ Ext2MountVolume (
 		StartingOffset = 0L;
 		Ext2PerformVerifyDiskRead ( TargetDeviceObject,
 			BootSector, StartingOffset, NumberOfBytesToRead );
+
+		// Reject a volume that contains fat artifacts
+		
+		DebugTrace(DEBUG_TRACE_MOUNT, "OEM[%s]", BootSector->Oem);
+		if (BootSector->Oem[0])
+		{
+		    try_return();
+		}
 
 		//	Allocating memory for reading in Super Block...
 		
@@ -291,7 +297,7 @@ Ext2MountVolume (
                     (PDEVICE_OBJECT *)&PtrVolumeDeviceObject)) //	The Volume Device Object
 					) 
 			{
-	            try_return( Status );
+	            try_return();
 			}
 
 			//	
@@ -436,7 +442,7 @@ Ext2MountVolume (
 			PtrRootFileObject = IoCreateStreamFileObject(NULL, TargetDeviceObject );
 			if( !PtrRootFileObject )
 			{
-				try_return( Status );
+				try_return();
 			}
 			//
 			//	Associate the file stream with the Volume parameter block...
@@ -465,7 +471,7 @@ Ext2MountVolume (
 						PtrVCB,
 						PtrObjectName  )  )  )
 				{
-					try_return( Status );
+					try_return();
 				}
 				
 

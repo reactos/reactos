@@ -254,7 +254,7 @@ static const struct sinfo {
   SINFO(  nodata,              "No such data"                                  )
 };
 
-static int __cdecl si_compar(const void *key, const void *elem) {
+static int si_compar(const void *key, const void *elem) {
   const adns_status *st= key;
   const struct sinfo *si= elem;
 
@@ -295,7 +295,7 @@ static const struct stinfo {
   STINFO(  permfail    )
 };
 
-static int __cdecl sti_compar(const void *key, const void *elem) {
+static int sti_compar(const void *key, const void *elem) {
   const adns_status *st= key;
   const struct stinfo *sti= elem;
 

@@ -2,6 +2,8 @@
  * Summary: internal interfaces for XML Schemas
  * Description: internal interfaces for the XML Schemas handling
  *              and schema validity checking
+ *		The Schemas development is a Work In Progress.
+ *              Some of those interfaces are not garanteed to be API or ABI stable !
  *
  * Copy: See Copyright for the status of this software.
  *
@@ -102,7 +104,8 @@ typedef enum {
     XML_SCHEMA_TYPE_IDC_UNIQUE,
     XML_SCHEMA_TYPE_IDC_KEY,
     XML_SCHEMA_TYPE_IDC_KEYREF,
-    XML_SCHEMA_TYPE_PARTICLE = 25,
+    XML_SCHEMA_TYPE_PARTICLE = 25, 
+    XML_SCHEMA_TYPE_ATTRIBUTE_USE, 
     XML_SCHEMA_FACET_MININCLUSIVE = 1000,
     XML_SCHEMA_FACET_MINEXCLUSIVE,
     XML_SCHEMA_FACET_MAXINCLUSIVE,
@@ -115,7 +118,8 @@ typedef enum {
     XML_SCHEMA_FACET_LENGTH,
     XML_SCHEMA_FACET_MAXLENGTH,
     XML_SCHEMA_FACET_MINLENGTH,
-    XML_SCHEMA_EXTRA_QNAMEREF = 2000
+    XML_SCHEMA_EXTRA_QNAMEREF = 2000,
+    XML_SCHEMA_EXTRA_ATTR_USE_PROHIB
 } xmlSchemaTypeType;
 
 typedef enum {
@@ -124,7 +128,7 @@ typedef enum {
     XML_SCHEMA_CONTENT_ELEMENTS,
     XML_SCHEMA_CONTENT_MIXED,
     XML_SCHEMA_CONTENT_SIMPLE,
-    XML_SCHEMA_CONTENT_MIXED_OR_ELEMENTS, /* obsolete, not used */
+    XML_SCHEMA_CONTENT_MIXED_OR_ELEMENTS, /* Obsolete */
     XML_SCHEMA_CONTENT_BASIC,
     XML_SCHEMA_CONTENT_ANY
 } xmlSchemaContentType;
@@ -242,31 +246,32 @@ struct _xmlSchemaAnnot {
 typedef struct _xmlSchemaAttribute xmlSchemaAttribute;
 typedef xmlSchemaAttribute *xmlSchemaAttributePtr;
 struct _xmlSchemaAttribute {
-    xmlSchemaTypeType type;        /* The kind of type */
-    struct _xmlSchemaAttribute *next;/* the next attribute if in a group ... */
-    const xmlChar *name; /* name of the declaration or empty if particle */
-    const xmlChar *id;
-    const xmlChar *ref; /* the local name of the attribute decl. if a particle */
-    const xmlChar *refNs; /* the ns URI of the attribute decl. if a particle */
+    xmlSchemaTypeType type;
+    struct _xmlSchemaAttribute *next; /* the next attribute (not used?) */
+    const xmlChar *name; /* the name of the declaration */
+    const xmlChar *id; /* Deprecated; not used */
+    const xmlChar *ref; /* Deprecated; not used */
+    const xmlChar *refNs; /* Deprecated; not used */
     const xmlChar *typeName; /* the local name of the type definition */
     const xmlChar *typeNs; /* the ns URI of the type definition */
     xmlSchemaAnnotPtr annot;
 
-    xmlSchemaTypePtr base; /* obsolete, not used */
-    int occurs;
-    const xmlChar *defValue;
+    xmlSchemaTypePtr base; /* Deprecated; not used */
+    int occurs; /* Deprecated; not used */
+    const xmlChar *defValue; /* The initial value of the value constraint */
     xmlSchemaTypePtr subtypes; /* the type definition */
     xmlNodePtr node;
     const xmlChar *targetNamespace;
     int flags;
-    const xmlChar *refPrefix;
-    xmlSchemaValPtr defVal;
-    xmlSchemaAttributePtr refDecl;
+    const xmlChar *refPrefix; /* Deprecated; not used */
+    xmlSchemaValPtr defVal; /* The compiled value constraint */
+    xmlSchemaAttributePtr refDecl; /* Deprecated; not used */
 };
 
 /**
  * xmlSchemaAttributeLink:
  * Used to build a list of attribute uses on complexType definitions.
+ * WARNING: Deprecated; not used.
  */
 typedef struct _xmlSchemaAttributeLink xmlSchemaAttributeLink;
 typedef xmlSchemaAttributeLink *xmlSchemaAttributeLinkPtr;
@@ -301,11 +306,11 @@ typedef struct _xmlSchemaWildcard xmlSchemaWildcard;
 typedef xmlSchemaWildcard *xmlSchemaWildcardPtr;
 struct _xmlSchemaWildcard {
     xmlSchemaTypeType type;        /* The kind of type */
-    const xmlChar *id;
+    const xmlChar *id; /* Deprecated; not used */
     xmlSchemaAnnotPtr annot;
     xmlNodePtr node;
-    int minOccurs;
-    int maxOccurs;
+    int minOccurs; /* Deprecated; not used */
+    int maxOccurs; /* Deprecated; not used */
     int processContents;
     int any; /* Indicates if the ns constraint is of ##any */
     xmlSchemaWildcardNsPtr nsSet; /* The list of allowed namespaces */
@@ -333,6 +338,19 @@ struct _xmlSchemaWildcard {
 #define XML_SCHEMAS_ATTRGROUP_MARKED 1 << 2
 
 /**
+ * XML_SCHEMAS_ATTRGROUP_REDEFINED:
+ *
+ * The attr group was redefined.
+ */
+#define XML_SCHEMAS_ATTRGROUP_REDEFINED 1 << 3
+/**
+ * XML_SCHEMAS_ATTRGROUP_HAS_REFS:
+ *
+ * Whether this attr. group contains attr. group references.
+ */
+#define XML_SCHEMAS_ATTRGROUP_HAS_REFS 1 << 4
+
+/**
  * An attribute group definition.
  *
  * xmlSchemaAttribute and xmlSchemaAttributeGroup start of structures
@@ -345,17 +363,18 @@ struct _xmlSchemaAttributeGroup {
     struct _xmlSchemaAttribute *next;/* the next attribute if in a group ... */
     const xmlChar *name;
     const xmlChar *id;
-    const xmlChar *ref;
-    const xmlChar *refNs;
+    const xmlChar *ref; /* Deprecated; not used */
+    const xmlChar *refNs; /* Deprecated; not used */
     xmlSchemaAnnotPtr annot;
 
-    xmlSchemaAttributePtr attributes;
+    xmlSchemaAttributePtr attributes; /* Deprecated; not used */
     xmlNodePtr node;
     int flags;
     xmlSchemaWildcardPtr attributeWildcard;
-    const xmlChar *refPrefix;
-    xmlSchemaAttributeGroupPtr refItem; /* The referenced attribute group */
+    const xmlChar *refPrefix; /* Deprecated; not used */
+    xmlSchemaAttributeGroupPtr refItem; /* Deprecated; not used */
     const xmlChar *targetNamespace;
+    void *attrUses;
 };
 
 /**
@@ -367,7 +386,7 @@ typedef struct _xmlSchemaTypeLink xmlSchemaTypeLink;
 typedef xmlSchemaTypeLink *xmlSchemaTypeLinkPtr;
 struct _xmlSchemaTypeLink {
     struct _xmlSchemaTypeLink *next;/* the next type link ... */
-    xmlSchemaTypePtr type;/* the linked type*/
+    xmlSchemaTypePtr type;/* the linked type */
 };
 
 /**
@@ -416,6 +435,9 @@ struct _xmlSchemaFacetLink {
  * XML_SCHEMAS_TYPE_VARIETY_ABSENT:
  *
  * the simpleType has a variety of "absent".
+ * TODO: Actually not necessary :-/, since if
+ * none of the variety flags occur then it's
+ * automatically absent.
  */
 #define XML_SCHEMAS_TYPE_VARIETY_ABSENT    1 << 5
 /**
@@ -553,41 +575,63 @@ struct _xmlSchemaFacetLink {
 #define XML_SCHEMAS_TYPE_NORMVALUENEEDED    1 << 28
 
 /**
+ * XML_SCHEMAS_TYPE_FIXUP_1:
+ *
+ * First stage of fixup was done.
+ */
+#define XML_SCHEMAS_TYPE_FIXUP_1    1 << 29
+
+/**
+ * XML_SCHEMAS_TYPE_REDEFINED:
+ *
+ * The type was redefined.
+ */
+#define XML_SCHEMAS_TYPE_REDEFINED    1 << 30
+/**
+ * XML_SCHEMAS_TYPE_REDEFINING:
+ *
+ * The type redefines an other type.
+ */
+/* #define XML_SCHEMAS_TYPE_REDEFINING    1 << 31 */
+
+/**
  * _xmlSchemaType:
  *
  * Schemas type definition.
  */
 struct _xmlSchemaType {
-    xmlSchemaTypeType type;        /* The kind of type */
-    struct _xmlSchemaType *next;/* the next type if in a sequence ... */
+    xmlSchemaTypeType type; /* The kind of type */
+    struct _xmlSchemaType *next; /* the next type if in a sequence ... */
     const xmlChar *name;
-    const xmlChar *id;
-    const xmlChar *ref;
-    const xmlChar *refNs;
+    const xmlChar *id ; /* Deprecated; not used */
+    const xmlChar *ref; /* Deprecated; not used */
+    const xmlChar *refNs; /* Deprecated; not used */
     xmlSchemaAnnotPtr annot;
     xmlSchemaTypePtr subtypes;
-    xmlSchemaAttributePtr attributes;
+    xmlSchemaAttributePtr attributes; /* Deprecated; not used */
     xmlNodePtr node;
-    int minOccurs;
-    int maxOccurs;
+    int minOccurs; /* Deprecated; not used */
+    int maxOccurs; /* Deprecated; not used */
 
     int flags;
     xmlSchemaContentType contentType;
-    const xmlChar *base;
-    const xmlChar *baseNs;
-    xmlSchemaTypePtr baseType;
-    xmlSchemaFacetPtr facets;
-    struct _xmlSchemaType *redef;/* possible redefinitions for the type */
-    int recurse;
-    xmlSchemaAttributeLinkPtr attributeUses;
+    const xmlChar *base; /* Base type's local name */
+    const xmlChar *baseNs; /* Base type's target namespace */
+    xmlSchemaTypePtr baseType; /* The base type component */
+    xmlSchemaFacetPtr facets; /* Local facets */
+    struct _xmlSchemaType *redef; /* Deprecated; not used */
+    int recurse; /* Obsolete */
+    xmlSchemaAttributeLinkPtr *attributeUses; /* Deprecated; not used */
     xmlSchemaWildcardPtr attributeWildcard;
-    int builtInType;
-    xmlSchemaTypeLinkPtr memberTypes;
-    xmlSchemaFacetLinkPtr facetSet;
-    const xmlChar *refPrefix;
-    xmlSchemaTypePtr contentTypeDef;
-    xmlRegexpPtr contModel;
+    int builtInType; /* Type of built-in types. */
+    xmlSchemaTypeLinkPtr memberTypes; /* member-types if a union type. */
+    xmlSchemaFacetLinkPtr facetSet; /* All facets (incl. inherited) */
+    const xmlChar *refPrefix; /* Deprecated; not used */
+    xmlSchemaTypePtr contentTypeDef; /* Used for the simple content of complex types.
+                                        Could we use @subtypes for this? */
+    xmlRegexpPtr contModel; /* Holds the automaton of the content model */
     const xmlChar *targetNamespace;
+    void *attrUses;
 };
 
 /*
@@ -719,18 +763,18 @@ struct _xmlSchemaType {
 typedef struct _xmlSchemaElement xmlSchemaElement;
 typedef xmlSchemaElement *xmlSchemaElementPtr;
 struct _xmlSchemaElement {
-    xmlSchemaTypeType type;        /* The kind of type */
-    struct _xmlSchemaType *next;/* the next type if in a sequence ... */
+    xmlSchemaTypeType type; /* The kind of type */
+    struct _xmlSchemaType *next; /* Not used? */
     const xmlChar *name;
-    const xmlChar *id;
-    const xmlChar *ref; /* the local name of the element declaration if a particle */
-    const xmlChar *refNs; /* the ns URI of the element declaration if a particle */
+    const xmlChar *id; /* Deprecated; not used */
+    const xmlChar *ref; /* Deprecated; not used */
+    const xmlChar *refNs; /* Deprecated; not used */
     xmlSchemaAnnotPtr annot;
     xmlSchemaTypePtr subtypes; /* the type definition */
     xmlSchemaAttributePtr attributes;
     xmlNodePtr node;
-    int minOccurs;
-    int maxOccurs;
+    int minOccurs; /* Deprecated; not used */
+    int maxOccurs; /* Deprecated; not used */
 
     int flags;
     const xmlChar *targetNamespace;
@@ -739,13 +783,14 @@ struct _xmlSchemaElement {
     const xmlChar *substGroup;
     const xmlChar *substGroupNs;
     const xmlChar *scope;
-    const xmlChar *value;
-    struct _xmlSchemaElement *refDecl; /* This will now be used for the substitution group affiliation */
-    xmlRegexpPtr contModel;
+    const xmlChar *value; /* The original value of the value constraint. */
+    struct _xmlSchemaElement *refDecl; /* This will now be used for the
+                                          substitution group affiliation */
+    xmlRegexpPtr contModel; /* Obsolete for WXS, maybe used for RelaxNG */
     xmlSchemaContentType contentType;
-    const xmlChar *refPrefix;
-    xmlSchemaValPtr defVal;
-    void *idcs;
+    const xmlChar *refPrefix; /* Deprecated; not used */
+    xmlSchemaValPtr defVal; /* The compiled value contraint. */
+    void *idcs; /* The identity-constraint defs */
 };
 
 /*
@@ -778,14 +823,14 @@ struct _xmlSchemaElement {
 struct _xmlSchemaFacet {
     xmlSchemaTypeType type;        /* The kind of type */
     struct _xmlSchemaFacet *next;/* the next type if in a sequence ... */
-    const xmlChar *value;
-    const xmlChar *id;
+    const xmlChar *value; /* The original value */
+    const xmlChar *id; /* Obsolete */
     xmlSchemaAnnotPtr annot;
     xmlNodePtr node;
-    int fixed;
+    int fixed; /* XML_SCHEMAS_FACET_PRESERVE, etc. */
     int whitespace;
-    xmlSchemaValPtr val;
-    xmlRegexpPtr    regexp;
+    xmlSchemaValPtr val; /* The compiled value */
+    xmlRegexpPtr    regexp; /* The regex for patterns */
 };
 
 /**
@@ -794,23 +839,31 @@ struct _xmlSchemaFacet {
 typedef struct _xmlSchemaNotation xmlSchemaNotation;
 typedef xmlSchemaNotation *xmlSchemaNotationPtr;
 struct _xmlSchemaNotation {
-    xmlSchemaTypeType type;        /* The kind of type */
+    xmlSchemaTypeType type; /* The kind of type */
     const xmlChar *name;
     xmlSchemaAnnotPtr annot;
     const xmlChar *identifier;
     const xmlChar *targetNamespace;
 };
 
+/*
+* TODO: Actually all those flags used for the schema should sit
+* on the schema parser context, since they are used only
+* during parsing an XML schema document, and not available
+* on the component level as per spec.
+*/
 /**
  * XML_SCHEMAS_QUALIF_ELEM:
  *
- * the schema requires qualified elements
+ * Reflects elementFormDefault == qualified in
+ * an XML schema document.
  */
 #define XML_SCHEMAS_QUALIF_ELEM                1 << 0
 /**
  * XML_SCHEMAS_QUALIF_ATTR:
  *
- * the schema requires qualified attributes
+ * Reflects attributeFormDefault == qualified in
+ * an XML schema document.
  */
 #define XML_SCHEMAS_QUALIF_ATTR            1 << 1
 /**
@@ -868,10 +921,10 @@ struct _xmlSchemaNotation {
  * A Schemas definition
  */
 struct _xmlSchema {
-    const xmlChar *name;        /* schema name */
-    const xmlChar *targetNamespace;     /* the target namespace */
+    const xmlChar *name; /* schema name */
+    const xmlChar *targetNamespace; /* the target namespace */
     const xmlChar *version;
-    const xmlChar *id;
+    const xmlChar *id; /* Obsolete */
     xmlDocPtr doc;
     xmlSchemaAnnotPtr annot;
     int flags;
@@ -890,8 +943,8 @@ struct _xmlSchema {
     void *includes;     /* the includes, this is opaque for now */
     int preserve;        /* whether to free the document */
     int counter; /* used to give ononymous components unique names */
-    xmlHashTablePtr idcDef;
-    void *volatiles; /* Misc. helper items (e.g. reference items) */
+    xmlHashTablePtr idcDef; /* All identity-constraint defs. */
+    void *volatiles; /* Obsolete */
 };
 
 XMLPUBFUN void XMLCALL         xmlSchemaFreeType        (xmlSchemaTypePtr type);

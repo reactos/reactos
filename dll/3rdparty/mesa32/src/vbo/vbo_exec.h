@@ -34,7 +34,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __VBO_EXEC_H__
 #define __VBO_EXEC_H__
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 #include "vbo.h"
 #include "vbo_attrib.h"
 
@@ -161,5 +161,8 @@ void vbo_exec_do_EvalCoord2f( struct vbo_exec_context *exec,
 
 void vbo_exec_do_EvalCoord1f( struct vbo_exec_context *exec,
 				     GLfloat u);
+
+extern GLboolean 
+vbo_validate_shaders(GLcontext *ctx);
 
 #endif

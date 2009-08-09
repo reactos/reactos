@@ -18,6 +18,30 @@
 
 import "oaidl.idl";
 
+typedef enum
+{
+    ADS_RIGHT_DS_CREATE_CHILD         = 0x00000001,
+    ADS_RIGHT_DS_DELETE_CHILD         = 0x00000002,
+    ADS_RIGHT_ACTRL_DS_LIST           = 0x00000004,
+    ADS_RIGHT_DS_SELF                 = 0x00000008,
+    ADS_RIGHT_DS_READ_PROP            = 0x00000010,
+    ADS_RIGHT_DS_WRITE_PROP           = 0x00000020,
+    ADS_RIGHT_DS_DELETE_TREE          = 0x00000040,
+    ADS_RIGHT_DS_LIST_OBJECT          = 0x00000080,
+    ADS_RIGHT_DS_CONTROL_ACCESS       = 0x00000100,
+
+    ADS_RIGHT_DELETE                  = 0x00010000,
+    ADS_RIGHT_READ_CONTROL            = 0x00020000,
+    ADS_RIGHT_WRITE_DAC               = 0x00040000,
+    ADS_RIGHT_WRITE_OWNER             = 0x00080000,
+    ADS_RIGHT_SYNCHRONIZE             = 0x00100000,
+    ADS_RIGHT_ACCESS_SYSTEM_SECURITY  = 0x00200000,
+
+    ADS_RIGHT_GENERIC_ALL             = 0x10000000,
+    ADS_RIGHT_GENERIC_EXECUTE         = 0x20000000,
+    ADS_RIGHT_GENERIC_WRITE           = 0x40000000,
+    ADS_RIGHT_GENERIC_READ            = 0x80000000
+} ADS_RIGHTS_ENUM;
 
 /*****************************************************************************
  *    IADsContainer interface

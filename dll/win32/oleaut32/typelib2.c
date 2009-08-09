@@ -152,6 +152,7 @@ typedef struct tagICreateTypeLib2Impl
     WCHAR *filename;
 
     MSFT_Header typelib_header;
+    INT helpStringDll;
     MSFT_pSeg typelib_segdir[MSFT_SEG_MAX];
     char *typelib_segment_data[MSFT_SEG_MAX];
     int typelib_segment_block_length[MSFT_SEG_MAX];
@@ -231,6 +232,7 @@ static void ctl2_init_header(
     This->typelib_header.res48 = 0x80;
     This->typelib_header.dispatchpos = -1;
     This->typelib_header.nimpinfos = 0;
+    This->helpStringDll = -1;
 }
 
 /****************************************************************************
@@ -726,7 +728,7 @@ static int ctl2_alloc_importfile(
     importfile->guid = guidoffset;
     importfile->lcid = This->typelib_header.lcid2;
     importfile->version = major_version | (minor_version << 16);
-    memcpy(&importfile->filename, encoded_string, length);
+    memcpy(importfile->filename, encoded_string, length);
 
     return offset;
 }
@@ -1347,7 +1349,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddRefTypeInfo(
      * implementation of ITypeInfo. So we need to do the following...
      */
     res = ITypeInfo_GetContainingTypeLib(pTInfo, &container, &index);
-    if (!SUCCEEDED(res)) {
+    if (FAILED(res)) {
 	TRACE("failed to find containing typelib.\n");
 	return res;
     }
@@ -1706,7 +1708,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncAndParamNames(
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
 
-    int i;
+    UINT i;
     int offset;
     char *namedata;
 
@@ -3331,8 +3333,10 @@ static HRESULT WINAPI ICreateTypeLib2_fnSaveAllChanges(ICreateTypeLib2 * iface)
     ctl2_finalize_typeinfos(This, filepos);
 
     if (!ctl2_write_chunk(hFile, &This->typelib_header, sizeof(This->typelib_header))) return retval;
+    if (This->typelib_header.varflags & HELPDLLFLAG)
+        if (!ctl2_write_chunk(hFile, &This->helpStringDll, sizeof(This->helpStringDll))) return retval;
     if (!ctl2_write_chunk(hFile, This->typelib_typeinfo_offsets, This->typelib_header.nrtypeinfos * 4)) return retval;
-    if (!ctl2_write_chunk(hFile, &This->typelib_segdir, sizeof(This->typelib_segdir))) return retval;
+    if (!ctl2_write_chunk(hFile, This->typelib_segdir, sizeof(This->typelib_segdir))) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_TYPEINFO    )) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_GUIDHASH    )) return retval;
     if (!ctl2_write_segment(This, hFile, MSFT_SEG_GUID        )) return retval;
@@ -3401,35 +3405,56 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetCustData(
  *
  *  Sets a context number for the library help string.
  *
- * RETURNS
+ * PARAMS
+ *  iface     [I] The type library to set the help string context for.
+ *  dwContext [I] The help string context.
  *
+ * RETURNS
  *  Success: S_OK
  *  Failure: E_OUTOFMEMORY or E_INVALIDARG.
  */
-static HRESULT WINAPI ICreateTypeLib2_fnSetHelpStringContext(
-	ICreateTypeLib2 * iface,   /* [I] The type library to set the help string context for. */
-	ULONG dwHelpStringContext) /* [I] The help string context. */
+static
+HRESULT WINAPI ICreateTypeLib2_fnSetHelpStringContext(ICreateTypeLib2 * iface,
+                                                      ULONG dwContext)
 {
-    FIXME("(%p,%d), stub!\n", iface, dwHelpStringContext);
-    return E_OUTOFMEMORY;
+    ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
+
+    TRACE("(%p,%d)\n", iface, dwContext);
+
+    This->typelib_header.helpstringcontext = dwContext;
+    return S_OK;
 }
 
 /******************************************************************************
  * ICreateTypeLib2_SetHelpStringDll {OLEAUT32}
  *
- *  Sets the DLL used to look up localized help strings.
+ *  Set the DLL used to look up localized help strings.
+ *
+ * PARAMS
+ *  iface     [I] The type library to set the help DLL for.
+ *  szDllName [I] The name of the help DLL.
  *
  * RETURNS
- *
  *  Success: S_OK
  *  Failure: E_OUTOFMEMORY or E_INVALIDARG.
  */
-static HRESULT WINAPI ICreateTypeLib2_fnSetHelpStringDll(
-	ICreateTypeLib2 * iface, /* [I] The type library to set the help DLL for. */
-	LPOLESTR szFileName)     /* [I] The name of the help DLL. */
+static
+HRESULT WINAPI ICreateTypeLib2_fnSetHelpStringDll(ICreateTypeLib2 * iface,
+                                                  LPOLESTR szDllName)
 {
-    FIXME("(%p,%s), stub!\n", iface, debugstr_w(szFileName));
-    return E_OUTOFMEMORY;
+    ICreateTypeLib2Impl *This = (ICreateTypeLib2Impl *)iface;
+    int offset;
+
+    TRACE("(%p,%s)\n", iface, debugstr_w(szDllName));
+    if (!szDllName)
+        return E_INVALIDARG;
+
+    offset = ctl2_alloc_string(This, szDllName);
+    if (offset == -1)
+        return E_OUTOFMEMORY;
+    This->typelib_header.varflags |= HELPDLLFLAG;
+    This->helpStringDll = offset;
+    return S_OK;
 }
 
 /*================== ITypeLib2 Implementation ===================================*/

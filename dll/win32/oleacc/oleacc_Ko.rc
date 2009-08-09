@@ -1,0 +1,91 @@
+/*
+ * English resources for oleacc
+ *
+ * Copyright 2008 Nikolay Sivov
+ * Copyright 2008 YunSong Hwang
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    0 "알 수 없는 객체" /* undocumented */
+    ROLE_SYSTEM_TITLEBAR    "제목바"
+    ROLE_SYSTEM_MENUBAR     "메뉴바"
+    ROLE_SYSTEM_SCROLLBAR   "스크롤바"
+    ROLE_SYSTEM_GRIP        "그립"
+    ROLE_SYSTEM_SOUND       "사운드"
+    ROLE_SYSTEM_CURSOR      "커서"
+    ROLE_SYSTEM_CARET       "삽입기호"
+    ROLE_SYSTEM_ALERT       "경고"
+    ROLE_SYSTEM_WINDOW      "창"
+    ROLE_SYSTEM_CLIENT      "클라이언트"
+    ROLE_SYSTEM_MENUPOPUP   "팝업 메뉴"
+    ROLE_SYSTEM_MENUITEM    "메뉴 아이템"
+    ROLE_SYSTEM_TOOLTIP     "도구 팁"
+    ROLE_SYSTEM_APPLICATION "프로그램"
+    ROLE_SYSTEM_DOCUMENT    "문서"
+    ROLE_SYSTEM_PANE        "틀(pane)"
+    ROLE_SYSTEM_CHART       "차트"
+    ROLE_SYSTEM_DIALOG      "대화상자"
+    ROLE_SYSTEM_BORDER      "가장자리"
+    ROLE_SYSTEM_GROUPING    "집단화"
+    ROLE_SYSTEM_SEPARATOR   "분리자"
+    ROLE_SYSTEM_TOOLBAR     "도구바"
+    ROLE_SYSTEM_STATUSBAR   "상태바"
+    ROLE_SYSTEM_TABLE        "테이블"
+    ROLE_SYSTEM_COLUMNHEADER "세로줄 헤더"
+    ROLE_SYSTEM_ROWHEADER    "가로줄 헤더"
+    ROLE_SYSTEM_COLUMN       "열"
+    ROLE_SYSTEM_ROW          "가로줄"
+    ROLE_SYSTEM_CELL         "셀"
+    ROLE_SYSTEM_LINK         "링크"
+    ROLE_SYSTEM_HELPBALLOON  "풍선 도움말"
+    ROLE_SYSTEM_CHARACTER    "문자"
+    ROLE_SYSTEM_LIST         "목록"
+    ROLE_SYSTEM_LISTITEM     "목록 아이템"
+    ROLE_SYSTEM_OUTLINE      "외곽선"
+    ROLE_SYSTEM_OUTLINEITEM  "외곽선 아이템"
+    ROLE_SYSTEM_PAGETAB      "페이지 탭"
+    ROLE_SYSTEM_PROPERTYPAGE "속성 페이지"
+    ROLE_SYSTEM_INDICATOR    "지시자"
+    ROLE_SYSTEM_GRAPHIC      "그림"
+    ROLE_SYSTEM_STATICTEXT   "정적 문자"
+    ROLE_SYSTEM_TEXT         "문자"
+    ROLE_SYSTEM_PUSHBUTTON   "누르기 버튼"
+    ROLE_SYSTEM_CHECKBUTTON  "체크 버튼"
+    ROLE_SYSTEM_RADIOBUTTON  "라디오 버튼"
+    ROLE_SYSTEM_COMBOBOX     "콤보  상자"
+    ROLE_SYSTEM_DROPLIST     "드룹 다운"
+    ROLE_SYSTEM_PROGRESSBAR  "진행바"
+    ROLE_SYSTEM_DIAL         "다이얼"
+    ROLE_SYSTEM_HOTKEYFIELD  "단축키 모음"
+    ROLE_SYSTEM_SLIDER       "슬라이더"
+    ROLE_SYSTEM_SPINBUTTON   "스핀 상자"
+    ROLE_SYSTEM_DIAGRAM      "도형"
+    ROLE_SYSTEM_ANIMATION    "애니매이션"
+    ROLE_SYSTEM_EQUATION     "수식"
+    ROLE_SYSTEM_BUTTONDROPDOWN "드룹 다운 버튼"
+    ROLE_SYSTEM_BUTTONMENU   "메뉴 버튼"
+    ROLE_SYSTEM_BUTTONDROPDOWNGRID "그립 드룹 다운 단추"
+    ROLE_SYSTEM_WHITESPACE   "빈 공간"
+    ROLE_SYSTEM_PAGETABLIST  "페이지 탭 목록"
+    ROLE_SYSTEM_CLOCK        "시계"
+    ROLE_SYSTEM_SPLITBUTTON  "나누기 단추"
+    ROLE_SYSTEM_IPADDRESS    "IP 주소"
+    ROLE_SYSTEM_OUTLINEBUTTON "외곽선 단추"
+}

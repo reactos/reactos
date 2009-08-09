@@ -75,7 +75,7 @@ InitCommandLines (VOID)
 /*
  * @implemented
  */
-LPSTR STDCALL GetCommandLineA(VOID)
+LPSTR WINAPI GetCommandLineA(VOID)
 {
 	if (bCommandLineInitialized == FALSE)
 	{
@@ -91,7 +91,7 @@ LPSTR STDCALL GetCommandLineA(VOID)
 /*
  * @implemented
  */
-LPWSTR STDCALL GetCommandLineW (VOID)
+LPWSTR WINAPI GetCommandLineW (VOID)
 {
 	if (bCommandLineInitialized == FALSE)
 	{

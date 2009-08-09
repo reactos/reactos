@@ -33,6 +33,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 GpStatus WINGDIPAPI GdipCloneCustomLineCap(GpCustomLineCap* from,
     GpCustomLineCap** to)
 {
+    TRACE("(%p, %p)\n", from, to);
+
     if(!from || !to)
         return InvalidParameter;
 
@@ -100,18 +102,48 @@ GpStatus WINGDIPAPI GdipCreateCustomLineCap(GpPath* fillPath, GpPath* strokePath
 
     (*customCap)->inset = baseInset;
     (*customCap)->cap = baseCap;
+    (*customCap)->join = LineJoinMiter;
+    (*customCap)->scale = 1.0;
 
     return Ok;
 }
 
 GpStatus WINGDIPAPI GdipDeleteCustomLineCap(GpCustomLineCap *customCap)
 {
+    TRACE("(%p)\n", customCap);
+
     if(!customCap)
         return InvalidParameter;
 
     GdipFree(customCap->pathdata.Points);
     GdipFree(customCap->pathdata.Types);
     GdipFree(customCap);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetCustomLineCapStrokeJoin(GpCustomLineCap* customCap,
+    GpLineJoin* lineJoin)
+{
+    TRACE("(%p, %p)\n", customCap, lineJoin);
+
+    if(!customCap || !lineJoin)
+        return InvalidParameter;
+
+    *lineJoin = customCap->join;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipGetCustomLineCapWidthScale(GpCustomLineCap* custom,
+    REAL* widthScale)
+{
+    TRACE("(%p, %p)\n", custom, widthScale);
+
+    if(!custom || !widthScale)
+        return InvalidParameter;
+
+    *widthScale = custom->scale;
 
     return Ok;
 }
@@ -144,12 +176,14 @@ GpStatus WINGDIPAPI GdipSetCustomLineCapBaseCap(GpCustomLineCap* custom,
 GpStatus WINGDIPAPI GdipGetCustomLineCapBaseInset(GpCustomLineCap* custom,
     REAL* inset)
 {
-    static int calls;
+    TRACE("(%p, %p)\n", custom, inset);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!custom || !inset)
+        return InvalidParameter;
 
-    return NotImplemented;
+    *inset = custom->inset;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetCustomLineCapBaseInset(GpCustomLineCap* custom,
@@ -163,15 +197,18 @@ GpStatus WINGDIPAPI GdipSetCustomLineCapBaseInset(GpCustomLineCap* custom,
     return NotImplemented;
 }
 
+/*FIXME: LineJoin completely ignored now */
 GpStatus WINGDIPAPI GdipSetCustomLineCapStrokeJoin(GpCustomLineCap* custom,
     GpLineJoin join)
 {
-    static int calls;
+    TRACE("(%p, %d)\n", custom, join);
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    if(!custom)
+        return InvalidParameter;
 
-    return NotImplemented;
+    custom->join = join;
+
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetCustomLineCapWidthScale(GpCustomLineCap* custom,
@@ -187,10 +224,103 @@ GpStatus WINGDIPAPI GdipSetCustomLineCapWidthScale(GpCustomLineCap* custom,
 
 GpStatus WINGDIPAPI GdipGetCustomLineCapBaseCap(GpCustomLineCap *customCap, GpLineCap *baseCap)
 {
+    TRACE("(%p, %p)\n", customCap, baseCap);
+
     if(!customCap || !baseCap)
         return InvalidParameter;
 
     *baseCap = customCap->cap;
 
     return Ok;
+}
+
+GpStatus WINGDIPAPI GdipCreateAdjustableArrowCap(REAL height, REAL width, BOOL fill,
+    GpAdjustableArrowCap **cap)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetAdjustableArrowCapFillState(GpAdjustableArrowCap* cap, BOOL* fill)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetAdjustableArrowCapHeight(GpAdjustableArrowCap* cap, REAL* height)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetAdjustableArrowCapMiddleInset(GpAdjustableArrowCap* cap, REAL* middle)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetAdjustableArrowCapWidth(GpAdjustableArrowCap* cap, REAL* width)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetAdjustableArrowCapFillState(GpAdjustableArrowCap* cap, BOOL fill)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetAdjustableArrowCapHeight(GpAdjustableArrowCap* cap, REAL height)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetAdjustableArrowCapMiddleInset(GpAdjustableArrowCap* cap, REAL middle)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipSetAdjustableArrowCapWidth(GpAdjustableArrowCap* cap, REAL width)
+{
+    static int calls;
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    return NotImplemented;
 }

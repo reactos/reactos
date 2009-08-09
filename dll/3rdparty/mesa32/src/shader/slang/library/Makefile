@@ -17,7 +17,7 @@ LIB_DEP = $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME)
 default: syntax builtin
 
 clean:
-	rm -f syn_to_c gc_to_bin *_syn.h *_gc.h
+	-rm -f syn_to_c gc_to_bin *_syn.h *_gc.h
 
 syntax: slang_pp_directives_syn.h slang_pp_expression_syn.h slang_shader_syn.h slang_pp_version_syn.h
 

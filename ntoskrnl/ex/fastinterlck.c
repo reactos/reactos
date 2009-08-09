@@ -74,7 +74,8 @@ ExInterlockedFlushSList(IN PSLIST_HEADER ListHead)
 PSLIST_ENTRY
 FASTCALL
 ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
-                            IN PSLIST_ENTRY ListEntry)
+                            IN PSLIST_ENTRY ListEntry,
+                            IN PKSPIN_LOCK Lock)
 {
     return InterlockedPushEntrySList(ListHead, ListEntry);
 }
@@ -88,7 +89,7 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
 }
 
 ULONG
-NTAPI
+FASTCALL
 ExfInterlockedAddUlong(IN PULONG Addend,
                        IN ULONG Increment,
                        PKSPIN_LOCK Lock)
@@ -104,12 +105,12 @@ LONGLONG
 FASTCALL
 ExfInterlockedCompareExchange64(IN OUT LONGLONG volatile *Destination,
                                 IN PLONGLONG Exchange,
-                                IN PLONGLONG Comperand)
+                                IN PLONGLONG Comparand)
 {
     LONGLONG Result;
     
     Result = *Destination;
-    if (*Destination == Result) *Destination = *Exchange;
+    if (*Destination == *Comparand) *Destination = *Exchange;
     return Result;
 }
 
@@ -305,7 +306,7 @@ ExInterlockedCompareExchange64(IN OUT PLONGLONG Destination,
     
     KeAcquireSpinLock(Lock, &OldIrql);
     Result = *Destination;
-    if (*Destination == Result) *Destination = *Exchange;
+    if (*Destination == *Comparand) *Destination = *Exchange;
     KeReleaseSpinLock(Lock, OldIrql);
     return Result;
 }

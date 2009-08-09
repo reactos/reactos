@@ -12,7 +12,7 @@ BEGIN
 
     POPUP "&Справка"
     BEGIN
-        MENUITEM "&О Консоли управления ReactOS...", ID_HELP_ABOUT
+        MENUITEM "&О программе...", ID_HELP_ABOUT
     END
 END
 

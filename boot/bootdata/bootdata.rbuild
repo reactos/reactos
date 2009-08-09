@@ -4,6 +4,7 @@
 	<cdfile>autorun.inf</cdfile>
 	<cdfile>icon.ico</cdfile>
 	<cdfile>readme.txt</cdfile>
+	<cdfile nameoncd="freeldr.ini">bootcd.ini</cdfile>
 
 	<cdfile installbase="$(CDOUTPUT)" nameoncd="hivecls.inf">hivecls_$(ARCH).inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)" nameoncd="hivedef.inf">hivedef_$(ARCH).inf</cdfile>

@@ -1,47 +1,83 @@
-cpp_quote("#ifndef _DTYP_IDL");
-cpp_quote("#define _DTYP_IDL");
+cpp_quote("#ifndef _DTYP_IDL")
+cpp_quote("#define _DTYP_IDL")
 
 /* Common data types */
-
+cpp_quote("#ifndef _WINDEF_H")
 typedef int BOOL, *PBOOL, *LPBOOL;
 typedef unsigned char BYTE, *PBYTE, *LPBYTE;
-typedef char CHAR, *PCHAR;
 typedef unsigned long DWORD, *PDWORD, *LPDWORD;
+cpp_quote("#endif")
+cpp_quote("#ifndef _BASETSD_H")
 typedef unsigned int DWORD32;
 typedef unsigned __int64 DWORD64;
+cpp_quote("#endif")
 //typedef unsigned long error_status_t;
+cpp_quote("#ifndef _WINDEF_H")
 typedef int INT, *LPINT;
+cpp_quote("#endif")
+cpp_quote("#ifndef _BASETSD_H")
 typedef signed char INT8;
 typedef signed short INT16;
 typedef signed int INT32;
 typedef signed __int64 INT64;
+cpp_quote("#endif")
+cpp_quote("#ifndef _BASETSD_H")
 typedef signed int LONG32;
 typedef signed __int64 LONG64;
-cpp_quote("#if 0");
-typedef long NTSTATUS;
-cpp_quote("#endif");
+cpp_quote("#endif")
 typedef unsigned __int64 QWORD;
+cpp_quote("#ifndef _WINNT_H")
 typedef short SHORT;
+cpp_quote("#endif")
 typedef __int64 TIME;
+cpp_quote("#ifndef _WINNT_H")
+typedef char CHAR, *PCHAR;
 typedef unsigned char UCHAR, *PUCHAR;
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINDEF_H")
 typedef unsigned int UINT;
+cpp_quote("#endif")
+cpp_quote("#ifndef _BASETSD_H")
 typedef unsigned char UINT8;
 typedef unsigned short UINT16;
 typedef unsigned int UINT32;
 typedef unsigned __int64 UINT64;
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINNT_H")
 typedef unsigned long ULONG, *PULONG;
+cpp_quote("#endif")
+cpp_quote("#ifndef _BASETSD_H")
 typedef unsigned int ULONG32;
 typedef unsigned __int64 ULONG64;
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINNT_H")
 typedef unsigned __int64 ULONGLONG;
 typedef unsigned short USHORT;
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINDEF_H")
 typedef unsigned short WORD, *PWORD, *LPWORD;
-typedef long LONG, *PLONG, *LPLONG;
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINNT_H")
+typedef long LONG, *PLONG;
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINDEF_H")
+typedef long *LPLONG;
+cpp_quote("#endif")
+cpp_quote("#ifndef _WINNT_H")
 typedef signed __int64 LONGLONG;
+cpp_quote("#endif")
 
+cpp_quote("#ifndef _WINDEF_H")
 typedef float FLOAT;
+cpp_quote("#endif")
+cpp_quote("#ifndef __wtypes_h__")
 typedef double DOUBLE;
+cpp_quote("#endif")
 
+cpp_quote("#ifndef _WINNT_H")
 typedef BYTE BOOLEAN, *PBOOLEAN;
+cpp_quote("#endif")
+cpp_quote("#ifndef _BASETSD_H")
 #ifdef _WIN64
 typedef __int64 LONG_PTR;
 typedef unsigned __int64 ULONG_PTR;
@@ -50,33 +86,41 @@ typedef LONG LONG_PTR;
 typedef ULONG ULONG_PTR;
 #endif
 typedef ULONG_PTR SIZE_T;
-cpp_quote("#if 0");
-typedef UCHAR *STRING;
-cpp_quote("#endif");
-typedef DWORD NET_API_STATUS;
 typedef ULONG_PTR DWORD_PTR;
+cpp_quote("#endif")
+typedef DWORD NET_API_STATUS;
+cpp_quote("#ifndef _WINNT_H")
 typedef ULONGLONG DWORDLONG, *PDWORDLONG;
+cpp_quote("#endif")
 typedef DWORD HCALL;
 //typedef DWORD HRESULT;
 
+cpp_quote("#ifndef _WINNT_H")
 typedef void *HANDLE;
 typedef void /*VOID,*/ *PVOID;
+cpp_quote("#endif")
+cpp_quote("#ifndef __WINE_RPCDCE_H")
 typedef void *RPC_BINDING_HANDLE;
+cpp_quote("#endif")
 typedef [context_handle] void *PCONTEXT_HANDLE, *PPCONTEXT_HANDLE;
 
+cpp_quote("#ifndef _WINNT_H")
 typedef wchar_t WCHAR, *PWCHAR;
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 typedef wchar_t UNICODE;
-cpp_quote("#endif");
+cpp_quote("#endif")
 typedef const char *LPCSTR;
 typedef const wchar_t *LPCWSTR;
 typedef char *PSTR, *LPSTR;
 typedef wchar_t *LPWSTR, *PWSTR;
+cpp_quote("#endif")
 typedef const wchar_t *LMCSTR;
 typedef WCHAR *LMSTR;
+cpp_quote("#ifndef __wtypes_h__")
 typedef WCHAR *BSTR;
+cpp_quote("#endif")
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 #ifdef Unicode
 typedef LPCWSTR LPCTSTR;
 typedef LPWSTR LPTSTR;
@@ -86,11 +130,11 @@ typedef LPCSTR LPCTSTR;
 typedef LPSTR LPTSTR;
 typedef CHAR TCHAR;
 #endif
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 /* Common data structures */
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 
 typedef struct _FILETIME {
     DWORD dwLowDateTime;
@@ -110,7 +154,7 @@ typedef struct _LARGE_INTEGER {
 
 typedef DWORD LCID;
 
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 typedef struct _RPC_UNICODE_STRING {
     USHORT Length;
@@ -118,7 +162,7 @@ typedef struct _RPC_UNICODE_STRING {
     [size_is(MaximumLength/2), length_is(Length/2)] LPWSTR Buffer;
 } RPC_UNICODE_STRING, *PRPC_UNICODE_STRING;
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 
 typedef struct _SYSTEMTIME {
     WORD wYear;
@@ -146,11 +190,11 @@ typedef struct _UNICODE_STRING {
     [size_is(MaximumLength/2), length_is(Length/2)] LPWSTR Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 /* Constructed security types */
 
-cpp_quote("#if 0");
+cpp_quote("#if 0")
 
 typedef struct _SID_IDENTIFIER_AUTHORITY {
     BYTE Value[6];
@@ -271,7 +315,7 @@ typedef struct _SECURITY_DESCRIPTOR {
 
 typedef DWORD SECURITY_INFORMATION, *PSECURITY_INFORMATION;
 
-cpp_quote("#endif");
+cpp_quote("#endif")
 
 typedef struct _RPC_SID {
     UCHAR Revision;
@@ -280,4 +324,4 @@ typedef struct _RPC_SID {
     [size_is(SubAuthorityCount)] DWORD SubAuthority[];
 } RPC_SID, *PRPC_SID;
 
-cpp_quote("#endif /* _DTYP_IDL */");
+cpp_quote("#endif /* _DTYP_IDL */")

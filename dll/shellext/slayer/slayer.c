@@ -908,7 +908,7 @@ ICompatibilityPage_fnLockServer(LPCOMPATIBILITYPAGE this,
    Exported
  ******************************************************************************/
 
-HRESULT STDCALL
+HRESULT WINAPI
 DllGetClassObject(REFCLSID rclsid,
                   REFIID iid,
                   LPVOID *ppv)
@@ -936,7 +936,7 @@ DllGetClassObject(REFCLSID rclsid,
     return CLASS_E_CLASSNOTAVAILABLE;
 }
 
-HRESULT STDCALL
+HRESULT WINAPI
 DllCanUnloadNow(VOID)
 {
     return ((dllrefs == 0) ? S_OK : S_FALSE);
@@ -955,7 +955,7 @@ UnregisterPropSheetHandler(LPTSTR szType)
                         szKey);
 }
 
-HRESULT STDCALL
+HRESULT WINAPI
 DllUnregisterServer(VOID)
 {
     LONG e;
@@ -1037,7 +1037,7 @@ RegisterPropSheetHandler(LPTSTR szType,
     return e;
 }
 
-HRESULT STDCALL
+HRESULT WINAPI
 DllRegisterServer(VOID)
 {
     LONG e = E_ACCESSDENIED;
@@ -1125,7 +1125,7 @@ DllRegisterServer(VOID)
     return ((e == ERROR_SUCCESS) ? S_OK : E_ACCESSDENIED);
 }
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,
         DWORD dwReason,
         LPVOID lpvReserved)

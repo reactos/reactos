@@ -51,7 +51,7 @@ CreateCommonFreeLoaderSections(PINICACHE IniCache)
 	  	    NULL,
 		    INSERT_LAST,
 		    L"DefaultOS",
-		    L"ReactOS_Debug");
+		    L"ReactOS_KdSerial");
   }
   else
 #endif
@@ -381,12 +381,26 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"\"ReactOS (Debug)\"");
 
 #ifdef DBG
+  /* ReactOS_KdSerial="ReactOS (RosDbg)" */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"ReactOS_KdSerial",
+		    L"\"ReactOS (RosDbg)\"");
+
   /* ReactOS_WinLdr="ReactOS (WinLdr)" */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"ReactOS_WinLdr",
 		    L"\"ReactOS (WinLdr)\"");
+
+  /* ReactOS_Ram="ReactOS (RAM Disk)" */
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"ReactOS_Ram",
+                    L"\"ReactOS (RAM Disk)\"");
 #endif
 
   /* Create "ReactOS" section */
@@ -440,11 +454,39 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
 
 #ifdef DBG
+
+  /* Create "ReactOS_KdSerial" section */
+  IniSection = IniCacheAppendSection(IniCache,
+				     L"ReactOS_KdSerial");
+
+  /* BootType=ReactOS */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"BootType",
+		    L"ReactOS");
+
+  /* SystemPath=<ArcPath> */
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"SystemPath",
+		    ArcPath);
+
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS*/
+  IniCacheInsertKey(IniSection,
+		    NULL,
+		    INSERT_LAST,
+		    L"Options",
+		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
+
+/* ------------------------------------------------------------------------------ */
+
   /* Create "ReactOS_WinLdr" section */
   IniSection = IniCacheAppendSection(IniCache,
 				     L"ReactOS_WinLdr");
 
-  /* BootType=ReactOS */
+  /* BootType=Windows2003 */
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
@@ -464,6 +506,32 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    INSERT_LAST,
 		    L"Options",
 		    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS");
+    
+  /* Create "ReactOS_Ram" section */
+  IniSection = IniCacheAppendSection(IniCache,
+                                     L"ReactOS_Ram");
+    
+  /* BootType=ReactOS */
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"BootType",
+                    L"ReactOS");
+    
+  /* SystemPath=ramdisk(0)\\ReactOS */
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"SystemPath",
+                    L"ramdisk(0)\\ReactOS");
+    
+  /* Options=/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256*/
+  IniCacheInsertKey(IniSection,
+                    NULL,
+                    INSERT_LAST,
+                    L"Options",
+                    L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /RDIMAGEPATH=reactos.img /RDIMAGEOFFSET=32256");
+
 #endif
 
   /* Save the ini file */
@@ -947,7 +1015,6 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
   NtClose(FileHandle);
   if (!NT_SUCCESS(Status))
   {
-CHECKPOINT1;
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
     return(Status);
   }

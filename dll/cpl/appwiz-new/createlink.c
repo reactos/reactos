@@ -11,3 +11,24 @@
  */
 
 #include "appwiz.h"
+
+LONG
+CALLBACK
+NewLinkHere(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+{
+    return -1;
+}
+
+LONG
+CALLBACK
+NewLinkHereA(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+{
+    return -1;
+}
+
+LONG
+CALLBACK
+NewLinkHereW(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
+{
+    return -1;
+}

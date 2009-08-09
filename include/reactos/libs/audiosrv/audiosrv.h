@@ -35,7 +35,7 @@ typedef struct
     DWORD size;         /* Size of the shared mem */
     DWORD max_size;     /* Amount of mem available */
     DWORD device_count; /* Number of devices */
-    PnP_AudioDevice first_device[];
+    PnP_AudioDevice *first_device;
 } PnP_AudioHeader;
 
 

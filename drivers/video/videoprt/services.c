@@ -77,11 +77,11 @@ VideoPortQueryServices(
 
       case VideoPortServicesI2C:
           UNIMPLEMENTED;
-          return ERROR_CALL_NOT_IMPLEMENTED;
+          return ERROR_INVALID_FUNCTION;
 
       case VideoPortServicesHeadless:
          UNIMPLEMENTED;
-         return ERROR_CALL_NOT_IMPLEMENTED;
+         return ERROR_INVALID_FUNCTION;
 
       default:
          break;

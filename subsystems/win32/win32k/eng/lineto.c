@@ -328,7 +328,7 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL APIENTRY
 EngLineTo(SURFOBJ *DestObj,
           CLIPOBJ *Clip,
           BRUSHOBJ *Brush,
@@ -505,8 +505,8 @@ EngLineTo(SURFOBJ *DestObj,
     return IntEngLeave(&EnterLeave);
 }
 
-BOOL STDCALL
-IntEngLineTo(SURFOBJ *DestSurf,
+BOOL APIENTRY
+IntEngLineTo(SURFOBJ *psoDest,
              CLIPOBJ *ClipObj,
              BRUSHOBJ *Brush,
              LONG x1,
@@ -517,13 +517,13 @@ IntEngLineTo(SURFOBJ *DestSurf,
              MIX Mix)
 {
     BOOLEAN ret;
-    BITMAPOBJ *DestObj;
+    SURFACE *psurfDest;
     PGDIBRUSHINST GdiBrush;
     RECTL b;
 
-    ASSERT(DestSurf);
-    DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
-    ASSERT(DestObj);
+    ASSERT(psoDest);
+    psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+    ASSERT(psurfDest);
 
     GdiBrush = CONTAINING_RECORD(
                    Brush,
@@ -544,9 +544,9 @@ IntEngLineTo(SURFOBJ *DestSurf,
     if (NULL == ClipObj || DC_TRIVIAL == ClipObj->iDComplexity)
     {
         b.left = 0;
-        b.right = DestSurf->sizlBitmap.cx;
+        b.right = psoDest->sizlBitmap.cx;
         b.top = 0;
-        b.bottom = DestSurf->sizlBitmap.cy;
+        b.bottom = psoDest->sizlBitmap.cy;
     }
     else
     {
@@ -565,18 +565,18 @@ IntEngLineTo(SURFOBJ *DestSurf,
     if (b.left == b.right) b.right++;
     if (b.top == b.bottom) b.bottom++;
 
-    BITMAPOBJ_LockBitmapBits(DestObj);
-    MouseSafetyOnDrawStart(DestSurf, x1, y1, x2, y2);
+    SURFACE_LockBitmapBits(psurfDest);
+    MouseSafetyOnDrawStart(psoDest, x1, y1, x2, y2);
 
-    if (DestObj->flHooks & HOOK_LINETO)
+    if (psurfDest->flHooks & HOOK_LINETO)
     {
         /* Call the driver's DrvLineTo */
-        ret = GDIDEVFUNCS(DestSurf).LineTo(
-                  DestSurf, ClipObj, Brush, x1, y1, x2, y2, &b, Mix);
+        ret = GDIDEVFUNCS(psoDest).LineTo(
+                  psoDest, ClipObj, Brush, x1, y1, x2, y2, &b, Mix);
     }
 
 #if 0
-    if (! ret && (DestObj->flHooks & HOOK_STROKEPATH))
+    if (! ret && (psurfDest->flHooks & HOOK_STROKEPATH))
     {
         /* FIXME: Emulate LineTo using drivers DrvStrokePath and set ret on success */
     }
@@ -584,17 +584,17 @@ IntEngLineTo(SURFOBJ *DestSurf,
 
     if (! ret)
     {
-        ret = EngLineTo(DestSurf, ClipObj, Brush, x1, y1, x2, y2, RectBounds, Mix);
+        ret = EngLineTo(psoDest, ClipObj, Brush, x1, y1, x2, y2, RectBounds, Mix);
     }
 
-    MouseSafetyOnDrawEnd(DestSurf);
-    BITMAPOBJ_UnlockBitmapBits(DestObj);
+    MouseSafetyOnDrawEnd(psoDest);
+    SURFACE_UnlockBitmapBits(psurfDest);
 
     return ret;
 }
 
-BOOL STDCALL
-IntEngPolyline(SURFOBJ *DestSurf,
+BOOL APIENTRY
+IntEngPolyline(SURFOBJ *psoDest,
                CLIPOBJ *Clip,
                BRUSHOBJ *Brush,
                CONST LPPOINT  pt,
@@ -612,7 +612,7 @@ IntEngPolyline(SURFOBJ *DestSurf,
         rect.top = min(pt[i-1].y, pt[i].y);
         rect.right = max(pt[i-1].x, pt[i].x);
         rect.bottom = max(pt[i-1].y, pt[i].y);
-        ret = IntEngLineTo(DestSurf,
+        ret = IntEngLineTo(psoDest,
                            Clip,
                            Brush,
                            pt[i-1].x,

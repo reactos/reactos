@@ -1,8 +1,6 @@
 #ifndef _ODBCINST_H
 #define _ODBCINST_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
+
 #include <sql.h>
 #ifdef __cplusplus
 extern "C" {

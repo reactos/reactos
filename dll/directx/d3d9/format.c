@@ -9,6 +9,7 @@
 #include "format.h"
 #include <ddrawi.h>
 #include <debug.h>
+#include <d3d9types.h>
 
 BOOL IsBackBufferFormat(D3DFORMAT Format)
 {

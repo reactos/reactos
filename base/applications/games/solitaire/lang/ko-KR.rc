@@ -1,0 +1,83 @@
+/*
+ *Korean translation of solitaire by Seungju Kim(manatails007) (www.seungjukim.com)
+ */
+#include "resource.h"
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+
+/* Dialogs */
+
+IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+CAPTION "옵션"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "카드", -1, 7, 7, 65, 40
+    AUTORADIOBUTTON "한 장씩(&O)", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "세 장씩(&T)", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+
+    AUTOCHECKBOX    "시간 보이기(&S)", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "상태 표시줄(&T)", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+
+    DEFPUSHBUTTON   "확인", IDOK, 35, 97, 50, 14
+    PUSHBUTTON      "취소", IDCANCEL, 101, 97, 50, 14
+END
+
+
+IDD_CARDBACK DIALOGEX 6, 6, 221, 96
+CAPTION "카드 무늬 선택"
+FONT 8, "MS Shell Dlg"
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
+BEGIN
+    CONTROL       "", IDC_CARDBACK1, "Static", SS_NOTIFY, 4, 7, 50, 61
+    CONTROL       "", IDC_CARDBACK2, "Static", SS_NOTIFY, 58, 7, 50, 61
+    CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 112, 7, 50, 61
+    CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 166, 7, 50, 61
+    DEFPUSHBUTTON "확인", IDOK, 104, 77, 54, 13
+    PUSHBUTTON    "취소", IDCANCEL, 162, 77, 54, 13
+END
+
+
+/* Strings */
+
+STRINGTABLE
+BEGIN
+    IDS_SOL_NAME    "카드놀이"
+    IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
+    IDS_SOL_QUIT    "현재 게임을 끝낼가요?"
+    IDS_SOL_WIN     "축하합니다!!"
+    IDS_SOL_DEAL    "Deal again?"
+END
+
+
+/* Menus */
+
+IDR_MENU1 MENU DISCARDABLE
+BEGIN
+    POPUP "게임(&G)"
+    BEGIN
+        MENUITEM "새 게임(&D)\tF2",                   IDM_GAME_NEW
+        MENUITEM SEPARATOR
+        /*FIXME : is 덱 correct?*/
+        MENUITEM "덱(&C)...",                    IDM_GAME_DECK
+        MENUITEM "옵션(&O)...",                 IDM_GAME_OPTIONS
+        MENUITEM SEPARATOR
+        MENUITEM "종료(&E)",                       IDM_GAME_EXIT
+    END
+    POPUP "도움말(&H)"
+    BEGIN
+        MENUITEM "목차(&C)\tF1",               IDM_HELP_CONTENTS
+        MENUITEM "정보(&A)",                      IDM_HELP_ABOUT
+    END
+END
+
+
+
+/* Accelerator */
+
+IDR_ACCELERATOR1 ACCELERATORS DISCARDABLE
+BEGIN
+    VK_F1,          IDM_HELP_CONTENTS,      VIRTKEY, NOINVERT
+    VK_F2,          IDM_GAME_NEW,           VIRTKEY, NOINVERT
+END

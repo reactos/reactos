@@ -464,7 +464,7 @@ MainWndCommand(PMAIN_WND_INFO Info,
             DialogBox(hInstance,
                       MAKEINTRESOURCE(IDD_ABOUTBOX),
                       Info->hMainWnd,
-                      (DLGPROC)AboutDialogProc);
+                      AboutDialogProc);
 
             SetFocus(Info->hTreeView);
         }

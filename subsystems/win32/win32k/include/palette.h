@@ -75,7 +75,7 @@ BOOL INTERNAL_CALL PALETTE_Cleanup(PVOID ObjectBody);
 HPALETTE FASTCALL PALETTE_Init (VOID);
 VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
 #ifndef NO_MAPPING
-INT      STDCALL  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
+INT      APIENTRY  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
 #endif
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 

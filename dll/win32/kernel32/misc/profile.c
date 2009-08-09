@@ -76,7 +76,7 @@ static RTL_CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &PROFILE_CritSect,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, 0, 0
+      0, 0, 0, 0, 0
 };
 static RTL_CRITICAL_SECTION PROFILE_CritSect = { &critsect_debug, -1, 0, 0, 0, 0 };
 
@@ -88,17 +88,18 @@ static __inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
     const WCHAR *end;
     for (end = ptr + n; ptr < end; ptr++)
         if (*ptr == ch)
-            return (WCHAR *)ptr;
+            return (WCHAR *)(ULONG_PTR)ptr;
     return NULL;
 }
 
 static __inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
-    const WCHAR *end, *ret = NULL;
+    const WCHAR *end;
+    WCHAR *ret = NULL;
     for (end = ptr + n; ptr < end; ptr++)
         if (*ptr == ch)
-            ret = ptr;
-    return (WCHAR *)ret;
+            ret = (WCHAR *)(ULONG_PTR)ptr;
+    return ret;
 }
 
 /***********************************************************************
@@ -139,7 +140,7 @@ static __inline void PROFILE_ByteSwapShortBuffer(WCHAR * buffer, int len)
 static __inline void PROFILE_WriteMarker(HANDLE hFile, ENCODING encoding)
 {
     DWORD dwBytesWritten;
-    DWORD bom;
+    WCHAR bom;
     switch (encoding)
     {
     case ENCODING_ANSI:
@@ -283,12 +284,8 @@ static void PROFILE_Free( PROFILESECTION *section )
 /* returns 1 if a character white space else 0 */
 static __inline int PROFILE_isspaceW(WCHAR c)
 {
-   if (iswspace(c))
-       return 1;
-   if (c=='\r' || c==0x1a)
-       return 1;
-   /* CR and ^Z (DOS EOF) are spaces too  (found on CD-ROMs) */
-   return 0;
+    /* ^Z (DOS EOF) is a space too  (found on CD-ROMs) */
+    return isspace(c) || c == 0x1a;
 }
 
 
@@ -325,7 +322,7 @@ static __inline ENCODING PROFILE_DetectTextEncoding(const void * buffer, int * l
  */
 static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
 {
-    void *pBuffer;
+    void *buffer_base, *pBuffer;
     WCHAR * szFile;
     const WCHAR *szLineStart, *szLineEnd;
     const WCHAR *szValueStart, *szEnd, *next_line;
@@ -341,22 +338,22 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
     if (dwFileSize == INVALID_FILE_SIZE)
         return NULL;
 
-    pBuffer = HeapAlloc(GetProcessHeap(), 0 , dwFileSize);
-    if (!pBuffer)
+    buffer_base = HeapAlloc(GetProcessHeap(), 0 , dwFileSize);
+    if (!buffer_base)
         return NULL;
 
-    if (!ReadFile(hFile, pBuffer, dwFileSize, &dwFileSize, NULL))
+    if (!ReadFile(hFile, buffer_base, dwFileSize, &dwFileSize, NULL))
     {
-        HeapFree(GetProcessHeap(), 0, pBuffer);
+        HeapFree(GetProcessHeap(), 0, buffer_base);
         DPRINT("Error %ld reading file\n", GetLastError());
         return NULL;
     }
 
     len = dwFileSize;
-    *pEncoding = PROFILE_DetectTextEncoding(pBuffer, &len);
+    *pEncoding = PROFILE_DetectTextEncoding(buffer_base, &len);
     /* len is set to the number of bytes in the character marker.
      * we want to skip these bytes */
-    pBuffer = (char *)pBuffer + len;
+    pBuffer = (char *)buffer_base + len;
     dwFileSize -= len;
     switch (*pEncoding)
     {
@@ -367,7 +364,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
         szFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         if (!szFile)
         {
-            HeapFree(GetProcessHeap(), 0, pBuffer);
+            HeapFree(GetProcessHeap(), 0, buffer_base);
             return NULL;
         }
         MultiByteToWideChar(CP_ACP, 0, (char *)pBuffer, dwFileSize, szFile, len);
@@ -381,7 +378,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
         szFile = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
         if (!szFile)
         {
-            HeapFree(GetProcessHeap(), 0, pBuffer);
+            HeapFree(GetProcessHeap(), 0, buffer_base);
             return NULL;
         }
         MultiByteToWideChar(CP_UTF8, 0, (char *)pBuffer, dwFileSize, szFile, len);
@@ -390,20 +387,20 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
 
     case ENCODING_UTF16LE:
         DPRINT("UTF16 Little Endian encoding\n");
-        szFile = (WCHAR *)pBuffer + 1;
+        szFile = (WCHAR *)pBuffer;// + 1;
         szEnd = (WCHAR *)((char *)pBuffer + dwFileSize);
         break;
 
     case ENCODING_UTF16BE:
         DPRINT("UTF16 Big Endian encoding\n");
-        szFile = (WCHAR *)pBuffer + 1;
+        szFile = (WCHAR *)pBuffer;// + 1;
         szEnd = (WCHAR *)((char *)pBuffer + dwFileSize);
         PROFILE_ByteSwapShortBuffer(szFile, dwFileSize / sizeof(WCHAR));
         break;
 
     default:
         DPRINT("encoding type %d not implemented\n", *pEncoding);
-        HeapFree(GetProcessHeap(), 0, pBuffer);
+        HeapFree(GetProcessHeap(), 0, buffer_base);
         return NULL;
     }
 
@@ -412,7 +409,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
     {
         if (szFile != pBuffer)
             HeapFree(GetProcessHeap(), 0, szFile);
-        HeapFree(GetProcessHeap(), 0, pBuffer);
+        HeapFree(GetProcessHeap(), 0, buffer_base);
         return NULL;
     }
     first_section->name[0] = 0;
@@ -427,6 +424,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
     {
         szLineStart = next_line;
         next_line = memchrW(szLineStart, '\n', szEnd - szLineStart);
+        if (!next_line) next_line = memchrW(szLineStart, '\r', szEnd - szLineStart);
         if (!next_line) next_line = szEnd;
         else next_line++;
         szLineEnd = next_line;
@@ -435,7 +433,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
 
         /* get rid of white space */
         while (szLineStart < szLineEnd && PROFILE_isspaceW(*szLineStart)) szLineStart++;
-        while ((szLineEnd > szLineStart) && ((szLineEnd[-1] == '\n') || (PROFILE_isspaceW(szLineEnd[-1]) && szLineEnd[-1] != ' '))) szLineEnd--;
+        while ((szLineEnd > szLineStart) && PROFILE_isspaceW(szLineEnd[-1])) szLineEnd--;
 
         if (szLineStart >= szLineEnd)
             continue;
@@ -510,7 +508,7 @@ static PROFILESECTION *PROFILE_Load(HANDLE hFile, ENCODING * pEncoding)
     }
     if (szFile != pBuffer)
         HeapFree(GetProcessHeap(), 0, szFile);
-    HeapFree(GetProcessHeap(), 0, pBuffer);
+    HeapFree(GetProcessHeap(), 0, buffer_base);
     return first_section;
 }
 
@@ -688,7 +686,8 @@ static BOOL PROFILE_FlushFile(void)
 
     if (!CurProfile->changed) return TRUE;
 
-    hFile = CreateFileW(CurProfile->filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    hFile = CreateFileW(CurProfile->filename, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile == INVALID_HANDLE_VALUE)
     {
@@ -725,11 +724,32 @@ static void PROFILE_ReleaseFile(void)
 
 
 /***********************************************************************
+ *
+ * Compares a file time with the current time. If the file time is
+ * at least 2.1 seconds in the past, return true.
+ *
+ * Intended as cache safety measure: The time resolution on FAT is
+ * two seconds, so files that are not at least two seconds old might
+ * keep their time even on modification, so don't cache them.
+ */
+static BOOL is_not_current(FILETIME * ft)
+{
+    FILETIME Now;
+    LONGLONG ftll, nowll;
+    GetSystemTimeAsFileTime(&Now);
+    ftll = ((LONGLONG)ft->dwHighDateTime << 32) + ft->dwLowDateTime;
+    nowll = ((LONGLONG)Now.dwHighDateTime << 32) + Now.dwLowDateTime;
+    DPRINT("%08x;%08x\n",(unsigned)ftll+21000000,(unsigned)nowll);
+    return ftll + 21000000 < nowll;
+}
+
+
+/***********************************************************************
  *           PROFILE_Open
  *
  * Open a profile file, checking the cached file first.
  */
-static BOOL PROFILE_Open( LPCWSTR filename )
+static BOOL PROFILE_Open( LPCWSTR filename, BOOL write_access )
 {
     WCHAR windirW[MAX_PATH];
     WCHAR buffer[MAX_PATH];
@@ -756,6 +776,9 @@ static BOOL PROFILE_Open( LPCWSTR filename )
 
     GetWindowsDirectoryW( windirW, MAX_PATH );
 
+    if (!filename)
+        filename = L"win.ini";
+
     if ((RtlDetermineDosPathNameType_U(filename) == RtlPathTypeRelative) &&
         !wcschr(filename, '\\') && !wcschr(filename, '/'))
     {
@@ -772,7 +795,9 @@ static BOOL PROFILE_Open( LPCWSTR filename )
 
     DPRINT("path: %S\n", buffer);
 
-    hFile = CreateFileW(buffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    hFile = CreateFileW(buffer, GENERIC_READ | (write_access ? GENERIC_WRITE : 0),
+                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+                        OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if ((hFile == INVALID_HANDLE_VALUE) && (GetLastError() != ERROR_FILE_NOT_FOUND))
     {
@@ -794,21 +819,21 @@ static BOOL PROFILE_Open( LPCWSTR filename )
              CurProfile=tempProfile;
           }
           if (hFile != INVALID_HANDLE_VALUE)
+		  {
              GetFileTime(hFile, NULL, NULL, &LastWriteTime);
-          else
-             LastWriteTime.dwHighDateTime = LastWriteTime.dwLowDateTime = 0;
-          if (memcmp(&CurProfile->LastWriteTime, &LastWriteTime, sizeof(FILETIME)))
-          {
-             DPRINT("(%S): already opened (mru = %d)\n",
-                    buffer, i );
-          }
-          else
-          {
-              DPRINT("(%S): already opened, needs refreshing (mru = %d)\n",
-                     buffer, i );
-          }
-          if (hFile != INVALID_HANDLE_VALUE)
-             CloseHandle(hFile);
+             if (!memcmp( &CurProfile->LastWriteTime, &LastWriteTime, sizeof(FILETIME) ) &&
+                 is_not_current(&LastWriteTime))
+				 DPRINT("(%S): already opened (mru=%d)\n", buffer, i);
+			 else
+			 {
+                 DPRINT("(%S): already opened, needs refreshing (mru=%d)\n", buffer, i);
+                 CurProfile->section = PROFILE_Load(hFile, &CurProfile->encoding);
+                 CurProfile->LastWriteTime = LastWriteTime;
+			 }
+			 CloseHandle(hFile);
+		  }
+          else DPRINT("(%S): already opened (mru = %d)\n", buffer, i );
+
           return TRUE;
        }
     }
@@ -933,7 +958,7 @@ static INT PROFILE_GetSectionNames( LPWSTR buffer, UINT len )
     while ((section!=NULL)) {
         if (section->name[0]) {
             tmplen = wcslen(section->name)+1;
-            if (tmplen > buflen) {
+            if (tmplen >= buflen) {
                 if (buflen > 0) {
                     memcpy(buf, section->name, (buflen - 1) * sizeof(WCHAR));
                     buf += buflen - 1;
@@ -981,15 +1006,15 @@ static INT PROFILE_GetString( LPCWSTR section, LPCWSTR key_name,
     PROFILEKEY *key = NULL;
     static const WCHAR empty_strW[] = { 0 };
 
-    if (!buffer) return 0;
+    if (!buffer || !len) return 0;
 
     if (!def_val) def_val = empty_strW;
     if (key_name)
     {
         if (!key_name[0])
         {
-            /* Win95 returns 0 on keyname "". Tested with Likse32 bon 000227 */
-            return 0;
+            PROFILE_CopyEntry(buffer, def_val, len, TRUE);
+            return wcslen(buffer);
         }
         key = PROFILE_Find( &CurProfile->section, section, key_name, FALSE, FALSE);
         PROFILE_CopyEntry( buffer, (key && key->value) ? key->value : def_val,
@@ -1109,10 +1134,7 @@ static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
 		   BOOL win32 )
 {
     int     ret;
-    LPCWSTR pDefVal = NULL;
-
-    if (!filename)
-        filename = L"win.ini";
+    LPWSTR defval_tmp = NULL;
 
     DPRINT("%S, %S, %S, %p, %u, %S\n",
            section, entry,
@@ -1121,52 +1143,40 @@ static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
     /* strip any trailing ' ' of def_val. */
     if (def_val)
     {
-        LPCWSTR p = &def_val[wcslen(def_val)]; /* even "" works ! */
+        LPCWSTR p = def_val + wcslen(def_val) - 1;
 
-        while (p > def_val)
-        {
+        while (p > def_val && *p == ' ')
             p--;
-            if ((*p) != ' ')
-                break;
-        }
 
-        if (*p == ' ') /* ouch, contained trailing ' ' */
+        if (p >= def_val)
         {
-           int len = (int)(p - def_val);
-           LPWSTR p;
+           int len = (int)(p - def_val) + 1;
 
-           p = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
-           if(p == NULL)
-           {
-               SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-               return FALSE;
-           }
-           memcpy(p, def_val, len * sizeof(WCHAR));
-           p[len] = '\0';
-           pDefVal = p;
+           defval_tmp = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+		   memcpy(defval_tmp, def_val, len * sizeof(WCHAR));
+           defval_tmp[len] = '\0';
+           def_val = defval_tmp;
         }
     }
 
-    if (!pDefVal)
-        pDefVal = (LPCWSTR)def_val;
-
     RtlEnterCriticalSection( &PROFILE_CritSect );
 
-    if (PROFILE_Open( filename )) {
+    if (PROFILE_Open( filename, FALSE )) {
         if (win32 && (section == NULL))
             ret = PROFILE_GetSectionNames(buffer, len);
         else
             /* PROFILE_GetString can handle the 'entry == NULL' case */
-            ret = PROFILE_GetString( section, entry, pDefVal, buffer, len, win32 );
-    } else {
-       lstrcpynW( buffer, pDefVal, len );
+            ret = PROFILE_GetString( section, entry, def_val, buffer, len, win32 );
+    } else if (buffer && def_val) {
+       lstrcpynW( buffer, def_val, len );
        ret = wcslen( buffer );
     }
+	else
+	    ret = 0;
 
     RtlLeaveCriticalSection( &PROFILE_CritSect );
 
-    if (pDefVal != def_val) /* allocated */
-        HeapFree(GetProcessHeap(), 0, (void*)pDefVal);
+    HeapFree(GetProcessHeap(), 0, defval_tmp);
 
     DPRINT("returning %S, %d\n", buffer, ret);
 
@@ -1302,7 +1312,7 @@ UINT WINAPI GetPrivateProfileIntW( LPCWSTR section, LPCWSTR entry,
         return (UINT)def_val;
 
     RtlInitUnicodeString( &bufferW, buffer );
-    RtlUnicodeStringToInteger( &bufferW, 10, &result);
+    RtlUnicodeStringToInteger( &bufferW, 0, &result); // 10
     return result;
 }
 
@@ -1337,14 +1347,20 @@ UINT WINAPI GetPrivateProfileIntA( LPCSTR section, LPCSTR entry,
 DWORD WINAPI GetPrivateProfileSectionW( LPCWSTR section, LPWSTR buffer,
                   DWORD len, LPCWSTR filename )
 {
-    int     ret = 0;
+    int ret = 0;
+
+    if (!section || !buffer)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
 
     DPRINT("(%S, %p, %ld, %S)\n",
            section, buffer, len, filename);
 
     RtlEnterCriticalSection( &PROFILE_CritSect );
 
-    if (PROFILE_Open( filename ))
+    if (PROFILE_Open( filename, FALSE ))
         ret = PROFILE_GetSection(CurProfile->section, section, buffer, len, TRUE, FALSE);
 
     RtlLeaveCriticalSection( &PROFILE_CritSect );
@@ -1363,18 +1379,23 @@ DWORD WINAPI GetPrivateProfileSectionA( LPCSTR section, LPSTR buffer,
     LPWSTR bufferW;
     INT retW, ret = 0;
 
-    bufferW = buffer ? HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR)) : NULL;
-    if (section) RtlCreateUnicodeStringFromAsciiz(&sectionW, section);
-    else sectionW.Buffer = NULL;
+    if (!section || !buffer)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    bufferW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    RtlCreateUnicodeStringFromAsciiz(&sectionW, section);
     if (filename) RtlCreateUnicodeStringFromAsciiz(&filenameW, filename);
     else filenameW.Buffer = NULL;
 
     retW = GetPrivateProfileSectionW(sectionW.Buffer, bufferW, len, filenameW.Buffer);
     if (len > 2)
     {
-        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW + 2, buffer, len, NULL, NULL);
+        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW + 1, buffer, len, NULL, NULL);
         if (ret > 2)
-            ret -= 2;
+            ret -= 1;
         else
         {
             ret = 0;
@@ -1423,12 +1444,12 @@ BOOL WINAPI WritePrivateProfileStringW( LPCWSTR section, LPCWSTR entry,
 
     if (!section && !entry && !string) /* documented "file flush" case */
     {
-        if (!filename || PROFILE_Open( filename ))
+        if (!filename || PROFILE_Open( filename, TRUE ))
         {
             if (CurProfile) PROFILE_ReleaseFile();  /* always return FALSE in this case */
         }
     }
-    else if (PROFILE_Open( filename ))
+    else if (PROFILE_Open( filename, TRUE ))
     {
         if (!section) {
             DPRINT1("(NULL?, %S, %S, %S)?\n",
@@ -1483,12 +1504,12 @@ BOOL WINAPI WritePrivateProfileSectionW( LPCWSTR section,
 
     if (!section && !string)
     {
-        if (!filename || PROFILE_Open( filename ))
+        if (!filename || PROFILE_Open( filename, TRUE ))
         {
             if (CurProfile) PROFILE_ReleaseFile();  /* always return FALSE in this case */
         }
         }
-    else if (PROFILE_Open( filename )) {
+    else if (PROFILE_Open( filename, TRUE )) {
         if (!string) {/* delete the named section*/
             ret = PROFILE_SetString(section,NULL,NULL, FALSE);
             PROFILE_FlushFile();
@@ -1617,7 +1638,7 @@ DWORD WINAPI GetPrivateProfileSectionNamesW( LPWSTR buffer, DWORD size,
 
     RtlEnterCriticalSection( &PROFILE_CritSect );
 
-    if (PROFILE_Open( filename ))
+    if (PROFILE_Open( filename, FALSE ))
         ret = PROFILE_GetSectionNames(buffer, size);
 
     RtlLeaveCriticalSection( &PROFILE_CritSect );
@@ -1645,13 +1666,17 @@ DWORD WINAPI GetPrivateProfileSectionNamesA( LPSTR buffer, DWORD size,
     retW = GetPrivateProfileSectionNamesW(bufferW, size, filenameW.Buffer);
     if (retW && size)
     {
-        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW, buffer, size, NULL, NULL);
+        ret = WideCharToMultiByte(CP_ACP, 0, bufferW, retW+1, buffer, size-1, NULL, NULL);
         if (!ret)
         {
-            ret = size;
+            ret = size-2;
             buffer[size-1] = 0;
         }
+        else
+          ret = ret-1;
     }
+    else if(size)
+        buffer[0] = '\0';
 
     RtlFreeUnicodeString(&filenameW);
     HeapFree(GetProcessHeap(), 0, bufferW);
@@ -1670,7 +1695,7 @@ BOOL WINAPI GetPrivateProfileStructW (LPCWSTR section, LPCWSTR key,
 
     RtlEnterCriticalSection( &PROFILE_CritSect );
 
-    if (PROFILE_Open( filename ))
+    if (PROFILE_Open( filename, FALSE ))
     {
         PROFILEKEY *k = PROFILE_Find ( &CurProfile->section, section, key, FALSE, FALSE);
         if (k)
@@ -1799,7 +1824,7 @@ BOOL WINAPI WritePrivateProfileStructW (LPCWSTR section, LPCWSTR key,
 
     RtlEnterCriticalSection( &PROFILE_CritSect );
 
-    if (PROFILE_Open( filename ))
+    if (PROFILE_Open( filename, TRUE ))
     {
         ret = PROFILE_SetString( section, key, outstring, FALSE);
         PROFILE_FlushFile();
@@ -1856,7 +1881,7 @@ CloseProfileUserMapping(VOID)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 QueryWin31IniFilesMappedToRegistry(DWORD Unknown0,
                                    DWORD Unknown1,
                                    DWORD Unknown2,

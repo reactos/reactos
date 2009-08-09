@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/eventvwr/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for ReactOS Event Viewer
- * TRANSLATORS: Rostislav Zabolotny
+ * TRANSLATORS: Rostislav Zabolotny, Artem Reznikov
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -12,7 +12,7 @@ IDC_EVENTVWR MENU
 BEGIN
 	POPUP	"&Звіт"
 	BEGIN
-		MENUITEM "&Програма",                 ID_LOG_APPLICATION, CHECKED
+		MENUITEM "&Програма",                 ID_LOG_APPLICATION
 		MENUITEM "&Захист",                   ID_LOG_SECURITY
 		MENUITEM "&Система",                  ID_LOG_SYSTEM
 		MENUITEM SEPARATOR
@@ -94,11 +94,11 @@ STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Оглядач подій"
 	IDC_EVENTSTRINGIDNOTFOUND      "Опис для Ідентифікатора події( %lu ) за джерелом( %s ) не знайдено. Локальний комп'ютер може не мати необхідної інформації в реєстрі чи DLL файлів повідомлень для відображення повідомлень, що надходять від віддаленого комп'ютера."
-	IDC_EVENTLOG_ERROR_TYPE        "Error"
-	IDC_EVENTLOG_WARNING_TYPE      "Warning"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Information"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
-	IDC_EVENTLOG_SUCCESS           "Success"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Unknown Event"
+	IDC_EVENTLOG_ERROR_TYPE        "Помилка"
+	IDC_EVENTLOG_WARNING_TYPE      "Попередження"
+	IDC_EVENTLOG_INFORMATION_TYPE  "Повідомлення"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Аудит успіхів"
+	IDC_EVENTLOG_AUDIT_FAILURE     "Аудит відмов"
+	IDC_EVENTLOG_SUCCESS           "Успіх"
+	IDC_EVENTLOG_UNKNOWN_TYPE      "Невідома подія"
 END

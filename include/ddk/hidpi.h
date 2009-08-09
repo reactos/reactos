@@ -23,10 +23,6 @@
 #ifndef __HIDPI_H
 #define __HIDPI_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "hidusage.h"
 
 #ifdef __cplusplus

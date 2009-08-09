@@ -33,6 +33,7 @@
 #include <aclapi.h>
 #include <cfgmgr32.h>
 #include <fdi.h>
+#include <reason.h>
 #include <regstr.h>
 #include <sddl.h>
 #include <setupapi.h>
@@ -41,6 +42,13 @@
 #include <wine/unicode.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+
+#include <pseh/pseh2.h>
+
+/* This hack definition is necessary as long as setupapi 
+   depends on Wine "compatibility" headers */
+typedef ULONG RESOURCEID;
+typedef RESOURCEID *PRESOURCEID;
 
 #include <pnp_c.h>
 #include "rpc_private.h"

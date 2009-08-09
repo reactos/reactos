@@ -32,7 +32,7 @@ ConvertDWord (DWORD num, LPTSTR des, INT len, BOOL bSeparator)
 }
 
 
-INT CommandMemory (LPTSTR cmd, LPTSTR param)
+INT CommandMemory (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	MEMORYSTATUS ms;

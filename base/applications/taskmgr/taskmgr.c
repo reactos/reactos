@@ -51,6 +51,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     HANDLE hProcess;
     HANDLE hToken;
     TOKEN_PRIVILEGES tkp;
+    HANDLE hMutex;
+
+    /* check wether we're already running or not */
+    hMutex = CreateMutexW(NULL, TRUE, L"taskmgrros");
+    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+        return 1;
 
     /* Initialize global variables */
     hInst = hInstance;
@@ -97,10 +103,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 INT_PTR CALLBACK
 TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+#if 0
     HDC              hdc;
     PAINTSTRUCT      ps;
-    LPRECT           pRC;
     RECT             rc;
+#endif
+    LPRECT           pRC;
     int              idctrl;
     LPNMHDR          pnmh;
     WINDOWPLACEMENT  wp;
@@ -283,7 +291,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             TaskManager_OnTabWndSelChange();
         }
         break;
-
+#if 0
     case WM_NCPAINT:
         hdc = GetDC(hDlg);
         GetClientRect(hDlg, &rc);
@@ -297,7 +305,7 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         Draw3dRect(hdc, rc.left, rc.top, rc.right, rc.top + 2, GetSysColor(COLOR_3DSHADOW), GetSysColor(COLOR_3DHILIGHT));
         EndPaint(hDlg, &ps);
         break;
-
+#endif
     case WM_SIZING:
         /* Make sure the user is sizing the dialog */
         /* in an acceptable range */
@@ -624,7 +632,7 @@ void OnSize( WPARAM nType, int cx, int cy )
 
     /* Update the status bar size */
     GetWindowRect(hStatusWnd, &rc);
-    SendMessageW(hStatusWnd, WM_SIZE, nType, MAKELPARAM(cx, cy + (rc.bottom - rc.top)));
+    SendMessageW(hStatusWnd, WM_SIZE, nType, MAKELPARAM(cx,rc.bottom - rc.top));
 
     /* Update the status bar pane sizes */
     nParts[0] = bInMenuLoop ? -1 : 100;

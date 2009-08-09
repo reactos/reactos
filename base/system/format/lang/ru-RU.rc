@@ -5,7 +5,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Использование: %S том: [-FS:система] [-V:метка] [-Q] [-A:размер] [-C]\n\n\
+STRING_HELP,  "Использование: %s том: [-FS:система] [-V:метка] [-Q] [-A:размер] [-C]\n\n\
   [том:]         Указывает букву диска (с последующим двоеточием),\n\
                  точку подключения или имя тома.\n\
   -FS:система    Указывает на тип файловой системы (%s).\n\
@@ -27,7 +27,7 @@ STRING_NO_SUPPORT  "Операция не поддерживается"
 
 STRING_FMIFS_FAIL  "Невозможно определить расположение точек входа FMIFS.\n\n"
 
-STRING_UNKNOW_ARG  "Неправильные аргументы: %S\n"
+STRING_UNKNOW_ARG  "Неправильные аргументы: %s\n"
 
 STRING_DRIVE_PARM  "Требуемый параметр операции отсутствует.\n\n"
 
@@ -39,7 +39,7 @@ STRING_NO_VOLUME         "Не удалось выполнить запрос к тому"
 
 STRING_NO_VOLUME_SIZE    "Не удалось определить размер тома"
 
-STRING_FILESYSTEM        "Тип файловой системы %S.\n"
+STRING_FILESYSTEM        "Тип файловой системы %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Введите текущую метку тома %C: "
 

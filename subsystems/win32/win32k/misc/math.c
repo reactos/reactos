@@ -25,7 +25,7 @@
  *
  * @implemented
  */
-INT STDCALL EngMulDiv(
+INT APIENTRY EngMulDiv(
 	     INT nMultiplicand,
 	     INT nMultiplier,
 	     INT nDivisor)

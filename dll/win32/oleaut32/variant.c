@@ -608,8 +608,7 @@ HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
       }
       else if (V_VT(pVarg) == VT_BSTR)
       {
-        if (V_BSTR(pVarg))
-          SysFreeString(V_BSTR(pVarg));
+        SysFreeString(V_BSTR(pVarg));
       }
       else if (V_VT(pVarg) == VT_RECORD)
       {
@@ -1191,7 +1190,7 @@ INT WINAPI DosDateTimeToVariantTime(USHORT wDosDate, USHORT wDosTime,
   ud.st.wSecond = DOS_SECOND(wDosTime);
   ud.st.wDayOfWeek = ud.st.wMilliseconds = 0;
 
-  return !VarDateFromUdate(&ud, 0, pDateOut);
+  return VarDateFromUdate(&ud, 0, pDateOut) == S_OK;
 }
 
 /**********************************************************************
@@ -1255,7 +1254,7 @@ INT WINAPI SystemTimeToVariantTime(LPSYSTEMTIME lpSt, double *pDateOut)
     return FALSE;
 
   ud.st = *lpSt;
-  return !VarDateFromUdate(&ud, 0, pDateOut);
+  return VarDateFromUdate(&ud, 0, pDateOut) == S_OK;
 }
 
 /***********************************************************************
@@ -2323,7 +2322,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
       whole = whole * dblMultipliers[10];
       multiplier10 -= 10;
     }
-    if (multiplier10)
+    if (multiplier10 && !bOverflow)
     {
       if (whole > dblMaximums[multiplier10])
       {
@@ -2334,9 +2333,10 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
         whole = whole * dblMultipliers[multiplier10];
     }
 
-    TRACE("Scaled double value is %16.16g\n", whole);
+    if (!bOverflow)
+        TRACE("Scaled double value is %16.16g\n", whole);
 
-    while (divisor10 > 10)
+    while (divisor10 > 10 && !bOverflow)
     {
       if (whole < dblMinimums[10] && whole != 0)
       {
@@ -2347,7 +2347,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
       whole = whole / dblMultipliers[10];
       divisor10 -= 10;
     }
-    if (divisor10)
+    if (divisor10 && !bOverflow)
     {
       if (whole < dblMinimums[divisor10] && whole != 0)
       {
@@ -5673,14 +5673,14 @@ HRESULT WINAPI VarPow(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     }
 
     hr = VariantChangeType(&dl,left,0,resvt);
-    if (!SUCCEEDED(hr)) {
+    if (FAILED(hr)) {
         ERR("Could not change passed left argument to VT_R8, handle it differently.\n");
         hr = E_FAIL;
         goto end;
     }
 
     hr = VariantChangeType(&dr,right,0,resvt);
-    if (!SUCCEEDED(hr)) {
+    if (FAILED(hr)) {
         ERR("Could not change passed right argument to VT_R8, handle it differently.\n");
         hr = E_FAIL;
         goto end;

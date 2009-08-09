@@ -74,6 +74,7 @@
 @ stub NTPTimeToNTFileTime
 @ stub NTTimeToNTPTime
 @ stub NhGetGuidFromInterfaceName
+@ stub NhGetInterfaceNameFromDeviceGuid
 @ stub NhGetInterfaceNameFromGuid
 @ stub NhpAllocateAndGetInterfaceInfoFromStack
 @ stub NhpGetInterfaceIndexFromStack

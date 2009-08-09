@@ -438,6 +438,7 @@ static const MSIVIEWOPS streams_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
 };
 
 static INT add_streams_to_table(MSISTREAMSVIEW *sv)
@@ -463,6 +464,9 @@ static INT add_streams_to_table(MSISTREAMSVIEW *sv)
         hr = IEnumSTATSTG_Next(stgenum, 1, &stat, &size);
         if (FAILED(hr) || !size)
             break;
+
+        if (stat.type != STGTY_STREAM)
+            continue;
 
         /* table streams are not in the _Streams table */
         if (*stat.pwcsName == 0x4840)

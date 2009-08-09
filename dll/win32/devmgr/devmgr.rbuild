@@ -1,10 +1,6 @@
-<module name="devmgr" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devmgr.dll" allowwarnings="true" unicode="yes">
+<module name="devmgr" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devmgr.dll" unicode="yes">
 	<include base="devmgr">.</include>
-	<importlibrary definition="devmgr.spec.def" />
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
-	<define name="_SETUPAPI_VER">0x501</define>
+	<importlibrary definition="devmgr.spec" />
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>setupapi</library>
@@ -16,6 +12,5 @@
 	<file>hwpage.c</file>
 	<file>misc.c</file>
 	<file>stubs.c</file>
-	<file>devmgr.spec</file>
 	<pch>precomp.h</pch>
 </module>

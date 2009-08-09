@@ -24,14 +24,12 @@
 /* Image_Open, Image_Closed, and Image_Root - integer variables for indexes of the images.  */
 /* CX_ICON and CY_ICON - width and height of an icon.  */
 /* NUM_ICON - number of icons to add to the image list.  */
-int Image_Open;
-int Image_Closed;
-int Image_Root;
+static int Image_Open = 0;
+static int Image_Closed = 0;
+static int Image_Root = 0;
 
 static LPTSTR pathBuffer;
 
-#define CX_ICON    16
-#define CY_ICON    16
 #define NUM_ICONS    3
 
 static BOOL get_item_path(HWND hwndTV, HTREEITEM hItem, HKEY* phKey, LPTSTR* pKeyPath, int* pPathLen, int* pMaxLen)
@@ -415,24 +413,57 @@ static BOOL InitTreeViewImageLists(HWND hwndTV)
     HICON hico;       /* handle to icon  */
 
     /* Create the image list.  */
-    if ((himl = ImageList_Create(CX_ICON, CY_ICON,
-                                 ILC_MASK|ILC_COLOR32, 0, NUM_ICONS)) == NULL)
+    if ((himl = ImageList_Create(GetSystemMetrics(SM_CXSMICON),
+                                 GetSystemMetrics(SM_CYSMICON),
+                                 ILC_MASK | ILC_COLOR32,
+                                 0,
+                                 NUM_ICONS)) == NULL)
+    {
         return FALSE;
+    }
 
     /* Add the open file, closed file, and document bitmaps.  */
-    hico = LoadIcon(hInst, MAKEINTRESOURCE(IDI_OPEN_FILE));
-    Image_Open = ImageList_AddIcon(himl, hico);
+    hico = LoadImage(hInst,
+                     MAKEINTRESOURCE(IDI_OPEN_FILE),
+                     IMAGE_ICON,
+                     GetSystemMetrics(SM_CXSMICON),
+                     GetSystemMetrics(SM_CYSMICON),
+                     0);
+    if (hico)
+    {
+            Image_Open = ImageList_AddIcon(himl, hico);
+            DestroyIcon(hico);
+    }
 
-    hico = LoadIcon(hInst, MAKEINTRESOURCE(IDI_CLOSED_FILE));
-    Image_Closed = ImageList_AddIcon(himl, hico);
+    hico = LoadImage(hInst,
+                     MAKEINTRESOURCE(IDI_CLOSED_FILE),
+                     IMAGE_ICON,
+                     GetSystemMetrics(SM_CXSMICON),
+                     GetSystemMetrics(SM_CYSMICON),
+                     0);
+    if (hico)
+    {
+            Image_Closed = ImageList_AddIcon(himl, hico);
+            DestroyIcon(hico);
+    }
 
-    hico = LoadIcon(hInst, MAKEINTRESOURCE(IDI_ROOT));
-    Image_Root = ImageList_AddIcon(himl, hico);
+    hico = LoadImage(hInst,
+                     MAKEINTRESOURCE(IDI_ROOT),
+                     IMAGE_ICON,
+                     GetSystemMetrics(SM_CXSMICON),
+                     GetSystemMetrics(SM_CYSMICON),
+                     0);
+    if (hico)
+    {
+            Image_Root = ImageList_AddIcon(himl, hico);
+            DestroyIcon(hico);
+    }
 
     /* Fail if not all of the images were added.  */
     if (ImageList_GetImageCount(himl) < NUM_ICONS)
     {
-      return FALSE;
+        ImageList_Destroy(himl);
+        return FALSE;
     }
 
     /* Associate the image list with the tree view control.  */

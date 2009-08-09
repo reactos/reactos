@@ -38,57 +38,10 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 KillSystemTimer(
   HWND hWnd,
   UINT_PTR IDEvent)
 {
   return NtUserCallHwndParam(hWnd, IDEvent, HWNDPARAM_ROUTINE_KILLSYSTEMTIMER);
 }
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-KillTimer(
-  HWND hWnd,
-  UINT_PTR IDEvent)
-{
-  return NtUserKillTimer(hWnd, IDEvent);
-}
-
-
-/*
- * @implemented
- */
-UINT_PTR
-STDCALL
-SetSystemTimer(
-  HWND hWnd,
-  UINT_PTR IDEvent,
-  UINT Period,
-  TIMERPROC TimerFunc)
-{
-  return NtUserSetSystemTimer(hWnd, IDEvent, Period, TimerFunc);
-}
-
-
-/*
- * @implemented
- */
-UINT_PTR
-STDCALL
-SetTimer(
-  HWND hWnd,
-  UINT_PTR IDEvent,
-  UINT Period,
-  TIMERPROC TimerFunc)
-{
-  return NtUserSetTimer(hWnd, IDEvent, Period, TimerFunc);
-}
-
-
-
-

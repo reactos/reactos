@@ -126,9 +126,9 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
       return FALSE;
    }
   if (pgp->MovePointer)
-    pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
+    pgp->MovePointer(SurfObj, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
   else
-    EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
+    EngMovePointer(SurfObj, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
 
   ppdev->SafetyRemoveLevel = 0;
 
@@ -138,13 +138,13 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
 
 VOID INTERNAL_CALL
-IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
+IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *psoDest)
 {
    GDIPOINTER *pgp;
    POINTL pt;
 
    ASSERT(ppdev);
-   ASSERT(DestSurface);
+   ASSERT(psoDest);
 
    pgp = &ppdev->Pointer;
 
@@ -169,8 +169,8 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
   /*
    *  Hide the cours
    */
-   pt.x = pgp->Pos.x - pgp->HotSpot.x;
-   pt.y = pgp->Pos.y - pgp->HotSpot.y;
+   pt.x = gpsi->ptCursor.x - pgp->HotSpot.x;
+   pt.y = gpsi->ptCursor.y - pgp->HotSpot.y;
 
 
    if (pgp->SaveSurface != NULL)
@@ -184,10 +184,10 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       DestRect.top = max(pt.y, 0);
       DestRect.right = min(
          pt.x + pgp->Size.cx,
-         DestSurface->sizlBitmap.cx);
+         psoDest->sizlBitmap.cx);
       DestRect.bottom = min(
          pt.y + pgp->Size.cy,
-         DestSurface->sizlBitmap.cy);
+         psoDest->sizlBitmap.cy);
 
       SrcPoint.x = max(-pt.x, 0);
       SrcPoint.y = max(-pt.y, 0);
@@ -196,7 +196,7 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       {
         if((MaskSurface = EngLockSurface(pgp->MaskSurface)))
         {
-          IntEngBitBltEx(DestSurface, SaveSurface, MaskSurface, NULL, NULL,
+          IntEngBitBltEx(psoDest, SaveSurface, MaskSurface, NULL, NULL,
                          &DestRect, &SrcPoint, &SrcPoint, NULL, NULL,
                          ROP3_TO_ROP4(SRCCOPY), FALSE);
           EngUnlockSurface(MaskSurface);
@@ -207,14 +207,14 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
 }
 
 VOID INTERNAL_CALL
-IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
+IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *psoDest)
 {
    GDIPOINTER *pgp;
    SURFOBJ *SaveSurface;
    POINTL pt;
 
    ASSERT(ppdev);
-   ASSERT(DestSurface);
+   ASSERT(psoDest);
 
    pgp = &ppdev->Pointer;
 
@@ -233,8 +233,8 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
      return ;
    }
 
-   pt.x = pgp->Pos.x - pgp->HotSpot.x;
-   pt.y = pgp->Pos.y - pgp->HotSpot.y;
+   pt.x = gpsi->ptCursor.x - pgp->HotSpot.x;
+   pt.y = gpsi->ptCursor.y - pgp->HotSpot.y;
 
    /*
     * Copy the pixels under the cursor to temporary surface.
@@ -253,12 +253,12 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       DestRect.top = SrcPoint.y - pt.y;
       DestRect.right = min(
          pgp->Size.cx,
-         DestSurface->sizlBitmap.cx - pt.x);
+         psoDest->sizlBitmap.cx - pt.x);
       DestRect.bottom = min(
          pgp->Size.cy,
-         DestSurface->sizlBitmap.cy - pt.y);
+         psoDest->sizlBitmap.cy - pt.y);
 
-      IntEngBitBltEx(SaveSurface, DestSurface, NULL, NULL, NULL,
+      IntEngBitBltEx(SaveSurface, psoDest, NULL, NULL, NULL,
                      &DestRect, &SrcPoint, NULL, NULL, NULL,
                      ROP3_TO_ROP4(SRCCOPY), FALSE);
       EngUnlockSurface(SaveSurface);
@@ -272,48 +272,48 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    {
       RECTL DestRect;
       POINTL SrcPoint;
-      SURFOBJ *ColorSurf;
-      SURFOBJ *MaskSurf = NULL;
+      SURFOBJ *psoColor;
+      SURFOBJ *psoMask = NULL;
 
       DestRect.left = max(pt.x, 0);
       DestRect.top = max(pt.y, 0);
       DestRect.right = min(
          pt.x + pgp->Size.cx,
-         DestSurface->sizlBitmap.cx);
+         psoDest->sizlBitmap.cx);
       DestRect.bottom = min(
          pt.y + pgp->Size.cy,
-         DestSurface->sizlBitmap.cy);
+         psoDest->sizlBitmap.cy);
 
       SrcPoint.x = max(-pt.x, 0);
       SrcPoint.y = max(-pt.y, 0);
 
 
       if (pgp->MaskSurface)
-        MaskSurf = EngLockSurface(pgp->MaskSurface);
+        psoMask = EngLockSurface(pgp->MaskSurface);
 
-      if (MaskSurf != NULL)
+      if (psoMask != NULL)
       {
         if (pgp->ColorSurface != NULL)
         {
-           if((ColorSurf = EngLockSurface(pgp->ColorSurface)))
+           if((psoColor = EngLockSurface(pgp->ColorSurface)))
            {
-                IntEngBitBltEx(DestSurface, ColorSurf, MaskSurf, NULL,
+                IntEngBitBltEx(psoDest, psoColor, psoMask, NULL,
                             pgp->XlateObject, &DestRect, &SrcPoint, &SrcPoint,
                             NULL, NULL, R4_MASK, FALSE);
-                EngUnlockSurface(ColorSurf);
+                EngUnlockSurface(psoColor);
            }
         }
         else
         {
-           IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
+           IntEngBitBltEx(psoDest, psoMask, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
                           ROP3_TO_ROP4(SRCAND), FALSE);
            SrcPoint.y += pgp->Size.cy;
-           IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
+           IntEngBitBltEx(psoDest, psoMask, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
                           ROP3_TO_ROP4(SRCINVERT), FALSE);
         }
-        EngUnlockSurface(MaskSurf);
+        EngUnlockSurface(psoMask);
       }
    }
 }
@@ -322,7 +322,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
  * @implemented
  */
 
-ULONG STDCALL
+ULONG APIENTRY
 EngSetPointerShape(
    IN SURFOBJ *pso,
    IN SURFOBJ *psoMask,
@@ -336,7 +336,7 @@ EngSetPointerShape(
    IN FLONG fl)
 {
    GDIDEVICE *ppdev;
-   SURFOBJ *TempSurfObj;
+   SURFOBJ *psoTemp;
    GDIPOINTER *pgp;
 
    ASSERT(pso);
@@ -349,11 +349,11 @@ EngSetPointerShape(
    if (pgp->ColorSurface != NULL)
    {
       /* FIXME: Is this really needed? */
-      if((TempSurfObj = EngLockSurface(pgp->ColorSurface)))
+      if((psoTemp = EngLockSurface(pgp->ColorSurface)))
       {
-        EngFreeMem(TempSurfObj->pvBits);
-        TempSurfObj->pvBits = 0;
-        EngUnlockSurface(TempSurfObj);
+        EngFreeMem(psoTemp->pvBits);
+        psoTemp->pvBits = 0;
+        EngUnlockSurface(psoTemp);
       }
 
       EngDeleteSurface(pgp->ColorSurface);
@@ -363,11 +363,11 @@ EngSetPointerShape(
    if (pgp->MaskSurface != NULL)
    {
       /* FIXME: Is this really needed? */
-      if((TempSurfObj = EngLockSurface(pgp->MaskSurface)))
+      if((psoTemp = EngLockSurface(pgp->MaskSurface)))
       {
-        EngFreeMem(TempSurfObj->pvBits);
-        TempSurfObj->pvBits = 0;
-        EngUnlockSurface(TempSurfObj);
+        EngFreeMem(psoTemp->pvBits);
+        psoTemp->pvBits = 0;
+        EngUnlockSurface(psoTemp);
       }
 
       EngDeleteSurface(pgp->MaskSurface);
@@ -402,8 +402,8 @@ EngSetPointerShape(
     * done right after this. It helps IntShowMousePointer. */
    if (x != -1)
    {
-     pgp->Pos.x = x;
-     pgp->Pos.y = y;
+     gpsi->ptCursor.x = x;
+     gpsi->ptCursor.y = y;
    }
 
    pgp->Size.cx = abs(psoMask->lDelta) << 3;
@@ -529,7 +529,7 @@ EngSetPointerShape(
  * @implemented
  */
 
-VOID STDCALL
+VOID APIENTRY
 EngMovePointer(
    IN SURFOBJ *pso,
    IN LONG x,
@@ -552,8 +552,8 @@ EngMovePointer(
    {
      /* Actually this should be set by 'the other side', but it would be
       * done right after this. It helps IntShowMousePointer. */
-     pgp->Pos.x = x;
-     pgp->Pos.y = y;
+     gpsi->ptCursor.x = x;
+     gpsi->ptCursor.y = y;
      IntShowMousePointer(ppdev, pso);
      if (prcl != NULL)
      {
@@ -567,25 +567,25 @@ EngMovePointer(
 
 }
 
-VOID STDCALL
+VOID APIENTRY
 IntEngMovePointer(
-   IN SURFOBJ *SurfObj,
+   IN SURFOBJ *pso,
    IN LONG x,
    IN LONG y,
    IN RECTL *prcl)
 {
-  BITMAPOBJ *BitmapObj = CONTAINING_RECORD(SurfObj, BITMAPOBJ, SurfObj);
+  SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
 
-  BITMAPOBJ_LockBitmapBits(BitmapObj);
-  if (GDIDEV(SurfObj)->Pointer.MovePointer)
+  SURFACE_LockBitmapBits(psurf);
+  if (GDIDEV(pso)->Pointer.MovePointer)
     {
-    GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, x, y, prcl);
+    GDIDEV(pso)->Pointer.MovePointer(pso, x, y, prcl);
     }
   else
     {
-    EngMovePointer(SurfObj, x, y, prcl);
+    EngMovePointer(pso, x, y, prcl);
     }
-  BITMAPOBJ_UnlockBitmapBits(BitmapObj);
+  SURFACE_UnlockBitmapBits(psurf);
 }
 
 /* EOF */

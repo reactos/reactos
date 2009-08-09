@@ -32,21 +32,21 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-typedef struct {
+struct HTMLStyleSheet {
     const IHTMLStyleSheetVtbl *lpHTMLStyleSheetVtbl;
 
     LONG ref;
 
     nsIDOMCSSStyleSheet *nsstylesheet;
-} HTMLStyleSheet;
+};
 
-typedef struct {
+struct HTMLStyleSheetsCollection {
     const IHTMLStyleSheetsCollectionVtbl *lpHTMLStyleSheetsCollectionVtbl;
 
     LONG ref;
 
     nsIDOMStyleSheetList *nslist;
-} HTMLStyleSheetsCollection;
+};
 
 typedef struct {
     const IHTMLStyleSheetRulesCollectionVtbl *lpHTMLStyleSheetRulesCollectionVtbl;
@@ -56,8 +56,8 @@ typedef struct {
     nsIDOMCSSRuleList *nslist;
 } HTMLStyleSheetRulesCollection;
 
-#define HTMLSTYLESHEET(x)     ((IHTMLStyleSheet*)                &(x)->lpHTMLStyleSheetVtbl);
-#define HTMLSTYLESHEETSCOL(x) ((IHTMLStyleSheetsCollection*)     &(x)->lpHTMLStyleSheetsCollectionVtbl);
+#define HTMLSTYLESHEET(x)     ((IHTMLStyleSheet*)                &(x)->lpHTMLStyleSheetVtbl)
+#define HTMLSTYLESHEETSCOL(x) ((IHTMLStyleSheetsCollection*)     &(x)->lpHTMLStyleSheetsCollectionVtbl)
 #define HTMLSTYLERULESCOL(x)  ((IHTMLStyleSheetRulesCollection*) &(x)->lpHTMLStyleSheetRulesCollectionVtbl)
 
 #define HTMLSTYLERULESCOL_THIS(iface) \

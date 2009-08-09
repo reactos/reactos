@@ -520,7 +520,7 @@ BOOL16      WINAPI WritePrivateProfileStruct16(LPCSTR,LPCSTR,LPVOID,UINT16,LPCST
 BOOL16      WINAPI WriteProfileSection16(LPCSTR,LPCSTR);
 
 /* Some optimizations */
-extern inline LPVOID WINAPI MapSL( SEGPTR segptr )
+static inline LPVOID WINAPI MapSL( SEGPTR segptr )
 {
     return (char *)wine_ldt_copy.base[SELECTOROF(segptr) >> __AHSHIFT] + OFFSETOF(segptr);
 }

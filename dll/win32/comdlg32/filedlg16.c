@@ -44,7 +44,7 @@ typedef struct tagFD16_PRIVATE
 
 /************************************************************************
  *                              FD16_MapOfnStruct16          [internal]
- *      map a 16 bits structure to an Unicode one
+ *      map a 16 bits structure to a Unicode one
  */
 static void FD16_MapOfnStruct16(const OPENFILENAME16 *ofn16, LPOPENFILENAMEW ofnW, BOOL open)
 {

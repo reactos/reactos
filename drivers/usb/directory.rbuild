@@ -10,7 +10,7 @@
 	<directory name="usbhub">
 		<xi:include href="usbhub/usbhub.rbuild" />
 	</directory>
-	directory name="usbstor">
+	<directory name="usbstor">
 		<xi:include href="usbstor/usbstor.rbuild" />
 	</directory-->
 </group>

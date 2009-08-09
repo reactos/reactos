@@ -247,6 +247,8 @@ WlxStartApplication(
 		CurrentDirectory,
 		&StartupInfo,
 		&ProcessInformation);
+	CloseHandle(ProcessInformation.hProcess);
+	CloseHandle(ProcessInformation.hThread);
 	CloseHandle(hAppToken);
 	if (!ret)
 		WARN("CreateProcessAsUserW() failed with error %lu\n", GetLastError());

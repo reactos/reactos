@@ -42,7 +42,9 @@
 #define GDI_ENTRY_UPPER_SHIFT 16
 
 /* GDI Entry Flags */
-#define GDI_ENTRY_FLAG_NEED_UPDATE 4
+#define GDI_ENTRY_UNDELETABLE  1
+#define GDI_ENTRY_DELETING     2
+#define GDI_ENTRY_VALIDATE_VIS 4
 
 /*! \defgroup GDI object types
  *
@@ -171,9 +173,14 @@
 /* DC_ATTR LCD Flags */
 #define LDC_LDC           0x00000001 // (init) local DC other than a normal DC
 #define LDC_EMFLDC        0x00000002 // Enhance Meta File local DC
+#define LDC_SAPCALLBACK   0x00000020
 #define LDC_INIT_DOCUMENT 0x00000040
 #define LDC_INIT_PAGE     0x00000080
+#define LDC_PLAY_MFDC     0x00000800
+#define LDC_CLOCKWISE     0x00002000
 #define LDC_KILL_DOCUMENT 0x00010000
+#define LDC_META_PRINT    0x00020000
+#define LDC_DEVCAPS       0x02000000
 
 /* DC_ATTR Xform Flags */
 #define METAFILE_TO_WORLD_IDENTITY          0x00000001
@@ -227,7 +234,7 @@ typedef struct __GDI_SHARED_HANDLE_TABLE // Must match win32k/include/gdiobj.h
     FLONG           flDeviceUniq;              // Device settings uniqueness.
     PVOID           pvLangPack;                // Lanuage Pack.
     CFONT           cfPublic[GDI_CFONT_MAX];   // Public Fonts.
-    DWORD           dwCsbSupported1;           // OEM code-page bitfield.
+    DWORD           dwCFCount;
 } GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;
 
 typedef struct _RGN_ATTR
@@ -244,10 +251,15 @@ typedef struct _LDC
     ULONG Flags;
     INT iType;
     PVOID pvEmfDC;        /* Pointer to ENHMETAFILE structure */
+    LPWSTR pwszPort;
     ABORTPROC pAbortProc; /* AbortProc for Printing */
+    DWORD CallBackTick;
     HANDLE hPrinter;      /* Local or Remote Printer driver */
-    INT iInitPage;        /* Start/Stop */
-    INT iInitDocument;
+    PVOID pUMPDev;
+    PUMDHPDEV pUMdhpdev;
+    DEVCAPS DevCaps;
+    HBRUSH BrushColor;
+    HPEN PenColor;
 } LDC, *PLDC;
 
 typedef struct _DC_ATTR
@@ -290,13 +302,13 @@ typedef struct _DC_ATTR
     LONG lBreakExtra;
     LONG cBreak;
     HANDLE hlfntNew;
-    MATRIX_S mxWorldToDevice;
-    MATRIX_S mxDevicetoWorld;
-    MATRIX_S mxWorldToPage;
-    EFLOAT_S efM11PtoD;
-    EFLOAT_S efM22PtoD;
-    EFLOAT_S efDxPtoD;
-    EFLOAT_S efDyPtoD;
+    MATRIX mxWorldToDevice;
+    MATRIX mxDeviceToWorld;
+    MATRIX mxWorldToPage;
+    FLOATOBJ efM11PtoD;
+    FLOATOBJ efM22PtoD;
+    FLOATOBJ efDxPtoD;
+    FLOATOBJ efDyPtoD;
     INT iMapMode;
     DWORD dwLayout;
     LONG lWindowOrgx;
@@ -320,8 +332,8 @@ typedef struct _BRUSH_ATTR // Used with pen too.
 
 typedef struct _FONT_ATTR
 {
-    DWORD dwUnknown;
-    void *pCharWidthData;
+    BOOL    bSlowWidths;
+    PCFONT  pCharWidthData;
 } FONT_ATTR, *PFONT_ATTR;
 
 

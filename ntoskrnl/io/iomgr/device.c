@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ********************************************************************/
 
@@ -122,7 +122,7 @@ IoShutdownRegisteredDevices(VOID)
         }
 
         /* Free the shutdown entry and reset the event */
-        ExFreePool(ShutdownEntry);
+        ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
         KeClearEvent(&Event);
 
         /* Go to the next entry */
@@ -317,7 +317,7 @@ IopUnloadDevice(IN PDEVICE_OBJECT DeviceObject)
         if (DeviceObject->SecurityDescriptor)
         {
             /* Free it */
-            ExFreePool(DeviceObject->SecurityDescriptor);
+            ExFreePoolWithTag(DeviceObject->SecurityDescriptor, TAG_SD);
         }
 
         /* Remove the device from the list */
@@ -558,7 +558,7 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
                           OUT PDEVICE_NODE *DeviceNode)
 {
     NTSTATUS Status;
-    IO_STACK_LOCATION Stack;
+    IO_STACK_LOCATION Stack = {0};
     IO_STATUS_BLOCK IoStatusBlock;
     PDEVICE_RELATIONS DeviceRelations;
     PDEVICE_OBJECT DeviceObject = NULL;
@@ -567,34 +567,32 @@ IopGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
 
     /* Get DeviceObject related to given FileObject */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    if (!DeviceObject)
-    {
-        return STATUS_NO_SUCH_DEVICE;
-    }
+    if (!DeviceObject) return STATUS_NO_SUCH_DEVICE;
 
     /* Define input parameters */
     Stack.Parameters.QueryDeviceRelations.Type = TargetDeviceRelation;
     Stack.FileObject = FileObject;
 
-    /* Call the driver to query all the relations (IRP_MJ_PNP) */
-    Status = IopInitiatePnpIrp(DeviceObject, &IoStatusBlock,
-                               IRP_MN_QUERY_DEVICE_RELATIONS, &Stack);
-    if (NT_SUCCESS(Status))
-    {
-        DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
-        ASSERT(DeviceRelations);
-        ASSERT(DeviceRelations->Count == 1);
+    /* Call the driver to query all relations (IRP_MJ_PNP) */
+    Status = IopInitiatePnpIrp(DeviceObject,
+                               &IoStatusBlock,
+                               IRP_MN_QUERY_DEVICE_RELATIONS,
+                               &Stack);
+    if (!NT_SUCCESS(Status)) return Status;
 
-        /* We finally get the device node */
-        *DeviceNode = IopGetDeviceNode(DeviceRelations->Objects[0]);
-        if (!*DeviceNode)
-        {
-            Status = STATUS_NO_SUCH_DEVICE;
-        }
+    /* Get returned pointer to DEVICE_RELATIONS */
+    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
 
-        /* Free the DEVICE_RELATIONS structure, it's not needed anymore */
-        ExFreePool(DeviceRelations);
-    }
+    /* Make sure it's not NULL and contains only one object */
+    ASSERT(DeviceRelations);
+    ASSERT(DeviceRelations->Count == 1);
+
+    /* Finally get the device node */
+    *DeviceNode = IopGetDeviceNode(DeviceRelations->Objects[0]);
+    if (!*DeviceNode) Status = STATUS_NO_SUCH_DEVICE;
+
+    /* Free the DEVICE_RELATIONS structure, it's not needed anymore */
+    ExFreePool(DeviceRelations);
 
     return Status;
 }
@@ -1242,7 +1240,7 @@ IoGetRelatedDeviceObject(IN PFILE_OBJECT FileObject)
             {
                 /* FIXME: Unhandled yet */
                 DPRINT1("FOEs not supported\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
         }
 
@@ -1265,7 +1263,7 @@ IoGetRelatedTargetDevice(IN PFILE_OBJECT FileObject,
     NTSTATUS Status;
     PDEVICE_NODE DeviceNode = NULL;
 
-    /* We call the internal function to do all the work */
+    /* Call the internal helper function */
     Status = IopGetRelatedTargetDevice(FileObject, &DeviceNode);
     if (NT_SUCCESS(Status) && DeviceNode)
     {
@@ -1395,7 +1393,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
             NextEntry = NextEntry->Blink;
 
             /* Free the entry */
-            ExFreePool(ShutdownEntry);
+            ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
         }
 
         /* Go to the next entry */
@@ -1419,7 +1417,7 @@ IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
             NextEntry = NextEntry->Blink;
 
             /* Free the entry */
-            ExFreePool(ShutdownEntry);
+            ExFreePoolWithTag(ShutdownEntry, TAG_SHUTDOWN_ENTRY);
         }
 
         /* Go to the next entry */
@@ -1568,7 +1566,7 @@ IoStartPacket(IN PDEVICE_OBJECT DeviceObject,
             }
 
             /* Release the cancel lock */
-            IoReleaseCancelSpinLock(OldIrql);
+            IoReleaseCancelSpinLock(CancelIrql);
         }
 
         /* Call the Start I/O function */

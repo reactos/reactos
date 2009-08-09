@@ -21,7 +21,7 @@
 #include "debug.h"
 
 #ifdef __GNUC__
-#define EXPORT STDCALL
+#define EXPORT WINAPI
 #else
 #define EXPORT CALLBACK
 #endif
@@ -40,7 +40,7 @@ BOOL Initialised = FALSE;
 CRITICAL_SECTION CriticalSection;
 
 /* To make the linker happy */
-//VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
+//VOID WINAPI KeBugCheck (ULONG	BugCheckCode) {}
 
 BOOL
 EXPORT

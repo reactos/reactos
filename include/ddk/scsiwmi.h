@@ -23,10 +23,6 @@
 #ifndef __SCSIWMI_H
 #define __SCSIWMI_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "srb.h"
 
 #ifdef __cplusplus

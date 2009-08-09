@@ -314,13 +314,13 @@ BEGIN
   AUTORADIOBUTTON "&Yatay", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
   GROUPBOX "Kenarlýklar", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "S&ol:", stc15, 88, 172, 21, 8
-  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Sað:", stc16, 159, 172, 27, 8
-  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Üst:", stc17, 88, 192, 21, 8
-  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Alt:", stc18, 159, 192, 23, 8
-  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   DEFPUSHBUTTON "Tamam", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
   PUSHBUTTON "Ýptal", IDCANCEL, 126, 220, 50, 14
   PUSHBUTTON "Ya&zýcý...", psh3, 184, 220, 48, 14
@@ -411,8 +411,8 @@ Lütfen bir tane kurun ve yeniden deneyin."
     PD32_DEFAULT_PRINTER                  "Öntanýmlý yazýcý; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Kuyrukta %d belge var"
     PD32_MARGINS_IN_INCHES                "Kenarlýklar [inç]"
-    PD32_MARGINS_IN_MILIMETERS            "Kenarlýklar [mm]"
-    PD32_MILIMETERS                       "mm"
+    PD32_MARGINS_IN_MILLIMETERS           "Kenarlýklar [mm]"
+    PD32_MILLIMETERS                      "mm"
 
     PD32_PRINTER_STATUS_READY             "Hazýr"
     PD32_PRINTER_STATUS_PAUSED            "Durakladý; "

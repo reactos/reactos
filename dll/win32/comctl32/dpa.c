@@ -106,7 +106,7 @@ HRESULT WINAPI DPA_LoadStream (HDPA *phDpa, DPALOADPROC loadProc,
     if (!phDpa || !loadProc || !pStream)
         return E_INVALIDARG;
 
-    *phDpa = (HDPA)NULL;
+    *phDpa = NULL;
 
     position.QuadPart = 0;
 

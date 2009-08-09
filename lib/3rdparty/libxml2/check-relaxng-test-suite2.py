@@ -15,7 +15,7 @@ quiet = 1
 #
 # the testsuite description
 #
-CONF="test/relaxng/testsuite.xml"
+CONF=os.path.join(os.path.dirname(__file__), "test/relaxng/testsuite.xml")
 LOG="check-relaxng-test-suite2.log"
 
 log = open(LOG, "w")

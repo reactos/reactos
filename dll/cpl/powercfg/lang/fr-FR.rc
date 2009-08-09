@@ -80,7 +80,7 @@ BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
     LTEXT           "Choisissez les options d'économie d'énergie que vous voulez utiliser.",-1,30,5,205,20
     GROUPBOX        "Options",-1,5,35,225,55
-    CONTROL         "Toujours &afficher l'icône sur la barre des taches",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Toujours &afficher l'icône sur la barre des tâches",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,45,200,10
     CONTROL         "&Demander un mot de passe pour sortir de la mise en veille",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,55,200,10

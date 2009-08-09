@@ -1,11 +1,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARM_KE_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
-
 //
 //Lockdown TLB entries
 //

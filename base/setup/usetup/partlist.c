@@ -836,18 +836,15 @@ AddDiskToList (HANDLE FileHandle,
   DPRINT ("SectorsPerTrack %d\n", DiskEntry->SectorsPerTrack);
   DPRINT ("BytesPerSector %d\n", DiskEntry->BytesPerSector);
 
-  DiskEntry->DiskSize =
-    DiskGeometry.Cylinders.QuadPart *
-    (ULONGLONG)DiskGeometry.TracksPerCylinder *
+  DiskEntry->TrackSize =
     (ULONGLONG)DiskGeometry.SectorsPerTrack *
     (ULONGLONG)DiskGeometry.BytesPerSector;
   DiskEntry->CylinderSize =
     (ULONGLONG)DiskGeometry.TracksPerCylinder *
-    (ULONGLONG)DiskGeometry.SectorsPerTrack *
-    (ULONGLONG)DiskGeometry.BytesPerSector;
-  DiskEntry->TrackSize =
-    (ULONGLONG)DiskGeometry.SectorsPerTrack *
-    (ULONGLONG)DiskGeometry.BytesPerSector;
+    DiskEntry->TrackSize;
+  DiskEntry->DiskSize =
+    DiskGeometry.Cylinders.QuadPart *
+    DiskEntry->CylinderSize;
 
   DiskEntry->DiskNumber = DiskNumber;
   DiskEntry->Port = ScsiAddress.PortNumber;
@@ -906,7 +903,7 @@ CreatePartitionList (SHORT Left,
   OBJECT_ATTRIBUTES ObjectAttributes;
   SYSTEM_DEVICE_INFORMATION Sdi;
   IO_STATUS_BLOCK Iosb;
-  SIZE_T ReturnSize;
+  ULONG ReturnSize;
   NTSTATUS Status;
   ULONG DiskNumber;
   WCHAR Buffer[MAX_PATH];

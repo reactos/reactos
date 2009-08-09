@@ -1,6 +1,5 @@
 #include <freeldr.h>
 #include <debug.h>
-#undef DbgPrint
 
 extern BOOLEAN FrLdrBootType;
 
@@ -231,8 +230,8 @@ LdrPEGetExportByName(PVOID BaseAddress,
                      USHORT Hint)
 {
     PIMAGE_EXPORT_DIRECTORY ExportDir;
-    PULONG * ExFunctions;
-    PULONG * ExNames;
+    ULONG * ExFunctions;
+    ULONG * ExNames;
     USHORT * ExOrdinals;
     PVOID ExName;
     ULONG Ordinal;
@@ -267,10 +266,10 @@ LdrPEGetExportByName(PVOID BaseAddress,
     /*
      * Get header pointers
      */
-    ExNames = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
+    ExNames = (ULONG *)RVA(BaseAddress, ExportDir->AddressOfNames);
     ExOrdinals = (USHORT *)RVA(BaseAddress, ExportDir->AddressOfNameOrdinals);
-    ExFunctions = (PULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
-    
+    ExFunctions = (ULONG *)RVA(BaseAddress, ExportDir->AddressOfFunctions);
+
     /*
      * Check the hint first
      */
@@ -348,7 +347,7 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
                                  PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory)
 {
     PVOID* ImportAddressList;
-    PULONG FunctionNameList;
+    PULONG_PTR FunctionNameList;
     
     if (ImportModuleDirectory == NULL || ImportModuleDirectory->Name == 0)
     {
@@ -361,11 +360,11 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
     /* Get the list of functions to import. */
     if (ImportModuleDirectory->OriginalFirstThunk != 0)
     {
-        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->OriginalFirstThunk);
+        FunctionNameList = (PULONG_PTR)RVA(DriverBase, ImportModuleDirectory->OriginalFirstThunk);
     }
     else
     {
-        FunctionNameList = (PULONG)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
+        FunctionNameList = (PULONG_PTR)RVA(DriverBase, ImportModuleDirectory->FirstThunk);
     }
     
     /* Walk through function list and fixup addresses. */
@@ -446,13 +445,15 @@ FrLdrReadAndMapImage(IN FILE *Image,
     PIMAGE_NT_HEADERS NtHeader;
     PIMAGE_SECTION_HEADER Section;
     NTSTATUS Status = STATUS_SUCCESS;
+    PLOADER_MODULE pModule;
 
     /* Try to see, maybe it's loaded already */
-    if (LdrGetModuleObject(Name) != NULL)
+    if ((pModule = LdrGetModuleObject(Name)) != NULL)
     {
-        /* It's loaded, return NULL. It would be wise to return
-         correct LoadBase, but it seems to be ignored almost everywhere */
-        return NULL;
+        /* It's loaded, return LoadBase */
+        ImageBase = (PVOID)pModule->ModStart;
+        LoadBase = RVA(ImageBase, -KSEG0_BASE);
+        return LoadBase;
     }
 
     /* Set the virtual (image) and physical (load) addresses */
@@ -481,6 +482,11 @@ FrLdrReadAndMapImage(IN FILE *Image,
 
     /* Get image headers */
     NtHeader = RtlImageNtHeader(ReadBuffer);
+    if (!NtHeader)
+    {
+	DbgPrint("Failed to read image (bad PE signature) %s\n", Name);
+	return NULL;
+    }
 
     /* Allocate memory for the driver */
     ImageSize = NtHeader->OptionalHeader.SizeOfImage;
@@ -543,6 +549,12 @@ FrLdrReadAndMapImage(IN FILE *Image,
                               Section[i].Misc.VirtualSize);
             }
         }
+        else
+        {
+            DbgPrint("Section %s in %s doesn't fit: VA: %lx, Size: %lx\n", 
+                      Section[i].Name, Name, Section[i].VirtualAddress,
+                      Section[i].Misc.VirtualSize);
+        }
     }
 
     /* Calculate Difference between Real Base and Compiled Base*/
@@ -551,7 +563,11 @@ FrLdrReadAndMapImage(IN FILE *Image,
                                       (ULONG_PTR)LoadBase,
                                       "FreeLdr",
                                       STATUS_SUCCESS,
+#ifdef _M_AMD64
+                                      STATUS_SUCCESS, // allow stripped files
+#else
                                       STATUS_UNSUCCESSFUL,
+#endif
                                       STATUS_UNSUCCESSFUL);
     if (!NT_SUCCESS(Status))
     {

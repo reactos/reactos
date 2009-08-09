@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -23,7 +23,7 @@ BOOLEAN MpwThreadShouldTerminate;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmWriteDirtyPages(ULONG Target, PULONG Actual)
 {
    PFN_TYPE Page;
@@ -52,7 +52,7 @@ MmWriteDirtyPages(ULONG Target, PULONG Actual)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmMpwThreadMain(PVOID Ignored)
 {
    NTSTATUS Status;
@@ -71,7 +71,7 @@ MmMpwThreadMain(PVOID Ignored)
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("MpwThread: Wait failed\n");
-         KEBUGCHECK(0);
+         KeBugCheck(MEMORY_MANAGEMENT);
          return(STATUS_UNSUCCESSFUL);
       }
       if (MpwThreadShouldTerminate)

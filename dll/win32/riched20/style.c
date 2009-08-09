@@ -77,7 +77,7 @@ void ME_CopyToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from)
     *to = *from;
 }
 
-CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
+static CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from)
 {
   assert(from->cbSize == sizeof(CHARFORMAT2W));
   if (to->cbSize == sizeof(CHARFORMATA))
@@ -197,7 +197,10 @@ ME_Style *ME_ApplyStyle(ME_Style *sSrc, CHARFORMAT2W *style)
   COPY_STYLE_ITEM(CFM_LCID, lcid);
   COPY_STYLE_ITEM(CFM_OFFSET, yOffset);
   COPY_STYLE_ITEM(CFM_REVAUTHOR, bRevAuthor);
-  COPY_STYLE_ITEM(CFM_SIZE, yHeight);
+  if (style->dwMask & CFM_SIZE) {
+    s->fmt.dwMask |= CFM_SIZE;
+    s->fmt.yHeight = min(style->yHeight, yHeightCharPtsMost * 20);
+  }
   COPY_STYLE_ITEM(CFM_SPACING, sSpacing);
   COPY_STYLE_ITEM(CFM_STYLE, sStyle);
   COPY_STYLE_ITEM(CFM_UNDERLINETYPE, bUnderlineType);
@@ -370,7 +373,6 @@ HFONT ME_SelectStyleFont(ME_Context *c, ME_Style *s)
   LOGFONTW lf;
   int i, nEmpty, nAge = 0x7FFFFFFF;
   ME_FontCacheItem *item;
-  assert(c->hDC);
   assert(s);
   
   ME_LogFontFromStyle(c, &lf, s);
@@ -423,7 +425,6 @@ void ME_UnselectStyleFont(ME_Context *c, ME_Style *s, HFONT hOldFont)
 {
   int i;
   
-  assert(c->hDC);
   assert(s);
   SelectObject(c->hDC, hOldFont);
   for (i=0; i<HFONT_CACHE_SIZE; i++)

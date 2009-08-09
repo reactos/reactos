@@ -34,9 +34,9 @@
 /*
  * @implemented
  */
-BOOL STDCALL
-EngCopyBits(SURFOBJ *Dest,
-	    SURFOBJ *Source,
+BOOL APIENTRY
+EngCopyBits(SURFOBJ *psoDest,
+	    SURFOBJ *psoSource,
 	    CLIPOBJ *Clip,
 	    XLATEOBJ *ColorTranslation,
 	    RECTL *DestRect,
@@ -47,24 +47,24 @@ EngCopyBits(SURFOBJ *Dest,
   RECT_ENUM RectEnum;
   BOOL      EnumMore;
   BLTINFO   BltInfo;
-  BITMAPOBJ *DestObj;
-  BITMAPOBJ *SourceObj;
+  SURFACE *psurfDest;
+  SURFACE *psurfSource;
 
-  ASSERT(Dest != NULL && Source != NULL && DestRect != NULL && SourcePoint != NULL);
+  ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
-  SourceObj = CONTAINING_RECORD(Source, BITMAPOBJ, SurfObj);
-  BITMAPOBJ_LockBitmapBits(SourceObj);
-  MouseSafetyOnDrawStart(Source, SourcePoint->x, SourcePoint->y,
+  psurfSource = CONTAINING_RECORD(psoSource, SURFACE, SurfObj);
+  SURFACE_LockBitmapBits(psurfSource);
+  MouseSafetyOnDrawStart(psoSource, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
                          (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
 
-  DestObj = CONTAINING_RECORD(Dest, BITMAPOBJ, SurfObj);
-  if (Dest != Source)
+  psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
+  if (psoDest != psoSource)
   {
-    BITMAPOBJ_LockBitmapBits(DestObj);
+    SURFACE_LockBitmapBits(psurfDest);
   }
 
-  MouseSafetyOnDrawStart(Dest, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+  MouseSafetyOnDrawStart(psoDest, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
   //        mark the copy block function to be DrvCopyBits instead of the
@@ -72,62 +72,62 @@ EngCopyBits(SURFOBJ *Dest,
   //        driver's responsibility
 
   // If one of the surfaces isn't managed by the GDI
-  if((Dest->iType!=STYPE_BITMAP) || (Source->iType!=STYPE_BITMAP))
+  if((psoDest->iType!=STYPE_BITMAP) || (psoSource->iType!=STYPE_BITMAP))
   {
     // Destination surface is device managed
-    if(Dest->iType!=STYPE_BITMAP)
+    if(psoDest->iType!=STYPE_BITMAP)
     {
       /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-      if (DestObj->flHooks & HOOK_COPYBITS)
+      if (psurfDest->flHooks & HOOK_COPYBITS)
       {
-        ret = GDIDEVFUNCS(Dest).CopyBits(
-          Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
+        ret = GDIDEVFUNCS(psoDest).CopyBits(
+          psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
 
-        MouseSafetyOnDrawEnd(Dest);
-        if (Dest != Source)
+        MouseSafetyOnDrawEnd(psoDest);
+        if (psoDest != psoSource)
         {
-          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(Source);
-        BITMAPOBJ_UnlockBitmapBits(SourceObj);
+        MouseSafetyOnDrawEnd(psoSource);
+        SURFACE_UnlockBitmapBits(psurfSource);
 
         return ret;
       }
     }
 
     // Source surface is device managed
-    if(Source->iType!=STYPE_BITMAP)
+    if(psoSource->iType!=STYPE_BITMAP)
     {
       /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-      if (SourceObj->flHooks & HOOK_COPYBITS)
+      if (psurfSource->flHooks & HOOK_COPYBITS)
       {
-        ret = GDIDEVFUNCS(Source).CopyBits(
-          Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
+        ret = GDIDEVFUNCS(psoSource).CopyBits(
+          psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
 
-        MouseSafetyOnDrawEnd(Dest);
-        if (Dest != Source)
+        MouseSafetyOnDrawEnd(psoDest);
+        if (psoDest != psoSource)
         {
-          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(Source);
-        BITMAPOBJ_UnlockBitmapBits(SourceObj);
+        MouseSafetyOnDrawEnd(psoSource);
+        SURFACE_UnlockBitmapBits(psurfSource);
 
         return ret;
       }
     }
 
     // If CopyBits wasn't hooked, BitBlt must be
-    ret = IntEngBitBlt(Dest, Source,
+    ret = IntEngBitBlt(psoDest, psoSource,
                        NULL, Clip, ColorTranslation, DestRect, SourcePoint,
                        NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
 
-    MouseSafetyOnDrawEnd(Dest);
-    if (Dest != Source)
+    MouseSafetyOnDrawEnd(psoDest);
+    if (psoDest != psoSource)
     {
-      BITMAPOBJ_UnlockBitmapBits(DestObj);
+      SURFACE_UnlockBitmapBits(psurfDest);
     }
-    MouseSafetyOnDrawEnd(Source);
-    BITMAPOBJ_UnlockBitmapBits(SourceObj);
+    MouseSafetyOnDrawEnd(psoSource);
+    SURFACE_UnlockBitmapBits(psurfSource);
 
     return ret;
   }
@@ -140,8 +140,8 @@ EngCopyBits(SURFOBJ *Dest,
     clippingType = Clip->iDComplexity;
   }
 
-  BltInfo.DestSurface = Dest;
-  BltInfo.SourceSurface = Source;
+  BltInfo.DestSurface = psoDest;
+  BltInfo.SourceSurface = psoSource;
   BltInfo.PatternSurface = NULL;
   BltInfo.XlateSourceToDest = ColorTranslation;
   BltInfo.XlatePatternToDest = NULL;
@@ -153,15 +153,15 @@ EngCopyBits(SURFOBJ *Dest,
         BltInfo.DestRect = *DestRect;
         BltInfo.SourcePoint = *SourcePoint;
 
-        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
+        DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
-        MouseSafetyOnDrawEnd(Dest);
-        if (Dest != Source)
+        MouseSafetyOnDrawEnd(psoDest);
+        if (psoDest != psoSource)
         {
-          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(Source);
-        BITMAPOBJ_UnlockBitmapBits(SourceObj);
+        MouseSafetyOnDrawEnd(psoSource);
+        SURFACE_UnlockBitmapBits(psurfSource);
 
         return(TRUE);
 
@@ -172,15 +172,15 @@ EngCopyBits(SURFOBJ *Dest,
         BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
         BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
 
-        DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
+        DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
-        MouseSafetyOnDrawEnd(Dest);
-        if (Dest != Source)
+        MouseSafetyOnDrawEnd(psoDest);
+        if (psoDest != psoSource)
         {
-          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          SURFACE_UnlockBitmapBits(psurfDest);
         }
-        MouseSafetyOnDrawEnd(Source);
-        BITMAPOBJ_UnlockBitmapBits(SourceObj);
+        MouseSafetyOnDrawEnd(psoSource);
+        SURFACE_UnlockBitmapBits(psurfSource);
 
         return(TRUE);
 
@@ -202,7 +202,7 @@ EngCopyBits(SURFOBJ *Dest,
               BltInfo.SourcePoint.x = SourcePoint->x + prcl->left - DestRect->left;
               BltInfo.SourcePoint.y = SourcePoint->y + prcl->top - DestRect->top;
 
-              if(!DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
+              if(!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
                 return FALSE;
 
               prcl++;
@@ -212,24 +212,24 @@ EngCopyBits(SURFOBJ *Dest,
 
           } while(EnumMore);
 
-          MouseSafetyOnDrawEnd(Dest);
-          if (Dest != Source)
+          MouseSafetyOnDrawEnd(psoDest);
+          if (psoDest != psoSource)
           {
-            BITMAPOBJ_UnlockBitmapBits(DestObj);
+            SURFACE_UnlockBitmapBits(psurfDest);
           }
-          MouseSafetyOnDrawEnd(Source);
-          BITMAPOBJ_UnlockBitmapBits(SourceObj);
+          MouseSafetyOnDrawEnd(psoSource);
+          SURFACE_UnlockBitmapBits(psurfSource);
 
           return(TRUE);
     }
 
-  MouseSafetyOnDrawEnd(Dest);
-  if (Dest != Source)
+  MouseSafetyOnDrawEnd(psoDest);
+  if (psoDest != psoSource)
   {
-    BITMAPOBJ_UnlockBitmapBits(DestObj);
+    SURFACE_UnlockBitmapBits(psurfDest);
   }
-  MouseSafetyOnDrawEnd(Source);
-  BITMAPOBJ_UnlockBitmapBits(SourceObj);
+  MouseSafetyOnDrawEnd(psoSource);
+  SURFACE_UnlockBitmapBits(psurfSource);
 
   return FALSE;
 }

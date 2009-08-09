@@ -1,18 +1,32 @@
-#include <mbstring.h>
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS system libraries
+ * FILE:        lib/sdk/crt/mbstring/mbslen.c
+ * PURPOSE:      Determines the length of a multi byte string
+ * PROGRAMERS:
+ *              Copyright 1999 Alexandre Julliard
+ *              Copyright 2000 Jon Griffths
+ *
+ */
 
-size_t _mbclen2(const unsigned int s);
+#include <mbstring.h>
 
 /*
  * @implemented
  */
 size_t _mbslen(const unsigned char *str)
 {
-	int i = 0;
-	unsigned char *s;
-
-	if (str == 0)
-		return 0;
-
-	for (s = (unsigned char *)str; *s; s+=_mbclen2(*s),i++);
-	return i;
+  size_t len = 0;
+  while(*str)
+  {
+    if (_ismbblead(*str))
+    {
+      str++;
+      if (!*str)  /* count only full chars */
+        break;
+    }
+    str++;
+    len++;
+  }
+  return len;
 }

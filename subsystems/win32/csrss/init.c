@@ -302,7 +302,7 @@ CSRSS_API_DEFINITION NativeDefinitions[] =
     { 0, 0, NULL }
   };
 
-static NTSTATUS STDCALL
+static NTSTATUS WINAPI
 CsrpCreateListenPort (IN     LPWSTR  Name,
 		      IN OUT PHANDLE Port,
 		      IN     PTHREAD_START_ROUTINE ListenThread)
@@ -721,7 +721,7 @@ struct {
  * RETURN VALUE
  * 	TRUE: Initialization OK; otherwise FALSE.
  */
-BOOL STDCALL
+BOOL WINAPI
 CsrServerInitialization (
 	int argc,
 	char ** argv,

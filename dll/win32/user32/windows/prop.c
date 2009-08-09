@@ -69,7 +69,7 @@ IntGetProp(HWND hWnd, ATOM Atom)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
 {
   PPROPLISTITEM pli, i;
@@ -136,7 +136,7 @@ EnumPropsA(HWND hWnd, PROPENUMPROCA lpEnumFunc)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
 {
   PPROPLISTITEM pli, i;
@@ -203,7 +203,7 @@ EnumPropsExA(HWND hWnd, PROPENUMPROCEXA lpEnumFunc, LPARAM lParam)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
 {
   PPROPLISTITEM pli, i;
@@ -270,7 +270,7 @@ EnumPropsExW(HWND hWnd, PROPENUMPROCEXW lpEnumFunc, LPARAM lParam)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
 {
   PPROPLISTITEM pli, i;
@@ -337,7 +337,7 @@ EnumPropsW(HWND hWnd, PROPENUMPROCW lpEnumFunc)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 GetPropA(HWND hWnd, LPCSTR lpString)
 {
   PWSTR lpWString;
@@ -365,7 +365,7 @@ GetPropA(HWND hWnd, LPCSTR lpString)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 GetPropW(HWND hWnd, LPCWSTR lpString)
 {
   ATOM Atom;
@@ -388,7 +388,7 @@ GetPropW(HWND hWnd, LPCWSTR lpString)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 RemovePropA(HWND hWnd, LPCSTR lpString)
 {
   PWSTR lpWString;
@@ -417,7 +417,7 @@ RemovePropA(HWND hWnd, LPCSTR lpString)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 RemovePropW(HWND hWnd,
 	    LPCWSTR lpString)
 {
@@ -437,7 +437,7 @@ RemovePropW(HWND hWnd,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
 {
   PWSTR lpWString;
@@ -466,7 +466,7 @@ SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetPropW(HWND hWnd, LPCWSTR lpString, HANDLE hData)
 {
   ATOM Atom;

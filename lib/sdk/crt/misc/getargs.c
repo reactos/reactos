@@ -24,7 +24,7 @@ extern wchar_t **__winitenv;
 
 extern HANDLE hHeap;
 
-char* strndup(char* name, int len)
+char* strndup(char* name, size_t len)
 {
    char *s = malloc(len + 1);
    if (s != NULL)
@@ -35,7 +35,7 @@ char* strndup(char* name, int len)
    return s;
 }
 
-wchar_t* wcsndup(wchar_t* name, int len)
+wchar_t* wcsndup(wchar_t* name, size_t len)
 {
    wchar_t *s = malloc((len + 1) * sizeof(wchar_t));
    if (s != NULL)
@@ -361,4 +361,5 @@ wchar_t*** __p___wargv(void)
 {
    return &__wargv;
 }
+
 

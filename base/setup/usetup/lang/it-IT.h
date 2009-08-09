@@ -1474,6 +1474,11 @@ MUI_ERROR itITErrorEntries[] =
         "INVIO = Riavviare il computer"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

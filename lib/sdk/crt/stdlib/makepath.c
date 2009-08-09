@@ -1,3 +1,16 @@
+/*
+ * PROJECT:     ReactOS CRT library
+ * LICENSE:     See COPYING in the top level directory
+ * FILE:        lib/sdk/crt/stdlib/makepath.c
+ * PURPOSE:     Creates a path
+ * PROGRAMMERS: Wine team
+ *              Copyright 1996,1998 Marcus Meissner
+ *              Copyright 1996 Jukka Iivonen
+ *              Copyright 1997,2000 Uwe Bonnes
+ *              Copyright 2000 Jon Griffiths
+ *
+ */
+
 /* $Id$
  */
 #include <precomp.h>
@@ -9,29 +22,36 @@
  */
 void _makepath(char* path, const char* drive, const char* dir, const char* fname, const char* ext)
 {
-    int dir_len;
+    char *p = path;
 
-    if ((drive != NULL) && (*drive)) {
-        path[0] = *drive;
-	path[1] = ':';
-	path[2] = 0;
-    } else {
-        (*path)=0;
-    }
+    if ( !path )
+        return;
 
-    if (dir != NULL) {
-        strcat(path, dir);
-        dir_len = strlen(dir);
-        if (dir_len && *(dir + dir_len - 1) != '\\')
-            strcat(path, "\\");
+    if (drive && drive[0])
+    {
+        *p++ = drive[0];
+        *p++ = ':';
     }
-
-    if (fname != NULL) {
-        strcat(path, fname);
-        if (ext != NULL && *ext != 0) {
-            if (*ext != '.')
-                strcat(path, ".");
-            strcat(path, ext);
-        }
+    if (dir && dir[0])
+    {
+        unsigned int len = strlen(dir);
+        memmove(p, dir, len);
+        p += len;
+        if (p[-1] != '/' && p[-1] != '\\')
+            *p++ = '\\';
     }
+    if (fname && fname[0])
+    {
+        unsigned int len = strlen(fname);
+        memmove(p, fname, len);
+        p += len;
+    }
+    if (ext && ext[0])
+    {
+        if (ext[0] != '.')
+            *p++ = '.';
+        strcpy(p, ext);
+    }
+    else
+        *p = '\0';
 }

@@ -300,7 +300,7 @@ FsRtlNotifyFilterChangeDirectory(IN PNOTIFY_SYNC NotifySync,
                                  IN PSECURITY_SUBJECT_CONTEXT SubjectContext OPTIONAL,
                                  IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++
@@ -357,7 +357,7 @@ FsRtlNotifyFilterReportChange(IN PNOTIFY_SYNC NotifySync,
                               IN PVOID TargetContext,
                               IN PVOID FilterContext)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*++

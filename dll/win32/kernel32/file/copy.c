@@ -194,7 +194,7 @@ SetLastWriteTime(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CopyFileExW (
 	LPCWSTR			lpExistingFileName,
 	LPCWSTR			lpNewFileName,
@@ -310,7 +310,7 @@ CopyFileExW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CopyFileExA (
 	LPCSTR			lpExistingFileName,
 	LPCSTR			lpNewFileName,
@@ -349,7 +349,7 @@ CopyFileExA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CopyFileA (
 	LPCSTR	lpExistingFileName,
 	LPCSTR	lpNewFileName,
@@ -369,7 +369,7 @@ CopyFileA (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CopyFileW (
 	LPCWSTR	lpExistingFileName,
 	LPCWSTR	lpNewFileName,
@@ -389,7 +389,7 @@ CopyFileW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PrivCopyFileExW (
 	LPCWSTR			lpExistingFileName,
 	LPCWSTR			lpNewFileName,

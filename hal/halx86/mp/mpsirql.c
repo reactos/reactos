@@ -21,7 +21,7 @@
 /* FUNCTIONS ****************************************************************/
 
 #undef KeGetCurrentIrql
-KIRQL STDCALL KeGetCurrentIrql (VOID)
+KIRQL NTAPI KeGetCurrentIrql (VOID)
 /*
  * PURPOSE: Returns the current irq level
  * RETURNS: The current irq level
@@ -37,7 +37,7 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
   if (irql > HIGH_LEVEL)
     {
       DPRINT1 ("CurrentIrql %x\n", irql);
-      KEBUGCHECK (0);
+      ASSERT(FALSE);
     }
   if (Flags & EFLAGS_INTERRUPT_MASK)
     {
@@ -57,7 +57,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
   if (NewIrql > HIGH_LEVEL)
   {
     DPRINT1 ("NewIrql %x\n", NewIrql);
-    KEBUGCHECK (0);
+    ASSERT(FALSE);
   }
   Ke386SaveFlags(Flags);
   _disable();
@@ -138,7 +138,7 @@ KfLowerIrql (KIRQL	NewIrql)
   if (NewIrql > oldIrql)
     {
       DPRINT1 ("NewIrql %x CurrentIrql %x\n", NewIrql, oldIrql);
-      KEBUGCHECK (0);
+      ASSERT(FALSE);
     }
   HalpLowerIrql (NewIrql, FALSE);
 }
@@ -160,7 +160,7 @@ KfLowerIrql (KIRQL	NewIrql)
  * NOTES
  */
 #undef KeLowerIrql
-VOID STDCALL
+VOID NTAPI
 KeLowerIrql (KIRQL NewIrql)
 {
   KfLowerIrql (NewIrql);
@@ -198,7 +198,7 @@ KfRaiseIrql (KIRQL	NewIrql)
   if (NewIrql < OldIrql)
     {
       DPRINT1 ("CurrentIrql %x NewIrql %x\n", KeGetCurrentIrql (), NewIrql);
-      KEBUGCHECK (0);
+      ASSERT(FALSE);
     }
 
 
@@ -234,7 +234,7 @@ KfRaiseIrql (KIRQL	NewIrql)
  *	Calls KfRaiseIrql
  */
 #undef KeRaiseIrql
-VOID STDCALL
+VOID NTAPI
 KeRaiseIrql (KIRQL	NewIrql,
 	PKIRQL	OldIrql)
 {
@@ -259,7 +259,7 @@ KeRaiseIrql (KIRQL	NewIrql,
  *	Calls KfRaiseIrql
  */
 
-KIRQL STDCALL
+KIRQL NTAPI
 KeRaiseIrqlToDpcLevel (VOID)
 {
   return KfRaiseIrql (DISPATCH_LEVEL);
@@ -283,14 +283,14 @@ KeRaiseIrqlToDpcLevel (VOID)
  *	Calls KfRaiseIrql
  */
 
-KIRQL STDCALL
+KIRQL NTAPI
 KeRaiseIrqlToSynchLevel (VOID)
 {
   return KfRaiseIrql (CLOCK2_LEVEL);
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalBeginSystemInterrupt (KIRQL Irql,
 			 ULONG Vector,
 			 PKIRQL OldIrql)
@@ -301,14 +301,14 @@ HalBeginSystemInterrupt (KIRQL Irql,
   if (KeGetCurrentIrql () >= Irql)
   {
     DPRINT1("current irql %d, new irql %d\n", KeGetCurrentIrql(), Irql);
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 
   Ke386SaveFlags(Flags);
   if (Flags & EFLAGS_INTERRUPT_MASK)
   {
      DPRINT1("HalBeginSystemInterrupt was called with interrupt's enabled\n");
-     KEBUGCHECK(0);
+     ASSERT(FALSE);
   }
   APICWrite (APIC_TPR, IRQL2TPR (Irql) & APIC_TPR_PRI);
   *OldIrql = KeGetCurrentIrql ();
@@ -317,7 +317,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 }
 
 
-VOID STDCALL
+VOID NTAPI
 HalEndSystemInterrupt (KIRQL Irql,
 		       ULONG Unknown2)
 /*
@@ -330,13 +330,13 @@ HalEndSystemInterrupt (KIRQL Irql,
   if (Flags & EFLAGS_INTERRUPT_MASK)
   {
      DPRINT1("HalEndSystemInterrupt was called with interrupt's enabled\n");
-     KEBUGCHECK(0);
+     ASSERT(FALSE);
   }
   APICSendEOI();
   HalpLowerIrql (Irql, TRUE);
 }
   
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalDisableSystemInterrupt (ULONG Vector,
 			   KIRQL Irql)
 {
@@ -358,7 +358,7 @@ HalDisableSystemInterrupt (ULONG Vector,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalEnableSystemInterrupt (ULONG Vector,
 			  KIRQL Irql,
 			  KINTERRUPT_MODE InterruptMode)
@@ -394,7 +394,7 @@ HalRequestSoftwareInterrupt(IN KIRQL Request)
       break;
       
     default:
-      KEBUGCHECK(0);
+      ASSERT(FALSE);
   }
 }
 

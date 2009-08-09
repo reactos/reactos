@@ -25,10 +25,6 @@
 #define __DSOUND_INCLUDED__
 
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 #ifndef DIRECTSOUND_VERSION
 #define DIRECTSOUND_VERSION 0x0900
 #endif
@@ -557,7 +553,7 @@ DECLARE_INTERFACE_(IDirectSoundBuffer,IUnknown)
     STDMETHOD(GetFrequency)(THIS_ LPDWORD lpdwFrequency) PURE;
     STDMETHOD(GetStatus)(THIS_ LPDWORD lpdwStatus) PURE;
     STDMETHOD(Initialize)(THIS_ LPDIRECTSOUND lpDirectSound, LPCDSBUFFERDESC lpcDSBufferDesc) PURE;
-    STDMETHOD(Lock)(THIS_ DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags) PURE;
+    STDMETHOD(Lock)(THIS_ DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID *lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID *lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags) PURE;
     STDMETHOD(Play)(THIS_ DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags) PURE;
     STDMETHOD(SetCurrentPosition)(THIS_ DWORD dwNewPosition) PURE;
     STDMETHOD(SetFormat)(THIS_ LPCWAVEFORMATEX lpcfxFormat) PURE;
@@ -640,7 +636,7 @@ DECLARE_INTERFACE_(IDirectSoundBuffer8,IUnknown)
     STDMETHOD(GetFrequency)(THIS_ LPDWORD lpdwFrequency) PURE;
     STDMETHOD(GetStatus)(THIS_ LPDWORD lpdwStatus) PURE;
     STDMETHOD(Initialize)(THIS_ LPDIRECTSOUND lpDirectSound, LPCDSBUFFERDESC lpcDSBufferDesc) PURE;
-    STDMETHOD(Lock)(THIS_ DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags) PURE;
+    STDMETHOD(Lock)(THIS_ DWORD dwWriteCursor, DWORD dwWriteBytes, LPVOID *lplpvAudioPtr1, LPDWORD lpdwAudioBytes1, LPVOID *lplpvAudioPtr2, LPDWORD lpdwAudioBytes2, DWORD dwFlags) PURE;
     STDMETHOD(Play)(THIS_ DWORD dwReserved1, DWORD dwReserved2, DWORD dwFlags) PURE;
     STDMETHOD(SetCurrentPosition)(THIS_ DWORD dwNewPosition) PURE;
     STDMETHOD(SetFormat)(THIS_ LPCWAVEFORMATEX lpcfxFormat) PURE;

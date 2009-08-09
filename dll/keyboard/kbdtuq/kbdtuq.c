@@ -195,11 +195,11 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { 'B',           CAPS,   {'b',    'B'   } },
   { 'N',           CAPS,   {'n',    'N'   } },
   { 'M',           CAPS,   {'m',    'M'   } },
-  { VK_OEM_2,      CAPS,   {0x00f6, 0x00d6} },
-  { VK_OEM_5,      CAPS,   {0x00e7, 0x00c7} },
-  { VK_OEM_PERIOD, NOCAPS, {'.',    ':'   } },
+  { VK_OEM_COMMA,  CAPS,   {0x00f6, 0x00d6} },
+  { VK_OEM_PERIOD, CAPS,   {0x00e7, 0x00c7} },
+  { VK_OEM_2,      NOCAPS, {'.',    ':'   } },
   { VK_DECIMAL,    NOCAPS, {',',    ','   } },
-  { VK_TAB,        NOCAPS, {'\t'     ,'\t'} },
+  { VK_TAB,        NOCAPS, {'\t',   '\t'  } },
   { VK_ADD,        NOCAPS, {'+',    '+'   } },
   { VK_DIVIDE,     NOCAPS, {'/',    '/'   } },
   { VK_MULTIPLY,   NOCAPS, {'*',    '*'   } },
@@ -232,7 +232,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { 0xff,         NOCAPS, {WCH_NONE, WCH_NONE, 0x00a8,   WCH_NONE} },
   { VK_OEM_6,     CAPS,   {0x00fc,   0x00dc,   WCH_DEAD, 0x001d  } },
   { 0xff,         NOCAPS, {WCH_NONE, WCH_NONE, '~',      WCH_NONE} },
-  { VK_OEM_COMMA, NOCAPS, {',',      ';',      WCH_DEAD, 0x001c  } },
+  { VK_OEM_5,     NOCAPS, {',',      ';',      WCH_DEAD, 0x001c  } },
   { 0xff,         NOCAPS, {WCH_NONE, WCH_NONE, '`',      WCH_NONE} },
   { VK_OEM_102,   NOCAPS, {'<',      '>',      '|',      0x001c  } },
   { VK_BACK,      NOCAPS, {'\b',     '\b',     WCH_NONE, 0x007f  } },
@@ -465,7 +465,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(0,1), /* Version 1.0 */
+  MAKELONG(1,1), /* Version 1.0 */
 
   /* Ligatures */
   0,
@@ -473,11 +473,11 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
 
-INT STDCALL
+INT WINAPI
 DllMain(
   PVOID hinstDll,
   ULONG dwReason,

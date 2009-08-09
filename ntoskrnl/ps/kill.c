@@ -12,11 +12,11 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
-LIST_ENTRY PspReaperListHead = {0};
+LIST_ENTRY PspReaperListHead = { NULL, NULL };
 WORK_QUEUE_ITEM PspReaperWorkItem;
 LARGE_INTEGER ShortTime = {{-10 * 100 * 1000, -1}};
 
@@ -188,7 +188,7 @@ PspReapRoutine(IN PVOID Context)
             Thread = CONTAINING_RECORD(NextEntry, ETHREAD, ReaperLink);
 
             /* Delete this entry's kernel stack */
-            MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit,
+            MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
                                 Thread->Tcb.LargeStack);
             Thread->Tcb.InitialStack = NULL;
 
@@ -310,7 +310,7 @@ PspDeleteProcess(IN PVOID ObjectBody)
         if (!(ExDestroyHandle(PspCidTable, Process->UniqueProcessId, NULL)))
         {
             /* Something wrong happened, bugcheck */
-            KEBUGCHECK(CID_HANDLE_DELETION);
+            KeBugCheck(CID_HANDLE_DELETION);
         }
     }
 
@@ -349,7 +349,7 @@ PspDeleteThread(IN PVOID ObjectBody)
     if (Thread->Tcb.InitialStack)
     {
         /* Release it */
-        MmDeleteKernelStack((PVOID)Thread->Tcb.StackLimit,
+        MmDeleteKernelStack((PVOID)Thread->Tcb.StackBase,
                             Thread->Tcb.LargeStack);
     }
 
@@ -360,7 +360,7 @@ PspDeleteThread(IN PVOID ObjectBody)
         if (!(ExDestroyHandle(PspCidTable, Thread->Cid.UniqueThread, NULL)))
         {
             /* Something wrong happened, bugcheck */
-            KEBUGCHECK(CID_HANDLE_DELETION);
+            KeBugCheck(CID_HANDLE_DELETION);
         }
     }
 
@@ -421,7 +421,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (KeIsAttachedProcess())
     {
         /* Bugcheck */
-        KEBUGCHECKEX(INVALID_PROCESS_ATTACH_ATTEMPT,
+        KeBugCheckEx(INVALID_PROCESS_ATTACH_ATTEMPT,
                      (ULONG_PTR)CurrentProcess,
                      (ULONG_PTR)Thread->Tcb.ApcState.Process,
                      (ULONG_PTR)Thread->Tcb.ApcStateIndex,
@@ -435,7 +435,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (Thread->ActiveExWorker)
     {
         /* Bugcheck */
-        KEBUGCHECKEX(ACTIVE_EX_WORKER_THREAD_TERMINATION,
+        KeBugCheckEx(ACTIVE_EX_WORKER_THREAD_TERMINATION,
                      (ULONG_PTR)Thread,
                      0,
                      0,
@@ -446,7 +446,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if (Thread->Tcb.CombinedApcDisable != 0)
     {
         /* Bugcheck */
-        KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
+        KeBugCheckEx(KERNEL_APC_PENDING_DURING_EXIT,
                      0,
                      Thread->Tcb.CombinedApcDisable,
                      0,
@@ -578,7 +578,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
         else
         {
             /* Bugcheck, we can't allow this */
-            KEBUGCHECKEX(CRITICAL_PROCESS_DIED,
+            KeBugCheckEx(CRITICAL_PROCESS_DIED,
                          (ULONG_PTR)CurrentProcess,
                          0,
                          0,
@@ -697,11 +697,11 @@ PspExitThread(IN NTSTATUS ExitStatus)
         PspW32ProcessCallout(CurrentProcess, FALSE);
     }
 
-    /* Make sure Stack Swap isn't enabled */
-    if (Thread->Tcb.EnableStackSwap)
+    /* Make sure Stack Swap is enabled */
+    if (!Thread->Tcb.EnableStackSwap)
     {
-        /* Stack swap really shouldn't be on during exit !*/
-        KEBUGCHECKEX(KERNEL_STACK_LOCKED_AT_EXIT, 0, 0, 0, 0);
+        /* Stack swap really shouldn't be disabled during exit! */
+        KeBugCheckEx(KERNEL_STACK_LOCKED_AT_EXIT, 0, 0, 0, 0);
     }
 
     /* Cancel I/O for the thread. */
@@ -778,7 +778,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
         ObFastDereferenceObject(&CurrentProcess->Token, PrimaryToken);
 
         /* Check if this is a VDM Process and rundown the VDM DPCs if so */
-        if (CurrentProcess->VdmObjects);// VdmRundownDpcs(CurrentProcess);
+        if (CurrentProcess->VdmObjects) { /* VdmRundownDpcs(CurrentProcess); */ }
 
         /* Kill the process in the Object Manager */
         ObKillProcess(CurrentProcess);
@@ -849,7 +849,7 @@ PspExitThread(IN NTSTATUS ExitStatus)
     if ((FirstEntry) || (Thread->Tcb.CombinedApcDisable != 0))
     {
         /* Bugcheck time */
-        KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
+        KeBugCheckEx(KERNEL_APC_PENDING_DURING_EXIT,
                      (ULONG_PTR)FirstEntry,
                      Thread->Tcb.CombinedApcDisable,
                      KeGetCurrentIrql(),
@@ -991,7 +991,6 @@ PspTerminateThreadByPointer(IN PETHREAD Thread,
         if (!KeInsertQueueApc(Apc, Apc, NULL, 2))
         {
             /* The APC was already in the queue, fail */
-            ExFreePool(Apc);
             Status = STATUS_UNSUCCESSFUL;
         }
         else
@@ -1086,7 +1085,7 @@ PsTerminateSystemThread(IN NTSTATUS ExitStatus)
     PETHREAD Thread = PsGetCurrentThread();
 
     /* Make sure this is a system thread */
-    if (Thread->SystemThread) return STATUS_INVALID_PARAMETER;
+    if (!Thread->SystemThread) return STATUS_INVALID_PARAMETER;
 
     /* Terminate it for real */
     return PspTerminateThreadByPointer(Thread, ExitStatus, TRUE);
@@ -1142,7 +1141,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
     /* Lock the Process */
     if (!ExAcquireRundownProtection(&Process->RundownProtect))
     {
-        /* Failed to lock, fal */
+        /* Failed to lock, fail */
         ObDereferenceObject (Process);
         return STATUS_PROCESS_IS_TERMINATING;
     }
@@ -1182,7 +1181,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle OPTIONAL,
         /* Also make sure the caller gave us our handle */
         if (KillByHandle)
         {
-            /* Dereference the project */
+            /* Dereference the process */
             ObDereferenceObject(Process);
 
             /* Terminate ourselves */

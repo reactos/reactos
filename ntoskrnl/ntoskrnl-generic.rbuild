@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<importlibrary definition="ntoskrnl_$(ARCH).def" />
+	<importlibrary definition="ntoskrnl.pspec" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
@@ -34,9 +34,11 @@
 	<library>wdmguid</library>
 	<library>ioevent</library>
 	<dependency>bugcodes</dependency>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<directory name="include">
-		<pch>ntoskrnl.h</pch>
+		<pch>precomp.h</pch>
 	</directory>
+	-->
 	<directory name="ke">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -354,11 +356,11 @@
 			</directory>
 		</if>
 		<file>anonmem.c</file>
-		<file>aspace.c</file>
 		<file>balance.c</file>
 		<file>cont.c</file>
 		<file>drvlck.c</file>
 		<file>freelist.c</file>
+		<file>hypermap.c</file>
 		<file>iospace.c</file>
 		<file>kmap.c</file>
 		<file>marea.c</file>
@@ -370,9 +372,6 @@
 		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
-		<file>pager.c</file>
-		<file>pagfault.c</file>
-		<file>paging.c</file>
 		<file>pe.c</file>
 		<file>physical.c</file>
 		<file>pool.c</file>
@@ -436,9 +435,13 @@
 				<file>rtlexcpt.c</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>stack.S</file>
+			</directory>
+		</if>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
-		<file>strtok.c</file>
 	</directory>
 	<directory name="se">
 		<file>access.c</file>
@@ -462,4 +465,7 @@
 	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
+
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </group>

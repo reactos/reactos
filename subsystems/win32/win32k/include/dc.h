@@ -80,27 +80,18 @@ typedef struct _DCLEVEL
   BOOL              ufiSet;
   FLONG             fl;
   FLONG             flBrush;
-  union{
-  MATRIX_S          mxWorldToDevice;
-  XFORM             xformWorld2Vport; /* World-to-viewport transformation */
-  };
-  union{
-  MATRIX_S          mxDeviceToWorld;
-  XFORM             xformVport2World; /* Inverse of the above transformation */
-  };
-  union{  
-  MATRIX_S          mxWorldToPage;
-  XFORM             xformWorld2Wnd;   /* World-to-window transformation */
-  };
-  EFLOAT_S          efM11PtoD;
-  EFLOAT_S          efM22PtoD;
-  EFLOAT_S          efDxPtoD;
-  EFLOAT_S          efDyPtoD;
-  EFLOAT_S          efM11_TWIPS;
-  EFLOAT_S          efM22_TWIPS;
-  EFLOAT_S          efPr11;
-  EFLOAT_S          efPr22;
-  PBITMAPOBJ        pSurface; // SURFACE*
+  MATRIX            mxWorldToDevice;
+  MATRIX            mxDeviceToWorld;
+  MATRIX            mxWorldToPage;
+  FLOATOBJ          efM11PtoD;
+  FLOATOBJ          efM22PtoD;
+  FLOATOBJ          efDxPtoD;
+  FLOATOBJ          efDyPtoD;
+  FLOATOBJ          efM11_TWIPS;
+  FLOATOBJ          efM22_TWIPS;
+  FLOATOBJ          efPr11;
+  FLOATOBJ          efPr22;
+  PSURFACE          pSurface;
   SIZE              sizl;
 } DCLEVEL, PDCLEVEL;
 
@@ -171,7 +162,6 @@ typedef struct _GDIPOINTER /* should stay private to ENG? No, part of GDIDEVICE 
 {
   /* private GDI pointer handling information, required for software emulation */
   BOOL     Enabled;
-  POINTL   Pos;
   SIZEL    Size;
   POINTL   HotSpot;
   XLATEOBJ *XlateObject;
@@ -199,12 +189,12 @@ typedef struct _GDIDEVICE
 
   PVOID         pvGammaRamp;    // Gamma ramp pointer.
 
-  DHPDEV        hPDev;          // DHPDEV for device.
-
   HSURF         FillPatterns[HS_DDI_MAX];
 
   ULONG         DxDd_nCount;
 
+  DHPDEV        hPDev;          // DHPDEV for device.
+  PVOID         ppalSurf;       // PEPALOBJ/PPALGDI for this device.
   DEVINFO       DevInfo;
   GDIINFO       GDIInfo;
   HSURF         pSurface;       // SURFACE for this device.
@@ -270,17 +260,21 @@ VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
 
 COLORREF FASTCALL IntGdiSetBkColor (HDC hDC, COLORREF Color);
 INT FASTCALL IntGdiSetBkMode(HDC  hDC, INT  backgroundMode);
-COLORREF STDCALL  IntGdiGetBkColor(HDC  hDC);
-INT STDCALL  IntGdiGetBkMode(HDC  hDC);
+COLORREF APIENTRY  IntGdiGetBkColor(HDC  hDC);
+INT APIENTRY  IntGdiGetBkMode(HDC  hDC);
 COLORREF FASTCALL  IntGdiSetTextColor(HDC hDC, COLORREF color);
 UINT FASTCALL IntGdiSetTextAlign(HDC  hDC, UINT  Mode);
-UINT STDCALL  IntGdiGetTextAlign(HDC  hDC);
-COLORREF STDCALL  IntGdiGetTextColor(HDC  hDC);
-INT STDCALL  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
+UINT APIENTRY  IntGdiGetTextAlign(HDC  hDC);
+COLORREF APIENTRY  IntGdiGetTextColor(HDC  hDC);
+INT APIENTRY  IntGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 VOID FASTCALL IntGdiReferencePdev(PGDIDEVICE pPDev);
 VOID FASTCALL IntGdiUnreferencePdev(PGDIDEVICE pPDev, DWORD CleanUpType);
 HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
+VOID FASTCALL IntvGetDeviceCaps(PGDIDEVICE, PDEVCAPS);
+HPEN FASTCALL IntGdiSelectPen(PDC,HPEN);
+HBRUSH FASTCALL IntGdiSelectBrush(PDC,HBRUSH);
+INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
 
 extern PGDIDEVICE pPrimarySurface;
 

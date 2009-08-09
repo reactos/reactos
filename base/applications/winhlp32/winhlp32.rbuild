@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="winhlp32" type="win32gui" installbase="system32" installname="winhlp32.exe" unicode="no" allowwarnings="true">
+<module name="winhlp32" type="win32gui" installname="winhlp32.exe" allowwarnings="true" unicode="no">
 	<include base="winhlp32">.</include>
-	<define name="_WIN32_IE">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
+	<include base="ReactOS">include/reactos/wine</include>
+	<define name="__ROS_LONG64__" />
+    <define name="_CRT_NONSTDC_NO_DEPRECATE" />
 	<library>wine</library>
 	<library>comdlg32</library>
 	<library>comctl32</library>

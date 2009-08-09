@@ -15,7 +15,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 AbortPath(
 	HDC	hdc
 	)
@@ -28,7 +28,7 @@ AbortPath(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 BeginPath(
 	HDC	hdc
 	)
@@ -40,7 +40,7 @@ BeginPath(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CloseFigure(
 	HDC	hdc
 	)
@@ -53,7 +53,7 @@ CloseFigure(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EndPath(
 	HDC	hdc
 	)
@@ -66,7 +66,7 @@ EndPath(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FillPath(
 	HDC	hdc
 	)
@@ -79,7 +79,7 @@ FillPath(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FlattenPath(
 	HDC	hdc
 	)
@@ -92,7 +92,7 @@ FlattenPath(
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 GetPath(HDC hdc,
         LPPOINT pptlBuf,
         LPBYTE pjTypes,
@@ -100,7 +100,7 @@ GetPath(HDC hdc,
 {
     INT retValue = -1;
 
-    if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_METADC)
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
     }
@@ -117,7 +117,7 @@ GetPath(HDC hdc,
  * @implemented
  */
 HRGN
-STDCALL
+WINAPI
 PathToRegion(
 	HDC	hdc
 	)
@@ -129,7 +129,7 @@ PathToRegion(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetMiterLimit(
 	HDC	hdc,
 	FLOAT	a1,
@@ -150,7 +150,7 @@ SetMiterLimit(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 StrokeAndFillPath(
 	HDC	hdc
 	)
@@ -163,7 +163,7 @@ StrokeAndFillPath(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 StrokePath(
 	HDC	hdc
 	)
@@ -176,7 +176,7 @@ StrokePath(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 WidenPath(
 	HDC	hdc
 	)
@@ -188,7 +188,7 @@ WidenPath(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SelectClipPath(
 	HDC	hdc,
 	int	Mode

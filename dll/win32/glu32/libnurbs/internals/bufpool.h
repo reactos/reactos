@@ -115,7 +115,7 @@ Pool::new_buffer( void )
     } else {
     	if( ! nextfree )
     	    grow( );
-    	nextfree -= buffersize;;
+    	nextfree -= buffersize;
     	buffer = (void *) (curblock + nextfree);
     }
     return buffer;

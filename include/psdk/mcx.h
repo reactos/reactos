@@ -1,8 +1,5 @@
 #ifndef _MCX_H
 #define _MCX_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifdef __cplusplus
 extern "C" {

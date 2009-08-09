@@ -42,7 +42,7 @@ DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 }
 
 VOID
-STDCALL
+WINAPI
 LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
 {
 #define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, pA->f, len, pW->f, len )
@@ -68,7 +68,7 @@ LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA)
 }
 
 VOID
-STDCALL
+WINAPI
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 {
 #define COPYS(f,len) WideCharToMultiByte ( CP_THREAD_ACP, 0, pW->f, len, pA->f, len, NULL, NULL )
@@ -96,7 +96,7 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 /*
  * @implemented
  */
-int STDCALL
+int WINAPI
 GetSystemMetrics(int nIndex)
 {
   GetConnected();
@@ -109,14 +109,14 @@ GetSystemMetrics(int nIndex)
 /*
  * @unimplemented
  */
-BOOL STDCALL SetDeskWallpaper(LPCSTR filename)
+BOOL WINAPI SetDeskWallpaper(LPCSTR filename)
 {
 	return SystemParametersInfoA(SPI_SETDESKWALLPAPER,0,(PVOID)filename,TRUE);
 }
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SystemParametersInfoA(UINT uiAction,
 		      UINT uiParam,
 		      PVOID pvParam,
@@ -339,7 +339,7 @@ SystemParametersInfoA(UINT uiAction,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SystemParametersInfoW(UINT uiAction,
 		      UINT uiParam,
 		      PVOID pvParam,
@@ -446,19 +446,7 @@ SystemParametersInfoW(UINT uiAction,
 /*
  * @implemented
  */
-BOOL
-STDCALL
-CloseDesktop(
-  HDESK hDesktop)
-{
-  return NtUserCloseDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
-HDESK STDCALL
+HDESK WINAPI
 CreateDesktopA(LPCSTR lpszDesktop,
 	       LPCSTR lpszDevice,
 	       LPDEVMODEA pDevmode,
@@ -500,7 +488,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
 /*
  * @implemented
  */
-HDESK STDCALL
+HDESK WINAPI
 CreateDesktopW(LPCWSTR lpszDesktop,
 	       LPCWSTR lpszDevice,
 	       LPDEVMODEW pDevmode,
@@ -530,7 +518,7 @@ CreateDesktopW(LPCWSTR lpszDesktop,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDesktopsA(
   HWINSTA WindowStation,
   DESKTOPENUMPROCA EnumFunc,
@@ -544,7 +532,7 @@ EnumDesktopsA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 EnumDesktopsW(
   HWINSTA WindowStation,
   DESKTOPENUMPROCW EnumFunc,
@@ -558,7 +546,7 @@ EnumDesktopsW(
  * @implemented
  */
 HDESK
-STDCALL
+WINAPI
 GetThreadDesktop(
   DWORD dwThreadId)
 {
@@ -570,7 +558,7 @@ GetThreadDesktop(
  * @implemented
  */
 HDESK
-STDCALL
+WINAPI
 OpenDesktopA(
   LPSTR lpszDesktop,
   DWORD dwFlags,
@@ -606,7 +594,7 @@ OpenDesktopA(
  * @implemented
  */
 HDESK
-STDCALL
+WINAPI
 OpenDesktopW(
   LPWSTR lpszDesktop,
   DWORD dwFlags,
@@ -627,70 +615,7 @@ OpenDesktopW(
 /*
  * @implemented
  */
-HDESK
-STDCALL
-OpenInputDesktop(
-  DWORD dwFlags,
-  BOOL fInherit,
-  ACCESS_MASK dwDesiredAccess)
-{
-  return NtUserOpenInputDesktop(
-    dwFlags,
-    fInherit,
-    dwDesiredAccess);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-PaintDesktop(
-  HDC hdc)
-{
-  return NtUserPaintDesktop(hdc);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetThreadDesktop(
-  HDESK hDesktop)
-{
-  return NtUserSetThreadDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SwitchDesktop(
-  HDESK hDesktop)
-{
-  return NtUserSwitchDesktop(hDesktop);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
-SetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
-{
-	return NtUserSetShellWindowEx(hwndShell, hwndShellListView);
-}
-
-
-/*
- * @implemented
- */
-BOOL STDCALL
+BOOL WINAPI
 SetShellWindow(HWND hwndShell)
 {
 	return SetShellWindowEx(hwndShell, hwndShell);
@@ -700,10 +625,10 @@ SetShellWindow(HWND hwndShell)
 /*
  * @implemented
  */
-HWND STDCALL
+HWND WINAPI
 GetShellWindow(VOID)
 {
-   PDESKTOP pdi;
+   PDESKTOPINFO pdi;
    pdi = GetThreadDesktopInfo();
    if (pdi) return pdi->hShellWindow;
    return NULL;

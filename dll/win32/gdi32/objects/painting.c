@@ -5,7 +5,7 @@
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 LineTo( HDC hDC, INT x, INT y )
 {
 #if 0
@@ -35,7 +35,7 @@ LineTo( HDC hDC, INT x, INT y )
 
 
 BOOL
-STDCALL
+WINAPI
 MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
 {
  PDC_ATTR Dc_Attr;
@@ -89,7 +89,7 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Ellipse(HDC hDC, INT Left, INT Top, INT Right, INT Bottom)
 {
 #if 0
@@ -122,7 +122,7 @@ Ellipse(HDC hDC, INT Left, INT Top, INT Right, INT Bottom)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Rectangle(HDC hDC, INT Left, INT Top, INT Right, INT Bottom)
 {
 #if 0
@@ -155,7 +155,7 @@ Rectangle(HDC hDC, INT Left, INT Top, INT Right, INT Bottom)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 RoundRect(HDC hDC, INT Left, INT Top, INT Right, INT Bottom,
                                                 INT ell_Width, INT ell_Height)
 {
@@ -191,7 +191,7 @@ RoundRect(HDC hDC, INT Left, INT Top, INT Right, INT Bottom,
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 GetPixel( HDC hDC, INT x, INT y )
 {
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC) return CLR_INVALID;
@@ -204,7 +204,7 @@ GetPixel( HDC hDC, INT x, INT y )
  * @implemented
  */
 COLORREF
-STDCALL
+WINAPI
 SetPixel( HDC hDC, INT x, INT y, COLORREF Color )
 {
 #if 0
@@ -238,7 +238,7 @@ SetPixel( HDC hDC, INT x, INT y, COLORREF Color )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPixelV( HDC hDC, INT x, INT y, COLORREF Color )
 {
    COLORREF Cr = SetPixel( hDC, x, y, Color );
@@ -251,7 +251,7 @@ SetPixelV( HDC hDC, INT x, INT y, COLORREF Color )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FillRgn( HDC hDC, HRGN hRgn, HBRUSH hBrush )
 {
 
@@ -286,7 +286,7 @@ FillRgn( HDC hDC, HRGN hRgn, HBRUSH hBrush )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 FrameRgn( HDC hDC, HRGN hRgn, HBRUSH hBrush, INT nWidth, INT nHeight )
 {
 
@@ -321,7 +321,7 @@ FrameRgn( HDC hDC, HRGN hRgn, HBRUSH hBrush, INT nWidth, INT nHeight )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 InvertRgn( HDC hDC, HRGN hRgn )
 {
 
@@ -356,7 +356,7 @@ InvertRgn( HDC hDC, HRGN hRgn )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PaintRgn( HDC hDC, HRGN hRgn )
 {
 #if 0
@@ -392,7 +392,7 @@ PaintRgn( HDC hDC, HRGN hRgn )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PolyBezier(HDC hDC ,const POINT* Point, DWORD cPoints)
 {
 #if 0
@@ -429,7 +429,7 @@ PolyBezier(HDC hDC ,const POINT* Point, DWORD cPoints)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PolyBezierTo(HDC hDC, const POINT* Point ,DWORD cPoints)
 {
 #if 0
@@ -462,7 +462,7 @@ PolyBezierTo(HDC hDC, const POINT* Point ,DWORD cPoints)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PolyDraw(HDC hDC, const POINT* Point, const BYTE *lpbTypes, int cCount )
 {
 #if 0
@@ -495,7 +495,7 @@ PolyDraw(HDC hDC, const POINT* Point, const BYTE *lpbTypes, int cCount )
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Polygon(HDC hDC, const POINT *Point, int Count)
 {
 #if 0
@@ -528,7 +528,7 @@ Polygon(HDC hDC, const POINT *Point, int Count)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 Polyline(HDC hDC, const POINT *Point, int Count)
 {
 #if 0
@@ -561,7 +561,7 @@ Polyline(HDC hDC, const POINT *Point, int Count)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PolylineTo(HDC hDC, const POINT* Point, DWORD Count)
 {
 #if 0
@@ -594,7 +594,7 @@ PolylineTo(HDC hDC, const POINT* Point, DWORD Count)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PolyPolygon(HDC hDC, const POINT* Point, const INT* Count, int Polys)
 {
 #if 0
@@ -627,7 +627,7 @@ PolyPolygon(HDC hDC, const POINT* Point, const INT* Count, int Polys)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PolyPolyline(HDC hDC, const POINT* Point, const DWORD* Counts, DWORD Polys)
 {
 #if 0
@@ -660,7 +660,7 @@ PolyPolyline(HDC hDC, const POINT* Point, const DWORD* Counts, DWORD Polys)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ExtFloodFill(
        HDC hDC,
        int nXStart,
@@ -740,7 +740,7 @@ MaskBlt(
 	                    xMask,
 	                    yMask,
 	                    dwRop,
-	                    0);
+	                    GetBkColor(hdcSrc));
 }
 
 
@@ -771,5 +771,5 @@ PlgBlt(
 	                   hbmMask,
 	                   xMask,
 	                   yMask,
-	                   0);
+	                   GetBkColor(hdcSrc));
 }

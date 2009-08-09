@@ -1,8 +1,5 @@
 #ifndef _CPL_H
 #define _CPL_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #include <pshpack1.h>
 

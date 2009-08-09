@@ -1,0 +1,91 @@
+Made by Vicmarcal 23/11/08
+
+THIS FILE HELPS TO EXPLAIN HOW REN IS NOW IMPLEMENTED. 
+****************************************************************
+(Please change or add latest modifications)
+****************************************************************
+Before detailing the Rem code just 3 things:
+
+1)Ren can be used in 3 different ways:
+
+WAY #1:Full Path Way:
+ren c:\ie\hello.txt c:\ie\hi.txt
+
+rename command will change the name of hello.txt->hi.txt. We have to be sure that both paths(c:\ie\ ) be the same.Since rename cant move files within Directories (MSDN).
+
+WAY #2:Semi Path Way:
+ren c:\ie\hello.txt hi.txt 
+
+This is a special feature,since this does the same as Way #1 but without telling the Destiny path.So this feature must be implemented also.
+
+WAY #3: Just file
+ren hello.txt hi.txt
+
+So it changes the name of hello.txt in the current directory.
+
+2)Also can be used Wildcards.So be careful ;)
+
+3)Syntax errors:
+
+-Way #1 with different Subdirectories path: ren c:\ie\hello.txt c:\hi\hi.txt, this is not possible.Since ren doesnt move files,just rename them.
+-Way #2 semi path in destiny: ren hello.txt c:\ie\hi.txt. This feature isnt available.
+
+
+**************************************************
+Explaining code:
+
+
+srcPattern: here is stored Source Argument (C:\ie\hello.txt) 
+srcPath: here  is  stored Source Path(C:\ie)
+srcFILE: here  is  stored FILE name(hello.txt)
+
+dstPattern: here is stored Destiny Argument (C:\ie\hi.txt)
+dstPath: here  is  stored Destiny Path(C:\i)
+dstFILE: here  is  stored FILE re-name(hi.txt)
+
+1)We begin retrieving arguments from command line and fulffilling dstPattern and srcPattern 
+
+
+2)If srcPattern contains "\" then:
+		-we activate bPath, since srcPattern has a path inside of it.
+		-we explit the srcPattern to srcFile and srcPath.
+	-Now we check the dstPattern ¿does it contain a Path?:
+		-If does: we divide it in dstPath and dstFile.AND ALSO CHECK THAT dstPath and srcPath it´s the same(see syntax error).If they aren the same we launch an error.
+		-If doesnt then we copy srcPath to dstPath(see #way2) and also saving dstPattern as dstFile.
+3)If srcPattern doesnt contain "\" then:
+		-srcPattern is copied in srcFile(we dont need a previous split,because it´s just a name)
+	-Now we check the dstPattern ¿does it contains a Path?
+		-If does: we launch an error (see syntax error 2)
+		-If doesnt: we copy dstPattern to dstFile(we dont need a previous split because it´s just a name)
+
+4)Now we are entering in the do...while:
+
+"p" will store a REAL name file(It uses f.cFileName)
+Real name file is the name that FindFile returns us.FindFile return NULL if it doesnt find the Source File that we want to  rename.And returns the name if finds it.
+
+Do while is used to manage Wildcards.So we can iterate Finding all the files with the Wildcards in it.
+But wildcards (? and *) has different behavior so we have to be carefull.
+
+"q" stores the srcFile(this can be a real name file but ALSO A NAME FULL OF WILDCARDS)(p always has a REAL NAME)(This is the most difficult point to understand the code)
+"r" is the Name File after aplying the Mask (q)(it´s stored in dstLast).
+
+If we are just renaming one file,then we dont make the while loop.The do..while loop is made when some files are renamed: i.e ren *.lol *.rem
+
+5)Now we have to check our Boolean.
+
+bPath==TRUE means that Source Argument was a Path so now we have to Join again the Path with the Name File:
+	-srcFINAL: srcPath+f.cFileName
+	-dstFINAL: dstPath+dstFile
+bPath==False then Souce wasn a Path an we dont need to join anything.
+	-srcFINAL:f.cFileName
+	-dstFINAL:dstFile
+
+
+At last we just make a MoveFile(srcFinal, dstFinal)):
+
+Also there are a Bunch of Flags (the options)
+.It makes the code more difficult to understand.But they are just option flags that show or hides errors,that prevents system files to be renamed...and so.
+
+
+
+

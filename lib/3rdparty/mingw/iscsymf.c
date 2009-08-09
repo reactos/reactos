@@ -13,6 +13,10 @@
 
 #include <ctype.h>
 
+#ifdef iscsymf
+#undef iscsymf
+#endif
+
 int
 iscsymf (int c)
 {

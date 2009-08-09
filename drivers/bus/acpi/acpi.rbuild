@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
+<module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="acpi">include</include>
 	<include base="acpi">ospm/include</include>

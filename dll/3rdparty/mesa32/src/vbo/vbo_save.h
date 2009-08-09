@@ -34,7 +34,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef VBO_SAVE_H
 #define VBO_SAVE_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 #include "vbo.h"
 #include "vbo_attrib.h"
 

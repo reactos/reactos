@@ -1,13 +1,12 @@
-<module name="lsasrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LSASRV}" installbase="system32" installname="lsasrv.dll" unicode="yes">
-	<importlibrary definition="lsasrv.def" />
+<module name="lsasrv" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_LSASRV}" installbase="system32" installname="lsasrv.dll" unicode="yes" allowwarnings="true">
+	<importlibrary definition="lsasrv.spec" />
 	<include base="lsasrv">.</include>
 	<include base="lsa_server">.</include>
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x0600</define>
 	<library>lsa_server</library>
-	<library>ntdll</library>
+	<library>wine</library>
 	<library>kernel32</library>
 	<library>rpcrt4</library>
+	<library>ntdll</library>
 	<library>pseh</library>
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>

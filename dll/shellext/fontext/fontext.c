@@ -28,7 +28,7 @@ DllGetClassObject(REFCLSID rclsid,
     return S_OK;
 }
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,
         DWORD dwReason,
         LPVOID lpvReserved)

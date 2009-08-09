@@ -23,7 +23,7 @@
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes,
                  LPCSTR lpName)
 {
@@ -59,7 +59,7 @@ CreateJobObjectA(LPSECURITY_ATTRIBUTES lpJobAttributes,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
                  LPCWSTR lpName)
 {
@@ -111,7 +111,7 @@ CreateJobObjectW(LPSECURITY_ATTRIBUTES lpJobAttributes,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 OpenJobObjectW(DWORD dwDesiredAccess,
                BOOL bInheritHandle,
                LPCWSTR lpName)
@@ -153,7 +153,7 @@ OpenJobObjectW(DWORD dwDesiredAccess,
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 OpenJobObjectA(DWORD dwDesiredAccess,
                BOOL bInheritHandle,
                LPCSTR lpName)
@@ -190,7 +190,7 @@ OpenJobObjectA(DWORD dwDesiredAccess,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsProcessInJob(HANDLE ProcessHandle,
                HANDLE JobHandle,
                PBOOL Result)
@@ -213,7 +213,7 @@ IsProcessInJob(HANDLE ProcessHandle,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 AssignProcessToJobObject(HANDLE hJob,
                          HANDLE hProcess)
 {
@@ -233,7 +233,7 @@ AssignProcessToJobObject(HANDLE hJob,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 QueryInformationJobObject(HANDLE hJob,
                           JOBOBJECTINFOCLASS JobObjectInformationClass,
                           LPVOID lpJobObjectInformation,
@@ -307,7 +307,7 @@ QueryInformationJobObject(HANDLE hJob,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetInformationJobObject(HANDLE hJob,
                         JOBOBJECTINFOCLASS JobObjectInformationClass,
                         LPVOID lpJobObjectInformation,
@@ -397,7 +397,7 @@ SetInformationJobObject(HANDLE hJob,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 TerminateJobObject(HANDLE hJob,
                    UINT uExitCode)
 {

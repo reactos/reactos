@@ -10,58 +10,58 @@
  * __do_global_ctors.
  *
  */
-
-/* Needed for the atexit prototype. */
+#include <windows.h>
 #include <stdlib.h>
+#include <setjmp.h>
 
 typedef void (*func_ptr) (void);
 extern func_ptr __CTOR_LIST__[];
 extern func_ptr __DTOR_LIST__[];
+
+static HMODULE hMsvcrt = NULL;
+
+typedef void __cdecl flongjmp(jmp_buf _Buf,int _Value);
+
+flongjmp *fctMsvcrtLongJmp = NULL;
 
 void
 __do_global_dtors (void)
 {
   static func_ptr *p = __DTOR_LIST__ + 1;
 
-  /*
-   * Call each destructor in the destructor list until a null pointer
-   * is encountered.
-   */
   while (*p)
     {
       (*(p)) ();
       p++;
+    }
+  if (hMsvcrt)
+    {
+      FreeLibrary (hMsvcrt);
+      hMsvcrt = NULL;
     }
 }
 
 void
 __do_global_ctors (void)
 {
-  unsigned long nptrs = (unsigned long) __CTOR_LIST__[0];
-  unsigned i;
+  unsigned long nptrs = (unsigned long) (ptrdiff_t) __CTOR_LIST__[0];
+  unsigned long i;
 
-  /*
-   * If the first entry in the constructor list is -1 then the list
-   * is terminated with a null entry. Otherwise the first entry was
-   * the number of pointers in the list.
-   */
-  if (nptrs == -1)
+  if (!hMsvcrt) {
+    hMsvcrt = LoadLibrary ("msvcrt.dll");
+    fctMsvcrtLongJmp = (flongjmp *) GetProcAddress( hMsvcrt, "longjmp");
+  }
+
+  if (nptrs == (unsigned long) -1)
     {
-      for (nptrs = 0; __CTOR_LIST__[nptrs + 1] != 0; nptrs++)
-	;
+      for (nptrs = 0; __CTOR_LIST__[nptrs + 1] != 0; nptrs++);
     }
 
-  /*
-   * Go through the list backwards calling constructors.
-   */
   for (i = nptrs; i >= 1; i--)
     {
       __CTOR_LIST__[i] ();
     }
 
-  /*
-   * Register the destructors for processing on exit.
-   */
   atexit (__do_global_dtors);
 }
 
@@ -76,4 +76,3 @@ __main (void)
       __do_global_ctors ();
     }
 }
-

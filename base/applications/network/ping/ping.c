@@ -14,19 +14,6 @@
 
 #define NDEBUG
 
-#ifndef _MSC_VER
-
-/* Should be in the header files somewhere (exported by ntdll.dll) */
-long atol(const char *str);
-
-#ifndef __int64
-typedef long long __int64;
-#endif
-
-char * _i64toa(__int64 value, char *string, int radix);
-
-#endif /* _MSC_VER */
-
 /* General ICMP constants */
 #define ICMP_MINSIZE        8     /* Minimum ICMP packet size */
 #define ICMP_MAXSIZE        65535 /* Maximum ICMP packet size */
@@ -234,7 +221,7 @@ static BOOL ParseCmdline(int argc, char* argv[])
                     if (DataSize > ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET))
                     {
                         printf("Bad value for option -l, valid range is from 0 to %d.\n",
-                            ICMP_MAXSIZE - sizeof(ICMP_ECHO_PACKET));
+                            ICMP_MAXSIZE - (int)sizeof(ICMP_ECHO_PACKET));
                         return FALSE;
                    }
                     break;
@@ -467,7 +454,7 @@ static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 
 
     printf("Reply from %s: bytes=%d time%s%s TTL=%d\n", inet_ntoa(from->sin_addr),
-      size - IphLength - sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
+      size - IphLength - (int)sizeof(ICMP_ECHO_PACKET), Sign, Time, IpHeader->TTL);
     if (RelativeTime.QuadPart < MinRTT.QuadPart || !MinRTTSet)
     {
         MinRTT.QuadPart = RelativeTime.QuadPart;
@@ -541,6 +528,7 @@ static BOOL Ping(VOID)
     }
     if (Status == SOCKET_ERROR)
     {
+        LostCount++;
         if (WSAGetLastError() == WSAEHOSTUNREACH)
             printf("Destination host unreachable.\n");
         else
@@ -567,6 +555,8 @@ static BOOL Ping(VOID)
         printf("\n");
 #endif /* !NDEBUG */
     }
+    else
+        LostCount++;
     if (Status == SOCKET_ERROR)
     {
         if (WSAGetLastError() != WSAETIMEDOUT)
@@ -581,7 +571,6 @@ static BOOL Ping(VOID)
     if (Status == 0)
     {
         printf("Request timed out.\n");
-        LostCount++;
         GlobalFree(Buffer);
         return TRUE;
     }
@@ -644,9 +633,13 @@ int main(int argc, char* argv[])
         printf("\nPing statistics for %s:\n", TargetIP);
         printf("    Packets: Sent = %d, Received = %d, Lost = %d (%d%% loss),\n",
             SentCount, SentCount - LostCount, LostCount, Count);
-        printf("Approximate round trip times in milli-seconds:\n");
-        printf("    Minimum = %s, Maximum = %s, Average = %s\n",
-            MinTime, MaxTime, AvgTime);
+        /* Print approximate times or NO approximate times if 100% loss */
+        if ((SentCount - LostCount) > 0)
+        {
+            printf("Approximate round trip times in milli-seconds:\n");
+            printf("    Minimum = %s, Maximum = %s, Average = %s\n",
+                MinTime, MaxTime, AvgTime);
+        }
     }
     return 0;
 }

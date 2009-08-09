@@ -23,8 +23,71 @@
 #include "config.h"
 #include "wined3d_private.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(d3d);
+WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
 #define GLINFO_LOCATION This->resource.wineD3DDevice->adapter->gl_info
+
+static void volume_bind_and_dirtify(IWineD3DVolume *iface) {
+    IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
+    IWineD3DVolumeTexture *texture;
+    int active_sampler;
+
+    /* We don't need a specific texture unit, but after binding the texture the current unit is dirty.
+     * Read the unit back instead of switching to 0, this avoids messing around with the state manager's
+     * gl states. The current texture unit should always be a valid one.
+     *
+     * To be more specific, this is tricky because we can implicitly be called
+     * from sampler() in state.c. This means we can't touch anything other than
+     * whatever happens to be the currently active texture, or we would risk
+     * marking already applied sampler states dirty again.
+     *
+     * TODO: Track the current active texture per GL context instead of using glGet
+     */
+    if (GL_SUPPORT(ARB_MULTITEXTURE)) {
+        GLint active_texture;
+        ENTER_GL();
+        glGetIntegerv(GL_ACTIVE_TEXTURE, &active_texture);
+        LEAVE_GL();
+        active_sampler = This->resource.wineD3DDevice->rev_tex_unit_map[active_texture - GL_TEXTURE0_ARB];
+    } else {
+        active_sampler = 0;
+    }
+
+    if (active_sampler != -1) {
+        IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_SAMPLER(active_sampler));
+    }
+
+    if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DVolumeTexture, (void **)&texture))) {
+        IWineD3DVolumeTexture_BindTexture(texture);
+        IWineD3DVolumeTexture_Release(texture);
+    } else {
+        ERR("Volume should be part of a volume texture\n");
+    }
+}
+
+void volume_add_dirty_box(IWineD3DVolume *iface, const WINED3DBOX *dirty_box)
+{
+    IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
+
+    This->dirty = TRUE;
+    if (dirty_box)
+    {
+        This->lockedBox.Left = min(This->lockedBox.Left, dirty_box->Left);
+        This->lockedBox.Top = min(This->lockedBox.Top, dirty_box->Top);
+        This->lockedBox.Front = min(This->lockedBox.Front, dirty_box->Front);
+        This->lockedBox.Right = max(This->lockedBox.Right, dirty_box->Right);
+        This->lockedBox.Bottom = max(This->lockedBox.Bottom, dirty_box->Bottom);
+        This->lockedBox.Back = max(This->lockedBox.Back, dirty_box->Back);
+    }
+    else
+    {
+        This->lockedBox.Left = 0;
+        This->lockedBox.Top = 0;
+        This->lockedBox.Front = 0;
+        This->lockedBox.Right = This->currentDesc.Width;
+        This->lockedBox.Bottom = This->currentDesc.Height;
+        This->lockedBox.Back = This->currentDesc.Depth;
+    }
+}
 
 /* *******************************************
    IWineD3DVolume IUnknown parts follow
@@ -56,7 +119,7 @@ static ULONG WINAPI IWineD3DVolumeImpl_Release(IWineD3DVolume *iface) {
     TRACE("(%p) : Releasing from %d\n", This, This->resource.ref);
     ref = InterlockedDecrement(&This->resource.ref);
     if (ref == 0) {
-        IWineD3DResourceImpl_CleanUp((IWineD3DResource *)iface);
+        resource_cleanup((IWineD3DResource *)iface);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -66,39 +129,46 @@ static ULONG WINAPI IWineD3DVolumeImpl_Release(IWineD3DVolume *iface) {
    IWineD3DVolume IWineD3DResource parts follow
    **************************************************** */
 static HRESULT WINAPI IWineD3DVolumeImpl_GetParent(IWineD3DVolume *iface, IUnknown **pParent) {
-    return IWineD3DResourceImpl_GetParent((IWineD3DResource *)iface, pParent);
+    return resource_get_parent((IWineD3DResource *)iface, pParent);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_GetDevice(IWineD3DVolume *iface, IWineD3DDevice** ppDevice) {
-    return IWineD3DResourceImpl_GetDevice((IWineD3DResource *)iface, ppDevice);
+    return resource_get_device((IWineD3DResource *)iface, ppDevice);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_SetPrivateData(IWineD3DVolume *iface, REFGUID refguid, CONST void* pData, DWORD SizeOfData, DWORD Flags) {
-    return IWineD3DResourceImpl_SetPrivateData((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
+    return resource_set_private_data((IWineD3DResource *)iface, refguid, pData, SizeOfData, Flags);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_GetPrivateData(IWineD3DVolume *iface, REFGUID  refguid, void* pData, DWORD* pSizeOfData) {
-    return IWineD3DResourceImpl_GetPrivateData((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
+    return resource_get_private_data((IWineD3DResource *)iface, refguid, pData, pSizeOfData);
 }
 
 static HRESULT WINAPI IWineD3DVolumeImpl_FreePrivateData(IWineD3DVolume *iface, REFGUID refguid) {
-    return IWineD3DResourceImpl_FreePrivateData((IWineD3DResource *)iface, refguid);
+    return resource_free_private_data((IWineD3DResource *)iface, refguid);
 }
 
 static DWORD WINAPI IWineD3DVolumeImpl_SetPriority(IWineD3DVolume *iface, DWORD PriorityNew) {
-    return IWineD3DResourceImpl_SetPriority((IWineD3DResource *)iface, PriorityNew);
+    return resource_set_priority((IWineD3DResource *)iface, PriorityNew);
 }
 
 static DWORD WINAPI IWineD3DVolumeImpl_GetPriority(IWineD3DVolume *iface) {
-    return IWineD3DResourceImpl_GetPriority((IWineD3DResource *)iface);
+    return resource_get_priority((IWineD3DResource *)iface);
 }
 
 static void WINAPI IWineD3DVolumeImpl_PreLoad(IWineD3DVolume *iface) {
-    IWineD3DResourceImpl_PreLoad((IWineD3DResource *)iface);
+    FIXME("iface %p stub!\n", iface);
+}
+
+static void WINAPI IWineD3DVolumeImpl_UnLoad(IWineD3DVolume *iface) {
+    /* The whole content is shadowed on This->resource.allocatedMemory, and the
+     * texture name is managed by the VolumeTexture container
+     */
+    TRACE("(%p): Nothing to do\n", iface);
 }
 
 static WINED3DRESOURCETYPE WINAPI IWineD3DVolumeImpl_GetType(IWineD3DVolume *iface) {
-    return IWineD3DResourceImpl_GetType((IWineD3DResource *)iface);
+    return resource_get_type((IWineD3DResource *)iface);
 }
 
 /* *******************************************
@@ -180,7 +250,7 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LockBox(IWineD3DVolume *iface, WINED3DL
        * Dirtify on lock
        * as seen in msdn docs
        */
-      IWineD3DVolume_AddDirtyBox(iface, &This->lockedBox);
+      volume_add_dirty_box(iface, &This->lockedBox);
 
       /**  Dirtify Container if needed */
       if (NULL != This->container) {
@@ -216,39 +286,6 @@ static HRESULT WINAPI IWineD3DVolumeImpl_UnlockBox(IWineD3DVolume *iface) {
 
 /* Internal use functions follow : */
 
-static HRESULT WINAPI IWineD3DVolumeImpl_CleanDirtyBox(IWineD3DVolume *iface) {
-  IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
-  This->dirty = FALSE;
-  This->lockedBox.Left   = This->currentDesc.Width;
-  This->lockedBox.Top    = This->currentDesc.Height;
-  This->lockedBox.Front  = This->currentDesc.Depth;
-  This->lockedBox.Right  = 0;
-  This->lockedBox.Bottom = 0;
-  This->lockedBox.Back   = 0;
-  return WINED3D_OK;
-}
-
-static HRESULT WINAPI IWineD3DVolumeImpl_AddDirtyBox(IWineD3DVolume *iface, CONST WINED3DBOX* pDirtyBox) {
-  IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
-  This->dirty = TRUE;
-   if (NULL != pDirtyBox) {
-    This->lockedBox.Left   = min(This->lockedBox.Left,   pDirtyBox->Left);
-    This->lockedBox.Top    = min(This->lockedBox.Top,    pDirtyBox->Top);
-    This->lockedBox.Front  = min(This->lockedBox.Front,  pDirtyBox->Front);
-    This->lockedBox.Right  = max(This->lockedBox.Right,  pDirtyBox->Right);
-    This->lockedBox.Bottom = max(This->lockedBox.Bottom, pDirtyBox->Bottom);
-    This->lockedBox.Back   = max(This->lockedBox.Back,   pDirtyBox->Back);
-  } else {
-    This->lockedBox.Left   = 0;
-    This->lockedBox.Top    = 0;
-    This->lockedBox.Front  = 0;
-    This->lockedBox.Right  = This->currentDesc.Width;
-    This->lockedBox.Bottom = This->currentDesc.Height;
-    This->lockedBox.Back   = This->currentDesc.Depth;
-  }
-  return WINED3D_OK;
-}
-
 static HRESULT WINAPI IWineD3DVolumeImpl_SetContainer(IWineD3DVolume *iface, IWineD3DBase* container) {
     IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
 
@@ -265,10 +302,12 @@ static HRESULT WINAPI IWineD3DVolumeImpl_SetContainer(IWineD3DVolume *iface, IWi
 static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int gl_level, BOOL srgb_mode) {
     IWineD3DVolumeImpl *This     = (IWineD3DVolumeImpl *)iface;
     WINED3DFORMAT format = This->resource.format;
-    const GlPixelFormatDesc *glDesc;
+    const struct GlPixelFormatDesc *glDesc;
     getFormatDescEntry(format, &GLINFO_LOCATION, &glDesc);
 
     TRACE("(%p) : level %u, format %s (0x%08x)\n", This, gl_level, debug_d3dformat(format), format);
+
+    volume_bind_and_dirtify(iface);
 
     TRACE("Calling glTexImage3D %x level=%d, intfmt=%x, w=%d, h=%d,d=%d, 0=%d, glFmt=%x, glType=%x, Mem=%p\n",
             GL_TEXTURE_3D,
@@ -281,6 +320,8 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int 
             glDesc->glFormat,
             glDesc->glType,
             This->resource.allocatedMemory);
+
+    ENTER_GL();
     GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D,
                 gl_level,
                 glDesc->glInternal,
@@ -292,6 +333,7 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int 
                 glDesc->glType,
                 This->resource.allocatedMemory));
     checkGLcall("glTexImage3D");
+    LEAVE_GL();
 
     /* When adding code releasing This->resource.allocatedMemory to save data keep in mind that
      * GL_UNPACK_CLIENT_STORAGE_APPLE is enabled by default if supported(GL_APPLE_client_storage).
@@ -316,6 +358,7 @@ const IWineD3DVolumeVtbl IWineD3DVolume_Vtbl =
     IWineD3DVolumeImpl_SetPriority,
     IWineD3DVolumeImpl_GetPriority,
     IWineD3DVolumeImpl_PreLoad,
+    IWineD3DVolumeImpl_UnLoad,
     IWineD3DVolumeImpl_GetType,
     /* IWineD3DVolume */
     IWineD3DVolumeImpl_GetContainer,
@@ -323,8 +366,6 @@ const IWineD3DVolumeVtbl IWineD3DVolume_Vtbl =
     IWineD3DVolumeImpl_LockBox,
     IWineD3DVolumeImpl_UnlockBox,
     /* Internal interface */
-    IWineD3DVolumeImpl_AddDirtyBox,
-    IWineD3DVolumeImpl_CleanDirtyBox,
     IWineD3DVolumeImpl_LoadTexture,
     IWineD3DVolumeImpl_SetContainer
 };

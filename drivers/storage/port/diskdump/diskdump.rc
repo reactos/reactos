@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: diskdump.rc 21842 2006-05-07 19:16:11Z ion $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Crash Dump Disk Driver\0"

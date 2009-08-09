@@ -73,51 +73,51 @@ typedef enum _DXEGSHDEVDATA
 /************************************************************************/
 /* win32k.sys internal protypes for driver functions it exports         */
 /************************************************************************/
-BOOLEAN STDCALL DxEngNUIsTermSrv();
-PDC STDCALL DxEngLockDC(HDC hDC);
-BOOLEAN STDCALL DxEngUnlockDC(PDC pDC);
-DWORD_PTR STDCALL DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
-BOOLEAN STDCALL DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD_PTR);
-BOOLEAN STDCALL DxEngLockHdev(HDEV hdev);
-BOOLEAN STDCALL DxEngUnlockHdev(HDEV hdev);
-DWORD_PTR STDCALL DxEngGetDCState(HDC hDC, DWORD type);
-BOOLEAN STDCALL DxEngReferenceHdev(HDEV hdev);
-BOOLEAN STDCALL DxEngLockShareSem();
-BOOLEAN STDCALL DxEngUnlockShareSem();
-DWORD STDCALL DxEngScreenAccessCheck();
-BOOL STDCALL DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask);
+BOOLEAN NTAPI DxEngNUIsTermSrv();
+PDC NTAPI DxEngLockDC(HDC hDC);
+BOOLEAN NTAPI DxEngUnlockDC(PDC pDC);
+DWORD_PTR NTAPI DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
+BOOLEAN NTAPI DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD_PTR);
+BOOLEAN NTAPI DxEngLockHdev(HDEV hdev);
+BOOLEAN NTAPI DxEngUnlockHdev(HDEV hdev);
+DWORD_PTR NTAPI DxEngGetDCState(HDC hDC, DWORD type);
+BOOLEAN NTAPI DxEngReferenceHdev(HDEV hdev);
+BOOLEAN NTAPI DxEngLockShareSem();
+BOOLEAN NTAPI DxEngUnlockShareSem();
+DWORD NTAPI DxEngScreenAccessCheck();
+BOOL NTAPI DxEngSetDCOwner(HGDIOBJ hObject, DWORD OwnerMask);
 
 /* Prototypes for the following functions are not yet finished */
-BOOLEAN STDCALL DxEngRedrawDesktop();
-ULONG STDCALL DxEngDispUniq();
-ULONG STDCALL DxEngVisRgnUniq();
-HDEV* STDCALL DxEngEnumerateHdev(HDEV *hdev);
-BOOL STDCALL DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
-BOOLEAN STDCALL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
-BOOLEAN STDCALL DxEngCleanDC(HDC hdc);
-BOOLEAN STDCALL DxEngIncDispUniq();
+BOOLEAN NTAPI DxEngRedrawDesktop();
+ULONG NTAPI DxEngDispUniq();
+ULONG NTAPI DxEngVisRgnUniq();
+HDEV* NTAPI DxEngEnumerateHdev(HDEV *hdev);
+BOOL NTAPI DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
+BOOLEAN NTAPI DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
+BOOLEAN NTAPI DxEngCleanDC(HDC hdc);
+BOOLEAN NTAPI DxEngIncDispUniq();
 
-HDC STDCALL DxEngCreateMemoryDC(HDEV hDev);
+HDC NTAPI DxEngCreateMemoryDC(HDEV hDev);
 
-BOOLEAN STDCALL DxEngIsHdevLockedByCurrentThread(HDEV hDev);
-BOOLEAN STDCALL DxEngUnreferenceHdev(HDEV hDev);
-DWORD STDCALL DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
-DWORD STDCALL DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
-DWORD STDCALL DxEngSpSpritesVisible(DWORD x1);
-HDC STDCALL DxEngGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd);
-BOOLEAN STDCALL DxEngDeleteDC(HDC hdc, BOOL Force);
-BOOLEAN STDCALL DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set);
-DWORD STDCALL DxEngSelectBitmap(DWORD x1, DWORD x2);
-DWORD STDCALL DxEngSetBitmapOwner(DWORD x1, DWORD x2);
-DWORD STDCALL DxEngDeleteSurface(DWORD x1);
-DWORD STDCALL DxEngGetSurfaceData(DWORD x1, DWORD x2);
-DWORD STDCALL DxEngAltLockSurface(DWORD x1);
-DWORD STDCALL DxEngUploadPaletteEntryToSurface(DWORD x1, DWORD x2,DWORD x3, DWORD x4);
-DWORD STDCALL DxEngMarkSurfaceAsDirectDraw(DWORD x1, DWORD x2);
-DWORD STDCALL DxEngSelectPaletteToSurface(DWORD x1, DWORD x2);
-DWORD STDCALL DxEngSyncPaletteTableWithDevice(DWORD x1, DWORD x2);
-DWORD STDCALL DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
-DWORD STDCALL DxEngGetRedirectionBitmap(DWORD x1);
-DWORD STDCALL DxEngLoadImage(DWORD x1,DWORD x2);
+BOOLEAN NTAPI DxEngIsHdevLockedByCurrentThread(HDEV hDev);
+BOOLEAN NTAPI DxEngUnreferenceHdev(HDEV hDev);
+DWORD NTAPI DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
+DWORD NTAPI DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
+DWORD NTAPI DxEngSpSpritesVisible(DWORD x1);
+HDC NTAPI DxEngGetDesktopDC(ULONG DcType, BOOL EmptyDC, BOOL ValidatehWnd);
+BOOLEAN NTAPI DxEngDeleteDC(HDC hdc, BOOL Force);
+BOOLEAN NTAPI DxEngSetDCState(HDC hDC, DWORD SetType, DWORD Set);
+DWORD NTAPI DxEngSelectBitmap(DWORD x1, DWORD x2);
+DWORD NTAPI DxEngSetBitmapOwner(DWORD x1, DWORD x2);
+DWORD NTAPI DxEngDeleteSurface(DWORD x1);
+DWORD NTAPI DxEngGetSurfaceData(DWORD x1, DWORD x2);
+DWORD NTAPI DxEngAltLockSurface(DWORD x1);
+DWORD NTAPI DxEngUploadPaletteEntryToSurface(DWORD x1, DWORD x2,DWORD x3, DWORD x4);
+DWORD NTAPI DxEngMarkSurfaceAsDirectDraw(DWORD x1, DWORD x2);
+DWORD NTAPI DxEngSelectPaletteToSurface(DWORD x1, DWORD x2);
+DWORD NTAPI DxEngSyncPaletteTableWithDevice(DWORD x1, DWORD x2);
+DWORD NTAPI DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
+DWORD NTAPI DxEngGetRedirectionBitmap(DWORD x1);
+DWORD NTAPI DxEngLoadImage(DWORD x1,DWORD x2);
 
 

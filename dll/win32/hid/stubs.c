@@ -15,7 +15,7 @@
  * @unimplemented
  */
 HIDAPI
-BOOLEAN DDKAPI
+BOOLEAN WINAPI
 HidD_GetConfiguration(IN HANDLE HidDeviceObject,
                       OUT PHIDD_CONFIGURATION Configuration,
                       IN ULONG ConfigurationLength)
@@ -29,7 +29,7 @@ HidD_GetConfiguration(IN HANDLE HidDeviceObject,
  * @unimplemented
  */
 HIDAPI
-BOOLEAN DDKAPI
+BOOLEAN WINAPI
 HidD_GetIndexedString(IN HANDLE HidDeviceObject,
                       IN ULONG StringIndex,
                       OUT PVOID Buffer,
@@ -44,7 +44,7 @@ HidD_GetIndexedString(IN HANDLE HidDeviceObject,
  * @unimplemented
  */
 HIDAPI
-BOOLEAN DDKAPI
+BOOLEAN WINAPI
 HidD_GetMsGenreDescriptor(IN HANDLE HidDeviceObject,
                           OUT PVOID Buffer,
                           IN ULONG BufferLength)
@@ -58,7 +58,7 @@ HidD_GetMsGenreDescriptor(IN HANDLE HidDeviceObject,
  * @unimplemented
  */
 HIDAPI
-BOOLEAN DDKAPI
+BOOLEAN WINAPI
 HidD_SetConfiguration(IN HANDLE HidDeviceObject,
                       IN PHIDD_CONFIGURATION Configuration,
                       IN ULONG ConfigurationLength)
@@ -72,7 +72,7 @@ HidD_SetConfiguration(IN HANDLE HidDeviceObject,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetCaps(IN PHIDP_PREPARSED_DATA PreparsedData,
              OUT PHIDP_CAPS Capabilities)
 {
@@ -85,7 +85,7 @@ HidP_GetCaps(IN PHIDP_PREPARSED_DATA PreparsedData,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetData(IN HIDP_REPORT_TYPE ReportType,
              OUT PHIDP_DATA DataList,
              IN OUT PULONG DataLength,
@@ -102,7 +102,7 @@ HidP_GetData(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetExtendedAttributes(IN HIDP_REPORT_TYPE ReportType,
                            IN USHORT DataIndex,
                            IN PHIDP_PREPARSED_DATA PreparsedData,
@@ -118,7 +118,7 @@ HidP_GetExtendedAttributes(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetLinkCollectionNodes(OUT PHIDP_LINK_COLLECTION_NODE LinkCollectionNodes,
                             IN OUT PULONG LinkCollectionNodesLength,
                             IN PHIDP_PREPARSED_DATA PreparsedData)
@@ -132,7 +132,7 @@ HidP_GetLinkCollectionNodes(OUT PHIDP_LINK_COLLECTION_NODE LinkCollectionNodes,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetScaledUsageValue(IN HIDP_REPORT_TYPE ReportType,
                          IN USAGE UsagePage,
                          IN USHORT LinkCollection OPTIONAL,
@@ -151,7 +151,7 @@ HidP_GetScaledUsageValue(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetSpecificButtonCaps(IN HIDP_REPORT_TYPE ReportType,
                            IN USAGE UsagePage,
                            IN USHORT LinkCollection,
@@ -169,7 +169,7 @@ HidP_GetSpecificButtonCaps(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetSpecificValueCaps(IN HIDP_REPORT_TYPE ReportType,
                           IN USAGE UsagePage,
                           IN USHORT LinkCollection,
@@ -187,7 +187,7 @@ HidP_GetSpecificValueCaps(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetUsageValue(IN HIDP_REPORT_TYPE ReportType,
                    IN USAGE UsagePage,
                    IN USHORT LinkCollection,
@@ -206,7 +206,7 @@ HidP_GetUsageValue(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetUsageValueArray(IN HIDP_REPORT_TYPE ReportType,
                         IN USAGE UsagePage,
                         IN USHORT LinkCollection  OPTIONAL,
@@ -226,7 +226,7 @@ HidP_GetUsageValueArray(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetUsages(IN HIDP_REPORT_TYPE ReportType,
                IN USAGE UsagePage,
                IN USHORT LinkCollection  OPTIONAL,
@@ -245,7 +245,7 @@ HidP_GetUsages(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_GetUsagesEx(IN HIDP_REPORT_TYPE ReportType,
                  IN USHORT LinkCollection,
                  OUT PUSAGE_AND_PAGE ButtonList,
@@ -263,7 +263,7 @@ HidP_GetUsagesEx(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_InitializeReportForID(IN HIDP_REPORT_TYPE ReportType,
                            IN UCHAR ReportID,
                            IN PHIDP_PREPARSED_DATA PreparsedData,
@@ -279,7 +279,7 @@ HidP_InitializeReportForID(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-ULONG DDKAPI
+ULONG WINAPI
 HidP_MaxDataListLength(IN HIDP_REPORT_TYPE  ReportType,
                        IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
@@ -292,7 +292,7 @@ HidP_MaxDataListLength(IN HIDP_REPORT_TYPE  ReportType,
  * @unimplemented
  */
 HIDAPI
-ULONG DDKAPI
+ULONG WINAPI
 HidP_MaxUsageListLength(IN HIDP_REPORT_TYPE ReportType,
                         IN USAGE UsagePage OPTIONAL,
                         IN PHIDP_PREPARSED_DATA PreparsedData)
@@ -306,7 +306,7 @@ HidP_MaxUsageListLength(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_SetData(IN HIDP_REPORT_TYPE ReportType,
              IN PHIDP_DATA DataList,
              IN OUT PULONG DataLength,
@@ -323,7 +323,7 @@ HidP_SetData(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_SetScaledUsageValue(IN HIDP_REPORT_TYPE ReportType,
                          IN USAGE UsagePage,
                          IN USHORT LinkCollection OPTIONAL,
@@ -342,7 +342,7 @@ HidP_SetScaledUsageValue(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_SetUsageValue(IN HIDP_REPORT_TYPE ReportType,
                    IN USAGE UsagePage,
                    IN USHORT LinkCollection,
@@ -361,7 +361,7 @@ HidP_SetUsageValue(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_SetUsageValueArray(IN HIDP_REPORT_TYPE ReportType,
                         IN USAGE UsagePage,
                         IN USHORT LinkCollection OPTIONAL,
@@ -381,7 +381,7 @@ HidP_SetUsageValueArray(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_SetUsages(IN HIDP_REPORT_TYPE ReportType,
                IN USAGE UsagePage,
                IN USHORT LinkCollection OPTIONAL,
@@ -400,7 +400,7 @@ HidP_SetUsages(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_TranslateUsagesToI8042ScanCodes(IN PUSAGE ChangedUsageList,
                                      IN ULONG UsageListLength,
                                      IN HIDP_KEYBOARD_DIRECTION KeyAction,
@@ -417,7 +417,7 @@ HidP_TranslateUsagesToI8042ScanCodes(IN PUSAGE ChangedUsageList,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_UnsetUsages(IN HIDP_REPORT_TYPE ReportType,
                  IN USAGE UsagePage,
                  IN USHORT LinkCollection OPTIONAL,
@@ -436,7 +436,7 @@ HidP_UnsetUsages(IN HIDP_REPORT_TYPE ReportType,
  * @unimplemented
  */
 HIDAPI
-NTSTATUS DDKAPI
+NTSTATUS WINAPI
 HidP_UsageListDifference(IN PUSAGE PreviousUsageList,
                          IN PUSAGE CurrentUsageList,
                          OUT PUSAGE BreakUsageList,

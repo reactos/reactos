@@ -30,9 +30,14 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 
+extern HGDIOBJ StockObjects[];
+extern SHORT gusLanguageID;
 
+SHORT FASTCALL IntGdiGetLanguageID();
 ULONG FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
-DWORD STDCALL IntGetQueueStatus(BOOL ClearChanges);
+DWORD APIENTRY IntGetQueueStatus(BOOL ClearChanges);
 VOID FASTCALL IntUserManualGuiCheck(LONG Check);
+PVOID APIENTRY HackSecureVirtualMemory(IN PVOID,IN SIZE_T,IN ULONG,OUT PVOID *);
+VOID APIENTRY HackUnsecureVirtualMemory(IN PVOID);
 
 #endif /* __WIN32K_MISC_H */

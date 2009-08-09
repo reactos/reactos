@@ -121,7 +121,7 @@ static BOOL ANIMATE_LoadResW(ANIMATE_INFO *infoPtr, HINSTANCE hInst, LPCWSTR lpN
 
     memset(&mminfo, 0, sizeof(mminfo));
     mminfo.fccIOProc = FOURCC_MEM;
-    mminfo.pchBuffer = (LPSTR)lpAvi;
+    mminfo.pchBuffer = lpAvi;
     mminfo.cchBuffer = SizeofResource(hInst, hrsrc);
     infoPtr->hMMio = mmioOpenW(NULL, &mminfo, MMIO_READ);
     if (!infoPtr->hMMio) 
@@ -391,7 +391,7 @@ static LRESULT ANIMATE_Timer(ANIMATE_INFO *infoPtr)
 
 static DWORD CALLBACK ANIMATE_AnimationThread(LPVOID ptr_)
 {
-    ANIMATE_INFO *infoPtr = (ANIMATE_INFO *)ptr_;
+    ANIMATE_INFO *infoPtr = ptr_;
     HANDLE event;
     DWORD timeout;
 
@@ -472,7 +472,7 @@ static LRESULT ANIMATE_Play(ANIMATE_INFO *infoPtr, UINT cRepeat, WORD wFrom, WOR
 	TRACE("Using an animation thread\n");
         infoPtr->hStopEvent = CreateEventW( NULL, TRUE, FALSE, NULL );
         infoPtr->hThread = CreateThread(0, 0, ANIMATE_AnimationThread,
-                                        (LPVOID)infoPtr, 0, &infoPtr->threadId);
+                                        infoPtr, 0, &infoPtr->threadId);
         if(!infoPtr->hThread) return FALSE;
 
     }
@@ -817,7 +817,7 @@ static BOOL ANIMATE_Create(HWND hWnd, const CREATESTRUCTW *lpcs)
     }
 
     /* allocate memory for info structure */
-    infoPtr = (ANIMATE_INFO *)Alloc(sizeof(ANIMATE_INFO));
+    infoPtr = Alloc(sizeof(ANIMATE_INFO));
     if (!infoPtr) return FALSE;
 
     /* store crossref hWnd <-> info structure */
@@ -962,7 +962,7 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 
     default:
-	if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 	    ERR("unknown msg %04x wp=%08lx lp=%08lx\n", uMsg, wParam, lParam);
 
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);

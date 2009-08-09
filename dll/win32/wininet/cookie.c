@@ -631,10 +631,10 @@ BOOL WINAPI InternetClearAllPerSiteCookieDecisions( VOID )
  *
  * See InternetEnumPerSiteCookieDecisionW.
  */
-BOOL WINAPI InternetEnumPerSiteCookieDecisionA( LPSTR pszSiteName, unsigned long *pcSiteNameSize,
-                                                unsigned long *pdwDecision, unsigned long dwIndex )
+BOOL WINAPI InternetEnumPerSiteCookieDecisionA( LPSTR pszSiteName, ULONG *pcSiteNameSize,
+                                                ULONG *pdwDecision, ULONG dwIndex )
 {
-    FIXME("(%s, %p, %p, 0x%08lx) stub\n",
+    FIXME("(%s, %p, %p, 0x%08x) stub\n",
           debugstr_a(pszSiteName), pcSiteNameSize, pdwDecision, dwIndex);
     return FALSE;
 }
@@ -649,10 +649,10 @@ BOOL WINAPI InternetEnumPerSiteCookieDecisionA( LPSTR pszSiteName, unsigned long
  *    FALSE on failure
  *
  */
-BOOL WINAPI InternetEnumPerSiteCookieDecisionW( LPWSTR pszSiteName, unsigned long *pcSiteNameSize,
-                                                unsigned long *pdwDecision, unsigned long dwIndex )
+BOOL WINAPI InternetEnumPerSiteCookieDecisionW( LPWSTR pszSiteName, ULONG *pcSiteNameSize,
+                                                ULONG *pdwDecision, ULONG dwIndex )
 {
-    FIXME("(%s, %p, %p, 0x%08lx) stub\n",
+    FIXME("(%s, %p, %p, 0x%08x) stub\n",
           debugstr_w(pszSiteName), pcSiteNameSize, pdwDecision, dwIndex);
     return FALSE;
 }
@@ -660,7 +660,7 @@ BOOL WINAPI InternetEnumPerSiteCookieDecisionW( LPWSTR pszSiteName, unsigned lon
 /***********************************************************************
  *           InternetGetPerSiteCookieDecisionA (WININET.@)
  */
-BOOL WINAPI InternetGetPerSiteCookieDecisionA( LPCSTR pwchHostName, unsigned long *pResult )
+BOOL WINAPI InternetGetPerSiteCookieDecisionA( LPCSTR pwchHostName, ULONG *pResult )
 {
     FIXME("(%s, %p) stub\n", debugstr_a(pwchHostName), pResult);
     return FALSE;
@@ -669,7 +669,7 @@ BOOL WINAPI InternetGetPerSiteCookieDecisionA( LPCSTR pwchHostName, unsigned lon
 /***********************************************************************
  *           InternetGetPerSiteCookieDecisionW (WININET.@)
  */
-BOOL WINAPI InternetGetPerSiteCookieDecisionW( LPCWSTR pwchHostName, unsigned long *pResult )
+BOOL WINAPI InternetGetPerSiteCookieDecisionW( LPCWSTR pwchHostName, ULONG *pResult )
 {
     FIXME("(%s, %p) stub\n", debugstr_w(pwchHostName), pResult);
     return FALSE;

@@ -8,6 +8,11 @@
 #ifndef CMLIB_H
 #define CMLIB_H
 
+//
+// Debug support switch
+//
+#define _CMLIB_DEBUG_ 1
+
 #ifdef CMLIB_HOST
     #include <host/typedefs.h>
     #include <stdio.h>
@@ -23,85 +28,90 @@
     #define STATUS_NOT_REGISTRY_FILE         ((NTSTATUS)0xC000015C)
     #define STATUS_REGISTRY_RECOVERED        ((NTSTATUS)0x40000009)
 
+    #define REG_OPTION_VOLATILE              1
+    #define OBJ_CASE_INSENSITIVE             0x00000040L
+    #define USHORT_MAX                       USHRT_MAX
+
+    VOID NTAPI
+    KeQuerySystemTime(
+        OUT PLARGE_INTEGER CurrentTime);
+
+    VOID NTAPI
+    RtlInitializeBitMap(
+        IN PRTL_BITMAP BitMapHeader,
+        IN PULONG BitMapBuffer,
+        IN ULONG SizeOfBitMap);
+
+    ULONG NTAPI
+    RtlFindSetBits(
+        IN PRTL_BITMAP BitMapHeader,
+        IN ULONG NumberToFind,
+        IN ULONG HintIndex);
+
+    VOID NTAPI
+    RtlSetBits(
+        IN PRTL_BITMAP BitMapHeader,
+        IN ULONG StartingIndex,
+        IN ULONG NumberToSet);
+
+    VOID NTAPI
+    RtlClearAllBits(
+        IN PRTL_BITMAP BitMapHeader);
+
+    #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
+
+    #define PKTHREAD PVOID
+    #define PKGUARDED_MUTEX PVOID
+    #define PERESOURCE PVOID
+    #define PFILE_OBJECT PVOID
+    #define PKEVENT PVOID
+    #define PWORK_QUEUE_ITEM PVOID
+    #define EX_PUSH_LOCK PULONG_PTR
+
     /* For <host/wcsfuncs.h> */
     #define USE_HOST_WCSFUNCS
+
+    #define CMLTRACE(x, ...)
+#else
+    //
+    // Debug/Tracing support
+    //
+    #if _CMLIB_DEBUG_
+    #ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+    #define CMLTRACE DbgPrintEx
+    #else
+    #define CMLTRACE(x, ...)                                 \
+    if (x & CmlibTraceLevel) DbgPrint(__VA_ARGS__)
+    #endif
+    #else
+    #define CMLTRACE(x, ...) DPRINT(__VA_ARGS__)
+    #endif
+
+
+    #include <ntddk.h>
 #endif
 
 #include <host/wcsfuncs.h>
-
-//
-// Debug support switch
-//
-#define _CMLIB_DEBUG_ 1
 
 //
 // These define the Debug Masks Supported
 //
 #define CMLIB_HCELL_DEBUG                                 0x01
 
-//
-// Debug/Tracing support
-//
-#if _CMLIB_DEBUG_
-#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
-#define CMLTRACE DbgPrintEx
-#else
-#define CMLTRACE(x, ...)                                 \
-    if (x & CmlibTraceLevel) DbgPrint(__VA_ARGS__)
-#endif
-#else
-#define CMLTRACE(x, ...) DPRINT(__VA_ARGS__)
-#endif
-
-#ifndef _TYPEDEFS_HOST_H
- #include <ntddk.h>
-
-#else
- #define REG_OPTION_VOLATILE 1
- #define OBJ_CASE_INSENSITIVE 0x00000040L
- #define USHORT_MAX USHRT_MAX
-
-VOID NTAPI
-KeQuerySystemTime(
-    OUT PLARGE_INTEGER CurrentTime);
-
-VOID NTAPI
-RtlInitializeBitMap(
-    IN PRTL_BITMAP BitMapHeader,
-    IN PULONG BitMapBuffer,
-    IN ULONG SizeOfBitMap);
-
-ULONG NTAPI
-RtlFindSetBits(
-    IN PRTL_BITMAP BitMapHeader,
-    IN ULONG NumberToFind,
-    IN ULONG HintIndex);
-
-VOID NTAPI
-RtlSetBits(
-    IN PRTL_BITMAP BitMapHeader,
-    IN ULONG StartingIndex,
-    IN ULONG NumberToSet);
-
-VOID NTAPI
-RtlClearAllBits(
-    IN PRTL_BITMAP BitMapHeader);
-
-#define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
-
-#define PKTHREAD PVOID
-#define PKGUARDED_MUTEX PVOID
-#define PERESOURCE PVOID
-#define PFILE_OBJECT PVOID
-#define PKEVENT PVOID
-#define PWORK_QUEUE_ITEM PVOID
-#define EX_PUSH_LOCK PULONG_PTR
-
-#endif
-
 #ifndef ROUND_UP
 #define ROUND_UP(a,b)        ((((a)+(b)-1)/(b))*(b))
 #define ROUND_DOWN(a,b)      (((a)/(b))*(b))
+#endif
+
+//
+// PAGE_SIZE definition
+//
+#ifndef PAGE_SIZE
+#if defined(TARGET_i386) || defined(TARGET_amd64) || defined(TARGET_arm)
+#define PAGE_SIZE 0x1000
+#else
+#error Local PAGE_SIZE definition required when built as host
+#endif
 #endif
 
 #define TAG_CM 0x68742020

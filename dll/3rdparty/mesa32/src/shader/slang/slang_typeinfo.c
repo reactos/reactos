@@ -23,17 +23,17 @@
  */
 
 /**
- * \file slang_assemble_typeinfo.c
+ * \file slang_typeinfo.c
  * slang type info
  * \author Michal Krol
  */
 
-#include "imports.h"
+#include "main/imports.h"
+#include "shader/prog_instruction.h"
 #include "slang_typeinfo.h"
 #include "slang_compile.h"
 #include "slang_log.h"
 #include "slang_mem.h"
-#include "prog_instruction.h"
 
 
 /**
@@ -130,7 +130,7 @@ _slang_is_swizzle(const char *field, GLuint rows, slang_swizzle * swz)
  * do not have duplicated fields.  Returns GL_TRUE if this is a
  * swizzle mask.  Returns GL_FALSE otherwise
  */
-GLboolean
+static GLboolean
 _slang_is_swizzle_mask(const slang_swizzle * swz, GLuint rows)
 {
    GLuint i, c = 0;
@@ -154,7 +154,7 @@ _slang_is_swizzle_mask(const slang_swizzle * swz, GLuint rows)
  * Combines (multiplies) two swizzles to form single swizzle.
  * Example: "vec.wzyx.yx" --> "vec.zw".
  */
-GLvoid
+static void
 _slang_multiply_swizzles(slang_swizzle * dst, const slang_swizzle * left,
                          const slang_swizzle * right)
 {
@@ -164,6 +164,110 @@ _slang_multiply_swizzles(slang_swizzle * dst, const slang_swizzle * left,
    for (i = 0; i < right->num_components; i++)
       dst->swizzle[i] = left->swizzle[right->swizzle[i]];
 }
+
+
+typedef struct
+{
+   const char *name;
+   slang_type_specifier_type type;
+} type_specifier_type_name;
+
+static const type_specifier_type_name type_specifier_type_names[] = {
+   {"void", SLANG_SPEC_VOID},
+   {"bool", SLANG_SPEC_BOOL},
+   {"bvec2", SLANG_SPEC_BVEC2},
+   {"bvec3", SLANG_SPEC_BVEC3},
+   {"bvec4", SLANG_SPEC_BVEC4},
+   {"int", SLANG_SPEC_INT},
+   {"ivec2", SLANG_SPEC_IVEC2},
+   {"ivec3", SLANG_SPEC_IVEC3},
+   {"ivec4", SLANG_SPEC_IVEC4},
+   {"float", SLANG_SPEC_FLOAT},
+   {"vec2", SLANG_SPEC_VEC2},
+   {"vec3", SLANG_SPEC_VEC3},
+   {"vec4", SLANG_SPEC_VEC4},
+   {"mat2", SLANG_SPEC_MAT2},
+   {"mat3", SLANG_SPEC_MAT3},
+   {"mat4", SLANG_SPEC_MAT4},
+   {"mat2x3", SLANG_SPEC_MAT23},
+   {"mat3x2", SLANG_SPEC_MAT32},
+   {"mat2x4", SLANG_SPEC_MAT24},
+   {"mat4x2", SLANG_SPEC_MAT42},
+   {"mat3x4", SLANG_SPEC_MAT34},
+   {"mat4x3", SLANG_SPEC_MAT43},
+   {"sampler1D", SLANG_SPEC_SAMPLER1D},
+   {"sampler2D", SLANG_SPEC_SAMPLER2D},
+   {"sampler3D", SLANG_SPEC_SAMPLER3D},
+   {"samplerCube", SLANG_SPEC_SAMPLERCUBE},
+   {"sampler1DShadow", SLANG_SPEC_SAMPLER1DSHADOW},
+   {"sampler2DShadow", SLANG_SPEC_SAMPLER2DSHADOW},
+   {"sampler2DRect", SLANG_SPEC_SAMPLER2DRECT},
+   {"sampler2DRectShadow", SLANG_SPEC_SAMPLER2DRECTSHADOW},
+   {NULL, SLANG_SPEC_VOID}
+};
+
+slang_type_specifier_type
+slang_type_specifier_type_from_string(const char *name)
+{
+   const type_specifier_type_name *p = type_specifier_type_names;
+   while (p->name != NULL) {
+      if (slang_string_compare(p->name, name) == 0)
+         break;
+      p++;
+   }
+   return p->type;
+}
+
+const char *
+slang_type_specifier_type_to_string(slang_type_specifier_type type)
+{
+   const type_specifier_type_name *p = type_specifier_type_names;
+   while (p->name != NULL) {
+      if (p->type == type)
+         break;
+      p++;
+   }
+   return p->name;
+}
+
+/* slang_fully_specified_type */
+
+int
+slang_fully_specified_type_construct(slang_fully_specified_type * type)
+{
+   type->qualifier = SLANG_QUAL_NONE;
+   slang_type_specifier_ctr(&type->specifier);
+   return 1;
+}
+
+void
+slang_fully_specified_type_destruct(slang_fully_specified_type * type)
+{
+   slang_type_specifier_dtr(&type->specifier);
+}
+
+int
+slang_fully_specified_type_copy(slang_fully_specified_type * x,
+                                const slang_fully_specified_type * y)
+{
+   slang_fully_specified_type z;
+
+   if (!slang_fully_specified_type_construct(&z))
+      return 0;
+   z.qualifier = y->qualifier;
+   z.precision = y->precision;
+   z.variant = y->variant;
+   z.centroid = y->centroid;
+   z.array_len = y->array_len;
+   if (!slang_type_specifier_copy(&z.specifier, &y->specifier)) {
+      slang_fully_specified_type_destruct(&z);
+      return 0;
+   }
+   slang_fully_specified_type_destruct(x);
+   *x = z;
+   return 1;
+}
+
 
 
 GLvoid
@@ -185,6 +289,21 @@ slang_type_specifier_dtr(slang_type_specifier * self)
       slang_type_specifier_dtr(self->_array);
       _slang_free(self->_array);
    }
+}
+
+slang_type_specifier *
+slang_type_specifier_new(slang_type_specifier_type type,
+                         struct slang_struct_ *_struct,
+                         struct slang_type_specifier_ *_array)
+{
+   slang_type_specifier *spec =
+      (slang_type_specifier *) _slang_alloc(sizeof(slang_type_specifier));
+   if (spec) {
+      spec->type = type;
+      spec->_struct = _struct;
+      spec->_array = _array;
+   }
+   return spec;
 }
 
 GLboolean
@@ -250,7 +369,7 @@ slang_type_specifier_equal(const slang_type_specifier * x,
 /**
  * As above, but allow float/int casting.
  */
-static GLboolean
+GLboolean
 slang_type_specifier_compatible(const slang_type_specifier * x,
                                 const slang_type_specifier * y)
 {
@@ -273,6 +392,7 @@ slang_type_specifier_compatible(const slang_type_specifier * x,
 GLboolean
 slang_typeinfo_construct(slang_typeinfo * ti)
 {
+   _mesa_bzero(ti, sizeof(*ti));
    slang_type_specifier_ctr(&ti->spec);
    ti->array_len = 0;
    return GL_TRUE;
@@ -304,10 +424,16 @@ _slang_typeof_function(slang_atom a_name,
                        slang_function **funFound,
                        slang_atom_pool *atoms, slang_info_log *log)
 {
-   *funFound = _slang_locate_function(space->funcs, a_name, params,
-                                      num_params, space, atoms, log);
+   GLboolean error;
+
+   *funFound = _slang_function_locate(space->funcs, a_name, params,
+                                      num_params, space, atoms, log, &error);
+   if (error)
+      return GL_FALSE;
+
    if (!*funFound)
       return GL_TRUE;  /* yes, not false */
+
    return slang_type_specifier_copy(spec, &(*funFound)->header.type.specifier);
 }
 
@@ -355,14 +481,6 @@ typeof_math_call(const char *name, slang_operation *call,
    }
 }
 
-GLboolean
-_slang_typeof_operation(const slang_assemble_ctx * A,
-                        slang_operation * op,
-                        slang_typeinfo * ti)
-{
-   return _slang_typeof_operation_(op, &A->space, ti, A->atoms, A->log);
-}
-
 
 /**
  * Determine the return type of an operation.
@@ -373,7 +491,7 @@ _slang_typeof_operation(const slang_assemble_ctx * A,
  * \return GL_TRUE for success, GL_FALSE if failure
  */
 GLboolean
-_slang_typeof_operation_(slang_operation * op,
+_slang_typeof_operation(slang_operation * op,
                          const slang_name_space * space,
                          slang_typeinfo * ti,
                          slang_atom_pool * atoms,
@@ -385,7 +503,6 @@ _slang_typeof_operation_(slang_operation * op,
    switch (op->type) {
    case SLANG_OPER_BLOCK_NO_NEW_SCOPE:
    case SLANG_OPER_BLOCK_NEW_SCOPE:
-   case SLANG_OPER_VARIABLE_DECL:
    case SLANG_OPER_ASM:
    case SLANG_OPER_BREAK:
    case SLANG_OPER_CONTINUE:
@@ -406,7 +523,7 @@ _slang_typeof_operation_(slang_operation * op,
    case SLANG_OPER_DIVASSIGN:
    case SLANG_OPER_PREINCREMENT:
    case SLANG_OPER_PREDECREMENT:
-      if (!_slang_typeof_operation_(op->children, space, ti, atoms, log))
+      if (!_slang_typeof_operation(op->children, space, ti, atoms, log))
          return GL_FALSE;
       break;
    case SLANG_OPER_LITERAL_BOOL:
@@ -470,9 +587,10 @@ _slang_typeof_operation_(slang_operation * op,
       }
       break;
    case SLANG_OPER_IDENTIFIER:
+   case SLANG_OPER_VARIABLE_DECL:
       {
          slang_variable *var;
-         var = _slang_locate_variable(op->locals, op->a_id, GL_TRUE);
+         var = _slang_variable_locate(op->locals, op->a_id, GL_TRUE);
          if (!var) {
             slang_info_log_error(log, "undefined variable '%s'",
                                  (char *) op->a_id);
@@ -483,12 +601,20 @@ _slang_typeof_operation_(slang_operation * op,
             return GL_FALSE;
          }
          ti->can_be_referenced = GL_TRUE;
-         ti->array_len = var->array_len;
+         if (var->type.specifier.type == SLANG_SPEC_ARRAY &&
+             var->type.array_len >= 1) {
+            /* the datatype is an array, ex: float[3] x; */
+            ti->array_len = var->type.array_len;
+         }
+         else {
+            /* the variable is an array, ex: float x[3]; */
+            ti->array_len = var->array_len;
+         }
       }
       break;
    case SLANG_OPER_SEQUENCE:
       /* TODO: check [0] and [1] if they match */
-      if (!_slang_typeof_operation_(&op->children[1], space, ti, atoms, log)) {
+      if (!_slang_typeof_operation(&op->children[1], space, ti, atoms, log)) {
          return GL_FALSE;
       }
       ti->can_be_referenced = GL_FALSE;
@@ -502,7 +628,7 @@ _slang_typeof_operation_(slang_operation * op,
       /*case SLANG_OPER_ANDASSIGN: */
    case SLANG_OPER_SELECT:
       /* TODO: check [1] and [2] if they match */
-      if (!_slang_typeof_operation_(&op->children[1], space, ti, atoms, log)) {
+      if (!_slang_typeof_operation(&op->children[1], space, ti, atoms, log)) {
          return GL_FALSE;
       }
       ti->can_be_referenced = GL_FALSE;
@@ -535,7 +661,7 @@ _slang_typeof_operation_(slang_operation * op,
       break;
    /*case SLANG_OPER_MODULUS: */
    case SLANG_OPER_PLUS:
-      if (!_slang_typeof_operation_(op->children, space, ti, atoms, log))
+      if (!_slang_typeof_operation(op->children, space, ti, atoms, log))
          return GL_FALSE;
       ti->can_be_referenced = GL_FALSE;
       ti->is_swizzled = GL_FALSE;
@@ -552,7 +678,7 @@ _slang_typeof_operation_(slang_operation * op,
 
          if (!slang_typeinfo_construct(&_ti))
             return GL_FALSE;
-         if (!_slang_typeof_operation_(op->children, space, &_ti, atoms, log)) {
+         if (!_slang_typeof_operation(op->children, space, &_ti, atoms, log)) {
             slang_typeinfo_destruct(&_ti);
             return GL_FALSE;
          }
@@ -576,7 +702,18 @@ _slang_typeof_operation_(slang_operation * op,
       }
       break;
    case SLANG_OPER_CALL:
-      if (op->fun) {
+      if (op->array_constructor) {
+         /* build array typeinfo */
+         ti->spec.type = SLANG_SPEC_ARRAY;
+         ti->spec._array = (slang_type_specifier *)
+            _slang_alloc(sizeof(slang_type_specifier));
+         slang_type_specifier_ctr(ti->spec._array);
+
+         ti->spec._array->type =
+            slang_type_specifier_type_from_string((char *) op->a_id);
+         ti->array_len = op->num_children;
+      }
+      else if (op->fun) {
          /* we've resolved this call before */
          slang_type_specifier_copy(&ti->spec, &op->fun->header.type.specifier);
       }
@@ -623,20 +760,26 @@ _slang_typeof_operation_(slang_operation * op,
          }
       }
       break;
+   case SLANG_OPER_METHOD:
+      /* at this time, GLSL 1.20 only has one method: array.length()
+       * which returns an integer.
+       */
+      ti->spec.type = SLANG_SPEC_INT;
+      break;
    case SLANG_OPER_FIELD:
       {
          slang_typeinfo _ti;
 
          if (!slang_typeinfo_construct(&_ti))
             return GL_FALSE;
-         if (!_slang_typeof_operation_(op->children, space, &_ti, atoms, log)) {
+         if (!_slang_typeof_operation(op->children, space, &_ti, atoms, log)) {
             slang_typeinfo_destruct(&_ti);
             return GL_FALSE;
          }
          if (_ti.spec.type == SLANG_SPEC_STRUCT) {
             slang_variable *field;
 
-            field = _slang_locate_variable(_ti.spec._struct->fields, op->a_id,
+            field = _slang_variable_locate(_ti.spec._struct->fields, op->a_id,
                                            GL_FALSE);
             if (field == NULL) {
                slang_typeinfo_destruct(&_ti);
@@ -735,7 +878,7 @@ _slang_typeof_operation_(slang_operation * op,
       break;
    case SLANG_OPER_POSTINCREMENT:
    case SLANG_OPER_POSTDECREMENT:
-      if (!_slang_typeof_operation_(op->children, space, ti, atoms, log))
+      if (!_slang_typeof_operation(op->children, space, ti, atoms, log))
          return GL_FALSE;
       ti->can_be_referenced = GL_FALSE;
       ti->is_swizzled = GL_FALSE;
@@ -745,62 +888,6 @@ _slang_typeof_operation_(slang_operation * op,
    }
 
    return GL_TRUE;
-}
-
-
-/**
- * Lookup a function according to name and parameter count/types.
- */
-slang_function *
-_slang_locate_function(const slang_function_scope * funcs, slang_atom a_name,
-                       slang_operation * args, GLuint num_args,
-                       const slang_name_space * space, slang_atom_pool * atoms,
-                       slang_info_log *log)
-{
-   GLuint i;
-
-   for (i = 0; i < funcs->num_functions; i++) {
-      slang_function *f = &funcs->functions[i];
-      const GLuint haveRetValue = _slang_function_has_return_value(f);
-      GLuint j;
-
-      if (a_name != f->header.a_name)
-         continue;
-      if (f->param_count - haveRetValue != num_args)
-         continue;
-
-      /* compare parameter / argument types */
-      for (j = 0; j < num_args; j++) {
-         slang_typeinfo ti;
-
-         if (!slang_typeinfo_construct(&ti))
-            return NULL;
-         if (!_slang_typeof_operation_(&args[j], space, &ti, atoms, log)) {
-            slang_typeinfo_destruct(&ti);
-            return NULL;
-         }
-         if (!slang_type_specifier_compatible(&ti.spec,
-             &f->parameters->variables[j]->type.specifier)) {
-            slang_typeinfo_destruct(&ti);
-            break;
-         }
-         slang_typeinfo_destruct(&ti);
-
-         /* "out" and "inout" formal parameter requires the actual
-          * parameter to be l-value.
-          */
-         if (!ti.can_be_referenced &&
-             (f->parameters->variables[j]->type.qualifier == SLANG_QUAL_OUT ||
-              f->parameters->variables[j]->type.qualifier == SLANG_QUAL_INOUT))
-            break;
-      }
-      if (j == num_args)
-         return f;
-   }
-   if (funcs->outer_scope != NULL)
-      return _slang_locate_function(funcs->outer_scope, a_name, args,
-                                    num_args, space, atoms, log);
-   return NULL;
 }
 
 
@@ -845,6 +932,34 @@ _slang_type_is_vector(slang_type_specifier_type ty)
    case SLANG_SPEC_BVEC2:
    case SLANG_SPEC_BVEC3:
    case SLANG_SPEC_BVEC4:
+      return GL_TRUE;
+   default:
+      return GL_FALSE;
+   }
+}
+
+
+/**
+ * Determine if a type is a float, float vector or float matrix.
+ * \return GL_TRUE if so, GL_FALSE otherwise
+ */
+GLboolean
+_slang_type_is_float_vec_mat(slang_type_specifier_type ty)
+{
+   switch (ty) {
+   case SLANG_SPEC_FLOAT:
+   case SLANG_SPEC_VEC2:
+   case SLANG_SPEC_VEC3:
+   case SLANG_SPEC_VEC4:
+   case SLANG_SPEC_MAT2:
+   case SLANG_SPEC_MAT3:
+   case SLANG_SPEC_MAT4:
+   case SLANG_SPEC_MAT23:
+   case SLANG_SPEC_MAT32:
+   case SLANG_SPEC_MAT24:
+   case SLANG_SPEC_MAT42:
+   case SLANG_SPEC_MAT34:
+   case SLANG_SPEC_MAT43:
       return GL_TRUE;
    default:
       return GL_FALSE;

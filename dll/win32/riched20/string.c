@@ -22,7 +22,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
-int ME_GetOptimalBuffer(int nLen)
+static int ME_GetOptimalBuffer(int nLen)
 {
   return ((2*nLen+1)+128)&~63;
 }
@@ -83,6 +83,7 @@ ME_String *ME_StrDup(const ME_String *s)
 
 void ME_DestroyString(ME_String *s)
 {
+  if (!s) return;
   FREE_OBJ(s->szData);
   FREE_OBJ(s);
 }
@@ -304,6 +305,8 @@ ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
   /* FIXME: Native also knows about punctuation */
   TRACE("s==%s, start==%d, len==%d, code==%d\n",
         debugstr_wn(s, len), start, len, code);
+  /* convert number of bytes to number of characters. */
+  len /= sizeof(WCHAR);
   switch (code)
   {
     case WB_ISDELIMITER:
@@ -330,11 +333,23 @@ ME_WordBreakProc(LPWSTR s, INT start, INT len, INT code)
 int
 ME_CallWordBreakProc(ME_TextEditor *editor, ME_String *str, INT start, INT code)
 {
-  /* FIXME: ANSIfy the string when bEmulateVersion10 is TRUE */
-  if (!editor->pfnWordBreak)
-    return ME_WordBreakProc(str->szData, start, str->nLen, code);
-  else
-    return editor->pfnWordBreak(str->szData, start, str->nLen, code);
+  if (!editor->pfnWordBreak) {
+    return ME_WordBreakProc(str->szData, start, str->nLen*sizeof(WCHAR), code);
+  } else if (!editor->bEmulateVersion10) {
+    /* MSDN lied about the third parameter for EditWordBreakProc being the number
+     * of characters, it is actually the number of bytes of the string. */
+    return editor->pfnWordBreak(str->szData, start, str->nLen*sizeof(WCHAR), code);
+  } else {
+    int result;
+    int buffer_size = WideCharToMultiByte(CP_ACP, 0, str->szData, str->nLen,
+                                          NULL, 0, NULL, NULL);
+    char *buffer = heap_alloc(buffer_size);
+    WideCharToMultiByte(CP_ACP, 0, str->szData, str->nLen,
+                        buffer, buffer_size, NULL, NULL);
+    result = editor->pfnWordBreak(str->szData, start, str->nLen, code);
+    heap_free(buffer);
+    return result;
+  }
 }
 
 LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz)
@@ -342,12 +357,12 @@ LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz)
   assert(psz != NULL);
 
   if (unicode)
-    return (LPWSTR)psz;
+    return psz;
   else {
     WCHAR *tmp;
-    int nChars = MultiByteToWideChar(CP_ACP, 0, (char *)psz, -1, NULL, 0);
+    int nChars = MultiByteToWideChar(CP_ACP, 0, psz, -1, NULL, 0);
     if((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
-      MultiByteToWideChar(CP_ACP, 0, (char *)psz, -1, tmp, nChars);
+      MultiByteToWideChar(CP_ACP, 0, psz, -1, tmp, nChars);
     return tmp;
   }
 }

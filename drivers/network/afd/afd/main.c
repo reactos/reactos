@@ -38,10 +38,10 @@ void OskitDumpBuffer( PCHAR Data, UINT Len ) {
 
 /* FUNCTIONS */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp) {
     PAFD_FCB FCB;
@@ -52,6 +52,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     ULONG EaLength;
     PWCHAR EaInfoValue = NULL;
     UINT Disposition, i;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
@@ -114,9 +115,6 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
 	FCB->TdiDeviceName.Buffer =
 	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
-	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		       ConnectInfo->TransportName,
-		       FCB->TdiDeviceName.Length );
 
 	if( !FCB->TdiDeviceName.Buffer ) {
 	    ExFreePool(FCB);
@@ -125,6 +123,10 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 	    return STATUS_NO_MEMORY;
 	}
+
+	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+		       ConnectInfo->TransportName,
+		       FCB->TdiDeviceName.Length );
 
 	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n",
 				EaInfo->EaName, &FCB->TdiDeviceName));
@@ -139,16 +141,27 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         AFD_DbgPrint(MID_TRACE,("Packet oriented socket\n"));
 	/* Allocate our backup buffer */
 	FCB->Recv.Window = ExAllocatePool( NonPagedPool, FCB->Recv.Size );
+	if( !FCB->Recv.Window ) Status = STATUS_NO_MEMORY;
         FCB->Send.Window = ExAllocatePool( NonPagedPool, FCB->Send.Size );
+	if( !FCB->Send.Window ) {
+	    if( FCB->Recv.Window ) ExFreePool( FCB->Recv.Window );
+	    Status = STATUS_NO_MEMORY;
+	}
 	/* A datagram socket is always sendable */
 	FCB->PollState |= AFD_EVENT_SEND;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    if( !NT_SUCCESS(Status) ) {
+	if( FCB->TdiDeviceName.Buffer ) ExFreePool( FCB->TdiDeviceName.Buffer );
+	ExFreePool( FCB );
+	FileObject->FsContext = NULL;
+    }
+
+    Irp->IoStatus.Status = Status;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 VOID DestroySocket( PAFD_FCB FCB ) {
@@ -187,9 +200,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	if( InFlightRequest[i]->InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
 				    i, InFlightRequest[i]->InFlightRequest));
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = Status;
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
-	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
+	    IoCancelIrp(InFlightRequest[i]->InFlightRequest);
+	    InFlightRequest[i]->InFlightRequest = NULL;
 	}
     }
 
@@ -205,8 +217,21 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 	ExFreePool( FCB->AddressFrom );
     if( FCB->LocalAddress )
 	ExFreePool( FCB->LocalAddress );
+    if( FCB->RemoteAddress )
+	ExFreePool( FCB->RemoteAddress );
+    if( FCB->TdiDeviceName.Buffer )
+	ExFreePool(FCB->TdiDeviceName.Buffer);
 
-    ExFreePool(FCB->TdiDeviceName.Buffer);
+	if (FCB->Connection.Object)
+	{
+		NtClose(FCB->Connection.Handle);
+		ObDereferenceObject(FCB->Connection.Object);
+	}
+	if (FCB->AddressFile.Object)
+	{
+		NtClose(FCB->AddressFile.Handle);
+		ObDereferenceObject(FCB->AddressFile.Object);
+	}
 
     ExFreePool(FCB);
     AFD_DbgPrint(MIN_TRACE,("Deleted (%x)\n", FCB));
@@ -214,7 +239,7 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     AFD_DbgPrint(MIN_TRACE,("Leaving\n"));
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp)
 {
@@ -244,7 +269,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -255,11 +280,11 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status;
     USHORT Flags = 0;
 
-    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
     if( !(DisReq = LockRequest( Irp, IrpSp )) )
 	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-				       Irp, 0, NULL, FALSE );
+				       Irp, 0, NULL );
 
     if (NULL == FCB->RemoteAddress)
       {
@@ -272,7 +297,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	if( !NT_SUCCESS(Status) || !ConnInfo )
 	    return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
-					   Irp, 0, NULL, TRUE );
+					   Irp, 0, NULL );
       }
 
     if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
@@ -292,10 +317,10 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (ConnInfo) ExFreePool( ConnInfo );
 
-    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -310,6 +335,8 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 				FileObject, IrpSp->FileObject));
 	ASSERT(FileObject == IrpSp->FileObject);
     }
+
+    Irp->IoStatus.Information = 0;
 
     switch(IrpSp->MajorFunction)
     {
@@ -455,7 +482,6 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	default:
 	    Status = STATUS_NOT_IMPLEMENTED;
-	    Irp->IoStatus.Information = 0;
 	    AFD_DbgPrint(MIN_TRACE, ("Unknown IOCTL (0x%x)\n",
 				     IrpSp->Parameters.DeviceIoControl.
 				     IoControlCode));
@@ -482,12 +508,12 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return (Status);
 }
 
-static VOID STDCALL
+static VOID NTAPI
 AfdUnload(PDRIVER_OBJECT DriverObject)
 {
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
     PDEVICE_OBJECT DeviceObject;

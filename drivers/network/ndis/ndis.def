@@ -233,7 +233,7 @@ NdisReadMcaPosInformation@16
 NdisReadNetworkAddress@16
 NdisReadPciSlotInformation@20
 NdisReadPcmciaAttributeMemory@16
-;NdisReEnumerateProtocolBindings ?
+NdisReEnumerateProtocolBindings@4
 NdisRegisterAdapter@24
 NdisRegisterAdapterShutdownHandler@12
 NdisRegisterProtocol@16

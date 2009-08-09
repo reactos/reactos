@@ -142,7 +142,7 @@ BOOLEAN						FirstAttempt )
 			{
 				DebugTrace( DEBUG_TRACE_SPECIAL, "###### File Pointer 0x%LX [Close]", PtrFileObject);
 			}
-			try_return( RC );
+			try_return();
 		}
 
 		// Get the FCB and CCB pointers
@@ -400,7 +400,7 @@ BOOLEAN						FirstAttempt )
 			DebugTrace(DEBUG_TRACE_MISC,   "VCB Close Requested !!!", 0);
 			CompleteIrp = TRUE;
 		}
-		try_return( RC );
+		try_return();
 		
 		try_exit:	NOTHING;
 

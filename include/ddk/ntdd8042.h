@@ -23,10 +23,6 @@
 #ifndef __NTDD8042_H
 #define __NTDD8042_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "ntddkbd.h"
 #include "ntddmou.h"
 

@@ -15,7 +15,7 @@
 /* NtGdiDdCreateSurface                                                 */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
                      HANDLE *hSurface,
                      DDSURFACEDESC *puSurfaceDescription,
@@ -29,11 +29,11 @@ NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
    
     if (pfnDdCreateSurface == NULL)
     {
-        DPRINT1("Warring no pfnDdCreateSurface\n");
+        DPRINT1("Warning: no pfnDdCreateSurface\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdCreateSurface\n");
+    DPRINT1("Calling dxg.sys pfnDdCreateSurface\n");
     return pfnDdCreateSurface(hDirectDrawLocal,hSurface,puSurfaceDescription,puSurfaceGlobalData,
                               puSurfaceLocalData,puSurfaceMoreData,puCreateSurfaceData,puhSurface);
 }
@@ -42,7 +42,7 @@ NtGdiDdCreateSurface(HANDLE hDirectDrawLocal,
 /* NtGdiDdWaitForVerticalBlank                                          */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
                             PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData)
 {
@@ -50,11 +50,11 @@ NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
    
     if (pfnDdWaitForVerticalBlank == NULL)
     {
-        DPRINT1("Warring no pfnDdWaitForVerticalBlank\n");
+        DPRINT1("Warning: no pfnDdWaitForVerticalBlank\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdWaitForVerticalBlank\n");
+    DPRINT1("Calling dxg.sys pfnDdWaitForVerticalBlank\n");
     return pfnDdWaitForVerticalBlank(hDirectDraw, puWaitForVerticalBlankData);
 }
 
@@ -62,7 +62,7 @@ NtGdiDdWaitForVerticalBlank(HANDLE hDirectDraw,
 /* NtGdiDdCanCreateSurface                                              */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
                         PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
@@ -70,11 +70,11 @@ NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
     
     if (pfnDdCanCreateSurface == NULL)
     {
-        DPRINT1("Warring no pfnDdCanCreateSurface\n");
+        DPRINT1("Warning: no pfnDdCanCreateSurface\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys DdCanCreateSurface\n");
+    DPRINT1("Calling dxg.sys DdCanCreateSurface\n");
 
     return pfnDdCanCreateSurface(hDirectDrawLocal,puCanCreateSurfaceData);
 }
@@ -83,7 +83,7 @@ NtGdiDdCanCreateSurface(HANDLE hDirectDrawLocal,
 /* NtGdiDdGetScanLine                                                   */
 /************************************************************************/
 DWORD
-STDCALL 
+APIENTRY 
 NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
                    PDD_GETSCANLINEDATA puGetScanLineData)
 {
@@ -91,11 +91,11 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
    
     if (pfnDdGetScanLine == NULL)
     {
-        DPRINT1("Warring no pfnDdGetScanLine\n");
+        DPRINT1("Warning: no pfnDdGetScanLine\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdGetScanLine\n");
+    DPRINT1("Calling dxg.sys pfnDdGetScanLine\n");
 
     return pfnDdGetScanLine(hDirectDrawLocal,puGetScanLineData);
 }
@@ -110,7 +110,7 @@ NtGdiDdGetScanLine(HANDLE hDirectDrawLocal,
 /* NtGdiDdCreateSurfaceEx                                               */
 /************************************************************************/
 DWORD
-STDCALL
+APIENTRY
 NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
                        HANDLE hSurface,
                        DWORD dwSurfaceHandle)
@@ -119,11 +119,11 @@ NtGdiDdCreateSurfaceEx(HANDLE hDirectDraw,
    
     if (pfnDdCreateSurfaceEx == NULL)
     {
-        DPRINT1("Warring no pfnDdCreateSurfaceEx\n");
+        DPRINT1("Warning: no pfnDdCreateSurfaceEx\n");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    DPRINT1("Calling on dxg.sys pfnDdCreateSurfaceEx\n");
+    DPRINT1("Calling dxg.sys pfnDdCreateSurfaceEx\n");
     return pfnDdCreateSurfaceEx(hDirectDraw,hSurface,dwSurfaceHandle);
 
 }

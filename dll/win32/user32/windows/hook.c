@@ -104,7 +104,7 @@ IntSetWindowsHook(
 
 #if 0
 BOOL
-STDCALL
+WINAPI
 CallMsgFilter(
   LPMSG lpMsg,
   int nCode)
@@ -118,7 +118,7 @@ CallMsgFilter(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CallMsgFilterA(
   LPMSG lpMsg,
   int nCode)
@@ -173,7 +173,7 @@ CallMsgFilterA(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CallMsgFilterW(
   LPMSG lpMsg,
   int nCode)
@@ -186,21 +186,75 @@ CallMsgFilterW(
  * @unimplemented
  */
 LRESULT
-STDCALL
+WINAPI
 CallNextHookEx(
   HHOOK Hook,
   int Code,
   WPARAM wParam,
   LPARAM lParam)
 {
-  return NtUserCallNextHookEx(Hook, Code, wParam, lParam);
+  PCLIENTINFO ClientInfo;
+  DWORD Flags, Save;
+  PHOOK pHook;
+  LRESULT lResult = 0;
+
+  GetConnected();
+
+  ClientInfo = GetWin32ClientInfo();
+
+  if (!ClientInfo->phkCurrent) return 0;
+  
+  pHook = SharedPtrToUser(ClientInfo->phkCurrent);
+
+  if (pHook->HookId == WH_CALLWNDPROC || pHook->HookId == WH_CALLWNDPROCRET)
+  {
+     Save = ClientInfo->dwHookData;
+     Flags = ClientInfo->CI_flags & CI_CURTHPRHOOK;
+// wParam: If the message was sent by the current thread/process, it is
+// nonzero; otherwise, it is zero.
+     if (wParam) ClientInfo->CI_flags |= CI_CURTHPRHOOK;
+     else        ClientInfo->CI_flags &= ~CI_CURTHPRHOOK;
+
+     if (pHook->HookId == WH_CALLWNDPROC)
+     {
+        PCWPSTRUCT pCWP = (PCWPSTRUCT)lParam;
+
+        lResult = NtUserMessageCall( pCWP->hwnd,
+                                  pCWP->message,
+                                   pCWP->wParam,
+                                   pCWP->lParam, 
+                                              0,
+                               FNID_CALLWNDPROC,
+                                    pHook->Ansi);
+     }
+     else
+     {
+        PCWPRETSTRUCT pCWPR = (PCWPRETSTRUCT)lParam;
+
+        ClientInfo->dwHookData = pCWPR->lResult;
+
+        lResult = NtUserMessageCall( pCWPR->hwnd,
+                                  pCWPR->message,
+                                   pCWPR->wParam,
+                                   pCWPR->lParam, 
+                                               0,
+                             FNID_CALLWNDPROCRET,
+                                     pHook->Ansi);
+     }
+     ClientInfo->CI_flags ^= ((ClientInfo->CI_flags ^ Flags) & CI_CURTHPRHOOK);
+     ClientInfo->dwHookData = Save;
+  }
+  else
+     lResult = NtUserCallNextHookEx(Code, wParam, lParam, pHook->Ansi);
+
+  return lResult;
 }
 
 /*
  * @unimplemented
  */
 HHOOK
-STDCALL
+WINAPI
 SetWindowsHookW(int idHook, HOOKPROC lpfn)
 {
   return IntSetWindowsHook(idHook, lpfn, NULL, 0, FALSE);
@@ -210,7 +264,7 @@ SetWindowsHookW(int idHook, HOOKPROC lpfn)
  * @unimplemented
  */
 HHOOK
-STDCALL
+WINAPI
 SetWindowsHookA(int idHook, HOOKPROC lpfn)
 {
   return IntSetWindowsHook(idHook, lpfn, NULL, 0, TRUE);
@@ -220,7 +274,7 @@ SetWindowsHookA(int idHook, HOOKPROC lpfn)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 DeregisterShellHookWindow(HWND hWnd)
 {
   return NtUserCallHwnd(hWnd, HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW);
@@ -230,7 +284,7 @@ DeregisterShellHookWindow(HWND hWnd)
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 RegisterShellHookWindow(HWND hWnd)
 {
   return NtUserCallHwnd(hWnd, HWND_ROUTINE_REGISTERSHELLHOOKWINDOW);
@@ -240,7 +294,7 @@ RegisterShellHookWindow(HWND hWnd)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
 {
   return NtUserCallTwoParam(nCode, (DWORD)pfnFilterProc, TWOPARAM_ROUTINE_UNHOOKWINDOWSHOOK);
@@ -250,7 +304,7 @@ UnhookWindowsHook ( int nCode, HOOKPROC pfnFilterProc )
  * @implemented
  */
 VOID
-STDCALL
+WINAPI
 NotifyWinEvent(
 	       DWORD event,
 	       HWND  hwnd,
@@ -269,7 +323,7 @@ NotifyWinEvent(
  * @implemented
  */
 HWINEVENTHOOK
-STDCALL
+WINAPI
 SetWinEventHook(
 		UINT         eventMin,
 		UINT         eventMax,
@@ -310,7 +364,7 @@ SetWinEventHook(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 IsWinEventHookInstalled(
     DWORD event)
 {
@@ -325,7 +379,7 @@ IsWinEventHookInstalled(
  * @unimplemented
  */
 HHOOK
-STDCALL
+WINAPI
 SetWindowsHookExA(
     int idHook,
     HOOKPROC lpfn,
@@ -340,7 +394,7 @@ SetWindowsHookExA(
  * @unimplemented
  */
 HHOOK
-STDCALL
+WINAPI
 SetWindowsHookExW(
     int idHook,
     HOOKPROC lpfn,
@@ -350,7 +404,7 @@ SetWindowsHookExW(
   return IntSetWindowsHook(idHook, lpfn, hMod, dwThreadId, FALSE);
 }
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PHOOKPROC_CALLBACK_ARGUMENTS Common;
@@ -453,7 +507,7 @@ User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
   return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   PEVENTPROC_CALLBACK_ARGUMENTS Common;

@@ -28,8 +28,8 @@
  */
 
 
-#include "glheader.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/macros.h"
 
 #include "s_context.h"
 #include "s_masking.h"
@@ -61,7 +61,7 @@ _swrast_mask_rgba_span(GLcontext *ctx, struct gl_renderbuffer *rb,
       const GLuint srcMask = *((GLuint *) ctx->Color.ColorMask);
       const GLuint dstMask = ~srcMask;
       const GLuint *dst = (const GLuint *) rbPixels;
-      GLuint *src = (GLuint *) span->array->color.sz1.rgba;
+      GLuint *src = (GLuint *) span->array->rgba8;
       GLuint i;
       for (i = 0; i < n; i++) {
          src[i] = (src[i] & srcMask) | (dst[i] & dstMask);
@@ -75,7 +75,7 @@ _swrast_mask_rgba_span(GLcontext *ctx, struct gl_renderbuffer *rb,
       const GLushort bMask = ctx->Color.ColorMask[BCOMP] ? 0xffff : 0x0;
       const GLushort aMask = ctx->Color.ColorMask[ACOMP] ? 0xffff : 0x0;
       const GLushort (*dst)[4] = (const GLushort (*)[4]) rbPixels;
-      GLushort (*src)[4] = span->array->color.sz2.rgba;
+      GLushort (*src)[4] = span->array->rgba16;
       GLuint i;
       for (i = 0; i < n; i++) {
          src[i][RCOMP] = (src[i][RCOMP] & rMask) | (dst[i][RCOMP] & ~rMask);

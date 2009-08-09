@@ -3,25 +3,32 @@
 <group>
 <module name="ole32" type="win32dll" baseaddress="${BASEADDRESS_OLE32}" installbase="system32" installname="ole32.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="ole32.spec.def" />
+	<importlibrary definition="ole32.spec" />
 	<include base="ole32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
+	<define name="_OLE32_" />
+	<define name="ENTRY_PREFIX">OLE32_</define>
+	<define name="PROXY_CLSID">CLSID_PSFactoryBuffer</define>
+	<define name="REGISTER_PROXY_DLL" />
+	<define name="COM_NO_WINDOWS_H" />
 	<library>wine</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>ole32_irot_client</library>
+	<library>ole32_proxy</library>
 	<library>rpcrt4</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>uuid</library>
+	<library>pseh</library>
 	<file>antimoniker.c</file>
 	<file>bindctx.c</file>
 	<file>classmoniker.c</file>
 	<file>clipboard.c</file>
+	<file>comcat.c</file>
 	<file>compobj.c</file>
 	<file>compositemoniker.c</file>
 	<file>datacache.c</file>
@@ -57,12 +64,25 @@
 	<file>dcom.idl</file>
 	<file>irot.idl</file>
 	<include base="ole32" root="intermediate">.</include>
-	<file>ole32.spec</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>
 <module name="ole32_irot_server" type="rpcserver">
 	<file>irot.idl</file>
 </module>
 <module name="ole32_irot_client" type="rpcclient">
 	<file>irot.idl</file>
+</module>
+<module name="ole32_proxy" type="rpcproxy" allowwarnings="true">
+	<define name="_OLE32_" />
+	<define name="COM_NO_WINDOWS_H" />
+	<define name="__WINESRC__" />
+	<define name="ENTRY_PREFIX">OLE32_</define>
+	<define name="PROXY_CLSID">CLSID_PSFactoryBuffer</define>
+	<define name="REGISTER_PROXY_DLL"/>
+	<file>dcom.idl</file>
+	<file>ole32_unknwn.idl</file>
+	<file>ole32_objidl.idl</file>
+	<file>ole32_oleidl.idl</file>
 </module>
 </group>

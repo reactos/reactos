@@ -12,8 +12,8 @@
 #include <internal/kbd.h>
 
 #ifdef _MSC_VER
-#ifndef STDCALL
-#define STDCALL __stdcall
+#ifndef WINAPI
+#define WINAPI __stdcall
 #endif
 #endif//_MSC_VER
 
@@ -448,7 +448,6 @@ ROSDATA KBDTABLES keyboard_layout_table =
   vk_to_wchar_master_table,
 
   /* diacritical marks -- currently implemented by wine code */
-  /* English doesn't have any, anyway */
   NULL,
 
   /* Key names */
@@ -464,13 +463,13 @@ ROSDATA KBDTABLES keyboard_layout_table =
 
   MAKELONG(0,1), /* Version 1.0 */
 
-  /* Ligatures -- does Hebrew have any? */
+  /* Ligatures -- Hebrew doesn't have any */
   0,
   0,
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID)
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID)
 {
   return &keyboard_layout_table;
 }

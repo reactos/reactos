@@ -312,8 +312,10 @@ static void FD31_UpdateResult(const FD31_DATA *lfs, const WCHAR *tmpstr)
     if (lenstr2 > 3)
         tmpstr2[lenstr2++]='\\';
     lstrcpynW(tmpstr2+lenstr2, tmpstr, BUFFILE-lenstr2);
-    if (ofnW->lpstrFile)
-        lstrcpynW(ofnW->lpstrFile, tmpstr2, ofnW->nMaxFile);
+    if (!ofnW->lpstrFile)
+        return;
+
+    lstrcpynW(ofnW->lpstrFile, tmpstr2, ofnW->nMaxFile);
 
     /* set filename offset */
     p = PathFindFileNameW(ofnW->lpstrFile);
@@ -690,7 +692,7 @@ static LPWSTR FD31_DupToW(LPCSTR str, DWORD size)
 
 /************************************************************************
  *                              FD31_MapOfnStructA          [internal]
- *      map a 32 bits Ansi structure to an Unicode one
+ *      map a 32 bits Ansi structure to a Unicode one
  */
 void FD31_MapOfnStructA(const OPENFILENAMEA *ofnA, LPOPENFILENAMEW ofnW, BOOL open)
 {
@@ -820,7 +822,7 @@ LONG FD31_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
   PFD31_DATA lfs = (PFD31_DATA) lParam;
 
   if (!lfs) return FALSE;
-  SetPropA(hWnd, FD31_OFN_PROP, (HANDLE)lfs);
+  SetPropA(hWnd, FD31_OFN_PROP, lfs);
   lfs->hwnd = hWnd;
   ofn = lfs->ofnW;
 

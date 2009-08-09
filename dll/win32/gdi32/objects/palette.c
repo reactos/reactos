@@ -3,6 +3,42 @@
 #define NDEBUG
 #include <debug.h>
 
+
+#define NB_RESERVED_COLORS  20   /* number of fixed colors in system palette */
+
+static const PALETTEENTRY sys_pal_template[NB_RESERVED_COLORS] =
+{
+    /* first 10 entries in the system palette */
+    /* red  green blue  flags */
+    { 0x00, 0x00, 0x00, 0 },
+    { 0x80, 0x00, 0x00, 0 },
+    { 0x00, 0x80, 0x00, 0 },
+    { 0x80, 0x80, 0x00, 0 },
+    { 0x00, 0x00, 0x80, 0 },
+    { 0x80, 0x00, 0x80, 0 },
+    { 0x00, 0x80, 0x80, 0 },
+    { 0xc0, 0xc0, 0xc0, 0 },
+    { 0xc0, 0xdc, 0xc0, 0 },
+    { 0xa6, 0xca, 0xf0, 0 },
+
+    /* ... c_min/2 dynamic colorcells */
+
+    /* ... gap (for sparse palettes) */
+
+    /* ... c_min/2 dynamic colorcells */
+
+    { 0xff, 0xfb, 0xf0, 0 },
+    { 0xa0, 0xa0, 0xa4, 0 },
+    { 0x80, 0x80, 0x80, 0 },
+    { 0xff, 0x00, 0x00, 0 },
+    { 0x00, 0xff, 0x00, 0 },
+    { 0xff, 0xff, 0x00, 0 },
+    { 0x00, 0x00, 0xff, 0 },
+    { 0xff, 0x00, 0xff, 0 },
+    { 0x00, 0xff, 0xff, 0 },
+    { 0xff, 0xff, 0xff, 0 }     /* last 10 */
+};
+
 BOOL
 WINAPI
 AnimatePalette(HPALETTE hpal,
@@ -50,7 +86,34 @@ GetSystemPaletteEntries(HDC hDC,
                         UINT cEntries,
                         LPPALETTEENTRY ppe)
 {
-    return NtGdiDoPalette(hDC, iStartIndex, cEntries, ppe, GdiPalGetSystemEntries, FALSE);
+     PALETTEENTRY ippe[256];
+     // Make this work!
+     if ((INT)cEntries < 0 ) return 0;
+
+     if ( GetDeviceCaps(hDC, RASTERCAPS) & RC_PALETTE )
+        return NtGdiDoPalette(hDC, iStartIndex, cEntries, ppe, GdiPalGetSystemEntries, FALSE);
+     else
+     {
+        if (ppe)
+        {
+           RtlZeroMemory( &ippe, sizeof(ippe) );
+           RtlCopyMemory( &ippe, &sys_pal_template, 10 * sizeof(PALETTEENTRY) );
+           RtlCopyMemory( &ippe + 246 , &sys_pal_template + 10 , 10 * sizeof(PALETTEENTRY) );
+
+           if (iStartIndex < 256)
+           {
+              UINT Index = 256 - iStartIndex;
+
+              if ( Index > cEntries ) Index = cEntries;
+
+              RtlCopyMemory( ppe, 
+                            &ippe[iStartIndex],
+                             Index*sizeof(PALETTEENTRY));
+           }
+        }
+     }
+
+     return 0;
 }
 
 UINT
@@ -60,7 +123,9 @@ GetDIBColorTable(HDC hDC,
                  UINT cEntries,
                  RGBQUAD *pColors)
 {
-    return NtGdiDoPalette(hDC, iStartIndex, cEntries, pColors, GdiPalGetColorTable, FALSE);
+  if (cEntries)
+     return NtGdiDoPalette(hDC, iStartIndex, cEntries, pColors, GdiPalGetColorTable, FALSE);
+  return 0;
 }
 
 /*
@@ -93,7 +158,7 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 ResizePalette(
 	HPALETTE	hPalette,
 	UINT		nEntries
@@ -126,7 +191,7 @@ SetDIBColorTable(HDC hDC,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 UpdateColors(
 	HDC	hdc
 	)

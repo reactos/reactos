@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ob/sdcache.c
- * PURPOSE:         No purpose listed.
- *
- * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/ob/obsdcach.c
+ * PURPOSE:         Security Descriptor Caching
+ * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -20,8 +19,8 @@ OB_SD_CACHE_LIST ObsSecurityDescriptorCache[SD_CACHE_ENTRIES];
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VOID
 FORCEINLINE
+VOID
 ObpSdAcquireLock(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Acquire the lock */
@@ -29,8 +28,8 @@ ObpSdAcquireLock(IN POB_SD_CACHE_LIST CacheEntry)
     ExAcquirePushLockExclusive(&CacheEntry->PushLock);
 }
 
-VOID
 FORCEINLINE
+VOID
 ObpSdReleaseLock(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Release the lock */
@@ -38,8 +37,8 @@ ObpSdReleaseLock(IN POB_SD_CACHE_LIST CacheEntry)
     KeLeaveCriticalRegion();
 }
 
-VOID
 FORCEINLINE
+VOID
 ObpSdAcquireLockShared(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Acquire the lock */
@@ -47,8 +46,8 @@ ObpSdAcquireLockShared(IN POB_SD_CACHE_LIST CacheEntry)
     ExAcquirePushLockShared(&CacheEntry->PushLock);
 }
 
-VOID
 FORCEINLINE
+VOID
 ObpSdReleaseLockShared(IN POB_SD_CACHE_LIST CacheEntry)
 {
     /* Release the lock */
@@ -82,11 +81,12 @@ ObpHash(IN PVOID Buffer,
     PULONG p, pp;
     PUCHAR pb, ppb;
     ULONG Hash = 0;
-    
+
     /* Setup aligned and byte buffers */
     p = Buffer;
+    pb = (PUCHAR)p;
     ppb = (PUCHAR)((ULONG_PTR)Buffer + Length);
-    pp = (PULONG)ALIGN_DOWN(p + Length, ULONG);
+    pp = (PULONG)ALIGN_DOWN(pb + Length, ULONG);
 
     /* Loop aligned data */
     while (p < pp)
@@ -95,7 +95,7 @@ ObpHash(IN PVOID Buffer,
         Hash ^= *p++;
         Hash = _rotl(Hash, 3);
     }
-    
+
     /* Loop non-aligned data */
     pb = (PUCHAR)p;
     while (pb < ppb)
@@ -181,24 +181,51 @@ ObpReferenceSecurityDescriptor(IN POBJECT_HEADER ObjectHeader)
 {
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PSECURITY_DESCRIPTOR_HEADER SdHeader;
-    
-    /* Get the SD */
-    SecurityDescriptor = ObjectHeader->SecurityDescriptor;
-    if (!SecurityDescriptor)
+    PEX_FAST_REF FastRef;
+    EX_FAST_REF OldValue;
+    ULONG_PTR Count;
+
+    /* Acquire a reference to the security descriptor */
+    FastRef = (PEX_FAST_REF)&ObjectHeader->SecurityDescriptor;
+    OldValue = ExAcquireFastReference(FastRef);
+
+    /* Get the descriptor and reference count */
+    SecurityDescriptor = ExGetObjectFastReference(OldValue);
+    Count = ExGetCountFastReference(OldValue);
+
+    /* Check if there's no descriptor or if there's still cached references */
+    if ((Count >= 1) || !(SecurityDescriptor))
     {
-        /* No SD, nothing to do */
-        return NULL;
+        /* Check if this is the last reference */
+        if (Count == 1)
+        {
+            /* Add the extra references that we'll take */
+            SdHeader = ObpGetHeaderForSd(SecurityDescriptor);
+            InterlockedExchangeAdd((PLONG)&SdHeader->RefCount, MAX_FAST_REFS);
+
+            /* Now insert them */
+            if (!ExInsertFastReference(FastRef, SecurityDescriptor))
+            {
+                /* Undo the references since we failed */
+                InterlockedExchangeAdd((PLONG)&SdHeader->RefCount,
+                                       -MAX_FAST_REFS);
+            }
+        }
+
+        /* Return the SD */
+        return SecurityDescriptor;
     }
-    
+
     /* Lock the object */
     ObpAcquireObjectLockShared(ObjectHeader);
-    
+
     /* Get the object header */
+    SecurityDescriptor = ExGetObjectFastReference(*FastRef);
     SdHeader = ObpGetHeaderForSd(SecurityDescriptor);
-    
+
     /* Do the reference */
     InterlockedIncrement((PLONG)&SdHeader->RefCount);
-    
+
     /* Release the lock and return */
     ObpReleaseObjectLock(ObjectHeader);
     return SecurityDescriptor;

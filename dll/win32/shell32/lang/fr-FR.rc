@@ -96,7 +96,7 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Parcourir pour un dossier"
+CAPTION "Rechercher un dossier"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
@@ -257,7 +257,7 @@ BEGIN
 	LTEXT "Type:", -1, 15, 55, 40, 10
 	LTEXT "", 14002, 110, 55, 100, 10
 
-	LTEXT "Système de fichier:", -1, 15, 70, 100, 10
+	LTEXT "Système de fichiers :", -1, 15, 70, 100, 10
 	LTEXT "", 14003, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
@@ -287,7 +287,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Outils"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Vérifcation-d'erreurs", -1, 5, 5, 230, 60
+	GROUPBOX "Vérification d'erreurs", -1, 5, 5, 230, 60
 	LTEXT "Cette option vérifiera le volume pour éviter les\nerreurs.", -1, 40, 25, 160, 20
 	PUSHBUTTON "Vérifier maintenant...", 14000, 130, 45, 90, 15, WS_TABSTOP
 	GROUPBOX "Défragmentation", -1, 5, 65, 230, 60
@@ -312,7 +312,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Quel compte d'utilisateur désirez-vous utiliser pour lancer ce programme?", -1, 10, 20, 220, 20
 	CHECKBOX "Utilisateur actuel %s", 14000, 10, 45, 150, 10
-	LTEXT "Protéger mon ordinateur et mes données de l'activé de programme non autorisés", -1, 25, 57, 200, 10, WS_DISABLED
+	LTEXT "Protéger mon ordinateur et mes données des activités des programmes non autorisés", -1, 25, 57, 200, 10, WS_DISABLED
 	CHECKBOX "Cette option peut empêcher les virus d'ordinateur d'endommager votre ordinateur ou vos données personnelles, néanmoins sélectionner cette option pourrait empêcher le programme de fonctionner correctement.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "L'utilisateur suivant:", 14002, 10, 100, 90, 10
 	LTEXT "Nom d'utilisateur:", -1, 20, 118, 54, 10
@@ -328,7 +328,7 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Proprétés de la corbeille"
+CAPTION "Propriétés de la corbeille"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
@@ -341,7 +341,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Ouvrir avec"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -361,22 +361,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-
-GROUPBOX "Tâches", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "Montrer les tâches communes dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Utilisez les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Parcourir les dossiers", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "Ouvrir tous les dossiers dans la &même fenêtre", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Ouvrir chaque dossier dans sa propre fenêtre", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Cliquer sur les éléments de la façon suivante", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "Clic unique pour ouvrir un élément (pointer pour sélectionner)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Toujours souligner les titres des icônes avec mon navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Souligner les titres des icônes seulement quand je les &pointe", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "Pa&ramètres par défaut", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Tâches", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Afficher les tâches habituelles dans les dossiers", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Utiliser les dossiers ReactOS class&iques", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Parcourir les dossiers", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Ouvrir tous les dossiers dans la &même fenêtre", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Ouvrir chaque dossier dans sa propre fenêtre", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Cliquer sur les éléments de la façon suivante", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Clic unique pour ouvrir un élément (pointer pour sélectionner)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Toujours souligner les titres des icônes comme dans le navigateur", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Souligner les titres des icônes seulement quand je les &pointe", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Double-cliquer pour ouvrir un élément (clic unique pour le sélectionner)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
+	PUSHBUTTON "Pa&ramètres par défaut", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -396,19 +395,19 @@ END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Types de fichier"
+CAPTION "Types de fichiers"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "&Types de fichier enregistrés :", -1, 7, 10, 70, 10
+LTEXT "&Types de fichiers enregistrés :", -1, 7, 10, 70, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
 PUSHBUTTON "&Nouveau", 14001, 120, 110, 50, 14, WS_TABSTOP
 PUSHBUTTON "Supprimer", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Détails pour l'extension '%s'", 14003, 7, 130, 249, 70
+GROUPBOX "Détails concernant l'extension '%s'", 14003, 7, 130, 249, 70
 LTEXT "Ouvrir avec :", -1, 12, 140, 40, 10
 //ICON
 LTEXT "Nom de l'application", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Changer...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Les fichiers avec l'extension '%s' sont du type '%s'. Pour\nchanger les paramètres qui concernent tous les fichiers '%s', cliquez\nsur Avancé.", 14007, 12, 155, 160, 30
+PUSHBUTTON "&Modifier...", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "Les fichiers avec l'extension '%s' sont de type '%s'. Pour\nmodifier les paramètres qui concernent tous les fichiers '%s', cliquez\nsur Avancé.", 14007, 12, 155, 160, 30
 PUSHBUTTON "A&vancé", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -460,7 +459,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "Exécution automatique"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Sélectionnez un type de contenu, puis choisissez une action que ReactOS réalisera automatiquement que ce type sera utilisé dans ce périphérique :", 1000, 7, 7, 215, 20
+	LTEXT "Sélectionnez un type de contenu, puis choisissez une action que ReactOS réalisera automatiquement quand ce type sera utilisé dans ce périphérique :", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
 	GROUPBOX "Actions", -1, 7, 45, 212, 146
 	AUTORADIOBUTTON "Sélectionnez une action à réaliser :", 1005, 14, 54, 202, 10, WS_GROUP
@@ -475,7 +474,7 @@ CAPTION "Contenu mixte"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "Ce disque ou dispositif contient plus d'un type de fichier.", 1001, 32, 7, 191, 20
+	LTEXT "Ce disque ou dispositif contient plus d'un type de fichiers.", 1001, 32, 7, 191, 20
 	LTEXT "Que voulez-vous que ReactOS fasse ?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
 	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
@@ -535,7 +534,7 @@ BEGIN
 	PUSHBUTTON "Fermer", IDCANCEL, 118, 198, 60, 14
 	LTEXT "Ca&pacité :", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Système de fichier", -1, 7, 35, 170, 9
+	LTEXT "Système de fichiers", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
 	LTEXT "Taille d'unité d'&allocation", -1, 7, 64, 170, 9
@@ -545,6 +544,20 @@ BEGIN
 	GROUPBOX "&Options de formatage", 4610, 7, 121, 170, 49
 	AUTOCHECKBOX "Formatage rapide", 28674, 16, 135, 155, 10
 	AUTOCHECKBOX "Activer la compression", 28675, 16, 152, 155, 10
+END
+
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Vérifier le disque"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Démarrer", IDOK, 53, 100, 60, 14
+	GROUPBOX "Options de vérification", -1, 7, 6, 179, 50
+	PUSHBUTTON "Annuler", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Réparer automatiquement les erreurs du système de fichiers", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scanner pour rechercher et réparer les secteurs défectueux", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
 END
 
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
@@ -575,14 +588,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Commentaires"
 	IDS_SHV_COLUMN10            "Propriétaire"
 	IDS_SHV_COLUMN11            "Groupe"
+	IDS_SHV_COLUMN12            "Nom de fichier"
+	IDS_SHV_COLUMN13            "Catégorie"
 	IDS_SHV_COLUMN_DELFROM      "Localisation d'origine"
 	IDS_SHV_COLUMN_DELDATE      "Date de suppression"
+	IDS_SHV_COLUMN_FONTTYPE     "Type de police"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Emplacement réseau"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
+	IDS_SHV_COLUMN_STATUS       "État"
+	IDS_SHV_COLUMN_COMMENTS     "Commentaires"
+	IDS_SHV_COLUMN_LOCATION     "Emplacement"
+	IDS_SHV_COLUMN_MODEL        "Modèle"
 
 	/* special folders */
 	IDS_DESKTOP                 "Bureau"
 	IDS_MYCOMPUTER              "Poste de travail"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Corbeille"
-	IDS_CONTROLPANEL            "Panneau de contrôle"
+	IDS_CONTROLPANEL            "Panneau de configuration"
+	IDS_ADMINISTRATIVETOOLS     "Outils d'administration"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Grandes icônes"
@@ -591,6 +615,15 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Détails"
 	IDS_SELECT                  "Sélectionner"
 	IDS_OPEN                    "Ouvrir"
+	IDS_CREATELINK              "Créer un &lien"
+	IDS_COPY                    "&Copier"
+	IDS_DELETE                  "&Supprimer"
+	IDS_PROPERTIES              "&Propriétés"
+	IDS_CUT                     "C&ouper"
+	IDS_RESTORE                 "Res&taurer"
+	IDS_FORMATDRIVE             "Formater..."
+	IDS_RENAME                  "Renommer"
+	IDS_INSERT                  "Insérer"
 
 	IDS_CREATEFOLDER_DENIED     "Impossible de créer le nouveau dossier : permission refusée."
 	IDS_CREATEFOLDER_CAPTION    "Erreur lors de la création du nouveau dossier"
@@ -663,7 +696,7 @@ BEGIN
 	IDS_FOLDER_OPTIONS          "Options du dossier"
 	IDS_RECYCLEBIN_LOCATION     "Emplacement de la corbeille"
 	IDS_RECYCLEBIN_DISKSPACE    "Espace disponible"
-	IDS_EMPTY_BITBUCKET         "Corbeille vide"
+	IDS_EMPTY_BITBUCKET         "Vider la Corbeille"
 	IDS_PICK_ICON_TITLE         "Choisir une icône"
 	IDS_PICK_ICON_FILTER        "Fichiers d'icônes (*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Fichiers exécutables\0*.exe\0"
@@ -691,4 +724,11 @@ BEGIN
 	IDS_PRINT_VERB              "Imprimer"
 	IDS_PLAY_VERB               "Lire"
 	IDS_PREVIEW_VERB            "Apercevoir"
+
+	IDS_FILE_FOLDER             "%u fichiers, %u répertoires"
+	IDS_PRINTERS                "Imprimantes"
+	IDS_FONTS                   "Polices"
+	IDS_INSTALLNEWFONT          "Installer une nouvelle police..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Taille d'allocation par défaut"
 END

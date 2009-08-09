@@ -290,17 +290,25 @@ extern void glXSelectEvent( Display *dpy, GLXDrawable drawable,
 extern void glXGetSelectedEvent( Display *dpy, GLXDrawable drawable,
                                  unsigned long *mask );
 
-
-/* GLX 1.4 and later */
-extern void (*glXGetProcAddress(const GLubyte *procname))( void );
-
-
-#ifndef GLX_GLXEXT_LEGACY
-
-#include <GL/glxext.h>
-
-#else
-
+/* GLX 1.3 function pointer typedefs */
+typedef GLXFBConfig * (* PFNGLXGETFBCONFIGSPROC) (Display *dpy, int screen, int *nelements);
+typedef GLXFBConfig * (* PFNGLXCHOOSEFBCONFIGPROC) (Display *dpy, int screen, const int *attrib_list, int *nelements);
+typedef int (* PFNGLXGETFBCONFIGATTRIBPROC) (Display *dpy, GLXFBConfig config, int attribute, int *value);
+typedef XVisualInfo * (* PFNGLXGETVISUALFROMFBCONFIGPROC) (Display *dpy, GLXFBConfig config);
+typedef GLXWindow (* PFNGLXCREATEWINDOWPROC) (Display *dpy, GLXFBConfig config, Window win, const int *attrib_list);
+typedef void (* PFNGLXDESTROYWINDOWPROC) (Display *dpy, GLXWindow win);
+typedef GLXPixmap (* PFNGLXCREATEPIXMAPPROC) (Display *dpy, GLXFBConfig config, Pixmap pixmap, const int *attrib_list);
+typedef void (* PFNGLXDESTROYPIXMAPPROC) (Display *dpy, GLXPixmap pixmap);
+typedef GLXPbuffer (* PFNGLXCREATEPBUFFERPROC) (Display *dpy, GLXFBConfig config, const int *attrib_list);
+typedef void (* PFNGLXDESTROYPBUFFERPROC) (Display *dpy, GLXPbuffer pbuf);
+typedef void (* PFNGLXQUERYDRAWABLEPROC) (Display *dpy, GLXDrawable draw, int attribute, unsigned int *value);
+typedef GLXContext (* PFNGLXCREATENEWCONTEXTPROC) (Display *dpy, GLXFBConfig config, int render_type, GLXContext share_list, Bool direct);
+typedef Bool (* PFNGLXMAKECONTEXTCURRENTPROC) (Display *dpy, GLXDrawable draw, GLXDrawable read, GLXContext ctx);
+typedef GLXDrawable (* PFNGLXGETCURRENTREADDRAWABLEPROC) (void);
+typedef Display * (* PFNGLXGETCURRENTDISPLAYPROC) (void);
+typedef int (* PFNGLXQUERYCONTEXTPROC) (Display *dpy, GLXContext ctx, int attribute, int *value);
+typedef void (* PFNGLXSELECTEVENTPROC) (Display *dpy, GLXDrawable draw, unsigned long event_mask);
+typedef void (* PFNGLXGETSELECTEDEVENTPROC) (Display *dpy, GLXDrawable draw, unsigned long *event_mask);
 
 
 /*
@@ -315,6 +323,17 @@ extern __GLXextFuncPtr glXGetProcAddressARB (const GLubyte *);
 #endif /* GLX_ARB_get_proc_address */
 
 
+
+/* GLX 1.4 and later */
+extern void (*glXGetProcAddress(const GLubyte *procname))( void );
+
+/* GLX 1.4 function pointer typedefs */
+typedef __GLXextFuncPtr (* PFNGLXGETPROCADDRESSPROC) (const GLubyte *procName);
+
+
+#ifndef GLX_GLXEXT_LEGACY
+
+#include <GL/glxext.h>
 
 #endif /* GLX_GLXEXT_LEGACY */
 

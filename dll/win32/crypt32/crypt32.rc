@@ -30,4 +30,5 @@
 #include "crypt32_Ko.rc"
 #include "crypt32_Nl.rc"
 #include "crypt32_No.rc"
+#include "crypt32_Pt.rc"
 #include "crypt32_Sv.rc"

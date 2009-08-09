@@ -180,10 +180,10 @@ static nsresult NSAPI nsInputStream_ReadSegments(nsIInputStream *iface,
     if(!This->buf_size)
         return S_OK;
 
-    if(This->buf_size > aCount)
-        FIXME("buf_size > aCount\n");
+    if(aCount > This->buf_size)
+        aCount = This->buf_size;
 
-    nsres = aWriter(NSINSTREAM(This), aClousure, This->buf, 0, This->buf_size, &written);
+    nsres = aWriter(NSINSTREAM(This), aClousure, This->buf, 0, aCount, &written);
     if(NS_FAILED(nsres))
         TRACE("aWritter failed: %08x\n", nsres);
     else if(written != This->buf_size)
@@ -343,6 +343,8 @@ static HRESULT WINAPI BindStatusCallback_OnStopBinding(IBindStatusCallback *ifac
     BSCallback *This = STATUSCLB_THIS(iface);
 
     TRACE("(%p)->(%08x %s)\n", This, hresult, debugstr_w(szError));
+
+    /* NOTE: IE7 calls GetBindResult here */
 
     if(This->binding) {
         IBinding_Release(This->binding);
@@ -655,7 +657,7 @@ static void parse_post_data(nsIInputStream *post_data_stream, LPWSTR *headers_re
         else
             headers = heap_alloc((len+1)*sizeof(WCHAR));
 
-        len = MultiByteToWideChar(CP_ACP, 0, ptr2, ptr-ptr2, headers+headers_len, -1);
+        len = MultiByteToWideChar(CP_ACP, 0, ptr2, ptr-ptr2, headers+headers_len, len);
         headers_len += len;
 
         ptr2 = ptr;
@@ -687,6 +689,9 @@ HRESULT start_binding(HTMLDocument *doc, BSCallback *bscallback, IBindCtx *bctx)
     HRESULT hres;
 
     bscallback->doc = doc;
+
+    /* NOTE: IE7 calls IsSystemMoniker here*/
+
     call_docview_84(doc);
 
     if(bctx) {
@@ -878,8 +883,10 @@ static HRESULT read_stream_data(nsChannelBSC *This, IStream *stream)
                 FIXME("OnStartRequest failed: %08x\n", nsres);
 
             /* events are reset when a new document URI is loaded, so re-initialise them here */
-            if(This->bsc.doc && This->bsc.doc->bscallback == This && This->bsc.doc->nscontainer)
+            if(This->bsc.doc && This->bsc.doc->bscallback == This && This->bsc.doc->nscontainer) {
+                update_nsdocument(This->bsc.doc);
                 init_nsevents(This->bsc.doc->nscontainer);
+            }
         }
 
         This->bsc.readed += This->nsstream->buf_size;

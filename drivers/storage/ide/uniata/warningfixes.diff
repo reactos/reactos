@@ -1,0 +1,589 @@
+Index: atapi.h
+===================================================================
+--- atapi.h	(revision 38451)
++++ atapi.h	(working copy)
+@@ -138,6 +138,10 @@
+ 
+ #else // _DEBUG
+ 
++#ifdef KdPrint
++#undef KdPrint
++#endif
++
+ #define PRINT_PREFIX "UniATA: "
+ 
+ //#define KdPrint3(_x_) {if(LOG_ON_RAISED_IRQL_W2K || MajorVersion < 0x05 || KeGetCurrentIrql() <= 2){/*DbgPrint("%x: ", PsGetCurrentThread()) ;*/ DbgPrint _x_ ; if(g_LogToDisplay){ PrintNtConsole _x_ ;} }}
+@@ -1063,8 +1067,8 @@
+ 
+ ULONG
+ AtapiParseArgumentString(
+-    IN PCHAR String,
+-    IN PCHAR KeyWord
++    IN PCCH String,
++    IN PCCH KeyWord
+     );
+ 
+ BOOLEAN
+@@ -1202,15 +1206,15 @@
+     IN PVOID HwDeviceExtension,
+     IN ULONG chan,
+     IN ULONG dev,
+-    IN PWSTR Name,
++    IN PCWSTR Name,
+     IN ULONG Default
+     );
+ 
+ extern ULONG
+ AtapiRegCheckParameterValue(
+     IN PVOID HwDeviceExtension,
+-    IN PWSTR PathSuffix,
+-    IN PWSTR Name,
++    IN PCWSTR PathSuffix,
++    IN PCWSTR Name,
+     IN ULONG Default
+     );
+ 
+@@ -1220,7 +1224,7 @@
+ VOID
+ _cdecl
+ _PrintNtConsole(
+-    PCHAR DebugMessage,
++    PCCH DebugMessage,
+     ...
+     );
+ 
+Index: id_sata.cpp
+===================================================================
+--- id_sata.cpp	(revision 38451)
++++ id_sata.cpp	(working copy)
+@@ -7,7 +7,7 @@
+     )
+ {
+     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+-    ULONG Channel = deviceExtension->Channel + lChannel;
++    //ULONG Channel = deviceExtension->Channel + lChannel;
+     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+     SATA_SSTATUS_REG SStatus;
+     ULONG i;
+@@ -126,7 +126,7 @@
+ {
+     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+     PHW_CHANNEL chan = &deviceExtension->chan[lChannel];
+-    ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
++    //ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
+     SATA_SSTATUS_REG SStatus;
+     SATA_SERROR_REG  SError;
+ 
+Index: ntddk_ex.h
+===================================================================
+--- ntddk_ex.h	(revision 38451)
++++ ntddk_ex.h	(working copy)
+@@ -1,15 +1,12 @@
+ #ifndef __NTDDK_EX__H__
+ #define __NTDDK_EX__H__
+ 
+-#ifndef __REACTOS__
++#ifdef ASSERT
+ #undef ASSERT
+-#define ASSERT
+-#else
+-#undef ASSERT
+-#define ASSERT //(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+-#endif //__REACTOS__
++#define ASSERT(x) ((void)0)
++// #define ASSERT(x) if (!(x)) { RtlAssert("#x",__FILE__,__LINE__, ""); }
++#endif
+ 
+-
+ #ifndef FILE_CHARACTERISTIC_PNP_DEVICE  // DDK 2003
+ 
+ #define FILE_CHARACTERISTIC_PNP_DEVICE  0x00000800
+Index: id_dma.cpp
+===================================================================
+--- id_dma.cpp	(revision 38451)
++++ id_dma.cpp	(working copy)
+@@ -219,7 +219,7 @@
+     PHW_CHANNEL chan = &(deviceExtension->chan[lChannel]);
+     PATA_REQ AtaReq = (PATA_REQ)(Srb->SrbExtension);
+     BOOLEAN use_DB_IO = FALSE;
+-    BOOLEAN use_AHCI = FALSE;
++    //BOOLEAN use_AHCI = FALSE;
+     ULONG orig_count = count;
+     ULONG max_entries = (deviceExtension->HwFlags & UNIATA_AHCI) ? ATA_AHCI_DMA_ENTRIES : ATA_DMA_ENTRIES;
+ 
+@@ -281,7 +281,7 @@
+     if(!dma_count || ((LONG)(dma_base) == -1)) {
+         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No 1st block\n" ));
+         //AtaReq->dma_base = NULL;
+-        AtaReq->ahci_base64 = NULL;
++        AtaReq->ahci_base64 = 0;
+         return FALSE;
+     }
+ 
+@@ -303,7 +303,7 @@
+         if (i >= max_entries) {
+             KdPrint2((PRINT_PREFIX "too many segments in DMA table\n" ));
+             //AtaReq->dma_base = NULL;
+-            AtaReq->ahci_base64 = NULL;
++            AtaReq->ahci_base64 = 0;
+             return FALSE;
+         }
+         KdPrint2((PRINT_PREFIX "  get Phys(data[n]=%x)\n", data ));
+@@ -321,7 +321,7 @@
+         } else
+         if(!dma_count || !dma_base || ((LONG)(dma_base) == -1)) {
+             //AtaReq->dma_base = NULL;
+-            AtaReq->ahci_base64 = NULL;
++            AtaReq->ahci_base64 = 0;
+             KdPrint2((PRINT_PREFIX "AtapiDmaSetup: No NEXT block\n" ));
+             return FALSE;
+         }
+@@ -596,7 +596,7 @@
+     )
+ {
+     PHW_LU_EXTENSION LunExt = &(deviceExtension->lun[ldev]);
+-    CHAR apiomode;
++    SCHAR apiomode;
+ 
+     apiomode = (CHAR)AtaPioMode(&(LunExt->IdentifyData));
+ 
+@@ -612,7 +612,7 @@
+     }
+ 
+     if((deviceExtension->HbaCtrlFlags & HBAFLAGS_DMA_DISABLED_LBA48) &&
+-       (AtaReq->lba >= ATA_MAX_LBA28) &&
++       (AtaReq->lba >= (LONGLONG)ATA_MAX_LBA28) &&
+        (LunExt->TransferMode > ATA_PIO5) ) {
+         KdPrint2((PRINT_PREFIX
+                     "AtapiDmaReinit: FORCE_DOWNRATE on Device %d for LBA48\n", ldev & 1));
+@@ -623,7 +623,7 @@
+     if(AtaReq->Flags & REQ_FLAG_FORCE_DOWNRATE) {
+         KdPrint2((PRINT_PREFIX
+                     "AtapiDmaReinit: FORCE_DOWNRATE on Device %d\n", ldev & 1));
+-        if(AtaReq->lba >= ATA_MAX_LBA28) {
++        if(AtaReq->lba >= (LONGLONG)ATA_MAX_LBA28) {
+ limit_lba48:
+             LunExt->DeviceFlags |= REQ_FLAG_FORCE_DOWNRATE_LBA48;
+ limit_pio:
+@@ -754,9 +754,9 @@
+     IN ULONG DeviceNumber,
+     IN ULONG lChannel,          // logical channel,
+                                // is always 0 except simplex-only controllers
+-    IN CHAR apiomode,
+-    IN CHAR wdmamode,
+-    IN CHAR udmamode
++    IN SCHAR apiomode,
++    IN SCHAR wdmamode,
++    IN SCHAR udmamode
+     )
+ {
+     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+@@ -1488,7 +1488,7 @@
+             AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
+ 
+             SetPciConfig1(mreg, mode | (mask & 0x11));
+-            SetPciConfig2(ureg - 0x8, sil_pio_modes[i]);
++            SetPciConfig2(ureg - 0x8, sil_pio_modes[apiomode]);
+             return;
+ 
+         } else {
+@@ -1538,7 +1538,7 @@
+         /*******/
+         /* SiS */
+         /*******/
+-        PULONG sis_modes;
++        PULONG sis_modes = NULL;
+         static const ULONG sis_modes_new133[] =
+                 { 0x28269008, 0x0c266008, 0x04263008, 0x0c0a3008, 0x05093008,
+                   0x22196008, 0x0c0a3008, 0x05093008, 0x050939fc, 0x050936ac,
+@@ -1553,9 +1553,9 @@
+                 { 0x00cb, 0x0067, 0x0044, 0x0033, 0x0031, 0x0044, 0x0033, 0x0031,
+                   0x8b31, 0x8731, 0x8531, 0x8431, 0x8231, 0x8131 };
+ 
+-        ULONG reg;
++        ULONG reg = 0;
+         UCHAR reg57;
+-        ULONG reg_size;
++        ULONG reg_size = 0;
+         ULONG offs;
+ 
+         switch(ChipType) {
+@@ -1731,8 +1731,8 @@
+             AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode);
+             ChangePciConfig1(0x50, a | (1 << (dev + 3)) );
+             GetPciConfig1(0x54 + offset, reg54);
+-            if(reg54 < chtiming[i]) {
+-                SetPciConfig1(0x54 + offset, chtiming[i]);
++            if(reg54 < chtiming[apiomode]) {
++                SetPciConfig1(0x54 + offset, chtiming[apiomode]);
+             }
+             return;
+         }
+@@ -1901,7 +1901,7 @@
+     ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
+     //ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
+ 
+-    ULONG timing;
++    ULONG timing = 0;
+ 
+     if(mode == ATA_PIO5)
+         mode = ATA_PIO4;
+Index: id_badblock.cpp
+===================================================================
+--- id_badblock.cpp	(revision 38451)
++++ id_badblock.cpp	(working copy)
+@@ -159,7 +159,11 @@
+                                                 L"UniATA\\Parameters\\BadBlocks",
+                                                 QueryTable, 0, 0);
+ 
++#ifdef _DEBUG
+         KdPrint(( "InitBadBlocks returned: %#x\n", status));
++#else
++        UNREFERENCED_PARAMETER(status);
++#endif
+     } else {
+ 
+         KdPrint(( "InitBadBlocks local\n"));
+Index: id_init.cpp
+===================================================================
+--- id_init.cpp	(revision 38451)
++++ id_init.cpp	(working copy)
+@@ -52,11 +52,11 @@
+     )
+ {
+     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+-    ULONG slotNumber = deviceExtension->slotNumber;
+-    ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
++    //ULONG slotNumber = deviceExtension->slotNumber;
++    //ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
+     ULONG VendorID =  deviceExtension->DevID        & 0xffff;
+-    ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
+-    ULONG RevID    =  deviceExtension->RevID;
++    //ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
++    //ULONG RevID    =  deviceExtension->RevID;
+     ULONG ChipType = deviceExtension->HwFlags & CHIPTYPE_MASK;
+     ULONG ChipFlags= deviceExtension->HwFlags & CHIPFLAG_MASK;
+ 
+@@ -216,7 +216,7 @@
+         PCI_DEV_HW_SPEC_BM( 0730, 1039, 0x00, ATA_UDMA5, "SiS 730"  , SIS100OLD        ),
+ 
+         PCI_DEV_HW_SPEC_BM( 0646, 1039, 0x00, ATA_UDMA6, "SiS 645DX", SIS133NEW        ),
+-/*        PCI_DEV_HW_SPEC_BM( 0645, 1039, 0x00, ATA_UDMA6, "SiS 645"  , SIS133NEW        ),
++/*        PCI_DEV_HW_SPEC_BM( 0645, 1039, 0x00, ATA_UDMA6, "SiS 645"  , SIS133NEW        ),*/
+ /*        PCI_DEV_HW_SPEC_BM( 0640, 1039, 0x00, ATA_UDMA4, "SiS 640"  , SIS_SOUTH        ),*/
+         PCI_DEV_HW_SPEC_BM( 0635, 1039, 0x00, ATA_UDMA5, "SiS 635"  , SIS100NEW        ),
+         PCI_DEV_HW_SPEC_BM( 0633, 1039, 0x00, ATA_UDMA5, "SiS 633"  , SIS100NEW        ),
+@@ -419,7 +419,7 @@
+             BaseIoAddressBM = AtapiGetIoRange(HwDeviceExtension, ConfigInfo, pciData, SystemIoBusNumber,
+                                     4, 0, deviceExtension->NumberChannels*sizeof(IDE_BUSMASTER_REGISTERS));
+             for(c=0; c<deviceExtension->NumberChannels; c++) {
+-                ULONG unit01 = (c & 1);
++                //ULONG unit01 = (c & 1);
+                 ULONG unit10 = (c & 2);
+                 chan = &deviceExtension->chan[c];
+ 
+@@ -987,7 +987,7 @@
+     IN ULONG  slotNumber
+     )
+ {
+-    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
++    //PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+     PCI_COMMON_CONFIG     pciData;
+     ULONG                 funcNumber;
+     ULONG                 busDataRead;
+@@ -1039,7 +1039,7 @@
+     IN ULONG  c
+     )
+ {
+-    PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
++    //PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+     PCI_COMMON_CONFIG     pciData;
+     ULONG                 funcNumber;
+     ULONG                 busDataRead;
+@@ -1174,7 +1174,7 @@
+     ULONG slotNumber = deviceExtension->slotNumber;
+     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
+ 
+-    ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
++    //ULONG ChipType  = deviceExtension->HwFlags & CHIPTYPE_MASK;
+     PHW_CHANNEL chan;
+     ULONG  c; // logical channel (for Compatible Mode controllers)
+     UCHAR tmp8;
+@@ -1332,7 +1332,9 @@
+     ULONG slotNumber = deviceExtension->slotNumber;
+     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
+     ULONG VendorID =  deviceExtension->DevID        & 0xffff;
++#ifdef _DEBUG
+     ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
++#endif
+     ULONG RevID    =  deviceExtension->RevID;
+ //    ULONG i;
+ //    BUSMASTER_CONTROLLER_INFORMATION* DevTypeInfo;
+Index: id_ata.cpp
+===================================================================
+--- id_ata.cpp	(revision 38451)
++++ id_ata.cpp	(working copy)
+@@ -1864,7 +1864,9 @@
+     ULONG slotNumber = deviceExtension->slotNumber;
+     ULONG SystemIoBusNumber = deviceExtension->SystemIoBusNumber;
+     ULONG VendorID =  deviceExtension->DevID        & 0xffff;
++#ifdef _DEBUG
+     ULONG DeviceID = (deviceExtension->DevID >> 16) & 0xffff;
++#endif
+     //ULONG RevID    =  deviceExtension->RevID;
+     ULONG ChipFlags = deviceExtension->HwFlags & CHIPFLAG_MASK;
+     UCHAR tmp8;
+@@ -2859,12 +2861,12 @@
+ --*/
+ ULONG
+ AtapiParseArgumentString(
+-    IN PCHAR String,
+-    IN PCHAR KeyWord
++    IN PCCH String,
++    IN PCCH KeyWord
+     )
+ {
+-    PCHAR cptr;
+-    PCHAR kptr;
++    PCCH cptr;
++    PCCH kptr;
+     ULONG value;
+     ULONG stringLength = 0;
+     ULONG keyWordLength = 0;
+@@ -2877,24 +2879,15 @@
+         return 0;
+     }
+ 
+-    // Calculate the string length and lower case all characters.
++    // Calculate the string length.
+     cptr = String;
+-    while (*cptr) {
+-        if (*cptr >= 'A' && *cptr <= 'Z') {
+-            *cptr = *cptr + ('a' - 'A');
+-        }
+-        cptr++;
++    while (*cptr++) {
+         stringLength++;
+     }
+ 
+-    // Calculate the keyword length and lower case all characters.
+-    cptr = KeyWord;
+-    while (*cptr) {
+-
+-        if (*cptr >= 'A' && *cptr <= 'Z') {
+-            *cptr = *cptr + ('a' - 'A');
+-        }
+-        cptr++;
++    // Calculate the keyword length.
++    kptr = KeyWord;
++    while (*kptr++) {
+         keyWordLength++;
+     }
+ 
+@@ -2920,18 +2913,21 @@
+     }
+ 
+     kptr = KeyWord;
+-    while (*cptr++ == *kptr++) {
++    while ((*cptr == *kptr) ||
++           (*cptr <= 'Z' && *cptr + ('a' - 'A') == *kptr) ||
++           (*cptr >= 'a' && *cptr - ('a' - 'A') == *kptr)) {
++        cptr++;
++        kptr++;
+ 
+-        if (*(cptr - 1) == '\0') {
++        if (*cptr == '\0') {
+             // end of string
+             return 0;
+         }
+     }
+ 
+-    if (*(kptr - 1) == '\0') {
++    if (*kptr == '\0') {
+ 
+         // May have a match backup and check for blank or equals.
+-        cptr--;
+         while (*cptr == ' ' || *cptr == '\t') {
+             cptr++;
+         }
+@@ -2967,7 +2963,7 @@
+         }
+ 
+         value = 0;
+-        if ((*cptr == '0') && (*(cptr + 1) == 'x')) {
++        if ((*cptr == '0') && ((*(cptr + 1) == 'x') || (*(cptr + 1) == 'X'))) {
+             // Value is in Hex.  Skip the "0x"
+             cptr += 2;
+             for (index = 0; *(cptr + index); index++) {
+@@ -2983,6 +2979,8 @@
+                 } else {
+                     if ((*(cptr + index) >= 'a') && (*(cptr + index) <= 'f')) {
+                         value = (16 * value) + (*(cptr + index) - 'a' + 10);
++                    } else if ((*(cptr + index) >= 'A') && (*(cptr + index) <= 'F')) {
++                        value = (16 * value) + (*(cptr + index) - 'A' + 10);
+                     } else {
+                         // Syntax error, return not found.
+                         return 0;
+@@ -8752,10 +8750,10 @@
+ ULONG
+ AtapiRegCheckDevLunValue(
+     IN PVOID HwDeviceExtension,
+-    IN PWCHAR NamePrefix,
++    IN PCWCH NamePrefix,
+     IN ULONG chan,
+     IN ULONG dev,
+-    IN PWSTR Name,
++    IN PCWSTR Name,
+     IN ULONG Default
+     )
+ {
+@@ -8822,7 +8820,7 @@
+     IN PVOID HwDeviceExtension,
+     IN ULONG chan,
+     IN ULONG dev,
+-    IN PWSTR Name,
++    IN PCWSTR Name,
+     IN ULONG Default
+     )
+ {
+@@ -8940,8 +8938,8 @@
+ ULONG
+ AtapiRegCheckParameterValue(
+     IN PVOID HwDeviceExtension,
+-    IN PWSTR PathSuffix,
+-    IN PWSTR Name,
++    IN PCWSTR PathSuffix,
++    IN PCWSTR Name,
+     IN ULONG Default
+     )
+ {
+@@ -9108,7 +9106,7 @@
+ VOID
+ _cdecl
+ _PrintNtConsole(
+-    PCHAR DebugMessage,
++    PCCH DebugMessage,
+     ...
+     )
+ {
+Index: id_probe.cpp
+===================================================================
+--- id_probe.cpp	(revision 38451)
++++ id_probe.cpp	(working copy)
+@@ -76,7 +76,6 @@
+ VOID
+ AtapiDoNothing(VOID)
+ {
+-    ULONG i = 0;
+     return;
+ } // end AtapiDoNothing()
+ 
+@@ -504,8 +503,8 @@
+ /*                        if(known) {
+                             RtlCopyMemory(newBMListPtr, (PVOID)&(BusMasterAdapters[i]), sizeof(BUSMASTER_CONTROLLER_INFORMATION));
+                         } else {*/
+-                        sprintf((PCHAR)vendorStrPtr, "%4.4x", VendorID);
+-                        sprintf((PCHAR)deviceStrPtr, "%4.4x", DeviceID);
++                        sprintf((PCHAR)vendorStrPtr, "%4.4lx", VendorID);
++                        sprintf((PCHAR)deviceStrPtr, "%4.4lx", DeviceID);
+ 
+                         RtlCopyMemory(&(newBMListPtr->VendorIdStr), (PCHAR)vendorStrPtr, 4);
+                         RtlCopyMemory(&(newBMListPtr->DeviceIdStr), (PCHAR)deviceStrPtr, 4);
+@@ -874,7 +873,11 @@
+     BOOLEAN found = FALSE;
+     BOOLEAN MasterDev;
+     BOOLEAN simplexOnly = FALSE;
++#ifndef UNIATA_CORE
++#ifdef UNIATA_INIT_ON_PROBE
+     BOOLEAN skip_find_dev = FALSE;
++#endif
++#endif
+     BOOLEAN AltInit = FALSE;
+ 
+     SCSI_PHYSICAL_ADDRESS IoBasePort1;
+@@ -1712,7 +1715,7 @@
+     )
+ {
+     PHW_DEVICE_EXTENSION  deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+-    PHW_CHANNEL           chan = NULL;
++    //PHW_CHANNEL           chan = NULL;
+     // this buffer must be global for UNIATA_CORE build
+     PCI_COMMON_CONFIG     pciData;
+ 
+@@ -1743,8 +1746,8 @@
+     BOOLEAN found = FALSE;
+     BOOLEAN MasterDev;
+     BOOLEAN simplexOnly = FALSE;
+-    BOOLEAN skip_find_dev = FALSE;
+-    BOOLEAN AltInit = FALSE;
++    //BOOLEAN skip_find_dev = FALSE;
++    //BOOLEAN AltInit = FALSE;
+ 
+     PIDE_BUSMASTER_REGISTERS BaseIoAddressBM_0 = NULL;
+ 
+@@ -1797,7 +1800,7 @@
+                                      &pciData,
+                                      PCI_COMMON_HDR_LENGTH);
+ 
+-    if (busDataRead < PCI_COMMON_HDR_LENGTH) {
++    if (busDataRead < (ULONG)PCI_COMMON_HDR_LENGTH) {
+         KdPrint2((PRINT_PREFIX "busDataRead < PCI_COMMON_HDR_LENGTH => SP_RETURN_ERROR\n"));
+         goto exit_error;
+     }
+@@ -2207,7 +2210,7 @@
+     PHW_DEVICE_EXTENSION deviceExtension = (PHW_DEVICE_EXTENSION)HwDeviceExtension;
+     PHW_CHANNEL          chan;
+     PULONG               adapterCount    = (PULONG)Context;
+-    PUCHAR               ioSpace;
++    PUCHAR               ioSpace = NULL;
+     ULONG                i;
+     ULONG                irq=0;
+     ULONG                portBase;
+@@ -2217,7 +2220,7 @@
+     BOOLEAN              preConfig = FALSE;
+     //
+     PIDE_REGISTERS_1 BaseIoAddress1;
+-    PIDE_REGISTERS_2 BaseIoAddress2;
++    PIDE_REGISTERS_2 BaseIoAddress2 = NULL;
+ 
+     // The following table specifies the ports to be checked when searching for
+     // an IDE controller.  A zero entry terminates the search.
+Index: bm_devs.h
+===================================================================
+--- bm_devs.h	(revision 38451)
++++ bm_devs.h	(working copy)
+@@ -482,7 +482,7 @@
+     { #idlo, 4, 0x##idlo, #idhi, 4, 0x##idhi, rev, mode, name, flags}
+ #else
+   #define PCI_DEV_HW_SPEC_BM(idhi, idlo, rev, mode, name, flags) \
+-    { #idlo, 4, 0x##idlo, #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
++    { (PCHAR) #idlo, 4, 0x##idlo, (PCHAR) #idhi, 4, 0x##idhi, rev, mode, NULL, flags}
+ #endif
+ 
+ #define BMLIST_TERMINATOR   (0xffffffffL)
+Index: bsmaster.h
+===================================================================
+--- bsmaster.h	(revision 38451)
++++ bsmaster.h	(working copy)
+@@ -987,7 +987,7 @@
+     BOOLEAN        opt_AtapiDmaRawRead;      // default TRUE
+     BOOLEAN        opt_AtapiDmaReadWrite;    // default TRUE
+ 
+-    PCHAR          FullDevName;
++    PCCH           FullDevName;
+ 
+ } HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;
+ 
+@@ -1172,9 +1172,9 @@
+     IN ULONG DeviceNumber,
+     IN ULONG lChannel,          // logical channel,
+                                // is always 0 except simplex-only controllers
+-    IN CHAR apiomode,
+-    IN CHAR wdmamode,
+-    IN CHAR udmamode
++    IN SCHAR apiomode,
++    IN SCHAR wdmamode,
++    IN SCHAR udmamode
+     );
+ 
+ extern BOOLEAN NTAPI

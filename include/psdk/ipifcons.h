@@ -1,8 +1,5 @@
 #ifndef _IPIFCONS_H
 #define _IPIFCONS_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define IF_ADMIN_STATUS_UP              1
 #define IF_ADMIN_STATUS_DOWN            2
@@ -30,4 +27,9 @@
 #define MIB_IF_TYPE_PPP 23
 #define MIB_IF_TYPE_LOOPBACK 24
 #define MIB_IF_TYPE_SLIP 28
+
+#define IF_TYPE_OTHER 1
+#define IF_TYPE_ETHERNET_CSMACD 6
+#define IF_TYPE_IEEE80211 71
+
 #endif /* _IPIFCONS_H */

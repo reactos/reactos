@@ -1,8 +1,5 @@
 #ifndef _MCIAVI_H
 #define _MCIAVI_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #define MCI_MCIAVI_PLAY_WINDOW 0x1000000
 #define	MCI_MCIAVI_PLAY_FULLSCREEN 0x2000000

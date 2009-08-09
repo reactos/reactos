@@ -127,10 +127,14 @@ SetServiceConfig(LPQUERY_SERVICE_CONFIG pServiceConfig,
                 {
                     bRet = TRUE;
                 }
+
+                CloseServiceHandle(hSc);
             }
 
             UnlockServiceDatabase(scLock);
         }
+
+        CloseServiceHandle(hSCManager);
     }
 
     if (!bRet)
@@ -359,11 +363,14 @@ UpdateServiceStatus(ENUM_SERVICE_STATUS_PROCESS* pService)
             QueryServiceStatusEx(hService,
                                  SC_STATUS_PROCESS_INFO,
                                  (LPBYTE)&pService->ServiceStatusProcess,
-                                 sizeof(*pService),
+                                 sizeof(SERVICE_STATUS_PROCESS),
                                  &size);
 
+            CloseServiceHandle(hService);
             bRet = TRUE;
         }
+
+        CloseServiceHandle(hScm);
     }
 
     return bRet;

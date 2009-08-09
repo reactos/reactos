@@ -7,8 +7,9 @@
 #ifndef __WS2_32_H
 #define __WS2_32_H
 
+#include <stdlib.h>
+
 #define WIN32_NO_STATUS
-#include <roscfg.h>
 #include <winsock2.h>
 #include <ws2spi.h>
 #include <ws2tcpip.h>
@@ -22,11 +23,7 @@
 #include <debug.h>
 #include <windns.h> // DNS_A_DATA
 
-/* Exported by ntdll.dll, but where is the prototype? */
-unsigned long strtoul(const char *nptr, char **endptr, int base);
-
-
-#define EXPORT STDCALL
+#define EXPORT WINAPI
 
 extern HINSTANCE g_hInstDll;
 extern HANDLE GlobalHeap;

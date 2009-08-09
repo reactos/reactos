@@ -186,7 +186,7 @@ rh_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
 
         pif->endp_count = 1;
         pendp = &pif->endp[0];
-        pif->pusb_config = pconfig;;
+        pif->pusb_config = pconfig;
         pif->pusb_if_desc = pif_desc;
 
         pif->if_ext_size = 0;

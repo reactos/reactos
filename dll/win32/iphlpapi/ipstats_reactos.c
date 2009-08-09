@@ -19,7 +19,6 @@
  * tcpip.sys
  */
 
-#include <roscfg.h>
 #include <stdio.h>
 
 #include "iphlpapi_private.h"
@@ -550,7 +549,10 @@ DWORD getNumArpEntries(void)
 					&returnSize );
 
 	    if( status == STATUS_SUCCESS ) totalNumber += returnSize;
-	    if( IpArpTable ) tdiFreeThingSet( IpArpTable );
+		if( IpArpTable ) {
+			tdiFreeThingSet( IpArpTable );
+			IpArpTable = NULL;
+		}
 	}
     }
 

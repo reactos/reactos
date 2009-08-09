@@ -86,10 +86,22 @@
 #define CMP_LOCK_HASHES_FOR_KCB                         0x2
 
 //
+// CmpDoCreate and CmpDoOpen flags
+//
+#define CMP_CREATE_KCB_KCB_LOCKED                       0x2
+#define CMP_OPEN_KCB_NO_CREATE                          0x4
+
+//
 // EnlistKeyBodyWithKCB Flags
 //
 #define CMP_ENLIST_KCB_LOCKED_SHARED                    0x1
 #define CMP_ENLIST_KCB_LOCKED_EXCLUSIVE                 0x2
+
+//
+// Unload Flags
+//
+#define CMP_UNLOCK_KCB_LOCKED                    0x1
+#define CMP_UNLOCK_REGISTRY_LOCKED               0x2
 
 //
 // Maximum size of Value Cache
@@ -840,6 +852,12 @@ CmpAddToDelayedClose(
 
 VOID
 NTAPI
+CmpArmDelayedCloseTimer(
+    VOID
+);
+
+VOID
+NTAPI
 CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
 VOID
@@ -896,6 +914,18 @@ CmpCleanUpKcbCacheWithLock(
 VOID
 NTAPI
 CmpCleanUpSubKeyInfo(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+PUNICODE_STRING
+NTAPI
+CmpConstructName(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+BOOLEAN
+NTAPI
+CmpReferenceKeyControlBlock(
     IN PCM_KEY_CONTROL_BLOCK Kcb
 );
 
@@ -1402,9 +1432,22 @@ CmLoadKey(
     IN PCM_KEY_BODY KeyBody
 );
 
+NTSTATUS
+NTAPI
+CmUnloadKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN ULONG Flags
+);
+
 //
 // Startup and Shutdown
 //
+BOOLEAN
+NTAPI
+CmInitSystem1(
+    VOID
+);
+
 VOID
 NTAPI
 CmShutdownSystem(
@@ -1414,6 +1457,7 @@ CmShutdownSystem(
 //
 // Global variables accessible from all of Cm
 //
+extern ULONG CmpTraceLevel;
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
 extern BOOLEAN CmpShareSystemHives;

@@ -18,9 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_ENTIRENETWORK "ƒlƒbƒgƒ[ƒN‘S‘Ì"
+    IDS_ENTIRENETWORK "ãƒãƒƒãƒˆãƒ¯ãƒ¼ã‚¯å…¨ä½“"
 }
+
+#pragma code_page(default)

@@ -985,7 +985,8 @@ SECTION _DATA public align=16 class=DATA use32 flat
 
 #if defined(Lynx) || (defined(SYSV) || defined(SVR4)) \
  || (defined(__linux__) || defined(__OS2ELF__)) && defined(__ELF__) \
- || defined(__FreeBSD__) && __FreeBSD__ >= 3
+ || (defined(__FreeBSD__) && __FreeBSD__ >= 3) \
+ || (defined(__NetBSD__) && defined(__ELF__))
 #define GLNAME(a)	a
 #else
 #define GLNAME(a)	CONCAT(_, a)

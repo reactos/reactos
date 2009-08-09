@@ -71,12 +71,12 @@ GetPciIrqRoutingTable(VOID)
   ULONG i;
 
   Table = (PPCI_IRQ_ROUTING_TABLE)0xF0000;
-  while ((ULONG)Table < 0x100000)
+  while ((ULONG_PTR)Table < 0x100000)
     {
       if (Table->Signature == 0x52495024)
 	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "Found signature\n"));
+	  DPRINTM(DPRINT_HWDETECT,
+		    "Found signature\n");
 
 	  Ptr = (PUCHAR)Table;
 	  Sum = 0;
@@ -87,18 +87,18 @@ GetPciIrqRoutingTable(VOID)
 
 	  if ((Sum & 0xFF) != 0)
 	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"Invalid routing table\n"));
+	      DPRINTM(DPRINT_HWDETECT,
+			"Invalid routing table\n");
 	      return NULL;
 	    }
 
-	  DbgPrint((DPRINT_HWDETECT,
-		   "Valid checksum\n"));
+	  DPRINTM(DPRINT_HWDETECT,
+		   "Valid checksum\n");
 
 	  return Table;
 	}
 
-      Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG)Table + 0x10);
+      Table = (PPCI_IRQ_ROUTING_TABLE)((ULONG_PTR)Table + 0x10);
     }
 
   return NULL;
@@ -118,12 +118,12 @@ FindPciBios(PPCI_REGISTRY_INFO BusData)
 
   if (INT386_SUCCESS(RegsOut) && RegsOut.d.edx == 0x20494350 && RegsOut.b.ah == 0)
     {
-      DbgPrint((DPRINT_HWDETECT, "Found PCI bios\n"));
+      DPRINTM(DPRINT_HWDETECT, "Found PCI bios\n");
 
-      DbgPrint((DPRINT_HWDETECT, "AL: %x\n", RegsOut.b.al));
-      DbgPrint((DPRINT_HWDETECT, "BH: %x\n", RegsOut.b.bh));
-      DbgPrint((DPRINT_HWDETECT, "BL: %x\n", RegsOut.b.bl));
-      DbgPrint((DPRINT_HWDETECT, "CL: %x\n", RegsOut.b.cl));
+      DPRINTM(DPRINT_HWDETECT, "AL: %x\n", RegsOut.b.al);
+      DPRINTM(DPRINT_HWDETECT, "BH: %x\n", RegsOut.b.bh);
+      DPRINTM(DPRINT_HWDETECT, "BL: %x\n", RegsOut.b.bl);
+      DPRINTM(DPRINT_HWDETECT, "CL: %x\n", RegsOut.b.cl);
 
       BusData->NoBuses = RegsOut.b.cl + 1;
       BusData->MajorRevision = RegsOut.b.bh;
@@ -134,7 +134,7 @@ FindPciBios(PPCI_REGISTRY_INFO BusData)
     }
 
 
-  DbgPrint((DPRINT_HWDETECT, "No PCI bios found\n"));
+  DPRINTM(DPRINT_HWDETECT, "No PCI bios found\n");
 
   return FALSE;
 }
@@ -152,7 +152,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
   Table = GetPciIrqRoutingTable();
   if (Table != NULL)
     {
-      DbgPrint((DPRINT_HWDETECT, "Table size: %u\n", Table->Size));
+      DPRINTM(DPRINT_HWDETECT, "Table size: %u\n", Table->Size);
 
       FldrCreateComponentKey(BusKey,
                              L"RealModeIrqRoutingTable",
@@ -173,11 +173,11 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
          2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->Size;
-      PartialResourceList = MmAllocateMemory(Size);
+      PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
       {
-          DbgPrint((DPRINT_HWDETECT,
-              "Failed to allocate resource descriptor\n"));
+          DPRINTM(DPRINT_HWDETECT,
+              "Failed to allocate resource descriptor\n");
           return;
       }
 
@@ -203,7 +203,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
 
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(TableKey, PartialResourceList, Size);
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
     }
 }
 
@@ -246,11 +246,11 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
                           PartialDescriptors);
-      PartialResourceList = MmAllocateMemory(Size);
+      PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
       {
-          DbgPrint((DPRINT_HWDETECT,
-              "Failed to allocate resource descriptor\n"));
+          DPRINTM(DPRINT_HWDETECT,
+              "Failed to allocate resource descriptor\n");
           return;
       }
 
@@ -259,7 +259,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(BiosKey, PartialResourceList, Size);
-      MmFreeMemory(PartialResourceList);
+      MmHeapFree(PartialResourceList);
 
       DetectPciIrqRoutingTable(BiosKey);
 
@@ -288,11 +288,11 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                   PartialDescriptors) +
                      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) +
                      sizeof(PCI_REGISTRY_INFO);
-              PartialResourceList = MmAllocateMemory(Size);
+              PartialResourceList = MmHeapAlloc(Size);
               if (!PartialResourceList)
               {
-                  DbgPrint((DPRINT_HWDETECT,
-                            "Failed to allocate resource descriptor\n"));
+                  DPRINTM(DPRINT_HWDETECT,
+                            "Failed to allocate resource descriptor\n");
                   return;
               }
 
@@ -311,18 +311,18 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
               /* Set 'Configuration Data' value */
               FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-              MmFreeMemory(PartialResourceList);
+              MmHeapFree(PartialResourceList);
           }
           else
           {
               /* Set 'Configuration Data' value */
               Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
                                   PartialDescriptors);
-              PartialResourceList = MmAllocateMemory(Size);
+              PartialResourceList = MmHeapAlloc(Size);
               if (!PartialResourceList)
               {
-                  DbgPrint((DPRINT_HWDETECT,
-                            "Failed to allocate resource descriptor\n"));
+                  DPRINTM(DPRINT_HWDETECT,
+                            "Failed to allocate resource descriptor\n");
                   return;
               }
 
@@ -331,7 +331,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
               /* Set 'Configuration Data' value */
               FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-              MmFreeMemory(PartialResourceList);
+              MmHeapFree(PartialResourceList);
           }
 
           /* Increment bus number */

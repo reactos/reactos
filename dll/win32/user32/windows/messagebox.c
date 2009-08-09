@@ -618,7 +618,7 @@ MessageBoxTimeoutIndirectW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxA(
   HWND hWnd,
   LPCSTR lpText,
@@ -633,7 +633,7 @@ MessageBoxA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxExA(
   HWND hWnd,
   LPCSTR lpText,
@@ -662,7 +662,7 @@ MessageBoxExA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxExW(
   HWND hWnd,
   LPCWSTR lpText,
@@ -691,7 +691,7 @@ MessageBoxExW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxIndirectA(
   CONST MSGBOXPARAMSA *lpMsgBoxParams)
 {
@@ -770,7 +770,7 @@ MessageBoxIndirectA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxIndirectW(
   CONST MSGBOXPARAMSW *lpMsgBoxParams)
 {
@@ -782,7 +782,7 @@ MessageBoxIndirectW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxW(
   HWND hWnd,
   LPCWSTR lpText,
@@ -796,7 +796,7 @@ MessageBoxW(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxTimeoutA(
   HWND hWnd,
   LPCSTR lpText,
@@ -845,7 +845,7 @@ MessageBoxTimeoutA(
  * @implemented
  */
 int
-STDCALL
+WINAPI
 MessageBoxTimeoutW(
   HWND hWnd,
   LPCWSTR lpText,
@@ -875,7 +875,7 @@ MessageBoxTimeoutW(
  * @unimplemented
  */
 DWORD
-STDCALL
+WINAPI
 SoftModalMessageBox(DWORD Unknown0)
 {
   UNIMPLEMENTED;
@@ -887,7 +887,7 @@ SoftModalMessageBox(DWORD Unknown0)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 MessageBeep(UINT uType)
 {
 #if 0
@@ -926,7 +926,7 @@ MessageBeep(UINT uType)
 /*
  * @implemented
  */
-LPWSTR STDCALL MB_GetString(DWORD string)
+LPWSTR WINAPI MB_GetString(DWORD string)
 {
     UNIMPLEMENTED;
     return NULL;

@@ -7,7 +7,7 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Usage: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+STRING_HELP,  "Usage: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Specifies the drive to format.\n\
   -FS:file-system  Specifies the type of file system (%s).\n\
   -V:label         Specifies volume label.\n\
@@ -29,7 +29,7 @@ STRING_NO_SUPPORT  "Operation Not Supported"
 
 STRING_FMIFS_FAIL  "Could not located FMIFS entry points.\n\n"
 
-STRING_UNKNOW_ARG  "Unknown argument: %S\n"
+STRING_UNKNOW_ARG  "Unknown argument: %s\n"
 
 STRING_DRIVE_PARM  "Required drive parameter is missing.\n\n"
 
@@ -41,7 +41,7 @@ STRING_NO_VOLUME         "Could not query volume"
 
 STRING_NO_VOLUME_SIZE    "Could not query volume size"
 
-STRING_FILESYSTEM        "The type of the file system is %S.\n"
+STRING_FILESYSTEM        "The type of the file system is %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Enter current volume label for drive %C: "
 

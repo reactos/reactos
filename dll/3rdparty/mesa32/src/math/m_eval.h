@@ -26,7 +26,7 @@
 #ifndef _M_EVAL_H
 #define _M_EVAL_H
 
-#include "glheader.h"
+#include "main/glheader.h"
 
 void _math_init_eval( void );
 

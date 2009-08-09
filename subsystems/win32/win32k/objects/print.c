@@ -24,7 +24,7 @@
 #include <debug.h>
 
 INT
-STDCALL
+APIENTRY
 NtGdiAbortDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -32,7 +32,7 @@ NtGdiAbortDoc(HDC  hDC)
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEndDoc(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -40,7 +40,7 @@ NtGdiEndDoc(HDC  hDC)
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEndPage(HDC  hDC)
 {
   UNIMPLEMENTED;
@@ -63,7 +63,7 @@ IntGdiEscape(PDC    dc,
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiEscape(HDC  hDC,
             INT  Escape,
             INT  InSize,
@@ -88,7 +88,7 @@ NtGdiEscape(HDC  hDC,
 }
 
 INT
-STDCALL
+APIENTRY
 IntEngExtEscape(
    SURFOBJ *Surface,
    INT      Escape,
@@ -105,7 +105,7 @@ IntEngExtEscape(
 }
 
 INT
-STDCALL
+APIENTRY
 IntGdiExtEscape(
    PDC    dc,
    INT    Escape,
@@ -114,15 +114,15 @@ IntGdiExtEscape(
    INT    OutSize,
    LPSTR  OutData)
 {
-   BITMAPOBJ *BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+   SURFACE *psurf = SURFACE_LockSurface(dc->w.hBitmap);
    INT Result;
 
-   /* FIXME - Handle BitmapObj == NULL !!!!!! */
+   /* FIXME - Handle psurf == NULL !!!!!! */
 
    if ( NULL == ((GDIDEVICE *)dc->pPDev)->DriverFunctions.Escape )
    {
       Result = IntEngExtEscape(
-         &BitmapObj->SurfObj,
+         &psurf->SurfObj,
          Escape,
          InSize,
          (PVOID)((ULONG_PTR)InData),
@@ -132,20 +132,20 @@ IntGdiExtEscape(
    else
    {
       Result = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.Escape(
-         &BitmapObj->SurfObj,
+         &psurf->SurfObj,
          Escape,
          InSize,
          (PVOID)InData,
          OutSize,
          (PVOID)OutData );
    }
-   BITMAPOBJ_UnlockBitmap(BitmapObj);
+   SURFACE_UnlockSurface(psurf);
 
    return Result;
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiExtEscape(
    HDC    hDC,
    IN OPTIONAL PWCHAR pDriver,
@@ -181,17 +181,17 @@ NtGdiExtEscape(
 
    if ( InSize && UnsafeInData )
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
         ProbeForRead(UnsafeInData,
                      InSize,
                      1);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {
@@ -208,22 +208,22 @@ NtGdiExtEscape(
          return -1;
       }
 
-      _SEH_TRY
+      _SEH2_TRY
       {
         /* pointers were already probed! */
         RtlCopyMemory(SafeInData,
                       UnsafeInData,
                       InSize);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if ( !NT_SUCCESS(Status) )
       {
-         ExFreePool ( SafeInData );
+         ExFreePoolWithTag ( SafeInData, TAG_PRINT );
          DC_UnlockDc(pDC);
          SetLastNtError(Status);
          return -1;
@@ -232,17 +232,17 @@ NtGdiExtEscape(
 
    if ( OutSize && UnsafeOutData )
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
         ProbeForWrite(UnsafeOutData,
                       OutSize,
                       1);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
       if (!NT_SUCCESS(Status))
       {
@@ -256,7 +256,7 @@ NtGdiExtEscape(
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
 freeout:
          if ( SafeInData )
-            ExFreePool ( SafeInData );
+            ExFreePoolWithTag ( SafeInData, TAG_PRINT );
          DC_UnlockDc(pDC);
          return -1;
       }
@@ -267,24 +267,24 @@ freeout:
    DC_UnlockDc(pDC);
 
    if ( SafeInData )
-      ExFreePool ( SafeInData );
+      ExFreePoolWithTag ( SafeInData ,TAG_PRINT );
 
    if ( SafeOutData )
    {
-      _SEH_TRY
+      _SEH2_TRY
       {
         /* pointers were already probed! */
         RtlCopyMemory(UnsafeOutData,
                       SafeOutData,
                       OutSize);
       }
-      _SEH_HANDLE
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-        Status = _SEH_GetExceptionCode();
+        Status = _SEH2_GetExceptionCode();
       }
-      _SEH_END;
+      _SEH2_END;
 
-      ExFreePool ( SafeOutData );
+      ExFreePoolWithTag ( SafeOutData, TAG_PRINT );
       if ( !NT_SUCCESS(Status) )
       {
          SetLastNtError(Status);
@@ -308,7 +308,7 @@ NtGdiStartDoc(
 }
 
 INT
-STDCALL
+APIENTRY
 NtGdiStartPage(HDC  hDC)
 {
   UNIMPLEMENTED;

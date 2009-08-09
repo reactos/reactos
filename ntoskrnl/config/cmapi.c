@@ -732,7 +732,7 @@ CmEnumerateValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     BOOLEAN IndexIsCached, ValueIsCached = FALSE;
     PCELL_DATA CellData;
     PCM_CACHED_VALUE *CachedValue;
-    PCM_KEY_VALUE ValueData;
+    PCM_KEY_VALUE ValueData = NULL;
     PAGED_CODE();
 
     /* Acquire hive lock */
@@ -1307,7 +1307,7 @@ CmDeleteKey(IN PCM_KEY_BODY KeyBody)
 
                 /* Update the write time */
                 KeQuerySystemTime(&Parent->LastWriteTime);
-                KeQuerySystemTime(&Kcb->ParentKcb->KcbLastWriteTime);
+                Kcb->ParentKcb->KcbLastWriteTime = Parent->LastWriteTime;
 
                 /* Release the cell */
                 HvReleaseCell(Hive, ParentCell);

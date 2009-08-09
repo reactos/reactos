@@ -42,9 +42,14 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #endif
+#if defined(USE_SSE_ASM) && defined(__OpenBSD__)
+#include <sys/param.h>
+#include <sys/sysctl.h>
+#include <machine/cpu.h>
+#endif
 
+#include "main/imports.h"
 #include "common_x86_asm.h"
-#include "imports.h"
 
 
 int _mesa_x86_cpu_features = 0;
@@ -113,6 +118,27 @@ static void check_os_sse_support( void )
       if (ret || !enabled)
          _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
    }
+#elif defined (__NetBSD__)
+   {
+      int ret, enabled;
+      size_t len = sizeof(enabled);
+      ret = sysctlbyname("machdep.sse", &enabled, &len, (void *)NULL, 0);
+      if (ret || !enabled)
+         _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
+   }
+#elif defined(__OpenBSD__)
+   {
+      int mib[2];
+      int ret, enabled;
+      size_t len = sizeof(enabled);
+
+      mib[0] = CTL_MACHDEP;
+      mib[1] = CPU_SSE;
+
+      ret = sysctl(mib, 2, &enabled, &len, NULL, 0);
+      if (ret || !enabled)
+         _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
+   }
 #elif defined(WIN32)
    LPTOP_LEVEL_EXCEPTION_FILTER oldFilter;
    
@@ -134,7 +160,7 @@ static void check_os_sse_support( void )
    if ( cpu_has_xmm ) {
       _mesa_debug(NULL, "Testing OS support for SSE unmasked exceptions...\n");
 
-      _mesa_test_os_sse_exception_support();
+      //_mesa_test_os_sse_exception_support();
 
       if ( cpu_has_xmm ) {
 	 _mesa_debug(NULL, "Yes.\n");

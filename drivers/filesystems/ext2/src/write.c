@@ -241,7 +241,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 		if (WriteLength == 0) 
 		{
 			// a 0 byte write can be immediately succeeded
-			try_return(RC);
+			try_return();
 		}
 
 		// Is this a write of the volume itself ?
@@ -310,14 +310,14 @@ NTSTATUS NTAPI Ext2CommonWrite(
 					//
 					RC = STATUS_END_OF_FILE;
 					NumberBytesWritten = 0;
-					try_return( RC );
+					try_return();
 				}
 			}
 
 			// Lock the callers buffer
 			if (!NT_SUCCESS(RC = Ext2LockCallersBuffer(PtrIrp, TRUE, WriteLength))) 
 			{
-				try_return(RC);
+				try_return();
 			}
 
 			// Forward the request to the lower level driver
@@ -337,7 +337,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 						PtrIrpContext, PtrIrp, PtrVCB, 
 						ByteOffset, WriteLength, SynchronousIo );
 
-				try_return(RC);
+				try_return();
 			}
 			else
 			{
@@ -375,7 +375,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 				//	Go ahead and complete the IRP...
 			}
-			try_return(RC);
+			try_return();
 		}
 
       
@@ -433,7 +433,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 				//	Nope... User initiated directory writes are not allowed!
 				//	Fail this request...
 				RC = STATUS_INVALID_DEVICE_REQUEST;
-				try_return(RC);
+				try_return();
 			}
 		}
 
@@ -496,7 +496,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 			// If the flush failed, return error to the caller
 			if (!NT_SUCCESS(RC = PtrIrp->IoStatus.Status)) 
 			{
-				try_return(RC);
+				try_return();
 			}
 
 			// Attempt the purge and ignore the return code
@@ -555,7 +555,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 						//	Page request for writing outside the file...
 						//	No op this IRP by completing it...
 						//
-						try_return(RC);
+						try_return();
 					}
 					if( ByteOffset.QuadPart + WriteLength
 						> PtrReqdFCB->CommonFCBHeader.AllocationSize.QuadPart )
@@ -688,7 +688,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 				NumberBytesWritten = PtrIrp->IoStatus.Information;
 				RC = PtrIrp->IoStatus.Status;
 
-				try_return(RC);
+				try_return();
 			}
 
 			// This is a regular run-of-the-mill cached I/O request. Let the
@@ -781,7 +781,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 
 				Ext2DeallocateUnicodeString( &ErrorMessage );
 				RC = STATUS_INSUFFICIENT_RESOURCES;
-				try_return ( RC );
+				try_return();
 			}
 			
 			if( ( ByteOffset.QuadPart + WriteLength ) > DirectBlockSize &&
@@ -813,7 +813,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return(RC);
+					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data", 0);
 				}
 			}
@@ -852,7 +852,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return(RC);
+					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data - Retrying", 0);
 				}
 
@@ -944,7 +944,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return(RC);
+					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data - Retrying", 0);
 				}
 
@@ -1055,7 +1055,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 					// Mark Irp Pending ...
 					IoMarkIrpPending( PtrIrp );
 					RC = STATUS_PENDING;
-					try_return(RC);
+					try_return();
 					DebugTrace(DEBUG_TRACE_ASYNC,   "Cache read failiure while reading in volume meta data - Retrying", 0);
 				}
 
@@ -1256,7 +1256,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 						Ext2BreakPoint();
 					}
 
-					PtrIoRuns[ Index ].LogicalBlock = PtrTIArray[ IBlockIndex ].PtrSIBlocks[ BlockIndex ];;
+					PtrIoRuns[ Index ].LogicalBlock = PtrTIArray[ IBlockIndex ].PtrSIBlocks[ BlockIndex ];
 					DbgPrint( "LogicalBlock = 0x%lX", PtrIoRuns[ Index ].LogicalBlock );
 				}
 
@@ -1324,7 +1324,7 @@ NTSTATUS NTAPI Ext2CommonWrite(
 			{
 				CompleteIrp = FALSE;	
 			}
-			try_return( RC );
+			try_return();
 		}
 
 		try_exit:	NOTHING;

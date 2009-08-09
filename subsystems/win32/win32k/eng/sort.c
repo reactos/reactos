@@ -26,7 +26,7 @@
 /*
  * @implemented
  */
-void STDCALL
+void APIENTRY
 EngSort(IN OUT PBYTE Buf, IN ULONG ElemSize, IN ULONG ElemCount, IN SORTCOMP CompFunc)
 {
   qsort(Buf, ElemCount, ElemSize, CompFunc);

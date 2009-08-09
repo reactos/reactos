@@ -1,0 +1,15 @@
+; $Id: sndblst.def 34299 2008-07-05 02:43:17Z silverblade $
+;
+; sndblst.def
+;
+; ReactOS Operating System
+;
+LIBRARY sndblst.dll
+EXPORTS
+DriverProc@20
+widMessage@20
+wodMessage@20
+midMessage@20
+modMessage@20
+mxdMessage@20
+auxMessage@20

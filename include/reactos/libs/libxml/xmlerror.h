@@ -60,7 +60,9 @@ typedef enum {
     XML_FROM_VALID,	/* The XML DTD validation with valid context */
     XML_FROM_CHECK,	/* The error checking module */
     XML_FROM_WRITER,	/* The xmlwriter module */
-    XML_FROM_MODULE	/* The dynamically loaded module module*/
+    XML_FROM_MODULE,	/* The dynamically loaded module module*/
+    XML_FROM_I18N,	/* The module handling character conversion */
+    XML_FROM_SCHEMATRONV	/* The Schematron validator module */
 } xmlErrorDomain;
 
 /**
@@ -201,11 +203,14 @@ typedef enum {
     XML_ERR_NOTATION_PROCESSING, /* 105 */
     XML_WAR_NS_COLUMN, /* 106 */
     XML_WAR_ENTITY_REDEFINED, /* 107 */
+    XML_ERR_UNKNOWN_VERSION, /* 108 */
+    XML_ERR_VERSION_MISMATCH, /* 109 */
     XML_NS_ERR_XML_NAMESPACE = 200,
     XML_NS_ERR_UNDEFINED_NAMESPACE, /* 201 */
     XML_NS_ERR_QNAME, /* 202 */
     XML_NS_ERR_ATTRIBUTE_REDEFINED, /* 203 */
     XML_NS_ERR_EMPTY, /* 204 */
+    XML_NS_ERR_COLON, /* 205 */
     XML_DTD_ATTRIBUTE_DEFAULT = 500,
     XML_DTD_ATTRIBUTE_REDEFINED, /* 501 */
     XML_DTD_ATTRIBUTE_VALUE, /* 502 */
@@ -247,6 +252,7 @@ typedef enum {
     XML_DTD_STANDALONE_DEFAULTED, /* 538 */
     XML_DTD_XMLID_VALUE, /* 539 */
     XML_DTD_XMLID_TYPE, /* 540 */
+    XML_DTD_DUP_TOKEN, /* 541 */
     XML_HTML_STRUCURE_ERROR = 800,
     XML_HTML_UNKNOWN_TAG, /* 801 */
     XML_RNGP_ANYNAME_ATTR_ANCESTOR = 1000,
@@ -397,6 +403,7 @@ typedef enum {
     XML_TREE_INVALID_HEX = 1300,
     XML_TREE_INVALID_DEC, /* 1301 */
     XML_TREE_UNTERMINATED_ENTITY, /* 1302 */
+    XML_TREE_NOT_UTF8, /* 1303 */
     XML_SAVE_NOT_UTF8 = 1400,
     XML_SAVE_CHAR_INVALID, /* 1401 */
     XML_SAVE_NO_DOCTYPE, /* 1402 */
@@ -662,6 +669,7 @@ typedef enum {
     XML_SCHEMAV_CVC_TYPE_2, /* 1876 */
     XML_SCHEMAV_CVC_IDC, /* 1877 */
     XML_SCHEMAV_CVC_WILDCARD, /* 1878 */
+    XML_SCHEMAV_MISC, /* 1879 */
     XML_XPTR_UNKNOWN_SCHEME = 1900,
     XML_XPTR_CHILDSEQ_START, /* 1901 */
     XML_XPTR_EVAL_FAILED, /* 1902 */
@@ -760,6 +768,19 @@ typedef enum {
     XML_SCHEMAP_AU_PROPS_CORRECT_2, /* 3078 */
     XML_SCHEMAP_A_PROPS_CORRECT_2, /* 3079 */
     XML_SCHEMAP_C_PROPS_CORRECT, /* 3080 */
+    XML_SCHEMAP_SRC_REDEFINE, /* 3081 */
+    XML_SCHEMAP_SRC_IMPORT, /* 3082 */
+    XML_SCHEMAP_WARN_SKIP_SCHEMA, /* 3083 */
+    XML_SCHEMAP_WARN_UNLOCATED_SCHEMA, /* 3084 */
+    XML_SCHEMAP_WARN_ATTR_REDECL_PROH, /* 3085 */
+    XML_SCHEMAP_WARN_ATTR_POINTLESS_PROH, /* 3085 */
+    XML_SCHEMAP_AG_PROPS_CORRECT, /* 3086 */
+    XML_SCHEMAP_COS_CT_EXTENDS_1_2, /* 3087 */
+    XML_SCHEMAP_AU_PROPS_CORRECT, /* 3088 */
+    XML_SCHEMAP_A_PROPS_CORRECT_3, /* 3089 */
+    XML_SCHEMAP_COS_ALL_LIMITED, /* 3090 */
+    XML_SCHEMATRONV_ASSERT = 4000, /* 4000 */
+    XML_SCHEMATRONV_REPORT,
     XML_MODULE_OPEN = 4900, /* 4900 */
     XML_MODULE_CLOSE, /* 4901 */
     XML_CHECK_FOUND_ELEMENT = 5000,
@@ -799,7 +820,12 @@ typedef enum {
     XML_CHECK_NOT_NCNAME, /* 5034 */
     XML_CHECK_OUTSIDE_DICT, /* 5035 */
     XML_CHECK_WRONG_NAME, /* 5036 */
-    XML_CHECK_NAME_NOT_NULL /* 5037 */
+    XML_CHECK_NAME_NOT_NULL, /* 5037 */
+    XML_I18N_NO_NAME = 6000,
+    XML_I18N_NO_HANDLER, /* 6001 */
+    XML_I18N_EXCESS_HANDLER, /* 6002 */
+    XML_I18N_CONV_FAILED, /* 6003 */
+    XML_I18N_NO_OUTPUT /* 6004 */
 #if 0
     XML_CHECK_, /* 5033 */
     XML_CHECK_X /* 503 */
@@ -815,9 +841,9 @@ typedef enum {
  * Signature of the function to use when there is an error and
  * no parsing or validity context available .
  */
-typedef void (*xmlGenericErrorFunc) (void *ctx,
+typedef void (XMLCDECL *xmlGenericErrorFunc) (void *ctx,
 				 const char *msg,
-	 			 ...);
+				 ...) ATTRIBUTE_PRINTF(2,3);
 /**
  * xmlStructuredErrorFunc:
  * @userData:  user provided data for the error callback
@@ -826,7 +852,7 @@ typedef void (*xmlGenericErrorFunc) (void *ctx,
  * Signature of the function to use when there is an error and
  * the module handles the new error reporting mechanism.
  */
-typedef void (*xmlStructuredErrorFunc) (void *userData, xmlErrorPtr error);
+typedef void (XMLCALL *xmlStructuredErrorFunc) (void *userData, xmlErrorPtr error);
 
 /*
  * Use the following function to reset the two global variables
@@ -845,22 +871,22 @@ XMLPUBFUN void XMLCALL
  * Default message routines used by SAX and Valid context for error
  * and warning reporting.
  */
-XMLPUBFUN void XMLCALL
+XMLPUBFUN void XMLCDECL
     xmlParserError		(void *ctx,
 				 const char *msg,
-				 ...);
-XMLPUBFUN void XMLCALL
+				 ...) ATTRIBUTE_PRINTF(2,3);
+XMLPUBFUN void XMLCDECL
     xmlParserWarning		(void *ctx,
 				 const char *msg,
-				 ...);
-XMLPUBFUN void XMLCALL
+				 ...) ATTRIBUTE_PRINTF(2,3);
+XMLPUBFUN void XMLCDECL
     xmlParserValidityError	(void *ctx,
 				 const char *msg,
-				 ...);
-XMLPUBFUN void XMLCALL
+				 ...) ATTRIBUTE_PRINTF(2,3);
+XMLPUBFUN void XMLCDECL
     xmlParserValidityWarning	(void *ctx,
 				 const char *msg,
-				 ...);
+				 ...) ATTRIBUTE_PRINTF(2,3);
 XMLPUBFUN void XMLCALL
     xmlParserPrintFileInfo	(xmlParserInputPtr input);
 XMLPUBFUN void XMLCALL
@@ -881,7 +907,7 @@ XMLPUBFUN void XMLCALL
     xmlResetError		(xmlErrorPtr err);
 XMLPUBFUN int XMLCALL
     xmlCopyError		(xmlErrorPtr from,
-    				 xmlErrorPtr to);
+				 xmlErrorPtr to);
 
 #ifdef IN_LIBXML
 /*
@@ -889,11 +915,11 @@ XMLPUBFUN int XMLCALL
  */
 XMLPUBFUN void XMLCALL
     __xmlRaiseError		(xmlStructuredErrorFunc schannel,
-    				 xmlGenericErrorFunc channel,
-    				 void *data,
+				 xmlGenericErrorFunc channel,
+				 void *data,
                                  void *ctx,
-    				 void *node,
-    				 int domain,
+				 void *node,
+				 int domain,
 				 int code,
 				 xmlErrorLevel level,
 				 const char *file,
@@ -904,10 +930,10 @@ XMLPUBFUN void XMLCALL
 				 int int1,
 				 int col,
 				 const char *msg,
-				 ...);
+				 ...) ATTRIBUTE_PRINTF(16,17);
 XMLPUBFUN void XMLCALL
     __xmlSimpleError		(int domain,
-    				 int code,
+				 int code,
 				 xmlNodePtr node,
 				 const char *msg,
 				 const char *extra);

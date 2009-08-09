@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializeBalancer)
@@ -68,7 +68,18 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 
    /* Set up targets. */
    MiMinimumAvailablePages = 64;
-   MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 2;
+    if ((NrAvailablePages + NrSystemPages) >= 8192)
+    {
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 4 * 3;   
+    }
+    else if ((NrAvailablePages + NrSystemPages) >= 4096)
+    {
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 3 * 2;
+    }
+    else
+    {
+        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 8;        
+    }
    MiMemoryConsumers[MC_USER].PagesTarget =
       NrAvailablePages - MiMinimumAvailablePages;
    MiMemoryConsumers[MC_PPOOL].PagesTarget = NrAvailablePages / 2;
@@ -97,7 +108,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
    if (Page == 0)
    {
       DPRINT1("Tried to release page zero.\n");
-      KEBUGCHECK(0);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    KeAcquireSpinLock(&AllocationListLock, &oldIrql);
@@ -168,7 +179,7 @@ MmRebalanceMemoryConsumers(VOID)
          Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
          if (!NT_SUCCESS(Status))
          {
-            KEBUGCHECK(0);
+            KeBugCheck(MEMORY_MANAGEMENT);
          }
          Target = Target - NrFreedPages;
       }
@@ -214,7 +225,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       Page = MmAllocPage(Consumer, 0);
       if (Page == 0)
       {
-         KEBUGCHECK(NO_PAGES_AVAILABLE);
+         KeBugCheck(NO_PAGES_AVAILABLE);
       }
       *AllocatedPage = Page;
       if (MmStats.NrFreePages <= MiMinimumAvailablePages &&
@@ -262,7 +273,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
       Page = Request.Page;
       if (Page == 0)
       {
-         KEBUGCHECK(NO_PAGES_AVAILABLE);
+         KeBugCheck(NO_PAGES_AVAILABLE);
       }
       /* Update the Consumer */
       MiGetPfnEntry(Page)->Flags.Consumer = Consumer;
@@ -278,7 +289,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    Page = MmAllocPage(Consumer, 0);
    if (Page == 0)
    {
-      KEBUGCHECK(NO_PAGES_AVAILABLE);
+      KeBugCheck(NO_PAGES_AVAILABLE);
    }
    if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
    *AllocatedPage = Page;
@@ -286,7 +297,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
    return(STATUS_SUCCESS);
 }
 
-VOID STDCALL
+VOID NTAPI
 MiBalancerThread(PVOID Unused)
 {
    PVOID WaitObjects[2];
@@ -315,7 +326,6 @@ MiBalancerThread(PVOID Unused)
       if (Status == STATUS_SUCCESS)
       {
          /* MiBalancerEvent */
-         CHECKPOINT;
          while (MmStats.NrFreePages < MiMinimumAvailablePages + 5)
          {
             for (i = 0; i < MC_MAXIMUM; i++)
@@ -326,13 +336,12 @@ MiBalancerThread(PVOID Unused)
                   Status = MiMemoryConsumers[i].Trim(MiMinimumPagesPerRun, 0, &NrFreedPages);
                   if (!NT_SUCCESS(Status))
                   {
-                     KEBUGCHECK(0);
+                     KeBugCheck(MEMORY_MANAGEMENT);
                   }
                }
             }
          }
          InterlockedExchange(&MiBalancerWork, 0);
-         CHECKPOINT;
       }
       else if (Status == STATUS_SUCCESS + 1)
       {
@@ -358,7 +367,7 @@ MiBalancerThread(PVOID Unused)
                   Status = MiMemoryConsumers[i].Trim(Target, 0, &NrFreedPages);
                   if (!NT_SUCCESS(Status))
                   {
-                     KEBUGCHECK(0);
+                     KeBugCheck(MEMORY_MANAGEMENT);
                   }
                }
             }
@@ -367,7 +376,7 @@ MiBalancerThread(PVOID Unused)
       else
       {
          DPRINT1("KeWaitForMultipleObjects failed, status = %x\n", Status);
-         KEBUGCHECK(0);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 }
@@ -386,7 +395,6 @@ MiInitBalancerThread(VOID)
    ;
 #endif
 
-   CHECKPOINT;
 
    KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
    KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
@@ -408,7 +416,7 @@ MiInitBalancerThread(VOID)
                                  NULL);
    if (!NT_SUCCESS(Status))
    {
-      KEBUGCHECK(0);
+      KeBugCheck(MEMORY_MANAGEMENT);
    }
 
    Priority = LOW_REALTIME_PRIORITY + 1;

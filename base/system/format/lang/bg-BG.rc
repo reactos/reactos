@@ -7,7 +7,7 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Употреба: %S устройство: [-FS:файлова_система] [-V:етикет] [-Q] [-A:размер] [-C]\n\n\
+STRING_HELP,  "Употреба: %s устройство: [-FS:файлова_система] [-V:етикет] [-Q] [-A:размер] [-C]\n\n\
   [drive:]         Указва устройството за оразмеряване.\n\
   -FS:файлова_система  Указва вида на дайловата система (%s).\n\
   -V:етикет         Указва етикет за тома.\n\
@@ -29,7 +29,7 @@ STRING_NO_SUPPORT  "Действието не се поддържа"
 
 STRING_FMIFS_FAIL  "Неуспешно определяне разположението на входните точки на FMIFS\n\n"
 
-STRING_UNKNOW_ARG  "Неизвестен ключ: %S\n"
+STRING_UNKNOW_ARG  "Неизвестен ключ: %s\n"
 
 STRING_DRIVE_PARM  "Задължителният ключ за името на устройството липсва.\n\n"
 
@@ -41,7 +41,7 @@ STRING_NO_VOLUME         "Неуспешно определяне на тома"
 
 STRING_NO_VOLUME_SIZE    "Неуспешно определяне на размера на тома"
 
-STRING_FILESYSTEM        "ВИд на файловата система: %S.\n"
+STRING_FILESYSTEM        "ВИд на файловата система: %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Въведете сегашния етикет на устройство %C: "
 

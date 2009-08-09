@@ -1,17 +1,17 @@
 #ifndef _WIN32K_RECT_H
 #define _WIN32K_RECT_H
 
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiUnionRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiSetRect(PRECT Rect, int left, int top, int right, int bottom);
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiSetEmptyRect(PRECT Rect);
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiIsEmptyRect(const RECT* Rect);
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2);
-BOOL STDCALL
+BOOL APIENTRY
 NtGdiOffsetRect(LPRECT Rect, int x, int y);
 
 #endif /* _WIN32K_RECT_H */

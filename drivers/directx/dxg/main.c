@@ -25,7 +25,7 @@ const ULONG gcDxgFuncs = DXG_INDEX_DxDdIoctl + 1;
 
 
 
-NTSTATUS
+NTSTATUS NTAPI
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
 {
@@ -43,7 +43,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 {
 
     PDRVFN drv_func;
-    INT i;
+    UINT i;
 
     /* Test see if the data is vaild we got from win32k.sys */
     if ((SizeEngDrv != sizeof(DRVENABLEDATA)) ||
@@ -117,6 +117,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 
 
 NTSTATUS
+APIENTRY
 DxDdCleanupDxGraphics()
 {
     DdHmgDestroy();

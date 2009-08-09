@@ -65,7 +65,7 @@ VOID MiniTuiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UL
 	//
 	//  Draw the "Loading..." text
 	//
-	TuiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, "ReactOS is loading files...", ATTR(7, 0));
+	TuiDrawCenteredText(Left + 2, Top + 1, Right - 2, Top + 1, ProgressText, ATTR(7, 0));
 
 	// Draw the percent complete
 	for (i=0; i<(Position*ProgressBarWidth)/Range; i++)

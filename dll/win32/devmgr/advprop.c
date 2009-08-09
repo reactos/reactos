@@ -162,6 +162,26 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
                                  &DriverInfoData))
     {
         HSPFILEQ queueHandle;
+        DWORD HiVal, LoVal;
+        WCHAR szTime[25];
+
+        HiVal = (DriverInfoData.DriverVersion >> 32);
+        if (HiVal)
+        {
+            swprintf (szTime, L"%d.%d", HIWORD(HiVal), LOWORD(HiVal));
+            LoVal = (DriverInfoData.DriverVersion & 0xFFFFFFFF);
+            if (HIWORD(LoVal))
+            {
+                swprintf(&szTime[wcslen(szTime)], L".%d", HIWORD(LoVal));
+                if (LOWORD(LoVal))
+                {
+                    swprintf(&szTime[wcslen(szTime)], L".%d", LOWORD(LoVal));
+                }
+            }
+            SetDlgItemTextW(hwndDlg, IDC_FILEVERSION, szTime);
+        }
+        SetDlgItemText(hwndDlg, IDC_FILEPROVIDER, DriverInfoData.ProviderName);
+
 
         queueHandle = SetupOpenFileQueue();
         if (queueHandle != (HSPFILEQ)INVALID_HANDLE_VALUE)
@@ -1517,7 +1537,7 @@ GetDeviceAndComputerName(LPWSTR lpString,
         if (*lpString == L'/')
         {
             lpString++;
-            if(!wcsnicmp(lpString, L"DeviceID", 8))
+            if(!_wcsnicmp(lpString, L"DeviceID", 8))
             {
                 lpString += 9;
                 if (*lpString != L'\0')
@@ -1533,7 +1553,7 @@ GetDeviceAndComputerName(LPWSTR lpString,
                     ret = TRUE;
                 }
             }
-            else if (!wcsnicmp(lpString, L"MachineName", 11))
+            else if (!_wcsnicmp(lpString, L"MachineName", 11))
             {
                 lpString += 12;
                 if (*lpString != L'\0')

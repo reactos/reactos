@@ -28,7 +28,7 @@
 #ifndef _TNL_VERTEX_H
 #define _TNL_VERTEX_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 #include "t_context.h"
 
 /* New mechanism to specify hardware vertices so that tnl can build
@@ -118,6 +118,18 @@ extern void *_tnl_emit_vertices_to_buffer( GLcontext *ctx,
 					   GLuint start,
 					   GLuint end,
 					   void *dest );
+
+/* This function isn't optimal. Check out 
+ * gallium/auxilary/translate for a more comprehensive implementation of
+ * the same functionality.
+ */
+  
+extern void *_tnl_emit_indexed_vertices_to_buffer( GLcontext *ctx,
+						   const GLuint *elts,
+						   GLuint start,
+						   GLuint end,
+						   void *dest );
+
 
 extern void _tnl_build_vertices( GLcontext *ctx,
 				 GLuint start,

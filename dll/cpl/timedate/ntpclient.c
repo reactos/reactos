@@ -75,7 +75,7 @@ GetTransmitTime(PTIMEPACKET ptp)
 static BOOL
 SendData(PINFO pInfo)
 {
-    TIMEPACKET tp = {0,};
+    TIMEPACKET tp = { 0, 0 };
     INT Ret;
 
     ZeroMemory(&pInfo->SendPacket, sizeof(pInfo->SendPacket));

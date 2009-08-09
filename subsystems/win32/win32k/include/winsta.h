@@ -47,7 +47,7 @@ typedef struct _WINSTATION_OBJECT
     WALLPAPER_MODE WallpaperMode;
 
     ULONG Flags;
-    struct _DESKTOP_OBJECT* ActiveDesktop;
+    struct _DESKTOP* ActiveDesktop;
 
     PCLIPBOARDSYSTEM Clipboard;
     DWORD           ClipboardSequenceNumber;
@@ -64,14 +64,14 @@ NTSTATUS FASTCALL
 CleanupWindowStationImpl(VOID);
 
 NTSTATUS
-STDCALL
+APIENTRY
 IntWinStaObjectOpen(PWIN32_OPENMETHOD_PARAMETERS Parameters);
 
-VOID STDCALL
+VOID APIENTRY
 IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS
-STDCALL
+APIENTRY
 IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters);
 
 NTSTATUS FASTCALL

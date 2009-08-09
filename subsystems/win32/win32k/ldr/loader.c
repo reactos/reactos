@@ -39,7 +39,7 @@ extern LIST_ENTRY GlobalDriverListHead;
  * Blatantly stolen from ldr/utils.c in ntdll.  I can't link ntdll from
  * here, though.
  */
-NTSTATUS STDCALL
+NTSTATUS APIENTRY
 LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN PANSI_STRING Name,
                         IN ULONG Ordinal,
@@ -99,7 +99,7 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
    return STATUS_PROCEDURE_NOT_FOUND;
 }
 
-PVOID STDCALL
+PVOID APIENTRY
 EngFindImageProcAddress(IN HANDLE Module,
 			IN LPSTR ProcName)
 {
@@ -196,7 +196,7 @@ EngFindImageProcAddress(IN HANDLE Module,
  * @implemented
  */
 HANDLE
-STDCALL
+APIENTRY
 EngLoadImage (LPWSTR DriverName)
 {
 	HANDLE hImageHandle = NULL;
@@ -247,7 +247,7 @@ EngLoadImage (LPWSTR DriverName)
  * @unimplemented
  */
 HANDLE
-STDCALL
+APIENTRY
 EngLoadModule(LPWSTR ModuleName)
 {
   SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
@@ -264,7 +264,7 @@ EngLoadModule(LPWSTR ModuleName)
 }
 
 VOID
-STDCALL
+APIENTRY
 EngUnloadImage ( IN HANDLE hModule )
 {
   NTSTATUS Status;

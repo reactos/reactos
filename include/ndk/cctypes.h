@@ -109,7 +109,7 @@ typedef struct _SHARED_CACHE_MAP
     LIST_ENTRY SharedCacheMapLinks;
     ULONG Flags;
     ULONG Status;
-    PMCB Mbcb;
+    PMBCB Mbcb;
     PVOID Section;
     PKEVENT CreateEvent;
     PKEVENT WaitOnActiveCount;
@@ -127,9 +127,9 @@ typedef struct _SHARED_CACHE_MAP
     ULONG BcbSpinLock;
     PVOID Reserved;
     KEVENT Event;
-    PEX_PUSH_LOCK VacbPushLock;
-    PPRIVATE_CACHE_MAP PrivateCacheMap;
-} SHARED_CACHE_MAP;
+    EX_PUSH_LOCK VacbPushLock;
+    PRIVATE_CACHE_MAP PrivateCacheMap;
+} SHARED_CACHE_MAP, *PSHARED_CACHE_MAP;
 
 #endif /* _NTIFS_INCLUDED_  */
 #endif /* NTOS_MODE_USER    */

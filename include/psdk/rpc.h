@@ -1,13 +1,18 @@
 
 #if !defined( RPC_NO_WINDOWS_H ) && !defined( MAC ) && !defined( _MAC )
+#if defined (_OLE32_)
+#ifndef RC_INVOKED
+#include <stdarg.h>
+#endif
+#include <windef.h>
+#include <winbase.h>
+#else
 #include <windows.h>
+#endif
 #endif
 
 #ifdef __GNUC__
-    #ifndef _SEH_NO_NATIVE_NLG
-        /* FIXME ReactOS SEH support, we need remove this when gcc support native seh */
-        #include  <libs/pseh/pseh.h>
-    #endif
+#include  <pseh/pseh2.h>
 #endif
 
 #ifndef __RPC_H__
@@ -129,33 +134,14 @@ typedef long RPC_STATUS;
         #define RpcExceptionCode() GetExceptionCode()
         #define RpcAbnormalTermination() AbnormalTermination()
     #else
-        /* FIXME ReactOS SEH support, we need remove this when gcc support native seh */
-
-        #ifdef _SEH_NO_NATIVE_NLG
-            /* hack for  _SEH_NO_NATIVE_NLG */
-                #define RpcTryExcept if (1) {
-                #define RpcExcept(expr) } else {
-                #define RpcEndExcept }
-                #define RpcTryFinally
-                #define RpcFinally
-                #define RpcEndFinally
-                #define RpcExceptionCode() 0
-        #else
-            #define RpcTryExcept _SEH_TRY {
-            #define RpcExcept(expr) } _SEH_HANDLE { \
-                                      if (expr) \
-                                      {
-            #define RpcEndExcept } \
-                                 } \
-                                 _SEH_END;
-
-            #define RpcTryFinally
-            #define RpcFinally
-            #define RpcEndFinally
-            #define RpcExceptionCode() _SEH_GetExceptionCode()
-
-            /* #define RpcAbnormalTermination() abort() */
-        #endif
+        #define RpcTryExcept _SEH2_TRY
+        #define RpcExcept(expr) _SEH2_EXCEPT((expr))
+        #define RpcEndExcept _SEH2_END;
+        #define RpcTryFinally _SEH2_TRY
+        #define RpcFinally _SEH2_FINALLY
+        #define RpcEndFinally _SEH2_END;
+        #define RpcExceptionCode() _SEH2_GetExceptionCode()
+        #define RpcAbnormalTermination() (_SEH2_GetExceptionCode() != 0)
     #endif
 #endif
 

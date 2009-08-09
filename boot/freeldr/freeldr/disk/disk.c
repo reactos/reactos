@@ -43,7 +43,7 @@ VOID DiskError(PCSTR ErrorString, ULONG ErrorCode)
 
 	sprintf(ErrorCodeString, "%s\n\nError Code: 0x%lx\nError: %s", ErrorString, ErrorCode, DiskGetErrorCodeString(ErrorCode));
 
-	DbgPrint((DPRINT_DISK, "%s\n", ErrorCodeString));
+	DPRINTM(DPRINT_DISK, "%s\n", ErrorCodeString);
 
 	UiMessageBox(ErrorCodeString);
 }
@@ -107,13 +107,13 @@ BOOLEAN DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG
 	UCHAR			VolumeType;
 	ULONG			ActivePartition;
     
-	DbgPrint((DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", BootDrive, BootPartition));
+	DPRINTM(DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", BootDrive, BootPartition);
     
 	// Check and see if it is a floppy drive
 	// If so then just assume FAT12 file system type
 	if (DiskIsDriveRemovable(BootDrive))
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "Drive is a floppy diskette drive. Assuming FAT12 file system.\n"));
+		DPRINTM(DPRINT_FILESYSTEM, "Drive is a floppy diskette drive. Assuming FAT12 file system.\n");
         
 		*DriveNumber = BootDrive;
 		*StartSector = 0;
@@ -125,7 +125,7 @@ BOOLEAN DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG
 	// Check for ISO9660 file system type
 	if (BootDrive >= 0x80 && FsRecIsIso9660(BootDrive))
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n"));
+		DPRINTM(DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n");
         
 		*DriveNumber = BootDrive;
 		*StartSector = 0;
@@ -296,7 +296,7 @@ BOOLEAN DiskGetSystemVolume(char *SystemPath,
 	/* Check for ISO9660 file system type */
 	if (*DriveNumber >= 0x80 && FsRecIsIso9660(*DriveNumber))
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n"));
+		DPRINTM(DPRINT_FILESYSTEM, "Drive is a cdrom drive. Assuming ISO-9660 file system.\n");
         
 		if (NULL != Device)
 		{

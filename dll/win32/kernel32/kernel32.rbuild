@@ -1,17 +1,21 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-	<module name="kernel32_base" type="objectlibrary">
+	<module name="kernel32_base" type="objectlibrary" crt="dll">
 		<include base="kernel32_base">.</include>
 		<include base="kernel32_base">include</include>
 		<include base="ReactOS">include/reactos/subsys</include>
+		<define name="_KERNEL32_" />
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_WIN32_WINNT">0x0600</define>
 		<define name="__NO_CTYPE_INLINES" />
-		<define name="WINVER">0x609</define>
 		<define name="NTDDI_VERSION">0x05020100</define>
 		<dependency>errcodes</dependency>
+		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 		<pch>k32.h</pch>
+		-->
+		<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+		<compilerflag>-fno-unit-at-a-time</compilerflag>
 		<directory name="debug">
 			<file>debugger.c</file>
 			<file>output.c</file>
@@ -58,13 +62,17 @@
 			<file>actctx.c</file>
 			<file>atom.c</file>
 			<file>chartype.c</file>
+			<file>collation.c</file>
+			<file>casemap.c</file>
 			<file>comm.c</file>
+			<file>commdcb.c</file>
 			<file>computername.c</file>
 			<file>console.c</file>
 			<file>dllmain.c</file>
 			<file>env.c</file>
 			<file>error.c</file>
 			<file>errormsg.c</file>
+			<file>fold.c</file>
 			<file>handle.c</file>
 			<file>lang.c</file>
 			<file>ldr.c</file>
@@ -72,8 +80,10 @@
 			<file>muldiv.c</file>
 			<file>nls.c</file>
 			<file>perfcnt.c</file>
+			<file>power.c</file>
 			<file>recovery.c</file>
 			<file>res.c</file>
+			<file>sortkey.c</file>
 			<file>stubs.c</file>
 			<file>sysinfo.c</file>
 			<file>time.c</file>
@@ -119,18 +129,27 @@
 				</directory>
 			</if>
 		</directory>
+
+		<compilerflag compiler="cpp">-fno-exceptions</compilerflag>
+		<compilerflag compiler="cpp">-fno-rtti</compilerflag>
+
+		<directory name="misc">
+			<file>icustubs.cpp</file>
+		</directory>
+		<library>normalize</library>
 	</module>
-	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
-		<importlibrary definition="kernel32.def" />
+	<module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll" crt="dll">
+		<importlibrary definition="kernel32.spec" />
 		<include base="kernel32">.</include>
 		<include base="kernel32" root="intermediate">.</include>
 		<include base="kernel32">include</include>
 		<define name="_DISABLE_TIDENTS" />
-		<define name="WINVER">0x0500</define>
 		<library>kernel32_base</library>
 		<library>wine</library>
 		<library>pseh</library>
-		<library>ntdll</library>
+
 		<file>kernel32.rc</file>
+
+		<library>ntdll</library>
 	</module>
 </group>

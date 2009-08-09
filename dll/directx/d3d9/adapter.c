@@ -6,14 +6,13 @@
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
 
-#define _WIN32_WINNT    0x0502
 #include "d3d9_common.h"
 #include <d3d9.h>
 #include <ddraw.h>
-#include <strsafe.h>
 #include <debug.h>
 #include <d3dhal.h>
 #include "d3d9_private.h"
+#include "d3d9_helpers.h"
 #include "adapter.h"
 
 #define D3D9_CAPS1              (D3DCAPS_READ_SCANLINE)
@@ -58,7 +57,7 @@ static BOOL GetDriverName(LPDISPLAY_DEVICEA pDisplayDevice, D3DADAPTER_IDENTIFIE
         if (ERROR_SUCCESS == RegQueryValueExA(hKey, "InstalledDisplayDrivers", 0, &Type, (LPBYTE)pIdentifier->Driver, &DriverNameLength))
         {
             pIdentifier->Driver[DriverNameLength] = '\0';
-            StringCbCatA(pIdentifier->Driver, MAX_DEVICE_IDENTIFIER_STRING, ".dll");
+            SafeAppendString(pIdentifier->Driver, MAX_DEVICE_IDENTIFIER_STRING, ".dll");
             bResult = TRUE;
         }
 

@@ -1428,9 +1428,10 @@ ohci_generic_urb_completion(PURB purb, PVOID context)
     if (old_irql < DISPATCH_LEVEL)
         KeRaiseIrql(DISPATCH_LEVEL, &old_irql);
 
-    pdev = purb->pdev;
     if (purb == NULL)
         goto LBL_LOWER_IRQL;
+
+    pdev = purb->pdev;
 
     if (pdev == NULL)
         goto LBL_LOWER_IRQL;

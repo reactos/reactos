@@ -3483,10 +3483,15 @@ gluScaleImage(GLenum format, GLsizei widthin, GLsizei heightin,
     }
     beforeImage =
 	malloc(image_size(widthin, heightin, format, GL_UNSIGNED_SHORT));
+    if (beforeImage == NULL) {
+		return GLU_OUT_OF_MEMORY;
+    }
+
     afterImage =
 	malloc(image_size(widthout, heightout, format, GL_UNSIGNED_SHORT));
-    if (beforeImage == NULL || afterImage == NULL) {
-	return GLU_OUT_OF_MEMORY;
+    if (afterImage == NULL) {
+		free(beforeImage);
+		return GLU_OUT_OF_MEMORY;
     }
 
     retrieveStoreModes(&psm);
@@ -7339,9 +7344,14 @@ int gluScaleImage3D(GLenum format,
 
    beforeImage = malloc(imageSize3D(widthIn, heightIn, depthIn, format,
 				    GL_UNSIGNED_SHORT));
+   if (beforeImage == NULL) {
+       return GLU_OUT_OF_MEMORY;
+   }
+
    afterImage = malloc(imageSize3D(widthOut, heightOut, depthOut, format,
 				   GL_UNSIGNED_SHORT));
-   if (beforeImage == NULL || afterImage == NULL) {
+   if (afterImage == NULL) {
+       free(beforeImage);
        return GLU_OUT_OF_MEMORY;
    }
    retrieveStoreModes3D(&psm);

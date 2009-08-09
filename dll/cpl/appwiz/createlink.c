@@ -155,7 +155,9 @@ WelcomeDlgProc(HWND hwndDlg,
                         first[1] = L'\0';
 
                     first = wcsrchr(pContext->szDescription, L'.');
-                    first[0] = L'\0';
+
+                    if(first)
+                        first[0] = L'\0';
                 }
 
             }
@@ -188,7 +190,7 @@ FinishDlgProc(HWND hwndDlg,
             switch(HIWORD(wParam))
             {
                 case EN_CHANGE:
-                    if (SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_GETTEXTLENGTH, 0, 0))
+                    if (SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_NAME, WM_GETTEXTLENGTH, 0, 0))
                     {
                         PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
                     }

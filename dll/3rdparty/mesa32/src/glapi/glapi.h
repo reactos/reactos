@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -44,11 +44,16 @@
 #ifndef _GLAPI_H
 #define _GLAPI_H
 
+#define GL_GLEXT_PROTOTYPES
 
 #include "GL/gl.h"
-#include "glapitable.h"
+#include "GL/glext.h"
 #include "glthread.h"
 
+
+struct _glapi_table;
+
+typedef void (*_glapi_proc)(void); /* generic function pointer */
 
 typedef void (*_glapi_warning_func)(void *ctx, const char *str, ...);
 
@@ -61,6 +66,12 @@ typedef void (*_glapi_warning_func)(void *ctx, const char *str, ...);
 #define _glapi_Context _mglapi_Context
 #define _glapi_Dispatch _mglapi_Dispatch
 #endif
+
+
+/*
+ * Number of extension functions which we can dynamically add at runtime.
+ */
+#define MAX_EXTENSION_FUNCS 300
 
 
 /**

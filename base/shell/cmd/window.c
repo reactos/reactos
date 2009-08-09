@@ -173,7 +173,7 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
 
 
 
-INT CommandWindow (LPTSTR cmd, LPTSTR param)
+INT CommandWindow (LPTSTR param)
 {
 	HWND hwnd;
 
@@ -189,7 +189,7 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 }
 
 
-INT CommandActivate (LPTSTR cmd, LPTSTR param)
+INT CommandActivate (LPTSTR param)
 {
 	HWND hwnd;
 	LPTSTR *arg;

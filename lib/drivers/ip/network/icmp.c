@@ -181,6 +181,7 @@ VOID ICMPTransmit(
  */
 {
     PNEIGHBOR_CACHE_ENTRY NCE;
+    NTSTATUS Status;
 
     TI_DbgPrint(DEBUG_ICMP, ("Called.\n"));
 
@@ -191,7 +192,11 @@ VOID ICMPTransmit(
     /* Get a route to the destination address */
     if ((NCE = RouteGetRouteToDestination(&IPPacket->DstAddr))) {
         /* Send the packet */
-	IPSendDatagram(IPPacket, NCE, Complete, Context);
+	Status = IPSendDatagram(IPPacket, NCE, Complete, Context);
+	if (!NT_SUCCESS(Status))
+	{
+		Complete(Context, IPPacket->NdisPacket, Status);
+	}
     } else {
         /* No route to destination (or no free resources) */
         TI_DbgPrint(DEBUG_ICMP, ("No route to destination address 0x%X.\n",

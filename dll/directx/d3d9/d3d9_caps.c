@@ -1,4 +1,3 @@
-#define STDCALL __stdcall
 #include <d3d9.h>
 #include <ddraw.h>
 #include <d3dnthal.h>
@@ -7,11 +6,11 @@
 #include <ddrawgdi.h>
 #include <dll/directx/d3d8thk.h>
 #include <debug.h>
-#include <strsafe.h>
 #include <limits.h>
 #include "d3d9_helpers.h"
 #include "d3d9_caps.h"
 #include "adapter.h"
+#include "d3d9_callbacks.h"
 
 static INT g_NumDevices = 0;
 
@@ -98,7 +97,7 @@ static void CreateInternalDeviceData(HDC hDC, LPCSTR lpszDeviceName, D3D9_Unknow
     }
 
 
-    StringCbCopyA(pUnknown6BC->szDeviceName, CCHDEVICENAME, lpszDeviceName);
+    SafeCopyString(pUnknown6BC->szDeviceName, CCHDEVICENAME, lpszDeviceName);
     //pUnknown6BC->DeviceUniq = DdQueryDisplaySettingsUniqueness();
     pUnknown6BC->DeviceType = DeviceType;
 
@@ -834,6 +833,7 @@ BOOL GetD3D9DriverInfo( D3D9_Unknown6BC* pUnknown6BC,
     }
 
     /* TODO: Set all internal function pointers to create surface, etc. */
+    pD3D9Callbacks->DdGetAvailDriverMemory = &D3d9GetAvailDriverMemory;
 
     /* Set device rect */
     {

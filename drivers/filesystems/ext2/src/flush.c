@@ -138,7 +138,7 @@ PIRP							PtrIrp)
 		// If we cannot wait, post the request immediately since a flush is inherently blocking/synchronous.
 		if (!CanWait) {
 			PostRequest = TRUE;
-			try_return(RC);
+			try_return();
 		}
 
 		// Check the type of object passed-in. That will determine the course of
@@ -160,7 +160,7 @@ PIRP							PtrIrp)
 
 			Ext2FlushLogicalVolume(PtrIrpContext, PtrIrp, PtrVCB);
 
-			try_return(RC);
+			try_return();
 		}
 
 		if (!(PtrFCB->FCBFlags & EXT2_FCB_DIRECTORY)) 

@@ -93,7 +93,7 @@ FsRtlLookupPerFileObjectContext(IN PFILE_OBJECT FileObject,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -201,7 +201,7 @@ FsRtlRemovePerFileObjectContext(IN PFILE_OBJECT PerFileObjectContext,
                                 IN PVOID OwnerId OPTIONAL,
                                 IN PVOID InstanceId OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return NULL;
 }
 

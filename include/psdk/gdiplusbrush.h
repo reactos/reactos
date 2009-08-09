@@ -19,10 +19,6 @@
 #ifndef _GDIPLUSBRUSH_H
 #define _GDIPLUSBRUSH_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 class Brush : public GdiplusBase
 {
 public:

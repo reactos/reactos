@@ -114,7 +114,7 @@ int main (int argc, char **argv)
 
    if (argc > 1 && _tcsncmp (argv[1], _T("/?"), 2) == 0)
    {
-      if (LoadString(hApp, IDS_USAGE, buff, 4096 / sizeof(TCHAR)) < 4096 / sizeof(TCHAR))
+      if (LoadString(hApp, IDS_USAGE, buff, 4096 / sizeof(TCHAR)) < (int)(4096 / sizeof(TCHAR)))
       {
          CharToOem(buff, buff);
          ConOutPuts(buff);
@@ -124,7 +124,7 @@ int main (int argc, char **argv)
       return 0;
    }
 
-   hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ,
+   hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ|GENERIC_WRITE,
                            0,NULL,OPEN_ALWAYS,0,0);
 
    GetScreenSize(&maxx,&maxy);
@@ -145,7 +145,7 @@ int main (int argc, char **argv)
                             0);
       if (hFile == INVALID_HANDLE_VALUE)
       {
-         if (LoadString(hApp, IDS_FILE_ACCESS, szMsg, sizeof(szMsg) / sizeof(TCHAR)) < sizeof(szMsg) / sizeof(TCHAR))
+         if (LoadString(hApp, IDS_FILE_ACCESS, szMsg, sizeof(szMsg) / sizeof(TCHAR)) < (int)(sizeof(szMsg) / sizeof(TCHAR)))
          {
             _stprintf(buff, szMsg, szFullPath);
             CharToOem(buff, buff);

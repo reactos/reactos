@@ -168,6 +168,7 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPSTR s)
                 reg_file = fopen(filename, "r");
                 if (reg_file) {
                     processRegLines(reg_file, doSetValue);
+                    fclose(reg_file);
                 } else {
                     perror("");
                     fprintf(stderr,"%s: Can't open file \"%s\"\n", getAppName(), filename);

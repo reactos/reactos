@@ -472,6 +472,7 @@ RecycleBin5_RecycleBin5_Restore(
 	PINFO2_HEADER pHeader;
 	DELETED_FILE_RECORD *pRecord, *pLast;
 	DWORD dwEntries, i;
+	SHFILEOPSTRUCTW op;
 
 	TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
 
@@ -496,7 +497,12 @@ RecycleBin5_RecycleBin5_Restore(
 		if (pRecord->dwRecordUniqueId == pDeletedFile->dwRecordUniqueId)
 		{
 			/* Restore file */
-			if (!MoveFileW(pDeletedFileName, pDeletedFile->FileNameW))
+			ZeroMemory(&op, sizeof(op));
+			op.wFunc = FO_COPY;
+			op.pFrom = pDeletedFileName;
+			op.pTo = pDeletedFile->FileNameW;
+
+			if (!SHFileOperationW(&op))
 			{
 				UnmapViewOfFile(pHeader);
 				return HRESULT_FROM_WIN32(GetLastError());
@@ -558,7 +564,7 @@ RecycleBin5_Create(
 	LPWSTR FileName; /* Pointer into BufferName buffer */
 	LPCSTR DesktopIniContents = "[.ShellClassInfo]\r\nCLSID={645FF040-5081-101B-9F08-00AA002F954E}\r\n";
 	INFO2_HEADER Info2Contents[] = { { 5, 0, 0, 0x320, 0 } };
-	SIZE_T BytesToWrite, BytesWritten, Needed;
+	DWORD BytesToWrite, BytesWritten, Needed;
 	HANDLE hFile = INVALID_HANDLE_VALUE;
 	HRESULT hr;
 
@@ -670,7 +676,7 @@ HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown)
 	HANDLE tokenHandle = INVALID_HANDLE_VALUE;
 	PTOKEN_USER TokenUserInfo = NULL;
 	LPWSTR StringSid = NULL, p;
-	SIZE_T Needed, DirectoryLength;
+	DWORD Needed, DirectoryLength;
 	INT len;
 	HRESULT hr;
 

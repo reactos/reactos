@@ -1,0 +1,29 @@
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&Файл"
+	BEGIN
+		MENUITEM "&Відкрити...", IDM_OPEN_FILE
+		MENUITEM "&Закрити", IDM_CLOSE_FILE
+		MENUITEM SEPARATOR
+		MENUITEM "&Вихід", IDM_EXIT
+	END
+	POPUP "&Довідка"
+	BEGIN
+		MENUITEM "&Про програму...", IDM_ABOUT
+	END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_ALL_TYPES_FILTER "Всі підтримувані (*.wav, *.cda, *.midi, *.mid, *.avi)\0*.wav;*.cda;*.midi;*.mid;*.avi\0"
+	IDS_TOOLTIP_PLAY "Відтворення"
+	IDS_TOOLTIP_STOP "Зупинити"
+	IDS_TOOLTIP_EJECT "Витягти"
+	IDS_TOOLTIP_BACKWARD "Назад"
+	IDS_TOOLTIP_SEEKBACK "Перемотування назад"
+	IDS_TOOLTIP_SEEKFORW "Перемотування вперед"
+	IDS_TOOLTIP_FORWARD "Вперед"
+    IDS_APPTITLE "Програвач ReactOS"
+END

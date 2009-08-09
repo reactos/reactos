@@ -374,7 +374,7 @@ int Entry::extract_icon(ICONCACHE_FLAGS flags)
 		if (!(flags & ICF_OVERLAYS)) {
 			IExtractIcon* pExtract;
 			if (SUCCEEDED(GetUIObjectOf(0, IID_IExtractIcon, (LPVOID*)&pExtract))) {
-				unsigned gil_flags;
+				unsigned gil_flags = 0;
 				int idx;
 
 				if (flags & ICF_OPEN)

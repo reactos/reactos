@@ -27,7 +27,7 @@
 /* DATA **********************************************************************/
 
 ULONG HalpCurrentTimeIncrement, HalpNextTimeIncrement, HalpNextIntervalCount;
-ULONG _KdComPortInUse = 0;
+PUCHAR KdComPortInUse;
 
 ULONG HalpIrqlTable[HIGH_LEVEL + 1] =
 {

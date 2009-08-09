@@ -57,9 +57,9 @@ _KiComputeTimerTableIndex@8:
     ret 8
 .endfunc
 
-.globl _KeUpdateRunTime@4
-.func KeUpdateRunTime@4
-_KeUpdateRunTime@4:
+.globl _KeUpdateRunTime@8
+.func KeUpdateRunTime@8
+_KeUpdateRunTime@8:
 
     /* Get KPCR */
     mov eax, [fs:KPCR_SELF]
@@ -294,9 +294,6 @@ _KeUpdateSystemTime@0:
     mov ds:[USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT], ecx
     mov ds:[USER_SHARED_DATA+USER_SHARED_DATA_TICK_COUNT+4], edx
 
-    /* FIXME: HACK */
-    mov ds:[USER_SHARED_DATA], ecx
-
     /* Get hand index and entry into the table */
     and eax, TIMER_TABLE_SIZE - 1
     shl eax, 4
@@ -355,7 +352,7 @@ NoDebug:
 
     /* Update system run time */
     push [esp]
-    call _KeUpdateRunTime@4
+    call _KeUpdateRunTime@8
     jmp Done
 
 IncompleteTick2:

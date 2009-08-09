@@ -92,7 +92,7 @@ BEGIN
     PUSHBUTTON "Enable", IDC_BUTTON_D3D, 170, 140, 60, 14, WS_DISABLED
     PUSHBUTTON "Enable", IDC_BUTTON_AGP, 170, 156, 60, 14, WS_DISABLED
     PUSHBUTTON "Test DirectDraw", IDC_BUTTON_TESTDD, 250, 124, 80, 14
-    PUSHBUTTON "Test Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14, WS_DISABLED
+    PUSHBUTTON "Test Direct3D", IDC_BUTTON_TEST3D, 250, 140, 80, 14
 
     GROUPBOX "Notes", -1, 10, 180, 450, 40
     EDITTEXT  IDC_TEXT_INFO, 20, 192, 432, 20, WS_DISABLED | WS_TABSTOP
@@ -211,7 +211,7 @@ BEGIN
 	IDS_REG_SUCCESS "OK"
 	IDS_REG_FAIL "Error"
 	IDS_DDTEST_ERROR "Test failed!"
-	IDS_DDTEST_DESCRIPTION "This will start DirecDraw interface test. Continue?"
+	IDS_DDTEST_DESCRIPTION "This will start DirectDraw interface test. Continue?"
 	IDS_DDPRIMARY_DESCRIPTION "This test will use DirectDraw to draw on primary surface. Black and white rectangles should be drawn. Continue?"
 	IDS_DDPRIMARY_RESULT "Did you see black and white rectangles?"
 	IDS_DDOFFSCREEN_DESCRIPTION "This test will use DirectDraw to draw in an offscreen buffer. Moving white rectangle should be drawn. Continue?"
@@ -221,4 +221,6 @@ BEGIN
 	IDS_FORMAT_ADAPTER_MEM "%u MB"
 	IDS_FORMAT_ADAPTER_MODE "%04u x %04u (%u bit)(%uHz)"
 	IDS_OPTION_NO "No"
+	IDS_D3DTEST_DESCRIPTION "This will start Direct3D interface test. Continue?"
+	IDS_D3DTEST_D3Dx "This test will use hardware-accelerated Direct3D %u interface."
 END

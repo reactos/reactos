@@ -107,11 +107,6 @@ Author:
 #define KINTERRUPT_DISPATCH_CODES       106
 #endif
 
-//
-// Get KPCR
-//
-#define KeGetPcr()                      PCR
-
 #ifdef NTOS_MODE_USER
 
 //
@@ -542,14 +537,14 @@ typedef enum _KAPC_ENVIRONMENT
 } KAPC_ENVIRONMENT;
 
 //
-// CPU Cache Types
-//
-typedef enum _PROCESSOR_CACHE_TYPE
+// CPU Cache Types 	 
+// 	 
+typedef enum _PROCESSOR_CACHE_TYPE 	 
 {
-    CacheUnified,
-    CacheInstruction,
-    CacheData,
-    CacheTrace,
+    CacheUnified, 	 
+    CacheInstruction, 	 
+    CacheData, 	 
+    CacheTrace, 	 
 } PROCESSOR_CACHE_TYPE;
 
 //
@@ -558,7 +553,7 @@ typedef enum _PROCESSOR_CACHE_TYPE
 typedef struct _KDPC_DATA
 {
     LIST_ENTRY DpcListHead;
-    ULONG DpcLock;
+    ULONG_PTR DpcLock;
     volatile ULONG DpcQueueDepth;
     ULONG DpcCount;
 } KDPC_DATA, *PKDPC_DATA;
@@ -573,15 +568,15 @@ typedef struct _PP_LOOKASIDE_LIST
 } PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 //
-// CPU Cache Descriptor
-//
-typedef struct _CACHE_DESCRIPTOR
+// CPU Cache Descriptor 	 
+// 	 
+typedef struct _CACHE_DESCRIPTOR 	 
 {
-    UCHAR Level;
-    UCHAR Associativity;
-    USHORT LineSize;
-    ULONG Size;
-    PROCESSOR_CACHE_TYPE Type;
+    UCHAR Level; 	 
+    UCHAR Associativity; 	 
+    USHORT LineSize; 	 
+    ULONG Size; 	 
+    PROCESSOR_CACHE_TYPE Type; 	 
 } CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
 
 //
@@ -621,7 +616,7 @@ typedef struct _KPROFILE
     PVOID RangeLimit;
     ULONG BucketShift;
     PVOID Buffer;
-    ULONG Segment;
+    PVOID Segment;
     KAFFINITY Affinity;
     KPROFILE_SOURCE Source;
     BOOLEAN Started;
@@ -662,7 +657,7 @@ typedef struct _KINTERRUPT
     ULONGLONG Rsvd1;
 #endif
     ULONG DispatchCode[KINTERRUPT_DISPATCH_CODES];
-} KINTERRUPT, *PKINTERRUPT;
+} KINTERRUPT;
 
 //
 // Kernel Event Pair Object
@@ -939,7 +934,7 @@ typedef struct _KTHREAD
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     PVOID MdlForLockedteb;
 #endif
-} KTHREAD, *PKTHREAD;
+} KTHREAD;
 
 #define ASSERT_THREAD(object) \
     ASSERT((((object)->DispatcherHeader.Type & KOBJECT_TYPE_MASK) == ThreadObject))
@@ -955,7 +950,7 @@ typedef struct _KPROCESS
     ULONG DirectoryTableBase;
     ULONG Unused0;
 #else
-    LARGE_INTEGER DirectoryTableBase;
+    ULONG DirectoryTableBase[2];
 #endif
 #if defined(_M_IX86)
     KGDTENTRY LdtDescriptor;
@@ -1001,7 +996,7 @@ typedef struct _KPROCESS
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     ULONGLONG CycleTime;
 #endif
-} KPROCESS, *PKPROCESS;
+} KPROCESS;
 
 #define ASSERT_PROCESS(object) \
     ASSERT((((object)->Header.Type & KOBJECT_TYPE_MASK) == ProcessObject))

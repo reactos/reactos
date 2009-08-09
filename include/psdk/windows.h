@@ -12,9 +12,6 @@
 */
 #ifndef _WINDOWS_H
 #define _WINDOWS_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 /* translate GCC target defines to MS equivalents. Keep this synchronized
    with winnt.h. */
@@ -48,13 +45,9 @@
 #include <stdarg.h>
 #include <windef.h>
 #include <winbase.h>
-#if !(defined NOGDI || defined  _WINGDI_H)
 #include <wingdi.h>
-#endif
-#include <wincon.h>
-#ifndef _WINUSER_H
 #include <winuser.h>
-#endif
+#include <wincon.h>
 #ifndef _WINNLS_H
 #include <winnls.h>
 #endif
@@ -83,6 +76,11 @@
 #include <rpc.h>
 #include <shellapi.h>
 #include <winperf.h>
+#ifndef NOCRYPT
+#include <wincrypt.h>
+#include <winefs.h>
+#include <winscard.h>
+#endif
 #ifndef NOGDI
 #include <commdlg.h>
 #include <winspool.h>

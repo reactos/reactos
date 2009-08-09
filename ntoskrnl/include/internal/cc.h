@@ -301,13 +301,4 @@ NTSTATUS
 NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
-/*
- * Macro for generic cache manage bugchecking. Note that this macro assumes
- * that the file name including extension is always longer than 4 characters.
- */
-#define KEBUGCHECKCC \
-    KEBUGCHECKEX(CACHE_MANAGER, \
-    (*(ULONG*)(__FILE__ + sizeof(__FILE__) - 4) << 16) | \
-    (__LINE__ & 0xFFFF), 0, 0, 0)
-
 #endif

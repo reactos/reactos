@@ -390,10 +390,10 @@ typedef struct {
 typedef struct {
 	HWAVE			hWave;
 	LPWAVEFORMATEX		lpFormat;
-	DWORD			dwCallback;
-	DWORD			dwInstance;
+	DWORD_PTR		dwCallback;
+	DWORD_PTR		dwInstance;
 	UINT			uMappedDeviceID;
-        DWORD			dnDevNode;
+	DWORD			dnDevNode;
 } WAVEOPENDESC, *LPWAVEOPENDESC;
 
 typedef struct {

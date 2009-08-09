@@ -6,9 +6,9 @@
  * Daniel Veillard <veillard@redhat.com>
  */
 
-#include <string.h>
 #include "libxml.h"
 #ifdef LIBXML_AUTOMATA_ENABLED
+#include <string.h>
 
 #include <libxml/tree.h>
 #include <libxml/xmlautomata.h>
@@ -53,6 +53,7 @@ testRegexpFile(const char *filename) {
         xmlGenericError(xmlGenericErrorContext,
 		"Cannot create automata\n");
 	fclose(input);
+	return;
     }
     states[0] = xmlAutomataGetInitState(am);
     if (states[0] == NULL) {
@@ -60,6 +61,7 @@ testRegexpFile(const char *filename) {
 		"Cannot get start state\n");
 	xmlFreeAutomata(am);
 	fclose(input);
+	return;
     }
     ret = 0;
 
@@ -68,10 +70,10 @@ testRegexpFile(const char *filename) {
 	    continue;
 	len = strlen(expr);
 	len--;
-	while ((len >= 0) &&
+	while ((len >= 0) && 
 	       ((expr[len] == '\n') || (expr[len] == '\t') ||
 		(expr[len] == '\r') || (expr[len] == ' '))) len--;
-	expr[len + 1] = 0;
+	expr[len + 1] = 0;      
 	if (len >= 0) {
 	    if ((am != NULL) && (expr[0] == 't') && (expr[1] == ' ')) {
 		char *ptr = &expr[2];

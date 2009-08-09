@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" allowwarnings="false">
+<module name="usetup" type="nativecui" installbase="system32" installname="usetup.exe" crt="static">
 	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="smss.exe" />
 	<include base="usetup">.</include>
 	<include base="zlib">.</include>
 	<include base="inflib">.</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="_WIN32_WINNT">0x0502</define>
 	<define name="__NO_CTYPE_INLINES" />
 	<library>zlib</library>
 	<library>inflib</library>

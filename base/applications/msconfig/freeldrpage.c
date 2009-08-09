@@ -19,9 +19,9 @@ typedef struct
     ULONG szDefaultPos;
     ULONG OSConfigurationCount;
     BOOL  UseBootIni;
-}FREELDR_SETTINGS;
+} FREELDR_SETTINGS;
 
-static FREELDR_SETTINGS Settings = { 0, {0}, 0 };
+static FREELDR_SETTINGS Settings = { 0, { 0, }, 0, 0, FALSE };
 
 
 BOOL

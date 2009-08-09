@@ -239,6 +239,7 @@ static const MSIVIEWOPS insert_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
 };
 
 static UINT count_column_info( const column_info *ci )

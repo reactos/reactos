@@ -76,6 +76,7 @@ HalpXboxReadSector(IN PDEVICE_OBJECT DeviceObject,
                                        SectorOffset,
                                        &Event,
                                        &StatusBlock);
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
 
     Status = IoCallDriver(DeviceObject,
                           Irp);

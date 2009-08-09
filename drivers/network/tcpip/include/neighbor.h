@@ -107,7 +107,7 @@ BOOLEAN NBQueuePacket(
 VOID NBRemoveNeighbor(
     PNEIGHBOR_CACHE_ENTRY NCE);
 
-DWORD NBCopyNeighbors(
+ULONG NBCopyNeighbors(
     PIP_INTERFACE Interface,
     PIPARP_ENTRY ArpTable);
 

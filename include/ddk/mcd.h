@@ -23,10 +23,6 @@
 #ifndef __MCD_H
 #define __MCD_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "srb.h"
 #include "scsi.h"
 #include "ntddchgr.h"

@@ -59,6 +59,7 @@ LdrFindResourceDirectory_U(
 );
 
 BOOLEAN
+NTAPI
 LdrUnloadAlternateResourceModule(
     IN PVOID BaseAddress
 );
@@ -86,6 +87,7 @@ LdrRelocateImage(
 );
 
 NTSTATUS
+NTAPI
 LdrLockLoaderLock(
     IN ULONG Flags,
     OUT PULONG Disposition OPTIONAL,

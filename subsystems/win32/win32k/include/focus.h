@@ -14,7 +14,7 @@ IntGetFocusWindow();
  */
 HWND FASTCALL
 IntGetThreadFocusWindow();
-HWND STDCALL IntGetCapture();
+HWND APIENTRY IntGetCapture();
 HWND FASTCALL UserGetActiveWindow();
 
 BOOL FASTCALL

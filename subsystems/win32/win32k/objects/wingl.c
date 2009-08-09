@@ -24,7 +24,7 @@
 #include <debug.h>
 
 INT
-STDCALL
+APIENTRY
 NtGdiChoosePixelFormat(HDC  hDC,
                            CONST PPIXELFORMATDESCRIPTOR  pfd)
 {
@@ -34,7 +34,7 @@ NtGdiChoosePixelFormat(HDC  hDC,
 
 
 INT
-STDCALL
+APIENTRY
 NtGdiDescribePixelFormat(HDC  hDC,
                              INT  PixelFormat,
                              UINT  BufSize,
@@ -56,7 +56,7 @@ NtGdiSetPixelFormat(
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiSwapBuffers(HDC  hDC)
 {
   UNIMPLEMENTED;

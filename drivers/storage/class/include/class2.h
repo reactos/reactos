@@ -47,35 +47,35 @@
 struct _CLASS_INIT_DATA;
 
 typedef VOID
-(STDCALL *PCLASS_ERROR)(IN PDEVICE_OBJECT DeviceObject,
+(NTAPI *PCLASS_ERROR)(IN PDEVICE_OBJECT DeviceObject,
 		IN PSCSI_REQUEST_BLOCK Srb,
 		IN OUT NTSTATUS *Status,
 		IN OUT BOOLEAN *Retry);
 
 typedef BOOLEAN
-(STDCALL *PCLASS_DEVICE_CALLBACK)(IN PINQUIRYDATA);
+(NTAPI *PCLASS_DEVICE_CALLBACK)(IN PINQUIRYDATA);
 
 typedef NTSTATUS
-(STDCALL *PCLASS_READ_WRITE)(IN PDEVICE_OBJECT DeviceObject,
+(NTAPI *PCLASS_READ_WRITE)(IN PDEVICE_OBJECT DeviceObject,
 		     IN PIRP Irp);
 
 typedef BOOLEAN
-(STDCALL *PCLASS_FIND_DEVICES)(IN PDRIVER_OBJECT DriverObject,
+(NTAPI *PCLASS_FIND_DEVICES)(IN PDRIVER_OBJECT DriverObject,
 		       IN PUNICODE_STRING RegistryPath,
 		       IN struct _CLASS_INIT_DATA *InitializationData,
 		       IN PDEVICE_OBJECT PortDeviceObject,
 		       IN ULONG PortNumber);
 
 typedef NTSTATUS
-(STDCALL *PCLASS_DEVICE_CONTROL)(IN PDEVICE_OBJECT DeviceObject,
+(NTAPI *PCLASS_DEVICE_CONTROL)(IN PDEVICE_OBJECT DeviceObject,
 			 IN PIRP Irp);
 
 typedef NTSTATUS
-(STDCALL *PCLASS_SHUTDOWN_FLUSH)(IN PDEVICE_OBJECT DeviceObject,
+(NTAPI *PCLASS_SHUTDOWN_FLUSH)(IN PDEVICE_OBJECT DeviceObject,
 			 IN PIRP Irp);
 
 typedef NTSTATUS
-(STDCALL *PCLASS_CREATE_CLOSE)(IN PDEVICE_OBJECT DeviceObject,
+(NTAPI *PCLASS_CREATE_CLOSE)(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp);
 
 
@@ -147,64 +147,64 @@ typedef struct _COMPLETION_CONTEXT
 /* FUNCTIONS ****************************************************************/
 
 IO_COMPLETION_ROUTINE ScsiClassAsynchronousCompletion;
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassAsynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,
 				IN PVOID Context);
 
-VOID STDCALL
+VOID NTAPI
 ScsiClassBuildRequest(IN PDEVICE_OBJECT DeviceObject,
 		      IN PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassClaimDevice(IN PDEVICE_OBJECT PortDeviceObject,
 		     IN PSCSI_INQUIRY_DATA LunInfo,
 		     IN BOOLEAN Release,
 		     OUT PDEVICE_OBJECT *NewPortDeviceObject OPTIONAL);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 			    IN PCCHAR ObjectNameBuffer,
 			    IN PDEVICE_OBJECT PhysicalDeviceObject OPTIONAL,
 			    IN OUT PDEVICE_OBJECT *DeviceObject,
 			    IN PCLASS_INIT_DATA InitializationData);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp);
 
-PVOID STDCALL
+PVOID NTAPI
 ScsiClassFindModePage(IN PCHAR ModeSenseBuffer,
 		      IN ULONG Length,
 		      IN UCHAR PageMode,
 		      IN BOOLEAN Use6Byte);
 
-ULONG STDCALL
+ULONG NTAPI
 ScsiClassFindUnclaimedDevices(IN PCLASS_INIT_DATA InitializationData,
 			      OUT PSCSI_ADAPTER_BUS_INFO AdapterInformation);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassGetCapabilities(IN PDEVICE_OBJECT PortDeviceObject,
 			 OUT PIO_SCSI_CAPABILITIES *PortCapabilities);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassGetInquiryData(IN PDEVICE_OBJECT PortDeviceObject,
 			OUT PSCSI_ADAPTER_BUS_INFO *ConfigInfo);
 
-ULONG STDCALL
+ULONG NTAPI
 ScsiClassInitialize(IN PVOID Argument1,
 		    IN PVOID Argument2,
 		    IN PCLASS_INIT_DATA InitializationData);
 
-VOID STDCALL
+VOID NTAPI
 ScsiClassInitializeSrbLookasideList(IN PDEVICE_EXTENSION DeviceExtension,
 				    IN ULONG NumberElements);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassInternalIoControl(IN PDEVICE_OBJECT DeviceObject,
 			   IN PIRP Irp);
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 			    IN PSCSI_REQUEST_BLOCK Srb,
 			    IN UCHAR MajorFunctionCode,
@@ -212,32 +212,32 @@ ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
 			    IN ULONG RetryCount,
 			    OUT NTSTATUS *Status);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
 		    IN PIRP Irp,
 		    IN PVOID Context);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
 			      IN PIRP Irp,
 			      IN PVOID Context);
 
-ULONG STDCALL
+ULONG NTAPI
 ScsiClassModeSense(IN PDEVICE_OBJECT DeviceObject,
 		   IN PCHAR ModeSenseBuffer,
 		   IN ULONG Length,
 		   IN UCHAR PageMode);
 
-ULONG STDCALL
+ULONG NTAPI
 ScsiClassQueryTimeOutRegistryValue(IN PUNICODE_STRING RegistryPath);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject);
 
-VOID STDCALL
+VOID NTAPI
 ScsiClassReleaseQueue(IN PDEVICE_OBJECT DeviceObject);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
 			     PSCSI_REQUEST_BLOCK Srb,
 			     PIRP Irp,
@@ -245,20 +245,20 @@ ScsiClassSendSrbAsynchronous(PDEVICE_OBJECT DeviceObject,
 			     ULONG BufferLength,
 			     BOOLEAN WriteToDevice);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ScsiClassSendSrbSynchronous(PDEVICE_OBJECT DeviceObject,
 			    PSCSI_REQUEST_BLOCK Srb,
 			    PVOID BufferAddress,
 			    ULONG BufferLength,
 			    BOOLEAN WriteToDevice);
 
-VOID STDCALL
+VOID NTAPI
 ScsiClassSplitRequest(IN PDEVICE_OBJECT DeviceObject,
 		      IN PIRP Irp,
 		      IN ULONG MaximumBytes);
 
 NTSTATUS
-STDCALL
+NTAPI
 ScsiClassCheckVerifyComplete(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,

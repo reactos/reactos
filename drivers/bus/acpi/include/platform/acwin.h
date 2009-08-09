@@ -47,14 +47,25 @@
 
 #endif
 
-/* ReactOS uses GCC */
+#if defined(__GNUC__)
 
 #include "acgcc.h"
 
 #undef disable
-#define disable() __asm__("cli\n\t");
+#define disable() __asm__("cli\n\t")
 #undef enable
-#define enable() __asm__("sti\n\t");
+#define enable() __asm__("sti\n\t")
+
+#elif defined(_MSC_VER)
+
+#include "acmsc.h"
+
+#undef disable
+#define disable() __asm { cli }
+#undef enable
+#define enable() __asm { sti }
+
+#endif
 
 #undef DEBUGGER_THREADING
 #define DEBUGGER_THREADING          DEBUGGER_SINGLE_THREADED

@@ -1,7 +1,10 @@
+/**
+ * This file has no copyright assigned and is placed in the Public Domain.
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
+ */
 #ifndef _FENV_H_
 #define _FENV_H_
-
-#include <_mingw.h>
 
 /* FPU status word exception flags */
 #define FE_INVALID	0x01
@@ -24,10 +27,6 @@
 #define __MXCSR_EXCEPT_FLAG_SHIFT 0
 
 /* How much to shift FE status word exception flags
-   to get the MXCSR exeptions masks,  */
-#define __MXCSR_EXCEPT_MASK_SHIFT 7
-
-/* How much to shift FE control word rounding flags
    to get MXCSR rounding flags,  */
 #define __MXCSR_ROUND_FLAG_SHIFT 3
 
@@ -55,9 +54,9 @@ typedef struct
   unsigned short __ip_selector;  
   unsigned short __opcode;
   unsigned int	 __data_offset;
-  unsigned short __data_selector;
-  unsigned short  __unused3;
-  unsigned int __mxcsr; /* contents of the MXCSR register  */
+  unsigned short __data_selector;  
+  unsigned short __unused3;
+  unsigned int   __mxcsr; /* contents of the MXCSR register  */
 } fenv_t;
 
 
@@ -81,23 +80,23 @@ extern "C" {
 /*TODO: Some of these could be inlined */
 /* 7.6.2 Exception */
 
-extern int __cdecl __MINGW_NOTHROW feclearexcept (int);
-extern int __cdecl __MINGW_NOTHROW fegetexceptflag (fexcept_t * flagp, int excepts);
-extern int __cdecl __MINGW_NOTHROW feraiseexcept (int excepts );
-extern int __cdecl __MINGW_NOTHROW fesetexceptflag (const fexcept_t *, int);
-extern int __cdecl __MINGW_NOTHROW fetestexcept (int excepts);
+extern int __cdecl feclearexcept (int);
+extern int __cdecl fegetexceptflag (fexcept_t * flagp, int excepts);
+extern int __cdecl feraiseexcept (int excepts );
+extern int __cdecl fesetexceptflag (const fexcept_t *, int);
+extern int __cdecl fetestexcept (int excepts);
 
 /* 7.6.3 Rounding */
 
-extern int __cdecl __MINGW_NOTHROW fegetround (void);
-extern int __cdecl __MINGW_NOTHROW fesetround (int mode);
+extern int __cdecl fegetround (void);
+extern int __cdecl fesetround (int mode);
 
 /* 7.6.4 Environment */
 
-extern int __cdecl __MINGW_NOTHROW fegetenv (fenv_t * envp);
-extern int __cdecl __MINGW_NOTHROW fesetenv (const fenv_t * );
-extern int __cdecl __MINGW_NOTHROW feupdateenv (const fenv_t *);
-extern int __cdecl __MINGW_NOTHROW feholdexcept (fenv_t *);
+extern int __cdecl fegetenv(fenv_t * envp);
+extern int __cdecl fesetenv(const fenv_t * );
+extern int __cdecl feupdateenv(const fenv_t *);
+extern int __cdecl feholdexcept(fenv_t *);
 
 #ifdef __cplusplus
 }

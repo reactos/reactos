@@ -13,6 +13,7 @@ extern HGDIOBJ stock_objects[];
 BOOL SetStockObjects = FALSE;
 PDEVCAPS GdiDevCaps = NULL;
 PGDIHANDLECACHE GdiHandleCache = NULL;
+BOOL gbLpk = FALSE;
 
 /*
  * GDI32.DLL does have an entry point for disable threadlibrarycall,. The initialization is done by a call
@@ -48,7 +49,7 @@ GdiProcessSetup (VOID)
     GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
     GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
     GdiDevCaps = &GdiSharedHandleTable->DevCaps;
-    CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
+    CurrentProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
     GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
     GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
 }

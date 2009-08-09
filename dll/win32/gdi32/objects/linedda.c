@@ -35,7 +35,7 @@
  *           LineDDA   (GDI32.@)
  * @implemented
  */
-BOOL STDCALL LineDDA(INT nXStart, INT nYStart, INT nXEnd, INT nYEnd,
+BOOL WINAPI LineDDA(INT nXStart, INT nYStart, INT nXEnd, INT nYEnd,
                         LINEDDAPROC lpLineFunc, LPARAM lpData )
 {
     INT xadd = 1, yadd = 1;

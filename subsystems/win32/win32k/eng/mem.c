@@ -42,7 +42,7 @@ USERMEMHEADER, *PUSERMEMHEADER;
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID APIENTRY
 EngAllocMem(ULONG Flags,
 	    ULONG MemSize,
 	    ULONG Tag)
@@ -62,7 +62,7 @@ EngAllocMem(ULONG Flags,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngFreeMem(PVOID Mem)
 {
   ExFreePool(Mem);
@@ -71,12 +71,12 @@ EngFreeMem(PVOID Mem)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID APIENTRY
 EngAllocUserMem(SIZE_T cj, ULONG Tag)
 {
   PVOID NewMem = NULL;
   NTSTATUS Status;
-  ULONG MemSize = sizeof(USERMEMHEADER) + cj;
+  SIZE_T MemSize = sizeof(USERMEMHEADER) + cj;
   PUSERMEMHEADER Header;
 
   Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT, PAGE_READWRITE);
@@ -96,19 +96,82 @@ EngAllocUserMem(SIZE_T cj, ULONG Tag)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngFreeUserMem(PVOID pv)
 {
   PUSERMEMHEADER Header = ((PUSERMEMHEADER) pv) - 1;
-  ULONG MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
+  SIZE_T MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
 
   ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_RELEASE);
+}
+
+
+
+PVOID
+APIENTRY
+HackSecureVirtualMemory(
+	IN PVOID Address,
+	IN SIZE_T Size,
+	IN ULONG ProbeMode,
+	OUT PVOID *SafeAddress)
+{
+	NTSTATUS Status = STATUS_SUCCESS;
+	PMDL mdl;
+	LOCK_OPERATION Operation;
+
+	if (ProbeMode == PAGE_READONLY) Operation = IoReadAccess;
+	else if (ProbeMode == PAGE_READWRITE) Operation = IoModifyAccess;
+	else return NULL;
+
+	mdl = IoAllocateMdl(Address, Size, FALSE, TRUE, NULL);
+	if (mdl == NULL)
+	{
+		return NULL;
+	}
+
+	_SEH2_TRY
+	{
+		MmProbeAndLockPages(mdl, UserMode, Operation);
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		Status = _SEH2_GetExceptionCode();
+	}
+	_SEH2_END
+
+	if (!NT_SUCCESS(Status))
+	{
+		IoFreeMdl(mdl);
+		return NULL;
+	}
+
+	*SafeAddress = MmGetSystemAddressForMdlSafe(mdl, NormalPagePriority);
+
+	if(!*SafeAddress)
+	{
+		MmUnlockPages(mdl);
+		IoFreeMdl(mdl);
+		return NULL;           
+	}
+
+	return mdl;
+}
+
+VOID
+APIENTRY
+HackUnsecureVirtualMemory(
+	IN PVOID  SecureHandle)
+{
+	PMDL mdl = (PMDL)SecureHandle;
+
+	MmUnlockPages(mdl);
+	IoFreeMdl(mdl);  
 }
 
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE APIENTRY
 EngSecureMem(PVOID Address, ULONG Length)
 {
   return MmSecureVirtualMemory(Address, Length, PAGE_READWRITE);
@@ -117,7 +180,7 @@ EngSecureMem(PVOID Address, ULONG Length)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID APIENTRY
 EngUnsecureMem(HANDLE Mem)
 {
   return MmUnsecureVirtualMemory((PVOID) Mem);

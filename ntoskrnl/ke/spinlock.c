@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #define LQ_WAIT     1
 #define LQ_OWN      2
@@ -258,6 +258,61 @@ KeReleaseInterruptSpinLock(IN PKINTERRUPT Interrupt,
 
     /* Lower IRQL */
     KeLowerIrql(OldIrql);
+}
+
+/*
+ * @unimplemented
+ */
+KIRQL
+FASTCALL
+KeAcquireSpinLockForDpc(IN PKSPIN_LOCK SpinLock)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeReleaseSpinLockForDpc(IN PKSPIN_LOCK SpinLock,
+                        IN KIRQL OldIrql)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+KIRQL
+FASTCALL
+KeAcquireInStackQueuedSpinLockForDpc(IN PKSPIN_LOCK SpinLock,
+                                     IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNIMPLEMENTED;
+    return 0;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+FASTCALL
+KeReleaseInStackQueuedSpinLockForDpc(IN PKLOCK_QUEUE_HANDLE LockHandle)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+FASTCALL
+KeTestSpinLock(IN PKSPIN_LOCK SpinLock)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

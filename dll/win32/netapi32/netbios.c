@@ -637,7 +637,7 @@ static UCHAR nbInternalHangup(NetBIOSAdapter *adapter, NetBIOSSession *session)
     EnterCriticalSection(&adapter->cs);
     memset(session, 0, sizeof(NetBIOSSession));
     LeaveCriticalSection(&adapter->cs);
-    return NRC_GOODRET;
+    return ret;
 }
 
 static UCHAR nbHangup(NetBIOSAdapter *adapter, const NCB *ncb)
@@ -762,7 +762,7 @@ static UCHAR nbDispatch(NetBIOSAdapter *adapter, PNCB ncb)
 
 static DWORD WINAPI nbCmdThread(LPVOID lpVoid)
 {
-    PNCB ncb = (PNCB)lpVoid;
+    PNCB ncb = lpVoid;
 
     if (ncb)
     {

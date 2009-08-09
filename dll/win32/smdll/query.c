@@ -42,7 +42,7 @@
  * 	A port error.
  *
  */
-NTSTATUS STDCALL
+NTSTATUS WINAPI
 SmQueryInformation (IN      HANDLE                hSmApiPort,
 		    IN      SM_INFORMATION_CLASS  SmInformationClass,
 		    IN OUT  PVOID                 Data,

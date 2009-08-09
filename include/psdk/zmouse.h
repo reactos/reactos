@@ -13,9 +13,6 @@
 
 #ifndef _ZMOUSE_H
 #define _ZMOUSE_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #ifndef WM_MOUSEWHEEL
 # define WM_MOUSEWHEEL (WM_MOUSELAST + 1)

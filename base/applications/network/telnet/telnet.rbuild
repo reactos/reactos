@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="telnet" type="win32cui" installbase="system32" installname="telnet.exe" allowwarnings ="true">
+<module name="telnet" type="win32cui" installbase="system32" installname="telnet.exe" >
 	<include base="telnet">.</include>
 	<library>kernel32</library>
 	<library>ws2_32</library>
 	<library>user32</library>
+	<define name="_CRT_NONSTDC_NO_DEPRECATE" />
 	<directory name="src">
 		<file>ansiprsr.cpp</file>
 		<file>keytrans.cpp</file>

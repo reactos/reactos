@@ -33,6 +33,7 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "winnls.h"
+#include "winternl.h"
 
 #include "shellapi.h"
 #include "objbase.h"
@@ -172,26 +173,26 @@ DWORD WINAPI ParseFieldAW(LPCVOID src, DWORD nField, LPVOID dst, DWORD len)
  */
 BOOL WINAPI GetFileNameFromBrowse(
 	HWND hwndOwner,
-	LPSTR lpstrFile,
-	DWORD nMaxFile,
-	LPCSTR lpstrInitialDir,
-	LPCSTR lpstrDefExt,
-	LPCSTR lpstrFilter,
-	LPCSTR lpstrTitle)
+	LPWSTR lpstrFile,
+	UINT nMaxFile,
+	LPCWSTR lpstrInitialDir,
+	LPCWSTR lpstrDefExt,
+	LPCWSTR lpstrFilter,
+	LPCWSTR lpstrTitle)
 {
     HMODULE hmodule;
-    FARPROC pGetOpenFileNameA;
-    OPENFILENAMEA ofn;
+    FARPROC pGetOpenFileNameW;
+    OPENFILENAMEW ofn;
     BOOL ret;
 
     TRACE("%p, %s, %d, %s, %s, %s, %s)\n",
-	  hwndOwner, lpstrFile, nMaxFile, lpstrInitialDir, lpstrDefExt,
+	  hwndOwner, debugstr_w(lpstrFile), nMaxFile, lpstrInitialDir, lpstrDefExt,
 	  lpstrFilter, lpstrTitle);
 
-    hmodule = LoadLibraryA("comdlg32.dll");
+    hmodule = LoadLibraryW(L"comdlg32.dll");
     if(!hmodule) return FALSE;
-    pGetOpenFileNameA = GetProcAddress(hmodule, "GetOpenFileNameA");
-    if(!pGetOpenFileNameA)
+    pGetOpenFileNameW = GetProcAddress(hmodule, "GetOpenFileNameW");
+    if(!pGetOpenFileNameW)
     {
 	FreeLibrary(hmodule);
 	return FALSE;
@@ -208,7 +209,7 @@ BOOL WINAPI GetFileNameFromBrowse(
     ofn.lpstrTitle = lpstrTitle;
     ofn.lpstrDefExt = lpstrDefExt;
     ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY | OFN_FILEMUSTEXIST;
-    ret = pGetOpenFileNameA(&ofn);
+    ret = pGetOpenFileNameW(&ofn);
 
     FreeLibrary(hmodule);
     return ret;
@@ -520,7 +521,8 @@ WORD WINAPI ArrangeWindows(
 	WORD cKids,
 	CONST HWND * lpKids)
 {
-    FIXME("(%p 0x%08x %p 0x%04x %p):stub.\n",
+    /* Unimplemented in WinXP SP3 */
+    TRACE("(%p 0x%08x %p 0x%04x %p):stub.\n",
 	   hwndParent, dwReserved, lpRect, cKids, lpKids);
     return 0;
 }
@@ -532,9 +534,9 @@ WORD WINAPI ArrangeWindows(
  *     exported by ordinal
  */
 DWORD WINAPI
-SignalFileOpen (DWORD dwParam1)
+SignalFileOpen (LPCITEMIDLIST pidl)
 {
-    FIXME("(0x%08x):stub.\n", dwParam1);
+    FIXME("(0x%08x):stub.\n", pidl);
 
     return 0;
 }
@@ -1048,8 +1050,9 @@ HRESULT WINAPI SHWinHelp (DWORD v, DWORD w, DWORD x, DWORD z)
  *  SHRunControlPanel [SHELL32.161]
  *
  */
-HRESULT WINAPI SHRunControlPanel (DWORD x, DWORD z)
-{	FIXME("0x%08x 0x%08x stub\n",x,z);
+HRESULT WINAPI SHRunControlPanel (LPCWSTR lpcszCmdLine, HWND hwndMsgParent)
+{
+	FIXME("0x%08x 0x%08x stub\n",lpcszCmdLine,hwndMsgParent);
 	return 0;
 }
 
@@ -1103,7 +1106,7 @@ void WINAPI SHFreeUnusedLibraries (void)
  * DAD_AutoScroll				[SHELL32.129]
  *
  */
-BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, LPPOINT pt)
+BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, const POINT * pt)
 {
     FIXME("hwnd = %p %p %p\n",hwnd,samples,pt);
     return 0;
@@ -1121,7 +1124,7 @@ BOOL WINAPI DAD_DragEnter(HWND hwnd)
  * DAD_DragEnterEx				[SHELL32.131]
  *
  */
-BOOL WINAPI DAD_DragEnterEx(HWND hwnd, POINT p)
+BOOL WINAPI DAD_DragEnterEx(HWND hwnd, const POINT p)
 {
     FIXME("hwnd = %p (%d,%d)\n",hwnd,p.x,p.y);
     return FALSE;
@@ -1411,16 +1414,19 @@ HRESULT WINAPI SHLoadOLE(LPARAM lParam)
  * DriveType					[SHELL32.64]
  *
  */
-HRESULT WINAPI DriveType(DWORD u)
-{	FIXME("0x%04x stub\n",u);
-	return 0;
+HRESULT WINAPI DriveType(int DriveType)
+{
+    WCHAR root[] = L"A:\\";
+	root[0] = L'A' + DriveType;
+	return GetDriveTypeW(root);
 }
 /*************************************************************************
  * InvalidateDriveType			[SHELL32.65]
- *
+ * Unimplemented in XP SP3
  */
 int WINAPI InvalidateDriveType(int u)
-{	FIXME("0x%08x stub\n",u);
+{
+	TRACE("0x%08x stub\n",u);
 	return 0;
 }
 /*************************************************************************
@@ -1448,8 +1454,8 @@ int WINAPI SHOutOfMemoryMessageBox(
  *
  */
 HRESULT WINAPI SHFlushClipboard(void)
-{	FIXME("stub\n");
-	return 1;
+{
+	return OleFlushClipboard();
 }
 
 /*************************************************************************
@@ -1466,21 +1472,6 @@ BOOL WINAPI SHWaitForFileToOpen(
 }
 
 /************************************************************************
- *	@				[SHELL32.654]
- *
- * NOTES
- *  first parameter seems to be a pointer (same as passed to WriteCabinetState)
- *  second one could be a size (0x0c). The size is the same as the structure saved to
- *  HCU\Software\Microsoft\Windows\CurrentVersion\Explorer\CabinetState
- *  I'm (js) guessing: this one is just ReadCabinetState ;-)
- */
-HRESULT WINAPI shell32_654 (CABINETSTATE *cs, int length)
-{
-	TRACE("%p %d\n",cs,length);
-	return ReadCabinetState(cs,length);
-}
-
-/************************************************************************
  *	RLBuildListOfPaths			[SHELL32.146]
  *
  * NOTES
@@ -1494,9 +1485,9 @@ DWORD WINAPI RLBuildListOfPaths (void)
  *	SHValidateUNC				[SHELL32.173]
  *
  */
-HRESULT WINAPI SHValidateUNC (DWORD x, DWORD y, DWORD z)
+HRESULT WINAPI SHValidateUNC (HWND hwndOwner, LPWSTR pszFile, UINT fConnect)
 {
-	FIXME("0x%08x 0x%08x 0x%08x stub\n",x,y,z);
+	FIXME("0x%08x 0x%08x 0x%08x stub\n",hwndOwner,pszFile,fConnect);
 	return 0;
 }
 
@@ -1543,8 +1534,21 @@ DWORD WINAPI DoEnvironmentSubstA(LPSTR pszString, UINT cchString)
  */
 DWORD WINAPI DoEnvironmentSubstW(LPWSTR pszString, UINT cchString)
 {
-	FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
-	return MAKELONG(FALSE,cchString);
+    LPWSTR dst;
+    BOOL res = FALSE;
+    FIXME("(%s, %d): stub\n", debugstr_w(pszString), cchString);
+    if ((dst = HeapAlloc(GetProcessHeap(), 0, cchString * sizeof(WCHAR))))
+    {
+        DWORD num = ExpandEnvironmentStringsW(pszString, dst, cchString);
+        if (num)
+        {
+            res = TRUE;
+            wcscpy(pszString, dst);
+        }
+        HeapFree(GetProcessHeap(), 0, dst);
+    }
+
+    return MAKELONG(res,cchString);
 }
 
 /************************************************************************
@@ -1560,25 +1564,41 @@ DWORD WINAPI DoEnvironmentSubstAW(LPVOID x, UINT y)
 }
 
 /*************************************************************************
- *      @                             [SHELL32.243]
- *
- * Win98+ by-ordinal routine.  In Win98 this routine returns zero and
- * does nothing else.  Possibly this does something in NT or SHELL32 5.0?
- *
+ *      GUIDFromStringA   [SHELL32.703]
  */
-
-BOOL WINAPI shell32_243(DWORD a, DWORD b)
+BOOL WINAPI GUIDFromStringA(LPCSTR str, LPGUID guid)
 {
-  return FALSE;
+    TRACE("GUIDFromStringA() stub\n");
+    return FALSE;
 }
 
 /*************************************************************************
- *      @	[SHELL32.714]
+ *      GUIDFromStringW   [SHELL32.704]
  */
-DWORD WINAPI SHELL32_714(LPVOID x)
+BOOL WINAPI GUIDFromStringW(LPCWSTR str, LPGUID guid)
 {
- 	FIXME("(%s)stub\n", debugstr_w(x));
-	return 0;
+    UNICODE_STRING guid_str;
+
+    RtlInitUnicodeString(&guid_str, str);
+    return !RtlGUIDFromString(&guid_str, guid);
+}
+
+/*************************************************************************
+ *      PathIsTemporaryW	[SHELL32.714]
+ */
+BOOL WINAPI PathIsTemporaryW(LPWSTR Str)
+{
+ 	FIXME("(%s)stub\n", debugstr_w(Str));
+	return FALSE;
+}
+
+/*************************************************************************
+ *      PathIsTemporaryA	[SHELL32.713]
+ */
+BOOL WINAPI PathIsTemporaryA(LPSTR Str)
+{
+ 	FIXME("(%s)stub\n", debugstr_a(Str));
+	return FALSE;
 }
 
 typedef struct _PSXA
@@ -1662,6 +1682,7 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
     IShellPropSheetExt *pspsx;
     HKEY hkBase, hkPropSheetHandlers;
     PPSXA psxa = NULL;
+    HRESULT hr;
 
     TRACE("(%p,%s,%u)\n", hKey, debugstr_w(pszSubKey), max_iface);
 
@@ -1699,38 +1720,41 @@ HPSXA WINAPI SHCreatePropSheetExtArrayEx(HKEY hKey, LPCWSTR pszSubKey, UINT max_
                         lRet = ERROR_SUCCESS;
                     break;
                 }
-
-                dwClsidSize = sizeof(szClsidHandler);
-                if (SHGetValueW(hkPropSheetHandlers, szHandler, NULL, NULL, szClsidHandler, &dwClsidSize) == ERROR_SUCCESS)
+                szHandler[(sizeof(szHandler) / sizeof(szHandler[0])) - 1] = 0;
+                hr = CLSIDFromString(szHandler, &clsid);
+                if (FAILED(hr))
                 {
-                    /* Force a NULL-termination and convert the string */
-                    szClsidHandler[(sizeof(szClsidHandler) / sizeof(szClsidHandler[0])) - 1] = 0;
-                    if (SUCCEEDED(SHCLSIDFromStringW(szClsidHandler, &clsid)))
+                    dwClsidSize = sizeof(szClsidHandler);
+                    if (SHGetValueW(hkPropSheetHandlers, szHandler, NULL, NULL, szClsidHandler, &dwClsidSize) == ERROR_SUCCESS)
                     {
-                        /* Attempt to get an IShellPropSheetExt and an IShellExtInit instance.
-                           Only if both interfaces are supported it's a real shell extension.
-                           Then call IShellExtInit's Initialize method. */
-                        if (SUCCEEDED(CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, &IID_IShellPropSheetExt, (LPVOID *)&pspsx)))
-                        {
-                            if (SUCCEEDED(pspsx->lpVtbl->QueryInterface(pspsx, &IID_IShellExtInit, (PVOID *)&psxi)))
-                            {
-                                if (SUCCEEDED(psxi->lpVtbl->Initialize(psxi, NULL, pDataObj, hKey)))
-                                {
-                                    /* Add the IShellPropSheetExt instance to the array */
-                                    psxa->pspsx[psxa->uiCount++] = pspsx;
-                                }
-                                else
-                                {
-                                    psxi->lpVtbl->Release(psxi);
-                                    pspsx->lpVtbl->Release(pspsx);
-                                }
-                            }
-                            else
-                                pspsx->lpVtbl->Release(pspsx);
-                        }
+                        szClsidHandler[(sizeof(szClsidHandler) / sizeof(szClsidHandler[0])) - 1] = 0;
+                        hr = CLSIDFromString(szClsidHandler, &clsid);
                     }
                 }
-
+                if (SUCCEEDED(hr))
+                {
+                    /* Attempt to get an IShellPropSheetExt and an IShellExtInit instance.
+                       Only if both interfaces are supported it's a real shell extension.
+                       Then call IShellExtInit's Initialize method. */
+                    if (SUCCEEDED(CoCreateInstance(&clsid, NULL, CLSCTX_INPROC_SERVER/* | CLSCTX_NO_CODE_DOWNLOAD */, &IID_IShellPropSheetExt, (LPVOID *)&pspsx)))
+                    {
+                        if (SUCCEEDED(pspsx->lpVtbl->QueryInterface(pspsx, &IID_IShellExtInit, (PVOID *)&psxi)))
+                        {
+                            if (SUCCEEDED(psxi->lpVtbl->Initialize(psxi, NULL, pDataObj, hKey)))
+                            {
+                                /* Add the IShellPropSheetExt instance to the array */
+                                psxa->pspsx[psxa->uiCount++] = pspsx;
+                            }
+                            else
+                            {
+                                psxi->lpVtbl->Release(psxi);
+                                pspsx->lpVtbl->Release(pspsx);
+                            }
+                        }
+                        else
+                            pspsx->lpVtbl->Release(pspsx);
+                    }
+                }
             } while (psxa->uiCount != psxa->uiAllocated);
         }
         else
@@ -1842,7 +1866,7 @@ HRESULT WINAPI CIDLData_CreateFromIDArray(
  *
  */
 HRESULT WINAPI SHCreateStdEnumFmtEtc(
-	DWORD cFormats,
+	UINT cFormats,
 	const FORMATETC *lpFormats,
 	LPENUMFORMATETC *ppenumFormatetc)
 {
@@ -1863,15 +1887,15 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 
 
 /*************************************************************************
- *		SHELL32_256 (SHELL32.256)
+ *		SHCreateShellFolderView (SHELL32.256)
  */
-HRESULT WINAPI SHELL32_256(LPDWORD lpdw0, LPDWORD lpdw1)
+HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pcsfv, IShellView **ppsv)
 {
     HRESULT ret = S_OK;
 
-    FIXME("stub %p 0x%08x %p\n", lpdw0, lpdw0 ? *lpdw0 : 0, lpdw1);
+    FIXME("SHCreateShellFolderView() stub\n");
 
-    if (!lpdw0 || *lpdw0 != 0x10)
+    if (!pcsfv || sizeof(*pcsfv) != pcsfv->cbSize)
         ret = E_INVALIDARG;
     else
     {
@@ -1962,14 +1986,18 @@ BOOL WINAPI SHGetNewLinkInfoW(LPCWSTR pszLinkTo, LPCWSTR pszDir, LPWSTR pszName,
 
     return FALSE;
 }
-
+/*************************************************************************
+ *              SHStartNetConnectionDialog (SHELL32.@)
+ */
 HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD dwType)
 {
     FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_a(pszRemoteName), dwType);
 
     return S_OK;
 }
-
+/*************************************************************************
+ *              SHEmptyRecycleBinA (SHELL32.@)
+ */
 HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 {
     LPWSTR szRootPathW = NULL;
@@ -2001,24 +2029,56 @@ HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 
 HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 {
-    BOOL ret;
+	WCHAR szPath[MAX_PATH] = {0};
+    DWORD dwSize, dwType;
+    LONG ret;
 
     TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
-    FIXME("0x%08x flags ignored\n", dwFlags);
 
-    ret = EmptyRecycleBinW(pszRootPath);
+    if (!(dwFlags & SHERB_NOCONFIRMATION))
+    {
+        /* FIXME
+         * enumerate available files 
+         * show confirmation dialog 
+         */
+        FIXME("show confirmation dialog\n");
+    }
+
+    if (dwFlags & SHERB_NOPROGRESSUI)
+    {
+        ret = EmptyRecycleBinW(pszRootPath);
+    }
+    else
+    {
+       /* FIXME
+        * show a progress dialog
+        */
+        ret = EmptyRecycleBinW(pszRootPath);
+    }
+
     if (!ret)
         return HRESULT_FROM_WIN32(GetLastError());
 
-    /* FIXME: update icon? */
+    if (!(dwFlags & SHERB_NOSOUND))
+    {
+        dwSize = sizeof(szPath);
+        ret = RegGetValueW(HKEY_CURRENT_USER, 
+                           L"AppEvents\\Schemes\\Apps\\Explorer\\EmptyRecycleBin\\.Current",
+                           NULL,
+                           RRF_RT_REG_EXPAND_SZ,
+                           &dwType,
+                           (PVOID)szPath,
+                           &dwSize);
+        if (ret != ERROR_SUCCESS)
+            return S_OK;
+
+        if (dwType != REG_EXPAND_SZ) /* type dismatch */
+            return S_OK;
+
+        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
+        PlaySoundW(szPath, NULL, SND_FILENAME);
+    }
     return S_OK;
-}
-
-DWORD WINAPI SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
-{
-    FIXME("%p, 0x%08x, 0x%08x, 0x%08x - stub\n", hwnd, drive, fmtID, options);
-
-    return SHFMT_NOFORMAT;
 }
 
 HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
@@ -2054,6 +2114,12 @@ HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryR
 {
     FIXME("%s, %p - stub\n", debugstr_w(pszRootPath), pSHQueryRBInfo);
 
+    if (!(pszRootPath) || (pszRootPath[0] == 0) ||
+        !(pSHQueryRBInfo) || (pSHQueryRBInfo->cbSize < sizeof(SHQUERYRBINFO)))
+    {
+        return E_INVALIDARG;
+    }
+
     pSHQueryRBInfo->i64Size = 0;
     pSHQueryRBInfo->i64NumItems = 0;
 
@@ -2063,7 +2129,7 @@ HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryR
 /*************************************************************************
  *              SHSetLocalizedName (SHELL32.@)
  */
-HRESULT WINAPI SHSetLocalizedName(LPWSTR pszPath, LPCWSTR pszResModule, int idsRes)
+HRESULT WINAPI SHSetLocalizedName(LPCWSTR pszPath, LPCWSTR pszResModule, int idsRes)
 {
     FIXME("%p, %s, %d - stub\n", pszPath, debugstr_w(pszResModule), idsRes);
 
@@ -2087,4 +2153,50 @@ BOOL WINAPI LinkWindow_UnregisterClass(void)
     FIXME("()\n");
     return TRUE;
 
+}
+
+/*************************************************************************
+ *              SHFlushSFCache (SHELL32.526)
+ *
+ * Notifies the shell that a user-specified special folder location has changed.
+ *
+ * NOTES
+ *   In Wine, the shell folder registry values are not cached, so this function
+ *   has no effect.
+ */
+void WINAPI SHFlushSFCache(void)
+{
+}
+
+HRESULT WINAPI SHGetImageList(int iImageList, REFIID riid, void **ppv)
+{
+    FIXME("STUB: %i %s\n",iImageList,debugstr_guid(riid));
+    return E_NOINTERFACE;
+}
+
+/*************************************************************************
+ *    SHParseDisplayName        [shell version 6.0]
+ */
+HRESULT WINAPI SHParseDisplayName(LPCWSTR pszName, IBindCtx *pbc,
+LPITEMIDLIST *ppidl, SFGAOF sfgaoIn, SFGAOF *psfgaoOut)
+{
+    IShellFolder    * psfDesktop;
+    HRESULT         hr=E_FAIL;
+    ULONG           dwAttr=sfgaoIn;
+
+    if (!pszName || !ppidl || !psfgaoOut)
+        return E_INVALIDARG;
+
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+        return hr;
+
+    hr = IShellFolder_ParseDisplayName(psfDesktop, (HWND)NULL, pbc, (LPOLESTR)pszName, (ULONG *)NULL, ppidl, &dwAttr);
+
+    IShellFolder_Release(psfDesktop);
+
+    if (SUCCEEDED(hr))
+        *psfgaoOut = dwAttr;
+
+    return hr;
 }

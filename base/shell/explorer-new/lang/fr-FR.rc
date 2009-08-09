@@ -4,7 +4,7 @@ IDM_TRAYWND MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Véroui&ller la barre de tâhces", ID_LOCKTASKBAR
+        MENUITEM "Véroui&ller la barre de tâches", ID_LOCKTASKBAR
         MENUITEM "P&ropriétés", ID_SHELL_CMD_PROPERTIES
     END
 END

@@ -1,0 +1,238 @@
+/*
+ * Finnish resources for mshtml 
+ *
+ * Copyright 2005 Kimmo Myllyvirta
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
+
+IDR_BROWSE_CONTEXT_MENU MENU
+{
+    POPUP "Oletus"
+    {
+        MENUITEM "&Takaisin",                     IDM_GOBACKWARD
+        MENUITEM "&Eteenpäin",                    IDM_GOFORWARD
+        MENUITEM SEPARATOR
+        MENUITEM "Ta&llenna Tausta...",           IDM_SAVEBACKGROUND
+        MENUITEM "&Aseta Taustaksi",              IDM_SETWALLPAPER
+        MENUITEM "&Kopioi Tausta",                IDM_COPYBACKGROUND
+        MENUITEM "A&seta Työpöydälle",            IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Valitse Kaikki",               IDM_SELECTALL
+        MENUITEM "L&iitä",                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Luo &Pikakuvake",               IDM_CREATESHORTCUT
+        MENUITEM "Lisää S&uosikkeihin",           IDM_ADDFAVORITES
+        MENUITEM "Nä&ytä Lähde",                  IDM_VIEWSOURCE
+        MENUITEM SEPARATOR
+        MENUITEM "Koo&daus",                      IDM_LANGUAGE
+        MENUITEM SEPARATOR
+        MENUITEM "Tul&osta",                      IDM_PRINT
+        MENUITEM "P&äivitä",                      _IDM_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "O&minaisuudet",                 IDM_PROPERTIES
+    }
+
+    POPUP "Kuva"
+    {
+        MENUITEM "&Avaa Linkki",                  IDM_FOLLOWLINKC
+        MENUITEM "A&vaa Linkki Uudessa Ikkunassa",IDM_FOLLOWLINKN
+        MENUITEM "&Tallenna kohde nimellä...",    IDM_SAVETARGET
+        MENUITEM "T&ulosta Kohde",                IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Näytä Kuva",                   IDM_SHOWPICTURE
+        MENUITEM "Tallenna Kuva Ni&mellä...",     IDM_SAVEPICTURE
+        MENUITEM "Lä&hetä kuva sähköpostina...",  IDM_MP_EMAILPICTURE
+        MENUITEM "Tulosta &Kuva...",              IDM_MP_PRINTPICTURE
+        MENUITEM "Mene &Omiin Kuviin",            IDM_MP_MYPICS
+        MENUITEM "A&seta Taustaksi",              IDM_SETWALLPAPER
+        MENUITEM "Aseta T&yöpöydälle...",         IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Leikkaa",                      IDM_CUT
+        MENUITEM "Ko&pioi",                       IDM_COPY
+        MENUITEM "Kopioi Pikakuvak&e",            IDM_COPYSHORTCUT
+        MENUITEM "L&iitä",                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Lis&ää Suosikkeihin...",        IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "Ominaisuu&det",                 IDM_PROPERTIES
+    }
+
+    POPUP "Hallinta"
+    {
+        MENUITEM "K&umoa",                        IDM_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Leikkaa",                      IDM_CUT
+        MENUITEM "&Kopioi",                       IDM_COPY
+        MENUITEM "L&iitä",                        IDM_PASTE
+        MENUITEM "P&oista",                       IDM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "V&alitse Kaikki",               IDM_SELECTALL
+    }
+
+    POPUP "Taulukko"
+    {
+        POPUP "&Valitse"
+        {
+            MENUITEM "&Solu",                     IDM_CELLSELECT
+            MENUITEM "&Rivi",                     IDM_ROWSELECT
+            MENUITEM "&Palsta",                   IDM_COLUMNSELECT
+            MENUITEM "&Taulukko",                 IDM_TABLESELECT
+        }
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "S&olun Ominaisuudet",           IDM_CELLPROPERTIES
+        MENUITEM "Ta&ulukon Ominaisuudet",        IDM_TABLEPROPERTIES
+    }
+
+    POPUP "1DSivun Valinta"
+    {
+        MENUITEM "&Leikkaa",                      IDM_CUT
+        MENUITEM "&Kopioi",                       IDM_COPY
+        MENUITEM "L&iitä",                        IDM_PASTE
+        MENUITEM "V&alitse Kaikki",               IDM_SELECTALL
+        MENUITEM "&Tulosta",                      IDM_PRINT
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "Ankkuri"
+    {
+        MENUITEM "&Avaa",                         IDM_FOLLOWLINKC
+        MENUITEM "A&vaa Uudessa Ikkunassa",       IDM_FOLLOWLINKN
+        MENUITEM "&Tallenna Kohde...",            IDM_SAVETARGET
+        MENUITEM "T&ulosta Kohde",                IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Leikkaa",                      IDM_CUT
+        MENUITEM "&Kopioi",                       IDM_COPY
+        MENUITEM "Kopioi &Pikakuvake",            IDM_COPYSHORTCUT
+        MENUITEM "L&iitä",                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Li&sää Suosikkeihin...",        IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "O&minaisuudet",                 IDM_PROPERTIES
+    }
+
+    POPUP "Context Unknown"
+    {
+        MENUITEM SEPARATOR
+    }
+
+    POPUP "DYNSRC Kuva"
+    {
+        MENUITEM "&Avaa Linkki",                  IDM_FOLLOWLINKC
+        MENUITEM "A&vaa Uudessa Ikkunassa",       IDM_FOLLOWLINKN
+        MENUITEM "Tallenna &Kohde...",            IDM_SAVETARGET
+        MENUITEM "T&ulosta Kohde",                IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Näytä Kuva",                   IDM_SHOWPICTURE
+        MENUITEM "Tallenna Vi&deo Nimellä...",    IDM_SAVEPICTURE
+        MENUITEM "A&seta Taustaksi",              IDM_SETWALLPAPER
+        MENUITEM "Aseta Ty&öpöydälle...",         IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Leikkaa",                      IDM_CUT
+        MENUITEM "K&opioi",                       IDM_COPY
+        MENUITEM "Kopioi &Pikakuvake",            IDM_COPYSHORTCUT
+        MENUITEM "L&iitä",                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Lis&ää Suosikkeihin...",        IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "&Toista",                       IDM_DYNSRCPLAY
+        MENUITEM "P&ysäytä",                      IDM_DYNSRCSTOP
+        MENUITEM "O&minaisuuedet",                IDM_PROPERTIES
+    }
+
+    POPUP "ART Kuva"
+    {
+        MENUITEM "&Avaa Linkki",                  IDM_FOLLOWLINKC
+        MENUITEM "A&vaa Uudessa Ikkunassa",       IDM_FOLLOWLINKN
+        MENUITEM "Tallenna Koh&de...",            IDM_SAVETARGET
+        MENUITEM "T&ulosta Kohde",                IDM_PRINTTARGET
+        MENUITEM SEPARATOR
+        MENUITEM "&Näytä Kuva",                   IDM_SHOWPICTURE
+        MENUITEM "Tall&enna Kuva Nimellä...",     IDM_SAVEPICTURE
+        MENUITEM "A&seta Taustaksi",              IDM_SETWALLPAPER
+        MENUITEM "Aseta Ty&öpöydälle...",         IDM_SETDESKTOPITEM
+        MENUITEM SEPARATOR
+        MENUITEM "&Leikkaa",                      IDM_CUT
+        MENUITEM "K&opioi",                       IDM_COPY
+        MENUITEM "Kopioi &Pikakuvake",            IDM_COPYSHORTCUT
+        MENUITEM "L&iitä",                        IDM_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "Lis&ää Suosikkeihin...",        IDM_ADDFAVORITES
+        MENUITEM SEPARATOR
+        MENUITEM "&Toista",                       IDM_IMGARTPLAY
+        MENUITEM "P&ysäytä",                      IDM_IMGARTSTOP
+        MENUITEM "Al&kuun",                       IDM_IMGARTREWIND
+        MENUITEM SEPARATOR
+        MENUITEM SEPARATOR
+        MENUITEM "O&minaisuudet",                 IDM_PROPERTIES
+    }
+
+    POPUP "Debug"
+    {
+        MENUITEM "Trace Tags",                    IDM_TRACETAGS
+        MENUITEM "Resource Failures",             IDM_RESOURCEFAILURES
+        MENUITEM "Dump Tracking Info",            IDM_DUMPTRACKINGINFO
+        MENUITEM "Debug Break",                   IDM_DEBUGBREAK
+        MENUITEM "Debug View",                    IDM_DEBUGVIEW
+        MENUITEM "Dump Tree",                     IDM_DUMPTREE
+        MENUITEM "Dump Lines",                    IDM_DUMPLINES
+        MENUITEM "Dump DisplayTree",              IDM_DUMPDISPLAYTREE
+        MENUITEM "Dump FormatCaches",             IDM_DUMPFORMATCACHES
+        MENUITEM "Dump LayoutRects",              IDM_DUMPLAYOUTRECTS
+        MENUITEM "Memory Monitor",                IDM_MEMORYMONITOR
+        MENUITEM "Performance Meters",            IDM_PERFORMANCEMETERS
+        MENUITEM "Save HTML",                     IDM_SAVEHTML
+        MENUITEM SEPARATOR
+        MENUITEM "&Browse View",                  IDM_BROWSEMODE
+        MENUITEM "&Edit View",                    IDM_EDITMODE
+    }
+
+    POPUP "Pystysuora Vierityspalkki"
+    {
+        MENUITEM "Vieritä Tänne",                 IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Ylös",                          IDM_SCROLL_TOP
+        MENUITEM "Alas",                          IDM_SCROLL_BOTTOM
+        MENUITEM SEPARATOR
+        MENUITEM "Sivu Ylös",                     IDM_SCROLL_PAGEUP
+        MENUITEM "Sivu Alas",                     IDM_SCROLL_PAGEDOWN
+        MENUITEM SEPARATOR
+        MENUITEM "Vieritä Ylös",                  IDM_SCROLL_UP
+        MENUITEM "Vieritä Alas",                  IDM_SCROLL_DOWN
+    }
+
+    POPUP "Vaakasuora Vierityspalkki"
+    {
+        MENUITEM "Vieritä Tänne",                 IDM_SCROLL_HERE
+        MENUITEM SEPARATOR
+        MENUITEM "Vasen Reuna",                   IDM_SCROLL_LEFTEDGE
+        MENUITEM "Oikea Reuna",                   IDM_SCROLL_RIGHTEDGE
+        MENUITEM SEPARATOR
+        MENUITEM "Sivu Vasempaan",                IDM_SCROLL_PAGELEFT
+        MENUITEM "Sivu Oikeaan",                  IDM_SCROLL_PAGERIGHT
+        MENUITEM SEPARATOR
+        MENUITEM "Vieritä Vasemmalle",            IDM_SCROLL_LEFT
+        MENUITEM "Vieritä Oikealle",              IDM_SCROLL_RIGHT
+    }
+}

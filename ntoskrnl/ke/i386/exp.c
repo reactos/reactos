@@ -46,22 +46,6 @@ UCHAR KiDebugRegisterTrapOffsets[9] =
 
 /* FUNCTIONS *****************************************************************/
 
-_SEH_DEFINE_LOCALS(KiCopyInfo)
-{
-    volatile EXCEPTION_RECORD SehExceptRecord;
-};
-
-_SEH_FILTER(KiCopyInformation)
-{
-    _SEH_ACCESS_LOCALS(KiCopyInfo);
-
-    /* Copy the exception records and return to the handler */
-    RtlCopyMemory((PVOID)&_SEH_VAR(SehExceptRecord),
-                  _SEH_GetExceptionPointers()->ExceptionRecord,
-                  sizeof(EXCEPTION_RECORD));
-    return EXCEPTION_EXECUTE_HANDLER;
-}
-
 VOID
 INIT_FUNCTION
 NTAPI
@@ -72,7 +56,7 @@ KeInitExceptions(VOID)
     extern KIDTENTRY KiIdt[MAXIMUM_IDTVECTOR];
 
     /* Loop the IDT */
-    for (i = 0; i <= MAXIMUM_IDTVECTOR; i ++)
+    for (i = 0; i <= MAXIMUM_IDTVECTOR; i++)
     {
         /* Save the current Selector */
         FlippedSelector = KiIdt[i].Selector;
@@ -113,7 +97,7 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
     /* Check if the caller gave us a mask */
     if (!DrMask)
     {
-        /* He didn't use the one from the thread */
+        /* He didn't, use the one from the thread */
         Mask = KeGetCurrentThread()->DispatcherHeader.DebugActive;
     }
     else
@@ -140,7 +124,7 @@ KiRecordDr7(OUT PULONG Dr7Ptr,
             NewMask |= DR_MASK(DR7_OVERRIDE_V);
 
             /* Set DR7 override */
-            *DrMask |= DR7_OVERRIDE_MASK;
+            *Dr7Ptr |= DR7_OVERRIDE_MASK;
         }
         else
         {
@@ -266,7 +250,7 @@ ULONG
 NTAPI
 KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
 {
-    /* If this was V86 Mode */
+    /* Check if this was V86 Mode */
     if (TrapFrame->EFlags & EFLAGS_V86_MASK)
     {
         /* Just return it */
@@ -274,7 +258,7 @@ KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
     }
     else if (TrapFrame->SegCs & MODE_MASK)
     {
-        /* Usermode, return the User SS */
+        /* User mode, return the User SS */
         return TrapFrame->HardwareSegSs | RPL_MASK;
     }
     else
@@ -599,7 +583,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Check if thread has IOPL and force it enabled if so */
-    if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= 0x3000;
+    if (KeGetCurrentThread()->Iopl) TrapFrame->EFlags |= EFLAGS_IOPL;
 
     /* Restore IRQL */
     if (OldIrql < APC_LEVEL) KeLowerIrql(OldIrql);
@@ -847,10 +831,7 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
                     IN BOOLEAN FirstChance)
 {
     CONTEXT Context;
-    ULONG_PTR Stack, NewStack;
-    ULONG Size;
     EXCEPTION_RECORD LocalExceptRecord;
-    _SEH_DECLARE_LOCALS(KiCopyInfo);
 
     /* Increase number of Exception Dispatches */
     KeGetCurrentPrcb()->KeExceptionDispatchCount++;
@@ -969,8 +950,11 @@ KiDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
 
             /* Set up the user-stack */
 DispatchToUser:
-            _SEH_TRY
+            _SEH2_TRY
             {
+                ULONG Size;
+                ULONG_PTR Stack, NewStack;
+
                 /* Make sure we have a valid SS and that this isn't V86 mode */
                 if ((TrapFrame->HardwareSegSs != (KGDT_R3_DATA | RPL_MASK)) ||
                     (TrapFrame->EFlags & EFLAGS_V86_MASK))
@@ -1022,26 +1006,26 @@ DispatchToUser:
                 TrapFrame->Eip = (ULONG)KeUserExceptionDispatcher;
 
                 /* Dispatch exception to user-mode */
-                _SEH_YIELD(return);
+                _SEH2_YIELD(return);
             }
-            _SEH_EXCEPT(KiCopyInformation)
+            _SEH2_EXCEPT((RtlCopyMemory(&LocalExceptRecord, _SEH2_GetExceptionInformation()->ExceptionRecord, sizeof(EXCEPTION_RECORD)), EXCEPTION_EXECUTE_HANDLER))
             {
                 /* Check if we got a stack overflow and raise that instead */
-                if (_SEH_VAR(SehExceptRecord).ExceptionCode ==
+                if ((NTSTATUS)LocalExceptRecord.ExceptionCode ==
                     STATUS_STACK_OVERFLOW)
                 {
                     /* Copy the exception address and record */
-                    _SEH_VAR(SehExceptRecord).ExceptionAddress =
+                    LocalExceptRecord.ExceptionAddress =
                         ExceptionRecord->ExceptionAddress;
                     RtlCopyMemory(ExceptionRecord,
-                                  (PVOID)&_SEH_VAR(SehExceptRecord),
+                                  (PVOID)&LocalExceptRecord,
                                   sizeof(EXCEPTION_RECORD));
 
                     /* Do the exception again */
-                    _SEH_YIELD(goto DispatchToUser);
+                    _SEH2_YIELD(goto DispatchToUser);
                 }
             }
-            _SEH_END;
+            _SEH2_END;
         }
 
         /* Try second chance */
@@ -1094,17 +1078,17 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
 
     /* Make sure we can access the TEB */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Set the exception code */
         Teb->ExceptionCode = ExceptionCode;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Save exception code */
         Status = ExceptionCode;
     }
-    _SEH_END;
+    _SEH2_END;
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the old EIP */

@@ -729,7 +729,7 @@ typedef struct _TEB
 {
     NT_TIB Tib;
     PVOID EnvironmentPointer;
-    CLIENT_ID Cid;
+    CLIENT_ID ClientId;
     PVOID ActiveRpcHandle;
     PVOID ThreadLocalStoragePointer;
     struct _PEB *ProcessEnvironmentBlock;
@@ -1169,7 +1169,7 @@ typedef struct _ETHREAD
     KSEMAPHORE AlpcWaitSemaphore;
     ULONG CacheManagerCount;
 #endif
-} ETHREAD, *PETHREAD;
+} ETHREAD;
 
 //
 // Executive Process (EPROCESS)
@@ -1361,7 +1361,7 @@ typedef struct _EPROCESS
     UCHAR PriorityClass;
     MM_AVL_TABLE VadRoot;
     ULONG Cookie;
-} EPROCESS, *PEPROCESS;
+} EPROCESS;
 
 //
 // Job Token Filter Data

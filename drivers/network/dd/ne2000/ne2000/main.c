@@ -7,13 +7,12 @@
  * REVISIONS:
  *   CSH 27/08-2000 Created
  */
-#include <roscfg.h>
 #include <ne2000.h>
 #include <debug.h>
 
 NTSTATUS
 #ifndef _MSC_VER
-STDCALL
+NTAPI
 #endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
@@ -59,12 +58,11 @@ static ULONG MiniportOIDList[] = {
     OID_802_3_MAC_OPTIONS
 };
 
-DRIVER_INFORMATION      DriverInfo = {0};
+DRIVER_INFORMATION      DriverInfo = { NULL, NULL, { NULL, NULL } };
 NDIS_PHYSICAL_ADDRESS   HighestAcceptableMax = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1);
 
 
-#if 0
-static BOOLEAN MiniportCheckForHang(
+static BOOLEAN NTAPI MiniportCheckForHang(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Examines if an adapter has hung
@@ -78,10 +76,9 @@ static BOOLEAN MiniportCheckForHang(
 
     return FALSE;
 }
-#endif
 
 
-static VOID STDCALL MiniportDisableInterrupt(
+static VOID NTAPI MiniportDisableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Disables interrupts from an adapter
@@ -96,7 +93,7 @@ static VOID STDCALL MiniportDisableInterrupt(
 }
 
 
-static VOID STDCALL MiniportEnableInterrupt(
+static VOID NTAPI MiniportEnableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Enables interrupts from an adapter
@@ -111,7 +108,7 @@ static VOID STDCALL MiniportEnableInterrupt(
 }
 
 
-static VOID STDCALL MiniportHalt(
+static VOID NTAPI MiniportHalt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Deallocates resources for and halts an adapter
@@ -120,6 +117,8 @@ static VOID STDCALL MiniportHalt(
  */
 {
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 #ifndef NOCARD
@@ -141,17 +140,20 @@ static VOID STDCALL MiniportHalt(
             0x20,
             Adapter->IOBase);
 
+    if (Adapter->ShutdownHandlerRegistered)
+        NdisMDeregisterAdapterShutdownHandler(Adapter->MiniportAdapterHandle);
+
     /* Remove adapter from global adapter list */
     if ((&Adapter->ListEntry)->Blink != NULL) {
         RemoveEntryList(&Adapter->ListEntry);
-	}
+    }
 
     /* Free adapter context area */
     NdisFreeMemory(Adapter, sizeof(NIC_ADAPTER), 0);
 }
 
 
-static VOID STDCALL MiQueryResources(
+static VOID NTAPI MiQueryResources(
     OUT PNDIS_STATUS    Status,
     IN  PNIC_ADAPTER    Adapter,
     IN  NDIS_HANDLE     WrapperConfigurationContext)
@@ -159,7 +161,7 @@ static VOID STDCALL MiQueryResources(
     PNDIS_RESOURCE_LIST AssignedResources;
     UINT BufferSize = 0;
     PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
-    int i;
+    UINT i;
 
     NdisMQueryAdapterResources(Status,
                                WrapperConfigurationContext,
@@ -201,8 +203,16 @@ static VOID STDCALL MiQueryResources(
     }
 }
 
+VOID
+NTAPI
+MiniportShutdown(PVOID Context)
+{
+  #ifndef NOCARD
+    NICStop((PNIC_ADAPTER)Context);
+  #endif
+}
 
-static NDIS_STATUS STDCALL MiniportInitialize(
+static NDIS_STATUS NTAPI MiniportInitialize(
     OUT PNDIS_STATUS    OpenErrorStatus,
     OUT PUINT           SelectedMediumIndex,
     IN  PNDIS_MEDIUM    MediumArray,
@@ -225,6 +235,11 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     UINT i;
     NDIS_STATUS Status;
     PNIC_ADAPTER Adapter;
+    NDIS_HANDLE ConfigurationHandle;
+    UINT *RegNetworkAddress = 0;
+    UINT RegNetworkAddressLength = 0;
+
+    ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called (Adapter %X).\n", MiniportAdapterHandle));
 
@@ -269,10 +284,7 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     if (Status != NDIS_STATUS_SUCCESS)
     {
         PNDIS_CONFIGURATION_PARAMETER ConfigurationParameter;
-        NDIS_HANDLE ConfigurationHandle;
         UNICODE_STRING Keyword;
-        UINT *RegNetworkAddress = 0;
-        UINT RegNetworkAddressLength = 0;
 
         NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
         if (Status == NDIS_STATUS_SUCCESS)
@@ -294,18 +306,6 @@ static NDIS_STATUS STDCALL MiniportInitialize(
                 NDIS_DbgPrint(MID_TRACE,("NdisReadConfiguration for Port returned successfully, port 0x%x\n",
                         ConfigurationParameter->ParameterData.IntegerData));
                 Adapter->IoBaseAddress = ConfigurationParameter->ParameterData.IntegerData;
-            }
-
-            /* the returned copy of the data is owned by NDIS and will be released on NdisCloseConfiguration */
-            NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
-            if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
-            {
-                int i;
-                NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
-                        RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
-                        RegNetworkAddress[4], RegNetworkAddress[5]));
-                for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
-                    Adapter->StationAddress[i] = RegNetworkAddress[i];
             }
 
             NdisCloseConfiguration(ConfigurationHandle);
@@ -354,6 +354,30 @@ static NDIS_STATUS STDCALL MiniportInitialize(
         NDIS_DbgPrint(MID_TRACE, ("Status (0x%X).\n", Status));
         MiniportHalt((NDIS_HANDLE)Adapter);
         return Status;
+    }
+
+    NdisOpenConfiguration(&Status, &ConfigurationHandle, WrapperConfigurationContext);
+    if (Status == NDIS_STATUS_SUCCESS)
+    {
+         NdisReadNetworkAddress(&Status, (PVOID *)&RegNetworkAddress, &RegNetworkAddressLength, ConfigurationHandle);
+         if(Status == NDIS_STATUS_SUCCESS && RegNetworkAddressLength == DRIVER_LENGTH_OF_ADDRESS)
+         {
+             int i;
+             NDIS_DbgPrint(MID_TRACE,("NdisReadNetworkAddress returned successfully, address %x:%x:%x:%x:%x:%x\n",
+                     RegNetworkAddress[0], RegNetworkAddress[1], RegNetworkAddress[2], RegNetworkAddress[3],
+                     RegNetworkAddress[4], RegNetworkAddress[5]));
+             for(i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+                 Adapter->StationAddress[i] = RegNetworkAddress[i];
+         }
+
+         NdisCloseConfiguration(ConfigurationHandle);
+    }
+
+    if (Status != NDIS_STATUS_SUCCESS)
+    {
+        int i;
+        for (i = 0; i < DRIVER_LENGTH_OF_ADDRESS; i++)
+             Adapter->StationAddress[i] = Adapter->PermanentAddress[i];
     }
 
     NDIS_DbgPrint(MID_TRACE, ("BOARDDATA:\n"));
@@ -410,6 +434,12 @@ static NDIS_STATUS STDCALL MiniportInitialize(
     /* Start the NIC */
     NICStart(Adapter);
 #endif
+
+    /* Register the shutdown handler */
+    NdisMRegisterAdapterShutdownHandler(MiniportAdapterHandle, Adapter, MiniportShutdown);
+
+    Adapter->ShutdownHandlerRegistered = TRUE;
+
     /* Add adapter to the global adapter list */
     InsertTailList(&DriverInfo.AdapterListHead, &Adapter->ListEntry);
 
@@ -419,7 +449,7 @@ static NDIS_STATUS STDCALL MiniportInitialize(
 }
 
 
-static VOID STDCALL MiniportISR(
+static VOID NTAPI MiniportISR(
     OUT PBOOLEAN    InterruptRecognized,
     OUT PBOOLEAN    QueueMiniportHandleInterrupt,
     IN  NDIS_HANDLE MiniportAdapterContext)
@@ -444,7 +474,7 @@ static VOID STDCALL MiniportISR(
 }
 
 
-static NDIS_STATUS STDCALL MiniportQueryInformation(
+static NDIS_STATUS NTAPI MiniportQueryInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -472,6 +502,8 @@ static NDIS_STATUS STDCALL MiniportQueryInformation(
     USHORT GenericUSHORT;
     NDIS_MEDIUM Medium   = NdisMedium802_3;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
@@ -602,7 +634,7 @@ static NDIS_STATUS STDCALL MiniportQueryInformation(
 }
 
 
-static NDIS_STATUS STDCALL MiniportReconfigure(
+static NDIS_STATUS NTAPI MiniportReconfigure(
     OUT PNDIS_STATUS    OpenErrorStatus,
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  NDIS_HANDLE     WrapperConfigurationContext)
@@ -625,7 +657,7 @@ static NDIS_STATUS STDCALL MiniportReconfigure(
 
 
 
-static NDIS_STATUS STDCALL MiniportReset(
+static NDIS_STATUS NTAPI MiniportReset(
     OUT PBOOLEAN    AddressingReset,
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -639,13 +671,23 @@ static NDIS_STATUS STDCALL MiniportReset(
  *     Status of operation
  */
 {
+    NDIS_STATUS NdisStatus = NDIS_STATUS_SUCCESS;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    return NDIS_STATUS_FAILURE;
+#ifndef NOCARD
+    NdisStatus = NICReset((PNIC_ADAPTER)MiniportAdapterContext);
+#endif
+
+    *AddressingReset = TRUE;
+
+    return NdisStatus;
 }
 
 
-static NDIS_STATUS STDCALL MiniportSend(
+static NDIS_STATUS NTAPI MiniportSend(
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  PNDIS_PACKET    Packet,
     IN  UINT            Flags)
@@ -662,13 +704,11 @@ static NDIS_STATUS STDCALL MiniportSend(
 {
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
 
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
+
+#ifndef NOCARD
     NDIS_DbgPrint(MID_TRACE, ("Queueing packet.\n"));
 
-#ifdef NOCARD
-    NdisMSendComplete(Adapter->MiniportAdapterHandle,
-                      Packet,
-                      NDIS_STATUS_SUCCESS);
-#else
     /* Queue the packet on the transmit queue */
     RESERVED(Packet)->Next = NULL;
     if (Adapter->TXQueueHead == NULL) {
@@ -681,12 +721,15 @@ static NDIS_STATUS STDCALL MiniportSend(
 
     /* Transmit the packet */
     NICTransmit(Adapter);
-#endif
+
     return NDIS_STATUS_PENDING;
+#else
+    return NDIS_STATUS_SUCCESS;
+#endif
 }
 
 
-static NDIS_STATUS STDCALL MiniportSetInformation(
+static NDIS_STATUS NTAPI MiniportSetInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -710,6 +753,8 @@ static NDIS_STATUS STDCALL MiniportSetInformation(
     ULONG GenericULONG;
     NDIS_STATUS Status   = NDIS_STATUS_SUCCESS;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Oid (0x%X).\n", Oid));
 
@@ -792,7 +837,7 @@ static NDIS_STATUS STDCALL MiniportSetInformation(
 }
 
 
-static NDIS_STATUS STDCALL MiniportTransferData(
+static NDIS_STATUS NTAPI MiniportTransferData(
     OUT PNDIS_PACKET    Packet,
     OUT PUINT           BytesTransferred,
     IN  NDIS_HANDLE     MiniportAdapterContext,
@@ -819,6 +864,8 @@ static NDIS_STATUS STDCALL MiniportTransferData(
     UINT RecvStart;
     UINT RecvStop;
     PNIC_ADAPTER Adapter = (PNIC_ADAPTER)MiniportAdapterContext;
+
+    ASSERT_IRQL_EQUAL(DISPATCH_LEVEL);
 
     NDIS_DbgPrint(MAX_TRACE, ("Called. Packet (0x%X)  ByteOffset (0x%X)  BytesToTransfer (%d).\n",
         Packet, ByteOffset, BytesToTransfer));
@@ -881,7 +928,7 @@ static NDIS_STATUS STDCALL MiniportTransferData(
 
 NTSTATUS
 #ifndef _MSC_VER
-STDCALL
+NTAPI
 #endif
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
@@ -904,7 +951,7 @@ DriverEntry(
     NdisZeroMemory(&Miniport, sizeof(Miniport));
     Miniport.MajorNdisVersion           = DRIVER_NDIS_MAJOR_VERSION;
     Miniport.MinorNdisVersion           = DRIVER_NDIS_MINOR_VERSION;
-    Miniport.CheckForHangHandler        = NULL; //MiniportCheckForHang;
+    Miniport.CheckForHangHandler        = MiniportCheckForHang;
     Miniport.DisableInterruptHandler    = MiniportDisableInterrupt;
     Miniport.EnableInterruptHandler     = MiniportEnableInterrupt;
     Miniport.HaltHandler                = MiniportHalt;
@@ -922,6 +969,11 @@ DriverEntry(
                            DriverObject,
                            RegistryPath,
                            NULL);
+
+    if (!NdisWrapperHandle) {
+        NDIS_DbgPrint(MIN_TRACE, ("NdisMInitializeWrapper() failed\n"));
+        return STATUS_UNSUCCESSFUL;
+    }
 
     DriverInfo.NdisWrapperHandle = NdisWrapperHandle;
     DriverInfo.NdisMacHandle     = NULL;

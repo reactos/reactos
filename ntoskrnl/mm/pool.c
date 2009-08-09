@@ -12,8 +12,9 @@
 #include <ntoskrnl.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
+extern PVOID MiNonPagedPoolStart;
 extern ULONG MiNonPagedPoolLength;
 extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
@@ -21,35 +22,56 @@ extern MM_STATS MmStats;
 
 /* FUNCTIONS ***************************************************************/
 
-static PVOID STDCALL
+ULONG NTAPI
+EiGetPagedPoolTag(IN PVOID Block);
+
+ULONG NTAPI
+EiGetNonPagedPoolTag(IN PVOID Block);
+
+static PVOID NTAPI
 EiAllocatePool(POOL_TYPE PoolType,
                ULONG NumberOfBytes,
                ULONG Tag,
                PVOID Caller)
 {
    PVOID Block;
+   PCHAR TagChars = (PCHAR)&Tag;
 
-   /* FIXME: Handle SESSION_POOL_MASK, VERIFIER_POOL_MASK, QUOTA_POOL_MASK */
-   if (PoolType & PAGED_POOL_MASK)
-   {
-      Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
-   }
-   else
-   {
-      Block = ExAllocateNonPagedPoolWithTag(PoolType,NumberOfBytes,Tag,Caller);
-   }
+   if (Tag == 0)
+       KeBugCheckEx(BAD_POOL_CALLER, 0x9b, PoolType, NumberOfBytes, (ULONG_PTR)Caller);
+   if (Tag == TAG('B','I','G',0))
+       KeBugCheckEx(BAD_POOL_CALLER, 0x9c, PoolType, NumberOfBytes, (ULONG_PTR)Caller);
 
-   if ((PoolType & MUST_SUCCEED_POOL_MASK) && Block==NULL)
-   {
-      KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
-   }
-   return(Block);
+#define IS_LETTER_OR_DIGIT(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= 'A' && (c) <= 'Z') || ((c) >= '0' && (c) <= '9'))
+   if (!IS_LETTER_OR_DIGIT(TagChars[0]) &&
+       !IS_LETTER_OR_DIGIT(TagChars[1]) &&
+       !IS_LETTER_OR_DIGIT(TagChars[2]) &&
+       !IS_LETTER_OR_DIGIT(TagChars[3]))
+       KeBugCheckEx(BAD_POOL_CALLER, 0x9d, Tag, PoolType, (ULONG_PTR)Caller);
+
+    /* FIXME: Handle SESSION_POOL_MASK, VERIFIER_POOL_MASK, QUOTA_POOL_MASK */
+    if (PoolType & PAGED_POOL_MASK)
+    {
+        if (KeGetCurrentIrql() > APC_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER, 0x08, KeGetCurrentIrql(), PoolType, Tag);
+        Block = ExAllocatePagedPoolWithTag(PoolType, NumberOfBytes, Tag);
+    }
+    else
+    {
+        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER, 0x08, KeGetCurrentIrql(), PoolType, Tag);
+        Block = ExAllocateNonPagedPoolWithTag(PoolType, NumberOfBytes, Tag, Caller);
+    }
+
+    if ((PoolType & MUST_SUCCEED_POOL_MASK) && !Block)
+        KeBugCheckEx(BAD_POOL_CALLER, 0x9a, PoolType, NumberOfBytes, Tag);
+    return Block;
 }
 
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 /*
  * FUNCTION: Allocates pool memory of a specified type and returns a pointer
@@ -98,7 +120,7 @@ ExAllocatePool (POOL_TYPE PoolType, ULONG NumberOfBytes)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
@@ -126,7 +148,8 @@ ExAllocatePoolWithTag (POOL_TYPE PoolType, ULONG NumberOfBytes, ULONG Tag)
 /*
  * @implemented
  */
-PVOID STDCALL
+#undef ExAllocatePoolWithQuota
+PVOID NTAPI
 ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
 {
    return(ExAllocatePoolWithQuotaTag(PoolType, NumberOfBytes, TAG_NONE));
@@ -136,7 +159,7 @@ ExAllocatePoolWithQuota (POOL_TYPE PoolType, ULONG NumberOfBytes)
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 ExAllocatePoolWithTagPriority(
     IN POOL_TYPE PoolType,
     IN SIZE_T NumberOfBytes,
@@ -160,23 +183,10 @@ ExAllocatePoolWithTagPriority(
     return ExAllocatePoolWithTag(PoolType, NumberOfBytes, Tag);
 }
 
-_SEH_DEFINE_LOCALS(ExQuotaPoolVars)
-{
-    PVOID Block;
-};
-
-_SEH_FILTER(FreeAndGoOn)
-{
-    _SEH_ACCESS_LOCALS(ExQuotaPoolVars);
-
-    /* Couldn't charge, so free the pool and let the caller SEH manage */
-    ExFreePool(_SEH_VAR(Block));
-    return EXCEPTION_CONTINUE_SEARCH;
-}
-
 /*
  * @implemented
  */
+#undef ExAllocatePoolWithQuotaTag
 PVOID
 NTAPI
 ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
@@ -184,13 +194,13 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
                             IN ULONG Tag)
 {
     PEPROCESS Process;
-    _SEH_DECLARE_LOCALS(ExQuotaPoolVars);
+    PVOID Block;
 
     /* Allocate the Pool First */
-    _SEH_VAR(Block) = EiAllocatePool(PoolType,
-                                     NumberOfBytes,
-                                     Tag,
-                                     &ExAllocatePoolWithQuotaTag);
+    Block = EiAllocatePool(PoolType,
+                           NumberOfBytes,
+                           Tag,
+                           &ExAllocatePoolWithQuotaTag);
 
     /* "Quota is not charged to the thread for allocations >= PAGE_SIZE" - OSR Docs */
     if (!(NumberOfBytes >= PAGE_SIZE))
@@ -199,59 +209,110 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
         Process = PsGetCurrentProcess();
 
         /* PsChargePoolQuota returns an exception, so this needs SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* FIXME: Is there a way to get the actual Pool size allocated from the pool header? */
             PsChargePoolQuota(Process,
                               PoolType & PAGED_POOL_MASK,
                               NumberOfBytes);
         }
-        _SEH_EXCEPT(FreeAndGoOn)
+        _SEH2_EXCEPT((ExFreePool(Block), EXCEPTION_CONTINUE_SEARCH))
         {
             /* Quota Exceeded and the caller had no SEH! */
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Return the allocated block */
-    return _SEH_VAR(Block);
+    return Block;
 }
 
 /*
  * @implemented
  */
 #undef ExFreePool
-VOID STDCALL
+VOID NTAPI
 ExFreePool(IN PVOID Block)
 {
-   ASSERT_IRQL(DISPATCH_LEVEL);
-
-   if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
-   {
-      ExFreePagedPool(Block);
-   }
-   else
-   {
-      ExFreeNonPagedPool(Block);
-   }
+    ExFreePoolWithTag(Block, 0);
 }
 
 /*
  * @implemented
  */
-VOID STDCALL
-ExFreePoolWithTag(IN PVOID Block, IN ULONG Tag)
+VOID
+NTAPI
+ExFreePoolWithTag(
+    IN PVOID Block,
+    IN ULONG Tag)
 {
-   /* FIXME: Validate the tag */
-   ExFreePool(Block);
+    /* Check for paged pool */
+    if (Block >= MmPagedPoolBase && 
+        (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
+    {
+        /* Validate tag */
+        if (Tag != 0 && Tag != EiGetPagedPoolTag(Block))
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x0a,
+                         (ULONG_PTR)Block,
+                         EiGetPagedPoolTag(Block),
+                         Tag);
+
+        /* Validate IRQL */
+        if (KeGetCurrentIrql() > APC_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x09,
+                         KeGetCurrentIrql(),
+                         PagedPool,
+                         (ULONG_PTR)Block);
+
+        /* Free from paged pool */
+        ExFreePagedPool(Block);
+    }
+
+    /* Check for non-paged pool */
+    else if (Block >= MiNonPagedPoolStart &&
+             (char*)Block < ((char*)MiNonPagedPoolStart + MiNonPagedPoolLength))
+    {
+        /* Validate tag */
+        if (Tag != 0 && Tag != EiGetNonPagedPoolTag(Block))
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x0a,
+                         (ULONG_PTR)Block,
+                         EiGetNonPagedPoolTag(Block),
+                         Tag);
+
+        /* Validate IRQL */
+        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+            KeBugCheckEx(BAD_POOL_CALLER,
+                         0x09,
+                         KeGetCurrentIrql(),
+                         NonPagedPool,
+                         (ULONG_PTR)Block);
+
+        /* Free from non-paged pool */
+        ExFreeNonPagedPool(Block);
+    }
+    else
+    {
+        /* Warn only for NULL pointers */
+        if (Block == NULL)
+        {
+            DPRINT1("Warning: Trying to free a NULL pointer!\n");
+            return;
+        }
+
+        /* Block was not inside any pool! */
+        KeBugCheckEx(BAD_POOL_CALLER, 0x42, (ULONG_PTR)Block, 0, 0);
+    }
 }
 
 /*
  * @unimplemented
  */
 SIZE_T
-STDCALL
+NTAPI
 ExQueryPoolBlockSize (
     IN PVOID PoolBlock,
     OUT PBOOLEAN QuotaCharged
@@ -265,7 +326,7 @@ ExQueryPoolBlockSize (
  * @unimplemented
  */
 PVOID
-STDCALL
+NTAPI
 MmAllocateMappingAddress (
      IN SIZE_T NumberOfBytes,
      IN ULONG PoolTag
@@ -280,7 +341,7 @@ MmAllocateMappingAddress (
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmFreeMappingAddress (
      IN PVOID BaseAddress,
      IN ULONG PoolTag
@@ -290,7 +351,7 @@ MmFreeMappingAddress (
 }
 
 BOOLEAN
-STDCALL
+NTAPI
 MiRaisePoolQuota(
     IN POOL_TYPE PoolType,
     IN ULONG CurrentMaxQuota,

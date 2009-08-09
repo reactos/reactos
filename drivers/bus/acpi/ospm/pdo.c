@@ -233,7 +233,7 @@ PdoSetPower(
 /*** PUBLIC ******************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 PdoPnpControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)
@@ -341,7 +341,7 @@ PdoPnpControl(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 PdoPowerControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp)

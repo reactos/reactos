@@ -20,7 +20,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_SNDVOL32       "Ovládání hlasitosti"
-    IDS_NOMIXERDEVICES "Nejsou dostupné žádné smìšovací zaøízení! Aplikace se nyní ukonèí."
+    IDS_NOMIXERDEVICES "Nejsou dostupná žádná smìšovací zaøízení! Aplikace se nyní ukonèí."
 END
 
 IDD_PREFERENCES DIALOGEX 0, 0, 224, 250

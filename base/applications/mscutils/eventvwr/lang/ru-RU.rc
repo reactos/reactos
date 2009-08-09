@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/eventvwr/lang/ru-RU.rc
  * PURPOSE:     Russian Language File for ReactOS Event Viewer
- * TRANSLATORS: Dmitry Chapyshev
+ * TRANSLATORS: Dmitry Chapyshev, Artem Reznikov
  */
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
@@ -12,7 +12,7 @@ IDC_EVENTVWR MENU
 BEGIN
 	POPUP "&Логи"
 	BEGIN
-		MENUITEM "&Приложений",               ID_LOG_APPLICATION, CHECKED
+		MENUITEM "&Приложений",               ID_LOG_APPLICATION
 		MENUITEM "&Безопасности",             ID_LOG_SECURITY
 		MENUITEM "&Системы",                  ID_LOG_SYSTEM
 		MENUITEM SEPARATOR
@@ -93,12 +93,12 @@ END
 STRINGTABLE
 BEGIN
 	IDS_APP_TITLE                  "Просмотр событий"
-	IDC_EVENTSTRINGIDNOTFOUND      "The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
-	IDC_EVENTLOG_ERROR_TYPE        "Error"
-	IDC_EVENTLOG_WARNING_TYPE      "Warning"
-	IDC_EVENTLOG_INFORMATION_TYPE  "Information"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
-	IDC_EVENTLOG_SUCCESS           "Success"
-	IDC_EVENTLOG_UNKNOWN_TYPE      "Unknown Event"
+	IDC_EVENTSTRINGIDNOTFOUND      "Не найдено описание для события с кодом ( %lu ) в источнике ( %s ). Возможно, на локальном компьютере нет нужных данных в реестре или файлов DLL сообщений для отображения сообщений удаленного компьютера."
+	IDC_EVENTLOG_ERROR_TYPE        "Ошибка"
+	IDC_EVENTLOG_WARNING_TYPE      "Предупреждение"
+	IDC_EVENTLOG_INFORMATION_TYPE  "Уведомление"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Аудит успехов"
+	IDC_EVENTLOG_AUDIT_FAILURE     "Аудит отказов"
+	IDC_EVENTLOG_SUCCESS           "Успех"
+	IDC_EVENTLOG_UNKNOWN_TYPE      "Неизвестное событие"
 END

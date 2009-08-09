@@ -363,7 +363,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_EXPAND                     "&Expandieren"
-  IDS_COLLAPSE                   "&Schlissen"
+  IDS_COLLAPSE                   "&Schlieﬂen"
   IDS_GOTO_SUGGESTED_KEY         "&Gehe zu '%s'"
   IDS_FINISHEDFIND               "Durchsuchen der Registry beendet."
 END

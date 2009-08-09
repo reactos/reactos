@@ -238,7 +238,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
 
     hInst = hInstance;
  
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL, (DLGPROC) DxDiagWndProc);
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_MAIN_DIALOG), NULL,  DxDiagWndProc);
   
     return 0;
 }

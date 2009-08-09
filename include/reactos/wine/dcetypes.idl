@@ -1,0 +1,88 @@
+/*
+ * Common DCE Types
+ *
+ * Copyright 2006 Robert Shearman (for CodeWeavers)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+/* pull in GUID type */
+import "wtypes.idl";
+
+typedef unsigned small unsigned8;
+typedef unsigned short unsigned16;
+typedef unsigned long unsigned32;
+typedef small signed8;
+typedef short signed16;
+typedef long signed32;
+typedef unsigned32 boolean32;
+typedef unsigned hyper u_int64;
+typedef unsigned long u_int32;
+typedef unsigned short u_int16;
+typedef unsigned small u_int8;
+
+typedef [ptr] GUID *uuid_p_t;
+
+typedef struct twr_t
+{
+				unsigned32 tower_length;
+	[size_is(tower_length)]	byte tower_octet_string[];
+} twr_t;
+typedef [ptr] twr_t *twr_p_t;
+
+typedef struct ndr_context_handle
+{
+    unsigned32      context_handle_attributes;
+    GUID            context_handle_uuid;
+} ndr_context_handle;
+
+const long  ndr_c_int_big_endian    = 0;
+const long  ndr_c_int_little_endian = 1;
+const long  ndr_c_float_ieee        = 0;
+const long  ndr_c_float_vax         = 1;
+const long  ndr_c_float_cray        = 2;
+const long  ndr_c_float_ibm         = 3;
+const long  ndr_c_char_ascii        = 0;
+const long  ndr_c_char_ebcdic       = 1;
+
+typedef struct
+{
+	unsigned8	int_rep;
+	unsigned8	char_rep;
+	unsigned8	float_rep;
+	byte		reserved;
+} ndr_format_t, *ndr_format_p_t;
+
+typedef struct
+{
+    GUID                    uuid;
+    unsigned16              vers_major;
+    unsigned16              vers_minor;
+} rpc_if_id_t;
+typedef [unique] rpc_if_id_t *rpc_if_id_p_t;
+
+typedef struct
+{
+    unsigned32              count;
+    [size_is(count)]
+    rpc_if_id_p_t           if_id[*];
+} rpc_if_id_vector_t;
+typedef [unique] rpc_if_id_vector_t *rpc_if_id_vector_p_t;
+
+typedef struct
+{
+    unsigned32          count;
+    unsigned32          stats[1];       /* length_is (count) */
+} rpc_stats_vector_t, *rpc_stats_vector_p_t;

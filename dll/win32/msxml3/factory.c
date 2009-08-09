@@ -133,6 +133,8 @@ static const struct IClassFactoryVtbl xmlcf_vtbl =
 static xmlcf domdoccf = { &xmlcf_vtbl, DOMDocument_create };
 static xmlcf schemacf = { &xmlcf_vtbl, SchemaCache_create };
 static xmlcf xmldoccf = { &xmlcf_vtbl, XMLDocument_create };
+static xmlcf saxreadcf = { &xmlcf_vtbl, SAXXMLReader_create };
+static xmlcf httpreqcf = { &xmlcf_vtbl, XMLHTTPRequest_create };
 
 /******************************************************************
  *		DllGetClassObject (MSXML3.@)
@@ -158,9 +160,19 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
     {
         cf = (IClassFactory*) &xmldoccf.lpVtbl;
     }
-    else if( IsEqualCLSID( rclsid, &CLSID_FreeThreadedDOMDocument ) )
+    else if( IsEqualCLSID( rclsid, &CLSID_DOMFreeThreadedDocument ) ||   /* Version indep. v 2.x */
+             IsEqualCLSID( rclsid, &CLSID_FreeThreadedDOMDocument ) )
     {
         cf = (IClassFactory*) &domdoccf.lpVtbl;
+    }
+    else if( IsEqualCLSID( rclsid, &CLSID_SAXXMLReader) ||
+             IsEqualCLSID( rclsid, &CLSID_SAXXMLReader30 ))
+    {
+        cf = (IClassFactory*) &saxreadcf.lpVtbl;
+    }
+    else if( IsEqualCLSID( rclsid, &CLSID_XMLHTTPRequest))
+    {
+        cf = (IClassFactory*) &httpreqcf.lpVtbl;
     }
 
     if ( !cf )

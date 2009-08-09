@@ -40,12 +40,12 @@
 #include "user32p.h"
 
 /* SEH Support with PSEH */
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* FIXME: Use ntgdi.h then cleanup... */
-HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
-BOOL STDCALL NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
-LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
+HGDIOBJ WINAPI  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
+BOOL WINAPI NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
+LONG WINAPI GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
 
 extern PW32PROCESSINFO g_pi;
@@ -64,13 +64,16 @@ SharedPtrToUser(PVOID Ptr)
 static __inline PVOID
 DesktopPtrToUser(PVOID Ptr)
 {
-    PW32THREADINFO ti = GetW32ThreadInfo();
+    GetW32ThreadInfo();
+    PCLIENTINFO pci = GetWin32ClientInfo();
+    PDESKTOPINFO pdi = pci->pDeskInfo;
+
     ASSERT(Ptr != NULL);
-    ASSERT(ti != NULL);
-    if ((ULONG_PTR)Ptr >= (ULONG_PTR)ti->DesktopHeapBase &&
-        (ULONG_PTR)Ptr < (ULONG_PTR)ti->DesktopHeapBase + ti->DesktopHeapLimit)
+    ASSERT(pdi != NULL);
+    if ((ULONG_PTR)Ptr >= (ULONG_PTR)pdi->pvDesktopBase &&
+        (ULONG_PTR)Ptr < (ULONG_PTR)pdi->pvDesktopLimit)
     {
-        return (PVOID)((ULONG_PTR)Ptr - ti->DesktopHeapDelta);
+        return (PVOID)((ULONG_PTR)Ptr - pci->ulClientDelta);
     }
     else
     {
@@ -96,11 +99,11 @@ IsThreadHooked(PW32THREADINFO ti)
     return ti->Hooks != 0;
 }
 
-static __inline PDESKTOP
+static __inline PDESKTOPINFO
 GetThreadDesktopInfo(VOID)
 {
     PW32THREADINFO ti;
-    PDESKTOP di = NULL;
+    PDESKTOPINFO di = NULL;
 
     ti = GetW32ThreadInfo();
     if (ti != NULL)
@@ -116,3 +119,4 @@ PWINDOW FASTCALL GetThreadDesktopWnd(VOID);
 PVOID FASTCALL ValidateHandleNoErr(HANDLE handle, UINT uType);
 PWINDOW FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
+BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);

@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
  *
- * Copyright (C) 2005-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2005-2008  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2009  VMware, Inc.   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,10 +23,11 @@
  */
 
 
-#include "imports.h"
-#include "context.h"
+#include "main/imports.h"
+#include "main/context.h"
 #include "slang_ir.h"
 #include "slang_mem.h"
+#include "shader/prog_instruction.h"
 #include "shader/prog_print.h"
 
 
@@ -36,8 +37,11 @@ static const slang_ir_info IrInfo[] = {
    { IR_SUB, "IR_SUB", OPCODE_SUB, 4, 2 },
    { IR_MUL, "IR_MUL", OPCODE_MUL, 4, 2 },
    { IR_DIV, "IR_DIV", OPCODE_NOP, 0, 2 }, /* XXX broke */
-   { IR_DOT4, "IR_DOT_4", OPCODE_DP4, 1, 2 },
-   { IR_DOT3, "IR_DOT_3", OPCODE_DP3, 1, 2 },
+   { IR_DOT4, "IR_DOT4", OPCODE_DP4, 1, 2 },
+   { IR_DOT3, "IR_DOT3", OPCODE_DP3, 1, 2 },
+   { IR_DOT2, "IR_DOT2", OPCODE_DP2, 1, 2 },
+   { IR_NRM4, "IR_NRM4", OPCODE_NRM4, 1, 1 },
+   { IR_NRM3, "IR_NRM3", OPCODE_NRM3, 1, 1 },
    { IR_CROSS, "IR_CROSS", OPCODE_XPD, 3, 2 },
    { IR_LRP, "IR_LRP", OPCODE_LRP, 4, 3 },
    { IR_MIN, "IR_MIN", OPCODE_MIN, 4, 2 },
@@ -50,9 +54,13 @@ static const slang_ir_info IrInfo[] = {
    { IR_SLE, "IR_SLE", OPCODE_SLE, 4, 2 },
    { IR_SLT, "IR_SLT", OPCODE_SLT, 4, 2 },
    { IR_POW, "IR_POW", OPCODE_POW, 1, 2 },
+   { IR_EQUAL, "IR_EQUAL", OPCODE_NOP, 1, 2 },
+   { IR_NOTEQUAL, "IR_NOTEQUAL", OPCODE_NOP, 1, 2 },
+
    /* unary ops */
-   { IR_I_TO_F, "IR_I_TO_F", OPCODE_NOP, 1, 1 },
-   { IR_F_TO_I, "IR_F_TO_I", OPCODE_INT, 4, 1 }, /* 4 floats to 4 ints */
+   { IR_MOVE, "IR_MOVE", OPCODE_MOV, 4, 1 },
+   { IR_I_TO_F, "IR_I_TO_F", OPCODE_MOV, 4, 1 },  /* int[4] to float[4] */
+   { IR_F_TO_I, "IR_F_TO_I", OPCODE_TRUNC, 4, 1 },
    { IR_EXP, "IR_EXP", OPCODE_EXP, 1, 1 },
    { IR_EXP2, "IR_EXP2", OPCODE_EX2, 1, 1 },
    { IR_LOG2, "IR_LOG2", OPCODE_LG2, 1, 1 },
@@ -79,7 +87,7 @@ static const slang_ir_info IrInfo[] = {
    { IR_KILL, "IR_KILL", OPCODE_NOP, 0, 0 },
    { IR_COND, "IR_COND", OPCODE_NOP, 0, 0 },
    { IR_CALL, "IR_CALL", OPCODE_NOP, 0, 0 },
-   { IR_MOVE, "IR_MOVE", OPCODE_NOP, 0, 1 },
+   { IR_COPY, "IR_COPY", OPCODE_NOP, 0, 1 },
    { IR_NOT, "IR_NOT", OPCODE_NOP, 1, 1 },
    { IR_VAR, "IR_VAR", OPCODE_NOP, 0, 0 },
    { IR_VAR_DECL, "IR_VAR_DECL", OPCODE_NOP, 0, 0 },
@@ -90,7 +98,8 @@ static const slang_ir_info IrInfo[] = {
    { IR_FIELD, "IR_FIELD", OPCODE_NOP, 0, 0 },
    { IR_ELEMENT, "IR_ELEMENT", OPCODE_NOP, 0, 0 },
    { IR_SWIZZLE, "IR_SWIZZLE", OPCODE_NOP, 0, 0 },
-   { IR_NOP, NULL, OPCODE_NOP, 0, 0 }
+   { IR_NOP, "IR_NOP", OPCODE_NOP, 0, 0 },
+   { 0, NULL, 0, 0, 0 }
 };
 
 
@@ -107,11 +116,142 @@ _slang_ir_info(slang_ir_opcode opcode)
 }
 
 
+void
+_slang_init_ir_storage(slang_ir_storage *st,
+                       enum register_file file, GLint index, GLint size,
+                       GLuint swizzle)
+{
+   st->File = file;
+   st->Index = index;
+   st->Size = size;
+   st->Swizzle = swizzle;
+   st->Parent = NULL;
+   st->IsIndirect = GL_FALSE;
+}
+
+
+/**
+ * Return a new slang_ir_storage object.
+ */
+slang_ir_storage *
+_slang_new_ir_storage(enum register_file file, GLint index, GLint size)
+{
+   slang_ir_storage *st;
+   st = (slang_ir_storage *) _slang_alloc(sizeof(slang_ir_storage));
+   if (st) {
+      st->File = file;
+      st->Index = index;
+      st->Size = size;
+      st->Swizzle = SWIZZLE_NOOP;
+      st->Parent = NULL;
+      st->IsIndirect = GL_FALSE;
+   }
+   return st;
+}
+
+
+/**
+ * Return a new slang_ir_storage object.
+ */
+slang_ir_storage *
+_slang_new_ir_storage_swz(enum register_file file, GLint index, GLint size,
+                          GLuint swizzle)
+{
+   slang_ir_storage *st;
+   st = (slang_ir_storage *) _slang_alloc(sizeof(slang_ir_storage));
+   if (st) {
+      st->File = file;
+      st->Index = index;
+      st->Size = size;
+      st->Swizzle = swizzle;
+      st->Parent = NULL;
+      st->IsIndirect = GL_FALSE;
+   }
+   return st;
+}
+
+
+/**
+ * Return a new slang_ir_storage object.
+ */
+slang_ir_storage *
+_slang_new_ir_storage_relative(GLint index, GLint size,
+                               slang_ir_storage *parent)
+{
+   slang_ir_storage *st;
+   st = (slang_ir_storage *) _slang_alloc(sizeof(slang_ir_storage));
+   if (st) {
+      st->File = PROGRAM_UNDEFINED;
+      st->Index = index;
+      st->Size = size;
+      st->Swizzle = SWIZZLE_NOOP;
+      st->Parent = parent;
+      st->IsIndirect = GL_FALSE;
+   }
+   return st;
+}
+
+
+slang_ir_storage *
+_slang_new_ir_storage_indirect(enum register_file file,
+                               GLint index,
+                               GLint size,
+                               enum register_file indirectFile,
+                               GLint indirectIndex,
+                               GLuint indirectSwizzle)
+{
+   slang_ir_storage *st;
+   st = (slang_ir_storage *) _slang_alloc(sizeof(slang_ir_storage));
+   if (st) {
+      st->File = file;
+      st->Index = index;
+      st->Size = size;
+      st->Swizzle = SWIZZLE_NOOP;
+      st->IsIndirect = GL_TRUE;
+      st->IndirectFile = indirectFile;
+      st->IndirectIndex = indirectIndex;
+      st->IndirectSwizzle = indirectSwizzle;
+   }
+   return st;
+}
+
+
+/**
+ * Allocate IR storage for a texture sampler.
+ * \param sampNum  the sampler number/index
+ * \param texTarget  one of TEXTURE_x_INDEX values
+ * \param size  number of samplers (in case of sampler array)
+ */
+slang_ir_storage *
+_slang_new_ir_storage_sampler(GLint sampNum, GLuint texTarget, GLint size)
+{
+   slang_ir_storage *st;
+   assert(texTarget < NUM_TEXTURE_TARGETS);
+   st = _slang_new_ir_storage(PROGRAM_SAMPLER, sampNum, size);
+   if (st) {
+      st->TexTarget = texTarget;
+   }
+   return st;
+}
+
+
+
+/* XXX temporary function */
+void
+_slang_copy_ir_storage(slang_ir_storage *dst, const slang_ir_storage *src)
+{
+   *dst = *src;
+   dst->Parent = NULL;
+}
+
+
+
 static const char *
 _slang_ir_name(slang_ir_opcode opcode)
 {
    return _slang_ir_info(opcode)->IrName;
 }
+
 
 
 #if 0 /* no longer needed with mempool */
@@ -173,36 +313,6 @@ _slang_free_ir_tree(slang_ir_node *n)
 }
 
 
-
-static const char *
-swizzle_string(GLuint swizzle)
-{
-   static char s[6];
-   GLuint i;
-   s[0] = '.';
-   for (i = 1; i < 5; i++) {
-      s[i] = "xyzw"[GET_SWZ(swizzle, i-1)];
-   }
-   s[i] = 0;
-   return s;
-}
-
-
-static const char *
-writemask_string(GLuint writemask)
-{
-   static char s[6];
-   GLuint i, j = 0;
-   s[j++] = '.';
-   for (i = 0; i < 4; i++) {
-      if (writemask & (1 << i))
-         s[j++] = "xyzw"[i];
-   }
-   s[j] = 0;
-   return s;
-}
-
-
 static const char *
 storage_string(const slang_ir_storage *st)
 {
@@ -216,12 +326,14 @@ storage_string(const slang_ir_storage *st)
       "NAMED_PARAM",
       "CONSTANT",
       "UNIFORM",
+      "VARYING",
       "WRITE_ONLY",
       "ADDRESS",
       "SAMPLER",
       "UNDEFINED"
    };
    static char s[100];
+   assert(Elements(files) == PROGRAM_FILE_MAX);
 #if 0
    if (st->Size == 1)
       sprintf(s, "%s[%d]", files[st->File], st->Index);
@@ -273,8 +385,8 @@ _slang_print_ir_tree(const slang_ir_node *n, int indent)
       assert(!n->Children[1]);
       _slang_print_ir_tree(n->Children[0], indent + 3);
       break;
-   case IR_MOVE:
-      printf("MOVE (writemask = %s)\n", writemask_string(n->Writemask));
+   case IR_COPY:
+      printf("COPY\n");
       _slang_print_ir_tree(n->Children[0], indent+3);
       _slang_print_ir_tree(n->Children[1], indent+3);
       break;
@@ -343,7 +455,7 @@ _slang_print_ir_tree(const slang_ir_node *n, int indent)
    case IR_VAR:
       printf("VAR %s%s at %s  store %p\n",
              (n->Var ? (char *) n->Var->a_name : "TEMP"),
-             swizzle_string(n->Store->Swizzle),
+             _mesa_swizzle_string(n->Store->Swizzle, 0, 0),
              storage_string(n->Store), (void*) n->Store);
       break;
    case IR_VAR_DECL:
@@ -370,7 +482,7 @@ _slang_print_ir_tree(const slang_ir_node *n, int indent)
       break;
    case IR_SWIZZLE:
       printf("SWIZZLE %s of  (store %p) \n",
-             swizzle_string(n->Store->Swizzle), (void*) n->Store);
+             _mesa_swizzle_string(n->Store->Swizzle, 0, 0), (void*) n->Store);
       _slang_print_ir_tree(n->Children[0], indent + 3);
       break;
    default:

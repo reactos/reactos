@@ -1,7 +1,7 @@
 /*
  * RPC transport layer
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  * Copyright 2003 Mike Hearn
  * Copyright 2004 Filip Navara
  * Copyright 2006 Mike McCormack
@@ -29,32 +29,43 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <errno.h>
-
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#include <fcntl.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-#ifdef HAVE_NETINET_IN_H
-# include <netinet/in.h>
-#endif
-#ifdef HAVE_NETINET_TCP_H
-# include <netinet/tcp.h>
-#endif
-#ifdef HAVE_ARPA_INET_H
-# include <arpa/inet.h>
-#endif
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#ifdef HAVE_SYS_POLL_H
-#include <sys/poll.h>
-#endif
+
+#if defined(__MINGW32__) || defined (_MSC_VER)
+# include <ws2tcpip.h>
+# ifndef EADDRINUSE
+#  define EADDRINUSE WSAEADDRINUSE
+# endif
+# ifndef EAGAIN
+#  define EAGAIN WSAEWOULDBLOCK
+# endif
+#else
+# include <errno.h>
+# ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+# endif
+# include <fcntl.h>
+# ifdef HAVE_SYS_SOCKET_H
+#  include <sys/socket.h>
+# endif
+# ifdef HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+# endif
+# ifdef HAVE_NETINET_TCP_H
+#  include <netinet/tcp.h>
+# endif
+# ifdef HAVE_ARPA_INET_H
+#  include <arpa/inet.h>
+# endif
+# ifdef HAVE_NETDB_H
+#  include <netdb.h>
+# endif
+# ifdef HAVE_SYS_POLL_H
+#  include <sys/poll.h>
+# endif
+# define closesocket close
+#endif /* defined(__MINGW32__) || defined (_MSC_VER) */
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -84,6 +95,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
+static RPC_STATUS RPCRT4_SpawnConnection(RpcConnection** Connection, RpcConnection* OldConnection);
+
 /**** ncacn_np support ****/
 
 typedef struct _RpcConnection_np
@@ -112,20 +125,29 @@ static RPC_STATUS rpcrt4_conn_listen_pipe(RpcConnection_np *npc)
     return RPC_S_OK;
 
   npc->listening = TRUE;
-  if (ConnectNamedPipe(npc->pipe, &npc->ovl[0]))
-    return RPC_S_OK;
+  for (;;)
+  {
+      if (ConnectNamedPipe(npc->pipe, &npc->ovl[0]))
+          return RPC_S_OK;
 
-  if (GetLastError() == ERROR_PIPE_CONNECTED) {
-    SetEvent(npc->ovl[0].hEvent);
-    return RPC_S_OK;
+      switch(GetLastError())
+      {
+      case ERROR_PIPE_CONNECTED:
+          SetEvent(npc->ovl[0].hEvent);
+          return RPC_S_OK;
+      case ERROR_IO_PENDING:
+          /* will be completed in rpcrt4_protseq_np_wait_for_new_connection */
+          return RPC_S_OK;
+      case ERROR_NO_DATA_DETECTED:
+          /* client has disconnected, retry */
+          DisconnectNamedPipe( npc->pipe );
+          break;
+      default:
+          npc->listening = FALSE;
+          WARN("Couldn't ConnectNamedPipe (error was %d)\n", GetLastError());
+          return RPC_S_OUT_OF_RESOURCES;
+      }
   }
-  if (GetLastError() == ERROR_IO_PENDING) {
-    /* will be completed in rpcrt4_protseq_np_wait_for_new_connection */
-    return RPC_S_OK;
-  }
-  npc->listening = FALSE;
-  WARN("Couldn't ConnectNamedPipe (error was %d)\n", GetLastError());
-  return RPC_S_OUT_OF_RESOURCES;
 }
 
 static RPC_STATUS rpcrt4_conn_create_pipe(RpcConnection *Connection, LPCSTR pname)
@@ -196,9 +218,7 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
       TRACE("connection failed, error=%x\n", err);
       return RPC_S_SERVER_TOO_BUSY;
     }
-    if (!wait)
-      return RPC_S_SERVER_UNAVAILABLE;
-    if (!WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
+    if (!wait || !WaitNamedPipeA(pname, NMPWAIT_WAIT_FOREVER)) {
       err = GetLastError();
       WARN("connection failed, error=%x\n", err);
       return RPC_S_SERVER_UNAVAILABLE;
@@ -212,7 +232,6 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
   SetNamedPipeHandleState(pipe, &dwMode, NULL, NULL);
   npc->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
   npc->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
-
   npc->pipe = pipe;
 
   return RPC_S_OK;
@@ -375,7 +394,7 @@ static int rpcrt4_conn_np_read(RpcConnection *Connection,
         break;
 
     ret = GetOverlappedResult(npc->pipe, &npc->ovl[0], &bytes_read, TRUE);
-    if (!ret && GetLastError() != ERROR_MORE_DATA)
+    if (!ret && (GetLastError() != ERROR_MORE_DATA))
         break;
 
     bytes_left -= bytes_read;
@@ -395,12 +414,12 @@ static int rpcrt4_conn_np_write(RpcConnection *Connection,
   while (bytes_left)
   {
     DWORD bytes_written;
-    ret = WriteFile(npc->pipe, buf, count, &bytes_written, &npc->ovl[1]);
+    ret = WriteFile(npc->pipe, buf, bytes_left, &bytes_written, &npc->ovl[1]);
     if ((!ret || !bytes_written) && (GetLastError() != ERROR_IO_PENDING))
         break;
 
     ret = GetOverlappedResult(npc->pipe, &npc->ovl[1], &bytes_written, TRUE);
-    if (!ret && GetLastError() != ERROR_MORE_DATA)
+    if (!ret && (GetLastError() != ERROR_MORE_DATA))
         break;
 
     bytes_left -= bytes_written;
@@ -425,7 +444,6 @@ static int rpcrt4_conn_np_close(RpcConnection *Connection)
     CloseHandle(npc->ovl[1].hEvent);
     npc->ovl[1].hEvent = 0;
   }
-
   return 0;
 }
 
@@ -485,7 +503,6 @@ static size_t rpcrt4_ncacn_np_get_top_of_tower(unsigned char *tower_data,
         memcpy(tower_data, networkaddr, networkaddr_size);
     else
         tower_data[0] = 0;
-    tower_data += networkaddr_size;
 
     return size;
 }
@@ -508,7 +525,8 @@ static RPC_STATUS rpcrt4_ncacn_np_parse_top_of_tower(const unsigned char *tower_
 
     if ((smb_floor->count_lhs != sizeof(smb_floor->protid)) ||
         (smb_floor->protid != EPM_PROTOCOL_SMB) ||
-        (smb_floor->count_rhs > tower_size))
+        (smb_floor->count_rhs > tower_size) ||
+        (tower_data[smb_floor->count_rhs - 1] != '\0'))
         return EPT_S_NOT_REGISTERED;
 
     if (endpoint)
@@ -531,7 +549,8 @@ static RPC_STATUS rpcrt4_ncacn_np_parse_top_of_tower(const unsigned char *tower_
 
     if ((nb_floor->count_lhs != sizeof(nb_floor->protid)) ||
         (nb_floor->protid != EPM_PROTOCOL_NETBIOS) ||
-        (nb_floor->count_rhs > tower_size))
+        (nb_floor->count_rhs > tower_size) ||
+        (tower_data[nb_floor->count_rhs - 1] != '\0'))
         return EPT_S_NOT_REGISTERED;
 
     if (networkaddr)
@@ -681,7 +700,7 @@ static size_t rpcrt4_ncalrpc_get_top_of_tower(unsigned char *tower_data,
 
     TRACE("(%p, %s, %s)\n", tower_data, networkaddr, endpoint);
 
-    endpoint_size = strlen(networkaddr) + 1;
+    endpoint_size = strlen(endpoint) + 1;
     size = sizeof(*pipe_floor) + endpoint_size;
 
     if (!tower_data)
@@ -692,11 +711,10 @@ static size_t rpcrt4_ncalrpc_get_top_of_tower(unsigned char *tower_data,
     tower_data += sizeof(*pipe_floor);
 
     pipe_floor->count_lhs = sizeof(pipe_floor->protid);
-    pipe_floor->protid = EPM_PROTOCOL_SMB;
+    pipe_floor->protid = EPM_PROTOCOL_PIPE;
     pipe_floor->count_rhs = endpoint_size;
 
     memcpy(tower_data, endpoint, endpoint_size);
-    tower_data += endpoint_size;
 
     return size;
 }
@@ -710,9 +728,6 @@ static RPC_STATUS rpcrt4_ncalrpc_parse_top_of_tower(const unsigned char *tower_d
 
     TRACE("(%p, %d, %p, %p)\n", tower_data, (int)tower_size, networkaddr, endpoint);
 
-    *networkaddr = NULL;
-    *endpoint = NULL;
-
     if (tower_size < sizeof(*pipe_floor))
         return EPT_S_NOT_REGISTERED;
 
@@ -720,9 +735,13 @@ static RPC_STATUS rpcrt4_ncalrpc_parse_top_of_tower(const unsigned char *tower_d
     tower_size -= sizeof(*pipe_floor);
 
     if ((pipe_floor->count_lhs != sizeof(pipe_floor->protid)) ||
-        (pipe_floor->protid != EPM_PROTOCOL_SMB) ||
-        (pipe_floor->count_rhs > tower_size))
+        (pipe_floor->protid != EPM_PROTOCOL_PIPE) ||
+        (pipe_floor->count_rhs > tower_size) ||
+        (tower_data[pipe_floor->count_rhs - 1] != '\0'))
         return EPT_S_NOT_REGISTERED;
+
+    if (networkaddr)
+        *networkaddr = NULL;
 
     if (endpoint)
     {
@@ -736,6 +755,8 @@ static RPC_STATUS rpcrt4_ncalrpc_parse_top_of_tower(const unsigned char *tower_d
 }
 
 /**** ncacn_ip_tcp support ****/
+
+#ifdef HAVE_SOCKETPAIR
 
 typedef struct _RpcConnection_tcp
 {
@@ -751,14 +772,12 @@ static RpcConnection *rpcrt4_conn_tcp_alloc(void)
   if (tcpc == NULL)
     return NULL;
   tcpc->sock = -1;
-#ifndef __REACTOS__
   if (socketpair(PF_UNIX, SOCK_STREAM, 0, tcpc->cancel_fds) < 0)
   {
     ERR("socketpair() failed: %s\n", strerror(errno));
     HeapFree(GetProcessHeap(), 0, tcpc);
     return NULL;
   }
-#endif
   return &tcpc->common;
 }
 
@@ -817,13 +836,14 @@ static RPC_STATUS rpcrt4_ncacn_ip_tcp_open(RpcConnection* Connection)
     if (0>connect(sock, ai_cur->ai_addr, ai_cur->ai_addrlen))
     {
       WARN("connect() failed: %s\n", strerror(errno));
-      close(sock);
+      closesocket(sock);
       continue;
     }
 
     /* RPC depends on having minimal latency so disable the Nagle algorithm */
     val = 1;
-    setsockopt(sock, SOL_TCP, TCP_NODELAY, (char *)&val, sizeof(val));
+    setsockopt(sock, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+    fcntl(sock, F_SETFL, O_NONBLOCK); /* make socket nonblocking */
 
     tcpc->sock = sock;
 
@@ -845,7 +865,6 @@ static RPC_STATUS rpcrt4_protseq_ncacn_ip_tcp_open_endpoint(RpcServerProtseq *pr
     struct addrinfo *ai;
     struct addrinfo *ai_cur;
     struct addrinfo hints;
-    u_long blocking;
     RpcConnection *first_connection = NULL;
 
     TRACE("(%p, %s)\n", protseq, endpoint);
@@ -896,8 +915,8 @@ static RPC_STATUS rpcrt4_protseq_ncacn_ip_tcp_open_endpoint(RpcServerProtseq *pr
         if (ret < 0)
         {
             WARN("bind failed: %s\n", strerror(errno));
-            close(sock);
-            if (errno == WSAEADDRINUSE)
+            closesocket(sock);
+            if (errno == EADDRINUSE)
               status = RPC_S_DUPLICATE_ENDPOINT;
             else
               status = RPC_S_CANT_CREATE_ENDPOINT;
@@ -908,7 +927,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_ip_tcp_open_endpoint(RpcServerProtseq *pr
                                                 endpoint, NULL, NULL, NULL);
         if (create_status != RPC_S_OK)
         {
-            close(sock);
+            closesocket(sock);
             status = create_status;
             continue;
         }
@@ -926,8 +945,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_ip_tcp_open_endpoint(RpcServerProtseq *pr
          * race-condition (poll() says it is readable, connection drops,
          * and accept() blocks until the next connection comes...)
          */
-        blocking = 1;
-        ret = ioctlsocket(sock, FIONBIO, &blocking);
+        ret = fcntl(sock, F_SETFL, O_NONBLOCK);
         if (ret < 0)
         {
             WARN("couldn't make socket non-blocking, error %d\n", ret);
@@ -970,7 +988,6 @@ static RPC_STATUS rpcrt4_conn_tcp_handoff(RpcConnection *old_conn, RpcConnection
   int ret;
   struct sockaddr_in address;
   socklen_t addrsize;
-  u_long blocking;
   RpcConnection_tcp *server = (RpcConnection_tcp*) old_conn;
   RpcConnection_tcp *client = (RpcConnection_tcp*) new_conn;
 
@@ -982,8 +999,7 @@ static RPC_STATUS rpcrt4_conn_tcp_handoff(RpcConnection *old_conn, RpcConnection
     return RPC_S_OUT_OF_RESOURCES;
   }
   /* reset to blocking behaviour */
-  blocking = 0;
-  ret = ioctlsocket(ret, FIONBIO, &blocking);
+  fcntl(ret, F_SETFL, 0);
   client->sock = ret;
   TRACE("Accepted a new TCP connection\n");
   return RPC_S_OK;
@@ -1065,7 +1081,7 @@ static int rpcrt4_conn_tcp_close(RpcConnection *Connection)
   TRACE("%d\n", tcpc->sock);
 
   if (tcpc->sock != -1)
-    close(tcpc->sock);
+    closesocket(tcpc->sock);
   tcpc->sock = -1;
   close(tcpc->cancel_fds[0]);
   close(tcpc->cancel_fds[1]);
@@ -1256,12 +1272,10 @@ static RpcServerProtseq *rpcrt4_protseq_sock_alloc(void)
     if (ps)
     {
         int fds[2];
-        u_long blocking;
         if (!socketpair(PF_UNIX, SOCK_DGRAM, 0, fds))
         {
-            blocking = 1;
-            ioctlsocket(fds[0], FIONBIO, &blocking);
-            ioctlsocket(fds[1], FIONBIO, &blocking);
+            fcntl(fds[0], F_SETFL, O_NONBLOCK);
+            fcntl(fds[1], F_SETFL, O_NONBLOCK);
             ps->mgr_event_rcv = fds[0];
             ps->mgr_event_snd = fds[1];
         }
@@ -1336,7 +1350,8 @@ static void rpcrt4_protseq_sock_free_wait_array(RpcServerProtseq *protseq, void 
 static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq, unsigned int count, void *wait_array)
 {
     struct pollfd *poll_info = wait_array;
-    int ret, i;
+    int ret;
+    unsigned int i;
     RpcConnection *cconn;
     RpcConnection_tcp *conn;
     
@@ -1383,6 +1398,8 @@ static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq
     return 1;
 }
 
+#endif  /* HAVE_SOCKETPAIR */
+
 static const struct connection_ops conn_protseq_list[] = {
   { "ncacn_np",
     { EPM_PROTOCOL_NCACN, EPM_PROTOCOL_SMB },
@@ -1410,6 +1427,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_ncalrpc_get_top_of_tower,
     rpcrt4_ncalrpc_parse_top_of_tower,
   },
+#ifdef HAVE_SOCKETPAIR
   { "ncacn_ip_tcp",
     { EPM_PROTOCOL_NCACN, EPM_PROTOCOL_TCP },
     rpcrt4_conn_tcp_alloc,
@@ -1423,6 +1441,7 @@ static const struct connection_ops conn_protseq_list[] = {
     rpcrt4_ncacn_ip_tcp_get_top_of_tower,
     rpcrt4_ncacn_ip_tcp_parse_top_of_tower,
   }
+#endif
 };
 
 
@@ -1446,6 +1465,7 @@ static const struct protseq_ops protseq_list[] =
         rpcrt4_protseq_np_wait_for_new_connection,
         rpcrt4_protseq_ncalrpc_open_endpoint,
     },
+#ifdef HAVE_SOCKETPAIR
     {
         "ncacn_ip_tcp",
         rpcrt4_protseq_sock_alloc,
@@ -1455,13 +1475,14 @@ static const struct protseq_ops protseq_list[] =
         rpcrt4_protseq_sock_wait_for_new_connection,
         rpcrt4_protseq_ncacn_ip_tcp_open_endpoint,
     },
+#endif
 };
 
 #define ARRAYSIZE(a) (sizeof((a)) / sizeof((a)[0]))
 
 const struct protseq_ops *rpcrt4_get_protseq_ops(const char *protseq)
 {
-  int i;
+  unsigned int i;
   for(i=0; i<ARRAYSIZE(protseq_list); i++)
     if (!strcmp(protseq_list[i].name, protseq))
       return &protseq_list[i];
@@ -1470,7 +1491,7 @@ const struct protseq_ops *rpcrt4_get_protseq_ops(const char *protseq)
 
 static const struct connection_ops *rpcrt4_get_conn_protseq_ops(const char *protseq)
 {
-    int i;
+    unsigned int i;
     for(i=0; i<ARRAYSIZE(conn_protseq_list); i++)
         if (!strcmp(conn_protseq_list[i].name, protseq))
             return &conn_protseq_list[i];
@@ -1544,8 +1565,7 @@ RPC_STATUS RPCRT4_CreateConnection(RpcConnection** Connection, BOOL server,
   return RPC_S_OK;
 }
 
-
-RPC_STATUS RPCRT4_SpawnConnection(RpcConnection** Connection, RpcConnection* OldConnection)
+static RPC_STATUS RPCRT4_SpawnConnection(RpcConnection** Connection, RpcConnection* OldConnection)
 {
   RPC_STATUS err;
 
@@ -1571,7 +1591,7 @@ RPC_STATUS RPCRT4_DestroyConnection(RpcConnection* Connection)
   if (Connection->QOS) RpcQualityOfService_Release(Connection->QOS);
 
   /* server-only */
-  if (Connection->server_binding) RPCRT4_DestroyBinding(Connection->server_binding);
+  if (Connection->server_binding) RPCRT4_ReleaseBinding(Connection->server_binding);
 
   HeapFree(GetProcessHeap(), 0, Connection);
   return RPC_S_OK;
@@ -1624,7 +1644,7 @@ RPC_STATUS RpcTransport_ParseTopOfTower(const unsigned char *tower_data,
     const twr_empty_floor_t *floor4;
     const struct connection_ops *protseq_ops = NULL;
     RPC_STATUS status;
-    int i;
+    unsigned int i;
 
     if (tower_size < sizeof(*protocol_floor))
         return EPT_S_NOT_REGISTERED;

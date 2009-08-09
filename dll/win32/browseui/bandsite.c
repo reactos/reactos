@@ -1,7 +1,7 @@
 /*
  *	Rebar band site
  *
- *	Copyright 2007	Hervé Poussineua
+ *	Copyright 2007	Hervé Poussineau
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -368,7 +368,10 @@ static void WINAPI BandSite_Destructor(BandSite *This)
     if (This->Bands != NULL)
     {
         for (i = 0; i < This->BandsAllocated; i++)
-            FreeBand(This, &This->Bands[i]);
+        {
+            if (This->Bands[i].DeskBand != NULL)
+                FreeBand(This, &This->Bands[i]);
+        }
         CoTaskMemFree(This->Bands);
         This->Bands = NULL;
     }
@@ -954,7 +957,8 @@ static HRESULT WINAPI BandSite_IDeskBarClient_SetDeskBarSite(IDeskBarClient *ifa
                                       NULL,
                                       WS_CHILD | WS_CLIPSIBLINGS |
                                           WS_CLIPCHILDREN | RBS_VARHEIGHT |
-                                          CCS_NODIVIDER | RBS_BANDBORDERS,
+                                          RBS_BANDBORDERS | CCS_NODIVIDER |
+                                          CCS_NORESIZE | CCS_NOPARENTALIGN,
                                       0,
                                       0,
                                       0,

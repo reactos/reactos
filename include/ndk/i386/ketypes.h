@@ -88,11 +88,14 @@ Author:
 #define EFLAGS_TF               0x100L
 #define EFLAGS_INTERRUPT_MASK   0x200L
 #define EFLAGS_DF               0x400L
+#define EFLAGS_IOPL             0x3000L
 #define EFLAGS_NESTED_TASK      0x4000L
+#define EFLAGS_RF               0x10000
 #define EFLAGS_V86_MASK         0x20000
 #define EFLAGS_ALIGN_CHECK      0x40000
 #define EFLAGS_VIF              0x80000
 #define EFLAGS_VIP              0x100000
+#define EFLAGS_ID               0x200000
 #define EFLAGS_USER_SANITIZE    0x3F4DD7
 #define EFLAG_SIGN              0x8000
 #define EFLAG_ZERO              0x4000
@@ -139,7 +142,11 @@ Author:
 #ifndef CONFIG_SMP
 #define SYNCH_LEVEL             DISPATCH_LEVEL
 #else
+#if (NTDDI_VERSION < NTDDI_WS03)
 #define SYNCH_LEVEL             (IPI_LEVEL - 1)
+#else
+#define SYNCH_LEVEL             (IPI_LEVEL - 2)
+#endif
 #endif
 
 //
@@ -658,7 +665,7 @@ typedef struct _KIPCR
     USHORT MinorVersion;
     KAFFINITY SetMember;
     ULONG StallScaleFactor;
-    UCHAR SparedUnused;
+    UCHAR SpareUnused;
     UCHAR Number;
     UCHAR Reserved;
     UCHAR L2CacheAssociativity;

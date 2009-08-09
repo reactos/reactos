@@ -78,9 +78,9 @@ HalProcessorIdle(VOID)
  */
 VOID
 NTAPI
-HalRequestIpi(ULONG Reserved)
+HalRequestIpi(KAFFINITY TargetProcessors)
 {
-    /* Not implemented on NT */
+    /* Not implemented on UP */
     __debugbreak();
 }
 

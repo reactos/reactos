@@ -12,7 +12,7 @@
 #include <ntoskrnl.h>
 
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS ******************************************************************/
 
@@ -26,7 +26,7 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE {
 static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
-
+BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -56,6 +56,9 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
   PPEB Peb = NULL;
   INT Count = 0;
   INT Length;
+
+  if (!KdbpSymbolsInitialized)
+	  return FALSE;
 
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != NULL)
@@ -109,6 +112,9 @@ KdbpSymFindModule(IN PVOID Address  OPTIONAL,
   PLDR_DATA_TABLE_ENTRY current;
   INT Count = 0;
   INT Length;
+
+  if (!KdbpSymbolsInitialized)
+	  return FALSE;
 
   current_entry = PsLoadedModuleList.Flink;
 
@@ -213,7 +219,7 @@ KdbSymPrintAddress(IN PVOID Address)
   CHAR FileName[256];
   CHAR FunctionName[256];
 
-  if (!KdbpSymFindModuleByAddress(Address, &Info))
+  if (!KdbpSymbolsInitialized || !KdbpSymFindModuleByAddress(Address, &Info))
     return FALSE;
 
   RelativeAddress = (ULONG_PTR) Address - Info.Base;
@@ -259,6 +265,11 @@ KdbSymGetAddressInformation(IN PROSSYM_INFO RosSymInfo,
                             OUT PCH FileName  OPTIONAL,
                             OUT PCH FunctionName  OPTIONAL)
 {
+  if (!KdbpSymbolsInitialized)
+    {
+	  return STATUS_UNSUCCESSFUL;
+	}
+
   if (NULL == RosSymInfo)
     {
       return STATUS_UNSUCCESSFUL;
@@ -343,7 +354,7 @@ KdbpSymAddCachedFile(IN PUNICODE_STRING FileName,
   CacheEntry->FileName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                       FileName->Length,
                                                       TAG_KDBS);
-  RtlInitUnicodeString(&CacheEntry->FileName, FileName->Buffer);
+  RtlCopyUnicodeString(&CacheEntry->FileName, FileName);
   ASSERT(CacheEntry->FileName.Buffer);
   CacheEntry->RefCount = 1;
   CacheEntry->RosSymInfo = RosSymInfo;
@@ -499,7 +510,7 @@ KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule)
 
   KernelName.MaximumLength = sizeof(Prefix) + LdrModule->FullDllName.Length;
   KernelName.Length = KernelName.MaximumLength - sizeof(WCHAR);
-  KernelName.Buffer = ExAllocatePoolWithTag(PagedPool, KernelName.MaximumLength, TAG_KDBS);
+  KernelName.Buffer = ExAllocatePoolWithTag(NonPagedPool, KernelName.MaximumLength, TAG_KDBS);
   if (NULL == KernelName.Buffer)
     {
       return;
@@ -673,13 +684,21 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
     PCHAR p1, p2;
-    SHORT Found;
+    SHORT Found = FALSE;
     CHAR YesNo;
     LIST_ENTRY *ModuleEntry;
     PLDR_DATA_TABLE_ENTRY DataTableEntry;
     KD_SYMBOLS_INFO SymbolsInfo;
 
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
+
+    LoadSymbols = FALSE;
+
+#ifdef DBG
+    /* Load symbols only if we have 96Mb of RAM or more */
+    if (MmNumberOfPhysicalPages >= 0x6000)
+        LoadSymbols = TRUE;
+#endif
 
     if (BootPhase == 0)
     {
@@ -696,12 +715,6 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
 
         InitializeListHead(&SymbolFileListHead);
         KeInitializeSpinLock(&SymbolFileListLock);
-
-#ifdef DBG
-        LoadSymbols = TRUE;
-#else
-        LoadSymbols = FALSE;
-#endif
 
         /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
         * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
@@ -772,6 +785,7 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
         SymbolsInfo.SizeOfImage = DataTableEntry->SizeOfImage;
 
         KdbSymProcessSymbols(NULL, &SymbolsInfo);
+		KdbpSymbolsInitialized = TRUE;
     }
 }
 

@@ -3,7 +3,7 @@
  *
  * Copyright 1995 Alexandre Julliard
  * Copyright 1996 Eric Youngdale
- * Copyright 1999 Ove Kåven
+ * Copyright 1999 Ove KÃ¥ven
  * Copyright 2004 Eric Pouech
  *
  * This library is free software; you can redistribute it and/or
@@ -386,7 +386,7 @@ static BOOL stack_walk(struct stack_walk_callback* cb, LPSTACKFRAME frame)
 
     if (curr_mode == stm_16bit)
     {
-        int     i;
+        unsigned int     i;
 
         p = sw_xlat_addr(cb, &frame->AddrFrame);
         if (!sw_read_mem(cb, p + sizeof(WORD), &val, sizeof(WORD)))

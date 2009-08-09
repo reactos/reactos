@@ -22,7 +22,7 @@
 #define _SYNTAX_CHECK
 
 
-INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
+INT CommandMsgbox (LPTSTR param)
 {
 
 	//used to parse command line

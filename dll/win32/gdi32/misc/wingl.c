@@ -28,11 +28,11 @@
 
 
 
-typedef int  STDCALL (*CHOOSEPIXELFMT) (HDC, CONST PIXELFORMATDESCRIPTOR *);
-typedef BOOL STDCALL (*SETPIXELFMT) (HDC, int, CONST PIXELFORMATDESCRIPTOR *);
-typedef BOOL STDCALL (*SWAPBUFFERS) (HDC hdc);
-typedef int  STDCALL (*DESCRIBEPIXELFMT) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
-typedef int  STDCALL (*GETPIXELFMT) (HDC);
+typedef int  WINAPI (*CHOOSEPIXELFMT) (HDC, CONST PIXELFORMATDESCRIPTOR *);
+typedef BOOL WINAPI (*SETPIXELFMT) (HDC, int, CONST PIXELFORMATDESCRIPTOR *);
+typedef BOOL WINAPI (*SWAPBUFFERS) (HDC hdc);
+typedef int  WINAPI (*DESCRIBEPIXELFMT) (HDC, int, UINT, LPPIXELFORMATDESCRIPTOR);
+typedef int  WINAPI (*GETPIXELFMT) (HDC);
 
 
 static CHOOSEPIXELFMT    glChoosePixelFormat   = NULL;
@@ -109,7 +109,7 @@ static BOOL OpenGLEnable(void)
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 ChoosePixelFormat(HDC  hdc,
                   CONST PIXELFORMATDESCRIPTOR * ppfd)
 {
@@ -126,7 +126,7 @@ ChoosePixelFormat(HDC  hdc,
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 DescribePixelFormat(HDC  hdc,
                     INT  iPixelFormat,
                     UINT  nBytes,
@@ -145,7 +145,7 @@ DescribePixelFormat(HDC  hdc,
  * @implemented
  */
 INT
-STDCALL
+WINAPI
 GetPixelFormat(HDC  hdc)
 {
   if (glGetPixelFormat == NULL)
@@ -161,7 +161,7 @@ GetPixelFormat(HDC  hdc)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetPixelFormat(HDC  hdc,
                INT  iPixelFormat,
                CONST PIXELFORMATDESCRIPTOR * ppfd)
@@ -179,7 +179,7 @@ SetPixelFormat(HDC  hdc,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SwapBuffers(HDC  hdc)
 {
   if (glSwapBuffers == NULL)
@@ -199,7 +199,7 @@ SwapBuffers(HDC  hdc)
  * @implemented
  */
 UINT
-STDCALL
+WINAPI
 GetEnhMetaFilePixelFormat(
 	HENHMETAFILE			hemf,
 	UINT				cbBuffer,

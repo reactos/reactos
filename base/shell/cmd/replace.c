@@ -367,7 +367,7 @@ INT recFindSubDirs(DWORD dwFlags,
 	return filesReplaced;
 }
 
-INT cmd_replace (LPTSTR cmd, LPTSTR param)
+INT cmd_replace (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;

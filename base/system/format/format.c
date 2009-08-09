@@ -64,7 +64,7 @@ static VOID PrintWin32Error( LPTSTR Message, DWORD ErrorCode )
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					(LPTSTR)&lpMsgBuf, 0, NULL );
 
-	_tprintf(_T("%S: %S\n"), (LPWSTR)Message, (LPWSTR)lpMsgBuf );
+	_tprintf(_T("%s: %s\n"), Message, lpMsgBuf );
 	LocalFree( lpMsgBuf );
 }
 
@@ -153,7 +153,7 @@ static int ParseCommandLine( int argc, TCHAR *argv[] )
 // can interpret. If we wanted to halt the chkdsk we could return FALSE.
 //
 //----------------------------------------------------------------------
-BOOLEAN STDCALL
+BOOLEAN WINAPI
 FormatExCallback (
 		CALLBACKCOMMAND Command,
 		ULONG Modifier,
@@ -264,7 +264,7 @@ static VOID Usage( LPTSTR ProgramName )
 	LoadString( GetModuleHandle(NULL), STRING_HELP, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
 	if (!LoadFMIFSEntryPoints())
 	{
-		_tprintf(szMsg, ProgramName, "");
+		_tprintf(szMsg, ProgramName, _T(""));
 		return;
 	}
 

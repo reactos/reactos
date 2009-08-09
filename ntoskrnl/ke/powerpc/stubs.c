@@ -188,7 +188,7 @@ NTAPI
 NtGetTickCount() { return __rdtsc(); }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtSetLdtEntries
 (ULONG Selector1, LDT_ENTRY LdtEntry1, ULONG Selector2, LDT_ENTRY LdtEntry2)
 {

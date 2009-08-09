@@ -85,7 +85,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /************************************************************************/
 /* BUFMAX defines the maximum number of characters in inbound/outbound buffers*/
@@ -1029,6 +1029,7 @@ typedef struct _GSPSWBREAKPOINT
 #define MAX_SW_BREAKPOINTS 64
 static unsigned GspSwBreakpointCount = 0;
 static GSPSWBREAKPOINT GspSwBreakpoints[MAX_SW_BREAKPOINTS];
+static CHAR GspSwBreakpointsInstructions[MAX_SW_BREAKPOINTS];
 
 static void
 GspSetHwBreakpoint(ULONG Type, ULONG_PTR Address, ULONG Length)
@@ -1114,9 +1115,23 @@ GspSetSwBreakpoint(ULONG_PTR Address)
     }
   else
     {
+      unsigned Index;
+
+      for (Index = 0; Index < GspSwBreakpointCount; Index++)
+        {
+          if (GspSwBreakpoints[Index].Address == Address)
+            {
+                strcpy(GspOutBuffer, "E22");
+                return;
+            }
+        }
+
       DPRINT("Stored at index %u\n", GspSwBreakpointCount);
       GspSwBreakpoints[GspSwBreakpointCount].Address = Address;
       GspSwBreakpoints[GspSwBreakpointCount].Active = FALSE;
+      GspSwBreakpointsInstructions[GspSwBreakpointCount] = 
+        GspReadMemSafe((PCHAR )Address);
+      GspWriteMemSafe((PCHAR )Address, 0xCC);
       GspSwBreakpointCount++;
       strcpy(GspOutBuffer, "OK");
     }
@@ -1134,12 +1149,19 @@ GspRemoveSwBreakpoint(ULONG_PTR Address)
         {
           DPRINT("Found match at index %u\n", Index);
           ASSERT(! GspSwBreakpoints[Index].Active);
+
+          GspWriteMemSafe((PCHAR )Address,
+                GspSwBreakpointsInstructions[Index]);
+
           if (Index + 1 < GspSwBreakpointCount)
             {
               memmove(GspSwBreakpoints + Index,
                       GspSwBreakpoints + (Index + 1),
                       (GspSwBreakpointCount - Index - 1) *
                       sizeof(GSPSWBREAKPOINT));
+              memmove(GspSwBreakpointsInstructions + Index,
+                      GspSwBreakpointsInstructions + (Index + 1),
+                      (GspSwBreakpointCount - Index - 1) * sizeof(CHAR));
             }
           GspSwBreakpointCount--;
           strcpy(GspOutBuffer, "OK");
@@ -1300,7 +1322,7 @@ static BOOLEAN gdb_attached_yet = FALSE;
  * This function does all command procesing for interfacing to gdb.
  */
 KD_CONTINUE_TYPE
-STDCALL
+NTAPI
 KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                              PCONTEXT Context,
                              PKTRAP_FRAME TrapFrame)
@@ -1378,6 +1400,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           *ptr = '\0';
 
           GspPutPacket(&GspOutBuffer[0]);
+          /* DPRINT("------- replied status: (%s) -------\n", GspOutBuffer); */
         }
       else
         {
@@ -1391,6 +1414,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           /* Zero the buffer now so we don't have to worry about the terminating zero character */
           memset(GspOutBuffer, 0, sizeof(GspInBuffer));
           ptr = GspGetPacket();
+          /* DPRINT("------- Get (%s) command -------\n", ptr); */
 
           switch(*ptr++)
             {
@@ -1661,6 +1685,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 
           /* reply to the request */
           GspPutPacket(GspOutBuffer);
+          /* DPRINT("------- reply command (%s) -------\n",  GspOutBuffer); */
         }
 
       /* not reached */
@@ -1678,7 +1703,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 
 
 BOOLEAN
-STDCALL
+NTAPI
 GspBreakIn(PKINTERRUPT Interrupt,
   PVOID ServiceContext)
 {
@@ -1720,14 +1745,14 @@ GspBreakIn(PKINTERRUPT Interrupt,
 }
 
 VOID
-STDCALL
+NTAPI
 KdpGdbDebugPrint(PCH Message, ULONG Length)
 {
 }
 
 /* Initialize the GDB stub */
 VOID
-STDCALL
+NTAPI
 KdpGdbStubInit(PKD_DISPATCH_TABLE WrapperTable,
                ULONG BootPhase)
 {

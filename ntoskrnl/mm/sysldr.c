@@ -43,7 +43,7 @@ MiCacheImageSymbols(IN PVOID BaseAddress)
     PAGED_CODE();
 
     /* Make sure it's safe to access the image */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Get the debug directory */
         DebugDirectory = RtlImageDirectoryEntryToData(BaseAddress,
@@ -51,11 +51,11 @@ MiCacheImageSymbols(IN PVOID BaseAddress)
                                                       IMAGE_DIRECTORY_ENTRY_DEBUG,
                                                       &DebugSize);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Nothing */
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return the directory */
     return DebugDirectory;
@@ -94,7 +94,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     PVOID Base = NULL;
     SIZE_T ViewSize = 0;
     KAPC_STATE ApcState;
-    LARGE_INTEGER SectionOffset = {{0}};
+    LARGE_INTEGER SectionOffset = {{0, 0}};
     BOOLEAN LoadSymbols = FALSE;
     ULONG DriverSize;
     PVOID DriverBase;
@@ -368,16 +368,60 @@ NTAPI
 MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
                     IN PLIST_ENTRY ListHead)
 {
+    UNICODE_STRING ServicesKeyName = RTL_CONSTANT_STRING(
+        L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
     PMM_DLL_INITIALIZE DllInit;
+    UNICODE_STRING RegPath, ImportName;
+    NTSTATUS Status;
 
     /* Try to see if the image exports a DllInitialize routine */
     DllInit = (PMM_DLL_INITIALIZE)MiLocateExportName(LdrEntry->DllBase,
                                                      "DllInitialize");
     if (!DllInit) return STATUS_SUCCESS;
 
-    /* FIXME: TODO */
-    DPRINT1("DllInitialize not called!\n");
-    return STATUS_UNSUCCESSFUL;
+    /* Do a temporary copy of BaseDllName called ImportName
+     * because we'll alter the length of the string
+     */
+    ImportName.Length = LdrEntry->BaseDllName.Length;
+    ImportName.MaximumLength = LdrEntry->BaseDllName.MaximumLength;
+    ImportName.Buffer = LdrEntry->BaseDllName.Buffer;
+
+    /* Obtain the path to this dll's service in the registry */
+    RegPath.MaximumLength = ServicesKeyName.Length +
+        ImportName.Length + sizeof(UNICODE_NULL);
+    RegPath.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                           RegPath.MaximumLength,
+                                           TAG_LDR_WSTR);
+
+    /* Check if this allocation was unsuccessful */
+    if (!RegPath.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Build and append the service name itself */
+    RegPath.Length = ServicesKeyName.Length;
+    RtlCopyMemory(RegPath.Buffer,
+                  ServicesKeyName.Buffer,
+                  ServicesKeyName.Length);
+
+    /* Check if there is a dot in the filename */
+    if (wcschr(ImportName.Buffer, L'.'))
+    {
+        /* Remove the extension */
+        ImportName.Length = (wcschr(ImportName.Buffer, L'.') -
+            ImportName.Buffer) * sizeof(WCHAR);
+    }
+
+    /* Append service name (the basename without extension) */
+    RtlAppendUnicodeStringToString(&RegPath, &ImportName);
+
+    /* Now call the DllInit func */
+    DPRINT("Calling DllInit(%wZ)\n", &RegPath);
+    Status = DllInit(&RegPath);
+
+    /* Clean up */
+    ExFreePool(RegPath.Buffer);
+
+    /* Return status value which DllInitialize returned */
+    return Status;
 }
 
 VOID
@@ -660,7 +704,7 @@ MiSnapThunk(IN PVOID DllBase,
                                          &MissingForwarder);
 
                     /* Free the forwarder name and set the thunk */
-                    ExFreePool(ForwardName);
+                    ExFreePoolWithTag(ForwardName, TAG_LDR_WSTR);
                     Address->u1 = ForwardThunk.u1;
                     break;
                 }
@@ -876,7 +920,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
         {
             /* Failed */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePool(LoadedImports);
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             return Status;
         }
 
@@ -997,7 +1041,7 @@ CheckDllState:
                 /* Cleanup and return */
                 RtlFreeUnicodeString(&NameString);
                 MiDereferenceImports(LoadedImports);
-                if (LoadedImports) ExFreePool(LoadedImports);
+                if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
                 return Status;
             }
 
@@ -1030,7 +1074,7 @@ CheckDllState:
         {
             /* Cleanup and return */
             MiDereferenceImports(LoadedImports);
-            if (LoadedImports) ExFreePool(LoadedImports);
+            if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             return STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
         }
 
@@ -1059,7 +1103,7 @@ CheckDllState:
                 {
                     /* Cleanup and return */
                     MiDereferenceImports(LoadedImports);
-                    if (LoadedImports) ExFreePool(LoadedImports);
+                    if (LoadedImports) ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
                     return Status;
                 }
 
@@ -1091,13 +1135,13 @@ CheckDllState:
         if (!ImportCount)
         {
             /* Free the list and set it to no imports */
-            ExFreePool(LoadedImports);
+            ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             LoadedImports = (PVOID)-2;
         }
         else if (ImportCount == 1)
         {
             /* Just one entry, we can free the table and only use our entry */
-            ExFreePool(LoadedImports);
+            ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
             LoadedImports = (PLOAD_IMPORTS)ImportEntry;
         }
         else if (ImportCount != LoadedImports->Count)
@@ -1125,7 +1169,7 @@ CheckDllState:
                 }
 
                 /* Free the old copy */
-                ExFreePool(LoadedImports);
+                ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
                 LoadedImports = NewImports;
             }
         }
@@ -1834,7 +1878,7 @@ LoaderScan:
         }
 
         /* Free the entry itself */
-        ExFreePool(LdrEntry);
+        ExFreePoolWithTag(LdrEntry, TAG_MODULE_OBJECT);
         LdrEntry = NULL;
         goto Quickie;
     }
@@ -1924,7 +1968,7 @@ Quickie:
     if (NamePrefix) ExFreePool(PrefixName.Buffer);
 
     /* Free the name buffer and return status */
-    ExFreePool(Buffer);
+    ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);
     return Status;
 }
 

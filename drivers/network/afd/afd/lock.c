@@ -11,10 +11,12 @@
 #include "tdi_proto.h"
 #include "tdiconn.h"
 #include "debug.h"
-#include "pseh/pseh.h"
+#include "pseh/pseh2.h"
 
 /* Lock a method_neither request so it'll be available from DISPATCH_LEVEL */
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
+    BOOLEAN LockFailed = FALSE;
+
     Irp->MdlAddress =
 	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,
@@ -22,18 +24,39 @@ PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
 		       FALSE,
 		       NULL );
     if( Irp->MdlAddress ) {
-	MmProbeAndLockPages( Irp->MdlAddress, KernelMode, IoModifyAccess );
+	_SEH2_TRY {
+	    MmProbeAndLockPages( Irp->MdlAddress, Irp->RequestorMode, IoModifyAccess );
+	} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+	    LockFailed = TRUE;
+	} _SEH2_END;
+
+	if( LockFailed ) {
+	    IoFreeMdl( Irp->MdlAddress );
+	    Irp->MdlAddress = NULL;
+	    return NULL;
+	}
+
 	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer =
-	    MmMapLockedPages( Irp->MdlAddress, KernelMode );
+	    MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
+
+	if( !IrpSp->Parameters.DeviceIoControl.Type3InputBuffer ) {
+	    IoFreeMdl( Irp->MdlAddress );
+	    Irp->MdlAddress = NULL;
+	    return NULL;
+	}
+
 	return IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     } else return NULL;
 }
 
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
-    MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
-			Irp->MdlAddress );
-    MmUnlockPages( Irp->MdlAddress );
-    IoFreeMdl( Irp->MdlAddress );
+    PVOID Buffer = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, NormalPagePriority );
+    if( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer == Buffer || Buffer == NULL ) {
+	MmUnmapLockedPages( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer, Irp->MdlAddress );
+        MmUnlockPages( Irp->MdlAddress );
+        IoFreeMdl( Irp->MdlAddress );
+    }
+
     Irp->MdlAddress = NULL;
 }
 
@@ -50,13 +73,14 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
     UINT Size = sizeof(AFD_WSABUF) * (Count + Lock);
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
     PMDL NewMdl;
+    BOOLEAN LockFailed = FALSE;
 
     AFD_DbgPrint(MID_TRACE,("Called(%08x)\n", NewBuf));
 
     if( NewBuf ) {
 	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count + Lock);
 
-        _SEH_TRY {
+        _SEH2_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
             if( LockAddress ) {
                 NewBuf[Count].buf = AddressBuf;
@@ -66,13 +90,13 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
                 NewBuf[Count].len = sizeof(*AddressLen);
                 Count++;
             }
-        } _SEH_HANDLE {
+        } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
             AFD_DbgPrint(MIN_TRACE,("Access violation copying buffer info "
                                     "from userland (%x %x)\n",
                                     Buf, AddressLen));
             ExFreePool( NewBuf );
-            _SEH_YIELD(return NULL);
-        } _SEH_END;
+            _SEH2_YIELD(return NULL);
+        } _SEH2_END;
 
 	for( i = 0; i < Count; i++ ) {
 	    AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",
@@ -95,9 +119,23 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
 	    if( MapBuf[i].Mdl ) {
 		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
-		MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
-				     Write ? IoModifyAccess : IoReadAccess );
+		_SEH2_TRY {
+		    MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode,
+				         Write ? IoModifyAccess : IoReadAccess );
+		} _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+		    LockFailed = TRUE;
+		} _SEH2_END;
 		AFD_DbgPrint(MID_TRACE,("MmProbeAndLock finished\n"));
+
+		if( LockFailed ) {
+		    IoFreeMdl( MapBuf[i].Mdl );
+		    MapBuf[i].Mdl = NULL;
+		    ExFreePool( NewBuf );
+		    return NULL;
+		}
+	    } else {
+		ExFreePool( NewBuf );
+		return NULL;
 	    }
 	}
     }
@@ -112,36 +150,48 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count, BOOL Address ) {
     PAFD_MAPBUF Map = (PAFD_MAPBUF)(Buf + Count + Lock);
     UINT i;
 
+    if( !Buf ) return;
+
     for( i = 0; i < Count + Lock; i++ ) {
 	if( Map[i].Mdl ) {
 	    MmUnlockPages( Map[i].Mdl );
 	    IoFreeMdl( Map[i].Mdl );
+	    Map[i].Mdl = NULL;
 	}
     }
 
     ExFreePool( Buf );
+    Buf = NULL;
 }
 
 /* Produce a kernel-land handle array with handles replaced by object
  * pointers.  This will allow the system to do proper alerting */
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     UINT i;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAFD_HANDLE FileObjects = ExAllocatePool
 	( NonPagedPool, HandleCount * sizeof(AFD_HANDLE) );
 
     for( i = 0; FileObjects && i < HandleCount; i++ ) {
-	HandleArray[i].Status = 0;
-	HandleArray[i].Events = HandleArray[i].Events;
+	FileObjects[i].Status = 0;
+	FileObjects[i].Events = HandleArray[i].Events;
         FileObjects[i].Handle = 0;
-	Status = ObReferenceObjectByHandle
-	    ( (PVOID)HandleArray[i].Handle,
-	      FILE_ALL_ACCESS,
-	      NULL,
-	      KernelMode,
-	      (PVOID*)&FileObjects[i].Handle,
-	      NULL );
+	if( !HandleArray[i].Handle ) continue;
+	if( NT_SUCCESS(Status) ) {
+		Status = ObReferenceObjectByHandle
+	    	( (PVOID)HandleArray[i].Handle,
+	     	 FILE_ALL_ACCESS,
+	     	 NULL,
+	      	 KernelMode,
+	      	 (PVOID*)&FileObjects[i].Handle,
+	      	 NULL );
+	}
+    }
+
+    if( !NT_SUCCESS(Status) ) {
+	UnlockHandles( FileObjects, HandleCount );
+	return NULL;
     }
 
     return FileObjects;
@@ -156,6 +206,7 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     }
 
     ExFreePool( HandleArray );
+    HandleArray = NULL;
 }
 
 /* Returns transitioned state or SOCKET_STATE_INVALID_TRANSITION */
@@ -163,7 +214,7 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
 
-    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     AFD_DbgPrint(MAX_TRACE,("Called on %x, attempting to lock\n", FCB));
 
@@ -214,7 +265,7 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
     PVOID CurrentThread = KeGetCurrentThread();
 #endif
     ASSERT(FCB->LockCount > 0);
-    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     ExAcquireFastMutex( &FCB->Mutex );
     FCB->LockCount--;
@@ -235,36 +286,34 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information,
-  PIO_COMPLETION_ROUTINE Completion,
-  BOOL ShouldUnlock ) {
+  PIO_COMPLETION_ROUTINE Completion ) {
+
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information = Information;
 
     if( Status == STATUS_PENDING ) {
 	/* We should firstly mark this IRP as pending, because
 	   otherwise it may be completed by StreamSocketConnectComplete()
 	   before we return from SocketStateUnlock(). */
 	IoMarkIrpPending( Irp );
-    SocketStateUnlock( FCB );
-    } else {
 	SocketStateUnlock( FCB );
-	Irp->IoStatus.Status = Status;
-	Irp->IoStatus.Information = Information;
+    } else {
+	if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+	SocketStateUnlock( FCB );
 	if( Completion )
 	    Completion( FCB->DeviceExt->DeviceObject, Irp, FCB );
-	if( ShouldUnlock )
-	    UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     }
     return Status;
 }
 
 
-NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp ) {
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+NTSTATUS LostSocket( PIRP Irp ) {
+    NTSTATUS Status = STATUS_FILE_CLOSED;
     AFD_DbgPrint(MIN_TRACE,("Called.\n"));
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;
-    if( ShouldUnlockIrp )
-	UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
+    if ( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     IoCompleteRequest( Irp, IO_NO_INCREMENT );
     return Status;
 }
@@ -272,7 +321,7 @@ NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp ) {
 NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
     InsertTailList( &FCB->PendingIrpList[Function],
 		    &Irp->Tail.Overlay.ListEntry );
-    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL, FALSE );
+    return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL );
 }
 
 VOID SocketCalloutEnter( PAFD_FCB FCB ) {

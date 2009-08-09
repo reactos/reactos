@@ -42,12 +42,14 @@ PSERVERINFO gpsi = NULL; // Global User Server Information.
 
 HSEMAPHORE hsemDriverMgmt = NULL;
 
+SHORT gusLanguageID;
+
 extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
 NTSTATUS
-STDCALL
+APIENTRY
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
@@ -169,12 +171,12 @@ CLEANUP:
 
 
 NTSTATUS
-STDCALL
+APIENTRY
 Win32kThreadCallback(struct _ETHREAD *Thread,
                      PSW32THREADCALLOUTTYPE Type)
 {
     struct _EPROCESS *Process;
-    PW32THREAD Win32Thread;
+    PTHREADINFO Win32Thread;
     DECLARE_RETURN(NTSTATUS);
 
     DPRINT("Enter Win32kThreadCallback\n");
@@ -190,12 +192,12 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     {
         /* FIXME - lock the process */
         Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
-                                            sizeof(W32THREAD),
+                                            sizeof(THREADINFO),
                                             TAG('W', '3', '2', 't'));
 
         if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
 
-        RtlZeroMemory(Win32Thread, sizeof(W32THREAD));
+        RtlZeroMemory(Win32Thread, sizeof(THREADINFO));
 
         PsSetThreadWin32Thread(Thread, Win32Thread);
         /* FIXME - unlock the process */
@@ -203,6 +205,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
   if (Type == PsW32ThreadCalloutInitialize)
     {
       HWINSTA hWinSta = NULL;
+      PTEB pTeb;
       HDESK hDesk = NULL;
       NTSTATUS Status;
       PUNICODE_STRING DesktopPath;
@@ -212,6 +215,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
       InitializeListHead(&Win32Thread->WindowListHead);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
+      InitializeListHead(&Win32Thread->PtiLink);
 
       /*
        * inherit the thread desktop and process window station (if not yet inherited) from the process startup
@@ -243,7 +247,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 
         if (hDesk != NULL)
         {
-          PDESKTOP_OBJECT DesktopObject;
+          PDESKTOP DesktopObject;
           Win32Thread->Desktop = NULL;
           Status = ObReferenceObjectByHandle(hDesk,
                                              0,
@@ -268,10 +272,20 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       }
       Win32Thread->IsExiting = FALSE;
       co_IntDestroyCaret(Win32Thread);
+      Win32Thread->ppi = PsGetCurrentProcessWin32Process();
+      pTeb = NtCurrentTeb();
+      if (pTeb)
+      {
+          Win32Thread->pClientInfo = (PCLIENTINFO)pTeb->Win32ClientInfo;
+          Win32Thread->pClientInfo->pClientThreadInfo = NULL;
+      }
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       if (Win32Thread->ThreadInfo)
+      {
           Win32Thread->ThreadInfo->ClientThreadInfo.dwcPumpHook = 0;
+          Win32Thread->pClientInfo->pClientThreadInfo = &Win32Thread->ThreadInfo->ClientThreadInfo;
+      }
     }
   else
     {
@@ -344,11 +358,11 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
   if (Thread->Tcb.Win32Thread == NULL)
     {
-      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(W32THREAD));
+      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(THREADINFO));
       if (Thread->Tcb.Win32Thread == NULL)
 	return STATUS_NO_MEMORY;
 
-      RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(W32THREAD));
+      RtlZeroMemory(Thread->Tcb.Win32Thread, sizeof(THREADINFO));
 
       Win32kThreadCallback(Thread, PsW32ThreadCalloutInitialize);
     }
@@ -360,7 +374,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
 /*
  * This definition doesn't work
  */
-NTSTATUS STDCALL
+NTSTATUS APIENTRY
 DriverEntry (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)
@@ -413,6 +427,13 @@ DriverEntry (
   InitializeListHead(&GlobalDriverListHead);
 
   if(!hsemDriverMgmt) hsemDriverMgmt = EngCreateSemaphore();
+
+  GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
+  if (GdiHandleTable == NULL)
+  {
+      DPRINT1("Failed to initialize the GDI handle table.\n");
+      return STATUS_UNSUCCESSFUL;
+  }
 
   Status = InitUserImpl();
   if (!NT_SUCCESS(Status))
@@ -505,13 +526,6 @@ DriverEntry (
       return(Status);
     }
 
-  GdiHandleTable = GDIOBJ_iAllocHandleTable(&GdiTableSection);
-  if (GdiHandleTable == NULL)
-  {
-      DPRINT1("Failed to initialize the GDI handle table.\n");
-      return STATUS_UNSUCCESSFUL;
-  }
-
   Status = InitDcImpl();
   if (!NT_SUCCESS(Status))
   {
@@ -530,6 +544,8 @@ DriverEntry (
      used by win32 applications */
   CreateStockObjects();
   CreateSysColorObjects();
+
+  gusLanguageID = IntGdiGetLanguageID();
 
   return STATUS_SUCCESS;
 }

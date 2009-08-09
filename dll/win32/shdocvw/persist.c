@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "wine/debug.h"
@@ -67,7 +67,7 @@ static HRESULT WINAPI PersistStorage_InitNew(IPersistStorage *iface, LPSTORAGE p
 {
     WebBrowser *This = PERSTORAGE_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pStg);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI PersistStorage_Load(IPersistStorage *iface, LPSTORAGE pStg)
@@ -92,8 +92,6 @@ static HRESULT WINAPI PersistStorage_SaveCompleted(IPersistStorage *iface, LPSTO
     return E_NOTIMPL;
 }
 
-#define PERSTORAGE_THIS(ifce) DEFINE_THIS(WebBrowser, PersistStorage, iface)
-
 static const IPersistStorageVtbl PersistStorageVtbl =
 {
     PersistStorage_QueryInterface,
@@ -105,6 +103,87 @@ static const IPersistStorageVtbl PersistStorageVtbl =
     PersistStorage_Load,
     PersistStorage_Save,
     PersistStorage_SaveCompleted
+};
+
+/**********************************************************************
+ * Implement the IPersistMemory interface
+ */
+
+#define PERMEMORY_THIS(ifce) DEFINE_THIS(WebBrowser, PersistMemory, iface)
+
+static HRESULT WINAPI PersistMemory_QueryInterface(IPersistMemory *iface,
+        REFIID riid, LPVOID *ppobj)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    return IWebBrowser_QueryInterface(WEBBROWSER(This), riid, ppobj);
+}
+
+static ULONG WINAPI PersistMemory_AddRef(IPersistMemory *iface)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    return IWebBrowser_AddRef(WEBBROWSER(This));
+}
+
+static ULONG WINAPI PersistMemory_Release(IPersistMemory *iface)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    return IWebBrowser_Release(WEBBROWSER(This));
+}
+
+static HRESULT WINAPI PersistMemory_GetClassID(IPersistMemory *iface, CLSID *pClassID)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pClassID);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistMemory_IsDirty(IPersistMemory *iface)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    FIXME("(%p)\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistMemory_InitNew(IPersistMemory *iface)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    FIXME("(%p)\n", This);
+    return S_OK;
+}
+
+static HRESULT WINAPI PersistMemory_Load(IPersistMemory *iface, LPVOID pMem, ULONG cbSize)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    FIXME("(%p)->(%p %x)\n", This, pMem, cbSize);
+    return S_OK;
+}
+
+static HRESULT WINAPI PersistMemory_Save(IPersistMemory *iface, LPVOID pMem,
+        BOOL fClearDirty, ULONG cbSize)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    FIXME("(%p)->(%p %x %x)\n", This, pMem, fClearDirty, cbSize);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI PersistMemory_GetSizeMax(IPersistMemory *iface, ULONG *pCbSize)
+{
+    WebBrowser *This = PERMEMORY_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pCbSize);
+    return E_NOTIMPL;
+}
+
+static const IPersistMemoryVtbl PersistMemoryVtbl =
+{
+    PersistMemory_QueryInterface,
+    PersistMemory_AddRef,
+    PersistMemory_Release,
+    PersistMemory_GetClassID,
+    PersistMemory_IsDirty,
+    PersistMemory_Load,
+    PersistMemory_Save,
+    PersistMemory_GetSizeMax,
+    PersistMemory_InitNew
 };
 
 /**********************************************************************
@@ -148,7 +227,7 @@ static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM
 {
     WebBrowser *This = PERSTRINIT_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pStg);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM pStg,
@@ -171,7 +250,7 @@ static HRESULT WINAPI PersistStreamInit_InitNew(IPersistStreamInit *iface)
 {
     WebBrowser *This = PERSTRINIT_THIS(iface);
     FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 #undef PERSTRINIT_THIS
@@ -192,5 +271,6 @@ static const IPersistStreamInitVtbl PersistStreamInitVtbl =
 void WebBrowser_Persist_Init(WebBrowser *This)
 {
     This->lpPersistStorageVtbl    = &PersistStorageVtbl;
+    This->lpPersistMemoryVtbl     = &PersistMemoryVtbl;
     This->lpPersistStreamInitVtbl = &PersistStreamInitVtbl;
 }

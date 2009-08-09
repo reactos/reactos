@@ -26,6 +26,7 @@ DECLARE_INTERFACE_(IAMDirectSound,IUnknown)
   STDMETHOD(SetFocusWindow)(THIS_ HWND, BOOL) PURE ;
   STDMETHOD(GetFocusWindow)(THIS_ HWND *, BOOL*) PURE ;
 };
+#undef INTERFACE
 
 #ifdef __cplusplus
 }

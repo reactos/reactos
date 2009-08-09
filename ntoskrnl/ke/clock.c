@@ -16,8 +16,7 @@
 
 LARGE_INTEGER KeBootTime;
 ULONGLONG KeBootTimeBias;
-volatile KSYSTEM_TIME KeTickCount = {0};
-volatile ULONG KiRawTicks = 0;
+volatile KSYSTEM_TIME KeTickCount = { 0, 0, 0 };
 ULONG KeMaximumIncrement;
 ULONG KeMinimumIncrement;
 ULONG KeTimeAdjustment;
@@ -41,7 +40,6 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
     PKSPIN_LOCK_QUEUE LockQueue;
     LIST_ENTRY TempList, TempList2;
     ULONG Hand, i;
-    PKTIMER_TABLE_ENTRY TimerEntry;
 
     /* Sanity checks */
     ASSERT((NewTime->HighPart & 0xF0000000) == 0);
@@ -58,10 +56,10 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
     /* Query the system time now */
     KeQuerySystemTime(OldTime);
 
-    /* Set the new system time */
+    /* Set the new system time (ordering of these operations is critical) */
+    SharedUserData->SystemTime.High2Time = NewTime->HighPart;
     SharedUserData->SystemTime.LowPart = NewTime->LowPart;
     SharedUserData->SystemTime.High1Time = NewTime->HighPart;
-    SharedUserData->SystemTime.High2Time = NewTime->HighPart;
 
     /* Check if this was for the HAL and set the RTC time */
     if (HalTime) ExCmosClockIsSane = HalSetRealTimeClock(&TimeFields);
@@ -77,7 +75,7 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
     KeLowerIrql(OldIrql2);
 
     /* Check if we need to adjust interrupt time */
-    if (FixInterruptTime) KEBUGCHECK(0);
+    if (FixInterruptTime) ASSERT(FALSE);
 
     /* Setup a temporary list of absolute timers */
     InitializeListHead(&TempList);
@@ -95,20 +93,11 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
             Timer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
             NextEntry = NextEntry->Flink;
 
-            /* Is is absolute? */
+            /* Is it absolute? */
             if (Timer->Header.Absolute)
             {
                 /* Remove it from the timer list */
-                if (RemoveEntryList(&Timer->TimerListEntry))
-                {
-                    /* Get the entry and check if it's empty */
-                    TimerEntry = &KiTimerTableListHead[Timer->Header.Hand];
-                    if (IsListEmpty(&TimerEntry->Entry))
-                    {
-                        /* Clear the time then */
-                        TimerEntry->Time.HighPart = 0xFFFFFFFF;
-                    }
-                }
+                KiRemoveEntryTimer(Timer);
 
                 /* Insert it into our temporary list */
                 InsertTailList(&TempList, &Timer->TimerListEntry);
@@ -139,16 +128,7 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
         if (KiInsertTimerTable(Timer, Hand))
         {
             /* Remove it from the timer list */
-            if (RemoveEntryList(&Timer->TimerListEntry))
-            {
-                /* Get the entry and check if it's empty */
-                TimerEntry = &KiTimerTableListHead[Timer->Header.Hand];
-                if (IsListEmpty(&TimerEntry->Entry))
-                {
-                    /* Clear the time then */
-                    TimerEntry->Time.HighPart = 0xFFFFFFFF;
-                }
-            }
+            KiRemoveEntryTimer(Timer);
 
             /* Insert it into our temporary list */
             InsertTailList(&TempList2, &Timer->TimerListEntry);
@@ -158,8 +138,8 @@ KeSetSystemTime(IN PLARGE_INTEGER NewTime,
         KiReleaseTimerLock(LockQueue);
     }
 
-    /* FIXME: Process expired timers! */
-    KiReleaseDispatcherLock(OldIrql);
+    /* Process expired timers. This releases the dispatcher lock. */
+    KiTimerListExpire(&TempList2, OldIrql);
 
     /* Revert affinity */
     KeRevertToUserAffinityThread();

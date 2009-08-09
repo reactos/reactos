@@ -1,0 +1,478 @@
+/*
+ * Copyright 2008 Aric Stewart, CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+import "comcat.idl";
+import "textstor.idl";
+/* import "ctfutb.idl"; */
+#endif
+
+/* FIXME: LANGID is defined in winnt.h and mlang.h in the platform SDK */
+cpp_quote("#ifndef _WINNT_H")
+typedef WORD LANGID;
+cpp_quote("#endif")
+
+cpp_quote("#define TF_E_STACKFULL MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0501)")
+cpp_quote("EXTERN_C const CLSID CLSID_TF_ThreadMgr;")
+cpp_quote("EXTERN_C const CLSID CLSID_TF_InputProcessorProfiles;")
+cpp_quote("EXTERN_C const CLSID CLSID_TF_CategoryMgr;")
+
+/* GUIDs for Categories */
+cpp_quote("EXTERN_C const GUID GUID_TFCAT_TIP_KEYBOARD;")
+cpp_quote("EXTERN_C const GUID GUID_TFCAT_TIP_SPEECH;")
+cpp_quote("EXTERN_C const GUID GUID_TFCAT_TIP_HANDWRITING;")
+cpp_quote("EXTERN_C const GUID GUID_TFCAT_DISPLAYATTRIBUTEPROVIDER;")
+
+typedef [uuid(7213778c-7bb0-4270-b050-6189ee594e97)]  DWORD TfEditCookie;
+typedef [uuid(de403c21-89fd-4f85-8b87-64584d063fbc)] DWORD TfClientId;
+typedef [uuid(88a9c478-f3ec-4763-8345-cd9250443f8d)] DWORD TfGuidAtom;
+
+interface ITfDocumentMgr;
+interface ITfContext;
+interface IEnumTfDocumentMgrs;
+interface IEnumTfContexts;
+interface ITfFunctionProvider;
+interface IEnumTfFunctionProviders;
+interface ITfCompartmentMgr;
+interface ITfEditSession;
+interface ITfRange;
+interface ITfContextView;
+interface IEnumTfContextViews;
+interface ITfProperty;
+interface ITfReadOnlyProperty;
+interface IEnumTfProperties;
+interface ITfRangeBackup;
+interface IEnumTfLanguageProfiles;
+interface ITfEditRecord;
+interface ITfCompositionView;
+
+typedef [uuid(e1b5808d-1e46-4c19-84dc-68c5f5978cc8)] struct TF_LANGUAGEPROFILE
+{
+    CLSID clsid;
+    LANGID langid;
+    GUID catid;
+    BOOL fActive;
+    GUID guidProfile;
+} TF_LANGUAGEPROFILE;
+
+[
+    object,
+    uuid(aa80e801-2021-11d2-93e0-0060b067b86e),
+    pointer_default(unique)
+]
+interface ITfThreadMgr: IUnknown
+{
+    HRESULT Activate(
+        [out] TfClientId *ptid);
+
+    HRESULT Deactivate();
+
+    HRESULT CreateDocumentMgr(
+        [out] ITfDocumentMgr **ppdim);
+
+    HRESULT EnumDocumentMgrs(
+        [out] IEnumTfDocumentMgrs **ppEnum);
+
+    HRESULT GetFocus(
+        [out] ITfDocumentMgr **ppdimFocus);
+
+    HRESULT SetFocus(
+        [in] ITfDocumentMgr *pdimFocus);
+
+    HRESULT AssociateFocus(
+        [in] HWND hwnd,
+        [in, unique] ITfDocumentMgr *pdimNew,
+        [out] ITfDocumentMgr **ppdimPrev);
+
+    HRESULT IsThreadFocus(
+        [out] BOOL *pfThreadFocus);
+
+    HRESULT GetFunctionProvider(
+        [in] REFCLSID clsid,
+        [out] ITfFunctionProvider **ppFuncProv);
+
+    HRESULT EnumFunctionProviders(
+        [out] IEnumTfFunctionProviders **ppEnum);
+
+    HRESULT GetGlobalCompartment(
+        [out] ITfCompartmentMgr **ppCompMgr);
+};
+
+
+[
+    object,
+    uuid(aa80e7f4-2021-11d2-93e0-0060b067b86e),
+    pointer_default(unique)
+]
+interface ITfDocumentMgr: IUnknown
+{
+    HRESULT CreateContext(
+        [in] TfClientId tidOwner,
+        [in] DWORD dwFlags,
+        [in, unique] IUnknown *punk,
+        [out] ITfContext **ppic,
+        [out] TfEditCookie *pecTextStore);
+
+    HRESULT Push(
+        [in] ITfContext *pic);
+
+    const DWORD TF_POPF_ALL = 0x0001;
+
+    HRESULT Pop(
+        [in] DWORD dwFlags);
+
+    HRESULT GetTop(
+        [out] ITfContext **ppic);
+
+    HRESULT GetBase(
+        [out] ITfContext **ppic);
+
+    HRESULT EnumContexts(
+        [out] IEnumTfContexts **ppEnum);
+};
+
+[
+    object,
+    uuid(aa80e7fd-2021-11d2-93e0-0060b067b86e),
+    pointer_default(unique)
+]
+interface ITfContext : IUnknown
+{
+    const DWORD TF_ES_ASYNCDONTCARE = 0x0;
+    const DWORD TF_ES_SYNC          = 0x1;
+    const DWORD TF_ES_READ          = 0x2;
+    const DWORD TF_ES_READWRITE     = 0x6;
+    const DWORD TF_ES_ASYNC         = 0x8;
+
+    HRESULT RequestEditSession(
+        [in] TfClientId tid,
+        [in] ITfEditSession *pes,
+        [in] DWORD dwFlags,
+        [out] HRESULT *phrSession);
+
+    HRESULT InWriteSession(
+        [in] TfClientId tid,
+        [out] BOOL *pfWriteSession);
+
+    typedef [uuid(1690be9b-d3e9-49f6-8d8b-51b905af4c43)] enum { TF_AE_NONE, TF_AE_START, TF_AE_END } TfActiveSelEnd;
+
+    typedef [uuid(36ae42a4-6989-4bdc-b48a-6137b7bf2e42)] struct TF_SELECTIONSTYLE
+    {
+        TfActiveSelEnd ase;
+        BOOL fInterimChar;
+    } TF_SELECTIONSTYLE;
+
+    typedef [uuid(75eb22f2-b0bf-46a8-8006-975a3b6efcf1)] struct TF_SELECTION
+    {
+        ITfRange *range;
+        TF_SELECTIONSTYLE style;
+    } TF_SELECTION;
+
+    const ULONG TF_DEFAULT_SELECTION =  TS_DEFAULT_SELECTION;
+
+    HRESULT GetSelection(
+        [in] TfEditCookie ec,
+        [in] ULONG ulIndex,
+        [in] ULONG ulCount,
+        [out, size_is(ulCount), length_is(*pcFetched)] TF_SELECTION *pSelection,
+        [out] ULONG *pcFetched);
+
+    HRESULT SetSelection(
+        [in] TfEditCookie ec,
+        [in] ULONG ulCount,
+        [in, size_is(ulCount)] const TF_SELECTION *pSelection);
+
+    HRESULT GetStart(
+        [in] TfEditCookie ec,
+        [out] ITfRange **ppStart);
+
+    HRESULT GetEnd(
+        [in] TfEditCookie ec,
+        [out] ITfRange **ppEnd);
+
+    typedef [uuid(bc7d979a-846a-444d-afef-0a9bfa82b961)] TS_STATUS TF_STATUS;
+    const DWORD TF_SD_READONLY    = TS_SD_READONLY;
+    const DWORD TF_SD_LOADING     = TS_SD_LOADING;
+    const DWORD TF_SS_DISJOINTSEL = TS_SS_DISJOINTSEL;
+    const DWORD TF_SS_REGIONS     = TS_SS_REGIONS;
+    const DWORD TF_SS_TRANSITORY  = TS_SS_TRANSITORY;
+
+
+    HRESULT GetActiveView(
+        [out] ITfContextView **ppView);
+
+    HRESULT EnumViews(
+        [out] IEnumTfContextViews **ppEnum);
+
+    HRESULT GetStatus(
+        [out] TF_STATUS *pdcs);
+
+    HRESULT GetProperty(
+        [in] REFGUID guidProp,
+        [out] ITfProperty **ppProp);
+
+    HRESULT GetAppProperty(
+        [in] REFGUID guidProp,
+        [out] ITfReadOnlyProperty **ppProp);
+
+    HRESULT TrackProperties(
+        [in, size_is(cProp)] const GUID **prgProp,
+        [in] ULONG cProp,
+        [in, size_is(cAppProp)] const GUID **prgAppProp,
+        [in] ULONG cAppProp,
+        [out] ITfReadOnlyProperty **ppProperty);
+
+    HRESULT EnumProperties(
+        [out] IEnumTfProperties **ppEnum);
+
+    HRESULT GetDocumentMgr(
+        [out] ITfDocumentMgr **ppDm);
+
+    HRESULT CreateRangeBackup(
+        [in] TfEditCookie ec,
+        [in] ITfRange *pRange,
+        [out] ITfRangeBackup **ppBackup);
+
+};
+
+[
+  object,
+  uuid(4ea48a35-60ae-446f-8fd6-e6a8d82459f7),
+  pointer_default(unique)
+]
+interface ITfSource : IUnknown
+{
+    HRESULT AdviseSink(
+        [in] REFIID riid,
+        [in, iid_is(riid)] IUnknown *punk,
+        [out] DWORD *pdwCookie);
+
+    HRESULT UnadviseSink(
+        [in] DWORD dwCookie);
+};
+
+[
+  object,
+  local,
+  uuid(1F02B6C5-7842-4EE6-8A0B-9A24183A95CA),
+  pointer_default(unique)
+]
+interface ITfInputProcessorProfiles : IUnknown
+{
+    HRESULT Register(
+        [in] REFCLSID rclsid);
+
+    HRESULT Unregister(
+        [in] REFCLSID rclsid);
+
+    HRESULT AddLanguageProfile(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [in, size_is(cchDesc)] const WCHAR *pchDesc,
+        [in] ULONG cchDesc,
+        [in, size_is(cchFile)] const WCHAR *pchIconFile,
+        [in] ULONG cchFile,
+        [in] ULONG uIconIndex);
+
+    HRESULT RemoveLanguageProfile(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile);
+
+    HRESULT EnumInputProcessorInfo(
+        [out] IEnumGUID **ppEnum);
+
+    HRESULT GetDefaultLanguageProfile(
+        [in] LANGID langid,
+        [in] REFGUID catid,
+        [out] CLSID *pclsid,
+        [out] GUID *pguidProfile);
+
+    HRESULT SetDefaultLanguageProfile(
+        [in] LANGID langid,
+        [in] REFCLSID rclsid,
+        [in] REFGUID guidProfiles);
+
+    HRESULT ActivateLanguageProfile(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfiles);
+
+    HRESULT GetActiveLanguageProfile(
+        [in] REFCLSID rclsid,
+        [out] LANGID *plangid,
+        [out] GUID *pguidProfile);
+
+    HRESULT GetLanguageProfileDescription(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [out] BSTR *pbstrProfile);
+
+    HRESULT GetCurrentLanguage(
+        [out] LANGID *plangid);
+
+    HRESULT ChangeCurrentLanguage(
+        [in] LANGID langid);
+
+    HRESULT GetLanguageList(
+        [out] LANGID **ppLangId,
+        [out] ULONG *pulCount);
+
+    HRESULT EnumLanguageProfiles(
+        [in] LANGID langid,
+        [out] IEnumTfLanguageProfiles **ppEnum);
+
+    HRESULT EnableLanguageProfile(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [in] BOOL fEnable);
+
+    HRESULT IsEnabledLanguageProfile(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [out] BOOL *pfEnable);
+
+    HRESULT EnableLanguageProfileByDefault(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [in] BOOL fEnable);
+
+    HRESULT SubstituteKeyboardLayout(
+        [in] REFCLSID rclsid,
+        [in] LANGID langid,
+        [in] REFGUID guidProfile,
+        [in] HKL hKL);
+};
+
+[
+  object,
+  local,
+  uuid(c3acefb5-f69d-4905-938f-fcadcf4be830),
+  pointer_default(unique)
+]
+interface ITfCategoryMgr : IUnknown
+{
+    HRESULT RegisterCategory([in] REFCLSID rclsid,
+                             [in] REFGUID rcatid,
+                             [in] REFGUID rguid);
+
+    HRESULT UnregisterCategory([in] REFCLSID rclsid,
+                               [in] REFGUID rcatid,
+                               [in] REFGUID rguid);
+
+    HRESULT EnumCategoriesInItem([in] REFGUID rguid,
+                                 [out] IEnumGUID **ppEnum);
+
+    HRESULT EnumItemsInCategory([in] REFGUID rcatid,
+                                [out] IEnumGUID **ppEnum);
+
+    HRESULT FindClosestCategory([in] REFGUID rguid,
+                                [out] GUID *pcatid,
+                                [in, size_is(ulCount)] const GUID **ppcatidList,
+                                [in] ULONG ulCount);
+
+    HRESULT RegisterGUIDDescription([in] REFCLSID rclsid,
+                                    [in] REFGUID rguid,
+                                    [in, size_is(cch)] const WCHAR *pchDesc,
+                                    [in] ULONG cch);
+
+    HRESULT UnregisterGUIDDescription([in] REFCLSID rclsid,
+                                      [in] REFGUID rguid);
+
+    HRESULT GetGUIDDescription([in] REFGUID rguid,
+                               [out] BSTR *pbstrDesc);
+
+    HRESULT RegisterGUIDDWORD([in] REFCLSID rclsid,
+                              [in] REFGUID rguid,
+                              [in] DWORD dw);
+
+    HRESULT UnregisterGUIDDWORD([in] REFCLSID rclsid,
+                                [in] REFGUID rguid);
+
+    HRESULT GetGUIDDWORD([in] REFGUID rguid,
+                         [out] DWORD *pdw);
+
+    HRESULT RegisterGUID([in] REFGUID rguid,
+                         [out] TfGuidAtom *pguidatom);
+
+    HRESULT GetGUID([in] TfGuidAtom guidatom,
+                    [out] GUID *pguid);
+
+    HRESULT IsEqualTfGuidAtom([in] TfGuidAtom guidatom,
+                              [in] REFGUID rguid,
+                              [out] BOOL *pfEqual);
+};
+
+[
+  object,
+  uuid(8127d409-ccd3-4683-967a-b43d5b482bf7),
+  pointer_default(unique)
+]
+interface ITfTextEditSink : IUnknown
+{
+    HRESULT OnEndEdit(
+        [in] ITfContext *pic,
+        [in] TfEditCookie ecReadOnly,
+        [in] ITfEditRecord *pEditRecord);
+};
+
+[
+    object,
+    uuid(5F20AA40-B57A-4F34-96AB-3576F377CC79),
+    pointer_default(unique)
+]
+interface ITfContextOwnerCompositionSink : IUnknown
+{
+    HRESULT OnStartComposition(
+        [in] ITfCompositionView *pComposition,
+        [out] BOOL *pfOk);
+
+    HRESULT OnUpdateComposition(
+        [in] ITfCompositionView *pComposition,
+        [in] ITfRange *pRangeNew);
+
+    HRESULT OnEndComposition(
+        [in] ITfCompositionView *pComposition);
+};
+
+[
+  object,
+  uuid(3d61bf11-ac5f-42c8-a4cb-931bcc28c744),
+  pointer_default(unique)
+]
+interface IEnumTfLanguageProfiles : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfLanguageProfiles **ppEnum);
+
+    HRESULT Next(
+        [in] ULONG ulCount,
+        [out, size_is(ulCount), length_is(*pcFetch)] TF_LANGUAGEPROFILE *pProfile,
+        [out] ULONG *pcFetch);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG ulCount);
+};

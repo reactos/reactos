@@ -1,0 +1,55 @@
+/*
+ * Korean resources for localui
+ *
+ * Copyright 2007 Detlef Riekenberg
+ * Copyright 2007 YunSong Hwang(황윤성)(hys545@dreamwiz.com)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+ADDPORT_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE 6, 18, 245, 47
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "지역 포트 더하기"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    LTEXT "더할 포트 이름 입력(&E):", -1, 7, 13, 194, 13, WS_VISIBLE
+    EDITTEXT ADDPORT_EDIT, 6, 28, 174, 12, WS_VISIBLE | ES_AUTOHSCROLL
+    DEFPUSHBUTTON "확인", IDOK, 199, 10, 40, 14, WS_VISIBLE
+    PUSHBUTTON "취소", IDCANCEL, 199, 27, 40, 14, WS_VISIBLE
+END
+
+
+LPTCONFIG_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE 6, 18, 220, 47
+STYLE DS_CONTEXTHELP | DS_MODALFRAME | DS_SETFONT | DS_SETFOREGROUND | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "LPT 포트 설정"
+FONT 9, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "시간초과(초)", LPTCONFIG_GROUP, 6, 6, 150, 35, BS_GROUPBOX
+    LTEXT "재 전송 횟수(&T):", -1, 14, 22, 90, 13, WS_VISIBLE
+    EDITTEXT LPTCONFIG_EDIT, 112, 20, 32, 13, WS_VISIBLE | ES_NUMBER
+    DEFPUSHBUTTON "확인", IDOK, 164, 10, 50, 14, WS_VISIBLE
+    PUSHBUTTON "취소", IDCANCEL, 164, 27, 50, 14, WS_VISIBLE
+END
+
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_LOCALPORT "지역 포트"
+    IDS_INVALIDNAME "'%s'는 올바른 포트 이름이 아닙니다"
+    IDS_PORTEXISTS "포트 %s는 이미 존재합니다"
+    IDS_NOTHINGTOCONFIG "이 포트는 설정할 옵션이 없습니다"
+}

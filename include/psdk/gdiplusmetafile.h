@@ -19,10 +19,6 @@
 #ifndef _GDIPLUSMETAFILE_H
 #define _GDIPLUSMETAFILE_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 class Metafile : public Image
 {
 public:

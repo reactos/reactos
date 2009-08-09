@@ -43,6 +43,9 @@ _mesa_condcode_string(GLuint condcode);
 extern const char *
 _mesa_swizzle_string(GLuint swizzle, GLuint negateBase, GLboolean extended);
 
+const char *
+_mesa_writemask_string(GLuint writeMask);
+
 extern void
 _mesa_print_alu_instruction(const struct prog_instruction *inst,
                             const char *opcode_string, GLuint numRegs);

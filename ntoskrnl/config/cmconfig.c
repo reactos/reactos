@@ -386,7 +386,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Close our handle, free the buffer and return status */
-    ExFreePool(CmpConfigurationData);
+    ExFreePoolWithTag(CmpConfigurationData, TAG_CM);
     NtClose(KeyHandle);
     return Status;
 }

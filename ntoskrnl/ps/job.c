@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 
 /* GLOBALS *******************************************************************/
@@ -117,7 +117,7 @@ PspExitProcessFromJob(IN PEJOB Job,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtAssignProcessToJobObject (
     HANDLE JobHandle,
     HANDLE ProcessHandle)
@@ -216,7 +216,7 @@ NtCreateJobSet(IN ULONG NumJob,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtCreateJobObject (
     PHANDLE JobHandle,
     ACCESS_MASK DesiredAccess,
@@ -236,15 +236,15 @@ NtCreateJobObject (
     /* check for valid buffers */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteHandle(JobHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if(!NT_SUCCESS(Status))
         {
@@ -298,18 +298,18 @@ NtCreateJobObject (
         if(NT_SUCCESS(Status))
         {
             /* pass the handle back to the caller */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* NOTE: if the caller passed invalid buffers to receive the handle it's his
                 own fault! the object will still be created and live... It's possible
                 to find the handle using ObFindHandleForObject()! */
                 *JobHandle = hJob;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -321,7 +321,7 @@ NtCreateJobObject (
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtIsProcessInJob (
     IN HANDLE ProcessHandle,
     IN HANDLE JobHandle OPTIONAL )
@@ -389,7 +389,7 @@ NtIsProcessInJob (
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtOpenJobObject (
     PHANDLE JobHandle,
     ACCESS_MASK DesiredAccess,
@@ -406,15 +406,15 @@ NtOpenJobObject (
     /* check for valid buffers */
     if(PreviousMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForWriteHandle(JobHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         if(!NT_SUCCESS(Status))
         {
@@ -433,15 +433,15 @@ NtOpenJobObject (
             &hJob);
         if(NT_SUCCESS(Status))
         {
-            _SEH_TRY
+            _SEH2_TRY
             {
                 *JobHandle = hJob;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -453,7 +453,7 @@ NtOpenJobObject (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtQueryInformationJobObject (
     HANDLE JobHandle,
     JOBOBJECTINFOCLASS JobInformationClass,
@@ -470,7 +470,7 @@ NtQueryInformationJobObject (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtSetInformationJobObject (
     HANDLE JobHandle,
     JOBOBJECTINFOCLASS JobInformationClass,
@@ -486,7 +486,7 @@ NtSetInformationJobObject (
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 NtTerminateJobObject (
     HANDLE JobHandle,
     NTSTATUS ExitStatus )
@@ -523,7 +523,7 @@ NtTerminateJobObject (
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 PsGetJobLock ( PEJOB Job )
 {
     ASSERT(Job);
@@ -535,7 +535,7 @@ PsGetJobLock ( PEJOB Job )
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 PsGetJobSessionId ( PEJOB Job )
 {
     ASSERT(Job);
@@ -547,7 +547,7 @@ PsGetJobSessionId ( PEJOB Job )
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 PsGetJobUIRestrictionsClass ( PEJOB Job )
 {
     ASSERT(Job);
@@ -559,7 +559,7 @@ PsGetJobUIRestrictionsClass ( PEJOB Job )
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 PsSetJobUIRestrictionsClass(PEJOB Job,
     ULONG UIRestrictionsClass)
 {

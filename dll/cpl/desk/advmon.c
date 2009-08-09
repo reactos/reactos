@@ -86,7 +86,9 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
     HPSXA hpsxaDev, hpsxaDisp;
     BOOL Ret;
     IDataObject *pdo;
+#ifdef _MSC_VER
     HMODULE hShell32 = NULL;
+#endif
     CPSEAE msvc_SHCreatePropSheetExtArrayEx;
 
     /* silence gcc warning */
@@ -140,8 +142,10 @@ DisplayAdvancedSettings(HWND hWndParent, PDISPLAY_DEVICE_ENTRY DisplayDevice)
 
     IDataObject_Release(pdo);
 
+#ifdef _MSC_VER
     if (hShell32)
         FreeLibrary(hShell32);
+#endif
 
     return Ret;
 }

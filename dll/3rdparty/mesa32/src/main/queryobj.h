@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.1
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -35,6 +35,19 @@ _mesa_init_query(GLcontext *ctx);
 
 extern void
 _mesa_free_query_data(GLcontext *ctx);
+
+extern void
+_mesa_delete_query(GLcontext *ctx, struct gl_query_object *q);
+
+extern void
+_mesa_begin_query(GLcontext *ctx, struct gl_query_object *q);
+
+extern void
+_mesa_end_query(GLcontext *ctx, struct gl_query_object *q);
+
+extern void
+_mesa_wait_query(GLcontext *ctx, struct gl_query_object *q);
+
 
 extern void GLAPIENTRY
 _mesa_GenQueriesARB(GLsizei n, GLuint *ids);

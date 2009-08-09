@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,6 +25,7 @@
 #include "winerror.h"
 #include "wincrypt.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 
@@ -34,6 +35,25 @@ WINE_DEFAULT_DEBUG_CHANNEL(crypt);
 #define CERT_REQUEST_TRAILER "-----END NEW CERTIFICATE REQUEST-----"
 #define X509_HEADER          "-----BEGIN X509 CRL-----"
 #define X509_TRAILER         "-----END X509 CRL-----"
+
+static const WCHAR CERT_HEADER_W[] = {
+'-','-','-','-','-','B','E','G','I','N',' ','C','E','R','T','I','F','I','C',
+'A','T','E','-','-','-','-','-',0 };
+static const WCHAR CERT_TRAILER_W[] = {
+'-','-','-','-','-','E','N','D',' ','C','E','R','T','I','F','I','C','A','T',
+'E','-','-','-','-','-',0 };
+static const WCHAR CERT_REQUEST_HEADER_W[] = {
+'-','-','-','-','-','B','E','G','I','N',' ','N','E','W',' ','C','E','R','T',
+'I','F','I','C','A','T','E','R','E','Q','U','E','S','T','-','-','-','-','-',0 };
+static const WCHAR CERT_REQUEST_TRAILER_W[] = {
+'-','-','-','-','-','E','N','D',' ','N','E','W',' ','C','E','R','T','I','F',
+'I','C','A','T','E','R','E','Q','U','E','S','T','-','-','-','-','-',0 };
+static const WCHAR X509_HEADER_W[] = {
+'-','-','-','-','-','B','E','G','I','N',' ','X','5','0','9',' ','C','R','L',
+'-','-','-','-','-',0 };
+static const WCHAR X509_TRAILER_W[] = {
+'-','-','-','-','-','E','N','D',' ','X','5','0','9',' ','C','R','L','-','-',
+'-','-','-',0 };
 
 static const char b64[] =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -260,7 +280,7 @@ BOOL WINAPI CryptBinaryToStringA(const BYTE *pbBinary,
     return encoder(pbBinary, cbBinary, dwFlags, pszString, pcchString);
 }
 
-static inline BYTE decodeBase64Byte(char c)
+static inline BYTE decodeBase64Byte(int c)
 {
     BYTE ret;
 
@@ -572,6 +592,306 @@ BOOL WINAPI CryptStringToBinaryA(LPCSTR pszString,
     }
     if (!cchString)
         cchString = strlen(pszString);
+    ret = decoder(pszString, cchString, pbBinary, pcbBinary, pdwSkip, pdwFlags);
+    if (ret)
+        SetLastError(ret);
+    return (ret == ERROR_SUCCESS) ? TRUE : FALSE;
+}
+
+static LONG decodeBase64BlockW(const WCHAR *in_buf, int in_len,
+ const WCHAR **nextBlock, PBYTE out_buf, DWORD *out_len)
+{
+    int len = in_len, i;
+    const WCHAR *d = in_buf;
+    int  ip0, ip1, ip2, ip3;
+
+    if (len < 4)
+        return ERROR_INVALID_DATA;
+
+    i = 0;
+    if (d[2] == '=')
+    {
+        if ((ip0 = decodeBase64Byte(d[0])) > 63)
+            return ERROR_INVALID_DATA;
+        if ((ip1 = decodeBase64Byte(d[1])) > 63)
+            return ERROR_INVALID_DATA;
+
+        if (out_buf)
+            out_buf[i] = (ip0 << 2) | (ip1 >> 4);
+        i++;
+    }
+    else if (d[3] == '=')
+    {
+        if ((ip0 = decodeBase64Byte(d[0])) > 63)
+            return ERROR_INVALID_DATA;
+        if ((ip1 = decodeBase64Byte(d[1])) > 63)
+            return ERROR_INVALID_DATA;
+        if ((ip2 = decodeBase64Byte(d[2])) > 63)
+            return ERROR_INVALID_DATA;
+
+        if (out_buf)
+        {
+            out_buf[i + 0] = (ip0 << 2) | (ip1 >> 4);
+            out_buf[i + 1] = (ip1 << 4) | (ip2 >> 2);
+        }
+        i += 2;
+    }
+    else
+    {
+        if ((ip0 = decodeBase64Byte(d[0])) > 63)
+            return ERROR_INVALID_DATA;
+        if ((ip1 = decodeBase64Byte(d[1])) > 63)
+            return ERROR_INVALID_DATA;
+        if ((ip2 = decodeBase64Byte(d[2])) > 63)
+            return ERROR_INVALID_DATA;
+        if ((ip3 = decodeBase64Byte(d[3])) > 63)
+            return ERROR_INVALID_DATA;
+
+        if (out_buf)
+        {
+            out_buf[i + 0] = (ip0 << 2) | (ip1 >> 4);
+            out_buf[i + 1] = (ip1 << 4) | (ip2 >> 2);
+            out_buf[i + 2] = (ip2 << 6) |  ip3;
+        }
+        i += 3;
+    }
+    if (len >= 6 && d[4] == '\r' && d[5] == '\n')
+        *nextBlock = d + 6;
+    else if (len >= 5 && d[4] == '\n')
+        *nextBlock = d + 5;
+    else if (len >= 4 && d[4])
+        *nextBlock = d + 4;
+    else
+        *nextBlock = NULL;
+    *out_len = i;
+    return ERROR_SUCCESS;
+}
+
+/* Unlike CryptStringToBinaryW, cchString is guaranteed to be the length of the
+ * string to convert.
+ */
+typedef LONG (*StringToBinaryWFunc)(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags);
+
+static LONG Base64ToBinaryW(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    LONG ret = ERROR_SUCCESS;
+    const WCHAR *nextBlock;
+    DWORD outLen = 0;
+
+    nextBlock = pszString;
+    while (nextBlock && !ret)
+    {
+        DWORD len = 0;
+
+        ret = decodeBase64BlockW(nextBlock, cchString - (nextBlock - pszString),
+         &nextBlock, pbBinary ? pbBinary + outLen : NULL, &len);
+        if (!ret)
+            outLen += len;
+        if (cchString - (nextBlock - pszString) <= 0)
+            nextBlock = NULL;
+    }
+    *pcbBinary = outLen;
+    if (!ret)
+    {
+        if (pdwSkip)
+            *pdwSkip = 0;
+        if (pdwFlags)
+            *pdwFlags = CRYPT_STRING_BASE64;
+    }
+    else if (ret == ERROR_INSUFFICIENT_BUFFER)
+    {
+        if (!pbBinary)
+            ret = ERROR_SUCCESS;
+    }
+    return ret;
+}
+
+static LONG Base64WithHeaderAndTrailerToBinaryW(LPCWSTR pszString,
+ DWORD cchString, LPCWSTR header, LPCWSTR trailer, BYTE *pbBinary,
+ DWORD *pcbBinary, DWORD *pdwSkip)
+{
+    LONG ret;
+    LPCWSTR ptr;
+
+    if (cchString > strlenW(header) + strlenW(trailer)
+     && (ptr = strstrW(pszString, header)) != NULL)
+    {
+        LPCWSTR trailerSpot = pszString + cchString - strlenW(trailer);
+
+        if (pszString[cchString - 1] == '\n')
+        {
+            cchString--;
+            trailerSpot--;
+        }
+        if (pszString[cchString - 1] == '\r')
+        {
+            cchString--;
+            trailerSpot--;
+        }
+        if (!strncmpW(trailerSpot, trailer, strlenW(trailer)))
+        {
+            if (pdwSkip)
+                *pdwSkip = ptr - pszString;
+            ptr += strlenW(header);
+            if (*ptr == '\r') ptr++;
+            if (*ptr == '\n') ptr++;
+            cchString -= ptr - pszString + strlenW(trailer);
+            ret = Base64ToBinaryW(ptr, cchString, pbBinary, pcbBinary, NULL,
+             NULL);
+        }
+        else
+            ret = ERROR_INVALID_DATA;
+    }
+    else
+        ret = ERROR_INVALID_DATA;
+    return ret;
+}
+
+static LONG Base64HeaderToBinaryW(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    LONG ret = Base64WithHeaderAndTrailerToBinaryW(pszString, cchString,
+     CERT_HEADER_W, CERT_TRAILER_W, pbBinary, pcbBinary, pdwSkip);
+
+    if (!ret && pdwFlags)
+        *pdwFlags = CRYPT_STRING_BASE64HEADER;
+    return ret;
+}
+
+static LONG Base64RequestHeaderToBinaryW(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    LONG ret = Base64WithHeaderAndTrailerToBinaryW(pszString, cchString,
+     CERT_REQUEST_HEADER_W, CERT_REQUEST_TRAILER_W, pbBinary, pcbBinary,
+     pdwSkip);
+
+    if (!ret && pdwFlags)
+        *pdwFlags = CRYPT_STRING_BASE64REQUESTHEADER;
+    return ret;
+}
+
+static LONG Base64X509HeaderToBinaryW(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    LONG ret = Base64WithHeaderAndTrailerToBinaryW(pszString, cchString,
+     X509_HEADER_W, X509_TRAILER_W, pbBinary, pcbBinary, pdwSkip);
+
+    if (!ret && pdwFlags)
+        *pdwFlags = CRYPT_STRING_BASE64X509CRLHEADER;
+    return ret;
+}
+
+static LONG Base64AnyToBinaryW(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    LONG ret;
+
+    ret = Base64HeaderToBinaryW(pszString, cchString, pbBinary, pcbBinary,
+     pdwSkip, pdwFlags);
+    if (ret == ERROR_INVALID_DATA)
+        ret = Base64ToBinaryW(pszString, cchString, pbBinary, pcbBinary,
+         pdwSkip, pdwFlags);
+    return ret;
+}
+
+static LONG DecodeBinaryToBinaryW(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    LONG ret = ERROR_SUCCESS;
+
+    if (*pcbBinary < cchString)
+    {
+        if (!pbBinary)
+            *pcbBinary = cchString;
+        else
+        {
+            ret = ERROR_INSUFFICIENT_BUFFER;
+            *pcbBinary = cchString;
+        }
+    }
+    else
+    {
+        if (cchString)
+            memcpy(pbBinary, pszString, cchString * sizeof(WCHAR));
+        *pcbBinary = cchString * sizeof(WCHAR);
+    }
+    return ret;
+}
+
+static LONG DecodeAnyW(LPCWSTR pszString, DWORD cchString,
+ BYTE *pbBinary, DWORD *pcbBinary, DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    LONG ret;
+
+    ret = Base64HeaderToBinaryW(pszString, cchString, pbBinary, pcbBinary,
+     pdwSkip, pdwFlags);
+    if (ret == ERROR_INVALID_DATA)
+        ret = Base64ToBinaryW(pszString, cchString, pbBinary, pcbBinary,
+         pdwSkip, pdwFlags);
+    if (ret == ERROR_INVALID_DATA)
+        ret = DecodeBinaryToBinaryW(pszString, cchString, pbBinary, pcbBinary,
+         pdwSkip, pdwFlags);
+    return ret;
+}
+
+BOOL WINAPI CryptStringToBinaryW(LPCWSTR pszString,
+ DWORD cchString, DWORD dwFlags, BYTE *pbBinary, DWORD *pcbBinary,
+ DWORD *pdwSkip, DWORD *pdwFlags)
+{
+    StringToBinaryWFunc decoder;
+    LONG ret;
+
+    TRACE("(%s, %d, %08x, %p, %p, %p, %p)\n", debugstr_w(pszString),
+     cchString, dwFlags, pbBinary, pcbBinary, pdwSkip, pdwFlags);
+
+    if (!pszString)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    /* Only the bottom byte contains valid types */
+    if (dwFlags & 0xfffffff0)
+    {
+        SetLastError(ERROR_INVALID_DATA);
+        return FALSE;
+    }
+    switch (dwFlags)
+    {
+    case CRYPT_STRING_BASE64_ANY:
+        decoder = Base64AnyToBinaryW;
+        break;
+    case CRYPT_STRING_BASE64:
+        decoder = Base64ToBinaryW;
+        break;
+    case CRYPT_STRING_BASE64HEADER:
+        decoder = Base64HeaderToBinaryW;
+        break;
+    case CRYPT_STRING_BASE64REQUESTHEADER:
+        decoder = Base64RequestHeaderToBinaryW;
+        break;
+    case CRYPT_STRING_BASE64X509CRLHEADER:
+        decoder = Base64X509HeaderToBinaryW;
+        break;
+    case CRYPT_STRING_BINARY:
+        decoder = DecodeBinaryToBinaryW;
+        break;
+    case CRYPT_STRING_ANY:
+        decoder = DecodeAnyW;
+        break;
+    case CRYPT_STRING_HEX:
+    case CRYPT_STRING_HEXASCII:
+    case CRYPT_STRING_HEXADDR:
+    case CRYPT_STRING_HEXASCIIADDR:
+        FIXME("Unimplemented type %d\n", dwFlags & 0x7fffffff);
+        /* fall through */
+    default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (!cchString)
+        cchString = strlenW(pszString);
     ret = decoder(pszString, cchString, pbBinary, pcbBinary, pdwSkip, pdwFlags);
     if (ret)
         SetLastError(ret);

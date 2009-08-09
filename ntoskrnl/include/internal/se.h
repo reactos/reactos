@@ -86,7 +86,7 @@ extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
 /* Functions */
 BOOLEAN
 NTAPI
-SeInit(VOID);
+SeInitSystem(VOID);
 
 BOOLEAN
 NTAPI
@@ -316,7 +316,7 @@ SeSetWorldSecurityDescriptor(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 SeCopyClientToken(
     IN PACCESS_TOKEN Token,
     IN SECURITY_IMPERSONATION_LEVEL Level,

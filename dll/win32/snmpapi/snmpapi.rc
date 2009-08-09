@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: snmpapi.rc 22410 2006-06-19 12:34:31Z gedmurphy $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Sockets 2 SNMP Helper API\0"

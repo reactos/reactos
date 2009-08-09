@@ -1,14 +1,17 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/mbstring/ismbtrl.c
+ * FILE:        lib/sdk/crt/mbstring/ismbtrl.c
  * PURPOSE:     Checks for a trailing byte
- * PROGRAMER:   Ariadne
- * UPDATE HISTORY:
- *              12/04/99: Created
+ * PROGRAMERS:
+ *              Copyright 1999 Ariadne
+ *              Copyright 1999 Alexandre Julliard
+ *              Copyright 2000 Jon Griffths
+ *
  */
 
 #include <precomp.h>
+#include <mbctype.h>
 
 size_t _mbclen2(const unsigned int s);
 
@@ -19,21 +22,18 @@ size_t _mbclen2(const unsigned int s);
  */
 int _ismbbtrail(unsigned int c)
 {
-   return (_mbctype[c & 0xff] & _MTRAIL);
+  return (_mbctype[(c&0xff) + 1] & _M2) != 0;
 }
 
 
 /*
  * @implemented
  */
-int _ismbstrail( const unsigned char *str, const unsigned char *t)
+int _ismbstrail( const unsigned char *start, const unsigned char *str)
 {
-	unsigned char *s = (unsigned char *)str;
-	while(*s != 0 && s != t)
-	{
-
-		s+= _mbclen2(*s);
-	}
-
-	return _ismbbtrail(*s);
+  /* Note: this function doesn't check _ismbbtrail */
+  if ((str > start) && _ismbslead(start, str-1))
+    return -1;
+  else
+    return 0;
 }

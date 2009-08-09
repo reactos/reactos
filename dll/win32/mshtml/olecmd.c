@@ -52,7 +52,7 @@ void do_ns_command(NSContainer *This, const char *cmd, nsICommandParams *nsparam
         return;
     }
 
-    nsres = nsICommandManager_DoCommand(cmdmgr, cmd, nsparam, NULL);
+    nsres = nsICommandManager_DoCommand(cmdmgr, cmd, nsparam, This->doc->window->nswindow);
     if(NS_FAILED(nsres))
         ERR("DoCommand(%s) failed: %08x\n", debugstr_a(cmd), nsres);
 

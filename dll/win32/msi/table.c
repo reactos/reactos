@@ -101,43 +101,33 @@ static WCHAR szColumns[] = { '_','C','o','l','u','m','n','s',0 };
 static WCHAR szNumber[]  = { 'N','u','m','b','e','r',0 };
 static WCHAR szType[]    = { 'T','y','p','e',0 };
 
-/* These tables are written into (the .hash_table part).
- * Do not mark them const.
- */
-static MSICOLUMNINFO _Columns_cols[4] = {
+static const MSICOLUMNINFO _Columns_cols[4] = {
     { szColumns, 1, szTable,  MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, NULL },
     { szColumns, 2, szNumber, MSITYPE_VALID | MSITYPE_KEY | 2,     2, 0, NULL },
     { szColumns, 3, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 4, 0, NULL },
     { szColumns, 4, szType,   MSITYPE_VALID | 2,                   6, 0, NULL },
 };
-static MSICOLUMNINFO _Tables_cols[1] = {
-    { szTables,  1, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 0, 0, NULL },
+
+static const MSICOLUMNINFO _Tables_cols[1] = {
+    { szTables,  1, szName,   MSITYPE_VALID | MSITYPE_STRING | MSITYPE_KEY | 64, 0, 0, NULL },
 };
 
 #define MAX_STREAM_NAME 0x1f
 
 static UINT table_get_column_info( MSIDATABASE *db, LPCWSTR name,
        MSICOLUMNINFO **pcols, UINT *pcount );
-static void table_calc_column_offsets( MSICOLUMNINFO *colinfo, DWORD count );
+static void table_calc_column_offsets( MSIDATABASE *db, MSICOLUMNINFO *colinfo,
+       DWORD count );
 static UINT get_tablecolumns( MSIDATABASE *db,
        LPCWSTR szTableName, MSICOLUMNINFO *colinfo, UINT *sz);
 static void msi_free_colinfo( MSICOLUMNINFO *colinfo, UINT count );
 
-
-void msi_table_set_strref(UINT bytes_per_strref)
-{
-    _Columns_cols[0].offset = 0;
-    _Columns_cols[1].offset = bytes_per_strref;
-    _Columns_cols[2].offset = _Columns_cols[1].offset + sizeof(USHORT);
-    _Columns_cols[3].offset = _Columns_cols[2].offset + bytes_per_strref;
-}
-
-static inline UINT bytes_per_column( const MSICOLUMNINFO *col )
+static inline UINT bytes_per_column( MSIDATABASE *db, const MSICOLUMNINFO *col )
 {
     if( MSITYPE_IS_BINARY(col->type) )
         return 2;
     if( col->type & MSITYPE_STRING )
-        return _Columns_cols[1].offset;
+        return db->bytes_per_strref;
     if( (col->type & 0xff) > 4 )
         ERR("Invalid column size!\n");
     return col->type & 0xff;
@@ -158,7 +148,7 @@ static int utf2mime(int x)
     return -1;
 }
 
-LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
+static LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
 {
     DWORD count = MAX_STREAM_NAME;
     DWORD ch, next;
@@ -336,7 +326,7 @@ end:
     return ret;
 }
 
-UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
+static UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 {
     LPWSTR encname;
     HRESULT r;
@@ -488,32 +478,29 @@ static void free_table( MSITABLE *table )
     for( i=0; i<table->nonpersistent_row_count; i++ )
         msi_free( table->nonpersistent_data[i] );
     msi_free( table->nonpersistent_data );
-    if( (table->colinfo != _Tables_cols) &&
-        (table->colinfo != _Columns_cols) )
-    {
-        msi_free_colinfo( table->colinfo, table->col_count );
-        msi_free( table->colinfo );
-    }
+    msi_free_colinfo( table->colinfo, table->col_count );
+    msi_free( table->colinfo );
     msi_free( table );
 }
 
-static UINT msi_table_get_row_size( const MSICOLUMNINFO *cols, UINT count )
+static UINT msi_table_get_row_size( MSIDATABASE *db,const MSICOLUMNINFO *cols,
+                                    UINT count )
 {
     const MSICOLUMNINFO *last_col = &cols[count-1];
     if (!count)
         return 0;
-    return last_col->offset + bytes_per_column( last_col );
+    return last_col->offset + bytes_per_column( db, last_col );
 }
 
 /* add this table to the list of cached tables in the database */
-static UINT read_table_from_storage( MSITABLE *t, IStorage *stg )
+static UINT read_table_from_storage( MSIDATABASE *db, MSITABLE *t, IStorage *stg )
 {
     BYTE *rawdata = NULL;
     UINT rawsize = 0, i, j, row_size = 0;
 
     TRACE("%s\n",debugstr_w(t->name));
 
-    row_size = msi_table_get_row_size( t->colinfo, t->col_count );
+    row_size = msi_table_get_row_size( db, t->colinfo, t->col_count );
 
     /* if we can't read the table, just assume that it's empty */
     read_stream_data( stg, t->name, TRUE, &rawdata, &rawsize );
@@ -544,7 +531,7 @@ static UINT read_table_from_storage( MSITABLE *t, IStorage *stg )
         for( j=0; j<t->col_count; j++ )
         {
             UINT ofs = t->colinfo[j].offset;
-            UINT n = bytes_per_column( &t->colinfo[j] );
+            UINT n = bytes_per_column( db, &t->colinfo[j] );
             UINT k;
 
             if ( n != 2 && n != 3 && n != 4 )
@@ -598,6 +585,8 @@ static UINT table_get_column_info( MSIDATABASE *db, LPCWSTR name, MSICOLUMNINFO 
     if( r != ERROR_SUCCESS )
         return r;
 
+    *pcount = column_count;
+
     /* if there's no columns, there's no table */
     if( column_count == 0 )
         return ERROR_INVALID_PARAMETER;
@@ -616,7 +605,6 @@ static UINT table_get_column_info( MSIDATABASE *db, LPCWSTR name, MSICOLUMNINFO 
     }
 
     *pcols = columns;
-    *pcount = column_count;
 
     return r;
 }
@@ -672,7 +660,7 @@ UINT msi_create_table( MSIDATABASE *db, LPCWSTR name, column_info *col_info,
         table->colinfo[ i ].ref_count = 0;
         table->colinfo[ i ].hash_table = NULL;
     }
-    table_calc_column_offsets( table->colinfo, table->col_count);
+    table_calc_column_offsets( db, table->colinfo, table->col_count);
 
     r = TABLE_CreateView( db, szTables, &tv );
     TRACE("CreateView returned %x\n", r);
@@ -800,28 +788,14 @@ static UINT get_table( MSIDATABASE *db, LPCWSTR name, MSITABLE **table_ret )
     table->persistent = TRUE;
     lstrcpyW( table->name, name );
 
-    /* these two tables are special - we know the column types already */
-    if( !lstrcmpW( name, szColumns ) )
+    r = table_get_column_info( db, name, &table->colinfo, &table->col_count);
+    if (r != ERROR_SUCCESS)
     {
-        table->colinfo = _Columns_cols;
-        table->col_count = sizeof(_Columns_cols)/sizeof(_Columns_cols[0]);
-    }
-    else if( !lstrcmpW( name, szTables ) )
-    {
-        table->colinfo = _Tables_cols;
-        table->col_count = sizeof(_Tables_cols)/sizeof(_Tables_cols[0]);
-    }
-    else
-    {
-        r = table_get_column_info( db, name, &table->colinfo, &table->col_count);
-        if (r != ERROR_SUCCESS)
-        {
-            free_table ( table );
-            return r;
-        }
+        free_table ( table );
+        return r;
     }
 
-    r = read_table_from_storage( table, db->storage );
+    r = read_table_from_storage( db, table, db->storage );
     if( r != ERROR_SUCCESS )
     {
         free_table( table );
@@ -844,7 +818,7 @@ static UINT save_table( MSIDATABASE *db, const MSITABLE *t )
 
     TRACE("Saving %s\n", debugstr_w( t->name ) );
 
-    row_size = msi_table_get_row_size( t->colinfo, t->col_count );
+    row_size = msi_table_get_row_size( db, t->colinfo, t->col_count );
 
     rawsize = t->row_count * row_size;
     rawdata = msi_alloc_zero( rawsize );
@@ -863,7 +837,7 @@ static UINT save_table( MSIDATABASE *db, const MSITABLE *t )
 
             *p++ = t->data[j][offset];
             *p++ = t->data[j][offset + 1];
-            if( 4 == bytes_per_column( &t->colinfo[i] ) )
+            if( 4 == bytes_per_column( db, &t->colinfo[i] ) )
             {
                 *p++ = t->data[j][offset + 2];
                 *p++ = t->data[j][offset + 3];
@@ -880,7 +854,8 @@ err:
     return r;
 }
 
-static void table_calc_column_offsets( MSICOLUMNINFO *colinfo, DWORD count )
+static void table_calc_column_offsets( MSIDATABASE *db, MSICOLUMNINFO *colinfo,
+                                       DWORD count )
 {
     DWORD i;
 
@@ -889,7 +864,7 @@ static void table_calc_column_offsets( MSICOLUMNINFO *colinfo, DWORD count )
          assert( (i+1) == colinfo[ i ].number );
          if (i)
              colinfo[i].offset = colinfo[ i - 1 ].offset
-                               + bytes_per_column( &colinfo[ i - 1 ] );
+                               + bytes_per_column( db, &colinfo[ i - 1 ] );
          else
              colinfo[i].offset = 0;
          TRACE("column %d is [%s] with type %08x ofs %d\n",
@@ -898,7 +873,8 @@ static void table_calc_column_offsets( MSICOLUMNINFO *colinfo, DWORD count )
     }
 }
 
-static UINT get_defaulttablecolumns( LPCWSTR name, MSICOLUMNINFO *colinfo, UINT *sz)
+static UINT get_defaulttablecolumns( MSIDATABASE *db, LPCWSTR name,
+                                     MSICOLUMNINFO *colinfo, UINT *sz)
 {
     const MSICOLUMNINFO *p;
     DWORD i, n;
@@ -930,7 +906,7 @@ static UINT get_defaulttablecolumns( LPCWSTR name, MSICOLUMNINFO *colinfo, UINT 
         if( colinfo && (i >= *sz) )
             break;
     }
-    table_calc_column_offsets( colinfo, n );
+    table_calc_column_offsets( db, colinfo, n );
     *sz = n;
     return ERROR_SUCCESS;
 }
@@ -971,7 +947,7 @@ static UINT get_tablecolumns( MSIDATABASE *db,
     TRACE("%s\n", debugstr_w(szTableName));
 
     /* first check if there is a default table with that name */
-    r = get_defaulttablecolumns( szTableName, colinfo, sz );
+    r = get_defaulttablecolumns( db, szTableName, colinfo, sz );
     if( ( r == ERROR_SUCCESS ) && *sz )
         return r;
 
@@ -1003,8 +979,8 @@ static UINT get_tablecolumns( MSIDATABASE *db,
             continue;
         if( colinfo )
         {
-            UINT id = read_table_int(table->data, i, _Columns_cols[2].offset, db->bytes_per_strref);
-            UINT col = read_table_int(table->data, i, _Columns_cols[1].offset, sizeof(USHORT)) - (1<<15);
+            UINT id = read_table_int(table->data, i, table->colinfo[2].offset, db->bytes_per_strref);
+            UINT col = read_table_int(table->data, i, table->colinfo[1].offset, sizeof(USHORT)) - (1<<15);
 
             /* check the column number is in range */
             if (col<1 || col>maxcount)
@@ -1023,7 +999,9 @@ static UINT get_tablecolumns( MSIDATABASE *db,
             colinfo[ col - 1 ].tablename = msi_makestring( db, table_id );
             colinfo[ col - 1 ].number = col;
             colinfo[ col - 1 ].colname = msi_makestring( db, id );
-            colinfo[ col - 1 ].type = read_table_int(table->data, i, _Columns_cols[3].offset, sizeof(USHORT)) - (1<<15);
+            colinfo[ col - 1 ].type = read_table_int(table->data, i,
+                                                     table->colinfo[3].offset,
+                                                     sizeof(USHORT)) - (1<<15);
             colinfo[ col - 1 ].offset = 0;
             colinfo[ col - 1 ].ref_count = 0;
             colinfo[ col - 1 ].hash_table = NULL;
@@ -1040,7 +1018,7 @@ static UINT get_tablecolumns( MSIDATABASE *db,
         return ERROR_FUNCTION_FAILED;
     }
 
-    table_calc_column_offsets( colinfo, n );
+    table_calc_column_offsets( db, colinfo, n );
     *sz = n;
 
     return ERROR_SUCCESS;
@@ -1057,7 +1035,10 @@ static void msi_update_table_columns( MSIDATABASE *db, LPCWSTR name )
     msi_free( table->colinfo );
     table_get_column_info( db, name, &table->colinfo, &table->col_count );
 
-    size = msi_table_get_row_size( table->colinfo, table->col_count );
+    if (!table->col_count)
+        return;
+
+    size = msi_table_get_row_size( db, table->colinfo, table->col_count );
     offset = table->colinfo[table->col_count - 1].offset;
 
     for ( n = 0; n < table->row_count; n++ )
@@ -1096,20 +1077,12 @@ BOOL TABLE_Exists( MSIDATABASE *db, LPCWSTR name )
     count = table->row_count;
     for( i=0; i<count; i++ )
         if( table->data[ i ][ 0 ] == table_id )
-            break;
-
-    if (i!=count)
-        return TRUE;
+            return TRUE;
 
     count = table->nonpersistent_row_count;
     for( i=0; i<count; i++ )
         if( table->nonpersistent_data[ i ][ 0 ] == table_id )
-            break;
-
-    if (i!=count)
-        return TRUE;
-
-    TRACE("Searched %d tables, but %d was not found\n", count, table_id );
+            return TRUE;
 
     return FALSE;
 }
@@ -1162,7 +1135,7 @@ static UINT TABLE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *
     else
         data = tv->table->data;
 
-    n = bytes_per_column( &tv->columns[col-1] );
+    n = bytes_per_column( tv->db, &tv->columns[col-1] );
     if (n != 2 && n != 3 && n != 4)
     {
         ERR("oops! what is %d bytes per column?\n", n );
@@ -1277,7 +1250,7 @@ static UINT TABLE_set_int( MSITABLEVIEW *tv, UINT row, UINT col, UINT val )
     else
         data = tv->table->data;
 
-    n = bytes_per_column( &tv->columns[col-1] );
+    n = bytes_per_column( tv->db, &tv->columns[col-1] );
     if ( n != 2 && n != 3 && n != 4 )
     {
         ERR("oops! what is %d bytes per column?\n", n );
@@ -1351,7 +1324,7 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
                 val = msi_addstringW( tv->db->strings, 0, sval, -1, 1,
                                       persistent ? StringPersistent : StringNonPersistent );
             }
-            else if ( 2 == bytes_per_column( &tv->columns[ i ] ) )
+            else if ( 2 == bytes_per_column( tv->db, &tv->columns[ i ] ) )
             {
                 val = 0x8000 + MSI_RecordGetInteger( rec, i + 1 );
                 if ( val & 0xffff0000 )
@@ -1845,7 +1818,7 @@ static UINT TABLE_remove_column(struct tagMSIVIEW *view, LPCWSTR table, UINT num
 
 done:
     msiobj_release(&rec->hdr);
-    if (columns) columns->ops->delete(columns);
+    columns->ops->delete(columns);
     return r;
 }
 
@@ -2081,6 +2054,53 @@ static UINT TABLE_sort(struct tagMSIVIEW *view, column_info *columns)
     return ERROR_SUCCESS;
 }
 
+static UINT TABLE_drop(struct tagMSIVIEW *view)
+{
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    MSIVIEW *tables = NULL;
+    MSIRECORD *rec = NULL;
+    UINT r, row;
+    INT i;
+
+    TRACE("dropping table %s\n", debugstr_w(tv->name));
+
+    for (i = tv->table->col_count - 1; i >= 0; i--)
+    {
+        r = TABLE_remove_column(view, tv->table->colinfo[i].tablename,
+                                tv->table->colinfo[i].number);
+        if (r != ERROR_SUCCESS)
+            return r;
+    }
+
+    rec = MSI_CreateRecord(1);
+    if (!rec)
+        return ERROR_OUTOFMEMORY;
+
+    MSI_RecordSetStringW(rec, 1, tv->name);
+
+    r = TABLE_CreateView(tv->db, szTables, &tables);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = msi_table_find_row((MSITABLEVIEW *)tables, rec, &row);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    r = TABLE_delete_row(tables, row);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    list_remove(&tv->table->entry);
+    free_table(tv->table);
+    TABLE_delete(view);
+
+done:
+    msiobj_release(&rec->hdr);
+    tables->ops->delete(tables);
+
+    return r;
+}
+
 static const MSIVIEWOPS table_ops =
 {
     TABLE_fetch_int,
@@ -2101,6 +2121,7 @@ static const MSIVIEWOPS table_ops =
     TABLE_add_column,
     TABLE_remove_column,
     TABLE_sort,
+    TABLE_drop,
 };
 
 UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
@@ -2109,11 +2130,14 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     UINT r, sz;
 
     static const WCHAR Streams[] = {'_','S','t','r','e','a','m','s',0};
+    static const WCHAR Storages[] = {'_','S','t','o','r','a','g','e','s',0};
 
     TRACE("%p %s %p\n", db, debugstr_w(name), view );
 
     if ( !lstrcmpW( name, Streams ) )
         return STREAMS_CreateView( db, view );
+    else if ( !lstrcmpW( name, Storages ) )
+        return STORAGES_CreateView( db, view );
 
     sz = sizeof *tv + lstrlenW(name)*sizeof name[0] ;
     tv = msi_alloc_zero( sz );
@@ -2135,7 +2159,7 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     tv->db = db;
     tv->columns = tv->table->colinfo;
     tv->num_cols = tv->table->col_count;
-    tv->row_size = msi_table_get_row_size( tv->table->colinfo, tv->table->col_count );
+    tv->row_size = msi_table_get_row_size( db, tv->table->colinfo, tv->table->col_count );
 
     TRACE("%s one row is %d bytes\n", debugstr_w(name), tv->row_size );
 
@@ -2243,7 +2267,7 @@ static MSIRECORD *msi_get_transform_record( const MSITABLEVIEW *tv, const string
         }
         else
         {
-            UINT n = bytes_per_column( &columns[i] );
+            UINT n = bytes_per_column( tv->db, &columns[i] );
             switch( n )
             {
             case 2:
@@ -2454,7 +2478,7 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
                     ! MSITYPE_IS_BINARY(tv->columns[i].type) )
                     sz += bytes_per_strref;
                 else
-                    sz += bytes_per_column( &tv->columns[i] );
+                    sz += bytes_per_column( tv->db, &tv->columns[i] );
             }
         }
         else
@@ -2476,7 +2500,7 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
                         ! MSITYPE_IS_BINARY(tv->columns[i].type) )
                         sz += bytes_per_strref;
                     else
-                        sz += bytes_per_column( &tv->columns[i] );
+                        sz += bytes_per_column( tv->db, &tv->columns[i] );
                 }
             }
         }

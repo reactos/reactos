@@ -332,7 +332,7 @@ VideoPortMapBankedMemory(
 {
    TRACE_(VIDEOPRT, "VideoPortMapBankedMemory\n");
    UNIMPLEMENTED;
-   return ERROR_CALL_NOT_IMPLEMENTED;
+   return ERROR_INVALID_FUNCTION;
 }
 
 
@@ -401,6 +401,7 @@ VideoPortGetAccessRanges(
    IN PULONG Slot)
 {
    PCI_SLOT_NUMBER PciSlotNumber;
+   ULONG DeviceNumber;
    ULONG FunctionNumber;
    PCI_COMMON_CONFIG Config;
    PCM_RESOURCE_LIST AllocatedResources;
@@ -413,6 +414,7 @@ VideoPortGetAccessRanges(
    USHORT DeviceIdToFind;
    ULONG SlotIdToFind;
    ULONG ReturnedLength;
+   BOOLEAN DeviceAndVendorFound = FALSE;
 
    TRACE_(VIDEOPRT, "VideoPortGetAccessRanges\n");
 
@@ -437,7 +439,7 @@ VideoPortGetAccessRanges(
 
             if (ReturnedLength != sizeof(PCI_COMMON_CONFIG))
             {
-               return ERROR_NO_SYSTEM_RESOURCES;
+               return ERROR_NOT_ENOUGH_MEMORY;
             }
          }
          else
@@ -453,36 +455,40 @@ VideoPortGetAccessRanges(
             /*
              * Search for the device id and vendor id on this bus.
              */
-
-            for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
+            for (DeviceNumber = 0; DeviceNumber < PCI_MAX_DEVICES; DeviceNumber++)
             {
-               INFO_(VIDEOPRT, "- Function number: %d\n", FunctionNumber);
-               PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
-               ReturnedLength = HalGetBusData(
-                  PCIConfiguration,
-                  DeviceExtension->SystemIoBusNumber,
-                  PciSlotNumber.u.AsULONG,
-                  &Config,
-                  sizeof(PCI_COMMON_CONFIG));
-               INFO_(VIDEOPRT, "- Length of data: %x\n", ReturnedLength);
-               if (ReturnedLength == sizeof(PCI_COMMON_CONFIG))
+               PciSlotNumber.u.bits.DeviceNumber = DeviceNumber;
+               for (FunctionNumber = 0; FunctionNumber < 8; FunctionNumber++)
                {
-                  INFO_(VIDEOPRT, "- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
-                         "DeviceId 0x%04x\n",
-                         PciSlotNumber.u.AsULONG,
-                         PciSlotNumber.u.bits.DeviceNumber,
-                         PciSlotNumber.u.bits.FunctionNumber,
-                         Config.VendorID,
-                         Config.DeviceID);
-
-                  if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
-                      (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
+                  INFO_(VIDEOPRT, "- Function number: %d\n", FunctionNumber);
+                  PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
+                  ReturnedLength = HalGetBusData(
+                     PCIConfiguration,
+                     DeviceExtension->SystemIoBusNumber,
+                     PciSlotNumber.u.AsULONG,
+                     &Config,
+                     sizeof(PCI_COMMON_CONFIG));
+                  INFO_(VIDEOPRT, "- Length of data: %x\n", ReturnedLength);
+                  if (ReturnedLength == sizeof(PCI_COMMON_CONFIG))
                   {
-                     break;
+                     INFO_(VIDEOPRT, "- Slot 0x%02x (Device %d Function %d) VendorId 0x%04x "
+                            "DeviceId 0x%04x\n",
+                            PciSlotNumber.u.AsULONG,
+                            PciSlotNumber.u.bits.DeviceNumber,
+                            PciSlotNumber.u.bits.FunctionNumber,
+                            Config.VendorID,
+                            Config.DeviceID);
+
+                     if ((VendorIdToFind == 0 || Config.VendorID == VendorIdToFind) &&
+                         (DeviceIdToFind == 0 || Config.DeviceID == DeviceIdToFind))
+                     {
+                        DeviceAndVendorFound = TRUE;
+                        break;
+                     }
                   }
                }
+               if (DeviceAndVendorFound) break;
             }
-
             if (FunctionNumber == 8)
             {
                WARN_(VIDEOPRT, "Didn't find device.\n");
@@ -491,7 +497,10 @@ VideoPortGetAccessRanges(
          }
 
          Status = HalAssignSlotResources(
-            NULL, NULL, NULL, NULL,
+            &DeviceExtension->RegistryPath,
+            NULL,
+            DeviceExtension->DriverObject,
+            DeviceExtension->DriverObject->DeviceObject,
             DeviceExtension->AdapterInterfaceType,
             DeviceExtension->SystemIoBusNumber,
             PciSlotNumber.u.AsULONG,
@@ -499,13 +508,13 @@ VideoPortGetAccessRanges(
 
          if (!NT_SUCCESS(Status))
          {
+            WARN_(VIDEOPRT, "HalAssignSlotResources failed with status %x.\n",Status);
             return Status;
          }
          DeviceExtension->AllocatedResources = AllocatedResources;
       }
       if (AllocatedResources == NULL)
-         return ERROR_NO_SYSTEM_RESOURCES;
-
+         return ERROR_NOT_ENOUGH_MEMORY;
       AssignedCount = 0;
       for (FullList = AllocatedResources->List;
            FullList < AllocatedResources->List + AllocatedResources->Count;
@@ -515,7 +524,7 @@ VideoPortGetAccessRanges(
                 FullList->BusNumber == DeviceExtension->SystemIoBusNumber &&
                 1 == FullList->PartialResourceList.Version &&
                 1 == FullList->PartialResourceList.Revision);
-	 for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
+         for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
               Descriptor < FullList->PartialResourceList.PartialDescriptors + FullList->PartialResourceList.Count;
               Descriptor++)
          {
@@ -524,14 +533,14 @@ VideoPortGetAccessRanges(
                 AssignedCount >= NumAccessRanges)
             {
                WARN_(VIDEOPRT, "Too many access ranges found\n");
-               return ERROR_NO_SYSTEM_RESOURCES;
+               return ERROR_NOT_ENOUGH_MEMORY;
             }
             if (Descriptor->Type == CmResourceTypeMemory)
             {
                if (NumAccessRanges <= AssignedCount)
                {
                   WARN_(VIDEOPRT, "Too many access ranges found\n");
-                  return ERROR_NO_SYSTEM_RESOURCES;
+                  return ERROR_NOT_ENOUGH_MEMORY;
                }
                INFO_(VIDEOPRT, "Memory range starting at 0x%08x length 0x%08x\n",
                       Descriptor->u.Memory.Start.u.LowPart, Descriptor->u.Memory.Length);
@@ -667,7 +676,7 @@ VideoPortGetDeviceData(
 {
    TRACE_(VIDEOPRT, "VideoPortGetDeviceData\n");
    UNIMPLEMENTED;
-   return ERROR_CALL_NOT_IMPLEMENTED;
+   return ERROR_INVALID_FUNCTION;
 }
 
 /*

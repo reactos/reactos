@@ -23,10 +23,6 @@
 #ifndef __NTDDSER_H
 #define __NTDDSER_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -369,11 +365,11 @@ typedef struct _SERENUM_PORT_DESC {
 	USHORT  Reserved[1];
 } SERENUM_PORT_DESC, *PSERENUM_PORT_DESC;
 
-typedef UCHAR STDCALL
+typedef UCHAR NTAPI
 (*PSERENUM_READPORT)(
   PVOID  SerPortAddress);
 
-typedef VOID STDCALL
+typedef VOID NTAPI
 (*PSERENUM_WRITEPORT)(
   PVOID  SerPortAddress,
   UCHAR  Value);

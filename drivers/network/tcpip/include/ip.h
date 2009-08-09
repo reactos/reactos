@@ -223,7 +223,7 @@ BOOLEAN IPRegisterInterface(
 VOID IPUnregisterInterface(
     PIP_INTERFACE IF);
 
-VOID STDCALL IPTimeout( PVOID Context );
+VOID NTAPI IPTimeout( PVOID Context );
 
 VOID IPDispatchProtocol(
     PIP_INTERFACE Interface,

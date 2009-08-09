@@ -1,14 +1,9 @@
-/**
- * \file context.c
- * Mesa context/visual/framebuffer management functions.
- * \author Brian Paul
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.2
+ * Version:  7.3
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2008  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,6 +23,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * \file context.c
+ * Mesa context/visual/framebuffer management functions.
+ * \author Brian Paul
+ */
 
 /**
  * \mainpage Mesa Main Module
@@ -78,43 +78,59 @@
 
 #include "glheader.h"
 #include "imports.h"
+#if FEATURE_accum
 #include "accum.h"
+#endif
+#include "api_exec.h"
 #include "arrayobj.h"
+#if FEATURE_attrib_stack
 #include "attrib.h"
+#endif
 #include "blend.h"
 #include "buffers.h"
 #include "bufferobj.h"
+#if FEATURE_colortable
 #include "colortab.h"
+#endif
 #include "context.h"
 #include "debug.h"
 #include "depth.h"
+#if FEATURE_dlist
 #include "dlist.h"
+#endif
+#if FEATURE_evaluators
 #include "eval.h"
+#endif
 #include "enums.h"
 #include "extensions.h"
 #include "fbobject.h"
+#if FEATURE_feedback
 #include "feedback.h"
+#endif
 #include "fog.h"
 #include "framebuffer.h"
 #include "get.h"
-#include "glthread.h"
-#include "glapioffsets.h"
+#if FEATURE_histogram
 #include "histogram.h"
+#endif
 #include "hint.h"
 #include "hash.h"
-#include "atifragshader.h"
 #include "light.h"
 #include "lines.h"
 #include "macros.h"
 #include "matrix.h"
+#include "multisample.h"
 #include "pixel.h"
+#include "pixelstore.h"
 #include "points.h"
 #include "polygon.h"
-#if FEATURE_NV_vertex_program || FEATURE_NV_fragment_program
-#include "program.h"
-#endif
+#if FEATURE_ARB_occlusion_query
 #include "queryobj.h"
+#endif
+#if FEATURE_drawpix
 #include "rastpos.h"
+#endif
+#include "scissor.h"
 #include "simple_list.h"
 #include "state.h"
 #include "stencil.h"
@@ -126,13 +142,22 @@
 #include "varray.h"
 #include "version.h"
 #include "vtxfmt.h"
+#include "glapi/glthread.h"
+#include "glapi/glapioffsets.h"
+#include "glapi/glapitable.h"
+#if FEATURE_NV_vertex_program || FEATURE_NV_fragment_program
+#include "shader/program.h"
+#endif
+#include "shader/shader_api.h"
+#if FEATURE_ATI_fragment_shader
+#include "shader/atifragshader.h"
+#endif
 #if _HAVE_FULL_GL
 #include "math/m_translate.h"
 #include "math/m_matrix.h"
 #include "math/m_xform.h"
 #include "math/mathmod.h"
 #endif
-#include "shader_api.h"
 
 #ifdef USE_SPARC_ASM
 #include "sparc/sparc.h"
@@ -150,8 +175,6 @@ int MESA_DEBUG_FLAGS = 0;
 /* ubyte -> float conversion */
 GLfloat _mesa_ubyte_to_float_color_tab[256];
 
-static void
-free_shared_state( GLcontext *ctx, struct gl_shared_state *ss );
 
 
 /**
@@ -416,17 +439,17 @@ alloc_shared_state( GLcontext *ctx )
 
    ss->DisplayList = _mesa_NewHashTable();
    ss->TexObjects = _mesa_NewHashTable();
-#if FEATURE_NV_vertex_program || FEATURE_NV_fragment_program
    ss->Programs = _mesa_NewHashTable();
-#endif
 
 #if FEATURE_ARB_vertex_program
-   ss->DefaultVertexProgram = ctx->Driver.NewProgram(ctx, GL_VERTEX_PROGRAM_ARB, 0);
+   ss->DefaultVertexProgram = (struct gl_vertex_program *)
+      ctx->Driver.NewProgram(ctx, GL_VERTEX_PROGRAM_ARB, 0);
    if (!ss->DefaultVertexProgram)
       goto cleanup;
 #endif
 #if FEATURE_ARB_fragment_program
-   ss->DefaultFragmentProgram = ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, 0);
+   ss->DefaultFragmentProgram = (struct gl_fragment_program *)
+      ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, 0);
    if (!ss->DefaultFragmentProgram)
       goto cleanup;
 #endif
@@ -467,6 +490,14 @@ alloc_shared_state( GLcontext *ctx )
    if (!ss->DefaultRect)
       goto cleanup;
 
+   ss->Default1DArray = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_1D_ARRAY_EXT);
+   if (!ss->Default1DArray)
+      goto cleanup;
+
+   ss->Default2DArray = (*ctx->Driver.NewTextureObject)(ctx, 0, GL_TEXTURE_2D_ARRAY_EXT);
+   if (!ss->Default2DArray)
+      goto cleanup;
+
    /* sanity check */
    assert(ss->Default1D->RefCount == 1);
 
@@ -490,17 +521,13 @@ cleanup:
       _mesa_DeleteHashTable(ss->DisplayList);
    if (ss->TexObjects)
       _mesa_DeleteHashTable(ss->TexObjects);
-#if FEATURE_NV_vertex_program
    if (ss->Programs)
       _mesa_DeleteHashTable(ss->Programs);
-#endif
 #if FEATURE_ARB_vertex_program
-   if (ss->DefaultVertexProgram)
-      ctx->Driver.DeleteProgram(ctx, ss->DefaultVertexProgram);
+   _mesa_reference_vertprog(ctx, &ss->DefaultVertexProgram, NULL);
 #endif
 #if FEATURE_ARB_fragment_program
-   if (ss->DefaultFragmentProgram)
-      ctx->Driver.DeleteProgram(ctx, ss->DefaultFragmentProgram);
+   _mesa_reference_fragprog(ctx, &ss->DefaultFragmentProgram, NULL);
 #endif
 #if FEATURE_ATI_fragment_shader
    if (ss->DefaultFragmentShader)
@@ -536,8 +563,13 @@ cleanup:
       (*ctx->Driver.DeleteTexture)(ctx, ss->DefaultCubeMap);
    if (ss->DefaultRect)
       (*ctx->Driver.DeleteTexture)(ctx, ss->DefaultRect);
-   if (ss)
-      _mesa_free(ss);
+   if (ss->Default1DArray)
+      (*ctx->Driver.DeleteTexture)(ctx, ss->Default1DArray);
+   if (ss->Default2DArray)
+      (*ctx->Driver.DeleteTexture)(ctx, ss->Default2DArray);
+
+   _mesa_free(ss);
+
    return GL_FALSE;
 }
 
@@ -548,9 +580,11 @@ cleanup:
 static void
 delete_displaylist_cb(GLuint id, void *data, void *userData)
 {
+#if FEATURE_dlist
    struct mesa_display_list *list = (struct mesa_display_list *) data;
    GLcontext *ctx = (GLcontext *) userData;
    _mesa_delete_list(ctx, list);
+#endif
 }
 
 /**
@@ -572,6 +606,8 @@ delete_program_cb(GLuint id, void *data, void *userData)
 {
    struct gl_program *prog = (struct gl_program *) data;
    GLcontext *ctx = (GLcontext *) userData;
+   ASSERT(prog->RefCount == 1); /* should only be referenced by hash table */
+   prog->RefCount = 0;  /* now going away */
    ctx->Driver.DeleteProgram(ctx, prog);
 }
 
@@ -610,6 +646,21 @@ delete_arrayobj_cb(GLuint id, void *data, void *userData)
 }
 
 /**
+ * Callback for freeing shader program data. Call it before delete_shader_cb
+ * to avoid memory access error.
+ */
+static void
+free_shader_program_data_cb(GLuint id, void *data, void *userData)
+{
+   GLcontext *ctx = (GLcontext *) userData;
+   struct gl_shader_program *shProg = (struct gl_shader_program *) data;
+
+   if (shProg->Type == GL_SHADER_PROGRAM_MESA) {
+       _mesa_free_shader_program_data(ctx, shProg);
+   }
+}
+
+/**
  * Callback for deleting shader and shader programs objects.
  * Called by _mesa_HashDeleteAll().
  */
@@ -640,7 +691,12 @@ delete_framebuffer_cb(GLuint id, void *data, void *userData)
     */
    /*assert(fb->RefCount == 1);*/
    fb->RefCount = 0;
-   fb->Delete(fb);
+
+   /* NOTE: Delete should always be defined but there are two reports
+    * of it being NULL (bugs 13507, 14293).  Work-around for now.
+    */
+   if (fb->Delete)
+      fb->Delete(fb);
 }
 
 /**
@@ -651,7 +707,8 @@ delete_renderbuffer_cb(GLuint id, void *data, void *userData)
 {
    struct gl_renderbuffer *rb = (struct gl_renderbuffer *) data;
    rb->RefCount = 0;  /* see comment for FBOs above */
-   rb->Delete(rb);
+   if (rb->Delete)
+      rb->Delete(rb);
 }
 
 
@@ -677,15 +734,20 @@ free_shared_state( GLcontext *ctx, struct gl_shared_state *ss )
    _mesa_HashDeleteAll(ss->DisplayList, delete_displaylist_cb, ctx);
    _mesa_DeleteHashTable(ss->DisplayList);
 
-#if defined(FEATURE_NV_vertex_program) || defined(FEATURE_NV_fragment_program)
+#if FEATURE_ARB_shader_objects
+   _mesa_HashWalk(ss->ShaderObjects, free_shader_program_data_cb, ctx);
+   _mesa_HashDeleteAll(ss->ShaderObjects, delete_shader_cb, ctx);
+   _mesa_DeleteHashTable(ss->ShaderObjects);
+#endif
+
    _mesa_HashDeleteAll(ss->Programs, delete_program_cb, ctx);
    _mesa_DeleteHashTable(ss->Programs);
-#endif
+
 #if FEATURE_ARB_vertex_program
-   _mesa_delete_program(ctx, ss->DefaultVertexProgram);
+   _mesa_reference_vertprog(ctx, &ss->DefaultVertexProgram, NULL);
 #endif
 #if FEATURE_ARB_fragment_program
-   _mesa_delete_program(ctx, ss->DefaultFragmentProgram);
+   _mesa_reference_fragprog(ctx, &ss->DefaultFragmentProgram, NULL);
 #endif
 
 #if FEATURE_ATI_fragment_shader
@@ -701,11 +763,6 @@ free_shared_state( GLcontext *ctx, struct gl_shared_state *ss )
 
    _mesa_HashDeleteAll(ss->ArrayObjects, delete_arrayobj_cb, ctx);
    _mesa_DeleteHashTable(ss->ArrayObjects);
-
-#if FEATURE_ARB_shader_objects
-   _mesa_HashDeleteAll(ss->ShaderObjects, delete_shader_cb, ctx);
-   _mesa_DeleteHashTable(ss->ShaderObjects);
-#endif
 
 #if FEATURE_EXT_framebuffer_object
    _mesa_HashDeleteAll(ss->FrameBuffers, delete_framebuffer_cb, ctx);
@@ -725,6 +782,8 @@ free_shared_state( GLcontext *ctx, struct gl_shared_state *ss )
    ctx->Driver.DeleteTexture(ctx, ss->Default3D);
    ctx->Driver.DeleteTexture(ctx, ss->DefaultCubeMap);
    ctx->Driver.DeleteTexture(ctx, ss->DefaultRect);
+   ctx->Driver.DeleteTexture(ctx, ss->Default1DArray);
+   ctx->Driver.DeleteTexture(ctx, ss->Default2DArray);
    /* all other textures */
    _mesa_HashDeleteAll(ss->TexObjects, delete_texture_cb, ctx);
    _mesa_DeleteHashTable(ss->TexObjects);
@@ -749,7 +808,7 @@ _mesa_init_current(GLcontext *ctx)
    }
 
    /* redo special cases: */
-   ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_WEIGHT], 1.0, 0.0, 0.0, 1.0 );
+   ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_WEIGHT], 1.0, 0.0, 0.0, 0.0 );
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_NORMAL], 0.0, 0.0, 1.0, 1.0 );
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_COLOR0], 1.0, 1.0, 1.0, 1.0 );
    ASSIGN_4V( ctx->Current.Attrib[VERT_ATTRIB_COLOR1], 0.0, 0.0, 0.0, 1.0 );
@@ -788,14 +847,12 @@ _mesa_init_constants(GLcontext *ctx)
    assert(MAX_TEXTURE_LEVELS >= MAX_3D_TEXTURE_LEVELS);
    assert(MAX_TEXTURE_LEVELS >= MAX_CUBE_TEXTURE_LEVELS);
 
-   assert(MAX_TEXTURE_UNITS >= MAX_TEXTURE_COORD_UNITS);
-   assert(MAX_TEXTURE_UNITS >= MAX_TEXTURE_IMAGE_UNITS);
-
    /* Constants, may be overriden (usually only reduced) by device drivers */
    ctx->Const.MaxTextureLevels = MAX_TEXTURE_LEVELS;
    ctx->Const.Max3DTextureLevels = MAX_3D_TEXTURE_LEVELS;
    ctx->Const.MaxCubeTextureLevels = MAX_CUBE_TEXTURE_LEVELS;
    ctx->Const.MaxTextureRectSize = MAX_TEXTURE_RECT_SIZE;
+   ctx->Const.MaxArrayTextureLayers = MAX_ARRAY_TEXTURE_LAYERS;
    ctx->Const.MaxTextureCoordUnits = MAX_TEXTURE_COORD_UNITS;
    ctx->Const.MaxTextureImageUnits = MAX_TEXTURE_IMAGE_UNITS;
    ctx->Const.MaxTextureUnits = MIN2(ctx->Const.MaxTextureCoordUnits,
@@ -903,6 +960,9 @@ check_context_limits(GLcontext *ctx)
    assert(ctx->Const.MaxTextureUnits <= MAX_TEXTURE_IMAGE_UNITS);
    assert(ctx->Const.MaxTextureUnits <= MAX_TEXTURE_COORD_UNITS);
 
+   /* number of coord units cannot be greater than number of image units */
+   assert(ctx->Const.MaxTextureCoordUnits <= ctx->Const.MaxTextureImageUnits);
+
    assert(ctx->Const.MaxViewportWidth <= MAX_WIDTH);
    assert(ctx->Const.MaxViewportHeight <= MAX_WIDTH);
 
@@ -937,30 +997,52 @@ init_attrib_groups(GLcontext *ctx)
    _mesa_init_extensions( ctx );
 
    /* Attribute Groups */
+#if FEATURE_accum
    _mesa_init_accum( ctx );
+#endif
+#if FEATURE_attrib_stack
    _mesa_init_attrib( ctx );
+#endif
    _mesa_init_buffer_objects( ctx );
    _mesa_init_color( ctx );
+#if FEATURE_colortable
    _mesa_init_colortables( ctx );
+#endif
    _mesa_init_current( ctx );
    _mesa_init_depth( ctx );
    _mesa_init_debug( ctx );
+#if FEATURE_dlist
    _mesa_init_display_list( ctx );
+#endif
+#if FEATURE_evaluators
    _mesa_init_eval( ctx );
+#endif
+   _mesa_init_fbobjects( ctx );
+#if FEATURE_feedback
    _mesa_init_feedback( ctx );
+#else
+   ctx->RenderMode = GL_RENDER;
+#endif
    _mesa_init_fog( ctx );
+#if FEATURE_histogram
    _mesa_init_histogram( ctx );
+#endif
    _mesa_init_hint( ctx );
    _mesa_init_line( ctx );
    _mesa_init_lighting( ctx );
    _mesa_init_matrix( ctx );
    _mesa_init_multisample( ctx );
    _mesa_init_pixel( ctx );
+   _mesa_init_pixelstore( ctx );
    _mesa_init_point( ctx );
    _mesa_init_polygon( ctx );
    _mesa_init_program( ctx );
+#if FEATURE_ARB_occlusion_query
    _mesa_init_query( ctx );
+#endif
+#if FEATURE_drawpix
    _mesa_init_rastpos( ctx );
+#endif
    _mesa_init_scissor( ctx );
    _mesa_init_shader_state( ctx );
    _mesa_init_stencil( ctx );
@@ -971,13 +1053,38 @@ init_attrib_groups(GLcontext *ctx)
    if (!_mesa_init_texture( ctx ))
       return GL_FALSE;
 
+#if FEATURE_texture_s3tc
    _mesa_init_texture_s3tc( ctx );
+#endif
+#if FEATURE_texture_fxt1
    _mesa_init_texture_fxt1( ctx );
+#endif
 
    /* Miscellaneous */
    ctx->NewState = _NEW_ALL;
    ctx->ErrorValue = (GLenum) GL_NO_ERROR;
-   ctx->_Facing = 0;
+
+   return GL_TRUE;
+}
+
+
+/**
+ * Update default objects in a GL context with respect to shared state.
+ *
+ * \param ctx GL context.
+ *
+ * Removes references to old default objects, (texture objects, program
+ * objects, etc.) and changes to reference those from the current shared
+ * state.
+ */
+static GLboolean
+update_default_objects(GLcontext *ctx)
+{
+   assert(ctx);
+
+   _mesa_update_default_objects_program(ctx);
+   _mesa_update_default_objects_texture(ctx);
+   _mesa_update_default_objects_buffer_objects(ctx);
 
    return GL_TRUE;
 }
@@ -991,7 +1098,7 @@ init_attrib_groups(GLcontext *ctx)
 static int
 generic_nop(void)
 {
-   _mesa_problem(NULL, "User called no-op dispatch function (an unsupported extension function?)");
+   _mesa_warning(NULL, "User called no-op dispatch function (an unsupported extension function?)");
    return 0;
 }
 
@@ -1103,20 +1210,21 @@ _mesa_initialize_context(GLcontext *ctx,
       if (ctx->Exec)
          _mesa_free(ctx->Exec);
    }
+#if FEATURE_dispatch
    _mesa_init_exec_table(ctx->Exec);
+#endif
    ctx->CurrentDispatch = ctx->Exec;
-#if _HAVE_FULL_GL
+#if FEATURE_dlist
    _mesa_init_dlist_table(ctx->Save);
    _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );
+#endif
    /* Neutral tnl module stuff */
    _mesa_init_exec_vtxfmt( ctx ); 
    ctx->TnlModule.Current = NULL;
    ctx->TnlModule.SwapCount = 0;
-#endif
 
    ctx->FragmentProgram._MaintainTexEnvProgram
       = (_mesa_getenv("MESA_TEX_PROG") != NULL);
-   ctx->FragmentProgram._UseTexEnvProgram = ctx->FragmentProgram._MaintainTexEnvProgram;
 
    ctx->VertexProgram._MaintainTnlProgram
       = (_mesa_getenv("MESA_TNL_PROG") != NULL);
@@ -1124,6 +1232,10 @@ _mesa_initialize_context(GLcontext *ctx,
       /* this is required... */
       ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
    }
+
+#ifdef FEATURE_extra_context_init
+   _mesa_initialize_context_extra(ctx);
+#endif
 
    ctx->FirstTimeCurrent = GL_TRUE;
 
@@ -1194,16 +1306,30 @@ _mesa_free_context_data( GLcontext *ctx )
    _mesa_unreference_framebuffer(&ctx->DrawBuffer);
    _mesa_unreference_framebuffer(&ctx->ReadBuffer);
 
+   _mesa_reference_vertprog(ctx, &ctx->VertexProgram.Current, NULL);
+   _mesa_reference_vertprog(ctx, &ctx->VertexProgram._Current, NULL);
+   _mesa_reference_vertprog(ctx, &ctx->VertexProgram._TnlProgram, NULL);
+
+   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram.Current, NULL);
+   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._Current, NULL);
+   _mesa_reference_fragprog(ctx, &ctx->FragmentProgram._TexEnvProgram, NULL);
+
    _mesa_free_attrib_data(ctx);
    _mesa_free_lighting_data( ctx );
+#if FEATURE_evaluators
    _mesa_free_eval_data( ctx );
+#endif
    _mesa_free_texture_data( ctx );
    _mesa_free_matrix_data( ctx );
    _mesa_free_viewport_data( ctx );
+#if FEATURE_colortable
    _mesa_free_colortables_data( ctx );
+#endif
    _mesa_free_program_data(ctx);
    _mesa_free_shader_state(ctx);
+#if FEATURE_ARB_occlusion_query
    _mesa_free_query_data(ctx);
+#endif
 
 #if FEATURE_ARB_vertex_buffer_object
    _mesa_delete_buffer_object(ctx, ctx->Array.NullBufferObj);
@@ -1377,9 +1503,9 @@ _mesa_copy_context( const GLcontext *src, GLcontext *dst, GLuint mask )
  * Check if the given context can render into the given framebuffer
  * by checking visual attributes.
  *
- * XXX this may go away someday because we're moving toward more freedom
- * in binding contexts to drawables with different visual attributes.
- * The GL_EXT_f_b_o extension is prompting some of that.
+ * Most of these tests could go away because Mesa is now pretty flexible
+ * in terms of mixing rendering contexts with framebuffers.  As long
+ * as RGB vs. CI mode agree, we're probably good.
  *
  * \return GL_TRUE if compatible, GL_FALSE otherwise.
  */
@@ -1511,6 +1637,9 @@ _mesa_make_current( GLcontext *newCtx, GLframebuffer *drawBuffer,
             _mesa_reference_framebuffer(&newCtx->ReadBuffer, readBuffer);
          }
 
+         /* XXX only set this flag if we're really changing the draw/read
+          * framebuffer bindings.
+          */
 	 newCtx->NewState |= _NEW_BUFFERS;
 
 #if 1
@@ -1578,12 +1707,18 @@ GLboolean
 _mesa_share_state(GLcontext *ctx, GLcontext *ctxToShare)
 {
    if (ctx && ctxToShare && ctx->Shared && ctxToShare->Shared) {
-      ctx->Shared->RefCount--;
-      if (ctx->Shared->RefCount == 0) {
-         free_shared_state(ctx, ctx->Shared);
-      }
+      struct gl_shared_state *oldSharedState = ctx->Shared;
+
       ctx->Shared = ctxToShare->Shared;
       ctx->Shared->RefCount++;
+
+      update_default_objects(ctx);
+
+      oldSharedState->RefCount--;
+      if (oldSharedState->RefCount == 0) {
+         free_shared_state(ctx, oldSharedState);
+      }
+
       return GL_TRUE;
    }
    else {

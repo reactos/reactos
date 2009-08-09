@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializeMdlImplementation)
@@ -57,7 +57,7 @@ MmInitializeMdlImplementation(VOID)
     if (!NT_SUCCESS(Status))
     {
         MmUnlockAddressSpace(MmGetKernelAddressSpace());
-        KEBUGCHECK(0);
+        KeBugCheck(MEMORY_MANAGEMENT);
     }
     MmUnlockAddressSpace(MmGetKernelAddressSpace());
     
@@ -261,7 +261,7 @@ MmUnlockPages(IN PMDL Mdl)
         if (Process)
         {
             /* Handle the accounting of locked pages */
-            ASSERT(Process->NumberOfLockedPages >= 0);
+            ASSERT(Process->NumberOfLockedPages > 0);
             InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
                                         -PageCount);
         }
@@ -276,7 +276,7 @@ MmUnlockPages(IN PMDL Mdl)
     if (Process)
     {
         /* Handle the accounting of locked pages */
-        ASSERT(Process->NumberOfLockedPages >= 0);
+        ASSERT(Process->NumberOfLockedPages > 0);
         InterlockedExchangeAddSizeT(&Process->NumberOfLockedPages,
                                     -PageCount);
     }
@@ -589,7 +589,7 @@ MmAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     }
     
     /* If nothing was allocated, fail */
-    if (NumberOfPagesAllocated)
+    if (NumberOfPagesWanted)
     {
         /* Free our MDL */
         ExFreePool(Mdl);
@@ -603,6 +603,22 @@ MmAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
     Mdl->MdlFlags |= MDL_PAGES_LOCKED;
     Mdl->ByteCount = (ULONG)(NumberOfPagesAllocated * PAGE_SIZE);
     return Mdl;
+}
+
+/*
+ * @unimplemented
+ */
+PMDL
+NTAPI
+MmAllocatePagesForMdlEx(IN PHYSICAL_ADDRESS LowAddress,
+                        IN PHYSICAL_ADDRESS HighAddress,
+                        IN PHYSICAL_ADDRESS SkipBytes,
+                        IN SIZE_T Totalbytes,
+                        IN MEMORY_CACHING_TYPE CacheType,
+                        IN ULONG Flags)
+{
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 /*
@@ -666,7 +682,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
             {
                 return NULL;
             }
-            KEBUGCHECK(0);
+            KeBugCheck(MEMORY_MANAGEMENT);
         }
         Base = (PVOID)((ULONG_PTR)MiMdlMappingRegionBase + StartingOffset * PAGE_SIZE);
         if (MiMdlMappingRegionHint == StartingOffset) MiMdlMappingRegionHint += PageCount;
@@ -856,7 +872,7 @@ MmProtectMdlSystemAddress(IN PMDL MemoryDescriptorList,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
                            IN PEPROCESS Process,
                            IN KPROCESSOR_MODE AccessMode,
@@ -870,7 +886,7 @@ MmProbeAndLockProcessPages(IN OUT PMDL MemoryDescriptorList,
  * @unimplemented
  */
 VOID
-STDCALL
+NTAPI
 MmProbeAndLockSelectedPages(IN OUT PMDL MemoryDescriptorList,
                             IN LARGE_INTEGER PageList[],
                             IN KPROCESSOR_MODE AccessMode,

@@ -1294,7 +1294,7 @@ hub_start_reset_port_completion(PURB purb, PVOID context)
     ULONG port_idx;
     PHCD hcd;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
     if (purb == NULL)
         return;
 
@@ -1460,7 +1460,7 @@ hub_disable_port_request(PUSB_DEV pdev, UCHAR port_idx)
     PUSB_CTRL_SETUP_PACKET psetup;
     NTSTATUS status;
     PHCD hcd;
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL || port_idx == 0)
         return STATUS_INVALID_PARAMETER;
@@ -1589,7 +1589,7 @@ hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOLEAN from_dpc)
     PUSB_CTRL_SETUP_PACKET psetup;
     PHCD hcd = NULL;
 
-    USE_NON_PENDING_IRQL;;
+    USE_NON_PENDING_IRQL;
 
     if (dev_mgr == NULL)
         return FALSE;
@@ -1736,7 +1736,7 @@ hub_check_reset_port_status(PUSB_DEV pdev, LONG port_idx)
     PUSB_CTRL_SETUP_PACKET psetup;
     ULONG status;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     //let's check whether the status change is a reset complete
     usb_dbg_print(DBGLVL_MAXIMUM, ("hub_check_reset_port_status(): entering...\n"));
@@ -1870,7 +1870,7 @@ hub_reexamine_port_status_queue(PUSB_DEV hub_dev, ULONG port_idx, BOOLEAN from_d
     PHUB2_EXTENSION hub_ext;
     PUSB_DEV_MANAGER dev_mgr;
 
-    USE_NON_PENDING_IRQL;;
+    USE_NON_PENDING_IRQL;
 
     if (hub_dev == NULL || port_idx == 0)
         return;
@@ -2031,7 +2031,7 @@ hub_set_cfg_completion(PURB purb, PVOID pcontext)
     PUSB_INTERFACE pif;
     BOOLEAN high_speed, multiple_tt;
     NTSTATUS status;
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL || pcontext == NULL)
         return;
@@ -2209,7 +2209,7 @@ hub_power_on_port(PUSB_DEV pdev, UCHAR port_idx)
     PURB purb;
     PHCD hcd;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
     if (pdev == NULL || port_idx == 0)
         return STATUS_INVALID_PARAMETER;
 
@@ -2270,7 +2270,7 @@ hub_get_hub_desc_completion(PURB purb, PVOID pcontext)
     PUSB_DRIVER pdriver;
     DEV_HANDLE dev_handle;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL)
     {
@@ -2388,7 +2388,7 @@ hub_lock_unlock_tt(PUSB_DEV pdev, UCHAR port_idx, UCHAR type, BOOLEAN lock)
     PHUB2_EXTENSION dev_ext;
     PULONG pmap = NULL;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL || port_idx > 127)
         return FALSE;
@@ -2483,7 +2483,7 @@ hub_clear_tt_buffer(PUSB_DEV pdev, URB_HS_PIPE_CONTENT pipe_content, UCHAR port_
     PHUB2_EXTENSION hub_ext;
     PHCD hcd;
     NTSTATUS status;
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL)
         return FALSE;
@@ -2571,7 +2571,7 @@ hub_post_clear_tt_event(PUSB_DEV pdev, BYTE port_idx, ULONG pipe)
 {
     PUSB_DEV_MANAGER dev_mgr;
     PUSB_EVENT pevent;
-    USE_NON_PENDING_IRQL;;
+    USE_NON_PENDING_IRQL;
 
     dev_mgr = dev_mgr_from_dev(pdev);
 
@@ -2688,7 +2688,7 @@ remove_irp_from_list(PIRP_LIST irp_list,
     PUSB_ENDPOINT pendp;
     PHCD hcd;
 
-    USE_NON_PENDING_IRQL;;
+    USE_NON_PENDING_IRQL;
 
     if (irp_list == NULL || pirp == NULL)
         return NULL;

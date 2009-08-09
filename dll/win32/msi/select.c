@@ -363,6 +363,7 @@ static const MSIVIEWOPS select_ops =
     NULL,
     NULL,
     SELECT_sort,
+    NULL,
 };
 
 static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name )

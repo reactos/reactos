@@ -287,9 +287,9 @@ static UINT ICO_ExtractIconExW(
 	CloseHandle(fmapping);
 
 	cx1 = LOWORD(cxDesired);
-	cx2 = HIWORD(cxDesired) ? HIWORD(cxDesired) : cx1;
+	cx2 = HIWORD(cxDesired);
 	cy1 = LOWORD(cyDesired);
-	cy2 = HIWORD(cyDesired) ? HIWORD(cyDesired) : cy1;
+	cy2 = HIWORD(cyDesired);
 
 	if (pIconId) /* Invalidate first icon identifier */
 		*pIconId = 0xFFFFFFFF;
@@ -439,7 +439,7 @@ static UINT ICO_ExtractIconExW(
 	  iconDirCount = icongroupresdir->NumberOfNamedEntries + icongroupresdir->NumberOfIdEntries;
 
 	  /* only number of icons requested */
-	  if( nIcons == 0 )
+	  if( !pIconId )
 	  {
 	    ret = iconDirCount;
 	    goto end;		/* success */
@@ -479,13 +479,13 @@ static UINT ICO_ExtractIconExW(
 	  }
 
 	  /* assure we don't get too much */
-	  if( nIcons / 2 > iconDirCount - nIconIndex )
-	    nIcons = 2 * (iconDirCount - nIconIndex);
+	  if( nIcons > iconDirCount - nIconIndex )
+	    nIcons = iconDirCount - nIconIndex;
 
 	  /* starting from specified index */
 	  xresent = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(icongroupresdir+1) + nIconIndex;
 
-	  for (i=0; i < nIcons; i++)
+	  for (i=0; i < nIcons; i++,xresent++)
 	  {
 	    const IMAGE_RESOURCE_DIRECTORY *resdir;
 
@@ -519,8 +519,8 @@ static UINT ICO_ExtractIconExW(
 	      FIXME("no matching real address for icongroup!\n");
 	      goto end;	/* failure */
 	    }
-	    pIconId[i] = LookupIconIdFromDirectoryEx(igdata, TRUE, (i & 1) ? cx2 : cx1, (i & 1) ? cy2 : cy1, flags);
-	    if (i & 1) xresent++;
+	    pIconId[i] = LookupIconIdFromDirectoryEx(igdata, TRUE, cx1, cy1, flags);
+	        if (cx2 && cy2) pIconId[++i] = LookupIconIdFromDirectoryEx(igdata, TRUE, cx2, cy2, flags);
 	  }
 
 	  if (!(iconresdir=find_entry_by_id(rootresdir,LOWORD(RT_ICON),rootresdir)))
@@ -535,16 +535,16 @@ static UINT ICO_ExtractIconExW(
 	    xresdir = find_entry_by_id(iconresdir, LOWORD(pIconId[i]), rootresdir);
 	    if (!xresdir)
 	    {
-	      WARN("find_entry_by_id failed\n");
-	      ret = 0xFFFFFFFF;
-	      goto end;
+	      WARN("icon entry %d not found\n", LOWORD(pIconId[i]));
+	      RetPtr[i]=0;
+	      continue;
 	    }
 	    xresdir = find_entry_default(xresdir, rootresdir);
 	    if (!xresdir)
 	    {
-	      WARN("find_entry_default failed\n");
-	      ret = 0xFFFFFFFF;
-	      goto end;
+	      WARN("icon entry %d not found\n", LOWORD(pIconId[i]));
+	      RetPtr[i]=0;
+	      continue;
 	    }
 	    idataent = (PIMAGE_RESOURCE_DATA_ENTRY)xresdir;
 	    idata = NULL;
@@ -564,8 +564,9 @@ static UINT ICO_ExtractIconExW(
 	      RetPtr[i]=0;
 	      continue;
 	    }
-	    RetPtr[i] = (HICON) CreateIconFromResourceEx(idata,idataent->Size,TRUE,0x00030000,
-	                                                 (i & 1) ? cx2 : cx1, (i & 1) ? cy2 : cy1, flags);
+	    RetPtr[i] = CreateIconFromResourceEx(idata, idataent->Size, TRUE, 0x00030000, cx1, cy1, flags);
+            if (cx2 && cy2)
+                RetPtr[++i] = CreateIconFromResourceEx(idata, idataent->Size, TRUE, 0x00030000, cx2, cy2, flags);
 	  }
 	  ret = i;	/* return number of retrieved icons */
 	}			/* if(sig == IMAGE_NT_SIGNATURE) */

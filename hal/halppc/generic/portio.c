@@ -193,7 +193,7 @@ __asm__("\t.globl SetPhysByte\n"
 	"blr"
     );
 
-VOID STDCALL
+VOID NTAPI
 READ_PORT_BUFFER_UCHAR (PUCHAR Port,
                         PUCHAR Buffer,
                         ULONG Count)
@@ -201,7 +201,7 @@ READ_PORT_BUFFER_UCHAR (PUCHAR Port,
     while(Count--) { *Buffer++ = GetPhysByte((ULONG)Port); }
 }
 
-VOID STDCALL
+VOID NTAPI
 READ_PORT_BUFFER_USHORT (PUSHORT Port,
                          PUSHORT Buffer,
                          ULONG Count)
@@ -209,7 +209,7 @@ READ_PORT_BUFFER_USHORT (PUSHORT Port,
     while(Count--) { *Buffer++ = GetPhysWord((ULONG)Port); }
 }
 
-VOID STDCALL
+VOID NTAPI
 READ_PORT_BUFFER_ULONG (PULONG Port,
                         PULONG Buffer,
                         ULONG Count)
@@ -217,25 +217,25 @@ READ_PORT_BUFFER_ULONG (PULONG Port,
     while(Count--) { *Buffer++ = GetPhys((ULONG)Port); }
 }
 
-UCHAR STDCALL
+UCHAR NTAPI
 READ_PORT_UCHAR (PUCHAR Port)
 {
     return GetPhys((ULONG)Port);
 }
 
-USHORT STDCALL
+USHORT NTAPI
 READ_PORT_USHORT (PUSHORT Port)
 {
     return GetPhysWord((ULONG)Port);
 }
 
-ULONG STDCALL
+ULONG NTAPI
 READ_PORT_ULONG (PULONG Port)
 {
     return GetPhys((ULONG)Port);
 }
 
-VOID STDCALL
+VOID NTAPI
 WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
                          PUCHAR Buffer,
                          ULONG Count)
@@ -243,7 +243,7 @@ WRITE_PORT_BUFFER_UCHAR (PUCHAR Port,
     while(Count--) { SetPhysByte((ULONG)Port, *Buffer++); }
 }
 
-VOID STDCALL
+VOID NTAPI
 WRITE_PORT_BUFFER_USHORT (PUSHORT Port,
                           PUSHORT Buffer,
                           ULONG Count)
@@ -251,7 +251,7 @@ WRITE_PORT_BUFFER_USHORT (PUSHORT Port,
     while(Count--) { SetPhysWord((ULONG)Port, *Buffer++); }
 }
 
-VOID STDCALL
+VOID NTAPI
 WRITE_PORT_BUFFER_ULONG (PULONG Port,
                          PULONG Buffer,
                          ULONG Count)
@@ -259,21 +259,21 @@ WRITE_PORT_BUFFER_ULONG (PULONG Port,
     while(Count--) { SetPhys((ULONG)Port, *Buffer++); }
 }
 
-VOID STDCALL
+VOID NTAPI
 WRITE_PORT_UCHAR (PUCHAR Port,
                   UCHAR Value)
 {
     SetPhysByte((ULONG)Port, Value);
 }
 
-VOID STDCALL
+VOID NTAPI
 WRITE_PORT_USHORT (PUSHORT Port,
                    USHORT Value)
 {
     SetPhysWord((ULONG)Port, Value);
 }
 
-VOID STDCALL
+VOID NTAPI
 WRITE_PORT_ULONG (PULONG Port,
                   ULONG Value)
 {

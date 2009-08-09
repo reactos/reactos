@@ -20,8 +20,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
 /* TYPES *********************************************************************/
 
-VOID HandleBind(VOID);
-
 typedef struct _ACTIVE_SERVICE
 {
     CLIENT_HANDLE hService;
@@ -42,7 +40,6 @@ typedef struct _ACTIVE_SERVICE
 
 /* GLOBALS *******************************************************************/
 
-extern handle_t BindingHandle;
 static DWORD dwActiveServiceCount = 0;
 static PACTIVE_SERVICE lpActiveServices = NULL;
 
@@ -286,7 +283,7 @@ ScStartService(PSCM_CONTROL_PACKET ControlPacket)
 
     lpService->Arguments = HeapAlloc(GetProcessHeap(),
                                      HEAP_ZERO_MEMORY,
-                                     ControlPacket->dwSize * sizeof(WCHAR));
+                                     (ControlPacket->dwSize + 1) * sizeof(WCHAR));
     if (lpService->Arguments == NULL)
         return ERROR_OUTOFMEMORY;
 
@@ -419,7 +416,7 @@ ScServiceDispatcher(HANDLE hPipe,
  *
  * @implemented
  */
-SERVICE_STATUS_HANDLE STDCALL
+SERVICE_STATUS_HANDLE WINAPI
 RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
                             LPHANDLER_FUNCTION lpHandlerProc)
 {
@@ -448,7 +445,7 @@ RegisterServiceCtrlHandlerA(LPCSTR lpServiceName,
  *
  * @implemented
  */
-SERVICE_STATUS_HANDLE STDCALL
+SERVICE_STATUS_HANDLE WINAPI
 RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
                             LPHANDLER_FUNCTION lpHandlerProc)
 {
@@ -474,7 +471,7 @@ RegisterServiceCtrlHandlerW(LPCWSTR lpServiceName,
  *
  * @implemented
  */
-SERVICE_STATUS_HANDLE STDCALL
+SERVICE_STATUS_HANDLE WINAPI
 RegisterServiceCtrlHandlerExA(LPCSTR lpServiceName,
                               LPHANDLER_FUNCTION_EX lpHandlerProc,
                               LPVOID lpContext)
@@ -505,7 +502,7 @@ RegisterServiceCtrlHandlerExA(LPCSTR lpServiceName,
  *
  * @implemented
  */
-SERVICE_STATUS_HANDLE STDCALL
+SERVICE_STATUS_HANDLE WINAPI
 RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
                               LPHANDLER_FUNCTION_EX lpHandlerProc,
                               LPVOID lpContext)
@@ -529,18 +526,93 @@ RegisterServiceCtrlHandlerExW(LPCWSTR lpServiceName,
 
 
 /**********************************************************************
+ *	I_ScSetServiceBitsA
+ *
+ * Undocumented
+ *
+ * @implemented
+ */
+BOOL WINAPI
+I_ScSetServiceBitsA(SERVICE_STATUS_HANDLE hServiceStatus,
+                    DWORD dwServiceBits,
+                    BOOL bSetBitsOn,
+                    BOOL bUpdateImmediately,
+                    LPSTR lpString)
+{
+    BOOL bResult;
+
+    RpcTryExcept
+    {
+        /* Call to services.exe using RPC */
+        bResult = RI_ScSetServiceBitsA((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
+                                       dwServiceBits,
+                                       bSetBitsOn,
+                                       bUpdateImmediately,
+                                       lpString);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
+        bResult = FALSE;
+    }
+    RpcEndExcept;
+
+    return bResult;
+}
+
+
+/**********************************************************************
+ *	I_ScSetServiceBitsW
+ *
+ * Undocumented
+ *
+ * @implemented
+ */
+BOOL WINAPI
+I_ScSetServiceBitsW(SERVICE_STATUS_HANDLE hServiceStatus,
+                    DWORD dwServiceBits,
+                    BOOL bSetBitsOn,
+                    BOOL bUpdateImmediately,
+                    LPWSTR lpString)
+{
+    BOOL bResult;
+
+    RpcTryExcept
+    {
+        /* Call to services.exe using RPC */
+        bResult = RI_ScSetServiceBitsW((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
+                                       dwServiceBits,
+                                       bSetBitsOn,
+                                       bUpdateImmediately,
+                                       lpString);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ScmRpcStatusToWinError(RpcExceptionCode()));
+        bResult = FALSE;
+    }
+    RpcEndExcept;
+
+    return bResult;
+}
+
+
+/**********************************************************************
  *	SetServiceBits
  *
- * @unimplemented
+ * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
                DWORD dwServiceBits,
                BOOL bSetBitsOn,
                BOOL bUpdateImmediately)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    return I_ScSetServiceBitsW(hServiceStatus,
+                               dwServiceBits,
+                               bSetBitsOn,
+                               bUpdateImmediately,
+                               NULL);
 }
 
 
@@ -549,7 +621,7 @@ SetServiceBits(SERVICE_STATUS_HANDLE hServiceStatus,
  *
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
                  LPSERVICE_STATUS lpServiceStatus)
 {
@@ -558,11 +630,8 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
     TRACE("SetServiceStatus() called\n");
     TRACE("hServiceStatus %lu\n", hServiceStatus);
 
-    HandleBind();
-
     /* Call to services.exe using RPC */
-    dwError = RSetServiceStatus(BindingHandle,
-                                (SC_RPC_HANDLE)hServiceStatus,
+    dwError = RSetServiceStatus((RPC_SERVICE_STATUS_HANDLE)hServiceStatus,
                                 lpServiceStatus);
     if (dwError != ERROR_SUCCESS)
     {
@@ -582,8 +651,8 @@ SetServiceStatus(SERVICE_STATUS_HANDLE hServiceStatus,
  *
  * @implemented
  */
-BOOL STDCALL
-StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
+BOOL WINAPI
+StartServiceCtrlDispatcherA(const SERVICE_TABLE_ENTRYA * lpServiceStartTable)
 {
     ULONG i;
     HANDLE hPipe;
@@ -621,6 +690,10 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     if (dwError != ERROR_SUCCESS)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -633,6 +706,10 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     if (lpMessageBuffer == NULL)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -647,6 +724,10 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpMessageBuffer);
 
     /* Free the service table */
+    for (i = 0; i < dwActiveServiceCount; i++)
+    {
+        RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+    }
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;
@@ -660,8 +741,8 @@ StartServiceCtrlDispatcherA(LPSERVICE_TABLE_ENTRYA lpServiceStartTable)
  *
  * @implemented
  */
-BOOL STDCALL
-StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
+BOOL WINAPI
+StartServiceCtrlDispatcherW(const SERVICE_TABLE_ENTRYW * lpServiceStartTable)
 {
     ULONG i;
     HANDLE hPipe;
@@ -699,6 +780,10 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     if (dwError != ERROR_SUCCESS)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -711,6 +796,10 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     if (lpMessageBuffer == NULL)
     {
         /* Free the service table */
+        for (i = 0; i < dwActiveServiceCount; i++)
+        {
+            RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+        }
         RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
         lpActiveServices = NULL;
         dwActiveServiceCount = 0;
@@ -725,6 +814,10 @@ StartServiceCtrlDispatcherW(LPSERVICE_TABLE_ENTRYW lpServiceStartTable)
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpMessageBuffer);
 
     /* Free the service table */
+    for (i = 0; i < dwActiveServiceCount; i++)
+    {
+        RtlFreeUnicodeString(&lpActiveServices[i].ServiceName);
+    }
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpActiveServices);
     lpActiveServices = NULL;
     dwActiveServiceCount = 0;

@@ -5,7 +5,7 @@
 #include <ntddk.h>
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry (
 	IN	PDRIVER_OBJECT	DriverObject,
 	IN	PUNICODE_STRING	RegistryPath

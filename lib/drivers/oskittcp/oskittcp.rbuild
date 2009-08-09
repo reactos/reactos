@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="oskittcp" type="staticlibrary" allowwarnings="true">
+<module name="oskittcp" type="staticlibrary">
 	<define name="__NTDRIVER__"/>
 	<define name="KERNEL"/>
 	<define name="_DISABLE_TIDENTS"/>

@@ -81,8 +81,8 @@ InternalOpenDirW(LPCWSTR DirName,
 /*
  * @implemented
  */
-/* Synced to Wine-? */
-DWORD STDCALL
+/* Synced to Wine-2008/12/28 */
+DWORD WINAPI
 GetLogicalDriveStringsA(DWORD nBufferLength,
 			LPSTR lpBuffer)
 {
@@ -98,8 +98,8 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
      }
 
 
-   if (count * 4 <= nBufferLength)
-     {
+   if ((count * 4) + 1 > nBufferLength) return ((count * 4) + 1);
+
 	LPSTR p = lpBuffer;
 
 	for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
@@ -111,7 +111,7 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 	     *p++ = '\0';
 	  }
 	*p = '\0';
-     }
+
     return (count * 4);
 }
 
@@ -119,8 +119,8 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 /*
  * @implemented
  */
-/* Synced to Wine-? */
-DWORD STDCALL
+/* Synced to Wine-2008/12/28 */
+DWORD WINAPI
 GetLogicalDriveStringsW(DWORD nBufferLength,
 			LPWSTR lpBuffer)
 {
@@ -135,19 +135,19 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 	   count++;
      }
 
-    if (count * 4 <=  nBufferLength)
-    {
-        LPWSTR p = lpBuffer;
-        for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
-            if (dwDriveMap & (1<<drive))
-            {
-                *p++ = (WCHAR)('A' + drive);
-                *p++ = (WCHAR)':';
-                *p++ = (WCHAR)'\\';
-                *p++ = (WCHAR)'\0';
-            }
-        *p = (WCHAR)'\0';
-    }
+    if ((count * 4) + 1 > nBufferLength) return ((count * 4) + 1);
+
+    LPWSTR p = lpBuffer;
+    for (drive = 0; drive < MAX_DOS_DRIVES; drive++)
+        if (dwDriveMap & (1<<drive))
+        {
+            *p++ = (WCHAR)('A' + drive);
+            *p++ = (WCHAR)':';
+            *p++ = (WCHAR)'\\';
+            *p++ = (WCHAR)'\0';
+        }
+    *p = (WCHAR)'\0';
+
     return (count * 4);
 }
 
@@ -156,7 +156,7 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
  * @implemented
  */
 /* Synced to Wine-? */
-DWORD STDCALL
+DWORD WINAPI
 GetLogicalDrives(VOID)
 {
 	NTSTATUS Status;
@@ -183,7 +183,7 @@ GetLogicalDrives(VOID)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceA (
 	LPCSTR	lpRootPathName,
 	LPDWORD	lpSectorsPerCluster,
@@ -211,7 +211,7 @@ GetDiskFreeSpaceA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceW(
     LPCWSTR lpRootPathName,
     LPDWORD lpSectorsPerCluster,
@@ -272,7 +272,7 @@ GetDiskFreeSpaceW(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceExA (
 	LPCSTR lpDirectoryName   OPTIONAL,
 	PULARGE_INTEGER	lpFreeBytesAvailableToCaller,
@@ -298,7 +298,7 @@ GetDiskFreeSpaceExA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetDiskFreeSpaceExW(
     LPCWSTR lpDirectoryName OPTIONAL,
     PULARGE_INTEGER lpFreeBytesAvailableToCaller,
@@ -412,7 +412,7 @@ GetDiskFreeSpaceExW(
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 GetDriveTypeA(LPCSTR lpRootPathName)
 {
    PWCHAR RootPathNameW;
@@ -427,7 +427,7 @@ GetDriveTypeA(LPCSTR lpRootPathName)
 /*
  * @implemented
  */
-UINT STDCALL
+UINT WINAPI
 GetDriveTypeW(LPCWSTR lpRootPathName)
 {
 	FILE_FS_DEVICE_INFORMATION FileFsDevice;
@@ -482,7 +482,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetVolumeInformationA(
 	LPCSTR	lpRootPathName,
 	LPSTR	lpVolumeNameBuffer,
@@ -495,7 +495,7 @@ GetVolumeInformationA(
 	)
 {
   UNICODE_STRING FileSystemNameU;
-  UNICODE_STRING VolumeNameU = {0};
+  UNICODE_STRING VolumeNameU = { 0, 0, NULL };
   ANSI_STRING VolumeName;
   ANSI_STRING FileSystemName;
   PWCHAR RootPathNameW;
@@ -621,7 +621,7 @@ FailNoMem:
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 GetVolumeInformationW(
     LPCWSTR lpRootPathName,
     LPWSTR lpVolumeNameBuffer,
@@ -738,7 +738,7 @@ GetVolumeInformationW(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 SetVolumeLabelA (
 	LPCSTR	lpRootPathName,
 	LPCSTR	lpVolumeName /* NULL if deleting label */
@@ -774,7 +774,7 @@ SetVolumeLabelA (
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetVolumeLabelW(
    LPCWSTR lpRootPathName,
    LPCWSTR lpVolumeName /* NULL if deleting label */
@@ -871,6 +871,12 @@ GetVolumeNameForVolumeMountPointW(
    PUCHAR SymbolicLinkName;
    BOOL Result;
    NTSTATUS Status;
+
+   if (!VolumeMountPoint || !VolumeMountPoint[0])
+   {
+       SetLastError(ERROR_PATH_NOT_FOUND);
+       return FALSE;
+   }
 
    /*
     * First step is to convert the passed volume mount point name to
@@ -1058,6 +1064,257 @@ GetVolumeNameForVolumeMountPointW(
    SetLastError(ERROR_INVALID_PARAMETER);
 
    return FALSE;
+}
+
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+BOOL
+WINAPI
+GetVolumeNameForVolumeMountPointA(
+    LPCSTR lpszVolumeMountPoint,
+    LPSTR lpszVolumeName,
+    DWORD cchBufferLength
+    )
+{
+    BOOL ret;
+    WCHAR volumeW[50], *pathW = NULL;
+    DWORD len = min( sizeof(volumeW) / sizeof(WCHAR), cchBufferLength );
+
+    TRACE("(%s, %p, %x)\n", debugstr_a(lpszVolumeMountPoint), lpszVolumeName, cchBufferLength);
+
+    if (!lpszVolumeMountPoint || !(pathW = FilenameA2W( lpszVolumeMountPoint, TRUE )))
+        return FALSE;
+
+    if ((ret = GetVolumeNameForVolumeMountPointW( pathW, volumeW, len )))
+        FilenameW2A_N( lpszVolumeName, len, volumeW, -1 );
+
+    RtlFreeHeap( GetProcessHeap(), 0, pathW );
+    return ret;
+}
+
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+HANDLE
+WINAPI
+FindFirstVolumeW(
+	LPWSTR volume,
+	DWORD len
+    )
+{
+    DWORD size = 1024;
+    HANDLE mgr = CreateFileW( MOUNTMGR_DOS_DEVICE_NAME, 0, FILE_SHARE_READ|FILE_SHARE_WRITE,
+                              NULL, OPEN_EXISTING, 0, 0 );
+    if (mgr == INVALID_HANDLE_VALUE) return INVALID_HANDLE_VALUE;
+
+    for (;;)
+    {
+        MOUNTMGR_MOUNT_POINT input;
+        MOUNTMGR_MOUNT_POINTS *output;
+
+        if (!(output = RtlAllocateHeap( GetProcessHeap(), 0, size )))
+        {
+            SetLastError( ERROR_NOT_ENOUGH_MEMORY );
+            break;
+        }
+        memset( &input, 0, sizeof(input) );
+
+        if (!DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_POINTS, &input, sizeof(input),
+                              output, size, NULL, NULL ))
+        {
+            if (GetLastError() != ERROR_MORE_DATA) break;
+            size = output->Size;
+            RtlFreeHeap( GetProcessHeap(), 0, output );
+            continue;
+        }
+        CloseHandle( mgr );
+        /* abuse the Size field to store the current index */
+        output->Size = 0;
+        if (!FindNextVolumeW( output, volume, len ))
+        {
+            RtlFreeHeap( GetProcessHeap(), 0, output );
+            return INVALID_HANDLE_VALUE;
+        }
+        return (HANDLE)output;
+    }
+    CloseHandle( mgr );
+    return INVALID_HANDLE_VALUE;
+}
+
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+HANDLE
+WINAPI
+FindFirstVolumeA(
+	LPSTR volume,
+	DWORD len
+    )
+{
+    WCHAR *buffer = RtlAllocateHeap( GetProcessHeap(), 0, len * sizeof(WCHAR) );
+    HANDLE handle = FindFirstVolumeW( buffer, len );
+
+    if (handle != INVALID_HANDLE_VALUE)
+    {
+        if (!WideCharToMultiByte( CP_ACP, 0, buffer, -1, volume, len, NULL, NULL ))
+        {
+            FindVolumeClose( handle );
+            handle = INVALID_HANDLE_VALUE;
+        }
+    }
+    RtlFreeHeap( GetProcessHeap(), 0, buffer );
+    return handle;
+}
+
+/*
+ * @implemented (Wine 13 sep 2008)
+ */
+BOOL
+WINAPI
+FindVolumeClose(
+    HANDLE hFindVolume
+    )
+{
+    return RtlFreeHeap(GetProcessHeap(), 0, hFindVolume);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetVolumePathNameA(LPCSTR lpszFileName,
+                   LPSTR lpszVolumePathName,
+                   DWORD cchBufferLength)
+{
+    PWCHAR FileNameW = NULL;
+    WCHAR VolumePathName[MAX_PATH];
+    BOOL Result;
+
+    if (lpszFileName)
+    {
+        if (!(FileNameW = FilenameA2W(lpszFileName, FALSE)))
+            return FALSE;
+    }
+
+    Result = GetVolumePathNameW(FileNameW, VolumePathName, cchBufferLength);
+
+    if (Result)
+        FilenameW2A_N(lpszVolumePathName, MAX_PATH, VolumePathName, -1);
+
+    return Result;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+GetVolumePathNameW(LPCWSTR lpszFileName,
+                   LPWSTR lpszVolumePathName,
+                   DWORD cchBufferLength)
+{
+    DWORD PathLength;
+    UNICODE_STRING UnicodeFilePath;
+    LPWSTR FilePart;
+    PWSTR FullFilePath, FilePathName;
+    ULONG PathSize;
+    WCHAR VolumeName[MAX_PATH];
+    DWORD ErrorCode;
+    BOOL Result = FALSE;
+
+    if (!(PathLength = GetFullPathNameW(lpszFileName, 0, NULL, NULL)))
+    {
+        return Result;
+    }
+    else
+    {
+        PathLength = PathLength + 10;
+        PathSize = PathLength * sizeof(WCHAR);
+
+        if (!(FullFilePath = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathSize)))
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return Result;
+        }
+
+        if (!GetFullPathNameW(lpszFileName, PathLength, FullFilePath, &FilePart))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
+            return Result;
+        }
+
+        RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
+
+        if (UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] != '\\')
+        {
+            UnicodeFilePath.Length += sizeof(WCHAR);
+            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] = '\\';
+            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+        }
+
+        if (!(FilePathName = RtlAllocateHeap(RtlGetProcessHeap(), 0, PathSize)))
+        {
+            RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return Result;
+        }
+
+        while (!GetVolumeNameForVolumeMountPointW(UnicodeFilePath.Buffer,
+                                                  VolumeName,
+                                                  MAX_PATH))
+        {
+            if (((UnicodeFilePath.Length == 4) && (UnicodeFilePath.Buffer[0] == '\\') &&
+                (UnicodeFilePath.Buffer[1] == '\\')) || ((UnicodeFilePath.Length == 6) &&
+                (UnicodeFilePath.Buffer[1] == ':')))
+            {
+                break;
+            }
+
+            UnicodeFilePath.Length -= sizeof(WCHAR);
+            UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+
+            memcpy(FilePathName, UnicodeFilePath.Buffer, UnicodeFilePath.Length);
+            FilePathName[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+
+            if (!GetFullPathNameW(FilePathName, PathLength, FullFilePath, &FilePart))
+            {
+                goto Cleanup2;
+            }
+
+            if (!FilePart)
+            {
+                RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
+                UnicodeFilePath.Length += sizeof(WCHAR);
+                UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR) - 1] = '\\';
+                UnicodeFilePath.Buffer[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+                break;
+            }
+
+            FilePart[0] = '\0';
+            RtlInitUnicodeString(&UnicodeFilePath, FullFilePath);
+        }
+    }
+
+    if (UnicodeFilePath.Length > (cchBufferLength * sizeof(WCHAR)) - sizeof(WCHAR))
+    {
+        ErrorCode = ERROR_FILENAME_EXCED_RANGE;
+        goto Cleanup1;
+    }
+
+    memcpy(lpszVolumePathName, UnicodeFilePath.Buffer, UnicodeFilePath.Length);
+    lpszVolumePathName[UnicodeFilePath.Length / sizeof(WCHAR)] = '\0';
+
+    Result = TRUE;
+    goto Cleanup2;
+
+Cleanup1:
+    SetLastError(ErrorCode);
+Cleanup2:
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FullFilePath);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, FilePathName);
+    return Result;
 }
 
 /* EOF */

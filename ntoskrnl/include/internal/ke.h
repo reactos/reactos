@@ -153,6 +153,7 @@ extern PVOID KeRaiseUserExceptionDispatcher;
 extern UCHAR KiDebugRegisterTrapOffsets[9];
 extern UCHAR KiDebugRegisterContextOffsets[9];
 extern ULONG KeTimeIncrement;
+extern ULONG KeTimeAdjustment;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
 
@@ -166,15 +167,11 @@ extern ULONG KiFreezeFlag;
 {                                                                           \
     (Header)->Type = t;                                                     \
     (Header)->Absolute = 0;                                                 \
-    (Header)->Inserted = 0;                                                 \
     (Header)->Size = s;                                                     \
+    (Header)->Inserted = 0;                                                 \
     (Header)->SignalState = State;                                          \
     InitializeListHead(&((Header)->WaitListHead));                          \
 }
-
-#define KEBUGCHECKWITHTF(a,b,c,d,e,f) \
-    DbgPrint("KeBugCheckWithTf at %s:%i\n",__FILE__,__LINE__), \
-             KeBugCheckWithTf(a,b,c,d,e,f)
 
 /* Tells us if the Timer or Event is a Syncronization or Notification Object */
 #define TIMER_OR_EVENT_TYPE 0x7L
@@ -250,6 +247,18 @@ VOID
 NTAPI
 KiDeferredReadyThread(IN PKTHREAD Thread);
 
+PKTHREAD
+FASTCALL
+KiIdleSchedule(
+    IN PKPRCB Prcb
+);
+
+VOID
+FASTCALL
+KiProcessDeferredReadyList(
+    IN PKPRCB Prcb
+);
+
 KAFFINITY
 FASTCALL
 KiSetAffinityThread(
@@ -277,6 +286,13 @@ KiInsertTimerTable(
     IN ULONG Hand
 );
 
+VOID
+FASTCALL
+KiTimerListExpire(
+    IN PLIST_ENTRY ExpiredListHead,
+    IN KIRQL OldIrql
+);
+
 BOOLEAN
 FASTCALL
 KiInsertTreeTimer(
@@ -295,7 +311,15 @@ KiCompleteTimer(
 
 VOID
 FASTCALL
-KiAcquireGuardedMutexContented(PKGUARDED_MUTEX GuardedMutex);
+KiAcquireGuardedMutex(
+    IN OUT PKGUARDED_MUTEX GuardedMutex
+);
+
+VOID
+FASTCALL
+KiAcquireFastMutex(
+    IN PFAST_MUTEX FastMutex
+);
 
 /* gate.c **********************************************************************/
 
@@ -318,10 +342,33 @@ KeWaitForGate(
 /* ipi.c ********************************************************************/
 
 VOID
-NTAPI
-KiIpiSendRequest(
+FASTCALL
+KiIpiSend(
     KAFFINITY TargetSet,
     ULONG IpiRequest
+);
+
+VOID
+NTAPI
+KiIpiSendPacket(
+    IN KAFFINITY TargetProcessors,
+    IN PKIPI_WORKER WorkerFunction,
+    IN PKIPI_BROADCAST_WORKER BroadcastFunction,
+    IN ULONG_PTR Context,
+    IN PULONG Count
+);
+
+VOID
+FASTCALL
+KiIpiSignalPacketDone(
+    IN PKIPI_CONTEXT PacketContext
+);
+
+VOID
+FASTCALL
+KiIpiSignalPacketDoneAndStall(
+    IN PKIPI_CONTEXT PacketContext,
+    IN volatile PULONG ReverseStall
 );
 
 /* next file ***************************************************************/
@@ -536,7 +583,7 @@ KeInitializeProcess(
     struct _KPROCESS *Process,
     KPRIORITY Priority,
     KAFFINITY Affinity,
-    PLARGE_INTEGER DirectoryTableBase,
+    PULONG DirectoryTableBase,
     IN BOOLEAN Enable
 );
 
@@ -677,6 +724,11 @@ VOID
 FASTCALL
 KiActivateWaiterQueue(IN PKQUEUE Queue);
 
+ULONG
+NTAPI
+KeQueryRuntimeProcess(IN PKPROCESS Process,
+                      OUT PULONG UserTime);
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 BOOLEAN
@@ -741,10 +793,10 @@ VOID
 NTAPI
 KeBugCheckWithTf(
     ULONG BugCheckCode,
-    ULONG BugCheckParameter1,
-    ULONG BugCheckParameter2,
-    ULONG BugCheckParameter3,
-    ULONG BugCheckParameter4,
+    ULONG_PTR BugCheckParameter1,
+    ULONG_PTR BugCheckParameter2,
+    ULONG_PTR BugCheckParameter3,
+    ULONG_PTR BugCheckParameter4,
     PKTRAP_FRAME Tf
 );
 

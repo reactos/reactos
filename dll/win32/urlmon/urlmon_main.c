@@ -173,6 +173,8 @@ static const ClassFactory FileProtocolCF =
     { &ClassFactoryVtbl, FileProtocol_Construct};
 static const ClassFactory FtpProtocolCF =
     { &ClassFactoryVtbl, FtpProtocol_Construct};
+static const ClassFactory GopherProtocolCF =
+    { &ClassFactoryVtbl, GopherProtocol_Construct};
 static const ClassFactory HttpProtocolCF =
     { &ClassFactoryVtbl, HttpProtocol_Construct};
 static const ClassFactory HttpSProtocolCF =
@@ -193,6 +195,7 @@ struct object_creation_info
 
 static const WCHAR wszFile[] = {'f','i','l','e',0};
 static const WCHAR wszFtp[]  = {'f','t','p',0};
+static const WCHAR wszGopher[]  = {'g','o','p','h','e','r',0};
 static const WCHAR wszHttp[] = {'h','t','t','p',0};
 static const WCHAR wszHttps[] = {'h','t','t','p','s',0};
 static const WCHAR wszMk[]   = {'m','k',0};
@@ -201,6 +204,7 @@ static const struct object_creation_info object_creation[] =
 {
     { &CLSID_FileProtocol,            CLASSFACTORY(&FileProtocolCF),    wszFile },
     { &CLSID_FtpProtocol,             CLASSFACTORY(&FtpProtocolCF),     wszFtp  },
+    { &CLSID_GopherProtocol,          CLASSFACTORY(&GopherProtocolCF),  wszGopher },
     { &CLSID_HttpProtocol,            CLASSFACTORY(&HttpProtocolCF),    wszHttp },
     { &CLSID_HttpSProtocol,           CLASSFACTORY(&HttpSProtocolCF),   wszHttps },
     { &CLSID_MkProtocol,              CLASSFACTORY(&MkProtocolCF),      wszMk },
@@ -210,7 +214,7 @@ static const struct object_creation_info object_creation[] =
 
 static void init_session(BOOL init)
 {
-    int i;
+    unsigned int i;
 
     for(i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++) {
 
@@ -240,7 +244,7 @@ static void init_session(BOOL init)
 
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
-    int i;
+    unsigned int i;
     
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     
@@ -435,7 +439,7 @@ static BOOL text_richtext_filter(const BYTE *b, DWORD size)
 
 static BOOL text_html_filter(const BYTE *b, DWORD size)
 {
-    int i;
+    DWORD i;
 
     if(size < 5)
         return FALSE;
@@ -598,7 +602,7 @@ HRESULT WINAPI FindMimeFromData(LPBC pBC, LPCWSTR pwzUrl, LPVOID pBuffer,
         const BYTE *buf = pBuffer;
         DWORD len;
         LPCWSTR ret = NULL;
-        int i;
+        unsigned int i;
 
         static const WCHAR wszTextHtml[] = {'t','e','x','t','/','h','t','m','l',0};
         static const WCHAR wszTextRichtext[] = {'t','e','x','t','/','r','i','c','h','t','e','x','t',0};
@@ -766,4 +770,22 @@ HRESULT WINAPI Extract(void *dest, LPCSTR szCabName)
     if (!pExtract) return HRESULT_FROM_WIN32(GetLastError());
 
     return pExtract(dest, szCabName);
+}
+
+/***********************************************************************
+ *           IsLoggingEnabledA (URLMON.@)
+ */
+BOOL WINAPI IsLoggingEnabledA(LPCSTR url)
+{
+    FIXME("(%s)\n", debugstr_a(url));
+    return FALSE;
+}
+
+/***********************************************************************
+ *           IsLoggingEnabledW (URLMON.@)
+ */
+BOOL WINAPI IsLoggingEnabledW(LPCWSTR url)
+{
+    FIXME("(%s)\n", debugstr_w(url));
+    return FALSE;
 }

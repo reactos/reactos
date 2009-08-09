@@ -171,7 +171,7 @@ LPVOID CDECL IMalloc16_fnHeapMinimize(IMalloc16* iface) {
 /******************************************************************************
  * IMalloc16_Constructor [VTABLE]
  */
-LPMALLOC16
+static LPMALLOC16
 IMalloc16_Constructor(void)
 {
     static IMalloc16Vtbl vt16;
@@ -572,7 +572,7 @@ SEGPTR WINAPI CoMemAlloc(DWORD size, DWORD dwMemContext, DWORD x) {
 	TRACE("(%d, 0x%08x, 0x%08x)\n", size, dwMemContext, x);
 	hres = _xmalloc16(size, &segptr);
 	if (hres != S_OK)
-		return (SEGPTR)0;
+		return 0;
 	return segptr;
 }
 

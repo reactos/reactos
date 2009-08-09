@@ -150,7 +150,7 @@ static const struct {
 
 void _dump_cf_flags(DWORD cflags)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < sizeof(cfflags)/sizeof(cfflags[0]); i++)
         if (cfflags[i].mask & cflags)
@@ -182,7 +182,7 @@ BOOL WINAPI ChooseFontW(LPCHOOSEFONTW lpChFont)
 
     if ( (lpChFont->Flags&CF_ENABLETEMPLATEHANDLE)!=0 )
     {
-        template=(LPCVOID)lpChFont->hInstance;
+        template=lpChFont->hInstance;
     } else
     {
         if ( (lpChFont->Flags&CF_ENABLETEMPLATE)!=0 )
@@ -236,7 +236,7 @@ BOOL WINAPI ChooseFontA(LPCHOOSEFONTA lpChFont)
 
     if ( (lpChFont->Flags&CF_ENABLETEMPLATEHANDLE)!=0 )
     {
-        template=(LPCVOID)lpChFont->hInstance;
+        template=lpChFont->hInstance;
     } else
     {
         if ( (lpChFont->Flags&CF_ENABLETEMPLATE)!=0 )
@@ -428,7 +428,7 @@ static int AddFontSizeToCombo3(HWND hwnd, UINT h, const CHOOSEFONTW *lpcf)
 static int SetFontSizesToCombo3(HWND hwnd, const CHOOSEFONTW *lpcf)
 {
     static const BYTE sizes[]={6,7,8,9,10,11,12,14,16,18,20,22,24,26,28,36,48,72};
-    int i;
+    unsigned int i;
 
     for (i = 0; i < sizeof(sizes)/sizeof(sizes[0]); i++)
         if (AddFontSizeToCombo3(hwnd, sizes[i], lpcf)) return 1;
@@ -601,7 +601,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
     HCURSOR hcursor=SetCursor(LoadCursorW(0,(LPWSTR)IDC_WAIT));
     static const WCHAR strColorName[] = {'[','c','o','l','o','r',' ','n','a','m','e',']',0};
 
-    SetPropW(hDlg, strWineFontData, (HANDLE)lpcf);
+    SetPropW(hDlg, strWineFontData, lpcf);
     lpxx=lpcf->lpLogFont;
     TRACE("WM_INITDIALOG lParam=%08lX\n", lParam);
 
@@ -1072,7 +1072,7 @@ static LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
                         LF_FACESIZE, lpcfa->lpLogFont->lfFaceName, LF_FACESIZE, 0, 0);
 
     if((lpcfw->Flags & CF_USESTYLE) && lpcfw->lpszStyle) {
-        len = WideCharToMultiByte(CP_ACP, 0, lpcfw->lpszStyle, -1, NULL, -1, 0, 0);
+        len = WideCharToMultiByte(CP_ACP, 0, lpcfw->lpszStyle, -1, NULL, 0, 0, 0);
         WideCharToMultiByte(CP_ACP, 0, lpcfw->lpszStyle, -1, lpcfa->lpszStyle, len, 0, 0);
         HeapFree(GetProcessHeap(), 0, lpcfw->lpszStyle);
     }
@@ -1146,7 +1146,7 @@ INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
     int len;
 
     if (uMsg!=WM_INITDIALOG) {
-        lpcfw = (LPCHOOSEFONTW)GetPropW(hDlg, strWineFontData);
+        lpcfw = GetPropW(hDlg, strWineFontData);
         if (!lpcfw)
             return FALSE;
         if (CFn_HookCallChk32(lpcfw))
@@ -1209,7 +1209,7 @@ INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
 
     if (uMsg!=WM_INITDIALOG)
     {
-        lpcf=(LPCHOOSEFONTW)GetPropW(hDlg, strWineFontData);
+        lpcf= GetPropW(hDlg, strWineFontData);
         if (!lpcf)
             return FALSE;
         if (CFn_HookCallChk32(lpcf))

@@ -85,7 +85,7 @@ PCHAR RegReadString( HKEY Root, PCHAR Subkey, PCHAR Value ) {
     goto cleanup;
 
 regerror:
-    if( SubOut ) free( SubOut );
+    if( SubOut ) { free( SubOut ); SubOut = NULL; }
 cleanup:
     if( ValueKey && ValueKey != Root ) {
         DH_DbgPrint(MID_TRACE,("Closing key %x\n", ValueKey));
@@ -103,12 +103,11 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
         "SYSTEM\\CurrentControlSet\\Control\\Class\\"
         "{4D36E972-E325-11CE-BFC1-08002BE10318}";
     PCHAR TargetKeyNameStart =
-        "SYSTEM\\CurrentControlSet\\Services\\";
-    PCHAR TargetKeyNameEnd = "\\Parameters\\Tcpip";
+        "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
     PCHAR TargetKeyName = NULL;
     PCHAR *EnumKeysLinkage = GetSubkeyNames( EnumKeyName, "\\Linkage" );
     PCHAR *EnumKeysTop     = GetSubkeyNames( EnumKeyName, "" );
-    PCHAR RootDevice = NULL, DriverDesc = NULL;
+    PCHAR RootDevice = NULL;
     HKEY EnumKey, OutKey = NULL;
     DWORD Error = ERROR_SUCCESS;
 
@@ -121,30 +120,24 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
     for( i = 0; EnumKeysLinkage[i]; i++ ) {
         RootDevice = RegReadString
             ( EnumKey, EnumKeysLinkage[i], "RootDevice" );
-        DriverDesc = RegReadString
-            ( EnumKey, EnumKeysTop[i], "DriverDesc" );
 
-        if( DriverDesc &&
-            RootDevice &&
-            !strcmp( DriverDesc, Adapter->DhclientInfo.name ) ) {
+        if( RootDevice &&
+            !strcmp( RootDevice, Adapter->DhclientInfo.name ) ) {
             TargetKeyName =
                 (CHAR*) malloc( strlen( TargetKeyNameStart ) +
-                        strlen( RootDevice ) +
-                        strlen( TargetKeyNameEnd ) + 1 );
+                        strlen( RootDevice ) + 1);
             if( !TargetKeyName ) goto cleanup;
-            sprintf( TargetKeyName, "%s%s%s",
-                     TargetKeyNameStart, RootDevice, TargetKeyNameEnd );
-            Error = RegOpenKey( HKEY_LOCAL_MACHINE, TargetKeyName, &OutKey );
+            sprintf( TargetKeyName, "%s%s",
+                     TargetKeyNameStart, RootDevice );
+            Error = RegCreateKeyExA( HKEY_LOCAL_MACHINE, TargetKeyName, 0, NULL, 0, KEY_READ, NULL, &OutKey, NULL );
             break;
         } else {
             free( RootDevice ); RootDevice = 0;
-            free( DriverDesc ); DriverDesc = 0;
         }
     }
 
 cleanup:
     if( RootDevice ) free( RootDevice );
-    if( DriverDesc ) free( DriverDesc );
     if( EnumKeysLinkage ) free( EnumKeysLinkage );
     if( EnumKeysTop ) free( EnumKeysTop );
     if( TargetKeyName ) free( TargetKeyName );

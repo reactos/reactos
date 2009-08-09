@@ -1,8 +1,7 @@
-
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/irp.c
+ * FILE:            ntoskrnl/io/iomgr/irp.c
  * PURPOSE:         IRP Handling Functions
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gunnar Dalsnes
@@ -13,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* Undefine some macros we implement here */
 #undef IoCallDriver
@@ -254,7 +253,7 @@ IopCompleteRequest(IN PKAPC Apc,
             FileObject);
 
     /* Sanity check */
-    ASSERT(Irp->IoStatus.Status != 0xFFFFFFFF);
+    ASSERT(Irp->IoStatus.Status != (NTSTATUS)0xFFFFFFFF);
 
     /* Check if we have a file object */
     if (*SystemArgument2)
@@ -287,7 +286,7 @@ IopCompleteRequest(IN PKAPC Apc,
         if (Irp->Flags & IRP_DEALLOCATE_BUFFER)
         {
             /* Deallocate it */
-            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer, TAG_SYS_BUF);
+            ExFreePool(Irp->AssociatedIrp.SystemBuffer);
         }
     }
 
@@ -324,16 +323,16 @@ IopCompleteRequest(IN PKAPC Apc,
         }
 
         /* Use SEH to make sure we don't write somewhere invalid */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /*  Save the IOSB Information */
             *Irp->UserIosb = Irp->IoStatus;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Ignore any error */
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Check if we have an event or a file object */
         if (Irp->UserEvent)
@@ -347,16 +346,8 @@ IopCompleteRequest(IN PKAPC Apc,
                 /* Check if this is an Asynch API */
                 if (!(Irp->Flags & IRP_SYNCHRONOUS_API))
                 {
-                  /* HACK */
-                  if (*((PULONG)(Irp->UserEvent) - 1) != 0x87878787)
-                  {
                     /* Dereference the event */
                     ObDereferenceObject(Irp->UserEvent);
-                  }
-                  else
-                  {
-                    DPRINT1("Not an executive event -- should not be dereferenced\n");
-                  }
                 }
 
                 /*
@@ -428,7 +419,7 @@ IopCompleteRequest(IN PKAPC Apc,
         {
             /* We have an I/O Completion setup... create the special Overlay */
             Irp->Tail.CompletionKey = Key;
-            Irp->Tail.Overlay.PacketType = IrpCompletionPacket;
+            Irp->Tail.Overlay.PacketType = IopCompletionPacketIrp;
             KeInsertQueue(Port, &Irp->Tail.Overlay.ListEntry);
         }
         else
@@ -525,6 +516,8 @@ IoAllocateIrp(IN CCHAR StackSize,
     PNPAGED_LOOKASIDE_LIST List = NULL;
     PP_NPAGED_LOOKASIDE_NUMBER ListType = LookasideSmallIrpList;
 
+    /* FIXME: Implement Lookaside Floats */
+    
     /* Figure out which Lookaside List to use */
     if ((StackSize <= 8) && (ChargeQuota == FALSE))
     {
@@ -585,8 +578,8 @@ IoAllocateIrp(IN CCHAR StackSize,
     }
     else
     {
-        /* We have an IRP from Lookaside */
-        Flags |= IRP_LOOKASIDE_ALLOCATION;
+        /* In this case there is no charge quota */
+        Flags &= ~IRP_QUOTA_CHARGED;
     }
 
     /* Set Flag */
@@ -624,7 +617,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return Irp;
+    if (!Irp) return NULL;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -682,24 +675,24 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
                 return NULL;
             }
 
-            /* Probe and Lock */
-            _SEH_TRY
-            {
-                /* Do the probe */
-                MmProbeAndLockPages(Irp->MdlAddress,
-                                    KernelMode,
-                                    MajorFunction == IRP_MJ_READ ?
-                                    IoWriteAccess : IoReadAccess);
-            }
-            _SEH_HANDLE
-            {
-                /* Free the IRP and its MDL */
-                IoFreeMdl(Irp->MdlAddress);
-                IoFreeIrp(Irp);
-                Irp = NULL;
-            }
-            _SEH_END;
-
+			/* Probe and Lock */
+			_SEH2_TRY
+			{
+				/* Do the probe */
+				MmProbeAndLockPages(Irp->MdlAddress,
+									KernelMode,
+									MajorFunction == IRP_MJ_READ ?
+									IoWriteAccess : IoReadAccess);
+			}
+			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+			{
+				/* Free the IRP and its MDL */
+				IoFreeMdl(Irp->MdlAddress);
+				IoFreeIrp(Irp);
+				Irp = NULL;
+			}
+			_SEH2_END;
+		
             /* This is how we know if we failed during the probe */
             if (!Irp) return NULL;
         }
@@ -728,7 +721,7 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
     Irp->UserIosb = IoStatusBlock;
     Irp->Tail.Overlay.Thread = PsGetCurrentThread();
 
-    /* Set the Status Block after all is done */
+    /* Return the IRP */
     IOTRACE(IO_IRP_DEBUG,
             "%s - Built IRP %p with Major, Buffer, DO %lx %p %p\n",
             __FUNCTION__,
@@ -760,7 +753,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
 
     /* Allocate IRP */
     Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-    if (!Irp) return Irp;
+    if (!Irp) return NULL;
 
     /* Get the Stack */
     StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -854,6 +847,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
             }
             else
             {
+                /* Clear the flags */
                 Irp->Flags = 0;
             }
 
@@ -874,7 +868,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                 }
 
                 /* Probe and Lock */
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     /* Do the probe */
                     MmProbeAndLockPages(Irp->MdlAddress,
@@ -883,7 +877,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                                         METHOD_IN_DIRECT ?
                                         IoReadAccess : IoWriteAccess);
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     /* Free the MDL */
                     IoFreeMdl(Irp->MdlAddress);
@@ -893,7 +887,7 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                     IoFreeIrp(Irp);
                     Irp = NULL;
                 }
-                _SEH_END;
+                _SEH2_END;
 
                 /* This is how we know if probing failed */
                 if (!Irp) return NULL;
@@ -967,19 +961,21 @@ NTAPI
 IoCancelIrp(IN PIRP Irp)
 {
     KIRQL OldIrql;
+    KIRQL IrqlAtEntry;
     PDRIVER_CANCEL CancelRoutine;
     IOTRACE(IO_IRP_DEBUG,
             "%s - Canceling IRP %p\n",
             __FUNCTION__,
             Irp);
     ASSERT(Irp->Type == IO_TYPE_IRP);
+    IrqlAtEntry = KeGetCurrentIrql();
 
     /* Acquire the cancel lock and cancel the IRP */
     IoAcquireCancelSpinLock(&OldIrql);
     Irp->Cancel = TRUE;
 
     /* Clear the cancel routine and get the old one */
-    CancelRoutine = IoSetCancelRoutine(Irp, NULL);
+    CancelRoutine = (PVOID)IoSetCancelRoutine(Irp, NULL);
     if (CancelRoutine)
     {
         /* We had a routine, make sure the IRP isn't completed */
@@ -996,6 +992,7 @@ IoCancelIrp(IN PIRP Irp)
         /* Set the cancel IRQL And call the routine */
         Irp->CancelIrql = OldIrql;
         CancelRoutine(IoGetCurrentIrpStackLocation(Irp)->DeviceObject, Irp);
+	ASSERT(IrqlAtEntry == KeGetCurrentIrql());
         return TRUE;
     }
 
@@ -1055,7 +1052,12 @@ IoCancelThreadIo(IN PETHREAD Thread)
          * Don't stay here forever if some broken driver doesn't complete
          * the IRP.
          */
-        if (!(Retries--)) IopRemoveThreadIrp();
+        if (!(Retries--))
+        {
+            /* Print out a message and remove the IRP */
+            DPRINT1("Broken driver did not complete!\n");
+            IopRemoveThreadIrp();
+        }
 
         /* Raise the IRQL Again */
         KeRaiseIrql(APC_LEVEL, &OldIrql);
@@ -1073,7 +1075,7 @@ NTAPI
 IoCallDriver(IN PDEVICE_OBJECT DeviceObject,
              IN PIRP Irp)
 {
-    /* Call fast call */
+    /* Call fastcall */
     return IofCallDriver(DeviceObject, Irp);
 }
 
@@ -1109,7 +1111,7 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
               IN PIRP Irp)
 {
     PDRIVER_OBJECT DriverObject;
-    PIO_STACK_LOCATION Param;
+    PIO_STACK_LOCATION StackPtr;
 
     /* Get the Driver Object */
     DriverObject = DeviceObject->DriverObject;
@@ -1123,15 +1125,15 @@ IofCallDriver(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Now update the stack location */
-    Param = IoGetNextIrpStackLocation(Irp);
-    Irp->Tail.Overlay.CurrentStackLocation = Param;
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    Irp->Tail.Overlay.CurrentStackLocation = StackPtr;
 
     /* Get the Device Object */
-    Param->DeviceObject = DeviceObject;
+    StackPtr->DeviceObject = DeviceObject;
 
     /* Call it */
-    return DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
-                                                             Irp);
+    return DriverObject->MajorFunction[StackPtr->MajorFunction](DeviceObject,
+                                                                Irp);
 }
 
 FORCEINLINE
@@ -1181,7 +1183,7 @@ IofCompleteRequest(IN PIRP Irp,
     ASSERT(Irp->Type == IO_TYPE_IRP);
     ASSERT(!Irp->CancelRoutine);
     ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
-    ASSERT(Irp->IoStatus.Status != 0xFFFFFFFF);
+    ASSERT(Irp->IoStatus.Status != (NTSTATUS)0xFFFFFFFF);
 
     /* Get the last stack */
     LastStackPtr = (PIO_STACK_LOCATION)(Irp + 1);
@@ -1414,10 +1416,9 @@ IofCompleteRequest(IN PIRP Irp,
 
 NTSTATUS
 NTAPI
-IopSynchronousCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
+IopSynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
+                         IN PIRP Irp,
+                         IN PVOID Context)
 {
     if (Irp->PendingReturned)
         KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
@@ -1461,6 +1462,7 @@ IoForwardIrpSynchronously(IN PDEVICE_OBJECT DeviceObject,
         KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
     }
 
+    /* Return success */
     return TRUE;
 }
 
@@ -1488,7 +1490,7 @@ IoFreeIrp(IN PIRP Irp)
     if (!(Irp->AllocationFlags & IRP_ALLOCATED_FIXED_SIZE))
     {
         /* Free it */
-        ExFreePool(Irp);
+        ExFreePoolWithTag(Irp, TAG_IRP);
     }
     else
     {
@@ -1517,7 +1519,7 @@ IoFreeIrp(IN PIRP Irp)
             {
                 /* All lists failed, use the pool */
                 List->L.FreeMisses++;
-                ExFreePool(Irp);
+                ExFreePoolWithTag(Irp, TAG_IRP);
                 Irp = NULL;
             }
         }
@@ -1534,10 +1536,46 @@ IoFreeIrp(IN PIRP Irp)
 /*
  * @implemented
  */
-PEPROCESS NTAPI
+IO_PAGING_PRIORITY
+FASTCALL
+IoGetPagingIoPriority(IN PIRP Irp)
+{
+    IO_PAGING_PRIORITY Priority;
+    ULONG Flags;
+
+    /* Get the flags */
+    Flags = Irp->Flags;
+
+    /* Check what priority it has */
+    if (Flags & 0x8000) // FIXME: Undocumented flag
+    {
+        /* High priority */
+        Priority = IoPagingPriorityHigh;
+    }
+    else if (Flags & IRP_PAGING_IO)
+    {
+        /* Normal priority */
+        Priority = IoPagingPriorityNormal;
+    }
+    else
+    {
+        /* Invalid -- not a paging IRP */
+        Priority = IoPagingPriorityInvalid;
+    }
+
+    /* Return the priority */
+    return Priority;
+}
+
+/*
+ * @implemented
+ */
+PEPROCESS
+NTAPI
 IoGetRequestorProcess(IN PIRP Irp)
 {
-    return(Irp->Tail.Overlay.Thread->ThreadsProcess);
+    /* Return the requestor process */
+    return Irp->Tail.Overlay.Thread->ThreadsProcess;
 }
 
 /*
@@ -1547,6 +1585,7 @@ ULONG
 NTAPI
 IoGetRequestorProcessId(IN PIRP Irp)
 {
+    /* Return the requestor process' id */
     return (ULONG)(IoGetRequestorProcess(Irp)->UniqueProcessId);
 }
 
@@ -1570,6 +1609,7 @@ PIRP
 NTAPI
 IoGetTopLevelIrp(VOID)
 {
+    /* Return the IRP */
     return (PIRP)PsGetCurrentThread()->TopLevelIrp;
 }
 
@@ -1720,5 +1760,3 @@ IoSetTopLevelIrp(IN PIRP Irp)
     /* Set the IRP */
     PsGetCurrentThread()->TopLevelIrp = (ULONG)Irp;
 }
-
-/* EOF */

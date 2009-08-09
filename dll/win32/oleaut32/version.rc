@@ -19,5 +19,7 @@
 #define WINE_OLESELFREGISTER
 #define WINE_FILEDESCRIPTION_STR "Wine OLE dll"
 #define WINE_FILENAME_STR "oleaut32.dll"
+#define WINE_FILEVERSION 6, 0, 6001, 18000 /* version from Vista SP1 */
+#define WINE_FILEVERSION_STR "6.0.6001.18000"
 
 #include "wine/wine_common_ver.rc"

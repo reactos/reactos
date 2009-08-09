@@ -103,10 +103,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(netbios);
 #define MIN_CACHE_TIMEOUT   60000
 #define CACHE_TIMEOUT       360000
 
-#define MAX_NBT_NAME_SZ (NCBNAMSZ * 2 + MAX_DOMAIN_NAME_LEN + 2)
-#define SIMPLE_NAME_QUERY_PKT_SIZE 26 + MAX_NBT_NAME_SZ
-
-#define DEFAULT_NBT_SESSIONS 16
+#define MAX_NBT_NAME_SZ            255
+#define SIMPLE_NAME_QUERY_PKT_SIZE 16 + MAX_NBT_NAME_SZ
 
 #define NBNS_TYPE_NB             0x0020
 #define NBNS_TYPE_NBSTAT         0x0021
@@ -156,7 +154,7 @@ static DWORD gWINSQueries;
 static DWORD gWINSQueryTimeout;
 static DWORD gWINSServers[MAX_WINS_SERVERS];
 static int   gNumWINSServers;
-static char  gScopeID[MAX_DOMAIN_NAME_LEN];
+static char  gScopeID[MAX_SCOPE_ID_LEN];
 static DWORD gCacheTimeout;
 static struct NBNameCache *gNameCache;
 
@@ -402,7 +400,7 @@ typedef struct _NetBTNameQueryData {
 static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
  WORD answerIndex, PUCHAR rData, WORD rLen)
 {
-    NetBTNameQueryData *queryData = (NetBTNameQueryData *)pVoid;
+    NetBTNameQueryData *queryData = pVoid;
     BOOL ret;
 
     if (queryData)
@@ -415,10 +413,7 @@ static BOOL NetBTFindNameAnswerCallback(void *pVoid, WORD answerCount,
             if (queryData->cacheEntry)
                 queryData->cacheEntry->numAddresses = 0;
             else
-            {
-                ret = FALSE;
                 queryData->ret = NRC_OSRESNOTAV;
-            }
         }
         if (rLen == 6 && queryData->cacheEntry &&
          queryData->cacheEntry->numAddresses < answerCount)
@@ -701,7 +696,7 @@ typedef struct _NetBTNodeQueryData
 static BOOL NetBTNodeStatusAnswerCallback(void *pVoid, WORD answerCount,
  WORD answerIndex, PUCHAR rData, WORD rLen)
 {
-    NetBTNodeQueryData *data = (NetBTNodeQueryData *)pVoid;
+    NetBTNodeQueryData *data = pVoid;
 
     if (data && !data->gotResponse && rData && rLen >= 1)
     {
@@ -816,7 +811,7 @@ static UCHAR NetBTAstatRemote(NetBTAdapter *adapter, PNCB ncb)
 
 static UCHAR NetBTAstat(void *adapt, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+    NetBTAdapter *adapter = adapt;
     UCHAR ret;
 
     TRACE("adapt %p, NCB %p\n", adapt, ncb);
@@ -850,8 +845,8 @@ static UCHAR NetBTAstat(void *adapt, PNCB ncb)
             astat->max_sess_pkt_size = 0xffff;
             astat->xmit_success = adapter->xmit_success;
             astat->recv_success = adapter->recv_success;
+            ret = NRC_GOODRET;
         }
-        ret = NRC_GOODRET;
     }
     else
         ret = NetBTAstatRemote(adapter, ncb);
@@ -861,7 +856,7 @@ static UCHAR NetBTAstat(void *adapt, PNCB ncb)
 
 static UCHAR NetBTFindName(void *adapt, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+    NetBTAdapter *adapter = adapt;
     UCHAR ret;
     const NBNameCacheEntry *cacheEntry = NULL;
     PFIND_NAME_HEADER foundName;
@@ -978,7 +973,7 @@ static UCHAR NetBTSessionReq(SOCKET fd, const UCHAR *calledName,
 
 static UCHAR NetBTCall(void *adapt, PNCB ncb, void **sess)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+    NetBTAdapter *adapter = adapt;
     UCHAR ret;
     const NBNameCacheEntry *cacheEntry = NULL;
 
@@ -1079,8 +1074,8 @@ static UCHAR NetBTCall(void *adapt, PNCB ncb, void **sess)
  */
 static UCHAR NetBTSend(void *adapt, void *sess, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
-    NetBTSession *session = (NetBTSession *)sess;
+    NetBTAdapter *adapter = adapt;
+    NetBTSession *session = sess;
     UCHAR buffer[NBSS_HDRSIZE], ret;
     int r;
     WSABUF wsaBufs[2];
@@ -1128,8 +1123,8 @@ static UCHAR NetBTSend(void *adapt, void *sess, PNCB ncb)
 
 static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
 {
-    NetBTAdapter *adapter = (NetBTAdapter *)adapt;
-    NetBTSession *session = (NetBTSession *)sess;
+    NetBTAdapter *adapter = adapt;
+    NetBTSession *session = sess;
     UCHAR buffer[NBSS_HDRSIZE], ret;
     int r;
     WSABUF wsaBufs[2];
@@ -1183,6 +1178,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                  * message header. */
                 NetBIOSHangupSession(ncb);
                 ret = NRC_SABORT;
+                goto error;
             }
             else if (buffer[0] != NBSS_MSG)
             {
@@ -1190,6 +1186,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                 FIXME("Received unexpected session msg type %d\n", buffer[0]);
                 NetBIOSHangupSession(ncb);
                 ret = NRC_SABORT;
+                goto error;
             }
             else
             {
@@ -1199,6 +1196,7 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
                     FIXME("Received a message that's too long for my taste\n");
                     NetBIOSHangupSession(ncb);
                     ret = NRC_SABORT;
+                    goto error;
                 }
                 else
                 {
@@ -1226,13 +1224,14 @@ static UCHAR NetBTRecv(void *adapt, void *sess, PNCB ncb)
             adapter->recv_success++;
         }
     }
+error:
     TRACE("returning 0x%02x\n", ret);
     return ret;
 }
 
 static UCHAR NetBTHangup(void *adapt, void *sess)
 {
-    NetBTSession *session = (NetBTSession *)sess;
+    NetBTSession *session = sess;
 
     TRACE("adapt %p, session %p\n", adapt, session);
 
@@ -1256,7 +1255,7 @@ static void NetBTCleanupAdapter(void *adapt)
     TRACE("adapt %p\n", adapt);
     if (adapt)
     {
-        NetBTAdapter *adapter = (NetBTAdapter *)adapt;
+        NetBTAdapter *adapter = adapt;
 
         if (adapter->nameCache)
             NBNameCacheDestroy(adapter->nameCache);
@@ -1311,7 +1310,7 @@ static BOOL NetBTEnumCallback(UCHAR totalLANAs, UCHAR lanaIndex,
  ULONG transport, const NetBIOSAdapterImpl *data, void *closure)
 {
     BOOL ret;
-    PMIB_IPADDRTABLE table = (PMIB_IPADDRTABLE)closure;
+    PMIB_IPADDRTABLE table = closure;
 
     if (table && data)
     {
@@ -1320,7 +1319,7 @@ static BOOL NetBTEnumCallback(UCHAR totalLANAs, UCHAR lanaIndex,
         ret = FALSE;
         for (ndx = 0; !ret && ndx < table->dwNumEntries; ndx++)
         {
-            const NetBTAdapter *adapter = (const NetBTAdapter *)data->data;
+            const NetBTAdapter *adapter = data->data;
 
             if (table->table[ndx].dwIndex == adapter->ipr.dwIndex)
             {
@@ -1492,7 +1491,7 @@ void NetBTInit(void)
          (LPBYTE)&dword, &size) == ERROR_SUCCESS && dword >= MIN_QUERY_TIMEOUT
          && dword <= MAX_QUERY_TIMEOUT)
             gWINSQueryTimeout = dword;
-        size = MAX_DOMAIN_NAME_LEN - 1;
+        size = sizeof(gScopeID) - 1;
         if (RegQueryValueExW(hKey, ScopeIDW, NULL, NULL, (LPBYTE)gScopeID + 1, &size)
          == ERROR_SUCCESS)
         {
@@ -1500,11 +1499,11 @@ void NetBTInit(void)
                NetBTNameEncode */
             char *ptr, *lenPtr;
 
-            for (ptr = gScopeID + 1; *ptr &&
-             ptr - gScopeID < MAX_DOMAIN_NAME_LEN; )
+            for (ptr = gScopeID + 1; ptr - gScopeID < sizeof(gScopeID) && *ptr; )
             {
-                for (lenPtr = ptr - 1, *lenPtr = 0; *ptr && *ptr != '.' &&
-                 ptr - gScopeID < MAX_DOMAIN_NAME_LEN; ptr++)
+                for (lenPtr = ptr - 1, *lenPtr = 0;
+                     ptr - gScopeID < sizeof(gScopeID) && *ptr && *ptr != '.';
+                     ptr++)
                     *lenPtr += 1;
                 ptr++;
             }

@@ -1,4 +1,3 @@
-/* $Id: sse.h,v 1.2 2002/04/09 14:58:03 keithw Exp $ */
 
 /*
  * Mesa 3-D graphics library

@@ -58,7 +58,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 	BOOL bSuccess = FALSE;
 	BYTE b = 0;
 	int iEncoding = ENCODING_ANSI;
-	int iCodePage;
+	int iCodePage = 0;
 	WCHAR szCrlf[2] = { '\r', '\n' };
 	DWORD adwEolnCount[3] = { 0, 0, 0 };
 
@@ -120,8 +120,6 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 			iCodePage = CP_ACP;
 		else if (iEncoding == ENCODING_UTF8)
 			iCodePage = CP_UTF8;
-		else
-			goto done;
 
 		if ((dwSize - dwPos) > 0)
 		{
@@ -225,7 +223,7 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 	DWORD dwPos = 0;
 	DWORD dwByteCount;
 	BYTE buffer[1024];
-	UINT iCodePage;
+	UINT iCodePage = 0;
 	DWORD dwDummy, i;
 	BOOL bSuccess = FALSE;
 	int iBufferSize, iRequiredBytes;
@@ -263,8 +261,6 @@ static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int
 					iCodePage = CP_ACP;
 				else if (iEncoding == ENCODING_UTF8)
 					iCodePage = CP_UTF8;
-				else
-					goto done;
 
 				iRequiredBytes = WideCharToMultiByte(iCodePage, 0, &pszText[dwPos], dwTextLen - dwPos, NULL, 0, NULL, NULL);
 				if (iRequiredBytes <= 0)
@@ -316,79 +312,71 @@ done:
 
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln)
 {
-	WCHAR wcBom;
-	WCHAR wcEoln;
-	BYTE bEoln;
-	LPBYTE pbEoln = NULL;
-	DWORD dwDummy, dwPos, dwNext, dwEolnSize = 0;
+  WCHAR wcBom;
+  LPCWSTR pszLF = L"\n";
+  DWORD dwPos, dwNext;
 
-	/* Write the proper byte order marks if not ANSI */
-	if (iEncoding != ENCODING_ANSI)
-	{
-		wcBom = 0xFEFF;
-		if (!WriteEncodedText(hFile, &wcBom, 1, iEncoding))
-			return FALSE;
-	}
+  /* Write the proper byte order marks if not ANSI */
+  if (iEncoding != ENCODING_ANSI)
+  {
+    wcBom = 0xFEFF;
+    if (!WriteEncodedText(hFile, &wcBom, 1, iEncoding))
+      return FALSE;
+  }
 
-	/* Identify the proper eoln to use */
-	switch(iEoln)
-	{
-	case EOLN_LF:
-		bEoln = '\n';
-		pbEoln = &bEoln;
-		dwEolnSize = sizeof(bEoln);
-		break;
-	case EOLN_CR:
-		bEoln = '\r';
-		pbEoln = &bEoln;
-		dwEolnSize = sizeof(bEoln);
-		break;
-	}
+  dwPos = 0;
 
-	/* If we have an eoln, make sure it is of the proper encoding */
-	if (pbEoln && ((iEncoding == ENCODING_UNICODE) || (iEncoding == ENCODING_UNICODE_BE)))
-	{
-		wcEoln = bEoln;
-		pbEoln = (LPBYTE) &wcEoln;
-		dwEolnSize = sizeof(wcEoln);
-	}
+  /* pszText eoln are always \r\n */
 
-	dwPos = 0;
+  do
+  {
+    /* Find the next eoln */
+    dwNext = dwPos;
+    while(dwNext < dwTextLen)
+    {
+      if (pszText[dwNext] == '\r' && pszText[dwNext + 1] == '\n')
+        break;
+      dwNext++;
+    }
 
-	while(dwPos < dwTextLen)
-	{
-		if (pbEoln)
-		{
-			/* Find the next eoln */
-			dwNext = dwPos;
-			while(dwNext < dwTextLen-1)
-			{
-				if ((pszText[dwNext] == '\r') && (pszText[dwNext+1] == '\n'))
-					break;
-				dwNext++;
-			}
-		}
-		else
-		{
-			/* No eoln conversion is necessary */
-			dwNext = dwTextLen;
-		}
+    if (dwNext != dwTextLen)
+    {
+      switch (iEoln)
+      {
+      case EOLN_LF:
+        /* Write text (without eoln) */
+        if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
+          return FALSE;
+        /* Write eoln */
+        if (!WriteEncodedText(hFile, pszLF, 1, iEncoding))
+          return FALSE;
+        break;
+      case EOLN_CR:
+        /* Write text (including \r as eoln) */
+        if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 1, iEncoding))
+          return FALSE;
+        break;
+      case EOLN_CRLF:
+        /* Write text (including \r\n as eoln) */
+        if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos + 2, iEncoding))
+          return FALSE;
+        break;
+      default:
+        return FALSE;
+      }
+    }
+    else
+    {
+      /* Write text (without eoln, since this is the end of the file) */
+      if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
+        return FALSE;
+    }
 
-		if (!WriteEncodedText(hFile, &pszText[dwPos], dwNext - dwPos, iEncoding))
-			return FALSE;
-		dwPos = dwNext;
+    /* Skip \r\n */
+    dwPos = dwNext + 2;
+  }
+  while (dwPos < dwTextLen);
 
-		/* are we at an eoln? */
-		while ((dwPos < dwTextLen-1) &&
-			((pszText[dwPos] == '\r') && (pszText[dwPos+1] == '\n')))
-		{
-			if (!WriteFile(hFile, pbEoln, dwEolnSize, &dwDummy, NULL))
-				return FALSE;
-			dwPos += 2;
-		}
-	}
-	while(dwPos < dwTextLen);
-
-	return TRUE;
+  return TRUE;
 }
 

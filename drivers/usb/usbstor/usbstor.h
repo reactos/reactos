@@ -7,7 +7,7 @@
 #define USB_STOR_TAG TAG('u','s','b','s')
 #define USB_MAXCHILDREN              (16)
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IoAttachDeviceToDeviceStackSafe(
   IN PDEVICE_OBJECT SourceDevice,
   IN PDEVICE_OBJECT TargetDevice,
@@ -32,13 +32,13 @@ typedef struct _USBSTOR_DEVICE_EXTENSION
 
 
 /* cleanup.c */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbStorCleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 /* fdo.c */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbStorPnpFdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
@@ -54,7 +54,7 @@ ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
@@ -71,7 +71,7 @@ UsbStorInitMultiSzString(
 	... /* list of PCSZ */);
 
 /* pdo.c */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 UsbStorPnpPdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);

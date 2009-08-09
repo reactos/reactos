@@ -19,6 +19,23 @@ ULONG KiIdleSMTSummary;
 
 /* FUNCTIONS *****************************************************************/
 
+PKTHREAD
+FASTCALL
+KiIdleSchedule(IN PKPRCB Prcb)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+    return NULL;
+}
+
+VOID
+FASTCALL
+KiProcessDeferredReadyList(IN PKPRCB Prcb)
+{
+    /* FIXME: TODO */
+    ASSERTMSG("Not yet implemented\n", FALSE);
+}
+
 VOID
 FASTCALL
 KiQueueReadyThread(IN PKTHREAD Thread,
@@ -55,7 +72,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
         {
             /* Calculate the new priority based on the adjust increment */
             OldPriority = min(Thread->AdjustIncrement + 1,
-                              LOW_REALTIME_PRIORITY - 1);
+                              LOW_REALTIME_PRIORITY - 3);
 
             /* Make sure we're not decreasing outside of the priority range */
             ASSERT((Thread->PriorityDecrement >= 0) &&
@@ -236,7 +253,7 @@ KiDeferredReadyThread(IN PKTHREAD Thread)
             if (KeGetCurrentProcessorNumber() != Thread->NextProcessor)
             {
                 /* We are, send an IPI */
-                KiIpiSendRequest(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
+                KiIpiSend(AFFINITY_MASK(Thread->NextProcessor), IPI_DPC);
             }
             return;
         }
@@ -344,9 +361,7 @@ KiSwapThread(IN PKTHREAD CurrentThread,
     WaitIrql = CurrentThread->WaitIrql;
 
     /* REACTOS Mm Hack of Doom */
-    MiSyncThreadProcessViews(PsGetCurrentProcess(),
-                             ((PETHREAD)NextThread)->ThreadsProcess,
-                             sizeof(EPROCESS));
+    MiSyncForContextSwitch(NextThread);
 
     /* Swap contexts */
     ApcState = KiSwapContext(CurrentThread, NextThread);
@@ -380,7 +395,7 @@ KiReadyThread(IN PKTHREAD Thread)
     if (Process->State != ProcessInMemory)
     {
         /* We don't page out processes in ROS */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else if (!Thread->KernelStackResident)
     {
@@ -393,7 +408,7 @@ KiReadyThread(IN PKTHREAD Thread)
         Thread->State = Transition;
 
         /* The stack is always resident in ROS */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
     else
     {
@@ -597,7 +612,7 @@ KiSetPriorityThread(IN PKTHREAD Thread,
                         if (KeGetCurrentProcessorNumber() != Processor)
                         {
                             /* We are, send an IPI */
-                            KiIpiSendRequest(AFFINITY_MASK(Processor), IPI_DPC);
+                            KiIpiSend(AFFINITY_MASK(Processor), IPI_DPC);
                         }
                     }
                 }
@@ -612,7 +627,7 @@ KiSetPriorityThread(IN PKTHREAD Thread,
             {
                 /* FIXME: TODO */
                 DPRINT1("Deferred state not yet supported\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
             else
             {
@@ -715,6 +730,9 @@ NtYieldExecution(VOID)
             /* Sanity check */
             ASSERT(OldIrql <= DISPATCH_LEVEL);
 
+            /* REACTOS Mm Hack of Doom */
+            MiSyncForContextSwitch(NextThread);
+
             /* Swap to new thread */
             KiSwapContext(Thread, NextThread);
             Status = STATUS_SUCCESS;
@@ -731,5 +749,3 @@ NtYieldExecution(VOID)
     KeLowerIrql(OldIrql);
     return Status;
 }
-
-

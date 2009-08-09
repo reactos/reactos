@@ -30,7 +30,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB Mcb,
                      IN LONGLONG Lbn,
                      IN LONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -67,7 +67,7 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB Mcb,
                          OUT PLONGLONG Lbn,
                          OUT PLONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     *Vbn = 0;
     *Lbn = 0;
     *SectorCount= 0;
@@ -231,7 +231,7 @@ FsRtlLookupLastBaseMcbEntryAndIndex(IN PBASE_MCB OpaqueMcb,
                                     IN OUT PLONGLONG LargeLbn,
                                     IN OUT PULONG Index)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     *LargeVbn = 0;
     *LargeLbn = 0;
     *Index = 0;
@@ -269,7 +269,7 @@ FsRtlLookupLastBaseMcbEntry(IN PBASE_MCB Mcb,
                             OUT PLONGLONG Vbn,
                             OUT PLONGLONG Lbn)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -422,7 +422,7 @@ NTAPI
 FsRtlTruncateBaseMcb(IN PBASE_MCB Mcb,
                      IN LONGLONG Vbn)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /*

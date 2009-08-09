@@ -1,7 +1,8 @@
 <module name="msgina" type="win32dll" baseaddress="${BASEADDRESS_MSGINA}" installbase="system32" installname="msgina.dll">
-	<importlibrary definition="msgina.def" />
+	<importlibrary definition="msgina.spec" />
 	<include base="msgina">.</include>
 	<include base="msgina">include</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<library>ntdll</library>
 	<library>wine</library>
 	<library>kernel32</library>

@@ -1,9 +1,0 @@
-; $Id: videoprt.def 27062 2007-06-07 21:13:06Z greatlrd $
-;
-; dxg.def - export definition file for ReactOS
-;
-EXPORTS
-DriverEntry@8
-DxDdCleanupDxGraphics@0
-DxDdStartupDxGraphics@24
-

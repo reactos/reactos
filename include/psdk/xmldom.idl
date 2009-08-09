@@ -21,6 +21,10 @@
 
 import "ocidl.idl";
 
+cpp_quote("#ifndef __xmldom_h__")
+cpp_quote("#define __xmldom_h__")
+cpp_quote("#endif")
+
 interface IXMLDOMImplementation;
 interface IXMLDOMNode;
 interface IXMLDOMDocumentFragment;
@@ -550,7 +554,7 @@ oleautomation,
 uuid(2933bf88-7b36-11d2-b20e-00c04f983e60),
 pointer_default(unique)
 ]
-interface IXMLDOMComment : IXMLDOMNode
+interface IXMLDOMComment : IXMLDOMCharacterData
 {
     /* empty */
 }
@@ -591,6 +595,7 @@ interface IXMLDOMCDATASection : IXMLDOMText
 {
     /* empty */
 }
+
 [
 local,
 object,
@@ -611,6 +616,77 @@ interface IXMLDOMDocumentType : IXMLDOMNode
 
     [propget, id(DISPID_DOM_DOCUMENTTYPE_NOTATIONS)]
     HRESULT notations( [out,retval] IXMLDOMNamedNodeMap **notationMap );
+}
+
+[
+local,
+object,
+odl,
+dual,
+nonextensible,
+oleautomation,
+uuid(2933bf8c-7b36-11d2-b20e-00c04f983e60),
+pointer_default(unique)
+]
+interface IXMLDOMNotation : IXMLDOMNode
+{
+    [propget, id(DISPID_DOM_NOTATION_PUBLICID)]
+    HRESULT publicId([out, retval] VARIANT *publicId);
+
+    [propget, id(DISPID_DOM_NOTATION_SYSTEMID)]
+    HRESULT systemId([out, retval] VARIANT *systemId);
+}
+
+[
+local,
+object,
+odl,
+dual,
+nonextensible,
+oleautomation,
+uuid(2933bf8d-7b36-11d2-b20e-00c04f983e60),
+pointer_default(unique)
+]
+interface IXMLDOMEntity : IXMLDOMNode
+{
+    [propget, id(DISPID_DOM_ENTITY_PUBLICID)]
+    HRESULT publicId([out, retval] VARIANT *publicId);
+
+    [propget, id(DISPID_DOM_ENTITY_SYSTEMID)]
+    HRESULT systemId([out, retval] VARIANT *systemId);
+
+    [propget, id(DISPID_DOM_ENTITY_NOTATIONNAME)]
+    HRESULT notationName([out, retval] BSTR *name);
+}
+
+[
+local,
+object,
+odl,
+dual,
+nonextensible,
+oleautomation,
+uuid(2933bf8e-7b36-11d2-b20e-00c04f983e60),
+pointer_default(unique)
+]
+interface IXMLDOMEntityReference : IXMLDOMNode
+{
+}
+
+[
+local,
+object,
+odl,
+dual,
+nonextensible,
+oleautomation,
+uuid(2933bf8f-7b36-11d2-b20e-00c04f983e60),
+pointer_default(unique)
+]
+interface IXMLDOMImplementation : IDispatch
+{
+    [id(DISPID_DOM_IMPLEMENTATION_HASFEATURE)]
+    HRESULT hasFeature([in] BSTR feature, [in] BSTR version, [out, retval] VARIANT_BOOL *pbool);
 }
 
 [
@@ -648,6 +724,20 @@ interface IXMLDOMParseError : IDispatch
     HRESULT filepos([retval, out] long * filePos);
 }
 
+[
+    hidden,
+    uuid(3efaa427-272f-11d2-836f-0000f87a7782)
+]
+dispinterface XMLDOMDocumentEvents
+{
+    properties:
+    methods:
+    [id(DISPID_XMLDOMEVENT_ONDATAAVAILABLE)]
+    HRESULT ondataavailable();
+
+    [id(DISPID_XMLDOMEVENT_ONREADYSTATECHANGE)]
+    HRESULT onreadystatechange();
+}
 
 [
 uuid(2933bf90-7b36-11d2-b20e-00c04f983e60)

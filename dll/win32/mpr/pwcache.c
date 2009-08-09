@@ -39,7 +39,7 @@ static inline BYTE hex( BYTE x )
     return x + 'A' - 10;
 }
 
-static inline CHAR ctox( CHAR x )
+static inline signed char ctox( CHAR x )
 {
     if( ( x >= '0' ) && ( x <= '9' ) )
         return x - '0';
@@ -74,7 +74,7 @@ static LPSTR MPR_GetValueName( LPCSTR pbResource, WORD cbResource, BYTE nType )
  * WNetCachePassword [MPR.@]  Saves password in cache
  *
  * NOTES
- *	only the parameter count is verifyed
+ *	Only the parameter count is verified
  *
  *	---- everything below this line might be wrong (js) -----
  * RETURNS
@@ -221,7 +221,7 @@ DWORD WINAPI WNetGetCachedPassword(
  * WNetEnumCachedPasswords [MPR.@]
  *
  * NOTES
- *	the parameter count is verifyed
+ *	The parameter count is verified
  * 
  *  This function is a huge security risk, as virii and such can use
  * it to grab all the passwords in the cache.  It's bad enough to 
@@ -282,7 +282,7 @@ UINT WINAPI WNetEnumCachedPasswords(
         /* decode the value */
         for(j=5; j<val_sz; j+=2 )
         {
-            CHAR hi = ctox( val[j] ), lo = ctox( val[j+1] );
+            signed char hi = ctox( val[j] ), lo = ctox( val[j+1] );
             if( ( hi < 0 ) || ( lo < 0 ) )
                 break;
             val[(j-5)/2] = (hi<<4) | lo;

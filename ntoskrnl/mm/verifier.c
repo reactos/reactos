@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -146,7 +146,7 @@ Cleanup:
     KeLeaveCriticalRegion();
 
     /* Free the table if we failed and return status */
-    ExFreePool(ThunkTable);
+    if (ThunkTable) ExFreePool(ThunkTable);
     return Status;
 }
 

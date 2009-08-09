@@ -1,8 +1,5 @@
 #ifndef _SCHANNEL_H
 #define _SCHANNEL_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 #include <wincrypt.h>
 

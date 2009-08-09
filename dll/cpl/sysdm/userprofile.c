@@ -139,7 +139,6 @@ UserProfileDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
             OnInitDialog(hwndDlg);
             break;
 

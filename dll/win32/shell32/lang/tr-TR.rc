@@ -337,7 +337,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Open With"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -357,22 +357,21 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-
-GROUPBOX "Tasks", -1, 7, 10, 249, 45
-//ICON
-AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
-//ICON
-AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
-//ICON
-AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
+	GROUPBOX "Tasks", -1, 7, 10, 249, 45
+	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+	AUTORADIOBUTTON "Use ReactOS class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+	GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
+	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+	AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP | WS_GROUP
+	GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
+	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
+	AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
+	PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -543,6 +542,20 @@ BEGIN
 	AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
 END
 
+CHKDSK_DLG DIALOGEX 50, 50, 194, 120
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Check Disk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
+	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
+	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
+	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
+	LTEXT "", 14003, 60, 80, 170, 10
+END
+
 IDD_PICK_ICON_DIALOG DIALOGEX 0, 0, 237, 204
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Change Icon"
@@ -571,14 +584,25 @@ BEGIN
 	IDS_SHV_COLUMN9             "Açýklamalar"
 	IDS_SHV_COLUMN10            "Sahip"
 	IDS_SHV_COLUMN11            "Grup"
+	IDS_SHV_COLUMN12            "Filename"
+	IDS_SHV_COLUMN13            "Category"
 	IDS_SHV_COLUMN_DELFROM      "Özgün konum"
 	IDS_SHV_COLUMN_DELDATE      "Silinme tarihi"
+	IDS_SHV_COLUMN_FONTTYPE     "Fonttype"
+	IDS_SHV_COLUMN_WORKGROUP    "Workgroup"
+	IDS_SHV_NETWORKLOCATION     "Network Location"
+	IDS_SHV_COLUMN_DOCUMENTS    "Documents"
+	IDS_SHV_COLUMN_STATUS       "Status"
+	IDS_SHV_COLUMN_COMMENTS     "Comments"
+	IDS_SHV_COLUMN_LOCATION     "Location"
+	IDS_SHV_COLUMN_MODEL        "Model"
 
 	/* special folders */
 	IDS_DESKTOP                 "Masaüstü"
 	IDS_MYCOMPUTER              "Bilgisayarým"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Çöp"
 	IDS_CONTROLPANEL            "Control Panel"
+	IDS_ADMINISTRATIVETOOLS     "Administrative Tools"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Bü&yük Simgeler"
@@ -587,6 +611,15 @@ BEGIN
 	IDS_VIEW_DETAILS            "&Ayrýntýlý"
 	IDS_SELECT                  "Seç"
 	IDS_OPEN                    "Aç"
+	IDS_CREATELINK              "Kýsayol O&luþtur"
+	IDS_COPY                    "K&opyala"
+	IDS_DELETE                  "&Sil"
+	IDS_PROPERTIES              "&Özellikler"
+	IDS_CUT                     "&Kes"
+	IDS_RESTORE                 "Restore"
+	IDS_FORMATDRIVE             "Format..."
+	IDS_RENAME                  "Rename"
+	IDS_INSERT                  "Insert"
 
 	IDS_CREATEFOLDER_DENIED     "Yeni dizin oluþturulamýyor: Eriþim engellendi."
 	IDS_CREATEFOLDER_CAPTION    "Dizin oluþturma sýrasýnda hata"
@@ -687,4 +720,9 @@ BEGIN
 	IDS_PRINT_VERB              "Print"
 	IDS_PLAY_VERB               "Play"
 	IDS_PREVIEW_VERB            "Preview"
+	IDS_PRINTERS                "Printers"
+	IDS_FONTS                   "Fonts"
+	IDS_INSTALLNEWFONT          "Install New Font..."
+
+	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 END

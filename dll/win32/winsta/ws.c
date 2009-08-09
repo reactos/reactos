@@ -1,80 +1,468 @@
-/* $Id$ */
-#include <windows.h>
-#include "winsta.h"
+/*
+ * PROJECT:         ReactOS winsta.dll
+ * FILE:            lib/winsta/ws.c
+ * PURPOSE:         WinStation
+ * PROGRAMMER:      Samuel Serapi?n
+ * 
+ */
+#include <winsta.h>
 
-WINSTASTUB(WinStationActivateLicense)
-WINSTASTUB(WinStationAutoReconnect)
-WINSTASTUB(WinStationBroadcastSystemMessage)
-WINSTASTUB(WinStationCheckLoopBack)
-WINSTASTUB(WinStationCloseServer)
-WINSTASTUB(WinStationConnectA)
-WINSTASTUB(WinStationConnectCallback)
-WINSTASTUB(WinStationConnectW)
-WINSTASTUB(WinStationDisconnect)
-WINSTASTUB(WinStationEnumerateA)
-WINSTASTUB(WinStationEnumerateLicenses)
-WINSTASTUB(WinStationEnumerateProcesses)
-WINSTASTUB(WinStationEnumerateW)
-WINSTASTUB(WinStationEnumerate_IndexedA)
-WINSTASTUB(WinStationEnumerate_IndexedW)
-WINSTASTUB(WinStationFreeGAPMemory)
-WINSTASTUB(WinStationFreeMemory)
-WINSTASTUB(WinStationGenerateLicense)
-WINSTASTUB(WinStationGetAllProcesses)
-WINSTASTUB(WinStationGetLanAdapterNameA)
-WINSTASTUB(WinStationGetLanAdapterNameW)
-WINSTASTUB(WinStationGetMachinePolicy)
-WINSTASTUB(WinStationGetProcessSid)
-WINSTASTUB(WinStationGetTermSrvCountersValue)
-WINSTASTUB(WinStationInstallLicense)
-WINSTASTUB(WinStationIsHelpAssistantSession)
-WINSTASTUB(WinStationNameFromLogonIdA)
-WINSTASTUB(WinStationNameFromLogonIdW)
-WINSTASTUB(WinStationNtsdDebug)
-WINSTASTUB(WinStationOpenServerA)
-WINSTASTUB(WinStationOpenServerW)
-WINSTASTUB(WinStationQueryInformationA)
-WINSTASTUB(WinStationQueryInformationW)
-WINSTASTUB(WinStationQueryLicense)
-WINSTASTUB(WinStationQueryLogonCredentialsW)
-WINSTASTUB(WinStationQueryUpdateRequired)
-WINSTASTUB(WinStationRegisterConsoleNotification)
-WINSTASTUB(WinStationRemoveLicense)
-WINSTASTUB(WinStationRenameA)
-WINSTASTUB(WinStationRenameW)
-WINSTASTUB(WinStationRequestSessionsList)
-WINSTASTUB(WinStationReset)
-WINSTASTUB(WinStationSendMessageA)
-WINSTASTUB(WinStationSendMessageW)
-WINSTASTUB(WinStationSendWindowMessage)
-WINSTASTUB(WinStationServerPing)
-WINSTASTUB(WinStationSetInformationA)
-WINSTASTUB(WinStationSetInformationW)
-WINSTASTUB(WinStationSetPoolCount)
-WINSTASTUB(WinStationShadow)
-WINSTASTUB(WinStationShadowStop)
-WINSTASTUB(WinStationShutdownSystem)
-WINSTASTUB(WinStationTerminateProcess)
-WINSTASTUB(WinStationUnRegisterConsoleNotification)
-WINSTASTUB(WinStationVirtualOpen)
-WINSTASTUB(WinStationWaitSystemEvent)
-WINSTASTUB(_WinStationAnnoyancePopup)
-WINSTASTUB(_WinStationBeepOpen)
-WINSTASTUB(_WinStationBreakPoint)
-WINSTASTUB(_WinStationCallback)
-WINSTASTUB(_WinStationCheckForApplicationName)
-WINSTASTUB(_WinStationFUSCanRemoteUserDisconnect)
-WINSTASTUB(_WinStationGetApplicationInfo)
-WINSTASTUB(_WinStationNotifyDisconnectPipe)
-WINSTASTUB(_WinStationNotifyLogoff)
-WINSTASTUB(_WinStationNotifyLogon)
-WINSTASTUB(_WinStationNotifyNewSession)
-WINSTASTUB(_WinStationReInitializeSecurity)
-WINSTASTUB(_WinStationReadRegistry)
-WINSTASTUB(_WinStationShadowTarget)
-WINSTASTUB(_WinStationShadowTargetSetup)
-WINSTASTUB(_WinStationUpdateClientCachedCredentials)
-WINSTASTUB(_WinStationUpdateSettings)
-WINSTASTUB(_WinStationUpdateUserConfig)
-WINSTASTUB(_WinStationWaitForConnect)
+VOID
+WINSTAAPI WinStationFreeMemory(PVOID A)
+{
+    FIXME("WinStationFreeMemory %p not freed!\n",A);
+}
+
+
+VOID
+WINSTAAPI WinStationAutoReconnect(PVOID A)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationBroadcastSystemMessage(PVOID A,
+                                           PVOID B,
+                                           PVOID C,
+                                           PVOID D,
+                                           PVOID E,
+                                           PVOID F,
+                                           PVOID G,
+                                           PVOID H,
+                                           PVOID I,
+                                           PVOID J)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationCheckAccess(PVOID A,
+                                PVOID B,
+                                PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationCheckLoopBack(PVOID A,
+                                  PVOID B,
+                                  PVOID C,
+                                  PVOID D)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationConnectA(PVOID A)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+CALLBACK WinStationConnectCallback(PVOID A,
+                                   PVOID B,
+                                   PVOID C,
+                                   PVOID D,
+                                   PVOID E)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationConnectEx(PVOID A,
+                              PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationConnectW(PVOID A,
+                             PVOID B,
+                             PVOID C,
+                             PVOID D,
+                             PVOID E)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationFreeGAPMemory(PVOID A,
+                                  PVOID B,
+                                  PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationGetProcessSid(PVOID A,
+                                  PVOID B,
+                                  PVOID C,
+                                  PVOID D,
+                                  PVOID E,
+                                  PVOID F,
+                                  PVOID G)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationIsHelpAssistantSession(PVOID A,
+                                           PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationNtsdDebug(PVOID A,
+                              PVOID B,
+                              PVOID C,
+                              PVOID D,
+                              PVOID E)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationRenameA(PVOID A,
+                            PVOID B,
+                            PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationRenameW(PVOID A,
+                            PVOID B,
+                            PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSendMessageA(PVOID A,
+                                 PVOID B,
+                                 PVOID C,
+                                 PVOID D,
+                                 PVOID E,
+                                 PVOID F,
+                                 PVOID G,
+                                 PVOID H,
+                                 PVOID I,
+                                 PVOID J)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSendMessageW(PVOID A,
+                                 PVOID B,
+                                 PVOID C,
+                                 PVOID D,
+                                 PVOID E,
+                                 PVOID F,
+                                 PVOID G,
+                                 PVOID H,
+                                 PVOID I,
+                                 PVOID J)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSendWindowMessage(PVOID A,
+                                      PVOID B,
+                                      PVOID C,
+                                      PVOID D,
+                                      PVOID E,
+                                      PVOID F,
+                                      PVOID G,
+                                      PVOID H)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSetInformationA(PVOID A,
+                                    PVOID B,
+                                    PVOID C,
+                                    PVOID D,
+                                    PVOID E)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSetInformationW(PVOID A,
+                                    PVOID B,
+                                    PVOID C,
+                                    PVOID D,
+                                    PVOID E)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSetPoolCount(PVOID A,
+                                 PVOID B,
+                                 PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationShadow(PVOID A,
+                           PVOID B,
+                           PVOID C,
+                           PVOID D,
+                           PVOID E)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationShadowStop(PVOID A,
+                               PVOID B,
+                               PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationShutdownSystem(PVOID A,
+                                   PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSystemShutdownStarted()
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSystemShutdownWait(PVOID A,
+                                       PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationTerminateProcess(PVOID A,
+                                     PVOID B,
+                                     PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationUnRegisterConsoleNotification(PVOID A,
+                                                  PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationVirtualOpen(PVOID A,
+                                PVOID B,
+                                PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationVirtualOpenEx(PVOID A,
+                                  PVOID B,
+                                  PVOID C,
+                                  PVOID D)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationWaitSystemEvent(PVOID A,
+                                    PVOID B,
+                                    PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationDynVirtualChanRead(PVOID A,
+                                       PVOID B,
+                                       PVOID C,
+                                       PVOID D,
+                                       PVOID E)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationDynVirtualChanWrite(PVOID A,
+                                        PVOID B,
+                                        PVOID C,
+                                        PVOID D)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationRegisterConsoleNotificationEx(PVOID A,
+                                                  PVOID B,
+                                                  PVOID C,
+                                                  PVOID D)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationRegisterConsoleNotification(PVOID A,
+                                                PVOID B,
+                                                PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationRegisterNotificationEvent(PVOID A,
+                                              PVOID B,
+                                              PVOID C,
+                                              PVOID D)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationUnRegisterNotificationEvent(PVOID A)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI WinStationSwitchToServicesSession()
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationAnnoyancePopup(PVOID A,
+                                    PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationBeepOpen(PVOID A,
+                              PVOID B,
+                              PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationBreakPoint(PVOID A,
+                                PVOID B,
+                                PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationSessionInitialized()
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+CALLBACK _WinStationCallback(PVOID A,
+                             PVOID B,
+                             PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationCheckForApplicationName(PVOID A,
+                                             PVOID B,
+                                             PVOID C,
+                                             PVOID D,
+                                             PVOID E,
+                                             PVOID F,
+                                             PVOID G,
+                                             PVOID H,
+                                             PVOID I,
+                                             PVOID J,
+                                             PVOID K,
+                                             PVOID M)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationFUSCanRemoteUserDisconnect(PVOID A,
+                                                PVOID B,
+                                                PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+
+VOID
+WINSTAAPI _WinStationNotifyDisconnectPipe()
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationNotifyNewSession(PVOID A,
+                                      PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationReInitializeSecurity(PVOID A)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationReadRegistry(PVOID A)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationShadowTargetSetup(PVOID A,
+                                       PVOID B)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationUpdateSettings(PVOID A,
+                                    PVOID B,
+                                    PVOID C)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationUpdateUserConfig(PVOID A)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+WINSTAAPI _WinStationUpdateClientCachedCredentials(PVOID A,
+                                                   PVOID B,
+                                                   PVOID C,
+                                                   PVOID D,
+                                                   PVOID E,
+                                                   PVOID F,
+                                                   PVOID G)
+{
+    UNIMPLEMENTED;
+}
+
 /* EOF */

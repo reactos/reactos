@@ -15,7 +15,6 @@
 #include <ntddscsi.h>
 #include <mountdev.h>
 #include <mountmgr.h>
-#include <helper.h>
 #include <ketypes.h>
 #include <iotypes.h>
 #include <rtlfuncs.h>
@@ -368,6 +367,351 @@ RamdiskCreateRamdisk(IN PDEVICE_OBJECT DeviceObject,
 	// We're done
 	//
 	return Status;
+}
+
+NTSTATUS
+NTAPI
+SendIrpToThread(IN PDEVICE_OBJECT DeviceObject,
+                IN PIRP Irp)
+{
+    PIO_WORKITEM WorkItem;
+    
+    //
+    // Mark the IRP pending
+    //
+    IoMarkIrpPending(Irp);
+    
+    //
+    // Allocate a work item
+    //
+    WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (WorkItem)
+    {
+        //
+        // Queue it up
+        //
+        Irp->Tail.Overlay.DriverContext[0] = WorkItem;
+        IoQueueWorkItem(WorkItem, RamdiskWorkerThread, DelayedWorkQueue, Irp);
+        return STATUS_PENDING;
+    }
+    else
+    {
+        //
+        // Fail
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+}
+
+NTSTATUS
+NTAPI
+RamdiskReadWriteReal(IN PIRP Irp,
+                     IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    PMDL Mdl;
+    PVOID CurrentBase, SystemVa, BaseAddress;
+    PIO_STACK_LOCATION IoStackLocation;
+    LARGE_INTEGER CurrentOffset;
+    ULONG BytesRead, BytesLeft, CopyLength;
+    PVOID Source, Destination;
+    NTSTATUS Status;
+    
+    //
+    // Get the MDL and check if it's mapped
+    //
+    Mdl = Irp->MdlAddress;
+    if (Mdl->MdlFlags & (MDL_MAPPED_TO_SYSTEM_VA | MDL_SOURCE_IS_NONPAGED_POOL))
+    {
+        //
+        // Use the mapped address
+        //
+        SystemVa = Mdl->MappedSystemVa;
+    }
+    else
+    {
+        //
+        // Map it ourselves
+        //
+        SystemVa = MmMapLockedPagesSpecifyCache(Mdl,
+                                                0,
+                                                MmCached,
+                                                NULL,
+                                                0, 
+                                                NormalPagePriority);
+    }
+    
+    //
+    // Make sure we were able to map it
+    //
+    CurrentBase = SystemVa;
+    if (!SystemVa) return STATUS_INSUFFICIENT_RESOURCES;
+    
+    //
+    // Initialize default
+    //
+    Irp->IoStatus.Information = 0;
+    
+    //
+    // Get the I/O Stack Location and capture the data
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    CurrentOffset = IoStackLocation->Parameters.Read.ByteOffset;
+    BytesLeft = IoStackLocation->Parameters.Read.Length;
+    if (!BytesLeft) return STATUS_INVALID_PARAMETER;
+    
+    //
+    // Do the copy loop
+    //
+    while (TRUE)
+    {
+        //
+        // Map the pages
+        //
+        BaseAddress = RamdiskMapPages(DeviceExtension,
+                                      CurrentOffset,
+                                      BytesLeft,
+                                      &BytesRead);
+        if (!BaseAddress) return STATUS_INSUFFICIENT_RESOURCES;
+        
+        //
+        // Update our lengths
+        //
+        Irp->IoStatus.Information += BytesRead;
+        CopyLength = BytesRead;
+        
+        //
+        // Check if this was a read or write
+        //
+        Status = STATUS_SUCCESS;
+        if (IoStackLocation->MajorFunction == IRP_MJ_READ)
+        {
+            //
+            // Set our copy parameters
+            //
+            Destination = CurrentBase;
+            Source = BaseAddress;
+            goto DoCopy;
+        }
+        else if (IoStackLocation->MajorFunction == IRP_MJ_WRITE)
+        {
+            //
+            // Set our copy parameters
+            //
+            Destination = BaseAddress;
+            Source = CurrentBase;
+DoCopy:
+            //
+            // Copy the data
+            //
+            RtlCopyMemory(Destination, Source, CopyLength);
+        }
+        else
+        {
+            //
+            // Prepare us for failure
+            //
+            BytesLeft = CopyLength;
+            Status = STATUS_INVALID_PARAMETER;
+        }
+        
+        //
+        // Unmap the pages
+        //
+        RamdiskUnmapPages(DeviceExtension,
+                          BaseAddress,
+                          CurrentOffset,
+                          BytesRead);
+        
+        //
+        // Update offset and bytes left
+        //
+        BytesLeft -= BytesRead;
+        CurrentOffset.QuadPart += BytesRead;
+        CurrentBase = (PVOID)((ULONG_PTR)CurrentBase + BytesRead);
+        
+        //
+        // Check if we're done
+        //
+        if (!BytesLeft) return Status;
+    }
+}
+
+NTSTATUS
+NTAPI
+RamdiskGetPartitionInfo(IN PIRP Irp,
+                        IN PRAMDISK_DRIVE_EXTENSION DeviceExtension)
+{
+    NTSTATUS Status;
+    PPARTITION_INFORMATION PartitionInfo;
+    PVOID BaseAddress;
+    LARGE_INTEGER Zero = {{0, 0}};
+    ULONG Length;
+    PIO_STACK_LOCATION IoStackLocation;
+    
+    //
+    // Validate the length
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    if (IoStackLocation->Parameters.DeviceIoControl.
+        OutputBufferLength < sizeof(PARTITION_INFORMATION))
+    {
+        //
+        // Invalid length
+        //
+        Status = STATUS_BUFFER_TOO_SMALL;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Map the partition table
+    //
+    BaseAddress = RamdiskMapPages(DeviceExtension, Zero, PAGE_SIZE, &Length);
+    if (!BaseAddress)
+    {
+        //
+        // No memory
+        //
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Irp->IoStatus.Status = Status;
+        Irp->IoStatus.Information = 0;
+        return Status;
+    }
+    
+    //
+    // Fill out the information
+    //
+    PartitionInfo = Irp->AssociatedIrp.SystemBuffer;
+    PartitionInfo->StartingOffset.QuadPart = DeviceExtension->BytesPerSector;
+    PartitionInfo->PartitionLength.QuadPart = DeviceExtension->BytesPerSector *
+                                              DeviceExtension->SectorsPerTrack *
+                                              DeviceExtension->NumberOfHeads *
+                                              DeviceExtension->Cylinders;
+    PartitionInfo->HiddenSectors = DeviceExtension->HiddenSectors;
+    PartitionInfo->PartitionNumber = 0;
+    PartitionInfo->PartitionType = PARTITION_FAT32; //*((PCHAR)BaseAddress + 450);
+    PartitionInfo->BootIndicator = (DeviceExtension->DiskType ==
+                                    RAMDISK_BOOT_DISK) ? TRUE: FALSE;
+    PartitionInfo->RecognizedPartition = IsRecognizedPartition(PartitionInfo->
+                                                               PartitionType);
+    PartitionInfo->RewritePartition = FALSE;
+
+    //
+    // Unmap the partition table
+    //
+    RamdiskUnmapPages(DeviceExtension, BaseAddress, Zero, Length);
+    
+    //
+    // Done
+    //
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Information = sizeof(PARTITION_INFORMATION);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskOpenClose(IN PDEVICE_OBJECT DeviceObject,
+                 IN PIRP Irp)
+{
+    //
+    // Complete the IRP
+    //
+    Irp->IoStatus.Information = 1;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+RamdiskReadWrite(IN PDEVICE_OBJECT DeviceObject,
+                 IN PIRP Irp)
+{
+    PRAMDISK_DRIVE_EXTENSION DeviceExtension;
+    ULONG Length;
+    LARGE_INTEGER ByteOffset;
+    PIO_STACK_LOCATION IoStackLocation;
+    NTSTATUS Status, ReturnStatus;
+    
+    //
+    // Get the device extension and make sure this isn't a bus
+    //
+    DeviceExtension = DeviceObject->DeviceExtension;
+    if (DeviceExtension->Type == RamdiskBus)
+    {
+        //
+        // Fail
+        //
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        goto Complete;
+    }
+    
+    //
+    // Capture parameters
+    //
+    IoStackLocation = IoGetCurrentIrpStackLocation(Irp);
+    Length = IoStackLocation->Parameters.Read.Length;
+    ByteOffset = IoStackLocation->Parameters.Read.ByteOffset;
+    
+    //
+    // FIXME: Validate offset
+    //
+    
+    //
+    // FIXME: Validate sector
+    //
+    
+    //
+    // Validate write
+    //
+    if ((IoStackLocation->MajorFunction == IRP_MJ_WRITE) &&
+        (DeviceExtension->DiskOptions.Readonly))
+    {
+        //
+        // Fail, this is read-only
+        //
+        Status = STATUS_MEDIA_WRITE_PROTECTED;
+        goto Complete;
+    }
+    
+    //
+    // See if we want to do this sync or async
+    //
+    if (DeviceExtension->DiskType > RAMDISK_MEMORY_MAPPED_DISK)
+    {
+        //
+        // Do it sync
+        //
+        Status = RamdiskReadWriteReal(Irp, DeviceExtension);
+        goto Complete;
+    }
+    
+    //
+    // Queue it to the worker
+    //
+    Status = SendIrpToThread(DeviceObject, Irp);
+    ReturnStatus = STATUS_PENDING;
+    
+    //
+    // Check if we're pending or not
+    //
+    if (Status != STATUS_PENDING)
+    {
+Complete:
+        //
+        // Complete the IRP
+        //
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        ReturnStatus = Status;
+    }
+    
+    //
+    // Return to caller
+    //
+    return ReturnStatus;
 }
 
 NTSTATUS
@@ -814,7 +1158,7 @@ RamdiskAddDevice(IN PDRIVER_OBJECT DriverObject,
 			//
 			// Are we being booted from setup? Not yet supported
 			//
-			ASSERT (!KeLoaderBlock->SetupLdrBlock);
+			//ASSERT(!KeLoaderBlock->SetupLdrBlock);
 	    }
 
 		//
@@ -838,6 +1182,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     PCHAR BootDeviceName, CommandLine;
     PDEVICE_OBJECT PhysicalDeviceObject = NULL;
     NTSTATUS Status;
+    DPRINT1("RAM Disk Driver Initialized\n");
     
     //
     // Query ramdisk parameters
@@ -929,7 +1274,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     //
     // Installing from Ramdisk isn't supported yet
     //
-    ASSERT(!KeLoaderBlock->SetupLdrBlock);
+    //ASSERT(!KeLoaderBlock->SetupLdrBlock);
     
     //
     // Are we reporting the device

@@ -13,6 +13,9 @@
 
 #include <ctype.h>
 
+#ifdef toascii
+#undef toascii
+#endif
 
 int
 toascii (int c)

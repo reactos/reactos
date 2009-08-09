@@ -1,4 +1,3 @@
-/* $Id: wgl.c,v 1.12 2006/03/30 07:58:24 kschultz Exp $ */
 
 /*
  * This library is free software; you can redistribute it and/or
@@ -55,7 +54,7 @@
 #include <windows.h>
 
 #endif
-
+#include "config.h"
 #include "glapi.h"
 #include "GL/wmesa.h"   /* protos for wmesa* functions */
 
@@ -70,10 +69,12 @@ struct __pixelformat__
     GLboolean doubleBuffered;
 };
 
+
+
 /* These are the PFD's supported by this driver. */
 struct __pixelformat__	pfd[] =
 {
-#if 0
+#if 0 
     /* Double Buffer, alpha */
     {	
 	{	
@@ -87,7 +88,7 @@ struct __pixelformat__	pfd[] =
 	    8, 16,	
 	    8, 24,
 	    0, 0, 0, 0, 0,	
-	    16,	8,	
+	    DEFAULT_SOFTWARE_DEPTH_BITS,	8,	
 	    0, 0, 0,	
 	    0, 0, 0 
 	},
@@ -106,13 +107,13 @@ struct __pixelformat__	pfd[] =
 	    8, 16,	
 	    8, 24,
 	    0, 0, 0, 0,	0,	
-	    16,	8,
+	    DEFAULT_SOFTWARE_DEPTH_BITS,	8,	
 	    0, 0, 0,	
 	    0, 0, 0
 	},
         GL_FALSE
     },
-#endif
+#endif 
     /* Double Buffer, no alpha */
     {	
 	{	
@@ -126,7 +127,7 @@ struct __pixelformat__	pfd[] =
 	    8, 16,
 	    0, 0,
 	    0, 0, 0, 0,	0,
-	    16,	8,
+	    DEFAULT_SOFTWARE_DEPTH_BITS,	8,	
 	    0, 0, 0, 
 	    0, 0, 0 
 	},
@@ -145,7 +146,7 @@ struct __pixelformat__	pfd[] =
 	    8, 16,
 	    0, 0,
 	    0, 0, 0, 0,	0,
-	    16,	8,
+	    DEFAULT_SOFTWARE_DEPTH_BITS,	8,	
 	    0, 0, 0,
 	    0, 0, 0 
 	},
@@ -579,6 +580,13 @@ WINGDIAPI BOOL GLAPIENTRY wglUseFontBitmapsA(HDC hdc, DWORD first,
     return success;
 }
 
+WINGDIAPI BOOL GLAPIENTRY wglShareLists(HGLRC hglrc1,
+					HGLRC hglrc2)
+{
+    WMesaShareLists((WMesaContext)hglrc1, (WMesaContext)hglrc2);
+    return(TRUE);
+}
+
 
 
 /* NOT IMPLEMENTED YET */
@@ -593,16 +601,10 @@ WINGDIAPI BOOL GLAPIENTRY wglCopyContext(HGLRC hglrcSrc,
 WINGDIAPI HGLRC GLAPIENTRY wglCreateLayerContext(HDC hdc,
 						 int iLayerPlane)
 {
-    (void) hdc; (void) iLayerPlane;
     SetLastError(0);
+    if (iLayerPlane == 0)
+        return wglCreateContext( hdc );
     return(NULL);
-}
-
-WINGDIAPI BOOL GLAPIENTRY wglShareLists(HGLRC hglrc1,
-					HGLRC hglrc2)
-{
-    (void) hglrc1; (void) hglrc2;
-    return(TRUE);
 }
 
 
@@ -692,7 +694,7 @@ WINGDIAPI BOOL GLAPIENTRY wglRealizeLayerPalette(HDC hdc,
 }
 
 WINGDIAPI BOOL GLAPIENTRY wglSwapLayerBuffers(HDC hdc,
-                                              UINT fuPlanes)
+					      UINT fuPlanes)
 {
     (void) hdc; (void) fuPlanes;
     SetLastError(0);

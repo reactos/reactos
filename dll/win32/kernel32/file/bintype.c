@@ -25,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * FIXME: is reading the module imports the only way of discerning
  *        old Windows binaries from OS/2 ones ? At least it seems so...
  */
-static DWORD STDCALL
+static DWORD WINAPI
 InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
 {
   DWORD CurPos;
@@ -77,7 +77,7 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
   return Ret;
 }
 
-static DWORD STDCALL
+static DWORD WINAPI
 InternalGetBinaryType(HANDLE hFile)
 {
   union
@@ -204,7 +204,7 @@ InternalGetBinaryType(HANDLE hFile)
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetBinaryTypeW (
     LPCWSTR lpApplicationName,
     LPDWORD lpBinaryType
@@ -297,7 +297,7 @@ GetBinaryTypeW (
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetBinaryTypeA (
     LPCSTR  lpApplicationName,
     LPDWORD lpBinaryType

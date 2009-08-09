@@ -14,7 +14,7 @@
 #define _LIBGEN_H_
 
 /* All the headers include this file. */
-#include <_mingw.h>
+#include <crtdefs.h>
 
 #ifdef __cplusplus
 extern "C" {

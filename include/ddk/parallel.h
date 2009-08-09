@@ -23,10 +23,6 @@
 #ifndef __PARALLEL_H
 #define __PARALLEL_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #include "ntddpar.h"
 
 #ifdef __cplusplus

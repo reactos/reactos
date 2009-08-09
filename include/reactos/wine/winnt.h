@@ -23,12 +23,16 @@
 
 #include_next <winnt.h>
 
+#if defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ >= 3)))
+#define __WINE_ALLOC_SIZE(x) __attribute__((__alloc_size__(x)))
+#else
+#define __WINE_ALLOC_SIZE(x)
+#endif
+
 /* non standard; keep the number high enough (but < 0xff) */
 #define LANG_ESPERANTO                   0x8f
 #define LANG_WALON                       0x90
 #define LANG_CORNISH                     0x91
-#define LANG_WELSH                       0x92
-#define LANG_BRETON                      0x93
 
 /* FIXME: these are not in the Windows header */
 #define LANG_GAELIC         0x94

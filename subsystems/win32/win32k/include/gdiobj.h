@@ -21,7 +21,7 @@ typedef struct _GDI_HANDLE_TABLE
   FLONG           flDeviceUniq;            // Device settings uniqueness.
   PVOID           pvLangPack;              // Language Pack.
   CFONT           cfPublic[GDI_CFONT_MAX]; // Public Fonts.
-  DWORD           dwCsbSupported1;         // OEM code-page bitfield.
+  DWORD           dwCFCount;
 //////////////////////////////////////////////////////////////////////////////
   PPAGED_LOOKASIDE_LIST LookasideLists;
 

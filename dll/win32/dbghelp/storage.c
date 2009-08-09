@@ -96,7 +96,7 @@ void* pool_alloc(struct pool* pool, unsigned len)
     }
 
     arena = HeapAlloc(GetProcessHeap(), 0, pool->arena_size);
-    if (!arena) {FIXME("OOM\n");return NULL;}
+    if (!arena) {ERR("OOM\n");return NULL;}
 
     ret = (char*)arena + sizeof(*arena);
     arena->next = pool->first;

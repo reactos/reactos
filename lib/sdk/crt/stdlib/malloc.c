@@ -25,6 +25,11 @@
 #include <stdlib.h>
 #include <malloc.h>
 
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 /* round to 16 bytes + alloc at minimum 16 bytes */
 #define ROUND_SIZE(size) (max(16, ROUND_UP(size, 16)))

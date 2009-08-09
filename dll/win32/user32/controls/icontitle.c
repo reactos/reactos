@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <user32.h>
@@ -37,23 +37,13 @@ static LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPAR
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
-#ifdef __REACTOS__
-    ICONTITLE_CLASS_ATOM, /* name */
-    0,                    /* style */
-    IconTitleWndProc,     /* procW */
-    NULL,                 /* procA (winproc is Unicode only) */
-    0,                    /* extra */
-    IDC_ARROW,            /* cursor */
-    0                     /* brush */
-#else
-    ICONTITLE_CLASS_ATOM, /* name */
+    (LPCWSTR)ICONTITLE_CLASS_ATOM, /* name */
     0,                    /* style */
     NULL,                 /* procA (winproc is Unicode only) */
     IconTitleWndProc,     /* procW */
     0,                    /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
-#endif
 };
 
 
@@ -70,11 +60,11 @@ HWND ICONTITLE_Create( HWND owner )
 
     if (!IsWindowEnabled(owner)) style |= WS_DISABLED;
     if( GetWindowLongA( owner, GWL_STYLE ) & WS_CHILD )
-	hWnd = CreateWindowExA( 0, ICONTITLE_CLASS_ATOM, NULL,
+	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
                                 style | WS_CHILD, 0, 0, 1, 1,
                                 GetParent(owner), 0, instance, NULL );
     else
-	hWnd = CreateWindowExA( 0, ICONTITLE_CLASS_ATOM, NULL,
+	hWnd = CreateWindowExA( 0, (LPCSTR)ICONTITLE_CLASS_ATOM, NULL,
                                 style, 0, 0, 1, 1,
                                 owner, 0, instance, NULL );
     WIN_SetOwner( hWnd, owner );  /* MDI depends on this */
@@ -185,7 +175,7 @@ static BOOL ICONTITLE_Paint( HWND hwnd, HWND owner, HDC hDC, BOOL bActive )
     {
 	WCHAR buffer[80];
 
-        INT length = GetWindowTextW( owner, buffer, sizeof(buffer) );
+        INT length = GetWindowTextW( owner, buffer, sizeof(buffer)/sizeof(buffer[0]) );
         SetTextColor( hDC, textColor );
         SetBkMode( hDC, TRANSPARENT );
 
@@ -232,8 +222,8 @@ LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg,
             if (wParam) ICONTITLE_SetTitlePos( hWnd, owner );
 	     return 0;
 	case WM_ERASEBKGND:
-            if( GetWindowLongA( owner, GWL_STYLE ) & WS_CHILD )
-                lParam = SendMessageA( owner, WM_ISACTIVEICON, 0, 0 );
+            if( GetWindowLongW( owner, GWL_STYLE ) & WS_CHILD )
+                lParam = SendMessageW( owner, WM_ISACTIVEICON, 0, 0 );
             else
                 lParam = (owner == GetActiveWindow());
             if( ICONTITLE_Paint( hWnd, owner, (HDC)wParam, (BOOL)lParam ) )

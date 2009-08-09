@@ -201,19 +201,19 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     if ( IsEqualCLSID (rclsid, &CLSID_IMsiServerX2) )
     {
-        *ppv = (LPVOID) &MsiServer_CF;
+        *ppv = &MsiServer_CF;
         return S_OK;
     }
 
     if ( IsEqualCLSID (rclsid, &CLSID_IWineMsiRemoteCustomAction) )
     {
-        *ppv = (LPVOID) &WineMsiCustomRemote_CF;
+        *ppv = &WineMsiCustomRemote_CF;
         return S_OK;
     }
 
     if ( IsEqualCLSID (rclsid, &CLSID_IWineMsiRemotePackage) )
     {
-        *ppv = (LPVOID) &WineMsiRemotePackage_CF;
+        *ppv = &WineMsiRemotePackage_CF;
         return S_OK;
     }
 

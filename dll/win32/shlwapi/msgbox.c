@@ -173,7 +173,7 @@ INT_PTR WINAPI SHMessageBoxCheckExW(HWND hWnd, HINSTANCE hInst, LPCWSTR lpszName
   d.dlgProc = dlgProc;
   d.lParam = lParam;
   d.lpszId = lpszId;
-  return DialogBoxParamW(hInst, (LPCWSTR)lpszName, hWnd, SHDlgProcEx, (LPARAM)&d);
+  return DialogBoxParamW(hInst, lpszName, hWnd, SHDlgProcEx, (LPARAM)&d);
 }
 
 /* Data held by each shlwapi message box */

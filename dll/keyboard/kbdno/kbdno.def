@@ -1,3 +1,0 @@
-LIBRARY kbdno.dll
-EXPORTS
-KbdLayerDescriptor@0

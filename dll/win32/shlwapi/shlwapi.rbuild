@@ -2,12 +2,11 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="shlwapi" type="win32dll" baseaddress="${BASEADDRESS_SHLWAPI}" installbase="system32" installname="shlwapi.dll" allowwarnings="true">
-	<importlibrary definition="shlwapi.spec.def" />
+	<importlibrary definition="shlwapi.spec" />
 	<include base="shlwapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
 	<define name="_WIN32_WINNT">0x600</define>
+	<define name="__WINESRC__" />
 	<file>assoc.c</file>
 	<file>clist.c</file>
 	<file>istream.c</file>
@@ -23,7 +22,6 @@
 	<file>url.c</file>
 	<file>wsprintf.c</file>
 	<file>shlwapi.rc</file>
-	<file>shlwapi.spec</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>user32</library>

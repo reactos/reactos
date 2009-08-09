@@ -190,7 +190,7 @@ VOID PrintPrompt(VOID)
 
 #ifdef INCLUDE_CMD_PROMPT
 
-INT cmd_prompt (LPTSTR cmd, LPTSTR param)
+INT cmd_prompt (LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

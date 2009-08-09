@@ -670,7 +670,8 @@ directedLine* MC_partitionY(directedLine *polygons, sampledLine **retSampledLine
   if(MC_sweepY(total_num_chains, array, ranges))
     {
       loopList->deleteLoopList();
-      free(array); 
+      free(array);
+      free(ranges);
       *retSampledLines = NULL;
       return NULL;
     }

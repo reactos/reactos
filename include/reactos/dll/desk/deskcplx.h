@@ -44,7 +44,7 @@ typedef struct _DESK_EXT_INTERFACE
 
 LONG WINAPI DisplaySaveSettings(PVOID pContext, HWND hwndPropSheet);
 
-static PDESK_EXT_INTERFACE __inline
+static __inline PDESK_EXT_INTERFACE
 QueryDeskCplExtInterface(IDataObject *pdo)
 {
     PDESK_EXT_INTERFACE pRecvBuffer, pExtIface = NULL;
@@ -80,7 +80,7 @@ QueryDeskCplExtInterface(IDataObject *pdo)
     return pExtIface;
 }
 
-static LPTSTR __inline
+static __inline LPTSTR
 QueryDeskCplString(IDataObject *pdo, UINT cfFormat)
 {
     FORMATETC fetc;
@@ -118,7 +118,7 @@ QueryDeskCplString(IDataObject *pdo, UINT cfFormat)
     return lpStr;
 }
 
-static LONG __inline
+static __inline LONG
 DeskCplExtDisplaySaveSettings(PDESK_EXT_INTERFACE DeskExtInterface,
                               HWND hwndDlg)
 {

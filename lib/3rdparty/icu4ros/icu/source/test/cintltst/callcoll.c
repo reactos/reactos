@@ -210,7 +210,7 @@ UBool hasCollationElements(const char *locName) {
   UErrorCode status = U_ZERO_ERROR;
   UResourceBundle *ColEl = NULL;
 
-  UResourceBundle *loc = ures_open(U_ICUDATA_COLL, locName, &status);;
+  UResourceBundle *loc = ures_open(U_ICUDATA_COLL, locName, &status);
 
   if(U_SUCCESS(status)) {
     status = U_ZERO_ERROR;

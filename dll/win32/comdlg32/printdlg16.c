@@ -527,7 +527,7 @@ BOOL16 CALLBACK PrintDlgProc16(HWND16 hDlg16, UINT16 uMsg, WPARAM16 wParam,
     BOOL16 res = FALSE;
 
     if (uMsg!=WM_INITDIALOG) {
-        PrintStructures = (PRINT_PTRA16*)GetPropA(hDlg,"__WINE_PRINTDLGDATA");
+        PrintStructures = GetPropA(hDlg,"__WINE_PRINTDLGDATA");
 	if (!PrintStructures)
 	    return FALSE;
     } else {

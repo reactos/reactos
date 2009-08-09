@@ -29,9 +29,6 @@
  * modified by Ian Jackson as it was incorporated into adns.
  */
 
-static const char * const cvsid =
-	"$Id$";
-
 #ifdef ADNS_JGAA_WIN32
 # include "adns_win32.h"
 #else

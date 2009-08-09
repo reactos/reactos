@@ -176,31 +176,6 @@ const NBNameCacheEntry *NBNameCacheFindEntry(struct NBNameCache *cache,
     return ret;
 }
 
-BOOL NBNameCacheUpdateNBName(struct NBNameCache *cache,
- const UCHAR name[NCBNAMSZ], const UCHAR nbname[NCBNAMSZ])
-{
-    BOOL ret;
-
-    if (cache)
-    {
-        NBNameCacheNode **node;
-
-        EnterCriticalSection(&cache->cs);
-        node = NBNameCacheWalk(cache, (const char *)name);
-        if (node && *node && (*node)->entry)
-        {
-            memcpy((*node)->entry->nbname, nbname, NCBNAMSZ);
-            ret = TRUE;
-        }
-        else
-            ret = FALSE;
-        LeaveCriticalSection(&cache->cs);
-    }
-    else
-        ret = FALSE;
-    return ret;
-}
-
 void NBNameCacheDestroy(struct NBNameCache *cache)
 {
     if (cache)

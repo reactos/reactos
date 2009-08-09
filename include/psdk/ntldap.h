@@ -14,9 +14,6 @@
 
 #ifndef _NTLDAP_H
 #define _NTLDAP_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #define LDAP_SERVER_ASQ_OID	"1.2.840.113556.1.4.1504"
 #define LDAP_SERVER_ASQ_OID_W	L"1.2.840.113556.1.4.1504"

@@ -67,7 +67,7 @@ CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, in
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE WINAPI
 LoadImageA(HINSTANCE hinst,
 	   LPCSTR lpszName,
 	   UINT uType,
@@ -412,6 +412,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    ULONG HeaderSize;
    ULONG ColorCount;
    PVOID Data;
+   BOOL Hit = FALSE;
 
    if (!(fuLoad & LR_LOADFROMFILE))
    {
@@ -448,18 +449,26 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
       BitmapInfo = (LPBITMAPINFO)((ULONG_PTR)BitmapInfo + sizeof(BITMAPFILEHEADER));
    }
 
-   if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+   HeaderSize = BitmapInfo->bmiHeader.biSize;
+   if (HeaderSize == sizeof(BITMAPCOREHEADER))
    {
       BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)BitmapInfo;
       ColorCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
-      HeaderSize = sizeof(BITMAPCOREHEADER) + ColorCount * sizeof(RGBTRIPLE);
+      HeaderSize += ColorCount * sizeof(RGBTRIPLE);
    }
    else
    {
-      ColorCount = BitmapInfo->bmiHeader.biClrUsed;
-      if (ColorCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
-         ColorCount = 1 << BitmapInfo->bmiHeader.biBitCount;
-      HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
+      if (BitmapInfo->bmiHeader.biCompression == BI_BITFIELDS)
+      {
+         HeaderSize += 3 * sizeof(RGBQUAD);
+      }
+      else
+      {
+         ColorCount = BitmapInfo->bmiHeader.biClrUsed;
+         if (ColorCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
+            ColorCount = 1 << BitmapInfo->bmiHeader.biBitCount;
+         HeaderSize += ColorCount * sizeof(RGBQUAD);
+      }
    }
    Data = (PVOID)((ULONG_PTR)BitmapInfo + HeaderSize);
 
@@ -470,8 +479,26 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
          UnmapViewOfFile(BitmapInfo);
       return NULL;
    }
-   memcpy(PrivateInfo, BitmapInfo, HeaderSize);
 
+   _SEH2_TRY
+   {
+   memcpy(PrivateInfo, BitmapInfo, HeaderSize);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+      Hit = TRUE;
+   }
+   _SEH2_END;
+
+   if (Hit)
+   {
+      DbgPrint("We have a thread overrun, these are already freed! pi -> %d bi -> %d\n", PrivateInfo, BitmapInfo);
+      RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);
+      if (fuLoad & LR_LOADFROMFILE)
+         UnmapViewOfFile(BitmapInfo);
+      return NULL;
+   }
+   
    /* FIXME: Handle color conversion and transparency. */
 
    hScreenDc = CreateCompatibleDC(NULL);
@@ -507,7 +534,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
    return hBitmap;
 }
 
-HANDLE STDCALL
+HANDLE WINAPI
 LoadImageW(
    IN HINSTANCE hinst,
    IN LPCWSTR lpszName,
@@ -553,7 +580,7 @@ LoadImageW(
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
 {
    return LoadImageA(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);
@@ -563,7 +590,7 @@ LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
 /*
  * @implemented
  */
-HBITMAP STDCALL
+HBITMAP WINAPI
 LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
 {
    return LoadImageW(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0);

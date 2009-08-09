@@ -25,7 +25,7 @@ LONG ProcessPipeId = 0;
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 CreatePipe(PHANDLE hReadPipe,
            PHANDLE hWritePipe,
            LPSECURITY_ATTRIBUTES lpPipeAttributes,
@@ -55,7 +55,7 @@ CreatePipe(PHANDLE hReadPipe,
     /* Create the pipe name */
     swprintf(Buffer,
              L"\\Device\\NamedPipe\\Win32Pipes.%08x.%08x",
-             NtCurrentTeb()->Cid.UniqueProcess,
+             NtCurrentTeb()->ClientId.UniqueProcess,
              PipeId);
     RtlInitUnicodeString(&PipeName, Buffer);
 

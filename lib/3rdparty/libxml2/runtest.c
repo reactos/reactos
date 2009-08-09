@@ -11,11 +11,16 @@
  * daniel@veillard.com
  */
 
+#ifdef HAVE_CONFIG_H
+#include "libxml.h"
+#else
+#include <stdio.h>
+#endif
+
 #if !defined(_WIN32) || defined(__CYGWIN__)
 #include <unistd.h>
 #endif
 #include <string.h>
-#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -204,7 +209,6 @@ static void globfree(glob_t *pglob) {
 static int nb_tests = 0;
 static int nb_errors = 0;
 static int nb_leaks = 0;
-static long libxmlMemoryAllocatedBase = 0;
 static int extraMemoryFromResolver = 0;
 
 static int
@@ -241,7 +245,7 @@ testExternalEntityLoader(const char *URL, const char *ID,
 static char testErrors[32769];
 static int testErrorsSize = 0;
 
-static void
+static void XMLCDECL
 testErrorHandler(void *ctx  ATTRIBUTE_UNUSED, const char *msg, ...) {
     va_list args;
     int res;
@@ -263,7 +267,7 @@ testErrorHandler(void *ctx  ATTRIBUTE_UNUSED, const char *msg, ...) {
     testErrors[testErrorsSize] = 0;
 }
 
-static void
+static void XMLCDECL
 channel(void *ctx  ATTRIBUTE_UNUSED, const char *msg, ...) {
     va_list args;
     int res;
@@ -310,7 +314,7 @@ xmlParserPrintFileContextInternal(xmlParserInputPtr input ,
     n = 0;
     /* search backwards for beginning-of-line (to max buff size) */
     while ((n++ < (sizeof(content)-1)) && (cur > base) &&
-    	   (*(cur) != '\n') && (*(cur) != '\r'))
+   (*(cur) != '\n') && (*(cur) != '\r'))
         cur--;
     if ((*(cur) == '\n') || (*(cur) == '\r')) cur++;
     /* calculate the error position in terms of the current position */
@@ -320,7 +324,7 @@ xmlParserPrintFileContextInternal(xmlParserInputPtr input ,
     ctnt = content;
     /* copy selected text to our buffer */
     while ((*cur != 0) && (*(cur) != '\n') &&
-    	   (*(cur) != '\r') && (n < sizeof(content)-1)) {
+   (*(cur) != '\r') && (n < sizeof(content)-1)) {
 		*ctnt++ = *cur++;
 	n++;
     }
@@ -536,7 +540,6 @@ initializeLibxml2(void) {
     xmlSchemaInitTypes();
     xmlRelaxNGInitTypes();
 #endif
-    libxmlMemoryAllocatedBase = xmlMemUsed();
 }
 
 
@@ -562,6 +565,7 @@ static char *resultFilename(const char *filename, const char *out,
                             const char *suffix) {
     const char *base;
     char res[500];
+    char suffixbuff[500];
 
 /*************
     if ((filename[0] == 't') && (filename[1] == 'e') &&
@@ -575,7 +579,14 @@ static char *resultFilename(const char *filename, const char *out,
         suffix = ".tmp";
     if (out == NULL)
         out = "";
-    snprintf(res, 499, "%s%s%s", out, base, suffix);
+
+    strncpy(suffixbuff,suffix,499);
+#ifdef VMS
+    if(strstr(base,".") && suffixbuff[0]=='.')
+      suffixbuff[0]='_';
+#endif
+
+    snprintf(res, 499, "%s%s%s", out, base, suffixbuff);
     res[499] = 0;
     return(strdup(res));
 }
@@ -614,7 +625,7 @@ static int compareFiles(const char *r1, const char *r2) {
     while (1) {
         res1 = read(fd1, bytes1, 4096);
         res2 = read(fd2, bytes2, 4096);
-	if (res1 != res2) {
+	if ((res1 != res2) || (res1 < 0)) {
 	    close(fd1);
 	    close(fd2);
 	    return(1);
@@ -714,12 +725,12 @@ static int unloadMem(const char *mem) {
  *									*
  ************************************************************************/
 
-FILE *SAXdebug = NULL;
+static FILE *SAXdebug = NULL;
 
 /*
  * empty SAX block
  */
-xmlSAXHandler emptySAXHandlerStruct = {
+static xmlSAXHandler emptySAXHandlerStruct = {
     NULL, /* internalSubset */
     NULL, /* isStandalone */
     NULL, /* hasInternalSubset */
@@ -755,8 +766,8 @@ xmlSAXHandler emptySAXHandlerStruct = {
 };
 
 static xmlSAXHandlerPtr emptySAXHandler = &emptySAXHandlerStruct;
-int callbacks = 0;
-int quiet = 0;
+static int callbacks = 0;
+static int quiet = 0;
 
 /**
  * isStandaloneDebug:
@@ -1287,7 +1298,7 @@ commentDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *value)
  * Display and format a warning messages, gives file, line, position and
  * extra parameters.
  */
-static void
+static void XMLCDECL
 warningDebug(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 {
     va_list args;
@@ -1310,7 +1321,7 @@ warningDebug(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
  * Display and format a error messages, gives file, line, position and
  * extra parameters.
  */
-static void
+static void XMLCDECL
 errorDebug(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 {
     va_list args;
@@ -1333,7 +1344,7 @@ errorDebug(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
  * Display and format a fatalError messages, gives file, line, position and
  * extra parameters.
  */
-static void
+static void XMLCDECL
 fatalErrorDebug(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 {
     va_list args;
@@ -1347,7 +1358,7 @@ fatalErrorDebug(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
     va_end(args);
 }
 
-xmlSAXHandler debugSAXHandlerStruct = {
+static xmlSAXHandler debugSAXHandlerStruct = {
     internalSubsetDebug,
     isStandaloneDebug,
     hasInternalSubsetDebug,
@@ -1382,7 +1393,7 @@ xmlSAXHandler debugSAXHandlerStruct = {
     NULL
 };
 
-xmlSAXHandlerPtr debugSAXHandler = &debugSAXHandlerStruct;
+static xmlSAXHandlerPtr debugSAXHandler = &debugSAXHandlerStruct;
 
 /*
  * SAX2 specific callbacks
@@ -1471,7 +1482,7 @@ endElementNsDebug(void *ctx ATTRIBUTE_UNUSED,
 	fprintf(SAXdebug, ", '%s')\n", (char *) URI);
 }
 
-xmlSAXHandler debugSAX2HandlerStruct = {
+static xmlSAXHandler debugSAX2HandlerStruct = {
     internalSubsetDebug,
     isStandaloneDebug,
     hasInternalSubsetDebug,
@@ -1506,7 +1517,7 @@ xmlSAXHandler debugSAX2HandlerStruct = {
     NULL
 };
 
-xmlSAXHandlerPtr debugSAX2Handler = &debugSAX2HandlerStruct;
+static xmlSAXHandlerPtr debugSAX2Handler = &debugSAX2HandlerStruct;
 
 #ifdef LIBXML_HTML_ENABLED
 /**
@@ -1586,7 +1597,7 @@ htmlcdataDebug(void *ctx ATTRIBUTE_UNUSED, const xmlChar *ch, int len)
     fprintf(SAXdebug, "SAX.cdata(%s, %d)\n", output, len);
 }
 
-xmlSAXHandler debugHTMLSAXHandlerStruct = {
+static xmlSAXHandler debugHTMLSAXHandlerStruct = {
     internalSubsetDebug,
     isStandaloneDebug,
     hasInternalSubsetDebug,
@@ -1621,7 +1632,7 @@ xmlSAXHandler debugHTMLSAXHandlerStruct = {
     NULL
 };
 
-xmlSAXHandlerPtr debugHTMLSAXHandler = &debugHTMLSAXHandlerStruct;
+static xmlSAXHandlerPtr debugHTMLSAXHandler = &debugHTMLSAXHandlerStruct;
 #endif /* LIBXML_HTML_ENABLED */
 
 #ifdef LIBXML_SAX1_ENABLED
@@ -2247,8 +2258,8 @@ streamMemParseTest(const char *filename, const char *result, const char *err,
  *									*
  ************************************************************************/
 
-FILE *xpathOutput;
-xmlDocPtr xpathDocument;
+static FILE *xpathOutput;
+static xmlDocPtr xpathDocument;
 
 static void
 testXPath(const char *str, int xptr, int expr) {
@@ -2542,7 +2553,7 @@ static void
 handleURI(const char *str, const char *base, FILE *o) {
     int ret;
     xmlURIPtr uri;
-    xmlChar *res = NULL, *parsed = NULL;
+    xmlChar *res = NULL;
 
     uri = xmlCreateURI();
 
@@ -2565,8 +2576,6 @@ handleURI(const char *str, const char *base, FILE *o) {
     }
     if (res != NULL)
 	xmlFree(res);
-    if (parsed != NULL)
-	xmlFree(parsed);
     xmlFreeURI(uri);
 }
 
@@ -2692,6 +2701,178 @@ uriBaseTest(const char *filename,
                          "http://foo.com/path/to/index.html?orig#help"));
 }
 
+static int urip_success = 1;
+static int urip_current = 0;
+static const char *urip_testURLs[] = {
+    "urip://example.com/a b.html",
+    "urip://example.com/a%20b.html",
+    "file:///path/to/a b.html",
+    "file:///path/to/a%20b.html",
+    "/path/to/a b.html",
+    "/path/to/a%20b.html",
+    "urip://example.com/résumé.html",
+    "urip://example.com/test?a=1&b=2%263&c=4#foo",
+    NULL
+};
+static const char *urip_rcvsURLs[] = {
+    /* it is an URI the strings must be escaped */
+    "urip://example.com/a%20b.html",
+    /* check that % escaping is not broken */
+    "urip://example.com/a%20b.html",
+    /* it's an URI path the strings must be escaped */
+    "file:///path/to/a%20b.html",
+    /* check that % escaping is not broken */
+    "file:///path/to/a%20b.html",
+    /* this is not an URI, this is a path, so this should not be escaped */
+    "/path/to/a b.html",
+    /* check that paths with % are not broken */
+    "/path/to/a%20b.html",
+    /* out of context the encoding can't be guessed byte by byte conversion */
+    "urip://example.com/r%E9sum%E9.html",
+    /* verify we don't destroy URIs especially the query part */
+    "urip://example.com/test?a=1&b=2%263&c=4#foo",
+    NULL
+};
+static const char *urip_res = "<list/>";
+static const char *urip_cur = NULL;
+static int urip_rlen;
+
+/**
+ * uripMatch:
+ * @URI: an URI to test
+ *
+ * Check for an urip: query
+ *
+ * Returns 1 if yes and 0 if another Input module should be used
+ */
+static int
+uripMatch(const char * URI) {
+    if ((URI == NULL) || (!strcmp(URI, "file:///etc/xml/catalog")))
+        return(0);
+    /* Verify we received the escaped URL */
+    if (strcmp(urip_rcvsURLs[urip_current], URI))
+	urip_success = 0;
+    return(1);
+}
+
+/**
+ * uripOpen:
+ * @URI: an URI to test
+ *
+ * Return a pointer to the urip: query handler, in this example simply
+ * the urip_current pointer...
+ *
+ * Returns an Input context or NULL in case or error
+ */
+static void *
+uripOpen(const char * URI) {
+    if ((URI == NULL) || (!strcmp(URI, "file:///etc/xml/catalog")))
+        return(NULL);
+    /* Verify we received the escaped URL */
+    if (strcmp(urip_rcvsURLs[urip_current], URI))
+	urip_success = 0;
+    urip_cur = urip_res;
+    urip_rlen = strlen(urip_res);
+    return((void *) urip_cur);
+}
+
+/**
+ * uripClose:
+ * @context: the read context
+ *
+ * Close the urip: query handler
+ *
+ * Returns 0 or -1 in case of error
+ */
+static int
+uripClose(void * context) {
+    if (context == NULL) return(-1);
+    urip_cur = NULL;
+    urip_rlen = 0;
+    return(0);
+}
+
+/**
+ * uripRead:
+ * @context: the read context
+ * @buffer: where to store data
+ * @len: number of bytes to read
+ *
+ * Implement an urip: query read.
+ *
+ * Returns the number of bytes read or -1 in case of error
+ */
+static int
+uripRead(void * context, char * buffer, int len) {
+   const char *ptr = (const char *) context;
+
+   if ((context == NULL) || (buffer == NULL) || (len < 0))
+       return(-1);
+
+   if (len > urip_rlen) len = urip_rlen;
+   memcpy(buffer, ptr, len);
+   urip_rlen -= len;
+   return(len);
+}
+
+static int
+urip_checkURL(const char *URL) {
+    xmlDocPtr doc;
+
+    doc = xmlReadFile(URL, NULL, 0);
+    if (doc == NULL)
+        return(-1);
+    xmlFreeDoc(doc);
+    return(1);
+}
+
+/**
+ * uriPathTest:
+ * @filename: ignored
+ * @result: ignored
+ * @err: ignored
+ *
+ * Run a set of tests to check how Path and URI are handled before
+ * being passed to the I/O layer
+ *
+ * Returns 0 in case of success, an error code otherwise
+ */
+static int
+uriPathTest(const char *filename ATTRIBUTE_UNUSED,
+             const char *result ATTRIBUTE_UNUSED,
+             const char *err ATTRIBUTE_UNUSED,
+             int options ATTRIBUTE_UNUSED) {
+    int parsed;
+    int failures = 0;
+
+    /*
+     * register the new I/O handlers
+     */
+    if (xmlRegisterInputCallbacks(uripMatch, uripOpen, uripRead, uripClose) < 0)
+    {
+        fprintf(stderr, "failed to register HTTP handler\n");
+	return(-1);
+    }
+
+    for (urip_current = 0;urip_testURLs[urip_current] != NULL;urip_current++) {
+        urip_success = 1;
+        parsed = urip_checkURL(urip_testURLs[urip_current]);
+	if (urip_success != 1) {
+	    fprintf(stderr, "failed the URL passing test for %s",
+	            urip_testURLs[urip_current]);
+	    failures++;
+	} else if (parsed != 1) {
+	    fprintf(stderr, "failed the parsing test for %s",
+	            urip_testURLs[urip_current]);
+	    failures++;
+	}
+	nb_tests++;
+    }
+
+    xmlPopInputCallbacks();
+    return(failures);
+}
+
 #ifdef LIBXML_SCHEMAS_ENABLED
 /************************************************************************
  *									*
@@ -2708,6 +2889,7 @@ schemasOneTest(const char *sch,
     xmlDocPtr doc;
     xmlSchemaValidCtxtPtr ctxt;
     int ret = 0;
+    int validResult = 0;
     char *temp;
     FILE *schemasOutput;
 
@@ -2735,10 +2917,10 @@ schemasOneTest(const char *sch,
          (xmlSchemaValidityErrorFunc) testErrorHandler,
          (xmlSchemaValidityWarningFunc) testErrorHandler,
 	 ctxt);
-    ret = xmlSchemaValidateDoc(ctxt, doc);
-    if (ret == 0) {
+    validResult = xmlSchemaValidateDoc(ctxt, doc);
+    if (validResult == 0) {
 	fprintf(schemasOutput, "%s validates\n", filename);
-    } else if (ret > 0) {
+    } else if (validResult > 0) {
 	fprintf(schemasOutput, "%s fails to validate\n", filename);
     } else {
 	fprintf(schemasOutput, "%s validation generated an internal error\n",
@@ -2754,13 +2936,12 @@ schemasOneTest(const char *sch,
     unlink(temp);
     free(temp);
 
-    if (err != NULL) {
+    if ((validResult != 0) && (err != NULL)) {
 	if (compareFileMem(err, testErrors, testErrorsSize)) {
 	    fprintf(stderr, "Error for %s on %s failed\n", filename, sch);
 	    ret = 1;
 	}
     }
-
 
     xmlSchemaFreeValidCtxt(ctxt);
     xmlFreeDoc(doc);
@@ -2857,8 +3038,8 @@ schemasTest(const char *filename,
 	    nb_tests++;
 	    ret = schemasOneTest(filename, instance, result, err,
 	                         options, schemas);
-	    if (res != 0)
-		ret = res;
+	    if (ret != 0)
+		res = ret;
 	}
     }
     globfree(&globbuf);
@@ -3076,7 +3257,7 @@ rngStreamTest(const char *filename,
      * hack is also done in the Makefile
      */
     if ((!strcmp(prefix, "tutor10_1")) || (!strcmp(prefix, "tutor10_2")) ||
-        (!strcmp(prefix, "tutor3_2")))
+        (!strcmp(prefix, "tutor3_2")) || (!strcmp(prefix, "307377")))
 	disable_err = 1;
 
     snprintf(pattern, 499, "./test/relaxng/%s_?.xml", prefix);
@@ -3357,7 +3538,7 @@ load_xpath_expr (xmlDocPtr parent_doc, const char* filename) {
     xmlLoadExtDtdDefaultValue = XML_DETECT_IDS | XML_COMPLETE_ATTRS;
     xmlSubstituteEntitiesDefault(1);
 
-    doc = xmlParseFile(filename);
+    doc = xmlReadFile(filename, NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT);
     if (doc == NULL) {
 	fprintf(stderr, "Error: unable to parse file \"%s\"\n", filename);
 	return(NULL);
@@ -3405,7 +3586,7 @@ load_xpath_expr (xmlDocPtr parent_doc, const char* filename) {
     while(ns != NULL) {
 	if(xmlXPathRegisterNs(ctx, ns->prefix, ns->href) != 0) {
 	    fprintf(stderr,"Error: unable to register NS with prefix=\"%s\" and href=\"%s\"\n", ns->prefix, ns->href);
-    	    xmlFree(expr);
+    xmlFree(expr);
 	    xmlXPathFreeContext(ctx);
 	    xmlFreeDoc(doc);
 	    return(NULL);
@@ -3419,7 +3600,7 @@ load_xpath_expr (xmlDocPtr parent_doc, const char* filename) {
     xpath = xmlXPathEvalExpression(expr, ctx);
     if(xpath == NULL) {
         fprintf(stderr,"Error: unable to evaluate xpath expression\n");
-    	xmlFree(expr);
+xmlFree(expr);
         xmlXPathFreeContext(ctx);
         xmlFreeDoc(doc);
         return(NULL);
@@ -3439,7 +3620,7 @@ load_xpath_expr (xmlDocPtr parent_doc, const char* filename) {
 #define xxx_growBufferReentrant() {						\
     buffer_size *= 2;							\
     buffer = (xmlChar **)						\
-    		xmlRealloc(buffer, buffer_size * sizeof(xmlChar*));	\
+	xmlRealloc(buffer, buffer_size * sizeof(xmlChar*));	\
     if (buffer == NULL) {						\
 	perror("realloc failed");					\
 	return(NULL);							\
@@ -3509,7 +3690,7 @@ c14nRunTest(const char* xml_filename, int with_comments, int exclusive,
     xmlLoadExtDtdDefaultValue = XML_DETECT_IDS | XML_COMPLETE_ATTRS;
     xmlSubstituteEntitiesDefault(1);
 
-    doc = xmlParseFile(xml_filename);
+    doc = xmlReadFile(xml_filename, NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT);
     if (doc == NULL) {
 	fprintf(stderr, "Error: unable to parse file \"%s\"\n", xml_filename);
 	return(-1);
@@ -3644,7 +3825,7 @@ c14nExcWithoutCommentTest(const char *filename,
     return(c14nCommonTest(filename, 0, 1, "exc-without-comments"));
 }
 #endif
-#if defined(LIBXML_THREAD_ENABLED) && defined(LIBXML_CATALOG_ENABLED)
+#if defined(LIBXML_THREAD_ENABLED) && defined(LIBXML_CATALOG_ENABLED) && defined (LIBXML_SAX1_ENABLED)
 /************************************************************************
  *									*
  *			Catalog and threads test			*
@@ -3667,8 +3848,8 @@ static const char *testfiles[] = {
     "test/threads/invalid.xml",
 };
 
-const char *Okay = "OK";
-const char *Failed = "Failed";
+static const char *Okay = "OK";
+static const char *Failed = "Failed";
 
 #ifndef xmlDoValidityCheckingDefaultValue
 #error xmlDoValidityCheckingDefaultValue is not a macro
@@ -3722,7 +3903,7 @@ thread_specific_data(void *private_data)
     return ((void *) Okay);
 }
 
-#if defined(linux) || defined(solaris)
+#if defined(linux) || defined(solaris) || defined(__APPLE_CC__)
 
 #include <pthread.h>
 
@@ -4002,18 +4183,22 @@ testDesc testDescriptions[] = {
       errParseTest, "./test/XInclude/docs/*", "result/XInclude/", "", NULL,
       /* Ignore errors at this point ".err", */
       XML_PARSE_XINCLUDE },
+#ifdef LIBXML_READER_ENABLED
     { "XInclude xmlReader regression tests",
       streamParseTest, "./test/XInclude/docs/*", "result/XInclude/", ".rdr",
       /* Ignore errors at this point ".err", */
       NULL, XML_PARSE_XINCLUDE },
+#endif
     { "XInclude regression tests stripping include nodes" ,
       errParseTest, "./test/XInclude/docs/*", "result/XInclude/", "", NULL,
       /* Ignore errors at this point ".err", */
       XML_PARSE_XINCLUDE | XML_PARSE_NOXINCNODE },
+#ifdef LIBXML_READER_ENABLED
     { "XInclude xmlReader regression tests stripping include nodes",
       streamParseTest, "./test/XInclude/docs/*", "result/XInclude/", ".rdr",
       /* Ignore errors at this point ".err", */
       NULL, XML_PARSE_XINCLUDE | XML_PARSE_NOXINCNODE },
+#endif
 #endif
 #ifdef LIBXML_XPATH_ENABLED
 #ifdef LIBXML_DEBUG_ENABLED
@@ -4038,6 +4223,9 @@ testDesc testDescriptions[] = {
       0 },
     { "URI base composition tests" ,
       uriBaseTest, "./test/URI/*.data", "result/URI/", "", NULL,
+      0 },
+    { "Path URI conversion tests" ,
+      uriPathTest, NULL, NULL, NULL, NULL,
       0 },
 #ifdef LIBXML_SCHEMAS_ENABLED
     { "Schemas regression tests" ,
@@ -4070,7 +4258,7 @@ testDesc testDescriptions[] = {
       c14nExcWithoutCommentTest, "./test/c14n/exc-without-comments/*.xml", NULL, NULL, NULL,
       0 },
 #endif
-#if defined(LIBXML_THREAD_ENABLED) && defined(LIBXML_CATALOG_ENABLED)
+#if defined(LIBXML_THREAD_ENABLED) && defined(LIBXML_CATALOG_ENABLED) && defined(LIBXML_SAX1_ENABLED)
     { "Catalog and Threads regression tests" ,
       threadsTest, NULL, NULL, NULL, NULL,
       0 },
@@ -4131,7 +4319,7 @@ launchTests(testDescPtr tst) {
 		testErrorsSize = 0;
 		testErrors[0] = 0;
 		res = tst->func(globbuf.gl_pathv[i], result, error,
-		                tst->options);
+		                tst->options | XML_PARSE_COMPACT);
 		xmlResetLastError();
 		if (res != 0) {
 		    fprintf(stderr, "File %s generated an error\n",
@@ -4169,33 +4357,58 @@ launchTests(testDescPtr tst) {
     return(err);
 }
 
+static int verbose = 0;
+static int tests_quiet = 0;
+
+static int
+runtest(int i) {
+    int ret = 0, res;
+    int old_errors, old_tests, old_leaks;
+
+    old_errors = nb_errors;
+    old_tests = nb_tests;
+    old_leaks = nb_leaks;
+    if ((tests_quiet == 0) && (testDescriptions[i].desc != NULL))
+	printf("## %s\n", testDescriptions[i].desc);
+    res = launchTests(&testDescriptions[i]);
+    if (res != 0)
+	ret++;
+    if (verbose) {
+	if ((nb_errors == old_errors) && (nb_leaks == old_leaks))
+	    printf("Ran %d tests, no errors\n", nb_tests - old_tests);
+	else
+	    printf("Ran %d tests, %d errors, %d leaks\n",
+		   nb_tests - old_tests,
+		   nb_errors - old_errors,
+		   nb_leaks - old_leaks);
+    }
+    return(ret);
+}
+
 int
 main(int argc ATTRIBUTE_UNUSED, char **argv ATTRIBUTE_UNUSED) {
-    int i = 0, res, ret = 0;
-    int verbose = 0;
-    int old_errors, old_tests, old_leaks;
+    int i, a, ret = 0;
+    int subset = 0;
 
     initializeLibxml2();
 
-    if ((argc >= 2) && (!strcmp(argv[1], "-v")))
-        verbose = 1;
-    for (i = 0; testDescriptions[i].func != NULL; i++) {
-        old_errors = nb_errors;
-        old_tests = nb_tests;
-        old_leaks = nb_leaks;
-        if (testDescriptions[i].desc != NULL)
-	    printf("## %s\n", testDescriptions[i].desc);
-	res = launchTests(&testDescriptions[i]);
-	if (res != 0)
-	    ret++;
-	if (verbose) {
-	    if ((nb_errors == old_errors) && (nb_leaks == old_leaks))
-	        printf("Ran %d tests, no errors\n", nb_tests - old_tests);
-	    else
-	        printf("Ran %d tests, %d errors, %d leaks\n",
-		       nb_tests - old_tests,
-		       nb_errors - old_errors,
-		       nb_leaks - old_leaks);
+    for (a = 1; a < argc;a++) {
+        if (!strcmp(argv[a], "-v"))
+	    verbose = 1;
+        else if (!strcmp(argv[a], "-quiet"))
+	    tests_quiet = 1;
+	else {
+	    for (i = 0; testDescriptions[i].func != NULL; i++) {
+	        if (strstr(testDescriptions[i].desc, argv[a])) {
+		    ret += runtest(i);
+		    subset++;
+		}
+	    }
+	}
+    }
+    if (subset == 0) {
+	for (i = 0; testDescriptions[i].func != NULL; i++) {
+	    ret += runtest(i);
 	}
     }
     if ((nb_errors == 0) && (nb_leaks == 0)) {

@@ -29,8 +29,8 @@
 #define PRE_LOOPBACK( FUNC )
 #endif
 
-#include "dispatch.h"
-#include "glapioffsets.h"
+#include "glapi/dispatch.h"
+#include "glapi/glapioffsets.h"
 
 static void GLAPIENTRY TAG(ArrayElement)( GLint i )
 {

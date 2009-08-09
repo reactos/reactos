@@ -40,10 +40,10 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Мови"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Текстові служби та мови вводу", IDC_GROUPBOX, 5, 5, 234, 52
+    GROUPBOX "Текстові служби та мови вводу", -1, 5, 5, 234, 52
     LTEXT "Щоб переглянути або змінити мову або засіб вводу тексту, натисніть кнопку ""Подробиці...""", -1, 12, 15, 220, 18
     PUSHBUTTON "&Подробиці...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
-    GROUPBOX "Додаткова мовна підтримка", IDC_GROUPBOX, 5, 62, 234, 82
+    GROUPBOX "Додаткова мовна підтримка", -1, 5, 62, 234, 82
     LTEXT "Більшість мов установлюється за замовчуванням. Щоб установити додаткові мови, установіть відповідні прапорці.", -1, 12, 72, 220, 18
     CHECKBOX "&Установити підтримку для мов із письмом справа наліво та для мов зі складними знаками", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE
     CHECKBOX "Ус&тановити підтримку для східно-азіатських мов", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE
@@ -54,7 +54,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Додатково"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Мова програм, які не підтримують Юнікод", IDC_GROUPBOX, 5, 5, 234, 90
+    GROUPBOX "Мова програм, які не підтримують Юнікод", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
     LTEXT "Цей системний параметр дає змогу програмам, які не підтримують Юнікод, показувати меню та діалоги рідною мовою. Він не впливає на програми з підтримкою Юнікоду, але застосовується до всіх користувачів цього комп'ютера.", -1, 14, 18, 223, 33
     LTEXT "Виберіть мову, яка відповідає мовній версії бажаних програм без підтримки Юнікоду.", -1, 14, 55, 223, 18
@@ -152,7 +152,7 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Дата"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Календар", IDC_GROUPBOX, 7, 7, 230, 74
+    GROUPBOX "Календар", -1, 7, 7, 230, 74
     LTEXT "Якщо рік введено двома цифрами, інтерпретувати його як рік між:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
     LTEXT "і", -1, 55, 32, 17, 8
@@ -162,7 +162,7 @@ BEGIN
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     LTEXT "Літочислення за хиджрою:", -1, 13, 62, 60, 16
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Короткий формат дати", IDC_GROUPBOX, 7, 83, 230, 81
+    GROUPBOX "Короткий формат дати", -1, 7, 83, 230, 81
     LTEXT "Зразок:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Зразок - читання справа наліво:", -1, 13, 109, 60, 16
@@ -171,7 +171,7 @@ BEGIN
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
     LTEXT "Розділювач компонентів дати:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Повний формат дати", IDC_GROUPBOX, 7, 167, 230, 64
+    GROUPBOX "Повний формат дати", -1, 7, 167, 230, 64
     LTEXT "Зразок:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
     LTEXT "Зразок - читання справа наліво:", -1, 13, 193, 61, 16

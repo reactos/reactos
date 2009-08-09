@@ -46,8 +46,6 @@ typedef struct
     DWORD dwDummy;  /* just to keep the compiler happy ;-) */
 } FLATSB_INFO, *LPFLATSB_INFO;
 
-#define FlatSB_GetInfoPtr(hwnd) ((FLATSB_INFO*)GetWindowLongPtrW (hwnd, 0))
-
 
 /***********************************************************************
  *		InitializeFlatSB (COMCTL32.@)
@@ -245,7 +243,7 @@ FlatSB_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT WINAPI
 FlatSB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    if (!FlatSB_GetInfoPtr(hwnd) && (uMsg != WM_CREATE))
+    if (!GetWindowLongPtrW(hwnd, 0) && (uMsg != WM_CREATE))
 	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
 
     switch (uMsg)
@@ -257,7 +255,7 @@ FlatSB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return FlatSB_Destroy (hwnd, wParam, lParam);
 
 	default:
-	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
                     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);

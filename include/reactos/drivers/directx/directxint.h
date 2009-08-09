@@ -2,8 +2,10 @@
 #ifndef _DXINTERNEL_
 #define _DXINTERNEL_
 
+#ifdef __W32K_H
 #define PDD_BASEOBJECT POBJ
 #define DD_BASEOBJECT BASEOBJECT
+#endif
 
 /* _EDD_DIRECTDRAW_LOCAL is 0x54 bytes long on Windows XP */
 typedef struct _EDD_DIRECTDRAW_LOCAL

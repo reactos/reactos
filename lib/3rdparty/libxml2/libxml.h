@@ -20,9 +20,24 @@
 
 #if defined(macintosh)
 #include "config-mac.h"
+#elif defined(_WIN32_WCE)
+/*
+ * Windows CE compatibility definitions and functions
+ * This is needed to compile libxml2 for Windows CE.
+ * At least I tested it with WinCE 5.0 for Emulator and WinCE 4.2/SH4 target
+ */
+#include <win32config.h>
+#include <libxml/xmlversion.h>
 #else
 #include "config.h"
 #include <libxml/xmlversion.h>
+#endif
+
+#if defined(__Lynx__)
+#include <stdio.h> /* pull definition of size_t */
+#include <varargs.h>
+int snprintf(char *, size_t, const char *, ...);
+int vfprintf(FILE *, const char *, va_list);
 #endif
 
 #ifndef WITH_TRIO
@@ -49,6 +64,20 @@ extern int __xmlRegisterCallbacks;
  */
 void __xmlIOErr(int domain, int code, const char *extra);
 void __xmlLoaderErr(void *ctx, const char *msg, const char *filename);
+#ifdef LIBXML_HTML_ENABLED
+/*
+ * internal function of HTML parser needed for xmlParseInNodeContext
+ * but not part of the API
+ */
+void __htmlParseContent(void *ctx);
+#endif
+
+/*
+ * internal global initialization critical section routines.
+ */
+void __xmlGlobalInitMutexLock(void);
+void __xmlGlobalInitMutexUnlock(void);
+void __xmlGlobalInitMutexDestroy(void);
 
 #ifdef IN_LIBXML
 #ifdef __GNUC__

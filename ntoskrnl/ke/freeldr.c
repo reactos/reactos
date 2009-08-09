@@ -31,7 +31,7 @@ typedef struct _BIOS_MEMORY_DESCRIPTOR
 
 /* FreeLDR Loader Data */
 PROS_LOADER_PARAMETER_BLOCK KeRosLoaderBlock;
-BOOLEAN AcpiTableDetected;
+BOOLEAN AcpiTableDetected = FALSE;
 ADDRESS_RANGE KeMemoryMap[64];
 ULONG KeMemoryMapRangeCount;
 
@@ -59,12 +59,12 @@ ARC_DISK_SIGNATURE BldrDiskInfo[32];                    // 0x1413C
 CHAR BldrArcHwBuffer[16 * 1024];                        // 0x1843C
 
 /* BIOS Memory Map */
-BIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptors[16] = {{0}};
+BIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptors[16] = { { 0, 0 }, };
 PBIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptorList = BiosMemoryDescriptors;
 
 /* ARC Memory Map */
 ULONG NumberDescriptors = 0;
-MEMORY_DESCRIPTOR MDArray[60] = {{0}};
+MEMORY_DESCRIPTOR MDArray[60] = { { 0, 0, 0 }, };
 
 /* FUNCTIONS *****************************************************************/
 
@@ -73,7 +73,7 @@ NTAPI
 KiRosGetMdFromArray(VOID)
 {
     /* Return the next MD from the list, but make sure we don't overflow */
-    if (BldrCurrentMd > 60) KEBUGCHECK(0);
+    if (BldrCurrentMd > 60) ASSERT(FALSE);
     return &BldrMemoryDescriptors[BldrCurrentMd++];
 }
 
@@ -1187,7 +1187,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     if (LoaderBlock->SetupLdrBlock)
     {
         /* All we'll setup right now is the flag for text-mode setup */
-        LoaderBlock->SetupLdrBlock->Flags = 1;
+        LoaderBlock->SetupLdrBlock->Flags = SETUPLDR_TEXT_MODE;
     }
 
     /* Make a copy of the command line */
@@ -1331,11 +1331,6 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
         LoaderBlock->MmapLength = 0;
         LoaderBlock->MmapAddr = (ULONG)KeMemoryMap;
     }
-
-#if defined(_M_IX86)
-    /* Set up the VDM Data */
-    NtEarlyInitVdm();
-#endif
 
     /* Convert the loader block */
     KiRosFrldrLpbToNtLpb(KeRosLoaderBlock, &NtLoaderBlock);

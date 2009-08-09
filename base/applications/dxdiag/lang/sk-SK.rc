@@ -1,6 +1,6 @@
 /* TRANSLATOR :  Mário Kaèmár /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  24-04-2008
- * LAST CHANGE:  30-05-2008
+ * LAST CHANGE:  30-11-2008
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -216,7 +216,7 @@ BEGIN
 	IDS_REG_SUCCESS "OK"
 	IDS_REG_FAIL "Chyba"
 	IDS_DDTEST_ERROR "Test zlyhal!"
-	IDS_DDTEST_DESCRIPTION "This will start DirecDraw interface test. Continue?"
+	IDS_DDTEST_DESCRIPTION "This will start DirectDraw interface test. Continue?"
 	IDS_DDPRIMARY_DESCRIPTION "This test will use DirectDraw to draw on primary surface. Black and white rectangles should be drawn. Continue?"
 	IDS_DDPRIMARY_RESULT "Did you see black and white rectangles?"
 	IDS_DDOFFSCREEN_DESCRIPTION "This test will use DirectDraw to draw in an offscreen buffer. Moving white rectangle should be drawn. Continue?"

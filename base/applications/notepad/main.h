@@ -61,8 +61,7 @@ typedef struct
   TCHAR      szMarginRight[MAX_PATH];
   TCHAR      szHeader[MAX_PATH];
   TCHAR      szFooter[MAX_PATH];
-  TCHAR      szStatusBarLine[MAX_PATH];
-  TCHAR      szStatusBarCol[MAX_PATH];
+  TCHAR      szStatusBarLineCol[MAX_PATH];
   int        iEncoding;
   int        iEoln;
 

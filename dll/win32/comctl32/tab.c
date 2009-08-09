@@ -142,7 +142,6 @@ typedef struct
 #define BUTTON_SPACINGY         3
 #define FLAT_BTN_SPACINGX       8
 #define DEFAULT_MIN_TAB_WIDTH   54
-#define DEFAULT_TAB_WIDTH_FIXED 96
 #define DEFAULT_PADDING_X       6
 #define EXTRA_ICON_PADDING      3
 
@@ -460,7 +459,7 @@ static BOOL TAB_InternalGetItemRect(
 static inline BOOL
 TAB_GetItemRect(const TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-  return TAB_InternalGetItemRect(infoPtr, (INT)wParam, (LPRECT)lParam, (LPRECT)NULL);
+  return TAB_InternalGetItemRect(infoPtr, wParam, (LPRECT)lParam, NULL);
 }
 
 /******************************************************************************
@@ -864,6 +863,8 @@ static LRESULT TAB_AdjustRect(const TAB_INFO *infoPtr, WPARAM fLarger, LPRECT pr
     TRACE ("hwnd=%p fLarger=%ld (%s)\n", infoPtr->hwnd, fLarger,
            wine_dbgstr_rect(prc));
 
+    if (!prc) return -1;
+
     if(lStyle & TCS_VERTICAL)
     {
 	iRightBottom = &(prc->right);
@@ -915,7 +916,7 @@ static LRESULT TAB_AdjustRect(const TAB_INFO *infoPtr, WPARAM fLarger, LPRECT pr
  * This method will handle the notification from the scroll control and
  * perform the scrolling operation on the tab control.
  */
-static LRESULT TAB_OnHScroll(TAB_INFO *infoPtr, int nScrollCode, int nPos, HWND hwndScroll)
+static LRESULT TAB_OnHScroll(TAB_INFO *infoPtr, int nScrollCode, int nPos)
 {
   if(nScrollCode == SB_THUMBPOSITION && nPos != infoPtr->leftmostVisible)
   {
@@ -2661,7 +2662,10 @@ static inline LRESULT TAB_SetMinTabWidth (TAB_INFO *infoPtr, INT cx)
 
   TRACE("(%p,%d)\n", infoPtr, cx);
 
-  oldcx = infoPtr->tabMinWidth;
+  if (infoPtr->tabMinWidth < 0)
+    oldcx = DEFAULT_MIN_TAB_WIDTH;
+  else
+    oldcx = infoPtr->tabMinWidth;
   infoPtr->tabMinWidth = cx;
   TAB_SetItemBounds(infoPtr);
   return oldcx;
@@ -2932,7 +2936,7 @@ static inline LRESULT TAB_Size (TAB_INFO *infoPtr)
 }
 
 
-static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
+static LRESULT TAB_Create (HWND hwnd, LPARAM lParam)
 {
   TAB_INFO *infoPtr;
   TEXTMETRICW fontMetrics;
@@ -2940,7 +2944,7 @@ static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
   HFONT hOldFont;
   DWORD dwStyle;
 
-  infoPtr = (TAB_INFO *)Alloc (sizeof(TAB_INFO));
+  infoPtr = Alloc (sizeof(TAB_INFO));
 
   SetWindowLongPtrW(hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -3019,7 +3023,7 @@ static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   /* Initialize the width of a tab. */
   if (dwStyle & TCS_FIXEDWIDTH)
-    infoPtr->tabWidth = DEFAULT_TAB_WIDTH_FIXED;
+    infoPtr->tabWidth = GetDeviceCaps(hdc, LOGPIXELSX);
 
   infoPtr->tabMinWidth = -1;
 
@@ -3072,7 +3076,7 @@ static LRESULT theme_changed(const TAB_INFO *infoPtr)
     return 0;
 }
 
-static LRESULT TAB_NCCalcSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
+static LRESULT TAB_NCCalcSize(WPARAM wParam)
 {
   if (!wParam)
     return 0;
@@ -3207,7 +3211,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_SetFont (infoPtr, (HFONT)wParam);
 
     case WM_CREATE:
-      return TAB_Create (hwnd, wParam, lParam);
+      return TAB_Create (hwnd, lParam);
 
     case WM_NCDESTROY:
       return TAB_Destroy (infoPtr);
@@ -3241,7 +3245,7 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_SetRedraw (infoPtr, (BOOL)wParam);
 
     case WM_HSCROLL:
-      return TAB_OnHScroll(infoPtr, (int)LOWORD(wParam), (int)HIWORD(wParam), (HWND)lParam);
+      return TAB_OnHScroll(infoPtr, (int)LOWORD(wParam), (int)HIWORD(wParam));
 
     case WM_STYLECHANGED:
       TAB_SetItemBounds (infoPtr);
@@ -3266,10 +3270,10 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_NCHitTest(infoPtr, lParam);
 
     case WM_NCCALCSIZE:
-      return TAB_NCCalcSize(hwnd, wParam, lParam);
+      return TAB_NCCalcSize(wParam);
 
     default:
-      if (uMsg >= WM_USER && uMsg < WM_APP)
+      if (uMsg >= WM_USER && uMsg < WM_APP && !COMCTL32_IsReflectedMessage(uMsg))
 	WARN("unknown msg %04x wp=%08lx lp=%08lx\n",
 	     uMsg, wParam, lParam);
       break;

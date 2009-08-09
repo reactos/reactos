@@ -38,8 +38,9 @@ ULONG		DebugPrintMask = DPRINT_INIFILE;
 #elif defined (DEBUG_REACTOS)
 ULONG		DebugPrintMask = DPRINT_REACTOS | DPRINT_REGISTRY;
 #elif defined (DEBUG_CUSTOM)
-ULONG		DebugPrintMask = DPRINT_WARNING | DPRINT_MEMORY |
-		                 DPRINT_REACTOS | DPRINT_WINDOWS | DPRINT_HWDETECT;
+ULONG		DebugPrintMask = DPRINT_WARNING |
+		                 DPRINT_UI | DPRINT_CACHE | DPRINT_REACTOS |
+		                 DPRINT_LINUX;
 #else //#elif defined (DEBUG_NONE)
 ULONG		DebugPrintMask = 0;
 #endif
@@ -98,6 +99,38 @@ VOID DebugPrintChar(UCHAR Character)
 	}
 }
 
+ULONG
+DbgPrint(const char *Format, ...)
+{
+	va_list ap;
+	CHAR Buffer[512];
+	ULONG Length;
+	char *ptr = Buffer;
+
+	va_start(ap, Format);
+
+	/* Construct a string */
+	Length = _vsnprintf(Buffer, 512, Format, ap);
+
+	/* Check if we went past the buffer */
+	if (Length == -1)
+	{
+		/* Terminate it if we went over-board */
+		Buffer[sizeof(Buffer) - 1] = '\n';
+
+		/* Put maximum */
+		Length = sizeof(Buffer);
+	}
+
+	while (*ptr)
+	{
+		DebugPrintChar(*ptr++);
+	}
+
+	va_end(ap);
+	return 0;
+}
+
 VOID DebugPrintHeader(ULONG Mask)
 {
   /* No header */
@@ -107,143 +140,54 @@ VOID DebugPrintHeader(ULONG Mask)
 	switch (Mask)
 	{
 	case DPRINT_WARNING:
-		DebugPrintChar('W');
-		DebugPrintChar('A');
-		DebugPrintChar('R');
-		DebugPrintChar('N');
-		DebugPrintChar('I');
-		DebugPrintChar('N');
-		DebugPrintChar('G');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("WARNING: ");
 		break;
 	case DPRINT_MEMORY:
-		DebugPrintChar('M');
-		DebugPrintChar('E');
-		DebugPrintChar('M');
-		DebugPrintChar('O');
-		DebugPrintChar('R');
-		DebugPrintChar('Y');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("MEMORY: ");
 		break;
 	case DPRINT_FILESYSTEM:
-		DebugPrintChar('F');
-		DebugPrintChar('I');
-		DebugPrintChar('L');
-		DebugPrintChar('E');
-		DebugPrintChar('S');
-		DebugPrintChar('Y');
-		DebugPrintChar('S');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("FILESYS: ");
 		break;
 	case DPRINT_INIFILE:
-		DebugPrintChar('I');
-		DebugPrintChar('N');
-		DebugPrintChar('I');
-		DebugPrintChar('F');
-		DebugPrintChar('I');
-		DebugPrintChar('L');
-		DebugPrintChar('E');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("INIFILE: ");
 		break;
 	case DPRINT_UI:
-		DebugPrintChar('U');
-		DebugPrintChar('I');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("UI: ");
 		break;
 	case DPRINT_DISK:
-		DebugPrintChar('D');
-		DebugPrintChar('I');
-		DebugPrintChar('S');
-		DebugPrintChar('K');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("DISK: ");
 		break;
 	case DPRINT_CACHE:
-		DebugPrintChar('C');
-		DebugPrintChar('A');
-		DebugPrintChar('C');
-		DebugPrintChar('H');
-		DebugPrintChar('E');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("CACHE: ");
 		break;
 	case DPRINT_REGISTRY:
-		DebugPrintChar('R');
-		DebugPrintChar('E');
-		DebugPrintChar('G');
-		DebugPrintChar('I');
-		DebugPrintChar('S');
-		DebugPrintChar('T');
-		DebugPrintChar('R');
-		DebugPrintChar('Y');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("REGISTER: ");
 		break;
 	case DPRINT_REACTOS:
-		DebugPrintChar('R');
-		DebugPrintChar('E');
-		DebugPrintChar('A');
-		DebugPrintChar('C');
-		DebugPrintChar('T');
-		DebugPrintChar('O');
-		DebugPrintChar('S');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("REACTOS: ");
 		break;
 	case DPRINT_LINUX:
-		DebugPrintChar('L');
-		DebugPrintChar('I');
-		DebugPrintChar('N');
-		DebugPrintChar('U');
-		DebugPrintChar('X');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("LINUX: ");
 		break;
 	case DPRINT_WINDOWS:
-		DebugPrintChar('W');
-		DebugPrintChar('I');
-		DebugPrintChar('N');
-		DebugPrintChar('L');
-		DebugPrintChar('D');
-		DebugPrintChar('R');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("WINLDR: ");
 		break;
 	case DPRINT_HWDETECT:
-		DebugPrintChar('H');
-		DebugPrintChar('W');
-		DebugPrintChar('D');
-		DebugPrintChar('E');
-		DebugPrintChar('T');
-		DebugPrintChar('E');
-		DebugPrintChar('C');
-		DebugPrintChar('T');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("HWDETECT: ");
 		break;
 	default:
-		DebugPrintChar('U');
-		DebugPrintChar('N');
-		DebugPrintChar('K');
-		DebugPrintChar('N');
-		DebugPrintChar('O');
-		DebugPrintChar('W');
-		DebugPrintChar('N');
-		DebugPrintChar(':');
-		DebugPrintChar(' ');
+	    DbgPrint("UNKNOWN: ");
 		break;
 	}
 }
 
-VOID DebugPrint(ULONG Mask, char *format, ...)
+char* g_file;
+int g_line;
+
+VOID DbgPrintMask(ULONG Mask, char *format, ...)
 {
 	va_list ap;
-	char Buffer[4096];
+	char Buffer[2096];
 	char *ptr = Buffer;
 
 	// Mask out unwanted debug messages
@@ -255,24 +199,10 @@ VOID DebugPrint(ULONG Mask, char *format, ...)
 	// Print the header if we have started a new line
 	if (DebugStartOfLine)
 	{
+        DbgPrint("(%s:%d) ", g_file, g_line);
 		DebugPrintHeader(Mask);
 		DebugStartOfLine = FALSE;
 	}
-
-	va_start(ap, format);
-	vsprintf(Buffer, format, ap);
-	va_end(ap);
-	while (*ptr)
-	{
-		DebugPrintChar(*ptr++);
-	}
-}
-
-VOID DebugPrint1(char *format, ...)
-{
-	va_list ap;
-	char Buffer[4096];
-	char *ptr = Buffer;
 
 	va_start(ap, format);
 	vsprintf(Buffer, format, ap);
@@ -296,7 +226,7 @@ VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 	}
 
 	DebugStartOfLine = FALSE; // We don't want line headers
-	DebugPrint(Mask, "Dumping buffer at 0x%x with length of %d bytes:\n", Buffer, Length);
+	DbgPrintMask(Mask, "Dumping buffer at 0x%x with length of %d bytes:\n", Buffer, Length);
 
 	for (Idx=0; Idx<Length; )
 	{
@@ -304,62 +234,98 @@ VOID DebugDumpBuffer(ULONG Mask, PVOID Buffer, ULONG Length)
 
 		if (Idx < 0x0010)
 		{
-			DebugPrint(Mask, "000%x:\t", Idx);
+			DbgPrintMask(Mask, "000%x:\t", Idx);
 		}
 		else if (Idx < 0x0100)
 		{
-			DebugPrint(Mask, "00%x:\t", Idx);
+			DbgPrintMask(Mask, "00%x:\t", Idx);
 		}
 		else if (Idx < 0x1000)
 		{
-			DebugPrint(Mask, "0%x:\t", Idx);
+			DbgPrintMask(Mask, "0%x:\t", Idx);
 		}
 		else
 		{
-			DebugPrint(Mask, "%x:\t", Idx);
+			DbgPrintMask(Mask, "%x:\t", Idx);
 		}
 
 		for (Idx2=0; Idx2<16; Idx2++,Idx++)
 		{
 			if (BufPtr[Idx] < 0x10)
 			{
-				DebugPrint(Mask, "0");
+				DbgPrintMask(Mask, "0");
 			}
-			DebugPrint(Mask, "%x", BufPtr[Idx]);
+			DbgPrintMask(Mask, "%x", BufPtr[Idx]);
 
 			if (Idx2 == 7)
 			{
-				DebugPrint(Mask, "-");
+				DbgPrintMask(Mask, "-");
 			}
 			else
 			{
-				DebugPrint(Mask, " ");
+				DbgPrintMask(Mask, " ");
 			}
 		}
 
 		Idx -= 16;
-		DebugPrint(Mask, " ");
+		DbgPrintMask(Mask, " ");
 
 		for (Idx2=0; Idx2<16; Idx2++,Idx++)
 		{
 			if ((BufPtr[Idx] > 20) && (BufPtr[Idx] < 0x80))
 			{
-				DebugPrint(Mask, "%c", BufPtr[Idx]);
+				DbgPrintMask(Mask, "%c", BufPtr[Idx]);
 			}
 			else
 			{
-				DebugPrint(Mask, ".");
+				DbgPrintMask(Mask, ".");
 			}
 		}
 
-		DebugPrint(Mask, "\n");
+		DbgPrintMask(Mask, "\n");
 	}
 }
 
 #else
 
-VOID DebugPrint(ULONG Mask, char *format, ...)
+VOID DbgPrintMask(ULONG Mask, char *format, ...)
 {
 }
 
+ULONG DbgPrint(PCCH Format, ...)
+{
+    return 0;
+}
+
 #endif // defined DBG
+
+ULONG
+MsgBoxPrint(const char *Format, ...)
+{
+	va_list ap;
+	CHAR Buffer[512];
+	ULONG Length;
+
+	va_start(ap, Format);
+
+	/* Construct a string */
+	Length = _vsnprintf(Buffer, 512, Format, ap);
+
+	/* Check if we went past the buffer */
+	if (Length == -1U)
+	{
+		/* Terminate it if we went over-board */
+		Buffer[sizeof(Buffer) - 1] = '\n';
+
+		/* Put maximum */
+		Length = sizeof(Buffer);
+	}
+
+	/* Show it as a message box */
+	UiMessageBox(Buffer);
+
+	/* Cleanup and exit */
+	va_end(ap);
+	return 0;
+}
+

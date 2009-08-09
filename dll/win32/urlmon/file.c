@@ -109,7 +109,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
-    if(!szUrl || lstrlenW(szUrl) < sizeof(wszFile)/sizeof(WCHAR)
+    if(!szUrl || strlenW(szUrl) < sizeof(wszFile)/sizeof(WCHAR)
             || memcmp(szUrl, wszFile, sizeof(wszFile)))
         return E_INVALIDARG;
 

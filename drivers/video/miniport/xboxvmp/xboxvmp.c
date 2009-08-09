@@ -35,7 +35,7 @@
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 DriverEntry(IN PVOID Context1, IN PVOID Context2)
 {
   VIDEO_HW_INITIALIZATION_DATA InitData;
@@ -60,7 +60,7 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
  * Detects the Xbox Nvidia display adapter.
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 XboxVmpFindAdapter(
    IN PVOID HwDeviceExtension,
    IN PVOID HwContext,
@@ -95,7 +95,7 @@ XboxVmpFindAdapter(
  * up control of the video hardware to the video port driver.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 XboxVmpInitialize(PVOID HwDeviceExtension)
 {
   PXBOXVMP_DEVICE_EXTENSION XboxVmpDeviceExtension;
@@ -130,7 +130,7 @@ XboxVmpInitialize(PVOID HwDeviceExtension)
  * Processes the specified Video Request Packet.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 XboxVmpStartIO(
    PVOID HwDeviceExtension,
    PVIDEO_REQUEST_PACKET RequestPacket)
@@ -248,7 +248,7 @@ XboxVmpStartIO(
  * This function is called to reset the hardware to a known state.
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 XboxVmpResetHw(
    PVOID DeviceExtension,
    ULONG Columns,
@@ -270,7 +270,7 @@ XboxVmpResetHw(
  * Queries whether the device can support the requested power state.
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 XboxVmpGetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,
@@ -287,7 +287,7 @@ XboxVmpGetPowerState(
  * Sets the power state of the specified device
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 XboxVmpSetPowerState(
    PVOID HwDeviceExtension,
    ULONG HwId,

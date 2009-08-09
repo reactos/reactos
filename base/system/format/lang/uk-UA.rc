@@ -11,7 +11,7 @@
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Використання: %S пристрій: [-FS:файл-система] [-V:мітка] [-Q] [-A:розмір] [-C]\n\n\
+STRING_HELP,  "Використання: %s пристрій: [-FS:файл-система] [-V:мітка] [-Q] [-A:розмір] [-C]\n\n\
   [пристрій:]      Вказує диск, який слід відформатувати (двокрапка обов'язкова).\n\
   -FS:файл-система Визначає тип файлової системи (%s).\n\
   -V:мітка         Визначає коротку назву диску.\n\
@@ -32,7 +32,7 @@ STRING_NO_SUPPORT  "Функція не підтримується"
 
 STRING_FMIFS_FAIL  "Не зміг знацти FMIFS точки входу.\n\n"
 
-STRING_UNKNOW_ARG  "Невідомий аргумент: %S\n"
+STRING_UNKNOW_ARG  "Невідомий аргумент: %s\n"
 
 STRING_DRIVE_PARM  "Необхідний параметр операції відсутній.\n\n"
 
@@ -44,7 +44,7 @@ STRING_NO_VOLUME         "Не вдалося виконати запит до пристрою"
 
 STRING_NO_VOLUME_SIZE    "Не вдалося визначити розмір диску"
 
-STRING_FILESYSTEM        "Визначена файлова система %S.\n"
+STRING_FILESYSTEM        "Визначена файлова система %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Визначте мітку диску %C: "
 

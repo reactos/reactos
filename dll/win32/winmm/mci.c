@@ -833,7 +833,7 @@ static	BOOL	MCI_OpenMciDriver(LPWINE_MCIDRIVER wmd, LPCWSTR drvTyp, LPARAM lp)
     } else if (WINMM_CheckForMMSystem() && pFnMciMapMsg32WTo16) {
 	WINMM_MapType 	res;
 
-	switch (res = pFnMciMapMsg32WTo16(0, DRV_OPEN, 0, &lp)) {
+	switch (res = pFnMciMapMsg32WTo16(0, DRV_OPEN, 0, (DWORD*)&lp)) {
 	case WINMM_MAP_MSGERROR:
 	    TRACE("Not handled yet (DRV_OPEN)\n");
 	    break;

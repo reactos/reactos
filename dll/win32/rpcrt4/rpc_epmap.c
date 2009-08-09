@@ -2,7 +2,8 @@
  * RPC endpoint mapper
  *
  * Copyright 2002 Greg Turner
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
+ * Copyright 2008 Robert Shearman (for CodeWeavers)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,14 +18,9 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
- * TODO:
- *  - actually do things right
  */
 
 #include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -33,8 +29,10 @@
 #include "rpc.h"
 
 #include "wine/debug.h"
+#include "wine/exception.h"
 
 #include "rpc_binding.h"
+#include "epm_c.h"
 #include "epm_towers.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
@@ -43,8 +41,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  *
  *  ncadg_ip_udp: 135
  *  ncacn_ip_tcp: 135
- *  ncacn_np: \\pipe\epmapper (?)
+ *  ncacn_np: \\pipe\epmapper
  *  ncalrpc: epmapper
+ *  ncacn_http: 593
  *
  * If the user's machine ran a DCE RPC daemon, it would
  * probably be possible to connect to it, but there are many
@@ -63,77 +62,222 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  * of running a fully functional DCOM server using Wine...
  */
 
+static const struct epm_endpoints
+{
+    const char *protseq;
+    const char *endpoint;
+} epm_endpoints[] =
+{
+    { "ncacn_np", "\\pipe\\epmapper" },
+    { "ncacn_ip_tcp", "135" },
+    { "ncacn_ip_udp", "135" },
+    { "ncalrpc", "epmapper" },
+    { "ncacn_http", "593" },
+};
+
+static BOOL start_rpcss(void)
+{
+    PROCESS_INFORMATION pi;
+    STARTUPINFOW si;
+    static WCHAR cmd[6];
+    static const WCHAR rpcss[] = {'r','p','c','s','s',0};
+    BOOL rslt;
+
+    TRACE("\n");
+
+    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+    ZeroMemory(&si, sizeof(STARTUPINFOA));
+    si.cb = sizeof(STARTUPINFOA);
+
+    memcpy(cmd, rpcss, sizeof(rpcss));
+
+    rslt = CreateProcessW(
+                          NULL,           /* executable */
+                          cmd,            /* command line */
+                          NULL,           /* process security attributes */
+                          NULL,           /* primary thread security attributes */
+                          FALSE,          /* inherit handles */
+                          0,              /* creation flags */
+                          NULL,           /* use parent's environment */
+                          NULL,           /* use parent's current directory */
+                          &si,            /* STARTUPINFO pointer */
+                          &pi             /* PROCESS_INFORMATION */
+                          );
+
+    if (rslt)
+    {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        Sleep(100);
+    }
+
+    return rslt;
+}
+
+static inline BOOL is_epm_destination_local(RPC_BINDING_HANDLE handle)
+{
+    RpcBinding *bind = (RpcBinding *)handle;
+    const char *protseq = bind->Protseq;
+    const char *network_addr = bind->NetworkAddr;
+
+    return ((!strcmp(protseq, "ncalrpc") && !network_addr) ||
+            (!strcmp(protseq, "ncacn_np") &&
+                (!network_addr || !strcmp(network_addr, "."))));
+}
+
+static RPC_STATUS get_epm_handle_client(RPC_BINDING_HANDLE handle, RPC_BINDING_HANDLE *epm_handle)
+{
+    RpcBinding *bind = (RpcBinding *)handle;
+    const char * pszEndpoint = NULL;
+    RPC_STATUS status;
+    RpcBinding* epm_bind;
+    unsigned int i;
+
+    if (bind->server)
+        return RPC_S_INVALID_BINDING;
+
+    for (i = 0; i < sizeof(epm_endpoints)/sizeof(epm_endpoints[0]); i++)
+        if (!strcmp(bind->Protseq, epm_endpoints[i].protseq))
+            pszEndpoint = epm_endpoints[i].endpoint;
+
+    if (!pszEndpoint)
+    {
+        FIXME("no endpoint for the endpoint-mapper found for protseq %s\n", debugstr_a(bind->Protseq));
+        return RPC_S_PROTSEQ_NOT_SUPPORTED;
+    }
+
+    status = RpcBindingCopy(handle, epm_handle);
+    if (status != RPC_S_OK) return status;
+
+    epm_bind = (RpcBinding*)*epm_handle;
+    if (epm_bind->AuthInfo)
+    {
+        /* don't bother with authenticating against the EPM by default
+        * (see EnableAuthEpResolution registry value) */
+        RpcAuthInfo_Release(epm_bind->AuthInfo);
+        epm_bind->AuthInfo = NULL;
+    }
+    RPCRT4_ResolveBinding(epm_bind, pszEndpoint);
+    TRACE("RPC_S_OK\n");
+    return RPC_S_OK;
+}
+
+static RPC_STATUS get_epm_handle_server(RPC_BINDING_HANDLE *epm_handle)
+{
+    unsigned char string_binding[] = "ncacn_np:.[\\\\pipe\\\\epmapper]";
+
+    return RpcBindingFromStringBindingA(string_binding, epm_handle);
+}
+
+static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *__eptr)
+{
+    switch (GetExceptionCode())
+    {
+        case EXCEPTION_ACCESS_VIOLATION:
+        case EXCEPTION_ILLEGAL_INSTRUCTION:
+            return EXCEPTION_CONTINUE_SEARCH;
+        default:
+            return EXCEPTION_EXECUTE_HANDLER;
+    }
+}
+
 /***********************************************************************
  *             RpcEpRegisterA (RPCRT4.@)
  */
 RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
                                   UUID_VECTOR *UuidVector, RPC_CSTR Annotation )
 {
-  RPCSS_NP_MESSAGE msg;
-  RPCSS_NP_REPLY reply;
-  char *vardata_payload, *vp;
   PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
-  unsigned long c;
-  RPC_STATUS rslt = RPC_S_OK;
+  unsigned long i;
+  RPC_STATUS status = RPC_S_OK;
+  error_status_t status2;
+  ept_entry_t *entries;
+  handle_t handle;
 
   TRACE("(%p,%p,%p,%s)\n", IfSpec, BindingVector, UuidVector, debugstr_a((char*)Annotation));
   TRACE(" ifid=%s\n", debugstr_guid(&If->InterfaceId.SyntaxGUID));
-  for (c=0; c<BindingVector->Count; c++) {
-    RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[c]);
-    TRACE(" protseq[%ld]=%s\n", c, debugstr_a(bind->Protseq));
-    TRACE(" endpoint[%ld]=%s\n", c, debugstr_a(bind->Endpoint));
+  for (i=0; i<BindingVector->Count; i++) {
+    RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
+    TRACE(" protseq[%ld]=%s\n", i, debugstr_a(bind->Protseq));
+    TRACE(" endpoint[%ld]=%s\n", i, debugstr_a(bind->Endpoint));
   }
   if (UuidVector) {
-    for (c=0; c<UuidVector->Count; c++)
-      TRACE(" obj[%ld]=%s\n", c, debugstr_guid(UuidVector->Uuid[c]));
+    for (i=0; i<UuidVector->Count; i++)
+      TRACE(" obj[%ld]=%s\n", i, debugstr_guid(UuidVector->Uuid[i]));
   }
 
-  /* FIXME: Do something with annotation. */
+  if (!BindingVector->Count) return RPC_S_OK;
 
-  /* construct the message to rpcss */
-  msg.message_type = RPCSS_NP_MESSAGE_TYPEID_REGISTEREPMSG;
-  msg.message.registerepmsg.iface = If->InterfaceId;
-  msg.message.registerepmsg.no_replace = 0;
+  entries = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*entries) * BindingVector->Count * (UuidVector ? UuidVector->Count : 1));
+  if (!entries)
+      return RPC_S_OUT_OF_MEMORY;
 
-  msg.message.registerepmsg.object_count = (UuidVector) ? UuidVector->Count : 0;
-  msg.message.registerepmsg.binding_count = BindingVector->Count;
-
-  /* calculate vardata payload size */
-  msg.vardata_payload_size = msg.message.registerepmsg.object_count * sizeof(UUID);
-  for (c=0; c < msg.message.registerepmsg.binding_count; c++) {
-    RpcBinding *bind = (RpcBinding *)(BindingVector->BindingH[c]);
-    msg.vardata_payload_size += strlen(bind->Protseq) + 1;
-    msg.vardata_payload_size += strlen(bind->Endpoint) + 1;
+  status = get_epm_handle_server(&handle);
+  if (status != RPC_S_OK)
+  {
+    HeapFree(GetProcessHeap(), 0, entries);
+    return status;
   }
 
-  /* allocate the payload buffer */
-  vp = vardata_payload = LocalAlloc(LPTR, msg.vardata_payload_size);
-  if (!vardata_payload)
-    return RPC_S_OUT_OF_MEMORY;
+  for (i = 0; i < BindingVector->Count; i++)
+  {
+      unsigned j;
+      RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
+      for (j = 0; j < (UuidVector ? UuidVector->Count : 1); j++)
+      {
+          int len = strlen((char *)Annotation);
+          status = TowerConstruct(&If->InterfaceId, &If->TransferSyntax,
+                                  bind->Protseq, bind->Endpoint,
+                                  bind->NetworkAddr,
+                                  &entries[i*(UuidVector ? UuidVector->Count : 1) + j].tower);
+          if (status != RPC_S_OK) break;
 
-  /* populate the payload data */
-  for (c=0; c < msg.message.registerepmsg.object_count; c++) {
-    CopyMemory(vp, UuidVector->Uuid[c], sizeof(UUID));
-    vp += sizeof(UUID);
+          if (UuidVector)
+              memcpy(&entries[i * UuidVector->Count].object, &UuidVector->Uuid[j], sizeof(GUID));
+          else
+              memset(&entries[i].object, 0, sizeof(entries[i].object));
+          memcpy(entries[i].annotation, Annotation, min(len + 1, ept_max_annotation_size));
+      }
   }
 
-  for (c=0; c < msg.message.registerepmsg.binding_count; c++) {
-    RpcBinding *bind = (RpcBinding*)(BindingVector->BindingH[c]);
-    unsigned long pslen = strlen(bind->Protseq) + 1, eplen = strlen(bind->Endpoint) + 1;
-    CopyMemory(vp, bind->Protseq, pslen);
-    vp += pslen;
-    CopyMemory(vp, bind->Endpoint, eplen);
-    vp += eplen;
+  if (status == RPC_S_OK)
+  {
+      while (TRUE)
+      {
+          __TRY
+          {
+              ept_insert(handle, BindingVector->Count * (UuidVector ? UuidVector->Count : 1),
+                         entries, TRUE, &status2);
+          }
+          __EXCEPT(rpc_filter)
+          {
+              status2 = GetExceptionCode();
+          }
+          __ENDTRY
+          if (status2 == RPC_S_SERVER_UNAVAILABLE &&
+              is_epm_destination_local(handle))
+          {
+              if (start_rpcss())
+                  continue;
+          }
+          if (status2 != RPC_S_OK)
+              ERR("ept_insert failed with error %d\n", status2);
+          status = status2; /* FIXME: convert status? */
+          break;
+      }
+  }
+  RpcBindingFree(&handle);
+
+  for (i = 0; i < BindingVector->Count; i++)
+  {
+      unsigned j;
+      for (j = 0; j < (UuidVector ? UuidVector->Count : 1); j++)
+          I_RpcFree(entries[i*(UuidVector ? UuidVector->Count : 1) + j].tower);
   }
 
-  /* send our request */
-  if (!RPCRT4_RPCSSOnDemandCall(&msg, vardata_payload, &reply))
-    rslt = RPC_S_OUT_OF_MEMORY;
+  HeapFree(GetProcessHeap(), 0, entries);
 
-  /* free the payload buffer */
-  LocalFree(vardata_payload);
-
-  return rslt;
+  return status;
 }
 
 /***********************************************************************
@@ -142,68 +286,85 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
 RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
                                    UUID_VECTOR *UuidVector )
 {
-  RPCSS_NP_MESSAGE msg;
-  RPCSS_NP_REPLY reply;
-  char *vardata_payload, *vp;
   PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
-  unsigned long c;
-  RPC_STATUS rslt = RPC_S_OK;
+  unsigned long i;
+  RPC_STATUS status = RPC_S_OK;
+  error_status_t status2;
+  ept_entry_t *entries;
+  handle_t handle;
 
   TRACE("(%p,%p,%p)\n", IfSpec, BindingVector, UuidVector);
   TRACE(" ifid=%s\n", debugstr_guid(&If->InterfaceId.SyntaxGUID));
-  for (c=0; c<BindingVector->Count; c++) {
-    RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[c]);
-    TRACE(" protseq[%ld]=%s\n", c, debugstr_a(bind->Protseq));
-    TRACE(" endpoint[%ld]=%s\n", c, debugstr_a(bind->Endpoint));
+  for (i=0; i<BindingVector->Count; i++) {
+    RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
+    TRACE(" protseq[%ld]=%s\n", i, debugstr_a(bind->Protseq));
+    TRACE(" endpoint[%ld]=%s\n", i, debugstr_a(bind->Endpoint));
   }
   if (UuidVector) {
-    for (c=0; c<UuidVector->Count; c++)
-      TRACE(" obj[%ld]=%s\n", c, debugstr_guid(UuidVector->Uuid[c]));
+    for (i=0; i<UuidVector->Count; i++)
+      TRACE(" obj[%ld]=%s\n", i, debugstr_guid(UuidVector->Uuid[i]));
   }
 
-  /* construct the message to rpcss */
-  msg.message_type = RPCSS_NP_MESSAGE_TYPEID_UNREGISTEREPMSG;
-  msg.message.unregisterepmsg.iface = If->InterfaceId;
+  entries = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*entries) * BindingVector->Count * (UuidVector ? UuidVector->Count : 1));
+  if (!entries)
+      return RPC_S_OUT_OF_MEMORY;
 
-  msg.message.unregisterepmsg.object_count = (UuidVector) ? UuidVector->Count : 0;
-  msg.message.unregisterepmsg.binding_count = BindingVector->Count;
-
-  /* calculate vardata payload size */
-  msg.vardata_payload_size = msg.message.unregisterepmsg.object_count * sizeof(UUID);
-  for (c=0; c < msg.message.unregisterepmsg.binding_count; c++) {
-    RpcBinding *bind = (RpcBinding *)(BindingVector->BindingH[c]);
-    msg.vardata_payload_size += strlen(bind->Protseq) + 1;
-    msg.vardata_payload_size += strlen(bind->Endpoint) + 1;
+  status = get_epm_handle_server(&handle);
+  if (status != RPC_S_OK)
+  {
+    HeapFree(GetProcessHeap(), 0, entries);
+    return status;
   }
 
-  /* allocate the payload buffer */
-  vp = vardata_payload = LocalAlloc(LPTR, msg.vardata_payload_size);
-  if (!vardata_payload)
-    return RPC_S_OUT_OF_MEMORY;
+  for (i = 0; i < BindingVector->Count; i++)
+  {
+      unsigned j;
+      RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
+      for (j = 0; j < (UuidVector ? UuidVector->Count : 1); j++)
+      {
+          status = TowerConstruct(&If->InterfaceId, &If->TransferSyntax,
+                                  bind->Protseq, bind->Endpoint,
+                                  bind->NetworkAddr,
+                                  &entries[i*(UuidVector ? UuidVector->Count : 1) + j].tower);
+          if (status != RPC_S_OK) break;
 
-  /* populate the payload data */
-  for (c=0; c < msg.message.unregisterepmsg.object_count; c++) {
-    CopyMemory(vp, UuidVector->Uuid[c], sizeof(UUID));
-    vp += sizeof(UUID);
+          if (UuidVector)
+              memcpy(&entries[i * UuidVector->Count + j].object, &UuidVector->Uuid[j], sizeof(GUID));
+          else
+              memset(&entries[i].object, 0, sizeof(entries[i].object));
+      }
   }
 
-  for (c=0; c < msg.message.unregisterepmsg.binding_count; c++) {
-    RpcBinding *bind = (RpcBinding*)(BindingVector->BindingH[c]);
-    unsigned long pslen = strlen(bind->Protseq) + 1, eplen = strlen(bind->Endpoint) + 1;
-    CopyMemory(vp, bind->Protseq, pslen);
-    vp += pslen;
-    CopyMemory(vp, bind->Endpoint, eplen);
-    vp += eplen;
+  if (status == RPC_S_OK)
+  {
+      __TRY
+      {
+          ept_insert(handle, BindingVector->Count * (UuidVector ? UuidVector->Count : 1),
+                     entries, TRUE, &status2);
+      }
+      __EXCEPT(rpc_filter)
+      {
+          status2 = GetExceptionCode();
+      }
+      __ENDTRY
+      if (status2 == RPC_S_SERVER_UNAVAILABLE)
+          status2 = EPT_S_NOT_REGISTERED;
+      if (status2 != RPC_S_OK)
+          ERR("ept_insert failed with error %d\n", status2);
+      status = status2; /* FIXME: convert status? */
+  }
+  RpcBindingFree(&handle);
+
+  for (i = 0; i < BindingVector->Count; i++)
+  {
+      unsigned j;
+      for (j = 0; j < (UuidVector ? UuidVector->Count : 1); j++)
+          I_RpcFree(entries[i*(UuidVector ? UuidVector->Count : 1) + j].tower);
   }
 
-  /* send our request */
-  if (!RPCRT4_RPCSSOnDemandCall(&msg, vardata_payload, &reply))
-    rslt = RPC_S_OUT_OF_MEMORY;
+  HeapFree(GetProcessHeap(), 0, entries);
 
-  /* free the payload buffer */
-  LocalFree(vardata_payload);
-
-  return rslt;
+  return status;
 }
 
 /***********************************************************************
@@ -211,50 +372,96 @@ RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bin
  */
 RPC_STATUS WINAPI RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE IfSpec )
 {
-  RPCSS_NP_MESSAGE msg;
-  RPCSS_NP_REPLY reply;
   PRPC_CLIENT_INTERFACE If = (PRPC_CLIENT_INTERFACE)IfSpec;
   RpcBinding* bind = (RpcBinding*)Binding;
+  RPC_STATUS status;
+  error_status_t status2;
+  handle_t handle;
+  ept_lookup_handle_t entry_handle = NULL;
+  twr_t *tower;
+  twr_t *towers[4] = { NULL };
+  unsigned32 num_towers, i;
+  GUID uuid = GUID_NULL;
+  char *resolved_endpoint = NULL;
 
   TRACE("(%p,%p)\n", Binding, IfSpec);
   TRACE(" protseq=%s\n", debugstr_a(bind->Protseq));
   TRACE(" obj=%s\n", debugstr_guid(&bind->ObjectUuid));
+  TRACE(" networkaddr=%s\n", debugstr_a(bind->NetworkAddr));
   TRACE(" ifid=%s\n", debugstr_guid(&If->InterfaceId.SyntaxGUID));
-
-  /* FIXME: totally untested */
 
   /* just return for fully bound handles */
   if (bind->Endpoint && (bind->Endpoint[0] != '\0'))
     return RPC_S_OK;
 
-  /* construct the message to rpcss */
-  msg.message_type = RPCSS_NP_MESSAGE_TYPEID_RESOLVEEPMSG;
-  msg.message.resolveepmsg.iface = If->InterfaceId;
-  msg.message.resolveepmsg.object = bind->ObjectUuid;
- 
-  msg.vardata_payload_size = strlen(bind->Protseq) + 1;
-
-  /* send the message */
-  if (!RPCRT4_RPCSSOnDemandCall(&msg, bind->Protseq, &reply))
-    return RPC_S_OUT_OF_MEMORY;
-
-  /* empty-string result means not registered */
-  if (reply.as_string[0] == '\0')
-    return EPT_S_NOT_REGISTERED;
+  status = get_epm_handle_client(Binding, &handle);
+  if (status != RPC_S_OK) return status;
   
-  /* otherwise we fully bind the handle & return RPC_S_OK */
-  return RPCRT4_ResolveBinding(Binding, reply.as_string);
+  status = TowerConstruct(&If->InterfaceId, &If->TransferSyntax, bind->Protseq,
+                          ((RpcBinding *)handle)->Endpoint,
+                          bind->NetworkAddr, &tower);
+  if (status != RPC_S_OK)
+  {
+      WARN("couldn't get tower\n");
+      RpcBindingFree(&handle);
+      return status;
+  }
+
+  while (TRUE)
+  {
+    __TRY
+    {
+      ept_map(handle, &uuid, tower, &entry_handle, sizeof(towers)/sizeof(towers[0]), &num_towers, towers, &status2);
+      /* FIXME: translate status2? */
+    }
+    __EXCEPT(rpc_filter)
+    {
+      status2 = GetExceptionCode();
+    }
+    __ENDTRY
+    if (status2 == RPC_S_SERVER_UNAVAILABLE &&
+        is_epm_destination_local(handle))
+    {
+      if (start_rpcss())
+        continue;
+    }
+    break;
+  };
+
+  RpcBindingFree(&handle);
+  I_RpcFree(tower);
+
+  if (status2 != RPC_S_OK)
+  {
+    ERR("ept_map failed for ifid %s, protseq %s, networkaddr %s\n", debugstr_guid(&If->TransferSyntax.SyntaxGUID), bind->Protseq, bind->NetworkAddr);
+    return status2;
+  }
+
+  for (i = 0; i < num_towers; i++)
+  {
+    /* only parse the tower if we haven't already found a suitable
+    * endpoint, otherwise just free the tower */
+    if (!resolved_endpoint)
+    {
+      status = TowerExplode(towers[i], NULL, NULL, NULL, &resolved_endpoint, NULL);
+      TRACE("status = %d\n", status);
+    }
+    I_RpcFree(towers[i]);
+  }
+
+  if (resolved_endpoint)
+  {
+    RPCRT4_ResolveBinding(Binding, resolved_endpoint);
+    I_RpcFree(resolved_endpoint);
+    return RPC_S_OK;
+  }
+
+  WARN("couldn't find an endpoint\n");
+  return EPT_S_NOT_REGISTERED;
 }
 
-typedef unsigned int unsigned32;
-typedef struct twr_t
-    {
-    unsigned32 tower_length;
-    /* [size_is] */ BYTE tower_octet_string[ 1 ];
-    } 	twr_t;
-
-/***********************************************************************
- *             TowerExplode (RPCRT4.@)
+/*****************************************************************************
+ * TowerExplode (RPCRT4.@)
  */
 RPC_STATUS WINAPI TowerExplode(
     const twr_t *tower, PRPC_SYNTAX_IDENTIFIER object, PRPC_SYNTAX_IDENTIFIER syntax,
@@ -387,4 +594,14 @@ RPC_STATUS WINAPI TowerConstruct(
         return status;
     }
     return RPC_S_OK;
+}
+
+void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t len)
+{
+    return HeapAlloc(GetProcessHeap(), 0, len);
+}
+
+void __RPC_USER MIDL_user_free(void __RPC_FAR * ptr)
+{
+    HeapFree(GetProcessHeap(), 0, ptr);
 }

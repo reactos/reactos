@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* TYPES *********************************************************************/
 
@@ -122,7 +122,7 @@ IopConnectLogPort(VOID)
                            NULL);
     if (NT_SUCCESS(Status))
     {
-        /* Remmeber we're connected */
+        /* Remember we're connected */
         IopLogPortConnected = TRUE;
         return TRUE;
     }
@@ -214,10 +214,10 @@ IopLogWorker(IN PVOID Parameter)
         }
 
         /* Align the buffer */
-        StringBuffer = (PVOID)ALIGN_UP(StringBuffer, WCHAR);
+        StringBuffer = ALIGN_UP_POINTER(StringBuffer, WCHAR);
 
         /* Set the offset for the driver's name to the current buffer */
-        ErrorMessage->DriverNameOffset = (ULONG)(StringBuffer -
+        ErrorMessage->DriverNameOffset = (ULONG_PTR)(StringBuffer -
                                                  (ULONG_PTR)ErrorMessage);
 
         /* Check how much space we have left for the device string */
@@ -583,7 +583,7 @@ IoWriteErrorLogEntry(IN PVOID ElEntry)
     KeAcquireSpinLock(&IopLogListLock, &Irql);
     InsertHeadList(&IopErrorLogListHead, &LogEntry->ListEntry);
 
-    /* Check if the worker is runnign */
+    /* Check if the worker is running */
     if (!IopLogWorkerRunning)
     {
 #if 0
@@ -648,7 +648,7 @@ IoRaiseInformationalHardError(IN NTSTATUS ErrorStatus,
                               IN PKTHREAD Thread)
 {
     UNIMPLEMENTED;
-    return(FALSE);
+    return FALSE;
 }
 
 /*
@@ -659,14 +659,12 @@ NTAPI
 IoSetThreadHardErrorMode(IN BOOLEAN HardErrorEnabled)
 {
     PETHREAD Thread = PsGetCurrentThread();
-    BOOLEAN Old;
+    BOOLEAN OldMode;
 
     /* Get the current value */
-    Old = !Thread->HardErrorsAreDisabled;
+    OldMode = !Thread->HardErrorsAreDisabled;
 
     /* Set the new one and return the old */
     Thread->HardErrorsAreDisabled = !HardErrorEnabled;
-    return Old;
+    return OldMode;
 }
-
-/* EOF */

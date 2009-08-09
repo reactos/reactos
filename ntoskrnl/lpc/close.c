@@ -40,7 +40,7 @@ LpcExitThread(IN PETHREAD Thread)
     if (Message)
     {
         /* FIXME: TODO */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Release the lock */

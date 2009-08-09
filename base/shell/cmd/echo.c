@@ -29,25 +29,12 @@
 #include <precomp.h>
 
 
-INT CommandEcho (LPTSTR cmd, LPTSTR param)
+INT CommandEcho (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
         LPTSTR p1, p2;
 
-	TRACE ("CommandEcho '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
-
-        if (_tcsicmp (cmd, _T("echo.")) == 0)
-	{
-		if (param[0] == 0)
-			ConOutChar (_T('\n'));
-		else
-			ConOutPuts (param);
-	}
-        else
-        {
-                /* skip the first delimiter */
-                if (_istspace(*param))
-                        param++;
+	TRACE ("CommandEcho: '%s'\n", debugstr_aw(param));
 
                 /* skip all spaces for the check of '/?', 'ON' and 'OFF' */
                 p1 = param;
@@ -84,33 +71,23 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
                 }
 		if (*p1 != _T('\0'))
 		{
-                        p1 = param;
-                        while (NULL != (p1 = _tcschr(p1, _T('^'))))
-                        {
-                                memmove(p1, p1 + 1, (_tcslen(p1 + 1) + 1) * sizeof(TCHAR));
-                                if (*p1)
-                                {
-      					//skip past the char being escaped
-                                        p1++;
-                                }
-                        }
-			ConOutPuts (param);
+			/* skip the first character */
+			ConOutPuts(param + 1);
 		}
 		else
 		{
 			LoadString(CMD_ModuleHandle, STRING_ECHO_HELP5, szMsg, RC_STRING_MAX_SIZE);
 			ConOutPrintf(szMsg, bEcho ? D_ON : D_OFF);
 		}
-	}
 
 	return 0;
 }
 
 
-INT CommandEchos (LPTSTR cmd, LPTSTR param)
+INT CommandEchos (LPTSTR param)
 {
 
-	TRACE ("CommandEchos '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("CommandEchos: '%s'\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -125,10 +102,10 @@ INT CommandEchos (LPTSTR cmd, LPTSTR param)
 }
 
 
-INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
+INT CommandEchoerr (LPTSTR param)
 {
 
-	TRACE ("CommandEchoerr '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("CommandEchoerr: '%s'\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -136,26 +113,16 @@ INT CommandEchoerr (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	if (_tcsicmp (cmd, _T("echoerr.")) == 0)
-	{
-		if (param[0] == 0)
-			ConErrChar (_T('\n'));
-		else
-			ConErrPuts (param);
-	}
-	else if (*param)
-	{
-		ConErrPuts (param);
-	}
+	ConErrPuts (param);
 
 	return 0;
 }
 
 
-INT CommandEchoserr (LPTSTR cmd, LPTSTR param)
+INT CommandEchoserr (LPTSTR param)
 {
 
-	TRACE ("CommandEchoserr '%s' : '%s'\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("CommandEchoserr: '%s'\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

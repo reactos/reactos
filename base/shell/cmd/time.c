@@ -129,7 +129,7 @@ static BOOL ParseTime (LPTSTR s)
 }
 
 
-INT cmd_time (LPTSTR cmd, LPTSTR param)
+INT cmd_time (LPTSTR param)
 {
 	LPTSTR *arg;
 	INT    argc;

@@ -58,7 +58,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "Настройка на РеактОС"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Напишете цялото си име и името на предприятието ви.",
+    LTEXT "Напишете имената си и името на вашето предприятието.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Име:", IDC_STATIC, 54, 37, 44, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
@@ -210,21 +210,23 @@ BEGIN
     IDS_CMT_DEVMGMT     "Пускане на управителя на устройствата"
     IDS_CMT_SERVMAN     "Пускане на управителя на услугите"
     IDS_CMT_RDESKTOP    "Пускане на отдалечената работна площ"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Игри"
+    IDS_GAMES		"Игри"
     IDS_CMT_SOLITAIRE	"Пасианс"
     IDS_CMT_WINEMINE	"Минички"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Ситемни средства"
+	IDS_SYS_TOOLS        "Системни средства"
 	IDS_CMT_CHARMAP      "Знакова таблица"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
+	IDS_CMT_KBSWITCH     "Превключвател на клавиатурните подредби"
 END
 
 STRINGTABLE
@@ -235,14 +237,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		    "Настройка на РеактОС"
+    IDS_REACTOS_SETUP		"Настройка на РеактОС"
     IDS_UNKNOWN_ERROR           "Неизвестна грешка"
     IDS_REGISTERING_COMPONENTS  "Вписване на съставните..."
-    IDS_LOADLIBRARY_FAILED	    "Грешка при LoadLibrary: "
-    IDS_GETPROCADDR_FAILED	    "Грешка при GetProcAddr: "
+    IDS_LOADLIBRARY_FAILED	"Грешка при LoadLibrary: "
+    IDS_GETPROCADDR_FAILED	"Грешка при GetProcAddr: "
     IDS_REGSVR_FAILED           "Грешка при DllRegisterServer: "
-    IDS_DLLINSTALL_FAILED	    "Грешка при DllInstall: "
-    IDS_TIMEOUT			        "Просрочване на рагистрирането"
+    IDS_DLLINSTALL_FAILED	"Грешка при DllInstall: "
+    IDS_TIMEOUT			"Просрочване на рагистрирането"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -263,19 +265,21 @@ BEGIN
     IDS_SHORT_CHARMAP    "Знакова таблица.lnk"
     IDS_SHORT_MAGNIFY    "Лупа.lnk"
     IDS_SHORT_RDESKTOP   "Далечна работна площ.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Превключвател на клавиатурните подредби.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "Настройката не може да продължи, докато не въведете името си."
-    IDS_WZD_SETCOMPUTERNAME  "Настройката не успя да зададе име на компютъра."
-    IDS_WZD_COMPUTERNAME  "Настройката не може да продължи, докато не въведете името на компютъра."
-    IDS_WZD_PASSWORDEMPTY  "Трябва да въведете парола!"
-    IDS_WZD_PASSWORDMATCH  "Паролите, които сте въвели на съвпадат. Въведете ги отново."
-    IDS_WZD_PASSWORDCHAR  "Паролата, която сте въвели съдържа забранени знаци. Въведете изчистена парола."
-    IDS_WZD_LOCALTIME    "Настройката не успя да зададе местното време."
+    IDS_WZD_NAME		"Настройката не може да продължи, докато не въведете името си."
+    IDS_WZD_SETCOMPUTERNAME	"Настройката не успя да зададе име на компютъра."
+    IDS_WZD_COMPUTERNAME	"Настройката не може да продължи, докато не въведете името на компютъра."
+    IDS_WZD_PASSWORDEMPTY	"Трябва да въведете парола!"
+    IDS_WZD_PASSWORDMATCH	"Паролите, които сте въвели на съвпадат. Въведете ги отново."
+    IDS_WZD_PASSWORDCHAR	"Паролата, която сте въвели съдържа забранени знаци. Въведете изчистена парола."
+    IDS_WZD_LOCALTIME		"Вълшебникът не успя да зададе местното време."
 END
 
 STRINGTABLE

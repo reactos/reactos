@@ -292,7 +292,7 @@ ShutdownHandlerRoutine(DWORD dwCtrlType)
 }
 
 
-int STDCALL
+int WINAPI
 wWinMain(HINSTANCE hInstance,
          HINSTANCE hPrevInstance,
          LPWSTR lpCmdLine,

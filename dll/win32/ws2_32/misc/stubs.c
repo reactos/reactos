@@ -163,6 +163,12 @@ setsockopt(IN  SOCKET s,
         return SOCKET_ERROR;
     }
 
+    if(IS_INTRESOURCE(optval))
+    {
+        SetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
     if (!ReferenceProviderByHandle((HANDLE)s, &Provider))
     {
         WSASetLastError(WSAENOTSOCK);

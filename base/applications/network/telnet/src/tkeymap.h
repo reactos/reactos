@@ -1,14 +1,14 @@
 #ifndef __TKEYMAP_H
 #define __TKEYMAP_H
 
+#include "tkeydef.h"
+
 #ifdef __BORLANDC__
 #include <classlib\arrays.h>
 #else
 #include <string>
 #include "stl_bids.h"
 #endif
-
-#include "tkeydef.h"
 
 //AVS
 typedef TArrayAsVector<TKeyDef> keyArray;

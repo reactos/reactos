@@ -31,11 +31,9 @@
 .syntax version_directive;
 
 version_directive
-	version_directive_1 .and .loop version_directive_2;
+	version_directive_1;
 version_directive_1
 	prior_optional_spaces .and optional_version_directive .and .true .emit $;
-version_directive_2
-	prior_optional_spaces .and version_directive_body .and .true .emit $;
 
 optional_version_directive
 	version_directive_body .or .true .emit 10 .emit 1;
@@ -45,13 +43,16 @@ version_directive_body
 	new_line;
 
 version_number
-	version_number_110 .or version_number_120;
+	version_number_100 .or version_number_110 .or version_number_120;
+
+version_number_100
+	leading_zeroes .and "100" .emit 0 .emit 1;
 
 version_number_110
 	leading_zeroes .and "110" .emit 10 .emit 1;
 
 version_number_120
-   leading_zeroes .and "120" .emit 20 .emit 1;
+	leading_zeroes .and "120" .emit 20 .emit 1;
 
 leading_zeroes
 	.loop zero;

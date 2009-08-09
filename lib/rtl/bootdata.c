@@ -17,7 +17,7 @@
 static SID_IDENTIFIER_AUTHORITY LocalSystemAuthority = {SECURITY_NT_AUTHORITY};
 
 static NTSTATUS
-RtlpSysVolCreateSecurityDescriptor(OUT PSECURITY_DESCRIPTOR *SecurityDescriptor,
+RtlpSysVolCreateSecurityDescriptor(OUT PISECURITY_DESCRIPTOR *SecurityDescriptor,
                                    OUT PSID *SystemSid)
 {
     PSECURITY_DESCRIPTOR AbsSD = NULL;

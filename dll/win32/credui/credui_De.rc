@@ -1,0 +1,50 @@
+/*
+ * German language resource file for Credentials UI
+ *
+ * Copyright 2007 Frank Richter
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IDS_TITLEFORMAT"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
+                    0,213,37
+    LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
+    LTEXT           "&Benutzername:",-1,8,62,72,12,SS_CENTERIMAGE
+    CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
+                    CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
+    LTEXT           "&Kennwort:",-1,8,80,72,12,SS_CENTERIMAGE
+    EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
+    CONTROL         "Kennwort &merken",IDC_SAVE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
+    DEFPUSHBUTTON   "OK",IDOK,97,128,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,156,128,50,14
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TITLEFORMAT     "Mit %s verbinden"
+    IDS_MESSAGEFORMAT   "Verbindung mit %s wird hergestellt"
+    IDS_INCORRECTPASSWORDTITLE  "Anmeldung fehlgeschlagen"
+    IDS_INCORRECTPASSWORD       "Bitte überprüfen Sie Ihren Benutzernamen\nund geben Sie das Kennwort neu ein."
+    IDS_CAPSLOCKONTITLE "Die Feststelltaste ist aktiviert"
+    IDS_CAPSLOCKON      "Mit aktivierter Feststelltaste könnte das Kennwort falsch eingeben werden.\n\nVor der Eingabe des Kennworts sollten Sie die Feststelltaste deaktivieren."
+}

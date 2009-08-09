@@ -18,49 +18,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FIXME *********************************************************************/
-
-/* FIXME: Interlocked functions that need to be made into a public header */
-FORCEINLINE
-LONG
-InterlockedAnd(IN OUT volatile LONG *Target,
-               IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = _InterlockedCompareExchange((PLONG)Target,
-                                        i & Set,
-                                        i);
-
-    } while (i != j);
-
-    return j;
-}
-
-FORCEINLINE
-LONG
-InterlockedOr(IN OUT volatile LONG *Target,
-              IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = _InterlockedCompareExchange((PLONG)Target,
-                                        i | Set,
-                                        i);
-
-    } while (i != j);
-
-    return j;
-}
-
 /* FUNCTIONS *****************************************************************/
 
 #ifdef _WIN64
@@ -87,13 +44,14 @@ InterlockedOr(IN OUT volatile LONG *Target,
                              RTL_SRWLOCK_SHARED | RTL_SRWLOCK_CONTENTION_LOCK)
 #define RTL_SRWLOCK_BITS    4
 
-#if defined(__GNUC__)
+#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40300) || \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40303)
 /* This macro will cause the code to assert if compiled with a buggy
    version of GCC that doesn't align the wait blocks properly on the stack! */
 #define ASSERT_SRW_WAITBLOCK(ptr) \
     ASSERT(((ULONG_PTR)ptr & ((1 << RTL_SRWLOCK_BITS) - 1)) == 0)
 #else
-#define ASSERT_SRW_WAITBLOCK(ptr)
+#define ASSERT_SRW_WAITBLOCK(ptr) ((void)0)
 #endif
 
 typedef struct _RTLP_SRWLOCK_SHARED_WAKE

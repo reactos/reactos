@@ -2,8 +2,8 @@
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS SerialUI DLL
  * FILE:        serialui.c
- * PUROPSE:     A dialog box to cunfigure COM port.
- *              Functions to set(and get too) default configuration.
+ * PUROPSE:     A dialog box to configure COM port.
+ *              Functions to set (and get too) default configuration.
  * PROGRAMMERS: Saveliy Tretiakov (saveliyt@mail.ru)
  * REVISIONS:
  *              ST   (05/04/2005) Created. Implemented drvCommConfigDialog.
@@ -71,7 +71,7 @@ const STOPBIT_INFO StopBits[] = {
  ************************************/
 
 BOOL
-STDCALL
+WINAPI
 DllMain(HINSTANCE hInstance,
 	DWORD dwReason,
 	LPVOID reserved)

@@ -1,4 +1,3 @@
-#include <roscfg.h>
 #include <ndk/asm.h>
 
 #define AP_MAGIC (0x12481020)

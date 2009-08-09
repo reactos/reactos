@@ -174,11 +174,14 @@ ChangeListViewText(PMAIN_WND_INFO Info,
 
                 lpServiceConfig = GetServiceConfig(pService->lpServiceName);
 
-                switch (lpServiceConfig->dwStartType)
+                if (lpServiceConfig)
                 {
-                    case 2: StringId = IDS_SERVICES_AUTO; break;
-                    case 3: StringId = IDS_SERVICES_MAN; break;
-                    case 4: StringId = IDS_SERVICES_DIS; break;
+                    switch (lpServiceConfig->dwStartType)
+                    {
+                        case 2: StringId = IDS_SERVICES_AUTO; break;
+                        case 3: StringId = IDS_SERVICES_MAN; break;
+                        case 4: StringId = IDS_SERVICES_DIS; break;
+                    }
                 }
 
                 if (StringId)

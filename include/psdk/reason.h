@@ -1,10 +1,6 @@
 #ifndef _REASON_H
 #define _REASON_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #if _WIN32_WINNT >= 0x0501
 
 #define SHTDN_REASON_MAJOR_APPLICATION     0x00040000

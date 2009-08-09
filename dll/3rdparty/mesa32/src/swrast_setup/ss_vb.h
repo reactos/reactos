@@ -29,7 +29,7 @@
 #ifndef SS_VB_H
 #define SS_VB_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 #include "swrast_setup.h"
 
 void _swsetup_vb_init( GLcontext *ctx );

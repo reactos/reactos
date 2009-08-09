@@ -1,28 +1,12 @@
-/* $Id$
- *
- * smapiexec.c - SM_API_EXECUTE_PROGRAM
- *
- * Reactos Session Manager
- *
- * --------------------------------------------------------------------
- *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software; see the file COPYING.LIB. If not, write
- * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.
- *
- * --------------------------------------------------------------------
+/*
+ * PROJECT:         ReactOS Session Manager
+ * LICENSE:         GPL v2 or later - See COPYING in the top level directory
+ * FILE:            base/system/smss/smapiexec.c
+ * PURPOSE:         SM_API_EXECUTE_PROGRAM.
+ * PROGRAMMERS:     ReactOS Development Team
  */
+
+/* INCLUDES ******************************************************************/
 #include "smss.h"
 
 #define NDEBUG
@@ -38,8 +22,10 @@ static const WCHAR szSystemDirectory[] = L"\\System32";
  * ARGUMENTS
  *	ImagePath: absolute path of the image to run;
  *	CommandLine: arguments and options for ImagePath;
- *	WaitForIt: TRUE for boot time processes and FALSE for
- *		subsystems bootstrapping;
+ *	Flags: Wait flag: Set for boot time processes and unset for
+ *			subsystems bootstrapping;
+ *		1Mb reserve flag: Set for subsystems, unset for everything
+*			else
  *	Timeout: optional: used if WaitForIt==TRUE;
  *	ProcessHandle: optional: a duplicated handle for
  		the child process (storage provided by the caller).
@@ -48,19 +34,19 @@ static const WCHAR szSystemDirectory[] = L"\\System32";
  * 	NTSTATUS:
  *
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 SmCreateUserProcess (LPWSTR ImagePath,
 		     LPWSTR CommandLine,
-		     BOOLEAN WaitForIt,
+		     ULONG Flags,
 		     PLARGE_INTEGER Timeout OPTIONAL,
 		     PRTL_USER_PROCESS_INFORMATION UserProcessInfo OPTIONAL)
 {
-	UNICODE_STRING			ImagePathString = {0};
-	UNICODE_STRING			CommandLineString = {0};
-        UNICODE_STRING			SystemDirectory = {0};
+	UNICODE_STRING			ImagePathString   = { 0, 0, NULL };
+	UNICODE_STRING			CommandLineString = { 0, 0, NULL };
+	UNICODE_STRING			SystemDirectory   = { 0, 0, NULL };
 	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters = NULL;
-	RTL_USER_PROCESS_INFORMATION		ProcessInfo = {0};
-	PRTL_USER_PROCESS_INFORMATION		pProcessInfo = & ProcessInfo;
+	RTL_USER_PROCESS_INFORMATION	ProcessInfo  = {0};
+	PRTL_USER_PROCESS_INFORMATION	pProcessInfo = & ProcessInfo;
 	NTSTATUS			Status = STATUS_SUCCESS;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
@@ -122,7 +108,12 @@ FailProcParams:
 			__FUNCTION__, Status);
 		return Status;
 	}
-
+#ifdef ROS_DOESNT_SUCK
+	/* Reserve lower 1Mb, if requested */
+	if (Flags & SM_CREATE_FLAG_RESERVE_1MB)
+		ProcessParameters->Flags |= RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB;
+#endif
+	/* Create the user process */
 	Status = RtlCreateUserProcess (& ImagePathString,
 				       OBJ_CASE_INSENSITIVE,
 				       ProcessParameters,
@@ -157,7 +148,7 @@ FailProcParams:
 	}
 
 	/* Wait for process termination */
-	if (WaitForIt)
+	if (Flags & SM_CREATE_FLAG_WAIT)
 	{
 		Status = NtWaitForSingleObject (pProcessInfo->ProcessHandle,
 						FALSE,
@@ -167,13 +158,13 @@ FailProcParams:
 			DPRINT1("SM: %s: NtWaitForSingleObject failed with Status=0x%08lx\n",
 				__FUNCTION__, Status);
 		}
-
 	}
-        if (NULL == UserProcessInfo)
-        {
-           NtClose(pProcessInfo->ProcessHandle);
-           NtClose(pProcessInfo->ThreadHandle);
-        }
+
+    if (NULL == UserProcessInfo)
+    {
+        NtClose(pProcessInfo->ProcessHandle);
+        NtClose(pProcessInfo->ThreadHandle);
+    }
 	return Status;
 }
 
@@ -246,9 +237,9 @@ SMAPI(SmExecPgm)
 				Request->SmHeader.Status =
 					SmCreateUserProcess(ImagePath,
 							      CommandLine,
-							      FALSE, /* wait */
-				      			      NULL, /* timeout */
-			      				      & ProcessInfo);
+							      SM_CREATE_FLAG_RESERVE_1MB,
+							      NULL, /* timeout */
+							      & ProcessInfo);
 				if (NT_SUCCESS(Request->SmHeader.Status))
 				{
 					Status = SmCreateClient (& ProcessInfo, Name);

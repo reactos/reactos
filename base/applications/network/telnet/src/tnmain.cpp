@@ -143,7 +143,7 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 					MustRefresh = 1;
 					break;
 				case VK_RIGHT:		//crn@ozemail.com.au (added ctrl+arrow)
-					if (cursor < current)
+					if (cursor < current) {
 						if (InputRecord.Event.KeyEvent.dwControlKeyState &
 							(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
 							unsigned int j, k;
@@ -159,8 +159,9 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 							cursor++;
 						MustRefresh = 1;
 						break;
+					}
 				case VK_LEFT:		//crn@ozemail.com.au (added ctrl+arrow)
-					if (cursor > 0)
+					if (cursor > 0) {
 						if(InputRecord.Event.KeyEvent.dwControlKeyState &
 							(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
 							int j, k;
@@ -176,6 +177,7 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 							cursor--;
 						MustRefresh = 1;
 						break;
+					}
 				case VK_HOME:
 					if (cursor>0) cursor = 0;
 					MustRefresh = 1;

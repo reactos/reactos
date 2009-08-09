@@ -15,19 +15,23 @@
 
 <!--
 	Sub-architecture to build for. Specify one of:
-		xbox
+		??
 -->
 <property name="SARCH" value="" />
 
 
 <!--
-	Which CPU ReactOS should be optimized for. Specify one of:
-		i486, i586, pentium, pentium2, pentium3, pentium4, athlon-xp, athlon-mp,
-		k6-2
+	Generate instructions for this CPU type. Specify one of:
+		??
 
-	See GCC manual for more CPU names and which CPUs GCC can optimize for.
+	See GCC manual for more CPU names.
 -->
 <property name="OARCH" value="" />
+
+<!--
+	Which CPU ReactOS should be optimized for. See GCC manual for CPU names.
+-->
+<property name="TUNE" value="" />
 
 
 <!--

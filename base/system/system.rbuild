@@ -4,6 +4,9 @@
 	<directory name="autochk">
 		<xi:include href="autochk/autochk.rbuild" />
 	</directory>
+	<directory name="bootok">
+		<xi:include href="bootok/bootok.rbuild" />
+	</directory>
 	<directory name="expand">
 		<xi:include href="expand/expand.rbuild" />
 	</directory>

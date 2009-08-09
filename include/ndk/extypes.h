@@ -24,7 +24,7 @@ Author:
 //
 #include <umtypes.h>
 #include <cfg.h>
-#if defined(_MSC_VER) && !defined(NTOS_MODE_USER)
+#if !defined(NTOS_MODE_USER)
 #include <ntimage.h>
 #endif
 #include <cmtypes.h>
@@ -47,9 +47,8 @@ Author:
 #endif
 
 //
-// Atom and Language IDs
+// Rtl Atom
 //
-typedef USHORT LANGID, *PLANGID;
 typedef USHORT RTL_ATOM, *PRTL_ATOM;
 
 #ifndef NTOS_MODE_USER
@@ -485,7 +484,7 @@ typedef struct _CALLBACK_OBJECT
     LIST_ENTRY RegisteredCallbacks;
     BOOLEAN AllowMultipleCallbacks;
     UCHAR reserved[3];
-} CALLBACK_OBJECT, *PCALLBACK_OBJECT;
+} CALLBACK_OBJECT;
 
 //
 // Callback Handle
@@ -532,7 +531,7 @@ typedef struct _EPROFILE
     PKPROFILE ProfileObject;
     PVOID LockedBufferAddress;
     PMDL Mdl;
-    ULONG Segment;
+    PVOID Segment;
     KPROFILE_SOURCE ProfileSource;
     KAFFINITY Affinity;
 } EPROFILE, *PEPROFILE;
@@ -818,6 +817,10 @@ typedef struct _SYSTEM_TIMEOFDAY_INFORMATION
     LARGE_INTEGER TimeZoneBias;
     ULONG TimeZoneId;
     ULONG Reserved;
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+    ULONGLONG BootTimeBias;
+    ULONGLONG SleepTimeBias;
+#endif
 } SYSTEM_TIMEOFDAY_INFORMATION, *PSYSTEM_TIMEOFDAY_INFORMATION;
 
 // Class 4

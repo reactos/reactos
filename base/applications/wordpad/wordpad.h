@@ -19,7 +19,8 @@
 
 #define MAX_STRING_LEN 255
 
-#define TWIPS_PER_CM 567
+#define TWIPS_PER_INCH 1440
+#define CENTMM_PER_INCH 2540
 
 #define ID_FILE_EXIT 1000
 #define ID_FILE_OPEN 1001
@@ -113,9 +114,10 @@
 #define IDC_PAGEFMT_FB 101
 #define IDC_PAGEFMT_RU 102
 #define IDC_PAGEFMT_SB 103
-#define IDC_PAGEFMT_WW 104
-#define IDC_PAGEFMT_WM 105
-#define IDC_PAGEFMT_ID 106
+#define IDC_PAGEFMT_WN 104
+#define IDC_PAGEFMT_WW 105
+#define IDC_PAGEFMT_WM 106
+#define IDC_PAGEFMT_ID 107
 
 #define ID_DATETIME 1600
 #define ID_PARAFORMAT 1601
@@ -193,6 +195,12 @@
 #define STRING_SAVE_LOSEFORMATTING 1704
 #define STRING_INVALID_NUMBER 1705
 #define STRING_OLE_STORAGE_NOT_SUPPORTED 1706
+#define STRING_WRITE_FAILED 1707
+#define STRING_WRITE_ACCESS_DENIED 1708
+#define STRING_OPEN_FAILED 1709
+#define STRING_OPEN_ACCESS_DENIED 1710
+#define STRING_PRINTING_NOT_IMPLEMENTED 1711
+#define STRING_MAX_TAB_STOPS 1712
 
 LPWSTR file_basename(LPWSTR);
 
@@ -200,7 +208,7 @@ void dialog_printsetup(HWND);
 void dialog_print(HWND, LPWSTR);
 void target_device(HWND, DWORD);
 void print_quick(LPWSTR);
-LRESULT preview_command(HWND, WPARAM, LPARAM);
+LRESULT preview_command(HWND, WPARAM);
 void init_preview(HWND, LPWSTR);
 void close_preview(HWND);
 BOOL preview_isactive(void);

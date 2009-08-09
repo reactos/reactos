@@ -37,6 +37,7 @@ DEFINE_GUID(IID_ISFHelper, 0x1fe68efbL, 0x1874, 0x9812, 0x56, 0xdc, 0x00, 0x00, 
 /*****************************************************************************
  * ISFHelper interface
  */
+#undef INTERFACE
 
 #define INTERFACE ISFHelper
 DECLARE_INTERFACE_(ISFHelper,IUnknown)

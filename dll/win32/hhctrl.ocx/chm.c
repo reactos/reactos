@@ -413,7 +413,7 @@ CHMInfo *CloseCHM(CHMInfo *chm)
         IStream_Release(chm->strings_stream);
 
     if(chm->strings_size) {
-        int i;
+        DWORD i;
 
         for(i=0; i<chm->strings_size; i++)
             heap_free(chm->strings[i]);

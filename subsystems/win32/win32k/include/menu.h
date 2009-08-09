@@ -50,8 +50,7 @@ IntGetMenuObject(HMENU hMenu);
   UserDereferenceObject(MenuObj)
 
 BOOL FASTCALL
-IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
-    BOOL RemoveFromList, BOOL bRecurse);
+IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, BOOL bRecurse);
 
 BOOL FASTCALL
 IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
@@ -98,7 +97,7 @@ IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
 BOOL FASTCALL
 IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECT *rcRect);
 
-DWORD STDCALL UserInsertMenuItem(HMENU hMenu, UINT uItem, BOOL fByPosition, LPCMENUITEMINFOW lpmii);
+DWORD APIENTRY UserInsertMenuItem(HMENU hMenu, UINT uItem, BOOL fByPosition, LPCMENUITEMINFOW lpmii);
 
 BOOL FASTCALL
 IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);

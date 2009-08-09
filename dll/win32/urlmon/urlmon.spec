@@ -48,11 +48,11 @@
 @ stub HlinkGoForward
 @ stub HlinkNavigateMoniker
 @ stdcall HlinkNavigateString(ptr wstr)
-@ stub HlinkSimpleNavigateToMoniker
+@ stdcall HlinkSimpleNavigateToMoniker(ptr wstr wstr ptr ptr ptr long long)
 @ stdcall HlinkSimpleNavigateToString(wstr wstr wstr ptr ptr ptr long long)
 @ stdcall IsAsyncMoniker(ptr)
-@ stub IsLoggingEnabledA
-@ stub IsLoggingEnabledW
+@ stdcall IsLoggingEnabledA(str)
+@ stdcall IsLoggingEnabledW(wstr)
 @ stdcall IsValidURL(ptr wstr long)
 @ stdcall MkParseDisplayNameEx(ptr wstr ptr ptr)
 @ stdcall ObtainUserAgentString(long str ptr)

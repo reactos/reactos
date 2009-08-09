@@ -57,7 +57,10 @@ varying float gl_FogFragCoord;
 
 vec4 ftransform()
 {
-   __retVal = gl_Vertex * gl_ModelViewProjectionMatrixTranspose;
+   __retVal = gl_ModelViewProjectionMatrix[0] * gl_Vertex.xxxx
+            + gl_ModelViewProjectionMatrix[1] * gl_Vertex.yyyy
+            + gl_ModelViewProjectionMatrix[2] * gl_Vertex.zzzz
+            + gl_ModelViewProjectionMatrix[3] * gl_Vertex.wwww;
 }
 
 

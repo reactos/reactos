@@ -27,6 +27,9 @@
 
 #include "gdiplus.h"
 #include "gdiplus_private.h"
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
 /* Multiplies two matrices of the form
  *
@@ -50,9 +53,16 @@ static void matrix_multiply(GDIPCONST REAL * left, GDIPCONST REAL * right, REAL 
     memcpy(out, temp, 6 * sizeof(REAL));
 }
 
+static REAL matrix_det(GDIPCONST GpMatrix *matrix)
+{
+    return matrix->matrix[0]*matrix->matrix[3] - matrix->matrix[1]*matrix->matrix[2];
+}
+
 GpStatus WINGDIPAPI GdipCreateMatrix2(REAL m11, REAL m12, REAL m21, REAL m22,
     REAL dx, REAL dy, GpMatrix **matrix)
 {
+    TRACE("(%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %p)\n", m11, m12, m21, m22, dx, dy, matrix);
+
     if(!matrix)
         return InvalidParameter;
 
@@ -75,6 +85,8 @@ GpStatus WINGDIPAPI GdipCreateMatrix2(REAL m11, REAL m12, REAL m21, REAL m22,
 GpStatus WINGDIPAPI GdipCreateMatrix3(GDIPCONST GpRectF *rect,
     GDIPCONST GpPointF *pt, GpMatrix **matrix)
 {
+    TRACE("(%p, %p, %p)\n", rect, pt, matrix);
+
     if(!matrix)
         return InvalidParameter;
 
@@ -95,6 +107,8 @@ GpStatus WINGDIPAPI GdipCreateMatrix3I(GDIPCONST GpRect *rect, GDIPCONST GpPoint
     GpRectF rectF;
     GpPointF ptF;
 
+    TRACE("(%p, %p, %p)\n", rect, pt, matrix);
+
     rectF.X = (REAL)rect->X;
     rectF.Y = (REAL)rect->Y;
     rectF.Width = (REAL)rect->Width;
@@ -108,6 +122,8 @@ GpStatus WINGDIPAPI GdipCreateMatrix3I(GDIPCONST GpRect *rect, GDIPCONST GpPoint
 
 GpStatus WINGDIPAPI GdipCloneMatrix(GpMatrix *matrix, GpMatrix **clone)
 {
+    TRACE("(%p, %p)\n", matrix, clone);
+
     if(!matrix || !clone)
         return InvalidParameter;
 
@@ -121,6 +137,8 @@ GpStatus WINGDIPAPI GdipCloneMatrix(GpMatrix *matrix, GpMatrix **clone)
 
 GpStatus WINGDIPAPI GdipCreateMatrix(GpMatrix **matrix)
 {
+    TRACE("(%p)\n", matrix);
+
     if(!matrix)
         return InvalidParameter;
 
@@ -139,6 +157,8 @@ GpStatus WINGDIPAPI GdipCreateMatrix(GpMatrix **matrix)
 
 GpStatus WINGDIPAPI GdipDeleteMatrix(GpMatrix *matrix)
 {
+    TRACE("(%p)\n", matrix);
+
     if(!matrix)
         return InvalidParameter;
 
@@ -150,6 +170,8 @@ GpStatus WINGDIPAPI GdipDeleteMatrix(GpMatrix *matrix)
 GpStatus WINGDIPAPI GdipGetMatrixElements(GDIPCONST GpMatrix *matrix,
     REAL *out)
 {
+    TRACE("(%p, %p)\n", matrix, out);
+
     if(!matrix || !out)
         return InvalidParameter;
 
@@ -158,9 +180,52 @@ GpStatus WINGDIPAPI GdipGetMatrixElements(GDIPCONST GpMatrix *matrix,
     return Ok;
 }
 
-GpStatus WINGDIPAPI GdipMultiplyMatrix(GpMatrix *matrix, GpMatrix* matrix2,
+GpStatus WINGDIPAPI GdipInvertMatrix(GpMatrix *matrix)
+{
+    GpMatrix copy;
+    REAL det;
+    BOOL invertible;
+
+    TRACE("(%p)\n", matrix);
+
+    if(!matrix)
+        return InvalidParameter;
+
+    GdipIsMatrixInvertible(matrix, &invertible);
+    if(!invertible)
+        return InvalidParameter;
+
+    det = matrix_det(matrix);
+
+    copy = *matrix;
+    /* store result */
+    matrix->matrix[0] =   copy.matrix[3] / det;
+    matrix->matrix[1] =  -copy.matrix[1] / det;
+    matrix->matrix[2] =  -copy.matrix[2] / det;
+    matrix->matrix[3] =   copy.matrix[0] / det;
+    matrix->matrix[4] =  (copy.matrix[2]*copy.matrix[5]-copy.matrix[3]*copy.matrix[4]) / det;
+    matrix->matrix[5] = -(copy.matrix[0]*copy.matrix[5]-copy.matrix[1]*copy.matrix[4]) / det;
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipIsMatrixInvertible(GDIPCONST GpMatrix *matrix, BOOL *result)
+{
+    TRACE("(%p, %p)\n", matrix, result);
+
+    if(!matrix || !result)
+        return InvalidParameter;
+
+    *result = (fabs(matrix_det(matrix)) >= 1e-5);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipMultiplyMatrix(GpMatrix *matrix, GDIPCONST GpMatrix* matrix2,
     GpMatrixOrder order)
 {
+    TRACE("(%p, %p, %d)\n", matrix, matrix2, order);
+
     if(!matrix || !matrix2)
         return InvalidParameter;
 
@@ -176,6 +241,8 @@ GpStatus WINGDIPAPI GdipRotateMatrix(GpMatrix *matrix, REAL angle,
     GpMatrixOrder order)
 {
     REAL cos_theta, sin_theta, rotate[6];
+
+    TRACE("(%p, %.2f, %d)\n", matrix, angle, order);
 
     if(!matrix)
         return InvalidParameter;
@@ -204,6 +271,8 @@ GpStatus WINGDIPAPI GdipScaleMatrix(GpMatrix *matrix, REAL scaleX, REAL scaleY,
 {
     REAL scale[6];
 
+    TRACE("(%p, %.2f, %.2f, %d)\n", matrix, scaleX, scaleY, order);
+
     if(!matrix)
         return InvalidParameter;
 
@@ -225,6 +294,9 @@ GpStatus WINGDIPAPI GdipScaleMatrix(GpMatrix *matrix, REAL scaleX, REAL scaleY,
 GpStatus WINGDIPAPI GdipSetMatrixElements(GpMatrix *matrix, REAL m11, REAL m12,
     REAL m21, REAL m22, REAL dx, REAL dy)
 {
+    TRACE("(%p, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f)\n", matrix, m11, m12,
+            m21, m22, dx, dy);
+
     if(!matrix)
         return InvalidParameter;
 
@@ -238,11 +310,39 @@ GpStatus WINGDIPAPI GdipSetMatrixElements(GpMatrix *matrix, REAL m11, REAL m12,
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipShearMatrix(GpMatrix *matrix, REAL shearX, REAL shearY,
+    GpMatrixOrder order)
+{
+    REAL shear[6];
+
+    TRACE("(%p, %.2f, %.2f, %d)\n", matrix, shearX, shearY, order);
+
+    if(!matrix)
+        return InvalidParameter;
+
+    /* prepare transformation matrix */
+    shear[0] = 1.0;
+    shear[1] = shearY;
+    shear[2] = shearX;
+    shear[3] = 1.0;
+    shear[4] = 0.0;
+    shear[5] = 0.0;
+
+    if(order == MatrixOrderAppend)
+        matrix_multiply(matrix->matrix, shear, matrix->matrix);
+    else
+        matrix_multiply(shear, matrix->matrix, matrix->matrix);
+
+    return Ok;
+}
+
 GpStatus WINGDIPAPI GdipTransformMatrixPoints(GpMatrix *matrix, GpPointF *pts,
                                               INT count)
 {
     REAL x, y;
     INT i;
+
+    TRACE("(%p, %p, %d)\n", matrix, pts, count);
 
     if(!matrix || !pts || count <= 0)
         return InvalidParameter;
@@ -264,6 +364,8 @@ GpStatus WINGDIPAPI GdipTransformMatrixPointsI(GpMatrix *matrix, GpPoint *pts, I
     GpPointF *ptsF;
     GpStatus ret;
     INT i;
+
+    TRACE("(%p, %p, %d)\n", matrix, pts, count);
 
     if(count <= 0)
         return InvalidParameter;
@@ -294,6 +396,8 @@ GpStatus WINGDIPAPI GdipTranslateMatrix(GpMatrix *matrix, REAL offsetX,
 {
     REAL translate[6];
 
+    TRACE("(%p, %.2f, %.2f, %d)\n", matrix, offsetX, offsetY, order);
+
     if(!matrix)
         return InvalidParameter;
 
@@ -317,6 +421,8 @@ GpStatus WINGDIPAPI GdipVectorTransformMatrixPoints(GpMatrix *matrix, GpPointF *
     REAL x, y;
     INT i;
 
+    TRACE("(%p, %p, %d)\n", matrix, pts, count);
+
     if(!matrix || !pts || count <= 0)
         return InvalidParameter;
 
@@ -337,6 +443,8 @@ GpStatus WINGDIPAPI GdipVectorTransformMatrixPointsI(GpMatrix *matrix, GpPoint *
     GpPointF *ptsF;
     GpStatus ret;
     INT i;
+
+    TRACE("(%p, %p, %d)\n", matrix, pts, count);
 
     if(count <= 0)
         return InvalidParameter;
@@ -365,6 +473,8 @@ GpStatus WINGDIPAPI GdipVectorTransformMatrixPointsI(GpMatrix *matrix, GpPoint *
 GpStatus WINGDIPAPI GdipIsMatrixEqual(GDIPCONST GpMatrix *matrix, GDIPCONST GpMatrix *matrix2,
     BOOL *result)
 {
+    TRACE("(%p, %p, %p)\n", matrix, matrix2, result);
+
     if(!matrix || !matrix2 || !result)
         return InvalidParameter;
     /* based on single array member of GpMatrix */
@@ -378,6 +488,8 @@ GpStatus WINGDIPAPI GdipIsMatrixIdentity(GDIPCONST GpMatrix *matrix, BOOL *resul
     GpMatrix *e;
     GpStatus ret;
     BOOL isIdentity;
+
+    TRACE("(%p, %p)\n", matrix, result);
 
     if(!matrix || !result)
         return InvalidParameter;

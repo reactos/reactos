@@ -74,7 +74,7 @@ VOID set_size(INT new_size);
 
 
 
-INT CommandHistory (LPTSTR cmd, LPTSTR param)
+INT CommandHistory (LPTSTR param)
 {
 	LPTSTR tmp;
 	INT tmp_int;

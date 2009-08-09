@@ -26,47 +26,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 OpenClipboard(HWND hWndNewOwner)
 {
-	BOOL ret = NtUserOpenClipboard(hWndNewOwner, 0);
+    BOOL ret = NtUserOpenClipboard(hWndNewOwner, 0);
     return ret;
 }
 
 /*
  * @implemented
  */
-BOOL STDCALL
-CloseClipboard(VOID)
-{
-    BOOL ret;
-    ret = NtUserCloseClipboard();
-    return ret;
-}
-
-/*
- * @implemented
- */
-INT STDCALL
-CountClipboardFormats(VOID)
-{
-    INT ret = NtUserCountClipboardFormats();
-    return ret;
-}
-
-/*
- * @implemented
- */
-BOOL STDCALL
-EmptyClipboard(VOID)
-{
-    return NtUserEmptyClipboard();
-}
-
-/*
- * @implemented
- */
-UINT STDCALL
+UINT
+WINAPI
 EnumClipboardFormats(UINT format)
 {
     UINT ret = NtUserCallOneParam(format, ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS);
@@ -76,7 +48,8 @@ EnumClipboardFormats(UINT format)
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE
+WINAPI
 GetClipboardData(UINT uFormat)
 {
     HGLOBAL hGlobal = NULL;
@@ -109,8 +82,11 @@ GetClipboardData(UINT uFormat)
 /*
  * @implemented
  */
-INT STDCALL
-GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
+INT
+WINAPI
+GetClipboardFormatNameA(UINT format,
+                        LPSTR lpszFormatName,
+                        int cchMaxCount)
 {
     LPWSTR lpBuffer;
     UNICODE_STRING FormatName;
@@ -123,32 +99,35 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
         return 0;
     }
 
-   FormatName.Length = 0;
-   FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
-   FormatName.Buffer = lpBuffer;
+    FormatName.Length = 0;
+    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
+    FormatName.Buffer = lpBuffer;
 
     /* we need a UNICODE string */
-   Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
+    Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
 
-   if (Length != 0)
-   {
-       if (!WideCharToMultiByte(CP_ACP, 0, lpBuffer, Length, lpszFormatName, cchMaxCount, NULL, NULL))
-       {
-          /* clear result string */
-          Length = 0;
-       }
-       lpszFormatName[Length] = '\0';
-   }
+    if (Length != 0)
+    {
+        if (!WideCharToMultiByte(CP_ACP, 0, lpBuffer, Length, lpszFormatName, cchMaxCount, NULL, NULL))
+        {
+            /* clear result string */
+            Length = 0;
+        }
+        lpszFormatName[Length] = '\0';
+    }
 
-   RtlFreeHeap(RtlGetProcessHeap(), 0, lpBuffer);
-   return Length;
+    RtlFreeHeap(RtlGetProcessHeap(), 0, lpBuffer);
+    return Length;
 }
 
 /*
  * @implemented
  */
-INT STDCALL
-GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
+INT
+WINAPI
+GetClipboardFormatNameW(UINT format,
+                        LPWSTR lpszFormatName,
+                        INT cchMaxCount)
 {
     UNICODE_STRING FormatName;
     ULONG Ret;
@@ -164,64 +143,9 @@ GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
 /*
  * @implemented
  */
-HWND STDCALL
-GetClipboardOwner(VOID)
-{
-   return NtUserGetClipboardOwner();
-}
 
-/*
- * @implemented
- */
-DWORD STDCALL
-GetClipboardSequenceNumber(VOID)
-{
-   return NtUserGetClipboardSequenceNumber();
-}
-
-/*
- * @implemented
- */
-HWND STDCALL
-GetClipboardViewer(VOID)
-{
-   return NtUserGetClipboardViewer();
-}
-
-/*
- * @implemented
- */
-HWND STDCALL
-GetOpenClipboardWindow(VOID)
-{
-   return NtUserGetOpenClipboardWindow();
-}
-
-/*
- * @implemented
- */
-INT STDCALL
-GetPriorityClipboardFormat(UINT *paFormatPriorityList, INT cFormats)
-{
-    INT ret = NtUserGetPriorityClipboardFormat(paFormatPriorityList, cFormats);
-    return ret;
-}
-
-/*
- * @implemented
- */
-BOOL STDCALL
-IsClipboardFormatAvailable(UINT format)
-{
-    BOOL ret = NtUserIsClipboardFormatAvailable(format);
-    return ret;
-}
-
-/*
- * @implemented
- */
-
-UINT STDCALL
+UINT
+WINAPI
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
     UINT ret = 0;
@@ -253,7 +177,8 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
 /*
  * @implemented
  */
-UINT STDCALL
+UINT
+WINAPI
 RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
     UINT ret = 0;
@@ -278,71 +203,73 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
     return ret;
 }
 
-HGLOBAL renderLocale (DWORD Locale)
+HGLOBAL
+renderLocale(DWORD Locale)
 {
-	DWORD* pLocale;
-	HGLOBAL hGlobal;
+    DWORD* pLocale;
+    HGLOBAL hGlobal;
 
-	hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, sizeof(DWORD));
+    hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, sizeof(DWORD));
 
-	if(!hGlobal)
-	{
-	    return hGlobal;
-	}
+    if(!hGlobal)
+    {
+        return hGlobal;
+    }
 
     pLocale = (DWORD*)GlobalLock(hGlobal);
 
-	*pLocale = Locale;
+    *pLocale = Locale;
 
-	GlobalUnlock(hGlobal);
+    GlobalUnlock(hGlobal);
 
-	return hGlobal;
+    return hGlobal;
 }
 
 /*
  * @implemented
  */
-HANDLE STDCALL
+HANDLE
+WINAPI
 SetClipboardData(UINT uFormat, HANDLE hMem)
 {
-	DWORD size;
-	LPVOID pMem;
-	HANDLE ret = NULL;
+    DWORD size;
+    LPVOID pMem;
+    HANDLE ret = NULL;
 
-	if (hMem == NULL)
-	{
-	    return NtUserSetClipboardData(uFormat, 0, 0);
+    if (hMem == NULL)
+    {
+        return NtUserSetClipboardData(uFormat, 0, 0);
     }
 
-	if (uFormat == CF_BITMAP)
-	{
-	    /* GlobalLock should return 0 for GDI handles
-	    pMem = GlobalLock(hMem);
-	    if (pMem)
-	    {
-	        // not a  GDI handle
-	        GlobalUnlock(hMem);
-	        return ret;
-	    }
-	    else
-	    {
-	        */
-	        /* check if this GDI handle is a HBITMAP */
-	        /* GetObject for HBITMAP not implemented in ReactOS */
-    	    //if (GetObject(hMem, 0, NULL) == sifeof(BITMAP))
-    	    //{
-    	        return NtUserSetClipboardData(CF_BITMAP, hMem, 0);
-    	    //}
-    	/*}*/
-	}
+    if (uFormat == CF_BITMAP)
+    {
+        /* GlobalLock should return 0 for GDI handles
+        pMem = GlobalLock(hMem);
+        if (pMem)
+        {
+            // not a  GDI handle
+            GlobalUnlock(hMem);
+            return ret;
+        }
+        else
+        {
+            */
+            /* check if this GDI handle is a HBITMAP */
+            /* GetObject for HBITMAP not implemented in ReactOS */
+            //if (GetObject(hMem, 0, NULL) == sifeof(BITMAP))
+            //{
+                return NtUserSetClipboardData(CF_BITMAP, hMem, 0);
+            //}
+        /*}*/
+    }
 
     size = GlobalSize(hMem);
     pMem = GlobalLock(hMem);
 
-	if ((pMem) && (size))
-	{
-    	size = GlobalSize(hMem);
-    	ret = NtUserSetClipboardData(uFormat, pMem, size);
+    if ((pMem) && (size))
+    {
+        size = GlobalSize(hMem);
+        ret = NtUserSetClipboardData(uFormat, pMem, size);
         //should i unlock hMem?
         GlobalUnlock(hMem);
     }
@@ -356,27 +283,10 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
 }
 
 /*
- * @implemented
- */
-HWND STDCALL
-SetClipboardViewer(HWND hWndNewViewer)
-{
-   return NtUserSetClipboardViewer(hWndNewViewer);
-}
-
-/*
- * @implemented
- */
-BOOL STDCALL
-ChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
-{
-   return NtUserChangeClipboardChain(hWndRemove, hWndNewNext);
-}
-
-/*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 AddClipboardFormatListener(HWND hwnd)
 {
     UNIMPLEMENTED;
@@ -385,7 +295,8 @@ AddClipboardFormatListener(HWND hwnd)
 /*
  * @unimplemented
  */
-BOOL STDCALL
+BOOL
+WINAPI
 RemoveClipboardFormatListener(HWND hwnd)
 {
     UNIMPLEMENTED;
@@ -395,11 +306,11 @@ RemoveClipboardFormatListener(HWND hwnd)
 /*
  * @unimplemented
  */
-BOOL STDCALL
-GetUpdatedClipboardFormats(
-    PUINT lpuiFormats,
-    UINT cFormats,
-    PUINT pcFormatsOut)
+BOOL
+WINAPI
+GetUpdatedClipboardFormats(PUINT lpuiFormats,
+                           UINT cFormats,
+                           PUINT pcFormatsOut)
 {
     UNIMPLEMENTED;
     return FALSE;

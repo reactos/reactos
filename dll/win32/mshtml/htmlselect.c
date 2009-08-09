@@ -28,6 +28,7 @@
 #include "wine/debug.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
@@ -289,15 +290,35 @@ static HRESULT WINAPI HTMLSelectElement_get_value(IHTMLSelectElement *iface, BST
 static HRESULT WINAPI HTMLSelectElement_put_disabled(IHTMLSelectElement *iface, VARIANT_BOOL v)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%x)\n", This, v);
-    return E_NOTIMPL;
+    nsresult nsres;
+
+    TRACE("(%p)->(%x)\n", This, v);
+
+    nsres = nsIDOMHTMLSelectElement_SetDisabled(This->nsselect, v != VARIANT_FALSE);
+    if(NS_FAILED(nsres)) {
+        ERR("SetDisabled failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLSelectElement_get_disabled(IHTMLSelectElement *iface, VARIANT_BOOL *p)
 {
     HTMLSelectElement *This = HTMLSELECT_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    PRBool disabled = FALSE;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMHTMLSelectElement_GetDisabled(This->nsselect, &disabled);
+    if(NS_FAILED(nsres)) {
+        ERR("GetDisabled failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = disabled ? VARIANT_TRUE : VARIANT_FALSE;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLSelectElement_get_form(IHTMLSelectElement *iface, IHTMLFormElement **p)
@@ -442,11 +463,25 @@ static void HTMLSelectElement_destructor(HTMLDOMNode *iface)
     HTMLElement_destructor(&This->element.node);
 }
 
+static HRESULT HTMLSelectElementImpl_put_disabled(HTMLDOMNode *iface, VARIANT_BOOL v)
+{
+    HTMLSelectElement *This = HTMLSELECT_NODE_THIS(iface);
+    return IHTMLSelectElement_put_disabled(HTMLSELECT(This), v);
+}
+
+static HRESULT HTMLSelectElementImpl_get_disabled(HTMLDOMNode *iface, VARIANT_BOOL *p)
+{
+    HTMLSelectElement *This = HTMLSELECT_NODE_THIS(iface);
+    return IHTMLSelectElement_get_disabled(HTMLSELECT(This), p);
+}
+
 #undef HTMLSELECT_NODE_THIS
 
 static const NodeImplVtbl HTMLSelectElementImplVtbl = {
     HTMLSelectElement_QI,
-    HTMLSelectElement_destructor
+    HTMLSelectElement_destructor,
+    HTMLSelectElementImpl_put_disabled,
+    HTMLSelectElementImpl_get_disabled
 };
 
 static const tid_t HTMLSelectElement_tids[] = {
@@ -454,6 +489,7 @@ static const tid_t HTMLSelectElement_tids[] = {
     IHTMLDOMNode2_tid,
     IHTMLElement_tid,
     IHTMLElement2_tid,
+    IHTMLElement3_tid,
     IHTMLSelectElement_tid,
     0
 };

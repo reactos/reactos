@@ -16,7 +16,7 @@
 #ifdef INCLUDE_CMD_SCREEN
 
 
-INT CommandScreen (LPTSTR cmd, LPTSTR param)
+INT CommandScreen (LPTSTR param)
 {
 	SHORT x,y;
 	BOOL bSkipText = FALSE;

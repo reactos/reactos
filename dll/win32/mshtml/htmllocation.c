@@ -43,12 +43,11 @@ static HRESULT WINAPI HTMLLocation_QueryInterface(IHTMLLocation *iface, REFIID r
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = HTMLLOCATION(This);
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = HTMLLOCATION(This);
     }else if(IsEqualGUID(&IID_IHTMLLocation, riid)) {
         TRACE("(%p)->(IID_IHTMLLocation %p)\n", This, ppv);
         *ppv = HTMLLOCATION(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
     }
 
     if(*ppv) {
@@ -89,16 +88,14 @@ static ULONG WINAPI HTMLLocation_Release(IHTMLLocation *iface)
 static HRESULT WINAPI HTMLLocation_GetTypeInfoCount(IHTMLLocation *iface, UINT *pctinfo)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLLocation_GetTypeInfo(IHTMLLocation *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLLocation_GetIDsOfNames(IHTMLLocation *iface, REFIID riid,
@@ -106,9 +103,7 @@ static HRESULT WINAPI HTMLLocation_GetIDsOfNames(IHTMLLocation *iface, REFIID ri
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLLocation_Invoke(IHTMLLocation *iface, DISPID dispIdMember,
@@ -116,9 +111,8 @@ static HRESULT WINAPI HTMLLocation_Invoke(IHTMLLocation *iface, DISPID dispIdMem
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLLocation *This = HTMLLOCATION_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLLocation_put_href(IHTMLLocation *iface, BSTR v)
@@ -293,6 +287,18 @@ static const IHTMLLocationVtbl HTMLLocationVtbl = {
     HTMLLocation_toString
 };
 
+static const tid_t HTMLLocation_iface_tids[] = {
+    IHTMLLocation_tid,
+    0
+};
+static dispex_static_data_t HTMLLocation_dispex = {
+    NULL,
+    IHTMLLocation_tid,
+    NULL,
+    HTMLLocation_iface_tids
+};
+
+
 HTMLLocation *HTMLLocation_Create(HTMLDocument *doc)
 {
     HTMLLocation *ret = heap_alloc(sizeof(*ret));
@@ -300,6 +306,8 @@ HTMLLocation *HTMLLocation_Create(HTMLDocument *doc)
     ret->lpHTMLLocationVtbl = &HTMLLocationVtbl;
     ret->ref = 1;
     ret->doc = doc;
+
+    init_dispex(&ret->dispex, (IUnknown*)HTMLLOCATION(ret),  &HTMLLocation_dispex);
 
     return ret;
 }

@@ -736,45 +736,6 @@ PATHOBJ_vGetBounds(
   UNIMPLEMENTED;
 }
 
-BOOL
-APIENTRY
-XFORMOBJ_bApplyXform(
-	IN XFORMOBJ  *pxo,
-	IN ULONG  iMode,
-	IN ULONG  cPoints,
-	IN PVOID  pvIn,
-	OUT PVOID  pvOut
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_027b.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-ULONG
-APIENTRY
-XFORMOBJ_iGetFloatObjXform(
-	IN XFORMOBJ  *pxo,
-	OUT FLOATOBJ_XFORM  *pxfo
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_5ig7.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-ULONG
-APIENTRY
-XFORMOBJ_iGetXform(
-	IN XFORMOBJ  *pxo,
-	OUT XFORML  *pxform
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0s2v.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
 /*
  * @unimplemented
  */
@@ -789,21 +750,34 @@ EngDitherColor(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL APIENTRY
 EngQuerySystemAttribute(
    IN ENG_SYSTEM_ATTRIBUTE CapNum,
    OUT PDWORD pCapability)
 {
+  SYSTEM_BASIC_INFORMATION sbi;
+  SYSTEM_PROCESSOR_INFORMATION spi;
+
    switch (CapNum)
    {
       case EngNumberOfProcessors:
-         *pCapability = 1;
+         NtQuerySystemInformation(
+                SystemBasicInformation,
+               &sbi,
+                sizeof(SYSTEM_BASIC_INFORMATION),
+                NULL);
+         *pCapability = sbi.NumberOfProcessors;
          return TRUE;
 
       case EngProcessorFeature:
-         *pCapability = 0;
+         NtQuerySystemInformation(
+                SystemProcessorInformation,
+               &spi,
+                sizeof(SYSTEM_PROCESSOR_INFORMATION),
+                NULL);
+         *pCapability = spi.ProcessorFeatureBits;
          return TRUE;
 
       default:
@@ -944,6 +918,19 @@ EngQueryDeviceAttribute(
 /*
  * @unimplemented
  */
+LARGE_INTEGER
+APIENTRY
+EngQueryFileTimeStamp(IN LPWSTR FileName)
+{
+   LARGE_INTEGER FileTime;
+   FileTime.QuadPart = 0;
+   UNIMPLEMENTED;
+   return FileTime;
+}
+
+/*
+ * @unimplemented
+ */
 LONG APIENTRY
 EngReadStateEvent(
    IN PEVENT Event)
@@ -951,26 +938,6 @@ EngReadStateEvent(
    UNIMPLEMENTED;
    return 0;
 }
-BOOL APIENTRY
-EngStretchBltROP(
-   IN SURFOBJ *Dest,
-   IN SURFOBJ *Source,
-   IN SURFOBJ *Mask,
-   IN CLIPOBJ *Clip,
-   IN XLATEOBJ *Xlate,
-   IN COLORADJUSTMENT *ColorAdjustment,
-   IN POINTL *BrushOrigin,
-   IN RECTL *DestRect,
-   IN RECTL *SourceRect,
-   IN POINTL *MaskPoint,
-   IN ULONG Mode,
-   IN BRUSHOBJ *BrushObj,
-   IN DWORD ROP4)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
 
 /*
  * @unimplemented
@@ -1607,6 +1574,7 @@ NtGdiRemoveMergeFont(
  * @unimplemented
  */
 BOOL
+APIENTRY
 NtGdiAddRemoteMMInstanceToDC(
     IN HDC hdc,
     IN DOWNLOADDESIGNVECTOR *pddv,
@@ -2010,19 +1978,6 @@ NtGdiGetColorSpaceforBitmap(
  */
 BOOL
 APIENTRY
-NtGdiGetDeviceCapsAll (
-    IN HDC hdc,
-    OUT PDEVCAPS pDevCaps)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiGetETM(
     IN HDC hdc,
     OUT EXTTEXTMETRIC *petm)
@@ -2149,19 +2104,6 @@ NtGdiGetMonitorID(
  * @unimplemented
  */
 BOOL
-NtGdiGetRealizationInfo(
-    IN HDC hdc,
-    OUT PREALIZATION_INFO pri,
-    IN HFONT hf)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
 APIENTRY
 NtGdiDrawStream(
     IN HDC hdcDst,
@@ -2259,18 +2201,6 @@ ULONG
 APIENTRY
 NtGdiQueryFontAssocInfo(
     IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-NtGdiGetFontUnicodeRanges(
-    IN HDC hdc,
-    OUT OPTIONAL LPGLYPHSET pgs)
 {
     UNIMPLEMENTED;
     return 0;
@@ -2729,36 +2659,8 @@ NtGdiMakeFontDir(
  */
 BOOL
 APIENTRY
-NtGdiMakeInfoDC(
-    IN HDC hdc,
-    IN BOOL bSet)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiMonoBitmap(
     IN HBITMAP hbm)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiMoveTo(
-    IN HDC hdc,
-    IN INT x,
-    IN INT y,
-    OUT OPTIONAL LPPOINT pptOut)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -2856,7 +2758,7 @@ NtGdiUnmapMemFont(
 }
 
 BOOL
-STDCALL
+APIENTRY
 EngControlSprites(
   IN WNDOBJ  *pwo,
   IN FLONG  fl)
@@ -2966,13 +2868,21 @@ EngFreeSectionMem(IN PVOID SectionObject OPTIONAL,
     UNIMPLEMENTED;
     return FALSE;
 }
- 
+
 ULONGLONG
 APIENTRY
 EngGetTickCount(VOID)
 {
-    UNIMPLEMENTED;
-    return 0;
+    ULONG Multiplier;
+    LARGE_INTEGER TickCount;
+
+    /* Get the multiplier and current tick count */
+    KeQueryTickCount(&TickCount);
+    Multiplier = SharedUserData->TickCountMultiplier;
+
+    /* Convert to milliseconds and return */
+    return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
+            (Multiplier * (TickCount.HighPart << 8)));
 }
  
 BOOLEAN

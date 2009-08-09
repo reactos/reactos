@@ -1,0 +1,13 @@
+Index: pstorec.c
+===================================================================
+--- pstorec.c	(revision 36054)
++++ pstorec.c	(working copy)
+@@ -43,8 +43,6 @@
+ 
+     switch (fdwReason)
+     {
+-    case DLL_WINE_PREATTACH:
+-        return FALSE;  /* prefer native version */
+     case DLL_PROCESS_ATTACH:
+         DisableThreadLibraryCalls(hinst);
+         break;

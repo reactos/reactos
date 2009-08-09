@@ -11,7 +11,9 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
+
+#define TAG_ATMT TAG('A', 't', 'o', 'T') /* Atom table */
 
 extern ULONG NtGlobalFlag;
 
@@ -57,14 +59,14 @@ RtlpSetInDbgPrint(IN BOOLEAN NewValue)
 }
 
 KPROCESSOR_MODE
-STDCALL
+NTAPI
 RtlpGetMode()
 {
    return KernelMode;
 }
 
 PVOID
-STDCALL
+NTAPI
 RtlpAllocateMemory(ULONG Bytes,
                    ULONG Tag)
 {
@@ -74,19 +76,24 @@ RtlpAllocateMemory(ULONG Bytes,
 }
 
 
+#define TAG_USTR        TAG('U', 'S', 'T', 'R')
+#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
+#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
 VOID
-STDCALL
+NTAPI
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
-    ExFreePoolWithTag(Mem,
-                      Tag);
+    if (Tag == TAG_ASTR || Tag == TAG_OSTR || Tag == TAG_USTR)
+        ExFreePool(Mem);
+    else
+        ExFreePoolWithTag(Mem, Tag);
 }
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlAcquirePebLock(VOID)
 {
 
@@ -95,14 +102,14 @@ RtlAcquirePebLock(VOID)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlReleasePebLock(VOID)
 {
 
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 LdrShutdownThread(VOID)
 {
     return STATUS_SUCCESS;
@@ -110,45 +117,45 @@ LdrShutdownThread(VOID)
 
 
 PPEB
-STDCALL
-RtlpCurrentPeb(VOID)
+NTAPI
+RtlGetCurrentPeb(VOID)
 {
    return ((PEPROCESS)(KeGetCurrentThread()->ApcState.Process))->Peb;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlEnterHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-   KEBUGCHECK(0);
+   ASSERT(FALSE);
    return STATUS_SUCCESS;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlLeaveHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
 
@@ -159,7 +166,7 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
   if(KeGetCurrentIrql() > APC_LEVEL)
   {
     DbgPrint("%s:%i: Pagable code called at IRQL > APC_LEVEL (%d)\n", file, line, KeGetCurrentIrql());
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
   }
 }
 #endif
@@ -306,7 +313,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     }
 
     /* Use a SEH block for maximum protection */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Check if we want the user-mode stack frame */
         if (Flags == 1)
@@ -391,12 +398,12 @@ RtlWalkFrameChain(OUT PVOID *Callers,
             Stack = NewStack;
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* No index */
         i = 0;
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return frames parsed */
     return i;
@@ -477,21 +484,21 @@ RtlpFreeAtomTable(PRTL_ATOM_TABLE AtomTable)
 PRTL_ATOM_TABLE_ENTRY
 RtlpAllocAtomTableEntry(ULONG Size)
 {
-   PRTL_ATOM_TABLE_ENTRY Entry = ExAllocatePool(NonPagedPool,
-                                                Size);
-   if (Entry != NULL)
-   {
-      RtlZeroMemory(Entry,
-                    Size);
-   }
+    PRTL_ATOM_TABLE_ENTRY Entry;
 
-   return Entry;
+    Entry = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_ATMT);
+    if (Entry != NULL)
+    {
+        RtlZeroMemory(Entry, Size);
+    }
+
+    return Entry;
 }
 
 VOID
 RtlpFreeAtomTableEntry(PRTL_ATOM_TABLE_ENTRY Entry)
 {
-   ExFreePool(Entry);
+    ExFreePoolWithTag(Entry, TAG_ATMT);
 }
 
 VOID
@@ -555,30 +562,6 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    }
 
    return Entry;
-}
-
-/* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
-BOOLEAN FASTCALL
-RtlpCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source,
-   IN POOL_TYPE PoolType)
-{
-   ULONG Length;
-
-   Length = (wcslen (Source) + 1) * sizeof(WCHAR);
-   UniDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG('U', 'S', 'T', 'R'));
-   if (UniDest->Buffer == NULL)
-      return FALSE;
-
-   RtlCopyMemory (UniDest->Buffer,
-                  Source,
-                  Length);
-
-   UniDest->MaximumLength = (USHORT)Length;
-   UniDest->Length = (USHORT)Length - sizeof (WCHAR);
-
-   return TRUE;
 }
 
 /*

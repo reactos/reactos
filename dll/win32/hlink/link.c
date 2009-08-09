@@ -82,8 +82,7 @@ static inline void __GetMoniker(HlinkImpl* This, IMoniker** moniker)
     else if (This->Site)
     {
         IHlinkSite_GetMoniker(This->Site, This->SiteData,
-                OLEGETMONIKER_FORCEASSIGN, OLEWHICHMK_CONTAINER,
-                (LPVOID)moniker);
+                OLEGETMONIKER_FORCEASSIGN, OLEWHICHMK_CONTAINER, moniker);
     }
 }
 
@@ -123,9 +122,9 @@ static HRESULT WINAPI IHlink_fnQueryInterface(IHlink* iface, REFIID riid,
     if (IsEqualIID(riid, &IID_IUnknown) || (IsEqualIID(riid, &IID_IHlink)))
         *ppvObj = This;
     else if (IsEqualIID(riid, &IID_IPersistStream))
-        *ppvObj = (LPVOID*)&(This->lpPSVtbl);
+        *ppvObj = &(This->lpPSVtbl);
     else if (IsEqualIID(riid, &IID_IDataObject))
-        *ppvObj = (LPVOID*)&(This->lpDOVtbl);
+        *ppvObj = &(This->lpDOVtbl);
 
     if (*ppvObj)
     {
@@ -441,14 +440,14 @@ static HRESULT WINAPI IHlink_fnNavigate(IHlink* iface, DWORD grfHLNF, LPBC pbc,
 static HRESULT WINAPI IHlink_fnSetAdditonalParams(IHlink* iface,
         LPCWSTR pwzAdditionalParams)
 {
-    FIXME("\n");
+    TRACE("Not implemented in native IHlink\n");
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI IHlink_fnGetAdditionalParams(IHlink* iface,
         LPWSTR* ppwzAdditionalParams)
 {
-    FIXME("\n");
+    TRACE("Not implemented in native IHlink\n");
     return E_NOTIMPL;
 }
 
@@ -676,7 +675,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(IPersistStream* iface,
     DWORD read;
     HlinkImpl *This = HlinkImpl_from_IPersistStream(iface);
 
-    r = IStream_Read(pStm, &hdr, sizeof(hdr), &read);
+    r = IStream_Read(pStm, hdr, sizeof(hdr), &read);
     if (read != sizeof(hdr) || (hdr[0] != HLINK_SAVE_MAGIC))
     {
         r = E_FAIL;
@@ -749,7 +748,7 @@ static HRESULT WINAPI IPersistStream_fnSave(IPersistStream* iface,
     if (This->TargetFrameName)
         hdr[1] |= HLINK_SAVE_TARGET_FRAME_PRESENT;
 
-    IStream_Write(pStm, &hdr, sizeof(hdr), NULL);
+    IStream_Write(pStm, hdr, sizeof(hdr), NULL);
 
     if (This->TargetFrameName)
     {

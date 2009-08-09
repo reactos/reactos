@@ -13,6 +13,11 @@
 #define _AFD_H
 
 #include <ntddk.h>
+#include <ntifs.h>
+#include <ndk/obtypes.h>
+#include <ndk/obfuncs.h>
+#include <ndk/mmtypes.h>
+#include <ndk/mmfuncs.h>
 #include <tdi.h>
 #include <tdikrnl.h>
 #include <tdiinfo.h>
@@ -27,6 +32,55 @@
 #ifndef MIN
 #define MIN(x,y) (((x)<(y))?(x):(y))
 #endif
+
+#define IOCTL_TCP_QUERY_INFORMATION_EX \
+	CTL_CODE(FILE_DEVICE_NETWORK, 0, METHOD_NEITHER, FILE_ANY_ACCESS)
+
+#define TL_INSTANCE 0
+#define	IP_MIB_STATS_ID 1
+#define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
+
+typedef struct IPSNMP_INFO {
+	ULONG Forwarding;
+	ULONG DefaultTTL;
+	ULONG InReceives;
+	ULONG InHdrErrors;
+	ULONG InAddrErrors;
+	ULONG ForwDatagrams;
+	ULONG InUnknownProtos;
+	ULONG InDiscards;
+	ULONG InDelivers;
+	ULONG OutRequests;
+	ULONG RoutingDiscards;
+	ULONG OutDiscards;
+	ULONG OutNoRoutes;
+	ULONG ReasmTimeout;
+	ULONG ReasmReqds;
+	ULONG ReasmOks;
+	ULONG ReasmFails;
+	ULONG FragOks;
+	ULONG FragFails;
+	ULONG FragCreates;
+	ULONG NumIf;
+	ULONG NumAddr;
+	ULONG NumRoutes;
+} IPSNMP_INFO, *PIPSNMP_INFO;
+
+typedef struct IPADDR_ENTRY {
+	ULONG  Addr;
+	ULONG  Index;
+	ULONG  Mask;
+	ULONG  BcastAddr;
+	ULONG  ReasmSize;
+	USHORT Context;
+	USHORT Pad;
+} IPADDR_ENTRY, *PIPADDR_ENTRY;
+
+#define DN2H(dw) \
+    ((((dw) & 0xFF000000L) >> 24) | \
+	 (((dw) & 0x00FF0000L) >> 8) | \
+	 (((dw) & 0x0000FF00L) << 8) | \
+	 (((dw) & 0x000000FFL) << 24))
 
 #define SOCKET_STATE_INVALID_TRANSITION ((DWORD)-1)
 #define SOCKET_STATE_CREATED            0
@@ -48,7 +102,7 @@
 #define FUNCTION_CLOSE                  5
 #define MAX_FUNCTIONS                   6
 
-#define IN_FLIGHT_REQUESTS              3
+#define IN_FLIGHT_REQUESTS              4
 
 #define EXTRA_LOCK_BUFFERS              2 /* Number of extra buffers needed
 					   * for ancillary data on packet
@@ -63,7 +117,7 @@
  * We do this in order to get some storage for the locked handle table
  * Maybe I'll use some tail item in the irp instead */
 #define AFD_HANDLES(x) ((PAFD_HANDLE)(x)->Exclusive)
-#define SET_AFD_HANDLES(x,y) (((x)->Exclusive) = (ULONG)(y))
+#define SET_AFD_HANDLES(x,y) (((x)->Exclusive) = (ULONG_PTR)(y))
 
 typedef struct _AFD_MAPBUF {
     PVOID BufferAddress;
@@ -155,7 +209,7 @@ typedef struct _AFD_FCB {
 /* bind.c */
 
 NTSTATUS WarmSocketForBind( PAFD_FCB FCB );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PIO_STACK_LOCATION IrpSp);
 
@@ -163,26 +217,26 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB );
 NTSTATUS WarmSocketForConnection( PAFD_FCB FCB );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		       PIO_STACK_LOCATION IrpSp);
 
 /* context.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 
 /* info.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    PIO_STACK_LOCATION IrpSp );
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdGetSockOrPeerName( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                       PIO_STACK_LOCATION IrpSp, BOOLEAN Local );
 
@@ -206,10 +260,9 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB );
 NTSTATUS NTAPI UnlockAndMaybeComplete
 ( PAFD_FCB FCB, NTSTATUS Status, PIRP Irp,
   UINT Information,
-  PIO_COMPLETION_ROUTINE Completion,
-  BOOL ShouldUnlockIrp );
+  PIO_COMPLETION_ROUTINE Completion );
 VOID SocketStateUnlock( PAFD_FCB FCB );
-NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp );
+NTSTATUS LostSocket( PIRP Irp );
 PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount );
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
@@ -235,22 +288,22 @@ NTSTATUS NTAPI PacketSocketRecvComplete
   PIRP Irp,
   PVOID Context );
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			   PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			PIO_STACK_LOCATION IrpSp );
 
 /* select.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	   PIO_STACK_LOCATION IrpSp );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp );
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp );
 VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceObject, PFILE_OBJECT FileObject );
@@ -321,10 +374,10 @@ NTSTATUS TdiSendDatagram(
 
 /* write.c */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    PIO_STACK_LOCATION IrpSp, BOOLEAN Short);
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			 PIO_STACK_LOCATION IrpSp);
 

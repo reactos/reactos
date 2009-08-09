@@ -123,7 +123,7 @@ MSIHANDLE alloc_msihandle( MSIOBJECTHDR *obj )
 
     LeaveCriticalSection( &MSI_handle_cs );
 
-    TRACE("%p -> %ld\n", obj, ret );
+    TRACE("%p -> %d\n", obj, ret );
 
     return ret;
 }
@@ -147,7 +147,7 @@ MSIHANDLE alloc_msi_remote_handle( IUnknown *unk )
 
     LeaveCriticalSection( &MSI_handle_cs );
 
-    TRACE("%p -> %ld\n", unk, ret);
+    TRACE("%p -> %d\n", unk, ret);
 
     return ret;
 }
@@ -174,7 +174,7 @@ void *msihandle2msiinfo(MSIHANDLE handle, UINT type)
 out:
     LeaveCriticalSection( &MSI_handle_cs );
 
-    return (void*) ret;
+    return ret;
 }
 
 IUnknown *msi_get_remote( MSIHANDLE handle )
@@ -270,7 +270,7 @@ UINT WINAPI MsiCloseHandle(MSIHANDLE handle)
     MSIOBJECTHDR *info = NULL;
     UINT ret = ERROR_INVALID_HANDLE;
 
-    TRACE("%lx\n",handle);
+    TRACE("%x\n",handle);
 
     if (!handle)
         return ERROR_SUCCESS;
@@ -304,7 +304,7 @@ UINT WINAPI MsiCloseHandle(MSIHANDLE handle)
 
     ret = ERROR_SUCCESS;
 
-    TRACE("handle %lx destroyed\n", handle+1);
+    TRACE("handle %x destroyed\n", handle+1);
 out:
     LeaveCriticalSection( &MSI_handle_cs );
     if( info )

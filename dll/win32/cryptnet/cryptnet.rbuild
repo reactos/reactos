@@ -3,18 +3,15 @@
 <group>
 <module name="cryptnet" type="win32dll" baseaddress="${BASEADDRESS_CRYPTNET}" installbase="system32" installname="cryptnet.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
-	<importlibrary definition="cryptnet.spec.def" />
+	<importlibrary definition="cryptnet.spec" />
 	<include base="cryptnet">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
-	<define name="WINVER">0x600</define>
-	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>crypt32</library>
 	<library>kernel32</library>
 	<library>wininet</library>
 	<library>ntdll</library>
 	<file>cryptnet_main.c</file>
-	<file>cryptnet.spec</file>
 </module>
 </group>

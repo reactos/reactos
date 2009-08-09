@@ -95,7 +95,7 @@ CmpGetBiosDate(IN PCHAR BiosStart,
                 }
             }
 
-            /* Add slashes were we previously had NULLs */
+            /* Add slashes where we previously had NULLs */
             CurrentDate[4] = CurrentDate[7] = '/';
 
             /* Check which date is newer */
@@ -232,7 +232,8 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 {
     UNICODE_STRING KeyName, ValueName, Data, SectionName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    ULONG HavePae, CacheSize, ViewSize, Length, TotalLength = 0, i, Disposition;
+    ULONG HavePae, CacheSize, Length, TotalLength = 0, i, Disposition;
+    SIZE_T ViewSize;
     NTSTATUS Status;
     HANDLE KeyHandle, BiosHandle, SystemHandle, FpuHandle, SectionHandle;
     CONFIGURATION_COMPONENT_DATA ConfigData;
@@ -244,7 +245,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     PCHAR PartialString = NULL, BiosVersion;
     CHAR CpuString[48];
     PVOID BaseAddress = NULL;
-    LARGE_INTEGER ViewBase = {{0}};
+    LARGE_INTEGER ViewBase = {{0, 0}};
     ULONG_PTR VideoRomBase;
     PCHAR CurrentVersion;
     extern UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
@@ -546,7 +547,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         }
 
         /* Free the configuration data */
-        ExFreePool(CmpConfigurationData);
+        ExFreePoolWithTag(CmpConfigurationData, TAG_CM);
     }
 
     /* Open physical memory */
@@ -636,7 +637,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
             if (BiosHandle)
             {
                 /* Get the BIOS Date Identifier */
-                RtlCopyMemory(Buffer, (PCHAR)BaseAddress + (16*PAGE_SIZE - 11), 8);
+                RtlCopyMemory(Buffer, (PCHAR)BaseAddress + (16 * PAGE_SIZE - 11), 8);
                 Buffer[8] = ANSI_NULL;
 
                 /* Convert it to unicode */
@@ -665,7 +666,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         }
 
         /* Get the BIOS Version */
-        if (CmpGetBiosVersion(BaseAddress, 16* PAGE_SIZE, Buffer))
+        if (CmpGetBiosVersion(BaseAddress, 16 * PAGE_SIZE, Buffer))
         {
             /* Start at the beginning of our buffer */
             CurrentVersion = BiosVersion;
@@ -764,7 +765,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
         }
 
         /* Get the Video BIOS Version */
-        if (CmpGetBiosVersion(BaseAddress, 8* PAGE_SIZE, Buffer))
+        if (CmpGetBiosVersion(BaseAddress, 8 * PAGE_SIZE, Buffer))
         {
             /* Start at the beginning of our buffer */
             CurrentVersion = BiosVersion;
@@ -824,7 +825,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     ZwClose(SectionHandle);
 
     /* Free the BIOS version string buffer */
-    if (BiosVersion) ExFreePool(BiosVersion);
+    if (BiosVersion) ExFreePoolWithTag(BiosVersion, TAG_CM);
 
 Quickie:
     /* Close the procesor handle */

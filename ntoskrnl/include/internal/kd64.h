@@ -51,6 +51,16 @@ BOOLEAN
 );
 
 //
+// Initialization Routines
+//
+BOOLEAN
+NTAPI
+KdInitSystem(
+    ULONG Reserved,
+    PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+//
 // Debug and Multi-Processor Switch Routines
 //
 BOOLEAN

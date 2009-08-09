@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/namespce.c
+ * FILE:            ntoskrnl/ob/obname.c
  * PURPOSE:         Manages all functions related to the Object Manager name-
  *                  space, such as finding objects or querying their names.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
@@ -282,7 +282,6 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
     POBJECT_HEADER ObjectHeader;
     UNICODE_STRING ComponentName, RemainingName;
     BOOLEAN Reparse = FALSE, SymLink = FALSE;
-    PDEVICE_MAP DeviceMap = NULL;
     POBJECT_DIRECTORY Directory = NULL, ParentDirectory = NULL, RootDirectory;
     POBJECT_DIRECTORY ReferencedDirectory = NULL, ReferencedParentDirectory = NULL;
     KIRQL CalloutIrql;
@@ -497,13 +496,7 @@ ObpLookupObjectName(IN HANDLE RootHandle OPTIONAL,
         else
         {
 ParseFromRoot:
-            /* Check if we have a device map */
-            if (DeviceMap)
-            {
-                /* Dereference it */
-                //ObfDereferenceDeviceMap(DeviceMap);
-                DeviceMap = NULL;
-            }
+            /* FIXME: Check if we have a device map */
 
             /* Check if this is a possible DOS name */
             if (!((ULONG_PTR)(ObjectName->Buffer) & 7))
@@ -720,7 +713,7 @@ ParseFromRoot:
                 if (ObjectNameInfo->Name.Buffer)
                 {
                     /* Free it */
-                    ExFreePool(ObjectNameInfo->Name.Buffer);
+                    ExFreePoolWithTag(ObjectNameInfo->Name.Buffer, OB_NAME_TAG );
                 }
 
                 /* Write new one */

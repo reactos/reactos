@@ -50,6 +50,7 @@ BEGIN
     IDS_SOL_ABOUT   "Косинка від J Brown\n\nCardLib версії 1.0."
     IDS_SOL_QUIT    "Вийти з поточної гри?"
     IDS_SOL_WIN     "Вітання, Ви виграли!!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

@@ -71,12 +71,6 @@ _mesa_ResetHistogram(GLenum target);
 extern void GLAPIENTRY 
 _mesa_ResetMinmax(GLenum target);
 
-extern void
-_mesa_update_minmax(GLcontext *ctx, GLuint n, const GLfloat rgba[][4]);
-
-extern void
-_mesa_update_histogram(GLcontext *ctx, GLuint n, const GLfloat rgba[][4]);
-
 extern void _mesa_init_histogram( GLcontext * ctx );
 
 #else

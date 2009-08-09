@@ -219,3 +219,10 @@ BEGIN
     IDS_ELEMENT_21 "Quickinfo"
     IDS_ELEMENT_22 "Symbol"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Anzeigeeinstellungen"
+    IDS_APPLY_FAILED "Beim Anwenden Ihrer Änderungen ist ein Fehler aufgetreten..."
+    IDS_APPLY_NEEDS_RESTART "Sie müssen Ihren Computer neu starten, damit die Änderungen wirksam werden."
+END

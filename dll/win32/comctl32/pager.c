@@ -237,7 +237,7 @@ PAGER_DrawButton(HDC hdc, COLORREF clrBk, RECT arrowRect,
         return;
 
     hBrush = CreateSolidBrush(clrBk);
-    hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+    hOldBrush = SelectObject(hdc, hBrush);
 
     FillRect(hdc, &rc, hBrush);
 
@@ -801,7 +801,7 @@ PAGER_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     PAGER_INFO *infoPtr;
 
     /* allocate memory for info structure */
-    infoPtr = (PAGER_INFO *)Alloc (sizeof(PAGER_INFO));
+    infoPtr = Alloc (sizeof(PAGER_INFO));
     if (!infoPtr) return -1;
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 

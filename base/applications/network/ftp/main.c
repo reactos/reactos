@@ -264,9 +264,9 @@ void lostpeer(void)
    extern int data;
 
    if (connected) {
-      if (cout != (int) NULL) {
+      if (cout) {
          closesocket(cout);
-         cout = (int) NULL;
+         cout = 0;
       }
       if (data >= 0) {
          (void) shutdown(data, 1+1);
@@ -277,9 +277,9 @@ void lostpeer(void)
    }
    pswitch(1);
    if (connected) {
-      if (cout != (int)NULL) {
+      if (cout) {
 						closesocket(cout);
-         cout = (int) NULL;
+         cout = 0;
       }
       connected = 0;
    }
@@ -538,7 +538,7 @@ void help(argc, argv)
 	char *argv[];
 {
 	extern struct cmd cmdtab[];
-	register struct cmd *c;
+	struct cmd *c;
 
 	if (argc == 1) {
 		register int i, j, w, k;
@@ -591,7 +591,7 @@ void help(argc, argv)
 		else if (c == (struct cmd *)0)
 			printf("?Invalid help command %s\n", arg);
 		else
-			printf("%-*s\t%s\n", HELPINDENT,
+			printf("%-*s\t%s\n", (int)HELPINDENT,
 				c->c_name, c->c_help);
 	}
 	(void) fflush(stdout);

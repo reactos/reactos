@@ -109,7 +109,7 @@ CAPTION "Finalizar Instalación Administrativa"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "", IDB_WATERMARK, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 0, 0, WATERMARK_WIDTH, SHORTCUTDLG_HEIGHT
-    LTEXT "Change ini mapping back by clicking Finish.", IDC_HEADTEXT, 98, 7, 196, 40
+    LTEXT "Restaurar mapa ini al presionar Finalizar.", IDC_HEADTEXT, 98, 7, 196, 40
 END
 
 IDD_AFTERINST DIALOG 0, 0, SHORTCUTDLG_WIDTH, SHORTCUTDLG_HEIGHT
@@ -164,7 +164,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTERMOUSE | WS_POPUPWINDOW | WS_CAPTIO
 CAPTION "Añadir más tarde"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Puede elegir una fecha y hora cuando quiere añadir este programa en su equipo. Por ejemplo, you can schedule this to happen when you are away from your computer.", IDC_UNINSTLOCTEXT, 7, 4, 208, 33
+    LTEXT "Puede elegir una fecha y hora cuando quiere añadir este programa en su equipo. Por ejemplo, puede programarlo para que ocurra cuando no está delante de su equipo.", IDC_UNINSTLOCTEXT, 7, 4, 208, 33
     AUTORADIOBUTTON "&Añadir programa más tarde", IDC_ADDPROGLATER, 7, 47, 207, 10, WS_GROUP
     CONTROL "Picker", 12368, "SYSDATETIMEPICK32", WS_BORDER | WS_TABSTOP | 0x0000000C, 29, 62, 107, 14
     AUTORADIOBUTTON "&No añadir programa", IDC_NOTADDPROG, 7, 87, 208, 10

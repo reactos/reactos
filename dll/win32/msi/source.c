@@ -64,21 +64,21 @@ static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, DWORD dwOptions,
         if (dwOptions & MSICODE_PATCH)
             rc = MSIREG_OpenUserPatchesKey(szProduct, &rootkey, create);
         else
-            rc = MSIREG_OpenUserProductsKey(szProduct, &rootkey, create);
+            rc = MSIREG_OpenProductKey(szProduct, context, &rootkey, create);
     }
     else if (context == MSIINSTALLCONTEXT_USERMANAGED)
     {
         if (dwOptions & MSICODE_PATCH)
             rc = MSIREG_OpenUserPatchesKey(szProduct, &rootkey, create);
         else
-            rc = MSIREG_OpenLocalManagedProductKey(szProduct, &rootkey, create);
+            rc = MSIREG_OpenProductKey(szProduct, context, &rootkey, create);
     }
     else if (context == MSIINSTALLCONTEXT_MACHINE)
     {
         if (dwOptions & MSICODE_PATCH)
             rc = MSIREG_OpenPatchesKey(szProduct, &rootkey, create);
         else
-            rc = MSIREG_OpenLocalClassesProductKey(szProduct, &rootkey, create);
+            rc = MSIREG_OpenProductKey(szProduct, context, &rootkey, create);
     }
 
     if (rc != ERROR_SUCCESS)
@@ -208,16 +208,19 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
                                          LPWSTR szDiskPrompt, LPDWORD pcchDiskPrompt)
 {
     WCHAR squished_pc[GUID_SIZE];
+    WCHAR convert[11];
     LPWSTR value = NULL;
     LPWSTR data = NULL;
-    LPWSTR ptr;
+    LPWSTR ptr, ptr2;
     HKEY source, media;
     DWORD valuesz, datasz = 0;
     DWORD type;
     DWORD numvals, size;
     LONG res;
     UINT r;
-    static int index = 0;
+    static DWORD index = 0;
+
+    static const WCHAR fmt[] = {'#','%','d',0};
 
     TRACE("(%s, %s, %d, %d, %d, %p, %p, %p, %p)\n", debugstr_w(szProductCodeOrPatchCode),
           debugstr_w(szUserSid), dwContext, dwOptions, dwIndex, szVolumeLabel,
@@ -285,6 +288,7 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
     if (pdwDiskId)
         *pdwDiskId = atolW(value);
 
+    ptr2 = data;
     ptr = strchrW(data, ';');
     if (!ptr)
         ptr = data;
@@ -293,11 +297,19 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
 
     if (pcchVolumeLabel)
     {
-        size = lstrlenW(data);
+        if (type == REG_DWORD)
+        {
+            sprintfW(convert, fmt, *data);
+            size = lstrlenW(convert);
+            ptr2 = convert;
+        }
+        else
+            size = lstrlenW(data);
+
         if (size >= *pcchVolumeLabel)
             r = ERROR_MORE_DATA;
         else if (szVolumeLabel)
-            lstrcpyW(szVolumeLabel, data);
+            lstrcpyW(szVolumeLabel, ptr2);
 
         *pcchVolumeLabel = size;
     }
@@ -306,6 +318,15 @@ UINT WINAPI MsiSourceListEnumMediaDisksW(LPCWSTR szProductCodeOrPatchCode,
     {
         if (!*ptr)
             ptr++;
+
+        if (type == REG_DWORD)
+        {
+            sprintfW(convert, fmt, *ptr);
+            size = lstrlenW(convert);
+            ptr = convert;
+        }
+        else
+            size = lstrlenW(ptr);
 
         size = lstrlenW(ptr);
         if (size >= *pcchDiskPrompt)
@@ -339,7 +360,7 @@ UINT WINAPI MsiSourceListEnumSourcesA(LPCSTR szProductCodeOrPatch, LPCSTR szUser
     LPWSTR source = NULL;
     DWORD len = 0;
     UINT r = ERROR_INVALID_PARAMETER;
-    static int index = 0;
+    static DWORD index = 0;
 
     TRACE("(%s, %s, %d, %d, %d, %p, %p)\n", debugstr_a(szProductCodeOrPatch),
           debugstr_a(szUserSid), dwContext, dwOptions, dwIndex, szSource, pcchSource);
@@ -412,7 +433,7 @@ UINT WINAPI MsiSourceListEnumSourcesW(LPCWSTR szProductCodeOrPatch, LPCWSTR szUs
     HKEY subkey = NULL;
     LONG res;
     UINT r = ERROR_INVALID_PARAMETER;
-    static int index = 0;
+    static DWORD index = 0;
 
     static const WCHAR format[] = {'%','d',0};
 
@@ -633,7 +654,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
 
         if (szValue)
         {
-            if (lstrlenW(ptr) < *pcchValue)
+            if (strlenW(ptr) < *pcchValue)
                 lstrcpyW(szValue, ptr);
             else
                 rc = ERROR_MORE_DATA;
@@ -882,12 +903,14 @@ UINT WINAPI MsiSourceListAddSourceW( LPCWSTR szProduct, LPCWSTR szUserName,
             msi_free(psid);
         }
 
-        r = MSIREG_OpenLocalManagedProductKey(szProduct, &hkey, FALSE);
+        r = MSIREG_OpenProductKey(szProduct, MSIINSTALLCONTEXT_USERMANAGED,
+                                  &hkey, FALSE);
         if (r == ERROR_SUCCESS)
             context = MSIINSTALLCONTEXT_USERMANAGED;
         else
         {
-            r = MSIREG_OpenUserProductsKey(szProduct, &hkey, FALSE);
+            r = MSIREG_OpenProductKey(szProduct, MSIINSTALLCONTEXT_USERUNMANAGED,
+                                      &hkey, FALSE);
             if (r != ERROR_SUCCESS)
                 return ERROR_UNKNOWN_PRODUCT;
 
@@ -1289,5 +1312,29 @@ UINT WINAPI MsiSourceListClearAllA( LPCSTR szProduct, LPCSTR szUserName, DWORD d
 UINT WINAPI MsiSourceListClearAllW( LPCWSTR szProduct, LPCWSTR szUserName, DWORD dwReserved )
 {
     FIXME("(%s %s %d)\n", debugstr_w(szProduct), debugstr_w(szUserName), dwReserved);
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************
+ *  MsiSourceListClearSourceA (MSI.@)
+ */
+UINT WINAPI MsiSourceListClearSourceA(LPCSTR szProductCodeOrPatchCode, LPCSTR szUserSid,
+                                      MSIINSTALLCONTEXT dwContext, DWORD dwOptions,
+                                      LPCSTR szSource)
+{
+    FIXME("(%s %s %x %x %s)\n", debugstr_a(szProductCodeOrPatchCode), debugstr_a(szUserSid),
+          dwContext, dwOptions, debugstr_a(szSource));
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************
+ *  MsiSourceListClearSourceW (MSI.@)
+ */
+UINT WINAPI MsiSourceListClearSourceW(LPCWSTR szProductCodeOrPatchCode, LPCWSTR szUserSid,
+                                      MSIINSTALLCONTEXT dwContext, DWORD dwOptions,
+                                      LPCWSTR szSource)
+{
+    FIXME("(%s %s %x %x %s)\n", debugstr_w(szProductCodeOrPatchCode), debugstr_w(szUserSid),
+          dwContext, dwOptions, debugstr_w(szSource));
     return ERROR_SUCCESS;
 }

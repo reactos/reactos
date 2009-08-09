@@ -31,12 +31,12 @@
 #ifdef INCLUDE_CMD_TYPE
 
 
-INT cmd_type (LPTSTR cmd, LPTSTR param)
+INT cmd_type (LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  buff[256];
 	HANDLE hFile, hConsoleOut;
-	BOOL   bRet;
+	DWORD  dwRet;
 	INT    argc,i;
 	LPTSTR *argv;
 	LPTSTR errmsg;
@@ -101,28 +101,34 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 			continue;
 		}
 
-		do
+		if (bPaging)
 		{
-			bRet = FileGetString (hFile, buff, sizeof(buff) / sizeof(TCHAR));
-			if(bPaging)
+			while (FileGetString (hFile, buff, sizeof(buff) / sizeof(TCHAR)))
 			{
-				if(bRet)
+				if (ConOutPrintfPaging(bFirstTime, _T("%s"), buff) == 1)
 				{
-					if (ConOutPrintfPaging(bFirstTime, buff) == 1)
-					{
-						bCtrlBreak = FALSE;
-						return 0;
-					}
+					bCtrlBreak = FALSE;
+					CloseHandle(hFile);
+					freep(argv);
+					return 0;
+				}
+				bFirstTime = FALSE;
+			}
+		}
+		else
+		{
+			while (ReadFile(hFile, buff, sizeof(buff), &dwRet, NULL) && dwRet > 0)
+			{
+				WriteFile(hConsoleOut, buff, dwRet, &dwRet, NULL);
+				if (bCtrlBreak)
+				{
+					bCtrlBreak = FALSE;
+					CloseHandle(hFile);
+					freep(argv);
+					return 0;
 				}
 			}
-			else
-			{
-				if(bRet)
-					ConOutPrintf(buff);
-			}
-			bFirstTime = FALSE;
-
-		} while(bRet);
+		}
 
 		CloseHandle(hFile);
 	}

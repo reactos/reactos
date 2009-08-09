@@ -21,11 +21,13 @@ import "imnact.idl";
 interface IInternetTransport;
 interface ISMTPTransport;
 interface IPOP3Transport;
+interface IIMAPTransport;
 
 /* CLSIDs */
 
 cpp_quote("DEFINE_GUID(CLSID_IInternetMessageUrl, 0xca30cc91, 0xb1b3, 0x11d0, 0x85, 0xd0, 0x00, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_ISMTPTransport, 0xfd853ce6, 0x7f86, 0x11d0, 0x82, 0x52, 0x00, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
+cpp_quote("DEFINE_GUID(CLSID_ISMTPTransport2, 0xdf2c7eC, 0x3435, 0x11d0, 0x81, 0xd0, 0x0, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_IPOP3Transport, 0xfd853ce7, 0x7f86, 0x11d0, 0x82, 0x52, 0x00, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_INNTPTransport, 0xfd853ce8, 0x7f86, 0x11d0, 0x82, 0x52, 0x00, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
 cpp_quote("DEFINE_GUID(CLSID_IRASTransport, 0xfd853ce9, 0x7f86, 0x11d0, 0x82, 0x52, 0x00, 0xc0, 0x4f, 0xd8, 0x5a, 0xb4);")
@@ -433,7 +435,7 @@ interface ISMTPCallback : ITransportCallback
         {
         [case(SMTP_SEND_STREAM)]    SMTPSTREAM rStreamInfo;
         [default];
-        };
+        } DUMMYUNIONNAME;
     } SMTPRESPONSE, *LPSMTPRESPONSE;
 
     HRESULT OnResponse(
@@ -604,7 +606,7 @@ interface IPOP3Callback : ITransportCallback
         [case(POP3_RETR)] POP3RETR rRetrInfo;
         [case(POP3_TOP)]  POP3TOP rTopInfo;
         [default];
-        };
+        } DUMMYUNIONNAME;
     } POP3RESPONSE, *LPPOP3RESPONSE;
 
     HRESULT OnResponse(
@@ -684,16 +686,429 @@ interface IPOP3Transport : IInternetTransport
 
 /* FIXME: INNTPCallback, INNTPTransport */
 
-/* FIXME: IRangeList */
+[
+    object,
+    uuid(8C438160-4EF6-11d0-874F-00AA00530EE9),
+    local,
+]
+interface IRangeList : IUnknown
+{
+    const ULONG RL_RANGE_ERROR = ((ULONG)-1);
+    const ULONG RL_LAST_MESSAGE = ((ULONG)-1);
 
-/* FIXME: IIMAPCallback, IIMAPTransport */
+    HRESULT Clear();
+
+    HRESULT IsInRange(
+        [in]    const ULONG value);
+
+    HRESULT Min(
+        [out]   ULONG *pulMin);
+
+    HRESULT Max(
+        [out]   ULONG *pulMax);
+
+    HRESULT Save(
+        [out]   byte **ppbDestination,
+        [out]   ULONG *pulSizeOfDestination);
+
+    HRESULT Load(
+        [in, size_is(ulSizeOfSource)]   byte *pbSource,
+        [in]    const ULONG ulSizeOfSource);
+
+    HRESULT AddRange(
+        [in]    const ULONG low,
+        [in]    const ULONG high);
+
+    HRESULT AddSingleValue(
+        [in]    const ULONG value);
+
+    HRESULT AddRangeList(
+        [in]    const IRangeList *prl);
+
+    HRESULT DeleteRange(
+        [in]    const ULONG low,
+        [in]    const ULONG high);
+
+    HRESULT DeleteSingleValue(
+        [in]    const ULONG value);
+
+    HRESULT DeleteRangeList(
+        [in]    const IRangeList *prl);
+
+    HRESULT MinOfRange(
+        [in]    const ULONG value,
+        [out]   ULONG *pulMinOfRange);
+
+    HRESULT MaxOfRange(
+        [in]    const ULONG value,
+        [out]   ULONG *pulMaxOfRange);
+
+    HRESULT RangeToIMAPString(
+        [out]   LPSTR *ppszDestination,
+        [out]   LPDWORD pdwLengthOfDestination);
+
+    HRESULT Next(
+        [in]    const ULONG current,
+        [out]   ULONG *pulNext);
+
+    HRESULT Prev(
+        [in]    const ULONG current,
+        [out]   ULONG *pulPrev);
+
+    HRESULT Cardinality(
+        [out]   ULONG *pulCardinality);
+
+    HRESULT CardinalityFrom(
+        [in]    const ULONG ulStartPoint,
+        [out]   ULONG *pulCardinalityFrom);
+}
+
+[
+    object,
+    uuid(E9E9D8A3-4EDD-11d0-874F-00AA00530EE9),
+    local
+]
+interface IIMAPCallback : ITransportCallback
+{
+    typedef DWORD IMAP_MBOXFLAGS;
+    const IMAP_MBOXFLAGS IMAP_MBOX_NOFLAGS = 0x0;
+    const IMAP_MBOXFLAGS IMAP_MBOX_MARKED = 0x1;
+    const IMAP_MBOXFLAGS IMAP_MBOX_NOINFERIORS = 0x2;
+    const IMAP_MBOXFLAGS IMAP_MBOX_NOSELECT = 0x4;
+    const IMAP_MBOXFLAGS IMAP_MBOX_UNMARKED = 0x8;
+    const IMAP_MBOXFLAGS IMAP_MBOX_ALLFLAGS = 0xf;
+
+    typedef enum tagIMAP_RESPONSE_TYPE
+    {
+        irtERROR_NOTIFICATION,
+        irtCOMMAND_COMPLETION,
+        irtSERVER_ALERT,
+        irtPARSE_ERROR,
+        irtMAILBOX_UPDATE,
+        irtDELETED_MSG,
+        irtFETCH_BODY,
+        irtUPDATE_MSG,
+        irtAPPLICABLE_FLAGS,
+        irtPERMANENT_FLAGS,
+        irtUIDVALIDITY,
+        irtREADWRITE_STATUS,
+        irtTRYCREATE,
+        irtSEARCH,
+        irtMAILBOX_LISTING,
+        irtMAILBOX_STATUS,
+        irtAPPEND_PROGRESS,
+        irtUPDATE_MSG_EX
+    } IMAP_RESPONSE_TYPE;
+
+    typedef struct tagFETCH_BODY_PART
+    {
+        DWORD dwMsgSeqNum;
+        LPSTR pszBodyTag;
+        DWORD dwTotalBytes;
+        DWORD dwSizeOfData;
+        DWORD dwOffset;
+        BOOL fDone;
+        LPSTR pszData;
+        LPARAM lpFetchCookie1;
+        LPARAM lpFetchCookie2;
+    } FETCH_BODY_PART;
+
+    typedef struct tagFETCH_CMD_RESULTS
+    {
+        DWORD dwMsgSeqNum;
+        BOOL bMsgFlags;
+        IMAP_MSGFLAGS mfMsgFlags;
+        BOOL bRFC822Size;
+        DWORD dwRFC822Size;
+        BOOL bUID;
+        DWORD dwUID;
+        BOOL bInternalDate;
+        FILETIME ftInternalDate;
+        LPARAM lpFetchCookie1;
+        LPARAM lpFetchCookie2;
+    } FETCH_CMD_RESULTS;
+
+    typedef struct tagIMAPADDR
+    {
+        LPSTR pszName;
+        LPSTR pszADL;
+        LPSTR pszMailbox;
+        LPSTR pszHost;
+        struct tagIMAPADDR *pNext;
+    } IMAPADDR;
+
+    typedef struct tagFETCH_CMD_RESULTS_EX
+    {
+        DWORD dwMsgSeqNum;
+        BOOL bMsgFlags;
+        IMAP_MSGFLAGS mfMsgFlags;
+        BOOL bRFC822Size;
+        DWORD dwRFC822Size;
+        BOOL bUID;
+        DWORD dwUID;
+        BOOL bInternalDate;
+        FILETIME ftInternalDate;
+        LPARAM lpFetchCookie1;
+        LPARAM lpFetchCookie2;
+        BOOL bEnvelope;
+        FILETIME ftENVDate;
+        LPSTR pszENVSubject;
+        IMAPADDR *piaENVFrom;
+        IMAPADDR *piaENVSender;
+        IMAPADDR *piaENVReplyTo;
+        IMAPADDR *piaENVTo;
+        IMAPADDR *piaENVCc;
+        IMAPADDR *piaENVBcc;
+        LPSTR pszENVInReplyTo;
+        LPSTR pszENVMessageID;
+        DWORD dwReserved1;
+        DWORD dwReserved2;
+        DWORD dwReserved3;
+    } FETCH_CMD_RESULTS_EX;
+
+    typedef struct tagMBOX_MSGCOUNT
+    {
+        BOOL bGotExistsResponse;
+        DWORD dwExists;
+        BOOL bGotRecentResponse;
+        DWORD dwRecent;
+        BOOL bGotUnseenResponse;
+        DWORD dwUnseen;
+    } MBOX_MSGCOUNT;
+
+    typedef struct tagIMAP_LISTLSUB_RESPONSE
+    {
+        LPSTR pszMailboxName;
+        IMAP_MBOXFLAGS imfMboxFlags;
+        char cHierarchyChar;
+    } IMAP_LISTLSUB_RESPONSE;
+
+    typedef struct tagIMAP_STATUS_RESPONSE
+    {
+        LPSTR pszMailboxName;
+        BOOL fMessages;
+        DWORD dwMessages;
+        BOOL fRecent;
+        DWORD dwRecent;
+        BOOL fUIDNext;
+        DWORD dwUIDNext;
+        BOOL fUIDValidity;
+        DWORD dwUIDValidity;
+        BOOL fUnseen;
+        DWORD dwUnseen;
+    } IMAP_STATUS_RESPONSE;
+
+    typedef struct tagAPPEND_PROGRESS
+    {
+        DWORD dwUploaded;
+        DWORD dwTotal;
+    } APPEND_PROGRESS;
+
+    typedef [switch_type(IMAP_RESPONSE_TYPE)] union tagIMAP_RESPONSE_DATA
+    {
+        [case (irtMAILBOX_UPDATE)] MBOX_MSGCOUNT *pmcMsgCount;
+        [case (irtDELETED_MSG)] DWORD dwDeletedMsgSeqNum;
+        [case (irtFETCH_BODY)] FETCH_BODY_PART *pFetchBodyPart;
+        [case (irtUPDATE_MSG)] FETCH_CMD_RESULTS *pFetchResults;
+        [case (irtAPPLICABLE_FLAGS, irtPERMANENT_FLAGS)] IMAP_MSGFLAGS imfImapMessageFlags;
+        [case (irtUIDVALIDITY)] DWORD dwUIDValidity;
+        [case (irtREADWRITE_STATUS)] BOOL bReadWrite;
+        [case (irtSEARCH)] IRangeList *prlSearchResults;
+        [case (irtMAILBOX_LISTING)] IMAP_LISTLSUB_RESPONSE illrdMailboxListing;
+        [case (irtMAILBOX_STATUS)] IMAP_STATUS_RESPONSE *pisrStatusResponse;
+        [case (irtAPPEND_PROGRESS)] APPEND_PROGRESS *papAppendProgress;
+        [case (irtUPDATE_MSG_EX)] FETCH_CMD_RESULTS_EX *pFetchResultsEx;
+    } IMAP_RESPONSE_DATA;
+
+    typedef struct tagIMAP_RESPONSE
+    {
+        WPARAM wParam;
+        LPARAM lParam;
+        HRESULT hrResult;
+        LPSTR lpszResponseText;
+        IMAP_RESPONSE_TYPE irtResponseType;
+        [switch_is(irtResponseType)] IMAP_RESPONSE_DATA irdResponseData;
+    } IMAP_RESPONSE;
+
+    HRESULT OnResponse([in] const IMAP_RESPONSE *pirIMAPResponse);
+}
+
+[
+object,
+uuid(E9E9D8A8-4EDD-11d0-874F-00AA00530EE9),
+local,
+]
+interface IIMAPTransport : IInternetTransport
+{
+    const DWORD IMAP_CAPABILITY_IMAP4 = 0x1;
+    const DWORD IMAP_CAPABILITY_IMAP4rev1 = 0x2;
+    const DWORD IMAP_CAPABILITY_IDLE = 0x4;
+    const DWORD IMAP_CAPABILITY_ALLFLAGS = 0x7;
+
+    HRESULT InitNew(
+        [in]    LPSTR pszLogFilePath,
+        [in]    IIMAPCallback *pCBHandler);
+
+    HRESULT NewIRangeList(
+        [out]   IRangeList **pprlNewRangeList);
+
+    HRESULT Capability(
+        [out]   DWORD *pdwCapabilityFlags);
+
+    HRESULT Select(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName);
+
+    HRESULT Examine(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName);
+
+    HRESULT Create(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName);
+
+    HRESULT Delete(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName);
+
+    HRESULT Rename(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName,
+        [in]    LPSTR lpszNewMailboxName);
+
+    HRESULT Subscribe(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName);
+
+    HRESULT Unsubscribe(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName);
+
+    HRESULT List(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxNameReference,
+        [in]    LPSTR lpszMailboxNamePattern);
+
+    HRESULT Lsub(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxNameReference,
+        [in]    LPSTR lpszMailboxNamePattern);
+
+    HRESULT Append(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszMailboxName,
+        [in]    LPSTR lpszMessageFlags,
+        [in]    FILETIME ftMessageDateTime,
+        [in]    LPSTREAM lpstmMessageToSave);
+
+    HRESULT Close(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler);
+
+    HRESULT Expunge(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler);
+
+    HRESULT Search(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR lpszSearchCriteria,
+        [in]    boolean bReturnUIDs,
+        [in]    IRangeList *pMsgRange,
+        [in]    boolean bUIDRangeList);
+
+    HRESULT Fetch(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    IRangeList *pMsgRange,
+        [in]    boolean bUIDMsgRange,
+        [in]    LPSTR lpszFetchArgs);
+
+    HRESULT Store(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    IRangeList *pMsgRange,
+        [in]    boolean bUIDRangeList,
+        [in]    LPSTR lpszStoreArgs);
+
+    HRESULT Copy(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    IRangeList *pMsgRange,
+        [in]    boolean bUIDRangeList,
+        [in]    LPSTR lpszMailboxName);
+
+    HRESULT Noop(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler);
+
+    HRESULT ResizeMsgSeqNumTable(
+        [in]    DWORD dwSizeOfMbox);
+
+    HRESULT UpdateSeqNumToUID(
+        [in]    DWORD dwMsgSeqNum,
+        [in]    DWORD dwUID);
+
+    HRESULT RemoveSequenceNum(
+        [in]    DWORD dwDeletedMsgSeqNum);
+
+    HRESULT MsgSeqNumToUID(
+        [in]    DWORD dwMsgSeqNum,
+        [out]   DWORD *pdwUID);
+
+    HRESULT GetMsgSeqNumToUIDArray(
+        [out]   DWORD **ppdwMsgSeqNumToUIDArray,
+        [out]   DWORD *pdwNumberOfElements);
+
+    HRESULT GetHighestMsgSeqNum(
+        [out]   DWORD *pdwHighestMSN);
+
+    HRESULT ResetMsgSeqNumToUID();
+
+    HRESULT SetDefaultCBHandler(
+        [in]    IIMAPCallback *pCBHandler);
+
+    HRESULT Status(
+        [in]    WPARAM wParam,
+        [in]    LPARAM lParam,
+        [in]    IIMAPCallback *pCBHandler,
+        [in]    LPSTR pszMailboxName,
+        [in]    LPSTR pszStatusCmdArgs);
+}
 
 #if 0
 cpp_quote("HRESULT WINAPI CreateRASTransport(IRASTransport **ppTransport);")
 cpp_quote("HRESULT WINAPI CreateNNTPTransport(INNTPTransport **ppTransport);")
-cpp_quote("HRESULT WINAPI CreateIMAPTransport(IIMAPTransport **ppTransport);")
 cpp_quote("HRESULT WINAPI CreateIMAPTransport2(IIMAPTransport2 **ppTransport);")
-cpp_quote("HRESULT WINAPI CreateRangeList(IRangeList **ppRangeList);")
 #endif
+cpp_quote("HRESULT WINAPI CreateRangeList(IRangeList **ppRangeList);")
 cpp_quote("HRESULT WINAPI CreateSMTPTransport(ISMTPTransport **ppTransport);")
 cpp_quote("HRESULT WINAPI CreatePOP3Transport(IPOP3Transport **ppTransport);")
+cpp_quote("HRESULT WINAPI CreateIMAPTransport(IIMAPTransport **ppTransport);")

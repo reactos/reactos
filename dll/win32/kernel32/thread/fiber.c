@@ -84,6 +84,7 @@ ConvertThreadToFiberEx(LPVOID lpParameter,
     }
 
     /* copy some contextual data from the thread to the fiber */
+    pfCurFiber->Parameter = lpParameter;
     pfCurFiber->ExceptionList = pTeb->Tib.ExceptionList;
     pfCurFiber->StackBase = pTeb->Tib.StackBase;
     pfCurFiber->StackLimit = pTeb->Tib.StackLimit;

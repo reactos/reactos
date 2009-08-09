@@ -13,9 +13,6 @@
 
 #ifndef _MGMTAPI_H
 #define _MGMTAPI_H
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
 
 #ifndef _SNMP_H
 #include <snmp.h>

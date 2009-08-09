@@ -11,7 +11,9 @@
 #include <precomp.h>
 
 
-static INT_PTR CALLBACK
+static
+INT_PTR
+CALLBACK
 AboutDialogProc(HWND hDlg,
                 UINT message,
                 WPARAM wParam,

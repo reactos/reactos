@@ -78,7 +78,7 @@ static HRESULT WINAPI IMAPIMalloc_fnQueryInterface(LPMALLOC iface, REFIID refiid
     if (IsEqualIID(refiid, &IID_IUnknown) ||
         IsEqualIID(refiid, &IID_IMalloc))
     {
-        *ppvObj = (LPMALLOC) &MAPI_IMalloc;
+        *ppvObj = &MAPI_IMalloc;
         TRACE("Returning IMalloc (%p)\n", *ppvObj);
         return S_OK;
     }

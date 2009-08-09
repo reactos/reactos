@@ -20,8 +20,8 @@ RamDiskSwitchFromBios(
 
 VOID
 NTAPI
-RamDiskCheckForVirtualFile(
-    VOID
+RamDiskLoadVirtualFile(
+    IN PCHAR FileName
 );
 
 extern PVOID gRamDiskBase;

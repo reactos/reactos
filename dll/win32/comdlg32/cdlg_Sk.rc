@@ -1,5 +1,6 @@
 /*
  * Copyright 2000 Simen Zamecnik
+ * Copyright 2008 M·rio KaËm·r (kario@szm.sk)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,10 +27,10 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Otvorenie s˙boru"
+CAPTION "Otvoriù"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Meno s˙boru:", 1090, 6, 6, 76, 9
+ LTEXT "&N·zov s˙boru:", 1090, 6, 6, 76, 9
  EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "&Adres·re:", -1, 110, 6, 92, 9
@@ -48,10 +49,10 @@ FONT 8, "MS Shell Dlg"
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Uloûiù pod menom..."
+CAPTION "Uloûiù ako..."
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Meno s˙boru:", 1090, 6, 6, 76, 9
+ LTEXT "&N·zov s˙boru:", 1090, 6, 6, 76, 9
  EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
  LTEXT "&Adres·re:", -1, 110, 6, 92, 9
@@ -61,7 +62,7 @@ FONT 8, "MS Shell Dlg"
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  LTEXT "&DiskovÈ jednotky:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Uloû pod menom", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Uloûiù ako", 1, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Zruöiù", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Pomoc", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Len na ËÌtanie", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
@@ -83,7 +84,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Zruöiù", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Nastaviù...", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&Od:", 1090, 60, 80, 30, 9
- LTEXT "&Po:", 1091, 120, 80, 30, 9
+ LTEXT "&Do:", 1091, 120, 80, 30, 9
  LTEXT "&Kvalita tlaËe:", 1092, 6, 100, 76, 9
  COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  CHECKBOX "TlaËiù do &s˙boru", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
@@ -101,7 +102,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "[ûiadna]", 1088, 35, 35, 120, 9
  RADIOBUTTON "äpecifick· &tlaËiareÚ", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Ok", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Zruöiù", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "œaæöi&e voæby...", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Orient·cia", 1073, 6, 85, 100, 50, BS_GROUPBOX
@@ -119,13 +120,13 @@ FONT 8, "MS Shell Dlg"
 
 CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Font"
+CAPTION "PÌsmo"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "&Font:",1088 ,6,3,40,9
+    LTEXT           "&PÌsmo:",1088 ,6,3,40,9
     COMBOBOX        1136 ,6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "ä&t˝l fontu:",1089 ,108,3,44,9
+    LTEXT           "ä&t˝l pÌsma:",1089 ,108,3,44,9
     COMBOBOX        1137,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "&Veækosù:",1090,179,3,30,9
@@ -143,30 +144,31 @@ FONT 8, "MS Shell Dlg"
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Vzorka",grp2,98,72,120,36,WS_GROUP
     CTEXT           "AaBbYyZz",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Scr&ipt (translate):",stc7 ,98,114,80,9
+    LTEXT           "Scr&ipt:",stc7 ,98,114,40,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
+
 
 CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 300, 185
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Farby"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Z·kladnÈ farby:",   1088, 4,    4,  140, 10
- LTEXT "&UûÌvateæskÈ farby:",  1089, 4,   106, 140, 10
- LTEXT "Farba |  Spoj&it·",  1090, 150, 151,  48, 10
+ LTEXT "Z·kladnÈ &farby:",   1088, 4,    4,  140, 10
+ LTEXT "&VlastnÈ farby:",  1089, 4,   106, 140, 10
+ LTEXT "Farba | Pl&n·",  1090, 150, 151,  48, 10
  LTEXT   "»e&rven·:", 726 /*1094*/,249,126,24,10
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "&Zelen·:",727/*1095*/,249,140,24,10
  EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT   "&Modr·:",728 /*1096*/,249,154,24,10
  EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Hue:" ,723 /*1091*/,202,126,22,10
+ LTEXT  "Od&tieÚ:" ,723 /*1091*/,202,126,22,10
  EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Sat:" ,724 /*1092*/,202,140,22,10
+ LTEXT  "&S˝tosù:" ,724 /*1092*/,202,140,22,10
  EDITTEXT 704, 226,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT  "&Lum:" ,725 /*1093*/,202,154,22,10
+ LTEXT  "&Jas:" ,725 /*1093*/,202,154,22,10
  EDITTEXT 705, 226,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  CONTROL "" ,720,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,14,140,86
  CONTROL "" ,721,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP,4,116,140,28
@@ -176,8 +178,8 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON "OK",  1,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Zruöiù", 2, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Pomoc", 1038,100,166, 44, 14
- PUSHBUTTON "&Pridaù k uûÌvateæov˝m farb·m",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Definovaù uûÌvateæskÈ farby >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Prid&aù medzi vlastnÈ farby",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Definovaù vlastnÈ farby >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&i",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
@@ -211,7 +213,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Zameniù za:", -1, 4, 26, 48, 8
  EDITTEXT 1153, 54, 24, 114, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
  CHECKBOX "Len &celÈ slov·", 1040, 5, 46, 104, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "&Rozliöovaù mal· a veækÈ pÌsmen·", 1041, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "&Rozliöovaù malÈ a veækÈ pÌsmen·", 1041, 5, 62, 59, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 
  DEFPUSHBUTTON "N·jsù Ô&alöie", 1, 174, 4, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Za&meniù", 1024, 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
@@ -234,7 +236,7 @@ FONT 8, "MS Shell Dlg"
     GROUPBOX        "TlaËiareÚ",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "tlaËiù do &s˙boru", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
     PUSHBUTTON      "&Vlastnosti",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Meno:",         stc6,  16, 20,  36,8
+    LTEXT           "&N·zov:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stav:",        stc8,  16, 36,  36,10, SS_NOPREFIX
     LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
@@ -273,7 +275,7 @@ BEGIN
 
     GROUPBOX        "TlaËiareÚ",        grp4,   8,  4, 272,84, WS_GROUP
     PUSHBUTTON      "&Vlastnosti",    psh2, 212, 17,  60,14, WS_GROUP
-    LTEXT           "&Meno:",         stc6,  16, 20,  36,8
+    LTEXT           "&N·zov:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stav:",        stc8,  16, 36,  36,10, SS_NOPREFIX
     LTEXT           "Dummy State",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
@@ -296,6 +298,36 @@ BEGIN
     CONTROL         "Na öÌ&rku",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
+PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Setup Page"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Paper", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Size:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "&Tray:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Orientation", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Portrait", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Landscape", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Borders", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "L&eft:", stc15, 88, 172, 21, 8
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "&Right:", stc16, 159, 172, 27, 8
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "T&op:", stc17, 88, 192, 21, 8
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  LTEXT "&Bottom:", stc18, 159, 192, 23, 8
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER|ES_NUMBER
+  DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Zruöiù", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "P&rinter...", psh3, 184, 220, 48, 14
+END
+
 NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
 CAPTION "Otvoriù"
@@ -307,7 +339,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
     LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
 
-    LTEXT	"&Meno s˙boru:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    LTEXT	"&N·zov s˙boru:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
     EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
 
     LTEXT	"&Typ s˙borov",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
@@ -325,11 +357,11 @@ STRINGTABLE DISCARDABLE
     IDS_ABOUTBOX            "&O teste uchopovania adres·rov"
     IDS_DOCUMENTFOLDERS     "Adres·r dokumentov"
     IDS_PERSONAL            "Moje dokumenty"
-    IDS_FAVORITES           "Moji favoriti"
+    IDS_FAVORITES           "Obæ˙benÈ poloûky"
     IDS_PATH                "SystÈmov· cesta"
     IDS_DESKTOP             "Pracovn· plocha"
-    IDS_FONTS               "Fonty"
-    IDS_MYCOMPUTER          "MÙj poËÌtaË"
+    IDS_FONTS               "PÌsma"
+    IDS_MYCOMPUTER          "Tento poËÌtaË"
 }
 
 STRINGTABLE DISCARDABLE
@@ -341,7 +373,7 @@ STRINGTABLE DISCARDABLE
     IDS_CREATEFILE          "File does not exist\nDo you want to create file"
     IDS_OVERWRITEFILE       "File does already exist.\nDo you want to replace it?"
     IDS_INVALID_FILENAME_TITLE "Invalid character(s) in path"
-    IDS_INVALID_FILENAME    "A filename cannot contain any of the following characters:\n                          / : < > |"
+    IDS_INVALID_FILENAME    "N·zov s˙boru nemÙûe obsahovaù ûiadny z nasledovn˝ch znakov:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Cesta neexistuje"
     IDS_FILENOTEXISTING     "S˙bor neexistuje"
 }
@@ -360,9 +392,10 @@ STRINGTABLE DISCARDABLE
     PD32_PRINT_TITLE       "TlaË"
 
     PD32_VALUE_UREADABLE                  "Unreadable Entry"
-    PD32_INVALID_PAGE_RANGE "This value lies not within Page range\n\
-Please enter a value between %d and %d"
-    PD32_FROM_NOT_ABOVE_TO                "The FROM entry cannot exceed TO:"
+    PD32_INVALID_PAGE_RANGE "This value does not lie within the page range.\n\
+Please enter a value between %d and %d."
+    PD32_FROM_NOT_ABOVE_TO                "The 'from' entry cannot exceed the \
+'to' entry."
     PD32_MARGINS_OVERLAP                  "Margins overlap or fall outside \
 Paper boundaries.\nPlease reenter margins"
     PD32_NR_OF_COPIES_EMPTY               "The NumberOfCopies entry cannot \
@@ -371,7 +404,7 @@ be empty"
 supported by your printer.\nPlease enter a value between 1 and %d"
     PD32_PRINT_ERROR                      "A printer error occurred"
     PD32_NO_DEFAULT_PRINTER               "Nie je nastaven· implicitn· tlaËiareÚ"
-    PD32_CANT_FIND_PRINTER                "Cannot find the printer"
+    PD32_CANT_FIND_PRINTER                "Nemoûno n·jsù tlaËiareÚ"
     PD32_OUT_OF_MEMORY                    "Nedostatok pam‰te"
     PD32_GENERIC_ERROR                    "Vyskytla sa chyba"
     PD32_DRIVER_UNKNOWN                   "Nezn·my ovl·daË tlaËiarne"
@@ -382,27 +415,27 @@ Please install one and retry."
     PD32_DEFAULT_PRINTER                  "Implicitn· tlaËiareÚ; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "There are %d documents in queue"
     PD32_MARGINS_IN_INCHES                "Okraje [palce]"
-    PD32_MARGINS_IN_MILIMETERS            "Okraje [mm]"
-    PD32_MILIMETERS                       "mm"
+    PD32_MARGINS_IN_MILLIMETERS           "Okraje [mm]"
+    PD32_MILLIMETERS                      "mm"
 
     PD32_PRINTER_STATUS_READY             "Pripraven·"
     PD32_PRINTER_STATUS_PAUSED            "Pozastaven·; "
     PD32_PRINTER_STATUS_ERROR             "Chyba; "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Pending deletion; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Paper jam; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Uviaznut˝ papier; "
     PD32_PRINTER_STATUS_PAPER_OUT         "Ch˝ba papier; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Feed paper manual; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Paper problem; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "ProblÈm s papierom; "
     PD32_PRINTER_STATUS_OFFLINE           "TlaËiareÚ v stave offline; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Active; "
     PD32_PRINTER_STATUS_BUSY              "Zanepr·zdnen·; "
     PD32_PRINTER_STATUS_PRINTING          "Prebieha tlaË; "
     PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Output tray is full; "
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "Nie je k dispozÌcii; "
-    PD32_PRINTER_STATUS_WAITING           "Waiting; "
+    PD32_PRINTER_STATUS_WAITING           "»ak· sa; "
     PD32_PRINTER_STATUS_PROCESSING        "Prebieha spracovanie; "
     PD32_PRINTER_STATUS_INITIALIZING      "Inicializ·cia; "
-    PD32_PRINTER_STATUS_WARMING_UP        "Warming up; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Zahrievanie; "
     PD32_PRINTER_STATUS_TONER_LOW         "Prim·lo toneru; "
     PD32_PRINTER_STATUS_NO_TONER          "Ch˝ba toner; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
@@ -410,5 +443,43 @@ Please install one and retry."
     PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Nedostatok pam‰te; "
     PD32_PRINTER_STATUS_DOOR_OPEN         "Dvierka tlaËiarne s˙ otvorenÈ; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Nezn·my print server; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Power safe mode; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "⁄sporn˝ reûim; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Regular"
+    IDS_FONT_BOLD          "TuËnÈ"
+    IDS_FONT_ITALIC        "KurzÌva"
+    IDS_FONT_BOLD_ITALIC   "TuËnÈ kurzÌva"
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "»ierna"
+    IDS_COLOR_MAROON    "Maroon"
+    IDS_COLOR_GREEN     "Zelen·"
+    IDS_COLOR_OLIVE     "Olive"
+    IDS_COLOR_NAVY      "Navy"
+    IDS_COLOR_PURPLE    "Purple"
+    IDS_COLOR_TEAL      "Teal"
+    IDS_COLOR_GRAY      "Gray"
+    IDS_COLOR_SILVER    "Silver"
+    IDS_COLOR_RED       "»erven·"
+    IDS_COLOR_LIME      "Lime"
+    IDS_COLOR_YELLOW    "élt·"
+    IDS_COLOR_BLUE      "Modr·"
+    IDS_COLOR_FUCHSIA   "Fuchsia"
+    IDS_COLOR_AQUA      "Aqua"
+    IDS_COLOR_WHITE     "Biela"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Select a font size between %d and %d points."
+    IDS_SAVE_BUTTON "&Save"
+    IDS_SAVE_IN     "Save &in:"
+    IDS_SAVE        "Uloûiù"
+    IDS_SAVE_AS     "Uloûiù ako"
+    IDS_OPEN_FILE   "Otvoriù s˙bor"
 }

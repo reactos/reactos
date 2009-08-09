@@ -1,105 +1,129 @@
-/*
- * excpt.h
+/**
  * This file has no copyright assigned and is placed in the Public Domain.
- * This file is a part of the mingw-runtime package.
- * No warranty is given; refer to the file DISCLAIMER within the package.
- *
- * Support for operating system level structured exception handling.
- *
- * NOTE: This is very preliminary stuff. I am also pretty sure it is
- *       completely Intel specific.
- *
+ * This file is part of the w64 mingw-runtime package.
+ * No warranty is given; refer to the file DISCLAIMER within this package.
  */
+#ifndef _INC_EXCPT
+#define _INC_EXCPT
 
-#ifndef	_EXCPT_H_
-#define	_EXCPT_H_
+#include <crtdefs.h>
 
-/* All the headers include this file. */
-#if defined(__MINGW32__)
-#include <_mingw.h>
-#endif
+#pragma pack(push,_CRT_PACKING)
 
-/*
- * NOTE: The constants structs and typedefs below should be defined in the
- *       Win32 API headers.
- */
-#define EXCEPTION_EXECUTE_HANDLER       1
-#define EXCEPTION_CONTINUE_SEARCH       0
-#define EXCEPTION_CONTINUE_EXECUTION    -1
-
-#define	EH_NONCONTINUABLE	0x01
-#define	EH_UNWINDING		0x02
-#define	EH_EXIT_UNWIND		0x04
-#define	EH_STACK_INVALID	0x08
-#define	EH_NESTED_CALL		0x10
-
-#ifndef	RC_INVOKED
-
-typedef enum {
-	ExceptionContinueExecution,
-	ExceptionContinueSearch,
-	ExceptionNestedException,
-	ExceptionCollidedUnwind
-} EXCEPTION_DISPOSITION;
-
-
-/*
- * End of stuff that should be in the Win32 API files.
- */
-
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-/*
- * The type of function that is expected as an exception handler to be
- * installed with __try1.
- */
-struct _CONTEXT;
-struct _EXCEPTION_RECORD;
-typedef EXCEPTION_DISPOSITION (*PEXCEPTION_HANDLER)
-		(struct _EXCEPTION_RECORD*, void*, struct _CONTEXT*, void*);
-
-/*
- * This is not entirely necessary, but it is the structure installed by
- * the __try1 primitive below.
- */
-typedef struct _EXCEPTION_REGISTRATION
+typedef enum _EXCEPTION_DISPOSITION
 {
-	struct _EXCEPTION_REGISTRATION*	prev;
-	PEXCEPTION_HANDLER		handler;
-} EXCEPTION_REGISTRATION, *PEXCEPTION_REGISTRATION;
+    ExceptionContinueExecution,
+    ExceptionContinueSearch,
+    ExceptionNestedException,
+    ExceptionCollidedUnwind,
+} EXCEPTION_DISPOSITION;
 
-/*
- * A macro which installs the supplied exception handler.
- * Push the pointer to the new handler onto the stack,
- * then push the pointer to the old registration structure (at fs:0)
- * onto the stack, then put a pointer to the new registration
- * structure (i.e. the current stack pointer) at fs:0.
- */
+#if (defined(_X86_) && !defined(__x86_64))
+  struct _EXCEPTION_RECORD;
+  struct _CONTEXT;
+
+  EXCEPTION_DISPOSITION __cdecl _except_handler(struct _EXCEPTION_RECORD *_ExceptionRecord,void *_EstablisherFrame,struct _CONTEXT *_ContextRecord,void *_DispatcherContext);
+#elif defined(__ia64__)
+
+  typedef struct _EXCEPTION_POINTERS *Exception_info_ptr;
+  struct _EXCEPTION_RECORD;
+  struct _CONTEXT;
+  struct _DISPATCHER_CONTEXT;
+
+  _CRTIMP EXCEPTION_DISPOSITION __cdecl __C_specific_handler (struct _EXCEPTION_RECORD *_ExceptionRecord,unsigned __int64 _MemoryStackFp,unsigned __int64 _BackingStoreFp,struct _CONTEXT *_ContextRecord,struct _DISPATCHER_CONTEXT *_DispatcherContext,unsigned __int64 _GlobalPointer);
+#elif defined(__x86_64)
+
+  struct _EXCEPTION_RECORD;
+  struct _CONTEXT;
+  struct _DISPATCHER_CONTEXT;
+
+  _CRTIMP EXCEPTION_DISPOSITION __cdecl __C_specific_handler (struct _EXCEPTION_RECORD *_ExceptionRecord,void *_EstablisherFrame,struct _CONTEXT *_ContextRecord,struct _DISPATCHER_CONTEXT *_DispatcherContext);
+#endif
+
+#ifdef _MSC_VER // HACK!!!
+#define GetExceptionCode _exception_code
+#define exception_code _exception_code
+#define GetExceptionInformation (struct _EXCEPTION_POINTERS *)_exception_info
+#define exception_info (struct _EXCEPTION_POINTERS *)_exception_info
+#define AbnormalTermination _abnormal_termination
+#define abnormal_termination _abnormal_termination
+#endif
+
+  unsigned long __cdecl _exception_code(void);
+  void *__cdecl _exception_info(void);
+  int __cdecl _abnormal_termination(void);
+
+#define EXCEPTION_EXECUTE_HANDLER 1
+#define EXCEPTION_CONTINUE_SEARCH 0
+#define EXCEPTION_CONTINUE_EXECUTION -1
+
+#if 0
+  /* CRT stuff */
+  typedef void (__cdecl * _PHNDLR)(int);
+
+  struct _XCPT_ACTION {
+    unsigned long XcptNum;
+    int SigNum;
+    _PHNDLR XcptAction;
+  };
+
+  extern struct _XCPT_ACTION _XcptActTab[];
+  extern int _XcptActTabCount;
+  extern int _XcptActTabSize;
+  extern int _First_FPE_Indx;
+  extern int _Num_FPE;
+
+  int __cdecl __CppXcptFilter(unsigned long _ExceptionNum,struct _EXCEPTION_POINTERS * _ExceptionPtr);
+  int __cdecl _XcptFilter(unsigned long _ExceptionNum,struct _EXCEPTION_POINTERS * _ExceptionPtr);
+
+  /*
+  * The type of function that is expected as an exception handler to be
+  * installed with _try1.
+  */
+  typedef EXCEPTION_DISPOSITION (*PEXCEPTION_HANDLER)(struct _EXCEPTION_RECORD*, void*, struct _CONTEXT*, void*);
+
+#ifndef HAVE_NO_SEH
+  /*
+  * This is not entirely necessary, but it is the structure installed by
+  * the _try1 primitive below.
+  */
+  typedef struct _EXCEPTION_REGISTRATION {
+    struct _EXCEPTION_REGISTRATION *prev;
+    EXCEPTION_DISPOSITION (*handler)(struct _EXCEPTION_RECORD*, void*, struct _CONTEXT*, void*);
+  } EXCEPTION_REGISTRATION, *PEXCEPTION_REGISTRATION;
+
+  typedef EXCEPTION_REGISTRATION EXCEPTION_REGISTRATION_RECORD;
+  typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
+#endif
+
+#if (defined(_X86_) && !defined(__x86_64))
 #define __try1(pHandler) \
-	__asm__ ("pushl %0;pushl %%fs:0;movl %%esp,%%fs:0;" : : "g" (pHandler));
+  __asm__ ("pushl %0;pushl %%fs:0;movl %%esp,%%fs:0;" : : "g" (pHandler));
 
-/*
- * A macro which (despite its name) *removes* an installed
- * exception handler. Should be used only in conjunction with the above
- * install routine __try1.
- * Move the pointer to the old reg. struct (at the current stack
- * position) to fs:0, replacing the pointer we installed above,
- * then add 8 to the stack pointer to get rid of the space we
- * used when we pushed on our new reg. struct above. Notice that
- * the stack must be in the exact state at this point that it was
- * after we did __try1 or this will smash things.
- */
 #define	__except1	\
-	__asm__ ("movl (%%esp),%%eax;movl %%eax,%%fs:0;addl $8,%%esp;" \
-	 : : : "%eax");
+  __asm__ ("movl (%%esp),%%eax;movl %%eax,%%fs:0;addl $8,%%esp;" \
+  : : : "%eax");
+#elif defined(__x86_64)
+#define __try1(pHandler) \
+  __asm__ ("pushq %0;pushq %%gs:0;movq %%rsp,%%gs:0;" : : "g" (pHandler));
 
-#ifdef	__cplusplus
+#define	__except1	\
+  __asm__ ("movq (%%rsp),%%rax;movq %%rax,%%gs:0;addq $16,%%rsp;" \
+  : : : "%rax");
+#else
+#define __try1(pHandler)
+#define __except1
+#endif
+
+#endif // 0
+
+#ifdef __cplusplus
 }
 #endif
 
-#endif	/* Not RC_INVOKED */
-
-#endif	/* _EXCPT_H_ not defined */
+#pragma pack(pop)
+#endif

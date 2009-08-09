@@ -567,7 +567,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	    SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
         /* allocate memory for info struct */
-        infoPtr = (PROGRESS_INFO *)Alloc (sizeof(PROGRESS_INFO));
+        infoPtr = Alloc (sizeof(PROGRESS_INFO));
         if (!infoPtr) return -1;
         SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
@@ -722,7 +722,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	return infoPtr->Marquee;
 
     default:
-        if ((message >= WM_USER) && (message < WM_APP))
+        if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
 	    ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam );
         return DefWindowProcW( hwnd, message, wParam, lParam );
     }

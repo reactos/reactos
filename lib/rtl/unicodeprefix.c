@@ -465,13 +465,14 @@ RtlNextUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
                      BOOLEAN Restart)
 {
     PRTL_SPLAY_LINKS SplayLinks;
-    PUNICODE_PREFIX_TABLE_ENTRY Entry, CaseMatchEntry;
+    PUNICODE_PREFIX_TABLE_ENTRY Entry, CaseMatchEntry = NULL;
 
     DPRINT("RtlNextUnicodePrefix(): Table %p Restart %b\n",
         PrefixTable, Restart);
 
     /* We might need this entry 2/3rd of the time, so cache it now */
-    CaseMatchEntry = PrefixTable->LastNextEntry->CaseMatch;
+    if (PrefixTable->LastNextEntry)
+        CaseMatchEntry = PrefixTable->LastNextEntry->CaseMatch;
 
     /* Check if this is a restart or if we don't have a last entry */
     if ((Restart) || !(PrefixTable->LastNextEntry))

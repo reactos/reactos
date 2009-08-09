@@ -83,6 +83,7 @@ INT stop_service(CHAR *service)
 		  row = (CHAR *) malloc(row_size*sizeof(CHAR));
 		  if (row == NULL)
 	      {
+		    free(srvlst);
 		    return 0;
 		  }
 		  memset(row,0,row_size*sizeof(CHAR));

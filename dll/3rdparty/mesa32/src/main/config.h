@@ -1,13 +1,9 @@
-/**
- * \file config.h
- * Tunable configuration parameters.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  7.0
+ * Version:  7.3
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 2008  VMware, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -27,9 +23,17 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * \file config.h
+ * Tunable configuration parameters.
+ */
 
 #ifndef MESA_CONFIG_H_INCLUDED
 #define MESA_CONFIG_H_INCLUDED
+
+
+#include "main/mfeatures.h"
+
 
 /**
  * \name OpenGL implementation limits
@@ -82,7 +86,7 @@
 /** Minimum point size */
 #define MIN_POINT_SIZE 1.0
 /** Maximum point size */
-#define MAX_POINT_SIZE 20.0
+#define MAX_POINT_SIZE 60.0
 /** Point size granularity */
 #define POINT_SIZE_GRANULARITY 0.1
 
@@ -108,27 +112,31 @@
 /** Maximum rectangular texture size - GL_NV_texture_rectangle */
 #define MAX_TEXTURE_RECT_SIZE 2048
 
-/** Number of texture units - GL_ARB_multitexture
- * This needs to be the larger of MAX_TEXTURE_COORD_UNITS and
- * MAX_TEXTURE_IMAGE_UNITS seen below, since MAX_TEXTURE_UNITS is used
- * to dimension some arrays that store both coord and image data.
-*/
-#define MAX_TEXTURE_UNITS 8
-
-/*@}*/
-
+/** Maximum number of layers in a 1D or 2D array texture - GL_MESA_texture_array */
+#define MAX_ARRAY_TEXTURE_LAYERS 64
 
 /**
- * \name Separate numbers of texture coordinates and texture image units.
- *
- * These values will eventually replace most instances of MAX_TEXTURE_UNITS.
- * We should always have MAX_TEXTURE_COORD_UNITS <= MAX_TEXTURE_IMAGE_UNITS.
- * And, GL_MAX_TEXTURE_UNITS <= MAX_TEXTURE_COORD_UNITS.
+ * Max number of texture coordinate units.  This mainly just applies to
+ * the fixed-function vertex code.  This will be difficult to raise above
+ * eight because of various vertex attribute bitvectors.
  */
-/*@{*/
 #define MAX_TEXTURE_COORD_UNITS 8
-#define MAX_TEXTURE_IMAGE_UNITS 8
-/*@}*/
+
+/**
+ * Max number of texture image units.  Also determines number of texture
+ * samplers in shaders.
+ */
+#define MAX_TEXTURE_IMAGE_UNITS 16
+
+/**
+ * Larger of MAX_TEXTURE_COORD_UNITS and MAX_TEXTURE_IMAGE_UNITS.
+ * This value is only used for dimensioning arrays.
+ * Either MAX_TEXTURE_COORD_UNITS or MAX_TEXTURE_IMAGE_UNITS (or the
+ * corresponding ctx->Const.MaxTextureCoord/ImageUnits fields) should be
+ * used almost everywhere else.
+ */
+#define MAX_TEXTURE_UNITS ((MAX_TEXTURE_COORD_UNITS > MAX_TEXTURE_IMAGE_UNITS) ? MAX_TEXTURE_COORD_UNITS : MAX_TEXTURE_IMAGE_UNITS)
+
 
 /** 
  * Maximum viewport/image width. Must accomodate all texture sizes too. 
@@ -160,25 +168,6 @@
 /** For GL_EXT_texture_lod_bias (typically MAX_TEXTURE_LEVELS - 1) */
 #define MAX_TEXTURE_LOD_BIAS 11.0
 
-/** For GL_NV_vertex_program */
-/*@{*/
-#define MAX_NV_VERTEX_PROGRAM_INSTRUCTIONS 128
-#define MAX_NV_VERTEX_PROGRAM_TEMPS         12
-#define MAX_NV_VERTEX_PROGRAM_PARAMS        128	/* KW: power of two */
-#define MAX_NV_VERTEX_PROGRAM_INPUTS        16
-#define MAX_NV_VERTEX_PROGRAM_OUTPUTS       15
-/*@}*/
-
-/** For GL_NV_fragment_program */
-/*@{*/
-#define MAX_NV_FRAGMENT_PROGRAM_INSTRUCTIONS 1024 /* 72 for GL_ARB_f_p */
-#define MAX_NV_FRAGMENT_PROGRAM_TEMPS         96
-#define MAX_NV_FRAGMENT_PROGRAM_PARAMS        64
-#define MAX_NV_FRAGMENT_PROGRAM_INPUTS        12
-#define MAX_NV_FRAGMENT_PROGRAM_OUTPUTS        3
-#define MAX_NV_FRAGMENT_PROGRAM_WRITE_ONLYS    2
-/*@}*/
-
 /** For GL_ARB_vertex_program */
 /*@{*/
 #define MAX_VERTEX_PROGRAM_ADDRESS_REGS 1
@@ -195,22 +184,45 @@
 
 /** For any program target/extension */
 /*@{*/
-#define MAX_PROGRAM_LOCAL_PARAMS 128 /* KW: power of two */
+#define MAX_PROGRAM_LOCAL_PARAMS 256 /**< per-program constants (power of two) */
 #define MAX_PROGRAM_ENV_PARAMS 128
 #define MAX_PROGRAM_MATRICES 8
 #define MAX_PROGRAM_MATRIX_STACK_DEPTH 4
 #define MAX_PROGRAM_CALL_DEPTH 8
 #define MAX_PROGRAM_TEMPS 128
 #define MAX_PROGRAM_ADDRESS_REGS 2
-#define MAX_UNIFORMS 128
-#define MAX_VARYING 8
+#define MAX_UNIFORMS 256   /**< number of vec4 uniforms */
+#define MAX_VARYING 8      /**< number of float[4] vectors */
+#define MAX_SAMPLERS MAX_TEXTURE_IMAGE_UNITS
+#define MAX_PROGRAM_INPUTS 32
+#define MAX_PROGRAM_OUTPUTS 32
 /*@}*/
+
+/** For GL_NV_vertex_program */
+/*@{*/
+#define MAX_NV_VERTEX_PROGRAM_INSTRUCTIONS 128
+#define MAX_NV_VERTEX_PROGRAM_TEMPS         12
+#define MAX_NV_VERTEX_PROGRAM_PARAMS        MAX_PROGRAM_ENV_PARAMS
+#define MAX_NV_VERTEX_PROGRAM_INPUTS        16
+#define MAX_NV_VERTEX_PROGRAM_OUTPUTS       15
+/*@}*/
+
+/** For GL_NV_fragment_program */
+/*@{*/
+#define MAX_NV_FRAGMENT_PROGRAM_INSTRUCTIONS 1024 /* 72 for GL_ARB_f_p */
+#define MAX_NV_FRAGMENT_PROGRAM_TEMPS         96
+#define MAX_NV_FRAGMENT_PROGRAM_PARAMS        64
+#define MAX_NV_FRAGMENT_PROGRAM_INPUTS        12
+#define MAX_NV_FRAGMENT_PROGRAM_OUTPUTS        3
+#define MAX_NV_FRAGMENT_PROGRAM_WRITE_ONLYS    2
+/*@}*/
+
 
 /** For GL_ARB_vertex_shader */
 /*@{*/
 #define MAX_VERTEX_ATTRIBS 16
-#define MAX_VERTEX_TEXTURE_IMAGE_UNITS 0
-#define MAX_COMBINED_TEXTURE_IMAGE_UNITS (MAX_TEXTURE_IMAGE_UNITS + MAX_VERTEX_TEXTURE_IMAGE_UNITS)
+#define MAX_VERTEX_TEXTURE_IMAGE_UNITS MAX_TEXTURE_IMAGE_UNITS
+#define MAX_COMBINED_TEXTURE_IMAGE_UNITS MAX_TEXTURE_IMAGE_UNITS
 /*@}*/
 
 
@@ -276,40 +288,6 @@
 #define GCOMP 1
 #define BCOMP 2
 #define ACOMP 3
-
-
-/*
- * Enable/disable features (blocks of code) by setting FEATURE_xyz to 0 or 1.
- */
-#ifndef _HAVE_FULL_GL
-#define _HAVE_FULL_GL 1
-#endif
-
-#define FEATURE_userclip  _HAVE_FULL_GL
-#define FEATURE_texgen  _HAVE_FULL_GL
-#define FEATURE_windowpos  _HAVE_FULL_GL
-#define FEATURE_ARB_occlusion_query  _HAVE_FULL_GL
-#define FEATURE_ARB_fragment_program  _HAVE_FULL_GL
-#define FEATURE_ARB_vertex_buffer_object  _HAVE_FULL_GL
-#define FEATURE_ARB_vertex_program  _HAVE_FULL_GL
-
-#define FEATURE_ARB_vertex_shader _HAVE_FULL_GL
-#define FEATURE_ARB_fragment_shader _HAVE_FULL_GL
-#define FEATURE_ARB_shader_objects (FEATURE_ARB_vertex_shader || FEATURE_ARB_fragment_shader)
-#define FEATURE_ARB_shading_language_100 FEATURE_ARB_shader_objects
-#define FEATURE_ARB_shading_language_120 FEATURE_ARB_shader_objects
-
-#define FEATURE_EXT_framebuffer_blit _HAVE_FULL_GL
-#define FEATURE_EXT_framebuffer_object _HAVE_FULL_GL
-#define FEATURE_EXT_pixel_buffer_object  _HAVE_FULL_GL
-#define FEATURE_EXT_texture_sRGB _HAVE_FULL_GL
-#define FEATURE_EXT_timer_query  _HAVE_FULL_GL
-#define FEATURE_ATI_fragment_shader _HAVE_FULL_GL
-#define FEATURE_MESA_program_debug  _HAVE_FULL_GL
-#define FEATURE_NV_fence  _HAVE_FULL_GL
-#define FEATURE_NV_fragment_program  _HAVE_FULL_GL
-#define FEATURE_NV_vertex_program  _HAVE_FULL_GL
-/*@}*/
 
 
 /**

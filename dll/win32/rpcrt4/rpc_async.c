@@ -64,7 +64,7 @@ RPC_STATUS WINAPI RpcAsyncInitializeHandle(PRPC_ASYNC_STATE pAsync, unsigned int
     pAsync->Flags = 0;
     pAsync->StubInfo = NULL;
     pAsync->RuntimeInfo = NULL;
-    memset(&pAsync->Reserved, 0, sizeof(*pAsync) - FIELD_OFFSET(RPC_ASYNC_STATE, Reserved));
+    memset(pAsync->Reserved, 0, sizeof(*pAsync) - FIELD_OFFSET(RPC_ASYNC_STATE, Reserved));
 
     return RPC_S_OK;
 }

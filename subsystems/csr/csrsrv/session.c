@@ -21,7 +21,7 @@ HANDLE CsrSmApiPort;
 PSB_API_ROUTINE CsrServerSbApiDispatch[5] =
 {
     CsrSbCreateSession,
-    CsrSbForeignSessionComplete,
+    CsrSbTerminateSession,
     CsrSbForeignSessionComplete,
     CsrSbCreateProcess,
     NULL
@@ -30,7 +30,7 @@ PSB_API_ROUTINE CsrServerSbApiDispatch[5] =
 PCHAR CsrServerSbApiName[5] =
 {
     "SbCreateSession",
-    "SbTerminateSEssion",
+    "SbTerminateSession",
     "SbForeignSessionComplete",
     "SbCreateProcess",
     "Unknown Csr Sb Api Number"

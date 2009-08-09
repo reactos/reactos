@@ -117,7 +117,7 @@ NdisWriteEventLogEntry(
  *     DataSize: number of bytes in Data
  *     Data: binary dump data to help analyzing the event
  * NOTES:
- *     - STDCALL, not CDECL like WriteError...
+ *     - NTAPI, not CDECL like WriteError...
  *     - FIXME Needs to use the real log interface, once there is one
  */
 {

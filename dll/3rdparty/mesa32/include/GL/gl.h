@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0
+ * Version:  6.5.1
  *
- * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -2208,6 +2208,39 @@ GLAPI void GLAPIENTRY glProgramCallbackMESA(GLenum target, GLprogramcallbackMESA
 GLAPI void GLAPIENTRY glGetProgramRegisterfvMESA(GLenum target, GLsizei len, const GLubyte *name, GLfloat *v);
 
 #endif /* GL_MESA_program_debug */
+
+
+#ifndef GL_MESA_texture_array
+#define GL_MESA_texture_array 1
+
+/* GL_MESA_texture_array uses the same enum values as GL_EXT_texture_array.
+ */
+#ifndef GL_EXT_texture_array
+
+#ifdef GL_GLEXT_PROTOTYPES
+GLAPI void APIENTRY glFramebufferTextureLayerEXT(GLenum target,
+    GLenum attachment, GLuint texture, GLint level, GLint layer);
+#endif /* GL_GLEXT_PROTOTYPES */
+
+#if 0
+/* (temporarily) disabled because of collision with typedef in glext.h
+ * that happens if apps include both gl.h and glext.h
+ */
+typedef void (APIENTRYP PFNGLFRAMEBUFFERTEXTURELAYEREXTPROC) (GLenum target,
+    GLenum attachment, GLuint texture, GLint level, GLint layer);
+#endif
+
+#define GL_TEXTURE_1D_ARRAY_EXT         0x8C18
+#define GL_PROXY_TEXTURE_1D_ARRAY_EXT   0x8C19
+#define GL_TEXTURE_2D_ARRAY_EXT         0x8C1A
+#define GL_PROXY_TEXTURE_2D_ARRAY_EXT   0x8C1B
+#define GL_TEXTURE_BINDING_1D_ARRAY_EXT 0x8C1C
+#define GL_TEXTURE_BINDING_2D_ARRAY_EXT 0x8C1D
+#define GL_MAX_ARRAY_TEXTURE_LAYERS_EXT 0x88FF
+#define GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER_EXT 0x8CD4
+#endif
+
+#endif
 
 
 #ifndef GL_ATI_blend_equation_separate

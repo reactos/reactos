@@ -24,10 +24,6 @@
 #define _NTIFS_
 #define _GNU_NTIFS_
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 #ifdef _NTOSKRNL_
 /* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
 #define NTKERNELAPI
@@ -35,7 +31,7 @@
 #define NTKERNELAPI DECLSPEC_IMPORT
 #endif
 
-#include "ntddk.h"
+#include <ntddk.h>
 
 #define _NTIFS_INCLUDED_
 #ifdef __cplusplus
@@ -57,14 +53,11 @@ extern "C" {
 
 #include "csq.h"
 
-typedef struct _SE_EXPORTS                  *PSE_EXPORTS;
-
 #ifdef _NTOSKRNL_
 extern PUCHAR                       FsRtlLegalAnsiCharacterArray;
 #else
 extern DECLSPEC_IMPORT PUCHAR       FsRtlLegalAnsiCharacterArray;
 #endif
-extern PSE_EXPORTS                  SeExports;
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
 
@@ -272,6 +265,8 @@ typedef enum _SECURITY_LOGON_TYPE
 
 #define FSRTL_FLAG2_DO_MODIFIED_WRITE        (0x01)
 #define FSRTL_FLAG2_SUPPORTS_FILTER_CONTEXTS (0x02)
+#define FSRTL_FLAG2_PURGE_WHEN_MAPPED        (0x04)
+#define FSRTL_FLAG2_IS_PAGING_FILE           (0x08)
 
 #define FSRTL_FSP_TOP_LEVEL_IRP         (0x01)
 #define FSRTL_CACHE_TOP_LEVEL_IRP       (0x02)
@@ -560,16 +555,11 @@ typedef enum _AUDIT_EVENT_TYPE
 
 typedef PVOID OPLOCK, *POPLOCK;
 
-typedef struct _CACHE_MANAGER_CALLBACKS         *PCACHE_MANAGER_CALLBACKS;
-typedef struct _FILE_GET_QUOTA_INFORMATION      *PFILE_GET_QUOTA_INFORMATION;
-typedef struct _HANDLE_TABLE                    *PHANDLE_TABLE;
-typedef struct _KPROCESS                        *PKPROCESS;
-typedef struct _KQUEUE                          *PKQUEUE;
-typedef struct _KTRAP_FRAME                     *PKTRAP_FRAME;
-typedef struct _OBJECT_DIRECTORY                *POBJECT_DIRECTORY;
-typedef struct _SHARED_CACHE_MAP                *PSHARED_CACHE_MAP;
-typedef struct _VACB                            *PVACB;
-typedef struct _VAD_HEADER                      *PVAD_HEADER;
+//
+// Forwarders
+//
+struct _RTL_AVL_TABLE;
+struct _RTL_GENERIC_TABLE;
 
 typedef ULONG LBN;
 typedef LBN *PLBN;
@@ -662,21 +652,203 @@ typedef struct _COMPRESSED_DATA_INFO {
 } COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
 
 typedef struct _SID_IDENTIFIER_AUTHORITY {
-	BYTE Value[6];
+	UCHAR Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
-typedef PVOID PSID;
+
 typedef struct _SID {
-   BYTE  Revision;
-   BYTE  SubAuthorityCount;
+   UCHAR  Revision;
+   UCHAR  SubAuthorityCount;
    SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   DWORD SubAuthority[ANYSIZE_ARRAY];
+   ULONG SubAuthority[ANYSIZE_ARRAY];
 } SID, *PISID;
 typedef struct _SID_AND_ATTRIBUTES {
 	PSID Sid;
-	DWORD Attributes;
+	ULONG Attributes;
 } SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
 typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
+
+
+
+//
+// Universal well-known SIDs
+//
+#define SECURITY_NULL_SID_AUTHORITY         {0,0,0,0,0,0}
+#define SECURITY_WORLD_SID_AUTHORITY        {0,0,0,0,0,1}
+#define SECURITY_LOCAL_SID_AUTHORITY        {0,0,0,0,0,2}
+#define SECURITY_CREATOR_SID_AUTHORITY      {0,0,0,0,0,3}
+#define SECURITY_NON_UNIQUE_AUTHORITY       {0,0,0,0,0,4}
+#define SECURITY_RESOURCE_MANAGER_AUTHORITY {0,0,0,0,0,9}
+
+#define SECURITY_NULL_RID                 (0x00000000L)
+#define SECURITY_WORLD_RID                (0x00000000L)
+#define SECURITY_LOCAL_RID                (0x00000000L)
+
+#define SECURITY_CREATOR_OWNER_RID        (0x00000000L)
+#define SECURITY_CREATOR_GROUP_RID        (0x00000001L)
+
+#define SECURITY_CREATOR_OWNER_SERVER_RID (0x00000002L)
+#define SECURITY_CREATOR_GROUP_SERVER_RID (0x00000003L)
+
+#define SECURITY_CREATOR_OWNER_RIGHTS_RID (0x00000004L)
+
+
+
+//
+// NT well-known SIDs
+//
+#define SECURITY_NT_AUTHORITY           {0,0,0,0,0,5}
+
+#define SECURITY_DIALUP_RID             (0x00000001L)
+#define SECURITY_NETWORK_RID            (0x00000002L)
+#define SECURITY_BATCH_RID              (0x00000003L)
+#define SECURITY_INTERACTIVE_RID        (0x00000004L)
+#define SECURITY_LOGON_IDS_RID          (0x00000005L)
+#define SECURITY_LOGON_IDS_RID_COUNT    (3L)
+#define SECURITY_SERVICE_RID            (0x00000006L)
+#define SECURITY_ANONYMOUS_LOGON_RID    (0x00000007L)
+#define SECURITY_PROXY_RID              (0x00000008L)
+#define SECURITY_ENTERPRISE_CONTROLLERS_RID (0x00000009L)
+#define SECURITY_SERVER_LOGON_RID       SECURITY_ENTERPRISE_CONTROLLERS_RID
+#define SECURITY_PRINCIPAL_SELF_RID     (0x0000000AL)
+#define SECURITY_AUTHENTICATED_USER_RID (0x0000000BL)
+#define SECURITY_RESTRICTED_CODE_RID    (0x0000000CL)
+#define SECURITY_TERMINAL_SERVER_RID    (0x0000000DL)
+#define SECURITY_REMOTE_LOGON_RID       (0x0000000EL)
+#define SECURITY_THIS_ORGANIZATION_RID  (0x0000000FL)
+#define SECURITY_IUSER_RID              (0x00000011L)
+#define SECURITY_LOCAL_SYSTEM_RID       (0x00000012L)
+#define SECURITY_LOCAL_SERVICE_RID      (0x00000013L)
+#define SECURITY_NETWORK_SERVICE_RID    (0x00000014L)
+
+#define SECURITY_NT_NON_UNIQUE          (0x00000015L)
+#define SECURITY_NT_NON_UNIQUE_SUB_AUTH_COUNT  (3L)
+
+#define SECURITY_ENTERPRISE_READONLY_CONTROLLERS_RID (0x00000016L)
+
+#define SECURITY_BUILTIN_DOMAIN_RID     (0x00000020L)
+#define SECURITY_WRITE_RESTRICTED_CODE_RID (0x00000021L)
+
+
+#define SECURITY_PACKAGE_BASE_RID       (0x00000040L)
+#define SECURITY_PACKAGE_RID_COUNT      (2L)
+#define SECURITY_PACKAGE_NTLM_RID       (0x0000000AL)
+#define SECURITY_PACKAGE_SCHANNEL_RID   (0x0000000EL)
+#define SECURITY_PACKAGE_DIGEST_RID     (0x00000015L)
+
+#define SECURITY_MIN_BASE_RID		(0x00000050L)
+
+#define SECURITY_SERVICE_ID_BASE_RID    (0x00000050L)
+#define SECURITY_SERVICE_ID_RID_COUNT   (6L)
+
+#define SECURITY_RESERVED_ID_BASE_RID   (0x00000051L)
+
+#define SECURITY_APPPOOL_ID_BASE_RID    (0x00000052L)
+#define SECURITY_APPPOOL_ID_RID_COUNT   (6L)
+
+#define SECURITY_VIRTUALSERVER_ID_BASE_RID    (0x00000053L)
+#define SECURITY_VIRTUALSERVER_ID_RID_COUNT   (6L)
+
+#define SECURITY_MAX_BASE_RID		(0x0000006FL)
+
+#define SECURITY_MAX_ALWAYS_FILTERED    (0x000003E7L)
+#define SECURITY_MIN_NEVER_FILTERED     (0x000003E8L)
+
+#define SECURITY_OTHER_ORGANIZATION_RID (0x000003E8L)
+
+
+
+//
+// Well-known domain relative sub-authority values (RIDs)
+//
+#define DOMAIN_GROUP_RID_ENTERPRISE_READONLY_DOMAIN_CONTROLLERS (0x000001F2L)
+
+#define FOREST_USER_RID_MAX            (0x000001F3L)
+
+//
+// Well-known users
+//
+#define DOMAIN_USER_RID_ADMIN          (0x000001F4L)
+#define DOMAIN_USER_RID_GUEST          (0x000001F5L)
+#define DOMAIN_USER_RID_KRBTGT         (0x000001F6L)
+
+#define DOMAIN_USER_RID_MAX            (0x000003E7L)
+
+//
+// Well-known groups
+//
+#define DOMAIN_GROUP_RID_ADMINS        (0x00000200L)
+#define DOMAIN_GROUP_RID_USERS         (0x00000201L)
+#define DOMAIN_GROUP_RID_GUESTS        (0x00000202L)
+#define DOMAIN_GROUP_RID_COMPUTERS     (0x00000203L)
+#define DOMAIN_GROUP_RID_CONTROLLERS   (0x00000204L)
+#define DOMAIN_GROUP_RID_CERT_ADMINS   (0x00000205L)
+#define DOMAIN_GROUP_RID_SCHEMA_ADMINS (0x00000206L)
+#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS (0x00000207L)
+#define DOMAIN_GROUP_RID_POLICY_ADMINS (0x00000208L)
+#define DOMAIN_GROUP_RID_READONLY_CONTROLLERS (0x00000209L)
+
+//
+// Well-known aliases
+//
+#define DOMAIN_ALIAS_RID_ADMINS                         (0x00000220L)
+#define DOMAIN_ALIAS_RID_USERS                          (0x00000221L)
+#define DOMAIN_ALIAS_RID_GUESTS                         (0x00000222L)
+#define DOMAIN_ALIAS_RID_POWER_USERS                    (0x00000223L)
+
+#define DOMAIN_ALIAS_RID_ACCOUNT_OPS                    (0x00000224L)
+#define DOMAIN_ALIAS_RID_SYSTEM_OPS                     (0x00000225L)
+#define DOMAIN_ALIAS_RID_PRINT_OPS                      (0x00000226L)
+#define DOMAIN_ALIAS_RID_BACKUP_OPS                     (0x00000227L)
+
+#define DOMAIN_ALIAS_RID_REPLICATOR                     (0x00000228L)
+#define DOMAIN_ALIAS_RID_RAS_SERVERS                    (0x00000229L)
+#define DOMAIN_ALIAS_RID_PREW2KCOMPACCESS               (0x0000022AL)
+#define DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS           (0x0000022BL)
+#define DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS      (0x0000022CL)
+#define DOMAIN_ALIAS_RID_INCOMING_FOREST_TRUST_BUILDERS (0x0000022DL)
+
+#define DOMAIN_ALIAS_RID_MONITORING_USERS               (0x0000022EL)
+#define DOMAIN_ALIAS_RID_LOGGING_USERS                  (0x0000022FL)
+#define DOMAIN_ALIAS_RID_AUTHORIZATIONACCESS            (0x00000230L)
+#define DOMAIN_ALIAS_RID_TS_LICENSE_SERVERS             (0x00000231L)
+#define DOMAIN_ALIAS_RID_DCOM_USERS                     (0x00000232L)
+#define DOMAIN_ALIAS_RID_IUSERS                         (0x00000238L)
+#define DOMAIN_ALIAS_RID_CRYPTO_OPERATORS               (0x00000239L)
+#define DOMAIN_ALIAS_RID_CACHEABLE_PRINCIPALS_GROUP     (0x0000023BL)
+#define DOMAIN_ALIAS_RID_NON_CACHEABLE_PRINCIPALS_GROUP (0x0000023CL)
+#define DOMAIN_ALIAS_RID_EVENT_LOG_READERS_GROUP        (0x0000023DL)
+#define DOMAIN_ALIAS_RID_CERTSVC_DCOM_ACCESS_GROUP      (0x0000023EL)
+
+
+#define SECURITY_MANDATORY_LABEL_AUTHORITY          {0,0,0,0,0,16}
+#define SECURITY_MANDATORY_UNTRUSTED_RID            (0x00000000L)
+#define SECURITY_MANDATORY_LOW_RID                  (0x00001000L)
+#define SECURITY_MANDATORY_MEDIUM_RID               (0x00002000L)
+#define SECURITY_MANDATORY_HIGH_RID                 (0x00003000L)
+#define SECURITY_MANDATORY_SYSTEM_RID               (0x00004000L)
+#define SECURITY_MANDATORY_PROTECTED_PROCESS_RID    (0x00005000L)
+
+//
+// SECURITY_MANDATORY_MAXIMUM_USER_RID is the highest RID that
+// can be set by a usermode caller.
+//
+#define SECURITY_MANDATORY_MAXIMUM_USER_RID   SECURITY_MANDATORY_SYSTEM_RID
+
+#define MANDATORY_LEVEL_TO_MANDATORY_RID(IL) (IL * 0x1000)
+
+//
+// Allocate the System Luid.  The first 1000 LUIDs are reserved.
+// Use #999 here (0x3e7 = 999)
+//
+#define SYSTEM_LUID                     { 0x3e7, 0x0 }
+#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
+#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
+#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
+#define IUSER_LUID                      { 0x3e3, 0x0 }
+
+
+
 typedef struct _TOKEN_SOURCE {
 	CHAR SourceName[TOKEN_SOURCE_LENGTH];
 	LUID SourceIdentifier;
@@ -691,7 +863,7 @@ typedef struct _TOKEN_DEFAULT_DACL {
 	PACL DefaultDacl;
 } TOKEN_DEFAULT_DACL,*PTOKEN_DEFAULT_DACL;
 typedef struct _TOKEN_GROUPS {
-	DWORD GroupCount;
+	ULONG GroupCount;
 	SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
 } TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
 typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
@@ -716,7 +888,7 @@ typedef struct _TOKEN_PRIMARY_GROUP {
 	PSID PrimaryGroup;
 } TOKEN_PRIMARY_GROUP,*PTOKEN_PRIMARY_GROUP;
 typedef struct _TOKEN_PRIVILEGES {
-	DWORD PrivilegeCount;
+	ULONG PrivilegeCount;
 	LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
 } TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
 typedef enum tagTOKEN_TYPE {
@@ -729,34 +901,42 @@ typedef struct _TOKEN_STATISTICS {
 	LARGE_INTEGER ExpirationTime;
 	TOKEN_TYPE TokenType;
 	SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-	DWORD DynamicCharged;
-	DWORD DynamicAvailable;
-	DWORD GroupCount;
-	DWORD PrivilegeCount;
+	ULONG DynamicCharged;
+	ULONG DynamicAvailable;
+	ULONG GroupCount;
+	ULONG PrivilegeCount;
 	LUID ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
 typedef struct _TOKEN_USER {
 	SID_AND_ATTRIBUTES User;
 } TOKEN_USER, *PTOKEN_USER;
-typedef DWORD SECURITY_INFORMATION,*PSECURITY_INFORMATION;
-typedef WORD SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
+typedef USHORT SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
 typedef struct _SECURITY_DESCRIPTOR {
-	BYTE Revision;
-	BYTE Sbz1;
+	UCHAR Revision;
+	UCHAR Sbz1;
 	SECURITY_DESCRIPTOR_CONTROL Control;
 	PSID Owner;
 	PSID Group;
 	PACL Sacl;
 	PACL Dacl;
 } SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
+
+#define SECURITY_DESCRIPTOR_MIN_LENGTH   (sizeof(SECURITY_DESCRIPTOR))
+
+typedef struct _OBJECT_TYPE_LIST {
+    USHORT Level;
+    USHORT Sbz;
+    GUID *ObjectType;
+    } OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
+    
 typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
-    BYTE Revision;
-    BYTE Sbz1;
+    UCHAR Revision;
+    UCHAR Sbz1;
     SECURITY_DESCRIPTOR_CONTROL Control;
-    DWORD Owner;
-    DWORD Group;
-    DWORD Sacl;
-    DWORD Dacl;
+    DWORD_PTR Owner;
+    DWORD_PTR Group;
+    DWORD_PTR Sacl;
+    DWORD_PTR Dacl;
 } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 typedef enum _TOKEN_INFORMATION_CLASS {
 	TokenUser=1,TokenGroups,TokenPrivileges,TokenOwner,
@@ -793,6 +973,30 @@ typedef struct _REPARSE_DATA_BUFFER {
         } GenericReparseBuffer;
     };
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+
+
+
+//
+// MicroSoft reparse point tags
+//
+#define IO_REPARSE_TAG_MOUNT_POINT              (0xA0000003L)
+#define IO_REPARSE_TAG_HSM                      (0xC0000004L)
+#define IO_REPARSE_TAG_DRIVE_EXTENDER           (0x80000005L)
+#define IO_REPARSE_TAG_HSM2                     (0x80000006L)
+#define IO_REPARSE_TAG_SIS                      (0x80000007L)
+#define IO_REPARSE_TAG_DFS                      (0x8000000AL)
+#define IO_REPARSE_TAG_FILTER_MANAGER           (0x8000000BL)
+#define IO_REPARSE_TAG_SYMLINK                  (0xA000000CL)
+#define IO_REPARSE_TAG_IIS_CACHE                (0xA0000010L)
+#define IO_REPARSE_TAG_DFSR                     (0x80000012L)
+
+//
+// Reserved reparse tags
+//
+#define IO_REPARSE_TAG_RESERVED_ZERO            (0)
+#define IO_REPARSE_TAG_RESERVED_ONE             (1)
+#define IO_REPARSE_TAG_RESERVED_RANGE           IO_REPARSE_TAG_RESERVED_ONE
+
 
 #define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 
@@ -888,23 +1092,6 @@ typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
     ULONG           EaSize;
     WCHAR           FileName[0];
 } FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
-
-typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
-    ULONG         NextEntryOffset;
-    ULONG         FileIndex;
-    LARGE_INTEGER CreationTime;
-    LARGE_INTEGER LastAccessTime;
-    LARGE_INTEGER LastWriteTime;
-    LARGE_INTEGER ChangeTime;
-    LARGE_INTEGER EndOfFile;
-    LARGE_INTEGER AllocationSize;
-    ULONG         FileAttributes;
-    ULONG         FileNameLength;
-    ULONG         EaSize;
-    CHAR          ShortNameLength;
-    WCHAR         ShortName[12];
-    WCHAR         FileName[0];
-} FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION;
 
 typedef struct _FILE_EA_INFORMATION {
     ULONG EaSize;
@@ -1065,6 +1252,14 @@ typedef struct _FILE_MOVE_CLUSTER_INFORMATION
     ULONG FileNameLength;
     WCHAR FileName[1];
 } FILE_MOVE_CLUSTER_INFORMATION, *PFILE_MOVE_CLUSTER_INFORMATION;
+
+typedef struct _FILE_NOTIFY_INFORMATION
+{
+    ULONG NextEntryOffset;
+    ULONG Action;
+    ULONG FileNameLength;
+    WCHAR FileName[1];
+} FILE_NOTIFY_INFORMATION, *PFILE_NOTIFY_INFORMATION;
 
 /* raw internal file lock struct returned from FsRtlGetNextFileLock */
 typedef struct _FILE_SHARED_LOCK_ENTRY {
@@ -1594,6 +1789,89 @@ typedef struct _RTL_GENERIC_TABLE
     PVOID TableContext;
 } RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
 
+typedef struct _UNICODE_PREFIX_TABLE_ENTRY
+{
+    CSHORT NodeTypeCode;
+    CSHORT NameLength;
+    struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
+    struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
+    RTL_SPLAY_LINKS Links;
+    PUNICODE_STRING Prefix;
+} UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;
+    
+typedef struct _UNICODE_PREFIX_TABLE
+{
+    CSHORT NodeTypeCode;
+    CSHORT NameLength;
+    PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
+    PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
+} UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
+    
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeUnicodePrefix (
+    IN PUNICODE_PREFIX_TABLE PrefixTable
+);
+    
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlInsertUnicodePrefix (
+    IN PUNICODE_PREFIX_TABLE PrefixTable,
+    IN PUNICODE_STRING Prefix,
+    IN PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry
+);
+    
+NTSYSAPI
+VOID
+NTAPI
+RtlRemoveUnicodePrefix (
+    IN PUNICODE_PREFIX_TABLE PrefixTable,
+    IN PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry
+);
+
+NTSYSAPI
+PUNICODE_PREFIX_TABLE_ENTRY
+NTAPI
+RtlFindUnicodePrefix (
+    IN PUNICODE_PREFIX_TABLE PrefixTable,
+    IN PUNICODE_STRING FullName,
+    IN ULONG CaseInsensitiveIndex
+);
+    
+NTSYSAPI
+PUNICODE_PREFIX_TABLE_ENTRY
+NTAPI
+RtlNextUnicodePrefix (
+    IN PUNICODE_PREFIX_TABLE PrefixTable,
+    IN BOOLEAN Restart
+);
+
+#undef PRTL_GENERIC_COMPARE_ROUTINE
+#undef PRTL_GENERIC_ALLOCATE_ROUTINE
+#undef PRTL_GENERIC_FREE_ROUTINE
+#undef RTL_GENERIC_TABLE
+#undef PRTL_GENERIC_TABLE
+
+#define PRTL_GENERIC_COMPARE_ROUTINE PRTL_AVL_COMPARE_ROUTINE
+#define PRTL_GENERIC_ALLOCATE_ROUTINE PRTL_AVL_ALLOCATE_ROUTINE
+#define PRTL_GENERIC_FREE_ROUTINE PRTL_AVL_FREE_ROUTINE
+#define RTL_GENERIC_TABLE RTL_AVL_TABLE
+#define PRTL_GENERIC_TABLE PRTL_AVL_TABLE
+
+#define RtlInitializeGenericTable               RtlInitializeGenericTableAvl
+#define RtlInsertElementGenericTable            RtlInsertElementGenericTableAvl
+#define RtlInsertElementGenericTableFull        RtlInsertElementGenericTableFullAvl
+#define RtlDeleteElementGenericTable            RtlDeleteElementGenericTableAvl
+#define RtlLookupElementGenericTable            RtlLookupElementGenericTableAvl
+#define RtlLookupElementGenericTableFull        RtlLookupElementGenericTableFullAvl
+#define RtlEnumerateGenericTable                RtlEnumerateGenericTableAvl
+#define RtlEnumerateGenericTableWithoutSplaying RtlEnumerateGenericTableWithoutSplayingAvl
+#define RtlGetElementGenericTable               RtlGetElementGenericTableAvl
+#define RtlNumberGenericTableElements           RtlNumberGenericTableElementsAvl
+#define RtlIsGenericTableEmpty                  RtlIsGenericTableEmptyAvl
+
 typedef struct _RTL_AVL_TABLE
 {
     RTL_BALANCED_LINKS BalancedRoot;
@@ -1742,6 +2020,8 @@ typedef struct _SE_EXPORTS {
 
 } SE_EXPORTS, *PSE_EXPORTS;
 
+extern PSE_EXPORTS SeExports;
+
 typedef struct
 {
   LARGE_INTEGER StartingLcn;
@@ -1759,6 +2039,17 @@ typedef struct _SECURITY_CLIENT_CONTEXT {
     BOOLEAN                     ServerIsRemote;
     TOKEN_CONTROL               ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
+
+//
+//  The following are the inherit flags that go into the AceFlags field
+//  of an Ace header.
+//
+#define OBJECT_INHERIT_ACE                (0x1)
+#define CONTAINER_INHERIT_ACE             (0x2)
+#define NO_PROPAGATE_INHERIT_ACE          (0x4)
+#define INHERIT_ONLY_ACE                  (0x8)
+#define INHERITED_ACE                     (0x10)
+#define VALID_INHERIT_FLAGS               (0x1F)
 
 typedef struct _ACE_HEADER
 {
@@ -1812,9 +2103,9 @@ typedef struct _TUNNEL {
 typedef struct _VAD_HEADER {
     PVOID       StartVPN;
     PVOID       EndVPN;
-    PVAD_HEADER ParentLink;
-    PVAD_HEADER LeftLink;
-    PVAD_HEADER RightLink;
+    struct _VAD_HEADER* ParentLink;
+    struct _VAD_HEADER* LeftLink;
+    struct _VAD_HEADER* RightLink;
     ULONG       Flags;          /* LSB = CommitCharge */
     PVOID       ControlArea;
     PVOID       FirstProtoPte;
@@ -2396,7 +2687,7 @@ ExDisableResourceBoostLite (
 );
 
 NTKERNELAPI
-ULONG
+SIZE_T
 NTAPI
 ExQueryPoolBlockSize (
     IN PVOID      PoolBlock,
@@ -2654,6 +2945,19 @@ FsRtlCopyWrite (
     IN PDEVICE_OBJECT       DeviceObject
 );
 
+#define HEAP_NO_SERIALIZE               0x00000001
+#define HEAP_GROWABLE                   0x00000002
+#define HEAP_GENERATE_EXCEPTIONS        0x00000004
+#define HEAP_ZERO_MEMORY                0x00000008
+#define HEAP_REALLOC_IN_PLACE_ONLY      0x00000010
+#define HEAP_TAIL_CHECKING_ENABLED      0x00000020
+#define HEAP_FREE_CHECKING_ENABLED      0x00000040
+#define HEAP_DISABLE_COALESCE_ON_FREE   0x00000080
+
+#define HEAP_CREATE_ALIGN_16            0x00010000
+#define HEAP_CREATE_ENABLE_TRACING      0x00020000
+#define HEAP_CREATE_ENABLE_EXECUTE      0x00040000
+
 NTSYSAPI
 PVOID
 NTAPI
@@ -2752,7 +3056,7 @@ FsRtlFastCheckLockForRead (
     IN PLARGE_INTEGER       Length,
     IN ULONG                Key,
     IN PFILE_OBJECT         FileObject,
-    IN PEPROCESS            Process
+    IN PVOID                Process
 );
 
 NTKERNELAPI
@@ -2764,7 +3068,7 @@ FsRtlFastCheckLockForWrite (
     IN PLARGE_INTEGER       Length,
     IN ULONG                Key,
     IN PFILE_OBJECT         FileObject,
-    IN PEPROCESS            Process
+    IN PVOID                Process
 );
 
 #define FsRtlFastLock(A1, A2, A3, A4, A5, A6, A7, A8, A9, A10, A11) (       \
@@ -3289,17 +3593,6 @@ VOID
 NTAPI
 FsRtlNotifyInitializeSync (
     IN PNOTIFY_SYNC *NotifySync
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-FsRtlNotifyReportChange (
-    IN PNOTIFY_SYNC NotifySync,
-    IN PLIST_ENTRY  NotifyList,
-    IN PSTRING      FullTargetName,
-    IN PUSHORT      FileNamePartLength,
-    IN ULONG        FilterMatch
 );
 
 NTKERNELAPI
@@ -3900,6 +4193,8 @@ IoVerifyVolume (
     IN BOOLEAN          AllowRawMount
 );
 
+#if !defined (_M_AMD64)
+
 NTHALAPI
 KIRQL
 FASTCALL
@@ -3914,6 +4209,51 @@ KeReleaseQueuedSpinLock (
     IN KSPIN_LOCK_QUEUE_NUMBER Number,
     IN KIRQL OldIrql
 );
+
+NTHALAPI
+KIRQL
+FASTCALL
+KeAcquireSpinLockRaiseToSynch(
+    IN OUT PKSPIN_LOCK SpinLock
+);
+
+NTHALAPI
+LOGICAL
+FASTCALL
+KeTryToAcquireQueuedSpinLock(
+  KSPIN_LOCK_QUEUE_NUMBER Number,
+  PKIRQL OldIrql);
+
+#else
+
+NTKERNELAPI
+KIRQL
+FASTCALL
+KeAcquireQueuedSpinLock (
+    IN KSPIN_LOCK_QUEUE_NUMBER Number
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+KeReleaseQueuedSpinLock (
+    IN KSPIN_LOCK_QUEUE_NUMBER Number,
+    IN KIRQL OldIrql
+);
+
+NTKERNELAPI
+KIRQL
+KeAcquireSpinLockRaiseToSynch(
+    IN OUT PKSPIN_LOCK SpinLock
+);
+
+NTKERNELAPI
+LOGICAL
+KeTryToAcquireQueuedSpinLock(
+  KSPIN_LOCK_QUEUE_NUMBER Number,
+  PKIRQL OldIrql);
+
+#endif
 
 NTKERNELAPI
 VOID
@@ -4321,7 +4661,7 @@ NTAPI
 RtlAllocateHeap (
     IN HANDLE  HeapHandle,
     IN ULONG   Flags,
-    IN ULONG   Size
+    IN SIZE_T   Size
 );
 
 NTSYSAPI
@@ -4592,6 +4932,31 @@ RtlNtStatusToDosError (
 );
 
 NTSYSAPI
+ULONG
+NTAPI
+RtlxUnicodeStringToOemSize(
+    PCUNICODE_STRING UnicodeString
+    );
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlxOemStringToUnicodeSize(
+    PCOEM_STRING OemString
+);
+
+#define RtlOemStringToUnicodeSize(STRING) (                 \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                              \
+    RtlxOemStringToUnicodeSize(STRING) :                    \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)  \
+)
+
+#define RtlOemStringToCountedUnicodeSize(STRING) (                    \
+    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL)) \
+)
+
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlOemStringToUnicodeString(
@@ -4782,6 +5147,42 @@ BOOLEAN
 NTAPI
 RtlValidSid (
     IN PSID Sid
+);
+
+//
+// RTL time functions
+//
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1980 (
+    PLARGE_INTEGER Time,
+    PULONG ElapsedSeconds
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1980ToTime (
+    ULONG ElapsedSeconds,
+    PLARGE_INTEGER Time
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTimeToSecondsSince1970 (
+    PLARGE_INTEGER Time,
+    PULONG ElapsedSeconds
+);
+
+NTSYSAPI
+VOID
+NTAPI
+RtlSecondsSince1970ToTime (
+    ULONG ElapsedSeconds,
+    PLARGE_INTEGER Time
 );
 
 NTKERNELAPI
@@ -5119,7 +5520,7 @@ NTAPI
 ZwAllocateVirtualMemory (
     IN HANDLE       ProcessHandle,
     IN OUT PVOID    *BaseAddress,
-    IN ULONG        ZeroBits,
+    IN ULONG_PTR    ZeroBits,
     IN OUT PSIZE_T  RegionSize,
     IN ULONG        AllocationType,
     IN ULONG        Protect

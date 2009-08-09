@@ -35,7 +35,7 @@ PVOID FsStaticBufferDisk = 0, FsStaticBufferData = 0;
 
 VOID FileSystemError(PCSTR ErrorString)
 {
-	DbgPrint((DPRINT_FILESYSTEM, "%s\n", ErrorString));
+	DPRINTM(DPRINT_FILESYSTEM, "%s\n", ErrorString);
 
 	UiMessageBox(ErrorString);
 }
@@ -141,7 +141,7 @@ PFILE FsOpenFile(PCSTR FileName)
 	//
 	// Print status message
 	//
-	DbgPrint((DPRINT_FILESYSTEM, "Opening file '%s'...\n", FileName));
+	DPRINTM(DPRINT_FILESYSTEM, "Opening file '%s'...\n", FileName);
 
 	//
 	// Check and see if the first character is '\' or '/' and remove it if so
@@ -168,11 +168,11 @@ PFILE FsOpenFile(PCSTR FileName)
 	//
 	if (FileHandle != NULL)
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "FsOpenFile() succeeded. FileHandle: 0x%x\n", FileHandle));
+		DPRINTM(DPRINT_FILESYSTEM, "FsOpenFile() succeeded. FileHandle: 0x%x\n", FileHandle);
 	}
 	else
 	{
-		DbgPrint((DPRINT_FILESYSTEM, "FsOpenFile() failed.\n"));
+		DPRINTM(DPRINT_FILESYSTEM, "FsOpenFile() failed.\n");
 	}
 
 	return FileHandle;
@@ -285,7 +285,7 @@ ULONG FsGetNumPathParts(PCSTR Path)
 	}
 	num++;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num));
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
 
 	return num;
 }
@@ -317,5 +317,5 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 
 	Buffer[i] = 0;
 
-	DbgPrint((DPRINT_FILESYSTEM, "FatGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer));
+	DPRINTM(DPRINT_FILESYSTEM, "FatGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }

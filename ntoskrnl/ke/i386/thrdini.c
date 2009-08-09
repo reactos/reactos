@@ -132,7 +132,7 @@ Ke386InitThreadWithContext(IN PKTHREAD Thread,
             Thread->NpxState = NPX_STATE_NOT_LOADED &~ CR0_MP;
         }
 
-        /* Disable any debug regiseters */
+        /* Disable any debug registers */
         Context->ContextFlags &= ~CONTEXT_DEBUG_REGISTERS;
 
         /* Setup the Trap Frame */
@@ -217,7 +217,7 @@ Ke386InitThreadWithContext(IN PKTHREAD Thread,
     /* And set up the Context Switch Frame */
     CtxSwitchFrame->RetAddr = KiThreadStartup;
     CtxSwitchFrame->ApcBypassDisable = TRUE;
-    CtxSwitchFrame->ExceptionList = EXCEPTION_CHAIN_END;;
+    CtxSwitchFrame->ExceptionList = EXCEPTION_CHAIN_END;
 
     /* Save back the new value of the kernel stack. */
     Thread->KernelStack = (PVOID)CtxSwitchFrame;

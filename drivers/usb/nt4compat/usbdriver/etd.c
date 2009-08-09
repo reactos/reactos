@@ -300,7 +300,7 @@ elem_list_get_total_count(PEHCI_ELEM_LIST plist)
 {
     if (plist == NULL)
         return 0;
-    return plist->total_count;;
+    return plist->total_count;
 }
 
 LONG

@@ -51,7 +51,8 @@ VOID DisplayWin32Error(DWORD dwErrorCode);
 
 
 /* clock.c */
-#define CLM_SETTIME (WM_USER + 1)
+#define CLM_STOPCLOCK (WM_USER + 1)
+#define CLM_STARTCLOCK (WM_USER + 2)
 
 BOOL RegisterClockControl(VOID);
 VOID UnregisterClockControl(VOID);

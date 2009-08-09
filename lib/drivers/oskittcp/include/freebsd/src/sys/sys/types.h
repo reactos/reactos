@@ -126,6 +126,7 @@ typedef	_BSD_SIZE_T_	size_t;
 
 #ifdef	_BSD_SSIZE_T_
 typedef	_BSD_SSIZE_T_	ssize_t;
+#define _SSIZE_T_DEFINED
 #undef	_BSD_SSIZE_T_
 #endif
 

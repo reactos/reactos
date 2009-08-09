@@ -7,9 +7,6 @@
 
 #ifndef _RAPI_H
 #define _RAPI_H
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
 
 typedef struct IRAPIStream
 {

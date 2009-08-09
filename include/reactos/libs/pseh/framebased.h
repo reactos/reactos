@@ -154,6 +154,7 @@ static _SEHPortableTryLevel_t * const _SEHPortableTryLevel = 0;
 		_SEHHandlers.SH_Finally = (FINALLY_);
 #endif
 
+#define _SEH_SetExceptionCode(CODE_) (_SEHPortableFrame->SPF_Code = (CODE_))
 #define _SEH_GetExceptionCode() (unsigned long)(_SEHPortableFrame->SPF_Code)
 
 #define _SEH_GetExceptionPointers() \

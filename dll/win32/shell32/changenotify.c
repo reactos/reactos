@@ -18,15 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-#include <string.h>
+#include <precomp.h>
 
-#define NONAMELESSUNION
-#define NONAMELESSSTRUCT
-#include "windef.h"
-#include "winbase.h"
-#include "wine/debug.h"
-#include "shell32_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -192,7 +185,7 @@ SHChangeNotifyRegister(
     LONG wEventMask,
     UINT uMsg,
     int cItems,
-    SHChangeNotifyEntry *lpItems)
+    const SHChangeNotifyEntry *lpItems)
 {
     LPNOTIFICATIONLIST item;
     int i;
@@ -315,8 +308,8 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     switch (typeFlag)
     {
     case SHCNF_PATHA:
-        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathA((LPCSTR)dwItem1);
-        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA((LPCSTR)dwItem2);
+        if (dwItem1) Pidls[0] = SHSimpleIDListFromPathA((LPCSTR)dwItem1); //FIXME
+        if (dwItem2) Pidls[1] = SHSimpleIDListFromPathA((LPCSTR)dwItem2); //FIXME
         break;
     case SHCNF_PATHW:
         if (dwItem1) Pidls[0] = SHSimpleIDListFromPathW((LPCWSTR)dwItem1);

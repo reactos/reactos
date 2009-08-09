@@ -154,6 +154,55 @@ BOOL WINAPI SymEnumSourceFiles(HANDLE hProcess, ULONG64 ModBase, PCSTR Mask,
     return TRUE;
 }
 
+static inline void re_append(char** mask, unsigned* len, char ch)
+{
+    *mask = HeapReAlloc(GetProcessHeap(), 0, *mask, ++(*len));
+    (*mask)[*len - 2] = ch;
+}
+
+static BOOL compile_regex(regex_t* re, const char* srcfile)
+{
+    char*                       mask;
+    unsigned                    len = 1;
+
+    mask = HeapAlloc(GetProcessHeap(), 0, 1);
+    re_append(&mask, &len, '^');
+    if (!srcfile || !*srcfile) re_append(&mask, &len, '*');
+    else while (*srcfile)
+    {
+        switch (*srcfile)
+        {
+        case '\\':
+        case '/':
+            re_append(&mask, &len, '[');
+            re_append(&mask, &len, '\\');
+            re_append(&mask, &len, '\\');
+            re_append(&mask, &len, '/');
+            re_append(&mask, &len, ']');
+            break;
+        case '.':
+            re_append(&mask, &len, '\\');
+            re_append(&mask, &len, '.');
+            break;
+        default:
+            re_append(&mask, &len, *srcfile);
+            break;
+        }
+        srcfile++;
+    }
+    re_append(&mask, &len, '$');
+    mask[len - 1] = '\0';
+    len = regcomp(re, mask, REG_NOSUB);
+    HeapFree(GetProcessHeap(), 0, mask);
+    if (len)
+    {
+        FIXME("Couldn't compile %s\n", mask);
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    return TRUE;
+}
+
 /******************************************************************
  *		SymEnumLines (DBGHELP.@)
  *
@@ -172,17 +221,13 @@ BOOL WINAPI SymEnumLines(HANDLE hProcess, ULONG64 base, PCSTR compiland,
 
     if (!cb) return FALSE;
     if (!(dbghelp_options & SYMOPT_LOAD_LINES)) return TRUE;
-    if (regcomp(&re, srcfile, REG_NOSUB))
-    {
-        FIXME("Couldn't compile %s\n", srcfile);
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
+
     pair.pcs = process_find_by_handle(hProcess);
     if (!pair.pcs) return FALSE;
     if (compiland) FIXME("Unsupported yet (filtering on compiland %s)\n", compiland);
     pair.requested = module_find_by_addr(pair.pcs, base, DMT_UNKNOWN);
     if (!module_get_debug(&pair)) return FALSE;
+    if (!compile_regex(&re, srcfile)) return FALSE;
 
     sci.SizeOfStruct = sizeof(sci);
     sci.ModBase      = base;
@@ -190,7 +235,7 @@ BOOL WINAPI SymEnumLines(HANDLE hProcess, ULONG64 base, PCSTR compiland,
     hash_table_iter_init(&pair.effective->ht_symbols, &hti, NULL);
     while ((ptr = hash_table_iter_up(&hti)))
     {
-        int    i;
+        unsigned int    i;
 
         sym = GET_ENTRY(ptr, struct symt_ht, hash_elt);
         if (sym->symt.tag != SymTagFunction) continue;
@@ -215,6 +260,7 @@ BOOL WINAPI SymEnumLines(HANDLE hProcess, ULONG64 base, PCSTR compiland,
             }
         }
     }
+    regfree(&re);
     return TRUE;
 }
 

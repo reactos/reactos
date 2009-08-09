@@ -24,7 +24,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 /*
  * @unimplemented
  */
-DWORD STDCALL DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
+DWORD WINAPI DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
 {
     UNIMPLEMENTED;
     return 0L;
@@ -33,7 +33,7 @@ DWORD STDCALL DisableMediaSense(HANDLE *pHandle,OVERLAPPED *pOverLapped)
 /*
  * @unimplemented
  */
-DWORD STDCALL RestoreMediaSense(OVERLAPPED* pOverlapped,LPDWORD lpdwEnableCount)
+DWORD WINAPI RestoreMediaSense(OVERLAPPED* pOverlapped,LPDWORD lpdwEnableCount)
 {
     UNIMPLEMENTED;
     return 0L;

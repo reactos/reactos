@@ -267,7 +267,7 @@ BOOL SetRootPath(TCHAR *InPath)
  * CD / CHDIR
  *
  */
-INT cmd_chdir (LPTSTR cmd, LPTSTR param)
+INT cmd_chdir (LPTSTR param)
 {
 
 	WIN32_FIND_DATA f;
@@ -435,6 +435,12 @@ MakeFullPath(TCHAR * DirPath)
     TCHAR *p = DirPath;
     INT  n;
 
+    if (CreateDirectory(DirPath, NULL))
+        return TRUE;
+    else if (GetLastError() != ERROR_PATH_NOT_FOUND)
+        return FALSE;
+
+    /* got ERROR_PATH_NOT_FOUND, so try building it up one component at a time */
     if (p[0] && p[1] == _T(':'))
         p += 2;
     while (*p == _T('\\'))
@@ -449,8 +455,6 @@ MakeFullPath(TCHAR * DirPath)
            return FALSE;
        p++;
     }
-    if (GetLastError() == ERROR_ALREADY_EXISTS)
-       SetLastError(ERROR_SUCCESS);
 
     return TRUE;
 }
@@ -459,92 +463,44 @@ MakeFullPath(TCHAR * DirPath)
  * MD / MKDIR
  *
  */
-INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
+INT cmd_mkdir (LPTSTR param)
 {
-	LPTSTR dir;		/* pointer to the directory to change to */
-	LPTSTR place;	/* used to search for the \ when no space is used */
-	LPTSTR new_dir, *p = NULL;
-	INT argc;
-	nErrorLevel = 0;
+	LPTSTR *p;
+	INT argc, i;
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_MKDIR_HELP);
 		return 0;
 	}
 
-
-	/* check if there is no space between the command and the path */
-	if (param[0] == _T('\0'))
+	p = split (param, &argc, FALSE);
+	if (argc == 0)
 	{
-		/* search for the \ or . so that both short & long names will work */
-		for (place = cmd; *place; place++)
-			if (*place == _T('.') || *place == _T('\\'))
-				break;
-
-		if (*place)
-		{
-			argc = 0;
-			if (add_entry(&argc, &p, place))
-				dir = place;
-			else
-				dir = NULL;
-		}
-		else
-			/* signal that there are no parameters */
-			dir = NULL;
-	}
-	else
-	{
-		p = split (param, &argc, FALSE);
-		if (argc > 1)
-		{
-			/*JPP 20-Jul-1998 use standard error message */
-			error_too_many_parameters (param);
-			freep (p);
-			return 1;
-		}
-		else
-			dir = p[0];
-	}
-
-	if (!dir)
-	{
-		ConErrResPuts (STRING_ERROR_REQ_PARAM_MISSING);
+		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
 		nErrorLevel = 1;
-		if(p != NULL)
-			freep (p);
+		freep(p);
 		return 1;
 	}
 
-	/* Add a \ at the end of the path is there isnt on already */
-	if (dir[_tcslen (dir) - 1] != _T('\\'))
+	nErrorLevel = 0;
+	for (i = 0; i < argc; i++)
 	{
-		new_dir = cmd_realloc(dir, (_tcslen (dir) + 2) * sizeof(TCHAR));
-		if (new_dir != NULL)
+		if (!MakeFullPath(p[i]))
 		{
-			p[0] = dir = new_dir;
-			_tcscat(dir,_T("\\"));
+			if(GetLastError() == ERROR_PATH_NOT_FOUND)
+			{
+				ConErrResPuts(STRING_MD_ERROR2);
+			}
+			else
+			{
+				ErrorMessage (GetLastError(), _T("MD"));
+			}
+			nErrorLevel = 1;
 		}
 	}
 
-    if (!MakeFullPath(dir))
-    {
-        if(GetLastError() == ERROR_PATH_NOT_FOUND)
-        {
-            ConErrResPuts(STRING_MD_ERROR2);
-        }
-        else
-        {
-            ErrorMessage (GetLastError(), _T("MD"));
-        }
-        nErrorLevel = 1;
-        freep (p);
-        return 1;
-    }
-
 	freep (p);
-
-	return 0;
+	return nErrorLevel;
 }
 #endif
 
@@ -588,19 +544,17 @@ BOOL DeleteFolder(LPTSTR FileName)
     }
 	return RemoveDirectory(FileName);
 }
-INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
+INT cmd_rmdir (LPTSTR param)
 {
-	TCHAR dir[MAX_PATH];		/* pointer to the directory to change to */
 	TCHAR ch;
 	INT args;
-	LPTSTR *arg = NULL;
+	INT dirCount;
+	LPTSTR *arg;
 	INT i;
 	BOOL RD_SUB = FALSE;
 	BOOL RD_QUIET = FALSE;
-	HANDLE hFile;
-	WIN32_FIND_DATA f;
 	INT res;
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	INT nError = 0;
 	TCHAR szFullPath[MAX_PATH];
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -609,19 +563,8 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	nErrorLevel = 0;
-
 	arg = split (param, &args, FALSE);
-
-	if (args == 0)
-	{
-		/* only command given */
-		error_req_param_missing ();
-		freep (arg);
-		return 1;
-	}
-
-	dir[0] = 0;
+	dirCount = 0;
 
 	/* check for options anywhere in command line */
 	for (i = 0; i < args; i++)
@@ -645,77 +588,61 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 		}
 		else
 		{
-			/* get the folder name */
-			_tcscpy(dir,arg[i]);
+			dirCount++;
 		}
 	}
 
-	if (dir[0] == _T('\0'))
+	if (dirCount == 0)
 	{
 		/* No folder to remove */
-		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
+		error_req_param_missing();
 		freep(arg);
 		return 1;
 	}
 
-	GetFullPathName(dir,MAX_PATH,szFullPath,NULL);
-
-	/* remove trailing \ if any, but ONLY if dir is not the root dir */
-	if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == _T('\\'))
-		szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
-
-	if(RD_SUB)
+	for (i = 0; i < args; i++)
 	{
-		/* ask if they want to delete evrything in the folder */
-		if (!RD_QUIET)
-		{
-			LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
-			res = FilePromptYNA (szMsg);
-			if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
-			{
-				freep(arg);
-				nErrorLevel = 1;
-				return 1;
-			}
-		}
+		if (*arg[i] == _T('/'))
+			continue;
 
-	}
-	else
-	{
-		/* check for files in the folder */
-		_tcscat(szFullPath,_T("\\*"));
-
-		hFile = FindFirstFile(szFullPath, &f);
-		if (hFile != INVALID_HANDLE_VALUE)
+		if (RD_SUB)
 		{
-			do
+			/* ask if they want to delete evrything in the folder */
+			if (!RD_QUIET)
 			{
-				if (!_tcscmp(f.cFileName,_T(".")) ||
-					!_tcscmp(f.cFileName,_T("..")))
+				res = FilePromptYNA (STRING_DEL_HELP2);
+				if (res == PROMPT_NO || res == PROMPT_BREAK)
+				{
+					nError = 1;
 					continue;
-				ConOutResPuts(STRING_RMDIR_HELP2);
-				freep(arg);
-				FindClose (hFile);
-				nErrorLevel = 1;
-				return 1;
-			} while (FindNextFile (hFile, &f));
-			FindClose (hFile);
-		}
-		/* reovme the \\* */
-		szFullPath[_tcslen(szFullPath) - 2] = _T('\0');
-	}
+				}
+				if (res == PROMPT_ALL)
+					RD_QUIET = TRUE;
+			}
+			/* get the folder name */
+			GetFullPathName(arg[i],MAX_PATH,szFullPath,NULL);
 
-	if (!DeleteFolder(szFullPath))
-	{
-		/* Couldnt delete the folder, clean up and print out the error */
-		ErrorMessage (GetLastError(), _T("RD"));
-		freep (arg);
-		nErrorLevel = 1;
-		return 1;
+			/* remove trailing \ if any, but ONLY if dir is not the root dir */
+			if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == _T('\\'))
+				szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
+
+			res = DeleteFolder(szFullPath);
+		}
+		else
+		{
+			res = RemoveDirectory(arg[i]);
+		}
+
+		if (!res)
+		{
+			/* Couldn't delete the folder, print out the error */
+			nError = GetLastError();
+			ErrorMessage(nError, _T("RD"));
+		}
 	}
 
 	freep (arg);
-	return 0;
+	return nError;
 }
 #endif
 
@@ -724,7 +651,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
  * set the exitflag to true
  *
  */
-INT CommandExit (LPTSTR cmd, LPTSTR param)
+INT CommandExit (LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -758,7 +685,7 @@ INT CommandExit (LPTSTR cmd, LPTSTR param)
  * does nothing
  *
  */
-INT CommandRem (LPTSTR cmd, LPTSTR param)
+INT CommandRem (LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -770,13 +697,13 @@ INT CommandRem (LPTSTR cmd, LPTSTR param)
 #endif /* INCLUDE_CMD_REM */
 
 
-INT CommandShowCommands (LPTSTR cmd, LPTSTR param)
+INT CommandShowCommands (LPTSTR param)
 {
 	PrintCommandList ();
 	return 0;
 }
 
-INT CommandShowCommandsDetail (LPTSTR cmd, LPTSTR param)
+INT CommandShowCommandsDetail (LPTSTR param)
 {
 	/* If a param was send, display help of correspondent command */
 	if (_tcslen(param))
@@ -784,7 +711,7 @@ INT CommandShowCommandsDetail (LPTSTR cmd, LPTSTR param)
 		LPTSTR NewCommand = cmd_alloc((_tcslen(param)+4)*sizeof(TCHAR));
 		_tcscpy(NewCommand, param);
 		_tcscat(NewCommand, _T(" /?"));
-		DoCommand(NewCommand);
+		DoCommand(NewCommand, NULL);
 		cmd_free(NewCommand);
 	}
 	/* Else, display detailed commands list */

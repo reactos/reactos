@@ -9,7 +9,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Uso: %S drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
+STRING_HELP,  "Uso: %s drive: [-FS:file-system] [-V:label] [-Q] [-A:size] [-C]\n\n\
   [drive:]         Specifica l'unità disco da formattare.\n\
   -FS:file-system  Specifica il tipo di filesystem (%s).\n\
   -V:label         Specifica l'etichetta del volume.\n\
@@ -30,7 +30,7 @@ STRING_NO_SUPPORT  "Operazione non supportata"
 
 STRING_FMIFS_FAIL  "Impossibile trovare 'FMIFS entry points'.\n\n"
 
-STRING_UNKNOW_ARG  "Parametro sconosciuto: %S\n"
+STRING_UNKNOW_ARG  "Parametro sconosciuto: %s\n"
 
 STRING_DRIVE_PARM  "Manca il parametro 'drive'.\n\n"
 
@@ -42,7 +42,7 @@ STRING_NO_VOLUME         "Impossibile rilevare il volume"
 
 STRING_NO_VOLUME_SIZE    "Impossibile rilevare la dimensione del volume"
 
-STRING_FILESYSTEM        "Il tipo di file system è %S.\n"
+STRING_FILESYSTEM        "Il tipo di file system è %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Inserire l'etichetta attuale del volume del drive %C: "
 

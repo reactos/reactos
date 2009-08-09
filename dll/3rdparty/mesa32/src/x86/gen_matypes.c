@@ -92,7 +92,6 @@ int main( int argc, char **argv )
    printf( "#ifndef __ASM_TYPES_H__\n" );
    printf( "#define __ASM_TYPES_H__\n" );
    printf( "\n" );
-   printf( "#include \"assyntax.h\"\n" );
 
 
    /* GLcontext offsets:

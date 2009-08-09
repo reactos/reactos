@@ -222,7 +222,7 @@ ExInitializeNPagedLookasideList(IN PNPAGED_LOOKASIDE_LIST Lookaside,
                                 IN PALLOCATE_FUNCTION Allocate OPTIONAL,
                                 IN PFREE_FUNCTION Free OPTIONAL,
                                 IN ULONG Flags,
-                                IN ULONG Size,
+                                IN SIZE_T Size,
                                 IN ULONG Tag,
                                 IN USHORT Depth)
 {
@@ -274,7 +274,7 @@ ExInitializePagedLookasideList(IN PPAGED_LOOKASIDE_LIST Lookaside,
                                IN PALLOCATE_FUNCTION Allocate OPTIONAL,
                                IN PFREE_FUNCTION Free OPTIONAL,
                                IN ULONG Flags,
-                               IN ULONG Size,
+                               IN SIZE_T Size,
                                IN ULONG Tag,
                                IN USHORT Depth)
 {

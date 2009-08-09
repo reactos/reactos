@@ -1,63 +1,112 @@
 /*
  * PROJECT:     ReactOS Help Viewer
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        applications/winhelp/lang/uk-UA.rc
+ * FILE:        applications/winhlp32/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for ReactOS Help Viewer
- * PROGRAMMERS: Rostislav Zabolotny
+ * PROGRAMMERS: Rostislav Zabolotny, Artem Reznikov
  */
-
-LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 /* Menu */
 
-MAIN_MENU MENU
-BEGIN
- POPUP "&Файл"
- BEGIN
+MAIN_MENU MENU LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+{
+ POPUP "&Файл" {
   MENUITEM "&Відкрити", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Друк", MNID_FILE_PRINT
-  MENUITEM "Налаштування &прінтера...", MNID_FILE_SETUP
+  MENUITEM "Пара&метри друку...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
   MENUITEM "В&ихід", MNID_FILE_EXIT
- END
- POPUP "&Правка"
- BEGIN
+ }
+ POPUP "&Правка" {
    MENUITEM "&Копіювати...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
    MENUITEM "&Опис...", MNID_EDIT_ANNOTATE
- END
- POPUP "&Закладка"
- BEGIN
+ }
+ POPUP "&Закладка" {
    MENUITEM "&Визначити...", MNID_BKMK_DEFINE
- END
- POPUP "&Допомога"
- BEGIN
-   MENUITEM "Допомога &по допомозі", MNID_HELP_HELPON
-   MENUITEM "&Над усіма вікнами", MNID_HELP_HELPTOP
+ }
+ POPUP "П&араметри" {
+   POPUP	"Довідку завжди видно"
+   BEGIN
+     MENUITEM "За промовчанням",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Видно",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Не видно",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "Історія",		MNID_OPTS_HISTORY
+  POPUP    "Шрифт"
+  BEGIN
+    MENUITEM "Дрібний",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Звичайний",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Великий",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Використовувати системні кольори",	MNID_OPTS_SYSTEM_COLORS
+ }
+ POPUP "&Довідка" {
+   MENUITEM "Довідка &по довідку", MNID_HELP_HELPON
+   MENUITEM "Над усіма вікнами", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Інформація...", MNID_HELP_ABOUT
 #ifdef WINELIB
    MENUITEM "&Про WINE", MNID_HELP_WINE
 #endif
- END
-END
+ }
+}
+
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Предметний покажчик"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Search"
+{
+    LTEXT  "Ще не реалізовано", -1, 10, 10, 180, 150
+}
 
 /* Strings */
-
-STRINGTABLE DISCARDABLE
-BEGIN
-STID_WINE_HELP, 	"Допомога WINE"
+STRINGTABLE DISCARDABLE LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"Довідка WINE"
 STID_WHERROR, 		"ПОМИЛКА"
 STID_WARNING,  		"ПОПЕРЕДЖЕННЯ"
-STID_INFO,  		"Інформація"
+STID_INFO,  		"Повідомлення"
 STID_NOT_IMPLEMENTED, 	"Не реалізовано"
-STID_HLPFILE_ERROR_s, 	"Помилка під час читання файлу допомоги `%s'"
-STID_CONTENTS, 		"&Зміст"
-STID_SEARCH, 		"&Пошук"
+STID_HLPFILE_ERROR_s, 	"Помилка під час читання файлу довідки `%s'"
+STID_INDEX, 		"&Предметний покажчик"
+STID_CONTENTS,		"Зміст"
 STID_BACK, 		"&Назад"
-STID_TOPICS,		"&Розділи"
-STID_ALL_FILES, 	"Всі файли (*.*)"
-STID_HELP_FILES_HLP, 	"Файли допомоги (*.hlp)"
+STID_ALL_FILES, 	"Усі файли (*.*)"
+STID_HELP_FILES_HLP, 	"Файли довідки (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не можу знайти '%s'. Чи не бажаєте вказати розташування самостійно?"
+STID_NO_RICHEDIT	"Не можу знайти richedit... Перериваю роботу"
+STID_PSH_INDEX,		"Теми довідки: "
+}
+
+CONTEXT_MENU MENU LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Нотатки...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Копіювати",                MNID_CTXT_COPY
+		MENUITEM "Друк...",            MNID_CTXT_PRINT
+		POPUP    "Шрифт"
+		BEGIN
+			MENUITEM "Дрібний",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Звичайний",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Великий",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Довідку завжди видно"
+		BEGIN
+			MENUITEM "За промовчанням",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Видно",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Не видно", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Використовувати системні кольори",   MNID_CTXT_SYSTEM_COLORS
+	END
 END

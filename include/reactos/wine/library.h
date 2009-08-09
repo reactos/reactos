@@ -23,6 +23,7 @@
 
 #include <stdarg.h>
 #include <sys/types.h>
+#include <stdint.h>
 
 #include <windef.h>
 #include <winbase.h>
@@ -41,9 +42,9 @@ extern void wine_exec_wine_binary( const char *name, char **argv, char **envp, i
 
 typedef void (*load_dll_callback_t)( void *, const char * );
 
-extern void *wine_dlopen( const char *filename, int flag, char *error, int errorsize );
-extern void *wine_dlsym( void *handle, const char *symbol, char *error, int errorsize );
-extern int wine_dlclose( void *handle, char *error, int errorsize );
+extern void *wine_dlopen( const char *filename, int flag, char *error, size_t errorsize );
+extern void *wine_dlsym( void *handle, const char *symbol, char *error, size_t errorsize );
+extern int wine_dlclose( void *handle, char *error, size_t errorsize );
 extern void wine_dll_set_callback( load_dll_callback_t load );
 extern void *wine_dll_load( const char *filename, char *error, int errorsize, int *file_exists );
 extern void *wine_dll_load_main_exe( const char *name, char *error, int errorsize,
@@ -131,9 +132,9 @@ WINE_LDT_EXTERN struct __wine_ldt_copy
 /* helper functions to manipulate the LDT_ENTRY structure */
 inline static void wine_ldt_set_base( LDT_ENTRY *ent, const void *base )
 {
-    ent->BaseLow               = (WORD)(unsigned long)base;
-    ent->HighWord.Bits.BaseMid = (BYTE)((unsigned long)base >> 16);
-    ent->HighWord.Bits.BaseHi  = (BYTE)((unsigned long)base >> 24);
+    ent->BaseLow               = (WORD)(intptr_t)base;
+    ent->HighWord.Bits.BaseMid = (BYTE)((intptr_t)base >> 16);
+    ent->HighWord.Bits.BaseHi  = (BYTE)((intptr_t)base >> 24);
 }
 inline static void wine_ldt_set_limit( LDT_ENTRY *ent, unsigned int limit )
 {
@@ -144,8 +145,8 @@ inline static void wine_ldt_set_limit( LDT_ENTRY *ent, unsigned int limit )
 inline static void *wine_ldt_get_base( const LDT_ENTRY *ent )
 {
     return (void *)(ent->BaseLow |
-                    (unsigned long)ent->HighWord.Bits.BaseMid << 16 |
-                    (unsigned long)ent->HighWord.Bits.BaseHi << 24);
+                    (intptr_t)ent->HighWord.Bits.BaseMid << 16 |
+                    (intptr_t)ent->HighWord.Bits.BaseHi << 24);
 }
 inline static unsigned int wine_ldt_get_limit( const LDT_ENTRY *ent )
 {
@@ -179,10 +180,10 @@ inline static int wine_ldt_is_empty( const LDT_ENTRY *ent )
 #ifdef __i386__
 # ifdef __GNUC__
 #  define __DEFINE_GET_SEG(seg) \
-    extern inline unsigned short wine_get_##seg(void) \
+    static inline unsigned short wine_get_##seg(void) \
     { unsigned short res; __asm__("movw %%" #seg ",%w0" : "=r"(res)); return res; }
 #  define __DEFINE_SET_SEG(seg) \
-    extern inline void wine_set_##seg(int val) { __asm__("movw %w0,%%" #seg : : "r" (val)); }
+    static inline void wine_set_##seg(int val) { __asm__("movw %w0,%%" #seg : : "r" (val)); }
 # elif defined(_MSC_VER)
 #  define __DEFINE_GET_SEG(seg) \
     extern inline unsigned short wine_get_##seg(void) \

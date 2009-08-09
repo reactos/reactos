@@ -41,8 +41,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 static BOOL BSTR_bCache = TRUE; /* Cache allocations to minimise alloc calls? */
 
-HMODULE OLEAUT32_hModule = NULL;
-
 /******************************************************************************
  * BSTR  {OLEAUT32}
  *
@@ -268,7 +266,7 @@ BSTR WINAPI SysAllocStringLen(const OLECHAR *str, unsigned int len)
     stringBuffer = (WCHAR*)newBuffer;
     stringBuffer[len] = '\0';
 
-    return (LPWSTR)stringBuffer;
+    return stringBuffer;
 }
 
 /******************************************************************************
@@ -419,8 +417,7 @@ INT WINAPI SysReAllocString(LPBSTR old,LPCOLESTR str)
     /*
      * Make sure we free the old string.
      */
-    if (*old!=NULL)
-      SysFreeString(*old);
+    SysFreeString(*old);
 
     /*
      * Allocate the new string
@@ -697,7 +694,8 @@ HRESULT WINAPI OleTranslateColor(
   return S_OK;
 }
 
-extern HRESULT OLEAUTPS_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv);
+extern HRESULT WINAPI OLEAUTPS_DllGetClassObject(REFCLSID, REFIID, LPVOID *) DECLSPEC_HIDDEN;
+extern BOOL WINAPI OLEAUTPS_DllMain(HINSTANCE, DWORD, LPVOID) DECLSPEC_HIDDEN;
 
 extern void _get_STDFONT_CF(LPVOID *);
 extern void _get_STDPIC_CF(LPVOID *);
@@ -708,7 +706,7 @@ static HRESULT WINAPI PSDispatchFacBuf_QueryInterface(IPSFactoryBuffer *iface, R
         IsEqualIID(riid, &IID_IPSFactoryBuffer))
     {
         IUnknown_AddRef(iface);
-        *ppv = (void *)iface;
+        *ppv = iface;
         return S_OK;
     }
     return E_NOINTERFACE;
@@ -807,8 +805,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 	    return S_OK;
 	/*FALLTHROUGH*/
     }
-    FIXME("\n\tCLSID:\t%s,\n\tIID:\t%s\n",debugstr_guid(rclsid),debugstr_guid(iid));
-    return CLASS_E_CLASSNOTAVAILABLE;
+    return OLEAUTPS_DllGetClassObject(rclsid, iid, ppv);
 }
 
 /***********************************************************************
@@ -832,18 +829,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
-  TRACE("(%p,%d,%p)\n", hInstDll, fdwReason, lpvReserved);
-
-  switch (fdwReason) {
-  case DLL_PROCESS_ATTACH:
-    DisableThreadLibraryCalls(hInstDll);
-    OLEAUT32_hModule = hInstDll;
-    break;
-  case DLL_PROCESS_DETACH:
-    break;
-  };
-
-  return TRUE;
+    return OLEAUTPS_DllMain( hInstDll, fdwReason, lpvReserved );
 }
 
 /***********************************************************************

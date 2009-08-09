@@ -157,18 +157,18 @@ VOID ConOutChar (TCHAR c)
 VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 {
 	DWORD dwWritten;
-    HANDLE hStdHandle;
+	HANDLE hStdHandle;
 	PCHAR pBuf;
 	INT len;
 
 	len = _tcslen(szText);
 #ifdef _UNICODE
-	pBuf = cmd_alloc(len + 1);
-	len = WideCharToMultiByte( OutputCodePage, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+	pBuf = cmd_alloc(len * 2 + 1);
+	len = WideCharToMultiByte(OutputCodePage, 0, szText, len + 1, pBuf, len * 2 + 1, NULL, NULL) - 1;
 #else
 	pBuf = szText;
 #endif
-    hStdHandle = GetStdHandle(nStdHandle);
+	hStdHandle = GetStdHandle(nStdHandle);
 
 	WriteFile (hStdHandle,
 	           pBuf,
@@ -213,10 +213,10 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
 
-	len = _vstprintf (szOut, szFormat, arg_ptr);
+	len = _vstprintf(szOut, szFormat, arg_ptr);
 #ifdef _UNICODE
-	pBuf = cmd_alloc(len + 1);
-	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+	pBuf = cmd_alloc(len * 2 + 1);
+	len = WideCharToMultiByte(OutputCodePage, 0, szOut, len + 1, pBuf, len * 2 + 1, NULL, NULL) - 1;
 #else
 	pBuf = szOut;
 #endif
@@ -226,7 +226,6 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 	           len,
 	           &dwWritten,
 	           NULL);
-
 
 #ifdef _UNICODE
 	cmd_free(pBuf);

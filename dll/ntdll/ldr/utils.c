@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/ldr/utils.c
@@ -23,6 +22,7 @@
 #include <debug.h>
 
 #define LDRP_PROCESS_CREATION_TIME 0x8000000
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
 
 /* GLOBALS *******************************************************************/
 
@@ -41,7 +41,7 @@ typedef struct _TLS_DATA
    PVOID StartAddressOfRawData;
    DWORD TlsDataSize;
    DWORD TlsZeroSize;
-   PIMAGE_TLS_CALLBACK TlsAddressOfCallBacks;
+   PIMAGE_TLS_CALLBACK *TlsAddressOfCallBacks;
    PLDR_DATA_TABLE_ENTRY Module;
 } TLS_DATA, *PTLS_DATA;
 
@@ -152,7 +152,7 @@ static __inline VOID LdrpAcquireTlsSlot(PLDR_DATA_TABLE_ENTRY Module, ULONG Size
 
 static __inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
 {
-   PIMAGE_TLS_CALLBACK TlsCallback;
+   PIMAGE_TLS_CALLBACK *TlsCallback;
    if (Module->TlsIndex != 0xFFFF && Module->LoadCount == 0xFFFF)
      {
        TlsCallback = LdrpTlsArray[Module->TlsIndex].TlsAddressOfCallBacks;
@@ -161,9 +161,9 @@ static __inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReaso
            while (*TlsCallback)
              {
                TRACE_LDR("%wZ - Calling tls callback at %x\n",
-                         &Module->BaseDllName, TlsCallback);
-               TlsCallback(Module->DllBase, dwReason, NULL);
-               TlsCallback = (PIMAGE_TLS_CALLBACK)((ULONG_PTR)TlsCallback + sizeof(PVOID));
+                         &Module->BaseDllName, *TlsCallback);
+               (*TlsCallback)(Module->DllBase, dwReason, NULL);
+               TlsCallback++;
              }
          }
      }
@@ -226,6 +226,7 @@ LdrpInitializeTlsForThread(VOID)
              }
          }
      }
+
    DPRINT("LdrpInitializeTlsForThread() done\n");
    return STATUS_SUCCESS;
 }
@@ -272,7 +273,7 @@ LdrpInitializeTlsForProccess(VOID)
                TlsData->TlsDataSize = TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData;
                TlsData->TlsZeroSize = TlsDirectory->SizeOfZeroFill;
                if (TlsDirectory->AddressOfCallBacks)
-                 TlsData->TlsAddressOfCallBacks = *(PIMAGE_TLS_CALLBACK*)TlsDirectory->AddressOfCallBacks;
+                 TlsData->TlsAddressOfCallBacks = (PIMAGE_TLS_CALLBACK *)TlsDirectory->AddressOfCallBacks;
                else
                  TlsData->TlsAddressOfCallBacks = NULL;
                TlsData->Module = Module;
@@ -282,7 +283,7 @@ LdrpInitializeTlsForProccess(VOID)
                DbgPrint("EndAddressOfRawData:   %x\n", TlsDirectory->EndAddressOfRawData);
                DbgPrint("SizeOfRawData:         %d\n", TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData);
                DbgPrint("AddressOfIndex:        %x\n", TlsDirectory->AddressOfIndex);
-               DbgPrint("AddressOfCallBacks:    %x (%x)\n", TlsDirectory->AddressOfCallBacks, *TlsDirectory->AddressOfCallBacks);
+               DbgPrint("AddressOfCallBacks:    %x\n", TlsDirectory->AddressOfCallBacks);
                DbgPrint("SizeOfZeroFill:        %d\n", TlsDirectory->SizeOfZeroFill);
                DbgPrint("Characteristics:       %x\n", TlsDirectory->Characteristics);
 #endif
@@ -295,6 +296,7 @@ LdrpInitializeTlsForProccess(VOID)
            Entry = Entry->Flink;
         }
     }
+
   DPRINT("LdrpInitializeTlsForProccess() done\n");
   return STATUS_SUCCESS;
 }
@@ -615,7 +617,6 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                           NULL) == 0)
     return STATUS_DLL_NOT_FOUND;
 
-
   if (!RtlDosPathNameToNtPathName_U (DosName,
                                      &FullNtFileName,
                                      NULL,
@@ -651,38 +652,43 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                0,
                FullNtFileName.Buffer);
 
-  Status = NtReadFile(FileHandle,
-                      NULL,
-                      NULL,
-                      NULL,
-                      &IoStatusBlock,
-                      BlockBuffer,
-                      sizeof(BlockBuffer),
-                      NULL,
-                      NULL);
-  if (!NT_SUCCESS(Status))
+  if (!MapAsDataFile)
     {
-      DPRINT("Dll header read failed: Status = 0x%08lx\n", Status);
-      NtClose(FileHandle);
-      return Status;
-    }
-  /*
-   * Overlay DOS and NT headers structures to the
-   * buffer with DLL's header raw data.
-   */
-  DosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
-  NTHeaders = (PIMAGE_NT_HEADERS) (BlockBuffer + DosHeader->e_lfanew);
-  /*
-   * Check it is a PE image file.
-   */
-  if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
-      || (DosHeader->e_lfanew == 0L)
-      || (*(PULONG)(NTHeaders) != IMAGE_NT_SIGNATURE))
-    {
-      DPRINT("NTDLL format invalid\n");
-      NtClose(FileHandle);
 
-      return STATUS_UNSUCCESSFUL;
+      Status = NtReadFile(FileHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          &IoStatusBlock,
+                          BlockBuffer,
+                          sizeof(BlockBuffer),
+                          NULL,
+                          NULL);
+      if (!NT_SUCCESS(Status))
+        {
+          DPRINT("Dll header read failed: Status = 0x%08lx\n", Status);
+          NtClose(FileHandle);
+          return Status;
+        }
+
+      /*
+       * Overlay DOS and NT headers structures to the
+       * buffer with DLL's header raw data.
+       */
+      DosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
+      NTHeaders = (PIMAGE_NT_HEADERS) (BlockBuffer + DosHeader->e_lfanew);
+      /*
+       * Check it is a PE image file.
+       */
+      if ((DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+          || (DosHeader->e_lfanew == 0L)
+          || (*(PULONG)(NTHeaders) != IMAGE_NT_SIGNATURE))
+        {
+          DPRINT("NTDLL format invalid\n");
+          NtClose(FileHandle);
+
+          return STATUS_UNSUCCESSFUL;
+        }
     }
 
   /*
@@ -693,7 +699,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                            NULL,
                            NULL,
                            PAGE_READONLY,
-                           SEC_COMMIT | (MapAsDataFile ? 0 : SEC_IMAGE),
+                           MapAsDataFile ? SEC_COMMIT : SEC_IMAGE,
                            FileHandle);
   NtClose(FileHandle);
 
@@ -1354,11 +1360,48 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
          }
        if (!NT_SUCCESS(Status))
          {
+           ULONG ErrorResponse;
+           ULONG_PTR ErrorParameter = (ULONG_PTR)&DllName;
+
            DPRINT1("failed to load %wZ\n", &DllName);
+           NtRaiseHardError(STATUS_DLL_NOT_FOUND,
+                            1,
+                            1,
+                            &ErrorParameter,
+                            OptionOk,
+                            &ErrorResponse);
          }
      }
    RtlFreeUnicodeString (&DllName);
    return Status;
+}
+
+void
+RtlpRaiseImportNotFound(CHAR *FuncName, ULONG Ordinal, PUNICODE_STRING DllName)
+{
+    ULONG ErrorResponse;
+    ULONG_PTR ErrorParameters[2];
+    ANSI_STRING ProcNameAnsi;
+    UNICODE_STRING ProcName;
+    CHAR Buffer[8];
+
+    if (!FuncName)
+    {
+        _snprintf(Buffer, 8, "# %ld", Ordinal);
+        FuncName = Buffer;
+    }
+
+    RtlInitAnsiString(&ProcNameAnsi, FuncName);
+    RtlAnsiStringToUnicodeString(&ProcName, &ProcNameAnsi, TRUE);
+    ErrorParameters[0] = (ULONG_PTR)&ProcName;
+    ErrorParameters[1] = (ULONG_PTR)DllName;
+    NtRaiseHardError(STATUS_ENTRYPOINT_NOT_FOUND,
+                     2,
+                     3,
+                     ErrorParameters,
+                     OptionOk,
+                     &ErrorResponse);
+    RtlFreeUnicodeString(&ProcName);
 }
 
 static NTSTATUS
@@ -1423,7 +1466,8 @@ LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
            if ((*ImportAddressList) == NULL)
              {
                DPRINT1("Failed to import #%ld from %wZ\n", Ordinal, &ImportedModule->FullDllName);
-               return STATUS_UNSUCCESSFUL;
+               RtlpRaiseImportNotFound(NULL, Ordinal, &ImportedModule->FullDllName);
+               return STATUS_ENTRYPOINT_NOT_FOUND;
              }
          }
        else
@@ -1434,7 +1478,8 @@ LdrpProcessImportDirectoryEntry(PLDR_DATA_TABLE_ENTRY Module,
            if ((*ImportAddressList) == NULL)
              {
                DPRINT1("Failed to import %s from %wZ\n", pe_name->Name, &ImportedModule->FullDllName);
-               return STATUS_UNSUCCESSFUL;
+               RtlpRaiseImportNotFound((CHAR*)pe_name->Name, 0, &ImportedModule->FullDllName);
+               return STATUS_ENTRYPOINT_NOT_FOUND;
              }
          }
        ImportAddressList++;
@@ -1653,14 +1698,15 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
        TlsSize = TlsDirectory->EndAddressOfRawData
                    - TlsDirectory->StartAddressOfRawData
                    + TlsDirectory->SizeOfZeroFill;
-       if (TlsSize > 0 &&
-           NtCurrentPeb()->Ldr->Initialized)
+
+       if (TlsSize > 0 && NtCurrentPeb()->Ldr->Initialized)
          {
-           TRACE_LDR("Trying to load dynamicly %wZ which contains a tls directory\n",
+           TRACE_LDR("Trying to dynamically load %wZ which contains a TLS directory\n",
                      &Module->BaseDllName);
-           return STATUS_UNSUCCESSFUL;
+           TlsDirectory = NULL;
          }
      }
+
    /*
     * Process each import module.
     */
@@ -1723,7 +1769,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                else
                  {
                    TRACE_LDR("%wZ has correct binding to %wZ\n",
-                           &Module->BaseDllName, &ImportedModule->BaseDllName);
+                             &Module->BaseDllName, &ImportedModule->BaseDllName);
                  }
                if (BoundImportDescriptorCurrent->NumberOfModuleForwarderRefs)
                  {
@@ -2044,8 +2090,8 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
                                     0,
                                     NULL,
                                     &ViewSize,
+                                    ViewShare,
                                     0,
-                                    MEM_COMMIT,
                                     PAGE_READONLY);
         NtCurrentTeb()->Tib.ArbitraryUserPointer = ArbitraryUserPointer;
         if (!NT_SUCCESS(Status))
@@ -2059,15 +2105,18 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
           {
             *BaseAddress = ImageBase;
           }
-        /* Get and check the NT headers */
-        NtHeaders = RtlImageNtHeader(ImageBase);
-        if (NtHeaders == NULL)
+        if (!MappedAsDataFile)
           {
-            DPRINT1("RtlImageNtHeaders() failed\n");
-            NtUnmapViewOfSection (NtCurrentProcess (), ImageBase);
-            NtClose (SectionHandle);
-            RtlFreeUnicodeString(&FullDosName);
-            return STATUS_UNSUCCESSFUL;
+            /* Get and check the NT headers */
+            NtHeaders = RtlImageNtHeader(ImageBase);
+            if (NtHeaders == NULL)
+              {
+                DPRINT1("RtlImageNtHeaders() failed\n");
+                NtUnmapViewOfSection (NtCurrentProcess (), ImageBase);
+                NtClose (SectionHandle);
+                RtlFreeUnicodeString(&FullDosName);
+                return STATUS_UNSUCCESSFUL;
+              }
           }
         DPRINT("Mapped %wZ at %x\n", &FullDosName, ImageBase);
         if (MappedAsDataFile)
@@ -3232,4 +3281,29 @@ LdrProcessRelocationBlock(IN ULONG_PTR Address,
   return (PIMAGE_BASE_RELOCATION)TypeOffset;
 }
 
-/* EOF */
+NTSTATUS
+NTAPI
+LdrLockLoaderLock(IN ULONG Flags,
+                  OUT PULONG Disposition OPTIONAL,
+                  OUT PULONG Cookie OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+LdrUnlockLoaderLock(IN ULONG Flags,
+                    IN ULONG Cookie OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+BOOLEAN
+NTAPI
+LdrUnloadAlternateResourceModule(IN PVOID BaseAddress)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}

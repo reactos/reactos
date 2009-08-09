@@ -29,7 +29,7 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
 #endif
 
 PVOID
-STDCALL
+NTAPI
 RtlpAllocateMemory(ULONG Bytes,
                    ULONG Tag)
 {
@@ -38,7 +38,7 @@ RtlpAllocateMemory(ULONG Bytes,
 
 
 VOID
-STDCALL
+NTAPI
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {

@@ -198,13 +198,12 @@ FindFile (
 
 	DPRINT ("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %d)\n",
 		Parent, FileToFindU, DirContext->DirIndex);
-	DPRINT ("FindFile: Path %wZ)\n",&Parent->PathNameU);
+	DPRINT ("FindFile: Path %wZ\n",&Parent->PathNameU);
 
 	PathNameBufferLength = LONGNAME_MAX_LENGTH * sizeof(WCHAR);
 	PathNameBuffer = ExAllocatePoolWithTag(NonPagedPool, PathNameBufferLength + sizeof(WCHAR), TAG_VFAT);
 	if (!PathNameBuffer)
 	{
-		CHECKPOINT1;
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
@@ -263,7 +262,6 @@ FindFile (
 	Status = RtlUpcaseUnicodeString(&FileToFindUpcase, FileToFindU, TRUE);
 	if (!NT_SUCCESS(Status))
 	{
-		CHECKPOINT;
 		ExFreePool(PathNameBuffer);
 		return Status;
 	}

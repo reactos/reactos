@@ -1,8 +1,8 @@
-/*		DirectDraw - IDirectPalette base interface
+/*              DirectDraw - IDirectPalette base interface
  *
  * Copyright 1997-2000 Marcus Meissner
  * Copyright 2000-2001 TransGaming Technologies Inc.
- * Copyright 2006 Stefan Dösinger for CodeWeavers
+ * Copyright 2006 Stefan DÃ¶singer for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -63,6 +63,7 @@ static ULONG  WINAPI IWineD3DPaletteImpl_Release(IWineD3DPalette *iface) {
     TRACE("(%p)->() decrementing from %u.\n", This, ref + 1);
 
     if (!ref) {
+        DeleteObject(This->hpal);
         HeapFree(GetProcessHeap(), 0, This);
         return 0;
     }
@@ -104,12 +105,14 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_GetEntries(IWineD3DPalette *iface, DW
     return WINED3D_OK;
 }
 
-static HRESULT  WINAPI IWineD3DPaletteImpl_SetEntries(IWineD3DPalette *iface, DWORD Flags, DWORD Start, DWORD Count, PALETTEENTRY *PalEnt)
+static HRESULT  WINAPI IWineD3DPaletteImpl_SetEntries(IWineD3DPalette *iface,
+        DWORD Flags, DWORD Start, DWORD Count, const PALETTEENTRY *PalEnt)
 {
     IWineD3DPaletteImpl *This = (IWineD3DPaletteImpl *)iface;
     IWineD3DResourceImpl *res;
 
     TRACE("(%p)->(%08x,%d,%d,%p)\n",This,Flags,Start,Count,PalEnt);
+    TRACE("Palette flags: %#x\n", This->Flags);
 
     if (This->Flags & WINEDDPCAPS_8BITENTRIES) {
         unsigned int i;
@@ -120,6 +123,19 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_SetEntries(IWineD3DPalette *iface, DW
     }
     else {
         memcpy(This->palents+Start, PalEnt, Count * sizeof(PALETTEENTRY));
+
+        /* When WINEDDCAPS_ALLOW256 isn't set we need to override entry 0 with black and 255 with white */
+        if(!(This->Flags & WINEDDPCAPS_ALLOW256))
+        {
+            TRACE("WINEDDPCAPS_ALLOW256 set, overriding palette entry 0 with black and 255 with white\n");
+            This->palents[0].peRed = 0;
+            This->palents[0].peGreen = 0;
+            This->palents[0].peBlue = 0;
+
+            This->palents[255].peRed = 255;
+            This->palents[255].peGreen = 255;
+            This->palents[255].peBlue = 255;
+        }
 
         if (This->hpal)
             SetPaletteEntries(This->hpal, Start, Count, This->palents+Start);
@@ -142,17 +158,6 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_SetEntries(IWineD3DPalette *iface, DW
         }
     }
 
-    /* If the palette is the primary palette, set the entries to the device */
-    if(This->Flags & WINEDDPCAPS_PRIMARYSURFACE) {
-        unsigned int i;
-        IWineD3DDeviceImpl *device = This->wineD3DDevice;
-        PALETTEENTRY *entry = PalEnt;
-
-        for(i = Start; i < Start+Count; i++) {
-            device->palettes[device->currentPalette][i] = *entry++;
-        }
-    }
-
     return WINED3D_OK;
 }
 
@@ -168,8 +173,8 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_GetParent(IWineD3DPalette *iface, IUn
     IWineD3DPaletteImpl *This = (IWineD3DPaletteImpl *)iface;
     TRACE("(%p)->(%p)\n", This, Parent);
 
-    *Parent = (IUnknown *) This->parent;
-    IUnknown_AddRef( (IUnknown *) This->parent);
+    *Parent = This->parent;
+    IUnknown_AddRef(This->parent);
     return WINED3D_OK;
 }
 

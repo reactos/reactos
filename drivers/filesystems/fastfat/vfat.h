@@ -1,6 +1,5 @@
 #include <ntifs.h>
 #include <ntdddisk.h>
-#include <reactos/helper.h>
 #include <debug.h>
 #include <pseh/pseh.h>
 
@@ -14,6 +13,12 @@
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 #define ROUND_UP(N, S) ROUND_DOWN((N) + (S) - 1, (S))
 #endif
+
+#define ROUND_DOWN(n, align) \
+    (((ULONG)n) & ~((align) - 1l))
+
+#define ROUND_UP(n, align) \
+    ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
 
 #include <pshpack1.h>
 struct _BootSector

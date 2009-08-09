@@ -1,11 +1,12 @@
 
-#include "imports.h"
+#include "main/imports.h"
+#include "shader/program.h"
+#include "shader/prog_print.h"
 #include "slang_compile.h"
 #include "slang_compile_variable.h"
 #include "slang_mem.h"
 #include "slang_vartable.h"
 #include "slang_ir.h"
-#include "prog_instruction.h"
 
 
 static int dbg = 0;
@@ -28,7 +29,7 @@ struct table
    slang_variable **Vars;  /* array [NumVars] */
 
    TempState Temps[MAX_PROGRAM_TEMPS * 4];  /* per-component state */
-   int ValSize[MAX_PROGRAM_TEMPS];     /* For debug only */
+   int ValSize[MAX_PROGRAM_TEMPS * 4];     /**< For debug only */
 
    struct table *Parent;  /** Parent scope table */
 };
@@ -106,12 +107,18 @@ _slang_pop_var_table(slang_var_table *vt)
 
    /* free the storage allocated for each variable */
    for (i = 0; i < t->NumVars; i++) {
-      slang_ir_storage *store = (slang_ir_storage *) t->Vars[i]->aux;
+      slang_ir_storage *store = t->Vars[i]->store;
       GLint j;
       GLuint comp;
-      if (dbg) printf("  Free var %s, size %d at %d\n",
+      if (dbg) printf("  Free var %s, size %d at %d.%s\n",
                       (char*) t->Vars[i]->a_name, store->Size,
-                      store->Index);
+                      store->Index,
+                      _mesa_swizzle_string(store->Swizzle, 0, 0));
+
+      if (store->File == PROGRAM_SAMPLER) {
+         /* samplers have no storage */
+         continue;
+      }
 
       if (store->Size == 1)
          comp = GET_SWZ(store->Swizzle, 0);
@@ -129,7 +136,7 @@ _slang_pop_var_table(slang_var_table *vt)
       /* just verify that any remaining allocations in this scope 
        * were for temps
        */
-      for (i = 0; i < vt->MaxRegisters * 4; i++) {
+      for (i = 0; i < (int) vt->MaxRegisters * 4; i++) {
          if (t->Temps[i] != FREE && t->Parent->Temps[i] == FREE) {
             if (dbg) printf("  Free reg %d\n", i/4);
             assert(t->Temps[i] == TEMP);
@@ -158,7 +165,7 @@ _slang_add_variable(slang_var_table *vt, slang_variable *v)
    assert(vt);
    t = vt->Top;
    assert(t);
-   if (dbg) printf("Adding var %s\n", (char *) v->a_name);
+   if (dbg) printf("Adding var %s, store %p\n", (char *) v->a_name, (void *) v->store);
    t->Vars = (slang_variable **)
       _slang_realloc(t->Vars,
                      t->NumVars * sizeof(slang_variable *),
@@ -206,7 +213,7 @@ alloc_reg(slang_var_table *vt, GLint size, GLboolean isTemp)
 
    for (i = 0; i <= vt->MaxRegisters * 4 - size; i += step) {
       GLuint found = 0;
-      for (j = 0; j < size; j++) {
+      for (j = 0; j < (GLuint) size; j++) {
          if (i + j < vt->MaxRegisters * 4 && t->Temps[i + j] == FREE) {
             found++;
          }
@@ -218,8 +225,9 @@ alloc_reg(slang_var_table *vt, GLint size, GLboolean isTemp)
          /* found block of size free regs */
          if (size > 1)
             assert(i % 4 == 0);
-         for (j = 0; j < size; j++)
+         for (j = 0; j < (GLuint) size; j++)
             t->Temps[i + j] = isTemp ? TEMP : VAR;
+         assert(i < MAX_PROGRAM_TEMPS * 4);
          t->ValSize[i] = size;
          return i;
       }
@@ -238,7 +246,15 @@ GLboolean
 _slang_alloc_var(slang_var_table *vt, slang_ir_storage *store)
 {
    struct table *t = vt->Top;
-   const int i = alloc_reg(vt, store->Size, GL_FALSE);
+   int i;
+
+   if (store->File == PROGRAM_SAMPLER) {
+      /* don't really allocate storage */
+      store->Index = 0;
+      return GL_TRUE;
+   }
+
+   i = alloc_reg(vt, store->Size, GL_FALSE);
    if (i < 0)
       return GL_FALSE;
 
@@ -246,14 +262,26 @@ _slang_alloc_var(slang_var_table *vt, slang_ir_storage *store)
    if (store->Size == 1) {
       const GLuint comp = i % 4;
       store->Swizzle = MAKE_SWIZZLE4(comp, comp, comp, comp);
-      if (dbg) printf("Alloc var sz %d at %d.%c (level %d)\n",
-                      store->Size, store->Index, "xyzw"[comp], t->Level);
+   }
+   else if (store->Size == 2) {
+      store->Swizzle = MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y,
+                                     SWIZZLE_NIL, SWIZZLE_NIL);
+   }
+   else if (store->Size == 3) {
+      store->Swizzle = MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y,
+                                     SWIZZLE_Z, SWIZZLE_NIL);
    }
    else {
       store->Swizzle = SWIZZLE_NOOP;
-      if (dbg) printf("Alloc var sz %d at %d.xyzw (level %d)\n",
-                      store->Size, store->Index, t->Level);
    }
+
+   if (dbg)
+      printf("Alloc var storage sz %d at %d.%s (level %d) store %p\n",
+             store->Size, store->Index,
+             _mesa_swizzle_string(store->Swizzle, 0, 0),
+             t->Level,
+             (void*) store);
+
    return GL_TRUE;
 }
 
@@ -270,18 +298,29 @@ _slang_alloc_temp(slang_var_table *vt, slang_ir_storage *store)
    if (i < 0)
       return GL_FALSE;
 
+   assert(store->Index < 0);
+
    store->Index = i / 4;
    if (store->Size == 1) {
       const GLuint comp = i % 4;
       store->Swizzle = MAKE_SWIZZLE4(comp, comp, comp, comp);
-      if (dbg) printf("Alloc temp sz %d at %d.%c (level %d)\n",
-                      store->Size, store->Index, "xyzw"[comp], t->Level);
    }
    else {
+      /* XXX improve swizzled for size=2/3, use for writemask... */
+#if 1
+      if (store->Size == 2) {
+         store->Swizzle = MAKE_SWIZZLE4(SWIZZLE_X, SWIZZLE_Y,
+                                        SWIZZLE_NIL, SWIZZLE_NIL);
+      }
+#endif
       store->Swizzle = SWIZZLE_NOOP;
-      if (dbg) printf("Alloc temp sz %d at %d.xyzw (level %d)\n",
-                      store->Size, store->Index, t->Level);
    }
+
+   if (dbg) printf("Alloc temp sz %d at %d.%s (level %d) store %p\n",
+                   store->Size, store->Index,
+                   _mesa_swizzle_string(store->Swizzle, 0, 0), t->Level,
+                   (void *) store);
+
    return GL_TRUE;
 }
 
@@ -295,19 +334,27 @@ _slang_free_temp(slang_var_table *vt, slang_ir_storage *store)
    assert(store->Size > 0);
    assert(r >= 0);
    assert(r + store->Size <= vt->MaxRegisters * 4);
-   if (dbg) printf("Free temp sz %d at %d (level %d)\n", store->Size, r, t->Level);
+   if (dbg) printf("Free temp sz %d at %d.%s (level %d) store %p\n",
+                   store->Size, r,
+                   _mesa_swizzle_string(store->Swizzle, 0, 0),
+                   t->Level, (void *) store);
    if (store->Size == 1) {
       const GLuint comp = GET_SWZ(store->Swizzle, 0);
+      /* we can actually fail some of these assertions because of the
+       * troublesome IR_SWIZZLE handling.
+       */
+#if 0
       assert(store->Swizzle == MAKE_SWIZZLE4(comp, comp, comp, comp));
       assert(comp < 4);
       assert(t->ValSize[r * 4 + comp] == 1);
+#endif
       assert(t->Temps[r * 4 + comp] == TEMP);
       t->Temps[r * 4 + comp] = FREE;
    }
    else {
       /*assert(store->Swizzle == SWIZZLE_NOOP);*/
       assert(t->ValSize[r*4] == store->Size);
-      for (i = 0; i < store->Size; i++) {
+      for (i = 0; i < (GLuint) store->Size; i++) {
          assert(t->Temps[r * 4 + i] == TEMP);
          t->Temps[r * 4 + i] = FREE;
       }
@@ -321,7 +368,7 @@ _slang_is_temp(const slang_var_table *vt, const slang_ir_storage *store)
    struct table *t = vt->Top;
    GLuint comp;
    assert(store->Index >= 0);
-   assert(store->Index < vt->MaxRegisters);
+   assert(store->Index < (int) vt->MaxRegisters);
    if (store->Swizzle == SWIZZLE_NOOP)
       comp = 0;
    else

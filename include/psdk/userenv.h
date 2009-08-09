@@ -1,10 +1,6 @@
 #ifndef _USERENV_H
 #define _USERENV_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -1,0 +1,79 @@
+/*
+ * XCOPY - Wine-compatible xcopy program
+ * Portuguese language support
+ *
+ * Copyright (C) 2008 Ricardo Filipe
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
+    STRING_INVPARM,  "Parâmetro inválido '%s' -  Use xcopy /? para ajuda\n"
+    STRING_PAUSE,    "Carregue <Enter> para iniciar cópia\n"
+    STRING_SIMCOPY,  "%d ficheiro(s) seriam copiados\n"
+    STRING_COPY,     "%d ficheiro(s) copiados\n"
+    STRING_QISDIR,   "'%s' é um ficheiro ou directório\n" \
+                     "no alvo?\n" \
+                     "(F - Ficheiro, D - Directório)\n"
+    STRING_SRCPROMPT,"%s? (Yes|No)\n"
+    STRING_OVERWRITE,"Reescrever %s? (Yes|No|All)\n"
+    STRING_COPYFAIL, "Cópia de '%s' para '%s' falhou com r/c %d\n"
+    STRING_OPENFAIL, "Falhou ao abrir '%s'\n"
+    STRING_READFAIL, "Falhou a ler '%s'\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Copia ficheiros ou directórios para um destino\n\
+\n\
+Sintaxe:\n\
+XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Onde:\n\
+\n\
+[/I]  Assume directório se o destino não existe e está a copiar 2 ou\n\
+\tmais ficheiros\n\
+[/S]  Copiar directórios e subdirectórios\n\
+[/E]  Copiar directórios e subdirectórios, incluindo os vazios\n\
+[/Q]  Não mostrar nomes durante a cópia, ie quiet.\n\
+[/F]  Mostrar por completo os nomes de fonte e destino durante a cópia\n\
+[/L]  Simular a operação, mostrando os nomes que seriam copiados\n\
+[/W]  Alerta antes de iniciar a operação de cópia\n\
+[/T]  Cria a estrutura de directórios mas não copia ficheiros\n\
+[/Y]  Suprimir alertas quando reescreve ficheiros\n\
+[/-Y] Alertar quando reescreve ficheiros\n\
+[/P]  Alertar antes de cada ficheiros ser copiado\n\
+[/N]  Copiar usando nomes pequenos\n\
+[/U]  Copiar apenas ficheiros que já existem no destino\n\
+[/R]  Reescrever quaisquer ficheiros apenas de leitura\n\
+[/H]  Incluir ficheiros ocultos e de sistema na cópia\n\
+[/C]  Continuar mesmo que ocorra um erro durante a cópia\n\
+[/A]  Copiar apenas ficheiros com atributo de arquivo\n\
+[/M]  Copiar apenas ficheiros com atributo de arquivo, removendo\n\
+\to atributo de arquivo\n\
+[/D | /D:m-d-y] Copiar novos ficheiros ou os alterados após a data fornecida\n\
+\t\tSe nenhuma data for fornecida, apenas copiar se o destino for mais antigo\n\
+\t\tque a fonte\n\n"
+
+}

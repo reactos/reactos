@@ -14,10 +14,56 @@
 #include <debug.h>
 
 
+SHORT
+FASTCALL
+IntGdiGetLanguageID()
+{
+  HANDLE KeyHandle;
+  ULONG Size = sizeof(WCHAR) * (MAX_PATH + 12);
+  OBJECT_ATTRIBUTES ObAttr;
+//  http://support.microsoft.com/kb/324097
+  ULONG Ret = 0x409; // English
+  PVOID KeyInfo;
+  UNICODE_STRING Language;
+  
+  RtlInitUnicodeString( &Language,
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Language");
+
+  InitializeObjectAttributes( &ObAttr,
+                            &Language,
+                 OBJ_CASE_INSENSITIVE,
+                                 NULL,
+                                 NULL);
+
+  if ( NT_SUCCESS(ZwOpenKey(&KeyHandle, KEY_READ, &ObAttr)))
+  {
+     KeyInfo = ExAllocatePoolWithTag(PagedPool, Size, TAG_STRING);
+     if ( KeyInfo )
+     {
+        RtlInitUnicodeString(&Language, L"Default");
+
+        if ( NT_SUCCESS(ZwQueryValueKey( KeyHandle,
+                                         &Language,
+                        KeyValuePartialInformation,
+                                           KeyInfo,
+                                              Size,
+                                             &Size)) )
+      {
+        RtlInitUnicodeString(&Language, (PVOID)((char *)KeyInfo + 12));
+        RtlUnicodeStringToInteger(&Language, 16, &Ret);
+      }
+      ExFreePoolWithTag(KeyInfo, TAG_STRING);
+    }
+    ZwClose(KeyHandle);
+  }
+  DPRINT("Language ID = %x\n",Ret);
+  return (SHORT) Ret;
+}
+
 /*
  * @unimplemented
  */
-DWORD STDCALL
+DWORD APIENTRY
 NtUserGetThreadState(
    DWORD Routine)
 {
@@ -61,7 +107,7 @@ CLEANUP:
 
 
 UINT
-STDCALL
+APIENTRY
 NtUserGetDoubleClickTime(VOID)
 {
    UINT Result;
@@ -93,7 +139,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetGUIThreadInfo(
    DWORD idThread, /* if NULL use foreground thread */
    LPGUITHREADINFO lpgui)
@@ -101,7 +147,7 @@ NtUserGetGUIThreadInfo(
    NTSTATUS Status;
    PTHRDCARETINFO CaretInfo;
    GUITHREADINFO SafeGui;
-   PDESKTOP_OBJECT Desktop;
+   PDESKTOP Desktop;
    PUSER_MESSAGE_QUEUE MsgQueue;
    PETHREAD Thread = NULL;
    DECLARE_RETURN(BOOLEAN);
@@ -130,12 +176,12 @@ NtUserGetGUIThreadInfo(
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          RETURN( FALSE);
       }
-      Desktop = ((PW32THREAD)Thread->Tcb.Win32Thread)->Desktop;
+      Desktop = ((PTHREADINFO)Thread->Tcb.Win32Thread)->Desktop;
    }
    else
    {
       /* get the foreground thread */
-      PW32THREAD W32Thread = (PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread;
+      PTHREADINFO W32Thread = (PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread;
       Desktop = W32Thread->Desktop;
       if(Desktop)
       {
@@ -198,7 +244,7 @@ CLEANUP:
 
 
 DWORD
-STDCALL
+APIENTRY
 NtUserGetGuiResources(
    HANDLE hProcess,
    DWORD uiFlags)
@@ -295,7 +341,7 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
       Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->Length);
       if(!NT_SUCCESS(Status))
       {
-         ExFreePool(Dest->Buffer);
+         ExFreePoolWithTag(Dest->Buffer, TAG_STRING);
          Dest->Buffer = NULL;
          return Status;
       }
@@ -342,7 +388,7 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
       Status = MmCopyFromCaller(Dest->Buffer, Src, Dest->Length);
       if(!NT_SUCCESS(Status))
       {
-         ExFreePool(Dest->Buffer);
+         ExFreePoolWithTag(Dest->Buffer, TAG_STRING);
          Dest->Buffer = NULL;
          return Status;
       }
@@ -437,8 +483,8 @@ GetW32ThreadInfo(VOID)
 {
     PTEB Teb;
     PW32THREADINFO ti;
-    PW32CLIENTINFO ci;
-    PW32THREAD W32Thread = PsGetCurrentThreadWin32Thread();
+    PCLIENTINFO ci;
+    PTHREADINFO W32Thread = PsGetCurrentThreadWin32Thread();
 
     if (W32Thread == NULL)
     {
@@ -446,7 +492,7 @@ GetW32ThreadInfo(VOID)
         return NULL;
     }
 
-    /* allocate a W32THREAD structure if neccessary */
+    /* allocate a THREADINFO structure if neccessary */
     if (W32Thread->ThreadInfo == NULL)
     {
         ti = UserHeapAlloc(sizeof(W32THREADINFO));
@@ -459,26 +505,22 @@ GetW32ThreadInfo(VOID)
             ti->kpi = GetW32ProcessInfo();
             ti->pi = UserHeapAddressToUser(ti->kpi);
             ti->Hooks = W32Thread->Hooks;
+            W32Thread->pcti = &ti->ClientThreadInfo;
             if (W32Thread->Desktop != NULL)
             {
                 ti->Desktop = W32Thread->Desktop->DesktopInfo;
-                ti->DesktopHeapBase = W32Thread->Desktop->DesktopInfo->hKernelHeap;
-                ti->DesktopHeapLimit = W32Thread->Desktop->DesktopInfo->HeapLimit;
-                ti->DesktopHeapDelta = DesktopHeapGetUserDelta();
             }
             else
             {
                 ti->Desktop = NULL;
-                ti->DesktopHeapBase = NULL;
-                ti->DesktopHeapLimit = 0;
-                ti->DesktopHeapDelta = 0;
             }
 
             W32Thread->ThreadInfo = ti;
             /* update the TEB */
             Teb = NtCurrentTeb();
-            ci = ((PW32CLIENTINFO)Teb->Win32ClientInfo);
-            _SEH_TRY
+            ci = GetWin32ClientInfo();
+            W32Thread->pClientInfo = ci;
+            _SEH2_TRY
             {
                 ProbeForWrite(Teb,
                               sizeof(TEB),
@@ -487,11 +529,11 @@ GetW32ThreadInfo(VOID)
                 Teb->Win32ThreadInfo = UserHeapAddressToUser(W32Thread->ThreadInfo);
                 ci->pClientThreadInfo = &ti->ClientThreadInfo;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                SetLastNtError(_SEH_GetExceptionCode());
+                SetLastNtError(_SEH2_GetExceptionCode());
             }
-            _SEH_END;
+            _SEH2_END;
         }
         else
         {

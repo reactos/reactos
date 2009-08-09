@@ -12,13 +12,17 @@
 #include <k32.h>
 #include <wine/debug.h>
 
+#define NANOS_TO_100NS(nanos) (((LONGLONG)(nanos)) / 100)
+#define MICROS_TO_100NS(micros) (((LONGLONG)(micros)) * NANOS_TO_100NS(1000))
+#define MILLIS_TO_100NS(milli) (((LONGLONG)(milli)) * MICROS_TO_100NS(1000))
+
 WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
 
 /*
  * @implemented
  */
 HANDLE
-STDCALL
+WINAPI
 CreateIoCompletionPort(
     HANDLE FileHandle,
     HANDLE ExistingCompletionPort,
@@ -88,7 +92,7 @@ CreateIoCompletionPort(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetQueuedCompletionStatus(
    HANDLE CompletionHandle,
    LPDWORD lpNumberOfBytesTransferred,
@@ -99,9 +103,10 @@ GetQueuedCompletionStatus(
 {
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatus;
+   ULONG_PTR CompletionKey;
    LARGE_INTEGER Interval;
 
-   if (!lpNumberOfBytesTransferred||!lpCompletionKey||!lpOverlapped)
+   if (!lpNumberOfBytesTransferred || !lpCompletionKey || !lpOverlapped)
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
@@ -109,22 +114,23 @@ GetQueuedCompletionStatus(
 
    if (dwMilliseconds != INFINITE)
    {
-      Interval.QuadPart = RELATIVE_TIME(MILLIS_TO_100NS(dwMilliseconds));
+      Interval.QuadPart = (-(MILLIS_TO_100NS(dwMilliseconds)));
    }
 
    errCode = NtRemoveIoCompletion(CompletionHandle,
-                                  (PVOID*)lpCompletionKey,
-                                  (PVOID*)lpNumberOfBytesTransferred,
+                                  (PVOID*)&CompletionKey,
+                                  (PVOID*)lpOverlapped,
                                   &IoStatus,
                                   dwMilliseconds == INFINITE ? NULL : &Interval);
 
-   if (!NT_SUCCESS(errCode)) {
+   if (!NT_SUCCESS(errCode) || errCode == STATUS_TIMEOUT) {
       *lpOverlapped = NULL;
       SetLastErrorByStatus(errCode);
       return FALSE;
    }
 
-   *lpOverlapped = (LPOVERLAPPED)IoStatus.Information;
+   *lpCompletionKey = CompletionKey;
+   *lpNumberOfBytesTransferred = IoStatus.Information;
 
    if (!NT_SUCCESS(IoStatus.Status)){
       //failed io operation
@@ -133,7 +139,6 @@ GetQueuedCompletionStatus(
    }
 
    return TRUE;
-
 }
 
 
@@ -141,7 +146,7 @@ GetQueuedCompletionStatus(
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 PostQueuedCompletionStatus(
    HANDLE CompletionHandle,
    DWORD dwNumberOfBytesTransferred,
@@ -152,10 +157,10 @@ PostQueuedCompletionStatus(
    NTSTATUS errCode;
 
    errCode = NtSetIoCompletion(CompletionHandle,
-                               (PVOID)dwCompletionKey,
-                               (PVOID)lpOverlapped,//CompletionValue
-                               STATUS_SUCCESS,                         //IoStatusBlock->Status
-                               dwNumberOfBytesTransferred);     //IoStatusBlock->Information
+                               (PVOID)dwCompletionKey,      // KeyContext
+                               (PVOID)lpOverlapped,         // ApcContext
+                               STATUS_SUCCESS,              // IoStatusBlock->Status
+                               dwNumberOfBytesTransferred); // IoStatusBlock->Information
 
    if ( !NT_SUCCESS(errCode) )
    {
@@ -169,7 +174,7 @@ PostQueuedCompletionStatus(
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 CancelIo(HANDLE hFile)
 {
   IO_STATUS_BLOCK IoStatusBlock;

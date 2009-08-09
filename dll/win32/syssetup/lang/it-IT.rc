@@ -50,9 +50,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Scrivere il proprio nome completo e il nome della propria ditta o organizzazione.",
           IDC_STATIC, 20, 7, 242, 21
-    LTEXT "No&me:", IDC_STATIC, 20, 37, 120, 8
+    LTEXT "No&me:", IDC_STATIC, 20, 37, 108, 8
     EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "&Organizzazione:", IDC_STATIC, 20, 57, 120, 8
+    LTEXT "&Organizzazione:", IDC_STATIC, 20, 57, 108, 8
     EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
@@ -198,6 +198,8 @@ BEGIN
     IDS_CMT_DEVMGMT     "Lancia la Gestione periferiche"
     IDS_CMT_SERVMAN     "Lancia la Gestione dei servizi"
     IDS_CMT_RDESKTOP    "Avvia il Desktop remoto"
+    IDS_CMT_EVENTVIEW   "Launch Event Viewer"
+    IDS_CMT_MSCONFIG    "Launch System Configuration program"
 END
 
 STRINGTABLE
@@ -247,10 +249,12 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "CharMap.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_CHARMAP    "CharMap.lnk"
+    IDS_SHORT_MAGNIFY    "Magnify.lnk"
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
-	IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_KBSWITCH   "Keyboard Layout Switcher.lnk"
+    IDS_SHORT_EVENTVIEW  "Event Viewer.lnk"
+    IDS_SHORT_MSCONFIG   "System Configuration.lnk"
 END
 
 STRINGTABLE

@@ -18,27 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
+#include <precomp.h>
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include "winerror.h"
-#include "windef.h"
-#include "winbase.h"
-#include "winreg.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "commdlg.h"
-#include "wine/debug.h"
-
-#include "shellapi.h"
-#include "shlobj.h"
-#include "shell32_main.h"
-#include "shresdef.h"
-#include "undocshell.h"
-#include "shlwapi.h"
 
 typedef struct
     {
@@ -136,7 +117,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
         pIconContext = (PPICK_ICON_CONTEXT)lParam;
         SetWindowLong(hwndDlg, DWLP_USER, (LONG)pIconContext);
         pIconContext->hDlgCtrl = GetDlgItem(hwndDlg, IDC_PICKICON_LIST);
-        EnumResourceNamesW(pIconContext->hLibrary, MAKEINTRESOURCEW(RT_ICON), EnumPickIconResourceProc, (LPARAM)pIconContext);
+        EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
         if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
             SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
         else
@@ -193,7 +174,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                 FreeLibrary(pIconContext->hLibrary);
                 pIconContext->hLibrary = hLibrary;
                 wcscpy(pIconContext->szName, szText);
-                EnumResourceNamesW(pIconContext->hLibrary, MAKEINTRESOURCEW(RT_ICON), EnumPickIconResourceProc, (LPARAM)pIconContext);
+                EnumResourceNamesW(pIconContext->hLibrary, RT_ICON, EnumPickIconResourceProc, (LPARAM)pIconContext);
                 if (PathUnExpandEnvStringsW(pIconContext->szName, szText, MAX_PATH))
                     SendDlgItemMessageW(hwndDlg, IDC_EDIT_PATH, WM_SETTEXT, 0, (LPARAM)szText);
                 else
@@ -244,6 +225,7 @@ INT_PTR CALLBACK PickIconProc(HWND hwndDlg,
                                 DI_NORMAL);
                     break;
             }
+            break;
     }
 
     return FALSE;
@@ -356,9 +338,11 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                             {
                             char * ptr;
                             strcpy(pdir, psz);
-                            ptr = strrchr(pdir, '\\');
+                            ptr = strrchr(pdir + 4, '\\');
                             if(ptr)
                                 ptr[0] = '\0';
+                            else
+                                pdir[3] = '\0';
                             }
                         if (ShellExecuteA(NULL, "open", psz, NULL, pdir, SW_SHOWNORMAL) < (HINSTANCE)33)
                             {
@@ -623,10 +607,10 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 }
 
 /*************************************************************************
- * LogoffWindowsDialog                          [SHELL32.54]
+ * LogoffWindowsDialog  [SHELL32.54]
  */
 
-int WINAPI LogoffWindowsDialog(DWORD uFlags)
+int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
    UNIMPLEMENTED;
    ExitWindowsEx(EWX_LOGOFF, 0);

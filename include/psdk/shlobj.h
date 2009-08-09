@@ -34,6 +34,44 @@ extern "C" {
 #include <shtypes.h>
 #include <shobjidl.h>
 
+typedef struct
+{
+    DWORD         dwSize;
+    DWORD         dwMask;
+    SHELLVIEWID*  pvid;
+    LPSTR         pszWebViewTemplate;
+    DWORD         cchWebViewTemplate;
+    LPSTR         pszWebViewTemplateVersion;
+    LPSTR         pszInfoTip;
+    DWORD         cchInfoTip;
+    CLSID*        pclsid;
+    DWORD         dwFlags;
+    LPSTR         pszIconFile;
+    DWORD         cchIconFile;
+    int           iIconIndex;
+    LPSTR         pszLogo;
+    DWORD         cchLogo;
+} SHFOLDERCUSTOMSETTINGSA, *LPSHFOLDERCUSTOMSETTINGSA;
+
+typedef struct
+{
+    DWORD         dwSize;
+    DWORD         dwMask;
+    SHELLVIEWID*  pvid;
+    LPWSTR        pszWebViewTemplate;
+    DWORD         cchWebViewTemplate;
+    LPWSTR        pszWebViewTemplateVersion;
+    LPWSTR        pszInfoTip;
+    DWORD         cchInfoTip;
+    CLSID*        pclsid;
+    DWORD         dwFlags;
+    LPWSTR        pszIconFile;
+    DWORD         cchIconFile;
+    int           iIconIndex;
+    LPWSTR        pszLogo;
+    DWORD         cchLogo;
+} SHFOLDERCUSTOMSETTINGSW, *LPSHFOLDERCUSTOMSETTINGSW;
+
 #ifndef HPSXA_DEFINED
 #define HPSXA_DEFINED
 DECLARE_HANDLE(HPSXA);
@@ -46,12 +84,12 @@ HPSXA        WINAPI SHCreatePropSheetExtArray(HKEY,LPCWSTR,UINT);
 DWORD        WINAPI SHCLSIDFromStringA(LPCSTR,CLSID*);
 DWORD        WINAPI SHCLSIDFromStringW(LPCWSTR,CLSID*);
 #define             SHCLSIDFromString WINELIB_NAME_AW(SHCLSIDFromString)
-HRESULT      WINAPI SHCreateStdEnumFmtEtc(DWORD,const FORMATETC *,IEnumFORMATETC**);
+HRESULT      WINAPI SHCreateStdEnumFmtEtc(UINT,const FORMATETC *,IEnumFORMATETC**);
 void         WINAPI SHDestroyPropSheetExtArray(HPSXA);
 BOOL         WINAPI SHFindFiles(LPCITEMIDLIST,LPCITEMIDLIST);
 DWORD        WINAPI SHFormatDrive(HWND,UINT,UINT,UINT);
 void         WINAPI SHFree(LPVOID);
-BOOL         WINAPI GetFileNameFromBrowse(HWND,LPSTR,DWORD,LPCSTR,LPCSTR,LPCSTR,LPCSTR);
+BOOL         WINAPI GetFileNameFromBrowse(HWND,LPWSTR,UINT,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR);
 HRESULT      WINAPI SHGetInstanceExplorer(IUnknown**);
 HRESULT      WINAPI SHGetFolderPathAndSubDirA(HWND,int,HANDLE,DWORD,LPCSTR,LPSTR);
 HRESULT      WINAPI SHGetFolderPathAndSubDirW(HWND,int,HANDLE,DWORD,LPCWSTR,LPWSTR);
@@ -110,6 +148,7 @@ typedef struct
 	UINT aoffset[1];
 } CIDA, *LPIDA;
 
+#define CFSTR_SHELLIDLISTA      "Shell IDList Array"      /* CF_IDLIST */
 #define CFSTR_SHELLIDLISTOFFSET "Shell Object Offsets"    /* CF_OBJECTPOSITIONS */
 #define CFSTR_NETRESOURCES      "Net Resource"            /* CF_NETRESOURCE */
 
@@ -1147,7 +1186,13 @@ typedef struct {
 } NT_FE_CONSOLE_PROPS, *LPNT_FE_CONSOLE_PROPS;
 
 typedef struct {
+
+#ifdef __cplusplus
     DATABLOCK_HEADER dbh;
+#else
+    DWORD cbSize;
+    DWORD dwSignature;
+#endif
     CHAR szDarwinID[MAX_PATH];
     WCHAR szwDarwinID[MAX_PATH];
 } EXP_DARWIN_LINK, *LPEXP_DARWIN_LINK;
@@ -1188,7 +1233,7 @@ typedef struct _SHChangeProductKeyAsIDList {
 } SHChangeProductKeyAsIDList, *LPSHChangeProductKeyAsIDList;
 
 ULONG WINAPI SHChangeNotifyRegister(HWND hwnd, int fSources, LONG fEvents, UINT wMsg,
-                                    int cEntries, SHChangeNotifyEntry *pshcne);
+                                    int cEntries, const SHChangeNotifyEntry *pshcne);
 BOOL WINAPI SHChangeNotifyDeregister(ULONG ulID);
 BOOL WINAPI SHChangeNotification_Unlock(HANDLE hLock);
 
@@ -1197,9 +1242,9 @@ HRESULT WINAPI SHGetRealIDL(IShellFolder *psf, LPCITEMIDLIST pidlSimple, LPITEMI
 /****************************************************************************
 * SHCreateDirectory API
 */
-DWORD WINAPI SHCreateDirectory(HWND, LPCVOID);
-int WINAPI SHCreateDirectoryExA(HWND, LPCSTR, LPSECURITY_ATTRIBUTES);
-int WINAPI SHCreateDirectoryExW(HWND, LPCWSTR, LPSECURITY_ATTRIBUTES);
+DWORD WINAPI SHCreateDirectory(HWND, LPCWSTR);
+int WINAPI SHCreateDirectoryExA(HWND, LPCSTR, const SECURITY_ATTRIBUTES*);
+int WINAPI SHCreateDirectoryExW(HWND, LPCWSTR, const SECURITY_ATTRIBUTES*);
 
 /****************************************************************************
 * SHGetSpecialFolderLocation API
@@ -1277,7 +1322,6 @@ HRESULT WINAPI SHGetFolderPathW(HWND hwnd, int nFolder, HANDLE hToken, DWORD dwF
 #define CSIDL_CDBURN_AREA	0x003b
 #define CSIDL_COMPUTERSNEARME	0x003d
 #define CSIDL_PROFILES		0x003e
-#define CSIDL_FOLDER_MASK	0x00ff
 #define CSIDL_FLAG_PER_USER_INIT 0x0800
 #define CSIDL_FLAG_NO_ALIAS	0x1000
 #define CSIDL_FLAG_DONT_VERIFY	0x4000
@@ -1417,7 +1461,7 @@ BOOL         WINAPI DAD_DragEnterEx(HWND,POINT);
 BOOL         WINAPI DAD_DragEnterEx2(HWND,POINT,IDataObject*);
 BOOL         WINAPI DAD_DragMove(POINT);
 BOOL         WINAPI DAD_DragLeave(void);
-BOOL         WINAPI DAD_AutoScroll(HWND,AUTO_SCROLL_DATA*,LPPOINT);
+BOOL         WINAPI DAD_AutoScroll(HWND,AUTO_SCROLL_DATA*,const POINT*);
 HRESULT      WINAPI SHDoDragDrop(HWND,IDataObject*,IDropSource*,DWORD,LPDWORD);
 
 LPITEMIDLIST WINAPI ILAppendID(LPITEMIDLIST,LPCSHITEMID,BOOL);
@@ -1470,7 +1514,7 @@ typedef struct
 HRESULT WINAPI SHCreateDefaultContextMenu(const DEFCONTEXTMENU *,REFIID,void **ppv);
 
 typedef HRESULT (CALLBACK * LPFNDFMCALLBACK)(IShellFolder*,HWND,IDataObject*,UINT,WPARAM,LPARAM);
-INT WINAPI CDefFolderMenu_Create2(LPCITEMIDLIST,HWND,UINT,LPCITEMIDLIST*,IShellFolder*,LPFNDFMCALLBACK,UINT,HKEY *,IContextMenu **);
+HRESULT WINAPI CDefFolderMenu_Create2(LPCITEMIDLIST,HWND,UINT,LPCITEMIDLIST*,IShellFolder*,LPFNDFMCALLBACK,UINT,const HKEY *,IContextMenu **);
 
 /****************************************************************************
  * SHCreateDefaultContextMenu API
@@ -1522,8 +1566,8 @@ typedef int OPEN_AS_INFO_FLAGS;
 
 
 typedef struct tagOPENASINFO {
-	LPCTSTR pcszFile;
-	LPCTSTR pcszClass;
+	LPCWSTR pcszFile;
+	LPCWSTR pcszClass;
 	OPEN_AS_INFO_FLAGS oaifInFlags;
 } OPENASINFO;
 

@@ -93,7 +93,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             FillListView();
             return TRUE;
         }
-	case WM_COMMAND:
+    case WM_COMMAND:
         {
             switch (LOWORD(wParam))
             {
@@ -178,7 +178,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                         break;
                     }
                 }
-	    }
+        }
         }
         break;
     }

@@ -20,7 +20,7 @@
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 {
   LARGE_INTEGER Frequency;
@@ -47,7 +47,7 @@ QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 {
   LARGE_INTEGER Count;

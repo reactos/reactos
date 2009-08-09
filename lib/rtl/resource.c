@@ -94,7 +94,7 @@ start:
       }
     else if (Resource->NumberActive < 0) /* exclusive lock in progress */
       {
-	if (Resource->OwningThread == NtCurrentTeb()->Cid.UniqueThread)
+	if (Resource->OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
 	  {
 	     retVal = TRUE;
 	     Resource->NumberActive--;
@@ -120,7 +120,7 @@ wait:
 	  goto wait;
      }
    if (retVal == TRUE)
-     Resource->OwningThread = NtCurrentTeb()->Cid.UniqueThread;
+     Resource->OwningThread = NtCurrentTeb()->ClientId.UniqueThread;
 done:
     RtlLeaveCriticalSection(&Resource->Lock);
     return retVal;
@@ -141,7 +141,7 @@ start:
    RtlEnterCriticalSection(&Resource->Lock);
    if (Resource->NumberActive < 0)
      {
-	if (Resource->OwningThread == NtCurrentTeb()->Cid.UniqueThread)
+	if (Resource->OwningThread == NtCurrentTeb()->ClientId.UniqueThread)
 	  {
 	     Resource->NumberActive--;
 	     retVal = TRUE;
@@ -218,7 +218,7 @@ RtlConvertSharedToExclusive(PRTL_RESOURCE Resource)
 
    if (Resource->NumberActive == 1)
      {
-	Resource->OwningThread = NtCurrentTeb()->Cid.UniqueThread;
+	Resource->OwningThread = NtCurrentTeb()->ClientId.UniqueThread;
 	Resource->NumberActive = -1;
      }
    else
@@ -233,7 +233,7 @@ RtlConvertSharedToExclusive(PRTL_RESOURCE Resource)
 	   return;
 
 	RtlEnterCriticalSection(&Resource->Lock);
-	Resource->OwningThread = NtCurrentTeb()->Cid.UniqueThread;
+	Resource->OwningThread = NtCurrentTeb()->ClientId.UniqueThread;
 	Resource->NumberActive = -1;
      }
    RtlLeaveCriticalSection(&Resource->Lock);

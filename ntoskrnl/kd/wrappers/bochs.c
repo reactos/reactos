@@ -9,7 +9,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* bochs debug output */
 #define BOCHS_LOGGER_PORT ((PVOID)0xe9)
@@ -17,7 +17,7 @@
 /* FUNCTIONS *****************************************************************/
 
 VOID
-STDCALL
+NTAPI
 KdpBochsDebugPrint(IN PCH Message,
                    IN ULONG Length)
 {
@@ -35,7 +35,7 @@ KdpBochsDebugPrint(IN PCH Message,
 }
 
 VOID
-STDCALL
+NTAPI
 KdpBochsInit(PKD_DISPATCH_TABLE DispatchTable,
              ULONG BootPhase)
 {

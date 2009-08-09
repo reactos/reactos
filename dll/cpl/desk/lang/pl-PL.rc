@@ -229,3 +229,10 @@ BEGIN
     IDS_ELEMENT_21 "Etykieta narzêdzia"
     IDS_ELEMENT_22 "Ikona"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DISPLAY_SETTINGS "Ustawienia ekranu"
+    IDS_APPLY_FAILED "Nie uda³o siê zastosowaæ nowych ustawieñ..."
+    IDS_APPLY_NEEDS_RESTART "Musisz ponownie uruchomiæ komputer aby zastosowaæ zmiany."
+END

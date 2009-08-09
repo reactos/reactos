@@ -48,7 +48,6 @@ static char *cvt(double arg, int ndigits, int *decpt, int *sign, char *buf, int 
   double fi, fj;
   char *p, *p1;
 
-  if (ndigits < 0) ndigits = 0;
   if (ndigits >= CVTBUFSIZE - 1) ndigits = CVTBUFSIZE - 2;
   r2 = 0;
   *sign = 0;

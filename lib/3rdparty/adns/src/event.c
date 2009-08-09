@@ -28,10 +28,10 @@
  */
 
 #include <errno.h>
-# include "adns_win32.h"
 #include <stdlib.h>
 
 #ifdef ADNS_JGAA_WIN32
+# include "adns_win32.h"
 #else
 # include <unistd.h>
 # include <sys/types.h>
@@ -52,7 +52,7 @@ static void tcp_close(adns_state ads) {
 
   serv= ads->tcpserver;
   adns_socket_close(ads->tcpsocket);
-  ads->tcpsocket= INVALID_SOCKET;
+  ads->tcpsocket= -1;
   ads->tcprecv.used= ads->tcprecv_skip= ads->tcpsend.used= 0;
 }
 
@@ -114,7 +114,7 @@ void adns__tcp_tryconnect(adns_state ads, struct timeval now) {
 	ADNS_CLEAR_ERRNO
     fd= socket(AF_INET,SOCK_STREAM,proto->p_proto);
 	ADNS_CAPTURE_ERRNO;
-    if (fd == INVALID_SOCKET) {
+    if (fd<0) {
       adns__diag(ads,-1,0,"cannot create TCP socket: %s",strerror(errno));
       return;
     }
@@ -128,7 +128,9 @@ void adns__tcp_tryconnect(adns_state ads, struct timeval now) {
     addr.sin_family= AF_INET;
     addr.sin_port= htons(DNS_PORT);
     addr.sin_addr= ads->servers[ads->tcpserver].addr;
+    ADNS_CLEAR_ERRNO;
     r= connect(fd,(const struct sockaddr*)&addr,sizeof(addr));
+    ADNS_CAPTURE_ERRNO;
     ads->tcpsocket= fd;
     ads->tcpstate= server_connecting;
     if (r==0) { tcp_connected(ads,now); return; }
@@ -398,10 +400,10 @@ int adns_processreadable(adns_state ads, ADNS_SOCKET fd, const struct timeval *n
 		  (struct sockaddr*)&udpaddr,&udpaddrlen);
 	  ADNS_CAPTURE_ERRNO;
       if (r<0) {
-	if (errno == EAGAIN || errno == EWOULDBLOCK) { r= 0; goto xit; }
+	if (errno == EAGAIN || errno == EWOULDBLOCK || errno == ECONNRESET) { r= 0; goto xit; }
 	if (errno == EINTR) continue;
 	if (errno_resources(errno)) { r= errno; goto xit; }
-	adns__warn(ads,-1,0,"datagram receive error: %s",strerror(errno));
+	adns__warn(ads,-1,0,"datagram receive error: %s (%d)",strerror(errno), errno);
 	r= 0; goto xit;
       }
       if (udpaddrlen != sizeof(udpaddr)) {

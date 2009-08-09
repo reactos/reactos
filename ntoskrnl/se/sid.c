@@ -238,7 +238,7 @@ SepCaptureSid(IN PSID InputSid,
     
     if(AccessMode != KernelMode)
     {
-        _SEH_TRY
+        _SEH2_TRY
         {
             ProbeForRead(Sid,
                          FIELD_OFFSET(SID,
@@ -249,11 +249,11 @@ SepCaptureSid(IN PSID InputSid,
                          SidSize,
                          sizeof(UCHAR));
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         
         if(NT_SUCCESS(Status))
         {
@@ -262,7 +262,7 @@ SepCaptureSid(IN PSID InputSid,
                                     SidSize);
             if(NewSid != NULL)
             {
-                _SEH_TRY
+                _SEH2_TRY
                 {
                     RtlCopyMemory(NewSid,
                                   Sid,
@@ -270,12 +270,12 @@ SepCaptureSid(IN PSID InputSid,
                     
                     *CapturedSid = NewSid;
                 }
-                _SEH_HANDLE
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     ExFreePool(NewSid);
-                    Status = _SEH_GetExceptionCode();
+                    Status = _SEH2_GetExceptionCode();
                 }
-                _SEH_END;
+                _SEH2_END;
             }
             else
             {

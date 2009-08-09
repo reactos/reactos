@@ -28,6 +28,20 @@
 #define _PATH_DHCLIENT_PID "\\systemroot\\system32\\drivers\\etc\\dhclient.pid"
 typedef void *VOIDPTR;
 
+#ifndef _SSIZE_T_DEFINED
+#define _SSIZE_T_DEFINED
+#undef ssize_t
+#ifdef _WIN64
+#if defined(__GNUC__) && defined(__STRICT_ANSI__)
+  typedef int ssize_t __attribute__ ((mode (DI)));
+#else
+  typedef __int64 ssize_t;
+#endif
+#else
+  typedef int ssize_t;
+#endif
+#endif
+
 typedef u_int32_t uintTIME;
 #define TIME uintTIME
 #include "dhcpd.h"

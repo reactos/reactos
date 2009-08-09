@@ -1,5 +1,3 @@
-
-
 ;
 ; moldname-msvcrt.def
 ;
@@ -58,7 +56,6 @@ fileno
 ; fpreset
 fputchar
 fputwchar
-fstat
 ftime
 gcvt
 getch
@@ -98,7 +95,6 @@ spawnv
 spawnve
 spawnvp
 spawnvpe
-stat
 strcmpi
 strdup
 stricmp
@@ -151,9 +147,3 @@ cabs
 hypot
 logb
 nextafter
-
-; Additional definitions for ReactOS:
-snwprintf
-snprintf
-strtoull=_strtoui64
-vsnprintf

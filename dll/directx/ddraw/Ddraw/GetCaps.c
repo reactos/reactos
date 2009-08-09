@@ -20,10 +20,6 @@
 
 #include <string.h>
 
-/* PSEH for SEH Support */
-#include <pseh/pseh.h>
-
-
 HRESULT WINAPI
 Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                          LPDDCAPS pHELCaps)
@@ -34,12 +30,12 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
     EnterCriticalSection( &ddcs );
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         if ((!pDriverCaps) && (!pHELCaps))
         {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
         }
 
         /*
@@ -53,7 +49,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
              (pDriverCaps->dwSize !=  sizeof(DDCAPS_DX7 )) )
         {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
         }
 
         /*
@@ -67,7 +63,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
              (pHELCaps->dwSize != sizeof(DDCAPS_DX7 )) )
         {
                 retVal = DDERR_INVALIDPARAMS;
-                _SEH_LEAVE;
+                _SEH2_LEAVE;
         }
 
         if (pDriverCaps)
@@ -288,11 +284,11 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
         }
 
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         retVal = DD_FALSE;
     }
-    _SEH_END;
+    _SEH2_END;
 
     LeaveCriticalSection( &ddcs );
     return  retVal;

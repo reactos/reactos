@@ -18,7 +18,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 DeviceIoControl(IN HANDLE hDevice,
                 IN DWORD dwIoControlCode,
                 IN LPVOID lpInBuffer  OPTIONAL,
@@ -132,6 +132,10 @@ DeviceIoControl(IN HANDLE hDevice,
              /* lpBytesReturned must not be NULL here, in fact Win doesn't
                 check that case either and crashes (only after the operation
                 completed) */
+            if (!lpBytesReturned)
+            {
+                ERR("Bad caller: lpBytesReturned must not be NULL\n");
+            }
              *lpBytesReturned = Iosb.Information;
           }
         else
@@ -149,7 +153,7 @@ DeviceIoControl(IN HANDLE hDevice,
  * @implemented
  */
 BOOL
-STDCALL
+WINAPI
 GetOverlappedResult (
   IN HANDLE   hFile,
 	IN LPOVERLAPPED	lpOverlapped,
@@ -184,6 +188,10 @@ GetOverlappedResult (
     }
   }
 
+  if (!lpNumberOfBytesTransferred)
+  {
+      ERR("Bad caller: lpNumberOfBytesTransferred must not be NULL\n");
+  }
   *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
 
   if (!NT_SUCCESS(lpOverlapped->Internal))

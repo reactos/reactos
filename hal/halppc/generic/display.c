@@ -250,7 +250,7 @@ HalInitializeDisplay (PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 
 /* PUBLIC FUNCTIONS *********************************************************/
 
-VOID STDCALL
+VOID NTAPI
 HalReleaseDisplayOwnership(VOID)
 /*
  * FUNCTION: Release ownership of display back to HAL
@@ -267,7 +267,7 @@ HalReleaseDisplayOwnership(VOID)
 }
 
 
-VOID STDCALL
+VOID NTAPI
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
 /*
  * FUNCTION:
@@ -280,7 +280,7 @@ HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParamete
   HalResetDisplayParameters = ResetDisplayParameters;
 }
 
-VOID STDCALL
+VOID NTAPI
 HalDisplayString(IN PCH String)
 /*
  * FUNCTION: Switches the screen to HAL console mode (BSOD) if not there
@@ -350,7 +350,7 @@ HalDisplayString(IN PCH String)
   KeLowerIrql(OldIrql);
 }
 
-VOID STDCALL
+VOID NTAPI
 HalQueryDisplayParameters(OUT PULONG DispSizeX,
 			  OUT PULONG DispSizeY,
 			  OUT PULONG CursorPosX,
@@ -367,7 +367,7 @@ HalQueryDisplayParameters(OUT PULONG DispSizeX,
 }
 
 
-VOID STDCALL
+VOID NTAPI
 HalSetDisplayParameters(IN ULONG CursorPosX,
 			IN ULONG CursorPosY)
 {
@@ -376,7 +376,7 @@ HalSetDisplayParameters(IN ULONG CursorPosX,
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 HalQueryDisplayOwnership(VOID)
 {
   return !HalOwnsDisplay;

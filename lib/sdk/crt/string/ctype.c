@@ -1,7 +1,10 @@
 #include <string.h>
+#undef __MINGW_IMPORT
+#define __MINGW_IMPORT
 #include <ctype.h>
 
 #undef _pctype
+#undef _pwctype
 
 /* MS's CRT header defines all that, and we actually implement that */
 #undef iswalnum
@@ -20,11 +23,13 @@
 #undef iswspace
 #undef iswxdigit
 #undef __toascii
+#undef _tolower
+#undef _toupper
 
 #define upalpha ('A' - 'a')
 
 
-unsigned short _ctype[] = {
+const unsigned short _ctype[] = {
 	0,			/* <EOF>, 0xFFFF */
 	_CONTROL,		/* CTRL+@, 0x00 */
 	_CONTROL,		/* CTRL+A, 0x01 */
@@ -543,7 +548,7 @@ int iswxdigit(wint_t c)
  */
 int __toascii(int c)
 {
-   return((unsigned)(c) & 0x7f);
+   return((unsigned int)(c) & 0x7f);
 }
 
 /*
@@ -589,7 +594,7 @@ int toupper(int c)
 /*
  * @implemented
  */
-wchar_t towlower(wchar_t c)
+wint_t towlower(wint_t c)
 {
    if (iswctype (c, _UPPER))
        return (c - upalpha);
@@ -599,7 +604,7 @@ wchar_t towlower(wchar_t c)
 /*
  * @implemented
  */
-wchar_t towupper(wchar_t c)
+wint_t towupper(wint_t c)
 {
    if (iswctype (c, _LOWER))
       return (c + upalpha);

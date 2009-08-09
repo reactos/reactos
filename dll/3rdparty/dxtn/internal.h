@@ -29,7 +29,7 @@
 
 #ifdef __WIN32__
 #define TAPI __declspec(dllexport)
-#define TAPIENTRY /*__stdcall*/
+#define TAPIENTRY __stdcall
 #else
 #define TAPI
 #define TAPIENTRY

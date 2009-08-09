@@ -895,7 +895,7 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
     PWCHAR LayoutId;
     const MUI_LAYOUTS * LayoutsList;
     MUI_LAYOUTS NewLayoutsList[20];
-    ULONG uIndex = 0;
+    ULONG uIndex;
     ULONG uOldPos = 0;
 
     Entry = GetCurrentListEntry(List);
@@ -910,16 +910,17 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
 
     if (_wcsicmp(LayoutsList[0].LayoutID, LayoutId) != 0)
     {
-        do
+        for (uIndex = 1; LayoutsList[uIndex].LangID != NULL; uIndex++)
         {
             if (_wcsicmp(LayoutsList[uIndex].LayoutID, LayoutId) == 0)
             {
                 uOldPos = uIndex;
+                continue;
             }
 
-            uIndex++;
-
-        } while (LayoutsList[uIndex].LangID != NULL);
+            NewLayoutsList[uIndex].LangID   = LayoutsList[uIndex].LangID;
+            NewLayoutsList[uIndex].LayoutID = LayoutsList[uIndex].LayoutID;
+        }
 
         NewLayoutsList[uIndex].LangID    = NULL;
         NewLayoutsList[uIndex].LayoutID  = NULL;
@@ -942,5 +943,48 @@ ProcessKeyboardLayoutFiles(PGENERIC_LIST List)
     return TRUE;
 }
 #endif
+
+BOOLEAN
+SetGeoID(PWCHAR Id)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    WCHAR szKeyName[] = L"\\Registry\\User\\.DEFAULT\\Control Panel\\International\\Geo";
+    WCHAR szValueName[] = L"Nation";
+    NTSTATUS Status;
+    RtlInitUnicodeString(&KeyName,
+                         szKeyName);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status =  NtOpenKey(&KeyHandle,
+                          KEY_ALL_ACCESS,
+			  &ObjectAttributes);
+    if(!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+    RtlInitUnicodeString(&ValueName, szValueName);
+    Status = NtSetValueKey(KeyHandle,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   (PVOID)Id,
+                                   (wcslen(Id) * sizeof(WCHAR)));
+    if (!NT_SUCCESS(Status))
+    {
+         DPRINT1("NtSetValueKey() failed (Status = %lx)\n", Status);
+         NtClose(KeyHandle);
+         return FALSE;
+    }
+
+    return TRUE;
+}
 
 /* EOF */

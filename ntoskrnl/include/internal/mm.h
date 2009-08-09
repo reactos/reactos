@@ -59,6 +59,15 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 /* Number of list heads to use */
 #define MI_FREE_POOL_LISTS 4
 
+#define HYPER_SPACE		                    (0xC0400000)
+
+#define MI_HYPERSPACE_PTES                  (256 - 1)
+#define MI_MAPPING_RANGE_START              (ULONG)HYPER_SPACE
+#define MI_MAPPING_RANGE_END                (MI_MAPPING_RANGE_START + \
+                                             MI_HYPERSPACE_PTES * PAGE_SIZE)
+#define MI_ZERO_PTE                         (PMMPTE)(MI_MAPPING_RANGE_END + \
+                                             PAGE_SIZE)
+
 /* Signature of free pool blocks */
 #define MM_FREE_POOL_TAG    TAG('F', 'r', 'p', 'l')
 
@@ -140,6 +149,16 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
     PAGE_NOACCESS | \
     PAGE_NOCACHE)
 
+#define PAGE_FLAGS_VALID_FOR_SECTION \
+    (PAGE_READONLY | \
+     PAGE_READWRITE | \
+     PAGE_WRITECOPY | \
+     PAGE_EXECUTE | \
+     PAGE_EXECUTE_READ | \
+     PAGE_EXECUTE_READWRITE | \
+     PAGE_EXECUTE_WRITECOPY | \
+     PAGE_NOACCESS)
+
 #define PAGE_IS_READABLE                    \
     (PAGE_READONLY | \
     PAGE_READWRITE | \
@@ -163,6 +182,13 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 #define PAGE_IS_WRITECOPY                   \
     (PAGE_WRITECOPY | \
     PAGE_EXECUTE_WRITECOPY)
+
+
+#define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
+    InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
+
+#define InterlockedExchangePte(PointerPte, Value) \
+    InterlockedExchange((PLONG)(PointerPte), Value)
 
 typedef struct
 {
@@ -287,7 +313,7 @@ typedef struct _PHYSICAL_PAGE
         Flags;
         ULONG AllFlags;
     };
-    
+
     LIST_ENTRY ListEntry;
     ULONG ReferenceCount;
     SWAPENTRY SavedSwapEntry;
@@ -356,7 +382,7 @@ typedef struct _MMFREE_POOL_ENTRY
 
 /* Paged pool information */
 typedef struct _MM_PAGED_POOL_INFO
-{  
+{
     PRTL_BITMAP PagedPoolAllocationMap;
     PRTL_BITMAP EndOfPagedPoolBitmap;
     PMMPTE FirstPteForPagedPool;
@@ -407,10 +433,6 @@ NTAPI
 MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace);
 
 /* marea.c *******************************************************************/
-
-NTSTATUS
-NTAPI
-MmInitMemoryAreas(VOID);
 
 NTSTATUS
 NTAPI
@@ -1038,6 +1060,16 @@ ULONG
 NTAPI
 MmGetLockCountPage(PFN_TYPE Page);
 
+static
+__inline
+KIRQL
+NTAPI
+MmAcquirePageListLock()
+{
+	return KeAcquireQueuedSpinLock(LockQueuePfnLock);
+}
+
+FORCEINLINE
 VOID
 NTAPI
 MmInitializePageList(
@@ -1059,22 +1091,41 @@ MmZeroPageThreadMain(
     PVOID Context
 );
 
-/* i386/page.c *********************************************************/
+/* hypermap.c *****************************************************************/
+
+extern PEPROCESS HyperProcess;
+extern KIRQL HyperIrql;
 
 PVOID
 NTAPI
-MmCreateHyperspaceMapping(PFN_TYPE Page);
+MiMapPageInHyperSpace(IN PEPROCESS Process,
+                      IN PFN_NUMBER Page,
+                      IN PKIRQL OldIrql);
 
-PFN_TYPE
+VOID
 NTAPI
-MmChangeHyperspaceMapping(
-    PVOID Address,
-    PFN_TYPE Page
-);
+MiUnmapPageInHyperSpace(IN PEPROCESS Process,
+                        IN PVOID Address,
+                        IN KIRQL OldIrql);
 
-PFN_TYPE
+PVOID
 NTAPI
-MmDeleteHyperspaceMapping(PVOID Address);
+MiMapPageToZeroInHyperSpace(IN PFN_NUMBER Page);
+
+//
+// ReactOS Compatibility Layer
+//
+PVOID
+FORCEINLINE
+MmCreateHyperspaceMapping(IN PFN_NUMBER Page)
+{
+    HyperProcess = (PEPROCESS)KeGetCurrentThread()->ApcState.Process;
+    return MiMapPageInHyperSpace(HyperProcess, Page, &HyperIrql);
+}
+
+#define MmDeleteHyperspaceMapping(x) MiUnmapPageInHyperSpace(HyperProcess, x, HyperIrql);
+
+/* i386/page.c *********************************************************/
 
 NTSTATUS
 NTAPI
@@ -1223,13 +1274,6 @@ VOID
 NTAPI
 MmReferencePageUnsafe(PFN_TYPE Page);
 
-BOOLEAN
-NTAPI
-MmIsAccessedAndResetAccessPage(
-    struct _EPROCESS *Process,
-    PVOID Address
-);
-
 ULONG
 NTAPI
 MmGetReferenceCountPage(PFN_TYPE Page);
@@ -1288,14 +1332,14 @@ NTAPI
 MmCreateProcessAddressSpace(
     IN ULONG MinWs,
     IN PEPROCESS Dest,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG DirectoryTableBase
 );
 
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(
     IN PEPROCESS Process,
-    IN PLARGE_INTEGER DirectoryTableBase
+    IN PULONG DirectoryTableBase
 );
 
 
@@ -1565,18 +1609,28 @@ MmCheckSystemImage(
     IN BOOLEAN PurgeSection
 );
 
-FORCEINLINE
-VOID
+NTSTATUS
 NTAPI
-MiSyncThreadProcessViews(IN PVOID Process,
-                         IN PVOID Address,
-                         IN ULONG Size)
-{
-    MmUpdatePageDir((PEPROCESS)Process, Address, Size);
-}
+MmCallDllInitialize(
+    IN PLDR_DATA_TABLE_ENTRY LdrEntry,
+    IN PLIST_ENTRY ListHead
+);
 
+/* ReactOS Mm Hacks */
+VOID
+FASTCALL
+MiSyncForProcessAttach(
+    IN PKTHREAD NextThread,
+    IN PEPROCESS Process
+);
 
-extern MADDRESS_SPACE MmKernelAddressSpace;
+VOID
+FASTCALL
+MiSyncForContextSwitch(
+    IN PKTHREAD Thread
+);
+
+extern PMM_AVL_TABLE MmKernelAddressSpace;
 
 FORCEINLINE
 VOID

@@ -368,7 +368,7 @@ static void TOOLTIPS_GetDispInfoA(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     ttnmdi.hdr.hwndFrom = hwnd;
     ttnmdi.hdr.idFrom = toolPtr->uId;
     ttnmdi.hdr.code = TTN_GETDISPINFOA; /* == TTN_NEEDTEXTA */
-    ttnmdi.lpszText = (LPSTR)&ttnmdi.szText;
+    ttnmdi.lpszText = ttnmdi.szText;
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
@@ -424,7 +424,7 @@ static void TOOLTIPS_GetDispInfoW(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     ttnmdi.hdr.hwndFrom = hwnd;
     ttnmdi.hdr.idFrom = toolPtr->uId;
     ttnmdi.hdr.code = TTN_GETDISPINFOW; /* == TTN_NEEDTEXTW */
-    ttnmdi.lpszText = (LPWSTR)&ttnmdi.szText;
+    ttnmdi.lpszText = ttnmdi.szText;
     ttnmdi.uFlags = toolPtr->uFlags;
     ttnmdi.lParam = toolPtr->lParam;
 
@@ -1006,7 +1006,7 @@ TOOLTIPS_CheckTool (HWND hwnd, BOOL bShowTest)
 
 
 static LRESULT
-TOOLTIPS_Activate (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_Activate (HWND hwnd, WPARAM wParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
 
@@ -1023,7 +1023,7 @@ TOOLTIPS_Activate (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_AddToolA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_AddToolA (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTTOOLINFOA lpToolInfo = (LPTTTOOLINFOA)lParam;
@@ -1114,7 +1114,7 @@ TOOLTIPS_AddToolA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_AddToolW (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_AddToolW (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTTOOLINFOW lpToolInfo = (LPTTTOOLINFOW)lParam;
@@ -1280,7 +1280,7 @@ TOOLTIPS_DelToolCommon (HWND hwnd, TOOLTIPS_INFO *infoPtr, INT nTool)
 }
 
 static LRESULT
-TOOLTIPS_DelToolA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_DelToolA (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTTOOLINFOA lpToolInfo = (LPTTTOOLINFOA)lParam;
@@ -1302,7 +1302,7 @@ TOOLTIPS_DelToolA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_DelToolW (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_DelToolW (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTTOOLINFOW lpToolInfo = (LPTTTOOLINFOW)lParam;
@@ -1451,7 +1451,7 @@ TOOLTIPS_GetCurrentToolA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_GetCurrentToolW (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_GetCurrentToolW (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTTOOLINFOW lpToolInfo = (LPTTTOOLINFOW)lParam;
@@ -1485,7 +1485,7 @@ TOOLTIPS_GetCurrentToolW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_GetDelayTime (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_GetDelayTime (HWND hwnd, WPARAM wParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
 
@@ -1510,7 +1510,7 @@ TOOLTIPS_GetDelayTime (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_GetMargin (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_GetMargin (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPRECT lpRect = (LPRECT)lParam;
@@ -1574,6 +1574,9 @@ TOOLTIPS_GetTextW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     nTool = TOOLTIPS_GetToolFromInfoW (infoPtr, lpToolInfo);
     if (nTool == -1) return 0;
 
+    if (infoPtr->tools[nTool].lpszText == NULL)
+	return 0;
+
     strcpyW (lpToolInfo->lpszText, infoPtr->tools[nTool].lpszText);
 
     return 0;
@@ -1597,7 +1600,7 @@ TOOLTIPS_GetTipTextColor (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static inline LRESULT
-TOOLTIPS_GetToolCount (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_GetToolCount (HWND hwnd)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     return infoPtr->uNumTools;
@@ -1605,7 +1608,7 @@ TOOLTIPS_GetToolCount (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_GetToolInfoA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_GetToolInfoA (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTTOOLINFOA lpToolInfo = (LPTTTOOLINFOA)lParam;
@@ -1714,7 +1717,7 @@ TOOLTIPS_HitTestA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_HitTestW (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_HitTestW (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTHITTESTINFOW lptthit = (LPTTHITTESTINFOW)lParam;
@@ -1797,7 +1800,7 @@ TOOLTIPS_NewToolRectW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static inline LRESULT
-TOOLTIPS_Pop (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_Pop (HWND hwnd)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     TOOLTIPS_Hide (hwnd, infoPtr);
@@ -1915,7 +1918,7 @@ TOOLTIPS_SetDelayTime (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_SetMargin (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_SetMargin (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPRECT lpRect = (LPRECT)lParam;
@@ -1953,7 +1956,7 @@ TOOLTIPS_SetTipBkColor (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static inline LRESULT
-TOOLTIPS_SetTipTextColor (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_SetTipTextColor (HWND hwnd, WPARAM wParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
 
@@ -2032,7 +2035,7 @@ TOOLTIPS_SetTitleW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TOOLTIPS_SetToolInfoA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_SetToolInfoA (HWND hwnd, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     LPTTTOOLINFOA lpToolInfo = (LPTTTOOLINFOA)lParam;
@@ -2348,7 +2351,7 @@ TOOLTIPS_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     TOOLTIPS_INFO *infoPtr;
 
     /* allocate memory for info structure */
-    infoPtr = (TOOLTIPS_INFO *)Alloc (sizeof(TOOLTIPS_INFO));
+    infoPtr = Alloc (sizeof(TOOLTIPS_INFO));
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure */
@@ -2485,30 +2488,28 @@ TOOLTIPS_NCHitTest (HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
     TTTOOL_INFO *toolPtr = infoPtr->tools;
     INT nResult;
 
-    if (lParam == NF_QUERY)
-    {
-        if (toolPtr->bNotifyUnicode)
-        {
+    TRACE("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
+
+    if (lParam == NF_QUERY) {
+        if (toolPtr->bNotifyUnicode) {
             return NFR_UNICODE;
         } else {
             return NFR_ANSI;
         }
     }
-    else if (lParam == NF_REQUERY)
-    {
+    else if (lParam == NF_REQUERY) {
         nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
                     (WPARAM)hwnd, (LPARAM)NF_QUERY);
         if (nResult == NFR_ANSI) {
             toolPtr->bNotifyUnicode = FALSE;
-        TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
+            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_ANSI\n");
         } else if (nResult == NFR_UNICODE) {
             toolPtr->bNotifyUnicode = TRUE;
-        TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
+            TRACE(" -- WM_NOTIFYFORMAT returns: NFR_UNICODE\n");
         } else {
             TRACE (" -- WM_NOTIFYFORMAT returns: error!\n");
         }
@@ -2696,19 +2697,19 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
 	case TTM_ACTIVATE:
-	    return TOOLTIPS_Activate (hwnd, wParam, lParam);
+	    return TOOLTIPS_Activate (hwnd, wParam);
 
 	case TTM_ADDTOOLA:
-	    return TOOLTIPS_AddToolA (hwnd, wParam, lParam);
+	    return TOOLTIPS_AddToolA (hwnd, lParam);
 
 	case TTM_ADDTOOLW:
-	    return TOOLTIPS_AddToolW (hwnd, wParam, lParam);
+	    return TOOLTIPS_AddToolW (hwnd, lParam);
 
 	case TTM_DELTOOLA:
-	    return TOOLTIPS_DelToolA (hwnd, wParam, lParam);
+	    return TOOLTIPS_DelToolA (hwnd, lParam);
 
 	case TTM_DELTOOLW:
-	    return TOOLTIPS_DelToolW (hwnd, wParam, lParam);
+	    return TOOLTIPS_DelToolW (hwnd, lParam);
 
 	case TTM_ENUMTOOLSA:
 	    return TOOLTIPS_EnumToolsA (hwnd, wParam, lParam);
@@ -2723,13 +2724,13 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_GetCurrentToolA (hwnd, wParam, lParam);
 
 	case TTM_GETCURRENTTOOLW:
-	    return TOOLTIPS_GetCurrentToolW (hwnd, wParam, lParam);
+	    return TOOLTIPS_GetCurrentToolW (hwnd, lParam);
 
 	case TTM_GETDELAYTIME:
-	    return TOOLTIPS_GetDelayTime (hwnd, wParam, lParam);
+	    return TOOLTIPS_GetDelayTime (hwnd, wParam);
 
 	case TTM_GETMARGIN:
-	    return TOOLTIPS_GetMargin (hwnd, wParam, lParam);
+	    return TOOLTIPS_GetMargin (hwnd, lParam);
 
 	case TTM_GETMAXTIPWIDTH:
 	    return TOOLTIPS_GetMaxTipWidth (hwnd, wParam, lParam);
@@ -2747,10 +2748,10 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_GetTipTextColor (hwnd, wParam, lParam);
 
 	case TTM_GETTOOLCOUNT:
-	    return TOOLTIPS_GetToolCount (hwnd, wParam, lParam);
+	    return TOOLTIPS_GetToolCount (hwnd);
 
 	case TTM_GETTOOLINFOA:
-	    return TOOLTIPS_GetToolInfoA (hwnd, wParam, lParam);
+	    return TOOLTIPS_GetToolInfoA (hwnd, lParam);
 
 	case TTM_GETTOOLINFOW:
 	    return TOOLTIPS_GetToolInfoW (hwnd, wParam, lParam);
@@ -2759,7 +2760,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_HitTestA (hwnd, wParam, lParam);
 
 	case TTM_HITTESTW:
-	    return TOOLTIPS_HitTestW (hwnd, wParam, lParam);
+	    return TOOLTIPS_HitTestW (hwnd, lParam);
 
 	case TTM_NEWTOOLRECTA:
 	    return TOOLTIPS_NewToolRectA (hwnd, wParam, lParam);
@@ -2768,7 +2769,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_NewToolRectW (hwnd, wParam, lParam);
 
 	case TTM_POP:
-	    return TOOLTIPS_Pop (hwnd, wParam, lParam);
+	    return TOOLTIPS_Pop (hwnd);
 
 	case TTM_RELAYEVENT:
 	    return TOOLTIPS_RelayEvent (hwnd, wParam, lParam);
@@ -2777,7 +2778,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_SetDelayTime (hwnd, wParam, lParam);
 
 	case TTM_SETMARGIN:
-	    return TOOLTIPS_SetMargin (hwnd, wParam, lParam);
+	    return TOOLTIPS_SetMargin (hwnd, lParam);
 
 	case TTM_SETMAXTIPWIDTH:
 	    return TOOLTIPS_SetMaxTipWidth (hwnd, wParam, lParam);
@@ -2786,7 +2787,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_SetTipBkColor (hwnd, wParam, lParam);
 
 	case TTM_SETTIPTEXTCOLOR:
-	    return TOOLTIPS_SetTipTextColor (hwnd, wParam, lParam);
+	    return TOOLTIPS_SetTipTextColor (hwnd, wParam);
 
 	case TTM_SETTITLEA:
 	    return TOOLTIPS_SetTitleA (hwnd, wParam, lParam);
@@ -2795,7 +2796,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_SetTitleW (hwnd, wParam, lParam);
 
 	case TTM_SETTOOLINFOA:
-	    return TOOLTIPS_SetToolInfoA (hwnd, wParam, lParam);
+	    return TOOLTIPS_SetToolInfoA (hwnd, lParam);
 
 	case TTM_SETTOOLINFOW:
 	    return TOOLTIPS_SetToolInfoW (hwnd, wParam, lParam);
@@ -2870,7 +2871,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_WinIniChange (hwnd, wParam, lParam);
 
 	default:
-	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
 		     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);

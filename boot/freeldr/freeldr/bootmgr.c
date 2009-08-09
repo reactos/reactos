@@ -23,7 +23,7 @@ VOID RunLoader(VOID)
 {
 	CHAR	SettingName[80];
 	CHAR	SettingValue[80];
-	ULONG		SectionId;
+	ULONG_PTR	SectionId;
 	ULONG		OperatingSystemCount;
 	PCSTR	*OperatingSystemSectionNames;
 	PCSTR	*OperatingSystemDisplayNames;
@@ -36,14 +36,6 @@ VOID RunLoader(VOID)
 		UiMessageBoxCritical("Error opening boot partition for file access.");
 		return;
 	}
-
-	//
-	// Check if we have a virtual RAM disk
-	// This is for x86 emulation -- on real hardware, the RAM disk will be
-	// located in one of the hardware memory descriptors as well as on the 
-	// freeldr command-line
-	//
-	RamDiskCheckForVirtualFile();
 
 	if (!IniFileInitialize())
 	{
@@ -123,18 +115,23 @@ VOID RunLoader(VOID)
 		{
 			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);
 		}
+#ifdef FREELDR_REACTOS_SETUP
+		else if (_stricmp(SettingValue, "ReactOSSetup") == 0)
+		{
+			// In future we could pass the selected OS details through this
+			// to have different install methods, etc.
+			LoadReactOSSetup();
+		}
+		else if (_stricmp(SettingValue, "ReactOSSetup2") == 0)
+		{
+			// WinLdr-style boot
+			LoadReactOSSetup2();
+		}
+#endif
 #ifdef __i386__
 		else if (_stricmp(SettingValue, "WindowsNT40") == 0)
 		{
 			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_NT4);
-		}
-		else if (_stricmp(SettingValue, "Windows2000") == 0)
-		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WIN2K);
-		}
-		else if (_stricmp(SettingValue, "WindowsXP") == 0)
-		{
-			LoadAndBootWindows(OperatingSystemSectionNames[SelectedOperatingSystem], _WIN32_WINNT_WINXP);
 		}
 		else if (_stricmp(SettingValue, "Windows2003") == 0)
 		{
@@ -169,7 +166,7 @@ ULONG	 GetDefaultOperatingSystem(PCSTR OperatingSystemList[], ULONG	 OperatingSy
 {
 	CHAR	DefaultOSText[80];
 	PCSTR	DefaultOSName;
-	ULONG	SectionId;
+	ULONG_PTR	SectionId;
 	ULONG	DefaultOS = 0;
 	ULONG	Idx;
 
@@ -206,7 +203,7 @@ LONG GetTimeOut(VOID)
 {
 	CHAR	TimeOutText[20];
 	LONG		TimeOut;
-	ULONG		SectionId;
+	ULONG_PTR	SectionId;
 
 	TimeOut = CmdLineGetTimeOut();
 	if (0 <= TimeOut)

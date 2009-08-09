@@ -32,7 +32,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -43,54 +45,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&File"
-	BEGIN
-		MENUITEM "&Nuovo",           CMD_NEW
-		MENUITEM "&Apri...\tCtrl+O",     CMD_OPEN
-		MENUITEM "&Salva\tCtrl+S",     CMD_SAVE
-		MENUITEM "Sal&va con nome...",       CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "S&tampa",            CMD_PRINT
-		MENUITEM "I&mposta pagina...",    CMD_PAGE_SETUP
-		MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Esci",             CMD_EXIT
-	END
-	POPUP "&Modifica"
-	BEGIN
-		MENUITEM "&Annulla\tCtrl+Z",      CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "&Taglia\tCtrl+X",       CMD_CUT
-		MENUITEM "&Copia\tCtrl+C",        CMD_COPY
-		MENUITEM "I&ncolla\tCtrl+V",      CMD_PASTE
-		MENUITEM "E&limina\tDel",         CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "Tr&ova\tCtrl+F",   	  CMD_SEARCH
-		MENUITEM "T&rova successivo\tF3", CMD_SEARCH_NEXT
-		MENUITEM "Sostituisci\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Vai a...\tCtrl+G",      CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "Sele&ziona tutto\tCtrl+A",       CMD_SELECT_ALL
-		MENUITEM "Ora/&Data\tF5",    CMD_TIME_DATE
-	END
-	POPUP "F&ormato"
-	BEGIN
-		MENUITEM "&A capo automatico",    CMD_WRAP
-		MENUITEM "&Imposta carattere...", CMD_FONT
-	END
-	POPUP "&Visualizza"
-	BEGIN
-		MENUITEM "&Barra di stato",    CMD_STATUSBAR
-	END
-	POPUP "&?"
-	BEGIN
-		MENUITEM "&Guida in linea",         CMD_HELP_CONTENTS
-		MENUITEM "&Trova...",        CMD_HELP_SEARCH
-		MENUITEM "&Aiuto sulla Guida",     CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "Informazioni &su blocco note"             CMD_ABOUT
-		MENUITEM "Inf&o...",      CMD_ABOUT_WINE
-	END
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Nuovo\tCtrl+N",               CMD_NEW
+        MENUITEM "&Apri...\tCtrl+O",             CMD_OPEN
+        MENUITEM "&Salva\tCtrl+S",               CMD_SAVE
+        MENUITEM "Sal&va con nome...",           CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "S&tampa\tCtrl+P",              CMD_PRINT
+        MENUITEM "I&mposta pagina...",           CMD_PAGE_SETUP
+        MENUITEM "&Configurazione stampante...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Esci",                        CMD_EXIT
+    END
+    POPUP "&Modifica"
+    BEGIN
+        MENUITEM "&Annulla\tCtrl+Z",         CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Taglia\tCtrl+X",          CMD_CUT
+        MENUITEM "&Copia\tCtrl+C",           CMD_COPY
+        MENUITEM "I&ncolla\tCtrl+V",         CMD_PASTE
+        MENUITEM "E&limina\tDel",            CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Tr&ova\tCtrl+F",           CMD_SEARCH
+        MENUITEM "T&rova successivo\tF3",    CMD_SEARCH_NEXT
+        MENUITEM "Sostituisci\tCtrl+H",      CMD_REPLACE
+        MENUITEM "Vai a...\tCtrl+G",         CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "Sele&ziona tutto\tCtrl+A", CMD_SELECT_ALL
+        MENUITEM "Ora/&Data\tF5",            CMD_TIME_DATE
+    END
+    POPUP "F&ormato"
+    BEGIN
+        MENUITEM "&A capo automatico",    CMD_WRAP
+        MENUITEM "&Imposta carattere...", CMD_FONT
+    END
+    POPUP "&Visualizza"
+    BEGIN
+        MENUITEM "&Barra di stato", CMD_STATUSBAR
+    END
+    POPUP "&?"
+    BEGIN
+        MENUITEM "&Guida in linea",             CMD_HELP_CONTENTS
+        MENUITEM "&Trova...",                   CMD_HELP_SEARCH
+        MENUITEM "&Aiuto sulla Guida",          CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "Informazioni &su blocco note" CMD_ABOUT
+        MENUITEM "Inf&o...",                    CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -204,4 +206,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
+STRING_LINE_COLUMN,                             "Linea %d, colonna %d"
 END

@@ -137,7 +137,7 @@ static nsresult get_ns_command_state(NSContainer *This, const char *cmd, nsIComm
         return nsres;
     }
 
-    nsres = nsICommandManager_GetCommandState(cmdmgr, cmd, NULL, nsparam);
+    nsres = nsICommandManager_GetCommandState(cmdmgr, cmd, This->doc->window->nswindow, nsparam);
     if(NS_FAILED(nsres))
         ERR("GetCommandState(%s) failed: %08x\n", debugstr_a(cmd), nsres);
 
@@ -341,17 +341,19 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
 {
     nsISelection *nsselection;
     PRBool collapsed;
-    nsIDOMDocument *nsdoc;
     nsIDOMElement *elem;
     nsIDOMRange *range;
     PRInt32 range_cnt = 0;
     nsAString font_str;
     nsAString size_str;
     nsAString val_str;
-    nsresult nsres;
+
+    if(!This->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return;
+    }
 
     nsselection = get_ns_selection(This);
-
     if(!nsselection)
         return;
 
@@ -364,15 +366,11 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
         }
     }
 
-    nsres = nsIWebNavigation_GetDocument(This->nscontainer->navigation, &nsdoc);
-    if(NS_FAILED(nsres))
-        return;
-
     nsAString_Init(&font_str, wszFont);
     nsAString_Init(&size_str, wszSize);
     nsAString_Init(&val_str, size);
 
-    nsIDOMDocument_CreateElement(nsdoc, &font_str, &elem);
+    nsIDOMDocument_CreateElement(This->nsdoc, &font_str, &elem);
     nsIDOMElement_SetAttribute(elem, &size_str, &val_str);
 
     nsISelection_GetRangeAt(nsselection, 0, &range);
@@ -389,15 +387,13 @@ static void set_font_size(HTMLDocument *This, LPCWSTR size)
         nsISelection_SelectAllChildren(nsselection, (nsIDOMNode*)elem);
     }
 
+    nsISelection_Release(nsselection);
     nsIDOMRange_Release(range);
     nsIDOMElement_Release(elem);
 
     nsAString_Finish(&font_str);
     nsAString_Finish(&size_str);
     nsAString_Finish(&val_str);
-
-    nsISelection_Release(nsselection);
-    nsIDOMDocument_Release(nsdoc);
 
     set_dirty(This, VARIANT_TRUE);
 }
@@ -592,7 +588,7 @@ static HRESULT exec_fontname(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
 
         len = MultiByteToWideChar(CP_ACP, 0, stra, -1, NULL, 0);
         strw = heap_alloc(len*sizeof(WCHAR));
-        MultiByteToWideChar(CP_ACP, 0, stra, -1, strw, -1);
+        MultiByteToWideChar(CP_ACP, 0, stra, -1, strw, len);
         nsfree(stra);
 
         V_BSTR(out) = SysAllocString(strw);
@@ -1150,12 +1146,17 @@ static INT_PTR CALLBACK hyperlink_dlgproc(HWND hwnd, UINT msg, WPARAM wparam, LP
 
 static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, VARIANT *out)
 {
+    nsAString a_str, href_str, ns_url;
+    nsIHTMLEditor *html_editor;
+    nsIDOMElement *anchor_elem;
+    PRBool insert_link_at_caret;
+    nsISelection *nsselection;
     BSTR url = NULL;
     INT ret;
-    nsISelection *nsselection;
-    nsIDOMDocument *nsdoc;
-    nsresult nsres;
     HRESULT hres = E_FAIL;
+
+    static const WCHAR wszA[] = {'a',0};
+    static const WCHAR wszHref[] = {'h','r','e','f',0};
 
     TRACE("%p, 0x%x, %p, %p\n", This, cmdexecopt, in, out);
 
@@ -1175,76 +1176,64 @@ static HRESULT exec_hyperlink(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in,
             return OLECMDERR_E_CANCELED;
     }
 
+    if(!This->nsdoc) {
+        WARN("NULL nsdoc\n");
+        return E_UNEXPECTED;
+    }
+
     nsselection = get_ns_selection(This);
     if (!nsselection)
         return E_FAIL;
 
-    nsres = nsIWebNavigation_GetDocument(This->nscontainer->navigation, &nsdoc);
-    if(NS_SUCCEEDED(nsres))
-    {
-        static const WCHAR wszA[] = {'a',0};
-        static const WCHAR wszHref[] = {'h','r','e','f',0};
-        nsIHTMLEditor *html_editor;
-        nsIDOMNode *text_node;
-        nsIDOMElement *anchor_elem;
-        nsIDOMNode *unused_node;
-        nsAString a_str;
-        nsAString href_str;
-        nsAString ns_url;
-        PRBool insert_link_at_caret;
+    nsAString_Init(&a_str, wszA);
+    nsAString_Init(&href_str, wszHref);
+    nsAString_Init(&ns_url, url);
 
-        nsAString_Init(&a_str, wszA);
-        nsAString_Init(&href_str, wszHref);
-        nsAString_Init(&ns_url, url);
+    /* create an element for the link */
+    nsIDOMDocument_CreateElement(This->nsdoc, &a_str, &anchor_elem);
+    nsIDOMElement_SetAttribute(anchor_elem, &href_str, &ns_url);
 
-        /* create an element for the link */
-        nsIDOMDocument_CreateElement(nsdoc, &a_str, &anchor_elem);
-        nsIDOMElement_SetAttribute(anchor_elem, &href_str, &ns_url);
+    nsAString_Finish(&href_str);
+    nsAString_Finish(&a_str);
 
-        nsAString_Finish(&href_str);
-        nsAString_Finish(&a_str);
+    nsISelection_GetIsCollapsed(nsselection, &insert_link_at_caret);
 
-        nsISelection_GetIsCollapsed(nsselection, &insert_link_at_caret);
+    /* create an element with text of URL */
+    if (insert_link_at_caret) {
+        nsIDOMNode *text_node, *unused_node;
 
-        /* create an element with text of URL */
-        if (insert_link_at_caret)
-        {
-            nsIDOMDocument_CreateTextNode(nsdoc, &ns_url, (nsIDOMText **)&text_node);
+        nsIDOMDocument_CreateTextNode(This->nsdoc, &ns_url, (nsIDOMText **)&text_node);
 
-            /* wrap the <a> tags around the text element */
-            nsIDOMElement_AppendChild(anchor_elem, text_node, &unused_node);
-            nsIDOMNode_Release(text_node);
-            nsIDOMNode_Release(unused_node);
-        }
+        /* wrap the <a> tags around the text element */
+        nsIDOMElement_AppendChild(anchor_elem, text_node, &unused_node);
+        nsIDOMNode_Release(text_node);
+        nsIDOMNode_Release(unused_node);
+    }
 
-        nsAString_Finish(&ns_url);
+    nsAString_Finish(&ns_url);
 
-        nsIEditor_QueryInterface(This->nscontainer->editor, &IID_nsIHTMLEditor, (void **)&html_editor);
-        if (html_editor)
-        {
-            if (insert_link_at_caret)
-            {
-                /* add them to the document at the caret position */
-                nsres = nsIHTMLEditor_InsertElementAtSelection(html_editor, anchor_elem, FALSE);
-                nsISelection_SelectAllChildren(nsselection, (nsIDOMNode*)anchor_elem);
-            }
-            else /* add them around the selection using the magic provided to us by nsIHTMLEditor */
-                nsres = nsIHTMLEditor_InsertLinkAroundSelection(html_editor, anchor_elem);
-            nsIHTMLEditor_Release(html_editor);
-        }
+    nsIEditor_QueryInterface(This->nscontainer->editor, &IID_nsIHTMLEditor, (void **)&html_editor);
+    if (html_editor) {
+        nsresult nsres;
 
-        nsIDOMElement_Release(anchor_elem);
-        nsIDOMDocument_Release(nsdoc);
+        if (insert_link_at_caret) {
+            /* add them to the document at the caret position */
+            nsres = nsIHTMLEditor_InsertElementAtSelection(html_editor, anchor_elem, FALSE);
+            nsISelection_SelectAllChildren(nsselection, (nsIDOMNode*)anchor_elem);
+        }else /* add them around the selection using the magic provided to us by nsIHTMLEditor */
+            nsres = nsIHTMLEditor_InsertLinkAroundSelection(html_editor, anchor_elem);
 
+        nsIHTMLEditor_Release(html_editor);
         hres = NS_SUCCEEDED(nsres) ? S_OK : E_FAIL;
     }
 
     nsISelection_Release(nsselection);
+    nsIDOMElement_Release(anchor_elem);
 
     if (cmdexecopt != OLECMDEXECOPT_DONTPROMPTUSER)
         SysFreeString(url);
 
-    TRACE("-- 0x%08x\n", nsres);
+    TRACE("-- 0x%08x\n", hres);
     return hres;
 }
 

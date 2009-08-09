@@ -14,7 +14,9 @@ const unsigned long PNP_MAX_PROP_SIZE = 65534;
 const unsigned long PNP_MAX_PROP_COUNT = 32767;
 const unsigned long PNP_MAX_BUFFER_SIZE = 16000000;
 
+cpp_quote("#ifndef _CFGMGR32_H_")
 typedef unsigned long RESOURCEID;
+cpp_quote("#endif")
 typedef unsigned long DEVPROPTYPE;
 typedef [range(0, PNP_MAX_PROP_SIZE)] unsigned long PNP_PROP_SIZE, *PPNP_PROP_SIZE;
 typedef [range(0, PNP_MAX_PROP_COUNT)] unsigned long PNP_PROP_COUNT, *PPNP_PROP_COUNT;

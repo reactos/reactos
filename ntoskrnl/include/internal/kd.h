@@ -157,25 +157,25 @@ typedef enum _KD_CONTINUE_TYPE
 
 typedef
 VOID
-(STDCALL*PKDP_INIT_ROUTINE)(
+(NTAPI*PKDP_INIT_ROUTINE)(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase
 );
 
 typedef
 VOID
-(STDCALL*PKDP_PRINT_ROUTINE)(
+(NTAPI*PKDP_PRINT_ROUTINE)(
     LPSTR String,
     ULONG Length
 );
 
 typedef
 VOID
-(STDCALL*PKDP_PROMPT_ROUTINE)(PCH String);
+(NTAPI*PKDP_PROMPT_ROUTINE)(PCH String);
 
 typedef
 KD_CONTINUE_TYPE
-(STDCALL*PKDP_EXCEPTION_ROUTINE)(
+(NTAPI*PKDP_EXCEPTION_ROUTINE)(
     PEXCEPTION_RECORD ExceptionRecord,
     PCONTEXT Context,
     PKTRAP_FRAME TrapFrame
@@ -183,42 +183,49 @@ KD_CONTINUE_TYPE
 
 /* INIT ROUTINES *************************************************************/
 
+BOOLEAN
+NTAPI
+KdInitSystem(
+    ULONG Reserved,
+    PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 VOID
-STDCALL
+NTAPI
 KdpScreenInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase
 );
 
 VOID
-STDCALL
+NTAPI
 KdpSerialInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase
 );
 
 VOID
-STDCALL
+NTAPI
 KdpInitDebugLog(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase
 );
 
 VOID
-STDCALL
+NTAPI
 KdpBochsInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase
 );
 
 VOID
-STDCALL
+NTAPI
 KdpGdbStubInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase);
 
 VOID
-STDCALL
+NTAPI
 KdpKdbgInit(
     struct _KD_DISPATCH_TABLE *DispatchTable,
     ULONG BootPhase);
@@ -235,21 +242,42 @@ KdpCallGdb(
 );
 
 ULONG
-STDCALL
+NTAPI
 KdpPrintString(
     LPSTR String,
     ULONG Length);
 
 BOOLEAN
-STDCALL
+NTAPI
 KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
 
 VOID
-STDCALL
+NTAPI
 KdpBochsDebugPrint(
     IN PCH Message,
     IN ULONG Length
 );
+
+BOOLEAN
+NTAPI
+KdpSafeReadMemory(
+    IN ULONG_PTR Addr,
+    IN LONG Len,
+    OUT PVOID Value
+);
+
+BOOLEAN
+NTAPI
+KdpSafeWriteMemory(
+    IN ULONG_PTR Addr,
+    IN LONG Len,
+    IN ULONGLONG Value
+);
+
+VOID
+NTAPI
+KdpEnableSafeMem();
+
 
 /* KD GLOBALS  ***************************************************************/
 

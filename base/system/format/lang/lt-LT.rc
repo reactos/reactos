@@ -5,7 +5,7 @@
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Naudojimas: %S diskas: [-FS:bylø-sistema] [-V:þymë] [-Q] [-A:dydis] [-C]\n\n\
+STRING_HELP,  "Naudojimas: %s diskas: [-FS:bylø-sistema] [-V:þymë] [-Q] [-A:dydis] [-C]\n\n\
   [diskas:]        Nurodo diskà formavimui.\n\
   -FS:bylø-sistema Nurodo bylø sistemos tipà (%s).\n\
   -V:þymë          Nurodo tomo þymæ.\n\
@@ -26,7 +26,7 @@ STRING_NO_SUPPORT  "Operacija nepalaikoma"
 
 STRING_FMIFS_FAIL  "Nepavyko rasti FMIFS áëjimo taðkø.\n\n"
 
-STRING_UNKNOW_ARG  "Neþinomas parametras: %S\n"
+STRING_UNKNOW_ARG  "Neþinomas parametras: %s\n"
 
 STRING_DRIVE_PARM  "Trûksta reikiamo disko parametro.\n\n"
 
@@ -38,7 +38,7 @@ STRING_NO_VOLUME         "Nepavyko kreiptis á tomà"
 
 STRING_NO_VOLUME_SIZE    "Nepavyko nustatyti tomo dydþio"
 
-STRING_FILESYSTEM        "Bylø sistemos tipas yra %S.\n"
+STRING_FILESYSTEM        "Bylø sistemos tipas yra %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Áveskite dabartinæ tomo þymæ diskui %C: "
 

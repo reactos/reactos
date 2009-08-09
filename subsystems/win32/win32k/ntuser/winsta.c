@@ -107,7 +107,7 @@ IntSetupClipboard(PWINSTATION_OBJECT WinStaObj)
 
 /* OBJECT CALLBACKS  **********************************************************/
 
-VOID STDCALL
+VOID APIENTRY
 IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 {
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)Parameters->Object;
@@ -120,7 +120,7 @@ IntWinStaObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters)
 }
 
 NTSTATUS
-STDCALL
+APIENTRY
 IntWinStaObjectParse(PWIN32_PARSEMETHOD_PARAMETERS Parameters)
 {
     PUNICODE_STRING RemainingName = Parameters->RemainingName;
@@ -294,6 +294,7 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
 {
+   TEXTMETRICW tmw;
    UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
    if (! IntCreatePrimarySurface())
    {
@@ -314,6 +315,15 @@ co_IntInitializeDesktopGraphics(VOID)
 
    NtGdiSelectFont( hSystemBM, NtGdiGetStockObject(SYSTEM_FONT));
    IntGdiSetDCOwnerEx( hSystemBM, GDI_OBJ_HMGR_PUBLIC, FALSE);
+
+   // FIXME! Move these to a update routine.
+   gpsi->Planes        = NtGdiGetDeviceCaps(ScreenDeviceContext, PLANES);
+   gpsi->BitsPixel     = NtGdiGetDeviceCaps(ScreenDeviceContext, BITSPIXEL);
+   gpsi->BitCount      = gpsi->Planes * gpsi->BitsPixel;
+   gpsi->dmLogPixels   = NtGdiGetDeviceCaps(ScreenDeviceContext, LOGPIXELSY);
+   // Font is realized and this dc was previously set to internal DC_ATTR.
+   gpsi->cxSysFontChar = IntGetCharDimensions(hSystemBM, &tmw, &gpsi->cySysFontChar);
+   gpsi->tmSysFont     = tmw;
 
    return TRUE;
 }
@@ -375,7 +385,7 @@ IntGetScreenDC(VOID)
  *    @implemented
  */
 
-HWINSTA STDCALL
+HWINSTA APIENTRY
 NtUserCreateWindowStation(
    PUNICODE_STRING lpszWindowStationName,
    ACCESS_MASK dwDesiredAccess,
@@ -590,7 +600,7 @@ NtUserCreateWindowStation(
  *    @implemented
  */
 
-HWINSTA STDCALL
+HWINSTA APIENTRY
 NtUserOpenWindowStation(
    PUNICODE_STRING lpszWindowStationName,
    ACCESS_MASK dwDesiredAccess)
@@ -665,7 +675,7 @@ NtUserOpenWindowStation(
  */
 
 BOOL
-STDCALL
+APIENTRY
 NtUserCloseWindowStation(
    HWINSTA hWinSta)
 {
@@ -746,7 +756,7 @@ NtUserCloseWindowStation(
  *    @unimplemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserGetObjectInformation(
    HANDLE hObject,
    DWORD nIndex,
@@ -755,7 +765,7 @@ NtUserGetObjectInformation(
    PDWORD nLengthNeeded)
 {
    PWINSTATION_OBJECT WinStaObject = NULL;
-   PDESKTOP_OBJECT DesktopObject = NULL;
+   PDESKTOP DesktopObject = NULL;
    NTSTATUS Status;
    PVOID pvData = NULL;
    DWORD nDataSize = 0;
@@ -898,7 +908,7 @@ NtUserGetObjectInformation(
  */
 
 BOOL
-STDCALL
+APIENTRY
 NtUserSetObjectInformation(
    HANDLE hObject,
    DWORD nIndex,
@@ -918,6 +928,7 @@ HWINSTA FASTCALL
 UserGetProcessWindowStation(VOID)
 {
    NTSTATUS Status;
+   PTHREADINFO pti;
    HWINSTA WinSta;
 
    if(PsGetCurrentProcess() != CsrProcess)
@@ -927,7 +938,8 @@ UserGetProcessWindowStation(VOID)
    else
    {
       DPRINT1("Should use ObFindHandleForObject\n");
-      Status = ObOpenObjectByPointer(PsGetCurrentThreadWin32Thread()->Desktop->WindowStation,
+      pti = PsGetCurrentThreadWin32Thread();
+      Status = ObOpenObjectByPointer(pti->Desktop->WindowStation,
                                      0,
                                      NULL,
                                      WINSTA_ALL_ACCESS,
@@ -960,7 +972,7 @@ UserGetProcessWindowStation(VOID)
  *    @implemented
  */
 
-HWINSTA STDCALL
+HWINSTA APIENTRY
 NtUserGetProcessWindowStation(VOID)
 {
    return UserGetProcessWindowStation();
@@ -970,7 +982,7 @@ PWINSTATION_OBJECT FASTCALL
 IntGetWinStaObj(VOID)
 {
    PWINSTATION_OBJECT WinStaObj;
-   PW32THREAD Win32Thread;
+   PTHREADINFO Win32Thread;
    PEPROCESS CurrentProcess;
 
    /*
@@ -1019,7 +1031,7 @@ IntGetWinStaObj(VOID)
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserSetProcessWindowStation(HWINSTA hWindowStation)
 {
    HANDLE hOld;
@@ -1072,7 +1084,7 @@ NtUserSetProcessWindowStation(HWINSTA hWindowStation)
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserLockWindowStation(HWINSTA hWindowStation)
 {
    PWINSTATION_OBJECT Object;
@@ -1116,7 +1128,7 @@ NtUserLockWindowStation(HWINSTA hWindowStation)
  *    @implemented
  */
 
-BOOL STDCALL
+BOOL APIENTRY
 NtUserUnlockWindowStation(HWINSTA hWindowStation)
 {
    PWINSTATION_OBJECT Object;
@@ -1160,7 +1172,7 @@ NtUserUnlockWindowStation(HWINSTA hWindowStation)
  *    @unimplemented
  */
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserSetWindowStationUser(
    DWORD Unknown0,
    DWORD Unknown1,
@@ -1257,7 +1269,7 @@ BuildWindowStationNameList(
                      FALSE, &Context, NULL))
          {
             /* Something went wrong, maybe someone added a directory entry? Just give up. */
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_WINSTA);
             ObDereferenceObject(DirectoryHandle);
             return NT_SUCCESS(Status) ? STATUS_INTERNAL_ERROR : Status;
          }
@@ -1285,7 +1297,7 @@ BuildWindowStationNameList(
       {
          if (Buffer != InitialBuffer)
          {
-            ExFreePool(Buffer);
+            ExFreePoolWithTag(Buffer, TAG_WINSTA);
          }
          return STATUS_BUFFER_TOO_SMALL;
       }
@@ -1298,7 +1310,7 @@ BuildWindowStationNameList(
    {
       if (Buffer != InitialBuffer)
       {
-         ExFreePool(Buffer);
+         ExFreePoolWithTag(Buffer, TAG_WINSTA);
       }
       return STATUS_BUFFER_TOO_SMALL;
    }
@@ -1365,7 +1377,7 @@ BuildDesktopNameList(
    PWINSTATION_OBJECT WindowStation;
    KIRQL OldLevel;
    PLIST_ENTRY DesktopEntry;
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP DesktopObject;
    DWORD EntryCount;
    ULONG ReturnLength;
    WCHAR NullWchar;
@@ -1390,7 +1402,7 @@ BuildDesktopNameList(
          DesktopEntry != &WindowStation->DesktopListHead;
          DesktopEntry = DesktopEntry->Flink)
    {
-      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
+      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
       ReturnLength += ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length + sizeof(WCHAR);
       EntryCount++;
    }
@@ -1433,7 +1445,7 @@ BuildDesktopNameList(
          DesktopEntry != &WindowStation->DesktopListHead;
          DesktopEntry = DesktopEntry->Flink)
    {
-      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP_OBJECT, ListEntry);
+      DesktopObject = CONTAINING_RECORD(DesktopEntry, DESKTOP, ListEntry);
       Status = MmCopyToCaller(lpBuffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Buffer, ((PUNICODE_STRING)GET_DESKTOP_NAME(DesktopObject))->Length);
       if (! NT_SUCCESS(Status))
       {
@@ -1487,7 +1499,7 @@ BuildDesktopNameList(
  *    @implemented
  */
 
-NTSTATUS STDCALL
+NTSTATUS APIENTRY
 NtUserBuildNameList(
    HWINSTA hWindowStation,
    ULONG dwSize,

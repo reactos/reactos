@@ -186,7 +186,9 @@ SerialInterruptService(
 				if (MSR & SR_MSR_CTS)
 					KeInsertQueueDpc(&DeviceExtension->SendByteDpc, NULL, NULL);
 				else
+				{
 					; /* FIXME: stop transmission */
+				}
 				Events |= SERIAL_EV_CTS;
 			}
 			if (MSR & SR_MSR_DSR_CHANGED)
@@ -194,7 +196,9 @@ SerialInterruptService(
 				if (MSR & SR_MSR_DSR)
 					KeInsertQueueDpc(&DeviceExtension->ReceivedByteDpc, NULL, NULL);
 				else
+				{
 					; /* FIXME: stop reception */
+				}
 				Events |= SERIAL_EV_DSR;
 			}
 			if (MSR & SR_MSR_RI_CHANGED)

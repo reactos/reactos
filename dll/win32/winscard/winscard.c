@@ -36,7 +36,7 @@ const SCARD_IO_REQUEST g_rgSCardRawPci;
  * @unimplemented
  */
 HANDLE
-STDCALL
+WINAPI
 SCardAccessStartedEvent(VOID)
 {
   UNIMPLEMENTED;
@@ -49,7 +49,7 @@ SCardAccessStartedEvent(VOID)
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardAddReaderToGroupA(SCARDCONTEXT hContext,
                        LPCSTR szReaderName,
                        LPCSTR szGroupName)
@@ -63,7 +63,7 @@ SCardAddReaderToGroupA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardAddReaderToGroupW(SCARDCONTEXT hContext,
                        LPCWSTR szReaderName,
                        LPCWSTR szGroupName)
@@ -77,7 +77,7 @@ SCardAddReaderToGroupW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardBeginTransaction(SCARDHANDLE hCard)
 {
   UNIMPLEMENTED;
@@ -89,7 +89,7 @@ SCardBeginTransaction(SCARDHANDLE hCard)
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardCancel(SCARDCONTEXT hContext)
 {
   UNIMPLEMENTED;
@@ -101,7 +101,7 @@ SCardCancel(SCARDCONTEXT hContext)
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardConnectA(SCARDCONTEXT hContext,
               LPCSTR szReader,
               DWORD dwShareMode,
@@ -118,7 +118,7 @@ SCardConnectA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardConnectW(SCARDCONTEXT hContext,
               LPCWSTR szReader,
               DWORD dwShareMode,
@@ -135,7 +135,7 @@ SCardConnectW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardControl(SCARDHANDLE hCard,
              DWORD dwControlCode,
              LPCVOID lpInBuffer,
@@ -153,7 +153,7 @@ SCardControl(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardDisconnect(SCARDHANDLE hCard,
                 DWORD dwDisposition)
 {
@@ -166,7 +166,7 @@ SCardDisconnect(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardEndTransaction(SCARDHANDLE hCard,
                     DWORD dwDisposition)
 {
@@ -179,7 +179,7 @@ SCardEndTransaction(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardEstablishContext(DWORD dwScope,
                       LPCVOID pvReserved1,
                       LPCVOID pvReserved2,
@@ -194,7 +194,7 @@ SCardEstablishContext(DWORD dwScope,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardForgetCardTypeA(SCARDCONTEXT hContext,
                      LPCSTR szCardName)
 {
@@ -207,7 +207,7 @@ SCardForgetCardTypeA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardForgetCardTypeW(SCARDCONTEXT hContext,
                      LPCWSTR szCardName)
 {
@@ -220,7 +220,7 @@ SCardForgetCardTypeW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardForgetReaderA(SCARDCONTEXT hContext,
                    LPCSTR szReaderName)
 {
@@ -233,7 +233,7 @@ SCardForgetReaderA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardForgetReaderW(SCARDCONTEXT hContext,
                    LPCWSTR szReaderName)
 {
@@ -246,7 +246,7 @@ SCardForgetReaderW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardForgetReaderGroupA(SCARDCONTEXT hContext,
                         LPCSTR szGroupName)
 {
@@ -259,7 +259,7 @@ SCardForgetReaderGroupA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardForgetReaderGroupW(SCARDCONTEXT hContext,
                         LPCWSTR szGroupName)
 {
@@ -272,7 +272,7 @@ SCardForgetReaderGroupW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardFreeMemory(SCARDCONTEXT hContext,
                 LPCVOID pvMem)
 {
@@ -285,7 +285,7 @@ SCardFreeMemory(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardGetAttrib(SCARDHANDLE hCard,
                DWORD dwAttrId,
                LPBYTE pbAttr,
@@ -300,7 +300,7 @@ SCardGetAttrib(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardGetCardTypeProviderNameA(SCARDCONTEXT hContext,
                               LPCSTR szCardName,
                               DWORD dwProviderId,
@@ -316,7 +316,7 @@ SCardGetCardTypeProviderNameA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardGetCardTypeProviderNameW(SCARDCONTEXT hContext,
                               LPCWSTR szCardName,
                               DWORD dwProviderId,
@@ -332,7 +332,7 @@ SCardGetCardTypeProviderNameW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardGetProviderIdA(SCARDCONTEXT hContext,
                     LPCSTR szCard,
                     LPGUID pguidProviderId)
@@ -346,7 +346,7 @@ SCardGetProviderIdA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardGetProviderIdW(SCARDCONTEXT hContext,
                     LPCWSTR szCard,
                     LPGUID pguidProviderId)
@@ -360,7 +360,7 @@ SCardGetProviderIdW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardGetStatusChangeA(SCARDCONTEXT hContext,
                       DWORD dwTimeout,
                       LPSCARD_READERSTATEA rgReaderState,
@@ -375,7 +375,7 @@ SCardGetStatusChangeA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardGetStatusChangeW(SCARDCONTEXT hContext,
                       DWORD dwTimeout,
                       LPSCARD_READERSTATEW rgReaderState,
@@ -390,7 +390,7 @@ SCardGetStatusChangeW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardIntroduceCardTypeA(SCARDCONTEXT hContext,
                         LPCSTR szCardName,
                         LPCGUID pguidPrimaryProvider,
@@ -409,7 +409,7 @@ SCardIntroduceCardTypeA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardIntroduceCardTypeW(SCARDCONTEXT hContext,
                         LPCWSTR szCardName,
                         LPCGUID pguidPrimaryProvider,
@@ -428,7 +428,7 @@ SCardIntroduceCardTypeW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardIntroduceReaderA(SCARDCONTEXT hContext,
                       LPCSTR szReaderName,
                       LPCSTR szDeviceName)
@@ -442,7 +442,7 @@ SCardIntroduceReaderA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardIntroduceReaderW(SCARDCONTEXT hContext,
                       LPCWSTR szReaderName,
                       LPCWSTR szDeviceName)
@@ -456,7 +456,7 @@ SCardIntroduceReaderW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardIntroduceReaderGroupA(SCARDCONTEXT hContext,
                            LPCSTR szGroupName)
 {
@@ -469,7 +469,7 @@ SCardIntroduceReaderGroupA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardIntroduceReaderGroupW(SCARDCONTEXT hContext,
                            LPCWSTR szGroupName)
 {
@@ -482,7 +482,7 @@ SCardIntroduceReaderGroupW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardIsValidContext(SCARDCONTEXT hContext)
 {
   UNIMPLEMENTED;
@@ -494,7 +494,7 @@ SCardIsValidContext(SCARDCONTEXT hContext)
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListCardsA(SCARDCONTEXT hContext,
                 LPCBYTE pbAtr,
                 LPCGUID rgguidInterface,
@@ -511,7 +511,7 @@ SCardListCardsA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListCardsW(SCARDCONTEXT hContext,
                 LPCBYTE pbAtr,
                 LPCGUID rgguidInterface,
@@ -528,7 +528,7 @@ SCardListCardsW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListInterfacesA(SCARDCONTEXT hContext,
                      LPCSTR szCard,
                      LPGUID pguidInterfaces,
@@ -543,7 +543,7 @@ SCardListInterfacesA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListInterfacesW(SCARDCONTEXT hContext,
                      LPCWSTR szCard,
                      LPGUID pguidInterfaces,
@@ -558,7 +558,7 @@ SCardListInterfacesW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListReaderGroupsA(SCARDCONTEXT hContext,
                        LPSTR mszGroups,
                        LPDWORD pcchGroups)
@@ -572,7 +572,7 @@ SCardListReaderGroupsA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListReaderGroupsW(SCARDCONTEXT hContext,
                        LPWSTR mszGroups,
                        LPDWORD pcchGroups)
@@ -586,7 +586,7 @@ SCardListReaderGroupsW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListReadersA(SCARDCONTEXT Context,
                   LPCSTR mszGroups,
                   LPSTR mszReaders,
@@ -601,7 +601,7 @@ SCardListReadersA(SCARDCONTEXT Context,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardListReadersW(SCARDCONTEXT Context,
                   LPCWSTR mszGroups,
                   LPWSTR mszReaders,
@@ -616,7 +616,7 @@ SCardListReadersW(SCARDCONTEXT Context,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardLocateCardsA(SCARDCONTEXT hContext,
                   LPCSTR mszCards,
                   LPSCARD_READERSTATEA rgReaderStates,
@@ -631,7 +631,7 @@ SCardLocateCardsA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardLocateCardsW(SCARDCONTEXT hContext,
                   LPCWSTR mszCards,
                   LPSCARD_READERSTATEW rgReaderStates,
@@ -646,7 +646,7 @@ SCardLocateCardsW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardLocateCardsByATRA(SCARDCONTEXT hContext,
                        LPSCARD_ATRMASK rgAtrMasks,
                        DWORD cAtrs,
@@ -662,7 +662,7 @@ SCardLocateCardsByATRA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardLocateCardsByATRW(SCARDCONTEXT hContext,
                        LPSCARD_ATRMASK rgAtrMasks,
                        DWORD cAtrs,
@@ -678,7 +678,7 @@ SCardLocateCardsByATRW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardReconnect(SCARDHANDLE hCard,
                DWORD dwShareMode,
                DWORD dwPreferredProtocols,
@@ -694,7 +694,7 @@ SCardReconnect(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardReleaseContext(SCARDCONTEXT hContext)
 {
   UNIMPLEMENTED;
@@ -706,7 +706,7 @@ SCardReleaseContext(SCARDCONTEXT hContext)
  * @unimplemented
  */
 VOID
-STDCALL
+WINAPI
 SCardReleaseStartedEvent(HANDLE hStartedEventHandle)
 {
   UNIMPLEMENTED;
@@ -717,7 +717,7 @@ SCardReleaseStartedEvent(HANDLE hStartedEventHandle)
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardRemoveReaderFromGroupA(SCARDCONTEXT hContext,
                             LPCSTR szReaderName,
                             LPCSTR szGroupname)
@@ -731,7 +731,7 @@ SCardRemoveReaderFromGroupA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardRemoveReaderFromGroupW(SCARDCONTEXT hContext,
                             LPCWSTR szReaderName,
                             LPCWSTR szGroupname)
@@ -745,7 +745,7 @@ SCardRemoveReaderFromGroupW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardSetAttrib(SCARDHANDLE hCard,
                DWORD dwAttrId,
                LPCBYTE pbAttr,
@@ -760,7 +760,7 @@ SCardSetAttrib(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardSetCardTypeProviderNameA(SCARDCONTEXT hContext,
                               LPCSTR szCardName,
                               DWORD dwProviderId,
@@ -775,7 +775,7 @@ SCardSetCardTypeProviderNameA(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardSetCardTypeProviderNameW(SCARDCONTEXT hContext,
                               LPCWSTR szCardName,
                               DWORD dwProviderId,
@@ -790,7 +790,7 @@ SCardSetCardTypeProviderNameW(SCARDCONTEXT hContext,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardState(SCARDHANDLE hCard,
            LPDWORD pdwState,
            LPDWORD pdwProtocol,
@@ -806,7 +806,7 @@ SCardState(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardStatusA(SCARDHANDLE hCard,
              LPSTR szReaderName,
              LPDWORD pcchReaderLen,
@@ -824,7 +824,7 @@ SCardStatusA(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardStatusW(SCARDHANDLE hCard,
              LPWSTR szReaderName,
              LPDWORD pcchReaderLen,
@@ -842,7 +842,7 @@ SCardStatusW(SCARDHANDLE hCard,
  * @unimplemented
  */
 LONG
-STDCALL
+WINAPI
 SCardTransmit(SCARDHANDLE hCard,
               LPCSCARD_IO_REQUEST pioSendPci,
               LPCBYTE pbSendBuffer,

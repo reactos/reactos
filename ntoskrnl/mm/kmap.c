@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *****************************************************************/
 
@@ -22,13 +22,12 @@ MiZeroPage(PFN_TYPE Page)
 {
    PVOID TempAddress;
 
-   TempAddress = MmCreateHyperspaceMapping(Page);
+   TempAddress = MiMapPageToZeroInHyperSpace(Page);
    if (TempAddress == NULL)
    {
       return(STATUS_NO_MEMORY);
    }
    memset(TempAddress, 0, PAGE_SIZE);
-   MmDeleteHyperspaceMapping(TempAddress);
    return(STATUS_SUCCESS);
 }
 

@@ -123,7 +123,7 @@ VOID AddrFileFree(
  *     Object = Pointer to address file object to free
  */
 {
-    ExFreePool(Object);
+    exFreePool(Object);
 }
 
 
@@ -135,7 +135,7 @@ VOID ControlChannelFree(
  *     Object = Pointer to address file object to free
  */
 {
-    ExFreePool(Object);
+    exFreePool(Object);
 }
 
 
@@ -190,7 +190,7 @@ VOID DeleteAddress(PADDRESS_FILE AddrFile)
     /* Abort the request and free its resources */
     TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
     (*SendRequest->Complete)(SendRequest->Context, STATUS_ADDRESS_CLOSED, 0);
-    ExFreePool(SendRequest);
+    exFreePool(SendRequest);
     TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
     CurrentEntry = NextEntry;
   }
@@ -202,28 +202,6 @@ VOID DeleteAddress(PADDRESS_FILE AddrFile)
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
-
-/*
- * FUNCTION: Deletes a connection endpoint file object
- * ARGUMENTS:
- *     Connection = Pointer to connection endpoint to delete
- */
-VOID DeleteConnectionEndpoint(
-  PCONNECTION_ENDPOINT Connection)
-{
-  KIRQL OldIrql;
-
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  /* Remove connection endpoint from the global list */
-  TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
-  RemoveEntryList(&Connection->ListEntry);
-  TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
-
-  ExFreePool(Connection);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
-}
 
 /*
  * FUNCTION: Open an address file object
@@ -242,12 +220,11 @@ NTSTATUS FileOpenAddress(
   PVOID Options)
 {
   IPv4_RAW_ADDRESS IPv4Address;
-  BOOLEAN Matched;
   PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
-  AddrFile = ExAllocatePool(NonPagedPool, sizeof(ADDRESS_FILE));
+  AddrFile = exAllocatePool(NonPagedPool, sizeof(ADDRESS_FILE));
   if (!AddrFile) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -260,21 +237,19 @@ NTSTATUS FileOpenAddress(
   AddrFile->Free = AddrFileFree;
 
   /* Make sure address is a local unicast address or 0 */
-
-  /* Locate address entry. If specified address is 0, a random address is chosen */
-
   /* FIXME: IPv4 only */
   AddrFile->Family = Address->Address[0].AddressType;
   IPv4Address = Address->Address[0].Address[0].in_addr;
-  if (IPv4Address == 0)
-      Matched = IPGetDefaultAddress(&AddrFile->Address);
+  if (IPv4Address != 0 &&
+      !AddrLocateADEv4(IPv4Address, &AddrFile->Address)) {
+	  exFreePool(AddrFile);
+	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
+	  return STATUS_INVALID_PARAMETER;
+  }
   else
-      Matched = AddrLocateADEv4(IPv4Address, &AddrFile->Address);
-
-  if (!Matched) {
-    ExFreePool(AddrFile);
-    TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
-    return STATUS_INVALID_PARAMETER;
+  {
+	  /* Bound to the default address ... Copy the address type */
+	  AddrFile->Address.Type = IP_ADDRESS_V4;
   }
 
   TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
@@ -285,6 +260,15 @@ NTSTATUS FileOpenAddress(
   case IPPROTO_TCP:
       AddrFile->Port =
           TCPAllocatePort(Address->Address[0].Address[0].sin_port);
+
+      if ((Address->Address[0].Address[0].sin_port &&
+           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
+           AddrFile->Port == 0xffff)
+      {
+          exFreePool(AddrFile);
+          return STATUS_INVALID_PARAMETER;
+      }
+
       AddrFile->Send = NULL; /* TCPSendData */
       break;
 
@@ -292,6 +276,15 @@ NTSTATUS FileOpenAddress(
       TI_DbgPrint(MID_TRACE,("Allocating udp port\n"));
       AddrFile->Port =
 	  UDPAllocatePort(Address->Address[0].Address[0].sin_port);
+
+      if ((Address->Address[0].Address[0].sin_port &&
+           AddrFile->Port != Address->Address[0].Address[0].sin_port) ||
+           AddrFile->Port == 0xffff)
+      {
+          exFreePool(AddrFile);
+          return STATUS_INVALID_PARAMETER;
+      }
+
       TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",
                              AddrFile->Port,
                              Address->Address[0].Address[0].sin_port));
@@ -369,14 +362,39 @@ NTSTATUS FileCloseAddress(
   switch (AddrFile->Protocol) {
   case IPPROTO_TCP:
     TCPFreePort( AddrFile->Port );
-    if( AddrFile->Listener )
-	TCPClose( AddrFile->Listener );
+    if( AddrFile->Listener ) {
+	    TCPClose( AddrFile->Listener );
+	    exFreePool( AddrFile->Listener );
+    }
     break;
 
   case IPPROTO_UDP:
     UDPFreePort( AddrFile->Port );
     break;
   }
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return Status;
+}
+
+
+/*
+ * FUNCTION: Closes an address file object
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS FileFreeAddress(
+  PTDI_REQUEST Request)
+{
+  PADDRESS_FILE AddrFile;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  AddrFile = Request->Handle.AddressHandle;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
   DeleteAddress(AddrFile);
 
@@ -408,6 +426,11 @@ NTSTATUS FileOpenConnection(
   if( !Connection ) return STATUS_NO_MEMORY;
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
+
+  if( !NT_SUCCESS(Status) ) {
+      TCPFreeConnectionEndpoint( Connection );
+      return Status;
+  }
 
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
@@ -465,20 +488,47 @@ NTSTATUS FileCloseConnection(
   PTDI_REQUEST Request)
 {
   PCONNECTION_ENDPOINT Connection;
-  NTSTATUS Status = STATUS_SUCCESS;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
   Connection = Request->Handle.ConnectionContext;
 
   TcpipRecursiveMutexEnter( &TCPLock, TRUE );
-  TCPClose(Connection);
-  DeleteConnectionEndpoint(Connection);
+  TCPClose( Connection );
   TcpipRecursiveMutexLeave( &TCPLock );
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
-  return Status;
+  return STATUS_SUCCESS;
+}
+
+
+/*
+ * FUNCTION: Frees an connection file object
+ * ARGUMENTS:
+ *     Request = Pointer to TDI request structure for this request
+ * RETURNS:
+ *     Status of operation
+ */
+NTSTATUS FileFreeConnection(
+  PTDI_REQUEST Request)
+{
+  KIRQL OldIrql;
+  PCONNECTION_ENDPOINT Connection;
+
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
+  Connection = Request->Handle.ConnectionContext;
+
+  TcpipAcquireSpinLock(&ConnectionEndpointListLock, &OldIrql);
+  RemoveEntryList(&Connection->ListEntry);
+  TcpipReleaseSpinLock(&ConnectionEndpointListLock, OldIrql);
+
+  TCPFreeConnectionEndpoint(Connection);
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -495,7 +545,7 @@ NTSTATUS FileOpenControlChannel(
   PCONTROL_CHANNEL ControlChannel;
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  ControlChannel = ExAllocatePool(NonPagedPool, sizeof(*ControlChannel));
+  ControlChannel = exAllocatePool(NonPagedPool, sizeof(*ControlChannel));
 
   if (!ControlChannel) {
     TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
@@ -529,13 +579,13 @@ NTSTATUS FileOpenControlChannel(
  * RETURNS:
  *     Status of operation
  */
-NTSTATUS FileCloseControlChannel(
+NTSTATUS FileFreeControlChannel(
   PTDI_REQUEST Request)
 {
   PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;
   NTSTATUS Status = STATUS_SUCCESS;
 
-  ExFreePool(ControlChannel);
+  exFreePool(ControlChannel);
   Request->Handle.ControlChannel = NULL;
 
   return Status;

@@ -2,7 +2,7 @@
 #ifndef SLANG_VARTABLE_H
 #define SLANG_VARTABLE_H
 
-struct _slang_ir_storage;
+struct slang_ir_storage_;
 
 typedef struct slang_var_table_ slang_var_table;
 
@@ -27,16 +27,16 @@ extern struct slang_variable_ *
 _slang_find_variable(const slang_var_table *t, slang_atom name);
 
 extern GLboolean
-_slang_alloc_var(slang_var_table *t, struct _slang_ir_storage *store);
+_slang_alloc_var(slang_var_table *t, struct slang_ir_storage_ *store);
 
 extern GLboolean
-_slang_alloc_temp(slang_var_table *t, struct _slang_ir_storage *store);
+_slang_alloc_temp(slang_var_table *t, struct slang_ir_storage_ *store);
 
 extern void
-_slang_free_temp(slang_var_table *t, struct _slang_ir_storage *store);
+_slang_free_temp(slang_var_table *t, struct slang_ir_storage_ *store);
 
 extern GLboolean
-_slang_is_temp(const slang_var_table *t, const struct _slang_ir_storage *store);
+_slang_is_temp(const slang_var_table *t, const struct slang_ir_storage_ *store);
 
 
 #endif /* SLANG_VARTABLE_H */

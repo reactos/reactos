@@ -163,6 +163,7 @@ FillServerAddesssCombo(PINFO pInfo)
 
             i++;
         }
+        RegCloseKey(hKey);
     }
 
     if (LoadStringW(hInst,
@@ -851,10 +852,11 @@ DisplayDlgProc(HWND hDlg,
             if(lpDrawItem->CtlID == IDC_COLORIMAGE)
             {
                 HDC hdcMem;
+                HBITMAP hSpecOld;
                 hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
                 if (hdcMem != NULL)
                 {
-                    SelectObject(hdcMem, pInfo->hSpectrum);
+                    hSpecOld = SelectObject(hdcMem, pInfo->hSpectrum);
                     StretchBlt(lpDrawItem->hDC,
                                lpDrawItem->rcItem.left,
                                lpDrawItem->rcItem.top,
@@ -866,6 +868,7 @@ DisplayDlgProc(HWND hDlg,
                                pInfo->bitmap.bmWidth,
                                pInfo->bitmap.bmHeight,
                                SRCCOPY);
+                    SelectObject(hdcMem, hSpecOld);
                     DeleteDC(hdcMem);
                 }
             }
@@ -986,7 +989,7 @@ OnMainCreate(HWND hwnd,
             if (CreateDialogParamW(hInst,
                                    MAKEINTRESOURCEW(IDD_GENERAL),
                                    pInfo->hTab,
-                                   (DLGPROC)GeneralDlgProc,
+                                   GeneralDlgProc,
                                    (LPARAM)pInfo))
             {
                 WCHAR str[256];
@@ -1001,7 +1004,7 @@ OnMainCreate(HWND hwnd,
             if (CreateDialogParamW(hInst,
                                    MAKEINTRESOURCEW(IDD_DISPLAY),
                                    pInfo->hTab,
-                                   (DLGPROC)DisplayDlgProc,
+                                   DisplayDlgProc,
                                    (LPARAM)pInfo))
             {
                 WCHAR str[256];
@@ -1020,8 +1023,33 @@ OnMainCreate(HWND hwnd,
     return bRet;
 }
 
+static void Cleanup(PINFO pInfo)
+{
+    if (pInfo)
+    {
+        if (pInfo->hMstscSm)
+            DestroyIcon(pInfo->hMstscSm);
+        if (pInfo->hMstscLg)
+            DestroyIcon(pInfo->hMstscLg);
+        if (pInfo->hHeader)
+            DeleteObject(pInfo->hHeader);
+        if (pInfo->hSpectrum)
+            DeleteObject(pInfo->hSpectrum);
+        if (pInfo->hRemote)
+            DestroyIcon(pInfo->hRemote);
+        if (pInfo->hLogon)
+            DestroyIcon(pInfo->hLogon);
+        if (pInfo->hConn)
+            DestroyIcon(pInfo->hConn);
+        if (pInfo->hColor)
+            DestroyIcon(pInfo->hColor);
+        HeapFree(GetProcessHeap(),
+                 0,
+                 pInfo);
+    }
+}
 
-static BOOL CALLBACK
+static INT_PTR CALLBACK
 DlgProc(HWND hDlg,
         UINT Message,
         WPARAM wParam,
@@ -1052,14 +1080,7 @@ DlgProc(HWND hDlg,
                     SaveAllSettings(pInfo);
                     SaveRdpSettingsToFile(NULL, pInfo->pRdpSettings);
                 }
-
-                if (pInfo)
-                {
-                    HeapFree(GetProcessHeap(),
-                             0,
-                             pInfo);
-                }
-
+                Cleanup(pInfo);
                 EndDialog(hDlg, LOWORD(wParam));
             }
 
@@ -1096,11 +1117,12 @@ DlgProc(HWND hDlg,
                     WCHAR szBuffer[32];
                     RECT bmpRc, txtRc;
                     LOGFONTW lf;
-                    HFONT hFont;
+                    HFONT hFont, hFontOld;
+                    HBITMAP hBmpOld;
 
                     GetClientRect(pInfo->hSelf, &bmpRc);
 
-                    SelectObject(hdcMem, pInfo->hHeader);
+                    hBmpOld = SelectObject(hdcMem, pInfo->hHeader);
                     StretchBlt(hdc,
                                0,
                                0,
@@ -1113,6 +1135,7 @@ DlgProc(HWND hDlg,
                                pInfo->headerbitmap.bmHeight,
                                SRCCOPY);
 
+                    SelectObject(hdcMem, hBmpOld);
                     txtRc.left = bmpRc.right * 0.25;
                     txtRc.top = 10;
                     txtRc.right = bmpRc.right * 0.75;
@@ -1134,7 +1157,7 @@ DlgProc(HWND hDlg,
                         hFont = CreateFontIndirectW(&lf);
                         if (hFont)
                         {
-                            SelectObject(hdc, hFont);
+                            hFontOld = SelectObject(hdc, hFont);
 
                             DPtoLP(hdc, (PPOINT)&txtRc, 2);
                             SetTextColor(hdc, RGB(255,255,255));
@@ -1144,6 +1167,7 @@ DlgProc(HWND hDlg,
                                       -1,
                                       &txtRc,
                                       DT_BOTTOM | DT_SINGLELINE | DT_NOCLIP);
+                            SelectObject(hdc, hFontOld);
                             DeleteObject(hFont);
                         }
                     }
@@ -1167,7 +1191,7 @@ DlgProc(HWND hDlg,
                         hFont = CreateFontIndirectW(&lf);
                         if (hFont)
                         {
-                            SelectObject(hdc, hFont);
+                            hFontOld = SelectObject(hdc, hFont);
 
                             DPtoLP(hdc, (PPOINT)&txtRc, 2);
                             SetTextColor(hdc, RGB(255,255,255));
@@ -1177,6 +1201,8 @@ DlgProc(HWND hDlg,
                                       -1,
                                       &txtRc,
                                       DT_TOP | DT_SINGLELINE);
+                            SelectObject(hdc, hFontOld);
+                            DeleteObject(hFont);
                         }
                     }
 
@@ -1191,20 +1217,7 @@ DlgProc(HWND hDlg,
 
         case WM_CLOSE:
         {
-            if (pInfo)
-            {
-                if (pInfo->hMstscSm)
-                    DestroyIcon(pInfo->hMstscSm);
-                if (pInfo->hMstscLg)
-                    DestroyIcon(pInfo->hMstscLg);
-                if (pInfo->hHeader)
-                    DeleteObject(pInfo->hHeader);
-
-                HeapFree(GetProcessHeap(),
-                         0,
-                         pInfo);
-            }
-
+            Cleanup(pInfo);
             EndDialog(hDlg, 0);
         }
         break;
@@ -1233,6 +1246,6 @@ OpenRDPConnectDialog(HINSTANCE hInstance,
     return (DialogBoxParamW(hInst,
                             MAKEINTRESOURCEW(IDD_CONNECTDIALOG),
                             NULL,
-                            (DLGPROC)DlgProc,
+                            DlgProc,
                             (LPARAM)pRdpSettings) == IDOK);
 }

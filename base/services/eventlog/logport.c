@@ -15,12 +15,11 @@
 
 HANDLE ConnectPortHandle = NULL;
 HANDLE MessagePortHandle = NULL;
-extern HANDLE MyHeap;
 extern BOOL onLiveCD;
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS STDCALL PortThreadRoutine(PVOID Param)
+NTSTATUS WINAPI PortThreadRoutine(PVOID Param)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -144,7 +143,7 @@ NTSTATUS ProcessPortMessage(VOID)
         {
             DPRINT("Received datagram\n");
             Message = (PIO_ERROR_LOG_MESSAGE) & Request.Message;
-            ulRecNum = SystemLog ? SystemLog->Header.NextRecord : 0;
+            ulRecNum = SystemLog ? SystemLog->Header.CurrentRecordNumber : 0;
 
             pRec = (PEVENTLOGRECORD) LogfAllocAndBuildNewRecord(&dwRecSize,
                     ulRecNum, Message->Type, Message->EntryData.EventCategory,

@@ -816,13 +816,13 @@ typedef struct BusLogic_WmiExtendedSetupInformation
 // function declaractions
 //_________________________________________________________________________________________
 ULONG
-STDCALL
+NTAPI
 DriverEntry(IN PVOID DriverObject,
             IN PVOID Argument2
             );
 
 ULONG
-STDCALL
+NTAPI
 BT958HwFindAdapter(IN PVOID HwDeviceExtension,
                    IN PVOID Context,
                    IN PVOID BusInformation,
@@ -832,27 +832,27 @@ BT958HwFindAdapter(IN PVOID HwDeviceExtension,
                   );
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwInitialize(IN PVOID HwDeviceExtension);
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwStartIO(IN PVOID HwDeviceExtension,
                IN PSCSI_REQUEST_BLOCK Srb
               );
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwInterrupt(IN PVOID HwDeviceExtension);
 
 BOOLEAN
-STDCALL
+NTAPI
 BT958HwResetBus(IN PVOID HwDeviceExtension,
                 IN ULONG PathId
                );
 
 SCSI_ADAPTER_CONTROL_STATUS
-STDCALL
+NTAPI
 BT958HwAdapterControl(IN PVOID HwDeviceExtension,
                       IN SCSI_ADAPTER_CONTROL_TYPE ControlType,
                       IN PVOID Parameters

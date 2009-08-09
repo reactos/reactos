@@ -561,7 +561,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     ID_VIEW_UPDATESPEED_PAUSED "Non aggiorna automaticamente"
     ID_WINDOWS_TILEHORIZONTALLY
-                            "Affianca le finestre orizontalmente sul desktop"
+                            "Affianca le finestre orizzontalmente sul desktop"
     ID_WINDOWS_TILEVERTICALLY "Affianca le finestre verticalmente sul desktop"
     ID_WINDOWS_MINIMIZE     "Minimizza le finestre"
     ID_WINDOWS_MAXIMIZE     "Massimizza le finestre"

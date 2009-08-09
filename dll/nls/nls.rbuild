@@ -4,13 +4,13 @@
 	<directory name="idndl">
 		<xi:include href="idndl/idndl.rbuild" />
 	</directory>
-	<directory name="idndl_redist">
+	<!--<directory name="idndl_redist">
 		<xi:include href="idndl_redist/idndl_redist.rbuild" />
-	</directory>
+	</directory>-->
 	<directory name="normaliz">
 		<xi:include href="normaliz/normaliz.rbuild" />
 	</directory>
-	<directory name="normaliz_redist">
+	<!--<directory name="normaliz_redist">
 		<xi:include href="normaliz_redist/normaliz_redist.rbuild" />
-	</directory>
+	</directory>-->
 </group>

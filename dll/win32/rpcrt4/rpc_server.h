@@ -1,7 +1,7 @@
 /*
  * RPC server API
  *
- * Copyright 2001 Ove Kåven, TransGaming Technologies
+ * Copyright 2001 Ove KÃ¥ven, TransGaming Technologies
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -73,6 +73,7 @@ typedef struct _RpcServerInterface
   /* set when unregistering interface to let the caller of
    * RpcServerUnregisterIf* know that all calls have finished */
   HANDLE CallsCompletedEvent;
+  BOOL Delete; /* delete when the last call finishes */
 } RpcServerInterface;
 
 void RPCRT4_new_client(RpcConnection* conn);

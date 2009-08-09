@@ -136,7 +136,7 @@ static PDOC_ITEM SYSLINK_AppendDocItem (SYSLINK_INFO *infoPtr, LPCWSTR Text, UIN
 {
     PDOC_ITEM Item;
 
-    textlen = min(textlen, lstrlenW(Text));
+    textlen = min(textlen, strlenW(Text));
     Item = Alloc(FIELD_OFFSET(DOC_ITEM, Text[textlen + 1]));
     if(Item == NULL)
     {
@@ -286,8 +286,6 @@ CheckParameter:
                             ValidLink = TRUE;
                             taglen++;
                         }
-                        else
-                            tmp++;
                     }
                 }
                 
@@ -604,8 +602,8 @@ static PDOC_ITEM SYSLINK_GetPrevLink (const SYSLINK_INFO *infoPtr, PDOC_ITEM Cur
  * SYSLINK_WrapLine
  * Tries to wrap a line.
  */
-static BOOL SYSLINK_WrapLine (HDC hdc, LPWSTR Text, WCHAR BreakChar, int *LineLen,
-                             int nFit, LPSIZE Extent, int Width)
+static BOOL SYSLINK_WrapLine (LPWSTR Text, WCHAR BreakChar, int *LineLen,
+                             int nFit, LPSIZE Extent)
 {
     WCHAR *Current;
 
@@ -722,7 +720,7 @@ static VOID SYSLINK_Render (const SYSLINK_INFO *infoPtr, HDC hdc, PRECT pRect)
                 
                 if(n != 0)
                 {
-                    Wrap = SYSLINK_WrapLine(hdc, tx, infoPtr->BreakChar, &LineLen, nFit, &szDim, rc.right - x);
+                    Wrap = SYSLINK_WrapLine(tx, infoPtr->BreakChar, &LineLen, nFit, &szDim);
 
                     if(LineLen == 0)
                     {
@@ -1319,7 +1317,7 @@ static LRESULT SYSLINK_SendParentNotify (const SYSLINK_INFO *infoPtr, UINT code,
  *           SYSLINK_SetFocus
  * Handles receiving the input focus.
  */
-static LRESULT SYSLINK_SetFocus (SYSLINK_INFO *infoPtr, HWND PrevFocusWindow)
+static LRESULT SYSLINK_SetFocus (SYSLINK_INFO *infoPtr)
 {
     PDOC_ITEM Focus;
     
@@ -1342,7 +1340,7 @@ static LRESULT SYSLINK_SetFocus (SYSLINK_INFO *infoPtr, HWND PrevFocusWindow)
  *           SYSLINK_KillFocus
  * Handles losing the input focus.
  */
-static LRESULT SYSLINK_KillFocus (SYSLINK_INFO *infoPtr, HWND NewFocusWindow)
+static LRESULT SYSLINK_KillFocus (SYSLINK_INFO *infoPtr)
 {
     PDOC_ITEM Focus;
     
@@ -1387,7 +1385,7 @@ static PDOC_ITEM SYSLINK_LinkAtPt (const SYSLINK_INFO *infoPtr, const POINT *pt,
  *           SYSLINK_LButtonDown
  * Handles mouse clicks
  */
-static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, DWORD Buttons, const POINT *pt)
+static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, const POINT *pt)
 {
     PDOC_ITEM Current, Old;
     int id;
@@ -1413,7 +1411,7 @@ static LRESULT SYSLINK_LButtonDown (SYSLINK_INFO *infoPtr, DWORD Buttons, const 
  *           SYSLINK_LButtonUp
  * Handles mouse clicks
  */
-static LRESULT SYSLINK_LButtonUp (SYSLINK_INFO *infoPtr, DWORD Buttons, const POINT *pt)
+static LRESULT SYSLINK_LButtonUp (SYSLINK_INFO *infoPtr, const POINT *pt)
 {
     if(infoPtr->MouseDownID > -1)
     {
@@ -1603,14 +1601,14 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         POINT pt;
         pt.x = (short)LOWORD(lParam);
         pt.y = (short)HIWORD(lParam);
-        return SYSLINK_LButtonDown(infoPtr, wParam, &pt);
+        return SYSLINK_LButtonDown(infoPtr, &pt);
     }
     case WM_LBUTTONUP:
     {
         POINT pt;
         pt.x = (short)LOWORD(lParam);
         pt.y = (short)HIWORD(lParam);
-        return SYSLINK_LButtonUp(infoPtr, wParam, &pt);
+        return SYSLINK_LButtonUp(infoPtr, &pt);
     }
     
     case WM_KEYDOWN:
@@ -1696,10 +1694,10 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
         return SYSLINK_GetIdealHeight(infoPtr);
 
     case WM_SETFOCUS:
-        return SYSLINK_SetFocus(infoPtr, (HWND)wParam);
+        return SYSLINK_SetFocus(infoPtr);
 
     case WM_KILLFOCUS:
-        return SYSLINK_KillFocus(infoPtr, (HWND)wParam);
+        return SYSLINK_KillFocus(infoPtr);
 
     case WM_ENABLE:
         infoPtr->Style &= ~WS_DISABLED;
@@ -1750,7 +1748,7 @@ static LRESULT WINAPI SysLinkWindowProc(HWND hwnd, UINT message,
 
     default:
 HandleDefaultMessage:
-        if ((message >= WM_USER) && (message < WM_APP))
+        if ((message >= WM_USER) && (message < WM_APP) && !COMCTL32_IsReflectedMessage(message))
         {
             ERR("unknown msg %04x wp=%04lx lp=%08lx\n", message, wParam, lParam );
         }

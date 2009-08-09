@@ -33,7 +33,7 @@ VOID FreePacket(
  *     Object = Pointer to an IP packet structure
  */
 {
-    TcpipFreeToNPagedLookasideList(&IPPacketList, Object);
+    exFreeToNPagedLookasideList(&IPPacketList, Object);
 }
 
 
@@ -70,7 +70,7 @@ PIP_PACKET IPCreatePacket(ULONG Type)
 {
   PIP_PACKET IPPacket;
 
-  IPPacket = TcpipAllocateFromNPagedLookasideList(&IPPacketList);
+  IPPacket = exAllocateFromNPagedLookasideList(&IPPacketList);
   if (!IPPacket)
     return NULL;
 
@@ -109,7 +109,7 @@ PIP_PACKET IPInitializePacket(
 }
 
 
-void STDCALL IPTimeout( PVOID Context ) {
+void NTAPI IPTimeout( PVOID Context ) {
     IpWorkItemQueued = FALSE;
 
     /* Check if datagram fragments have taken too long to assemble */
@@ -147,15 +147,20 @@ VOID IPDispatchProtocol(
         TI_DbgPrint(MIN_TRACE, ("IPv6 datagram discarded.\n"));
         return;
     default:
-        Protocol = 0;
+        TI_DbgPrint(MIN_TRACE, ("Unrecognized datagram discarded.\n"));
+        return;
     }
 
-    /* Call the appropriate protocol handler */
-    (*ProtocolTable[Protocol])(Interface, IPPacket);
-    /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
-     * must be handled here. */
-    if( Protocol == IPPROTO_ICMP )
-        ICMPReceive( Interface, IPPacket );
+    if (Protocol < IP_PROTOCOL_TABLE_SIZE)
+    {
+       /* Call the appropriate protocol handler */
+       (*ProtocolTable[Protocol])(Interface, IPPacket);
+
+       /* Special case for ICMP -- ICMP can be caught by a SOCK_RAW but also
+        * must be handled here. */
+        if( Protocol == IPPROTO_ICMP )
+            ICMPReceive( Interface, IPPacket );
+    }
 }
 
 
@@ -190,6 +195,8 @@ PIP_INTERFACE IPCreateInterface(
 
     INIT_TAG(IF, TAG('F','A','C','E'));
 
+	RtlZeroMemory(IF, sizeof(IP_INTERFACE));
+
     IF->Free       = FreeIF;
     IF->Context    = BindInfo->Context;
     IF->HeaderSize = BindInfo->HeaderSize;
@@ -204,6 +211,11 @@ PIP_INTERFACE IPCreateInterface(
     IF->Address       = BindInfo->Address;
     IF->AddressLength = BindInfo->AddressLength;
     IF->Transmit      = BindInfo->Transmit;
+
+	IF->Unicast.Type = IP_ADDRESS_V4;
+	IF->PointToPoint.Type = IP_ADDRESS_V4;
+	IF->Netmask.Type = IP_ADDRESS_V4;
+	IF->Broadcast.Type = IP_ADDRESS_V4;
 
     TcpipInitializeSpinLock(&IF->Lock);
 
@@ -242,12 +254,14 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
 			NUD_PERMANENT);
     if (!NCE) {
 	TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
+        return;
     }
 
     AddrWidenAddress( &NetworkAddress, &IF->Unicast, &IF->Netmask );
 
     if (!RouterAddRoute(&NetworkAddress, &IF->Netmask, NCE, 1)) {
 	TI_DbgPrint(MIN_TRACE, ("Could not add route due to insufficient resources.\n"));
+        return;
     }
 
     /* Allow TCP to hang some configuration on this interface */
@@ -286,8 +300,6 @@ BOOLEAN IPRegisterInterface(
 
     IF->Index = ChosenIndex;
 
-    IPAddInterfaceRoute( IF );
-
     /* Add interface to the global interface list */
     TcpipInterlockedInsertTailList(&InterfaceListHead,
 				   &IF->ListEntry,
@@ -302,22 +314,23 @@ VOID IPRemoveInterfaceRoute( PIP_INTERFACE IF ) {
     PNEIGHBOR_CACHE_ENTRY NCE;
     IP_ADDRESS GeneralRoute;
 
-    TCPDisposeInterfaceData( IF->TCPContext );
-    IF->TCPContext = NULL;
-
-    TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
-    TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
-
-    AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
-
-    RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
-
-    /* Remove permanent NCE, but first we have to find it */
     NCE = NBLocateNeighbor(&IF->Unicast);
     if (NCE)
-	NBRemoveNeighbor(NCE);
-    else
-	TI_DbgPrint(DEBUG_IP, ("Could not delete IF route (0x%X)\n", IF));
+    {
+       if ( IF->TCPContext ) {
+           TCPDisposeInterfaceData( IF->TCPContext );
+           IF->TCPContext = NULL;
+       }
+
+       TI_DbgPrint(DEBUG_IP,("Removing interface Addr %s\n", A2S(&IF->Unicast)));
+       TI_DbgPrint(DEBUG_IP,("                   Mask %s\n", A2S(&IF->Netmask)));
+
+       AddrWidenAddress(&GeneralRoute,&IF->Unicast,&IF->Netmask);
+
+       RouterRemoveRoute(&GeneralRoute, &IF->Unicast);
+
+       NBRemoveNeighbor(NCE);
+    }
 }
 
 VOID IPUnregisterInterface(
@@ -340,27 +353,6 @@ VOID IPUnregisterInterface(
 }
 
 
-VOID IPRegisterProtocol(
-    UINT ProtocolNumber,
-    IP_PROTOCOL_HANDLER Handler)
-/*
- * FUNCTION: Registers a handler for an IP protocol number
- * ARGUMENTS:
- *     ProtocolNumber = Internet Protocol number for which to register handler
- *     Handler        = Pointer to handler to be called when a packet is received
- * NOTES:
- *     To unregister a protocol handler, call this function with Handler = NULL
- */
-{
-#ifdef DBG
-    if (ProtocolNumber >= IP_PROTOCOL_TABLE_SIZE)
-        TI_DbgPrint(MIN_TRACE, ("Protocol number is out of range (%d).\n", ProtocolNumber));
-#endif
-
-    ProtocolTable[ProtocolNumber] = Handler;
-}
-
-
 VOID DefaultProtocolHandler(
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket)
@@ -373,6 +365,27 @@ VOID DefaultProtocolHandler(
 {
     TI_DbgPrint(MID_TRACE, ("[IF %x] Packet of unknown Internet protocol "
 			    "discarded.\n", Interface));
+}
+
+
+VOID IPRegisterProtocol(
+    UINT ProtocolNumber,
+    IP_PROTOCOL_HANDLER Handler)
+/*
+ * FUNCTION: Registers a handler for an IP protocol number
+ * ARGUMENTS:
+ *     ProtocolNumber = Internet Protocol number for which to register handler
+ *     Handler        = Pointer to handler to be called when a packet is received
+ * NOTES:
+ *     To unregister a protocol handler, call this function with Handler = NULL
+ */
+{
+    if (ProtocolNumber >= IP_PROTOCOL_TABLE_SIZE) {
+        TI_DbgPrint(MIN_TRACE, ("Protocol number is out of range (%d).\n", ProtocolNumber));
+        return;
+    }
+
+    ProtocolTable[ProtocolNumber] = Handler ? Handler : DefaultProtocolHandler;
 }
 
 

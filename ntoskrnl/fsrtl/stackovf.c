@@ -63,7 +63,7 @@ FsRtlPostStackOverflow(IN PVOID Context,
                        IN PKEVENT Event,
                        IN PFSRTL_STACK_OVERFLOW_ROUTINE StackOverflowRoutine)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
 }
 
 /* EOF */

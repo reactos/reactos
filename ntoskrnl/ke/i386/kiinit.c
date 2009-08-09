@@ -18,10 +18,6 @@
 KSPIN_LOCK KiFreezeExecutionLock;
 KSPIN_LOCK Ki486CompatibilityLock;
 
-/* BIOS Memory Map. Not NTLDR-compliant yet */
-extern ULONG KeMemoryMapRangeCount;
-extern ADDRESS_RANGE KeMemoryMap[64];
-
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -294,7 +290,7 @@ KiInitMachineDependent(VOID)
                     if (KiMXCsrMask != MXCsrMask)
                     {
                         /* No, something is definitely wrong */
-                        KEBUGCHECKEX(MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED,
+                        KeBugCheckEx(MULTIPROCESSOR_CONFIGURATION_NOT_SUPPORTED,
                                      KF_FXSR,
                                      KiMXCsrMask,
                                      MXCsrMask,
@@ -391,7 +387,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 {
     BOOLEAN NpxPresent;
     ULONG FeatureBits;
-    LARGE_INTEGER PageDirectory;
+    ULONG PageDirectory[2];
     PVOID DpcStack;
     ULONG Vendor[3];
 
@@ -503,11 +499,12 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 
         /* Initialize the Idle Process and the Process Listhead */
         InitializeListHead(&KiProcessListHead);
-        PageDirectory.QuadPart = 0;
+        PageDirectory[0] = 0;
+        PageDirectory[1] = 0;
         KeInitializeProcess(InitProcess,
                             0,
                             0xFFFFFFFF,
-                            &PageDirectory,
+                            PageDirectory,
                             FALSE);
         InitProcess->QuantumReset = MAXCHAR;
     }
@@ -610,7 +607,7 @@ KiGetMachineBootPointers(IN PKGDTENTRY *Gdt,
                          IN PKIPCR *Pcr,
                          IN PKTSS *Tss)
 {
-    KDESCRIPTOR GdtDescriptor = {0}, IdtDescriptor = {0};
+    KDESCRIPTOR GdtDescriptor = { 0, 0, 0 }, IdtDescriptor = { 0, 0, 0 };
     KGDTENTRY TssSelector, PcrSelector;
     USHORT Tr = 0, Fs;
 

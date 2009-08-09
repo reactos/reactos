@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.1
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -23,10 +23,10 @@
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "colormac.h"
-#include "macros.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/colormac.h"
+#include "main/macros.h"
 #include "s_aaline.h"
 #include "s_context.h"
 #include "s_depth.h"
@@ -63,11 +63,12 @@ compute_stipple_mask( GLcontext *ctx, GLuint len, GLubyte mask[] )
 static void
 draw_wide_line( GLcontext *ctx, SWspan *span, GLboolean xMajor )
 {
-   GLint width, start;
+   const GLint width = (GLint) CLAMP(ctx->Line.Width,
+                                     ctx->Const.MinLineWidth,
+                                     ctx->Const.MaxLineWidth);
+   GLint start;
 
    ASSERT(span->end < MAX_WIDTH);
-
-   width = (GLint) CLAMP( ctx->Line._Width, MIN_LINE_WIDTH, MAX_LINE_WIDTH );
 
    if (width & 1)
       start = width / 2;
@@ -121,29 +122,29 @@ draw_wide_line( GLcontext *ctx, SWspan *span, GLboolean xMajor )
 /**********************************************************************/
 
 /* Simple color index line (no stipple, width=1, no Z, no fog, no tex)*/
-#define NAME simple_ci_line
+#define NAME simple_no_z_ci_line
 #define INTERP_INDEX
 #define RENDER_SPAN(span) _swrast_write_index_span(ctx, &span)
 #include "s_linetemp.h"
 
 /* Simple RGBA index line (no stipple, width=1, no Z, no fog, no tex)*/
-#define NAME simple_rgba_line
+#define NAME simple_no_z_rgba_line
 #define INTERP_RGBA
 #define RENDER_SPAN(span) _swrast_write_rgba_span(ctx, &span);
 #include "s_linetemp.h"
 
 
 /* Z, fog, wide, stipple color index line */
-#define NAME general_ci_line
+#define NAME ci_line
 #define INTERP_INDEX
 #define INTERP_Z
-#define INTERP_FOG
+#define INTERP_ATTRIBS /* for fog */
 #define RENDER_SPAN(span)					\
    if (ctx->Line.StippleFlag) {					\
       span.arrayMask |= SPAN_MASK;				\
       compute_stipple_mask(ctx, span.end, span.array->mask);    \
    }								\
-   if (ctx->Line._Width > 1.0) {					\
+   if (ctx->Line.Width > 1.0) {					\
       draw_wide_line(ctx, &span, (GLboolean)(dx > dy));		\
    }								\
    else {							\
@@ -153,16 +154,15 @@ draw_wide_line( GLcontext *ctx, SWspan *span, GLboolean xMajor )
 
 
 /* Z, fog, wide, stipple RGBA line */
-#define NAME general_rgba_line
+#define NAME rgba_line
 #define INTERP_RGBA
 #define INTERP_Z
-#define INTERP_FOG
 #define RENDER_SPAN(span)					\
    if (ctx->Line.StippleFlag) {					\
       span.arrayMask |= SPAN_MASK;				\
       compute_stipple_mask(ctx, span.end, span.array->mask);	\
    }								\
-   if (ctx->Line._Width > 1.0) {					\
+   if (ctx->Line.Width > 1.0) {					\
       draw_wide_line(ctx, &span, (GLboolean)(dx > dy));		\
    }								\
    else {							\
@@ -171,19 +171,17 @@ draw_wide_line( GLcontext *ctx, SWspan *span, GLboolean xMajor )
 #include "s_linetemp.h"
 
 
-/* General-purpose textured line (any/all features). */
-#define NAME textured_line
+/* General-purpose line (any/all features). */
+#define NAME general_line
 #define INTERP_RGBA
-#define INTERP_SPEC
 #define INTERP_Z
-#define INTERP_FOG
 #define INTERP_ATTRIBS
 #define RENDER_SPAN(span)					\
    if (ctx->Line.StippleFlag) {					\
       span.arrayMask |= SPAN_MASK;				\
       compute_stipple_mask(ctx, span.end, span.array->mask);	\
    }								\
-   if (ctx->Line._Width > 1.0) {					\
+   if (ctx->Line.Width > 1.0) {					\
       draw_wide_line(ctx, &span, (GLboolean)(dx > dy));		\
    }								\
    else {							\
@@ -194,46 +192,37 @@ draw_wide_line( GLcontext *ctx, SWspan *span, GLboolean xMajor )
 
 
 void
-_swrast_add_spec_terms_line( GLcontext *ctx,
-                             const SWvertex *v0,
-                             const SWvertex *v1 )
+_swrast_add_spec_terms_line(GLcontext *ctx,
+                            const SWvertex *v0, const SWvertex *v1)
 {
    SWvertex *ncv0 = (SWvertex *)v0;
    SWvertex *ncv1 = (SWvertex *)v1;
-   GLchan c[2][4];
-   COPY_CHAN4( c[0], ncv0->color );
-   COPY_CHAN4( c[1], ncv1->color );
-   ACC_3V( ncv0->color, ncv0->specular );
-   ACC_3V( ncv1->color, ncv1->specular );
+   GLfloat rSum, gSum, bSum;
+   GLchan cSave[2][4];
+
+   /* save original colors */
+   COPY_CHAN4(cSave[0], ncv0->color);
+   COPY_CHAN4(cSave[1], ncv1->color);
+   /* sum v0 */
+   rSum = CHAN_TO_FLOAT(ncv0->color[0]) + ncv0->attrib[FRAG_ATTRIB_COL1][0];
+   gSum = CHAN_TO_FLOAT(ncv0->color[1]) + ncv0->attrib[FRAG_ATTRIB_COL1][1];
+   bSum = CHAN_TO_FLOAT(ncv0->color[2]) + ncv0->attrib[FRAG_ATTRIB_COL1][2];
+   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[0], rSum);
+   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[1], gSum);
+   UNCLAMPED_FLOAT_TO_CHAN(ncv0->color[2], bSum);
+   /* sum v1 */
+   rSum = CHAN_TO_FLOAT(ncv1->color[0]) + ncv1->attrib[FRAG_ATTRIB_COL1][0];
+   gSum = CHAN_TO_FLOAT(ncv1->color[1]) + ncv1->attrib[FRAG_ATTRIB_COL1][1];
+   bSum = CHAN_TO_FLOAT(ncv1->color[2]) + ncv1->attrib[FRAG_ATTRIB_COL1][2];
+   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[0], rSum);
+   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[1], gSum);
+   UNCLAMPED_FLOAT_TO_CHAN(ncv1->color[2], bSum);
+   /* draw */
    SWRAST_CONTEXT(ctx)->SpecLine( ctx, ncv0, ncv1 );
-   COPY_CHAN4( ncv0->color, c[0] );
-   COPY_CHAN4( ncv1->color, c[1] );
+   /* restore original colors */
+   COPY_CHAN4( ncv0->attrib[FRAG_ATTRIB_COL0], cSave[0] );
+   COPY_CHAN4( ncv1->attrib[FRAG_ATTRIB_COL0], cSave[1] );
 }
-
-
-#ifdef DEBUG
-extern void
-_mesa_print_line_function(GLcontext *ctx);  /* silence compiler warning */
-void
-_mesa_print_line_function(GLcontext *ctx)
-{
-   SWcontext *swrast = SWRAST_CONTEXT(ctx);
-
-   _mesa_printf("Line Func == ");
-   if (swrast->Line == simple_ci_line)
-      _mesa_printf("simple_ci_line\n");
-   else if (swrast->Line == simple_rgba_line)
-      _mesa_printf("simple_rgba_line\n");
-   else if (swrast->Line == general_ci_line)
-      _mesa_printf("general_ci_line\n");
-   else if (swrast->Line == general_rgba_line)
-      _mesa_printf("general_rgba_line\n");
-   else if (swrast->Line == textured_line)
-      _mesa_printf("textured_line\n");
-   else
-      _mesa_printf("Driver func %p\n", (void *(*)()) swrast->Line);
-}
-#endif
 
 
 
@@ -257,7 +246,7 @@ do {                                    \
 
 
 
-/*
+/**
  * Determine which line drawing function to use given the current
  * rendering context.
  *
@@ -269,6 +258,9 @@ _swrast_choose_line( GLcontext *ctx )
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const GLboolean rgbmode = ctx->Visual.rgbMode;
+   GLboolean specular = (ctx->Fog.ColorSumEnabled ||
+                         (ctx->Light.Enabled &&
+                          ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR));
 
    if (ctx->RenderMode == GL_RENDER) {
       if (ctx->Line.SmoothFlag) {
@@ -277,24 +269,32 @@ _swrast_choose_line( GLcontext *ctx )
          ASSERT(swrast->Line);
       }
       else if (ctx->Texture._EnabledCoordUnits
-             || ctx->FragmentProgram._Current) {
-         /* textured lines */
-         USE(textured_line);
+               || ctx->FragmentProgram._Current
+               || swrast->_FogEnabled
+               || specular) {
+         USE(general_line);
       }
-      else if (ctx->Depth.Test || swrast->_FogEnabled || ctx->Line._Width != 1.0
+      else if (ctx->Depth.Test
+               || ctx->Line.Width != 1.0
                || ctx->Line.StippleFlag) {
          /* no texture, but Z, fog, width>1, stipple, etc. */
          if (rgbmode)
-            USE(general_rgba_line);
+#if CHAN_BITS == 32
+            USE(general_line);
+#else
+            USE(rgba_line);
+#endif
          else
-            USE(general_ci_line);
+            USE(ci_line);
       }
       else {
-         /* simplest lines */
+         ASSERT(!ctx->Depth.Test);
+         ASSERT(ctx->Line.Width == 1.0);
+         /* simple lines */
          if (rgbmode)
-            USE(simple_rgba_line);
+            USE(simple_no_z_rgba_line);
          else
-            USE(simple_ci_line);
+            USE(simple_no_z_ci_line);
       }
    }
    else if (ctx->RenderMode == GL_FEEDBACK) {
@@ -304,6 +304,4 @@ _swrast_choose_line( GLcontext *ctx )
       ASSERT(ctx->RenderMode == GL_SELECT);
       USE(_swrast_select_line);
    }
-
-   /*_mesa_print_line_function(ctx);*/
 }

@@ -8,6 +8,7 @@
  * 20040708 Created
  */
 #include <afd.h>
+#include <pseh/pseh2.h>
 #include "debug.h"
 #include "tdiconn.h"
 
@@ -121,14 +122,18 @@ NTSTATUS TdiBuildNullConnectionInfo
     ExAllocatePool(NonPagedPool,
 		   sizeof(TDI_CONNECTION_INFORMATION) +
 		   TdiAddressSize);
-  if (!ConnInfo)
-    return STATUS_INSUFFICIENT_RESOURCES;
+  if (!ConnInfo) {
+      *ConnectionInfo = NULL;
+      return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
   Status = TdiBuildNullConnectionInfoInPlace( ConnInfo, Type );
 
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status)) {
       ExFreePool( ConnInfo );
-  else
+      *ConnectionInfo = NULL;
+      return Status;
+  } else
       *ConnectionInfo = ConnInfo;
 
   ConnInfo->RemoteAddress = (PTA_ADDRESS)&ConnInfo[1];
@@ -144,9 +149,13 @@ TdiBuildConnectionInfoInPlace
   PTRANSPORT_ADDRESS Address ) {
     NTSTATUS Status = STATUS_SUCCESS;
 
-    RtlCopyMemory( ConnectionInfo->RemoteAddress,
-		   Address,
-		   ConnectionInfo->RemoteAddressLength );
+    _SEH2_TRY {
+    	RtlCopyMemory( ConnectionInfo->RemoteAddress,
+		       Address,
+		       ConnectionInfo->RemoteAddressLength );
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+	Status = _SEH2_GetExceptionCode();
+    } _SEH2_END;
 
     return Status;
 }
@@ -185,6 +194,8 @@ TdiBuildConnectionInfoPair
     ULONG TdiAddressSize;
     PTDI_CONNECTION_INFORMATION FromTdiConn, ToTdiConn;
 
+    if (!From) return STATUS_INVALID_PARAMETER;
+
     /* FIXME: Get from socket information */
     TdiAddressSize = TdiAddressSizeFromType(From->Address[0].AddressType);
     SizeOfEntry = TdiAddressSize + sizeof(TDI_CONNECTION_INFORMATION);
@@ -198,15 +209,10 @@ TdiBuildConnectionInfoPair
 
     RtlZeroMemory( LayoutFrame, 2 * SizeOfEntry );
 
-	FromTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame;
-	ToTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame + SizeOfEntry;
+    FromTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame;
+    ToTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame + SizeOfEntry;
 
-    if (From != NULL) {
-	TdiBuildConnectionInfoInPlace( FromTdiConn, From );
-    } else {
-	TdiBuildNullConnectionInfoInPlace( FromTdiConn,
-					   From->Address[0].AddressType );
-    }
+    TdiBuildConnectionInfoInPlace( FromTdiConn, From );
 
     TdiBuildConnectionInfoInPlace( ToTdiConn, To );
 

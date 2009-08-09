@@ -23,10 +23,6 @@
 #ifndef _NTSCSI_
 #define _NTSCSI_
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

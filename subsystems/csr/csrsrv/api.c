@@ -513,7 +513,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     ReceiveMsg.Status = STATUS_SUCCESS;
 
                     /* Validation complete, start SEH */
-                    _SEH_TRY
+                    _SEH2_TRY
                     {
                         /* Make sure we have enough threads */
                         CsrCheckRequestThreads();
@@ -529,7 +529,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                     {
                         ReplyMsg = NULL;
                     }
-                    _SEH_END;
+                    _SEH2_END;
                 }
             }
             else
@@ -1001,7 +1001,7 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
     }
 
     /* Validation complete, start SEH */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Call the API and get the result */
         Status = (ServerDll->DispatchTable[ApiId])(ReceiveMsg, &Reply);
@@ -1009,12 +1009,12 @@ CsrCallServerFromServer(PCSR_API_MESSAGE ReceiveMsg,
         /* Return the result, no matter what it is */
         ReplyMsg->Status = Status;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* If we got an exception, return access violation */
         ReplyMsg->Status = STATUS_ACCESS_VIOLATION;
     }
-    _SEH_END;
+    _SEH2_END;
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -1133,7 +1133,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     ULONG_PTR *CurrentPointer = NULL;
 
     /* Use SEH to make sure this is valid */
-    _SEH_TRY
+    _SEH2_TRY
     {
         /* Get the buffer we got from whoever called NTDLL */
         LocalCaptureBuffer = ApiMessage->CsrCaptureData;
@@ -1145,7 +1145,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         {
             /* Return failure */
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
-            _SEH_YIELD(return FALSE);
+            _SEH2_YIELD(return FALSE);
         }
 
         /* Check if the Length is valid */
@@ -1154,15 +1154,15 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
         {
             /* Return failure */
             ApiMessage->Status = STATUS_INVALID_PARAMETER;
-            _SEH_YIELD(return FALSE);
+            _SEH2_YIELD(return FALSE);
         }
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Return failure */
         ApiMessage->Status = STATUS_INVALID_PARAMETER;
-        _SEH_YIELD(return FALSE);
-    } _SEH_END;
+        _SEH2_YIELD(return FALSE);
+    } _SEH2_END;
 
     /* We validated the incoming buffer, now allocate the remote one */
     RemoteCaptureBuffer = RtlAllocateHeap(CsrHeap, 0, LocalLength);

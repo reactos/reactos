@@ -28,9 +28,21 @@
 
 #include "mtypes.h"
 
+
+extern void
+_mesa_generate_mipmap_level(GLenum target,
+                            GLenum datatype, GLuint comps,
+                            GLint border,
+                            GLint srcWidth, GLint srcHeight, GLint srcDepth,
+                            const GLubyte *srcData,
+                            GLint srcRowStride,
+                            GLint dstWidth, GLint dstHeight, GLint dstDepth,
+                            GLubyte *dstData,
+                            GLint dstRowStride);
+
+
 extern void
 _mesa_generate_mipmap(GLcontext *ctx, GLenum target,
-                      const struct gl_texture_unit *texUnit,
                       struct gl_texture_object *texObj);
 
 

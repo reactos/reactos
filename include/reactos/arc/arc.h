@@ -118,10 +118,10 @@ typedef struct _MEMORY_ALLOCATION_DESCRIPTOR
 
 typedef struct _BOOT_DRIVER_LIST_ENTRY
 {
-    LIST_ENTRY ListEntry;
+    LIST_ENTRY Link;
     UNICODE_STRING FilePath;
     UNICODE_STRING RegistryPath;
-    struct _LDR_DATA_TABLE_ENTRY *DataTableEntry;
+    struct _LDR_DATA_TABLE_ENTRY *LdrEntry;
 } BOOT_DRIVER_LIST_ENTRY, *PBOOT_DRIVER_LIST_ENTRY;
 
 typedef struct _ARC_DISK_SIGNATURE
@@ -412,7 +412,8 @@ typedef struct _FIRMWARE_INFORMATION_LOADER_BLOCK
 {
     ULONG FirmwareTypeEfi:1;
     ULONG Reserved:31;
-    union {
+    union
+    {
         EFI_FIRMWARE_INFORMATION EfiInformation;
         PCAT_FIRMWARE_INFORMATION PcatInformation;
     } u;
@@ -447,7 +448,7 @@ typedef struct _LOADER_PARAMETER_BLOCK
     {
         I386_LOADER_BLOCK I386;
         ALPHA_LOADER_BLOCK Alpha;
-        IA64_LOADER_BLOCK Ia64;
+        IA64_LOADER_BLOCK IA64;
         PPC_LOADER_BLOCK PowerPC;
         ARM_LOADER_BLOCK Arm;
     } u;

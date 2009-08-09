@@ -612,7 +612,7 @@ BEGIN
     IDS_TAB_PROCESSES             "Processus"
     IDS_TAB_PERFORMANCE           "Performance"
     IDS_TAB_TASK                  "Tâche"
-    IDS_TAB_STATUS                "Status"
+    IDS_TAB_STATUS                "Statut"
     IDS_TAB_IMAGENAME             "Nom de l'image"
     IDS_TAB_PID                   "PID"
     IDS_TAB_USERNAME              "Nom d'utilisateur"

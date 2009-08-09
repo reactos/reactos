@@ -46,6 +46,7 @@ typedef struct
     PWCHAR OEMCPage;
     PWCHAR MACCPage;
     PWCHAR LanguageDescriptor;
+    PWCHAR GeoID;
     const MUI_PAGE * MuiPages;
     const MUI_ERROR * MuiErrors;
     const MUI_STRING * MuiStrings;
@@ -61,6 +62,9 @@ MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);
 
 LPCWSTR
 MUIDefaultKeyboardLayout(VOID);
+
+PWCHAR
+MUIGetGeoID(VOID);
 
 const MUI_LAYOUTS *
 MUIGetLayoutsList(VOID);

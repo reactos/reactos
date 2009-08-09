@@ -23,10 +23,6 @@
 #ifndef __NTDDNDIS_H
 #define __NTDDNDIS_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 #pragma pack(push,4)
 
 #ifdef __cplusplus

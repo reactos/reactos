@@ -54,6 +54,35 @@ ObDereferenceProcessHandleTable(IN PEPROCESS Process)
     ExReleaseRundownProtection(&Process->RundownProtect);
 }
 
+ULONG
+NTAPI
+ObGetProcessHandleCount(IN PEPROCESS Process)
+{
+    ULONG HandleCount;
+    PHANDLE_TABLE HandleTable;
+
+    ASSERT(Process);
+
+    /* Ensure the handle table doesn't go away while we use it */
+    HandleTable = ObReferenceProcessHandleTable(Process);
+
+    if (HandleTable != NULL)
+    {
+        /* Count the number of handles the process has */
+        HandleCount = HandleTable->HandleCount;
+
+        /* Let the handle table go */
+        ObDereferenceProcessHandleTable(Process);
+    }
+    else
+    {
+        /* No handle table, no handles */
+        HandleCount = 0;
+    }
+
+    return HandleCount;
+}
+
 NTSTATUS
 NTAPI
 ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
@@ -289,7 +318,7 @@ ObpInsertHandleCount(IN POBJECT_HEADER ObjectHeader)
     else
     {
         /* Otherwise we had a DB, free it */
-        ExFreePool(OldHandleDatabase);
+        ExFreePoolWithTag(OldHandleDatabase, TAG_OB_HANDLE);
     }
 
     /* Find the end of the copy and zero out the new data */
@@ -450,6 +479,14 @@ ObpChargeQuotaForObject(IN POBJECT_HEADER ObjectHeader,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+ObpValidateAccessMask(IN PACCESS_STATE AccessState)
+{
+    /* TODO */
+    return STATUS_SUCCESS;
+}
+
 /*++
 * @name ObpDecrementHandleCount
 *
@@ -489,7 +526,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Get the object type and header */
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Decrementing count for: %p. HC LC %lx %lx\n",
+            "%s - Decrementing count for: %p. HC PC %lx %lx\n",
             __FUNCTION__,
             ObjectBody,
             ObjectHeader->HandleCount,
@@ -592,7 +629,7 @@ ObpDecrementHandleCount(IN PVOID ObjectBody,
     /* Decrease the total number of handles for this type */
     InterlockedDecrement((PLONG)&ObjectType->TotalNumberOfHandles);
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Decremented count for: %p. HC LC %lx %lx\n",
+            "%s - Decremented count for: %p. HC PC %lx %lx\n",
             __FUNCTION__,
             ObjectBody,
             ObjectHeader->HandleCount,
@@ -645,7 +682,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
     Body = &ObjectHeader->Body;
     GrantedAccess = HandleEntry->GrantedAccess;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closing handle: %lx for %p. HC LC %lx %lx\n",
+            "%s - Closing handle: %lx for %p. HC PC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -697,7 +734,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         else
         {
             /* Otherwise, bugcheck the OS */
-            KeBugCheckEx(0x8B, (ULONG_PTR)Handle, 0, 0, 0);
+            KeBugCheckEx(INVALID_KERNEL_HANDLE, (ULONG_PTR)Handle, 0, 0, 0);
         }
     }
 
@@ -715,7 +752,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 
     /* Return to caller */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Closed handle: %lx for %p. HC LC %lx %lx\n",
+            "%s - Closed handle: %lx for %p. HC PC %lx %lx\n",
             __FUNCTION__,
             Handle,
             Body,
@@ -755,7 +792,7 @@ ObpCloseHandleTableEntry(IN PHANDLE_TABLE HandleTable,
 NTSTATUS
 NTAPI
 ObpIncrementHandleCount(IN PVOID Object,
-                        IN PACCESS_STATE AccessState,
+                        IN PACCESS_STATE AccessState OPTIONAL,
                         IN KPROCESSOR_MODE AccessMode,
                         IN ULONG HandleAttributes,
                         IN PEPROCESS Process,
@@ -777,7 +814,7 @@ ObpIncrementHandleCount(IN PVOID Object,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incrementing count for: %p. Reason: %lx. HC LC %lx %lx\n",
+            "%s - Incrementing count for: %p. Reason: %lx. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -916,7 +953,7 @@ ObpIncrementHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             goto Quickie;
         }
     }
@@ -945,7 +982,7 @@ ObpIncrementHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             return Status;
         }
     }
@@ -978,7 +1015,7 @@ ObpIncrementHandleCount(IN PVOID Object,
 
     /* Trace call and return */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incremented count for: %p. Reason: %lx HC LC %lx %lx\n",
+            "%s - Incremented count for: %p. Reason: %lx HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -1042,7 +1079,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incrementing count for: %p. UNNAMED. HC LC %lx %lx\n",
+            "%s - Incrementing count for: %p. UNNAMED. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -1143,7 +1180,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             goto Quickie;
         }
     }
@@ -1169,7 +1206,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
         {
             /* FIXME: This should never happen for now */
             DPRINT1("Unhandled case\n");
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             return Status;
         }
     }
@@ -1198,7 +1235,7 @@ ObpIncrementUnnamedHandleCount(IN PVOID Object,
 
     /* Trace call and return */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Incremented count for: %p. UNNAMED HC LC %lx %lx\n",
+            "%s - Incremented count for: %p. UNNAMED HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -1267,7 +1304,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Creating handle for: %p. UNNAMED. HC LC %lx %lx\n",
+            "%s - Creating handle for: %p. UNNAMED. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             ObjectHeader->HandleCount,
@@ -1363,7 +1400,7 @@ ObpCreateUnnamedHandle(IN PVOID Object,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC LC %lx %lx\n",
+                "%s - Returning Handle: %lx HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -1456,7 +1493,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
     ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
     ObjectType = ObjectHeader->Type;
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - Creating handle for: %p. Reason: %lx. HC LC %lx %lx\n",
+            "%s - Creating handle for: %p. Reason: %lx. HC PC %lx %lx\n",
             __FUNCTION__,
             Object,
             OpenReason,
@@ -1609,7 +1646,7 @@ ObpCreateHandle(IN OB_OPEN_REASON OpenReason,
 
         /* Trace and return */
         OBTRACE(OB_HANDLE_DEBUG,
-                "%s - Returning Handle: %lx HC LC %lx %lx\n",
+                "%s - Returning Handle: %lx HC PC %lx %lx\n",
                 __FUNCTION__,
                 Handle,
                 ObjectHeader->HandleCount,
@@ -1753,7 +1790,7 @@ ObpCloseHandle(IN HANDLE Handle,
                     if (KdDebuggerEnabled)
                     {
                         /* Bugcheck */
-                        KeBugCheckEx(0, (ULONG_PTR)Handle, 1, 0, 0);
+                        KeBugCheckEx(INVALID_KERNEL_HANDLE, (ULONG_PTR)Handle, 1, 0, 0);
                     }
                 }
             }
@@ -2425,7 +2462,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        ExFreePool(TempBuffer);
+        ExFreePoolWithTag(TempBuffer, TAG_OB_TEMP_STORAGE);
         return Status;
     }
 
@@ -2533,7 +2570,7 @@ Quickie:
     /* Release the object attributes and temporary buffer */
     ObpReleaseObjectCreateInformation(&TempBuffer->ObjectCreateInfo);
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-    ExFreePool(TempBuffer);
+    ExFreePoolWithTag(TempBuffer, TAG_OB_TEMP_STORAGE);
 
     /* Return status */
     OBTRACE(OB_HANDLE_DEBUG,
@@ -2888,7 +2925,7 @@ ObInsertObject(IN PVOID Object,
     AccessState->SecurityDescriptor = ObjectCreateInfo->SecurityDescriptor;
 
     /* Validate the access mask */
-    Status = STATUS_SUCCESS;//ObpValidateAccessMask(AccessState);
+    Status = ObpValidateAccessMask(AccessState);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
@@ -3034,7 +3071,7 @@ ObInsertObject(IN PVOID Object,
             {
                 /* Weird case where we need to do a manual delete */
                 DPRINT1("Unhandled path\n");
-                KEBUGCHECK(0);
+                ASSERT(FALSE);
             }
 
             /* Cleanup the lookup */
@@ -3052,7 +3089,7 @@ ObInsertObject(IN PVOID Object,
             }
 
             /* Return failure code */
-            KEBUGCHECK(0);
+            ASSERT(FALSE);
             return Status;
         }
     }
@@ -3116,7 +3153,7 @@ ObInsertObject(IN PVOID Object,
 
     /* Return status code */
     OBTRACE(OB_HANDLE_DEBUG,
-            "%s - returning Object with PC S/RS: %lx %lx %lx\n",
+            "%s - returning Object with PC RS/S: %lx %lx %lx\n",
             __FUNCTION__,
             OBJECT_TO_OBJECT_HEADER(Object)->PointerCount,
             RealStatus, Status);
@@ -3196,18 +3233,18 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     if ((TargetHandle) && (PreviousMode != KernelMode))
     {
         /* Enter SEH */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the handle and assume failure */
             ProbeForWriteHandle(TargetHandle);
             *TargetHandle = NULL;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception status */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
         if (!NT_SUCCESS(Status)) return Status;
     }
 
@@ -3262,17 +3299,17 @@ NtDuplicateObject(IN HANDLE SourceProcessHandle,
     if (TargetHandle)
     {
         /* Protect the write to user mode */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Write the new handle */
             *TargetHandle = hTarget;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Otherwise, get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
     }
 
     /* Dereference the processes */
@@ -3293,7 +3330,7 @@ NTAPI
 ObIsKernelHandle(IN HANDLE Handle)
 {
     /* We know we're kernel mode, so just check for the kernel handle flag */
-    return (BOOLEAN)((ULONG_PTR)Handle & KERNEL_HANDLE_FLAG);
+    return (BOOLEAN)(((ULONG_PTR)Handle & KERNEL_HANDLE_FLAG) != 0);
 }
 
 /* EOF */

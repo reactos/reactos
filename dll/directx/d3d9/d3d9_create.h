@@ -15,4 +15,7 @@
 /* Creates a Direct3D9 object */
 HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion);
 
+BOOL CreateD3D9DeviceData(IN LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter, IN LPD3D9_DEVICEDATA pDeviceData);
+VOID DestroyD3D9DeviceData(IN LPD3D9_DEVICEDATA pDeviceData);
+
 #endif // _D3D9_CREATE_H_

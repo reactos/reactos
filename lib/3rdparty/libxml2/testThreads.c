@@ -1,6 +1,7 @@
+#include "libxml.h"
+
 #include <stdlib.h>
 #include <stdio.h>
-#include "libxml.h"
 
 #if defined(LIBXML_THREAD_ENABLED) && defined(LIBXML_CATALOG_ENABLED) && defined(LIBXML_SAX1_ENABLED)
 #include <libxml/globals.h>
@@ -36,8 +37,8 @@ static const char *testfiles[] = {
     "test/threads/invalid.xml",
 };
 
-const char *Okay = "OK";
-const char *Failed = "Failed";
+static const char *Okay = "OK";
+static const char *Failed = "Failed";
 
 #ifndef xmlDoValidityCheckingDefaultValue
 #error xmlDoValidityCheckingDefaultValue is not a macro
@@ -110,7 +111,7 @@ main(void)
 	}
 
 	for (i = 0; i < num_threads; i++) {
-	    ret = pthread_create(&tid[i], 0, thread_specific_data,
+	    ret = pthread_create(&tid[i], NULL, thread_specific_data,
 				 (void *) testfiles[i]);
 	    if (ret != 0) {
 		perror("pthread_create");

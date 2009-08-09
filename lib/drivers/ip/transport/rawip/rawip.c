@@ -143,6 +143,13 @@ NTSTATUS BuildRawIpPacket(
 	break;
     }
 
+    if( !NT_SUCCESS(Status) ) {
+	TI_DbgPrint(MIN_TRACE, ("Cannot add header. Status = (0x%X)\n",
+				Status));
+	FreeNdisPacket(Packet->NdisPacket);
+	return Status;
+    }
+
     TI_DbgPrint(MID_TRACE, ("Copying data (hdr %x data %x (%d))\n",
 			    Packet->Header, Packet->Data,
 			    (PCHAR)Packet->Data - (PCHAR)Packet->Header));
@@ -216,12 +223,18 @@ NTSTATUS RawIPSendDatagram(
 
     TI_DbgPrint(MID_TRACE,("About to get route to destination\n"));
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+        FreeNdisPacket(Packet.NdisPacket);
 	return STATUS_UNSUCCESSFUL;
+    }
 
     TI_DbgPrint(MID_TRACE,("About to send datagram\n"));
 
-    IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL );
+    if (!NT_SUCCESS(Status = IPSendDatagram( &Packet, NCE, RawIpSendPacketComplete, NULL )))
+    {
+        FreeNdisPacket(Packet.NdisPacket);
+        return Status;
+    }
 
     TI_DbgPrint(MID_TRACE,("Leaving\n"));
 

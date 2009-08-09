@@ -86,8 +86,8 @@ Ke386CallBios(IN ULONG Int,
     KeSetSystemAffinityThread(1);
 
     /* Make sure there's space for two IOPMs, then copy & clear the current */
-    //ASSERT(((PKGDTENTRY)&KeGetPcr()->GDT[KGDT_TSS / 8])->LimitLow >=
-    //        (0x2000 + IOPM_OFFSET - 1));
+    ASSERT(((PKIPCR)KeGetPcr())->GDT[KGDT_TSS / 8].LimitLow >=
+            (0x2000 + IOPM_OFFSET - 1));
     RtlCopyMemory(Ki386IopmSaveArea, &Tss->IoMaps[0].IoMap, PAGE_SIZE * 2);
     RtlZeroMemory(&Tss->IoMaps[0].IoMap, PAGE_SIZE * 2);
 
@@ -120,4 +120,38 @@ Ke386CallBios(IN ULONG Int,
     return STATUS_SUCCESS;
 }
 
-/* EOF */
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+Ke386IoSetAccessProcess(IN PKPROCESS Process,
+                        IN ULONG Flag)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+Ke386SetIoAccessMap(IN ULONG Flag,
+                    IN PVOID IopmBuffer)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOLEAN
+NTAPI
+Ke386QueryIoAccessMap(IN ULONG Flag,
+                      IN PVOID IopmBuffer)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}

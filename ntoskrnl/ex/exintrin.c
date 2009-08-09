@@ -100,7 +100,7 @@ InterlockedExchangeAdd(IN OUT LONG volatile *Addend,
 VOID
 NTAPI
 ProbeForRead(IN CONST VOID *Address,
-             IN ULONG Length,
+             IN SIZE_T Length,
              IN ULONG Alignment)
 {
     PAGED_CODE();
@@ -136,7 +136,7 @@ ProbeForRead(IN CONST VOID *Address,
 VOID
 NTAPI
 ProbeForWrite(IN PVOID Address,
-              IN ULONG Length,
+              IN SIZE_T Length,
               IN ULONG Alignment)
 {
     ULONG_PTR Last, Current = (ULONG_PTR)Address;

@@ -1,3 +1,4 @@
+
 /*
 * adns_unix_calls.c
 * - Simple implementation of requiered UNIX system calls and
@@ -29,20 +30,20 @@
 
 #include "adns.h"
 
-int adns_writev(SOCKET FileDescriptor, const struct iovec * iov, int iovCount)
+int adns_writev(int FileDescriptor, const struct iovec * iov, int iovCount)
 {
-	int total_len = 0;
+	size_t total_len = 0;
 	int i = 0, r = 0;
 	char *buf = NULL, *p = NULL;
 
 	for(; i < iovCount; i++)
 		total_len += iov[i].iov_len;
 
-	p = buf = (char *)alloca( (size_t) total_len);
+	p = buf = (char *)_alloca(total_len);
 
 	for(; i < iovCount; i++)
 	{
-		memcpy(p, iov[i].iov_base, (size_t) iov[i].iov_len);
+		memcpy(p, iov[i].iov_base, iov[i].iov_len);
 		p += iov[i].iov_len;
 	}
 
@@ -54,8 +55,21 @@ int adns_writev(SOCKET FileDescriptor, const struct iovec * iov, int iovCount)
 
 int adns_inet_aton(const char *cp, struct in_addr *inp)
 {
+    if (!cp || !*cp || !inp)
+    {
+        errno = EINVAL;
+        return -1; 
+    }
+
+    if (!strcmp(cp, "255.255.255.255"))
+    {
+        // Special case
+        inp->s_addr = INADDR_NONE;
+        return 0;
+    }
+
 	inp->s_addr = inet_addr(cp);
-	return inp->s_addr != INADDR_ANY;
+    return (inp->s_addr == INADDR_NONE) ? -1 : 0;
 }
 
 int adns_getpid()
@@ -63,34 +77,29 @@ int adns_getpid()
 	return GetCurrentProcessId();
 }
 
-/* ReactOS: Fixed gettimeofday implementation.  Was wrong by a factor of
- * 10 */
 int gettimeofday(struct timeval *tv, struct timezone *tz)
 {
     static __int64 Adjustment;
-    __int64 Now = 0;
-
+	__int64 now = 0;
 
     if (!Adjustment)
     {
-	SYSTEMTIME st = {1970,1,3,0,0,0,0};
-
-	SystemTimeToFileTime(&st, ((LPFILETIME)(VOID *)&Adjustment));
+		SYSTEMTIME st = {1970,1,0,1,0,0,0};
+		SystemTimeToFileTime(&st, (LPFILETIME)&Adjustment);
     }
 
     if (tz)
     {
+		errno = EINVAL;
 	return -1;
     }
 
-    GetSystemTimeAsFileTime(((LPFILETIME)(VOID *)&Now));
-    Now -= Adjustment;
+	GetSystemTimeAsFileTime((LPFILETIME)&now);
+	now -= Adjustment;
 
-    /* 100 ns
-       .1  us
-       10 * 1000000 */
-    tv->tv_sec = (long)(Now / 10000000);
-    tv->tv_usec = (long)((Now /     10) % 1000000);
+	tv->tv_sec = (long)(now / 10000000);
+	tv->tv_usec = (long)((now % 10000000) / 10); 
+
     return 0;
 }
 

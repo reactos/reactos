@@ -12,6 +12,7 @@
 			<file>debug_asm.S</file>
 			<file>except_asm.s</file>
 			<file>except.c</file>
+			<file>interlck.S</file>
 			<file>random_asm.S</file>
 			<file>rtlswap.S</file>
 			<file>rtlmem.s</file>
@@ -43,6 +44,7 @@
 
 	<file>access.c</file>
 	<file>acl.c</file>
+	<file>actctx.c</file>
 	<file>atom.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
@@ -61,6 +63,7 @@
 	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>image.c</file>
+	<file>interlck.c</file>
 	<file>message.c</file>
 	<file>largeint.c</file>
 	<file>luid.c</file>
@@ -78,6 +81,7 @@
 	<file>resource.c</file>
 	<file>sd.c</file>
 	<file>security.c</file>
+	<file>slist.c</file>
 	<file>sid.c</file>
 	<file>sprintf.c</file>
 	<file>srw.c</file>
@@ -93,5 +97,9 @@
 	<file>version.c</file>
 	<file>wait.c</file>
 	<file>workitem.c</file>
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
 	<pch>rtl.h</pch>
+	-->
+	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
+	<compilerflag>-fno-unit-at-a-time</compilerflag>
 </module>

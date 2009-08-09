@@ -17,26 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/winbase16.h"
-#include "wownt32.h"
-#include "wine/debug.h"
-#include "cpl.h"
-#include "wine/unicode.h"
-
-#define NO_SHLWAPI_REG
-#include "shlwapi.h"
-
-#include "cpanel.h"
+#include <precomp.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 
@@ -319,13 +301,13 @@ static	void	Control_DoWindow(CPanel* panel, HWND hWnd, HINSTANCE hInst)
     WCHAR *p;
 
     GetSystemDirectoryW( buffer, MAX_PATH );
-    p = buffer + strlenW(buffer);
+    p = buffer + wcslen(buffer);
     *p++ = '\\';
-    lstrcpyW(p, wszAllCpl);
+    wcscpy(p, wszAllCpl);
 
     if ((h = FindFirstFileW(buffer, &fd)) != INVALID_HANDLE_VALUE) {
         do {
-	   lstrcpyW(p, fd.cFileName);
+	   wcscpy(p, fd.cFileName);
 	   Control_LoadApplet(hWnd, buffer, panel);
 	} while (FindNextFileW(h, &fd));
 	FindClose(h);
@@ -348,21 +330,44 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
     LPWSTR	beg = NULL;
     LPWSTR	end;
     WCHAR	ch;
-    LPWSTR       ptr;
+    LPCWSTR       ptr, ptr2;
+    WCHAR szName[MAX_PATH];
     unsigned 	sp = 0;
     LPWSTR	extraPmts = NULL;
     int        quoted = 0;
     BOOL	spSet = FALSE;
-	HANDLE hMutex;
+    HANDLE hMutex;
+    UINT Length;
 
-    hMutex = CreateMutex(NULL, FALSE, (LPCTSTR) wszCmd);
+    ptr = wcsrchr(wszCmd, L'\\');
+    ptr2 = wcsrchr(wszCmd, L',');
+    if (!ptr2)
+    {
+        ptr2 = wszCmd + wcslen(wszCmd) + 1;
+    }
+
+    if (ptr)
+        ptr++;
+    else
+        ptr = wszCmd;
+
+    Length = (ptr2 - ptr);
+    if (Length >= MAX_PATH)
+        return;
+
+    memcpy(szName, (LPVOID)ptr, Length * sizeof(WCHAR));
+    szName[Length] = L'\0';
+    hMutex = CreateMutexW(NULL, TRUE, szName);
+
  	if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
         return;
-    buffer = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(wszCmd) + 1) * sizeof(*wszCmd));
-    if (!buffer) return;
-
-    end = lstrcpyW(buffer, wszCmd);
-
+    buffer = HeapAlloc(GetProcessHeap(), 0, (wcslen(wszCmd) + 1) * sizeof(*wszCmd));
+    if (!buffer)
+    {
+        CloseHandle(hMutex);
+        return;
+    }
+    end = wcscpy(buffer, wszCmd);
     for (;;) {
 	ch = *end;
         if (ch == '"') quoted = !quoted;
@@ -386,10 +391,10 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	end++;
     }
     while ((ptr = StrChrW(buffer, '"')))
-	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+	memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
 
     while ((ptr = StrChrW(extraPmts, '"')))
-	memmove(ptr, ptr+1, lstrlenW(ptr)*sizeof(WCHAR));
+	memmove((LPVOID)ptr, ptr+1, wcslen(ptr)*sizeof(WCHAR));
 
     TRACE("cmd %s, extra %s, sp %d\n", debugstr_w(buffer), debugstr_w(extraPmts), sp);
 
@@ -404,12 +409,20 @@ static	void	Control_DoLaunch(CPanel* panel, HWND hWnd, LPCWSTR wszCmd)
 	  sp = 0;
        }
 
-       if ((extraPmts)&&(!spSet))
+       if ((extraPmts) && extraPmts[0] &&(!spSet))
        {
           while ((lstrcmpiW(extraPmts, applet->info[sp].szName)) && (sp < applet->count))
             sp++;
-       }
 
+          if (sp >= applet->count)
+          {
+            ReleaseMutex(hMutex);
+            CloseHandle(hMutex);
+            Control_UnloadApplet(applet);
+            HeapFree(GetProcessHeap(), 0, buffer);
+            return;
+          }
+       }
        if (applet->info[sp].dwSize) {
 	  if (!applet->proc(applet->hWnd, CPL_STARTWPARMSA, sp, (LPARAM)extraPmts))
 	     applet->proc(applet->hWnd, CPL_DBLCLK, sp, applet->info[sp].lData);

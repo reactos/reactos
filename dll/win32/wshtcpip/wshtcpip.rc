@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: wshtcpip.rc 21805 2006-05-05 15:40:59Z fireball $ */
 
 #define REACTOS_VERSION_DLL
 #define REACTOS_STR_FILE_DESCRIPTION	"Windows Sockets 2 API\0"

@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-PPEB NTAPI RtlpCurrentPeb(VOID);
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -282,6 +281,10 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
    DPRINT("RtlSetEnvironmentVariable(Environment %p Name %wZ Value %wZ)\n",
           Environment, Name, Value);
 
+   /* Variable name must not be empty */
+   if (Name->Length < sizeof(WCHAR))
+      return STATUS_INVALID_PARAMETER;
+
    /* Variable names can't contain a '=' except as a first character. */
    for (wcs = Name->Buffer + 1;
         wcs < Name->Buffer + (Name->Length / sizeof(WCHAR));
@@ -351,7 +354,7 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
    }
 
 found:
-   if (Value != NULL && Value->Length > 0)
+   if (Value != NULL)
    {
       hole_len = tail - hole;
       /* calculate new environment size */
@@ -365,7 +368,7 @@ found:
          /* enlarge environment size */
          /* check the size of available memory */
          new_size += (env_len - hole_len) * sizeof(WCHAR);
-         new_size = ROUNDUP(new_size, PAGE_SIZE);
+         new_size = ROUND_UP(new_size, PAGE_SIZE);
          mbi.RegionSize = 0;
          DPRINT("new_size %lu\n", new_size);
 
@@ -504,7 +507,7 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 
    if (Environment == NULL)
    {
-      PPEB Peb = RtlpCurrentPeb();
+      PPEB Peb = RtlGetCurrentPeb();
       if (Peb) {
           Environment = Peb->ProcessParameters->Environment;
           SysEnvUsed = TRUE;

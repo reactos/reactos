@@ -30,19 +30,19 @@ FindAcpiBios(VOID)
 
     /* Find the 'Root System Descriptor Table Pointer' */
     Ptr = (PUCHAR)0xE0000;
-    while ((ULONG)Ptr < 0x100000)
+    while ((ULONG_PTR)Ptr < 0x100000)
     {
         if (!memcmp(Ptr, "RSD PTR ", 8))
         {
-            DbgPrint((DPRINT_HWDETECT, "ACPI supported\n"));
+            DPRINTM(DPRINT_HWDETECT, "ACPI supported\n");
 
             return (PRSDP_DESCRIPTOR)Ptr;
         }
 
-        Ptr = (PUCHAR)((ULONG)Ptr + 0x10);
+        Ptr = (PUCHAR)((ULONG_PTR)Ptr + 0x10);
     }
 
-    DbgPrint((DPRINT_HWDETECT, "ACPI not supported\n"));
+    DPRINTM(DPRINT_HWDETECT, "ACPI not supported\n");
 
     return NULL;
 }
@@ -110,8 +110,8 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         memcpy(AcpiBiosData->MemoryMap, BiosMemoryMap,
             BiosMemoryMapEntryCount * sizeof(BIOS_MEMORY_MAP));
 
-        DbgPrint((DPRINT_HWDETECT, "RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
-            TableSize));
+        DPRINTM(DPRINT_HWDETECT, "RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
+            TableSize);
 
         FldrSetConfigurationData(BiosKey,
                                  PartialResourceList,
@@ -123,7 +123,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         /* Set 'Identifier' value */
         FldrSetIdentifier(BiosKey, "ACPI BIOS");
-        MmFreeMemory(PartialResourceList);
+        MmHeapFree(PartialResourceList);
     }
 }
 

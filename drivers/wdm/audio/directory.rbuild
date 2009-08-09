@@ -10,6 +10,9 @@
 	<directory name="drm">
 		<xi:include href="drm/directory.rbuild" />
 	</directory>
+	<directory name="filters">
+		<xi:include href="filters/directory.rbuild" />
+	</directory>
 	<directory name="legacy">
 		<xi:include href="legacy/directory.rbuild" />
 	</directory>

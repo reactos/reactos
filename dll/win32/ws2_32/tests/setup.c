@@ -2,7 +2,7 @@
 #include "regtests.h"
 
 extern BOOL
-STDCALL
+WINAPI
 DllMain(HANDLE hInstDll,
         ULONG dwReason,
         LPVOID lpReserved);

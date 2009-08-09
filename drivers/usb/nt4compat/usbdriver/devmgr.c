@@ -162,8 +162,8 @@ dev_mgr_driver_entry_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdrvr)
     pdrvr[MOUSE_DRIVER_IDX].driver_init = mouse_driver_init;
     pdrvr[MOUSE_DRIVER_IDX].driver_destroy = mouse_driver_destroy;
 
-    //pdrvr[KEYBOARD_DRIVER_IDX].driver_init = gendrv_if_driver_init;
-    //pdrvr[KEYBOARD_DRIVER_IDX].driver_destroy = gendrv_if_driver_destroy;
+    pdrvr[KEYBOARD_DRIVER_IDX].driver_init = kbd_driver_init;
+    pdrvr[KEYBOARD_DRIVER_IDX].driver_destroy = kbd_driver_destroy;
 }
 
 BOOLEAN
@@ -202,6 +202,7 @@ dev_mgr_strobe(PUSB_DEV_MANAGER dev_mgr)
     pevent->context = (ULONG) dev_mgr;
 
     KeInitializeEvent(&dev_mgr->wake_up_event, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&dev_mgr->drivers_inited, NotificationEvent, FALSE);
 
     InsertTailList(&dev_mgr->event_list, &pevent->event_link);
 
@@ -273,6 +274,9 @@ dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
         KeSetTimerEx(&dev_mgr->dev_mgr_timer,
                      due_time, DEV_MGR_TIMER_INTERVAL_MS, &dev_mgr->dev_mgr_timer_dpc);
 
+        /* Signal we're done initing */
+        KeSetEvent(&dev_mgr->drivers_inited, 0, FALSE);
+
         return TRUE;
     }
 
@@ -286,6 +290,7 @@ dev_mgr_event_init(PUSB_DEV pdev,       //always null. we do not use this param
 
     KeCancelTimer(&dev_mgr->dev_mgr_timer);
     KeRemoveQueueDpc(&dev_mgr->dev_mgr_timer_dpc);
+    KeSetEvent(&dev_mgr->drivers_inited, 0, FALSE);
     return FALSE;
 
 }
@@ -845,7 +850,7 @@ dev_mgr_get_desc_completion(PURB purb, PVOID context)
     PUSB_CTRL_SETUP_PACKET psetup;
     PHCD hcd;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (purb == NULL)
         return;
@@ -1033,7 +1038,7 @@ dev_mgr_start_select_driver(PUSB_DEV pdev)
     PUSB_EVENT pevent;
     BOOLEAN bret;
 
-    USE_BASIC_NON_PENDING_IRQL;;
+    USE_BASIC_NON_PENDING_IRQL;
 
     if (pdev == NULL)
         return FALSE;
@@ -1195,6 +1200,7 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
 {
     LONG i;
     PUSB_ENDPOINT_DESC pendp_desc;
+    PBYTE pbuf;
 
     if (pcfg == NULL || pif == NULL || pif_desc == NULL)
         return FALSE;
@@ -1213,11 +1219,23 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
         InitializeListHead(&pif->altif_list);
         pif->altif_count = 0;
 
-        pendp_desc = (PUSB_ENDPOINT_DESC) (&((PBYTE) pif_desc)[sizeof(USB_INTERFACE_DESC)]);
+        pbuf = &((PBYTE) pif_desc)[sizeof(USB_INTERFACE_DESC)];
 
-        for(i = 0; i < pif->endp_count; i++, pendp_desc++)
+        i = 0;
+        while (i < pif->endp_count)
         {
-            dev_mgr_build_usb_endp(pif, &pif->endp[i], pendp_desc);
+            pendp_desc = (PUSB_ENDPOINT_DESC)pbuf;
+
+            // check if it's an endpoint descriptor
+            if (pendp_desc->bDescriptorType == USB_DT_ENDPOINT)
+            {
+                // add it
+                dev_mgr_build_usb_endp(pif, &pif->endp[i], pendp_desc);
+                i++;
+            }
+
+            // skip to the next one
+            pbuf += pendp_desc->bLength;
         }
     }
     else
@@ -1246,6 +1264,7 @@ dev_mgr_build_usb_if(PUSB_CONFIGURATION pcfg, PUSB_INTERFACE pif, PUSB_INTERFACE
             pthis_if = (PUSB_INTERFACE) (((PBYTE) pthis) - offsetof(USB_INTERFACE, altif_list));
             pthis_if->altif_count = pif->altif_count;
             ListNext(&pif->altif_list, pthis, pnext);
+            pthis = pnext;
         }
 
     }
@@ -1293,8 +1312,7 @@ dev_mgr_build_usb_config(PUSB_DEV pdev, PBYTE pbuf, ULONG config_val, LONG confi
         }
         else
         {
-            i--;
-            pif = &pcfg->interf[i];
+            pif = &pcfg->interf[i-1];
             dev_mgr_build_usb_if(pcfg, pif, pif_desc, TRUE);
         }
     }

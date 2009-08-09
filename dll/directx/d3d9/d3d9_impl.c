@@ -11,15 +11,16 @@
 #include <debug.h>
 #include "d3d9_helpers.h"
 #include "adapter.h"
+#include "device.h"
 #include "format.h"
 
 #define LOCK_D3D9()     EnterCriticalSection(&This->d3d9_cs);
 #define UNLOCK_D3D9()   LeaveCriticalSection(&This->d3d9_cs);
 
 /* Convert a IDirect3D9 pointer safely to the internal implementation struct */
-static LPDIRECT3D9_INT impl_from_IDirect3D9(LPDIRECT3D9 iface)
+static LPDIRECT3D9_INT IDirect3D9ToImpl(LPDIRECT3D9 iface)
 {
-    if (IsBadWritePtr(iface, sizeof(LPDIRECT3D9_INT)))
+    if (NULL == iface)
         return NULL;
 
     return (LPDIRECT3D9_INT)((ULONG_PTR)iface - FIELD_OFFSET(DIRECT3D9_INT, lpVtbl));
@@ -28,7 +29,7 @@ static LPDIRECT3D9_INT impl_from_IDirect3D9(LPDIRECT3D9 iface)
 /* IDirect3D9: IUnknown implementation */
 static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppvObject)
 {
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDirect3D9))
     {
@@ -43,7 +44,7 @@ static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID ri
 
 static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface)
 {
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     ULONG ref = InterlockedIncrement(&This->lRefCnt);
 
     return ref;
@@ -51,7 +52,7 @@ static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface)
 
 static ULONG WINAPI IDirect3D9Impl_Release(LPDIRECT3D9 iface)
 {
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     ULONG ref = InterlockedDecrement(&This->lRefCnt);
 
     if (ref == 0)
@@ -90,7 +91,7 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterCount(LPDIRECT3D9 iface)
 {
     UINT NumDisplayAdapters;
 
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     NumDisplayAdapters = This->NumDisplayAdapters;
@@ -129,7 +130,7 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterCount(LPDIRECT3D9 iface)
 HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapter, DWORD Flags,
                                                           D3DADAPTER_IDENTIFIER9* pIdentifier)
 {
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -146,7 +147,7 @@ HRESULT WINAPI IDirect3D9Impl_GetAdapterIdentifier(LPDIRECT3D9 iface, UINT Adapt
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(pIdentifier, sizeof(D3DADAPTER_IDENTIFIER9)))
+    if (NULL == pIdentifier)
     {
         DPRINT1("Invalid pIdentifier parameter specified");
         UNLOCK_D3D9();
@@ -192,7 +193,7 @@ static UINT WINAPI IDirect3D9Impl_GetAdapterModeCount(LPDIRECT3D9 iface, UINT Ad
 {
     UINT AdapterModeCount;
 
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -257,7 +258,7 @@ static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Ad
                                                       UINT Mode, D3DDISPLAYMODE* pMode)
 {
     const D3DDISPLAYMODE* pMatchingDisplayFormat;
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -267,7 +268,7 @@ static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Ad
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(pMode, sizeof(D3DDISPLAYMODE)))
+    if (NULL == pMode)
     {
         DPRINT1("Invalid pMode parameter specified");
         UNLOCK_D3D9();
@@ -328,7 +329,7 @@ static HRESULT WINAPI IDirect3D9Impl_EnumAdapterModes(LPDIRECT3D9 iface, UINT Ad
 */
 static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UINT Adapter, D3DDISPLAYMODE* pMode)
 {
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -338,7 +339,7 @@ static HRESULT WINAPI IDirect3D9Impl_GetAdapterDisplayMode(LPDIRECT3D9 iface, UI
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(pMode, sizeof(D3DDISPLAYMODE)))
+    if (NULL == pMode)
     {
         DPRINT1("Invalid pMode parameter specified");
         UNLOCK_D3D9();
@@ -392,7 +393,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceType(LPDIRECT3D9 iface, UINT Ada
 {
     HRESULT hResult;
 
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -492,7 +493,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormat(LPDIRECT3D9 iface, UINT A
     BOOL bIsTextureRType = FALSE;
     HRESULT hResult;
 
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -686,7 +687,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDepthStencilMatch(LPDIRECT3D9 iface, U
 {
     HRESULT hResult;
 
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -755,7 +756,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormatConversion(LPDIRECT3D9 ifa
                                                                  D3DFORMAT SourceFormat, D3DFORMAT TargetFormat)
 {
     HRESULT hResult;
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -826,7 +827,7 @@ static HRESULT WINAPI IDirect3D9Impl_CheckDeviceFormatConversion(LPDIRECT3D9 ifa
 static HRESULT WINAPI IDirect3D9Impl_GetDeviceCaps(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps)
 {
     HRESULT hResult;
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -836,7 +837,7 @@ static HRESULT WINAPI IDirect3D9Impl_GetDeviceCaps(LPDIRECT3D9 iface, UINT Adapt
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(pCaps, sizeof(D3DCAPS9)))
+    if (NULL == pCaps)
     {
         DPRINT1("Invalid pCaps parameter specified");
         UNLOCK_D3D9();
@@ -872,7 +873,7 @@ static HMONITOR WINAPI IDirect3D9Impl_GetAdapterMonitor(LPDIRECT3D9 iface, UINT 
 {
     HMONITOR hAdapterMonitor = NULL;
 
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter < This->NumDisplayAdapters)
@@ -888,14 +889,55 @@ static HMONITOR WINAPI IDirect3D9Impl_GetAdapterMonitor(LPDIRECT3D9 iface, UINT 
     return hAdapterMonitor;
 }
 
+/*++
+* @name IDirect3D9::CreateDevice
+* @implemented
+*
+* The function IDirect3D9Impl_CreateDevice creates an IDirect3DDevice9 object
+* that represents the display adapter.
+*
+* @param LPDIRECT3D iface
+* Pointer to the IDirect3D9 object returned from Direct3DCreate9()
+*
+* @param UINT Adapter
+* Adapter index to get information about. D3DADAPTER_DEFAULT is the primary display.
+* The maximum value for this is the value returned by IDirect3D::GetAdapterCount() - 1.
+*
+* @param D3DDEVTYPE DeviceType
+* One of the D3DDEVTYPE enum members.
+*
+* @param HWND hFocusWindow
+* A window handle that is used as a reference when Direct3D should switch between
+* foreground mode and background mode.
+*
+* @param DWORD BehaviourFlags
+* Any valid combination of the D3DCREATE constants.
+*
+* @param D3DPRESENT_PARAMETERS* pPresentationParameters
+* Pointer to a D3DPRESENT_PARAMETERS structure describing the parameters for the device
+* to be created. If D3DCREATE_ADAPTERGROUP_DEVICE is specified in the BehaviourFlags parameter,
+* the pPresentationParameters is treated as an array.
+*
+* @param IDirect3DDevice9** ppReturnedDeviceInterface
+* Return object that represents the created device.
+*
+* @return HRESULT
+* If the method successfully creates a device and returns a valid ppReturnedDeviceInterface object,
+* the return value is D3D_OK.
+* If Adapter is out of range, DeviceType is invalid, hFocusWindow is not a valid, BehaviourFlags is invalid
+* pPresentationParameters is invalid or ppReturnedDeviceInterface is a bad pointer, the return value
+* will be D3DERR_INVALIDCALL.
+*
+*/
 static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
                                                   HWND hFocusWindow, DWORD BehaviourFlags,
                                                   D3DPRESENT_PARAMETERS* pPresentationParameters,
                                                   struct IDirect3DDevice9** ppReturnedDeviceInterface)
 {
     DWORD NumAdaptersToCreate;
+    HRESULT Ret;
 
-    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
+    LPDIRECT3D9_INT This = IDirect3D9ToImpl(iface);
     LOCK_D3D9();
 
     if (Adapter >= This->NumDisplayAdapters)
@@ -923,12 +965,47 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
 
     if (hFocusWindow != NULL && FALSE == IsWindow(hFocusWindow))
     {
-        DPRINT1("Invalid hFocusWindow parameter specified");
+        DPRINT1("Invalid hFocusWindow parameter specified, expected NULL or a valid HWND");
         UNLOCK_D3D9();
         return D3DERR_INVALIDCALL;
     }
 
-    if (IsBadWritePtr(ppReturnedDeviceInterface, sizeof(IDirect3DDevice9*)))
+    if (NULL == pPresentationParameters)
+    {
+        DPRINT1("Invalid pPresentationParameters parameter specified");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (pPresentationParameters->hDeviceWindow != NULL && FALSE == IsWindow(pPresentationParameters->hDeviceWindow))
+    {
+        DPRINT1("Invalid pPresentationParameters->hDeviceWindow parameter specified, expected NULL or a valid HWND");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (FALSE == pPresentationParameters->Windowed && hFocusWindow == NULL)
+    {
+        DPRINT1("When pPresentationParameters->Windowed is not set, hFocusWindow must be a valid HWND");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == hFocusWindow && NULL == pPresentationParameters->hDeviceWindow)
+    {
+        DPRINT1("Any of pPresentationParameters->Windowed and hFocusWindow must be set to a valid HWND");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (Adapter > 0 && NULL == pPresentationParameters->hDeviceWindow)
+    {
+        DPRINT1("Invalid pPresentationParameters->hDeviceWindow, must be set to a valid unique HWND when Adapter is greater than 0");
+        UNLOCK_D3D9();
+        return D3DERR_INVALIDCALL;
+    }
+
+    if (NULL == ppReturnedDeviceInterface)
     {
         DPRINT1("Invalid ppReturnedDeviceInterface parameter specified");
         UNLOCK_D3D9();
@@ -942,9 +1019,10 @@ static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapte
 
     *ppReturnedDeviceInterface = 0;
 
-    UNIMPLEMENTED
+    Ret = CreateD3D9HalDevice(This, Adapter, hFocusWindow, BehaviourFlags, pPresentationParameters, NumAdaptersToCreate, ppReturnedDeviceInterface);
 
-    return D3D_OK;
+    UNLOCK_D3D9();
+    return Ret;
 }
 
 IDirect3D9Vtbl Direct3D9_Vtbl =

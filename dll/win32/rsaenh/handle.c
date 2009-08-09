@@ -44,13 +44,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(handle);
  *  lpTable [I] Pointer to the HANDLETABLE structure, which is to be initalized.
  *
  * NOTES
- *  Note that alloc_handle_table calls init_handle_table on it's own, which 
- *  means that you only have to call init_handle_table, if you use a global
- *  variable of type HANDLETABLE for your handle table. However, in this
- *  case you have to call destroy_handle_table when you don't need the table
+ *  You have to call destroy_handle_table when you don't need the table
  *  any more.
  */
-void init_handle_table(HANDLETABLE *lpTable)
+void init_handle_table(struct handle_table *lpTable)
 {
     TRACE("(lpTable=%p)\n", lpTable);
         
@@ -68,11 +65,8 @@ void init_handle_table(HANDLETABLE *lpTable)
  * 
  * PARAMS
  *  lpTable [I] Pointer to the handle table, which is to be destroyed.
- *
- * NOTES
- *  Note that release_handle_table takes care of this.
  */
-void destroy_handle_table(HANDLETABLE *lpTable)
+void destroy_handle_table(struct handle_table *lpTable)
 {
     TRACE("(lpTable=%p)\n", lpTable);
         
@@ -96,7 +90,7 @@ void destroy_handle_table(HANDLETABLE *lpTable)
  *  non zero,  if handle is valid.
  *  zero,      if handle is not valid.
  */
-int is_valid_handle(HANDLETABLE *lpTable, HCRYPTKEY handle, DWORD dwType)
+int is_valid_handle(struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType)
 {
     unsigned int index = HANDLE2INDEX(handle);
     int ret = 0;
@@ -124,82 +118,6 @@ exit:
 }
 
 /******************************************************************************
- *  release_all_handles
- *
- * Releases all valid handles in the given handle table and shrinks the table
- * to zero size.
- *
- * PARAMS
- *  lpTable [I] The table of which all valid handles shall be released.
- */
-static void release_all_handles(HANDLETABLE *lpTable)
-{
-    unsigned int i;
-
-    TRACE("(lpTable=%p)\n", lpTable);
-
-    EnterCriticalSection(&lpTable->mutex);
-    for (i=0; i<lpTable->iEntries; i++)
-        if (lpTable->paEntries[i].pObject)
-            release_handle(lpTable, lpTable->paEntries[i].pObject->dwType, INDEX2HANDLE(i));
-    LeaveCriticalSection(&lpTable->mutex);
-}
-
-/******************************************************************************
- *  alloc_handle_table
- *
- * Allocates a new handle table
- * 
- * PARAMS
- *  lplpTable [O] Pointer to the variable, to which the pointer to the newly
- *                allocated handle table is written.
- * RETURNS
- *  non zero,  if successful
- *  zero,      if not successful (out of process heap memory)
- *
- * NOTES
- *  If all you need is a single handle table, you may as well declare a global 
- *  variable of type HANDLETABLE and call init_handle_table on your own. 
- */
-int alloc_handle_table(HANDLETABLE **lplpTable)
-{
-    TRACE("(lplpTable=%p)\n", lplpTable);
-        
-    *lplpTable = HeapAlloc(GetProcessHeap(), 0, sizeof(HANDLETABLE));
-    if (*lplpTable) 
-    {
-        init_handle_table(*lplpTable);
-        return 1;
-    }
-    else
-        return 0;
-}
-
-/******************************************************************************
- *  release_handle_table
- *
- * Releases a handle table and frees the resources it used.
- *
- * PARAMS
- *  lpTable [I] Pointer to the handle table, which is to be released.
- *
- * RETURNS
- *  non zero,  if successful
- *  zero,      if not successful
- *
- * NOTES
- *   All valid handles still in the table are released also.
- */
-int release_handle_table(HANDLETABLE *lpTable) 
-{
-    TRACE("(lpTable=%p)\n", lpTable);
-
-    release_all_handles(lpTable);
-    destroy_handle_table(lpTable);
-    return HeapFree(GetProcessHeap(), 0, lpTable);
-}
-
-/******************************************************************************
  *  grow_handle_table [Internal]
  *
  * Grows the number of entries in the given table by TABLE_SIZE_INCREMENT
@@ -214,20 +132,20 @@ int release_handle_table(HANDLETABLE *lpTable)
  * NOTES
  *  This is a support function for alloc_handle. Do not call!
  */
-static int grow_handle_table(HANDLETABLE *lpTable) 
+static int grow_handle_table(struct handle_table *lpTable) 
 {
-    HANDLETABLEENTRY *newEntries;
+    struct handle_table_entry *newEntries;
     unsigned int i, newIEntries;
 
     newIEntries = lpTable->iEntries + TABLE_SIZE_INCREMENT;
 
-    newEntries = HeapAlloc(GetProcessHeap(), 0, sizeof(HANDLETABLEENTRY)*newIEntries);
+    newEntries = HeapAlloc(GetProcessHeap(), 0, sizeof(struct handle_table_entry)*newIEntries);
     if (!newEntries) 
         return 0;
 
     if (lpTable->paEntries)
     {
-        memcpy(newEntries, lpTable->paEntries, sizeof(HANDLETABLEENTRY)*lpTable->iEntries);
+        memcpy(newEntries, lpTable->paEntries, sizeof(struct handle_table_entry)*lpTable->iEntries);
         HeapFree(GetProcessHeap(), 0, lpTable->paEntries);
     }
 
@@ -259,7 +177,7 @@ static int grow_handle_table(HANDLETABLE *lpTable)
  *  non zero,  if successful
  *  zero,      if not successful (no free handle)
  */
-static int alloc_handle(HANDLETABLE *lpTable, OBJECTHDR *lpObject, HCRYPTKEY *lpHandle)
+static int alloc_handle(struct handle_table *lpTable, OBJECTHDR *lpObject, HCRYPTKEY *lpHandle)
 {
     int ret = 0;
 
@@ -306,7 +224,7 @@ exit:
  *  non zero,  if successful
  *  zero,      if not successful (invalid handle)
  */
-int release_handle(HANDLETABLE *lpTable, HCRYPTKEY handle, DWORD dwType)
+int release_handle(struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType)
 {
     unsigned int index = HANDLE2INDEX(handle);
     OBJECTHDR *pObject;
@@ -351,7 +269,7 @@ exit:
  *  non zero,  if successful
  *  zero,      if not successful (invalid handle)
  */
-int lookup_handle(HANDLETABLE *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject)
+int lookup_handle(struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, OBJECTHDR **lplpObject)
 {
     int ret = 0;
     
@@ -386,7 +304,7 @@ exit:
  *  non zero,  if successful
  *  zero,      if not successful (invalid handle or out of memory)
  */
-int copy_handle(HANDLETABLE *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy)
+int copy_handle(struct handle_table *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY *copy)
 {
     OBJECTHDR *pObject;
     int ret;
@@ -429,7 +347,7 @@ int copy_handle(HANDLETABLE *lpTable, HCRYPTKEY handle, DWORD dwType, HCRYPTKEY 
  *  INVALID_HANDLE_VALUE,        if something went wrong.
  *  a handle to the new object,  if successful. 
  */
-HCRYPTKEY new_object(HANDLETABLE *lpTable, size_t cbSize, DWORD dwType, DESTRUCTOR destructor,
+HCRYPTKEY new_object(struct handle_table *lpTable, size_t cbSize, DWORD dwType, DESTRUCTOR destructor,
                         OBJECTHDR **ppObject)
 {
     OBJECTHDR *pObject;

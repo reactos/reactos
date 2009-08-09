@@ -18,13 +18,28 @@
 
 /* GLOBALS *******************************************************************/
 
-HANDLE STDCALL
+HANDLE WINAPI
 DuplicateConsoleHandle (HANDLE	hConsole,
 			DWORD   dwDesiredAccess,
 			BOOL	bInheritHandle,
 			DWORD	dwOptions);
 
 /* FUNCTIONS *****************************************************************/
+
+HANDLE FASTCALL
+TranslateStdHandle(HANDLE hHandle)
+{
+  PRTL_USER_PROCESS_PARAMETERS Ppb = NtCurrentPeb()->ProcessParameters;
+
+  switch ((ULONG)hHandle)
+    {
+      case STD_INPUT_HANDLE:  return Ppb->StandardInput;
+      case STD_OUTPUT_HANDLE: return Ppb->StandardOutput;
+      case STD_ERROR_HANDLE:  return Ppb->StandardError;
+    }
+
+  return hHandle;
+}
 
 /*
  * @implemented
@@ -33,25 +48,12 @@ BOOL WINAPI
 GetHandleInformation (HANDLE hObject,
 		      LPDWORD lpdwFlags)
 {
-  PRTL_USER_PROCESS_PARAMETERS Ppb;
   OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
   ULONG BytesWritten;
   NTSTATUS Status;
   DWORD Flags;
 
-  Ppb = NtCurrentPeb()->ProcessParameters;
-  switch ((ULONG)hObject)
-  {
-    case STD_INPUT_HANDLE:
-      hObject = Ppb->StandardInput;
-      break;
-    case STD_OUTPUT_HANDLE:
-      hObject = Ppb->StandardOutput;
-      break;
-    case STD_ERROR_HANDLE:
-      hObject = Ppb->StandardError;
-      break;
-  }
+  hObject = TranslateStdHandle(hObject);
 
   Status = NtQueryObject (hObject,
 			  ObjectHandleFlagInformation,
@@ -81,29 +83,16 @@ GetHandleInformation (HANDLE hObject,
 /*
  * @implemented
  */
-BOOL STDCALL
+BOOL WINAPI
 SetHandleInformation (HANDLE hObject,
 		      DWORD dwMask,
 		      DWORD dwFlags)
 {
-  PRTL_USER_PROCESS_PARAMETERS Ppb;
   OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
   ULONG BytesWritten;
   NTSTATUS Status;
 
-  Ppb = NtCurrentPeb()->ProcessParameters;
-  switch ((ULONG)hObject)
-  {
-    case STD_INPUT_HANDLE:
-      hObject = Ppb->StandardInput;
-      break;
-    case STD_OUTPUT_HANDLE:
-      hObject = Ppb->StandardOutput;
-      break;
-    case STD_ERROR_HANDLE:
-      hObject = Ppb->StandardError;
-      break;
-  }
+  hObject = TranslateStdHandle(hObject);
 
   Status = NtQueryObject (hObject,
 			  ObjectHandleFlagInformation,
@@ -140,7 +129,7 @@ SetHandleInformation (HANDLE hObject,
 /*
  * @implemented
  */
-BOOL STDCALL CloseHandle(HANDLE  hObject)
+BOOL WINAPI CloseHandle(HANDLE  hObject)
 /*
  * FUNCTION: Closes an open object handle
  * PARAMETERS:
@@ -149,22 +138,9 @@ BOOL STDCALL CloseHandle(HANDLE  hObject)
  *          If the function fails, the return value is zero
  */
 {
-   PRTL_USER_PROCESS_PARAMETERS Ppb;
    NTSTATUS Status;
 
-   Ppb = NtCurrentPeb()->ProcessParameters;
-   switch ((ULONG)hObject)
-   {
-     case STD_INPUT_HANDLE:
-       hObject = Ppb->StandardInput;
-       break;
-     case STD_OUTPUT_HANDLE:
-       hObject = Ppb->StandardOutput;
-       break;
-     case STD_ERROR_HANDLE:
-       hObject = Ppb->StandardError;
-       break;
-   }
+   hObject = TranslateStdHandle(hObject);
 
    if (IsConsoleHandle(hObject))
      {
@@ -185,7 +161,7 @@ BOOL STDCALL CloseHandle(HANDLE  hObject)
 /*
  * @implemented
  */
-BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
+BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle,
 				HANDLE hSourceHandle,
 				HANDLE hTargetProcessHandle,
 				LPHANDLE lpTargetHandle,
@@ -193,23 +169,10 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 				BOOL bInheritHandle,
 				DWORD dwOptions)
 {
-   PRTL_USER_PROCESS_PARAMETERS Ppb;
    DWORD SourceProcessId, TargetProcessId;
    NTSTATUS Status;
 
-   Ppb = NtCurrentPeb()->ProcessParameters;
-   switch ((ULONG)hSourceHandle)
-   {
-     case STD_INPUT_HANDLE:
-       hSourceHandle = Ppb->StandardInput;
-       break;
-     case STD_OUTPUT_HANDLE:
-       hSourceHandle = Ppb->StandardOutput;
-       break;
-     case STD_ERROR_HANDLE:
-       hSourceHandle = Ppb->StandardError;
-       break;
-   }
+   hSourceHandle = TranslateStdHandle(hSourceHandle);
 
    if (IsConsoleHandle(hSourceHandle))
    {
@@ -247,7 +210,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 /*
  * @implemented
  */
-UINT STDCALL SetHandleCount(UINT nCount)
+UINT WINAPI SetHandleCount(UINT nCount)
 {
    return(nCount);
 }

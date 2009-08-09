@@ -87,7 +87,7 @@ HighContrastDlgProc(HWND hwndDlg,
             SendDlgItemMessage(hwndDlg,
                                IDC_CONTRAST_COMBO,
                                CB_SELECTSTRING,
-                               -1,
+                               (WPARAM)-1,
                                (LPARAM)pGlobalData->highContrast.lpszDefaultScheme);
             break;
 

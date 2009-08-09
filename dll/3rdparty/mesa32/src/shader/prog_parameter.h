@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.3
  *
- * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -31,16 +31,25 @@
 #ifndef PROG_PARAMETER_H
 #define PROG_PARAMETER_H
 
-#include "mtypes.h"
+#include "main/mtypes.h"
 #include "prog_statevars.h"
 
 
 /**
+ * Program parameter flags
+ */
+/*@{*/
+#define PROG_PARAM_BIT_CENTROID   0x1  /**< for varying vars (GLSL 1.20) */
+#define PROG_PARAM_BIT_INVARIANT  0x2  /**< for varying vars (GLSL 1.20) */
+#define PROG_PARAM_BIT_FLAT       0x4  /**< for varying vars (GLSL 1.30) */
+#define PROG_PARAM_BIT_LINEAR     0x8  /**< for varying vars (GLSL 1.30) */
+/*@}*/
+
+
+
+/**
  * Program parameter.
- * Used for NV_fragment_program for "DEFINE"d constants and "DECLARE"d
- * parameters.
- * Also used by ARB_vertex/fragment_programs for state variables, etc.
- * Used by shaders for uniforms, constants, varying vars, etc.
+ * Used by shaders/programs for uniforms, constants, varying vars, etc.
  */
 struct gl_program_parameter
 {
@@ -48,6 +57,9 @@ struct gl_program_parameter
    enum register_file Type; /**< PROGRAM_NAMED_PARAM, CONSTANT or STATE_VAR */
    GLenum DataType;         /**< GL_FLOAT, GL_FLOAT_VEC2, etc */
    GLuint Size;             /**< Number of components (1..4) */
+   GLboolean Used;          /**< Helper flag for GLSL uniform tracking */
+   GLboolean Initialized;   /**< Has the ParameterValue[] been set? */
+   GLbitfield Flags;        /**< Bitmask of PROG_PARAM_*_BIT */
    /**
     * A sequence of STATE_* tokens and integers to identify GL state.
     */
@@ -78,11 +90,22 @@ _mesa_free_parameter_list(struct gl_program_parameter_list *paramList);
 extern struct gl_program_parameter_list *
 _mesa_clone_parameter_list(const struct gl_program_parameter_list *list);
 
+extern struct gl_program_parameter_list *
+_mesa_combine_parameter_lists(const struct gl_program_parameter_list *a,
+                              const struct gl_program_parameter_list *b);
+
+static INLINE GLuint
+_mesa_num_parameters(const struct gl_program_parameter_list *list)
+{
+   return list ? list->NumParameters : 0;
+}
+
 extern GLint
 _mesa_add_parameter(struct gl_program_parameter_list *paramList,
                     enum register_file type, const char *name,
                     GLuint size, GLenum datatype, const GLfloat *values,
-                    const gl_state_index state[STATE_LENGTH]);
+                    const gl_state_index state[STATE_LENGTH],
+                    GLbitfield flags);
 
 extern GLint
 _mesa_add_named_parameter(struct gl_program_parameter_list *paramList,
@@ -100,7 +123,12 @@ _mesa_add_unnamed_constant(struct gl_program_parameter_list *paramList,
 
 extern GLint
 _mesa_add_uniform(struct gl_program_parameter_list *paramList,
-                  const char *name, GLuint size, GLenum datatype);
+                  const char *name, GLuint size, GLenum datatype,
+                  const GLfloat *values);
+
+extern void
+_mesa_use_uniform(struct gl_program_parameter_list *paramList,
+                  const char *name);
 
 extern GLint
 _mesa_add_sampler(struct gl_program_parameter_list *paramList,
@@ -108,11 +136,11 @@ _mesa_add_sampler(struct gl_program_parameter_list *paramList,
 
 extern GLint
 _mesa_add_varying(struct gl_program_parameter_list *paramList,
-                  const char *name, GLuint size);
+                  const char *name, GLuint size, GLbitfield flags);
 
 extern GLint
 _mesa_add_attribute(struct gl_program_parameter_list *paramList,
-                    const char *name, GLint size, GLint attrib);
+                    const char *name, GLint size, GLenum datatype, GLint attrib);
 
 extern GLint
 _mesa_add_state_reference(struct gl_program_parameter_list *paramList,

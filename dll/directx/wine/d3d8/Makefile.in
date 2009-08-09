@@ -3,9 +3,8 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = d3d8.dll
-IMPORTLIB = libd3d8.$(IMPLIBEXT)
-IMPORTS   = wined3d user32 gdi32 advapi32 kernel32
-EXTRALIBS = -ldxguid -luuid
+IMPORTLIB = d3d8
+IMPORTS   = dxguid uuid wined3d kernel32
 
 C_SRCS = \
 	basetexture.c \

@@ -16,7 +16,7 @@
 
 #include <precomp.h>
 
-VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
+VOID WINAPI GetSystemTimeAsFileTime(LPFILETIME lpSystemTimeAsFileTime);
 
 /*
  * @implemented

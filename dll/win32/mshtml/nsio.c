@@ -47,6 +47,7 @@ static const IID NS_IOSERVICE_CID =
     {0x9ac9e770, 0x18bc, 0x11d3, {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40}};
 
 static nsIIOService *nsio = NULL;
+static nsINetUtil *net_util;
 
 static const WCHAR about_blankW[] = {'a','b','o','u','t',':','b','l','a','n','k',0};
 
@@ -66,6 +67,23 @@ typedef struct {
 #define NSWINEURI(x)     ((nsIWineURI*)        &(x)->lpWineURIVtbl)
 
 static nsresult create_uri(nsIURI*,NSContainer*,nsIWineURI**);
+
+HRESULT nsuri_to_url(LPCWSTR nsuri, BSTR *ret)
+{
+    const WCHAR *ptr = nsuri;
+
+    static const WCHAR wine_prefixW[] = {'w','i','n','e',':'};
+
+    if(!strncmpW(nsuri, wine_prefixW, sizeof(wine_prefixW)/sizeof(WCHAR)))
+        ptr += sizeof(wine_prefixW)/sizeof(WCHAR);
+
+    *ret = SysAllocString(ptr);
+    if(!*ret)
+        return E_OUTOFMEMORY;
+
+    TRACE("%s -> %s\n", debugstr_w(nsuri), debugstr_w(*ret));
+    return S_OK;
+}
 
 static BOOL exec_shldocvw_67(HTMLDocument *doc, LPCWSTR url)
 {
@@ -201,6 +219,8 @@ static nsrefcnt NSAPI nsChannel_Release(nsIHttpChannel *iface)
             nsIChannel_Release(This->channel);
         if(This->http_channel)
             nsIHttpChannel_Release(This->http_channel);
+        if(This->owner)
+            nsISupports_Release(This->owner);
         if(This->post_data_stream)
             nsIInputStream_Release(This->post_data_stream);
         if(This->load_group)
@@ -399,8 +419,11 @@ static nsresult NSAPI nsChannel_GetOwner(nsIHttpChannel *iface, nsISupports **aO
     if(This->channel)
         return nsIChannel_GetOwner(This->channel, aOwner);
 
-    FIXME("default action not implemented\n");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if(This->owner)
+        nsISupports_AddRef(This->owner);
+    *aOwner = This->owner;
+
+    return NS_OK;
 }
 
 static nsresult NSAPI nsChannel_SetOwner(nsIHttpChannel *iface, nsISupports *aOwner)
@@ -412,8 +435,13 @@ static nsresult NSAPI nsChannel_SetOwner(nsIHttpChannel *iface, nsISupports *aOw
     if(This->channel)
         return nsIChannel_SetOwner(This->channel, aOwner);
 
-    FIXME("default action not implemented\n");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if(aOwner)
+        nsISupports_AddRef(aOwner);
+    if(This->owner)
+        nsISupports_Release(This->owner);
+    This->owner = aOwner;
+
+    return NS_OK;
 }
 
 static nsresult NSAPI nsChannel_GetNotificationCallbacks(nsIHttpChannel *iface,
@@ -739,25 +767,6 @@ static nsresult async_open(nsChannel *This, NSContainer *container, nsIStreamLis
     HRESULT hres;
 
     if(This->channel) {
-        if(This->post_data_stream) {
-            nsIUploadChannel *upload_channel;
-
-            nsres = nsIChannel_QueryInterface(This->channel, &IID_nsIUploadChannel,
-                                          (void**)&upload_channel);
-            if(NS_SUCCEEDED(nsres)) {
-                nsACString empty_string;
-                nsACString_Init(&empty_string, "");
-
-                nsres = nsIUploadChannel_SetUploadStream(upload_channel, This->post_data_stream,
-                                                         &empty_string, -1);
-                nsIUploadChannel_Release(upload_channel);
-                if(NS_FAILED(nsres))
-                    WARN("SetUploadStream failed: %08x\n", nsres);
-
-                nsACString_Finish(&empty_string);
-            }
-        }
-
         nsres = nsIChannel_AsyncOpen(This->channel, listener, context);
 
         if(mon)
@@ -1145,6 +1154,7 @@ static nsresult NSAPI nsUploadChannel_SetUploadStream(nsIUploadChannel *iface,
 {
     nsChannel *This = NSUPCHANNEL_THIS(iface);
     const char *content_type;
+    nsresult nsres;
 
     TRACE("(%p)->(%p %p %d)\n", This, aStream, aContentType, aContentLength);
 
@@ -1160,9 +1170,25 @@ static nsresult NSAPI nsUploadChannel_SetUploadStream(nsIUploadChannel *iface,
     if(aContentLength != -1)
         FIXME("Unsupported acontentLength = %d\n", aContentLength);
 
+    if(This->post_data_stream)
+        nsIInputStream_Release(This->post_data_stream);
+    This->post_data_stream = aStream;
     if(aStream)
         nsIInputStream_AddRef(aStream);
-    This->post_data_stream = aStream;
+
+    if(This->post_data_stream) {
+        nsIUploadChannel *upload_channel;
+
+        nsres = nsIChannel_QueryInterface(This->channel, &IID_nsIUploadChannel,
+                (void**)&upload_channel);
+        if(NS_SUCCEEDED(nsres)) {
+            nsres = nsIUploadChannel_SetUploadStream(upload_channel, aStream, aContentType, aContentLength);
+            nsIUploadChannel_Release(upload_channel);
+            if(NS_FAILED(nsres))
+                WARN("SetUploadStream failed: %08x\n", nsres);
+
+        }
+    }
 
     return NS_OK;
 }
@@ -1566,7 +1592,7 @@ static nsresult NSAPI nsURI_SchemeIs(nsIWineURI *iface, const char *scheme, PRBo
         WCHAR buf[INTERNET_MAX_SCHEME_LENGTH];
         int len = MultiByteToWideChar(CP_ACP, 0, scheme, -1, buf, sizeof(buf)/sizeof(WCHAR))-1;
 
-        *_retval = strlenW(This->wine_url) > len
+        *_retval = lstrlenW(This->wine_url) > len
             && This->wine_url[len] == ':'
             && !memcmp(buf, This->wine_url, len*sizeof(WCHAR));
         return NS_OK;
@@ -2245,28 +2271,81 @@ static nsrefcnt NSAPI nsNetUtil_Release(nsINetUtil *iface)
 static nsresult NSAPI nsNetUtil_ParseContentType(nsINetUtil *iface, const nsACString *aTypeHeader,
         nsACString *aCharset, PRBool *aHadCharset, nsACString *aContentType)
 {
-    nsINetUtil *net_util;
-    nsresult nsres;
-
     TRACE("(%p %p %p %p)\n", aTypeHeader, aCharset, aHadCharset, aContentType);
 
-    nsres = nsIIOService_QueryInterface(nsio, &IID_nsINetUtil, (void**)&net_util);
-    if(NS_FAILED(nsres)) {
-        WARN("Could not get nsINetUtil interface: %08x\n", nsres);
-        return nsres;
+    return nsINetUtil_ParseContentType(net_util, aTypeHeader, aCharset, aHadCharset, aContentType);
+}
+
+static nsresult NSAPI nsNetUtil_ProtocolHasFlags(nsINetUtil *iface, nsIURI *aURI, PRUint32 aFlags, PRBool *_retval)
+{
+    TRACE("()\n");
+
+    return nsINetUtil_ProtocolHasFlags(net_util, aURI, aFlags, _retval);
+}
+
+static nsresult NSAPI nsNetUtil_URIChainHasFlags(nsINetUtil *iface, nsIURI *aURI, PRUint32 aFlags, PRBool *_retval)
+{
+    TRACE("(%p %08x %p)\n", aURI, aFlags, _retval);
+
+    if(aFlags == (1<<11)) {
+        *_retval = FALSE;
+        return NS_OK;
     }
 
-    nsres = nsINetUtil_ParseContentType(net_util, aTypeHeader, aCharset, aHadCharset, aContentType);
+    return nsINetUtil_URIChainHasFlags(net_util, aURI, aFlags, _retval);
+}
 
-    nsINetUtil_Release(net_util);
-    return nsres;
+static nsresult NSAPI nsNetUtil_ToImmutableURI(nsINetUtil *iface, nsIURI *aURI, nsIURI **_retval)
+{
+    TRACE("(%p %p)\n", aURI, _retval);
+
+    return nsINetUtil_ToImmutableURI(net_util, aURI, _retval);
+}
+
+static nsresult NSAPI nsNetUtil_EscapeString(nsINetUtil *iface, const nsACString *aString,
+                                             PRUint32 aEscapeType, nsACString *_retval)
+{
+    TRACE("(%p %x %p)\n", aString, aEscapeType, _retval);
+
+    return nsINetUtil_EscapeString(net_util, aString, aEscapeType, _retval);
+}
+
+static nsresult NSAPI nsNetUtil_EscapeURL(nsINetUtil *iface, const nsACString *aStr, PRUint32 aFlags,
+                                          nsACString *_retval)
+{
+    TRACE("(%p %08x %p)\n", aStr, aFlags, _retval);
+
+    return nsINetUtil_EscapeURL(net_util, aStr, aFlags, _retval);
+}
+
+static nsresult NSAPI nsNetUtil_UnescapeString(nsINetUtil *iface, const nsACString *aStr,
+                                               PRUint32 aFlags, nsACString *_retval)
+{
+    TRACE("(%p %08x %p)\n", aStr, aFlags, _retval);
+
+    return nsINetUtil_UnescapeString(net_util, aStr, aFlags, _retval);
+}
+
+static nsresult NSAPI nsNetUtil_ExtractCharsetFromContentType(nsINetUtil *iface, const nsACString *aTypeHeader,
+        nsACString *aCharset, PRInt32 *aCharsetStart, PRInt32 *aCharsetEnd, PRBool *_retval)
+{
+    TRACE("(%p %p %p %p %p)\n", aTypeHeader, aCharset, aCharsetStart, aCharsetEnd, _retval);
+
+    return nsINetUtil_ExtractCharsetFromContentType(net_util, aTypeHeader, aCharset, aCharsetStart, aCharsetEnd, _retval);
 }
 
 static const nsINetUtilVtbl nsNetUtilVtbl = {
     nsNetUtil_QueryInterface,
     nsNetUtil_AddRef,
     nsNetUtil_Release,
-    nsNetUtil_ParseContentType
+    nsNetUtil_ParseContentType,
+    nsNetUtil_ProtocolHasFlags,
+    nsNetUtil_URIChainHasFlags,
+    nsNetUtil_ToImmutableURI,
+    nsNetUtil_EscapeString,
+    nsNetUtil_EscapeURL,
+    nsNetUtil_UnescapeString,
+    nsNetUtil_ExtractCharsetFromContentType
 };
 
 static nsINetUtil nsNetUtil = { &nsNetUtilVtbl };
@@ -2365,6 +2444,13 @@ void init_nsio(nsIComponentManager *component_manager, nsIComponentRegistrar *re
         return;
     }
 
+    nsres = nsIIOService_QueryInterface(nsio, &IID_nsINetUtil, (void**)&net_util);
+    if(NS_FAILED(nsres)) {
+        WARN("Could not get nsINetUtil interface: %08x\n", nsres);
+        nsIIOService_Release(nsio);
+        return;
+    }
+
     nsres = nsIComponentRegistrar_UnregisterFactory(registrar, &NS_IOSERVICE_CID, old_factory);
     nsIFactory_Release(old_factory);
     if(NS_FAILED(nsres))
@@ -2374,4 +2460,17 @@ void init_nsio(nsIComponentManager *component_manager, nsIComponentRegistrar *re
             NS_IOSERVICE_CLASSNAME, NS_IOSERVICE_CONTRACTID, &nsIOServiceFactory);
     if(NS_FAILED(nsres))
         ERR("RegisterFactory failed: %08x\n", nsres);
+}
+
+void release_nsio(void)
+{
+    if(net_util) {
+        nsINetUtil_Release(net_util);
+        net_util = NULL;
+    }
+
+    if(nsio) {
+        nsIIOService_Release(nsio);
+        nsio = NULL;
+    }
 }

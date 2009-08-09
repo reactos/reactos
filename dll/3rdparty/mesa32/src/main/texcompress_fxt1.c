@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.1
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -298,22 +298,17 @@ const struct gl_texture_format _mesa_texformat_rgba_fxt1 = {
 /*
  * Define a 64-bit unsigned integer type and macros
  */
-#if defined(__GNUC__) && !defined(__cplusplus)
+#ifdef GL_EXT_timer_query  /* this extensions defines the GLuint64EXT type */
 
 #define FX64_NATIVE 1
 
-#ifdef __MINGW32__
-typedef unsigned long Fx64;
-#else
-typedef unsigned long long Fx64;
-#endif
-
+typedef GLuint64EXT Fx64;
 
 #define FX64_MOV32(a, b) a = b
 #define FX64_OR32(a, b)  a |= b
 #define FX64_SHL(a, c)   a <<= c
 
-#else  /* !__GNUC__ */
+#else  /* !GL_EXT_timer_query */
 
 #define FX64_NATIVE 0
 
@@ -335,7 +330,7 @@ typedef struct {
        }                                               \
    } while (0)
 
-#endif /* !__GNUC__ */
+#endif  /* !GL_EXT_timer_query */
 
 
 #define F(i) (GLfloat)1 /* can be used to obtain an oblong metric: 0.30 / 0.59 / 0.11 */

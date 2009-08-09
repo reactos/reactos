@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.1
+ * Version:  7.2
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -32,6 +32,7 @@
 
 #include "glheader.h"
 #include "imports.h"
+#include "buffers.h"
 #include "context.h"
 #include "depthstencil.h"
 #include "mtypes.h"
@@ -66,7 +67,9 @@ compute_depth_max(struct gl_framebuffer *fb)
       fb->_DepthMax = 0xffffffff;
    }
    fb->_DepthMaxF = (GLfloat) fb->_DepthMax;
-   fb->_MRD = 1.0;  /* Minimum resolvable depth value, for polygon offset */
+
+   /* Minimum resolvable depth value, for polygon offset */
+   fb->_MRD = (GLfloat)1.0 / fb->_DepthMaxF;
 }
 
 
@@ -106,8 +109,9 @@ _mesa_new_framebuffer(GLcontext *ctx, GLuint name)
    if (fb) {
       fb->Name = name;
       fb->RefCount = 1;
+      fb->_NumColorDrawBuffers = 1;
       fb->ColorDrawBuffer[0] = GL_COLOR_ATTACHMENT0_EXT;
-      fb->_ColorDrawBufferMask[0] = BUFFER_BIT_COLOR0;
+      fb->_ColorDrawBufferIndexes[0] = BUFFER_COLOR0;
       fb->ColorReadBuffer = GL_COLOR_ATTACHMENT0_EXT;
       fb->_ColorReadBufferIndex = BUFFER_COLOR0;
       fb->Delete = _mesa_destroy_framebuffer;
@@ -136,16 +140,18 @@ _mesa_initialize_framebuffer(struct gl_framebuffer *fb, const GLvisual *visual)
    /* save the visual */
    fb->Visual = *visual;
 
-   /* Init glRead/DrawBuffer state */
+   /* Init read/draw renderbuffer state */
    if (visual->doubleBufferMode) {
+      fb->_NumColorDrawBuffers = 1;
       fb->ColorDrawBuffer[0] = GL_BACK;
-      fb->_ColorDrawBufferMask[0] = BUFFER_BIT_BACK_LEFT;
+      fb->_ColorDrawBufferIndexes[0] = BUFFER_BACK_LEFT;
       fb->ColorReadBuffer = GL_BACK;
       fb->_ColorReadBufferIndex = BUFFER_BACK_LEFT;
    }
    else {
+      fb->_NumColorDrawBuffers = 1;
       fb->ColorDrawBuffer[0] = GL_FRONT;
-      fb->_ColorDrawBufferMask[0] = BUFFER_BIT_FRONT_LEFT;
+      fb->_ColorDrawBufferIndexes[0] = BUFFER_FRONT_LEFT;
       fb->ColorReadBuffer = GL_FRONT;
       fb->_ColorReadBufferIndex = BUFFER_FRONT_LEFT;
    }
@@ -331,6 +337,84 @@ _mesa_resize_framebuffer(GLcontext *ctx, struct gl_framebuffer *fb,
 }
 
 
+
+/**
+ * XXX THIS IS OBSOLETE - drivers should take care of detecting window
+ * size changes and act accordingly, likely calling _mesa_resize_framebuffer().
+ *
+ * GL_MESA_resize_buffers extension.
+ *
+ * When this function is called, we'll ask the window system how large
+ * the current window is.  If it's a new size, we'll call the driver's
+ * ResizeBuffers function.  The driver will then resize its color buffers
+ * as needed, and maybe call the swrast's routine for reallocating
+ * swrast-managed depth/stencil/accum/etc buffers.
+ * \note This function should only be called through the GL API, not
+ * from device drivers (as was done in the past).
+ */
+void
+_mesa_resizebuffers( GLcontext *ctx )
+{
+   ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH( ctx );
+
+   if (MESA_VERBOSE & VERBOSE_API)
+      _mesa_debug(ctx, "glResizeBuffersMESA\n");
+
+   if (!ctx->Driver.GetBufferSize) {
+      return;
+   }
+
+   if (ctx->WinSysDrawBuffer) {
+      GLuint newWidth, newHeight;
+      GLframebuffer *buffer = ctx->WinSysDrawBuffer;
+
+      assert(buffer->Name == 0);
+
+      /* ask device driver for size of output buffer */
+      ctx->Driver.GetBufferSize( buffer, &newWidth, &newHeight );
+
+      /* see if size of device driver's color buffer (window) has changed */
+      if (buffer->Width != newWidth || buffer->Height != newHeight) {
+         if (ctx->Driver.ResizeBuffers)
+            ctx->Driver.ResizeBuffers(ctx, buffer, newWidth, newHeight );
+      }
+   }
+
+   if (ctx->WinSysReadBuffer
+       && ctx->WinSysReadBuffer != ctx->WinSysDrawBuffer) {
+      GLuint newWidth, newHeight;
+      GLframebuffer *buffer = ctx->WinSysReadBuffer;
+
+      assert(buffer->Name == 0);
+
+      /* ask device driver for size of read buffer */
+      ctx->Driver.GetBufferSize( buffer, &newWidth, &newHeight );
+
+      /* see if size of device driver's color buffer (window) has changed */
+      if (buffer->Width != newWidth || buffer->Height != newHeight) {
+         if (ctx->Driver.ResizeBuffers)
+            ctx->Driver.ResizeBuffers(ctx, buffer, newWidth, newHeight );
+      }
+   }
+
+   ctx->NewState |= _NEW_BUFFERS;  /* to update scissor / window bounds */
+}
+
+
+/*
+ * XXX THIS IS OBSOLETE
+ */
+void GLAPIENTRY
+_mesa_ResizeBuffersMESA( void )
+{
+   GET_CURRENT_CONTEXT(ctx);
+
+   if (ctx->Extensions.MESA_resize_buffers)
+      _mesa_resizebuffers( ctx );
+}
+
+
+
 /**
  * Examine all the framebuffer's renderbuffers to update the Width/Height
  * fields of the framebuffer.  If we have renderbuffers with different
@@ -485,13 +569,13 @@ _mesa_update_framebuffer_visual(struct gl_framebuffer *fb)
    if (fb->Attachment[BUFFER_ACCUM].Renderbuffer) {
       fb->Visual.haveAccumBuffer = GL_TRUE;
       fb->Visual.accumRedBits
-         = fb->Attachment[BUFFER_DEPTH].Renderbuffer->RedBits;
+         = fb->Attachment[BUFFER_ACCUM].Renderbuffer->RedBits;
       fb->Visual.accumGreenBits
-         = fb->Attachment[BUFFER_DEPTH].Renderbuffer->GreenBits;
+         = fb->Attachment[BUFFER_ACCUM].Renderbuffer->GreenBits;
       fb->Visual.accumBlueBits
-         = fb->Attachment[BUFFER_DEPTH].Renderbuffer->BlueBits;
+         = fb->Attachment[BUFFER_ACCUM].Renderbuffer->BlueBits;
       fb->Visual.accumAlphaBits
-         = fb->Attachment[BUFFER_DEPTH].Renderbuffer->AlphaBits;
+         = fb->Attachment[BUFFER_ACCUM].Renderbuffer->AlphaBits;
    }
 
    compute_depth_max(fb);
@@ -580,8 +664,53 @@ _mesa_update_stencil_buffer(GLcontext *ctx,
 }
 
 
+/*
+ * Example DrawBuffers scenarios:
+ *
+ * 1. glDrawBuffer(GL_FRONT_AND_BACK), fixed-func or shader writes to
+ * "gl_FragColor" or program writes to the "result.color" register:
+ *
+ *   fragment color output   renderbuffer
+ *   ---------------------   ---------------
+ *   color[0]                Front, Back
+ *
+ *
+ * 2. glDrawBuffers(3, [GL_FRONT, GL_AUX0, GL_AUX1]), shader writes to
+ * gl_FragData[i] or program writes to result.color[i] registers:
+ *
+ *   fragment color output   renderbuffer
+ *   ---------------------   ---------------
+ *   color[0]                Front
+ *   color[1]                Aux0
+ *   color[3]                Aux1
+ *
+ *
+ * 3. glDrawBuffers(3, [GL_FRONT, GL_AUX0, GL_AUX1]) and shader writes to
+ * gl_FragColor, or fixed function:
+ *
+ *   fragment color output   renderbuffer
+ *   ---------------------   ---------------
+ *   color[0]                Front, Aux0, Aux1
+ *
+ *
+ * In either case, the list of renderbuffers is stored in the
+ * framebuffer->_ColorDrawBuffers[] array and
+ * framebuffer->_NumColorDrawBuffers indicates the number of buffers.
+ * The renderer (like swrast) has to look at the current fragment shader
+ * to see if it writes to gl_FragColor vs. gl_FragData[i] to determine
+ * how to map color outputs to renderbuffers.
+ *
+ * Note that these two calls are equivalent (for fixed function fragment
+ * shading anyway):
+ *   a)  glDrawBuffer(GL_FRONT_AND_BACK);  (assuming non-stereo framebuffer)
+ *   b)  glDrawBuffers(2, [GL_FRONT_LEFT, GL_BACK_LEFT]);
+ */
+
+
+
+
 /**
- * Update the list of color drawing renderbuffer pointers.
+ * Update the (derived) list of color drawing renderbuffer pointers.
  * Later, when we're rendering we'll loop from 0 to _NumColorDrawBuffers
  * writing colors.
  */
@@ -590,42 +719,23 @@ update_color_draw_buffers(GLcontext *ctx, struct gl_framebuffer *fb)
 {
    GLuint output;
 
-   /*
-    * Fragment programs can write to multiple colorbuffers with
-    * the GL_ARB_draw_buffers extension.
-    */
-   for (output = 0; output < ctx->Const.MaxDrawBuffers; output++) {
-      GLbitfield bufferMask = fb->_ColorDrawBufferMask[output];
-      GLuint count = 0;
-      GLuint i;
-      if (!fb->DeletePending) {
-         /* We need the inner loop here because glDrawBuffer(GL_FRONT_AND_BACK)
-          * can specify writing to two or four color buffers (for example).
-          */
-         for (i = 0; bufferMask && i < BUFFER_COUNT; i++) {
-            const GLuint bufferBit = 1 << i;
-            if (bufferBit & bufferMask) {
-               struct gl_renderbuffer *rb = fb->Attachment[i].Renderbuffer;
-               if (rb && rb->Width > 0 && rb->Height > 0) {
-                  fb->_ColorDrawBuffers[output][count] = rb;
-                  count++;
-               }
-               else {
-                  /*
-                  _mesa_warning(ctx, "DrawBuffer names a missing buffer!\n");
-                  */
-               }
-               bufferMask &= ~bufferBit;
-            }
-         }
+   /* set 0th buffer to NULL now in case _NumColorDrawBuffers is zero */
+   fb->_ColorDrawBuffers[0] = NULL;
+
+   for (output = 0; output < fb->_NumColorDrawBuffers; output++) {
+      GLint buf = fb->_ColorDrawBufferIndexes[output];
+      if (buf >= 0) {
+         fb->_ColorDrawBuffers[output] = fb->Attachment[buf].Renderbuffer;
       }
-      fb->_NumColorDrawBuffers[output] = count;
+      else {
+         fb->_ColorDrawBuffers[output] = NULL;
+      }
    }
 }
 
 
 /**
- * Update the color read renderbuffer pointer.
+ * Update the (derived) color read renderbuffer pointer.
  * Unlike the DrawBuffer, we can only read from one (or zero) color buffers.
  */
 static void
@@ -648,35 +758,71 @@ update_color_read_buffer(GLcontext *ctx, struct gl_framebuffer *fb)
 
 
 /**
- * Update state related to the current draw/read framebuffers.
+ * Update a gl_framebuffer's derived state.
+ *
  * Specifically, update these framebuffer fields:
  *    _ColorDrawBuffers
  *    _NumColorDrawBuffers
  *    _ColorReadBuffer
  *    _DepthBuffer
  *    _StencilBuffer
- * If the current framebuffer is user-created, make sure it's complete.
- * The following functions can effect this state:  glReadBuffer,
- * glDrawBuffer, glDrawBuffersARB, glFramebufferRenderbufferEXT,
+ *
+ * If the framebuffer is user-created, make sure it's complete.
+ *
+ * The following functions (at least) can effect framebuffer state:
+ * glReadBuffer, glDrawBuffer, glDrawBuffersARB, glFramebufferRenderbufferEXT,
  * glRenderbufferStorageEXT.
  */
-void
-_mesa_update_framebuffer(GLcontext *ctx)
+static void
+update_framebuffer(GLcontext *ctx, struct gl_framebuffer *fb)
 {
-   struct gl_framebuffer *fb = ctx->DrawBuffer;
-
-   /* Completeness only matters for user-created framebuffers */
-   if (fb->Name != 0) {
+   if (fb->Name == 0) {
+      /* This is a window-system framebuffer */
+      /* Need to update the FB's GL_DRAW_BUFFER state to match the
+       * context state (GL_READ_BUFFER too).
+       */
+      if (fb->ColorDrawBuffer[0] != ctx->Color.DrawBuffer[0]) {
+         _mesa_drawbuffers(ctx, ctx->Const.MaxDrawBuffers,
+                           ctx->Color.DrawBuffer, NULL);
+      }
+      if (fb->ColorReadBuffer != ctx->Pixel.ReadBuffer) {
+         
+      }
+   }
+   else {
+      /* This is a user-created framebuffer.
+       * Completeness only matters for user-created framebuffers.
+       */
       _mesa_test_framebuffer_completeness(ctx, fb);
       _mesa_update_framebuffer_visual(fb);
    }
 
+   /* Strictly speaking, we don't need to update the draw-state
+    * if this FB is bound as ctx->ReadBuffer (and conversely, the
+    * read-state if this FB is bound as ctx->DrawBuffer), but no
+    * harm.
+    */
    update_color_draw_buffers(ctx, fb);
    update_color_read_buffer(ctx, fb);
    _mesa_update_depth_buffer(ctx, fb, BUFFER_DEPTH);
    _mesa_update_stencil_buffer(ctx, fb, BUFFER_STENCIL);
 
    compute_depth_max(fb);
+}
+
+
+/**
+ * Update state related to the current draw/read framebuffers.
+ */
+void
+_mesa_update_framebuffer(GLcontext *ctx)
+{
+   struct gl_framebuffer *drawFb = ctx->DrawBuffer;
+   struct gl_framebuffer *readFb = ctx->ReadBuffer;
+
+   update_framebuffer(ctx, drawFb);
+   if (readFb != drawFb)
+      update_framebuffer(ctx, readFb);
 }
 
 

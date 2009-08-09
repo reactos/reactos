@@ -49,7 +49,7 @@
  */
 
 
-#include "imports.h"
+#include "main/imports.h"
 #include "slang_library_noise.h"
 
 #define FASTFLOOR(x) ( ((x)>0) ? ((int)x) : (((int)x)-1) )

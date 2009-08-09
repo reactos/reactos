@@ -1,6 +1,4 @@
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
+#include "priv.h"
 
 /* ===============================================================
     Event Functions
@@ -95,7 +93,7 @@ KSDDKAPI VOID NTAPI
 KsFreeEventList(
     IN  PFILE_OBJECT FileObject,
     IN  OUT PLIST_ENTRY EventsList,
-    IN  KSEVENTS_LOCKTYPE EVentsFlags,
+    IN  KSEVENTS_LOCKTYPE EventsFlags,
     IN  PVOID EventsLock)
 {
     UNIMPLEMENTED;

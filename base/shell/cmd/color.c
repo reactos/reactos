@@ -63,7 +63,7 @@ VOID SetScreenColor (WORD wColor, BOOL bNoFill)
  *
  * internal dir command
  */
-INT CommandColor (LPTSTR first, LPTSTR rest)
+INT CommandColor (LPTSTR rest)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 

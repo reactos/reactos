@@ -32,7 +32,7 @@
  * 	PUBLIC API
  *===================================================================*/
 
-NTSTATUS STDCALL BaseSetProcessCreateNotify (BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc)
+NTSTATUS WINAPI BaseSetProcessCreateNotify (BASE_PROCESS_CREATE_NOTIFY_ROUTINE ProcessCreateNotifyProc)
 {
 	NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
 

@@ -4,7 +4,7 @@
 # Fixed up by JRS for bzip2-0.9.5d release.
 
 CC=cl
-CFLAGS= -DWIN32 -MD -Ox -D_FILE_OFFSET_BITS=64
+CFLAGS= -DWIN32 -MD -Ox -D_FILE_OFFSET_BITS=64 -nologo
 
 OBJS= blocksort.obj  \
       huffman.obj    \

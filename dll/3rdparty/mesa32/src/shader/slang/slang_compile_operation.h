@@ -93,7 +93,8 @@ typedef enum slang_operation_type_
    SLANG_OPER_NOT,              /* "!" [expr] */
    SLANG_OPER_SUBSCRIPT,        /* [expr] "[" [expr] "]" */
    SLANG_OPER_CALL,             /* [func name] [param] [param] [...] */
-   SLANG_OPER_INLINED_CALL,     /* inlined function call */
+   SLANG_OPER_NON_INLINED_CALL, /* a real function call */
+   SLANG_OPER_METHOD,           /* method call, such as  v.length() */
    SLANG_OPER_FIELD,            /* i.e.: ".next" or ".xzy" or ".xxx" etc */
    SLANG_OPER_POSTINCREMENT,    /* [var] "++" */
    SLANG_OPER_POSTDECREMENT     /* [var] "--" */
@@ -115,10 +116,17 @@ typedef struct slang_operation_
    GLfloat literal[4];           /**< Used for float, int and bool values */
    GLuint literal_size;          /**< 1, 2, 3, or 4 */
    slang_atom a_id;              /**< type: asm, identifier, call, field */
+   slang_atom a_obj;             /**< object in a method call */
    slang_variable_scope *locals; /**< local vars for scope */
    struct slang_function_ *fun;  /**< If type == SLANG_OPER_CALL */
    struct slang_variable_ *var;  /**< If type == slang_oper_identier */
    struct slang_label_ *label;   /**< If type == SLANG_OPER_LABEL */
+   /** If type==SLANG_OPER_CALL and we're calling an array constructor,
+    * for which there's no real function, we need to have a flag to
+    * indicate such.  num_children indicates number of elements.
+    */
+   GLboolean array_constructor;
+   double x;
 } slang_operation;
 
 
@@ -127,6 +135,11 @@ slang_operation_construct(slang_operation *);
 
 extern void
 slang_operation_destruct(slang_operation *);
+
+extern void
+slang_replace_scope(slang_operation *oper,
+                    slang_variable_scope *oldScope,
+                    slang_variable_scope *newScope);
 
 extern GLboolean
 slang_operation_copy(slang_operation *, const slang_operation *);

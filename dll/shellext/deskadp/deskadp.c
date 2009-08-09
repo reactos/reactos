@@ -610,7 +610,7 @@ IDeskDisplayAdapter_Constructor(REFIID riid,
     return hRet;
 }
 
-BOOL STDCALL
+BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,
         DWORD dwReason,
         LPVOID lpvReserved)

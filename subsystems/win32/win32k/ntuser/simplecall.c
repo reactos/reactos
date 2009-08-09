@@ -75,7 +75,7 @@ co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
  * @unimplemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallNoParam(DWORD Routine)
 {
    DWORD Result = 0;
@@ -139,7 +139,7 @@ CLEANUP:
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallOneParam(
    DWORD Param,
    DWORD Routine)
@@ -396,9 +396,28 @@ NtUserCallOneParam(
          /* FIXME: Should use UserEnterShared */
          RETURN(IntEnumClipboardFormats(Param));
 
-       case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
+      case ONEPARAM_ROUTINE_CSRSS_GUICHECK:
           IntUserManualGuiCheck(Param);
           RETURN(TRUE);
+
+      case ONEPARAM_ROUTINE_GETCURSORPOS:
+      {
+          BOOL Ret = TRUE;
+          PPOINTL pptl;
+          PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
+          if (pti->hDesktop != InputDesktopHandle) RETURN(FALSE);
+          _SEH2_TRY
+          {
+             pptl = (PPOINTL)Param;
+             *pptl = gpsi->ptCursor;
+          }
+          _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+          {
+             Ret = FALSE;
+          }
+          _SEH2_END;
+          RETURN(Ret);
+      }      
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);
@@ -416,7 +435,7 @@ CLEANUP:
  * @implemented
  */
 DWORD
-STDCALL
+APIENTRY
 NtUserCallTwoParam(
    DWORD Param1,
    DWORD Param2,
@@ -493,7 +512,7 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
          {
-            PUSER_MESSAGE_QUEUE MsgQueue = ((PW32THREAD)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
+            PUSER_MESSAGE_QUEUE MsgQueue = ((PTHREADINFO)PsGetCurrentThread()->Tcb.Win32Thread)->MessageQueue;
 
             ASSERT(MsgQueue);
             RETURN( (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
@@ -644,7 +663,7 @@ NtUserCallTwoParam(
 
           if (Count != 0 && RegSysClassArray != NULL)
           {
-              _SEH_TRY
+              _SEH2_TRY
               {
                   ProbeArrayForRead(RegSysClassArray,
                                     sizeof(RegSysClassArray[0]),
@@ -654,11 +673,11 @@ NtUserCallTwoParam(
                   Ret = (DWORD)UserRegisterSystemClasses(Count,
                                                          RegSysClassArray);
               }
-              _SEH_HANDLE
+              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
               {
-                  SetLastNtError(_SEH_GetExceptionCode());
+                  SetLastNtError(_SEH2_GetExceptionCode());
               }
-              _SEH_END;
+              _SEH2_END;
           }
 
           RETURN( Ret);
@@ -680,7 +699,7 @@ CLEANUP:
  * @unimplemented
  */
 BOOL
-STDCALL
+APIENTRY
 NtUserCallHwndLock(
    HWND hWnd,
    DWORD Routine)
@@ -694,7 +713,7 @@ NtUserCallHwndLock(
    DPRINT("Enter NtUserCallHwndLock\n");
    UserEnterExclusive();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
    {
       RETURN( FALSE);
    }
@@ -723,15 +742,45 @@ NtUserCallHwndLock(
             Menu->MenuInfo.WndOwner = hWnd;
             Menu->MenuInfo.Height = 0;
 
-            co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-                                  SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
+            co_WinPosSetWindowPos( Window,
+                                   HWND_DESKTOP,
+                                   0,0,0,0,
+                                   SWP_NOSIZE|
+                                   SWP_NOMOVE|
+                                   SWP_NOZORDER|
+                                   SWP_NOACTIVATE|
+                                   SWP_FRAMECHANGED );
 
             Ret = TRUE;
             break;
          }
 
       case HWNDLOCK_ROUTINE_REDRAWFRAME:
-         /* FIXME */
+         co_WinPosSetWindowPos( Window,
+                                HWND_DESKTOP,
+                                0,0,0,0, 
+                                SWP_NOSIZE|
+                                SWP_NOMOVE|
+                                SWP_NOZORDER|
+                                SWP_NOACTIVATE|
+                                SWP_FRAMECHANGED );
+         Ret = TRUE;
+         break;
+
+      case HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK:
+         co_WinPosSetWindowPos( Window,
+                                HWND_DESKTOP,
+                                0,0,0,0, 
+                                SWP_NOSIZE|
+                                SWP_NOMOVE|
+                                SWP_NOZORDER|
+                                SWP_NOACTIVATE|
+                                SWP_FRAMECHANGED );
+         if (!IntGetOwner(Window) && !IntGetParent(Window))
+         {
+            co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
+         }
+         Ret = TRUE;
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
@@ -739,7 +788,7 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
-         /* FIXME */
+         Ret = co_UserRedrawWindow( Window, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
          break;
    }
 
@@ -757,7 +806,7 @@ CLEANUP:
  * @unimplemented
  */
 HWND
-STDCALL
+APIENTRY
 NtUserCallHwndOpt(
    HWND hWnd,
    DWORD Routine)
@@ -777,7 +826,7 @@ NtUserCallHwndOpt(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwnd(
    HWND hWnd,
    DWORD Routine)
@@ -800,7 +849,7 @@ NtUserCallHwnd(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwndParam(
    HWND hWnd,
    DWORD Param,
@@ -819,7 +868,7 @@ NtUserCallHwndParam(
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserCallHwndParamLock(
    HWND hWnd,
    DWORD Param,

@@ -35,31 +35,31 @@ INFLIB_HOST_CFLAGS = -O3 -Wall -Wpointer-arith -Wconversion \
   -Iinclude/reactos -Iinclude $(HOST_CFLAGS)
 
 $(INFLIB_HOST_TARGET): $(INFLIB_HOST_OBJECTS) | $(INFLIB_OUT)
-	$(ECHO_AR)
+	$(ECHO_HOSTAR)
 	$(host_ar) -r $@ $(INFLIB_HOST_OBJECTS)
 
 $(INFLIB_INT_)infcore.o: $(INFLIB_BASE_)infcore.c | $(INFLIB_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
 $(INFLIB_INT_)infget.o: $(INFLIB_BASE_)infget.c | $(INFLIB_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
 $(INFLIB_INT_)infput.o: $(INFLIB_BASE_)infput.c | $(INFLIB_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
 $(INFLIB_INT_)infhostgen.o: $(INFLIB_BASE_)infhostgen.c | $(INFLIB_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
 $(INFLIB_INT_)infhostget.o: $(INFLIB_BASE_)infhostget.c | $(INFLIB_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
 $(INFLIB_INT_)infhostput.o: $(INFLIB_BASE_)infhostput.c | $(INFLIB_INT)
-	$(ECHO_CC)
+	$(ECHO_HOSTCC)
 	${host_gcc} $(INFLIB_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: inflib_host

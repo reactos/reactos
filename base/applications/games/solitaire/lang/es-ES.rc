@@ -4,7 +4,7 @@
  * FILE:        base/applications/games/solitaire/lang/es-ES.rc
  * PURPOSE:     Spanish Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
- * ACTUALIZADO: Javier Remacha - 18/12/17
+ * ACTUALIZADO: Javier Remacha - 13/01/09
  */
 #include "resource.h"
 
@@ -29,6 +29,7 @@ BEGIN
     PUSHBUTTON      "Cancelar", IDCANCEL, 101, 97, 50, 14
 END
 
+
 IDD_CARDBACK DIALOGEX 6, 6, 221, 96
 CAPTION "Seleccionar el reverso"
 FONT 8, "MS Shell Dlg"
@@ -51,6 +52,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitario por J Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "¿Finalizar el juego actual?"
     IDS_SOL_WIN     "Felicidades, ¡¡Has ganado!!"
+    IDS_SOL_DEAL    "¿Repartir de nuevo?"
 END
 
 

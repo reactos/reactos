@@ -34,10 +34,10 @@
  *        Remove all hardcode string to En.rc
  */
 
-INT cmd_pause (LPTSTR cmd, LPTSTR param)
+INT cmd_pause (LPTSTR param)
 {
 
-	TRACE ("cmd_pause: \'%s\' : \'%s\')\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_pause: \'%s\')\n", debugstr_aw(param));
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{

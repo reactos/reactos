@@ -26,8 +26,6 @@
 #define SLANG_COMPILE_FUNCTION_H
 
 
-struct slang_code_unit_;
-
 /**
  * Types of functions.
  */
@@ -40,21 +38,6 @@ typedef enum slang_function_kind_
 
 
 /**
- * When we need to fill in addresses which we won't know until the future,
- * we keep track of them with a fix-up table.
- */
-typedef struct slang_fixup_table_
-{
-   GLuint *table;     /**< array[count] of addresses */
-   GLuint count;
-} slang_fixup_table;
-
-extern void slang_fixup_table_init(slang_fixup_table *);
-extern void slang_fixup_table_free(slang_fixup_table *);
-extern GLboolean slang_fixup_save(slang_fixup_table *fixups, GLuint address);
-
-
-/**
  * Description of a compiled shader function.
  */
 typedef struct slang_function_
@@ -64,12 +47,14 @@ typedef struct slang_function_
    slang_variable_scope *parameters; /**< formal parameters AND local vars */
    unsigned int param_count;   /**< number of formal params (no locals) */
    slang_operation *body;      /**< The instruction tree */
-   unsigned int address;       /**< Address of this func in memory */
-   slang_fixup_table fixups;   /**< Mem locations which need func's address */
 } slang_function;
 
 extern int slang_function_construct(slang_function *);
 extern void slang_function_destruct(slang_function *);
+extern slang_function *slang_function_new(slang_function_kind kind);
+
+extern GLboolean
+_slang_function_has_return_value(const slang_function *fun);
 
 
 /**
@@ -89,13 +74,19 @@ _slang_function_scope_ctr(slang_function_scope *);
 extern void
 slang_function_scope_destruct(slang_function_scope *);
 
-extern GLboolean
-_slang_function_has_return_value(const slang_function *fun);
-
 extern int
 slang_function_scope_find_by_name(slang_function_scope *, slang_atom, int);
 
 extern slang_function *
 slang_function_scope_find(slang_function_scope *, slang_function *, int);
+
+extern struct slang_function_ *
+_slang_function_locate(const struct slang_function_scope_ *funcs,
+                       slang_atom name, struct slang_operation_ *params,
+                       GLuint num_params,
+                       const struct slang_name_space_ *space,
+                       slang_atom_pool *atoms, slang_info_log *log,
+                       GLboolean *error);
+
 
 #endif /* SLANG_COMPILE_FUNCTION_H */

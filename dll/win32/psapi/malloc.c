@@ -19,7 +19,7 @@
 #include <debug.h>
 
 PVOID
-STDCALL
+WINAPI
 MemAlloc(IN HANDLE Heap,
          IN PVOID Ptr,
          IN ULONG Size)

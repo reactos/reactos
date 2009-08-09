@@ -2339,7 +2339,7 @@ static BOOL WINAPI CommitUrlCacheEntryInternal(
         /* skip container path prefix */
         lpszLocalFileName += lstrlenW(pContainer->path);
 
-        WideCharToMultiByte(CP_ACP, 0, lpszLocalFileName, -1, achFile, -1, NULL, NULL);
+        WideCharToMultiByte(CP_ACP, 0, lpszLocalFileName, -1, achFile, MAX_PATH, NULL, NULL);
 	pchLocalFileName = achFile;
 
         for (cDirectory = 0; cDirectory < pHeader->DirectoryCount; cDirectory++)

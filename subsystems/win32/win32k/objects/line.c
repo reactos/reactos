@@ -89,7 +89,7 @@ IntGdiLineTo(DC  *dc,
              int XEnd,
              int YEnd)
 {
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     BOOL      Ret = TRUE;
     PGDIBRUSHOBJ PenBrushObj;
     GDIBRUSHINST PenBrushInst;
@@ -115,8 +115,14 @@ IntGdiLineTo(DC  *dc,
     }
     else
     {
-        BitmapObj = BITMAPOBJ_LockBitmap ( dc->w.hBitmap );
-        if (NULL == BitmapObj)
+       if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+          IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+       if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+          IntGdiSelectPen(dc,Dc_Attr->hpen);
+
+        psurf = SURFACE_LockSurface( dc->w.hBitmap );
+        if (NULL == psurf)
         {
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             return FALSE;
@@ -152,7 +158,7 @@ IntGdiLineTo(DC  *dc,
         if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
             IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-            Ret = IntEngLineTo(&BitmapObj->SurfObj,
+            Ret = IntEngLineTo(&psurf->SurfObj,
                                dc->CombinedClip,
                                &PenBrushInst.BrushObject,
                                Points[0].x, Points[0].y,
@@ -161,7 +167,7 @@ IntGdiLineTo(DC  *dc,
                                ROP2_TO_MIX(Dc_Attr->jROP2));
         }
 
-        BITMAPOBJ_UnlockBitmap ( BitmapObj );
+        SURFACE_UnlockSurface(psurf);
         PENOBJ_UnlockPen( PenBrushObj );
     }
 
@@ -198,7 +204,7 @@ IntGdiPolyBezier(DC      *dc,
         if ( Pts )
         {
             ret = IntGdiPolyline(dc, Pts, nOut);
-            ExFreePool(Pts);
+            ExFreePoolWithTag(Pts, TAG_BEZIER);
         }
     }
 
@@ -228,7 +234,7 @@ IntGdiPolyBezierTo(DC      *dc,
             npt[0].y = Dc_Attr->ptlCurrent.y;
             memcpy(npt + 1, pt, sizeof(POINT) * Count);
             ret = IntGdiPolyBezier(dc, npt, Count+1);
-            ExFreePool(npt);
+            ExFreePoolWithTag(npt, TAG_BEZIER);
         }
     }
     if ( ret )
@@ -248,7 +254,7 @@ IntGdiPolyline(DC      *dc,
                LPPOINT pt,
                int     Count)
 {
-    BITMAPOBJ *BitmapObj;
+    SURFACE *psurf;
     GDIBRUSHOBJ *PenBrushObj;
     GDIBRUSHINST PenBrushInst;
     LPPOINT Points;
@@ -257,8 +263,15 @@ IntGdiPolyline(DC      *dc,
     PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
     if (PATH_IsPathOpen(dc->DcLevel))
         return PATH_Polyline(dc, pt, Count);
+
+    if (Dc_Attr->ulDirty_ & DC_BRUSH_DIRTY)
+       IntGdiSelectBrush(dc,Dc_Attr->hbrush);
+
+    if (Dc_Attr->ulDirty_ & DC_PEN_DIRTY)
+       IntGdiSelectPen(dc,Dc_Attr->hpen);
 
     /* Get BRUSHOBJ from current pen. */
     PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
@@ -270,10 +283,10 @@ IntGdiPolyline(DC      *dc,
         Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
         if (Points != NULL)
         {
-            BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-            /* FIXME - BitmapObj can be NULL!!!!
+            psurf = SURFACE_LockSurface(dc->w.hBitmap);
+            /* FIXME - psurf can be NULL!!!!
                Don't assert but handle this case gracefully! */
-            ASSERT(BitmapObj);
+            ASSERT(psurf);
 
             RtlCopyMemory(Points, pt, Count * sizeof(POINT));
             IntLPtoDP(dc, Points, Count);
@@ -286,14 +299,14 @@ IntGdiPolyline(DC      *dc,
             }
 
             IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
-            Ret = IntEngPolyline(&BitmapObj->SurfObj,
+            Ret = IntEngPolyline(&psurf->SurfObj,
                                  dc->CombinedClip,
                                  &PenBrushInst.BrushObject,
                                  Points,
                                  Count,
                                  ROP2_TO_MIX(Dc_Attr->jROP2));
 
-            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            SURFACE_UnlockSurface(psurf);
             EngFreeMem(Points);
         }
         else
@@ -331,7 +344,7 @@ IntGdiPolylineTo(DC      *dc,
             pts[0].y = Dc_Attr->ptlCurrent.y;
             memcpy( pts + 1, pt, sizeof(POINT) * Count);
             ret = IntGdiPolyline(dc, pts, Count + 1);
-            ExFreePool(pts);
+            ExFreePoolWithTag(pts, TAG_SHAPE);
         }
     }
     if ( ret )
@@ -350,12 +363,12 @@ IntGdiPolylineTo(DC      *dc,
 BOOL FASTCALL
 IntGdiPolyPolyline(DC      *dc,
                    LPPOINT pt,
-                   LPDWORD PolyPoints,
+                   PULONG  PolyPoints,
                    DWORD   Count)
 {
     int i;
     LPPOINT pts;
-    LPDWORD pc;
+    PULONG pc;
     BOOL ret = FALSE; // default to failure
     pts = pt;
     pc = PolyPoints;
@@ -379,7 +392,7 @@ IntGdiPolyPolyline(DC      *dc,
 /******************************************************************************/
 
 BOOL
-STDCALL
+APIENTRY
 NtGdiLineTo(HDC  hDC,
             int  XEnd,
             int  YEnd)
@@ -426,7 +439,7 @@ NtGdiPolyDraw(
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
         ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
@@ -437,7 +450,7 @@ NtGdiPolyDraw(
             if ( lpbTypes[i] != PT_MOVETO &&
                  lpbTypes[i] & PT_BEZIERTO )
             {
-                if ( cCount < i+3 ) _SEH_LEAVE;
+                if ( cCount < i+3 ) _SEH2_LEAVE;
                 else i += 2;
             }
         }
@@ -466,7 +479,7 @@ NtGdiPolyDraw(
                 IntGdiPolyBezier(dc, pts, 4);
                 i += 2;
             }
-            else _SEH_LEAVE;
+            else _SEH2_LEAVE;
 
             if ( lpbTypes[i] & PT_CLOSEFIGURE )
             {
@@ -485,16 +498,30 @@ NtGdiPolyDraw(
 
         result = TRUE;
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        SetLastNtError(_SEH_GetExceptionCode());
+        SetLastNtError(_SEH2_GetExceptionCode());
     }
-    _SEH_END;
+    _SEH2_END;
 
     DC_UnlockDc(dc);
 
     return result;
 }
 
+ /*
+ * @unimplemented
+ */
+BOOL
+APIENTRY
+NtGdiMoveTo(
+    IN HDC hdc,
+    IN INT x,
+    IN INT y,
+    OUT OPTIONAL LPPOINT pptOut)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
 /* EOF */

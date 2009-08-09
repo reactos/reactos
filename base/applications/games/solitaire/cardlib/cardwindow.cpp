@@ -366,7 +366,7 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
         //
         // associate this class with the window
         //
-        SetWindowLong(hwnd, 0, (LONG)cs->lpCreateParams);
+        SetWindowLong(hwnd, 0, (LONG_PTR)cs->lpCreateParams);
 
         return 1;
 

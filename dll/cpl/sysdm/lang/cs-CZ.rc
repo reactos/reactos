@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/sysdm/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-06-27
+ * UPDATED:     2008-07-01
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -147,11 +147,11 @@ BEGIN
     LTEXT       "Výchozí operaèní s&ystém:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     AUTOCHECKBOX "Dob&a zobrazení seznamu operaèních systémù:", IDC_STRECLIST, 14, 56, 160, 8
-    EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12
+    EDITTEXT    IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "sek.", IDC_STATIC, 223, 56, 18, 8
     AUTOCHECKBOX "Doba zobrazení možnos&tí zotavení v pøípadì potøeby:", IDC_STRRECREC, 14, 70, 170, 8
-    EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12
+    EDITTEXT    IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "s", IDC_STATIC, 223, 70, 18, 8
     LTEXT       "Soubor s možnostmi spuštìní lze upravit ruènì kliknutím na tlaèítko Upravit.", IDC_STATIC, 14, 89, 187, 8

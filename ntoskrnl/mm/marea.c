@@ -43,7 +43,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitMemoryAreas)
@@ -186,7 +186,7 @@ static VOID MmVerifyMemoryAreas(PMADDRESS_SPACE AddressSpace)
 #define MmVerifyMemoryAreas(x)
 #endif
 
-VOID STDCALL
+VOID NTAPI
 MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace)
 {
    PMEMORY_AREA Node;
@@ -210,7 +210,7 @@ MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace)
    DbgPrint("Finished MmDumpMemoryAreas()\n");
 }
 
-PMEMORY_AREA STDCALL
+PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByAddress(
    PMADDRESS_SPACE AddressSpace,
    PVOID Address)
@@ -240,7 +240,7 @@ MmLocateMemoryAreaByAddress(
    return NULL;
 }
 
-PMEMORY_AREA STDCALL
+PMEMORY_AREA NTAPI
 MmLocateMemoryAreaByRegion(
    PMADDRESS_SPACE AddressSpace,
    PVOID Address,
@@ -627,7 +627,7 @@ MmFindGapTopDown(
 }
 
 
-PVOID STDCALL
+PVOID NTAPI
 MmFindGap(
    PMADDRESS_SPACE AddressSpace,
    ULONG_PTR Length,
@@ -640,7 +640,7 @@ MmFindGap(
    return MmFindGapBottomUp(AddressSpace, Length, Granularity);
 }
 
-ULONG_PTR STDCALL
+ULONG_PTR NTAPI
 MmFindGapAtAddress(
    PMADDRESS_SPACE AddressSpace,
    PVOID Address)
@@ -701,21 +701,6 @@ MmFindGapAtAddress(
    }
 }
 
-/**
- * @name MmInitMemoryAreas
- *
- * Initialize the memory area list implementation.
- */
-
-NTSTATUS
-INIT_FUNCTION
-NTAPI
-MmInitMemoryAreas(VOID)
-{
-   DPRINT("MmInitMemoryAreas()\n");
-   return(STATUS_SUCCESS);
-}
-
 
 /**
  * @name MmFreeMemoryArea
@@ -736,7 +721,7 @@ MmInitMemoryAreas(VOID)
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmFreeMemoryArea(
    PMADDRESS_SPACE AddressSpace,
    PMEMORY_AREA MemoryArea,
@@ -877,7 +862,7 @@ MmFreeMemoryArea(
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmFreeMemoryAreaByPtr(
    PMADDRESS_SPACE AddressSpace,
    PVOID BaseAddress,
@@ -896,7 +881,7 @@ MmFreeMemoryAreaByPtr(
                                             BaseAddress);
    if (MemoryArea == NULL)
    {
-      KEBUGCHECK(0);
+      KeBugCheck(MEMORY_MANAGEMENT);
       return(STATUS_UNSUCCESSFUL);
    }
 
@@ -929,7 +914,7 @@ MmFreeMemoryAreaByPtr(
  * @remarks Lock the address space before calling this function.
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
                    ULONG Type,
                    PVOID *BaseAddress,
@@ -976,14 +961,12 @@ MmCreateMemoryArea(PMADDRESS_SPACE AddressSpace,
       if (AddressSpace->LowestAddress == MmSystemRangeStart &&
           *BaseAddress < MmSystemRangeStart)
       {
-         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
       if (AddressSpace->LowestAddress < MmSystemRangeStart &&
           (ULONG_PTR)(*BaseAddress) + tmpLength > (ULONG_PTR)MmSystemRangeStart)
       {
-         CHECKPOINT;
          return STATUS_ACCESS_VIOLATION;
       }
 
@@ -1039,7 +1022,7 @@ MmMapMemoryArea(PVOID BaseAddress,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to allocate page\n");
-         KEBUGCHECK(0);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
       Status = MmCreateVirtualMapping (NULL,
                                        (PVOID)((ULONG_PTR)BaseAddress + (i * PAGE_SIZE)),
@@ -1049,13 +1032,13 @@ MmMapMemoryArea(PVOID BaseAddress,
       if (!NT_SUCCESS(Status))
       {
          DPRINT1("Unable to create virtual mapping\n");
-         KEBUGCHECK(0);
+         KeBugCheck(MEMORY_MANAGEMENT);
       }
    }
 }
 
 
-VOID STDCALL
+VOID NTAPI
 MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
                                  PMADDRESS_SPACE AddressSpace,
                                  PVOID BaseAddress)

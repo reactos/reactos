@@ -621,7 +621,7 @@ static MUI_ENTRY plPLQuitPageEntries[] =
     {
         10,
         8,
-        "Upewnij si© ze w Nap©dzie A: nie ma dyskietki i",
+        "Upewnij si© ¾e w Nap©dzie A: nie ma dyskietki i",
         TEXT_STYLE_NORMAL
     },
     {
@@ -967,7 +967,7 @@ static MUI_ENTRY plPLFileCopyEntries[] =
     {
         50,
         0,
-        "\xB3 Please wait...    ",
+        "\xB3 Prosz© czeka†...    ",
         TEXT_TYPE_STATUS
     },
     {
@@ -1087,7 +1087,7 @@ static MUI_ENTRY plPLLayoutSettingsEntries[] =
     {
         6,
         8,
-        "Please select a layout to be installed by default.",
+        "Prosz© wybra† domy˜lnie instalowany ukˆad klawiatury.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1479,6 +1479,11 @@ MUI_ERROR plPLErrorEntries[] =
     {
         //ERROR_ADDING_KBLAYOUTS,
         "Instalator nie m¢gˆ doda† ukˆad¢w klawiatury do rejestru.\n"
+        "ENTER = Restart komputera"
+    },
+    {
+        //ERROR_UPDATE_GEOID,
+        "Instalator nie m¢gˆ ustawi† lokalizacji geograficznej.\n"
         "ENTER = Restart komputera"
     },
     {

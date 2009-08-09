@@ -21,19 +21,19 @@
 #ifndef __WINE_ICMPAPI_H
 #define __WINE_ICMPAPI_H
 
-HANDLE STDCALL  IcmpCreateFile(
+HANDLE WINAPI  IcmpCreateFile(
     VOID
     );
 
-HANDLE STDCALL  Icmp6CreateFile(
+HANDLE WINAPI  Icmp6CreateFile(
     VOID
     );
 
-BOOL STDCALL  IcmpCloseHandle(
+BOOL WINAPI  IcmpCloseHandle(
     HANDLE  IcmpHandle
     );
 
-DWORD STDCALL  IcmpSendEcho(
+DWORD WINAPI  IcmpSendEcho(
     HANDLE                 IcmpHandle,
     IPAddr                 DestinationAddress,
     LPVOID                 RequestData,
@@ -45,7 +45,7 @@ DWORD STDCALL  IcmpSendEcho(
     );
 
 DWORD
-STDCALL
+WINAPI
 IcmpSendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
@@ -61,7 +61,7 @@ IcmpSendEcho2(
     );
 
 DWORD
-STDCALL
+WINAPI
 Icmp6SendEcho2(
     HANDLE                   IcmpHandle,
     HANDLE                   Event,
@@ -78,14 +78,14 @@ Icmp6SendEcho2(
     );
 
 DWORD
-STDCALL
+WINAPI
 IcmpParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize
     );
 
 DWORD
-STDCALL
+WINAPI
 Icmp6ParseReplies(
     LPVOID                   ReplyBuffer,
     DWORD                    ReplySize

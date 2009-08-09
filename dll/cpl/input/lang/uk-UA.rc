@@ -10,17 +10,17 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Settings"
+CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Select the services that you want for each input language shown in the list.\nUse the Add and Remove buttons to modify this list.", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SORTASCENDING | LVS_REPORT | 0x0000808D, 8, 36, 237, 101
-    PUSHBUTTON "&Set Default", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "A&dd...", IDC_ADD_BUTTON, 27, 142, 70, 14
-    PUSHBUTTON "&Remove...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
-    PUSHBUTTON "&Properties...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Preferences", -1, 7, 185, 240, 36
-    PUSHBUTTON "&Key Settings...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "Замов&чування", IDC_SET_DEFAULT, 101, 159, 144, 14
+    PUSHBUTTON "&Додати...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "В&идалити...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
+    PUSHBUTTON "В&ластивості...", IDC_PROP_BUTTON, 175, 142, 70, 14
+    GROUPBOX "Настройка", -1, 7, 185, 240, 36
+    PUSHBUTTON "&Параметри клавіатури...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
@@ -28,16 +28,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Додаткові параметри клавіатури"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Вимкнення режиму Caps Lock", -1, 7, 7, 258, 26
-	AUTORADIOBUTTON "&при натисненні клавіші CAPS LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
-	AUTORADIOBUTTON "при &натисненні клавіші SHIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
-	GROUPBOX "Сполучення клавіш для мов вводу", -1, 7, 37, 258, 95
-	LTEXT "Дія", -1, 14, 47, 60, 9
-	RTEXT "&Сполучення клавіш", -1, 177, 47, 79, 9
-	CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
-	PUSHBUTTON "З&міна сполучення клавіш...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
-	DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
-	PUSHBUTTON "Скасувати", IDCANCEL, 146, 140, 70, 14
+    GROUPBOX "Вимкнення режиму Caps Lock", -1, 7, 7, 258, 26
+    AUTORADIOBUTTON "&при натисненні клавіші CAPS LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
+    AUTORADIOBUTTON "при &натисненні клавіші SHIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
+    GROUPBOX "Сполучення клавіш для мов вводу", -1, 7, 37, 258, 95
+    LTEXT "Дія", -1, 14, 47, 60, 9
+    RTEXT "&Сполучення клавіш", -1, 177, 47, 79, 9
+    CONTROL "", IDC_KEY_LISTVIEW, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | LVS_AUTOARRANGE | LVS_SINGLESEL, 14, 57, 244, 52, WS_EX_CLIENTEDGE
+    PUSHBUTTON "З&міна сполучення клавіш...", IDC_CHANGE_KEY_SEQ_BTN, 152, 113, 106, 14, WS_GROUP
+    DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 146, 140, 70, 14
 END
 
 IDD_ADD DIALOGEX 20, 20, 227, 90
@@ -45,32 +45,32 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Додавання мови вводу"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Мова вводу:", -1, 7, 7, 61, 10
-	COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-	LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 36, 110, 10
-	COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-	DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
-	PUSHBUTTON "Скасувати", IDCANCEL, 169, 68, 50, 14
+    LTEXT "&Мова вводу:", -1, 7, 7, 61, 10
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 36, 110, 10
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 169, 68, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ DIALOGEX 5, 100, 230, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Change Key Sequence"
+CAPTION "Зміна сполучення клавіш"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
-    AUTOCHECKBOX "&Switch input languages", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
+    AUTOCHECKBOX "&Переключати мови ввод", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
     LTEXT "Shift", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
-    AUTORADIOBUTTON "Left &ALT", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
-    AUTOCHECKBOX "S&witch keyboard layouts", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
+    AUTORADIOBUTTON "ALT з&ліва", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
+    AUTOCHECKBOX "Пере&ключати розкладки клавіатури", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
     LTEXT "Shift", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
-    AUTORADIOBUTTON "Left A&LT", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
+    AUTORADIOBUTTON "ALT &зліва", IDC_LEFT_ALT_LAYOUT, 30, 95, 44, 12
     DEFPUSHBUTTON "OK", IDOK, 172, 9, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 172, 27, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 172, 27, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOGEX 20, 20, 227, 75
@@ -78,173 +78,173 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWIN
 CAPTION "Властивості мови вводу"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Мова вводу:", -1, 7, 7, 61, 8
-	LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
-	LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 21, 110, 10
-	COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-	DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
-	PUSHBUTTON "Скасувати", IDCANCEL, 169, 53, 52, 14
+    LTEXT "Мова вводу:", -1, 7, 7, 61, 8
+    LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
+    LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 21, 110, 10
+    COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 169, 53, 52, 14
 END
 
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME        "Мови та служби текстового вводу"
-	IDS_CPLSYSTEMDESCRIPTION "Налаштовує параметри для текстового вводу."
-	IDS_KEYBOARD             "Клавіатура"
-	IDS_NONE                 "(Немає)"
-	IDS_UNKNOWN              "(Немає даних)"
-	IDS_RESTART              "Ви дійсно бажаєте перезавантажити комп'ютер зараз?"
-	IDS_WHATS_THIS           "Що це?"
-	IDS_LANGUAGE             "Language"
-	IDS_LAYOUT               "Keyboard Layout"
-    IDS_REM_QUESTION         "Do you want to remove selected keyboard layout?"
-    IDS_CONFIRMATION         "Confirmation"
-	IDS_LAYOUT_EXISTS        "This layout already exists."
-	IDS_LAYOUT_EXISTS2       "This layout already exists and can not be added."
-	IDS_CTRL_SHIFT           "Ctrl+Shift"
-	IDS_LEFT_ALT_SHIFT       "Left Alt+Shift"
-	IDS_SWITCH_BET_INLANG    "Switch between input languages"
+    IDS_CPLSYSTEMNAME        "Мови та служби текстового вводу"
+    IDS_CPLSYSTEMDESCRIPTION "Налаштовує параметри для текстового вводу."
+    IDS_KEYBOARD             "Клавіатура"
+    IDS_NONE                 "(Немає)"
+    IDS_UNKNOWN              "(Немає даних)"
+    IDS_RESTART              "Ви дійсно бажаєте перезавантажити комп'ютер зараз?"
+    IDS_WHATS_THIS           "Що це?"
+    IDS_LANGUAGE             "Мова"
+    IDS_LAYOUT               "Розкладка клавіатури"
+    IDS_REM_QUESTION         "Ви дійсно хочете видалити вибрану розкладку клавіатури?"
+    IDS_CONFIRMATION         "Підтвердження"
+    IDS_LAYOUT_EXISTS        "Ця розкладка вже існує."
+    IDS_LAYOUT_EXISTS2       "Ця розкладка вже існує і не може бути додана."
+    IDS_CTRL_SHIFT           "Ctrl+Shift"
+    IDS_LEFT_ALT_SHIFT       "Alt зліва+Shift"
+    IDS_SWITCH_BET_INLANG    "Переключення мов вводу"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_US_LAYOUT,                                  "США"
-	IDS_BELGIAN_LAYOUT,                             "Бельгійська (із крапкою)"
-	IDS_BELGIAN_FRENCH_LAYOUT,                      "Французька (Бельгія)"
-	IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Португальська (Бразилія ABNT)"
-	IDS_CANADIAN_FRENCH_LAYOUT,                     "Французька (Канада)"
-	IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "Французька (Канада, традиційна)"
-	IDS_DANISH_LAYOUT,                              "Датська"
-	IDS_DUTCH_LAYOUT,                               "Нідерландська"
-	IDS_FINNISH_LAYOUT,                             "Фінська"
-	IDS_FRENCH_LAYOUT,                              "Французька"
-	IDS_GERMAN_LAYOUT,                              "Німецька"
-	IDS_GERMAN_IBM_LAYOUT,                          "Німецька (IBM)"
-	IDS_ICELANDIC_LAYOUT,                           "Ісландська"
-	IDS_IRISH_LAYOUT,                               "Ірландська"
-	IDS_ITALIAN_LAYOUT,                             "Італійська"
-	IDS_ITALIAN_142_LAYOUT,                         "Італійська (142)"
-	IDS_LATIN_AMERICAN_LAYOUT,                      "Латинська Америка"
-	IDS_NORWEGIAN_LAYOUT,                           "Норвезька"
-	IDS_PORTUGUESE_LAYOUT,                          "Португальська"
-	IDS_SPANISH_LAYOUT,                             "Іспанська"
-	IDS_SPANISH_VARIANTION_LAYOUT,                  "Іспанська 2"
-	IDS_SWEDISH_LAYOUT,                             "Шведська"
-	IDS_SWISS_FRENCH_LAYOUT,                        "Французька (Швейцарія)"
-	IDS_SWISS_GERMAN_LAYOUT,                        "Німецька (Швейцарія)"
-	IDS_UNITED_KINGDOM_LAYOUT,                      "Великобританія"
-	IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "США - міжнародна"
-	IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "США - Дворак (для лівої руки)"
-	IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "США - Дворак (для правої руки)"
-	IDS_ALBANIAN_LAYOUT,                            "Албанська"
-	IDS_CROATIAN_LAYOUT,                            "Хорватська"
-	IDS_CZECH_LAYOUT,                               "Чеська"
-	IDS_CZECH_QWERTY_LAYOUT,                        "Чеська (QWERTY)"
-	IDS_HUNGARIAN_LAYOUT,                           "Угорська"
-	IDS_HUNGARIAN_101_KEY_LAYOUT,                   "Угорська (101 клавіша)"
-	IDS_POLISH_LAYOUT,                              "Польська (програмістська)"
-	IDS_POLISH_214_LAYOUT,                          "Польська (214)"
-	IDS_ROMANIAN_LAYOUT,                            "Румунська"
-	IDS_SERBIAN_LATIN_LAYOUT,                       "Сербська (латиниця)"
-	IDS_SLOVAK_LAYOUT,                              "Словацька"
-	IDS_SLOVAK_QWERTY_LAYOUT,                       "Словацька (QWERTY)"
-	IDS_SLOVENIAN_LAYOUT,                           "Словенська"
-	IDS_ESTONIAN_LAYOUT,                            "Естонська"
-	IDS_LATVIAN_LAYOUT,                             "Латвійська"
-	IDS_LATVIAN_QWERTY_LAYOUT,                      "Латвійська (QWERTY)"
-	IDS_LITHUANIAN_IBM_LAYOUT,                      "Литовська (IBM)"
-	IDS_GREEK_LAYOUT,                               "Грецька"
-	IDS_GREEK_LATIN_LAYOUT,                         "Грецька (латиниця)"
-	IDS_GREEK_220_LAYOUT,                           "Грецька (220)"
-	IDS_GREEK_319_LAYOUT,                           "Грецька (319)"
-	IDS_GREEK_220_LATIN_LAYOUT,                     "Грецька (220, латиниця)"
-	IDS_GREEK_319_LATIN_LAYOUT,                     "Грецька (319, латиниця)"
-	IDS_BELARUSIAN_LAYOUT,                          "Білоруська"
-	IDS_BULGARIAN_LAYOUT,                           "Болгарська"
-	IDS_BULGARIAN_LATIN_LAYOUT,                     "Болгарська (латиниця)"
-	IDS_RUSSIAN_LAYOUT,                             "Російська"
-	IDS_RUSSIAN_TYPEWRITER_LAYOUT,                  "Російська (друкарська машинка)"
-	IDS_SERBIAN_CYRILLIC_LAYOUT,                    "Сербська (кирилиця)"
-	IDS_UKRAINIAN_LAYOUT,                           "Українська"
-	IDS_TURKISH_F_LAYOUT,                           "Турецька F"
-	IDS_TURKISH_Q_LAYOUT,                           "Турецька Q"
-	IDS_JAPANESE_LAYOUT,                            "Японська"
-	IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "Японський засіб вводу (MS-IME2002)"
-	IDS_KOREAN_LAYOUT,                              "Корейська"
-	IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "Корейський засіб вводу (MS-IME2002)"
-	IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT,      "Китайська (традиційне письмо) - США"
-	IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT,        "Китайська (традиційне письмо) - фонетична"
-	IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT,        "Китайська (традиційне письмо) - ChangJie"
-	IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT,        "Китайська (традиційне письмо) - Big5 Code"
-	IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT,            "Китайська (традиційне письмо) - DaYi"
-	IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT,         "Китайська (традиційне письмо) - Юнікод"
-	IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "Китайська (традиційне письмо) - алфавітно-цифрова"
-	IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "Китайська (спрощене письмо) - США"
-	IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "Китайська (спрощене письмо) - QuanPin"
-	IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "Китайська (спрощене письмо) - ShuangPin"
-	IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT,          "Китайська (спрощене письмо) - ZhengMa"
-	IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT,            "Китайська (спрощене письмо) - NeiMa"
-	IDS_THAI_KEDMANEE_LAYOUT,                       "Тайська Кедмані"
-	IDS_THAI_PATTACHOTE_LAYOUT,                     "Тайська Паташот"
-	IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT,          "Тайська Кедмані (без ShiftLock)"
-	IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT,        "Тайська Паташот (без ShiftLock)"
-	IDS_HEBREW_LAYOUT,                              "Іврит"
-	IDS_ARABIC_101_LAYOUT,                          "Арабська (101)"
-	IDS_ARABIC_102_LAYOUT,                          "Арабська (102)"
-	IDS_ARABIC_102_AZERTY_LAYOUT,                   "Арабська (102) AZERTY"
-	IDS_CZECH_PROGRAMMERS_LAYOUT,                   "Чеська (програмістська)"
-	IDS_LITHUANIAN_LAYOUT,                          "Литовська"
-	IDS_BELGIAN_COMMA_LAYOUT,                       "Бельгійська (з комою)"
-	IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT,     "Китайська (традиційне письмо) - нова фонетична"
-	IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "Китайська (спрощене письмо) - Microsoft Pinyin IME 3.0"
-	IDS_UNITED_STATES_DVIRAK_LAYOUT,                "США - Дворак"
-	IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT,     "Китайська (традиційне письмо) - нова ChangJie"
-	IDS_ASSAMESE_LAYOUT,                            "Ассамська"
-	IDS_BENGALI_LAYOUT,                             "Бенгалі"
-	IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "Деванагарі (INSCRIPT)"
-	IDS_GUJARATI_LAYOUT,                            "Гуджараті"
-	IDS_KANNADA_LAYOUT,                             "Каннада"
-	IDS_MALAYALAM_LAYOUT,                           "Малаялам"
-	IDS_ORIYA_LAYOUT,                               "Орія"
-	IDS_PUNJABI_LAYOUT,                             "Панджабі"
-	IDS_TAMIL_LAYOUT,                               "Тамільська"
-	IDS_TELUGU_LAYOUT,                              "Телугу"
-	IDS_MARATHI_LAYOUT,                             "Маратхі"
-	IDS_HINDI_TRADITIONAL_LAYOUT,                   "Хінді (традиційна)"
-	IDS_CANTONESE_PHONETIC_LAYOUT,                  "Кантонська (фонетична)"
-	IDS_FAEROESE_LAYOUT,                            "Фарерська"
-	IDS_FYRO_MACEDONIAN_LAYOUT,                     "Македонська (Македонія)"
-	IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT,           "Канадська стандартна (багатомовна)"
-	IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT,           "Китайська (традиційне письмо) - швидка"
-	IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT,           "Китайська (традиційне письмо) - таблична"
-	IDS_KAZAKH_LAYOUT,                              "Казахська"
-	IDS_UZBEK_CYRILLIC_LAYOUT,                      "Узбецька (кирилиця)"
-	IDS_AZERI_CYRILLIC_LAYOUT,                      "Азербайджанська (кирилиця)"
-	IDS_TATAR_LAYOUT,                               "Татарська"
-	IDS_AZERI_LATIN_LAYOUT,                         "Азербайджанська (латиниця)"
-	IDS_VIETNAMESE_LAYOUT,                          "В'єтнамська"
-	IDS_GEORGIAN_LAYOUT,                            "Грузинська"
-	IDS_ARMENIAN_EASTERN_LAYOUT,                    "Вірменська (східна)"
-	IDS_ARMENIAN_WESTERN_LAYOUT,                    "Вірменська (західна)"
-	IDS_GREEK_POLYTONIC_LAYOUT,                     "Грецька (політонічна)"
-	IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "Англійська таблична (США) для арабської (IBM, 238_L)"
-	IDS_FARSI_LAYOUT,                               "Перська"
-	IDS_GAELIC_LAYOUT,                              "Гельська"
-	IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Португальська (Бразилія ABNT2)"
-	IDS_MONGOLIAN_CYRILLIC_LAYOUT,                  "Монгольська (кирилиця)"
-	IDS_KYRGYZ_CYRILLIC_LAYOUT,                     "Киргизька (кирилиця)"
-	IDS_URDU_LAYOUT,                                "Урду"
-	IDS_SYRIAC_LAYOUT,                              "Сирійська"
-	IDS_SYRIAC_PHONETIC_LAYOUT,                     "Сирійська (фонетична)"
-	IDS_DIVEHI_PHONETIC_LAYOUT,                     "Мальдівська (фонетична)"
-	IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Мальдівська (друкарська машинка)"
-	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Болгарська фонетична (класична)"
-	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Болгарська фонетична (BDS)"
-    IDS_BULGARIAN_BDS_LAYOUT,                       "Bulgarian BDS 5237-1978"
-    IDS_GERMAN_RISTOME_LAYOUT,                      "German (RISTOME)"
-    IDS_GERMAN_NEO_11_LAYOUT,                       "German (NEO-1.1)"
-    IDS_GERMAN_DE_ERGO_LAYOUT,                      "German (de_ergo)"
-    IDS_BURMESE_LAYOUT,                             "Burmese"
-    IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Ukrainian (Student)"
+    IDS_US_LAYOUT,                                  "США"
+    IDS_BELGIAN_LAYOUT,                             "Бельгійська (із крапкою)"
+    IDS_BELGIAN_FRENCH_LAYOUT,                      "Французька (Бельгія)"
+    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Португальська (Бразилія ABNT)"
+    IDS_CANADIAN_FRENCH_LAYOUT,                     "Французька (Канада)"
+    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "Французька (Канада, традиційна)"
+    IDS_DANISH_LAYOUT,                              "Датська"
+    IDS_DUTCH_LAYOUT,                               "Нідерландська"
+    IDS_FINNISH_LAYOUT,                             "Фінська"
+    IDS_FRENCH_LAYOUT,                              "Французька"
+    IDS_GERMAN_LAYOUT,                              "Німецька"
+    IDS_GERMAN_IBM_LAYOUT,                          "Німецька (IBM)"
+    IDS_ICELANDIC_LAYOUT,                           "Ісландська"
+    IDS_IRISH_LAYOUT,                               "Ірландська"
+    IDS_ITALIAN_LAYOUT,                             "Італійська"
+    IDS_ITALIAN_142_LAYOUT,                         "Італійська (142)"
+    IDS_LATIN_AMERICAN_LAYOUT,                      "Латинська Америка"
+    IDS_NORWEGIAN_LAYOUT,                           "Норвезька"
+    IDS_PORTUGUESE_LAYOUT,                          "Португальська"
+    IDS_SPANISH_LAYOUT,                             "Іспанська"
+    IDS_SPANISH_VARIANTION_LAYOUT,                  "Іспанська 2"
+    IDS_SWEDISH_LAYOUT,                             "Шведська"
+    IDS_SWISS_FRENCH_LAYOUT,                        "Французька (Швейцарія)"
+    IDS_SWISS_GERMAN_LAYOUT,                        "Німецька (Швейцарія)"
+    IDS_UNITED_KINGDOM_LAYOUT,                      "Великобританія"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "США - міжнародна"
+    IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "США - Дворак (для лівої руки)"
+    IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "США - Дворак (для правої руки)"
+    IDS_ALBANIAN_LAYOUT,                            "Албанська"
+    IDS_CROATIAN_LAYOUT,                            "Хорватська"
+    IDS_CZECH_LAYOUT,                               "Чеська"
+    IDS_CZECH_QWERTY_LAYOUT,                        "Чеська (QWERTY)"
+    IDS_HUNGARIAN_LAYOUT,                           "Угорська"
+    IDS_HUNGARIAN_101_KEY_LAYOUT,                   "Угорська (101 клавіша)"
+    IDS_POLISH_LAYOUT,                              "Польська (програмістська)"
+    IDS_POLISH_214_LAYOUT,                          "Польська (214)"
+    IDS_ROMANIAN_LAYOUT,                            "Румунська"
+    IDS_SERBIAN_LATIN_LAYOUT,                       "Сербська (латиниця)"
+    IDS_SLOVAK_LAYOUT,                              "Словацька"
+    IDS_SLOVAK_QWERTY_LAYOUT,                       "Словацька (QWERTY)"
+    IDS_SLOVENIAN_LAYOUT,                           "Словенська"
+    IDS_ESTONIAN_LAYOUT,                            "Естонська"
+    IDS_LATVIAN_LAYOUT,                             "Латвійська"
+    IDS_LATVIAN_QWERTY_LAYOUT,                      "Латвійська (QWERTY)"
+    IDS_LITHUANIAN_IBM_LAYOUT,                      "Литовська (IBM)"
+    IDS_GREEK_LAYOUT,                               "Грецька"
+    IDS_GREEK_LATIN_LAYOUT,                         "Грецька (латиниця)"
+    IDS_GREEK_220_LAYOUT,                           "Грецька (220)"
+    IDS_GREEK_319_LAYOUT,                           "Грецька (319)"
+    IDS_GREEK_220_LATIN_LAYOUT,                     "Грецька (220, латиниця)"
+    IDS_GREEK_319_LATIN_LAYOUT,                     "Грецька (319, латиниця)"
+    IDS_BELARUSIAN_LAYOUT,                          "Білоруська"
+    IDS_BULGARIAN_LAYOUT,                           "Болгарська"
+    IDS_BULGARIAN_LATIN_LAYOUT,                     "Болгарська (латиниця)"
+    IDS_RUSSIAN_LAYOUT,                             "Російська"
+    IDS_RUSSIAN_TYPEWRITER_LAYOUT,                  "Російська (друкарська машинка)"
+    IDS_SERBIAN_CYRILLIC_LAYOUT,                    "Сербська (кирилиця)"
+    IDS_UKRAINIAN_LAYOUT,                           "Українська"
+    IDS_TURKISH_F_LAYOUT,                           "Турецька F"
+    IDS_TURKISH_Q_LAYOUT,                           "Турецька Q"
+    IDS_JAPANESE_LAYOUT,                            "Японська"
+    IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "Японський засіб вводу (MS-IME2002)"
+    IDS_KOREAN_LAYOUT,                              "Корейська"
+    IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "Корейський засіб вводу (MS-IME2002)"
+    IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT,      "Китайська (традиційне письмо) - США"
+    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT,        "Китайська (традиційне письмо) - фонетична"
+    IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT,        "Китайська (традиційне письмо) - ChangJie"
+    IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT,        "Китайська (традиційне письмо) - Big5 Code"
+    IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT,            "Китайська (традиційне письмо) - DaYi"
+    IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT,         "Китайська (традиційне письмо) - Юнікод"
+    IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "Китайська (традиційне письмо) - алфавітно-цифрова"
+    IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "Китайська (спрощене письмо) - США"
+    IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "Китайська (спрощене письмо) - QuanPin"
+    IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "Китайська (спрощене письмо) - ShuangPin"
+    IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT,          "Китайська (спрощене письмо) - ZhengMa"
+    IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT,            "Китайська (спрощене письмо) - NeiMa"
+    IDS_THAI_KEDMANEE_LAYOUT,                       "Тайська Кедмані"
+    IDS_THAI_PATTACHOTE_LAYOUT,                     "Тайська Паташот"
+    IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT,          "Тайська Кедмані (без ShiftLock)"
+    IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT,        "Тайська Паташот (без ShiftLock)"
+    IDS_HEBREW_LAYOUT,                              "Іврит"
+    IDS_ARABIC_101_LAYOUT,                          "Арабська (101)"
+    IDS_ARABIC_102_LAYOUT,                          "Арабська (102)"
+    IDS_ARABIC_102_AZERTY_LAYOUT,                   "Арабська (102) AZERTY"
+    IDS_CZECH_PROGRAMMERS_LAYOUT,                   "Чеська (програмістська)"
+    IDS_LITHUANIAN_LAYOUT,                          "Литовська"
+    IDS_BELGIAN_COMMA_LAYOUT,                       "Бельгійська (з комою)"
+    IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT,     "Китайська (традиційне письмо) - нова фонетична"
+    IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "Китайська (спрощене письмо) - Microsoft Pinyin IME 3.0"
+    IDS_UNITED_STATES_DVIRAK_LAYOUT,                "США - Дворак"
+    IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT,     "Китайська (традиційне письмо) - нова ChangJie"
+    IDS_ASSAMESE_LAYOUT,                            "Ассамська"
+    IDS_BENGALI_LAYOUT,                             "Бенгалі"
+    IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "Деванагарі (INSCRIPT)"
+    IDS_GUJARATI_LAYOUT,                            "Гуджараті"
+    IDS_KANNADA_LAYOUT,                             "Каннада"
+    IDS_MALAYALAM_LAYOUT,                           "Малаялам"
+    IDS_ORIYA_LAYOUT,                               "Орія"
+    IDS_PUNJABI_LAYOUT,                             "Панджабі"
+    IDS_TAMIL_LAYOUT,                               "Тамільська"
+    IDS_TELUGU_LAYOUT,                              "Телугу"
+    IDS_MARATHI_LAYOUT,                             "Маратхі"
+    IDS_HINDI_TRADITIONAL_LAYOUT,                   "Хінді (традиційна)"
+    IDS_CANTONESE_PHONETIC_LAYOUT,                  "Кантонська (фонетична)"
+    IDS_FAEROESE_LAYOUT,                            "Фарерська"
+    IDS_FYRO_MACEDONIAN_LAYOUT,                     "Македонська (Македонія)"
+    IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT,           "Канадська стандартна (багатомовна)"
+    IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT,           "Китайська (традиційне письмо) - швидка"
+    IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT,           "Китайська (традиційне письмо) - таблична"
+    IDS_KAZAKH_LAYOUT,                              "Казахська"
+    IDS_UZBEK_CYRILLIC_LAYOUT,                      "Узбецька (кирилиця)"
+    IDS_AZERI_CYRILLIC_LAYOUT,                      "Азербайджанська (кирилиця)"
+    IDS_TATAR_LAYOUT,                               "Татарська"
+    IDS_AZERI_LATIN_LAYOUT,                         "Азербайджанська (латиниця)"
+    IDS_VIETNAMESE_LAYOUT,                          "В'єтнамська"
+    IDS_GEORGIAN_LAYOUT,                            "Грузинська"
+    IDS_ARMENIAN_EASTERN_LAYOUT,                    "Вірменська (східна)"
+    IDS_ARMENIAN_WESTERN_LAYOUT,                    "Вірменська (західна)"
+    IDS_GREEK_POLYTONIC_LAYOUT,                     "Грецька (політонічна)"
+    IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "Англійська таблична (США) для арабської (IBM, 238_L)"
+    IDS_FARSI_LAYOUT,                               "Перська"
+    IDS_GAELIC_LAYOUT,                              "Гельська"
+    IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Португальська (Бразилія ABNT2)"
+    IDS_MONGOLIAN_CYRILLIC_LAYOUT,                  "Монгольська (кирилиця)"
+    IDS_KYRGYZ_CYRILLIC_LAYOUT,                     "Киргизька (кирилиця)"
+    IDS_URDU_LAYOUT,                                "Урду"
+    IDS_SYRIAC_LAYOUT,                              "Сирійська"
+    IDS_SYRIAC_PHONETIC_LAYOUT,                     "Сирійська (фонетична)"
+    IDS_DIVEHI_PHONETIC_LAYOUT,                     "Мальдівська (фонетична)"
+    IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Мальдівська (друкарська машинка)"
+    IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Болгарська фонетична (класична)"
+    IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Болгарська фонетична (BDS)"
+    IDS_BULGARIAN_BDS_LAYOUT,                       "Болгарська BDS 5237-1978"
+    IDS_GERMAN_RISTOME_LAYOUT,                      "Німецька (RISTOME)"
+    IDS_GERMAN_NEO_11_LAYOUT,                       "Німецька (NEO-1.1)"
+    IDS_GERMAN_DE_ERGO_LAYOUT,                      "Німецька (de_ergo)"
+    IDS_BURMESE_LAYOUT,                             "Бірманська"
+    IDS_UKRAINIAN_STUDENT_LAYOUT,                   "Українська (студентська)"
 END

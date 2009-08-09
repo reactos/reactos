@@ -21,7 +21,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(kernel32file);
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 BackupRead (
 	HANDLE	hFile,
 	LPBYTE	lpBuffer,
@@ -41,7 +41,7 @@ BackupRead (
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 BackupSeek (
 	HANDLE	hFile,
 	DWORD	dwLowBytesToSeek,
@@ -60,7 +60,7 @@ BackupSeek (
  * @unimplemented
  */
 BOOL
-STDCALL
+WINAPI
 BackupWrite (
 	HANDLE	hFile,
 	LPBYTE	lpBuffer,

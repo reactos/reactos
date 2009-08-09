@@ -250,11 +250,13 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
     case IOCTL_DISK_FORMAT_TRACKS:
     case IOCTL_DISK_FORMAT_TRACKS_EX:
       ERR_(FLOPPY, "Format called; not supported yet\n");
+      Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+      Irp->IoStatus.Information = 0;
       break;
 
     case IOCTL_DISK_GET_PARTITION_INFO:
-      INFO_(FLOPPY, "IOCTL_DISK_GET_PARTITION_INFO Called; not supported\n");
-      Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
+      INFO_(FLOPPY, "IOCTL_DISK_GET_PARTITION_INFO Called; not supported by a floppy driver\n");
+      Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
       Irp->IoStatus.Information = 0;
       break;
 

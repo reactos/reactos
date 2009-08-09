@@ -132,16 +132,27 @@ LoadAppInitDlls()
     {
         WCHAR buffer[KEY_LENGTH];
         LPWSTR ptr;
-        LPWSTR seps = L" ,";
+		size_t i;
 
-        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);;
+        RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);
 
-        ptr = wcstok(buffer, seps);
-        while (ptr)
-        {
-            LoadLibraryW(ptr);
-            ptr = wcstok(NULL, seps);
-        }
+		for (i = 0; i < KEY_LENGTH; ++ i)
+		{
+			if(buffer[i] == L' ' || buffer[i] == L',')
+				buffer[i] = 0;
+		}
+
+		for (i = 0; i < KEY_LENGTH; )
+		{
+			if(buffer[i] == 0)
+				++ i;
+			else
+			{
+				ptr = buffer + i;
+				i += wcslen(ptr);
+				LoadLibraryW(ptr);
+			}
+		}
     }
 }
 
@@ -153,17 +164,28 @@ UnloadAppInitDlls()
         WCHAR buffer[KEY_LENGTH];
         HMODULE hModule;
         LPWSTR ptr;
-        LPWSTR seps = L" ,";
+		size_t i;
 
         RtlCopyMemory(buffer, szAppInit, KEY_LENGTH);
 
-        ptr = wcstok(buffer, seps);
-        while (ptr)
-        {
-            hModule = GetModuleHandleW(ptr);
-            FreeLibrary(hModule);
-            ptr = wcstok(NULL, seps);
-        }
+		for (i = 0; i < KEY_LENGTH; ++ i)
+		{
+			if(buffer[i] == L' ' || buffer[i] == L',')
+				buffer[i] = 0;
+		}
+
+		for (i = 0; i < KEY_LENGTH; )
+		{
+			if(buffer[i] == 0)
+				++ i;
+			else
+			{
+				ptr = buffer + i;
+				i += wcslen(ptr);
+				hModule = GetModuleHandleW(ptr);
+				FreeLibrary(hModule);
+			}
+		}
     }
 }
 
@@ -195,17 +217,17 @@ BOOL
 Init(VOID)
 {
    /* Set up the kernel callbacks. */
-   NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
       (PVOID)User32CallWindowProcFromKernel;
-   NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
       (PVOID)User32CallSendAsyncProcForKernel;
-   NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
       (PVOID)User32LoadSysMenuTemplateForKernel;
-   NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
       (PVOID)User32SetupDefaultCursors;
-   NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
       (PVOID)User32CallHookProcFromKernel;
-   NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_EVENTPROC] =
       (PVOID)User32CallEventProcFromKernel;
 
    g_pi = GetW32ProcessInfo();
@@ -249,7 +271,7 @@ Cleanup(VOID)
    TlsFree(User32TlsIndex);
 }
 
-INT STDCALL
+INT WINAPI
 DllMain(
    IN PVOID hInstanceDll,
    IN ULONG dwReason,
@@ -288,6 +310,7 @@ DllMain(
          break;
 
       case DLL_PROCESS_DETACH:
+         if (hImmInstance) FreeLibrary(hImmInstance);
          CleanupThread();
          Cleanup();
          break;

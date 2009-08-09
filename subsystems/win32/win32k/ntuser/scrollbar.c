@@ -498,7 +498,7 @@ IntDestroyScrollBars(PWINDOW_OBJECT Window)
    return FALSE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
 {
    BOOL Chg = FALSE;
@@ -538,7 +538,7 @@ IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows)
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
 {
    NTSTATUS Status;
@@ -585,7 +585,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserGetScrollInfo(HWND hWnd, int fnBar, LPSCROLLINFO lpsi)
 {
    NTSTATUS Status;
@@ -640,7 +640,7 @@ CLEANUP:
 
 
 BOOL
-STDCALL
+APIENTRY
 NtUserEnableScrollBar(
    HWND hWnd,
    UINT wSBflags,
@@ -720,7 +720,7 @@ CLEANUP:
 }
 
 BOOL
-STDCALL
+APIENTRY
 NtUserSetScrollBarInfo(
    HWND hWnd,
    LONG idObject,
@@ -783,7 +783,7 @@ CLEANUP:
 }
 
 DWORD
-STDCALL
+APIENTRY
 NtUserSetScrollInfo(
    HWND hWnd,
    int fnBar,
@@ -892,7 +892,7 @@ co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
 }
 
 
-DWORD STDCALL
+DWORD APIENTRY
 NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
 {
    PWINDOW_OBJECT Window;

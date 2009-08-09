@@ -183,7 +183,7 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   6,
-  {   0,     1,    2,          4,   SHFT_INVALID, SHFT_INVALID, 3  }
+  { 0, 1, 2, 4, SHFT_INVALID, SHFT_INVALID, 3 }
 };
 
 #define NOCAPS 0
@@ -403,7 +403,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   extcode0_to_vk,
   extcode1_to_vk,
 
-  MAKELONG(0,1), /* Version 1.0 */
+  MAKELONG(1,1), /* Version 1.0 */
 
   /* Ligatures */
   0,
@@ -411,7 +411,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   NULL
 };
 
-PKBDTABLES STDCALL KbdLayerDescriptor(VOID) {
+PKBDTABLES WINAPI KbdLayerDescriptor(VOID) {
   return &keyboard_layout_table;
 }
 

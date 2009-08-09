@@ -47,9 +47,9 @@
  * limitations on drivers which want to use it as a fallback path.
  */
 
-#include "glheader.h"
-#include "imports.h"
-#include "mtypes.h"
+#include "main/glheader.h"
+#include "main/imports.h"
+#include "main/mtypes.h"
 
 #include "vbo_split.h"
 #include "vbo.h"

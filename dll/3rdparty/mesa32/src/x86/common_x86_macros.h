@@ -1,4 +1,3 @@
-/* $Id: common_x86_macros.h,v 1.3 2002/10/29 20:28:58 brianp Exp $ */
 
 /*
  * Mesa 3-D graphics library

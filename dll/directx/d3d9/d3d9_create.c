@@ -13,7 +13,6 @@
 #include <debug.h>
 #include <ddrawi.h>
 #include <ddrawgdi.h>
-#include <strsafe.h>
 
 static const GUID DISPLAY_GUID = { 0x67685559, 0x3106, 0x11D0, { 0xB9, 0x71, 0x00, 0xAA, 0x00, 0x34, 0x2F, 0x9F } };
 
@@ -113,21 +112,14 @@ void GetDisplayAdapterFromDevice(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapt
     }
 }
 
-static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapters, IN DWORD AdapterIndex)
+BOOL CreateD3D9DeviceData(IN LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter, IN LPD3D9_DEVICEDATA pDeviceData)
 {
     HDC hDC;
-    LPD3D9_DEVICEDATA pDeviceData;
-    LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapter = &pDisplayAdapters[AdapterIndex];
 
     /* Test DC creation for the display device */
     if (NULL == (hDC = CreateDCA(NULL, pDisplayAdapter->szDeviceName, NULL, NULL)))
-        return FALSE;
-
-    pDeviceData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3D9_DEVICEDATA));
-    if (NULL == pDeviceData)
     {
-        DPRINT1("Out of memory, could not initialize Direct3D adapter");
-        DeleteDC(hDC);
+        DPRINT1("Could not create dc for display adapter: %s", pDisplayAdapter->szDeviceName);
         return FALSE;
     }
 
@@ -148,17 +140,39 @@ static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAd
 
     if (FALSE == GetDeviceData(pDeviceData))
     {
-        DeleteDC(hDC);
-        HeapFree(GetProcessHeap(), 0, pDeviceData->pUnknown6BC);
-        HeapFree(GetProcessHeap(), 0, pDeviceData);
+        DPRINT1("Could not get device data for display adapter: %s", pDisplayAdapter->szDeviceName);
         return FALSE;
     }
 
-    DeleteDC(hDC);
+    return TRUE;
+}
+
+VOID DestroyD3D9DeviceData(IN LPD3D9_DEVICEDATA pDeviceData)
+{
+    DeleteDC(pDeviceData->hDC);
+    HeapFree(GetProcessHeap(), 0, pDeviceData->pUnknown6BC);
+}
+
+static BOOL GetDirect3D9AdapterInfo(IN OUT LPDIRECT3D9_DISPLAYADAPTER pDisplayAdapters, IN DWORD AdapterIndex)
+{
+    LPD3D9_DEVICEDATA pDeviceData;
+    
+    pDeviceData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3D9_DEVICEDATA));
+    if (NULL == pDeviceData)
+    {
+        DPRINT1("Out of memory, could not initialize Direct3D adapter");
+        return FALSE;
+    }
+
+    if (FALSE == CreateD3D9DeviceData(&pDisplayAdapters[AdapterIndex], pDeviceData))
+    {
+        DPRINT1("Could not create device data for adapter: %d", AdapterIndex);
+        return FALSE;
+    }
 
     GetDisplayAdapterFromDevice(pDisplayAdapters, AdapterIndex, pDeviceData);
 
-    HeapFree(GetProcessHeap(), 0, pDeviceData->pUnknown6BC);
+    DestroyD3D9DeviceData(pDeviceData);
     HeapFree(GetProcessHeap(), 0, pDeviceData);
 
     return TRUE;
@@ -233,9 +247,6 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion)
     if (pDirect3D9 == 0)
         return DDERR_OUTOFMEMORY;
 
-    pDirect3D9->unknown000007 = 0;
-    pDirect3D9->lpInt = 0;
-
     pDirect3D9->lpVtbl = &Direct3D9_Vtbl;
     pDirect3D9->dwProcessId = GetCurrentThreadId();
     pDirect3D9->lRefCnt = 1;
@@ -247,10 +258,15 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9, UINT SDKVersion)
 
     InitializeCriticalSection(&pDirect3D9->d3d9_cs);
 
-    GetDisplayDeviceInfo(pDirect3D9);
+    if (FALSE == GetDisplayDeviceInfo(pDirect3D9))
+    {
+        DPRINT1("Could not create Direct3D9 object");
+        AlignedFree(pDirect3D9);
+        return DDERR_GENERIC;
+    }
 
     *ppDirect3D9 = (LPDIRECT3D9)&pDirect3D9->lpVtbl;
 
-    return ERROR_SUCCESS;
+    return D3D_OK;
 }
 

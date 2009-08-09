@@ -6,6 +6,7 @@
  * Copyright 2004 Christian Costa
  * Copyright 2005 Oliver Stieber
  * Copyright 2006 Ivan Gyurdiev
+ * Copyright 2007-2008 Stefan Dösinger for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,122 +34,78 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 
 #define GLINFO_LOCATION ((IWineD3DDeviceImpl *)This->baseShader.device)->adapter->gl_info
 
-/* Shader debugging - Change the following line to enable debugging of software
-      vertex shaders                                                             */
-#if 0 /* Musxt not be 1 in cvs version */
-# define VSTRACE(A) TRACE A
-# define TRACE_VSVECTOR(name) TRACE( #name "=(%f, %f, %f, %f)\n", name.x, name.y, name.z, name.w)
-#else
-# define VSTRACE(A)
-# define TRACE_VSVECTOR(name)
-#endif
-
-/**
- * DirectX9 SDK download
- *  http://msdn.microsoft.com/library/default.asp?url=/downloads/list/directx.asp
- *
- * Exploring D3DX
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dndrive/html/directx07162002.asp
- *
- * Using Vertex Shaders
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dndrive/html/directx02192001.asp
- *
- * Dx9 New
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/whatsnew.asp
- *
- * Dx9 Shaders
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/reference/Shaders/VertexShader2_0/VertexShader2_0.asp
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/reference/Shaders/VertexShader2_0/Instructions/Instructions.asp
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/programmingguide/GettingStarted/VertexDeclaration/VertexDeclaration.asp
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/reference/Shaders/VertexShader3_0/VertexShader3_0.asp
- *
- * Dx9 D3DX
- *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/directx9_c/directx/graphics/programmingguide/advancedtopics/VertexPipe/matrixstack/matrixstack.asp
- *
- * FVF
- *  http://msdn.microsoft.com/library/en-us/directx9_c/directx/graphics/programmingguide/GettingStarted/VertexFormats/vformats.asp
- *
- * NVIDIA: DX8 Vertex Shader to NV Vertex Program
- *  http://developer.nvidia.com/view.asp?IO=vstovp
- *
- * NVIDIA: Memory Management with VAR
- *  http://developer.nvidia.com/view.asp?IO=var_memory_management
- */
-
-/* TODO: Vertex and Pixel shaders are almost identicle, the only exception being the way that some of the data is looked up or the availablity of some of the data i.e. some instructions are only valid for pshaders and some for vshaders
-because of this the bulk of the software pipeline can be shared between pixel and vertex shaders... and it wouldn't supprise me if the programes can be cross compiled using a large body body shared code */
-
-#define GLNAME_REQUIRE_GLSL  ((const char *)1)
+/* TODO: Vertex and Pixel shaders are almost identical, the only exception being the way that some of the data is looked up or the availability of some of the data i.e. some instructions are only valid for pshaders and some for vshaders
+because of this the bulk of the software pipeline can be shared between pixel and vertex shaders... and it wouldn't surprise me if the program can be cross compiled using a large body of shared code */
 
 CONST SHADER_OPCODE IWineD3DVertexShaderImpl_shader_ins[] = {
     /* This table is not order or position dependent. */
 
     /* Arithmetic */
-    {WINED3DSIO_NOP,    "nop",  "NOP", 0, 0, vshader_hw_map2gl,   NULL, 0, 0},
-    {WINED3DSIO_MOV,    "mov",  "MOV", 1, 2, vshader_hw_map2gl,   shader_glsl_mov, 0, 0},
-    {WINED3DSIO_MOVA,   "mova",  NULL, 1, 2, vshader_hw_map2gl,   shader_glsl_mov, WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_ADD,    "add",  "ADD", 1, 3, vshader_hw_map2gl,   shader_glsl_arith, 0, 0},
-    {WINED3DSIO_SUB,    "sub",  "SUB", 1, 3, vshader_hw_map2gl,   shader_glsl_arith, 0, 0},
-    {WINED3DSIO_MAD,    "mad",  "MAD", 1, 4, vshader_hw_map2gl,   shader_glsl_mad, 0, 0},
-    {WINED3DSIO_MUL,    "mul",  "MUL", 1, 3, vshader_hw_map2gl,   shader_glsl_arith, 0, 0},
-    {WINED3DSIO_RCP,    "rcp",  "RCP", 1, 2, vshader_hw_rsq_rcp,  shader_glsl_rcp, 0, 0},
-    {WINED3DSIO_RSQ,    "rsq",  "RSQ", 1, 2, vshader_hw_rsq_rcp,  shader_glsl_rsq, 0, 0},
-    {WINED3DSIO_DP3,    "dp3",  "DP3", 1, 3, vshader_hw_map2gl,   shader_glsl_dot, 0, 0},
-    {WINED3DSIO_DP4,    "dp4",  "DP4", 1, 3, vshader_hw_map2gl,   shader_glsl_dot, 0, 0},
-    {WINED3DSIO_MIN,    "min",  "MIN", 1, 3, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_MAX,    "max",  "MAX", 1, 3, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_SLT,    "slt",  "SLT", 1, 3, vshader_hw_map2gl,   shader_glsl_compare, 0, 0},
-    {WINED3DSIO_SGE,    "sge",  "SGE", 1, 3, vshader_hw_map2gl,   shader_glsl_compare, 0, 0},
-    {WINED3DSIO_ABS,    "abs",  "ABS", 1, 2, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_EXP,    "exp",  "EX2", 1, 2, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_LOG,    "log",  "LG2", 1, 2, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_EXPP,   "expp", "EXP", 1, 2, vshader_hw_map2gl,   shader_glsl_expp, 0, 0},
-    {WINED3DSIO_LOGP,   "logp", "LOG", 1, 2, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_LIT,    "lit",  "LIT", 1, 2, vshader_hw_map2gl,   shader_glsl_lit, 0, 0},
-    {WINED3DSIO_DST,    "dst",  "DST", 1, 3, vshader_hw_map2gl,   shader_glsl_dst, 0, 0},
-    {WINED3DSIO_LRP,    "lrp",  "LRP", 1, 4, NULL,                shader_glsl_lrp, 0, 0},
-    {WINED3DSIO_FRC,    "frc",  "FRC", 1, 2, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_POW,    "pow",  "POW", 1, 3, vshader_hw_map2gl,   shader_glsl_pow, 0, 0},
-    {WINED3DSIO_CRS,    "crs",  "XPD", 1, 3, vshader_hw_map2gl,   shader_glsl_cross, 0, 0},
-    /* TODO: sng can possibly be performed a  s
+    {WINED3DSIO_NOP,     "nop",     0, 0, WINED3DSIH_NOP,     0,                      0                     },
+    {WINED3DSIO_MOV,     "mov",     1, 2, WINED3DSIH_MOV,     0,                      0                     },
+    {WINED3DSIO_MOVA,    "mova",    1, 2, WINED3DSIH_MOVA,    WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_ADD,     "add",     1, 3, WINED3DSIH_ADD,     0,                      0                     },
+    {WINED3DSIO_SUB,     "sub",     1, 3, WINED3DSIH_SUB,     0,                      0                     },
+    {WINED3DSIO_MAD,     "mad",     1, 4, WINED3DSIH_MAD,     0,                      0                     },
+    {WINED3DSIO_MUL,     "mul",     1, 3, WINED3DSIH_MUL,     0,                      0                     },
+    {WINED3DSIO_RCP,     "rcp",     1, 2, WINED3DSIH_RCP,     0,                      0                     },
+    {WINED3DSIO_RSQ,     "rsq",     1, 2, WINED3DSIH_RSQ,     0,                      0                     },
+    {WINED3DSIO_DP3,     "dp3",     1, 3, WINED3DSIH_DP3,     0,                      0                     },
+    {WINED3DSIO_DP4,     "dp4",     1, 3, WINED3DSIH_DP4,     0,                      0                     },
+    {WINED3DSIO_MIN,     "min",     1, 3, WINED3DSIH_MIN,     0,                      0                     },
+    {WINED3DSIO_MAX,     "max",     1, 3, WINED3DSIH_MAX,     0,                      0                     },
+    {WINED3DSIO_SLT,     "slt",     1, 3, WINED3DSIH_SLT,     0,                      0                     },
+    {WINED3DSIO_SGE,     "sge",     1, 3, WINED3DSIH_SGE,     0,                      0                     },
+    {WINED3DSIO_ABS,     "abs",     1, 2, WINED3DSIH_ABS,     0,                      0                     },
+    {WINED3DSIO_EXP,     "exp",     1, 2, WINED3DSIH_EXP,     0,                      0                     },
+    {WINED3DSIO_LOG,     "log",     1, 2, WINED3DSIH_LOG,     0,                      0                     },
+    {WINED3DSIO_EXPP,    "expp",    1, 2, WINED3DSIH_EXPP,    0,                      0                     },
+    {WINED3DSIO_LOGP,    "logp",    1, 2, WINED3DSIH_LOGP,    0,                      0                     },
+    {WINED3DSIO_LIT,     "lit",     1, 2, WINED3DSIH_LIT,     0,                      0                     },
+    {WINED3DSIO_DST,     "dst",     1, 3, WINED3DSIH_DST,     0,                      0                     },
+    {WINED3DSIO_LRP,     "lrp",     1, 4, WINED3DSIH_LRP,     0,                      0                     },
+    {WINED3DSIO_FRC,     "frc",     1, 2, WINED3DSIH_FRC,     0,                      0                     },
+    {WINED3DSIO_POW,     "pow",     1, 3, WINED3DSIH_POW,     0,                      0                     },
+    {WINED3DSIO_CRS,     "crs",     1, 3, WINED3DSIH_CRS,     0,                      0                     },
+    /* TODO: sng can possibly be performed as
         RCP tmp, vec
         MUL out, tmp, vec*/
-    {WINED3DSIO_SGN,  "sgn",  NULL,  1, 2, NULL,                shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_NRM,    "nrm",      NULL, 1, 2, shader_hw_nrm, shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_SINCOS, "sincos",   NULL, 1, 4, shader_hw_sincos, shader_glsl_sincos, WINED3DVS_VERSION(2,0), WINED3DVS_VERSION(2,1)},
-    {WINED3DSIO_SINCOS, "sincos",  "SCS", 1, 2, shader_hw_sincos, shader_glsl_sincos, WINED3DVS_VERSION(3,0), -1},
+    {WINED3DSIO_SGN,     "sgn",     1, 2, WINED3DSIH_SGN,     0,                      0                     },
+    {WINED3DSIO_NRM,     "nrm",     1, 2, WINED3DSIH_NRM,     0,                      0                     },
+    {WINED3DSIO_SINCOS,  "sincos",  1, 4, WINED3DSIH_SINCOS,  WINED3DVS_VERSION(2,0), WINED3DVS_VERSION(2,1)},
+    {WINED3DSIO_SINCOS,  "sincos",  1, 2, WINED3DSIH_SINCOS,  WINED3DVS_VERSION(3,0), -1                    },
     /* Matrix */
-    {WINED3DSIO_M4x4,   "m4x4", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M4x3,   "m4x3", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M3x4,   "m3x4", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M3x3,   "m3x3", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M3x2,   "m3x2", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
+    {WINED3DSIO_M4x4,    "m4x4",    1, 3, WINED3DSIH_M4x4,    0,                      0                     },
+    {WINED3DSIO_M4x3,    "m4x3",    1, 3, WINED3DSIH_M4x3,    0,                      0                     },
+    {WINED3DSIO_M3x4,    "m3x4",    1, 3, WINED3DSIH_M3x4,    0,                      0                     },
+    {WINED3DSIO_M3x3,    "m3x3",    1, 3, WINED3DSIH_M3x3,    0,                      0                     },
+    {WINED3DSIO_M3x2,    "m3x2",    1, 3, WINED3DSIH_M3x2,    0,                      0                     },
     /* Declare registers */
-    {WINED3DSIO_DCL,    "dcl",      NULL,                0, 2, NULL, NULL, 0, 0},
+    {WINED3DSIO_DCL,     "dcl",     0, 2, WINED3DSIH_DCL,     0,                      0                     },
     /* Constant definitions */
-    {WINED3DSIO_DEF,    "def",      NULL,                1, 5, NULL, NULL, 0, 0},
-    {WINED3DSIO_DEFB,   "defb",     GLNAME_REQUIRE_GLSL, 1, 2, NULL, NULL, 0, 0},
-    {WINED3DSIO_DEFI,   "defi",     GLNAME_REQUIRE_GLSL, 1, 5, NULL, NULL, 0, 0},
+    {WINED3DSIO_DEF,     "def",     1, 5, WINED3DSIH_DEF,     0,                      0                     },
+    {WINED3DSIO_DEFB,    "defb",    1, 2, WINED3DSIH_DEFB,    0,                      0                     },
+    {WINED3DSIO_DEFI,    "defi",    1, 5, WINED3DSIH_DEFI,    0,                      0                     },
     /* Flow control - requires GLSL or software shaders */
-    {WINED3DSIO_REP ,   "rep",      NULL, 0, 1, NULL, shader_glsl_rep,    WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_ENDREP, "endrep",   NULL, 0, 0, NULL, shader_glsl_end,    WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_IF,     "if",       NULL, 0, 1, NULL, shader_glsl_if,     WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_IFC,    "ifc",      NULL, 0, 2, NULL, shader_glsl_ifc,    WINED3DVS_VERSION(2,1), -1},
-    {WINED3DSIO_ELSE,   "else",     NULL, 0, 0, NULL, shader_glsl_else,   WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_ENDIF,  "endif",    NULL, 0, 0, NULL, shader_glsl_end,    WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_BREAK,  "break",    NULL, 0, 0, NULL, shader_glsl_break,  WINED3DVS_VERSION(2,1), -1},
-    {WINED3DSIO_BREAKC, "breakc",   NULL, 0, 2, NULL, shader_glsl_breakc, WINED3DVS_VERSION(2,1), -1},
-    {WINED3DSIO_BREAKP, "breakp",   GLNAME_REQUIRE_GLSL, 0, 1, NULL, NULL, 0, 0},
-    {WINED3DSIO_CALL,   "call",     NULL, 0, 1, NULL, shader_glsl_call,   WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_CALLNZ, "callnz",   NULL, 0, 2, NULL, shader_glsl_callnz, WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_LOOP,   "loop",     NULL, 0, 2, NULL, shader_glsl_loop,   WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_RET,    "ret",      NULL, 0, 0, NULL, NULL,               WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_ENDLOOP,"endloop",  NULL, 0, 0, NULL, shader_glsl_end,    WINED3DVS_VERSION(2,0), -1},
-    {WINED3DSIO_LABEL,  "label",    NULL, 0, 1, NULL, shader_glsl_label,  WINED3DVS_VERSION(2,0), -1},
+    {WINED3DSIO_REP ,    "rep",     0, 1, WINED3DSIH_REP,     WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_ENDREP,  "endrep",  0, 0, WINED3DSIH_ENDREP,  WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_IF,      "if",      0, 1, WINED3DSIH_IF,      WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_IFC,     "ifc",     0, 2, WINED3DSIH_IFC,     WINED3DVS_VERSION(2,1), -1                    },
+    {WINED3DSIO_ELSE,    "else",    0, 0, WINED3DSIH_ELSE,    WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_ENDIF,   "endif",   0, 0, WINED3DSIH_ENDIF,   WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_BREAK,   "break",   0, 0, WINED3DSIH_BREAK,   WINED3DVS_VERSION(2,1), -1                    },
+    {WINED3DSIO_BREAKC,  "breakc",  0, 2, WINED3DSIH_BREAKC,  WINED3DVS_VERSION(2,1), -1                    },
+    {WINED3DSIO_BREAKP,  "breakp",  0, 1, WINED3DSIH_BREAKP,  0,                      0                     },
+    {WINED3DSIO_CALL,    "call",    0, 1, WINED3DSIH_CALL,    WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_CALLNZ,  "callnz",  0, 2, WINED3DSIH_CALLNZ,  WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_LOOP,    "loop",    0, 2, WINED3DSIH_LOOP,    WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_RET,     "ret",     0, 0, WINED3DSIH_RET,     WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_ENDLOOP, "endloop", 0, 0, WINED3DSIH_ENDLOOP, WINED3DVS_VERSION(2,0), -1                    },
+    {WINED3DSIO_LABEL,   "label",   0, 1, WINED3DSIH_LABEL,   WINED3DVS_VERSION(2,0), -1                    },
 
-    {WINED3DSIO_SETP,   "setp",     GLNAME_REQUIRE_GLSL, 1, 3, NULL, NULL, 0, 0},
-    {WINED3DSIO_TEXLDL, "texldl",   NULL, 1, 3, NULL, shader_glsl_texldl, WINED3DVS_VERSION(3,0), -1},
-    {0,                 NULL,       NULL,                0, 0, NULL, NULL, 0, 0}
+    {WINED3DSIO_SETP,    "setp",    1, 3, WINED3DSIH_SETP,    0,                      0                     },
+    {WINED3DSIO_TEXLDL,  "texldl",  1, 3, WINED3DSIH_TEXLDL,  WINED3DVS_VERSION(3,0), -1                    },
+    {0,                  NULL,      0, 0, 0,                  0,                      0                     }
 };
 
 static void vshader_set_limits(
@@ -161,7 +118,8 @@ static void vshader_set_limits(
       /* Must match D3DCAPS9.MaxVertexShaderConst: at least 256 for vs_2_0 */
       This->baseShader.limits.constant_float = GL_LIMITS(vshader_constantsF);
 
-      switch (This->baseShader.hex_version) {
+      switch (This->baseShader.reg_maps.shader_version)
+      {
           case WINED3DVS_VERSION(1,0):
           case WINED3DVS_VERSION(1,1):
                    This->baseShader.limits.temporary = 12;
@@ -202,7 +160,7 @@ static void vshader_set_limits(
                    This->baseShader.limits.sampler = 0;
                    This->baseShader.limits.label = 16;
                    FIXME("Unrecognized vertex shader version %#x\n",
-                       This->baseShader.hex_version);
+                           This->baseShader.reg_maps.shader_version);
       }
 }
 
@@ -258,264 +216,50 @@ BOOL vshader_get_input(
     return FALSE;
 }
 
-BOOL vshader_input_is_color(
-    IWineD3DVertexShader* iface,
-    unsigned int regnum) {
-
-    IWineD3DVertexShaderImpl* This = (IWineD3DVertexShaderImpl*) iface;
-
-    DWORD usage_token = This->semantics_in[regnum].usage;
-    DWORD usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
-    DWORD usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
-
-    int i;
-
-    for(i = 0; i < This->num_swizzled_attribs; i++) {
-        if(This->swizzled_attribs[i].usage == usage &&
-           This->swizzled_attribs[i].idx == usage_idx) {
-            return TRUE;
-        }
-    }
-    return FALSE;
-}
-
-static inline void find_swizzled_attribs(IWineD3DVertexDeclaration *declaration, IWineD3DVertexShaderImpl *This) {
-    UINT num = 0, i, j;
-    UINT numoldswizzles = This->num_swizzled_attribs;
-    IWineD3DVertexDeclarationImpl *decl = (IWineD3DVertexDeclarationImpl *) declaration;
-
-    DWORD usage_token, usage, usage_idx;
-    BOOL found;
-
-    attrib_declaration oldswizzles[sizeof(This->swizzled_attribs) / sizeof(This->swizzled_attribs[0])];
-
-    /* Back up the old swizzles to keep attributes that are undefined in the current declaration */
-    memcpy(oldswizzles, This->swizzled_attribs, sizeof(oldswizzles));
-
-    memset(This->swizzled_attribs, 0, sizeof(This->swizzled_attribs[0]) * MAX_ATTRIBS);
-
-    for(i = 0; i < decl->num_swizzled_attribs; i++) {
-        for(j = 0; j < MAX_ATTRIBS; j++) {
-            usage_token = This->semantics_in[j].usage;
-            usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
-            usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
-
-            if(decl->swizzled_attribs[i].usage == usage &&
-               decl->swizzled_attribs[i].idx == usage_idx) {
-                This->swizzled_attribs[num].usage = usage;
-                This->swizzled_attribs[num].idx = usage_idx;
-                num++;
-            }
-        }
-    }
-
-    /* Add previously converted attributes back in if they are not defined in the current declaration */
-    for(i = 0; i < numoldswizzles; i++) {
-
-        found = FALSE;
-        for(j = 0; j < decl->declarationWNumElements; j++) {
-            if(oldswizzles[i].usage == decl->pDeclarationWine[j].Usage &&
-               oldswizzles[i].idx == decl->pDeclarationWine[j].UsageIndex) {
-                found = TRUE;
-            }
-        }
-        if(found) {
-            /* This previously converted attribute is declared in the current declaration. Either it is
-             * already in the new array, or it should not be there. Skip it
-             */
-            continue;
-        }
-        /* We have a previously swizzled attribute that is not defined by the current vertex declaration.
-         * Insert it into the new conversion array to keep it in the old defined state. Otherwise we end up
-         * recompiling if the old decl is used again because undefined attributes are reset to no swizzling.
-         * In the reverse way(attribute was not swizzled and is not declared in new declaration) the attrib
-         * stays unswizzled as well because it isn't found in the oldswizzles array
-         */
-        for(j = 0; j < num; j++) {
-            if(oldswizzles[i].usage > This->swizzled_attribs[j].usage || (
-               oldswizzles[i].usage == This->swizzled_attribs[j].usage &&
-               oldswizzles[i].idx > This->swizzled_attribs[j].idx)) {
-                memmove(&This->swizzled_attribs[j + 1], &This->swizzled_attribs[j],
-                         sizeof(This->swizzled_attribs) - (sizeof(This->swizzled_attribs[0]) * (j - 1)));
-                break;
-            }
-        }
-        This->swizzled_attribs[j].usage = oldswizzles[i].usage;
-        This->swizzled_attribs[j].idx = oldswizzles[i].idx;
-        num++;
-    }
-
-    TRACE("New swizzled attributes array\n");
-    for(i = 0; i < num; i++) {
-        TRACE("%d: %s(%d), %d\n", i, debug_d3ddeclusage(This->swizzled_attribs[i].usage),
-              This->swizzled_attribs[i].usage, This->swizzled_attribs[i].idx);
-    }
-    This->num_swizzled_attribs = num;
-}
-/** Generate a vertex shader string using either GL_VERTEX_PROGRAM_ARB
-    or GLSL and send it to the card */
-static VOID IWineD3DVertexShaderImpl_GenerateShader(
-    IWineD3DVertexShader *iface,
-    shader_reg_maps* reg_maps,
-    CONST DWORD *pFunction) {
-
-    IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
-    IWineD3DVertexDeclaration *decl = ((IWineD3DDeviceImpl *) This->baseShader.device)->stateBlock->vertexDecl;
-    SHADER_BUFFER buffer;
-
-    find_swizzled_attribs(decl, This);
-
-#if 0 /* FIXME: Use the buffer that is held by the device, this is ok since fixups will be skipped for software shaders
-        it also requires entering a critical section but cuts down the runtime footprint of wined3d and any memory fragmentation that may occur... */
-    if (This->device->fixupVertexBufferSize < SHADER_PGMSIZE) {
-        HeapFree(GetProcessHeap(), 0, This->fixupVertexBuffer);
-        This->fixupVertexBuffer = HeapAlloc(GetProcessHeap() , 0, SHADER_PGMSIZE);
-        This->fixupVertexBufferSize = PGMSIZE;
-        This->fixupVertexBuffer[0] = 0;
-    }
-    buffer.buffer = This->device->fixupVertexBuffer;
-#else
-    buffer.buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SHADER_PGMSIZE); 
-#endif
-    buffer.bsize = 0;
-    buffer.lineNo = 0;
-    buffer.newline = TRUE;
-
-    if (This->baseShader.shader_mode == SHADER_GLSL) {
-
-        /* Create the hw GLSL shader program and assign it as the baseShader.prgId */
-        GLhandleARB shader_obj = GL_EXTCALL(glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB));
-
-        /* Base Declarations */
-        shader_generate_glsl_declarations( (IWineD3DBaseShader*) This, reg_maps, &buffer, &GLINFO_LOCATION);
-
-        /* Base Shader Body */
-        shader_generate_main( (IWineD3DBaseShader*) This, &buffer, reg_maps, pFunction);
-
-        /* Unpack 3.0 outputs */
-        if (This->baseShader.hex_version >= WINED3DVS_VERSION(3,0)) {
-            shader_addline(&buffer, "order_ps_input(OUT);\n");
-        } else {
-            shader_addline(&buffer, "order_ps_input();\n");
-        }
-
-        /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
-        if (!reg_maps->fog)
-            shader_addline(&buffer, "gl_FogFragCoord = gl_Position.z;\n");
-
-        /* Write the final position.
-         *
-         * OpenGL coordinates specify the center of the pixel while d3d coords specify
-         * the corner. The offsets are stored in z and w in posFixup. posFixup.y contains
-         * 1.0 or -1.0 to turn the rendering upside down for offscreen rendering. PosFixup.x
-         * contains 1.0 to allow a mad.
-         */
-        shader_addline(&buffer, "gl_Position.xy = gl_Position.xy * posFixup.xy + posFixup.zw;\n");
-
-        /* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
-         *
-         * Basically we want(in homogenous coordinates) z = z * 2 - 1. However, shaders are run
-         * before the homogenous divide, so we have to take the w into account: z = ((z / w) * 2 - 1) * w,
-         * which is the same as z = z / 2 - w.
-         */
-        shader_addline(&buffer, "gl_Position.z = gl_Position.z * 2.0 - gl_Position.w;\n");
-
-        shader_addline(&buffer, "}\n");
-
-        TRACE("Compiling shader object %u\n", shader_obj);
-        GL_EXTCALL(glShaderSourceARB(shader_obj, 1, (const char**)&buffer.buffer, NULL));
-        GL_EXTCALL(glCompileShaderARB(shader_obj));
-        print_glsl_info_log(&GLINFO_LOCATION, shader_obj);
-
-        /* Store the shader object */
-        This->baseShader.prgId = shader_obj;
-
-    } else if (This->baseShader.shader_mode == SHADER_ARB) {
-
-        /*  Create the hw ARB shader */
-        shader_addline(&buffer, "!!ARBvp1.0\n");
-        shader_addline(&buffer, "PARAM helper_const = { 2.0, -1.0, %d.0, 0.0 };\n", This->rel_offset);
-
-        /* Mesa supports only 95 constants */
-        if (GL_VEND(MESA) || GL_VEND(WINE))
-            This->baseShader.limits.constant_float = 
-                min(95, This->baseShader.limits.constant_float);
-
-        /* Some instructions need a temporary register. Add it if needed, but only if it is really needed */
-        if(reg_maps->usesnrm || This->rel_offset) {
-            shader_addline(&buffer, "TEMP TMP;\n");
-        }
-
-        /* Base Declarations */
-        shader_generate_arb_declarations( (IWineD3DBaseShader*) This, reg_maps, &buffer, &GLINFO_LOCATION);
-
-        /* We need a constant to fixup the final position */
-        shader_addline(&buffer, "PARAM posFixup = program.env[%d];\n", ARB_SHADER_PRIVCONST_POS);
-
-        /* Base Shader Body */
-        shader_generate_main( (IWineD3DBaseShader*) This, &buffer, reg_maps, pFunction);
-
-        /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
-        if (!reg_maps->fog)
-            shader_addline(&buffer, "MOV result.fogcoord, TMP_OUT.z;\n");
-
-        /* Write the final position.
-         *
-         * OpenGL coordinates specify the center of the pixel while d3d coords specify
-         * the corner. The offsets are stored in z and w in posFixup. posFixup.y contains
-         * 1.0 or -1.0 to turn the rendering upside down for offscreen rendering. PosFixup.x
-         * contains 1.0 to allow a mad, but arb vs swizzles are too restricted for that.
-         */
-        shader_addline(&buffer, "ADD TMP_OUT.x, TMP_OUT.x, posFixup.z;\n");
-        shader_addline(&buffer, "MAD TMP_OUT.y, TMP_OUT.y, posFixup.y, posFixup.w;\n");
-
-        /* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
-         * and the glsl equivalent
-         */
-        shader_addline(&buffer, "MAD TMP_OUT.z, TMP_OUT.z, helper_const.x, -TMP_OUT.w;\n");
-
-        shader_addline(&buffer, "MOV result.position, TMP_OUT;\n");
-        
-        shader_addline(&buffer, "END\n"); 
-
-        /* TODO: change to resource.glObjectHandle or something like that */
-        GL_EXTCALL(glGenProgramsARB(1, &This->baseShader.prgId));
-
-        TRACE("Creating a hw vertex shader, prg=%d\n", This->baseShader.prgId);
-        GL_EXTCALL(glBindProgramARB(GL_VERTEX_PROGRAM_ARB, This->baseShader.prgId));
-
-        TRACE("Created hw vertex shader, prg=%d\n", This->baseShader.prgId);
-        /* Create the program and check for errors */
-        GL_EXTCALL(glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB,
-            buffer.bsize, buffer.buffer));
-
-        if (glGetError() == GL_INVALID_OPERATION) {
-            GLint errPos;
-            glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &errPos);
-            FIXME("HW VertexShader Error at position %d: %s\n",
-                  errPos, debugstr_a((const char *)glGetString(GL_PROGRAM_ERROR_STRING_ARB)));
-            This->baseShader.prgId = -1;
-        }
-    }
-
-#if 1 /* if were using the data buffer of device then we don't need to free it */
-  HeapFree(GetProcessHeap(), 0, buffer.buffer);
-#endif
-}
-
 /* *******************************************
    IWineD3DVertexShader IUnknown parts follow
    ******************************************* */
 static HRESULT  WINAPI IWineD3DVertexShaderImpl_QueryInterface(IWineD3DVertexShader *iface, REFIID riid, LPVOID *ppobj) {
-    return IWineD3DBaseShaderImpl_QueryInterface((IWineD3DBaseShader *) iface, riid, ppobj);
+    TRACE("iface %p, riid %s, ppobj %p\n", iface, debugstr_guid(riid), ppobj);
+
+    if (IsEqualGUID(riid, &IID_IWineD3DVertexShader)
+            || IsEqualGUID(riid, &IID_IWineD3DBaseShader)
+            || IsEqualGUID(riid, &IID_IWineD3DBase)
+            || IsEqualGUID(riid, &IID_IUnknown))
+    {
+        IUnknown_AddRef(iface);
+        *ppobj = iface;
+        return S_OK;
+    }
+
+    WARN("%s not implemented, returning E_NOINTERFACE\n", debugstr_guid(riid));
+
+    *ppobj = NULL;
+    return E_NOINTERFACE;
 }
 
 static ULONG  WINAPI IWineD3DVertexShaderImpl_AddRef(IWineD3DVertexShader *iface) {
-    return IWineD3DBaseShaderImpl_AddRef((IWineD3DBaseShader *) iface);
+    IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
+    ULONG refcount = InterlockedIncrement(&This->baseShader.ref);
+
+    TRACE("%p increasing refcount to %u\n", This, refcount);
+
+    return refcount;
 }
 
 static ULONG WINAPI IWineD3DVertexShaderImpl_Release(IWineD3DVertexShader *iface) {
-    return IWineD3DBaseShaderImpl_Release((IWineD3DBaseShader *) iface);
+    IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
+    ULONG refcount = InterlockedDecrement(&This->baseShader.ref);
+
+    TRACE("%p decreasing refcount to %u\n", This, refcount);
+
+    if (!refcount)
+    {
+        shader_cleanup((IWineD3DBaseShader *)iface);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+
+    return refcount;
 }
 
 /* *******************************************
@@ -553,16 +297,10 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_GetFunction(IWineD3DVertexShader*
          * return D3DERR_MOREDATA. That's not actually true. */
         return WINED3DERR_INVALIDCALL;
     }
-    if (NULL == This->baseShader.function) { /* no function defined */
-        TRACE("(%p) : GetFunction no User Function defined using NULL to %p\n", This, pData);
-        (*(DWORD **) pData) = NULL;
-    } else {
-        if(This->baseShader.functionLength == 0){
 
-        }
-        TRACE("(%p) : GetFunction copying to %p\n", This, pData);
-        memcpy(pData, This->baseShader.function, This->baseShader.functionLength);
-    }
+    TRACE("(%p) : GetFunction copying to %p\n", This, pData);
+    memcpy(pData, This->baseShader.function, This->baseShader.functionLength);
+
     return WINED3D_OK;
 }
 
@@ -580,8 +318,7 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader 
     TRACE("(%p) : pFunction %p\n", iface, pFunction);
 
     /* First pass: trace shader */
-    shader_trace_init((IWineD3DBaseShader*) This, pFunction);
-    vshader_set_limits(This);
+    if (TRACE_ON(d3d_shader)) shader_trace_init(pFunction, This->baseShader.shader_ins);
 
     /* Initialize immediate constant lists */
     list_init(&This->baseShader.constantsF);
@@ -593,8 +330,10 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader 
     This->max_rel_offset = 0;
     memset(reg_maps, 0, sizeof(shader_reg_maps));
     hr = shader_get_registers_used((IWineD3DBaseShader*) This, reg_maps,
-       This->semantics_in, This->semantics_out, pFunction, NULL);
+            This->semantics_in, This->semantics_out, pFunction);
     if (hr != WINED3D_OK) return hr;
+
+    vshader_set_limits(This);
 
     This->baseShader.shader_mode = deviceImpl->vs_selected_mode;
 
@@ -617,16 +356,9 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader 
     This->baseShader.load_local_constsF = This->baseShader.reg_maps.usesrelconstF && !list_empty(&This->baseShader.constantsF);
 
     /* copy the function ... because it will certainly be released by application */
-    if (NULL != pFunction) {
-        void *function;
-
-        function = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->baseShader.functionLength);
-        if (!function) return E_OUTOFMEMORY;
-        memcpy(function, pFunction, This->baseShader.functionLength);
-        This->baseShader.function = function;
-    } else {
-        This->baseShader.function = NULL;
-    }
+    This->baseShader.function = HeapAlloc(GetProcessHeap(), 0, This->baseShader.functionLength);
+    if (!This->baseShader.function) return E_OUTOFMEMORY;
+    memcpy(This->baseShader.function, pFunction, This->baseShader.functionLength);
 
     return WINED3D_OK;
 }
@@ -638,7 +370,7 @@ static void WINAPI IWineD3DVertexShaderImpl_FakeSemantics(IWineD3DVertexShader *
 
     int i;
     for (i = 0; i < vdecl->declarationWNumElements - 1; ++i) {
-        WINED3DVERTEXELEMENT* element = vdecl->pDeclarationWine + i;
+        const WINED3DVERTEXELEMENT *element = vdecl->pDeclarationWine + i;
         vshader_set_input(This, element->Reg, element->Usage, element->UsageIndex);
     }
 }
@@ -669,100 +401,20 @@ static HRESULT WINAPI IWIneD3DVertexShaderImpl_SetLocalConstantsF(IWineD3DVertex
     return WINED3D_OK;
 }
 
-static inline BOOL swizzled_attribs_differ(IWineD3DVertexShaderImpl *This, IWineD3DVertexDeclarationImpl *vdecl) {
-    UINT i, j, k;
-    BOOL found;
-
-    DWORD usage_token;
-    DWORD usage;
-    DWORD usage_idx;
-
-    for(i = 0; i < vdecl->declarationWNumElements; i++) {
-        for(j = 0; j < MAX_ATTRIBS; j++) {
-            if(!This->baseShader.reg_maps.attributes) continue;
-
-            usage_token = This->semantics_in[j].usage;
-            usage = (usage_token & WINED3DSP_DCL_USAGE_MASK) >> WINED3DSP_DCL_USAGE_SHIFT;
-            usage_idx = (usage_token & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
-
-            if(vdecl->pDeclarationWine[i].Usage != usage ||
-               vdecl->pDeclarationWine[i].UsageIndex != usage_idx) {
-                continue;
-            }
-
-            found = FALSE;
-            for(k = 0; k < This->num_swizzled_attribs; k++) {
-                if(This->swizzled_attribs[k].usage == usage &&
-                    This->swizzled_attribs[k].idx == usage_idx) {
-                    found = TRUE;
-                }
-            }
-            if(!found && vdecl->pDeclarationWine[i].Type == WINED3DDECLTYPE_D3DCOLOR) {
-                TRACE("Attribute %s%d is D3DCOLOR now but wasn't before\n",
-                      debug_d3ddeclusage(usage), usage_idx);
-                return TRUE;
-            }
-            if( found && vdecl->pDeclarationWine[i].Type != WINED3DDECLTYPE_D3DCOLOR) {
-                TRACE("Attribute %s%d was D3DCOLOR before but is not any more\n",
-                      debug_d3ddeclusage(usage), usage_idx);
-                return TRUE;
-            }
-        }
-    }
-    return FALSE;
-}
-
-static HRESULT WINAPI IWineD3DVertexShaderImpl_CompileShader(IWineD3DVertexShader *iface) {
-    IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
-    IWineD3DVertexDeclarationImpl *vdecl;
-    CONST DWORD *function = This->baseShader.function;
+static GLuint vertexshader_compile(IWineD3DVertexShaderImpl *This, const struct vs_compile_args *args) {
     IWineD3DDeviceImpl *deviceImpl = (IWineD3DDeviceImpl *) This->baseShader.device;
-
-    TRACE("(%p) : function %p\n", iface, function);
-
-    /* We're already compiled. */
-    if (This->baseShader.is_compiled) {
-        vdecl = (IWineD3DVertexDeclarationImpl *) deviceImpl->stateBlock->vertexDecl;
-
-        if(This->num_swizzled_attribs != vdecl->num_swizzled_attribs ||
-           memcmp(This->swizzled_attribs, vdecl->swizzled_attribs, sizeof(vdecl->swizzled_attribs[0]) * This->num_swizzled_attribs) != 0) {
-
-            /* The swizzled attributes differ between shader and declaration. This doesn't necessarily mean
-             * we have to recompile, but we have to take a deeper look at see if the attribs that differ
-             * are declared in the decl and used in the shader
-             */
-            if(swizzled_attribs_differ(This, vdecl)) {
-                WARN("Recompiling vertex shader %p due to D3DCOLOR input changes\n", This);
-                goto recompile;
-            }
-            WARN("Swizzled attribute validation required an expensive comparison\n");
-        }
-
-        return WINED3D_OK;
-
-        recompile:
-        if(This->recompile_count < 50) {
-            This->recompile_count++;
-        } else {
-            FIXME("Vertexshader %p recompiled more than 50 times\n", This);
-        }
-
-        deviceImpl->shader_backend->shader_destroy((IWineD3DBaseShader *) iface);
-    }
-
-    /* We don't need to compile */
-    if (!function) {
-        This->baseShader.is_compiled = TRUE;
-        return WINED3D_OK;
-    }
+    SHADER_BUFFER buffer;
+    GLuint ret;
 
     /* Generate the HW shader */
     TRACE("(%p) : Generating hardware program\n", This);
-    IWineD3DVertexShaderImpl_GenerateShader(iface, &This->baseShader.reg_maps, function);
+    shader_buffer_init(&buffer);
+    This->cur_args = args;
+    ret = deviceImpl->shader_backend->shader_generate_vshader((IWineD3DVertexShader *)This, &buffer, args);
+    This->cur_args = NULL;
+    shader_buffer_free(&buffer);
 
-    This->baseShader.is_compiled = TRUE;
-
-    return WINED3D_OK;
+    return ret;
 }
 
 const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl =
@@ -775,10 +427,62 @@ const IWineD3DVertexShaderVtbl IWineD3DVertexShader_Vtbl =
     IWineD3DVertexShaderImpl_GetParent,
     /*** IWineD3DBaseShader methods ***/
     IWineD3DVertexShaderImpl_SetFunction,
-    IWineD3DVertexShaderImpl_CompileShader,
     /*** IWineD3DVertexShader methods ***/
     IWineD3DVertexShaderImpl_GetDevice,
     IWineD3DVertexShaderImpl_GetFunction,
     IWineD3DVertexShaderImpl_FakeSemantics,
     IWIneD3DVertexShaderImpl_SetLocalConstantsF
 };
+
+void find_vs_compile_args(IWineD3DVertexShaderImpl *shader, IWineD3DStateBlockImpl *stateblock, struct vs_compile_args *args) {
+    args->fog_src = stateblock->renderState[WINED3DRS_FOGTABLEMODE] == WINED3DFOG_NONE ? VS_FOG_COORD : VS_FOG_Z;
+    args->swizzle_map = ((IWineD3DDeviceImpl *)shader->baseShader.device)->strided_streams.swizzle_map;
+}
+
+static inline BOOL vs_args_equal(const struct vs_compile_args *stored, const struct vs_compile_args *new,
+                                 const DWORD use_map) {
+    if((stored->swizzle_map & use_map) != new->swizzle_map) return FALSE;
+    return stored->fog_src == new->fog_src;
+}
+
+GLuint find_gl_vshader(IWineD3DVertexShaderImpl *shader, const struct vs_compile_args *args)
+{
+    UINT i;
+    DWORD new_size = shader->shader_array_size;
+    struct vs_compiled_shader *new_array;
+    DWORD use_map = ((IWineD3DDeviceImpl *)shader->baseShader.device)->strided_streams.use_map;
+
+    /* Usually we have very few GL shaders for each d3d shader(just 1 or maybe 2),
+     * so a linear search is more performant than a hashmap or a binary search
+     * (cache coherency etc)
+     */
+    for(i = 0; i < shader->num_gl_shaders; i++) {
+        if(vs_args_equal(&shader->gl_shaders[i].args, args, use_map)) {
+            return shader->gl_shaders[i].prgId;
+        }
+    }
+
+    TRACE("No matching GL shader found, compiling a new shader\n");
+
+    if(shader->shader_array_size == shader->num_gl_shaders) {
+        if(shader->gl_shaders) {
+            new_size = shader->shader_array_size + max(1, shader->shader_array_size / 2);
+            new_array = HeapReAlloc(GetProcessHeap(), 0, shader->gl_shaders,
+                                    new_size * sizeof(*shader->gl_shaders));
+        } else {
+            new_array = HeapAlloc(GetProcessHeap(), 0, sizeof(*shader->gl_shaders));
+            new_size = 1;
+        }
+
+        if(!new_array) {
+            ERR("Out of memory\n");
+            return 0;
+        }
+        shader->gl_shaders = new_array;
+        shader->shader_array_size = new_size;
+    }
+
+    shader->gl_shaders[shader->num_gl_shaders].args = *args;
+    shader->gl_shaders[shader->num_gl_shaders].prgId = vertexshader_compile(shader, args);
+    return shader->gl_shaders[shader->num_gl_shaders++].prgId;
+}

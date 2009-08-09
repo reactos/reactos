@@ -18,11 +18,24 @@
 #include <libxml/xmlschemas.h>
 #endif
 
-#ifdef LIBXML_READER_ENABLED
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * xmlParserSeverities:
+ *
+ * How severe an error callback is when the per-reader error callback API
+ * is used.
+ */
+typedef enum {
+    XML_PARSER_SEVERITY_VALIDITY_WARNING = 1,
+    XML_PARSER_SEVERITY_VALIDITY_ERROR = 2,
+    XML_PARSER_SEVERITY_WARNING = 3,
+    XML_PARSER_SEVERITY_ERROR = 4
+} xmlParserSeverities;
+
+#ifdef LIBXML_READER_ENABLED
 
 /**
  * xmlTextReaderMode:
@@ -51,19 +64,6 @@ typedef enum {
     XML_PARSER_VALIDATE = 3,
     XML_PARSER_SUBST_ENTITIES = 4
 } xmlParserProperties;
-
-/**
- * xmlParserSeverities:
- *
- * How severe an error callback is when the per-reader error callback API
- * is used.
- */
-typedef enum {
-    XML_PARSER_SEVERITY_VALIDITY_WARNING = 1,
-    XML_PARSER_SEVERITY_VALIDITY_ERROR = 2,
-    XML_PARSER_SEVERITY_WARNING = 3,
-    XML_PARSER_SEVERITY_ERROR = 4
-} xmlParserSeverities;
 
 /**
  * xmlReaderTypes:
@@ -113,18 +113,29 @@ XMLPUBFUN xmlTextReaderPtr XMLCALL
 	                                         const char *URI);
 XMLPUBFUN xmlTextReaderPtr XMLCALL
 			xmlNewTextReaderFilename(const char *URI);
+
 XMLPUBFUN void XMLCALL
 			xmlFreeTextReader	(xmlTextReaderPtr reader);
+
+XMLPUBFUN int XMLCALL
+            xmlTextReaderSetup(xmlTextReaderPtr reader,
+                   xmlParserInputBufferPtr input, const char *URL,
+                   const char *encoding, int options);
 
 /*
  * Iterators
  */
 XMLPUBFUN int XMLCALL
 			xmlTextReaderRead	(xmlTextReaderPtr reader);
+
+#ifdef LIBXML_WRITER_ENABLED
 XMLPUBFUN xmlChar * XMLCALL
 			xmlTextReaderReadInnerXml	(xmlTextReaderPtr reader);
+
 XMLPUBFUN xmlChar * XMLCALL
 			xmlTextReaderReadOuterXml	(xmlTextReaderPtr reader);
+#endif
+
 XMLPUBFUN xmlChar * XMLCALL
 			xmlTextReaderReadString		(xmlTextReaderPtr reader);
 XMLPUBFUN int XMLCALL
@@ -168,7 +179,7 @@ XMLPUBFUN const xmlChar * XMLCALL
 		    xmlTextReaderConstXmlLang	(xmlTextReaderPtr reader);
 XMLPUBFUN const xmlChar * XMLCALL
 		    xmlTextReaderConstString	(xmlTextReaderPtr reader,
-		    				 const xmlChar *str);
+						 const xmlChar *str);
 XMLPUBFUN const xmlChar * XMLCALL
 		    xmlTextReaderConstValue	(xmlTextReaderPtr reader);
 
@@ -256,7 +267,7 @@ XMLPUBFUN xmlNodePtr XMLCALL
 #ifdef LIBXML_PATTERN_ENABLED
 XMLPUBFUN int XMLCALL
 		    xmlTextReaderPreservePattern(xmlTextReaderPtr reader,
-		    				 const xmlChar *pattern,
+						 const xmlChar *pattern,
 						 const xmlChar **namespaces);
 #endif /* LIBXML_PATTERN_ENABLED */
 XMLPUBFUN xmlDocPtr XMLCALL
@@ -278,10 +289,14 @@ XMLPUBFUN int XMLCALL
 						 xmlRelaxNGPtr schema);
 XMLPUBFUN int XMLCALL
 		    xmlTextReaderSchemaValidate	(xmlTextReaderPtr reader,
-		    				 const char *xsd);
+						 const char *xsd);
+XMLPUBFUN int XMLCALL
+		    xmlTextReaderSchemaValidateCtxt(xmlTextReaderPtr reader,
+						 xmlSchemaValidCtxtPtr ctxt,
+						 int options);
 XMLPUBFUN int XMLCALL
 		    xmlTextReaderSetSchema	(xmlTextReaderPtr reader,
-		    				 xmlSchemaPtr schema);
+						 xmlSchemaPtr schema);
 #endif
 XMLPUBFUN const xmlChar * XMLCALL
 		    xmlTextReaderConstXmlVersion(xmlTextReaderPtr reader);
@@ -367,7 +382,17 @@ XMLPUBFUN int XMLCALL
  * Error handling extensions
  */
 typedef void *  xmlTextReaderLocatorPtr;
-typedef void   (XMLCALL *xmlTextReaderErrorFunc)        (void *arg,
+
+/**
+ * xmlTextReaderErrorFunc:
+ * @arg: the user argument
+ * @msg: the message
+ * @severity: the severity of the error
+ * @locator: a locator indicating where the error occured
+ *
+ * Signature of an error callback from a reader parser
+ */
+typedef void   (XMLCALL *xmlTextReaderErrorFunc)(void *arg,
 						 const char *msg,
 						 xmlParserSeverities severity,
 						 xmlTextReaderLocatorPtr locator);
@@ -389,11 +414,11 @@ XMLPUBFUN void XMLCALL
 						 xmlTextReaderErrorFunc *f,
 						 void **arg);
 
+#endif /* LIBXML_READER_ENABLED */
+
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* LIBXML_READER_ENABLED */
 
 #endif /* __XML_XMLREADER_H__ */
 

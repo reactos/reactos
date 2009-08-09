@@ -1,10 +1,9 @@
-/* ===============================================================
-    Clock Functions
-*/
+#include "priv.h"
 
-#include <ntddk.h>
-#include <debug.h>
-#include <ks.h>
+typedef struct
+{
+
+}KS_DEFAULT_CLOCK;
 
 /*
     @unimplemented
@@ -27,19 +26,28 @@ KsCreateDefaultClock(
     IN  PIRP Irp,
     IN  PKSDEFAULTCLOCK DefaultClock)
 {
-    UNIMPLEMENTED;
+    NTSTATUS Status;
+    PKSCLOCK_CREATE ClockCreate;
+
+    Status = KsValidateClockCreateRequest(Irp, &ClockCreate);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+//    ExAllocatePoolWithTag(NonPagedPool, sizeof(KS_DEFAULT_CLOCK), 0);
+
+
+
     return STATUS_UNSUCCESSFUL;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI NTSTATUS NTAPI
 KsAllocateDefaultClock(
     OUT PKSDEFAULTCLOCK* DefaultClock)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    return KsAllocateDefaultClockEx(DefaultClock, NULL, NULL, NULL, NULL, NULL, 0);
 }
 
 /*

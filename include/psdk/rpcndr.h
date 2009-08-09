@@ -18,7 +18,7 @@
 
 #ifndef __RPCNDR_H_VERSION__
 /* FIXME: What version?   Perhaps something is better than nothing, however incorrect */
-#define __RPCNDR_H_VERSION__ ( 500 )
+#define __RPCNDR_H_VERSION__ ( 399 )
 #endif
 
 #ifndef __WINE_RPCNDR_H
@@ -115,6 +115,12 @@ typedef unsigned char boolean;
 #define NdrFcLong(s)  (unsigned char)(s & 0xff), (unsigned char)((s & 0x0000ff00) >> 8), \
   (unsigned char)((s & 0x00ff0000) >> 16), (unsigned char)(s >> 24)
 
+#define RPC_BAD_STUB_DATA_EXCEPTION_FILTER  \
+  ((RpcExceptionCode() == STATUS_ACCESS_VIOLATION) || \
+   (RpcExceptionCode() == STATUS_DATATYPE_MISALIGNMENT) || \
+   (RpcExceptionCode() == RPC_X_BAD_STUB_DATA) || \
+   (RpcExceptionCode() == RPC_S_INVALID_BOUND))
+
 typedef struct
 {
   void *pad[2];
@@ -138,7 +144,7 @@ struct NDR_ALLOC_ALL_NODES_CONTEXT;
 struct NDR_POINTER_QUEUE_STATE;
 
 typedef unsigned char *RPC_BUFPTR;
-typedef unsigned long RPC_LENGTH;
+typedef ULONG RPC_LENGTH;
 typedef void (__RPC_USER *EXPR_EVAL)(struct _MIDL_STUB_MESSAGE *);
 typedef const unsigned char *PFORMAT_STRING;
 
@@ -175,19 +181,21 @@ typedef struct _MIDL_STUB_MESSAGE
   ULONG BufferLength;
   ULONG MemorySize;
   unsigned char *Memory;
-  int IsClient;
+  unsigned char IsClient;
+  unsigned char Pad;
+  unsigned short uFlags2;
   int ReuseBuffer;
   struct NDR_ALLOC_ALL_NODES_CONTEXT *pAllocAllNodesContext;
   struct NDR_POINTER_QUEUE_STATE *pPointerQueueState;
   int IgnoreEmbeddedPointers;
   unsigned char *PointerBufferMark;
-  unsigned char fBufferValid;
+  unsigned char CorrDespIncrement;
   unsigned char uFlags;
   unsigned short UniquePtrCount;
   ULONG_PTR MaxCount;
   ULONG Offset;
   ULONG ActualCount;
-  void * (__RPC_API *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
   void (__RPC_API *pfnFree)(void *);
   unsigned char *StackTop;
   unsigned char *pPresentedType;
@@ -203,7 +211,14 @@ typedef struct _MIDL_STUB_MESSAGE
   int fHasReturn:1;
   int fHasExtensions:1;
   int fHasNewCorrDesc:1;
-  int fUnused:10;
+  int fIsIn:1;
+  int fIsOut:1;
+  int fIsOicf:1;
+  int fBufferValid:1;
+  int fHasMemoryValidateCallback:1;
+  int fInFree:1;
+  int fNeedMCCP:1;
+  int fUnused:3;
   int fUnused2:16;
   DWORD dwDestContext;
   void *pvDestContext;
@@ -307,7 +322,7 @@ typedef struct _USER_MARSHAL_CB
 
 typedef struct _MALLOC_FREE_STRUCT
 {
-  void * (__RPC_USER *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_USER *pfnAllocate)(size_t);
   void   (__RPC_USER *pfnFree)(void *);
 } MALLOC_FREE_STRUCT;
 
@@ -320,7 +335,7 @@ typedef struct _COMM_FAULT_OFFSETS
 typedef struct _MIDL_STUB_DESC
 {
   void *RpcInterfaceInformation;
-  void * (__RPC_API *pfnAllocate)(size_t);
+  void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
   void (__RPC_API *pfnFree)(void *);
   union {
     handle_t *pAutoHandle;
@@ -459,7 +474,7 @@ typedef struct _NDR_USER_MARSHAL_INFO_LEVEL1
 {
     void *Buffer;
     ULONG BufferSize;
-    void * (__RPC_API *pfnAllocate)(size_t);
+    void * (__WINE_ALLOC_SIZE(1) __RPC_API *pfnAllocate)(size_t);
     void (__RPC_API *pfnFree)(void *);
     struct IRpcChannelBuffer *pRpcChannelBuffer;
     ULONG_PTR Reserved[5];
@@ -536,6 +551,9 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI NDR_SCONTEXT RPC_ENTRY
   NdrServerContextNewUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat );
 
+RPCRTAPI RPC_STATUS RPC_ENTRY
+  RpcSmDestroyClientContext( void **ContextHandle );
+
 RPCRTAPI void RPC_ENTRY
   RpcSsDestroyClientContext( void **ContextHandle );
 
@@ -543,6 +561,18 @@ RPCRTAPI void RPC_ENTRY
   NdrSimpleTypeMarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, unsigned char FormatChar );
 RPCRTAPI void RPC_ENTRY
   NdrSimpleTypeUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, unsigned char FormatChar );
+
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrByteCountPointerMarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, PFORMAT_STRING pFormat );
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrByteCountPointerUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char** ppMemory, PFORMAT_STRING pFormat, unsigned char fMustAlloc );
+RPCRTAPI void RPC_ENTRY
+  NdrByteCountPointerBufferSize( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, PFORMAT_STRING pFormat );
+RPCRTAPI void RPC_ENTRY
+  NdrByteCountPointerFree( PMIDL_STUB_MESSAGE pStubMsg, unsigned char* pMemory, PFORMAT_STRING pFormat );
+
+RPCRTAPI unsigned char* RPC_ENTRY
+  NdrRangeUnmarshall( PMIDL_STUB_MESSAGE pStubMsg, unsigned char** ppMemory, PFORMAT_STRING pFormat, unsigned char fMustAlloc );
 
 /* while MS declares each prototype separately, I prefer to use macros for this kind of thing instead */
 #define SIMPLE_TYPE_MARSHAL(type) \
@@ -572,11 +602,9 @@ TYPE_MARSHAL(VaryingArray)
 TYPE_MARSHAL(ComplexArray)
 TYPE_MARSHAL(EncapsulatedUnion)
 TYPE_MARSHAL(NonEncapsulatedUnion)
-TYPE_MARSHAL(ByteCountPointer)
 TYPE_MARSHAL(XmitOrRepAs)
 TYPE_MARSHAL(UserMarshal)
 TYPE_MARSHAL(InterfacePointer)
-TYPE_MARSHAL(Range)
 
 SIMPLE_TYPE_MARSHAL(ConformantString)
 SIMPLE_TYPE_MARSHAL(NonConformantString)
@@ -640,7 +668,7 @@ RPCRTAPI LONG RPC_ENTRY
   NdrDcomAsyncStubCall( struct IRpcStubBuffer* pThis, struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg, DWORD * pdwStubPhase );
 
 RPCRTAPI void* RPC_ENTRY
-  NdrAllocate( PMIDL_STUB_MESSAGE pStubMsg, size_t Len );
+  NdrAllocate( PMIDL_STUB_MESSAGE pStubMsg, SIZE_T Len ) __WINE_ALLOC_SIZE(2);
 
 RPCRTAPI void RPC_ENTRY
   NdrClearOutParameters( PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat, void *ArgAddr );
@@ -650,7 +678,7 @@ RPCRTAPI RPC_STATUS RPC_ENTRY
                             ULONG *pFaultStatus, RPC_STATUS Status_ );
 
 RPCRTAPI void* RPC_ENTRY
-  NdrOleAllocate( size_t Size );
+  NdrOleAllocate( size_t Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrOleFree( void* NodeToFree );
 
@@ -711,11 +739,11 @@ RPCRTAPI void RPC_ENTRY
 RPCRTAPI void RPC_ENTRY
   NdrRpcSmSetClientToOsf( PMIDL_STUB_MESSAGE pMessage );
 RPCRTAPI void * RPC_ENTRY
-  NdrRpcSmClientAllocate( size_t Size );
+  NdrRpcSmClientAllocate( size_t Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrRpcSmClientFree( void *NodeToFree );
 RPCRTAPI void * RPC_ENTRY
-  NdrRpcSsDefaultAllocate( size_t Size );
+  NdrRpcSsDefaultAllocate( size_t Size ) __WINE_ALLOC_SIZE(1);
 RPCRTAPI void RPC_ENTRY
   NdrRpcSsDefaultFree( void *NodeToFree );
 

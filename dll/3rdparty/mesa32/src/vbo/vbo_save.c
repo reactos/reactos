@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.3
+ * Version:  7.2
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2008  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,10 +26,11 @@
  */
 
 
-#include "mtypes.h"
-#include "dlist.h"
-#include "vtxfmt.h"
-#include "imports.h"
+#include "main/mtypes.h"
+#include "main/bufferobj.h"
+#include "main/dlist.h"
+#include "main/vtxfmt.h"
+#include "main/imports.h"
 
 #include "vbo_context.h"
 
@@ -69,6 +70,26 @@ void vbo_save_init( GLcontext *ctx )
 
 void vbo_save_destroy( GLcontext *ctx )
 {
+   struct vbo_context *vbo = vbo_context(ctx);
+   struct vbo_save_context *save = &vbo->save;
+   GLuint i;
+
+   if (save->prim_store) {
+      if ( --save->prim_store->refcount == 0 ) {
+         FREE( save->prim_store );
+         save->prim_store = NULL;
+      }
+      if ( --save->vertex_store->refcount == 0 ) {
+         _mesa_reference_buffer_object(ctx,
+                                       &save->vertex_store->bufferobj, NULL);
+         FREE( save->vertex_store );
+         save->vertex_store = NULL;
+      }
+   }
+
+   for (i = 0; i < VBO_ATTRIB_MAX; i++) {
+      _mesa_reference_buffer_object(ctx, &save->arrays[i].BufferObj, NULL);
+   }
 }
 
 

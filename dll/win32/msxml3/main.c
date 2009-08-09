@@ -20,15 +20,20 @@
  */
 
 #include "config.h"
+#include "wine/port.h"
+
+#define COBJMACROS
 
 #include <stdarg.h>
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
 #include "ole2.h"
+#include "msxml.h"
 #include "msxml2.h"
 
 #include "wine/debug.h"
+#include "wine/library.h"
 
 #include "msxml_private.h"
 
@@ -40,6 +45,45 @@ HRESULT WINAPI DllCanUnloadNow(void)
     return S_FALSE;
 }
 
+
+void* libxslt_handle = NULL;
+#ifdef SONAME_LIBXSLT
+# define DECL_FUNCPTR(f) typeof(f) * p##f = NULL
+DECL_FUNCPTR(xsltApplyStylesheet);
+DECL_FUNCPTR(xsltCleanupGlobals);
+DECL_FUNCPTR(xsltFreeStylesheet);
+DECL_FUNCPTR(xsltParseStylesheetDoc);
+# undef MAKE_FUNCPTR
+#endif
+
+static void init_libxslt(void)
+{
+#ifdef SONAME_LIBXSLT
+    void (*pxsltInit)(void); /* Missing in libxslt <= 1.1.14 */
+
+    libxslt_handle = wine_dlopen(SONAME_LIBXSLT, RTLD_NOW, NULL, 0);
+    if (!libxslt_handle)
+        return;
+
+#define LOAD_FUNCPTR(f, needed) if ((p##f = wine_dlsym(libxslt_handle, #f, NULL, 0)) == NULL && needed) { WARN("Can't find symbol %s\n", #f); goto sym_not_found; }
+    LOAD_FUNCPTR(xsltInit, 0);
+    LOAD_FUNCPTR(xsltApplyStylesheet, 1);
+    LOAD_FUNCPTR(xsltCleanupGlobals, 1);
+    LOAD_FUNCPTR(xsltFreeStylesheet, 1);
+    LOAD_FUNCPTR(xsltParseStylesheetDoc, 1);
+#undef LOAD_FUNCPTR
+
+    if (pxsltInit)
+        pxsltInit();
+    return;
+
+ sym_not_found:
+    wine_dlclose(libxslt_handle, NULL, 0);
+    libxslt_handle = NULL;
+#endif
+}
+
+
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
 {
     switch(fdwReason)
@@ -47,13 +91,28 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     case DLL_PROCESS_ATTACH:
 #ifdef HAVE_LIBXML2
         xmlInitParser();
+
+        /* Set the default indent character to a single tab,
+           for this thread and as default for new threads */
+        xmlTreeIndentString = "\t";
+        xmlThrDefTreeIndentString("\t");
 #endif
+        init_libxslt();
         DisableThreadLibraryCalls(hInstDLL);
         break;
     case DLL_PROCESS_DETACH:
+#ifdef SONAME_LIBXSLT
+        if (libxslt_handle)
+        {
+            pxsltCleanupGlobals();
+            wine_dlclose(libxslt_handle, NULL, 0);
+            libxslt_handle = NULL;
+        }
+#endif
 #ifdef HAVE_LIBXML2
         xmlCleanupParser();
 #endif
+        release_typelib();
         break;
     }
     return TRUE;

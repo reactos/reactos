@@ -34,6 +34,7 @@
 #include "mshtml_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
+WINE_DECLARE_DEBUG_CHANNEL(gecko);
 
 #define NS_APPSTARTUPNOTIFIER_CONTRACTID "@mozilla.org/embedcomp/appstartup-notifier;1"
 #define NS_WEBBROWSER_CONTRACTID "@mozilla.org/embedding/browser/nsWebBrowser;1"
@@ -94,7 +95,7 @@ static LRESULT WINAPI nsembed_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         This = *(NSContainer**)lParam;
         SetPropW(hwnd, wszTHIS, This);
     }else {
-        This = (NSContainer*)GetPropW(hwnd, wszTHIS);
+        This = GetPropW(hwnd, wszTHIS);
     }
 
     switch(msg) {
@@ -142,22 +143,46 @@ static void register_nscontainer_class(void)
     nscontainer_class = RegisterClassExW(&wndclass);
 }
 
+static void set_environment(LPCWSTR gre_path)
+{
+    WCHAR path_env[MAX_PATH], buf[20];
+    int len, debug_level = 0;
+
+    static const WCHAR pathW[] = {'P','A','T','H',0};
+    static const WCHAR warnW[] = {'w','a','r','n',0};
+    static const WCHAR xpcom_debug_breakW[] =
+        {'X','P','C','O','M','_','D','E','B','U','G','_','B','R','E','A','K',0};
+    static const WCHAR nspr_log_modulesW[] =
+        {'N','S','P','R','_','L','O','G','_','M','O','D','U','L','E','S',0};
+    static const WCHAR debug_formatW[] = {'a','l','l',':','%','d',0};
+
+    /* We have to modify PATH as XPCOM loads other DLLs from this directory. */
+    GetEnvironmentVariableW(pathW, path_env, sizeof(path_env)/sizeof(WCHAR));
+    len = strlenW(path_env);
+    path_env[len++] = ';';
+    strcpyW(path_env+len, gre_path);
+    SetEnvironmentVariableW(pathW, path_env);
+
+    SetEnvironmentVariableW(xpcom_debug_breakW, warnW);
+
+    if(TRACE_ON(gecko))
+        debug_level = 5;
+    else if(WARN_ON(gecko))
+        debug_level = 3;
+    else if(ERR_ON(gecko))
+        debug_level = 2;
+
+    sprintfW(buf, debug_formatW, debug_level);
+    SetEnvironmentVariableW(nspr_log_modulesW, buf);
+}
+
 static BOOL load_xpcom(const PRUnichar *gre_path)
 {
-    WCHAR path_env[MAX_PATH];
-    int len;
-
-    static const WCHAR wszPATH[] = {'P','A','T','H',0};
     static const WCHAR strXPCOM[] = {'x','p','c','o','m','.','d','l','l',0};
 
     TRACE("(%s)\n", debugstr_w(gre_path));
 
-    /* We have to modify PATH as XPCOM loads other DLLs from this directory. */
-    GetEnvironmentVariableW(wszPATH, path_env, sizeof(path_env)/sizeof(WCHAR));
-    len = strlenW(path_env);
-    path_env[len++] = ';';
-    strcpyW(path_env+len, gre_path);
-    SetEnvironmentVariableW(wszPATH, path_env);
+    set_environment(gre_path);
 
     hXPCOM = LoadLibraryW(strXPCOM);
     if(!hXPCOM) {
@@ -369,34 +394,10 @@ static void set_bool_pref(nsIPrefBranch *pref, const char *pref_name, BOOL val)
         ERR("Could not set pref %s\n", debugstr_a(pref_name));
 }
 
-static void set_profile(void)
+static void set_preferences(void)
 {
     nsIPrefBranch *pref;
-    nsIProfile *profile;
-    PRBool exists = FALSE;
     nsresult nsres;
-
-    static const WCHAR wszMSHTML[] = {'M','S','H','T','M','L',0};
-
-    nsres = nsIServiceManager_GetServiceByContractID(pServMgr, NS_PROFILE_CONTRACTID,
-            &IID_nsIProfile, (void**)&profile);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get profile service: %08x\n", nsres);
-        return;
-    }
-
-    nsres = nsIProfile_ProfileExists(profile, wszMSHTML, &exists);
-    if(!exists) {
-        nsres = nsIProfile_CreateNewProfile(profile, wszMSHTML, NULL, NULL, FALSE);
-        if(NS_FAILED(nsres))
-            ERR("CreateNewProfile failed: %08x\n", nsres);
-    }
-
-    nsres = nsIProfile_SetCurrentProfile(profile, wszMSHTML);
-    if(NS_FAILED(nsres))
-        ERR("SetCurrentProfile failed: %08x\n", nsres);
-
-    nsIProfile_Release(profile);
 
     nsres = nsIServiceManager_GetServiceByContractID(pServMgr, NS_PREFERENCES_CONTRACTID,
             &IID_nsIPrefBranch, (void**)&pref);
@@ -468,7 +469,7 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
         ERR("could not get appstartup-notifier: %08x\n", nsres);
     }
 
-    set_profile();
+    set_preferences();
 
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr, NS_MEMORY_CONTRACTID,
             NULL, &IID_nsIMemory, (void**)&nsmem);
@@ -497,7 +498,7 @@ BOOL load_gecko(BOOL silent)
     PRUnichar gre_path[MAX_PATH];
     BOOL ret = FALSE;
 
-    static LONG loading_thread;
+    static DWORD loading_thread;
 
     TRACE("()\n");
 
@@ -604,44 +605,6 @@ nsIInputStream *create_nsstream(const char *data, PRInt32 data_len)
     return (nsIInputStream*)ret;
 }
 
-nsIMutableArray *create_nsarray(void)
-{
-    nsIMutableArray *ret;
-    nsresult nsres;
-
-    if(!pCompMgr)
-        return NULL;
-
-    nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr,
-            NS_ARRAY_CONTRACTID, NULL, &IID_nsIMutableArray,
-            (void**)&ret);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIArray: %08x\n", nsres);
-        return NULL;
-    }
-
-    return ret;
-}
-
-nsIWritableVariant *create_nsvariant(void)
-{
-    nsIWritableVariant *ret;
-    nsresult nsres;
-
-    if(!pCompMgr)
-        return NULL;
-
-    nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr,
-            NS_VARIANT_CONTRACTID, NULL, &IID_nsIWritableVariant,
-            (void**)&ret);
-    if(NS_FAILED(nsres)) {
-        ERR("Could not get nsIWritableVariant: %08x\n", nsres);
-        return NULL;
-    }
-
-    return ret;
-}
-
 nsICommandParams *create_nscommand_params(void)
 {
     nsICommandParams *ret = NULL;
@@ -693,7 +656,7 @@ static void nsnode_to_nsstring_rec(nsIContentSerializer *serializer, nsIDOMNode 
     case ELEMENT_NODE: {
         nsIDOMElement *nselem;
         nsIDOMNode_QueryInterface(nsnode, &IID_nsIDOMElement, (void**)&nselem);
-        nsIContentSerializer_AppendElementStart(serializer, nselem, has_children, str);
+        nsIContentSerializer_AppendElementStart(serializer, nselem, nselem, str);
         nsIDOMElement_Release(nselem);
         break;
     }
@@ -765,7 +728,7 @@ void nsnode_to_nsstring(nsIDOMNode *nsdoc, nsAString *str)
         return;
     }
 
-    nsres = nsIContentSerializer_Init(serializer, 0, 100, NULL, FALSE);
+    nsres = nsIContentSerializer_Init(serializer, 0, 100, NULL, FALSE, FALSE /* FIXME */);
     if(NS_FAILED(nsres))
         ERR("Init failed: %08x\n", nsres);
 
@@ -848,7 +811,8 @@ void set_ns_editmode(NSContainer *This)
         return;
     }
 
-    nsres = nsIEditingSession_MakeWindowEditable(editing_session, dom_window, NULL, FALSE);
+    nsres = nsIEditingSession_MakeWindowEditable(editing_session, dom_window,
+            NULL, FALSE, TRUE, TRUE);
     nsIEditingSession_Release(editing_session);
     nsIDOMWindow_Release(dom_window);
     if(NS_FAILED(nsres)) {
@@ -866,9 +830,49 @@ void set_ns_editmode(NSContainer *This)
     nsIWebBrowser_SetParentURIContentListener(This->webbrowser, NSURICL(This));
 }
 
+void update_nsdocument(HTMLDocument *doc)
+{
+    nsIDOMHTMLDocument *nsdoc;
+    nsIDOMDocument *nsdomdoc;
+    nsresult nsres;
+
+    if(!doc->nscontainer || !doc->nscontainer->navigation)
+        return;
+
+    nsres = nsIWebNavigation_GetDocument(doc->nscontainer->navigation, &nsdomdoc);
+    if(NS_FAILED(nsres) || !nsdomdoc) {
+        ERR("GetDocument failed: %08x\n", nsres);
+        return;
+    }
+
+    nsres = nsIDOMDocument_QueryInterface(nsdomdoc, &IID_nsIDOMHTMLDocument, (void**)&nsdoc);
+    nsIDOMDocument_Release(nsdomdoc);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMHTMLDocument iface: %08x\n", nsres);
+        return;
+    }
+
+    if(nsdoc == doc->nsdoc) {
+        nsIDOMHTMLDocument_Release(nsdoc);
+        return;
+    }
+
+    if(doc->nsdoc) {
+        remove_mutation_observer(doc->nscontainer, doc->nsdoc);
+        nsIDOMHTMLDocument_Release(doc->nsdoc);
+    }
+
+    doc->nsdoc = nsdoc;
+
+    if(nsdoc)
+        set_mutation_observer(doc->nscontainer, nsdoc);
+}
+
 void close_gecko(void)
 {
     TRACE("()\n");
+
+    release_nsio();
 
     if(pCompMgr)
         nsIComponentManager_Release(pCompMgr);
@@ -951,6 +955,7 @@ static nsrefcnt NSAPI nsWebBrowserChrome_Release(nsIWebBrowserChrome *iface)
     TRACE("(%p) ref=%d\n", This, ref);
 
     if(!ref) {
+        heap_free(This->event_vector);
         if(This->parent)
             nsIWebBrowserChrome_Release(NSWBCHROME(This->parent));
         heap_free(This);
@@ -963,8 +968,14 @@ static nsresult NSAPI nsWebBrowserChrome_SetStatus(nsIWebBrowserChrome *iface,
         PRUint32 statusType, const PRUnichar *status)
 {
     NSContainer *This = NSWBCHROME_THIS(iface);
+
     TRACE("(%p)->(%d %s)\n", This, statusType, debugstr_w(status));
-    return NS_ERROR_NOT_IMPLEMENTED;
+
+    /* FIXME: This hack should be removed when we'll load all pages by URLMoniker */
+    if(This->doc)
+        update_nsdocument(This->doc);
+
+    return NS_OK;
 }
 
 static nsresult NSAPI nsWebBrowserChrome_GetWebBrowser(nsIWebBrowserChrome *iface,
@@ -1486,7 +1497,8 @@ static nsresult NSAPI nsTooltipListener_OnShowTooltip(nsITooltipListener *iface,
 {
     NSContainer *This = NSTOOLTIP_THIS(iface);
 
-    show_tooltip(This->doc, aXCoord, aYCoord, aTipText);
+    if (This->doc)
+        show_tooltip(This->doc, aXCoord, aYCoord, aTipText);
 
     return NS_OK;
 }
@@ -1495,7 +1507,8 @@ static nsresult NSAPI nsTooltipListener_OnHideTooltip(nsITooltipListener *iface)
 {
     NSContainer *This = NSTOOLTIP_THIS(iface);
 
-    hide_tooltip(This->doc);
+    if (This->doc)
+        hide_tooltip(This->doc);
 
     return NS_OK;
 }
@@ -1656,6 +1669,7 @@ NSContainer *NSContainer_Create(HTMLDocument *doc, NSContainer *parent)
 
     ret->doc = doc;
     ret->ref = 1;
+    init_mutation(ret);
 
     nsres = nsIComponentManager_CreateInstanceByContractID(pCompMgr, NS_WEBBROWSER_CONTRACTID,
             NULL, &IID_nsIWebBrowser, (void**)&ret->webbrowser);

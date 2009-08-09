@@ -35,6 +35,7 @@
 #include "objidl.h"
 #include "objbase.h"
 #include "msiserver.h"
+#include "query.h"
 
 #include "initguid.h"
 
@@ -90,6 +91,13 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if( !pdb )
         return ERROR_INVALID_PARAMETER;
 
+    if (szPersist - MSIDBOPEN_PATCHFILE >= MSIDBOPEN_READONLY &&
+        szPersist - MSIDBOPEN_PATCHFILE <= MSIDBOPEN_CREATEDIRECT)
+    {
+        TRACE("Database is a patch\n");
+        szPersist -= MSIDBOPEN_PATCHFILE;
+    }
+
     save_path = szDBPath;
     szMode = szPersist;
     if( HIWORD( szPersist ) )
@@ -118,7 +126,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
             IStorage_SetClass( stg, &CLSID_MsiDatabase );
             /* create the _Tables stream */
             r = write_stream_data(stg, szTables, NULL, 0, TRUE);
-            if (!FAILED(r))
+            if (SUCCEEDED(r))
                 r = msi_init_string_table( stg );
         }
         created = TRUE;
@@ -197,7 +205,6 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     if( !db->strings )
         goto end;
 
-    msi_table_set_strref( db->bytes_per_strref );
     ret = ERROR_SUCCESS;
 
     msiobj_addref( &db->hdr );
@@ -550,25 +557,16 @@ static UINT msi_add_records_to_table(MSIDATABASE *db, LPWSTR *columns, LPWSTR *t
                                      int num_columns, int num_records)
 {
     UINT r;
-    DWORD i, size;
+    int i;
     MSIQUERY *view;
     MSIRECORD *rec;
-    LPWSTR query;
 
     static const WCHAR select[] = {
         'S','E','L','E','C','T',' ','*',' ',
         'F','R','O','M',' ','`','%','s','`',0
     };
 
-    size = lstrlenW(select) + lstrlenW(labels[0]) - 1;
-    query = msi_alloc(size * sizeof(WCHAR));
-    if (!query)
-        return ERROR_OUTOFMEMORY;
-
-    sprintfW(query, select, labels[0]);
-
-    r = MSI_DatabaseOpenViewW(db, query, &view);
-    msi_free(query);
+    r = MSI_OpenQuery(db, &view, select, labels[0]);
     if (r != ERROR_SUCCESS)
         return r;
 
@@ -600,7 +598,7 @@ done:
     return r;
 }
 
-UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
+static UINT MSI_DatabaseImport(MSIDATABASE *db, LPCWSTR folder, LPCWSTR file)
 {
     UINT r;
     DWORD len, i;
@@ -694,7 +692,7 @@ UINT WINAPI MsiDatabaseImportW(MSIHANDLE handle, LPCWSTR szFolder, LPCWSTR szFil
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%lx %s %s\n",handle,debugstr_w(szFolder), debugstr_w(szFilename));
+    TRACE("%x %s %s\n",handle,debugstr_w(szFolder), debugstr_w(szFilename));
 
     db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
     if( !db )
@@ -722,7 +720,7 @@ UINT WINAPI MsiDatabaseImportA( MSIHANDLE handle,
     LPWSTR path = NULL, file = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%lx %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename));
+    TRACE("%x %s %s\n", handle, debugstr_a(szFolder), debugstr_a(szFilename));
 
     if( szFolder )
     {
@@ -814,7 +812,7 @@ static UINT msi_export_forcecodepage( HANDLE handle )
     return ERROR_SUCCESS;
 }
 
-UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
+static UINT MSI_DatabaseExport( MSIDATABASE *db, LPCWSTR table,
                LPCWSTR folder, LPCWSTR file )
 {
     static const WCHAR query[] = {
@@ -914,7 +912,7 @@ UINT WINAPI MsiDatabaseExportW( MSIHANDLE handle, LPCWSTR szTable,
     MSIDATABASE *db;
     UINT r;
 
-    TRACE("%lx %s %s %s\n", handle, debugstr_w(szTable),
+    TRACE("%x %s %s %s\n", handle, debugstr_w(szTable),
           debugstr_w(szFolder), debugstr_w(szFilename));
 
     db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
@@ -943,7 +941,7 @@ UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, LPCSTR szTable,
     LPWSTR path = NULL, file = NULL, table = NULL;
     UINT r = ERROR_OUTOFMEMORY;
 
-    TRACE("%lx %s %s %s\n", handle, debugstr_a(szTable),
+    TRACE("%x %s %s %s\n", handle, debugstr_a(szTable),
           debugstr_a(szFolder), debugstr_a(szFilename));
 
     if( szTable )
@@ -977,12 +975,520 @@ end:
     return r;
 }
 
+UINT WINAPI MsiDatabaseMergeA(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
+                              LPCSTR szTableName)
+{
+    UINT r;
+    LPWSTR table;
+
+    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge,
+          debugstr_a(szTableName));
+
+    table = strdupAtoW(szTableName);
+    r = MsiDatabaseMergeW(hDatabase, hDatabaseMerge, table);
+
+    msi_free(table);
+    return r;
+}
+
+typedef struct _tagMERGETABLE
+{
+    struct list entry;
+    struct list rows;
+    LPWSTR name;
+    DWORD numconflicts;
+} MERGETABLE;
+
+typedef struct _tagMERGEROW
+{
+    struct list entry;
+    MSIRECORD *data;
+} MERGEROW;
+
+typedef struct _tagMERGEDATA
+{
+    MSIDATABASE *db;
+    MSIDATABASE *merge;
+    MERGETABLE *curtable;
+    MSIQUERY *curview;
+    struct list *tabledata;
+} MERGEDATA;
+
+static UINT merge_verify_colnames(MSIQUERY *dbview, MSIQUERY *mergeview)
+{
+    MSIRECORD *dbrec, *mergerec;
+    UINT r, i, count;
+
+    r = MSI_ViewGetColumnInfo(dbview, MSICOLINFO_NAMES, &dbrec);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_ViewGetColumnInfo(mergeview, MSICOLINFO_NAMES, &mergerec);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    count = MSI_RecordGetFieldCount(dbrec);
+    for (i = 1; i <= count; i++)
+    {
+        if (!MSI_RecordGetString(mergerec, i))
+            break;
+
+        if (lstrcmpW(MSI_RecordGetString(dbrec, i),
+                     MSI_RecordGetString(mergerec, i)))
+        {
+            r = ERROR_DATATYPE_MISMATCH;
+            goto done;
+        }
+    }
+
+    msiobj_release(&dbrec->hdr);
+    msiobj_release(&mergerec->hdr);
+    dbrec = mergerec = NULL;
+
+    r = MSI_ViewGetColumnInfo(dbview, MSICOLINFO_TYPES, &dbrec);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_ViewGetColumnInfo(mergeview, MSICOLINFO_TYPES, &mergerec);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    count = MSI_RecordGetFieldCount(dbrec);
+    for (i = 1; i <= count; i++)
+    {
+        if (!MSI_RecordGetString(mergerec, i))
+            break;
+
+        if (lstrcmpW(MSI_RecordGetString(dbrec, i),
+                     MSI_RecordGetString(mergerec, i)))
+        {
+            r = ERROR_DATATYPE_MISMATCH;
+            break;
+        }
+    }
+
+done:
+    msiobj_release(&dbrec->hdr);
+    msiobj_release(&mergerec->hdr);
+
+    return r;
+}
+
+static UINT merge_verify_primary_keys(MSIDATABASE *db, MSIDATABASE *mergedb,
+                                      LPCWSTR table)
+{
+    MSIRECORD *dbrec, *mergerec = NULL;
+    UINT r, i, count;
+
+    r = MSI_DatabaseGetPrimaryKeys(db, table, &dbrec);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_DatabaseGetPrimaryKeys(mergedb, table, &mergerec);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    count = MSI_RecordGetFieldCount(dbrec);
+    if (count != MSI_RecordGetFieldCount(mergerec))
+    {
+        r = ERROR_DATATYPE_MISMATCH;
+        goto done;
+    }
+
+    for (i = 1; i <= count; i++)
+    {
+        if (lstrcmpW(MSI_RecordGetString(dbrec, i),
+                     MSI_RecordGetString(mergerec, i)))
+        {
+            r = ERROR_DATATYPE_MISMATCH;
+            goto done;
+        }
+    }
+
+done:
+    msiobj_release(&dbrec->hdr);
+    msiobj_release(&mergerec->hdr);
+
+    return r;
+}
+
+static LPWSTR get_key_value(MSIQUERY *view, LPCWSTR key, MSIRECORD *rec)
+{
+    MSIRECORD *colnames;
+    LPWSTR str;
+    UINT r, i = 0;
+    int cmp;
+
+    r = MSI_ViewGetColumnInfo(view, MSICOLINFO_NAMES, &colnames);
+    if (r != ERROR_SUCCESS)
+        return NULL;
+
+    do
+    {
+        str = msi_dup_record_field(colnames, ++i);
+        cmp = lstrcmpW(key, str);
+        msi_free(str);
+    } while (cmp);
+
+    msiobj_release(&colnames->hdr);
+    return msi_dup_record_field(rec, i);
+}
+
+static LPWSTR create_diff_row_query(MSIDATABASE *merge, MSIQUERY *view,
+                                    LPWSTR table, MSIRECORD *rec)
+{
+    LPWSTR query = NULL, clause = NULL;
+    LPWSTR ptr = NULL, val;
+    LPCWSTR setptr;
+    DWORD size = 1, oldsize;
+    LPCWSTR key;
+    MSIRECORD *keys;
+    UINT r, i, count;
+
+    static const WCHAR keyset[] = {
+        '`','%','s','`',' ','=',' ','%','s',' ','A','N','D',' ',0};
+    static const WCHAR lastkeyset[] = {
+        '`','%','s','`',' ','=',' ','%','s',' ',0};
+    static const WCHAR fmt[] = {'S','E','L','E','C','T',' ','*',' ',
+        'F','R','O','M',' ','`','%','s','`',' ',
+        'W','H','E','R','E',' ','%','s',0};
+
+    r = MSI_DatabaseGetPrimaryKeys(merge, table, &keys);
+    if (r != ERROR_SUCCESS)
+        return NULL;
+
+    clause = msi_alloc_zero(size * sizeof(WCHAR));
+    if (!clause)
+        goto done;
+
+    ptr = clause;
+    count = MSI_RecordGetFieldCount(keys);
+    for (i = 1; i <= count; i++)
+    {
+        key = MSI_RecordGetString(keys, i);
+        val = get_key_value(view, key, rec);
+
+        if (i == count)
+            setptr = lastkeyset;
+        else
+            setptr = keyset;
+
+        oldsize = size;
+        size += lstrlenW(setptr) + lstrlenW(key) + lstrlenW(val) - 4;
+        clause = msi_realloc(clause, size * sizeof (WCHAR));
+        if (!clause)
+        {
+            msi_free(val);
+            goto done;
+        }
+
+        ptr = clause + oldsize - 1;
+        sprintfW(ptr, setptr, key, val);
+        msi_free(val);
+    }
+
+    size = lstrlenW(fmt) + lstrlenW(table) + lstrlenW(clause) + 1;
+    query = msi_alloc(size * sizeof(WCHAR));
+    if (!query)
+        goto done;
+
+    sprintfW(query, fmt, table, clause);
+
+done:
+    msi_free(clause);
+    msiobj_release(&keys->hdr);
+    return query;
+}
+
+static UINT merge_diff_row(MSIRECORD *rec, LPVOID param)
+{
+    MERGEDATA *data = param;
+    MERGETABLE *table = data->curtable;
+    MERGEROW *mergerow;
+    MSIQUERY *dbview;
+    MSIRECORD *row = NULL;
+    LPWSTR query;
+    UINT r;
+
+    query = create_diff_row_query(data->merge, data->curview, table->name, rec);
+    if (!query)
+        return ERROR_OUTOFMEMORY;
+
+    r = MSI_DatabaseOpenViewW(data->db, query, &dbview);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    r = MSI_ViewExecute(dbview, NULL);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    r = MSI_ViewFetch(dbview, &row);
+    if (r == ERROR_SUCCESS && !MSI_RecordsAreEqual(rec, row))
+    {
+        table->numconflicts++;
+        goto done;
+    }
+    else if (r != ERROR_NO_MORE_ITEMS)
+        goto done;
+
+    mergerow = msi_alloc(sizeof(MERGEROW));
+    if (!mergerow)
+    {
+        r = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    mergerow->data = MSI_CloneRecord(rec);
+    if (!mergerow->data)
+    {
+        r = ERROR_OUTOFMEMORY;
+        msi_free(mergerow);
+        goto done;
+    }
+
+    list_add_tail(&table->rows, &mergerow->entry);
+
+done:
+    msi_free(query);
+    msiobj_release(&row->hdr);
+    msiobj_release(&dbview->hdr);
+    return r;
+}
+
+static UINT merge_diff_tables(MSIRECORD *rec, LPVOID param)
+{
+    MERGEDATA *data = param;
+    MERGETABLE *table;
+    MSIQUERY *dbview;
+    MSIQUERY *mergeview = NULL;
+    LPCWSTR name;
+    UINT r;
+
+    static const WCHAR query[] = {'S','E','L','E','C','T',' ','*',' ',
+        'F','R','O','M',' ','`','%','s','`',0};
+
+    name = MSI_RecordGetString(rec, 1);
+
+    r = MSI_OpenQuery(data->db, &dbview, query, name);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_OpenQuery(data->merge, &mergeview, query, name);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    r = merge_verify_colnames(dbview, mergeview);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    r = merge_verify_primary_keys(data->db, data->merge, name);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    table = msi_alloc(sizeof(MERGETABLE));
+    if (!table)
+    {
+        r = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    list_init(&table->rows);
+    table->name = strdupW(name);
+    table->numconflicts = 0;
+    data->curtable = table;
+    data->curview = mergeview;
+
+    r = MSI_IterateRecords(mergeview, NULL, merge_diff_row, data);
+    if (r != ERROR_SUCCESS)
+    {
+        msi_free(table->name);
+        msi_free(table);
+        goto done;
+    }
+
+    list_add_tail(data->tabledata, &table->entry);
+
+done:
+    msiobj_release(&dbview->hdr);
+    msiobj_release(&mergeview->hdr);
+    return r;
+}
+
+static UINT gather_merge_data(MSIDATABASE *db, MSIDATABASE *merge,
+                              struct list *tabledata)
+{
+    UINT r;
+    MSIQUERY *view;
+    MERGEDATA data;
+
+    static const WCHAR query[] = {'S','E','L','E','C','T',' ','*',' ',
+        'F','R','O','M',' ','`','_','T','a','b','l','e','s','`',0};
+
+    r = MSI_DatabaseOpenViewW(merge, query, &view);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    data.db = db;
+    data.merge = merge;
+    data.tabledata = tabledata;
+    r = MSI_IterateRecords(view, NULL, merge_diff_tables, &data);
+
+    msiobj_release(&view->hdr);
+    return r;
+}
+
+static UINT merge_table(MSIDATABASE *db, MERGETABLE *table)
+{
+    UINT r;
+    MERGEROW *row;
+    MSIVIEW *tv;
+
+    LIST_FOR_EACH_ENTRY(row, &table->rows, MERGEROW, entry)
+    {
+        r = TABLE_CreateView(db, table->name, &tv);
+        if (r != ERROR_SUCCESS)
+            return r;
+
+        r = tv->ops->insert_row(tv, row->data, FALSE);
+        tv->ops->delete(tv);
+
+        if (r != ERROR_SUCCESS)
+            return r;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+static UINT update_merge_errors(MSIDATABASE *db, LPCWSTR error,
+                                LPWSTR table, DWORD numconflicts)
+{
+    UINT r;
+    MSIQUERY *view;
+
+    static const WCHAR create[] = {
+        'C','R','E','A','T','E',' ','T','A','B','L','E',' ',
+        '`','%','s','`',' ','(','`','T','a','b','l','e','`',' ',
+        'C','H','A','R','(','2','5','5',')',' ','N','O','T',' ',
+        'N','U','L','L',',',' ','`','N','u','m','R','o','w','M','e','r','g','e',
+        'C','o','n','f','l','i','c','t','s','`',' ','S','H','O','R','T',' ',
+        'N','O','T',' ','N','U','L','L',' ','P','R','I','M','A','R','Y',' ',
+        'K','E','Y',' ','`','T','a','b','l','e','`',')',0};
+    static const WCHAR insert[] = {
+        'I','N','S','E','R','T',' ','I','N','T','O',' ',
+        '`','%','s','`',' ','(','`','T','a','b','l','e','`',',',' ',
+        '`','N','u','m','R','o','w','M','e','r','g','e',
+        'C','o','n','f','l','i','c','t','s','`',')',' ','V','A','L','U','E','S',
+        ' ','(','\'','%','s','\'',',',' ','%','d',')',0};
+
+    if (!TABLE_Exists(db, error))
+    {
+        r = MSI_OpenQuery(db, &view, create, error);
+        if (r != ERROR_SUCCESS)
+            return r;
+
+        r = MSI_ViewExecute(view, NULL);
+        msiobj_release(&view->hdr);
+        if (r != ERROR_SUCCESS)
+            return r;
+    }
+
+    r = MSI_OpenQuery(db, &view, insert, error, table, numconflicts);
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MSI_ViewExecute(view, NULL);
+    msiobj_release(&view->hdr);
+    return r;
+}
+
+static void merge_free_rows(MERGETABLE *table)
+{
+    struct list *item, *cursor;
+
+    LIST_FOR_EACH_SAFE(item, cursor, &table->rows)
+    {
+        MERGEROW *row = LIST_ENTRY(item, MERGEROW, entry);
+
+        list_remove(&row->entry);
+        merge_free_rows(table);
+        msiobj_release(&row->data->hdr);
+        msi_free(row);
+    }
+}
+
+UINT WINAPI MsiDatabaseMergeW(MSIHANDLE hDatabase, MSIHANDLE hDatabaseMerge,
+                              LPCWSTR szTableName)
+{
+    struct list tabledata = LIST_INIT(tabledata);
+    struct list *item, *cursor;
+    MSIDATABASE *db, *merge;
+    MERGETABLE *table;
+    BOOL conflicts;
+    UINT r;
+
+    TRACE("(%d, %d, %s)\n", hDatabase, hDatabaseMerge,
+          debugstr_w(szTableName));
+
+    if (szTableName && !*szTableName)
+        return ERROR_INVALID_TABLE;
+
+    db = msihandle2msiinfo(hDatabase, MSIHANDLETYPE_DATABASE);
+    merge = msihandle2msiinfo(hDatabaseMerge, MSIHANDLETYPE_DATABASE);
+    if (!db || !merge)
+    {
+        r = ERROR_INVALID_HANDLE;
+        goto done;
+    }
+
+    r = gather_merge_data(db, merge, &tabledata);
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    conflicts = FALSE;
+    LIST_FOR_EACH_ENTRY(table, &tabledata, MERGETABLE, entry)
+    {
+        if (table->numconflicts)
+        {
+            conflicts = TRUE;
+
+            r = update_merge_errors(db, szTableName, table->name,
+                                    table->numconflicts);
+            if (r != ERROR_SUCCESS)
+                break;
+        }
+        else
+        {
+            r = merge_table(db, table);
+            if (r != ERROR_SUCCESS)
+                break;
+        }
+    }
+
+    LIST_FOR_EACH_SAFE(item, cursor, &tabledata)
+    {
+        MERGETABLE *table = LIST_ENTRY(item, MERGETABLE, entry);
+
+        list_remove(&table->entry);
+        merge_free_rows(table);
+        msi_free(table->name);
+        msi_free(table);
+    }
+
+    if (conflicts)
+        r = ERROR_FUNCTION_FAILED;
+
+done:
+    msiobj_release(&db->hdr);
+    msiobj_release(&merge->hdr);
+    return r;
+}
+
 MSIDBSTATE WINAPI MsiGetDatabaseState( MSIHANDLE handle )
 {
     MSIDBSTATE ret = MSIDBSTATE_READ;
     MSIDATABASE *db;
 
-    TRACE("%ld\n", handle);
+    TRACE("%d\n", handle);
 
     db = msihandle2msiinfo( handle, MSIHANDLETYPE_DATABASE );
     if( !db )
@@ -1056,7 +1562,7 @@ static HRESULT WINAPI mrd_IsTablePersistent( IWineMsiRemoteDatabase *iface,
                                              BSTR table, MSICONDITION *persistent )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
-    *persistent = MsiDatabaseIsTablePersistentW(This->database, (LPWSTR)table);
+    *persistent = MsiDatabaseIsTablePersistentW(This->database, table);
     return S_OK;
 }
 
@@ -1064,7 +1570,7 @@ static HRESULT WINAPI mrd_GetPrimaryKeys( IWineMsiRemoteDatabase *iface,
                                           BSTR table, MSIHANDLE *keys )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
-    UINT r = MsiDatabaseGetPrimaryKeysW(This->database, (LPWSTR)table, keys);
+    UINT r = MsiDatabaseGetPrimaryKeysW(This->database, table, keys);
     return HRESULT_FROM_WIN32(r);
 }
 
@@ -1080,7 +1586,7 @@ static HRESULT WINAPI mrd_OpenView( IWineMsiRemoteDatabase *iface,
                                     BSTR query, MSIHANDLE *view )
 {
     msi_remote_database_impl *This = mrd_from_IWineMsiRemoteDatabase( iface );
-    UINT r = MsiDatabaseOpenViewW(This->database, (LPWSTR)query, view);
+    UINT r = MsiDatabaseOpenViewW(This->database, query, view);
     return HRESULT_FROM_WIN32(r);
 }
 

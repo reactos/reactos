@@ -5,9 +5,6 @@
 #include <netinet/in.h>
 #endif
 
-#ifndef _MSC_VER
-#include <roscfg.h>
-#endif/*_MSC_VER*/
 #ifdef KERNEL
 #include <sys/param.h>
 #include <sys/systm.h>

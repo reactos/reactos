@@ -1,0 +1,54 @@
+/*
+ * Top level resource file for localui
+ *
+ * Copyright 2007 Detlef Riekenberg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ *
+ */
+
+#include "windef.h"
+#include "winbase.h"
+#include "winuser.h"
+#include "winver.h"
+#include "localui.h"
+
+#define WINE_FILENAME_STR "localui.dll"
+#define WINE_FILEDESCRIPTION_STR "User Interface for the Local Monitor"
+
+/* Same Version as WinXP_sp2 */
+#define WINE_FILEVERSION      5,1,2600,2180
+#define WINE_FILEVERSION_STR "5.1.2600.2180"
+
+#define WINE_PRODUCTVERSION      5,1,2600,2180
+#define WINE_PRODUCTVERSION_STR "5.1.2600.2180"
+
+#include "wine/wine_common_ver.rc"
+
+
+#include "ui_Da.rc"
+#include "ui_De.rc"
+#include "ui_En.rc"
+#include "ui_Fr.rc"
+#include "ui_Ko.rc"
+#include "ui_Nl.rc"
+#include "ui_No.rc"
+#include "ui_Pl.rc"
+#include "ui_Pt.rc"
+#include "ui_Ro.rc"
+#include "ui_Ru.rc"
+#include "ui_Si.rc"
+#include "ui_Sv.rc"
+#include "ui_Zh.rc"

@@ -80,7 +80,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
 	VIDEODISPLAYMODE	UiDisplayMode; // Tells us if we are in text or graphics mode
 	BOOLEAN	UiMinimal = FALSE; // Tells us if we should use a minimal console-like UI
-	ULONG	SectionId;
+	ULONG_PTR SectionId;
 	CHAR	DisplayModeText[260];
 	CHAR	SettingText[260];
 	ULONG	Depth;
@@ -94,8 +94,8 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		return TRUE;
 	}
 
-	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
-	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
+	DPRINTM(DPRINT_UI, "Initializing User Interface.\n");
+	DPRINTM(DPRINT_UI, "Reading in UI settings from [Display] section.\n");
 
 	DisplayModeText[0] = '\0';
 	if (IniOpenSection("Display", &SectionId))
@@ -219,7 +219,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 	// Draw the backdrop and fade it in if special effects are enabled
 	UiFadeInBackdrop();
 
-	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
+	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
 	return TRUE;
 }
 
@@ -256,7 +256,7 @@ BOOLEAN SetupUiInitialize(VOID)
 	UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
 	UiVtbl.DrawText(3, 2, DisplayModeText, ATTR(COLOR_GRAY, UiBackdropBgColor));
 
-	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
+	DPRINTM(DPRINT_UI, "UiInitialize() returning TRUE.\n");
 
 	return TRUE;
 }
@@ -408,7 +408,7 @@ VOID UiShowMessageBoxesInSection(PCSTR SectionName)
 	CHAR	SettingValue[80];
 	PCHAR	MessageBoxText;
 	ULONG		MessageBoxTextSize;
-	ULONG		SectionId;
+	ULONG_PTR	SectionId;
 
 	if (!IniOpenSection(SectionName, &SectionId))
 	{

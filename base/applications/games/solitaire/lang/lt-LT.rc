@@ -52,6 +52,7 @@ BEGIN
     IDS_SOL_ABOUT   "Solitaire\n\nSukurta J Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Baigti þaidimà?"
     IDS_SOL_WIN     "Sveikiname, jûs laimëjote!!"
+    IDS_SOL_DEAL    "Deal again?"
 END
 
 

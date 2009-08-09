@@ -26,6 +26,7 @@
 #include "ole2.h"
 
 #include "mshtml_private.h"
+#include "htmlevent.h"
 
 #include "wine/debug.h"
 
@@ -35,17 +36,50 @@ struct event_target_t {
     IDispatch *event_table[EVENTID_LAST];
 };
 
+static const WCHAR blurW[] = {'b','l','u','r',0};
+static const WCHAR onblurW[] = {'o','n','b','l','u','r',0};
+
 static const WCHAR changeW[] = {'c','h','a','n','g','e',0};
 static const WCHAR onchangeW[] = {'o','n','c','h','a','n','g','e',0};
 
 static const WCHAR clickW[] = {'c','l','i','c','k',0};
 static const WCHAR onclickW[] = {'o','n','c','l','i','c','k',0};
 
+static const WCHAR dragW[] = {'d','r','a','g',0};
+static const WCHAR ondragW[] = {'o','n','d','r','a','g',0};
+
+static const WCHAR dragstartW[] = {'d','r','a','g','s','t','a','r','t',0};
+static const WCHAR ondragstartW[] = {'o','n','d','r','a','g','s','t','a','r','t',0};
+
+static const WCHAR focusW[] = {'f','o','c','u','s',0};
+static const WCHAR onfocusW[] = {'o','n','f','o','c','u','s',0};
+
+static const WCHAR keydownW[] = {'k','e','y','d','o','w','n',0};
+static const WCHAR onkeydownW[] = {'o','n','k','e','y','d','o','w','n',0};
+
 static const WCHAR keyupW[] = {'k','e','y','u','p',0};
 static const WCHAR onkeyupW[] = {'o','n','k','e','y','u','p',0};
 
 static const WCHAR loadW[] = {'l','o','a','d',0};
 static const WCHAR onloadW[] = {'o','n','l','o','a','d',0};
+
+static const WCHAR mousedownW[] = {'m','o','u','s','e','d','o','w','n',0};
+static const WCHAR onmousedownW[] = {'o','n','m','o','u','s','e','d','o','w','n',0};
+
+static const WCHAR mouseoutW[] = {'m','o','u','s','e','o','u','t',0};
+static const WCHAR onmouseoutW[] = {'o','n','m','o','u','s','e','o','u','t',0};
+
+static const WCHAR mouseoverW[] = {'m','o','u','s','e','o','v','e','r',0};
+static const WCHAR onmouseoverW[] = {'o','n','m','o','u','s','e','o','v','e','r',0};
+
+static const WCHAR mouseupW[] = {'m','o','u','s','e','u','p',0};
+static const WCHAR onmouseupW[] = {'o','n','m','o','u','s','e','u','p',0};
+
+static const WCHAR pasteW[] = {'p','a','s','t','e',0};
+static const WCHAR onpasteW[] = {'o','n','p','a','s','t','e',0};
+
+static const WCHAR selectstartW[] = {'s','e','l','e','c','t','s','t','a','r','t',0};
+static const WCHAR onselectstartW[] = {'o','n','s','e','l','e','c','t','s','t','a','r','t',0};
 
 typedef struct {
     LPCWSTR name;
@@ -54,12 +88,24 @@ typedef struct {
 } event_info_t;
 
 #define EVENT_DEFAULTLISTENER    0x0001
+#define EVENT_BUBBLE             0x0002
 
 static const event_info_t event_info[] = {
-    {changeW,   onchangeW,   EVENT_DEFAULTLISTENER},
-    {clickW,    onclickW,    EVENT_DEFAULTLISTENER},
-    {keyupW,    onkeyupW,    EVENT_DEFAULTLISTENER},
-    {loadW,     onloadW,     0}
+    {blurW,         onblurW,         EVENT_DEFAULTLISTENER},
+    {changeW,       onchangeW,       EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {clickW,        onclickW,        EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {dragW,         ondragW,         0},
+    {dragstartW,    ondragstartW,    0},
+    {focusW,        onfocusW,        EVENT_DEFAULTLISTENER},
+    {keydownW,      onkeydownW,      EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {keyupW,        onkeyupW,        EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {loadW,         onloadW,         0},
+    {mousedownW,    onmousedownW,    EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {mouseoutW,     onmouseoutW,     EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {mouseoverW,    onmouseoverW,    EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {mouseupW,      onmouseupW,      EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {pasteW,        onpasteW,        0},
+    {selectstartW,  onselectstartW,  0}
 };
 
 eventid_t str_to_eid(LPCWSTR str)
@@ -76,8 +122,12 @@ eventid_t str_to_eid(LPCWSTR str)
 }
 
 typedef struct {
+    DispatchEx dispex;
     const IHTMLEventObjVtbl  *lpIHTMLEventObjVtbl;
+
     LONG ref;
+
+    HTMLDOMNode *target;
 } HTMLEventObj;
 
 #define HTMLEVENTOBJ(x) ((IHTMLEventObj*) &(x)->lpIHTMLEventObjVtbl)
@@ -93,12 +143,11 @@ static HRESULT WINAPI HTMLEventObj_QueryInterface(IHTMLEventObj *iface, REFIID r
     if(IsEqualGUID(&IID_IUnknown, riid)) {
         TRACE("(%p)->(IID_IUnknown %p)\n", This, ppv);
         *ppv = HTMLEVENTOBJ(This);
-    }else if(IsEqualGUID(&IID_IDispatch, riid)) {
-        TRACE("(%p)->(IID_IDispatch %p)\n", This, ppv);
-        *ppv = HTMLEVENTOBJ(This);
     }else if(IsEqualGUID(&IID_IHTMLEventObj, riid)) {
         TRACE("(%p)->(IID_IHTMLEventObj %p)\n", This, ppv);
         *ppv = HTMLEVENTOBJ(This);
+    }else if(dispex_query_interface(&This->dispex, riid, ppv)) {
+        return *ppv ? S_OK : E_NOINTERFACE;
     }
 
     if(*ppv) {
@@ -171,8 +220,10 @@ static HRESULT WINAPI HTMLEventObj_Invoke(IHTMLEventObj *iface, DISPID dispIdMem
 static HRESULT WINAPI HTMLEventObj_get_srcElement(IHTMLEventObj *iface, IHTMLElement **p)
 {
     HTMLEventObj *This = HTMLEVENTOBJ_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    return IHTMLDOMNode_QueryInterface(HTMLDOMNODE(This->target), &IID_IHTMLElement, (void**)p);
 }
 
 static HRESULT WINAPI HTMLEventObj_get_altKey(IHTMLEventObj *iface, VARIANT_BOOL *p)
@@ -380,66 +431,154 @@ static const IHTMLEventObjVtbl HTMLEventObjVtbl = {
     HTMLEventObj_get_srcFilter
 };
 
-static IHTMLEventObj *create_event(void)
+static const tid_t HTMLEventObj_iface_tids[] = {
+    IHTMLEventObj_tid,
+    0
+};
+
+static dispex_static_data_t HTMLEventObj_dispex = {
+    NULL,
+    DispCEventObj_tid,
+    NULL,
+    HTMLEventObj_iface_tids
+};
+
+static IHTMLEventObj *create_event(HTMLDOMNode *target)
 {
     HTMLEventObj *ret;
 
     ret = heap_alloc(sizeof(*ret));
     ret->lpIHTMLEventObjVtbl = &HTMLEventObjVtbl;
     ret->ref = 1;
+    ret->target = target;
+    IHTMLDOMNode_AddRef(HTMLDOMNODE(target));
+
+    init_dispex(&ret->dispex, (IUnknown*)HTMLEVENTOBJ(ret), &HTMLEventObj_dispex);
 
     return HTMLEVENTOBJ(ret);
 }
 
 void fire_event(HTMLDocument *doc, eventid_t eid, nsIDOMNode *target)
 {
+    IHTMLEventObj *prev_event, *event_obj = NULL;
+    nsIDOMNode *parent, *nsnode;
     HTMLDOMNode *node;
+    PRUint16 node_type;
 
-    node = get_node(doc, target, FALSE);
-    if(!node)
+    nsIDOMNode_GetNodeType(target, &node_type);
+    if(node_type != ELEMENT_NODE) {
+        FIXME("node type %d node supported\n", node_type);
         return;
+    }
 
-    if(node->event_target && node->event_target->event_table[eid]) {
-        doc->window->event = create_event();
+    prev_event = doc->window->event;
+    nsnode = target;
+    nsIDOMNode_AddRef(nsnode);
 
-        TRACE("%s >>>\n", debugstr_w(event_info[eid].name));
-        call_disp_func(doc, node->event_target->event_table[eid]);
-        TRACE("%s <<<\n", debugstr_w(event_info[eid].name));
+    while(1) {
+        node = get_node(doc, nsnode, FALSE);
 
-        IHTMLEventObj_Release(doc->window->event);
-        doc->window->event = NULL;
+        if(node && node->event_target && node->event_target->event_table[eid]) {
+            if(!event_obj)
+                event_obj = doc->window->event = create_event(get_node(doc, target, TRUE));
+
+            TRACE("%s >>>\n", debugstr_w(event_info[eid].name));
+            call_disp_func(doc, node->event_target->event_table[eid], (IDispatch*)HTMLDOMNODE(node));
+            TRACE("%s <<<\n", debugstr_w(event_info[eid].name));
+        }
+
+        if(!(event_info[eid].flags & EVENT_BUBBLE))
+            break;
+
+        nsIDOMNode_GetParentNode(nsnode, &parent);
+        nsIDOMNode_Release(nsnode);
+        nsnode = parent;
+        if(!nsnode)
+            break;
+
+        nsIDOMNode_GetNodeType(nsnode, &node_type);
+        if(node_type != ELEMENT_NODE)
+            break;
+    }
+
+    if(nsnode)
+        nsIDOMNode_Release(nsnode);
+
+    if((event_info[eid].flags & EVENT_BUBBLE) && doc->event_target && doc->event_target->event_table[eid]) {
+        if(!event_obj)
+            event_obj = doc->window->event = create_event(get_node(doc, target, TRUE));
+
+        TRACE("doc %s >>>\n", debugstr_w(event_info[eid].name));
+        call_disp_func(doc, doc->event_target->event_table[eid], (IDispatch*)HTMLDOC(doc));
+        TRACE("doc %s <<<\n", debugstr_w(event_info[eid].name));
+    }
+
+    if(event_obj) {
+        IHTMLEventObj_Release(event_obj);
+        doc->window->event = prev_event;
     }
 }
 
-static HRESULT set_node_event_disp(HTMLDOMNode *node, eventid_t eid, IDispatch *disp)
+static HRESULT set_event_handler_disp(event_target_t **event_target, HTMLDocument *doc, eventid_t eid, IDispatch *disp)
 {
-    if(!node->event_target)
-        node->event_target = heap_alloc_zero(sizeof(event_target_t));
-    else if(node->event_target->event_table[eid])
-        IDispatch_Release(node->event_target->event_table[eid]);
+    if(!*event_target)
+        *event_target = heap_alloc_zero(sizeof(event_target_t));
+    else if((*event_target)->event_table[eid])
+        IDispatch_Release((*event_target)->event_table[eid]);
 
+    (*event_target)->event_table[eid] = disp;
+    if(!disp)
+        return S_OK;
     IDispatch_AddRef(disp);
-    node->event_target->event_table[eid] = disp;
 
-    if((event_info[eid].flags & EVENT_DEFAULTLISTENER) && !node->doc->nscontainer->event_vector[eid]) {
-        node->doc->nscontainer->event_vector[eid] = TRUE;
-        add_nsevent_listener(node->doc->nscontainer, event_info[eid].name);
+    if(doc->nscontainer && (event_info[eid].flags & EVENT_DEFAULTLISTENER)) {
+        if(!doc->nscontainer->event_vector) {
+            doc->nscontainer->event_vector = heap_alloc_zero(EVENTID_LAST*sizeof(BOOL));
+            if(!doc->nscontainer->event_vector)
+                return E_OUTOFMEMORY;
+        }
+
+        if(!doc->nscontainer->event_vector[eid]) {
+            doc->nscontainer->event_vector[eid] = TRUE;
+            add_nsevent_listener(doc->nscontainer, event_info[eid].name);
+        }
     }
 
     return S_OK;
 }
 
-HRESULT set_node_event(HTMLDOMNode *node, eventid_t eid, VARIANT *var)
+HRESULT set_event_handler(event_target_t **event_target, HTMLDocument *doc, eventid_t eid, VARIANT *var)
 {
     switch(V_VT(var)) {
+    case VT_NULL:
+        if(*event_target && (*event_target)->event_table[eid]) {
+            IDispatch_Release((*event_target)->event_table[eid]);
+            (*event_target)->event_table[eid] = NULL;
+        }
+        break;
+
     case VT_DISPATCH:
-        return set_node_event_disp(node, eid, V_DISPATCH(var));
+        return set_event_handler_disp(event_target, doc, eid, V_DISPATCH(var));
 
     default:
         FIXME("not supported vt=%d\n", V_VT(var));
+        return E_NOTIMPL;
     }
 
-    return E_NOTIMPL;
+    return S_OK;
+}
+
+HRESULT get_event_handler(event_target_t **event_target, eventid_t eid, VARIANT *var)
+{
+    if(*event_target && (*event_target)->event_table[eid]) {
+        V_VT(var) = VT_DISPATCH;
+        V_DISPATCH(var) = (*event_target)->event_table[eid];
+        IDispatch_AddRef(V_DISPATCH(var));
+    }else {
+        V_VT(var) = VT_NULL;
+    }
+
+    return S_OK;
 }
 
 void check_event_attr(HTMLDocument *doc, nsIDOMElement *nselem)
@@ -467,7 +606,7 @@ void check_event_attr(HTMLDocument *doc, nsIDOMElement *nselem)
             disp = script_parse_event(doc, attr_value);
             if(disp) {
                 node = get_node(doc, (nsIDOMNode*)nselem, TRUE);
-                set_node_event_disp(node, i, disp);
+                set_event_handler_disp(&node->event_target, node->doc, i, disp);
                 IDispatch_Release(disp);
             }
         }

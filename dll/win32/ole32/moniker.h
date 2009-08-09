@@ -36,6 +36,7 @@ HRESULT AntiMonikerCF_Create(REFIID riid, LPVOID *ppv);
 HRESULT CompositeMonikerCF_Create(REFIID riid, LPVOID *ppv);
 HRESULT ClassMonikerCF_Create(REFIID riid, LPVOID *ppv);
 HRESULT PointerMonikerCF_Create(REFIID riid, LPVOID *ppv);
+HRESULT ComCatCF_Create(REFIID riid, LPVOID *ppv);
 
 /* This function decomposes a String path to a String Table containing all the elements ("\" or "subDirectory" or "Directory" or "FileName") of the path */
 int FileMonikerImpl_DecomposePath(LPCOLESTR str, LPOLESTR** stringTable);

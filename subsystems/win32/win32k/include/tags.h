@@ -2,6 +2,7 @@
 #define _WIN32K_TAGS_H
 
 #define TAG_STRING      TAG('S', 'T', 'R', ' ') /* string */
+#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v') /* RTL registry */
 
 /* ntuser */
 #define TAG_MOUSE       TAG('M', 'O', 'U', 'S') /* mouse */
@@ -25,6 +26,7 @@
 #define TAG_CALLBACK    TAG('C', 'B', 'C', 'K') /* callback memory */
 #define TAG_WINSTA      TAG('W', 'S', 'T', 'A') /* window station */
 #define TAG_PDCE        TAG('U', 's', 'd', 'c') /* dce */
+#define TAG_INPUT       TAG('U', 's', 's', 'y') /* Input */
 
 /* gdi objects from the handle table */
 #define TAG_DC          TAG('G', 'l', 'a', '1') /* dc */
@@ -76,17 +78,18 @@
 #define TAG_CLIPOBJ     TAG('C', 'L', 'P', 'O') /* clip object */
 #define TAG_DRIVEROBJ   TAG('D', 'R', 'V', 'O') /* driver object */
 #define TAG_DFSM        TAG('D', 'f', 's', 'm') /* Eng event allocation */
+#define TAG_EPATH       TAG('G', 'p', 'a', 't') /* path object */
 #define TAG_FONT        TAG('F', 'N', 'T', 'E') /* font entry */
 #define TAG_FONTOBJ     TAG('G', 'f', 'n', 't') /* font object */
 #define TAG_WNDOBJ      TAG('W', 'N', 'D', 'O') /* window object */
 #define TAG_XLATEOBJ    TAG('X', 'L', 'A', 'O') /* xlate object */
-#define TAG_BITMAPOBJ   TAG('B', 'M', 'P', 'O') /* bitmap object */
 #define TAG_GSEM        TAG('G', 's', 'e', 'm') /* Gdi Semaphore */
 
 /* misc */
 #define TAG_DRIVER      TAG('G', 'D', 'R', 'V') /* video drivers */
 #define TAG_FNTFILE     TAG('F', 'N', 'T', 'F') /* font file */
 #define TAG_SSECTPOOL   TAG('S', 'S', 'C', 'P') /* shared section pool */
+#define TAG_PFF         TAG('G', 'p', 'f', 'f') /* physical font file */
 
 /* Dx internal tags rember I do not known if it right namees */
 #define TAG_DXPVMLIST   TAG('D', 'X', 'P', 'L') /* pmvlist for the driver */

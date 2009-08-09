@@ -26,7 +26,7 @@ typedef struct _WINDOW_OBJECT
   /* Pointer to the thread information */
   PW32THREADINFO ti;
   /* Pointer to the desktop */
-  PDESKTOP Desktop;
+  PDESKTOPINFO Desktop;
   /* system menu handle. */
   HMENU SystemMenu;
   /* Entry in the thread's list of windows. */
@@ -166,6 +166,8 @@ IntShowOwnedPopups( PWINDOW_OBJECT owner, BOOL fShow );
 
 LRESULT FASTCALL
 IntDefWindowProc( PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
+
+VOID FASTCALL IntNotifyWinEvent(DWORD, PWINDOW_OBJECT, LONG, LONG);
 
 #endif /* _WIN32K_WINDOW_H */
 

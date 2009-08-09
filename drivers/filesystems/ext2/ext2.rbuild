@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="ext2fs" type="kernelmodedriver" installbase="system32/drivers" installname="ext2.sys" allowwarnings="true">
+<module name="ext2fs" type="kernelmodedriver" installbase="system32/drivers" installname="ext2.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="ext2fs">inc</include>
 	<library>ntoskrnl</library>

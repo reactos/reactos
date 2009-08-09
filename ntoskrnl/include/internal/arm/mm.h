@@ -1,10 +1,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_ARM_MM_H
 
-#if __GNUC__ >=3
-#pragma GCC system_header
-#endif
-
 //
 // Number of bits corresponding to the area that a PDE entry represents (1MB)
 //
@@ -15,7 +11,7 @@
 // Number of bits corresponding to the area that a coarse page table entry represents (4KB)
 //
 #define PTE_SHIFT 12
-#define PAGE_SIZE (1 << PTE_SHIFT)
+//#define PAGE_SIZE (1 << PTE_SHIFT) // FIXME: This conflicts with ndk/arm/mmtypes.h which does #define PAGE_SIZE 0x1000 -- use PTE_SIZE here instead?
 
 //
 // Number of bits corresponding to the area that a coarse page table occupies (1KB)

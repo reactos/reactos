@@ -77,7 +77,7 @@ static void md2_compress(md2_state *md2)
        md2->X[32+j] = md2->X[j] ^ md2->X[16+j];
    }
 
-   t = (unsigned char)0;
+   t = 0;
 
    /* do 18 rounds */
    for (j = 0; j < 18; j++) {

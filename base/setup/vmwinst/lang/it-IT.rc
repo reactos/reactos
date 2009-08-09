@@ -114,15 +114,15 @@ END
 
 STRINGTABLE
 BEGIN
-  IDD_INSERT_VMWARE_TOOLSTITLE     	"Wizard installazione driver VMware (r) SVGA"
+  IDD_INSERT_VMWARE_TOOLSTITLE     		"Wizard installazione driver VMware (r) SVGA"
   IDD_INSERT_VMWARE_TOOLSSUBTITLE       "Inserite il CD_ROM 'VMware(r) Tools'."
   IDD_INSTALLING_VMWARE_TOOLSTITLE      "Wizard installazione driver VMware (r) SVGA"
-  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Search and copy the VMware (r) SVGA driver."
-  IDD_CONFIGTITLE     			"Wizard installazione driver VMware (r) SVGA"
-  IDD_CONFIGSUBTITLE     		"Select your favorite screen resolution."
-  IDD_INSTALLATION_FAILEDTITLE     	"Wizard installazione driver VMware (r) SVGA"
+  IDD_INSTALLING_VMWARE_TOOLSSUBTITLE   "Cerca e copia il driver VMware (r) SVGA."
+  IDD_CONFIGTITLE     			        "Wizard installazione driver VMware (r) SVGA"
+  IDD_CONFIGSUBTITLE     		        "Sceglie la risoluzione preferita per lo schermo."
+  IDD_INSTALLATION_FAILEDTITLE     	    "Wizard installazione driver VMware (r) SVGA"
   IDD_INSTALLATION_FAILEDSUBTITLE       "Installazione del driver VMware (r) SVGA fallita."
-  IDD_CHOOSEACTIONTITLE    	        "Wizard installazione driver VMware (r) SVGA"
+  IDD_CHOOSEACTIONTITLE    	            "Wizard installazione driver VMware (r) SVGA"
   IDD_CHOOSEACTIONSUBTITLE              "Scegli cosa vuoi fare."
   IDD_SELECTDRIVERTITLE                 "Wizard installazione driver VMware (r) SVGA"
   IDD_SELECTDRIVERSUBTITLE              "Scegli un driver."

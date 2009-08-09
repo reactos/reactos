@@ -12,6 +12,8 @@
 #include "api.h"
 #include "win32csr.h"
 
+#define CSR_DEFAULT_CURSOR_SIZE 25
+
 /* Object type magic numbers */
 
 #define CONIO_CONSOLE_MAGIC         0x00000001
@@ -41,7 +43,7 @@ typedef struct tagCSRSS_SCREEN_BUFFER
   USHORT ShowX, ShowY;             /* beginning offset for the actual display area */
   ULONG CurrentX;                  /* Current X cursor position */
   ULONG CurrentY;                  /* Current Y cursor position */
-  BYTE DefaultAttrib;              /* default char attribute */
+  WORD DefaultAttrib;              /* default char attribute */
   USHORT VirtualX;                 /* top row of buffer being displayed, reported to callers */
   CONSOLE_CURSOR_INFO CursorInfo;
   USHORT Mode;
@@ -49,17 +51,17 @@ typedef struct tagCSRSS_SCREEN_BUFFER
 
 typedef struct tagCSRSS_CONSOLE_VTBL
 {
-  VOID (STDCALL *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  VOID (STDCALL *WriteStream)(PCSRSS_CONSOLE Console, RECT *Block, LONG CursorStartX, LONG CursorStartY,
+  VOID (WINAPI *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+  VOID (WINAPI *WriteStream)(PCSRSS_CONSOLE Console, RECT *Block, LONG CursorStartX, LONG CursorStartY,
                               UINT ScrolledLines, CHAR *Buffer, UINT Length);
-  VOID (STDCALL *DrawRegion)(PCSRSS_CONSOLE Console, RECT *Region);
-  BOOL (STDCALL *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  BOOL (STDCALL *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
+  VOID (WINAPI *DrawRegion)(PCSRSS_CONSOLE Console, RECT *Region);
+  BOOL (WINAPI *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+  BOOL (WINAPI *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
                                 UINT OldCursorX, UINT OldCursorY);
-  BOOL (STDCALL *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  BOOL (STDCALL *ChangeTitle)(PCSRSS_CONSOLE Console);
-  VOID (STDCALL *CleanupConsole)(PCSRSS_CONSOLE Console);
-  BOOL (STDCALL *ChangeIcon)(PCSRSS_CONSOLE Console);
+  BOOL (WINAPI *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
+  BOOL (WINAPI *ChangeTitle)(PCSRSS_CONSOLE Console);
+  VOID (WINAPI *CleanupConsole)(PCSRSS_CONSOLE Console);
+  BOOL (WINAPI *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
 } CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
 
 typedef struct tagCSRSS_CONSOLE
@@ -92,9 +94,9 @@ typedef struct tagCSRSS_CONSOLE
   LIST_ENTRY ProcessList;
 } CSRSS_CONSOLE;
 
-VOID STDCALL ConioDeleteConsole(Object_t *Object);
-VOID STDCALL ConioDeleteScreenBuffer(Object_t *Buffer);
-void STDCALL ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
+VOID WINAPI ConioDeleteConsole(Object_t *Object);
+VOID WINAPI ConioDeleteScreenBuffer(Object_t *Buffer);
+void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
 void FASTCALL ConioPhysicalToLogical(PCSRSS_SCREEN_BUFFER Buff,
                                      ULONG PhysicalX,
                                      ULONG PhysicalY,
@@ -144,6 +146,7 @@ CSR_API(CsrSetConsoleCodePage);
 CSR_API(CsrGetConsoleOutputCodePage);
 CSR_API(CsrSetConsoleOutputCodePage);
 CSR_API(CsrGetProcessList);
+CSR_API(CsrGenerateCtrlEvent);
 
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))

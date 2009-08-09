@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef DO_NO_IMPORTS
 import "unknwn.idl";
+#endif
 
 cpp_quote("#define INTERFACESAFE_FOR_UNTRUSTED_CALLER 1")
 cpp_quote("#define INTERFACESAFE_FOR_UNTRUSTED_DATA 2")

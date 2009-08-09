@@ -1,18 +1,17 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/io/pnproot.c
+ * PROJECT:         ReactOS Kernel
+ * COPYRIGHT:       GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/io/pnpmgr/pnproot.c
  * PURPOSE:         PnP manager root device
- *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- *                  Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ *                  Copyright 2007 Herv? Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -100,20 +99,31 @@ LocateChildDevice(
 {
     PPNPROOT_DEVICE Device;
     UNICODE_STRING DeviceIdU, InstanceIdU;
+    PLIST_ENTRY NextEntry;
 
+    /* Initialize the strings to compare  */
     RtlInitUnicodeString(&DeviceIdU, DeviceId);
     RtlInitUnicodeString(&InstanceIdU, InstanceId);
 
-    LIST_FOR_EACH(Device, &DeviceExtension->DeviceListHead, PNPROOT_DEVICE, ListEntry)
+    /* Start looping */
+    for (NextEntry = DeviceExtension->DeviceListHead.Flink;
+         NextEntry != &DeviceExtension->DeviceListHead;
+         NextEntry = NextEntry->Flink)
     {
-        if (RtlEqualUnicodeString(&DeviceIdU, &Device->DeviceID, TRUE)
-         && RtlEqualUnicodeString(&InstanceIdU, &Device->InstanceID, TRUE))
+        /* Get the entry */
+        Device = CONTAINING_RECORD(NextEntry, PNPROOT_DEVICE, ListEntry);
+
+        /* See if the strings match */
+        if (RtlEqualUnicodeString(&DeviceIdU, &Device->DeviceID, TRUE) &&
+            RtlEqualUnicodeString(&InstanceIdU, &Device->InstanceID, TRUE))
         {
+            /* They do, so set the pointer and return success */
             *ChildDevice = Device;
             return STATUS_SUCCESS;
         }
     }
 
+    /* No device found */
     return STATUS_NO_SUCH_DEVICE;
 }
 
@@ -152,7 +162,7 @@ PnpRootCreateDevice(
         if (Status == STATUS_NO_SUCH_DEVICE)
             break;
     }
-    if (i > 9999)
+    if (i == 9999)
     {
         DPRINT1("Too much legacy devices reported for service '%wZ'\n", &LocalServiceName);
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -493,8 +503,10 @@ cleanup:
         ZwClose(SubKeyHandle);
     if (KeyHandle != INVALID_HANDLE_VALUE)
         ZwClose(KeyHandle);
-    ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
-    ExFreePoolWithTag(SubKeyInfo, TAG_PNP_ROOT);
+    if (KeyInfo)
+        ExFreePoolWithTag(KeyInfo, TAG_PNP_ROOT);
+    if (SubKeyInfo)
+        ExFreePoolWithTag(SubKeyInfo, TAG_PNP_ROOT);
     KeReleaseGuardedMutex(&DeviceExtension->DeviceListLock);
     return Status;
 }
@@ -517,6 +529,7 @@ PnpRootQueryDeviceRelations(
     PPNPROOT_DEVICE Device = NULL;
     ULONG Size;
     NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
 
     DPRINT("PnpRootQueryDeviceRelations(FDO %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -552,8 +565,15 @@ PnpRootQueryDeviceRelations(
     }
 
     KeAcquireGuardedMutex(&DeviceExtension->DeviceListLock);
-    LIST_FOR_EACH(Device, &DeviceExtension->DeviceListHead, PNPROOT_DEVICE, ListEntry)
+
+    /* Start looping */
+    for (NextEntry = DeviceExtension->DeviceListHead.Flink;
+         NextEntry != &DeviceExtension->DeviceListHead;
+         NextEntry = NextEntry->Flink)
     {
+        /* Get the entry */
+        Device = CONTAINING_RECORD(NextEntry, PNPROOT_DEVICE, ListEntry);
+    
         if (!Device->Pdo)
         {
             /* Create a physical device object for the
@@ -1066,7 +1086,7 @@ PnpRootPnpControl(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 PnpRootAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -1080,7 +1100,7 @@ PnpRootAddDevice(
     {
         DPRINT("PhysicalDeviceObject 0x%p\n", PhysicalDeviceObject);
         Status = STATUS_INSUFFICIENT_RESOURCES;
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     Status = IoCreateDevice(
@@ -1094,7 +1114,7 @@ PnpRootAddDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
     DPRINT("Created FDO %p\n", PnpRootDeviceObject);
 
@@ -1114,7 +1134,7 @@ PnpRootAddDevice(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
-        KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
+        KeBugCheckEx(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
     }
 
     PnpRootDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
@@ -1138,5 +1158,3 @@ PnpRootDriverEntry(
 
     return STATUS_SUCCESS;
 }
-
-/* EOF */

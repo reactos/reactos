@@ -19,10 +19,6 @@
 #ifndef _GDIPLUSIMAGEATTRIBUTES_H
 #define _GDIPLUSIMAGEATTRIBUTES_H
 
-#if __GNUC__ >= 3
-#pragma GCC system_header
-#endif
-
 class ImageAttributes : public GdiplusBase
 {
 public:

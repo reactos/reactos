@@ -24,7 +24,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Tento nástroj poskytuje detailní informace o komponentách ReactX a ovladaèích nainstalovaných na tomto systému.", -1, 10, 10, 443, 17
-    LTEXT "Pokud víte, ve které oblasti se nachází problém, kliknìte na vhodnou záložku výše. V opaèném pøípadì lze použít tlaèítko \"Další stránka\" níže a procházet stránky postupnì.", -1, 10, 30, 443, 25
+    LTEXT "Pokud víte, ve které oblasti se nachází problém, kliknìte na vhodnou záložku výše. V opaèném pøípadì lze použít tlaèítko ""Další stránka"" níže a procházet stránky postupnì.", -1, 10, 30, 443, 25
     GROUPBOX "Systémové informace", -1, 10, 55, 443, 130, SS_RIGHT
     LTEXT "Souèasné datum a èas:", -1, 70, 70, 80, 10, SS_RIGHT
     LTEXT "Název poèítaèe:", -1, 70, 80, 80, 10, SS_RIGHT

@@ -328,7 +328,7 @@ static void OLEFont_SendNotify(OLEFontImpl* this, DISPID dispID)
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-HRESULT WINAPI OLEFontImpl_QueryInterface(
+static HRESULT WINAPI OLEFontImpl_QueryInterface(
   IFont*  iface,
   REFIID  riid,
   void**  ppvObject)
@@ -351,21 +351,21 @@ HRESULT WINAPI OLEFontImpl_QueryInterface(
    * Compare the riid with the interface IDs implemented by this object.
    */
   if (IsEqualGUID(&IID_IUnknown, riid))
-    *ppvObject = (IFont*)this;
+    *ppvObject = this;
   if (IsEqualGUID(&IID_IFont, riid))
-    *ppvObject = (IFont*)this;
+    *ppvObject = this;
   if (IsEqualGUID(&IID_IDispatch, riid))
-    *ppvObject = (IDispatch*)&(this->lpvtblIDispatch);
+    *ppvObject = &this->lpvtblIDispatch;
   if (IsEqualGUID(&IID_IFontDisp, riid))
-    *ppvObject = (IDispatch*)&(this->lpvtblIDispatch);
+    *ppvObject = &this->lpvtblIDispatch;
   if (IsEqualIID(&IID_IPersist, riid) || IsEqualGUID(&IID_IPersistStream, riid))
-    *ppvObject = (IPersistStream*)&(this->lpvtblIPersistStream);
+    *ppvObject = &this->lpvtblIPersistStream;
   if (IsEqualGUID(&IID_IConnectionPointContainer, riid))
-    *ppvObject = (IConnectionPointContainer*)&(this->lpvtblIConnectionPointContainer);
+    *ppvObject = &this->lpvtblIConnectionPointContainer;
   if (IsEqualGUID(&IID_IPersistPropertyBag, riid))
-    *ppvObject = (IPersistPropertyBag*)&(this->lpvtblIPersistPropertyBag);
+    *ppvObject = &this->lpvtblIPersistPropertyBag;
   if (IsEqualGUID(&IID_IPersistStreamInit, riid))
-    *ppvObject = (IPersistStreamInit*)&(this->lpvtblIPersistStreamInit);
+    *ppvObject = &this->lpvtblIPersistStreamInit;
 
   /*
    * Check that we obtained an interface.
@@ -384,7 +384,7 @@ HRESULT WINAPI OLEFontImpl_QueryInterface(
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-ULONG WINAPI OLEFontImpl_AddRef(
+static ULONG WINAPI OLEFontImpl_AddRef(
   IFont* iface)
 {
   OLEFontImpl *this = (OLEFontImpl *)iface;
@@ -397,7 +397,7 @@ ULONG WINAPI OLEFontImpl_AddRef(
  *
  * See Windows documentation for more details on IUnknown methods.
  */
-ULONG WINAPI OLEFontImpl_Release(
+static ULONG WINAPI OLEFontImpl_Release(
       IFont* iface)
 {
   OLEFontImpl *this = (OLEFontImpl *)iface;
@@ -2343,4 +2343,4 @@ static const IClassFactoryVtbl SFCF_Vtbl = {
 };
 static IClassFactoryImpl STDFONT_CF = {&SFCF_Vtbl, 1 };
 
-void _get_STDFONT_CF(LPVOID *ppv) { *ppv = (LPVOID)&STDFONT_CF; }
+void _get_STDFONT_CF(LPVOID *ppv) { *ppv = &STDFONT_CF; }

@@ -194,10 +194,13 @@ void adns__querysend_tcp(adns_query qu, struct timeval now) {
     iov[1].iov_base= (char*)qu->query_dgram;
     iov[1].iov_len= qu->query_dglen;
     adns__sigpipe_protect(qu->ads);
+
+    ADNS_CLEAR_ERRNO;
     wr= writev(qu->ads->tcpsocket,iov,2);
+    ADNS_CAPTURE_ERRNO;
     adns__sigpipe_unprotect(qu->ads);
     if (wr < 0) {
-      if (!(errno == EAGAIN || errno == EINTR || errno == ENOSPC ||
+      if (!(errno == EAGAIN || EWOULDBLOCK || errno == EINTR || errno == ENOSPC ||
 	    errno == ENOBUFS || errno == ENOMEM)) {
 	adns__tcp_broken(ads,"write",strerror(errno));
 	return;
@@ -255,7 +258,7 @@ void adns__query_send(adns_query qu, struct timeval now) {
 	    (const struct sockaddr*)&servaddr,sizeof(servaddr));
   ADNS_CAPTURE_ERRNO;
   if (r<0 && errno == EMSGSIZE) { qu->retries= 0; query_usetcp(qu,now); return; }
-  if (r<0 && errno != EAGAIN) adns__warn(ads,serv,0,"sendto failed: %s (%d)",strerror(errno), errno);
+  if (r<0 && ((errno != EAGAIN) && (errno != EWOULDBLOCK))) adns__warn(ads,serv,0,"sendto failed: %s (%d)",strerror(errno), errno);
 
   qu->timeout= now;
   timevaladd(&qu->timeout,UDPRETRYMS);

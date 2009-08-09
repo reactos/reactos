@@ -132,12 +132,7 @@ relocate:
 
 	; Make sure the keyboard buffer is empty
 %ifdef WAIT_FOR_KEY
-.kbd_buffer_test:
-	call	pollchar
-	jz	.kbd_buffer_empty
-	call	getchar
-	jmp	.kbd_buffer_test
-.kbd_buffer_empty:
+	call	pollchar_and_empty
 
 	; Check for MBR on harddisk
 	pusha
@@ -166,7 +161,7 @@ relocate:
 	add	eax, 19				; 
 
 .poll_again:
-	call	pollchar
+	call	pollchar_and_empty
 	jnz	.boot_cdrom
 
 	mov	ebx, [BIOS_timer]
@@ -921,12 +916,24 @@ getchar:
 
 
 ;
-; pollchar: check if we have an input character pending (ZF = 0)
+; pollchar_and_empty: check if we have an input character pending (ZF = 0) and empty the input buffer afterwards
 ;
-pollchar:
+pollchar_and_empty:
 	pushad
-	mov ah,1		; Poll keyboard
+	mov ah, 1		; Poll keyboard
 	int 16h
+	jz	.end
+.empty_buffer:
+	mov ah, 0		; Read from keyboard
+	int 16h
+	
+	mov ah, 1		; Poll keyboard again
+	int 16h
+	jz	.buffer_emptied
+	jmp .empty_buffer
+.buffer_emptied:
+	and ax, ax	; ZF = 0
+.end:
 	popad
 	ret
 

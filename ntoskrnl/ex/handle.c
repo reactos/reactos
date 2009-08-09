@@ -59,7 +59,7 @@ ExpLookupHandleTableEntry(IN PHANDLE_TABLE HandleTable,
         /* Direct index */
         case 0:
 
-            /* Use level 1 and just get the entry directlry */
+            /* Use level 1 and just get the entry directly */
             Level1 = (PUCHAR)TableBase;
             Entry = (PVOID)&Level1[Handle.Value *
                                    (sizeof(HANDLE_TABLE_ENTRY) /
@@ -210,8 +210,8 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
     PEPROCESS Process = HandleTable->QuotaProcess;
     ULONG i, j;
     ULONG_PTR TableCode = HandleTable->TableCode;
-    ULONG TableLevel = TableCode & 3;
     ULONG_PTR TableBase = TableCode & ~3;
+    ULONG TableLevel = (ULONG)(TableCode & 3);
     PHANDLE_TABLE_ENTRY Level1, *Level2, **Level3;
     PAGED_CODE();
 
@@ -268,8 +268,7 @@ ExpFreeHandleTable(IN PHANDLE_TABLE HandleTable)
         /* Free the third level table */
         ExpFreeTablePagedPool(Process,
                               Level3,
-                              HIGH_LEVEL_ENTRIES *
-                              sizeof(PHANDLE_TABLE_ENTRY));
+                              SizeOfHandle(HIGH_LEVEL_ENTRIES));
     }
 
     /* Free the actual table and check if we need to release quota */
@@ -540,7 +539,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
         {
             /* We need a new high level table */
             High = ExpAllocateTablePagedPool(HandleTable->QuotaProcess,
-                                             HIGH_LEVEL_ENTRIES);
+                                             SizeOfHandle(HIGH_LEVEL_ENTRIES));
             if (!High) return FALSE;
 
             /* Allocate a new mid level table as well */
@@ -550,7 +549,7 @@ ExpAllocateHandleTableEntrySlow(IN PHANDLE_TABLE HandleTable,
                 /* We failed, free the high level table as welll */
                 ExpFreeTablePagedPool(HandleTable->QuotaProcess,
                                       High,
-                                      HIGH_LEVEL_ENTRIES);
+                                      SizeOfHandle(HIGH_LEVEL_ENTRIES));
                 return FALSE;
             }
 
@@ -661,7 +660,7 @@ ExpMoveFreeHandles(IN PHANDLE_TABLE HandleTable)
     }
 
     /* We are strict FIFO, we need to reverse the entries */
-    KEBUGCHECK(0);
+    ASSERT(FALSE);
     return LastFree;
 }
 
@@ -958,7 +957,7 @@ ExDestroyHandleTable(IN PHANDLE_TABLE HandleTable,
     if (DestroyHandleProcedure)
     {
         /* FIXME: */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Free the handle table */

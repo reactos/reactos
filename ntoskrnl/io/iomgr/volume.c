@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, IoInitFileSystemImplementation)
@@ -26,7 +26,6 @@ LIST_ENTRY IopDiskFsListHead, IopNetworkFsListHead;
 LIST_ENTRY IopCdRomFsListHead, IopTapeFsListHead;
 KGUARDED_MUTEX FsChangeNotifyListLock;
 LIST_ENTRY FsChangeNotifyListHead;
-KSPIN_LOCK IoVpbLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -71,7 +70,7 @@ IopCheckVpbMounted(IN POPEN_PACKET OpenPacket,
             IopDereferenceDeviceObject(DeviceObject, FALSE);
 
             /* Check if it was a total failure */
-            if (!NT_SUCCESS(Status)) return NULL;
+            if (!NT_SUCCESS(*Status)) return NULL;
 
             /* Otherwise we were alerted */
             *Status = STATUS_WRONG_VOLUME;
@@ -140,7 +139,7 @@ IopDereferenceVpb(IN PVPB Vpb)
     if (!Vpb->ReferenceCount)
     {
         /* FIXME: IMPLEMENT CLEANUP! */
-        KEBUGCHECK(0);
+        ASSERT(FALSE);
     }
 
     /* Release VPB lock */
@@ -646,6 +645,19 @@ IopMountVolume(IN PDEVICE_OBJECT DeviceObject,
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+IoEnumerateRegisteredFiltersList(IN PDRIVER_OBJECT *DriverObjectList,
+                                 IN ULONG DriverObjectListSize,
+                                 OUT PULONG ActualNumberDriverObjects)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
  * @implemented
  */
 NTSTATUS
@@ -910,7 +922,7 @@ NTAPI
 IoAcquireVpbSpinLock(OUT PKIRQL Irql)
 {
     /* Simply acquire the lock */
-    KeAcquireSpinLock(&IoVpbLock, Irql);
+    *Irql = KeAcquireQueuedSpinLock(LockQueueIoVpbLock);
 }
 
 /*
@@ -921,7 +933,7 @@ NTAPI
 IoReleaseVpbSpinLock(IN KIRQL Irql)
 {
     /* Just release the lock */
-    KeReleaseSpinLock(&IoVpbLock, Irql);
+    KeReleaseQueuedSpinLock(LockQueueIoVpbLock, Irql);
 }
 
 /*

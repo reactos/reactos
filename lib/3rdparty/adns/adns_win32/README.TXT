@@ -5,9 +5,9 @@ ADNS is not officially suppoted for Windows, but this
 port provides a 100% native Windows DLL and linker
 library for the DLL - suitable for traditional compilers 
 and linkers under Windows. The library itself is ported to
-Microsot Visual C++ 6.0 SP 2.
+Microsot Visual C++ 6.0.
 
-The library is tested under Windows 2000, but should work
+The library is tested under Windows 2000 and XP, but should work
 with all versions from Windows NT 4 and up, and Windows98
 and up. Windows95 is not supported.
 
@@ -35,5 +35,34 @@ reasons for this:
 	 licensed projects.
 
 For more information about this port, see http://adns.jgaa.com
+
+
+///////////////////////////////////////////////////////
+
+October 13th 2005 jgaa: adns-1.0-win32-05
+  - Fixed a problem with the return-value from adns_inet_aton()
+    Thanks to Gerald Combs for reporting the problem.
+
+October 7th 2004 jgaa: adns-1.0-win32-03
+
+ - Fixed a problem with error-messages when the program
+   works off-line.
+   Thanks to Ulf Lamping for pointing ourt and solving the problem.
+
+
+April 4th 2004 jgaa: adns-1.0-win32-03
+
+ - Fixed broken gettimeofday() function.
+
+ - Fixed problem with TCP connections, where the librarry
+   failed to connect to DNS servers with TCP, and flooded
+   the servers with TCP connection attempts.
+ 
+ - Made sure that errno was handled corrcetly after all network
+   (winsock) calls.
+
+ - Fixed a few places where noblocking calls were not handled
+   EAGAIN and EWOULDBLOCK is not the same under Windows.
+
 
 

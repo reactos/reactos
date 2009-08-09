@@ -11,7 +11,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -51,7 +51,7 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
  * @unimplemented
  */
 ULONG
-STDCALL
+NTAPI
 MmTrimAllSystemPagableMemory (
 	IN ULONG PurgeTransitionList
 	)

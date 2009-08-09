@@ -10,7 +10,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, KiInitializeBugCheck)
@@ -236,7 +236,9 @@ KeRosDumpStackFrameArray(IN PULONG Frames,
     ULONG i, Addr;
     BOOLEAN InSystem;
     PVOID p;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
+
+    /* GCC complaints that it may be used uninitialized */
+    PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
 
     /* Loop them */
     for (i = 0; i < FrameCount; i++)
@@ -546,11 +548,13 @@ KiDoBugCheckCallbacks(VOID)
 
 VOID
 NTAPI
+__declspec(noreturn)
 KiBugCheckDebugBreak(IN ULONG StatusCode)
 {
     /* If KDBG isn't connected, freeze the CPU, otherwise, break */
     if (KdDebuggerNotPresent) for (;;) KeArchHaltProcessor();
     DbgBreakPointWithStatus(StatusCode);
+    while (TRUE);
 }
 
 PCHAR
@@ -604,13 +608,9 @@ KiDumpParameterImages(IN PCHAR Message,
                                      &InSystem);
         if (!ImageBase)
         {
-            /* Driver wasn't found, check for unloaded driver */
-            DriverName = NULL; // FIXME: ROS can't
-            if (!DriverName) continue;
-
-            /* Convert the driver name */
-            ImageBase = (PVOID)Parameters[i];
-            ConversionRoutine(DriverName, AnsiName, sizeof(AnsiName));
+            /* FIXME: Add code to check for unloaded drivers */
+            DPRINT1("Potentially unloaded driver!\n");
+            continue;
         }
         else
         {
@@ -751,6 +751,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
 
 VOID
 NTAPI
+__declspec(noreturn)
 KeBugCheckWithTf(IN ULONG BugCheckCode,
                  IN ULONG_PTR BugCheckParameter1,
                  IN ULONG_PTR BugCheckParameter2,
@@ -1130,7 +1131,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
             if (i != (LONG)KeGetCurrentProcessorNumber())
             {
                 /* Send the IPI and give them one second to catch up */
-                KiIpiSendRequest(1 << i, IPI_FREEZE);
+                KiIpiSend(1 << i, IPI_FREEZE);
                 KeStallExecutionProcessor(1000000);
             }
         }
@@ -1208,6 +1209,21 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KeInitializeCrashDumpHeader(IN ULONG Type,
+                            IN ULONG Flags,
+                            OUT PVOID Buffer,
+                            IN ULONG BufferSize,
+                            OUT ULONG BufferNeeded OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
  * @implemented
  */
 BOOLEAN
@@ -1260,6 +1276,17 @@ KeDeregisterBugCheckReasonCallback(
     /* Lower IRQL and return */
     KeLowerIrql(OldIrql);
     return Status;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+NTAPI
+KeDeregisterNmiCallback(PVOID Handle)
+{
+    UNIMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -1330,6 +1357,18 @@ KeRegisterBugCheckReasonCallback(
     /* Lower IRQL and return */
     KeLowerIrql(OldIrql);
     return Status;
+}
+
+/*
+ * @unimplemented
+ */
+PVOID
+NTAPI
+KeRegisterNmiCallback(IN PNMI_CALLBACK CallbackRoutine,
+                      IN PVOID Context)
+{
+    UNIMPLEMENTED;
+    return NULL;
 }
 
 /*

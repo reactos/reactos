@@ -4029,7 +4029,7 @@ public:
 		wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 		wcex.lpszClassName = TEXT("MissTosca_Control");
 
-		return RegisterClassEx(&wcex);;
+		return RegisterClassEx(&wcex);
 	}
 
 	static void Shutdown()

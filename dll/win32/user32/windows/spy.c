@@ -559,7 +559,8 @@ static const char * const MessageTypeNames[SPY_MAX_MSGNUM + 1] =
     "WM_PALETTEISCHANGING",
     "WM_PALETTECHANGED",
     "WM_HOTKEY",                /* 0x0312 */
-          NULL, NULL, NULL, NULL,
+    "WM_POPUPSYSTEMMENU",       /* 0x0313 */
+    NULL, NULL, NULL,
     "WM_PRINT",
     "WM_PRINTCLIENT",
     NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -1454,10 +1455,10 @@ static const USER_MSG toolbar_array[] = {
           USM(TB_GETSTRINGW            ,0),
           USM(TB_GETSTRINGA            ,0),
           USM(TB_UNKWN45D              ,8),
-          USM(TB_UNKWN45E              ,0),
-          USM(TB_UNKWN460              ,0),
-          USM(TB_UNKWN463              ,8),
-          USM(TB_UNKWN464              ,0),
+          USM(TB_SETHOTITEM2           ,0),
+          USM(TB_SETLISTGAP            ,0),
+          USM(TB_GETIMAGELISTCOUNT     ,0),
+          USM(TB_GETIDEALSIZE          ,0),
           {0,0,0} };
 
 static const USER_MSG tooltips_array[] = {

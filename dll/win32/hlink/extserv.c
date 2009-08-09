@@ -40,10 +40,10 @@ typedef struct {
     LPWSTR headers;
 } ExtensionService;
 
-#define EXTSERVUNK(x)    ((IUnknown*)       &(x)->lpIUnknownVtbl)
-#define AUTHENTICATE(x)  ((IAuthenticate*)  &(x)->lpIAuthenticateVtbl)
-#define HTTPNEGOTIATE(x) ((IHttpNegotiate*) &(x)->lpIHttpNegotiateVtbl)
-#define EXTENSIONSERVICES(x) ((IExtensionServices*) &(x)->lpIExtensionServicesVtbl)
+#define EXTSERVUNK(x)        ((IUnknown*)&(x)->lpIUnknownVtbl)
+#define AUTHENTICATE(x)      (&(x)->lpIAuthenticateVtbl)
+#define HTTPNEGOTIATE(x)     (&(x)->lpIHttpNegotiateVtbl)
+#define EXTENSIONSERVICES(x) (&(x)->lpIExtensionServicesVtbl)
 
 #define EXTSERVUNK_THIS(iface)  DEFINE_THIS(ExtensionService, IUnknown, iface)
 

@@ -104,7 +104,7 @@ static char              gMutexesInUse[MAX_MUTEXES];
  *
  *-------------------------------------------------------------*/
 static CRITICAL_SECTION  gMutexes[MAX_MUTEXES];
-static CRITICAL_SECTION  gGlobalWinMutex;
+/* static */ CRITICAL_SECTION  gGlobalWinMutex;
 
 
 /* On WIN32 mutexes are reentrant.  This makes it difficult to debug

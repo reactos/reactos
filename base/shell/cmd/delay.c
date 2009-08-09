@@ -14,7 +14,7 @@
 #ifdef INCLUDE_CMD_DELAY
 
 
-INT CommandDelay (LPTSTR cmd, LPTSTR param)
+INT CommandDelay (LPTSTR param)
 {
 	DWORD val;
 	DWORD mul=1000;

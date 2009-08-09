@@ -125,7 +125,7 @@ typedef struct tagCStdPSFactoryBuffer
 
 #define STUB_FORWARDING_FUNCTION NdrStubForwardingFunction
 
-ULONG STDMETHODCALLTYPE CStdStubBuffer2_Release(IRpcStubBuffer *This);
+ULONG STDMETHODCALLTYPE CStdStubBuffer2_Release(IRpcStubBuffer *This) DECLSPEC_HIDDEN;
 ULONG STDMETHODCALLTYPE NdrCStdStubBuffer2_Release(IRpcStubBuffer *This, IPSFactoryBuffer *pPSF);
 
 #define CStdStubBuffer_DELEGATING_METHODS 0, 0, CStdStubBuffer2_Release, 0, 0, 0, 0, 0, 0, 0
@@ -136,7 +136,7 @@ HRESULT WINAPI
 ULONG WINAPI
   CStdStubBuffer_AddRef( IRpcStubBuffer *This );
 ULONG WINAPI
-  CStdStubBuffer_Release( IRpcStubBuffer *This );
+  CStdStubBuffer_Release( IRpcStubBuffer *This ) DECLSPEC_HIDDEN;
 ULONG WINAPI
   NdrCStdStubBuffer_Release( IRpcStubBuffer *This, IPSFactoryBuffer *pPSF );
 HRESULT WINAPI
@@ -233,10 +233,10 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
 
 /* macros used in dlldata.c files */
 #define EXTERN_PROXY_FILE(proxy) \
-    EXTERN_C const ProxyFileInfo proxy##_ProxyFileInfo;
+    EXTERN_C const ProxyFileInfo proxy##_ProxyFileInfo DECLSPEC_HIDDEN;
 
 #define PROXYFILE_LIST_START \
-    const ProxyFileInfo *aProxyFileList[] = \
+    const ProxyFileInfo * aProxyFileList[] DECLSPEC_HIDDEN = \
     {
 
 #define REFERENCE_PROXY_FILE(proxy) \
@@ -251,11 +251,11 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
 /* define PROXY_CLSID_IS to specify the CLSID data of the PSFactoryBuffer */
 /* define neither to use the GUID of the first interface */
 #ifdef PROXY_CLSID
-# define CLSID_PSFACTORYBUFFER extern CLSID PROXY_CLSID;
+# define CLSID_PSFACTORYBUFFER extern CLSID PROXY_CLSID DECLSPEC_HIDDEN;
 #else
 # ifdef PROXY_CLSID_IS
-#  define CLSID_PSFACTORYBUFFER const CLSID CLSID_PSFactoryBuffer = \
-    PROXY_CLSID_IS;
+#  define CLSID_PSFACTORYBUFFER const CLSID CLSID_PSFactoryBuffer DECLSPEC_HIDDEN; \
+    const CLSID CLSID_PSFactoryBuffer = PROXY_CLSID_IS;
 #  define PROXY_CLSID CLSID_PSFactoryBuffer
 # else
 #  define CLSID_PSFACTORYBUFFER
@@ -287,6 +287,8 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
 
 #define DLLDATA_GETPROXYDLLINFO(pfl, rclsid) \
     void RPC_ENTRY GetProxyDllInfo(const ProxyFileInfo ***ppProxyFileInfo, \
+                                   const CLSID **ppClsid) DECLSPEC_HIDDEN; \
+    void RPC_ENTRY GetProxyDllInfo(const ProxyFileInfo ***ppProxyFileInfo, \
                                    const CLSID **ppClsid) \
     { \
         *ppProxyFileInfo = (pfl); \
@@ -294,6 +296,7 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
     }
 
 #define DLLGETCLASSOBJECTROUTINE(pfl, factory_clsid, factory) \
+    HRESULT WINAPI DLLGETCLASSOBJECT_ENTRY(REFCLSID rclsid, REFIID riid, void **ppv) DECLSPEC_HIDDEN; \
     HRESULT WINAPI DLLGETCLASSOBJECT_ENTRY(REFCLSID rclsid, REFIID riid, \
                                            void **ppv) \
     { \
@@ -302,14 +305,16 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
     }
 
 #define DLLCANUNLOADNOW(factory) \
+    HRESULT WINAPI DLLCANUNLOADNOW_ENTRY(void) DECLSPEC_HIDDEN; \
     HRESULT WINAPI DLLCANUNLOADNOW_ENTRY(void) \
     { \
         return NdrDllCanUnloadNow((factory)); \
     }
 
 #define REGISTER_PROXY_DLL_ROUTINES(pfl, factory_clsid) \
-    HINSTANCE hProxyDll = NULL; \
+    HINSTANCE hProxyDll DECLSPEC_HIDDEN = NULL; \
     \
+    BOOL WINAPI DLLMAIN_ENTRY(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) DECLSPEC_HIDDEN; \
     BOOL WINAPI DLLMAIN_ENTRY(HINSTANCE hinstDLL, DWORD fdwReason, \
                               LPVOID lpvReserved) \
     { \
@@ -321,11 +326,13 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
         return TRUE; \
     } \
     \
+    HRESULT WINAPI DLLREGISTERSERVER_ENTRY(void) DECLSPEC_HIDDEN; \
     HRESULT WINAPI DLLREGISTERSERVER_ENTRY(void) \
     { \
         return NdrDllRegisterProxy(hProxyDll, (pfl), (factory_clsid)); \
     } \
     \
+    HRESULT WINAPI DLLUNREGISTERSERVER_ENTRY(void) DECLSPEC_HIDDEN; \
     HRESULT WINAPI DLLUNREGISTERSERVER_ENTRY(void) \
     { \
         return NdrDllUnregisterProxy(hProxyDll, (pfl), (factory_clsid)); \
@@ -340,7 +347,7 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
 
 #define DLLDATA_ROUTINES(pfl, factory_clsid) \
     CLSID_PSFACTORYBUFFER \
-    CStdPSFactoryBuffer gPFactory = { NULL, 0, NULL, 0 }; \
+    CStdPSFactoryBuffer DECLSPEC_HIDDEN gPFactory = { NULL, 0, NULL, 0 }; \
     DLLDATA_GETPROXYDLLINFO(pfl, factory_clsid) \
     DLLGETCLASSOBJECTROUTINE(pfl, factory_clsid, &gPFactory) \
     DLLCANUNLOADNOW(&gPFactory) \
@@ -349,8 +356,6 @@ ULONG WINAPI CStdStubBuffer2_Release(IRpcStubBuffer *This) \
     DLLREGISTRY_ROUTINES(pfl, factory_clsid)
 
 #if 0
-
-/* see http://www.microsoft.com/msj/0199/com/com0199.aspx */
 
 RPCRTAPI HRESULT RPC_ENTRY
   CreateProxyFromTypeInfo( LPTYPEINFO pTypeInfo, LPUNKNOWN pUnkOuter, REFIID riid,
@@ -365,4 +370,4 @@ RPCRTAPI HRESULT RPC_ENTRY
 }
 #endif
 
-#endif /*__WINE_RPCDCE_H */
+#endif /*__WINE_RPCPROXY_H */

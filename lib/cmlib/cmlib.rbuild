@@ -14,10 +14,8 @@
 	<file>hivesum.c</file>
 	<file>hivewrt.c</file>
 </module>
-<module name="cmlibhost" type="hoststaticlibrary" allowwarnings="true">
+<module name="cmlibhost" type="hoststaticlibrary">
 	<include base="cmlibhost">.</include>
-	<include base="ReactOS">include/reactos</include>
-	<include base="ReactOS">include</include>
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="_NTOSKRNL_" />
 	<define name="_NTSYSTEM_" />

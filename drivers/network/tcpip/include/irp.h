@@ -10,10 +10,4 @@
 VOID IRPRemember( PIRP Irp, PCHAR File, UINT Line );
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status );
 
-#ifdef MEMTRACK
-#define RIRP(x) IRPRemember(x,__FILE__,__LINE__)
-#else
-#define RIRP(x)
-#endif
-
 #endif/*__IRP_H*/

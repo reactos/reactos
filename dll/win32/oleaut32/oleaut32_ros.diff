@@ -72,15 +72,3 @@ Index: oleaut32.rc
  
  /*
   * FIXME:
-Index: oleaut32.rbuild
-===================================================================
---- oleaut32.rbuild	(revision 23782)
-+++ oleaut32.rbuild	(working copy)
-@@ -43,6 +43,7 @@
- 	<library>comctl32</library>
- 	<library>urlmon</library>
- 	<library>uuid</library>
-+	<library>pseh</library>
- </module>
- <module name="oleaut32_oleaut32_oaidl_proxy" type="rpcproxy" allowwarnings="true">
- 	<file>oleaut32_oaidl.idl</file>

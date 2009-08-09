@@ -85,6 +85,7 @@ static VOID SignalSocket(
               PollReq->Handles[i].Status));
     }
     UnlockHandles( AFD_HANDLES(PollReq), PollReq->HandleCount );
+    if( Irp->MdlAddress ) UnlockRequest( Irp, IoGetCurrentIrpStackLocation( Irp ) );
     AFD_DbgPrint(MID_TRACE,("Completing\n"));
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     AFD_DbgPrint(MID_TRACE,("Done\n"));
@@ -154,7 +155,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
     AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	   PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_NO_MEMORY;
@@ -180,7 +181,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-	return Irp->IoStatus.Status;
+	return STATUS_NO_MEMORY;
     }
 
     if( Exclusive ) {
@@ -265,7 +266,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -274,14 +275,17 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	(PAFD_EVENT_SELECT_INFO)LockRequest( Irp, IrpSp );
     PAFD_FCB FCB = FileObject->FsContext;
 
+    if( !SocketAcquireStateLock( FCB ) ) {
+	return LostSocket( Irp );
+    }
+
+    if ( !EventSelectInfo ) {
+         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
+				   0, NULL );
+    }
     AFD_DbgPrint(MID_TRACE,("Called (Event %x Triggers %x)\n",
 			    EventSelectInfo->EventObject,
 			    EventSelectInfo->Events));
-
-    if( !SocketAcquireStateLock( FCB ) ) {
-	UnlockRequest( Irp, IrpSp );
-	return LostSocket( Irp, FALSE );
-    }
 
     FCB->EventSelectTriggers = FCB->EventsFired = 0;
     if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
@@ -305,11 +309,11 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
-    return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
-				   0, NULL, TRUE );
+    return UnlockAndMaybeComplete( FCB, Status, Irp,
+				   0, NULL );
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp ) {
     PFILE_OBJECT FileObject = IrpSp->FileObject;
@@ -320,15 +324,19 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called (FCB %x)\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) {
-	UnlockRequest( Irp, IrpSp );
-	return LostSocket( Irp, FALSE );
+	return LostSocket( Irp );
+    }
+
+    if ( !EnumReq ) {
+         return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, Irp,
+				   0, NULL );
     }
 
     EnumReq->PollEvents = FCB->PollState;
     RtlZeroMemory( EnumReq->EventStatus, sizeof(EnumReq->EventStatus) );
 
     return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
-				   0, NULL, TRUE );
+				   0, NULL );
 }
 
 /* * * NOTE ALWAYS CALLED AT DISPATCH_LEVEL * * */
@@ -382,6 +390,11 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
     /* Take care of any event select signalling */
     FCB = (PAFD_FCB)FileObject->FsContext;
 
+    if( !FCB ) {
+	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
+	return;
+    }
+
     /* Not sure if i can do this at DISPATCH_LEVEL ... try it at passive */
     AFD_DbgPrint(MID_TRACE,("Current State: %x, Events Fired: %x, "
 			    "Select Triggers %x\n",
@@ -390,11 +403,6 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
     if( FCB->PollState & ~FCB->EventsFired & FCB->EventSelectTriggers ) {
 	FCB->EventsFired |= FCB->PollState;
 	EventSelect = FCB->EventSelect;
-    }
-
-    if( !FCB ) {
-	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
-	return;
     }
 
     /* Now signal normal select irps */

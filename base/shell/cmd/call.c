@@ -33,72 +33,43 @@
 
 /*
  * Perform CALL command.
- *
- * Allocate a new batch context and add it to the current chain.
- * Call parsecommandline passing in our param string
- * If No batch file was opened then remove our newly allocted
- * context block.
  */
 
-INT cmd_call (LPTSTR cmd, LPTSTR param)
+INT cmd_call (LPTSTR param)
 {
-	LPBATCH_CONTEXT n = NULL;
+	TCHAR line[CMDLINE_LENGTH];
 
-	TRACE ("cmd_call: (\'%s\',\'%s\')\n", debugstr_aw(cmd), debugstr_aw(param));
+	TRACE ("cmd_call: (\'%s\')\n", debugstr_aw(param));
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CALL_HELP);
 		return 0;
 	}
 
+	/* Do a second round of %-variable substitutions */
+	if (!SubstituteVars(param, line, _T('%')))
+		return nErrorLevel = 1;
+
+	param = line;
+	while (_istspace(*param))
+		param++;
 	if (*param == _T(':') && (bc))
 	{
-		bc->lCallPosition = SetFilePointer(bc->hBatchFile, 0, &bc->lCallPositionHigh, FILE_CURRENT);
-		cmd_goto(_T("goto"), param);
-		return 0;
+		/* CALL :label - call a subroutine of the current batch file */
+		TCHAR *first = param;
+		while (*param && !_istspace(*param))
+			param++;
+		if (*param)
+		{
+			/* Separate label and arguments */
+			*param++ = _T('\0');
+			while (_istspace(*param))
+				param++;
+		}
+		return !Batch(bc->BatchFilePath, first, param, NULL);
 	}
 
-    nErrorLevel = 0;
-
-	n = (LPBATCH_CONTEXT)cmd_alloc (sizeof (BATCH_CONTEXT));
-
-	if (n == NULL)
-	{
-		error_out_of_memory ();
-		return 1;
-	}
-
-	n->prev = bc;
-	bc = n;
-
-	bc->hBatchFile = INVALID_HANDLE_VALUE;
-	bc->params = NULL;
-	bc->shiftlevel = 0;
-	bc->forvar = 0;        /* HBP004 */
-	bc->forproto = NULL;   /* HBP004 */
-	ParseCommandLine (param);
-	if (bc->prev)
-	{
-		_tcscpy(bc->In, bc->prev->In);
-		_tcscpy(bc->Out, bc->prev->Out);
-		_tcscpy(bc->Err, bc->prev->Err);
-	}
-	else
-	{
-		bc->In[0] = _T('\0');
-		bc->Out[0] = _T('\0');
-		bc->Err[0] = _T('\0');
-	}
-
-
-	/* Wasn't a batch file so remove conext */
-	if (bc->hBatchFile == INVALID_HANDLE_VALUE)
-	{
-		bc = bc->prev;
-		cmd_free (n);
-	}
-
-	return 0;
+	return !DoCommand(param, NULL);
 }
 
 /* EOF */

@@ -350,13 +350,13 @@ OnColorButton(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         /* Save selected color to var */
         pGlobalData->backgroundDesktopColor = cc.rgbResult;
 
-        /* Allpy buuton will be activated */
+        /* Apply button will be activated */
         PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 
         /* Window will be updated :) */
         InvalidateRect(GetDlgItem(hwndDlg, IDC_BACKGROUND_PREVIEW), NULL, TRUE);
 
-        /* Save custom colors to reg. To this moment key must be ceated already. See above */
+        /* Save custom colors to reg. To this moment key must be created already. See above */
         res = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance"), 0,
             KEY_WRITE, &hKey);
         if (res == ERROR_SUCCESS)

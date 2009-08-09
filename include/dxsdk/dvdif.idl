@@ -1,6 +1,0 @@
-import "unknwn.idl";
-import "objidl.idl";
-
-cpp_quote("#include <ddraw.h>")
-
-// fixme it is not completed 

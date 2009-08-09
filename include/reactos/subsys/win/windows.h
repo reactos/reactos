@@ -5,11 +5,11 @@
 
 /* w32 console server */
 #define WIN_SRV_WIN_CONSOLE  2
-NTSTATUS STDCALL ConServerDllInitialization (ULONG,LPWSTR*);
+NTSTATUS WINAPI ConServerDllInitialization (ULONG,LPWSTR*);
 
 /* w32 user server */
 #define WIN_SRV_WIN_USER     3
-NTSTATUS STDCALL UserServerDllInitialization (ULONG,LPWSTR*);
+NTSTATUS WINAPI UserServerDllInitialization (ULONG,LPWSTR*);
 
 #endif /* ndef __INCLUDE_WIN_WINDOWS_H */
 

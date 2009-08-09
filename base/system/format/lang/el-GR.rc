@@ -7,7 +7,7 @@
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_HELP,  "Χρήση: %S τόμος: [-FS:σύστημα-αρχείων] [-V:ετικέτα] [-Q] [-A:μέγεθος] [-C]\n\n\
+STRING_HELP,  "Χρήση: %s τόμος: [-FS:σύστημα-αρχείων] [-V:ετικέτα] [-Q] [-A:μέγεθος] [-C]\n\n\
   [τόμος:]             Καθορίζει το γράμμα μονάδας δίσκου προς διαμόρφωση.\n\
   -FS:σύστημα-αρχείων  Καθορίζει τον τύπο του συστήματος αρχείων FAT, FAT32 ή NTFS (%s).\n\
   -V:label             Καθορισμός της ετικέτας του τόμου.\n\
@@ -31,7 +31,7 @@ STRING_NO_SUPPORT  "Η λειτουργία δεν είναι υποστηριζόμενη"
 
 STRING_FMIFS_FAIL  "Could not located FMIFS entry points.\n\n"
 
-STRING_UNKNOW_ARG  "’γνωστο όρισμα: %S\n"
+STRING_UNKNOW_ARG  "’γνωστο όρισμα: %s\n"
 
 STRING_DRIVE_PARM  "Required drive parameter is missing.\n\n"
 
@@ -43,7 +43,7 @@ STRING_NO_VOLUME         "Could not query volume"
 
 STRING_NO_VOLUME_SIZE    "Could not query volume size"
 
-STRING_FILESYSTEM        "Ο τύπος του συστήματος αρχείων είναι %S.\n"
+STRING_FILESYSTEM        "Ο τύπος του συστήματος αρχείων είναι %s.\n"
 
 STRING_LABEL_NAME_EDIT  "Εισάγετε την τρέχουσα ετικέτα για τον τόμο %C: "
 

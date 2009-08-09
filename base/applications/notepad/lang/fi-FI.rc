@@ -28,7 +28,9 @@ BEGIN
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
     "H", CMD_REPLACE, VIRTKEY, CONTROL
+    "^N", CMD_NEW
     "^O", CMD_OPEN
+    "^P", CMD_PRINT
     "^S", CMD_SAVE
     "^V", CMD_PASTE
     "^X", CMD_CUT
@@ -39,54 +41,54 @@ END
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Tiedosto"
-	BEGIN
-		MENUITEM "&Uusi...",		CMD_NEW
-		MENUITEM "&Avaa",		CMD_OPEN
-		MENUITEM "Ta&lleta",		CMD_SAVE
-		MENUITEM "Talleta &nimellä...",	CMD_SAVE_AS
-		MENUITEM SEPARATOR
-		MENUITEM "T&ulosta",		CMD_PRINT
-		MENUITEM "&Sivun asetukset...",	CMD_PAGE_SETUP
-		MENUITEM "&Kirjoittimen asetukset...",	CMD_PRINTER_SETUP
-		MENUITEM SEPARATOR
-		MENUITEM "&Poistu",		CMD_EXIT
-	END
-	POPUP "&Muokkaa"
-	BEGIN
-		MENUITEM "&Palauta\tCtrl+Z",	CMD_UNDO
-		MENUITEM SEPARATOR
-		MENUITEM "&Leikkaa\tCtrl+X",	CMD_CUT
-		MENUITEM "&Kopioi\tCtrl+C",	CMD_COPY
-		MENUITEM "L&iitä\tCtrl+V",	CMD_PASTE
-		MENUITEM "P&oista\tDel",	CMD_DELETE
-		MENUITEM SEPARATOR
-		MENUITEM "Etsi...",		CMD_SEARCH
-		MENUITEM "Etsi &seuraava\tF3",	CMD_SEARCH_NEXT
-		MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
-		MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
-		MENUITEM SEPARATOR
-		MENUITEM "&Valitse kaikki",	CMD_SELECT_ALL
-		MENUITEM "&Aika/Päivämäärä\tF5",	CMD_TIME_DATE
-	END
-	POPUP "F&ormat"
-	BEGIN
-		MENUITEM "Ka&tkaise pitkä rivi",	CMD_WRAP
-		MENUITEM "&Font...",          CMD_FONT
-	END
-	POPUP "&View"
-	BEGIN
-		MENUITEM "Status&bar",    CMD_STATUSBAR
-	END
-	POPUP "&Apua"
-	BEGIN
-		MENUITEM "&Sisältö",		CMD_HELP_CONTENTS
-		MENUITEM "&Etsi...",		CMD_HELP_SEARCH
-		MENUITEM "Apua &Opastuksesta",	CMD_HELP_ON_HELP
-		MENUITEM SEPARATOR
-		MENUITEM "&About"             CMD_ABOUT
-		MENUITEM "Inf&o...",	CMD_ABOUT_WINE
-	END
+    POPUP "&Tiedosto"
+    BEGIN
+        MENUITEM "&Uusi\tCtrl+N",              CMD_NEW
+        MENUITEM "&Avaa\tCtrl+O",              CMD_OPEN
+        MENUITEM "Ta&lleta\tCtrl+S",           CMD_SAVE
+        MENUITEM "Talleta &nimellä...",        CMD_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "T&ulosta\tCtrl+P",           CMD_PRINT
+        MENUITEM "&Sivun asetukset...",        CMD_PAGE_SETUP
+        MENUITEM "&Kirjoittimen asetukset...", CMD_PRINTER_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "&Poistu",                    CMD_EXIT
+    END
+    POPUP "&Muokkaa"
+    BEGIN
+        MENUITEM "&Palauta\tCtrl+Z",     CMD_UNDO
+        MENUITEM SEPARATOR
+        MENUITEM "&Leikkaa\tCtrl+X",     CMD_CUT
+        MENUITEM "&Kopioi\tCtrl+C",      CMD_COPY
+        MENUITEM "L&iitä\tCtrl+V",       CMD_PASTE
+        MENUITEM "P&oista\tDel",         CMD_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Etsi...",              CMD_SEARCH
+        MENUITEM "Etsi &seuraava\tF3",   CMD_SEARCH_NEXT
+        MENUITEM "Replace\tCtrl+H",      CMD_REPLACE
+        MENUITEM "Go To...\tCtrl+G",     CMD_GOTO
+        MENUITEM SEPARATOR
+        MENUITEM "&Valitse kaikki",      CMD_SELECT_ALL
+        MENUITEM "&Aika/Päivämäärä\tF5", CMD_TIME_DATE
+    END
+    POPUP "F&ormat"
+    BEGIN
+        MENUITEM "Ka&tkaise pitkä rivi", CMD_WRAP
+        MENUITEM "&Font...",             CMD_FONT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Status&bar", CMD_STATUSBAR
+    END
+    POPUP "&Apua"
+    BEGIN
+        MENUITEM "&Sisältö",           CMD_HELP_CONTENTS
+        MENUITEM "&Etsi...",           CMD_HELP_SEARCH
+        MENUITEM "Apua &Opastuksesta", CMD_HELP_ON_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&About"              CMD_ABOUT
+        MENUITEM "Inf&o...",           CMD_ABOUT_WINE
+    END
 END
 
 /* Dialog `Page setup' */
@@ -163,33 +165,33 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-STRING_PAGESETUP_HEADERVALUE,	"&n"        /* FIXME */
-STRING_PAGESETUP_FOOTERVALUE,	"Sivu &s"   /* FIXME */
-STRING_PAGESETUP_LEFTVALUE,		"20 mm"     /* FIXME */
-STRING_PAGESETUP_RIGHTVALUE,	"20 mm"     /* FIXME */
-STRING_PAGESETUP_TOPVALUE,		"25 mm"     /* FIXME */
-STRING_PAGESETUP_BOTTOMVALUE,	"25 mm"     /* FIXME */
+STRING_PAGESETUP_HEADERVALUE,    "&n"        /* FIXME */
+STRING_PAGESETUP_FOOTERVALUE,    "Sivu &s"   /* FIXME */
+STRING_PAGESETUP_LEFTVALUE,        "20 mm"     /* FIXME */
+STRING_PAGESETUP_RIGHTVALUE,    "20 mm"     /* FIXME */
+STRING_PAGESETUP_TOPVALUE,        "25 mm"     /* FIXME */
+STRING_PAGESETUP_BOTTOMVALUE,    "25 mm"     /* FIXME */
 
-STRING_NOTEPAD,					"Notepad"
-STRING_ERROR,					"VIRHE"
-STRING_WARNING,					"VAROITUS"
-STRING_INFO,					"Tiedoitus"
+STRING_NOTEPAD,                    "Notepad"
+STRING_ERROR,                    "VIRHE"
+STRING_WARNING,                    "VAROITUS"
+STRING_INFO,                    "Tiedoitus"
 
-STRING_UNTITLED,				"(otsikoimaton)"
+STRING_UNTITLED,                "(otsikoimaton)"
 
-STRING_ALL_FILES,				"Kaikki tiedostot (*.*)"
-STRING_TEXT_FILES_TXT,			"Teksti tiedostot (*.txt)"
+STRING_ALL_FILES,                "Kaikki tiedostot (*.*)"
+STRING_TEXT_FILES_TXT,            "Teksti tiedostot (*.txt)"
 
-STRING_TOOLARGE,				"Tiedosto '%s' on liian suuri.\n \
+STRING_TOOLARGE,                "Tiedosto '%s' on liian suuri.\n \
 Please use a different editor."
-STRING_NOTEXT,					"Et syöttänyt lainkaan tekstiä. \
+STRING_NOTEXT,                    "Et syöttänyt lainkaan tekstiä. \
 \nKirjoita jotain ja yritä uudelleen"
-STRING_DOESNOTEXIST,				"File '%s'\ndoes not exist\n\n \
+STRING_DOESNOTEXIST,                "File '%s'\ndoes not exist\n\n \
 Do you want to create a new file ?"
-STRING_NOTSAVED,				"File '%s'\nhas been modified\n\n \
+STRING_NOTSAVED,                "File '%s'\nhas been modified\n\n \
 Would you like to save the changes ?"
-STRING_NOTFOUND,					"'%s' ei löydy."
-STRING_OUT_OF_MEMORY,			"Muistia ei ole riittävästi tämän \
+STRING_NOTFOUND,                    "'%s' ei löydy."
+STRING_OUT_OF_MEMORY,            "Muistia ei ole riittävästi tämän \
 \ntehtävän tekemiseksi. Sulje jokin sovellus vapauttaaksesi\n \
 muistia."
 STRING_CANNOTFIND                               "Cannot find '%s'"
@@ -200,4 +202,5 @@ STRING_UTF8,                                    "UTF-8"
 STRING_CRLF,                                    "Windows"
 STRING_LF,                                      "Unix"
 STRING_CR,                                      "Mac"
+STRING_LINE_COLUMN,                             "Line %d, column %d"
 END

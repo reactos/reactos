@@ -1,13 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="libxml2" type="staticlibrary" allowwarnings="true">
+<module name="libxml2" type="staticlibrary" allowwarnings="true" crt="dll">
 	<define name="HAVE_CONFIG_H" />
 	<define name="WIN32" />
 	<define name="_WINDOWS" />
 	<define name="_MBCS" />
 	<define name="HAVE_WIN32_THREADS" />
 	<define name="_REENTRANT" />
-	<define name="_WINSOCKAPI_" />
 	<define name="LIBXML_STATIC" />
 	<include base="libxml2">include</include>
 	<include base="libxml2">.</include>

@@ -4,7 +4,6 @@
 #include <ntifs.h>
 #include <ntddk.h>
 #include <ntdddisk.h>
-#include <ccros.h>
 #include <pseh/pseh.h>
 
 #define CACHEPAGESIZE(pDeviceExt) \

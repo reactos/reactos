@@ -1,0 +1,790 @@
+
+        NEWS file for libxslt
+
+  Note that this is automatically generated from the news webpage at:
+       http://xmlsoft.org/XSLT/news.html
+
+The change log at 
+ChangeLog.html
+ describes the recents commits
+to the SVN at 
+http://svn.gnome.org/viewcvs/libxslt/trunk/
+ code base.Those are the public releases made:
+1.1.24: May 13 20088:
+   - Documentation: man page fix (Vincent Lefevre).
+   - Bug fixes: pattern bug fix, key initialization problems, exclusion of
+      unknown namespaced element on top of stylesheets, python generator
+      syntactic cleanup (Martin)
+
+
+1.1.23: Apr  8 2008:
+   - Documentation: fix links for Cygwin DocBook setup (Philippe Bourcier),
+      xsltParseStylesheetDoc doc fix (Jason Viers), fix manpage default
+      maxdepth value 
+   - Bug fixes: python segfault (Daniel Gryniewicz), week-in-year bug fix
+      (Maurice van der Pot), fix python iterator problem (William Brack),
+      avoid garbage collection problems on str:tokenize and str:split
+      and function results (William Brack and Peter Pawlowski) 
+      superfluous re-generation of keys (William Brack), remove superfluous
+      code in xsltExtInitTest (Tony Graham), func:result segfault fix
+      (William Brack), timezone offset problem (Peter Pawlowski),
+   - Portability fixes: old gcrypt support fix (Brent Cowgill), Python
+      portability patch (Stephane Bidoul), VS 2008 fix (Rob Richard) 
+
+
+1.1.22: Aug 23 2007:
+   - Bug fixes: RVT cleanup problems (William Brack), exclude-result-prefix
+      bug (William Brack), stylesheet compilation error handling (Rob Richards).
+      
+   - Portability fixes: improve build with VS2005 (Rob Richards), 
+      fixing build on AIX (Bjorn Wiberg), fix the security file checks on
+      Windows (Roland Schwarz and Rob Richards). 
+   - Improvement: add an --encoding option to xsltproc (Drazen Kacar). 
+
+
+1.1.21: Jun 12 2007:
+   - Bug fixes: out of memory allocation errors (William Brack), 
+      namespace problem on compound predicates (William Brack),
+      python space/tab inconsistencies (Andreas Hanke), hook xsl:message
+      to per transformation error callbacks (Shaun McCance),
+      cached RVT problem (William Brack), XPath context maintainance
+      on choose (William Brack), memory leaks in the math module (William
+      Brack), exclude-result-prefix induced namespace problem (William
+      Brack)
+   - Build: configure setup for TRIO_REPLACE_STDIO (William Brack)
+  
+   - Documentation: updated after change from CVs to SVN (William Brack)
+
+
+1.1.20: Jan 17 2007:
+   - Portability fixes: strict aliasing fix (Marcus Meissner), BSD portability
+      patches (Roland Illig)
+   - Bug fixes: Result Value Tree handling fix (William Brack), function
+      parameters fix (William), uninitialized variable (Kjartan Maraas),
+      empty text node handling (William), plugin support and test fixes (William),
+      fragment support fixes (William)
+   - Improvements: python stylesheet compare and transform context
+      access (Nic Ferrier), EXSLT string replace support (Joel Reed),
+      xsltproc better low level error handling (Mike Hommey and William)
+
+
+1.1.19: Nov 29 2006:
+   - Bug fixes: entities within attributes (William Brack), Python detection
+      problem (Joseph Sacco), in-scope namespace bug (Mike Hommey), Result
+      value tree caching bug (William Brack)
+
+
+1.1.18: Oct 26 2006:
+   - portability and build fixes: DESTDIR problem, build paths in python
+      shared lib, compile when libxml2 doesn't support XInclude (Gary Coady).
+   - bug fixes: a number of namespace related bugs (Kasimier Buchcik), 
+      parameters bugs (Kasimier Buchcik), proximity position in predicates
+      of match patterns (Kasimier), exslt-node-set troubles with strings
+      (Kasimier), CDATA serialization, Python floats and booleans XPath
+      conversions, XInclude support fixes, RVT cleanup problem (William Brack
+      and Kasimier), attribute checking in stylesheets (Kasimier), xsltForEach
+      context problem (Kasimier), security check should pass full URLs (Shane
+      Corgatelli), security cleanup patch (Mikhail Zabaluev), some python
+      accessor for stylesheet were broken, memory errors when compiling 
+      stylesheets (Mike Hommey), EXSLT current date end-of-month problem
+      (William Brack).
+   - improvements: refactoring of namespace handling, value-of impleemntation
+      and template internal processing (Kasimier Buchcik), new xsltproc
+      flag to apply Xinclude to stylesheets.
+   - documentation: xsltproc man pages (Daniel Leidert), tests updates
+      (William Brack), various typo fixes (Daniel Leidert), comments on
+      versions macros (Peter Breitenlohner).
+
+
+1.1.17: Jun 6 2006:
+   - portability fixes: python detection
+   - bug fixes: some regression tests, attribute/namespaces output (Kasimier
+    Buchcik), problem in mixed xsl:value-of and xsl:text uses (Kasimier)
+   - improvements: internal refactoring (Kasimier Buchcik), use of the XPath
+    object cache in libxml2-2.6.25 (Kasimier)
+
+
+1.1.16: May 01 2006:
+   - portability fixes: EXSLT date/time on Solaris and IRIX (Albert Chin),
+      HP-UX  build (Albert Chin), 
+  
+   - build fixes: Python detection(Joseph Sacco), plugin configurei
+      (Joel Reed)
+   - bug fixes: pattern compilation fix(William Brack), EXSLT date/time
+      fix (Thomas Broyer), EXSLT function bug, potential loop on variable
+      eval, startup race (Christopher Palmer), debug statement left in python
+      (Nic Ferrier), various cleanup based on Coverity reports), error on
+      Out of memory condition (Charles Hardin), various namespace prefixes
+      fixes (Kasimier Buchcik), 
+   - improvement: speed up sortingi, start of internals refactoring (Kasimier
+      Buchcik)
+   - documentation: man page fixes and updates (Daniel Leidert)
+
+
+
+1.1.15: Sep 04 2005:
+   - build fixes: Windows build cleanups and updates (Igor Zlatkovic),
+    remove jhbuild warnings
+   - bug fixes: negative number formatting (William Brack), number
+    formatting per mille definition (William Brack), XInclude default values
+    (William), text copy bugs (William), bug related to xmlXPathContext size,
+    reuse libxml2 memory management for text nodes, dictionary text bug,
+    forbid variables in match (needs libxml2-2.6.21)
+   - improvements: EXSLT dyn:map (Mark Vakoc),
+   - documentation: EXSLT date and time functions namespace in man (Jonathan
+    Wakely)
+
+
+1.1.14: Apr 02 2005:
+   - bug fixes: text node on stylesheet document without a dictionary
+    (William Brack), more checking of XSLT syntax, calling xsltInit()
+    multiple times, mode values interning raised by Mark Vakoc, bug in
+    pattern matching with ancestors, bug in patterna matching with cascading
+    select, xinclude and document() problem, build outside of source tree
+    (Mike Castle)
+   - improvement: added a --nodict mode to xsltproc to check problems for
+    docuemtns without dictionaries
+
+
+1.1.13: Mar 13 2005:
+   - build fixes: 64bits cleanup (William Brack), python 2.4 test (William),
+    LIBXSLT_VERSION_EXTRA on Windows (William), Windows makefiles fixes (Joel
+    Reed), libgcrypt-devel requires for RPM spec.
+   - bug fixes: exslt day-of-week-in-month (Sal Paradise), xsl:call-template
+    should not change the current template rule (William Brack), evaluation
+    of global variables (William Brack), RVT's in XPath predicates (William),
+    namespace URI on template names (Mark Vakoc), stat() for Windows patch
+    (Aleksey Gurtovoy), pattern expression fixes (William Brack), out of
+    memory detection misses (William), parserOptions propagation (William),
+    exclude-result-prefixes fix (William), // patten fix (William).
+   - extensions: module support (Joel Reed), dictionary based speedups
+    trying to get rid of xmlStrEqual as much as possible.
+   - documentation: added Wiki (Joel Reed)
+
+
+1.1.12: Oct 29 2004:
+   - build fixes: warnings removal (William).
+   - bug fixes: attribute document pointer fix (Mark Vakoc), exslt date
+    negative periods (William Brack), generated tree structure fixes,
+    namespace lookup fix, use reentrant gmtime_r (William Brack),
+    exslt:funtion namespace fix (William), potential NULL pointer reference
+    (Dennis Dams, William), force string interning on generated
+  documents.
+   - documentation: update of the second tutorial (Panagiotis Louridas), add
+    exslt doc in rpm packages, fix the xsltproc man page.
+
+
+1.1.11: Sep 29 2004:
+   - bug fixes: xsl:include problems (William Brack), UTF8 number pattern
+    (William), date-time validation (William), namespace fix (William),
+    various Exslt date fixes (William), error callback fixes, leak with
+    namespaced global variable, attempt to fix a weird problem #153137
+   - improvements: exslt:date-sum tests (Derek Poon)
+   - documentation: second tutorial by Panagiotis Lourida
+
+
+1.1.10: Aug 31 2004:
+   - build fix: NUL in c file blocking compilation on Solaris, Windows build
+    (Igor Zlatkovic)
+   - fix: key initialization problem (William Brack)
+   - documentation: fixed missing man page description for --path
+
+
+1.1.9: Aug 22 2004:
+   - build fixes: missing tests (William Brack), Python dependancies, Python
+    on 64bits boxes, --with-crypto flag (Rob Richards),
+   - fixes: RVT key handling (William), Python binding (William and Sitsofe
+    Wheeler), key and XPath troubles (William), template priority on imports
+    (William), str:tokenize with empty strings (William), #default namespace
+    alias behaviour (William), doc ordering missing for main document
+    (William), 64bit bug (Andreas Schwab)
+   - improvements: EXSLT date:sum added (Joel Reed), hook for document
+    loading for David Hyatt, xsltproc --nodtdattr to avoid defaulting DTD
+    attributes, extend xsltproc --version with CVS stamp (William).
+   - Documentation: web page problem reported by Oliver Stoeneberg
+
+
+1.1.8: July 5 2004:
+   - build fixes: Windows runtime options (Oliver Stoeneberg), Windows
+    binary package layout (Igor Zlatkovic), libgcrypt version test and link
+    (William)
+   - documentation: fix libxslt namespace name in doc (William)
+   - bug fixes: undefined namespace message (William Brack), search engine
+    (William), multiple namespace fixups (William), namespace fix for key
+    evaluation (William), Python memory debug bindings,
+   - improvements: crypto extensions for exslt (Joel Reed, William)
+
+
+1.1.7: May 17 2004:
+   - build fix: warning about localtime_r on Solaris
+   - bug fix: UTF8 string tokenize (William Brack), subtle memory
+    corruption, linefeed after comment at document level (William),
+    disable-output-escaping problem (William), pattern compilation in deep
+    imported stylesheets (William), namespace extension prefix bug,
+    libxslt.m4 bug (Edward Rudd), namespace lookup for attribute, namespaced
+    DOCTYPE name
+
+
+1.1.6: Apr 18 2004:
+   - 2 bug fixes about keys fixed one by Mark Vakoc
+
+
+1.1.5: Mar 23 2004:
+   - performance: use dictionary lookup for variables
+   - remove use of _private from source documents
+   - cleanup of "make tests" output
+   - bugfixes: AVT in local variables, use localtime_r to avoid thread
+    troubles (William), dictionary handling bug (William), limited number of
+    stubstitutions in AVT (William), tokenize fix for UTF-8 (William),
+    superfluous namespace (William), xsltproc error code on
+    <xsl:message> halt, OpenVMS fix, dictionary reference counting
+    change.
+
+
+1.1.4: Feb 23 2004:
+   - bugfixes: attributes without doc (Mariano Suárez-Alvarez), problem with
+    Yelp, extension problem
+   - display extension modules (Steve Little)
+   - Windows compilation patch (Mark Vadoc), Mingw (Mikhail Grushinskiy)
+
+
+1.1.3: Feb 16 2004:
+   - Rewrote the Attribute Value Template code, new XPath compilation
+    interfaces, dictionary reuses for XSLT with potential for serious
+    performance improvements.
+   - bug fixes: portability (William Brack), key() in node-set() results
+    (William), comment before doctype (William), math and node-set() problems
+    (William), cdata element and default namespace (William), behaviour on
+    unknown XSLT elements (Stefan Kost), priority of "//foo" patterns
+    (William), xsl:element and xsl:attribute QName check (William), comments
+    with -- (William), attribute namespace (William), check for ?> in PI
+    (William)
+   - Documentations: cleanup (John Fleck and William)
+   - Python: patch for OS-X (Gianni Ceccarelli), enums export (Stephane
+    bidoul)
+
+
+1.1.2: Dec 24 2003:
+   - Documentation fixes (John Fleck, William Brack), EXSLT documentation
+    (William Brack)
+   - Windows compilation fixes for MSVC and Mingw (Igor Zlatkovic)
+   - Bug fixes: exslt:date returning NULL strings (William Brack),
+    namespaces output (William Brack),  key and namespace definition problem,
+    passing options down to the document() parser, xsl:number fixes (William
+    Brack)
+
+
+1.1.1: Dec 10 2003:
+   - code cleanup (William Brack)
+   - Windows: Makefile improvements (Igor Zlatkovic)
+   - documentation improvements: William Brack, libexslt man page (Jonathan
+    Wakely)
+   - param in EXSLT functions (Shaun McCance)
+   - XSLT debugging improvements (Mark Vakoc)
+   - bug fixes: number formatting (Bjorn Reese), exslt:tokenize (William
+    Brack), key selector parsing with | reported by Oleg Paraschenko,
+    xsl:element with computed namespaces (William Brack), xslt:import/include
+    recursion detection (William Brack), exslt:function used in keys (William
+    Brack), bug when CDATA_SECTION are foun in the tree (William Brack),
+    entities handling when using XInclude.
+
+
+1.1.0: Nov 4 2003:
+   - Removed DocBook SGML broken support
+   - fix xsl:key to work with PIs
+   - Makefile and build improvement (Graham Wilson), build cleanup (William
+    Brack), macro fix (Justin Fletcher), build outside of source tree (Roumen
+    Petrov)
+   - xsltproc option display fix (Alexey Efimov), --load-trace (Crutcher
+    Dunnavant)
+   - Python: never use stdout for error
+   - extension memory error fix (Karl Eichwalder)
+   - header path fixes (Steve Ball)
+   - added saxon:line-number() to libexslt (Brett Kail)
+   - Fix some tortuous template problems when using predicates (William
+    Brack)
+   - Debugger status patch (Kasimier Buchcik)
+   - Use new libxml2-2.6.x APIs for faster processing
+   - Make sure xsl:sort is empty
+   - Fixed a bug in default processing of attributes
+   - Removes the deprecated breakpoint library
+   - detect invalid names on templates (William Brack)
+   - fix exslt:document (and similar) base handling problem
+
+
+1.0.33: Sep 12 2003:
+This is a bugfix only release   - error message missing argument (William Brack)
+   - mode not cascaded in template fallbacks (William Brack)
+   - catch redefinition of parameter/variables  (William Brack)
+   - multiple keys with same namespace name (William Brack)
+   - patch for compilation using MingW on Windows (Mikhail Grushinskiy)
+   - header export macros for Windows (Igor Zlatkovic)
+   - cdata-section-elements handling of namespaced names
+   - compilation without libxml2 XPointer support (Mark Vadoc)
+   - apply-templates crash (William Brack)
+   - bug with imported templates (William Brack)
+   - imported attribute-sets merging bug (DocBook) (William Brack)
+
+
+1.0.32: Aug 9 2003:
+   - bugfixes: xsltSaveResultToFile() python binding (Chris Jaeger), EXSLT
+    function (William Brack), RVT for globals (William Brack), EXSLT date
+    (William Brack),
+    speed of large text output, xsl:copy with attributes, strip-space and
+    namespaces prefix, fix for --path xsltproc option, EXST:tokenize (Shaun
+    McCance), EXSLT:seconds (William Brack), sort with multiple keys (William
+    Brack), checking of { and } for attribute value templates (William
+    Brack)
+  
+   - Python bindings for extension elements (Sean Treadway)
+   - EXSLT:split added (Shaun McCance)
+   - portability fixes for HP-UX/Solaris/IRIX (William Brack)
+   - doc cleanup
+
+
+1.0.31: Jul 6 2003:
+   - bugfixes: xsl:copy on namespace nodes, AVT for xsl:sort order, fix for
+    the debugger (Keith Isdale), output filename limitation, trio.h and
+    triodef.h added (Albert Chin), EXSLT node-set (Peter Breitenlohner),
+    xsltChoose and whitespace (Igor Zlatkovic),
+    stylesheet compilation (Igor Zlatkovic), NaN and sort (William Brack),
+    RVT bug introduced in 1.0.30
+  
+   - avoid generating &quot; (fix in libxml2-2.5.8)
+   - fix 64bit cleaness problem and compilation troubles introduced in
+  1.0.30
+   - Windows makefile generation (Igor Zlatkovic)
+   - HP-UX portability fix
+
+
+1.0.30: May 4 2003:
+   - Fixes and new APIs to handle Result Value Trees and avoid leaks
+   - Fixes for: EXSLT math pow() function (Charles Bozeman), global
+    parameter and global variables mismatch, a segfault on pattern
+    compilation errors, namespace copy in xsl:copy-of, python generator
+    problem, OpenVMS trio update, premature call to xsltFreeStackElem (Igor),
+    current node when templates applies to attributes
+
+
+1.0.29: Apr 1 2003:
+   - performance improvements especially for large flat documents
+   - bug fixes: Result Value Tree handling, XML IDs, keys(), extra namespace
+    declarations with xsl:elements.
+   - portability: python and trio fixes (Albert Chin), python on Solaris
+    (Ben Phillips)
+
+
+1.0.28: Mar 24 2003:
+   - fixed node() in patterns semantic.
+   - fixed a memory access problem in format-number()
+   - fixed stack overflow in recursive global variable or params
+   - cleaned up Result Value Tree handling, and fixed a couple of old bugs
+    in the process
+
+
+1.0.27: Feb 24 2003:
+   - bug fixes: spurious xmlns:nsX="" generation, serialization bug (in
+    libxml2), a namespace copy problem, errors in the RPM spec prereqs
+   - Windows path canonicalization and document cache fix (Igor)
+
+
+1.0.26: Feb 10 2003:
+   - Fixed 3 serious bugs in document() and stylesheet compilation which
+    could lead to a crash
+
+
+1.0.25: Feb 5 2003:
+   - Bug fix: double-free for standalone stylesheets introduced in 1.0.24, C
+    syntax pbm, 3 bugs reported by Eric van der Vlist
+   - Some XPath and XInclude related problems were actually fixed in
+    libxml2-2.5.2
+   - Documentation: emphasize taht --docbook is not for XML docs.
+
+
+1.0.24: Jan 14 2003:
+   - bug fixes: imported global varables, python bindings (Stéphane Bidoul),
+    EXSLT memory leak (Charles Bozeman), namespace generation on
+    xsl:attribute, space handling with imports (Daniel Stodden),
+    extension-element-prefixes (Josh Parsons), comments within xsl:text (Matt
+    Sergeant), superfluous xmlns generation, XInclude related bug for
+    numbering, EXSLT strings (Alexey Efimov), attribute-sets computation on
+    imports, extension module init and shutdown callbacks not called
+   - HP-UX portability (Alexey Efimov), Windows makefiles (Igor and Stephane
+    Bidoul), VMS makefile updates (Craig A. Berry)
+   - adds xsltGetProfileInformation() (Michael Rothwell)
+   - fix the API generation scripts
+   - API to provide the sorting routines (Richard Jinks)
+   - added XML description of the EXSLT API
+   - added ESXLT URI (un)escaping (Jörg Walter)
+   - Some memory leaks have been found and fixed
+   - document() now support fragment identifiers in URIs
+
+
+1.0.23: Nov 17 2002:
+   - Windows build cleanup (Igor)
+   - Unix build and RPM packaging cleanup
+   - Improvement of the python bindings: extension functions and activating
+    EXSLT
+   - various bug fixes: number formatting, portability for bounded string
+    functions, CData nodes, key(), @*[...] patterns
+   - Documentation improvements (John Fleck)
+   - added libxslt.m4 (Thomas Schraitle)
+
+
+1.0.22: Oct 18 2002:
+   - Updates on the Windows Makefiles
+   - Added a security module, and a related set of new options to
+  xsltproc
+   - Allowed per transformation error handler.
+   - Fixed a few bugs: node() semantic, URI escaping, media-type, attribute
+    lists
+
+
+1.0.21: Sep 26 2002:
+   - Bug fixes: match="node()", date:difference() (Igor and Charlie
+    Bozeman), disable-output-escaping
+   - Python bindings: style.saveResultToString() from Ralf Mattes
+   - Logos from Marc Liyanage
+   - Mem leak fix from Nathan Myers
+   - Makefile: DESTDIR fix from Christophe Merlet, AMD x86_64 (Mandrake),
+    Windows (Igor), Python detection
+   - Documentation improvements: John Fleck
+
+
+1.0.20: Aug 23 2002:
+   - Windows makefile updates (Igor) and x86-64 (Frederic Crozat)
+   - fixed HTML meta tag saving for Mac/IE users
+   - possible leak patches from Nathan Myers
+   - try to handle document('') as best as possible depending in the
+  cases
+   - Fixed the DocBook stylesheets handling problem
+   - Fixed a few XSLT reported errors
+
+
+1.0.19:  July 6 2002:
+   - EXSLT: dynamic functions and date support bug fixes (Mark Vakoc)
+   - xsl:number fix: Richard Jinks
+   - xsl:format-numbers fix: Ken Neighbors
+   - document('') fix: bug pointed by Eric van der Vlist
+   - xsl:message with terminate="yes" fixes: William Brack
+   - xsl:sort order support added: Ken Neighbors
+   - a few other bug fixes, some of them requiring the latest version of
+    libxml2
+
+
+1.0.18: May 27 2002:
+   - a number of bug fixes: attributes, extra namespace declarations
+    (DocBook), xsl:include crash (Igor), documentation (Christian Cornelssen,
+    Charles Bozeman and Geert Kloosterman),  element-available (Richard
+  Jinks)
+   - xsltproc can now list teh registered extensions thanks to Mark
+  Vakoc
+   - there is a new API to save directly to a string
+    xsltSaveResultToString() by Morus Walter
+   - specific error registration function for the python API
+
+
+1.0.17: April 29 2002:
+   - cleanup in code, XSLT debugger support and Makefiles for Windows by
+  Igor
+   - a C++ portability fix by Mark Vakoc
+   - EXSLT date improvement and regression tests by Charles Bozeman
+   - attempt to fix a bug in xsltProcessUserParamInternal
+
+
+1.0.16: April 15 2002:
+   - Bug fixes: strip-space, URL in HTML output, error when xsltproc can't
+    save
+   - portability fixes: OSF/1, IEEE on alphas, Windows, Python bindings
+
+
+1.0.15: Mar 25 2002:
+   - Bugfixes: XPath, python Makefile, recursive attribute sets, @foo[..]
+    templates
+   - Debug of memory alocation with valgind
+   - serious profiling leading to significant improvement for DocBook
+    processing
+   - revamp of the Windows build
+
+
+1.0.14: Mar 18 2002:
+   - Improvement in the XPath engine (libxml2-2.4.18)
+   - Nasty bug fix related to exslt:node-set
+   - Fixed the python Makefiles, cleanup of doc comments, Windows
+    portability fixes
+
+
+1.0.13: Mar 8 2002:
+   - a number of bug fixes including "namespace node have no parents"
+   - Improvement of the Python bindings
+   - Charles Bozeman provided fixes and regression tests for exslt date
+    functions.
+
+
+1.0.12: Feb 11 2002:
+   - Fixed the makefiles especially the python module ones
+   - half a dozen bugs fixes including 2 old ones
+
+
+1.0.11: Feb 8 2002:
+   - Change of Licence to the MIT
+  Licence
+   - Added a beta version of the Python bindings, including support to
+    extend the engine with functions written in Python
+   - A number of bug fixes
+   - Charlie Bozeman provided more EXSLT functions
+   - Portability fixes
+
+
+1.0.10: Jan 14 2002:
+   - Windows fixes for Win32 from Igor
+   - Fixed the Solaris compilation trouble (Albert)
+   - Documentation changes and updates: John Fleck
+   - Added a stringparam option to avoid escaping hell at the shell
+  level
+   - A few bug fixes
+
+
+1.0.9: Dec 7 2001:
+   - Makefile patches from Peter Williams
+   - attempt to fix the compilation problem associated to prelinking
+   - obsoleted libxsltbreakpoint now deprecated and frozen to 1.0.8 API
+   - xsltproc return codes are now significant, John Fleck updated the
+    documentation
+   - patch to allow as much as 40 steps in patterns (Marc Tardif), should be
+    made dynamic really
+   - fixed a bug raised by Nik Clayton when using doctypes with HTML
+  output
+   - patches from Keith Isdale to interface with xsltdebugger
+
+
+1.0.8: Nov 26 2001:
+   - fixed an annoying header problem, removed a few bugs and some code
+    cleanup
+   - patches for Windows and update of Windows Makefiles by Igor
+   - OpenVMS port instructions from John A Fotheringham
+   - fixed some Makefiles annoyance and libraries prelinking
+  information
+
+
+1.0.7: Nov 10 2001:
+   - remove a compilation problem with LIBXSLT_PUBLIC
+   - Finishing the integration steps for Keith Isdale debugger
+   - fixes the handling of indent="no" on HTML output
+   - fixes on the configure script and RPM spec file
+
+
+1.0.6: Oct 30 2001:
+   - bug fixes on number formatting (Thomas), date/time functions (Bruce
+    Miller)
+   - update of the Windows Makefiles (Igor)
+   - fixed DOCTYPE generation rules for HTML output (me)
+
+
+1.0.5: Oct 10 2001:
+   - some portability fixes, including Windows makefile updates from
+  Igor
+   - fixed a dozen bugs on XSLT and EXSLT (me and Thomas Broyer)
+   - support for Saxon's evaluate and expressions extensions added (initial
+    contribution from Darren Graves)
+   - better handling of XPath evaluation errors
+
+
+1.0.4: Sep 12 2001:
+   - Documentation updates from John fleck
+   - bug fixes (DocBook  FO generation should be fixed)  and portability
+    improvements
+   - Thomas Broyer improved the existing EXSLT support and added String,
+    Time and Date core functions support
+
+
+1.0.3:  Aug 23 2001:
+   - XML Catalog support see the doc
+   - New NaN/Infinity floating point code
+   - A few bug fixes
+
+
+1.0.2:  Aug 15 2001:
+   - lot of bug fixes, increased the testsuite
+   - a large chunk of EXSLT is implemented
+   - improvements on the extension framework
+   - documentation improvements
+   - Windows MSC projects files should be up-to-date
+   - handle attributes inherited from the DTD by default
+
+
+1.0.1:  July 24 2001:
+   - initial EXSLT framework
+   - better error reporting
+   - fixed the profiler on Windows
+   - bug fixes
+
+
+1.0.0: July 10 2001:
+   - a lot of cleanup, a lot of regression tests added or fixed
+   - added a documentation for writing
+    extensions
+   - fixed some variable evaluation problems (with William)
+   - added profiling of stylesheet execution accessible as the xsltproc
+    --profile option
+   - fixed element-available() and the implementation of the various
+    chunking methods present, Norm Walsh provided a lot of feedback
+   - exclude-result-prefixes and namespaces output should now work as
+    expected
+   - added support of embedded stylesheet as described in section 2.7 of the
+    spec
+
+
+0.14.0: July 5 2001:
+   - lot of bug fixes, and code cleanup
+   - completion of the little XSLT-1.0 features left unimplemented
+   - Added and implemented the extension API suggested by Thomas Broyer
+   - the Windows MSC environment should be complete
+   - tested and optimized with a really large document (DocBook Definitive
+    Guide) libxml/libxslt should really be faster on serious workloads
+
+
+0.13.0: June 26 2001:
+   - lots of cleanups
+   - fixed a C++ compilation problem
+   - couple of fixes to xsltSaveTo()
+   - try to fix Docbook-xslt-1.4 and chunking, updated the regression test
+    with them
+   - fixed pattern compilation and priorities problems
+   - Patches for Windows and MSC project mostly contributed by Yon Derek
+   - update to the Tutorial by John Fleck
+   - William fixed bugs in templates and for-each functions
+   - added a new interface xsltRunStylesheet() for a more flexible output
+    (incomplete), added -o option to xsltproc
+
+
+0.12.0: June 18 2001:
+   - fixed a dozen of bugs reported
+   - HTML generation should be quite better (requires libxml-2.3.11 upgrade
+    too)
+   - William fixed some problems with document()
+   - Fix namespace nodes selection and copy (requires libxml-2.3.11 upgrade
+    too)
+   - John Fleck added a
+  tutorial
+   - Fixes for namespace handling when evaluating variables
+   - XInclude global flag added to process XInclude on document() if
+    requested
+   - made xsltproc --version more detailed
+
+
+0.11.0: June 1 2001:
+Mostly a bug fix release.   - integration of catalogs from xsltproc
+   - added --version to xsltproc for bug reporting
+   - fixed errors when handling ID in external parsed entities
+   - document() should hopefully work correctly but ...
+   - fixed bug with PI and comments processing
+   - William fixed the XPath string functions when using unicode
+
+
+0.10.0: May 19 2001:
+   - cleanups to make stylesheet read-only (not 100% complete)
+   - fixed URI resolution in document()
+   - force all XPath expression to be compiled at stylesheet parsing time,
+    even if unused ...
+   - Fixed HTML default output detection
+   - Fixed double attribute generation #54446
+   - Fixed {{ handling in attributes #54451
+   - More tests and speedups for DocBook document transformations
+   - Fixed a really bad race like bug in xsltCopyTreeList()
+   - added a documentation on the libxslt internals
+   - William Brack and Bjorn Reese improved format-number()
+   - Fixed multiple sort, it should really work now
+   - added a --docbook option for SGML DocBook input (hackish)
+   - a number of other bug fixes and regression test added as people were
+    submitting them
+
+
+0.9.0: May 3 2001:
+   - lot of various bugfixes, extended the regression suite
+   - xsltproc should work with multiple params
+   - added an option to use xsltproc with HTML input
+   - improved the stylesheet compilation, processing of complex stylesheets
+    should be faster
+   - using the same stylesheet for concurrent processing on multithreaded
+    programs should work now
+   - fixed another batch of namespace handling problems
+   - Implemented multiple level of sorting
+
+
+0.8.0: Apr 22 2001:
+   - fixed ansidecl.h problem
+   - fixed unparsed-entity-uri() and generate-id()
+   - sort semantic fixes and priority prob from William M. Brack
+   - fixed namespace handling problems in XPath expression computations
+    (requires libxml-2.3.7)
+   - fixes to current() and key()
+   - other, smaller fixes, lots of testing with N Walsh DocBook HTML
+    stylesheets
+
+
+0.7.0: Apr 10 2001:
+   - cleanup using stricter compiler flags
+   - command line parameter passing
+   - fix to xsltApplyTemplates from William M. Brack
+   - added the XSLTMark in the regression tests as well as document()
+
+
+0.6.0: Mar 22 2001:
+   - another beta
+   - requires 2.3.5, which provide XPath expression compilation support
+   - document() extension should function properly
+   - fixed a number or reported bugs
+
+
+0.5.0: Mar 10 2001:
+   - fifth beta
+   - some optimization work, for the moment 2 XSLT transform cannot use the
+    same stylesheet at the same time (to be fixed)
+   - fixed problems with handling of tree results
+   - fixed a reported strip-spaces problem
+   - added more reported/fixed bugs to the test suite
+   - incorporated William M. Brack fix for imports and global variables as
+    well as patch for with-param support in apply-templates
+   - a bug fix on for-each
+
+
+0.4.0: Mar 1 2001:
+   - fourth beta test, released at the same time of libxml2-2.3.3
+   - bug fixes
+   - some optimization
+   - started implement extension support, not finished
+   - implemented but not tested multiple file output
+
+
+0.3.0: Feb 24 2001:
+   - third beta test, released at the same time of libxml2-2.3.2
+   - lot of bug fixes
+   - some optimization
+   - added DocBook XSL based testsuite
+
+
+0.2.0: Feb 15 2001:
+   - second beta version, released at the same time as libxml2-2.3.1
+   - getting close to feature completion, lot of bug fixes, some in the HTML
+    and XPath support of libxml
+   - start becoming usable for real work. This version can now regenerate
+    the XML 2e HTML from the original XML sources and the associated
+    stylesheets (in section I of the XML
+    REC)
+   - Still misses extension element/function/prefixes support. Support of
+    key() and document() is not complete
+
+
+0.1.0: Feb 8 2001:
+   - first beta version, released at the same time as libxml2-2.3.0
+   - lots of bug fixes, first "testing" version, but incomplete
+
+
+0.0.1: Jan 25 2001:
+   - first alpha version released at the same time as libxml2-2.2.12
+   - Framework in place, should work on simple examples, but far from being
+    feature complete
+
+Daniel Veillard at 
+bugs.html

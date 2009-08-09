@@ -44,7 +44,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
 HINSTANCE hInst;
-LONG module_ref = 0;
 DWORD mshtml_tls = 0;
 
 static HINSTANCE shdoclc = NULL;
@@ -141,7 +140,6 @@ static ULONG WINAPI ClassFactory_Release(IClassFactory *iface)
 
     if(!ref) {
         heap_free(This);
-        UNLOCK_MODULE();
     }
 
     return ref;
@@ -158,11 +156,7 @@ static HRESULT WINAPI ClassFactory_LockServer(IClassFactory *iface, BOOL dolock)
 {
     TRACE("(%p)->(%x)\n", iface, dolock);
 
-    if(dolock)
-        LOCK_MODULE();
-    else
-        UNLOCK_MODULE();
-
+    /* We never unload the DLL. See DllCanUnloadNow(). */
     return S_OK;
 }
 
@@ -184,9 +178,7 @@ static HRESULT ClassFactory_Create(REFIID riid, void **ppv, CreateInstanceFunc f
     ret->fnCreateInstance = fnCreateInstance;
 
     hres = IClassFactory_QueryInterface((IClassFactory*)ret, riid, ppv);
-    if(SUCCEEDED(hres)) {
-        LOCK_MODULE();
-    }else {
+    if(FAILED(hres)) {
         heap_free(ret);
         *ppv = NULL;
     }
@@ -230,8 +222,9 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
  */
 HRESULT WINAPI DllCanUnloadNow(void)
 {
-    TRACE("() ref=%d\n", module_ref);
-    return module_ref ? S_FALSE : S_OK;
+    TRACE("()\n");
+    /* The cost of keeping this DLL in memory is small. */
+    return S_FALSE;
 }
 
 /***********************************************************************
@@ -318,7 +311,7 @@ static HRESULT register_server(BOOL do_register)
     STRTABLEA strtable;
     STRENTRYA pse[35];
     static CLSID const *clsids[35];
-    int i = 0;
+    unsigned int i = 0;
 
     static const WCHAR wszAdvpack[] = {'a','d','v','p','a','c','k','.','d','l','l',0};
 
@@ -422,4 +415,26 @@ HRESULT WINAPI DllRegisterServer(void)
 HRESULT WINAPI DllUnregisterServer(void)
 {
     return register_server(FALSE);
+}
+
+const char *debugstr_variant(const VARIANT *v)
+{
+    switch(V_VT(v)) {
+    case VT_EMPTY:
+        return wine_dbg_sprintf("{VT_EMPTY}");
+    case VT_NULL:
+        return wine_dbg_sprintf("{VT_NULL}");
+    case VT_I4:
+        return wine_dbg_sprintf("{VT_I4: %d}", V_I4(v));
+    case VT_R8:
+        return wine_dbg_sprintf("{VT_R8: %lf}", V_R8(v));
+    case VT_BSTR:
+        return wine_dbg_sprintf("{VT_BSTR: %s}", debugstr_w(V_BSTR(v)));
+    case VT_DISPATCH:
+        return wine_dbg_sprintf("{VT_DISPATCH: %p}", V_DISPATCH(v));
+    case VT_BOOL:
+        return wine_dbg_sprintf("{VT_BOOL: %x}", V_BOOL(v));
+    default:
+        return wine_dbg_sprintf("{vt %d}", V_VT(v));
+    }
 }

@@ -81,12 +81,6 @@
 #define RD_SYMLINK_CREATE_FAILED 5
 
 //
-// Packet Types when piggybacking on the IRP Overlay
-//
-#define IrpCompletionPacket                             0x1
-#define IrpMiniCompletionPacket                         0x2
-
-//
 // We can call the Ob Inlined API, it's the same thing
 //
 #define IopAllocateMdlFromLookaside                     \
@@ -259,10 +253,20 @@ typedef enum _IOP_TRANSFER_TYPE
 } IOP_TRANSFER_TYPE, *PIOP_TRANSFER_TYPE;
 
 //
+// Packet Types when piggybacking on the IRP Overlay
+//
+typedef enum _COMPLETION_PACKET_TYPE
+    {
+    IopCompletionPacketIrp,
+    IopCompletionPacketMini,
+    IopCompletionPacketQuota
+} COMPLETION_PACKET_TYPE, *PCOMPLETION_PACKET_TYPE;
+
+//
 // Special version of the IRP Overlay used to optimize I/O completion
 // by not using up a separate structure.
 //
-typedef struct _IO_COMPLETION_PACKET
+typedef struct _IOP_MINI_COMPLETION_PACKET
 {
     struct
     {
@@ -273,10 +277,11 @@ typedef struct _IO_COMPLETION_PACKET
             ULONG PacketType;
         };
     };
-    PVOID Key;
-    PVOID Context;
-    IO_STATUS_BLOCK IoStatus;
-} IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
+    PVOID KeyContext;
+    PVOID ApcContext;
+    NTSTATUS IoStatus;
+    ULONG_PTR IoStatusInformation;
+} IOP_MINI_COMPLETION_PACKET, *PIOP_MINI_COMPLETION_PACKET;
 
 //
 // I/O Completion Context for IoSetIoCompletionRoutineEx
@@ -297,7 +302,7 @@ typedef struct _IO_WORKITEM
     PDEVICE_OBJECT DeviceObject;
     PIO_WORKITEM_ROUTINE WorkerRoutine;
     PVOID Context;
-} IO_WORKITEM, *PIO_WORKITEM;
+} IO_WORKITEM;
 
 //
 // I/O Wrapper around the Kernel Interrupt
@@ -563,8 +568,12 @@ IopActionConfigureChildServices(
 NTSTATUS
 IopActionInitChildServices(
     IN PDEVICE_NODE DeviceNode,
-    IN PVOID Context,
-    IN BOOLEAN BootDrivers
+    IN PVOID Context
+);
+
+NTSTATUS
+IopEnumerateDevice(
+    IN PDEVICE_OBJECT DeviceObject
 );
 
 NTSTATUS
@@ -589,15 +598,22 @@ IopQueueTargetDeviceEvent(
 
 NTSTATUS
 IopInitializePnpServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN BootDrivers);
+    IN PDEVICE_NODE DeviceNode);
 
 NTSTATUS
+NTAPI
 IopOpenRegistryKeyEx(
     PHANDLE KeyHandle,
     HANDLE ParentKey,
     PUNICODE_STRING Name,
     ACCESS_MASK DesiredAccess);
+
+NTSTATUS
+NTAPI
+IopGetRegistryValue(IN HANDLE Handle,
+                    IN PWSTR ValueName,
+                    OUT PKEY_VALUE_FULL_INFORMATION *Information);
+
 
 //
 // Initialization Routines
@@ -1041,7 +1057,7 @@ IopStartRamdisk(
 extern POBJECT_TYPE IoCompletionType;
 extern PDEVICE_NODE IopRootDeviceNode;
 extern ULONG IopTraceLevel;
-extern NPAGED_LOOKASIDE_LIST IopMdlLookasideList;
+extern GENERAL_LOOKASIDE IopMdlLookasideList;
 extern GENERIC_MAPPING IopCompletionMapping;
 extern GENERIC_MAPPING IopFileMapping;
 extern POBJECT_TYPE _IoFileObjectType;

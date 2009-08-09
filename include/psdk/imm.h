@@ -169,7 +169,6 @@ typedef struct _tagCOMPOSITIONFORM
 
 
 /* the modifiers of hot key */
-#ifndef _WINUSER_
 #define MOD_ALT                         0x0001
 #define MOD_CONTROL                     0x0002
 #define MOD_SHIFT                       0x0004
@@ -179,7 +178,6 @@ typedef struct _tagCOMPOSITIONFORM
 
 #define MOD_ON_KEYUP                    0x0800
 #define MOD_IGNORE_ALL_MODIFIER         0x0400
-#endif /* _WINUSER_ */
 
 
 /* Windows for Simplified Chinese Edition hot key ID from 0x10 - 0x2F */

@@ -289,7 +289,7 @@ static HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
   if (IsEqualIID(riid, &IID_IUnknown) ||
       IsEqualIID(riid, &IID_ILockBytes))
   {
-    *ppvObject = (ILockBytes*)This;
+    *ppvObject = This;
   }
 
   /*

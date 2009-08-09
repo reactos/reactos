@@ -37,8 +37,8 @@
  */
 
 
-#include "glheader.h"
-#include "config.h"
+#include "main/glheader.h"
+#include "main/config.h"
 #include "m_eval.h"
 
 static GLfloat inv_tab[MAX_EVAL_ORDER];

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef MAPIDEFS_H
@@ -24,9 +24,8 @@
 #endif
 
 #include <winerror.h>
-#ifndef _OBJBASE_H_
 #include <objbase.h>
-#endif
+#include <stddef.h>
 
 /* Some types from other headers */
 #ifndef __LHANDLE
@@ -219,7 +218,7 @@ typedef struct _MAPIUID
 #define MVI_FLAG    (MV_FLAG|MV_INSTANCE)
 #define MVI_PROP(t) ((t)|MVI_FLAG)
 
-#ifndef __WINESRC__
+#ifndef WINE_NO_UNICODE_MACROS
 # ifdef UNICODE
 # define PT_TSTRING      PT_UNICODE
 # define PT_MV_TSTRING   (MV_FLAG|PT_UNICODE)
@@ -435,7 +434,7 @@ typedef struct _SRowSet
 typedef struct _SPropProblem
 {
     ULONG ulIndex;   /* Index of the property */
-    ULONG ulPropTag; /* Proprty tag of the property */
+    ULONG ulPropTag; /* Property tag of the property */
     SCODE scode;     /* Error code of the problem */
 } SPropProblem, *LPSPropProblem;
 
@@ -896,17 +895,17 @@ DECLARE_INTERFACE_(IMAPIProp,IUnknown)
 #define IMAPIProp_AddRef(p)                    (p)->lpVtbl->AddRef(p)
 #define IMAPIProp_Release(p)                   (p)->lpVtbl->Release(p)
         /*** IMAPIProp methods ***/
-#define IMAPIProp_GetLastError(p,a,b,c)        (p)->lpVtbl->GetLastError(p,a,b,c)
-#define IMAPIProp_SaveChanges(p,a)             (p)->lpVtbl->SaveChanges(p,a)
-#define IMAPIProp_GetProps(p,a,b,c,d)          (p)->lpVtbl->GetProps(p,a,b,c,d)
-#define IMAPIProp_GetPropList(p,a,b)           (p)->lpVtbl->GetPropList(p,a,b)
-#define IMAPIProp_OpenProperty(p,a,b,c,d,e)    (p)->lpVtbl->OpenProperty(p,a,b,c,d,e)
-#define IMAPIProp_SetProps(p,a,b,c)            (p)->lpVtbl->SetProps(p,a,b,c)
-#define IMAPIProp_DeleteProps(p,a,b)           (p)->lpVtbl->DeleteProps(p,a,b)
-#define IMAPIProp_CopyTo(p,a,b,c,d,e,f,g,h,i)  (p)->lpVtbl->CopyTo(p,a,b,c,d,e,f,g,h,i)
-#define IMAPIProp_CopyProps(p,a,b,c,d,e,f,g)   (p)->lpVtbl->CopyProps(p,a,b,c,d,e,f,g)
-#define IMAPIProp_GetNamesFromIDs(p,a,b,c,d,e) (p)->lpVtbl->GetNamesFromIDs(p,a,b,c,d,e)
-#define IMAPIProp_GetIDsFromNames(p,a,b,c,d)   (p)->lpVtbl->GetIDsFromNames(p,a,b,c,d)
+#define IMAPIProp_GetLastError(p,a,b,c)        (p)->lpVtbl->GetLastError(p,a,b,c)        
+#define IMAPIProp_SaveChanges(p,a)             (p)->lpVtbl->SaveChanges(p,a)             
+#define IMAPIProp_GetProps(p,a,b,c,d)          (p)->lpVtbl->GetProps(p,a,b,c,d)          
+#define IMAPIProp_GetPropList(p,a,b)           (p)->lpVtbl->GetPropList(p,a,b)           
+#define IMAPIProp_OpenProperty(p,a,b,c,d,e)    (p)->lpVtbl->OpenProperty(p,a,b,c,d,e)    
+#define IMAPIProp_SetProps(p,a,b,c)            (p)->lpVtbl->SetProps(p,a,b,c)            
+#define IMAPIProp_DeleteProps(p,a,b)           (p)->lpVtbl->DeleteProps(p,a,b)           
+#define IMAPIProp_CopyTo(p,a,b,c,d,e,f,g,h,i)  (p)->lpVtbl->CopyTo(p,a,b,c,d,e,f,g,h,i)  
+#define IMAPIProp_CopyProps(p,a,b,c,d,e,f,g)   (p)->lpVtbl->CopyProps(p,a,b,c,d,e,f,g)   
+#define IMAPIProp_GetNamesFromIDs(p,a,b,c,d,e) (p)->lpVtbl->GetNamesFromIDs(p,a,b,c,d,e) 
+#define IMAPIProp_GetIDsFromNames(p,a,b,c,d)   (p)->lpVtbl->GetIDsFromNames(p,a,b,c,d)   
 #endif
 
 typedef IMAPIProp *LPMAPIPROP;

@@ -71,8 +71,6 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Указатель"
 {
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
-    PUSHBUTTON "&OK", IDOK, 40, 170, 50, 12
-    PUSHBUTTON "&Отмена", IDCANCEL, 120, 170, 50, 12
 }
 
 /* Strings */
@@ -85,13 +83,13 @@ STID_INFO,  		"Информация"
 STID_NOT_IMPLEMENTED, 	"Не реализованно"
 STID_HLPFILE_ERROR_s, 	"Ошибка при чтении файла помощи `%s'"
 STID_INDEX, 		"&Содержание"
-STID_CONTENTS,		"Summary"
+STID_CONTENTS,		"Начало"
 STID_BACK, 		"&Назад"
 STID_ALL_FILES, 	"Все файлы (*.*)"
 STID_HELP_FILES_HLP, 	"Файлы справки (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Не могу найти '%s'. Вы хотите найти этот файл самостоятельно?"
 STID_NO_RICHEDIT	"Не могу найти richedit"
-STID_PSH_INDEX,		"Help topics: "
+STID_PSH_INDEX,		"Содержание: "
 }
 
 CONTEXT_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT

@@ -1,6 +1,0 @@
-LIBRARY odbccp32.cpl
-
-EXPORTS
-CPlApplet@16
-
-; EOF

@@ -12,7 +12,7 @@
 
 #include <ntoskrnl.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 PTOKEN PspBootAccessToken;
 
@@ -255,7 +255,7 @@ PspSetPrimaryToken(IN PEPROCESS Process,
                                     PreviousMode))
         {
             /* Failed, dereference */
-            if (TokenHandle) ObDereferenceObject(Token);
+            if (TokenHandle) ObDereferenceObject(NewToken);
             return STATUS_PRIVILEGE_NOT_HELD;
         }
     }
@@ -311,13 +311,10 @@ PspSetPrimaryToken(IN PEPROCESS Process,
                                        STANDARD_RIGHTS_ALL |
                                        PROCESS_SET_QUOTA);
         }
-
-        /* Dereference the process */
-        ObDereferenceObject(Process);
     }
 
     /* Dereference the token */
-    if (Token) ObDereferenceObject(NewToken);
+    if (TokenHandle) ObDereferenceObject(NewToken);
     return Status;
 }
 
@@ -361,17 +358,17 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe the token handle */
             ProbeForWriteHandle(TokenHandle);
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get the exception code */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;
@@ -395,17 +392,17 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
         if (NT_SUCCESS(Status))
         {
             /* Enter SEH for write */
-            _SEH_TRY
+            _SEH2_TRY
             {
                 /* Return the handle */
                 *TokenHandle = hToken;
             }
-            _SEH_HANDLE
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Get exception code */
-                Status = _SEH_GetExceptionCode();
+                Status = _SEH2_GetExceptionCode();
             }
-            _SEH_END;
+            _SEH2_END;
         }
     }
 
@@ -650,7 +647,7 @@ PsImpersonateClient(IN PETHREAD Thread,
         }
 
         /* Check if this is a job, which we don't support yet */
-        if (Thread->ThreadsProcess->Job) KEBUGCHECK(0);
+        if (Thread->ThreadsProcess->Job) ASSERT(FALSE);
 
         /* Lock thread security */
         PspLockThreadSecurityExclusive(Thread);
@@ -950,7 +947,7 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
     if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
-        _SEH_TRY
+        _SEH2_TRY
         {
             /* Probe QoS */
             ProbeForRead(SecurityQualityOfService,
@@ -961,12 +958,12 @@ NtImpersonateThread(IN HANDLE ThreadHandle,
             SafeServiceQoS = *SecurityQualityOfService;
             SecurityQualityOfService = &SafeServiceQoS;
         }
-        _SEH_HANDLE
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Get exception status */
-            Status = _SEH_GetExceptionCode();
+            Status = _SEH2_GetExceptionCode();
         }
-        _SEH_END;
+        _SEH2_END;
 
         /* Fail on exception */
         if (!NT_SUCCESS(Status)) return Status;

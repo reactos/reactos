@@ -51,7 +51,6 @@
  *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  *
- *  $Id$
  */
 
 #ifndef ADNS_H_INCLUDED
@@ -95,8 +94,7 @@ typedef enum {
   adns_if_eintr=        0x0020, /* allow _wait and _synchronous to return EINTR */
   adns_if_nosigpipe=    0x0040, /* applic has SIGPIPE set to SIG_IGN, do not protect */
   adns_if_checkc_entex= 0x0100, /* do consistency checks on entry/exit to adns funcs */
-  adns_if_checkc_freq=  0x0300, /* do consistency checks very frequently (slow!) */
-  adns_if_noserver=     0x0800, /* do not get dns servers from the environment */
+  adns_if_checkc_freq=  0x0300  /* do consistency checks very frequently (slow!) */
 } adns_initflags;
 
 typedef enum {

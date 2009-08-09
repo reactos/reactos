@@ -96,19 +96,19 @@ VOID DriveMapMapDrivesInSection(PCSTR SectionName)
 				DriveMapList.DriveMap[(DriveMapList.DriveMapCount * 2)+1] = DriveMapGetBiosDriveNumber(Drive2);
 				DriveMapList.DriveMapCount++;
 
-				DbgPrint((DPRINT_WARNING, "Mapping BIOS drive 0x%x to drive 0x%x\n", DriveMapGetBiosDriveNumber(Drive1), DriveMapGetBiosDriveNumber(Drive2)));
+				DPRINTM(DPRINT_WARNING, "Mapping BIOS drive 0x%x to drive 0x%x\n", DriveMapGetBiosDriveNumber(Drive1), DriveMapGetBiosDriveNumber(Drive2));
 			}
 		}
 	}
 
 	if (DriveMapList.DriveMapCount)
 	{
-		DbgPrint((DPRINT_WARNING, "Installing Int13 drive map for %d drives.\n", DriveMapList.DriveMapCount));
+		DPRINTM(DPRINT_WARNING, "Installing Int13 drive map for %d drives.\n", DriveMapList.DriveMapCount);
 		DriveMapInstallInt13Handler(&DriveMapList);
 	}
 	else
 	{
-		DbgPrint((DPRINT_WARNING, "Removing any previously installed Int13 drive map.\n"));
+		DPRINTM(DPRINT_WARNING, "Removing any previously installed Int13 drive map.\n");
 		DriveMapRemoveInt13Handler();
 	}
 }

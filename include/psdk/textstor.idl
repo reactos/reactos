@@ -1,0 +1,277 @@
+/*
+ * Copyright 2009 Aric Stewart, CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#ifndef DO_NO_IMPORTS
+import "oaidl.idl";
+#endif
+
+const ULONG TS_DEFAULT_SELECTION = ~0u;
+
+const DWORD TS_SD_READONLY     = 0x001;
+const DWORD TS_SD_LOADING      = 0x002;
+
+const DWORD TS_SS_DISJOINTSEL  = 0x001;
+const DWORD TS_SS_REGIONS      = 0x002;
+const DWORD TS_SS_TRANSITORY   = 0x004;
+const DWORD TS_SS_NOHIDDENTEXT = 0x008;
+
+const DWORD TS_AS_TEXT_CHANGE      = 0x01;
+const DWORD TS_AS_SEL_CHANGE       = 0x02;
+const DWORD TS_AS_LAYOUT_CHANGE    = 0x04;
+const DWORD TS_AS_ATTR_CHANGE      = 0x08;
+const DWORD TS_AS_STATUS_CHANGE    = 0x10;
+
+const DWORD TS_AS_ALL_SINKS = (TS_AS_TEXT_CHANGE | TS_AS_SEL_CHANGE | TS_AS_LAYOUT_CHANGE | TS_AS_ATTR_CHANGE | TS_AS_STATUS_CHANGE);
+
+
+typedef [uuid(05fcf85b-5e9c-4c3e-ab71-29471d4f38e7)]  enum { TS_AE_NONE, TS_AE_START, TS_AE_END } TsActiveSelEnd;
+typedef [uuid(033b0df0-f193-4170-b47b-141afc247878)]  enum { TS_RT_PLAIN, TS_RT_HIDDEN, TS_RT_OPAQUE } TsRunType;
+typedef [uuid(ef3457d9-8446-49a7-a9e6-b50d9d5f3fd9)]  GUID TS_ATTRID;
+
+typedef [uuid(fec4f516-c503-45b1-a5fd-7a3d8ab07049)] struct TS_STATUS
+{
+    DWORD dwDynamicFlags;
+    DWORD dwStaticFlags;
+} TS_STATUS;
+
+typedef [uuid(f3181bd6-bcf0-41d3-a81c-474b17ec38fb)]  struct TS_TEXTCHANGE
+{
+    LONG acpStart;
+    LONG acpOldEnd;
+    LONG acpNewEnd;
+} TS_TEXTCHANGE;
+
+typedef [uuid(7ecc3ffa-8f73-4d91-98ed-76f8ac5b1600)]  struct TS_SELECTIONSTYLE
+{
+    TsActiveSelEnd ase;
+    BOOL fInterimChar;
+} TS_SELECTIONSTYLE;
+
+typedef [uuid(c4b9c33b-8a0d-4426-bebe-d444a4701fe9)]  struct TS_SELECTION_ACP
+{
+    LONG acpStart;
+    LONG acpEnd;
+    TS_SELECTIONSTYLE style;
+} TS_SELECTION_ACP;
+
+typedef [uuid(a6231949-37c5-4b74-a24e-2a26c327201d)]  struct TS_RUNINFO
+{
+    ULONG uCount;
+    TsRunType type;
+} TS_RUNINFO;
+
+typedef [uuid(2cc2b33f-1174-4507-b8d9-5bc0eb37c197)]  struct TS_ATTRVAL
+{
+    TS_ATTRID idAttr;
+    DWORD dwOverlapId;
+    VARIANT varValue;
+} TS_ATTRVAL;
+
+typedef [uuid(7899d7c4-5f07-493c-a89a-fac8e777f476)]  enum { TS_LC_CREATE, TS_LC_CHANGE, TS_LC_DESTROY } TsLayoutCode;
+typedef [uuid(1faf509e-44c1-458e-950a-38a96705a62b)]  DWORD TsViewCookie;
+
+[
+  object,
+  uuid(22d44c94-a419-4542-a272-ae26093ececf),
+  pointer_default(unique)
+]
+interface ITextStoreACPSink : IUnknown
+{
+    HRESULT OnTextChange(
+        [in] DWORD dwFlags,
+        [in] const TS_TEXTCHANGE *pChange);
+
+    HRESULT OnSelectionChange();
+
+    HRESULT OnLayoutChange(
+        [in] TsLayoutCode lcode,
+        [in] TsViewCookie vcView);
+
+    HRESULT OnStatusChange(
+        [in] DWORD dwFlags);
+
+    HRESULT OnAttrsChange(
+        [in] LONG acpStart,
+        [in] LONG acpEnd,
+        [in] ULONG cAttrs,
+        [in, size_is(cAttrs)] const TS_ATTRID *paAttrs);
+
+    HRESULT OnLockGranted(
+        [in] DWORD dwLockFlags);
+
+    HRESULT OnStartEditTransaction();
+
+    HRESULT OnEndEditTransaction();
+};
+
+[
+  object,
+  uuid(28888fe3-c2a0-483a-a3ea-8cb1ce51ff3d),
+  pointer_default(unique)
+]
+interface ITextStoreACP : IUnknown
+{
+    HRESULT AdviseSink(
+        [in] REFIID riid,
+        [in, iid_is(riid)] IUnknown *punk,
+        [in] DWORD dwMask);
+
+    HRESULT UnadviseSink(
+        [in] IUnknown *punk);
+
+    HRESULT RequestLock(
+        [in] DWORD dwLockFlags,
+        [out] HRESULT *phrSession);
+
+    HRESULT GetStatus(
+        [out] TS_STATUS *pdcs);
+
+    HRESULT QueryInsert(
+        [in] LONG acpTestStart,
+        [in] LONG acpTestEnd,
+        [in] ULONG cch,
+        [out] LONG *pacpResultStart,
+        [out] LONG *pacpResultEnd);
+
+    HRESULT GetSelection(
+        [in] ULONG ulIndex,
+        [in] ULONG ulCount,
+        [out, size_is(ulCount), length_is(*pcFetched)] TS_SELECTION_ACP *pSelection,
+        [out] ULONG *pcFetched);
+
+    HRESULT SetSelection(
+        [in] ULONG ulCount,
+        [in, size_is(ulCount)] const TS_SELECTION_ACP *pSelection);
+
+    HRESULT GetText(
+        [in] LONG acpStart,
+        [in] LONG acpEnd,
+        [out, size_is(cchPlainReq), length_is(*pcchPlainRet)] WCHAR *pchPlain,
+        [in] ULONG cchPlainReq,
+        [out] ULONG *pcchPlainRet,
+        [out, size_is(cRunInfoReq), length_is(*pcRunInfoRet)] TS_RUNINFO *prgRunInfo,
+        [in] ULONG cRunInfoReq,
+        [out] ULONG *pcRunInfoRet,
+        [out] LONG *pacpNext);
+
+    HRESULT SetText(
+        [in] DWORD dwFlags,
+        [in] LONG acpStart,
+        [in] LONG acpEnd,
+        [in, size_is(cch)] const WCHAR *pchText,
+        [in] ULONG cch,
+        [out] TS_TEXTCHANGE *pChange);
+
+    HRESULT GetFormattedText(
+        [in] LONG acpStart,
+        [in] LONG acpEnd,
+        [out] IDataObject **ppDataObject);
+
+    HRESULT GetEmbedded(
+        [in] LONG acpPos,
+        [in] REFGUID rguidService,
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **ppunk);
+
+    HRESULT QueryInsertEmbedded(
+        [in] const GUID *pguidService,
+        [in] const FORMATETC *pFormatEtc,
+        [out] BOOL *pfInsertable);
+
+    HRESULT InsertEmbedded(
+        [in] DWORD dwFlags,
+        [in] LONG acpStart,
+        [in] LONG acpEnd,
+        [in] IDataObject *pDataObject,
+        [out] TS_TEXTCHANGE *pChange);
+
+
+    HRESULT InsertTextAtSelection(
+        [in] DWORD dwFlags,
+        [in, size_is(cch)] const WCHAR *pchText,
+        [in] ULONG cch,
+        [out] LONG *pacpStart,
+        [out] LONG *pacpEnd,
+        [out] TS_TEXTCHANGE *pChange);
+
+    HRESULT InsertEmbeddedAtSelection(
+        [in] DWORD dwFlags,
+        [in] IDataObject *pDataObject,
+        [out] LONG *pacpStart,
+        [out] LONG *pacpEnd,
+        [out] TS_TEXTCHANGE *pChange);
+
+    HRESULT RequestSupportedAttrs(
+        [in] DWORD dwFlags,
+        [in] ULONG cFilterAttrs,
+        [in, size_is(cFilterAttrs), unique] const TS_ATTRID *paFilterAttrs);
+
+    HRESULT RequestAttrsAtPosition(
+        [in] LONG acpPos,
+        [in] ULONG cFilterAttrs,
+        [in, size_is(cFilterAttrs), unique] const TS_ATTRID *paFilterAttrs,
+        [in] DWORD dwFlags);
+
+    HRESULT RequestAttrsTransitioningAtPosition(
+        [in] LONG acpPos,
+        [in] ULONG cFilterAttrs,
+        [in, size_is(cFilterAttrs), unique] const TS_ATTRID *paFilterAttrs,
+        [in] DWORD dwFlags);
+
+    HRESULT FindNextAttrTransition(
+        [in] LONG acpStart,
+        [in] LONG acpHalt,
+        [in] ULONG cFilterAttrs,
+        [in, size_is(cFilterAttrs), unique] const TS_ATTRID *paFilterAttrs,
+        [in] DWORD dwFlags,
+        [out] LONG *pacpNext,
+        [out] BOOL *pfFound,
+        [out] LONG *plFoundOffset);
+
+    HRESULT RetrieveRequestedAttrs(
+        [in] ULONG ulCount,
+        [out, size_is(ulCount), length_is(*pcFetched)] TS_ATTRVAL *paAttrVals,
+        [out] ULONG *pcFetched);
+
+    HRESULT GetEndACP(
+        [out] LONG *pacp);
+
+    HRESULT GetActiveView(
+        [out] TsViewCookie *pvcView);
+
+    HRESULT GetACPFromPoint(
+        [in] TsViewCookie vcView,
+        [in] const POINT *ptScreen,
+        [in] DWORD dwFlags,
+        [out] LONG *pacp);
+
+    HRESULT GetTextExt(
+        [in] TsViewCookie vcView,
+        [in] LONG acpStart,
+        [in] LONG acpEnd,
+        [out] RECT *prc,
+        [out] BOOL *pfClipped);
+
+    HRESULT GetScreenExt(
+        [in] TsViewCookie vcView,
+        [out] RECT *prc);
+
+    HRESULT GetWnd(
+        [in] TsViewCookie vcView,
+        [out] HWND *phwnd);
+};

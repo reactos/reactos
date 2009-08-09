@@ -26,7 +26,7 @@
 #define GRAMMAR_MESA_H
 
 
-#include "imports.h"
+#include "main/imports.h"
 /* NOTE: include Mesa 3-D specific headers here */
 
 

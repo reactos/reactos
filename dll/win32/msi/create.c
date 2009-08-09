@@ -137,6 +137,7 @@ static const MSIVIEWOPS create_ops =
     NULL,
     NULL,
     NULL,
+    NULL,
 };
 
 static UINT check_columns( column_info *col_info )
@@ -157,7 +158,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
 {
     MSICREATEVIEW *cv = NULL;
     UINT r;
-    const column_info *col;
+    column_info *col;
     BOOL temp = TRUE;
 
     TRACE("%p\n", cv );
@@ -171,11 +172,13 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
         return ERROR_FUNCTION_FAILED;
 
     for( col = col_info; col; col = col->next )
+    {
+        if (!col->table)
+            col->table = strdupW(table);
+
         if( !col->temporary )
-        {
             temp = FALSE;
-            break;
-        }
+    }
 
     /* fill the structure */
     cv->view.ops = &create_ops;

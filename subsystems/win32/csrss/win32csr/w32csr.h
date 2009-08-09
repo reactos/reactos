@@ -22,6 +22,11 @@
 #include "tuiconsole.h"
 #include <win32csr.h>
 
+/* Public Win32K Headers */
+#include <win32k/ntusrtyp.h>
+#include <win32k/ntuser.h>
+#include <win32k/callback.h>
+
 #include <tchar.h>
 #include <wchar.h>
 #include <cpl.h>

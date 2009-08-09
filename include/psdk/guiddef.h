@@ -31,6 +31,10 @@ typedef struct _GUID
 } GUID;
 #endif
 
+#ifndef DECLSPEC_SELECTANY
+#define DECLSPEC_SELECTANY __declspec(selectany)
+#endif
+
 #undef DEFINE_GUID
 
 #ifdef INITGUID
@@ -105,6 +109,8 @@ typedef GUID FMTID,*LPFMTID;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
 #include <string.h>
+#if !defined _SYS_GUID_OPERATOR_EQ_ && !defined _NO_SYS_GUID_OPERATOR_EQ_
+#define _SYS_GUID_OPERATOR_EQ_
 inline bool operator==(const GUID& guidOne, const GUID& guidOther)
 {
     return !memcmp(&guidOne,&guidOther,sizeof(GUID));
@@ -114,7 +120,6 @@ inline bool operator!=(const GUID& guidOne, const GUID& guidOther)
     return !(guidOne == guidOther);
 }
 #endif
-
-extern const IID GUID_NULL;
+#endif
 
 #endif /* _GUIDDEF_H_ */

@@ -23,7 +23,9 @@ static __inline INT GDI_ROUND(FLOAT val)
    return (int)floor(val + 0.5);
 }
 
-/* Performs a world-to-viewport transformation on the specified point (which
+
+/* FIXME: Do not use the fpu in kernel on x86, use FLOATOBJ_Xxx api instead
+ * Performs a world-to-viewport transformation on the specified point (which
  * is in floating point format).
  */
 static __inline void INTERNAL_LPTODP_FLOAT(DC *dc, FLOAT_POINT *point)

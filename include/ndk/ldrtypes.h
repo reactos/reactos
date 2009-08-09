@@ -138,8 +138,8 @@ typedef struct _LOAD_IMPORTS
 //
 typedef struct _LDR_RESOURCE_INFO
 {
-    ULONG Type;
-    ULONG Name;
+    ULONG_PTR Type;
+    ULONG_PTR Name;
     ULONG Language;
 } LDR_RESOURCE_INFO, *PLDR_RESOURCE_INFO;
 

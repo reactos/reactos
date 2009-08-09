@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.1
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -23,9 +23,9 @@
  */
 
 
-#include "glheader.h"
-#include "context.h"
-#include "imports.h"
+#include "main/glheader.h"
+#include "main/context.h"
+#include "main/imports.h"
 
 #include "s_context.h"
 #include "s_depth.h"
@@ -392,6 +392,23 @@ do_stencil_test( GLcontext *ctx, GLuint face, GLuint n, GLstencil stencil[],
 }
 
 
+/**
+ * Compute the zpass/zfail masks by comparing the pre- and post-depth test
+ * masks.
+ */
+static INLINE void
+compute_pass_fail_masks(GLuint n, const GLubyte origMask[],
+                        const GLubyte newMask[],
+                        GLubyte passMask[], GLubyte failMask[])
+{
+   GLuint i;
+   for (i = 0; i < n; i++) {
+      ASSERT(newMask[i] == 0 || newMask[i] == 1);
+      passMask[i] = origMask[i] & newMask[i];
+      failMask[i] = origMask[i] & (newMask[i] ^ 1);
+   }
+}
+
 
 /**
  * Apply stencil and depth testing to the span of pixels.
@@ -460,39 +477,24 @@ stencil_and_ztest_span(GLcontext *ctx, SWspan *span, GLuint face)
       /*
        * Perform depth buffering, then apply zpass or zfail stencil function.
        */
-      GLubyte passmask[MAX_WIDTH], failmask[MAX_WIDTH], oldmask[MAX_WIDTH];
-      GLuint i;
+      GLubyte passMask[MAX_WIDTH], failMask[MAX_WIDTH], origMask[MAX_WIDTH];
 
       /* save the current mask bits */
-      _mesa_memcpy(oldmask, mask, n * sizeof(GLubyte));
+      _mesa_memcpy(origMask, mask, n * sizeof(GLubyte));
 
       /* apply the depth test */
       _swrast_depth_test_span(ctx, span);
 
-      /* Set the stencil pass/fail flags according to result of depth testing.
-       * if oldmask[i] == 0 then
-       *    Don't touch the stencil value
-       * else if oldmask[i] and newmask[i] then
-       *    Depth test passed
-       * else
-       *    assert(oldmask[i] && !newmask[i])
-       *    Depth test failed
-       * endif
-       */
-      for (i=0;i<n;i++) {
-         ASSERT(mask[i] == 0 || mask[i] == 1);
-         passmask[i] = oldmask[i] & mask[i];
-         failmask[i] = oldmask[i] & (mask[i] ^ 1);
-      }
+      compute_pass_fail_masks(n, origMask, mask, passMask, failMask);
 
       /* apply the pass and fail operations */
       if (ctx->Stencil.ZFailFunc[face] != GL_KEEP) {
          apply_stencil_op( ctx, ctx->Stencil.ZFailFunc[face], face,
-                           n, stencil, failmask );
+                           n, stencil, failMask );
       }
       if (ctx->Stencil.ZPassFunc[face] != GL_KEEP) {
          apply_stencil_op( ctx, ctx->Stencil.ZPassFunc[face], face,
-                           n, stencil, passmask );
+                           n, stencil, passMask );
       }
    }
 
@@ -902,6 +904,7 @@ stencil_test_pixels( GLcontext *ctx, GLuint face, GLuint n,
 static GLboolean
 stencil_and_ztest_pixels( GLcontext *ctx, SWspan *span, GLuint face )
 {
+   GLubyte passMask[MAX_WIDTH], failMask[MAX_WIDTH], origMask[MAX_WIDTH];
    struct gl_framebuffer *fb = ctx->DrawBuffer;
    struct gl_renderbuffer *rb = fb->_StencilBuffer;
    const GLuint n = span->end;
@@ -916,12 +919,11 @@ stencil_and_ztest_pixels( GLcontext *ctx, SWspan *span, GLuint face )
    if (!rb->GetPointer(ctx, rb, 0, 0)) {
       /* No direct access */
       GLstencil stencil[MAX_WIDTH];
-      GLubyte origMask[MAX_WIDTH];
 
       ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
       _swrast_get_values(ctx, rb, n, x, y, stencil, sizeof(GLubyte));
 
-      _mesa_memcpy(origMask, mask, n * sizeof(GLubyte));
+      _mesa_memcpy(origMask, mask, n * sizeof(GLubyte));          
 
       (void) do_stencil_test(ctx, face, n, stencil, mask);
 
@@ -930,27 +932,20 @@ stencil_and_ztest_pixels( GLcontext *ctx, SWspan *span, GLuint face )
                           n, stencil, mask);
       }
       else {
+         GLubyte tmpMask[MAX_WIDTH]; 
+         _mesa_memcpy(tmpMask, mask, n * sizeof(GLubyte));
+
          _swrast_depth_test_span(ctx, span);
 
+         compute_pass_fail_masks(n, tmpMask, mask, passMask, failMask);
+
          if (ctx->Stencil.ZFailFunc[face] != GL_KEEP) {
-            GLubyte failmask[MAX_WIDTH];
-            GLuint i;
-            for (i = 0; i < n; i++) {
-               ASSERT(mask[i] == 0 || mask[i] == 1);
-               failmask[i] = origMask[i] & (mask[i] ^ 1);
-            }
             apply_stencil_op(ctx, ctx->Stencil.ZFailFunc[face], face,
-                             n, stencil, failmask);
+                             n, stencil, failMask);
          }
          if (ctx->Stencil.ZPassFunc[face] != GL_KEEP) {
-            GLubyte passmask[MAX_WIDTH];
-            GLuint i;
-            for (i = 0; i < n; i++) {
-               ASSERT(mask[i] == 0 || mask[i] == 1);
-               passmask[i] = origMask[i] & mask[i];
-            }
             apply_stencil_op(ctx, ctx->Stencil.ZPassFunc[face], face,
-                             n, stencil, passmask);
+                             n, stencil, passMask);
          }
       }
 
@@ -972,28 +967,21 @@ stencil_and_ztest_pixels( GLcontext *ctx, SWspan *span, GLuint face )
                                     ctx->Stencil.ZPassFunc[face], face, mask);
       }
       else {
-         GLubyte passmask[MAX_WIDTH], failmask[MAX_WIDTH], oldmask[MAX_WIDTH];
-         GLuint i;
-
-         _mesa_memcpy(oldmask, mask, n * sizeof(GLubyte));
+         _mesa_memcpy(origMask, mask, n * sizeof(GLubyte));
 
          _swrast_depth_test_span(ctx, span);
 
-         for (i=0;i<n;i++) {
-            ASSERT(mask[i] == 0 || mask[i] == 1);
-            passmask[i] = oldmask[i] & mask[i];
-            failmask[i] = oldmask[i] & (mask[i] ^ 1);
-         }
+         compute_pass_fail_masks(n, origMask, mask, passMask, failMask);
 
          if (ctx->Stencil.ZFailFunc[face] != GL_KEEP) {
             apply_stencil_op_to_pixels(ctx, n, x, y,
                                        ctx->Stencil.ZFailFunc[face],
-                                       face, failmask);
+                                       face, failMask);
          }
          if (ctx->Stencil.ZPassFunc[face] != GL_KEEP) {
             apply_stencil_op_to_pixels(ctx, n, x, y,
                                        ctx->Stencil.ZPassFunc[face],
-                                       face, passmask);
+                                       face, passMask);
          }
       }
 

@@ -70,7 +70,7 @@ int rc2_setup(const unsigned char *key, int keylen, int bits, int rounds, rc2_ke
      * key schedule.  One which is normal, and anther which has a hook to
      * use a reduced key length.
      * BSAFE uses the 'retarded' version.  What I previously shipped is
-     * the same as specifying 1024 for the 'bits' parameter.  Bsafe uses
+     * the same as specifying 1024 for the 'bits' parameter.  BSAFE uses
      * a version where the bits parameter is the same as len*8 */
     /* Seems like MS uses the 'retarded' version, too.
      * Adjust effective keylen bits */

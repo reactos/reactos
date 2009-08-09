@@ -342,7 +342,7 @@ HOTKEY_KeyDown (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
 
 
 static LRESULT
-HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
+HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, DWORD key)
 {
     BYTE bOldMod;
 
@@ -383,7 +383,7 @@ HOTKEY_KeyUp (HOTKEY_INFO *infoPtr, DWORD key, DWORD flags)
 
 
 static LRESULT
-HOTKEY_KillFocus (HOTKEY_INFO *infoPtr, HWND receiveFocus)
+HOTKEY_KillFocus (HOTKEY_INFO *infoPtr)
 {
     infoPtr->bFocus = FALSE;
     DestroyCaret ();
@@ -411,7 +411,7 @@ HOTKEY_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
                     dwExStyle | WS_EX_CLIENTEDGE);
 
     /* allocate memory for info structure */
-    infoPtr = (HOTKEY_INFO *)Alloc (sizeof(HOTKEY_INFO));
+    infoPtr = Alloc (sizeof(HOTKEY_INFO));
     SetWindowLongPtrW(hwnd, 0, (DWORD_PTR)infoPtr);
 
     /* initialize info structure */
@@ -424,7 +424,7 @@ HOTKEY_NCCreate (HWND hwnd, const CREATESTRUCTW *lpcs)
 }
 
 static LRESULT
-HOTKEY_SetFocus (HOTKEY_INFO *infoPtr, HWND lostFocus)
+HOTKEY_SetFocus (HOTKEY_INFO *infoPtr)
 {
     infoPtr->bFocus = TRUE;
 
@@ -505,10 +505,10 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_KEYUP:
 	case WM_SYSKEYUP:
-	    return HOTKEY_KeyUp (infoPtr, wParam, lParam);
+	    return HOTKEY_KeyUp (infoPtr, wParam);
 
 	case WM_KILLFOCUS:
-	    return HOTKEY_KillFocus (infoPtr, (HWND)wParam);
+	    return HOTKEY_KillFocus (infoPtr);
 
 	case WM_LBUTTONDOWN:
 	    return HOTKEY_LButtonDown (infoPtr);
@@ -522,13 +522,13 @@ HOTKEY_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return 0;
 
 	case WM_SETFOCUS:
-	    return HOTKEY_SetFocus (infoPtr, (HWND)wParam);
+	    return HOTKEY_SetFocus (infoPtr);
 
 	case WM_SETFONT:
 	    return HOTKEY_SetFont (infoPtr, (HFONT)wParam, LOWORD(lParam));
 
 	default:
-	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
+	    if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))
 		ERR("unknown msg %04x wp=%08lx lp=%08lx\n",
 		     uMsg, wParam, lParam);
 	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);

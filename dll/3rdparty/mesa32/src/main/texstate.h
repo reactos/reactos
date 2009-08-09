@@ -5,9 +5,9 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.5
+ * Version:  7.1
  *
- * Copyright (C) 1999-2005  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -42,85 +42,11 @@ extern void
 _mesa_print_texunit_state( GLcontext *ctx, GLuint unit );
 
 
+
 /**
  * \name Called from API
  */
 /*@{*/
-
-extern void GLAPIENTRY
-_mesa_GetTexEnvfv( GLenum target, GLenum pname, GLfloat *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexGendv( GLenum coord, GLenum pname, GLdouble *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexGenfv( GLenum coord, GLenum pname, GLfloat *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexGeniv( GLenum coord, GLenum pname, GLint *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexLevelParameterfv( GLenum target, GLint level,
-                              GLenum pname, GLfloat *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexLevelParameteriv( GLenum target, GLint level,
-                              GLenum pname, GLint *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexParameterfv( GLenum target, GLenum pname, GLfloat *params );
-
-extern void GLAPIENTRY
-_mesa_GetTexParameteriv( GLenum target, GLenum pname, GLint *params );
-
-
-extern void GLAPIENTRY
-_mesa_TexEnvf( GLenum target, GLenum pname, GLfloat param );
-
-extern void GLAPIENTRY
-_mesa_TexEnvfv( GLenum target, GLenum pname, const GLfloat *param );
-
-extern void GLAPIENTRY
-_mesa_TexEnvi( GLenum target, GLenum pname, GLint param );
-
-extern void GLAPIENTRY
-_mesa_TexEnviv( GLenum target, GLenum pname, const GLint *param );
-
-
-extern void GLAPIENTRY
-_mesa_TexParameterfv( GLenum target, GLenum pname, const GLfloat *params );
-
-extern void GLAPIENTRY
-_mesa_TexParameterf( GLenum target, GLenum pname, GLfloat param );
-
-
-extern void GLAPIENTRY
-_mesa_TexParameteri( GLenum target, GLenum pname, GLint param );
-
-extern void GLAPIENTRY
-_mesa_TexParameteriv( GLenum target, GLenum pname, const GLint *params );
-
-
-extern void GLAPIENTRY
-_mesa_TexGend( GLenum coord, GLenum pname, GLdouble param );
-
-extern void GLAPIENTRY
-_mesa_TexGendv( GLenum coord, GLenum pname, const GLdouble *params );
-
-extern void GLAPIENTRY
-_mesa_TexGenf( GLenum coord, GLenum pname, GLfloat param );
-
-extern void GLAPIENTRY
-_mesa_TexGenfv( GLenum coord, GLenum pname, const GLfloat *params );
-
-extern void GLAPIENTRY
-_mesa_TexGeni( GLenum coord, GLenum pname, GLint param );
-
-extern void GLAPIENTRY
-_mesa_TexGeniv( GLenum coord, GLenum pname, const GLint *params );
 
 
 /*
@@ -146,6 +72,9 @@ _mesa_init_texture( GLcontext *ctx );
 
 extern void 
 _mesa_free_texture_data( GLcontext *ctx );
+
+extern void
+_mesa_update_default_objects_texture(GLcontext *ctx);
 
 /*@}*/
 

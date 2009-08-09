@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/csr/capture.c
- * PURPOSE:         routines for probing and capturing CSR API Messages
+ * PURPOSE:         Routines for probing and capturing CSR API Messages
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 

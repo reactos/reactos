@@ -89,15 +89,15 @@ void TAG(translate_vertex)(GLcontext *ctx,
 
    if (format == TINY_VERTEX_FORMAT) {
       if (HAVE_HW_VIEWPORT) {
-	 dst->win[0] = s[0]  * src->v.x + s[12];
-	 dst->win[1] = s[5]  * src->v.y + s[13];
-	 dst->win[2] = s[10] * src->v.z + s[14];
-	 dst->win[3] = 1.0;
+	 dst->attrib[FRAG_ATTRIB_WPOS][0] = s[0]  * src->v.x + s[12];
+	 dst->attrib[FRAG_ATTRIB_WPOS][1] = s[5]  * src->v.y + s[13];
+	 dst->attrib[FRAG_ATTRIB_WPOS][2] = s[10] * src->v.z + s[14];
+	 dst->attrib[FRAG_ATTRIB_WPOS][3] = 1.0;
       } else {
-	 dst->win[0] = UNVIEWPORT_X( src->v.x );
-	 dst->win[1] = UNVIEWPORT_Y( src->v.y );
-	 dst->win[2] = UNVIEWPORT_Z( src->v.z );
-	 dst->win[3] = 1.0;
+	 dst->attrib[FRAG_ATTRIB_WPOS][0] = UNVIEWPORT_X( src->v.x );
+	 dst->attrib[FRAG_ATTRIB_WPOS][1] = UNVIEWPORT_Y( src->v.y );
+	 dst->attrib[FRAG_ATTRIB_WPOS][2] = UNVIEWPORT_Z( src->v.z );
+	 dst->attrib[FRAG_ATTRIB_WPOS][3] = 1.0;
       }
 
       dst->color[0] = src->tv.color.red;
@@ -109,21 +109,21 @@ void TAG(translate_vertex)(GLcontext *ctx,
       if (HAVE_HW_VIEWPORT) {
 	 if (HAVE_HW_DIVIDE && CHECK_HW_DIVIDE) {
 	    GLfloat oow = 1.0 / src->v.w;
-	    dst->win[0] = s[0]  * src->v.x * oow + s[12];
-	    dst->win[1] = s[5]  * src->v.y * oow + s[13];
-	    dst->win[2] = s[10] * src->v.z * oow + s[14];
-	    dst->win[3] = oow;
+	    dst->attrib[FRAG_ATTRIB_WPOS][0] = s[0]  * src->v.x * oow + s[12];
+	    dst->attrib[FRAG_ATTRIB_WPOS][1] = s[5]  * src->v.y * oow + s[13];
+	    dst->attrib[FRAG_ATTRIB_WPOS][2] = s[10] * src->v.z * oow + s[14];
+	    dst->attrib[FRAG_ATTRIB_WPOS][3] = oow;
 	 } else {
-	    dst->win[0] = s[0]  * src->v.x + s[12];
-	    dst->win[1] = s[5]  * src->v.y + s[13];
-	    dst->win[2] = s[10] * src->v.z + s[14];
-	    dst->win[3] = src->v.w;
+	    dst->attrib[FRAG_ATTRIB_WPOS][0] = s[0]  * src->v.x + s[12];
+	    dst->attrib[FRAG_ATTRIB_WPOS][1] = s[5]  * src->v.y + s[13];
+	    dst->attrib[FRAG_ATTRIB_WPOS][2] = s[10] * src->v.z + s[14];
+	    dst->attrib[FRAG_ATTRIB_WPOS][3] = src->v.w;
 	 }
       } else {
-	 dst->win[0] = UNVIEWPORT_X( src->v.x );
-	 dst->win[1] = UNVIEWPORT_Y( src->v.y );
-	 dst->win[2] = UNVIEWPORT_Z( src->v.z );
-	 dst->win[3] = src->v.w;
+	 dst->attrib[FRAG_ATTRIB_WPOS][0] = UNVIEWPORT_X( src->v.x );
+	 dst->attrib[FRAG_ATTRIB_WPOS][1] = UNVIEWPORT_Y( src->v.y );
+	 dst->attrib[FRAG_ATTRIB_WPOS][2] = UNVIEWPORT_Z( src->v.z );
+	 dst->attrib[FRAG_ATTRIB_WPOS][3] = src->v.w;
       }
 
       dst->color[0] = src->v.color.red;
@@ -131,11 +131,11 @@ void TAG(translate_vertex)(GLcontext *ctx,
       dst->color[2] = src->v.color.blue;
       dst->color[3] = src->v.color.alpha;
 
-      dst->specular[0] = src->v.specular.red;
-      dst->specular[1] = src->v.specular.green;
-      dst->specular[2] = src->v.specular.blue;
+      dst->attrib[FRAG_ATTRIB_COL1][0] = UBYTE_TO_FLOAT(src->v.specular.red);
+      dst->attrib[FRAG_ATTRIB_COL1][1] = UBYTE_TO_FLOAT(src->v.specular.green);
+      dst->attrib[FRAG_ATTRIB_COL1][2] = UBYTE_TO_FLOAT(src->v.specular.blue);
 
-      dst->attrib[FRAG_ATTRIB_FOGC][0] = src->v.specular.alpha/255.0;
+      dst->attrib[FRAG_ATTRIB_FOGC][0] = UBYTE_TO_FLOAT(src->v.specular.alpha);
 
       if (HAVE_PTEX_VERTICES &&
 	  ((HAVE_TEX2_VERTICES && format == PROJ_TEX3_VERTEX_FORMAT) ||
@@ -184,7 +184,7 @@ void TAG(translate_vertex)(GLcontext *ctx,
       }
    }
 
-   dst->pointSize = ctx->Point._Size;
+   dst->pointSize = ctx->Point.Size;
 }
 
 

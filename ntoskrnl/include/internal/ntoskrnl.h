@@ -6,7 +6,7 @@
  */
 #define PLACE_IN_SECTION(s)	__attribute__((section (s)))
 #ifdef __GNUC__
-#define INIT_FUNCTION		PLACE_IN_SECTION("init")
+#define INIT_FUNCTION		PLACE_IN_SECTION("INIT")
 #define PAGE_LOCKED_FUNCTION	PLACE_IN_SECTION("pagelk")
 #define PAGE_UNLOCKED_FUNCTION	PLACE_IN_SECTION("pagepo")
 #else
@@ -24,20 +24,43 @@
 #undef  PsGetCurrentProcess
 #define PsGetCurrentProcess _PsGetCurrentProcess
 
+#define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
+
 //
 // We are very lazy on ARM -- we just import intrinsics
 // Question: Why wasn't this done for x86 too? (see fastintrlck.asm)
 //
-#define InterlockedDecrement        _InterlockedDecrement
-#define InterlockedIncrement        _InterlockedIncrement
-#define InterlockedCompareExchange  _InterlockedCompareExchange
-#define InterlockedExchange         _InterlockedExchange
-#define InterlockedExchangeAdd      _InterlockedExchangeAdd
+#define InterlockedDecrement         _InterlockedDecrement
+#define InterlockedDecrement16       _InterlockedDecrement16
+#define InterlockedIncrement         _InterlockedIncrement
+#define InterlockedIncrement16       _InterlockedIncrement16
+#define InterlockedCompareExchange   _InterlockedCompareExchange
+#define InterlockedCompareExchange16 _InterlockedCompareExchange16
+#define InterlockedCompareExchange64 _InterlockedCompareExchange64
+#define InterlockedExchange          _InterlockedExchange
+#define InterlockedExchangeAdd       _InterlockedExchangeAdd
+#define InterlockedOr                _InterlockedOr
+#define InterlockedAnd               _InterlockedAnd
+
+//
+// Use inlined versions of fast/guarded mutex routines
+//
+#define ExEnterCriticalRegionAndAcquireFastMutexUnsafe _ExEnterCriticalRegionAndAcquireFastMutexUnsafe
+#define ExReleaseFastMutexUnsafeAndLeaveCriticalRegion _ExReleaseFastMutexUnsafeAndLeaveCriticalRegion
+#define ExAcquireFastMutex _ExAcquireFastMutex
+#define ExReleaseFastMutex _ExReleaseFastMutex
+#define ExAcquireFastMutexUnsafe _ExAcquireFastMutexUnsafe
+#define ExReleaseFastMutexUnsafe _ExReleaseFastMutexUnsafe
+#define ExTryToAcquireFastMutex _ExTryToAcquireFastMutex
+
+#define KeInitializeGuardedMutex _KeInitializeGuardedMutex
+#define KeAcquireGuardedMutex _KeAcquireGuardedMutex
+#define KeReleaseGuardedMutex _KeReleaseGuardedMutex
+#define KeAcquireGuardedMutexUnsafe _KeAcquireGuardedMutexUnsafe
+#define KeReleaseGuardedMutexUnsafe _KeReleaseGuardedMutexUnsafe
+#define KeTryToAcquireGuardedMutex _KeTryToAcquireGuardedMutex
 
 #include "ke.h"
-#include "i386/mm.h"
-#include "i386/fpu.h"
-#include "i386/v86m.h"
 #include "ob.h"
 #include "mm.h"
 #include "ex.h"
@@ -66,84 +89,6 @@
 #include "vdm.h"
 #include "hal.h"
 #include "arch/intrin_i.h"
-
-#include <pshpack1.h>
-/*
- * Defines a descriptor as it appears in the processor tables
- */
-typedef struct __DESCRIPTOR
-{
-  ULONG a;
-  ULONG b;
-} IDT_DESCRIPTOR, GDT_DESCRIPTOR;
-
-#include <poppack.h>
-//extern GDT_DESCRIPTOR KiGdt[256];
-
-/*
- * Initalization functions (called once by main())
- */
-BOOLEAN NTAPI ObInit(VOID);
-BOOLEAN NTAPI CmInitSystem1(VOID);
-VOID NTAPI CmShutdownSystem(VOID);
-BOOLEAN NTAPI KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-/* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
-BOOLEAN FASTCALL
-RtlpCreateUnicodeString(
-   IN OUT PUNICODE_STRING UniDest,
-   IN PCWSTR  Source,
-   IN POOL_TYPE PoolType);
-
-VOID
-NTAPI
-RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
-                 IN PCONTEXT ContextRecord,
-                 IN PVOID ContextData,
-                 IN ULONG Size);
-
-/* FIXME: Interlocked functions that need to be made into a public header */
-#ifdef __GNUC__
-FORCEINLINE
-LONG
-InterlockedAnd(IN OUT LONG volatile *Target,
-               IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = InterlockedCompareExchange((PLONG)Target,
-                                       i & Set,
-                                       i);
-
-    } while (i != j);
-
-    return j;
-}
-
-FORCEINLINE
-LONG
-InterlockedOr(IN OUT LONG volatile *Target,
-              IN LONG Set)
-{
-    LONG i;
-    LONG j;
-
-    j = *Target;
-    do {
-        i = j;
-        j = InterlockedCompareExchange((PLONG)Target,
-                                       i | Set,
-                                       i);
-
-    } while (i != j);
-
-    return j;
-}
-#endif
 
 /*
  * generic information class probing code
@@ -179,115 +124,6 @@ typedef struct _INFORMATION_CLASS_INFO
 #define IQS(TypeQuery, TypeSet, AlignmentQuery, AlignmentSet, Flags)        \
   { sizeof(TypeQuery), sizeof(TypeSet), sizeof(AlignmentQuery), sizeof(AlignmentSet), Flags }
 
-FORCEINLINE
-NTSTATUS
-DefaultSetInfoBufferCheck(ULONG Class,
-                          const INFORMATION_CLASS_INFO *ClassList,
-                          ULONG ClassListEntries,
-                          PVOID Buffer,
-                          ULONG BufferLength,
-                          KPROCESSOR_MODE PreviousMode)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (Class < ClassListEntries)
-    {
-        if (!(ClassList[Class].Flags & ICIF_SET))
-        {
-            Status = STATUS_INVALID_INFO_CLASS;
-        }
-        else if (ClassList[Class].RequiredSizeSET > 0 &&
-                 BufferLength != ClassList[Class].RequiredSizeSET)
-        {
-            if (!(ClassList[Class].Flags & ICIF_SET_SIZE_VARIABLE))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-            }
-        }
-
-        if (NT_SUCCESS(Status))
-        {
-            if (PreviousMode != KernelMode)
-            {
-                _SEH_TRY
-                {
-                    ProbeForRead(Buffer,
-                                 BufferLength,
-                                 ClassList[Class].AlignmentSET);
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-            }
-        }
-    }
-    else
-        Status = STATUS_INVALID_INFO_CLASS;
-
-    return Status;
-}
-
-FORCEINLINE
-NTSTATUS
-DefaultQueryInfoBufferCheck(ULONG Class,
-                            const INFORMATION_CLASS_INFO *ClassList,
-                            ULONG ClassListEntries,
-                            PVOID Buffer,
-                            ULONG BufferLength,
-                            PULONG ReturnLength,
-                            KPROCESSOR_MODE PreviousMode)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-
-    if (Class < ClassListEntries)
-    {
-        if (!(ClassList[Class].Flags & ICIF_QUERY))
-        {
-            Status = STATUS_INVALID_INFO_CLASS;
-        }
-        else if (ClassList[Class].RequiredSizeQUERY > 0 &&
-                 BufferLength != ClassList[Class].RequiredSizeQUERY)
-        {
-            if (!(ClassList[Class].Flags & ICIF_QUERY_SIZE_VARIABLE))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-            }
-        }
-
-        if (NT_SUCCESS(Status))
-        {
-            if (PreviousMode != KernelMode)
-            {
-                _SEH_TRY
-                {
-                    if (Buffer != NULL)
-                    {
-                        ProbeForWrite(Buffer,
-                                      BufferLength,
-                                      ClassList[Class].AlignmentQUERY);
-                    }
-
-                    if (ReturnLength != NULL)
-                    {
-                        ProbeForWriteUlong(ReturnLength);
-                    }
-                }
-                _SEH_HANDLE
-                {
-                    Status = _SEH_GetExceptionCode();
-                }
-                _SEH_END;
-            }
-        }
-    }
-    else
-        Status = STATUS_INVALID_INFO_CLASS;
-
-    return Status;
-}
-
 /*
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset
  * or as a pointer
@@ -320,8 +156,9 @@ C_ASSERT(FIELD_OFFSET(KTHREAD, TrapFrame) == KTHREAD_TRAP_FRAME);
 C_ASSERT(FIELD_OFFSET(KTHREAD, CallbackStack) == KTHREAD_CALLBACK_STACK);
 C_ASSERT(FIELD_OFFSET(KTHREAD, ApcState.Process) == KTHREAD_APCSTATE_PROCESS);
 C_ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
-//C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
-//C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
+C_ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
+
+C_ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
 #ifdef _M_IX86
 C_ASSERT(FIELD_OFFSET(KPCR, IRR) == KPCR_IRR);
 C_ASSERT(FIELD_OFFSET(KPCR, IDR) == KPCR_IDR);
@@ -331,7 +168,7 @@ C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NextThread) == KPCR
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) == KPCR_PRCB_DATA);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, KeSystemCalls) == KPCR_SYSTEM_CALLS);
-C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + /*FIELD_OFFSET(KDPC_DATA, DpcQueuDepth)*/12 == KPCR_PRCB_DPC_QUEUE_DEPTH);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + FIELD_OFFSET(KDPC_DATA, DpcQueueDepth) == KPCR_PRCB_DPC_QUEUE_DEPTH);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcData) + 16 == KPCR_PRCB_DPC_COUNT);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, TimerRequest) == KPCR_PRCB_TIMER_REQUEST);
@@ -344,8 +181,9 @@ C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, TimerRequest) == KP
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, QuantumEnd) == KPCR_PRCB_QUANTUM_END);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DeferredReadyListHead) == KPCR_PRCB_DEFERRED_READY_LIST_HEAD);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PowerState) == KPCR_PRCB_POWER_STATE_IDLE_FUNCTION);
-//C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PrcbLock) == KPCR_PRCB_PRCB_LOCK);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, PrcbLock) == KPCR_PRCB_PRCB_LOCK);
 C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, DpcStack) == KPCR_PRCB_DPC_STACK);
+C_ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, IdleSchedule) == KPCR_PRCB_IDLE_SCHEDULE);
 C_ASSERT(sizeof(FX_SAVE_AREA) == SIZEOF_FX_SAVE_AREA);
 
 /* Platform specific checks */
