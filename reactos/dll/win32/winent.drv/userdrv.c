@@ -14,10 +14,10 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
-#include "winuser16.h"
 #include "wingdi.h"
 #define NTOS_USER_MODE
 #include <ndk/ntndk.h>
+#include "winuser16.h"
 #include "ntrosgdi.h"
 #include "win32k/rosuser.h"
 #include "winent.h"

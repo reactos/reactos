@@ -3749,6 +3749,11 @@ typedef struct NMLVSCROLL
   SNDMSGA(hwnd, LVM_SETITEMSTATE, (WPARAM)(UINT)i, (LPARAM) (LPLVITEMA)&_LVi);}
 #define ListView_GetItemState(hwnd,i,mask) \
     (BOOL)SNDMSGA((hwnd),LVM_GETITEMSTATE,(WPARAM)(UINT)(i),(LPARAM)(UINT)(mask))
+#define ListView_SetCheckState(hwndLV, i, bCheck) \
+    { LVITEM _LVi; _LVi.state = INDEXTOSTATEIMAGEMASK((bCheck)?2:1); _LVi.stateMask = LVIS_STATEIMAGEMASK; \
+    SNDMSG(hwndLV, LVM_SETITEMSTATE, (WPARAM)(UINT)(i), (LPARAM)(LPLVITEM)&_LVi);}
+#define ListView_GetCheckState(hwndLV, i) \
+    (((UINT)SNDMSG((hwndLV), LVM_GETITEMSTATE, (i), LVIS_STATEIMAGEMASK) >> 12) - 1)
 #define ListView_GetCountPerPage(hwnd) \
     (BOOL)SNDMSGW((hwnd),LVM_GETCOUNTPERPAGE,0,0L)
 #define ListView_GetImageList(hwnd,iImageList) \

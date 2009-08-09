@@ -165,6 +165,8 @@ typedef struct
     DWORD   dwAllocCount;
 } WINDEBUGINFO16, *LPWINDEBUGINFO16;
 
+/* definitions specific to Wine 16-bit relaying support */
+
 /* 32-bit stack layout after __wine_call_to_16() */
 typedef struct _STACK32FRAME
 {
@@ -201,6 +203,19 @@ typedef struct _STACK16FRAME
     WORD          ip;             /* 2c return address */
     WORD          cs;             /* 2e */
 } STACK16FRAME;
+
+/* argument type flags for relay debugging */
+enum arg_types
+{
+    ARG_NONE = 0, /* indicates end of arg list */
+    ARG_WORD,     /* unsigned word */
+    ARG_SWORD,    /* signed word */
+    ARG_LONG,     /* long or segmented pointer */
+    ARG_PTR,      /* linear pointer */
+    ARG_STR,      /* linear pointer to null-terminated string */
+    ARG_SEGSTR,   /* segmented pointer to null-terminated string */
+    ARG_VARARG    /* start of varargs */
+};
 
 #include <poppack.h>
 
@@ -301,6 +316,13 @@ typedef struct
 
 #define __AHSHIFT  3  /* don't change! */
 #define __AHINCR   (1 << __AHSHIFT)
+
+
+typedef struct tagSYSLEVEL
+{
+    CRITICAL_SECTION crst;
+    INT              level;
+} SYSLEVEL;
 
 /* undocumented functions */
 WORD        WINAPI AllocCStoDSAlias16(WORD);
