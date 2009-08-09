@@ -28,6 +28,7 @@
 #include "shdocvw.h"
 #include "htiframe.h"
 #include "idispids.h"
+#include "mshtmdid.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
@@ -722,6 +723,8 @@ static HRESULT WINAPI OleControl_OnAmbientPropertyChange(IOleControl *iface, DIS
         /* Unknown means multiple properties changed, so check them all.
          * BUT the Webbrowser OleControl object doesn't appear to do this.
          */
+        return S_OK;
+    case DISPID_AMBIENT_DLCONTROL:
         return S_OK;
     case DISPID_AMBIENT_OFFLINEIFNOTCONNECTED:
         return on_offlineconnected_change(This);

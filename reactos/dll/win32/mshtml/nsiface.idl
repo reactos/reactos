@@ -23,7 +23,7 @@
  * compatible with XPCOM, usable in C code.
  */
 
-cpp_quote("#define GECKO_VERSION \"0.9.1\"")
+cpp_quote("#define GECKO_VERSION \"1.0.0\"")
 cpp_quote("#define GECKO_VERSION_STRING \"Wine Gecko \" GECKO_VERSION")
 
 import "wtypes.idl";
@@ -855,7 +855,7 @@ interface nsIDOMDocument : nsIDOMNode
 
 [
     object,
-    uuid(533a8131-8d0c-4ebf-990b-7fad7cd51466),
+    uuid(09a439ad-4079-46d5-a050-4d7015d1a108),
     local
     /* NOT_FROZEN */
 ]
@@ -868,9 +868,9 @@ interface nsIDOMNSDocument : nsISupports
     nsresult GetTitle(nsAString *aTitle);
     nsresult SetTitle(const nsAString *aTitle);
     nsresult GetContentType(nsAString *aContentType);
+    nsresult GetReadyState(nsAString *aReadyState);
     nsresult GetLastModified(nsAString *aLastModified);
     nsresult GetReferrer(nsAString *aReferrer);
-    nsresult GetBoxObjectFor(nsIDOMElement *elt, nsIBoxObject **_retval);
     nsresult HasFocus(PRBool *_retval);
     nsresult GetActiveElement(nsIDOMElement **aActiveElement);
     nsresult GetElementsByClassName(const nsAString *classes, nsIDOMNodeList **_retval);
@@ -1546,13 +1546,13 @@ interface nsIWebNavigation : nsISupports
 
 [
     object,
-    uuid(5af07661-6477-4235-8814-4a45215855b8),
+    uuid(343700dd-078b-42b6-a809-b9c1d7e951d0),
     local
     /* NOT_FROZEN */
 ]
 interface nsIPrintSettings : nsISupports
 {
-    typedef struct { char dummy; } nsMargin;
+    typedef struct { char dummy; } nsIntMargin;
 
     nsresult SetPrintOptions(PRInt32 aType, PRBool aTurnOnOff);
     nsresult GetPrintOptions(PRInt32 aType, PRBool *_retval);
@@ -1672,13 +1672,13 @@ interface nsIPrintSettings : nsISupports
     nsresult SetIsInitializedFromPrinter(PRBool aIsInitializedFromPrinter);
     nsresult GetIsInitializedFromPrefs(PRBool *aIsInitializedFromPrefs);
     nsresult SetIsInitializedFromPrefs(PRBool aIsInitializedFromPrefs);
-    nsresult SetMarginInTwips(nsMargin *aMargin);
-    nsresult SetEdgeInTwips(nsMargin *aEdge);
-    nsresult GetMarginInTwips(nsMargin *aMargin);
-    nsresult GetEdgeInTwips(nsMargin *aEdge);
+    nsresult SetMarginInTwips(nsIntMargin *aMargin);
+    nsresult SetEdgeInTwips(nsIntMargin *aEdge);
+    nsresult GetMarginInTwips(nsIntMargin *aMargin);
+    nsresult GetEdgeInTwips(nsIntMargin *aEdge);
     nsresult SetupSilentPrinting();
-    nsresult SetUnwriteableMarginInTwips(nsMargin *aEdge);
-    nsresult GetUnwriteableMarginInTwips(nsMargin *aEdge);
+    nsresult SetUnwriteableMarginInTwips(nsIntMargin *aEdge);
+    nsresult GetUnwriteableMarginInTwips(nsIntMargin *aEdge);
 }
 
 [
@@ -1872,7 +1872,7 @@ interface nsIIOService : nsISupports
 
 [
     object,
-    uuid(57322c6f-f4ec-4e46-8253-b74be220de16),
+    uuid(a50d5516-5c0a-4f08-b427-703ca0c44ac3),
     local,
     /* NOT_FROZEN */
 ]
@@ -2485,7 +2485,7 @@ interface nsIHTMLEditor : nsISupports
 
 [
     object,
-    uuid(32e68316-67d4-44a5-8d35-0d390fa9df11),
+    uuid(365d600b-868a-452a-8de8-f46fad8fee53),
     local
     /* NOT_FROZEN */
 ]
@@ -2495,6 +2495,8 @@ interface nsIMutationObserver : nsISupports
                                  void /*CharacterDataChangeInfo*/ *aInfo);
     void CharacterDataChanged(nsIDocument *aDocument, nsIContent *aContent,
                               void /*CharacterDataChangeInfo*/ *aInfo);
+    void AttributeWillChange(nsIDocument *aDocument, nsIContent * aContent, PRInt32 aNameSpaceID,
+                             nsIAtom *aAttribute, PRInt32 aModType);
     void AttributeChanged(nsIDocument *aDocument, nsIContent *aContent, PRInt32 aNameSpaceID,
                           nsIAtom *aAttribute, PRInt32 aModType, PRUint32 aStateMask);
     void ContentAppended(nsIDocument *aDocument, nsIContent *aContainer, PRInt32 aNewIndexInContainer);
@@ -2531,7 +2533,7 @@ interface nsIDocumentObserver : nsIMutationObserver
     void StyleRuleAdded(nsIDocument *aDocument, nsIStyleSheet *aStyleSheet, nsIStyleRule *aStyleRule);
     void StyleRuleRemoved(nsIDocument *aDocument, nsIStyleSheet *aStyleSheet, nsIStyleRule *aStyleRule);
     void BindToDocument(nsIDocument *aDocument, nsIContent *aContent);
-    void DoneAddingContent(nsIContent *aContent, PRBool aHaveNotified);
+    void DoneAddingChildren(nsIContent *aContent, PRBool aHaveNotified);
 }
 
 /*

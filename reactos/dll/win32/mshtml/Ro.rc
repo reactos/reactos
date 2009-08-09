@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
 
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
@@ -65,5 +66,3 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON "OK", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Renunță", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
 }
-
-#pragma code_page(default)

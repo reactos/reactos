@@ -157,6 +157,11 @@ static HRESULT WINAPI HTMLDOMChildrenCollection_item(IHTMLDOMChildrenCollection 
 
     TRACE("(%p)->(%d %p)\n", This, index, ppItem);
 
+    if (ppItem)
+        *ppItem = NULL;
+    else
+        return E_POINTER;
+
     nsIDOMNodeList_GetLength(This->nslist, &length);
     if(index < 0 || index >= length)
         return E_INVALIDARG;

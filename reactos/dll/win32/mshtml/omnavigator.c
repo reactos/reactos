@@ -329,7 +329,7 @@ static const tid_t OmNavigator_iface_tids[] = {
 };
 static dispex_static_data_t OmNavigator_dispex = {
     NULL,
-    IOmNavigator_tid,
+    DispHTMLNavigator_tid,
     NULL,
     OmNavigator_iface_tids
 };

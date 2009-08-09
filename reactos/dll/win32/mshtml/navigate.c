@@ -152,18 +152,21 @@ static nsresult NSAPI nsInputStream_Read(nsIInputStream *iface, char *aBuf, PRUi
                                          PRUint32 *_retval)
 {
     nsProtocolStream *This = NSINSTREAM_THIS(iface);
+    DWORD read = aCount;
 
     TRACE("(%p)->(%p %d %p)\n", This, aBuf, aCount, _retval);
 
-    /* Gecko always calls Read with big enough buffer */
-    if(aCount < This->buf_size)
-        FIXME("aCount < This->buf_size\n");
+    if(read > This->buf_size)
+        read = This->buf_size;
 
-    *_retval = This->buf_size;
-    if(This->buf_size)
-        memcpy(aBuf, This->buf, This->buf_size);
-    This->buf_size = 0;
+    if(read) {
+        memcpy(aBuf, This->buf, read);
+        if(read < This->buf_size)
+            memmove(This->buf, This->buf+read, This->buf_size-read);
+        This->buf_size -= read;
+    }
 
+    *_retval = read;
     return NS_OK;
 }
 

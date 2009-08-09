@@ -140,9 +140,9 @@ HKLM,"Software\Microsoft\Windows\CurrentVersion\URL\Prefixes","www",,"http://"
 
 
 [Settings.Reg]
-HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"http://www.reactos.org"
+HKCU,"Software\Microsoft\Internet Explorer\Main","Start Page",2,"http://www.winehq.org"
 HKCU,"Software\Microsoft\Internet Explorer\Main","Search Page",2,"http://www.google.com"
-HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"http://www.reactos.org"
+HKLM,"Software\Microsoft\Internet Explorer\Main","Default_Page_URL",2,"http://www.winehq.org"
 HKLM,"Software\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe",,,"%16422%\Internet Explorer\iexplore.exe"
 HKLM,"Software\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe","Path",,"%16422%\Internet Explorer;"
 

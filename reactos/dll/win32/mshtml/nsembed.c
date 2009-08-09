@@ -448,10 +448,6 @@ static BOOL init_xpcom(const PRUnichar *gre_path)
         if(NS_FAILED(nsres))
             ERR("AutoRegister(NULL) failed: %08x\n", nsres);
 
-        nsres = nsIComponentRegistrar_AutoRegister(registrar, gre_dir);
-        if(NS_FAILED(nsres))
-            ERR("AutoRegister(gre_dir) failed: %08x\n", nsres);
-
         init_nsio(pCompMgr, registrar);
     }else {
         ERR("NS_GetComponentRegistrar failed: %08x\n", nsres);
@@ -515,7 +511,7 @@ BOOL load_gecko(BOOL silent)
            || (install_wine_gecko(silent) && load_wine_gecko(gre_path)))
             ret = init_xpcom(gre_path);
         else
-           MESSAGE("Could not load Mozilla. HTML rendering will be disabled.\n");
+           MESSAGE("Could not load wine-gecko. HTML rendering will be disabled.\n");
     }else {
         ret = pCompMgr != NULL;
     }
@@ -883,8 +879,8 @@ void close_gecko(void)
     if(nsmem)
         nsIMemory_Release(nsmem);
 
-    if(hXPCOM)
-        FreeLibrary(hXPCOM);
+    /* Gecko doesn't really support being unloaded */
+    /* if (hXPCOM) FreeLibrary(hXPCOM); */
 }
 
 /**********************************************************
