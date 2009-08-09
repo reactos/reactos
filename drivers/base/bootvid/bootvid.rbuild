@@ -14,7 +14,7 @@
 		</directory>
 	</if>
 	<if property="ARCH" value="arm">
-        <directory name="arm">
+		<directory name="arm">
 			<file>bootvid.c</file>
 			<file>bootdata.c</file>
 		</directory>

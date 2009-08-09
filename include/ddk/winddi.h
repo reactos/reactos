@@ -540,11 +540,15 @@ typedef struct _FD_KERNINGPAIR {
   FWORD  fwdKern;
 } FD_KERNINGPAIR;
 
+#if defined(_X86_) && !defined(USERMODE_DRIVER)
 typedef struct _FLOATOBJ
 {
   ULONG  ul1;
   ULONG  ul2;
 } FLOATOBJ, *PFLOATOBJ;
+#else
+typedef FLOAT FLOATOBJ, *PFLOATOBJ;
+#endif
 
 typedef struct _FLOATOBJ_XFORM {
   FLOATOBJ  eM11;
@@ -2294,6 +2298,7 @@ EngWritePrinter(
   IN DWORD  cbBuf,
   OUT LPDWORD  pcWritten);
 
+#if defined(_X86_) && !defined(USERMODE_DRIVER)
 WIN32KAPI
 VOID
 APIENTRY
@@ -3802,12 +3807,6 @@ typedef BOOL
   IN BRUSHOBJ  *pbo,
   IN POINTL  *pptlBrushOrg,
   IN MIX  mix);
-
-typedef VOID 
-(APIENTRY *PFN_DrvMovePanning)(
-  IN LONG    x,
-  IN LONG    y,
-  IN FLONG   fl);
 
 typedef BOOL
 (APIENTRY *PFN_DrvPlgBlt)(

@@ -178,16 +178,19 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     InFlightRequest[0] = &FCB->ListenIrp;
     InFlightRequest[1] = &FCB->ReceiveIrp;
     InFlightRequest[2] = &FCB->SendIrp;
+    InFlightRequest[3] = &FCB->ConnectIrp;
 
     /* Return early here because we might be called in the mean time. */
     if( FCB->Critical ||
 	FCB->ListenIrp.InFlightRequest ||
 	FCB->ReceiveIrp.InFlightRequest ||
-	FCB->SendIrp.InFlightRequest ) {
-	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x)\n",
+	FCB->SendIrp.InFlightRequest ||
+	FCB->ConnectIrp.InFlightRequest ) {
+	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x %x)\n",
 				FCB->ListenIrp.InFlightRequest,
 				FCB->ReceiveIrp.InFlightRequest,
-				FCB->SendIrp.InFlightRequest));
+				FCB->SendIrp.InFlightRequest,
+				FCB->ConnectIrp.InFlightRequest));
         ReturnEarly = TRUE;
     }
 
@@ -196,7 +199,6 @@ VOID DestroySocket( PAFD_FCB FCB ) {
 
     /* Cancel our pending requests */
     for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
-	NTSTATUS Status = STATUS_NO_SUCH_FILE;
 	if( InFlightRequest[i]->InFlightRequest ) {
 	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
 				    i, InFlightRequest[i]->InFlightRequest));
