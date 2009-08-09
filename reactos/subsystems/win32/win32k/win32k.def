@@ -201,6 +201,9 @@ RtlUnicodeToMultiByteSize@12=NTOSKRNL.RtlUnicodeToMultiByteSize
 RtlUnwind@16=NTOSKRNL.RtlUnwind
 RtlUpcaseUnicodeChar@4=NTOSKRNL.RtlUpcaseUnicodeChar
 RtlUpcaseUnicodeToMultiByteN@20=NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
+XFORMOBJ_bApplyXform@20
+XFORMOBJ_iGetFloatObjXform@8
+XFORMOBJ_iGetXform@8
 _abnormal_termination=NTOSKRNL._abnormal_termination
 _except_handler2=NTOSKRNL._except_handler2
 _global_unwind2=NTOSKRNL._global_unwind2
