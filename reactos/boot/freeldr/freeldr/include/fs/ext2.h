@@ -104,6 +104,7 @@ struct ext2_sblock
   char volume_name[16];
   char last_mounted_on[64];
   ULONG compression_info;
+  ULONG padding[77];
 };
 
 /* The ext2 blockgroup.  */
