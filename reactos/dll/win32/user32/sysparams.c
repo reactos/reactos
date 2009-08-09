@@ -3314,9 +3314,10 @@ BOOL WINAPI SetProcessDPIAware( VOID )
 /***********************************************************************
  *              UpdatePerUserSystemParameters   (USER32.@)
  */
-BOOL WINAPI UpdatePerUserSystemParameters ( DWORD dwUnknown )
+BOOL WINAPI UpdatePerUserSystemParameters(DWORD dwReserved, BOOL bEnable)
+
 {
-    FIXME( "stub, param %d!\n", dwUnknown);
+    FIXME( "stub, params %d, %d!\n", dwReserved, bEnable);
 
     return TRUE;
 }
