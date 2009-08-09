@@ -138,6 +138,7 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
                        IN IDENTIFIER_FLAG Flags,
                        IN ULONG Key,
                        IN ULONG Affinity,
+                       IN PCHAR IdentifierString,
                        OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey)
 {
     PCONFIGURATION_COMPONENT_DATA ComponentData;
@@ -157,6 +158,13 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     Component = &ComponentData->ComponentEntry;
     Component->Class = Class;
     Component->Type = Type;
+    Component->Flags = Flags;
+    Component->Key = Key;
+    Component->Affinity = Affinity;
+    
+    /* Set identifier */
+    if (Identifier)
+        FldrSetIdentifier(ComponentData, Identifier);
     
     /* Return the child */
     *ComponentKey = ComponentData; 

@@ -393,6 +393,7 @@ VOID OfwCopyDeviceTree
          0,
          0,
          (ULONG)-1,
+         NULL,
          &NewKey);
 
     /* Add properties */

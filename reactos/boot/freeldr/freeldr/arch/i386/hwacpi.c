@@ -74,6 +74,7 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                0x0,
                                0x0,
                                0xFFFFFFFF,
+                               "ACPI BIOS",
                                &BiosKey);
 
         /* Get BIOS memory map */
@@ -116,8 +117,6 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         /* Increment bus number */
         (*BusNumber)++;
 
-        /* Set 'Identifier' value */
-        FldrSetIdentifier(BiosKey, "ACPI BIOS");
         MmHeapFree(PartialResourceList);
     }
 }

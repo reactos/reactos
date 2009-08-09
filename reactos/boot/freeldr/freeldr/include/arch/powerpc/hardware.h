@@ -39,13 +39,6 @@
 //
 VOID
 NTAPI
-FldrSetIdentifier(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN PCHAR Identifier
-);
-
-VOID
-NTAPI
 FldrCreateSystemKey(
     OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
 );
@@ -59,6 +52,7 @@ FldrCreateComponentKey(
     IN IDENTIFIER_FLAG Flags,
     IN ULONG Key,
     IN ULONG Affinity,
+    IN PCHAR IdentifierString,
     OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
 );
 

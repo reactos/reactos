@@ -160,10 +160,8 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
                              0x0,
                              0x0,
                              0xFFFFFFFF,
+                             "PCI Real-mode IRQ Routing Table",
                              &TableKey);
-
-      /* Set 'Identifier' value */
-      FldrSetIdentifier(TableKey, "PCI Real-mode IRQ Routing Table");
 
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
@@ -213,7 +211,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   ULONG Size;
   PCONFIGURATION_COMPONENT_DATA BusKey;
   ULONG i;
-  CHAR szPci[] = "PCI";
 
   /* Report the PCI BIOS */
   if (FindPciBios(&BusData))
@@ -225,13 +222,11 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                              0x0,
                              0x0,
                              0xFFFFFFFF,
+                             "PCI BIOS"
                              &BiosKey);
 
       /* Increment bus number */
       (*BusNumber)++;
-
-      /* Set 'Identifier' value */
-      FldrSetIdentifier(BiosKey, "PCI BIOS");
 
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
@@ -263,6 +258,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                  0x0,
                                  0x0,
                                  0xFFFFFFFF,
+                                 "PCI",
                                  &BusKey);
 
           /* Check if this is the first bus */
@@ -321,9 +317,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
           /* Increment bus number */
           (*BusNumber)++;
-
-          /* Set 'Identifier' value */
-          FldrSetIdentifier(BusKey, szPci);
       }
     }
 }

@@ -94,7 +94,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
 
 
 static VOID
-SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
+GetHarddiskIdentifier(PCHAR Identifier,
 		      ULONG DriveNumber)
 {
   PMASTER_BOOT_RECORD Mbr;
@@ -158,9 +158,6 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Identifier[18] = 'A';
   Identifier[19] = 0;
   DPRINTM(DPRINT_HWDETECT, "Identifier: %s\n", Identifier);
-
-  /* Set identifier */
-  FldrSetIdentifier(DiskKey, Identifier);
 }
 
 static VOID
@@ -212,6 +209,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                            Output | Input | Removable,
                            0,
                            0xFFFFFFFF,
+                           NULL,
                            &ControllerKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
     
@@ -268,6 +266,11 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
+        CHAR Identifier[20];
+
+        /* Get disk values */
+        GetHarddiskIdentifier(Identifier, 0x80 + i);
+
         /* Create disk key */
         FldrCreateComponentKey(ControllerKey,
                                PeripheralClass,
@@ -275,11 +278,11 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                                Output | Input,
                                0,
                                0xFFFFFFFF,
+                               Identifier,
                                &DiskKey);
         
         /* Set disk values */
         SetHarddiskConfigurationData(DiskKey, 0x80 + i);
-        SetHarddiskIdentifier(DiskKey, 0x80 + i);
     }
 }
 
@@ -297,13 +300,11 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                          0x0,
                          0x0,
                          0xFFFFFFFF,
+                         "ISA",
                          &BusKey);
 
   /* Increment bus number */
   (*BusNumber)++;
-
-  /* Set 'Identifier' value */
-  FldrSetIdentifier(BusKey, "ISA");
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
