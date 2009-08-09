@@ -38,6 +38,7 @@ extern HMODULE g_hModule;
 extern PGDI_TABLE_ENTRY GdiHandleTable;
 
 BOOL IsHandleValid(HGDIOBJ hobj);
+PVOID GetHandleUserData(HGDIOBJ hobj);
 DWORD Syscall(LPWSTR lpszFunction, int cParams, void* pParams);
 BOOL InitOsVersion();
 extern UINT g_OsIdx;

@@ -171,23 +171,28 @@ Test_NtGdiCreateDIBSection(PTESTINFO pti)
     pbih->biBitCount = 4;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(hbmp != 0);
+    if (hbmp) DeleteObject(hbmp);
 
     pbih->biBitCount = 8;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(hbmp != 0);
+    if (hbmp) DeleteObject(hbmp);
 
     cjHeader = pbih->biSize;
     pbih->biBitCount = 16;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(hbmp != 0);
+    if (hbmp) DeleteObject(hbmp);
 
     pbih->biBitCount = 24;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(hbmp != 0);
+    if (hbmp) DeleteObject(hbmp);
 
     pbih->biBitCount = 32;
     hbmp = NtGdiCreateDIBSection(hDC, NULL, 0, pbmi, 0, cjHeader, 0, 0, &pvBits);
     TEST(hbmp != 0);
+    if (hbmp) DeleteObject(hbmp);
 
     /* Test BI_BITFIELDS */
     cEntries = 3;

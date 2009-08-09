@@ -1,3 +1,41 @@
+
+INT
+Test_SelectDIBSection(PTESTINFO pti)
+{
+    HDC hdc;
+    HBITMAP hbmp;
+    struct
+    {
+        BITMAPINFOHEADER bmiHeader;
+        RGBQUAD          bmiColors[100]; 
+    } bmi;
+    PBITMAPINFO pbmi = (PBITMAPINFO)&bmi;
+    PVOID pvBits;
+
+    hdc = CreateCompatibleDC(0);
+    ASSERT(hdc);
+
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = 2;
+    bmi.bmiHeader.biHeight = 2;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 1;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage = 0;
+    bmi.bmiHeader.biXPelsPerMeter = 100;
+    bmi.bmiHeader.biYPelsPerMeter = 100;
+    bmi.bmiHeader.biClrUsed = 2;
+    bmi.bmiHeader.biClrImportant = 2;
+
+    hbmp = CreateDIBSection(hdc, pbmi, DIB_PAL_COLORS, &pvBits, NULL, 0);
+    ASSERT(hbmp);
+
+    TEST(NtGdiSelectBitmap(hdc, hbmp) != 0);
+
+    return 0;
+}
+
+
 INT
 Test_NtGdiSelectBitmap(PTESTINFO pti)
 {
@@ -67,6 +105,8 @@ Test_NtGdiSelectBitmap(PTESTINFO pti)
 	/* cleanup */
 	DeleteObject(hBmp);
 	DeleteDC(hDC);
+
+    Test_SelectDIBSection(pti);
 
 	return APISTATUS_NORMAL;
 }

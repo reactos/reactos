@@ -88,5 +88,61 @@ Test_NtUserSelectPalette(PTESTINFO pti)
 	TEST(hOldPal != 0);
 
 
+
+#if 0
+	RealizePalette(hDC);
+
+	GetClientRect(hWnd, &rect);
+	FillRect(hDC, &rect, GetSysColorBrush(COLOR_BTNSHADOW));
+
+	TEST(GetNearestColor(hDC, RGB(0,0,0)) == RGB(0,0,0));
+	TEST(GetNearestColor(hDC, RGB(0,0,1)) == RGB(0,0,1));
+
+	ReleaseDC(hWnd, hDC);
+	DestroyWindow(hWnd);
+	RECT rect;
+	HBITMAP hBmp;
+
+
+	BITMAPINFOHEADER bmih = {sizeof(BITMAPINFOHEADER), // biSize
+	                         3, // biWidth
+	                         3, // biHeight
+	                         1, // biPlanes
+	                         8, // biBitCount
+	                         BI_RGB, // biCompression
+	                         0, // biSizeImage
+	                         92, // biXPelsPerMeter
+	                         92, // biYPelsPerMeter
+	                         6,  // biClrUsed
+	                         6}; // biClrImportant
+	BYTE bits[3][3] = {{0,1,2},{3,4,5},{6,1,2}};
+
+	struct
+	{
+		BITMAPINFOHEADER bmih;
+		RGBQUAD colors[6];
+	} bmi = {{sizeof(BITMAPINFOHEADER),3,3,1,8,BI_RGB,0,92,92,6,6},
+	                  {{0,0,0,0},{255,255,255,0},{255,0,0,0},
+	                   {0,255,0,0},{0,0,255,0},{128,128,128,0}}};
+
+	hBmp = CreateDIBitmap(hCompDC, &bmih, CBM_INIT, &bits, (BITMAPINFO*)&bmi, DIB_RGB_COLORS);
+	ASSERT(hBmp);
+
+	SetLastError(0);
+	TEST(NtGdiSelectBitmap(hCompDC, hBmp));
+	hOldPal = NtUserSelectPalette(hCompDC, hPal, 0);
+	TEST(hOldPal != NULL);
+	RealizePalette(hCompDC);
+
+	TEST(GetNearestColor(hCompDC, RGB(0,0,0)) == RGB(0,0,0));
+	TEST(GetNearestColor(hCompDC, RGB(0,0,1)) == RGB(0,0,0));
+	TEST(GetNearestColor(hCompDC, RGB(100,0,0)) == RGB(0,0,0));
+	TEST(GetNearestColor(hCompDC, RGB(250,250,250)) == RGB(255,255,255));
+	TEST(GetNearestColor(hCompDC, RGB(120,100,110)) == RGB(128,128,128));
+
+printf("nearest = 0x%x\n", GetNearestColor(hCompDC, RGB(120,100,110)));
+#endif
+
+
 	return APISTATUS_NORMAL;
 }

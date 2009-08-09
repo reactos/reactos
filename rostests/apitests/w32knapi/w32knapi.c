@@ -29,6 +29,23 @@ IsHandleValid(HGDIOBJ hobj)
     return TRUE;
 }
 
+PVOID
+GetHandleUserData(HGDIOBJ hobj)
+{
+    USHORT Index = (ULONG_PTR)hobj;
+    PGDI_TABLE_ENTRY pentry = &GdiHandleTable[Index];
+
+    if (pentry->KernelData == NULL ||
+        pentry->KernelData < (PVOID)0x80000000 ||
+        (USHORT)pentry->FullUnique != (USHORT)((ULONG_PTR)hobj >> 16))
+    {
+        return NULL;
+    }
+
+    return pentry->UserData;
+}
+
+
 static DWORD WINAPI
 IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 {
