@@ -912,7 +912,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 	//
 
 	// Copy the old IDT
-	RtlCopyMemory(pIdt, (PVOID)OldIdt.Base, OldIdt.Limit);
+	RtlCopyMemory(pIdt, (PVOID)OldIdt.Base, OldIdt.Limit + 1);
 
 	// Mask interrupts
 	//asm("cli\n"); // they are already masked before enabling paged mode
