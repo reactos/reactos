@@ -250,3 +250,13 @@ EngUnmapFontFileFD(IN ULONG_PTR iFile)
 {
     UNIMPLEMENTED;
 }
+
+LARGE_INTEGER
+APIENTRY
+EngQueryFileTimeStamp(IN LPWSTR FileName)
+{
+   LARGE_INTEGER FileTime;
+   FileTime.QuadPart = 0;
+   UNIMPLEMENTED;
+   return FileTime;
+}

@@ -2,7 +2,7 @@
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys">
-	<importlibrary definition="win32k.def" />
+	<importlibrary definition="win32k.pspec" />
 	<define name="_WIN32K_" />
 
 	<include base="win32k">.</include>
