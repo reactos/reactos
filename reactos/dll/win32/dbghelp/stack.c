@@ -31,6 +31,7 @@
 #define WIN32_NO_STATUS
 #include "dbghelp_private.h"
 #include "winternl.h"
+#include <exception.h>
 #include "wine/winbase16.h"
 #include "wine/debug.h"
 
