@@ -627,7 +627,7 @@ DCB_BuildCommDCBAndTimeoutsW(LPCWSTR lpDef, LPDCB lpDCB, LPCOMMTIMEOUTS lpCommTi
 	DWORD dwErr;
 
 	dwErr = ERROR_INVALID_PARAMETER;
-	cchAscii = WideCharToMultiByte(CP_ACP, 0, lpDef, -1, NULL, 0, NULL, NULL);
+	cchAscii = WideCharToMultiByte(20127, 0, lpDef, -1, NULL, 0, NULL, NULL);
 
 	bRet = cchAscii > 0;
 
@@ -641,7 +641,7 @@ DCB_BuildCommDCBAndTimeoutsW(LPCWSTR lpDef, LPDCB lpDCB, LPCOMMTIMEOUTS lpCommTi
 		if(bRet)
 		{
 			bInvalidChars = FALSE;
-			cchAscii = WideCharToMultiByte(CP_ACP, 0, lpDef, -1, pszAscii, cchAscii, NULL, &bInvalidChars);
+			cchAscii = WideCharToMultiByte(20127, 0, lpDef, -1, pszAscii, cchAscii, NULL, &bInvalidChars);
 
 			bRet = cchAscii > 0 && !bInvalidChars;
 
