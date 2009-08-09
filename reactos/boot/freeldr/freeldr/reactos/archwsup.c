@@ -160,11 +160,11 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     Component->Type = Type;
     Component->Flags = Flags;
     Component->Key = Key;
-    Component->Affinity = Affinity;
+    Component->AffinityMask = Affinity;
     
     /* Set identifier */
-    if (Identifier)
-        FldrSetIdentifier(ComponentData, Identifier);
+    if (IdentifierString)
+        FldrSetIdentifier(ComponentData, IdentifierString);
     
     /* Return the child */
     *ComponentKey = ComponentData; 

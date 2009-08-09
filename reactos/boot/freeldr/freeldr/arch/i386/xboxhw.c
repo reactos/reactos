@@ -102,7 +102,6 @@ GetHarddiskIdentifier(PCHAR Identifier,
   ULONG i;
   ULONG Checksum;
   ULONG Signature;
-  CHAR Identifier[20];
   CHAR ArcName[256];
 
   /* Read the MBR */

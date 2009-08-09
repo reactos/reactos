@@ -222,7 +222,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                              0x0,
                              0x0,
                              0xFFFFFFFF,
-                             "PCI BIOS"
+                             "PCI BIOS",
                              &BiosKey);
 
       /* Increment bus number */
