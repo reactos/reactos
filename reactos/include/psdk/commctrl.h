@@ -132,7 +132,11 @@ VOID WINAPI InitMUILanguage (LANGID uiLang);
 /* callback constants */
 #define LPSTR_TEXTCALLBACKA    ((LPSTR)-1L)
 #define LPSTR_TEXTCALLBACKW    ((LPWSTR)-1L)
-#define LPSTR_TEXTCALLBACK WINELIB_NAME_AW(LPSTR_TEXTCALLBACK)
+#ifdef UNICODE
+#define LPSTR_TEXTCALLBACK LPSTR_TEXTCALLBACKW
+#else
+#define LPSTR_TEXTCALLBACK LPSTR_TEXTCALLBACKA
+#endif
 
 #define I_IMAGECALLBACK          (-1)
 #define I_IMAGENONE              (-2)
@@ -403,7 +407,6 @@ INT  WINAPI LBItemFromPt (HWND, POINT, BOOL);
 static const WCHAR UPDOWN_CLASSW[] = { 'm','s','c','t','l','s','_',
   'u','p','d','o','w','n','3','2',0 };
 #endif
-#define UPDOWN_CLASS            WINELIB_NAME_AW(UPDOWN_CLASS)
 
 typedef struct _UDACCEL
 {
@@ -472,7 +475,6 @@ HWND WINAPI CreateUpDownControl (DWORD, INT, INT, INT, INT,
 static const WCHAR PROGRESS_CLASSW[] = { 'm','s','c','t','l','s','_',
   'p','r','o','g','r','e','s','s','3','2',0 };
 #endif
-#define PROGRESS_CLASS      WINELIB_NAME_AW(PROGRESS_CLASS)
 
 #define PBM_SETRANGE        (WM_USER+1)
 #define PBM_SETPOS          (WM_USER+2)
@@ -725,7 +727,6 @@ int WINAPI DrawShadowText(HDC, LPCWSTR, UINT, RECT*, DWORD, COLORREF, COLORREF, 
 #else
 static const WCHAR WC_HEADERW[] = { 'S','y','s','H','e','a','d','e','r','3','2',0 };
 #endif
-#define WC_HEADER		WINELIB_NAME_AW(WC_HEADER)
 
 #define HDS_HORZ                0x0000
 #define HDS_BUTTONS             0x0002
@@ -1024,7 +1025,6 @@ typedef struct tagNMHDFILTERBTNCLICK
 #else
 static const WCHAR WC_BUTTONW[] = { 'B','u','t','t','o','n',0 };
 #endif
-#define WC_BUTTON WINELIB_NAME_AW(WC_BUTTON)
 
 #define BCN_FIRST               (0U-1250U)
 #define BCN_LAST                (0U-1350U)
@@ -1051,7 +1051,6 @@ typedef struct tagNMBCHOTITEM
 static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
   'W','i','n','d','o','w','3','2',0 };
 #endif
-#define TOOLBARCLASSNAME WINELIB_NAME_AW(TOOLBARCLASSNAME)
 
 #define CMB_MASKED              0x02
 
@@ -1618,7 +1617,41 @@ CreateMappedBitmap (HINSTANCE, INT_PTR, UINT, LPCOLORMAP, INT);
 static const WCHAR TOOLTIPS_CLASSW[] = { 't','o','o','l','t','i','p','s','_',
   'c','l','a','s','s','3','2',0 };
 #endif
-#define TOOLTIPS_CLASS          WINELIB_NAME_AW(TOOLTIPS_CLASS)
+
+#ifdef UNICODE
+#define UPDOWN_CLASS L"msctls_updown32"
+#define PROGRESS_CLASS L"msctls_progress32"
+#define WC_HEADER L"SysHeader32"
+#define WC_BUTTON L"Button"
+#define TOOLBARCLASSNAME L"ToolbarWindow32"
+#define TOOLTIPS_CLASS L"tooltips_class32"
+#else
+#define UPDOWN_CLASS "msctls_updown32"
+#define PROGRESS_CLASS "msctls_progress32"
+#define WC_HEADER "SysHeader32"
+#define WC_BUTTON "Button"
+#define TOOLBARCLASSNAME "ToolbarWindow32"
+#define TOOLTIPS_CLASS "tooltips_class32"
+#endif
+
+#if (_WIN32_WINNT >= 0x501)
+#define BUTTON_IMAGELIST_ALIGN_LEFT 0
+#define BUTTON_IMAGELIST_ALIGN_RIGHT 1
+#define BUTTON_IMAGELIST_ALIGN_TOP 2
+#define BUTTON_IMAGELIST_ALIGN_BOTTOM 3
+#define BUTTON_IMAGELIST_ALIGN_CENTER 4
+
+typedef struct
+{
+    HIMAGELIST himl;
+    RECT margin;
+    UINT uAlign;
+} BUTTON_IMAGELIST, *PBUTTON_IMAGELIST;
+
+#define BCM_FIRST   0x1600
+#define BCM_GETIDEALSIZE    (BCM_FIRST + 1)
+#define BCM_SETIMAGELIST    (BCM_FIRST + 2)
+#endif /* _WIN32_WINNT */
 
 #define INFOTIPSIZE             1024
 
@@ -2381,10 +2414,10 @@ static const WCHAR WC_TREEVIEWW[] = { 'S','y','s',
 #define TVIF_INTEGRAL         0x0080
 #define TVIF_DI_SETITEM	      0x1000
 
-#define TVI_ROOT              ((HTREEITEM)-65536)
-#define TVI_FIRST             ((HTREEITEM)-65535)
-#define TVI_LAST              ((HTREEITEM)-65534)
-#define TVI_SORT              ((HTREEITEM)-65533)
+#define TVI_ROOT              ((HTREEITEM)(ULONG_PTR)-0x10000)     /* -65536 */
+#define TVI_FIRST             ((HTREEITEM)(ULONG_PTR)-0x0FFFF)     /* -65535 */
+#define TVI_LAST              ((HTREEITEM)(ULONG_PTR)-0x0FFFE)     /* -65534 */
+#define TVI_SORT              ((HTREEITEM)(ULONG_PTR)-0x0FFFD)     /* -65533 */
 
 #define TVIS_FOCUSED          0x0001
 #define TVIS_SELECTED         0x0002
@@ -2781,7 +2814,7 @@ typedef struct tagTVKEYDOWN
 (LPARAM)(HTREEITEM)(hitem))
 
 #define TreeView_EnsureVisible(hwnd, hitem) \
-    (BOOL)SNDMSGA((hwnd), TVM_ENSUREVISIBLE, 0, (LPARAM)(UINT)(hitem))
+    (BOOL)SNDMSGA((hwnd), TVM_ENSUREVISIBLE, 0, (LPARAM)(HTREEITEM)(hitem))
 
 #define TreeView_SortChildrenCB(hwnd, psort, recurse) \
     (BOOL)SNDMSGA((hwnd), TVM_SORTCHILDRENCB, (WPARAM)recurse, \
@@ -3715,7 +3748,7 @@ typedef struct NMLVSCROLL
 { LVITEMA _LVi; _LVi.state = data; _LVi.stateMask = dataMask;\
   SNDMSGA(hwnd, LVM_SETITEMSTATE, (WPARAM)(UINT)i, (LPARAM) (LPLVITEMA)&_LVi);}
 #define ListView_GetItemState(hwnd,i,mask) \
-    (UINT)SNDMSGA((hwnd),LVM_GETITEMSTATE,(WPARAM)(UINT)(i),(LPARAM)(UINT)(mask))
+    (BOOL)SNDMSGA((hwnd),LVM_GETITEMSTATE,(WPARAM)(UINT)(i),(LPARAM)(UINT)(mask))
 #define ListView_GetCountPerPage(hwnd) \
     (BOOL)SNDMSGW((hwnd),LVM_GETCOUNTPERPAGE,0,0L)
 #define ListView_GetImageList(hwnd,iImageList) \
