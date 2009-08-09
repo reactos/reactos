@@ -1565,21 +1565,21 @@ static void testSHGetFolderPathAndSubDirA(void)
     }
     if(FAILED(pSHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, appdata)))
     {
-        skip("SHGetFolderPathA failed for CSIDL_LOCAL_APPDATA!\n");
+        win_skip("SHGetFolderPathA failed for CSIDL_LOCAL_APPDATA!\n");
         return;
     }
 
     sprintf(testpath, "%s\\%s", appdata, winetemp);
     delret = RemoveDirectoryA(testpath);
     if(!delret && (ERROR_PATH_NOT_FOUND != GetLastError()) ) {
-        skip("RemoveDirectoryA(%s) failed with error %u\n", testpath, GetLastError());
+        win_skip("RemoveDirectoryA(%s) failed with error %u\n", testpath, GetLastError());
         return;
     }
 
     sprintf(testpath, "%s\\%s", appdata, wine);
     delret = RemoveDirectoryA(testpath);
     if(!delret && (ERROR_PATH_NOT_FOUND != GetLastError()) && (ERROR_FILE_NOT_FOUND != GetLastError())) {
-        skip("RemoveDirectoryA(%s) failed with error %u\n", testpath, GetLastError());
+        win_skip("RemoveDirectoryA(%s) failed with error %u\n", testpath, GetLastError());
         return;
     }
 
@@ -1695,7 +1695,7 @@ static void test_LocalizedNames(void)
     len = lstrlenA(cCurrDirA);
 
     if (len == 0) {
-        trace("GetCurrentDirectoryA returned empty string. Skipping test_LocalizedNames\n");
+        win_skip("GetCurrentDirectoryA returned empty string. Skipping test_LocalizedNames\n");
         goto cleanup;
     }
     if(cCurrDirA[len-1] == '\\')
@@ -1944,12 +1944,12 @@ START_TEST(shlfolder)
     if(pSHGetFolderPathAndSubDirA)
         testSHGetFolderPathAndSubDirA();
     else
-        skip("SHGetFolderPathAndSubDirA not present\n");
+        win_skip("SHGetFolderPathAndSubDirA not present\n");
     test_LocalizedNames();
     if(pSHCreateShellItem)
         test_SHCreateShellItem();
     else
-        win_skip("test_SHCreateShellItem not present\n");
+        win_skip("SHCreateShellItem not present\n");
 
     OleUninitialize();
 }

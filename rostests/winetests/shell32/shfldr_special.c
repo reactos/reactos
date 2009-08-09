@@ -46,7 +46,6 @@ static void test_parse_for_entire_network(void)
     LPITEMIDLIST pidl;
     DWORD attr = ~0;
     DWORD expected_attr;
-    DWORD alter_attr;
 
     hr = SHGetDesktopFolder(&psfDesktop);
     ok(hr == S_OK, "SHGetDesktopFolder failed with error 0x%x\n", hr);
@@ -70,7 +69,9 @@ static void test_parse_for_entire_network(void)
     attr = ~0;
 
     hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL, entire_network_path, &eaten, &pidl, &attr);
-    if (hr == HRESULT_FROM_WIN32(ERROR_BAD_NET_NAME) || hr == HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER))
+    if (hr == HRESULT_FROM_WIN32(ERROR_BAD_NET_NAME) ||
+        hr == HRESULT_FROM_WIN32(ERROR_NO_NET_OR_BAD_PATH) ||
+        hr == HRESULT_FROM_WIN32(ERROR_INVALID_PARAMETER))
     {
         win_skip("'EntireNetwork' is not available on Win9x, NT4 and Vista\n");
         return;
@@ -78,12 +79,12 @@ static void test_parse_for_entire_network(void)
     ok(hr == S_OK, "IShellFolder_ParseDisplayName failed with error 0x%x\n", hr);
     todo_wine
     ok(eaten == 0xdeadbeef, "eaten should not have been set to %u\n", eaten);
-    expected_attr = SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|SFGAO_STORAGEANCESTOR|SFGAO_HASPROPSHEET|SFGAO_CANLINK;
-    alter_attr = (expected_attr & (~SFGAO_STORAGEANCESTOR)) | SFGAO_STREAM;
+    expected_attr = SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|SFGAO_HASPROPSHEET|SFGAO_CANLINK;
     todo_wine
-    ok(attr == expected_attr ||
-       attr == alter_attr, /* win2k */
-       "attr should be 0x%x or 0x%x, not 0x%x\n", expected_attr, alter_attr, attr);
+    ok(attr == expected_attr || /* winme, nt4 */
+       attr == (expected_attr | SFGAO_STREAM) || /* win2k */
+       attr == (expected_attr | SFGAO_STORAGEANCESTOR),  /* others */
+       "attr should be 0x%x, not 0x%x\n", expected_attr, attr);
 
     ILFree(pidl);
 }

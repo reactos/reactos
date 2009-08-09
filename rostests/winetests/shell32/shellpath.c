@@ -89,6 +89,7 @@ static HRESULT (WINAPI *pSHGetSpecialFolderLocation)(HWND, int, LPITEMIDLIST *);
 static LPITEMIDLIST (WINAPI *pILFindLastID)(LPCITEMIDLIST);
 static int (WINAPI *pSHFileOperationA)(LPSHFILEOPSTRUCTA);
 static HRESULT (WINAPI *pSHGetMalloc)(LPMALLOC *);
+static UINT (WINAPI *pGetSystemWow64DirectoryA)(LPSTR,UINT);
 static DLLVERSIONINFO shellVersion = { 0 };
 static LPMALLOC pMalloc;
 static const BYTE guidType[] = { PT_GUID };
@@ -684,10 +685,17 @@ static void testSystemDir(void)
          "GetSystemDirectory returns %s SHGetSpecialFolderPath returns %s\n",
          systemDir, systemShellPath);
     }
-    /* CSIDL_SYSTEMX86 isn't checked in the same way, since it's different
-     * on Win64 (and non-x86 Windows systems, if there are any still in
-     * existence) than on Win32.
-     */
+
+    if (!pGetSystemWow64DirectoryA || !pGetSystemWow64DirectoryA(systemDir, sizeof(systemDir)))
+        GetSystemDirectoryA(systemDir, sizeof(systemDir));
+    myPathRemoveBackslashA(systemDir);
+    if (pSHGetSpecialFolderPathA(NULL, systemShellPath, CSIDL_SYSTEMX86, FALSE))
+    {
+        myPathRemoveBackslashA(systemShellPath);
+        ok(!lstrcmpiA(systemDir, systemShellPath),
+         "GetSystemDirectory returns %s SHGetSpecialFolderPath returns %s\n",
+         systemDir, systemShellPath);
+    }
 }
 
 /* Globals used by subprocesses */
@@ -871,6 +879,8 @@ START_TEST(shellpath)
     if (!init()) return;
 
     loadShell32();
+    pGetSystemWow64DirectoryA = (void *)GetProcAddress( GetModuleHandleA("kernel32.dll"),
+                                                        "GetSystemWow64DirectoryA" );
 
     if (myARGC >= 3)
         doChild(myARGV[2]);
