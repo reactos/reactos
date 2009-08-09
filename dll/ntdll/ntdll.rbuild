@@ -6,7 +6,7 @@
 	</module>
 	<module name="ntdll" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_NTDLL}" installbase="system32" installname="ntdll.dll" iscrt="yes">
 		<bootstrap installbase="$(CDOUTPUT)/system32" />
-		<importlibrary definition="def/ntdll.def" />
+		<importlibrary definition="def/ntdll_$(ARCH).def" />
 		<include base="ntdll">include</include>
 		<include base="ntdll" root="intermediate"></include>
 		<include base="ReactOS">include/reactos/subsys</include>
