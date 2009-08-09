@@ -232,9 +232,7 @@ typedef DWORD FLONG;
 #define C_ASSERT(e) typedef char __C_ASSERT_JOIN(__C_ASSERT__, __LINE__)[(e) ? 1 : -1]
 
 
-#ifdef __GNUC__
 #include "intrin.h"
-#endif
 
 #define NTAPI __stdcall
 #include <basetsd.h>
@@ -4892,9 +4890,6 @@ extern struct _TEB * NtCurrentTeb(void);
 #elif defined(_MSC_VER)
 
 #if (_MSC_FULL_VER >= 13012035)
-
-unsigned long __readfsdword(const unsigned long Offset);
-#pragma intrinsic(__readfsdword)
 
 __inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
 __inline struct _TEB * NtCurrentTeb(void) { return (struct _TEB *)(ULONG_PTR)__readfsdword(0x18); }

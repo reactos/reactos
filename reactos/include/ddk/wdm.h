@@ -13,9 +13,7 @@
 #include <guiddef.h>
 #endif /* GUID_DEFINED */
 
-#ifdef __GNUC__
 #include "intrin.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {

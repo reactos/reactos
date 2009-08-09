@@ -31,27 +31,7 @@ extern "C" {
 #include <ntdef.h>
 #include <ntstatus.h>
 
-#ifdef __GNUC__
 #include "intrin.h"
-#endif
-
-#ifdef _MSC_VER
-//
-// FIXME: MSVC Intrinsics
-//
-unsigned char __readfsbyte(const unsigned long Offset);
-#pragma intrinsic(__readfsbyte)
-long _InterlockedExchange(volatile long * const Target, const long Value);
-#pragma intrinsic(_InterlockedExchange)
-long _InterlockedExchangeAdd(volatile long * const Addend, const long Value);
-#pragma intrinsic(_InterlockedExchangeAdd)
-long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
-#pragma intrinsic(_InterlockedCompareExchange)
-long _InterlockedDecrement(volatile long * const lpAddend);
-#pragma intrinsic(_InterlockedDecrement)
-long _InterlockedIncrement(volatile long * const lpAddend);
-#pragma intrinsic(_InterlockedIncrement)
-#endif
 
 #if !defined(_NTHAL_)
 #define NTHALAPI DECLSPEC_IMPORT
