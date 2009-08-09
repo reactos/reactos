@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" makefile="makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="makefile-arm.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="config-arm.rbuild">
 		<xi:fallback>
 			<xi:include href="config-arm.template.rbuild" />
@@ -66,6 +66,7 @@
 		<compilerflag>-O3</compilerflag>
 	</if>
 
+	<define name="__MSVCRT__"/>
 	<compilerflag>-Wno-attributes</compilerflag>
 	<compilerflag>-fno-strict-aliasing</compilerflag>
 	<linkerflag>--strip-debug</linkerflag>
@@ -115,9 +116,18 @@
 				<xi:include href="lib/sdk/crt/crt.rbuild" />
 				<xi:include href="lib/sdk/crt/libcntpr.rbuild" />
 			</directory>
+			<directory name="nt">
+				<xi:include href="lib/sdk/nt/nt.rbuild" />
+			</directory>
 			<directory name="wdmguid">
 				<xi:include href="lib/sdk/wdmguid/wdmguid.rbuild" />
 			</directory>
+		</directory>
+		<directory name="ntdllsys">
+			<xi:include href="lib/ntdllsys/ntdllsys.rbuild" />
+		</directory>
+		<directory name="smlib">
+			<xi:include href="lib/smlib/smlib.rbuild" />
 		</directory>
 	</directory>
 	<directory name="include">
@@ -154,8 +164,8 @@
 			</directory>
 		</directory>
 		<directory name="filesystems">
-			<directory name="cdfs">
-				<xi:include href="drivers/filesystems/cdfs/cdfs.rbuild" />
+			<directory name="fastfat">
+				<xi:include href="drivers/filesystems/fastfat/vfatfs.rbuild" />
 			</directory>
 		</directory>
 		<directory name="base">
@@ -166,5 +176,17 @@
 				<xi:include href="drivers/base/bootvid/bootvid.rbuild" />
 			</directory>
 		</directory>
-	</directory>	
+	</directory>
+	<directory name="dll">
+		<directory name="ntdll">
+			<xi:include href="dll/ntdll/ntdll.rbuild" />
+		</directory>	
+	</directory>
+	<directory name="base">
+		<directory name="system">
+            <directory name="smss">
+                <xi:include href="base/system/smss/smss.rbuild" />
+            </directory>	
+		</directory>	
+	</directory>
 </project>
