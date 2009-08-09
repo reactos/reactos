@@ -4322,7 +4322,7 @@ HDEVNOTIFY WINAPI RegisterDeviceNotificationA(HANDLE,LPVOID,DWORD);
 HDEVNOTIFY WINAPI RegisterDeviceNotificationW(HANDLE,LPVOID,DWORD);
 #endif
 BOOL WINAPI RegisterHotKey(HWND,int,UINT,UINT);
-BOOL WINAPI RegisterLogonProcess(HANDLE,BOOL);
+BOOL WINAPI RegisterLogonProcess(DWORD,BOOL);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI RegisterRawInputDevices(PRAWINPUTDEVICE,UINT,UINT);
 #endif

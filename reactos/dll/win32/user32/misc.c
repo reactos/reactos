@@ -259,9 +259,9 @@ DWORD WINAPI SetWindowStationUser(DWORD x1,DWORD x2)
 /***********************************************************************
  *		RegisterLogonProcess (USER32.@)
  */
-BOOL WINAPI RegisterLogonProcess(HANDLE hprocess,BOOL x)
+BOOL WINAPI RegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
-    FIXME("(%p,%d),stub!\n",hprocess,x);
+    FIXME("(%d,%d),stub!\n",dwProcessId,bRegister);
     return 1;
 }
 
