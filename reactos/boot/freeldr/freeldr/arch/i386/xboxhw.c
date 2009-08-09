@@ -207,18 +207,13 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
               (int)DiskCount, (DiskCount == 1) ? "": "s");
     
     FldrCreateComponentKey(BusKey,
-                           L"DiskController",
-                           0,
                            ControllerClass,
                            DiskController,
+                           Output | Input | Removable,
+                           0,
+                           0xFFFFFFFF,
                            &ControllerKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
-    
-    /* Set 'ComponentInformation' value */
-    FldrSetComponentInformation(ControllerKey,
-                                Output | Input | Removable,
-                                0,
-                                0xFFFFFFFF);
     
     //DetectBiosFloppyController(BusKey, ControllerKey);
     
@@ -275,17 +270,12 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     {
         /* Create disk key */
         FldrCreateComponentKey(ControllerKey,
-                               L"DiskPeripheral",
-                               i,
                                PeripheralClass,
                                DiskPeripheral,
+                               Output | Input,
+                               0,
+                               0xFFFFFFFF,
                                &DiskKey);
-        
-        /* Set 'ComponentInformation' value */
-        FldrSetComponentInformation(DiskKey,
-                                    Output | Input,
-                                    0,
-                                    0xFFFFFFFF);
         
         /* Set disk values */
         SetHarddiskConfigurationData(DiskKey, 0x80 + i);
@@ -302,17 +292,12 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
   /* Create new bus key */
   FldrCreateComponentKey(SystemKey,
-                         L"MultifunctionAdapter",
-                         *BusNumber,
                          AdapterClass,
                          MultiFunctionAdapter,
+                         0x0,
+                         0x0,
+                         0xFFFFFFFF,
                          &BusKey);
-
-  /* Set 'Component Information' value similar to my NT4 box */
-  FldrSetComponentInformation(BusKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
 
   /* Increment bus number */
   (*BusNumber)++;
@@ -359,12 +344,6 @@ XboxHwDetect(VOID)
 
   /* Create the 'System' key */
   FldrCreateSystemKey(&SystemKey);
-
-  /* Set empty component information */
-  FldrSetComponentInformation(SystemKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
 
   /* TODO: Build actual xbox's hardware configuration tree */
   DetectIsaBios(SystemKey, &BusNumber);

@@ -155,17 +155,12 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
       DPRINTM(DPRINT_HWDETECT, "Table size: %u\n", Table->Size);
 
       FldrCreateComponentKey(BusKey,
-                             L"RealModeIrqRoutingTable",
-                             0,
                              PeripheralClass,
                              RealModeIrqRoutingTable,
+                             0x0,
+                             0x0,
+                             0xFFFFFFFF,
                              &TableKey);
-
-      /* Set 'Component Information' */
-      FldrSetComponentInformation(TableKey,
-                                  0x0,
-                                  0x0,
-                                  0xFFFFFFFF);
 
       /* Set 'Identifier' value */
       FldrSetIdentifier(TableKey, "PCI Real-mode IRQ Routing Table");
@@ -225,17 +220,12 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
       /* Create new bus key */
       FldrCreateComponentKey(SystemKey,
-                             L"MultifunctionAdapter",
-                             *BusNumber,
                              AdapterClass,
                              MultiFunctionAdapter,
+                             0x0,
+                             0x0,
+                             0xFFFFFFFF,
                              &BiosKey);
-
-      /* Set 'Component Information' */
-      FldrSetComponentInformation(BiosKey,
-                                  0x0,
-                                  0x0,
-                                  0xFFFFFFFF);
 
       /* Increment bus number */
       (*BusNumber)++;
@@ -268,17 +258,12 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       {
           /* Create the bus key */
           FldrCreateComponentKey(SystemKey,
-                                 L"MultifunctionAdapter",
-                                 *BusNumber,
                                  AdapterClass,
                                  MultiFunctionAdapter,
+                                 0x0,
+                                 0x0,
+                                 0xFFFFFFFF,
                                  &BusKey);
-
-          /* Set 'Component Information' */
-          FldrSetComponentInformation(BusKey,
-                                      0x0,
-                                      0x0,
-                                      0xFFFFFFFF);
 
           /* Check if this is the first bus */
           if (i == 0)

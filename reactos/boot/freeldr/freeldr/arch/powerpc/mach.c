@@ -388,13 +388,12 @@ VOID OfwCopyDeviceTree
     /* Create a key for this device */
     FldrCreateComponentKey
         (ParentKey,
-         wide_name,
-         0,
          AdapterClass,
          MultiFunctionAdapter,
+         0,
+         0,
+         (ULONG)-1,
          &NewKey);
-
-    FldrSetComponentInformation(NewKey, 0, 0, (ULONG)-1);
 
     /* Add properties */
     for (prev_name = ""; ofw_nextprop(node, prev_name, cur_name) == 1; )
@@ -451,8 +450,6 @@ PCONFIGURATION_COMPONENT_DATA PpcHwDetect() {
     int node = ofw_finddevice("/");
 
     FldrCreateSystemKey(&RootKey);
-
-    FldrSetComponentInformation(RootKey, 0, 0, (ULONG)-1);
 
     OfwCopyDeviceTree(RootKey,"/",node,&BusNumber,&DiskController,&DiskNumber);
     return RootKey;

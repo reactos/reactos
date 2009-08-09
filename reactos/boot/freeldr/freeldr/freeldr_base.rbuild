@@ -11,6 +11,10 @@
 		<compilerflag>-fno-inline</compilerflag>
 		<compilerflag>-fno-zero-initialized-in-bss</compilerflag>
 	</group>
+	<directory name="arcemul">
+		<file>component.c</file>
+		<file>time.c</file>
+	</directory>
 	<directory name="cache">
 		<file>blocklist.c</file>
 		<file>cache.c</file>

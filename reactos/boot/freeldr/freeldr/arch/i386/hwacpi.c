@@ -69,17 +69,12 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
         /* Create new bus key */
         FldrCreateComponentKey(SystemKey,
-                               L"MultifunctionAdapter",
-                               *BusNumber,
                                AdapterClass,
                                MultiFunctionAdapter,
+                               0x0,
+                               0x0,
+                               0xFFFFFFFF,
                                &BiosKey);
-
-        /* Set 'Component Information' */
-        FldrSetComponentInformation(BiosKey,
-                                    0x0,
-                                    0x0,
-                                    0xFFFFFFFF);
 
         /* Get BIOS memory map */
         RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);

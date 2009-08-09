@@ -39,15 +39,6 @@
 //
 VOID
 NTAPI
-FldrSetComponentInformation(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN IDENTIFIER_FLAG Flags,
-    IN ULONG Key,
-    IN ULONG Affinity
-);
-
-VOID
-NTAPI
 FldrSetIdentifier(
     IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
     IN PCHAR Identifier
@@ -63,10 +54,11 @@ VOID
 NTAPI
 FldrCreateComponentKey(
     IN PCONFIGURATION_COMPONENT_DATA SystemKey,
-    IN PWCHAR BusName,
-    IN ULONG BusNumber,
     IN CONFIGURATION_CLASS Class,
     IN CONFIGURATION_TYPE Type,
+    IN IDENTIFIER_FLAG Flags,
+    IN ULONG Key,
+    IN ULONG Affinity,
     OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
 );
 

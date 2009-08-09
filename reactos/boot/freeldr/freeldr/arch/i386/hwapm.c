@@ -63,17 +63,12 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     {
         /* Create new bus key */
         FldrCreateComponentKey(SystemKey,
-                               L"MultifunctionAdapter",
-                               *BusNumber,
                                AdapterClass,
                                MultiFunctionAdapter,
+                               0x0,
+                               0x0,
+                               0xFFFFFFFF,
                                &BiosKey);
-
-        /* Set 'Component Information' */
-        FldrSetComponentInformation(BiosKey,
-                                    0x0,
-                                    0x0,
-                                    0xFFFFFFFF);
 
         /* Set 'Configuration Data' value */
         memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
