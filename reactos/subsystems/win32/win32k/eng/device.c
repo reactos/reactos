@@ -4,14 +4,145 @@
  * PURPOSE:           GDI Driver Device Functions
  * FILE:              subsys/win32k/eng/device.c
  * PROGRAMER:         Jason Filby
- * REVISION HISTORY:
- *                 3/7/1999: Created
+ *                    Timo Kreuzer
  */
 
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
+
+static
+DWORD
+EngpFileIoRequest(
+    PFILE_OBJECT pFileObject,
+    ULONG   ulMajorFunction,
+    LPVOID  lpBuffer,
+    DWORD   nBufferSize,
+    ULONGLONG  ullStartOffset,
+    OUT LPDWORD lpInformation)
+{
+    PDEVICE_OBJECT pDeviceObject;
+    KEVENT Event;
+    PIRP pIrp;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+    LARGE_INTEGER liStartOffset;
+
+    /* Get corresponding device object */
+    pDeviceObject = IoGetRelatedDeviceObject(pFileObject);
+    if (!pDeviceObject)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Initialize an event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* Build IPR */
+    liStartOffset.QuadPart = ullStartOffset;
+    pIrp = IoBuildSynchronousFsdRequest(ulMajorFunction,
+                                        pDeviceObject,
+                                        lpBuffer,
+                                        nBufferSize,
+                                        &liStartOffset,
+                                        &Event,
+                                        &Iosb);
+    if (!pIrp)
+    {
+        return FALSE;
+    }
+
+    /* Call the driver */
+    Status = IoCallDriver(pDeviceObject, pIrp);
+
+    /* Wait if neccessary */
+    if (STATUS_PENDING == Status)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+        Status = Iosb.Status;
+    }
+
+    /* Return information to the caller about the operation. */
+    *lpInformation = Iosb.Information;
+
+    return NT_SUCCESS(Status);
+}
+
+VOID
+APIENTRY
+EngFileWrite(
+    IN PFILE_OBJECT pFileObject,
+    IN PVOID lpBuffer,
+    IN SIZE_T nLength,
+    IN PSIZE_T lpBytesWritten)
+{
+    EngpFileIoRequest(pFileObject,
+                      IRP_MJ_WRITE,
+                      lpBuffer,
+                      nLength,
+                      0,
+                      lpBytesWritten);
+}
+
+NTSTATUS
+APIENTRY
+EngFileIoControl(
+    IN PFILE_OBJECT pFileObject,
+    IN DWORD dwIoControlCode,
+    IN PVOID lpInBuffer,
+    IN SIZE_T nInBufferSize,
+    OUT PVOID lpOutBuffer,
+    IN SIZE_T nOutBufferSize,
+    OUT LPDWORD lpInformation)
+{
+    PDEVICE_OBJECT pDeviceObject;
+    KEVENT Event;
+    PIRP pIrp;
+    IO_STATUS_BLOCK Iosb;
+    NTSTATUS Status;
+
+    /* Get corresponding device object */
+    pDeviceObject = IoGetRelatedDeviceObject(pFileObject);
+    if (!pDeviceObject)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Initialize an event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* Build IO control IPR */
+    pIrp = IoBuildDeviceIoControlRequest(dwIoControlCode,
+                                         pDeviceObject,
+                                         lpInBuffer,
+                                         nInBufferSize,
+                                         lpOutBuffer,
+                                         nOutBufferSize,
+                                         FALSE,
+                                         &Event,
+                                         &Iosb);
+    if (!pIrp)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Call the driver */
+    Status = IoCallDriver(pDeviceObject, pIrp);
+
+    /* Wait if neccessary */
+    if (Status == STATUS_PENDING)
+    {
+        KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+        Status = Iosb.Status;
+    }
+
+    /* Return information to the caller about the operation. */
+    *lpInformation = Iosb.Information;
+
+    /* This function returns NTSTATUS */
+    return Status;
+}
 
 /*
  * @implemented

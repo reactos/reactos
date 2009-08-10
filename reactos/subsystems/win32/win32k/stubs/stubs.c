@@ -2796,29 +2796,6 @@ EngAllocSectionMem(IN PVOID SectionObject,
     return NULL;
 }
 
-NTSTATUS
-APIENTRY
-EngFileIoControl(IN PFILE_OBJECT FileObject,
-                 IN ULONG IoControlCode,
-                 IN PVOID InputBuffer,
-                 IN SIZE_T InputBufferLength,
-                 OUT PVOID OutputBuffer,
-                 IN SIZE_T OutputBufferLength,
-                 OUT PULONG Information)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-VOID
-APIENTRY
-EngFileWrite(IN PFILE_OBJECT FileObject,
-             IN PVOID Buffer,
-             IN SIZE_T Length,
-             IN PSIZE_T BytesWritten)
-{
-    UNIMPLEMENTED;
-}
 
 BOOLEAN
 APIENTRY
