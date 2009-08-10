@@ -3747,8 +3747,8 @@ KsGetParent(
     );
 
 
-PKSFILTERFACTORY
 static
+PKSFILTERFACTORY
 __inline
 KsFilterGetParentFilterFactory(
     IN PKSFILTER Filter
@@ -3756,6 +3756,17 @@ KsFilterGetParentFilterFactory(
 {
     return (PKSFILTERFACTORY) KsGetParent((PVOID) Filter);
 }
+
+static
+PKSDEVICE
+__inline
+KsFilterFactoryGetParentDevice(
+    IN PKSFILTERFACTORY FilterFactory
+    )
+{
+    return (PKSDEVICE) KsGetParent((PVOID) FilterFactory);
+}
+
 
 
 #define KsDeleteFilterFactory(FilterFactory)                                           \
