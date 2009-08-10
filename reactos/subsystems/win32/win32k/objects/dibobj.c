@@ -19,6 +19,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#if 0
+#include "dibbmp.c"
+#else
 #include <w32k.h>
 
 #define NDEBUG
@@ -1734,5 +1737,7 @@ BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType)
 
     return hPal;
 }
+
+#endif
 
 /* EOF */

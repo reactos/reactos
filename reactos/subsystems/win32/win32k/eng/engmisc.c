@@ -222,20 +222,6 @@ IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
 }
 
 HANDLE APIENTRY
-EngGetCurrentProcessId(VOID)
-{
-  /* http://www.osr.com/ddk/graphics/gdifncs_5ovb.htm */
-  return PsGetCurrentProcessId();
-}
-
-HANDLE APIENTRY
-EngGetCurrentThreadId(VOID)
-{
-  /* http://www.osr.com/ddk/graphics/gdifncs_25rb.htm */
-  return PsGetCurrentThreadId();
-}
-
-HANDLE APIENTRY
 EngGetProcessHandle(VOID)
 {
   /* http://www.osr.com/ddk/graphics/gdifncs_3tif.htm
@@ -252,5 +238,58 @@ EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
     /* Forward to kernel */
     RtlGetDefaultCodePage(AnsiCodePage, OemCodePage);
 }
+
+BOOL
+APIENTRY
+EngQuerySystemAttribute(
+   IN ENG_SYSTEM_ATTRIBUTE CapNum,
+   OUT PDWORD pCapability)
+{
+    SYSTEM_BASIC_INFORMATION sbi;
+    SYSTEM_PROCESSOR_INFORMATION spi;
+
+    switch (CapNum)
+    {
+        case EngNumberOfProcessors:
+            NtQuerySystemInformation(SystemBasicInformation,
+                                     &sbi,
+                                     sizeof(SYSTEM_BASIC_INFORMATION),
+                                     NULL);
+            *pCapability = sbi.NumberOfProcessors;
+            return TRUE;
+
+        case EngProcessorFeature:
+            NtQuerySystemInformation(SystemProcessorInformation,
+                                     &spi,
+                                     sizeof(SYSTEM_PROCESSOR_INFORMATION),
+                                     NULL);
+            *pCapability = spi.ProcessorFeatureBits;
+            return TRUE;
+
+        default:
+            break;
+    }
+
+    return FALSE;
+}
+
+ULONGLONG
+APIENTRY
+EngGetTickCount(VOID)
+{
+    ULONG Multiplier;
+    LARGE_INTEGER TickCount;
+
+    /* Get the multiplier and current tick count */
+    KeQueryTickCount(&TickCount);
+    Multiplier = SharedUserData->TickCountMultiplier;
+
+    /* Convert to milliseconds and return */
+    return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
+            (Multiplier * (TickCount.HighPart << 8)));
+}
+
+
+
 
 /* EOF */

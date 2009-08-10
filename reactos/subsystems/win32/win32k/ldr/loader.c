@@ -243,27 +243,6 @@ EngLoadImage (LPWSTR DriverName)
 	return hImageHandle;
 }
 
-
-/*
- * @unimplemented
- */
-HANDLE
-APIENTRY
-EngLoadModule(LPWSTR ModuleName)
-{
-  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
-  NTSTATUS Status;
-
-  // FIXME: should load as readonly
-
-  RtlInitUnicodeString (&GdiDriverInfo.DriverName, ModuleName);
-  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation,
-    &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
-  if (!NT_SUCCESS(Status)) return NULL;
-
-  return (HANDLE)GdiDriverInfo.ImageAddress;
-}
-
 VOID
 APIENTRY
 EngUnloadImage ( IN HANDLE hModule )

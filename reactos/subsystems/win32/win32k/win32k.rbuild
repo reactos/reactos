@@ -65,6 +65,7 @@
 		</if>
 		<file>gradient.c</file>
 		<file>lineto.c</file>
+		<file>mapping.c</file>
 		<file>mem.c</file>
 		<file>engmisc.c</file>
 		<file>mouse.c</file>

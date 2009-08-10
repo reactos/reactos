@@ -6,58 +6,7 @@
 
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 
-/*
- * @unimplemented
- */
-BOOL
-APIENTRY
-EngMapFontFileFD (
-	IN  ULONG_PTR  iFile,
-	OUT PULONG    *ppjBuf,
-	OUT ULONG     *pcjBuf
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_0co7.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
 
-/*
- * @unimplemented
- */
-VOID
-APIENTRY
-EngUnmapFontFileFD ( IN ULONG_PTR iFile )
-{
-  // http://www.osr.com/ddk/graphics/gdifncs_6wbr.htm
-  UNIMPLEMENTED;
-}
-
-/*
- * @implemented
- */
-BOOL
-APIENTRY
-EngMapFontFile (
-	ULONG_PTR  iFile,
-	PULONG    *ppjBuf,
-	ULONG     *pcjBuf
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_3up3.htm
-  return EngMapFontFileFD ( iFile, ppjBuf, pcjBuf );
-}
-
-/*
- * @implemented
- */
-VOID
-APIENTRY
-EngUnmapFontFile ( ULONG_PTR iFile )
-{
-  // www.osr.com/ddk/graphics/gdifncs_09wn.htm
- EngUnmapFontFileFD ( iFile );
-}
 
 /*
  * @unimplemented
@@ -204,18 +153,6 @@ EngFindResource(
 /*
  * @unimplemented
  */
-VOID
-APIENTRY
-EngFreeModule ( IN HANDLE h )
-{
-  // www.osr.com/ddk/graphics/gdifncs_9fzb.htm
-  UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
 LPWSTR
 APIENTRY
 EngGetDriverName ( IN HDEV hdev )
@@ -345,36 +282,6 @@ EngGetType1FontList(
 /*
  * @unimplemented
  */
-HANDLE
-APIENTRY
-EngLoadModuleForWrite(
-	IN LPWSTR  pwsz,
-	IN ULONG   cjSizeOfModule
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_98rr.htm
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
-PVOID
-APIENTRY
-EngMapModule(
-	IN  HANDLE  h,
-	OUT PULONG  pSize
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_9b1j.htm
-  UNIMPLEMENTED;
-  return NULL;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 EngMarkBandingSurface ( IN HSURF hsurf )
@@ -421,21 +328,6 @@ EngQueryPalette(
   return 0;
 }
 
-BOOL
-APIENTRY
-EngSetPointerTag(
-	IN HDEV  hdev,
-	IN SURFOBJ  *psoMask,
-	IN SURFOBJ  *psoColor,
-	IN XLATEOBJ  *pxlo,
-	IN FLONG  fl
-	)
-{
-  // This function is obsolete for Windows 2000 and later.
-  // This function is still supported, but always returns FALSE.
-  // www.osr.com/ddk/graphics/gdifncs_4yav.htm
-  return FALSE;
-}
 
 DWORD
 APIENTRY
@@ -747,45 +639,6 @@ EngDitherColor(
 }
 
 /*
- * @implemented
- */
-BOOL APIENTRY
-EngQuerySystemAttribute(
-   IN ENG_SYSTEM_ATTRIBUTE CapNum,
-   OUT PDWORD pCapability)
-{
-  SYSTEM_BASIC_INFORMATION sbi;
-  SYSTEM_PROCESSOR_INFORMATION spi;
-
-   switch (CapNum)
-   {
-      case EngNumberOfProcessors:
-         NtQuerySystemInformation(
-                SystemBasicInformation,
-               &sbi,
-                sizeof(SYSTEM_BASIC_INFORMATION),
-                NULL);
-         *pCapability = sbi.NumberOfProcessors;
-         return TRUE;
-
-      case EngProcessorFeature:
-         NtQuerySystemInformation(
-                SystemProcessorInformation,
-               &spi,
-                sizeof(SYSTEM_PROCESSOR_INFORMATION),
-                NULL);
-         *pCapability = spi.ProcessorFeatureBits;
-         return TRUE;
-
-      default:
-         break;
-   }
-
-   return FALSE;
-}
-
-
-/*
  * @unimplemented
  */
 HANDLE APIENTRY
@@ -853,19 +706,6 @@ EngLpkInstalled()
 /*
  * @unimplemented
  */
-PVOID APIENTRY
-EngMapFile(
-   IN LPWSTR Filename,
-   IN ULONG Size,
-   OUT ULONG_PTR *File)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
-/*
- * @unimplemented
- */
 BOOL APIENTRY
 EngPlgBlt(
    IN SURFOBJ *Dest,
@@ -913,16 +753,6 @@ EngQueryFileTimeStamp(IN LPWSTR FileName)
    return FileTime;
 }
 
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-EngUnmapFile(
-   IN ULONG_PTR File)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
 
 /*
  * @unimplemented
@@ -2751,86 +2581,6 @@ EngFntCacheLookUp(IN ULONG FastCheckSum,
 {
     UNIMPLEMENTED;
     return NULL;
-}
-
-VOID
-APIENTRY
-FLOATOBJ_AddFloatObj(PFLOATOBJ pFloatObj1,
-                     PFLOATOBJ pFloatObj2)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-APIENTRY
-FLOATOBJ_DivFloatObj(PFLOATOBJ pFloatObj1,
-                     PFLOATOBJ pFloatObj2)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-APIENTRY
-FLOATOBJ_MulFloatObj(PFLOATOBJ pFloatObj1,
-                     PFLOATOBJ pFloatObj2)
-{
-    UNIMPLEMENTED;
-}
-
-VOID
-APIENTRY
-FLOATOBJ_SubFloatObj(PFLOATOBJ pFloatObj1,
-                     PFLOATOBJ pFloatObj2)
-{
-    UNIMPLEMENTED;
-}
-
-PVOID
-APIENTRY
-EngAllocSectionMem(IN PVOID SectionObject,
-                   IN ULONG Flags,
-                   IN SIZE_T MemSize,
-                   IN ULONG Tag)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-
-BOOLEAN
-APIENTRY
-EngFreeSectionMem(IN PVOID SectionObject OPTIONAL,
-                  IN PVOID MappedBase)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-ULONGLONG
-APIENTRY
-EngGetTickCount(VOID)
-{
-    ULONG Multiplier;
-    LARGE_INTEGER TickCount;
-
-    /* Get the multiplier and current tick count */
-    KeQueryTickCount(&TickCount);
-    Multiplier = SharedUserData->TickCountMultiplier;
-
-    /* Convert to milliseconds and return */
-    return (Int64ShrlMod32(UInt32x32To64(Multiplier, TickCount.LowPart), 24) +
-            (Multiplier * (TickCount.HighPart << 8)));
-}
-
-BOOLEAN
-APIENTRY
-EngMapSection(IN PVOID Section,
-              IN BOOLEAN Map,
-              IN HANDLE Process,
-              IN PVOID* BaseAddress)
-{
-    UNIMPLEMENTED;
-    return FALSE;
 }
 
 BOOLEAN

@@ -16,6 +16,21 @@
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL
+APIENTRY
+EngSetPointerTag(
+	IN HDEV hdev,
+	IN SURFOBJ *psoMask,
+	IN SURFOBJ *psoColor,
+	IN XLATEOBJ *pxlo,
+	IN FLONG fl)
+{
+    // This function is obsolete for Windows 2000 and later.
+    // This function is still supported, but always returns FALSE.
+    // www.osr.com/ddk/graphics/gdifncs_4yav.htm
+    return FALSE;
+}
+
 /*
  * FUNCTION: Notify the mouse driver that drawing is about to begin in
  * a rectangle on a particular surface.
