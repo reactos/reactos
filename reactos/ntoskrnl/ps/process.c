@@ -451,7 +451,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Check if we have a parent */
     if (Parent)
     {
-        /* Ineherit PID and Hard Error Processing */
+        /* Inherit PID and Hard Error Processing */
         Process->InheritedFromUniqueProcessId = Parent->UniqueProcessId;
         Process->DefaultHardErrorProcessing = Parent->
                                               DefaultHardErrorProcessing;

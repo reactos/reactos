@@ -1122,8 +1122,7 @@ NTSTATUS
 NTAPI
 NtUnloadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    return NtUnloadKey2(KeyObjectAttributes, 0);
 }
 
 NTSTATUS
@@ -1131,8 +1130,166 @@ NTAPI
 NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
              IN ULONG Flags)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status = STATUS_SUCCESS;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING ObjectName;
+    CM_PARSE_CONTEXT ParseContext = {0};
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PCM_KEY_BODY KeyBody = NULL;
+    ULONG ParentConv = 0, ChildConv = 0;
+    HANDLE Handle;
+    PAGED_CODE();
+
+    /* Validate privilege */
+    if (!SeSinglePrivilegeCheck(SeRestorePrivilege, PreviousMode))
+    {
+        /* Fail */
+        DPRINT1("Restore Privilege missing!\n");
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+
+    /* Check for user-mode caller */
+    if (PreviousMode != KernelMode)
+    {
+        /* Prepare to probe parameters */
+        _SEH2_TRY
+        {
+            /* Probe object attributes */
+            ProbeForRead(TargetKey,
+                         sizeof(OBJECT_ATTRIBUTES),
+                         sizeof(ULONG));
+
+            ObjectAttributes = *TargetKey;
+
+            /* Probe the string */
+            ProbeForReadUnicodeString(&TargetKey->ObjectName);
+
+            ObjectName = *TargetKey->ObjectName;
+
+            ProbeForRead(ObjectName.Buffer,
+                         ObjectName.Length,
+                         sizeof(WCHAR));
+
+            ObjectAttributes.ObjectName = &ObjectName;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+        if(!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        /* Save the target attributes directly */
+        ObjectAttributes = *TargetKey;
+    }
+
+    /* Setup the parse context */
+    ParseContext.CreateOperation = TRUE;
+    ParseContext.CreateOptions = REG_OPTION_BACKUP_RESTORE;
+
+    /* Do the create */
+    Status = ObOpenObjectByName(&ObjectAttributes,
+                                CmpKeyObjectType,
+                                KernelMode,
+                                NULL,
+                                KEY_WRITE,
+                                &ParseContext,
+                                &Handle);
+
+    /* Return if failure encountered */
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Reference it */
+    Status = ObReferenceObjectByHandle(Handle,
+                                       KEY_WRITE,
+                                       CmpKeyObjectType,
+                                       KernelMode,
+                                       (PVOID *)&KeyBody,
+                                       NULL);
+
+    /* Close the handle */
+    ZwClose(Handle);
+
+    /* Return if failure encountered */
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Acquire the lock depending on flags */
+    if (Flags == REG_FORCE_UNLOAD)
+    {
+        /* Lock registry exclusively */
+        CmpLockRegistryExclusive();
+    }
+    else
+    {
+        /* Lock registry */
+        CmpLockRegistry();
+
+        /* Acquire the hive loading lock */
+        ExAcquirePushLockExclusive(&CmpLoadHiveLock);
+
+        /* Lock parent and child */
+        if (KeyBody->KeyControlBlock->ParentKcb)
+            ParentConv = KeyBody->KeyControlBlock->ParentKcb->ConvKey;
+        else
+            ParentConv = KeyBody->KeyControlBlock->ConvKey;
+
+        ChildConv = KeyBody->KeyControlBlock->ConvKey;
+
+        CmpAcquireTwoKcbLocksExclusiveByKey(ChildConv, ParentConv);
+    }
+
+    /* Check if it's being deleted already */
+    if (KeyBody->KeyControlBlock->Delete)
+    {
+        /* Return appropriate status */
+        Status = STATUS_KEY_DELETED;
+        goto Quickie;
+    }
+
+    /* Check if it's a readonly key */
+    if (KeyBody->KeyControlBlock->ExtFlags & CM_KCB_READ_ONLY_KEY)
+    {
+        /* Return appropriate status */
+        Status = STATUS_ACCESS_DENIED;
+        goto Quickie;
+    }
+
+    /* Call the internal API */
+    Status = CmUnloadKey(KeyBody->KeyControlBlock,
+                         Flags);
+
+    /* Check if we failed, but really need to succeed */
+    if ((Status == STATUS_CANNOT_DELETE) && (Flags == REG_FORCE_UNLOAD))
+    {
+        /* TODO: We should perform another attempt here */
+        ASSERT(FALSE);
+    }
+
+    /* If CmUnloadKey failed we need to unlock registry ourselves */
+    if (!NT_SUCCESS(Status))
+    {
+        if (Flags != REG_FORCE_UNLOAD)
+        {
+            /* Release the hive loading lock */
+            ExReleasePushLockExclusive(&CmpLoadHiveLock);
+
+            /* Release two KCBs lock */
+            CmpReleaseTwoKcbLockByKey(ChildConv, ParentConv);
+        }
+
+        /* Unlock the registry */
+        CmpUnlockRegistry();
+    }
+
+Quickie:
+    /* Dereference the key */
+    ObDereferenceObject(KeyBody);
+
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS
