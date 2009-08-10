@@ -339,14 +339,47 @@ BdaInitFilter(
     IN PKSFILTER pKSFilter,
     IN const BDA_FILTER_TEMPLATE *pBdaFilterTemplate)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
+    PKSFILTERFACTORY FilterFactory;
+    ULONG Index, PinId;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* check input parameters */
+    if (!pKSFilter)
+        return STATUS_INVALID_PARAMETER;
+
+    /* get parent filter factory */
+    FilterFactory = KsFilterGetParentFilterFactory(pKSFilter);
+
+    /* sanity check */
+    ASSERT(FilterFactory);
+
+    /* find instance entry */
+    InstanceEntry = GetFilterInstanceEntry(FilterFactory);
+
+    /* sanity check */
+    ASSERT(InstanceEntry);
+    ASSERT(InstanceEntry->FilterTemplate == pBdaFilterTemplate);
+
+    /* now create the pins */
+    for(Index = 0; Index < pBdaFilterTemplate->pFilterDescriptor->PinDescriptorsCount; Index++)
+    {
+        /* create the pin */
+        Status = BdaCreatePin(pKSFilter, Index, &PinId);
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+            break;
+    }
+
+    /* done */
+    return Status;
 }
 
 
 
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
@@ -355,8 +388,44 @@ BdaCreateTopology(
     IN ULONG InputPinId,
     IN ULONG OutputPinId)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
+    PKSFILTERFACTORY FilterFactory;
+    KSTOPOLOGY_CONNECTION Connection;
+
+    /* check input parameters */
+    if (!pKSFilter)
+        return STATUS_INVALID_PARAMETER;
+
+    /* get parent filter factory */
+    FilterFactory = KsFilterGetParentFilterFactory(pKSFilter);
+
+    /* sanity check */
+    ASSERT(FilterFactory);
+
+    /* find instance entry */
+    InstanceEntry = GetFilterInstanceEntry(FilterFactory);
+
+    if (!InstanceEntry)
+    {
+        /* the filter was not initialized with BDA */
+        return STATUS_NOT_FOUND;
+    }
+
+    if (InputPinId >= InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount ||
+        OutputPinId >= InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount)
+    {
+        /* invalid pin id */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* initialize topology connection */
+    Connection.FromNode = KSFILTER_NODE;
+    Connection.ToNode = KSFILTER_NODE;
+    Connection.FromNodePin = InputPinId;
+    Connection.ToNodePin = OutputPinId;
+
+    /* add the connection */
+    return KsFilterAddTopologyConnections(pKSFilter, 1, &Connection);
 }
 
 /*
@@ -650,7 +719,7 @@ BdaUninitFilter(IN PKSFILTER pKSFilter)
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
