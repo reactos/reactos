@@ -532,7 +532,7 @@ BdaPropertyGetControllingPinId(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
@@ -541,8 +541,35 @@ BdaPropertyGetPinControl(
     IN KSPROPERTY *pKSProperty,
     OUT ULONG *pulProperty)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PKSPIN Pin;
+    PKSFILTER Filter;
+    PKSFILTERFACTORY FilterFactory;
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
+
+    /* first get the pin */
+    Pin = KsGetPinFromIrp(Irp);
+    ASSERT(Pin);
+
+    /* now get the parent filter */
+    Filter = KsPinGetParentFilter(Pin);
+    ASSERT(Filter);
+
+    /* get parent filter factory */
+    FilterFactory = KsFilterGetParentFilterFactory(Filter);
+    ASSERT(FilterFactory);
+
+    /* find instance entry */
+    InstanceEntry = GetFilterInstanceEntry(FilterFactory);
+    ASSERT(InstanceEntry);
+
+    /* sanity check */
+    pKSProperty++;
+    ASSERT(pKSProperty->Id == KSPROPERTY_BDA_PIN_TYPE);
+
+    /* store pin id */
+    *pulProperty = Pin->Id;
+
+    return STATUS_SUCCESS;
 }
 
 /*
