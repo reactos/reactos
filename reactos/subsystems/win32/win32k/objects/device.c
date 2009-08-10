@@ -8,7 +8,7 @@
 
 #include <w32k.h>
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 // TODO: proper implementation of LDEVOBJ and PDEVOBJ interface
@@ -213,9 +213,6 @@ IntPrepareDriver()
     ULONG DisplayNumber;
     LARGE_INTEGER Zero;
     BOOLEAN ret = FALSE;
-
-    DPRINT("IntPrepareDriver()\n");
-ASSERT(FALSE);
 
     Zero.QuadPart = 0;
     if (STATUS_SUCCESS != KeWaitForSingleObject(&VideoDriverNeedsPreparation, Executive, KernelMode, TRUE, &Zero))
@@ -453,7 +450,7 @@ PrepareVideoPrt()
     IO_STATUS_BLOCK Iosb;
     BOOL Prepare = TRUE;
     ULONG Length = sizeof(BOOL);
-//    PIO_STACK_LOCATION StackPtr;
+    PIO_STACK_LOCATION StackPtr;
     LARGE_INTEGER StartOffset;
     PFILE_OBJECT FileObject = PrimarySurface.VideoFileObject;
     PDEVICE_OBJECT DeviceObject = FileObject->DeviceObject;
@@ -478,16 +475,16 @@ PrepareVideoPrt()
     }
 
     /* Set up IRP Data */
-//    Irp->Tail.Overlay.OriginalFileObject = FileObject;
-//    Irp->RequestorMode = KernelMode;
-//    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
-//    Irp->Overlay.AsynchronousParameters.UserApcContext = NULL;
-//    Irp->Flags |= IRP_WRITE_OPERATION;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->RequestorMode = KernelMode;
+    Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = NULL;
+    Irp->Flags |= IRP_WRITE_OPERATION;
 
     /* Setup Stack Data */
-//    StackPtr = IoGetNextIrpStackLocation(Irp);
-//    StackPtr->FileObject = PrimarySurface.VideoFileObject;
-//    StackPtr->Parameters.Write.Key = 0;
+    StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->FileObject = PrimarySurface.VideoFileObject;
+    StackPtr->Parameters.Write.Key = 0;
 
     Status = IoCallDriver(DeviceObject, Irp);
 
@@ -508,8 +505,6 @@ IntCreatePrimarySurface()
     RECTL SurfaceRect;
     SURFOBJ *SurfObj;
     BOOL calledFromUser;
-
-    DPRINT("IntCreatePrimarySurface()\n");
 
     if (! IntPrepareDriverIfNeeded())
     {
