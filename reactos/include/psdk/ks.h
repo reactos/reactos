@@ -3708,6 +3708,12 @@ KsFilterFactoryUpdateCacheData(
     IN const KSFILTER_DESCRIPTOR *FilterDescriptor OPTIONAL
     );
 
+KSDDKAPI
+PKSPIN
+NTAPI
+KsGetPinFromIrp(
+    IN PIRP Irp
+    );
 
 KSDDKAPI
 PKSFILTER
