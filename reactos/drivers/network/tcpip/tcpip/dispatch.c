@@ -192,6 +192,10 @@ VOID NTAPI DispCancelRequest(
         DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
+    case TDI_CONNECT:
+        TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        break;
+
     default:
         TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
         break;
@@ -399,12 +403,18 @@ NTSTATUS DispTdiConnect(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  Status = TCPConnect(
-      TranContext->Handle.ConnectionContext,
-      Parameters->RequestConnectionInformation,
-      Parameters->ReturnConnectionInformation,
-      DispDataRequestComplete,
-      Irp );
+  Status = DispPrepareIrpForCancel(TranContext->Handle.ConnectionContext,
+                                   Irp,
+                                   DispCancelRequest);
+
+  if (NT_SUCCESS(Status)) {
+      Status = TCPConnect(
+          TranContext->Handle.ConnectionContext,
+          Parameters->RequestConnectionInformation,
+          Parameters->ReturnConnectionInformation,
+          DispDataRequestComplete,
+          Irp );
+  }
 
 done:
   TcpipRecursiveMutexLeave( &TCPLock );
@@ -577,12 +587,17 @@ NTSTATUS DispTdiListen(
 			      Connection->AddressFile->Listener));
   }
 
+  Status = DispPrepareIrpForCancel
+      (TranContext->Handle.ConnectionContext,
+       Irp,
+       (PDRIVER_CANCEL)DispCancelListenRequest);
+
   /* Listening will require us to create a listening socket and store it in
    * the address file.  It will be signalled, and attempt to complete an irp
    * when a new connection arrives. */
   /* The important thing to note here is that the irp we'll complete belongs
    * to the socket to be accepted onto, not the listener */
-  if( !Connection->AddressFile->Listener ) {
+  if( NT_SUCCESS(Status) && !Connection->AddressFile->Listener ) {
       Connection->AddressFile->Listener =
 	  TCPAllocateConnectionEndpoint( NULL );
 
@@ -602,12 +617,6 @@ NTSTATUS DispTdiListen(
       if( NT_SUCCESS(Status) )
 	  Status = TCPListen( Connection->AddressFile->Listener, 1024 );
 	  /* BACKLOG */
-  }
-  if( NT_SUCCESS(Status) ) {
-      Status = DispPrepareIrpForCancel
-          (TranContext->Handle.ConnectionContext,
-           Irp,
-           (PDRIVER_CANCEL)DispCancelListenRequest);
   }
 
   if( NT_SUCCESS(Status) ) {
