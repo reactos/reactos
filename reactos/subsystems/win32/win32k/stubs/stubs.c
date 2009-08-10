@@ -328,7 +328,6 @@ EngQueryPalette(
   return 0;
 }
 
-
 DWORD
 APIENTRY
 EngSetPrinterData(
@@ -381,7 +380,6 @@ EngStrokePath(
   UNIMPLEMENTED;
   return FALSE;
 }
-
 
 INT
 APIENTRY
@@ -661,8 +659,6 @@ EngDeleteFile(
    return FALSE;
 }
 
-
-
 /*
  * @unimplemented
  */
@@ -690,8 +686,6 @@ EngHangNotification(
    UNIMPLEMENTED;
    return EHN_ERROR;
 }
-
-
 
 /*
  * @unimplemented
@@ -752,7 +746,6 @@ EngQueryFileTimeStamp(IN LPWSTR FileName)
    UNIMPLEMENTED;
    return FileTime;
 }
-
 
 /*
  * @unimplemented
@@ -821,7 +814,6 @@ HT_Get8BPPMaskPalette(
 /*
  * @unimplemented
  */
-
 BOOL
 APIENTRY
 NtGdiAnyLinkedFonts()
@@ -833,485 +825,12 @@ NtGdiAnyLinkedFonts()
 /*
  * @unimplemented
  */
-HANDLE
-APIENTRY
-NtGdiBRUSHOBJ_hGetColorTransform(
-   IN BRUSHOBJ *Brush)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
-/*
- * @unimplemented
- */
-PVOID APIENTRY
-NtGdiBRUSHOBJ_pvAllocRbrush(IN BRUSHOBJ *BrushObj,
-                            IN ULONG ObjSize)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
-/*
- * @unimplemented
- */
-PVOID APIENTRY
-NtGdiBRUSHOBJ_pvGetRbrush(IN BRUSHOBJ *BrushObj)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
-/*
- * @unimplemented
- */
-ULONG APIENTRY
-NtGdiBRUSHOBJ_ulGetBrushColor(BRUSHOBJ *pbo)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiCLIPOBJ_bEnum( IN CLIPOBJ *ClipObj,
-                    IN ULONG ObjSize,
-                    OUT ULONG *EnumRects)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-ULONG APIENTRY
-NtGdiCLIPOBJ_cEnumStart(IN CLIPOBJ *ClipObj,
-                        IN BOOL ShouldDoAll,
-                        IN ULONG ClipType,
-                        IN ULONG BuildOrder,
-                        IN ULONG MaxRects)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-PATHOBJ* APIENTRY
-NtGdiCLIPOBJ_ppoGetPath(CLIPOBJ *ClipObj)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-
-/*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiEnableEudc(BOOL enable)
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngAssociateSurface(IN HSURF Surface,
-                         IN HDEV Dev,
-                         IN ULONG Hooks)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-CLIPOBJ* APIENTRY
-NtGdiEngCreateClip(VOID)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-VOID APIENTRY
-NtGdiEngDeleteClip(CLIPOBJ *ClipRegion)
-{
-    UNIMPLEMENTED;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngCheckAbort(SURFOBJ *pso)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @implemented
- */
-HSURF APIENTRY
-NtGdiEngCreateDeviceSurface( IN DHSURF Surface,
-                             IN SIZEL Size,
-                             IN ULONG FormatVersion)
-{
-    if ( FormatVersion <= BMF_8RLE &&
-         FormatVersion >= BMF_1BPP )
-       return EngCreateDeviceSurface(Surface, Size, FormatVersion);
-    else
-       return NULL;
-}
-
-/*
- * @implemented
- */
-HBITMAP APIENTRY
-NtGdiEngCreateDeviceBitmap(
-    IN DHSURF dhsurf,
-    IN SIZEL sizl,
-    IN ULONG iFormatCompat)
-{
-    if ( ( sizl.cx > 0 && sizl.cy > 0 && (((LONGLONG)(sizl.cy * sizl.cx)) <= 0xFFFFFFFFULL) ) &&
-         iFormatCompat <= BMF_8RLE &&
-         iFormatCompat >= BMF_1BPP )
-       return EngCreateDeviceBitmap(dhsurf, sizl, iFormatCompat);
-    else
-       return NULL;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngCopyBits(SURFOBJ *Dest,
-	    SURFOBJ *Source,
-	    CLIPOBJ *Clip,
-	    XLATEOBJ *ColorTranslation,
-	    RECTL *DestRect,
-	    POINTL *SourcePoint)
-{
-     UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @implemented
- */
-HBITMAP APIENTRY
-NtGdiEngCreateBitmap(IN SIZEL Size,
-		IN LONG Width,
-		IN ULONG Format,
-		IN ULONG Flags,
-		IN PVOID Bits)
-{
-    return EngCreateBitmap(Size,
-                          Width,
-                         Format,
-                          Flags,
-                           Bits);
-}
-
-
-/*
- * @implemented
- */
-HPALETTE APIENTRY
-NtGdiEngCreatePalette(IN ULONG Mode,
-		 IN ULONG NumColors,
-		 IN ULONG *Colors,
-		 IN ULONG Red,
-		 IN ULONG Green,
-		 IN ULONG Blue)
-{
-    return EngCreatePalette( Mode,
-                        NumColors,
-                           Colors,
-                              Red,
-                            Green,
-                             Blue);
-}
-
-BOOL APIENTRY
-NtGdiEngTransparentBlt(IN SURFOBJ *Dest,
-		  IN SURFOBJ *Source,
-		  IN CLIPOBJ *Clip,
-		  IN XLATEOBJ *ColorTranslation,
-		  IN PRECTL DestRect,
-		  IN PRECTL SourceRect,
-		  IN ULONG TransparentColor,
-		  IN ULONG Reserved)
-{
-     UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngTextOut(SURFOBJ *pso,
-                STROBJ *pstro,
-                FONTOBJ *pfo,
-                CLIPOBJ *pco,
-                RECTL *prclExtra,
-                RECTL *prclOpaque,
-                BRUSHOBJ *pboFore,
-                BRUSHOBJ *pboOpaque,
-                POINTL *pptlOrg,
-                MIX mix)
-{
-     UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngStrokePath(SURFOBJ *pso,
-                   PATHOBJ *ppo,
-                   CLIPOBJ *pco,
-                   XFORMOBJ *pxo,
-                   BRUSHOBJ *pbo,
-                   POINTL *pptlBrushOrg,
-                   LINEATTRS *plineattrs,
-                   MIX mix)
-{
-     UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @implemented
- */
-BOOL APIENTRY
-NtGdiEngDeletePalette(IN HPALETTE Palette)
-{
-    return EngDeletePalette(Palette);
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngStrokeAndFillPath(SURFOBJ *pso,
-                          PATHOBJ *ppo,
-                          CLIPOBJ *pco,
-                          XFORMOBJ *pxo,
-                          BRUSHOBJ *pboStroke,
-                          LINEATTRS *plineattrs,
-                          BRUSHOBJ *pboFill,
-                          POINTL *pptlBrushOrg,
-                          MIX mixFill,
-                          FLONG flOptions)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-VOID APIENTRY
-NtGdiEngDeletePath(PATHOBJ *ppo)
-{
-    UNIMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngDeleteSurface(IN HSURF Surface)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngEraseSurface(SURFOBJ *Surface,
-                     RECTL *Rect,
-                     ULONG iColor)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngFillPath(SURFOBJ *pso,
-                 PATHOBJ *ppo,
-                 CLIPOBJ *pco,
-                 BRUSHOBJ *pbo,
-                 POINTL *pptlBrushOrg,
-                 MIX mix,
-                 FLONG flOptions)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL APIENTRY
-NtGdiEngGradientFill(SURFOBJ *psoDest,
-                     CLIPOBJ *pco,
-                     XLATEOBJ *pxlo,
-                     TRIVERTEX *pVertex,
-                     ULONG nVertex,
-                     PVOID pMesh,
-                     ULONG nMesh,
-                     RECTL *prclExtents,
-                     POINTL *pptlDitherOrg,
-                     ULONG ulMode)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL APIENTRY
-NtGdiEngLineTo(SURFOBJ *Surface,
-	  CLIPOBJ *Clip,
-	  BRUSHOBJ *Brush,
-	  LONG x1,
-	  LONG y1,
-	  LONG x2,
-	  LONG y2,
-	  RECTL *RectBounds,
-	  MIX mix)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngMarkBandingSurface(HSURF hsurf)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngPaint(IN SURFOBJ *Surface,
-	 IN CLIPOBJ *ClipRegion,
-	 IN BRUSHOBJ *Brush,
-	 IN POINTL *BrushOrigin,
-	 IN MIX  Mix)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngPlgBlt(SURFOBJ *psoTrg,
-               SURFOBJ *psoSrc,
-               SURFOBJ *psoMsk,
-               CLIPOBJ *pco,
-               XLATEOBJ *pxlo,
-               COLORADJUSTMENT *pca,
-               POINTL *pptlBrushOrg,
-               POINTFIX *pptfx,
-               RECTL *prcl,
-               POINTL *pptl,
-               ULONG iMode)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-NtGdiEngStretchBltROP(SURFOBJ *psoDest,
-                      SURFOBJ *psoSrc,
-                      SURFOBJ *psoMask,
-                      CLIPOBJ *pco,
-                      XLATEOBJ *pxlo,
-                      COLORADJUSTMENT *pca,
-                      POINTL *pptlHTOrg,
-                      RECTL *prclDest,
-                      RECTL *prclSrc,
-                      POINTL *pptlMask,
-                      ULONG iMode,
-                      BRUSHOBJ *pbo,
-                      DWORD rop4)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-FD_GLYPHSET* APIENTRY
-NtGdiEngComputeGlyphSet( INT nCodePage,
-                         INT nFirstChar,
-                         INT cChars)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiFONTOBJ_cGetAllGlyphHandles(IN FONTOBJ *FontObj,
-                            IN HGLYPH  *Glyphs)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
-/*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiFONTOBJ_cGetGlyphs(IN FONTOBJ *FontObj,
-                        IN ULONG    Mode,
-                        IN ULONG    NumGlyphs,
-                        IN HGLYPH  *GlyphHandles,
-                        IN PVOID   *OutGlyphs)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
 /*
@@ -1346,7 +865,6 @@ NtGdiAddFontMemResourceEx(
     return NULL;
 }
 
-
 /*
  * @unimplemented
  */
@@ -1373,7 +891,6 @@ NtGdiAddRemoteMMInstanceToDC(
     UNIMPLEMENTED;
     return FALSE;
 }
-
 
 /*
  * @unimplemented
@@ -1418,7 +935,6 @@ NtGdiClearBitmapAttributes(
     return NULL;
 }
 
-
  /*
  * @unimplemented
  */
@@ -1434,80 +950,6 @@ NtGdiGetUFI(
 {
     UNIMPLEMENTED;
     return FALSE;
-}
-
- /*
- * @unimplemented
- */
-PFD_GLYPHATTR
-APIENTRY
-NtGdiFONTOBJ_pQueryGlyphAttrs(
-    IN FONTOBJ *pfo,
-    IN ULONG iMode)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-IFIMETRICS*
-APIENTRY
-NtGdiFONTOBJ_pifi(
-    IN FONTOBJ *pfo)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-FD_GLYPHSET*
-APIENTRY
-NtGdiFONTOBJ_pfdg(IN FONTOBJ *pfo)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-PVOID
-APIENTRY
-NtGdiFONTOBJ_pvTrueTypeFontFile(
-    IN FONTOBJ *pfo,
-    OUT ULONG *pcjFile
-)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-VOID
-APIENTRY
-NtGdiFONTOBJ_vGetInfo(
-    IN FONTOBJ *pfo,
-    IN ULONG cjSize,
-    OUT FONTINFO *pfi)
-{
-    UNIMPLEMENTED;
-}
-
- /*
- * @unimplemented
- */
-XFORMOBJ*
-APIENTRY
-NtGdiFONTOBJ_pxoGetXform(IN FONTOBJ *pfo)
-{
-    UNIMPLEMENTED;
-    return NULL;
 }
 
  /*
@@ -1570,7 +1012,6 @@ NtGdiComputeXformCoefficients(IN HDC hdc)
     return FALSE;
 }
 
-
  /*
  * @unimplemented
  */
@@ -1626,7 +1067,6 @@ NtGdiDoBanding(
     UNIMPLEMENTED;
     return FALSE;
 }
-
 
  /*
  * @unimplemented
@@ -1790,7 +1230,6 @@ NtGdiGetEudcTimeStampEx(
     return 0;
 }
 
-
  /*
  * @unimplemented
  */
@@ -1801,7 +1240,6 @@ NtGdiInitSpool()
     UNIMPLEMENTED;
     return FALSE;
 }
-
 
  /*
  * @unimplemented
@@ -1862,7 +1300,6 @@ NtGdiGetLinkedUFIs(
     return 0;
 }
 
-
  /*
  * @unimplemented
  */
@@ -1904,81 +1341,11 @@ NtGdiDrawStream(
     return FALSE;
 }
 
-
- /*
- * @unimplemented
- */
-BOOL
-NtGdiUMPDEngFreeUserMem(
-    IN KERNEL_PVOID *ppv)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-NtGdiBRUSHOBJ_DeleteRbrush(
-    IN BRUSHOBJ *pbo,
-    IN BRUSHOBJ *pboB)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-NtGdiSetPUMPDOBJ(
-    IN HUMPD humpd,
-    IN BOOL bStoreID,
-    OUT HUMPD *phumpd,
-    OUT BOOL *pbWOW64)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
  /*
  * @unimplemented
  */
 BOOL
 NtGdiUpdateTransform(IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-LONG
-APIENTRY
-NtGdiHT_Get8BPPMaskPalette(
-    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
-    IN BOOL Use8BPPMaskPal,
-    IN BYTE CMYMask,
-    IN USHORT RedGamma,
-    IN USHORT GreenGamma,
-    IN USHORT BlueGamma)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-LONG
-APIENTRY
-NtGdiHT_Get8BPPFormatPalette(
-    OUT OPTIONAL LPPALETTEENTRY pPaletteEntry,
-    IN USHORT RedGamma,
-    IN USHORT GreenGamma,
-    IN USHORT BlueGamma)
 {
     UNIMPLEMENTED;
     return FALSE;
@@ -2017,81 +1384,12 @@ NtGdiGetStringBitmapW(
  */
 BOOL
 APIENTRY
-NtGdiPATHOBJ_bEnum(
-    IN PATHOBJ *ppo,
-    OUT PATHDATA *ppd)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiPATHOBJ_bEnumClipLines(
-    IN PATHOBJ *ppo,
-    IN ULONG cb,
-    OUT CLIPLINE *pcl)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-VOID
-APIENTRY
-NtGdiPATHOBJ_vGetBounds(
-    IN PATHOBJ *ppo,
-    OUT PRECTFX prectfx)
-{
-    UNIMPLEMENTED;
-}
-
-
-
- /*
- * @unimplemented
- */
-VOID
-APIENTRY
-NtGdiPATHOBJ_vEnumStart(
-    IN PATHOBJ *ppo)
-{
-    UNIMPLEMENTED;
-}
-
- /*
- * @unimplemented
- */
-VOID
-APIENTRY
-NtGdiPATHOBJ_vEnumStartClipLines(
-    IN PATHOBJ *ppo,
-    IN CLIPOBJ *pco,
-    IN SURFOBJ *pso,
-    IN LINEATTRS *pla)
-{
-    UNIMPLEMENTED;
-}
-
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
 NtGdiRemoveFontMemResourceEx(
     IN HANDLE hMMFont)
 {
     UNIMPLEMENTED;
     return FALSE;
 }
-
-
  /*
  * @unimplemented
  */
@@ -2140,76 +1438,6 @@ NtGdiGetStats(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-
- /*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiXLATEOBJ_cGetPalette(
-    IN XLATEOBJ *pxlo,
-    IN ULONG iPal,
-    IN ULONG cPal,
-    OUT ULONG *pPal)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiXLATEOBJ_iXlate(
-    IN XLATEOBJ *pxlo,
-    IN ULONG iColor)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-HANDLE
-APIENTRY
-NtGdiXLATEOBJ_hGetColorTransform(
-    IN XLATEOBJ *pxlo)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiXFORMOBJ_bApplyXform(
-    IN XFORMOBJ *pxo,
-    IN ULONG iMode,
-    IN ULONG cPoints,
-    IN  PVOID pvIn,
-    OUT PVOID pvOut)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-ULONG
-APIENTRY
-NtGdiXFORMOBJ_iGetXform(
-    IN XFORMOBJ *pxo,
-    OUT OPTIONAL XFORML *pxform)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 /*
  * @unimplemented
  */
@@ -2235,72 +1463,6 @@ NtGdiSetBrushAttributes(
 {
     UNIMPLEMENTED;
     return NULL;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiSTROBJ_bEnum(
-    IN STROBJ *pstro,
-    OUT ULONG *pc,
-    OUT PGLYPHPOS *ppgpos)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiSTROBJ_bEnumPositionsOnly(
-    IN STROBJ *pstro,
-    OUT ULONG *pc,
-    OUT PGLYPHPOS *ppgpos)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiSTROBJ_bGetAdvanceWidths(
-    IN STROBJ*pstro,
-    IN ULONG iFirst,
-    IN ULONG c,
-    OUT POINTQF*pptqD)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-VOID
-APIENTRY
-NtGdiSTROBJ_vEnumStart(
-    IN STROBJ *pstro)
-{
-    UNIMPLEMENTED;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-APIENTRY
-NtGdiSTROBJ_dwGetCodePage(
-    IN STROBJ *pstro)
-{
-    UNIMPLEMENTED;
-    return 0;
 }
 
  /*
@@ -2397,7 +1559,6 @@ NtGdiGetWidthTable(
     UNIMPLEMENTED;
     return FALSE;
 }
-
 
  /*
  * @unimplemented

@@ -196,6 +196,7 @@
 	</directory>
 	<directory name="stubs">
 		<file>stubs.c</file>
+		<file>umpdstubs.c</file>
 	</directory>
 
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->
