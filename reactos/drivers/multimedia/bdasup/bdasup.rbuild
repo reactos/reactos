@@ -5,5 +5,6 @@
 	<library>ntoskrnl</library>
 	<library>ks</library>
 	<library>pseh</library>
+	<library>hal</library>
 	<file>bdasup.c</file>
 </module>

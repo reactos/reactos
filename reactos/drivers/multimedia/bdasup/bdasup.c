@@ -1,55 +1,308 @@
 
-#include <ntddk.h>
-#include <windef.h>
-#include <ks.h>
-#include <bdatypes.h>
-#include <bdamedia.h>
-#include <bdasup.h>
+#include "precomp.h"
 
-#define NDEBUG
-#include <debug.h>
-
-STDMETHODIMP_(NTSTATUS) BdaCheckChanges(IN PIRP  Irp)
+BDA_GLOBAL g_Settings =
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    0,
+    0,
+    {NULL, NULL}
+};
+
+
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
+{
+    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    if (!Item)
+        return Item;
+
+    RtlZeroMemory(Item, NumberOfBytes);
+    return Item;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaCommitChanges(IN PIRP  Irp)
+VOID
+FreeItem(
+    IN PVOID Item)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ExFreePool(Item);
 }
 
-STDMETHODIMP_(NTSTATUS) BdaCreateFilterFactory(
+
+PBDA_FILTER_INSTANCE_ENTRY
+GetFilterInstanceEntry(
+    IN PKSFILTERFACTORY FilterFactory)
+{
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry = NULL;
+    PLIST_ENTRY Entry;
+    KIRQL OldLevel;
+
+    /* acquire list lock */
+    KeAcquireSpinLock(&g_Settings.FilterFactoryInstanceListLock, &OldLevel);
+
+    /* point to first entry */
+    Entry = g_Settings.FilterFactoryInstanceList.Flink;
+
+    while(Entry != &g_Settings.FilterFactoryInstanceList)
+    {
+        /* get instance entry from list entry offset */
+        InstanceEntry = (PBDA_FILTER_INSTANCE_ENTRY)CONTAINING_RECORD(Entry, BDA_FILTER_INSTANCE_ENTRY, Entry);
+
+        /* is the instance entry the requested one */
+        if (InstanceEntry->FilterFactoryInstance == FilterFactory)
+            break;
+
+        /* move to next entry */
+        Entry = Entry->Flink;
+        /* set to null as it has not been found */
+        InstanceEntry = NULL;
+    }
+
+
+    /* release spin lock */
+    KeReleaseSpinLock(&g_Settings.FilterFactoryInstanceListLock, OldLevel);
+
+    /* return result */
+    return InstanceEntry;
+}
+
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaCheckChanges(IN PIRP  Irp)
+{
+    if (!Irp)
+        return STATUS_INVALID_PARAMETER;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaCommitChanges(IN PIRP  Irp)
+{
+    if (!Irp)
+        return STATUS_INVALID_PARAMETER;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaCreateFilterFactory(
     IN PKSDEVICE  pKSDevice,
     IN const KSFILTER_DESCRIPTOR *pFilterDescriptor,
+    IN const BDA_FILTER_TEMPLATE *pBdaFilterTemplate)
+{
+    return BdaCreateFilterFactoryEx(pKSDevice, pFilterDescriptor, pBdaFilterTemplate, NULL);
+}
+
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaCreateFilterFactoryEx(
+    IN  PKSDEVICE pKSDevice,
+    IN  const KSFILTER_DESCRIPTOR *pFilterDescriptor,
+    IN  const BDA_FILTER_TEMPLATE *BdaFilterTemplate,
+    OUT PKSFILTERFACTORY  *ppKSFilterFactory)
+{
+    PKSFILTERFACTORY FilterFactory;
+    PBDA_FILTER_INSTANCE_ENTRY FilterInstance;
+    KIRQL OldLevel;
+    NTSTATUS Status;
+
+    /* FIXME provide a default automation table
+     * to handle requests which the driver doesnt implement
+     */
+
+    /* allocate filter instance */
+    FilterInstance = AllocateItem(NonPagedPool, sizeof(BDA_FILTER_INSTANCE_ENTRY));
+    if (!FilterInstance)
+    {
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* create the filter factory */
+    Status = KsCreateFilterFactory(pKSDevice->FunctionalDeviceObject, pFilterDescriptor, NULL, NULL, 0, NULL, NULL, &FilterFactory);
+
+    /* check for success */
+    if (NT_SUCCESS(Status))
+    {
+
+        /* initialize filter instance entry */
+        FilterInstance->FilterFactoryInstance = FilterFactory;
+        FilterInstance->FilterTemplate = (BDA_FILTER_TEMPLATE *)BdaFilterTemplate;
+
+        /* acquire list lock */
+        KeAcquireSpinLock(&g_Settings.FilterFactoryInstanceListLock, &OldLevel);
+
+        /* insert factory at the end */
+        InsertTailList(&g_Settings.FilterFactoryInstanceList, &FilterInstance->Entry);
+
+        /* release spin lock */
+        KeReleaseSpinLock(&g_Settings.FilterFactoryInstanceListLock, OldLevel);
+
+        if (ppKSFilterFactory)
+        {
+            /* store result */
+            *ppKSFilterFactory = FilterFactory;
+        }
+    }
+    else
+    {
+        /* failed to create filter factory */
+        FreeItem(FilterInstance);
+    }
+
+    /* done */
+    return Status;
+}
+
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaCreatePin(
+    IN PKSFILTER pKSFilter,
+    IN ULONG ulPinType,
+    OUT ULONG *pulPinId)
+{
+    PKSPIN_DESCRIPTOR_EX PinDescriptor;
+    PKSFILTERFACTORY FilterFactory;
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
+    NTSTATUS Status;
+    ULONG PinId;
+
+    if (!pulPinId || !pKSFilter)
+        return STATUS_INVALID_PARAMETER;
+
+
+    /* FIXME provide a default automation table
+     * to handle requests which the driver doesnt implement
+     */
+
+    /* get parent filter factory */
+    FilterFactory = KsFilterGetParentFilterFactory(pKSFilter);
+
+    /* sanity check */
+    ASSERT(FilterFactory);
+
+    /* find instance entry */
+    InstanceEntry = GetFilterInstanceEntry(FilterFactory);
+
+    if (!InstanceEntry)
+    {
+        /* the filter was not initialized with BDA */
+        return STATUS_NOT_FOUND;
+    }
+
+    /* sanity checks */
+    ASSERT(InstanceEntry->FilterTemplate);
+    ASSERT(InstanceEntry->FilterTemplate->pFilterDescriptor);
+
+    /* does the filter support any pins */
+    if (!InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount)
+    {
+        /* no pins supported */
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* is pin factory still existing */
+    if (InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount <= ulPinType)
+    {
+        /* pin request is out of bounds */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* FIXME custom pin descriptors */
+    ASSERT(InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorSize == sizeof(KSPIN_DESCRIPTOR_EX));
+
+    /* get pin descriptor */
+    PinDescriptor = (PKSPIN_DESCRIPTOR_EX)&InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptors[ulPinType];
+
+    /* create the pin factory */
+    Status = KsFilterCreatePinFactory(pKSFilter, PinDescriptor, &PinId);
+
+    /* check for success */
+    if (NT_SUCCESS(Status))
+    {
+        /* store result */
+        *pulPinId = PinId;
+    }
+
+    DPRINT("BdaCreatePin Result %x\n", Status);
+    return Status;
+}
+
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaMethodCreatePin(
+    IN PIRP Irp,
+    IN KSMETHOD *pKSMethod,
+    OUT ULONG *pulPinFactoryID)
+{
+    PKSM_PIN Pin;
+    PKSFILTER Filter;
+
+    if (!Irp)
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* get filter from irp */
+    Filter = KsGetFilterFromIrp(Irp);
+
+    /* sanity check */
+    ASSERT(Filter);
+    ASSERT(pKSMethod);
+
+    /* get method request */
+    Pin = (PKSM_PIN)pKSMethod;
+
+    /* create the pin */
+    return BdaCreatePin(Filter, Pin->PinId, pulPinFactoryID);
+}
+
+
+
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaInitFilter(
+    IN PKSFILTER pKSFilter,
     IN const BDA_FILTER_TEMPLATE *pBdaFilterTemplate)
 {
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaCreateFilterFactoryEx(
-    IN  PKSDEVICE pKSDevice,
-    IN  const KSFILTER_DESCRIPTOR *pFilterDescriptor,
-    IN  const BDA_FILTER_TEMPLATE *pBdaFilterTemplate,
-    OUT PKSFILTERFACTORY  *ppKSFilterFactory)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
 
-STDMETHODIMP_(NTSTATUS) BdaCreatePin(
-    IN PKSFILTER pKSFilter,
-    IN ULONG ulPinType,
-    OUT ULONG *pulPinId)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
 
-STDMETHODIMP_(NTSTATUS) BdaCreateTopology(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaCreateTopology(
     IN PKSFILTER pKSFilter,
     IN ULONG InputPinId,
     IN ULONG OutputPinId)
@@ -58,7 +311,12 @@ STDMETHODIMP_(NTSTATUS) BdaCreateTopology(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaDeletePin(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaDeletePin(
     IN PKSFILTER pKSFilter,
     IN ULONG *pulPinId)
 {
@@ -66,58 +324,90 @@ STDMETHODIMP_(NTSTATUS) BdaDeletePin(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaFilterFactoryUpdateCacheData(
-    IN PKSFILTERFACTORY pFilterFactory,
-    IN const KSFILTER_DESCRIPTOR *pFilterDescriptor OPTIONAL)
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaFilterFactoryUpdateCacheData(
+    IN PKSFILTERFACTORY FilterFactory,
+    IN const KSFILTER_DESCRIPTOR *FilterDescriptor OPTIONAL)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    return KsFilterFactoryUpdateCacheData(FilterFactory, FilterDescriptor);
 }
 
-STDMETHODIMP_(NTSTATUS) BdaGetChangeState(
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaGetChangeState(
     IN PIRP Irp,
-    OUT BDA_CHANGE_STATE *pChangeState)
+    OUT BDA_CHANGE_STATE *ChangeState)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    if (Irp && ChangeState)
+    {
+        *ChangeState = BDA_CHANGES_COMPLETE;
+        return STATUS_SUCCESS;
+    }
+
+    /* invalid parameters supplied */
+    return STATUS_INVALID_PARAMETER;
+
 }
 
-STDMETHODIMP_(NTSTATUS) BdaInitFilter(
-    IN PKSFILTER pKSFilter,
-    IN const BDA_FILTER_TEMPLATE *pBdaFilterTemplate)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-STDMETHODIMP_(NTSTATUS) BdaMethodCreatePin(
-    IN PIRP Irp,
-    IN KSMETHOD *pKSMethod,
-    OUT ULONG *pulPinFactoryID)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-STDMETHODIMP_(NTSTATUS) BdaMethodCreateTopology(
-    IN PIRP Irp,
-    IN KSMETHOD *pKSMethod,
-    OPTIONAL PVOID pvIgnored)
-{
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-STDMETHODIMP_(NTSTATUS) BdaMethodDeletePin(
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaMethodCreateTopology(
     IN PIRP Irp,
     IN KSMETHOD *pKSMethod,
     OPTIONAL PVOID pvIgnored)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PKSFILTER Filter;
+    PKSP_BDA_NODE_PIN Node;
+
+    /* check input parameters */
+    if (!Irp || !pKSMethod)
+        return STATUS_INVALID_PARAMETER;
+
+    /* get filter */
+    Filter = KsGetFilterFromIrp(Irp);
+
+    /* sanity check */
+    ASSERT(Filter);
+
+    /* get method request */
+    Node = (PKSP_BDA_NODE_PIN)pKSMethod;
+
+    /* create the topology */
+    return BdaCreateTopology(Filter, Node->ulInputPinId, Node->ulOutputPinId);
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyGetControllingPinId(
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaMethodDeletePin(
+    IN PIRP Irp,
+    IN KSMETHOD *pKSMethod,
+    OPTIONAL PVOID pvIgnored)
+{
+    if (!Irp)
+        return STATUS_INVALID_PARAMETER;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyGetControllingPinId(
     IN PIRP Irp,
     IN KSP_BDA_NODE_PIN *pProperty,
     OUT ULONG *pulControllingPinId)
@@ -126,7 +416,12 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyGetControllingPinId(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyGetPinControl(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyGetPinControl(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT ULONG *pulProperty)
@@ -135,7 +430,12 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyGetPinControl(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyNodeDescriptors(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyNodeDescriptors(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT GUID *pguidProperty)
@@ -144,7 +444,12 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyNodeDescriptors(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyNodeEvents(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyNodeEvents(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT GUID *pguidProperty)
@@ -153,7 +458,12 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyNodeEvents(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyNodeMethods(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyNodeMethods(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT GUID *pguidProperty)
@@ -162,7 +472,12 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyNodeMethods(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyNodeProperties(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyNodeProperties(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT GUID *pguidProperty)
@@ -171,7 +486,12 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyNodeProperties(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyNodeTypes(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyNodeTypes(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT ULONG *pulProperty)
@@ -180,7 +500,12 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyNodeTypes(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyPinTypes(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyPinTypes(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT ULONG *pulProperty)
@@ -189,31 +514,105 @@ STDMETHODIMP_(NTSTATUS) BdaPropertyPinTypes(
     return STATUS_NOT_IMPLEMENTED;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaPropertyTemplateConnections(
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaPropertyTemplateConnections(
     IN PIRP Irp,
     IN KSPROPERTY *pKSProperty,
     OUT KSTOPOLOGY_CONNECTION *pConnectionProperty)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PBDA_FILTER_INSTANCE_ENTRY FilterInstance;
+    PKSFILTER Filter;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Index;
+
+    /* validate parameters */
+    if (!Irp || !pKSProperty)
+        return STATUS_INVALID_PARAMETER;
+
+    /* first get the filter */
+    Filter = KsGetFilterFromIrp(Irp);
+
+    /* sanity check */
+    ASSERT(Filter);
+
+    /* verify filter has been registered with BDA */
+    FilterInstance = GetFilterInstanceEntry(KsFilterGetParentFilterFactory(Filter));
+
+    if (!FilterInstance)
+        return STATUS_INVALID_PARAMETER;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (!pConnectionProperty)
+    {
+        /* caller needs the size first */
+        Irp->IoStatus.Information = FilterInstance->FilterTemplate->pFilterDescriptor->ConnectionsCount * sizeof(KSTOPOLOGY_CONNECTION);
+        Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* sanity check */
+    ASSERT(FilterInstance->FilterTemplate->pFilterDescriptor->ConnectionsCount * sizeof(KSTOPOLOGY_CONNECTION) <= IoStack->Parameters.DeviceIoControl.OutputBufferLength);
+
+    for(Index = 0; Index < FilterInstance->FilterTemplate->pFilterDescriptor->ConnectionsCount; Index++)
+    {
+        /* sanity check */
+        ASSERT(FilterInstance->FilterTemplate->pFilterDescriptor->Connections);
+
+        /* copy connection */
+        RtlMoveMemory(pConnectionProperty, &FilterInstance->FilterTemplate->pFilterDescriptor->Connections[Index], sizeof(KSTOPOLOGY_CONNECTION));
+    }
+
+    /* store result */
+    Irp->IoStatus.Information = FilterInstance->FilterTemplate->pFilterDescriptor->ConnectionsCount * sizeof(KSTOPOLOGY_CONNECTION);
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+
+    /* done */
+    return STATUS_SUCCESS;
+
 }
 
-STDMETHODIMP_(NTSTATUS) BdaStartChanges(IN PIRP Irp)
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaStartChanges(IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    if (Irp)
+        return STATUS_SUCCESS;
+    else
+        return STATUS_INVALID_PARAMETER;
+
 }
 
-STDMETHODIMP_(NTSTATUS) BdaUninitFilter(IN PKSFILTER pKSFilter)
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
+BdaUninitFilter(IN PKSFILTER pKSFilter)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
-STDMETHODIMP_(NTSTATUS) BdaValidateNodeProperty(
+/*
+    @unimplemented
+*/
+NTSTATUS
+NTAPI
+BdaValidateNodeProperty(
     IN PIRP Irp,
-    IN KSPROPERTY *pKSProperty)
+    IN KSPROPERTY *KSProperty)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    /* check for valid parameter */
+    if (Irp && KSProperty)
+        return STATUS_SUCCESS;
+
+    return STATUS_INVALID_PARAMETER;
 }
