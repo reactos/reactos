@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 BOOL WINAPI ShowHideMenuCtl (HWND, UINT_PTR, LPINT);
-VOID WINAPI GetEffectiveClientRect (HWND hwnd, LPRECT lpRect, const INT *lpInfo);
+VOID WINAPI GetEffectiveClientRect (HWND, LPRECT, const INT*);
 VOID WINAPI InitCommonControls (VOID);
 
 typedef struct tagINITCOMMONCONTROLSEX {
@@ -344,8 +344,8 @@ static const WCHAR STATUSCLASSNAMEW[] = { 'm','s','c','t','l','s','_',
 HWND WINAPI CreateStatusWindowA (LONG, LPCSTR, HWND, UINT);
 HWND WINAPI CreateStatusWindowW (LONG, LPCWSTR, HWND, UINT);
 #define CreateStatusWindow WINELIB_NAME_AW(CreateStatusWindow)
-void WINAPI DrawStatusTextA (HDC hdc, LPCRECT lprc, LPCSTR text, UINT style);
-void WINAPI DrawStatusTextW (HDC hdc, LPCRECT lprc, LPCWSTR text, UINT style);
+VOID WINAPI DrawStatusTextA (HDC, LPCRECT, LPCSTR, UINT);
+VOID WINAPI DrawStatusTextW (HDC, LPCRECT, LPCWSTR, UINT);
 #define DrawStatusText WINELIB_NAME_AW(DrawStatusText)
 VOID WINAPI MenuHelp (UINT, WPARAM, LPARAM, HMENU,
                       HINSTANCE, HWND, UINT*);
@@ -1098,7 +1098,7 @@ static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
 #define TBSTYLE_EX_UNDOC1               0x00000004 /* similar to TBSTYLE_WRAPABLE */
 #define TBSTYLE_EX_MIXEDBUTTONS         0x00000008
 #define TBSTYLE_EX_HIDECLIPPEDBUTTONS   0x00000010 /* don't show partially obscured buttons */
-#define TBSTYLE_EX_DOUBLEBUFFER         0x00000080 /* Double Buffer the toolbar ??? */
+#define TBSTYLE_EX_DOUBLEBUFFER         0x00000080 /* Double Buffer the toolbar */
 
 #define TBIF_IMAGE              0x00000001
 #define TBIF_TEXT               0x00000002
@@ -2892,6 +2892,10 @@ typedef struct tagTVKEYDOWN
 #define TreeView_MapHTREEITEMToAccID(hwnd, htreeitem) \
     (UINT)SNDMSG((hwnd), TVM_MAPHTREEITEMTOACCID, (WPARAM)htreeitem, 0)
 
+#define TreeView_SetUnicodeFormat(hwnd, fUnicode) \
+    (BOOL)SNDMSG((hwnd), TVM_SETUNICODEFORMAT, (WPARAM)(fUnicode), 0)
+#define TreeView_GetUnicodeFormat(hwnd) \
+    (BOOL)SNDMSG((hwnd), TVM_GETUNICODEFORMAT, 0, 0)
 
 /* Listview control */
 
@@ -3387,9 +3391,6 @@ typedef struct tagLVBKIMAGEW
 #define ListView_GetBkImage(hwnd, plvbki) \
     (BOOL)SNDMSG((hwnd), LVM_GETBKIMAGE, 0, (LPARAM)plvbki)
 
-#define ListView_GetCheckState(w,i) ((((UINT)(SNDMSG((w),LVM_GETITEMSTATE,(WPARAM)(i),LVIS_STATEIMAGEMASK)))>>12)-1)
-#define ListView_SetCheckState(w,i,f) ListView_SetItemState(w,i,INDEXTOSTATEIMAGEMASK((f)+1),LVIS_STATEIMAGEMASK)
-
 typedef struct tagLVCOLUMNA
 {
     UINT mask;
@@ -3746,6 +3747,11 @@ typedef struct NMLVSCROLL
   SNDMSGA(hwnd, LVM_SETITEMSTATE, (WPARAM)(UINT)i, (LPARAM) (LPLVITEMA)&_LVi);}
 #define ListView_GetItemState(hwnd,i,mask) \
     (BOOL)SNDMSGA((hwnd),LVM_GETITEMSTATE,(WPARAM)(UINT)(i),(LPARAM)(UINT)(mask))
+#define ListView_SetCheckState(hwndLV, i, bCheck) \
+    { LVITEM _LVi; _LVi.state = INDEXTOSTATEIMAGEMASK((bCheck)?2:1); _LVi.stateMask = LVIS_STATEIMAGEMASK; \
+    SNDMSG(hwndLV, LVM_SETITEMSTATE, (WPARAM)(UINT)(i), (LPARAM)(LPLVITEM)&_LVi);}
+#define ListView_GetCheckState(hwndLV, i) \
+    (((UINT)SNDMSG((hwndLV), LVM_GETITEMSTATE, (i), LVIS_STATEIMAGEMASK) >> 12) - 1)
 #define ListView_GetCountPerPage(hwnd) \
     (BOOL)SNDMSGW((hwnd),LVM_GETCOUNTPERPAGE,0,0L)
 #define ListView_GetImageList(hwnd,iImageList) \
@@ -3773,6 +3779,8 @@ typedef struct NMLVSCROLL
     (HWND)SNDMSGA((hwnd), LVM_GETEDITCONTROL, 0, 0)
 #define ListView_GetTextColor(hwnd)  \
     (COLORREF)SNDMSGA((hwnd), LVM_GETTEXTCOLOR, 0, 0)
+#define ListView_GetTextBkColor(hwnd) \
+    (COLORREF)SNDMSGA((hwnd), LVM_GETTEXTBKCOLOR, 0, 0)
 #define ListView_GetBkColor(hwnd)  \
     (COLORREF)SNDMSGA((hwnd), LVM_GETBKCOLOR, 0, 0)
 #define ListView_GetItemA(hwnd,pitem) \
@@ -3803,6 +3811,9 @@ typedef struct NMLVSCROLL
 
 #define ListView_SortItems(hwndLV,_pfnCompare,_lPrm) \
     (BOOL)SNDMSGA((hwndLV),LVM_SORTITEMS,(WPARAM)(LPARAM)_lPrm,(LPARAM)(PFNLVCOMPARE)_pfnCompare)
+#define ListView_SortItemsEx(hwndLV, _pfnCompare, _lPrm) \
+  (BOOL)SNDMSGA((hwndLV), LVM_SORTITEMSEX, (WPARAM)(LPARAM)(_lPrm), (LPARAM)(PFNLVCOMPARE)(_pfnCompare))
+
 #define ListView_SetItemPosition(hwndLV, i, x, y) \
     (BOOL)SNDMSGA((hwndLV),LVM_SETITEMPOSITION,(WPARAM)(INT)(i),MAKELPARAM((x),(y)))
 #define ListView_GetSelectedCount(hwndLV) \
@@ -3958,6 +3969,10 @@ typedef struct NMLVSCROLL
     (UINT)SNDMSG((hwnd), LVM_MAPINDEXTOID, (WPARAM)index, (LPARAM)0)
 #define ListView_MapIDToIndex(hwnd, id) \
     (UINT)SNDMSG((hwnd), LVM_MAPIDTOINDEX, (WPARAM)id, (LPARAM)0)
+#define ListView_SetUnicodeFormat(hwnd, fUnicode) \
+    (BOOL)SNDMSG((hwnd), LVM_SETUNICODEFORMAT, (WPARAM)(fUnicode), 0)
+#define ListView_GetUnicodeFormat(hwnd) \
+    (BOOL)SNDMSG((hwnd), LVM_GETUNICODEFORMAT, 0, 0)
 
 /* Tab Control */
 
