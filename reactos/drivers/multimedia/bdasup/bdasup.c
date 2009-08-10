@@ -328,10 +328,8 @@ BdaMethodCreatePin(
     return BdaCreatePin(Filter, Pin->PinId, pulPinFactoryID);
 }
 
-
-
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
@@ -604,7 +602,7 @@ BdaPropertyNodeProperties(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
@@ -613,12 +611,64 @@ BdaPropertyNodeTypes(
     IN KSPROPERTY *pKSProperty,
     OUT ULONG *pulProperty)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
+    PKSFILTERFACTORY FilterFactory;
+    PKSFILTER pKSFilter;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Index;
+
+    /* check input parameter */
+    if (!Irp || !pKSProperty)
+        return STATUS_INVALID_PARAMETER;
+
+    /* first get the filter */
+    pKSFilter = KsGetFilterFromIrp(Irp);
+
+    /* sanity check */
+    ASSERT(pKSFilter);
+
+    /* get parent filter factory */
+    FilterFactory = KsFilterGetParentFilterFactory(pKSFilter);
+
+    /* sanity check */
+    ASSERT(FilterFactory);
+
+    /* find instance entry */
+    InstanceEntry = GetFilterInstanceEntry(FilterFactory);
+    ASSERT(InstanceEntry);
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* are there node types provided */
+    if (!pulProperty)
+    {
+        /* no node entry array provided */
+        Irp->IoStatus.Information = InstanceEntry->FilterTemplate->pFilterDescriptor->NodeDescriptorsCount * sizeof(ULONG);
+        Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
+        return STATUS_MORE_ENTRIES;
+    }
+
+    if (InstanceEntry->FilterTemplate->pFilterDescriptor->NodeDescriptorsCount * sizeof(ULONG) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+    {
+        /* buffer too small */
+        Irp->IoStatus.Information = InstanceEntry->FilterTemplate->pFilterDescriptor->NodeDescriptorsCount * sizeof(ULONG);
+        Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* now copy all descriptors */
+    for(Index = 0; Index < InstanceEntry->FilterTemplate->pFilterDescriptor->NodeDescriptorsCount; Index++)
+    {
+        /* use the index as the type */
+        pulProperty[Index] = Index;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
@@ -627,8 +677,60 @@ BdaPropertyPinTypes(
     IN KSPROPERTY *pKSProperty,
     OUT ULONG *pulProperty)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
+    PKSFILTERFACTORY FilterFactory;
+    PKSFILTER pKSFilter;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Index;
+
+    /* check input parameter */
+    if (!Irp || !pKSProperty)
+        return STATUS_INVALID_PARAMETER;
+
+    /* first get the filter */
+    pKSFilter = KsGetFilterFromIrp(Irp);
+
+    /* sanity check */
+    ASSERT(pKSFilter);
+
+    /* get parent filter factory */
+    FilterFactory = KsFilterGetParentFilterFactory(pKSFilter);
+
+    /* sanity check */
+    ASSERT(FilterFactory);
+
+    /* find instance entry */
+    InstanceEntry = GetFilterInstanceEntry(FilterFactory);
+    ASSERT(InstanceEntry);
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* are there node types provided */
+    if (!pKSProperty)
+    {
+        /* no node entry array provided */
+        Irp->IoStatus.Information = InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount * sizeof(ULONG);
+        Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
+        return STATUS_MORE_ENTRIES;
+    }
+
+    if (InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount * sizeof(ULONG) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
+    {
+        /* buffer too small */
+        Irp->IoStatus.Information = InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount * sizeof(ULONG);
+        Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    /* now copy all descriptors */
+    for(Index = 0; Index < InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptorsCount; Index++)
+    {
+        /* use the index as the type */
+        pulProperty[Index] = Index;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
