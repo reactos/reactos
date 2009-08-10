@@ -106,6 +106,43 @@ BdaCreateFilterFactory(
     return BdaCreateFilterFactoryEx(pKSDevice, pFilterDescriptor, pBdaFilterTemplate, NULL);
 }
 
+VOID
+NTAPI
+FreeFilterInstance(
+    IN PVOID Context)
+{
+    PBDA_FILTER_INSTANCE_ENTRY InstanceEntry = NULL;
+    PLIST_ENTRY Entry;
+    KIRQL OldLevel;
+
+    /* acquire list lock */
+    KeAcquireSpinLock(&g_Settings.FilterFactoryInstanceListLock, &OldLevel);
+
+    /* point to first entry */
+    Entry = g_Settings.FilterFactoryInstanceList.Flink;
+
+    while(Entry != &g_Settings.FilterFactoryInstanceList)
+    {
+        /* get instance entry from list entry offset */
+        InstanceEntry = (PBDA_FILTER_INSTANCE_ENTRY)CONTAINING_RECORD(Entry, BDA_FILTER_INSTANCE_ENTRY, Entry);
+
+        /* is the instance entry the requested one */
+        if (InstanceEntry == (PBDA_FILTER_INSTANCE_ENTRY)Context)
+        {
+            RemoveEntryList(&InstanceEntry->Entry);
+            FreeItem(InstanceEntry);
+            break;
+        }
+
+        /* move to next entry */
+        Entry = Entry->Flink;
+    }
+
+    /* release spin lock */
+    KeReleaseSpinLock(&g_Settings.FilterFactoryInstanceListLock, OldLevel);
+}
+
+
 /*
     @implemented
 */
@@ -141,6 +178,16 @@ BdaCreateFilterFactoryEx(
     if (NT_SUCCESS(Status))
     {
 
+        /* add the item to filter object bag */
+        Status = KsAddItemToObjectBag(FilterFactory->Bag, FilterInstance, FreeFilterInstance);
+        if (!NT_SUCCESS(Status))
+        {
+            /* destroy filter instance */
+            FreeItem(FilterInstance);
+            KsDeleteFilterFactory(FilterFactory);
+            return Status;
+        }
+
         /* initialize filter instance entry */
         FilterInstance->FilterFactoryInstance = FilterFactory;
         FilterInstance->FilterTemplate = (BDA_FILTER_TEMPLATE *)BdaFilterTemplate;
@@ -153,6 +200,7 @@ BdaCreateFilterFactoryEx(
 
         /* release spin lock */
         KeReleaseSpinLock(&g_Settings.FilterFactoryInstanceListLock, OldLevel);
+
 
         if (ppKSFilterFactory)
         {
