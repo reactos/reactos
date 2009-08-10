@@ -31,44 +31,6 @@ Dispatch_fnDeviceIoControl(
 
 NTSTATUS
 NTAPI
-Dispatch_fnRead(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    /* unsupported request */
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-Dispatch_fnWrite(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    /* unsupported request */
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-Dispatch_fnFlush(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 Dispatch_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -81,122 +43,19 @@ Dispatch_fnClose(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-NTAPI
-Dispatch_fnQuerySecurity(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-    DPRINT("Dispatch_fnQuerySecurity called DeviceObject %p Irp %p\n", DeviceObject);
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSTATUS
-NTAPI
-Dispatch_fnSetSecurity(
-    PDEVICE_OBJECT DeviceObject,
-    PIRP Irp)
-{
-
-    DPRINT("Dispatch_fnSetSecurity called DeviceObject %p Irp %p\n", DeviceObject);
-
-    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_UNSUCCESSFUL;
-}
-
-BOOLEAN
-NTAPI
-Dispatch_fnFastDeviceIoControl(
-    PFILE_OBJECT FileObject,
-    BOOLEAN Wait,
-    PVOID InputBuffer,
-    ULONG InputBufferLength,
-    PVOID OutputBuffer,
-    ULONG OutputBufferLength,
-    ULONG IoControlCode,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    DPRINT("Dispatch_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
-
-
-    return FALSE;
-}
-
-
-BOOLEAN
-NTAPI
-Dispatch_fnFastRead(
-    PFILE_OBJECT FileObject,
-    PLARGE_INTEGER FileOffset,
-    ULONG Length,
-    BOOLEAN Wait,
-    ULONG LockKey,
-    PVOID Buffer,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    DPRINT("Dispatch_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
-
-    return FALSE;
-
-}
-
-BOOLEAN
-NTAPI
-Dispatch_fnFastWrite(
-    PFILE_OBJECT FileObject,
-    PLARGE_INTEGER FileOffset,
-    ULONG Length,
-    BOOLEAN Wait,
-    ULONG LockKey,
-    PVOID Buffer,
-    PIO_STATUS_BLOCK IoStatus,
-    PDEVICE_OBJECT DeviceObject)
-{
-    DPRINT("Dispatch_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
-
-    return FALSE;
-}
-
 static KSDISPATCH_TABLE DispatchTable =
 {
     Dispatch_fnDeviceIoControl,
-    Dispatch_fnRead,
-    Dispatch_fnWrite,
-    Dispatch_fnFlush,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
     Dispatch_fnClose,
-    Dispatch_fnQuerySecurity,
-    Dispatch_fnSetSecurity,
-    Dispatch_fnFastDeviceIoControl,
-    Dispatch_fnFastRead,
-    Dispatch_fnFastWrite,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchFastIoDeviceControlFailure,
+    KsDispatchFastReadFailure,
+    KsDispatchFastWriteFailure,
 };
-
-NTSTATUS
-NTAPI
-DispatchCreateSysAudioPin(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    NTSTATUS Status;
-
-    DPRINT("DispatchCreateSysAudio entered\n");
-    /* create the virtual pin */
-    Status = CreateSysAudioPin(Irp);
-
-    /* store result */
-    Irp->IoStatus.Information = 0;
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
-}
 
 NTSTATUS
 NTAPI
@@ -208,9 +67,7 @@ DispatchCreateSysAudio(
     KSOBJECT_HEADER ObjectHeader;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
-    static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
-
-    DPRINT("DispatchCreateSysAudio entered\n");
+    DPRINT1("DispatchCreateSysAudio entered\n");
 
     /* allocate create item */
     CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
@@ -227,12 +84,12 @@ DispatchCreateSysAudio(
 
     /* setup create context */
     CreateItem->Create = DispatchCreateSysAudioPin;
-    RtlInitUnicodeString(&CreateItem->ObjectClass, KS_NAME_PIN);
+    RtlInitUnicodeString(&CreateItem->ObjectClass, KSSTRING_Pin);
 
     /* allocate object header */
     Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
 
-    DPRINT("KsAllocateObjectHeader result %x\n", Status);
+    DPRINT1("KsAllocateObjectHeader result %x\n", Status);
     /* complete the irp */
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = Status;

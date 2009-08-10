@@ -135,7 +135,7 @@ WdmAudControlOpen(
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo)
 {
-    PSYSAUDIO_INSTANCE_INFO InstanceInfo;
+    SYSAUDIO_INSTANCE_INFO InstanceInfo;
     PWDMAUD_DEVICE_EXTENSION DeviceExtension;
     ULONG BytesReturned;
     NTSTATUS Status;
@@ -185,21 +185,16 @@ WdmAudControlOpen(
     }
 
 
-    Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT) + sizeof(SYSAUDIO_INSTANCE_INFO);
-    InstanceInfo = ExAllocatePool(NonPagedPool, Length);
-    if (!InstanceInfo)
+    Length = sizeof(KSDATAFORMAT_WAVEFORMATEX) + sizeof(KSPIN_CONNECT);
+    PinConnect = ExAllocatePool(NonPagedPool, Length);
+    if (!PinConnect)
     {
         /* no memory */
         return SetIrpIoStatus(Irp, STATUS_NO_MEMORY, 0);
     }
 
-    InstanceInfo->Property.Set = KSPROPSETID_Sysaudio;
-    InstanceInfo->Property.Id = KSPROPERTY_SYSAUDIO_INSTANCE_INFO;
-    InstanceInfo->Property.Flags = KSPROPERTY_TYPE_SET;
-    InstanceInfo->Flags = 0;
-    InstanceInfo->DeviceNumber = FilterId;
-
     DeviceExtension = (PWDMAUD_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
     if (DeviceInfo->DeviceType == WAVE_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIDI_IN_DEVICE_TYPE ||
         DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)
@@ -215,17 +210,14 @@ WdmAudControlOpen(
         DesiredAccess |= GENERIC_WRITE;
     }
 
-    PinConnect = (KSPIN_CONNECT*)(InstanceInfo + 1);
-
-
     PinConnect->Interface.Set = KSINTERFACESETID_Standard;
     PinConnect->Interface.Id = KSINTERFACE_STANDARD_STREAMING;
     PinConnect->Interface.Flags = 0;
     PinConnect->Medium.Set = KSMEDIUMSETID_Standard;
     PinConnect->Medium.Id = KSMEDIUM_TYPE_ANYINSTANCE;
     PinConnect->Medium.Flags = 0;
+    PinConnect->PinToHandle = NULL;
     PinConnect->PinId = PinId;
-    PinConnect->PinToHandle = DeviceExtension->hSysAudio;
     PinConnect->Priority.PriorityClass = KSPRIORITY_NORMAL;
     PinConnect->Priority.PrioritySubClass = 1;
 
@@ -247,9 +239,29 @@ WdmAudControlOpen(
     DataFormat->DataFormat.Specifier = KSDATAFORMAT_SPECIFIER_WAVEFORMATEX;
     DataFormat->DataFormat.SampleSize = 4;
 
-    /* ros specific pin creation request */
-    InstanceInfo->Property.Id = (ULONG)-1;
-    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)InstanceInfo, Length, &PinHandle, sizeof(HANDLE), &BytesReturned);
+    /* setup property request */
+    InstanceInfo.Property.Set = KSPROPSETID_Sysaudio;
+    InstanceInfo.Property.Id = KSPROPERTY_SYSAUDIO_INSTANCE_INFO;
+    InstanceInfo.Property.Flags = KSPROPERTY_TYPE_SET;
+    InstanceInfo.Flags = 0;
+    InstanceInfo.DeviceNumber = FilterId;
+
+    /* first open the virtual device */
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        ExFreePool(PinConnect);
+        return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
+    }
+
+    /* now create the pin */
+    Status = KsCreatePin(DeviceExtension->hSysAudio, PinConnect, DesiredAccess, &PinHandle);
+
+    /* free create info */
+    ExFreePool(PinConnect);
+
     if (NT_SUCCESS(Status))
     {
         PWDMAUD_HANDLE Handels;
