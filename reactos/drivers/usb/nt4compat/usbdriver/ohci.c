@@ -236,7 +236,7 @@ PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
             //KeSynchronizeExecution(pdev_ext->ohci_int, ehci_cal_cpu_freq, NULL);
         }
     }
-    return NULL;
+    return pdev;
 }
 
 BOOLEAN ohci_mem_init (POHCI_DEVICE_EXTENSION dev_ext)

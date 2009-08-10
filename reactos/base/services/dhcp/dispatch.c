@@ -50,39 +50,9 @@
 struct protocol *protocols = NULL;
 struct timeout *timeouts = NULL;
 static struct timeout *free_timeouts = NULL;
-static int interfaces_invalidated = FALSE;
 void (*bootp_packet_handler)(struct interface_info *,
                              struct dhcp_packet *, int, unsigned int,
                              struct iaddr, struct hardware *);
-
-static int interface_status(struct interface_info *ifinfo);
-
-/*
- * Use getifaddrs() to get a list of all the attached interfaces.  For
- * each interface that's of type INET and not the loopback interface,
- * register that interface with the network I/O software, figure out
- * what subnet it's on, and add it to the list of interfaces.
- */
-void
-discover_interfaces(struct interface_info *iface)
-{
-    PDHCP_ADAPTER Adapter = AdapterFindInfo( iface );
-
-    if_register_receive(iface);
-    if_register_send(iface);
-
-    if( Adapter->DhclientState.state != S_STATIC ) {
-        add_protocol(iface->name, iface->rfdesc, got_one, iface);
-	iface->client->state = S_INIT;
-	state_reboot(iface);
-    }
-}
-
-void
-reinitialize_interfaces(void)
-{
-    interfaces_invalidated = 1;
-}
 
 /*
  * Wait for packets to come in using poll().  When a packet comes in,
@@ -93,7 +63,7 @@ reinitialize_interfaces(void)
 void
 dispatch(void)
 {
-    int count, i, to_msec, nfds = 0;
+    int count, i, to_msec, nfds, err;
     struct protocol *l;
     fd_set fds;
     time_t howlong, cur_time;
@@ -101,17 +71,19 @@ dispatch(void)
 
     ApiLock();
 
-    for (l = protocols; l; l = l->next)
-        nfds++;
-
-    FD_ZERO(&fds);
-
     do {
         /*
          * Call any expired timeouts, and then if there's still
          * a timeout registered, time out the select call then.
          */
     another:
+        AdapterDiscover();
+
+        for (l = protocols, nfds = 0; l; l = l->next)
+            nfds++;
+
+        FD_ZERO(&fds);
+
         time(&cur_time);
 
         if (timeouts) {
@@ -150,10 +122,9 @@ dispatch(void)
         }
 
         if (i == 0) {
-            /* No interfaces for now, set the select timeout reasonably so
-             * we can recover from that condition later. */
-            timeval.tv_sec = 5;
-            timeval.tv_usec = 0;
+            /* Wait for 5 seconds before looking for more interfaces */
+            Sleep(5000);
+            continue;
         } else {
             /* Wait for a packet or a timeout... XXX */
             timeval.tv_sec = to_msec / 1000;
@@ -184,12 +155,9 @@ dispatch(void)
 
         /* Not likely to be transitory... */
         if (count == SOCKET_ERROR) {
-            if (errno == EAGAIN || errno == EINTR) {
-                continue;
-            } else {
-                error("poll: %s", strerror(errno));
-                break;
-            }
+            err = WSAGetLastError();
+            error("poll: %d", err);
+            break;
         }
 
         i = 0;
@@ -201,12 +169,9 @@ dispatch(void)
                            !ip->dead)) {
                     DH_DbgPrint(MID_TRACE,("Handling %x\n", l));
                     (*(l->handler))(l);
-                    if (interfaces_invalidated)
-                        break;
                 }
                 i++;
             }
-            interfaces_invalidated = 0;
         }
     } while (1);
 
@@ -233,19 +198,21 @@ got_one(struct protocol *l)
 
     if ((result = receive_packet(ip, u.packbuf, sizeof(u), &from,
                                  &hfrom)) == -1) {
-        warning("receive_packet failed on %s: %s", ip->name,
-                strerror(errno));
+        warning("receive_packet failed on %s: %d", ip->name,
+                WSAGetLastError());
         ip->errors++;
-        if ((!interface_status(ip)) ||
-            (ip->noifmedia && ip->errors > 20)) {
+        if (ip->errors > 20) {
             /* our interface has gone away. */
             warning("Interface %s no longer appears valid.",
                     ip->name);
             ip->dead = 1;
-            interfaces_invalidated = 1;
             close(l->fd);
             remove_protocol(l);
-            free(ip);
+            adapter = AdapterFindInfo(ip);
+            if (adapter) {
+                RemoveEntryList(&adapter->ListEntry);
+                free(adapter);
+            }
         }
         return;
     }
@@ -269,75 +236,6 @@ got_one(struct protocol *l)
                                 from.sin_port, ifrom, &hfrom);
     }
 }
-
-#if 0
-int
-interface_status(struct interface_info *ifinfo)
-{
-    char *ifname = ifinfo->name;
-    int ifsock = ifinfo->rfdesc;
-    struct ifreq ifr;
-    struct ifmediareq ifmr;
-
-    /* get interface flags */
-    memset(&ifr, 0, sizeof(ifr));
-    strlcpy(ifr.ifr_name, ifname, sizeof(ifr.ifr_name));
-    if (ioctl(ifsock, SIOCGIFFLAGS, &ifr) < 0) {
-        syslog(LOG_ERR, "ioctl(SIOCGIFFLAGS) on %s: %m", ifname);
-        goto inactive;
-    }
-
-    /*
-     * if one of UP and RUNNING flags is dropped,
-     * the interface is not active.
-     */
-    if ((ifr.ifr_flags & (IFF_UP|IFF_RUNNING)) != (IFF_UP|IFF_RUNNING))
-        goto inactive;
-
-    /* Next, check carrier on the interface, if possible */
-    if (ifinfo->noifmedia)
-        goto active;
-    memset(&ifmr, 0, sizeof(ifmr));
-    strlcpy(ifmr.ifm_name, ifname, sizeof(ifmr.ifm_name));
-    if (ioctl(ifsock, SIOCGIFMEDIA, (caddr_t)&ifmr) < 0) {
-        if (errno != EINVAL) {
-            syslog(LOG_DEBUG, "ioctl(SIOCGIFMEDIA) on %s: %m",
-                   ifname);
-
-            ifinfo->noifmedia = 1;
-            goto active;
-        }
-        /*
-         * EINVAL (or ENOTTY) simply means that the interface
-         * does not support the SIOCGIFMEDIA ioctl. We regard it alive.
-         */
-        ifinfo->noifmedia = 1;
-        goto active;
-    }
-    if (ifmr.ifm_status & IFM_AVALID) {
-        switch (ifmr.ifm_active & IFM_NMASK) {
-        case IFM_ETHER:
-            if (ifmr.ifm_status & IFM_ACTIVE)
-                goto active;
-            else
-                goto inactive;
-            break;
-        default:
-            goto inactive;
-        }
-    }
-inactive:
-    return (0);
-active:
-    return (1);
-}
-#else
-int
-interface_status(struct interface_info *ifinfo)
-{
-    return (1);
-}
-#endif
 
 void
 add_timeout(time_t when, void (*where)(void *), void *what)
@@ -476,33 +374,5 @@ find_protocol_by_adapter(struct interface_info *info)
 int
 interface_link_status(char *ifname)
 {
-#if 0
-    struct ifmediareq ifmr;
-    int sock;
-
-    if ((sock = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
-        error("Can't create socket");
-
-    memset(&ifmr, 0, sizeof(ifmr));
-    strlcpy(ifmr.ifm_name, ifname, sizeof(ifmr.ifm_name));
-    if (ioctl(sock, SIOCGIFMEDIA, (caddr_t)&ifmr) == -1) {
-        /* EINVAL -> link state unknown. treat as active */
-        if (errno != EINVAL)
-            syslog(LOG_DEBUG, "ioctl(SIOCGIFMEDIA) on %s: %m",
-                   ifname);
-        close(sock);
-        return (1);
-    }
-    close(sock);
-
-    if (ifmr.ifm_status & IFM_AVALID) {
-        if ((ifmr.ifm_active & IFM_NMASK) == IFM_ETHER) {
-            if (ifmr.ifm_status & IFM_ACTIVE)
-                return (1);
-            else
-                return (0);
-        }
-    }
-#endif
     return (1);
 }

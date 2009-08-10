@@ -20,6 +20,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "xcopy.h"
+
+#pragma code_page(65001)
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
@@ -27,16 +30,16 @@ STRINGTABLE
 {
     STRING_INVPARMS, "Falsche Parameteranzahl -  xcopy /? zeigt Hilfe an\n"
     STRING_INVPARM,  "Unbekannter Parameter '%s' - xcopy /? zeigt Hilfe an\n"
-    STRING_PAUSE,    "Eingabetaste betätigen, um mit dem Kopieren zu beginnen\n"
-    STRING_SIMCOPY,  "%d Datei(en) würden kopiert\n"
+    STRING_PAUSE,    "Eingabetaste betÃ¤tigen, um mit dem Kopieren zu beginnen\n"
+    STRING_SIMCOPY,  "%d Datei(en) wÃ¼rden kopiert\n"
     STRING_COPY,     "%d Datei(en) kopiert\n"
     STRING_QISDIR,   "Ist '%s' eine Datei oder ein Verzeichnis\n" \
                      "am Zielsort?\n" \
                      "(D - Datei, V - Verzeichnis)\n"
     STRING_SRCPROMPT,"%s? (Ja|Nein)\n"
-    STRING_OVERWRITE,"%s überschreiben? (Ja|Nein|Alle)\n"
+    STRING_OVERWRITE,"%s Ã¼berschreiben? (Ja|Nein|Alle)\n"
     STRING_COPYFAIL, "Kopieren von '%s' nach '%s' fehlgeschlagen. Fehlernummer: %d\n"
-    STRING_OPENFAIL, "Fehler beim Öffnen von '%s'\n"
+    STRING_OPENFAIL, "Fehler beim Ã–ffnen von '%s'\n"
     STRING_READFAIL, "Fehler beim Lesen von '%s'\n"
     STRING_YES_CHAR, "J"
     STRING_NO_CHAR,  "N"
@@ -58,20 +61,20 @@ Mit:\n\
 [/S]  Kopiere Verzeichnisse und Unterverzeichnisse\n\
 [/E]  Kopiere Verzeichnisse und Unterverzeichnisse, auch leere\n\
 [/Q]  Zeige die Dateinamen beim Kopieren nicht an\n\
-[/F]  Zeige vollständige Dateinamen von Quelle und Ziel an\n\
-[/L]  Simulation: Zeige die Namen der Datein, die kopiert würden\n\
-[/W]  Wartet vor Beginn des Kopierens auf Bestätigung\n\
+[/F]  Zeige vollstÃ¤ndige Dateinamen von Quelle und Ziel an\n\
+[/L]  Simulation: Zeige die Namen der Datein, die kopiert wÃ¼rden\n\
+[/W]  Wartet vor Beginn des Kopierens auf BestÃ¤tigung\n\
 [/T]  Erzeuge eine leere Verzeichnisstruktur, ohne Dateien zu kopieren\n\
-[/Y]  Keine Nachfrage vor dem Überschreiben von Dateien\n\
-[/-Y] Nachrage vor dem Überschreiben von Dateien\n\
-[/P]  Fragt für jede Quelldatei, ob sie kopiert werden soll\n\
+[/Y]  Keine Nachfrage vor dem Ãœberschreiben von Dateien\n\
+[/-Y] Nachrage vor dem Ãœberschreiben von Dateien\n\
+[/P]  Fragt fÃ¼r jede Quelldatei, ob sie kopiert werden soll\n\
 [/N]  Kopiert die Dateien unter ihrem Kurznamen\n\
 [/U]  Kopiert nur Dateien, die am Ziel bereits existieren\n\
-[/R]  Überschreibt schreibgeschützte Dateien\n\
+[/R]  Ãœberschreibt schreibgeschÃ¼tzte Dateien\n\
 [/H]  Kopiere auch versteckte und Systemdateien\n\
 [/C]  Nach Fehlern den Kopiervorgang fortsetzen\n\
 [/A]  Nur Dateien mit Archivbit kopieren\n\
-[/M]  Nur Dateien mit Archivbit kopieren, danach Archivbit löschen\n\
+[/M]  Nur Dateien mit Archivbit kopieren, danach Archivbit lÃ¶schen\n\
 [/D | /D:m-d-y] Kopiere neue Dateien und Dateien, die neuer als das\n\
 \t\tangegebene Datum sind. Wird kein Datum angegegebn, werden nur\n\
 \t\tQuelldateien kopiert, die neuer sind als die Zieldatei\n\n"

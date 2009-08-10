@@ -198,6 +198,10 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
             (MID_TRACE,("Adapter Name: [%s] (Bind Status %x) (dynamic)\n",
                         Adapter->DhclientInfo.name,
                         Adapter->BindStatus));
+
+        add_protocol(Adapter->DhclientInfo.name, Adapter->DhclientInfo.rfdesc, got_one, &Adapter->DhclientInfo);
+	Adapter->DhclientInfo.client->state = S_INIT;
+	state_reboot(&Adapter->DhclientInfo);
     }
 
     if( IPAddress ) free( IPAddress );
@@ -205,20 +209,31 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     return TRUE;
 }
 
+void AdapterInit() {
+    WSAStartup(0x0101,&wsd);
+
+    InitializeListHead( &AdapterList );
+}
+
+int
+InterfaceConnected(MIB_IFROW IfEntry)
+{
+    if (IfEntry.dwOperStatus == IF_OPER_STATUS_CONNECTED ||
+        IfEntry.dwOperStatus == IF_OPER_STATUS_OPERATIONAL)
+        return 1;
+
+    return 0;
+}
+
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
-
-void AdapterInit() {
+void AdapterDiscover() {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size = sizeof(MIB_IFTABLE);
     PDHCP_ADAPTER Adapter = NULL;
     struct interface_info *ifi = NULL;
     int i;
-
-    WSAStartup(0x0101,&wsd);
-
-    InitializeListHead( &AdapterList );
 
     DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
 
@@ -236,9 +251,25 @@ void AdapterInit() {
     for( i = Table->dwNumEntries - 1; i >= 0; i-- ) {
         DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
                                Table->table[i].dwIndex));
+
+        if (AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen))
+        {
+            /* This is an existing adapter */
+            if (InterfaceConnected(Table->table[i])) {
+                /* We're still active so we stay in the list */
+                ifi = &Adapter->DhclientInfo;
+            } else {
+                /* We've lost our link so out we go */
+                RemoveEntryList(&Adapter->ListEntry);
+                free(Adapter);
+            }
+
+            continue;
+        }
+
         Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
 
-        if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET ) {
+        if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(Table->table[i])) {
             memcpy( &Adapter->IfMib, &Table->table[i],
                     sizeof(Adapter->IfMib) );
             Adapter->DhclientInfo.client = &Adapter->DhclientState;
@@ -287,6 +318,9 @@ void AdapterInit() {
             if( PrepareAdapterForService( Adapter ) ) {
                 Adapter->DhclientInfo.next = ifi;
                 ifi = &Adapter->DhclientInfo;
+
+                read_client_conf(&Adapter->DhclientInfo);
+
                 InsertTailList( &AdapterList, &Adapter->ListEntry );
             } else { free( Adapter ); Adapter = 0; }
         } else { free( Adapter ); Adapter = 0; }

@@ -7,7 +7,8 @@
 #define USER32_CALLBACK_LOADDEFAULTCURSORS    (3)
 #define USER32_CALLBACK_HOOKPROC              (4)
 #define USER32_CALLBACK_EVENTPROC             (5)
-#define USER32_CALLBACK_MAXIMUM               (5)
+#define USER32_CALLBACK_LOADMENU              (6)
+#define USER32_CALLBACK_MAXIMUM               (6)
 
 typedef struct _WINDOWPROC_CALLBACK_ARGUMENTS
 {
@@ -63,6 +64,12 @@ typedef struct _EVENTPROC_CALLBACK_ARGUMENTS
   WINEVENTPROC Proc;
 } EVENTPROC_CALLBACK_ARGUMENTS, *PEVENTPROC_CALLBACK_ARGUMENTS;
 
+typedef struct _LOADMENU_CALLBACK_ARGUMENTS
+{
+  HINSTANCE hModule;
+  WCHAR MenuName[1];
+} LOADMENU_CALLBACK_ARGUMENTS, *PLOADMENU_CALLBACK_ARGUMENTS;
+
 NTSTATUS WINAPI
 User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
@@ -75,5 +82,7 @@ NTSTATUS WINAPI
 User32CallHookProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
 NTSTATUS WINAPI
 User32CallEventProcFromKernel(PVOID Arguments, ULONG ArgumentLength);
+NTSTATUS WINAPI
+User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength);
 
 #endif /* __INCLUDE_USER32_CALLBACK_H */

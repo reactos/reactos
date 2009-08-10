@@ -956,9 +956,11 @@ QSI_DEF(SystemProcessorPerformanceInformation)
     }
 
     CurrentTime.QuadPart = KeQueryInterruptTime();
-    Prcb = KeGetPcr()->Prcb;
     for (i = 0; i < KeNumberProcessors; i++)
     {
+        /* Get the PRCB on this processor */
+        Prcb = KiProcessorBlock[i];
+
         /* Calculate total user and kernel times */
         TotalTime = Prcb->IdleThread->KernelTime + Prcb->IdleThread->UserTime;
         Spi->IdleTime.QuadPart = UInt32x32To64(TotalTime, KeMaximumIncrement);
@@ -968,7 +970,6 @@ QSI_DEF(SystemProcessorPerformanceInformation)
         Spi->InterruptTime.QuadPart = UInt32x32To64(Prcb->InterruptTime, KeMaximumIncrement);
         Spi->InterruptCount = Prcb->InterruptCount;
         Spi++;
-        Prcb = (PKPRCB)((ULONG_PTR)Prcb + PAGE_SIZE);
     }
 
     return STATUS_SUCCESS;

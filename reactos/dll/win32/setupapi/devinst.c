@@ -4137,8 +4137,19 @@ SetupDiGetDeviceInstallParamsW(
             Source = &((struct DeviceInfo *)DeviceInfoData->Reserved)->InstallParams;
         else
             Source = &list->InstallParams;
-        memcpy(DeviceInstallParams, Source, Source->cbSize);
+
         ret = TRUE;
+
+        _SEH2_TRY
+        {
+            memcpy(DeviceInstallParams, Source, Source->cbSize);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            SetLastError(RtlNtStatusToDosError(_SEH2_GetExceptionCode()));
+            ret = FALSE;
+        }
+        _SEH2_END;
     }
 
     TRACE("Returning %d\n", ret);

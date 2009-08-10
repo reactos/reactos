@@ -341,6 +341,10 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
             DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n");
             *Errno = WSAEAFNOSUPPORT;
             break;
+        case STATUS_INVALID_ADDRESS:
+            DbgPrint("MSAFD: STATUS_INVALID_ADDRESS\n");
+            *Errno = WSAEADDRNOTAVAIL;
+            break;
         case STATUS_REMOTE_NOT_LISTENING:
             DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n");
             *Errno = WSAECONNREFUSED;
@@ -2289,6 +2293,7 @@ VOID SockAsyncSelectCompletionRoutine(PVOID Context, PIO_STATUS_BLOCK IoStatusBl
 
                 /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
             case AFD_EVENT_CONNECT:
+            case AFD_EVENT_CONNECT_FAIL:
                 if (0 != (Socket->SharedData.AsyncEvents & FD_CONNECT) &&
                     0 == (Socket->SharedData.AsyncDisabledEvents & FD_CONNECT))
                 {

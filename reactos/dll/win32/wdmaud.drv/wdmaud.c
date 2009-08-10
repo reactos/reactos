@@ -299,6 +299,26 @@ SetWdmWaveDeviceFormat(
 
     Instance->Handle = (PVOID)DeviceInfo.hDevice;
 
+    /* Now determine framing requirements */
+    Result = SyncOverlappedDeviceIoControl(KernelHandle,
+                                           IOCTL_GETFRAMESIZE,
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           (LPVOID) &DeviceInfo,
+                                           sizeof(WDMAUD_DEVICE_INFO),
+                                           NULL);
+
+    if ( MMSUCCESS(Result) )
+    {
+        if (DeviceInfo.u.FrameSize)
+        {
+            Instance->FrameSize = DeviceInfo.u.FrameSize;
+            Instance->BufferCount = WaveFormat->nAvgBytesPerSec / Instance->FrameSize;
+            SND_TRACE(L"FrameSize %u BufferCount %u\n", Instance->FrameSize, Instance->BufferCount);
+        }
+    }
+
+
     return MMSYSERR_NOERROR;
 }
 

@@ -884,8 +884,14 @@ HRESULT WINAPI SHDefExtractIconW(LPCWSTR pszIconFile, int iIndex, UINT uFlags,
 	if (ret == 0xFFFFFFFF)
 	  return E_FAIL;
 	if (ret > 0) {
-	  *phiconLarge = hIcons[0];
-	  *phiconSmall = hIcons[1];
+	  if (phiconLarge)
+	    *phiconLarge = hIcons[0];
+	  else
+	    DestroyIcon(hIcons[0]);
+	  if (phiconSmall)
+	    *phiconSmall = hIcons[1];
+	  else
+	    DestroyIcon(hIcons[1]);
 	  return S_OK;
 	}
 	return S_FALSE;

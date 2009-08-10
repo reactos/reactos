@@ -72,7 +72,7 @@ WsNcEntryInitializeFromRegistry(IN PNSCATALOG_ENTRY CatalogEntry,
     ULONG RegSize = MAX_PATH;
 
     /* Convert to a 00000xxx string */
-    sprintf(CatalogEntryName, "%0""12""i", UniqueId);
+    sprintf(CatalogEntryName, "%0""12""i", (int)UniqueId);
 
     /* Open the Entry */
     Return = RegOpenKeyEx(ParentKey,

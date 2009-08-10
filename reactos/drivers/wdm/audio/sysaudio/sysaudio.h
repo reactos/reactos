@@ -124,7 +124,7 @@ GetListEntry(
     IN ULONG Index);
 
 NTSTATUS
-CreateDispatcher(
+CreateSysAudioPin(
     IN PIRP Irp);
 
 ULONG

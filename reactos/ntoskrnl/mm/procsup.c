@@ -222,7 +222,7 @@ MmCreatePeb(PEPROCESS Process)
     Peb->HeapDeCommitFreeBlockThreshold = MmHeapDeCommitFreeBlockThreshold;*/
     Peb->NumberOfHeaps = 0;
     Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(PVOID);
-    Peb->ProcessHeaps = (PVOID*)Peb + 1;
+    Peb->ProcessHeaps = (PVOID*)(Peb + 1);
 
     /* Image Data */
     if ((NtHeaders = RtlImageNtHeader(Peb->ImageBaseAddress)))

@@ -73,6 +73,7 @@ typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 #define srandom srand
 
 void AdapterInit(VOID);
+void AdapterDiscover(VOID);
 HANDLE PipeInit(VOID);
 extern PDHCP_ADAPTER AdapterGetFirst();
 extern PDHCP_ADAPTER AdapterGetNext(PDHCP_ADAPTER);

@@ -34,7 +34,6 @@ SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
 
     if( CurrentIrql <= APC_LEVEL ) {
         ExAcquireFastMutex( &RecMutex->Mutex );
-        RecMutex->OldIrql = CurrentIrql;
         while( RecMutex->Locked ) {
             ExReleaseFastMutex( &RecMutex->Mutex );
             Status = KeWaitForSingleObject( &RecMutex->StateLockedEvent,
@@ -44,6 +43,7 @@ SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
                 NULL );
             ExAcquireFastMutex( &RecMutex->Mutex );
         }
+        RecMutex->OldIrql = CurrentIrql;
         RecMutex->Locked = TRUE;
         RecMutex->Writer = ToWrite;
         RecMutex->CurrentThread = CurrentThread;

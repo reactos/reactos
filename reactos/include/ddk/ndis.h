@@ -2020,9 +2020,12 @@ NdisQueryPacket(
  *   OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
  *   OUT PUINT  TotalPacketLength  OPTIONAL);
  */
-#define NdisQueryPacketLength(Packet,                                     \
-                              TotalPacketLength)                          \
-{                                                                         \
+static __inline
+VOID
+NdisQueryPacketLength(
+    IN PNDIS_PACKET  Packet,
+    OUT PUINT  TotalPacketLength  OPTIONAL)
+{
   if ((TotalPacketLength))                                                \
   {                                                                       \
     if (!(Packet)->Private.ValidCounts) {                                 \
@@ -2066,7 +2069,7 @@ NdisQueryPacket(
   {                                               \
       while (_Buffer->Next != NULL)               \
       {                                           \
-          ´_Buffer = _Buffer->Next;               \
+          _Buffer = _Buffer->Next;                \
       }                                           \
       (Packet)->Private.Tail = _Buffer;           \
   }                                               \

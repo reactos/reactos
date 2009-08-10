@@ -155,22 +155,23 @@ struct ip_msfilter {
 
 struct in6_addr {
     union {
-        u_char	_S6_u8[16];
-        u_short	_S6_u16[8];
+        u_char	Byte[16];
+        u_short	Word[8];
         u_long	_S6_u32[4];
-        } _S6_un;
+        } u;
 };
+
 /* s6_addr is the standard name */
-#define s6_addr		_S6_un._S6_u8
+#define s6_addr		u.Byte
 
 /* These are GLIBC names */
-#define s6_addr16	_S6_un._S6_u16
-#define s6_addr32	_S6_un._S6_u16
+#define s6_addr16	u.Word
+#define s6_addr32	u.Word
 
 /* These are used in some MS code */
 #define in_addr6	in6_addr
-#define _s6_bytes	_S6_un._S6_u8
-#define _s6_words	_S6_un._S6_u16
+#define _s6_bytes	u.Byte
+#define _s6_words	u.Word
 
 typedef struct in6_addr IN6_ADDR,  *PIN6_ADDR, *LPIN6_ADDR;
 
@@ -275,16 +276,37 @@ struct in6_pktinfo {
 };
 typedef struct  in6_pktinfo IN6_PKTINFO;
 
-struct addrinfo {
-	int     ai_flags;
-	int     ai_family;
-	int     ai_socktype;
-	int     ai_protocol;
-	size_t  ai_addrlen;
-	char   *ai_canonname;
-	struct sockaddr  *ai_addr;
-	struct addrinfo  *ai_next;
-};
+typedef struct addrinfo
+{
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    char *ai_canonname;
+    struct sockaddr *ai_addr;
+    struct addrinfo *ai_next;
+} ADDRINFOA, *PADDRINFOA;
+
+typedef struct addrinfoW
+{
+    int ai_flags;
+    int ai_family;
+    int ai_socktype;
+    int ai_protocol;
+    size_t ai_addrlen;
+    PWSTR ai_canonname;
+    struct sockaddr *ai_addr;
+    struct addrinfoW *ai_next;
+} ADDRINFOW, *PADDRINFOW;
+
+#ifdef UNICODE
+typedef ADDRINFOW ADDRINFOT,*PADDRINFOT;
+#else
+typedef ADDRINFOA ADDRINFOT,*PADDRINFOT;
+#endif
+
+typedef ADDRINFOA ADDRINFO, FAR *LPADDRINFO;
 
 void WSAAPI freeaddrinfo (struct addrinfo*);
 int WSAAPI getaddrinfo (const char*,const char*,const struct addrinfo*,
@@ -335,6 +357,17 @@ gai_strerrorW(int ecode)
 int WSAAPI getnameinfo(const struct sockaddr*,socklen_t,char*,DWORD,
 		       char*,DWORD,int);
 
+#if (_WIN32_WINNT >= 0x0502)
+INT WSAAPI GetNameInfoW(const SOCKADDR*,socklen_t,PWCHAR,DWORD,PWCHAR,DWORD,INT);
+#define GetNameInfoA getnameinfo
+
+#ifdef UNICODE
+#define GetNameInfo     GetNameInfoW
+#else
+#define GetNameInfo     GetNameInfoA
+#endif /* UNICODE */
+
+#endif /* (_WIN32_WINNT >= 0x0502) */
 
 /* Some older IPv4/IPv6 compatability stuff */
 

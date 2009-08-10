@@ -1,9 +1,6 @@
 /*
  *  FreeLoader
  *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
- *  Portions from Linux video.S - Display adapter & video mode setup, version 2.13 (14-May-99)
- *  Copyright (C) 1995 -- 1999 Martin Mares <mj@ucw.cz>
- *  Based on the original setup.S code (C) Linus Torvalds and Mats Anderson
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

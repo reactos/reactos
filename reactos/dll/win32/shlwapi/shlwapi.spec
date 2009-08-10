@@ -215,7 +215,7 @@
 215 stdcall -noname SHAnsiToUnicode(str ptr long)
 216 stdcall -noname SHAnsiToUnicodeCP(long str ptr long)
 217 stdcall -noname SHUnicodeToAnsi(wstr ptr ptr)
-218 stdcall -noname SHUnicodeToAnsiCP(long wstr ptr ptr)
+218 stdcall -noname SHUnicodeToAnsiCP(long wstr ptr long)
 219 stdcall -noname QISearch(long long long long)
 220 stdcall -noname SHSetDefaultDialogFont(ptr long)
 221 stdcall -noname SHRemoveDefaultDialogFont(ptr)
@@ -477,7 +477,7 @@
 477 stub -noname SHCreatePropertyBagOnMemory
 478 stdcall -noname IUnknown_TranslateAcceleratorIO(ptr ptr)
 479 stub -noname IUnknown_UIActivateIO
-480 stub -noname UrlCrackW
+480 stdcall -noname UrlCrackW(wstr long long ptr) wininet.InternetCrackUrlW
 481 stdcall -noname IUnknown_HasFocusIO(ptr)
 482 stub -noname SHMessageBoxHelpA
 483 stub -noname SHMessageBoxHelpW

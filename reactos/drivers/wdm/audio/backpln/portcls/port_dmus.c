@@ -45,6 +45,28 @@ static GUID InterfaceGuids[3] =
     }
 };
 
+DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterDMusTopologySet, TopologyPropertyHandler);
+DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PortFilterDMusPinSet, PinPropertyHandler, PinPropertyHandler, PinPropertyHandler);
+
+KSPROPERTY_SET PortDMusPropertySet[] =
+{
+    {
+        &KSPROPSETID_Topology,
+        sizeof(PortFilterDMusTopologySet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterDMusTopologySet,
+        0,
+        NULL
+    },
+    {
+        &KSPROPSETID_Pin,
+        sizeof(PortFilterDMusPinSet) / sizeof(KSPROPERTY_ITEM),
+        (const KSPROPERTY_ITEM*)&PortFilterDMusPinSet,
+        0,
+        NULL
+    }
+};
+
+
 //---------------------------------------------------------------
 // IUnknown interface functions
 //
@@ -249,8 +271,8 @@ IPortDMus_fnInit(
                                          InterfaceGuids, 
                                          0, 
                                          NULL,
-                                         0, 
-                                         NULL,
+                                         2, 
+                                         PortDMusPropertySet,
                                          0,
                                          0,
                                          0,

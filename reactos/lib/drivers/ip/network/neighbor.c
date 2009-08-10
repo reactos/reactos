@@ -40,9 +40,9 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     HashValue &= NB_HASHMASK;
 
     /* Send any waiting packets */
-    PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
-                                              &NeighborCache[HashValue].Lock);
-    if( PacketEntry != NULL ) {
+    while ((PacketEntry = ExInterlockedRemoveHeadList(&NCE->PacketQueue,
+                                              &NeighborCache[HashValue].Lock)) != NULL)
+    {
 	Packet = CONTAINING_RECORD( PacketEntry, NEIGHBOR_PACKET, Next );
 
 	TI_DbgPrint

@@ -23,6 +23,8 @@ PFN_NUMBER MmNumberOfFreeNonPagedPool, MiExpansionPoolPagesInitialCharge;
 PVOID MmNonPagedPoolEnd0;
 PFN_NUMBER MiStartOfInitialPoolFrame, MiEndOfInitialPoolFrame;
 
+MM_PAGED_POOL_INFO MmPagedPoolInfo;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -396,7 +398,6 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // This page is on the outskirts of initial nonpaged pool, so ignore it
         //
-        DPRINT1("End of initial frame\n");
         Pfn1 = NULL;
     }
     else
@@ -457,7 +458,6 @@ MiFreePoolPages(IN PVOID StartingVa)
         //
         // Then we can't do anything or we'll risk underflowing
         //
-        DPRINT1("Start of of initial frame\n");
         Pfn1 = NULL;
     }
     else

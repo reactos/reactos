@@ -158,7 +158,7 @@ function clickHandler (evt)
 			var strFilename = elt.nextSibling;
 			if (strFilename && strFilename.innerText)
 			{
-				var strRoot = 'http://svn.reactos.com/viewcvs/trunk/';
+				var strRoot = 'http://svn.reactos.org/svn/reactos/trunk/reactos/';
 				var strExtra = '?view=markup';
 				window.open (strRoot + strFilename.innerText + strExtra, 'SVN');
 			}

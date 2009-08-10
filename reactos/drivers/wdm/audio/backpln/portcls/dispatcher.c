@@ -15,13 +15,15 @@ Dispatch_fnDeviceIoControl(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
-    PKSOBJECT_CREATE_ITEM CreateItem;
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    /* get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext2;
+
     /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->DeviceIoControl(IrpTarget, DeviceObject, Irp);
 }
@@ -32,13 +34,16 @@ Dispatch_fnRead(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
-    PKSOBJECT_CREATE_ITEM CreateItem;
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    /* get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext2;
+
+
     /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Read(IrpTarget, DeviceObject, Irp);
 }
@@ -49,13 +54,16 @@ Dispatch_fnWrite(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
-    PKSOBJECT_CREATE_ITEM CreateItem;
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    /* get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext2;
+
+
     /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Write(IrpTarget, DeviceObject, Irp);
 }
@@ -66,13 +74,16 @@ Dispatch_fnFlush(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
-    PKSOBJECT_CREATE_ITEM CreateItem;
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    /* get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext2;
+
+
     /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Flush(IrpTarget, DeviceObject, Irp);
 }
@@ -83,13 +94,16 @@ Dispatch_fnClose(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
-    PKSOBJECT_CREATE_ITEM CreateItem;
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    /* get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext2;
+
+
     /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->Close(IrpTarget, DeviceObject, Irp);
 }
@@ -100,13 +114,16 @@ Dispatch_fnQuerySecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
-    PKSOBJECT_CREATE_ITEM CreateItem;
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    /* get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext2;
+
+
     /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->QuerySecurity(IrpTarget, DeviceObject, Irp);
 }
@@ -117,13 +134,16 @@ Dispatch_fnSetSecurity(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
     IIrpTarget * IrpTarget;
-    PKSOBJECT_CREATE_ITEM CreateItem;
 
-    /* access the create item */
-    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    /* get the IrpTarget */
-    IrpTarget = (IIrpTarget*)CreateItem->Context;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* access IrpTarget */
+    IrpTarget = (IIrpTarget *)IoStack->FileObject->FsContext2;
+
+
     /* let IrpTarget handle request */
     return IrpTarget->lpVtbl->SetSecurity(IrpTarget, DeviceObject, Irp);
 }
@@ -212,26 +232,19 @@ NTAPI
 NewDispatchObject(
     IN PIRP Irp,
     IN IIrpTarget * Target,
-    IN LPWSTR Name)
+    IN ULONG CreateItemCount,
+    IN PKSOBJECT_CREATE_ITEM CreateItem)
 {
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
-    PKSOBJECT_CREATE_ITEM CreateItem;
     PIO_STACK_LOCATION IoStack;
 
-    CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM), TAG_PORTCLASS);
-    if (!CreateItem)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    CreateItem->Context = (PVOID)Target;
-    RtlInitUnicodeString(&CreateItem->ObjectClass, Name);
-
+    /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
-    ASSERT(IoStack->FileObject);
 
     IoStack->FileObject->FsContext2 = (PVOID)Target;
 
-    Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader(&ObjectHeader, CreateItemCount, CreateItem, Irp, &DispatchTable);
     DPRINT("KsAllocateObjectHeader result %x\n", Status);
     return Status;
 }

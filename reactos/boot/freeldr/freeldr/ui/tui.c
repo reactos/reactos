@@ -41,25 +41,11 @@ int TuiPrintf(const char *format, ... )
 		{
 			switch (c = *(format++))
 			{
-			case 'd': case 'u': case 'x':
-                if (c == 'x')
-                    _itoa(va_arg(ap, unsigned long), str, 16);
-                else
-                    _itoa(va_arg(ap, unsigned long), str, 10);
-
-				ptr = str;
-
-				while (*ptr)
-				{
-					MachConsPutChar(*(ptr++));
-				}
+			case 'c':
+				MachConsPutChar((va_arg(ap, int)) & 0xff);
 				break;
-
-			case 'c': MachConsPutChar((va_arg(ap,int))&0xff); break;
-
 			case 's':
-				ptr = va_arg(ap,char *);
-
+				ptr = va_arg(ap, char *);
 				while ((c = *(ptr++)))
 				{
 					MachConsPutChar(c);
@@ -67,6 +53,20 @@ int TuiPrintf(const char *format, ... )
 				break;
 			case '%':
 				MachConsPutChar(c);
+				break;
+			case 'l':
+				c = *(format++);
+				/* Fall through.  */
+			case 'd': case 'u': case 'x':
+				if (c == 'x')
+					_itoa(va_arg(ap, unsigned long), str, 16);
+				else
+					_itoa(va_arg(ap, unsigned long), str, 10);
+				ptr = str;
+				while (*ptr)
+				{
+					MachConsPutChar(*(ptr++));
+				}
 				break;
 			default:
 				printf("\nprintf() invalid format specifier - %%%c\n", c);
@@ -76,7 +76,6 @@ int TuiPrintf(const char *format, ... )
 	}
 
 	va_end(ap);
-
 	return 0;
 }
 

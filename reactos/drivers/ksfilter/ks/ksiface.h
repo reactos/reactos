@@ -15,6 +15,129 @@
 #endif
 
 /*****************************************************************************
+ * IKsAllocator
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IKsAllocator
+
+DECLARE_INTERFACE_(IKsAllocator, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(NTSTATUS, DispatchDeviceIoControl)(THIS_
+        IN PDEVICE_OBJECT DeviceObject,
+        IN PIRP Irp) PURE;
+
+    STDMETHOD_(NTSTATUS, Close)(THIS) PURE;
+
+    STDMETHOD_(NTSTATUS, AllocateFrame)(THIS_
+        IN PVOID * OutFrame) PURE;
+
+    STDMETHOD_(VOID, FreeFrame)(THIS_
+        IN PVOID OutFrame) PURE;
+};
+
+
+/*****************************************************************************
+ * IKsPin
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IKsClock
+
+DECLARE_INTERFACE_(IKsClock, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+};
+
+/*****************************************************************************
+ * IKsPin
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IKsPin
+
+DECLARE_INTERFACE_(IKsPin, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+};
+
+/*****************************************************************************
+ * IKsQueue
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IKsQueue
+
+DECLARE_INTERFACE_(IKsQueue, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+};
+
+/*****************************************************************************
+ * IKsFilterFactory
+ *****************************************************************************
+ */
+
+#undef INTERFACE
+#define INTERFACE IKsFilter
+
+struct KSPROCESSPIPESECTION;
+
+
+DECLARE_INTERFACE_(IKsFilter, IUnknown)
+{
+    DEFINE_ABSTRACT_UNKNOWN()
+
+    STDMETHOD_(PKSFILTER, GetStruct)(THIS) PURE;
+
+    STDMETHOD_(BOOL, DoAllNecessaryPinsExist)(THIS) PURE;
+
+    STDMETHOD_(NTSTATUS, CreateNode)(THIS_
+        IN PIRP Irp,
+        IN IKsPin * Pin,
+        IN PLIST_ENTRY ListEntry) PURE;
+
+    STDMETHOD_(NTSTATUS, BindProcessPinsToPipeSection)(THIS_
+        IN struct KSPROCESSPIPESECTION *Section,
+        IN PVOID Create,
+        IN PKSPIN KsPin,
+        OUT IKsPin **Pin,
+        OUT PKSGATE *OutGate) PURE;
+
+    STDMETHOD_(NTSTATUS, UnbindProcessPinsFromPipeSection)(THIS_
+        IN struct KSPROCESSPIPESECTION *Section) PURE;
+
+    STDMETHOD_(NTSTATUS, AddProcessPin)(THIS_
+        IN PKSPROCESSPIN ProcessPin) PURE;
+
+    STDMETHOD_(NTSTATUS, RemoveProcessPin)(THIS_
+        IN PKSPROCESSPIN ProcessPin) PURE;
+
+    STDMETHOD_(BOOL, ReprepareProcessPipeSection)(THIS_
+        IN struct KSPROCESSPIPESECTION *PipeSection,
+        IN PULONG Data) PURE;
+
+    STDMETHOD_(VOID, DeliverResetState)(THIS_
+        IN struct KSPROCESSPIPESECTION *PipeSection,
+        IN KSRESET ResetState) PURE;
+
+    STDMETHOD_(BOOL, IsFrameHolding)(THIS);
+
+    STDMETHOD_(VOID, RegisterForCopyCallbacks)(THIS_
+        IKsQueue * Queue,
+        IN BOOL Enable) PURE;
+
+    STDMETHOD_(PKSPROCESSPIN_INDEXENTRY, GetProcessDispatch)(THIS);
+};
+
+/*****************************************************************************
  * IKsFilterFactory
  *****************************************************************************
  */
@@ -26,10 +149,26 @@ DECLARE_INTERFACE_(IKsFilterFactory, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
 
-    STDMETHOD_(KSFILTERFACTORY*,GetStruct)(THIS) PURE;
+    STDMETHOD_(KSFILTERFACTORY*, GetStruct)(THIS) PURE;
 
-    STDMETHOD_(NTSTATUS,SetDeviceClassesState)(THIS_
+    STDMETHOD_(NTSTATUS, SetDeviceClassesState)(THIS_
         IN BOOLEAN Enable)PURE;
+
+    STDMETHOD_(NTSTATUS, Initialize)(THIS_
+        IN PDEVICE_OBJECT  DeviceObject,
+        IN const KSFILTER_DESCRIPTOR  *Descriptor,
+        IN PWSTR  RefString OPTIONAL,
+        IN PSECURITY_DESCRIPTOR  SecurityDescriptor OPTIONAL,
+        IN ULONG  CreateItemFlags,
+        IN PFNKSFILTERFACTORYPOWER  SleepCallback OPTIONAL,
+        IN PFNKSFILTERFACTORYPOWER  WakeCallback OPTIONAL,
+        OUT PKSFILTERFACTORY  *FilterFactory OPTIONAL)PURE;
+
+    STDMETHOD_(NTSTATUS, AddFilterInstance)(THIS_
+        IN IKsFilter *Filter)PURE;
+
+    STDMETHOD_(NTSTATUS, RemoveFilterInstance)(THIS_
+        IN IKsFilter *Filter)PURE;
 };
 
 

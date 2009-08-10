@@ -182,7 +182,7 @@ WsSetupCatalogProtection(IN HKEY CatalogKey,
         }
 
         /* Try to open it for writing */
-        sprintf(KeyBuffer, "%08.8lX", NewUniqueId);
+        sprintf(KeyBuffer, "%8.8lX", NewUniqueId);
         ErrorCode = RegOpenKeyEx(CatalogKey,
                                  KeyBuffer,
                                  0,

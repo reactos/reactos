@@ -954,183 +954,102 @@ Cleanup:
 }
 
 
+/***********************************************************************
+ *           ContainsPath (Wine name: contains_pathW)
+ *
+ * Check if the file name contains a path; helper for SearchPathW.
+ * A relative path is not considered a path unless it starts with ./ or ../
+ */
+static
+BOOL
+ContainsPath(LPCWSTR name)
+{
+    if (RtlDetermineDosPathNameType_U(name) != RtlPathTypeRelative) return TRUE;
+    if (name[0] != '.') return FALSE;
+    if (name[1] == '/' || name[1] == '\\') return TRUE;
+    return (name[1] == '.' && (name[2] == '/' || name[2] == '\\'));
+}
+
+
 /*
  * @implemented
  */
 DWORD
 WINAPI
-SearchPathW (
-        LPCWSTR lpPath,
-        LPCWSTR lpFileName,
-        LPCWSTR lpExtension,
-        DWORD   nBufferLength,
-        LPWSTR  lpBuffer,
-        LPWSTR  *lpFilePart
-        )
-/*
- * FUNCTION: Searches for the specified file
- * ARGUMENTS:
- *       lpPath = Points to a null-terminated string that specified the
- *                path to be searched. If this parameters is NULL then
- *                the following directories are searched
- *                          The directory from which the application loaded
- *                          The current directory
- *                          The system directory
- *                          The 16-bit system directory
- *                          The windows directory
- *                          The directories listed in the PATH environment
- *                          variable
- *        lpFileName = Specifies the filename to search for
- *        lpExtension = Points to the null-terminated string that specifies
- *                      an extension to be added to the filename when
- *                      searching for the file. The first character of the
- *                      filename extension must be a period (.). The
- *                      extension is only added if the specified filename
- *                      doesn't end with an extension
- *
- *                      If the filename extension is not required or if the
- *                      filename contains an extension, this parameters can be
- *                      NULL
- *        nBufferLength = The length in characters of the buffer for output
- *        lpBuffer = Points to the buffer for the valid path and filename of
- *                   file found
- *        lpFilePart = Points to the last component of the valid path and
- *                     filename
- * RETURNS: On success, the length, in characters, of the string copied to the
- *          buffer
- *          On failure, zero.
- */
+SearchPathW(LPCWSTR lpPath,
+            LPCWSTR lpFileName,
+            LPCWSTR lpExtension,
+            DWORD nBufferLength,
+            LPWSTR lpBuffer,
+            LPWSTR *lpFilePart)
 {
-        DWORD retCode = 0;
-        ULONG pos, len;
-        PWCHAR EnvironmentBufferW = NULL;
-        PWCHAR AppPathW = NULL;
-        WCHAR Buffer;
-        BOOL HasExtension = FALSE, IsAbsolute = FALSE;
-        LPCWSTR p;
-        PWCHAR Name;
+    DWORD ret = 0;
 
-        TRACE("SearchPath\n");
+    /* If the name contains an explicit path, ignore the path */
+    if (ContainsPath(lpFileName))
+    {
+        /* try first without extension */
+        if (RtlDoesFileExists_U(lpFileName))
+            return GetFullPathNameW(lpFileName, nBufferLength, lpBuffer, lpFilePart);
 
-        p = lpFileName + wcslen(lpFileName);
-        while (lpFileName < p &&
-               L'\\' != *(p - 1) &&
-               L'/' != *(p - 1))
+        if (lpExtension)
         {
-                HasExtension = HasExtension || L'.' == *(p - 1);
-                if (p >= lpFileName && L'\\' == *(p-1))
-                {
-                    if (':' == *p)
-                        IsAbsolute = TRUE;
-                }
-                p--;
+            LPCWSTR p = wcsrchr(lpFileName, '.');
+            if (p && !strchr((const char *)p, '/') && !wcschr( p, '\\' ))
+                lpExtension = NULL;  /* Ignore the specified extension */
         }
-        if (IsAbsolute)
+
+        /* Allocate a buffer for the file name and extension */
+        if (lpExtension)
         {
-                if (HasExtension || NULL == lpExtension)
-                {
-                        Name = (PWCHAR) lpFileName;
-                }
-                else
-                {
-                        Name = RtlAllocateHeap(RtlGetProcessHeap(),
-                                               HEAP_GENERATE_EXCEPTIONS,
-                                               (wcslen(lpFileName) + wcslen(lpExtension) + 1)
-                                               * sizeof(WCHAR));
-                        if (NULL == Name)
-                        {
-                                SetLastError(ERROR_OUTOFMEMORY);
-                                return 0;
-                        }
-                        wcscat(wcscpy(Name, lpFileName), lpExtension);
-                }
-            if (RtlDoesFileExists_U(Name))
-                {
-                        retCode = RtlGetFullPathName_U (Name,
-                                                        nBufferLength * sizeof(WCHAR),
-                                                        lpBuffer,
-                                                        lpFilePart);
-                }
-                if (Name != lpFileName)
-                {
-                        RtlFreeHeap(GetProcessHeap(), 0, Name);
-                }
+            LPWSTR tmp;
+            DWORD len = wcslen(lpFileName) + wcslen(lpExtension);
+
+            if (!(tmp = RtlAllocateHeap(RtlGetProcessHeap(), 0, (len + 1) * sizeof(WCHAR))))
+            {
+                SetLastError(ERROR_OUTOFMEMORY);
+                return 0;
+            }
+            wcscpy(tmp, lpFileName);
+            wcscat(tmp, lpExtension);
+            if (RtlDoesFileExists_U(tmp))
+                ret = GetFullPathNameW(tmp, nBufferLength, lpBuffer, lpFilePart);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, tmp);
+        }
+    }
+    else if (lpPath && lpPath[0])  /* search in the specified path */
+    {
+        ret = RtlDosSearchPath_U(lpPath,
+                                 lpFileName,
+                                 lpExtension,
+                                 nBufferLength * sizeof(WCHAR),
+                                 lpBuffer,
+                                 lpFilePart) / sizeof(WCHAR);
+    }
+    else  /* search in the default path */
+    {
+        WCHAR *DllPath = GetDllLoadPath(NULL);
+
+        if (DllPath)
+        {
+            ret = RtlDosSearchPath_U(DllPath,
+                                     lpFileName,
+                                     lpExtension,
+                                     nBufferLength * sizeof(WCHAR),
+                                     lpBuffer,
+                                     lpFilePart) / sizeof(WCHAR);
+            RtlFreeHeap(RtlGetProcessHeap(), 0, DllPath);
         }
         else
         {
-                if (lpPath == NULL)
-                {
-
-                        AppPathW = (PWCHAR) RtlAllocateHeap(RtlGetProcessHeap(),
-                                                        HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
-                                                        MAX_PATH * sizeof(WCHAR));
-                        if (AppPathW == NULL)
-                        {
-                            SetLastError(ERROR_OUTOFMEMORY);
-                            return 0;
-                        }
-
-
-                        wcscat (AppPathW, NtCurrentPeb()->ProcessParameters->ImagePathName.Buffer);
-
-                        len = wcslen (AppPathW);
-
-                        while (len && AppPathW[len - 1] != L'\\')
-                                len--;
-
-                        if (len) AppPathW[len-1] = L'\0';
-
-                        len = GetEnvironmentVariableW(L"PATH", &Buffer, 0);
-                        len += 1 + GetCurrentDirectoryW(0, &Buffer);
-                        len += 1 + GetSystemDirectoryW(&Buffer, 0);
-                        len += 1 + GetWindowsDirectoryW(&Buffer, 0);
-                        len += 1 + wcslen(AppPathW) * sizeof(WCHAR);
-
-                        EnvironmentBufferW = (PWCHAR) RtlAllocateHeap(RtlGetProcessHeap(),
-                                                        HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,
-                                                        len * sizeof(WCHAR));
-                        if (EnvironmentBufferW == NULL)
-                        {
-                                RtlFreeHeap(RtlGetProcessHeap(), 0, AppPathW);
-                                SetLastError(ERROR_OUTOFMEMORY);
-                                return 0;
-                        }
-
-                        pos = GetCurrentDirectoryW(len, EnvironmentBufferW);
-                        EnvironmentBufferW[pos++] = L';';
-                        EnvironmentBufferW[pos] = 0;
-                        pos += GetSystemDirectoryW(&EnvironmentBufferW[pos], len - pos);
-                        EnvironmentBufferW[pos++] = L';';
-                        EnvironmentBufferW[pos] = 0;
-                        pos += GetWindowsDirectoryW(&EnvironmentBufferW[pos], len - pos);
-                        EnvironmentBufferW[pos++] = L';';
-                        EnvironmentBufferW[pos] = 0;
-                        pos += GetEnvironmentVariableW(L"PATH", &EnvironmentBufferW[pos], len - pos);
-                        EnvironmentBufferW[pos++] = L';';
-                        EnvironmentBufferW[pos] = 0;
-                        wcscat (EnvironmentBufferW, AppPathW);
-
-                        RtlFreeHeap (RtlGetProcessHeap (),
-                             0,
-                             AppPathW);
-
-                        lpPath = EnvironmentBufferW;
-
-                }
-
-                retCode = RtlDosSearchPath_U ((PWCHAR)lpPath, (PWCHAR)lpFileName, (PWCHAR)lpExtension,
-                                              nBufferLength * sizeof(WCHAR), lpBuffer, lpFilePart);
-
-                if (EnvironmentBufferW != NULL)
-                {
-                        RtlFreeHeap(GetProcessHeap(), 0, EnvironmentBufferW);
-                }
-                if (retCode == 0)
-                {
-                        SetLastError(ERROR_FILE_NOT_FOUND);
-                }
+            SetLastError(ERROR_OUTOFMEMORY);
+            return 0;
         }
-        return retCode / sizeof(WCHAR);
+    }
+
+    if (!ret) SetLastError(ERROR_FILE_NOT_FOUND);
+
+    return ret;
 }
 
 /*

@@ -234,6 +234,9 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(BOOL, HasLastMappingFailed)(THIS);
     STDMETHOD_(VOID, PrintQueueStatus)(THIS);
+    STDMETHOD_(VOID, SetMinimumDataThreshold)(THIS_
+        IN ULONG MinimumDataThreshold);
+    STDMETHOD_(ULONG, GetMinimumDataThreshold)(THIS);
 };
 
 

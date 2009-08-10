@@ -1162,13 +1162,7 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
 
         /* FIXME: Support Triage Dump */
 
-        /* Write the crash dump */
-        MmDumpToPagingFile(KiBugCheckData[4],
-                           KiBugCheckData[0],
-                           KiBugCheckData[1],
-                           KiBugCheckData[2],
-                           KiBugCheckData[3],
-                           TrapFrame);
+        /* FIXME: Write the crash dump */
     }
     else
     {

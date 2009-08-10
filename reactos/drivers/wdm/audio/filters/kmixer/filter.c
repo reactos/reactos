@@ -181,38 +181,38 @@ static KSDISPATCH_TABLE DispatchTable =
 
 NTSTATUS
 NTAPI
+DispatchCreateKMixPin(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    NTSTATUS Status;
+
+    DPRINT("DispatchCreateKMix entered\n");
+
+    /* create the pin */
+    Status = CreatePin(Irp);
+
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
 DispatchCreateKMix(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
     NTSTATUS Status;
     KSOBJECT_HEADER ObjectHeader;
-    PIO_STACK_LOCATION IoStatus;
-    LPWSTR Buffer;
     PKSOBJECT_CREATE_ITEM CreateItem;
 
     static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
-    IoStatus = IoGetCurrentIrpStackLocation(Irp);
-    Buffer = IoStatus->FileObject->FileName.Buffer;
-
     DPRINT("DispatchCreateKMix entered\n");
 
-    if (Buffer)
-    {
-        /* is the request for a new pin */
-        if (wcsstr(Buffer, KS_NAME_PIN))
-        {
-            Status = CreatePin(Irp);
-
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = Status;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return Status;
-        }
-    }
-
-    /* allocate create item */
+   /* allocate create item */
     CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
     if (!CreateItem)
     {
@@ -225,7 +225,10 @@ DispatchCreateKMix(
     /* zero create struct */
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
 
-    RtlInitUnicodeString(&CreateItem->ObjectClass, L"KMixer");
+    /* initialize pin create item */
+    CreateItem->Create = DispatchCreateKMixPin;
+    RtlInitUnicodeString(&CreateItem->ObjectClass, KS_NAME_PIN);
+
 
     /* allocate object header */
     Status = KsAllocateObjectHeader(&ObjectHeader, 1, CreateItem, Irp, &DispatchTable);

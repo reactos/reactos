@@ -515,12 +515,13 @@ CreatePinWorkerRoutine(
                                                          WorkerContext->Irp,
                                                          NULL);
 
-    DPRINT("CreatePinWorkerRoutine Status %x\n", Status);
+    DPRINT1("CreatePinWorkerRoutine Status %x\n", Status);
 
     if (NT_SUCCESS(Status))
     {
         /* create the dispatch object */
-        Status = NewDispatchObject(WorkerContext->Irp, Pin, NULL);
+        /* FIXME need create item for clock */
+        Status = NewDispatchObject(WorkerContext->Irp, Pin, 0, NULL);
         DPRINT("Pin %p\n", Pin);
     }
 
@@ -536,6 +537,78 @@ CreatePinWorkerRoutine(
     FreeItem(WorkerContext, TAG_PORTCLASS);
 }
 
+NTSTATUS
+NTAPI
+PcCreatePinDispatch(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    IIrpTarget *Filter;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    PPIN_WORKER_CONTEXT Context;
+
+    /* access the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+    /* sanity check */
+    ASSERT(CreateItem);
+
+    DPRINT1("PcCreatePinDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
+
+    Filter = (IIrpTarget*)CreateItem->Context;
+
+    /* sanity checks */
+    ASSERT(Filter != NULL);
+
+
+#if KS_IMPLEMENTED
+    Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
+    if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
+    {
+        DPRINT1("PcCreatePinDispatch failed to reference device header\n");
+
+        FreeItem(Entry, TAG_PORTCLASS);
+        goto cleanup;
+    }
+#endif
+
+     /* new pins are instantiated at passive level,
+      * so allocate a work item and context for it 
+      */
+
+     Context = AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
+     if (!Context)
+     {
+         DPRINT("Failed to allocate worker context\n");
+         Irp->IoStatus.Information = 0;
+         Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+         IoCompleteRequest(Irp, IO_NO_INCREMENT);
+         return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate work item */
+    Context->WorkItem = IoAllocateWorkItem(DeviceObject);
+    if (!Context->WorkItem)
+    {
+        DPRINT("Failed to allocate workitem\n");
+        FreeItem(Context, TAG_PORTCLASS);
+        Irp->IoStatus.Information = 0;
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Context->Filter = Filter;
+    Context->Irp = Irp;
+
+    DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
+    Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Status = STATUS_PENDING;
+    IoMarkIrpPending(Irp);
+    IoQueueWorkItem(Context->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
+    return STATUS_PENDING;
+}
+
+
 
 NTSTATUS
 NTAPI
@@ -543,59 +616,34 @@ PcCreateItemDispatch(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
-    PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status;
     ISubdevice * SubDevice;
-    PPCLASS_DEVICE_EXTENSION DeviceExt;
     IIrpTarget *Filter;
-    PKSOBJECT_CREATE_ITEM CreateItem;
-    PPIN_WORKER_CONTEXT Context;
-    LPWSTR Buffer;
-    static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
+    PKSOBJECT_CREATE_ITEM CreateItem, PinCreateItem;
 
-    DPRINT1("PcCreateItemDispatch called DeviceObject %p\n", DeviceObject);
+    static LPWSTR KS_NAME_PIN = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}";
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
-    if (!CreateItem)
-    {
-        DPRINT1("PcCreateItemDispatch no CreateItem\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
+    DPRINT1("PcCreateItemDispatch called DeviceObject %p %S Name\n", DeviceObject, CreateItem->ObjectClass.Buffer);
+
+    /* get the subdevice */
     SubDevice = (ISubdevice*)CreateItem->Context;
-    DeviceExt = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-    if (!SubDevice || !DeviceExt)
-    {
-        DPRINT1("PcCreateItemDispatch SubDevice %p DeviceExt %p\n", SubDevice, DeviceExt);
-        return STATUS_UNSUCCESSFUL;
-    }
+    /* sanity checks */
+    ASSERT(SubDevice != NULL);
 
 #if KS_IMPLEMENTED
     Status = KsReferenceSoftwareBusObject(DeviceExt->KsDeviceHeader);
     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_IMPLEMENTED)
     {
-        DPRINT1("PciCreateItemDispatch failed to reference device header\n");
+        DPRINT1("PcCreateItemDispatch failed to reference device header\n");
 
         FreeItem(Entry, TAG_PORTCLASS);
         goto cleanup;
     }
 #endif
-
-
-    /* get current io stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    /* sanity check */
-    ASSERT(IoStack->FileObject != NULL);
-
-    if (IoStack->FileObject->FsContext != NULL)
-    {
-        /* nothing to do */
-        DPRINT1("FsContext already exists\n");
-        return STATUS_SUCCESS;
-    }
-
 
     /* get filter object 
      * is implemented as a singleton
@@ -611,61 +659,36 @@ PcCreateItemDispatch(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to get filter object\n");
-        return Status;
-    }
-
-    /* get the buffer */
-    Buffer = IoStack->FileObject->FileName.Buffer;
-
-    /* check if the request contains a pin request */
-    if (!wcsstr(Buffer, KS_NAME_PIN))
-    {
-        /* creator just wants the filter object */
-        Status = NewDispatchObject(Irp, Filter, CreateItem->ObjectClass.Buffer);
-
-        DPRINT1("Filter %p\n", Filter);
-        Irp->IoStatus.Information = 0;
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
-    else
+
+    /* allocate pin create item */
+    PinCreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM), TAG_PORTCLASS);
+    if (!PinCreateItem)
     {
-        /* try to create new pin */
-        Context = AllocateItem(NonPagedPool, sizeof(PIN_WORKER_CONTEXT), TAG_PORTCLASS);
-        if (!Context)
-        {
-            DPRINT("Failed to allocate worker context\n");
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        /* allocate work item */
-        Context->WorkItem = IoAllocateWorkItem(DeviceObject);
-        if (!Context->WorkItem)
-        {
-            DPRINT("Failed to allocate workitem\n");
-            FreeItem(Context, TAG_PORTCLASS);
-            Irp->IoStatus.Information = 0;
-            Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-            IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        Context->Filter = Filter;
-        Context->Irp = Irp;
-
-        DPRINT("Queueing IRP %p Irql %u\n", Irp, KeGetCurrentIrql());
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_PENDING;
-        IoMarkIrpPending(Irp);
-        IoQueueWorkItem(Context->WorkItem, CreatePinWorkerRoutine, DelayedWorkQueue, (PVOID)Context);
-        return STATUS_PENDING;
+        /* not enough memory */
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    /* initialize pin create item */
+    PinCreateItem->Context = (PVOID)Filter;
+    PinCreateItem->Create = PcCreatePinDispatch;
+    RtlInitUnicodeString(&PinCreateItem->ObjectClass, KS_NAME_PIN);
+    /* FIXME copy security descriptor */
+
+    /* now allocate a dispatch object */
+    Status = NewDispatchObject(Irp, Filter, 1, PinCreateItem);
+
+    /* complete request */
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
 }
-
-
 
 NTSTATUS
 NewPortTopology(

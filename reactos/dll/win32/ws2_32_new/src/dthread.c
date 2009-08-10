@@ -66,7 +66,7 @@ WsThreadSetBlockingHook(IN PWSTHREAD Thread,
     FARPROC OldHook = Thread->BlockingHook;
 
     /* Check if we're resetting to our default hook */
-    if (BlockingHook == WsThreadDefaultBlockingHook)
+    if (BlockingHook == (FARPROC)WsThreadDefaultBlockingHook)
     {
         /* Clear out the blocking callback */
         Thread->BlockingCallback = NULL;
@@ -87,7 +87,7 @@ WSAAPI
 WsThreadUnhookBlockingHook(IN PWSTHREAD Thread)
 {
     /* Reset the hook to the default, and remove the callback */
-    Thread->BlockingHook = WsThreadDefaultBlockingHook;
+    Thread->BlockingHook = (FARPROC)WsThreadDefaultBlockingHook;
     Thread->BlockingCallback = NULL;
 
     /* Return success */
@@ -143,7 +143,7 @@ WsThreadAllocate(VOID)
     Thread = HeapAlloc(WsSockHeap, HEAP_ZERO_MEMORY, sizeof(*Thread));
 
     /* Set non-zero data */
-    Thread->BlockingHook = WsThreadDefaultBlockingHook;
+    Thread->BlockingHook = (FARPROC)WsThreadDefaultBlockingHook;
 
     /* Return it */
     return Thread;

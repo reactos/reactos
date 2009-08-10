@@ -143,6 +143,7 @@
   <property name="BASEADDRESS_MSVIDC32" value="0x73650000" />
   <property name="BASEADDRESS_MSRLE32" value="0x73660000" />
   <property name="BASEADDRESS_MSDMO" value="0x73670000" />
+  <property name="BASEADDRESS_AVICAP32" value="0x739e0000" />
   <property name="BASEADDRESS_AVIFIL32" value="0x73ac0000" />
   <property name="BASEADDRESS_MSCMS" value="0x73af0000" />
   <property name="BASEADDRESS_DCIMAN32" value="0x73b10000" />

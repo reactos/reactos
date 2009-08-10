@@ -1,8 +1,14 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS Kernel Streaming
+ * FILE:            drivers/ksfilter/ks/topoology.c
+ * PURPOSE:         KS Allocator functions
+ * PROGRAMMER:      Johannes Anderwald
+ */
+
+
 #include "priv.h"
 
-/* ===============================================================
-    Topology Functions
-*/
 
 NTSTATUS
 NTAPI
@@ -17,29 +23,11 @@ KspCreateObjectType(
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    PFILE_OBJECT FileObject;
     UNICODE_STRING Name;
-    PKSIOBJECT_HEADER ObjectHeader;
-
-    /* acquire parent file object */
-    Status = ObReferenceObjectByHandle(ParentHandle,
-                                       GENERIC_READ | GENERIC_WRITE, 
-                                       IoFileObjectType, KernelMode, (PVOID*)&FileObject, NULL);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Failed to reference parent %x\n", Status);
-        return Status;
-    }
-
-    /* get parent object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
-    /* sanity check */
-    ASSERT(ObjectHeader);
 
     /* calculate request length */
     Name.Length = 0;
-    Name.MaximumLength = wcslen(ObjectType) * sizeof(WCHAR) + CreateParametersSize + ObjectHeader->ObjectClass.MaximumLength + 2 * sizeof(WCHAR);
+    Name.MaximumLength = wcslen(ObjectType) * sizeof(WCHAR) + CreateParametersSize +  2 * sizeof(WCHAR);
     Name.MaximumLength += sizeof(WCHAR);
     /* acquire request buffer */
     Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
@@ -47,16 +35,13 @@ KspCreateObjectType(
     if (!Name.Buffer)
     {
         /* insufficient resources */
-        ObDereferenceObject(FileObject);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* build a request which looks like \Parent\{ObjectGuid}\CreateParameters 
+    /* build a request which looks like \{ObjectClass}\CreateParameters 
      * For pins the parent is the reference string used in registration
      * For clocks it is full path for pin\{ClockGuid}\ClockCreateParams
      */
-    
-    RtlAppendUnicodeStringToString(&Name, &ObjectHeader->ObjectClass);
     RtlAppendUnicodeToString(&Name, L"\\");
     RtlAppendUnicodeToString(&Name, ObjectType);
     RtlAppendUnicodeToString(&Name, L"\\");
@@ -75,7 +60,7 @@ KspCreateObjectType(
                           0,
                           0,
                           FILE_OPEN,
-                          FILE_SYNCHRONOUS_IO_NONALERT,
+                          0,
                           NULL,
                           0,
                           CreateFileTypeNone,
@@ -84,8 +69,6 @@ KspCreateObjectType(
 
     /* free request buffer */
     ExFreePool(Name.Buffer);
-    /* release parent handle */
-    ObDereferenceObject(FileObject);
     return Status;
 }
 
@@ -101,7 +84,7 @@ KsCreateTopologyNode(
     OUT PHANDLE NodeHandle)
 {
     return KspCreateObjectType(ParentHandle,
-                               L"{0621061A-EE75-11D0-B915-00A0C9223196}",
+                               KSSTRING_TopologyNode,
                                (PVOID)NodeCreate,
                                sizeof(KSNODE_CREATE),
                                DesiredAccess,
@@ -109,16 +92,47 @@ KsCreateTopologyNode(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
-KSDDKAPI NTSTATUS NTAPI
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsValidateTopologyNodeCreateRequest(
     IN  PIRP Irp,
     IN  PKSTOPOLOGY Topology,
-    OUT PKSNODE_CREATE* NodeCreate)
+    OUT PKSNODE_CREATE* OutNodeCreate)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKSNODE_CREATE NodeCreate;
+    ULONG Size;
+    NTSTATUS Status;
+
+    /* did the caller miss the topology */
+    if (!Topology)
+        return STATUS_INVALID_PARAMETER;
+
+    /* set create param  size */
+    Size = sizeof(KSNODE_CREATE);
+
+    /* fetch create parameters */
+    Status = KspCopyCreateRequest(Irp,
+                                  KSSTRING_TopologyNode,
+                                  &Size,
+                                  (PVOID*)&NodeCreate);
+
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (NodeCreate->CreateFlags != 0 || (NodeCreate->Node >= Topology->TopologyNodesCount && NodeCreate->Node != (ULONG)-1))
+    {
+        /* invalid node create */
+        FreeItem(NodeCreate);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* store result */
+    *OutNodeCreate = NodeCreate;
+
+    return Status;
 }
 
 /*
@@ -290,4 +304,15 @@ KsTopologyPropertyHandler(
 
 
     return Status;
+}
+
+NTSTATUS
+NTAPI
+KspTopologyPropertyHandler(
+    IN PIRP Irp,
+    IN PKSIDENTIFIER  Request,
+    IN OUT PVOID  Data)
+{
+
+    return STATUS_NOT_IMPLEMENTED;
 }

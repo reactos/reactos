@@ -305,13 +305,14 @@ int XMLNode::count(XPath::const_iterator from, const XPath::const_iterator& to) 
 	int n = 0;
 
 	for(XMLNode::Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-		if (elem.matches(**it, n))
+		if (elem.matches(**it, n)) {
 			if (from != to)
 				 // iterate deeper
 				cnt += (*it)->count(from, to);
 			else
 				 // increment match counter
 				++cnt;
+		}
 
 	return cnt;
 }
@@ -863,7 +864,7 @@ void XMLReaderBase::StartElementHandler(const XS_String& name, const XMLNode::At
 		if (!isspace((unsigned char)p[-1]))
 			break;
 
-	if (p != s)
+	if (p != s) {
 		if (_pos->_children.empty()) {	// no children in last node?
 			if (_last_tag == TAG_START)
 				_pos->_content.append(s, p-s);
@@ -873,6 +874,7 @@ void XMLReaderBase::StartElementHandler(const XS_String& name, const XMLNode::At
 				p = s;
 		} else
 			_pos->_children.back()->_trailing.append(s, p-s);
+	}
 
 	std::string leading;
 
@@ -914,13 +916,14 @@ void XMLReaderBase::EndElementHandler()
 		_pos->_cdata_content = false;
 	}
 
-	if (p != s)
+	if (p != s) {
 		if (_pos->_children.empty())	// no children in current node?
 			_pos->_content.append(s, p-s);
 		else if (_last_tag == TAG_START)
 			_pos->_content.append(s, p-s);
 		else
 			_pos->_children.back()->_trailing.append(s, p-s);
+	}
 
 	if (p != e)
 		_pos->_end_leading.assign(p, e-p);
@@ -989,9 +992,10 @@ void XMLWriter::write_pre(StackEntry& entry)
 	if (_format._pretty >= PRETTY_LINEFEED)
 		_out << _format._endl;
 
-	if (_format._pretty == PRETTY_INDENT)
+	if (_format._pretty == PRETTY_INDENT) {
 		for(size_t i=_stack.size(); --i>0; )
 			_out << XML_INDENT_SPACE;
+	}
 
 	_out << '<' << EncodeXMLString(entry._node_name);
 	//entry._state = PRE;
@@ -1020,9 +1024,10 @@ void XMLWriter::write_post(StackEntry& entry)
 		if (_format._pretty>=PRETTY_LINEFEED && entry._content.empty())
 			_out << _format._endl;
 
-		if (_format._pretty==PRETTY_INDENT && entry._content.empty())
+		if (_format._pretty==PRETTY_INDENT && entry._content.empty()) {
 			for(size_t i=_stack.size(); --i>0; )
 				_out << XML_INDENT_SPACE;
+		}
 
 		_out << "</" << EncodeXMLString(entry._node_name) << ">";
 	} else {

@@ -555,6 +555,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
 
         default:
         {
+            DPRINT1("Unsupported or unimplemented class: %lx\n", VirtualMemoryInformationClass);
             Status = STATUS_INVALID_INFO_CLASS;
             *ResultLength = 0;
             break;
