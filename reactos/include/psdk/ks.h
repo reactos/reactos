@@ -3702,6 +3702,22 @@ KsCreateFilterFactory(
 KSDDKAPI
 NTSTATUS
 NTAPI
+KsFilterFactoryUpdateCacheData(
+    IN PKSFILTERFACTORY FilterFactory,
+    IN const KSFILTER_DESCRIPTOR *FilterDescriptor OPTIONAL
+    );
+
+
+KSDDKAPI
+PKSFILTER
+NTAPI
+KsGetFilterFromIrp(
+    IN PIRP Irp
+    );
+
+KSDDKAPI
+NTSTATUS
+NTAPI
 KsDefaultAddEventHandler(
     IN  PIRP Irp,
     IN  PKSEVENTDATA EventData,
@@ -3723,6 +3739,23 @@ KsDispatchSetSecurity(
     IN PIRP Irp
     );
 
+KSDDKAPI
+PVOID
+NTAPI
+KsGetParent(
+    IN PVOID Object
+    );
+
+
+PKSFILTERFACTORY
+static
+__inline
+KsFilterGetParentFilterFactory(
+    IN PKSFILTER Filter
+    )
+{
+    return (PKSFILTERFACTORY) KsGetParent((PVOID) Filter);
+}
 
 
 #define KsDeleteFilterFactory(FilterFactory)                                           \
