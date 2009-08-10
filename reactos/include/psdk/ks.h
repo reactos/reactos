@@ -41,7 +41,8 @@ extern "C" {
 #endif
 
 
-
+#define KSFILTER_NODE   ((ULONG)-1)
+#define KSALL_NODES     ((ULONG)-1)
 
 #define KSSTRING_Filter L"{9B365890-165F-11D0-A195-0020AFD156E4}"
 #define KSSTRING_Pin L"{146F1A80-4791-11D0-A5D6-28DB04C10000}"
