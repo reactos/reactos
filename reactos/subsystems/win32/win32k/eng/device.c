@@ -13,7 +13,7 @@
 #include <debug.h>
 
 static
-DWORD
+NTSTATUS
 EngpFileIoRequest(
     PFILE_OBJECT pFileObject,
     ULONG   ulMajorFunction,
@@ -50,7 +50,7 @@ EngpFileIoRequest(
                                         &Iosb);
     if (!pIrp)
     {
-        return FALSE;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Call the driver */
@@ -66,7 +66,8 @@ EngpFileIoRequest(
     /* Return information to the caller about the operation. */
     *lpInformation = Iosb.Information;
 
-    return NT_SUCCESS(Status);
+    /* Return NTSTATUS */
+    return Status;
 }
 
 VOID
