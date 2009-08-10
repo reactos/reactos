@@ -226,7 +226,7 @@ CsrDuplicateHandleTable(
             SourceProcessData->HandleTable[i].Inheritable)
         {
             TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
-            _InterlockedIncrement( &SourceProcessData->HandleTable[i]->ReferenceCount );
+            _InterlockedIncrement( &SourceProcessData->HandleTable[i].Object->ReferenceCount );
         }
     }
     RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);

@@ -24,16 +24,15 @@
 
 INT cmd_label (LPTSTR param)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  szRootPath[] = _T("A:\\");
 	TCHAR  szLabel[80];
 	TCHAR  szOldLabel[80];
 	DWORD  dwSerialNr;
-	LPTSTR *arg;
-	INT    args;
 
 	/* set empty label string */
 	szLabel[0] = _T('\0');
+
+	nErrorLevel = 0;
 
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -42,42 +41,20 @@ INT cmd_label (LPTSTR param)
 		return 0;
 	}
 
-  nErrorLevel = 0;
-
 	/* get parameters */
-	arg = split (param, &args, FALSE);
-
-	if (args > 2)
+	if (param[0] != _T('\0') && param[1] == _T(':'))
 	{
-		/* too many parameters */
-		error_too_many_parameters (arg[args - 1]);
-		freep (arg);
-    nErrorLevel = 1;
-		return 1;
+		szRootPath[0] = toupper(*param);
+		param += 2;
+		while (_istspace(*param))
+			param++;
 	}
-
-	if (args == 0)
+	else
 	{
 		/* get label of current drive */
 		TCHAR szCurPath[MAX_PATH];
 		GetCurrentDirectory (MAX_PATH, szCurPath);
 		szRootPath[0] = szCurPath[0];
-	}
-	else
-	{
-		if ((_tcslen (arg[0]) >= 2) && (arg[0][1] == _T(':')))
-		{
-			szRootPath[0] = toupper (*arg[0]);
-			if (args == 2)
-				_tcsncpy (szLabel, arg[1], 12);
-		}
-		else
-		{
-			TCHAR szCurPath[MAX_PATH];
-			GetCurrentDirectory (MAX_PATH, szCurPath);
-			szRootPath[0] = szCurPath[0];
-			_tcsncpy (szLabel, arg[0], 12);
-		}
 	}
 
 	_tcsncat(szLabel, param, 79);
@@ -86,8 +63,7 @@ INT cmd_label (LPTSTR param)
 	if (!IsValidPathName (szRootPath))
 	{
 		error_invalid_drive ();
-		freep (arg);
-    nErrorLevel = 1;
+		nErrorLevel = 1;
 		return 1;
 	}
 
@@ -109,7 +85,6 @@ INT cmd_label (LPTSTR param)
 		/* print the volume serial number */
 		ConOutResPrintf(STRING_LABEL_HELP4, HIWORD(dwSerialNr), LOWORD(dwSerialNr));
 
-		LoadString(CMD_ModuleHandle, STRING_LABEL_HELP5, szMsg, RC_STRING_MAX_SIZE);
 		ConOutResPuts(STRING_LABEL_HELP5);
 
 		ConInString(szLabel, 80);
@@ -121,8 +96,6 @@ INT cmd_label (LPTSTR param)
 		nErrorLevel = 1;
 		return 1;
 	}
-
-	freep(arg);
 
 	return 0;
 }

@@ -51,7 +51,6 @@ enum
  */
 INT cmd_rename (LPTSTR param)
 {
-  TCHAR szMsg[RC_STRING_MAX_SIZE];
   LPTSTR *arg = NULL;
   INT args = 0;
   INT nSlash = 0;
@@ -365,10 +364,9 @@ INT cmd_rename (LPTSTR param)
   if (!(dwFlags & REN_QUIET))
   {
     if (dwFiles == 1)
-      LoadString( CMD_ModuleHandle, STRING_REN_HELP2, szMsg, RC_STRING_MAX_SIZE);
+      ConOutResPrintf(STRING_REN_HELP2, dwFiles);
     else
-      LoadString( CMD_ModuleHandle, STRING_REN_HELP3, szMsg, RC_STRING_MAX_SIZE);
-    ConOutPrintf(szMsg,dwFiles);
+      ConOutResPrintf(STRING_REN_HELP3, dwFiles);
   }
  
   freep(arg);

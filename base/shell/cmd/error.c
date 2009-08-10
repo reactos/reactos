@@ -61,30 +61,21 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 
 VOID error_parameter_format(TCHAR ch)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-	LoadString(CMD_ModuleHandle, STRING_ERROR_PARAMETERF_ERROR, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, ch);
+	ConErrResPrintf(STRING_ERROR_PARAMETERF_ERROR, ch);
   nErrorLevel = 1;
 }
 
 
 VOID error_invalid_switch (TCHAR ch)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-	LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, ch);
+	ConErrResPrintf(STRING_ERROR_INVALID_SWITCH, ch);
   nErrorLevel = 1;
 }
 
 
 VOID error_too_many_parameters (LPTSTR s)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
-	LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg, s);
+	ConErrResPrintf(STRING_ERROR_TOO_MANY_PARAMETERS, s);
   nErrorLevel = 1;
 }
 

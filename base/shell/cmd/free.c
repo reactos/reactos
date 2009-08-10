@@ -35,8 +35,7 @@ PrintDiskInfo (LPTSTR szDisk)
 
 	if (_tcslen (szDisk) < 2 || szDisk[1] != _T(':'))
 	{
-		LoadString(CMD_ModuleHandle, STRING_FREE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConErrResPrintf(STRING_FREE_ERROR1);
 		return;
 	}
 
@@ -81,8 +80,7 @@ PrintDiskInfo (LPTSTR szDisk)
 	ConvertULargeInteger (uliSize, szFree, 40, TRUE);
 
 
-	LoadString(CMD_ModuleHandle, STRING_FREE_HELP1, szMsg, RC_STRING_MAX_SIZE);
-	ConOutPrintf(szMsg, szDrive, szVolume, szSerial, szTotal, szUsed, szFree);
+	ConOutResPrintf(STRING_FREE_HELP1, szDrive, szVolume, szSerial, szTotal, szUsed, szFree);
 }
 
 

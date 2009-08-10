@@ -46,24 +46,19 @@ static WORD awMonths[2][13] =
 static VOID
 PrintDateString (VOID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-
 	switch (nDateFormat)
 	{
 		case 0: /* mmddyy */
 		default:
-			LoadString(CMD_ModuleHandle, STRING_DATE_HELP1, szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
+			ConOutResPrintf(STRING_DATE_HELP1, cDateSeparator, cDateSeparator);
 			break;
 
 		case 1: /* ddmmyy */
-			LoadString(CMD_ModuleHandle, STRING_DATE_HELP2, szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
+			ConOutResPrintf(STRING_DATE_HELP2, cDateSeparator, cDateSeparator);
 			break;
 
 		case 2: /* yymmdd */
-			LoadString(CMD_ModuleHandle, STRING_DATE_HELP3, szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf(szMsg, cDateSeparator, cDateSeparator);
+			ConOutResPrintf(STRING_DATE_HELP3, cDateSeparator, cDateSeparator);
 			break;
 	}
 }

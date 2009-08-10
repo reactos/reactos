@@ -277,7 +277,6 @@ INT cmd_chdir (LPTSTR param)
 	TCHAR szFinalPath[MAX_PATH];
 	TCHAR * tmpPath;
 	TCHAR szCurrent[MAX_PATH];
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INT i;
 
 
@@ -301,8 +300,7 @@ INT cmd_chdir (LPTSTR param)
 		if(!tmpPath)
 		{
 			/* Didnt find an directories */
-			LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg);
+			ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 			nErrorLevel = 1;
 			return 1;
 		}
@@ -368,8 +366,7 @@ INT cmd_chdir (LPTSTR param)
 			return 0;
 		}
 		/* Didnt find an directories */
-		LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 		nErrorLevel = 1;
 		return 1;
 
@@ -414,8 +411,7 @@ INT cmd_chdir (LPTSTR param)
 	}while(FindNextFile (hFile, &f));
 
 	/* Didnt find an directories */
-	LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-	ConErrPrintf(szMsg);
+	ConErrResPrintf(STRING_ERROR_PATH_NOT_FOUND);
 	nErrorLevel = 1;
 	return 1;
 }
@@ -445,16 +441,16 @@ MakeFullPath(TCHAR * DirPath)
         p += 2;
     while (*p == _T('\\'))
         p++; /* skip drive root */
-    while ((p = _tcschr(p, _T('\\'))) != NULL)
+    do
     {
-       n = p - DirPath + 1;
+       p = _tcschr(p, _T('\\'));
+       n = p ? p++ - DirPath : _tcslen(DirPath);
        _tcsncpy(path, DirPath, n);
        path[n] = _T('\0');
        if( !CreateDirectory(path, NULL) &&
            (GetLastError() != ERROR_ALREADY_EXISTS))
            return FALSE;
-       p++;
-    }
+    } while (p != NULL);
 
     return TRUE;
 }

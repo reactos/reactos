@@ -129,36 +129,30 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 {
   ULONG hash;
   UINT c;
-  PCSRSS_PROCESS_DATA pProcessData, pPrevProcessData = NULL;
+  PCSRSS_PROCESS_DATA pProcessData, *pPrevLink;
   HANDLE Process;
 
   hash = ((ULONG_PTR)Pid >> 2) % (sizeof(ProcessData) / sizeof(*ProcessData));
+  pPrevLink = &ProcessData[hash];
 
   LOCK;
 
-  pProcessData = ProcessData[hash];
-
-  while (pProcessData && pProcessData->ProcessId != Pid)
+  while ((pProcessData = *pPrevLink) && pProcessData->ProcessId != Pid)
     {
-      pPrevProcessData = pProcessData;
-      pProcessData = pProcessData->next;
+      pPrevLink = &pProcessData->next;
     }
 
   if (pProcessData)
     {
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
       Process = pProcessData->Process;
-      if (pProcessData->Console)
-        {
-          RemoveEntryList(&pProcessData->ProcessEntry);
-        }
       if (pProcessData->HandleTable)
         {
           for (c = 0; c < pProcessData->HandleTableSize; c++)
             {
-              if (pProcessData->HandleTable[c])
+              if (pProcessData->HandleTable[c].Object)
                 {
-                  CsrReleaseObject(pProcessData, (HANDLE)(((c + 1) << 2)|0x3));
+                  CsrReleaseObjectByPointer(pProcessData->HandleTable[c].Object);
                 }
             }
           RtlFreeHeap(CsrssApiHeap, 0, pProcessData->HandleTable);
@@ -166,6 +160,7 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
       RtlDeleteCriticalSection(&pProcessData->HandleTableLock);
       if (pProcessData->Console)
         {
+          RemoveEntryList(&pProcessData->ProcessEntry);
           CsrReleaseObjectByPointer((Object_t *) pProcessData->Console);
         }
       if (pProcessData->CsrSectionViewBase)
@@ -176,14 +171,7 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
         {
           NtClose(pProcessData->ServerCommunicationPort);
         }
-      if (pPrevProcessData)
-        {
-          pPrevProcessData->next = pProcessData->next;
-        }
-      else
-        {
-          ProcessData[hash] = pProcessData->next;
-        }
+      *pPrevLink = pProcessData->next;
 
       RtlFreeHeap(CsrssApiHeap, 0, pProcessData);
       UNLOCK;
@@ -315,7 +303,9 @@ CSR_API(CsrGetInputHandle)
    {
       Request->Status = CsrInsertObject(ProcessData,
 		                      &Request->Data.GetInputHandleRequest.InputHandle,
-		                      (Object_t *)ProcessData->Console);
+		                      (Object_t *)ProcessData->Console,
+		                      Request->Data.GetInputHandleRequest.Access,
+		                      Request->Data.GetInputHandleRequest.Inheritable);
    }
    else
    {
@@ -336,7 +326,9 @@ CSR_API(CsrGetOutputHandle)
       RtlEnterCriticalSection(&ProcessDataLock);
       Request->Status = CsrInsertObject(ProcessData,
                                       &Request->Data.GetOutputHandleRequest.OutputHandle,
-                                      &(ProcessData->Console->ActiveBuffer->Header));
+                                      &ProcessData->Console->ActiveBuffer->Header,
+                                      Request->Data.GetOutputHandleRequest.Access,
+                                      Request->Data.GetOutputHandleRequest.Inheritable);
       RtlLeaveCriticalSection(&ProcessDataLock);
    }
    else
@@ -372,19 +364,24 @@ CSR_API(CsrVerifyHandle)
 
 CSR_API(CsrDuplicateHandle)
 {
-  Object_t *Object;
+    ULONG Index;
+    PCSRSS_HANDLE Entry;
+    DWORD DesiredAccess;
 
-  Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-  Request->Status = CsrGetObject(ProcessData, Request->Data.DuplicateHandleRequest.Handle, &Object);
-  if (! NT_SUCCESS(Request->Status))
+    Index = (ULONG)Request->Data.DuplicateHandleRequest.Handle >> 2;
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    if (Index >= ProcessData->HandleTableSize
+        || (Entry = &ProcessData->HandleTable[Index])->Object == NULL)
     {
         DPRINT1("Couldn't dup invalid handle %p\n", Request->Data.DuplicateHandleRequest.Handle);
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
-  else
+
+    if (Request->Data.DuplicateHandleRequest.Options & DUPLICATE_SAME_ACCESS)
     {
         DesiredAccess = Entry->Access;
     }
@@ -403,9 +400,19 @@ CSR_API(CsrDuplicateHandle)
     
     Request->Status = CsrInsertObject(ProcessData,
                                       &Request->Data.DuplicateHandleRequest.Handle,
-                                      Object);
+                                      Entry->Object,
+                                      DesiredAccess,
+                                      Request->Data.DuplicateHandleRequest.Inheritable);
+    if (NT_SUCCESS(Request->Status)
+        && Request->Data.DuplicateHandleRequest.Options & DUPLICATE_CLOSE_SOURCE)
+    {
+        /* Close the original handle. This cannot drop the count to 0, since a new handle now exists */
+        _InterlockedDecrement(&Entry->Object->ReferenceCount);
+        Entry->Object = NULL;
     }
-  return Request->Status;
+
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    return Request->Status;
 }
 
 CSR_API(CsrGetInputWaitHandle)

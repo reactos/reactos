@@ -67,6 +67,12 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(GET_CONSOLE_OUTPUT_CP,        CsrGetConsoleOutputCodePage),
     CSRSS_DEFINE_API(SET_CONSOLE_OUTPUT_CP,        CsrSetConsoleOutputCodePage),
     CSRSS_DEFINE_API(GET_PROCESS_LIST,             CsrGetProcessList),
+    CSRSS_DEFINE_API(ADD_CONSOLE_ALIAS,      CsrAddConsoleAlias),
+    CSRSS_DEFINE_API(GET_CONSOLE_ALIAS,      CsrGetConsoleAlias),
+    CSRSS_DEFINE_API(GET_ALL_CONSOLE_ALIASES,         CsrGetAllConsoleAliases),
+    CSRSS_DEFINE_API(GET_ALL_CONSOLE_ALIASES_LENGTH,  CsrGetAllConsoleAliasesLength),
+    CSRSS_DEFINE_API(GET_CONSOLE_ALIASES_EXES,        CsrGetConsoleAliasesExes),
+    CSRSS_DEFINE_API(GET_CONSOLE_ALIASES_EXES_LENGTH, CsrGetConsoleAliasesExesLength),
     CSRSS_DEFINE_API(GENERATE_CTRL_EVENT,          CsrGenerateCtrlEvent),
     { 0, 0, NULL }
   };
@@ -96,39 +102,33 @@ DllMain(HANDLE hDll,
 
 NTSTATUS FASTCALL
 Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
-                     PHANDLE Handle,
-                     Object_t *Object)
-{
-  InitializeCriticalSection(&(Object->Lock));
-
-  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object);
-}
-
-NTSTATUS FASTCALL
-Win32CsrInsertObject2(PCSRSS_PROCESS_DATA ProcessData,
                       PHANDLE Handle,
-                      Object_t *Object)
+                      Object_t *Object,
+                      DWORD Access,
+                      BOOL Inheritable)
 {
-  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object);
+  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object, Access, Inheritable);
 }
 
 NTSTATUS FASTCALL
 Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
                  HANDLE Handle,
-                 Object_t **Object)
+                 Object_t **Object,
+                 DWORD Access)
 {
-  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object);
+  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
 }
 
 NTSTATUS FASTCALL
 Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
                    HANDLE Handle,
                    Object_t **Object,
+                   DWORD Access,
                    LONG Type)
 {
   NTSTATUS Status;
 
-  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object);
+  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
   if (! NT_SUCCESS(Status))
     {
       return Status;
@@ -136,6 +136,7 @@ Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
 
   if ((*Object)->Type != Type)
     {
+      (CsrExports.CsrReleaseObjectByPointerProc)(*Object);
       return STATUS_INVALID_HANDLE;
     }
 
@@ -148,6 +149,13 @@ VOID FASTCALL
 Win32CsrUnlockObject(Object_t *Object)
 {
   LeaveCriticalSection(&(Object->Lock));
+  (CsrExports.CsrReleaseObjectByPointerProc)(Object);
+}
+
+NTSTATUS FASTCALL
+Win32CsrReleaseObjectByPointer(Object_t *Object)
+{
+  return (CsrExports.CsrReleaseObjectByPointerProc)(Object);
 }
 
 NTSTATUS FASTCALL

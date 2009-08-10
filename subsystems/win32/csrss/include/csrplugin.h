@@ -24,7 +24,9 @@
 
 typedef NTSTATUS (WINAPI *CSRSS_INSERT_OBJECT_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                      PHANDLE Handle,
-                                                     Object_t *Object);
+                                                     Object_t *Object,
+                                                     DWORD Access,
+                                                     BOOL Inheritable);
 typedef NTSTATUS (WINAPI *CSRSS_GET_OBJECT_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                                   HANDLE Handle,
                                                   Object_t **Object,
@@ -39,6 +41,7 @@ typedef struct tagCSRSS_EXPORTED_FUNCS
 {
   CSRSS_INSERT_OBJECT_PROC CsrInsertObjectProc;
   CSRSS_GET_OBJECT_PROC CsrGetObjectProc;
+  CSRSS_RELEASE_OBJECT_BY_POINTER_PROC CsrReleaseObjectByPointerProc;
   CSRSS_RELEASE_OBJECT_PROC CsrReleaseObjectProc;
   CSRSS_ENUM_PROCESSES_PROC CsrEnumProcessesProc;
 } CSRSS_EXPORTED_FUNCS, *PCSRSS_EXPORTED_FUNCS;

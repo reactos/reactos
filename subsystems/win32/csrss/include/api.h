@@ -32,6 +32,13 @@ typedef struct ConsoleInput_t
 
 typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
 
+typedef struct _CSRSS_HANDLE
+{
+  Object_t *Object;
+  DWORD Access;
+  BOOL Inheritable;
+} CSRSS_HANDLE, *PCSRSS_HANDLE;
+
 typedef struct _CSRSS_PROCESS_DATA
 {
   PCSRSS_CONSOLE Console;
@@ -39,7 +46,7 @@ typedef struct _CSRSS_PROCESS_DATA
   BOOL bInheritHandles;
   RTL_CRITICAL_SECTION HandleTableLock;
   ULONG HandleTableSize;
-  Object_t ** HandleTable;
+  PCSRSS_HANDLE HandleTable;
   HANDLE ProcessId;
   DWORD ProcessGroup;
   HANDLE Process;
@@ -149,13 +156,6 @@ CSR_API(CsrSetShutdownParameters);
 
 CSR_API(CsrSetLogonNotifyWindow);
 CSR_API(CsrRegisterLogonProcess);
-
-CSR_API(CsrAddConsoleAlias);
-CSR_API(CsrGetConsoleAlias);
-CSR_API(CsrGetAllConsoleAliases);
-CSR_API(CsrGetAllConsoleAliasesLength);
-CSR_API(CsrGetConsoleAliasesExes);
-CSR_API(CsrGetConsoleAliasesExesLength);
 
 
 #endif /* ndef API_H_INCLUDED */
