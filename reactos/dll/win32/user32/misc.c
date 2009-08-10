@@ -393,7 +393,7 @@ static BOOL CALLBACK monitor_enum( HMONITOR monitor, HDC hdc, LPRECT rect, LPARA
 /***********************************************************************
  *		MonitorFromRect (USER32.@)
  */
-HMONITOR WINAPI MonitorFromRect( LPRECT rect, DWORD flags )
+HMONITOR WINAPI MonitorFromRect( LPCRECT rect, DWORD flags )
 {
     struct monitor_enum_info info;
 
