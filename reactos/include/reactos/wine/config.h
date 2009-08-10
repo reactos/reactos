@@ -123,7 +123,7 @@
 #define HAVE_FREETYPE_FTWINFNT_H 1
 
 /* Define to 1 if you have the <freetype/internal/sfnt.h> header file. */
-/* #define HAVE_FREETYPE_INTERNAL_SFNT_H 1 */
+/* #undef HAVE_FREETYPE_INTERNAL_SFNT_H */
 
 /* Define to 1 if you have the <freetype/ttnameid.h> header file. */
 #define HAVE_FREETYPE_TTNAMEID_H 1
@@ -289,6 +289,8 @@
 
 /* Define if you have the libxml2 library */
 #define HAVE_LIBXML2
+#define HAVE_XMLNEWDOCPI
+#define HAVE_XMLREADMEMORY
 
 /* Define to 1 if you have the <libxml/parser.h> header file. */
 #define HAVE_LIBXML_PARSER_H
@@ -306,10 +308,10 @@
 /* #undef HAVE_LIBXSLT */
 
 /* Define to 1 if you have the <libxslt/pattern.h> header file. */
-/* #undef HAVE_LIBXSLT_PATTERN_H */
+#define HAVE_LIBXSLT_PATTERN_H
 
 /* Define to 1 if you have the <libxslt/transform.h> header file. */
-/* #undef HAVE_LIBXSLT_TRANSFORM_H */
+#define HAVE_LIBXSLT_TRANSFORM_H
 
 /* Define if you have the Xxf86dga library version 2 */
 /* #undef HAVE_LIBXXF86DGA2 */
@@ -453,9 +455,7 @@
 #define HAVE_PCLOSE 1
 
 /* Define to 1 if the system has the type `pid_t'. */
-#if !defined(_MSC_VER)
 #define HAVE_PID_T 1
-#endif
 
 /* Define to 1 if you have the <poll.h> header file. */
 /* #undef HAVE_POLL_H */
