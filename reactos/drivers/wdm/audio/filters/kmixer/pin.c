@@ -65,7 +65,7 @@ PerformSampleRateConversion(
     }
 
     ResultOut = ExAllocatePool(NonPagedPool, NewSamples * NumChannels * BytesPerSample);
-    if (!FloatOut)
+    if (!ResultOut)
     {
         ExFreePool(FloatIn);
         ExFreePool(FloatOut);
