@@ -2157,6 +2157,7 @@ typedef struct _VPB {
 #define DO_POWER_PAGABLE                  0x00002000
 #define DO_POWER_INRUSH                   0x00004000
 #define DO_LOW_PRIORITY_FILESYSTEM        0x00010000
+#define DO_XIP                            0x00020000
 
 /* DEVICE_OBJECT.Characteristics */
 
@@ -3289,7 +3290,7 @@ typedef BOOLEAN
 typedef BOOLEAN
 (DDKAPI *PFAST_IO_UNLOCK_ALL_BY_KEY)(
   IN struct _FILE_OBJECT  *FileObject,
-  PEPROCESS  ProcessId,
+  PVOID  ProcessId,
   ULONG  Key,
   OUT PIO_STATUS_BLOCK  IoStatus,
   IN struct _DEVICE_OBJECT  *DeviceObject);
@@ -4547,6 +4548,9 @@ typedef enum _CONFIGURATION_TYPE {
 
 #define IO_FORCE_ACCESS_CHECK               0x001
 #define IO_NO_PARAMETER_CHECKING            0x100
+
+#define IO_REPARSE                      0x0
+#define IO_REMOUNT                      0x1
 
 typedef NTSTATUS
 (DDKAPI *PIO_QUERY_DEVICE_ROUTINE)(

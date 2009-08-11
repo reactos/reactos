@@ -27,6 +27,12 @@
 #define UDFS_AVDP_SECTOR       256
 
 //
+// Ext2 Magic
+// Taken from Linux Kernel
+//
+#define EXT2_SUPER_MAGIC	   0xEF53
+
+//
 // Non-standard rounding macros
 //
 #define ROUND_UP(n, align) \
