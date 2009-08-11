@@ -443,6 +443,13 @@ IKsFilter_DispatchClose(
         /* free object header */
         KsFreeObjectHeader(This->ObjectHeader);
     }
+    else
+    {
+        /* complete and forget */
+        Irp->IoStatus.Status = Status;
+        /* complete irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
     /* done */
     return Status;
@@ -1085,21 +1092,29 @@ KspCreateFilter(
         return Status;
     }
 
-    /* now let driver initialize the filter instance */
-    Status = Factory->FilterDescriptor->Dispatch->Create(&This->Filter, Irp);
-
-    if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
+    /* does the filter have a filter dispatch */
+    if (Factory->FilterDescriptor->Dispatch)
     {
-        /* driver failed to initialize */
-        DPRINT1("Driver: Status %x\n", Status);
+        /* does it have a create routine */
+        if (Factory->FilterDescriptor->Dispatch->Create)
+        {
+            /* now let driver initialize the filter instance */
+            Status = Factory->FilterDescriptor->Dispatch->Create(&This->Filter, Irp);
 
-        /* remove filter instance from filter factory */
-        iface->lpVtbl->RemoveFilterInstance(iface, (IKsFilter*)&This->lpVtbl);
+            if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
+            {
+                /* driver failed to initialize */
+                DPRINT1("Driver: Status %x\n", Status);
 
-        /* free filter instance */
-        FreeItem(This);
-        FreeItem(CreateItem);
-        return Status;
+                /* remove filter instance from filter factory */
+                iface->lpVtbl->RemoveFilterInstance(iface, (IKsFilter*)&This->lpVtbl);
+
+                /* free filter instance */
+                FreeItem(This);
+                FreeItem(CreateItem);
+                return Status;
+            }
+        }
     }
 
     /* now allocate the object header */
