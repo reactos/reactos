@@ -358,7 +358,7 @@ EngSetPointerShape(
             }
         }
     }
-    else
+    else if (psoMask)
     {
         pgp->Size.cx = psoMask->sizlBitmap.cx;
         pgp->Size.cy = psoMask->sizlBitmap.cy / 2;
