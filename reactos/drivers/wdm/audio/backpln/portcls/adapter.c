@@ -91,7 +91,7 @@ PcAddAdapterDevice(
     IN  ULONG DeviceExtensionSize)
 {
     NTSTATUS status = STATUS_UNSUCCESSFUL;
-    PDEVICE_OBJECT fdo = NULL;
+    PDEVICE_OBJECT fdo;
     PDEVICE_OBJECT PrevDeviceObject;
     PPCLASS_DEVICE_EXTENSION portcls_ext = NULL;
 
@@ -200,27 +200,21 @@ PcAddAdapterDevice(
 
 cleanup:
 
-    if (portcls_ext)
+    if (portcls_ext->KsDeviceHeader)
     {
-
-        if (portcls_ext->KsDeviceHeader)
-        {
-            /* free the device header */
-            KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
-        }
-
-        if (portcls_ext->CreateItems)
-        {
-            /* free previously allocated create items */
-            FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
-        }
+        /* free the device header */
+        KsFreeDeviceHeader(portcls_ext->KsDeviceHeader);
     }
 
-    if (fdo)
+    if (portcls_ext->CreateItems)
     {
-        /* delete created fdo */
-        IoDeleteDevice(fdo);
+        /* free previously allocated create items */
+        FreeItem(portcls_ext->CreateItems, TAG_PORTCLASS);
     }
+
+    /* delete created fdo */
+    IoDeleteDevice(fdo);
+
 
     return status;
 }
