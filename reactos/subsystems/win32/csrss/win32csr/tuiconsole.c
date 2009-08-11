@@ -66,6 +66,7 @@ TuiInit(DWORD OemCP)
   CONSOLE_SCREEN_BUFFER_INFO ScrInfo;
   DWORD BytesReturned;
   WNDCLASSEXW wc;
+  USHORT TextAttribute = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 
   TuiStartService(L"Blue");
 
@@ -81,8 +82,15 @@ TuiInit(DWORD OemCP)
                          &OemCP, sizeof(OemCP), NULL, 0,
                          &BytesReturned, NULL))
     {
-        DPRINT("Failed to load the font for codepage %d\n", OemCP);
+        DPRINT1("Failed to load the font for codepage %d\n", OemCP);
         /* Let's suppose the font is good enough to continue */
+    }
+
+    if (!DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_TEXT_ATTRIBUTE,
+                         &TextAttribute, sizeof(TextAttribute), NULL, 0,
+                         &BytesReturned, NULL))
+    {
+        DPRINT1("Failed to set text attribute\n");
     }
 
   ActiveConsole = NULL;
@@ -112,7 +120,7 @@ TuiInit(DWORD OemCP)
 static VOID WINAPI
 TuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 {
-  Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | BACKGROUND_BLUE;
+  Buffer->DefaultAttrib = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
 }
 
 static void FASTCALL
