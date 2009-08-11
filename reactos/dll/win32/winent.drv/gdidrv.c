@@ -343,8 +343,13 @@ COLORREF CDECL RosDrv_GetNearestColor( NTDRV_PDEVICE *physDev, COLORREF color )
 
 COLORREF CDECL RosDrv_GetPixel( NTDRV_PDEVICE *physDev, INT x, INT y )
 {
-    UNIMPLEMENTED;
-    return 0;
+    POINT ptPixel;
+
+    /* Transform to device coordinates */
+    ptPixel.x = x; ptPixel.y = y;
+    LPtoDP(physDev->hUserDC, &ptPixel, 1);
+
+    return RosGdiGetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y);
 }
 
 int CDECL RosDrv_GetPixelFormat(NTDRV_PDEVICE *physDev)
@@ -699,8 +704,13 @@ BOOL CDECL RosDrv_SetDeviceGammaRamp(NTDRV_PDEVICE *physDev, LPVOID ramp)
 
 COLORREF CDECL RosDrv_SetPixel( NTDRV_PDEVICE *physDev, INT x, INT y, COLORREF color )
 {
-    UNIMPLEMENTED;
-    return 0;
+    POINT ptPixel;
+
+    /* Transform to device coordinates */
+    ptPixel.x = x; ptPixel.y = y;
+    LPtoDP(physDev->hUserDC, &ptPixel, 1);
+
+    return RosGdiSetPixel(physDev->hKernelDC, ptPixel.x, ptPixel.y, color);
 }
 
 BOOL CDECL RosDrv_SetPixelFormat(NTDRV_PDEVICE *physDev,

@@ -63,3 +63,4 @@ BOOL CDECL RosDrv_GetCursorPos( LPPOINT pt );
 struct ntdrv_win_data *NTDRV_get_win_data( HWND hwnd );
 struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd );
 void NTDRV_destroy_win_data( HWND hwnd );
+VOID CDECL RosDrv_UpdateZOrder(HWND hwnd, RECT *rect);
