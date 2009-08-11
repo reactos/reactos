@@ -686,11 +686,11 @@ GreSetPointerShape(
                                      fl | SPS_CHANGE);
 
     /* Cleanup */
-    if (hbmColor)
-        EXLATEOBJ_vCleanup(&exlo);
-
     if (psurfColor)
+    {
+        EXLATEOBJ_vCleanup(&exlo);
         SURFACE_ShareUnlockSurface(psurfColor);
+    }
 
     if (psurfMask)
         SURFACE_ShareUnlockSurface(psurfMask);
