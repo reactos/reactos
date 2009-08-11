@@ -65,7 +65,7 @@ PlayLogonSoundThread(
 		if (!hSCManager)
 			ExitThread(0);;
 
-		hService = OpenServiceW(hSCManager, L"sysaudio", GENERIC_READ);
+		hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
 		if (!hService)
 		{
 			CloseServiceHandle(hSCManager);
