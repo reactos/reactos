@@ -1130,6 +1130,7 @@ NTAPI
 NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
              IN ULONG Flags)
 {
+#if 0
     NTSTATUS Status = STATUS_SUCCESS;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING ObjectName;
@@ -1290,6 +1291,10 @@ Quickie:
 
     /* Return status */
     return Status;
+#else
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 NTSTATUS
