@@ -44,5 +44,7 @@ PALETTE_FreePaletteByHandle(HGDIOBJ hPalette)
 #define  PALETTE_LockPalette(hPalette) ((PPALETTE)GDIOBJ_LockObj((HGDIOBJ)hPalette, GDI_OBJECT_TYPE_PALETTE))
 #define  PALETTE_UnlockPalette(pPalette) GDIOBJ_UnlockObjByPtr((PBASEOBJECT)pPalette)
 
+#define  PALETTE_ShareLock(hpal) ((PPALETTE)GDIOBJ_ShareLockObj((HGDIOBJ)hpal, GDI_OBJECT_TYPE_PALETTE))
+#define  PALETTE_ShareUnlock(ppal) GDIOBJ_ShareUnlockObjByPtr(&ppal->BaseObject)
 
 #endif

@@ -484,12 +484,6 @@ BOOL APIENTRY RosGdiSetDeviceGammaRamp(HDC physDev, LPVOID ramp)
     return FALSE;
 }
 
-COLORREF APIENTRY RosGdiSetPixel( HDC physDev, INT x, INT y, COLORREF color )
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 BOOL APIENTRY RosGdiSetPixelFormat(HDC physDev,
                                    int iPixelFormat,
                                    const PIXELFORMATDESCRIPTOR *ppfd)

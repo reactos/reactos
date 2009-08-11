@@ -172,6 +172,23 @@ RECTL_bPointInRect(const RECTL *prcl, INT x, INT y)
             y >= prcl->top  && y <= prcl->bottom);
 }
 
+/* surfobj.c */
+COLORREF
+NTAPI
+GreGetPixel(
+    PDC pDC,
+    UINT x,
+    UINT y);
+
+VOID
+NTAPI
+GreSetPixel(
+    PDC pDC,
+    UINT x,
+    UINT y,
+    COLORREF crColor);
+
+
 /* Private Eng functions */
 BOOL APIENTRY
 EngpStretchBlt(SURFOBJ *psoDest,

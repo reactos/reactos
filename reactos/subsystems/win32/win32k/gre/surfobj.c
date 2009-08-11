@@ -238,3 +238,65 @@ GreSetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits)
     /* Return amount copied */
     return ulBytes;
 }
+
+COLORREF
+NTAPI
+GreGetPixel(
+    PDC pDC,
+    UINT x,
+    UINT y)
+{
+    COLORREF crPixel = (COLORREF)CLR_INVALID;
+    PSURFACE psurf;
+    SURFOBJ *pso;
+
+    /* Offset coordinate by DC origin */
+    x += pDC->rcVport.left + pDC->rcDcRect.left;
+    y += pDC->rcVport.top + pDC->rcDcRect.top;
+
+    /* If points is outside combined clipping region - return error */
+    if (!RECTL_bPointInRect(&pDC->CombinedClip->rclBounds, x, y))
+        return CLR_INVALID;
+
+    /* Get DC's surface */
+    psurf = pDC->pBitmap;
+
+    if (!psurf) return CLR_INVALID;
+
+    pso = &psurf->SurfObj;
+
+    /* Actually get the pixel */
+    if (pso->pvScan0)
+    {
+        ASSERT(pso->lDelta);
+
+        // FIXME: Translate the color?
+        crPixel = DibFunctionsForBitmapFormat[pso->iBitmapFormat].DIB_GetPixel(pso, x, y);
+    }
+
+    /* Return found pixel color */
+    return crPixel;
+}
+
+VOID
+NTAPI
+GreSetPixel(
+    PDC pDC,
+    UINT x,
+    UINT y,
+    COLORREF crColor)
+{
+    PBRUSHGDI pOldBrush = pDC->pFillBrush;
+
+    /* Create a solid brush with this color */
+    pDC->pFillBrush = GreCreateSolidBrush(crColor);
+
+    /* Put pixel */
+    GrePatBlt(pDC, x, y, 1, 1, PATCOPY, pDC->pFillBrush);
+
+    /* Free the created brush */
+    GreFreeBrush(pDC->pFillBrush);
+
+    /* Restore the old brush */
+    pDC->pFillBrush = pOldBrush;
+}

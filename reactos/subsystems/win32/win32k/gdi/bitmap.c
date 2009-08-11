@@ -36,13 +36,16 @@ BOOL APIENTRY RosGdiBitBlt( HDC physDevDst, INT xDst, INT yDst,
 
     /* Get a pointer to the DCs */
     pSrc = DC_Lock(physDevSrc);
-    pDst = DC_Lock(physDevDst);
+    if (physDevSrc != physDevDst)
+        pDst = DC_Lock(physDevDst);
+    else
+        pDst = pSrc;
 
     /* Call the internal helper */
     bRes = GreBitBlt(pDst, xDst, yDst, width, height, pSrc, xSrc, ySrc, rop);
 
     /* Release DC objects */
-    DC_Unlock(pDst);
+    if (physDevSrc != physDevDst) DC_Unlock(pDst);
     DC_Unlock(pSrc);
 
     /* Return status */
@@ -227,8 +230,33 @@ INT APIENTRY RosGdiGetDIBits( HDC physDev, HBITMAP hUserBitmap, UINT StartScan, 
 
 COLORREF APIENTRY RosGdiGetPixel( HDC physDev, INT x, INT y )
 {
-    UNIMPLEMENTED;
-    return 0;
+    PDC pDC;
+    COLORREF crPixel;
+
+    /* Get a pointer to the DC */
+    pDC = DC_Lock(physDev);
+
+    crPixel = GreGetPixel(pDC, x, y);
+
+    /* Release DC */
+    DC_Unlock(pDC);
+
+    return crPixel;
+}
+
+COLORREF APIENTRY RosGdiSetPixel( HDC physDev, INT x, INT y, COLORREF color )
+{
+    PDC pDC;
+
+    /* Get a pointer to the DC */
+    pDC = DC_Lock(physDev);
+
+    GreSetPixel(pDC, x, y, color);
+
+    /* Release DC */
+    DC_Unlock(pDC);
+
+    return color;
 }
 
 BOOL APIENTRY RosGdiPatBlt( HDC physDev, INT left, INT top, INT width, INT height, DWORD rop )
