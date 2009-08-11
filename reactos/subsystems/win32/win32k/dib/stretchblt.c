@@ -144,9 +144,9 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
         }
       }
 
-      if (UsesPattern && CanDraw)
+      if (CanDraw)
       {
-        if (PatternSurface)
+        if (UsesPattern && PatternSurface)
         {
           Pattern = fnPattern_GetPixel(PatternSurface, PatternX, PatternY);
           PatternX++;
