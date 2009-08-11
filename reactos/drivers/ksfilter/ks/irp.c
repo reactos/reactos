@@ -1075,7 +1075,7 @@ KsMoveIrpsOnCancelableQueue(
     KIRQL OldLevel;
     PLIST_ENTRY SrcEntry;
     PIRP Irp;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     if (!DestinationLock)
     {
@@ -1111,7 +1111,7 @@ KsMoveIrpsOnCancelableQueue(
             SrcEntry = SrcEntry->Blink;
         }
 
-        if (SrcEntry == DestinationList)
+        if (SrcEntry == SourceList)
         {
             /* eof list reached */
             break;
