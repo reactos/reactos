@@ -160,7 +160,7 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
 
             SETDLGINFO( hWnd, dlgInfo );
 
-            NtUserSetWindowFNID( hWnd, FNID_DIALOG );
+            NtUserCallHwndParam( hWnd, (DWORD)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
         }
         else
         {
@@ -1088,6 +1088,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );
                 HeapFree( GetProcessHeap(), 0, dlgInfo );
+                NtUserCallHwndParam( hwnd, 0, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
             }
              /* Window clean-up */
             return DefWindowProcA( hwnd, msg, wParam, lParam );

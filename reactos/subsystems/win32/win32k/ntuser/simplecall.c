@@ -802,6 +802,42 @@ NtUserCallHwndParam(
    {
       case HWNDPARAM_ROUTINE_KILLSYSTEMTIMER:
           return IntKillTimer(hWnd, (UINT_PTR)Param, TRUE);
+
+      case HWNDPARAM_ROUTINE_SETDIALOGPOINTER:
+      {
+         PWINDOW_OBJECT Window;
+         PWND pWnd;
+         USER_REFERENCE_ENTRY Ref;
+
+         UserEnterExclusive();
+
+         if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
+         {
+            UserLeave();
+            return 0;
+         }
+         UserRefObjectCo(Window, &Ref);
+
+         pWnd = Window->Wnd;
+         if (pWnd->head.pti->ppi == PsGetCurrentProcessWin32Process() &&
+             pWnd->cbwndExtra == DLGWINDOWEXTRA)
+         {
+            if (Param)
+            {
+               if (!pWnd->fnid) pWnd->fnid = FNID_DIALOG;
+               pWnd->state |= WNDS_DIALOGWINDOW;
+            }
+            else
+            {
+               pWnd->fnid |= FNID_DESTROY;
+               pWnd->state &= ~WNDS_DIALOGWINDOW;
+            }
+         }
+         
+         UserDerefObjectCo(Window);
+         UserLeave();
+         return 0;
+      }
    }
 
    UNIMPLEMENTED;

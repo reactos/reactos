@@ -36,7 +36,7 @@ typedef struct _THREADINFO
 {
     W32THREAD;
     PTL                 ptl;
-    PVOID               ppi; // FIXME: use PPROCESSINFO
+    PPROCESSINFO        ppi;
     struct _USER_MESSAGE_QUEUE* MessageQueue;
     struct _KBL*        KeyboardLayout;
     PCLIENTTHREADINFO   pcti;
