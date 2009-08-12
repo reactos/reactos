@@ -22,6 +22,7 @@
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
 extern __declspec(noreturn) VOID CALLBACK ConsoleControlDispatcher(DWORD CodeAndFlag);
 extern RTL_CRITICAL_SECTION ConsoleLock;
+extern BOOL ConsoleInitialized;
 extern BOOL WINAPI IsDebuggerPresent(VOID);
 
 /* GLOBALS *******************************************************************/
@@ -3345,7 +3346,6 @@ GetConsoleTitleW(LPWSTR lpConsoleTitle,
     PCSR_API_MESSAGE Request;
     ULONG CsrRequest;
     NTSTATUS Status;
-   HANDLE hConsole;
 
     Request = RtlAllocateHeap(RtlGetProcessHeap(),
                               0,
@@ -3357,7 +3357,6 @@ GetConsoleTitleW(LPWSTR lpConsoleTitle,
     }
 
     CsrRequest = MAKE_CSR_API(GET_TITLE, CSR_CONSOLE);
-   Request->Data.GetTitleRequest.ConsoleHandle = hConsole;
 
     Status = CsrClientCallServer(Request,
                                  NULL,
@@ -3437,7 +3436,6 @@ SetConsoleTitleW(LPCWSTR lpConsoleTitle)
     ULONG CsrRequest;
     NTSTATUS Status;
     unsigned int c;
-  HANDLE hConsole;
 
     Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
                               max(sizeof(CSR_API_MESSAGE),
@@ -3450,7 +3448,6 @@ SetConsoleTitleW(LPCWSTR lpConsoleTitle)
     }
 
     CsrRequest = MAKE_CSR_API(SET_TITLE, CSR_CONSOLE);
-  Request->Data.SetTitleRequest.Console = hConsole;
 
     for (c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++)
         Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
@@ -3489,7 +3486,6 @@ SetConsoleTitleA(LPCSTR lpConsoleTitle)
     ULONG CsrRequest;
     NTSTATUS Status;
     unsigned int c;
-  HANDLE hConsole;
 
     Request = RtlAllocateHeap(RtlGetProcessHeap(),
                               0,
@@ -3503,7 +3499,6 @@ SetConsoleTitleA(LPCSTR lpConsoleTitle)
     }
 
     CsrRequest = MAKE_CSR_API(SET_TITLE, CSR_CONSOLE);
-  Request->Data.SetTitleRequest.Console = hConsole;
 
     for (c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++)
         Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
@@ -3543,7 +3538,7 @@ CreateConsoleScreenBuffer(DWORD dwDesiredAccess,
     CSR_API_MESSAGE Request;
     ULONG CsrRequest;
     NTSTATUS Status;
-   
+
     if (dwDesiredAccess & ~(GENERIC_READ | GENERIC_WRITE)
         || dwShareMode & ~(FILE_SHARE_READ | FILE_SHARE_WRITE)
         || dwFlags != CONSOLE_TEXTMODE_BUFFER)
