@@ -1,6 +1,7 @@
 #ifndef __WIN32K_BITMAP_H
 #define __WIN32K_BITMAP_H
 
+#define SRF_BITSALLOCD 0x01 /* GRE allocated memory for bits itself */
 
 typedef struct _SURFACE
 {
@@ -11,6 +12,7 @@ typedef struct _SURFACE
 
     HPALETTE hDIBPalette;
     PFAST_MUTEX pBitsLock; /* grab this lock before accessing actual bits in the bitmap */
+    ULONG ulFlags;         /* implementation specific flags */
 } SURFACE, *PSURFACE;
 
 HBITMAP

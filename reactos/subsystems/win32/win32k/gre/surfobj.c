@@ -171,14 +171,17 @@ GreCreateBitmap(IN SIZEL Size,
     {
         /* Allocate memory for bitmap bits */
         pSurfObj->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ? 0 : FL_ZERO_MEMORY,
-                                       pSurfObj->cjBits, TAG_DIB);
-
+                                       pSurfObj->cjBits,
+                                       TAG_DIB);
         if (!pSurfObj->pvBits)
         {
             /* Cleanup and exit */
             GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
             return 0;
         }
+
+        /* Indicate we allocated memory ourselves */
+        pSurface->ulFlags |= SRF_BITSALLOCD;
     }
     else
     {
@@ -187,8 +190,8 @@ GreCreateBitmap(IN SIZEL Size,
 
     pSurfObj->pvScan0 = pSurfObj->pvBits;
 
-    /* Override the 0th scanline if it's topdown */
-    if (Flags & BMF_TOPDOWN)
+    /* Override the 0th scanline if it's not topdown */
+    if (!(Flags & BMF_TOPDOWN))
     {
         pSurfObj->pvScan0 = (PVOID)((ULONG_PTR)pSurfObj->pvBits + pSurfObj->cjBits - pSurfObj->lDelta);
         pSurfObj->lDelta = -pSurfObj->lDelta;
@@ -205,7 +208,8 @@ GreCreateBitmap(IN SIZEL Size,
     if (!pSurface->pBitsLock)
     {
         /* Cleanup and return */
-        if (!Bits) EngFreeMem(pSurfObj->pvBits);
+        if (!Bits && (pSurface->ulFlags & SRF_BITSALLOCD))
+            EngFreeMem(pSurfObj->pvBits);
         GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
         return 0;
     }
@@ -230,8 +234,9 @@ SURFACE_Cleanup(PVOID ObjectBody)
 {
     PSURFACE pSurf = (PSURFACE)ObjectBody;
 
-    /* TODO: Free bits memory */
-    //if (pSurf->SurfObj.fl
+    /* Free bits memory */
+    if (pSurf->SurfObj.pvBits && (pSurf->ulFlags & SRF_BITSALLOCD))
+        EngFreeMem(pSurf->SurfObj.pvBits);
 
     /* Delete DIB palette if it exists */
     if (pSurf->hDIBPalette)

@@ -24,9 +24,6 @@ EngCreateBitmap(IN SIZEL Size,
 {
     HBITMAP hNewBitmap;
 
-    /* HACK: Why?! */
-    Flags ^= BMF_TOPDOWN;
-
     /* Call the internal routine */
     hNewBitmap = GreCreateBitmap(Size, Width, Format, Flags, Bits);
 
