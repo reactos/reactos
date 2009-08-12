@@ -31,6 +31,7 @@ DbgPrint(
     IN ...
 );
 
+NTSYSAPI
 ULONG
 __cdecl
 DbgPrintEx(

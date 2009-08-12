@@ -134,6 +134,6 @@ APIENTRY
 RosUserGetAsyncKeyboardState(BYTE key_state_table[]);
 
 VOID NTAPI
-RosUserConnectCsrss();
+RosUserConnectCsrss(VOID);
 
 #endif /* __WIN32K_NTUSER_H */

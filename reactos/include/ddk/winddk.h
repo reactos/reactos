@@ -10277,6 +10277,7 @@ DbgPrint(
   IN PCCH  Format,
   IN ...);
 
+NTSYSAPI
 ULONG
 DDKCDECLAPI
 DbgPrintEx(

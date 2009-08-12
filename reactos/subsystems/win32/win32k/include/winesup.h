@@ -141,11 +141,11 @@ process_id_t get_process_id(PPROCESSINFO Process);
 // fd stuff
 struct wait_queue_entry;
 
-struct fd {};
+struct fd {int a;};
 
-struct event {};
+struct event {int a;};
 
-struct async_queue {};
+struct async_queue {int a;};
 
 unsigned int default_fd_map_access( struct object *obj, unsigned int access );
 void set_fd_events( struct fd *fd, int events );

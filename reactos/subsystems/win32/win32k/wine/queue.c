@@ -1154,9 +1154,10 @@ static struct timer *find_expired_timer( struct msg_queue *queue, user_handle_t 
 static struct timer *set_timer( struct msg_queue *queue, unsigned int rate )
 {
     LARGE_INTEGER current_time;
+    struct timer *timer;
     KeQuerySystemTime(&current_time);
 
-    struct timer *timer = mem_alloc( sizeof(*timer) );
+    timer = mem_alloc( sizeof(*timer) );
     if (timer)
     {
         timer->rate = max( rate, 1 );

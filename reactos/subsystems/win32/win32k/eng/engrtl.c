@@ -20,7 +20,7 @@ EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
                       OUT PUSHORT AnsiCodePage)
 {
     /* Call Rtl */
-    return RtlGetDefaultCodePage(AnsiCodePage, OemCodePage);
+    RtlGetDefaultCodePage(AnsiCodePage, OemCodePage);
 }
 
 VOID
