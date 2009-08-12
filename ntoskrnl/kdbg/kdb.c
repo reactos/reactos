@@ -1647,7 +1647,7 @@ KdbpGetCommandLineSettings(PCHAR p1)
 {
     PCHAR p2;
 
-    while (p1 && (p2 = strchr(p1, '/')))
+    while (p1 && (p2 = strchr(p1, ' ')))
     {
         p2++;
 
@@ -1672,21 +1672,31 @@ KdbpSafeReadMemory(OUT PVOID Dest,
                    IN PVOID Src,
                    IN ULONG Bytes)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
+    BOOLEAN Result = TRUE;
 
-   _SEH_TRY
-   {
-      RtlCopyMemory(Dest,
-                    Src,
-                    Bytes);
-   }
-   _SEH_HANDLE
-   {
-      Status = _SEH_GetExceptionCode();
-   }
-   _SEH_END;
+    switch (Bytes)
+    {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+        Result = KdpSafeReadMemory((ULONG_PTR)Src, Bytes, Dest);
+        break;
+    default:
+    {
+        ULONG_PTR Start, End, Write;
+        for (Start = (ULONG_PTR)Src, 
+                 End = Start + Bytes, 
+                 Write = (ULONG_PTR)Dest; 
+             Result && (Start < End); 
+             Start++, Write++)
+            if (!KdpSafeReadMemory(Start, 1, (PVOID)Write))
+                Result = FALSE;
+        break;
+    }
+    }
 
-   return Status;
+    return Result ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
 }
 
 NTSTATUS
@@ -1705,5 +1715,5 @@ KdbpSafeWriteMemory(OUT PVOID Dest,
         if (!KdpSafeWriteMemory(Write, 1, *((PCHAR)Start)))
             Result = FALSE;
 
-   return Status;
+    return Result ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
 }

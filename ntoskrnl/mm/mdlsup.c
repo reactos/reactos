@@ -366,12 +366,12 @@ MmUnmapLockedPages(IN PVOID BaseAddress,
         ASSERT(Mdl->Process == PsGetCurrentProcess());
         
         /* Find the memory area */
-        MemoryArea = MmLocateMemoryAreaByAddress((PMADDRESS_SPACE)&(Mdl->Process)->VadRoot,
+        MemoryArea = MmLocateMemoryAreaByAddress(&Mdl->Process->VadRoot,
                                                  BaseAddress);
         ASSERT(MemoryArea);
 
         /* Free it */
-        MmFreeMemoryArea((PMADDRESS_SPACE)&(Mdl->Process)->VadRoot,
+        MmFreeMemoryArea(&Mdl->Process->VadRoot,
                          MemoryArea,
                          NULL,
                          NULL);
@@ -391,11 +391,12 @@ MmProbeAndLockPages(IN PMDL Mdl,
     PVOID Base, Address;
     ULONG i, j;
     ULONG NrPages;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PFN_TYPE Page;
     PEPROCESS CurrentProcess;
     PETHREAD Thread;
-    PMADDRESS_SPACE AddressSpace;
+    PMM_AVL_TABLE AddressSpace;
+	KIRQL OldIrql = KeGetCurrentIrql();
     DPRINT("Probing MDL: %p\n", Mdl);
     
     /* Sanity checks */
@@ -479,14 +480,17 @@ MmProbeAndLockPages(IN PMDL Mdl,
         Mdl->Process = CurrentProcess;
         
         /* Use the process lock */
-        AddressSpace = (PMADDRESS_SPACE)&(CurrentProcess)->VadRoot;
+        AddressSpace = &CurrentProcess->VadRoot;
     }
     
     
     /*
      * Lock the pages
      */
-    MmLockAddressSpace(AddressSpace);
+	if (OldIrql < DISPATCH_LEVEL)
+		MmLockAddressSpace(AddressSpace);
+	else
+		MmAcquirePageListLock(&OldIrql);
     
     for (i = 0; i < NrPages; i++)
     {
@@ -500,8 +504,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
             Status = MmAccessFault(FALSE, Address, AccessMode, NULL);
             if (!NT_SUCCESS(Status))
             {
-                MmUnlockAddressSpace(AddressSpace);
-                ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+				goto cleanup;
             }
         }
         else
@@ -524,8 +527,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                         MmDereferencePage(Page);
                     }
                 }
-                MmUnlockAddressSpace(AddressSpace);
-                ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+				goto cleanup;
             }
         }
         Page = MmGetPfnForProcess(NULL, Address);
@@ -539,9 +541,17 @@ MmProbeAndLockPages(IN PMDL Mdl,
             MmReferencePage(Page);
         }
     }
-    
-    MmUnlockAddressSpace(AddressSpace);
+
+cleanup:
+	if (OldIrql < DISPATCH_LEVEL)
+		MmUnlockAddressSpace(AddressSpace);
+	else
+		MmReleasePageListLock(OldIrql);
+
+	if (!NT_SUCCESS(Status))
+		ExRaiseStatus(STATUS_ACCESS_VIOLATION);
     Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+	return;
 }
 
 /*
@@ -748,8 +758,8 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
     
     CurrentProcess = PsGetCurrentProcess();
     
-    MmLockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
-    Status = MmCreateMemoryArea((PMADDRESS_SPACE)&CurrentProcess->VadRoot,
+    MmLockAddressSpace(&CurrentProcess->VadRoot);
+    Status = MmCreateMemoryArea(&CurrentProcess->VadRoot,
                                 MEMORY_AREA_MDL_MAPPING,
                                 &Base,
                                 PageCount * PAGE_SIZE,
@@ -758,7 +768,7 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
                                 (Base != NULL),
                                 0,
                                 BoundaryAddressMultiple);
-    MmUnlockAddressSpace((PMADDRESS_SPACE)&CurrentProcess->VadRoot);
+    MmUnlockAddressSpace(&CurrentProcess->VadRoot);
     if (!NT_SUCCESS(Status))
     {
         if (Mdl->MdlFlags & MDL_MAPPING_CAN_FAIL)

@@ -655,11 +655,7 @@ typedef struct _KIPCR
     ULONG IDR;
     PVOID KdVersionBlock;
     PKIDTENTRY IDT;
-#ifdef __REACTOS__
-    PUSHORT GDT;
-#else
     PKGDTENTRY GDT;
-#endif
     struct _KTSS *TSS;
     USHORT MajorVersion;
     USHORT MinorVersion;

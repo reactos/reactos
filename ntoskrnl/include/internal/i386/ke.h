@@ -28,10 +28,6 @@ Ki386InitializeTss(
 );
 
 VOID
-FASTCALL
-KiIdleLoop(VOID);
-
-VOID
 KiGdtPrepareForApplicationProcessorInit(ULONG Id);
 VOID
 Ki386InitializeLdt(VOID);

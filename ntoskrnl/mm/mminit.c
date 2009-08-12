@@ -331,19 +331,22 @@ MiGetLastKernelAddress(VOID)
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
     ULONG_PTR LastKrnlPhysAddr = 0;
-    
+
     for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
          NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
          NextEntry = NextEntry->Flink)
     {
         Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-        if (Md->MemoryType != LoaderFree)
+
+        if (Md->MemoryType != LoaderFree &&
+            Md->MemoryType != LoaderFirmwareTemporary &&
+            Md->MemoryType != LoaderSpecialMemory)
         {
             if (Md->BasePage+Md->PageCount > LastKrnlPhysAddr)
-                LastKrnlPhysAddr = Md->BasePage+Md->PageCount;   
+                LastKrnlPhysAddr = Md->BasePage+Md->PageCount;
         }
     }
-    
+
     /* Convert to a physical address */
     return LastKrnlPhysAddr << PAGE_SHIFT;
 }
@@ -452,7 +455,6 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG Flags = 0;
     if (Phase == 0)
     {
         /* Initialize Mm bootstrap */
@@ -460,13 +462,6 @@ MmInitSystem(IN ULONG Phase,
 
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);
-
-        /* Initialize the address space for the system process */
-        MmInitializeProcessAddressSpace(PsGetCurrentProcess(),
-                                        NULL,
-                                        NULL,
-                                        &Flags,
-                                        NULL);
 
         /* Reload boot drivers */
         MiReloadBootLoadedDrivers(LoaderBlock);

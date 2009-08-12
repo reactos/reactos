@@ -188,7 +188,7 @@ FsRtlInsertPerFileObjectContext(IN PFILE_OBJECT FileObject,
         return STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return STATUS_NOT_IMPLEMENTED;
 }
 

@@ -421,7 +421,7 @@ MiQueryVirtualMemory(IN HANDLE ProcessHandle,
     NTSTATUS Status;
     PEPROCESS Process;
     MEMORY_AREA* MemoryArea;
-    PMADDRESS_SPACE AddressSpace;
+    PMM_AVL_TABLE AddressSpace;
 
     Status = ObReferenceObjectByHandle(ProcessHandle,
                                        PROCESS_QUERY_INFORMATION,
@@ -576,7 +576,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                        OUT PULONG OldAccessProtection  OPTIONAL)
 {
     PMEMORY_AREA MemoryArea;
-    PMADDRESS_SPACE AddressSpace;
+    PMM_AVL_TABLE AddressSpace;
     ULONG OldAccessProtection_;
     NTSTATUS Status;
 
@@ -585,7 +585,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
     PAGE_ROUND_DOWN(*BaseAddress);
     *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
 
-    AddressSpace = (PMADDRESS_SPACE)&(Process)->VadRoot;
+    AddressSpace = &Process->VadRoot;
 
     MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);

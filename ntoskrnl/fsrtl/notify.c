@@ -74,35 +74,6 @@ FsRtlNotifyReleaseFastMutex(IN PREAL_NOTIFY_SYNC RealNotifySync)
     }
 }
 
-/* PSEH FUNCTIONS ************************************************************/
-
-VOID
-FsRtlNotifyCleanupFinal(PREAL_NOTIFY_SYNC RealNotifySync,
-                        PSECURITY_SUBJECT_CONTEXT SubjectContext)
-{
-    /* Release fast mutex */
-    FsRtlNotifyReleaseFastMutex(RealNotifySync);
-
-    /* If the subject security context was captured, release and free it */
-    if (SubjectContext)
-    {
-        SeReleaseSubjectContext(SubjectContext);
-        ExFreePool(SubjectContext);
-    }
-}
-
-_SEH_DEFINE_LOCALS(FsRtlNotifyCleanupFinal)
-{
-    PREAL_NOTIFY_SYNC RealNotifySync;
-    PSECURITY_SUBJECT_CONTEXT SubjectContext;
-};
-
-_SEH_FINALLYFUNC(FsRtlNotifyCleanupFinal_PSEH)
-{
-    _SEH_ACCESS_LOCALS(FsRtlNotifyCleanupFinal);
-    FsRtlNotifyCleanupFinal(_SEH_VAR(RealNotifySync), _SEH_VAR(SubjectContext));
-}
-
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*++
@@ -189,6 +160,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
 {
     PNOTIFY_CHANGE NotifyChange;
     PREAL_NOTIFY_SYNC RealNotifySync;
+    PSECURITY_SUBJECT_CONTEXT SubjectContext = NULL;
 
     /* Get real structure hidden behind the opaque pointer */
     RealNotifySync = (PREAL_NOTIFY_SYNC)NotifySync;
@@ -196,12 +168,8 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
     /* Acquire the fast mutex */
     FsRtlNotifyAcquireFastMutex(RealNotifySync);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
-        _SEH_DECLARE_LOCALS(FsRtlNotifyCleanupFinal);
-        _SEH_VAR(RealNotifySync) = RealNotifySync;
-        _SEH_VAR(SubjectContext) = NULL;
-
         /* Find if there's a matching notification with the FsContext */
         NotifyChange = FsRtlIsNotifyOnList(NotifyList, FsContext);
         if (NotifyChange)
@@ -230,7 +198,7 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
                 /* In case there the string was set, get the captured subject security context */
                 if (NotifyChange->FullDirectoryName)
                 {
-                    _SEH_VAR(SubjectContext) = NotifyChange->SubjectContext;
+                    SubjectContext = NotifyChange->SubjectContext;
                 }
 
                 /* Finally, free the notification, as it's not needed anymore */
@@ -238,8 +206,19 @@ FsRtlNotifyCleanup(IN PNOTIFY_SYNC NotifySync,
             }
         }
     }
-    _SEH_FINALLY(FsRtlNotifyCleanupFinal_PSEH)
-    _SEH_END;
+    _SEH2_FINALLY
+    {
+      /* Release fast mutex */
+      FsRtlNotifyReleaseFastMutex(RealNotifySync);
+
+      /* If the subject security context was captured, release and free it */
+      if (SubjectContext)
+      {
+          SeReleaseSubjectContext(SubjectContext);
+          ExFreePool(SubjectContext);
+      }
+    }
+    _SEH2_END;
 }
 
 /*++

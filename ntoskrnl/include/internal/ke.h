@@ -156,6 +156,7 @@ extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
 extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
+extern ULONG KiDPCTimeout;
 
 /* MACROS *************************************************************************/
 
@@ -1034,6 +1035,30 @@ VOID
 NTAPI
 KiSaveProcessorControlState(
     OUT PKPROCESSOR_STATE ProcessorState
+);
+
+VOID
+FASTCALL
+KiRetireDpcList(
+    IN PKPRCB Prcb
+);
+
+VOID
+NTAPI
+KiQuantumEnd(
+    VOID
+);
+
+VOID
+KiSystemService(
+    IN PKTHREAD Thread,
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Instruction
+);
+
+VOID
+KiIdleLoop(
+    VOID
 );
 
 #include "ke_x.h"

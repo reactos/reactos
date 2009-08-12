@@ -135,17 +135,17 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 
     KeInitializeGuardedMutex(Mcb->GuardedMutex);
 
-    _SEH_TRY
+    _SEH2_TRY
     {
         FsRtlInitializeBaseMcb(&(Mcb->BaseMcb), PoolType);
     }
-    _SEH_HANDLE
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         ExFreeToNPagedLookasideList(&FsRtlFastMutexLookasideList,
                                     Mcb->GuardedMutex);
         Mcb->GuardedMutex = NULL;
     }
-    _SEH_END;
+    _SEH2_END;
 }
 
 /*
@@ -187,7 +187,7 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB Mcb,
                         OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
                         OUT PULONG Index OPTIONAL)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     *Lbn = 0;
     *SectorCountFromLbn = 0;
     return FALSE;
@@ -331,7 +331,7 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB Mcb,
                         IN LONGLONG Vbn,
                         IN LONGLONG SectorCount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 
@@ -390,7 +390,7 @@ FsRtlSplitBaseMcb(IN PBASE_MCB Mcb,
                   IN LONGLONG Vbn,
                   IN LONGLONG Amount)
 {
-    KEBUGCHECK(0);
+    KeBugCheck(FILE_SYSTEM);
     return FALSE;
 }
 

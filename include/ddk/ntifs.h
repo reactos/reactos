@@ -3598,6 +3598,17 @@ FsRtlNotifyInitializeSync (
 NTKERNELAPI
 VOID
 NTAPI
+FsRtlNotifyReportChange (
+    IN PNOTIFY_SYNC NotifySync,
+    IN PLIST_ENTRY  NotifyList,
+    IN PSTRING      FullTargetName,
+    IN PUSHORT      FileNamePartLength,
+    IN ULONG        FilterMatch
+);
+
+NTKERNELAPI
+VOID
+NTAPI
 FsRtlNotifyUninitializeSync (
     IN PNOTIFY_SYNC *NotifySync
 );
