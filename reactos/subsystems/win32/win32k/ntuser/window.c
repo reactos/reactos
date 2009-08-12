@@ -1837,12 +1837,19 @@ AllocErr:
    {
       if (hMenu)
          IntSetMenu(Window, hMenu, &MenuChanged);
-      else // Take it from the parent.
+      else if (Wnd->pcls->lpszMenuName) // Take it from the parent.
       {
           UNICODE_STRING MenuName;
-
-          RtlInitUnicodeString( &MenuName, Wnd->pcls->lpszMenuName);
-
+          if (IS_INTRESOURCE(Wnd->pcls->lpszMenuName))
+          {
+             MenuName.Length = 0;
+             MenuName.MaximumLength = 0;
+             MenuName.Buffer = Wnd->pcls->lpszMenuName;
+          }
+          else
+          {
+             RtlInitUnicodeString( &MenuName, Wnd->pcls->lpszMenuName);
+          }
           hMenu = co_IntCallLoadMenu( Wnd->pcls->hModule, &MenuName);
           if (hMenu) IntSetMenu(Window, hMenu, &MenuChanged);
       }
