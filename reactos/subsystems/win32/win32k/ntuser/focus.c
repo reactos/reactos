@@ -95,7 +95,11 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          Window->Wnd->hWndLastActive = hWnd;
          if (Window->Wnd->spwndOwner)
             Window->Wnd->spwndOwner->hWndLastActive = hWnd;
+         Window->Wnd->state |= WNDS_ACTIVEFRAME;
       }
+
+      if (WindowPrev && WindowPrev->Wnd)
+         WindowPrev->Wnd->state &= ~WNDS_ACTIVEFRAME;
 
       if (Window && WindowPrev)
       {

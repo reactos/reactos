@@ -133,7 +133,7 @@ IntDefWindowProc(
          if (LOWORD(lParam))
          {
             if (wParam)
-            {
+            {//                      WNDS_HIDDENPOPUP
                if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP)) break;
                Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
             }
