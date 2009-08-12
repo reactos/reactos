@@ -197,6 +197,21 @@ GreCreateBitmap(IN SIZEL Size,
     /* Set the format */
     pSurfObj->iBitmapFormat = Format;
 
+    /* Initialize bits lock */
+    pSurface->pBitsLock = ExAllocatePoolWithTag(NonPagedPool,
+                                                sizeof(FAST_MUTEX),
+                                                TAG_SURFOBJ);
+
+    if (!pSurface->pBitsLock)
+    {
+        /* Cleanup and return */
+        if (!Bits) EngFreeMem(pSurfObj->pvBits);
+        GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
+        return 0;
+    }
+
+    ExInitializeFastMutex(pSurface->pBitsLock);
+
     /* Unlock the surface */
     SURFACE_Unlock(pSurface);
 
@@ -209,6 +224,25 @@ GreDeleteBitmap(HGDIOBJ hBitmap)
 {
     GDIOBJ_FreeObjByHandle(hBitmap, GDI_OBJECT_TYPE_BITMAP);
 }
+
+BOOL APIENTRY
+SURFACE_Cleanup(PVOID ObjectBody)
+{
+    PSURFACE pSurf = (PSURFACE)ObjectBody;
+
+    /* TODO: Free bits memory */
+    //if (pSurf->SurfObj.fl
+
+    /* Delete DIB palette if it exists */
+    if (pSurf->hDIBPalette)
+        GDIOBJ_FreeObjByHandle(pSurf->hDIBPalette, GDI_OBJECT_TYPE_PALETTE);
+
+    /* Free bitslock storage */
+    ExFreePoolWithTag(pSurf->pBitsLock, TAG_SURFOBJ);
+
+    return TRUE;
+}
+
 
 LONG FASTCALL
 GreGetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits)

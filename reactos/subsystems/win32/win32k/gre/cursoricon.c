@@ -19,9 +19,11 @@ GreMovePointer(
     IN LONG y,
     IN RECTL *prcl)
 {
-    SURFACE_LockBitmapBits(pso);
+    SURFACE *pSurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+
+    SURFACE_LockBitmapBits(pSurf);
     GDIDEVFUNCS(pso).MovePointer(pso, x, y, prcl);
-    SURFACE_UnlockBitmapBits(pso);
+    SURFACE_UnlockBitmapBits(pSurf);
 }
 
 
@@ -41,10 +43,11 @@ GreSetPointerShape(
     ULONG ulResult = SPS_DECLINE;
     PFN_DrvSetPointerShape pfnSetPointerShape;
     PPDEVOBJ ppdev = &PrimarySurface;
+    SURFACE *pSurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
 
     pfnSetPointerShape = GDIDEVFUNCS(pso).SetPointerShape;
 
-    SURFACE_LockBitmapBits(pso);
+    SURFACE_LockBitmapBits(pSurf);
     if (pfnSetPointerShape)
     {
         ulResult = pfnSetPointerShape(pso,
@@ -82,7 +85,7 @@ GreSetPointerShape(
         ppdev->pfnMovePointer = EngMovePointer;
     }
 
-    SURFACE_UnlockBitmapBits(pso);
+    SURFACE_UnlockBitmapBits(pSurf);
 
     return ulResult;
 }

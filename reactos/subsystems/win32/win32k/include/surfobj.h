@@ -10,6 +10,7 @@ typedef struct _SURFACE
     FLONG   flHooks;
 
     HPALETTE hDIBPalette;
+    PFAST_MUTEX pBitsLock; /* grab this lock before accessing actual bits in the bitmap */
 } SURFACE, *PSURFACE;
 
 HBITMAP
@@ -31,6 +32,9 @@ GreSetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits);
 INT FASTCALL
 BITMAP_GetWidthBytes(INT bmWidth, INT bpp);
 
+BOOL APIENTRY
+SURFACE_Cleanup(PVOID ObjectBody);
+
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 
 #define  SURFACE_Lock(hBMObj) \
@@ -42,7 +46,7 @@ BITMAP_GetWidthBytes(INT bmWidth, INT bpp);
 #define  SURFACE_ShareUnlock(pBMObj)  \
   GDIOBJ_ShareUnlockObjByPtr ((PBASEOBJECT)pBMObj)
 
-#define SURFACE_LockBitmapBits(x)
-#define SURFACE_UnlockBitmapBits(x)
+#define SURFACE_LockBitmapBits(pBMObj) ExEnterCriticalRegionAndAcquireFastMutexUnsafe((pBMObj)->pBitsLock)
+#define SURFACE_UnlockBitmapBits(pBMObj) ExReleaseFastMutexUnsafeAndLeaveCriticalRegion((pBMObj)->pBitsLock)
 
 #endif
