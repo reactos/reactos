@@ -516,29 +516,36 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    HANDLE Handle;
    USHORT HandleIndex;
 
+   /* Initialize ex handle table entry */
    ExEntry.Object = Entry;
    ExEntry.GrantedAccess = 0x1; /* FIXME - valid handle */
 
+   /* Create ex handle */
    Handle = ExCreateHandle(AtomTable->ExHandleTable,
-                                &ExEntry);
-   if (Handle != NULL)
-   {
-      HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
-      /* FIXME - Handle Indexes >= 0xC000 ?! */
-      if ((ULONG_PTR)HandleIndex >> 2 < 0xC000)
-      {
-         Entry->HandleIndex = HandleIndex;
-         Entry->Atom = 0xC000 + HandleIndex;
+                           &ExEntry);
+   if (!Handle) return FALSE;
 
-         return TRUE;
-      }
-      else
-         ExDestroyHandle(AtomTable->ExHandleTable,
-                         Handle,
-                         NULL);
+   /* Calculate HandleIndex (by getting rid of the first two bits) */
+   HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
+
+   /* Index must be less than 0xC000 */
+   if (HandleIndex >= 0xC000)
+   {
+       /* Destroy ex handle */
+       ExDestroyHandle(AtomTable->ExHandleTable,
+                       Handle,
+                       NULL);
+
+       /* Return failure */
+       return FALSE;
    }
 
-   return FALSE;
+   /* Initialize atom table entry */
+   Entry->HandleIndex = HandleIndex;
+   Entry->Atom = 0xC000 + HandleIndex;
+
+   /* Return success */
+   return TRUE;
 }
 
 PRTL_ATOM_TABLE_ENTRY
