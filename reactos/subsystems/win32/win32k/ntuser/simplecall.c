@@ -820,7 +820,8 @@ NtUserCallHwndParam(
 
          pWnd = Window->Wnd;
          if (pWnd->head.pti->ppi == PsGetCurrentProcessWin32Process() &&
-             pWnd->cbwndExtra == DLGWINDOWEXTRA)
+             pWnd->cbwndExtra == DLGWINDOWEXTRA && 
+             !(pWnd->state & WNDS_SERVERSIDEWINDOWPROC))
          {
             if (Param)
             {
