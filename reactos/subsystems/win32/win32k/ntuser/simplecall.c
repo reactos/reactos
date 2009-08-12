@@ -514,64 +514,9 @@ NtUserCallTwoParam(
          UNIMPLEMENTED
          RETURN( 0);
 
-      case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
-
-         if(!(Window = UserGetWindowObject((HWND)Param1)))
-         {
-            RETURN( (DWORD)FALSE);
-         }
-
-         if ( Param2 )
-            IntSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param2);
-         else
-            IntRemoveProp(Window, gpsi->atomContextHelpIdProp);
-
-         RETURN( (DWORD)TRUE);
 
       case TWOPARAM_ROUTINE_SETCARETPOS:
          RETURN( (DWORD)co_IntSetCaretPos((int)Param1, (int)Param2));
-
-      case TWOPARAM_ROUTINE_GETWINDOWINFO:
-         {
-            WINDOWINFO wi;
-            DWORD Ret;
-
-            if(!(Window = UserGetWindowObject((HWND)Param1)))
-            {
-               RETURN( FALSE);
-            }
-
-#if 0
-            /*
-             * According to WINE, Windows' doesn't check the cbSize field
-             */
-
-            Status = MmCopyFromCaller(&wi.cbSize, (PVOID)Param2, sizeof(wi.cbSize));
-            if(!NT_SUCCESS(Status))
-            {
-               SetLastNtError(Status);
-               RETURN( FALSE);
-            }
-
-            if(wi.cbSize != sizeof(WINDOWINFO))
-            {
-               SetLastWin32Error(ERROR_INVALID_PARAMETER);
-               RETURN( FALSE);
-            }
-#endif
-
-            if((Ret = (DWORD)IntGetWindowInfo(Window, &wi)))
-            {
-               Status = MmCopyToCaller((PVOID)Param2, &wi, sizeof(WINDOWINFO));
-               if(!NT_SUCCESS(Status))
-               {
-                  SetLastNtError(Status);
-                  RETURN( FALSE);
-               }
-            }
-
-            RETURN( Ret);
-         }
 
       case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
          RETURN( (DWORD)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
@@ -802,6 +747,26 @@ NtUserCallHwndParam(
    {
       case HWNDPARAM_ROUTINE_KILLSYSTEMTIMER:
           return IntKillTimer(hWnd, (UINT_PTR)Param, TRUE);
+
+      case HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID:
+      {
+         PWINDOW_OBJECT Window;
+
+         UserEnterExclusive();
+         if(!(Window = UserGetWindowObject(hWnd)))
+         {
+            UserLeave();
+            return FALSE;
+         }
+
+         if ( Param )
+            IntSetProp(Window, gpsi->atomContextHelpIdProp, (HANDLE)Param);
+         else
+            IntRemoveProp(Window, gpsi->atomContextHelpIdProp);
+
+         UserLeave();
+         return TRUE;
+      }
 
       case HWNDPARAM_ROUTINE_SETDIALOGPOINTER:
       {

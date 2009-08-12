@@ -1043,10 +1043,63 @@ GetTopWindow(HWND hWnd)
  * @implemented
  */
 BOOL WINAPI
-GetWindowInfo(HWND hwnd,
+GetWindowInfo(HWND hWnd,
               PWINDOWINFO pwi)
 {
-    return NtUserGetWindowInfo(hwnd, pwi);
+    PWND pWnd;
+    PCLS pCls = NULL;
+    SIZE Size = {0,0};
+    BOOL Ret = FALSE;
+
+    if ( !pwi || pwi->cbSize != sizeof(WINDOWINFO))
+       SetLastError(ERROR_INVALID_PARAMETER); // Just set the error and go!
+
+    pWnd = ValidateHwnd(hWnd);
+    if (!pWnd)
+        return Ret;
+
+    UserGetWindowBorders(pWnd->style, pWnd->ExStyle, &Size, FALSE);
+
+    _SEH2_TRY
+    {
+       pCls = DesktopPtrToUser(pWnd->pcls);
+       pwi->rcWindow = pWnd->rcWindow;
+       pwi->rcClient = pWnd->rcClient;
+       pwi->dwStyle = pWnd->style;
+       pwi->dwExStyle = pWnd->ExStyle;
+       pwi->cxWindowBorders = Size.cx;
+       pwi->cyWindowBorders = Size.cy;
+       pwi->dwWindowStatus = 0;
+       if (pWnd->state & WNDS_ACTIVEFRAME)
+          pwi->dwWindowStatus = WS_ACTIVECAPTION;
+       pwi->atomWindowType = (pCls ? pCls->atomClassName : 0 );
+
+       if ( pWnd->state2 & WNDS2_WIN50COMPAT )
+       {
+          pwi->wCreatorVersion = 0x500;
+       }
+       else if ( pWnd->state2 & WNDS2_WIN40COMPAT )
+       {
+          pwi->wCreatorVersion = 0x400;
+       }
+       else if ( pWnd->state2 & WNDS2_WIN31COMPAT )
+       {
+          pwi->wCreatorVersion =  0x30A;
+       }
+       else
+       {
+          pwi->wCreatorVersion = 0x300;
+       }
+
+       Ret = TRUE;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Do nothing */
+    }
+    _SEH2_END;
+
+   return Ret;
 }
 
 

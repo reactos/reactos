@@ -119,3 +119,4 @@ PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
 BOOL FASTCALL TestWindowProcess(PWND);
+VOID UserGetWindowBorders(DWORD, DWORD, SIZE *, BOOL);

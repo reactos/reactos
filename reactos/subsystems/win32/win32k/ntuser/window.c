@@ -1678,6 +1678,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        Wnd->head.pti = ti;
        Wnd->head.rpdesk = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
+       Wnd->state2 |= WNDS2_WIN40COMPAT;
    }
 
    DPRINT("Created object with handle %X\n", hWnd);
