@@ -111,6 +111,72 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
     return TRUE;
 }
 
+/*
+   Based on UserFindCallProc.
+ */
+PCALLPROCDATA
+FASTCALL
+UserSearchForCallProc(
+   PCALLPROCDATA pcpd,
+   WNDPROC WndProc,
+   GETCPD Type)
+{
+   while ( pcpd && (pcpd->pfnClientPrevious != WndProc || pcpd->wType != Type) )
+   {
+      pcpd = pcpd->spcpdNext;
+   }
+   return pcpd;
+}
+
+/*
+   Get Call Proc Data handle for the window proc being requested or create a
+   new Call Proc Data handle to be return for the requested window proc.
+ */
+ULONG_PTR
+FASTCALL
+UserGetCPD(
+   PVOID pvClsWnd,
+   GETCPD Flags,
+   ULONG_PTR ProcIn)
+{
+   PCLS pCls;
+   PWND pWnd;
+   PCALLPROCDATA CallProc = NULL;
+   PTHREADINFO pti;
+
+   pti = PsGetCurrentThreadWin32Thread();
+
+   if ( Flags & (UserGetCPDWindow|UserGetCPDDialog) ||
+        Flags & UserGetCPDWndtoCls)
+   {
+      pWnd = pvClsWnd;
+      pCls = pWnd->pcls;
+   }
+   else
+      pCls = pvClsWnd;
+
+   // Search Class call proc data list.
+   if (pCls->spcpdFirst)
+      CallProc = UserSearchForCallProc( pCls->spcpdFirst, (WNDPROC)ProcIn, Flags);
+
+   // No luck, create a new one for the requested proc.
+   if (!CallProc)
+   {
+      CallProc = CreateCallProc( NULL,
+                                 (WNDPROC)ProcIn,
+                                 (Flags & UserGetCPDU2A),
+                                 pti->ppi);
+      if (CallProc)
+      {
+          CallProc->spcpdNext = pCls->spcpdFirst;
+          (void)InterlockedExchangePointer((PVOID*)&pCls->spcpdFirst,
+                                                    CallProc);
+          CallProc->wType = Flags;
+      }
+   }
+   return (ULONG_PTR)(CallProc ? GetCallProcHandle(CallProc) : NULL);
+}
+
 /* SYSCALLS *****************************************************************/
 
 /* 
@@ -138,9 +204,7 @@ NtUserGetCPD(
 {
    PWINDOW_OBJECT Window;
    PWND Wnd;
-   PCLS Class;
    ULONG_PTR Result = 0;
-   BOOL Ansi;
 
    UserEnterExclusive();
    if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
@@ -148,18 +212,10 @@ NtUserGetCPD(
       goto Cleanup;
    }
    Wnd = Window->Wnd;
-   Class = Wnd->pcls;
-   /* Ex: Retrieve the Unicode Proc since the default is Ansi. */
-   Ansi = (Flags & UserGetCPDA2U); // Ansi to Unicode request from user.
 
-   if ( Flags & (UserGetCPDWindow|UserGetCPDDialog))
-   {
-      Result = UserGetWindowLong( hWnd, GWL_WNDPROC, Ansi);
-   }
-   else if (Flags & (UserGetCPDClass|UserGetCPDWndtoCls))
-   {
-      Result = UserGetClassLongPtr( Class, GCLP_WNDPROC, Ansi);
-   }
+   // Processing Window only from User space.
+   if ((Flags & ~(UserGetCPDU2A|UserGetCPDA2U)) != UserGetCPDClass)        
+      Result = UserGetCPD(Wnd, Flags, ProcIn);
 
 Cleanup:
    UserLeave();
