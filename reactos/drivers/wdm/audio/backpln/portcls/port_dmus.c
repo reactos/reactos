@@ -219,6 +219,12 @@ IPortDMus_fnInit(
         }
     }
 
+    /* Initialize port object */
+    This->pMiniport = Miniport;
+    This->pMiniportMidi = MidiMiniport;
+    This->pDeviceObject = DeviceObject;
+    This->bInitialized = TRUE;
+
     if (Miniport)
     {
         /* initialize IMiniportDMus */
@@ -226,6 +232,7 @@ IPortDMus_fnInit(
         if (!NT_SUCCESS(Status))
         {
             DPRINT("IMiniportDMus_Init failed with %x\n", Status);
+            This->bInitialized = FALSE;
             return Status;
         }
 
@@ -235,6 +242,7 @@ IPortDMus_fnInit(
         {
             DPRINT1("failed to get description\n");
             Miniport->lpVtbl->Release(Miniport);
+            This->bInitialized = FALSE;
             return Status;
         }
 
@@ -249,6 +257,7 @@ IPortDMus_fnInit(
         if (!NT_SUCCESS(Status))
         {
             DPRINT("IMiniportMidi_Init failed with %x\n", Status);
+            This->bInitialized = FALSE;
             return Status;
         }
 
@@ -258,6 +267,7 @@ IPortDMus_fnInit(
         {
             DPRINT1("failed to get description\n");
             MidiMiniport->lpVtbl->Release(MidiMiniport);
+            This->bInitialized = FALSE;
             return Status;
         }
 
@@ -290,6 +300,7 @@ IPortDMus_fnInit(
         else
             MidiMiniport->lpVtbl->Release(MidiMiniport);
 
+        This->bInitialized = FALSE;
         return Status;
     }
 
@@ -298,12 +309,6 @@ IPortDMus_fnInit(
         /* register service group */
         This->ServiceGroup = ServiceGroup;
     }
-
-    /* Initialize port object */
-    This->pMiniport = Miniport;
-    This->pMiniportMidi = MidiMiniport;
-    This->pDeviceObject = DeviceObject;
-    This->bInitialized = TRUE;
 
     /* check if it supports IPinCount interface */
     Status = UnknownMiniport->lpVtbl->QueryInterface(UnknownMiniport, &IID_IPinCount, (PVOID*)&PinCount);
@@ -346,7 +351,16 @@ IPortDMus_fnNewRegistryKey(
         DPRINT("IPortDMus_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
-    return STATUS_UNSUCCESSFUL;
+
+    return PcNewRegistryKey(OutRegistryKey,
+                            OuterUnknown,
+                            RegistryKeyType,
+                            DesiredAccess,
+                            This->pDeviceObject,
+                            NULL,//FIXME
+                            ObjectAttributes,
+                            CreateOptions,
+                            Disposition);
 }
 
 VOID
