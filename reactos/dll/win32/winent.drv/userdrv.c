@@ -280,7 +280,19 @@ BOOL CDECL RosDrv_SetCursorPos( INT x, INT y )
 
 BOOL CDECL RosDrv_ClipCursor( LPCRECT clip )
 {
-    return RosUserClipCursor( clip );
+    RECT rcScreen, cursor_clip;
+
+    /* Make up virtual screen rectangle*/
+    rcScreen.left = 0; rcScreen.top = 0;
+    rcScreen.right  = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    rcScreen.bottom = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+    /* Intersect with screen rectangle */
+    if (!IntersectRect( &cursor_clip, &rcScreen, clip ))
+        return RosUserClipCursor(&rcScreen);
+
+    /* Set clipping */
+    return RosUserClipCursor( &cursor_clip );
 }
 
 BOOL CDECL RosDrv_GetScreenSaveActive(void)
@@ -863,6 +875,8 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
             move_window_bits( data, &valid_rects[1], &valid_rects[0], &old_client_rect );
         }
     }
+
+    RosDrv_UpdateZOrder(hwnd, visible_rect);
 }
 
 /* EOF */
