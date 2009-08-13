@@ -7,9 +7,6 @@ typedef struct _DC
 
     PPDEVOBJ     pPDevice;
 
-    /* Device palette */
-    HPALETTE     hPalette;
-
     PSURFACE     pBitmap;
     PBRUSHGDI    pFillBrush;
     PBRUSHGDI    pLineBrush;

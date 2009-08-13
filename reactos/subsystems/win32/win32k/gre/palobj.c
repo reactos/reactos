@@ -114,8 +114,8 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
     USHORT *lpIndex;
     PPALETTE palGDI;
 
-    palGDI = PALETTE_LockPalette(dc->hPalette);
-
+    palGDI = NULL;//PALETTE_LockPalette(dc->hPalette);
+    UNIMPLEMENTED;
     if (NULL == palGDI)
     {
         return NULL;

@@ -229,6 +229,41 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
     return TRUE;
 }
 
+// TODO: Move somewhere, give it a better name
+XLATEOBJ *GrepBrushCreateXlate(PDC pDC, PBRUSHGDI pBrush, COLORREF lbColor)
+{
+    SURFACE *pSurfPattern;
+    HPALETTE hPalette;
+
+    pSurfPattern = SURFACE_Lock(pBrush->hbmPattern);
+    if (!pSurfPattern) return NULL;
+
+    /* Get default palette */
+    hPalette = pDC->pBitmap->hDIBPalette;
+    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
+
+    /* Special case: 1bpp pattern */
+    if (pSurfPattern->SurfObj.iBitmapFormat == BMF_1BPP)
+    {
+        if (BitsPerFormat(pDC->pBitmap->SurfObj.iBitmapFormat) != 1)
+        {
+            pBrush->XlateObject =
+                IntEngCreateSrcMonoXlate(hPalette,
+                                         pDC->crBackgroundClr,
+                                         lbColor);
+        }
+    }
+    else if (pBrush->flAttrs & GDIBRUSH_IS_DIB)
+    {
+        pBrush->XlateObject =
+            IntEngCreateXlate(0, 0, hPalette, pSurfPattern->hDIBPalette);
+    }
+
+    SURFACE_Unlock(pSurfPattern);
+
+    return pBrush->XlateObject;
+}
+
 VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
 {
     PDC pDC;
@@ -281,6 +316,12 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
         break;
     }
 
+    /* Create XLATE for hatched/pattern brushes */
+    if (pLogBrush->lbStyle == BS_HATCHED || pLogBrush->lbStyle == BS_PATTERN)
+    {
+        GrepBrushCreateXlate(pDC, pDC->pFillBrush, pLogBrush->lbColor);
+    }
+
     /* Release the object */
     DC_Unlock(pDC);
 }
@@ -320,6 +361,12 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
                          NULL,
                          0,
                          TRUE);
+
+        /* Create XLATE if necessary */
+        if (pDC->pLineBrush && pDC->pLineBrush->flAttrs & GDIBRUSH_IS_BITMAP)
+        {
+            GrepBrushCreateXlate(pDC, pDC->pLineBrush, pLogPen->lopnColor);
+        }
     }
     else
     {
@@ -335,6 +382,12 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
                          pExtLogPen->elpStyleEntry,
                          0,
                          FALSE);
+
+        /* Create XLATE if necessary */
+        if (pDC->pLineBrush && pDC->pLineBrush->flAttrs & GDIBRUSH_IS_BITMAP)
+        {
+            GrepBrushCreateXlate(pDC, pDC->pLineBrush, pExtLogPen->elpColor);
+        }
     }
 
     /* Release the object */

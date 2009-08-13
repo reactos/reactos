@@ -26,6 +26,9 @@ XLATEOBJ* NTAPI
 IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
                   HPALETTE PaletteDest, HPALETTE PaletteSource);
 
+XLATEOBJ* FASTCALL
+IntEngCreateSrcMonoXlate(HPALETTE PaletteDest, ULONG Color0, ULONG Color1);
+
 VOID FASTCALL
 EngDeleteXlate(XLATEOBJ *XlateObj);
 

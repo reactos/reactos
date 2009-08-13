@@ -259,7 +259,7 @@ GreCreateHatchedBrush(INT iHatchStyle, COLORREF crColor)
     SURFACE_Unlock(pPattern);
 
     /* Set color to the reserved value */
-    pBrush->BrushObj.iSolidColor = crColor & 0xFFFFFF;
+    pBrush->BrushObj.iSolidColor = 0xFFFFFFFF;
 
     /* Return newly created brush */
     return pBrush;
