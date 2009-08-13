@@ -21,6 +21,9 @@
 #define GDIBRUSH_CACHED_ENGINE      0x00040000
 #define GDIBRUSH_CACHED_IS_SOLID	0x80000000
 
+/* Total amount of hatch brush styles */
+#define NB_HATCH_STYLES  6
+
 /* BRUSHGDI is a handleless GDI object */
 typedef struct _BRUSHGDI
 {
@@ -48,6 +51,9 @@ GreCreatePen(
    PULONG pStyle,
    IN ULONG cjDIB,
    IN BOOL bOldStylePen);
+
+PBRUSHGDI NTAPI
+GreCreateHatchedBrush(INT iHatchStyle, COLORREF crColor);
 
 PBRUSHGDI NTAPI
 GreCreateSolidBrush(COLORREF crColor);

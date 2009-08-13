@@ -12,6 +12,17 @@
 #define NDEBUG
 #include <debug.h>
 
+
+static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
+{
+    {0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00}, /* HS_HORIZONTAL */
+    {0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08}, /* HS_VERTICAL   */
+    {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80}, /* HS_FDIAGONAL  */
+    {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01}, /* HS_BDIAGONAL  */
+    {0x08, 0x08, 0x08, 0x08, 0xff, 0x08, 0x08, 0x08}, /* HS_CROSS      */
+    {0x81, 0x42, 0x24, 0x18, 0x18, 0x24, 0x42, 0x81}  /* HS_DIAGCROSS  */
+};
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 PBRUSHGDI
@@ -220,13 +231,50 @@ GreCreatePatternBrush(HBITMAP hbmPattern)
     return pBrush;
 }
 
+PBRUSHGDI
+NTAPI
+GreCreateHatchedBrush(INT iHatchStyle, COLORREF crColor)
+{
+    PBRUSHGDI pBrush;
+    SIZEL szPatSize;
+    PSURFACE pPattern;
+
+    /* Make sure hatch style is in range */
+    if (iHatchStyle < 0 || iHatchStyle >= NB_HATCH_STYLES)
+        return NULL;
+
+    /* Allocate memory for the object */
+    pBrush = EngAllocMem(FL_ZERO_MEMORY, sizeof(BRUSHGDI), TAG_BRUSHOBJ);
+    if (!pBrush) return NULL;
+
+    /* Set HATCH flag */
+    pBrush->flAttrs |= GDIBRUSH_IS_HATCH;
+
+    /* Create and set pattern bitmap */
+    szPatSize.cx = 8; szPatSize.cy = 8;
+    pBrush->hbmPattern = GreCreateBitmap(szPatSize, 0, BMF_1BPP, BMF_NOZEROINIT, NULL);
+    GDIOBJ_SetOwnership(pBrush->hbmPattern, NULL);
+    pPattern = SURFACE_Lock(pBrush->hbmPattern);
+    GreSetBitmapBits(pPattern, 8, (PVOID)HatchBrushes[iHatchStyle]);
+    SURFACE_Unlock(pPattern);
+
+    /* Set color to the reserved value */
+    pBrush->BrushObj.iSolidColor = crColor & 0xFFFFFF;
+
+    /* Return newly created brush */
+    return pBrush;
+}
+
 VOID
 NTAPI
 GreFreeBrush(PBRUSHGDI pBrush)
 {
     /* Free the pattern bitmap if any */
     if (pBrush->hbmPattern)
+    {
+        GDIOBJ_SetOwnership(pBrush->hbmPattern, PsGetCurrentProcess());
         GreDeleteBitmap(pBrush->hbmPattern);
+    }
 
     /* Free the memory */
     EngFreeMem(pBrush);

@@ -260,9 +260,8 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
         break;
 
     case BS_HATCHED:
-        DPRINT1("BS_HATCHED\n" );
-        //GreCreateHatchedBrush();
-        UNIMPLEMENTED;
+        DPRINT("BS_HATCHED\n" );
+        pDC->pFillBrush = GreCreateHatchedBrush(pLogBrush->lbHatch, pLogBrush->lbColor);
         break;
 
     case BS_PATTERN:
@@ -273,6 +272,7 @@ VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
             DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", pLogBrush->lbHatch, physDev);
             break;
         }
+        GDIOBJ_SetOwnership(hBmpKern, NULL);
         pDC->pFillBrush = GreCreatePatternBrush(hBmpKern);
         break;
 
