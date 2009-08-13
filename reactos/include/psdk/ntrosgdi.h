@@ -108,6 +108,7 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
 COLORREF APIENTRY RosGdiSetBkColor( HDC physDev, COLORREF color );
 COLORREF APIENTRY RosGdiSetDCBrushColor( HDC physDev, COLORREF crColor );
 DWORD APIENTRY RosGdiSetDCOrg( HDC physDev, INT x, INT y );
+VOID APIENTRY RosGdiSetBrushOrg( HDC physDev, INT x, INT y );
 COLORREF APIENTRY RosGdiSetDCPenColor( HDC physDev, COLORREF crColor );
 void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, PRECTL rcBounds );
 BOOL APIENTRY RosGdiSetDeviceGammaRamp(HDC physDev, LPVOID ramp);

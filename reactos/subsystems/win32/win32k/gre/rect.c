@@ -27,21 +27,21 @@ GreRectangle(PDC pDC,
     BOOLEAN bRet;
     RECTL DestRect;
     MIX Mix;
-    POINT BrushOrigin = {0, 0};
+    POINT BrushOrigin;
 
     DestRect.left = LeftRect + pDC->rcDcRect.left + pDC->rcVport.left;
     DestRect.right = RightRect + pDC->rcDcRect.left + pDC->rcVport.left;
     DestRect.top = TopRect + pDC->rcDcRect.top + pDC->rcVport.top;
     DestRect.bottom = BottomRect + pDC->rcDcRect.top + pDC->rcVport.top;
 
+    BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
+    BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
+
     /* Draw brush-based rectangle */
     if (pDC->pFillBrush)
     {
         if (!(pDC->pFillBrush->flAttrs & GDIBRUSH_IS_NULL))
         {
-            //BrushOrigin = *((PPOINTL)&pbrFill->ptOrigin);
-            //BrushOrigin.x += dc->ptlDCOrig.x;
-            //BrushOrigin.y += dc->ptlDCOrig.y;
             bRet = GrepBitBltEx(&pDC->pBitmap->SurfObj,
                                NULL,
                                NULL,
@@ -102,7 +102,7 @@ GrePolygon(PDC pDC,
     RECTL DestRect;
     MIX Mix;
     INT i;
-    POINT BrushOrigin = {0, 0};
+    POINT BrushOrigin;
 
     // HACK
     DestRect.left = 0;
@@ -110,14 +110,14 @@ GrePolygon(PDC pDC,
     DestRect.bottom = PrimarySurface.GDIInfo.ulVertRes;
     DestRect.right = PrimarySurface.GDIInfo.ulHorzRes;
 
+    BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
+    BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
+
     /* Draw brush-based polygon */
     if (pDC->pFillBrush)
     {
         if (!(pDC->pFillBrush->flAttrs & GDIBRUSH_IS_NULL))
         {
-            //BrushOrigin = *((PPOINTL)&pbrFill->ptOrigin);
-            //BrushOrigin.x += dc->ptlDCOrig.x;
-            //BrushOrigin.y += dc->ptlDCOrig.y;
             GrepFillPolygon(pDC,
                             &pDC->pBitmap->SurfObj,
                             &pDC->pFillBrush->BrushObj,

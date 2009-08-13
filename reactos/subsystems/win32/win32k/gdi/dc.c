@@ -423,6 +423,21 @@ DWORD APIENTRY RosGdiSetDCOrg( HDC physDev, INT x, INT y )
     return 0;
 }
 
+VOID APIENTRY RosGdiSetBrushOrg( HDC physDev, INT x, INT y )
+{
+    PDC pDC;
+
+    /* Get a pointer to the DC */
+    pDC = DC_Lock(physDev);
+
+    /* Set brush origin */
+    pDC->ptBrushOrg.x = x;
+    pDC->ptBrushOrg.y = y;
+
+    /* Release the object */
+    DC_Unlock(pDC);
+}
+
 COLORREF APIENTRY RosGdiSetDCPenColor( HDC physDev, COLORREF crColor )
 {
     UNIMPLEMENTED;

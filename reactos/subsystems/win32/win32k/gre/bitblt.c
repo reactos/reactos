@@ -200,8 +200,7 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
           INT XSrc, INT YSrc, DWORD rop)
 {
     BOOLEAN bRet;
-    POINT BrushOrigin = {0,0};
-    POINT SourcePoint;
+    POINT SourcePoint, BrushOrigin;
     RECTL DestRect;
     XLATEOBJ *XlateObj = NULL;
     BOOL UsesSource = ROP3_USES_SOURCE(rop);
@@ -238,6 +237,9 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
             return FALSE;
         }
     }
+
+    BrushOrigin.x = pDest->ptBrushOrg.x + pDest->rcDcRect.left;
+    BrushOrigin.y = pDest->ptBrushOrg.y + pDest->rcDcRect.top;
 
     /* Perform the bitblt operation */
     bRet = GrepBitBltEx(
@@ -302,8 +304,8 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
         DestRect.right += pDC->rcVport.left + pDC->rcDcRect.left;
         DestRect.bottom += pDC->rcVport.top + pDC->rcDcRect.top;
 
-        //BrushOrigin.x = BrushObj->ptOrigin.x + pDC->ptVportOrg.x;
-        //BrushOrigin.y = BrushObj->ptOrigin.y + pDC->ptVportOrg.y;
+        BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
+        BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
 
         bRet = GrepBitBltEx(
             &pDC->pBitmap->SurfObj,
@@ -377,8 +379,8 @@ GreStretchBltMask(
         SourceRect.bottom += DCSrc->rcVport.top + DCSrc->rcDcRect.top;
     }
 
-    BrushOrigin.x = 0;
-    BrushOrigin.y = 0;
+    BrushOrigin.x = DCDest->ptBrushOrg.x + DCDest->rcDcRect.left;
+    BrushOrigin.y = DCDest->ptBrushOrg.y + DCDest->rcDcRect.top;
 
     /* Determine surfaces to be used in the bitblt */
     BitmapDest = DCDest->pBitmap;
@@ -401,10 +403,6 @@ GreStretchBltMask(
             goto failed;
         }
     }
-
-    /* Offset the brush */
-    BrushOrigin.x += DCDest->rcVport.left + DCDest->rcDcRect.left;
-    BrushOrigin.y += DCDest->rcVport.top + DCDest->rcDcRect.top;
 
     /* Make mask surface for source surface */
     if (BitmapSrc && DCMask)

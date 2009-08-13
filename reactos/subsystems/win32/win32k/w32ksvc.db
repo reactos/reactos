@@ -24,6 +24,7 @@ RosGdiSelectPen                    3
 RosGdiSetBkColor                   2
 RosGdiSetDCBrushColor              2
 RosGdiSetDCOrg                     3
+RosGdiSetBrushOrg                  3
 RosGdiSetDCPenColor                2
 RosGdiSetDeviceClipping            4
 RosGdiSetDeviceGammaRamp           2
