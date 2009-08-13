@@ -445,16 +445,20 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     if (count == 0)
     {
         /* Special case, set it to full screen then */
-        RECTL_vSetRect(&rcSafeBounds,
+        /*RECTL_vSetRect(&rcSafeBounds,
                        pDC->rcVport.left,
                        pDC->rcVport.top,
                        pDC->rcVport.right,
-                       pDC->rcVport.bottom);
+                       pDC->rcVport.bottom);*/
+
+        RECTL_vSetRect(&rcSafeBounds,
+                       0,
+                       0,
+                       pDC->pBitmap->SurfObj.sizlBitmap.cx,
+                       pDC->pBitmap->SurfObj.sizlBitmap.cy);
 
         /* Set the clipping object */
         pDC->CombinedClip = IntEngCreateClipRegion(1, &rcSafeBounds, &rcSafeBounds);
-
-        DPRINT1("FIXME: Setting device clipping to NULL region, using full screen instead\n");
     }
     else
     {
