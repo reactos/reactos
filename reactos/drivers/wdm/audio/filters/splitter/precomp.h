@@ -58,4 +58,13 @@ PinIntersectHandler(
     OUT PVOID Data OPTIONAL,
     OUT PULONG DataSize);
 
+
+
+typedef struct
+{
+    ULONG BytesAvailable;
+    ULONG BytesProcessed;
+}PIN_CONTEXT, *PPIN_CONTEXT;
+
+
 #endif
