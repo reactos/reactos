@@ -41,7 +41,7 @@
   (BOOL)NtUserCallTwoParam((DWORD)hWnd, (DWORD)hRgn, TWOPARAM_ROUTINE_VALIDATERGN)
 
 #define NtUserSetWindowContextHelpId(hWnd, dwContextHelpId) \
-  (BOOL)NtUserCallTwoParam((DWORD)hwnd, dwContextHelpId, HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID)
+  (BOOL)NtUserCallHwndParam(hwnd, dwContextHelpId, HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID)
 
 #define NtUserSetCaretPos(X, Y) \
   (BOOL)NtUserCallTwoParam((DWORD)X, (DWORD)Y, TWOPARAM_ROUTINE_SETCARETPOS)
