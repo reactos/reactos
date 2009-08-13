@@ -12,11 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
-
-extern BOOLEAN NlsMbOemCodePageTag;
-extern PUSHORT NlsOemLeadByteInfo;
-
 
 /* CONSTANTS *****************************************************************/
 
@@ -274,29 +269,20 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
 
     for (i = 0; i < AnsiName->Length; i++)
     {
-        /* First make sure the character it's not the Lead DBCS */
-        if (NlsMbOemCodePageTag && NlsOemLeadByteInfo[(UCHAR)AnsiName->Buffer[i]])
+        switch (AnsiName->Buffer[i])
         {
-            if (i == AnsiName->Length - 1) return FALSE;
-            i++;
-        }
-        else
-        {
-            switch (AnsiName->Buffer[i])
-            {
-                case ' ':
-                    /* leading/trailing spaces not allowed */
-                    if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
-                    GotSpace = TRUE;
-                    break;
-                case '.':
-                    if (Dot != -1) return FALSE;
-                    Dot = i;
-                    break;
-                default:
-                    if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
-                    break;
-            }
+        case ' ':
+            /* leading/trailing spaces not allowed */
+            if (!i || i == AnsiName->Length-1 || AnsiName->Buffer[i+1] == '.') return FALSE;
+            GotSpace = TRUE;
+            break;
+        case '.':
+            if (Dot != -1) return FALSE;
+            Dot = i;
+            break;
+        default:
+            if (strchr(Illegal, AnsiName->Buffer[i])) return FALSE;
+            break;
         }
     }
     /* check file part is shorter than 8, extension shorter than 3
