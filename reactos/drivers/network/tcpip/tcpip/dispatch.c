@@ -582,10 +582,7 @@ NTSTATUS DispTdiListen(
 
   TI_DbgPrint(MIN_TRACE, ("Connection->AddressFile: %x\n",
 			  Connection->AddressFile ));
-  if( Connection->AddressFile ) {
-      TI_DbgPrint(MIN_TRACE, ("Connection->AddressFile->Listener: %x\n",
-			      Connection->AddressFile->Listener));
-  }
+  ASSERT(Connection->AddressFile);
 
   Status = DispPrepareIrpForCancel
       (TranContext->Handle.ConnectionContext,

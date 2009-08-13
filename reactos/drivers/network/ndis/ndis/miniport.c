@@ -1850,6 +1850,12 @@ NdisIPnPStartDevice(
    */
 
   NdisOpenConfiguration(&NdisStatus, &ConfigHandle, (NDIS_HANDLE)&WrapperContext);
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Failed to open configuration key\n"));
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      return NdisStatus;
+  }
 
   Size = sizeof(ULONG);
   Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,

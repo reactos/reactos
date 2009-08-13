@@ -207,7 +207,6 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	    if( (FCB->PollState & AFD_EVENT_CLOSE) ||
 		(PollReq->Handles[i].Status & AFD_EVENT_CLOSE) ) {
-		AFD_HANDLES(PollReq)[i].Handle = 0;
 		PollReq->Handles[i].Events = 0;
 		PollReq->Handles[i].Status = AFD_EVENT_CLOSE;
 		Signalled++;

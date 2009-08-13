@@ -51,6 +51,8 @@ static NTSTATUS NTAPI SendComplete
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	       SendReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
