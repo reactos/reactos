@@ -188,6 +188,15 @@ GreSetPixel(
     UINT y,
     COLORREF crColor);
 
+BOOL
+APIENTRY
+GreCopyBits(
+    SURFOBJ *psoDest,
+    SURFOBJ *psoSource,
+    CLIPOBJ *Clip,
+    XLATEOBJ *ColorTranslation,
+    RECTL *DestRect,
+    POINTL *SourcePoint);
 
 /* Private Eng functions */
 BOOL APIENTRY

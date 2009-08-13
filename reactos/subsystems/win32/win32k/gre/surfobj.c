@@ -339,3 +339,31 @@ GreSetPixel(
     /* Restore the old brush */
     pDC->pFillBrush = pOldBrush;
 }
+
+BOOL
+APIENTRY
+GreCopyBits(SURFOBJ *psoDest,
+            SURFOBJ *psoSource,
+            CLIPOBJ *pco,
+            XLATEOBJ *pxlo,
+            RECTL *prclDest,
+            POINTL *ptlSource)
+{
+    BOOL bResult;
+
+    /* Start mouse safety */
+    MouseSafetyOnDrawStart(psoSource, ptlSource->x, ptlSource->y,
+                         (ptlSource->x + abs(prclDest->right - prclDest->left)),
+                         (ptlSource->y + abs(prclDest->bottom - prclDest->top)));
+
+    MouseSafetyOnDrawStart(psoDest, prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
+
+    /* Copy bits using Eng function */
+    bResult = EngCopyBits(psoDest, psoSource, pco, pxlo, prclDest, ptlSource);
+
+    /* Finish mouse safety */
+    MouseSafetyOnDrawEnd(psoDest);
+    MouseSafetyOnDrawEnd(psoSource);
+
+    return bResult;
+}

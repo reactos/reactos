@@ -176,7 +176,7 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
                   return FALSE;
                }
                soMask = EngLockSurface((HSURF)hMask);
-               EngCopyBits(soMask, MaskBmpObj, NULL, NULL,
+               GreCopyBits(soMask, MaskBmpObj, NULL, NULL,
                            &DestRect, &SourcePoint);
                EngUnlockSurface(MaskBmpObj);
             }

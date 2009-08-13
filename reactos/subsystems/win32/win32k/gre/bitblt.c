@@ -563,7 +563,7 @@ GreSetDIBits(
     DestRect.right	= SourceSize.cx;
     DestRect.bottom	= DestRect.top + ScanLines;
 
-    copyBitsResult = EngCopyBits(DestSurf, SourceSurf, NULL, XlateObj, &DestRect, &ZeroPoint);
+    copyBitsResult = GreCopyBits(DestSurf, SourceSurf, NULL, XlateObj, &DestRect, &ZeroPoint);
 
     // If it succeeded, return number of scanlines copies
     if (copyBitsResult == TRUE)
@@ -934,7 +934,7 @@ GreGetDIBits(
 
             DestSurfObj = EngLockSurface((HSURF)hDestBitmap);
 
-            if (EngCopyBits(DestSurfObj,
+            if (GreCopyBits(DestSurfObj,
                             &psurf->SurfObj,
                             NULL,
                             XlateObj,
