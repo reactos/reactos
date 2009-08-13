@@ -97,7 +97,7 @@ NTAPI
 GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
 {
    SURFOBJ *pso;
-   SURFOBJ *MaskBmpObj = NULL;
+   SURFACE *MaskBmpObj = NULL;
    HBITMAP hMask = 0;
    SURFOBJ *soMask = NULL, *soColor = NULL;
    XLATEOBJ *XlateObj = NULL;
@@ -121,11 +121,11 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
          return TRUE;
    }
 
-   MaskBmpObj = EngLockSurface((HSURF)NewCursor->hbmMask);
+   MaskBmpObj = SURFACE_Lock(NewCursor->hbmMask);
    if (MaskBmpObj)
    {
-      const int maskBpp = BitsPerFormat(MaskBmpObj->iBitmapFormat);
-      EngUnlockSurface(MaskBmpObj);
+      const int maskBpp = BitsPerFormat(MaskBmpObj->SurfObj.iBitmapFormat);
+      SURFACE_Unlock(MaskBmpObj);
       if (maskBpp != 1)
       {
          DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
@@ -154,10 +154,10 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
          }
          else
          {
-            MaskBmpObj = EngLockSurface((HSURF)NewCursor->hbmMask);
+            MaskBmpObj = SURFACE_Lock((HSURF)NewCursor->hbmMask);
             if(MaskBmpObj)
             {
-               RECTL DestRect = {0, 0, MaskBmpObj->sizlBitmap.cx, MaskBmpObj->sizlBitmap.cy};
+               RECTL DestRect = {0, 0, MaskBmpObj->SurfObj.sizlBitmap.cx, MaskBmpObj->SurfObj.sizlBitmap.cy};
                POINTL SourcePoint = {0, 0};
 
                /*
@@ -166,19 +166,19 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
                 * be fixed later.
                 */
                hMask = EngCreateBitmap(
-                          MaskBmpObj->sizlBitmap, abs(MaskBmpObj->lDelta),
-                          MaskBmpObj->iBitmapFormat, BMF_TOPDOWN,
+                          MaskBmpObj->SurfObj.sizlBitmap, abs(MaskBmpObj->SurfObj.lDelta),
+                          MaskBmpObj->SurfObj.iBitmapFormat, BMF_TOPDOWN,
                           NULL);
                if ( !hMask )
                {
-                  EngUnlockSurface(MaskBmpObj);
+                  SURFACE_Unlock(MaskBmpObj);
                   EngUnlockSurface(pso);
                   return FALSE;
                }
                soMask = EngLockSurface((HSURF)hMask);
-               GreCopyBits(soMask, MaskBmpObj, NULL, NULL,
+               GreCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
                            &DestRect, &SourcePoint);
-               EngUnlockSurface(MaskBmpObj);
+               SURFACE_Unlock(MaskBmpObj);
             }
          }
       }
