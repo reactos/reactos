@@ -319,6 +319,8 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     PWND Wnd = WindowObject->Wnd;
 
+    if (!Wnd) return;
+    
     if (ClientInfo->CallbackWnd.pvWnd == DesktopHeapAddressToUser(WindowObject->Wnd))
     {
         ClientInfo->CallbackWnd.hWnd = NULL;
