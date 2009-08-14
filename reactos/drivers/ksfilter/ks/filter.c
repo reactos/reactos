@@ -637,57 +637,6 @@ KspPinPropertyHandler(
 }
 
 NTSTATUS
-FindPropertyHandler(
-    IN PIO_STATUS_BLOCK IoStatus,
-    IN KSPROPERTY_SET * FilterPropertySet,
-    IN ULONG FilterPropertySetCount,
-    IN PKSPROPERTY Property,
-    IN ULONG InputBufferLength,
-    IN ULONG OutputBufferLength,
-    OUT PFNKSHANDLER *PropertyHandler)
-{
-    ULONG Index, ItemIndex;
-
-    for(Index = 0; Index < FilterPropertySetCount; Index++)
-    {
-        if (IsEqualGUIDAligned(&Property->Set, FilterPropertySet[Index].Set))
-        {
-            for(ItemIndex = 0; ItemIndex < FilterPropertySet[Index].PropertiesCount; ItemIndex++)
-            {
-                if (FilterPropertySet[Index].PropertyItem[ItemIndex].PropertyId == Property->Id)
-                {
-                    if (Property->Flags & KSPROPERTY_TYPE_SET)
-                        *PropertyHandler = FilterPropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
-
-                    if (Property->Flags & KSPROPERTY_TYPE_GET)
-                        *PropertyHandler = FilterPropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
-
-                    if (FilterPropertySet[Index].PropertyItem[ItemIndex].MinProperty > InputBufferLength)
-                    {
-                        /* too small input buffer */
-                        IoStatus->Information = FilterPropertySet[Index].PropertyItem[ItemIndex].MinProperty;
-                        IoStatus->Status = STATUS_BUFFER_TOO_SMALL;
-                        return STATUS_BUFFER_TOO_SMALL;
-                    }
-
-                    if (FilterPropertySet[Index].PropertyItem[ItemIndex].MinData > OutputBufferLength)
-                    {
-                        /* too small output buffer */
-                        IoStatus->Information = FilterPropertySet[Index].PropertyItem[ItemIndex].MinData;
-                        IoStatus->Status = STATUS_BUFFER_TOO_SMALL;
-                        return STATUS_BUFFER_TOO_SMALL;
-                    }
-                    return STATUS_SUCCESS;
-                }
-            }
-        }
-    }
-    return STATUS_UNSUCCESSFUL;
-}
-
-
-
-NTSTATUS
 NTAPI
 IKsFilter_DispatchDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
@@ -724,7 +673,7 @@ IKsFilter_DispatchDeviceIoControl(
     }
 
     /* find a supported property handler */
-    Status = FindPropertyHandler(&Irp->IoStatus, FilterPropertySet, 2, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, &PropertyHandler);
+    Status = KsPropertyHandler(Irp, 2, FilterPropertySet);
     if (NT_SUCCESS(Status))
     {
         KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PVOID)This;
