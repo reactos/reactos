@@ -173,6 +173,7 @@ IKsFilterFactory_fnInitialize(
     PDEVICE_EXTENSION DeviceExtension;
     KSOBJECT_CREATE_ITEM CreateItem;
     BOOL FreeString = FALSE;
+    IKsDevice * KsDevice;
 
     IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
 
@@ -185,10 +186,20 @@ IKsFilterFactory_fnInitialize(
     This->FilterFactory.FilterDescriptor = Descriptor;
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Type = KsObjectTypeFilterFactory;
+    This->Header.Parent.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->DeviceHeader = DeviceExtension->DeviceHeader;
+
+    /* unused fields */
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
+    InitializeListHead(&This->Header.EventList);
+    KeInitializeSpinLock(&This->Header.EventListLock);
+
 
     InitializeListHead(&This->SymbolicLinkList);
     InitializeListHead(&This->FilterInstanceList);
+
+    /* initialize filter factory control mutex */
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
 
     /* does the device use a reference string */
     if (RefString || !Descriptor->ReferenceGuid)
@@ -252,7 +263,14 @@ IKsFilterFactory_fnInitialize(
         /* return filterfactory */
         *FilterFactory = &This->FilterFactory;
 
-        /*FIXME create object bag */
+        /* create a object bag for the filter factory */
+        This->FilterFactory.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
+        if (This->FilterFactory.Bag)
+        {
+            /* initialize object bag */
+            KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+            KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->FilterFactory.Bag, NULL);
+        }
     }
 
 

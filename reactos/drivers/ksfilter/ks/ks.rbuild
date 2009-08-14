@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="ks" type="kernelmodedriver" installbase="system32/drivers" installname="ks.sys">
+<module name="ks" type="kernelmodedriver" installbase="system32/drivers" installname="ks.sys" entrypoint="0">
 	<include base="ks">.</include>
 	<include base="ks">..</include>
 	<include base="ks">../include</include>

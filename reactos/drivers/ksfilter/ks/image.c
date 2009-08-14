@@ -82,8 +82,21 @@ KsLoadResource(
     return Status;
 }
 
+
+NTSTATUS
+KspQueryRegValue(
+    IN HANDLE KeyHandle,
+    IN LPWSTR KeyName,
+    IN PVOID Buffer,
+    IN OUT PULONG BufferLength,
+    OUT PULONG Type)
+{
+    UNIMPLEMENTED
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -94,12 +107,78 @@ KsGetImageNameAndResourceId(
     OUT PULONG_PTR ResourceId,
     OUT PULONG ValueType)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+    ULONG ImageLength;
+    WCHAR ImagePath[] = {L"\\SystemRoot\\system32\\drivers\\"};
+
+    /* first clear the provided ImageName */
+    ImageName->Buffer = NULL;
+    ImageName->Length = ImageName->MaximumLength = 0;
+
+    ImageLength = 0;
+    /* retrieve length of image name */
+    Status = KspQueryRegValue(RegKey, L"Image", NULL, &ImageLength, NULL);
+
+    if (Status != STATUS_BUFFER_OVERFLOW)
+    {
+        /* key value doesnt exist */
+        return Status;
+    }
+
+    /* allocate image name buffer */
+    ImageName->MaximumLength = sizeof(ImagePath) + ImageLength;
+    ImageName->Buffer = ExAllocatePool(PagedPool, ImageName->MaximumLength);
+
+    /* check for success */
+    if (!ImageName->Buffer)
+    {
+        /* insufficient memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* copy image name */
+    RtlCopyMemory(ImageName->Buffer, ImagePath, sizeof(ImagePath));
+
+    /* retrieve image name */
+    Status = KspQueryRegValue(RegKey, L"Image", &ImageName->Buffer[sizeof(ImagePath) / sizeof(WCHAR)], &ImageLength, NULL);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* unexpected error */
+        ExFreePool(ImageName->Buffer);
+        return Status;
+    }
+
+    /* now query for resource id length*/
+   ImageLength = 0;
+   Status = KspQueryRegValue(RegKey, L"ResourceId", NULL, &ImageLength, ValueType);
+
+    /* allocate resource id buffer*/
+    *ResourceId = (ULONG_PTR)ExAllocatePool(PagedPool, ImageLength);
+
+    /* check for success */
+    if (!*ResourceId)
+    {
+        /* insufficient memory */
+        ExFreePool(ImageName->Buffer);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    /* now query for resource id */
+    Status = KspQueryRegValue(RegKey, L"ResourceId", (PVOID)*ResourceId, &ImageLength, ValueType);
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* unexpected error */
+        ExFreePool(ImageName->Buffer);
+        ExFreePool((PVOID)*ResourceId);
+    }
+
+    /* return result */
+    return Status;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -111,6 +190,64 @@ KsMapModuleName(
     OUT PULONG_PTR ResourceId,
     OUT PULONG ValueType)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
+    UNICODE_STRING SubKeyName;
+    UNICODE_STRING Modules = RTL_CONSTANT_STRING(L"Modules\\");
+    HANDLE hKey, hSubKey;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+
+    /* first open device key */
+    Status = IoOpenDeviceRegistryKey(PhysicalDeviceObject, PLUGPLAY_REGKEY_DEVICE, GENERIC_READ, &hKey);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        /* invalid parameter */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* initialize subkey buffer */
+    SubKeyName.Length = 0;
+    SubKeyName.MaximumLength = Modules.MaximumLength + ModuleName->MaximumLength;
+    SubKeyName.Buffer = ExAllocatePool(PagedPool, SubKeyName.MaximumLength);
+
+    /* check for success */
+    if (!SubKeyName.Buffer)
+    {
+        /* not enough memory */
+        ZwClose(hKey);
+        return STATUS_NO_MEMORY;
+    }
+
+    /* build subkey string */
+    RtlAppendUnicodeStringToString(&SubKeyName, &Modules);
+    RtlAppendUnicodeStringToString(&SubKeyName, ModuleName);
+
+    /* initialize subkey attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE, hKey, NULL);
+
+    /* now open the subkey */
+    Status = ZwOpenKey(&hSubKey, GENERIC_READ, &ObjectAttributes);
+
+    /* check for success */
+    if (NT_SUCCESS(Status))
+    {
+        /* defer work */
+        Status = KsGetImageNameAndResourceId(hSubKey, ImageName, ResourceId, ValueType);
+
+        /* close subkey */
+        ZwClose(hSubKey);
+    }
+
+    /* free subkey string */
+    ExFreePool(SubKeyName.Buffer);
+
+    /* close device key */
+    ZwClose(hKey);
+
+    /* return status */
+    return Status;
 }
+
+
+

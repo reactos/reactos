@@ -66,13 +66,26 @@ NTSTATUS
 NTAPI
 IKsDevice_fnInitializeObjectBag(
     IN IKsDevice * iface,
-    IN struct KSIOBJECTBAG *Bag,
-    IN KMUTANT * Mutant)
+    IN PKSIOBJECT_BAG Bag,
+    IN PRKMUTEX Mutex)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
 
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    if (!Mutex)
+    {
+        /* use device mutex */
+        Mutex = &This->DeviceMutex;
+    }
+
+    /* initialize object bag */
+    Bag->BagMutex = Mutex;
+    Bag->DeviceHeader = (PKSIDEVICE_HEADER)This;
+    InitializeListHead(&Bag->ObjectList);
+
+    /* insert bag into device list */
+    InsertTailList(&This->ObjectBags, &Bag->Entry);
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -624,12 +637,20 @@ KsInitializeDevice(
     IN PDEVICE_OBJECT NextDeviceObject,
     IN const KSDEVICE_DESCRIPTOR* Descriptor OPTIONAL)
 {
+    PDEVICE_EXTENSION DeviceExtension;
     PKSIDEVICE_HEADER Header;
     ULONG Index;
+    IKsDevice * KsDevice;
     NTSTATUS Status = STATUS_SUCCESS;
 
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)FunctionalDeviceObject->DeviceExtension;
+
     /* first allocate device header */
-    Status = KsAllocateDeviceHeader((KSDEVICE_HEADER*)&Header, 0, NULL);
+    Status = KsAllocateDeviceHeader((KSDEVICE_HEADER*)&DeviceExtension->DeviceHeader, 0, NULL);
+
+    /* point to allocated header */
+    Header = DeviceExtension->DeviceHeader;
 
     /* check for success */
     if (!NT_SUCCESS(Status))
@@ -638,16 +659,29 @@ KsInitializeDevice(
         return Status;
     }
 
+    /* initialize IKsDevice interface */
+    Header->lpVtblIKsDevice = &vt_IKsDevice;
+    Header->ref = 1;
+
+    /* initialize object bag */
+    Header->KsDevice.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
+    if (!Header->KsDevice.Bag)
+    {
+        /* no memory */
+        KsFreeDeviceHeader((KSDEVICE_HEADER*)&DeviceExtension->DeviceHeader);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+    KsDevice->lpVtbl->InitializeObjectBag(KsDevice, Header->KsDevice.Bag, NULL);
+
+
     /* initialize device header */
     Header->KsDevice.FunctionalDeviceObject = FunctionalDeviceObject;
     Header->KsDevice.PhysicalDeviceObject = PhysicalDeviceObject;
     Header->KsDevice.NextDeviceObject = NextDeviceObject;
     Header->KsDevice.Descriptor = Descriptor;
     KsSetDevicePnpAndBaseObject(Header, PhysicalDeviceObject, NextDeviceObject);
-    /* initialize IKsDevice interface */
-    Header->lpVtblIKsDevice = &vt_IKsDevice;
-    Header->Type = KsObjectTypeDevice;
-    Header->ref = 1;
 
     /* FIXME Power state */
 
@@ -681,7 +715,7 @@ KsInitializeDevice(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -689,6 +723,85 @@ NTAPI
 KsReferenceSoftwareBusObject(
     IN KSDEVICE_HEADER  Header)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+     IKsDevice * Device;
+     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
+
+     /* get device interface */
+     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+
+     if (Device)
+     {
+         /* reference device interface */
+         Device->lpVtbl->AddRef(Device);
+     }
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsReferenceBusObject(
+    IN  KSDEVICE_HEADER Header)
+{
+     IKsDevice * Device;
+     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
+
+     /* get device interface */
+     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+
+     if (Device)
+     {
+         /* reference device interface */
+         Device->lpVtbl->AddRef(Device);
+     }
+
+    return STATUS_SUCCESS;
+
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsDereferenceBusObject(
+    IN  KSDEVICE_HEADER Header)
+{
+     IKsDevice * Device;
+     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
+
+     /* get device interface */
+     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+
+     if (Device)
+     {
+         /* release device interface */
+         Device->lpVtbl->Release(Device);
+     }
+}
+
+/*
+    @implemented
+*/
+KSDDKAPI
+VOID
+NTAPI
+KsDereferenceSoftwareBusObject(
+    IN KSDEVICE_HEADER  Header)
+{     IKsDevice * Device;
+     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
+
+     /* get device interface */
+     Device = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+
+     if (Device)
+     {
+         /* release device interface */
+         Device->lpVtbl->Release(Device);
+     }
 }

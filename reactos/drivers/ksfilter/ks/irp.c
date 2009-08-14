@@ -10,43 +10,6 @@
 #include "priv.h"
 
 /*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsReferenceBusObject(
-    IN  KSDEVICE_HEADER Header)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-VOID
-NTAPI
-KsDereferenceBusObject(
-    IN  KSDEVICE_HEADER Header)
-{
-    UNIMPLEMENTED;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-VOID
-NTAPI
-KsDereferenceSoftwareBusObject(
-    IN KSDEVICE_HEADER  Header)
-{
-    UNIMPLEMENTED;
-}
-
-/*
     @implemented
 */
 KSDDKAPI
@@ -1659,15 +1622,3 @@ KsGetNodeIdFromIrp(
     return (ULONG)-1;
 }
 
-/*
-    @unimplemented
-*/
-KSDDKAPI
-PKSPIN
-NTAPI
-KsGetPinFromIrp(
-    IN PIRP Irp)
-{
-    UNIMPLEMENTED
-    return NULL;
-}

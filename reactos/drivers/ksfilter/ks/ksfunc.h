@@ -114,4 +114,15 @@ KspCopyCreateRequest(
     IN OUT PULONG Size,
     OUT PVOID * Result);
 
+NTSTATUS
+KspCreatePin(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp, 
+    IN PKSDEVICE KsDevice,
+    IN IKsFilterFactory * FilterFactory, 
+    IN IKsFilter* Filter,
+    IN PKSPIN_CONNECT Connect,
+    IN KSPIN_DESCRIPTOR_EX* Descriptor);
+
+
 #endif

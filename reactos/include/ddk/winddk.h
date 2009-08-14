@@ -5992,17 +5992,39 @@ RtlCompareString(
   IN PSTRING  String2,
   BOOLEAN  CaseInSensitive);
 
-NTSYSAPI
+#if !defined(MIDL_PASS)
+
+FORCEINLINE
 LUID
 NTAPI
 RtlConvertLongToLuid(
-  IN LONG  Long);
+    IN LONG Val)
+{
+    LUID Luid;
+    LARGE_INTEGER Temp;
 
-NTSYSAPI
+    Temp.QuadPart = Val;
+    Luid.LowPart = Temp.u.LowPart;
+    Luid.HighPart = Temp.u.HighPart;
+
+    return Luid;
+}
+
+FORCEINLINE
 LUID
 NTAPI
 RtlConvertUlongToLuid(
-  ULONG  Ulong);
+    IN ULONG Val)
+{
+    LUID Luid;
+
+    Luid.LowPart = Val;
+    Luid.HighPart = 0;
+
+    return Luid;
+}
+#endif
+
 
 NTSYSAPI
 VOID

@@ -150,7 +150,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
-   PFN_TYPE Pfn;
+   extern PMMPTE MmSharedUserDataPte;
 
    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -228,14 +228,8 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SHARED_DATA:
-            Pfn = MmGetPhysicalAddress((PVOID)PCR).LowPart >> PAGE_SHIFT;
-            Pfn++;
-            Status =
-               MmCreateVirtualMapping(PsGetCurrentProcess(),
-                                      (PVOID)PAGE_ROUND_DOWN(Address),
-                                      PAGE_READONLY,
-                                      &Pfn,
-                                      1);
+              *MiAddressToPte(USER_SHARED_DATA) = *MmSharedUserDataPte;
+              Status = STATUS_SUCCESS;
             break;
 
          default:
