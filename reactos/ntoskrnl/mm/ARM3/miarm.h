@@ -133,6 +133,7 @@ extern PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 extern ULONG MxPfnAllocation;
 extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
+extern RTL_BITMAP MiPfnBitMap;
 
 VOID
 NTAPI

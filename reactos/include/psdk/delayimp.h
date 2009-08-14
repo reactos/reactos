@@ -1,6 +1,11 @@
 #ifndef _delayimp_h
 #define _delayimp_h
 
+#ifdef __GNUC__
+/* Hack, for bug in ld.  Will be removed soon.  */
+#define __ImageBase _image_base__
+#endif
+
 #define DELAYLOAD_VERSION 0x200
 
 typedef DWORD RVA;

@@ -83,7 +83,7 @@ MachVideoSetDisplayMode(char *DisplayMode, BOOLEAN Init)
 VOID
 MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth)
 {
-  return MachVtbl.VideoGetDisplaySize(Width, Height, Depth);
+  MachVtbl.VideoGetDisplaySize(Width, Height, Depth);
 }
 
 ULONG
@@ -95,7 +95,7 @@ MachVideoGetBufferSize(VOID)
 VOID
 MachVideoSetTextCursorPosition(ULONG X, ULONG Y)
 {
-  return MachVtbl.VideoSetTextCursorPosition(X, Y);
+  MachVtbl.VideoSetTextCursorPosition(X, Y);
 }
 
 VOID
@@ -125,13 +125,13 @@ MachVideoIsPaletteFixed(VOID)
 VOID
 MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue)
 {
-  return MachVtbl.VideoSetPaletteColor(Color, Red, Green, Blue);
+  MachVtbl.VideoSetPaletteColor(Color, Red, Green, Blue);
 }
 
 VOID
 MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue)
 {
-  return MachVtbl.VideoGetPaletteColor(Color, Red, Green, Blue);
+  MachVtbl.VideoGetPaletteColor(Color, Red, Green, Blue);
 }
 
 VOID

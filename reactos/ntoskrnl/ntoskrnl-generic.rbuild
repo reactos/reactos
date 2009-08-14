@@ -390,7 +390,6 @@
 		<file>mmsup.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
-		<file>npool.c</file>
 		<file>pagefile.c</file>
 		<file>pageop.c</file>
 		<file>pe.c</file>

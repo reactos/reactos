@@ -133,6 +133,10 @@ ShutdownThreadMain(PVOID Context)
        "<Place your Ad here>\n"
     };
    LARGE_INTEGER Now;
+#ifdef CONFIG_SMP
+	LONG i;
+	KIRQL OldIrql;
+#endif
 
    /* Run the thread on the boot processor */
    KeSetSystemAffinityThread(1);
@@ -172,9 +176,6 @@ ShutdownThreadMain(PVOID Context)
         HalReturnToFirmware (FIRMWARE_OFF);
 #else
 #ifdef CONFIG_SMP
-        LONG i;
-	KIRQL OldIrql;
-
 	OldIrql = KeRaiseIrqlToDpcLevel();
         /* Halt all other processors */
 	for (i = 0; i < KeNumberProcessors; i++)

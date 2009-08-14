@@ -145,9 +145,23 @@ MingwModuleHandler::GetTargetFilename (
 const FileLocation*
 MingwModuleHandler::GetImportLibraryFilename (
 	const Module& module,
-	string_list* pclean_files )
+	string_list* pclean_files,
+	bool delayimp )
 {
-	FileLocation *target = new FileLocation ( *module.dependency );
+	FileLocation *target;
+
+	if (module.HasImportLibrary())
+	{
+		if (delayimp)
+		{
+			target = new FileLocation ( *module.delayImportLibrary->target );
+		}
+		else
+			target = new FileLocation ( *module.importLibrary->target );
+	}
+	else
+		target = new FileLocation ( *module.dependency );
+
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -324,7 +338,8 @@ MingwModuleHandler::OutputCopyCommand ( const FileLocation& source,
 
 string
 MingwModuleHandler::GetImportLibraryDependency (
-	const Module& importedModule )
+	const Module& importedModule,
+	bool delayimp )
 {
 	string dep;
 	if ( ReferenceObjects ( importedModule ) )
@@ -346,7 +361,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 	}
 	else
 	{
-		const FileLocation *library_target = GetImportLibraryFilename ( importedModule, NULL );
+		const FileLocation *library_target = GetImportLibraryFilename ( importedModule, NULL, delayimp );
 		dep = backend->GetFullName ( *library_target );
 		delete library_target;
 	}
@@ -358,7 +373,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 		for ( size_t i = 0; i < libraries.size (); ++ i )
 		{
 			dep += " ";
-			dep += GetImportLibraryDependency ( *libraries[i]->importedModule );
+			dep += GetImportLibraryDependency ( *libraries[i]->importedModule, libraries[i]->delayimp );
 		}
 	}
 
@@ -378,7 +393,7 @@ MingwModuleHandler::GetTargets ( const Module& dependencyModule,
 		}
 	}
 	else
-		targets.push_back ( GetImportLibraryDependency ( dependencyModule ) );
+		targets.push_back ( GetImportLibraryDependency ( dependencyModule, false ) );
 }
 
 void
@@ -746,7 +761,7 @@ MingwModuleHandler::GenerateImportLibraryDependenciesFromVector (
 			dependencies += " \\\n\t\t", wrap_count = 0;
 		else if ( dependencies.size () > 0 )
 			dependencies += " ";
-		dependencies += GetImportLibraryDependency ( *libraries[i]->importedModule );
+		dependencies += GetImportLibraryDependency ( *libraries[i]->importedModule, libraries[i]->delayimp );
 	}
 	return dependencies;
 }
@@ -2135,42 +2150,57 @@ MingwModuleHandler::GetDefinitionFilename () const
 }
 
 void
+MingwModuleHandler::GenerateImportLibraryTarget (
+	const FileLocation *defFilename,
+	const FileLocation *library_target,
+	bool delayimp)
+{
+	string empty = "tools" + sSep + "rbuild" + sSep + "empty.def";
+
+	fprintf ( fMakefile, "# IMPORT LIBRARY RULE\n" );
+
+	fprintf ( fMakefile, "%s:",
+	          backend->GetFullName ( *library_target ).c_str () );
+
+	if ( defFilename )
+	{
+		fprintf ( fMakefile, " %s",
+		          backend->GetFullName ( *defFilename ).c_str () );
+	}
+
+	fprintf ( fMakefile, " | %s\n",
+	          backend->GetFullPath ( *library_target ).c_str () );
+
+	fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
+
+	fprintf ( fMakefile,
+	          "\t${dlltool} --dllname %s --def %s %s %s%s%s\n\n",
+	          module.GetDllName ().c_str (),
+	          defFilename ? backend->GetFullName ( *defFilename ).c_str ()
+	                      : empty.c_str (),
+	          delayimp ? "--output-delaylib" : "--output-lib",
+	          backend->GetFullName ( *library_target ).c_str (),
+	          module.mangledSymbols ? "" : " --kill-at",
+	          module.underscoreSymbols ? " --add-underscore" : "" );
+}
+
+void
 MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 {
 	if ( module.importLibrary != NULL )
 	{
-		const FileLocation *library_target = GetImportLibraryFilename ( module, &clean_files );
+		const FileLocation *library_target = GetImportLibraryFilename ( module, &clean_files, false );
+		const FileLocation *delayimp_target = GetImportLibraryFilename ( module, &clean_files, true );
 		const FileLocation *defFilename = GetDefinitionFilename ();
-		string empty = "tools" + sSep + "rbuild" + sSep + "empty.def";
 
-		fprintf ( fMakefile, "# IMPORT LIBRARY RULE\n" );
-
-		fprintf ( fMakefile, "%s:",
-		          backend->GetFullName ( *library_target ).c_str () );
-
-		if ( defFilename )
-		{
-			fprintf ( fMakefile, " %s",
-			          backend->GetFullName ( *defFilename ).c_str () );
-		}
-
-		fprintf ( fMakefile, " | %s\n",
-		          backend->GetFullPath ( *library_target ).c_str () );
-
-		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
-
-		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s%s%s\n\n",
-		          module.GetDllName ().c_str (),
-		          defFilename ? backend->GetFullName ( *defFilename ).c_str ()
-		                      : empty.c_str (),
-		          backend->GetFullName ( *library_target ).c_str (),
-		          module.mangledSymbols ? "" : " --kill-at",
-		          module.underscoreSymbols ? " --add-underscore" : "" );
+		GenerateImportLibraryTarget(defFilename, library_target, false);
+		GenerateImportLibraryTarget(defFilename, delayimp_target, true);
 
 		if ( defFilename )
 			delete defFilename;
 		delete library_target;
+		delete delayimp_target;
+
 	}
 }
 

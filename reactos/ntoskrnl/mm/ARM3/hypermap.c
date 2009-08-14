@@ -37,9 +37,10 @@ MiMapPageInHyperSpace(IN PEPROCESS Process,
     PFN_NUMBER Offset;
 
     //
-    // Never accept page 0
+    // Never accept page 0 or non-physical pages
     //
     ASSERT(Page != 0);
+    ASSERT(MiGetPfnEntry(Page) != NULL);
 
     //
     // Build the PTE

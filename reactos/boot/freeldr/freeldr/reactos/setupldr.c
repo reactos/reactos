@@ -60,11 +60,12 @@ VOID LoadReactOSSetup(VOID)
       NULL };
     CHAR FileName[256];
 
-  HINF InfHandle;
-  ULONG ErrorLine;
-  INFCONTEXT InfContext;
+    HINF InfHandle;
+    ULONG ErrorLine;
+    INFCONTEXT InfContext;
     PIMAGE_NT_HEADERS NtHeader;
     PVOID LoadBase;
+    extern BOOLEAN FrLdrBootType;
 
   /* Setup multiboot information structure */
   LoaderBlock.CommandLine = reactos_kernel_cmdline;
@@ -108,8 +109,7 @@ VOID LoadReactOSSetup(VOID)
 #endif
   UiDrawStatusText("");
 
-    extern BOOLEAN FrLdrBootType;
-    FrLdrBootType = TRUE;
+  FrLdrBootType = TRUE;
 
   /* Detect hardware */
   UiDrawStatusText("Detecting hardware...");

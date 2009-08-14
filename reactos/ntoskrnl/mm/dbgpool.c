@@ -69,9 +69,10 @@ ExpAllocateDebugPool(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Caller, BOOLEA
     }
     else
     {
-        Buffer = (ULONG_PTR)
-            ExAllocateNonPagedPoolWithTag(Type, TotalSize, Tag, Caller);
+        ASSERT(FALSE);
+        return NULL;
     }
+
 
     /* If allocation failed - fail too */
     if (!Buffer)
@@ -126,10 +127,8 @@ ExpFreeDebugPool(PVOID Block, BOOLEAN PagedPool)
     MmSetPageProtect(NULL, ProtectedPage, PAGE_READWRITE);
 
     /* Free storage */
-    if (PagedPool)
-        ExFreePagedPool(Header->ActualAddress);
-    else
-        ExFreeNonPagedPool(Header->ActualAddress);
+    ASSERT(PagedPool);
+    ExFreePagedPool(Header->ActualAddress);
 }
 
 /* EOF */

@@ -22,12 +22,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* non-standard specifier from windef.h -- please deprecate */
-#undef PACKED
-#ifdef __GNUC__
-#define PACKED __attribute__((packed))
-#endif
-
 #define VIDEOPORT_PALETTE_READ		0x03C7
 #define VIDEOPORT_PALETTE_WRITE		0x03C8
 #define VIDEOPORT_PALETTE_DATA		0x03C9
@@ -57,6 +51,7 @@
 #define VERTRES_350_SCANLINES		0x01
 #define VERTRES_400_SCANLINES		0x02
 
+#include <pshpack2.h>
 typedef struct
 {
   USHORT ModeAttributes;             /* mode attributes (see #00080) */
@@ -110,7 +105,8 @@ typedef struct
   UCHAR  LinearReservedMaskPosition; /* linear modes:Bit position of reserved mask LSB */
   ULONG MaximumPixelClock;          /* maximum pixel clock for graphics video mode, in Hz */
   UCHAR  Reserved2[190];             /* 190 BYTEs  reserved (0) */
-} PACKED SVGA_MODE_INFORMATION, *PSVGA_MODE_INFORMATION;
+} SVGA_MODE_INFORMATION, *PSVGA_MODE_INFORMATION;
+#include <poppack.h>
 
 static ULONG BiosVideoMode;                              /* Current video mode as known by BIOS */
 static ULONG ScreenWidth = 80;	                       /* Screen Width in characters */

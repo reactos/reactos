@@ -729,15 +729,7 @@ InternalTrusteeAToW(IN PTRUSTEE_A pTrusteeA,
                                             StrBuf,
                                             BufferSize) == 0)
                     {
-ConvertErr:
-                        ErrorCode = GetLastError();
-
-                        /* cleanup */
-                        RtlFreeHeap(RtlGetProcessHeap(),
-                                    0,
-                                    *pTrusteeW);
-
-                        return ErrorCode;
+                        goto ConvertErr;
                     }
                     oan->ptstrName = StrBuf;
                 }
@@ -757,6 +749,16 @@ NothingToConvert:
             break;
         }
     }
+
+    return ErrorCode;
+
+ConvertErr:
+    ErrorCode = GetLastError();
+
+    /* cleanup */
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                *pTrusteeW);
 
     return ErrorCode;
 }
@@ -930,15 +932,7 @@ InternalExplicitAccessAToW(IN ULONG cCountOfExplicitEntries,
                                                     StrBuf,
                                                     BufferSize) == 0)
                             {
-ConvertErr:
-                                ErrorCode = GetLastError();
-
-                                /* cleanup */
-                                RtlFreeHeap(RtlGetProcessHeap(),
-                                            0,
-                                            peaw);
-
-                                return ErrorCode;
+                                goto ConvertErr;
                             }
                             oan->ptstrName = StrBuf;
 
@@ -971,6 +965,16 @@ RawTrusteeCopy:
         else
             ErrorCode = ERROR_NOT_ENOUGH_MEMORY;
     }
+
+    return ErrorCode;
+
+ConvertErr:
+    ErrorCode = GetLastError();
+
+    /* cleanup */
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                peaw);
 
     return ErrorCode;
 }

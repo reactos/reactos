@@ -5737,6 +5737,7 @@ KefReleaseSpinLockFromDpcLevel(
     
 #else
     
+FORCEINLINE
 VOID
 NTAPI
 KeInitializeSpinLock(

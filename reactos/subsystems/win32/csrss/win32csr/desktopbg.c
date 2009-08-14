@@ -127,7 +127,7 @@ DtbgInit()
    */
 #if 0
   Class.cbSize = sizeof(WNDCLASSEXW);
-  Class.style = 0;
+  Class.style = CS_GLOBALCLASS;
   Class.lpfnWndProc = DtbgWindowProc;
   Class.cbClsExtra = 0;
   Class.cbWndExtra = 0;

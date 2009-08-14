@@ -45,8 +45,6 @@ MemType[] =
     "LoaderXIPRom      "
 };
 
-PVOID MiNonPagedPoolStart;
-ULONG MiNonPagedPoolLength;
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
 MM_STATS MmStats;
@@ -160,18 +158,10 @@ MmInit1(VOID)
     // Initialize ARM³ in phase 1
     //
     MmArmInitSystem(1, KeLoaderBlock);
-                                                                  // DEPRECATED
-    /* Put nonpaged pool after the loaded modules */              // DEPRECATED
-    MiNonPagedPoolStart = (PVOID)((ULONG_PTR)MmSystemRangeStart + // DEPRECATED
-                                  MmBootImageSize);               // DEPRECATED
-    MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;                 // DEPRECATED
-                                                                  // DEPRECATED
-    /* Initialize nonpaged pool */                                // DEPRECATED
-    MiInitializeNonPagedPool();                                   // DEPRECATED
-                                                                  // DEPRECATED
-    /* Put the paged pool after nonpaged pool */
-    MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MiNonPagedPoolStart +
-                                           MiNonPagedPoolLength);
+
+    /* Put the paged pool after the loaded modules */
+    MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
+                                           MmBootImageSize);
     MmPagedPoolSize = MM_PAGED_POOL_SIZE;
 
     //

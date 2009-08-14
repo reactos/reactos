@@ -465,7 +465,6 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     if (WasValid)
     {
         Pfn = PTE_TO_PFN(Pte);
-        MmMarkPageUnmapped(Pfn);
     }
     else
     {
@@ -768,10 +767,6 @@ MmCreatePageFileMapping(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
     Pte = *Pt;
-    if (PAGE_MASK((Pte)) != 0)
-    {
-        MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
-    }
     InterlockedExchangePte(Pt, SwapEntry << 1);
     if (Pte != 0)
     {
@@ -882,15 +877,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         oldPdeOffset = PdeOffset;
         
         Pte = *Pt;
-        MmMarkPageMapped(Pages[i]);
         if (PAGE_MASK(Pte) != 0 && !(Pte & PA_PRESENT) && (Pte & 0x800))
         {
             DPRINT1("Bad PTE %lx\n", Pte);
             KeBugCheck(MEMORY_MANAGEMENT);
-        }
-        if (PAGE_MASK(Pte) != 0)
-        {
-            MmMarkPageUnmapped(PTE_TO_PFN(Pte));
         }
         InterlockedExchangePte(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
         if (Pte != 0)
@@ -1049,6 +1039,18 @@ MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
     ULONG StartOffset, EndOffset, Offset;
     PULONG Pde;
+    
+    //
+    // Check if the process isn't there anymore
+    // This is probably a bad sign, since it means the caller is setting cr3 to
+    // 0 or something...
+    //
+    if ((PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]) == 0) && (Process != PsGetCurrentProcess()))
+    {
+        DPRINT1("Process: %16s is dead: %p\n", Process->ImageFileName, Process->Pcb.DirectoryTableBase[0]);
+        ASSERT(FALSE);
+        return;
+    }
 
     if (Address < MmSystemRangeStart)
     {
