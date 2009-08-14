@@ -146,13 +146,12 @@ static NTSTATUS TdiOpenDevice(
     }
 
     if (!NT_SUCCESS(Status)) {
-        *Handle = NULL;
+        *Handle = INVALID_HANDLE_VALUE;
         *Object = NULL;
     }
 
     return Status;
 }
-
 
 NTSTATUS TdiOpenAddressFile(
     PUNICODE_STRING DeviceName,

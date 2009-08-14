@@ -6,6 +6,7 @@
 	<include base="dbghelp">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<define name="HAVE_REGEX_H" />
 	<file>coff.c</file>
 	<file>dbghelp.c</file>

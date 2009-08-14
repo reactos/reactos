@@ -7,6 +7,7 @@
 	<include base="msxml3" root="intermediate">.</include>
 	<dependency>msxml3_v1</dependency>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<redefine name="_WIN32_WINNT">0x601</redefine>
 	<define name="LIBXML_STATIC" />
 	<library>libxml2</library>

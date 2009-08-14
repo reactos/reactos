@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = ScummVM
+Version = 0.11.1
+Licence = Unknown
+Description = SamNMax, Day of Tentacle, etc on ReactOS.
+Size = Unknown
+Category = 4
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/scummvm/scummvm-0.11.1-win32.exe
+CDPath = none

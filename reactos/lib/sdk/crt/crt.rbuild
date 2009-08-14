@@ -317,7 +317,6 @@
 		<file>abort.c</file>
 		<file>atexit.c</file>
 		<file>ecvt.c</file>
-		<file>ecvtbuf.c</file>
 		<file>errno.c</file>
 		<file>fcvt.c</file>
 		<file>fcvtbuf.c</file>

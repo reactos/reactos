@@ -340,28 +340,25 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 /*
  * @implemented
  */
-BOOL
-WINAPI
-FreeLibrary( HMODULE hLibModule )
+BOOL WINAPI FreeLibrary(HINSTANCE hLibModule)
 {
-    PVOID Module = (PVOID)((ULONG_PTR)hLibModule & ~1);
     NTSTATUS Status;
+
+    if (!hLibModule)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
     if ((ULONG_PTR)hLibModule & 1)
     {
-        if (!RtlImageNtHeader(Module))
-        {
-            SetLastErrorByStatus(STATUS_INVALID_IMAGE_FORMAT);
-            return FALSE;
-        }
-
-        Status = NtUnmapViewOfSection(NtCurrentProcess(), Module);
-    }
-    else
-    {
-        Status = LdrUnloadDll(hLibModule);
+        /* this is a LOAD_LIBRARY_AS_DATAFILE module */
+        char *ptr = (char *)hLibModule - 1;
+        UnmapViewOfFile(ptr);
+        return TRUE;
     }
 
+    Status = LdrUnloadDll(hLibModule);
     if (!NT_SUCCESS(Status))
     {
         SetLastErrorByStatus(Status);

@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = LMarbles
+Version = 1.0.6
+Licence = Unknown
+Description = Atomix Clone using SDL libs.
+Size = Unknown
+Category = 4
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lmarbles-1.0.6-win32.exe
+CDPath = none

@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = IrfanView
+Version = 4.23
+Licence = Unknown
+Description = Viewer for all kinds of graphics/audio files/video files.
+Size = Unknown
+Category = 3
+URLSite = http://www.irfanview.com
+URLDownload = http://irfanview.tuwien.ac.at/iview423_setup.exe
+CDPath = none

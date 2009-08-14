@@ -489,7 +489,7 @@ CreateSetSinglePixel(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
     }
   if (RopInfo->UsesPattern && 0 != (Flags & FLAG_PATTERNSURFACE))
     {
-      Output(Out, "Pattern = DIB_GetSource(BltInfo->PatternSurface, PatternX, PatternY, BltInfo->XlatePatternToDest);\n");
+      Output(Out, "Pattern = DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY);\n");
       Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cx <= ++PatternX)\n");
       Output(Out, "{\n");
       Output(Out, "PatternX -= BltInfo->PatternSurface->sizlBitmap.cx;\n");
@@ -618,11 +618,11 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
             {
               if (0 == Partial)
                 {
-                  Output(Out, "Pattern = DIB_GetSource(BltInfo->PatternSurface, PatternX, PatternY, BltInfo->XlatePatternToDest);\n");
+                  Output(Out, "Pattern = DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY);\n");
                 }
               else
                 {
-                  Output(Out, "Pattern |= DIB_GetSource(BltInfo->PatternSurface, PatternX, PatternY, BltInfo->XlatePatternToDest) << %u;\n", Partial * Bpp);
+                  Output(Out, "Pattern |= DIB_GetSourceIndex(BltInfo->PatternSurface, PatternX, PatternY) << %u;\n", Partial * Bpp);
                 }
               Output(Out, "if (BltInfo->PatternSurface->sizlBitmap.cx <= ++PatternX)\n");
               Output(Out, "{\n");

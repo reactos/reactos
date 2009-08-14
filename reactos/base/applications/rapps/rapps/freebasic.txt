@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = FreeBASIC
+Version = 0.18.4b
+Licence = Unknown
+Description = Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.
+Size = Unknown
+Category = 7
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.18.4b-win32.exe
+CDPath = none

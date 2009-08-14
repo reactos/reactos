@@ -242,10 +242,6 @@ extern int getopt_long_only (int ___argc, char *const *___argv,
 size_t getpagesize(void);
 #endif  /* HAVE_GETPAGESIZE */
 
-#ifndef HAVE_GETTID
-pid_t gettid(void);
-#endif /* HAVE_GETTID */
-
 #ifndef HAVE_LSTAT
 int lstat(const char *file_name, struct stat *buf);
 #endif /* HAVE_LSTAT */

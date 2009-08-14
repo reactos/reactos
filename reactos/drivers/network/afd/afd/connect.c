@@ -29,11 +29,6 @@ NTSTATUS WarmSocketForConnection( PAFD_FCB FCB ) {
                                           FCB->Connection.Object );
     }
 
-	if (NT_SUCCESS(Status)) 
-	{
-		ObReferenceObject(FCB->Connection.Object);
-	}
-
     return Status;
 }
 

@@ -3642,6 +3642,14 @@ KsAddItemToObjectBag(
     IN  PFNKSFREE Free OPTIONAL);
 
 KSDDKAPI
+ULONG
+NTAPI
+KsRemoveItemFromObjectBag(
+    IN KSOBJECT_BAG ObjectBag,
+    IN PVOID Item,
+    IN BOOLEAN Free);
+
+KSDDKAPI
 NTSTATUS
 NTAPI
 KsAllocateObjectBag(

@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = uTorrent
+Version = 1.8
+Licence = Unknown
+Description = Small and fast BitTorrent Client.
+Size = Unknown
+Category = 5
+URLSite = Unknown
+URLDownload = http://download.utorrent.com/1.8.2/utorrent-1.8.2.upx.exe
+CDPath = none

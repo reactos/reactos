@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = OpenOffice 3.0
+Version = 3.0.1
+Licence = Unknown
+Description = THE Open Source Office Suite.
+Size = Unknown
+Category = 6
+URLSite = http://www.openoffice.org
+URLDownload = http://ftp.tu-chemnitz.de/pub/openoffice/stable/3.0.1/OOo_3.0.1_Win32Intel_install_en-US.exe
+CDPath = none

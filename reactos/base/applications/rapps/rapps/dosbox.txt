@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = DOSBox
+Version = 0.72
+Licence = Unknown
+Description = DOSBox is a DOS emulator.
+Size = Unknown
+Category = 15
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/dosbox/DOSBox0.72-win32-installer.exe
+CDPath = none

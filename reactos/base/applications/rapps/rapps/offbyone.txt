@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Off By One Browser
+Version = Unknown
+Licence = Unknown
+Description = The Off By One Browser is a very small and fast web browser with full HTML 3.2 support.
+Size = 0.98M
+Category = 5
+URLSite = http://offbyone.com
+URLDownload = http://offbyone.com/offbyone/images/OffByOneSetup.exe
+CDPath = none

@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = Simple Direct Media Layer (SDL) Runtime
+Version = 1.2.13
+Licence = Unknown
+Description = Needed for many Open Source Games to run. You need 7-Zip or a similar Utility to extract it.
+Size = Unknown
+Category = 14
+URLSite = Unknown
+URLDownload = http://www.libsdl.org/release/SDL-1.2.13-win32.zip
+CDPath = none

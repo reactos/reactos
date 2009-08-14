@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = AbiWord
+Version = 2.6.4
+Licence = Unknown
+Description = Word processor.
+Size = Unknown
+Category = 6
+URLSite = http://www.abiword.org
+URLDownload = http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe
+CDPath = none

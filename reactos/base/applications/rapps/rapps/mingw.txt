@@ -1,0 +1,12 @@
+﻿; UTF-8
+
+[Section]
+Name = MinGW
+Version = 5.1.3
+Licence = Unknown
+Description = A Port of the GNU toolchain with GCC, GDB, GNU make, etc.
+Size = Unknown
+Category = 7
+URLSite = Unknown
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.3.exe
+CDPath = none
