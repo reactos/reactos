@@ -145,7 +145,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
             if( (PVOID)HandleArray[i].Handle == FileObject &&
                 (!OnlyExclusive || (OnlyExclusive && Poll->Exclusive)) ) {
                 ZeroEvents( PollReq->Handles, PollReq->HandleCount );
-                SignalSocket( Poll, NULL, PollReq, STATUS_SUCCESS );
+                SignalSocket( Poll, NULL, PollReq, STATUS_CANCELLED );
             }
 	}
     }
@@ -353,20 +353,11 @@ static BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject
 	FileObject = (PFILE_OBJECT)AFD_HANDLES(PollReq)[i].Handle;
 	FCB = FileObject->FsContext;
 
-	if( (FCB->PollState & AFD_EVENT_CLOSE) ||
-	    (PollReq->Handles[i].Status & AFD_EVENT_CLOSE) ) {
-	    AFD_HANDLES(PollReq)[i].Handle = 0;
-	    PollReq->Handles[i].Events = 0;
-	    PollReq->Handles[i].Status = AFD_EVENT_CLOSE;
-	    Signalled++;
-	} else {
-	    PollReq->Handles[i].Status =
-		PollReq->Handles[i].Events & FCB->PollState;
-	    if( PollReq->Handles[i].Status ) {
-		AFD_DbgPrint(MID_TRACE,("Signalling %x with %x\n",
+	PollReq->Handles[i].Status = PollReq->Handles[i].Events & FCB->PollState;
+	if( PollReq->Handles[i].Status ) {
+	    AFD_DbgPrint(MID_TRACE,("Signalling %x with %x\n",
 					FCB, FCB->PollState));
-		Signalled++;
-	    }
+	    Signalled++;
 	}
     }
 
