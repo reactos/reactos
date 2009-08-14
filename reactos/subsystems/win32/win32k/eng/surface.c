@@ -191,6 +191,13 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
     }
 
     pso = EngLockSurface((HSURF)NewBitmap);
+    if (!pso)
+    {
+        DPRINT1("EngLockSurface failed on newly created bitmap!\n");
+        GreDeleteObject(NewBitmap);
+        return NULL;
+    }
+
     pso->dhsurf = dhsurf;
     EngUnlockSurface(pso);
 
