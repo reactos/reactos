@@ -297,7 +297,7 @@ typedef struct
 #endif
 
 #define STATIC_KSINTERFACESETID_Standard \
-    0x1A8766A0L, 0x62CE, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+    0x1A8766A0L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
 DEFINE_GUIDSTRUCT("1A8766A0-62CE-11CF-A5D6-28DB04C10000", KSINTERFACESETID_Standard);
 #define KSINTERFACESETID_Standard DEFINE_GUIDNAMED(KSINTERFACESETID_Standard)
 
@@ -326,7 +326,7 @@ typedef enum
 #define KSMEDIUM_TYPE_ANYINSTANCE       0
 
 #define STATIC_KSMEDIUMSETID_Standard \
-    0x4747B320L, 0x62CE, 0x11CF, 0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00
+    0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}
 DEFINE_GUIDSTRUCT("4747B320-62CE-11CF-A5D6-28DB04C10000", KSMEDIUMSETID_Standard);
 #define KSMEDIUMSETID_Standard DEFINE_GUIDNAMED(KSMEDIUMSETID_Standard)
 
@@ -3625,6 +3625,22 @@ KsSynchronousIoControlDevice(
     IN  ULONG OUtSize,
     OUT PULONG BytesReturned);
 
+KSDDKAPI
+PKSPIN
+NTAPI
+KsFilterGetFirstChildPin(
+    IN PKSFILTER Filter,
+    IN ULONG PinId
+    );
+
+KSDDKAPI
+PFILE_OBJECT
+NTAPI
+KsPinGetConnectedPinFileObject(
+    IN PKSPIN Pin
+    );
+
+
 #endif
 
 /* ===============================================================
@@ -3988,11 +4004,21 @@ KsDeviceSetBusData(
     IN  ULONG Length);
 
 
+KSDDKAPI
+VOID
+NTAPI
+KsReleaseControl(
+    IN PVOID Object
+    );
+
 #define KsDiscard(object, pointer) \
     KsRemoveItemFromObjectBag(object->Bag, pointer, TRUE)
 
 #define KsFilterAcquireControl(Filter) \
     KsAcquireControl((PVOID) Filter);
+
+#define KsFilterReleaseControl(Filter) \
+    KsReleaseControl((PVOID) Filter);
 
 #define KsFilterAddEvent(Filter, EventEntry) \
     KsAddEvent(Filter,EventEntry);
