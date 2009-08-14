@@ -510,13 +510,13 @@ WSAHtons(IN  SOCKET s,
          IN  USHORT hostshort,
          OUT USHORT FAR* lpnetshort)
 {
+    PCATALOG_ENTRY provider;
     if (!WSAINITIALIZED)
     {
         WSASetLastError(WSANOTINITIALISED);
         return SOCKET_ERROR;
     }
 
-    PCATALOG_ENTRY provider;
     if (!ReferenceProviderByHandle((HANDLE)s, &provider))
     {
         WSASetLastError(WSAENOTSOCK);
@@ -599,13 +599,13 @@ WSANtohs(IN  SOCKET s,
          IN  USHORT netshort,
          OUT USHORT FAR* lphostshort)
 {
+    PCATALOG_ENTRY provider;
     if (!WSAINITIALIZED)
     {
         WSASetLastError(WSANOTINITIALISED);
         return SOCKET_ERROR;
     }
 
-    PCATALOG_ENTRY provider;
     if (!ReferenceProviderByHandle((HANDLE)s, &provider))
     {
         WSASetLastError(WSAENOTSOCK);

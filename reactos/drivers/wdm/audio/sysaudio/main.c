@@ -47,8 +47,17 @@ SysAudio_Shutdown(
         DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)CONTAINING_RECORD(Entry, KSAUDIO_DEVICE_ENTRY, Entry);
 
         DPRINT1("Freeing item %wZ\n", &DeviceEntry->DeviceName);
-        RtlFreeUnicodeString(&DeviceEntry->DeviceName);
 
+        /* dereference audio device file object */
+        ObDereferenceObject(DeviceEntry->FileObject);
+
+        /* close audio device handle */
+        ZwClose(DeviceEntry->Handle);
+        /* free device string */
+        RtlFreeUnicodeString(&DeviceEntry->DeviceName);
+        /* free pins */
+        ExFreePool(DeviceEntry->Pins);
+        /* free audio device entry */
         ExFreePool(DeviceEntry);
     }
 

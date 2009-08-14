@@ -5128,9 +5128,17 @@ typedef struct _KFLOATING_SAVE {
   ULONG  Spare1;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
-static __inline
+#ifdef _MSC_VER
+//
+// FIXME: Intrinsics
+//
+unsigned char __readfsbyte(const unsigned long Offset);
+#pragma intrinsic(__readfsbyte)
+#endif
+
+
+FORCEINLINE
 ULONG
-DDKAPI
 KeGetCurrentProcessorNumber(VOID)
 {
 #if defined(__GNUC__)
@@ -5145,7 +5153,7 @@ KeGetCurrentProcessorNumber(VOID)
 #if _MSC_FULL_VER >= 13012035
   return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 #else
-  __asm { movzx eax, _PCR KPCR.Number }
+  __asm { movzx eax, fs:[0] KPCR.Number }
 #endif
 #else
 #error Unknown compiler
@@ -5945,7 +5953,7 @@ RemoveEntryList(
   OldBlink = Entry->Blink;
   OldFlink->Blink = OldBlink;
   OldBlink->Flink = OldFlink;
-  return (OldFlink == OldBlink);
+  return (BOOLEAN)(OldFlink == OldBlink);
 }
 
 static __inline PLIST_ENTRY

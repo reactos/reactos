@@ -104,14 +104,17 @@ IntInsertAliasHeader(PALIAS_HEADER * RootHeader, PALIAS_HEADER NewHeader)
 PALIAS_ENTRY
 IntGetAliasEntry(PALIAS_HEADER Header, LPCWSTR lpSrcName)
 {
+    PALIAS_ENTRY RootHeader;
+
     if (Header == NULL)
         return NULL;
 
-    PALIAS_ENTRY RootHeader = Header->Data;
+    RootHeader = Header->Data;
     while(RootHeader)
     {
+        INT diff;
         DPRINT("IntGetAliasEntry>lpSource %S\n", RootHeader->lpSource);
-        INT diff = _wcsicmp(RootHeader->lpSource, lpSrcName);
+        diff = _wcsicmp(RootHeader->lpSource, lpSrcName);
         if (!diff)
             return RootHeader;
 

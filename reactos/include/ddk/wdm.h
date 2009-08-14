@@ -575,13 +575,13 @@ typedef union _SLIST_HEADER {
         ULONGLONG Reserved:59;
         ULONGLONG Region:3;
     } Header8;
+    struct {
         ULONGLONG Depth:16;
         ULONGLONG Sequence:48;
         ULONGLONG HeaderType:1;
         ULONGLONG Init:1;
         ULONGLONG Reserved:2;
         ULONGLONG NextEntry:60;
-    struct {
     } Header16;
 } SLIST_HEADER, *PSLIST_HEADER;
 #else
@@ -1956,8 +1956,8 @@ RtlEnlargedUnsignedDivide(
     IN OUT PULONG Remainder)
 {
     if (Remainder)
-        *Remainder = Dividend.QuadPart % Divisor;
-    return Dividend.QuadPart / Divisor;
+        *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
+    return (ULONG)(Dividend.QuadPart / Divisor);
 }
 
 //DECLSPEC_DEPRECATED_DDK

@@ -34,7 +34,7 @@ PlayLogonSoundThread(
 	DWORD dwSize = sizeof(szBuffer);
 	HMODULE hLibrary;
 	SERVICE_STATUS_PROCESS Info;
-	typedef BOOL WINAPI (*PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
+	typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
 	PLAYSOUNDW Play;
 	ULONG Index = 0;
 

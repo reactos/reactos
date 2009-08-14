@@ -56,15 +56,6 @@ typedef struct
     PIRP Irp;
 }CONTEXT_WRITE, *PCONTEXT_WRITE;
 
-
-typedef struct
-{
-    PIRP Irp;
-    IO_STATUS_BLOCK StatusBlock;
-    ULONG Length;
-}WRITE_CONTEXT, *PWRITE_CONTEXT;
-
-
 NTSTATUS
 WdmAudRegisterDeviceInterface(
     IN PDEVICE_OBJECT PhysicalDeviceObject,

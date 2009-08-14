@@ -344,7 +344,7 @@ KsWriteFile(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -357,7 +357,13 @@ KsQueryInformationFile(
 {
     PDEVICE_OBJECT DeviceObject;
     PFAST_IO_DISPATCH FastIoDispatch;
+    PIRP Irp;
+    PIO_STACK_LOCATION IoStack;
     IO_STATUS_BLOCK IoStatus;
+    KEVENT Event;
+    LARGE_INTEGER Offset;
+    IO_STATUS_BLOCK StatusBlock;
+    NTSTATUS Status;
 
     /* get related file object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
@@ -386,10 +392,47 @@ KsQueryInformationFile(
             }
         }
     }
+    /* clear event */
+    KeClearEvent(&FileObject->Event);
 
-    /* Implement Me */
+    /* initialize event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-    return STATUS_UNSUCCESSFUL;
+    /* set offset to zero */
+    Offset.QuadPart = 0L;
+
+    /* build the request */
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_QUERY_INFORMATION, IoGetRelatedDeviceObject(FileObject), NULL, 0, &Offset, &Event, &StatusBlock);
+
+    if (!Irp)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    /* setup parameters */
+    IoStack->Parameters.QueryFile.FileInformationClass = FileInformationClass;
+    IoStack->Parameters.QueryFile.Length = Length;
+    Irp->AssociatedIrp.SystemBuffer = FileInformation;
+
+
+    /* call the driver */
+    Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), Irp);
+
+    if (Status == STATUS_PENDING)
+    {
+        /* wait for the operation to complete */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+
+       /* is object sync */
+       if (FileObject->Flags & FO_SYNCHRONOUS_IO)
+           Status = FileObject->FinalStatus;
+       else
+           Status = StatusBlock.Status;
+    }
+
+    /* done */
+    return Status;
 }
 
 /*
@@ -506,77 +549,104 @@ KsStreamIo(
     PIRP Irp;
     PIO_STACK_LOCATION IoStack;
     PDEVICE_OBJECT DeviceObject;
-    ULONG Code;
     NTSTATUS Status;
     LARGE_INTEGER Offset;
     PKSIOBJECT_HEADER ObjectHeader;
+    BOOLEAN Ret;
 
-
-    if (Flags == KSSTREAM_READ)
-        Code = IRP_MJ_READ;
-    else if (Flags == KSSTREAM_WRITE)
-        Code = IRP_MJ_WRITE;
-    else
-        return STATUS_INVALID_PARAMETER;
-
+    /* get related device object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    if (!DeviceObject)
-        return STATUS_INVALID_PARAMETER;
+    /* sanity check */
+    ASSERT(DeviceObject != NULL);
 
+    /* is there a event provided */
     if (Event)
     {
-        KeResetEvent(Event);
+        /* reset event */
+        KeClearEvent(Event);
     }
 
-    //ASSERT(DeviceObject->DeviceType == FILE_DEVICE_KS);
-    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
-    ASSERT(ObjectHeader);
-    if (Code == IRP_MJ_READ)
+    if (RequestorMode || ExGetPreviousMode() == KernelMode)
     {
-        if (ObjectHeader->DispatchTable.FastRead)
+        /* requestor is from kernel land */
+        ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+
+        if (ObjectHeader)
         {
-            if (ObjectHeader->DispatchTable.FastRead(FileObject, NULL, Length, FALSE, 0, StreamHeaders, IoStatusBlock, DeviceObject))
+            /* there is a object header */
+            if (Flags == KSSTREAM_READ)
             {
-                return STATUS_SUCCESS;
+                /* is fast read supported */
+                if (ObjectHeader->DispatchTable.FastRead)
+                {
+                    /* call fast read dispatch routine */
+                    Ret = ObjectHeader->DispatchTable.FastRead(FileObject, NULL, Length, FALSE, 0, StreamHeaders, IoStatusBlock, DeviceObject);
+
+                    if (Ret)
+                    {
+                        /* the request was handeled */
+                        return IoStatusBlock->Status;
+                    }
+                }
+            }
+            else if (Flags == KSSTREAM_WRITE)
+            {
+                /* is fast write supported */
+                if (ObjectHeader->DispatchTable.FastWrite)
+                {
+                    /* call fast write dispatch routine */
+                    Ret = ObjectHeader->DispatchTable.FastWrite(FileObject, NULL, Length, FALSE, 0, StreamHeaders, IoStatusBlock, DeviceObject);
+
+                    if (Ret)
+                    {
+                        /* the request was handeled */
+                        return IoStatusBlock->Status;
+                    }
+                }
             }
         }
     }
-    else
-    {
-        if (ObjectHeader->DispatchTable.FastWrite)
-        {
-            if (ObjectHeader->DispatchTable.FastWrite(FileObject, NULL, Length, FALSE, 0, StreamHeaders, IoStatusBlock, DeviceObject))
-            {
-                return STATUS_SUCCESS;
-            }
-        }
-    }
 
+    /* clear file object event */
+    KeClearEvent(&FileObject->Event);
+
+    /* set the offset to zero */
     Offset.QuadPart = 0LL;
-    Irp = IoBuildSynchronousFsdRequest(Code, DeviceObject, (PVOID)StreamHeaders, Length, &Offset, Event, IoStatusBlock);
+
+    /* now build the irp */
+    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_DEVICE_CONTROL,
+                                       DeviceObject, (PVOID)StreamHeaders, Length, &Offset, Event, IoStatusBlock);
     if (!Irp)
     {
-        return STATUS_UNSUCCESSFUL;
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* setup irp parameters */
+    Irp->RequestorMode = RequestorMode;
+    Irp->Overlay.AsynchronousParameters.UserApcContext = PortContext;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->UserBuffer = StreamHeaders;
+
+    /* get next irp stack location */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+    /* setup stack parameters */
+    IoStack->FileObject = FileObject;
+    IoStack->Parameters.DeviceIoControl.InputBufferLength = Length;
+    IoStack->Parameters.DeviceIoControl.Type3InputBuffer = StreamHeaders;
+    IoStack->Parameters.DeviceIoControl.IoControlCode = (Flags == KSSTREAM_READ ? IOCTL_KS_READ_STREAM : IOCTL_KS_WRITE_STREAM);
 
     if (CompletionRoutine)
     {
-        IoSetCompletionRoutine(Irp,
-                               CompletionRoutine,
-                               CompletionContext,
-                               (CompletionInvocationFlags & KsInvokeOnSuccess),
-                               (CompletionInvocationFlags & KsInvokeOnError),
-                               (CompletionInvocationFlags & KsInvokeOnCancel));
+        /* setup completion routine for async processing */
+        IoSetCompletionRoutine(Irp, CompletionRoutine, CompletionContext, (CompletionInvocationFlags & KsInvokeOnSuccess), (CompletionInvocationFlags & KsInvokeOnError), (CompletionInvocationFlags & KsInvokeOnCancel));
     }
 
-    IoStack = IoGetNextIrpStackLocation(Irp);
-    IoStack->FileObject = FileObject;
-
+    /* now call the driver */
     Status = IoCallDriver(DeviceObject, Irp);
+    /* done */
     return Status;
 }
-
 
 /*
     @unimplemented
@@ -594,7 +664,7 @@ KsProbeStreamIrp(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -604,8 +674,60 @@ KsAllocateExtraData(
     IN  ULONG ExtraSize,
     OUT PVOID* ExtraBuffer)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    ULONG Count, Index;
+    PUCHAR Buffer, BufferOrg;
+    PKSSTREAM_HEADER Header;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSSTREAM_HEADER));
+
+    /* get total length */
+    Count = IoStack->Parameters.DeviceIoControl.InputBufferLength / sizeof(KSSTREAM_HEADER);
+
+    /* allocate buffer */
+    Buffer = BufferOrg = AllocateItem(NonPagedPool, Count * (sizeof(KSSTREAM_HEADER) + ExtraSize));
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    _SEH2_TRY
+    {
+        /* get input buffer */
+        Header = (PKSSTREAM_HEADER)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        for(Index = 0; Index < Count; Index++)
+        {
+            /* copy stream header */
+            RtlMoveMemory(Buffer, Header, sizeof(KSSTREAM_HEADER));
+
+            /* move to next header */
+            Header++;
+            /* increment output buffer offset */
+            Buffer += sizeof(KSSTREAM_HEADER) + ExtraSize;
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Exception, get the error code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status))
+    {
+        /* free buffer on exception */
+        FreeItem(Buffer);
+        return Status;
+    }
+
+    /* store result */
+    *ExtraBuffer = BufferOrg;
+
+    /* done */
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -881,7 +1003,7 @@ KsRemoveIrpFromCancelableQueue(
         }
 
         /* get irp offset */
-        Irp = (PIRP)CONTAINING_RECORD(Irp, IRP, Tail.Overlay.ListEntry);
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
 
         if (Irp->Cancel)
         {
@@ -936,7 +1058,7 @@ KsRemoveIrpFromCancelableQueue(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -950,8 +1072,114 @@ KsMoveIrpsOnCancelableQueue(
     IN  PFNKSIRPLISTCALLBACK ListCallback,
     IN  PVOID Context)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    KIRQL OldLevel;
+    PLIST_ENTRY SrcEntry;
+    PIRP Irp;
+    NTSTATUS Status;
+
+    if (!DestinationLock)
+    {
+        /* no destination lock just acquire the source lock */
+        KeAcquireSpinLock(SourceLock, &OldLevel);
+    }
+    else
+    {
+        /* acquire cancel spinlock */
+        IoAcquireCancelSpinLock(&OldLevel);
+
+        /* now acquire source lock */
+        KeAcquireSpinLockAtDpcLevel(SourceLock);
+
+        /* now acquire destination lock */
+        KeAcquireSpinLockAtDpcLevel(DestinationLock);
+    }
+
+    /* point to list head */
+    SrcEntry = SourceList;
+
+    /* now move all irps */
+    while(TRUE)
+    {
+        if (ListLocation == KsListEntryTail)
+        {
+            /* move queue downwards */
+            SrcEntry = SrcEntry->Flink;
+        }
+        else
+        {
+            /* move queue upwards */
+            SrcEntry = SrcEntry->Blink;
+        }
+
+        if (SrcEntry == DestinationList)
+        {
+            /* eof list reached */
+            break;
+        }
+
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(SrcEntry, IRP, Tail.Overlay.ListEntry);
+
+        /* now check if irp can be moved */
+        Status = ListCallback(Irp, Context);
+
+        /* check if irp can be moved */
+        if (Status == STATUS_SUCCESS)
+        {
+            /* remove irp from src list */
+            RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+
+            if (ListLocation == KsListEntryTail)
+            {
+                /* insert irp end of list */
+                InsertTailList(DestinationList, &Irp->Tail.Overlay.ListEntry);
+            }
+            else
+            {
+                /* insert irp head of list */
+                InsertHeadList(DestinationList, &Irp->Tail.Overlay.ListEntry);
+            }
+
+            /* do we need to update the irp lock */
+            if (DestinationLock)
+            {
+                /* update irp lock */
+                KSQUEUE_SPINLOCK_IRP_STORAGE(Irp) = DestinationLock;
+            }
+        }
+        else
+        {
+            if (Status != STATUS_NO_MATCH)
+            {
+                /* callback decided to stop enumeration */
+                break;
+            }
+
+            /* reset return value */
+            Status = STATUS_SUCCESS;
+        }
+    }
+
+    if (!DestinationLock)
+    {
+        /* release source lock */
+        KeReleaseSpinLock(SourceLock, OldLevel);
+    }
+    else
+    {
+        /* now release destination lock */
+        KeReleaseSpinLockFromDpcLevel(DestinationLock);
+
+        /* now release source lock */
+        KeReleaseSpinLockFromDpcLevel(SourceLock);
+
+
+        /* now release cancel spinlock */
+        IoReleaseCancelSpinLock(OldLevel);
+    }
+
+    /* done */
+    return Status;
 }
 
 /*
@@ -1059,25 +1287,24 @@ KsCancelRoutine(
     IN  PIRP Irp)
 {
     PKSPIN_LOCK SpinLock;
-    KIRQL OldLevel;
 
     /* get internal queue lock */
     SpinLock = KSQUEUE_SPINLOCK_IRP_STORAGE(Irp);
 
     /* acquire spinlock */
-    KeAcquireSpinLock(SpinLock, &OldLevel);
+    KeAcquireSpinLockAtDpcLevel(SpinLock);
 
     /* sanity check */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
     /* release cancel spinlock */
-    IoReleaseCancelSpinLock(DISPATCH_LEVEL);
+    IoReleaseCancelSpinLock(Irp->CancelIrql);
 
     /* remove the irp from the list */
     RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 
     /* release spinlock */
-    KeReleaseSpinLock(SpinLock, OldLevel);
+    KeReleaseSpinLockFromDpcLevel(SpinLock);
 
     /* has the irp already been canceled */
     if (Irp->IoStatus.Status != STATUS_CANCELLED)
@@ -1086,20 +1313,6 @@ KsCancelRoutine(
         Irp->IoStatus.Status = STATUS_CANCELLED;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsGetChildCreateParameter(
-    IN  PIRP Irp,
-    OUT PVOID* CreateParameter)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS

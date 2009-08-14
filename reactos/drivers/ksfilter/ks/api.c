@@ -9,8 +9,11 @@
 
 #include "priv.h"
 
+const GUID GUID_NULL              = {0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+const GUID KSMEDIUMSETID_Standard = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
+
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -19,8 +22,40 @@ KsAcquireResetValue(
     IN  PIRP Irp,
     OUT KSRESET* ResetValue)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    KSRESET* Value;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* check if there is reset value provided */
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSRESET))
+        return STATUS_INVALID_PARAMETER;
+
+    if (Irp->RequestorMode == UserMode)
+    {
+        /* need to probe the buffer */
+        _SEH2_TRY
+        {
+            ProbeForRead(IoStack->Parameters.DeviceIoControl.Type3InputBuffer, sizeof(KSRESET), sizeof(UCHAR));
+            Value = (KSRESET*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+            *ResetValue = *Value;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        Value = (KSRESET*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        *ResetValue = *Value;
+    }
+
+    return Status;
 }
 
 /*
@@ -1131,7 +1166,7 @@ KsSynchronousIoControlDevice(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1147,7 +1182,7 @@ KsUnserializeObjectPropertiesFromRegistry(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1157,8 +1192,83 @@ KsCacheMedium(
     IN  PKSPIN_MEDIUM Medium,
     IN  ULONG PinDirection)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    HANDLE hKey;
+    UNICODE_STRING Path;
+    UNICODE_STRING BasePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\MediumCache\\");
+    UNICODE_STRING GuidString;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    BOOLEAN PathAdjusted = FALSE;
+    ULONG Value = 0;
+
+    /* first check if the medium is standard */
+    if (IsEqualGUIDAligned(&KSMEDIUMSETID_Standard, &Medium->Set) ||
+        IsEqualGUIDAligned(&GUID_NULL, &Medium->Set))
+    {
+        /* no need to cache that */
+        return STATUS_SUCCESS;
+    }
+
+    /* convert guid to string */
+    Status = RtlStringFromGUID(&Medium->Set, &GuidString);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* allocate path buffer */
+    Path.Length = 0;
+    Path.MaximumLength = BasePath.MaximumLength + GuidString.MaximumLength + 10 * sizeof(WCHAR);
+    Path.Buffer = AllocateItem(PagedPool, Path.MaximumLength);
+    if (!Path.Buffer)
+    {
+        /* not enough resources */
+        RtlFreeUnicodeString(&GuidString);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&Path, &BasePath);
+    RtlAppendUnicodeStringToString(&Path, &GuidString);
+    RtlAppendUnicodeToString(&Path, L"-");
+    /* FIXME append real instance id */
+    RtlAppendUnicodeToString(&Path, L"0");
+    RtlAppendUnicodeToString(&Path, L"-");
+    /* FIXME append real instance id */
+    RtlAppendUnicodeToString(&Path, L"0");
+
+    /* free guid string */
+    RtlFreeUnicodeString(&GuidString);
+
+    /* initialize object attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &Path, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+    /* create the key */
+    Status = ZwCreateKey(&hKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
+
+    /* free path buffer */
+    FreeItem(Path.Buffer);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* store symbolic link */
+        if (SymbolicLink->Buffer[1] == L'?' && SymbolicLink->Buffer[2] == L'?')
+        {
+            /* replace kernel path with user mode path */
+            SymbolicLink->Buffer[1] = L'\\';
+            PathAdjusted = TRUE;
+        }
+
+        /* store the key */
+        Status = ZwSetValueKey(hKey, SymbolicLink, 0, REG_DWORD, &Value, sizeof(ULONG));
+
+        if (PathAdjusted)
+        {
+            /* restore kernel path */
+            SymbolicLink->Buffer[1] = L'?';
+        }
+
+        ZwClose(hKey);
+    }
+
+    /* done */
+    return Status;
 }
 
 /*
@@ -1551,10 +1661,8 @@ KsTerminateDevice(
     }
 }
 
-
-
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1562,7 +1670,35 @@ NTAPI
 KsCompletePendingRequest(
     IN PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
+
+    if (IoStack->MajorFunction != IRP_MJ_CLOSE)
+    {
+        /* can be completed immediately */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return;
+    }
+
+    /* did close operation fail */
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        /* closing failed, complete irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return;
+    }
+
+    /* FIXME 
+     * delete object / device header 
+     * remove dead pin / filter instance
+     */
     UNIMPLEMENTED
+
 }
 
 /*
@@ -1704,23 +1840,6 @@ KsDeviceRegisterAdapterObject(
     IN ULONG MappingTableStride)
 {
     UNIMPLEMENTED
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-_KsEdit(
-    IN KSOBJECT_BAG ObjectBag,
-    IN OUT PVOID* PointerToPointerToItem,
-    IN ULONG NewSize,
-    IN ULONG OldSize,
-    IN ULONG Tag)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -1957,6 +2076,62 @@ KsRegisterFilterWithNoKSPins(
     IN KSPIN_MEDIUM*  MediumList,
     IN GUID*  CategoryList OPTIONAL)
 {
+    ULONG Size, Index;
+    NTSTATUS Status;
+    PWSTR SymbolicLinkList;
+    //PUCHAR Buffer;
+    HANDLE hKey;
+    UNICODE_STRING InterfaceString;
+    //UNICODE_STRING FilterData = RTL_CONSTANT_STRING(L"FilterData");
+
+    if (!InterfaceClassGUID || !PinCount || !PinDirection || !MediumList)
+    {
+        /* all these parameters are required */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* calculate filter data value size */
+    Size = PinCount * sizeof(KSPIN_MEDIUM);
+    if (CategoryList)
+    {
+        /* add category list */
+        Size += PinCount * sizeof(GUID);
+    }
+
+    /* FIXME generate filter data blob */
     UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+
+    /* get symbolic link list */
+    Status = IoGetDeviceInterfaces(InterfaceClassGUID, DeviceObject, DEVICE_INTERFACE_INCLUDE_NONACTIVE, &SymbolicLinkList);
+    if (NT_SUCCESS(Status))
+    {
+        /* initialize first symbolic link */
+        RtlInitUnicodeString(&InterfaceString, SymbolicLinkList);
+
+        /* open first device interface registry key */
+        Status = IoOpenDeviceInterfaceRegistryKey(&InterfaceString, GENERIC_WRITE, &hKey);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* write filter data */
+            //Status = ZwSetValueKey(hKey, &FilterData, 0, REG_BINARY, Buffer, Size);
+
+            /* close the key */
+            ZwClose(hKey);
+        }
+
+        if (PinCount)
+        {
+            /* update medium cache */
+            for(Index = 0; Index < PinCount; Index++)
+            {
+                KsCacheMedium(&InterfaceString, &MediumList[Index], PinDirection[Index]);
+            }
+        }
+
+        /* free the symbolic link list */
+        ExFreePool(SymbolicLinkList);
+    }
+
+    return Status;
 }

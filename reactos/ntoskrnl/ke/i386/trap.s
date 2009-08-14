@@ -1338,7 +1338,6 @@ BogusTrap:
 .globl _KiTrap8
 .func KiTrap8
 _KiTrap8:
-
     /* Can't really do too much */
     mov eax, 8
     jmp _KiSystemFatalException
@@ -1511,6 +1510,7 @@ NotV86:
     cmp eax, offset CheckPrivilegedInstruction
     jbe KmodeGpf
     cmp eax, offset CheckPrivilegedInstruction2
+    jae KmodeGpf
 
     /* FIXME: TODO */
     UNHANDLED_PATH

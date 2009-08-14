@@ -197,7 +197,8 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PKSDATAFORMAT DataFormat,
         IN PDEVICE_OBJECT DeviceObject,
         IN ULONG FrameSize,
-        IN ULONG Alignment);
+        IN ULONG Alignment,
+        IN PVOID SilenceBuffer);
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PUCHAR Buffer,

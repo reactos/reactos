@@ -777,6 +777,12 @@ CloseStreamRoutine(
     /* free work item ctx */
     FreeItem(Ctx, TAG_PORTCLASS);
 
+    /* release reference to port driver */
+    This->Port->lpVtbl->Release(This->Port);
+
+    /* release reference to filter instance */
+    This->Filter->lpVtbl->Release(This->Filter);
+
     if (This->Stream)
     {
         Stream = This->Stream;
@@ -973,34 +979,21 @@ IPortPinWaveCyclic_fnFastWrite(
     DPRINT("IPortPinWaveCyclic_fnFastWrite entered Total %u Pre %u Post %u State %x MinData %u Ratio %u\n", This->TotalPackets, This->PreCompleted, This->PostCompleted, This->State, This->IrpQueue->lpVtbl->NumData(This->IrpQueue), PrePostRatio);
 
     Packet = (PCONTEXT_WRITE)Buffer;
-
-    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue))
-    {
-        Irp = Packet->Irp;
-        StatusBlock->Status = STATUS_PENDING;
-        InterlockedIncrement((PLONG)&This->PostCompleted);
-    }
-    else
-    {
-        Irp = NULL;
-        Packet->Irp->IoStatus.Status = STATUS_SUCCESS;
-        Packet->Irp->IoStatus.Information = Packet->Header.FrameExtent;
-        IoCompleteRequest(Packet->Irp, IO_SOUND_INCREMENT);
-        StatusBlock->Status = STATUS_SUCCESS;
-        InterlockedIncrement((PLONG)&This->PreCompleted);
-    }
+    Irp = Packet->Irp;
 
     Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, Buffer, Length, Irp);
 
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (This->State != KSSTATE_RUN && This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE)
+    if (This->State != KSSTATE_RUN)
     {
         SetStreamState(This, KSSTATE_RUN);
         /* some should initiate a state request but didnt do it */
         DPRINT1("Starting stream with %lu mappings Status %x\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), Status);
     }
+
+    StatusBlock->Status = STATUS_PENDING;
 
     return TRUE;
 }
@@ -1021,15 +1014,11 @@ IPortPinWaveCyclic_fnInit(
     PKSDATAFORMAT DataFormat;
     PDEVICE_OBJECT DeviceObject;
     BOOL Capture;
+    PVOID SilenceBuffer;
     //IDrmAudioStream * DrmAudio = NULL;
 
     IPortPinWaveCyclicImpl * This = (IPortPinWaveCyclicImpl*)iface;
 
-    Port->lpVtbl->AddRef(Port);
-    Filter->lpVtbl->AddRef(Filter);
-
-    This->Port = Port;
-    This->Filter = Filter;
     This->KsPinDescriptor = KsPinDescriptor;
     This->ConnectDetails = ConnectDetails;
     This->Miniport = GetWaveCyclicMiniport(Port);
@@ -1114,19 +1103,31 @@ IPortPinWaveCyclic_fnInit(
 
     Status = This->Stream->lpVtbl->SetNotificationFreq(This->Stream, 10, &This->FrameSize);
 
-   Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, This->FrameSize, 0);
+    SilenceBuffer = AllocateItem(NonPagedPool, This->FrameSize, TAG_PORTCLASS);
+    if (!SilenceBuffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    This->Stream->lpVtbl->Silence(This->Stream, SilenceBuffer, This->FrameSize);
+
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, DataFormat, DeviceObject, This->FrameSize, 0, SilenceBuffer);
     if (!NT_SUCCESS(Status))
     {
        This->IrpQueue->lpVtbl->Release(This->IrpQueue);
        return Status;
     }
 
+    Port->lpVtbl->AddRef(Port);
+    Filter->lpVtbl->AddRef(Filter);
+
+    This->Port = Port;
+    This->Filter = Filter;
 
     //This->Stream->lpVtbl->SetFormat(This->Stream, (PKSDATAFORMAT)This->Format);
     DPRINT1("Setting state to acquire %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_ACQUIRE));
     DPRINT1("Setting state to pause %x\n", This->Stream->lpVtbl->SetState(This->Stream, KSSTATE_PAUSE));
     This->State = KSSTATE_PAUSE;
 
+    //This->ServiceGroup->lpVtbl->RequestDelayedService(This->ServiceGroup, This->Delay);
 
     return STATUS_SUCCESS;
 }

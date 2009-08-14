@@ -65,7 +65,7 @@ typedef struct DelayLoadInfo
 
 typedef FARPROC (WINAPI *PfnDliHook)(unsigned, PDelayLoadInfo);
 
-static __inline__
+FORCEINLINE
 unsigned
 IndexFromPImgThunkData(PCImgThunkData pData, PCImgThunkData pBase)
 {
@@ -74,7 +74,7 @@ IndexFromPImgThunkData(PCImgThunkData pData, PCImgThunkData pBase)
 
 extern const IMAGE_DOS_HEADER __ImageBase;
 
-static __inline__
+FORCEINLINE
 PVOID
 PFromRva(RVA rva)
 {

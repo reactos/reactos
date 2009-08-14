@@ -336,6 +336,22 @@ MingwModuleHandler::OutputCopyCommand ( const FileLocation& source,
 	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str () );
 }
 
+void
+MingwModuleHandler::OutputCopyCommandSingle ( const FileLocation& source,
+                                              const FileLocation& destination )
+{
+	fprintf ( fMakefile,
+	          "%s : %s\n",
+	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str (),
+	          backend->GetFullName ( source ).c_str () );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_CP)\n" );
+	fprintf ( fMakefile,
+	          "\t${cp} %s %s 1>$(NUL)\n",
+	          backend->GetFullName ( source ).c_str (),
+	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str () );
+}
+
 string
 MingwModuleHandler::GetImportLibraryDependency (
 	const Module& importedModule,
@@ -3196,7 +3212,8 @@ MingwLiveIsoModuleHandler::CreateDirectory ( const string& directory )
 
 void
 MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
-                                                      string& reactosDirectory )
+                                                      string& reactosDirectory,
+                                                      std::vector<FileLocation>& destinations )
 {
 	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
@@ -3211,15 +3228,17 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 			                               ? livecdDirectory + sSep + reactosDirectory + sSep + m.install->relative_path
 			                               : livecdDirectory + sSep + reactosDirectory,
 			                           m.install->name );
-			OutputCopyCommand ( *aliasedModule.output,
-			                    destination);
+			OutputCopyCommandSingle ( *aliasedModule.output,
+			                          destination);
+			destinations.push_back ( destination );
 		}
 	}
 }
 
 void
 MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory,
-                                                         string& reactosDirectory )
+                                                         string& reactosDirectory,
+                                                         std::vector<FileLocation>& destinations )
 {
 	for ( size_t i = 0; i < module.project.installfiles.size (); i++ )
 	{
@@ -3229,12 +3248,14 @@ MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory
 		                          ? livecdDirectory + sSep + reactosDirectory + sSep + installfile.target->relative_path
 		                          : livecdDirectory + sSep + reactosDirectory,
 		                      installfile.target->name );
-		OutputCopyCommand ( *installfile.source, target );
+		OutputCopyCommandSingle ( *installfile.source, target );
+		destinations.push_back ( target );
 	}
 }
 
 void
-MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirectory )
+MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirectory,
+                                                             vector<FileLocation>& destinations )
 {
 	CreateDirectory ( livecdDirectory + sSep + "Profiles" );
 	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "All Users") ;
@@ -3249,12 +3270,14 @@ MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirec
 	FileLocation destination ( OutputDirectory,
 	                           livecdDirectory,
 	                           "freeldr.ini" );
-	OutputCopyCommand ( livecdIni,
-	                    destination );
+	OutputCopyCommandSingle ( livecdIni,
+	                          destination );
+	destinations.push_back ( destination );
 }
 
 void
-MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
+MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory,
+                                                  std::vector<FileLocation>& destinations )
 {
 	FileLocation freeldr ( OutputDirectory,
 	                       "boot" + sSep + "freeldr" + sSep + "freeldr",
@@ -3262,8 +3285,9 @@ MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
 	FileLocation destination ( OutputDirectory,
 	                           livecdDirectory + sSep + "loader",
 	                           "setupldr.sys" );
-	OutputCopyCommand ( freeldr,
-	                    destination );
+	OutputCopyCommandSingle ( freeldr,
+	                          destination );
+	destinations.push_back ( destination );
 }
 
 void
@@ -3316,19 +3340,31 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	                             "" );
 	CLEAN_FILE ( livecdReactos );
 
+	std::vector<FileLocation> sourceFiles;
+	OutputModuleCopyCommands ( livecdDirectory,
+	                           reactosDirectory,
+	                           sourceFiles );
+	OutputNonModuleCopyCommands ( livecdDirectory,
+	                              reactosDirectory,
+	                              sourceFiles );
+	OutputProfilesDirectoryCommands ( livecdDirectory, sourceFiles );
+	OutputLoaderCommands ( livecdDirectory, sourceFiles );
+
+	fprintf( fMakefile,
+	         "\n%s_OBJS := %s\n\n",
+	         module.name.c_str (),
+	         v2s ( backend, sourceFiles, 5 ).c_str () );
+
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s: all %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
+	          "%s : $(%s_OBJS) %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
+	          module.name.c_str (),
 	          module.name.c_str (),
 	          backend->GetFullName ( *isoboot) .c_str (),
-	          backend->GetFullPath ( livecdReactos ).c_str () );
-	OutputModuleCopyCommands ( livecdDirectory,
-	                           reactosDirectory );
-	OutputNonModuleCopyCommands ( livecdDirectory,
-	                              reactosDirectory );
-	OutputProfilesDirectoryCommands ( livecdDirectory );
-	OutputLoaderCommands ( livecdDirectory );
+	          backend->GetFullPath ( FileLocation ( OutputDirectory,
+	                                                livecdDirectory,
+	                                                "" ) ).c_str () );
 	OutputRegistryCommands ( livecdDirectory );
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,

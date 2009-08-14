@@ -814,6 +814,10 @@ Ext2Format(
     /* File Sys Structure */
     EXT2_FILESYS     FileSys;
     ULONG Percent;
+    ULONG rsv;
+    ULONG blocks;
+    ULONG start;
+    ULONG ret_blk;
 
 
     Callback(PROGRESS, 0, (PVOID)&Percent);
@@ -917,10 +921,8 @@ Ext2Format(
     }
 
     /* rsv must be a power of two (64kB is MD RAID sb alignment) */
-    ULONG rsv = 65536 / FileSys.blocksize;
-    ULONG blocks = Ext2Sb.s_blocks_count;
-    ULONG start;
-    ULONG ret_blk;
+    rsv = 65536 / FileSys.blocksize;
+    blocks = Ext2Sb.s_blocks_count;
 
 #ifdef ZAP_BOOTBLOCK
     zap_sector(&FileSys, 0, 2);

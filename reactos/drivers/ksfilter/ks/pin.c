@@ -9,6 +9,17 @@
 
 #include "priv.h"
 
+typedef struct _KSISTREAM_POINTER
+{
+    KSSTREAM_POINTER StreamPointer;
+    PFNKSSTREAMPOINTER Callback;
+    PIRP Irp;
+    KTIMER Timer;
+    KDPC TimerDpc;
+    struct _KSISTREAM_POINTER *Next;
+
+}KSISTREAM_POINTER, *PKSISTREAM_POINTER;
+
 typedef struct
 {
     KSBASIC_HEADER BasicHeader;
@@ -24,6 +35,13 @@ typedef struct
 
     PKSGATE AttachedGate;
     BOOL OrGate;
+
+    LIST_ENTRY IrpList;
+    KSPIN_LOCK IrpListLock;
+
+    PKSISTREAM_POINTER ClonedStreamPointer;
+    PKSISTREAM_POINTER LeadingEdgeStreamPointer;
+    PKSISTREAM_POINTER TrailingStreamPointer;
 
     PFNKSPINPOWER  Sleep;
     PFNKSPINPOWER  Wake;
@@ -687,7 +705,7 @@ KsStreamPointerAdvanceOffsetsAndUnlock(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -695,7 +713,41 @@ NTAPI
 KsStreamPointerDelete(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    UNIMPLEMENTED
+    IKsPinImpl * This;
+    PKSISTREAM_POINTER Cur, Last;
+    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+
+    This = (IKsPinImpl*)CONTAINING_RECORD(Pointer->StreamPointer.Pin, IKsPinImpl, Pin);
+
+    /* point to first stream pointer */
+    Last = NULL;
+    Cur = This->ClonedStreamPointer;
+
+    while(Cur != Pointer && Cur)
+    {
+        Last = Cur;
+        /* iterate to next cloned pointer */
+        Cur = Cur->Next;
+    }
+
+    if (!Cur)
+    {
+        /* you naughty driver */
+        return;
+    }
+
+    if (!Last)
+    {
+        /* remove first cloned pointer */
+        This->ClonedStreamPointer = Pointer->Next;
+    }
+    else
+    {
+        Last->Next = Pointer->Next;
+    }
+
+    /* FIXME make sure no timeouts are pending */
+    FreeItem(Pointer);
 }
 
 /*
@@ -772,7 +824,7 @@ KsStreamPointerGetIrp(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -782,11 +834,22 @@ KsStreamPointerScheduleTimeout(
     IN PFNKSSTREAMPOINTER Callback,
     IN ULONGLONG Interval)
 {
-    UNIMPLEMENTED
+    LARGE_INTEGER DueTime;
+    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+
+    /* setup timer callback */
+    Pointer->Callback = Callback;
+
+    /* setup expiration */
+    DueTime.QuadPart = (LONGLONG)Interval;
+
+    /* setup the timer */
+    KeSetTimer(&Pointer->Timer, DueTime, &Pointer->TimerDpc);
+
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -794,11 +857,14 @@ NTAPI
 KsStreamPointerCancelTimeout(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    UNIMPLEMENTED
+    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+
+    KeCancelTimer(&Pointer->Timer);
+
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PKSSTREAM_POINTER
@@ -806,12 +872,13 @@ NTAPI
 KsPinGetFirstCloneStreamPointer(
     IN PKSPIN Pin)
 {
-    UNIMPLEMENTED
-    return NULL;
+    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
+    /* return first cloned stream pointer */
+    return &This->ClonedStreamPointer->StreamPointer;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PKSSTREAM_POINTER
@@ -819,8 +886,14 @@ NTAPI
 KsStreamPointerGetNextClone(
     IN PKSSTREAM_POINTER StreamPointer)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSISTREAM_POINTER Pointer = (PKSISTREAM_POINTER)StreamPointer;
+
+    /* is there a another cloned stream pointer */
+    if (!Pointer->Next)
+        return NULL;
+
+    /* return next stream pointer */
+    return &Pointer->Next->StreamPointer;
 }
 
 NTSTATUS
@@ -829,11 +902,55 @@ IKsPin_DispatchDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+    IKsPinImpl * This;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(IoStack->FileObject);
+    ASSERT(IoStack->FileObject->FsContext);
+
+    /* get the object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+
+    /* locate ks pin implemention fro KSPIN offset */
+    This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
+
+    if (IoStack->Parameters.DeviceIoControl.IoControlCode != IOCTL_KS_WRITE_STREAM && IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_READ_STREAM)
+    {
+        UNIMPLEMENTED;
+        Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_NOT_IMPLEMENTED;
+    }
+
+    /* mark irp as pending */
+    IoMarkIrpPending(Irp);
+
+    /* add irp to cancelable queue */
+    KsAddIrpToCancelableQueue(&This->IrpList, &This->IrpListLock, Irp, KsListEntryTail, NULL /* FIXME */);
+
+    if (This->Pin.Descriptor->Dispatch->Process)
+    {
+        /* it is a pin centric avstream */
+        Status = This->Pin.Descriptor->Dispatch->Process(&This->Pin);
+
+        /* TODO */
+    }
+    else
+    {
+        /* TODO
+         * filter-centric avstream 
+         */
+        UNIMPLEMENTED
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -842,11 +959,51 @@ IKsPin_Close(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
-    UNIMPLEMENTED;
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
+    IKsPinImpl * This;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_NOT_IMPLEMENTED;
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(IoStack->FileObject);
+    ASSERT(IoStack->FileObject->FsContext);
+
+    /* get the object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+
+    /* locate ks pin implemention fro KSPIN offset */
+    This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
+
+    /* acquire filter control mutex */
+    KsFilterAcquireControl(This->BasicHeader.Parent.KsFilter);
+
+    if (This->Pin.Descriptor->Dispatch->Close)
+    {
+        /* call pin close routine */
+        Status = This->Pin.Descriptor->Dispatch->Close(&This->Pin, Irp);
+
+        if (!NT_SUCCESS(Status))
+        {
+            /* abort closing */
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+
+        /* FIXME remove pin from filter pin list and decrement reference count */
+
+        if (Status != STATUS_PENDING)
+        {
+            Irp->IoStatus.Status = Status;
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+            return Status;
+        }
+    }
+
+    return Status;
 }
 
 NTSTATUS
@@ -962,6 +1119,8 @@ KspCreatePin(
     This->ref = 1;
     This->FileObject = IoStack->FileObject;
     KeInitializeMutex(&This->ProcessingMutex, 0);
+    InitializeListHead(&This->IrpList);
+    KeInitializeSpinLock(&This->IrpListLock);
 
     /* initialize ks pin descriptor */
     This->Pin.Descriptor = Descriptor;

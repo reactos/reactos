@@ -1135,7 +1135,7 @@ IPortPinDMus_fnInit(
         This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
     }
 
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, 0, 0);
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, 0, 0, NULL /*FIXME*/);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IrpQueue_Init failed with %x\n", Status);
