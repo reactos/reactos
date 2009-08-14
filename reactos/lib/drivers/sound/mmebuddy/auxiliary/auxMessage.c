@@ -21,7 +21,8 @@
 /*
     Standard MME driver entry-point for messages relating to auxiliary devices.
 */
-APIENTRY DWORD
+DWORD
+APIENTRY
 auxMessage(
     DWORD DeviceId,
     DWORD Message,

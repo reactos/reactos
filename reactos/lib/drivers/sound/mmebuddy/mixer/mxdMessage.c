@@ -21,7 +21,8 @@
 /*
     Standard MME driver entry-point for messages relating to mixers.
 */
-APIENTRY DWORD
+DWORD
+APIENTRY
 mxdMessage(
     DWORD DeviceId,
     DWORD Message,

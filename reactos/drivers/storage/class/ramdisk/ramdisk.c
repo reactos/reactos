@@ -1022,7 +1022,6 @@ RamdiskWorkerThread(IN PDEVICE_OBJECT DeviceObject,
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return;
 }
 
 NTSTATUS

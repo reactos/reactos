@@ -98,7 +98,8 @@ PADDRESS_FILE AddrSearchNext(
             (Current->Protocol == SearchContext->Protocol) &&
             (AddrIsEqual(IPAddress, SearchContext->Address) ||
              AddrIsBroadcast(IPAddress, SearchContext->Address) ||
-             AddrIsUnspecified(IPAddress))) {
+             AddrIsUnspecified(IPAddress) ||
+             AddrIsUnspecified(SearchContext->Address))) {
             /* We've found a match */
             Found = TRUE;
             break;
@@ -136,70 +137,6 @@ VOID ControlChannelFree(
  */
 {
     exFreePool(Object);
-}
-
-
-VOID DeleteAddress(PADDRESS_FILE AddrFile)
-/*
- * FUNCTION: Deletes an address file object
- * ARGUMENTS:
- *     AddrFile = Pointer to address file object to delete
- */
-{
-  KIRQL OldIrql;
-  PLIST_ENTRY CurrentEntry;
-  PLIST_ENTRY NextEntry;
-  PDATAGRAM_SEND_REQUEST SendRequest;
-  PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
-
-  TI_DbgPrint(MID_TRACE, ("Called.\n"));
-
-  /* Remove address file from the global list */
-  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
-  RemoveEntryList(&AddrFile->ListEntry);
-  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
-
-  TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-
-  /* FIXME: Kill TCP connections on this address file object */
-
-  /* Return pending requests with error */
-
-  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
-
-  /* Go through pending receive request list and cancel them all */
-  CurrentEntry = AddrFile->ReceiveQueue.Flink;
-  while (CurrentEntry != &AddrFile->ReceiveQueue) {
-    NextEntry = CurrentEntry->Flink;
-    ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-    /* Abort the request and free its resources */
-    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-    (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_ADDRESS_CLOSED, 0);
-    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-    CurrentEntry = NextEntry;
-  }
-
-  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
-
-  /* Go through pending send request list and cancel them all */
-  CurrentEntry = AddrFile->TransmitQueue.Flink;
-  while (CurrentEntry != &AddrFile->TransmitQueue) {
-    NextEntry = CurrentEntry->Flink;
-    SendRequest = CONTAINING_RECORD(CurrentEntry,
-				    DATAGRAM_SEND_REQUEST, ListEntry);
-    /* Abort the request and free its resources */
-    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-    (*SendRequest->Complete)(SendRequest->Context, STATUS_ADDRESS_CLOSED, 0);
-    exFreePool(SendRequest);
-    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-    CurrentEntry = NextEntry;
-  }
-
-  TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-  (*AddrFile->Free)(AddrFile);
-
-  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
 
@@ -350,6 +287,10 @@ NTSTATUS FileCloseAddress(
   KIRQL OldIrql;
   PADDRESS_FILE AddrFile;
   NTSTATUS Status = STATUS_SUCCESS;
+  PDATAGRAM_SEND_REQUEST SendRequest;
+  PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
+  PLIST_ENTRY CurrentEntry;
+  PLIST_ENTRY NextEntry;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
@@ -357,28 +298,41 @@ NTSTATUS FileCloseAddress(
 
   TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
-  /* Set address file object exclusive to us */
-  AF_SET_BUSY(AddrFile);
-  AF_CLR_VALID(AddrFile);
+  /* FIXME: Kill TCP connections on this address file object */
+
+  /* Return pending requests with error */
+
+  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting receive requests on AddrFile at (0x%X).\n", AddrFile));
+
+  /* Go through pending receive request list and cancel them all */
+  CurrentEntry = AddrFile->ReceiveQueue.Flink;
+  while (CurrentEntry != &AddrFile->ReceiveQueue) {
+    NextEntry = CurrentEntry->Flink;
+    ReceiveRequest = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+    /* Abort the request and free its resources */
+    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    (*ReceiveRequest->Complete)(ReceiveRequest->Context, STATUS_ADDRESS_CLOSED, 0);
+    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    CurrentEntry = NextEntry;
+  }
+
+  TI_DbgPrint(DEBUG_ADDRFILE, ("Aborting send requests on address file at (0x%X).\n", AddrFile));
+
+  /* Go through pending send request list and cancel them all */
+  CurrentEntry = AddrFile->TransmitQueue.Flink;
+  while (CurrentEntry != &AddrFile->TransmitQueue) {
+    NextEntry = CurrentEntry->Flink;
+    SendRequest = CONTAINING_RECORD(CurrentEntry,
+				    DATAGRAM_SEND_REQUEST, ListEntry);
+    /* Abort the request and free its resources */
+    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    (*SendRequest->Complete)(SendRequest->Context, STATUS_ADDRESS_CLOSED, 0);
+    exFreePool(SendRequest);
+    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+    CurrentEntry = NextEntry;
+  }
 
   TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-  /* Protocol specific handling */
-  switch (AddrFile->Protocol) {
-  case IPPROTO_TCP:
-    TCPFreePort( AddrFile->Port );
-    if( AddrFile->Listener ) {
-            TcpipRecursiveMutexEnter(&TCPLock, TRUE);
-	    TCPClose( AddrFile->Listener );
-            TcpipRecursiveMutexLeave(&TCPLock);
-	    exFreePool( AddrFile->Listener );
-    }
-    break;
-
-  case IPPROTO_UDP:
-    UDPFreePort( AddrFile->Port );
-    break;
-  }
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 
@@ -398,12 +352,35 @@ NTSTATUS FileFreeAddress(
 {
   PADDRESS_FILE AddrFile;
   NTSTATUS Status = STATUS_SUCCESS;
+  KIRQL OldIrql;
 
   AddrFile = Request->Handle.AddressHandle;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  DeleteAddress(AddrFile);
+  /* Remove address file from the global list */
+  TcpipAcquireSpinLock(&AddressFileListLock, &OldIrql);
+  RemoveEntryList(&AddrFile->ListEntry);
+  TcpipReleaseSpinLock(&AddressFileListLock, OldIrql);
+
+  /* Protocol specific handling */
+  switch (AddrFile->Protocol) {
+  case IPPROTO_TCP:
+    TCPFreePort( AddrFile->Port );
+    if( AddrFile->Listener ) {
+            TcpipRecursiveMutexEnter(&TCPLock, TRUE);
+	    TCPClose( AddrFile->Listener );
+            TcpipRecursiveMutexLeave(&TCPLock);
+	    exFreePool( AddrFile->Listener );
+    }
+    break;
+
+  case IPPROTO_UDP:
+    UDPFreePort( AddrFile->Port );
+    break;
+  }
+
+  (*AddrFile->Free)(AddrFile);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 

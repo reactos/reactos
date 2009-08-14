@@ -122,7 +122,8 @@ BOOLEAN AddrIsUnspecified(
 {
     switch (Address->Type) {
         case IP_ADDRESS_V4:
-            return (Address->Address.IPv4Address == 0);
+            return (Address->Address.IPv4Address == 0 ||
+                    Address->Address.IPv4Address == 0xFFFFFFFF);
 
         case IP_ADDRESS_V6:
         /* FIXME: IPv6 is not supported */
