@@ -10,3 +10,10 @@ Category = 4
 URLSite = Unknown
 URLDownload = http://ftp.freenet.de./pub/filepilot/windows/spiele/diabloiidemo.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Diablo 2 Shareware. zeckensacks glide wrapper wird zum Ausführen benötigt.
+URLSite = Unbekannt
+Size = Unbekannt

@@ -10,3 +10,10 @@ Category = 1
 URLSite = Unknown
 URLDownload = http://www.audiograbber.de/files/4898276276/agsetup183se.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Ein sehr guter CD-Ripper/Audio-Datei-Konverter.
+URLSize = Unbekannt 
+Size = Unbekannt

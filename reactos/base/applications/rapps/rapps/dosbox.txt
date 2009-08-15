@@ -10,3 +10,10 @@ Category = 15
 URLSite = Unknown
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/dosbox/DOSBox0.72-win32-installer.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = DOSBox ist ein DOS Emulator.
+URLSite = Unbekannt
+Size = Unbekannt

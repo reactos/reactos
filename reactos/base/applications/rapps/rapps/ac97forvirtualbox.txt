@@ -10,3 +10,11 @@ Category = 13
 URLSite = Unknown
 URLDownload = http://svn.reactos.org/packages/ac97_vbox.exe
 CDPath = none
+
+
+[Section.0407]
+Name = AC97 Treiber für VirtualBox
+Licence = Unbekannt
+Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
+Size = Unbekannt
+URLSize = Unbekannt

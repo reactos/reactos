@@ -10,3 +10,9 @@ Category = 7
 URLSite = Unknown
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.18.4b-win32.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Open Source BASIC Compiler. Die BASIC Syntax ist kompatibel zu QBASIC. 
+Size = Unbekannt

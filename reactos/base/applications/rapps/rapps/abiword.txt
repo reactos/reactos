@@ -10,3 +10,8 @@ Category = 6
 URLSite = http://www.abiword.org
 URLDownload = http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-setup-2.6.4.exe
 CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Textverarbeitung
+Size = Unbekannt
