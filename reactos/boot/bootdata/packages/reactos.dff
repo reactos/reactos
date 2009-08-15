@@ -42,8 +42,6 @@ base\applications\cmdutils\lodctr\lodctr.exe            1
 base\applications\cmdutils\more\more.exe                1
 base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
-base\applications\downloader\downloader.exe             1
-base\applications\downloader\downloader.xml             1
 base\applications\dxdiag\dxdiag.exe                     1
 base\applications\fontview\fontview.exe                 1
 base\applications\mscutils\devmgmt\devmgmt.exe          1
@@ -71,6 +69,7 @@ base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
 base\applications\notepad\notepad.exe                   1
 base\applications\paint\paint.exe                       1
+base\applications\rapps\rapps.exe                       1
 base\applications\regedit\regedit.exe                   4
 base\applications\regedit\clb\clb.dll                   1
 base\applications\regedt32\regedt32.exe                 1
@@ -332,6 +331,7 @@ dll\win32\msctf\msctf.dll                           1
 dll\win32\msftedit\msftedit.dll                     1
 dll\win32\msg711.acm\msg711.acm                     1
 dll\win32\msgina\msgina.dll                         1
+dll\win32\msgsm32.acm\msgsm32.acm                   1
 dll\win32\mshtml\mshtml.dll                         1
 dll\win32\mshtml.tlb\mshtml.tlb                     1
 dll\win32\msi\msi.dll                               1
@@ -661,9 +661,13 @@ modules\optional\kvmnet.inf                         6  optional
 modules\optional\kvmnet.sys                         2  optional
 modules\optional\mfc42.dll                          1  optional
 modules\optional\mfc42u.dll                         1  optional
+modules\optional\mfc71.dll                          1  optional
+modules\optional\mfc71u.dll                         1  optional
 modules\optional\msvbvm50.dll                       1  optional
 modules\optional\msvbvm60.dll                       1  optional
 modules\optional\msvcirt.dll                        1  optional
+modules\optional\msvcp71.dll                        1  optional
+modules\optional\msvcr71.dll                        1  optional
 modules\optional\Systema.ttf                        3  optional
 modules\optional\vmx_fb.dll                         1  optional
 modules\optional\vmx_mode.dll                       1  optional
