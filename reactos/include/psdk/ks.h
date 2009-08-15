@@ -3203,6 +3203,11 @@ KsPinGetParentFilter(
     IN PKSPIN Pin
     );
 
+KSDDKAPI PKSPIN NTAPI
+KsPinGetNextSiblingPin(
+    IN PKSPIN Pin
+    );
+
 
 /* Does this belong here? */
 
