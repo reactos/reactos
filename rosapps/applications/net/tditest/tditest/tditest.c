@@ -10,6 +10,7 @@
  *   26-Nov-2003 Vizzini Updated to run properly on Win2ksp4
  */
 #include <tditest.h>
+#include <pseh/pseh2.h>
 
 
 #if DBG
@@ -544,22 +545,18 @@ NTSTATUS TdiSendDatagram(
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
 
-#ifdef _MSC_VER
-	try
-		{
-#endif
-			MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
-		}
-	except(EXCEPTION_EXECUTE_HANDLER)
-		{
-			TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-			IoFreeMdl(Mdl);
-			IoFreeIrp(Irp);
-			ExFreePool(ConnectInfo);
-			return STATUS_UNSUCCESSFUL;
-		}
-#endif
+	_SEH2_TRY
+	{
+		MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+		IoFreeMdl(Mdl);
+		IoFreeIrp(Irp);
+		ExFreePool(ConnectInfo);
+		return STATUS_UNSUCCESSFUL;
+	} _SEH2_END;
 
 	TdiBuildSendDatagram(
 		Irp,               /* I/O Request Packet */
@@ -675,23 +672,19 @@ NTSTATUS TdiReceiveDatagram(
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
 
-#ifdef _MSC_VER
-	try
-		{
-#endif
-			MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
-#ifdef _MSC_VER
-		}
-	except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-			IoFreeMdl(Mdl);
-			IoFreeIrp(Irp);
-			ExFreePool(MdlBuffer);
-			ExFreePool(ReceiveInfo);
-			return STATUS_INSUFFICIENT_RESOURCES;
-		}
-#endif
+	_SEH2_TRY
+	{
+		MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		TDI_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+		IoFreeMdl(Mdl);
+		IoFreeIrp(Irp);
+		ExFreePool(MdlBuffer);
+		ExFreePool(ReceiveInfo);
+		return STATUS_INSUFFICIENT_RESOURCES;
+	} _SEH2_END;
 
 	TdiBuildReceiveDatagram(
 		Irp,                    /* I/O Request Packet */
