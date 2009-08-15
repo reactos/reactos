@@ -4974,7 +4974,7 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
 
       if (fShow)
       {
-         if (pWnd->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP)
+         if (pWnd->Wnd->state & WNDS_HIDDENPOPUP)
          {
             /* In Windows, ShowOwnedPopups(TRUE) generates
              * WM_SHOWWINDOW messages with SW_PARENTOPENING,
