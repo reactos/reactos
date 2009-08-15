@@ -236,6 +236,7 @@ BEGIN
     IDS_CPLNAME "Sunet și dispozitive audio"
     IDS_CPLDESCRIPTION "Schimbă schema de sunete a computerului și modifică setările pentru dispozitivele de redare și de înregistrare sunet instalate."
     IDS_NO_SOUND "(Niciunul)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Eroare program"
     5826 "Închidere program"

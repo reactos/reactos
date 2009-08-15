@@ -235,6 +235,7 @@ BEGIN
     IDS_CPLNAME "Geluid en Audio apparaten"
     IDS_CPLDESCRIPTION "Verander het geluidsschema van uw computer of configureer de aanwezige geluidsapparatuur."
     IDS_NO_SOUND "(Geen)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Program error"
     5826 "Close program"

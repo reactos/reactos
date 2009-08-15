@@ -234,6 +234,7 @@ BEGIN
     IDS_CPLNAME "Lyder og lydenheter"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
     IDS_NO_SOUND "(Ingen)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Program feil"
     5826 "Avslutt program"

@@ -234,6 +234,7 @@ BEGIN
     IDS_CPLNAME "Suoni e Dispositivi audio"
     IDS_CPLDESCRIPTION "Cambia lo schema dei suoni per il tuo computer o configura le impostazioni per gli altoparlanti e i dispositivi di registrazione."
     IDS_NO_SOUND "(nessuno)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Errore del programma"
     5826 "Chiudere il programma"

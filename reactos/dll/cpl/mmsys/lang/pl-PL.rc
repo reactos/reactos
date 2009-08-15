@@ -244,6 +244,7 @@ BEGIN
     IDS_CPLNAME "DŸwiêk i urz¹dzenia audio"
     IDS_CPLDESCRIPTION "Zmieñ schemat dŸwiêkowy dla tego komputera lub skonfiguruj ustawienia g³oœników i urz¹dzeñ nagrywaj¹cych."
     IDS_NO_SOUND "(Brak)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "B³¹d programu"
     5826 "Zamknij program"

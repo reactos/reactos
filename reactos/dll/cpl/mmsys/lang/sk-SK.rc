@@ -239,6 +239,7 @@ BEGIN
     IDS_CPLNAME "Zvuk a zvukovÈ zariadenia"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
     IDS_NO_SOUND "(éiadne)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Chyba programu"
     5826 "Zavrieù program"

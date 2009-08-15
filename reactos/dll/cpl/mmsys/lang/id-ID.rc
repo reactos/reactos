@@ -234,6 +234,7 @@ BEGIN
     IDS_CPLNAME "Suara dan Audio Devices"
     IDS_CPLDESCRIPTION "Mengubah skema suara untuk komputer anda, atau mengkonfigurasi setelan untuk speaker dan device perekaman anda."
     IDS_NO_SOUND "(None)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Program error"
     5826 "Close program"

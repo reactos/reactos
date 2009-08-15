@@ -242,6 +242,7 @@ BEGIN
     IDS_CPLNAME "声音和音频设备"
     IDS_CPLDESCRIPTION "更改计算机的声音方案，或者配置扬声器和录音设备的设置"
     IDS_NO_SOUND "(无)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "程序出错"
     5826 "关闭程序"

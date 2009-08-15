@@ -234,6 +234,7 @@ BEGIN
     IDS_CPLNAME "Συσκευές ήχου"
     IDS_CPLDESCRIPTION "Αλλάζει το σχήμα ήχου του υπολογιστή ή τροποποιεί τις ρυθμίσεις για τα ηχεία και τις συσκευές εγγραφής ήχου."
     IDS_NO_SOUND "(None)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Program error"
     5826 "Close program"

@@ -234,6 +234,7 @@ BEGIN
     IDS_CPLNAME "Son et périphériques audio"
     IDS_CPLDESCRIPTION "Change le modèle de sons de votre ordinateur, ou configure les paramètres de vos hauts-parleurs et de vos périphériques d'enregistrement."
     IDS_NO_SOUND "(Aucun)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Erreur programme"
     5826 "Fermeture programme"
