@@ -266,6 +266,7 @@ BEGIN
     5851 "Meniu Start"
     5852 "Ieșire din ReactOS"
     5853 "Intrare în ReactOS"
+	5854 "ReactOS Explorer"
 END
 
 #pragma code_page(default)

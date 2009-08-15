@@ -795,16 +795,7 @@ SoundsDlgProc(HWND hwndDlg,
     {
         case WM_INITDIALOG:
         {
-            UINT NumWavOut;
-
-            NumWavOut = waveOutGetNumDevs();
-            if (!NumWavOut)
-            {
-                EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME), FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_SAVEAS_BTN),   FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),   FALSE);
-                EnableWindow(GetDlgItem(hwndDlg, IDC_SCHEME_LIST),  FALSE);
-            }
+            UINT NumWavOut = waveOutGetNumDevs();
 
             SendMessage(GetDlgItem(hwndDlg, IDC_PLAY_SOUND),
                         BM_SETIMAGE,(WPARAM)IMAGE_ICON,
@@ -814,6 +805,15 @@ SoundsDlgProc(HWND hwndDlg,
             LoadSoundProfiles(hwndDlg);
             LoadSoundFiles(hwndDlg);
             ShowSoundScheme(hwndDlg);
+
+            if (!NumWavOut)
+            {
+                EnableWindow(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME), FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_SAVEAS_BTN),   FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),   FALSE);
+                EnableWindow(GetDlgItem(hwndDlg, IDC_SCHEME_LIST),  FALSE);
+            }
+
             if (wParam == (WPARAM)GetDlgItem(hwndDlg, IDC_SOUND_SCHEME))
                 return TRUE;
             SetFocus(GetDlgItem(hwndDlg, IDC_SOUND_SCHEME));

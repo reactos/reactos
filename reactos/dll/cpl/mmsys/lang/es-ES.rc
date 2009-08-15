@@ -264,4 +264,5 @@ BEGIN
     5851 "Menu de Inicio"
     5852 "Cierre de sesión de ReactOS"
     5853 "Inicio de sesión en ReactOS"
+	5854 "ReactOS Explorer"
 END

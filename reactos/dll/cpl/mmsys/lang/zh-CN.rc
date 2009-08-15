@@ -272,4 +272,5 @@ BEGIN
     5851 "「开始」菜单"
     5852 "ReactOS 注销"
     5853 "ReactOS 登录"
+	5854 "ReactOS Explorer"
 END

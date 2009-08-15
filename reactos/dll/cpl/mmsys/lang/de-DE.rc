@@ -264,4 +264,5 @@ BEGIN
     5851 "Startmenü"
     5852 "ReactOS-Abmeldung"
     5853 "ReactOS-Anmeldung"
+	5854 "ReactOS Explorer"
 END

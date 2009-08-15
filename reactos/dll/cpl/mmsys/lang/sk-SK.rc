@@ -269,4 +269,5 @@ BEGIN
     5851 "Ponuka Štart"
     5852 "Odhlásenie zo systému ReactOS"
     5853 "Prihlásenie do systému ReactOS"
+	5854 "ReactOS Explorer"
 END

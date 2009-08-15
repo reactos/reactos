@@ -264,4 +264,5 @@ BEGIN
     5851 "Start Menu"
     5852 "ReactOS Logoff"
     5853 "ReactOS Logon"
+	5854 "ReactOS Explorer"
 END
