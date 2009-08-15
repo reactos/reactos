@@ -31,9 +31,7 @@ extern "C" {
 #include <ntdef.h>
 #include <ntstatus.h>
 
-#ifdef __GNUC__
 #include "intrin.h"
-#endif
 
 #if !defined(_NTHAL_)
 #define NTHALAPI DECLSPEC_IMPORT
@@ -65,18 +63,6 @@ extern "C" {
 #else
 # define _DDK_DUMMYUNION_MEMBER(name) name
 # define _DDK_DUMMYUNION_N_MEMBER(n, name) name
-#endif
-
-#if !defined(_NTSYSTEM_)
-#define NTSYSAPI     DECLSPEC_IMPORT
-#define NTSYSCALLAPI DECLSPEC_IMPORT
-#else
-#define NTSYSAPI
-#if defined(_NTDLLBUILD_)
-#define NTSYSCALLAPI
-#else
-#define NTSYSCALLAPI DECLSPEC_ADDRSAFE
-#endif
 #endif
 
 /*
@@ -2866,7 +2852,7 @@ typedef struct {
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
 #if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTHAL_)
-extern DECLSPEC_IMPORT PHAL_DISPATCH HalDispatchTable;
+extern NTSYSAPI PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
 extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
@@ -5127,15 +5113,6 @@ typedef struct _KFLOATING_SAVE {
   ULONG  Cr0NpxState;
   ULONG  Spare1;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
-
-#ifdef _MSC_VER
-//
-// FIXME: Intrinsics
-//
-unsigned char __readfsbyte(const unsigned long Offset);
-#pragma intrinsic(__readfsbyte)
-#endif
-
 
 FORCEINLINE
 ULONG
@@ -8315,6 +8292,13 @@ KeEnterCriticalRegion(
 #define ExReleaseSpinLock(Lock, OldIrql) KeReleaseSpinLock((Lock), (OldIrql))
 #define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
 #define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeFlushQueuedDpcs(
+    VOID
+);
 
 NTHALAPI
 VOID

@@ -15,6 +15,9 @@ extern "C" {
 #pragma warning(disable:4201)
 #endif
 
+#define DRV_SUCCESS		0x0001
+#define DRV_FAILURE		0x0000
+
 #define	WINMMAPI	DECLSPEC_IMPORT
 #define _loadds
 #define _huge

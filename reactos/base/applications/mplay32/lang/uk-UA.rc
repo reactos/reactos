@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS MPlay32
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/mplay32/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS MPlay32
+ * TRANSLATOR:  Sakara Yevhen
+ */
+
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDR_MAINMENU MENU

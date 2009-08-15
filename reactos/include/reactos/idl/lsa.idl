@@ -622,7 +622,6 @@ interface lsarpc
 
     /* Function 5 */
     NTSTATUS LsarChangePassword(
-        [in] handle_t hBinding,  /* FIXME */
         [in] PRPC_UNICODE_STRING String1,
         [in] PRPC_UNICODE_STRING String2,
         [in] PRPC_UNICODE_STRING String3,
@@ -805,11 +804,11 @@ interface lsarpc
 
     /* Function 33 */
     NTSTATUS LsarLookupPrivilegeDisplayName(
-        [in] LSAPR_HANDLE PolicyHandle,  /* FIXME */
-        /*[in] PRPC_UNICODE_STRING Name,
+        [in] LSAPR_HANDLE PolicyHandle,
+        [in] PRPC_UNICODE_STRING Name,
         [in] USHORT ClientLanguage,
         [in] USHORT ClientSystemDefaultLanguage,
-        [out] PRPC_UNICODE_STRING *DisplayName,*/
+        [out] PRPC_UNICODE_STRING *DisplayName,
         [out] USHORT *LanguageReturned);
 
     /* Function 34 */
@@ -1078,7 +1077,7 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
 
     /* Function 76 */
     NTSTATUS LsarLookupSids3(
-        [in] handle_t hBinding, /* FIXME */
+        [in] LSAPR_HANDLE PolicyHandle,
         [in] PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
         [out] PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,
         [in, out] PLSAPR_TRANSLATED_NAMES_EX TranslatedNames,
@@ -1089,8 +1088,7 @@ cpp_quote("#if _WIN32_WINNT >= 0x0501")
 
     /* Function 77 */
     NTSTATUS LsarLookupNames4(
-        [in] handle_t hBinding, /* FIXME */
-        [in] handle_t RpcHandle,
+        [in] LSAPR_HANDLE PolicyHandle,
         [in] DWORD Count,
         [in, size_is(Count)] PRPC_UNICODE_STRING Names,
         [out] PLSAPR_REFERENCED_DOMAIN_LIST *ReferencedDomains,

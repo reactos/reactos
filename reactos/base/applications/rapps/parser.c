@@ -544,6 +544,7 @@ ParserOpen(LPCWSTR filename, BOOL write_access)
     HANDLE hFile = INVALID_HANDLE_VALUE;
     int i, j;
     ITEMS *tempProfile;
+    static const WCHAR wszSeparator[] = L"\\rapps\\";
 
     if (!CurProfile)
         for (i = 0; i < N_CACHED_ITEMS; i++)
@@ -558,7 +559,6 @@ ParserOpen(LPCWSTR filename, BOOL write_access)
 
     GetCurrentDirectoryW(MAX_PATH, szDir);
 
-    static const WCHAR wszSeparator[] = L"\\rapps\\";
     wcscpy(buffer, szDir);
     wcscat(buffer, wszSeparator);
     wcscat(buffer, filename);

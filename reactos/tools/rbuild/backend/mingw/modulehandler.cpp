@@ -234,12 +234,6 @@ MingwModuleHandler::InstanciateHandler (
 		case LiveIso:
 			handler = new MingwLiveIsoModuleHandler ( module );
 			break;
-		case IsoRegTest:
-			handler = new MingwIsoModuleHandler ( module );
-			break;
-		case LiveIsoRegTest:
-			handler = new MingwLiveIsoModuleHandler ( module );
-			break;
 		case Test:
 			handler = new MingwTestModuleHandler ( module );
 			break;
@@ -2973,7 +2967,8 @@ MingwIsoModuleHandler::Process ()
 
 void
 MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
-	const string& bootcdDirectory )
+	const string& bootcdDirectory,
+	vector<FileLocation>& destinations )
 {
 	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
@@ -2987,14 +2982,16 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 			                                   ? bootcdDirectory + sSep + m.bootstrap->base
 			                                   : bootcdDirectory,
 			                          m.bootstrap->nameoncd );
-			OutputCopyCommand ( *m.output, targetFile );
+			OutputCopyCommandSingle ( *m.output, targetFile );
+			destinations.push_back ( targetFile );
 		}
 	}
 }
 
 void
 MingwIsoModuleHandler::OutputCdfileCopyCommands (
-	const string& bootcdDirectory )
+	const string& bootcdDirectory,
+	std::vector<FileLocation>& destinations )
 {
 	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
 	{
@@ -3004,7 +3001,19 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands (
 		                              ? bootcdDirectory + sSep + cdfile.target->relative_path
 		                              : bootcdDirectory,
 		                          cdfile.target->name );
-		OutputCopyCommand ( *cdfile.source, targetFile );
+		OutputCopyCommandSingle ( *cdfile.source, targetFile );
+		destinations.push_back ( targetFile );
+	}
+	for ( size_t i = 0; i < module.cdfiles.size (); i++ )
+	{
+		const CDFile& cdfile = *module.cdfiles[i];
+		FileLocation targetFile ( OutputDirectory,
+		                          cdfile.target->relative_path.length () > 0
+		                              ? bootcdDirectory + sSep + cdfile.target->relative_path
+		                              : bootcdDirectory,
+		                          cdfile.target->name );
+		OutputCopyCommandSingle ( *cdfile.source, targetFile );
+		destinations.push_back ( targetFile );
 	}
 }
 
@@ -3092,25 +3101,13 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	fprintf ( fMakefile, "# ISO MODULE TARGET\n" );
-	string bootcdDirectory = "cd";
+	string bootcdDirectory = module.name;
 	FileLocation bootcd ( OutputDirectory,
 	                      bootcdDirectory,
 	                      "" );
 	FileLocation bootcdReactos ( OutputDirectory,
 	                             bootcdDirectory + sSep + Environment::GetCdOutputPath (),
 	                             "" );
-	vector<FileLocation> vSourceFiles, vCdFiles;
-	vector<FileLocation> vCdDirectories;
-
-	// unattend.inf
-	FileLocation srcunattend ( SourceDirectory,
-	                           "boot" + sSep + "bootdata" + sSep + "bootcdregtest",
-	                           "unattend.inf" );
-	FileLocation tarunattend ( bootcdReactos.directory,
-	                           bootcdReactos.relative_path,
-	                           "unattend.inf" );
-	if (module.type == IsoRegTest)
-		vSourceFiles.push_back ( srcunattend );
 
 	// bootsector
 	const Module* bootModule = module.bootSector->bootSectorModule;
@@ -3124,7 +3121,6 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	}
 
 	const FileLocation *isoboot = bootModule->output;
-	vSourceFiles.push_back ( *isoboot );
 
 	// prepare reactos.dff and reactos.inf
 	FileLocation reactosDff ( SourceDirectory,
@@ -3134,31 +3130,18 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	                          bootcdReactos.relative_path,
 	                          "reactos.inf" );
 
-	vSourceFiles.push_back ( reactosDff );
-
 	/*
 		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
 		Iso/LiveIso outputs are generated in code base root
 	*/
 	string IsoName = module.output->name;
 
-	string sourceFiles = v2s ( backend, vSourceFiles, 5 );
-
-	// fill cdrom
-	GetCdDirectories ( vCdDirectories, bootcdDirectory );
-	GetCdFiles ( vCdFiles );
-	string cdDirectories = "";//v2s ( vCdDirectories, 5 );
-	string cdFiles = v2s ( backend, vCdFiles, 5 );
-
-	fprintf ( fMakefile, ".PHONY: %s\n\n",
-	          module.name.c_str ());
-	fprintf ( fMakefile,
-	          "%s: all %s %s %s $(CABMAN_TARGET) $(CDMAKE_TARGET) %s\n",
+	fprintf ( fMakefile, ".PHONY: %s_CABINET\n\n",
+	          module.name.c_str () );
+	fprintf ( fMakefile, "%s_CABINET: all $(CABMAN_TARGET) %s | %s\n",
 	          module.name.c_str (),
-	          backend->GetFullName ( *isoboot ).c_str (),
-	          sourceFiles.c_str (),
-	          cdFiles.c_str (),
-	          cdDirectories.c_str () );
+	          backend->GetFullName ( reactosDff ).c_str (),
+	          backend->GetFullPath ( bootcdReactos ).c_str () );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
 	          backend->GetFullName ( reactosDff ).c_str (),
@@ -3169,13 +3152,29 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          backend->GetFullName ( reactosInf ).c_str (),
 	          backend->GetFullPath ( bootcdReactos ).c_str ());
 	fprintf ( fMakefile,
-	          "\t-@${rm} %s 2>$(NUL)\n",
+	          "\t-@${rm} %s 2>$(NUL)\n\n",
 	          backend->GetFullName ( reactosInf ).c_str () );
-	OutputBootstrapfileCopyCommands ( bootcdDirectory );
-	OutputCdfileCopyCommands ( bootcdDirectory );
 
-	if (module.type == IsoRegTest)
-		OutputCopyCommand ( srcunattend, tarunattend );
+	std::vector<FileLocation> sourceFiles;
+	OutputBootstrapfileCopyCommands ( bootcdDirectory, sourceFiles );
+	OutputCdfileCopyCommands ( bootcdDirectory, sourceFiles );
+
+	fprintf( fMakefile,
+	         "\n%s_OBJS := %s\n\n",
+	         module.name.c_str (),
+	         v2s ( backend, sourceFiles, 5 ).c_str () );
+
+	fprintf ( fMakefile, ".PHONY: %s\n\n",
+	          module.name.c_str ());
+	fprintf ( fMakefile,
+	          "%s: $(%s_OBJS) %s_CABINET %s $(CDMAKE_TARGET) | %s\n",
+	          module.name.c_str (),
+	          module.name.c_str (),
+	          module.name.c_str (),
+	          backend->GetFullName ( *isoboot ).c_str (),
+	          backend->GetFullPath ( FileLocation ( OutputDirectory,
+	                                                bootcdDirectory,
+	                                                "" ) ).c_str () );
 
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,

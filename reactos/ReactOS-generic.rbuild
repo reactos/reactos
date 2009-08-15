@@ -91,6 +91,7 @@
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
 		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
 		<compilerflag compiler="as">-gstabs+</compilerflag>
+		<compilerflag compiler="midl">-m32 --win32</compilerflag>
 	</group>
 
 	<group compilerset="msc">
@@ -99,6 +100,7 @@
 		<compilerflag>/Zl</compilerflag>
 		<compilerflag>/Zi</compilerflag>
 		<compilerflag>/W1</compilerflag>
+		<compilerflag>/FIwine/typeof.h</compilerflag>
 	</group>
 
 	<group compilerset="gcc">

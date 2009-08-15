@@ -101,7 +101,7 @@
 #endif
 #ifndef NOGDI
 #if !defined (__OBJC__)
-#if (defined(__GNUC__) && (__GNUC__ >= 3)) || defined (__WATCOMC__)
+#if (defined(__GNUC__) && (__GNUC__ >= 3)) || defined (__WATCOMC__) || defined(_MSC_VER)
 #include <ole2.h>
 #endif
 #endif /* __OBJC__ */

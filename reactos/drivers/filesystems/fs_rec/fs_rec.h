@@ -14,8 +14,6 @@
 #include <ntdddisk.h>
 #include <ntddcdrm.h>
 
-#include "udfs.h"
-
 //
 // Tag for memory allocations
 //

@@ -1,27 +1,37 @@
-/* A Bison parser, made by GNU Bison 2.1.  */
 
-/* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+/* A Bison parser, made by GNU Bison 2.4.1.  */
 
-   This program is free software; you can redistribute it and/or modify
+/* Skeleton interface for Bison's Yacc-like parsers in C
+   
+      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   Free Software Foundation, Inc.
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-/* As a special exception, when this file is copied by Bison into a
-   Bison output file, you may use that output file without restriction.
-   This special exception was added by the Free Software Foundation
-   in version 1.24 of Bison.  */
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+   
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -114,97 +124,16 @@
      pUPM = 340
    };
 #endif
-/* Tokens.  */
-#define tNL 258
-#define tNUMBER 259
-#define tLNUMBER 260
-#define tSTRING 261
-#define tIDENT 262
-#define tFILENAME 263
-#define tRAWDATA 264
-#define tACCELERATORS 265
-#define tBITMAP 266
-#define tCURSOR 267
-#define tDIALOG 268
-#define tDIALOGEX 269
-#define tMENU 270
-#define tMENUEX 271
-#define tMESSAGETABLE 272
-#define tRCDATA 273
-#define tVERSIONINFO 274
-#define tSTRINGTABLE 275
-#define tFONT 276
-#define tFONTDIR 277
-#define tICON 278
-#define tHTML 279
-#define tAUTO3STATE 280
-#define tAUTOCHECKBOX 281
-#define tAUTORADIOBUTTON 282
-#define tCHECKBOX 283
-#define tDEFPUSHBUTTON 284
-#define tPUSHBUTTON 285
-#define tRADIOBUTTON 286
-#define tSTATE3 287
-#define tGROUPBOX 288
-#define tCOMBOBOX 289
-#define tLISTBOX 290
-#define tSCROLLBAR 291
-#define tCONTROL 292
-#define tEDITTEXT 293
-#define tRTEXT 294
-#define tCTEXT 295
-#define tLTEXT 296
-#define tBLOCK 297
-#define tVALUE 298
-#define tSHIFT 299
-#define tALT 300
-#define tASCII 301
-#define tVIRTKEY 302
-#define tGRAYED 303
-#define tCHECKED 304
-#define tINACTIVE 305
-#define tNOINVERT 306
-#define tPURE 307
-#define tIMPURE 308
-#define tDISCARDABLE 309
-#define tLOADONCALL 310
-#define tPRELOAD 311
-#define tFIXED 312
-#define tMOVEABLE 313
-#define tCLASS 314
-#define tCAPTION 315
-#define tCHARACTERISTICS 316
-#define tEXSTYLE 317
-#define tSTYLE 318
-#define tVERSION 319
-#define tLANGUAGE 320
-#define tFILEVERSION 321
-#define tPRODUCTVERSION 322
-#define tFILEFLAGSMASK 323
-#define tFILEOS 324
-#define tFILETYPE 325
-#define tFILEFLAGS 326
-#define tFILESUBTYPE 327
-#define tMENUBARBREAK 328
-#define tMENUBREAK 329
-#define tMENUITEM 330
-#define tPOPUP 331
-#define tSEPARATOR 332
-#define tHELP 333
-#define tTOOLBAR 334
-#define tBUTTON 335
-#define tBEGIN 336
-#define tEND 337
-#define tDLGINIT 338
-#define tNOT 339
-#define pUPM 340
 
 
 
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE
+{
 
-#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 241 "parser.y"
-typedef union YYSTYPE {
+/* Line 1676 of yacc.c  */
+#line 238 "parser.y"
+
 	string_t	*str;
 	int		num;
 	int		*iptr;
@@ -246,15 +175,17 @@ typedef union YYSTYPE {
 	style_pair_t	*styles;
 	style_t		*style;
 	ani_any_t	*ani;
+
+
+
+/* Line 1676 of yacc.c  */
+#line 183 "parser.tab.h"
 } YYSTYPE;
-/* Line 1447 of yacc.c.  */
-#line 252 "parser.tab.h"
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE parser_lval;
-
 
 

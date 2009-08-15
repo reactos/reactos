@@ -103,14 +103,6 @@ ArmHwDetect(VOID)
     FldrCreateSystemKey(&RootNode);
     
     //
-    // Write null component information
-    //
-    FldrSetComponentInformation(RootNode,
-                                0x0,
-                                0x0,
-                                0xFFFFFFFF);
-    
-    //
     // TODO:
     // There's no such thing as "PnP" on embedded hardware.
     // The boot loader will send us a device tree, similar to ACPI

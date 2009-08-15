@@ -74,6 +74,8 @@ typedef enum {
     DispHTMLIFrame_tid,
     DispHTMLImg_tid,
     DispHTMLInputElement_tid,
+    DispHTMLLocation_tid,
+    DispHTMLNavigator_tid,
     DispHTMLOptionElement_tid,
     DispHTMLSelectElement_tid,
     DispHTMLStyle_tid,

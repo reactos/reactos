@@ -192,6 +192,10 @@ VOID NTAPI DispCancelRequest(
         DGRemoveIRP(TranContext->Handle.AddressHandle, Irp);
         break;
 
+    case TDI_CONNECT:
+        TCPRemoveIRP(TranContext->Handle.ConnectionContext, Irp);
+        break;
+
     default:
         TI_DbgPrint(MIN_TRACE, ("Unknown IRP. MinorFunction (0x%X).\n", MinorFunction));
         break;
@@ -399,12 +403,18 @@ NTSTATUS DispTdiConnect(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  Status = TCPConnect(
-      TranContext->Handle.ConnectionContext,
-      Parameters->RequestConnectionInformation,
-      Parameters->ReturnConnectionInformation,
-      DispDataRequestComplete,
-      Irp );
+  Status = DispPrepareIrpForCancel(TranContext->Handle.ConnectionContext,
+                                   Irp,
+                                   DispCancelRequest);
+
+  if (NT_SUCCESS(Status)) {
+      Status = TCPConnect(
+          TranContext->Handle.ConnectionContext,
+          Parameters->RequestConnectionInformation,
+          Parameters->ReturnConnectionInformation,
+          DispDataRequestComplete,
+          Irp );
+  }
 
 done:
   TcpipRecursiveMutexLeave( &TCPLock );
@@ -572,17 +582,19 @@ NTSTATUS DispTdiListen(
 
   TI_DbgPrint(MIN_TRACE, ("Connection->AddressFile: %x\n",
 			  Connection->AddressFile ));
-  if( Connection->AddressFile ) {
-      TI_DbgPrint(MIN_TRACE, ("Connection->AddressFile->Listener: %x\n",
-			      Connection->AddressFile->Listener));
-  }
+  ASSERT(Connection->AddressFile);
+
+  Status = DispPrepareIrpForCancel
+      (TranContext->Handle.ConnectionContext,
+       Irp,
+       (PDRIVER_CANCEL)DispCancelListenRequest);
 
   /* Listening will require us to create a listening socket and store it in
    * the address file.  It will be signalled, and attempt to complete an irp
    * when a new connection arrives. */
   /* The important thing to note here is that the irp we'll complete belongs
    * to the socket to be accepted onto, not the listener */
-  if( !Connection->AddressFile->Listener ) {
+  if( NT_SUCCESS(Status) && !Connection->AddressFile->Listener ) {
       Connection->AddressFile->Listener =
 	  TCPAllocateConnectionEndpoint( NULL );
 
@@ -602,12 +614,6 @@ NTSTATUS DispTdiListen(
       if( NT_SUCCESS(Status) )
 	  Status = TCPListen( Connection->AddressFile->Listener, 1024 );
 	  /* BACKLOG */
-  }
-  if( NT_SUCCESS(Status) ) {
-      Status = DispPrepareIrpForCancel
-          (TranContext->Handle.ConnectionContext,
-           Irp,
-           (PDRIVER_CANCEL)DispCancelListenRequest);
   }
 
   if( NT_SUCCESS(Status) ) {
@@ -716,15 +722,6 @@ NTSTATUS DispTdiQueryInformation(
             TcpipRecursiveMutexLeave(&TCPLock);
             return STATUS_INVALID_PARAMETER;
         }
-
-        if (!AddrFile) {
-          TI_DbgPrint(MID_TRACE, ("No address file object.\n"));
-          TcpipRecursiveMutexLeave(&TCPLock);
-          return STATUS_INVALID_PARAMETER;
-        }
-
-        TcpipRecursiveMutexLeave(&TCPLock);
-        return STATUS_SUCCESS;
       }
 
     case TDI_QUERY_CONNECTION_INFO:
@@ -747,6 +744,7 @@ NTSTATUS DispTdiQueryInformation(
         switch ((ULONG)IrpSp->FileObject->FsContext2) {
           case TDI_TRANSPORT_ADDRESS_FILE:
             AddrFile = (PADDRESS_FILE)TranContext->Handle.AddressHandle;
+            Endpoint = AddrFile ? AddrFile->Connection : NULL;
             break;
 
           case TDI_CONNECTION_FILE:

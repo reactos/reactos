@@ -238,21 +238,14 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
     /* Create component key */
     FldrCreateComponentKey(SystemKey,
-                           L"MultifunctionAdapter",
-                           *BusNumber,
                            AdapterClass,
                            MultiFunctionAdapter,
+                           0x0,
+                           0x0,
+                           0xFFFFFFFF,
+                           "PNP BIOS",
                            &BusKey);
     (*BusNumber)++;
-    
-    /* Set the component information */
-    FldrSetComponentInformation(BusKey,
-                                0x0,
-                                0x0,
-                                0xFFFFFFFF);
-    
-    /* Set the identifier */
-    FldrSetIdentifier(BusKey, "PNP BIOS");
 
     /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) + (NodeSize * NodeCount);
@@ -449,19 +442,26 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+    UCHAR* Ptr = (UCHAR*)Buffer;
+    ULONG i;
     BOOLEAN ret;
 
     *Count = 0;
     if (N & (Context->SectorSize - 1))
         return EINVAL;
 
-    ret = MachDiskReadLogicalSectors(
-        Context->DriveNumber,
-        Context->SectorNumber + Context->SectorOffset,
-        N / Context->SectorSize,
-        Buffer);
-    if (!ret)
-        return EIO;
+    for (i = 0; i < N / Context->SectorSize; i++)
+    {
+        ret = MachDiskReadLogicalSectors(
+            Context->DriveNumber,
+            Context->SectorNumber + Context->SectorOffset + i,
+            1,
+            (PVOID)DISKREADBUFFER);
+        if (!ret)
+            return EIO;
+        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Context->SectorSize);
+        Ptr += Context->SectorSize;
+    }
 
     *Count = N;
     return ESUCCESS;
@@ -490,7 +490,7 @@ static const DEVVTBL DiskVtbl = {
 };
 
 static VOID
-SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
+GetHarddiskIdentifier(PCHAR Identifier,
 		      ULONG DriveNumber)
 {
   PMASTER_BOOT_RECORD Mbr;
@@ -498,7 +498,6 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   ULONG i;
   ULONG Checksum;
   ULONG Signature;
-  CHAR Identifier[20];
   CHAR ArcName[256];
   PARTITION_TABLE_ENTRY PartitionTableEntry;
 
@@ -572,9 +571,6 @@ SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
   Identifier[18] = 'A';
   Identifier[19] = 0;
   DPRINTM(DPRINT_HWDETECT, "Identifier: %s\n", Identifier);
-
-  /* Set identifier */
-  FldrSetIdentifier(DiskKey, Identifier);
 }
 
 static ULONG
@@ -640,19 +636,18 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     DiskResetController(FloppyNumber);
 
     Ptr = GetInt1eTable();
-    
+
+    /* Set 'Identifier' value */
+    sprintf(Identifier, "FLOPPY%ld", FloppyNumber + 1);
+
     FldrCreateComponentKey(ControllerKey,
-                           L"FloppyDiskPeripheral",
-                           FloppyNumber,
                            PeripheralClass,
                            FloppyDiskPeripheral,
+                           Input | Output,
+                           FloppyNumber,
+                           0xFFFFFFFF,
+                           Identifier,
                            &PeripheralKey);
-
-    /* Set 'ComponentInformation' value */
-    FldrSetComponentInformation(PeripheralKey,
-                                Input | Output,
-                                FloppyNumber,
-                                0xFFFFFFFF);
 
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
 	   sizeof(CM_FLOPPY_DEVICE_DATA);
@@ -688,10 +683,6 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     /* Set 'Configuration Data' value */
     FldrSetConfigurationData(PeripheralKey, PartialResourceList, Size);
     MmHeapFree(PartialResourceList);
-
-    /* Set 'Identifier' value */
-    sprintf(Identifier, "FLOPPY%ld", FloppyNumber + 1);
-    FldrSetIdentifier(PeripheralKey, Identifier);
   }
 }
 
@@ -804,18 +795,14 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
               (int)DiskCount, (DiskCount == 1) ? "": "s");
     
     FldrCreateComponentKey(BusKey,
-                           L"DiskController",
-                           0,
                            ControllerClass,
                            DiskController,
+                           Output | Input | Removable,
+                           0x0,
+                           0xFFFFFFFF,
+                           NULL,
                            &ControllerKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
-    
-    /* Set 'ComponentInformation' value */
-    FldrSetComponentInformation(ControllerKey,
-                                Output | Input | Removable,
-                                0,
-                                0xFFFFFFFF);
     
     DetectBiosFloppyController(BusKey, ControllerKey);
     
@@ -873,23 +860,23 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
+        CHAR Identifier[20];
+
+        /* Get disk values */
+        GetHarddiskIdentifier(Identifier, 0x80 + i);
+
         /* Create disk key */
         FldrCreateComponentKey(ControllerKey,
-                               L"DiskPeripheral",
-                               i,
                                PeripheralClass,
                                DiskPeripheral,
+                               Output | Input,
+                               0x0,
+                               0xFFFFFFFF,
+                               Identifier,
                                &DiskKey);
-        
-        /* Set 'ComponentInformation' value */
-        FldrSetComponentInformation(DiskKey,
-                                    Output | Input,
-                                    0,
-                                    0xFFFFFFFF);
         
         /* Set disk values */
         SetHarddiskConfigurationData(DiskKey, 0x80 + i);
-        SetHarddiskIdentifier(DiskKey, 0x80 + i);
     }
 
     /* Get the drive we're booting from */
@@ -1217,19 +1204,15 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
 
       /* Create 'PointerPeripheral' key */
       FldrCreateComponentKey(ControllerKey,
-                             L"PointerPeripheral",
-                             0,
                              PeripheralClass,
                              PointerPeripheral,
+                             Input,
+                             0x0,
+                             0xFFFFFFFF,
+                             Identifier,
                              &PeripheralKey);
       DPRINTM(DPRINT_HWDETECT,
 		"Created key: PointerPeripheral\\0\n");
-
-      /* Set 'ComponentInformation' value */
-      FldrSetComponentInformation(PeripheralKey,
-                                  Input,
-                                  0,
-                                  0xFFFFFFFF);
 
       /* Set 'Configuration Data' value */
       memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
@@ -1241,9 +1224,6 @@ DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
                                &PartialResourceList,
                                sizeof(CM_PARTIAL_RESOURCE_LIST) -
                                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-
-      /* Set 'Identifier' value */
-      FldrSetIdentifier(PeripheralKey, Identifier);
     }
 }
 
@@ -1278,19 +1258,18 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 		i + 1,
 		Base);
 
+      /* Set 'Identifier' value */
+      sprintf(Buffer, "COM%ld", i + 1);
+
       /* Create controller key */
       FldrCreateComponentKey(BusKey,
-                             L"SerialController",
-                             ControllerNumber,
                              ControllerClass,
                              SerialController,
+                             Output | Input | ConsoleIn | ConsoleOut,
+                             ControllerNumber,
+                             0xFFFFFFFF,
+                             Buffer,
                              &ControllerKey);
-
-      /* Set 'ComponentInformation' value */
-      FldrSetComponentInformation(ControllerKey,
-                                  Output | Input | ConsoleIn | ConsoleOut,
-                                  ControllerNumber,
-                                  0xFFFFFFFF);
 
       /* Build full device descriptor */
       Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -1343,13 +1322,6 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       FldrSetConfigurationData(ControllerKey, PartialResourceList, Size);
       MmHeapFree(PartialResourceList);
 
-      /* Set 'Identifier' value */
-      sprintf(Buffer, "COM%ld", i + 1);
-      FldrSetIdentifier(ControllerKey, Buffer);
-      DPRINTM(DPRINT_HWDETECT,
-		"Created value: Identifier %s\n",
-		Buffer);
-
       if (!Rs232PortInUse(Base))
         {
           /* Detect serial mouse */
@@ -1390,19 +1362,18 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 		ControllerNumber,
 		Base);
 
+      /* Set 'Identifier' value */
+      sprintf(Buffer, "PARALLEL%ld", i + 1);
+
       /* Create controller key */
       FldrCreateComponentKey(BusKey,
-                             L"ParallelController",
-                             ControllerNumber,
                              ControllerClass,
                              ParallelController,
+                             Output,
+                             ControllerNumber,
+                             0xFFFFFFFF,
+                             Buffer,
                              &ControllerKey);
-
-      /* Set 'ComponentInformation' value */
-      FldrSetComponentInformation(ControllerKey,
-                                  Output,
-                                  ControllerNumber,
-                                  0xFFFFFFFF);
 
       /* Build full device descriptor */
       Size = sizeof(CM_PARTIAL_RESOURCE_LIST);
@@ -1447,13 +1418,6 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(ControllerKey, PartialResourceList, Size);
       MmHeapFree(PartialResourceList);
-
-      /* Set 'Identifier' value */
-      sprintf(Buffer, "PARALLEL%ld", i + 1);
-      FldrSetIdentifier(ControllerKey, Buffer);
-      DPRINTM(DPRINT_HWDETECT,
-		"Created value: Identifier %s\n",
-		Buffer);
 
       ControllerNumber++;
     }
@@ -1547,18 +1511,14 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
   {
       /* Create controller key */
       FldrCreateComponentKey(ControllerKey,
-                             L"KeyboardPeripheral",
-                             0,
                              PeripheralClass,
                              KeyboardPeripheral,
+                             Input | ConsoleIn,
+                             0x0,
+                             0xFFFFFFFF,
+                             "PCAT_ENHANCED",
                              &PeripheralKey);
     DPRINTM(DPRINT_HWDETECT, "Created key: KeyboardPeripheral\\0\n");
-
-    /* Set 'ComponentInformation' value */
-    FldrSetComponentInformation(PeripheralKey,
-                                Input | ConsoleIn,
-                                0,
-                                0xFFFFFFFF);
 
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -1592,9 +1552,6 @@ DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
     /* Set 'Configuration Data' value */
     FldrSetConfigurationData(PeripheralKey, PartialResourceList, Size);
     MmHeapFree(PartialResourceList);
-
-    /* Set 'Identifier' value */
-    FldrSetIdentifier(PeripheralKey, "PCAT_ENHANCED");
   }
 }
 
@@ -1609,18 +1566,14 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
 
   /* Create controller key */
   FldrCreateComponentKey(BusKey,
-                         L"KeyboardController",
-                         0,
                          ControllerClass,
                          KeyboardController,
+                         Input | ConsoleIn,
+                         0x0,
+                         0xFFFFFFFF,
+                         NULL,
                          &ControllerKey);
   DPRINTM(DPRINT_HWDETECT, "Created key: KeyboardController\\0\n");
-
-  /* Set 'ComponentInformation' value */
-  FldrSetComponentInformation(ControllerKey,
-                              Input | ConsoleIn,
-                              0,
-                              0xFFFFFFFF);
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -1796,18 +1749,14 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
 
       /* Create controller key */
       FldrCreateComponentKey(BusKey,
-                             L"PointerController",
-                             0,
                              ControllerClass,
                              PointerController,
+                             Input,
+                             0x0,
+                             0xFFFFFFFF,
+                             NULL,
                              &ControllerKey);
       DPRINTM(DPRINT_HWDETECT, "Created key: PointerController\\0\n");
-
-      /* Set 'ComponentInformation' value */
-      FldrSetComponentInformation(ControllerKey,
-                                  Input,
-                                  0,
-                                  0xFFFFFFFF);
 
       memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
 
@@ -1835,18 +1784,14 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
 
           /* Create peripheral key */
           FldrCreateComponentKey(ControllerKey,
-                                 L"PointerPeripheral",
-                                 0,
                                  ControllerClass,
                                  PointerPeripheral,
+                                 Input,
+                                 0x0,
+                                 0xFFFFFFFF,
+                                 "MICROSOFT PS2 MOUSE",
                                  &PeripheralKey);
 	  DPRINTM(DPRINT_HWDETECT, "Created key: PointerPeripheral\\0\n");
-
-	  /* Set 'ComponentInformation' value */
-	  FldrSetComponentInformation(PeripheralKey,
-                                  Input,
-                                  0,
-                                  0xFFFFFFFF);
 
 	  /* Initialize resource descriptor */
 	  memset(&PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
@@ -1859,9 +1804,6 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
                                &PartialResourceList,
                                sizeof(CM_PARTIAL_RESOURCE_LIST) -
                                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-
-	  /* Set 'Identifier' value */
-      FldrSetIdentifier(PeripheralKey, "MICROSOFT PS2 MOUSE");
     }
   }
 }
@@ -1873,20 +1815,6 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
   CHAR Buffer[80];
   PCONFIGURATION_COMPONENT_DATA ControllerKey;
   USHORT VesaVersion;
-
-  FldrCreateComponentKey(BusKey,
-                         L"DisplayController",
-                         0,
-                         ControllerClass,
-                         DisplayController,
-                         &ControllerKey);
-  DPRINTM(DPRINT_HWDETECT, "Created key: DisplayController\\0\n");
-
-  /* Set 'ComponentInformation' value */
-  FldrSetComponentInformation(ControllerKey,
-                              0x00,
-                              0,
-                              0xFFFFFFFF);
 
   /* FIXME: Set 'ComponentInformation' value */
 
@@ -1915,8 +1843,15 @@ DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
              "VGA Display");
     }
 
-  /* Set 'Identifier' value */
-  FldrSetIdentifier(ControllerKey, Buffer);
+  FldrCreateComponentKey(BusKey,
+                         ControllerClass,
+                         DisplayController,
+                         0x0,
+                         0x0,
+                         0xFFFFFFFF,
+                         Buffer,
+                         &ControllerKey);
+  DPRINTM(DPRINT_HWDETECT, "Created key: DisplayController\\0\n");
 
   /* FIXME: Add display peripheral (monitor) data */
 }
@@ -1931,23 +1866,16 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
   /* Create new bus key */
   FldrCreateComponentKey(SystemKey,
-                         L"MultifunctionAdapter",
-                         *BusNumber,
                          AdapterClass,
                          MultiFunctionAdapter,
+                         0x0,
+                         0x0,
+                         0xFFFFFFFF,
+                         "ISA",
                          &BusKey);
-
-  /* Set 'Component Information' value similar to my NT4 box */
-  FldrSetComponentInformation(BusKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
 
   /* Increment bus number */
   (*BusNumber)++;
-
-  /* Set 'Identifier' value */
-  FldrSetIdentifier(BusKey, "ISA");
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
@@ -1997,12 +1925,6 @@ PcHwDetect(VOID)
 
   /* Create the 'System' key */
   FldrCreateSystemKey(&SystemKey);
-
-  /* Set empty component information */
-  FldrSetComponentInformation(SystemKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
   
   /* Detect buses */
   DetectPciBios(SystemKey, &BusNumber);

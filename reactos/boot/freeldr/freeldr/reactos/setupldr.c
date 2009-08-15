@@ -119,13 +119,6 @@ VOID LoadReactOSSetup(VOID)
   /* set boot device */
   MachDiskGetBootDevice(&LoaderBlock.BootDevice);
 
-  /* Open boot drive */
-  if (!FsOpenBootVolume())
-    {
-      UiMessageBox("Failed to open boot drive.");
-      return;
-    }
-
   UiDrawStatusText("Loading txtsetup.sif...");
   /* Open 'txtsetup.sif' */
   for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)
@@ -201,13 +194,6 @@ VOID LoadReactOSSetup(VOID)
   if (MachDiskBootingFromFloppy())
     {
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
-
-      /* Open boot drive */
-      if (!FsOpenBootVolume())
-	{
-	  UiMessageBox("Failed to open boot drive.");
-	  return;
-	}
 
       /* FIXME: check volume label or disk marker file */
     }

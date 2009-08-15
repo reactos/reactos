@@ -55,7 +55,7 @@
 #endif
 
 static const char usage[] =
-	"Usage: wrc [options...] [infile[.rc|.res]] [outfile]\n"
+	"Usage: wrc [options...] [infile[.rc|.res]]\n"
 	"   -D id[=val] Define preprocessor identifier id=val\n"
 	"   -E          Preprocess only\n"
 	"   -F target   Ignored for compatibility with windres\n"
@@ -132,6 +132,7 @@ int extensions = 1;
 /*
  * Language setting for resources (-l option)
  */
+static language_t *defaultlanguage;
 language_t *currentlanguage = NULL;
 
 /*
@@ -174,29 +175,42 @@ int getopt (int argc, char *const *argv, const char *optstring);
 static void cleanup_files(void);
 static void segvhandler(int sig);
 
+enum long_options_values
+{
+    LONG_OPT_NOSTDINC = 1,
+    LONG_OPT_TMPFILE,
+    LONG_OPT_NOTMPFILE,
+    LONG_OPT_PREPROCESSOR,
+    LONG_OPT_VERSION,
+    LONG_OPT_DEBUG,
+    LONG_OPT_ENDIANESS,
+    LONG_OPT_PEDANTIC,
+    LONG_OPT_VERIFY_TRANSL
+};
+
 static const char short_options[] =
 	"D:Ef:F:hi:I:J:l:o:O:rU:v";
 static const struct option long_options[] = {
-	{ "debug", 1, 0, 6 },
+	{ "debug", 1, 0, LONG_OPT_DEBUG },
 	{ "define", 1, 0, 'D' },
-	{ "endianess", 1, 0, 7 },
+	{ "endianess", 1, 0, LONG_OPT_ENDIANESS },
 	{ "help", 0, 0, 'h' },
 	{ "include-dir", 1, 0, 'I' },
 	{ "input", 1, 0, 'i' },
 	{ "input-format", 1, 0, 'J' },
 	{ "language", 1, 0, 'l' },
-	{ "no-use-temp-file", 0, 0, 3 },
-	{ "nostdinc", 0, 0, 1 },
+	{ "no-use-temp-file", 0, 0, LONG_OPT_NOTMPFILE },
+	{ "nostdinc", 0, 0, LONG_OPT_NOSTDINC },
 	{ "output", 1, 0, 'o' },
 	{ "output-format", 1, 0, 'O' },
-	{ "pedantic", 0, 0, 8 },
-	{ "preprocessor", 1, 0, 4 },
+	{ "pedantic", 0, 0, LONG_OPT_PEDANTIC },
+	{ "preprocessor", 1, 0, LONG_OPT_PREPROCESSOR },
 	{ "target", 1, 0, 'F' },
 	{ "undefine", 1, 0, 'U' },
-	{ "use-temp-file", 0, 0, 2 },
+	{ "use-temp-file", 0, 0, LONG_OPT_TMPFILE },
 	{ "verbose", 0, 0, 'v' },
-	{ "verify-translations", 0, 0, 9 },
-	{ "version", 0, 0, 5 },
+	{ "verify-translations", 0, 0, LONG_OPT_VERIFY_TRANSL },
+	{ "version", 0, 0, LONG_OPT_VERSION },
 	{ 0, 0, 0, 0 }
 };
 
@@ -232,6 +246,71 @@ static void exit_on_signal( int sig )
     exit(1);  /* this will call the atexit functions */
 }
 
+/* load a single input file */
+static int load_file( const char *input_name, const char *output_name )
+{
+    int ret;
+
+    /* Run the preprocessor on the input */
+    if(!no_preprocess)
+    {
+        /*
+         * Preprocess the input to a temp-file, or stdout if
+         * no output was given.
+         */
+
+        chat("Starting preprocess\n");
+
+        if (!preprocess_only)
+        {
+            ret = wpp_parse_temp( input_name, output_name, &temp_name );
+        }
+        else if (output_name)
+        {
+            FILE *output;
+
+            if (!(output = fopen( output_name, "w" )))
+                fatal_perror( "Could not open %s for writing", output_name );
+            ret = wpp_parse( input_name, output );
+            fclose( output );
+        }
+        else
+        {
+            ret = wpp_parse( input_name, stdout );
+        }
+
+        if (ret) return ret;
+
+        if(preprocess_only)
+        {
+            output_name = NULL;
+            exit(0);
+        }
+
+        input_name = temp_name;
+    }
+
+    /* Reset the language */
+    currentlanguage = dup_language( defaultlanguage );
+
+    /* Go from .rc to .res */
+    chat("Starting parse\n");
+
+    if(!(parser_in = fopen(input_name, "rb")))
+        fatal_perror("Could not open %s for input", input_name);
+
+    ret = parser_parse();
+    fclose(parser_in);
+    if (temp_name)
+    {
+        unlink( temp_name );
+        temp_name = NULL;
+    }
+    free( currentlanguage );
+    return ret;
+}
+
+
 int main(int argc,char *argv[])
 {
 	extern char* optarg;
@@ -240,9 +319,10 @@ int main(int argc,char *argv[])
 	int opti = 0;
 	int stdinc = 1;
 	int lose = 0;
-	int ret;
+	int nb_files = 0;
 	int i;
 	int cmdlen;
+        char **files = xmalloc( argc * sizeof(*files) );
 
 	signal(SIGSEGV, segvhandler);
         signal( SIGTERM, exit_on_signal );
@@ -279,27 +359,27 @@ int main(int argc,char *argv[])
 	{
 		switch(optc)
 		{
-		case 1:
+		case LONG_OPT_NOSTDINC:
 			stdinc = 0;
 			break;
-		case 2:
+		case LONG_OPT_TMPFILE:
 			if (debuglevel) warning("--use-temp-file option not yet supported, ignored.\n");
 			break;
-		case 3:
+		case LONG_OPT_NOTMPFILE:
 			if (debuglevel) warning("--no-use-temp-file option not yet supported, ignored.\n");
 			break;
-		case 4:
+		case LONG_OPT_PREPROCESSOR:
 			if (strcmp(optarg, "cat") == 0) no_preprocess = 1;
 			else fprintf(stderr, "-P option not yet supported, ignored.\n");
 			break;
-		case 5:
+		case LONG_OPT_VERSION:
 			printf(version_string);
 			exit(0);
 			break;
-		case 6:
+		case LONG_OPT_DEBUG:
 			debuglevel = strtol(optarg, NULL, 0);
 			break;
-		case 7:
+		case LONG_OPT_ENDIANESS:
 			switch(optarg[0])
 			{
 			case 'n':
@@ -319,11 +399,11 @@ int main(int argc,char *argv[])
 				lose++;
 			}
 			break;
-		case 8:
+		case LONG_OPT_PEDANTIC:
 			pedantic = 1;
 			wpp_set_pedantic(1);
 			break;
-		case 9:
+		case LONG_OPT_VERIFY_TRANSL:
 			verify_translations_mode = 1;
 			break;
 		case 'D':
@@ -339,8 +419,7 @@ int main(int argc,char *argv[])
 			printf(usage);
 			exit(0);
 		case 'i':
-			if (!input_name) input_name = strdup(optarg);
-			else error("Too many input files.\n");
+			files[nb_files++] = optarg;
 			break;
 		case 'I':
 			wpp_add_include_path(optarg);
@@ -355,7 +434,7 @@ int main(int argc,char *argv[])
 				lan = strtol(optarg, NULL, 0);
 				if (get_language_codepage(PRIMARYLANGID(lan), SUBLANGID(lan)) == -1)
 					error("Language %04x is not supported\n", lan);
-				currentlanguage = new_language(PRIMARYLANGID(lan), SUBLANGID(lan));
+				defaultlanguage = new_language(PRIMARYLANGID(lan), SUBLANGID(lan));
 			}
 			break;
 		case 'f':
@@ -402,20 +481,6 @@ int main(int argc,char *argv[])
 		wpp_add_include_path(INCLUDEDIR"/msvcrt");
 		wpp_add_include_path(INCLUDEDIR"/windows");
 	}
-	
-	/* Check for input file on command-line */
-	if(optind < argc)
-	{
-		if (!input_name) input_name = argv[optind++];
-		else error("Too many input files.\n");
-	}
-
-	/* Check for output file on command-line */
-	if(optind < argc)
-	{
-		if (!output_name) output_name = argv[optind++];
-		else error("Too many output files.\n");
-	}
 
 	/* Kill io buffering when some kind of debuglevel is enabled */
 	if(debuglevel)
@@ -432,68 +497,33 @@ int main(int argc,char *argv[])
                        (debuglevel & DEBUGLEVEL_PPMSG) != 0 );
 
 	/* Check if the user set a language, else set default */
-	if(!currentlanguage)
-		currentlanguage = new_language(0, 0);
+	if(!defaultlanguage)
+		defaultlanguage = new_language(0, 0);
 
-	/* Generate appropriate outfile names */
-	if(!output_name && !preprocess_only)
-	{
-		output_name = dup_basename(input_name, ".rc");
-		strcat(output_name, ".res");
-	}
 	atexit(cleanup_files);
 
-	/* Run the preprocessor on the input */
-	if(!no_preprocess)
-	{
-		/*
-		 * Preprocess the input to a temp-file, or stdout if
-		 * no output was given.
-		 */
+        while (optind < argc) files[nb_files++] = argv[optind++];
 
-		chat("Starting preprocess\n");
+        for (i = 0; i < nb_files; i++)
+        {
+            input_name = files[i];
+            if(!output_name && !preprocess_only)
+            {
+		output_name = dup_basename(input_name, ".rc");
+		strcat(output_name, ".res");
+            }
+            if (load_file( input_name, output_name )) exit(1);
+        }
 
-                if (!preprocess_only)
-                {
-                    ret = wpp_parse_temp( input_name, output_name, &temp_name );
-                }
-                else if (output_name)
-                {
-                    FILE *output;
-
-                    if (!(output = fopen( output_name, "w" )))
-                        error( "Could not open %s for writing\n", output_name );
-                    ret = wpp_parse( input_name, output );
-                    fclose( output );
-                }
-                else
-                {
-                    ret = wpp_parse( input_name, stdout );
-                }
-
-		if(ret)
-			exit(1);	/* Error during preprocess */
-
-		if(preprocess_only)
-		{
-			output_name = NULL;
-			exit(0);
-		}
-
-		input_name = temp_name;
-	}
-
-	/* Go from .rc to .res */
-	chat("Starting parse\n");
-
-	if(!(parser_in = fopen(input_name, "rb")))
-		error("Could not open %s for input\n", input_name);
-
-	ret = parser_parse();
-
-	if(input_name) fclose(parser_in);
-
-	if(ret) exit(1); /* Error during parse */
+	/* stdin special case. NULL means "stdin" for wpp. */
+        if (nb_files == 0) { 
+            if(!output_name && !preprocess_only)
+            {
+		output_name = dup_basename("stdin", ".rc");
+		strcat(output_name, ".res");
+            }
+            if (load_file( NULL, output_name )) exit(1);
+        }
 
 	if(debuglevel & DEBUGLEVEL_DUMP)
 		dump_resources(resource_top);

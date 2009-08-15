@@ -1,4 +1,4 @@
-/* 
+/*
  * float.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -12,12 +12,16 @@
  * NOTE: GCC provides float.h, but it doesn't include the non-standard
  *       stuff for accessing the fp controller. We include_next the
  *       GCC-supplied header and just define the MS-specific extensions
- *       here.     
+ *       here.
  *
  */
 
 #ifdef __GNUC__
 #include_next<float.h>
+#endif
+
+#ifdef _MSC_VER
+#include <msc_float.h>
 #endif
 
 #ifndef _MINGW_FLOAT_H_
@@ -117,7 +121,7 @@ _CRTIMP unsigned int __cdecl __attribute__ ((__nothrow__)) _statusfp (void);	/* 
    word to 0x37f (64 bit mantissa precison rather than 53 bit).
    By default, the mingw version of _fpreset sets fp control as
    per fninit. To use the MSVCRT.dll _fpreset, include CRT_fp8.o when
-   building your application.	 
+   building your application.
 */
 void __cdecl __attribute__ ((__nothrow__)) _fpreset (void);
 void __cdecl __attribute__ ((__nothrow__)) fpreset (void);

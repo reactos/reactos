@@ -91,7 +91,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 149 "parser.y"
+#line 151 "parser.y"
 
     int                     ival;
     const WCHAR             *srcptr;

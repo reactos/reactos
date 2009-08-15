@@ -16,40 +16,44 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_HTMLDISABLED    "В настоящее время отображение HTML выключенно."
-    IDS_HTMLDOCUMENT    "Документ HTML"
-    IDS_DOWNLOADING     "Загрузка..."
-    IDS_INSTALLING      "Установка..."
+    IDS_HTMLDISABLED    "Р’ РЅР°СЃС‚РѕСЏС‰РµРµ РІСЂРµРјСЏ РѕС‚РѕР±СЂР°Р¶РµРЅРёРµ HTML РІС‹РєР»СЋС‡РµРЅРЅРѕ."
+    IDS_HTMLDOCUMENT    "Р”РѕРєСѓРјРµРЅС‚ HTML"
+    IDS_DOWNLOADING     "Р—Р°РіСЂСѓР·РєР°..."
+    IDS_INSTALLING      "РЈСЃС‚Р°РЅРѕРІРєР°..."
 }
 
 ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 261, 85
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка Wine Gecko"
+CAPTION "РЈСЃС‚Р°РЅРѕРІРєР° Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Эта программа пытается отобразить HTML страницу. Для её отображения Wine необходимо " \
-          "установить Gecko (Mozilla HTML engine). Нажмите кнопку установить если вы хотите, что бы Wine " \
-          "автоматически загрузил и установил Gecko.", ID_DWL_STATUS, 10, 10, 240, 33, SS_LEFT
-    CONTROL "Прогресс", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 46, 240, 12
-    DEFPUSHBUTTON "&Установить", ID_DWL_INSTALL, 200, 63, 50, 15, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Отмена", IDCANCEL, 140, 63, 50, 15, WS_GROUP | WS_TABSTOP
+    LTEXT "Р­С‚Р° РїСЂРѕРіСЂР°РјРјР° РїС‹С‚Р°РµС‚СЃСЏ РѕС‚РѕР±СЂР°Р·РёС‚СЊ HTML СЃС‚СЂР°РЅРёС†Сѓ. Р”Р»СЏ РµС‘ РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ Wine РЅРµРѕР±С…РѕРґРёРјРѕ " \
+          "СѓСЃС‚Р°РЅРѕРІРёС‚СЊ Gecko (Mozilla HTML engine). РќР°Р¶РјРёС‚Рµ РєРЅРѕРїРєСѓ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ РµСЃР»Рё РІС‹ С…РѕС‚РёС‚Рµ, С‡С‚Рѕ Р±С‹ Wine " \
+          "Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё Р·Р°РіСЂСѓР·РёР» Рё СѓСЃС‚Р°РЅРѕРІРёР» Gecko.", ID_DWL_STATUS, 10, 10, 240, 33, SS_LEFT
+    CONTROL "РџСЂРѕРіСЂРµСЃСЃ", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 46, 240, 12
+    DEFPUSHBUTTON "&РЈСЃС‚Р°РЅРѕРІРёС‚СЊ", ID_DWL_INSTALL, 200, 63, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&РћС‚РјРµРЅР°", IDCANCEL, 140, 63, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
 IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
 STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Ссылка"
+CAPTION "РЎСЃС‹Р»РєР°"
 FONT 8, "MS Shell Dlg"
 {
-    GROUPBOX "Информация о ссылке", -1, 5, 5, 190, 55
-    LTEXT "&Тип:", -1, 10, 22, 20, 10
+    GROUPBOX "РРЅС„РѕСЂРјР°С†РёСЏ Рѕ СЃСЃС‹Р»РєРµ", -1, 5, 5, 190, 55
+    LTEXT "&РўРёРї:", -1, 10, 22, 20, 10
     COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
-    LTEXT "&Адрес:", -1, 10, 42, 20, 10
+    LTEXT "&РђРґСЂРµСЃ:", -1, 10, 42, 20, 10
     EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 200, 10, 45, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "Отмена", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "РћС‚РјРµРЅР°", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
 }

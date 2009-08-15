@@ -182,7 +182,7 @@ WORD wDefColor;           /* default color */
 INT
 ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator)
 {
-	TCHAR temp[32];
+	TCHAR temp[39];   /* maximum length with nNumberGroups == 1 */
 	UINT  n, iTarget;
 
 	if (len <= 1)
@@ -198,15 +198,15 @@ ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator)
 		if (iTarget == n && bPutSeperator)
 		{
 			iTarget += nNumberGroups + 1;
-			temp[31 - n++] = cThousandSeparator;
+			temp[38 - n++] = cThousandSeparator;
 		}
-		temp[31 - n++] = (TCHAR)(num % 10) + _T('0');
+		temp[38 - n++] = (TCHAR)(num % 10) + _T('0');
 		num /= 10;
 	} while (num > 0);
 	if (n > len-1)
 		n = len-1;
 
-	memcpy(des, temp + 32 - n, n * sizeof(TCHAR));
+	memcpy(des, temp + 39 - n, n * sizeof(TCHAR));
 	des[n] = _T('\0');
 
 	return n;

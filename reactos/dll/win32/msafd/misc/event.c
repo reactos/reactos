@@ -76,7 +76,7 @@ WSPEventSelect(
     }
 
     if (lNetworkEvents & FD_CLOSE) {
-	EventSelectInfo.Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT;
+	EventSelectInfo.Events |= AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE;
     }
 
     if (lNetworkEvents & FD_QOS) {
@@ -206,7 +206,7 @@ WSPEnumNetworkEvents(
     }
 
     if (EnumReq.PollEvents & 
-	(AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT)) {
+	(AFD_EVENT_DISCONNECT | AFD_EVENT_ABORT | AFD_EVENT_CLOSE)) {
 	lpNetworkEvents->lNetworkEvents |= FD_CLOSE;
     }
 

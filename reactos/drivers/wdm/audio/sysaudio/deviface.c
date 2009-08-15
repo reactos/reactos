@@ -16,19 +16,65 @@ const GUID DMOCATEGORY_ACOUSTIC_ECHO_CANCEL    = {0xBF963D80L, 0xC559, 0x11D0, {
 
 #define IOCTL_KS_OBJECT_CLASS CTL_CODE(FILE_DEVICE_KS, 0x7, METHOD_NEITHER, FILE_ANY_ACCESS)
 
+NTSTATUS
+BuildPinDescriptor(
+    IN PKSAUDIO_DEVICE_ENTRY DeviceEntry,
+    IN ULONG Count)
+{
+    ULONG Index;
+    KSP_PIN PinRequest;
+    KSPIN_DATAFLOW DataFlow;
+    KSPIN_COMMUNICATION Communication;
+    ULONG NumWaveOutPin, NumWaveInPin;
+    NTSTATUS Status;
+    ULONG BytesReturned;
+
+    NumWaveInPin = 0;
+    NumWaveOutPin = 0;
+    for(Index = 0; Index < Count; Index++)
+    {
+        /* retrieve data flow */
+        PinRequest.PinId = Index;
+        PinRequest.Property.Set = KSPROPSETID_Pin;
+        PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+
+        /* get dataflow direction */
+        PinRequest.Property.Id = KSPROPERTY_PIN_DATAFLOW;
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceEntry->PinDescriptors[Index].DataFlow = DataFlow;
+        }
+
+        /* get irp flow direction */
+        PinRequest.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceEntry->PinDescriptors[Index].Communication = Communication;
+        }
+
+        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
+            NumWaveOutPin++;
+
+        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
+            NumWaveInPin++;
+
+        /* FIXME query for interface, dataformat etc */
+    }
+
+    DPRINT("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->PinDescriptorsCount, NumWaveInPin, NumWaveOutPin);
+    return STATUS_SUCCESS;
+}
+
 VOID
 QueryFilterRoutine(
     IN PKSAUDIO_DEVICE_ENTRY DeviceEntry)
 {
     KSPROPERTY PropertyRequest;
-    KSP_PIN PinRequest;
-    KSPIN_DATAFLOW DataFlow;
-    KSPIN_COMMUNICATION Communication;
-    KSPIN_CINSTANCES PinInstances;
-    ULONG Count, Index;
+    ULONG Count;
     NTSTATUS Status;
     ULONG BytesReturned;
-    ULONG NumWaveOutPin, NumWaveInPin;
 
     DPRINT("Querying filter...\n");
 
@@ -50,6 +96,23 @@ QueryFilterRoutine(
         return;
     }
 
+    /* allocate pin descriptor array */
+    DeviceEntry->PinDescriptors = ExAllocatePool(NonPagedPool, Count * sizeof(KSPIN_DESCRIPTOR));
+    if (!DeviceEntry->PinDescriptors)
+    {
+        /* no memory */
+        return;
+    }
+
+    /* zero array pin descriptor array */
+    RtlZeroMemory(DeviceEntry->PinDescriptors, Count * sizeof(KSPIN_DESCRIPTOR));
+
+    /* build the device descriptor */
+    Status = BuildPinDescriptor(DeviceEntry, Count);
+    if (!NT_SUCCESS(Status))
+        return;
+
+
     /* allocate pin array */
     DeviceEntry->Pins = ExAllocatePool(NonPagedPool, Count * sizeof(PIN_INFO));
     if (!DeviceEntry->Pins)
@@ -58,51 +121,11 @@ QueryFilterRoutine(
         DPRINT1("Failed to allocate memory Pins %u Block %x\n", Count, Count * sizeof(PIN_INFO));
         return;
     }
+
     /* clear array */
     RtlZeroMemory(DeviceEntry->Pins, sizeof(PIN_INFO) * Count);
-    DeviceEntry->NumberOfPins = Count;
+    DeviceEntry->PinDescriptorsCount = Count;
 
-    NumWaveInPin = 0;
-    NumWaveOutPin = 0;
-    for(Index = 0; Index < Count; Index++)
-    {
-        /* get max instance count */
-        PinRequest.PinId = Index;
-        PinRequest.Property.Set = KSPROPSETID_Pin;
-        PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
-        PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
-
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->Pins[Index].MaxPinInstanceCount = PinInstances.PossibleCount;
-        }
-
-        /* get dataflow direction */
-        PinRequest.Property.Id = KSPROPERTY_PIN_DATAFLOW;
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->Pins[Index].DataFlow = DataFlow;
-        }
-
-        /* get irp flow direction */
-        PinRequest.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->Pins[Index].Communication = Communication;
-        }
-
-        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
-            NumWaveOutPin++;
-
-        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
-            NumWaveInPin++;
-
-    }
-
-    DPRINT("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, NumWaveInPin, NumWaveOutPin);
 }
 
 VOID

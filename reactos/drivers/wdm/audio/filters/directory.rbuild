@@ -4,4 +4,7 @@
 	<directory name="kmixer">
 		<xi:include href="kmixer/kmixer.rbuild" />
 	</directory>
+	<directory name="splitter">
+		<xi:include href="splitter/splitter.rbuild" />
+	</directory>	
 </group>

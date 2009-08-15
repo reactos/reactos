@@ -13,20 +13,13 @@
 #include <guiddef.h>
 #endif /* GUID_DEFINED */
 
-#ifdef __GNUC__
 #include "intrin.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifdef _NTOSKRNL_
-/* HACKHACKHACK!!! We shouldn't include this header from ntoskrnl! */
-#define NTKERNELAPI
-#else
 #define NTKERNELAPI DECLSPEC_IMPORT
-#endif
 
 #ifdef _WIN64
 #define PORT_MAXIMUM_MESSAGE_LENGTH 512

@@ -196,7 +196,6 @@ typedef struct _AFD_FCB {
     KEVENT StateLockedEvent;
     PKEVENT EventSelect;
     DWORD EventSelectTriggers;
-    DWORD EventsFired;
     UNICODE_STRING TdiDeviceName;
     PVOID Context;
     DWORD PollState;

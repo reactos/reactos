@@ -279,9 +279,6 @@ struct hash_table {
 
 #define	MAX_TIME 0x7fffffff
 #define	MIN_TIME 0
-#ifdef _MSC_VER
-typedef SIZE_T ssize_t;
-#endif
 
 /* External definitions... */
 

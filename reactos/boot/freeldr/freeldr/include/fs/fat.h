@@ -152,28 +152,6 @@ typedef struct
 	ULONG	DriveNumber;
 } FAT_FILE_INFO, * PFAT_FILE_INFO;
 
-
-
-BOOLEAN	FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
-ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
-PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
-BOOLEAN	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-BOOLEAN	FatLookupFile(PCSTR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-void	FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
-BOOLEAN	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
-FILE*	FatOpenFile(PCSTR FileName);
-ULONG	FatCountClustersInChain(ULONG StartCluster);
-ULONG*	FatGetClusterChainArray(ULONG StartCluster);
-BOOLEAN	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
-BOOLEAN	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
-BOOLEAN	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
-BOOLEAN	FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-ULONG		FatGetFileSize(FILE *FileHandle);
-VOID	FatSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG		FatGetFilePointer(FILE *FileHandle);
-BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
-
-
 #define	ATTR_NORMAL		0x00
 #define	ATTR_READONLY	0x01
 #define	ATTR_HIDDEN		0x02
@@ -191,6 +169,6 @@ BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG Sector
 
 #define ISFATX(FT) ((FT) == FATX16 || (FT) == FATX32)
 
-extern const FS_VTBL FatVtbl;
+const DEVVTBL* FatMount(ULONG DeviceId);
 
 #endif // #defined __FAT_H

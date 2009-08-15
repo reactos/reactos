@@ -119,6 +119,8 @@ static const WCHAR attrVisibility[] =
     {'v','i','s','i','b','i','l','i','t','y',0};
 static const WCHAR attrWidth[] =
     {'w','i','d','t','h',0};
+static const WCHAR attrWordWrap[] =
+    {'w','o','r','d','-','w','r','a','p',0};
 static const WCHAR attrZIndex[] =
     {'z','-','i','n','d','e','x',0};
 
@@ -168,6 +170,7 @@ static const struct{
     {attrVerticalAlign,        DISPID_IHTMLSTYLE_VERTICALALIGN},
     {attrVisibility,           DISPID_IHTMLSTYLE_VISIBILITY},
     {attrWidth,                DISPID_IHTMLSTYLE_WIDTH},
+    {attrWordWrap,             DISPID_IHTMLSTYLE3_WORDWRAP},
     {attrZIndex,               DISPID_IHTMLSTYLE_ZINDEX}
 };
 

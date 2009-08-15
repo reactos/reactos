@@ -23,7 +23,7 @@
 
 
 #if defined(_DXAPI_)
-  #define DXAPI DECLSPEC_EXPORT
+  #define DXAPI
 #else
   #define DXAPI DECLSPEC_IMPORT
 #endif

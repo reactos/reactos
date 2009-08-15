@@ -2816,6 +2816,10 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
             wcscat( args, iciex->lpParametersW );
         }
     }
+    else if (This->sArgs != NULL)
+    {
+        args = This->sArgs;
+    }
 
     memset( &sei, 0, sizeof sei );
     sei.cbSize = sizeof sei;

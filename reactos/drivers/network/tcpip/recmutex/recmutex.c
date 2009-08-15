@@ -13,10 +13,9 @@ VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
 VOID RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
-    KIRQL CurrentIrql = KeGetCurrentIrql();
 
     ASSERT(RecMutex);
-    ASSERT(CurrentIrql <= APC_LEVEL);
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
 
     /* Wait for the previous user to unlock the RecMutex state.  There might be
     * multiple waiters waiting to change the state.  We need to check each

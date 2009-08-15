@@ -123,6 +123,11 @@ BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
 
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
 
+    /* If Address is NULL then the caller wants an
+     * gratuitous ARP packet sent */
+    if (!Address)
+        Address = &Interface->Unicast;
+
     switch (Address->Type) {
         case IP_ADDRESS_V4:
             ProtoType    = (USHORT)ETYPE_IPv4; /* IPv4 */
@@ -179,7 +184,6 @@ VOID ARPReceive(
     IP_ADDRESS Address;
     PVOID SenderHWAddress;
     PVOID SenderProtoAddress;
-    PVOID TargetProtoAddress;
     PNEIGHBOR_CACHE_ENTRY NCE;
     PNDIS_PACKET NdisPacket;
     PIP_INTERFACE Interface = (PIP_INTERFACE)Context;
@@ -203,17 +207,6 @@ VOID ARPReceive(
     SenderHWAddress    = (PVOID)((ULONG_PTR)Header + sizeof(ARP_HEADER));
     SenderProtoAddress = (PVOID)((ULONG_PTR)SenderHWAddress + Header->HWAddrLen);
 
-    /* Check if we have the target protocol address */
-
-    TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress +
-        Header->ProtoAddrLen + Header->HWAddrLen);
-
-    if( !AddrLocateADEv4( *((PIPv4_RAW_ADDRESS)TargetProtoAddress),
-			  &Address) ) {
-        TI_DbgPrint(DEBUG_ARP, ("Target address (0x%X) is not mine.\n", *((PULONG)TargetProtoAddress)));
-        return;
-    }
-
     /* Check if we know the sender */
 
     AddrInitIPv4(&Address, *((PULONG)SenderProtoAddress));
@@ -230,7 +223,7 @@ VOID ARPReceive(
             Header->HWAddrLen, NUD_REACHABLE);
     }
 
-    if (Header->Opcode != ARP_OPCODE_REQUEST || !NCE)
+    if (Header->Opcode != ARP_OPCODE_REQUEST)
         return;
 
     /* This is a request for our address. Swap the addresses and

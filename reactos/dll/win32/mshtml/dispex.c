@@ -77,6 +77,8 @@ static REFIID tid_ids[] = {
     &DIID_DispHTMLIFrame,
     &DIID_DispHTMLImg,
     &DIID_DispHTMLInputElement,
+    &DIID_DispHTMLLocation,
+    &DIID_DispHTMLNavigator,
     &DIID_DispHTMLOptionElement,
     &DIID_DispHTMLSelectElement,
     &DIID_DispHTMLStyle,

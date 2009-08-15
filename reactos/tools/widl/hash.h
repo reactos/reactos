@@ -22,12 +22,6 @@
 #ifndef __WIDL_HASH_H
 #define __WIDL_HASH_H
 
-typedef enum tag_syskind_t {
-    SYS_WIN16 = 0,
-    SYS_WIN32,
-    SYS_MAC
-} syskind_t;
-
-extern unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr);
+extern unsigned int lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr);
 
 #endif

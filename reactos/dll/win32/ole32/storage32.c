@@ -979,6 +979,10 @@ static HRESULT WINAPI StorageBaseImpl_CreateStream(
       (grfMode & STGM_TRANSACTED))
     return STG_E_INVALIDFUNCTION;
 
+  /* Can't create a stream on read-only storage */
+  if ( STGM_ACCESS_MODE( This->openFlags ) == STGM_READ )
+    return STG_E_ACCESSDENIED;
+
   /*
    * Check that we're compatible with the parent's storage mode
    * if not in transacted mode
@@ -987,6 +991,9 @@ static HRESULT WINAPI StorageBaseImpl_CreateStream(
     if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( This->openFlags ) )
       return STG_E_ACCESSDENIED;
   }
+
+  if(This->ancestorStorage->base.openFlags & STGM_SIMPLE)
+    if(grfMode & STGM_CREATE) return STG_E_INVALIDFLAG;
 
   /*
    * Initialize the out parameter
@@ -1226,8 +1233,13 @@ static HRESULT WINAPI StorageImpl_CreateStorage(
     /*
      * An element with this name already exists
      */
-    if (STGM_CREATE_MODE(grfMode) == STGM_CREATE)
-      IStorage_DestroyElement(iface, pwcsName);
+    if (STGM_CREATE_MODE(grfMode) == STGM_CREATE &&
+        STGM_ACCESS_MODE(This->base.openFlags) != STGM_READ)
+    {
+      hr = IStorage_DestroyElement(iface, pwcsName);
+      if (FAILED(hr))
+        return hr;
+    }
     else
     {
       WARN("file already exists\n");
@@ -1791,6 +1803,9 @@ static HRESULT WINAPI StorageImpl_DestroyElement(
    */
   if (pwcsName==NULL)
     return STG_E_INVALIDPOINTER;
+
+  if ( STGM_ACCESS_MODE( This->base.openFlags ) == STGM_READ )
+    return STG_E_ACCESSDENIED;
 
   /*
    * Create a property enumeration to search the property with the given name
@@ -2383,7 +2398,7 @@ static HRESULT StorageImpl_Construct(
   ILockBytes*  pLkbyt,
   DWORD        openFlags,
   BOOL         fileBased,
-  BOOL         fileCreate)
+  BOOL         create)
 {
   HRESULT     hr = S_OK;
   StgProperty currentProperty;
@@ -2395,19 +2410,13 @@ static HRESULT StorageImpl_Construct(
 
   memset(This, 0, sizeof(StorageImpl));
 
-  /*
-   * Initialize stream list
-   */
-
   list_init(&This->base.strmHead);
 
-  /*
-   * Initialize the virtual function table.
-   */
   This->base.lpVtbl = &Storage32Impl_Vtbl;
   This->base.pssVtbl = &IPropertySetStorage_Vtbl;
   This->base.v_destructor = StorageImpl_Destroy;
   This->base.openFlags = (openFlags & ~STGM_CREATE);
+  This->create = create;
 
   /*
    * This is the top-level storage so initialize the ancestor pointer
@@ -2415,14 +2424,8 @@ static HRESULT StorageImpl_Construct(
    */
   This->base.ancestorStorage = This;
 
-  /*
-   * Initialize the physical support of the storage.
-   */
   This->hFile = hFile;
 
-  /*
-   * Store copy of file path.
-   */
   if(pwcsName) {
       This->pwcsName = HeapAlloc(GetProcessHeap(), 0,
                                 (lstrlenW(pwcsName)+1)*sizeof(WCHAR));
@@ -2445,7 +2448,7 @@ static HRESULT StorageImpl_Construct(
   if (This->bigBlockFile == 0)
     return E_FAIL;
 
-  if (fileCreate)
+  if (create)
   {
     ULARGE_INTEGER size;
     BYTE bigBlockBuffer[BIG_BLOCK_SIZE];
@@ -2526,7 +2529,7 @@ static HRESULT StorageImpl_Construct(
   /*
    * Write the root property (memory only)
    */
-  if (fileCreate)
+  if (create)
   {
     StgProperty rootProp;
     /*

@@ -53,23 +53,6 @@ FldrpHwHeapAlloc(IN ULONG Size)
 
 VOID
 NTAPI
-FldrSetComponentInformation(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                            IN IDENTIFIER_FLAG Flags,
-                            IN ULONG Key,
-                            IN ULONG Affinity)
-{
-    PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
-
-    /* Set component information */
-    Component->Flags = Flags;
-    Component->Version = 0;
-    Component->Revision = 0;
-    Component->Key = Key;
-    Component->AffinityMask = Affinity;
-}
-
-VOID
-NTAPI
 FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                   IN PCHAR IdentifierString)
 {
@@ -107,6 +90,11 @@ FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
     Component->ConfigurationDataLength = 0;
     Component->Identifier = 0;
     Component->IdentifierLength = 0;
+    Component->Flags = 0;
+    Component->Version = 0;
+    Component->Revision = 0;
+    Component->Key = 0;
+    Component->AffinityMask = 0xFFFFFFFF;
     
     /* Return the node */
     *SystemNode = FldrArcHwTreeRoot;
@@ -145,10 +133,12 @@ FldrLinkToParent(IN PCONFIGURATION_COMPONENT_DATA Parent,
 VOID
 NTAPI
 FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
-                       IN PWCHAR BusName,
-                       IN ULONG BusNumber,
                        IN CONFIGURATION_CLASS Class,
                        IN CONFIGURATION_TYPE Type,
+                       IN IDENTIFIER_FLAG Flags,
+                       IN ULONG Key,
+                       IN ULONG Affinity,
+                       IN PCHAR IdentifierString,
                        OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey)
 {
     PCONFIGURATION_COMPONENT_DATA ComponentData;
@@ -168,6 +158,13 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     Component = &ComponentData->ComponentEntry;
     Component->Class = Class;
     Component->Type = Type;
+    Component->Flags = Flags;
+    Component->Key = Key;
+    Component->AffinityMask = Affinity;
+    
+    /* Set identifier */
+    if (IdentifierString)
+        FldrSetIdentifier(ComponentData, IdentifierString);
     
     /* Return the child */
     *ComponentKey = ComponentData; 

@@ -1,5 +1,6 @@
 /*
  * Copyright 2008 Jacek Caban for CodeWeavers
+ * Copyright 2009 Piotr Caban
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,25 +37,59 @@ static const WCHAR propertyIsEnumerableW[] =
     {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
 static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
+/* ECMA-262 3rd Edition    15.6.4.2 */
 static HRESULT Bool_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    static const WCHAR trueW[] = {'t','r','u','e',0};
+    static const WCHAR falseW[] = {'f','a','l','s','e',0};
+
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_BOOLEAN))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_BOOL, NULL);
+
+    if(retv) {
+        BoolInstance *bool = (BoolInstance*)dispex;
+        BSTR val;
+
+        if(bool->val) val = SysAllocString(trueW);
+        else val = SysAllocString(falseW);
+
+        if(!val)
+            return E_OUTOFMEMORY;
+
+        V_VT(retv) = VT_BSTR;
+        V_BSTR(retv) = val;
+    }
+
+    return S_OK;
 }
 
 static HRESULT Bool_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+    return Bool_toString(dispex, lcid, flags, dp, retv, ei, sp);
 }
 
+/* ECMA-262 3rd Edition    15.6.4.3 */
 static HRESULT Bool_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    if(!is_class(dispex, JSCLASS_BOOLEAN))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_BOOL, NULL);
+
+    if(retv) {
+        BoolInstance *bool = (BoolInstance*)dispex;
+
+        V_VT(retv) = VT_BOOL;
+        V_BOOL(retv) = bool->val;
+    }
+
+    return S_OK;
 }
 
 static HRESULT Bool_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -81,8 +116,18 @@ static HRESULT Bool_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DIS
 static HRESULT Bool_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    switch(flags) {
+    case INVOKE_FUNC:
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
+    default:
+        FIXME("unimplemented flags %x\n", flags);
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
+
 }
 
 static const builtin_prop_t Bool_props[] = {
@@ -106,8 +151,41 @@ static const builtin_info_t Bool_info = {
 static HRESULT BoolConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    HRESULT hres;
+    VARIANT_BOOL value = VARIANT_FALSE;
+
+    if(arg_cnt(dp)) {
+        hres = to_boolean(get_arg(dp,0), &value);
+        if(FAILED(hres))
+            return hres;
+    }
+
+    switch(flags) {
+    case DISPATCH_CONSTRUCT: {
+        DispatchEx *bool;
+
+        hres = create_bool(dispex->ctx, value, &bool);
+        if(FAILED(hres))
+            return hres;
+
+        V_VT(retv) = VT_DISPATCH;
+        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(bool);
+        return S_OK;
+    }
+
+    case INVOKE_FUNC:
+        if(retv) {
+            V_VT(retv) = VT_BOOL;
+            V_BOOL(retv) = value;
+        }
+        return S_OK;
+
+    default:
+        FIXME("unimplemented flags %x\n", flags);
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT alloc_bool(script_ctx_t *ctx, BOOL use_constr, BoolInstance **ret)

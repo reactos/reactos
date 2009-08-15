@@ -1148,6 +1148,13 @@ KsSynchronousIoControlDevice(
     /* create the irp */
     Irp =  IoBuildDeviceIoControlRequest(IoControl, DeviceObject, InBuffer, InSize, OutBuffer, OutSize, FALSE, &Event, &IoStatusBlock);
 
+    if (!Irp)
+    {
+        /* no memory to allocate the irp */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+
     /* HACK */
     IoStack = IoGetNextIrpStackLocation(Irp);
     IoStack->FileObject = FileObject;

@@ -33,7 +33,7 @@ double fmod (double __x, double __y)
      "jp        1b"
      : "=t" (__val) : "0" (__x), "u" (__y) : "ax", "cc");
 #else
-  __val = linkme_fmod(__x, __y);
+#error IMPLEMENT ME
 #endif /*__GNUC__*/
   return __val;
 }

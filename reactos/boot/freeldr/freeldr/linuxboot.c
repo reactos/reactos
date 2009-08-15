@@ -43,8 +43,8 @@ CHAR			LinuxBootPath[260] = "";
 
 VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 {
-	PFILE	LinuxKernel = NULL;
-	PFILE	LinuxInitrdFile = NULL;
+	PFILE	LinuxKernel = 0;
+	PFILE	LinuxInitrdFile = 0;
 	CHAR	TempString[260];
 
 	UiDrawBackdrop();
@@ -73,15 +73,15 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 		UiMessageBox("Invalid boot path");
 		goto LinuxBootFailed;
 	}
-	if (!FsOpenSystemVolume(LinuxBootPath, NULL, NULL))
+	if (!MachDiskGetSystemVolume(LinuxBootPath, NULL, NULL))
 	{
-		UiMessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to get system volume.");
 		goto LinuxBootFailed;
 	}
 
 	// Open the kernel
 	LinuxKernel = FsOpenFile(LinuxKernelName);
-	if (LinuxKernel == NULL)
+	if (!LinuxKernel)
 	{
 		sprintf(TempString, "Linux kernel \'%s\' not found.", LinuxKernelName);
 		UiMessageBox(TempString);
@@ -92,7 +92,7 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 	if (LinuxHasInitrd)
 	{
 		LinuxInitrdFile = FsOpenFile(LinuxInitrdName);
-		if (LinuxInitrdFile == NULL)
+		if (!LinuxInitrdFile)
 		{
 			sprintf(TempString, "Linux initrd image \'%s\' not found.", LinuxInitrdName);
 			UiMessageBox(TempString);
@@ -178,11 +178,11 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 
 LinuxBootFailed:
 
-	if (LinuxKernel != NULL)
+	if (LinuxKernel)
 	{
 		FsCloseFile(LinuxKernel);
 	}
-	if (LinuxInitrdFile != NULL)
+	if (LinuxInitrdFile)
 	{
 		FsCloseFile(LinuxInitrdFile);
 	}

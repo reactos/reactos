@@ -228,7 +228,7 @@ STRINGTABLE
 BEGIN
     IDS_SYS_ENTERTAINMENT       "Z·bava" //Entertainment
     IDS_CMT_MPLAY32             "Spustiù Multimedi·lny prehr·vaË"
-    IDS_CMT_SNDVOL32            "Stustiù Ovl·danie hlasitosti"
+    IDS_CMT_SNDVOL32            "Spustiù Ovl·danie hlasitosti"
 END
 
 STRINGTABLE

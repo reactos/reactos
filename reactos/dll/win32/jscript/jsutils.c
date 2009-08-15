@@ -175,7 +175,7 @@ jsheap_t *jsheap_mark(jsheap_t *heap)
 }
 
 /* ECMA-262 3rd Edition    9.1 */
-HRESULT to_primitive(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret)
+HRESULT to_primitive(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret, hint_t hint)
 {
     switch(V_VT(v)) {
     case VT_EMPTY:
@@ -189,8 +189,61 @@ HRESULT to_primitive(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret
         V_VT(ret) = VT_BSTR;
         V_BSTR(ret) = SysAllocString(V_BSTR(v));
         break;
-    case VT_DISPATCH:
-        return disp_propget(V_DISPATCH(v), DISPID_VALUE, ctx->lcid, ret, ei, NULL /*FIXME*/);
+    case VT_DISPATCH: {
+        DispatchEx *jsdisp;
+        DISPID id;
+        DISPPARAMS dp = {NULL, NULL, 0, 0};
+        HRESULT hres;
+
+        static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
+        static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
+
+        jsdisp = iface_to_jsdisp((IUnknown*)V_DISPATCH(v));
+        if(!jsdisp)
+            return disp_propget(V_DISPATCH(v), DISPID_VALUE, ctx->lcid, ret, ei, NULL /*FIXME*/);
+
+        if(hint == NO_HINT)
+            hint = is_class(jsdisp, JSCLASS_DATE) ? HINT_STRING : HINT_NUMBER;
+
+        /* Native implementation doesn't throw TypeErrors, returns strange values */
+
+        hres = jsdisp_get_id(jsdisp, hint == HINT_STRING ? toStringW : valueOfW, 0, &id);
+        if(SUCCEEDED(hres)) {
+            hres = jsdisp_call(jsdisp, id, ctx->lcid, DISPATCH_METHOD, &dp, ret, ei, NULL /*FIXME*/);
+            if(FAILED(hres)) {
+                WARN("call error - forwarding exception\n");
+                jsdisp_release(jsdisp);
+                return hres;
+            }
+            else if(V_VT(ret) != VT_DISPATCH) {
+                jsdisp_release(jsdisp);
+                return S_OK;
+            }
+            else
+                IDispatch_Release(V_DISPATCH(ret));
+        }
+
+        hres = jsdisp_get_id(jsdisp, hint == HINT_STRING ? valueOfW : toStringW, 0, &id);
+        if(SUCCEEDED(hres)) {
+            hres = jsdisp_call(jsdisp, id, ctx->lcid, DISPATCH_METHOD, &dp, ret, ei, NULL /*FIXME*/);
+            if(FAILED(hres)) {
+                WARN("call error - forwarding exception\n");
+                jsdisp_release(jsdisp);
+                return hres;
+            }
+            else if(V_VT(ret) != VT_DISPATCH) {
+                jsdisp_release(jsdisp);
+                return S_OK;
+            }
+            else
+                IDispatch_Release(V_DISPATCH(ret));
+        }
+
+        jsdisp_release(jsdisp);
+
+        WARN("failed\n");
+        return throw_type_error(ctx, ei, IDS_TO_PRIMITIVE, NULL);
+    }
     default:
         FIXME("Unimplemented for vt %d\n", V_VT(v));
         return E_NOTIMPL;
@@ -211,7 +264,8 @@ HRESULT to_boolean(VARIANT *v, VARIANT_BOOL *b)
         *b = V_I4(v) ? VARIANT_TRUE : VARIANT_FALSE;
         break;
     case VT_R8:
-        *b = V_R8(v) ? VARIANT_TRUE : VARIANT_FALSE;
+        if(isnan(V_R8(v))) *b = VARIANT_FALSE;
+        else *b = V_R8(v) ? VARIANT_TRUE : VARIANT_FALSE;
         break;
     case VT_BSTR:
         *b = V_BSTR(v) && *V_BSTR(v) ? VARIANT_TRUE : VARIANT_FALSE;
@@ -355,7 +409,7 @@ HRESULT to_number(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, VARIANT *ret)
         VARIANT prim;
         HRESULT hres;
 
-        hres = to_primitive(ctx, v, ei, &prim);
+        hres = to_primitive(ctx, v, ei, &prim, HINT_NUMBER);
         if(FAILED(hres))
             return hres;
 
@@ -458,6 +512,8 @@ HRESULT to_string(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, BSTR *str)
     const WCHAR nullW[] = {'n','u','l','l',0};
     const WCHAR trueW[] = {'t','r','u','e',0};
     const WCHAR falseW[] = {'f','a','l','s','e',0};
+    const WCHAR NaNW[] = {'N','a','N',0};
+    const WCHAR InfinityW[] = {'-','I','n','f','i','n','i','t','y',0};
 
     switch(V_VT(v)) {
     case VT_EMPTY:
@@ -470,16 +526,23 @@ HRESULT to_string(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, BSTR *str)
         *str = int_to_bstr(V_I4(v));
         break;
     case VT_R8: {
-        VARIANT strv;
-        HRESULT hres;
+        if(isnan(V_R8(v)))
+            *str = SysAllocString(NaNW);
+        else if(isinf(V_R8(v)))
+            *str = SysAllocString(V_R8(v)<0 ? InfinityW : InfinityW+1);
+        else {
+            VARIANT strv;
+            HRESULT hres;
 
-        V_VT(&strv) = VT_EMPTY;
-        hres = VariantChangeTypeEx(&strv, v, MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT), 0, VT_BSTR);
-        if(FAILED(hres))
-            return hres;
+            V_VT(&strv) = VT_EMPTY;
+            hres = VariantChangeTypeEx(&strv, v, MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT), 0, VT_BSTR);
+            if(FAILED(hres))
+                return hres;
 
-        *str = V_BSTR(&strv);
-        return S_OK;
+            *str = V_BSTR(&strv);
+            return S_OK;
+        }
+        break;
     }
     case VT_BSTR:
         *str = SysAllocString(V_BSTR(v));
@@ -488,7 +551,7 @@ HRESULT to_string(script_ctx_t *ctx, VARIANT *v, jsexcept_t *ei, BSTR *str)
         VARIANT prim;
         HRESULT hres;
 
-        hres = to_primitive(ctx, v, ei, &prim);
+        hres = to_primitive(ctx, v, ei, &prim, HINT_STRING);
         if(FAILED(hres))
             return hres;
 

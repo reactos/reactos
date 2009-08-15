@@ -20,6 +20,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+    PLIST_ENTRY CurrentEntry;
 
     AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq,
 			    InfoReq ? InfoReq->InformationClass : 0));
@@ -42,7 +43,7 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    break;
 
 	case AFD_INFO_BLOCKING_MODE:
-	    InfoReq->Information.Ulong = 0;
+	    InfoReq->Information.Ulong = FCB->BlockingMode;
 	    break;
 
     case AFD_INFO_RECEIVE_CONTENT_SIZE:
@@ -52,6 +53,23 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
             InfoReq->Information.Ulong = FCB->Recv.Content - FCB->Recv.BytesUsed;
 
         break;
+
+	case AFD_INFO_SENDS_IN_PROGRESS:
+            InfoReq->Information.Ulong = 0;
+
+	    /* Count the queued sends */
+	    CurrentEntry = FCB->PendingIrpList[FUNCTION_SEND].Flink;
+	    while (CurrentEntry != &FCB->PendingIrpList[FUNCTION_SEND])
+	    {
+	         InfoReq->Information.Ulong++;
+	         CurrentEntry = CurrentEntry->Flink;
+	    }
+
+	    /* Count the send in progress */
+	    if (FCB->SendIrp.InFlightRequest)
+	        InfoReq->Information.Ulong++;
+
+            break;
 
 	default:
 	    AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n",

@@ -406,3 +406,12 @@ HRESULT WINAPI IEParseDisplayNameWithBCW(DWORD codepage, LPCWSTR lpszDisplayName
     FIXME("stub: 0x%x %s %p %p\n",codepage,debugstr_w(lpszDisplayName),pbc,ppidl);
     return E_FAIL;
 }
+
+/******************************************************************
+ *  SHRestricted2W (SHDOCVW.159)
+ */
+DWORD WINAPI SHRestricted2W(DWORD res, LPCWSTR url, DWORD reserved)
+{
+    FIXME("(%d %s %d) stub\n", res, debugstr_w(url), reserved);
+    return 0;
+}

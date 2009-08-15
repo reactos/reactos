@@ -906,8 +906,9 @@ DWORD WINAPI GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numInterfaces = getNumInterfaces();
+    ULONG size;
     TRACE("GetIfTable: numInterfaces = %d\n", (int)numInterfaces);
-    ULONG size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
+    size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
 
     if (!pIfTable || *pdwSize < size) {
       *pdwSize = size;
@@ -971,8 +972,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numNonLoopbackInterfaces = getNumNonLoopbackInterfaces();
+    ULONG size;
     TRACE("numNonLoopbackInterfaces == 0x%x\n", numNonLoopbackInterfaces);
-    ULONG size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
+    size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
      sizeof(IP_ADAPTER_INDEX_MAP);
 
     if (!pIfTable || *dwOutBufLen < size) {

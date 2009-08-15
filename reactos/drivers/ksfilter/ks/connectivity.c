@@ -9,6 +9,21 @@
 
 #include "priv.h"
 
+KSPIN_INTERFACE StandardPinInterface = 
+{
+    {STATIC_KSINTERFACESETID_Standard},
+    KSINTERFACE_STANDARD_STREAMING,
+    0
+};
+
+KSPIN_MEDIUM StandardPinMedium =
+{
+    {STATIC_KSMEDIUMSETID_Standard},
+    KSMEDIUM_TYPE_ANYINSTANCE,
+    0
+};
+
+
 /*
     @implemented
 */
@@ -50,61 +65,112 @@ KsValidateConnectRequest(
     IN  KSPIN_DESCRIPTOR* Descriptor,
     OUT PKSPIN_CONNECT* Connect)
 {
-    PIO_STACK_LOCATION IoStack;
     PKSPIN_CONNECT ConnectDetails;
-    LPWSTR PinName = L"{146F1A80-4791-11D0-A5D6-28DB04C10000}\\";
-    PKSDATAFORMAT DataFormat;
-    LPWSTR Offset;
+    PKSPIN_INTERFACE Interface;
+    PKSPIN_MEDIUM Medium;
+    ULONG Size;
+    NTSTATUS Status;
+    ULONG Index;
+    ULONG Count;
+    BOOLEAN Found;
 
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-    if (!IoStack->FileObject->FileName.Buffer)
+    /* did the caller miss the connect parameter */
+    if (!Connect)
         return STATUS_INVALID_PARAMETER;
 
-    if (IoStack->FileObject->FileName.Length < wcslen(PinName) + sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT))
-        return STATUS_INVALID_PARAMETER;
+    /* set create param  size */
+    Size = sizeof(KSPIN_CONNECT);
 
-    Offset = wcsstr(IoStack->FileObject->FileName.Buffer, PinName);
-    if (!Offset)
-    {
-        /* request is not targeted for a pin */
-        return STATUS_INVALID_PARAMETER;
-    }
+    /* fetch create parameters */
+    Status = KspCopyCreateRequest(Irp,
+                                  KSSTRING_Pin,
+                                  &Size,
+                                  (PVOID*)&ConnectDetails);
 
-    ConnectDetails = (PKSPIN_CONNECT)(Offset + wcslen(PinName));
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+        return Status;
 
-    if (ConnectDetails->PinToHandle != NULL)
-    {
-        UNIMPLEMENTED
-        return STATUS_NOT_IMPLEMENTED;
-    }
-
+    /* is pin id out of bounds */
     if (ConnectDetails->PinId >= DescriptorsCount)
         return STATUS_INVALID_PARAMETER;
 
-#if 0
-    if (!IsEqualGUIDAligned(&ConnectDetails->Interface.Set, &KSINTERFACESETID_Standard) &&
-         ConnectDetails->Interface.Id != KSINTERFACE_STANDARD_STREAMING)
+    /* does the pin have interface details filled in */
+    if (Descriptor[ConnectDetails->PinId].InterfacesCount && Descriptor[ConnectDetails->PinId].Interfaces)
     {
-         //FIXME
-         // validate provided interface set
-         DPRINT1("FIXME\n");
+        /* use provided pin interface count */
+        Count = Descriptor[ConnectDetails->PinId].InterfacesCount;
+        Interface = (PKSPIN_INTERFACE)Descriptor[ConnectDetails->PinId].Interfaces;
+    }
+    else
+    {
+        /* use standard pin interface */
+        Count = 1;
+        Interface = &StandardPinInterface;
     }
 
-    if (!IsEqualGUIDAligned(&ConnectDetails->Medium.Set, &KSMEDIUMSETID_Standard) &&
-         ConnectDetails->Medium.Id != KSMEDIUM_TYPE_ANYINSTANCE)
+    /* now check the interface */
+    Found = FALSE;
+    Index = 0;
+    do
     {
-         //FIXME
-         // validate provided medium set
-         DPRINT1("FIXME\n");
+        if (IsEqualGUIDAligned(&Interface[Index].Set, &ConnectDetails->Interface.Set) &&
+                               Interface[Index].Id == ConnectDetails->Interface.Id)
+        {
+            /* found a matching interface */
+            Found = TRUE;
+            break;
+        }
+        /* iterate to next interface */
+        Index++;
+    }while(Index < Count);
+
+    if (!Found)
+    {
+        /* pin doesnt support this interface */
+        return STATUS_NO_MATCH;
     }
-#endif
+
+    /* does the pin have medium details filled in */
+    if (Descriptor[ConnectDetails->PinId].MediumsCount && Descriptor[ConnectDetails->PinId].Mediums)
+    {
+        /* use provided pin interface count */
+        Count = Descriptor[ConnectDetails->PinId].MediumsCount;
+        Medium = (PKSPIN_MEDIUM)Descriptor[ConnectDetails->PinId].Mediums;
+    }
+    else
+    {
+        /* use standard pin interface */
+        Count = 1;
+        Medium = &StandardPinMedium;
+    }
+
+    /* now check the interface */
+    Found = FALSE;
+    Index = 0;
+    do
+    {
+        if (IsEqualGUIDAligned(&Medium[Index].Set, &ConnectDetails->Medium.Set) &&
+                               Medium[Index].Id == ConnectDetails->Medium.Id)
+        {
+            /* found a matching interface */
+            Found = TRUE;
+            break;
+        }
+        /* iterate to next medium */
+        Index++;
+    }while(Index < Count);
+
+    if (!Found)
+    {
+        /* pin doesnt support this medium */
+        return STATUS_NO_MATCH;
+    }
 
     /// FIXME
     /// implement format checking
 
-    DataFormat = (PKSDATAFORMAT) (ConnectDetails + 1);
     *Connect = ConnectDetails;
-
     return STATUS_SUCCESS;
 }
 

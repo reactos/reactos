@@ -8,4 +8,8 @@ extern void (*_imp___fpreset)(void) ;
 void _fpreset (void)
 { (*_imp___fpreset)(); }
 
+#ifdef __GNUC__
 void __attribute__ ((alias ("_fpreset"))) fpreset(void);
+#else
+void fpreset(void) { _fpreset(); }
+#endif

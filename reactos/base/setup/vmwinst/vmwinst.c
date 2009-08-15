@@ -29,6 +29,7 @@
 #include <newdev.h>
 #include <stdio.h>
 #include <string.h>
+#include <pseh/pseh2.h>
 #include "vmwinst.h"
 #include <debug.h>
 
@@ -61,14 +62,6 @@ static LONG AbortInstall = 0;
 #define WM_INSTSTATUSUPDATE (WM_USER + 4)
 
 /* Helper functions */
-
-LONG CALLBACK VectoredExceptionHandler(PEXCEPTION_POINTERS ExceptionInfo)
-{
-    /* we're not running in VMware, just terminate the process */
-    ExitProcess(ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_PRIV_INSTRUCTION);
-    return EXCEPTION_CONTINUE_EXECUTION;
-}
-
 BOOL
 DetectVMware(int *Version)
 {
@@ -77,16 +70,35 @@ DetectVMware(int *Version)
     magic = 0;
     ver = 0;
 
-    /* Try using a VMware I/O port. If not running in VMware this'll throw an
-    exception! */
-#ifndef _MSC_VER
-    __asm__ __volatile__("inl  %%dx, %%eax"
-        : "=a" (ver), "=b" (magic)
-        : "0" (0x564d5868), "d" (0x5658), "c" (0xa));
+	_SEH2_TRY
+	{
+		/* Try using a VMware I/O port. If not running in VMware this'll throw an
+		exception! */
+#if defined(__GNUC__)
+		__asm__ __volatile__("inl  %%dx, %%eax"
+			: "=a" (ver), "=b" (magic)
+			: "0" (0x564d5868), "d" (0x5658), "c" (0xa));
+#elif defined(_MSC_VER)
+		__asm
+		{
+			push ebx
+			mov  ecx, 0xa
+			mov  edx, 0x5658
+			mov  eax, 0x564d5868
+			in   eax, dx
+			mov  [ver],   eax
+			mov  [magic], ebx
+			pop  ebx
+		}
 #else
-#error PLEASE WRITE THIS IN ASSEMBLY
+#error TODO
 #endif
-
+	}
+	_SEH2_EXCEPT(_SEH2_GetExceptionCode() == EXCEPTION_PRIV_INSTRUCTION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+	{
+		return FALSE;
+	}
+	_SEH2_END;
 
     if(magic == 0x564d5868)
     {
@@ -1036,28 +1048,15 @@ wWinMain(HINSTANCE hInstance,
          int nCmdShow)
 {
 
-    PVOID ExceptionHandler;
     int Version;
     WCHAR *lc;
 
     hAppInstance = hInstance;
 
-    /* Setup a vectored exception handler to protect the detection. Don't use SEH
-    here so we notice the next time someone removes support for vectored
-    exception handling from ros... */
-    if (!(ExceptionHandler = AddVectoredExceptionHandler(0,
-        VectoredExceptionHandler)))
-    {
-        return 1;
-    }
-
     if(!DetectVMware(&Version))
     {
         return 1;
     }
-
-    /* unregister the handler */
-    RemoveVectoredExceptionHandler(ExceptionHandler);
 
     lc = DestinationPath;
     lc += GetSystemDirectory(DestinationPath, MAX_PATH) - 1;

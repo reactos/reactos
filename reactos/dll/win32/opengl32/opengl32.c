@@ -26,7 +26,7 @@ GLPROCESSDATA OPENGL32_processdata;
 
 
 static BOOL
-OPENGL32_ThreadAttach()
+OPENGL32_ThreadAttach( void )
 {
     GLTHREADDATA* lpData = NULL;
     PROC *dispatchTable = NULL;
@@ -69,7 +69,7 @@ OPENGL32_ThreadAttach()
 
 
 static void
-OPENGL32_ThreadDetach()
+OPENGL32_ThreadDetach( void )
 {
     GLTHREADDATA* lpData = NULL;
     PROC *dispatchTable = NULL;
@@ -96,7 +96,7 @@ OPENGL32_ThreadDetach()
 
 
 static BOOL
-OPENGL32_ProcessAttach()
+OPENGL32_ProcessAttach( void )
 {
     SECURITY_ATTRIBUTES attrib = { sizeof (SECURITY_ATTRIBUTES), /* nLength */
                                    NULL, /* lpSecurityDescriptor */
@@ -136,7 +136,7 @@ OPENGL32_ProcessAttach()
 
 
 static void
-OPENGL32_ProcessDetach()
+OPENGL32_ProcessDetach( void )
 {
     GLDRIVERDATA *icd, *icd2;
     GLDCDATA *dcdata, *dcdata2;

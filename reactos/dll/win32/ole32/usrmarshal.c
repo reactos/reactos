@@ -307,7 +307,7 @@ static unsigned char * handle_UserUnmarshal(ULONG *pFlags, unsigned char *pBuffe
     RemotableHandle *remhandle = (RemotableHandle *)pBuffer;
     if (remhandle->fContext != WDT_INPROC_CALL)
         RaiseException(RPC_X_BAD_STUB_DATA, 0, 0, NULL);
-    *handle = (HANDLE)remhandle->u.hInproc;
+    *handle = (HANDLE)(LONG_PTR)remhandle->u.hInproc;
     return pBuffer + sizeof(RemotableHandle);
 }
 

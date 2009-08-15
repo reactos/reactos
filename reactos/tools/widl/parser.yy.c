@@ -2140,7 +2140,6 @@ static const struct keyword attr_keywords[] =
         {"requestedit",                 tREQUESTEDIT},
         {"restricted",                  tRESTRICTED},
         {"retval",                      tRETVAL},
-        {"single",                      tSINGLE},
         {"size_is",                     tSIZEIS},
         {"source",                      tSOURCE},
         {"strict_context_handle",       tSTRICTCONTEXTHANDLE},

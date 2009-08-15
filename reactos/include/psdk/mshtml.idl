@@ -92,6 +92,26 @@ typedef enum _SELECTION_TYPE {
     SELECTION_TYPE_Max = 2147483647
 } SELECTION_TYPE;
 
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3051049b-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLDOMConstructor : IDispatch
+{
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    HRESULT constructor([retval, out] IDispatch* * p);
+
+    HRESULT LookupGetter([in] BSTR propname, [retval, out] VARIANT* ppDispHandler);
+
+    HRESULT LookupSetter([in] BSTR propname, [retval, out] VARIANT* ppDispHandler);
+
+    HRESULT DefineGetter([in] BSTR propname, [in] VARIANT* pdispHandler);
+
+    HRESULT DefineSetter([in] BSTR propname, [in] VARIANT* pdispHandler);
+}
+
 interface IHTMLDocument2;
 interface IHTMLStyleSheetsCollection;
 interface IHTMLFrameBase;
@@ -5377,6 +5397,41 @@ interface IHTMLStyleSheetRule : IDispatch
     HRESULT readOnly([retval, out] VARIANT_BOOL *p);
 }
 
+[
+    hidden,
+    uuid(3050f50e-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLStyleSheetRule
+{
+properties:
+methods:
+    [propput, id(DISPID_IHTMLSTYLESHEETRULE_SELECTORTEXT)]
+    void selectorText(BSTR v);
+
+    [propget, id(DISPID_IHTMLSTYLESHEETRULE_SELECTORTEXT)]
+    BSTR selectorText();
+
+    [propget, id(DISPID_IHTMLSTYLESHEETRULE_STYLE), nonbrowsable]
+    IHTMLRuleStyle* style();
+
+    [propget, id(DISPID_IHTMLSTYLESHEETRULE_READONLY)]
+    VARIANT_BOOL readOnly();
+
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    IDispatch* constructor();
+}
+
+[
+    noncreatable,
+    uuid(3050f3ce-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLStyleSheetRule
+{
+    [default]           dispinterface DispHTMLStyleSheetRule;
+                        interface IHTMLStyleSheetRule;
+                        interface IHTMLDOMConstructor;
+}
+
 /*****************************************************************************
  *    IHTMLStyleSheetRulesCollection interface
  */
@@ -5398,6 +5453,35 @@ interface IHTMLStyleSheetRulesCollection : IDispatch
 }
 
 [
+    hidden,
+    uuid(3050f52f-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLStyleSheetRulesCollection
+{
+properties:
+methods:
+    [propget, id(DISPID_IHTMLSTYLESHEETRULESCOLLECTION_LENGTH)]
+    long length();
+
+    [id(DISPID_IHTMLSTYLESHEETRULESCOLLECTION_ITEM)]
+    IHTMLStyleSheetRule* item([in] long index);
+
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    IDispatch* constructor();
+}
+
+[
+    noncreatable,
+    uuid(3050f3cd-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLStyleSheetRulesCollection
+{
+    [default]           dispinterface DispHTMLStyleSheetRulesCollection;
+                        interface IHTMLStyleSheetRulesCollection;
+                        interface IHTMLDOMConstructor;
+}
+
+[
     odl,
     oleautomation,
     dual,
@@ -5411,6 +5495,34 @@ interface IHTMLStyleSheetPage : IDispatch
     [propget, id(DISPID_IHTMLSTYLESHEETPAGE_PSEUDOCLASS)]
     HRESULT pseudoClass([retval, out] BSTR *p);
 }
+
+[
+    hidden,
+    uuid(3050f540-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLStyleSheetPage
+{
+properties:
+methods:
+    [propget, id(DISPID_IHTMLSTYLESHEETPAGE_SELECTOR)]
+    BSTR selector();
+
+    [propget, id(DISPID_IHTMLSTYLESHEETPAGE_PSEUDOCLASS)]
+    BSTR pseudoClass();
+
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    IDispatch* constructor();
+}
+[
+    noncreatable,
+    uuid(3050f7ef-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLStyleSheetPage
+{
+    [default]           dispinterface DispHTMLStyleSheetPage;
+                        interface IHTMLStyleSheetPage;
+                        interface IHTMLDOMConstructor;
+};
 
 [
     odl,
@@ -5427,6 +5539,35 @@ interface IHTMLStyleSheetPagesCollection : IDispatch
     HRESULT item(
         [in] LONG index,
         [retval, out] IHTMLStyleSheetPage **ppHTMLStyleSheetPage);
+}
+
+[
+    hidden,
+    uuid(3050f543-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLStyleSheetPagesCollection
+{
+properties:
+methods:
+    [propget, id(DISPID_IHTMLSTYLESHEETPAGESCOLLECTION_LENGTH)]
+    long length();
+
+    [id(DISPID_IHTMLSTYLESHEETPAGESCOLLECTION_ITEM)]
+    IHTMLStyleSheetPage* item([in] long index);
+
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    IDispatch* constructor();
+}
+
+[
+    noncreatable,
+    uuid(3050f7f1-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLStyleSheetPagesCollection
+{
+    [default]           dispinterface DispHTMLStyleSheetPagesCollection;
+                        interface IHTMLStyleSheetPagesCollection;
+                        interface IHTMLDOMConstructor;
 }
 
 /*****************************************************************************
@@ -9616,6 +9757,21 @@ interface IHTMLOptionElement : IDispatch
     HRESULT form([retval, out] IHTMLFormElement **p);
 }
 
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f820-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLOptionElement3 : IDispatch
+{
+    [propput, id(DISPID_IHTMLOPTIONELEMENT3_LABEL), displaybind, bindable]
+    HRESULT label([in] BSTR v);
+
+    [propget, id(DISPID_IHTMLOPTIONELEMENT3_LABEL), displaybind, bindable]
+    HRESULT label([retval, out] BSTR * p);
+}
+
 /*****************************************************************************
  *    IHTMLOptionElementFactory interface
  */
@@ -10525,6 +10681,27 @@ methods:
 
     [propget, id(DISPID_IHTMLOPTIONELEMENT3_LABEL), displaybind, bindable]
     BSTR label();
+}
+
+[
+    noncreatable,
+    uuid(3050f24d-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLOptionElement
+{
+    [default]           dispinterface DispHTMLOptionElement;
+    [source, default]   dispinterface HTMLElementEvents;
+    [source]            dispinterface HTMLElementEvents2;
+                        interface IHTMLElement;
+                        interface IHTMLElement2;
+                        interface IHTMLElement3;
+                        interface IHTMLElement4;
+                        interface IHTMLUniqueName;
+                        interface IHTMLDOMNode;
+                        interface IHTMLDOMNode2;
+                        interface IHTMLDatabinding;
+                        interface IHTMLOptionElement;
+                        interface IHTMLOptionElement3;
 }
 
 /*****************************************************************************
@@ -13017,13 +13194,89 @@ interface IOmNavigator : IDispatch
     HRESULT userProfile([retval, out] IHTMLOpsProfile **p);
 }
 
+/*****************************************************************************
+ *    DispHTMLNavigator dispinterface
+ */
+[
+    hidden,
+    uuid(3050f54c-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLNavigator
+{
+properties:
+methods:
+    [propget, id(DISPID_IOMNAVIGATOR_APPCODENAME)]
+    BSTR appCodeName();
+
+    [propget, id(DISPID_IOMNAVIGATOR_APPNAME)]
+    BSTR appName();
+
+    [propget, id(DISPID_IOMNAVIGATOR_APPVERSION)]
+    BSTR appVersion();
+
+    [propget, id(DISPID_IOMNAVIGATOR_USERAGENT)]
+    BSTR userAgent();
+
+    [id(DISPID_IOMNAVIGATOR_JAVAENABLED)]
+    VARIANT_BOOL javaEnabled();
+
+    [id(DISPID_IOMNAVIGATOR_TAINTENABLED)]
+    VARIANT_BOOL taintEnabled();
+
+    [propget, id(DISPID_IOMNAVIGATOR_MIMETYPES)]
+    IHTMLMimeTypesCollection *mimeTypes();
+
+    [propget, id(DISPID_IOMNAVIGATOR_PLUGINS)]
+    IHTMLPluginsCollection *plugins();
+
+    [propget, id(DISPID_IOMNAVIGATOR_COOKIEENABLED)]
+    VARIANT_BOOL cookieEnabled();
+
+    [propget, id(DISPID_IOMNAVIGATOR_OPSPROFILE)]
+    IHTMLOpsProfile *opsProfile();
+
+    [id(DISPID_IOMNAVIGATOR_TOSTRING)]
+    BSTR toString();
+
+    [propget, id(DISPID_IOMNAVIGATOR_CPUCLASS)]
+    BSTR cpuClass();
+
+    [propget, id(DISPID_IOMNAVIGATOR_SYSTEMLANGUAGE)]
+    BSTR systemLanguage();
+
+    [propget, id(DISPID_IOMNAVIGATOR_BROWSERLANGUAGE), hidden]
+    BSTR browserLanguage();
+
+    [propget, id(DISPID_IOMNAVIGATOR_USERLANGUAGE)]
+    BSTR userLanguage();
+
+    [propget, id(DISPID_IOMNAVIGATOR_PLATFORM)]
+    BSTR platform();
+
+    [propget, id(DISPID_IOMNAVIGATOR_APPMINORVERSION)]
+    BSTR appMinorVersion();
+
+    [propget, id(DISPID_IOMNAVIGATOR_CONNECTIONSPEED), hidden]
+    LONG connectionSpeed();
+
+    [propget, id(DISPID_IOMNAVIGATOR_ONLINE)]
+    VARIANT_BOOL onLine();
+
+    [propget, id(DISPID_IOMNAVIGATOR_USERPROFILE)]
+    IHTMLOpsProfile *userProfile();
+
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    IDispatch *constructor();
+}
+
 [
     noncreatable,
     uuid(FECEAAA6-8405-11cf-8BA1-00AA00476DA6)
 ]
 coclass HTMLNavigator
 {
-    [default]           interface IOmNavigator;
+    [default]  dispinterface DispHTMLNavigator;
+               interface IOmNavigator;
 }
 
 /*****************************************************************************
@@ -13098,13 +13351,89 @@ interface IHTMLLocation : IDispatch
     HRESULT toString([retval, out] BSTR *String);
 }
 
+/*****************************************************************************
+ *    DispHTMLLocation dispinterface
+ */
+[
+    hidden,
+    uuid(3050f54e-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLLocation
+{
+properties:
+methods:
+    [propput, id(DISPID_IHTMLLOCATION_HREF)]
+    void href(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_HREF)]
+    BSTR href();
+
+    [propput, id(DISPID_IHTMLLOCATION_PROTOCOL)]
+    void protocol(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_PROTOCOL)]
+    BSTR protocol();
+
+    [propput, id(DISPID_IHTMLLOCATION_HOST)]
+    void host(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_HOST)]
+    BSTR host();
+
+    [propput, id(DISPID_IHTMLLOCATION_HOSTNAME)]
+    void hostname(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_HOSTNAME)]
+    BSTR hostname();
+
+    [propput, id(DISPID_IHTMLLOCATION_PORT)]
+    void port(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_PORT)]
+    BSTR port();
+
+    [propput, id(DISPID_IHTMLLOCATION_PATHNAME)]
+    void pathname(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_PATHNAME)]
+    BSTR pathname();
+
+    [propput, id(DISPID_IHTMLLOCATION_SEARCH)]
+    void search(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_SEARCH)]
+    BSTR search();
+
+    [propput, id(DISPID_IHTMLLOCATION_HASH)]
+    void hash(BSTR v);
+
+    [propget, id(DISPID_IHTMLLOCATION_HASH)]
+    BSTR hash();
+
+    [id(DISPID_IHTMLLOCATION_RELOAD)]
+    void reload([in, defaultvalue(0)] VARIANT_BOOL flag);
+
+    [id(DISPID_IHTMLLOCATION_REPLACE)]
+    void replace([in] BSTR bstr);
+
+    [id(DISPID_IHTMLLOCATION_ASSIGN)]
+    void assign([in] BSTR bstr);
+
+    [id(DISPID_IHTMLLOCATION_TOSTRING)]
+    BSTR toString();
+
+    [propget, id(DISPID_IHTMLDOMCONSTRUCTOR_CONSTRUCTOR), hidden]
+    IDispatch *constructor();
+}
+
 [
     noncreatable,
     uuid(163BB1E1-6E00-11cf-837A-48DC04C10000)
 ]
 coclass HTMLLocation
 {
-    [default]           interface IHTMLLocation;
+    [default]  dispinterface DispHTMLLocation;
+               interface IHTMLLocation;
 }
 
 [
@@ -13884,6 +14213,43 @@ interface IHTMLWindow3 : IDispatch
 }
 
 /*****************************************************************************
+ *    IHTMLWindow4 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3050f6cf-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLWindow4 : IDispatch
+{
+    [id(DISPID_IHTMLWINDOW4_CREATEPOPUP)]
+    HRESULT createPopup([optional, in] VARIANT* varArgIn,
+                        [retval, out] IDispatch** ppPopup);
+
+    [propget, id(DISPID_IHTMLWINDOW4_FRAMEELEMENT)]
+    HRESULT frameElement([retval, out] IHTMLFrameBase* * p);
+};
+
+/*****************************************************************************
+ *    IHTMLWindow5 interface
+ */
+[
+    odl,
+    oleautomation,
+    dual,
+    uuid(3051040e-98b5-11cf-bb82-00aa00bdce0b)
+]
+interface IHTMLWindow5 : IDispatch
+{
+    [propput, id(DISPID_IHTMLWINDOW5_XMLHTTPREQUEST)]
+    HRESULT XMLHttpRequest([in] VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW5_XMLHTTPREQUEST)]
+    HRESULT XMLHttpRequest([retval, out] VARIANT * p);
+};
+
+/*****************************************************************************
  *    DispHTMLWindow2 dispinterface
  */
 [
@@ -14167,6 +14533,408 @@ methods:
     [propget, id(DISPID_IHTMLWINDOW4_FRAMEELEMENT)]
     IHTMLFrameBase *frameElement();
 }
+
+/*****************************************************************************
+ *    DispHTMLWindowProxy dispinterface
+ */
+[
+    hidden,
+    uuid(3050f55e-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface DispHTMLWindowProxy
+{
+properties:
+methods:
+    [id(DISPID_IHTMLFRAMESCOLLECTION2_ITEM)]
+    VARIANT item([in] VARIANT* pvarIndex);
+
+    [propget, id(DISPID_IHTMLFRAMESCOLLECTION2_LENGTH)]
+    LONG length();
+
+    [propget, id(DISPID_IHTMLWINDOW2_FRAMES)]
+    IHTMLFramesCollection2* frames();
+
+    [propput, id(DISPID_IHTMLWINDOW2_DEFAULTSTATUS)]
+    void defaultStatus(BSTR v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_DEFAULTSTATUS)]
+    BSTR defaultStatus();
+
+    [propput, id(DISPID_IHTMLWINDOW2_STATUS)]
+    void status(BSTR v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_STATUS)]
+    BSTR status();
+
+    [id(DISPID_IHTMLWINDOW2_CLEARTIMEOUT)]
+    void clearTimeout([in] LONG timerID);
+
+    [id(DISPID_IHTMLWINDOW2_ALERT)]
+    void alert([defaultvalue(""), in] BSTR message);
+
+    [id(DISPID_IHTMLWINDOW2_CONFIRM)]
+    VARIANT_BOOL confirm([defaultvalue(""), in] BSTR message);
+
+    [id(DISPID_IHTMLWINDOW2_PROMPT)]
+    VARIANT prompt([defaultvalue(""), in] BSTR message,
+                   [defaultvalue("undefined"), in] BSTR defstr);
+
+    [propget, id(DISPID_IHTMLWINDOW2_IMAGE)]
+    IHTMLImageElementFactory* Image();
+
+    [propget, id(DISPID_IHTMLWINDOW2_LOCATION)]
+    IHTMLLocation* location();
+
+    [propget, id(DISPID_IHTMLWINDOW2_HISTORY)]
+    IOmHistory* history();
+
+    [id(DISPID_IHTMLWINDOW2_CLOSE)]
+    void close();
+
+    [propput, id(DISPID_IHTMLWINDOW2_OPENER)]
+    void opener(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_OPENER)]
+    VARIANT opener();
+
+    [propget, id(DISPID_IHTMLWINDOW2_NAVIGATOR)]
+    IOmNavigator* navigator();
+
+    [propput, id(DISPID_IHTMLWINDOW2_NAME)]
+    void name(BSTR v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_NAME)]
+    BSTR name();
+
+    [propget, id(DISPID_IHTMLWINDOW2_PARENT)]
+    IHTMLWindow2* parent();
+
+    [id(DISPID_IHTMLWINDOW2_OPEN)]
+    IHTMLWindow2* open([defaultvalue(""), in] BSTR url,
+                       [defaultvalue(""), in] BSTR name,
+                       [defaultvalue(""), in] BSTR features,
+                       [defaultvalue(0), in] VARIANT_BOOL replace);
+
+    [propget, id(DISPID_IHTMLWINDOW2_SELF)]
+    IHTMLWindow2* self();
+
+    [propget, id(DISPID_IHTMLWINDOW2_TOP)]
+    IHTMLWindow2* top();
+
+    [propget, id(DISPID_IHTMLWINDOW2_WINDOW)]
+    IHTMLWindow2* window();
+
+    [id(DISPID_IHTMLWINDOW2_NAVIGATE)]
+    void navigate([in] BSTR url);
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONFOCUS), displaybind, bindable]
+    void onfocus(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONFOCUS), displaybind, bindable]
+    VARIANT onfocus();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONBLUR), displaybind, bindable]
+    void onblur(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONBLUR), displaybind, bindable]
+    VARIANT onblur();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONLOAD), displaybind, bindable]
+    void onload(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONLOAD), displaybind, bindable]
+    VARIANT onload();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONBEFOREUNLOAD), displaybind, bindable]
+    void onbeforeunload(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONBEFOREUNLOAD), displaybind, bindable]
+    VARIANT onbeforeunload();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONUNLOAD), displaybind, bindable]
+    void onunload(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONUNLOAD), displaybind, bindable]
+    VARIANT onunload();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONHELP), displaybind, bindable]
+    void onhelp(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONHELP), displaybind, bindable]
+    VARIANT onhelp();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONERROR), displaybind, bindable]
+    void onerror(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONERROR), displaybind, bindable]
+    VARIANT onerror();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONRESIZE), displaybind, bindable]
+    void onresize(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONRESIZE), displaybind, bindable]
+    VARIANT onresize();
+
+    [propput, id(DISPID_IHTMLWINDOW2_ONSCROLL), displaybind, bindable]
+    void onscroll(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_ONSCROLL), displaybind, bindable]
+    VARIANT onscroll();
+
+    [propget, id(DISPID_IHTMLWINDOW2_DOCUMENT), source]
+    IHTMLDocument2* document();
+
+    [propget, id(DISPID_IHTMLWINDOW2_EVENT)]
+    IHTMLEventObj* event();
+
+    [propget, id(DISPID_IHTMLWINDOW2__NEWENUM), hidden, restricted]
+    IUnknown* _newEnum();
+
+    [id(DISPID_IHTMLWINDOW2_SHOWMODALDIALOG)]
+    VARIANT showModalDialog([in] BSTR dialog,
+                            [optional, in] VARIANT* varArgIn,
+                            [optional, in] VARIANT* varOptions);
+
+    [id(DISPID_IHTMLWINDOW2_SHOWHELP)]
+    void showHelp([in] BSTR helpURL,
+                  [optional, in] VARIANT helpArg,
+                  [defaultvalue(""), in] BSTR features);
+
+    [propget, id(DISPID_IHTMLWINDOW2_SCREEN)]
+    IHTMLScreen* screen();
+
+    [propget, id(DISPID_IHTMLWINDOW2_OPTION)]
+    IHTMLOptionElementFactory* Option();
+
+    [id(DISPID_IHTMLWINDOW2_FOCUS)]
+    void focus();
+
+    [propget, id(DISPID_IHTMLWINDOW2_CLOSED)]
+    VARIANT_BOOL closed();
+
+    [id(DISPID_IHTMLWINDOW2_BLUR)]
+    void blur();
+
+    [id(DISPID_IHTMLWINDOW2_SCROLL)]
+    void scroll([in] LONG x,
+                [in] LONG y);
+
+    [propget, id(DISPID_IHTMLWINDOW2_CLIENTINFORMATION)]
+    IOmNavigator* clientInformation();
+
+    [id(DISPID_IHTMLWINDOW2_CLEARINTERVAL)]
+    void clearInterval([in] LONG timerID);
+
+    [propput, id(DISPID_IHTMLWINDOW2_OFFSCREENBUFFERING)]
+    void offscreenBuffering(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW2_OFFSCREENBUFFERING)]
+    VARIANT offscreenBuffering();
+
+    [id(DISPID_IHTMLWINDOW2_EXECSCRIPT)]
+    VARIANT execScript([in] BSTR code,
+                       [defaultvalue("JScript"), in] BSTR language);
+
+    [id(DISPID_IHTMLWINDOW2_TOSTRING)]
+    BSTR toString();
+
+    [id(DISPID_IHTMLWINDOW2_SCROLLBY)]
+    void scrollBy([in] LONG x,
+                  [in] LONG y);
+
+    [id(DISPID_IHTMLWINDOW2_SCROLLTO)]
+    void scrollTo([in] LONG x,
+                  [in] LONG y);
+
+    [id(DISPID_IHTMLWINDOW2_MOVETO)]
+    void moveTo([in] LONG x,
+                [in] LONG y);
+
+    [id(DISPID_IHTMLWINDOW2_MOVEBY)]
+    void moveBy([in] LONG x,
+                [in] LONG y);
+
+    [id(DISPID_IHTMLWINDOW2_RESIZETO)]
+    void resizeTo([in] LONG x,
+                  [in] LONG y);
+
+    [id(DISPID_IHTMLWINDOW2_RESIZEBY)]
+    void resizeBy([in] LONG x,
+                  [in] LONG y);
+
+    [propget, id(DISPID_IHTMLWINDOW2_EXTERNAL)]
+    IDispatch* external();
+
+    [propget, id(DISPID_IHTMLWINDOW3_SCREENLEFT)]
+    LONG screenLeft();
+
+    [propget, id(DISPID_IHTMLWINDOW3_SCREENTOP)]
+    LONG screenTop();
+
+    [id(DISPID_IHTMLWINDOW3_ATTACHEVENT)]
+    VARIANT_BOOL attachEvent([in] BSTR event,
+                             [in] IDispatch* pDisp);
+
+    [id(DISPID_IHTMLWINDOW3_DETACHEVENT)]
+    void detachEvent([in] BSTR event,
+                     [in] IDispatch* pDisp);
+
+    [id(DISPID_IHTMLWINDOW3_SETTIMEOUT)]
+    LONG setTimeout([in] VARIANT* expression,
+                    [in] LONG msec,
+                    [optional, in] VARIANT* language);
+
+    [id(DISPID_IHTMLWINDOW3_SETINTERVAL)]
+    LONG setInterval([in] VARIANT* expression,
+                     [in] LONG msec,
+                     [optional, in] VARIANT* language);
+
+    [id(DISPID_IHTMLWINDOW3_PRINT)]
+    void print();
+
+    [propput, id(DISPID_IHTMLWINDOW3_ONBEFOREPRINT), displaybind, bindable]
+    void onbeforeprint(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW3_ONBEFOREPRINT), displaybind, bindable]
+    VARIANT onbeforeprint();
+
+    [propput, id(DISPID_IHTMLWINDOW3_ONAFTERPRINT), displaybind, bindable]
+    void onafterprint(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW3_ONAFTERPRINT), displaybind, bindable]
+    VARIANT onafterprint();
+
+    [propget, id(DISPID_IHTMLWINDOW3_CLIPBOARDDATA)]
+    IHTMLDataTransfer* clipboardData();
+
+    [id(DISPID_IHTMLWINDOW3_SHOWMODELESSDIALOG)]
+    IHTMLWindow2* showModelessDialog([defaultvalue(""), in] BSTR url,
+                                     [optional, in] VARIANT* varArgIn,
+                                     [optional, in] VARIANT* options);
+
+    [id(DISPID_IHTMLWINDOW4_CREATEPOPUP)]
+    IDispatch* createPopup([optional, in] VARIANT* varArgIn);
+
+    [propget, id(DISPID_IHTMLWINDOW4_FRAMEELEMENT)]
+    IHTMLFrameBase* frameElement();
+
+    [propput, id(DISPID_IHTMLWINDOW5_XMLHTTPREQUEST)]
+    void XMLHttpRequest(VARIANT v);
+
+    [propget, id(DISPID_IHTMLWINDOW5_XMLHTTPREQUEST)]
+    VARIANT XMLHttpRequest();
+};
+
+/*****************************************************************************
+ *    HTMLWindowEvents interface
+ */
+[
+    hidden,
+    uuid(96A0A4E0-D062-11cf-94B6-00AA0060275C)
+]
+dispinterface HTMLWindowEvents
+{
+properties:
+methods:
+    [id(DISPID_HTMLWINDOWEVENTS_ONLOAD)]
+    void onload();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONUNLOAD)]
+    void onunload();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONHELP)]
+    VARIANT_BOOL onhelp();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONFOCUS)]
+    void onfocus();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONBLUR)]
+    void onblur();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONERROR)]
+    void onerror([in] BSTR description,
+                 [in] BSTR url,
+                 [in] LONG line);
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONRESIZE)]
+    void onresize();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONSCROLL)]
+    void onscroll();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONBEFOREUNLOAD)]
+    void onbeforeunload();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONBEFOREPRINT)]
+    void onbeforeprint();
+
+    [id(DISPID_HTMLWINDOWEVENTS_ONAFTERPRINT)]
+    void onafterprint();
+};
+
+/*****************************************************************************
+ *    HTMLWindowEvents2 interface
+ */
+[
+    hidden,
+    uuid(3050f625-98b5-11cf-bb82-00aa00bdce0b)
+]
+dispinterface HTMLWindowEvents2
+{
+properties:
+methods:
+    [id(DISPID_HTMLWINDOWEVENTS2_ONLOAD)]
+    void onload([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONUNLOAD)]
+    void onunload([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONHELP)]
+    VARIANT_BOOL onhelp([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONFOCUS)]
+    void onfocus([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONBLUR)]
+    void onblur([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONERROR)]
+    void onerror([in] BSTR description,
+                 [in] BSTR url,
+                 [in] LONG line);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONRESIZE)]
+    void onresize([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONSCROLL)]
+    void onscroll([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONBEFOREUNLOAD)]
+    void onbeforeunload([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONBEFOREPRINT)]
+    void onbeforeprint([in] IHTMLEventObj* pEvtObj);
+
+    [id(DISPID_HTMLWINDOWEVENTS2_ONAFTERPRINT)]
+    void onafterprint([in] IHTMLEventObj* pEvtObj);
+};
+
+/*****************************************************************************
+ *    HTMLWindowProxy class
+ */
+[
+    uuid(3050f391-98b5-11cf-bb82-00aa00bdce0b)
+]
+coclass HTMLWindowProxy
+{
+    [default]           dispinterface DispHTMLWindowProxy;
+    [source, default]   dispinterface HTMLWindowEvents;
+    [source]            dispinterface HTMLWindowEvents2;
+                        interface IHTMLWindow2;
+                        interface IHTMLWindow3;
+                        interface IHTMLWindow4;
+                        interface IHTMLWindow5;
+};
 
 /*****************************************************************************
  *    HTMLDocumentEvents2 interface

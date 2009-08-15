@@ -1489,7 +1489,7 @@ int CDECL _wopen(const wchar_t *path,int flags,...)
     free(patha);
     return retval;
   }
-
+  free(patha);
   _dosmaperr(GetLastError());
   return -1;
 }

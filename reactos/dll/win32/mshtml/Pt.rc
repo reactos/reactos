@@ -16,15 +16,18 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_HTMLDISABLED    "A interpretaÁ„o de HTML est· desactivada."
+    IDS_HTMLDISABLED    "A interpreta√ß√£o de HTML est√° desactivada."
     IDS_HTMLDOCUMENT    "Documento HTML"
-    IDS_DOWNLOADING     "Descarregando..."
-    IDS_INSTALLING      "Instalando..."
+    IDS_DOWNLOADING     "A descarregar..."
+    IDS_INSTALLING      "A instalar..."
 }
 
 ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
@@ -32,8 +35,8 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Instalador Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Esta aplicaÁ„o est· a tentar mostrar uma p·gina HTML. O Wine precisa que o Gecko " \
-          "(Motor HTML Mozilla) seja instalado para mostrar a p·gina. Clique em Instalar se deseja que o Wine " \
+    LTEXT "Esta aplica√ß√£o est√° a tentar mostrar uma p√°gina HTML. O Wine precisa que o Gecko " \
+          "(Motor HTML Mozilla) seja instalado para mostrar a p√°gina. Clique em Instalar se deseja que o Wine " \
           "descarregue e instale o Gecko automaticamente.", ID_DWL_STATUS, 10, 10, 240, 40, SS_LEFT
     CONTROL "Progresso", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12
     DEFPUSHBUTTON "&Instalar", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
@@ -42,14 +45,25 @@ FONT 8, "MS Shell Dlg"
 
 IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65
 STYLE DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "HiperligaÁ„o"
+CAPTION "Hiperliga√ß√£o"
 FONT 8, "MS Shell Dlg"
 {
-    GROUPBOX "InformaÁ„o da HiperligaÁ„o", -1, 5, 5, 190, 55
+    GROUPBOX "Informa√ß√£o da Hiperliga√ß√£o", -1, 5, 5, 190, 55
     LTEXT "&Tipo:", -1, 10, 22, 20, 10
     COMBOBOX IDC_TYPE, 35, 20, 45, 100, WS_TABSTOP | WS_GROUP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_HASSTRINGS
     LTEXT "&URL:", -1, 10, 42, 20, 10
     EDITTEXT IDC_URL, 35, 40, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "OK", IDOK, 200, 10, 45, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Cancelar", IDCANCEL, 200, 28, 45, 14, WS_GROUP | WS_TABSTOP
+}
+
+ID_PROMPT_DIALOG DIALOG 0, 0, 200, 90
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT "", ID_PROMPT_PROMPT, 10, 10, 180, 30
+    EDITTEXT ID_PROMPT_EDIT, 10, 45, 180, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "OK", IDOK, 40, 65, 45, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "Cancelar", IDCANCEL, 115, 65, 45, 15, WS_GROUP | WS_TABSTOP
 }

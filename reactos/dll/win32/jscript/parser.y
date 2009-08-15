@@ -25,6 +25,8 @@
 #define YYPARSE_PARAM ctx
 
 static int parser_error(const char*);
+static void set_error(parser_ctx_t*,UINT);
+static BOOL explicit_error(parser_ctx_t*,void*,WCHAR);
 static BOOL allow_auto_semicolon(parser_ctx_t*);
 static void program_parsed(parser_ctx_t*,source_elements_t*);
 static source_elements_t *function_body_parsed(parser_ctx_t*,source_elements_t*);
@@ -200,7 +202,7 @@ static source_elements_t *source_elements_add_statement(source_elements_t*,state
 %type <statement> Finally
 %type <statement_list> StatementList StatementList_opt
 %type <parameter_list> FormalParameterList FormalParameterList_opt
-%type <expr> Expression Expression_opt
+%type <expr> Expression Expression_opt Expression_err
 %type <expr> ExpressionNoIn ExpressionNoIn_opt
 %type <expr> FunctionExpression
 %type <expr> AssignmentExpression AssignmentExpressionNoIn
@@ -266,7 +268,7 @@ SourceElements
 
 /* ECMA-262 3rd Edition    13 */
 FunctionExpression
-        : KFunction Identifier_opt '(' FormalParameterList_opt ')' '{' FunctionBody '}'
+        : KFunction Identifier_opt left_bracket FormalParameterList_opt right_bracket '{' FunctionBody '}'
                                 { $$ = new_function_expression(ctx, $2, $4, $7, $1, $8-$1+1); }
 
 KFunction
@@ -379,24 +381,32 @@ ExpressionStatement
 
 /* ECMA-262 3rd Edition    12.5 */
 IfStatement
-        : kIF '(' Expression ')' Statement kELSE Statement
+        : kIF left_bracket Expression_err right_bracket Statement kELSE Statement
                                 { $$ = new_if_statement(ctx, $3, $5, $7); }
-        | kIF '(' Expression ')' Statement %prec LOWER_THAN_ELSE
+        | kIF left_bracket Expression_err right_bracket Statement %prec LOWER_THAN_ELSE
                                 { $$ = new_if_statement(ctx, $3, $5, NULL); }
 
 /* ECMA-262 3rd Edition    12.6 */
 IterationStatement
-        : kDO Statement kWHILE '(' Expression ')' ';'
+        : kDO Statement kWHILE left_bracket Expression_err right_bracket semicolon_opt
                                 { $$ = new_while_statement(ctx, TRUE, $5, $2); }
-        | kWHILE '(' Expression ')' Statement
+        | kWHILE left_bracket Expression_err right_bracket Statement
                                 { $$ = new_while_statement(ctx, FALSE, $3, $5); }
-        | kFOR '(' ExpressionNoIn_opt ';' Expression_opt ';' Expression_opt ')' Statement
-                                { $$ = new_for_statement(ctx, NULL, $3, $5, $7, $9); }
-        | kFOR '(' kVAR VariableDeclarationListNoIn ';' Expression_opt ';' Expression_opt ')' Statement
-                                { $$ = new_for_statement(ctx, $4, NULL, $6, $8, $10); }
-        | kFOR '(' LeftHandSideExpression kIN Expression ')' Statement
+        | kFOR left_bracket ExpressionNoIn_opt
+                                { if(!explicit_error(ctx, $3, ';')) YYABORT; }
+        semicolon  Expression_opt
+                                { if(!explicit_error(ctx, $6, ';')) YYABORT; }
+        semicolon Expression_opt right_bracket Statement
+                                { $$ = new_for_statement(ctx, NULL, $3, $6, $9, $11); }
+        | kFOR left_bracket kVAR VariableDeclarationListNoIn
+                                { if(!explicit_error(ctx, $4, ';')) YYABORT; }
+        semicolon Expression_opt
+                                { if(!explicit_error(ctx, $7, ';')) YYABORT; }
+        semicolon Expression_opt right_bracket Statement
+                                { $$ = new_for_statement(ctx, $4, NULL, $7, $10, $12); }
+        | kFOR left_bracket LeftHandSideExpression kIN Expression_err right_bracket Statement
                                 { $$ = new_forin_statement(ctx, NULL, $3, $5, $7); }
-        | kFOR '(' kVAR VariableDeclarationNoIn kIN Expression ')' Statement
+        | kFOR left_bracket kVAR VariableDeclarationNoIn kIN Expression_err right_bracket Statement
                                 { $$ = new_forin_statement(ctx, $4, NULL, $6, $8); }
 
 /* ECMA-262 3rd Edition    12.7 */
@@ -416,7 +426,7 @@ ReturnStatement
 
 /* ECMA-262 3rd Edition    12.10 */
 WithStatement
-        : kWITH '(' Expression ')' Statement
+        : kWITH left_bracket Expression right_bracket Statement
                                 { $$ = new_with_statement(ctx, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.12 */
@@ -426,8 +436,8 @@ LabelledStatement
 
 /* ECMA-262 3rd Edition    12.11 */
 SwitchStatement
-        : kSWITCH '(' Expression ')' CaseBlock
-                                 { $$ = new_switch_statement(ctx, $3, $5); }
+        : kSWITCH left_bracket Expression right_bracket CaseBlock
+                                { $$ = new_switch_statement(ctx, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.11 */
 CaseBlock
@@ -471,8 +481,8 @@ TryStatement
 
 /* ECMA-262 3rd Edition    12.14 */
 Catch
-        : kCATCH '(' tIdentifier ')' Block
-                                 { $$ = new_catch_block(ctx, $3, $5); }
+        : kCATCH left_bracket tIdentifier right_bracket Block
+                                { $$ = new_catch_block(ctx, $3, $5); }
 
 /* ECMA-262 3rd Edition    12.14 */
 Finally
@@ -482,6 +492,10 @@ Finally
 Expression_opt
         : /* empty */           { $$ = NULL; }
         | Expression            { $$ = $1; }
+
+Expression_err
+        : Expression            { $$ = $1; }
+        | error                 { set_error(ctx, IDS_SYNTAX_ERROR); YYABORT; }
 
 /* ECMA-262 3rd Edition    11.14 */
 Expression
@@ -795,6 +809,18 @@ BooleanLiteral
 semicolon_opt
         : ';'
         | error                 { if(!allow_auto_semicolon(ctx)) {YYABORT;} }
+
+left_bracket
+        : '('
+        | error                 { set_error(ctx, IDS_LBRACKET); YYABORT; }
+
+right_bracket
+        : ')'
+        | error                 { set_error(ctx, IDS_RBRACKET); YYABORT; }
+
+semicolon
+        : ';'
+        | error                 { set_error(ctx, IDS_SEMICOLON); YYABORT; }
 
 %%
 
@@ -1434,6 +1460,20 @@ static int parser_error(const char *str)
     return 0;
 }
 
+static void set_error(parser_ctx_t *ctx, UINT error)
+{
+    ctx->hres = JSCRIPT_ERROR|error;
+}
+
+static BOOL explicit_error(parser_ctx_t *ctx, void *obj, WCHAR next)
+{
+    if(obj || *(ctx->ptr-1)==next) return TRUE;
+
+    set_error(ctx, IDS_SYNTAX_ERROR);
+    return FALSE;
+}
+
+
 static expression_t *new_identifier_expression(parser_ctx_t *ctx, const WCHAR *identifier)
 {
     identifier_expression_t *ret = parser_alloc(ctx, sizeof(identifier_expression_t));
@@ -1537,7 +1577,8 @@ static void program_parsed(parser_ctx_t *ctx, source_elements_t *source)
     pop_func(ctx);
 
     ctx->source = source;
-    ctx->hres = S_OK;
+    if(!ctx->lexer_error)
+        ctx->hres = S_OK;
 }
 
 void parser_release(parser_ctx_t *ctx)
@@ -1568,7 +1609,7 @@ HRESULT script_parse(script_ctx_t *ctx, const WCHAR *code, const WCHAR *delimite
         return E_OUTOFMEMORY;
 
     parser_ctx->ref = 1;
-    parser_ctx->hres = E_FAIL;
+    parser_ctx->hres = JSCRIPT_ERROR|IDS_SYNTAX_ERROR;
     parser_ctx->is_html = delimiter && !strcmpiW(delimiter, html_tagW);
 
     parser_ctx->begin = parser_ctx->ptr = code;

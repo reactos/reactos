@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "windef.h"
+
 LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
@@ -33,5 +35,4 @@ STRINGTABLE DISCARDABLE
         14 "caracteristică de la:"
         15 "selectați fișierul care conține %s"
 }
-
 #pragma code_page(default)

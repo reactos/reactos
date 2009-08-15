@@ -15,8 +15,8 @@ HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 
 
-CALLBACK
 BOOL
+CALLBACK
 EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, LPWSTR lpKeyName, LPARAM lParam)
 {
     WCHAR szText[MAX_PATH];
@@ -49,8 +49,8 @@ FreeAvailableAppList(VOID)
     }
 }
 
-CALLBACK
 BOOL
+CALLBACK
 EnumAvailableAppProc(APPLICATION_INFO Info)
 {
     PAPPLICATION_INFO ItemInfo;

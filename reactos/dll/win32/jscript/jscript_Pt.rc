@@ -1,0 +1,42 @@
+/*
+ * Copyright 2009 Ricardo Filipe
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TO_PRIMITIVE        "Erro ao converter objecto em tipo primitivo"
+    IDS_INVALID_CALL_ARG    "Argumento ou chamada de procedimento inválida"
+    IDS_NO_PROPERTY         "O objecto não suporta esta propriedade ou método"
+    IDS_ARG_NOT_OPT         "Argumento não opcional"
+    IDS_SYNTAX_ERROR        "Erro de sintaxe"
+    IDS_SEMICOLON           "';' esperado"
+    IDS_LBRACKET            "'(' esperado"
+    IDS_RBRACKET            "')' esperado"
+    IDS_NOT_FUNC            "Função esperada"
+    IDS_NOT_DATE            "'[object]' não é um objecto de data"
+    IDS_NOT_NUM             "Número esperado"
+    IDS_ILLEGAL_ASSIGN      "Atribuição ilegal"
+    IDS_UNDEFINED           "'|' é indefinido"
+    IDS_NOT_BOOL            "Objecto boleano esperado"
+    IDS_INVALID_LENGTH      "Tamanho do vector tem de ser um inteiro finito positivo"
+}

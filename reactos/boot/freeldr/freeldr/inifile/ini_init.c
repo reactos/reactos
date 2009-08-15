@@ -1,6 +1,6 @@
 /*
  *  FreeLoader
- *  Copyright (C) 1998-2003  Brian Palmer  <brianp@sginet.com>
+ *  Copyright (C) 2009     Hervé Poussineau  <hpoussin@reactos.org>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,58 +19,86 @@
 
 #include <freeldr.h>
 
+static LONG IniOpenIniFile(ULONG* FileId)
+{
+	CHAR FreeldrPath[MAX_PATH];
+	LONG ret;
+
+	//
+	// Create full freeldr.ini path
+	//
+	MachDiskGetBootPath(FreeldrPath, sizeof(FreeldrPath));
+	strcat(FreeldrPath, "\\freeldr.ini");
+
+	// Try to open freeldr.ini
+	ret = ArcOpen(FreeldrPath, OpenReadOnly, FileId);
+
+	return ret;
+}
+
 BOOLEAN IniFileInitialize(VOID)
 {
-	PFILE	Freeldr_Ini;	// File handle for freeldr.ini
-	PCHAR	FreeLoaderIniFileData;
-	ULONG		FreeLoaderIniFileSize;
-	BOOLEAN	Success;
+	FILEINFORMATION FileInformation;
+	ULONG FileId; // File handle for freeldr.ini
+	PCHAR FreeLoaderIniFileData;
+	ULONG FreeLoaderIniFileSize, Count;
+	LONG ret;
+	BOOLEAN Success;
 
+	//
 	// Open freeldr.ini
-	Freeldr_Ini = IniOpenIniFile();
-
-	if (Freeldr_Ini == NULL)
+	//
+	ret = IniOpenIniFile(&FileId);
+	if (ret != ESUCCESS)
 	{
 		UiMessageBoxCritical("Error opening freeldr.ini or file not found.\nYou need to re-install FreeLoader.");
 		return FALSE;
 	}
 
-	// Get the file size & allocate enough memory for it
-	FreeLoaderIniFileSize = FsGetFileSize(Freeldr_Ini);
-	FreeLoaderIniFileData = MmHeapAlloc(FreeLoaderIniFileSize);
+	//
+	// Get the file size
+	//
+	ret = ArcGetFileInformation(FileId, &FileInformation);
+	if (ret != ESUCCESS || FileInformation.EndingAddress.HighPart != 0)
+	{
+		UiMessageBoxCritical("Error while getting informations about freeldr.ini.\nYou need to re-install FreeLoader.");
+		return FALSE;
+	}
+	FreeLoaderIniFileSize = FileInformation.EndingAddress.LowPart;
 
-	// If we are out of memory then return FALSE
-	if (FreeLoaderIniFileData == NULL)
+	//
+	// Allocate memory to cache the whole freeldr.ini
+	//
+	FreeLoaderIniFileData = MmHeapAlloc(FreeLoaderIniFileSize);
+	if (!FreeLoaderIniFileData)
 	{
 		UiMessageBoxCritical("Out of memory while loading freeldr.ini.");
-		FsCloseFile(Freeldr_Ini);
+		ArcClose(FileId);
 		return FALSE;
 	}
 
+	//
 	// Read freeldr.ini off the disk
-	if (!FsReadFile(Freeldr_Ini, FreeLoaderIniFileSize, NULL, FreeLoaderIniFileData))
+	//
+	ret = ArcRead(FileId, FreeLoaderIniFileData, FreeLoaderIniFileSize, &Count);
+	if (ret != ESUCCESS || Count != FreeLoaderIniFileSize)
 	{
-		FsCloseFile(Freeldr_Ini);
+		UiMessageBoxCritical("Error while reading freeldr.ini.");
+		ArcClose(FileId);
 		MmHeapFree(FreeLoaderIniFileData);
 		return FALSE;
 	}
 
-	FsCloseFile(Freeldr_Ini);
-
+	//
 	// Parse the .ini file data
+	//
 	Success = IniParseFile(FreeLoaderIniFileData, FreeLoaderIniFileSize);
 
+	//
+	// Do some cleanup, and return
+	//
+	ArcClose(FileId);
 	MmHeapFree(FreeLoaderIniFileData);
 
 	return Success;
-}
-
-PFILE IniOpenIniFile()
-{
-	PFILE	IniFileHandle;	// File handle for freeldr.ini
-
-	// Try to open freeldr.ini
-	IniFileHandle = FsOpenFile("freeldr.ini");
-
-	return IniFileHandle;
 }

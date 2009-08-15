@@ -315,8 +315,6 @@ enum ModuleType
 	Win32SCR,
 	IdlHeader,
 	IdlInterface,
-	IsoRegTest,
-	LiveIsoRegTest,
 	EmbeddedTypeLib,
 	ElfExecutable,
 	RpcProxy,
@@ -392,6 +390,7 @@ public:
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<StubbedComponent*> stubbedComponents;
+	std::vector<CDFile*> cdfiles;
 	LinkerScript* linkerScript;
 	PchFile* pch;
 	bool cplusplus;

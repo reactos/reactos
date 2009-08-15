@@ -71,6 +71,7 @@ static ULONG STDMETHODCALLTYPE taskbar_list_Release(ITaskbarList *iface)
     if (!refcount)
     {
         HeapFree(GetProcessHeap(), 0, This);
+        SHDOCVW_UnlockModule();
     }
 
     return refcount;
@@ -130,12 +131,14 @@ static const struct ITaskbarListVtbl taskbar_list_vtbl =
 HRESULT TaskbarList_Create(IUnknown *outer, REFIID riid, void **taskbar_list)
 {
     struct taskbar_list *object;
+    HRESULT hr;
 
     TRACE("outer %p, riid %s, taskbar_list %p\n", outer, debugstr_guid(riid), taskbar_list);
 
     if (outer)
     {
         WARN("Aggregation not supported\n");
+        *taskbar_list = NULL;
         return CLASS_E_NOAGGREGATION;
     }
 
@@ -143,15 +146,23 @@ HRESULT TaskbarList_Create(IUnknown *outer, REFIID riid, void **taskbar_list)
     if (!object)
     {
         ERR("Failed to allocate taskbar list object memory\n");
+        *taskbar_list = NULL;
         return E_OUTOFMEMORY;
     }
 
     object->lpVtbl = &taskbar_list_vtbl;
-    object->refcount = 1;
-
-    *taskbar_list = object;
+    object->refcount = 0;
 
     TRACE("Created ITaskbarList %p\n", object);
+
+    hr = ITaskbarList_QueryInterface((ITaskbarList *)object, riid, taskbar_list);
+    if (FAILED(hr))
+    {
+        HeapFree(GetProcessHeap(), 0, object);
+        return hr;
+    }
+
+    SHDOCVW_LockModule();
 
     return S_OK;
 }

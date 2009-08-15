@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <math.h>
+
 #include "jscript.h"
 
 #include "wine/debug.h"
@@ -39,31 +41,126 @@ static const WCHAR propertyIsEnumerableW[] =
     {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
 static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
+#define NUMBER_TOSTRING_BUF_SIZE 64
 /* ECMA-262 3rd Edition    15.7.4.2 */
 static HRESULT Number_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     NumberInstance *number;
+    INT radix = 10;
+    DOUBLE val;
     BSTR str;
     HRESULT hres;
 
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_NUMBER)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_NUMBER))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_NUM, NULL);
 
     number = (NumberInstance*)dispex;
 
-    if(arg_cnt(dp) != 0) {
-        FIXME("unsupported args\n");
-        return E_NOTIMPL;
+    if(arg_cnt(dp)) {
+        hres = to_int32(dispex->ctx, get_arg(dp, 0), ei, &radix);
+        if(FAILED(hres))
+            return hres;
+
+        if(radix<2 || radix>36)
+            return throw_type_error(dispex->ctx, ei, IDS_INVALID_CALL_ARG, NULL);
     }
 
-    hres = to_string(dispex->ctx, &number->num, ei, &str);
-    if(FAILED(hres))
-        return hres;
+    if(V_VT(&number->num) == VT_I4)
+        val = V_I4(&number->num);
+    else
+        val = V_R8(&number->num);
+
+    if(radix==10 || isnan(val) || isinf(val)) {
+        hres = to_string(dispex->ctx, &number->num, ei, &str);
+        if(FAILED(hres))
+            return hres;
+    }
+    else {
+        INT idx = 0;
+        DOUBLE integ, frac, log_radix = 0;
+        WCHAR buf[NUMBER_TOSTRING_BUF_SIZE+16];
+        BOOL exp = FALSE;
+
+        if(val<0) {
+            val = -val;
+            buf[idx++] = '-';
+        }
+
+        while(1) {
+            integ = floor(val);
+            frac = val-integ;
+
+            if(integ == 0)
+                buf[idx++] = '0';
+            while(integ>=1 && idx<NUMBER_TOSTRING_BUF_SIZE) {
+                buf[idx] = fmod(integ, radix);
+                if(buf[idx]<10) buf[idx] += '0';
+                else buf[idx] += 'a'-10;
+                integ /= radix;
+                idx++;
+            }
+
+            if(idx<NUMBER_TOSTRING_BUF_SIZE) {
+                INT beg = buf[0]=='-'?1:0;
+                INT end = idx-1;
+                WCHAR wch;
+
+                while(end > beg) {
+                    wch = buf[beg];
+                    buf[beg++] = buf[end];
+                    buf[end--] = wch;
+                }
+            }
+
+            if(idx != NUMBER_TOSTRING_BUF_SIZE) buf[idx++] = '.';
+
+            while(frac>0 && idx<NUMBER_TOSTRING_BUF_SIZE) {
+                frac *= radix;
+                buf[idx] = fmod(frac, radix);
+                frac -= buf[idx];
+                if(buf[idx]<10) buf[idx] += '0';
+                else buf[idx] += 'a'-10;
+                idx++;
+            }
+
+            if(idx==NUMBER_TOSTRING_BUF_SIZE && !exp) {
+                exp = TRUE;
+                idx = (buf[0]=='-') ? 1 : 0;
+                log_radix = floor(log(val)/log(radix));
+                val *= pow(radix, -log_radix);
+                continue;
+            }
+
+            break;
+        }
+
+        while(buf[idx-1] == '0') idx--;
+        if(buf[idx-1] == '.') idx--;
+
+        if(exp) {
+            if(log_radix==0)
+                buf[idx++] = '\0';
+            else {
+                static const WCHAR formatW[] = {'(','e','%','c','%','d',')',0};
+                WCHAR ch;
+
+                if(log_radix<0) {
+                    log_radix = -log_radix;
+                    ch = '-';
+                }
+                else ch = '+';
+                sprintfW(&buf[idx], formatW, ch, (int)log_radix);
+            }
+        }
+        else buf[idx] = '\0';
+
+        str = SysAllocString(buf);
+        if(!str)
+            return E_OUTOFMEMORY;
+    }
 
     if(retv) {
         V_VT(retv) = VT_BSTR;
@@ -107,10 +204,8 @@ static HRESULT Number_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
 {
     TRACE("\n");
 
-    if(!is_class(dispex, JSCLASS_NUMBER)) {
-        FIXME("throw TypeError\n");
-        return E_FAIL;
-    }
+    if(!is_class(dispex, JSCLASS_NUMBER))
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_NUM, NULL);
 
     if(retv) {
         NumberInstance *number = (NumberInstance*)dispex;
@@ -146,6 +241,8 @@ static HRESULT Number_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
     NumberInstance *number = (NumberInstance*)dispex;
 
     switch(flags) {
+    case INVOKE_FUNC:
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
     case DISPATCH_PROPERTYGET:
         *retv = number->num;
         break;

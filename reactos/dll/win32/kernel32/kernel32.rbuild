@@ -10,6 +10,7 @@
 	<library>pseh</library>
 	<library>normalize</library>
 	<library>ntdll</library>
+	<library>win32ksys</library>
 	<define name="_KERNEL32_" />
 	<redefine name="_WIN32_WINNT">0x0600</redefine>
 	<define name="__NO_CTYPE_INLINES" />

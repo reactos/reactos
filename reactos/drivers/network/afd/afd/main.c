@@ -184,6 +184,8 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( !SocketAcquireStateLock( FCB ) ) return STATUS_FILE_CLOSED;
 
     FCB->State = SOCKET_STATE_CLOSED;
+    FCB->PollState = AFD_EVENT_CLOSE;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     InFlightRequest[0] = &FCB->ListenIrp;
     InFlightRequest[1] = &FCB->ReceiveIrp;
@@ -297,6 +299,9 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			    ConnInfo);
 
     if (ConnInfo) ExFreePool( ConnInfo );
+
+    FCB->PollState |= AFD_EVENT_DISCONNECT;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }

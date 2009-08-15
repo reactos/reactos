@@ -186,9 +186,6 @@ VOID LoadReactOSSetup2(VOID)
         NULL
     };
 
-    /* Try to open system drive */
-    FsOpenBootVolume();
-
     /* Open 'txtsetup.sif' from any of source paths */
     MachDiskGetBootPath(SystemPath, sizeof(SystemPath));
     for (i = MachDiskBootingFromFloppy() ? 0 : 1; ; i++)

@@ -77,6 +77,7 @@ typedef enum {
     STYLEID_VERTICAL_ALIGN,
     STYLEID_VISIBILITY,
     STYLEID_WIDTH,
+    STYLEID_WORD_WRAP,
     STYLEID_Z_INDEX
 } styleid_t;
 

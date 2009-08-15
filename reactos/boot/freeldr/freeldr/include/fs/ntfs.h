@@ -222,14 +222,6 @@ typedef struct
 } NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 #include <poppack.h>
 
-BOOLEAN	NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
-FILE*	NtfsOpenFile(PCSTR FileName);
-VOID	NtfsCloseFile(FILE *FileHandle);
-BOOLEAN	NtfsReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-ULONG	NtfsGetFileSize(FILE *FileHandle);
-VOID	NtfsSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
-ULONG	NtfsGetFilePointer(FILE *FileHandle);
-
-extern const FS_VTBL NtfsVtbl;
+const DEVVTBL* NtfsMount(ULONG DeviceId);
 
 #endif // #defined __NTFS_H

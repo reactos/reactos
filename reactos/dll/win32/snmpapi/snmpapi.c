@@ -12,19 +12,9 @@
 #include <winsock2.h>
 #include <windows.h>
 
-#ifdef __GNUC__
 #define SNMP_FUNC_TYPE WINAPI
-#endif
 #include <snmp.h>
 #include "debug.h"
-
-
-#ifdef __GNUC__
-#define EXPORT WINAPI
-#else
-#define EXPORT CALLBACK
-#endif
-
 
 #if DBG
 

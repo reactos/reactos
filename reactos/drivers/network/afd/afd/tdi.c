@@ -830,10 +830,10 @@ NTSTATUS TdiSend
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
         *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -843,7 +843,7 @@ NTSTATUS TdiSend
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 		IoFreeMdl(Mdl);
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
         *Irp = NULL;
         _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
@@ -911,10 +911,10 @@ NTSTATUS TdiReceive(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
         *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -926,7 +926,7 @@ NTSTATUS TdiReceive(
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 		IoFreeMdl(Mdl);
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
 		*Irp = NULL;
 		_SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
@@ -1011,10 +1011,10 @@ NTSTATUS TdiReceiveDatagram(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
         *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -1024,7 +1024,7 @@ NTSTATUS TdiReceiveDatagram(
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 		IoFreeMdl(Mdl);
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
         *Irp = NULL;
         _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;
@@ -1109,11 +1109,11 @@ NTSTATUS TdiSendDatagram(
                         BufferLength,   /* Length of buffer */
                         FALSE,          /* Not secondary */
                         FALSE,          /* Don't charge quota */
-                        *Irp);          /* Use IRP */
+                        NULL);          /* Don't use IRP */
 
     if (!Mdl) {
         AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
         *Irp = NULL;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -1123,7 +1123,7 @@ NTSTATUS TdiSendDatagram(
     } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
         AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 		IoFreeMdl(Mdl);
-        IoFreeIrp(*Irp);
+        IoCompleteRequest(*Irp, IO_NO_INCREMENT);
         *Irp = NULL;
         _SEH2_YIELD(return STATUS_INSUFFICIENT_RESOURCES);
     } _SEH2_END;

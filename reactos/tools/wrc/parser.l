@@ -121,6 +121,8 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 /* Always update the current character position within a line */
 #define YY_USER_ACTION	char_number+=yyleng; wanted_id = want_id; want_id = 0;
 
+#define YY_USER_INIT current_codepage = -1;
+
 static void addcchar(char c);
 static void addwchar(WCHAR s);
 static string_t *get_buffered_cstring(void);
@@ -571,7 +573,7 @@ L\"			{
 			}
 {ws}+			want_id = wanted_id;	/* Eat whitespace */
 
-<INITIAL>.		return yytext[0];
+<INITIAL>[ -~]		return yytext[0];
 
 <*>.|\n			{
 				/* Catch all rule to find any unmatched text */
@@ -580,10 +582,11 @@ L\"			{
 					line_number++;
 					char_number = 1;
 				}
-				parser_warning("Unmatched text '%c' (0x%02x) YY_START=%d\n",
-					isprint(*yytext & 0xff) ? *yytext : '.', *yytext, YY_START);
+				parser_error("Unmatched text '%c' (0x%02x) YY_START=%d",
+                                             isprint((unsigned char)*yytext) ? *yytext : '.', *yytext, YY_START);
 			}
 
+<<EOF>>			current_codepage = -1; yyterminate();
 %%
 
 /* These dup functions copy the enclosed '\0' from

@@ -9,6 +9,22 @@
 
 #include "stream.h"
 
+
+NTSTATUS
+NTAPI
+StreamClassCreatePin(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp)
+{
+    UNIMPLEMENTED
+
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
 NTSTATUS
 NTAPI
 FilterDispatch_fnDeviceIoControl(
@@ -203,10 +219,13 @@ InitializeFilterWithKs(
         /* not enough memory */
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
     /* Zero create item */
     RtlZeroMemory(CreateItem, sizeof(KSOBJECT_CREATE_ITEM));
-    /* Set item class */
-    RtlInitUnicodeString(&CreateItem->ObjectClass, L"STREAMCLASS");
+    /* Initialize createitem */
+    RtlInitUnicodeString(&CreateItem->ObjectClass, KSSTRING_Pin);
+    CreateItem->Create = StreamClassCreatePin;
+
     /* Get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* Create Ks streaming object header */
@@ -246,7 +265,6 @@ StreamClassCreateFilter(
     NTSTATUS Status;
     DPRINT1("StreamClassCreateFilter Called\n");
 
-    /* FIXME Support Pins/Clocks */
     /* Init filter */
     Status = InitializeFilterWithKs(DeviceObject, Irp);
 

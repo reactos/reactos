@@ -11,7 +11,7 @@
 	<cdfile installbase="$(CDOUTPUT)" nameoncd="hivesft.inf">hivesft_$(ARCH).inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)" nameoncd="hivesys.inf">hivesys_$(ARCH).inf</cdfile>
 	<cdfile installbase="$(CDOUTPUT)">txtsetup.sif</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">unattend.inf</cdfile>
+	<cdfile installbase="$(CDOUTPUT)" nameoncd="unattend.inf.sample">unattend.inf</cdfile>
 
 	<directory name="bootcd">
 		<xi:include href="bootcd/bootcd.rbuild" />

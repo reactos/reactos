@@ -66,8 +66,8 @@
 @ stdcall EngFreeSectionMem(ptr ptr)
 @ stdcall EngFreeUserMem(ptr)
 @ stdcall EngGetCurrentCodePage(ptr ptr)
-@ stdcall EngGetCurrentProcessId()
-@ stdcall EngGetCurrentThreadId()
+@ stdcall EngGetCurrentProcessId() NTOSKRNL.PsGetCurrentProcessId
+@ stdcall EngGetCurrentThreadId() NTOSKRNL.PsGetCurrentThreadId
 @ stdcall EngGetDriverName(ptr)
 @ stdcall EngGetFileChangeTime(ptr ptr)
 @ stdcall EngGetFilePath(ptr ptr)

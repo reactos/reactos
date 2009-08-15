@@ -197,7 +197,7 @@ typedef WORD LANGID;
 #endif
 #undef __int64
 #define __int64 long long
-#elif defined(__WATCOMC__) && (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64 )
+#elif (defined(__WATCOMC__) || defined(_MSC_VER)) && (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64 )
 #define _HAVE_INT64
 #endif /* __GNUC__/__WATCOMC */
 #if defined(_HAVE_INT64) || (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 64)
@@ -232,9 +232,7 @@ typedef DWORD FLONG;
 #define C_ASSERT(e) typedef char __C_ASSERT_JOIN(__C_ASSERT__, __LINE__)[(e) ? 1 : -1]
 
 
-#ifdef __GNUC__
 #include "intrin.h"
-#endif
 
 #define NTAPI __stdcall
 #include <basetsd.h>
@@ -2841,7 +2839,7 @@ typedef struct _CONTEXT {
 #ifndef PAGE_SIZE
 #define PAGE_SIZE                         0x1000 // FIXME: This should probably go elsewhere
 #endif
-    
+
 /* The following flags control the contents of the CONTEXT structure. */
 
 #define CONTEXT_ARM    0x0000040
@@ -3241,7 +3239,7 @@ typedef struct _MEMORY_BASIC_INFORMATION {
 	PVOID BaseAddress;
 	PVOID AllocationBase;
 	DWORD AllocationProtect;
-	DWORD RegionSize;
+	SIZE_T RegionSize;
 	DWORD State;
 	DWORD Protect;
 	DWORD Type;
@@ -4892,9 +4890,6 @@ extern struct _TEB * NtCurrentTeb(void);
 #elif defined(_MSC_VER)
 
 #if (_MSC_FULL_VER >= 13012035)
-
-unsigned long __readfsdword(const unsigned long Offset);
-#pragma intrinsic(__readfsdword)
 
 __inline PVOID GetCurrentFiber(void) { return (PVOID)(ULONG_PTR)__readfsdword(0x10); }
 __inline struct _TEB * NtCurrentTeb(void) { return (struct _TEB *)(ULONG_PTR)__readfsdword(0x18); }

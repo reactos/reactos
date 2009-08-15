@@ -11,6 +11,7 @@
 	<library>setupapi</library>
 	<library>shell32</library>
 	<library>ntdll</library>
+	<library>pseh</library>
 	<file>vmwinst.c</file>
 	<file>vmwinst.rc</file>
 </module>

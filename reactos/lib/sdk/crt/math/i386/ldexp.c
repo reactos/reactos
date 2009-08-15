@@ -30,7 +30,7 @@ double ldexp (double __x, int __y)
     ("fscale"
      : "=t" (__val) : "0" (__x), "u" ((double) __y));
 #else
-  __val = linkme_ldexp(__x, __y);
+#error IMPLEMENT ME
 #endif /*__GNUC__*/
   return __val;
 }

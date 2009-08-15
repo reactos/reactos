@@ -24,7 +24,10 @@
 /* INCLUDES *******************************************************************/
 
 #ifdef _MSC_VER
-#include "dderror.h"
+#pragma message ("INVESTIGATE ME")
+#endif
+
+#if 0 //#ifdef _MSC_VER
 #include "devioctl.h"
 #else
 #include <ntddk.h>

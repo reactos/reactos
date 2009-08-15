@@ -179,6 +179,8 @@ HRESULT create_exec_ctx(IDispatch *this_obj, DispatchEx *var_disp, scope_chain_t
     if(!ctx)
         return E_OUTOFMEMORY;
 
+    ctx->ref = 1;
+
     IDispatch_AddRef(this_obj);
     ctx->this_obj = this_obj;
 
@@ -230,10 +232,8 @@ static HRESULT disp_get_id(IDispatch *disp, BSTR name, DWORD flags, DISPID *id)
 /* ECMA-262 3rd Edition    8.7.2 */
 static HRESULT put_value(script_ctx_t *ctx, exprval_t *ref, VARIANT *v, jsexcept_t *ei)
 {
-    if(ref->type != EXPRVAL_IDREF) {
-        FIXME("throw ReferemceError\n");
-        return E_FAIL;
-    }
+    if(ref->type != EXPRVAL_IDREF)
+        return throw_reference_error(ctx, ei, IDS_ILLEGAL_ASSIGN, NULL);
 
     return disp_propput(ref->u.idref.disp, ref->u.idref.id, ctx->lcid, v, ei, NULL/*FIXME*/);
 }
@@ -304,7 +304,12 @@ static HRESULT equal2_values(VARIANT *lval, VARIANT *rval, BOOL *ret)
         *ret = V_R8(lval) == V_R8(rval);
         break;
     case VT_BSTR:
-        *ret = !strcmpW(V_BSTR(lval), V_BSTR(rval));
+        if(!V_BSTR(lval))
+            *ret = SysStringLen(V_BSTR(rval))?FALSE:TRUE;
+        else if(!V_BSTR(rval))
+            *ret = SysStringLen(V_BSTR(lval))?FALSE:TRUE;
+        else
+            *ret = !strcmpW(V_BSTR(lval), V_BSTR(rval));
         break;
     case VT_DISPATCH:
         return disp_cmp(V_DISPATCH(lval), V_DISPATCH(rval), ret);
@@ -431,7 +436,7 @@ HRESULT exec_source(exec_ctx_t *ctx, parser_ctx_t *parser, source_elements_t *so
 }
 
 /* ECMA-262 3rd Edition    10.1.4 */
-static HRESULT identifier_eval(exec_ctx_t *ctx, BSTR identifier, DWORD flags, exprval_t *ret)
+static HRESULT identifier_eval(exec_ctx_t *ctx, BSTR identifier, DWORD flags, jsexcept_t *ei, exprval_t *ret)
 {
     scope_chain_t *scope;
     named_item_t *item;
@@ -516,8 +521,7 @@ static HRESULT identifier_eval(exec_ctx_t *ctx, BSTR identifier, DWORD flags, ex
         return S_OK;
     }
 
-    WARN("Could not find identifier %s\n", debugstr_w(identifier));
-    return E_FAIL;
+    return throw_type_error(ctx->var_disp->ctx, ei, IDS_UNDEFINED, identifier);
 }
 
 /* ECMA-262 3rd Edition    12.1 */
@@ -853,7 +857,7 @@ HRESULT forin_statement_eval(exec_ctx_t *ctx, statement_t *_stat, return_type_t 
         TRACE("iter %s\n", debugstr_w(str));
 
         if(stat->variable)
-            hres = identifier_eval(ctx, identifier, 0, &exprval);
+            hres = identifier_eval(ctx, identifier, 0, NULL, &exprval);
         else
             hres = expr_eval(ctx, stat->expr, EXPR_NEWREF, &rt->ei, &exprval);
         if(SUCCEEDED(hres)) {
@@ -1536,11 +1540,16 @@ HRESULT call_expression_eval(exec_ctx_t *ctx, expression_t *_expr, DWORD flags, 
     hres = args_to_param(ctx, expr->argument_list, ei, &dp);
     if(SUCCEEDED(hres)) {
         switch(exprval.type) {
+        case EXPRVAL_VARIANT:
+            if(V_VT(&exprval.u.var) != VT_DISPATCH)
+                return throw_type_error(ctx->var_disp->ctx, ei, IDS_NO_PROPERTY, NULL);
+
+            hres = disp_call(V_DISPATCH(&exprval.u.var), DISPID_VALUE, ctx->parser->script->lcid,
+                    DISPATCH_METHOD, &dp, flags & EXPR_NOVAL ? NULL : &var, ei, NULL/*FIXME*/);
+            break;
         case EXPRVAL_IDREF:
-            hres = disp_call(exprval.u.idref.disp, exprval.u.idref.id, ctx->parser->script->lcid, DISPATCH_METHOD,
-                    &dp, flags & EXPR_NOVAL ? NULL : &var, ei, NULL/*FIXME*/);
-            if(flags & EXPR_NOVAL)
-                V_VT(&var) = VT_EMPTY;
+            hres = disp_call(exprval.u.idref.disp, exprval.u.idref.id, ctx->parser->script->lcid,
+                    DISPATCH_METHOD, &dp, flags & EXPR_NOVAL ? NULL : &var, ei, NULL/*FIXME*/);
             break;
         default:
             FIXME("unimplemented type %d\n", exprval.type);
@@ -1554,9 +1563,13 @@ HRESULT call_expression_eval(exec_ctx_t *ctx, expression_t *_expr, DWORD flags, 
     if(FAILED(hres))
         return hres;
 
-    TRACE("= %s\n", debugstr_variant(&var));
     ret->type = EXPRVAL_VARIANT;
-    ret->u.var = var;
+    if(flags & EXPR_NOVAL) {
+        V_VT(&ret->u.var) = VT_EMPTY;
+    }else {
+        TRACE("= %s\n", debugstr_variant(&var));
+        ret->u.var = var;
+    }
     return S_OK;
 }
 
@@ -1585,7 +1598,7 @@ HRESULT identifier_expression_eval(exec_ctx_t *ctx, expression_t *_expr, DWORD f
     if(!identifier)
         return E_OUTOFMEMORY;
 
-    hres = identifier_eval(ctx, identifier, flags, ret);
+    hres = identifier_eval(ctx, identifier, flags, ei, ret);
 
     SysFreeString(identifier);
     return hres;
@@ -1931,11 +1944,11 @@ static HRESULT add_eval(exec_ctx_t *ctx, VARIANT *lval, VARIANT *rval, jsexcept_
     VARIANT r, l;
     HRESULT hres;
 
-    hres = to_primitive(ctx->parser->script, lval, ei, &l);
+    hres = to_primitive(ctx->parser->script, lval, ei, &l, NO_HINT);
     if(FAILED(hres))
         return hres;
 
-    hres = to_primitive(ctx->parser->script, rval, ei, &r);
+    hres = to_primitive(ctx->parser->script, rval, ei, &r, NO_HINT);
     if(FAILED(hres)) {
         VariantClear(&l);
         return hres;
@@ -2518,7 +2531,7 @@ static HRESULT equal_values(exec_ctx_t *ctx, VARIANT *lval, VARIANT *rval, jsexc
         VARIANT v;
         HRESULT hres;
 
-        hres = to_primitive(ctx->parser->script, rval, ei, &v);
+        hres = to_primitive(ctx->parser->script, rval, ei, &v, NO_HINT);
         if(FAILED(hres))
             return hres;
 
@@ -2533,7 +2546,7 @@ static HRESULT equal_values(exec_ctx_t *ctx, VARIANT *lval, VARIANT *rval, jsexc
         VARIANT v;
         HRESULT hres;
 
-        hres = to_primitive(ctx->parser->script, lval, ei, &v);
+        hres = to_primitive(ctx->parser->script, lval, ei, &v, NO_HINT);
         if(FAILED(hres))
             return hres;
 
@@ -2638,11 +2651,11 @@ static HRESULT less_eval(exec_ctx_t *ctx, VARIANT *lval, VARIANT *rval, BOOL gre
     VARIANT l, r, ln, rn;
     HRESULT hres;
 
-    hres = to_primitive(ctx->parser->script, lval, ei, &l);
+    hres = to_primitive(ctx->parser->script, lval, ei, &l, NO_HINT);
     if(FAILED(hres))
         return hres;
 
-    hres = to_primitive(ctx->parser->script, rval, ei, &r);
+    hres = to_primitive(ctx->parser->script, rval, ei, &r, NO_HINT);
     if(FAILED(hres)) {
         VariantClear(&l);
         return hres;

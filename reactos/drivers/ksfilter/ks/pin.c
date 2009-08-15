@@ -384,16 +384,14 @@ KsPinGetConnectedPinDeviceObject(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 PFILE_OBJECT
 NTAPI
 KsPinGetConnectedPinFileObject(
     IN PKSPIN Pin)
 {
-    IKsPinImpl * This = (IKsPinImpl*)CONTAINING_RECORD(Pin, IKsPinImpl, Pin);
-
-    return This->FileObject;
+    return NULL;
 }
 
 /*
@@ -1188,8 +1186,12 @@ KspCreatePin(
     This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
     This->ObjectHeader->ObjectType = (PVOID)&This->Pin;
 
-    /*  now inform the driver to create a new pin */
-    Status = Descriptor->Dispatch->Create(&This->Pin, Irp);
+    /* does the driver have a pin dispatch */
+    if (Descriptor->Dispatch && Descriptor->Dispatch->Create)
+    {
+        /*  now inform the driver to create a new pin */
+        Status = Descriptor->Dispatch->Create(&This->Pin, Irp);
+    }
 
     if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {

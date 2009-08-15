@@ -114,7 +114,7 @@ RetrieveQuote(SOCKET sock)
                     lpStr++;
 
                 /* move past % and RN */
-                lpStr += 3;
+                lpStr += 2;
             }
         }
 

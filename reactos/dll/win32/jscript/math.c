@@ -1,5 +1,6 @@
 /*
  * Copyright 2008 Jacek Caban for CodeWeavers
+ * Copyright 2009 Piotr Caban
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

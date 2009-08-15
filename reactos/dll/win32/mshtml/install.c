@@ -47,7 +47,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-#define GECKO_FILE_NAME "wine_gecko-" GECKO_VERSION ".cab"
+#define GECKO_FILE_NAME "wine_gecko-" GECKO_VERSION "-x86.cab"
 
 static const WCHAR mshtml_keyW[] =
     {'S','o','f','t','w','a','r','e',
@@ -146,7 +146,7 @@ static BOOL install_cab(LPCWSTR file_name)
 
     TRACE("(%s)\n", debugstr_w(file_name));
 
-    GetWindowsDirectoryA(install_dir, sizeof(install_dir));
+    GetSystemDirectoryA(install_dir, sizeof(install_dir));
     strcat(install_dir, "\\gecko\\");
     res = CreateDirectoryA(install_dir, NULL);
     if(!res && GetLastError() != ERROR_ALREADY_EXISTS) {
@@ -430,7 +430,7 @@ static LPWSTR get_url(void)
 
     static const WCHAR wszGeckoUrl[] = {'G','e','c','k','o','U','r','l',0};
     static const WCHAR httpW[] = {'h','t','t','p'};
-    static const WCHAR v_formatW[] = {'?','v','=',0};
+    static const WCHAR v_formatW[] = {'?','a','r','c','h','=','x','8','6','&','v','=',0};
 
     /* @@ Wine registry key: HKCU\Software\Wine\MSHTML */
     res = RegOpenKeyW(HKEY_CURRENT_USER, mshtml_keyW, &hkey);

@@ -19,7 +19,7 @@ void exit(int status)
     djgpp_first_dtor[i]();
 */
   /* in case the program set it this way */
-  _setmode(0, O_TEXT);
+  _setmode(0, _O_TEXT);
   _atexit_cleanup();
   _exit(status);
   for(;;);

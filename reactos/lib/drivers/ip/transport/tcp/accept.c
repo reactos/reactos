@@ -70,16 +70,16 @@ NTSTATUS TCPListen( PCONNECTION_ENDPOINT Connection, UINT Backlog ) {
     NTSTATUS Status = STATUS_SUCCESS;
     SOCKADDR_IN AddressToBind;
 
-    TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
-
-    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
-    Connection->SocketContext));
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     ASSERT(Connection);
     ASSERT_KM_POINTER(Connection->SocketContext);
     ASSERT_KM_POINTER(Connection->AddressFile);
 
-    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+    TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
+
+    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
+    Connection->SocketContext));
 
     AddressToBind.sin_family = AF_INET;
     memcpy( &AddressToBind.sin_addr,
