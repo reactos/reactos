@@ -247,7 +247,7 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
                 if (in_count >= sizeof(struct ntdrv_escape_set_drawable))
                 {
                     const struct ntdrv_escape_set_drawable *data = in_data;
-                    RosGdiSetDcRects(physDev->hKernelDC, &data->dc_rect, &data->drawable_rect);
+                    RosGdiSetDcRects(physDev->hKernelDC, (RECT*)&data->dc_rect, (RECT*)&data->drawable_rect);
                     TRACE( "SET_DRAWABLE hdc %p dc_rect %s drawable_rect %s\n",
                            physDev->hUserDC, wine_dbgstr_rect(&data->dc_rect), wine_dbgstr_rect(&data->drawable_rect) );
                     return TRUE;

@@ -1133,8 +1133,6 @@ static inline void text_buffer_changed(EDITSTATE *es)
  */
 static void EDIT_LockBuffer(EDITSTATE *es)
 {
-	HINSTANCE16 hInstance = GetWindowLongPtrW( es->hwndSelf, GWLP_HINSTANCE );
-
 	if (!es->text) {
 	    CHAR *textA = NULL;
 	    UINT countA = 0;
@@ -1217,7 +1215,9 @@ static void EDIT_UnlockBuffer(EDITSTATE *es, BOOL force)
 		CHAR *textA = NULL;
 		UINT countA = 0;
 		UINT countW = get_text_length(es) + 1;
-	        HANDLE16 oldDS = 0;
+#ifndef __REACTOS__
+		HANDLE16 oldDS = 0;
+#endif
 
 		if(es->hloc32A)
 		{
@@ -3037,29 +3037,6 @@ static BOOL EDIT_EM_SetTabStops(EDITSTATE *es, INT count, const INT *tabs)
 
 /*********************************************************************
  *
- *	EM_SETTABSTOPS16
- *
- */
-static BOOL EDIT_EM_SetTabStops16(EDITSTATE *es, INT count, const INT16 *tabs)
-{
-	if (!(es->style & ES_MULTILINE))
-		return FALSE;
-        HeapFree(GetProcessHeap(), 0, es->tabs);
-	es->tabs_count = count;
-	if (!count)
-		es->tabs = NULL;
-	else {
-		INT i;
-		es->tabs = HeapAlloc(GetProcessHeap(), 0, count * sizeof(INT));
-		for (i = 0 ; i < count ; i++)
-			es->tabs[i] = *tabs++;
-	}
-	return TRUE;
-}
-
-
-/*********************************************************************
- *
  *	EM_SETWORDBREAKPROC
  *
  */
@@ -3071,25 +3048,6 @@ static void EDIT_EM_SetWordBreakProc(EDITSTATE *es, void *wbp)
 	es->word_break_proc = wbp;
 	es->word_break_proc16 = NULL;
 
-	if ((es->style & ES_MULTILINE) && !(es->style & ES_AUTOHSCROLL)) {
-		EDIT_BuildLineDefs_ML(es, 0, get_text_length(es), 0, NULL);
-		EDIT_UpdateText(es, NULL, TRUE);
-	}
-}
-
-
-/*********************************************************************
- *
- *	EM_SETWORDBREAKPROC16
- *
- */
-static void EDIT_EM_SetWordBreakProc16(EDITSTATE *es, EDITWORDBREAKPROC16 wbp)
-{
-	if (es->word_break_proc16 == wbp)
-		return;
-
-	es->word_break_proc = NULL;
-	es->word_break_proc16 = wbp;
 	if ((es->style & ES_MULTILINE) && !(es->style & ES_AUTOHSCROLL)) {
 		EDIT_BuildLineDefs_ML(es, 0, get_text_length(es), 0, NULL);
 		EDIT_UpdateText(es, NULL, TRUE);
@@ -4378,7 +4336,7 @@ static LRESULT EDIT_EM_GetThumb(EDITSTATE *es)
  * 
  * The Following code is to handle inline editing from IMEs
  */
-
+#if 0
 static void EDIT_GetCompositionStr(HIMC hIMC, LPARAM CompFlag, EDITSTATE *es)
 {
     LONG buflen;
@@ -4484,6 +4442,7 @@ static void EDIT_GetResultStr(HIMC hIMC, EDITSTATE *es)
 
     HeapFree(GetProcessHeap(),0,lpResultStr);
 }
+#endif
 
 static void EDIT_ImeComposition(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
 {

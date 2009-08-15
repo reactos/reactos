@@ -2,8 +2,8 @@
 	<importlibrary definition="winex11.drv.spec" />
 	<include base="winex11">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
+	<redefine name="WINVER">0x0600</redefine>
+	<redefine name="_WIN32_WINNT">0x0501</redefine>
 	<define name="__WINESRC__" />
 	<define name="_WINE" />
 	<file>bitblt.c</file>

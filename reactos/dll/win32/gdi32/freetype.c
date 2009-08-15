@@ -160,32 +160,31 @@ static DWORD FT_SimpleVersion;
 
 static void *ft_handle = NULL;
 
-#define MAKE_FUNCPTR(f) static typeof(f) * p##f = NULL // FIXME: MSVC does not implement typeof
-MAKE_FUNCPTR(FT_Vector_Unit);
-MAKE_FUNCPTR(FT_Done_Face);
-MAKE_FUNCPTR(FT_Get_Char_Index);
-MAKE_FUNCPTR(FT_Get_Module);
-MAKE_FUNCPTR(FT_Get_Sfnt_Name);
-MAKE_FUNCPTR(FT_Get_Sfnt_Name_Count);
-MAKE_FUNCPTR(FT_Get_Sfnt_Table);
-MAKE_FUNCPTR(FT_Init_FreeType);
-MAKE_FUNCPTR(FT_Load_Glyph);
-MAKE_FUNCPTR(FT_Matrix_Multiply);
+static void (*pFT_Vector_Unit)(FT_Vector*, FT_Angle) = NULL;
+static FT_Error (*pFT_Done_Face)(FT_Face) = NULL;
+static FT_UInt (*pFT_Get_Char_Index)(FT_Face, FT_ULong) = NULL; 
+static FT_Module (*pFT_Get_Module)(FT_Library, const char*) = NULL;
+static FT_Error (*pFT_Get_Sfnt_Name)(FT_Face, FT_UInt, FT_SfntName*) = NULL;
+static FT_UInt (*pFT_Get_Sfnt_Name_Count)(FT_Face) = NULL;
+static void* (*pFT_Get_Sfnt_Table)(FT_Face, FT_Sfnt_Tag) = NULL; 
+static  FT_Error (*pFT_Init_FreeType)(FT_Library*) = NULL;
+static FT_Error (*pFT_Load_Glyph)(FT_Face, FT_UInt, FT_Int32) = NULL;
+static void (*pFT_Matrix_Multiply)(const FT_Matrix*, FT_Matrix*) = NULL;
 #ifdef FT_MULFIX_INLINED
 #define pFT_MulFix FT_MULFIX_INLINED
 #else
-MAKE_FUNCPTR(FT_MulFix);
+static FT_Long (*pFT_MulFix)(FT_Long, FT_Long) = NULL;
 #endif
-MAKE_FUNCPTR(FT_New_Face);
-MAKE_FUNCPTR(FT_New_Memory_Face);
-MAKE_FUNCPTR(FT_Outline_Get_Bitmap);
-MAKE_FUNCPTR(FT_Outline_Transform);
-MAKE_FUNCPTR(FT_Outline_Translate);
-MAKE_FUNCPTR(FT_Select_Charmap);
-MAKE_FUNCPTR(FT_Set_Charmap);
-MAKE_FUNCPTR(FT_Set_Pixel_Sizes);
-MAKE_FUNCPTR(FT_Vector_Transform);
-MAKE_FUNCPTR(FT_Render_Glyph);
+static FT_Error (*pFT_New_Face)(FT_Library, const char*, FT_Long, FT_Face*) = NULL;
+static FT_Error (*pFT_New_Memory_Face)(FT_Library, const FT_Byte*, FT_Long, FT_Long, FT_Face*) = NULL;
+static FT_Error (*pFT_Outline_Get_Bitmap)(FT_Library, FT_Outline*, const FT_Bitmap*) = NULL;
+static void (*pFT_Outline_Transform)(const FT_Outline*, const FT_Matrix*) = NULL;
+static void (*pFT_Outline_Translate)(const FT_Outline*, FT_Pos, FT_Pos) = NULL;
+static FT_Error (*pFT_Select_Charmap)(FT_Face, FT_Encoding) = NULL;
+static FT_Error (*pFT_Set_Charmap)(FT_Face, FT_CharMap) = NULL;
+static FT_Error (*pFT_Set_Pixel_Sizes)(FT_Face, FT_UInt, FT_UInt) = NULL;
+static void (*pFT_Vector_Transform)(FT_Vector*, const FT_Matrix*) = NULL;
+static FT_Error (*pFT_Render_Glyph)(FT_GlyphSlot, FT_Render_Mode) = NULL;
 static void (*pFT_Library_Version)(FT_Library,FT_Int*,FT_Int*,FT_Int*);
 static FT_Error (*pFT_Load_Sfnt_Table)(FT_Face,FT_ULong,FT_Long,FT_Byte*,FT_ULong*);
 static FT_ULong (*pFT_Get_First_Char)(FT_Face,FT_UInt*);
@@ -195,11 +194,21 @@ static FT_TrueTypeEngineType (*pFT_Get_TrueType_Engine_Type)(FT_Library);
 static FT_Error (*pFT_Library_SetLcdFilter)(FT_Library, FT_LcdFilter);
 #endif
 #ifdef HAVE_FREETYPE_FTWINFNT_H
-MAKE_FUNCPTR(FT_Get_WinFNT_Header);
+static FT_Error (*pFT_Get_WinFNT_Header)(FT_Face, FT_WinFNT_HeaderRec*) = NULL;
 #endif
 
 #ifdef SONAME_LIBFONTCONFIG
 #include <fontconfig/fontconfig.h>
+static = NULL;
+static = NULL;
+static = NULL;
+static = NULL;
+static = NULL;
+static = NULL;
+static = NULL;
+static = NULL;
+static = NULL;
+static = NULL;
 MAKE_FUNCPTR(FcConfigGetCurrent);
 MAKE_FUNCPTR(FcFontList);
 MAKE_FUNCPTR(FcFontSetDestroy);
@@ -212,8 +221,6 @@ MAKE_FUNCPTR(FcPatternDestroy);
 MAKE_FUNCPTR(FcPatternGetBool);
 MAKE_FUNCPTR(FcPatternGetString);
 #endif
-
-#undef MAKE_FUNCPTR
 
 #ifndef FT_MAKE_TAG
 #define FT_MAKE_TAG( ch0, ch1, ch2, ch3 ) \

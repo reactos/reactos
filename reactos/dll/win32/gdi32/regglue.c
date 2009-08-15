@@ -1338,7 +1338,7 @@ RegQueryValueExW(HKEY hkeyorg,
     static const int info_size = offsetof( KEY_VALUE_PARTIAL_INFORMATION, Data );
 
     TRACE("(%p,%s,%p,%p,%p,%p=%d)\n",
-          hkey, debugstr_w(name), reserved, type, data, count,
+          hkeyorg, debugstr_w(name), reserved, type, data, count,
           (count && data) ? *count : 0 );
 
     if ((data && !count) || reserved) return ERROR_INVALID_PARAMETER;

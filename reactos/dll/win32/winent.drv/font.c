@@ -633,7 +633,7 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
         pen = CreatePen(PS_NULL, 0, 0);
         oldPen = SelectObject(physDev->hUserDC, pen);
 
-        RosGdiRectangle(physDev->hKernelDC, lprect);
+        RosGdiRectangle(physDev->hKernelDC, (RECT*)lprect);
 
         DeleteObject(SelectObject(physDev->hUserDC, oldBrush));
         DeleteObject(SelectObject(physDev->hUserDC, oldPen));

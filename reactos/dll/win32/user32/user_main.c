@@ -155,7 +155,9 @@ static void palette_init(void)
 static const WCHAR *get_default_desktop(void)
 {
     static const WCHAR defaultW[] = {'D','e','f','a','u','l','t',0};
+#if 0
     static const WCHAR desktopW[] = {'D','e','s','k','t','o','p',0};
+#endif
     static const WCHAR explorerW[] = {'\\','E','x','p','l','o','r','e','r',0};
     static const WCHAR app_defaultsW[] = {'S','o','f','t','w','a','r','e','\\',
                                           'W','i','n','e','\\',
@@ -164,7 +166,9 @@ static const WCHAR *get_default_desktop(void)
     WCHAR *p, *appname = buffer;
     const WCHAR *ret = defaultW;
     DWORD len;
+#if 0
     HKEY tmpkey, appkey;
+#endif
 
     len = (GetModuleFileNameW( 0, buffer, MAX_PATH ));
     if (!len || len >= MAX_PATH) return ret;
@@ -264,10 +268,10 @@ static void winstation_init(void)
  */
 static BOOL process_attach(void)
 {
+#ifndef __REACTOS__
     HINSTANCE16 instance;
 
     /* Create USER heap */
-#ifndef __REACTOS__
     if ((instance = LoadLibrary16( "USER.EXE" )) >= 32) USER_HeapSel = instance | 7;
     else
     {

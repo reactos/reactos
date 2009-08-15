@@ -36,7 +36,9 @@ static DWORD driver_load_error;
 static const USER_DRIVER *load_driver(void)
 {
     char buffer[MAX_PATH], libname[32], *name, *next;
+#if 0
     HKEY hkey;
+#endif
     void *ptr;
     HMODULE graphics_driver;
     USER_DRIVER *driver, *prev;

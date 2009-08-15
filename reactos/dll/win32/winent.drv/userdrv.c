@@ -158,7 +158,7 @@ UINT CDECL RosDrv_SendInput( UINT count, LPINPUT inputs, int size )
 INT CDECL RosDrv_ToUnicodeEx( UINT virt, UINT scan, const BYTE *state, LPWSTR str,
                                       int size, UINT flags, HKL layout )
 {
-    return RosUserToUnicodeEx(virt, scan, state, str, size, flags, layout);
+    return RosUserToUnicodeEx(virt, scan, (BYTE*)state, str, size, flags, layout);
 }
 
 BOOL CDECL RosDrv_UnloadKeyboardLayout( HKL layout )
@@ -876,7 +876,7 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
         }
     }
 
-    RosDrv_UpdateZOrder(hwnd, visible_rect);
+    RosDrv_UpdateZOrder(hwnd, (RECT*)visible_rect);
 }
 
 /* EOF */

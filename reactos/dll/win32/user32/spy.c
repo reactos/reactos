@@ -2658,10 +2658,14 @@ int SPY_Init(void)
 {
     int i;
     UINT j;
+#if 0
     char buffer[1024];
+#endif
     const SPY_NOTIFY *p;
     const USER_MSG *q;
+#if 0
     HKEY hkey;
+#endif
 
     if (!TRACE_ON(message)) return TRUE;
 
