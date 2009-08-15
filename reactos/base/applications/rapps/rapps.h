@@ -9,6 +9,8 @@
 
 #include "resource.h"
 
+#define APPLICATION_DATEBASE_URL L"http://opendn.org/rappmgr.cab"
+
 #define SPLIT_WIDTH 4
 #define MAX_STR_LEN 256
 

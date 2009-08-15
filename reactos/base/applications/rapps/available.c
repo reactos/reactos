@@ -76,7 +76,7 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     if (hFind == INVALID_HANDLE_VALUE)
     {
 		if (GetFileAttributesW(szCabPath) == 0xFFFFFFFF)
-			DownloadApplicationsDB(L"http://opendn.org/rappmgr.cab");
+			DownloadApplicationsDB(APPLICATION_DATEBASE_URL);
 
 		ExtractFilesFromCab(szCabPath, szAppsPath);
         hFind = FindFirstFileW(szPath, &FindFileData);
