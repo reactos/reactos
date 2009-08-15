@@ -234,7 +234,8 @@ find_best_locale_proc(HMODULE hModule, LPCSTR type, LPCSTR name, WORD LangID, LO
     res->match_flags = flags;
     res->found_lang_id = LangID;
   }
-  if (flags & (FOUND_LANGUAGE & FOUND_COUNTRY & FOUND_CODEPAGE))
+  if ((flags & (FOUND_LANGUAGE | FOUND_COUNTRY | FOUND_CODEPAGE)) ==
+        (FOUND_LANGUAGE | FOUND_COUNTRY | FOUND_CODEPAGE))
   {
     TRACE(":found exact locale match\n");
     return STOP_LOOKING;
@@ -316,7 +317,7 @@ static void msvcrt_set_ctype(unsigned int codepage, LCID lcid)
   {
     int i;
     char str[3];
-    unsigned char *traverse = (unsigned char *)cp.LeadByte;
+    unsigned char *traverse = cp.LeadByte;
 
     memset(MSVCRT_current_ctype, 0, sizeof(MSVCRT__ctype));
     MSVCRT___lc_codepage = codepage;
@@ -387,8 +388,8 @@ char *setlocale(int category, const char *locale)
   {
     MSVCRT_current_lc_all[0] = 'C';
     MSVCRT_current_lc_all[1] = '\0';
-    MSVCRT___lc_codepage = 1252;
-    MSVCRT___lc_collate_cp = 1252;
+    MSVCRT___lc_codepage = GetACP();
+    MSVCRT___lc_collate_cp = GetACP();
 
     switch (category) {
     case MSVCRT_LC_ALL:
