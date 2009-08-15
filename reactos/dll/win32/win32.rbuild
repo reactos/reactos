@@ -253,6 +253,9 @@
 <directory name="msgina">
 	<xi:include href="msgina/msgina.rbuild" />
 </directory>
+<directory name="msgsm32.acm">
+	<xi:include href="msgsm32.acm/msgsm32.acm.rbuild" />
+</directory>
 <directory name="mshtml">
 	<xi:include href="mshtml/mshtml.rbuild" />
 </directory>

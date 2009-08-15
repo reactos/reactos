@@ -21,6 +21,7 @@
   <property name="BASEADDRESS_SRCLIENT" value="0x512C0000" />
   <property name="BASEADDRESS_PSTOREC" value="0x513D0000" />
   <property name="BASEADDRESS_LPK" value="0x516C0000" />
+  <property name="BASEADDRESS_MSGSM32ACM" value="0x56db0000" />
   <property name="BASEADDRESS_MSG711ACM" value="0x584f0000" />
   <property name="BASEADDRESS_IMAADP32ACM" value="0x585e0000" />
   <property name="BASEADDRESS_TELEPHON" value="0x58750000" />

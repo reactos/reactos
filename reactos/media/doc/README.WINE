@@ -94,6 +94,7 @@ reactos/dll/win32/mscoree         # Autosync
 reactos/dll/win32/msctf           # Autosync
 reactos/dll/win32/msftedit        # Autosync
 reactos/dll/win32/msg711.acm      # Autosync
+reactos/dll/win32/msgsm32.acm     # Autosync
 reactos/dll/win32/mshtml          # Autosync
 reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Autosync
