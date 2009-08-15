@@ -1107,8 +1107,10 @@ IopSecurityFile(IN PVOID ObjectBody,
         /* Check what kind of request this was */
         if (OperationCode == QuerySecurityDescriptor)
         {
-            DPRINT1("FIXME: Device Query security descriptor UNHANDLED\n");
-            return STATUS_SUCCESS;
+            return SeQuerySecurityDescriptorInfo(SecurityInformation,
+                                                 SecurityDescriptor,
+                                                 BufferLength,
+                                                 &DeviceObject->SecurityDescriptor);
         }
         else if (OperationCode == DeleteSecurityDescriptor)
         {
@@ -1262,8 +1264,16 @@ IopSecurityFile(IN PVOID ObjectBody,
         /* Callers usually expect the normalized form */
         if (Status == STATUS_BUFFER_OVERFLOW) Status = STATUS_BUFFER_TOO_SMALL;
 
-        /* Return length */
-        *BufferLength = IoStatusBlock.Information;
+        _SEH2_TRY
+        {
+            /* Return length */
+            *BufferLength = IoStatusBlock.Information;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
 
     /* Return Status */
