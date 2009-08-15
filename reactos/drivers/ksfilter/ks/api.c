@@ -1891,7 +1891,7 @@ KsGetBusEnumPnpDeviceObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -1899,12 +1899,19 @@ NTAPI
 KsGetFirstChild(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader;
+
+    /* get the basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* type has to be either a device or a filter factory */
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory);
+
+    return (PVOID)BasicHeader->FirstChild.Filter;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -1912,8 +1919,15 @@ NTAPI
 KsGetNextSibling(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader;
+
+    /* get the basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+           BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    return (PVOID)BasicHeader->Next.Pin;
 }
 
 /*

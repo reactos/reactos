@@ -62,13 +62,26 @@ typedef struct
     KMUTEX ControlMutex;
     LIST_ENTRY EventList;
     KSPIN_LOCK EventListLock;
-
     union
     {
         PKSDEVICE KsDevice;
         PKSFILTERFACTORY KsFilterFactory;
         PKSFILTER KsFilter;
     }Parent;
+
+    union
+    {
+        PKSFILTERFACTORY FilterFactory;
+        PKSFILTER Filter;
+        PKSPIN Pin;
+    }Next;
+
+    union
+    {
+        PKSFILTERFACTORY FilterFactory;
+        PKSFILTER Filter;
+    }FirstChild;
+
 }KSBASIC_HEADER, *PKSBASIC_HEADER;
 
 typedef struct

@@ -120,20 +120,6 @@ KsDispatchSetSecurity(
 KSDDKAPI
 NTSTATUS
 NTAPI
-KsDispatchSpecificProperty(
-    IN  PIRP Irp,
-    IN  PFNKSHANDLER Handler)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
 KsDispatchSpecificMethod(
     IN  PIRP Irp,
     IN  PFNKSHANDLER Handler)

@@ -237,12 +237,6 @@ DECLARE_INTERFACE_(IKsFilterFactory, IUnknown)
         IN PFNKSFILTERFACTORYPOWER  SleepCallback OPTIONAL,
         IN PFNKSFILTERFACTORYPOWER  WakeCallback OPTIONAL,
         OUT PKSFILTERFACTORY  *FilterFactory OPTIONAL)PURE;
-
-    STDMETHOD_(NTSTATUS, AddFilterInstance)(THIS_
-        IN IKsFilter *Filter)PURE;
-
-    STDMETHOD_(NTSTATUS, RemoveFilterInstance)(THIS_
-        IN IKsFilter *Filter)PURE;
 };
 
 

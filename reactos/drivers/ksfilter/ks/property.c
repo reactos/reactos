@@ -200,7 +200,7 @@ FindFastPropertyHandler(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 BOOLEAN
@@ -280,3 +280,22 @@ KsFastPropertyHandler(
     }
     return FALSE;
 }
+
+/*
+    @implemented
+*/
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsDispatchSpecificProperty(
+    IN  PIRP Irp,
+    IN  PFNKSHANDLER Handler)
+{
+    PIO_STACK_LOCATION IoStack;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    return Handler(Irp, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, Irp->UserBuffer);
+}
+

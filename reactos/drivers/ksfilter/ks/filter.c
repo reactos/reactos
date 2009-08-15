@@ -32,6 +32,9 @@ typedef struct
     PFNKSFILTERPOWER Wake;
 
     ULONG *PinInstanceCount;
+    PKSPIN * FirstPin;
+    KSPROCESSPIN_INDEXENTRY ProcessPinIndex;
+
 }IKsFilterImpl;
 
 const GUID IID_IKsControl = {0x28F54685L, 0x06FD, 0x11D2, {0xB2, 0x7A, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
@@ -284,8 +287,43 @@ IKsFilter_fnAddProcessPin(
     IKsFilter * iface,
     IN PKSPROCESSPIN ProcessPin)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PKSPROCESSPIN *Pins;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtbl);
+
+    /* first acquire processing mutex */
+    KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
+
+    /* allocate new pins array */
+    Pins = AllocateItem(NonPagedPool, sizeof(PKSPROCESSPIN) * (This->ProcessPinIndex.Count + 1));
+
+    /* check if allocation succeeded */
+    if (Pins)
+    {
+        if (This->ProcessPinIndex.Count)
+        {
+            /* copy old pin index */
+            RtlMoveMemory(Pins, This->ProcessPinIndex.Pins, sizeof(PKSPROCESSPIN) * This->ProcessPinIndex.Count);
+        }
+
+        /* add new process pin */
+        Pins[This->ProcessPinIndex.Count] = ProcessPin;
+
+        /* free old process pin */
+        FreeItem(This->ProcessPinIndex.Pins);
+
+        /* store new process pin index */
+        This->ProcessPinIndex.Pins = Pins;
+        This->ProcessPinIndex.Count++;
+    }
+
+    /* release process mutex */
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
+
+    if (Pins)
+        return STATUS_SUCCESS;
+    else
+        return STATUS_INSUFFICIENT_RESOURCES;
+
 }
 
 NTSTATUS
@@ -294,8 +332,33 @@ IKsFilter_fnRemoveProcessPin(
     IKsFilter * iface,
     IN PKSPROCESSPIN ProcessPin)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Index;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtbl);
+
+    /* first acquire processing mutex */
+    KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
+
+    /* iterate through process pin index array and search for the process pin to be removed */
+    for(Index = 0; Index < This->ProcessPinIndex.Count; Index++)
+    {
+        if (This->ProcessPinIndex.Pins[Index] == ProcessPin)
+        {
+            /* found process pin */
+            if (Index + 1 < This->ProcessPinIndex.Count)
+            {
+                /* erase entry */
+                RtlMoveMemory(&This->ProcessPinIndex.Pins[Index], &This->ProcessPinIndex.Pins[Index+1], This->ProcessPinIndex.Count - Index - 1);
+            }
+            /* decrement process pin count */
+            This->ProcessPinIndex.Count--;
+        }
+    }
+
+    /* release process mutex */
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
+
+    /* done */
+    return STATUS_SUCCESS;
 }
 
 BOOL
@@ -437,8 +500,8 @@ IKsFilter_DispatchClose(
         /* complete irp */
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-        /* remove our instance from the filter factory */
-        This->FilterFactory->lpVtbl->RemoveFilterInstance(This->FilterFactory, Filter);
+        /* FIXME remove our instance from the filter factory */
+        ASSERT(0);
 
         /* free object header */
         KsFreeObjectHeader(This->ObjectHeader);
@@ -726,6 +789,15 @@ IKsFilter_CreateDescriptors(
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
+        /* allocate first pin array */
+        This->FirstPin = AllocateItem(NonPagedPool, sizeof(PKSPIN) * FilterDescriptor->PinDescriptorsCount);
+        if(!This->FirstPin)
+        {
+            FreeItem(This->PinDescriptors);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+
         /* allocate pin descriptor array */
         This->PinDescriptors = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * FilterDescriptor->PinDescriptorsCount);
         if(!This->PinDescriptors)
@@ -852,6 +924,50 @@ IKsFilter_CopyFilterDescriptor(
     return STATUS_SUCCESS;
 }
 
+
+NTSTATUS
+IKsFilter_AddPin(
+    IKsFilter * Filter,
+    PKSPIN Pin)
+{
+    PKSPIN NextPin, CurPin;
+    PKSBASIC_HEADER BasicHeader;
+    IKsFilterImpl * This = (IKsFilterImpl*)Filter;
+
+    /* sanity check */
+    ASSERT(Pin->Id < This->PinDescriptorCount);
+
+    if (This->FirstPin[Pin->Id] == NULL)
+    {
+        /* welcome first pin */
+        This->FirstPin[Pin->Id] = Pin;
+        return STATUS_SUCCESS;
+    }
+
+    /* get first pin */
+    CurPin = This->FirstPin[Pin->Id];
+
+    do
+    {
+        /* get next instantiated pin */
+        NextPin = KsPinGetNextSiblingPin(CurPin);
+        if (!NextPin)
+            break;
+
+        NextPin = CurPin;
+
+    }while(NextPin != NULL);
+
+    /* get basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)CurPin - sizeof(KSBASIC_HEADER));
+
+    /* store pin */
+    BasicHeader->Next.Pin = Pin;
+
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS
 NTAPI
 IKsFilter_DispatchCreatePin(
@@ -920,6 +1036,54 @@ IKsFilter_DispatchCreateNode(
     return STATUS_UNSUCCESSFUL;
 }
 
+
+VOID
+IKsFilter_AttachFilterToFilterFactory(
+    IKsFilterImpl * This,
+    PKSFILTERFACTORY FilterFactory)
+{
+    PKSBASIC_HEADER BasicHeader;
+    PKSFILTER Filter;
+
+
+    /* get filter factory basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)FilterFactory - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory);
+
+    if (BasicHeader->FirstChild.FilterFactory == NULL)
+    {
+        /* welcome first instantiated filter */
+        BasicHeader->FirstChild.Filter = &This->Filter;
+        return;
+    }
+
+    /* set to first entry */
+    Filter = BasicHeader->FirstChild.Filter;
+
+    do
+    {
+        /* get basic header */
+        BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Filter - sizeof(KSBASIC_HEADER));
+        /* sanity check */
+        ASSERT(BasicHeader->Type == KsObjectTypeFilter);
+
+        if (BasicHeader->Next.Filter)
+        {
+            /* iterate to next filter factory */
+            Filter = BasicHeader->Next.Filter;
+        }
+        else
+        {
+            /* found last entry */
+            break;
+        }
+    }while(FilterFactory);
+
+    /* attach filter factory */
+    BasicHeader->Next.Filter = &This->Filter;
+}
 
 NTSTATUS
 NTAPI
@@ -1016,26 +1180,11 @@ KspCreateFilter(
     InitializeListHead(&This->Header.EventList);
     KeInitializeSpinLock(&This->Header.EventListLock);
 
-
-
-
-
     /* allocate the stream descriptors */
     Status = IKsFilter_CreateDescriptors(This, (PKSFILTER_DESCRIPTOR)Factory->FilterDescriptor);
     if (!NT_SUCCESS(Status))
     {
         /* what can go wrong, goes wrong */
-        FreeItem(This);
-        FreeItem(CreateItem);
-        return Status;
-    }
-
-    /* now add the filter instance to the filter factory */
-    Status = iface->lpVtbl->AddFilterInstance(iface, (IKsFilter*)&This->lpVtbl);
-
-    if (!NT_SUCCESS(Status))
-    {
-        /* failed to add filter */
         FreeItem(This);
         FreeItem(CreateItem);
         return Status;
@@ -1054,9 +1203,6 @@ KspCreateFilter(
             {
                 /* driver failed to initialize */
                 DPRINT1("Driver: Status %x\n", Status);
-
-                /* remove filter instance from filter factory */
-                iface->lpVtbl->RemoveFilterInstance(iface, (IKsFilter*)&This->lpVtbl);
 
                 /* free filter instance */
                 FreeItem(This);
@@ -1081,6 +1227,8 @@ KspCreateFilter(
     This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
     This->ObjectHeader->ObjectType = (PVOID)&This->Filter;
 
+    /* attach filter to filter factory */
+    IKsFilter_AttachFilterToFilterFactory(This, This->Header.Parent.KsFilterFactory);
 
     /* completed initialization */
     return Status;
@@ -1205,6 +1353,7 @@ KsFilterCreatePinFactory (
     ULONG *PinInstanceCount;
     KSPIN_DESCRIPTOR_EX * PinDescriptorsEx;
     KSPIN_DESCRIPTOR * PinDescriptors;
+    PKSPIN *FirstPin;
     IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
 
     /* calculate existing count */
@@ -1234,6 +1383,17 @@ KsFilterCreatePinFactory (
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
+    /* allocate first pin array */
+    FirstPin = AllocateItem(NonPagedPool, sizeof(PKSPIN) * Count);
+    if (!FirstPin)
+    {
+        /* not enough memory */
+        FreeItem(PinDescriptorsEx);
+        FreeItem(PinInstanceCount);
+        FreeItem(PinDescriptors);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     /* now copy all fields */
     if (Count > 1)
     {
@@ -1241,11 +1401,13 @@ KsFilterCreatePinFactory (
         RtlMoveMemory(PinDescriptorsEx, This->Filter.Descriptor->PinDescriptors, max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * This->PinDescriptorCount);
         RtlMoveMemory(PinInstanceCount, This->PinInstanceCount, This->PinDescriptorCount * sizeof(ULONG));
         RtlMoveMemory(PinDescriptors, This->PinDescriptors, sizeof(KSPIN_DESCRIPTOR) * This->PinDescriptorCount);
+        RtlMoveMemory(FirstPin, This->FirstPin, sizeof(PKSPIN) * This->PinDescriptorCount);
 
         /* now free old descriptors */
         FreeItem(This->PinInstanceCount);
         FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
         FreeItem(This->PinDescriptors);
+        FreeItem(This->FirstPin);
     }
 
     /* add new pin factory */
@@ -1258,6 +1420,7 @@ KsFilterCreatePinFactory (
 
     This->PinDescriptors = PinDescriptors;
     This->PinInstanceCount = PinInstanceCount;
+    This->FirstPin = FirstPin;
 
     /* store new pin id */
     *PinID = This->PinDescriptorCount;
@@ -1304,7 +1467,7 @@ KsFilterGetChildPinCount(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PKSPIN
@@ -1313,8 +1476,16 @@ KsFilterGetFirstChildPin(
     IN PKSFILTER Filter,
     IN ULONG PinId)
 {
-    UNIMPLEMENTED
-    return NULL;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    if (PinId >= This->PinDescriptorCount)
+    {
+        /* index is out of bounds */
+        return NULL;
+    }
+
+    /* return first pin index */
+    return This->FirstPin[PinId];
 }
 
 /*
