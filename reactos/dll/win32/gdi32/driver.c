@@ -229,7 +229,9 @@ static struct graphics_driver *load_display_driver(void)
 {
     char buffer[MAX_PATH], libname[32], *name, *next;
     HMODULE module = 0;
+#if 0
     HKEY hkey;
+#endif
 
     if (display_driver)  /* already loaded */
     {

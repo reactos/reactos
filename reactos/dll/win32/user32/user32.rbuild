@@ -5,9 +5,10 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0600</define>
+	<redefine name="WINVER">0x0600</redefine>
+	<redefine name="_WIN32_WINNT">0x0600</redefine>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>gdi32</library>

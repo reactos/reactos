@@ -5,6 +5,7 @@
 	<define name="WINVER">0x0600</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<file>bitblt.c</file>
 	<file>bitmap.c</file>
 	<file>brush.c</file>

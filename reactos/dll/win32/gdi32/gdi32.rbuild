@@ -4,10 +4,11 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="ReactOS">dll/3rdparty/freetype/include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="WINVER">0x0600</define>
-	<define name="_WIN32_WINNT">0x0501</define>
+	<redefine name="WINVER">0x0600</redefine>
+	<redefine name="_WIN32_WINNT">0x0501</redefine>
 	<define name="LANGPACK" />
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>user32</library>

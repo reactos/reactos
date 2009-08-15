@@ -160,7 +160,7 @@ static DWORD FT_SimpleVersion;
 
 static void *ft_handle = NULL;
 
-#define MAKE_FUNCPTR(f) static typeof(f) * p##f = NULL
+#define MAKE_FUNCPTR(f) static typeof(f) * p##f = NULL // FIXME: MSVC does not implement typeof
 MAKE_FUNCPTR(FT_Vector_Unit);
 MAKE_FUNCPTR(FT_Done_Face);
 MAKE_FUNCPTR(FT_Get_Char_Index);
@@ -2714,7 +2714,7 @@ static BOOL init_freetype(void)
 	return FALSE;
     }
 
-#define LOAD_FUNCPTR(f) if((p##f = GetProcAddress(ft_handle, #f)) == NULL){WARN("Can't find symbol %s\n", #f); goto sym_not_found;}
+#define LOAD_FUNCPTR(f) if((p##f = (PVOID)GetProcAddress(ft_handle, #f)) == NULL){WARN("Can't find symbol %s\n", #f); goto sym_not_found;}
 
     LOAD_FUNCPTR(FT_Vector_Unit)
     LOAD_FUNCPTR(FT_Done_Face)
@@ -2742,16 +2742,16 @@ static BOOL init_freetype(void)
 
 #undef LOAD_FUNCPTR
     /* Don't warn if these ones are missing */
-    pFT_Library_Version = GetProcAddress(ft_handle, "FT_Library_Version");
-    pFT_Load_Sfnt_Table = GetProcAddress(ft_handle, "FT_Load_Sfnt_Table");
-    pFT_Get_First_Char = GetProcAddress(ft_handle, "FT_Get_First_Char");
-    pFT_Get_Next_Char = GetProcAddress(ft_handle, "FT_Get_Next_Char");
-    pFT_Get_TrueType_Engine_Type = GetProcAddress(ft_handle, "FT_Get_TrueType_Engine_Type");
+    pFT_Library_Version = (PVOID)GetProcAddress(ft_handle, "FT_Library_Version");
+    pFT_Load_Sfnt_Table = (PVOID)GetProcAddress(ft_handle, "FT_Load_Sfnt_Table");
+    pFT_Get_First_Char = (PVOID)GetProcAddress(ft_handle, "FT_Get_First_Char");
+    pFT_Get_Next_Char = (PVOID)GetProcAddress(ft_handle, "FT_Get_Next_Char");
+    pFT_Get_TrueType_Engine_Type = (PVOID)GetProcAddress(ft_handle, "FT_Get_TrueType_Engine_Type");
 #ifdef HAVE_FREETYPE_FTLCDFIL_H
-    pFT_Library_SetLcdFilter = GetProcAddress(ft_handle, "FT_Library_SetLcdFilter");
+    pFT_Library_SetLcdFilter = (PVOID)GetProcAddress(ft_handle, "FT_Library_SetLcdFilter");
 #endif
 #ifdef HAVE_FREETYPE_FTWINFNT_H
-    pFT_Get_WinFNT_Header = GetProcAddress(ft_handle, "FT_Get_WinFNT_Header");
+    pFT_Get_WinFNT_Header = (PVOID)GetProcAddress(ft_handle, "FT_Get_WinFNT_Header");
 #endif
       if(!GetProcAddress(ft_handle, "FT_Get_Postscript_Name") &&
 	 !GetProcAddress(ft_handle, "FT_Sqrt64")) {
