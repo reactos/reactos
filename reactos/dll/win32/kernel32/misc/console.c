@@ -3753,8 +3753,7 @@ WINAPI
 AttachConsole(DWORD dwProcessId)
 {
     DPRINT1("AttachConsole(0x%x) UNIMPLEMENTED!\n", dwProcessId);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    return TRUE;
 }
 
 /*--------------------------------------------------------------
