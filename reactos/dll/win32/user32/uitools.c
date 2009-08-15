@@ -1612,11 +1612,11 @@ static BOOL UITOOLS_DrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp
             break;
 
         case DST_ICON:
-            ici = GlobalLock16((HGLOBAL16)lp);
+            ici = GlobalLock((HGLOBAL)lp);
             if(!ici) return FALSE;
             s.cx = ici->nWidth;
             s.cy = ici->nHeight;
-            GlobalUnlock16((HGLOBAL16)lp);
+            GlobalUnlock((HGLOBAL)lp);
             break;
 
         case DST_BITMAP:

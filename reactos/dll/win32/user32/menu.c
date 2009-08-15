@@ -5351,13 +5351,13 @@ static BOOL translate_accelerator( HWND hWnd, UINT message, WPARAM wParam, LPARA
 INT WINAPI TranslateAcceleratorA( HWND hWnd, HACCEL hAccel, LPMSG msg )
 {
     /* YES, Accel16! */
-    LPACCEL16 lpAccelTbl;
+    LPACCEL lpAccelTbl;
     int i;
     WPARAM wParam;
 
     if (!hWnd || !msg) return 0;
 
-    if (!hAccel || !(lpAccelTbl = (LPACCEL16) LockResource16(LOWORD(hAccel))))
+    if (!hAccel || !(lpAccelTbl = (LPACCEL) LockResource(hAccel)))
     {
         WARN_(accel)("invalid accel handle=%p\n", hAccel);
         return 0;

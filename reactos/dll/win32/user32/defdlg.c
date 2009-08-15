@@ -237,8 +237,8 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
                 /* Free dialog heap (if created) */
                 if (dlgInfo->hDialogHeap)
                 {
-                    GlobalUnlock16(dlgInfo->hDialogHeap);
-                    GlobalFree16(dlgInfo->hDialogHeap);
+                    GlobalUnlock(dlgInfo->hDialogHeap);
+                    GlobalFree(dlgInfo->hDialogHeap);
                 }
                 if (dlgInfo->hUserFont) DeleteObject( dlgInfo->hUserFont );
                 if (dlgInfo->hMenu) DestroyMenu( dlgInfo->hMenu );

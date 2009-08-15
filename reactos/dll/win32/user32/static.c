@@ -151,7 +151,7 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
     CURSORICONINFO * info;
 
     if ((style & SS_TYPEMASK) != SS_ICON) return 0;
-    info = hicon ? GlobalLock16(HICON_16(hicon)) : NULL;
+    info = hicon ? GlobalLock(hicon) : NULL;
     if (hicon && !info) {
         WARN("hicon != 0, but info == 0\n");
         return 0;
@@ -174,7 +174,7 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
                           SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
         }
     }
-    if (info) GlobalUnlock16(HICON_16(hicon));
+    if (info) GlobalUnlock(hicon);
     return prevIcon;
 }
 
@@ -803,7 +803,7 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
     GetClientRect( hwnd, &rc );
     hbrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
     hIcon = (HICON)GetWindowLongPtrW( hwnd, HICON_GWL_OFFSET );
-    info = hIcon ? GlobalLock16(HICON_16(hIcon)) : NULL;
+    info = hIcon ? GlobalLock(hIcon) : NULL;
     if (!hIcon || !info)
     {
         FillRect(hdc, &rc, hbrush);
@@ -823,7 +823,7 @@ static void STATIC_PaintIconfn( HWND hwnd, HDC hdc, DWORD style )
         DrawIconEx( hdc, iconRect.left, iconRect.top, hIcon, iconRect.right - iconRect.left,
                     iconRect.bottom - iconRect.top, 0, NULL, DI_NORMAL );
     }
-    if (info) GlobalUnlock16(HICON_16(hIcon));
+    if (info) GlobalUnlock(hIcon);
 }
 
 static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )

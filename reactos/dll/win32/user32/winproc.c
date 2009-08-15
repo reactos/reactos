@@ -739,7 +739,7 @@ static inline BOOL WINPROC_TestLBForStr( HWND hwnd, UINT msg )
 
 }
 
-
+#if 0
 static UINT_PTR convert_handle_16_to_32(HANDLE16 src, unsigned int flags)
 {
     HANDLE      dst;
@@ -773,6 +773,7 @@ static HANDLE16 convert_handle_32_to_16(UINT_PTR src, unsigned int flags)
 
     return dst;
 }
+#endif
 
 
 /**********************************************************************
