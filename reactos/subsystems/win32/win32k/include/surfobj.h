@@ -37,6 +37,7 @@ BITMAP_GetWidthBytes(INT bmWidth, INT bpp);
 BOOL APIENTRY
 SURFACE_Cleanup(PVOID ObjectBody);
 
+#define GDIDEV(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 
 #define  SURFACE_Lock(hBMObj) \

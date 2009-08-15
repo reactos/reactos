@@ -15,8 +15,8 @@ typedef struct _GDIPOINTER
   SIZEL    Size;
   POINTL   HotSpot;
   XLATEOBJ *XlateObject;
-  SURFOBJ  *psurfColor;
-  SURFOBJ  *psurfMask;
-  SURFOBJ  *psurfSave;
+  SURFACE  *psurfColor;
+  SURFACE  *psurfMask;
+  SURFACE  *psurfSave;
   RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
 } GDIPOINTER, *PGDIPOINTER;

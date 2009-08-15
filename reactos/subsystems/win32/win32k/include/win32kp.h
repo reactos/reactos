@@ -37,10 +37,10 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 /* Eng and GRE stuff */
 #include <driver.h>
 #include <engevent.h>
-#include <cursor.h>
-#include <devobj.h>
 #include <gdiobj.h>
 #include <surfobj.h>
+#include <cursor.h>
+#include <devobj.h>
 #include <brushobj.h>
 #include <dc.h>
 #include <palobj.h>

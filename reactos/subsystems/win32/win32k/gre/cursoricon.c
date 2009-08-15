@@ -26,7 +26,6 @@ GreMovePointer(
     SURFACE_UnlockBitmapBits(pSurf);
 }
 
-
 ULONG NTAPI
 GreSetPointerShape(
    IN SURFOBJ *pso,
@@ -41,9 +40,9 @@ GreSetPointerShape(
    IN FLONG fl)
 {
     ULONG ulResult = SPS_DECLINE;
-    PFN_DrvSetPointerShape pfnSetPointerShape;
-    PPDEVOBJ ppdev = &PrimarySurface;
     SURFACE *pSurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+    PFN_DrvSetPointerShape pfnSetPointerShape;
+    PPDEVOBJ ppdev = GDIDEV(pso);
 
     pfnSetPointerShape = GDIDEVFUNCS(pso).SetPointerShape;
 
@@ -96,128 +95,83 @@ BOOL
 NTAPI
 GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
 {
-   SURFOBJ *pso;
-   SURFACE *MaskBmpObj = NULL;
-   HBITMAP hMask = 0;
-   SURFOBJ *soMask = NULL, *soColor = NULL;
-   XLATEOBJ *XlateObj = NULL;
-   ULONG Status;
+    SURFOBJ *pso;
+    HBITMAP hbmMask, hbmColor;
+    PSURFACE psurfMask, psurfColor;
+    XLATEOBJ *XlateObj = NULL;
+    ULONG Status;
 
-   pso = EngLockSurface(PrimarySurface.pSurface);
+    pso = EngLockSurface(PrimarySurface.pSurface);
 
-   if (!NewCursor)
-   {
-         if (CursorInfo->ShowingCursor)
-         {
+    if (!NewCursor)
+    {
+        if (CursorInfo->ShowingCursor)
+        {
             DPRINT("Removing pointer!\n");
             /* Remove the cursor if it was displayed */
             GreMovePointer(pso, -1, -1, NULL);
-         }
+        }
+        CursorInfo->ShowingCursor = 0;
+        EngUnlockSurface(pso);
+        return TRUE;
+    }
 
-         CursorInfo->ShowingCursor = 0;
+    CursorInfo->ShowingCursor = TRUE;
+    CursorInfo->CurrentCursorObject = *NewCursor;
 
-         EngUnlockSurface(pso);
+    hbmMask = NewCursor->hbmMask;
+    hbmColor = NewCursor->hbmColor;
 
-         return TRUE;
-   }
+    /* Lock the mask bitmap */
+    if (hbmMask)
+        psurfMask = SURFACE_ShareLock(hbmMask);
+    else
+        psurfMask = NULL;
 
-   MaskBmpObj = SURFACE_Lock(NewCursor->hbmMask);
-   if (MaskBmpObj)
-   {
-      const int maskBpp = BitsPerFormat(MaskBmpObj->SurfObj.iBitmapFormat);
-      SURFACE_Unlock(MaskBmpObj);
-      if (maskBpp != 1)
-      {
-         DPRINT1("SetCursor: The Mask bitmap must have 1BPP!\n");
-         EngUnlockSurface(pso);
-         return FALSE;
-      }
-
-      if ((PrimarySurface.DevInfo.flGraphicsCaps2 & GCAPS2_ALPHACURSOR) &&
-            pso->iBitmapFormat >= BMF_16BPP &&
-            pso->iBitmapFormat <= BMF_32BPP)
-      {
-         /* FIXME - Create a color pointer, only 32bit bitmap, set alpha bits!
-                    Do not pass a mask bitmap to DrvSetPointerShape()!
-                    Create a XLATEOBJ that describes the colors of the bitmap. */
-         DPRINT1("SetCursor: (Colored) alpha cursors are not supported!\n");
-      }
-      else
-      {
-         if(NewCursor->hbmColor)
-         {
-            /* FIXME - Create a color pointer, create only one 32bit bitmap!
-                       Do not pass a mask bitmap to DrvSetPointerShape()!
-                       Create a XLATEOBJ that describes the colors of the bitmap.
-                       (16bit bitmaps are propably allowed) */
-            DPRINT1("SetCursor: Cursors with colors are not supported!\n");
-         }
-         else
-         {
-            MaskBmpObj = SURFACE_Lock((HSURF)NewCursor->hbmMask);
-            if(MaskBmpObj)
-            {
-               RECTL DestRect = {0, 0, MaskBmpObj->SurfObj.sizlBitmap.cx, MaskBmpObj->SurfObj.sizlBitmap.cy};
-               POINTL SourcePoint = {0, 0};
-
-               /*
-                * NOTE: For now we create the cursor in top-down bitmap,
-                * because VMware driver rejects it otherwise. This should
-                * be fixed later.
-                */
-               hMask = EngCreateBitmap(
-                          MaskBmpObj->SurfObj.sizlBitmap, abs(MaskBmpObj->SurfObj.lDelta),
-                          MaskBmpObj->SurfObj.iBitmapFormat, BMF_TOPDOWN,
-                          NULL);
-               if ( !hMask )
-               {
-                  SURFACE_Unlock(MaskBmpObj);
-                  EngUnlockSurface(pso);
-                  return FALSE;
-               }
-               soMask = EngLockSurface((HSURF)hMask);
-               GreCopyBits(soMask, &MaskBmpObj->SurfObj, NULL, NULL,
-                           &DestRect, &SourcePoint);
-               SURFACE_Unlock(MaskBmpObj);
-            }
-         }
-      }
-      CursorInfo->ShowingCursor = TRUE;
-      CursorInfo->CurrentCursorObject = *NewCursor;
-   }
-   else
-   {
-      CursorInfo->ShowingCursor = FALSE;
-   }
+    /* Check for color bitmap */
+    if (hbmColor)
+    {
+        /* We have one, lock it */
+        psurfColor = SURFACE_ShareLock(hbmColor);
+        
+        if (psurfColor)
+        {
+            /* Create an XLATEOBJ, no mono support */
+            //EXLATEOBJ_vInitialize(&exlo, psurfColor->ppal, psurf->ppal, 0, 0, 0);
+            UNIMPLEMENTED;
+        }
+    }
+    else
+        psurfColor = NULL;
 
    Status  = GreSetPointerShape(pso,
-                                   soMask,
-                                   soColor,
-                                   XlateObj,
-                                   NewCursor->xHotspot,
-                                   NewCursor->yHotspot,
-                                   CursorInfo->CursorPos.x,
-                                   CursorInfo->CursorPos.y,
-                                   NULL,
-                                   SPS_CHANGE);
+                                psurfMask ? &psurfMask->SurfObj : NULL,
+                                psurfColor ? &psurfColor->SurfObj : NULL,
+                                XlateObj,
+                                NewCursor->xHotspot,
+                                NewCursor->yHotspot,
+                                CursorInfo->CursorPos.x,
+                                CursorInfo->CursorPos.y,
+                                NULL,
+                                SPS_CHANGE);
 
    if (Status != SPS_ACCEPT_NOEXCLUDE)
    {
        DPRINT1("GreSetPointerShape returned %lx\n", Status);
    }
 
-   if(hMask)
-   {
-      EngUnlockSurface(soMask);
-      EngDeleteSurface((HSURF)hMask);
-   }
-   if(XlateObj)
-   {
-      EngDeleteXlate(XlateObj);
-   }
+    /* Cleanup */
+    if (psurfColor)
+    {
+        //EXLATEOBJ_vCleanup(&exlo);
+        SURFACE_ShareUnlock(psurfColor);
+    }
 
-   EngUnlockSurface(pso);
+    if (psurfMask)
+        SURFACE_ShareUnlock(psurfMask);
 
-   return TRUE;
+    EngUnlockSurface(pso);
+
+    return TRUE;
 }
 
