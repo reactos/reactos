@@ -251,7 +251,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "命令提示符.lnk"
     IDS_SHORT_EXPLORER   "ReactOS 资源管理器.lnk"
-    IDS_SHORT_DOWNLOADER "Download !.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "服务.lnk"
     IDS_SHORT_DEVICE     "设备管理.lnk"
     IDS_SHORT_MPLAY32    "Multimedia Player.lnk"

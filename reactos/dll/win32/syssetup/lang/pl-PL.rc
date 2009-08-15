@@ -271,7 +271,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Wiersz poleceñ.lnk"
     IDS_SHORT_EXPLORER   "Eksplorator ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Download!.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "Mened¿er us³ug.lnk"
     IDS_SHORT_DEVICE     "Mened¿er urz¹dzeñ.lnk"
     IDS_SHORT_MPLAY32    "Odtwarzacz multimedialny.lnk"

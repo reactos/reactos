@@ -264,7 +264,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "キャラクター マップ.lnk"
     IDS_SHORT_CMD        "コマンド プロンプト.lnk"
     IDS_SHORT_DEVICE     "デバイス マネージャ.lnk"
-    IDS_SHORT_DOWNLOADER "ダウンロード !.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_DXDIAG     "ReactX 診断.lnk"
     IDS_SHORT_EVENTVIEW  "イベント ビューア.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"

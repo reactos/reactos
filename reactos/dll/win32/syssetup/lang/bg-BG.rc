@@ -266,7 +266,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Команден прозорец.lnk"
     IDS_SHORT_EXPLORER   "Изследователят на РеактОС.lnk"
-    IDS_SHORT_DOWNLOADER "Свали!.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "Управител на услугите.lnk"
     IDS_SHORT_DEVICE     "Управител на устройствата.lnk"
     IDS_SHORT_MPLAY32    "Мултимедиен възпроизводител.lnk"
