@@ -35,6 +35,10 @@ extern "C" {
 #ifndef mmioFOURCC
 #define mmioFOURCC(c0,c1,c2,c3) MAKEFOURCC(c0,c1,c2,c3)
 #endif
+
+#define MM_MICROSOFT            1       /* Microsoft Corp. */
+#define MM_CREATIVE             2       /* Creative labs   */
+
 #define MM_JOY1MOVE           0x3A0
 #define MM_JOY2MOVE           0x3A1
 #define MM_JOY1ZMOVE          0x3A2
