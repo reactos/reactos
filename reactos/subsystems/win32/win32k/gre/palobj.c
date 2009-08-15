@@ -14,6 +14,84 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+HGDIOBJ hSystemPal;
+
+#define NB_RESERVED_COLORS              20 /* number of fixed colors in system palette */
+#define PC_SYS_USED     0x80		/* palentry is used (both system and logical) */
+
+const PALETTEENTRY COLOR_sysPalTemplate[NB_RESERVED_COLORS] =
+{
+  // first 10 entries in the system palette
+  // red  green blue  flags
+  { 0x00, 0x00, 0x00, PC_SYS_USED },
+  { 0x80, 0x00, 0x00, PC_SYS_USED },
+  { 0x00, 0x80, 0x00, PC_SYS_USED },
+  { 0x80, 0x80, 0x00, PC_SYS_USED },
+  { 0x00, 0x00, 0x80, PC_SYS_USED },
+  { 0x80, 0x00, 0x80, PC_SYS_USED },
+  { 0x00, 0x80, 0x80, PC_SYS_USED },
+  { 0xc0, 0xc0, 0xc0, PC_SYS_USED },
+  { 0xc0, 0xdc, 0xc0, PC_SYS_USED },
+  { 0xa6, 0xca, 0xf0, PC_SYS_USED },
+
+  // ... c_min/2 dynamic colorcells
+  // ... gap (for sparse palettes)
+  // ... c_min/2 dynamic colorcells
+
+  { 0xff, 0xfb, 0xf0, PC_SYS_USED },
+  { 0xa0, 0xa0, 0xa4, PC_SYS_USED },
+  { 0x80, 0x80, 0x80, PC_SYS_USED },
+  { 0xff, 0x00, 0x00, PC_SYS_USED },
+  { 0x00, 0xff, 0x00, PC_SYS_USED },
+  { 0xff, 0xff, 0x00, PC_SYS_USED },
+  { 0x00, 0x00, 0xff, PC_SYS_USED },
+  { 0xff, 0x00, 0xff, PC_SYS_USED },
+  { 0x00, 0xff, 0xff, PC_SYS_USED },
+  { 0xff, 0xff, 0xff, PC_SYS_USED }     // last 10
+};
+
+const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate(void)
+{
+   return (const PALETTEENTRY*)&COLOR_sysPalTemplate;
+}
+
+/* PRIVATE FUNCTIONS *********************************************************/
+/*
+ * @implemented
+ */
+HPALETTE APIENTRY
+GrepCreatePalette( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
+{
+    PPALETTE PalGDI;
+    HPALETTE NewPalette;
+
+    pLogPal->palNumEntries = cEntries;
+    NewPalette = PALETTE_AllocPalette( PAL_INDEXED,
+                                       cEntries,
+                                       (PULONG)pLogPal->palPalEntry,
+                                       0, 0, 0);
+
+    if (NewPalette == NULL)
+    {
+        return NULL;
+    }
+
+    PalGDI = (PPALETTE) PALETTE_LockPalette(NewPalette);
+    if (PalGDI != NULL)
+    {
+        PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
+        //PalGDI->logicalToSystem = NULL;
+        PALETTE_UnlockPalette(PalGDI);
+    }
+    else
+    {
+        /* FIXME - Handle PalGDI == NULL!!!! */
+        DPRINT1("Warning: PalGDI is NULL!\n");
+    }
+    return NewPalette;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 HPALETTE
@@ -105,6 +183,108 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
     return NewPalette;
 }
 
+// Create the system palette
+VOID APIENTRY
+PALETTE_Init(VOID)
+{
+    int i;
+    PLOGPALETTE palPtr;
+
+    const PALETTEENTRY* __sysPalTemplate = (const PALETTEENTRY*)COLOR_GetSystemPaletteTemplate();
+
+    // create default palette (20 system colors)
+    palPtr = ExAllocatePoolWithTag(PagedPool,
+                                   sizeof(LOGPALETTE) +
+                                       (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)),
+                                   TAG_PALETTE);
+    if (!palPtr)
+    {
+        hSystemPal = 0;
+        return;
+    }
+
+    palPtr->palVersion = 0x300;
+    palPtr->palNumEntries = NB_RESERVED_COLORS;
+    for (i=0; i<NB_RESERVED_COLORS; i++)
+    {
+        palPtr->palPalEntry[i].peRed = __sysPalTemplate[i].peRed;
+        palPtr->palPalEntry[i].peGreen = __sysPalTemplate[i].peGreen;
+        palPtr->palPalEntry[i].peBlue = __sysPalTemplate[i].peBlue;
+        palPtr->palPalEntry[i].peFlags = 0;
+    }
+
+    hSystemPal = GrepCreatePalette(palPtr,NB_RESERVED_COLORS);
+    ExFreePoolWithTag(palPtr, TAG_PALETTE);
+
+    /* Convert it to a stock object */
+    GDIOBJ_ConvertToStockObj(&hSystemPal);
+}
+
+UINT APIENTRY
+GreGetSystemPaletteEntries(HDC  hDC,
+                           UINT  StartIndex,
+                           UINT  Entries,
+                           LPPALETTEENTRY  pe)
+{
+    PPALETTE palGDI = NULL;
+    PDC dc = NULL;
+    UINT EntriesSize = 0;
+    UINT Ret = 0;
+
+    if (Entries == 0)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (pe != NULL)
+    {
+        EntriesSize = Entries * sizeof(pe[0]);
+        if (Entries != EntriesSize / sizeof(pe[0]))
+        {
+            /* Integer overflow! */
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+    }
+
+    if (!(dc = DC_Lock(hDC)))
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    palGDI = PALETTE_LockPalette(dc->hPalette);
+    if (palGDI != NULL)
+    {
+        if (pe != NULL)
+        {
+            if (StartIndex >= palGDI->NumColors)
+                Entries = 0;
+            else if (Entries > palGDI->NumColors - StartIndex)
+                Entries = palGDI->NumColors - StartIndex;
+
+            memcpy(pe,
+                   palGDI->IndexedColors + StartIndex,
+                   Entries * sizeof(pe[0]));
+
+            Ret = Entries;
+        }
+        else
+        {
+            Ret = dc->pPDevice->GDIInfo.ulNumPalReg;
+        }
+    }
+
+    if (palGDI != NULL)
+        PALETTE_UnlockPalette(palGDI);
+
+    if (dc != NULL)
+        DC_Unlock(dc);
+
+    return Ret;
+}
+
 RGBQUAD *
 NTAPI
 DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
@@ -114,7 +294,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
     USHORT *lpIndex;
     PPALETTE palGDI;
 
-    palGDI = NULL;//PALETTE_LockPalette(dc->hPalette);
+    palGDI = PALETTE_LockPalette(dc->hPalette);
     UNIMPLEMENTED;
     if (NULL == palGDI)
     {
@@ -219,5 +399,11 @@ BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType)
     return hPal;
 }
 
+VOID FASTCALL PALETTE_ValidateFlags(PALETTEENTRY* lpPalE, INT size)
+{
+    int i = 0;
+    for (; i<size ; i++)
+        lpPalE[i].peFlags = PC_SYS_USED | (lpPalE[i].peFlags & 0x07);
+}
 
 /* EOF */

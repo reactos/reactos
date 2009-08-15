@@ -355,6 +355,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* Create stock objects */
     CreateStockBitmap();
+    PALETTE_Init();
 
     /* Init video driver implementation */
     InitDcImpl();

@@ -12,6 +12,7 @@ typedef struct _DC
     PBRUSHGDI    pLineBrush;
     COLORREF     crForegroundClr;
     COLORREF     crBackgroundClr;
+    HPALETTE     hPalette;
 
     /* Origins and extents */
     RECT         rcDcRect; /* Relative to Vport */
