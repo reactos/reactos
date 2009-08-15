@@ -394,15 +394,7 @@ INT  WINAPI LBItemFromPt (HWND, POINT, BOOL);
 /* UpDown */
 
 #define UPDOWN_CLASSA           "msctls_updown32"
-#if defined(__GNUC__)
-# define UPDOWN_CLASSW (const WCHAR []){ 'm','s','c','t','l','s','_', \
-  'u','p','d','o','w','n','3','2',0 }
-#elif defined(_MSC_VER)
 # define UPDOWN_CLASSW          L"msctls_updown32"
-#else
-static const WCHAR UPDOWN_CLASSW[] = { 'm','s','c','t','l','s','_',
-  'u','p','d','o','w','n','3','2',0 };
-#endif
 #define UPDOWN_CLASS            WINELIB_NAME_AW(UPDOWN_CLASS)
 
 typedef struct _UDACCEL
@@ -463,15 +455,7 @@ HWND WINAPI CreateUpDownControl (DWORD, INT, INT, INT, INT,
 /* Progress Bar */
 
 #define PROGRESS_CLASSA   "msctls_progress32"
-#if defined(__GNUC__)
-# define PROGRESS_CLASSW (const WCHAR []){ 'm','s','c','t','l','s','_', \
-  'p','r','o','g','r','e','s','s','3','2',0 }
-#elif defined(_MSC_VER)
 # define PROGRESS_CLASSW  L"msctls_progress32"
-#else
-static const WCHAR PROGRESS_CLASSW[] = { 'm','s','c','t','l','s','_',
-  'p','r','o','g','r','e','s','s','3','2',0 };
-#endif
 #define PROGRESS_CLASS      WINELIB_NAME_AW(PROGRESS_CLASS)
 
 #define PBM_SETRANGE        (WM_USER+1)
@@ -720,13 +704,7 @@ int WINAPI DrawShadowText(HDC, LPCWSTR, UINT, RECT*, DWORD, COLORREF, COLORREF, 
 /* Header control */
 
 #define WC_HEADERA		"SysHeader32"
-#if defined(__GNUC__)
-# define WC_HEADERW (const WCHAR []){ 'S','y','s','H','e','a','d','e','r','3','2',0 }
-#elif defined(_MSC_VER)
 # define WC_HEADERW             L"SysHeader32"
-#else
-static const WCHAR WC_HEADERW[] = { 'S','y','s','H','e','a','d','e','r','3','2',0 };
-#endif
 #define WC_HEADER		WINELIB_NAME_AW(WC_HEADER)
 
 #define HDS_HORZ                0x0000
@@ -1035,13 +1013,7 @@ typedef struct tagNMHDFILTERBTNCLICK
 
 /* Win32 5.1 Button Theme */
 #define WC_BUTTONA       "Button"
-#if defined(__GNUC__)
-# define WC_BUTTONW (const WCHAR []){ 'B','u','t','t','o','n',0 }
-#elif defined(_MSC_VER)
 # define WC_BUTTONW      L"Button"
-#else
-static const WCHAR WC_BUTTONW[] = { 'B','u','t','t','o','n',0 };
-#endif
 #define WC_BUTTON WINELIB_NAME_AW(WC_BUTTON)
 
 #define BCN_FIRST               (0U-1250U)
@@ -1060,15 +1032,8 @@ typedef struct tagNMBCHOTITEM
 /* Toolbar */
 
 #define TOOLBARCLASSNAMEA       "ToolbarWindow32"
-#if defined(__GNUC__)
-# define TOOLBARCLASSNAMEW (const WCHAR []){ 'T','o','o','l','b','a','r', \
-  'W','i','n','d','o','w','3','2',0 }
-#elif defined(_MSC_VER)
 # define TOOLBARCLASSNAMEW      L"ToolbarWindow32"
-#else
-static const WCHAR TOOLBARCLASSNAMEW[] = { 'T','o','o','l','b','a','r',
-  'W','i','n','d','o','w','3','2',0 };
-#endif
+
 #define TOOLBARCLASSNAME WINELIB_NAME_AW(TOOLBARCLASSNAME)
 
 #define CMB_MASKED              0x02
@@ -1627,16 +1592,27 @@ CreateMappedBitmap (HINSTANCE, INT_PTR, UINT, LPCOLORMAP, INT);
 /* Tool tips */
 
 #define TOOLTIPS_CLASSA         "tooltips_class32"
-#if defined(__GNUC__)
-# define TOOLTIPS_CLASSW (const WCHAR []){ 't','o','o','l','t','i','p','s','_', \
-  'c','l','a','s','s','3','2',0 }
-#elif defined(_MSC_VER)
 # define TOOLTIPS_CLASSW        L"tooltips_class32"
-#else
-static const WCHAR TOOLTIPS_CLASSW[] = { 't','o','o','l','t','i','p','s','_',
-  'c','l','a','s','s','3','2',0 };
-#endif
 #define TOOLTIPS_CLASS          WINELIB_NAME_AW(TOOLTIPS_CLASS)
+
+#if (_WIN32_WINNT >= 0x501)
+#define BUTTON_IMAGELIST_ALIGN_LEFT 0
+#define BUTTON_IMAGELIST_ALIGN_RIGHT 1
+#define BUTTON_IMAGELIST_ALIGN_TOP 2
+#define BUTTON_IMAGELIST_ALIGN_BOTTOM 3
+#define BUTTON_IMAGELIST_ALIGN_CENTER 4
+
+typedef struct
+{
+    HIMAGELIST himl;
+    RECT margin;
+    UINT uAlign;
+} BUTTON_IMAGELIST, *PBUTTON_IMAGELIST;
+
+#define BCM_FIRST   0x1600
+#define BCM_GETIDEALSIZE    (BCM_FIRST + 1)
+#define BCM_SETIMAGELIST    (BCM_FIRST + 2)
+#endif /* _WIN32_WINNT */
 
 #define INFOTIPSIZE             1024
 
