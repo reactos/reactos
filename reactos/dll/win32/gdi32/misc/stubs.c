@@ -138,7 +138,7 @@ DrawEscape(HDC  hDC,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 WINAPI
@@ -147,10 +147,20 @@ EnumObjects(HDC hdc,
             GOBJENUMPROC lpObjectFunc,
             LPARAM lParam)
 {
+    ULONG ObjectsCount;
+    ULONG Size;
+    PVOID Buffer = NULL;
+    DWORD_PTR EndOfBuffer;
+    int Result = 0;
+
     switch (nObjectType)
     {
         case OBJ_BRUSH:
+            Size = sizeof(LOGBRUSH);
+            break;
+
         case OBJ_PEN:
+            Size = sizeof(LOGPEN);
             break;
 
         default:
@@ -158,9 +168,32 @@ EnumObjects(HDC hdc,
             return 0;
     }
 
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    ObjectsCount = NtGdiEnumObjects(hdc, nObjectType, 0, NULL);
+    if (!ObjectsCount) return 0;
+
+    Buffer = HeapAlloc(GetProcessHeap(), 0, ObjectsCount * Size);
+    if (!Buffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    if (!NtGdiEnumObjects(hdc, nObjectType, ObjectsCount * Size, Buffer))
+    {
+        HeapFree(GetProcessHeap(), 0, Buffer);
+        return 0;
+    }
+
+    EndOfBuffer = (DWORD_PTR)Buffer + (ObjectsCount * Size);
+    while ((DWORD_PTR)Buffer < EndOfBuffer)
+    {
+        Result = lpObjectFunc(Buffer, lParam);
+        if (!Result) break;
+        Buffer = (PVOID)((DWORD_PTR)Buffer + Size);
+    }
+
+    HeapFree(GetProcessHeap(), 0, Buffer);
+    return Result;
 }
 
 
