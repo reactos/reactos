@@ -231,11 +231,7 @@ GreGetSystemPaletteEntries(HDC  hDC,
     UINT EntriesSize = 0;
     UINT Ret = 0;
 
-    if (Entries == 0)
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
+    if (!Entries) return 0;
 
     if (pe != NULL)
     {
@@ -243,16 +239,12 @@ GreGetSystemPaletteEntries(HDC  hDC,
         if (Entries != EntriesSize / sizeof(pe[0]))
         {
             /* Integer overflow! */
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return 0;
         }
     }
 
     if (!(dc = DC_Lock(hDC)))
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
         return 0;
-    }
 
     palGDI = PALETTE_LockPalette(dc->hPalette);
     if (palGDI != NULL)

@@ -86,11 +86,25 @@ int APIENTRY RosGdiGetPixelFormat(HDC physDev)
     return 0;
 }
 
-UINT APIENTRY RosGdiGetSystemPaletteEntries( HDC physDev, UINT start, UINT count,
-                                     LPPALETTEENTRY entries )
+UINT APIENTRY RosGdiGetSystemPaletteEntries( HDC hDC, UINT uStart, UINT uCount,
+                                     LPPALETTEENTRY lpEntries )
 {
-    UNIMPLEMENTED;
-    return 0;
+    UINT uRes = 0;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* Call GRE function fully wrapped into SEH */
+    _SEH2_TRY
+    {
+        uRes = GreGetSystemPaletteEntries(hDC, uStart, uCount, lpEntries);
+    } _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    if (!NT_SUCCESS(Status)) return 0;
+
+    return uRes;
 }
 
 BOOL APIENTRY RosGdiGetTextExtentExPoint( HDC physDev, LPCWSTR str, INT count,

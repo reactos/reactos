@@ -363,10 +363,9 @@ int CDECL RosDrv_GetPixelFormat(NTDRV_PDEVICE *physDev)
 }
 
 UINT CDECL RosDrv_GetSystemPaletteEntries( NTDRV_PDEVICE *physDev, UINT start, UINT count,
-                                     LPPALETTEENTRY entries )
+                                           LPPALETTEENTRY entries )
 {
-    UNIMPLEMENTED;
-    return 0;
+    return RosGdiGetSystemPaletteEntries(physDev->hKernelDC, start, count, entries);
 }
 
 BOOL CDECL RosDrv_GetTextExtentExPoint( NTDRV_PDEVICE *physDev, LPCWSTR str, INT count,
