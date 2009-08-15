@@ -47,8 +47,10 @@ static VOID ZeroEvents( PAFD_HANDLE HandleArray,
 		 UINT HandleCount ) {
     UINT i;
 
-    for( i = 0; i < HandleCount; i++ )
+    for( i = 0; i < HandleCount; i++ ) {
 	HandleArray[i].Status = 0;
+	HandleArray[i].Events = 0;
+    }
 }
 
 
@@ -193,9 +195,6 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
                                TRUE );
         }
     }
-
-    ZeroEvents( PollReq->Handles,
-		PollReq->HandleCount );
 
 	KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
 
