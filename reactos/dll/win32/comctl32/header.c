@@ -247,8 +247,7 @@ HEADER_SetItemBounds (HEADER_INFO *infoPtr)
 static LRESULT
 HEADER_Size (HEADER_INFO *infoPtr)
 {
-    infoPtr->bRectsValid = FALSE;
-
+    HEADER_SetItemBounds(infoPtr);
     return 0;
 }
 
@@ -329,18 +328,21 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
     }
     else {
         HBRUSH hbr;
-    
-        if (infoPtr->dwStyle & HDS_BUTTONS) {
-            if (phdi->bDown) {
-                DrawEdge (hdc, &r, BDR_RAISEDOUTER,
-                            BF_RECT | BF_FLAT | BF_MIDDLE | BF_ADJUST);
+
+        if (!(infoPtr->dwStyle & HDS_FLAT))
+        {
+            if (infoPtr->dwStyle & HDS_BUTTONS) {
+                if (phdi->bDown) {
+                    DrawEdge (hdc, &r, BDR_RAISEDOUTER,
+                                BF_RECT | BF_FLAT | BF_MIDDLE | BF_ADJUST);
+                }
+                else
+                    DrawEdge (hdc, &r, EDGE_RAISED,
+                                BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
             }
             else
-                DrawEdge (hdc, &r, EDGE_RAISED,
-                            BF_RECT | BF_SOFT | BF_MIDDLE | BF_ADJUST);
+                DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
         }
-        else
-            DrawEdge (hdc, &r, EDGE_ETCHED, BF_BOTTOM | BF_RIGHT | BF_ADJUST);
 
         hbr = CreateSolidBrush(GetBkColor(hdc));
         FillRect(hdc, &r, hbr);
@@ -547,14 +549,19 @@ HEADER_Refresh (HEADER_INFO *infoPtr, HDC hdc)
         if (theme != NULL) {
             DrawThemeBackground(theme, hdc, HP_HEADERITEM, HIS_NORMAL, &rcRest, NULL);
         }
-        else {
+        else if (infoPtr->dwStyle & HDS_FLAT) {
+            hbrBk = GetSysColorBrush(COLOR_3DFACE);
+            FillRect(hdc, &rcRest, hbrBk);
+        }
+        else
+        {
             if (infoPtr->dwStyle & HDS_BUTTONS)
                 DrawEdge (hdc, &rcRest, EDGE_RAISED, BF_TOP|BF_LEFT|BF_BOTTOM|BF_SOFT|BF_MIDDLE);
             else
                 DrawEdge (hdc, &rcRest, EDGE_ETCHED, BF_BOTTOM|BF_MIDDLE);
         }
     }
-    
+
     if (infoPtr->iHotDivider != -1)
         HEADER_DrawHotDivider(infoPtr, hdc);
 
@@ -1189,7 +1196,7 @@ HEADER_GetOrderArray(const HEADER_INFO *infoPtr, INT size, LPINT order)
 }
 
 static LRESULT
-HEADER_SetOrderArray(HEADER_INFO *infoPtr, INT size, LPINT order)
+HEADER_SetOrderArray(HEADER_INFO *infoPtr, INT size, const INT *order)
 {
     INT i;
     HEADER_ITEM *lpItem;
@@ -1202,7 +1209,7 @@ HEADER_SetOrderArray(HEADER_INFO *infoPtr, INT size, LPINT order)
         lpItem = &infoPtr->items[*order++];
 	lpItem->iOrder=i;
       }
-    infoPtr->bRectsValid=0;
+    HEADER_SetItemBounds(infoPtr);
     InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
     return TRUE;
 }
@@ -1217,10 +1224,12 @@ HEADER_GetUnicodeFormat (const HEADER_INFO *infoPtr)
 static LRESULT
 HEADER_HitTest (const HEADER_INFO *infoPtr, LPHDHITTESTINFO phti)
 {
+    UINT outside = HHT_NOWHERE | HHT_ABOVE | HHT_BELOW | HHT_TOLEFT | HHT_TORIGHT;
+
     HEADER_InternalHitTest (infoPtr, &phti->pt, &phti->flags, &phti->iItem);
 
-    if (phti->flags == HHT_NOWHERE)
-        return -1;
+    if (phti->flags & outside)
+	return phti->iItem = -1;
     else
         return phti->iItem;
 }
@@ -1400,7 +1409,7 @@ HEADER_SetUnicodeFormat (HEADER_INFO *infoPtr, WPARAM wParam)
 
 
 static LRESULT
-HEADER_Create (HWND hwnd, LPCREATESTRUCTW lpcs)
+HEADER_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
 {
     HEADER_INFO *infoPtr;
     TEXTMETRICW tm;
@@ -1496,7 +1505,7 @@ HEADER_IsDragDistance(const HEADER_INFO *infoPtr, const POINT *pt)
 }
 
 static LRESULT
-HEADER_LButtonDblClk (HEADER_INFO *infoPtr, INT x, INT y)
+HEADER_LButtonDblClk (const HEADER_INFO *infoPtr, INT x, INT y)
 {
     POINT pt;
     UINT  flags;
@@ -1582,6 +1591,9 @@ HEADER_LButtonUp (HEADER_INFO *infoPtr, INT x, INT y)
     HEADER_InternalHitTest (infoPtr, &pt, &flags, &nItem);
 
     if (infoPtr->bPressed) {
+
+	infoPtr->items[infoPtr->iMoveItem].bDown = FALSE;
+
 	if (infoPtr->bDragging)
 	{
             HEADER_ITEM *lpItem = &infoPtr->items[infoPtr->iMoveItem];
@@ -1589,8 +1601,7 @@ HEADER_LButtonUp (HEADER_INFO *infoPtr, INT x, INT y)
             
 	    ImageList_DragShowNolock(FALSE);
 	    ImageList_EndDrag();
-            lpItem->bDown=FALSE;
-            
+
             if (infoPtr->iHotDivider == -1)
                 iNewOrder = -1;
             else if (infoPtr->iHotDivider == infoPtr->uNumItem)
@@ -1615,14 +1626,14 @@ HEADER_LButtonUp (HEADER_INFO *infoPtr, INT x, INT y)
             infoPtr->bDragging = FALSE;
             HEADER_SetHotDivider(infoPtr, FALSE, -1);
 	}
-	else if (!(infoPtr->dwStyle & HDS_DRAGDROP) || !HEADER_IsDragDistance(infoPtr, &pt))
+	else
 	{
-	    infoPtr->items[infoPtr->iMoveItem].bDown = FALSE;
 	    hdc = GetDC (infoPtr->hwndSelf);
 	    HEADER_RefreshItem (infoPtr, infoPtr->iMoveItem);
 	    ReleaseDC (infoPtr->hwndSelf, hdc);
 
-	    HEADER_SendNotifyWithHDItemT(infoPtr, HDN_ITEMCLICKW, infoPtr->iMoveItem, NULL);
+	    if (!(infoPtr->dwStyle & HDS_DRAGDROP) || !HEADER_IsDragDistance(infoPtr, &pt))
+		HEADER_SendNotifyWithHDItemT(infoPtr, HDN_ITEMCLICKW, infoPtr->iMoveItem, NULL);
 	}
 
 	TRACE("Released item %d!\n", infoPtr->iMoveItem);
@@ -1923,7 +1934,7 @@ static LRESULT HEADER_SetRedraw(HEADER_INFO *infoPtr, WPARAM wParam, LPARAM lPar
 }
 
 static INT HEADER_StyleChanged(HEADER_INFO *infoPtr, WPARAM wStyleType,
-                               const LPSTYLESTRUCT lpss)
+                               const STYLESTRUCT *lpss)
 {
     TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
           wStyleType, lpss->styleOld, lpss->styleNew);

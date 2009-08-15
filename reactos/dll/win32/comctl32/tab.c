@@ -1445,7 +1445,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
 
 
 static void
-TAB_EraseTabInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect)
+TAB_EraseTabInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, const RECT *drawRect)
 {
     LONG     lStyle  = GetWindowLongW(infoPtr->hwnd, GWL_STYLE);
     HBRUSH   hbr = CreateSolidBrush (comctl32_color.clrBtnFace);
@@ -3223,7 +3223,7 @@ TAB_SetExtendedStyle (TAB_INFO *infoPtr, DWORD exMask, DWORD exStyle)
 }
 
 static inline LRESULT
-TAB_GetExtendedStyle (TAB_INFO *infoPtr)
+TAB_GetExtendedStyle (const TAB_INFO *infoPtr)
 {
   return infoPtr->exStyle;
 }

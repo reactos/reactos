@@ -333,7 +333,7 @@ STATUSBAR_Refresh (STATUS_INFO *infoPtr, HDC hdc)
 
 
 static int
-STATUSBAR_InternalHitTest(const STATUS_INFO *infoPtr, const LPPOINT pt)
+STATUSBAR_InternalHitTest(const STATUS_INFO *infoPtr, const POINT *pt)
 {
     int i;
     if (infoPtr->simple)

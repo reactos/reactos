@@ -385,7 +385,7 @@ INT WINAPI FindMRUData (HANDLE hList, LPCVOID lpData, DWORD cbData,
     UINT i;
     LPSTR dataA = NULL;
 
-    if (!mp->extview.lpfnCompare)
+    if (!mp || !mp->extview.lpfnCompare)
 	return -1;
 
     if(!(mp->extview.dwFlags & MRUF_BINARY_LIST) && !mp->isUnicode) {
@@ -834,6 +834,7 @@ INT WINAPI EnumMRUListW (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
     const WINEMRUITEM *witem;
     INT desired, datasize;
 
+    if (!mp) return -1;
     if ((nItemPos < 0) || !lpBuffer) return mp->cursize;
     if (nItemPos >= mp->cursize) return -1;
     desired = mp->realMRU[nItemPos];
@@ -860,6 +861,7 @@ INT WINAPI EnumMRUListA (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
     INT desired, datasize;
     DWORD lenA;
 
+    if (!mp) return -1;
     if ((nItemPos < 0) || !lpBuffer) return mp->cursize;
     if (nItemPos >= mp->cursize) return -1;
     desired = mp->realMRU[nItemPos];

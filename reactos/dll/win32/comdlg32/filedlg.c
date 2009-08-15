@@ -172,6 +172,7 @@ typedef struct tagFD32_PRIVATE
 
 const char FileOpenDlgInfosStr[] = "FileOpenDlgInfos"; /* windows property description string */
 static const char LookInInfosStr[] = "LookInInfos"; /* LOOKIN combo box property */
+static SIZE MemDialogSize = { 0, 0}; /* keep size of the (resizable) dialog */
 
 /***********************************************************************
  * Prototypes
@@ -276,6 +277,9 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
         fodInfos->sizedlg.cx = fodInfos->sizedlg.cy = 0;
         fodInfos->initial_size.x = fodInfos->initial_size.y = 0;
     }
+    else
+        ((LPDLGTEMPLATEW)template)->style &= ~WS_SIZEBOX;
+
 
     /* old style hook messages */
     if (IsHooked(fodInfos))
@@ -553,13 +557,14 @@ static BOOL COMDLG32_GetDisplayNameOf(LPCITEMIDLIST pidl, LPWSTR pwszPath) {
 /***********************************************************************
  *      ArrangeCtrlPositions [internal]
  *
- * NOTE: Do not change anything here without a lot of testing.
+ * NOTE: Make sure to add testcases for any changes made here.
  */
 static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hide_help)
 {
     HWND hwndChild, hwndStc32;
     RECT rectParent, rectChild, rectStc32;
-    INT help_fixup = 0, child_height_fixup = 0, child_width_fixup = 0;
+    INT help_fixup = 0;
+    int chgx, chgy;
 
     /* Take into account if open as read only checkbox and help button
      * are hidden
@@ -622,24 +627,16 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
             /* move only if stc32 exist */
             if (hwndStc32 && rectChild.left > rectStc32.right)
             {
-                LONG old_left = rectChild.left;
-
                 /* move to the right of visible controls of the parent dialog */
                 rectChild.left += rectParent.right;
                 rectChild.left -= rectStc32.right;
-
-                child_width_fixup = rectChild.left - old_left;
             }
             /* move even if stc32 doesn't exist */
             if (rectChild.top >= rectStc32.bottom)
             {
-                LONG old_top = rectChild.top;
-
                 /* move below visible controls of the parent dialog */
                 rectChild.top += rectParent.bottom;
                 rectChild.top -= rectStc32.bottom - rectStc32.top;
-
-                child_height_fixup = rectChild.top - old_top;
             }
 
             SetWindowPos(hwndChild, 0, rectChild.left, rectChild.top,
@@ -674,50 +671,36 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
     /* here we have to use original parent size */
     GetClientRect(hwndParentDlg, &rectParent);
     GetClientRect(hwndChildDlg, &rectChild);
+    TRACE( "parent %s child %s stc32 %s\n", wine_dbgstr_rect( &rectParent),
+            wine_dbgstr_rect( &rectChild), wine_dbgstr_rect( &rectStc32));
 
     if (hwndStc32)
     {
-        rectChild.right += child_width_fixup;
-        rectChild.bottom += child_height_fixup;
-
-        if (rectParent.right > rectChild.right)
-        {
-            rectParent.right += rectChild.right;
-            rectParent.right -= rectStc32.right - rectStc32.left;
-        }
+        /* width */
+        if (rectParent.right > rectStc32.right - rectStc32.left)
+            chgx = rectChild.right - ( rectStc32.right - rectStc32.left);
         else
-        {
-            rectParent.right = rectChild.right;
-        }
-
-        if (rectParent.bottom > rectChild.bottom)
-        {
-            rectParent.bottom += rectChild.bottom;
-            rectParent.bottom -= rectStc32.bottom - rectStc32.top;
-        }
+            chgx = rectChild.right - rectParent.right;
+        /* height */
+        if (rectParent.bottom > rectStc32.bottom - rectStc32.top)
+            chgy = rectChild.bottom - ( rectStc32.bottom - rectStc32.top) - help_fixup;
         else
-        {
-            /* child dialog is higher, unconditionally set new dialog
-             * height to its size (help_fixup will be subtracted below)
+            /* Unconditionally set new dialog
+             * height to that of the child
              */
-            rectParent.bottom = rectChild.bottom + help_fixup;
-        }
+            chgy = rectChild.bottom - rectParent.bottom;
     }
     else
     {
-        rectParent.bottom += rectChild.bottom;
+        chgx = 0;
+        chgy = rectChild.bottom - help_fixup;
     }
-
-    /* finally use fixed parent size */
-    rectParent.bottom -= help_fixup;
-
     /* set the size of the parent dialog */
-    AdjustWindowRectEx(&rectParent, GetWindowLongW(hwndParentDlg, GWL_STYLE),
-                       FALSE, GetWindowLongW(hwndParentDlg, GWL_EXSTYLE));
+    GetWindowRect(hwndParentDlg, &rectParent);
     SetWindowPos(hwndParentDlg, 0,
                  0, 0,
-                 rectParent.right - rectParent.left,
-                 rectParent.bottom - rectParent.top,
+                 rectParent.right - rectParent.left + chgx,
+                 rectParent.bottom - rectParent.top + chgy,
                  SWP_NOMOVE | SWP_NOZORDER);
 }
 
@@ -789,11 +772,7 @@ static HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
           hChildDlg = CreateDialogIndirectParamA(hinst, template, hwnd,
               IsHooked(fodInfos) ? (DLGPROC)fodInfos->ofnInfos->lpfnHook : FileOpenDlgProcUserTemplate,
               (LPARAM)fodInfos->ofnInfos);
-      if(hChildDlg)
-      {
-        ShowWindow(hChildDlg,SW_SHOW);
-        return hChildDlg;
-      }
+      return hChildDlg;
     }
     else if( IsHooked(fodInfos))
     {
@@ -1023,6 +1002,8 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     if( !(fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)) return FALSE;
     /* get the new dialog rectangle */
     GetWindowRect( hwnd, &rc);
+    TRACE("Size from %d,%d to %d,%d\n", fodInfos->sizedlg.cx, fodInfos->sizedlg.cy,
+            rc.right -rc.left, rc.bottom -rc.top);
     /* not initialized yet */
     if( (fodInfos->sizedlg.cx == 0 && fodInfos->sizedlg.cy == 0) ||
         ((fodInfos->sizedlg.cx == rc.right -rc.left) && /* no change */
@@ -1043,6 +1024,7 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* change position and sizes of the controls */
     for( ctrl = GetWindow( hwnd, GW_CHILD); ctrl ; ctrl = GetWindow( ctrl, GW_HWNDNEXT))
     {
+        int ctrlid = GetDlgCtrlID( ctrl);
         GetWindowRect( ctrl, &rc);
         MapWindowPoints( NULL, hwnd, (LPPOINT) &rc, 2);
         if( ctrl == fodInfos->DlgInfos.hwndGrip)
@@ -1055,25 +1037,69 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
         {
             /* if it was below the shell view
              * move to bottom */
-            DeferWindowPos( hdwp, ctrl, NULL, rc.left, rc.top + chgy,
-                    rc.right - rc.left, rc.bottom - rc.top,
-                    SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+            switch( ctrlid)
+            {
+                /* file name box and file types combo change also width */
+                case edt1:
+                case cmb1:
+                    DeferWindowPos( hdwp, ctrl, NULL, rc.left, rc.top + chgy,
+                            rc.right - rc.left + chgx, rc.bottom - rc.top,
+                            SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+                    /* then these buttons must move out of the way */
+                case IDOK:
+                case IDCANCEL:
+                case pshHelp:
+                    DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top + chgy,
+                            0, 0,
+                            SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+                default:
+                DeferWindowPos( hdwp, ctrl, NULL, rc.left, rc.top + chgy,
+                        0, 0,
+                        SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+            }
         }
         else if( rc.left > rcview.right)
         {
             /* if it was to the right of the shell view
              * move to right */
             DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top,
-                    rc.right - rc.left, rc.bottom - rc.top,
+                    0, 0,
                     SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+        }
+        else
+            /* special cases */
+        {
+            switch( ctrlid)
+            {
+#if 0 /* this is Win2k, Win XP. Vista and Higher don't move/size these controls */
+                case IDC_LOOKIN:
+                    DeferWindowPos( hdwp, ctrl, NULL, 0, 0,
+                            rc.right - rc.left + chgx, rc.bottom - rc.top,
+                            SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+                case IDC_TOOLBARSTATIC:
+                case IDC_TOOLBAR:
+                    DeferWindowPos( hdwp, ctrl, NULL, rc.left + chgx, rc.top,
+                            0, 0,
+                            SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+#endif
+                /* not resized in windows. Since wine uses this invisible control
+                 * to size the browser view it needs to be resized */
+                case IDC_SHELLSTATIC:
+                    DeferWindowPos( hdwp, ctrl, NULL, 0, 0,
+                            rc.right - rc.left + chgx,
+                            rc.bottom - rc.top + chgy,
+                            SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+                    break;
+            }
         }
     }
     if(fodInfos->DlgInfos.hwndCustomDlg &&
         (fodInfos->ofnInfos->Flags & (OFN_ENABLETEMPLATE | OFN_ENABLETEMPLATEHANDLE)))
     {
-        GetClientRect(hwnd, &rc);
-        DeferWindowPos( hdwp,fodInfos->DlgInfos.hwndCustomDlg, NULL,
-            0, 0, rc.right, rc.bottom, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
         for( ctrl = GetWindow( fodInfos->DlgInfos.hwndCustomDlg, GW_CHILD);
                 ctrl ; ctrl = GetWindow( ctrl, GW_HWNDNEXT))
         {
@@ -1096,6 +1122,11 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
                         SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
             }
         }
+        /* size the custom dialog at the end: some applications do some
+         * control re-arranging at this point */
+        GetClientRect(hwnd, &rc);
+        DeferWindowPos( hdwp,fodInfos->DlgInfos.hwndCustomDlg, NULL,
+            0, 0, rc.right, rc.bottom, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
     }
     EndDeferWindowPos( hdwp);
     /* should not be needed */
@@ -1111,7 +1142,7 @@ static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
 INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #if 0
-  TRACE("0x%04x 0x%04x\n", hwnd, uMsg);
+  TRACE("%p 0x%04x\n", hwnd, uMsg);
 #endif
 
   switch(uMsg)
@@ -1146,10 +1177,17 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
          FILEDLG95_ResizeControls(hwnd, wParam, lParam);
       	 FILEDLG95_FillControls(hwnd, wParam, lParam);
 
+         if( fodInfos->DlgInfos.hwndCustomDlg)
+             ShowWindow( fodInfos->DlgInfos.hwndCustomDlg, SW_SHOW);
+
+         if(fodInfos->ofnInfos->Flags & OFN_EXPLORER) {
+             SendCustomDlgNotificationMessage(hwnd,CDN_INITDONE);
+             SendCustomDlgNotificationMessage(hwnd,CDN_FOLDERCHANGE);
+         }
+
          if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
          {
              GetWindowRect( hwnd, &rc);
-             /* FIXME: should remember sizes of last invocation */
              fodInfos->sizedlg.cx = rc.right - rc.left;
              fodInfos->sizedlg.cy = rc.bottom - rc.top;
              fodInfos->initial_size.x = fodInfos->sizedlg.cx;
@@ -1158,14 +1196,16 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
              SetWindowPos( fodInfos->DlgInfos.hwndGrip, NULL,
                      rc.right - gripx, rc.bottom - gripy,
                      0, 0, SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOZORDER);
+             /* resize the dialog to the previous invocation */
+             if( MemDialogSize.cx && MemDialogSize.cy)
+                 SetWindowPos( hwnd, NULL,
+                         0, 0, MemDialogSize.cx, MemDialogSize.cy,
+                         SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
          }
 
          if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
-         {
-             SendCustomDlgNotificationMessage(hwnd,CDN_INITDONE);
-             SendCustomDlgNotificationMessage(hwnd,CDN_FOLDERCHANGE);
              SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
-         }
+
          return 0;
        }
     case WM_SIZE:
@@ -1189,9 +1229,13 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
       return FILEDLG95_OnWMGetIShellBrowser(hwnd);
 
     case WM_DESTROY:
-      RemovePropA(hwnd, FileOpenDlgInfosStr);
-      return FALSE;
-
+      {
+          FileOpenDlgInfos * fodInfos = GetPropA(hwnd,FileOpenDlgInfosStr);
+          if (fodInfos && fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
+              MemDialogSize = fodInfos->sizedlg;
+          RemovePropA(hwnd, FileOpenDlgInfosStr);
+          return FALSE;
+      }
     case WM_NOTIFY:
     {
 	LPNMHDR lpnmh = (LPNMHDR)lParam;
@@ -1321,6 +1365,7 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
 
 /* FIXME: use TB_LOADIMAGES when implemented */
 /*  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_LOADIMAGES, IDB_VIEW_SMALL_COLOR, HINST_COMMCTRL);*/
+  SendMessageW(fodInfos->DlgInfos.hwndTB, TB_SETMAXTEXTROWS, 0, 0);
   SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBITMAP, 12, (LPARAM) &tba[0]);
   SendMessageW(fodInfos->DlgInfos.hwndTB, TB_ADDBITMAP, 1, (LPARAM) &tba[1]);
 
@@ -1758,19 +1803,19 @@ static BOOL FILEDLG95_SendFileOK( HWND hwnd, FileOpenDlgInfos *fodInfos )
         /* First send CDN_FILEOK as MSDN doc says */
         if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
             retval = SendCustomDlgNotificationMessage(hwnd,CDN_FILEOK);
-        if (GetWindowLongPtrW(fodInfos->DlgInfos.hwndCustomDlg, DWLP_MSGRESULT))
+        if( retval)
         {
             TRACE("canceled\n");
-            return (retval == 0);
+            return FALSE;
         }
 
         /* fodInfos->ofnInfos points to an ASCII or UNICODE structure as appropriate */
         retval = SendMessageW(fodInfos->DlgInfos.hwndCustomDlg,
                               fodInfos->HookMsg.fileokstring, 0, (LPARAM)fodInfos->ofnInfos);
-        if (GetWindowLongPtrW(fodInfos->DlgInfos.hwndCustomDlg, DWLP_MSGRESULT))
+        if( retval)
         {
             TRACE("canceled\n");
-            return (retval == 0);
+            return FALSE;
         }
     }
     return TRUE;
@@ -3297,7 +3342,7 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
  * Although shell32 is already linked the behaviour of exported StrRetToStrN
  * is dependent on whether emulated OS is unicode or not.
  */
-static HRESULT COMDLG32_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, LPITEMIDLIST pidl)
+static HRESULT COMDLG32_StrRetToStrNW (LPWSTR dest, DWORD len, LPSTRRET src, const ITEMIDLIST *pidl)
 {
 	switch (src->uType)
 	{
