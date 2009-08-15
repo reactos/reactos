@@ -52,7 +52,7 @@ InitStockObjects(void)
              SysColors table - the pens, brushes and stock objects are not affected
              as their handles never change. But it'd be faster to map them, too. */
 
- // Done! g_psi!
+ // Done! gpsi!
 }
 
 /*
@@ -63,7 +63,7 @@ GetSysColor(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
-    return g_psi->argbSystem[nIndex];
+    return gpsi->argbSystem[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -78,7 +78,7 @@ GetSysColorBrush(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
-    return g_psi->ahbrSystem[nIndex];
+    return gpsi->ahbrSystem[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);

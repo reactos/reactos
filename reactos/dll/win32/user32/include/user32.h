@@ -48,7 +48,7 @@ BOOL FASTCALL IsMetaFile(HDC);
 
 extern PPROCESSINFO g_ppi;
 extern ULONG_PTR g_ulSharedDelta;
-extern PSERVERINFO g_psi;
+extern PSERVERINFO gpsi;
 
 static __inline PVOID
 SharedPtrToUser(PVOID Ptr)

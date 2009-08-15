@@ -703,7 +703,7 @@ LookupIconIdFromDirectoryEx(PBYTE xdir,
         }
         else
         {
-            ColorBits = g_psi->BitsPixel;
+            ColorBits = gpsi->BitsPixel;
         }
 
         if(bIcon)
