@@ -16,5 +16,5 @@
 @ stub IID_IAccessibleHandler
 @ stub LIBID_Accessibility
 @ stdcall LresultFromObject(ptr long ptr)
-@ stub ObjectFromLresult
+@ stdcall ObjectFromLresult(long ptr long ptr)
 @ stub WindowFromAccessibleObject

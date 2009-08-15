@@ -760,7 +760,7 @@ static int ctl2_alloc_custdata(
 	if (offset == -1) return offset;
 
 	*((unsigned short *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset]) = VT_UI4;
-	*((unsigned long *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = V_UI4(pVarVal);
+	*((unsigned int *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = V_UI4(pVarVal);
 	break;
 
     default:
@@ -3204,7 +3204,10 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetHelpContext(ICreateTypeLib2 * iface, 
 /******************************************************************************
  * ICreateTypeLib2_SetLcid {OLEAUT32}
  *
- *  See ICreateTypeLib_SetLcid.
+ * Sets both the lcid and lcid2 members in the header to lcid.
+ *
+ * As a special case if lcid == LOCALE_NEUTRAL (0), then the first header lcid
+ * is set to US English while the second one is set to 0.
  */
 static HRESULT WINAPI ICreateTypeLib2_fnSetLcid(ICreateTypeLib2 * iface, LCID lcid)
 {
@@ -3213,6 +3216,8 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetLcid(ICreateTypeLib2 * iface, LCID lc
     TRACE("(%p,%d)\n", iface, lcid);
 
     This->typelib_header.lcid = This->typelib_header.lcid2 = lcid;
+
+    if(lcid == LOCALE_NEUTRAL) This->typelib_header.lcid = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
 
     return S_OK;
 }

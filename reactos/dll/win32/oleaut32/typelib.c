@@ -938,7 +938,7 @@ typedef struct tagITypeLibImpl
     BSTR DocString;
     BSTR HelpFile;
     BSTR HelpStringDll;
-    unsigned long  dwHelpContext;
+    DWORD dwHelpContext;
     int TypeInfoCount;          /* nr of typeinfo's in librarry */
     struct tagITypeInfoImpl *pTypeInfo;   /* linked list of type info data */
     int ctCustData;             /* number of items in cust data list */
@@ -1058,8 +1058,8 @@ typedef struct tagITypeInfoImpl
     BSTR Name;
     BSTR DocString;
     BSTR DllName;
-    unsigned long  dwHelpContext;
-    unsigned long  dwHelpStringContext;
+    DWORD dwHelpContext;
+    DWORD dwHelpStringContext;
 
     /* functions  */
     TLBFuncDesc * funclist;     /* linked list with function descriptions */
@@ -2872,13 +2872,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
     /* TLIBATTR fields */
     MSFT_ReadGuid(&pTypeLibImpl->LibAttr.guid, tlbHeader.posguid, &cx);
 
-    /*    pTypeLibImpl->LibAttr.lcid = tlbHeader.lcid;*/
-    /* Windows seems to have zero here, is this correct? */
-    if(SUBLANGID(tlbHeader.lcid) == SUBLANG_NEUTRAL)
-      pTypeLibImpl->LibAttr.lcid = MAKELCID(MAKELANGID(PRIMARYLANGID(tlbHeader.lcid),0),0);
-    else
-      pTypeLibImpl->LibAttr.lcid = 0;
-
+    pTypeLibImpl->LibAttr.lcid = tlbHeader.lcid2;
     pTypeLibImpl->LibAttr.syskind = tlbHeader.varflags & 0x0f; /* check the mask */
     pTypeLibImpl->LibAttr.wMajorVerNum = LOWORD(tlbHeader.version);
     pTypeLibImpl->LibAttr.wMinorVerNum = HIWORD(tlbHeader.version);

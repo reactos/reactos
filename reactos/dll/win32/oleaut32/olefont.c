@@ -132,8 +132,8 @@ struct OLEFontImpl
   /*
    * Size ratio
    */
-  long cyLogical;
-  long cyHimetric;
+  LONG cyLogical;
+  LONG cyHimetric;
 
   IConnectionPoint *pPropertyNotifyCP;
   IConnectionPoint *pFontEventsCP;

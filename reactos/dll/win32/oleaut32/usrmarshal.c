@@ -232,7 +232,7 @@ static unsigned int get_type_size(ULONG *pFlags, VARTYPE vt)
     case VT_DECIMAL:
         return sizeof(DECIMAL);
     case VT_BSTR:
-        return sizeof(BSTR);
+        return sizeof(ULONG);
     case VT_VARIANT:
         return sizeof(VARIANT);
     case VT_UNKNOWN:
@@ -764,7 +764,7 @@ ULONG WINAPI LPSAFEARRAY_UserSize(ULONG *pFlags, ULONG StartingSize, LPSAFEARRAY
         HRESULT hr;
 
         size += sizeof(ULONG);
-        size += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+        size += 2 * sizeof(USHORT) + 2 * sizeof(ULONG);
 
         sftype = SAFEARRAY_GetUnionType(psa);
         size += sizeof(ULONG);
@@ -850,23 +850,23 @@ unsigned char * WINAPI LPSAFEARRAY_UserMarshal(ULONG *pFlags, unsigned char *Buf
         VARTYPE vt;
         SAFEARRAY *psa = *ppsa;
         ULONG ulCellCount = SAFEARRAY_GetCellCount(psa);
-        wireSAFEARRAY wiresa;
         SF_TYPE sftype;
         GUID guid;
 
         *(ULONG *)Buffer = psa->cDims;
         Buffer += sizeof(ULONG);
-        wiresa = (wireSAFEARRAY)Buffer;
-        wiresa->cDims = psa->cDims;
-        wiresa->fFeatures = psa->fFeatures;
-        wiresa->cbElements = psa->cbElements;
+        *(USHORT *)Buffer = psa->cDims;
+        Buffer += sizeof(USHORT);
+        *(USHORT *)Buffer = psa->fFeatures;
+        Buffer += sizeof(USHORT);
+        *(ULONG *)Buffer = psa->cbElements;
+        Buffer += sizeof(ULONG);
 
         hr = SafeArrayGetVartype(psa, &vt);
         if (FAILED(hr)) vt = 0;
 
-        wiresa->cLocks = (USHORT)psa->cLocks | (vt << 16);
-
-        Buffer += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+        *(ULONG *)Buffer = (USHORT)psa->cLocks | (vt << 16);
+        Buffer += sizeof(ULONG);
 
         sftype = SAFEARRAY_GetUnionType(psa);
         *(ULONG *)Buffer = sftype;
@@ -987,7 +987,7 @@ unsigned char * WINAPI LPSAFEARRAY_UserUnmarshal(ULONG *pFlags, unsigned char *B
     Buffer += sizeof(ULONG);
 
     wiresa = (wireSAFEARRAY)Buffer;
-    Buffer += FIELD_OFFSET(struct _wireSAFEARRAY, uArrayStructs);
+    Buffer += 2 * sizeof(USHORT) + 2 * sizeof(ULONG);
 
     if (cDims != wiresa->cDims)
         RpcRaiseException(RPC_S_INVALID_BOUND);
