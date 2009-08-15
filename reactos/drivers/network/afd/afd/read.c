@@ -29,17 +29,7 @@
 static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
     UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
 
-    return !BytesAvailable &&
-        (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT));
-}
-
-static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, UINT Information ) {
-    if( !NT_SUCCESS(Status) || 
-		(Status == STATUS_SUCCESS && Information == 0) ) {
-        AFD_DbgPrint(MID_TRACE,("Looks like an EOF\n"));
-        FCB->PollState |= AFD_EVENT_DISCONNECT;
-        PollReeval( FCB->DeviceExt, FCB->FileObject );
-    }
+    return !BytesAvailable;
 }
 
 static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
@@ -56,8 +46,7 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     AFD_DbgPrint(MID_TRACE,("Called, BytesAvailable = %d\n",
 							BytesAvailable));
 
-    if( CantReadMore(FCB) ) return STATUS_SUCCESS;
-    if( !BytesAvailable ) return STATUS_PENDING;
+    if( CantReadMore(FCB) ) return STATUS_PENDING;
 
     Map = (PAFD_MAPBUF)(RecvReq->BufferArray + RecvReq->BufferCount);
 
@@ -115,7 +104,6 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 
             if( Status == STATUS_SUCCESS )
                 FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
-            HandleEOFOnIrp( FCB, Status, FCB->ReceiveIrp.Iosb.Information );
 		}
     }
 
@@ -132,77 +120,45 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 
     AFD_DbgPrint(MID_TRACE,("%x %x\n", FCB, Irp));
 
-    if( CantReadMore( FCB ) ) {
-        /* Success here means that we got an EOF.  Complete a pending read
-         * with zero bytes if we haven't yet overread, then kill the others.
-         */
-        while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
-            NextIrpEntry =
-                RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
-            NextIrp =
-                CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
-            NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
-            RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    /* Kick the user that receive would be possible now */
+    /* XXX Not implemented yet */
 
-            AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
-                                    TotalBytesCopied));
-            UnlockBuffers( RecvReq->BufferArray,
-                           RecvReq->BufferCount, FALSE );
-            Status = NextIrp->IoStatus.Status =
-                FCB->Overread ? STATUS_END_OF_FILE : STATUS_SUCCESS;
-            NextIrp->IoStatus.Information = 0;
-            if( NextIrp == Irp ) RetStatus = Status;
-            if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
-            IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-            FCB->Overread = TRUE;
-            //FCB->PollState |= AFD_EVENT_DISCONNECT;
-            PollReeval( FCB->DeviceExt, FCB->FileObject );
-        }
-    } else {
-		/* Kick the user that receive would be possible now */
-		/* XXX Not implemented yet */
+    AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
+						FCB, FCB->Recv.Content));
 
-		AFD_DbgPrint(MID_TRACE,("FCB %x Receive data waiting %d\n",
-								FCB, FCB->Recv.Content));
-		/*OskitDumpBuffer( FCB->Recv.Window, FCB->Recv.Content );*/
+    /* Try to clear some requests */
+    while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
+	   NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
+	   NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	   NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	   RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 
-		/* Try to clear some requests */
-		while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
-			NextIrpEntry =
-				RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
-			NextIrp =
-				CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
-			NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
-			RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+	   AFD_DbgPrint(MID_TRACE,("RecvReq @ %x\n", RecvReq));
 
-			AFD_DbgPrint(MID_TRACE,("RecvReq @ %x\n", RecvReq));
+	   Status = TryToSatisfyRecvRequestFromBuffer( FCB, RecvReq, &TotalBytesCopied );
 
-			Status = TryToSatisfyRecvRequestFromBuffer
-				( FCB, RecvReq, &TotalBytesCopied );
-
-			if( Status == STATUS_PENDING ) {
-				AFD_DbgPrint(MID_TRACE,("Ran out of data for %x\n", NextIrp));
-				InsertHeadList(&FCB->PendingIrpList[FUNCTION_RECV],
-							   &NextIrp->Tail.Overlay.ListEntry);
-				break;
-			} else {
-				AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
-										TotalBytesCopied));
-				UnlockBuffers( RecvReq->BufferArray,
-							   RecvReq->BufferCount, FALSE );
-				NextIrp->IoStatus.Status = Status;
-				NextIrp->IoStatus.Information = TotalBytesCopied;
-				if( NextIrp == Irp ) { 
-					RetStatus = Status;
-					RetBytesCopied = TotalBytesCopied;
-				}
-				if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
-				IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
-			}
+	   if( Status == STATUS_PENDING ) {
+		AFD_DbgPrint(MID_TRACE,("Ran out of data for %x\n", NextIrp));
+		InsertHeadList(&FCB->PendingIrpList[FUNCTION_RECV],
+					   &NextIrp->Tail.Overlay.ListEntry);
+		break;
+	   } else {
+		AFD_DbgPrint(MID_TRACE,("Completing recv %x (%d)\n", NextIrp,
+								TotalBytesCopied));
+		UnlockBuffers( RecvReq->BufferArray,
+					   RecvReq->BufferCount, FALSE );
+		NextIrp->IoStatus.Status = Status;
+		NextIrp->IoStatus.Information = TotalBytesCopied;
+		if( NextIrp == Irp ) { 
+			RetStatus = Status;
+			RetBytesCopied = TotalBytesCopied;
 		}
+		if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+		IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
+	   }
     }
 
-    if( FCB->Recv.Content ) {
+    if( !CantReadMore(FCB) ) {
 		FCB->PollState |= AFD_EVENT_RECEIVE;
     } else
 		FCB->PollState &= ~AFD_EVENT_RECEIVE;
@@ -264,11 +220,7 @@ NTSTATUS NTAPI ReceiveComplete
         return STATUS_INVALID_PARAMETER;
     }
 
-    HandleEOFOnIrp( FCB, Irp->IoStatus.Status, Irp->IoStatus.Information );
-
 	ReceiveActivity( FCB, NULL );
-
-	PollReeval( FCB->DeviceExt, FCB->FileObject );
 		
     SocketStateUnlock( FCB );
 
