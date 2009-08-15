@@ -21,9 +21,6 @@
 #include <win32k.h>
 
 #include <limits.h>
-
-#undef LIST_FOR_EACH
-#undef LIST_FOR_EACH_SAFE
 #include "object.h"
 
 #define NDEBUG

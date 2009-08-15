@@ -21,8 +21,6 @@
 
 #include <win32k.h>
 
-#undef LIST_FOR_EACH
-#undef LIST_FOR_EACH_SAFE
 #include "object.h"
 #include "request.h"
 #include "user.h"

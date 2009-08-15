@@ -16,7 +16,7 @@ typedef struct _PROCESSINFO
 {
   PEPROCESS            peProcess;
   W32HEAP_USER_MAPPING HeapMappings;
-  LIST_ENTRY           Classes;         /* window classes owned by the process */
+  struct list          Classes;         /* window classes owned by the process */
   struct handle_table *handles;         /* handle entries */
   struct event        *idle_event;      /* event for input idle */
   struct msg_queue    *queue;           /* main message queue */

@@ -23,8 +23,6 @@
 
 #include <limits.h>
 
-#undef LIST_FOR_EACH
-#undef LIST_FOR_EACH_SAFE
 #include "object.h"
 #include "request.h"
 #include "user.h"
@@ -32,18 +30,9 @@
 #define NDEBUG
 #include <debug.h>
 
-#undef LIST_FOR_EACH
-/* iterate through the list using a list entry.
- * elem is set to NULL if the list is run thru without breaking out or if list is empty.
- */
-#define LIST_FOR_EACH(elem, list, type, field) \
-    for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
-         &(elem)->field != (list) || (elem == NULL); \
-         (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
-
 struct window_class
 {
-    LIST_ENTRY      entry;           /* entry in process list */
+    struct list     entry;           /* entry in process list */
     PPROCESSINFO    process;         /* process owning the class */
     int             count;           /* reference count */
     int             local;           /* local class? */
@@ -70,36 +59,36 @@ static struct window_class *create_class( PPROCESSINFO process, int extra_bytes,
     /* other fields are initialized by caller */
 
     /* local classes have priority so we put them first in the list */
-    if (local) InsertHeadList( &process->Classes, &class->entry );
-    else InsertTailList( &process->Classes, &class->entry );
+    if (local) list_add_head( &process->Classes, &class->entry );
+    else list_add_tail( &process->Classes, &class->entry );
     return class;
 }
 
 static void destroy_class( struct window_class *class )
 {
-    RemoveEntryList( &class->entry );
+    list_remove( &class->entry );
     ObDereferenceObject( class->process->peProcess );
     ExFreePool( class );
 }
 
 void destroy_process_classes( PPROCESSINFO process )
 {
-    PLIST_ENTRY ptr;
+    struct list *ptr;
 
-    while (( ptr = process->Classes.Flink ))
+    while (( ptr = list_head(&process->Classes) ))
     {
-        struct window_class *class = CONTAINING_RECORD( ptr, struct window_class, entry );
+        struct window_class *class = LIST_ENTRY( ptr, struct window_class, entry );
         destroy_class( class );
     }
 }
 
 static struct window_class *find_class( PPROCESSINFO process, atom_t atom, mod_handle_t instance )
 {
-    struct window_class *class;
+    struct list *ptr;
 
-    LIST_FOR_EACH( class, &process->Classes, struct window_class, entry)
+    LIST_FOR_EACH( ptr, &process->Classes )
     {
-        //struct window_class *class = CONTAINING_RECORD( ptr, struct window_class, entry );
+        struct window_class *class = LIST_ENTRY( ptr, struct window_class, entry );
         if (class->atom != atom) continue;
         if (!instance || !class->local || class->instance == instance) return class;
     }

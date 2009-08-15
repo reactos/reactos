@@ -40,6 +40,7 @@ Win32kProcessCallout(PEPROCESS Process,
                      BOOLEAN Create)
 {
     PPROCESSINFO Win32Process;
+    struct handle_table *handles;
 
     DPRINT("Enter Win32kProcessCallback\n");
 
@@ -91,13 +92,25 @@ Win32kProcessCallout(PEPROCESS Process,
         Win32Process->HeapMappings.UserMapping = UserBase;
         Win32Process->HeapMappings.Count = 1;
 
-        InitializeListHead(&Win32Process->Classes);
+        list_init(&Win32Process->Classes);
         Win32Process->handles = alloc_handle_table(Win32Process, 0);
         connect_process_winstation(Win32Process);
     }
     else
     {
         DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
+
+        UserEnterExclusive();
+
+        /* Delete its handles table */
+        handles = Win32Process->handles;
+        Win32Process->handles = NULL;
+        if (handles) release_object(handles);
+
+        /* Destroy its classes */
+        destroy_process_classes(Win32Process);
+
+        UserLeave();
     }
 
     DPRINT("Leave Win32kProcessCallback\n");
