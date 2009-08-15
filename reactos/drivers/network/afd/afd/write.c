@@ -223,8 +223,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_SEND;
-
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
     {
         PAFD_SEND_INFO_UDP SendReq;
@@ -393,7 +391,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_SEND;
     FCB->PollState &= ~AFD_EVENT_SEND;
 
     PollReeval( FCB->DeviceExt, FCB->FileObject );

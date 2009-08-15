@@ -300,6 +300,9 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if (ConnInfo) ExFreePool( ConnInfo );
 
+    FCB->PollState |= AFD_EVENT_DISCONNECT;
+    PollReeval( FCB->DeviceExt, FCB->FileObject );
+
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
 }
 

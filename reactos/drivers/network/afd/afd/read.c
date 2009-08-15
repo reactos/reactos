@@ -303,9 +303,6 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 									   Irp, 0 );
     }
 
-    FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
-
     if( !(RecvReq = LockRequest( Irp, IrpSp )) )
 		return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
 									   Irp, 0 );
@@ -332,7 +329,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     Status = ReceiveActivity( FCB, Irp );
 
-    if( Status == STATUS_PENDING && RecvReq->AfdFlags & AFD_IMMEDIATE ) {
+    if( Status == STATUS_PENDING && (RecvReq->AfdFlags & AFD_IMMEDIATE) ) {
         AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
         Status = STATUS_CANT_WAIT;
         TotalBytesCopied = 0;
@@ -595,8 +592,6 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
-
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 		return UnlockAndMaybeComplete
@@ -660,10 +655,12 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     } else if( RecvReq->AfdFlags & AFD_IMMEDIATE ) {
 		AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 		Status = STATUS_CANT_WAIT;
+		FCB->PollState &= ~AFD_EVENT_RECEIVE;
 		PollReeval( FCB->DeviceExt, FCB->FileObject );
 		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 		return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     } else {
+		FCB->PollState &= ~AFD_EVENT_RECEIVE;
 		PollReeval( FCB->DeviceExt, FCB->FileObject );
 		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }

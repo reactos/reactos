@@ -63,6 +63,9 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
 
    if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 
+   FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;
+   PollReeval( FCB->DeviceExt, FCB->FileObject );
+
    return Status;
 }
 
@@ -102,17 +105,12 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 	return STATUS_FILE_CLOSED;
     }
 
-    if( NT_SUCCESS(Irp->IoStatus.Status) ) {
-	FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;
-	AFD_DbgPrint(MID_TRACE,("Going to connected state %d\n", FCB->State));
-	FCB->State = SOCKET_STATE_CONNECTED;
-    } else {
-	FCB->PollState |= AFD_EVENT_CONNECT_FAIL | AFD_EVENT_RECEIVE;
+    if( !NT_SUCCESS(Irp->IoStatus.Status) ) {
+	FCB->PollState |= AFD_EVENT_CONNECT_FAIL;
 	AFD_DbgPrint(MID_TRACE,("Going to bound state\n"));
 	FCB->State = SOCKET_STATE_BOUND;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     /* Succeed pending irps on the FUNCTION_CONNECT list */
     while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_CONNECT] ) ) {
