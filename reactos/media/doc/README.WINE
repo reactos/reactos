@@ -43,6 +43,7 @@ reactos/dll/directx/quartz        # Autosync
 reactos/dll/win32/advpack         # Autosync
 reactos/dll/win32/atl             # Autosync
 reactos/dll/win32/avifil32        # Autosync
+reactos/dll/win32/bcrypt          # Autosync
 reactos/dll/win32/browseui        # Out of sync
 reactos/dll/win32/cabinet         # Autosync
 reactos/dll/win32/clusapi         # Autosync
@@ -61,6 +62,7 @@ reactos/dll/win32/dciman32        # Synced to Wine-1_0-rc2
 reactos/dll/win32/gdiplus         # Autosync
 reactos/dll/win32/hhctrl.ocx      # Autosync
 reactos/dll/win32/hlink           # Autosync
+reactos/dll/win32/hnetcfg         # Autosync
 reactos/dll/win32/httpapi         # Autosync
 reactos/dll/win32/iccvid          # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
@@ -177,6 +179,7 @@ reactos/dll/win32/xinput1_1       # Autosync
 reactos/dll/win32/xinput1_2       # Autosync
 reactos/dll/win32/xinput1_3       # Autosync
 reactos/dll/win32/xinput9_1_0     # Autosync
+reactos/dll/win32/xmllite         # Autosync
 
 ReactOS shares the following programs with Winehq.
 

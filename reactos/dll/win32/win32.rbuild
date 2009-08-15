@@ -31,6 +31,9 @@
 <directory name="avifil32">
 	<xi:include href="avifil32/avifil32.rbuild" />
 </directory>
+<directory name="bcrypt">
+	<xi:include href="bcrypt/bcrypt.rbuild" />
+</directory>
 <directory name="beepmidi">
 	<xi:include href="beepmidi/beepmidi.rbuild" />
 </directory>
@@ -126,6 +129,9 @@
 </directory>
 <directory name="hlink">
 	<xi:include href="hlink/hlink.rbuild" />
+</directory>
+<directory name="hnetcfg">
+	<xi:include href="hnetcfg/hnetcfg.rbuild" />
 </directory>
 <directory name="httpapi">
 	<xi:include href="httpapi/httpapi.rbuild" />
@@ -642,5 +648,8 @@
 </directory>
 <directory name="xinput9_1_0">
 	<xi:include href="xinput9_1_0/xinput9_1_0.rbuild" />
+</directory>
+<directory name="xmllite">
+	<xi:include href="xmllite/xmllite.rbuild" />
 </directory>
 </group>

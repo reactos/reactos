@@ -108,6 +108,7 @@
   <property name="BASEADDRESS_SXS" value="0x6e160000" />
   <property name="BASEADDRESS_SCHANNEL" value="0x6e360000" />
   <property name="BASEADDRESS_COMPSTUI" value="0x6ec10000" />
+  <property name="BASEADDRESS_HNETCFG" value="0x6edb0000" />
   <property name="BASEADDRESS_CLB" value="0x6f2b0000" />
   <property name="BASEADDRESS_JSCRIPT" value="0x6fe80000" />
   <property name="BASEADDRESS_FONTEXT" value="0x6f7b0000" />

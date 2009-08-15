@@ -16,6 +16,7 @@
 	<file>hlink.idl</file>
 	<file>htiframe.idl</file>
 	<file>iads.idl</file>
+	<file>icftypes.idl</file>
 	<file>imnact.idl</file>
 	<file>imnxport.idl</file>
 	<file>indexsrv.idl</file>
@@ -26,6 +27,7 @@
 	<file>mstask.idl</file>
 	<file>msxml.idl</file>
 	<file>msxml2.idl</file>
+	<file>netfw.idl</file>
 	<file>oaidl.idl</file>
 	<file>objidl.idl</file>
 	<file>objsafe.idl</file>
