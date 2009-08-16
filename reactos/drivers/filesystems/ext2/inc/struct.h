@@ -452,8 +452,9 @@ typedef struct _Ext2VolumeControlBlock
 	ULONG	ReservedBlocksCount;
 	ULONG	FreeBlocksCount;
 	ULONG	FreeInodesCount;
-	ULONG	LogBlockSize;			//	Block size = 1024 << LogBlockSize
-	
+	ULONG	LogBlockSize;			// Block size = 1024 << LogBlockSize
+	ULONG	InodeSize;
+
 	//	Group Information Saved up in the VCB...
 	PtrExt2GroupDescriptors	PtrGroupDescriptors;
 	ULONG	NoOfGroups;

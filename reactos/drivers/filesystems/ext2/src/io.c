@@ -184,7 +184,7 @@ NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP(
 		}
 
 		for( i = 0; i < Count; i++ ) {
-                    DbgPrint("PASSING DOWN IRP %d TO TARGET DEVICE\n", i);
+                    // DbgPrint("PASSING DOWN IRP %d TO TARGET DEVICE\n", i);
                     IoCallDriver( PtrVCB->TargetDeviceObject, PtrIoRuns[ i].PtrAssociatedIrp );
                 }
 
@@ -194,7 +194,7 @@ NTSTATUS NTAPI Ext2PassDownMultiReadWriteIRP(
 			//	Synchronous IO 
 			//	Wait for the IO to complete...
 			//
-                    DbgPrint("DEADLY WAIT (%d)\n", KeGetCurrentIrql());
+			DbgPrint("DEADLY WAIT (%d)\n", KeGetCurrentIrql());
 			KeWaitForSingleObject( PtrSyncEvent,
 				Executive, KernelMode, FALSE, (PLARGE_INTEGER)NULL );
                         DbgPrint("DEADLY WAIT DONE\n");
