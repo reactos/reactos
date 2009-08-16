@@ -39,6 +39,9 @@ PsConvertToGuiThread(VOID)
     /* Validate the previous mode */
     if (KeGetPreviousMode() == KernelMode) return STATUS_INVALID_PARAMETER;
 
+    /* If no win32k, crashes later */
+    ASSERT(PspW32ProcessCallout != NULL);
+
     /* Make sure win32k is here */
     if (!PspW32ProcessCallout) return STATUS_ACCESS_DENIED;
 
