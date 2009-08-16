@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
+ * PROJECT:          ReactOS Win32 kernelmode subsystem
  * PURPOSE:          GDI stretch blt functions
  * FILE:             subsystems/win32/win32k/eng/stretchblt.c
  * PROGRAMER:        Jason Filby
@@ -160,13 +160,13 @@ EngStretchBltROP(
         OutputRect.bottom = prclDest->top;
     }
 
-    InputRect = *prclSrc;
     if (UsesSource)
     {
         if (NULL == prclSrc)
         {
             return FALSE;
         }
+        InputRect = *prclSrc;
 
         if (! IntEngEnter(&EnterLeaveSource, psoSource, &InputRect, TRUE,
                           &Translate, &psoInput))
@@ -178,6 +178,13 @@ EngStretchBltROP(
         InputRect.right += Translate.x;
         InputRect.top += Translate.y;
         InputRect.bottom += Translate.y;
+    }
+    else
+    {
+        InputRect.left = 0;
+        InputRect.right = OutputRect.right - OutputRect.left;
+        InputRect.top = 0;
+        InputRect.bottom = OutputRect.bottom - OutputRect.top;
     }
 
     if (NULL != ClipRegion)
