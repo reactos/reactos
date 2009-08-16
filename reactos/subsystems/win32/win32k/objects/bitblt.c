@@ -377,10 +377,10 @@ NtGdiTransparentBlt(
     }
 
     DestPalette = BitmapDest->hDIBPalette;
-    if (!DestPalette) DestPalette = pPrimarySurface->DevInfo.hpalDefault;
+    if (!DestPalette) DestPalette = pPrimarySurface->devinfo.hpalDefault;
 
     SourcePalette = BitmapSrc->hDIBPalette;
-    if (!SourcePalette) SourcePalette = pPrimarySurface->DevInfo.hpalDefault;
+    if (!SourcePalette) SourcePalette = pPrimarySurface->devinfo.hpalDefault;
 
     if(!(PalSourceGDI = PALETTE_LockPalette(SourcePalette)))
     {

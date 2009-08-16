@@ -104,10 +104,10 @@ IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 
   if (!(pGDev->flFlags & PDEV_DISPLAY )) return FALSE;
 
-  if ((pGDev->DevInfo.iDitherFormat == BMF_8BPP)  ||
-      (pGDev->DevInfo.iDitherFormat == BMF_16BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_24BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_32BPP))
+  if ((pGDev->devinfo.iDitherFormat == BMF_8BPP)  ||
+      (pGDev->devinfo.iDitherFormat == BMF_16BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_24BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_32BPP))
   {
      if (pGDev->flFlags & PDEV_GAMMARAMP_TABLE)
         RtlCopyMemory( Ramp,
@@ -236,22 +236,22 @@ UpdateDeviceGammaRamp( HDEV hPDev )
   PALOBJ *palPtr;
   PPDEVOBJ pGDev = (PPDEVOBJ) hPDev;
 
-  if ((pGDev->DevInfo.iDitherFormat == BMF_8BPP)  ||
-      (pGDev->DevInfo.iDitherFormat == BMF_16BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_24BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_32BPP))
+  if ((pGDev->devinfo.iDitherFormat == BMF_8BPP)  ||
+      (pGDev->devinfo.iDitherFormat == BMF_16BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_24BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_32BPP))
   {
      if (pGDev->DriverFunctions.IcmSetDeviceGammaRamp)
-         return pGDev->DriverFunctions.IcmSetDeviceGammaRamp( pGDev->hPDev,
+         return pGDev->DriverFunctions.IcmSetDeviceGammaRamp( pGDev->dhpdev,
                                                         IGRF_RGB_256WORDS,
                                                        pGDev->pvGammaRamp);
 
-     if ( (pGDev->DevInfo.iDitherFormat != BMF_8BPP) ||
-         !(pGDev->GDIInfo.flRaster & RC_PALETTE)) return FALSE;
+     if ( (pGDev->devinfo.iDitherFormat != BMF_8BPP) ||
+         !(pGDev->gdiinfo.flRaster & RC_PALETTE)) return FALSE;
 
      if (!(pGDev->flFlags & PDEV_GAMMARAMP_TABLE)) return FALSE;
 
-     palGDI = PALETTE_LockPalette(pGDev->DevInfo.hpalDefault);
+     palGDI = PALETTE_LockPalette(pGDev->devinfo.hpalDefault);
      if(!palGDI) return FALSE;
      palPtr = (PALOBJ*) palGDI;
 
@@ -266,7 +266,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
      // PALOBJ_cGetColors check mode flags and update Gamma Correction.
      // Set the HDEV to pal and go.
         palGDI->hPDev = hPDev;
-        Ret = pGDev->DriverFunctions.SetPalette(pGDev->hPDev,
+        Ret = pGDev->DriverFunctions.SetPalette(pGDev->dhpdev,
                                                      palPtr,
                                                           0,
                                                           0,
@@ -296,18 +296,18 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 
   if (!(pGDev->flFlags & PDEV_DISPLAY )) return FALSE;
 
-  if ((pGDev->DevInfo.iDitherFormat == BMF_8BPP)  ||
-      (pGDev->DevInfo.iDitherFormat == BMF_16BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_24BPP) ||
-      (pGDev->DevInfo.iDitherFormat == BMF_32BPP))
+  if ((pGDev->devinfo.iDitherFormat == BMF_8BPP)  ||
+      (pGDev->devinfo.iDitherFormat == BMF_16BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_24BPP) ||
+      (pGDev->devinfo.iDitherFormat == BMF_32BPP))
   {
      if (!pGDev->DriverFunctions.IcmSetDeviceGammaRamp)
      {  // No driver support
-        if (!(pGDev->DevInfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP))
+        if (!(pGDev->devinfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP))
         { // Driver does not support Gamma Ramp, so test to see we
           // have BMF_8BPP only and palette operation support.
-           if ((pGDev->DevInfo.iDitherFormat != BMF_8BPP) ||
-              !(pGDev->GDIInfo.flRaster & RC_PALETTE))  return FALSE;
+           if ((pGDev->devinfo.iDitherFormat != BMF_8BPP) ||
+              !(pGDev->gdiinfo.flRaster & RC_PALETTE))  return FALSE;
         }
      }
 

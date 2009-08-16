@@ -334,8 +334,8 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECTL pRect,
       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Monitor->Lock);
       MonitorRect.left = 0; /* FIXME: get origin */
       MonitorRect.top = 0; /* FIXME: get origin */
-      MonitorRect.right = MonitorRect.left + Monitor->GdiDevice->GDIInfo.ulHorzRes;
-      MonitorRect.bottom = MonitorRect.top + Monitor->GdiDevice->GDIInfo.ulVertRes;
+      MonitorRect.right = MonitorRect.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+      MonitorRect.bottom = MonitorRect.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
       ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Monitor->Lock);
 
       DPRINT("MonitorRect: left = %d, top = %d, right = %d, bottom = %d\n",
@@ -667,8 +667,8 @@ NtUserGetMonitorInfo(
    /* fill monitor info */
    MonitorInfo.rcMonitor.left = 0; /* FIXME: get origin */
    MonitorInfo.rcMonitor.top = 0; /* FIXME: get origin */
-   MonitorInfo.rcMonitor.right = MonitorInfo.rcMonitor.left + Monitor->GdiDevice->GDIInfo.ulHorzRes;
-   MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->GDIInfo.ulVertRes;
+   MonitorInfo.rcMonitor.right = MonitorInfo.rcMonitor.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+   MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
    MonitorInfo.rcWork = MonitorInfo.rcMonitor; /* FIXME: use DEVMODE panning to calculate work area? */
    MonitorInfo.dwFlags = 0;
 

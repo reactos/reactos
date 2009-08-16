@@ -29,8 +29,8 @@ InitMetrics(VOID)
     PSYSTEM_CURSORINFO CurInfo;
     INT *piSysMet;
 
-    Width = pPrimarySurface->GDIInfo.ulHorzRes;
-    Height = pPrimarySurface->GDIInfo.ulVertRes;
+    Width = pPrimarySurface->gdiinfo.ulHorzRes;
+    Height = pPrimarySurface->gdiinfo.ulVertRes;
 
     Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                             KernelMode,

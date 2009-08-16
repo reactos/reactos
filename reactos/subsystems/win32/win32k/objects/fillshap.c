@@ -918,7 +918,7 @@ IntGdiGradientFill(
     ASSERT(psurf);
 
     hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
 
     PalDestGDI = PALETTE_LockPalette(hDestPalette);
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, PalDestGDI, 0, 0, 0);
@@ -1113,7 +1113,7 @@ NtGdiExtFloodFill(
     }
 
     hpal = dc->dclevel.pSurface->hDIBPalette;
-    if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
+    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
     ppal = PALETTE_ShareLockPalette(hpal);
     
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0xffffff, 0);

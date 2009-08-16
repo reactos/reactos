@@ -287,7 +287,7 @@ IntSetDIBits(
     else
     {
         // Destination palette obtained from the hDC
-        DDB_Palette = DC->ppdev->DevInfo.hpalDefault;
+        DDB_Palette = DC->ppdev->devinfo.hpalDefault;
     }
 
     ppalDDB = PALETTE_LockPalette(DDB_Palette);
@@ -478,7 +478,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Use destination palette obtained from the DC by default */
-    DDBPalette = pDC->ppdev->DevInfo.hpalDefault;
+    DDBPalette = pDC->ppdev->devinfo.hpalDefault;
 
     /* Try to use hDIBPalette if it exists */
     pSurf = pDC->dclevel.pSurface;
@@ -654,7 +654,7 @@ NtGdiGetDIBitsInternal(
     hSourcePalette = psurf->hDIBPalette;
     if (!hSourcePalette)
     {
-        hSourcePalette = pPrimarySurface->DevInfo.hpalDefault;
+        hSourcePalette = pPrimarySurface->devinfo.hpalDefault;
     }
 
     ColorPtr = ((PBYTE)Info + Info->bmiHeader.biSize);

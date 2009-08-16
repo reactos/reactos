@@ -3386,7 +3386,7 @@ GreExtTextOutW(
 
     /* Create the xlateobj */
     hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
     ppalDst = PALETTE_LockPalette(hDestPalette);
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);

@@ -296,33 +296,33 @@ IntGdiCreateDC(
 
     pdc->dctype = DC_TYPE_DIRECT;
 
-    pdc->dhpdev = PrimarySurface.hPDev;
+    pdc->dhpdev = PrimarySurface.dhpdev;
     if (pUMdhpdev) pUMdhpdev = pdc->dhpdev; // set DHPDEV for device.
     pdc->ppdev = (PVOID)&PrimarySurface;
 
     // ATM we only have one display.
     pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
-    pdc->rosdc.bitsPerPixel = pdc->ppdev->GDIInfo.cBitsPixel *
-                              pdc->ppdev->GDIInfo.cPlanes;
+    pdc->rosdc.bitsPerPixel = pdc->ppdev->gdiinfo.cBitsPixel *
+                              pdc->ppdev->gdiinfo.cPlanes;
     DPRINT("Bits per pel: %u\n", pdc->rosdc.bitsPerPixel);
 
-    pdc->flGraphicsCaps  = PrimarySurface.DevInfo.flGraphicsCaps;
-    pdc->flGraphicsCaps2 = PrimarySurface.DevInfo.flGraphicsCaps2;
+    pdc->flGraphicsCaps  = PrimarySurface.devinfo.flGraphicsCaps;
+    pdc->flGraphicsCaps2 = PrimarySurface.devinfo.flGraphicsCaps2;
 
     pdc->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
 
     pdcattr->jROP2 = R2_COPYPEN;
 
     pdc->erclWindow.top = pdc->erclWindow.left = 0;
-    pdc->erclWindow.right  = pdc->ppdev->GDIInfo.ulHorzRes;
-    pdc->erclWindow.bottom = pdc->ppdev->GDIInfo.ulVertRes;
+    pdc->erclWindow.right  = pdc->ppdev->gdiinfo.ulHorzRes;
+    pdc->erclWindow.bottom = pdc->ppdev->gdiinfo.ulVertRes;
     pdc->dclevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
 
     pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->ppdev->GDIInfo.ulHorzRes,
-                                 pdc->ppdev->GDIInfo.ulVertRes);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->ppdev->gdiinfo.ulHorzRes,
+                                 pdc->ppdev->gdiinfo.ulVertRes);
 
     if (!CreateAsIC)
     {

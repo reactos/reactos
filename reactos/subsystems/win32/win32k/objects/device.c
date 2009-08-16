@@ -320,19 +320,19 @@ IntPrepareDriver()
         PrimarySurface.DMW.dmSize = sizeof (PrimarySurface.DMW);
         if (SetupDevMode(&PrimarySurface.DMW, DisplayNumber))
         {
-            PrimarySurface.hPDev = PrimarySurface.DriverFunctions.EnablePDEV(
+            PrimarySurface.dhpdev = PrimarySurface.DriverFunctions.EnablePDEV(
                                        &PrimarySurface.DMW,
                                        L"",
                                        HS_DDI_MAX,
-                                       PrimarySurface.FillPatterns,
-                                       sizeof(PrimarySurface.GDIInfo),
-                                       &PrimarySurface.GDIInfo,
-                                       sizeof(PrimarySurface.DevInfo),
-                                       &PrimarySurface.DevInfo,
+                                       PrimarySurface.ahsurf,
+                                       sizeof(PrimarySurface.gdiinfo),
+                                       &PrimarySurface.gdiinfo,
+                                       sizeof(PrimarySurface.devinfo),
+                                       &PrimarySurface.devinfo,
                                        NULL,
                                        L"",
                                        (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
-            DoDefault = (NULL == PrimarySurface.hPDev);
+            DoDefault = (NULL == PrimarySurface.dhpdev);
             if (DoDefault)
             {
                 DPRINT1("DrvEnablePDev with registry parameters failed\n");
@@ -347,20 +347,20 @@ IntPrepareDriver()
         {
             RtlZeroMemory(&(PrimarySurface.DMW), sizeof(DEVMODEW));
             PrimarySurface.DMW.dmSize = sizeof (PrimarySurface.DMW);
-            PrimarySurface.hPDev = PrimarySurface.DriverFunctions.EnablePDEV(
+            PrimarySurface.dhpdev = PrimarySurface.DriverFunctions.EnablePDEV(
                                        &PrimarySurface.DMW,
                                        L"",
                                        HS_DDI_MAX,
-                                       PrimarySurface.FillPatterns,
-                                       sizeof(PrimarySurface.GDIInfo),
-                                       &PrimarySurface.GDIInfo,
-                                       sizeof(PrimarySurface.DevInfo),
-                                       &PrimarySurface.DevInfo,
+                                       PrimarySurface.ahsurf,
+                                       sizeof(PrimarySurface.gdiinfo),
+                                       &PrimarySurface.gdiinfo,
+                                       sizeof(PrimarySurface.devinfo),
+                                       &PrimarySurface.devinfo,
                                        NULL,
                                        L"",
                                        (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
 
-            if (NULL == PrimarySurface.hPDev)
+            if (NULL == PrimarySurface.dhpdev)
             {
                 ObDereferenceObject(PrimarySurface.VideoFileObject);
                 DPRINT1("DrvEnablePDEV with default parameters failed\n");
@@ -369,10 +369,10 @@ IntPrepareDriver()
             }
 
             // Update the primary surface with what we really got
-            PrimarySurface.DMW.dmPelsWidth = PrimarySurface.GDIInfo.ulHorzRes;
-            PrimarySurface.DMW.dmPelsHeight = PrimarySurface.GDIInfo.ulVertRes;
-            PrimarySurface.DMW.dmBitsPerPel = PrimarySurface.GDIInfo.cBitsPixel;
-            PrimarySurface.DMW.dmDisplayFrequency = PrimarySurface.GDIInfo.ulVRefresh;
+            PrimarySurface.DMW.dmPelsWidth = PrimarySurface.gdiinfo.ulHorzRes;
+            PrimarySurface.DMW.dmPelsHeight = PrimarySurface.gdiinfo.ulVertRes;
+            PrimarySurface.DMW.dmBitsPerPel = PrimarySurface.gdiinfo.cBitsPixel;
+            PrimarySurface.DMW.dmDisplayFrequency = PrimarySurface.gdiinfo.ulVRefresh;
         }
 
         if (!PrimarySurface.DMW.dmDriverExtra)
@@ -389,15 +389,15 @@ IntPrepareDriver()
             DPRINT1("**** DMW extra = %u bytes. Please report to ros-dev@reactos.org ****\n", PrimarySurface.DMW.dmDriverExtra);
         }
 
-        if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
+        if (0 == PrimarySurface.gdiinfo.ulLogPixelsX)
         {
-            DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
-            PrimarySurface.GDIInfo.ulLogPixelsX = 96;
+            DPRINT("Adjusting gdiinfo.ulLogPixelsX\n");
+            PrimarySurface.gdiinfo.ulLogPixelsX = 96;
         }
-        if (0 == PrimarySurface.GDIInfo.ulLogPixelsY)
+        if (0 == PrimarySurface.gdiinfo.ulLogPixelsY)
         {
-            DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
-            PrimarySurface.GDIInfo.ulLogPixelsY = 96;
+            DPRINT("Adjusting gdiinfo.ulLogPixelsY\n");
+            PrimarySurface.gdiinfo.ulLogPixelsY = 96;
         }
 
         PrimarySurface.Pointer.Exclude.right = -1;
@@ -406,7 +406,7 @@ IntPrepareDriver()
 
         /* Complete initialization of the physical device */
         PrimarySurface.DriverFunctions.CompletePDEV(
-            PrimarySurface.hPDev,
+            PrimarySurface.dhpdev,
             (HDEV)&PrimarySurface);
 
         DPRINT("calling DRIVER_ReferenceDriver\n");
@@ -421,7 +421,7 @@ IntPrepareDriver()
         PrimarySurface.pvGammaRamp = NULL;
         PrimarySurface.ppdevNext = NULL;    // Fixme! We need to support more than display drvs.
         PrimarySurface.ppdevParent = NULL;  // Always NULL if primary.
-        PrimarySurface.pGraphicsDev = NULL; // Fixme!
+        PrimarySurface.pGraphicsDevice = NULL; // Fixme!
         PrimarySurface.pEDDgpl = ExAllocatePoolWithTag(PagedPool, sizeof(EDD_DIRECTDRAW_GLOBAL), TAG_EDDGBL);
         if (PrimarySurface.pEDDgpl)
         {
@@ -519,17 +519,17 @@ IntCreatePrimarySurface()
     DPRINT("calling EnableSurface\n");
     /* Enable the drawing surface */
     PrimarySurface.pSurface =
-        PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.hPDev);
+        PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.dhpdev);
     if (NULL == PrimarySurface.pSurface)
     {
-        /*      PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.hPDev, FALSE);*/
-        PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.hPDev);
+        /*      PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.dhpdev, FALSE);*/
+        PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.dhpdev);
         ObDereferenceObject(PrimarySurface.VideoFileObject);
         DPRINT1("DrvEnableSurface failed\n");
         return FALSE;
     }
 
-    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.hPDev, TRUE);
+    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.dhpdev, TRUE);
 
     calledFromUser = UserIsEntered(); //fixme: possibly upgrade a shared lock
     if (!calledFromUser)
@@ -541,7 +541,7 @@ IntCreatePrimarySurface()
     IntAttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
 
     SurfObj = EngLockSurface(PrimarySurface.pSurface);
-    SurfObj->dhpdev = PrimarySurface.hPDev;
+    SurfObj->dhpdev = PrimarySurface.dhpdev;
     SurfSize = SurfObj->sizlBitmap;
     SurfaceRect.left = SurfaceRect.top = 0;
     SurfaceRect.right = SurfObj->sizlBitmap.cx;
@@ -599,9 +599,9 @@ IntDestroyPrimarySurface()
      */
 
     DPRINT("Reseting display\n" );
-    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.hPDev, FALSE);
-    PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.hPDev);
-    PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.hPDev);
+    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.dhpdev, FALSE);
+    PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.dhpdev);
+    PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.dhpdev);
     PrimarySurface.PreparedDriver = FALSE;
     KeSetEvent(&VideoDriverNeedsPreparation, 1, FALSE);
     KeResetEvent(&VideoDriverPrepared);
@@ -619,15 +619,15 @@ IntcFonts(PPDEVOBJ pDevObj)
 // Msdn DrvQueryFont:
 // If the number of fonts in DEVINFO is -1 and iFace is zero, the driver
 // should return the number of fonts it supports.
-    if ( pDevObj->DevInfo.cFonts == -1)
+    if ( pDevObj->devinfo.cFonts == -1)
     {
         if (pDevObj->DriverFunctions.QueryFont)
-            pDevObj->DevInfo.cFonts =
-                (ULONG)pDevObj->DriverFunctions.QueryFont(pDevObj->hPDev, 0, 0, &Junk);
+            pDevObj->devinfo.cFonts =
+                (ULONG)pDevObj->DriverFunctions.QueryFont(pDevObj->dhpdev, 0, 0, &Junk);
         else
-            pDevObj->DevInfo.cFonts = 0;
+            pDevObj->devinfo.cFonts = 0;
     }
-    return pDevObj->DevInfo.cFonts;
+    return pDevObj->devinfo.cFonts;
 }
 
 //
@@ -704,13 +704,13 @@ IntGetColorManagementCaps(PPDEVOBJ pDevObj)
 
     if ( pDevObj->flFlags & PDEV_DISPLAY)
     {
-        if (pDevObj->DevInfo.iDitherFormat == BMF_8BPP ||
-            pDevObj->DevInfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP)
+        if (pDevObj->devinfo.iDitherFormat == BMF_8BPP ||
+            pDevObj->devinfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP)
             ret = CM_GAMMA_RAMP;
     }
-    if (pDevObj->DevInfo.flGraphicsCaps & GCAPS_CMYKCOLOR)
+    if (pDevObj->devinfo.flGraphicsCaps & GCAPS_CMYKCOLOR)
         ret |= CM_CMYK_COLOR;
-    if (pDevObj->DevInfo.flGraphicsCaps & GCAPS_ICM)
+    if (pDevObj->devinfo.flGraphicsCaps & GCAPS_ICM)
         ret |= CM_DEVICE_ICM;
     return ret;
 }
@@ -724,50 +724,50 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
     switch (Index)
     {
         case DRIVERVERSION:
-            ret = ppdev->GDIInfo.ulVersion;
+            ret = ppdev->gdiinfo.ulVersion;
             break;
 
         case TECHNOLOGY:
-            ret = ppdev->GDIInfo.ulTechnology;
+            ret = ppdev->gdiinfo.ulTechnology;
             break;
 
         case HORZSIZE:
-            ret = ppdev->GDIInfo.ulHorzSize;
+            ret = ppdev->gdiinfo.ulHorzSize;
             break;
 
         case VERTSIZE:
-            ret = ppdev->GDIInfo.ulVertSize;
+            ret = ppdev->gdiinfo.ulVertSize;
             break;
 
         case HORZRES:
-            ret = ppdev->GDIInfo.ulHorzRes;
+            ret = ppdev->gdiinfo.ulHorzRes;
             break;
 
         case VERTRES:
-            ret = ppdev->GDIInfo.ulVertRes;
+            ret = ppdev->gdiinfo.ulVertRes;
             break;
 
         case LOGPIXELSX:
-            ret = ppdev->GDIInfo.ulLogPixelsX;
+            ret = ppdev->gdiinfo.ulLogPixelsX;
             break;
 
         case LOGPIXELSY:
-            ret = ppdev->GDIInfo.ulLogPixelsY;
+            ret = ppdev->gdiinfo.ulLogPixelsY;
             break;
 
         case CAPS1:
-            if ( ppdev->pGraphicsDev &&
-                    (((PGRAPHICS_DEVICE)ppdev->pGraphicsDev)->StateFlags &
+            if ( ppdev->pGraphicsDevice &&
+                    (((PGRAPHICS_DEVICE)ppdev->pGraphicsDevice)->StateFlags &
                      DISPLAY_DEVICE_MIRRORING_DRIVER))
                 ret = C1_MIRRORING;
             break;
 
         case BITSPIXEL:
-            ret = ppdev->GDIInfo.cBitsPixel;
+            ret = ppdev->gdiinfo.cBitsPixel;
             break;
 
         case PLANES:
-            ret = ppdev->GDIInfo.cPlanes;
+            ret = ppdev->gdiinfo.cPlanes;
             break;
 
         case NUMBRUSHES:
@@ -775,7 +775,7 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
             break;
 
         case NUMPENS:
-            ret = ppdev->GDIInfo.ulNumColors;
+            ret = ppdev->gdiinfo.ulNumColors;
             if ( ret != -1 ) ret *= 5;
             break;
 
@@ -784,19 +784,19 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
             break;
 
         case NUMCOLORS:
-            ret = ppdev->GDIInfo.ulNumColors;
+            ret = ppdev->gdiinfo.ulNumColors;
             break;
 
         case ASPECTX:
-            ret = ppdev->GDIInfo.ulAspectX;
+            ret = ppdev->gdiinfo.ulAspectX;
             break;
 
         case ASPECTY:
-            ret = ppdev->GDIInfo.ulAspectY;
+            ret = ppdev->gdiinfo.ulAspectY;
             break;
 
         case ASPECTXY:
-            ret = ppdev->GDIInfo.ulAspectXY;
+            ret = ppdev->gdiinfo.ulAspectXY;
             break;
 
         case CLIPCAPS:
@@ -804,7 +804,7 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
             break;
 
         case SIZEPALETTE:
-            ret = ppdev->GDIInfo.ulNumPalReg;
+            ret = ppdev->gdiinfo.ulNumPalReg;
             break;
 
         case NUMRESERVED:
@@ -812,25 +812,25 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
             break;
 
         case COLORRES:
-            ret = ppdev->GDIInfo.ulDACRed +
-                  ppdev->GDIInfo.ulDACGreen +
-                  ppdev->GDIInfo.ulDACBlue;
+            ret = ppdev->gdiinfo.ulDACRed +
+                  ppdev->gdiinfo.ulDACGreen +
+                  ppdev->gdiinfo.ulDACBlue;
             break;
 
         case DESKTOPVERTRES:
-            ret = ppdev->GDIInfo.ulVertRes;
+            ret = ppdev->gdiinfo.ulVertRes;
             break;
 
         case DESKTOPHORZRES:
-            ret = ppdev->GDIInfo.ulHorzRes;
+            ret = ppdev->gdiinfo.ulHorzRes;
             break;
 
         case BLTALIGNMENT:
-            ret = ppdev->GDIInfo.ulBltAlignment;
+            ret = ppdev->gdiinfo.ulBltAlignment;
             break;
 
         case SHADEBLENDCAPS:
-            ret = ppdev->GDIInfo.flShadeBlend;
+            ret = ppdev->gdiinfo.flShadeBlend;
             break;
 
         case COLORMGMTCAPS:
@@ -838,27 +838,27 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
             break;
 
         case PHYSICALWIDTH:
-            ret = ppdev->GDIInfo.szlPhysSize.cx;
+            ret = ppdev->gdiinfo.szlPhysSize.cx;
             break;
 
         case PHYSICALHEIGHT:
-            ret = ppdev->GDIInfo.szlPhysSize.cy;
+            ret = ppdev->gdiinfo.szlPhysSize.cy;
             break;
 
         case PHYSICALOFFSETX:
-            ret = ppdev->GDIInfo.ptlPhysOffset.x;
+            ret = ppdev->gdiinfo.ptlPhysOffset.x;
             break;
 
         case PHYSICALOFFSETY:
-            ret = ppdev->GDIInfo.ptlPhysOffset.y;
+            ret = ppdev->gdiinfo.ptlPhysOffset.y;
             break;
 
         case VREFRESH:
-            ret = ppdev->GDIInfo.ulVRefresh;
+            ret = ppdev->gdiinfo.ulVRefresh;
             break;
 
         case RASTERCAPS:
-            ret = ppdev->GDIInfo.flRaster;
+            ret = ppdev->gdiinfo.flRaster;
             break;
 
         case CURVECAPS:
@@ -877,8 +877,8 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
             break;
 
         case TEXTCAPS:
-            ret = ppdev->GDIInfo.flTextCaps;
-            if (ppdev->GDIInfo.ulTechnology) ret |= TC_VA_ABLE;
+            ret = ppdev->gdiinfo.flTextCaps;
+            if (ppdev->gdiinfo.ulTechnology) ret |= TC_VA_ABLE;
             ret |= (TC_SO_ABLE|TC_UA_ABLE);
             break;
 
@@ -922,7 +922,7 @@ IntvGetDeviceCaps(
     PDEVCAPS pDevCaps)
 {
     ULONG Tmp = 0;
-    PGDIINFO pGdiInfo = &pDevObj->GDIInfo;
+    PGDIINFO pGdiInfo = &pDevObj->gdiinfo;
 
     pDevCaps->ulVersion         = pGdiInfo->ulVersion;
     pDevCaps->ulTechnology      = pGdiInfo->ulTechnology;
@@ -1056,7 +1056,7 @@ NtGdiGetDhpdev(
     while (ppdev != NULL);
     IntGdiReleaseSemaphore(hsemDriverMgmt);
     if (!ppdev) return NULL;
-    return pGdiDevice->hPDev;
+    return pGdiDevice->dhpdev;
 }
 
 static NTSTATUS FASTCALL

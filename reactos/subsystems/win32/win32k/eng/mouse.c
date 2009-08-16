@@ -428,7 +428,7 @@ EngSetPointerShape(
 
         if(pgp->psurfMask)
         {
-            ppal = PALETTE_LockPalette(ppdev->DevInfo.hpalDefault);
+            ppal = PALETTE_LockPalette(ppdev->devinfo.hpalDefault);
             EXLATEOBJ_vInitialize(&exlo,
                                   &gpalMono,
                                   ppal,

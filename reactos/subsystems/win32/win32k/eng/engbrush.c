@@ -39,7 +39,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
 
     if (pebo->psurfTrg)
         hpal = pebo->psurfTrg->hDIBPalette;
-    if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
+    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
     pebo->ppalSurf = PALETTE_ShareLockPalette(hpal);
     if (!pebo->ppalSurf)
         pebo->ppalSurf = &gpalRGB;

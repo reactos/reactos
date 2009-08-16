@@ -621,14 +621,14 @@ EXLATEOBJ_vInitXlateFromDCs(
 
     hpalSrc = psurfSrc->hDIBPalette;
     if (!hpalSrc) 
-        hpalSrc = pPrimarySurface->DevInfo.hpalDefault;
+        hpalSrc = pPrimarySurface->devinfo.hpalDefault;
 
     ppalSrc = PALETTE_ShareLockPalette(hpalSrc);
     if (!ppalSrc)
         return;
 
     hpalDst = psurfDst->hDIBPalette;
-    if (!hpalDst) hpalDst = pPrimarySurface->DevInfo.hpalDefault;
+    if (!hpalDst) hpalDst = pPrimarySurface->devinfo.hpalDefault;
 
     ppalDst = PALETTE_ShareLockPalette(hpalDst);
     if (!ppalDst)
@@ -695,7 +695,7 @@ EXLATEOBJ_vInitBrushXlate(
     EXLATEOBJ_vInitTrivial(pexlo);
 
     hpalDst = psurfDst->hDIBPalette;
-    if (!hpalDst) hpalDst = pPrimarySurface->DevInfo.hpalDefault;
+    if (!hpalDst) hpalDst = pPrimarySurface->devinfo.hpalDefault;
     ppalDst = PALETTE_ShareLockPalette(hpalDst);
     if (!ppalDst)
     {

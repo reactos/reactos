@@ -536,7 +536,7 @@ EngAssociateSurface(
 
     /* Associate the hdev */
     pso->hdev = hdev;
-    pso->dhpdev = ppdev->hPDev;
+    pso->dhpdev = ppdev->dhpdev;
 
     /* Hook up specified functions */
     psurf->flHooks = flHooks;
@@ -578,7 +578,7 @@ EngModifySurface(
 
     /* Associate the hdev */
     pso->hdev = hdev;
-    pso->dhpdev = ppdev->hPDev;
+    pso->dhpdev = ppdev->dhpdev;
 
     /* Hook up specified functions */
     psurf->flHooks = flHooks;

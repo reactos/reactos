@@ -674,38 +674,38 @@ IntGdiSetMapMode(
             /* Fall through */
 
         case MM_LOMETRIC:
-            pdcattr->szlWindowExt.cx = dc->ppdev->GDIInfo.ulHorzSize * 10;
-            pdcattr->szlWindowExt.cy = dc->ppdev->GDIInfo.ulVertSize * 10;
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = dc->ppdev->gdiinfo.ulHorzSize * 10;
+            pdcattr->szlWindowExt.cy = dc->ppdev->gdiinfo.ulVertSize * 10;
+            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
             break;
 
         case MM_HIMETRIC:
-            pdcattr->szlWindowExt.cx = dc->ppdev->GDIInfo.ulHorzSize * 100;
-            pdcattr->szlWindowExt.cy = dc->ppdev->GDIInfo.ulVertSize * 100;
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = dc->ppdev->gdiinfo.ulHorzSize * 100;
+            pdcattr->szlWindowExt.cy = dc->ppdev->gdiinfo.ulVertSize * 100;
+            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
             break;
 
         case MM_LOENGLISH:
-            pdcattr->szlWindowExt.cx = MulDiv(1000, dc->ppdev->GDIInfo.ulHorzSize, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(1000, dc->ppdev->GDIInfo.ulVertSize, 254);
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(1000, dc->ppdev->gdiinfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(1000, dc->ppdev->gdiinfo.ulVertSize, 254);
+            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
             break;
 
         case MM_HIENGLISH:
-            pdcattr->szlWindowExt.cx = MulDiv(10000, dc->ppdev->GDIInfo.ulHorzSize, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(10000, dc->ppdev->GDIInfo.ulVertSize, 254);
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(10000, dc->ppdev->gdiinfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(10000, dc->ppdev->gdiinfo.ulVertSize, 254);
+            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
             break;
 
         case MM_TWIPS:
-            pdcattr->szlWindowExt.cx = MulDiv(14400, dc->ppdev->GDIInfo.ulHorzSize, 254);
-            pdcattr->szlWindowExt.cy = MulDiv(14400, dc->ppdev->GDIInfo.ulVertSize, 254);
-            pdcattr->szlViewportExt.cx = dc->ppdev->GDIInfo.ulHorzRes;
-            pdcattr->szlViewportExt.cy = -dc->ppdev->GDIInfo.ulVertRes;
+            pdcattr->szlWindowExt.cx = MulDiv(14400, dc->ppdev->gdiinfo.ulHorzSize, 254);
+            pdcattr->szlWindowExt.cy = MulDiv(14400, dc->ppdev->gdiinfo.ulVertSize, 254);
+            pdcattr->szlViewportExt.cx = dc->ppdev->gdiinfo.ulHorzRes;
+            pdcattr->szlViewportExt.cy = -dc->ppdev->gdiinfo.ulVertRes;
             break;
 
         case MM_ANISOTROPIC:
@@ -1151,8 +1151,8 @@ DC_vGetAspectRatioFilter(PDC pDC, LPSIZE AspectRatio)
     {
         // "This specifies that Windows should only match fonts that have the
         // same aspect ratio as the display.", Programming Windows, Fifth Ed.
-        AspectRatio->cx = pDC->ppdev->GDIInfo.ulLogPixelsX;
-        AspectRatio->cy = pDC->ppdev->GDIInfo.ulLogPixelsY;
+        AspectRatio->cx = pDC->ppdev->gdiinfo.ulLogPixelsX;
+        AspectRatio->cy = pDC->ppdev->gdiinfo.ulLogPixelsY;
     }
     else
     {

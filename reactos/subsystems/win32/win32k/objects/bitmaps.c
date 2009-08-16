@@ -278,7 +278,7 @@ NtGdiCreateCompatibleBitmap(
     Dc = DC_LockDc(hDC);
 
     DPRINT("NtGdiCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n",
-           hDC, Width, Height, Dc->ppdev->GDIInfo.cBitsPixel);
+           hDC, Width, Height, Dc->ppdev->gdiinfo.cBitsPixel);
 
     if (NULL == Dc)
     {
@@ -364,7 +364,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
         {
             pso = &psurf->SurfObj;
             hpal = psurf->hDIBPalette;
-            if (!hpal) hpal = pPrimarySurface->DevInfo.hpalDefault;
+            if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
             ppal = PALETTE_ShareLockPalette(hpal);
 
             if (psurf->SurfObj.iBitmapFormat == BMF_1BPP && !psurf->hSecure)

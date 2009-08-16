@@ -39,7 +39,7 @@ IntGetipfdDevMax(PDC pdc)
   if (ppdev->DriverFunctions.DescribePixelFormat)
   {
      Ret = ppdev->DriverFunctions.DescribePixelFormat(
-                                                ppdev->hPDev,
+                                                ppdev->dhpdev,
                                                 1,
                                                 0,
                                                 NULL);
@@ -94,7 +94,7 @@ NtGdiDescribePixelFormat(HDC  hDC,
   if (ppdev->DriverFunctions.DescribePixelFormat)
   {
      Ret = ppdev->DriverFunctions.DescribePixelFormat(
-                                                ppdev->hPDev,
+                                                ppdev->dhpdev,
                                                 PixelFormat,
                                                 sizeof(PIXELFORMATDESCRIPTOR),
                                                 &pfdSafe);
