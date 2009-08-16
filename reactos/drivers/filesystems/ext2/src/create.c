@@ -1410,12 +1410,8 @@ ULONG NTAPI Ext2LocateFileInDisk (
 			}
 		}
 
-		// FIXME
-		if( PtrBCB )
-		{
-			CcUnpinData( PtrBCB );
-			PtrBCB = NULL;
-		}
+		CcUnpinData( PtrBCB );
+		PtrBCB = NULL;
 
 		return InodeNo;
 	}
