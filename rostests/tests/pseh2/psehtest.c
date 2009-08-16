@@ -2248,6 +2248,71 @@ DEFINE_TEST(test_abnorm_8)
 }
 //}}}
 
+/* Use of local variables from _SEH2_EXCEPT(...) and _SEH2_FINALLY { ... } *///{{{
+DEFINE_TEST(test_nested_locals_1)
+{
+	int var1 = return_one();
+
+	_SEH2_TRY
+	{
+		RaiseException(0xE00DEAD0, 0, 0, 0);
+	}
+	_SEH2_EXCEPT((var1 = (var1 == return_one() ? return_positive() : var1)), EXCEPTION_EXECUTE_HANDLER)
+	{
+		if(var1 == return_positive())
+			var1 = return_positive() + 1;
+	}
+	_SEH2_END;
+
+	return var1 == return_positive() + 1;
+}
+
+DEFINE_TEST(test_nested_locals_2)
+{
+	int var1 = return_positive();
+
+	_SEH2_TRY
+	{
+	}
+	_SEH2_FINALLY
+	{
+		if(var1 == return_positive())
+			var1 = return_positive() + 1;
+	}
+	_SEH2_END;
+
+	return var1 == return_positive() + 1;
+}
+
+DEFINE_TEST(test_nested_locals_3)
+{
+	int var1 = return_zero();
+
+	_SEH2_TRY
+	{
+		_SEH2_TRY
+		{
+			var1 = return_one();
+			RaiseException(0xE00DEAD0, 0, 0, 0);
+		}
+		_SEH2_FINALLY
+		{
+			if(var1 == return_one())
+				var1 = return_positive();
+		}
+		_SEH2_END;
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		if(var1 == return_positive())
+			var1 = return_positive() + 1;
+	}
+	_SEH2_END;
+
+	return var1 == return_positive() + 1;
+}
+//}}}
+
 /* System support *///{{{
 // TODO
 //}}}
@@ -2566,6 +2631,10 @@ void testsuite_syntax(void)
 		USE_TEST(test_abnorm_6),
 		USE_TEST(test_abnorm_7),
 		USE_TEST(test_abnorm_8),
+
+		USE_TEST(test_nested_locals_1),
+		USE_TEST(test_nested_locals_2),
+		USE_TEST(test_nested_locals_3),
 
 		USE_TEST(test_bug_4004),
 		USE_TEST(test_bug_4663),
