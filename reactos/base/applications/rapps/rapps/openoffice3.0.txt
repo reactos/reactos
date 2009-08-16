@@ -14,5 +14,5 @@ CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
-Description = DIE Open Source Office Suite.
+Description = DIE Open Source Office Suite
 Size = Unbekannt
