@@ -1220,13 +1220,6 @@ IntCallWindowProcA(BOOL IsAnsiProc,
     }
 }
 
-static BOOL __inline
-IsCallProcHandle(IN WNDPROC lpWndProc)
-{
-    /* FIXME - check for 64 bit architectures... */
-    return ((ULONG_PTR)lpWndProc & 0xFFFF0000) == 0xFFFF0000;
-}
-
 
 /*
  * @implemented
