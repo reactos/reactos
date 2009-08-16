@@ -164,7 +164,7 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_GETDESKTOPMAPPING:
          {
-             PW32THREADINFO ti;
+             PTHREADINFO ti;
              ti = GetW32ThreadInfo();
              if (ti != NULL)
              {

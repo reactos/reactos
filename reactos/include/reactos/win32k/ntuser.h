@@ -2,6 +2,7 @@
 #define __WIN32K_NTUSER_H
 
 typedef struct _PROCESSINFO *PPROCESSINFO;
+typedef struct _THREADINFO *PTHREADINFO;
 struct _DESKTOP;
 struct _WND;
 
@@ -72,13 +73,6 @@ typedef struct _CLIENTTHREADINFO
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
-typedef struct _W32THREADINFO
-{
-    PPROCESSINFO ppi; /* [KERNEL] */
-    PDESKTOPINFO pDeskInfo;
-    ULONG fsHooks;
-} W32THREADINFO, *PW32THREADINFO;
-
 typedef struct _HEAD
 {
   HANDLE h;
@@ -88,7 +82,7 @@ typedef struct _HEAD
 typedef struct _THROBJHEAD
 {
   HEAD;
-  PW32THREADINFO pti;
+  PTHREADINFO pti;
 } THROBJHEAD, *PTHROBJHEAD;
 
 typedef struct _THRDESKHEAD
@@ -701,7 +695,7 @@ typedef struct _BROADCASTPARM
   LUID  luid;
 } BROADCASTPARM, *PBROADCASTPARM;
 
-PW32THREADINFO GetW32ThreadInfo(VOID);
+PTHREADINFO GetW32ThreadInfo(VOID);
 PPROCESSINFO GetW32ProcessInfo(VOID);
 
 typedef struct _WNDMSG

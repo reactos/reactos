@@ -100,7 +100,7 @@ IsThreadHooked(PCLIENTINFO pci)
 static __inline PDESKTOPINFO
 GetThreadDesktopInfo(VOID)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
     PDESKTOPINFO di = NULL;
 
     ti = GetW32ThreadInfo();

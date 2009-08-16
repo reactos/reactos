@@ -88,8 +88,7 @@ typedef struct _THREADINFO
   LIST_ENTRY W32CallbackListHead;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
-  PW32THREADINFO ThreadInfo;
-} THREADINFO, *PTHREADINFO;
+} THREADINFO;
 
 #include <poppack.h>
 

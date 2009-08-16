@@ -1316,12 +1316,12 @@ GetWindowThreadProcessId(HWND hWnd,
                          LPDWORD lpdwProcessId)
 {
     DWORD Ret = 0;
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
     PWND pWnd = ValidateHwnd(hWnd);
 
     if (!pWnd) return Ret;
 
-    ti = SharedPtrToUser(pWnd->head.pti);
+    ti = pWnd->head.pti;
  
     if (ti)
     {

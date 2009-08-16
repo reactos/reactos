@@ -1846,7 +1846,7 @@ CLEANUP:
 static NTSTATUS
 IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
     PPROCESSINFO CurrentWin32Process;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1883,10 +1883,6 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
     ti = GetW32ThreadInfo();
     if (ti != NULL)
     {
-        if (ti->pDeskInfo == DesktopObject->DesktopInfo)
-        {
-            ti->pDeskInfo = NULL;
-        }
         GetWin32ClientInfo()->pDeskInfo = NULL;
     }
     GetWin32ClientInfo()->ulClientDelta = 0;
@@ -1897,7 +1893,7 @@ IntUnmapDesktopView(IN PDESKTOP DesktopObject)
 static NTSTATUS
 IntMapDesktopView(IN PDESKTOP DesktopObject)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
     PPROCESSINFO CurrentWin32Process;
     PW32HEAP_USER_MAPPING HeapMapping, *PrevLink;
     PVOID UserBase = NULL;
@@ -1965,11 +1961,11 @@ IntMapDesktopView(IN PDESKTOP DesktopObject)
     GetWin32ClientInfo()->ulClientDelta = DesktopHeapGetUserDelta();
     if (ti != NULL)
     {
-        if (ti->pDeskInfo == NULL)
+        if (GetWin32ClientInfo()->pDeskInfo == NULL)
         {
-           ti->pDeskInfo = DesktopObject->DesktopInfo;
            GetWin32ClientInfo()->pDeskInfo = 
-                (PVOID)((ULONG_PTR)ti->pDeskInfo - GetWin32ClientInfo()->ulClientDelta);
+                (PVOID)((ULONG_PTR)DesktopObject->DesktopInfo - 
+                                          GetWin32ClientInfo()->ulClientDelta);
         }
     }
 
@@ -2009,15 +2005,6 @@ IntSetThreadDesktop(IN PDESKTOP DesktopObject,
             {
                 SetLastNtError(Status);
                 return FALSE;
-            }
-        }
-
-        if (W32Thread->Desktop == NULL)
-        {
-            PW32THREADINFO ti = GetW32ThreadInfo();
-            if (ti != NULL)
-            {
-                ti->pDeskInfo = NULL;
             }
         }
 

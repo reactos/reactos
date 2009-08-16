@@ -369,7 +369,7 @@ WINAPI
 IsWinEventHookInstalled(
     DWORD event)
 {
-  if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
+  if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo)
   {
      return (gpsi->dwInstalledEventHooks & GetMaskFromEvent(event)) != 0;
   }

@@ -306,12 +306,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       IntSetThreadDesktop(NULL,
                           TRUE);
 
-      if (Win32Thread->ThreadInfo != NULL)
-      {
-          UserHeapFree(Win32Thread->ThreadInfo);
-          Win32Thread->ThreadInfo = NULL;
-      }
-
       PsSetThreadWin32Thread(Thread, NULL);
     }
 

@@ -103,7 +103,7 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 /* temp hack */
 PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
 {
-   PW32THREADINFO ti;
+   PTHREADINFO ti;
    PWINDOW_OBJECT Window;
 
    if (PsGetCurrentProcess() != PsInitialSystemProcess)
@@ -314,7 +314,7 @@ static void IntSendDestroyMsg(HWND hWnd)
 }
 
 static VOID
-UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
+UserFreeWindowInfo(PTHREADINFO ti, PWINDOW_OBJECT WindowObject)
 {
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     PWND Wnd = WindowObject->Wnd;
@@ -1551,7 +1551,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    HWND hWnd;
    POINT Pos;
    SIZE Size;
-   PW32THREADINFO ti = NULL;
+   PTHREADINFO ti = NULL;
 #if 0
 
    POINT MaxSize, MaxPos, MinTrack, MaxTrack;
@@ -3311,7 +3311,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status;
-   PW32THREADINFO ti;
+   PTHREADINFO ti;
 
    DPRINT("Enter NtUserSetShellWindowEx\n");
    UserEnterExclusive();

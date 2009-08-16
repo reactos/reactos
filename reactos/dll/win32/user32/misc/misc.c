@@ -104,17 +104,17 @@ UpdatePerUserSystemParameters(
    return NtUserUpdatePerUserSystemParameters(dwReserved, bEnable);
 }
 
-PW32THREADINFO
+PTHREADINFO
 GetW32ThreadInfo(VOID)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
 
-    ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+    ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
     if (ti == NULL)
     {
-        /* create the W32THREADINFO structure */
+        /* create the THREADINFO structure */
         NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-        ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+        ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
     }
 
     return ti;
@@ -250,13 +250,13 @@ WINAPI
 IsGUIThread(
     BOOL bConvert)
 {
-  PW32THREADINFO ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
+  PTHREADINFO ti = (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo;
   if (ti == NULL)
   {
     if(bConvert)
     {
       NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
-      if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo) return TRUE;
+      if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo) return TRUE;
       else
          SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     }
@@ -270,7 +270,7 @@ BOOL
 FASTCALL
 TestWindowProcess(PWND Wnd)
 {
-   if (Wnd->head.pti == (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo)
+   if (Wnd->head.pti == (PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo)
       return TRUE;
    else
       return (NtUserQueryWindow(Wnd->head.h, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==

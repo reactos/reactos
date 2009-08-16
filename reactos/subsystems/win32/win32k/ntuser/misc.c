@@ -451,11 +451,10 @@ GetW32ProcessInfo(VOID)
     return (PPROCESSINFO)PsGetCurrentProcessWin32Process();
 }
 
-PW32THREADINFO
+PTHREADINFO
 GetW32ThreadInfo(VOID)
 {
     PTEB Teb;
-    PW32THREADINFO ti;
     PPROCESSINFO ppi;
     PCLIENTINFO pci;
     PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
@@ -465,67 +464,49 @@ GetW32ThreadInfo(VOID)
         /* FIXME - temporary hack for system threads... */
         return NULL;
     }
+    /* initialize it */
+    pti->ppi = ppi = GetW32ProcessInfo();
 
-    /* allocate a THREADINFO structure if neccessary */
-    if (pti->ThreadInfo == NULL)
+    pti->pcti = &pti->cti; // FIXME Need to set it in desktop.c!
+
+    if (pti->Desktop != NULL)
     {
-        ti = UserHeapAlloc(sizeof(W32THREADINFO));
-        if (ti != NULL)
+       pti->pDeskInfo = pti->Desktop->DesktopInfo;
+    }
+    else
+    {
+       pti->pDeskInfo = NULL;
+    }
+    /* update the TEB */
+    Teb = NtCurrentTeb();
+    pci = GetWin32ClientInfo();
+    pti->pClientInfo = pci;
+    _SEH2_TRY
+    {
+        ProbeForWrite( Teb,
+                       sizeof(TEB),
+                       sizeof(ULONG));
+
+        Teb->Win32ThreadInfo = (PW32THREAD) pti;
+
+        pci->pClientThreadInfo = NULL; // FIXME Need to set it in desktop.c!
+        pci->ppi = ppi;
+        pci->fsHooks = pti->fsHooks;
+        /* CI may not have been initialized. */
+        if (!pci->pDeskInfo && pti->pDeskInfo)
         {
-            RtlZeroMemory(ti,
-                          sizeof(W32THREADINFO));
+           if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
 
-            /* initialize it */
-            ti->ppi = ppi = GetW32ProcessInfo();
-            ti->fsHooks = pti->fsHooks;
-            pti->pcti = &pti->cti; // FIXME Need to set it in desktop.c!
-            if (pti->Desktop != NULL)
-            {
-                pti->pDeskInfo = ti->pDeskInfo = pti->Desktop->DesktopInfo;
-            }
-            else
-            {
-                pti->pDeskInfo = ti->pDeskInfo = NULL;
-            }
-
-            pti->ThreadInfo = ti;
-            /* update the TEB */
-            Teb = NtCurrentTeb();
-            pci = GetWin32ClientInfo();
-            pti->pClientInfo = pci;
-            _SEH2_TRY
-            {
-                ProbeForWrite(Teb,
-                              sizeof(TEB),
-                              sizeof(ULONG));
-
-                Teb->Win32ThreadInfo = UserHeapAddressToUser(pti->ThreadInfo);
-
-                pci->pClientThreadInfo = NULL; // FIXME Need to set it in desktop.c!
-                pci->ppi = ppi;
-                pci->fsHooks = pti->fsHooks;
-                /* CI may not have been initialized. */
-                if (!pci->pDeskInfo && pti->pDeskInfo)
-                {
-                   if (!pci->ulClientDelta) pci->ulClientDelta = DesktopHeapGetUserDelta();
-
-                   pci->pDeskInfo = 
-                            (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
-                }
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                SetLastNtError(_SEH2_GetExceptionCode());
-            }
-            _SEH2_END;
-        }
-        else
-        {
-            SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+           pci->pDeskInfo = (PVOID)((ULONG_PTR)pti->pDeskInfo - pci->ulClientDelta);
         }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastNtError(_SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
-    return pti->ThreadInfo;
+    return pti;
 }
 
 

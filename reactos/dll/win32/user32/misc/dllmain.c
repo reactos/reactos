@@ -335,7 +335,7 @@ GetConnected(VOID)
   USERCONNECT UserCon;
 //  ERR("GetConnected\n");
 
-  if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
+  if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
   if (gpsi && g_ppi) return;
