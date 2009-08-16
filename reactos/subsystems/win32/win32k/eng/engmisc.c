@@ -76,6 +76,11 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
       }
 
     *ppsoOutput = EngLockSurface((HSURF)EnterLeave->OutputBitmap);
+    if (*ppsoOutput == NULL)
+    {
+      EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
+      return FALSE;
+    }
 
     EnterLeave->DestRect.left = 0;
     EnterLeave->DestRect.top = 0;
@@ -105,9 +110,9 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     EnterLeave->TrivialClipObj = EngCreateClip();
     if (EnterLeave->TrivialClipObj == NULL)
     {
-        EngUnlockSurface(*ppsoOutput);
-        EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
-        return FALSE;
+      EngUnlockSurface(*ppsoOutput);
+      EngDeleteSurface((HSURF)EnterLeave->OutputBitmap);
+      return FALSE;
     }
     EnterLeave->TrivialClipObj->iDComplexity = DC_TRIVIAL;
     if (ClippedDestRect.left < (*ppsoOutput)->sizlBitmap.cx &&
