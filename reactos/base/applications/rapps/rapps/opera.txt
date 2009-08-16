@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Opera
@@ -13,3 +13,7 @@ CDPath = none
 
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий почтовый и BitTorrent клиент.
+
+
+[Section.0407]
+Description = Der popiläre Opera Browser mit vielen fortschrittlichen Eigenschaften, enthält einen Mail und BitTorrent Client.

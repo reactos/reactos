@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = GlidewrapZbag
@@ -10,3 +10,10 @@ Category = 3
 URLSite = Unknown
 URLDownload = http://www.zeckensack.de/glide/archive/GlideWrapper084c.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = glidewrapper ist erforderlich um Diablo2 in ReactOS auszuführen.
+Size = Unbekannt
+URLSite = Unbekannt

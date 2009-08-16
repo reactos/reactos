@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = OpenTTD
@@ -10,3 +10,10 @@ Category = 4
 URLSite = Unknown
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.6.0-win32.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Open Source Klon der "Transport Tycoon Deluxe" Spiel-Engine. Sie benötigen eine Kopie von Transport Tycoon.
+Size = Unbekannt
+URLSite = Unbekannt

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Samba TNG
@@ -10,3 +10,11 @@ Category = 5
 URLSite = Unknown
 URLDownload = http://svn.reactos.org/packages/samba-tng.exe
 CDPath = none
+
+
+[Section.0407]
+Version = Unbekannt
+Licence = Unbekannt
+Description = Dieses Werkzeug erlaubt den Zugriff auf Windows' gemeinsame Verzeichnisse und Drucker aus ReactOS heraus.
+Size = Unbekannt
+URLSite = Unbekannt

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = mIRC
@@ -10,3 +10,7 @@ Category = 5
 URLSite = http://www.mirc.com
 URLDownload = http://mirc.bigchief.dk/mirc635.exe
 CDPath = none
+
+
+[Section.0407]
+Description = Der populärste Client für Internet Relay Chat (IRC).

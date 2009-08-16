@@ -17,4 +17,4 @@ Name = AC97 Treiber für VirtualBox
 Licence = Unbekannt
 Description = Entpacken in das "ReactOS"-Verzeichnis und ReactOS zweimal neustarten.
 Size = Unbekannt
-URLSize = Unbekannt
+URLSite = Unbekannt

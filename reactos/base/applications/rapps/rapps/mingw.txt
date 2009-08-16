@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = MinGW
@@ -10,3 +10,10 @@ Category = 7
 URLSite = Unknown
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.3.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Eine Portierung der GNU Werkzeugkette mit GCC, GDB, GNU make usw.
+Size = Unbekannt
+URLSite = Unbekannt

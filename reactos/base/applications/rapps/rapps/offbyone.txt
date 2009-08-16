@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Off By One Browser
@@ -10,3 +10,9 @@ Category = 5
 URLSite = http://offbyone.com
 URLDownload = http://offbyone.com/offbyone/images/OffByOneSetup.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Der Off-By-One-Browser ist ein sehr kleiner und schneller Webbrowser mit voller HTML 3.2 Unterstützung.
+Size = Unbekannt

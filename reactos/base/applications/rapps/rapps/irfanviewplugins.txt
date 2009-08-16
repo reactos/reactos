@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = IrfanView Plugins
@@ -10,3 +10,9 @@ Category = 3
 URLSite = http://www.irfanview.com
 URLDownload = http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_422_setup.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Zusätzlich Plugins zur Unterstützung von weiteren Dateitypen.
+Size = Unbekannt

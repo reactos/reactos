@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = LBreakout2
@@ -10,3 +10,10 @@ Category = 4
 URLSite = Unknown
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lbreakout2-2.4.1-win32.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Breakout-Klon verwendet SDL Bibliothek.
+Size = Unbekannt
+URLSite = Unbekannt

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = LMarbles
@@ -10,3 +10,10 @@ Category = 4
 URLSite = Unknown
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lmarbles-1.0.6-win32.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Description = Atomix-Klon verwendet SDL Bibliotheken.
+Size = Unbekannt
+URLSite = Unbekannt
