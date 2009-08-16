@@ -23,8 +23,6 @@
 #ifndef __NTDDNDIS_H
 #define __NTDDNDIS_H
 
-#pragma pack(push,4)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -299,8 +297,6 @@ typedef enum _NDIS_PHYSICAL_MEDIUM
                                                0,                            \
                                                METHOD_OUT_DIRECT,            \
                                                FILE_ANY_ACCESS)
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }
