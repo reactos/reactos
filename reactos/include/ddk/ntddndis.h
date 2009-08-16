@@ -135,6 +135,50 @@ typedef struct _NDIS_PNP_CAPABILITIES {
   NDIS_PM_WAKE_UP_CAPABILITIES  WakeUpCapabilities;
 } NDIS_PNP_CAPABILITIES, *PNDIS_PNP_CAPABILITIES;
 
+/* NDIS driver medium (OID_GEN_MEDIA_SUPPORTED / OID_GEN_MEDIA_IN_USE) */
+typedef enum _NDIS_MEDIUM {
+  NdisMedium802_3,
+  NdisMedium802_5,
+  NdisMediumFddi,
+  NdisMediumWan,
+  NdisMediumLocalTalk,
+  NdisMediumDix,
+  NdisMediumArcnetRaw,
+  NdisMediumArcnet878_2,
+  NdisMediumAtm,
+  NdisMediumWirelessWan,
+  NdisMediumIrda,
+  NdisMediumBpc,
+  NdisMediumCoWan,
+  NdisMedium1394,
+  NdisMediumMax
+} NDIS_MEDIUM, *PNDIS_MEDIUM;
+
+typedef enum _NDIS_PHYSICAL_MEDIUM
+{
+    NdisPhysicalMediumUnspecified,
+    NdisPhysicalMediumWirelessLan,
+    NdisPhysicalMediumCableModem,
+    NdisPhysicalMediumPhoneLine,
+    NdisPhysicalMediumPowerLine,
+    NdisPhysicalMediumDSL,
+    NdisPhysicalMediumFibreChannel,
+    NdisPhysicalMedium1394,
+    NdisPhysicalMediumWirelessWan,
+    NdisPhysicalMediumNative802_11,
+    NdisPhysicalMediumBluetooth,
+    NdisPhysicalMediumInfiniband,
+    NdisPhysicalMediumWiMax,
+    NdisPhysicalMediumUWB,
+    NdisPhysicalMedium802_3,
+    NdisPhysicalMedium802_5,
+    NdisPhysicalMediumIrda,
+    NdisPhysicalMediumWiredWAN,
+    NdisPhysicalMediumWiredCoWan,
+    NdisPhysicalMediumOther,
+    NdisPhysicalMediumMax
+} NDIS_PHYSICAL_MEDIUM, *PNDIS_PHYSICAL_MEDIUM;
+
 /* Required Object IDs (OIDs) */
 #define OID_GEN_SUPPORTED_LIST            0x00010101
 #define OID_GEN_HARDWARE_STATUS           0x00010102

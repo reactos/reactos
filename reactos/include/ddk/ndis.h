@@ -307,25 +307,6 @@ typedef struct _GEN_GET_NETCARD_TIME {
   ULONGLONG  ReadTime;
 } GEN_GET_NETCARD_TIME, *PGEN_GET_NETCARD_TIME;
 
-/* NDIS driver medium (OID_GEN_MEDIA_SUPPORTED / OID_GEN_MEDIA_IN_USE) */
-typedef enum _NDIS_MEDIUM {
-  NdisMedium802_3,
-  NdisMedium802_5,
-  NdisMediumFddi,
-  NdisMediumWan,
-  NdisMediumLocalTalk,
-  NdisMediumDix,
-  NdisMediumArcnetRaw,
-  NdisMediumArcnet878_2,
-  NdisMediumAtm,
-  NdisMediumWirelessWan,
-  NdisMediumIrda,
-  NdisMediumBpc,
-  NdisMediumCoWan,
-  NdisMedium1394,
-  NdisMediumMax
-} NDIS_MEDIUM, *PNDIS_MEDIUM;
-
 /* NDIS packet filter bits (OID_GEN_CURRENT_PACKET_FILTER) */
 #define NDIS_PACKET_TYPE_DIRECTED               0x00000001
 #define NDIS_PACKET_TYPE_MULTICAST              0x00000002
