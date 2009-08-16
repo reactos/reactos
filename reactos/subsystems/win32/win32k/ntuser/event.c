@@ -331,7 +331,6 @@ NtUserSetWinEventHook(
 
       UserHMGetHandle(pEH) = Handle;
 //      pEH->head.pti  =?
-//      pEH->head.rpdesk
       if (Thread)
          pEH->Thread = Thread;
       else

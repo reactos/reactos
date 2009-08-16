@@ -15,7 +15,7 @@ typedef struct tagHOOKTABLE
 
 typedef struct tagEVENTHOOK
 {
-  THRDESKHEAD    head;
+  THROBJHEAD     head;
   LIST_ENTRY     Chain;      /* Event chain entry */
   PETHREAD       Thread;     /* Thread owning the event */
   UINT           eventMin;

@@ -85,11 +85,15 @@ typedef struct _HEAD
   DWORD  cLockObj;
 } HEAD, *PHEAD;
 
+typedef struct _THROBJHEAD
+{
+  HEAD;
+  PW32THREADINFO pti;
+} THROBJHEAD, *PTHROBJHEAD;
+
 typedef struct _THRDESKHEAD
 {
-  HANDLE h;
-  DWORD  cLockObj;
-  PW32THREADINFO pti;
+  THROBJHEAD;
   struct _DESKTOP *rpdesk;
   PVOID       pSelf;
 } THRDESKHEAD, *PTHRDESKHEAD;
