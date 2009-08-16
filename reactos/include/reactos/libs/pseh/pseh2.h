@@ -87,43 +87,6 @@ extern void __cdecl _SEH2Return(void);
 }
 #endif
 
-#if defined(__i386__)
-typedef struct __SEHTrampoline
-{
-	unsigned char STR_MovEcx;
-	unsigned char STR_Closure[4];
-	unsigned char STR_Jmp;
-	unsigned char STR_Function[4];
-}
-_SEHTrampoline_t;
-
-static
-__inline__
-__attribute__((always_inline))
-int _SEHIsTrampoline(_SEHTrampoline_t * trampoline_)
-{
-	return trampoline_->STR_MovEcx == 0xb9 && trampoline_->STR_Jmp == 0xe9;
-}
-
-static
-__inline__
-__attribute__((always_inline))
-void * _SEHFunctionFromTrampoline(_SEHTrampoline_t * trampoline_)
-{
-	return (void *)(*(int *)(&trampoline_->STR_Function[0]) + (int)(trampoline_ + 1));
-}
-
-static
-__inline__
-__attribute__((always_inline))
-void * _SEHClosureFromTrampoline(_SEHTrampoline_t * trampoline_)
-{
-	return (void *)*(int *)(&trampoline_->STR_Closure[0]);
-}
-#else
-#error TODO
-#endif
-
 /* A no-op side effect that scares GCC */
 #define __SEH_SIDE_EFFECT __asm__ __volatile__("#")
 
