@@ -67,8 +67,8 @@ BltMask(SURFOBJ* psoDest,
             psoPattern = &psurfPattern->SurfObj;
             PatternWidth = psoPattern->sizlBitmap.cx;
             PatternHeight = psoPattern->sizlBitmap.cy;
+            fnPattern_GetPixel = DibFunctionsForBitmapFormat[psoPattern->iBitmapFormat].DIB_GetPixel;
         }
-        fnPattern_GetPixel = DibFunctionsForBitmapFormat[psoPattern->iBitmapFormat].DIB_GetPixel;
     }
     else
         psurfPattern = NULL;
