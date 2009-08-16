@@ -31,6 +31,10 @@
 //
 typedef unsigned long DWORD;
 
+#ifndef UNIMPLEMENTED
+#define UNIMPLEMENTED DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
+#endif
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 FORCEINLINE
