@@ -850,12 +850,6 @@ typedef struct _NDIS_PACKET_EXTENSION {
   PVOID  NdisPacketInfo[MaxPerPacketInfo];
 } NDIS_PACKET_EXTENSION, *PNDIS_PACKET_EXTENSION;
 
-typedef struct _NDIS_OBJECT_HEADER {
-  UCHAR  Type;
-  UCHAR  Revision;
-  USHORT  Size;
-} NDIS_OBJECT_HEADER, *PNDIS_OBJECT_HEADER;
-
 typedef struct _NDIS_GENERIC_OBJECT {
   NDIS_OBJECT_HEADER  Header;
   PVOID  Caller;
