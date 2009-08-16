@@ -406,18 +406,21 @@ ClipobjToSpans(
 
     ASSERT(Boundary->top <= Boundary->bottom && Boundary->left <= Boundary->right);
 
-    *Spans = NULL;
+    *Count = Boundary->bottom - Boundary->top;
+    if (*Count > 0)
+    {
+        *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
+        if (NULL == *Spans)
+        {
+            *Count = 0;
+            return FALSE;
+        }
+    }
+
     if (NULL == ClipRegion || DC_TRIVIAL == ClipRegion->iDComplexity)
     {
-        *Count = Boundary->bottom - Boundary->top;
         if (0 != *Count)
         {
-            *Spans = ExAllocatePoolWithTag(PagedPool, *Count * sizeof(SPAN), TAG_CLIP);
-            if (NULL == *Spans)
-            {
-                *Count = 0;
-                return FALSE;
-            }
             for (i = 0; i < Boundary->bottom - Boundary->top; i++)
             {
                 (*Spans)[i].X = Boundary->left;
