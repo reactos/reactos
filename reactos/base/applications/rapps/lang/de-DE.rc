@@ -77,7 +77,7 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Über"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS Applications Manager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
+	LTEXT "ReactOS Anwendungsmanager\nCopyright (C) 2009\nby Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
 	PUSHBUTTON "Schließen", IDOK, 133, 46, 50, 14
 	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
 END
@@ -156,7 +156,7 @@ BEGIN
 	IDS_UNINSTALL "Deinstallieren"
 	IDS_MODIFY "Ändern"
 	IDS_APPS_COUNT "Anzahl der Anwendungen: %d"
-	IDS_WELCOME_TITLE "Willkommen zum ReactOS Anwendungsmanager!\n\n"
+	IDS_WELCOME_TITLE "Willkommen im ReactOS Anwendungsmanager!\n\n"
 	IDS_WELCOME_TEXT "Wählen Sie links eine Kategorie und dann eine Anwendung um sie zu installieren oder zu deinstallieren.\nReactOS Webseite: "
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installiert"
