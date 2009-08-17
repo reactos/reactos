@@ -15,6 +15,27 @@
 
 /** Internal ******************************************************************/
 
+DWORD
+FASTCALL
+GreGetCharacterPlacementW(
+    HDC hdc,
+    LPWSTR pwsz,
+    INT nCount,
+    INT nMaxExtent,
+    LPGCP_RESULTSW pgcpw,
+    DWORD dwFlags)
+{
+  SIZE Size = {0,0};
+
+  if (!pgcpw)
+  {
+     if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
+        return MAKELONG(Size.cx, Size.cy);
+  }
+  UNIMPLEMENTED;
+  return 0;
+}
+
 INT
 FASTCALL
 FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
