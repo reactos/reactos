@@ -414,3 +414,4 @@ STRINGTABLE
 
  IDS_FREE_SPACE_FMT         "%s de %s livre"
 }
+#pragma code_page(default)

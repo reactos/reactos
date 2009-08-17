@@ -260,3 +260,4 @@ STRINGTABLE
 
     IDS_FREE_SPACE_FMT      "Prosto: %s od %s"
 }
+#pragma code_page(default)

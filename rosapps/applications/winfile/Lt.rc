@@ -261,3 +261,4 @@ STRINGTABLE
 
     IDS_FREE_SPACE_FMT      "%s iš %s laisva"
 }
+#pragma code_page(default)
