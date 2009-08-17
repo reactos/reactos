@@ -232,6 +232,8 @@ Init(VOID)
       (PVOID)User32CallEventProcFromKernel;
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
       (PVOID)User32CallLoadMenuFromKernel;
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
+      (PVOID)User32CallClientThreadSetupFromKernel;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
@@ -353,3 +355,12 @@ GetConnected(VOID)
   gHandleEntries = SharedPtrToUser(gHandleTable->handles);  
   
 }
+
+NTSTATUS
+WINAPI
+User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  ERR("GetConnected\n");
+  return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);  
+}
+

@@ -703,4 +703,29 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    return (HMENU)Result;
 }
 
+NTSTATUS
+APIENTRY
+co_IntClientThreadSetup(VOID)
+{
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_CLIENTTHREADSTARTUP,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   UserEnterCo();
+
+   return Status;
+}
+
+
 /* EOF */
