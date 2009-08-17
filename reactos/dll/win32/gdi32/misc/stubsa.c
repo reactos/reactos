@@ -13,28 +13,6 @@
 
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
-
-
-
-/*
- * @unimplemented
- */
-DWORD
-WINAPI
-GetCharacterPlacementA(
-	HDC		hDc,
-	LPCSTR		a1,
-	int		a2,
-	int		a3,
-	LPGCP_RESULTSA	a4,
-	DWORD		a5
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 /*
  * @unimplemented
  */

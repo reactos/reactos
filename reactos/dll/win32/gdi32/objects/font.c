@@ -425,6 +425,58 @@ EnumFontFamiliesA(HDC hdc, LPCSTR lpszFamily, FONTENUMPROCA lpEnumFontFamProc,
   return IntEnumFontFamilies(hdc, &LogFont, lpEnumFontFamProc, lParam, FALSE);
 }
 
+
+/*
+ * @implemented
+ */
+DWORD
+WINAPI
+GetCharacterPlacementA(
+        HDC hdc,
+        LPCSTR lpString,
+        INT uCount,
+        INT nMaxExtent,
+        GCP_RESULTSA *lpResults,
+        DWORD dwFlags)
+{
+    WCHAR *lpStringW;
+    INT uCountW;
+    GCP_RESULTSW resultsW;
+    DWORD ret;
+    UINT font_cp;
+
+    if ( !lpString || uCount <= 0 || (nMaxExtent < 0 && nMaxExtent != -1 ) )
+    {
+       SetLastError(ERROR_INVALID_PARAMETER);
+       return 0;
+    }
+/*    TRACE("%s, %d, %d, 0x%08x\n",
+          debugstr_an(lpString, uCount), uCount, nMaxExtent, dwFlags);
+*/
+    /* both structs are equal in size */
+    memcpy(&resultsW, lpResults, sizeof(resultsW));
+
+    lpStringW = FONT_mbtowc(hdc, lpString, uCount, &uCountW, &font_cp);
+    if(lpResults->lpOutString)
+        resultsW.lpOutString = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*uCountW);
+
+    ret = GetCharacterPlacementW(hdc, lpStringW, uCountW, nMaxExtent, &resultsW, dwFlags);
+
+    lpResults->nGlyphs = resultsW.nGlyphs;
+    lpResults->nMaxFit = resultsW.nMaxFit;
+
+    if(lpResults->lpOutString) {
+        WideCharToMultiByte(font_cp, 0, resultsW.lpOutString, uCountW,
+                            lpResults->lpOutString, uCount, NULL, NULL );
+    }
+
+    HeapFree(GetProcessHeap(), 0, lpStringW);
+    HeapFree(GetProcessHeap(), 0, resultsW.lpOutString);
+
+    return ret;
+}
+
+
 /*
  * @implemented
  */
@@ -505,6 +557,47 @@ GetCharacterPlacementW(
     ret = MAKELONG(size.cx, size.cy);
 
   return ret;
+}
+
+DWORD
+WINAPI
+NewGetCharacterPlacementW(
+	HDC hdc,
+	LPCWSTR lpString,
+	INT uCount,
+	INT nMaxExtent,
+	GCP_RESULTSW *lpResults,
+	DWORD dwFlags
+	)
+{
+  INT nSet;
+  SIZE Size = {0,0};
+
+  if ( !lpString || uCount <= 0 || (nMaxExtent < 0 && nMaxExtent != -1 ) )
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return 0;
+  }
+
+  if ( !lpResults )
+  {
+     if ( GetTextExtentPointW(hdc, lpString, uCount, &Size) )
+     {
+        return MAKELONG(Size.cx, Size.cy);
+     }
+     return 0;
+  }
+
+  nSet = uCount; 
+  if ( nSet > lpResults->nGlyphs )
+     nSet = lpResults->nGlyphs;
+
+  return NtGdiGetCharacterPlacementW( hdc,
+                                      (LPWSTR)lpString,
+                                      nSet,
+                                      nMaxExtent,
+                                      lpResults,
+                                      dwFlags);
 }
 
 /*

@@ -1164,23 +1164,6 @@ NtGdiFullscreenControl(
  /*
  * @unimplemented
  */
-DWORD
-APIENTRY
-NtGdiGetCharacterPlacementW(
-    IN HDC hdc,
-    IN LPWSTR pwsz,
-    IN INT nCount,
-    IN INT nMaxExtent,
-    IN OUT LPGCP_RESULTSW pgcpw,
-    IN DWORD dwFlags)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiGetCharWidthInfo(
