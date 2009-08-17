@@ -62,7 +62,9 @@ static const CHARSETINFO FONT_tci[MAXTCIINDEX] = {
 /***********************************************************************
  *              TEXTMETRIC conversion functions.
  */
-static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
+VOID
+FASTCALL
+FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
 {
     ptmA->tmHeight = ptmW->tmHeight;
     ptmA->tmAscent = ptmW->tmAscent;
@@ -75,10 +77,19 @@ static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
     ptmA->tmOverhang = ptmW->tmOverhang;
     ptmA->tmDigitizedAspectX = ptmW->tmDigitizedAspectX;
     ptmA->tmDigitizedAspectY = ptmW->tmDigitizedAspectY;
-    ptmA->tmFirstChar = ptmW->tmFirstChar > 255 ? 255 : ptmW->tmFirstChar;
-    ptmA->tmLastChar = ptmW->tmLastChar > 255 ? 255 : ptmW->tmLastChar;
-    ptmA->tmDefaultChar = ptmW->tmDefaultChar > 255 ? 255 : ptmW->tmDefaultChar;
-    ptmA->tmBreakChar = ptmW->tmBreakChar > 255 ? 255 : ptmW->tmBreakChar;
+    ptmA->tmFirstChar = min(ptmW->tmFirstChar, 255);
+    if (ptmW->tmCharSet == SYMBOL_CHARSET)
+    {
+        ptmA->tmFirstChar = 0x1e;
+        ptmA->tmLastChar = 0xff;  /* win9x behaviour - we need the OS2 table data to calculate correctly */
+    }
+    else
+    {
+        ptmA->tmFirstChar = ptmW->tmDefaultChar - 1;
+        ptmA->tmLastChar = min(ptmW->tmLastChar, 0xff);
+    }
+    ptmA->tmDefaultChar = ptmW->tmDefaultChar;
+    ptmA->tmBreakChar = ptmW->tmBreakChar;
     ptmA->tmItalic = ptmW->tmItalic;
     ptmA->tmUnderlined = ptmW->tmUnderlined;
     ptmA->tmStruckOut = ptmW->tmStruckOut;
@@ -114,168 +125,21 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     return strW;
 }
 
-
-static BOOL FASTCALL
-MetricsCharConvert(WCHAR w, UCHAR *b)
-  {
-  UNICODE_STRING WString;
-  WCHAR WBuf[2];
-  ANSI_STRING AString;
-  CHAR ABuf[2];
-  NTSTATUS Status;
-
-  if (L'\0' == w)
-    {
-      *b = '\0';
-    }
-  else
-    {
-      WBuf[0] = w;
-      WBuf[1] = L'\0';
-      RtlInitUnicodeString(&WString, WBuf);
-      ABuf[0] = '*';
-      ABuf[1] = L'\0';
-      RtlInitAnsiString(&AString, ABuf);
-
-      Status = RtlUnicodeStringToAnsiString(&AString, &WString, FALSE);
-      if (! NT_SUCCESS(Status))
-	{
-	  SetLastError(RtlNtStatusToDosError(Status));
-	  return FALSE;
-	}
-      *b = ABuf[0];
-    }
-
-  return TRUE;
-}
-
-BOOL FASTCALL
-TextMetricW2A(TEXTMETRICA *tma, TEXTMETRICW *tmw)
-{
-  UNICODE_STRING WString;
-  WCHAR WBuf[256];
-  ANSI_STRING AString;
-  CHAR ABuf[256];
-  UINT Letter;
-  NTSTATUS Status;
-
-  tma->tmHeight = tmw->tmHeight;
-  tma->tmAscent = tmw->tmAscent;
-  tma->tmDescent = tmw->tmDescent;
-  tma->tmInternalLeading = tmw->tmInternalLeading;
-  tma->tmExternalLeading = tmw->tmExternalLeading;
-  tma->tmAveCharWidth = tmw->tmAveCharWidth;
-  tma->tmMaxCharWidth = tmw->tmMaxCharWidth;
-  tma->tmWeight = tmw->tmWeight;
-  tma->tmOverhang = tmw->tmOverhang;
-  tma->tmDigitizedAspectX = tmw->tmDigitizedAspectX;
-  tma->tmDigitizedAspectY = tmw->tmDigitizedAspectY;
-
-  /* The Unicode FirstChar/LastChar need not correspond to the ANSI
-     FirstChar/LastChar. For example, if the font contains glyphs for
-     letters A-Z and an accented version of the letter e, the Unicode
-     FirstChar would be A and the Unicode LastChar would be the accented
-     e. If you just translate those to ANSI, the range would become
-     letters A-E instead of A-Z.
-     We translate all possible ANSI chars to Unicode and find the first
-     and last translated character which fall into the Unicode FirstChar/
-     LastChar range and return the corresponding ANSI char. */
-
-  /* Setup an Ansi string containing all possible letters (note: skip '\0' at
-     the beginning since that would be interpreted as end-of-string, handle
-     '\0' special later */
-  for (Letter = 1; Letter < 256; Letter++)
-    {
-    ABuf[Letter - 1] = (CHAR) Letter;
-    WBuf[Letter - 1] = L' ';
-    }
-  ABuf[255] = '\0';
-  WBuf[255] = L'\0';
-  RtlInitAnsiString(&AString, ABuf);
-  RtlInitUnicodeString(&WString, WBuf);
-
-  /* Find the corresponding Unicode characters */
-  Status = RtlAnsiStringToUnicodeString(&WString, &AString, FALSE);
-  if (! NT_SUCCESS(Status))
-    {
-      SetLastError(RtlNtStatusToDosError(Status));
-      return FALSE;
-    }
-
-  /* Scan for the first ANSI character which maps to an Unicode character
-     in the range */
-  tma->tmFirstChar = '\0';
-  if (L'\0' != tmw->tmFirstChar)
-    {
-      for (Letter = 1; Letter < 256; Letter++)
-	{
-	  if (tmw->tmFirstChar <= WBuf[Letter - 1] &&
-	      WBuf[Letter - 1] <= tmw->tmLastChar)
-	    {
-	      tma->tmFirstChar = (CHAR) Letter;
-	      break;
-	    }
-	}
-    }
-
-  /* Scan for the last ANSI character which maps to an Unicode character
-     in the range */
-  tma->tmLastChar = '\0';
-  if (L'\0' != tmw->tmLastChar)
-    {
-      for (Letter = 255; 0 < Letter; Letter--)
-	{
-	  if (tmw->tmFirstChar <= WBuf[Letter - 1] &&
-	      WBuf[Letter - 1] <= tmw->tmLastChar)
-	    {
-	      tma->tmLastChar = (CHAR) Letter;
-	      break;
-	    }
-	}
-    }
-
-  if (! MetricsCharConvert(tmw->tmDefaultChar, &tma->tmDefaultChar) ||
-      ! MetricsCharConvert(tmw->tmBreakChar, &tma->tmBreakChar))
-    {
-      return FALSE;
-    }
-
-  tma->tmItalic = tmw->tmItalic;
-  tma->tmUnderlined = tmw->tmUnderlined;
-  tma->tmStruckOut = tmw->tmStruckOut;
-  tma->tmPitchAndFamily = tmw->tmPitchAndFamily;
-  tma->tmCharSet = tmw->tmCharSet;
-
-  return TRUE;
-}
-
-BOOL FASTCALL
+VOID FASTCALL
 NewTextMetricW2A(NEWTEXTMETRICA *tma, NEWTEXTMETRICW *tmw)
 {
-  if (! TextMetricW2A((TEXTMETRICA *) tma, (TEXTMETRICW *) tmw))
-    {
-      return FALSE;
-    }
-
+  FONT_TextMetricWToA((TEXTMETRICW *) tmw, (TEXTMETRICA *) tma);
   tma->ntmFlags = tmw->ntmFlags;
   tma->ntmSizeEM = tmw->ntmSizeEM;
   tma->ntmCellHeight = tmw->ntmCellHeight;
   tma->ntmAvgWidth = tmw->ntmAvgWidth;
-
-  return TRUE;
 }
 
-BOOL FASTCALL
+VOID FASTCALL
 NewTextMetricExW2A(NEWTEXTMETRICEXA *tma, NEWTEXTMETRICEXW *tmw)
 {
-  if (! NewTextMetricW2A(&tma->ntmTm, &tmw->ntmTm))
-    {
-      return FALSE;
-    }
-
+  NewTextMetricW2A(&tma->ntmTm, &tmw->ntmTm);
   tma->ntmFontSig = tmw->ntmFontSig;
-
-  return TRUE;
 }
 
 static int FASTCALL

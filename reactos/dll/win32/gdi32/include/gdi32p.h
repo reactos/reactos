@@ -162,21 +162,21 @@ HEAP_strdupA2W(
 VOID
 HEAP_free(LPVOID memory);
 
-BOOL
+VOID 
 FASTCALL
-TextMetricW2A(
-    TEXTMETRICA *tma,
-    TEXTMETRICW *tmw
+FONT_TextMetricWToA(
+    const TEXTMETRICW *ptmW, 
+    LPTEXTMETRICA ptmA
 );
 
-BOOL
+VOID
 FASTCALL
 NewTextMetricW2A(
     NEWTEXTMETRICA *tma,
     NEWTEXTMETRICW *tmw
 );
 
-BOOL
+VOID
 FASTCALL
 NewTextMetricExW2A(
     NEWTEXTMETRICEXA *tma,

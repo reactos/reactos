@@ -1,7 +1,6 @@
 #include "precomp.h"
 
 
-
 /*
  * @implemented
  */
@@ -91,7 +90,6 @@ GetTextCharset(HDC hdc)
 
 
 
-
 /*
  * @implemented
  */
@@ -109,7 +107,8 @@ GetTextMetricsA(
     return FALSE;
   }
 
-  return TextMetricW2A(lptm, &tmwi.TextMetric);
+  FONT_TextMetricWToA(&tmwi.TextMetric, lptm);
+  return TRUE;
 }
 
 
