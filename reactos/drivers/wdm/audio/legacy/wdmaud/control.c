@@ -468,6 +468,212 @@ CheckFormatSupport(
 
 }
 
+PKEY_VALUE_PARTIAL_INFORMATION
+ReadKeyValue(
+    IN HANDLE hSubKey,
+    IN PUNICODE_STRING KeyName)
+{
+    NTSTATUS Status;
+    ULONG Length;
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
+
+    /* now query MatchingDeviceId key */
+    Status = ZwQueryValueKey(hSubKey, KeyName, KeyValuePartialInformation, NULL, 0, &Length);
+
+    /* check for success */
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+        return NULL;
+
+    /* allocate a buffer for key data */
+    PartialInformation = ExAllocatePool(NonPagedPool, Length);
+
+    if (!PartialInformation)
+        return NULL;
+
+
+    /* now query MatchingDeviceId key */
+    Status = ZwQueryValueKey(hSubKey, KeyName, KeyValuePartialInformation, PartialInformation, Length, &Length);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePool(PartialInformation);
+        return NULL;
+    }
+
+    if (PartialInformation->Type != REG_SZ)
+    {
+        /* invalid key type */
+        ExFreePool(PartialInformation);
+        return NULL;
+    }
+
+    return PartialInformation;
+}
+
+
+NTSTATUS
+CompareProductName(
+    IN HANDLE hSubKey,
+    IN LPWSTR PnpName,
+    IN ULONG ProductNameSize,
+    OUT LPWSTR ProductName)
+{
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInformation;
+    UNICODE_STRING DriverDescName = RTL_CONSTANT_STRING(L"DriverDesc");
+    UNICODE_STRING MatchingDeviceIdName = RTL_CONSTANT_STRING(L"MatchingDeviceId");
+    ULONG Length;
+    LPWSTR DeviceName;
+
+    /* read MatchingDeviceId value */
+    PartialInformation = ReadKeyValue(hSubKey, &MatchingDeviceIdName);
+
+    if (!PartialInformation)
+        return STATUS_UNSUCCESSFUL;
+
+
+    /* extract last '&' */
+    DeviceName = wcsrchr((LPWSTR)PartialInformation->Data, L'&');
+    ASSERT(DeviceName);
+    /* terminate it */
+    DeviceName[0] = L'\0';
+
+    Length = wcslen((LPWSTR)PartialInformation->Data);
+
+    DPRINT("DeviceName %S PnpName %S Length %u\n", (LPWSTR)PartialInformation->Data, PnpName, Length);
+
+    if (_wcsnicmp((LPWSTR)PartialInformation->Data, &PnpName[4], Length))
+    {
+        ExFreePool(PartialInformation);
+        return STATUS_NO_MATCH;
+    }
+
+    /* free buffer */
+    ExFreePool(PartialInformation);
+
+    /* read DriverDescName value */
+    PartialInformation = ReadKeyValue(hSubKey, &DriverDescName);
+
+    /* copy key name */
+    Length = min(ProductNameSize * sizeof(WCHAR), PartialInformation->DataLength);
+    RtlMoveMemory(ProductName, (PVOID)PartialInformation->Data, Length);
+
+    /* zero terminate it */
+    ProductName[ProductNameSize-1] = L'\0';
+
+    /* free buffer */
+    ExFreePool(PartialInformation);
+
+    return STATUS_SUCCESS;
+}
+
+
+
+NTSTATUS
+FindProductName(
+    IN LPWSTR PnpName,
+    IN ULONG ProductNameSize,
+    OUT LPWSTR ProductName)
+{
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class\\{4D36E96C-E325-11CE-BFC1-08002BE10318}");
+
+    UNICODE_STRING SubKeyName;
+    WCHAR SubKey[20];
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hKey, hSubKey;
+    NTSTATUS Status;
+    ULONG Length, Index;
+    PKEY_FULL_INFORMATION KeyInformation;
+
+    for(Index = 0; Index < wcslen(PnpName); Index++)
+    {
+        if (PnpName[Index] == '#')
+            PnpName[Index] = L'\\';
+    }
+
+
+    /* initialize key attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, NULL, NULL);
+
+    /* open the key */
+    Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* query num of subkeys */
+    Status = ZwQueryKey(hKey, KeyFullInformation, NULL, 0, &Length);
+
+    if (Status != STATUS_BUFFER_TOO_SMALL)
+    {
+        DPRINT1("ZwQueryKey failed with %x\n", Status);
+        /* failed */
+        ZwClose(hKey);
+        return Status;
+    }
+
+    /* allocate key information struct */
+    KeyInformation = ExAllocatePool(NonPagedPool, Length);
+    if (!KeyInformation)
+    {
+        /* no memory */
+        ZwClose(hKey);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* query num of subkeys */
+    Status = ZwQueryKey(hKey, KeyFullInformation, (PVOID)KeyInformation, Length, &Length);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwQueryKey failed with %x\n", Status);
+        ExFreePool(KeyInformation);
+        ZwClose(hKey);
+        return Status;
+    }
+
+    /* now iterate through all subkeys */
+    for(Index = 0; Index < KeyInformation->SubKeys; Index++)
+    {
+        /* subkeys are always in the format 0000-XXXX */
+        swprintf(SubKey, L"%04u", Index);
+
+        /* initialize subkey name */
+        RtlInitUnicodeString(&SubKeyName, SubKey);
+
+        /* initialize key attributes */
+        InitializeObjectAttributes(&ObjectAttributes, &SubKeyName, OBJ_CASE_INSENSITIVE | OBJ_OPENIF, hKey, NULL);
+
+        /* open the sub key */
+        Status = ZwOpenKey(&hSubKey, GENERIC_READ, &ObjectAttributes);
+
+        /* check for success */
+        if (NT_SUCCESS(Status))
+        {
+            /* compare product name */
+            Status = CompareProductName(hSubKey, PnpName, ProductNameSize, ProductName);
+
+            /* close subkey */
+            ZwClose(hSubKey);
+
+            if (NT_SUCCESS(Status))
+                break;
+        }
+    }
+
+    /* free buffer */
+    ExFreePool(KeyInformation);
+
+    /* close key */
+    ZwClose(hKey);
+
+    /* no matching key found */
+    return Status;
+}
+
+
+
 NTSTATUS
 WdmAudCapabilities(
     IN  PDEVICE_OBJECT DeviceObject,
@@ -489,6 +695,7 @@ WdmAudCapabilities(
     ULONG dwSupport = 0;
     ULONG FilterId;
     ULONG PinId;
+    WCHAR DeviceName[MAX_PATH];
 
     DPRINT("WdmAudCapabilities entered\n");
 
@@ -512,6 +719,25 @@ WdmAudCapabilities(
     {
         DeviceInfo->u.WaveOutCaps.wMid = ComponentId.Manufacturer.Data1 - 0xd5a47fa7;
         DeviceInfo->u.WaveOutCaps.vDriverVersion = MAKELONG(ComponentId.Version, ComponentId.Revision);
+    }
+
+    /* retrieve pnp base name */
+    PinProperty.PinId = FilterId;
+    PinProperty.Property.Set = KSPROPSETID_Sysaudio;
+    PinProperty.Property.Id = KSPROPERTY_SYSAUDIO_DEVICE_INTERFACE_NAME;
+    PinProperty.Property.Flags = KSPROPERTY_TYPE_GET;
+
+    Status = KsSynchronousIoControlDevice(DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinProperty, sizeof(KSP_PIN), (PVOID)DeviceName, sizeof(DeviceName), &BytesReturned);
+    if (NT_SUCCESS(Status))
+    {
+        /* find product name */
+        Status = FindProductName(DeviceName, MAXPNAMELEN, DeviceInfo->u.WaveOutCaps.szPname);
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            DeviceInfo->u.WaveOutCaps.szPname[0] = L'\0';
+        }
     }
 
     PinProperty.Reserved = DeviceInfo->DeviceIndex;
@@ -575,10 +801,9 @@ WdmAudCapabilities(
     DeviceInfo->u.WaveOutCaps.dwFormats = dwFormats;
     DeviceInfo->u.WaveOutCaps.dwSupport = dwSupport;
     DeviceInfo->u.WaveOutCaps.wChannels = wChannels;
-    DeviceInfo->u.WaveOutCaps.szPname[0] = L'\0';
-
 
     ExFreePool(MultipleItem);
+
     return SetIrpIoStatus(Irp, Status, sizeof(WDMAUD_DEVICE_INFO));
 }
 

@@ -351,7 +351,7 @@ SysAudioHandleProperty(
     PKSOBJECT_CREATE_ITEM CreateItem;
     UNICODE_STRING GuidString;
     PKSP_PIN Pin;
-
+    LPWSTR DeviceName;
 
     /* access the create item */
     CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
@@ -394,6 +394,39 @@ SysAudioHandleProperty(
     }
     else if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Sysaudio))
     {
+        if (Property->Id == KSPROPERTY_SYSAUDIO_DEVICE_INTERFACE_NAME)
+        {
+            if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY) + sizeof(ULONG))
+            {
+                /* invalid request */
+                return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, sizeof(KSPROPERTY) + sizeof(ULONG));
+            }
+            Index = (PULONG)(Property + 1);
+
+            if (DeviceExtension->NumberOfKsAudioDevices <= *Index)
+            {
+                /* invalid index */
+                return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
+            }
+
+            Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, *Index);
+            ASSERT(Entry != NULL);
+
+            BytesReturned = Entry->DeviceName.Length + sizeof(WCHAR);
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < BytesReturned)
+            {
+                /* too small buffer */
+                return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, BytesReturned);
+            }
+
+            /* copy device name */
+            DeviceName = (LPWSTR)Irp->UserBuffer;
+
+            RtlMoveMemory(DeviceName, Entry->DeviceName.Buffer, Entry->DeviceName.Length);
+            DeviceName[Entry->DeviceName.Length / sizeof(WCHAR)] = L'\0';
+            return SetIrpIoStatus(Irp, STATUS_SUCCESS, BytesReturned);
+        }
+
         if (Property->Id == KSPROPERTY_SYSAUDIO_COMPONENT_ID)
         {
             if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSPROPERTY) + sizeof(ULONG))

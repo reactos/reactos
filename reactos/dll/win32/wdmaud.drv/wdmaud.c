@@ -120,6 +120,7 @@ GetWdmDeviceCapabilities(
         return TranslateInternalMmResult(Result);
     }
 
+    SND_TRACE(L"WDMAUD Name %S\n", DeviceInfo.u.WaveOutCaps.szPname);
 
     /* This is pretty much a big hack right now */
     switch ( DeviceType )
@@ -131,7 +132,7 @@ GetWdmDeviceCapabilities(
             WaveOutCaps->wPid = DeviceInfo.u.WaveOutCaps.wPid;
 
             WaveOutCaps->vDriverVersion = 0x0001;
-            CopyWideString(WaveOutCaps->szPname, UnknownWaveOut);
+            CopyWideString(WaveOutCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
 
             WaveOutCaps->dwFormats = DeviceInfo.u.WaveOutCaps.dwFormats;
             WaveOutCaps->wChannels = DeviceInfo.u.WaveOutCaps.wChannels;
@@ -141,7 +142,7 @@ GetWdmDeviceCapabilities(
         case WAVE_IN_DEVICE_TYPE :
         {
             LPWAVEINCAPS WaveInCaps = (LPWAVEINCAPS) Capabilities;
-            CopyWideString(WaveInCaps->szPname, UnknownWaveIn);
+            CopyWideString(WaveInCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
             /* TODO... other fields */
             break;
         }

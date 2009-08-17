@@ -43,7 +43,7 @@ PerformSampleRateConversion(
     ULONG NumSamples;
     ULONG NewSamples;
 
-    SND_TRACE(L"PerformSampleRateConversion OldRate %u NewRate %u BytesPerSample %u NumChannels %u\n", OldRate, NewRate, BytesPerSample, NumChannels);
+    //SND_TRACE(L"PerformSampleRateConversion OldRate %u NewRate %u BytesPerSample %u NumChannels %u\n", OldRate, NewRate, BytesPerSample, NumChannels);
 
     ASSERT(BytesPerSample == 1 || BytesPerSample == 2 || BytesPerSample == 4);
 
@@ -281,7 +281,7 @@ PerformQualityConversion(
     Samples = BufferLength / (OldWidth / 8);
     //DPRINT("Samples %u BufferLength %u\n", Samples, BufferLength);
 
-    SND_TRACE(L"PerformQualityConversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
+    //SND_TRACE(L"PerformQualityConversion OldWidth %u NewWidth %u\n", OldWidth, NewWidth);
 
     if (OldWidth == 8 && NewWidth == 16)
     {
@@ -292,7 +292,7 @@ PerformQualityConversion(
 
           for(Index = 0; Index < Samples; Index++)
           {
-              Sample = Buffer[Index];
+              Sample = Buffer[Index];// & 0xFF);
               Sample *= 2;
 #ifdef _X86_
               Sample = _byteswap_ushort(Sample);
