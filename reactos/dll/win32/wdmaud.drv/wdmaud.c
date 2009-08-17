@@ -32,6 +32,15 @@ PWSTR UnknownMidiOut = L"Midi Output";
 HANDLE KernelHandle = INVALID_HANDLE_VALUE;
 DWORD OpenCount = 0;
 
+MMRESULT
+WriteFileEx_Remixer(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Length,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+
+
 
 MMRESULT
 GetNumWdmDevs(
@@ -288,11 +297,19 @@ SetWdmWaveDeviceFormat(
     DeviceInfo.DeviceIndex = DeviceId;
     DeviceInfo.u.WaveFormatEx.cbSize = WaveFormat->cbSize;
     DeviceInfo.u.WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
+#ifdef USERMODE_MIXER
+    DeviceInfo.u.WaveFormatEx.nChannels = 2;
+    DeviceInfo.u.WaveFormatEx.nSamplesPerSec = 44100;
+    DeviceInfo.u.WaveFormatEx.nBlockAlign = 4;
+    DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = 176400;
+    DeviceInfo.u.WaveFormatEx.wBitsPerSample = 16;
+#else
     DeviceInfo.u.WaveFormatEx.nChannels = WaveFormat->nChannels;
     DeviceInfo.u.WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
     DeviceInfo.u.WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
     DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
     DeviceInfo.u.WaveFormatEx.wBitsPerSample = WaveFormat->wBitsPerSample;
+#endif
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
                                            IOCTL_OPEN_WDMAUD,
@@ -307,6 +324,16 @@ SetWdmWaveDeviceFormat(
         return TranslateInternalMmResult(Result);
     }
 
+    /* Store format */
+    Instance->WaveFormatEx.cbSize = WaveFormat->cbSize;
+    Instance->WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
+    Instance->WaveFormatEx.nChannels = WaveFormat->nChannels;
+    Instance->WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
+    Instance->WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
+    Instance->WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
+    Instance->WaveFormatEx.wBitsPerSample = WaveFormat->wBitsPerSample;
+
+    /* Store sound device handle instance handle */
     Instance->Handle = (PVOID)DeviceInfo.hDevice;
 
     /* Now determine framing requirements */
@@ -473,7 +500,11 @@ PopulateWdmDeviceList(
         FuncTable.SetWaveFormat = SetWdmWaveDeviceFormat;
         FuncTable.Open = OpenWdmSoundDevice;
         FuncTable.Close = CloseWdmSoundDevice;
+#ifndef USERMODE_MIXER
         FuncTable.CommitWaveBuffer = WriteFileEx_Committer2;
+#else
+        FuncTable.CommitWaveBuffer = WriteFileEx_Remixer;
+#endif
         FuncTable.GetPos = GetWdmPosition;
 
         SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
