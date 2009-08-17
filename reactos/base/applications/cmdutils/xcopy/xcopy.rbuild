@@ -7,17 +7,6 @@
 	<library>user32</library>
 	<library>kernel32</library>
 	<file>xcopy.c</file>
-	<file>Da.rc</file>
-	<file>De.rc</file>
-	<file>En.rc</file>
-	<file>Fr.rc</file>
-	<file>Ko.rc</file>
-	<file>Lt.rc</file>
-	<file>Nl.rc</file>
-	<file>No.rc</file>
-	<file>Pl.rc</file>
-	<file>Pt.rc</file>
-	<file>Ru.rc</file>
-	<file>Si.rc</file>
+	<file>rsrc.rc</file>
 	<metadata description="xcopy command-line tool" />
 </module>

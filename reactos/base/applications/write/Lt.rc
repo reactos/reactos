@@ -29,3 +29,4 @@ STRINGTABLE
 {
     IDS_FAILED, "Nepavyko paleisti Wordpad"
 }
+#pragma code_page(default)

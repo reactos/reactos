@@ -247,3 +247,4 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "Tiskanje (še) ni na voljo"
     STRING_MAX_TAB_STOPS,             "Ne morem vstaviti več kot 32 položajev tabulatorja."
 END
+#pragma code_page(default)

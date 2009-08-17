@@ -1,7 +1,5 @@
 /*
- * French language support
- *
- * Copyright (C) 2007 Jonathan Ernst
+ * Copyright 2007 Mikolaj Zalewski
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -17,13 +15,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-#pragma code_page(65001)
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+#include "resources.h"
 
-STRINGTABLE
-{
-    IDS_FAILED, "Wordpad n'a pas pu être démarré"
-}
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-#pragma code_page(default)
+#include "De.rc"
+#include "En.rc"
+#include "Fr.rc"
+#include "Ja.rc"
+#include "Ko.rc"
+#include "Lt.rc"
+#include "Nl.rc"
+#include "Pt.rc"
+#include "Ro.rc"
+#include "Ru.rc"
+#include "Si.rc"
+#include "Sv.rc"

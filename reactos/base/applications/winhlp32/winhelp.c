@@ -167,7 +167,7 @@ BOOL WINHELP_GetOpenFileName(LPSTR lpszFile, int len)
     lpszFile[0]='\0';
 
     openfilename.lStructSize       = sizeof(OPENFILENAME);
-    openfilename.hwndOwner         = NULL;
+    openfilename.hwndOwner         = (Globals.active_win ? Globals.active_win->hMainWnd : 0);
     openfilename.hInstance         = Globals.hInstance;
     openfilename.lpstrFilter       = szzFilter;
     openfilename.lpstrCustomFilter = 0;

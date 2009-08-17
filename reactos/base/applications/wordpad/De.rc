@@ -246,3 +246,4 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED, "Drucken ist nicht implementiert"
     STRING_MAX_TAB_STOPS,            "Es können nur maximal 32 Tabstopps definiert werden."
 END
+#pragma code_page(default)
