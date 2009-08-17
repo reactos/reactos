@@ -3761,6 +3761,12 @@ NtGdiGetCharABCWidthsW(
         return FALSE;
     }
 
+    if (!Buffer)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
     BufferSize = Count * sizeof(ABC); // Same size!
     SafeBuff = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
     if (!fl) SafeBuffF = (LPABCFLOAT) SafeBuff;
