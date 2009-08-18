@@ -13,9 +13,6 @@ extern GUID IID_IDmaChannelSlave;
 typedef struct
 {
     IPortWaveCyclicVtbl *lpVtbl;
-    IPortEventsVtbl *lpVbtlPortEvents;
-    IUnregisterSubdeviceVtbl *lpVtblUnregisterSubdevice;
-    IUnregisterPhysicalConnectionVtbl *lpVtblPhysicalConnection;
     IPortEventsVtbl *lpVtblPortEvents;
     ISubdeviceVtbl *lpVtblSubDevice;
 
@@ -111,7 +108,7 @@ IPortEvents_fnQueryInterface(
     if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
-        *Output = &This->lpVbtlPortEvents;
+        *Output = &This->lpVtblPortEvents;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }

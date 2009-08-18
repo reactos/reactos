@@ -12,6 +12,7 @@ typedef struct
 {
     IPortTopologyVtbl *lpVtbl;
     ISubdeviceVtbl *lpVtblSubDevice;
+    IPortEventsVtbl *lpVtblPortEvents;
 
     LONG ref;
     BOOL bInitialized;
@@ -66,6 +67,98 @@ KSPROPERTY_SET TopologyPropertySet[] =
     }
 };
 
+//---------------------------------------------------------------
+// IPortEvents
+//
+
+static
+NTSTATUS
+NTAPI
+IPortEvents_fnQueryInterface(
+    IPortEvents* iface,
+    IN  REFIID refiid,
+    OUT PVOID* Output)
+{
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblPortEvents);
+
+    DPRINT("IPortEvents_fnQueryInterface entered\n");
+
+    if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
+    {
+        *Output = &This->lpVtblPortEvents;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+ULONG
+NTAPI
+IPortEvents_fnAddRef(
+    IPortEvents* iface)
+{
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblPortEvents);
+    DPRINT("IPortEvents_fnQueryInterface entered\n");
+    return InterlockedIncrement(&This->ref);
+}
+
+static
+ULONG
+NTAPI
+IPortEvents_fnRelease(
+    IPortEvents* iface)
+{
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblPortEvents);
+
+    DPRINT("IPortEvents_fnRelease entered\n");
+    InterlockedDecrement(&This->ref);
+
+    if (This->ref == 0)
+    {
+        FreeItem(This, TAG_PORTCLASS);
+        return 0;
+    }
+    /* Return new reference count */
+    return This->ref;
+}
+
+static
+void
+NTAPI
+IPortEvents_fnAddEventToEventList(
+    IPortEvents* iface,
+    IN PKSEVENT_ENTRY EventEntry)
+{
+    UNIMPLEMENTED
+}
+
+
+static
+void
+NTAPI
+IPortEvents_fnGenerateEventList(
+    IPortEvents* iface,
+    IN  GUID* Set OPTIONAL,
+    IN  ULONG EventId,
+    IN  BOOL PinEvent,
+    IN  ULONG PinId,
+    IN  BOOL NodeEvent,
+    IN  ULONG NodeId)
+{
+    UNIMPLEMENTED
+}
+
+static IPortEventsVtbl vt_IPortEvents = 
+{
+    IPortEvents_fnQueryInterface,
+    IPortEvents_fnAddRef,
+    IPortEvents_fnRelease,
+    IPortEvents_fnAddEventToEventList,
+    IPortEvents_fnGenerateEventList
+};
+
 
 //---------------------------------------------------------------
 // IUnknown interface functions
@@ -94,6 +187,12 @@ IPortTopology_fnQueryInterface(
     else if (IsEqualGUIDAligned(refiid, &IID_ISubdevice))
     {
         *Output = &This->lpVtblSubDevice;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPortEvents))
+    {
+        *Output = &This->lpVtblPortEvents;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
@@ -707,6 +806,7 @@ NewPortTopology(
 
     This->lpVtbl = &vt_IPortTopology;
     This->lpVtblSubDevice = &vt_ISubdeviceVtbl;
+    This->lpVtblPortEvents = &vt_IPortEvents;
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
     DPRINT("NewPortTopology result %p\n", *OutPort);
