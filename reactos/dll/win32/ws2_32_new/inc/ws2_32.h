@@ -25,9 +25,7 @@
 #include <ws2spi.h>
 #include <ndk/umtypes.h>
 #include <ndk/rtlfuncs.h>
-
-/* Shared NSP Headers */
-#include <nsp_dns.h>
+#include <svcguid.h>
 
 /* Winsock Helper Header */
 #include <ws2help.h>
