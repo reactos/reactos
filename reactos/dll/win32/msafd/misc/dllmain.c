@@ -98,6 +98,9 @@ WSPSocket(int AddressFamily,
 
     /* Set Socket Data */
     Socket = HeapAlloc(GlobalHeap, 0, sizeof(*Socket));
+    if (!Socket)
+        return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
+
     RtlZeroMemory(Socket, sizeof(*Socket));
     Socket->RefCount = 2;
     Socket->Handle = -1;
@@ -140,6 +143,9 @@ WSPSocket(int AddressFamily,
 
     /* Set up EA Buffer */
     EABuffer = HeapAlloc(GlobalHeap, 0, SizeOfEA);
+    if (!EABuffer)
+        return MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
+
     RtlZeroMemory(EABuffer, SizeOfEA);
     EABuffer->NextEntryOffset = 0;
     EABuffer->Flags = 0;
@@ -240,6 +246,8 @@ WSPSocket(int AddressFamily,
                  EABuffer,
                  SizeOfEA);
 
+    HeapFree(GlobalHeap, 0, EABuffer);
+
     /* Save Handle */
     Socket->Handle = (SOCKET)Sock;
 
@@ -291,6 +299,9 @@ WSPSocket(int AddressFamily,
 error:
     AFD_DbgPrint(MID_TRACE,("Ending %x\n", Status));
 
+    if( Socket )
+        HeapFree(GlobalHeap, 0, Socket);
+
     if( lpErrno )
         *lpErrno = Status;
 
@@ -335,7 +346,7 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
         case STATUS_NO_MEMORY: /* Fall through to STATUS_INSUFFICIENT_RESOURCES */
         case STATUS_INSUFFICIENT_RESOURCES:
             DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n");
-            *Errno = WSA_NOT_ENOUGH_MEMORY;
+            *Errno = WSANOBUFS;
             break;
         case STATUS_INVALID_CONNECTION:
             DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n");
@@ -1038,6 +1049,11 @@ WSPAccept(SOCKET Handle,
             {
                 /* Allocate needed space */
                 PendingData = HeapAlloc(GlobalHeap, 0, PendingDataLength);
+                if (!PendingData)
+                {
+                    MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+                    return INVALID_SOCKET;
+                }
 
                 /* We want the data now */
                 PendingAcceptData.ReturnSize = FALSE;
@@ -1079,6 +1095,13 @@ WSPAccept(SOCKET Handle,
         CalleeID.buf = (PVOID)Socket->LocalAddress;
         CalleeID.len = Socket->SharedData.SizeOfLocalAddress;
 
+        RemoteAddress = HeapAlloc(GlobalHeap, 0, sizeof(*RemoteAddress));
+        if (!RemoteAddress)
+        {
+            MsafdReturnWithErrno(STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL);
+            return INVALID_SOCKET;
+        }
+
         /* Set up Address in SOCKADDR Format */
         RtlCopyMemory (RemoteAddress, 
                        &ListenReceiveData->Address.Address[0].AddressType, 
@@ -1097,6 +1120,10 @@ WSPAccept(SOCKET Handle,
         {
             /* Allocate Buffer for Callee Data */
             CalleeDataBuffer = HeapAlloc(GlobalHeap, 0, 4096);
+            if (!CalleeDataBuffer) {
+                MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+                return INVALID_SOCKET;
+            }
             CalleeData.buf = CalleeDataBuffer;
             CalleeData.len = 4096;
         } 
@@ -1288,6 +1315,11 @@ WSPConnect(SOCKET Handle,
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
         BindAddress = HeapAlloc(GetProcessHeap(), 0, BindAddressLength);
+        if (!BindAddress)
+        {
+            MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+            return INVALID_SOCKET;
+        }
         Socket->HelperData->WSHGetWildcardSockaddr (Socket->HelperContext, 
                                                     BindAddress, 
                                                     &BindAddressLength);
@@ -1938,7 +1970,10 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     }
 
     /* Return Information */
-    *Ulong = InfoData.Information.Ulong;
+    if (Ulong != NULL)
+    {
+        *Ulong = InfoData.Information.Ulong;
+    }
     if (LargeInteger != NULL)
     {
         *LargeInteger = InfoData.Information.LargeInteger;
@@ -1975,7 +2010,10 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     InfoData.InformationClass = AfdInformationClass;
 
     /* Set Information */
-    InfoData.Information.Ulong = *Ulong;
+    if (Ulong != NULL)
+    {
+        InfoData.Information.Ulong = *Ulong;
+    }
     if (LargeInteger != NULL)
     {
         InfoData.Information.LargeInteger = *LargeInteger;
@@ -2491,6 +2529,7 @@ SockReenableAsyncSelectEvent (IN PSOCKET_INFORMATION Socket,
 
     /* Wait on new events */
     AsyncData = HeapAlloc(GetProcessHeap(), 0, sizeof(ASYNC_DATA));
+    if (!AsyncData) return;
 
     /* Create the Asynch Thread if Needed */  
     SockCreateOrReferenceAsyncThread();
@@ -2538,6 +2577,7 @@ DllMain(HANDLE hInstDll,
 
         /* Allocate Heap for 1024 Sockets, can be expanded later */
         Sockets = HeapAlloc(GetProcessHeap(), 0, sizeof(PSOCKET_INFORMATION) * 1024);
+        if (!Sockets) return FALSE;
 
         AFD_DbgPrint(MAX_TRACE, ("MSAFD.DLL has been loaded\n"));
 

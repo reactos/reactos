@@ -32,6 +32,11 @@ WSPAsyncSelect(IN  SOCKET Handle,
 
     /* Allocate the Async Data Structure to pass on to the Thread later */
     AsyncData = HeapAlloc(GetProcessHeap(), 0, sizeof(*AsyncData));
+    if (!AsyncData)
+    {
+        MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+        return INVALID_SOCKET;
+    }
 
     /* Change the Socket to Non Blocking */
     BlockMode = 1;
@@ -533,6 +538,11 @@ WSPSendTo(SOCKET Handle,
         /* Get the Wildcard Address */
         BindAddressLength = Socket->HelperData->MaxWSAddressLength;
         BindAddress = HeapAlloc(GlobalHeap, 0, BindAddressLength);
+        if (!BindAddress)
+        {
+            MsafdReturnWithErrno( STATUS_INSUFFICIENT_RESOURCES, lpErrno, 0, NULL );
+            return INVALID_SOCKET;
+        }
         Socket->HelperData->WSHGetWildcardSockaddr (Socket->HelperContext,
                                                     BindAddress,
                                                     &BindAddressLength);
