@@ -1342,6 +1342,7 @@ DriverEntry(
   Characteristics.SendHandler = MiniportSend;
 
   NdisMInitializeWrapper(&WrapperHandle, DriverObject, RegistryPath, 0);
+  if (!WrapperHandle) return NDIS_STATUS_FAILURE;
 
   Status = NdisMRegisterMiniport(WrapperHandle, &Characteristics, sizeof(Characteristics));
   if(Status != NDIS_STATUS_SUCCESS)
