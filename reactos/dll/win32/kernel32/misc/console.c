@@ -352,6 +352,12 @@ GetConsoleAliasW(LPWSTR lpSource,
 
     DPRINT("GetConsoleAliasW entered lpSource %S lpExeName %S\n", lpSource, lpExeName);
 
+    if (lpTargetBuffer == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
     CsrRequest = MAKE_CSR_API(GET_CONSOLE_ALIAS, CSR_CONSOLE);
 
     ExeLength = wcslen(lpExeName) + 1;
@@ -361,11 +367,17 @@ GetConsoleAliasW(LPWSTR lpSource,
 
     RequestLength = Size + sizeof(CSR_API_MESSAGE);
     Request = RtlAllocateHeap(GetProcessHeap(), 0, RequestLength);
+    if (Request == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
 
     CaptureBuffer = CsrAllocateCaptureBuffer(1, TargetBufferLength);
     if (!CaptureBuffer)
     {
         RtlFreeHeap(GetProcessHeap(), 0, Request);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return 0;
     }
 
