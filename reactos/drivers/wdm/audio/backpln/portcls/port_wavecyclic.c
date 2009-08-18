@@ -337,6 +337,13 @@ IPortWaveCyclic_fnInit(
     This->bInitialized = TRUE;
     This->pResourceList = ResourceList;
 
+
+    if (ResourceList)
+    {
+        /* increment reference on resource list */
+        ResourceList->lpVtbl->AddRef(ResourceList);
+    }
+
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
     {
@@ -396,10 +403,6 @@ IPortWaveCyclic_fnInit(
         /* store reference */
         This->pPowerNotify = PowerNotify;
     }
-
-    /* increment reference on resource list */
-    ResourceList->lpVtbl->AddRef(ResourceList);
-
 
     DPRINT("IPortWaveCyclic successfully initialized\n");
     return STATUS_SUCCESS;
