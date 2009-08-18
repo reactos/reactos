@@ -14,7 +14,6 @@
 #define NTOS_MODE_USER
 #define _CRT_SECURE_NO_DEPRECATE
 #define WINSOCK_API_LINKAGE
-#define DBG 1
 
 /* C Header */
 #include <stdio.h>
