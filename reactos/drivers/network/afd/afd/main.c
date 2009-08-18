@@ -233,10 +233,20 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	ObDereferenceObject(FCB->AddressFile.Object);
 
     if( FCB->AddressFile.Handle != INVALID_HANDLE_VALUE )
-        ZwClose(FCB->AddressFile.Handle);
+    {
+        if (ZwClose(FCB->AddressFile.Handle) == STATUS_INVALID_HANDLE)
+        {
+            DbgPrint("INVALID ADDRESS FILE HANDLE VALUE: %x %x\n", FCB->AddressFile.Handle, FCB->AddressFile.Object);
+        }
+    }
 
     if( FCB->Connection.Handle != INVALID_HANDLE_VALUE )
-        ZwClose(FCB->Connection.Handle);
+    {
+        if (ZwClose(FCB->Connection.Handle) == STATUS_INVALID_HANDLE)
+        {
+            DbgPrint("INVALID CONNECTION HANDLE VALUE: %x %x\n", FCB->Connection.Handle, FCB->Connection.Object);
+        }
+    }
 
     if( FCB->TdiDeviceName.Buffer )
 	ExFreePool(FCB->TdiDeviceName.Buffer);
