@@ -346,7 +346,7 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
         case STATUS_NO_MEMORY: /* Fall through to STATUS_INSUFFICIENT_RESOURCES */
         case STATUS_INSUFFICIENT_RESOURCES:
             DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n");
-            *Errno = WSANOBUFS;
+            *Errno = WSAENOBUFS;
             break;
         case STATUS_INVALID_CONNECTION:
             DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n");
