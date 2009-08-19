@@ -2548,7 +2548,7 @@ typedef struct
     ULONG DataUsed;
     PVOID Data;
     ULONG OptionsFlags;
-#if _WIN64
+#ifdef _WIN64
   ULONG  Reserved;
 #endif
 } KSSTREAM_HEADER, *PKSSTREAM_HEADER;
