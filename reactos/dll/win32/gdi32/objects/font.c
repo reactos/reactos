@@ -929,6 +929,7 @@ GetGlyphOutlineA(
     DWORD ret;
     UINT c;
     DPRINT("GetGlyphOutlineA uChar %x\n", uChar);
+    if (!lpgm || !lpmat2) return GDI_ERROR;
     if(!(uFormat & GGO_GLYPH_INDEX)) {
         int len;
         char mbchs[2];
@@ -966,7 +967,7 @@ GetGlyphOutlineW(
 	)
 {
   DPRINT("GetGlyphOutlineW uChar %x\n", uChar);
-  if (!lpgm & !lpmat2) return GDI_ERROR;
+  if (!lpgm || !lpmat2) return GDI_ERROR;
   if (!lpvBuffer) cbBuffer = 0;
   return NtGdiGetGlyphOutline ( hdc, uChar, uFormat, lpgm, cbBuffer, lpvBuffer, (CONST LPMAT2)lpmat2, TRUE);
 }
