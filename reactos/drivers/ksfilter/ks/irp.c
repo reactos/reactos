@@ -645,7 +645,6 @@ KsProbeStreamIrp(
     IN  ULONG ProbeFlags,
     IN  ULONG HeaderSize)
 {
-#if 0
     PMDL Mdl;
     PVOID Buffer;
     LOCK_OPERATION Operation;
@@ -826,10 +825,10 @@ ProbeMdl:
                             ExRaiseStatus(STATUS_INVALID_PARAMETER);
                         }
 
-                        if (StreamHeader->FrameExtend)
+                        if (StreamHeader->FrameExtent)
                         {
                             /* allocate an mdl */
-                            Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtend, FALSE, TRUE, Irp);
+                            Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, FALSE, TRUE, Irp);
 
                             if (!Mdl)
                             {
@@ -857,10 +856,10 @@ ProbeMdl:
                     }
                 }
 
-                if (StreamHeader->FrameExtend)
+                if (StreamHeader->FrameExtent)
                 {
                     /* allocate an mdl */
-                    Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtend, Irp->MdlAddress != NULL, TRUE, Irp);
+                    Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, Irp->MdlAddress != NULL, TRUE, Irp);
                     if (!Mdl)
                     {
                         /* not enough memory */
@@ -934,6 +933,9 @@ ProbeMdl:
             goto AllocMdl;
         }
 
+        /* check all stream headers */
+        StreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+
         _SEH2_TRY
         {
             do
@@ -965,7 +967,7 @@ ProbeMdl:
 
                 if (ProbeFlags & KSPROBE_STREAMWRITE)
                 {
-                    if (StreamHeader->DataUsed > StreamHeader->FrameExtend)
+                    if (StreamHeader->DataUsed > StreamHeader->FrameExtent)
                     {
                         /* frame extend can never be smaller */
                         ExRaiseStatus(STATUS_INVALID_BUFFER_SIZE);
@@ -986,10 +988,10 @@ ProbeMdl:
                             ExRaiseStatus(STATUS_INVALID_PARAMETER);
                         }
 
-                        if (StreamHeader->FrameExtend)
+                        if (StreamHeader->FrameExtent)
                         {
                             /* allocate an mdl */
-                            Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtend, FALSE, TRUE, Irp);
+                            Mdl = IoAllocateMdl(StreamHeader->Data, StreamHeader->FrameExtent, FALSE, TRUE, Irp);
 
                             if (!Mdl)
                             {
@@ -1037,10 +1039,6 @@ ProbeMdl:
     }
 
     return STATUS_INVALID_BUFFER_SIZE;
-#else
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
-#endif
 }
 
 /*
