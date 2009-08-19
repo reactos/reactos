@@ -566,6 +566,18 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
 }
 
 
+static BOOL face_has_symbol_charmap(FT_Face ft_face)
+{
+    int i;
+
+    for(i = 0; i < ft_face->num_charmaps; i++)
+    {
+        if(ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 static void FASTCALL
 FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT_WinFNT_HeaderRec *pWin)
 {
@@ -644,10 +656,36 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
     TM->tmOverhang = 0;
     TM->tmDigitizedAspectX = 96;
     TM->tmDigitizedAspectY = 96;
-    TM->tmFirstChar = pOS2->usFirstCharIndex;
-    TM->tmDefaultChar = pOS2->usDefaultChar ? pOS2->usDefaultChar : 0xffff;
-    TM->tmLastChar = pOS2->usLastCharIndex;
-    TM->tmBreakChar = L'\0' != pOS2->usBreakChar ? pOS2->usBreakChar : ' ';
+    if (face_has_symbol_charmap(Face) || (pOS2->usFirstCharIndex >= 0xf000 && pOS2->usFirstCharIndex < 0xf100))
+    {
+        USHORT cpOEM, cpAnsi;
+
+        EngGetCurrentCodePage(&cpOEM, &cpAnsi);
+        TM->tmFirstChar = 0;
+        switch(cpAnsi)
+        {
+        case 1257: /* Baltic */
+            TM->tmLastChar = 0xf8fd;
+            break;
+        default:
+            TM->tmLastChar = 0xf0ff;
+        }
+        TM->tmBreakChar = 0x20;
+        TM->tmDefaultChar = 0x1f;
+    }
+    else
+    {
+        TM->tmFirstChar = pOS2->usFirstCharIndex; /* Should be the first char in the cmap */
+        TM->tmLastChar = pOS2->usLastCharIndex;   /* Should be min(cmap_last, os2_last) */
+
+        if(pOS2->usFirstCharIndex <= 1)
+            TM->tmBreakChar = pOS2->usFirstCharIndex + 2;
+        else if (pOS2->usFirstCharIndex > 0xff)
+            TM->tmBreakChar = 0x20;
+        else
+            TM->tmBreakChar = pOS2->usFirstCharIndex;
+        TM->tmDefaultChar = TM->tmBreakChar - 1;
+    }
     TM->tmItalic = (Face->style_flags & FT_STYLE_FLAG_ITALIC) ? 255 : 0;
     TM->tmUnderlined = FontGDI->Underline;
     TM->tmStruckOut  = FontGDI->StrikeOut;
