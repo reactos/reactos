@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Mozilla SeaMonkey
@@ -15,3 +15,10 @@ CDPath = none
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
 Licence = Неизвестно
 URLSite = http://www.mozilla-europe.org/ru/
+
+[Section.0407]
+Licence = Unbekannt
+Description = Mozilla Suite ist lebendig. Dies ist das einzige Browser-, Mail-, Chat- and Composerwerkzeug-Bundle welches Sie benötigen.
+Size = 8.9M
+URLSite = http://www.mozilla-europe.org/de/
+URLDownload = http://ftp.df.lth.se/mozilla/seamonkey/releases/1.1.16/contrib-localized/seamonkey-1.1.16.de-AT.win32.installer.exe

@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = SMPlayer
@@ -10,3 +10,9 @@ Category = 1
 URLSite = Unknown
 URLDownload = http://dfn.dl.sourceforge.net/sourceforge/smplayer/smplayer_0.6.7_setup.exe
 CDPath = none
+
+
+[Section.0407]
+Licence = Unbekannt
+Size = Unbekannt
+URLSite = Unbekannt

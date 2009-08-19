@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Simple Direct Media Layer (SDL) Runtime
@@ -10,3 +10,11 @@ Category = 14
 URLSite = Unknown
 URLDownload = http://www.libsdl.org/release/SDL-1.2.13-win32.zip
 CDPath = none
+
+
+[Section.0407]
+Name = Simple Direct Media Layer (SDL) Laufzeitumgebung
+Licence = Unbekannt
+Description = Erforderlich um einige Open Source Spiele auszuführen. Sie brauchen 7-Zip oder einen ähnlichen Entpacker um es zu entpacken.
+Size = Unbekannt
+URLSite = Unbekannt
