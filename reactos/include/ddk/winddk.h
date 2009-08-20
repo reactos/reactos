@@ -2855,7 +2855,7 @@ typedef struct {
 extern NTSYSAPI PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
-extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
+extern __declspec(dllexport) HAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH (&HalDispatchTable)
 #endif
 
@@ -2876,14 +2876,6 @@ extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
 #define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
 #define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
-
-#ifndef _NTOSKRNL_
-#define HalDeviceControl                HALDISPATCH->HalDeviceControl
-#define HalIoAssignDriveLetters         HALDISPATCH->HalIoAssignDriveLetters
-#define HalIoReadPartitionTable         HALDISPATCH->HalIoReadPartitionTable
-#define HalIoSetPartitionInformation    HALDISPATCH->HalIoSetPartitionInformation
-#define HalIoWritePartitionTable        HALDISPATCH->HalIoWritePartitionTable
-#endif
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
