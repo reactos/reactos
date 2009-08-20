@@ -28,7 +28,7 @@
 #else
 
 #if defined(_VIDEOPORT_)
-  #define VPAPI DECLSPEC_EXPORT
+  #define VPAPI
 #else
   #define VPAPI DECLSPEC_IMPORT
 #endif
