@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -56,5 +58,4 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMOD         "ファイルは有効なOLEモジュールではないようです。OLEコントロールを登録できません。"
   IDS_NOTOLEMODCAPTION  "コントロールを追加"
 }
-
 #pragma code_page(default)

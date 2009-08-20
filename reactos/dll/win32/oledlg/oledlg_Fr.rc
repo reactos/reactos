@@ -3,6 +3,7 @@
  * French language support
  *
  * Copyright (C) 2005-2006 Jonathan Ernst
+ * Copyright (C) 2009 FrÃ©dÃ©ric Delanoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,48 +20,52 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "resource.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 308, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Insérer Objet"
+CAPTION "InsÃ©rer objet"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
+    LISTBOX         IDC_OBJTYPELIST,94,19,131,66,LBS_SORT |
                     LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
                     WS_TABSTOP
-    LTEXT           "Type d'objet :",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
-    DEFPUSHBUTTON   "OK",IDOK,221,7,66,14
-    PUSHBUTTON      "Annuler",IDCANCEL,221,24,66,14
-    GROUPBOX        "Résultat",IDC_RESULT,7,103,208,41
-    CONTROL         "Créer nouveau",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
+    LTEXT           "Type d'objet :",IDC_OBJTYPELBL,94,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,233,7,65,14
+    PUSHBUTTON      "Annuler",IDCANCEL,233,24,65,14
+    GROUPBOX        "RÃ©sultat",IDC_RESULT,7,103,218,41
+    CONTROL         "CrÃ©er nouveau",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP,7,20,62,10
-    CONTROL         "Créer le contrôle",IDC_CREATECONTROL,"Button",
-                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
-    CONTROL         "Créer depuis le fichier",IDC_CREATEFROMFILE,"Button",
-                    BS_AUTORADIOBUTTON,7,37,67,10
-    LTEXT           "",IDC_RESULTDESC,49,112,159,23
-    PUSHBUTTON      "&Ajoute Contrôle...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
-    CONTROL         "Afficher comme icône",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
-    PUSHBUTTON      "Parcourir...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
-    LTEXT           "Fichier :",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
-    EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    CONTROL         "CrÃ©er un contrÃ´le",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,72,10
+    CONTROL         "CrÃ©er depuis le fichier",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,82,10
+    LTEXT           "",IDC_RESULTDESC,47,112,173,25
+    PUSHBUTTON      "&Ajouter un contrÃ´le...",IDC_ADDCONTROL,94,88,80,14,NOT WS_VISIBLE
+    CONTROL         "Afficher comme une icÃ´ne",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+                    BS_MULTILINE | WS_TABSTOP | NOT WS_VISIBLE,234,51,61,35
+    PUSHBUTTON      "Parcourir...",IDC_BROWSE,96,53,50,14,NOT WS_VISIBLE
+    LTEXT           "Fichier :",IDC_FILELBL,96,27,27,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,95,37,129,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_RESULTOBJDESC	"Insérer un nouvel object %s dans votre document"
-  IDS_RESULTFILEOBJDESC	"Insère le contenu du fichier comme un objet dans votre document afin que vous puissiez l'activer en utilisant le programme avec lequel il a été créé."
+  IDS_RESULTOBJDESC	"InsÃ©rer un nouvel object %s dans votre document"
+  IDS_RESULTFILEOBJDESC	"InsÃ¨re le contenu du fichier comme un objet dans votre document afin que vous puissiez l'activer en utilisant le programme avec lequel il a Ã©tÃ© crÃ©Ã©."
   IDS_BROWSE            "Parcourir"
-  IDS_NOTOLEMOD         "Le fichier ne semble pas être un module OLE valide. Impossible d'enregistrer le contrôle OLE."
-  IDS_NOTOLEMODCAPTION  "Ajouter un contrôle"
+  IDS_NOTOLEMOD         "Le fichier ne semble pas Ãªtre un module OLE valide. Impossible d'enregistrer le contrÃ´le OLE."
+  IDS_NOTOLEMODCAPTION  "Ajouter un contrÃ´le"
 }
 
-IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 308, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Collage spécial"
+CAPTION "Collage spÃ©cial"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT         "Source :", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
@@ -68,32 +73,33 @@ BEGIN
                   6, 38, 55, 10
     CONTROL       "Coller le &lien", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   6, 63, 55, 10
-    LTEXT         "&Comme :", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LTEXT         "&Comme :", -1, 65, 25, 31, 8, WS_VISIBLE | WS_GROUP
     LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
     LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
     LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
-    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
-    CONTROL       "Annuler", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
-    CONTROL       "Aid&e", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
-    CONTROL       "&Afficher comme icône", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
-    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
-    CONTROL       "Changer l'&icône...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
-    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
-    CONTROL       "<< le résultat vient ici >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
-    CONTROL       "Résultat", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 228, 6, 66, 14
+    CONTROL       "Annuler", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 228, 23, 66, 14
+    CONTROL       "Aid&e", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 228, 42, 66, 14
+    CONTROL       "&Afficher comme une icÃ´ne", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP | WS_VISIBLE, 228, 63, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 84, 21, 20
+    CONTROL       "Changer l'&icÃ´ne...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 12, 103, 21, 20
+    CONTROL       "<< le rÃ©sultat vient ici >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 53, 99, 161, 35
+    CONTROL       "RÃ©sultat", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
     CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
 END
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_PS_PASTE_DATA                     "Insère le contenu du presse-papiers dans votre document comme %s."
-    IDS_PS_PASTE_OBJECT                   "Insère le contenu du presse-papiers dans votre document de sorte que vous puissiez l'activer en utilisant %s."
-    IDS_PS_PASTE_OBJECT_AS_ICON           "Insère le contenu du presse-papiers dans votre document de sorte que vous puissiez l'activer en utilisant %s. Il sera affiché comme une icône."
-    IDS_PS_PASTE_LINK_DATA                "Insère le contenu du presse-papiers dans votre document comme %s. Les données sont liées au fichier source de sorte que les modifications de celles-ci seront répercutées dans votre document."
-    IDS_PS_PASTE_LINK_OBJECT              "Insère le contenu du presse-papiers dans votre document. L'image est liée au fichier source de sorte que les modifications de celle-ci seront répercutées dans votre document."
-    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Insère un raccourci qui pointe vers l'emplacement du contenu du presse-papiers. Le raccourci est lié au fichier source de sorte que les modifications de celui-ci seront répercutées dans votre document."
-    IDS_PS_NON_OLE                        "Insère le contenu du presse-papiers dans votre document."
+    IDS_PS_PASTE_DATA                     "InsÃ¨re le contenu du presse-papiers dans votre document comme %s."
+    IDS_PS_PASTE_OBJECT                   "InsÃ¨re le contenu du presse-papiers dans votre document de sorte que vous puissiez l'activer en utilisant %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "InsÃ¨re le contenu du presse-papiers dans votre document de sorte que vous puissiez l'activer en utilisant %s. Il sera affichÃ© comme une icÃ´ne."
+    IDS_PS_PASTE_LINK_DATA                "InsÃ¨re le contenu du presse-papiers dans votre document comme %s. Les donnÃ©es sont liÃ©es au fichier source de sorte que les modifications de celles-ci seront rÃ©percutÃ©es dans votre document."
+    IDS_PS_PASTE_LINK_OBJECT              "InsÃ¨re une image du contenu du presse-papiers dans votre document. L'image est liÃ©e au fichier source de sorte que les modifications de celui-ci seront rÃ©percutÃ©es dans votre document."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "InsÃ¨re un raccourci qui pointe vers l'emplacement du contenu du presse-papiers. Le raccourci est liÃ© au fichier source de sorte que les modifications de celui-ci seront rÃ©percutÃ©es dans votre document."
+    IDS_PS_NON_OLE                        "InsÃ¨re le contenu du presse-papiers dans votre document."
     IDS_PS_UNKNOWN_TYPE                   "Type inconnu"
     IDS_PS_UNKNOWN_SRC                    "Source inconnue"
-    IDS_PS_UNKNOWN_APP                    "le programme avec lequel il a été créé"
+    IDS_PS_UNKNOWN_APP                    "le programme avec lequel il a Ã©tÃ© crÃ©Ã©"
 }
+#pragma code_page(default)
