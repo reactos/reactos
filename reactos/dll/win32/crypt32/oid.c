@@ -82,7 +82,8 @@ static const WCHAR MY[] = {'M','Y',0};
 static const WCHAR CA[] = {'C','A',0};
 static const WCHAR ADDRESSBOOK[] = {'A','D','D','R','E','S','S','B','O','O','K',0};
 static const WCHAR TRUSTEDPUBLISHER[] = {'T','r','u','s','t','e','d','P','u','b','l','i','s','h','e','r',0};
-static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER};
+static const WCHAR DISALLOWED[] = {'D','i','s','a','l','l','o','w','e','d',0};
+static const LPCWSTR LocalizedKeys[] = {ROOT,MY,CA,ADDRESSBOOK,TRUSTEDPUBLISHER,DISALLOWED};
 static WCHAR LocalizedNames[sizeof(LocalizedKeys)/sizeof(LocalizedKeys[0])][256];
 
 static void free_function_sets(void)
