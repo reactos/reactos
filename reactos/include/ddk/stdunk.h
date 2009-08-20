@@ -2,8 +2,7 @@
     ReactOS Kernel-Mode COM
     IUnknown implementations
 
-    LICENSE
-        Please see COPYING in the top-level directory for license information.
+    This file is in the public domain.
 
     AUTHORS
         Andrew Greenwood

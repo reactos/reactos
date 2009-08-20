@@ -2,6 +2,8 @@
     ReactOS Kernel Streaming
     Port Class
 
+    This file is in the public domain.
+
     Andrew Greenwood
 
     NOTES:

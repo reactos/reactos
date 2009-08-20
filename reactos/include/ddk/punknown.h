@@ -2,7 +2,7 @@
     ReactOS Kernel-Mode COM
     by Andrew Greenwood
 
-    Please see COPYING in the top-level directory for license information.
+    This file is in the public domain.
 */
 
 #ifndef _UNKNOWN_H_
