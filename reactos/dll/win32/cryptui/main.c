@@ -5171,6 +5171,7 @@ static LRESULT CALLBACK import_store_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             selectInfo.parent = hwnd;
             selectInfo.dwFlags = CRYPTUI_ENABLE_SHOW_PHYSICAL_STORE;
             selectInfo.pwszTitle = NULL;
+            selectInfo.pwszText = NULL;
             selectInfo.pEnumData = &enumData;
             selectInfo.pfnSelectedStoreCallback = NULL;
             if ((store = CryptUIDlgSelectStoreW(&selectInfo)))
