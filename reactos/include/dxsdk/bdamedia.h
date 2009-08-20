@@ -1,12 +1,6 @@
 #ifndef BDAMEDIA_H__
 #define BDAMEDIA_H__
 
-typedef enum
-{
-    KSPROPERTY_BDA_PIN_ID = 0,
-    KSPROPERTY_BDA_PIN_TYPE
-} KSPROPERTY_BDA_PIN_CONTROL;
-
 typedef struct _KSP_BDA_NODE_PIN {
     KSPROPERTY Property;
     ULONG ulNodeType;
@@ -173,6 +167,38 @@ typedef enum {
         sizeof(KSM_BDA_PIN_PAIR),\
         0,\
         SupportHandler)
+
+/* ------------------------------------------------------------
+  BDA Pin Control Property {0DED49D5-A8B7-4d5d-97A1-12B0C195874D}
+*/
+
+#define STATIC_KSPROPSETID_BdaPinControl \
+    0xded49d5, 0xa8b7, 0x4d5d, 0x97, 0xa1, 0x12, 0xb0, 0xc1, 0x95, 0x87, 0x4d
+DEFINE_GUIDSTRUCT("0DED49D5-A8B7-4d5d-97A1-12B0C195874D", KSPROPSETID_BdaPinControl);
+#define KSPROPSETID_BdaPinControl DEFINE_GUIDNAMED(KSPROPSETID_BdaPinControl)
+
+typedef enum {
+    KSPROPERTY_BDA_PIN_ID = 0,
+    KSPROPERTY_BDA_PIN_TYPE
+} KSPROPERTY_BDA_PIN_CONTROL;
+
+#define DEFINE_KSPROPERTY_ITEM_BDA_PIN_ID(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_BDA_PIN_ID,\
+        (GetHandler),\
+        sizeof( KSPROPERTY),\
+        sizeof( ULONG),\
+        FALSE,\
+        NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_BDA_PIN_TYPE(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_BDA_PIN_TYPE,\
+        (GetHandler),\
+        sizeof( KSPROPERTY),\
+        sizeof( ULONG),\
+        FALSE,\
+        NULL, 0, NULL, NULL, 0)
 
 
 #endif
