@@ -2,6 +2,7 @@
  * Unit test suite for MLANG APIs.
  *
  * Copyright 2004 Dmitry Timoshkov
+ * Copyright 2009 Detlef Riekenberg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +22,7 @@
 #define COBJMACROS
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -48,6 +50,184 @@ static HRESULT (WINAPI *pConvertINetMultiByteToUnicode)(LPDWORD, DWORD, LPCSTR,
                                                         LPINT, LPWSTR, LPINT);
 static HRESULT (WINAPI *pConvertINetUnicodeToMultiByte)(LPDWORD, DWORD, LPCWSTR,
                                                         LPINT, LPSTR, LPINT);
+static HRESULT (WINAPI *pRfc1766ToLcidA)(LCID *, LPCSTR);
+static HRESULT (WINAPI *pLcidToRfc1766A)(LCID, LPSTR, INT);
+
+typedef struct lcid_tag_table {
+    LPCSTR rfc1766;
+    LCID lcid;
+    HRESULT hr;
+    LCID broken_lcid;
+    LPCSTR broken_rfc;
+} lcid_table_entry;
+
+/* en, ar and zh use SUBLANG_NEUTRAL for the rfc1766 name without the country
+   all others suppress the country with SUBLANG_DEFAULT.
+   For 3 letter language codes, the rfc1766 is too small for the country */
+
+static const lcid_table_entry  lcid_table[] = {
+    {"e",     -1,       E_FAIL},
+    {"",      -1,       E_FAIL},
+    {"-",     -1,       E_FAIL},
+    {"e-",    -1,       E_FAIL},
+
+    {"ar",    1,        S_OK},
+    {"zh",    4,        S_OK},
+
+    {"de",    0x0407,   S_OK},
+    {"de-ch", 0x0807,   S_OK},
+    {"de-at", 0x0c07,   S_OK},
+    {"de-lu", 0x1007,   S_OK},
+    {"de-li", 0x1407,   S_OK},
+
+    {"en",    9,        S_OK},
+    {"en-gb", 0x809,    S_OK},
+    {"en-GB", 0x809,    S_OK},
+    {"EN-GB", 0x809,    S_OK},
+    {"en-US", 0x409,    S_OK},
+    {"en-us", 0x409,    S_OK},
+
+    {"fr",    0x040c,   S_OK},
+    {"fr-be", 0x080c,   S_OK},
+    {"fr-ca", 0x0c0c,   S_OK},
+    {"fr-ch", 0x100c,   S_OK},
+    {"fr-lu", 0x140c,   S_OK},
+    {"fr-mc", 0x180c,   S_OK, 0x040c, "fr"},
+
+    {"it",    0x0410,   S_OK},
+    {"it-ch", 0x0810,   S_OK},
+
+    {"nl",    0x0413,   S_OK},
+    {"nl-be", 0x0813,   S_OK},
+    {"pl",    0x0415,   S_OK},
+    {"ru",    0x0419,   S_OK},
+
+    {"kok",   0x0457,   S_OK, 0x0412, "x-kok"}
+
+};
+
+#define TODO_NAME 1
+
+typedef struct info_table_tag {
+    LCID lcid;
+    LANGID lang;
+    DWORD todo;
+    LPCSTR rfc1766;
+    LPCWSTR localename;
+    LPCWSTR broken_name;
+} info_table_entry;
+
+static const WCHAR de_en[] =   {'E','n','g','l','i','s','c','h',0};
+static const WCHAR de_enca[] = {'E','n','g','l','i','s','c','h',' ',
+                                '(','K','a','n','a','d','a',')',0};
+static const WCHAR de_engb[] = {'E','n','g','l','i','s','c','h',' ',
+                                '(','G','r','o',0xDF,'b','r','i','t','a','n','n','i','e','n',')',0};
+static const WCHAR de_engb2[] ={'E','n','g','l','i','s','c','h',' ',
+                                '(','V','e','r','e','i','n','i','g','t','e','s',' ',
+                                'K',0xF6,'n','i','g','r','e','i','c',0};
+static const WCHAR de_enus[] = {'E','n','g','l','i','s','c','h',' ',
+                                '(','U','S','A',')',0};
+static const WCHAR de_de[] =   {'D','e','u','t','s','c','h',' ',
+                                '(','D','e','u','t','s','c','h','l','a','n','d',')',0};
+static const WCHAR de_deat[] = {'D','e','u','t','s','c','h',' ',
+                                '(',0xD6,'s','t','e','r','r','e','i','c','h',')',0};
+static const WCHAR de_dech[] = {'D','e','u','t','s','c','h',' ',
+                                '(','S','c','h','w','e','i','z',')',0};
+
+static const WCHAR en_en[] =   {'E','n','g','l','i','s','h',0};
+static const WCHAR en_enca[] = {'E','n','g','l','i','s','h',' ',
+                                '(','C','a','n','a','d','a',')',0};
+static const WCHAR en_engb[] = {'E','n','g','l','i','s','h',' ',
+                                '(','U','n','i','t','e','d',' ','K','i','n','g','d','o','m',')',0};
+static const WCHAR en_enus[] = {'E','n','g','l','i','s','h',' ',
+                                '(','U','n','i','t','e','d',' ','S','t','a','t','e','s',')',0};
+static const WCHAR en_de[] =   {'G','e','r','m','a','n',' ',
+                                '(','G','e','r','m','a','n','y',')',0};
+static const WCHAR en_deat[] = {'G','e','r','m','a','n',' ',
+                                '(','A','u','s','t','r','i','a',')',0};
+static const WCHAR en_dech[] = {'G','e','r','m','a','n',' ',
+                                '(','S','w','i','t','z','e','r','l','a','n','d',')',0};
+
+static const WCHAR fr_en[] =   {'A','n','g','l','a','i','s',0};
+static const WCHAR fr_enca[] = {'A','n','g','l','a','i','s',' ',
+                                '(','C','a','n','a','d','a',')',0};
+static const WCHAR fr_engb[] = {'A','n','g','l','a','i','s',' ',
+                                '(','R','o','y','a','u','m','e','-','U','n','i',')',0};
+static const WCHAR fr_enus[] = {'A','n','g','l','a','i','s',' ',
+                                '(',0xC9, 't','a','t','s','-','U','n','i','s',')',0};
+static const WCHAR fr_enus2[] ={'A','n','g','l','a','i','s',' ',
+                                '(','U','.','S','.',')',0};
+static const WCHAR fr_de[] =   {'A','l','l','e','m','a','n','d',' ',
+                                '(','A','l','l','e','m','a','g','n','e',')',0};
+static const WCHAR fr_de2[] =  {'A','l','l','e','m','a','n','d',' ',
+                                '(','S','t','a','n','d','a','r','d',')',0};
+static const WCHAR fr_deat[] = {'A','l','l','e','m','a','n','d',' ',
+                                '(','A','u','t','r','i','c','h','e',')',0};
+static const WCHAR fr_dech[] = {'A','l','l','e','m','a','n','d',' ',
+                                '(','S','u','i','s','s','e',')',0};
+
+static const info_table_entry  info_table[] = {
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),        MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "en", en_en},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),        MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "en-us", en_enus},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_UK),     MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "en-gb", en_engb},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),     MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "en-us", en_enus},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_CAN),    MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "en-ca", en_enca},
+
+    {MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),         MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "de", en_de},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN),          MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "de", en_de},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN_SWISS),    MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "de-ch", en_dech},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN_AUSTRIAN), MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),
+         0, "de-at", en_deat},
+
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),        MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "en", de_en},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),        MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "en-us", de_enus},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_UK),     MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "en-gb", de_engb, de_engb2},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),     MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "en-us", de_enus},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_CAN),    MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "en-ca", de_enca},
+
+    {MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),         MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "de", de_de},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN),          MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "de",de_de},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN_SWISS),    MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "de-ch", de_dech},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN_AUSTRIAN), MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),
+         TODO_NAME, "de-at", de_deat},
+
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_NEUTRAL),        MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "en", fr_en},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_DEFAULT),        MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "en-us", fr_enus, fr_enus2},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_UK),     MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "en-gb", fr_engb},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),     MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "en-us", fr_enus, fr_enus2},
+    {MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_CAN),    MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "en-ca", fr_enca},
+
+    {MAKELANGID(LANG_GERMAN, SUBLANG_DEFAULT),         MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "de", fr_de, fr_de2},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN),          MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "de", fr_de, fr_de2},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN_SWISS),    MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "de-ch", fr_dech},
+    {MAKELANGID(LANG_GERMAN, SUBLANG_GERMAN_AUSTRIAN), MAKELANGID(LANG_FRENCH, SUBLANG_DEFAULT),
+         TODO_NAME, "de-at", fr_deat}
+
+};
 
 static BOOL init_function_ptrs(void)
 {
@@ -62,6 +242,8 @@ static BOOL init_function_ptrs(void)
 
     pConvertINetMultiByteToUnicode = (void *)GetProcAddress(hMlang, "ConvertINetMultiByteToUnicode");
     pConvertINetUnicodeToMultiByte = (void *)GetProcAddress(hMlang, "ConvertINetUnicodeToMultiByte");
+    pRfc1766ToLcidA = (void *)GetProcAddress(hMlang, "Rfc1766ToLcidA");
+    pLcidToRfc1766A = (void *)GetProcAddress(hMlang, "LcidToRfc1766A");
 
     pGetCPInfoExA = (void *)GetProcAddress(GetModuleHandleA("kernel32.dll"), "GetCPInfoExA");
 
@@ -77,6 +259,66 @@ static BOOL init_function_ptrs(void)
         WideCharToMultiByte(CP_ACP, 0, (szString2), -1, string2, 256, NULL, NULL); \
         ok(0, (format), string1, string2); \
     }
+
+/* lstrcmpW is not supported on Win9x! */
+static int mylstrcmpW(const WCHAR* str1, const WCHAR* str2)
+{
+    if (!str2) return 1;
+    while (*str1 && *str1==*str2) {
+        str1++;
+        str2++;
+    }
+    return *str1-*str2;
+}
+
+/* lstrcpyW is not supported on Win95 */
+static void mylstrcpyW(WCHAR* str1, const WCHAR* str2)
+{
+    while (str2 && *str2) {
+        *str1 = *str2;
+        str1++;
+        str2++;
+    }
+    *str1 = '\0';
+}
+
+#define DEBUGSTR_W_MAXLEN 64
+
+static CHAR * debugstr_w(const WCHAR * strW)
+{
+    static CHAR buffers[DEBUGSTR_W_MAXLEN * 2];
+    static DWORD pos = 0;
+    CHAR * strA;
+    DWORD len = DEBUGSTR_W_MAXLEN - 4;
+
+    strA = &buffers[pos];
+
+    *strA++ = 'L';
+    *strA++ = '"';
+
+    while (*strW && (len > 4)) {
+        if ((*strW < ' ') || (*strW > 126)) {
+            sprintf(strA, "\\%04x", *strW);
+            strA +=5;
+            len -=5;
+        }
+        else
+        {
+            *strA++ = *strW;
+            len--;
+        }
+        strW++;
+    }
+    *strA++ = '"';
+    *strA = '\0';
+
+    strA = &buffers[pos];
+    pos += DEBUGSTR_W_MAXLEN;
+    if (pos >= sizeof(buffers)) pos = 0;
+
+    return strA;
+
+}
 
 static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 {
@@ -382,7 +624,8 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 	if (TranslateCharsetInfo((DWORD *)(INT_PTR)cpinfo[i].uiFamilyCodePage, &csi, TCI_SRCCODEPAGE))
 	    ok(cpinfo[i].bGDICharset == csi.ciCharset, "%d != %d\n", cpinfo[i].bGDICharset, csi.ciCharset);
 	else
-	    trace("TranslateCharsetInfo failed for cp %u\n", cpinfo[i].uiFamilyCodePage);
+            if (winetest_debug > 1)
+                trace("TranslateCharsetInfo failed for cp %u\n", cpinfo[i].uiFamilyCodePage);
 
 #ifdef DUMP_CP_INFO
         trace("%u: codepage %u family %u\n", i, cpinfo[i].uiCodePage, cpinfo[i].uiFamilyCodePage);
@@ -410,7 +653,8 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
             }
 	}
 	else
-	    trace("IsValidCodePage failed for cp %u\n", cpinfo[i].uiCodePage);
+            if (winetest_debug > 1)
+                trace("IsValidCodePage failed for cp %u\n", cpinfo[i].uiCodePage);
 
     if (memcmp(cpinfo[i].wszWebCharset,feffW,sizeof(WCHAR)*11)==0)
         skip("Legacy windows bug returning invalid charset of unicodeFEFF\n");
@@ -832,36 +1076,37 @@ static void test_rfc1766(IMultiLanguage2 *iML2)
 
 static void test_GetLcidFromRfc1766(IMultiLanguage2 *iML2)
 {
+    WCHAR rfc1766W[MAX_RFC1766_NAME + 1];
     LCID lcid;
     HRESULT ret;
+    DWORD i;
 
-    static WCHAR e[] = { 'e',0 };
     static WCHAR en[] = { 'e','n',0 };
-    static WCHAR empty[] = { 0 };
-    static WCHAR dash[] = { '-',0 };
-    static WCHAR e_dash[] = { 'e','-',0 };
-    static WCHAR en_gb[] = { 'e','n','-','g','b',0 };
-    static WCHAR en_us[] = { 'e','n','-','u','s',0 };
     static WCHAR en_them[] = { 'e','n','-','t','h','e','m',0 };
     static WCHAR english[] = { 'e','n','g','l','i','s','h',0 };
+
+
+    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+        lcid = -1;
+        MultiByteToWideChar(CP_ACP, 0, lcid_table[i].rfc1766, -1, rfc1766W, MAX_RFC1766_NAME);
+        ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, rfc1766W);
+
+        /* IE <6.0 guess 0x412 (ko) from "kok" */
+        ok((ret == lcid_table[i].hr) ||
+            broken(lcid_table[i].broken_lcid && (ret == S_FALSE)),
+            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, ret, lcid_table[i].hr);
+
+        ok((lcid == lcid_table[i].lcid) ||
+            broken(lcid == lcid_table[i].broken_lcid),   /* IE <6.0 */
+            "#%02d: got LCID 0x%x (expected 0x%x)\n", i, lcid, lcid_table[i].lcid);
+    }
+
 
     ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, NULL, en);
     ok(ret == E_INVALIDARG, "GetLcidFromRfc1766 returned: %08x\n", ret);
 
     ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, NULL);
     ok(ret == E_INVALIDARG, "GetLcidFromRfc1766 returned: %08x\n", ret);
-
-    ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, e);
-    ok(ret == E_FAIL, "GetLcidFromRfc1766 returned: %08x\n", ret);
-
-    ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, empty);
-    ok(ret == E_FAIL, "GetLcidFromRfc1766 returned: %08x\n", ret);
-
-    ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, dash);
-    ok(ret == E_FAIL, "GetLcidFromRfc1766 returned: %08x\n", ret);
-
-    ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, e_dash);
-    ok(ret == E_FAIL, "GetLcidFromRfc1766 returned: %08x\n", ret);
 
     ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, en_them);
     ok((ret == E_FAIL || ret == S_FALSE), "GetLcidFromRfc1766 returned: %08x\n", ret);
@@ -887,44 +1132,194 @@ static void test_GetLcidFromRfc1766(IMultiLanguage2 *iML2)
         ok_w2("Expected \"%s\",  got \"%s\"n", en, rfcstr);
     }
 
-    lcid = 0;
+}
 
-    ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, en);
-    ok(ret == S_OK, "GetLcidFromRfc1766 returned: %08x\n", ret);
-    ok(lcid == 9, "got wrong lcid: %04x\n", lcid);
+static void test_Rfc1766ToLcid(void)
+{
+    LCID lcid;
+    HRESULT ret;
+    DWORD i;
 
-    ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, en_gb);
-    ok(ret == S_OK, "GetLcidFromRfc1766 returned: %08x\n", ret);
-    ok(lcid == 0x809, "got wrong lcid: %04x\n", lcid);
+    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+        lcid = -1;
+        ret = pRfc1766ToLcidA(&lcid, lcid_table[i].rfc1766);
 
-    ret = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, en_us);
-    ok(ret == S_OK, "GetLcidFromRfc1766 returned: %08x\n", ret);
-    ok(lcid == 0x409, "got wrong lcid: %04x\n", lcid);
+        /* IE <6.0 guess 0x412 (ko) from "kok" */
+        ok( (ret == lcid_table[i].hr) ||
+            broken(lcid_table[i].broken_lcid && (ret == S_FALSE)),
+            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, ret, lcid_table[i].hr);
+
+        ok( (lcid == lcid_table[i].lcid) ||
+            broken(lcid == lcid_table[i].broken_lcid),  /* IE <6.0 */
+            "#%02d: got LCID 0x%x (expected 0x%x)\n", i, lcid, lcid_table[i].lcid);
+    }
+
+    ret = pRfc1766ToLcidA(&lcid, NULL);
+    ok(ret == E_INVALIDARG, "got 0x%08x (expected E_INVALIDARG)\n", ret);
+
+    ret = pRfc1766ToLcidA(NULL, "en");
+    ok(ret == E_INVALIDARG, "got 0x%08x (expected E_INVALIDARG)\n", ret);
+}
+
+static void test_GetNumberOfCodePageInfo(IMultiLanguage2 *iML2)
+{
+    HRESULT hr;
+    UINT value;
+
+    value = 0xdeadbeef;
+    hr = IMultiLanguage2_GetNumberOfCodePageInfo(iML2, &value);
+    ok( (hr == S_OK) && value,
+        "got 0x%x with %d (expected S_OK with '!= 0')\n", hr, value);
+
+    hr = IMultiLanguage2_GetNumberOfCodePageInfo(iML2, NULL);
+    ok(hr == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hr);
+
 }
 
 static void test_GetRfc1766FromLcid(IMultiLanguage2 *iML2)
 {
+    CHAR expected[MAX_RFC1766_NAME];
+    CHAR buffer[MAX_RFC1766_NAME + 1];
+    DWORD i;
     HRESULT hr;
     BSTR rfcstr;
-    LCID lcid;
 
-    static WCHAR kok[] = {'k','o','k',0};
+    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+        buffer[0] = '\0';
 
-    hr = IMultiLanguage2_GetLcidFromRfc1766(iML2, &lcid, kok);
-    /*
-     * S_FALSE happens when 'kok' instead matches to a different Rfc1766 name
-     * for example 'ko' so it is not a failure but does not give us what 
-     * we are looking for
-     */
-    if (hr != S_FALSE)
-    {
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
+        rfcstr = NULL;
+        hr = IMultiLanguage2_GetRfc1766FromLcid(iML2, lcid_table[i].lcid, &rfcstr);
+        ok(hr == lcid_table[i].hr,
+            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, hr, lcid_table[i].hr);
 
-        hr = IMultiLanguage2_GetRfc1766FromLcid(iML2, lcid, &rfcstr);
-        ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
-        ok_w2("Expected \"%s\",  got \"%s\"n", kok, rfcstr);
+        if (hr != S_OK)
+            continue;   /* no result-string created */
+
+        WideCharToMultiByte(CP_ACP, 0, rfcstr, -1, buffer, sizeof(buffer), NULL, NULL);
+        LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE, lcid_table[i].rfc1766,
+                    lstrlenA(lcid_table[i].rfc1766) + 1, expected, MAX_RFC1766_NAME);
+
+        /* IE <6.0 return "x-kok" for LCID 0x457 ("kok") */
+        ok( (!lstrcmpA(buffer, expected)) ||
+            broken(!lstrcmpA(buffer, lcid_table[i].broken_rfc)),
+            "#%02d: got '%s' (expected '%s')\n", i, buffer, expected);
+
         SysFreeString(rfcstr);
     }
+
+    hr = IMultiLanguage2_GetRfc1766FromLcid(iML2, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), NULL);
+    ok(hr == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", hr);
+}
+
+static void test_LcidToRfc1766(void)
+{
+    CHAR expected[MAX_RFC1766_NAME];
+    CHAR buffer[MAX_RFC1766_NAME * 2];
+    HRESULT hr;
+    DWORD i;
+
+    for(i = 0; i < sizeof(lcid_table) / sizeof(lcid_table[0]); i++) {
+
+        memset(buffer, '#', sizeof(buffer)-1);
+        buffer[sizeof(buffer)-1] = '\0';
+
+        hr = pLcidToRfc1766A(lcid_table[i].lcid, buffer, MAX_RFC1766_NAME);
+
+        /* IE <5.0 does not recognize 0x180c (fr-mc) and 0x457 (kok) */
+        ok( (hr == lcid_table[i].hr) ||
+            broken(lcid_table[i].broken_lcid && (hr == E_FAIL)),
+            "#%02d: HRESULT 0x%x (expected 0x%x)\n", i, hr, lcid_table[i].hr);
+
+        if (hr != S_OK)
+            continue;
+
+        LCMapStringA(LOCALE_USER_DEFAULT, LCMAP_LOWERCASE, lcid_table[i].rfc1766,
+                    lstrlenA(lcid_table[i].rfc1766) + 1, expected, MAX_RFC1766_NAME);
+
+        /* IE <6.0 return "x-kok" for LCID 0x457 ("kok") */
+        /* IE <5.0 return "fr" for LCID 0x180c ("fr-mc") */
+        ok( (!lstrcmpA(buffer, expected)) ||
+            broken(!lstrcmpA(buffer, lcid_table[i].broken_rfc)),
+            "#%02d: got '%s' (expected '%s')\n", i, buffer, expected);
+
+    }
+
+    memset(buffer, '#', sizeof(buffer)-1);
+    buffer[sizeof(buffer)-1] = '\0';
+    hr = pLcidToRfc1766A(-1, buffer, MAX_RFC1766_NAME);
+    ok(hr == E_FAIL, "got 0x%08x and '%s' (expected E_FAIL)\n", hr, buffer);
+
+    hr = pLcidToRfc1766A(LANG_ENGLISH, NULL, MAX_RFC1766_NAME);
+    ok(hr == E_INVALIDARG, "got 0x%08x (expected E_INVALIDARG)\n", hr);
+
+    memset(buffer, '#', sizeof(buffer)-1);
+    buffer[sizeof(buffer)-1] = '\0';
+    hr = pLcidToRfc1766A(LANG_ENGLISH, buffer, -1);
+    ok(hr == E_INVALIDARG, "got 0x%08x and '%s' (expected E_INVALIDARG)\n", hr, buffer);
+
+    memset(buffer, '#', sizeof(buffer)-1);
+    buffer[sizeof(buffer)-1] = '\0';
+    hr = pLcidToRfc1766A(LANG_ENGLISH, buffer, 0);
+    ok(hr == E_INVALIDARG, "got 0x%08x and '%s' (expected E_INVALIDARG)\n", hr, buffer);
+}
+
+static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
+{
+    WCHAR short_broken_name[MAX_LOCALE_NAME];
+    CHAR rfc1766A[MAX_RFC1766_NAME + 1];
+    BYTE buffer[sizeof(RFC1766INFO) + 4];
+    PRFC1766INFO prfc = (RFC1766INFO *) buffer;
+    HRESULT ret;
+    DWORD i;
+
+    for(i = 0; i < sizeof(info_table) / sizeof(info_table[0]); i++) {
+        memset(buffer, 'x', sizeof(RFC1766INFO) + 2);
+        buffer[sizeof(buffer) -1] = 0;
+        buffer[sizeof(buffer) -2] = 0;
+
+        ret = IMultiLanguage2_GetRfc1766Info(iML2, info_table[i].lcid, info_table[i].lang, prfc);
+        WideCharToMultiByte(CP_ACP, 0, prfc->wszRfc1766, -1, rfc1766A, MAX_RFC1766_NAME, NULL, NULL);
+        ok(ret == S_OK, "#%02d: got 0x%x (expected S_OK)\n", i, ret);
+        ok(prfc->lcid == info_table[i].lcid,
+            "#%02d: got 0x%04x (expected 0x%04x)\n", i, prfc->lcid, info_table[i].lcid);
+
+        ok(!lstrcmpA(rfc1766A, info_table[i].rfc1766),
+            "#%02d: got '%s' (expected '%s')\n", i, rfc1766A, info_table[i].rfc1766);
+
+        /* Some IE versions truncate an oversized name one character to short */
+        mylstrcpyW(short_broken_name, info_table[i].broken_name);
+        short_broken_name[MAX_LOCALE_NAME - 2] = '\0';
+
+        if (info_table[i].todo & TODO_NAME) {
+            todo_wine
+            ok( (!mylstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
+                broken(!mylstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
+                broken(!mylstrcmpW(prfc->wszLocaleName, short_broken_name)),
+                "#%02d: got %s (expected %s)\n", i,
+                debugstr_w(prfc->wszLocaleName), debugstr_w(info_table[i].localename));
+        }
+        else
+            ok( (!mylstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
+                broken(!mylstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
+                broken(!mylstrcmpW(prfc->wszLocaleName, short_broken_name)),
+                "#%02d: got %s (expected %s)\n", i,
+                debugstr_w(prfc->wszLocaleName), debugstr_w(info_table[i].localename));
+
+    }
+
+    /* SUBLANG_NEUTRAL only allowed for english, arabic, chinese */
+    ret = IMultiLanguage2_GetRfc1766Info(iML2, MAKELANGID(LANG_GERMAN, SUBLANG_NEUTRAL), LANG_ENGLISH, prfc);
+    ok(ret == E_FAIL, "got 0x%x (expected E_FAIL)\n", ret);
+
+    ret = IMultiLanguage2_GetRfc1766Info(iML2, MAKELANGID(LANG_ITALIAN, SUBLANG_NEUTRAL), LANG_ENGLISH, prfc);
+    ok(ret == E_FAIL, "got 0x%x (expected E_FAIL)\n", ret);
+
+    /* NULL not allowed */
+    ret = IMultiLanguage2_GetRfc1766Info(iML2, 0, LANG_ENGLISH, prfc);
+    ok(ret == E_FAIL, "got 0x%x (expected E_FAIL)\n", ret);
+
+    ret = IMultiLanguage2_GetRfc1766Info(iML2, LANG_ENGLISH, LANG_ENGLISH, NULL);
+    ok(ret == E_INVALIDARG, "got 0x%x (expected E_INVALIDARG)\n", ret);
 }
 
 static void test_IMultiLanguage2_ConvertStringFromUnicode(IMultiLanguage2 *iML2)
@@ -1446,23 +1841,23 @@ static void test_GetScriptFontInfo(IMLangFontLink2 *font_link)
     SCRIPTFONTINFO sfi[1];
 
     nfonts = 0;
-    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidLatin, 0, &nfonts, NULL);
+    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, 0, &nfonts, NULL);
     ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
     ok(nfonts, "unexpected result\n");
 
     nfonts = 0;
-    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidLatin, SCRIPTCONTF_FIXED_FONT, &nfonts, NULL);
+    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_FIXED_FONT, &nfonts, NULL);
     ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
     ok(nfonts, "unexpected result\n");
 
     nfonts = 0;
-    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidLatin, SCRIPTCONTF_PROPORTIONAL_FONT, &nfonts, NULL);
+    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_PROPORTIONAL_FONT, &nfonts, NULL);
     ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
     ok(nfonts, "unexpected result\n");
 
     nfonts = 1;
     memset(sfi, 0, sizeof(sfi));
-    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidLatin, SCRIPTCONTF_FIXED_FONT, &nfonts, sfi);
+    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_FIXED_FONT, &nfonts, sfi);
     ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
     ok(nfonts == 1, "got %u, expected 1\n", nfonts);
     ok(sfi[0].scripts != 0, "unexpected result\n");
@@ -1470,15 +1865,132 @@ static void test_GetScriptFontInfo(IMLangFontLink2 *font_link)
 
     nfonts = 1;
     memset(sfi, 0, sizeof(sfi));
-    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidLatin, SCRIPTCONTF_PROPORTIONAL_FONT, &nfonts, sfi);
+    hr = IMLangFontLink2_GetScriptFontInfo(font_link, sidAsciiLatin, SCRIPTCONTF_PROPORTIONAL_FONT, &nfonts, sfi);
     ok(hr == S_OK, "GetScriptFontInfo failed %u\n", GetLastError());
     ok(nfonts == 1, "got %u, expected 1\n", nfonts);
     ok(sfi[0].scripts != 0, "unexpected result\n");
     ok(sfi[0].wszFont[0], "unexpected result\n");
 }
 
+static void test_CodePageToScriptID(IMLangFontLink2 *font_link)
+{
+    HRESULT hr;
+    UINT i;
+    SCRIPT_ID sid;
+    static const struct
+    {
+        UINT cp;
+        SCRIPT_ID sid;
+        HRESULT hr;
+    }
+    cp_sid[] =
+    {
+        {874,  sidThai},
+        {932,  sidKana},
+        {936,  sidHan},
+        {949,  sidHangul},
+        {950,  sidBopomofo},
+        {1250, sidAsciiLatin},
+        {1251, sidCyrillic},
+        {1252, sidAsciiLatin},
+        {1253, sidGreek},
+        {1254, sidAsciiLatin},
+        {1255, sidHebrew},
+        {1256, sidArabic},
+        {1257, sidAsciiLatin},
+        {1258, sidAsciiLatin},
+        {CP_UNICODE, 0, E_FAIL}
+    };
+
+    for (i = 0; i < sizeof(cp_sid)/sizeof(cp_sid[0]); i++)
+    {
+        hr = IMLangFontLink2_CodePageToScriptID(font_link, cp_sid[i].cp, &sid);
+        ok(hr == cp_sid[i].hr, "%u CodePageToScriptID failed 0x%08x %u\n", i, hr, GetLastError());
+        if (SUCCEEDED(hr))
+        {
+            ok(sid == cp_sid[i].sid,
+               "%u got sid %u for codepage %u, expected %u\n", i, sid, cp_sid[i].cp, cp_sid[i].sid);
+        }
+    }
+}
+
+static void test_GetFontUnicodeRanges(IMLangFontLink2 *font_link)
+{
+    HRESULT hr;
+    UINT count;
+    HFONT hfont, old_hfont;
+    LOGFONTA lf;
+    HDC hdc;
+    UNICODERANGE *ur;
+
+    hdc = CreateCompatibleDC(0);
+    memset(&lf, 0, sizeof(lf));
+    lstrcpyA(lf.lfFaceName, "Arial");
+    hfont = CreateFontIndirectA(&lf);
+    old_hfont = SelectObject(hdc, hfont);
+
+    count = 0;
+    hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, NULL, &count, NULL);
+    ok(hr == E_FAIL, "expected E_FAIL, got 0x%08x\n", hr);
+
+    hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, NULL, NULL);
+    ok(hr == E_INVALIDARG, "expected E_FAIL, got 0x%08x\n", hr);
+
+    count = 0;
+    hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, &count, NULL);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+    ok(count, "expected count > 0\n");
+
+    ur = HeapAlloc(GetProcessHeap(), 0, sizeof(*ur) * count);
+
+    hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, &count, ur);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+
+    count--;
+    hr = IMLangFontLink2_GetFontUnicodeRanges(font_link, hdc, &count, ur);
+    ok(hr == S_OK, "expected S_OK, got 0x%08x\n", hr);
+
+    HeapFree(GetProcessHeap(), 0, ur);
+
+    SelectObject(hdc, old_hfont);
+    DeleteObject(hfont);
+    DeleteDC(hdc);
+}
+
+static void test_IsCodePageInstallable(IMultiLanguage2 *ml2)
+{
+    UINT i;
+    HRESULT hr;
+
+    SetLastError(0xdeadbeef);
+    lstrcmpW(NULL, NULL);
+    if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        /* This corruption leads (sometimes) to test failures in oleaut32 but also
+         * to the inability to use the Regional Settings.
+         * This only seems to be an issue with Win98 and IE6 (mlang version 6.0.2800.1106).
+         *
+         * A reboot restores the codepages again.
+         */
+        win_skip("IsCodePageInstallable could mess up the codepages on Win98\n");
+        return;
+    }
+
+    for (i = 0; i < 0xffff; i++)
+    {
+        hr = IMultiLanguage2_IsCodePageInstallable(ml2, i);
+
+        /* it would be better to use IMultiLanguage2_ValidateCodePageEx here but that brings
+         * up an installation dialog on some platforms, even when specifying CPIOD_PEEK.
+         */
+        if (IsValidCodePage(i))
+            ok(hr == S_OK, "code page %u is valid but not installable 0x%08x\n", i, hr);
+    }
+}
+
 START_TEST(mlang)
 {
+    IMultiLanguage  *iML = NULL;
     IMultiLanguage2 *iML2 = NULL;
     IMLangFontLink  *iMLFL = NULL;
     IMLangFontLink2 *iMLFL2 = NULL;
@@ -1488,6 +2000,24 @@ START_TEST(mlang)
         return;
 
     CoInitialize(NULL);
+    test_Rfc1766ToLcid();
+    test_LcidToRfc1766();
+
+    test_ConvertINetUnicodeToMultiByte();
+    test_JapaneseConversion();
+
+
+    trace("IMultiLanguage\n");
+    ret = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
+                           &IID_IMultiLanguage, (void **)&iML);
+    if (ret != S_OK || !iML) return;
+
+    test_GetNumberOfCodePageInfo((IMultiLanguage2 *)iML);
+    IMultiLanguage_Release(iML);
+
+
+    /* IMultiLanguage2 (IE5.0 and above) */
+    trace("IMultiLanguage2\n");
     ret = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
                            &IID_IMultiLanguage2, (void **)&iML2);
     if (ret != S_OK || !iML2) return;
@@ -1495,6 +2025,8 @@ START_TEST(mlang)
     test_rfc1766(iML2);
     test_GetLcidFromRfc1766(iML2);
     test_GetRfc1766FromLcid(iML2);
+    test_GetRfc1766Info(iML2);
+    test_GetNumberOfCodePageInfo(iML2);
 
     test_EnumCodePages(iML2, 0);
     test_EnumCodePages(iML2, MIMECONTF_MIME_LATEST);
@@ -1516,12 +2048,12 @@ START_TEST(mlang)
     test_multibyte_to_unicode_translations(iML2);
     test_IMultiLanguage2_ConvertStringFromUnicode(iML2);
 
+    test_IsCodePageInstallable(iML2);
+
     IMultiLanguage2_Release(iML2);
 
-    test_ConvertINetUnicodeToMultiByte();
 
-    test_JapaneseConversion();
-
+    /* IMLangFontLink */
     ret = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
                            &IID_IMLangFontLink, (void **)&iMLFL);
     if (ret != S_OK || !iMLFL) return;
@@ -1529,11 +2061,14 @@ START_TEST(mlang)
     IMLangFontLink_Test(iMLFL);
     IMLangFontLink_Release(iMLFL);
 
+    /* IMLangFontLink2 */
     ret = CoCreateInstance(&CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER,
                            &IID_IMLangFontLink2, (void **)&iMLFL2);
     if (ret != S_OK || !iMLFL2) return;
 
     test_GetScriptFontInfo(iMLFL2);
+    test_GetFontUnicodeRanges(iMLFL2);
+    test_CodePageToScriptID(iMLFL2);
     IMLangFontLink2_Release(iMLFL2);
 
     CoUninitialize();
