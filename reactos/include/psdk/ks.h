@@ -3713,6 +3713,17 @@ KsPinGetConnectedPinFileObject(
 */
 
 #if defined(_NTDDK_)
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsMergeAutomationTables(
+    OUT PKSAUTOMATION_TABLE* AutomationTableAB,
+    IN PKSAUTOMATION_TABLE AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE AutomationTableB OPTIONAL,
+    IN KSOBJECT_BAG Bag OPTIONAL
+    );
+
 KSDDKAPI
 NTSTATUS
 NTAPI
