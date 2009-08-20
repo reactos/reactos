@@ -47,7 +47,7 @@ extern "C" {
 #endif
 
 #if defined(NDIS_WRAPPER)
-  #define NDISAPI DECLSPEC_EXPORT
+  #define NDISAPI
 #else
   #define NDISAPI DECLSPEC_IMPORT
 #endif

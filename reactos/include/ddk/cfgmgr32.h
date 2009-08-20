@@ -30,7 +30,7 @@ extern "C" {
 #endif
 
 #if defined(_CFGMGR32_)
-#define CMAPI DECLSPEC_EXPORT
+#define CMAPI
 #else
 #define CMAPI DECLSPEC_IMPORT
 #endif

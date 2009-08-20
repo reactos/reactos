@@ -34,7 +34,7 @@ extern "C" {
 #pragma pack(push,4)
 
 #if defined(_BATTERYCLASS_)
-  #define USBCAMAPI DECLSPEC_EXPORT
+  #define USBCAMAPI
 #else
   #define USBCAMAPI DECLSPEC_IMPORT
 #endif

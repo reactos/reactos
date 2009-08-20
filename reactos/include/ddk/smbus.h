@@ -30,7 +30,7 @@ extern "C" {
 #if !defined(SMBCLASS)
   #define SMBCLASSAPI DECLSPEC_IMPORT
 #else
-  #define SMBCLASSAPI DECLSPEC_EXPORT
+  #define SMBCLASSAPI
 #endif
 
 #define SMB_BUS_REQUEST \
