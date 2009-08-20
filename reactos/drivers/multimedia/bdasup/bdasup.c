@@ -1,11 +1,93 @@
 
 #include "precomp.h"
 
+const GUID KSPROPSETID_BdaPinControl = {0xded49d5, 0xa8b7, 0x4d5d, {0x97, 0xa1, 0x12, 0xb0, 0xc1, 0x95, 0x87, 0x4d}};
+const GUID KSMETHODSETID_BdaDeviceConfiguration = {0x71985f45, 0x1ca1, 0x11d3, {0x9c, 0xc8, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
+const GUID KSPROPSETID_BdaTopology = {0xa14ee835, 0x0a23, 0x11d3, {0x9c, 0xc7, 0x0, 0xc0, 0x4f, 0x79, 0x71, 0xe0}};
+
 BDA_GLOBAL g_Settings =
 {
     0,
     0,
     {NULL, NULL}
+};
+
+KSPROPERTY_ITEM FilterPropertyItem[] =
+{
+    DEFINE_KSPROPERTY_ITEM_BDA_NODE_TYPES(BdaPropertyNodeTypes, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_PIN_TYPES( BdaPropertyPinTypes, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_TEMPLATE_CONNECTIONS(BdaPropertyTemplateConnections, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_NODE_METHODS(BdaPropertyNodeMethods, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_NODE_PROPERTIES(BdaPropertyNodeProperties, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_NODE_EVENTS(BdaPropertyNodeEvents, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_CONTROLLING_PIN_ID(BdaPropertyGetControllingPinId, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_NODE_DESCRIPTORS(BdaPropertyNodeDescriptors, NULL)
+};
+
+
+KSPROPERTY_SET FilterPropertySet =
+{
+    &KSPROPSETID_BdaTopology,
+    8,
+    FilterPropertyItem,
+    0,
+    NULL
+};
+
+KSMETHOD_ITEM FilterMethodItem[] =
+{
+    //DEFINE_KSMETHOD_ITEM_BDA_CREATE_PIN_FACTORY(BdaMethodCreatePin, NULL),
+    DEFINE_KSMETHOD_ITEM_BDA_CREATE_TOPOLOGY(BdaMethodCreateTopology, NULL)
+};
+
+KSMETHOD_SET FilterMethodSet =
+{
+    &KSMETHODSETID_BdaDeviceConfiguration,
+    2,
+    FilterMethodItem,
+    0,
+    NULL
+};
+
+KSAUTOMATION_TABLE FilterAutomationTable =
+{
+    1,
+    sizeof(KSPROPERTY_SET),
+    &FilterPropertySet,
+    1,
+    sizeof(KSMETHOD_SET),
+    &FilterMethodSet,
+    0,
+    sizeof(KSEVENT_SET),
+    NULL
+};
+
+KSPROPERTY_ITEM PinPropertyItem[] =
+{
+    DEFINE_KSPROPERTY_ITEM_BDA_PIN_ID(BdaPropertyGetPinControl, NULL),
+    DEFINE_KSPROPERTY_ITEM_BDA_PIN_TYPE(BdaPropertyGetPinControl, NULL)
+};
+
+KSPROPERTY_SET PinPropertySet =
+{
+    &KSPROPSETID_BdaPinControl,
+    2,
+    PinPropertyItem,
+    0,
+    NULL
+};
+
+KSAUTOMATION_TABLE PinAutomationTable =
+{
+    1,
+    sizeof(KSPROPERTY_SET),
+    &PinPropertySet,
+    0,
+    sizeof(KSMETHOD_SET),
+    NULL,
+    0,
+    sizeof(KSEVENT_SET),
+    NULL
 };
 
 
@@ -158,10 +240,17 @@ BdaCreateFilterFactoryEx(
     PBDA_FILTER_INSTANCE_ENTRY FilterInstance;
     KIRQL OldLevel;
     NTSTATUS Status;
+    KSFILTER_DESCRIPTOR FilterDescriptor;
 
-    /* FIXME provide a default automation table
-     * to handle requests which the driver doesnt implement
-     */
+    /* backup filter descriptor */
+    RtlMoveMemory(&FilterDescriptor, pFilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
+
+    /* merge the automation tables */
+    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&FilterDescriptor.AutomationTable, (PKSAUTOMATION_TABLE)pFilterDescriptor->AutomationTable, &FilterAutomationTable, NULL);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     /* allocate filter instance */
     FilterInstance = AllocateItem(NonPagedPool, sizeof(BDA_FILTER_INSTANCE_ENTRY));
@@ -172,7 +261,7 @@ BdaCreateFilterFactoryEx(
     }
 
     /* create the filter factory */
-    Status = KsCreateFilterFactory(pKSDevice->FunctionalDeviceObject, pFilterDescriptor, NULL, NULL, 0, NULL, NULL, &FilterFactory);
+    Status = KsCreateFilterFactory(pKSDevice->FunctionalDeviceObject, &FilterDescriptor, NULL, NULL, 0, NULL, NULL, &FilterFactory);
 
     /* check for success */
     if (NT_SUCCESS(Status))
@@ -233,14 +322,10 @@ BdaCreatePin(
     PBDA_FILTER_INSTANCE_ENTRY InstanceEntry;
     NTSTATUS Status;
     ULONG PinId;
+    KSPIN_DESCRIPTOR_EX NewPinDescriptor;
 
     if (!pulPinId || !pKSFilter)
         return STATUS_INVALID_PARAMETER;
-
-
-    /* FIXME provide a default automation table
-     * to handle requests which the driver doesnt implement
-     */
 
     /* get parent filter factory */
     FilterFactory = KsFilterGetParentFilterFactory(pKSFilter);
@@ -281,15 +366,26 @@ BdaCreatePin(
     /* get pin descriptor */
     PinDescriptor = (PKSPIN_DESCRIPTOR_EX)&InstanceEntry->FilterTemplate->pFilterDescriptor->PinDescriptors[ulPinType];
 
-    /* create the pin factory */
-    Status = KsFilterCreatePinFactory(pKSFilter, PinDescriptor, &PinId);
+   /* make a copy of the pin descriptor */
+   RtlMoveMemory(&NewPinDescriptor, PinDescriptor, sizeof(KSPIN_DESCRIPTOR_EX));
+
+    /* merge the automation tables */
+    Status = KsMergeAutomationTables((PKSAUTOMATION_TABLE*)&NewPinDescriptor.AutomationTable, (PKSAUTOMATION_TABLE)PinDescriptor->AutomationTable, &PinAutomationTable, pKSFilter->Bag);
 
     /* check for success */
     if (NT_SUCCESS(Status))
     {
-        /* store result */
-        *pulPinId = PinId;
+        /* create the pin factory */
+        Status = KsFilterCreatePinFactory(pKSFilter, &NewPinDescriptor, &PinId);
+
+        /* check for success */
+        if (NT_SUCCESS(Status))
+        {
+            /* store result */
+            *pulPinId = PinId;
+        }
     }
+
 
     DPRINT("BdaCreatePin Result %x\n", Status);
     return Status;
