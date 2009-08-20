@@ -29,7 +29,7 @@ STRINGTABLE DISCARDABLE
     IDS_POLICY_ID "정책 식별자: "
     IDS_POLICY_QUALIFIER_INFO "정책 구별자 정보"
     IDS_POLICY_QUALIFIER_ID "정책 구별자 아이디="
-    IDS_CPS "CPS"
+    IDS_CPS "CPS"/*인증 실현 선언 */
     IDS_USER_NOTICE "사용자 통지"
     IDS_QUALIFIER "구별자"
     IDS_NOTICE_REF "통지 참조"

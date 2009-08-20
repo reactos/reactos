@@ -28,7 +28,7 @@ STRINGTABLE DISCARDABLE
     IDS_POLICY_ID "Policy Identifier: "
     IDS_POLICY_QUALIFIER_INFO "Policy Qualifier Info"
     IDS_POLICY_QUALIFIER_ID "Policy Qualifier Id="
-    IDS_CPS "CPS"
+    IDS_CPS "CPS" /* Certification Practice Statement */
     IDS_USER_NOTICE "User Notice"
     IDS_QUALIFIER "Qualifier"
     IDS_NOTICE_REF "Notice Reference"

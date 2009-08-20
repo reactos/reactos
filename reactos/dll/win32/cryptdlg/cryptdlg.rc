@@ -28,4 +28,5 @@
 #include "cryptdlg_Ko.rc"
 #include "cryptdlg_Lt.rc"
 #include "cryptdlg_Nl.rc"
+#include "cryptdlg_Pt.rc"
 #include "cryptdlg_Ro.rc"
