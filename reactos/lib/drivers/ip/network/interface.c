@@ -81,36 +81,26 @@ NTSTATUS GetInterfaceName( PIP_INTERFACE Interface,
     return Status;
 }
 
-/*
- * FUNCTION: Locates and returns an address entry using IPv4 adress as argument
- * ARGUMENTS:
- *     Address = Raw IPv4 address
- * RETURNS:
- *     Pointer to address entry if found, NULL if not found
- * NOTES:
- *     If found, the address is referenced
- */
-BOOLEAN AddrLocateADEv4(
-    IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address)
+PIP_INTERFACE AddrLocateInterface(
+    PIP_ADDRESS MatchAddress)
 {
     KIRQL OldIrql;
-    BOOLEAN Matched = FALSE;
+    PIP_INTERFACE RetIF = NULL;
     IF_LIST_ITER(CurrentIF);
 
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     ForEachInterface(CurrentIF) {
-	if( AddrIsEqualIPv4( &CurrentIF->Unicast, MatchAddress ) ||
-            AddrIsEqualIPv4( &CurrentIF->Broadcast, MatchAddress ) ) {
-            Address->Type = IP_ADDRESS_V4;
-	    Address->Address.IPv4Address = MatchAddress;
-	    Matched = TRUE; break;
+	if( AddrIsEqual( &CurrentIF->Unicast, MatchAddress ) ||
+            AddrIsEqual( &CurrentIF->Broadcast, MatchAddress ) ) {
+            RetIF = CurrentIF;
+            break;
 	}
     } EndFor(CurrentIF);
 
     TcpipReleaseSpinLock(&InterfaceListLock, OldIrql);
 
-    return Matched;
+    return RetIF;
 }
 
 BOOLEAN HasPrefix(

@@ -55,8 +55,8 @@ BOOLEAN AddrIsEqualIPv4(
     PIP_ADDRESS Address1,
     IPv4_RAW_ADDRESS Address2);
 
-BOOLEAN AddrLocateADEv4(
-    IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address);
+PIP_INTERFACE AddrLocateInterface(
+    PIP_ADDRESS MatchAddress);
 
 PADDRESS_FILE AddrSearchFirst(
     PIP_ADDRESS Address,

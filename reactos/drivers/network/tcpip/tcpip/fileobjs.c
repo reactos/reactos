@@ -43,18 +43,50 @@ PADDRESS_FILE AddrSearchFirst(
     return AddrSearchNext(SearchContext);
 }
 
-BOOLEAN AddrIsBroadcast(
-    PIP_ADDRESS PossibleMatch,
-    PIP_ADDRESS TargetAddress ) {
+BOOLEAN AddrIsBroadcastMatch(
+    PIP_ADDRESS UnicastAddress,
+    PIP_ADDRESS BroadcastAddress ) {
     IF_LIST_ITER(IF);
 
     ForEachInterface(IF) {
-        if( AddrIsEqual( &IF->Unicast, PossibleMatch ) &&
-            AddrIsEqual( &IF->Broadcast, TargetAddress ) )
+        if ((AddrIsUnspecified(UnicastAddress) ||
+             AddrIsEqual(&IF->Unicast, UnicastAddress)) &&
+            (AddrIsEqual(&IF->Broadcast, BroadcastAddress)))
             return TRUE;
     } EndFor(IF);
 
     return FALSE;
+}
+
+BOOLEAN AddrReceiveMatch(
+   PIP_ADDRESS LocalAddress,
+   PIP_ADDRESS RemoteAddress)
+{
+   if (AddrIsEqual(LocalAddress, RemoteAddress))
+   {
+       /* Unicast address match */
+       return TRUE;
+   }
+
+   if (AddrIsBroadcastMatch(LocalAddress, RemoteAddress))
+   {
+       /* Broadcast address match */
+       return TRUE;
+   }
+
+   if (AddrIsUnspecified(LocalAddress))
+   {
+       /* Local address unspecified */
+       return TRUE;
+   }
+
+   if (AddrIsUnspecified(RemoteAddress))
+   {
+       /* Remote address unspecified */
+       return TRUE;
+   }
+
+   return FALSE;
 }
 
 /*
@@ -96,10 +128,7 @@ PADDRESS_FILE AddrSearchNext(
         /* See if this address matches the search criteria */
         if ((Current->Port    == SearchContext->Port) &&
             (Current->Protocol == SearchContext->Protocol) &&
-            (AddrIsEqual(IPAddress, SearchContext->Address) ||
-             AddrIsBroadcast(IPAddress, SearchContext->Address) ||
-             AddrIsUnspecified(IPAddress) ||
-             AddrIsUnspecified(SearchContext->Address))) {
+            (AddrReceiveMatch(IPAddress, SearchContext->Address))) {
             /* We've found a match */
             Found = TRUE;
             break;
@@ -156,7 +185,6 @@ NTSTATUS FileOpenAddress(
   USHORT Protocol,
   PVOID Options)
 {
-  IPv4_RAW_ADDRESS IPv4Address;
   PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
@@ -176,17 +204,14 @@ NTSTATUS FileOpenAddress(
   /* Make sure address is a local unicast address or 0 */
   /* FIXME: IPv4 only */
   AddrFile->Family = Address->Address[0].AddressType;
-  IPv4Address = Address->Address[0].Address[0].in_addr;
-  if (IPv4Address != 0 &&
-      !AddrLocateADEv4(IPv4Address, &AddrFile->Address)) {
+  AddrFile->Address.Address.IPv4Address = Address->Address[0].Address[0].in_addr;
+  AddrFile->Address.Type = IP_ADDRESS_V4;
+
+  if (!AddrIsUnspecified(&AddrFile->Address) &&
+      !AddrLocateInterface(&AddrFile->Address)) {
 	  exFreePool(AddrFile);
 	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
 	  return STATUS_INVALID_PARAMETER;
-  }
-  else
-  {
-	  /* Bound to the default address ... Copy the address type */
-	  AddrFile->Address.Type = IP_ADDRESS_V4;
   }
 
   TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
