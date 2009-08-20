@@ -210,7 +210,7 @@ NTSTATUS FileOpenAddress(
   if (!AddrIsUnspecified(&AddrFile->Address) &&
       !AddrLocateInterface(&AddrFile->Address)) {
 	  exFreePool(AddrFile);
-	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
+	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", A2S(&AddrFile->Address)));
 	  return STATUS_INVALID_PARAMETER;
   }
 
