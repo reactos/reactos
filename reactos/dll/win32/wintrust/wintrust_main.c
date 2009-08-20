@@ -303,7 +303,8 @@ static HRESULT WINAPI WINTRUST_CertVerifyObjTrust(CRYPT_PROVIDER_DATA *data)
     {
     case WTD_CHOICE_BLOB:
         if (data->pWintrustData->u.pBlob &&
-         data->pWintrustData->u.pBlob->cbStruct == sizeof(WINTRUST_BLOB_INFO) &&
+         WVT_IS_CBSTRUCT_GT_MEMBEROFFSET(WINTRUST_BLOB_INFO,
+         data->pWintrustData->u.pBlob->cbStruct, pbMemObject) &&
          data->pWintrustData->u.pBlob->cbMemObject ==
          sizeof(CERT_VERIFY_CERTIFICATE_TRUST) &&
          data->pWintrustData->u.pBlob->pbMemObject)
@@ -1083,4 +1084,13 @@ BOOL WINAPI OpenPersonalTrustDBDialog(HWND hwnd)
     uiCertMgr.pwszTitle = NULL;
     uiCertMgr.pszInitUsageOID = NULL;
     return CryptUIDlgCertMgr(&uiCertMgr);
+}
+
+/***********************************************************************
+ *		WTHelperCertCheckValidSignature
+ */
+HRESULT WINAPI WTHelperCertCheckValidSignature(CRYPT_PROVIDER_DATA *pProvData)
+{
+    FIXME("Stub\n");
+    return S_OK;
 }

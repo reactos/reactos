@@ -2079,15 +2079,6 @@ BOOL WINAPI WVTAsn1SpcIndirectDataContentDecode(DWORD dwCertEncodingType,
     return ret;
 }
 
-BOOL WINAPI WVTAsn1SpcSpOpusInfoDecode(DWORD dwCertEncodingType,
- LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
- void *pvStructInfo, DWORD *pcbStructInfo)
-{
-    FIXME("%p, %d, %08x, %p, %d\n", pbEncoded, cbEncoded, dwFlags,
-     pvStructInfo, *pcbStructInfo);
-    return FALSE;
-}
-
 static BOOL WINAPI CRYPT_AsnDecodeBMPString(DWORD dwCertEncodingType,
  LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
  void *pvStructInfo, DWORD *pcbStructInfo)
@@ -2123,6 +2114,66 @@ static BOOL WINAPI CRYPT_AsnDecodeBMPString(DWORD dwCertEncodingType,
             str[i] = '\0';
         }
     }
+    return ret;
+}
+
+static BOOL WINAPI CRYPT_AsnDecodeProgramName(DWORD dwCertEncodingType,
+ LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
+ void *pvStructInfo, DWORD *pcbStructInfo)
+{
+    BOOL ret = FALSE;
+    DWORD dataLen;
+
+    TRACE("(%p, %d, %08x, %p, %d)\n", pbEncoded, cbEncoded, dwFlags,
+     pvStructInfo, pvStructInfo ? *pcbStructInfo : 0);
+
+    if ((ret = CRYPT_GetLen(pbEncoded, cbEncoded, &dataLen)))
+    {
+        BYTE lenBytes = GET_LEN_BYTES(pbEncoded[1]);
+
+        ret = CRYPT_AsnDecodeBMPString(dwCertEncodingType, lpszStructType,
+         pbEncoded + 1 + lenBytes, dataLen, dwFlags, pvStructInfo,
+         pcbStructInfo);
+    }
+    return ret;
+}
+
+BOOL WINAPI WVTAsn1SpcSpOpusInfoDecode(DWORD dwCertEncodingType,
+ LPCSTR lpszStructType, const BYTE *pbEncoded, DWORD cbEncoded, DWORD dwFlags,
+ void *pvStructInfo, DWORD *pcbStructInfo)
+{
+    BOOL ret = FALSE;
+
+    TRACE("%p, %d, %08x, %p, %d\n", pbEncoded, cbEncoded, dwFlags,
+     pvStructInfo, *pcbStructInfo);
+
+    __TRY
+    {
+        struct AsnDecodeSequenceItem items[] = {
+         { ASN_CONSTRUCTOR | ASN_CONTEXT,
+           offsetof(SPC_SP_OPUS_INFO, pwszProgramName),
+           CRYPT_AsnDecodeProgramName, sizeof(LPCWSTR), TRUE, TRUE,
+           offsetof(SPC_SP_OPUS_INFO, pwszProgramName), 0 },
+         { ASN_CONSTRUCTOR | ASN_CONTEXT | 1,
+           offsetof(SPC_SP_OPUS_INFO, pMoreInfo),
+           CRYPT_AsnDecodeSPCLinkPointer, sizeof(PSPC_LINK), TRUE, TRUE,
+           offsetof(SPC_SP_OPUS_INFO, pMoreInfo), 0 },
+         { ASN_CONSTRUCTOR | ASN_CONTEXT | 2,
+           offsetof(SPC_SP_OPUS_INFO, pPublisherInfo),
+           CRYPT_AsnDecodeSPCLinkPointer, sizeof(PSPC_LINK), TRUE, TRUE,
+           offsetof(SPC_SP_OPUS_INFO, pPublisherInfo), 0 },
+        };
+
+        ret = CRYPT_AsnDecodeSequence(dwCertEncodingType, items,
+         sizeof(items) / sizeof(items[0]), pbEncoded, cbEncoded, dwFlags,
+         pvStructInfo, pcbStructInfo, NULL);
+    }
+    __EXCEPT_PAGE_FAULT
+    {
+        SetLastError(STATUS_ACCESS_VIOLATION);
+    }
+    __ENDTRY
+    TRACE("returning %d\n", ret);
     return ret;
 }
 
