@@ -1808,6 +1808,30 @@ typedef struct
     ULONG                   Flags;
 } KSMETHOD_ITEM, *PKSMETHOD_ITEM;
 
+#ifndef _MSC_VER
+
+#define DEFINE_KSMETHOD_ITEM(MethodId, Flags,\
+                             MethodHandler,\
+                             MinMethod, MinData, SupportHandler)\
+{\
+    MethodId, {(PFNKSHANDLER)MethodHandler}, MinMethod, MinData,\
+    SupportHandler, Flags\
+}
+
+#else
+
+#define DEFINE_KSMETHOD_ITEM(MethodId, Flags,\
+                             MethodHandler,\
+                             MinMethod, MinData, SupportHandler)\
+{\
+    MethodId, (PFNKSHANDLER)MethodHandler, MinMethod, MinData,\
+    SupportHandler, Flags\
+}
+
+
+
+#endif
+
 
 typedef struct
 {
@@ -1818,6 +1842,12 @@ typedef struct
     };
 } KSFASTMETHOD_ITEM, *PKSFASTMETHOD_ITEM;
 
+#define DEFINE_KSFASTMETHOD_ITEM(MethodId, MethodHandler)\
+{\
+    MethodId, (PFNKSFASTHANDLER)MethodHandler\
+}
+
+	
 typedef struct
 {
     const GUID*             Set;
@@ -1826,6 +1856,20 @@ typedef struct
     ULONG                   FastIoCount;
     const KSFASTMETHOD_ITEM*FastIoTable;
 } KSMETHOD_SET, *PKSMETHOD_SET;
+
+
+#define DEFINE_KSMETHOD_SET(Set,\
+                            MethodsCount,\
+                            MethodItem,\
+                            FastIoCount,\
+                            FastIoTable)\
+{\
+    Set,\
+    MethodsCount,\
+    MethodItem,\
+    FastIoCount,\
+    FastIoTable\
+}
 
 #endif
 /* ===============================================================
