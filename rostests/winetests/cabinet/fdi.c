@@ -287,10 +287,9 @@ static void createTestFile(const CHAR *name)
 
 static void create_test_files(void)
 {
-    int len;
+    DWORD len;
 
-    GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
-    len = lstrlenA(CURR_DIR);
+    len = GetCurrentDirectoryA(MAX_PATH, CURR_DIR);
 
     if(len && (CURR_DIR[len-1] == '\\'))
         CURR_DIR[len-1] = 0;
@@ -609,8 +608,6 @@ static void test_FDICopy(void)
     char name[] = "extract.cab";
     char path[MAX_PATH + 1];
 
-    GetCurrentDirectoryA(MAX_PATH, path);
-
     set_cab_parameters(&cabParams);
 
     hfci = FCICreate(&erf, file_placed, mem_alloc, mem_free, fci_open,
@@ -622,6 +619,31 @@ static void test_FDICopy(void)
 
     FCIDestroy(hfci);
 
+    lstrcpyA(path, CURR_DIR);
+
+    /* path doesn't have a trailing backslash */
+    if (lstrlenA(path) > 2)
+    {
+        hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
+                         fdi_write, fdi_close, fdi_seek,
+                         cpuUNKNOWN, &erf);
+
+        SetLastError(0xdeadbeef);
+        ret = FDICopy(hfdi, name, path, 0, CopyProgress, NULL, 0);
+        ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
+        todo_wine
+        {
+            ok(GetLastError() == ERROR_INVALID_HANDLE,
+               "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
+        }
+
+        FDIDestroy(hfdi);
+    }
+    else
+        skip("Running on a root drive directory.\n");
+
+    lstrcatA(path, "\\");
+
     hfdi = FDICreate(fdi_alloc, fdi_free, fdi_open, fdi_read,
                      fdi_write, fdi_close, fdi_seek,
                      cpuUNKNOWN, &erf);
@@ -629,14 +651,12 @@ static void test_FDICopy(void)
     /* cabinet with no files or folders */
     SetLastError(0xdeadbeef);
     ret = FDICopy(hfdi, name, path, 0, CopyProgress, NULL, 0);
-    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
     todo_wine
-    {
-        ok(GetLastError() == ERROR_INVALID_HANDLE,
-           "Expected ERROR_INVALID_HANDLE, got %d\n", GetLastError());
-    }
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
+    ok(GetLastError() == 0, "Expected 0f, got %d\n", GetLastError());
 
     FDIDestroy(hfdi);
+
     DeleteFileA(name);
 }
 
