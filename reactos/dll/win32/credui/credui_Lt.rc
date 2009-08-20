@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "credui_resources.h"
+
 /* UTF-8 */
 #pragma code_page(65001)
 
@@ -51,5 +53,4 @@ STRINGTABLE DISCARDABLE
     IDS_CAPSLOCKONTITLE "Didžiųjų raidžių būsena įjungta"
     IDS_CAPSLOCKON      "Kai įjungta didžiųjų raidžių būsena, savo slaptažodį galite įvesti neteisingai.\n\nPaspauskite didžiųjų raidžių klaviatūros klavišą didžiųjų raidžių būsenai išjungti\nprieš rinkdami savo slaptažodį."
 }
-
 #pragma code_page(default)

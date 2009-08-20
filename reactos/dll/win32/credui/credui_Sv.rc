@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "credui_resources.h"
+
 LANGUAGE LANG_SWEDISH, SUBLANG_NEUTRAL
 
 IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
