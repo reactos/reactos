@@ -82,8 +82,8 @@ typedef struct _SMB_REQUEST {
   UCHAR  Data[SMB_MAX_DATA_SIZE];
 } SMB_REQUEST, *PSMB_REQUEST;
 
-typedef VOID NTAPI
-(*SMB_ALARM_NOTIFY)(
+typedef VOID
+(NTAPI *SMB_ALARM_NOTIFY)(
   PVOID  Context,
   UCHAR  Address,
   USHORT  Data);
@@ -99,18 +99,18 @@ typedef struct _SMB_REGISTER_ALARM {
 #define SMB_CLASS_MAJOR_VERSION           0x0001
 #define SMB_CLASS_MINOR_VERSION           0x0000
 
-typedef NTSTATUS DDKAPI
-(*SMB_RESET_DEVICE)(
+typedef NTSTATUS
+(DDKAPI *SMB_RESET_DEVICE)(
   IN struct _SMB_CLASS  *SmbClass,
   IN PVOID  SmbMiniport);
 
-typedef VOID DDKAPI
-(*SMB_START_IO)(
+typedef VOID
+(DDKAPI *SMB_START_IO)(
   IN struct _SMB_CLASS  *SmbClass,
   IN PVOID  SmbMiniport);
 
-typedef NTSTATUS DDKAPI
-(*SMB_STOP_DEVICE)(
+typedef NTSTATUS
+(DDKAPI *SMB_STOP_DEVICE)(
   IN struct _SMB_CLASS  *SmbClass,
   IN PVOID  SmbMiniport);
 
@@ -142,8 +142,8 @@ DDKAPI
 SmbClassCompleteRequest(
   IN PSMB_CLASS  SmbClass);
 
-typedef NTSTATUS DDKAPI
-(*PSMB_INITIALIZE_MINIPORT)(
+typedef NTSTATUS
+(DDKAPI *PSMB_INITIALIZE_MINIPORT)(
   IN PSMB_CLASS  SmbClass,
   IN PVOID  MiniportExtension,
   IN PVOID  MiniportContext);

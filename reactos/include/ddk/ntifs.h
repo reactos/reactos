@@ -2378,7 +2378,7 @@ CcFlushCache (
     OUT PIO_STATUS_BLOCK        IoStatus OPTIONAL
 );
 
-typedef VOID (*PDIRTY_PAGE_ROUTINE) (
+typedef VOID (NTAPI *PDIRTY_PAGE_ROUTINE) (
     IN PFILE_OBJECT     FileObject,
     IN PLARGE_INTEGER   FileOffset,
     IN ULONG            Length,
@@ -3601,7 +3601,7 @@ FsRtlNotifyCleanup (
     IN PVOID        FsContext
 );
 
-typedef BOOLEAN (*PCHECK_FOR_TRAVERSE_ACCESS) (
+typedef BOOLEAN (NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
     IN PVOID                        NotifyContext,
     IN PVOID                        TargetContext,
     IN PSECURITY_SUBJECT_CONTEXT    SubjectContext
@@ -5522,7 +5522,7 @@ SeQuerySessionIdToken (
     ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->ClientToken :     \
     ((PSECURITY_SUBJECT_CONTEXT) SubjectContext)->PrimaryToken )
 
-typedef NTSTATUS (*PSE_LOGON_SESSION_TERMINATED_ROUTINE) (
+typedef NTSTATUS (NTAPI *PSE_LOGON_SESSION_TERMINATED_ROUTINE) (
     IN PLUID LogonId
 );
 

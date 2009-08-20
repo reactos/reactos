@@ -76,7 +76,7 @@ typedef enum _HW_DMA_RETURN {
 } HW_DMA_RETURN, *PHW_DMA_RETURN;
 
 typedef HW_DMA_RETURN
-(*PVIDEO_HW_START_DMA)(
+(DDKAPI *PVIDEO_HW_START_DMA)(
     PVOID  HwDeviceExtension,
     PDMA  pDma);
 
