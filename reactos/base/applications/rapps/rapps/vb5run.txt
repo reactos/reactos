@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Visual Basic 5 Runtime
@@ -10,3 +10,9 @@ Category = 14
 URLSite = Unknown
 URLDownload = http://download.microsoft.com/download/vb50pro/utility/1/win98/en-us/msvbvm50.exe
 CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Basic 5 Laufzeitsystem
+Size = Unbekannt
+URLSite = Unbekannt

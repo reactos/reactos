@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Visual Studio 2005 Runtime SP1
@@ -10,3 +10,9 @@ Category = 14
 URLSite = Unknown
 URLDownload = http://download.microsoft.com/download/e/1/c/e1c773de-73ba-494a-a5ba-f24906ecf088/vcredist_x86.exe
 CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Studio 2005 Laufzeitsystem SP1
+Size = Unbekannt
+URLSite = Unbekannt

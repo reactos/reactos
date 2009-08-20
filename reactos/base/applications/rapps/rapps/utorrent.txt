@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = uTorrent
@@ -10,3 +10,9 @@ Category = 5
 URLSite = Unknown
 URLDownload = http://download.utorrent.com/1.8.2/utorrent-1.8.2.upx.exe
 CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Kleiner und schneller BitTorrent Client.
+Size = Unbekannt
+URLSite = Unbekannt

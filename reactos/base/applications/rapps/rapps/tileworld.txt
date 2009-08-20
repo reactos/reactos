@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Tile World
@@ -10,3 +10,9 @@ Category = 4
 URLSite = Unknown
 URLDownload = http://www.muppetlabs.com/~breadbox/pub/software/tworld/tworld-1.3.0-win32-CCLP2.exe
 CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Schöner Klon von Chip's Challange ursprünglich etnwickelt für Atari Lynx. Enthält CCLP2 Graphics Pack, deshalb wird das urheberrechtlich geschützte Original nicht benötigt.
+Size = Unbekannt
+URLSite = Unbekannt

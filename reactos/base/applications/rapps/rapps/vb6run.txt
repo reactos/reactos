@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Visual Basic 6 Runtime
@@ -10,3 +10,9 @@ Category = 14
 URLSite = Unknown
 URLDownload = http://download.microsoft.com/download/vb60pro/install/6/win98me/en-us/vbrun60.exe
 CDPath = none
+
+[Section.0407]
+Licence = Unbekannt
+Description = Visual Basic 6 Laufzeitsystem
+Size = Unbekannt
+URLSite = Unbekannt
