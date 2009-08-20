@@ -1,3 +1,4 @@
+@ stdcall DllInitialize(ptr)
 @ stdcall BdaCheckChanges(ptr)
 @ stdcall BdaCommitChanges(ptr)
 @ stdcall BdaCreateFilterFactory(ptr ptr ptr)

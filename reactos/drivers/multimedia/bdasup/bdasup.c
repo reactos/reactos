@@ -154,6 +154,21 @@ GetFilterInstanceEntry(
 */
 NTSTATUS
 NTAPI
+DllInitialize(
+    PUNICODE_STRING  RegistryPath)
+{
+    KeInitializeSpinLock(&g_Settings.FilterFactoryInstanceListLock);
+    InitializeListHead(&g_Settings.FilterFactoryInstanceList);
+    g_Settings.Initialized = TRUE;
+
+    return STATUS_SUCCESS;
+}
+
+/*
+    @implemented
+*/
+NTSTATUS
+NTAPI
 BdaCheckChanges(IN PIRP  Irp)
 {
     if (!Irp)
