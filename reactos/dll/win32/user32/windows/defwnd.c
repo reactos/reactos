@@ -1525,7 +1525,15 @@ User32DefWindowProc(HWND hWnd,
             return ((LRESULT)LoadIconW(0, IDI_APPLICATION));
         }
 
-        /* FIXME: WM_ISACTIVEICON */
+        case WM_ISACTIVEICON:
+        {
+           PWND pWnd;
+           BOOL isai;
+           pWnd = ValidateHwnd(hWnd);
+           if (!pWnd) return 0;
+           isai = (pWnd->state & WNDS_ACTIVEFRAME) != 0;
+           return isai;
+        }
 
         case WM_NOTIFYFORMAT:
         {
