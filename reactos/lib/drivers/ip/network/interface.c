@@ -88,7 +88,6 @@ NTSTATUS GetInterfaceName( PIP_INTERFACE Interface,
  * RETURNS:
  *     Pointer to address entry if found, NULL if not found
  * NOTES:
- *     Only unicast addresses are considered.
  *     If found, the address is referenced
  */
 BOOLEAN AddrLocateADEv4(
@@ -101,7 +100,9 @@ BOOLEAN AddrLocateADEv4(
     TcpipAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
     ForEachInterface(CurrentIF) {
-	if( AddrIsEqualIPv4( &CurrentIF->Unicast, MatchAddress ) ) {
+	if( AddrIsEqualIPv4( &CurrentIF->Unicast, MatchAddress ) ||
+            AddrIsEqualIPv4( &CurrentIF->Broadcast, MatchAddress ) ) {
+            Address->Type = IP_ADDRESS_V4;
 	    Address->Address.IPv4Address = MatchAddress;
 	    Matched = TRUE; break;
 	}
