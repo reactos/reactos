@@ -1,4 +1,4 @@
-﻿; UTF-8
+; UTF-8
 
 [Section]
 Name = Audio Grabber
@@ -15,5 +15,5 @@ CDPath = none
 [Section.0407]
 Licence = Unbekannt
 Description = Ein sehr guter CD-Ripper/Audio-Datei-Konverter.
-URLSize = Unbekannt 
+URLSite = Unbekannt 
 Size = Unbekannt
