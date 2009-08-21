@@ -881,17 +881,12 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
     }
     RtlAppendUnicodeToString(SymbolicLinkName, L"#");
     RtlAppendUnicodeStringToString(SymbolicLinkName, &GuidString);
-    if (ReferenceString && ReferenceString->Length)
-    {
-        RtlAppendUnicodeToString(SymbolicLinkName, L"\\");
-        RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
-    }
     SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
 
     /* Create symbolic link */
     DPRINT1("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
     Status = IoCreateSymbolicLink(SymbolicLinkName, &PdoNameInfo->Name);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) && ReferenceString == NULL)
     {
         DPRINT("IoCreateSymbolicLink() failed with status 0x%08lx\n", Status);
         ZwClose(SubKey);
@@ -903,6 +898,13 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
         ExFreePool(SymbolicLinkName->Buffer);
         return Status;
     }
+
+    if (ReferenceString && ReferenceString->Length)
+    {
+        RtlAppendUnicodeToString(SymbolicLinkName, L"\\");
+        RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
+    }
+    SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
 
     /* Write symbolic link name in registry */
     SymbolicLinkName->Buffer[1] = '\\';
@@ -958,10 +960,12 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     PDEVICE_OBJECT PhysicalDeviceObject;
     PFILE_OBJECT FileObject;
     UNICODE_STRING GuidString;
+    UNICODE_STRING SymLink;
     PWCHAR StartPosition;
     PWCHAR EndPosition;
     NTSTATUS Status;
     LPCGUID EventGuid;
+
 
     if (SymbolicLinkName == NULL)
         return STATUS_INVALID_PARAMETER_1;
@@ -980,9 +984,13 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     GuidString.Buffer = StartPosition;
     GuidString.MaximumLength = GuidString.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)StartPosition);
 
+    SymLink.Buffer = SymbolicLinkName->Buffer;
+    SymLink.MaximumLength = SymLink.Length = (USHORT)((ULONG_PTR)(EndPosition + 1) - (ULONG_PTR)SymLink.Buffer);
+
+
     /* Get pointer to the PDO */
     Status = IoGetDeviceObjectPointer(
-        SymbolicLinkName,
+        &SymLink,
         0, /* DesiredAccess */
         &FileObject,
         &PhysicalDeviceObject);
