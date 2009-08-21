@@ -145,4 +145,19 @@ typedef struct
 
 typedef BOOLEAN (NTAPI *PKSEVENT_SYNCHRONIZED_ROUTINE)(PKSEVENT_CTX Context);
 
+typedef struct
+{
+    BOOLEAN Enabled;
+
+    PDEVICE_OBJECT PnpDeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT BusDeviceObject;
+
+    UNICODE_STRING ServicePath;
+    UNICODE_STRING SymbolicLinkName;
+
+    WCHAR BusIdentifier[1];
+}BUS_ENUM_DEVICE_EXTENSION, *PBUS_ENUM_DEVICE_EXTENSION;
+
+
 #endif
