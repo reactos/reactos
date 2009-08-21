@@ -266,7 +266,7 @@ SETUP_CreateInterfaceList(
             else
             {
                 dwLength = sizeof(DWORD);
-                if (RegQueryValueExW(hControlKey, Linked, NULL, &dwRegType, (LPBYTE)&LinkedValue, &dwLength)
+                if (RegQueryValueExW(hControlKey, Linked, NULL, &dwRegType, (LPBYTE)&LinkedValue, &dwLength) == ERROR_SUCCESS
                     && dwRegType == REG_DWORD && LinkedValue)
                     interfaceInfo->Flags |= SPINT_ACTIVE;
                 RegCloseKey(hControlKey);
