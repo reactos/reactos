@@ -44,18 +44,19 @@ KsiCreateObjectType( HANDLE hHandle,
 
     Length = wcslen(IID);
 
-    TotalSize = (Length * sizeof(WCHAR)) + BufferSize + 2 * sizeof(WCHAR);
+    TotalSize = (Length * sizeof(WCHAR)) + BufferSize + 4 * sizeof(WCHAR);
 
     pStr = HeapAlloc(GetProcessHeap(), 0, TotalSize);
     if (!pStr)
         return STATUS_INSUFFICIENT_RESOURCES;
-
-    wcscpy(pStr, (LPWSTR)IID);
-    pStr[Length] = L'\\';
-    memcpy(&pStr[Length+1], Buffer, BufferSize);
-    pStr[Length+1+BufferSize] = L'\0';
+    pStr[0] = L'\\';
+    wcscpy(&pStr[1], (LPWSTR)IID);
+    pStr[Length+1] = L'\\';
+    memcpy(&pStr[Length+2], Buffer, BufferSize);
+    pStr[Length+3+(BufferSize/sizeof(WCHAR))] = L'\0';
 
     RtlInitUnicodeString(&ObjectName, pStr);
+    ObjectName.Length = ObjectName.MaximumLength = TotalSize;
 
     InitializeObjectAttributes(&ObjectAttributes, &ObjectName, OBJ_CASE_INSENSITIVE, hHandle, NULL);
 
