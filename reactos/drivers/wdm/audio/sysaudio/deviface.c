@@ -203,8 +203,6 @@ InsertAudioDevice(
     PIO_WORKITEM WorkItem = NULL;
     PSYSAUDIODEVEXT DeviceExtension;
     PKSAUDIO_DEVICE_ENTRY DeviceEntry = NULL;
-    PDEVICE_OBJECT AudioDeviceObject;
-    UNICODE_STRING ReferenceString, SymbolicLinkName;
 
     /* a new device has arrived */
     DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
@@ -259,24 +257,6 @@ InsertAudioDevice(
 
     Ctx->DeviceEntry = DeviceEntry;
     Ctx->WorkItem = WorkItem;
-
-    /* HACK
-     * sysaudio should register the device object for itself 
-     */
-    AudioDeviceObject = IoGetRelatedDeviceObject(DeviceEntry->FileObject);
-    RtlInitUnicodeString(&ReferenceString, L"sad0");
-    Status = IoRegisterDeviceInterface(AudioDeviceObject, &KSCATEGORY_AUDIO_DEVICE, &ReferenceString, &SymbolicLinkName);
-    if (NT_SUCCESS(Status))
-    {
-        IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
-        RtlFreeUnicodeString(&SymbolicLinkName);
-    }
-    else
-	{
-		DPRINT1("Failed to open %wZ with Status %x\n", &DeviceEntry->DeviceName, Status);
-	DbgBreakPoint();
-
-	}
 
     /* fetch device extension */
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
