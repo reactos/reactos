@@ -640,15 +640,7 @@ IPortPinWaveCyclic_HandleKsStream(
 
     Status = This->IrpQueue->lpVtbl->AddMapping(This->IrpQueue, NULL, 0, Irp);
 
-    /* check if pin is in run state */
-    if (This->State != KSSTATE_RUN)
-    {
-        /* HACK set pin into run state if caller forgot it */
-        SetStreamState(This, KSSTATE_RUN);
-        DPRINT1("Starting stream with %lu mappings Status %x\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), Status);
-    }
-
-    return Status;
+    return STATUS_PENDING;
 }
 
 /*
@@ -911,7 +903,7 @@ IPortPinWaveCyclic_fnFastDeviceIoControl(
     OUT PIO_STATUS_BLOCK StatusBlock,
     IN PDEVICE_OBJECT DeviceObject)
 {
-    return FALSE;
+    return KsDispatchFastIoDeviceControlFailure(FileObject, Wait, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, IoControlCode, StatusBlock, DeviceObject);
 }
 
 /*

@@ -129,6 +129,7 @@ Pin_fnWrite(
     PDISPATCH_CONTEXT Context;
     PIO_STACK_LOCATION IoStack;
     PFILE_OBJECT FileObject;
+    PVOID Buffer;
     NTSTATUS Status;
     ULONG BytesReturned;
 
@@ -159,14 +160,25 @@ Pin_fnWrite(
         return Status;
     }
 
+    Buffer = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+
+    if (!Buffer)
+    {
+        /* insufficient resources */
+        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+        /* Complete the irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+
     /* call the portcls audio pin */
     Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_WRITE_STREAM,
-                                          Irp->UserBuffer,
-                                          IoStack->Parameters.Write.Length,
                                           NULL,
                                           0,
+                                          Buffer,
+                                          IoStack->Parameters.Write.Length,
                                           &BytesReturned);
-
 
     /* Release file object */
     ObDereferenceObject(FileObject);
@@ -329,9 +341,6 @@ Pin_fnFastDeviceIoControl(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT("Pin_fnFastDeviceIoControl called DeviceObject %p Irp %p\n", DeviceObject);
-
-
     return FALSE;
 }
 
@@ -348,8 +357,6 @@ Pin_fnFastRead(
     PIO_STATUS_BLOCK IoStatus,
     PDEVICE_OBJECT DeviceObject)
 {
-    DPRINT("Pin_fnFastRead called DeviceObject %p Irp %p\n", DeviceObject);
-
     return FALSE;
 
 }

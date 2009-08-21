@@ -1105,8 +1105,8 @@ WdmAudWrite(
     /* now build the irp */
     LowerIrp = IoBuildAsynchronousFsdRequest (IRP_MJ_WRITE,
                                               IoGetRelatedDeviceObject(FileObject),
-                                              Packet, 
-                                              sizeof(KSSTREAM_HEADER), 
+                                              Packet,
+                                              sizeof(KSSTREAM_HEADER),
                                               &Offset,
                                               NULL);
 
@@ -1119,6 +1119,12 @@ WdmAudWrite(
 
         return SetIrpIoStatus(Irp, STATUS_INSUFFICIENT_RESOURCES, 0);
     }
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(LowerIrp);
+
+    /* attach file object */
+    IoStack->FileObject = FileObject;
 
     /* set a completion routine */
     IoSetCompletionRoutine(LowerIrp, WdmAudWriteCompletion, (PVOID)Irp, TRUE, TRUE, TRUE);

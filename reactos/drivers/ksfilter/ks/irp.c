@@ -1855,6 +1855,8 @@ KspDispatchIrp(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
+    ASSERT(IoStack->FileObject);
+
     /* get object header */
     ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
 

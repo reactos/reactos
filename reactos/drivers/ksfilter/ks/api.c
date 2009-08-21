@@ -1155,9 +1155,18 @@ KsSynchronousIoControlDevice(
     }
 
 
-    /* HACK */
+    /* Store Fileobject */
     IoStack = IoGetNextIrpStackLocation(Irp);
     IoStack->FileObject = FileObject;
+
+    if (IoControl == IOCTL_KS_WRITE_STREAM)
+    {
+        Irp->AssociatedIrp.SystemBuffer = OutBuffer;
+    }
+    else if (IoControl == IOCTL_KS_READ_STREAM)
+    {
+        Irp->AssociatedIrp.SystemBuffer = InBuffer;
+    }
 
     IoSetCompletionRoutine(Irp, KspSynchronousIoControlDeviceCompletion, (PVOID)&IoStatusBlock, TRUE, TRUE, TRUE);
 

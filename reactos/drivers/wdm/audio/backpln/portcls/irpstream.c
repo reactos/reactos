@@ -118,24 +118,44 @@ IIrpQueue_fnAddMapping(
     IN PIRP Irp)
 {
     PKSSTREAM_HEADER Header;
-    //PIO_STACK_LOCATION IoStack;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PIO_STACK_LOCATION IoStack;
     IIrpQueueImpl * This = (IIrpQueueImpl*)iface;
 
-#if 0
     /* get current irp stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSSTREAM_HEADER));
+    if (!Buffer)
+    {
+        /* probe the stream irp */
+        Status = KsProbeStreamIrp(Irp, KSSTREAM_WRITE | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK | KSPROBE_ALLOWFORMATCHANGE | KSPROBE_SYSTEMADDRESS, 0);
 
-    /* get stream header */
-    Header = (KSSTREAM_HEADER*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-#else
-    /* HACK get stream header */
-    Header = (KSSTREAM_HEADER*)Buffer;
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("KsProbeStreamIrp failed with %x\n", Status);
+            return Status;
+        }
 
-    /* HACK untill stream probing is ready */
+        /* get the stream header */
+        Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+        ASSERT(Header);
+        ASSERT(Irp->MdlAddress);
+
+        if (Irp->RequestorMode != KernelMode)
+        {
+           /* use allocated mdl */
+           Header->Data = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+        }
+    }
+    else
+    {
+        /* HACK */
+        Header = (PKSSTREAM_HEADER)Buffer;
+    }
+
+    /* HACK */
     Irp->Tail.Overlay.DriverContext[2] = (PVOID)Header;
-#endif
 
     /* sanity check */
     ASSERT(Header);
@@ -156,7 +176,7 @@ IIrpQueue_fnAddMapping(
     KsAddIrpToCancelableQueue(&This->IrpList, &This->IrpListLock, Irp, KsListEntryTail, NULL);
 
     /* done */
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS
@@ -281,10 +301,10 @@ IIrpQueue_fnUpdateMapping(
         This->Irp->IoStatus.Information = StreamHeader->FrameExtent;
 
         /* free stream data, no tag as wdmaud.drv does it atm */
-        ExFreePool(StreamHeader->Data);
+        //ExFreePool(StreamHeader->Data);
 
         /* free stream header, no tag as wdmaud.drv allocates it atm */
-        ExFreePool(StreamHeader);
+        //ExFreePool(StreamHeader);
 
         /* complete the request */
         IoCompleteRequest(This->Irp, IO_SOUND_INCREMENT);
