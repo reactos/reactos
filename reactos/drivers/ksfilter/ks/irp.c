@@ -657,7 +657,7 @@ KsProbeStreamIrp(
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    Length = IoStack->Parameters.DeviceIoControl.InputBufferLength;
+    Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
 
     if (Irp->RequestorMode == KernelMode || Irp->AssociatedIrp.SystemBuffer)
     {
