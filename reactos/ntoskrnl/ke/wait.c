@@ -117,15 +117,15 @@ KiAcquireFastMutex(IN PFAST_MUTEX FastMutex)
                           NULL);
 }
 
-/* KiAcquireGuardedMutex depends on these bits being right */
-C_ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
-
 VOID
 FASTCALL
 KiAcquireGuardedMutex(IN OUT PKGUARDED_MUTEX GuardedMutex)
 {
     ULONG BitsToRemove, BitsToAdd;
     LONG OldValue, NewValue;
+
+    /* We depend on these bits being just right */
+    C_ASSERT((GM_LOCK_WAITER_WOKEN * 2) == GM_LOCK_WAITER_INC);
     
     /* Increase the contention count */
     GuardedMutex->Contention++;

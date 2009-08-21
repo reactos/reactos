@@ -426,9 +426,8 @@ UniataAhciSetupFIS(
         i++;
     } else {
 #ifdef _MSC_VER
-#pragma message ("HACK HACK HACK Disabling warning HACK HACK HACK")
 #pragma warning(push)
-#pragma warning(disable:4333)
+#pragma warning(disable:4333) // right shift by too large amount, data loss
 #endif
         fis[7] |= (plba[3] >> 24) & 0x0f;
 #ifdef _MSC_VER

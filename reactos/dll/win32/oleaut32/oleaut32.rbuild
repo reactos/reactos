@@ -15,6 +15,7 @@
 	<define name="PROXY_DELEGATION"/>
 	<define name="REGISTER_PROXY_DLL"/>
 	<define name="ENTRY_PREFIX">OLEAUTPS_</define>
+	<compilerflag compilerset="msc">/FIwine/typeof.h</compilerflag>
 	<file>connpt.c</file>
 	<file>dispatch.c</file>
 	<file>hash.c</file>

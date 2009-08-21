@@ -16,12 +16,12 @@
  *
  */
 
-#ifdef __GNUC__
-#include_next<float.h>
-#endif
-
-#ifdef _MSC_VER
+#if defined(__GNUC__)
+#include <gcc_float.h>
+#elif defined(_MSC_VER)
 #include <msc_float.h>
+#else
+#error
 #endif
 
 #ifndef _MINGW_FLOAT_H_

@@ -1058,7 +1058,7 @@ NTSTATUS DispTdiSendDatagram(
 		    ("About to call send routine %x\n",
 		     (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)));
 
-        if( (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send) )
+        if( (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send != NULL) )
             Status = (*((PADDRESS_FILE)Request.Handle.AddressHandle)->Send)(
                 Request.Handle.AddressHandle,
                 DgramInfo->SendDatagramInformation,

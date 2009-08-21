@@ -146,12 +146,7 @@ extern "C" {
 #endif /* RC_INVOKED */
 
 #ifndef	NO_OLDNAMES
-#undef alloca
-#ifdef __GNUC__
-#define alloca(x) __builtin_alloca((x))
-#else
 #define alloca _alloca
-#endif
 #endif
 
 #ifdef HEAPHOOK
