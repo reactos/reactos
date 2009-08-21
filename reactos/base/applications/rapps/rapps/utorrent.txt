@@ -1,18 +1,20 @@
-; UTF-8
+﻿; UTF-8
 
 [Section]
-Name = uTorrent
-Version = 1.8
-Licence = Unknown
+Name = µTorrent
+Version = 1.8.3
+Licence = Freeware for non-commercial uses
 Description = Small and fast BitTorrent Client.
-Size = Unknown
+Size = 281K
 Category = 5
-URLSite = Unknown
-URLDownload = http://download.utorrent.com/1.8.2/utorrent-1.8.2.upx.exe
+URLSite = http://www.utorrent.com/
+URLDownload = http://download.utorrent.com/1.8.3/utorrent.exe
 CDPath = none
 
+[Section.0419]
+Licence = Бесплатная для не комерческого использования
+Description = Маленький и быстрый BitTorrent клиент.
+
 [Section.0407]
-Licence = Unbekannt
+Licence = Freeware für nichtkommerzielle Nutzung
 Description = Kleiner und schneller BitTorrent Client.
-Size = Unbekannt
-URLSite = Unbekannt
