@@ -44,7 +44,7 @@ void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const 
 
     if (TRUE)
     {
-        OffsetRect( &dst_rect, -data->window_rect.left, -data->window_rect.top );
+        //OffsetRect( &dst_rect, -data->window_rect.left, -data->window_rect.top );
         parent = GetAncestor( data->hwnd, GA_PARENT );
         hdc_src = GetDCEx( parent, 0, DCX_CACHE );
         hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE | DCX_WINDOW );
@@ -58,18 +58,12 @@ void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const 
         hdc_src = hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE );
     }
 
-    //code = X11DRV_START_EXPOSURES;
-    //ExtEscape( hdc_dst, X11DRV_ESCAPE, sizeof(code), (LPSTR)&code, 0, NULL );
-
-    ERR( "copying bits for win %p (parent %p)/ %s -> %s\n",
-           data->hwnd, parent,
-           wine_dbgstr_rect(&src_rect), wine_dbgstr_rect(&dst_rect) );
+    //ERR( "copying bits for win %p (parent %p)/ %s -> %s\n",
+    //       data->hwnd, parent,
+    //       wine_dbgstr_rect(&src_rect), wine_dbgstr_rect(&dst_rect) );
     BitBlt( hdc_dst, dst_rect.left, dst_rect.top,
             dst_rect.right - dst_rect.left, dst_rect.bottom - dst_rect.top,
             hdc_src, src_rect.left, src_rect.top, SRCCOPY );
-
-    //code = X11DRV_END_EXPOSURES;
-    //ExtEscape( hdc_dst, X11DRV_ESCAPE, sizeof(code), (LPSTR)&code, sizeof(rgn), (LPSTR)&rgn );
 
     ReleaseDC( data->hwnd, hdc_dst );
     if (hdc_src != hdc_dst) ReleaseDC( parent, hdc_src );
@@ -789,20 +783,6 @@ UINT CDECL RosDrv_ShowWindow( HWND hwnd, INT cmd, RECT *rect, UINT swp )
     TRACE( "win %p cmd %d at %s flags %08x\n",
            hwnd, cmd, wine_dbgstr_rect(rect), swp );
 
-#if 0
-    /* HACK */
-    x = 1;
-    y = 1;
-    width = 50;
-    height = 50;
-
-    rect->left   = x;
-    rect->top    = y;
-    rect->right  = x + width;
-    rect->bottom = y + height;
-    //OffsetRect( rect, virtual_screen_rect.left, virtual_screen_rect.top );
-    //X11DRV_X_to_window_rect( data, rect );
-#endif
     return swp & ~(SWP_NOMOVE | SWP_NOCLIENTMOVE | SWP_NOSIZE | SWP_NOCLIENTSIZE);
 }
 
@@ -876,7 +856,7 @@ void CDECL RosDrv_WindowPosChanged( HWND hwnd, HWND insert_after, UINT swp_flags
         }
     }
 
-    RosDrv_UpdateZOrder(hwnd, (RECT*)visible_rect);
+    //RosDrv_UpdateZOrder(hwnd, (RECT*)visible_rect);
 }
 
 /* EOF */
