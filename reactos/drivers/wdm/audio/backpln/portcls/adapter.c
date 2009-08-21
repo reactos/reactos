@@ -312,8 +312,9 @@ PcRegisterSubdevice(
          */
         Status = IoRegisterDeviceInterface(DeviceExt->PhysicalDeviceObject,
                                            &SubDeviceDescriptor->Interfaces[Index],
-                                           NULL, //&RefName,
+                                           &RefName,
                                            &SymbolicLinkName);
+
         if (NT_SUCCESS(Status))
         {
             /* activate device interface */

@@ -14,8 +14,6 @@ const GUID KS_CATEGORY_AUDIO                   = {0x6994AD04L, 0x93EF, 0x11D0, {
 const GUID KS_CATEGORY_TOPOLOGY                = {0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}};
 const GUID DMOCATEGORY_ACOUSTIC_ECHO_CANCEL    = {0xBF963D80L, 0xC559, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 
-#define IOCTL_KS_OBJECT_CLASS CTL_CODE(FILE_DEVICE_KS, 0x7, METHOD_NEITHER, FILE_ANY_ACCESS)
-
 NTSTATUS
 BuildPinDescriptor(
     IN PKSAUDIO_DEVICE_ENTRY DeviceEntry,
@@ -198,14 +196,15 @@ OpenDevice(
 NTSTATUS
 InsertAudioDevice(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PUNICODE_STRING DeviceName,
-    IN LPWSTR ReferenceString)
+    IN PUNICODE_STRING DeviceName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILTER_WORKER_CONTEXT Ctx = NULL;
     PIO_WORKITEM WorkItem = NULL;
     PSYSAUDIODEVEXT DeviceExtension;
     PKSAUDIO_DEVICE_ENTRY DeviceEntry = NULL;
+    PDEVICE_OBJECT AudioDeviceObject;
+    UNICODE_STRING ReferenceString, SymbolicLinkName;
 
     /* a new device has arrived */
     DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
@@ -240,12 +239,6 @@ InsertAudioDevice(
     DeviceEntry->DeviceName.Length = 0;
     DeviceEntry->DeviceName.MaximumLength = DeviceName->MaximumLength + 10 * sizeof(WCHAR);
 
-    /* hack for bug 4566 */
-    if (ReferenceString)
-    {
-        DeviceEntry->DeviceName.MaximumLength += (wcslen(ReferenceString) + 2) * sizeof(WCHAR);
-    }
-
     DeviceEntry->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);
 
     if (!DeviceEntry->DeviceName.Buffer)
@@ -257,12 +250,6 @@ InsertAudioDevice(
     RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\");
     RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
 
-    if (ReferenceString)
-    {
-        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\");
-        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, ReferenceString);
-    }
-
     Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
 
      if (!NT_SUCCESS(Status))
@@ -272,6 +259,24 @@ InsertAudioDevice(
 
     Ctx->DeviceEntry = DeviceEntry;
     Ctx->WorkItem = WorkItem;
+
+    /* HACK
+     * sysaudio should register the device object for itself 
+     */
+    AudioDeviceObject = IoGetRelatedDeviceObject(DeviceEntry->FileObject);
+    RtlInitUnicodeString(&ReferenceString, L"sad0");
+    Status = IoRegisterDeviceInterface(AudioDeviceObject, &KSCATEGORY_AUDIO_DEVICE, &ReferenceString, &SymbolicLinkName);
+    if (NT_SUCCESS(Status))
+    {
+        IoSetDeviceInterfaceState(&SymbolicLinkName, TRUE);
+        RtlFreeUnicodeString(&SymbolicLinkName);
+    }
+    else
+	{
+		DPRINT1("Failed to open %wZ with Status %x\n", &DeviceEntry->DeviceName, Status);
+	DbgBreakPoint();
+
+	}
 
     /* fetch device extension */
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
@@ -312,13 +317,6 @@ DeviceInterfaceChangeCallback(
     DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
     NTSTATUS Status = STATUS_SUCCESS;
     PSYSAUDIODEVEXT DeviceExtension;
-    UNICODE_STRING DeviceName;
-    HANDLE Handle;
-    PFILE_OBJECT FileObject;
-    LPWSTR ReferenceString;
-    ULONG BytesReturned;
-
-
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
 
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
@@ -328,54 +326,7 @@ DeviceInterfaceChangeCallback(
     if (IsEqualGUIDAligned(&Event->Event,
                            &GUID_DEVICE_INTERFACE_ARRIVAL))
     {
-        /*<HACK>
-         * 1) Open the filter w/o reference string
-         * 2) Retrieve reference strings with our private IOCTL_KS_OBJECT_CLASS
-         * 3) Append these reference strings to symbolic link we got
-         * * see bug 4566
-         */
-
-        DeviceName.Length = 0;
-        DeviceName.MaximumLength = Event->SymbolicLinkName->Length + 10 * sizeof(WCHAR);
-
-        DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceName.MaximumLength);
-
-        if (!DeviceName.Buffer)
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-       RtlAppendUnicodeToString(&DeviceName, L"\\??\\");
-       RtlAppendUnicodeStringToString(&DeviceName, Event->SymbolicLinkName);
-
-
-        Status = OpenDevice(&DeviceName, &Handle, &FileObject);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePool(DeviceName.Buffer);
-            return Status;
-        }
-
-        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_OBJECT_CLASS, NULL, 0, &ReferenceString, sizeof(LPWSTR), &BytesReturned);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("failed Status %x\n", Status);
-
-            ExFreePool(DeviceName.Buffer);
-            ObDereferenceObject(FileObject);
-            ZwClose(Handle);
-            return Status;
-       }
-
-        while(*ReferenceString)
-        {
-            Status = InsertAudioDevice(DeviceObject, Event->SymbolicLinkName, ReferenceString);
-            ReferenceString += wcslen(ReferenceString) + 1;
-        }
-        //ExFreePool(ReferenceString);
-        ObDereferenceObject(FileObject);
-        ZwClose(Handle);
-        ExFreePool(DeviceName.Buffer);
+        Status = InsertAudioDevice(DeviceObject, Event->SymbolicLinkName);
         return Status;
     }
     else

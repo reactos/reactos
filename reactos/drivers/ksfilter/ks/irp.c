@@ -635,7 +635,7 @@ KsStreamIo(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1781,9 +1781,10 @@ KspCreate(
     /* get device header */
     DeviceHeader = DeviceExtension->DeviceHeader;
 
-    /* hack for bug 4566 */
+
     if (IoStack->FileObject->FileName.Buffer == NULL)
     {
+        /* FIXME Pnp-Issue */
         DPRINT("Using reference string hack\n");
         Irp->IoStatus.Information = 0;
         /* set return status */
@@ -1834,116 +1835,6 @@ KspCreate(
 }
 
 NTSTATUS
-RosDeviceInterfaceReferenceStringHack(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIDEVICE_HEADER DeviceHeader;
-    PDEVICE_EXTENSION DeviceExtension;
-    PCREATE_ITEM_ENTRY CreateItemEntry;
-    PLIST_ENTRY Entry;
-    LPWSTR Buffer;
-    ULONG Length;
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
-    /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
-
-    /* retrieve all available reference strings registered */
-    Length = 0;
-    Entry = DeviceHeader->ItemList.Flink;
-    while(Entry != &DeviceHeader->ItemList)
-    {
-        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
-
-        ASSERT(CreateItemEntry->CreateItem);
-        if (CreateItemEntry->CreateItem->Create && CreateItemEntry->CreateItem->ObjectClass.Buffer)
-            Length += wcslen(CreateItemEntry->CreateItem->ObjectClass.Buffer) + 1;
-
-        Entry = Entry->Flink;
-    }
-
-    /* add extra zero */
-    Length += 1;
-
-    /* allocate the buffer */
-    Buffer = ExAllocatePool(NonPagedPool, Length * sizeof(WCHAR));
-    if (!Buffer)
-    {
-        Irp->IoStatus.Information = 0;
-        Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-
-    *((LPWSTR*)Irp->UserBuffer) = Buffer;
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = sizeof(LPWSTR);
-
-    Entry = DeviceHeader->ItemList.Flink;
-    while(Entry != &DeviceHeader->ItemList)
-    {
-        CreateItemEntry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(Entry, CREATE_ITEM_ENTRY, Entry);
-
-        ASSERT(CreateItemEntry->CreateItem);
-        if (CreateItemEntry->CreateItem->Create && CreateItemEntry->CreateItem->ObjectClass.Buffer)
-        {
-            wcscpy(Buffer, CreateItemEntry->CreateItem->ObjectClass.Buffer);
-            Buffer += wcslen(Buffer) + 1;
-        }
-        Entry = Entry->Flink;
-    }
-
-
-
-    *Buffer = L'\0';
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return STATUS_SUCCESS;
-
-}
-
-NTSTATUS
-NTAPI
-KspDeviceControl(
-    IN  PDEVICE_OBJECT DeviceObject,
-    IN  PIRP Irp)
-{
-    PIO_STACK_LOCATION IoStack;
-    PKSIOBJECT_HEADER ObjectHeader;
-    PKSIDEVICE_HEADER DeviceHeader;
-    PDEVICE_EXTENSION DeviceExtension;
-
-
-
-    /* get current stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    /* get device extension */
-    DeviceExtension = (PDEVICE_EXTENSION)IoStack->DeviceObject->DeviceExtension;
-    /* get device header */
-    DeviceHeader = DeviceExtension->DeviceHeader;
-
-    if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL && IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_OBJECT_CLASS)
-    {
-        /* hack for bug 4566 */
-        return RosDeviceInterfaceReferenceStringHack(DeviceObject, Irp);
-    }
-
-    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
-
-    ASSERT(ObjectHeader);
-    //KSCREATE_ITEM_IRP_STORAGE(Irp) = ObjectHeader->CreateItem;
-
-    return ObjectHeader->DispatchTable.DeviceIoControl(DeviceObject, Irp);
-}
-
-NTSTATUS
 NTAPI
 KspDispatchIrp(
     IN  PDEVICE_OBJECT DeviceObject,
@@ -1969,7 +1860,7 @@ KspDispatchIrp(
 
     if (!ObjectHeader)
     {
-        /* hack for bug 4566 */
+        /* FIXME Pnp-Issue*/
         Irp->IoStatus.Status = STATUS_SUCCESS;
         Irp->IoStatus.Information = 0;
         /* complete and forget */
@@ -2045,8 +1936,6 @@ KsSetMajorFunctionHandler(
             break;
             break;
         case IRP_MJ_DEVICE_CONTROL:
-            DriverObject->MajorFunction[MajorFunction] = KspDeviceControl;
-            break;
         case IRP_MJ_CLOSE:
         case IRP_MJ_READ:
         case IRP_MJ_WRITE:
@@ -2102,12 +1991,6 @@ KsDispatchIrp(
             }
         }
 
-        if (IoStack->MajorFunction == IRP_MJ_DEVICE_CONTROL)
-        {
-            /* handle device requests */
-            return KspDeviceControl(DeviceObject, Irp);
-        }
-
         switch (IoStack->MajorFunction)
         {
             case IRP_MJ_CLOSE:
@@ -2117,6 +2000,7 @@ KsDispatchIrp(
             case IRP_MJ_QUERY_SECURITY:
             case IRP_MJ_SET_SECURITY:
             case IRP_MJ_PNP:
+            case IRP_MJ_DEVICE_CONTROL:
                 return KspDispatchIrp(DeviceObject, Irp);
             default:
                 return KsDispatchInvalidDeviceRequest(DeviceObject, Irp);
