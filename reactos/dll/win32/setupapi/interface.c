@@ -255,6 +255,7 @@ SETUP_CreateInterfaceList(
             rc = RegOpenKeyExW(hReferenceKey, Control, 0, KEY_QUERY_VALUE, &hControlKey);
             if (rc != ERROR_SUCCESS)
             {
+#if 0
                 if (OnlyPresentInterfaces)
                 {
                     DestroyDeviceInterface(interfaceInfo);
@@ -262,6 +263,7 @@ SETUP_CreateInterfaceList(
                 }
                 else
                     interfaceInfo->Flags |= SPINT_REMOVED;
+#endif
             }
             else
             {
