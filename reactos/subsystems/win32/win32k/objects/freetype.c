@@ -3732,12 +3732,6 @@ NtGdiExtTextOutW(
         }
     }
 
-    /* FIXME: remove this as soon as GetCharacterPlacementA/W work properly */
-    if ((fuOptions & ETO_GLYPH_INDEX) && (fuOptions != (ETO_GLYPH_INDEX | ETO_PDY)))
-    {
-        fuOptions &= ~ETO_GLYPH_INDEX;
-    }
-
     /* Finally call the internal routine */
     Result = GreExtTextOutW(hDC,
                             XStart,
