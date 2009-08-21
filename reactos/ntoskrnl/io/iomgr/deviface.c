@@ -920,7 +920,10 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
         DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
         ExFreePool(SymbolicLinkName->Buffer);
     }
-    SymbolicLinkName->Buffer[1] = '?';
+    else
+    {
+        SymbolicLinkName->Buffer[1] = '?';
+    }
 
     ZwClose(SubKey);
     ZwClose(InterfaceKey);
