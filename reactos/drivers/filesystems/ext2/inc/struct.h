@@ -31,11 +31,21 @@ typedef ULONG uint32;
 
 typedef PVOID PBCB;
 
+//
+// This is a huge hack that will create a broken driver for GCC.
+// The driver should use PSEH2.
+//
+#ifdef _MSC_VER
+#define try __try
+#define except __except
+#define finally __finally
+#else
 #define try if (1)
 #define except(x) if (0 && (x))
 #define finally if (1)
 #define GetExceptionInformation() 0
 #define GetExceptionCode() 0
+#endif
 
 // we will use the LARGE_INTEGER structure as defined by NT
 
