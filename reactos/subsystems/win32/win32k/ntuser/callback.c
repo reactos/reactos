@@ -249,7 +249,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 HMENU APIENTRY
 co_IntLoadSysMenuTemplate()
 {
-   LRESULT Result;
+   LRESULT Result = 0;
    NTSTATUS Status;
    PVOID ResultPointer;
    ULONG ResultLength;
@@ -264,23 +264,20 @@ co_IntLoadSysMenuTemplate()
                                0,
                                &ResultPointer,
                                &ResultLength);
-
-   /* Simulate old behaviour: copy into our local buffer */
-   Result = *(LRESULT*)ResultPointer;
+   if (NT_SUCCESS(Status))
+   {
+      /* Simulate old behaviour: copy into our local buffer */
+      Result = *(LRESULT*)ResultPointer;
+   }
 
    UserEnterCo();
 
-   if (!NT_SUCCESS(Status))
-   {
-      return(0);
-   }
    return (HMENU)Result;
 }
 
 BOOL APIENTRY
 co_IntLoadDefaultCursors(VOID)
 {
-   LRESULT Result;
    NTSTATUS Status;
    PVOID ResultPointer;
    ULONG ResultLength;
@@ -296,9 +293,6 @@ co_IntLoadDefaultCursors(VOID)
                                sizeof(BOOL),
                                &ResultPointer,
                                &ResultLength);
-
-   /* Simulate old behaviour: copy into our local buffer */
-   Result = *(LRESULT*)ResultPointer;
 
    UserEnterCo();
 
