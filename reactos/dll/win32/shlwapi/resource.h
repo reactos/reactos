@@ -20,6 +20,9 @@
 #ifndef WINE_SHLWAPI_RESOURCE_H
 #define WINE_SHLWAPI_RESOURCE_H
 
+#include <windef.h>
+#include <winuser.h>
+
 #define IDS_BYTES_FORMAT 64
 #define IDS_TIME_INTERVAL_HOURS 65
 #define IDS_TIME_INTERVAL_MINUTES 66
