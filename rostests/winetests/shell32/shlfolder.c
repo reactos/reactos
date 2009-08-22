@@ -81,15 +81,6 @@ static void init_function_pointers(void)
     ok(hr == S_OK, "SHGetMalloc failed %08x\n", hr);
 }
 
-static const char *wine_dbgstr_w(LPCWSTR str)
-{
-    static char buf[512];
-    if (!str)
-        return "(null)";
-    WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
-    return buf;
-}
-
 static void test_ParseDisplayName(void)
 {
     HRESULT hr;
