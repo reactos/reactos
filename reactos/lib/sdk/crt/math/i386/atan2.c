@@ -15,7 +15,13 @@ double atan2 (double __y, double __x)
      "fld %%st(0)"
      : "=t" (__val) : "0" (__x), "u" (__y));
 #else
-#error IMPLEMENT ME
+  __asm
+  {
+    fld __y
+    fld __x
+    fpatan
+    fstp __val
+  }
 #endif /*__GNUC__*/
   return __val;
 }
