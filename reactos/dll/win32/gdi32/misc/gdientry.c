@@ -302,15 +302,15 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     ULONG i;
     LPDDSURFACEDESC pSurfaceDesc = NULL;
 
-    /* TODO : Speed optimze, most games/dx apps/program does not want 1 surface, they want lest 2
-     * so we need incress the stack so it can contain 2 surface instead of one, this will incress 
-     * the speed of the apps when it trying alloc buffer. How to incress the surface stack space
-     * we need create a own struct for DD_SURFACE_LOCAL DdSurfaceLocal, DD_SURFACE_MORE DdSurfaceMore
-     * DD_SURFACE_GLOBAL DdSurfaceGlobal. HANDLE hPrevSurface, hSurface. like
+    /* TODO: Optimize speed. Most games/dx apps/programs do not want one surface, they want at least two.
+     * So we need increase the stack to contain two surfaces instead of one. This will increase 
+     * the speed of the apps when allocating buffers. How to increase the surface stack space:
+     * we need to create a struct for DD_SURFACE_LOCAL DdSurfaceLocal, DD_SURFACE_MORE DdSurfaceMore
+     * DD_SURFACE_GLOBAL DdSurfaceGlobal, HANDLE hPrevSurface, hSurface like
      * struct { DD_SURFACE_LOCAL DdSurfaceLocal1, DD_SURFACE_LOCAL DdSurfaceLocal2 }
-     * lest so it contain two surface. maybe 4. we need watch what is most common here before 
-     * we create the size activate  this IF when you start doing the optimze and please also
-     * take report from user which value they got here
+     * in a way that it may contain two surfaces, maybe even four. We need to watch what is most common before 
+     * we create the size. Activate this IF when you start doing the optimze and please also
+     * take reports from users which value they got here.
      */ 
 #if 1
     {
@@ -323,14 +323,14 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
     /* Check how many surfaces there are */
     if (SurfaceCount != 1)
     {
-        /* We got more that one surface so we need alloc memory for them */
+        /* We got more than one surface, so we need to allocate memory for them */
         pDdSurfaceLocal = (PDD_SURFACE_LOCAL) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_LOCAL) * SurfaceCount ));
         pDdSurfaceMore = (PDD_SURFACE_MORE) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_MORE) * SurfaceCount ));
         pDdSurfaceGlobal = (PDD_SURFACE_GLOBAL)  HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(DD_SURFACE_GLOBAL) * SurfaceCount ));
         phSurface = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(HANDLE) * SurfaceCount ));
         puhSurface = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (sizeof(HANDLE) * SurfaceCount ));
 
-        /* check if we sueese alloc all memory we need */
+        /* Check if we successfully allocated all memory we need */
         if ((pDdSurfaceLocal == NULL) || (pDdSurfaceMore == NULL) || (pDdSurfaceGlobal == NULL) || (phSurface == NULL) || (puhSurface == NULL))
         {
             pCreateSurface->ddRVal = DDERR_OUTOFMEMORY;
@@ -343,6 +343,11 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
             if ( pDdSurfaceMore != NULL )
             {
                 HeapFree(GetProcessHeap(), 0, pDdSurfaceMore);
+            }
+
+            if ( pDdSurfaceGlobal != NULL )
+            {
+                HeapFree(GetProcessHeap(), 0, pDdSurfaceGlobal);
             }
 
             if ( phSurface != NULL )
@@ -517,6 +522,11 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
         if ( pDdSurfaceMore != NULL )
         {
             HeapFree(GetProcessHeap(), 0, pDdSurfaceMore);
+        }
+
+        if ( pDdSurfaceGlobal != NULL )
+        {
+            HeapFree(GetProcessHeap(), 0, pDdSurfaceGlobal);
         }
 
         if ( phSurface != NULL )
