@@ -49,8 +49,9 @@ GetHandleUserData(HGDIOBJ hobj)
 static DWORD WINAPI
 IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 {
-	DWORD ret;
+	DWORD retval;
 
+#ifdef __GNUC__
 	asm volatile
 	(
 		"pushfl;"				// Save flags
@@ -62,21 +63,37 @@ IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 		"rep movsd;"			// Copy params to the stack
 		"call *%%edx;"			// Call function
 		"popfl;"				// Restore flags
-		: "=a" (ret)
+		: "=a" (retval)
 		: "S" (pFirstParam), "c" (cParams), "d"(proc)
 		: "%edi"
 	);
+#else
+	__asm
+	{
+		pushf
+		mov eax, cParams
+		shl eax, 2
+		sub esp, eax
+		mov edi, esp
+		cld
+		rep movsd
+		call proc
+		mov retval, eax
+		popf
+    };
+#endif
 
-	return ret;
+	return retval;
 }
 
 DWORD
 Syscall(LPWSTR pszFunction, int cParams, void* pParams)
 {
 	char szFunctionName[MAX_PATH];
+	FARPROC proc;
 
 	sprintf(szFunctionName, "%ls", pszFunction);
-	FARPROC proc = (FARPROC)GetProcAddress(g_hModule, szFunctionName);
+	proc = (FARPROC)GetProcAddress(g_hModule, szFunctionName);
 	if (!proc)
 	{
 		printf("Couldn't find proc: %s\n", szFunctionName);

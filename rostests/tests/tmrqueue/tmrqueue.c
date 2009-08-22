@@ -102,7 +102,7 @@ typedef struct _TESTINFO
   {
     struct
     {
-      /* nothing */
+      HANDLE Dummy;
     } Test1;
     struct
     {
