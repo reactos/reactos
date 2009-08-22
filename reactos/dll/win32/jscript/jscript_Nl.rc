@@ -30,6 +30,7 @@ STRINGTABLE DISCARDABLE
     IDS_SEMICOLON           "';' verwacht"
     IDS_LBRACKET            "'(' verwacht"
     IDS_RBRACKET            "')' verwacht"
+    IDS_UNTERMINATED_STR    "Onafgesloten tekenreeksconstante"
     IDS_NOT_FUNC            "Functie verwacht"
     IDS_NOT_DATE            "'[object]' is geen datum object"
     IDS_NOT_NUM             "Getal verwacht"

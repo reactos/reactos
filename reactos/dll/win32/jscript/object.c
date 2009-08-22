@@ -74,8 +74,11 @@ static HRESULT Object_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPA
 static HRESULT Object_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
+    DISPPARAMS params = {NULL, NULL, 0, 0};
+
     TRACE("\n");
-    return Object_toString(dispex, lcid, flags, dp, retv, ei, sp);
+
+    return jsdisp_call_name(dispex, toStringW, lcid, DISPATCH_METHOD, &params, retv, ei, sp);
 }
 
 static HRESULT Object_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -142,9 +145,9 @@ static void Object_destructor(DispatchEx *dispex)
 }
 
 static const builtin_prop_t Object_props[] = {
-    {hasOwnPropertyW,        Object_hasOwnProperty,        PROPF_METHOD},
-    {isPrototypeOfW,         Object_isPrototypeOf,         PROPF_METHOD},
-    {propertyIsEnumerableW,  Object_propertyIsEnumerable,  PROPF_METHOD},
+    {hasOwnPropertyW,        Object_hasOwnProperty,        PROPF_METHOD|1},
+    {isPrototypeOfW,         Object_isPrototypeOf,         PROPF_METHOD|1},
+    {propertyIsEnumerableW,  Object_propertyIsEnumerable,  PROPF_METHOD|1},
     {toLocaleStringW,        Object_toLocaleString,        PROPF_METHOD},
     {toStringW,              Object_toString,              PROPF_METHOD},
     {valueOfW,               Object_valueOf,               PROPF_METHOD}

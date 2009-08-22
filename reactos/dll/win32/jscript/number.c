@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
 #include <math.h>
 
 #include "jscript.h"
@@ -36,10 +39,6 @@ static const WCHAR toFixedW[] = {'t','o','F','i','x','e','d',0};
 static const WCHAR toExponentialW[] = {'t','o','E','x','p','o','n','e','n','t','i','a','l',0};
 static const WCHAR toPrecisionW[] = {'t','o','P','r','e','c','i','s','i','o','n',0};
 static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
 #define NUMBER_TOSTRING_BUF_SIZE 64
 /* ECMA-262 3rd Edition    15.7.4.2 */
@@ -214,27 +213,6 @@ static HRESULT Number_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPAR
     return S_OK;
 }
 
-static HRESULT Number_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Number_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Number_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT Number_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
@@ -256,14 +234,11 @@ static HRESULT Number_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
 }
 
 static const builtin_prop_t Number_props[] = {
-    {hasOwnPropertyW,        Number_hasOwnProperty,        PROPF_METHOD},
-    {isPrototypeOfW,         Number_isPrototypeOf,         PROPF_METHOD},
-    {propertyIsEnumerableW,  Number_propertyIsEnumerable,  PROPF_METHOD},
-    {toExponentialW,         Number_toExponential,         PROPF_METHOD},
+    {toExponentialW,         Number_toExponential,         PROPF_METHOD|1},
     {toFixedW,               Number_toFixed,               PROPF_METHOD},
     {toLocaleStringW,        Number_toLocaleString,        PROPF_METHOD},
-    {toPrecisionW,           Number_toPrecision,           PROPF_METHOD},
-    {toStringW,              Number_toString,              PROPF_METHOD},
+    {toPrecisionW,           Number_toPrecision,           PROPF_METHOD|1},
+    {toStringW,              Number_toString,              PROPF_METHOD|1},
     {valueOfW,               Number_valueOf,               PROPF_METHOD}
 };
 
@@ -330,7 +305,7 @@ static HRESULT NumberConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DIS
     return S_OK;
 }
 
-static HRESULT alloc_number(script_ctx_t *ctx, BOOL use_constr, NumberInstance **ret)
+static HRESULT alloc_number(script_ctx_t *ctx, DispatchEx *object_prototype, NumberInstance **ret)
 {
     NumberInstance *number;
     HRESULT hres;
@@ -339,10 +314,10 @@ static HRESULT alloc_number(script_ctx_t *ctx, BOOL use_constr, NumberInstance *
     if(!number)
         return E_OUTOFMEMORY;
 
-    if(use_constr)
-        hres = init_dispex_from_constr(&number->dispex, ctx, &Number_info, ctx->number_constr);
+    if(object_prototype)
+        hres = init_dispex(&number->dispex, ctx, &Number_info, object_prototype);
     else
-        hres = init_dispex(&number->dispex, ctx, &Number_info, NULL);
+        hres = init_dispex_from_constr(&number->dispex, ctx, &Number_info, ctx->number_constr);
     if(FAILED(hres))
         return hres;
 
@@ -350,12 +325,12 @@ static HRESULT alloc_number(script_ctx_t *ctx, BOOL use_constr, NumberInstance *
     return S_OK;
 }
 
-HRESULT create_number_constr(script_ctx_t *ctx, DispatchEx **ret)
+HRESULT create_number_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
     NumberInstance *number;
     HRESULT hres;
 
-    hres = alloc_number(ctx, FALSE, &number);
+    hres = alloc_number(ctx, object_prototype, &number);
     if(FAILED(hres))
         return hres;
 
@@ -371,7 +346,7 @@ HRESULT create_number(script_ctx_t *ctx, VARIANT *num, DispatchEx **ret)
     NumberInstance *number;
     HRESULT hres;
 
-    hres = alloc_number(ctx, TRUE, &number);
+    hres = alloc_number(ctx, NULL, &number);
     if(FAILED(hres))
         return hres;
 

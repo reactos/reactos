@@ -43,10 +43,6 @@ static const WCHAR spliceW[] = {'s','p','l','i','c','e',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
 static const WCHAR unshiftW[] = {'u','n','s','h','i','f','t',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
 static const WCHAR default_separatorW[] = {',',0};
 
@@ -743,27 +739,6 @@ static HRESULT Array_unshift(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARA
     return E_NOTIMPL;
 }
 
-static HRESULT Array_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT Array_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
@@ -809,22 +784,19 @@ static void Array_on_put(DispatchEx *dispex, const WCHAR *name)
 }
 
 static const builtin_prop_t Array_props[] = {
-    {concatW,                Array_concat,               PROPF_METHOD},
-    {hasOwnPropertyW,        Array_hasOwnProperty,       PROPF_METHOD},
-    {isPrototypeOfW,         Array_isPrototypeOf,        PROPF_METHOD},
-    {joinW,                  Array_join,                 PROPF_METHOD},
+    {concatW,                Array_concat,               PROPF_METHOD|1},
+    {joinW,                  Array_join,                 PROPF_METHOD|1},
     {lengthW,                Array_length,               0},
     {popW,                   Array_pop,                  PROPF_METHOD},
-    {propertyIsEnumerableW,  Array_propertyIsEnumerable, PROPF_METHOD},
-    {pushW,                  Array_push,                 PROPF_METHOD},
+    {pushW,                  Array_push,                 PROPF_METHOD|1},
     {reverseW,               Array_reverse,              PROPF_METHOD},
     {shiftW,                 Array_shift,                PROPF_METHOD},
-    {sliceW,                 Array_slice,                PROPF_METHOD},
-    {sortW,                  Array_sort,                 PROPF_METHOD},
-    {spliceW,                Array_splice,               PROPF_METHOD},
+    {sliceW,                 Array_slice,                PROPF_METHOD|2},
+    {sortW,                  Array_sort,                 PROPF_METHOD|1},
+    {spliceW,                Array_splice,               PROPF_METHOD|2},
     {toLocaleStringW,        Array_toLocaleString,       PROPF_METHOD},
     {toStringW,              Array_toString,             PROPF_METHOD},
-    {unshiftW,               Array_unshift,              PROPF_METHOD},
+    {unshiftW,               Array_unshift,              PROPF_METHOD|1},
 };
 
 static const builtin_info_t Array_info = {
@@ -888,7 +860,7 @@ static HRESULT ArrayConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISP
     return S_OK;
 }
 
-static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **ret)
+static HRESULT alloc_array(script_ctx_t *ctx, DispatchEx *object_prototype, ArrayInstance **ret)
 {
     ArrayInstance *array;
     HRESULT hres;
@@ -897,8 +869,8 @@ static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **r
     if(!array)
         return E_OUTOFMEMORY;
 
-    if(use_constr)
-        hres = init_dispex_from_constr(&array->dispex, ctx, &Array_info, ctx->array_constr);
+    if(object_prototype)
+        hres = init_dispex(&array->dispex, ctx, &Array_info, object_prototype);
     else
         hres = init_dispex_from_constr(&array->dispex, ctx, &Array_info, ctx->object_constr);
 
@@ -911,12 +883,12 @@ static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **r
     return S_OK;
 }
 
-HRESULT create_array_constr(script_ctx_t *ctx, DispatchEx **ret)
+HRESULT create_array_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
     ArrayInstance *array;
     HRESULT hres;
 
-    hres = alloc_array(ctx, FALSE, &array);
+    hres = alloc_array(ctx, object_prototype, &array);
     if(FAILED(hres))
         return hres;
 
@@ -931,7 +903,7 @@ HRESULT create_array(script_ctx_t *ctx, DWORD length, DispatchEx **ret)
     ArrayInstance *array;
     HRESULT hres;
 
-    hres = alloc_array(ctx, TRUE, &array);
+    hres = alloc_array(ctx, NULL, &array);
     if(FAILED(hres))
         return hres;
 

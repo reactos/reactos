@@ -90,11 +90,6 @@ static const WCHAR ignoreCaseW[] = {'i','g','n','o','r','e','C','a','s','e',0};
 static const WCHAR multilineW[] = {'m','u','l','t','i','l','i','n','e',0};
 static const WCHAR lastIndexW[] = {'l','a','s','t','I','n','d','e','x',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
-static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 static const WCHAR execW[] = {'e','x','e','c',0};
 static const WCHAR testW[] = {'t','e','s','t',0};
 
@@ -3432,8 +3427,24 @@ HRESULT regexp_match(DispatchEx *dispex, const WCHAR *str, DWORD len, BOOL gflag
 static HRESULT RegExp_source(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    TRACE("\n");
+
+    switch(flags) {
+    case DISPATCH_PROPERTYGET: {
+        RegExpInstance *This = (RegExpInstance*)dispex;
+
+        V_VT(retv) = VT_BSTR;
+        V_BSTR(retv) = SysAllocString(This->str);
+        if(!V_BSTR(retv))
+            return E_OUTOFMEMORY;
+        break;
+    }
+    default:
+        FIXME("Unimplemnted flags %x\n", flags);
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT RegExp_global(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
@@ -3465,34 +3476,6 @@ static HRESULT RegExp_lastIndex(DispatchEx *dispex, LCID lcid, WORD flags, DISPP
 }
 
 static HRESULT RegExp_toString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT RegExp_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT RegExp_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT RegExp_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT RegExp_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
@@ -3540,17 +3523,13 @@ static void RegExp_destructor(DispatchEx *dispex)
 }
 
 static const builtin_prop_t RegExp_props[] = {
-    {execW,                  RegExp_exec,                  PROPF_METHOD},
+    {execW,                  RegExp_exec,                  PROPF_METHOD|1},
     {globalW,                RegExp_global,                0},
-    {hasOwnPropertyW,        RegExp_hasOwnProperty,        PROPF_METHOD},
     {ignoreCaseW,            RegExp_ignoreCase,            0},
-    {isPrototypeOfW,         RegExp_isPrototypeOf,         PROPF_METHOD},
     {lastIndexW,             RegExp_lastIndex,             0},
     {multilineW,             RegExp_multiline,             0},
-    {propertyIsEnumerableW,  RegExp_propertyIsEnumerable,  PROPF_METHOD},
     {sourceW,                RegExp_source,                0},
-    {testW,                  RegExp_test,                  PROPF_METHOD},
-    {toLocaleStringW,        RegExp_toLocaleString,        PROPF_METHOD},
+    {testW,                  RegExp_test,                  PROPF_METHOD|1},
     {toStringW,              RegExp_toString,              PROPF_METHOD}
 };
 
@@ -3563,7 +3542,7 @@ static const builtin_info_t RegExp_info = {
     NULL
 };
 
-static HRESULT alloc_regexp(script_ctx_t *ctx, BOOL use_constr, RegExpInstance **ret)
+static HRESULT alloc_regexp(script_ctx_t *ctx, DispatchEx *object_prototype, RegExpInstance **ret)
 {
     RegExpInstance *regexp;
     HRESULT hres;
@@ -3572,10 +3551,10 @@ static HRESULT alloc_regexp(script_ctx_t *ctx, BOOL use_constr, RegExpInstance *
     if(!regexp)
         return E_OUTOFMEMORY;
 
-    if(use_constr)
-        hres = init_dispex_from_constr(&regexp->dispex, ctx, &RegExp_info, ctx->regexp_constr);
+    if(object_prototype)
+        hres = init_dispex(&regexp->dispex, ctx, &RegExp_info, object_prototype);
     else
-        hres = init_dispex(&regexp->dispex, ctx, &RegExp_info, NULL);
+        hres = init_dispex_from_constr(&regexp->dispex, ctx, &RegExp_info, ctx->regexp_constr);
 
     if(FAILED(hres)) {
         heap_free(regexp);
@@ -3593,7 +3572,7 @@ static HRESULT create_regexp(script_ctx_t *ctx, const WCHAR *exp, int len, DWORD
 
     TRACE("%s %x\n", debugstr_w(exp), flags);
 
-    hres = alloc_regexp(ctx, TRUE, &regexp);
+    hres = alloc_regexp(ctx, NULL, &regexp);
     if(FAILED(hres))
         return hres;
 
@@ -3694,12 +3673,12 @@ static HRESULT RegExpConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DIS
     return S_OK;
 }
 
-HRESULT create_regexp_constr(script_ctx_t *ctx, DispatchEx **ret)
+HRESULT create_regexp_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
     RegExpInstance *regexp;
     HRESULT hres;
 
-    hres = alloc_regexp(ctx, FALSE, &regexp);
+    hres = alloc_regexp(ctx, object_prototype, &regexp);
     if(FAILED(hres))
         return hres;
 

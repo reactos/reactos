@@ -131,6 +131,7 @@ DispatchEx *iface_to_jsdisp(IUnknown*);
 HRESULT disp_call(IDispatch*,DISPID,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_call_value(DispatchEx*,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_call(DispatchEx*,DISPID,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
+HRESULT jsdisp_call_name(DispatchEx*,const WCHAR*,LCID,WORD,DISPPARAMS*,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT disp_propget(IDispatch*,DISPID,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT disp_propput(IDispatch*,DISPID,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
 HRESULT jsdisp_propget(DispatchEx*,DISPID,LCID,VARIANT*,jsexcept_t*,IServiceProvider*);
@@ -225,14 +226,14 @@ HRESULT init_global(script_ctx_t*);
 HRESULT init_function_constr(script_ctx_t*,DispatchEx*);
 HRESULT create_object_prototype(script_ctx_t*,DispatchEx**);
 
-HRESULT create_array_constr(script_ctx_t*,DispatchEx**);
-HRESULT create_bool_constr(script_ctx_t*,DispatchEx**);
-HRESULT create_date_constr(script_ctx_t*,DispatchEx**);
-HRESULT init_error_constr(script_ctx_t*);
-HRESULT create_number_constr(script_ctx_t*,DispatchEx**);
+HRESULT create_array_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
+HRESULT create_bool_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
+HRESULT create_date_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
+HRESULT init_error_constr(script_ctx_t*,DispatchEx*);
+HRESULT create_number_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
 HRESULT create_object_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
-HRESULT create_regexp_constr(script_ctx_t*,DispatchEx**);
-HRESULT create_string_constr(script_ctx_t*,DispatchEx**);
+HRESULT create_regexp_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
+HRESULT create_string_constr(script_ctx_t*,DispatchEx*,DispatchEx**);
 
 typedef struct {
     const WCHAR *str;

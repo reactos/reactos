@@ -38,10 +38,6 @@ static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n'
 static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
 static const WCHAR numberW[] = {'n','u','m','b','e','r',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
 static HRESULT Error_number(DispatchEx *dispex, LCID lcid, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
@@ -116,28 +112,6 @@ static HRESULT Error_toString(DispatchEx *dispex, LCID lcid, WORD flags,
     return S_OK;
 }
 
-static HRESULT Error_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags,
-        DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Error_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags,
-        DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-
-static HRESULT Error_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags,
-        DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT Error_value(DispatchEx *dispex, LCID lcid, WORD flags,
         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
@@ -166,11 +140,8 @@ static void Error_destructor(DispatchEx *dispex)
 
 static const builtin_prop_t Error_props[] = {
     {descriptionW,              Error_description,                  0},
-    {hasOwnPropertyW,           Error_hasOwnProperty,               PROPF_METHOD},
-    {isPrototypeOfW,            Error_isPrototypeOf,                PROPF_METHOD},
     {messageW,                  Error_message,                      0},
     {numberW,                   Error_number,                       0},
-    {propertyIsEnumerableW,     Error_propertyIsEnumerable,         PROPF_METHOD},
     {toStringW,                 Error_toString,                     PROPF_METHOD}
 };
 
@@ -185,11 +156,8 @@ static const builtin_info_t Error_info = {
 
 static const builtin_prop_t ErrorInst_props[] = {
     {descriptionW,              Error_description,                  0},
-    {hasOwnPropertyW,           Error_hasOwnProperty,               PROPF_METHOD},
-    {isPrototypeOfW,            Error_isPrototypeOf,                PROPF_METHOD},
     {messageW,                  Error_message,                      0},
     {numberW,                   Error_number,                       0},
-    {propertyIsEnumerableW,     Error_propertyIsEnumerable,         PROPF_METHOD}
 };
 
 static const builtin_info_t ErrorInst_info = {
@@ -201,21 +169,21 @@ static const builtin_info_t ErrorInst_info = {
     NULL
 };
 
-static HRESULT alloc_error(script_ctx_t *ctx, BOOL error_prototype,
+static HRESULT alloc_error(script_ctx_t *ctx, DispatchEx *prototype,
         DispatchEx *constr, ErrorInstance **ret)
 {
     ErrorInstance *err;
-    DispatchEx *inherit;
     HRESULT hres;
 
     err = heap_alloc_zero(sizeof(ErrorInstance));
     if(!err)
         return E_OUTOFMEMORY;
 
-    inherit = error_prototype ? ctx->object_constr : ctx->error_constr;
-    hres = init_dispex_from_constr(&err->dispex, ctx,
-            error_prototype ? &Error_info : &ErrorInst_info,
-            constr ? constr : inherit);
+    if(prototype)
+        hres = init_dispex(&err->dispex, ctx, &Error_info, prototype);
+    else
+        hres = init_dispex_from_constr(&err->dispex, ctx, &ErrorInst_info,
+            constr ? constr : ctx->error_constr);
     if(FAILED(hres)) {
         heap_free(err);
         return hres;
@@ -231,7 +199,7 @@ static HRESULT create_error(script_ctx_t *ctx, DispatchEx *constr,
     ErrorInstance *err;
     HRESULT hres;
 
-    hres = alloc_error(ctx, FALSE, constr, &err);
+    hres = alloc_error(ctx, NULL, constr, &err);
     if(FAILED(hres))
         return hres;
 
@@ -366,7 +334,7 @@ static HRESULT URIErrorConstr_value(DispatchEx *dispex, LCID lcid, WORD flags,
             dispex->ctx->uri_error_constr);
 }
 
-HRESULT init_error_constr(script_ctx_t *ctx)
+HRESULT init_error_constr(script_ctx_t *ctx, DispatchEx *object_prototype)
 {
     static const WCHAR nameW[] = {'n','a','m','e',0};
     static const WCHAR ErrorW[] = {'E','r','r','o','r',0};
@@ -392,7 +360,7 @@ HRESULT init_error_constr(script_ctx_t *ctx)
     HRESULT hres;
 
     for(i=0; i<7; i++) {
-        hres = alloc_error(ctx, i==0, NULL, &err);
+        hres = alloc_error(ctx, i==0 ? object_prototype : NULL, NULL, &err);
         if(FAILED(hres))
             return hres;
 
