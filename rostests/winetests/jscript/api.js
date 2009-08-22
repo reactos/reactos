@@ -77,6 +77,14 @@ ok(tmp.f() === "[object RegExp]", "tmp.f() = " + tmp.f());
 (tmp = new String).f = Object.prototype.toString;
 ok(tmp.f() === "[object String]", "tmp.f() = " + tmp.f());
 
+var obj = new Object();
+obj.toString = function (x) {
+    ok(arguments.length === 0, "arguments.length = " + arguments.length);
+    return "test";
+};
+ok((tmp = obj.toLocaleString()) === "test", "obj.toLocaleString() = " + tmp);
+ok((tmp = obj.toLocaleString(1)) === "test", "obj.toLocaleString(1) = " + tmp);
+
 ok("".length === 0, "\"\".length = " + "".length);
 ok(getVT("".length) == "VT_I4", "\"\".length = " + "".length);
 ok("abc".length === 3, "\"abc\".length = " + "abc".length);
@@ -1344,5 +1352,204 @@ exception_test(function() {eval("for(i=0;i<10")}, "SyntaxError", -2146827284);
 exception_test(function() {eval("while(")}, "SyntaxError", -2146827286);
 exception_test(function() {eval("if(")}, "SyntaxError", -2146827286);
 exception_test(function() {eval("'unterminated")}, "SyntaxError", -2146827273);
+
+function testObjectInherit(obj, ts, tls, vo) {
+    ok(obj.hasOwnProperty === Object.prototype.hasOwnProperty,
+       "obj.hasOwnProperty !== Object.prototype.hasOwnProprty");
+    ok(obj.isPrototypeOf === Object.prototype.isPrototypeOf,
+       "obj.isPrototypeOf !== Object.prototype.isPrototypeOf");
+    ok(obj.propertyIsEnumerable === Object.prototype.propertyIsEnumerable,
+       "obj.propertyIsEnumerable !== Object.prototype.propertyIsEnumerable");
+
+    if(ts)
+        ok(obj.toString === Object.prototype.toString,
+           "obj.toString !== Object.prototype.toString");
+    else
+        ok(obj.toString != Object.prototype.toString,
+           "obj.toString == Object.prototype.toString");
+
+    if(tls)
+        ok(obj.toLocaleString === Object.prototype.toLocaleString,
+           "obj.toLocaleString !== Object.prototype.toLocaleString");
+    else
+        ok(obj.toLocaleString != Object.prototype.toLocaleString,
+           "obj.toLocaleString == Object.prototype.toLocaleString");
+
+    if(vo)
+        ok(obj.valueOf === Object.prototype.valueOf,
+           "obj.valueOf !== Object.prototype.valueOf");
+    else
+        ok(obj.valueOf != Object.prototype.valueOf,
+           "obj.valueOf == Object.prototype.valueOf");
+
+    ok(obj._test === "test", "obj.test = " + obj._test);
+}
+
+Object.prototype._test = "test";
+testObjectInherit(new String("test"), false, true, false);
+testObjectInherit(/test/g, false, true, true);
+testObjectInherit(new Number(1), false, false, false);
+testObjectInherit(new Date(), false, false, false);
+testObjectInherit(new Boolean(true), false, true, false);
+testObjectInherit(new Array(), false, false, true);
+testObjectInherit(new Error(), false, true, true);
+testObjectInherit(testObjectInherit, false, true, true);
+testObjectInherit(Math, true, true, true);
+
+function testFunctions(obj, arr) {
+    var l;
+
+    for(var i=0; i<arr.length; i++) {
+        l = obj[arr[i][0]].length;
+        ok(l === arr[i][1], arr[i][0] + ".length = " + l);
+    }
+}
+
+testFunctions(Boolean.prototype, [
+        ["valueOf", 0],
+        ["toString", 0]
+    ]);
+
+testFunctions(Number.prototype, [
+        ["valueOf", 0],
+        ["toString", 1],
+        ["toExponential", 1],
+        ["toLocaleString", 0],
+        ["toPrecision", 1]
+    ]);
+
+testFunctions(String.prototype, [
+        ["valueOf", 0],
+        ["toString", 0],
+        ["anchor", 1],
+        ["big", 0],
+        ["blink", 0],
+        ["bold", 0],
+        ["charAt", 1],
+        ["charCodeAt", 1],
+        ["concat", 1],
+        ["fixed", 0],
+        ["fontcolor", 1],
+        ["fontsize", 1],
+        ["indexOf", 2],
+        ["italics", 0],
+        ["lastIndexOf", 2],
+        ["link", 1],
+        ["localeCompare", 1],
+        ["match", 1],
+        ["replace", 1],
+        ["search", 0],
+        ["slice", 0],
+        ["small", 0],
+        ["split", 2],
+        ["strike", 0],
+        ["sub", 0],
+        ["substr", 2],
+        ["substring", 2],
+        ["sup", 0],
+        ["toLocaleLowerCase", 0],
+        ["toLocaleUpperCase", 0],
+        ["toLowerCase", 0],
+        ["toUpperCase", 0]
+    ]);
+
+testFunctions(RegExp.prototype, [
+        ["toString", 0],
+        ["exec", 1],
+        ["test", 1]
+    ]);
+
+testFunctions(Date.prototype, [
+        ["getDate", 0],
+        ["getDay", 0],
+        ["getFullYear", 0],
+        ["getHours", 0],
+        ["getMilliseconds", 0],
+        ["getMinutes", 0],
+        ["getMonth", 0],
+        ["getSeconds", 0],
+        ["getTime", 0],
+        ["getTimezoneOffset", 0],
+        ["getUTCDate", 0],
+        ["getUTCDay", 0],
+        ["getUTCFullYear", 0],
+        ["getUTCHours", 0],
+        ["getUTCMilliseconds", 0],
+        ["getUTCMinutes", 0],
+        ["getUTCMonth", 0],
+        ["getUTCSeconds", 0],
+        ["setDate", 1],
+        ["setFullYear", 3],
+        ["setHours", 4],
+        ["setMilliseconds", 1],
+        ["setMinutes", 3],
+        ["setMonth", 2],
+        ["setSeconds", 2],
+        ["setTime", 1],
+        ["setUTCDate", 1],
+        ["setUTCFullYear", 3],
+        ["setUTCHours", 4],
+        ["setUTCMilliseconds", 1],
+        ["setUTCMinutes", 3],
+        ["setUTCMonth", 2],
+        ["setUTCSeconds", 2],
+        ["toDateString", 0],
+        ["toLocaleDateString", 0],
+        ["toLocaleString", 0],
+        ["toLocaleTimeString", 0],
+        ["toString", 0],
+        ["toTimeString", 0],
+        ["toUTCString", 0],
+        ["valueOf", 0]
+    ]);
+
+testFunctions(Array.prototype, [
+        ["concat", 1],
+        ["join", 1],
+        ["push", 1],
+        ["pop", 0],
+        ["reverse", 0],
+        ["shift", 0],
+        ["slice", 2],
+        ["sort", 1],
+        ["splice", 2],
+        ["toLocaleString", 0],
+        ["toString", 0],
+        ["unshift", 1]
+    ]);
+
+testFunctions(Error.prototype, [
+        ["toString", 0]
+    ]);
+
+testFunctions(Math, [
+        ["abs", 1],
+        ["acos", 1],
+        ["asin", 1],
+        ["atan", 1],
+        ["atan2", 2],
+        ["ceil", 1],
+        ["cos", 1],
+        ["exp", 1],
+        ["floor", 1],
+        ["log", 1],
+        ["max", 2],
+        ["min", 2],
+        ["pow", 2],
+        ["random", 0],
+        ["round", 1],
+        ["sin", 1],
+        ["sqrt", 1],
+        ["tan", 1]
+    ]);
+
+testFunctions(Object.prototype, [
+        ["hasOwnProperty", 1],
+        ["isPrototypeOf", 1],
+        ["propertyIsEnumerable", 1],
+        ["toLocaleString", 0],
+        ["toString", 0],
+        ["valueOf", 0]
+    ]);
 
 reportSuccess();

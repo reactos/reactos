@@ -158,6 +158,39 @@ function replaceFunc2(m, subm, off, str) {
 r = "[test1] [test2]".replace(/\[([^\[]+)\]/g, replaceFunc2);
 ok(r === "r0 r1", "r = '" + r + "' expected 'r0 r1'");
 
+r = "$1,$2".replace(/(\$(\d))/g, "$$1-$1$2");
+ok(r === "$1-$11,$1-$22", "r = '" + r + "' expected '$1-$11,$1-$22'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$&");
+ok(r === "abc &1 123", "r = '" + r + "' expected 'abc &1 123'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$'");
+ok(r === "abc  123 123", "r = '" + r + "' expected 'abc  123 123'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$`");
+ok(r === "abc abc  123", "r = '" + r + "' expected 'abc abc  123'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$3");
+ok(r === "abc $3 123", "r = '" + r + "' expected 'abc $3 123'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$");
+ok(r === "abc $ 123", "r = '" + r + "' expected 'abc $ 123'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$a");
+ok(r === "abc $a 123", "r = '" + r + "' expected 'abc $a 123'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$11");
+ok(r === "abc &11 123", "r = '" + r + "' expected 'abc &11 123'");
+
+r = "abc &1 123".replace(/(\&(\d))/g, "$0");
+ok(r === "abc $0 123", "r = '" + r + "' expected 'abc $0 123'");
+
+r = "1 2 3".replace("2", "$&");
+ok(r === "1 $& 3", "r = '" + r + "' expected '1 $& 3'");
+
+r = "1 2 3".replace("2", "$'");
+ok(r === "1 $' 3", "r = '" + r + "' expected '1 $' 3'");
+
 r = "1,,2,3".split(/,+/g);
 ok(r.length === 3, "r.length = " + r.length);
 ok(r[0] === "1", "r[0] = " + r[0]);
@@ -174,5 +207,13 @@ r = "1,,2,".split(/,+/);
 ok(r.length === 2, "r.length = " + r.length);
 ok(r[0] === "1", "r[0] = " + r[0]);
 ok(r[1] === "2", "r[1] = " + r[1]);
+
+var re;
+
+re = /abc[^d]/g;
+ok(re.source === "abc[^d]", "re.source = '" + re.source + "', expected 'abc[^d]'");
+
+re = /a\bc[^d]/g;
+ok(re.source === "a\\bc[^d]", "re.source = '" + re.source + "', expected 'a\\bc[^d]'");
 
 reportSuccess();
