@@ -111,6 +111,9 @@ Win32kProcessCallout(PEPROCESS Process,
         destroy_process_classes(Win32Process);
 
         UserLeave();
+
+        /* Destroy all user->kernel handle mapping */
+        GDI_CleanupHandleMapping();
     }
 
     DPRINT("Leave Win32kProcessCallback\n");

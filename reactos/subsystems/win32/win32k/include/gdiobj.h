@@ -90,5 +90,6 @@ VOID NTAPI GDI_InitHandleMapping();
 VOID NTAPI GDI_AddHandleMapping(HGDIOBJ hKernel, HGDIOBJ hUser);
 HGDIOBJ NTAPI GDI_MapUserHandle(HGDIOBJ hUser);
 VOID NTAPI GDI_RemoveHandleMapping(HGDIOBJ hUser);
+VOID NTAPI GDI_CleanupHandleMapping();
 
 #endif

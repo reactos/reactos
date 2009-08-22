@@ -8,7 +8,7 @@
 
 /** INCLUDES ******************************************************************/
 
-//#define GDI_DEBUG
+#define GDI_DEBUG
 
 #include <win32k.h>
 #define NDEBUG
@@ -1547,6 +1547,39 @@ GDI_RemoveHandleMapping(HGDIOBJ hUser)
             RemoveEntryList(Current);
             ExFreePool(Mapping);
             break;
+        }
+
+        /* Advance to the next pair */
+        Current = Current->Flink;
+    }
+
+    /* Release the lock and return the entry */
+    KeReleaseSpinLock(&HandleMappingLock, OldIrql);
+}
+
+VOID NTAPI
+GDI_CleanupHandleMapping()
+{
+    KIRQL OldIrql;
+    PLIST_ENTRY Current;
+    PHMAPPING Mapping;
+    HANDLE hProcessId = PsGetCurrentProcessId();
+
+    /* Acquire the lock and check if the list is empty */
+    KeAcquireSpinLock(&HandleMappingLock, &OldIrql);
+
+    /* Traverse the list to find all handles of a current process */
+    Current = HandleMapping.Flink;
+    while(Current != &HandleMapping)
+    {
+        Mapping = CONTAINING_RECORD(Current, HMAPPING, Entry);
+
+        /* Check if it's our entry */
+        if (Mapping->hProcessId == hProcessId)
+        {
+            /* Remove and free it */
+            RemoveEntryList(Current);
+            ExFreePool(Mapping);
         }
 
         /* Advance to the next pair */
