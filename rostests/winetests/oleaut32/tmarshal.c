@@ -44,82 +44,6 @@ const MYSTRUCT MYSTRUCT_ARRAY[5] = {
     {0x5a5b5c5d, ULL_CONST(0x5e5f5051, 0x52535455)},
 };
 
-/* Debugging functions from wine/libs/wine/debug.c */
-
-/* allocate some tmp string space */
-/* FIXME: this is not 100% thread-safe */
-static char *get_tmp_space( int size )
-{
-    static char *list[32];
-    static long pos;
-    char *ret;
-    int idx;
-
-    idx = ++pos % (sizeof(list)/sizeof(list[0]));
-    if ((ret = realloc( list[idx], size ))) list[idx] = ret;
-    return ret;
-}
-
-/* default implementation of wine_dbgstr_wn */
-static const char *default_dbgstr_wn( const WCHAR *str, int n )
-{
-    char *dst, *res;
-
-    if (!HIWORD(str))
-    {
-        if (!str) return "(null)";
-        res = get_tmp_space( 6 );
-        sprintf( res, "#%04x", LOWORD(str) );
-        return res;
-    }
-    if (n == -1) n = lstrlenW(str);
-    if (n < 0) n = 0;
-    else if (n > 200) n = 200;
-    dst = res = get_tmp_space( n * 5 + 7 );
-    *dst++ = 'L';
-    *dst++ = '"';
-    while (n-- > 0)
-    {
-        WCHAR c = *str++;
-        switch (c)
-        {
-        case '\n': *dst++ = '\\'; *dst++ = 'n'; break;
-        case '\r': *dst++ = '\\'; *dst++ = 'r'; break;
-        case '\t': *dst++ = '\\'; *dst++ = 't'; break;
-        case '"':  *dst++ = '\\'; *dst++ = '"'; break;
-        case '\\': *dst++ = '\\'; *dst++ = '\\'; break;
-        default:
-            if (c >= ' ' && c <= 126)
-                *dst++ = (char)c;
-            else
-            {
-                *dst++ = '\\';
-                sprintf(dst,"%04x",c);
-                dst+=4;
-            }
-        }
-    }
-    *dst++ = '"';
-    if (*str)
-    {
-        *dst++ = '.';
-        *dst++ = '.';
-        *dst++ = '.';
-    }
-    *dst = 0;
-    return res;
-}
-
-const char *wine_dbgstr_wn( const WCHAR *s, int n )
-{
-    return default_dbgstr_wn(s, n);
-}
-
-const char *wine_dbgstr_w( const WCHAR *s )
-{
-    return default_dbgstr_wn( s, -1 );
-}
-
 
 #define RELEASEMARSHALDATA WM_USER
 
@@ -620,6 +544,40 @@ static HRESULT WINAPI Widget_CloneInterface(
     return S_OK;
 }
 
+static HRESULT WINAPI Widget_put_prop_with_lcid(
+    IWidget* iface, LONG lcid, INT i)
+{
+    trace("put_prop_with_lcid(%08x, %x)\n", lcid, i);
+    ok(lcid == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), "got lcid %08x\n", lcid);
+    ok(i == 0xcafe, "got %08x\n", i);
+    return S_OK;
+}
+
+static HRESULT WINAPI Widget_get_prop_with_lcid(
+    IWidget* iface, LONG lcid, INT *i)
+{
+    trace("get_prop_with_lcid(%08x, %p)\n", lcid, i);
+    ok(lcid == MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), "got lcid %08x\n", lcid);
+    *i = lcid;
+    return S_OK;
+}
+
+static HRESULT WINAPI Widget_get_prop_int(
+    IWidget* iface, INT *i)
+{
+    trace("get_prop_int(%p)\n", i);
+    *i = -13;
+    return S_OK;
+}
+
+static HRESULT WINAPI Widget_get_prop_uint(
+    IWidget* iface, UINT *i)
+{
+    trace("get_prop_uint(%p)\n", i);
+    *i = 42;
+    return S_OK;
+}
+
 static const struct IWidgetVtbl Widget_VTable =
 {
     Widget_QueryInterface,
@@ -647,7 +605,11 @@ static const struct IWidgetVtbl Widget_VTable =
     Widget_VarArg,
     Widget_StructArgs,
     Widget_Error,
-    Widget_CloneInterface
+    Widget_CloneInterface,
+    Widget_put_prop_with_lcid,
+    Widget_get_prop_with_lcid,
+    Widget_get_prop_int,
+    Widget_get_prop_uint
 };
 
 static HRESULT WINAPI StaticWidget_QueryInterface(IStaticWidget *iface, REFIID riid, void **ppvObject)
@@ -1324,6 +1286,59 @@ static void test_typelibmarshal(void)
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_STATE, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
     ok(hr == DISP_E_NOTACOLLECTION, "IDispatch_Invoke should have returned DISP_E_NOTACOLLECTION instead of 0x%08x\n", hr);
 
+    /* test propput with lcid */
+
+    /* the lcid passed to the function is the first lcid in the typelib header.
+       Since we don't explicitly set an lcid in the idl, it'll default to US English. */
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_I4;
+    V_I4(&vararg[0]) = 0xcafe;
+    dispparams.cNamedArgs = 1;
+    dispparams.rgdispidNamedArgs = &dispidNamed;
+    dispparams.cArgs = 1;
+    dispparams.rgvarg = vararg;
+    VariantInit(&varresult);
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_WITH_LCID, &IID_NULL, 0x40c, DISPATCH_PROPERTYPUT, &dispparams, &varresult, &excepinfo, NULL);
+todo_wine
+    ok_ole_success(hr, ITypeInfo_Invoke);
+    VariantClear(&varresult);
+
+    /* test propget with lcid */
+    dispparams.cNamedArgs = 0;
+    dispparams.cArgs = 0;
+    dispparams.rgvarg = NULL;
+    dispparams.rgdispidNamedArgs = NULL;
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_WITH_LCID, &IID_NULL, 0x40c, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
+todo_wine
+{
+    ok_ole_success(hr, ITypeInfo_Invoke);
+    ok(V_VT(&varresult) == VT_I4, "got %x\n", V_VT(&varresult));
+    ok(V_I4(&varresult) == 0x409, "got %x\n", V_I4(&varresult));
+}
+    VariantClear(&varresult);
+
+    /* test propget of INT value */
+    dispparams.cNamedArgs = 0;
+    dispparams.cArgs = 0;
+    dispparams.rgvarg = NULL;
+    dispparams.rgdispidNamedArgs = NULL;
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_INT, &IID_NULL, 0x40c, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
+    ok_ole_success(hr, ITypeInfo_Invoke);
+    ok(V_VT(&varresult) == VT_I4, "got %x\n", V_VT(&varresult));
+    ok(V_I4(&varresult) == -13, "got %x\n", V_I4(&varresult));
+    VariantClear(&varresult);
+
+    /* test propget of INT value */
+    dispparams.cNamedArgs = 0;
+    dispparams.cArgs = 0;
+    dispparams.rgvarg = NULL;
+    dispparams.rgdispidNamedArgs = NULL;
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_UINT, &IID_NULL, 0x40c, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
+    ok_ole_success(hr, ITypeInfo_Invoke);
+    ok(V_VT(&varresult) == VT_UI4, "got %x\n", V_VT(&varresult));
+    ok(V_UI4(&varresult) == 42, "got %x\n", V_UI4(&varresult));
+    VariantClear(&varresult);
+
     IDispatch_Release(pDispatch);
     IWidget_Release(pWidget);
 
@@ -1352,7 +1367,7 @@ static void test_DispCallFunc(void)
     V_VT(&varref) = VT_ERROR;
     V_ERROR(&varref) = DISP_E_PARAMNOTFOUND;
     VariantInit(&varresult);
-    hr = DispCallFunc(pWidget, 36, CC_STDCALL, VT_UI4, 4, rgvt, rgpvarg, &varresult);
+    hr = DispCallFunc(pWidget, 9*sizeof(void*), CC_STDCALL, VT_UI4, 4, rgvt, rgpvarg, &varresult);
     ok_ole_success(hr, DispCallFunc);
     VariantClear(&varresult);
     VariantClear(&vararg[1]);
@@ -1401,7 +1416,8 @@ START_TEST(tmarshal)
     test_DispCallFunc();
     test_StaticWidget();
 
-    hr = UnRegisterTypeLib(&LIBID_TestTypelib, 1, 0, LOCALE_NEUTRAL, 1);
+    hr = UnRegisterTypeLib(&LIBID_TestTypelib, 1, 0, LOCALE_NEUTRAL,
+                           sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32);
     ok_ole_success(hr, UnRegisterTypeLib);
 
     CoUninitialize();

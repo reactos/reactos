@@ -33,8 +33,8 @@
 #include "tmarshal.h"
 
 #define expect_eq(expr, value, type, format) { type _ret = (expr); ok((value) == _ret, #expr " expected " format " got " format "\n", value, _ret); }
-#define expect_int(expr, value) expect_eq(expr, (int)value, int, "%d")
-#define expect_hex(expr, value) expect_eq(expr, (int)value, int, "0x%x")
+#define expect_int(expr, value) expect_eq(expr, (int)(value), int, "%d")
+#define expect_hex(expr, value) expect_eq(expr, (int)(value), int, "0x%x")
 #define expect_null(expr) expect_eq(expr, NULL, const void *, "%p")
 
 #define expect_wstr_acpval(expr, value) \
@@ -1090,7 +1090,7 @@ typedef struct _function_info
     CALLCONV callconv;
     short cParams;
     short cParamsOpt;
-    short oVft;
+    short vtbl_index;
     short cScodes;
     WORD wFuncFlags;
     element_info ret_type;
@@ -1115,7 +1115,7 @@ static const interface_info info[] = {
 {
   "IDualIface",
   /*kind*/ TKIND_DISPATCH, /*flags*/ 0x1040, /*align*/ 4, /*size*/ 4,
-  /*#vtbl*/ 28, /*#func*/ 8,
+  /*#vtbl*/ 7, /*#func*/ 8,
   {
     {
       0x60000000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
@@ -1135,7 +1135,7 @@ static const interface_info info[] = {
     },
     {
       0x60000001, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 4, /*#scodes*/ 0, /*flags*/ 0x1,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 1, /*#scodes*/ 0, /*flags*/ 0x1,
       {19, 0}, /* ret */
       { /* params */
         {-1, -1}
@@ -1147,7 +1147,7 @@ static const interface_info info[] = {
     },
     {
       0x60000002, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 8, /*#scodes*/ 0, /*flags*/ 0x1,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 2, /*#scodes*/ 0, /*flags*/ 0x1,
       {19, 0}, /* ret */
       { /* params */
         {-1, -1}
@@ -1159,7 +1159,7 @@ static const interface_info info[] = {
     },
     {
       0x60010000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 12, /*#scodes*/ 0, /*flags*/ 0x1,
+      /*#param*/ 1, /*#opt*/ 0, /*vtbl*/ 3, /*#scodes*/ 0, /*flags*/ 0x1,
       {24, 0}, /* ret */
       { /* params */
         {26, 2},
@@ -1173,7 +1173,7 @@ static const interface_info info[] = {
     },
     {
       0x60010001, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 3, /*#opt*/ 0, /*vtbl*/ 16, /*#scodes*/ 0, /*flags*/ 0x1,
+      /*#param*/ 3, /*#opt*/ 0, /*vtbl*/ 4, /*#scodes*/ 0, /*flags*/ 0x1,
       {24, 0}, /* ret */
       { /* params */
         {23, 1},
@@ -1191,7 +1191,7 @@ static const interface_info info[] = {
     },
     {
       0x60010002, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 5, /*#opt*/ 0, /*vtbl*/ 20, /*#scodes*/ 0, /*flags*/ 0x1,
+      /*#param*/ 5, /*#opt*/ 0, /*vtbl*/ 5, /*#scodes*/ 0, /*flags*/ 0x1,
       {24, 0}, /* ret */
       { /* params */
         {26, 1},
@@ -1213,7 +1213,7 @@ static const interface_info info[] = {
     },
     {
       0x60010003, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 8, /*#opt*/ 0, /*vtbl*/ 24, /*#scodes*/ 0, /*flags*/ 0x1,
+      /*#param*/ 8, /*#opt*/ 0, /*vtbl*/ 6, /*#scodes*/ 0, /*flags*/ 0x1,
       {24, 0}, /* ret */
       { /* params */
         {3, 1},
@@ -1241,7 +1241,7 @@ static const interface_info info[] = {
     },
     {
       0x60020000, /*func*/ FUNC_DISPATCH, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 28, /*#scodes*/ 0, /*flags*/ 0x0,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 7, /*#scodes*/ 0, /*flags*/ 0x0,
       {24, 0}, /* ret */
       { /* params */
         {-1, -1}
@@ -1256,11 +1256,11 @@ static const interface_info info[] = {
 {
   "ISimpleIface",
   /*kind*/ TKIND_INTERFACE, /*flags*/ 0x1000, /*align*/ 4, /*size*/ 4,
-  /*#vtbl*/ 32, /*#func*/ 1,
+  /*#vtbl*/ 8, /*#func*/ 1,
   {
     {
       0x60020000, /*func*/ FUNC_PUREVIRTUAL, /*inv*/ INVOKE_FUNC, /*call*/ 0x4,
-      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 28, /*#scodes*/ 0, /*flags*/ 0x0,
+      /*#param*/ 0, /*#opt*/ 0, /*vtbl*/ 7, /*#scodes*/ 0, /*flags*/ 0x0,
       {25, 0}, /* ret */
       { /* params */
         {-1, -1}
@@ -1307,7 +1307,7 @@ static void test_dump_typelib(const char *name)
         expect_hex(typeattr->wTypeFlags, if_info->wTypeFlags);
         expect_int(typeattr->cbAlignment, if_info->cbAlignment);
         expect_int(typeattr->cbSizeInstance, if_info->cbSizeInstance);
-        expect_int(typeattr->cbSizeVft, if_info->cbSizeVft);
+        expect_int(typeattr->cbSizeVft, if_info->cbSizeVft * sizeof(void*));
         expect_int(typeattr->cFuncs, if_info->cFuncs);
 
         for (func = 0; func < typeattr->cFuncs; func++)
@@ -1326,7 +1326,9 @@ static void test_dump_typelib(const char *name)
             expect_int(desc->callconv, fn_info->callconv);
             expect_int(desc->cParams, fn_info->cParams);
             expect_int(desc->cParamsOpt, fn_info->cParamsOpt);
-            expect_int(desc->oVft, fn_info->oVft);
+            ok( desc->oVft == fn_info->vtbl_index * sizeof(void*) ||
+                broken(desc->oVft == fn_info->vtbl_index * 4), /* xp64 */
+                "desc->oVft got %u\n", desc->oVft );
             expect_int(desc->cScodes, fn_info->cScodes);
             expect_int(desc->wFuncFlags, fn_info->wFuncFlags);
             ole_check(ITypeInfo_GetNames(typeinfo, desc->memid, namesTab, 256, &cNames));
@@ -1376,6 +1378,58 @@ static const char *create_test_typelib(void)
     return filename;
 }
 
+static void test_create_typelib_lcid(LCID lcid)
+{
+    char filename[MAX_PATH];
+    WCHAR name[MAX_PATH];
+    HRESULT hr;
+    ICreateTypeLib2 *tl;
+    HANDLE file;
+    DWORD msft_header[5]; /* five is enough for now */
+    DWORD read;
+
+    GetTempFileNameA( ".", "tlb", 0, filename );
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, name, MAX_PATH);
+
+    hr = CreateTypeLib2(SYS_WIN32, name, &tl);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeLib2_SetLcid(tl, lcid);
+    ok(hr == S_OK, "got %08x\n", hr);
+
+    hr = ICreateTypeLib2_SaveAllChanges(tl);
+    ICreateTypeLib2_Release(tl);
+
+    file = CreateFileA( filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, 0 );
+    ok( file != INVALID_HANDLE_VALUE, "file creation failed\n" );
+
+    ReadFile( file, msft_header, sizeof(msft_header), &read, NULL );
+    ok(read == sizeof(msft_header), "read %d\n", read);
+    CloseHandle( file );
+
+    ok(msft_header[0] == 0x5446534d, "got %08x\n", msft_header[0]);
+    ok(msft_header[1] == 0x00010002, "got %08x\n", msft_header[1]);
+    ok(msft_header[2] == 0xffffffff, "got %08x\n", msft_header[2]);
+    ok(msft_header[3] == (lcid ? lcid : 0x409), "got %08x (lcid %08x)\n", msft_header[3], lcid);
+    ok(msft_header[4] == lcid, "got %08x (lcid %08x)\n", msft_header[4], lcid);
+
+    DeleteFileA(filename);
+}
+
+static void test_create_typelibs(void)
+{
+    test_create_typelib_lcid(LOCALE_SYSTEM_DEFAULT);
+    test_create_typelib_lcid(LOCALE_USER_DEFAULT);
+    test_create_typelib_lcid(LOCALE_NEUTRAL);
+
+    test_create_typelib_lcid(0x009);
+    test_create_typelib_lcid(0x409);
+    test_create_typelib_lcid(0x809);
+
+    test_create_typelib_lcid(0x007);
+    test_create_typelib_lcid(0x407);
+}
+
 START_TEST(typelib)
 {
     const char *filename;
@@ -1392,4 +1446,7 @@ START_TEST(typelib)
         test_dump_typelib( filename );
         DeleteFile( filename );
     }
+
+    test_create_typelibs();
+
 }

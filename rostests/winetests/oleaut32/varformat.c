@@ -379,6 +379,10 @@ static void test_VarFormat(void)
   VARFMT(VT_R8,V_R8,-1.57,"0.00",S_OK,"-1.57");
   VARFMT(VT_R8,V_R8,-1.57,"#.##",S_OK,"-1.57");
   VARFMT(VT_R8,V_R8,-0.1,".#",S_OK,"-.1");
+  VARFMT(VT_R8,V_R8,0.099,"#.#",S_OK,".1");
+  VARFMT(VT_R8,V_R8,0.0999,"#.##",S_OK,".1");
+  /* for large negative exponents, wine truncates instead of rounding */
+  todo_wine VARFMT(VT_R8,V_R8,0.099,"#.##",S_OK,".1");
 
 
   /* 'out' is not cleared */
