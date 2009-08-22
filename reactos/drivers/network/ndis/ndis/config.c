@@ -704,15 +704,8 @@ NdisReadNetworkAddress(
     }
 
     while (j < str.Length && str.Buffer[j] != '\0') j++;
-         
-    if ((j % 2) == 0)
-    {
-        *NetworkAddressLength = (UINT)(j/2);
-    }
-    else
-    {
-        *NetworkAddressLength = (UINT)((j/2)+1);
-    }
+    
+    *NetworkAddressLength = (j+1) >> 1;
 
     if ((*NetworkAddressLength) == 0)
     {
