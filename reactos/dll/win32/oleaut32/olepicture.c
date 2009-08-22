@@ -82,11 +82,10 @@
 #include "oleauto.h"
 #include "connpt.h"
 #include "urlmon.h"
+#include "wincodec.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "wine/library.h"
-
-#include "ungif.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
@@ -1059,220 +1058,6 @@ static jpeg_boolean _jpeg_resync_to_restart(j_decompress_ptr cinfo, int desired)
 static void _jpeg_term_source(j_decompress_ptr cinfo) { }
 #endif /* SONAME_LIBJPEG */
 
-struct gifdata {
-    unsigned char *data;
-    unsigned int curoff;
-    unsigned int len;
-};
-
-static int _gif_inputfunc(GifFileType *gif, GifByteType *data, int len) {
-    struct gifdata *gd = gif->UserData;
-
-    if (len+gd->curoff > gd->len) {
-        ERR("Trying to read %d bytes, but only %d available.\n",len, gd->len-gd->curoff);
-        len = gd->len - gd->curoff;
-    }
-    memcpy(data, gd->data+gd->curoff, len);
-    gd->curoff += len;
-    return len;
-}
-
-
-static HRESULT OLEPictureImpl_LoadGif(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
-{
-    struct gifdata 	gd;
-    GifFileType 	*gif;
-    BITMAPINFO		*bmi;
-    HDC			hdcref;
-    LPBYTE              bytes;
-    int                 i,j,ret;
-    GifImageDesc        *gid;
-    SavedImage          *si;
-    ColorMapObject      *cm;
-    int                 transparent = -1;
-    ExtensionBlock      *eb;
-    int                 padding;
-
-    gd.data   = xbuf;
-    gd.curoff = 0;
-    gd.len    = xread;
-    gif = DGifOpen((void*)&gd, _gif_inputfunc);
-    ret = DGifSlurp(gif);
-    if (ret == GIF_ERROR) {
-      ERR("Failed reading GIF using libgif.\n");
-      return E_FAIL;
-    }
-    TRACE("screen height %d, width %d\n", gif->SWidth, gif->SHeight);
-    TRACE("color res %d, backgcolor %d\n", gif->SColorResolution, gif->SBackGroundColor);
-    TRACE("imgcnt %d\n", gif->ImageCount);
-    if (gif->ImageCount<1) {
-      ERR("GIF stream does not have images inside?\n");
-      return E_FAIL;
-    }
-    TRACE("curimage: %d x %d, on %dx%d, interlace %d\n",
-      gif->Image.Width, gif->Image.Height,
-      gif->Image.Left, gif->Image.Top,
-      gif->Image.Interlace
-    );
-    /* */
-    padding = (gif->SWidth+3) & ~3;
-    si   = gif->SavedImages+0;
-    gid  = &(si->ImageDesc);
-    cm   = gid->ColorMap;
-    if (!cm) cm = gif->SColorMap;
-    bmi  = HeapAlloc(GetProcessHeap(),0,sizeof(BITMAPINFOHEADER)+(cm->ColorCount)*sizeof(RGBQUAD));
-    bytes= HeapAlloc(GetProcessHeap(),0,padding*gif->SHeight);
-    
-    /* look for the transparent color extension */
-    for (i = 0; i < si->ExtensionBlockCount; ++i) {
-	eb = si->ExtensionBlocks + i;
-	if (eb->Function == 0xF9 && eb->ByteCount == 4) {
-	    if ((eb->Bytes[0] & 1) == 1) {
-		transparent = (unsigned char)eb->Bytes[3];
-	    }
-	}
-    }
-
-    for (i = 0; i < cm->ColorCount; i++) {
-      bmi->bmiColors[i].rgbRed = cm->Colors[i].Red;
-      bmi->bmiColors[i].rgbGreen = cm->Colors[i].Green;
-      bmi->bmiColors[i].rgbBlue = cm->Colors[i].Blue;
-      if (i == transparent) {
-	  This->rgbTrans = RGB(bmi->bmiColors[i].rgbRed,
-			       bmi->bmiColors[i].rgbGreen,
-			       bmi->bmiColors[i].rgbBlue);
-      }
-    }
-
-    /* Map to in picture coordinates */
-    for (i = 0, j = 0; i < gid->Height; i++) {
-        if (gif->Image.Interlace) {
-            memcpy(
-                bytes + (gid->Top + j) * padding + gid->Left,
-                si->RasterBits + i * gid->Width,
-                gid->Width);
-
-            /* Lower bits of interlaced counter encode current interlace */
-            if (j & 1) j += 2;      /* Currently filling odd rows */
-            else if (j & 2) j += 4; /* Currently filling even rows not multiples of 4 */
-            else j += 8;            /* Currently filling every 8th row or 4th row in-between */
-
-            if (j >= gid->Height && i < gid->Height && (j & 1) == 0) {
-                /* End of current interlace, go to next interlace */
-                if (j & 2) j = 1;       /* Next iteration fills odd rows */
-                else if (j & 4) j = 2;  /* Next iteration fills even rows not mod 4 and not mod 8 */
-                else j = 4;             /* Next iteration fills rows in-between rows mod 6 */
-            }
-        } else {
-            memcpy(
-                bytes + (gid->Top + i) * padding + gid->Left,
-                si->RasterBits + i * gid->Width,
-                gid->Width);
-        }
-    }
-
-    bmi->bmiHeader.biSize		= sizeof(BITMAPINFOHEADER);
-    bmi->bmiHeader.biWidth		= gif->SWidth;
-    bmi->bmiHeader.biHeight		= -gif->SHeight;
-    bmi->bmiHeader.biPlanes		= 1;
-    bmi->bmiHeader.biBitCount		= 8;
-    bmi->bmiHeader.biCompression	= BI_RGB;
-    bmi->bmiHeader.biSizeImage		= padding*gif->SHeight;
-    bmi->bmiHeader.biXPelsPerMeter	= 0;
-    bmi->bmiHeader.biYPelsPerMeter	= 0;
-    bmi->bmiHeader.biClrUsed		= cm->ColorCount;
-    bmi->bmiHeader.biClrImportant	= 0;
-
-    hdcref = GetDC(0);
-    This->desc.u.bmp.hbitmap=CreateDIBitmap(
-	    hdcref,
-	    &bmi->bmiHeader,
-	    CBM_INIT,
-	    bytes,
-	    bmi,
-	    DIB_RGB_COLORS
-    );
-
-    if (transparent > -1) {
-	/* Create the Mask */
-	HDC hdc = CreateCompatibleDC(0);
-	HDC hdcMask = CreateCompatibleDC(0);
-	HBITMAP hOldbitmap; 
-	HBITMAP hOldbitmapmask;
-
-        unsigned int monopadding = (((unsigned)(gif->SWidth + 31)) >> 5) << 2;
-        HBITMAP hTempMask;
-
-        This->hbmXor = CreateDIBitmap(
-            hdcref,
-            &bmi->bmiHeader,
-            CBM_INIT,
-            bytes,
-            bmi,
-            DIB_RGB_COLORS
-        );
-
-        bmi->bmiColors[0].rgbRed = 0;
-        bmi->bmiColors[0].rgbGreen = 0;
-        bmi->bmiColors[0].rgbBlue = 0;
-        bmi->bmiColors[1].rgbRed = 255;
-        bmi->bmiColors[1].rgbGreen = 255;
-        bmi->bmiColors[1].rgbBlue = 255;
-
-        bmi->bmiHeader.biBitCount		= 1;
-        bmi->bmiHeader.biSizeImage		= monopadding*gif->SHeight;
-        bmi->bmiHeader.biClrUsed		= 2;
-
-        for (i = 0; i < gif->SHeight; i++) {
-            unsigned char * colorPointer = bytes + padding * i;
-            unsigned char * monoPointer = bytes + monopadding * i;
-            for (j = 0; j < gif->SWidth; j++) {
-                unsigned char pixel = colorPointer[j];
-                if ((j & 7) == 0) monoPointer[j >> 3] = 0;
-                if (pixel == (transparent & 0x000000FFU)) monoPointer[j >> 3] |= 1 << (7 - (j & 7));
-            }
-        }
-        hTempMask = CreateDIBitmap(
-                hdcref,
-                &bmi->bmiHeader,
-                CBM_INIT,
-                bytes,
-                bmi,
-                DIB_RGB_COLORS
-        );
-
-        bmi->bmiHeader.biHeight = -bmi->bmiHeader.biHeight;
-        This->hbmMask = CreateBitmap(bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, 1, 1, NULL);
-	hOldbitmap = SelectObject(hdc, hTempMask);
-	hOldbitmapmask = SelectObject(hdcMask, This->hbmMask);
-
-        SetBkColor(hdc, RGB(255, 255, 255));
-	BitBlt(hdcMask, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, hdc, 0, 0, SRCCOPY);
-
-	/* We no longer need the original bitmap, so we apply the first
-	   transformation with the mask to speed up the rendering */
-        SelectObject(hdc, This->hbmXor);
-	SetBkColor(hdc, RGB(0,0,0));
-	SetTextColor(hdc, RGB(255,255,255));
-	BitBlt(hdc, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, 
-		 hdcMask, 0, 0,  SRCAND);
-
-	SelectObject(hdc, hOldbitmap);
-	SelectObject(hdcMask, hOldbitmapmask);
-	DeleteDC(hdcMask);
-	DeleteDC(hdc);
-        DeleteObject(hTempMask);
-    }
-    
-    ReleaseDC(0, hdcref);
-    This->desc.picType = PICTYPE_BITMAP;
-    OLEPictureImpl_SetBitmap(This);
-    DGifCloseFile(gif);
-    HeapFree(GetProcessHeap(),0,bmi);
-    HeapFree(GetProcessHeap(),0,bytes);
-    return S_OK;
-}
-
 static HRESULT OLEPictureImpl_LoadJpeg(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
 {
 #ifdef SONAME_LIBJPEG
@@ -1402,6 +1187,182 @@ static HRESULT OLEPictureImpl_LoadDIB(OLEPictureImpl *This, BYTE *xbuf, ULONG xr
     This->desc.picType = PICTYPE_BITMAP;
     OLEPictureImpl_SetBitmap(This);
     return S_OK;
+}
+
+static HRESULT OLEPictureImpl_LoadWICSource(OLEPictureImpl *This, IWICBitmapSource *src)
+{
+    HRESULT hr;
+    BITMAPINFOHEADER bih;
+    HDC hdcref;
+    UINT width, height;
+    UINT stride, buffersize;
+    LPBYTE bits=NULL;
+    WICRect rc;
+    IWICBitmapSource *real_source;
+    UINT x, y;
+    COLORREF white = RGB(255, 255, 255), black = RGB(0, 0, 0);
+    BOOL has_alpha=FALSE;
+
+    hr = WICConvertBitmapSource(&GUID_WICPixelFormat32bppBGRA, src, &real_source);
+    if (FAILED(hr)) return hr;
+
+    hr = IWICBitmapSource_GetSize(real_source, &width, &height);
+    if (FAILED(hr)) goto end;
+
+    bih.biSize = sizeof(bih);
+    bih.biWidth = width;
+    bih.biHeight = -height;
+    bih.biPlanes = 1;
+    bih.biBitCount = 32;
+    bih.biCompression = BI_RGB;
+    bih.biSizeImage = 0;
+    bih.biXPelsPerMeter = 4085; /* olepicture ignores the stored resolution */
+    bih.biYPelsPerMeter = 4085;
+    bih.biClrUsed = 0;
+    bih.biClrImportant = 0;
+
+    stride = 4 * width;
+    buffersize = stride * height;
+
+    bits = HeapAlloc(GetProcessHeap(), 0, buffersize);
+    if (!bits)
+    {
+        hr = E_OUTOFMEMORY;
+        goto end;
+    }
+
+    rc.X = 0;
+    rc.Y = 0;
+    rc.Width = width;
+    rc.Height = height;
+    hr = IWICBitmapSource_CopyPixels(real_source, &rc, stride, buffersize, bits);
+    if (FAILED(hr))
+        goto end;
+
+    hdcref = GetDC(0);
+    This->desc.u.bmp.hbitmap = CreateDIBitmap(
+        hdcref,
+        &bih,
+        CBM_INIT,
+        bits,
+        (BITMAPINFO*)&bih,
+        DIB_RGB_COLORS);
+
+    if (This->desc.u.bmp.hbitmap == 0)
+    {
+        hr = E_FAIL;
+        ReleaseDC(0, hdcref);
+        goto end;
+    }
+
+    This->desc.picType = PICTYPE_BITMAP;
+    OLEPictureImpl_SetBitmap(This);
+
+    /* set transparent pixels to black, all others to white */
+    for(y = 0; y < height; y++){
+        for(x = 0; x < width; x++){
+            DWORD *pixel = (DWORD*)(bits + stride*y + 4*x);
+            if((*pixel & 0x80000000) == 0)
+            {
+                has_alpha = TRUE;
+                *pixel = black;
+            }
+            else
+                *pixel = white;
+        }
+    }
+
+    if (has_alpha)
+    {
+        HDC hdcBmp, hdcXor, hdcMask;
+        HBITMAP hbmoldBmp, hbmoldXor, hbmoldMask;
+
+        This->hbmXor = CreateDIBitmap(
+            hdcref,
+            &bih,
+            CBM_INIT,
+            bits,
+            (BITMAPINFO*)&bih,
+            DIB_RGB_COLORS
+        );
+
+        This->hbmMask = CreateBitmap(width,-height,1,1,NULL);
+        hdcBmp = CreateCompatibleDC(NULL);
+        hdcXor = CreateCompatibleDC(NULL);
+        hdcMask = CreateCompatibleDC(NULL);
+
+        hbmoldBmp = SelectObject(hdcBmp,This->desc.u.bmp.hbitmap);
+        hbmoldXor = SelectObject(hdcXor,This->hbmXor);
+        hbmoldMask = SelectObject(hdcMask,This->hbmMask);
+
+        SetBkColor(hdcXor,black);
+        BitBlt(hdcMask,0,0,width,height,hdcXor,0,0,SRCCOPY);
+        BitBlt(hdcXor,0,0,width,height,hdcBmp,0,0,SRCAND);
+
+        SelectObject(hdcBmp,hbmoldBmp);
+        SelectObject(hdcXor,hbmoldXor);
+        SelectObject(hdcMask,hbmoldMask);
+
+        DeleteDC(hdcBmp);
+        DeleteDC(hdcXor);
+        DeleteDC(hdcMask);
+    }
+
+    ReleaseDC(0, hdcref);
+
+end:
+    HeapFree(GetProcessHeap(), 0, bits);
+    IWICBitmapSource_Release(real_source);
+    return hr;
+}
+
+static HRESULT OLEPictureImpl_LoadWICDecoder(OLEPictureImpl *This, REFCLSID decoder_clsid, BYTE *xbuf, ULONG xread)
+{
+    HRESULT hr;
+    IWICBitmapDecoder *decoder;
+    IWICBitmapFrameDecode *framedecode;
+    HRESULT initresult;
+    HGLOBAL hdata;
+    BYTE *data;
+    IStream *stream;
+
+    hdata = GlobalAlloc(GMEM_MOVEABLE, xread);
+    if (!hdata) return E_OUTOFMEMORY;
+
+    data = GlobalLock(hdata);
+    memcpy(data, xbuf, xread);
+    GlobalUnlock(hdata);
+
+    hr = CreateStreamOnHGlobal(hdata, TRUE, &stream);
+    if (FAILED(hr))
+    {
+        GlobalFree(hdata);
+        return hr;
+    }
+
+    initresult = CoInitialize(NULL);
+
+    hr = CoCreateInstance(decoder_clsid, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICBitmapDecoder, (void**)&decoder);
+    if (FAILED(hr)) goto end;
+
+    hr = IWICBitmapDecoder_Initialize(decoder, stream, WICDecodeMetadataCacheOnLoad);
+    if (SUCCEEDED(hr))
+    {
+        hr = IWICBitmapDecoder_GetFrame(decoder, 0, &framedecode);
+        if (SUCCEEDED(hr))
+        {
+            hr = OLEPictureImpl_LoadWICSource(This, (IWICBitmapSource*)framedecode);
+            IWICBitmapFrameDecode_Release(framedecode);
+        }
+    }
+
+    IWICBitmapDecoder_Release(decoder);
+
+end:
+    IStream_Release(stream);
+    if (SUCCEEDED(initresult)) CoUninitialize();
+    return hr;
 }
 
 /*****************************************************
@@ -1925,7 +1886,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
 
   switch (magic) {
   case BITMAP_FORMAT_GIF: /* GIF */
-    hr = OLEPictureImpl_LoadGif(This, xbuf, xread);
+    hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICGifDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_JPEG: /* JPEG */
     hr = OLEPictureImpl_LoadJpeg(This, xbuf, xread);

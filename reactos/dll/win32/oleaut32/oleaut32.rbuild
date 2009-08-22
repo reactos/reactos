@@ -39,6 +39,7 @@
 	<include base="oleaut32" root="intermediate">.</include>
 	<library>oleaut32_proxy</library>
 	<library>wine</library>
+	<library>windowscodecs</library>
 	<library>wineldr</library>
 	<library>ole32</library>
 	<library>rpcrt4</library>
