@@ -18,7 +18,7 @@
 #define GDIBRUSH_IS_DEFAULTSTYLE    0x4000
 #define GDIBRUSH_IS_MASKING         0x8000 /* Pattern bitmap is used as transparent mask (?) */
 #define GDIBRUSH_IS_INSIDEFRAME     0x00010000
-#define GDIBRUSH_CACHED_ENGINE      0x00040000
+#define GDIBRUSH_USER_BITMAP        0x00040000 /* Bitmap is not self-allocated */
 #define GDIBRUSH_CACHED_IS_SOLID	0x80000000
 
 /* Total amount of hatch brush styles */

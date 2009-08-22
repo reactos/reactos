@@ -218,8 +218,9 @@ GreCreatePatternBrush(HBITMAP hbmPattern)
     pBrush = EngAllocMem(FL_ZERO_MEMORY, sizeof(BRUSHGDI), TAG_BRUSHOBJ);
     if (!pBrush) return NULL;
 
-    /* Set SOLID flag */
+    /* Set BITMAP and USER_BITMAP flags */
     pBrush->flAttrs |= GDIBRUSH_IS_BITMAP;
+    pBrush->flAttrs |= GDIBRUSH_USER_BITMAP;
 
     /* Set bitmap */
     pBrush->hbmPattern = hbmPattern;
@@ -269,8 +270,8 @@ VOID
 NTAPI
 GreFreeBrush(PBRUSHGDI pBrush)
 {
-    /* Free the pattern bitmap if any */
-    if (pBrush->hbmPattern)
+    /* Free the pattern bitmap if it wasn't user-provided */
+    if (pBrush->hbmPattern && !(pBrush->flAttrs & GDIBRUSH_USER_BITMAP))
     {
         GDIOBJ_SetOwnership(pBrush->hbmPattern, PsGetCurrentProcess());
         GreDeleteBitmap(pBrush->hbmPattern);
