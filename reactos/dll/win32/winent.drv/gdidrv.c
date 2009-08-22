@@ -187,13 +187,6 @@ HBITMAP CDECL RosDrv_CreateDIBSection( NTDRV_PDEVICE *physDev, HBITMAP hbitmap,
 
 BOOL CDECL RosDrv_DeleteBitmap( HBITMAP hbitmap )
 {
-    DIBSECTION dib;
-
-    if (GetObjectW( hbitmap, sizeof(dib), &dib ) == sizeof(dib))
-    {
-        FIXME("TODO: Delete existing DIB section!\n");
-    }
-
     return RosGdiDeleteBitmap(hbitmap);
 }
 
