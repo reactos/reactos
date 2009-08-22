@@ -45,6 +45,7 @@ char *dup_basename(const char *name, const char *ext);
 int compare_name_id(const name_id_t *n1, const name_id_t *n2);
 string_t *convert_string(const string_t *str, enum str_e type, int codepage);
 void free_string( string_t *str );
+int check_valid_utf8( const string_t *str, int codepage );
 int check_unicode_conversion( const string_t *str_a, const string_t *str_w, int codepage );
 int get_language_codepage( unsigned short lang, unsigned short sublang );
 
