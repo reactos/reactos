@@ -33,7 +33,16 @@ double fmod (double __x, double __y)
      "jp        1b"
      : "=t" (__val) : "0" (__x), "u" (__y) : "ax", "cc");
 #else
-#error IMPLEMENT ME
+  __asm
+  {
+    fld     __y
+    fld     __x
+L1: fprem1
+    fstsw   ax
+    sahf
+    jp      L1
+    fstp    __val
+  }
 #endif /*__GNUC__*/
   return __val;
 }
