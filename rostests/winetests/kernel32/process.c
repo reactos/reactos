@@ -56,23 +56,6 @@
           wine_dbgstr_w(expected), wine_dbgstr_w(value)); \
     } while (0)
 
-/* A simpler version of wine_dbgstr_w. Note that the returned buffer will be
- * invalid after 16 calls to this funciton. */
-static const char *wine_dbgstr_w(LPCWSTR wstr)
-{
-  static char *buffers[16];
-  static int curr_buffer = 0;
-
-  int size;
-
-  curr_buffer = (curr_buffer + 1) % 16;
-  HeapFree(GetProcessHeap(), 0, buffers[curr_buffer]);
-  size = WideCharToMultiByte(CP_ACP, 0, wstr, -1, NULL, 0, NULL, NULL);
-  buffers[curr_buffer] = HeapAlloc(GetProcessHeap(), 0, size);
-  size = WideCharToMultiByte(CP_ACP, 0, wstr, -1, buffers[curr_buffer], size, NULL, NULL);
-  return buffers[curr_buffer];
-}
-
 static HINSTANCE hkernel32;
 static LPVOID (WINAPI *pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
 static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
@@ -1243,6 +1226,7 @@ static  void    test_SuspendFlag(void)
 static  void    test_DebuggingFlag(void)
 {
     char                buffer[MAX_PATH];
+    void               *processbase = NULL;
     PROCESS_INFORMATION	info;
     STARTUPINFOA       startup, us;
     DEBUG_EVENT         de;
@@ -1263,7 +1247,15 @@ static  void    test_DebuggingFlag(void)
     {
         ok(WaitForDebugEvent(&de, INFINITE), "reading debug event\n");
         ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
+        if (!dbg)
+        {
+            ok(de.dwDebugEventCode == CREATE_PROCESS_DEBUG_EVENT,
+               "first event: %d\n", de.dwDebugEventCode);
+            processbase = de.u.CreateProcessInfo.lpBaseOfImage;
+        }
         if (de.dwDebugEventCode != EXCEPTION_DEBUG_EVENT) dbg++;
+        ok(de.dwDebugEventCode != LOAD_DLL_DEBUG_EVENT ||
+           de.u.LoadDll.lpBaseOfDll != processbase, "got LOAD_DLL for main module\n");
     } while (de.dwDebugEventCode != EXIT_PROCESS_DEBUG_EVENT);
 
     ok(dbg, "I have seen a debug event\n");

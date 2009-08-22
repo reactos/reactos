@@ -125,6 +125,7 @@ static void test_GetDiskFreeSpaceA(void)
                    GetLastError() == ERROR_INVALID_DRIVE ||
                    GetLastError() == ERROR_PATH_NOT_FOUND ||
                    GetLastError() == ERROR_REQUEST_ABORTED ||
+                   GetLastError() == ERROR_NETNAME_DELETED ||
                    GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
                    "GetDiskFreeSpaceA(%s): ret=%d GetLastError=%d\n",
                    drive, ret, GetLastError());
@@ -144,6 +145,7 @@ static void test_GetDiskFreeSpaceA(void)
                         GetLastError() == ERROR_INVALID_FUNCTION ||
                         GetLastError() == ERROR_PATH_NOT_FOUND ||
                         GetLastError() == ERROR_REQUEST_ABORTED ||
+                        GetLastError() == ERROR_NETNAME_DELETED ||
                         GetLastError() == ERROR_UNRECOGNIZED_VOLUME,
                         "GetDiskFreeSpaceExA( %s ) failed. GetLastError=%d\n", drive, GetLastError());
                     ok( bytes_per_sector == 0 || /* empty cd rom drive */

@@ -320,7 +320,7 @@ static void test_string_conversion(LPBOOL bUsedDefaultChar)
     SetLastError(0xdeadbeef);
     ret = WideCharToMultiByte(950, 0, dbwcs, -1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     ok(ret == 5, "ret is %d\n", ret);
-    ok(!strcmp(mbs, "µH©Ò"), "mbs is %s\n", mbs);
+    ok(!strcmp(mbs, "\xb5H\xa9\xd2"), "mbs is %s\n", mbs);
     if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
     ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
 
@@ -334,7 +334,7 @@ static void test_string_conversion(LPBOOL bUsedDefaultChar)
     SetLastError(0xdeadbeef);
     ret = WideCharToMultiByte(950, 0, dbwcs, 1, mbs, sizeof(mbs), NULL, bUsedDefaultChar);
     ok(ret == 2, "ret is %d\n", ret);
-    ok(!strcmp(mbs, "µH"), "mbs is %s\n", mbs);
+    ok(!strcmp(mbs, "\xb5H"), "mbs is %s\n", mbs);
     if(bUsedDefaultChar) ok(*bUsedDefaultChar == FALSE, "bUsedDefaultChar is %d\n", *bUsedDefaultChar);
     ok(GetLastError() == 0xdeadbeef, "GetLastError() is %u\n", GetLastError());
 

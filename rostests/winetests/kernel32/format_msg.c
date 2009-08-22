@@ -52,13 +52,6 @@ static DWORD doitW(DWORD flags, LPCVOID src, DWORD msg_id, DWORD lang_id,
     return r;
 }
 
-static char buf[1024];
-static const char *debugstr_w(const WCHAR *str)
-{
-    WideCharToMultiByte(CP_ACP, 0, str, -1, buf, sizeof(buf), NULL, NULL);
-    return buf;
-}
-
 static void test_message_from_string_wide(void)
 {
     static const WCHAR test[]        = {'t','e','s','t',0};
@@ -127,180 +120,180 @@ static void test_message_from_string_wide(void)
     /* the basics */
     r = FormatMessageW(FORMAT_MESSAGE_FROM_STRING, test, 0,
         0, out, sizeof(out)/sizeof(WCHAR), NULL);
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4, "failed: r=%d\n", r);
 
     /* using the format feature */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1s, 0,
         0, out, sizeof(out)/sizeof(WCHAR), test);
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* no format */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1, 0,
         0, out, sizeof(out)/sizeof(WCHAR), test);
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* two pieces */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_12, 0,
         0, out, sizeof(out)/sizeof(WCHAR), te, st);
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* three pieces */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_123, 0,
         0, out, sizeof(out)/sizeof(WCHAR), t, s, e);
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* s doesn't seem to work in format strings */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_s, 0,
         0, out, sizeof(out)/sizeof(WCHAR), test);
-    ok(!lstrcmpW(&fmt_s[1], out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(&fmt_s[1], out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==3, "failed: r=%d\n", r);
 
     /* nor ls */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_ls, 0,
         0, out, sizeof(out)/sizeof(WCHAR), test);
-    ok(!lstrcmpW(&fmt_ls[1], out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(&fmt_ls[1], out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4, "failed: r=%d\n", r);
 
     /* nor S */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_S, 0,
         0, out, sizeof(out)/sizeof(WCHAR), test);
-    ok(!lstrcmpW(&fmt_S[1], out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(&fmt_S[1], out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==3, "failed: r=%d\n", r);
 
     /* nor ws */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_ws, 0,
         0, out, sizeof(out)/sizeof(WCHAR), test);
-    ok(!lstrcmpW(&fmt_ws[1], out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(&fmt_ws[1], out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4, "failed: r=%d\n", r);
 
     /* as characters */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_123c, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 't', 'e', 's');
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* lc is unicode */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_123lc, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 't', 'e', 's');
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* wc is unicode */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_123wc, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 't', 'e', 's');
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* C is unicode */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_123C, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 't', 'e', 's');
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* some numbers */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_123d, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 1, 2, 3);
-    ok(!lstrcmpW(s_123d, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_123d, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==3,"failed: r=%d\n", r);
 
     /* a single digit with some spacing */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_14d, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 1);
-    ok(!lstrcmpW(s_14d, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_14d, out), "failed out=%s\n", wine_dbgstr_w(out));
 
     /* a single digit, left justified */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1_4d, 0,
         0, out, sizeof(out)/sizeof(CHAR), 1);
-    ok(!lstrcmpW(s_1_4d, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_1_4d, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* two digit decimal number */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_14d, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 11);
-    ok(!lstrcmpW(s_14d2, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_14d2, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* a hex number */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_14x, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 11);
-    ok(!lstrcmpW(s_14x, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_14x, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* a hex number, upper case */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_14X, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 11);
-    ok(!lstrcmpW(s_14X, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_14X, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* a hex number, upper case, left justified */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_1_4X, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 11);
-    ok(!lstrcmpW(s_1_4X, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_1_4X, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* a long hex number, upper case */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_14X, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 0x1ab);
-    ok(!lstrcmpW(s_1AB, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_1AB, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* two percent... */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_2pct, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_2pct, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_2pct, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* periods are special cases */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_2dot1d, 0,
         0, out, sizeof(out)/sizeof(WCHAR), 0x1ab);
-    ok(!lstrcmpW(s_2dot147, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_2dot147, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==8,"failed: r=%d\n", r);
 
     /* %0 ends the line */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_t0t, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(test, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(test, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* %! prints an exclamation */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_yah, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_yah, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_yah, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* %space */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_space, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_space, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_space, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* line feed */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_hi_lf, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_hi_crlf, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_hi_crlf, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* carriage return line feed */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_hi_crlf, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_hi_crlf, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_hi_crlf, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* carriage return */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_cr, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_crlf, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_crlf, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==2,"failed: r=%d\n", r);
 
     /* double carriage return line feed */
     r = doitW(FORMAT_MESSAGE_FROM_STRING, fmt_crcrlf, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_crlfcrlf, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_crlfcrlf, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==4,"failed: r=%d\n", r);
 
     /* change of pace... test the low byte of dwflags */
@@ -308,25 +301,25 @@ static void test_message_from_string_wide(void)
     /* line feed */
     r = doitW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_MAX_WIDTH_MASK, fmt_hi_lf, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_hi_sp, out) || !lstrcmpW(s_hi_crlf, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_hi_sp, out) || !lstrcmpW(s_hi_crlf, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==3 || r==4,"failed: r=%d\n", r);
 
     /* carriage return line feed */
     r = doitW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_MAX_WIDTH_MASK, fmt_hi_crlf, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_hi_sp, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_hi_sp, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==3,"failed: r=%d\n", r);
 
     /* carriage return */
     r = doitW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_MAX_WIDTH_MASK, fmt_cr, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_sp, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_sp, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==1,"failed: r=%d\n", r);
 
     /* double carriage return line feed */
     r = doitW(FORMAT_MESSAGE_FROM_STRING | FORMAT_MESSAGE_MAX_WIDTH_MASK, fmt_crcrlf, 0,
         0, out, sizeof(out)/sizeof(WCHAR));
-    ok(!lstrcmpW(s_2sp, out), "failed out=[%s]\n", debugstr_w(out));
+    ok(!lstrcmpW(s_2sp, out), "failed out=%s\n", wine_dbgstr_w(out));
     ok(r==2,"failed: r=%d\n", r);
 }
 

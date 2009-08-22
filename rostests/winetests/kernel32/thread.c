@@ -812,22 +812,24 @@ static VOID test_thread_processor(void)
       "SetThreadAffinityMask passed for an illegal processor\n");
 /* NOTE: This only works on WinNT/2000/XP) */
    if (pSetThreadIdealProcessor) {
-     todo_wine {
-       SetLastError(0);
-       error=pSetThreadIdealProcessor(curthread,0);
-       if (GetLastError()!=ERROR_CALL_NOT_IMPLEMENTED) {
-         ok(error!=-1, "SetThreadIdealProcessor failed\n");
-       }
+     SetLastError(0xdeadbeef);
+     error=pSetThreadIdealProcessor(curthread,0);
+     if (GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
+     {
+       win_skip("SetThreadIdealProcessor is not implemented\n");
+       return;
      }
-     if (GetLastError()!=ERROR_CALL_NOT_IMPLEMENTED) {
-       error=pSetThreadIdealProcessor(curthread,MAXIMUM_PROCESSORS+1);
-       ok(error==-1,
-          "SetThreadIdealProcessor succeeded with an illegal processor #\n");
-       todo_wine {
-         error=pSetThreadIdealProcessor(curthread,MAXIMUM_PROCESSORS);
-         ok(error==0, "SetThreadIdealProcessor returned an incorrect value\n");
-       }
-     }
+     ok(error!=-1, "SetThreadIdealProcessor failed\n");
+
+     SetLastError(0xdeadbeef);
+     error=pSetThreadIdealProcessor(curthread,MAXIMUM_PROCESSORS+1);
+     ok(error==-1,
+        "SetThreadIdealProcessor succeeded with an illegal processor #\n");
+     ok(GetLastError()==ERROR_INVALID_PARAMETER,
+        "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
+
+     error=pSetThreadIdealProcessor(curthread,MAXIMUM_PROCESSORS);
+     ok(error==0, "SetThreadIdealProcessor returned an incorrect value\n");
    }
 }
 
