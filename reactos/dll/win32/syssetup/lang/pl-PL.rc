@@ -18,7 +18,7 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * translated by Caemyr
- * updated by Caemyr - Olaf Siejka (Jan, 2008)
+ * updated by Caemyr - Olaf Siejka (Jan, 2008), (Aug, 2009)
  * Use ReactOS forum PM or IRC to contact me
  * http://www.reactos.org
  * IRC: irc.freenode.net #reactos-pl; 
@@ -271,7 +271,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Wiersz poleceñ.lnk"
     IDS_SHORT_EXPLORER   "Eksplorator ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
+    IDS_SHORT_DOWNLOADER "Mened¿er aplikacji ReactOS.lnk"
     IDS_SHORT_SERVICE    "Mened¿er us³ug.lnk"
     IDS_SHORT_DEVICE     "Mened¿er urz¹dzeñ.lnk"
     IDS_SHORT_MPLAY32    "Odtwarzacz multimedialny.lnk"
