@@ -52,6 +52,7 @@
 	<file>unknwn.idl</file>
 	<file>urlhist.idl</file>
 	<file>urlmon.idl</file>
+	<file>wincodec.idl</file>
 	<file>mimeole.idl</file>
 	<file>mscoree.idl</file>
 	<file>mshtmhst.idl</file>

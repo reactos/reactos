@@ -583,6 +583,9 @@
 <directory name="wdmaud.drv">
 	<xi:include href="wdmaud.drv/wdmaud.rbuild" />
 </directory>
+<directory name="windowscodecs">
+	<xi:include href="windowscodecs/windowscodecs.rbuild" />
+</directory>
 <directory name="winemp3.acm">
 	<xi:include href="winemp3.acm/winemp3.acm.rbuild" />
 </directory>

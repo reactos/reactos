@@ -6,6 +6,7 @@
   <property name="BASEADDRESS_QMGRPRXY" value="0x1F710000" />
   <property name="BASEADDRESS_CRYPTDLG" value="0x209C0000" />
   <property name="BASEADDRESS_COMCAT" value="0x20A50000" />
+  <property name="BASEADDRESS_WINDOWSCODECS" value="0x26c40000" />
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
   <property name="BASEADDRESS_RSABASE" value="0x35700000" />
   <property name="BASEADDRESS_RSAENH" value="0x35780000" />
