@@ -2727,6 +2727,9 @@ static unsigned char * ComplexMarshall(PMIDL_STUB_MESSAGE pStubMsg,
       pMemory += sizeof(void *);
       break;
     }
+    case RPC_FC_ALIGNM2:
+      ALIGN_POINTER(pMemory, 2);
+      break;
     case RPC_FC_ALIGNM4:
       ALIGN_POINTER(pMemory, 4);
       break;
@@ -2852,6 +2855,9 @@ static unsigned char * ComplexUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
       pMemory += sizeof(void *);
       break;
     }
+    case RPC_FC_ALIGNM2:
+      ALIGN_POINTER_CLEAR(pMemory, 2);
+      break;
     case RPC_FC_ALIGNM4:
       ALIGN_POINTER_CLEAR(pMemory, 4);
       break;
@@ -2966,6 +2972,9 @@ static unsigned char * ComplexBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
       pPointer += 4;
       pMemory += sizeof(void*);
       break;
+    case RPC_FC_ALIGNM2:
+      ALIGN_POINTER(pMemory, 2);
+      break;
     case RPC_FC_ALIGNM4:
       ALIGN_POINTER(pMemory, 4);
       break;
@@ -3048,6 +3057,9 @@ static unsigned char * ComplexFree(PMIDL_STUB_MESSAGE pStubMsg,
       NdrPointerFree(pStubMsg, *(unsigned char**)pMemory, pPointer);
       pPointer += 4;
       pMemory += sizeof(void *);
+      break;
+    case RPC_FC_ALIGNM2:
+      ALIGN_POINTER(pMemory, 2);
       break;
     case RPC_FC_ALIGNM4:
       ALIGN_POINTER(pMemory, 4);
@@ -3161,6 +3173,9 @@ static ULONG ComplexStructMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
       size += sizeof(void *);
       break;
     }
+    case RPC_FC_ALIGNM2:
+      ALIGN_LENGTH(size, 2);
+      break;
     case RPC_FC_ALIGNM4:
       ALIGN_LENGTH(size, 4);
       break;
@@ -3223,6 +3238,9 @@ ULONG ComplexStructSize(PMIDL_STUB_MESSAGE pStubMsg, PFORMAT_STRING pFormat)
       break;
     case RPC_FC_POINTER:
       size += sizeof(void *);
+      break;
+    case RPC_FC_ALIGNM2:
+      ALIGN_LENGTH(size, 2);
       break;
     case RPC_FC_ALIGNM4:
       ALIGN_LENGTH(size, 4);
