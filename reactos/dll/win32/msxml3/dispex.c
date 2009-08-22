@@ -634,6 +634,9 @@ BOOL dispex_query_interface(DispatchEx *This, REFIID riid, void **ppv)
     }else if(IsEqualGUID(&IID_UndocumentedScriptIface, riid)) {
         TRACE("(%p)->(IID_UndocumentedScriptIface %p) returning NULL\n", This, ppv);
         *ppv = NULL;
+    }else if (IsEqualGUID(&IID_IObjectIdentity, riid)) {
+        TRACE("IID_IObjectIdentity not supported returning NULL\n");
+        *ppv = NULL;
     }else {
         return FALSE;
     }

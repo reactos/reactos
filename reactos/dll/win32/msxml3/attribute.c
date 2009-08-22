@@ -547,7 +547,7 @@ static const struct IXMLDOMAttributeVtbl domattr_vtbl =
 IUnknown* create_attribute( xmlNodePtr attribute )
 {
     domattr *This;
-    HRESULT hr;
+    xmlnode *node;
 
     This = HeapAlloc( GetProcessHeap(), 0, sizeof *This );
     if ( !This )
@@ -556,22 +556,15 @@ IUnknown* create_attribute( xmlNodePtr attribute )
     This->lpVtbl = &domattr_vtbl;
     This->ref = 1;
 
-    This->node_unk = create_basic_node( attribute, (IUnknown*)&This->lpVtbl );
-    if(!This->node_unk)
+    node = create_basic_node( attribute, (IUnknown*)&This->lpVtbl );
+    if(!node)
     {
         HeapFree(GetProcessHeap(), 0, This);
         return NULL;
     }
 
-    hr = IUnknown_QueryInterface(This->node_unk, &IID_IXMLDOMNode, (LPVOID*)&This->node);
-    if(FAILED(hr))
-    {
-        IUnknown_Release(This->node_unk);
-        HeapFree( GetProcessHeap(), 0, This );
-        return NULL;
-    }
-    /* The ref on This->node is actually looped back into this object, so release it */
-    IXMLDOMNode_Release(This->node);
+    This->node_unk = (IUnknown*)&node->lpInternalUnkVtbl;
+    This->node = IXMLDOMNode_from_impl(node);
 
     return (IUnknown*) &This->lpVtbl;
 }

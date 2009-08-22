@@ -39,7 +39,6 @@
 extern IUnknown         *create_domdoc( xmlNodePtr document );
 extern IUnknown         *create_xmldoc( void );
 extern IXMLDOMNode      *create_node( xmlNodePtr node );
-extern IUnknown         *create_basic_node( xmlNodePtr node, IUnknown *pUnkOuter );
 extern IUnknown         *create_element( xmlNodePtr element, IUnknown *pUnkOuter );
 extern IUnknown         *create_attribute( xmlNodePtr attribute );
 extern IUnknown         *create_text( xmlNodePtr text );
@@ -59,7 +58,6 @@ xmlNodePtr xmlNodePtr_from_domnode( IXMLDOMNode *iface, xmlElementType type );
 
 /* helpers */
 extern xmlChar *xmlChar_from_wchar( LPWSTR str );
-extern BSTR bstr_from_xmlChar( const xmlChar *buf );
 
 extern LONG xmldoc_add_ref( xmlDocPtr doc );
 extern LONG xmldoc_release( xmlDocPtr doc );
@@ -85,7 +83,28 @@ static inline xmlnode *impl_from_IXMLDOMNode( IXMLDOMNode *iface )
     return (xmlnode *)((char*)iface - FIELD_OFFSET(xmlnode, lpVtbl));
 }
 
+static inline IXMLDOMNode *IXMLDOMNode_from_impl(xmlnode *This)
+{
+    return (IXMLDOMNode*)&This->lpVtbl;
+}
+
+extern xmlnode *create_basic_node(xmlNodePtr,IUnknown*);
+
 extern HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **document);
+
+static inline BSTR bstr_from_xmlChar(const xmlChar *str)
+{
+    BSTR ret = NULL;
+
+    if(str) {
+        DWORD len = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)str, -1, NULL, 0);
+        ret = SysAllocStringLen(NULL, len-1);
+        if(ret)
+            MultiByteToWideChar( CP_UTF8, 0, (LPCSTR)str, -1, ret, len);
+    }
+
+    return ret;
+}
 
 #endif
 
