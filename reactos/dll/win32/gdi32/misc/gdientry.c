@@ -2047,15 +2047,18 @@ DdGetDxHandle(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
               BOOL bRelease)
 {
     HANDLE hDD = NULL;
-    HANDLE hSurface = (HANDLE)pSurface->hDDSurface;
+    HANDLE hSurface = NULL;
 
     /* Check if we already have a surface */
     if (!pSurface)
     {
         /* We don't have one, use the DirectDraw Object handle instead */
-        hSurface = NULL;
         hDD = GetDdHandle(pDDraw->lpGbl->hDD);
-     }
+    }
+    else
+    {
+        hSurface = (HANDLE)pSurface->hDDSurface;
+    }
 
     /* Call the API */
     return (HANDLE)NtGdiDdGetDxHandle(hDD, hSurface, bRelease);
