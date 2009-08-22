@@ -3052,7 +3052,7 @@ static WORD SLTG_ReadString(const char *ptr, BSTR *pBstr)
     bytelen = *(const WORD*)ptr;
     if(bytelen == 0xffff) return 2;
     len = MultiByteToWideChar(CP_ACP, 0, ptr + 2, bytelen, NULL, 0);
-    *pBstr = SysAllocStringLen(NULL, len - 1);
+    *pBstr = SysAllocStringLen(NULL, len);
     if (*pBstr)
         len = MultiByteToWideChar(CP_ACP, 0, ptr + 2, bytelen, *pBstr, len);
     return bytelen + 2;
@@ -5873,6 +5873,12 @@ static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, 
     case VT_SAFEARRAY:
         *vt |= VT_ARRAY;
         hr = typedescvt_to_variantvt(tinfo, tdesc->u.lptdesc, vt);
+        break;
+    case VT_INT:
+        *vt |= VT_I4;
+        break;
+    case VT_UINT:
+        *vt |= VT_UI4;
         break;
     default:
         *vt |= tdesc->vt;
