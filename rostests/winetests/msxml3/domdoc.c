@@ -150,6 +150,37 @@ static const CHAR szTypeValueXML[] =
 "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 "<string>Wine</string>";
 
+static const CHAR szBasicTransformSSXMLPart1[] =
+"<?xml version=\"1.0\"?>"
+"<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\" >"
+"<xsl:output method=\"html\"/>\n"
+"<xsl:template match=\"/\">"
+"<HTML><BODY><TABLE>"
+"        <xsl:apply-templates select='document(\"";
+
+static const CHAR szBasicTransformSSXMLPart2[] =
+"\")/bottle/wine'>"
+"           <xsl:sort select=\"cost\"/><xsl:sort select=\"name\"/>"
+"        </xsl:apply-templates>"
+"</TABLE></BODY></HTML>"
+"</xsl:template>"
+"<xsl:template match=\"bottle\">"
+"   <TR><xsl:apply-templates select=\"name\" /><xsl:apply-templates select=\"cost\" /></TR>"
+"</xsl:template>"
+"<xsl:template match=\"name\">"
+"   <TD><xsl:apply-templates /></TD>"
+"</xsl:template>"
+"<xsl:template match=\"cost\">"
+"   <TD><xsl:apply-templates /></TD>"
+"</xsl:template>"
+"</xsl:stylesheet>";
+
+static const CHAR szBasicTransformXML[] =
+"<?xml version=\"1.0\"?><bottle><wine><name>Wine</name><cost>$25.00</cost></wine></bottle>";
+
+static const CHAR szBasicTransformOutput[] =
+"<HTML><BODY><TABLE><TD>Wine</TD><TD>$25.00</TD></TABLE></BODY></HTML>";
+
 static const WCHAR szNonExistentFile[] = {
     'c', ':', '\\', 'N', 'o', 'n', 'e', 'x', 'i', 's', 't', 'e', 'n', 't', '.', 'x', 'm', 'l', 0
 };
@@ -514,7 +545,11 @@ static void test_domdoc( void )
     ok( r == S_OK, "should be a document element\n");
     if( element )
     {
+        IObjectIdentity *ident;
         BSTR tag = NULL;
+
+        r = IXMLDOMElement_QueryInterface( element, &IID_IObjectIdentity, (LPVOID*)&ident );
+        ok( r == E_NOINTERFACE, "ret %08x\n", r);
 
         /* check if the tag is correct */
         r = IXMLDOMElement_get_tagName( element, &tag );
@@ -3948,6 +3983,98 @@ static void test_NodeTypeValue(void)
     free_bstrs();
 }
 
+static void test_TransformWithLoadingLocalFile(void)
+{
+    IXMLDOMDocument2 *doc = NULL;
+    IXMLDOMDocument2 *xsl = NULL;
+    IXMLDOMNode *pNode;
+    VARIANT_BOOL bSucc;
+    HRESULT hr;
+    HANDLE file;
+    DWORD dwWritten;
+    char lpPathBuffer[MAX_PATH];
+    int i;
+
+    /* Create a Temp File. */
+    GetTempPathA(MAX_PATH, lpPathBuffer);
+    strcat(lpPathBuffer, "customers.xml" );
+
+    file = CreateFile(lpPathBuffer, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+    ok(file != INVALID_HANDLE_VALUE, "Could not create file: %u\n", GetLastError());
+    if(file == INVALID_HANDLE_VALUE)
+        return;
+
+    WriteFile(file, szBasicTransformXML, strlen(szBasicTransformXML), &dwWritten, NULL);
+    CloseHandle(file);
+
+    /* Correct path to not include a escape character. */
+    for(i=0; i < strlen(lpPathBuffer); i++)
+    {
+        if(lpPathBuffer[i] == '\\')
+            lpPathBuffer[i] = '/';
+    }
+
+    hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    if( hr != S_OK )
+        return;
+
+    hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&xsl );
+    if( hr != S_OK )
+    {
+        IXMLDOMDocument2_Release(doc);
+        return;
+    }
+
+    hr = IXMLDOMDocument2_loadXML(doc, _bstr_(szTypeValueXML), &bSucc);
+    ok(hr == S_OK, "ret %08x\n", hr );
+    ok(bSucc == VARIANT_TRUE, "Expected VARIANT_TRUE got VARIANT_FALSE\n");
+    if(bSucc == VARIANT_TRUE)
+    {
+        BSTR sXSL;
+        BSTR sPart1 = _bstr_(szBasicTransformSSXMLPart1);
+        BSTR sPart2 = _bstr_(szBasicTransformSSXMLPart2);
+        BSTR sFileName = _bstr_(lpPathBuffer);
+        int nLegnth = lstrlenW(sPart1) + lstrlenW(sPart2) + lstrlenW(sFileName) + 1;
+
+        sXSL = SysAllocStringLen(NULL, nLegnth);
+        lstrcpyW(sXSL, sPart1);
+        lstrcatW(sXSL, sFileName);
+        lstrcatW(sXSL, sPart2);
+
+        hr = IXMLDOMDocument2_loadXML(xsl, sXSL, &bSucc);
+        ok(hr == S_OK, "ret %08x\n", hr );
+        ok(bSucc == VARIANT_TRUE, "Expected VARIANT_TRUE got VARIANT_FALSE\n");
+        if(bSucc == VARIANT_TRUE)
+        {
+            BSTR sResult;
+
+            hr = IXMLDOMDocument_QueryInterface(xsl, &IID_IXMLDOMNode, (LPVOID*)&pNode );
+            ok(hr == S_OK, "ret %08x\n", hr );
+            if(hr == S_OK)
+            {
+                /* This will load the temp file via the XSL */
+                hr = IXMLDOMDocument2_transformNode(doc, pNode, &sResult);
+                ok(hr == S_OK, "ret %08x\n", hr );
+                if(hr == S_OK)
+                {
+                    ok( compareIgnoreReturns( sResult, _bstr_(szBasicTransformOutput)), "Stylesheet output not correct\n");
+                    SysFreeString(sResult);
+                }
+
+                IXMLDOMNode_Release(pNode);
+            }
+        }
+
+        SysFreeString(sXSL);
+    }
+
+    IXMLDOMDocument2_Release(doc);
+    IXMLDOMDocument2_Release(xsl);
+
+    DeleteFile(lpPathBuffer);
+    free_bstrs();
+}
+
 START_TEST(domdoc)
 {
     HRESULT r;
@@ -3977,6 +4104,7 @@ START_TEST(domdoc)
     test_Namespaces();
     test_FormattingXML();
     test_NodeTypeValue();
+    test_TransformWithLoadingLocalFile();
 
     CoUninitialize();
 }

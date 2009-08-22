@@ -117,13 +117,6 @@ static content_handler_test contentHandlerTest2[] = {
 static content_handler_test *expectCall;
 static ISAXLocator *locator;
 
-static const char *debugstr_wn(const WCHAR *szStr, int len)
-{
-    static char buf[1024];
-    WideCharToMultiByte(CP_ACP, 0, szStr, len, buf, sizeof(buf), NULL, NULL);
-    return buf;
-}
-
 static void test_saxstr(unsigned line, const WCHAR *szStr, int nStr, const char *szTest)
 {
     WCHAR buf[1024];
@@ -142,7 +135,7 @@ static void test_saxstr(unsigned line, const WCHAR *szStr, int nStr, const char 
 
     MultiByteToWideChar(CP_ACP, 0, szTest, -1, buf, sizeof(buf)/sizeof(WCHAR));
     ok_(__FILE__,line) (!memcmp(szStr, buf, len*sizeof(WCHAR)), "unexpected szStr %s, expected %s\n",
-                        debugstr_wn(szStr, nStr), szTest);
+                        wine_dbgstr_wn(szStr, nStr), szTest);
 }
 
 static BOOL test_expect_call(CH id)
