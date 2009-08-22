@@ -118,6 +118,8 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     if(count == -1) count = strlen(str);
     lenW = MultiByteToWideChar(cp, 0, str, count, NULL, 0);
     strW = HeapAlloc(GetProcessHeap(), 0, lenW*sizeof(WCHAR));
+    if (!strW)
+        return NULL;
     MultiByteToWideChar(cp, 0, str, count, strW, lenW);
     DPRINT("mapped %s -> %S\n", str, strW);
     if(plenW) *plenW = lenW;
@@ -322,7 +324,13 @@ GetCharacterPlacementA(
 
     lpStringW = FONT_mbtowc(hdc, lpString, uCount, &uCountW, &font_cp);
     if(lpResults->lpOutString)
+    {
         resultsW.lpOutString = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*uCountW);
+        if (resultsW.lpOutString == NULL)
+        {
+            return 0;
+        }
+    }
 
     ret = GetCharacterPlacementW(hdc, lpStringW, uCountW, nMaxExtent, &resultsW, dwFlags);
 
@@ -993,7 +1001,13 @@ GetOutlineTextMetricsA(
     if((ret = GetOutlineTextMetricsW(hdc, 0, NULL)) == 0)
         return 0;
     if(ret > sizeof(buf))
-	lpOTMW = HeapAlloc(GetProcessHeap(), 0, ret);
+    {
+        lpOTMW = HeapAlloc(GetProcessHeap(), 0, ret);
+        if (lpOTMW == NULL)
+        {
+            return 0;
+        }
+    }
     GetOutlineTextMetricsW(hdc, ret, lpOTMW);
 
     needed = sizeof(OUTLINETEXTMETRICA);
@@ -1021,10 +1035,16 @@ GetOutlineTextMetricsA(
 
     DPRINT("needed = %d\n", needed);
     if(needed > cbData)
+    {
         /* Since the supplied buffer isn't big enough, we'll alloc one
            that is and memcpy the first cbData bytes into the lpOTM at
            the end. */
         output = HeapAlloc(GetProcessHeap(), 0, needed);
+        if (output == NULL)
+        {
+            goto end;
+        }
+    }
 
     ret = output->otmSize = min(needed, cbData);
     FONT_TextMetricWToA( &lpOTMW->otmTextMetrics, &output->otmTextMetrics );
@@ -1207,6 +1227,10 @@ GetKerningPairsA( HDC hDC,
     if (!cPairs && !kern_pairA) return total_kern_pairs;
 
     kern_pairW = HeapAlloc(GetProcessHeap(), 0, total_kern_pairs * sizeof(*kern_pairW));
+    if (kern_pairW == NULL)
+    {
+        return 0;
+    }
     GetKerningPairsW(hDC, total_kern_pairs, kern_pairW);
 
     for (i = 0; i < total_kern_pairs; i++)
