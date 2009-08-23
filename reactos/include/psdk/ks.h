@@ -3097,13 +3097,6 @@ KsFastPropertyHandler(
     Event Functions
 */
 
-KSDDKAPI NTSTATUS NTAPI
-KsCreatePin(
-    IN  HANDLE FilterHandle,
-    IN  PKSPIN_CONNECT Connect,
-    IN  ACCESS_MASK DesiredAccess,
-    OUT PHANDLE ConnectionHandle);
-
 #if defined(_NTDDK_)
 
 #define KSPROBE_STREAMREAD      0x00000000
@@ -3219,7 +3212,12 @@ KsTopologyPropertyHandler(
     Connectivity Functions
 */
 
-
+KSDDKAPI NTSTATUS NTAPI
+KsCreatePin(
+    IN  HANDLE FilterHandle,
+    IN  PKSPIN_CONNECT Connect,
+    IN  ACCESS_MASK DesiredAccess,
+    OUT PHANDLE ConnectionHandle);
 
 KSDDKAPI NTSTATUS NTAPI
 KsValidateConnectRequest(
@@ -3701,6 +3699,18 @@ PFILE_OBJECT
 NTAPI
 KsPinGetConnectedPinFileObject(
     IN PKSPIN Pin
+    );
+
+#else
+
+KSDDKAPI
+DWORD
+WINAPI
+KsCreatePin(
+    IN HANDLE FilterHandle,
+    IN PKSPIN_CONNECT Connect,
+    IN ACCESS_MASK DesiredAccess,
+    OUT PHANDLE ConnectionHandle
     );
 
 
