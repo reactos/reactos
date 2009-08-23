@@ -607,15 +607,12 @@ typedef enum
 DEFINE_GUIDSTRUCT("720D4AC0-7533-11D0-A5D6-28DB04C10000", KSPROPSETID_Topology);
 #define KSPROPSETID_Topology DEFINE_GUIDNAMED(KSPROPSETID_Topology)
 
-typedef enum
-{
+typedef enum {
     KSPROPERTY_TOPOLOGY_CATEGORIES,
+    KSPROPERTY_TOPOLOGY_NODES,
     KSPROPERTY_TOPOLOGY_CONNECTIONS,
-    KSPROPERTY_TOPOLOGY_NAME,
-    KSPROPERTY_TOPOLOGY_NODES
+    KSPROPERTY_TOPOLOGY_NAME
 } KSPROPERTY_TOPOLOGY;
-
-
 
 /* ===============================================================
     Property Sets for audio drivers - TODO
@@ -3099,6 +3096,14 @@ KsFastPropertyHandler(
 /* ===============================================================
     Event Functions
 */
+
+KSDDKAPI NTSTATUS NTAPI
+KsCreatePin(
+    IN  HANDLE FilterHandle,
+    IN  PKSPIN_CONNECT Connect,
+    IN  ACCESS_MASK DesiredAccess,
+    OUT PHANDLE ConnectionHandle);
+
 #if defined(_NTDDK_)
 
 #define KSPROBE_STREAMREAD      0x00000000
@@ -3214,12 +3219,7 @@ KsTopologyPropertyHandler(
     Connectivity Functions
 */
 
-KSDDKAPI NTSTATUS NTAPI
-KsCreatePin(
-    IN  HANDLE FilterHandle,
-    IN  PKSPIN_CONNECT Connect,
-    IN  ACCESS_MASK DesiredAccess,
-    OUT PHANDLE ConnectionHandle);
+
 
 KSDDKAPI NTSTATUS NTAPI
 KsValidateConnectRequest(
