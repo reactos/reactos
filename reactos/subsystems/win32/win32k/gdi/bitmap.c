@@ -209,7 +209,7 @@ INT APIENTRY RosGdiGetDIBits( HDC physDev, HBITMAP hUserBitmap, UINT StartScan, 
     /* Get a pointer to the DCs */
     pDC = DC_Lock(physDev);
 
-    DPRINT1("RosGdiGetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d, height %d\n",
+    DPRINT("RosGdiGetDIBits for bitmap %x (user handle %x), StartScan %d, ScanLines %d, height %d\n",
         hBitmap, hUserBitmap, StartScan, ScanLines, dib->dsBm.bmHeight);
 
     /* Set the bits */

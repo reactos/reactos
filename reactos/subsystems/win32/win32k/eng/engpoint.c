@@ -357,8 +357,8 @@ EngSetPointerShape(
     /* Create a mask surface */
     if (psoMask)
     {
-        //EXLATEOBJ exlo;
-        PPALETTE ppal;
+        XLATEOBJ *xlo;
+        //PPALETTE ppal;
 
         hbmp = EngCreateBitmap(psoMask->sizlBitmap,
                                lDelta,
@@ -369,25 +369,31 @@ EngSetPointerShape(
 
         if(pgp->psurfMask)
         {
-            ppal = PALETTE_LockPalette(ppdev->DevInfo.hpalDefault);
+            //ppal = PALETTE_LockPalette(ppdev->DevInfo.hpalDefault);
             /*EXLATEOBJ_vInitialize(&exlo,
                                   &gpalMono,
                                   ppal,
                                   0,
                                   RGB(0xff,0xff,0xff),
                                   RGB(0,0,0));*/
+            xlo = IntEngCreateSrcMonoXlate(ppdev->DevInfo.hpalDefault,
+                                           RGB(0xff,0xff,0xff),
+                                           RGB(0,0,0)
+                                           );
 
             rcl.bottom = psoMask->sizlBitmap.cy;
+
             GreCopyBits(&pgp->psurfMask->SurfObj,
                            psoMask,
                            NULL,
-                           NULL,//&exlo.xlo,
+                           xlo,
                            &rcl,
                            (POINTL*)&rcl);
 
             //EXLATEOBJ_vCleanup(&exlo);
-            if (ppal)
-                PALETTE_UnlockPalette(ppal);
+            EngDeleteXlate(xlo);
+            //if (ppal)
+            //    PALETTE_UnlockPalette(ppal);
         }
     }
     else
