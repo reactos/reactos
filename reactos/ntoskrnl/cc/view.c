@@ -70,15 +70,6 @@ NPAGED_LOOKASIDE_LIST iBcbLookasideList;
 static NPAGED_LOOKASIDE_LIST BcbLookasideList;
 static NPAGED_LOOKASIDE_LIST CacheSegLookasideList;
 
-
-#if defined(__GNUC__)
-/* void * alloca(size_t size); */
-#elif defined(_MSC_VER)
-void* _alloca(size_t size);
-#else
-#error Unknown compiler for alloca intrinsic stack allocation "function"
-#endif
-
 #if DBG || defined(KDBG)
 static void CcRosCacheSegmentIncRefCount_ ( PCACHE_SEGMENT cs, const char* file, int line )
 {
@@ -737,15 +728,8 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 
   Length = ROUND_UP(Length, Bcb->CacheSegmentSize);
 
-#if defined(__GNUC__)
-  CacheSegList = alloca(sizeof(PCACHE_SEGMENT) *
-			(Length / Bcb->CacheSegmentSize));
-#elif defined(_MSC_VER)
   CacheSegList = _alloca(sizeof(PCACHE_SEGMENT) *
 			(Length / Bcb->CacheSegmentSize));
-#else
-#error Unknown compiler for alloca intrinsic stack allocation "function"
-#endif
 
   /*
    * Look for a cache segment already mapping the same data.
