@@ -241,7 +241,10 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
     iconinfo->hbmMask = CreateBitmap ( ciconinfo->nWidth, height,
                                 1, 1, ciconinfo + 1);
     if( GetObjectW(iconinfo->hbmMask, sizeof(bitmap), &bitmap))
-        RosGdiCreateBitmap(NULL, iconinfo->hbmMask, &bitmap, bitmap.bmBits);
+    {
+        // FIXME: Why bitmap.bmBits is NULL when it's supposed to be a valid pointer from above ?!
+        RosGdiCreateBitmap(NULL, iconinfo->hbmMask, &bitmap, /*bitmap.bmBits*/ ciconinfo + 1);
+    }
 }
 
 void CDECL RosDrv_SetCursor( CURSORICONINFO *lpCursor )
