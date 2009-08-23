@@ -76,7 +76,7 @@ BOOL InstallApplication(INT Index);
 
 /* installed.c */
 typedef BOOL (CALLBACK *APPENUMPROC)(INT ItemIndex, LPWSTR lpName, LPWSTR lpKeyName, LPARAM lParam);
-BOOL EnumInstalledApplications(INT EnumType, APPENUMPROC lpEnumProc);
+BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc);
 BOOL GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);

@@ -101,7 +101,8 @@ UpdateApplicationsList(INT EnumType)
     if (IS_INSTALLED_ENUM(EnumType))
     {
         /* Enum installed applications and updates */
-        EnumInstalledApplications(EnumType, EnumInstalledAppProc);
+        EnumInstalledApplications(EnumType, TRUE, EnumInstalledAppProc);
+        EnumInstalledApplications(EnumType, FALSE, EnumInstalledAppProc);
     }
     else if (IS_AVAILABLE_ENUM(EnumType))
     {

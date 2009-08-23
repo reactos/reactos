@@ -172,7 +172,7 @@ ShowInstalledAppInfo(INT Index)
 
 
 BOOL
-EnumInstalledApplications(INT EnumType, APPENUMPROC lpEnumProc)
+EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
 {
     DWORD dwSize = MAX_PATH, dwType, dwValue;
     BOOL bIsSystemComponent, bIsUpdate;
@@ -182,7 +182,7 @@ EnumInstalledApplications(INT EnumType, APPENUMPROC lpEnumProc)
     HKEY hKey, hSubKey;
     LONG ItemIndex = 0;
 
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE,
+    if (RegOpenKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
                     &hKey) != ERROR_SUCCESS)
     {
