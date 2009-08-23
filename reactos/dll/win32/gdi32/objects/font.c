@@ -328,6 +328,7 @@ GetCharacterPlacementA(
         resultsW.lpOutString = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*uCountW);
         if (resultsW.lpOutString == NULL)
         {
+            HeapFree(GetProcessHeap(), 0, lpStringW);
             return 0;
         }
     }
