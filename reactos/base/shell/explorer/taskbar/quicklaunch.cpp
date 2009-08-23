@@ -154,8 +154,6 @@ void QuickLaunchBar::AddShortcuts()
 	}
 	DeleteDC(hdc);
 
-	SendMessage(_hwnd, TB_INSERTBUTTON, INT_MAX, (LPARAM)&sep);
-
 	for(Entry*entry=_dir->_down; entry; entry=entry->_next) {
 		 // hide files like "desktop.ini"
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
