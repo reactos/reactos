@@ -29,7 +29,7 @@ typedef struct
     CLSID m_ClassId;
     IUnknown* m_UnknownOuter;
 
-}IBaseUnknownImpl;
+}CBaseUnknownImpl;
 
 
 
@@ -40,7 +40,7 @@ INonDelegatedUnknown_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    IBaseUnknownImpl * This = (IBaseUnknownImpl*)CONTAINING_RECORD(iface, IBaseUnknownImpl, lpVtbl);
+    CBaseUnknownImpl * This = (CBaseUnknownImpl*)CONTAINING_RECORD(iface, CBaseUnknownImpl, lpVtbl);
 
     if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
@@ -56,7 +56,7 @@ NTAPI
 INonDelegatedUnknown_fnAddRef(
     INonDelegatedUnknown * iface)
 {
-    IBaseUnknownImpl * This = (IBaseUnknownImpl*)CONTAINING_RECORD(iface, IBaseUnknownImpl, lpVtbl);
+    CBaseUnknownImpl * This = (CBaseUnknownImpl*)CONTAINING_RECORD(iface, CBaseUnknownImpl, lpVtbl);
 
     return InterlockedIncrement(&This->m_RefCount);
 }
@@ -66,7 +66,7 @@ NTAPI
 INonDelegatedUnknown_fnRelease(
     INonDelegatedUnknown * iface)
 {
-    IBaseUnknownImpl * This = (IBaseUnknownImpl*)CONTAINING_RECORD(iface, IBaseUnknownImpl, lpVtbl);
+    CBaseUnknownImpl * This = (CBaseUnknownImpl*)CONTAINING_RECORD(iface, CBaseUnknownImpl, lpVtbl);
 
     InterlockedDecrement(&This->m_RefCount);
 
@@ -88,7 +88,7 @@ IIndirectedUnknown_fnQueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    IBaseUnknownImpl * This = (IBaseUnknownImpl*)CONTAINING_RECORD(iface, IBaseUnknownImpl, lpVtblIndirectedUnknown);
+    CBaseUnknownImpl * This = (CBaseUnknownImpl*)CONTAINING_RECORD(iface, CBaseUnknownImpl, lpVtblIndirectedUnknown);
 
     return This->m_UnknownOuter->lpVtbl->QueryInterface(This->m_UnknownOuter, refiid, Output);
 }
@@ -98,7 +98,7 @@ NTAPI
 IIndirectedUnknown_fnAddRef(
     IIndirectedUnknown * iface)
 {
-    IBaseUnknownImpl * This = (IBaseUnknownImpl*)CONTAINING_RECORD(iface, IBaseUnknownImpl, lpVtblIndirectedUnknown);
+    CBaseUnknownImpl * This = (CBaseUnknownImpl*)CONTAINING_RECORD(iface, CBaseUnknownImpl, lpVtblIndirectedUnknown);
 
     return This->m_UnknownOuter->lpVtbl->AddRef(This->m_UnknownOuter);
 }
@@ -108,7 +108,7 @@ NTAPI
 IIndirectedUnknown_fnRelease(
     IIndirectedUnknown * iface)
 {
-    IBaseUnknownImpl * This = (IBaseUnknownImpl*)CONTAINING_RECORD(iface, IBaseUnknownImpl, lpVtblIndirectedUnknown);
+    CBaseUnknownImpl * This = (CBaseUnknownImpl*)CONTAINING_RECORD(iface, CBaseUnknownImpl, lpVtblIndirectedUnknown);
 
     return This->m_UnknownOuter->lpVtbl->Release(This->m_UnknownOuter);
 }
@@ -121,9 +121,7 @@ static IIndirectedUnknownVtbl vt_IIndirectedUnknownVtbl =
 };
 
 
-// On x86, the function is named @__CBaseUnknown_ConstructorWithGUID@16
-// On non-x86, the function is named __CBaseUnknown_ConstructorWithGUID
-KS_DECL_CXX(IBaseUnknownImpl *) CBaseUnknown_ConstructorWithGUID(KS_THIS(IBaseUnknownImpl), const GUID *lpGUID, IUnknown * OuterUnknown)
+KS_DECL_CXX(CBaseUnknownImpl *) CBaseUnknown_ConstructorWithGUID(KS_THIS(CBaseUnknownImpl), const GUID *lpGUID, IUnknown * OuterUnknown)
 {
 
     This->lpVtbl = &vt_INonDelegatedUnknownVtbl;
@@ -153,9 +151,7 @@ KS_DECL_CXX(IBaseUnknownImpl *) CBaseUnknown_ConstructorWithGUID(KS_THIS(IBaseUn
     return This;
 }
 
-// On x86, the function is named @__CBaseUnknown_Constructor@12
-// On non-x86, the function is named ___CBaseUnknown_Constructor
-KS_DECL_CXX(IBaseUnknownImpl *) CBaseUnknown_Constructor(KS_THIS(IBaseUnknownImpl), IUnknown * OuterUnknown)
+KS_DECL_CXX(CBaseUnknownImpl *) CBaseUnknown_Constructor(KS_THIS(CBaseUnknownImpl), IUnknown * OuterUnknown)
 {
 
     This->lpVtbl = &vt_INonDelegatedUnknownVtbl;
@@ -182,9 +178,7 @@ KS_DECL_CXX(IBaseUnknownImpl *) CBaseUnknown_Constructor(KS_THIS(IBaseUnknownImp
     return This;
 }
 
-// On x86, the function is named @__CBaseUnknown_Destructor@12
-// On non-x86, the function is named __CBaseUnknown_Destructor
-KS_DECL_CXX(IBaseUnknownImpl *) CBaseUnknown_Destructor(KS_THIS(IBaseUnknownImpl), IUnknown * OuterUnknown)
+KS_DECL_CXX(VOID) CBaseUnknown_Destructor(KS_THIS(CBaseUnknownImpl), IUnknown * OuterUnknown)
 {
     /* restore vtbl's */
     This->lpVtbl = &vt_INonDelegatedUnknownVtbl;
@@ -201,19 +195,12 @@ KS_DECL_CXX(IBaseUnknownImpl *) CBaseUnknown_Destructor(KS_THIS(IBaseUnknownImpl
         /* use unknown from INonDelegatedUnknown */
         This->m_UnknownOuter = (PUNKNOWN)&This->lpVtbl;
     }
-
-    /* return result */
-    return This;
 }
 
-KS_DECL_CXX(IBaseUnknownImpl *) CBaseUnknown_DefaultDestructor(KS_THIS(IBaseUnknownImpl))
+KS_DECL_CXX(VOID) CBaseUnknown_DefaultDestructor(KS_THIS(CBaseUnknownImpl))
 {
     /* restore vtbl's */
     This->lpVtbl = &vt_INonDelegatedUnknownVtbl;
     This->lpVtblIndirectedUnknown = &vt_IIndirectedUnknownVtbl;
-
-
-    /* return result */
-    return This;
 }
 
