@@ -1700,7 +1700,7 @@ GdiGetCharDimensions(HDC hdc, LPTEXTMETRICW lptm, LONG *height)
  *
  */
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
