@@ -1,13 +1,13 @@
-;@ fastcall -i386 ??0CBaseUnknown@@QAE@ABU_GUID@@PAUIUnknown@@@Z(ptr ptr ptr ptr)  ks.CBaseUnknown_ConstructorWithGUID(ptr ptr ptr ptr) 
-;@ fastcall -i386 ??0CBaseUnknown@@QAE@PAUIUnknown@@@Z(ptr ptr ptr) ks.CBaseUnknown_Constructor(ptr ptr ptr)
-;@ fastcall -i386 ??1CBaseUnknown@@UAE@XZ(ptr) ks.__CBaseUnknown_DefaultDestructor(ptr)
-;@ fastcall -i386 ??_FCBaseUnknown@@QAEXXZ(ptr) ks.CBaseUnknown_Destructor(ptr, ptr)
-;@ stdcall -i386 ?IndirectedAddRef@CBaseUnknown@@UAGKXZ(ptr) ks.IIndirectedUnknown_fnAddRef(ptr)
-;@ stdcall -i386 ?IndirectedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z(ptr ptr ptr) ks.IIndirectedUnknown_fnQueryInterface(ptr ptr ptr)
-;@ stdcall -i386 ?IndirectedRelease@CBaseUnknown@@UAGKXZ(ptr) ks.IIndirectedUnknown_fnRelease(ptr)
-;@ stdcall -i386 ?NonDelegatedAddRef@CBaseUnknown@@UAGKXZ(ptr) ks.INonDelegatedUnknown_fnAddRef(ptr)
-;@ stdcall -i386 ?NonDelegatedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z ks.INonDelegatedUnknown_fnQueryInterface(ptr ptr ptr)
-;@ stdcall -i386 ?NonDelegatedRelease@CBaseUnknown@@UAGKXZ(ptr) ks.IIndirectedUnknown_fnRelease(ptr)
+@ fastcall -i386 ??0CBaseUnknown@@QAE@ABU_GUID@@PAUIUnknown@@@Z(ptr ptr ptr ptr) CBaseUnknown_ConstructorWithGUID
+@ fastcall -i386 ??0CBaseUnknown@@QAE@PAUIUnknown@@@Z(ptr ptr ptr) CBaseUnknown_Constructor
+@ fastcall -i386 ??1CBaseUnknown@@UAE@XZ(ptr ptr) CBaseUnknown_DefaultDestructor
+@ fastcall -i386 ??_FCBaseUnknown@@QAEXXZ(ptr ptr ptr) CBaseUnknown_Destructor
+@ stdcall -i386 ?IndirectedAddRef@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnAddRef
+@ stdcall -i386 ?IndirectedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z(ptr ptr ptr) IIndirectedUnknown_fnQueryInterface
+@ stdcall -i386 ?IndirectedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
+@ stdcall -i386 ?NonDelegatedAddRef@CBaseUnknown@@UAGKXZ(ptr) INonDelegatedUnknown_fnAddRef
+@ stdcall -i386 ?NonDelegatedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z(ptr ptr ptr) INonDelegatedUnknown_fnQueryInterface
+@ stdcall ?NonDelegatedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
 
 @ stdcall DllInitialize(ptr)
 @ stdcall KoCreateInstance(ptr ptr long ptr ptr)
