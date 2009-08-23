@@ -53,17 +53,10 @@ FldrCreateComponentKey(
     IN ULONG Key,
     IN ULONG Affinity,
     IN PCHAR IdentifierString,
+    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
+    IN ULONG Size,
     OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
 );
-
-VOID
-NTAPI
-FldrSetConfigurationData(
-    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
-    IN ULONG Size
-);
-
 
 /* PROTOTYPES ***************************************************************/
 
