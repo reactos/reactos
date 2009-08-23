@@ -154,15 +154,6 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
     {
       DPRINTM(DPRINT_HWDETECT, "Table size: %u\n", Table->Size);
 
-      FldrCreateComponentKey(BusKey,
-                             PeripheralClass,
-                             RealModeIrqRoutingTable,
-                             0x0,
-                             0x0,
-                             0xFFFFFFFF,
-                             "PCI Real-mode IRQ Routing Table",
-                             &TableKey);
-
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
          2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->Size;
@@ -194,8 +185,17 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
       memcpy(&PartialResourceList->PartialDescriptors[2],
           Table, Table->Size);
 
-      /* Set 'Configuration Data' value */
-      FldrSetConfigurationData(TableKey, PartialResourceList, Size);
+      FldrCreateComponentKey(BusKey,
+                             PeripheralClass,
+                             RealModeIrqRoutingTable,
+                             0x0,
+                             0x0,
+                             0xFFFFFFFF,
+                             "PCI Real-mode IRQ Routing Table",
+                             PartialResourceList,
+                             Size,
+                             &TableKey);
+
       MmHeapFree(PartialResourceList);
     }
 }
@@ -215,19 +215,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   /* Report the PCI BIOS */
   if (FindPciBios(&BusData))
     {
-      /* Create new bus key */
-      FldrCreateComponentKey(SystemKey,
-                             AdapterClass,
-                             MultiFunctionAdapter,
-                             0x0,
-                             0x0,
-                             0xFFFFFFFF,
-                             "PCI BIOS",
-                             &BiosKey);
-
-      /* Increment bus number */
-      (*BusNumber)++;
-
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST,
                           PartialDescriptors);
@@ -242,8 +229,21 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       /* Initialize resource descriptor */
       memset(PartialResourceList, 0, Size);
 
-      /* Set 'Configuration Data' value */
-      FldrSetConfigurationData(BiosKey, PartialResourceList, Size);
+      /* Create new bus key */
+      FldrCreateComponentKey(SystemKey,
+                             AdapterClass,
+                             MultiFunctionAdapter,
+                             0x0,
+                             0x0,
+                             0xFFFFFFFF,
+                             "PCI BIOS",
+                             PartialResourceList,
+                             Size,
+                             &BiosKey);
+
+      /* Increment bus number */
+      (*BusNumber)++;
+
       MmHeapFree(PartialResourceList);
 
       DetectPciIrqRoutingTable(BiosKey);
@@ -251,16 +251,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       /* Report PCI buses */
       for (i = 0; i < (ULONG)BusData.NoBuses; i++)
       {
-          /* Create the bus key */
-          FldrCreateComponentKey(SystemKey,
-                                 AdapterClass,
-                                 MultiFunctionAdapter,
-                                 0x0,
-                                 0x0,
-                                 0xFFFFFFFF,
-                                 "PCI",
-                                 &BusKey);
-
           /* Check if this is the first bus */
           if (i == 0)
           {
@@ -289,10 +279,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
               memcpy(&PartialResourceList->PartialDescriptors[1],
                      &BusData,
                      sizeof(PCI_REGISTRY_INFO));
-
-              /* Set 'Configuration Data' value */
-              FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-              MmHeapFree(PartialResourceList);
           }
           else
           {
@@ -309,11 +295,21 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
               /* Initialize resource descriptor */
               memset(PartialResourceList, 0, Size);
-
-              /* Set 'Configuration Data' value */
-              FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-              MmHeapFree(PartialResourceList);
           }
+
+          /* Create the bus key */
+          FldrCreateComponentKey(SystemKey,
+                                 AdapterClass,
+                                 MultiFunctionAdapter,
+                                 0x0,
+                                 0x0,
+                                 0xFFFFFFFF,
+                                 "PCI",
+                                 PartialResourceList,
+                                 Size,
+                                 &BusKey);
+
+          MmHeapFree(PartialResourceList);
 
           /* Increment bus number */
           (*BusNumber)++;

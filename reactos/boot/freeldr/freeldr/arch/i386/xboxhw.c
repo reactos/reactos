@@ -29,15 +29,19 @@ extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 extern char reactos_arc_strings[32][256];
 
-static VOID
-SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
-			     ULONG DriveNumber)
+static PCM_PARTIAL_RESOURCE_LIST
+GetHarddiskConfigurationData(ULONG DriveNumber, ULONG* pSize)
 {
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
   EXTENDED_GEOMETRY ExtGeometry;
   GEOMETRY Geometry;
   ULONG Size;
+
+    //
+    // Initialize returned size
+    //
+    *pSize = 0;
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -47,7 +51,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
     {
       DPRINTM(DPRINT_HWDETECT,
 		"Failed to allocate a full resource descriptor\n");
-      return;
+      return NULL;
     }
 
   memset(PartialResourceList, 0, Size);
@@ -78,7 +82,7 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
     {
       DPRINTM(DPRINT_HWDETECT, "Reading disk geometry failed\n");
       MmHeapFree(PartialResourceList);
-      return;
+      return NULL;
     }
   DPRINTM(DPRINT_HWDETECT,
 	   "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
@@ -88,8 +92,11 @@ SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
 	   DiskGeometry->SectorsPerTrack,
 	   DiskGeometry->BytesPerSector);
 
-  FldrSetConfigurationData(DiskKey, PartialResourceList, Size);
-  MmHeapFree(PartialResourceList);
+    //
+    // Return configuration data
+    //
+    *pSize = Size;
+    return PartialResourceList;
 }
 
 
@@ -202,17 +209,7 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
     DPRINTM(DPRINT_HWDETECT, "BIOS reports %d harddisk%s\n",
               (int)DiskCount, (DiskCount == 1) ? "": "s");
     
-    FldrCreateComponentKey(BusKey,
-                           ControllerClass,
-                           DiskController,
-                           Output | Input | Removable,
-                           0,
-                           0xFFFFFFFF,
-                           NULL,
-                           &ControllerKey);
-    DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
-    
-    //DetectBiosFloppyController(BusKey, ControllerKey);
+    //DetectBiosFloppyController(BusKey);
     
     /* Allocate resource descriptor */
     Size = sizeof(CM_PARTIAL_RESOURCE_LIST) +
@@ -258,16 +255,29 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
         }
     }
     
-    /* Set 'Configuration Data' value */
-    FldrSetConfigurationData(SystemKey, PartialResourceList, Size);
+    FldrCreateComponentKey(BusKey,
+                           ControllerClass,
+                           DiskController,
+                           Output | Input,
+                           0,
+                           0xFFFFFFFF,
+                           NULL,
+                           PartialResourceList,
+                           Size,
+                           &ControllerKey);
+    DPRINTM(DPRINT_HWDETECT, "Created key: DiskController\\0\n");
+    
     MmHeapFree(PartialResourceList);
     
     /* Create and fill subkey for each harddisk */
     for (i = 0; i < DiskCount; i++)
     {
+        PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
+        ULONG Size;
         CHAR Identifier[20];
 
         /* Get disk values */
+        PartialResourceList = GetHarddiskConfigurationData(0x80 + i, &Size);
         GetHarddiskIdentifier(Identifier, 0x80 + i);
 
         /* Create disk key */
@@ -278,10 +288,12 @@ DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
                                0,
                                0xFFFFFFFF,
                                Identifier,
+                               PartialResourceList,
+                               Size,
                                &DiskKey);
-        
-        /* Set disk values */
-        SetHarddiskConfigurationData(DiskKey, 0x80 + i);
+
+        if (PartialResourceList)
+            MmHeapFree(PartialResourceList);
     }
 }
 
@@ -291,19 +303,6 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   PCM_PARTIAL_RESOURCE_LIST PartialResourceList;
   PCONFIGURATION_COMPONENT_DATA BusKey;
   ULONG Size;
-
-  /* Create new bus key */
-  FldrCreateComponentKey(SystemKey,
-                         AdapterClass,
-                         MultiFunctionAdapter,
-                         0x0,
-                         0x0,
-                         0xFFFFFFFF,
-                         "ISA",
-                         &BusKey);
-
-  /* Increment bus number */
-  (*BusNumber)++;
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_PARTIAL_RESOURCE_LIST) -
@@ -322,10 +321,22 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
   PartialResourceList->Revision = 1;
   PartialResourceList->Count = 0;
 
-  /* Set 'Configuration Data' value */
-  FldrSetConfigurationData(BusKey, PartialResourceList, Size);
-  MmHeapFree(PartialResourceList);
+    /* Create new bus key */
+    FldrCreateComponentKey(SystemKey,
+                           AdapterClass,
+                           MultiFunctionAdapter,
+                           0x0,
+                           0x0,
+                           0xFFFFFFFF,
+                           "ISA",
+                           PartialResourceList,
+                           Size,
+                           &BusKey);
 
+    /* Increment bus number */
+    (*BusNumber)++;
+
+  MmHeapFree(PartialResourceList);
 
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);
