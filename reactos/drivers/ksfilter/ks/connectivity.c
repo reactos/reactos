@@ -194,6 +194,8 @@ KsPinPropertyHandler(
     PVOID Buffer;
     PKSDATARANGE_AUDIO *WaveFormatOut;
     PKSDATAFORMAT_WAVEFORMATEX WaveFormatIn;
+    PULONG GuidBuffer;
+    static WCHAR Speaker[] = {L"PC-Speaker"};
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     Buffer = Irp->UserBuffer;
@@ -243,7 +245,7 @@ KsPinPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
@@ -270,19 +272,30 @@ KsPinPropertyHandler(
                 break;
             }
 
-            Size = sizeof(KSMULTIPLE_ITEM) + sizeof(KSPIN_INTERFACE) * Descriptor[Pin->PinId].InterfacesCount;
+            /* calculate size */
+            Size = sizeof(KSMULTIPLE_ITEM);
+            Size += max(1, Descriptor[Pin->PinId].InterfacesCount) * sizeof(KSPIN_INTERFACE);
 
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
             Item = (KSMULTIPLE_ITEM*)Buffer;
             Item->Size = Size;
-            Item->Count = Descriptor[Pin->PinId].InterfacesCount;
-            RtlMoveMemory((PVOID)(Item + 1), Descriptor[Pin->PinId].Interfaces, Descriptor[Pin->PinId].InterfacesCount * sizeof(KSDATARANGE));
+
+            if (Descriptor[Pin->PinId].InterfacesCount)
+            {
+                Item->Count = Descriptor[Pin->PinId].InterfacesCount;
+                RtlMoveMemory((PVOID)(Item + 1), Descriptor[Pin->PinId].Interfaces, Descriptor[Pin->PinId].InterfacesCount * sizeof(KSPIN_INTERFACE));
+            }
+            else
+            {
+                Item->Count = 1;
+                RtlMoveMemory((PVOID)(Item + 1), &StandardPinInterface, sizeof(KSPIN_INTERFACE));
+            }
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
@@ -296,18 +309,30 @@ KsPinPropertyHandler(
                 break;
             }
 
-            Size = sizeof(KSMULTIPLE_ITEM) + sizeof(KSPIN_MEDIUM) * Descriptor[Pin->PinId].MediumsCount;
+            /* calculate size */
+            Size = sizeof(KSMULTIPLE_ITEM);
+            Size += max(1, Descriptor[Pin->PinId].MediumsCount) * sizeof(KSPIN_MEDIUM);
+
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
             Item = (KSMULTIPLE_ITEM*)Buffer;
             Item->Size = Size;
-            Item->Count = Descriptor[Pin->PinId].MediumsCount;
-            RtlMoveMemory((PVOID)(Item + 1), Descriptor[Pin->PinId].Mediums, Descriptor[Pin->PinId].MediumsCount * sizeof(KSDATARANGE));
+
+            if (Descriptor[Pin->PinId].MediumsCount)
+            {
+                Item->Count = Descriptor[Pin->PinId].MediumsCount;
+                RtlMoveMemory((PVOID)(Item + 1), Descriptor[Pin->PinId].Mediums, Descriptor[Pin->PinId].MediumsCount * sizeof(KSPIN_MEDIUM));
+            }
+            else
+            {
+                Item->Count = 1;
+                RtlMoveMemory((PVOID)(Item + 1), &StandardPinMedium, sizeof(KSPIN_MEDIUM));
+            }
 
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
@@ -366,16 +391,19 @@ KsPinPropertyHandler(
                 break;
             }
 
-            Size = sizeof(GUID);
+            GuidBuffer = Buffer;
+            Size = sizeof(Speaker);
+
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                Irp->IoStatus.Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
+            RtlMoveMemory(GuidBuffer, Speaker, sizeof(Speaker));
 
-            RtlMoveMemory(Buffer, &Descriptor[Pin->PinId].Name, sizeof(GUID));
+            //RtlMoveMemory(Buffer, &Descriptor[Pin->PinId].Name, sizeof(GUID));
             Irp->IoStatus.Status = STATUS_SUCCESS;
             Irp->IoStatus.Information = Size;
             break;

@@ -409,6 +409,68 @@ FindPropertyHandler(
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+PcCountProperties(
+    IN PIRP Irp,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor)
+{
+    ULONG Properties;
+    ULONG Index, Offset;
+    PIO_STACK_LOCATION IoStack;
+    LPGUID Guid;
+
+    /* count property items */
+    Properties = Descriptor->FilterPropertySet.FreeKsPropertySetOffset;
+
+    if (Descriptor->DeviceDescriptor->AutomationTable)
+    {
+        Properties = Descriptor->DeviceDescriptor->AutomationTable->PropertyCount;
+    }
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* store output size */
+    Irp->IoStatus.Information = sizeof(GUID) * Properties;
+
+    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GUID) * Properties)
+    {
+        /* buffer too small */
+        Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* get output buffer */
+    Guid = Irp->UserBuffer;
+
+
+    /* copy property guids from filter */
+    Offset = 0;
+    for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
+    {
+        RtlMoveMemory(&Guid[Offset], Descriptor->FilterPropertySet.Properties[Index].Set, sizeof(GUID));
+        Offset++;
+    }
+
+    if (Descriptor->DeviceDescriptor->AutomationTable)
+    {
+        /* copy property guids from driver */
+        for(Index = 0; Index < Descriptor->DeviceDescriptor->AutomationTable->PropertyCount; Index++)
+        {
+            RtlMoveMemory(&Guid[Offset], Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Set, sizeof(GUID));
+            Offset++;
+        }
+    }
+
+     /* done */
+     Irp->IoStatus.Status = STATUS_SUCCESS;
+     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+     return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 NTAPI
@@ -428,6 +490,12 @@ PcPropertyHandler(
 
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
     ASSERT(Property);
+
+    if (IsEqualGUIDAligned(&Property->Set, &GUID_NULL) && Property->Id == 0 && Property->Flags == KSPROPERTY_TYPE_SETSUPPORT)
+    {
+        return PcCountProperties(Irp, Descriptor);
+    }
+
 
     /* check properties provided by the driver */
     if (Descriptor->DeviceDescriptor->AutomationTable)
@@ -478,7 +546,7 @@ PcPropertyHandler(
     else
     {
         RtlStringFromGUID(&Property->Set, &GuidString);
-        DPRINT1("Unhandeled property: Set %S Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        DPRINT1("Unhandeled property: Set %S Id %u Flags %x InputLength %u OutputLength %u\n", GuidString.Buffer, Property->Id, Property->Flags, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
         RtlFreeUnicodeString(&GuidString);
     }
 

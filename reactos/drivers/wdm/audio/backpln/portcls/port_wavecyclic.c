@@ -31,7 +31,7 @@ typedef struct
 
 GUID KSPROPERTY_SETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
-static GUID InterfaceGuids[3] = 
+static GUID InterfaceGuids[4] = 
 {
     {
         /// KSCATEGORY_RENDER
@@ -42,9 +42,14 @@ static GUID InterfaceGuids[3] =
         0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     },
     {
-        /// KS_CATEGORY_AUDIO
+         //KS_CATEGORY_AUDIO
         0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        ///KSCATEGORY_AUDIO_DEVICE
+        0xFBF6F530L, 0x07B9, 0x11D2, {0xA7, 0x1E, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}
     }
+
 };
 
 DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterWaveCyclicTopologySet, TopologyPropertyHandler);
@@ -363,7 +368,7 @@ IPortWaveCyclic_fnInit(
 
     /* create the subdevice descriptor */
     Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
-                                         3,
+                                         4,
                                          InterfaceGuids,
                                          0, 
                                          NULL,

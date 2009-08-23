@@ -176,7 +176,7 @@ KsTopologyPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
@@ -184,7 +184,10 @@ KsTopologyPropertyHandler(
             Item->Size = Size;
             Item->Count = Topology->CategoriesCount;
 
-            RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->Categories, Topology->CategoriesCount * sizeof(GUID));
+            if (Topology->CategoriesCount)
+            {
+                RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->Categories, Topology->CategoriesCount * sizeof(GUID));
+            }
             Irp->IoStatus.Information = Size;
             Status = STATUS_SUCCESS;
             break;
@@ -194,7 +197,7 @@ KsTopologyPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
@@ -203,6 +206,10 @@ KsTopologyPropertyHandler(
             Item->Count = Topology->TopologyNodesCount;
 
             RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyNodes, Topology->TopologyNodesCount * sizeof(GUID));
+            if (Topology->TopologyNodesCount)
+            {
+                RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyNodes, Topology->TopologyNodesCount * sizeof(GUID));
+            }
             Irp->IoStatus.Information = Size;
             Status = STATUS_SUCCESS;
             break;
@@ -212,7 +219,7 @@ KsTopologyPropertyHandler(
             if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
             {
                 Irp->IoStatus.Information = Size;
-                Status = STATUS_BUFFER_TOO_SMALL;
+                Status = STATUS_MORE_ENTRIES;
                 break;
             }
 
@@ -220,7 +227,11 @@ KsTopologyPropertyHandler(
             Item->Size = Size;
             Item->Count = Topology->TopologyConnectionsCount;
 
-            RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyConnections, Topology->TopologyConnectionsCount * sizeof(KSTOPOLOGY_CONNECTION));
+            if (Topology->TopologyConnections)
+            {
+                RtlMoveMemory((PVOID)(Item + 1), (PVOID)Topology->TopologyConnections, Topology->TopologyConnectionsCount * sizeof(KSTOPOLOGY_CONNECTION));
+            }
+
             Irp->IoStatus.Information = Size;
             Status = STATUS_SUCCESS;
             break;
