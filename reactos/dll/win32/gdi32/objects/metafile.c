@@ -160,6 +160,7 @@ CreateMetaFileW(
                (LPTSTR*) &lpszFile))
     {
 //       MFDRV_DeleteDC( dc->physDev );
+       LocalFree(pmfDC);
        return NULL;
     }
 
@@ -167,12 +168,14 @@ CreateMetaFileW(
 				CREATE_ALWAYS, 0, 0)) == INVALID_HANDLE_VALUE)
     {
 //       MFDRV_DeleteDC( dc->physDev );
+       LocalFree(pmfDC);
        return NULL;
     }
 
     if (!WriteFile( hFile, &pmfDC->mh, sizeof(pmfDC->mh), NULL, NULL ))
     {
 //       MFDRV_DeleteDC( dc->physDev );
+       LocalFree(pmfDC);
        return NULL;
     }
       pmfDC->hFile = hFile;
