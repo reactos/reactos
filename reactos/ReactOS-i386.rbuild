@@ -24,13 +24,13 @@
 			<compilerflag>-ftracer</compilerflag>
 			<compilerflag>-momit-leaf-frame-pointer</compilerflag>
 		</if>
-        <compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-    </group>
+		<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
+	</group>
 
 	<group linkerset="ld">
 		<linkerflag>-disable-stdcall-fixup</linkerflag>
 	</group>
-    
+
 	<directory name="base">
 		<xi:include href="base/base.rbuild" />
 	</directory>
