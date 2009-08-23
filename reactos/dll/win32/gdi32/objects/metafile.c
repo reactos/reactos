@@ -143,6 +143,7 @@ CreateMetaFileW(
 {
   HANDLE hFile;
   HDC hmDC;
+  DWORD dwWritten;
   PMETAFILEDC pmfDC = LocalAlloc(LMEM_ZEROINIT, sizeof(METAFILEDC));
   if (!pmfDC) return NULL;
 
@@ -172,7 +173,7 @@ CreateMetaFileW(
        return NULL;
     }
 
-    if (!WriteFile( hFile, &pmfDC->mh, sizeof(pmfDC->mh), NULL, NULL ))
+    if (!WriteFile( hFile, &pmfDC->mh, sizeof(pmfDC->mh), &dwWritten, NULL ))
     {
 //       MFDRV_DeleteDC( dc->physDev );
        LocalFree(pmfDC);
