@@ -45,10 +45,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitMemoryAreas)
-#endif
-
 MEMORY_AREA MiStaticMemoryAreas[MI_STATIC_MEMORY_AREAS];
 ULONG MiStaticMemoryAreaCount;
 

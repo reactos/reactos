@@ -28,6 +28,25 @@ extern "C" {
 #endif
 
 
+#if defined(_MSC_VER)
+
+//
+// Indicate if #pragma alloc_text() is supported
+//
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_IA64)
+#define ALLOC_PRAGMA 1
+#endif
+
+//
+// Indicate if #pragma data_seg() is supported
+//
+#if defined(_M_IX86) || defined(_M_AMD64)
+#define ALLOC_DATA_PRAGMA 1
+#endif
+
+#endif
+
+
 /* Simple types */
 typedef UCHAR KPROCESSOR_MODE;
 typedef LONG KPRIORITY;
