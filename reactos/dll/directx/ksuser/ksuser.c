@@ -177,7 +177,7 @@ KsCreateClock(HANDLE ConnectionHandle,
 *--*/
 
 KSDDKAPI
-NTSTATUS
+DWORD
 NTAPI
 KsCreatePin(HANDLE FilterHandle,
             PKSPIN_CONNECT Connect,
