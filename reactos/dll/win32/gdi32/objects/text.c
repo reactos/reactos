@@ -395,6 +395,10 @@ GetTextFaceA( HDC hdc, INT count, LPSTR name )
 
     res = GetTextFaceW(hdc, 0, NULL);
     nameW = HeapAlloc( GetProcessHeap(), 0, res * 2 );
+    if (nameW == NULL)
+    {
+        return 0;
+    }
     GetTextFaceW( hdc, res, nameW );
 
     if (name)
