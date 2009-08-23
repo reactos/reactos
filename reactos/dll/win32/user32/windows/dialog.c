@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
  * PURPOSE:         Input
@@ -275,6 +274,7 @@ static const WORD *DIALOG_GetControl32( const WORD *p, DLG_CONTROL_INFO *info,
 
     if (GET_WORD(p) == 0xffff)  /* Is it an integer id? */
     {
+//// ReactOS Rev 6478
         info->windowName = HeapAlloc( GetProcessHeap(), 0, sizeof(L"#65535") );
         if (info->windowName != NULL)
         {
@@ -422,12 +422,16 @@ static HWND DIALOG_FindMsgDestination( HWND hwndDlg )
 {
     while (GetWindowLongA(hwndDlg, GWL_STYLE) & DS_CONTROL)
     {
+        PWND pWnd;
         HWND hParent = GetParent(hwndDlg);
         if (!hParent) break;
-
+// ReactOS
         if (!IsWindow(hParent)) break;
 
-        if (!GETDLGINFO(hParent)) /* TODO: Correct? */
+        pWnd = ValidateHwnd(hParent);
+        if (!pWnd) break;
+
+        if (!(pWnd->state & WNDS_DIALOGWINDOW))
         {
             break;
         }
@@ -649,13 +653,29 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
     {
         result->pointSize = GET_WORD(p);
         p++;
-        if (result->dialogEx)
+
+        /* If pointSize is 0x7fff, it means that we need to use the font
+         * in NONCLIENTMETRICSW.lfMessageFont, and NOT read the weight,
+         * italic, and facename from the dialog template.
+         */
+        if (result->pointSize == 0x7fff)
         {
-            result->weight = GET_WORD(p); p++;
-            result->italic = LOBYTE(GET_WORD(p)); p++;
+           /* We could call SystemParametersInfo here, but then we'd have
+            * to convert from pixel size to point size (which can be
+            * imprecise).
+            */
+            TRACE(" FONT: Using message box font\n");
         }
-        result->faceName = (LPCWSTR)p;
-        p += wcslen( result->faceName ) + 1;
+        else
+        {
+            if (result->dialogEx)
+            {
+               result->weight = GET_WORD(p); p++;
+               result->italic = LOBYTE(GET_WORD(p)); p++;
+            }
+            result->faceName = (LPCWSTR)p;
+            p += wcslen( result->faceName ) + 1;
+        }
     }
 
     /* First control is on dword boundary */
@@ -676,6 +696,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 {
     HWND hwnd;
     RECT rect;
+    POINT pos;
+    SIZE size;
     DLG_TEMPLATE template;
     DIALOGINFO * dlgInfo = NULL;
     DWORD units = GetDialogBaseUnits();
@@ -699,16 +721,32 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
     if (template.style & DS_SETFONT)
     {
+        HDC dc = GetDC(0);
+
+        if (template.pointSize == 0x7fff)
+        {
+            /* We get the message font from the non-client metrics */
+            NONCLIENTMETRICSW ncMetrics;
+
+            ncMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
+            if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
+                                      sizeof(NONCLIENTMETRICSW), &ncMetrics, 0))
+           {
+               hUserFont = CreateFontIndirectW( &ncMetrics.lfMessageFont );
+           }
+        }
+        else  
+        {
           /* We convert the size to pixels and then make it -ve.  This works
            * for both +ve and -ve template.pointSize */
-        HDC dc;
-        int pixels;
-        dc = GetDC(0);
-        pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
-        hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
+          int pixels;
+          pixels = MulDiv(template.pointSize, GetDeviceCaps(dc , LOGPIXELSY), 72);
+          hUserFont = CreateFontW( -pixels, 0, 0, 0, template.weight,
                                           template.italic, FALSE, FALSE, DEFAULT_CHARSET, 0, 0,
                                           PROOF_QUALITY, FF_DONTCARE,
                                           template.faceName );
+        }
+
         if (hUserFont)
         {
             SIZE charSize;
@@ -737,26 +775,39 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     if (template.style & DS_CONTROL)
         template.exStyle |= WS_EX_CONTROLPARENT;
     AdjustWindowRectEx( &rect, template.style, (hMenu != 0), template.exStyle );
-    rect.right -= rect.left;
-    rect.bottom -= rect.top;
+    pos.x = rect.left;
+    pos.y = rect.top;
+    size.cx = rect.right - rect.left;
+    size.cy = rect.bottom - rect.top;
 
     if (template.x == CW_USEDEFAULT16)
     {
-        rect.left = rect.top = CW_USEDEFAULT;
+        pos.x = pos.y = CW_USEDEFAULT;
     }
     else
     {
+        HMONITOR monitor = 0;
+        MONITORINFO mon_info;
+        
+        mon_info.cbSize = sizeof(mon_info);
         if (template.style & DS_CENTER)
         {
-            rect.left = (GetSystemMetrics(SM_CXSCREEN) - rect.right) / 2;
-            rect.top = (GetSystemMetrics(SM_CYSCREEN) - rect.bottom) / 2;
+            monitor = MonitorFromWindow( owner ? owner : GetActiveWindow(), MONITOR_DEFAULTTOPRIMARY );
+            GetMonitorInfoW( monitor, &mon_info );
+            pos.x = (mon_info.rcWork.left + mon_info.rcWork.right - size.cx) / 2;
+            pos.y = (mon_info.rcWork.top + mon_info.rcWork.bottom - size.cy) / 2;
+        }
+        else if (template.style & DS_CENTERMOUSE)
+        {
+            GetCursorPos( &pos );
+            monitor = MonitorFromPoint( pos, MONITOR_DEFAULTTOPRIMARY );
+            GetMonitorInfoW( monitor, &mon_info );
         }
         else
         {
-            rect.left += MulDiv(template.x, xBaseUnit, 4);
-            rect.top += MulDiv(template.y, yBaseUnit, 8);
-            if( !(template.style & (WS_CHILD|DS_ABSALIGN)) )
-                ClientToScreen( owner, (POINT *)&rect );
+            pos.x += MulDiv(template.x, xBaseUnit, 4);
+            pos.y += MulDiv(template.y, yBaseUnit, 8);
+            if (!(template.style & (WS_CHILD|DS_ABSALIGN))) ClientToScreen( owner, &pos );
         }
         if ( !(template.style & WS_CHILD) )
         {
@@ -764,12 +815,18 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
             /* try to fit it into the desktop */
 
-            if( (dX = rect.left + rect.right + GetSystemMetrics(SM_CXDLGFRAME)
-                 - GetSystemMetrics(SM_CXSCREEN)) > 0 ) rect.left -= dX;
-            if( (dY = rect.top + rect.bottom + GetSystemMetrics(SM_CYDLGFRAME)
-                 - GetSystemMetrics(SM_CYSCREEN)) > 0 ) rect.top -= dY;
-            if( rect.left < 0 ) rect.left = 0;
-            if( rect.top < 0 ) rect.top = 0;
+            if (!monitor)
+            {
+                SetRect( &rect, pos.x, pos.y, pos.x + size.cx, pos.y + size.cy );
+                monitor = MonitorFromRect( &rect, MONITOR_DEFAULTTOPRIMARY );
+                GetMonitorInfoW( monitor, &mon_info );
+            }
+            if ((dX = pos.x + size.cx + GetSystemMetrics(SM_CXDLGFRAME) - mon_info.rcWork.right) > 0)
+                pos.x -= dX;
+            if ((dY = pos.y + size.cy + GetSystemMetrics(SM_CYDLGFRAME) - mon_info.rcWork.bottom) > 0)
+                pos.y -= dY;
+            if( pos.x < mon_info.rcWork.left ) pos.x = mon_info.rcWork.left;
+            if( pos.y < mon_info.rcWork.top ) pos.y = mon_info.rcWork.top;
         }
     }
 
@@ -781,44 +838,36 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
 
     if (unicode)
     {
-        hwnd = User32CreateWindowEx(template.exStyle, (LPCSTR)template.className, (LPCSTR)template.caption,
-                                    template.style & ~WS_VISIBLE,
-                                    rect.left, rect.top, rect.right, rect.bottom,
-                                    owner, hMenu, hInst, NULL,
-                                    TRUE);
+        hwnd = CreateWindowExW(template.exStyle, template.className, template.caption,
+                               template.style & ~WS_VISIBLE, pos.x, pos.y, size.cx, size.cy,
+                               owner, hMenu, hInst, NULL );
     }
     else
     {
-        LPSTR class = (LPSTR)template.className;
-        LPSTR caption = (LPSTR)template.caption;
+        LPCSTR class = (LPCSTR)template.className;
+        LPCSTR caption = (LPCSTR)template.caption;
+        LPSTR class_tmp = NULL;
+        LPSTR caption_tmp = NULL;
 
         if (HIWORD(class))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.className, -1, NULL, 0, NULL, NULL );
-            class = HeapAlloc( GetProcessHeap(), 0, len );
-            if (class != NULL)
-                WideCharToMultiByte( CP_ACP, 0, template.className, -1, class, len, NULL, NULL );
+            class_tmp = HeapAlloc( GetProcessHeap(), 0, len );
+            WideCharToMultiByte( CP_ACP, 0, template.className, -1, class_tmp, len, NULL, NULL );
+            class = class_tmp;
         }
         if (HIWORD(caption))
         {
             DWORD len = WideCharToMultiByte( CP_ACP, 0, template.caption, -1, NULL, 0, NULL, NULL );
-            caption = HeapAlloc( GetProcessHeap(), 0, len );
-            if (caption != NULL)
-                WideCharToMultiByte( CP_ACP, 0, template.caption, -1, caption, len, NULL, NULL );
+            caption_tmp = HeapAlloc( GetProcessHeap(), 0, len );
+            WideCharToMultiByte( CP_ACP, 0, template.caption, -1, caption_tmp, len, NULL, NULL );
+            caption = caption_tmp;
         }
-
-        if (class != NULL && caption != NULL)
-        {
-            hwnd = User32CreateWindowEx(template.exStyle, class, caption,
-                                        template.style & ~WS_VISIBLE,
-                                        rect.left, rect.top, rect.right, rect.bottom,
-                                        owner, hMenu, hInst, NULL,
-                                        FALSE);
-        }
-        else
-            hwnd = NULL;
-        if (HIWORD(class)) HeapFree( GetProcessHeap(), 0, class );
-        if (HIWORD(caption)) HeapFree( GetProcessHeap(), 0, caption );
+        hwnd = CreateWindowExA(template.exStyle, class, caption,
+                               template.style & ~WS_VISIBLE, pos.x, pos.y, size.cx, size.cy,
+                               owner, hMenu, hInst, NULL );
+        HeapFree( GetProcessHeap(), 0, class_tmp );
+        HeapFree( GetProcessHeap(), 0, caption_tmp );
     }
 
     if (!hwnd)
@@ -832,7 +881,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
     /* moved this from the top of the method to here as DIALOGINFO structure
     will be valid only after WM_CREATE message has been handled in DefDlgProc
     All the members of the structure get filled here using temp variables */
-
     dlgInfo = DIALOG_get_info( hwnd, TRUE );
     if (dlgInfo == NULL)
     {
@@ -876,9 +924,10 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                     SetFocus( dlgInfo->hwndFocus );
             }
         }
+//// ReactOS Rev 30613 & 30644
         if (!(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_CHILD))
             SendMessageW( hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, 0), 0);
-
+////
         if (template.style & WS_VISIBLE && !(GetWindowLongPtrW( hwnd, GWL_STYLE ) & WS_VISIBLE))
         {
            ShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
@@ -899,13 +948,6 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
  */
 static void DEFDLG_SetFocus( HWND hwndDlg, HWND hwndCtrl )
 {
-    HWND hwndPrev = GetFocus();
-
-    if (IsChild( hwndDlg, hwndPrev ))
-    {
-        if (SendMessageW( hwndPrev, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
-            SendMessageW( hwndPrev, EM_SETSEL, -1, 0 );
-    }
     if (SendMessageW( hwndCtrl, WM_GETDLGCODE, 0, 0 ) & DLGC_HASSETSEL)
         SendMessageW( hwndCtrl, EM_SETSEL, 0, -1 );
     SetFocus( hwndCtrl );
@@ -944,7 +986,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
         infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
        if (!IsWindow( infoPtr->hwndFocus )) return;
     }
-    SetFocus( infoPtr->hwndFocus );
+    DEFDLG_SetFocus( hwnd, infoPtr->hwndFocus );
 
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
@@ -1077,6 +1119,7 @@ static LRESULT DEFDLG_Proc( HWND hwnd, UINT msg, WPARAM wParam,
             return 1;
         }
         case WM_NCDESTROY:
+//// ReactOS
             if ((dlgInfo = (DIALOGINFO *)SetWindowLongPtrW( hwnd, DWLP_ROS_DIALOGINFO, 0 )))
             {
                 /* Free dialog heap (if created) */
@@ -1717,7 +1760,7 @@ DialogBoxParamA(
     HWND hwnd;
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
-
+//// ReactOS rev 33532
     if (!(hrsrc = FindResourceA( hInstance, lpTemplateName, (LPCSTR)RT_DIALOG )) ||
         !(ptr = LoadResource(hInstance, hrsrc)))
     {
@@ -1750,7 +1793,7 @@ DialogBoxParamW(
     HWND hwnd;
     HRSRC hrsrc;
     LPCDLGTEMPLATE ptr;
-
+//// ReactOS rev 33532
     if (!(hrsrc = FindResourceW( hInstance, lpTemplateName, (LPCWSTR)RT_DIALOG )) ||
         !(ptr = LoadResource(hInstance, hrsrc)))
     {
