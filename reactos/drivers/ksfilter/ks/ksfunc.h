@@ -139,4 +139,13 @@ VOID
 KspFreeCreateItems(
     IN PLIST_ENTRY ListHead);
 
+NTSTATUS
+KspPropertyHandler(
+    IN PIRP Irp,
+    IN  ULONG PropertySetsCount,
+    IN  const KSPROPERTY_SET* PropertySet,
+    IN  PFNKSALLOCATOR Allocator OPTIONAL,
+    IN  ULONG PropertyItemSize OPTIONAL);
+
+
 #endif

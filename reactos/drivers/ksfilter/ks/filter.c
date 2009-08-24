@@ -706,10 +706,10 @@ IKsFilter_DispatchDeviceIoControl(
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PFNKSHANDLER PropertyHandler = NULL;
     IKsFilter * Filter;
     IKsFilterImpl * This;
     NTSTATUS Status;
+    PKSFILTER FilterInstance;
 
     /* obtain filter from object header */
     Status = IKsFilter_GetFilterFromIrp(Irp, &Filter);
@@ -735,19 +735,24 @@ IKsFilter_DispatchDeviceIoControl(
         return STATUS_NOT_IMPLEMENTED;
     }
 
-    /* find a supported property handler */
-    Status = KsPropertyHandler(Irp, 2, FilterPropertySet);
-    if (NT_SUCCESS(Status))
+    /* call property handler supported by ks */
+    Status = KspPropertyHandler(Irp, 2, FilterPropertySet, NULL, sizeof(KSPROPERTY_ITEM));
+
+    if (Status == STATUS_NOT_FOUND)
     {
-        KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PVOID)This;
-        DPRINT("Calling property handler %p\n", PropertyHandler);
-        Status = PropertyHandler(Irp, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, Irp->UserBuffer);
-    }
-    else
-    {
-        /* call driver's property handler */
-        UNIMPLEMENTED
-        Status = STATUS_NOT_IMPLEMENTED;
+        /* get filter instance */
+        FilterInstance = Filter->lpVtbl->GetStruct(Filter);
+
+        /* check if the driver supports property sets */
+        if (FilterInstance->Descriptor->AutomationTable && FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
+        {
+            /* call driver's filter property handler */
+            Status = KspPropertyHandler(Irp, 
+                                        FilterInstance->Descriptor->AutomationTable->PropertySetsCount,
+                                        FilterInstance->Descriptor->AutomationTable->PropertySets, 
+                                        NULL,
+                                        FilterInstance->Descriptor->AutomationTable->PropertyItemSize);
+        }
     }
 
     Irp->IoStatus.Status = Status;
