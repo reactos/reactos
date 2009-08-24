@@ -64,7 +64,7 @@ const struct test winetest_testlist[] =
     { "module", func_module },
     { "mailslot", func_mailslot },
     { "path", func_path },
-    { "pipe", func_pipe },
+    //{ "pipe", func_pipe },
     { "process", func_process },
     { "profile", func_profile },
     { "resource", func_resource },
