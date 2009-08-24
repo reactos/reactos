@@ -998,6 +998,13 @@ PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
         return 0;
       }
 
+    case WM_PRINTCLIENT:
+      {
+        MenuDrawPopupMenu( Wnd, (HDC)wParam,
+                                (HMENU)GetWindowLongPtrW( Wnd, 0 ) );
+        return 0;
+      }
+
     case WM_ERASEBKGND:
       return 1;
 
@@ -1060,6 +1067,13 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
         MenuDrawPopupMenu(Wnd, ps.hdc, (HMENU)GetWindowLongPtrW(Wnd, 0));
         EndPaint(Wnd, &ps);
         return 0;
+      }
+
+    case WM_PRINTCLIENT:
+      {
+         MenuDrawPopupMenu( Wnd, (HDC)wParam,
+                                (HMENU)GetWindowLongPtrW( Wnd, 0 ) );
+         return 0;
       }
 
     case WM_ERASEBKGND:
