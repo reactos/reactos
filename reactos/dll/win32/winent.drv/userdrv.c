@@ -708,12 +708,25 @@ BOOL CDECL RosDrv_ScrollDC( HDC hdc, INT dx, INT dy, const RECT *lprcScroll,
 
 void CDECL RosDrv_SetCapture( HWND hwnd, UINT flags )
 {
-    UNIMPLEMENTED;
+    if (!(flags & (GUI_INMOVESIZE | GUI_INMENUMODE))) return;
+
+    if (hwnd)
+    {
+        /* Capturing */
+        FIXME("Capture set for hwnd %x\n", hwnd);
+    }
+    else
+    {
+        FIXME("Capture released\n");
+    }
 }
 
 void CDECL RosDrv_SetFocus( HWND hwnd )
 {
-    UNIMPLEMENTED;
+    RECT rc;
+    //UNIMPLEMENTED;
+    GetWindowRect(hwnd, &rc);
+    RosDrv_UpdateZOrder(hwnd, &rc);
 }
 
 void CDECL RosDrv_SetLayeredWindowAttributes( HWND hwnd, COLORREF key, BYTE alpha, DWORD flags )
@@ -774,19 +787,10 @@ void CDECL RosDrv_SetWindowText( HWND hwnd, LPCWSTR text )
 
 UINT CDECL RosDrv_ShowWindow( HWND hwnd, INT cmd, RECT *rect, UINT swp )
 {
-    /*int x, y;
-    unsigned int width, height;*/
-    DWORD style = GetWindowLongW( hwnd, GWL_STYLE );
-
-    if (style & WS_MINIMIZE) return swp;
-    if (IsRectEmpty( rect )) return swp;
-
-    /* only fetch the new rectangle if the ShowWindow was a result of a window manager event */
-
     TRACE( "win %p cmd %d at %s flags %08x\n",
            hwnd, cmd, wine_dbgstr_rect(rect), swp );
 
-    return swp & ~(SWP_NOMOVE | SWP_NOCLIENTMOVE | SWP_NOSIZE | SWP_NOCLIENTSIZE);
+    return swp;
 }
 
 LRESULT CDECL RosDrv_SysCommand( HWND hwnd, WPARAM wparam, LPARAM lparam )
