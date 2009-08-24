@@ -142,6 +142,8 @@ const struct builtin_class_descr DIALOG_builtin_class =
 *
 * Get the DIALOGINFO structure of a window, allocating it if needed
 * and 'create' is TRUE.
+*
+* ReactOS
 */
 DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
 {
@@ -151,6 +153,11 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
     if(!dlgInfo && create)
     {
         pWindow = ValidateHwnd( hWnd );
+        if (!pWindow)
+        {
+           SetLastError( ERROR_INVALID_WINDOW_HANDLE );
+           return NULL;
+        }
 
         if (pWindow && pWindow->cbwndExtra >= DLGWINDOWEXTRA && hWnd != GetDesktopWindow())
         {
@@ -551,7 +558,7 @@ INT DIALOG_DoDialogBox( HWND hwnd, HWND owner )
                 if (!GetMessageW( &msg, 0, 0, 0 )) break;
             }
 
-            if (!IsWindow( hwnd )) return -1;
+            if (!IsWindow( hwnd )) return 0;
             if (!(dlgInfo->flags & DF_END) && !IsDialogMessageW( hwnd, &msg))
             {
                 TranslateMessage( &msg );
@@ -1585,7 +1592,7 @@ DefDlgProcA(
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return -1;
+    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return 0;
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
@@ -1645,7 +1652,7 @@ DefDlgProcW(
     BOOL result = FALSE;
 
     /* Perform DIALOGINFO initialization if not done */
-    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return -1;
+    if(!(dlgInfo = DIALOG_get_info( hDlg, TRUE ))) return 0;
 
     SetWindowLongPtrW( hDlg, DWLP_MSGRESULT, 0 );
 
