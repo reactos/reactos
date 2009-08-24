@@ -187,10 +187,7 @@ KsCreatePin(HANDLE FilterHandle,
     ULONG BufferSize = sizeof(KSPIN_CONNECT);
     PKSDATAFORMAT DataFormat = ((PKSDATAFORMAT) ( ((ULONG)Connect) + ((ULONG)sizeof(KSPIN_CONNECT)) ) );
 
-    if (DataFormat->Flags &  KSDATAFORMAT_ATTRIBUTES)
-    {
-        BufferSize += (ROUND_UP(DataFormat->FormatSize,sizeof(LONGLONG)) + DataFormat->FormatSize);
-    }
+    BufferSize += DataFormat->FormatSize;
 
     return KsiCreateObjectType(FilterHandle,
                                KSSTRING_Pin,
