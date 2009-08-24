@@ -70,7 +70,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         /* FIXME - lock the process */
         Win32Process = ExAllocatePoolWithTag(NonPagedPool,
                                              sizeof(PROCESSINFO),
-                                             TAG('W', '3', '2', 'p'));
+                                             'p23W');
 
         if (Win32Process == NULL) RETURN( STATUS_NO_MEMORY);
 
@@ -188,7 +188,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         /* FIXME - lock the process */
         Win32Thread = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(THREADINFO),
-                                            TAG('W', '3', '2', 't'));
+                                            't23W');
 
         if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
 

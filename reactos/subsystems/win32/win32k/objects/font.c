@@ -656,7 +656,7 @@ NtGdiGetFontResourceInfoInternalW(
     SafeFileNames.MaximumLength = SafeFileNames.Length = cbStringSize - sizeof(WCHAR);
     SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                  cbStringSize,
-                                                 TAG('R','T','S','U'));
+                                                 'RTSU');
     if (!SafeFileNames.Buffer)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -682,7 +682,7 @@ NtGdiGetFontResourceInfoInternalW(
     {
         SetLastNtError(Status);
         /* Free the string buffer for the safe filename */
-        ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
+        ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
         return FALSE;
     }
 
@@ -713,7 +713,7 @@ NtGdiGetFontResourceInfoInternalW(
     }
 
     /* Free the string for the safe filenames */
-    ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
+    ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
 
     return bRet;
 }

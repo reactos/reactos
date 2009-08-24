@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ENG TAG('E', 'n', 'g', ' ')
+#define TAG_ENG ' gnE'
 
 /* PUBLIC FUNCTIONS **********************************************************/
 

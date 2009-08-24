@@ -58,7 +58,7 @@ PIP_PACKET IPInitializePacket(
     /* FIXME: Is this needed? */
     RtlZeroMemory(IPPacket, sizeof(IP_PACKET));
 
-    INIT_TAG(IPPacket, TAG('I','P','K','T'));
+    INIT_TAG(IPPacket, 'TKPI');
 
     IPPacket->Free     = DontFreePacket;
     IPPacket->Type     = Type;
@@ -146,7 +146,7 @@ PIP_INTERFACE IPCreateInterface(
         return NULL;
     }
 
-    INIT_TAG(IF, TAG('F','A','C','E'));
+    INIT_TAG(IF, 'ECAF');
 
 	RtlZeroMemory(IF, sizeof(IP_INTERFACE));
 
@@ -371,7 +371,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IPDATAGRAM_REASSEMBLY),  /* Size of each entry */
-	    TAG('I','P','D','R'),           /* Tag */
+	    'RDPI',                         /* Tag */
 	    0);                             /* Depth */
 
     ExInitializeNPagedLookasideList(
@@ -380,7 +380,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IP_FRAGMENT),            /* Size of each entry */
-	    TAG('I','P','F','G'),           /* Tag */
+	    'GFPI',                         /* Tag */
 	    0);                             /* Depth */
 
     ExInitializeNPagedLookasideList(
@@ -389,7 +389,7 @@ NTSTATUS IPStartup(PUNICODE_STRING RegistryPath)
 	    NULL,                           /* Free routine */
 	    0,                              /* Flags */
 	    sizeof(IPDATAGRAM_HOLE),        /* Size of each entry */
-	    TAG('I','P','H','L'),           /* Tag */
+	    'LHPI',                         /* Tag */
 	    0);                             /* Depth */
 
     /* Start routing subsystem */

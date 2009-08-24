@@ -197,10 +197,10 @@ void TCPWakeup( void *ClientData, void *token ) {
 #define SMALL_SIZE 128
 #define LARGE_SIZE 2048
 
-#define SIGNATURE_LARGE TAG('L','L','L','L')
-#define SIGNATURE_SMALL TAG('S','S','S','S')
-#define SIGNATURE_OTHER TAG('O','O','O','O')
-#define TCP_TAG TAG('T','C','P',' ')
+#define SIGNATURE_LARGE 'LLLL'
+#define SIGNATURE_SMALL 'SSSS'
+#define SIGNATURE_OTHER 'OOOO'
+#define TCP_TAG ' PCT'
 
 static NPAGED_LOOKASIDE_LIST LargeLookasideList;
 static NPAGED_LOOKASIDE_LIST SmallLookasideList;

@@ -509,7 +509,7 @@ NTSTATUS TCPStartup(VOID)
         NULL,                           /* Free routine */
         0,                              /* Flags */
         sizeof(TCP_SEGMENT),            /* Size of each entry */
-        TAG('T','C','P','S'),           /* Tag */
+        'SPCT',                         /* Tag */
         0);                             /* Depth */
 
     StartTimer();

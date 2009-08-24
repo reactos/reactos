@@ -3,7 +3,7 @@
 
 #include <include/engobjects.h>
 
-#define TAG_FINF        TAG('F', 'I', 'N', 'F')
+#define TAG_FINF        'FNIF'
 //
 // EXSTROBJ flags.
 //

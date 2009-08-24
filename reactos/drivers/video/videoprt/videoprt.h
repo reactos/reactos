@@ -36,8 +36,8 @@
 
 #include <debug.h>
 
-#define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
-#define TAG_VIDEO_PORT_BUFFER  TAG('V', 'p', 'm', '\0' )
+#define TAG_VIDEO_PORT  'PDIV'
+#define TAG_VIDEO_PORT_BUFFER  '\0mpV'
 
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {

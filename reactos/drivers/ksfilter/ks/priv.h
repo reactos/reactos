@@ -18,7 +18,7 @@
 #include "ksiface.h"
 
 
-#define TAG_DEVICE_HEADER TAG('H','D','S','K')
+#define TAG_DEVICE_HEADER 'KSDH'
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\

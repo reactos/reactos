@@ -287,7 +287,7 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
       return NULL;
     }
 
-  INIT_TAG(NCE, TAG('N','C','E',' '));
+  INIT_TAG(NCE, ' ECN');
 
   NCE->Interface = Interface;
   NCE->Address = *Address;

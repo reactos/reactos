@@ -5585,7 +5585,7 @@ typedef VOID
     IN ULONG Length
 );
 
-#define PCI_DATA_TAG TAG('P', 'C', 'I', ' ')
+#define PCI_DATA_TAG ' ICP'
 #define PCI_DATA_VERSION 1
 
 typedef struct _PCIBUSDATA

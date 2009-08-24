@@ -595,7 +595,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
         PagedPool,
         sizeof(CM_RESOURCE_LIST) +
         (ResourceCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR),
-        TAG('H','a','l',' '));
+        ' laH');
 
     if (NULL == *AllocatedResources)
         return STATUS_NO_MEMORY;
@@ -815,7 +815,7 @@ HalpQueryPciRegistryInfo(VOID)
             /* Allocate the return structure */
             PciRegistryInfo = ExAllocatePoolWithTag(NonPagedPool,
                                                     sizeof(PCI_REGISTRY_INFO_INTERNAL),
-                                                    TAG('H', 'a', 'l', ' '));
+                                                    ' laH');
             if (!PciRegistryInfo) return NULL;
 
             /* Fill it out */
