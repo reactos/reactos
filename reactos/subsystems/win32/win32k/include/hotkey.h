@@ -15,7 +15,7 @@ typedef struct _HOT_KEY_ITEM
 } HOT_KEY_ITEM, *PHOT_KEY_ITEM;
 
 NTSTATUS FASTCALL
-InitHotkeyImpl();
+InitHotkeyImpl(VOID);
 
 //NTSTATUS FASTCALL
 //CleanupHotKeys(PWINSTATION_OBJECT WinStaObject);

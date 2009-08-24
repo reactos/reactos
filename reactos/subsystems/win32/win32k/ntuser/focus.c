@@ -24,21 +24,21 @@
 #include <debug.h>
 
 HWND FASTCALL
-IntGetCaptureWindow()
+IntGetCaptureWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
    return ForegroundQueue != NULL ? ForegroundQueue->CaptureWindow : 0;
 }
 
 HWND FASTCALL
-IntGetFocusWindow()
+IntGetFocusWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
    return ForegroundQueue != NULL ? ForegroundQueue->FocusWindow : 0;
 }
 
 HWND FASTCALL
-IntGetThreadFocusWindow()
+IntGetThreadFocusWindow(VOID)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
@@ -445,7 +445,7 @@ CLEANUP:
 }
 
 
-HWND FASTCALL UserGetActiveWindow()
+HWND FASTCALL UserGetActiveWindow(VOID)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;

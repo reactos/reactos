@@ -50,7 +50,7 @@ SetLastWin32Error(DWORD Status)
 }
 
 NTSTATUS FASTCALL
-GetLastNtError()
+GetLastNtError(VOID)
 {
   PTEB Teb = PsGetCurrentThread()->Tcb.Teb;
 

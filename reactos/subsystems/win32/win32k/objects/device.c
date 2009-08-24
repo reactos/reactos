@@ -202,7 +202,7 @@ SetupDevMode(PDEVMODEW DevMode, ULONG DisplayNumber)
 }
 
 static BOOL FASTCALL
-IntPrepareDriver()
+IntPrepareDriver(VOID)
 {
     PFN_DrvEnableDriver GDEnableDriver;
     DRVENABLEDATA DED;
@@ -437,13 +437,13 @@ cleanup:
 }
 
 BOOL FASTCALL
-IntPrepareDriverIfNeeded()
+IntPrepareDriverIfNeeded(VOID)
 {
     return (PrimarySurface.PreparedDriver ? TRUE : IntPrepareDriver());
 }
 
 static BOOL FASTCALL
-PrepareVideoPrt()
+PrepareVideoPrt(VOID)
 {
     PIRP Irp;
     NTSTATUS Status;
@@ -499,7 +499,7 @@ PrepareVideoPrt()
 
 
 BOOL FASTCALL
-IntCreatePrimarySurface()
+IntCreatePrimarySurface(VOID)
 {
     SIZEL SurfSize;
     RECTL SurfaceRect;
@@ -573,7 +573,7 @@ IntCreatePrimarySurface()
 }
 
 VOID FASTCALL
-IntDestroyPrimarySurface()
+IntDestroyPrimarySurface(VOID)
 {
     BOOL calledFromUser;
 

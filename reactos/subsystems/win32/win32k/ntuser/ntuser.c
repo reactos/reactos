@@ -180,13 +180,13 @@ NtUserInitialize(
 RETURN
    True if current thread owns the lock (possibly shared)
 */
-BOOL FASTCALL UserIsEntered()
+BOOL FASTCALL UserIsEntered(VOID)
 {
    return ExIsResourceAcquiredExclusiveLite(&UserLock)
       || ExIsResourceAcquiredSharedLite(&UserLock);
 }
 
-BOOL FASTCALL UserIsEnteredExclusive()
+BOOL FASTCALL UserIsEnteredExclusive(VOID)
 {
    return ExIsResourceAcquiredExclusiveLite(&UserLock);
 }

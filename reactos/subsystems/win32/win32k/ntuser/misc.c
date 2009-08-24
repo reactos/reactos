@@ -16,7 +16,7 @@
 
 SHORT
 FASTCALL
-IntGdiGetLanguageID()
+IntGdiGetLanguageID(VOID)
 {
   HANDLE KeyHandle;
   ULONG Size = sizeof(WCHAR) * (MAX_PATH + 12);

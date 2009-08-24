@@ -53,7 +53,7 @@ UserGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point);
 
 /*************** FOCUS.C ***************/
 
-HWND FASTCALL UserGetActiveWindow();
+HWND FASTCALL UserGetActiveWindow(VOID);
 
 HWND FASTCALL UserGetForegroundWindow(VOID);
 
@@ -125,7 +125,7 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd);
 VOID FASTCALL
 co_DestroyThreadWindows(struct _ETHREAD *Thread);
 
-HWND FASTCALL UserGetShellWindow();
+HWND FASTCALL UserGetShellWindow(VOID);
 
 HWND FASTCALL UserGetWindow(HWND hWnd, UINT Relationship);
 

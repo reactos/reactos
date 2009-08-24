@@ -713,7 +713,7 @@ DceFreeClassDCE(HDC hDC)
 }
 
 VOID FASTCALL
-DceEmptyCache()
+DceEmptyCache(VOID)
 {
    PDCE pDCE = FirstDce;
    KeEnterCriticalRegion();

@@ -3272,7 +3272,7 @@ CLEANUP:
  * Status
  *    @implemented
  */
-HWND FASTCALL UserGetShellWindow()
+HWND FASTCALL UserGetShellWindow(VOID)
 {
    PWINSTATION_OBJECT WinStaObject;
    HWND Ret;

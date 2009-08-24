@@ -196,7 +196,7 @@ LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
 
 ULONG
 FASTCALL
-InterlockedPopFreeEntry()
+InterlockedPopFreeEntry(VOID)
 {
     ULONG idxFirst, idxNext, idxPrev;
     PGDI_TABLE_ENTRY pEntry;
