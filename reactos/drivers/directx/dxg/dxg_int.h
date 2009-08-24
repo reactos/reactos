@@ -1,4 +1,3 @@
-
 /* DDK/NDK/SDK Headers */
 #include <ddk/ntddk.h>
 #include <ddk/ntddmou.h>
@@ -76,7 +75,7 @@ typedef struct _EDD_SURFACE_LOCAL
 /* exported functions */
 NTSTATUS NTAPI DriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS NTAPI GsDriverEntry(IN PVOID Context1, IN PVOID Context2);
-NTSTATUS APIENTRY DxDdCleanupDxGraphics();
+NTSTATUS APIENTRY DxDdCleanupDxGraphics(VOID);
 
 /* Global pointers */
 extern ULONG gcSizeDdHmgr;
@@ -99,9 +98,9 @@ BOOL NTAPI DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface);
 
 /* Internal functions */
 BOOL FASTCALL VerifyObjectOwner(PDD_ENTRY pEntry);
-BOOL FASTCALL DdHmgCreate();
-BOOL FASTCALL DdHmgDestroy();
-PVOID FASTCALL DdHmgLock( HANDLE DdHandle, UCHAR ObjectType,  BOOLEAN LockOwned);
+BOOL FASTCALL DdHmgCreate(VOID);
+BOOL FASTCALL DdHmgDestroy(VOID);
+PVOID FASTCALL DdHmgLock(HANDLE DdHandle, UCHAR ObjectType, BOOLEAN LockOwned);
 
 /* define stuff */
 #define drvDxEngLockDC          gpEngFuncs[DXENG_INDEX_DxEngLockDC]
