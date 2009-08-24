@@ -97,13 +97,12 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     ULONG ParameterCount, Size;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    /* Set up SEH */
-    _SEH2_TRY
+    /* Check if we need to probe */
+    if (PreviousMode != KernelMode)
     {
-        /* Check the previous mode */
-        if (PreviousMode != KernelMode)
+        /* Set up SEH */
+        _SEH2_TRY
         {
-#if 0
             /* Probe the context */
             ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
 
@@ -112,7 +111,7 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
                          FIELD_OFFSET(EXCEPTION_RECORD, NumberParameters) +
                          sizeof(ULONG),
                          sizeof(ULONG));
-#endif
+
             /* Validate the maximum parameters */
             if ((ParameterCount = ExceptionRecord->NumberParameters) >
                 EXCEPTION_MAXIMUM_PARAMETERS)
@@ -136,14 +135,15 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
             /* Update the parameter count */
             ExceptionRecord->NumberParameters = ParameterCount;
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            DbgBreakPoint();
+
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Get the exception code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Convert the context record */
     KeContextToTrapFrame(Context,

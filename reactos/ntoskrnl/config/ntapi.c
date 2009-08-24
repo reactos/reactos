@@ -27,7 +27,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             IN ULONG CreateOptions,
             OUT PULONG Disposition OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     CM_PARSE_CONTEXT ParseContext = {0};
     HANDLE Handle;
@@ -63,11 +63,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the error code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if(!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -113,7 +112,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 {
     CM_PARSE_CONTEXT ParseContext = {0};
     HANDLE Handle;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PAGED_CODE();
     DPRINT("NtOpenKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
@@ -135,11 +134,10 @@ NtOpenKey(OUT PHANDLE KeyHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the status */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Just let the object manager handle this */
@@ -268,16 +266,11 @@ NtEnumerateKey(IN HANDLE KeyHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
             /* Dereference and return status */
             ObDereferenceObject(KeyObject);
-            return Status;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
     }
 
     /* Setup the callback */
@@ -357,16 +350,11 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
             /* Dereference and return status */
             ObDereferenceObject(KeyObject);
-            return Status;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
     }
 
     /* Setup the callback */
@@ -476,16 +464,11 @@ NtQueryKey(IN HANDLE KeyHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
             /* Dereference and return status */
             ObDereferenceObject(KeyObject);
-            return Status;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
     }
 
     /* Setup the callback */
@@ -556,16 +539,11 @@ NtQueryValueKey(IN HANDLE KeyHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
             /* Dereference and return status */
             ObDereferenceObject(KeyObject);
-            return Status;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
     }
 
     /* Make sure the name is aligned properly */
@@ -1131,7 +1109,7 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
              IN ULONG Flags)
 {
 #if 0
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING ObjectName;
     CM_PARSE_CONTEXT ParseContext = {0};
@@ -1175,11 +1153,10 @@ NtUnloadKey2(IN POBJECT_ATTRIBUTES TargetKey,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the error code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if(!NT_SUCCESS(Status)) return Status;
     }
     else
     {

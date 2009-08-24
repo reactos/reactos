@@ -849,10 +849,10 @@ NtDelayExecution(IN BOOLEAN Alertable,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LARGE_INTEGER SafeInterval;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     /* Check the previous mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         /* Enter SEH for probing */
         _SEH2_TRY
@@ -863,11 +863,10 @@ NtDelayExecution(IN BOOLEAN Alertable,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get SEH exception */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
    }
 
    /* Call the Kernel Function */

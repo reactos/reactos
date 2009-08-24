@@ -1072,7 +1072,6 @@ NTSTATUS
 NTAPI
 KeRaiseUserException(IN NTSTATUS ExceptionCode)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
     ULONG OldEip;
     PTEB Teb = KeGetCurrentThread()->Teb;
     PKTRAP_FRAME TrapFrame = KeGetCurrentThread()->TrapFrame;
@@ -1085,11 +1084,10 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Save exception code */
-        Status = ExceptionCode;
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Get the old EIP */
     OldEip = TrapFrame->Eip;
