@@ -137,6 +137,8 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            /* Don't fail silently */
+            DPRINT1("KiRaiseException: Failed to Probe\n"),
             DbgBreakPoint();
 
             /* Return the exception code */
