@@ -323,6 +323,10 @@ GetCharacterPlacementA(
     memcpy(&resultsW, lpResults, sizeof(resultsW));
 
     lpStringW = FONT_mbtowc(hdc, lpString, uCount, &uCountW, &font_cp);
+    if (lpStringW == NULL)
+    {
+        return 0;
+    }
     if(lpResults->lpOutString)
     {
         resultsW.lpOutString = HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR)*uCountW);
