@@ -61,7 +61,7 @@ KeStartProfile(PKPROFILE Profile,
     /* Allocate a buffer first, before we raise IRQL */
     SourceBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                           sizeof(KPROFILE_SOURCE_OBJECT),
-                                          TAG('P', 'r', 'o', 'f'));
+                                          'forP');
     RtlZeroMemory(SourceBuffer, sizeof(KPROFILE_SOURCE_OBJECT));
 
     /* Raise to PROFILE_LEVEL */

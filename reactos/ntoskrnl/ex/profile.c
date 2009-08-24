@@ -17,7 +17,7 @@
 #pragma alloc_text(INIT, ExpInitializeProfileImplementation)
 #endif
 
-#define TAG_PROFILE TAG('P', 'r', 'o', 'f')
+#define TAG_PROFILE 'forP'
 
 /* GLOBALS *******************************************************************/
 

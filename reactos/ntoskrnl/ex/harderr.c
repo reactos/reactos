@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ERR TAG('E', 'r', 'r', ' ')
+#define TAG_ERR ' rrE'
 
 /* GLOBALS ****************************************************************/
 

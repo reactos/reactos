@@ -50,7 +50,7 @@ KdpServiceDispatcher(ULONG Service,
             break;
 
 #if DBG
-        case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
+        case ' soR': /* ROS-INTERNAL */
         {
             switch ((ULONG)Buffer1)
             {
@@ -81,7 +81,7 @@ KdpServiceDispatcher(ULONG Service,
         }
 
         /* Special  case for stack frame dumps */
-        case TAG('R', 'o', 's', 'D'):
+        case 'DsoR':
         {
             KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
             break;

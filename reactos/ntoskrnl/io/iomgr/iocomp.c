@@ -230,7 +230,7 @@ IoSetCompletionRoutineEx(IN PDEVICE_OBJECT DeviceObject,
     /* Allocate the context */
     UnloadContext = ExAllocatePoolWithTag(NonPagedPool,
                                           sizeof(*UnloadContext),
-                                          TAG('I', 'o', 'U', 's'));
+                                          'sUoI');
     if (!UnloadContext) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Set up the context */

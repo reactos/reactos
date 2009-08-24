@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATMT TAG('A', 't', 'o', 'T') /* Atom table */
+#define TAG_ATMT 'TotA' /* Atom table */
 
 extern ULONG NtGlobalFlag;
 
@@ -38,7 +38,7 @@ RtlInitializeRangeListPackage(VOID)
                                    NULL,
                                    POOL_COLD_ALLOCATION,
                                    sizeof(RTL_RANGE_ENTRY),
-                                   TAG('R', 'R', 'l', 'e'),
+                                   'elRR',
                                    16);
 }
 
@@ -76,9 +76,9 @@ RtlpAllocateMemory(ULONG Bytes,
 }
 
 
-#define TAG_USTR        TAG('U', 'S', 'T', 'R')
-#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
-#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
+#define TAG_USTR        'RTSU'
+#define TAG_ASTR        'RTSA'
+#define TAG_OSTR        'RTSO'
 VOID
 NTAPI
 RtlpFreeMemory(PVOID Mem,

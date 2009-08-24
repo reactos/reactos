@@ -29,7 +29,7 @@ UNICODE_STRING IopHardwareDatabaseKey =
 
 POBJECT_TYPE IoDriverObjectType = NULL;
 
-#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
+#define TAG_RTLREGISTRY 'vrqR'
 
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;

@@ -20,7 +20,7 @@
 PHANDLE_TABLE ObpKernelHandleTable = NULL;
 ULONG ObpAccessProtectCloseBit = MAXIMUM_ALLOWED;
 
-#define TAG_OB_HANDLE TAG('O', 'b', 'H', 'd')
+#define TAG_OB_HANDLE 'dHbO'
 
 /* PRIVATE FUNCTIONS *********************************************************/
 

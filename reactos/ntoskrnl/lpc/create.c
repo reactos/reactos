@@ -24,7 +24,7 @@ LpcpInitializePortQueue(IN PLPCP_PORT_OBJECT Port)
     /* Allocate the queue */
     MessageQueue = ExAllocatePoolWithTag(NonPagedPool,
                                          sizeof(LPCP_NONPAGED_PORT_QUEUE),
-                                         TAG('P', 'o', 'r', 't'));
+                                         'troP');
     if (!MessageQueue) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Set it up */

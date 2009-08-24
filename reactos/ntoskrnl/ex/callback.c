@@ -402,7 +402,7 @@ ExCreateCallback(OUT PCALLBACK_OBJECT *CallbackObject,
         if (NT_SUCCESS(Status))
         {
             /* Set it up */
-            Callback->Signature = TAG('C', 'a', 'l', 'l');
+            Callback->Signature = 'llaC';
             KeInitializeSpinLock(&Callback->Lock);
             InitializeListHead(&Callback->RegisteredCallbacks);
             Callback->AllowMultipleCallbacks = AllowMultipleCallbacks;

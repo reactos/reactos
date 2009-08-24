@@ -16,7 +16,7 @@
 #define MI_MAPPED_COPY_PAGES  16
 #define MI_POOL_COPY_BYTES    512
 #define MI_MAX_TRANSFER_SIZE  64 * 1024
-#define TAG_VM TAG('V', 'm', 'R', 'w')
+#define TAG_VM 'wRmV'
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

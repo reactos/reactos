@@ -1298,7 +1298,7 @@ NtRegisterThreadTerminatePort(IN HANDLE PortHandle)
     /* Allocate the Port and make sure it suceeded */
     TerminationPort = ExAllocatePoolWithTag(NonPagedPool,
                                             sizeof(TERMINATION_PORT),
-                                            TAG('P', 's', 'T', '='));
+                                            '=TsP');
     if(TerminationPort)
     {
         /* Associate the Port */

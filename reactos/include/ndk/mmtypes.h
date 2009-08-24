@@ -42,12 +42,6 @@ Author:
     & ~(MM_ALLOCATION_GRANULARITY - 1))
 
 //
-// Macro for generating pool tags
-//
-#define TAG(A, B, C, D)                                     \
-    (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
-//
 // PFN Identity Uses
 //
 #define MMPFNUSE_PROCESSPRIVATE                             0

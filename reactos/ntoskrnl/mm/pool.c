@@ -50,7 +50,7 @@ EiAllocatePool(POOL_TYPE PoolType,
 
    if (Tag == 0)
        KeBugCheckEx(BAD_POOL_CALLER, 0x9b, PoolType, NumberOfBytes, (ULONG_PTR)Caller);
-   if (Tag == TAG('B','I','G',0))
+   if (Tag == '0GIB')
        KeBugCheckEx(BAD_POOL_CALLER, 0x9c, PoolType, NumberOfBytes, (ULONG_PTR)Caller);
 
 #define IS_LETTER_OR_DIGIT(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= 'A' && (c) <= 'Z') || ((c) >= '0' && (c) <= '9'))

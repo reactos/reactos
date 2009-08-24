@@ -25,19 +25,19 @@ NTAPI
 ExpIsPoolTagDebuggable(ULONG Tag)
 {
 #if 0
-    if (Tag == TAG('C', 'a', 'l', 'l')) return FALSE;
-    if (Tag == TAG('D', 'r', 'i', 'v')) return FALSE;
-    if (Tag == TAG('D', 'e', 'v', 'i')) return FALSE;
-    if (Tag == TAG('A', 'd', 'a', 'p')) return FALSE;
+    if (Tag == 'llaC') return FALSE;
+    if (Tag == 'virD') return FALSE;
+    if (Tag == 'iveD') return FALSE;
+    if (Tag == 'padA') return FALSE;
 
-    if (Tag == TAG('S', 'e', 'S', 'd')) return FALSE;
-    if (Tag == TAG('O', 'b', 'D', 'i')) return FALSE;
-    if (Tag == TAG('O', 'b', 'N', 'm')) return FALSE;
-    if (Tag == TAG('O', 'b', 'N', 'D')) return FALSE;
-    if (Tag == TAG('O', 'b', 't', 'b')) return FALSE;
-    if (Tag == TAG('O', 'b', 'S', 'c')) return FALSE;
-    //if (Tag == TAG('S', 'e', 'S', 'i')) return FALSE;
-    //if (Tag == TAG('S', 'e', 'A', 'c')) return FALSE;
+    if (Tag == 'dSeS') return FALSE;
+    if (Tag == 'iDbO') return FALSE;
+    if (Tag == 'mNbO') return FALSE;
+    if (Tag == 'DNbO') return FALSE;
+    if (Tag == 'btbO') return FALSE;
+    if (Tag == 'cSbO') return FALSE;
+    //if (Tag == 'iSeS') return FALSE;
+    //if (Tag == 'cAeS') return FALSE;
 #endif
 
     return TRUE;

@@ -13,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_ATOM TAG('A', 't', 'o', 'm')
+#define TAG_ATOM 'motA'
 
 /* GLOBALS ****************************************************************/
 

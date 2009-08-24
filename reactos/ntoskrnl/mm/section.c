@@ -125,7 +125,7 @@ MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
     /* Allocate memory for our structure */
     ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
                                            1024,
-                                           TAG('M', 'm', ' ', ' '));
+                                           '  mM');
     if (!ObjectNameInfo) return STATUS_NO_MEMORY;
 
     /* Query the name */
@@ -136,7 +136,7 @@ MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, free memory */
-        ExFreePoolWithTag(ObjectNameInfo, TAG('M', 'm', ' ', ' '));
+        ExFreePoolWithTag(ObjectNameInfo, '  mM');
         return Status;
     }
 
@@ -191,7 +191,7 @@ MmGetFileNameForAddress(IN PVOID Address,
                                 ModuleNameInformation->Name.Buffer);
 
          /* Free temp taged buffer from MmGetFileNameForSection() */
-         ExFreePoolWithTag(ModuleNameInformation, TAG('M', 'm', ' ', ' '));
+         ExFreePoolWithTag(ModuleNameInformation, '  mM');
          DPRINT("Found ModuleName %S by address %p\n",
                 ModuleName->Buffer,Address);
       }
@@ -2755,7 +2755,7 @@ ExeFmtpReadFile(IN PVOID File,
     */
    Buffer = ExAllocatePoolWithTag(PagedPool,
                                   BufferSize,
-                                  TAG('M', 'm', 'X', 'r'));
+                                  'rXmM');
 
    UsedSize = 0;
 
@@ -2806,7 +2806,7 @@ ExeFmtpReadFile(IN PVOID File,
    }
    else
    {
-      ExFreePoolWithTag(Buffer, TAG('M', 'm', 'X', 'r'));
+      ExFreePoolWithTag(Buffer, 'rXmM');
    }
 
    return Status;
@@ -3215,7 +3215,7 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
          break;
    }
 
-   ExFreePoolWithTag(FileHeaderBuffer, TAG('M', 'm', 'X', 'r'));
+   ExFreePoolWithTag(FileHeaderBuffer, 'rXmM');
 
    /*
     * No loader handled the format

@@ -287,7 +287,7 @@ SepDuplicateToken(PTOKEN Token,
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uLength,
-                                               TAG('T', 'O', 'K', 'u'));
+                                               'uKOT');
     
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
     
@@ -314,7 +314,7 @@ SepDuplicateToken(PTOKEN Token,
         AccessToken->Privileges =
         (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
-                                                    TAG('T', 'O', 'K', 'p'));
+                                                    'pKOT');
         
         for (i = 0; i < AccessToken->PrivilegeCount; i++)
         {
@@ -329,7 +329,7 @@ SepDuplicateToken(PTOKEN Token,
             AccessToken->DefaultDacl =
             (PACL) ExAllocatePoolWithTag(PagedPool,
                                          Token->DefaultDacl->AclSize,
-                                         TAG('T', 'O', 'K', 'd'));
+                                         'kDOT');
             memcpy(AccessToken->DefaultDacl,
                    Token->DefaultDacl,
                    Token->DefaultDacl->AclSize);
@@ -589,7 +589,7 @@ SepCreateSystemProcessToken(VOID)
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uSize,
-                                               TAG('T', 'O', 'K', 'u'));
+                                               'uKOT');
     SidArea = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
     
     i = 0;
@@ -621,7 +621,7 @@ SepCreateSystemProcessToken(VOID)
     AccessToken->Privileges =
     (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                 uSize,
-                                                TAG('T', 'O', 'K', 'p'));
+                                                'pKOT');
     
     i = 0;
     AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
@@ -700,7 +700,7 @@ SepCreateSystemProcessToken(VOID)
     AccessToken->DefaultDacl =
     (PACL) ExAllocatePoolWithTag(PagedPool,
                                  uSize,
-                                 TAG('T', 'O', 'K', 'd'));
+                                 'kDOT');
     Status = RtlCreateAcl(AccessToken->DefaultDacl, uSize, ACL_REVISION);
     if ( NT_SUCCESS(Status) )
     {
@@ -2079,7 +2079,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uLength,
-                                               TAG('T', 'O', 'K', 'u'));
+                                               'uKOT');
     
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
     
@@ -2115,7 +2115,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         AccessToken->Privileges =
         (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
-                                                    TAG('T', 'O', 'K', 'p'));
+                                                    'pKOT');
         
         if (PreviousMode != KernelMode)
         {
@@ -2144,7 +2144,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         AccessToken->DefaultDacl =
         (PACL) ExAllocatePoolWithTag(PagedPool,
                                      TokenDefaultDacl->DefaultDacl->AclSize,
-                                     TAG('T', 'O', 'K', 'd'));
+                                     'kDOT');
         memcpy(AccessToken->DefaultDacl,
                TokenDefaultDacl->DefaultDacl,
                TokenDefaultDacl->DefaultDacl->AclSize);

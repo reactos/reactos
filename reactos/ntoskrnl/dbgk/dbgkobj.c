@@ -59,7 +59,7 @@ DbgkpQueueMessage(IN PEPROCESS Process,
         /* Allocate it */
         DebugEvent = ExAllocatePoolWithTag(NonPagedPool,
                                            sizeof(DEBUG_EVENT),
-                                           TAG('D', 'b', 'g', 'E'));
+                                           'EgbD');
         if (!DebugEvent) return STATUS_INSUFFICIENT_RESOURCES;
 
         /* Set flags */
