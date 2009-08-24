@@ -33,6 +33,7 @@ DEFINE_GUID(GUID_NULL,0,0,0,0,0,0,0,0,0,0,0);
 #include "wingdi.h"
 #include "winuser.h"
 
+#define USE_COM_CONTEXT_DEF
 #include "objbase.h"
 #include "servprov.h"
 
