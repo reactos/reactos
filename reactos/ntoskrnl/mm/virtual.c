@@ -70,7 +70,6 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
     KAPC_STATE ApcState;
     BOOLEAN HaveBadAddress;
     ULONG_PTR BadAddress;
-    NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
     /* Calculate the maximum amount of data to move */
@@ -165,8 +164,7 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             if ((FailedInProbe) || (FailedInMapping))
             {
                 /* Exit */
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(return Status);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
 
             /* Otherwise, we failed  probably during the move */
@@ -182,12 +180,9 @@ MiDoMappedCopy(IN PEPROCESS SourceProcess,
             }
 
             /* Return partial copy */
-            Status = STATUS_PARTIAL_COPY;
+            _SEH2_YIELD(return STATUS_PARTIAL_COPY);
         }
         _SEH2_END;
-
-        /* Check for SEH status */
-        if (Status != STATUS_SUCCESS) return Status;
 
         /* Detach from target */
         KeUnstackDetachProcess(&ApcState);
@@ -225,7 +220,6 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
     KAPC_STATE ApcState;
     BOOLEAN HaveBadAddress;
     ULONG_PTR BadAddress;
-    NTSTATUS Status = STATUS_SUCCESS;
     PAGED_CODE();
 
     /* Calculate the maximum amount of data to move */
@@ -313,8 +307,7 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             if (FailedInProbe)
             {
                 /* Exit */
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(return Status);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
 
             /* Otherwise, we failed  probably during the move */
@@ -330,12 +323,9 @@ MiDoPoolCopy(IN PEPROCESS SourceProcess,
             }
 
             /* Return partial copy */
-            Status = STATUS_PARTIAL_COPY;
+            _SEH2_YIELD(return STATUS_PARTIAL_COPY);
         }
         _SEH2_END;
-
-        /* Check for SEH status */
-        if (Status != STATUS_SUCCESS) return Status;
 
         /* Detach from target */
         KeUnstackDetachProcess(&ApcState);
@@ -779,7 +769,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PEPROCESS Process;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     SIZE_T BytesRead = 0;
     PAGED_CODE();
 
@@ -804,13 +794,10 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Return if we failed */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Reference the process */
@@ -866,7 +853,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PEPROCESS Process;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ULONG BytesWritten = 0;
     PAGED_CODE();
 
@@ -891,13 +878,10 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Return if we failed */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Reference the process */
@@ -957,7 +941,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
     PVOID BaseAddress = NULL;
     SIZE_T NumberOfBytesToProtect = 0;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check for valid protection flags */
@@ -991,13 +975,10 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Return on exception */
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -1065,7 +1046,7 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
                      IN SIZE_T Length,
                      OUT PSIZE_T UnsafeResultLength)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     SIZE_T ResultLength = 0;
     KPROCESSOR_MODE PreviousMode;
     WCHAR ModuleFileNameBuffer[MAX_PATH] = {0};
@@ -1098,14 +1079,10 @@ NtQueryVirtualMemory(IN HANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
 
     if (Address >= MmSystemRangeStart)

@@ -3496,7 +3496,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
    LARGE_INTEGER SafeMaximumSize;
    PVOID SectionObject;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
 
    PreviousMode = ExGetPreviousMode();
 
@@ -3514,14 +3514,10 @@ NtCreateSection (OUT PHANDLE SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+         /* Return the exception code */
+         _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
 
    Status = MmCreateSection(&SectionObject,
@@ -3570,7 +3566,7 @@ NtOpenSection(PHANDLE   SectionHandle,
 {
    HANDLE hSection;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
 
    PreviousMode = ExGetPreviousMode();
 
@@ -3582,14 +3578,10 @@ NtOpenSection(PHANDLE   SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
 
    Status = ObOpenObjectByName(ObjectAttributes,
@@ -3729,7 +3721,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
    PMMSUPPORT AddressSpace;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
    ULONG tmpProtect;
    ACCESS_MASK DesiredAccess;
 
@@ -3779,14 +3771,10 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+         /* Return the exception code */
+         _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
    else
    {
@@ -4263,7 +4251,7 @@ NtQuerySection(IN HANDLE SectionHandle,
 {
    PROS_SECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
    PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
@@ -4392,7 +4380,7 @@ NtExtendSection(IN HANDLE SectionHandle,
    LARGE_INTEGER SafeNewMaximumSize;
    PROS_SECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
 
    PreviousMode = ExGetPreviousMode();
 
@@ -4406,14 +4394,10 @@ NtExtendSection(IN HANDLE SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
 
    Status = ObReferenceObjectByHandle(SectionHandle,
