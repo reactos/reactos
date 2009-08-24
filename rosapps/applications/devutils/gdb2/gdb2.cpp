@@ -26,7 +26,7 @@
 #define PARAMS_SEPARATOR " "
 #define PARAMS_SEPARATOR_LEN strlen(PARAMS_SEPARATOR);
 
-void DisplayError(char *pszAPI);
+void DisplayError(const char *pszAPI);
 void ReadAndHandleOutput(HANDLE hPipeRead);
 void PrepAndLaunchRedirectedChild(HANDLE hChildStdOut,
 								  HANDLE hChildStdIn,
@@ -274,7 +274,7 @@ DWORD WINAPI GetAndSendInputThread(LPVOID lpvThreadParam)
 // DisplayError
 // Displays the error number and corresponding message.
 ///////////////////////////////////////////////////////////////////////
-void DisplayError(char *pszAPI)
+void DisplayError(const char *pszAPI)
 {
 	LPVOID lpvMessageBuffer;
 	CHAR szPrintBuffer[512];
