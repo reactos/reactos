@@ -4,7 +4,7 @@
 #include <initguid.h>
 #include <debug.h>
 
-#define USB_STOR_TAG TAG('u','s','b','s')
+#define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
 
 NTSTATUS NTAPI

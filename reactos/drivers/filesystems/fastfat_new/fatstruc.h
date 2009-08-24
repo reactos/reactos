@@ -116,7 +116,7 @@ typedef struct _FAT_METHODS {
     PFAT_SETFAT_VALUE_RUN_ROUTINE SetValueRun;
 } FAT_METHODS, *PFAT_METHODS;
 
-#define FAT_NTC_VCB  (USHORT) TAG('F', 'V', 0, 0)
+#define FAT_NTC_VCB  (USHORT) '00VF'
 
 /* Volume Control Block */
 typedef struct _VCB
