@@ -190,7 +190,7 @@ void *set_reply_data_size( void *req, data_size_t size )
 /* set the reply data pointer directly (will be freed by request code) */
 void set_reply_data_ptr( void *req, void *data, data_size_t size )
 {
-    ASSERT( size < get_reply_max_size(req));
+    ASSERT( size <= get_reply_max_size(req));
 
     /* Just save them */
     ReplySize = size;
