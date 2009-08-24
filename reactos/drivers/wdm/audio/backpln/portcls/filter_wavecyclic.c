@@ -235,16 +235,16 @@ IPortFilterWaveCyclic_fnClose(
     NTSTATUS Status = STATUS_SUCCESS;
     IPortFilterWaveCyclicImpl * This = (IPortFilterWaveCyclicImpl *)iface;
 
-    for(Index = 0; Index < This->Descriptor->Factory.PinDescriptorCount; Index++)
-    {
-        /* all pins should have been closed by now */
-        ASSERT(This->Pins[Index] == NULL);
-    }
-
     DPRINT("IPortFilterWaveCyclic_fnClose ref %u\n", This->ref);
 
     if (This->ref == 1)
     {
+        for(Index = 0; Index < This->Descriptor->Factory.PinDescriptorCount; Index++)
+        {
+            /* all pins should have been closed by now */
+            ASSERT(This->Pins[Index] == NULL);
+        }
+
         /* release reference to port */
         This->SubDevice->lpVtbl->Release(This->SubDevice);
 

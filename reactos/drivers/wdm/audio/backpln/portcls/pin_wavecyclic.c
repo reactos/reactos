@@ -464,6 +464,34 @@ IPortPinWaveCyclic_HandleKsProperty(
 
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
+    if (IsEqualGUIDAligned(&Property->Set, &GUID_NULL))
+    {
+        if (Property->Flags & KSPROPERTY_TYPE_SETSUPPORT)
+        {
+            if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GUID))
+            {
+                /* buffer too small */
+                Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+                Irp->IoStatus.Information = sizeof(GUID);
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+                return STATUS_BUFFER_OVERFLOW;
+            }
+            /* FIXME copy guids 
+             *   KSPROPSETID_Audio when available
+             *   KSPROPSETID_Sysaudio_Pin
+             */
+            RtlMoveMemory(Irp->UserBuffer, &KSPROPSETID_Connection, sizeof(GUID));
+
+            Irp->IoStatus.Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(GUID);
+            IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+            return STATUS_SUCCESS;
+        }
+    }
+
+
     if (IsEqualGUIDAligned(&Property->Set, &KSPROPSETID_Connection))
     {
         if (Property->Id == KSPROPERTY_CONNECTION_STATE)
@@ -1040,6 +1068,7 @@ IPortPinWaveCyclic_fnInit(
         DPRINT1("Unexpected Communication %u DataFlow %u\n", KsPinDescriptor->Communication, KsPinDescriptor->DataFlow);
         KeBugCheck(0);
     }
+
 
     Status = This->Miniport->lpVtbl->NewStream(This->Miniport,
                                                &This->Stream,

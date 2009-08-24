@@ -300,11 +300,12 @@ IIrpQueue_fnUpdateMapping(
          */
         This->Irp->IoStatus.Information = StreamHeader->FrameExtent;
 
-        /* free stream data, no tag as wdmaud.drv does it atm */
-        //ExFreePool(StreamHeader->Data);
-
-        /* free stream header, no tag as wdmaud.drv allocates it atm */
-        //ExFreePool(StreamHeader);
+        if (This->Irp->RequestorMode != KernelMode)
+        {
+            /* HACK - WDMAUD should pass PKSSTREAM_HEADERs */
+            ExFreePool(StreamHeader->Data);
+            ExFreePool(StreamHeader);
+        }
 
         /* complete the request */
         IoCompleteRequest(This->Irp, IO_SOUND_INCREMENT);
