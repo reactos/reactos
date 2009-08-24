@@ -356,9 +356,9 @@ AllSysInfo(VOID)
 
 /* Main program */
 int
-main(int argc,char *argv[])
+main(int argc, char *argv[])
 {
-	if (argc > 1 && argv[1] == "/?")
+	if (argc > 1 && !strcmp(argv[1], "/?"))
 	{
 		Usage();
 		return 0;
