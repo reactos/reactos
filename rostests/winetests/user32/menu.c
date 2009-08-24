@@ -536,7 +536,7 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
         mi.cbSize = sizeof(mi);
         mi.fMask = MIM_STYLE;
         pGetMenuInfo( hmenu, &mi);
-        mi.dwStyle |= mnuopt == 1 ? MNS_NOCHECK : MNS_CHECKORBMP;
+        if( mnuopt) mi.dwStyle |= mnuopt == 1 ? MNS_NOCHECK : MNS_CHECKORBMP;
         ret = pSetMenuInfo( hmenu, &mi);
         ok( ret, "SetMenuInfo failed with error %d\n", GetLastError());
     }
@@ -2451,6 +2451,48 @@ static HMENU create_menu_from_data(const struct menu_data *item, INT item_count)
     return hmenu;
 }
 
+/* use InsertMenuItem: does not set the MFT_BITMAP flag,
+ * and does not accept non-magic bitmaps with invalid
+ * bitmap handles */
+static HMENU create_menuitem_from_data(const struct menu_data *item, INT item_count)
+{
+    HMENU hmenu;
+    INT i;
+    BOOL ret;
+    MENUITEMINFO mii = { sizeof( MENUITEMINFO)};
+
+    hmenu = CreateMenu();
+    assert(hmenu != 0);
+
+    for (i = 0; i < item_count; i++)
+    {
+        SetLastError(0xdeadbeef);
+
+        mii.fMask = MIIM_FTYPE | MIIM_ID | MIIM_STATE;
+        mii.fType = 0;
+        if(  item[i].type & MFT_BITMAP)
+        {
+            mii.fMask |= MIIM_BITMAP;
+            mii.hbmpItem =  (HBITMAP)item[i].str;
+        }
+        else if(  item[i].type & MFT_SEPARATOR)
+            mii.fType = MFT_SEPARATOR;
+        else
+        {
+            mii.fMask |= MIIM_STRING;
+            mii.dwTypeData =  (LPSTR)item[i].str;
+            mii.cch = strlen(  item[i].str);
+        }
+        mii.fState = 0;
+        if(  item[i].type & MF_HELP) mii.fType |= MF_HELP;
+        mii.wID = item[i].id;
+        ret = InsertMenuItem( hmenu, -1, TRUE, &mii);
+        ok(ret, "%d: InsertMenuItem(%04x, %04x, %p) error %u\n",
+           i, item[i].type, item[i].id, item[i].str, GetLastError());
+    }
+    return hmenu;
+}
+
 static void compare_menu_data(HMENU hmenu, const struct menu_data *item, INT item_count)
 {
     INT count, i;
@@ -2479,14 +2521,12 @@ static void compare_menu_data(HMENU hmenu, const struct menu_data *item, INT ite
            "%u: expected fType %04x, got %04x\n", i, item[i].type, mii.fType);
         ok(mii.wID == item[i].id,
            "%u: expected wID %04x, got %04x\n", i, item[i].id, mii.wID);
-        if (item[i].type & (MF_BITMAP | MF_SEPARATOR))
-        {
+        if (mii.hbmpItem || !item[i].str)
             /* For some reason Windows sets high word to not 0 for
              * not "magic" ids.
              */
             ok(LOWORD(mii.hbmpItem) == LOWORD(item[i].str),
                "%u: expected hbmpItem %p, got %p\n", i, item[i].str, mii.hbmpItem);
-        }
         else
         {
             ok(mii.cch == strlen(item[i].str),
@@ -2499,6 +2539,7 @@ static void compare_menu_data(HMENU hmenu, const struct menu_data *item, INT ite
 
 static void test_InsertMenu(void)
 {
+    HBITMAP hbm = CreateBitmap(1,1,1,1,NULL);
     /* Note: XP treats only bitmap handles 1 - 6 as "magic" ones
      * regardless of their id.
      */
@@ -2514,16 +2555,28 @@ static void test_InsertMenu(void)
         { MF_STRING|MF_HELP, 2, "Help" },
         { MF_BITMAP|MF_HELP, SC_CLOSE, MAKEINTRESOURCE(1) }
     };
-    static const struct menu_data in2[] =
+    static const struct menu_data out1a[] =
     {
         { MF_STRING, 1, "File" },
-        { MF_BITMAP|MF_HELP, SC_CLOSE, MAKEINTRESOURCE(100) },
+        { MF_STRING|MF_HELP, 2, "Help" },
+        { MF_HELP, SC_CLOSE, MAKEINTRESOURCE(1) }
+    };
+    const struct menu_data in2[] =
+    {
+        { MF_STRING, 1, "File" },
+        { MF_BITMAP|MF_HELP, SC_CLOSE, (char*)hbm },
         { MF_STRING|MF_HELP, 2, "Help" }
     };
-    static const struct menu_data out2[] =
+    const struct menu_data out2[] =
     {
         { MF_STRING, 1, "File" },
-        { MF_BITMAP|MF_HELP, SC_CLOSE, MAKEINTRESOURCE(100) },
+        { MF_BITMAP|MF_HELP, SC_CLOSE, (char*)hbm },
+        { MF_STRING|MF_HELP, 2, "Help" }
+    };
+    const struct menu_data out2a[] =
+    {
+        { MF_STRING, 1, "File" },
+        { MF_HELP, SC_CLOSE, (char*)hbm },
         { MF_STRING|MF_HELP, 2, "Help" }
     };
     static const struct menu_data in3[] =
@@ -2550,9 +2603,16 @@ static void test_InsertMenu(void)
         { MF_STRING|MF_HELP, 2, "Help" },
         { MF_BITMAP|MF_HELP, 1, MAKEINTRESOURCE(1) }
     };
+    static const struct menu_data out4a[] =
+    {
+        { MF_STRING, 1, "File" },
+        { MF_STRING|MF_HELP, 2, "Help" },
+        { MF_HELP, 1, MAKEINTRESOURCE(1) }
+    };
     HMENU hmenu;
 
 #define create_menu(a) create_menu_from_data((a), sizeof(a)/sizeof((a)[0]))
+#define create_menuitem(a) create_menuitem_from_data((a), sizeof(a)/sizeof((a)[0]))
 #define compare_menu(h, a) compare_menu_data((h), (a), sizeof(a)/sizeof((a)[0]))
 
     hmenu = create_menu(in1);
@@ -2571,7 +2631,25 @@ static void test_InsertMenu(void)
     compare_menu(hmenu, out4);
     DestroyMenu(hmenu);
 
+    /* now using InsertMenuItemInfo */
+    hmenu = create_menuitem(in1);
+    compare_menu(hmenu, out1a);
+    DestroyMenu(hmenu);
+
+    hmenu = create_menuitem(in2);
+    compare_menu(hmenu, out2a);
+    DestroyMenu(hmenu);
+
+    hmenu = create_menuitem(in3);
+    compare_menu(hmenu, out3);
+    DestroyMenu(hmenu);
+
+    hmenu = create_menuitem(in4);
+    compare_menu(hmenu, out4a);
+    DestroyMenu(hmenu);
+
 #undef create_menu
+#undef create_menuitem
 #undef compare_menu
 }
 
@@ -2932,6 +3010,166 @@ static void test_menu_cancelmode(void)
     DestroyWindow( hwnd);
 }
 
+/* show menu trees have a maximum depth */
+static void test_menu_maxdepth(void)
+{
+#define NR_MENUS 100
+    HMENU hmenus[ NR_MENUS];
+    int i;
+    DWORD ret;
+
+    SetLastError(12345678);
+    for( i = 0; i < NR_MENUS; i++) {
+        hmenus[i] = CreatePopupMenu();
+        if( !hmenus[i]) break;
+    }
+    ok( i == NR_MENUS, "could not create more than %d menu's\n", i);
+    for( i = 1; i < NR_MENUS; i++) {
+        ret = AppendMenuA( hmenus[i], MF_POPUP, (UINT_PTR)hmenus[i-1],"test");
+        if( !ret) break;
+    }
+    trace("Maximum depth is %d\n", i);
+    ok( GetLastError() == 12345678, "unexpected error %d\n",  GetLastError());
+    ok( i < NR_MENUS ||
+           broken( i == NR_MENUS), /* win98, NT */
+           "no ( or very large) limit on menu depth!\n");
+
+    for( i = 0; i < NR_MENUS; i++)
+        DestroyMenu( hmenus[i]);
+}
+
+/* bug #12171 */
+static void test_menu_circref(void)
+{
+    HMENU menu1, menu2;
+    DWORD ret;
+
+    menu1 = CreatePopupMenu();
+    menu2 = CreatePopupMenu();
+    ok( menu1 && menu2, "error creating menus.\n");
+    ret = AppendMenuA( menu1, MF_POPUP, (UINT_PTR)menu2, "winetest");
+    ok( ret, "AppendMenu failed, error is %d\n", GetLastError());
+    ret = AppendMenuA( menu1, MF_STRING | MF_HILITE, 123, "winetest");
+    ok( ret, "AppendMenu failed, error is %d\n", GetLastError());
+    /* app chooses an id that happens to clash with its own hmenu */
+    ret = AppendMenuA( menu2, MF_STRING, (UINT_PTR)menu2, "winetest");
+    ok( ret, "AppendMenu failed, error is %d\n", GetLastError());
+    /* now attempt to change the string of the first item of menu1 */
+    ret = ModifyMenuA( menu1, (UINT_PTR)menu2, MF_POPUP, (UINT_PTR)menu2, "menu 2");
+    ok( !ret ||
+            broken( ret), /* win98, NT */
+            "ModifyMenu should have failed.\n");
+    if( !ret) { /* will probably stack fault if the ModifyMenu succeeded */
+        ret = GetMenuState( menu1, 123, 0);
+        ok( ret == MF_HILITE, "GetMenuState returned %x\n",ret);
+    }
+    DestroyMenu( menu2);
+    DestroyMenu( menu1);
+}
+
+/* test how the menu texts are aligned when the menu items have
+ * different combinations of text and bitmaps (bug #13350) */
+static void test_menualign(void)
+{
+    BYTE bmfill[300];
+    HMENU menu;
+    HBITMAP hbm1, hbm2, hbm3;
+    MENUITEMINFO mii = { sizeof(MENUITEMINFO)};
+    DWORD ret;
+    HWND hwnd;
+    MENUINFO mi = { sizeof( MENUINFO)};
+
+    if( !winetest_interactive) {
+        skip( "interactive alignment tests.\n");
+        return;
+    }
+    hwnd = CreateWindowEx(0,
+            "STATIC",
+            "Menu text alignment Test\nPlease make a selection.",
+            WS_OVERLAPPEDWINDOW,
+            100, 100,
+            300, 300,
+            NULL, NULL, 0, NULL);
+    ShowWindow( hwnd, SW_SHOW);
+    /* create bitmaps */
+    memset( bmfill, 0xcc, sizeof( bmfill));
+    hbm1 = CreateBitmap( 10,10,1,1,bmfill);
+    hbm2 = CreateBitmap( 20,20,1,1,bmfill);
+    hbm3 = CreateBitmap( 50,6,1,1,bmfill);
+    ok( hbm1 && hbm2 && hbm3, "Creating bitmaps failed\n");
+    menu = CreatePopupMenu();
+    ok( menu != NULL, "CreatePopupMenu() failed\n");
+    if( pGetMenuInfo) {
+        mi.fMask = MIM_STYLE;
+        ret = pGetMenuInfo( menu, &mi);
+        ok( menu != NULL, "GetMenuInfo() failed\n");
+        ok( 0 == mi.dwStyle, "menuinfo style is %x\n", mi.dwStyle);
+    }
+    /* test 1 */
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 1;
+    mii.hbmpItem = hbm1;
+    mii.dwTypeData = (LPSTR) " OK: menu texts are correctly left-aligned.";
+    ret = InsertMenuItem( menu, -1, TRUE, &mii);
+    ok( ret, "InsertMenuItem() failed\n");
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID ;
+    mii.wID = 2;
+    mii.hbmpItem = hbm2;
+    mii.dwTypeData = (LPSTR) " FAIL: menu texts are NOT left-aligned.";
+    ret = InsertMenuItem( menu, -1, TRUE, &mii);
+    ok( ret, "InsertMenuItem() failed\n");
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 110, 200, 0, hwnd, NULL);
+    ok( ret != 2, "User indicated that menu text alignment test 1 failed %d\n", ret);
+    /* test 2*/
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 3;
+    mii.hbmpItem = hbm3;
+    mii.dwTypeData = NULL;
+    ret = InsertMenuItem( menu, 0, TRUE, &mii);
+    ok( ret, "InsertMenuItem() failed\n");
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 1;
+    mii.hbmpItem = hbm1;
+    /* make the text a bit longer, to keep it readable */
+    /* this bug is on winXP and reproduced on wine */
+    mii.dwTypeData = (LPSTR) " OK: menu texts are to the right of the bitmaps........";
+    ret = SetMenuItemInfo( menu, 1, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    mii.wID = 2;
+    mii.hbmpItem = hbm2;
+    mii.dwTypeData = (LPSTR) " FAIL: menu texts are below the first bitmap.  ";
+    ret = SetMenuItemInfo( menu, 2, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 110, 200, 0, hwnd, NULL);
+    ok( ret != 2, "User indicated that menu text alignment test 2 failed %d\n", ret);
+    /* test 3 */
+    mii.fMask = MIIM_TYPE | MIIM_ID;
+    mii.wID = 3;
+    mii.fType = MFT_BITMAP;
+    mii.dwTypeData = (LPSTR) hbm3;
+    ret = SetMenuItemInfo( menu, 0, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    mii.fMask = MIIM_BITMAP | MIIM_STRING | MIIM_ID;
+    mii.wID = 1;
+    mii.hbmpItem = NULL;
+    mii.dwTypeData = (LPSTR) " OK: menu texts are below the bitmap.";
+    ret = SetMenuItemInfo( menu, 1, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    mii.wID = 2;
+    mii.hbmpItem = NULL;
+    mii.dwTypeData = (LPSTR) " FAIL: menu texts are NOT below the bitmap.";
+    ret = SetMenuItemInfo( menu, 2, TRUE, &mii);
+    ok( ret, "SetMenuItemInfo() failed\n");
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 110, 200, 0, hwnd, NULL);
+    ok( ret != 2, "User indicated that menu text alignment test 3 failed %d\n", ret);
+    /* cleanup */
+    DeleteObject( hbm1);
+    DeleteObject( hbm2);
+    DeleteObject( hbm3);
+    DestroyMenu( menu);
+    DestroyWindow( hwnd);
+}
+
 START_TEST(menu)
 {
     init_function_pointers();
@@ -2947,6 +3185,7 @@ START_TEST(menu)
         test_CheckMenuRadioItem();
         test_menu_resource_layout();
         test_InsertMenu();
+        test_menualign();
     }
 
     register_menu_check_class();
@@ -2970,4 +3209,6 @@ START_TEST(menu)
     test_menu_hilitemenuitem();
     test_menu_trackpopupmenu();
     test_menu_cancelmode();
+    test_menu_maxdepth();
+    test_menu_circref();
 }

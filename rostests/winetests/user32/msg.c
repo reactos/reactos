@@ -581,7 +581,7 @@ static const struct message WmShowMinOverlappedSeq[] = {
     { WM_GETTEXT, sent|defwinproc|optional },
     { WM_WINDOWPOSCHANGED, sent },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|defwinproc|wparam, SIZE_MINIMIZED },
+    { WM_SIZE, sent|defwinproc|wparam|lparam, SIZE_MINIMIZED, 0 },
     { WM_NCCALCSIZE, sent|optional },
     { EVENT_OBJECT_LOCATIONCHANGE, winevent_hook|wparam|lparam, 0, 0 },
     { EVENT_OBJECT_LOCATIONCHANGE, winevent_hook|wparam|lparam, 0, 0 },
@@ -1004,7 +1004,7 @@ static const struct message WmShowChildInvisibleParentSeq_1[] = {
     { WM_CHILDACTIVATE, sent|optional },
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_SHOWWINDOW|SWP_FRAMECHANGED|SWP_NOREDRAW|SWP_NOCOPYBITS|SWP_STATECHANGED, 0, SWP_NOACTIVATE },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|defwinproc|wparam, SIZE_MINIMIZED },
+    { WM_SIZE, sent|defwinproc|wparam|lparam, SIZE_MINIMIZED, 0 },
     { EVENT_OBJECT_LOCATIONCHANGE, winevent_hook|wparam|lparam, 0, 0 },
     { EVENT_SYSTEM_MINIMIZESTART, winevent_hook|wparam|lparam, 0, 0 },
     /* FIXME: Wine creates an icon/title window while Windows doesn't */
@@ -1044,7 +1044,7 @@ static const struct message WmShowChildInvisibleParentSeq_3[] = {
     { WM_CHILDACTIVATE, sent },
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_SHOWWINDOW|SWP_FRAMECHANGED|SWP_NOREDRAW|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|defwinproc|wparam, SIZE_MINIMIZED },
+    { WM_SIZE, sent|defwinproc|wparam|lparam, SIZE_MINIMIZED, 0 },
     { EVENT_OBJECT_LOCATIONCHANGE, winevent_hook|wparam|lparam, 0, 0 },
     { EVENT_SYSTEM_MINIMIZESTART, winevent_hook|wparam|lparam, 0, 0 },
     /* FIXME: Wine creates an icon/title window while Windows doesn't */
@@ -1065,7 +1065,7 @@ static const struct message WmShowChildInvisibleParentSeq_4[] = {
     { EVENT_OBJECT_SHOW, winevent_hook|wparam|lparam, 0, 0 },
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_SHOWWINDOW|SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOREDRAW|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|defwinproc|wparam, SIZE_MINIMIZED },
+    { WM_SIZE, sent|defwinproc|wparam|lparam, SIZE_MINIMIZED, 0 },
     { EVENT_OBJECT_LOCATIONCHANGE, winevent_hook|wparam|lparam, 0, 0 },
     { EVENT_SYSTEM_MINIMIZESTART, winevent_hook|wparam|lparam, 0, 0 },
     /* FIXME: Wine creates an icon/title window while Windows doesn't */
@@ -3186,7 +3186,7 @@ static const struct message WmMinimizeMDIchildVisibleSeq[] = {
     { WM_NCCALCSIZE, sent|wparam, 1 },
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_FRAMECHANGED|SWP_NOACTIVATE|SWP_NOCOPYBITS|SWP_NOCLIENTSIZE|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|defwinproc|wparam, SIZE_MINIMIZED },
+    { WM_SIZE, sent|defwinproc|wparam|lparam, SIZE_MINIMIZED, 0 },
     { WM_CHILDACTIVATE, sent|wparam|lparam|defwinproc, 0, 0 },
     { EVENT_OBJECT_LOCATIONCHANGE, winevent_hook|wparam|lparam, 0, 0 }, /* MDI child */
     { EVENT_SYSTEM_MINIMIZESTART, winevent_hook|wparam|lparam, 0, 0 }, /* MDI child */
@@ -5209,6 +5209,49 @@ static const struct message WmSetFontButtonSeq[] =
     { WM_CTLCOLORBTN, sent|defwinproc },
     { 0 }
 };
+static const struct message WmSetStyleButtonSeq[] =
+{
+    { BM_SETSTYLE, sent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { WM_PAINT, sent },
+    { WM_NCPAINT, sent|defwinproc|optional }, /* FIXME: Wine sends it */
+    { WM_ERASEBKGND, sent|defwinproc|optional }, /* Win9x doesn't send it */
+    { WM_CTLCOLORBTN, sent|parent },
+    { 0 }
+};
+static const struct message WmSetStyleStaticSeq[] =
+{
+    { BM_SETSTYLE, sent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { WM_PAINT, sent },
+    { WM_NCPAINT, sent|defwinproc|optional }, /* FIXME: Wine sends it */
+    { WM_ERASEBKGND, sent|defwinproc|optional }, /* Win9x doesn't send it */
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { 0 }
+};
+static const struct message WmSetStyleUserSeq[] =
+{
+    { BM_SETSTYLE, sent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { WM_PAINT, sent },
+    { WM_NCPAINT, sent|defwinproc|optional }, /* FIXME: Wine sends it */
+    { WM_ERASEBKGND, sent|defwinproc|optional }, /* Win9x doesn't send it */
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_PAINT) },
+    { 0 }
+};
+static const struct message WmSetStyleOwnerdrawSeq[] =
+{
+    { BM_SETSTYLE, sent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { WM_PAINT, sent },
+    { WM_NCPAINT, sent|optional }, /* FIXME: Wine sends it */
+    { WM_ERASEBKGND, sent|defwinproc|optional }, /* Win9x doesn't send it */
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_CTLCOLORBTN, sent|parent|optional }, /* Win9x doesn't send it */
+    { WM_DRAWITEM, sent|wparam|lparam|parent, ID_BUTTON, 0x000010e4 },
+    { 0 }
+};
 
 static WNDPROC old_button_proc;
 
@@ -5268,29 +5311,30 @@ static void test_button_messages(void)
 	DWORD dlg_code;
 	const struct message *setfocus;
 	const struct message *killfocus;
+	const struct message *setstyle;
     } button[] = {
 	{ BS_PUSHBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
-	  WmSetFocusButtonSeq, WmKillFocusButtonSeq },
+	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq },
 	{ BS_DEFPUSHBUTTON, DLGC_BUTTON | DLGC_DEFPUSHBUTTON,
-	  WmSetFocusButtonSeq, WmKillFocusButtonSeq },
+	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq },
 	{ BS_CHECKBOX, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
 	{ BS_AUTOCHECKBOX, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
 	{ BS_RADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
 	{ BS_3STATE, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
 	{ BS_AUTO3STATE, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
 	{ BS_GROUPBOX, DLGC_STATIC,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
 	{ BS_USERBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
-	  WmSetFocusButtonSeq, WmKillFocusButtonSeq },
+	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleUserSeq },
 	{ BS_AUTORADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
 	{ BS_OWNERDRAW, DLGC_BUTTON,
-	  WmSetFocusOwnerdrawSeq, WmKillFocusOwnerdrawSeq }
+	  WmSetFocusOwnerdrawSeq, WmKillFocusOwnerdrawSeq, WmSetStyleOwnerdrawSeq }
     };
     unsigned int i;
     HWND hwnd, parent;
@@ -5319,6 +5363,8 @@ static void test_button_messages(void)
         MSG msg;
         DWORD style;
 
+        trace("button style %08x\n", button[i].style);
+
         hwnd = CreateWindowExA(0, "my_button_class", "test", button[i].style | WS_CHILD | BS_NOTIFY,
                                0, 0, 50, 14, parent, (HMENU)ID_BUTTON, 0, NULL);
 	ok(hwnd != 0, "Failed to create button window\n");
@@ -5327,9 +5373,9 @@ static void test_button_messages(void)
         style &= ~(WS_CHILD | BS_NOTIFY);
         /* XP turns a BS_USERBUTTON into BS_PUSHBUTTON */
         if (button[i].style == BS_USERBUTTON)
-            todo_wine ok(style == BS_PUSHBUTTON, "expected style BS_PUSHBUTTON got %x\n", style);
+            ok(style == BS_PUSHBUTTON, "expected style BS_PUSHBUTTON got %x\n", style);
         else
-        ok(style == button[i].style, "expected style %x got %x\n", button[i].style, style);
+            ok(style == button[i].style, "expected style %x got %x\n", button[i].style, style);
 
 	dlg_code = SendMessageA(hwnd, WM_GETDLGCODE, 0, 0);
 	ok(dlg_code == button[i].dlg_code, "%u: wrong dlg_code %08x\n", i, dlg_code);
@@ -5342,7 +5388,6 @@ static void test_button_messages(void)
 
         log_all_parent_messages++;
 
-	trace("button style %08x\n", button[i].style);
         ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
 	SetFocus(hwnd);
         SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
@@ -5354,9 +5399,20 @@ static void test_button_messages(void)
         while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
 	ok_sequence(button[i].killfocus, "SetFocus(0) on a button", FALSE);
 
+        ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
+
+        SendMessage(hwnd, BM_SETSTYLE, button[i].style | BS_BOTTOM, TRUE);
+        SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+        ok_sequence(button[i].setstyle, "BM_SETSTYLE on a button", FALSE);
+
+        style = GetWindowLongA(hwnd, GWL_STYLE);
+        style &= ~(WS_VISIBLE | WS_CHILD | BS_NOTIFY);
+        /* XP doesn't turn a BS_USERBUTTON into BS_PUSHBUTTON here! */
+        ok(style == button[i].style, "expected style %x got %x\n", button[i].style, style);
+
         log_all_parent_messages--;
 
-        ok(GetFocus() == 0, "expected focus 0, got %p\n", GetFocus());
 	DestroyWindow(hwnd);
     }
 
@@ -10198,7 +10254,7 @@ static const struct message WmShowMinimized_1[] = {
     { WM_WINDOWPOSCHANGING, sent|wparam|optional, SWP_NOSIZE|SWP_NOMOVE }, /* win2000 doesn't send it */
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_SHOWWINDOW|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|wparam|defwinproc, SIZE_MINIMIZED },
+    { WM_SIZE, sent|wparam|lparam|defwinproc, SIZE_MINIMIZED, 0 },
     { 0 }
 };
 static const struct message WmMinimize_1[] = {
@@ -10208,7 +10264,7 @@ static const struct message WmMinimize_1[] = {
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_SHOWWINDOW|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|wparam|defwinproc, SIZE_MINIMIZED },
+    { WM_SIZE, sent|wparam|lparam|defwinproc, SIZE_MINIMIZED, 0 },
     { 0 }
 };
 static const struct message WmMinimize_2[] = {
@@ -10217,7 +10273,7 @@ static const struct message WmMinimize_2[] = {
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_SHOWWINDOW|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|wparam|defwinproc, SIZE_MINIMIZED },
+    { WM_SIZE, sent|wparam|lparam|defwinproc, SIZE_MINIMIZED, 0 },
     { 0 }
 };
 static const struct message WmMinimize_3[] = {
@@ -10225,7 +10281,7 @@ static const struct message WmMinimize_3[] = {
     { WM_WINDOWPOSCHANGING, sent|wparam, SWP_SHOWWINDOW|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_WINDOWPOSCHANGED, sent|wparam, SWP_SHOWWINDOW|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc },
-    { WM_SIZE, sent|wparam|defwinproc, SIZE_MINIMIZED },
+    { WM_SIZE, sent|wparam|lparam|defwinproc, SIZE_MINIMIZED, 0 },
     { 0 }
 };
 static const struct message WmShowMinNoActivate[] = {
@@ -10233,7 +10289,7 @@ static const struct message WmShowMinNoActivate[] = {
     { WM_WINDOWPOSCHANGING, sent },
     { WM_WINDOWPOSCHANGED, sent },
     { WM_MOVE, sent|defwinproc|optional },
-    { WM_SIZE, sent|wparam|defwinproc|optional, SIZE_MINIMIZED },
+    { WM_SIZE, sent|wparam|lparam|defwinproc|optional, SIZE_MINIMIZED, 0 },
     { 0 }
 };
 static const struct message WmMinMax_1[] = {
@@ -10259,7 +10315,7 @@ static const struct message WmMinMax_3[] = {
     { WM_WINDOWPOSCHANGING, sent|wparam|optional, SWP_SHOWWINDOW|SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_WINDOWPOSCHANGED, sent|wparam|optional, SWP_NOACTIVATE|SWP_FRAMECHANGED|SWP_NOCOPYBITS|SWP_STATECHANGED },
     { WM_MOVE, sent|defwinproc|optional },
-    { WM_SIZE, sent|wparam|defwinproc|optional, SIZE_MINIMIZED },
+    { WM_SIZE, sent|wparam|lparam|defwinproc|optional, SIZE_MINIMIZED, 0 },
     { 0 }
 };
 static const struct message WmMinMax_4[] = {

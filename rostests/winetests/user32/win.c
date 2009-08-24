@@ -4859,6 +4859,75 @@ static void test_Expose(void)
     DestroyWindow(mw);
 }
 
+static LRESULT CALLBACK TestNCRedraw_WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    static UINT ncredrawflags;
+    PAINTSTRUCT ps;
+
+    switch(msg)
+    {
+    case WM_CREATE:
+        ncredrawflags = *(UINT *) (((CREATESTRUCT *)lParam)->lpCreateParams);
+        return 0;
+    case WM_NCPAINT:
+        RedrawWindow(hwnd, NULL, NULL, ncredrawflags);
+        break;
+    case WM_PAINT:
+        BeginPaint(hwnd, &ps);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    return DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+static void run_NCRedrawLoop(UINT flags)
+{
+    HWND hwnd;
+    MSG msg;
+
+    UINT loopcount = 0;
+
+    hwnd = CreateWindowA("TestNCRedrawClass", "MainWindow",
+                         WS_OVERLAPPEDWINDOW, 0, 0, 200, 100,
+                         NULL, NULL, 0, &flags);
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
+    while(PeekMessage(&msg, hwnd, 0, 0, PM_REMOVE) != 0)
+    {
+        if (msg.message == WM_PAINT) loopcount++;
+        if (loopcount >= 100) break;
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+        MsgWaitForMultipleObjects(0, NULL, FALSE, 100, QS_ALLINPUT);
+    }
+    if (flags == (RDW_INVALIDATE | RDW_FRAME))
+        todo_wine ok(loopcount < 100, "Detected infinite WM_PAINT loop (%x).\n", flags);
+    else
+        ok(loopcount < 100, "Detected infinite WM_PAINT loop (%x).\n", flags);
+    DestroyWindow(hwnd);
+}
+
+static void test_NCRedraw(void)
+{
+    WNDCLASSA wndclass;
+
+    wndclass.lpszClassName = "TestNCRedrawClass";
+    wndclass.style = CS_HREDRAW | CS_VREDRAW;
+    wndclass.lpfnWndProc = TestNCRedraw_WndProc;
+    wndclass.cbClsExtra = 0;
+    wndclass.cbWndExtra = 0;
+    wndclass.hInstance = 0;
+    wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wndclass.hbrBackground = GetStockObject(WHITE_BRUSH);
+    wndclass.lpszMenuName = NULL;
+
+    RegisterClassA(&wndclass);
+
+    run_NCRedrawLoop(RDW_INVALIDATE | RDW_FRAME);
+    run_NCRedrawLoop(RDW_INVALIDATE);
+}
+
 static void test_GetWindowModuleFileName(void)
 {
     HWND hwnd;
@@ -5647,6 +5716,7 @@ START_TEST(win)
     test_SetMenu(hwndMain);
     test_SetFocus(hwndMain);
     test_SetActiveWindow(hwndMain);
+    test_NCRedraw();
 
     test_children_zorder(hwndMain);
     test_popup_zorder(hwndMain2, hwndMain);

@@ -901,23 +901,72 @@ static void test_GetDlgItemText(void)
        "string retrieved using GetDlgItemText should have been NULL terminated\n");
 }
 
+static INT_PTR CALLBACK DestroyDlgWinProc (HWND hDlg, UINT uiMsg,
+        WPARAM wParam, LPARAM lParam)
+{
+    if (uiMsg == WM_INITDIALOG)
+    {
+        DestroyWindow(hDlg);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static INT_PTR CALLBACK DestroyOnCloseDlgWinProc (HWND hDlg, UINT uiMsg,
+        WPARAM wParam, LPARAM lParam)
+{
+    switch (uiMsg)
+    {
+    case WM_INITDIALOG:
+        PostMessage(hDlg, WM_CLOSE, 0, 0);
+        return TRUE;
+    case WM_CLOSE:
+        DestroyWindow(hDlg);
+        return TRUE;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static void test_DialogBoxParamA(void)
 {
-    int ret;
+    INT_PTR ret;
     HWND hwnd_invalid = (HWND)0x4444;
 
     SetLastError(0xdeadbeef);
     ret = DialogBoxParamA(GetModuleHandle(NULL), "IDD_DIALOG" , hwnd_invalid, 0 , 0);
-    ok(0 == ret || broken(ret == -1), "DialogBoxParamA returned %d, expected 0\n", ret);
+    ok(0 == ret || broken(ret == -1), "DialogBoxParamA returned %ld, expected 0\n", ret);
     ok(ERROR_INVALID_WINDOW_HANDLE == GetLastError() ||
        broken(GetLastError() == 0xdeadbeef),
        "got %d, expected ERROR_INVALID_WINDOW_HANDLE\n",GetLastError());
+
+    /* Test a dialog which destroys itself on WM_INITDIALOG. */
+    SetLastError(0xdeadbeef);
+    ret = DialogBoxParamA(GetModuleHandle(NULL), "IDD_DIALOG", 0, DestroyDlgWinProc, 0);
+    ok(-1 == ret, "DialogBoxParamA returned %ld, expected -1\n", ret);
+    ok(ERROR_INVALID_WINDOW_HANDLE == GetLastError() ||
+       GetLastError() == ERROR_SUCCESS ||
+       broken(GetLastError() == 0xdeadbeef),
+       "got %d, expected ERROR_INVALID_WINDOW_HANDLE\n",GetLastError());
+
+    /* Test a dialog which destroys itself on WM_CLOSE. */
+    ret = DialogBoxParamA(GetModuleHandle(NULL), "IDD_DIALOG", 0, DestroyOnCloseDlgWinProc, 0);
+    ok(0 == ret, "DialogBoxParamA returned %ld, expected 0\n", ret);
+
     SetLastError(0xdeadbeef);
     ret = DialogBoxParamA(GetModuleHandle(NULL), "RESOURCE_INVALID" , 0, 0, 0);
-    ok(-1 == ret, "DialogBoxParamA returned %d, expected -1\n", ret);
+    ok(-1 == ret, "DialogBoxParamA returned %ld, expected -1\n", ret);
     ok(ERROR_RESOURCE_NAME_NOT_FOUND == GetLastError() ||
        broken(GetLastError() == 0xdeadbeef),
        "got %d, expected ERROR_RESOURCE_NAME_NOT_FOUND\n",GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = DefDlgProcA(0, WM_ERASEBKGND, 0, 0);
+    ok(ret == 0, "DefDlgProcA returned %ld, expected 0\n", ret);
+    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE,
+       "got %d, expected ERROR_INVALID_WINDOW_HANDLE\n", GetLastError());
 }
 
 static void test_DisabledDialogTest(void)
@@ -1020,6 +1069,63 @@ static void test_MessageBoxFontTest(void)
     DestroyWindow(hDlg);
 }
 
+static void test_SaveRestoreFocus(void)
+{
+    HWND hDlg;
+    HRSRC hResource;
+    HANDLE hTemplate;
+    DLGTEMPLATE* pTemplate;
+    LONG_PTR foundId;
+    HWND foundHwnd;
+
+    /* create the dialog */
+    hResource = FindResourceA(g_hinst, "MULTI_EDIT_DIALOG", RT_DIALOG);
+    hTemplate = LoadResource(g_hinst, hResource);
+    pTemplate = LockResource(hTemplate);
+
+    hDlg = CreateDialogIndirectParamA(g_hinst, pTemplate, NULL, messageBoxFontDlgWinProc, 0);
+    ok (hDlg != 0, "Failed to create test dialog.\n");
+
+    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    ok (foundId == 1000, "First edit box should have gained focus on dialog creation. Expected: %d, Found: %ld\n", 1000, foundId);
+
+    /* de- then reactivate the dialog */
+    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
+    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+
+    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    ok (foundId == 1000, "First edit box should have regained focus after dialog reactivation. Expected: %d, Found: %ld\n", 1000, foundId);
+
+    /* select the next tabbable item */
+    SetFocus(GetNextDlgTabItem(hDlg, GetFocus(), FALSE));
+
+    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    ok (foundId == 1001, "Second edit box should have gained focus. Expected: %d, Found: %ld\n", 1001, foundId);
+
+    /* de- then reactivate the dialog */
+    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
+    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+
+    foundId = GetWindowLongPtr(GetFocus(), GWLP_ID);
+    ok (foundId == 1001, "Second edit box should have gained focus after dialog reactivation. Expected: %d, Found: %ld\n", 1001, foundId);
+
+    /* disable the 2nd box */
+    EnableWindow(GetFocus(), FALSE);
+
+    foundHwnd = GetFocus();
+    ok (foundHwnd == NULL, "Second edit box should have lost focus after being disabled. Expected: %p, Found: %p\n", NULL, foundHwnd);
+
+    /* de- then reactivate the dialog */
+    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_INACTIVE, 0), 0);
+    SendMessage(hDlg, WM_ACTIVATE, MAKEWPARAM(WA_ACTIVE, 0), 0);
+
+    foundHwnd = GetFocus();
+    ok (foundHwnd == NULL, "No controls should have gained focus after dialog reactivation. Expected: %p, Found: %p\n", NULL, foundHwnd);
+
+    /* clean up */
+    DestroyWindow(hDlg);
+}
+
 START_TEST(dialog)
 {
     g_hinst = GetModuleHandleA (0);
@@ -1034,4 +1140,5 @@ START_TEST(dialog)
     test_DialogBoxParamA();
     test_DisabledDialogTest();
     test_MessageBoxFontTest();
+    test_SaveRestoreFocus();
 }

@@ -956,6 +956,262 @@ static void test_CreateIconFromResource(void)
     HeapFree(GetProcessHeap(), 0, hotspot);
 }
 
+static HICON create_test_icon(HDC hdc, int width, int height, int bpp,
+                              BOOL maskvalue, UINT32 *color, int colorSize)
+{
+    ICONINFO iconInfo;
+    BITMAPINFO bitmapInfo;
+    UINT32 *buffer = NULL;
+    UINT32 mask = maskvalue ? 0xFFFFFFFF : 0x00000000;
+
+    memset(&bitmapInfo, 0, sizeof(bitmapInfo));
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = width;
+    bitmapInfo.bmiHeader.biHeight = height;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biBitCount = bpp;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    bitmapInfo.bmiHeader.biSizeImage = colorSize;
+
+    iconInfo.fIcon = TRUE;
+    iconInfo.xHotspot = 0;
+    iconInfo.yHotspot = 0;
+
+    iconInfo.hbmMask = CreateBitmap( width, height, 1, 1, &mask );
+    if(!iconInfo.hbmMask) return NULL;
+
+    iconInfo.hbmColor = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, (void**)&buffer, NULL, 0);
+    if(!iconInfo.hbmColor || !buffer)
+    {
+        DeleteObject(iconInfo.hbmMask);
+        return NULL;
+    }
+
+    memcpy(buffer, color, colorSize);
+
+    return CreateIconIndirect(&iconInfo);
+}
+
+static BOOL color_match(COLORREF a, COLORREF b)
+{
+    /* 5-bit accuracy is a sufficient test. This will match, so long as
+     * colors are never truncated to less that 3x5-bit accuracy i.e.
+     * paletized. */
+    return (a & 0x00F8F8F8) == (b & 0x00F8F8F8);
+}
+
+static void check_alpha_draw(HDC hdc, BOOL drawiconex, BOOL alpha, int bpp, int line)
+{
+    HICON hicon;
+    UINT32 mask;
+    UINT32 color[2];
+    COLORREF modern_expected, legacy_expected, result;
+
+    mask = 0x00000000;
+    color[0] = 0x00A0B0C0;
+    color[1] = alpha ? 0xFF000000 : 0x00000000;
+    modern_expected = alpha ? 0x00FFFFFF : 0x00C0B0A0;
+    legacy_expected = 0x00C0B0A0;
+
+    hicon = create_test_icon(hdc, 2, 1, bpp, 0, color, sizeof(color));
+    if (!hicon) return;
+
+    SetPixelV(hdc, 0, 0, 0x00FFFFFF);
+
+    if(drawiconex)
+        DrawIconEx(hdc, 0, 0, hicon, 2, 1, 0, NULL, DI_NORMAL);
+    else
+        DrawIcon(hdc, 0, 0, hicon);
+
+    result = GetPixel(hdc, 0, 0);
+    ok (color_match(result, modern_expected) ||         /* Windows 2000 and up */
+        broken(color_match(result, legacy_expected)),   /* Windows NT 4.0, 9X and below */
+        "%s. Expected a close match to %06X (modern) or %06X (legacy) with %s. "
+        "Got %06X from line %d\n",
+        alpha ? "Alpha blending" : "Not alpha blending", modern_expected, legacy_expected,
+        drawiconex ? "DrawIconEx" : "DrawIcon", result, line);
+}
+
+static void check_DrawIcon(HDC hdc, BOOL maskvalue, UINT32 color, int bpp, COLORREF background,
+                           COLORREF modern_expected, COLORREF legacy_expected, int line)
+{
+    COLORREF result;
+    HICON hicon = create_test_icon(hdc, 1, 1, bpp, maskvalue, &color, sizeof(color));
+    if (!hicon) return;
+    SetPixelV(hdc, 0, 0, background);
+    DrawIcon(hdc, 0, 0, hicon);
+    result = GetPixel(hdc, 0, 0);
+
+    ok (color_match(result, modern_expected) ||         /* Windows 2000 and up */
+        broken(color_match(result, legacy_expected)),   /* Windows NT 4.0, 9X and below */
+        "Overlaying Mask %d on Color %06X with DrawIcon. "
+        "Expected a close match to %06X (modern), or %06X (legacy). Got %06X from line %d\n",
+        maskvalue, color, modern_expected, legacy_expected, result, line);
+}
+
+static void test_DrawIcon(void)
+{
+    BITMAPINFO bitmapInfo;
+    HDC hdcDst = NULL;
+    HBITMAP bmpDst = NULL;
+    HBITMAP bmpOld = NULL;
+    UINT32 *bits = 0;
+
+    hdcDst = CreateCompatibleDC(0);
+    ok(hdcDst != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
+    if (!hdcDst)
+        return;
+
+    if(GetDeviceCaps(hdcDst, BITSPIXEL) <= 8)
+    {
+        skip("Windows will distort DrawIcon colors at 8-bpp and less due to palletizing.\n");
+        goto cleanup;
+    }
+
+    memset(&bitmapInfo, 0, sizeof(bitmapInfo));
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = 1;
+    bitmapInfo.bmiHeader.biHeight = 1;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    bitmapInfo.bmiHeader.biSizeImage = sizeof(UINT32);
+
+    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    ok (bmpDst && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
+    if (!bmpDst || !bits)
+        goto cleanup;
+    bmpOld = SelectObject(hdcDst, bmpDst);
+
+    /* Mask is only heeded if alpha channel is always zero */
+    check_DrawIcon(hdcDst, FALSE, 0x00A0B0C0, 32, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
+    check_DrawIcon(hdcDst, TRUE, 0x00A0B0C0, 32, 0x00FFFFFF, 0x003F4F5F, 0x003F4F5F, __LINE__);
+
+    /* Test alpha blending */
+    /* Windows 2000 and up will alpha blend, earlier Windows versions will not */
+    check_DrawIcon(hdcDst, FALSE, 0xFFA0B0C0, 32, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
+    check_DrawIcon(hdcDst, TRUE, 0xFFA0B0C0, 32, 0x00FFFFFF, 0x00C0B0A0, 0x003F4F5F, __LINE__);
+
+    check_DrawIcon(hdcDst, FALSE, 0x80A0B0C0, 32, 0x00000000, 0x00605850, 0x00C0B0A0, __LINE__);
+    check_DrawIcon(hdcDst, TRUE, 0x80A0B0C0, 32, 0x00000000, 0x00605850, 0x00C0B0A0, __LINE__);
+    check_DrawIcon(hdcDst, FALSE, 0x80A0B0C0, 32, 0x00FFFFFF, 0x00DFD7CF, 0x00C0B0A0, __LINE__);
+    check_DrawIcon(hdcDst, TRUE, 0x80A0B0C0, 32, 0x00FFFFFF, 0x00DFD7CF, 0x003F4F5F, __LINE__);
+
+    check_DrawIcon(hdcDst, FALSE, 0x01FFFFFF, 32, 0x00000000, 0x00010101, 0x00FFFFFF, __LINE__);
+    check_DrawIcon(hdcDst, TRUE, 0x01FFFFFF, 32, 0x00000000, 0x00010101, 0x00FFFFFF, __LINE__);
+
+    /* Test detecting of alpha channel */
+    /* If a single pixel's alpha channel is non-zero, the icon
+       will be alpha blended, otherwise it will be draw with
+       and + xor blts. */
+    check_alpha_draw(hdcDst, FALSE, FALSE, 32, __LINE__);
+    check_alpha_draw(hdcDst, FALSE, TRUE, 32, __LINE__);
+
+cleanup:
+    if(bmpOld)
+        SelectObject(hdcDst, bmpOld);
+    if(bmpDst)
+        DeleteObject(bmpDst);
+    if(hdcDst)
+        DeleteDC(hdcDst);
+}
+
+static void check_DrawIconEx(HDC hdc, BOOL maskvalue, UINT32 color, int bpp, UINT flags, COLORREF background,
+                             COLORREF modern_expected, COLORREF legacy_expected, int line)
+{
+    COLORREF result;
+    HICON hicon = create_test_icon(hdc, 1, 1, bpp, maskvalue, &color, sizeof(color));
+    if (!hicon) return;
+    SetPixelV(hdc, 0, 0, background);
+    DrawIconEx(hdc, 0, 0, hicon, 1, 1, 0, NULL, flags);
+    result = GetPixel(hdc, 0, 0);
+
+    ok (color_match(result, modern_expected) ||         /* Windows 2000 and up */
+        broken(color_match(result, legacy_expected)),   /* Windows NT 4.0, 9X and below */
+        "Overlaying Mask %d on Color %06X with DrawIconEx flags %08X. "
+        "Expected a close match to %06X (modern) or %06X (legacy). Got %06X from line %d\n",
+        maskvalue, color, flags, modern_expected, legacy_expected, result, line);
+}
+
+static void test_DrawIconEx(void)
+{
+    BITMAPINFO bitmapInfo;
+    HDC hdcDst = NULL;
+    HBITMAP bmpDst = NULL;
+    HBITMAP bmpOld = NULL;
+    UINT32 bits = 0;
+
+    hdcDst = CreateCompatibleDC(0);
+    ok(hdcDst != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
+    if (!hdcDst)
+        return;
+
+    if(GetDeviceCaps(hdcDst, BITSPIXEL) <= 8)
+    {
+        skip("Windows will distort DrawIconEx colors at 8-bpp and less due to palletizing.\n");
+        goto cleanup;
+    }
+
+    memset(&bitmapInfo, 0, sizeof(bitmapInfo));
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = 1;
+    bitmapInfo.bmiHeader.biHeight = 1;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+    bitmapInfo.bmiHeader.biSizeImage = sizeof(UINT32);
+    bmpDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    ok (bmpDst && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
+    if (!bmpDst || !bits)
+        goto cleanup;
+    bmpOld = SelectObject(hdcDst, bmpDst);
+
+    /* Test null, image only, and mask only drawing */
+    check_DrawIconEx(hdcDst, FALSE, 0x00A0B0C0, 32, 0, 0x00102030, 0x00102030, 0x00102030, __LINE__);
+    check_DrawIconEx(hdcDst, TRUE, 0x00A0B0C0, 32, 0, 0x00102030, 0x00102030, 0x00102030, __LINE__);
+
+    check_DrawIconEx(hdcDst, FALSE, 0x80A0B0C0, 32, DI_MASK, 0x00FFFFFF, 0x00000000, 0x00000000, __LINE__);
+    check_DrawIconEx(hdcDst, TRUE, 0x80A0B0C0, 32, DI_MASK, 0x00FFFFFF, 0x00FFFFFF, 0x00FFFFFF, __LINE__);
+
+    todo_wine
+    {
+        check_DrawIconEx(hdcDst, FALSE, 0x00A0B0C0, 32, DI_IMAGE, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
+        check_DrawIconEx(hdcDst, TRUE, 0x00A0B0C0, 32, DI_IMAGE, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
+    }
+
+    /* Test normal drawing */
+    check_DrawIconEx(hdcDst, FALSE, 0x00A0B0C0, 32, DI_NORMAL, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
+    todo_wine check_DrawIconEx(hdcDst, TRUE, 0x00A0B0C0, 32, DI_NORMAL, 0x00FFFFFF, 0x003F4F5F, 0x003F4F5F, __LINE__);
+    check_DrawIconEx(hdcDst, FALSE, 0xFFA0B0C0, 32, DI_NORMAL, 0x00FFFFFF, 0x00C0B0A0, 0x00C0B0A0, __LINE__);
+
+    /* Test alpha blending */
+    /* Windows 2000 and up will alpha blend, earlier Windows versions will not */
+    check_DrawIconEx(hdcDst, TRUE, 0xFFA0B0C0, 32, DI_NORMAL, 0x00FFFFFF, 0x00C0B0A0, 0x003F4F5F, __LINE__);
+
+    check_DrawIconEx(hdcDst, FALSE, 0x80A0B0C0, 32, DI_NORMAL, 0x00000000, 0x00605850, 0x00C0B0A0, __LINE__);
+    check_DrawIconEx(hdcDst, TRUE, 0x80A0B0C0, 32, DI_NORMAL, 0x00000000, 0x00605850, 0x00C0B0A0, __LINE__);
+    check_DrawIconEx(hdcDst, FALSE, 0x80A0B0C0, 32, DI_NORMAL, 0x00FFFFFF, 0x00DFD7CF, 0x00C0B0A0, __LINE__);
+    check_DrawIconEx(hdcDst, TRUE, 0x80A0B0C0, 32, DI_NORMAL, 0x00FFFFFF, 0x00DFD7CF, 0x003F4F5F, __LINE__);
+
+    check_DrawIconEx(hdcDst, FALSE, 0x01FFFFFF, 32, DI_NORMAL, 0x00000000, 0x00010101, 0x00FFFFFF, __LINE__);
+    check_DrawIconEx(hdcDst, TRUE, 0x01FFFFFF, 32, DI_NORMAL, 0x00000000, 0x00010101, 0x00FFFFFF, __LINE__);
+
+    /* Test detecting of alpha channel */
+    /* If a single pixel's alpha channel is non-zero, the icon
+       will be alpha blended, otherwise it will be draw with
+       and + xor blts. */
+    check_alpha_draw(hdcDst, TRUE, FALSE, 32, __LINE__);
+    check_alpha_draw(hdcDst, TRUE, TRUE, 32, __LINE__);
+
+cleanup:
+    if(bmpOld)
+        SelectObject(hdcDst, bmpOld);
+    if(bmpDst)
+        DeleteObject(bmpDst);
+    if(hdcDst)
+        DeleteDC(hdcDst);
+}
+
 static void test_DestroyCursor(void)
 {
     static const BYTE bmp_bits[4096];
@@ -1063,6 +1319,8 @@ START_TEST(cursoricon)
     test_CreateIcon();
     test_LoadImage();
     test_CreateIconFromResource();
+    test_DrawIcon();
+    test_DrawIconEx();
     test_DestroyCursor();
     do_parent();
     test_child_process();

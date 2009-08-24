@@ -44,7 +44,7 @@
  *
  */
 
-#define _WIN32_WINNT 0x401
+#define _WIN32_WINNT 0x500
 #define _WIN32_IE 0x0500
 
 #include <stdarg.h>
@@ -59,6 +59,20 @@
 /* globals */
 static HWND hWndTest;
 static LONG timetag = 0x10000000;
+
+static struct {
+    LONG last_key_down;
+    LONG last_key_up;
+    LONG last_syskey_down;
+    LONG last_syskey_up;
+    LONG last_char;
+    LONG last_syschar;
+    LONG last_hook_down;
+    LONG last_hook_up;
+    LONG last_hook_syskey_down;
+    LONG last_hook_syskey_up;
+    BOOL expect_alt;
+} key_status;
 
 static UINT (WINAPI *pSendInput) (UINT, INPUT*, size_t);
 static int (WINAPI *pGetMouseMovePointsEx) (UINT, LPMOUSEMOVEPOINT, LPMOUSEMOVEPOINT, int, DWORD);
@@ -824,7 +838,8 @@ static LRESULT CALLBACK WndProc2(HWND hWnd, UINT Msg, WPARAM wParam,
         Msg != WM_GETTEXT &&
         Msg != WM_GETICON &&
         Msg != WM_IME_SELECT &&
-        Msg != WM_DEVICECHANGE)
+        Msg != WM_DEVICECHANGE &&
+        Msg != WM_TIMECHANGE)
     {
         ok(sent_messages_cnt < MAXKEYMESSAGES, "Too many messages\n");
         if (sent_messages_cnt < MAXKEYMESSAGES)
@@ -920,6 +935,224 @@ static void test_Input_blackbox(void)
     empty_message_queue();
     DestroyWindow(window);
     UnhookWindowsHookEx(hook);
+}
+
+static void reset_key_status(void)
+{
+    key_status.last_key_down = -1;
+    key_status.last_key_up = -1;
+    key_status.last_syskey_down = -1;
+    key_status.last_syskey_up = -1;
+    key_status.last_char = -1;
+    key_status.last_syschar = -1;
+    key_status.last_hook_down = -1;
+    key_status.last_hook_up = -1;
+    key_status.last_hook_syskey_down = -1;
+    key_status.last_hook_syskey_up = -1;
+    key_status.expect_alt = FALSE;
+}
+
+static void test_unicode_keys(HWND hwnd, HHOOK hook)
+{
+    TEST_INPUT inputs[2];
+    MSG msg;
+
+    /* init input data that never changes */
+    inputs[1].type = inputs[0].type = INPUT_KEYBOARD;
+    inputs[1].u.ki.dwExtraInfo = inputs[0].u.ki.dwExtraInfo = 0;
+    inputs[1].u.ki.time = inputs[0].u.ki.time = 0;
+
+    /* pressing & releasing a single unicode character */
+    inputs[0].u.ki.wVk = 0;
+    inputs[0].u.ki.wScan = 0x3c0;
+    inputs[0].u.ki.dwFlags = KEYEVENTF_UNICODE;
+
+    reset_key_status();
+    SendInput(1, (INPUT*)inputs, sizeof(INPUT));
+    while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
+        if(msg.message == WM_KEYDOWN && msg.wParam == VK_PACKET){
+            TranslateMessage(&msg);
+        }
+        DispatchMessageW(&msg);
+    }
+    ok(key_status.last_key_down == VK_PACKET,
+        "Last keydown msg should have been VK_PACKET[0x%04x] (was: 0x%x)\n", VK_PACKET, key_status.last_key_down);
+    ok(key_status.last_char == 0x3c0,
+        "Last char msg wparam should have been 0x3c0 (was: 0x%x)\n", key_status.last_char);
+    if(hook)
+        ok(key_status.last_hook_down == 0x3c0,
+            "Last hookdown msg should have been 0x3c0, was: 0x%x\n", key_status.last_hook_down);
+
+    inputs[1].u.ki.wVk = 0;
+    inputs[1].u.ki.wScan = 0x3c0;
+    inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+
+    reset_key_status();
+    SendInput(1, (INPUT*)(inputs+1), sizeof(INPUT));
+    while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
+        if(msg.message == WM_KEYDOWN && msg.wParam == VK_PACKET){
+            TranslateMessage(&msg);
+        }
+        DispatchMessageW(&msg);
+    }
+    ok(key_status.last_key_up == VK_PACKET,
+        "Last keyup msg should have been VK_PACKET[0x%04x] (was: 0x%x)\n", VK_PACKET, key_status.last_key_up);
+    if(hook)
+        ok(key_status.last_hook_up == 0x3c0,
+            "Last hookup msg should have been 0x3c0, was: 0x%x\n", key_status.last_hook_up);
+
+    /* holding alt, pressing & releasing a unicode character, releasing alt */
+    inputs[0].u.ki.wVk = VK_LMENU;
+    inputs[0].u.ki.wScan = 0;
+    inputs[0].u.ki.dwFlags = 0;
+
+    inputs[1].u.ki.wVk = 0;
+    inputs[1].u.ki.wScan = 0x3041;
+    inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE;
+
+    reset_key_status();
+    key_status.expect_alt = TRUE;
+    SendInput(2, (INPUT*)inputs, sizeof(INPUT));
+    while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
+        if(msg.message == WM_SYSKEYDOWN && msg.wParam == VK_PACKET){
+            TranslateMessage(&msg);
+        }
+        DispatchMessageW(&msg);
+    }
+    ok(key_status.last_syskey_down == VK_PACKET,
+        "Last syskeydown msg should have been VK_PACKET[0x%04x] (was: 0x%x)\n", VK_PACKET, key_status.last_syskey_down);
+    ok(key_status.last_syschar == 0x3041,
+        "Last syschar msg should have been 0x3041 (was: 0x%x)\n", key_status.last_syschar);
+    if(hook)
+        ok(key_status.last_hook_syskey_down == 0x3041,
+            "Last hooksysdown msg should have been 0x3041, was: 0x%x\n", key_status.last_hook_syskey_down);
+
+    inputs[1].u.ki.wVk = 0;
+    inputs[1].u.ki.wScan = 0x3041;
+    inputs[1].u.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+
+    inputs[0].u.ki.wVk = VK_LMENU;
+    inputs[0].u.ki.wScan = 0;
+    inputs[0].u.ki.dwFlags = KEYEVENTF_KEYUP;
+
+    reset_key_status();
+    key_status.expect_alt = TRUE;
+    SendInput(2, (INPUT*)inputs, sizeof(INPUT));
+    while(PeekMessageW(&msg, hwnd, 0, 0, PM_REMOVE)){
+        if(msg.message == WM_SYSKEYDOWN && msg.wParam == VK_PACKET){
+            TranslateMessage(&msg);
+        }
+        DispatchMessageW(&msg);
+    }
+    ok(key_status.last_key_up == VK_PACKET,
+        "Last keyup msg should have been VK_PACKET[0x%04x] (was: 0x%x)\n", VK_PACKET, key_status.last_key_up);
+    if(hook)
+        ok(key_status.last_hook_up == 0x3041,
+            "Last hook up msg should have been 0x3041, was: 0x%x\n", key_status.last_hook_up);
+}
+
+static LRESULT CALLBACK unicode_wnd_proc( HWND hWnd, UINT msg, WPARAM wParam,
+        LPARAM lParam )
+{
+    switch(msg){
+    case WM_KEYDOWN:
+        key_status.last_key_down = wParam;
+        break;
+    case WM_SYSKEYDOWN:
+        key_status.last_syskey_down = wParam;
+        break;
+    case WM_KEYUP:
+        key_status.last_key_up = wParam;
+        break;
+    case WM_SYSKEYUP:
+        key_status.last_syskey_up = wParam;
+        break;
+    case WM_CHAR:
+        key_status.last_char = wParam;
+        break;
+    case WM_SYSCHAR:
+        key_status.last_syschar = wParam;
+        break;
+    }
+    return DefWindowProcW(hWnd, msg, wParam, lParam);
+}
+
+static LRESULT CALLBACK llkbd_unicode_hook(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    if(nCode == HC_ACTION){
+        LPKBDLLHOOKSTRUCT info = (LPKBDLLHOOKSTRUCT)lParam;
+        ok(info->vkCode == VK_PACKET || (key_status.expect_alt && info->vkCode == VK_LMENU), "vkCode should have been VK_PACKET[%04x], was: %04x\n", VK_PACKET, info->vkCode);
+        key_status.expect_alt = FALSE;
+        switch(wParam){
+        case WM_KEYDOWN:
+            key_status.last_hook_down = info->scanCode;
+            break;
+        case WM_KEYUP:
+            key_status.last_hook_up = info->scanCode;
+            break;
+        case WM_SYSKEYDOWN:
+            key_status.last_hook_syskey_down = info->scanCode;
+            break;
+        case WM_SYSKEYUP:
+            key_status.last_hook_syskey_up = info->scanCode;
+            break;
+        }
+    }
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+static void test_Input_unicode(void)
+{
+    WCHAR classNameW[] = {'I','n','p','u','t','U','n','i','c','o','d','e',
+        'K','e','y','T','e','s','t','C','l','a','s','s',0};
+    WCHAR windowNameW[] = {'I','n','p','u','t','U','n','i','c','o','d','e',
+        'K','e','y','T','e','s','t',0};
+    MSG msg;
+    WNDCLASSW wclass;
+    HANDLE hInstance = GetModuleHandleW(NULL);
+    HHOOK hook;
+
+    wclass.lpszClassName = classNameW;
+    wclass.style         = CS_HREDRAW | CS_VREDRAW;
+    wclass.lpfnWndProc   = unicode_wnd_proc;
+    wclass.hInstance     = hInstance;
+    wclass.hIcon         = LoadIcon(0, IDI_APPLICATION);
+    wclass.hCursor       = LoadCursor( NULL, IDC_ARROW);
+    wclass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wclass.lpszMenuName  = 0;
+    wclass.cbClsExtra    = 0;
+    wclass.cbWndExtra    = 0;
+    if(!RegisterClassW(&wclass)){
+        win_skip("Unicode functions not supported\n");
+        return;
+    }
+    /* create the test window that will receive the keystrokes */
+    hWndTest = CreateWindowW(wclass.lpszClassName, windowNameW,
+                             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, 100, 100,
+                             NULL, NULL, hInstance, NULL);
+
+    assert(hWndTest);
+    assert(IsWindowUnicode(hWndTest));
+
+    hook = SetWindowsHookExW(WH_KEYBOARD_LL, llkbd_unicode_hook, GetModuleHandleW(NULL), 0);
+    if(!hook)
+        win_skip("unable to set WH_KEYBOARD_LL hook\n");
+
+    ShowWindow(hWndTest, SW_SHOW);
+    SetWindowPos(hWndTest, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE);
+    SetForegroundWindow(hWndTest);
+    UpdateWindow(hWndTest);
+
+    /* flush pending messages */
+    while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessageW(&msg);
+
+    SetFocus(hWndTest);
+
+    test_unicode_keys(hWndTest, hook);
+
+    if(hook)
+        UnhookWindowsHookEx(hook);
+    DestroyWindow(hWndTest);
 }
 
 static void test_keynames(void)
@@ -1319,6 +1552,7 @@ START_TEST(input)
     {
         test_Input_blackbox();
         test_Input_whitebox();
+        test_Input_unicode();
     }
     else win_skip("SendInput is not available\n");
 
