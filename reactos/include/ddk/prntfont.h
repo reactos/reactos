@@ -71,11 +71,11 @@
 #define CC_SJIS		-17
 #define CC_WANSUNG	-18
 
-#define UFF_FILE_MAGIC		TAG('1','F','F','U')
+#define UFF_FILE_MAGIC		'UFF1'
 #define UFF_VERSION_NUMBER	0x10001
 #define FONT_DIR_SORTED		1
-#define FONT_REC_SIG            TAG('C','E','R','F')
-#define WINNT_INSTALLER_SIG     TAG('I','F','T','N')
+#define FONT_REC_SIG            'CERF'
+#define WINNT_INSTALLER_SIG     'IFTN'
 
 #define FONT_FL_UFM             0x0001
 #define FONT_FL_IFI             0x0002
@@ -86,11 +86,11 @@
 #define FONT_FL_GLYPHSET_RLE    0x0040
 #define FONT_FL_RESERVED        0x8000
 
-#define DATA_UFM_SIG        TAG('M','F','U','D')
-#define DATA_IFI_SIG        TAG('I','F','I','D')
-#define DATA_GTT_SIG        TAG('T','T','G','D')
-#define DATA_CTT_SIG        TAG('T','T','C','D')
-#define DATA_VAR_SIG        TAG('R','A','V','D')
+#define DATA_UFM_SIG        'MFUD'
+#define DATA_IFI_SIG        'IFID'
+#define DATA_GTT_SIG        'TTGD'
+#define DATA_CTT_SIG        'TTCD'
+#define DATA_VAR_SIG        'RAVD'
 
 #define FG_CANCHANGE	128
 #define WM_FI_FILENAME	900
