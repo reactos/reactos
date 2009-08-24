@@ -779,6 +779,12 @@ DEFINE_TEST(test_continue_execution_12)
 
 	return ret == return_positive();
 }
+
+DEFINE_TEST(test_continue_execution_13)
+{
+	/* XXX */
+	return 1;
+}
 //}}}
 
 /* _SEH2_LEAVE *///{{{
@@ -2572,6 +2578,8 @@ void testsuite_syntax(void)
 		USE_TEST(test_continue_search_6),
 		USE_TEST(test_execute_handler_12),
 		USE_TEST(test_continue_execution_12),
+
+		USE_TEST(test_continue_execution_13),
 
 		USE_TEST(test_leave_1),
 		USE_TEST(test_leave_2),

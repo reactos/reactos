@@ -30,7 +30,7 @@
 //#define NDEBUG
 #include "debug.h"
 
-#define TAG_POOLTEST TAG('P','t','s','t')
+#define TAG_POOLTEST 'tstP'
 
 /* PRIVATE FUNCTIONS ***********************************************************/
 
