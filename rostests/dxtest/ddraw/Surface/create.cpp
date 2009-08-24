@@ -2,7 +2,7 @@ HWND CreateBasicWindow (VOID);
 
 LPDIRECTDRAW7 DirectDraw;
 
-BOOL TestCaps (char* dummy, DWORD Caps, HRESULT test1, HRESULT test2)
+BOOL TestCaps (const char* dummy, DWORD Caps, HRESULT test1, HRESULT test2)
 {
     LPDIRECTDRAWSURFACE7 Surface = NULL;
 	DDSURFACEDESC2 Desc = { 0 };
