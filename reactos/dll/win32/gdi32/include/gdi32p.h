@@ -42,32 +42,42 @@ typedef INT
 /* TYPES *********************************************************************/
 
 // Based on wmfapi.h and Wine.
-typedef struct tagMETAFILEDC {
-  PVOID      pvMetaBuffer;
-  HANDLE     hFile;
-  DWORD      Size;
-  METAHEADER mh;
-  UINT       handles_size, cur_handles;
-  HGDIOBJ   *handles;
-
-  // more DC object stuff.
-  HGDIOBJ    Pen;
-  HGDIOBJ    Brush;
-  HGDIOBJ    Palette;
-  HGDIOBJ    Font;
-
-  WCHAR      Filename[MAX_PATH+2];
-  // Add more later.
+typedef struct tagMETAFILEDC
+{
+  PVOID       pvMetaBuffer;
+  HANDLE      hFile;
+  DWORD       Size;
+  DWORD       dwWritten;
+  METAHEADER  mh;
+  WORD        reserved;
+  HLOCAL      MFObjList;
+  HPEN        hPen;
+  HBRUSH      hBrush;
+  HDC         hDc;
+  HGDIOBJ     hMetaDc;
+  HPALETTE    hPalette;
+  HFONT       hFont;
+  HBITMAP     hBitmap;
+  HRGN        hRegion;
+  HGDIOBJ     hMetafile;
+  HGDIOBJ     hMemDc;
+  HPEN        hExtPen;
+  HGDIOBJ     hEnhMetaDc;
+  HGDIOBJ     hEnhMetaFile;
+  HCOLORSPACE hColorSpace;
+  WCHAR       Filename[MAX_PATH+2];
 } METAFILEDC,*PMETAFILEDC;
 
 // Metafile Entry handle
-typedef struct tagMF_ENTRY {
+typedef struct tagMF_ENTRY
+{
   LIST_ENTRY   List;
   HGDIOBJ      hmDC;             // Handle return from NtGdiCreateClientObj.
   PMETAFILEDC pmfDC;
 } MF_ENTRY, *PMF_ENTRY;
 
-typedef struct tagENHMETAFILE {
+typedef struct tagENHMETAFILE
+{
   PVOID      pvMetaBuffer;
   HANDLE     hFile;      /* Handle for disk based MetaFile */
   DWORD      Size;
