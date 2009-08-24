@@ -180,7 +180,7 @@
 @ stub OleConvertOLESTREAMToIStorageEx
 @ stdcall OleCreate(ptr ptr long ptr ptr ptr ptr)
 @ stdcall OleCreateDefaultHandler(ptr ptr ptr ptr)
-@ stub OleCreateEmbeddingHelper
+@ stdcall OleCreateEmbeddingHelper(ptr ptr long ptr ptr ptr)
 @ stub OleCreateEx
 @ stdcall OleCreateFromData(ptr ptr long ptr ptr ptr ptr)
 @ stdcall OleCreateFromDataEx(ptr ptr long long long ptr ptr ptr ptr ptr ptr ptr)

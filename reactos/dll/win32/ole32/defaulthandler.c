@@ -137,6 +137,11 @@ struct DefaultHandler
   /* storage passed to Load or InitNew */
   IStorage *storage;
   enum storage_state storage_state;
+
+  /* optional class factory for object */
+  IClassFactory *pCFObject;
+  /* TRUE if acting as an inproc server instead of an inproc handler */
+  BOOL inproc_server;
 };
 
 typedef struct DefaultHandler DefaultHandler;
@@ -222,6 +227,12 @@ static HRESULT WINAPI DefaultHandler_NDIUnknown_QueryInterface(
     HRESULT hr = IUnknown_QueryInterface(This->dataCache, riid, ppvObject);
     if (FAILED(hr)) FIXME("interface %s not implemented by data cache\n", debugstr_guid(riid));
     return hr;
+  }
+  else if (This->inproc_server && This->pOleDelegate)
+  {
+    HRESULT hr = IUnknown_QueryInterface(This->pOleDelegate, riid, ppvObject);
+    if (SUCCEEDED(hr))
+      return hr;
   }
 
   /* Check that we obtained an interface. */
@@ -1901,7 +1912,9 @@ static const IPersistStorageVtbl DefaultHandler_IPersistStorage_VTable =
  */
 static DefaultHandler* DefaultHandler_Construct(
   REFCLSID  clsid,
-  LPUNKNOWN pUnkOuter)
+  LPUNKNOWN pUnkOuter,
+  DWORD flags,
+  IClassFactory *pCF)
 {
   DefaultHandler* This = NULL;
   HRESULT hr;
@@ -1917,6 +1930,8 @@ static DefaultHandler* DefaultHandler_Construct(
   This->lpvtblIRunnableObject = &DefaultHandler_IRunnableObject_VTable;
   This->lpvtblIAdviseSink = &DefaultHandler_IAdviseSink_VTable;
   This->lpvtblIPersistStorage = &DefaultHandler_IPersistStorage_VTable;
+
+  This->inproc_server = (flags & EMBDHLP_INPROC_SERVER) ? TRUE : FALSE;
 
   /*
    * Start with one reference count. The caller of this function
@@ -1963,6 +1978,30 @@ static DefaultHandler* DefaultHandler_Construct(
   This->dwAdvConn = 0;
   This->storage = NULL;
   This->storage_state = storage_state_uninitialised;
+
+  if (This->inproc_server && !(flags & EMBDHLP_DELAYCREATE))
+  {
+    HRESULT hr;
+    This->pCFObject = NULL;
+    if (pCF)
+      hr = IClassFactory_CreateInstance(pCF, NULL, &IID_IOleObject, (void **)&This->pOleDelegate);
+    else
+      hr = CoCreateInstance(&This->clsid, NULL, CLSCTX_INPROC_SERVER,
+                            &IID_IOleObject, (void **)&This->pOleDelegate);
+    if (SUCCEEDED(hr))
+      hr = IOleObject_QueryInterface(This->pOleDelegate, &IID_IPersistStorage, (void **)&This->pPSDelegate);
+    if (SUCCEEDED(hr))
+      hr = IOleObject_QueryInterface(This->pOleDelegate, &IID_IDataObject, (void **)&This->pDataDelegate);
+    if (SUCCEEDED(hr))
+      This->object_state = object_state_running;
+    if (FAILED(hr))
+      WARN("object creation failed with error %08x\n", hr);
+  }
+  else
+  {
+    This->pCFObject = pCF;
+    if (pCF) IClassFactory_AddRef(pCF);
+  }
 
   return This;
 }
@@ -2011,22 +2050,30 @@ static void DefaultHandler_Destroy(
     This->storage = NULL;
   }
 
+  if (This->pCFObject)
+  {
+    IClassFactory_Release(This->pCFObject);
+    This->pCFObject = NULL;
+  }
+
   HeapFree(GetProcessHeap(), 0, This);
 }
 
 /******************************************************************************
- * OleCreateDefaultHandler [OLE32.@]
+ * OleCreateEmbeddingHelper [OLE32.@]
  */
-HRESULT WINAPI OleCreateDefaultHandler(
+HRESULT WINAPI OleCreateEmbeddingHelper(
   REFCLSID  clsid,
   LPUNKNOWN pUnkOuter,
+  DWORD     flags,
+  IClassFactory *pCF,
   REFIID    riid,
   LPVOID*   ppvObj)
 {
   DefaultHandler* newHandler = NULL;
   HRESULT         hr         = S_OK;
 
-  TRACE("(%s, %p, %s, %p)\n", debugstr_guid(clsid), pUnkOuter, debugstr_guid(riid), ppvObj);
+  TRACE("(%s, %p, %08x, %p, %s, %p)\n", debugstr_guid(clsid), pUnkOuter, flags, pCF, debugstr_guid(riid), ppvObj);
 
   if (!ppvObj)
     return E_POINTER;
@@ -2045,7 +2092,7 @@ HRESULT WINAPI OleCreateDefaultHandler(
   /*
    * Try to construct a new instance of the class.
    */
-  newHandler = DefaultHandler_Construct(clsid, pUnkOuter);
+  newHandler = DefaultHandler_Construct(clsid, pUnkOuter, flags, pCF);
 
   if (!newHandler)
     return E_OUTOFMEMORY;
@@ -2062,4 +2109,16 @@ HRESULT WINAPI OleCreateDefaultHandler(
   IUnknown_Release((IUnknown*)&newHandler->lpvtblIUnknown);
 
   return hr;
+}
+
+
+/******************************************************************************
+ * OleCreateDefaultHandler [OLE32.@]
+ */
+HRESULT WINAPI OleCreateDefaultHandler(REFCLSID clsid, LPUNKNOWN pUnkOuter,
+                                       REFIID riid, LPVOID* ppvObj)
+{
+    TRACE("(%s, %p, %s, %p)\n", debugstr_guid(clsid), pUnkOuter,debugstr_guid(riid), ppvObj);
+    return OleCreateEmbeddingHelper(clsid, pUnkOuter, EMBDHLP_INPROC_HANDLER | EMBDHLP_CREATENOW,
+                                    NULL, riid, ppvObj);
 }

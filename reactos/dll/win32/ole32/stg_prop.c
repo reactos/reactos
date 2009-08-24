@@ -1477,6 +1477,25 @@ static void PropertyStorage_MakePropertyIdOffset(DWORD propid, DWORD dwOffset,
      offsetof(PROPERTYIDOFFSET, dwOffset), dwOffset);
 }
 
+static inline HRESULT PropertStorage_WriteWStringToStream(IStream *stm,
+ LPCWSTR str, DWORD len, DWORD *written)
+{
+#ifdef WORDS_BIGENDIAN
+    WCHAR *leStr = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+    HRESULT hr;
+
+    if (!leStr)
+        return E_OUTOFMEMORY;
+    memcpy(leStr, str, len * sizeof(WCHAR));
+    PropertyStorage_ByteSwapString(leStr, len);
+    hr = IStream_Write(stm, leStr, len, written);
+    HeapFree(GetProcessHeap(), 0, leStr);
+    return hr;
+#else
+    return IStream_Write(stm, str, len, written);
+#endif
+}
+
 struct DictionaryClosure
 {
     HRESULT hr;
@@ -1508,15 +1527,11 @@ static BOOL PropertyStorage_DictionaryWriter(const void *key,
         if (FAILED(c->hr))
             goto end;
         c->bytesWritten += sizeof(DWORD);
-        /* Rather than allocate a copy, I'll swap the string to little-endian
-         * in-place, write it, then swap it back.
-         */
-        PropertyStorage_ByteSwapString(key, keyLen);
-        c->hr = IStream_Write(This->stm, key, keyLen, &count);
-        PropertyStorage_ByteSwapString(key, keyLen);
+        c->hr = PropertStorage_WriteWStringToStream(This->stm, key, keyLen,
+         &count);
         if (FAILED(c->hr))
             goto end;
-        c->bytesWritten += keyLen;
+        c->bytesWritten += keyLen * sizeof(WCHAR);
         if (keyLen % sizeof(DWORD))
         {
             c->hr = IStream_Write(This->stm, &pad,

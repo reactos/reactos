@@ -278,7 +278,7 @@ static HRESULT WINAPI COMCAT_ICatRegister_QueryInterface(
     LPVOID *ppvObj)
 {
     ComCatMgrImpl *This = (ComCatMgrImpl *)iface;
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -515,7 +515,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_GetCategoryDesc(
     HKEY key;
     HRESULT res;
 
-    TRACE("\n\tCATID:\t%s\n\tLCID:\t%X\n",debugstr_guid(rcatid), lcid);
+    TRACE("CATID: %s LCID: %x\n",debugstr_guid(rcatid), lcid);
 
     if (rcatid == NULL || ppszDesc == NULL) return E_INVALIDARG;
 
@@ -596,12 +596,12 @@ static HRESULT WINAPI COMCAT_ICatInformation_IsClassOfCategories(
 
     if (WINE_TRACE_ON(ole)) {
 	ULONG count;
-	TRACE("\n\tCLSID:\t%s\n\tImplemented %u\n",debugstr_guid(rclsid),cImplemented);
+	TRACE("CLSID: %s Implemented %u\n",debugstr_guid(rclsid),cImplemented);
 	for (count = 0; count < cImplemented; ++count)
-	    TRACE("\t\t%s\n",debugstr_guid(&rgcatidImpl[count]));
-	TRACE("\tRequired %u\n",cRequired);
+	    TRACE("    %s\n",debugstr_guid(&rgcatidImpl[count]));
+	TRACE("Required %u\n",cRequired);
 	for (count = 0; count < cRequired; ++count)
-	    TRACE("\t\t%s\n",debugstr_guid(&rgcatidReq[count]));
+	    TRACE("    %s\n",debugstr_guid(&rgcatidReq[count]));
     }
 
     if ((cImplemented && rgcatidImpl == NULL) ||
@@ -637,7 +637,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_EnumImplCategoriesOfClass(
 			  'n', 't', 'e', 'd', ' ', 'C', 'a', 't',
 			  'e', 'g', 'o', 'r', 'i', 'e', 's', 0 };
 
-    TRACE("\n\tCLSID:\t%s\n",debugstr_guid(rclsid));
+    TRACE("%s\n",debugstr_guid(rclsid));
 
     if (rclsid == NULL || ppenumCATID == NULL)
 	return E_POINTER;
@@ -659,7 +659,7 @@ static HRESULT WINAPI COMCAT_ICatInformation_EnumReqCategoriesOfClass(
 			  'd', ' ', 'C', 'a', 't', 'e', 'g', 'o',
 			  'r', 'i', 'e', 's', 0 };
 
-    TRACE("\n\tCLSID:\t%s\n",debugstr_guid(rclsid));
+    TRACE("%s\n",debugstr_guid(rclsid));
 
     if (rclsid == NULL || ppenumCATID == NULL)
 	return E_POINTER;
@@ -719,7 +719,7 @@ static HRESULT WINAPI COMCAT_IClassFactory_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -760,7 +760,7 @@ static HRESULT WINAPI COMCAT_IClassFactory_CreateInstance(
     LPVOID *ppvObj)
 {
     HRESULT res;
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -834,7 +834,7 @@ static HRESULT WINAPI COMCAT_IEnumCATEGORYINFO_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -1017,7 +1017,7 @@ static HRESULT WINAPI COMCAT_CLSID_IEnumGUID_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
@@ -1203,7 +1203,7 @@ static HRESULT WINAPI COMCAT_CATID_IEnumGUID_QueryInterface(
     REFIID riid,
     LPVOID *ppvObj)
 {
-    TRACE("\n\tIID:\t%s\n",debugstr_guid(riid));
+    TRACE("%s\n",debugstr_guid(riid));
 
     if (ppvObj == NULL) return E_POINTER;
 
