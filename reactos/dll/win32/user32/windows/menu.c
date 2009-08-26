@@ -4993,8 +4993,12 @@ SetMenuInfo(
 {
   ROSMENUINFO mi;
   BOOL res = FALSE;
-  if(lpcmi->cbSize != sizeof(MENUINFO))
+
+  if (!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
     return res;
+  }
 
   memcpy(&mi, lpcmi, sizeof(MENUINFO));
   return NtUserMenuInfo(hmenu, &mi, TRUE);
