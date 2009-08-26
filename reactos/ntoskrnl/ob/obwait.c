@@ -62,7 +62,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     PHANDLE_TABLE HandleTable;
     ACCESS_MASK GrantedAccess;
     PVOID DefaultObject;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Enter a critical region since we'll play with handles */
@@ -89,7 +89,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     _SEH2_TRY
     {
         /* Check if the call came from user mode */
-        if(PreviousMode != KernelMode)
+        if (PreviousMode != KernelMode)
         {
             /* Check if we have a timeout */
             if (TimeOut)
@@ -116,13 +116,10 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Get exception code */
-        Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-
-    /* Fail if we raised an exception */
-    if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Check if we can use the internal Wait Array */
     if (ObjectCount > THREAD_WAIT_OBJECTS)
@@ -359,7 +356,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     PVOID Object, WaitableObject;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LARGE_INTEGER SafeTimeOut;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     /* Check if we came with a timeout from user mode */
     if ((TimeOut) && (PreviousMode != KernelMode))
@@ -373,11 +370,10 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get the Object */
@@ -460,7 +456,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     PVOID SignalObj, WaitObj, WaitableObject;
     LARGE_INTEGER SafeTimeOut;
     OBJECT_HANDLE_INFORMATION HandleInfo;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
 
     /* Check if we came with a timeout from user mode */
     if ((TimeOut) && (PreviousMode != KernelMode))
@@ -474,11 +470,10 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Start by getting the signal object*/

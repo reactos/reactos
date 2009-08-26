@@ -215,14 +215,10 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
     
     /* allocate enough memory or check if the provided buffer is
@@ -391,7 +387,7 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
     ULONG Length;
     BOOLEAN CheckResult;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
@@ -415,8 +411,7 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
                              Privilege[PrivilegeCount]) /
                 sizeof(RequiredPrivileges->Privilege[0]) != PrivilegeCount)
             {
-                Status = STATUS_INVALID_PARAMETER;
-                _SEH2_LEAVE;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
             }
             
             /* probe all of the array */
@@ -429,14 +424,10 @@ NtPrivilegeCheck (IN HANDLE ClientToken,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
     else
     {

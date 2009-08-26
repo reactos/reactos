@@ -278,7 +278,7 @@ SepCaptureAcl(IN PACL InputAcl,
     
     PAGED_CODE();
     
-    if(AccessMode != KernelMode)
+    if (AccessMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -292,35 +292,34 @@ SepCaptureAcl(IN PACL InputAcl,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
         
-        if(NT_SUCCESS(Status))
+        NewAcl = ExAllocatePool(PoolType,
+                                AclSize);
+        if(NewAcl != NULL)
         {
-            NewAcl = ExAllocatePool(PoolType,
-                                    AclSize);
-            if(NewAcl != NULL)
+            _SEH2_TRY
             {
-                _SEH2_TRY
-                {
-                    RtlCopyMemory(NewAcl,
-                                  InputAcl,
-                                  AclSize);
-                    
-                    *CapturedAcl = NewAcl;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    ExFreePool(NewAcl);
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
+                RtlCopyMemory(NewAcl,
+                              InputAcl,
+                              AclSize);
+
+                *CapturedAcl = NewAcl;
             }
-            else
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
+                /* Free the ACL and return the exception code */
+                ExFreePool(NewAcl);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
+            _SEH2_END;
+        }
+        else
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
         }
     }
     else if(!CaptureIfKernel)

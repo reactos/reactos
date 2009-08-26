@@ -90,7 +90,7 @@ NtAddAtom(IN PWSTR AtomName,
           OUT PRTL_ATOM Atom)
 {
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LPWSTR CapturedName;
     ULONG CapturedSize;
@@ -145,32 +145,30 @@ NtAddAtom(IN PWSTR AtomName,
                 if (Atom) ProbeForWriteUshort(Atom);
             }
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
 
-    /* Make sure probe worked */
-    if (NT_SUCCESS(Status))
+    /* Call the runtime function */
+    Status = RtlAddAtomToAtomTable(AtomTable, CapturedName, &SafeAtom);
+    if (NT_SUCCESS(Status) && (Atom))
     {
-        /* Call the runtime function */
-        Status = RtlAddAtomToAtomTable(AtomTable, CapturedName, &SafeAtom);
-        if (NT_SUCCESS(Status) && (Atom))
+        /* Success and caller wants the atom back.. .enter SEH */
+        _SEH2_TRY
         {
-            /* Success and caller wants the atom back.. .enter SEH */
-            _SEH2_TRY
-            {
-                /* Return the atom */
-                *Atom = SafeAtom;
-            }
-            _SEH2_EXCEPT(ExSystemExceptionFilter())
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
+            /* Return the atom */
+            *Atom = SafeAtom;
         }
+        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        {
+            /* Get the exception code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
 
     /* If we captured anything, free it */
@@ -242,7 +240,7 @@ NtFindAtom(IN PWSTR AtomName,
            OUT PRTL_ATOM Atom)
 {
     PRTL_ATOM_TABLE AtomTable = ExpGetGlobalAtomTable();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     LPWSTR CapturedName = NULL;
     ULONG CapturedSize;
@@ -297,32 +295,29 @@ NtFindAtom(IN PWSTR AtomName,
                 if (Atom) ProbeForWriteUshort(Atom);
             }
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
+        }
+        _SEH2_END;
+    }
+
+    /* Call the runtime function */
+    Status = RtlLookupAtomInAtomTable(AtomTable, CapturedName, &SafeAtom);
+    if (NT_SUCCESS(Status) && (Atom))
+    {
+        /* Success and caller wants the atom back.. .enter SEH */
+        _SEH2_TRY
+        {
+            /* Return the atom */
+            *Atom = SafeAtom;
+        }
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;
-    }
-
-    /* Make sure probe worked */
-    if (NT_SUCCESS(Status))
-    {
-        /* Call the runtime function */
-        Status = RtlLookupAtomInAtomTable(AtomTable, CapturedName, &SafeAtom);
-        if (NT_SUCCESS(Status) && (Atom))
-        {
-            /* Success and caller wants the atom back.. .enter SEH */
-            _SEH2_TRY
-            {
-                /* Return the atom */
-                *Atom = SafeAtom;
-            }
-            _SEH2_EXCEPT(ExSystemExceptionFilter())
-            {
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-        }
     }
 
     /* If we captured anything, free it */

@@ -712,12 +712,11 @@ IoBuildAsynchronousFsdRequest(IN ULONG MajorFunction,
 				/* Free the IRP and its MDL */
 				IoFreeMdl(Irp->MdlAddress);
 				IoFreeIrp(Irp);
-				Irp = NULL;
+
+                /* Fail */
+				_SEH2_YIELD(return NULL);
 			}
 			_SEH2_END;
-		
-            /* This is how we know if we failed during the probe */
-            if (!Irp) return NULL;
         }
         else
         {
@@ -908,12 +907,11 @@ IoBuildDeviceIoControlRequest(IN ULONG IoControlCode,
                     /* Free the input buffer and IRP */
                     if (InputBuffer) ExFreePool(Irp->AssociatedIrp.SystemBuffer);
                     IoFreeIrp(Irp);
-                    Irp = NULL;
+
+                    /* Fail */
+                    _SEH2_YIELD(return NULL);
                 }
                 _SEH2_END;
-
-                /* This is how we know if probing failed */
-                if (!Irp) return NULL;
             }
             break;
 

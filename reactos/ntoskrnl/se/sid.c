@@ -232,11 +232,11 @@ SepCaptureSid(IN PSID InputSid,
 {
     ULONG SidSize = 0;
     PISID NewSid, Sid = (PISID)InputSid;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
-    if(AccessMode != KernelMode)
+    if (AccessMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -251,36 +251,35 @@ SepCaptureSid(IN PSID InputSid,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
         
-        if(NT_SUCCESS(Status))
+        /* allocate a SID and copy it */
+        NewSid = ExAllocatePool(PoolType,
+                                SidSize);
+        if(NewSid != NULL)
         {
-            /* allocate a SID and copy it */
-            NewSid = ExAllocatePool(PoolType,
-                                    SidSize);
-            if(NewSid != NULL)
+            _SEH2_TRY
             {
-                _SEH2_TRY
-                {
-                    RtlCopyMemory(NewSid,
-                                  Sid,
-                                  SidSize);
-                    
-                    *CapturedSid = NewSid;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    ExFreePool(NewSid);
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
+                RtlCopyMemory(NewSid,
+                              Sid,
+                              SidSize);
+
+                *CapturedSid = NewSid;
             }
-            else
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = STATUS_INSUFFICIENT_RESOURCES;
+                /* Free the SID and return the exception code */
+                ExFreePool(NewSid);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
+            _SEH2_END;
+        }
+        else
+        {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
         }
     }
     else if(!CaptureIfKernel)

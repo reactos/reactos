@@ -804,7 +804,7 @@ NtQuerySecurityObject(IN HANDLE Handle,
     POBJECT_HEADER Header;
     POBJECT_TYPE Type;
     ACCESS_MASK DesiredAccess;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check if we came from user mode */
@@ -819,13 +819,10 @@ NtQuerySecurityObject(IN HANDLE Handle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Fail if we got an access violation */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get the required access rights for the operation */

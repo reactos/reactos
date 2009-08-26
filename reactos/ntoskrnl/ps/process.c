@@ -1247,14 +1247,14 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
                   IN HANDLE ExceptionPort OPTIONAL,
                   IN BOOLEAN InJob)
 {
-    KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    NTSTATUS Status;
     PAGED_CODE();
     PSTRACE(PS_PROCESS_DEBUG,
             "ParentProcess: %p Flags: %lx\n", ParentProcess, Flags);
 
     /* Check if we came from user mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -1263,11 +1263,10 @@ NtCreateProcessEx(OUT PHANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Make sure there's a parent process */
@@ -1346,7 +1345,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     BOOLEAN HasObjectName = FALSE;
     PETHREAD Thread = NULL;
     PEPROCESS Process = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ACCESS_STATE AccessState;
     AUX_ACCESS_DATA AuxData;
     PAGED_CODE();
@@ -1383,11 +1382,10 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {

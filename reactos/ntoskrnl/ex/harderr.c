@@ -620,16 +620,15 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
                 }
             }
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
             /* Free captured buffer */
             if (SafeParams) ExFreePool(SafeParams);
-            Status = _SEH2_GetExceptionCode();
+
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* If we failed to capture/probe, bail out */
-        if (!NT_SUCCESS(Status)) return Status;
 
         /* Call the system function directly, because we probed */
         ExpRaiseHardError(ErrorStatus,
@@ -668,8 +667,9 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
             /* Return the response */
             *Response = SafeResponse;
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
+            /* Get the exception code */
             Status = _SEH2_GetExceptionCode();
         }
         _SEH2_END;

@@ -102,7 +102,7 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
     PEPROCESS pProcess;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     OBJECT_ATTRIBUTES ObjectAttributes;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ULONG Log2 = 0;
     PVOID Segment = NULL;
     PAGED_CODE();
@@ -164,14 +164,12 @@ NtCreateProfile(OUT PHANDLE ProfileHandle,
                           BufferSize,
                           sizeof(ULONG));
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Bail out if we failed */
-        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Check if a process was specified */
@@ -281,7 +279,7 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Check if we were called from user-mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         /* Entry SEH Block */
         _SEH2_TRY
@@ -293,14 +291,12 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
                 ProbeForWriteLargeInteger(PerformanceFrequency);
             }
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* If the pointers are invalid, bail out */
-        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Enter a new SEH Block */
@@ -310,10 +306,11 @@ NtQueryPerformanceCounter(OUT PLARGE_INTEGER PerformanceCounter,
         *PerformanceCounter = KeQueryPerformanceCounter(&PerfFrequency);
 
         /* Return Frequency if requested */
-        if(PerformanceFrequency) *PerformanceFrequency = PerfFrequency;
+        if (PerformanceFrequency) *PerformanceFrequency = PerfFrequency;
     }
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
+        /* Get the exception code */
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
@@ -381,20 +378,13 @@ NtStartProfile(IN HANDLE ProfileHandle)
     }
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
-        /* Get the exception code */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    /* Fail if we raised an exception */
-    if (!NT_SUCCESS(Status))
-    {
         /* Release our lock, free the buffer, dereference and return */
         KeReleaseMutex(&ExpProfileMutex, FALSE);
         ObDereferenceObject(Profile);
         ExFreePool(ProfileObject);
-        return Status;
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
+    _SEH2_END;
 
     /* Map the pages */
     TempLockedBufferAddress = MmMapLockedPages(Profile->Mdl, KernelMode);
@@ -482,7 +472,7 @@ NtQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
     PAGED_CODE();
 
     /* Check if we were called from user-mode */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         /* Enter SEH Block */
         _SEH2_TRY
@@ -490,14 +480,12 @@ NtQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
             /* Validate interval */
             ProbeForWriteUlong(Interval);
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* If pointer was invalid, bail out */
-        if(!NT_SUCCESS(Status)) return Status;
     }
 
     /* Query the Interval */
@@ -511,12 +499,13 @@ NtQueryIntervalProfile(IN KPROFILE_SOURCE ProfileSource,
     }
     _SEH2_EXCEPT(ExSystemExceptionFilter())
     {
+        /* Get the exception code */
         Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END;
 
     /* Return Success */
-    return STATUS_SUCCESS;
+    return Status;
 }
 
 NTSTATUS

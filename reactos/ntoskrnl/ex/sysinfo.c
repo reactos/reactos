@@ -228,8 +228,7 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
     ANSI_STRING AValue;
     UNICODE_STRING WValue;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
-
+    NTSTATUS Status;
     PAGED_CODE();
 
     PreviousMode = ExGetPreviousMode();
@@ -248,13 +247,12 @@ NtQuerySystemEnvironmentValue(IN PUNICODE_STRING VariableName,
 
             if (ReturnLength != NULL) ProbeForWriteUlong(ReturnLength);
         }
-        _SEH2_EXCEPT(ExSystemExceptionFilter())
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /*

@@ -196,7 +196,7 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
                      IN ULONG OutputBufferLength OPTIONAL,
                      IN BOOLEAN IsDevIoCtl)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PFILE_OBJECT FileObject;
     PDEVICE_OBJECT DeviceObject;
     PIRP Irp;
@@ -258,11 +258,10 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Don't check for access rights right now, KernelMode can do anything */
@@ -427,12 +426,11 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Cleanup after exception */
+                /* Cleanup after exception and return */
                 IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
-                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
-            if (!NT_SUCCESS(Status)) return Status;
             break;
 
         /* Direct I/O */
@@ -484,12 +482,11 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Cleanup after exception */
+                /* Cleanup after exception and return */
                 IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
-                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
-            if (!NT_SUCCESS(Status)) return Status;
             break;
 
         case METHOD_NEITHER:
@@ -958,7 +955,7 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     PFILE_OBJECT FileObject;
     PIRP Irp;
     PIO_STACK_LOCATION StackPtr;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
@@ -978,13 +975,10 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Return exception code, if any */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get the File Object */
@@ -1095,7 +1089,7 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION IoStack;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     BOOLEAN LockedForSync = FALSE;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
@@ -1114,13 +1108,10 @@ NtNotifyChangeDirectoryFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Check if probing failed */
-        if (!NT_SUCCESS(Status)) return Status;
 
         /* Check if CompletionFilter is valid */
         if (!CompletionFilter || (CompletionFilter & ~FILE_NOTIFY_VALID_MASK))
@@ -1229,7 +1220,7 @@ NtLockFile(IN HANDLE FileHandle,
     BOOLEAN LockedForSync = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     LARGE_INTEGER CapturedByteOffset, CapturedLength;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     PAGED_CODE();
     CapturedByteOffset.QuadPart = 0;
@@ -1268,18 +1259,11 @@ NtLockFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        /* Check if probing failed */
-        if (!NT_SUCCESS(Status))
-        {
             /* Dereference the object and return exception code */
             ObDereferenceObject(FileObject);
-            return Status;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
     }
     else
     {
@@ -1351,15 +1335,14 @@ NtLockFile(IN HANDLE FileHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Allocating failed, clean up */
+        /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, Event, NULL);
         if (LocalLength) ExFreePool(LocalLength);
 
-        /* Get status */
-        Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set Parameters */
     StackPtr->Parameters.LockControl.ByteOffset = CapturedByteOffset;
@@ -1401,7 +1384,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
     PFILE_OBJECT FileObject;
     PIO_STACK_LOCATION StackPtr;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     BOOLEAN LockedForSynch = FALSE;
     PKEVENT Event = NULL;
     PVOID AuxBuffer = NULL;
@@ -1456,14 +1439,11 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception code and free the buffer */
+            /* Free buffer and return the exception code */
             if (AuxBuffer) ExFreePool(AuxBuffer);
-            Status = _SEH2_GetExceptionCode();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Return status on failure */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get File Object */
@@ -1547,15 +1527,14 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Allocating failed, clean up */
+            /* Allocating failed, clean up and return the exception code */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
             if (AuxBuffer) ExFreePool(AuxBuffer);
 
-            /* Get status */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
 
         /* Set the buffer and flags */
         Irp->UserBuffer = FileInformation;
@@ -1573,10 +1552,9 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Allocating failed, clean up */
+            /* Allocating failed, clean up and return the exception code */
             IopCleanupAfterException(FileObject, Irp, Event, NULL);
-            Status = _SEH2_GetExceptionCode();
-            _SEH2_YIELD(return Status);
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
     }
@@ -1647,7 +1625,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
 {
     OBJECT_HANDLE_INFORMATION HandleInformation;
     PFILE_OBJECT FileObject;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION StackPtr;
@@ -1689,11 +1667,10 @@ NtQueryInformationFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -1811,12 +1788,11 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Allocating failed, clean up */
+        /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
     Irp->Flags |= (IRP_BUFFERED_IO |
@@ -1957,7 +1933,7 @@ NtReadFile(IN HANDLE FileHandle,
            IN PLARGE_INTEGER ByteOffset OPTIONAL,
            IN PULONG Key OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PFILE_OBJECT FileObject;
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
@@ -1973,7 +1949,7 @@ NtReadFile(IN HANDLE FileHandle,
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Validate User-Mode Buffers */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -1995,13 +1971,10 @@ NtReadFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Check for probe failure */
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -2116,12 +2089,11 @@ NtReadFile(IN HANDLE FileHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Allocating failed, clean up */
+                /* Allocating failed, clean up and return the exception code */
                 IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
-                Status = _SEH2_GetExceptionCode();
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
-            if (!NT_SUCCESS(Status)) return Status;
 
             /* Set the buffer and flags */
             Irp->UserBuffer = Buffer;
@@ -2148,10 +2120,9 @@ NtReadFile(IN HANDLE FileHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Allocating failed, clean up */
+                /* Allocating failed, clean up and return the exception code */
                 IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(return Status);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
 
@@ -2229,7 +2200,7 @@ NtSetInformationFile(IN HANDLE FileHandle,
                      IN FILE_INFORMATION_CLASS FileInformationClass)
 {
     PFILE_OBJECT FileObject;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
     PIO_STACK_LOCATION StackPtr;
@@ -2278,13 +2249,10 @@ NtSetInformationFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Check if probing failed */
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -2417,12 +2385,11 @@ NtSetInformationFile(IN HANDLE FileHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Allocating failed, clean up */
+        /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags */
     Irp->Flags |= (IRP_BUFFERED_IO |
@@ -2626,7 +2593,7 @@ NtUnlockFile(IN HANDLE FileHandle,
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
     LARGE_INTEGER CapturedByteOffset, CapturedLength;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     OBJECT_HANDLE_INFORMATION HandleInformation;
     IO_STATUS_BLOCK KernelIosb;
     PAGED_CODE();
@@ -2666,18 +2633,11 @@ NtUnlockFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
-        }
-        _SEH2_END;
-
-        /* Check if probing failed */
-        if (!NT_SUCCESS(Status))
-        {
             /* Dereference the object and return exception code */
             ObDereferenceObject(FileObject);
-            return Status;
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
+        _SEH2_END;
     }
     else
     {
@@ -2747,15 +2707,14 @@ NtUnlockFile(IN HANDLE FileHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Allocating failed, clean up */
+        /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
         if (LocalLength) ExFreePool(LocalLength);
 
-        /* Get exception status */
-        Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set Parameters */
     StackPtr->Parameters.LockControl.ByteOffset = CapturedByteOffset;
@@ -2801,7 +2760,7 @@ NtWriteFile(IN HANDLE FileHandle,
             IN PLARGE_INTEGER ByteOffset OPTIONAL,
             IN PULONG Key OPTIONAL)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PFILE_OBJECT FileObject;
     PIRP Irp;
     PDEVICE_OBJECT DeviceObject;
@@ -2827,7 +2786,7 @@ NtWriteFile(IN HANDLE FileHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Validate User-Mode Buffers */
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -2864,13 +2823,10 @@ NtWriteFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Check for probe failure */
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
@@ -2990,10 +2946,9 @@ NtWriteFile(IN HANDLE FileHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Allocating failed, clean up */
+                /* Allocating failed, clean up and return the exception code */
                 IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(return Status);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
 
@@ -3019,10 +2974,9 @@ NtWriteFile(IN HANDLE FileHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Allocating failed, clean up */
+                /* Allocating failed, clean up and return the exception code */
                 IopCleanupAfterException(FileObject, Irp, EventObject, NULL);
-                Status = _SEH2_GetExceptionCode();
-                _SEH2_YIELD(return Status);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
         }
@@ -3088,7 +3042,7 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     IO_STATUS_BLOCK KernelIosb;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
@@ -3122,11 +3076,10 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get File Object */
@@ -3191,12 +3144,11 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Allocating failed, clean up */
+        /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags for this buffered + deferred I/O */
     Irp->Flags |= (IRP_BUFFERED_IO |
@@ -3251,7 +3203,7 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     PKEVENT Event = NULL;
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     IO_STATUS_BLOCK KernelIosb;
     PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
@@ -3285,11 +3237,10 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Get File Object */
@@ -3357,12 +3308,11 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Allocating failed, clean up */
+        /* Allocating failed, clean up and return the exception code */
         IopCleanupAfterException(FileObject, Irp, NULL, Event);
-        Status = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(Status)) return Status;
 
     /* Set the flags for this buffered + deferred I/O */
     Irp->Flags |= (IRP_BUFFERED_IO | IRP_DEALLOCATE_BUFFER);

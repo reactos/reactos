@@ -131,7 +131,7 @@ NtW32Call(IN ULONG RoutineIndex,
 {
     PVOID RetResult;
     ULONG RetResultLength;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     ASSERT(KeGetPreviousMode() != KernelMode);
 
     /* Enter SEH for probing */
@@ -143,36 +143,32 @@ NtW32Call(IN ULONG RoutineIndex,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Get exception code */
-        Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
 
-    /* Make sure we got success */
+    /* Call kernel function */
+    Status = KeUserModeCallback(RoutineIndex,
+                                Argument,
+                                ArgumentLength,
+                                &RetResult,
+                                &RetResultLength);
     if (NT_SUCCESS(Status))
     {
-        /* Call kernel function */
-        Status = KeUserModeCallback(RoutineIndex,
-                                    Argument,
-                                    ArgumentLength,
-                                    &RetResult,
-                                    &RetResultLength);
-        if (NT_SUCCESS(Status))
+        /* Enter SEH for write back */
+        _SEH2_TRY
         {
-            /* Enter SEH for write back */
-            _SEH2_TRY
-            {
-                /* Return results to user mode */
-                *Result = RetResult;
-                *ResultLength = RetResultLength;
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                /* Get the exception code */
-                Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
+            /* Return results to user mode */
+            *Result = RetResult;
+            *ResultLength = RetResultLength;
         }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Get the exception code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
 
     /* Return the result */

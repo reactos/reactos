@@ -258,7 +258,7 @@ NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
     PKQUEUE Queue;
     HANDLE hIoCompletionHandle;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check if this was a user-mode call */
@@ -272,13 +272,10 @@ NtCreateIoCompletion(OUT PHANDLE IoCompletionHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Fail on exception */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Create the Object */
@@ -332,7 +329,7 @@ NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
 {
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     HANDLE hIoCompletionHandle;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check if this was a user-mode call */
@@ -346,13 +343,10 @@ NtOpenIoCompletion(OUT PHANDLE IoCompletionHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Fail on exception */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Open the Object */
@@ -393,7 +387,7 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
 {
     PKQUEUE Queue;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PAGED_CODE();
 
     /* Check buffers and parameters */
@@ -457,7 +451,7 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
     PIOP_MINI_COMPLETION_PACKET Packet;
     PLIST_ENTRY ListEntry;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PIRP Irp;
     PVOID Apc, Key;
     IO_STATUS_BLOCK IoStatus;
@@ -484,13 +478,10 @@ NtRemoveIoCompletion(IN HANDLE IoCompletionHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get the exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Fail on exception */
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
     /* Open the Object */
