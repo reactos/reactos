@@ -111,7 +111,6 @@
 		<file>csr.c</file>
 		<file>err.c</file>
 		<file>init.c</file>
-		<file>usrheap.c</file>
 		<file>cursor.c</file>
 		<file>monitor.c</file>
 		<file>kbdlayout.c</file>

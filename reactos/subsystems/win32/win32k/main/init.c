@@ -26,8 +26,6 @@ NTSTATUS FASTCALL InitDcImpl(VOID);
 
 /* GLOBALS *******************************************************************/
 
-HANDLE GlobalUserHeap = NULL;
-PSECTION_OBJECT GlobalUserHeapSection = NULL;
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
 LIST_ENTRY GlobalDriverListHead;
@@ -49,11 +47,6 @@ Win32kProcessCallout(PEPROCESS Process,
     DPRINT("Win32Process %p, Create %d\n", Win32Process, Create);
     if (Create && !Win32Process)
     {
-        SIZE_T ViewSize = 0;
-        LARGE_INTEGER Offset;
-        PVOID UserBase = NULL;
-        NTSTATUS Status;
-        extern PSECTION_OBJECT GlobalUserHeapSection;
         DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
         /* Allocate one if needed */
@@ -69,28 +62,6 @@ Win32kProcessCallout(PEPROCESS Process,
         PsSetProcessWin32Process(Process, Win32Process);
         Win32Process->peProcess = Process;
         /* FIXME - unlock the process */
-
-        /* map the global heap into the process */
-        Offset.QuadPart = 0;
-        Status = MmMapViewOfSection(GlobalUserHeapSection,
-                                    PsGetCurrentProcess(),
-                                    &UserBase,
-                                    0,
-                                    0,
-                                    &Offset,
-                                    &ViewSize,
-                                    ViewUnmap,
-                                    SEC_NO_CHANGE,
-                                    PAGE_EXECUTE_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("Failed to map the global heap! 0x%x\n", Status);
-            return Status;
-        }
-        Win32Process->HeapMappings.Next = NULL;
-        Win32Process->HeapMappings.KernelMapping = (PVOID)GlobalUserHeap;
-        Win32Process->HeapMappings.UserMapping = UserBase;
-        Win32Process->HeapMappings.Count = 1;
 
         list_init(&Win32Process->Classes);
         Win32Process->handles = alloc_handle_table(Win32Process, 0);
@@ -301,7 +272,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
             PUNICODE_STRING RegistryPath)
 {
     WIN32_CALLOUTS_FPNS CalloutData;
-    PVOID GlobalUserHeapBase = NULL;
 
     DPRINT1("Win32k initialization: DO %p, RegPath %wZ\n", DriverObject,
         RegistryPath);
@@ -344,16 +314,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
     /* Initialize user implementation */
     UserInitialize();
-
-    /* Create global heap */
-    GlobalUserHeap = UserCreateHeap(&GlobalUserHeapSection,
-                                    &GlobalUserHeapBase,
-                                    1 * 1024 * 1024); /* FIXME - 1 MB for now... */
-    if (GlobalUserHeap == NULL)
-    {
-        DPRINT1("Failed to initialize the global heap!\n");
-        return STATUS_UNSUCCESSFUL;
-    }
 
     /* Init object directories implementation */
     init_directories();
