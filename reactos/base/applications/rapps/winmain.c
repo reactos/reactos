@@ -15,6 +15,21 @@ HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
 
 
+VOID
+FreeInstalledAppList(VOID)
+{
+    INT Count = ListView_GetItemCount(hListView) - 1;
+    HKEY hKey;
+
+    while (Count >= 0)
+    {
+        hKey = ListViewGetlParam(Count);
+        if (hKey)
+            RegCloseKey(hKey);
+        Count--;
+    }
+}
+
 BOOL
 CALLBACK
 EnumInstalledAppProc(INT ItemIndex, LPWSTR lpName, LPWSTR lpKeyName, LPARAM lParam)
@@ -56,7 +71,8 @@ EnumAvailableAppProc(APPLICATION_INFO Info)
     PAPPLICATION_INFO ItemInfo;
     INT Index;
 
-    if (!IsInstalledApplication(Info.szRegName))
+    if (!IsInstalledApplication(Info.szRegName, FALSE) &&
+        !IsInstalledApplication(Info.szRegName, TRUE))
     {
         ItemInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(APPLICATION_INFO));
         if (!ItemInfo) return FALSE;
@@ -98,6 +114,11 @@ UpdateApplicationsList(INT EnumType)
 
     if (EnumType == -1) EnumType = SelectedEnumType;
 
+    if (IS_INSTALLED_ENUM(SelectedEnumType))
+        FreeInstalledAppList();
+    else if (IS_AVAILABLE_ENUM(SelectedEnumType))
+        FreeAvailableAppList();
+
     if (IS_INSTALLED_ENUM(EnumType))
     {
         /* Enum installed applications and updates */
@@ -106,9 +127,6 @@ UpdateApplicationsList(INT EnumType)
     }
     else if (IS_AVAILABLE_ENUM(EnumType))
     {
-        if (IS_AVAILABLE_ENUM(SelectedEnumType))
-            FreeAvailableAppList();
-
         /* Enum availabled applications */
         EnumAvailableApplications(EnumType, EnumAvailableAppProc);
     }
@@ -608,6 +626,8 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         {
             if (IS_AVAILABLE_ENUM(SelectedEnumType))
                 FreeAvailableAppList();
+            if (IS_INSTALLED_ENUM(SelectedEnumType))
+                FreeInstalledAppList();
             if (hImageListView) ImageList_Destroy(hImageListView);
             if (hImageTreeView) ImageList_Destroy(hImageTreeView);
             PostQuitMessage(0);

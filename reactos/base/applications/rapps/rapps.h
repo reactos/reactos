@@ -80,7 +80,7 @@ BOOL EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumP
 BOOL GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString);
 BOOL ShowInstalledAppInfo(INT Index);
 BOOL UninstallApplication(INT Index, BOOL bModify);
-BOOL IsInstalledApplication(LPWSTR lpRegName);
+BOOL IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey);
 
 /* winmain.c */
 extern HWND hMainWnd;

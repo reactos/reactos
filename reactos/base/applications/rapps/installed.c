@@ -31,7 +31,7 @@ GetApplicationString(HKEY hKey, LPWSTR lpKeyName, LPWSTR lpString)
 
 
 BOOL
-IsInstalledApplication(LPWSTR lpRegName)
+IsInstalledApplication(LPWSTR lpRegName, BOOL IsUserKey)
 {
     DWORD dwSize = MAX_PATH, dwType;
     WCHAR szName[MAX_PATH];
@@ -39,7 +39,7 @@ IsInstalledApplication(LPWSTR lpRegName)
     HKEY hKey, hSubKey;
     INT ItemIndex = 0;
 
-    if (RegOpenKeyW(HKEY_LOCAL_MACHINE,
+    if (RegOpenKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
                     &hKey) != ERROR_SUCCESS)
     {
@@ -247,7 +247,6 @@ EnumInstalledApplications(INT EnumType, BOOL IsUserKey, APPENUMPROC lpEnumProc)
         ItemIndex++;
     }
 
-    RegCloseKey(hSubKey);
     RegCloseKey(hKey);
 
     return TRUE;
