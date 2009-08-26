@@ -226,6 +226,10 @@ GreCreateBitmap(IN SIZEL Size,
 VOID FASTCALL
 GreDeleteBitmap(HGDIOBJ hBitmap)
 {
+    /* Get ownership */
+    GDIOBJ_SetOwnership(hBitmap, PsGetCurrentProcess());
+
+    /* Free it */
     GDIOBJ_FreeObjByHandle(hBitmap, GDI_OBJECT_TYPE_BITMAP);
 }
 

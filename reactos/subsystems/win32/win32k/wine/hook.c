@@ -145,7 +145,7 @@ static struct hook *add_hook( struct desktop *desktop, PTHREADINFO thread, int i
 static void free_hook( struct hook *hook )
 {
     free_user_handle( hook->handle );
-    ExFreePool( hook->module );
+    if (hook->module) ExFreePool( hook->module );
     if (hook->thread)
     {
         assert( hook->thread->desktop_users > 0 );

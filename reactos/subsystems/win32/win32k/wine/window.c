@@ -1701,7 +1701,7 @@ void destroy_window( struct window *win )
     if (win->win_region) free_region( win->win_region );
     if (win->update_region) free_region( win->update_region );
     if (win->class) release_class( win->class );
-    ExFreePool( win->text );
+    if (win->text) ExFreePool( win->text );
     memset( win, 0x55, sizeof(*win) + win->nb_extra_bytes - 1 );
     ExFreePool( win );
 }
@@ -1993,7 +1993,7 @@ DECL_HANDLER(get_window_children_from_point)
     reply->count = array.count;
     len = min( get_reply_max_size((void*)req), array.count * sizeof(user_handle_t) );
     if (len) set_reply_data_ptr( (void*)req, array.handles, len );
-    else ExFreePool( array.handles );
+    else if (array.handles) ExFreePool( array.handles );
 }
 
 
