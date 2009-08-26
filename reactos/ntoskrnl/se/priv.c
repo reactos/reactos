@@ -237,7 +237,7 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
         *Dest = ExAllocatePool(PoolType,
                                BufferSize);
         
-        if (&Dest == NULL)
+        if (*Dest == NULL)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
         }
