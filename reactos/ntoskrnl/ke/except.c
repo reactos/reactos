@@ -95,7 +95,6 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
     CONTEXT LocalContext;
     EXCEPTION_RECORD LocalExceptionRecord;
     ULONG ParameterCount, Size;
-    NTSTATUS Status = STATUS_SUCCESS;
 
     /* Check if we need to probe */
     if (PreviousMode != KernelMode)
@@ -117,8 +116,7 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
                 EXCEPTION_MAXIMUM_PARAMETERS)
             {
                 /* Too large */
-                Status = STATUS_INVALID_PARAMETER;
-                _SEH2_LEAVE;
+                _SEH2_YIELD(return STATUS_INVALID_PARAMETER);
             }
 
             /* Probe the entire parameters now*/
@@ -162,8 +160,8 @@ KiRaiseException(IN PEXCEPTION_RECORD ExceptionRecord,
                         PreviousMode,
                         SearchFrames);
 
-    /* Return the status */
-    return Status;
+    /* We are done */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
