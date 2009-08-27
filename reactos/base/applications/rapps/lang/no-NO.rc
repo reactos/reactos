@@ -161,7 +161,7 @@ BEGIN
 	IDS_WELCOME_URL "http://www.reactos.org"
 	IDS_INSTALLED "Installert"
 	IDS_AVAILABLEFORINST "Tilgjengelig for installasjon"
-	IDS_UPDATES "P\Oppdateringer"
+	IDS_UPDATES "Oppdateringer"
 	IDS_APPLICATIONS "Programmer"
 	IDS_DOWNLOAD_FOLDER "Nedlastinger"
 END

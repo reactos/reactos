@@ -217,7 +217,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Start Ekstern skrivebord"
     IDS_CMT_EVENTVIEW   "Start Hendelseliste"
     IDS_CMT_MSCONFIG    "Start Systemkonfigurasjon"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_PAINT       "Start Paint"
 END
 
 STRINGTABLE
