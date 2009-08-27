@@ -30,6 +30,7 @@
 #include "lang/ro-RO.rc"
 #include "lang/sk-SK.rc"
 // cp 1251 languages
+#include "lang/bg-BG.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
 
