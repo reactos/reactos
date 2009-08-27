@@ -1022,7 +1022,11 @@ co_WinPosSetWindowPos(
          if (InsertAfterWindow != NULL)
             UserDereferenceObject(InsertAfterWindow);
          if ((HWND_TOPMOST == WinPos.hwndInsertAfter)
-             && (IntIsDesktopWindow(Window->Parent)))
+               || (0 != (Window->Wnd->ExStyle & WS_EX_TOPMOST)
+                   && NULL != Window->PrevSibling
+                   && 0 != (Window->PrevSibling->Wnd->ExStyle & WS_EX_TOPMOST))
+               || (NULL != Window->NextSibling
+                   && 0 != (Window->NextSibling->Wnd->ExStyle & WS_EX_TOPMOST)))
          {
             Window->Wnd->ExStyle |= WS_EX_TOPMOST;
          }
