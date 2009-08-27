@@ -235,18 +235,28 @@ WSPSocket(int AddressFamily,
     ourselves after every call to NtDeviceIoControlFile. This is
     because the kernel doesn't support overlapping synchronous I/O
     requests (made from multiple threads) at this time (Sep 2005) */
-    ZwCreateFile(&Sock,
-                 GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
-                 &Object,
-                 &IOSB,
-                 NULL,
-                 0,
-                 FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_IF,
-                 0,
-                 EABuffer,
-                 SizeOfEA);
+    Status = NtCreateFile(&Sock,
+                          GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
+                          &Object,
+                          &IOSB,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN_IF,
+                          0,
+                          EABuffer,
+                          SizeOfEA);
 
     HeapFree(GlobalHeap, 0, EABuffer);
+
+    if (Status != STATUS_SUCCESS)
+    {
+        AFD_DbgPrint(MIN_TRACE, ("Failed to open socket\n"));
+
+        HeapFree(GlobalHeap, 0, Socket);
+
+        return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
+    }
 
     /* Save Handle */
     Socket->Handle = (SOCKET)Sock;
