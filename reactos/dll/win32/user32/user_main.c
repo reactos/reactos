@@ -240,13 +240,6 @@ static void winstation_init(void)
     {
         handle = OpenWindowStationW( winstation ? winstation : WinSta0, FALSE, WINSTA_ALL_ACCESS );
 
-        if (!handle)
-        {
-            /* the process has no window station */
-            FIXME("A process without a window station! Creating one for it...\n");
-            handle = CreateWindowStationW( winstation ? winstation : WinSta0, 0, WINSTA_ALL_ACCESS, NULL );
-        }
-
         if (handle)
         {
             SetProcessWindowStation( handle );
