@@ -299,13 +299,18 @@ BOOLEAN AdapterDiscover() {
                     Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc =
                     socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
-                Adapter->ListenAddr.sin_family = AF_INET;
-                Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
-                Adapter->BindStatus =
-                    (bind( Adapter->DhclientInfo.rfdesc,
-                           (struct sockaddr *)&Adapter->ListenAddr,
-                           sizeof(Adapter->ListenAddr) ) == 0) ?
-                    0 : WSAGetLastError();
+
+                if (DhcpSocket != INVALID_SOCKET) {
+                    Adapter->ListenAddr.sin_family = AF_INET;
+                    Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
+                    Adapter->BindStatus =
+                        (bind( Adapter->DhclientInfo.rfdesc,
+                               (struct sockaddr *)&Adapter->ListenAddr,
+                               sizeof(Adapter->ListenAddr) ) == 0) ?
+                        0 : WSAGetLastError();
+                } else {
+                    error("socket() failed: %d\n", WSAGetLastError());
+                }
             } else {
                 Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc = DhcpSocket;
