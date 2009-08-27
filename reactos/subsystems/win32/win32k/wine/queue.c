@@ -2091,9 +2091,8 @@ DECL_HANDLER(kill_win_timer)
     }
     else
     {
-        //thread = (PTHREADINFO)grab_object( current );
         thread = (PTHREADINFO)PsGetCurrentThreadWin32Thread();
-        DPRINT1("Fixme: referencing thread object is missing!\n");
+        ObReferenceObjectByPointer(thread->peThread, 0, NULL, KernelMode);
     }
 
     if (thread->queue && (timer = find_timer( thread->queue, win, req->msg, req->id )))
