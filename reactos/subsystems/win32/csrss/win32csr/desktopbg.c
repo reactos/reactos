@@ -56,7 +56,8 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         if(GetUpdateRect(Wnd, &rc, FALSE) &&
            (hDC = BeginPaint(Wnd, &PS)))
         {
-          PaintDesktop(hDC);
+          // arwinss, commented out due to desktop flickering
+          //PaintDesktop(hDC);
           EndPaint(Wnd, &PS);
         }
         return 0;
