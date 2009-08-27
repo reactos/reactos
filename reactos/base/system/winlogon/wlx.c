@@ -1060,7 +1060,8 @@ CreateWindowStationAndDesktops(
 		ERR("WL: Failed to create Default desktop (%lu)\n", GetLastError());
 		goto cleanup;
 	}
-
+// multiple desktops commented out for arwinss development
+#if 0
 	/*
 	 * Create the winlogon desktop
 	 */
@@ -1096,6 +1097,7 @@ CreateWindowStationAndDesktops(
 	/* FIXME: big HACK */
 	CloseDesktop(Session->WinlogonDesktop);
 	CloseDesktop(Session->ScreenSaverDesktop);
+#endif
 	Session->WinlogonDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
 	Session->ScreenSaverDesktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
 
