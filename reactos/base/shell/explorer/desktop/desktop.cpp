@@ -298,7 +298,8 @@ LRESULT BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 void BackgroundWindow::DrawDesktopBkgnd(HDC hdc)
 {
-	PaintDesktop(hdc);
+	// let csrss draw the background. A special hack for arwinss and wine
+	//PaintDesktop(hdc);
 
 /* special solid background
 	HBRUSH bkgndBrush = CreateSolidBrush(RGB(0,32,160));	// dark blue
@@ -324,8 +325,8 @@ DesktopWindow::~DesktopWindow()
 HWND DesktopWindow::Create()
 {
 	static IconWindowClass wcDesktop(TEXT("Progman"), IDI_REACTOS, CS_DBLCLKS);
-	/* (disabled because of small ugly temporary artefacts when hiding start menu)
-	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1); */
+	/* (disabled because of small ugly temporary artefacts when hiding start menu)*/
+	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
 
 	int width = GetSystemMetrics(SM_CXSCREEN);
 	int height = GetSystemMetrics(SM_CYSCREEN);
