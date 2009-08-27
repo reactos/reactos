@@ -238,7 +238,15 @@ static void winstation_init(void)
     /* set winstation if explicitly specified, or if we don't have one yet */
     if (buffer || !GetProcessWindowStation())
     {
-        handle = CreateWindowStationW( winstation ? winstation : WinSta0, 0, WINSTA_ALL_ACCESS, NULL );
+        handle = OpenWindowStationW( winstation ? winstation : WinSta0, FALSE, WINSTA_ALL_ACCESS );
+
+        if (!handle)
+        {
+            /* the process has no window station */
+            FIXME("A process without a window station! Creating one for it...\n");
+            handle = CreateWindowStationW( winstation ? winstation : WinSta0, 0, WINSTA_ALL_ACCESS, NULL );
+        }
+
         if (handle)
         {
             SetProcessWindowStation( handle );
@@ -255,8 +263,9 @@ static void winstation_init(void)
     }
     if (buffer || !GetThreadDesktop( GetCurrentThreadId() ))
     {
-        handle = CreateDesktopW( desktop ? desktop : get_default_desktop(),
-                                 NULL, NULL, 0, DESKTOP_ALL_ACCESS, NULL );
+        handle = OpenDesktopW(desktop ? desktop : get_default_desktop(),
+                            0, FALSE, DESKTOP_ALL_ACCESS);
+
         if (handle) SetThreadDesktop( handle );
     }
     HeapFree( GetProcessHeap(), 0, buffer );
