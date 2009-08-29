@@ -1,57 +1,61 @@
+/*
+ * Copyright (C) 2002 Alexandre Julliard
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
 
 #ifndef __DSHOW_INCLUDED__
 #define __DSHOW_INCLUDED__
 
-#ifdef  _MSC_VER
-  #pragma warning(disable:4100)
-  #pragma warning(disable:4201)
-  #pragma warning(disable:4511)
-  #pragma warning(disable:4512)
-  #pragma warning(disable:4514)
-  #if _MSC_VER>=1100
-    #define AM_NOVTABLE __declspec(novtable)
-  #else
-    #define AM_NOVTABLE
-  #endif
-#endif
+#define AM_NOVTABLE
 
-#include <windows.h>
-#include <windowsx.h>
+#ifndef __WINESRC__
+# include <windows.h>
+# include <windowsx.h>
+#else
+# include <windef.h>
+# include <wingdi.h>
+# include <objbase.h>
+#endif
 #include <olectl.h>
 #include <ddraw.h>
 #include <mmsystem.h>
-/*
-#ifndef NO_DSHOW_STRSAFE
-  #define NO_SHLWAPI_STRFCNS
-#include <strsafe.h>
-#endif
-*/
+/* FIXME: #include <strsafe.h>*/
+
 #ifndef NUMELMS
-   #define NUMELMS(aa) (sizeof(aa)/sizeof((aa)[0]))
+#define NUMELMS(array) (sizeof(array)/sizeof((array)[0]))
 #endif
 
 #include <strmif.h>
 #include <amvideo.h>
-#include <amaudio.h>
+#ifdef DSHOW_USE_AMAUDIO
+/* FIXME: #include <amaudio.h>*/
+#endif
 #include <control.h>
 #include <evcode.h>
 #include <uuids.h>
 #include <errors.h>
-#include <edevdefs.h>
+/* FIXME: #include <edevdefs.h> */
 #include <audevcod.h>
-#include <dvdevcod.h>
-
-#ifndef InterlockedExchangePointer
-  #define InterlockedExchangePointer(Target, Value) (PVOID)InterlockedExchange((PLONG)(Target), (LONG)(Value))
-#endif
+/* FIXME: #include <dvdevcod.h> */
 
 #ifndef OATRUE
-  #define OATRUE (-1)
+#define OATRUE (-1)
 #endif
-
 #ifndef OAFALSE
-  #define OAFALSE (0)
+#define OAFALSE (0)
 #endif
 
-#endif
-
+#endif /* __DSHOW_INCLUDED__ */

@@ -19,12 +19,6 @@
 #ifndef __WINE_D3D_H
 #define __WINE_D3D_H
 
-#ifndef DIRECT3D_VERSION
-#define DIRECT3D_VERSION         0x0700
-#endif
-
-#if (DIRECT3D_VERSION < 0x0800)
-
 #include <stdlib.h>
 
 #define COM_NO_WINDOWS_H
@@ -208,7 +202,6 @@ typedef DWORD D3DVIEWPORTHANDLE, *LPD3DVIEWPORTHANDLE;
 /*****************************************************************************
  * IDirect3D interface
  */
-#undef INTERFACE
 #define INTERFACE IDirect3D
 DECLARE_INTERFACE_(IDirect3D,IUnknown)
 {
@@ -1534,5 +1527,4 @@ DECLARE_INTERFACE_(IDirect3DVertexBuffer7,IUnknown)
 #define IDirect3DVertexBuffer7_ProcessVerticesStrided(p,a,b,c,d,e,f,g) (p)->ProcessVerticesStrided(a,b,c,d,e,f,g)
 #endif
 
-#endif /* (DIRECT3D_VERSION < 0x0800) */
 #endif /* __WINE_D3D_H */

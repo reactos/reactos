@@ -20,7 +20,7 @@
 #define __D3DRM_H__
 
 #include <ddraw.h>
-/* #include <d3drmobj.h> */
+#include <d3drmobj.h>
 
 
 /* Direct3DRM Object CLSID */

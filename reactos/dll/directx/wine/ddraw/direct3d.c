@@ -1324,7 +1324,7 @@ IDirect3DImpl_GetCaps(IWineD3D *WineD3D,
     Desc7->dwStencilCaps &= (
         D3DSTENCILCAPS_KEEP              | D3DSTENCILCAPS_ZERO                 | D3DSTENCILCAPS_REPLACE              |
         D3DSTENCILCAPS_INCRSAT           | D3DSTENCILCAPS_DECRSAT              | D3DSTENCILCAPS_INVERT               |
-        D3DSTENCILCAPS_INCR              | D3DSTENCILCAPS_DECR                 | D3DSTENCILCAPS_TWOSIDED);
+        D3DSTENCILCAPS_INCR              | D3DSTENCILCAPS_DECR);
 
     /* FVF caps ?*/
 

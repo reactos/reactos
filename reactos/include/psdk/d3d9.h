@@ -57,16 +57,8 @@
 /*****************************************************************************
  * #defines and error codes
  */
-#ifdef D3D_DEBUG_INFO
-#define D3D_SDK_VERSION                         (32 | 0x80000000L)
-#define D3D9b_SDK_VERSION                       (31 | 0x80000000L)
-#else
 #define D3D_SDK_VERSION                         32
-#define D3D9b_SDK_VERSION                       31
-#endif
-
 #define D3DADAPTER_DEFAULT                      0
-#define D3DENUM_WHQL_LEVEL                      0x00000002L
 #define D3DENUM_NO_WHQL_LEVEL                   0x00000002L
 #define D3DPRESENT_BACK_BUFFERS_MAX             3L
 #define D3DSGR_NO_CALIBRATION                   0x00000000L
@@ -132,6 +124,9 @@ typedef struct IDirect3DVolume9 *LPDIRECT3DVOLUME9, *PDIRECT3DVOLUME9;
 DEFINE_GUID(IID_IDirect3DSwapChain9,          0x794950f2, 0xadfc, 0x458a, 0x90, 0x5e, 0x10, 0xa1, 0xb, 0xb, 0x50, 0x3b);
 typedef struct IDirect3DSwapChain9 *LPDIRECT3DSWAPCHAIN9, *PDIRECT3DSWAPCHAIN9;
 
+DEFINE_GUID(IID_IDirect3DSwapChain9Ex,        0x91886caf, 0x1c3d, 0x4d2e, 0xa0, 0xab, 0x3e, 0x4c, 0x7d, 0x8d, 0x33, 0x3);
+typedef struct IDirect3DSwapChain9Ex *LPDIRECT3DSWAPCHAIN9EX, *PDIRECT3DSWAPCHAIN9EX;
+
 DEFINE_GUID(IID_IDirect3DSurface9,            0xcfbaf3a, 0x9ff6, 0x429a, 0x99, 0xb3, 0xa2, 0x79, 0x6a, 0xf8, 0xb8, 0x9b);
 typedef struct IDirect3DSurface9 *LPDIRECT3DSURFACE9, *PDIRECT3DSURFACE9;
 
@@ -190,11 +185,6 @@ DECLARE_INTERFACE_(IDirect3D9,IUnknown)
     STDMETHOD(GetDeviceCaps)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps) PURE;
     STDMETHOD_(HMONITOR, GetAdapterMonitor)(THIS_ UINT Adapter) PURE;
     STDMETHOD(CreateDevice)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, struct IDirect3DDevice9** ppReturnedDeviceInterface) PURE;
-
-#ifdef D3D_DEBUG_INFO
-    LPCWSTR Version;
-#endif
-
 };
 #undef INTERFACE
 
@@ -251,7 +241,15 @@ DECLARE_INTERFACE_(IDirect3D9Ex,IDirect3D9)
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IDirect3D9 methods ***/
+
+    /* Note: Microsoft's d3d9.h does not declare IDirect3D9Ex::RegisterSoftwareDevice . This would mean that
+     * the offsets of the other methods in the Vtable change too. This is wrong. In Microsoft's
+     * d3d9.dll, the offsets for the other functions are still compatible with IDirect3D9.
+     * This is probably because even in MS's header IDirect3D9Ex inherits from IDirect3D9, which makes the
+     * C++ inferface compatible, and nobody uses the C interface in Windows world.
+     */
     STDMETHOD(RegisterSoftwareDevice)(THIS_ void* pInitializeFunction) PURE;
+
     STDMETHOD_(UINT, GetAdapterCount)(THIS) PURE;
     STDMETHOD(GetAdapterIdentifier)(THIS_ UINT Adapter, DWORD Flags, D3DADAPTER_IDENTIFIER9* pIdentifier) PURE;
     STDMETHOD_(UINT, GetAdapterModeCount)(THIS_ UINT Adapter, D3DFORMAT Format) PURE;
@@ -2004,7 +2002,6 @@ DECLARE_INTERFACE_(IDirect3DDevice9Ex,IDirect3DDevice9)
 #define IDirect3DDevice9Ex_ResetEx(p,a,b)                                (p)->ResetEx(a,b)
 #define IDirect3DDevice9Ex_GetDisplayModeEx(p,a,b,c)                     (p)->GetDisplayModeEx(a,b,c)
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {

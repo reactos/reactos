@@ -693,7 +693,7 @@ IDirectDrawImpl_GetCaps(IDirectDraw7 *iface,
     DDCAPS caps;
     WINED3DCAPS winecaps;
     HRESULT hr;
-    DDSCAPS2 ddscaps = {0, 0, 0, {0}};
+    DDSCAPS2 ddscaps = {0, 0, 0, 0};
     TRACE("(%p)->(%p,%p)\n", This, DriverCaps, HELCaps);
 
     /* One structure must be != NULL */
@@ -1664,10 +1664,8 @@ IDirectDrawImpl_RecreateSurfacesCallback(IDirectDrawSurface7 *surf,
 
     WINED3DSURFACE_DESC     Desc;
     WINED3DFORMAT           Format;
-    WINED3DRESOURCETYPE     Type;
     DWORD                   Usage;
     WINED3DPOOL             Pool;
-    UINT                    Size;
 
     WINED3DMULTISAMPLE_TYPE MultiSampleType;
     DWORD                   MultiSampleQuality;
@@ -1702,18 +1700,16 @@ IDirectDrawImpl_RecreateSurfacesCallback(IDirectDrawSurface7 *surf,
     IWineD3DSurface_GetClipper(wineD3DSurface, &clipper);
 
     /* Get the surface properties */
-    Desc.Format = &Format;
-    Desc.Type = &Type;
-    Desc.Usage = &Usage;
-    Desc.Pool = &Pool;
-    Desc.Size = &Size;
-    Desc.MultiSampleType = &MultiSampleType;
-    Desc.MultiSampleQuality = &MultiSampleQuality;
-    Desc.Width = &Width;
-    Desc.Height = &Height;
-
     hr = IWineD3DSurface_GetDesc(wineD3DSurface, &Desc);
     if(hr != D3D_OK) return hr;
+
+    Format = Desc.format;
+    Usage = Desc.usage;
+    Pool = Desc.pool;
+    MultiSampleType = Desc.multisample_type;
+    MultiSampleQuality = Desc.multisample_quality;
+    Width = Desc.width;
+    Height = Desc.height;
 
     if(swapchain) {
         /* If there's a swapchain, it owns the IParent interface. Create a new one for the
@@ -1729,7 +1725,7 @@ IDirectDrawImpl_RecreateSurfacesCallback(IDirectDrawSurface7 *surf,
     /* Create the new surface */
     hr = IWineD3DDevice_CreateSurface(This->wineD3DDevice, Width, Height, Format,
             TRUE /* Lockable */, FALSE /* Discard */, surfImpl->mipmap_level, &surfImpl->WineD3DSurface,
-            Type, Usage, Pool, MultiSampleType, MultiSampleQuality, This->ImplType, Parent);
+            Usage, Pool, MultiSampleType, MultiSampleQuality, This->ImplType, Parent);
 
     if(hr != D3D_OK)
         return hr;
@@ -1840,21 +1836,14 @@ IDirectDrawImpl_CreateNewSurface(IDirectDrawImpl *This,
                                  UINT level)
 {
     HRESULT hr;
-    UINT Width = 0, Height = 0;
+    UINT Width, Height;
     WINED3DFORMAT Format = WINED3DFMT_UNKNOWN;
-    WINED3DRESOURCETYPE ResType = WINED3DRTYPE_SURFACE;
     DWORD Usage = 0;
     WINED3DSURFTYPE ImplType = This->ImplType;
     WINED3DSURFACE_DESC Desc;
     IUnknown *Parent;
     IParentImpl *parImpl = NULL;
     WINED3DPOOL Pool = WINED3DPOOL_DEFAULT;
-
-    /* Dummies for GetDesc */
-    WINED3DPOOL dummy_d3dpool;
-    WINED3DMULTISAMPLE_TYPE dummy_mst;
-    UINT dummy_uint;
-    DWORD dummy_dword;
 
     if (TRACE_ON(ddraw))
     {
@@ -2026,8 +2015,8 @@ IDirectDrawImpl_CreateNewSurface(IDirectDrawImpl *This,
 
     /* Now create the WineD3D Surface */
     hr = IWineD3DDevice_CreateSurface(This->wineD3DDevice, pDDSD->dwWidth, pDDSD->dwHeight, Format,
-            TRUE /* Lockable */, FALSE /* Discard */, level, &(*ppSurf)->WineD3DSurface, ResType, Usage,
-            Pool, WINED3DMULTISAMPLE_NONE, 0 /* MultiSampleQuality */, ImplType, Parent);
+            TRUE /* Lockable */, FALSE /* Discard */, level, &(*ppSurf)->WineD3DSurface,
+            Usage, Pool, WINED3DMULTISAMPLE_NONE, 0 /* MultiSampleQuality */, ImplType, Parent);
 
     if(hr != D3D_OK)
     {
@@ -2058,16 +2047,6 @@ IDirectDrawImpl_CreateNewSurface(IDirectDrawImpl *This,
      * Don't use the Format choosen above, WineD3D might have
      * changed it
      */
-    Desc.Format = &Format;
-    Desc.Type = &ResType;
-    Desc.Usage = &Usage;
-    Desc.Pool = &dummy_d3dpool;
-    Desc.Size = &dummy_uint;
-    Desc.MultiSampleType = &dummy_mst;
-    Desc.MultiSampleQuality = &dummy_dword;
-    Desc.Width = &Width;
-    Desc.Height = &Height;
-
     (*ppSurf)->surface_desc.dwFlags |= DDSD_PIXELFORMAT;
     hr = IWineD3DSurface_GetDesc((*ppSurf)->WineD3DSurface, &Desc);
     if(hr != D3D_OK)
@@ -2076,6 +2055,10 @@ IDirectDrawImpl_CreateNewSurface(IDirectDrawImpl *This,
         IDirectDrawSurface7_Release( (IDirectDrawSurface7 *) *ppSurf);
         return hr;
     }
+
+    Format = Desc.format;
+    Width = Desc.width;
+    Height = Desc.height;
 
     if(Format == WINED3DFMT_UNKNOWN)
     {
@@ -2571,7 +2554,7 @@ IDirectDrawImpl_CreateSurface(IDirectDraw7 *iface,
      */
     if(DDSD->dwFlags & DDSD_BACKBUFFERCOUNT)
     {
-        extra_surfaces = DDSD->u5.dwBackBufferCount;
+        extra_surfaces = DDSD->dwBackBufferCount;
         desc2.ddsCaps.dwCaps &= ~DDSCAPS_FRONTBUFFER; /* It's not a front buffer */
         desc2.ddsCaps.dwCaps |= DDSCAPS_BACKBUFFER;
     }
@@ -2784,7 +2767,7 @@ IDirectDrawImpl_DDSD_Match(const DDSURFACEDESC2* requested,
     static const struct compare_info compare[] =
     {
         CMP(ALPHABITDEPTH, dwAlphaBitDepth),
-        CMP(BACKBUFFERCOUNT, u5.dwBackBufferCount),
+        CMP(BACKBUFFERCOUNT, dwBackBufferCount),
         CMP(CAPS, ddsCaps),
         CMP(CKDESTBLT, ddckCKDestBlt),
         CMP(CKDESTOVERLAY, u3 /* ddckCKDestOverlay */),
@@ -2938,7 +2921,7 @@ static HRESULT IDirectDrawImpl_CreateGDISwapChain(IDirectDrawImpl *This,
     presentation_parameters.BackBufferWidth                 = primary->surface_desc.dwWidth;
     presentation_parameters.BackBufferHeight                = primary->surface_desc.dwHeight;
     presentation_parameters.BackBufferFormat                = PixelFormat_DD2WineD3D(&primary->surface_desc.u4.ddpfPixelFormat);
-    presentation_parameters.BackBufferCount                 = (primary->surface_desc.dwFlags & DDSD_BACKBUFFERCOUNT) ? primary->surface_desc.u5.dwBackBufferCount : 0;
+    presentation_parameters.BackBufferCount                 = (primary->surface_desc.dwFlags & DDSD_BACKBUFFERCOUNT) ? primary->surface_desc.dwBackBufferCount : 0;
     presentation_parameters.MultiSampleType                 = WINED3DMULTISAMPLE_NONE;
     presentation_parameters.MultiSampleQuality              = 0;
     presentation_parameters.SwapEffect                      = WINED3DSWAPEFFECT_FLIP;
@@ -3013,7 +2996,7 @@ IDirectDrawImpl_AttachD3DDevice(IDirectDrawImpl *This,
     localParameters.BackBufferWidth                 = primary->surface_desc.dwWidth;
     localParameters.BackBufferHeight                = primary->surface_desc.dwHeight;
     localParameters.BackBufferFormat                = PixelFormat_DD2WineD3D(&primary->surface_desc.u4.ddpfPixelFormat);
-    localParameters.BackBufferCount                 = (primary->surface_desc.dwFlags & DDSD_BACKBUFFERCOUNT) ? primary->surface_desc.u5.dwBackBufferCount : 0;
+    localParameters.BackBufferCount                 = (primary->surface_desc.dwFlags & DDSD_BACKBUFFERCOUNT) ? primary->surface_desc.dwBackBufferCount : 0;
     localParameters.MultiSampleType                 = WINED3DMULTISAMPLE_NONE;
     localParameters.MultiSampleQuality              = 0;
     localParameters.SwapEffect                      = WINED3DSWAPEFFECT_COPY;

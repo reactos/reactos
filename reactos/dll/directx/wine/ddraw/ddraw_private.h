@@ -100,6 +100,7 @@ struct IDirectDrawImpl
     /* IUnknown fields */
     const IDirectDraw7Vtbl *lpVtbl;
     const IDirectDraw4Vtbl *IDirectDraw4_vtbl;
+    const IDirectDraw3Vtbl *IDirectDraw3_vtbl;
     const IDirectDraw2Vtbl *IDirectDraw2_vtbl;
     const IDirectDrawVtbl *IDirectDraw_vtbl;
     const IDirect3D7Vtbl *IDirect3D7_vtbl;
@@ -168,6 +169,7 @@ struct IDirectDrawImpl
 /* Declare the VTables. They can be found ddraw.c */
 extern const IDirectDraw7Vtbl IDirectDraw7_Vtbl;
 extern const IDirectDraw4Vtbl IDirectDraw4_Vtbl;
+extern const IDirectDraw3Vtbl IDirectDraw3_Vtbl;
 extern const IDirectDraw2Vtbl IDirectDraw2_Vtbl;
 extern const IDirectDrawVtbl  IDirectDraw1_Vtbl;
 extern const IWineD3DDeviceParentVtbl ddraw_wined3d_device_parent_vtbl;
@@ -233,6 +235,11 @@ static inline IDirectDrawImpl *ddraw_from_ddraw1(IDirectDraw *iface)
 static inline IDirectDrawImpl *ddraw_from_ddraw2(IDirectDraw2 *iface)
 {
     return (IDirectDrawImpl *)((char*)iface - FIELD_OFFSET(IDirectDrawImpl, IDirectDraw2_vtbl));
+}
+
+static inline IDirectDrawImpl *ddraw_from_ddraw3(IDirectDraw3 *iface)
+{
+    return (IDirectDrawImpl *)((char*)iface - FIELD_OFFSET(IDirectDrawImpl, IDirectDraw3_vtbl));
 }
 
 static inline IDirectDrawImpl *ddraw_from_ddraw4(IDirectDraw4 *iface)

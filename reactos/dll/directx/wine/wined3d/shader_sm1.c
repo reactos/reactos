@@ -349,6 +349,7 @@ static void shader_parse_src_param(DWORD param, const struct wined3d_shader_src_
     src->reg.type = ((param & WINED3DSP_REGTYPE_MASK) >> WINED3DSP_REGTYPE_SHIFT)
             | ((param & WINED3DSP_REGTYPE_MASK2) >> WINED3DSP_REGTYPE_SHIFT2);
     src->reg.idx = param & WINED3DSP_REGNUM_MASK;
+    src->reg.array_idx = ~0U;
     src->swizzle = (param & WINED3DSP_SWIZZLE_MASK) >> WINED3DSP_SWIZZLE_SHIFT;
     src->modifiers = (param & WINED3DSP_SRCMOD_MASK) >> WINED3DSP_SRCMOD_SHIFT;
     src->reg.rel_addr = rel_addr;
@@ -360,6 +361,7 @@ static void shader_parse_dst_param(DWORD param, const struct wined3d_shader_src_
     dst->reg.type = ((param & WINED3DSP_REGTYPE_MASK) >> WINED3DSP_REGTYPE_SHIFT)
             | ((param & WINED3DSP_REGTYPE_MASK2) >> WINED3DSP_REGTYPE_SHIFT2);
     dst->reg.idx = param & WINED3DSP_REGNUM_MASK;
+    dst->reg.array_idx = ~0U;
     dst->write_mask = (param & WINED3D_SM1_WRITEMASK_MASK) >> WINED3D_SM1_WRITEMASK_SHIFT;
     dst->modifiers = (param & WINED3DSP_DSTMOD_MASK) >> WINED3DSP_DSTMOD_SHIFT;
     dst->shift = (param & WINED3DSP_DSTSHIFT_MASK) >> WINED3DSP_DSTSHIFT_SHIFT;

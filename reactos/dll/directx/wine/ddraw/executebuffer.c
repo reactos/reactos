@@ -227,14 +227,14 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
                     } else if(lpDevice->Handles[ci->u2.dwArg[0] - 1].type != DDrawHandle_Matrix) {
                         ERR("Handle %d is not a matrix handle\n", ci->u2.dwArg[0]);
                     } else {
-                        if(ci->u1.drstRenderStateType == D3DTRANSFORMSTATE_WORLD)
+                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_WORLD)
                             lpDevice->world = ci->u2.dwArg[0];
-                        if(ci->u1.drstRenderStateType == D3DTRANSFORMSTATE_VIEW)
+                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_VIEW)
                             lpDevice->view = ci->u2.dwArg[0];
-                        if(ci->u1.drstRenderStateType == D3DTRANSFORMSTATE_PROJECTION)
+                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_PROJECTION)
                             lpDevice->proj = ci->u2.dwArg[0];
                         IDirect3DDevice7_SetTransform((IDirect3DDevice7 *)lpDevice,
-                                ci->u1.drstRenderStateType, (LPD3DMATRIX)lpDevice->Handles[ci->u2.dwArg[0] - 1].ptr);
+                                ci->u1.dtstTransformStateType, (LPD3DMATRIX)lpDevice->Handles[ci->u2.dwArg[0] - 1].ptr);
                     }
 		    instr += size;
 		}
@@ -249,7 +249,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
 		    TRACE("(%08x,%08x)\n", ci->u1.dlstLightStateType, ci->u2.dwArg[0]);
 
-		    if (!ci->u1.dlstLightStateType && (ci->u1.dlstLightStateType > D3DLIGHTSTATE_COLORVERTEX))
+		    if (!ci->u1.dlstLightStateType || (ci->u1.dlstLightStateType > D3DLIGHTSTATE_COLORVERTEX))
 			ERR("Unexpected Light State Type\n");
 		    else if (ci->u1.dlstLightStateType == D3DLIGHTSTATE_MATERIAL /* 1 */) {
 			DWORD matHandle = ci->u2.dwArg[0];

@@ -174,6 +174,7 @@ DDRAW_Create(const GUID *guid,
     This->lpVtbl = &IDirectDraw7_Vtbl;
     This->IDirectDraw_vtbl = &IDirectDraw1_Vtbl;
     This->IDirectDraw2_vtbl = &IDirectDraw2_Vtbl;
+    This->IDirectDraw3_vtbl = &IDirectDraw3_Vtbl;
     This->IDirectDraw4_vtbl = &IDirectDraw4_Vtbl;
     This->IDirect3D_vtbl = &IDirect3D1_Vtbl;
     This->IDirect3D2_vtbl = &IDirect3D2_Vtbl;
@@ -899,6 +900,7 @@ DllMain(HINSTANCE hInstDLL,
                 /* Add references to each interface to avoid freeing them unexpectedly */
                 IDirectDraw_AddRef((IDirectDraw *)&ddraw->IDirectDraw_vtbl);
                 IDirectDraw2_AddRef((IDirectDraw2 *)&ddraw->IDirectDraw2_vtbl);
+                IDirectDraw3_AddRef((IDirectDraw3 *)&ddraw->IDirectDraw3_vtbl);
                 IDirectDraw4_AddRef((IDirectDraw4 *)&ddraw->IDirectDraw4_vtbl);
                 IDirectDraw7_AddRef((IDirectDraw7 *)ddraw);
 
@@ -934,6 +936,7 @@ DllMain(HINSTANCE hInstDLL,
                     */
                 while(IDirectDraw_Release((IDirectDraw *)&ddraw->IDirectDraw_vtbl));
                 while(IDirectDraw2_Release((IDirectDraw2 *)&ddraw->IDirectDraw2_vtbl));
+                while(IDirectDraw3_Release((IDirectDraw3 *)&ddraw->IDirectDraw3_vtbl));
                 while(IDirectDraw4_Release((IDirectDraw4 *)&ddraw->IDirectDraw4_vtbl));
                 while(IDirectDraw7_Release((IDirectDraw7 *)ddraw));
             }
