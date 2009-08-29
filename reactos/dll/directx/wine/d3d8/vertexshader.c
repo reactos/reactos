@@ -59,9 +59,9 @@ static ULONG WINAPI IDirect3DVertexShader8Impl_Release(IDirect3DVertexShader8 *i
         IDirect3DVertexDeclaration8_Release(This->vertex_declaration);
         if (This->wineD3DVertexShader)
         {
-            wined3d_mutex_lock();
+            EnterCriticalSection(&d3d8_cs);
             IWineD3DVertexShader_Release(This->wineD3DVertexShader);
-            wined3d_mutex_unlock();
+            LeaveCriticalSection(&d3d8_cs);
         }
         HeapFree(GetProcessHeap(), 0, This);
     }

@@ -477,14 +477,14 @@ IDirectDrawSurfaceImpl_GetAttachedSurface(IDirectDrawSurface7 *iface,
         our_caps.dwCaps = Caps->dwCaps;
         our_caps.dwCaps2 = 0;
         our_caps.dwCaps3 = 0;
-        our_caps.dwCaps4 = 0;
+        our_caps.u1.dwCaps4 = 0;
     }
     else
     {
         our_caps = *Caps;
     }
 
-    TRACE("(%p): Looking for caps: %x,%x,%x,%x\n", This, our_caps.dwCaps, our_caps.dwCaps2, our_caps.dwCaps3, our_caps.dwCaps4); /* FIXME: Better debugging */
+    TRACE("(%p): Looking for caps: %x,%x,%x,%x\n", This, our_caps.dwCaps, our_caps.dwCaps2, our_caps.dwCaps3, our_caps.u1.dwCaps4); /* FIXME: Better debugging */
 
     for(i = 0; i < MAX_COMPLEX_ATTACHED; i++)
     {
@@ -497,7 +497,7 @@ IDirectDrawSurfaceImpl_GetAttachedSurface(IDirectDrawSurface7 *iface,
                    surf->surface_desc.ddsCaps.dwCaps,
                    surf->surface_desc.ddsCaps.dwCaps2,
                    surf->surface_desc.ddsCaps.dwCaps3,
-                   surf->surface_desc.ddsCaps.dwCaps4);
+                   surf->surface_desc.ddsCaps.u1.dwCaps4);
         }
 
         if (((surf->surface_desc.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
@@ -529,7 +529,7 @@ IDirectDrawSurfaceImpl_GetAttachedSurface(IDirectDrawSurface7 *iface,
                    surf->surface_desc.ddsCaps.dwCaps,
                    surf->surface_desc.ddsCaps.dwCaps2,
                    surf->surface_desc.ddsCaps.dwCaps3,
-                   surf->surface_desc.ddsCaps.dwCaps4);
+                   surf->surface_desc.ddsCaps.u1.dwCaps4);
         }
 
         if (((surf->surface_desc.ddsCaps.dwCaps & our_caps.dwCaps) == our_caps.dwCaps) &&
@@ -2577,7 +2577,7 @@ IDirectDrawSurfaceImpl_SetPalette(IDirectDrawSurface7 *iface,
     if(This->surface_desc.ddsCaps.dwCaps & DDSCAPS_FRONTBUFFER)
     {
         /* For primary surfaces the tree is just a list, so the simpler scheme fits too */
-        DDSCAPS2 caps2 = { DDSCAPS_PRIMARYSURFACE, 0, 0, 0 };
+        DDSCAPS2 caps2 = { DDSCAPS_PRIMARYSURFACE, 0, 0, {0} };
 
         surf = This;
         while(1)

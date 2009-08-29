@@ -58,10 +58,9 @@ static ULONG WINAPI IDirect3DStateBlock8Impl_Release(IDirect3DStateBlock8 *iface
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        wined3d_mutex_lock();
+        EnterCriticalSection(&d3d8_cs);
         IWineD3DStateBlock_Release(This->wineD3DStateBlock);
-        wined3d_mutex_unlock();
-
+        LeaveCriticalSection(&d3d8_cs);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -75,14 +74,16 @@ static HRESULT WINAPI IDirect3DStateBlock8Impl_GetDevice(IDirect3DStateBlock8 *i
 
     TRACE("(%p) Relay\n", This);
 
-    wined3d_mutex_lock();
+    EnterCriticalSection(&d3d8_cs);
+
     hr = IWineD3DStateBlock_GetDevice(This->wineD3DStateBlock, &wined3d_device);
     if (SUCCEEDED(hr))
     {
         IWineD3DDevice_GetParent(wined3d_device, (IUnknown **)ppDevice);
         IWineD3DDevice_Release(wined3d_device);
     }
-    wined3d_mutex_unlock();
+
+    LeaveCriticalSection(&d3d8_cs);
 
     return hr;
 }
@@ -93,9 +94,11 @@ static HRESULT WINAPI IDirect3DStateBlock8Impl_Capture(IDirect3DStateBlock8 *ifa
 
     TRACE("(%p) Relay\n", This);
 
-    wined3d_mutex_lock();
+    EnterCriticalSection(&d3d8_cs);
+
     hr = IWineD3DStateBlock_Capture(This->wineD3DStateBlock);
-    wined3d_mutex_unlock();
+
+    LeaveCriticalSection(&d3d8_cs);
 
     return hr;
 }
@@ -106,9 +109,11 @@ static HRESULT WINAPI IDirect3DStateBlock8Impl_Apply(IDirect3DStateBlock8 *iface
 
     TRACE("(%p) Relay\n", This);
 
-    wined3d_mutex_lock();
+    EnterCriticalSection(&d3d8_cs);
+
     hr = IWineD3DStateBlock_Apply(This->wineD3DStateBlock);
-    wined3d_mutex_unlock();
+
+    LeaveCriticalSection(&d3d8_cs);
 
     return hr;
 }

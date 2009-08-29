@@ -26,12 +26,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
-HRESULT resource_init(IWineD3DResource *iface, WINED3DRESOURCETYPE resource_type,
+HRESULT resource_init(struct IWineD3DResourceClass *resource, WINED3DRESOURCETYPE resource_type,
         IWineD3DDeviceImpl *device, UINT size, DWORD usage, const struct GlPixelFormatDesc *format_desc,
         WINED3DPOOL pool, IUnknown *parent)
 {
-    struct IWineD3DResourceClass *resource = &((IWineD3DResourceImpl *)iface)->resource;
-
     resource->wineD3DDevice = device;
     resource->parent = parent;
     resource->resourceType = resource_type;
@@ -70,8 +68,6 @@ HRESULT resource_init(IWineD3DResource *iface, WINED3DRESOURCETYPE resource_type
         WineD3DAdapterChangeGLRam(device, size);
     }
 
-    device_resource_add(device, iface);
-
     return WINED3D_OK;
 }
 
@@ -100,7 +96,10 @@ void resource_cleanup(IWineD3DResource *iface)
     This->resource.allocatedMemory = 0;
     This->resource.heapMemory = 0;
 
-    if (This->resource.wineD3DDevice) device_resource_released(This->resource.wineD3DDevice, iface);
+    if (This->resource.wineD3DDevice != NULL) {
+        IWineD3DDevice_ResourceReleased((IWineD3DDevice *)This->resource.wineD3DDevice, iface);
+    }/* NOTE: this is not really an error for system memory resources */
+    return;
 }
 
 HRESULT resource_get_device(IWineD3DResource *iface, IWineD3DDevice** ppDevice)

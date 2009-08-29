@@ -64,6 +64,7 @@ typedef [v1_enum] enum {
 	RenderData = 2
 } OUTPUT_STATE;
 
+/*
 [
 object,
 uuid(7DB01C96-C0C3-11d0-8FF1-00C04FD9189D),
@@ -80,6 +81,7 @@ interface IDirectShowStream : IDispatch
 	[propget, id(3), helpstring("property Audio")] HRESULT Audio([out, retval] OUTPUT_STATE *pVal);
 	[propput, id(3), helpstring("propetry Audio")] HRESULT Audio([in] OUTPUT_STATE newVal);
 };
+*/
 
 [
 object,
@@ -91,7 +93,7 @@ interface IAMMultiMediaStream : IMultiMediaStream
 	HRESULT Initialize(
 		[in] STREAM_TYPE StreamType,
 		[in] DWORD dwFlags,
-		[in] IGraphBuilder *pFilterGraph);
+		[in, optional] IGraphBuilder *pFilterGraph);
 
 	HRESULT GetFilterGraph(
 		[out] IGraphBuilder **ppGraphBuilder);
@@ -100,10 +102,10 @@ interface IAMMultiMediaStream : IMultiMediaStream
 		[out] IMediaStreamFilter **ppFilter);
 
 	HRESULT AddMediaStream(
-		[in] IUnknown *pStreamObject,
-		[in] const MSPID *PurposeId,
+		[in, optional] IUnknown *pStreamObject,
+		[in, optional] const MSPID *PurposeId,
 		[in] DWORD dwFlags,
-		[out] IMediaStream **ppNewStream);
+		[out, optional] IMediaStream **ppNewStream);
 
 	HRESULT OpenFile(
 		[in] LPCWSTR pszFileName,
@@ -127,7 +129,7 @@ pointer_default(unique)
 interface IAMMediaStream : IMediaStream
 {
 	HRESULT Initialize(
-		[in] IUnknown *pSourceObject,
+		[in, optional] IUnknown *pSourceObject,
 		[in] DWORD dwFlags,
 		[in] REFMSPID PurposeId,
 		[in] const STREAM_TYPE StreamType);
@@ -231,9 +233,9 @@ interface IAMMediaTypeStream : IMediaStream
 
 	HRESULT CreateSample(
 		[in] long lSampleSize,
-		[in] BYTE * pbBuffer,
+		[in, optional] BYTE * pbBuffer,
 		[in] DWORD dwFlags,
-		[in] IUnknown *pUnkOuter,
+		[in, optional] IUnknown *pUnkOuter,
 		[out] IAMMediaTypeSample ** ppAMMediaTypeSample);
 
 	HRESULT GetStreamAllocatorRequirements(

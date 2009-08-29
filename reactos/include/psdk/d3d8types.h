@@ -142,7 +142,7 @@
 #define D3DTA_ALPHAREPLICATE    0x00000020
 #define D3DTA_TEMP              0x00000005
 
-#define D3DCOLORWRITEENABLE_RED   (1L<<0)   
+#define D3DCOLORWRITEENABLE_RED   (1L<<0)
 #define D3DCOLORWRITEENABLE_GREEN (1L<<1)
 #define D3DCOLORWRITEENABLE_BLUE  (1L<<2)
 #define D3DCOLORWRITEENABLE_ALPHA (1L<<3)
@@ -154,8 +154,7 @@
     ((DWORD)(BYTE)(ch2) << 16) | ((DWORD)(BYTE)(ch3) << 24 ))
 #endif
 
-
-/**************************** 
+/****************************
  * Vertex Shaders Declaration
  */
 
@@ -171,7 +170,7 @@ typedef enum _D3DVSD_TOKENTYPE {
   D3DVSD_FORCE_DWORD       = 0x7FFFFFFF
 } D3DVSD_TOKENTYPE;
 
-/** input registers for vertex shaders functions */
+/** input registers for vertes shaders functions */
 /*
 #define D3DVSDE_POSITION      0
 #define D3DVSDE_BLENDWEIGHT   1
@@ -1131,8 +1130,6 @@ typedef struct _D3DPRESENT_PARAMETERS_ {
     UINT                    FullScreen_PresentationInterval;
 
 } D3DPRESENT_PARAMETERS;
-
-#define D3DPRESENTFLAG_LOCKABLE_BACKBUFFER  0x00000001
 
 typedef struct _D3DRANGE {
     UINT                Offset;

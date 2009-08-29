@@ -1,75 +1,84 @@
-/*
- * Copyright (C) 2000 Ove Kaaven
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */
 
-#ifndef __WINE_D3DVEC_INL
-#define __WINE_D3DVEC_INL
+#include <math.h>
 
-/*** constructors ***/
 
 inline _D3DVECTOR::_D3DVECTOR(D3DVALUE f)
 {
   x = y = z = f;
 }
 
-inline _D3DVECTOR::_D3DVECTOR(D3DVALUE _x, D3DVALUE _y, D3DVALUE _z)
+inline
+_D3DVECTOR::_D3DVECTOR(D3DVALUE _x, D3DVALUE _y, D3DVALUE _z)
 {
-  x = _x; y = _y; z = _z;
+  x = _x;
+  y = _y;
+  z = _z;
 }
 
-/*** assignment operators ***/
+inline _D3DVECTOR::_D3DVECTOR(const D3DVALUE f[3])
+{
+  x = f[0];
+  y = f[1];
+  z = f[2];
+}
+
+inline const D3DVALUE& _D3DVECTOR::operator[](int i) const
+{
+  return (&x)[i];
+}
+
+inline D3DVALUE& _D3DVECTOR::operator[](int i)
+{
+  return (&x)[i];
+}
 
 inline _D3DVECTOR& _D3DVECTOR::operator += (const _D3DVECTOR& v)
 {
-  x += v.x; y += v.y; z += v.z;
+  x += v.x;
+  y += v.y;
+  z += v.z;
   return *this;
 }
 
 inline _D3DVECTOR& _D3DVECTOR::operator -= (const _D3DVECTOR& v)
 {
-  x -= v.x; y -= v.y; z -= v.z;
+  x -= v.x;
+  y -= v.y;
+  z -= v.z;
   return *this;
 }
 
 inline _D3DVECTOR& _D3DVECTOR::operator *= (const _D3DVECTOR& v)
 {
-  x *= v.x; y *= v.y; z *= v.z;
+  x *= v.x;
+  y *= v.y;
+  z *= v.z;
   return *this;
 }
 
 inline _D3DVECTOR& _D3DVECTOR::operator /= (const _D3DVECTOR& v)
 {
-  x /= v.x; y /= v.y; z /= v.z;
+  x /= v.x;
+  y /= v.y;
+  z /= v.z;
   return *this;
 }
 
 inline _D3DVECTOR& _D3DVECTOR::operator *= (D3DVALUE s)
 {
-  x *= s; y *= s; z *= s;
+  x *= s;
+  y *= s;
+  z *= s;
   return *this;
 }
 
 inline _D3DVECTOR& _D3DVECTOR::operator /= (D3DVALUE s)
 {
-  x /= s; y /= s; z /= s;
-  return *this;
+  x /= s;
+  y /= s;
+  z /= s;
+   return *this;
 }
-
-/*** unary operators ***/
 
 inline _D3DVECTOR operator + (const _D3DVECTOR& v)
 {
@@ -81,8 +90,6 @@ inline _D3DVECTOR operator - (const _D3DVECTOR& v)
   return _D3DVECTOR(-v.x, -v.y, -v.z);
 }
 
-/*** binary operators ***/
-
 inline _D3DVECTOR operator + (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
 {
   return _D3DVECTOR(v1.x+v2.x, v1.y+v2.y, v1.z+v2.z);
@@ -93,14 +100,34 @@ inline _D3DVECTOR operator - (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
   return _D3DVECTOR(v1.x-v2.x, v1.y-v2.y, v1.z-v2.z);
 }
 
+inline _D3DVECTOR operator * (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  return _D3DVECTOR(v1.x*v2.x, v1.y*v2.y, v1.z*v2.z);
+}
+
+inline _D3DVECTOR operator / (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  return _D3DVECTOR(v1.x/v2.x, v1.y/v2.y, v1.z/v2.z);
+}
+
+inline int operator < (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  return v1[0] < v2[0] && v1[1] < v2[1] && v1[2] < v2[2];
+}
+
+inline int operator <= (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  return v1[0] <= v2[0] && v1[1] <= v2[1] && v1[2] <= v2[2];
+}
+
 inline _D3DVECTOR operator * (const _D3DVECTOR& v, D3DVALUE s)
 {
-  return _D3DVECTOR(v.x*s, v.y*s, v.z*s);
+  return _D3DVECTOR(s*v.x, s*v.y, s*v.z);
 }
 
 inline _D3DVECTOR operator * (D3DVALUE s, const _D3DVECTOR& v)
 {
-  return _D3DVECTOR(v.x*s, v.y*s, v.z*s);
+  return _D3DVECTOR(s*v.x, s*v.y, s*v.z);
 }
 
 inline _D3DVECTOR operator / (const _D3DVECTOR& v, D3DVALUE s)
@@ -108,34 +135,93 @@ inline _D3DVECTOR operator / (const _D3DVECTOR& v, D3DVALUE s)
   return _D3DVECTOR(v.x/s, v.y/s, v.z/s);
 }
 
-inline D3DVALUE SquareMagnitude(const _D3DVECTOR& v)
+inline int operator == (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
 {
-  return v.x*v.x + v.y*v.y + v.z*v.z; /* DotProduct(v, v) */
+  return v1.x==v2.x && v1.y==v2.y && v1.z == v2.z;
 }
 
-inline D3DVALUE Magnitude(const _D3DVECTOR& v)
+inline D3DVALUE Magnitude (const _D3DVECTOR& v)
 {
-  return sqrt(SquareMagnitude(v));
+  return (D3DVALUE) sqrt(SquareMagnitude(v));
 }
 
-inline _D3DVECTOR Normalize(const _D3DVECTOR& v)
+inline D3DVALUE SquareMagnitude (const _D3DVECTOR& v)
+{
+  return v.x*v.x + v.y*v.y + v.z*v.z;
+}
+
+inline _D3DVECTOR Normalize (const _D3DVECTOR& v)
 {
   return v / Magnitude(v);
 }
 
-inline D3DVALUE DotProduct(const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+inline D3DVALUE Min (const _D3DVECTOR& v)
 {
-  return v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+  D3DVALUE ret = v.x;
+  if (v.y < ret)
+      ret = v.y;
+
+  if (v.z < ret)
+      ret = v.z;
+
+  return ret;
 }
 
-inline _D3DVECTOR CrossProduct(const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+inline D3DVALUE Max (const _D3DVECTOR& v)
 {
-  _D3DVECTOR res;
-  /* this is a left-handed cross product, right? */
-  res.x = v1.y * v2.z - v1.z * v2.y;
-  res.y = v1.z * v2.x - v1.x * v2.z;
-  res.z = v1.x * v2.y - v1.y * v2.x;
-  return res;
+  D3DVALUE ret = v.x;
+  if (ret < v.y)
+      ret = v.y;
+
+  if (ret < v.z)
+      ret = v.z;
+
+  return ret;
 }
 
-#endif
+inline _D3DVECTOR Minimize (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  return _D3DVECTOR( v1[0] < v2[0] ? v1[0] : v2[0],
+                     v1[1] < v2[1] ? v1[1] : v2[1],
+                     v1[2] < v2[2] ? v1[2] : v2[2]);
+}
+
+inline _D3DVECTOR Maximize (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  return _D3DVECTOR( v1[0] > v2[0] ? v1[0] : v2[0],
+                     v1[1] > v2[1] ? v1[1] : v2[1],
+                     v1[2] > v2[2] ? v1[2] : v2[2]);
+}
+
+inline D3DVALUE DotProduct (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  return v1.x*v2.x + v1.y * v2.y + v1.z*v2.z;
+}
+
+inline _D3DVECTOR CrossProduct (const _D3DVECTOR& v1, const _D3DVECTOR& v2)
+{
+  _D3DVECTOR result;
+  result[0] = v1[1] * v2[2] - v1[2] * v2[1];
+  result[1] = v1[2] * v2[0] - v1[0] * v2[2];
+  result[2] = v1[0] * v2[1] - v1[1] * v2[0];
+
+  return result;
+}
+
+inline _D3DMATRIX operator* (const _D3DMATRIX& a, const _D3DMATRIX& b)
+{
+  _D3DMATRIX ret;
+  for (int i=0; i<4; i++)
+  {
+    for (int j=0; j<4; j++)
+    {
+      ret(i, j) = 0.0f;
+      for (int k=0; k<4; k++)
+      {
+        ret(i, j) += a(i, k) * b(k, j);
+      }
+    }
+}
+  return ret;
+}
+

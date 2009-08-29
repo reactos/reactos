@@ -31,11 +31,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
  * Stateblock helper functions follow
  **************************************/
 
-/* Allocates the correct amount of space for pixel and vertex shader constants,
+/** Allocates the correct amount of space for pixel and vertex shader constants, 
  * along with their set/changed flags on the given stateblock object
  */
-HRESULT allocate_shader_constants(IWineD3DStateBlockImpl* object)
-{
+HRESULT allocate_shader_constants(IWineD3DStateBlockImpl* object) {
+    
     IWineD3DStateBlockImpl *This = object;
 
     /* Allocate space for floating point constants */
@@ -113,8 +113,11 @@ static inline void stateblock_set_bits(DWORD *map, UINT map_size)
 }
 
 /** Set all members of a stateblock savedstate to the given value */
-void stateblock_savedstates_set(IWineD3DStateBlock *iface, SAVEDSTATES *states, BOOL value)
-{
+void stateblock_savedstates_set(
+    IWineD3DStateBlock* iface,
+    SAVEDSTATES* states,
+    BOOL value) {
+    
     IWineD3DStateBlockImpl *This = (IWineD3DStateBlockImpl *)iface;
     unsigned bsize = sizeof(BOOL);
 
@@ -225,7 +228,7 @@ void stateblock_copy(
     memcpy(Dest->vertexShaderConstantI, This->vertexShaderConstantI, sizeof(INT) * MAX_CONST_I * 4);
     memcpy(Dest->pixelShaderConstantB, This->pixelShaderConstantB, sizeof(BOOL) * MAX_CONST_B);
     memcpy(Dest->pixelShaderConstantI, This->pixelShaderConstantI, sizeof(INT) * MAX_CONST_I * 4);
-
+    
     memcpy(Dest->streamStride, This->streamStride, sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->streamOffset, This->streamOffset, sizeof(UINT) * MAX_STREAMS);
     memcpy(Dest->streamSource, This->streamSource, sizeof(IWineD3DBuffer *) * MAX_STREAMS);
@@ -354,7 +357,7 @@ static inline void record_lights(IWineD3DStateBlockImpl *This, IWineD3DStateBloc
         LIST_FOR_EACH(e, &This->lightMap[i]) {
             BOOL updated = FALSE;
             PLIGHTINFOEL *src = LIST_ENTRY(e, PLIGHTINFOEL, entry), *realLight;
-            if (!src->changed && !src->enabledChanged) continue;
+            if(!src->changed || !src->enabledChanged) continue;
 
             /* Look up the light in the destination */
             LIST_FOR_EACH(f, &targetStateBlock->lightMap[i]) {
@@ -1084,6 +1087,9 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
     unsigned int i;
     IWineD3DSwapChain *swapchain;
     IWineD3DSurface *backbuffer;
+    WINED3DSURFACE_DESC desc = {0};
+    UINT width, height;
+    RECT scissorrect;
     HRESULT hr;
 
     /* Note this may have a large overhead but it should only be executed
@@ -1286,27 +1292,28 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
         This->textures[i]         = NULL;
     }
 
+    /* Set the default scissor rect values */
+    desc.Width = &width;
+    desc.Height = &height;
+
     /* check the return values, because the GetBackBuffer call isn't valid for ddraw */
     hr = IWineD3DDevice_GetSwapChain(device, 0, &swapchain);
     if( hr == WINED3D_OK && swapchain != NULL) {
         WINED3DVIEWPORT vp;
 
         hr = IWineD3DSwapChain_GetBackBuffer(swapchain, 0, WINED3DBACKBUFFER_TYPE_MONO, &backbuffer);
-        if (SUCCEEDED(hr) && backbuffer)
-        {
-            WINED3DSURFACE_DESC desc;
-            RECT scissorrect;
-
+        if( hr == WINED3D_OK && backbuffer != NULL) {
             IWineD3DSurface_GetDesc(backbuffer, &desc);
             IWineD3DSurface_Release(backbuffer);
 
-            /* Set the default scissor rect values */
             scissorrect.left = 0;
-            scissorrect.right = desc.width;
+            scissorrect.right = width;
             scissorrect.top = 0;
-            scissorrect.bottom = desc.height;
+            scissorrect.bottom = height;
             hr = IWineD3DDevice_SetScissorRect(device, &scissorrect);
-            if (FAILED(hr)) ERR("This should never happen, expect rendering issues!\n");
+            if( hr != WINED3D_OK ) {
+                ERR("This should never happen, expect rendering issues!\n");
+            }
         }
 
         /* Set the default viewport */
