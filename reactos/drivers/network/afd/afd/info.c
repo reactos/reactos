@@ -39,7 +39,9 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    break;
 
 	case AFD_INFO_GROUP_ID_TYPE:
-	    InfoReq->Information.Ulong = 0; /* What is group id */
+	    InfoReq->Information.LargeInteger.u.HighPart = FCB->GroupType;
+	    InfoReq->Information.LargeInteger.u.LowPart = FCB->GroupID;
+	    AFD_DbgPrint(MID_TRACE, ("Group ID: %d Group Type: %d\n", FCB->GroupID, FCB->GroupType));
 	    break;
 
 	case AFD_INFO_BLOCKING_MODE:

@@ -91,6 +91,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     RtlZeroMemory( FCB, sizeof( *FCB ) );
 
     FCB->Flags = ConnectInfo ? ConnectInfo->EndpointFlags : 0;
+    FCB->GroupID = ConnectInfo ? ConnectInfo->GroupID : 0;
+    FCB->GroupType = 0; /* FIXME */
     FCB->State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
