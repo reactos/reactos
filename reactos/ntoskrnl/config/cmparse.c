@@ -224,6 +224,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     ULONG StorageType;
     LARGE_INTEGER SystemTime;
     PCM_KEY_CONTROL_BLOCK Kcb;
+    PSECURITY_DESCRIPTOR NewDescriptor;
 
     /* Get the storage type */
     StorageType = Stable;
@@ -359,6 +360,26 @@ CmpDoCreateChild(IN PHHIVE Hive,
     
     /* Link it with the KCB */
     EnlistKeyBodyWithKCB(KeyBody, 0);
+
+    /* Assign security */
+    Status = SeAssignSecurity(ParentDescriptor,
+                              AccessState->SecurityDescriptor,
+                              &NewDescriptor,
+                              TRUE,
+                              &AccessState->SubjectSecurityContext,
+                              &CmpKeyObjectType->TypeInfo.GenericMapping,
+                              CmpKeyObjectType->TypeInfo.PoolType);
+    if (NT_SUCCESS(Status))
+    {
+        Status = CmpSecurityMethod(*Object,
+                                   AssignSecurityDescriptor,
+                                   NULL,
+                                   NewDescriptor,
+                                   NULL,
+                                   NULL,
+                                   CmpKeyObjectType->TypeInfo.PoolType,
+                                   &CmpKeyObjectType->TypeInfo.GenericMapping);
+    }
 
 Quickie:
     /* Check if we got here because of failure */
@@ -686,6 +707,16 @@ CmpDoOpen(IN PHHIVE Hive,
         
         /* Link to the KCB */
         EnlistKeyBodyWithKCB(KeyBody, 0);
+
+        if (!ObCheckObjectAccess(*Object,
+                                 AccessState,
+                                 FALSE,
+                                 AccessMode,
+                                 &Status))
+        {
+            /* Access check failed */
+            ObDereferenceObject(*Object);
+        }
     }
     else
     {
