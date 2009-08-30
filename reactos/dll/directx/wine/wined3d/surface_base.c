@@ -30,6 +30,8 @@
 #include "wine/port.h"
 #include "wined3d_private.h"
 
+#include <assert.h>
+
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
 
 /* See also float_16_to_32() in wined3d_private.h */
@@ -41,26 +43,26 @@ static inline unsigned short float_32_to_16(const float *in)
     unsigned short ret;
 
     /* Deal with special numbers */
-    if (*in == 0.0f) return 0x0000;
+    if(*in == 0.0) return 0x0000;
     if(isnan(*in)) return 0x7C01;
-    if (isinf(*in)) return (*in < 0.0f ? 0xFC00 : 0x7c00);
+    if(isinf(*in)) return (*in < 0.0 ? 0xFC00 : 0x7c00);
 
     if(tmp < pow(2, 10)) {
         do
         {
-            tmp = tmp * 2.0f;
+            tmp = tmp * 2.0;
             exp--;
         }while(tmp < pow(2, 10));
     } else if(tmp >= pow(2, 11)) {
         do
         {
-            tmp /= 2.0f;
+            tmp /= 2.0;
             exp++;
         }while(tmp >= pow(2, 11));
     }
 
     mantissa = (unsigned int) tmp;
-    if(tmp - mantissa >= 0.5f) mantissa++; /* round to nearest, away from zero */
+    if(tmp - mantissa >= 0.5) mantissa++; /* round to nearest, away from zero */
 
     exp += 10;  /* Normalize the mantissa */
     exp += 15;  /* Exponent is encoded with excess 15 */
@@ -78,7 +80,7 @@ static inline unsigned short float_32_to_16(const float *in)
         ret = (exp << 10) | (mantissa & 0x3ff);
     }
 
-    ret |= ((*in < 0.0f ? 1 : 0) << 15); /* Add the sign */
+    ret |= ((*in < 0.0 ? 1 : 0) << 15); /* Add the sign */
     return ret;
 }
 
@@ -179,17 +181,15 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetDesc(IWineD3DSurface *iface, WINED3DSU
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
 
     TRACE("(%p) : copying into %p\n", This, pDesc);
-
-    pDesc->format = This->resource.format_desc->format;
-    pDesc->resource_type = This->resource.resourceType;
-    pDesc->usage = This->resource.usage;
-    pDesc->pool = This->resource.pool;
-    pDesc->size = This->resource.size; /* dx8 only */
-    pDesc->multisample_type = This->currentDesc.MultiSampleType;
-    pDesc->multisample_quality = This->currentDesc.MultiSampleQuality;
-    pDesc->width = This->currentDesc.Width;
-    pDesc->height = This->currentDesc.Height;
-
+    if(pDesc->Format != NULL)             *(pDesc->Format) = This->resource.format_desc->format;
+    if(pDesc->Type != NULL)               *(pDesc->Type)   = This->resource.resourceType;
+    if(pDesc->Usage != NULL)              *(pDesc->Usage)              = This->resource.usage;
+    if(pDesc->Pool != NULL)               *(pDesc->Pool)               = This->resource.pool;
+    if(pDesc->Size != NULL)               *(pDesc->Size)               = This->resource.size;   /* dx8 only */
+    if(pDesc->MultiSampleType != NULL)    *(pDesc->MultiSampleType)    = This->currentDesc.MultiSampleType;
+    if(pDesc->MultiSampleQuality != NULL) *(pDesc->MultiSampleQuality) = This->currentDesc.MultiSampleQuality;
+    if(pDesc->Width != NULL)              *(pDesc->Width)              = This->currentDesc.Width;
+    if(pDesc->Height != NULL)             *(pDesc->Height)             = This->currentDesc.Height;
     return WINED3D_OK;
 }
 
@@ -332,19 +332,19 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_GetPalette(IWineD3DSurface *iface, IWineD
 
 DWORD WINAPI IWineD3DBaseSurfaceImpl_GetPitch(IWineD3DSurface *iface) {
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *) iface;
-    const struct GlPixelFormatDesc *format_desc = This->resource.format_desc;
+    WINED3DFORMAT format = This->resource.format_desc->format;
     DWORD ret;
     TRACE("(%p)\n", This);
 
-    if (format_desc->Flags & WINED3DFMT_FLAG_COMPRESSED)
-    {
-        /* Since compressed formats are block based, pitch means the amount of
-         * bytes to the next row of block rather than the next row of pixels. */
-        UINT row_block_count = (This->currentDesc.Width + format_desc->block_width - 1) / format_desc->block_width;
-        ret = row_block_count * format_desc->block_byte_count;
-    }
-    else
-    {
+    /* DXTn formats don't have exact pitches as they are to the new row of blocks,
+    where each block is 4x4 pixels, 8 bytes (dxt1) and 16 bytes (dxt2/3/4/5)
+    ie pitch = (width/4) * bytes per block                                  */
+    if (format == WINED3DFMT_DXT1) /* DXT1 is 8 bytes per block */
+        ret = ((This->currentDesc.Width + 3) >> 2) << 3;
+    else if (format == WINED3DFMT_DXT2 || format == WINED3DFMT_DXT3 ||
+             format == WINED3DFMT_DXT4 || format == WINED3DFMT_DXT5) /* DXT2/3/4/5 is 16 bytes per block */
+        ret = ((This->currentDesc.Width + 3) >> 2) << 4;
+    else {
         unsigned char alignment = This->resource.wineD3DDevice->surface_alignment;
         ret = This->resource.format_desc->byte_count * This->currentDesc.Width;  /* Bytes / row */
         ret = (ret + alignment - 1) & ~(alignment - 1);
@@ -519,9 +519,20 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_SetFormat(IWineD3DSurface *iface, WINED3D
     }
 
     TRACE("(%p) : Setting texture format to (%d,%s)\n", This, format, debug_d3dformat(format));
+    if (format == WINED3DFMT_UNKNOWN) {
+        This->resource.size = 0;
+    } else if (format == WINED3DFMT_DXT1) {
+        /* DXT1 is half byte per pixel */
+        This->resource.size = ((max(This->pow2Width, 4) * format_desc->byte_count) * max(This->pow2Height, 4)) >> 1;
 
-    This->resource.size = surface_calculate_size(format_desc, This->resource.wineD3DDevice->surface_alignment,
-            This->pow2Width, This->pow2Height);
+    } else if (format == WINED3DFMT_DXT2 || format == WINED3DFMT_DXT3 ||
+               format == WINED3DFMT_DXT4 || format == WINED3DFMT_DXT5) {
+        This->resource.size = ((max(This->pow2Width, 4) * format_desc->byte_count) * max(This->pow2Height, 4));
+    } else {
+        unsigned char alignment = This->resource.wineD3DDevice->surface_alignment;
+        This->resource.size = ((This->pow2Width * format_desc->byte_count) + alignment - 1) & ~(alignment - 1);
+        This->resource.size *= This->pow2Height;
+    }
 
     This->Flags |= (WINED3DFMT_D16_LOCKABLE == format) ? SFLAG_LOCKABLE : 0;
 
@@ -724,25 +735,6 @@ static void convert_r5g6b5_x8r8g8b8(const BYTE *src, BYTE *dst,
     }
 }
 
-static void convert_a8r8g8b8_x8r8g8b8(const BYTE *src, BYTE *dst,
-        DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h)
-{
-    unsigned int x, y;
-
-    TRACE("Converting %ux%u pixels, pitches %u %u\n", w, h, pitch_in, pitch_out);
-
-    for (y = 0; y < h; ++y)
-    {
-        const DWORD *src_line = (const DWORD *)(src + y * pitch_in);
-        DWORD *dst_line = (DWORD *)(dst + y * pitch_out);
-
-        for (x = 0; x < w; ++x)
-        {
-            dst_line[x] = 0xff000000 | (src_line[x] & 0xffffff);
-        }
-    }
-}
-
 struct d3dfmt_convertor_desc {
     WINED3DFORMAT from, to;
     void (*convert)(const BYTE *src, BYTE *dst, DWORD pitch_in, DWORD pitch_out, unsigned int w, unsigned int h);
@@ -752,7 +744,6 @@ static const struct d3dfmt_convertor_desc convertors[] =
 {
     {WINED3DFMT_R32_FLOAT,  WINED3DFMT_R16_FLOAT,   convert_r32_float_r16_float},
     {WINED3DFMT_R5G6B5,     WINED3DFMT_X8R8G8B8,    convert_r5g6b5_x8r8g8b8},
-    {WINED3DFMT_A8R8G8B8,   WINED3DFMT_X8R8G8B8,    convert_a8r8g8b8_x8r8g8b8},
 };
 
 static inline const struct d3dfmt_convertor_desc *find_convertor(WINED3DFORMAT from, WINED3DFORMAT to)
@@ -790,9 +781,10 @@ static IWineD3DSurfaceImpl *surface_convert_format(IWineD3DSurfaceImpl *source, 
         return NULL;
     }
 
-    IWineD3DDevice_CreateSurface((IWineD3DDevice *)source->resource.wineD3DDevice, source->currentDesc.Width,
-            source->currentDesc.Height, to_fmt, TRUE /* lockable */, TRUE /* discard  */, 0 /* level */, &ret,
-            0 /* usage */, WINED3DPOOL_SCRATCH, WINED3DMULTISAMPLE_NONE /* TODO: Multisampled conversion */,
+    IWineD3DDevice_CreateSurface((IWineD3DDevice *)source->resource.wineD3DDevice,
+            source->currentDesc.Width, source->currentDesc.Height, to_fmt, TRUE /* lockable */,
+            TRUE /* discard  */, 0 /* level */, &ret, WINED3DRTYPE_SURFACE, 0 /* usage */,
+            WINED3DPOOL_SCRATCH, WINED3DMULTISAMPLE_NONE /* TODO: Multisampled conversion */,
             0 /* MultiSampleQuality */, IWineD3DSurface_GetImplType((IWineD3DSurface *) source), NULL /* parent */);
     if(!ret) {
         ERR("Failed to create a destination surface for conversion\n");
@@ -1134,6 +1126,8 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_Blt(IWineD3DSurface *iface, const RECT *D
     dstheight = xdst.bottom - xdst.top;
     dstwidth = xdst.right - xdst.left;
     width = (xdst.right - xdst.left) * bpp;
+
+    assert(width <= dlock.Pitch);
 
     if (DestRect && Src != This)
         dbuf = dlock.pBits;
@@ -1635,6 +1629,7 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface, DWORD dst
         slock.Pitch = dlock.Pitch;
 
         /* Since slock was originally copied from this surface's description, we can just reuse it */
+        assert(This->resource.allocatedMemory != NULL);
         sbuf = This->resource.allocatedMemory + lock_src.top * pitch + lock_src.left * bpp;
         dbuf = This->resource.allocatedMemory + lock_dst.top * pitch + lock_dst.left * bpp;
         sEntry = Src->resource.format_desc;
@@ -1655,39 +1650,63 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_BltFast(IWineD3DSurface *iface, DWORD dst
         dEntry = This->resource.format_desc;
     }
 
-    /* Handle compressed surfaces first... */
-    if (sEntry->Flags & dEntry->Flags & WINED3DFMT_FLAG_COMPRESSED)
+    /* Handle first the FOURCC surfaces... */
+    if (sEntry->Flags & dEntry->Flags & WINED3DFMT_FLAG_FOURCC)
     {
-        UINT row_block_count;
+        UINT block_width;
+        UINT block_height;
+        UINT block_byte_size;
 
-        TRACE("compressed -> compressed copy\n");
+        TRACE("Fourcc -> Fourcc copy\n");
         if (trans)
-            FIXME("trans arg not supported when a compressed surface is involved\n");
+            FIXME("trans arg not supported when a FOURCC surface is involved\n");
         if (dstx || dsty)
             FIXME("offset for destination surface is not supported\n");
         if (Src->resource.format_desc->format != This->resource.format_desc->format)
         {
-            FIXME("compressed -> compressed copy only supported for the same type of surface\n");
+            FIXME("FOURCC->FOURCC copy only supported for the same type of surface\n");
             ret = WINED3DERR_WRONGTEXTUREFORMAT;
             goto error;
         }
 
-        row_block_count = (w + dEntry->block_width - 1) / dEntry->block_width;
-        for (y = 0; y < h; y += dEntry->block_height)
+        if (This->resource.format_desc->format == WINED3DFMT_DXT1)
         {
-            memcpy(dbuf, sbuf, row_block_count * dEntry->block_byte_count);
+            block_width = 4;
+            block_height = 4;
+            block_byte_size = 8;
+        }
+        else if (This->resource.format_desc->format == WINED3DFMT_DXT2
+                || This->resource.format_desc->format == WINED3DFMT_DXT3
+                || This->resource.format_desc->format == WINED3DFMT_DXT4
+                || This->resource.format_desc->format == WINED3DFMT_DXT5)
+        {
+            block_width = 4;
+            block_height = 4;
+            block_byte_size = 16;
+        }
+        else
+        {
+            FIXME("Unsupported FourCC format %s.\n", debug_d3dformat(This->resource.format_desc->format));
+            block_width = 1;
+            block_height = 1;
+            block_byte_size = This->resource.format_desc->byte_count;
+        }
+
+        for (y = 0; y < h; y += block_height)
+        {
+            memcpy(dbuf, sbuf, (w / block_width) * block_byte_size);
             dbuf += dlock.Pitch;
             sbuf += slock.Pitch;
         }
 
         goto error;
     }
-    if ((sEntry->Flags & WINED3DFMT_FLAG_COMPRESSED) && !(dEntry->Flags & WINED3DFMT_FLAG_COMPRESSED))
+    if ((sEntry->Flags & WINED3DFMT_FLAG_FOURCC) && !(dEntry->Flags & WINED3DFMT_FLAG_FOURCC))
     {
         /* TODO: Use the libtxc_dxtn.so shared library to do
          * software decompression
          */
-        ERR("Software decompression not supported.\n");
+        ERR("DXTC decompression not supported by now\n");
         goto error;
     }
 
@@ -1825,24 +1844,32 @@ HRESULT WINAPI IWineD3DBaseSurfaceImpl_LockRect(IWineD3DSurface *iface, WINED3DL
     }
     else
     {
-        const struct GlPixelFormatDesc *format_desc = This->resource.format_desc;
-
         TRACE("Lock Rect (%p) = l %d, t %d, r %d, b %d\n",
               pRect, pRect->left, pRect->top, pRect->right, pRect->bottom);
 
-        if (format_desc->Flags & WINED3DFMT_FLAG_COMPRESSED)
+        /* DXTn textures are based on compressed blocks of 4x4 pixels, each
+         * 16 bytes large (8 bytes in case of DXT1). Because of that Pitch has
+         * slightly different meaning compared to regular textures. For DXTn
+         * textures Pitch is the size of a row of blocks, 4 high and "width"
+         * long. The x offset is calculated differently as well, since moving 4
+         * pixels to the right actually moves an entire 4x4 block to right, ie
+         * 16 bytes (8 in case of DXT1). */
+        if (This->resource.format_desc->format == WINED3DFMT_DXT1)
         {
-            /* Compressed textures are block based, so calculate the offset of
-             * the block that contains the top-left pixel of the locked rectangle. */
-            pLockedRect->pBits = This->resource.allocatedMemory
-                    + ((pRect->top / format_desc->block_height) * pLockedRect->Pitch)
-                    + ((pRect->left / format_desc->block_width) * format_desc->block_byte_count);
+            pLockedRect->pBits = This->resource.allocatedMemory + (pLockedRect->Pitch * pRect->top / 4) + (pRect->left * 2);
+        }
+        else if (This->resource.format_desc->format == WINED3DFMT_DXT2
+                || This->resource.format_desc->format == WINED3DFMT_DXT3
+                || This->resource.format_desc->format == WINED3DFMT_DXT4
+                || This->resource.format_desc->format == WINED3DFMT_DXT5)
+        {
+            pLockedRect->pBits = This->resource.allocatedMemory + (pLockedRect->Pitch * pRect->top / 4) + (pRect->left * 4);
         }
         else
         {
             pLockedRect->pBits = This->resource.allocatedMemory +
                     (pLockedRect->Pitch * pRect->top) +
-                    (pRect->left * format_desc->byte_count);
+                    (pRect->left * This->resource.format_desc->byte_count);
         }
         This->lockedRect.left   = pRect->left;
         This->lockedRect.top    = pRect->top;

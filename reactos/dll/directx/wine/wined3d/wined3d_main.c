@@ -32,25 +32,17 @@ int num_lock = 0;
 void (*CDECL wine_tsx11_lock_ptr)(void) = NULL;
 void (*CDECL wine_tsx11_unlock_ptr)(void) = NULL;
 
-CRITICAL_SECTION wined3d_cs;
-static CRITICAL_SECTION_DEBUG wined3d_cs_debug =
-{
-    0, 0, &wined3d_cs,
-    {&wined3d_cs_debug.ProcessLocksList,
-    &wined3d_cs_debug.ProcessLocksList},
-    0, 0, {(DWORD_PTR)(__FILE__ ": wined3d_cs")}
-};
-CRITICAL_SECTION wined3d_cs = {&wined3d_cs_debug, -1, 0, 0, 0, 0};
 
 /* When updating default value here, make sure to update winecfg as well,
  * where appropriate. */
-wined3d_settings_t wined3d_settings =
+wined3d_settings_t wined3d_settings = 
 {
     VS_HW,          /* Hardware by default */
     PS_HW,          /* Hardware by default */
+    VBO_HW,         /* Hardware by default */
     TRUE,           /* Use of GLSL enabled by default */
-    ORM_FBO,        /* Use FBOs to do offscreen rendering */
-    RTL_READTEX,    /* Default render target locking method */
+    ORM_BACKBUFFER, /* Use the backbuffer to do offscreen rendering */
+    RTL_AUTO,       /* Automatically determine best locking method */
     PCI_VENDOR_NONE,/* PCI Vendor ID */
     PCI_DEVICE_NONE,/* PCI Device ID */
     0,              /* The default of memory is set in FillGLCaps */
@@ -105,7 +97,6 @@ static void CDECL wined3d_do_nothing(void)
 
 static BOOL wined3d_init(HINSTANCE hInstDLL)
 {
-    DWORD wined3d_context_tls_idx;
     HMODULE mod;
     char buffer[MAX_PATH+10];
     DWORD size = sizeof(buffer);
@@ -113,15 +104,6 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
     HKEY appkey = 0;
     DWORD len, tmpvalue;
     WNDCLASSA wc;
-
-    wined3d_context_tls_idx = TlsAlloc();
-    if (wined3d_context_tls_idx == TLS_OUT_OF_INDEXES)
-    {
-        DWORD err = GetLastError();
-        ERR("Failed to allocate context TLS index, err %#x.\n", err);
-        return FALSE;
-    }
-    context_set_tls_idx(wined3d_context_tls_idx);
 
     /* We need our own window class for a fake window which we use to retrieve GL capabilities */
     /* We might need CS_OWNDC in the future if we notice strange things on Windows.
@@ -135,16 +117,11 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
     wc.hCursor              = LoadCursorA(NULL, (LPCSTR)IDC_ARROW);
     wc.hbrBackground        = NULL;
     wc.lpszMenuName         = NULL;
-    wc.lpszClassName        = WINED3D_OPENGL_WINDOW_CLASS_NAME;
+    wc.lpszClassName        = "WineD3D_OpenGL";
 
-    if (!RegisterClassA(&wc))
+    if (!RegisterClassA(&wc) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
     {
         ERR("Failed to register window class 'WineD3D_OpenGL'!\n");
-        if (!TlsFree(wined3d_context_tls_idx))
-        {
-            DWORD err = GetLastError();
-            ERR("Failed to free context TLS index, err %#x.\n", err);
-        }
         return FALSE;
     }
 
@@ -204,6 +181,19 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
                 wined3d_settings.ps_mode = PS_NONE;
             }
         }
+        if ( !get_config_key( hkey, appkey, "VertexBufferMode", buffer, size) )
+        {
+            if (!strcmp(buffer,"none"))
+            {
+                TRACE("Disable Vertex Buffer Hardware support\n");
+                wined3d_settings.vbo_mode = VBO_NONE;
+            }
+            else if (!strcmp(buffer,"hardware"))
+            {
+                TRACE("Allow Vertex Buffer Hardware support\n");
+                wined3d_settings.vbo_mode = VBO_HW;
+            }
+        }
         if ( !get_config_key( hkey, appkey, "UseGLSL", buffer, size) )
         {
             if (!strcmp(buffer,"disabled"))
@@ -246,6 +236,16 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
             {
                 TRACE("Using glReadPixels for render target reading and textures for writing\n");
                 wined3d_settings.rendertargetlock_mode = RTL_READTEX;
+            }
+            else if (!strcmp(buffer,"texdraw"))
+            {
+                TRACE("Using textures for render target reading and glDrawPixels for writing\n");
+                wined3d_settings.rendertargetlock_mode = RTL_TEXDRAW;
+            }
+            else if (!strcmp(buffer,"textex"))
+            {
+                TRACE("Reading render targets via textures and writing via textures\n");
+                wined3d_settings.rendertargetlock_mode = RTL_TEXTEX;
             }
         }
         if ( !get_config_key_dword( hkey, appkey, "VideoPciDeviceID", &tmpvalue) )
@@ -309,6 +309,8 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
         TRACE("Allow HW vertex shaders\n");
     if (wined3d_settings.ps_mode == PS_NONE)
         TRACE("Disable pixel shaders\n");
+    if (wined3d_settings.vbo_mode == VBO_NONE)
+        TRACE("Disable Vertex Buffer Hardware support\n");
     if (wined3d_settings.glslRequested)
         TRACE("If supported by your system, GL Shading Language will be used\n");
 
@@ -318,30 +320,11 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
     return TRUE;
 }
 
-static BOOL wined3d_destroy(HINSTANCE hInstDLL)
+static BOOL wined3d_destroy(void)
 {
-    DWORD wined3d_context_tls_idx = context_get_tls_idx();
-
-    if (!TlsFree(wined3d_context_tls_idx))
-    {
-        DWORD err = GetLastError();
-        ERR("Failed to free context TLS index, err %#x.\n", err);
-    }
-
     HeapFree(GetProcessHeap(), 0, wined3d_settings.logo);
-    UnregisterClassA(WINED3D_OPENGL_WINDOW_CLASS_NAME, hInstDLL);
 
     return TRUE;
-}
-
-void WINAPI wined3d_mutex_lock(void)
-{
-    EnterCriticalSection(&wined3d_cs);
-}
-
-void WINAPI wined3d_mutex_unlock(void)
-{
-    LeaveCriticalSection(&wined3d_cs);
 }
 
 /* At process attach */
@@ -355,16 +338,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
             return wined3d_init(hInstDLL);
 
         case DLL_PROCESS_DETACH:
-            return wined3d_destroy(hInstDLL);
-
-        case DLL_THREAD_DETACH:
-        {
-            if (!context_set_current(NULL))
-            {
-                ERR("Failed to clear current context.\n");
-            }
-            return TRUE;
-        }
+            return wined3d_destroy();
 
         default:
             return TRUE;

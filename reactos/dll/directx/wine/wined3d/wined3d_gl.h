@@ -1141,13 +1141,10 @@ void (WINE_GLAPI *glViewport) (GLint x, GLint y, GLsizei width, GLsizei height);
 void (WINE_GLAPI *glPointParameterfv) (GLenum pname, const GLfloat *params);
 
 /* glFinish and glFlush are always loaded from opengl32.dll, thus they always have
- * __stdcall calling convention.
- *
- * They are wgl functions and must not be called inside the gl lock, give them a
- * name that makes this clear
+ * __stdcall calling convention
  */
-void (__stdcall  *wglFinish) ();
-void (__stdcall  *wglFlush) ();
+void (__stdcall  *glFinish) ();
+void (__stdcall  *glFlush) ();
 
 /* WGL functions */
 HGLRC   (WINAPI *pwglCreateContext)(HDC);
@@ -1519,14 +1516,6 @@ BOOL    (WINAPI *pwglShareLists)(HGLRC,HGLRC);
 #define GL_FIXED_ONLY_ARB                 0x891D
 #endif
 typedef void (WINE_GLAPI *PGLFNCLAMPCOLORARBPROC) (GLenum target, GLenum clamp);
-
-/* GL_ARB_depth_buffer_float */
-#ifndef GL_ARB_depth_buffer_float
-#define GL_ARB_depth_buffer_float 1
-#define GL_DEPTH_COMPONENT32F             0x8cac
-#define GL_DEPTH32F_STENCIL8              0x8cad
-#define GL_FLOAT_32_UNSIGNED_INT_24_8_REV 0x8dad
-#endif
 
 /* GL_ARB_depth_texture */
 #ifndef GL_ARB_depth_texture
@@ -1908,15 +1897,6 @@ typedef void (WINE_GLAPI * PGLFNGLBLITFRAMEBUFFEREXTPROC) (GLint srcX0, GLint sr
 #endif
 typedef void (WINE_GLAPI * PGLFNRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
 
-/* GL_EXT_packed_depth_stencil */
-#ifndef GL_EXT_packed_depth_stencil
-#define GL_EXT_packed_depth_stencil 1
-#define GL_DEPTH_STENCIL_EXT                0x84f9
-#define GL_UNSIGNED_INT_24_8_EXT            0x84fa
-#define GL_DEPTH24_STENCIL8_EXT             0x88f0
-#define GL_TEXTURE_STENCIL_SIZE_EXT         0x88f1
-#endif
-
 /* GL_EXT_secondary_color */
 #ifndef GL_EXT_secondary_color
 #define GL_EXT_secondary_color 1
@@ -1955,17 +1935,6 @@ typedef void (WINE_GLAPI * PGLFNGLCOLORTABLEEXTPROC) (GLenum target, GLenum inte
 #endif
 typedef void (WINE_GLAPI * PGLFNGLPOINTPARAMETERFEXTPROC) (GLenum pname, GLfloat param);
 typedef void (WINE_GLAPI * PGLFNGLPOINTPARAMETERFVEXTPROC) (GLenum pname, const GLfloat *params);
-
-/* GL_EXT_provoking_vertex */
-#ifndef GL_EXT_provoking_vertex
-#define GL_EXT_provoking_vertex 1
-#define GL_FIRST_VERTEX_CONVENTION_EXT                      0x8e4d
-#define GL_LAST_VERTEX_CONVENTION_EXT                       0x8e4e
-#define GL_PROVOKING_VERTEX_EXT                             0x8e4f
-#define GL_QUADS_FOLLOW_PROVOKING_VERTEX_CONVENTIONS_EXT    0x8e4c
-#endif
-typedef void (WINE_GLAPI * PGLFNGLPROVOKINGVERTEXEXTPROC)(GLenum mode);
-
 /* GL_EXT_texture3D */
 #ifndef GL_EXT_texture3D
 #define GL_EXT_texture3D 1
@@ -3111,13 +3080,6 @@ typedef void (WINE_GLAPI *PGLFNSETFRAGMENTSHADERCONSTANTATI) (GLuint dst, const 
 #define GL_COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT          0x8DBE
 #endif
 
-/* GL_NV_vertex_program2_option */
-#ifndef GL_NV_vertex_program2_option
-#define GL_NV_vertex_program2_option
-#define GL_MAX_PROGRAM_EXEC_INSTRUCTIONS_NV               0x88F4
-#define GL_MAX_PROGRAM_CALL_DEPTH_NV                      0x88F5
-#endif
-
 /* GL_VERSION_2_0 */
 #ifndef GL_VERSION_2_0
 #define GL_VERSION_2_0 1
@@ -3340,18 +3302,6 @@ typedef enum _GL_Cards {
   CARD_ATI_RADEON_HD2600          = 0x9581,
   CARD_ATI_RADEON_HD2900          = 0x9400,
   CARD_ATI_RADEON_HD3200          = 0x9620,
-  CARD_ATI_RADEON_HD4350          = 0x954f,
-  CARD_ATI_RADEON_HD4550          = 0x9540,
-  CARD_ATI_RADEON_HD4600          = 0x9495,
-  CARD_ATI_RADEON_HD4650          = 0x9498,
-  CARD_ATI_RADEON_HD4670          = 0x9490,
-  CARD_ATI_RADEON_HD4700          = 0x944e,
-  CARD_ATI_RADEON_HD4770          = 0x94b3,
-  CARD_ATI_RADEON_HD4800          = 0x944c, /* picked one value between 9440,944c,9442,9460 */
-  CARD_ATI_RADEON_HD4830          = 0x944c,
-  CARD_ATI_RADEON_HD4850          = 0x9442,
-  CARD_ATI_RADEON_HD4870          = 0x9440,
-  CARD_ATI_RADEON_HD4890          = 0x9460,
 
   CARD_NVIDIA_RIVA_128            = 0x0018,
   CARD_NVIDIA_RIVA_TNT            = 0x0020,
@@ -3392,20 +3342,39 @@ typedef enum _GL_Cards {
   CARD_INTEL_I915G                = 0x2582,
   CARD_INTEL_I915GM               = 0x2592,
   CARD_INTEL_I945GM               = 0x27a2, /* Same as GMA 950?? */
-  CARD_INTEL_X3100                = 0x2a02, /* found in macs. Same as GMA 965? */
 } GL_Cards;
 
 #define WINE_DEFAULT_VIDMEM 64*1024*1024
+
+typedef enum _GL_VSVersion {
+  VS_VERSION_NOT_SUPPORTED = 0x0,
+  VS_VERSION_10 = 0x10,
+  VS_VERSION_11 = 0x11,
+  VS_VERSION_20 = 0x20,
+  VS_VERSION_30 = 0x30,
+  /*Force 32-bits*/
+  VS_VERSION_FORCE_DWORD = 0x7FFFFFFF
+} GL_VSVersion;
+
+typedef enum _GL_PSVersion {
+  PS_VERSION_NOT_SUPPORTED = 0x0,
+  PS_VERSION_10 = 0x10,
+  PS_VERSION_11 = 0x11,
+  PS_VERSION_12 = 0x12,
+  PS_VERSION_13 = 0x13,
+  PS_VERSION_14 = 0x14,
+  PS_VERSION_20 = 0x20,
+  PS_VERSION_30 = 0x30,
+  /*Force 32-bits*/
+  PS_VERSION_FORCE_DWORD = 0x7FFFFFFF
+} GL_PSVersion;
 
 #define MAKEDWORD_VERSION(maj, min)  ((maj & 0x0000FFFF) << 16) | (min & 0x0000FFFF)
 
 /* OpenGL Supported Extensions (ARB and EXT) */
 typedef enum _GL_SupportedExt {
-  WINED3D_GL_EXT_NONE,
   /* ARB */
   ARB_COLOR_BUFFER_FLOAT,
-  ARB_DEPTH_BUFFER_FLOAT,
-  ARB_DEPTH_TEXTURE,
   ARB_DRAW_BUFFERS,
   ARB_FRAGMENT_PROGRAM,
   ARB_FRAGMENT_SHADER,
@@ -3445,11 +3414,9 @@ typedef enum _GL_SupportedExt {
   EXT_FRAMEBUFFER_OBJECT,
   EXT_FRAMEBUFFER_BLIT,
   EXT_FRAMEBUFFER_MULTISAMPLE,
-  EXT_PACKED_DEPTH_STENCIL,
   EXT_PALETTED_TEXTURE,
   EXT_PIXEL_BUFFER_OBJECT,
   EXT_POINT_PARAMETERS,
-  EXT_PROVOKING_VERTEX,
   EXT_SECONDARY_COLOR,
   EXT_STENCIL_TWO_SIDE,
   EXT_STENCIL_WRAP,
@@ -3482,9 +3449,7 @@ typedef enum _GL_SupportedExt {
   NV_VERTEX_PROGRAM,
   NV_VERTEX_PROGRAM1_1,
   NV_VERTEX_PROGRAM2,
-  NV_VERTEX_PROGRAM2_OPTION,
   NV_VERTEX_PROGRAM3,
-  NV_FRAGMENT_PROGRAM_OPTION,
   NV_FENCE,
   NV_DEPTH_CLAMP,
   NV_LIGHT_MAX_EXPONENT,
@@ -3513,7 +3478,7 @@ typedef enum _GL_SupportedExt {
   WGL_ARB_PIXEL_FORMAT,
   WGL_WINE_PIXEL_FORMAT_PASSTHROUGH,
 
-  WINED3D_GL_EXT_COUNT,
+  OPENGL_SUPPORTED_EXT_END
 } GL_SupportedExt;
 
 
@@ -3626,8 +3591,6 @@ typedef enum _GL_SupportedExt {
     /* GL_EXT_point_parameters */ \
     USE_GL_FUNC(PGLFNGLPOINTPARAMETERFEXTPROC,                      glPointParameterfEXT,                       EXT_POINT_PARAMETERS,   NULL )\
     USE_GL_FUNC(PGLFNGLPOINTPARAMETERFVEXTPROC,                     glPointParameterfvEXT,                      EXT_POINT_PARAMETERS,   NULL )\
-    /* GL_EXT_provoking_vertex */ \
-    USE_GL_FUNC(PGLFNGLPROVOKINGVERTEXEXTPROC,                      glProvokingVertexEXT,                       EXT_PROVOKING_VERTEX,   NULL)\
     /* GL_EXT_secondary_color */ \
     USE_GL_FUNC(PGLFNGLSECONDARYCOLOR3UBEXTPROC,                    glSecondaryColor3ubEXT,                     EXT_SECONDARY_COLOR,    NULL )\
     USE_GL_FUNC(PGLFNGLSECONDARYCOLOR3UBVEXTPROC,                   glSecondaryColor3ubvEXT,                    EXT_SECONDARY_COLOR,    NULL )\
@@ -3943,61 +3906,77 @@ typedef BOOL (WINAPI * WINED3D_PFNWGLSETPIXELFORMATWINE) (HDC hdc, int iPixelFor
  ****************************************************/
 
 #define USE_GL_FUNC(type, pfn, ext, replace) type pfn;
+typedef struct _WineD3D_GL_Info {
 
-struct wined3d_gl_info
-{
-    GL_Vendors gl_vendor;
-    GL_Cards gl_card;
-    UINT vidmem;
-    DWORD driver_version;
-    DWORD driver_version_hipart;
-    const char *driver_description;
+  DWORD  glx_version;
+  DWORD  gl_version;
 
-    UINT max_buffers;
-    UINT max_lights;
-    UINT max_textures;
-    UINT max_texture_stages;
-    UINT max_fragment_samplers;
-    UINT max_vertex_samplers;
-    UINT max_combined_samplers;
-    UINT max_sampler_stages;
-    UINT max_clipplanes;
-    UINT max_texture_size;
-    UINT max_texture3d_size;
-    float max_pointsize, max_pointsizemin;
-    UINT max_point_sprite_units;
-    UINT max_blends;
-    UINT max_anisotropy;
-    UINT max_glsl_varyings;
-    float max_shininess;
+  GL_Vendors gl_vendor;
+  GL_Cards   gl_card;
+  UINT   vidmem;
+  DWORD  driver_version;
+  DWORD  driver_version_hipart;
+  CHAR   driver_description[255];
+  CHAR   gl_renderer[255];
+  /**
+   * CAPS Constants
+   */
+  UINT   max_buffers;
+  UINT   max_lights;
+  UINT   max_textures;
+  UINT   max_texture_stages;
+  UINT   max_fragment_samplers;
+  UINT   max_vertex_samplers;
+  UINT   max_combined_samplers;
+  UINT   max_sampler_stages;
+  UINT   max_clipplanes;
+  UINT   max_texture_size;
+  UINT   max_texture3d_size;
+  float  max_pointsize, max_pointsizemin;
+  UINT   max_point_sprite_units;
+  UINT   max_blends;
+  UINT   max_anisotropy;
+  UINT   max_glsl_varyings;
+  float  max_shininess;
 
-    unsigned int max_vshader_constantsF;
-    unsigned int max_pshader_constantsF;
+  unsigned max_vshader_constantsF;
+  unsigned max_pshader_constantsF;
 
-    unsigned int vs_arb_constantsF;
-    unsigned int vs_arb_max_instructions;
-    unsigned int vs_arb_max_temps;
-    unsigned int ps_arb_constantsF;
-    unsigned int ps_arb_max_local_constants;
-    unsigned int ps_arb_max_instructions;
-    unsigned int ps_arb_max_temps;
-    unsigned int vs_glsl_constantsF;
-    unsigned int ps_glsl_constantsF;
+  unsigned vs_arb_constantsF;
+  unsigned vs_arb_max_instructions;
+  unsigned vs_arb_max_temps;
+  unsigned ps_arb_constantsF;
+  unsigned ps_arb_max_instructions;
+  unsigned ps_arb_max_temps;
+  unsigned vs_glsl_constantsF;
+  unsigned ps_glsl_constantsF;
 
-    DWORD reserved_glsl_constants;
+  GL_PSVersion ps_arb_version;
+  GL_PSVersion ps_nv_version;
 
-    DWORD quirks;
+  GL_VSVersion vs_arb_version;
+  GL_VSVersion vs_nv_version;
+  GL_VSVersion vs_ati_version;
 
-    BOOL supported[WINED3D_GL_EXT_COUNT];
+  BOOL arb_vs_offset_limit;
+  BOOL set_texcoord_w;
+  DWORD reserved_glsl_constants;
 
-    /* GL function pointers */
-    GL_EXT_FUNCS_GEN
-    /* WGL function pointers */
-    WGL_EXT_FUNCS_GEN
+  BOOL supported[OPENGL_SUPPORTED_EXT_END + 1];
 
-    struct GlPixelFormatDesc *gl_formats;
-};
+  /** OpenGL EXT and ARB functions ptr */
+  GL_EXT_FUNCS_GEN
+  /** OpenGL WGL functions ptr */
+  WGL_EXT_FUNCS_GEN
 
+  struct GlPixelFormatDesc *gl_formats;
+} WineD3D_GL_Info;
 #undef USE_GL_FUNC
+
+struct driver_quirk {
+    BOOL        (*match)(const WineD3D_GL_Info *gl_info);
+    void        (*apply)(WineD3D_GL_Info *gl_info);
+    const char  *description;
+};
 
 #endif /* __WINE_WINED3D_GL */

@@ -56,10 +56,9 @@ static ULONG WINAPI IDirect3DPixelShader8Impl_Release(IDirect3DPixelShader8 * if
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        wined3d_mutex_lock();
+        EnterCriticalSection(&d3d8_cs);
         IWineD3DPixelShader_Release(This->wineD3DPixelShader);
-        wined3d_mutex_unlock();
-
+        LeaveCriticalSection(&d3d8_cs);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;

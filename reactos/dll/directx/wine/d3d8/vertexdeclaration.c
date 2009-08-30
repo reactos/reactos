@@ -61,10 +61,9 @@ static ULONG WINAPI IDirect3DVertexDeclaration8Impl_Release(IDirect3DVertexDecla
     TRACE("(%p) : Releasing to %d\n", This, ref_count);
 
     if (!ref_count) {
-        wined3d_mutex_lock();
+        EnterCriticalSection(&d3d8_cs);
         IWineD3DVertexDeclaration_Release(This->wined3d_vertex_declaration);
-        wined3d_mutex_unlock();
-
+        LeaveCriticalSection(&d3d8_cs);
         HeapFree(GetProcessHeap(), 0, This->elements);
         HeapFree(GetProcessHeap(), 0, This);
     }
