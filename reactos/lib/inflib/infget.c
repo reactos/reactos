@@ -243,7 +243,7 @@ InfpGetBinaryField(PINFCONTEXT Context,
   for (Index = 1; Index < FieldIndex; Index++)
     CacheField = CacheField->Next;
 
-  Size = CacheLine->FieldCount - FieldIndex + 1;
+  Size = (ULONG)CacheLine->FieldCount - FieldIndex + 1;
 
   if (RequiredSize != NULL)
     *RequiredSize = Size;
