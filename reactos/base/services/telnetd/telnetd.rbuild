@@ -1,4 +1,4 @@
-<module name="telnetd" type="win32cui" installbase="system32" installname="telnetd.exe" allowwarnings="true" unicode="no">
+<module name="telnetd" type="win32cui" installbase="system32" installname="telnetd.exe" unicode="no">
 	<include base="reactos"></include>
 	<include base="telnetd">..</include>
 
