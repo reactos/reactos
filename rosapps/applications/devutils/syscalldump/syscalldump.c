@@ -36,7 +36,7 @@ ImageSymToVa(HANDLE hProcess, PSYMBOL_INFO pSym, PBYTE pModule, PCSTR Name)
 		printf("SymGetSymFromName64() failed: %ld\n", GetLastError());
 		return 0;
 	}
-	printf("looking up adress for %s: 0x%llx\n", Name, pSym->Address);
+	printf("looking up adress for %s: 0x%I64x\n", Name, pSym->Address);
 
 	NtHeaders = ImageNtHeader(pModule);
 	p = ImageRvaToVa(NtHeaders, pModule, pSym->Address - pSym->ModBase, NULL);
