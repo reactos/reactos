@@ -56,9 +56,10 @@ static ULONG WINAPI IDirect3DVertexShader9Impl_Release(LPDIRECT3DVERTEXSHADER9 i
     TRACE("(%p) : ReleaseRef to %d\n", This, ref);
 
     if (ref == 0) {
-        EnterCriticalSection(&d3d9_cs);
+        wined3d_mutex_lock();
         IWineD3DVertexShader_Release(This->wineD3DVertexShader);
-        LeaveCriticalSection(&d3d9_cs);
+        wined3d_mutex_unlock();
+
         IDirect3DDevice9Ex_Release(This->parentDevice);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -72,7 +73,7 @@ static HRESULT WINAPI IDirect3DVertexShader9Impl_GetDevice(LPDIRECT3DVERTEXSHADE
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DVertexShader_GetDevice(This->wineD3DVertexShader, &myDevice);
     if (WINED3D_OK == hr && myDevice != NULL) {
         hr = IWineD3DDevice_GetParent(myDevice, (IUnknown **)ppDevice);
@@ -80,7 +81,8 @@ static HRESULT WINAPI IDirect3DVertexShader9Impl_GetDevice(LPDIRECT3DVERTEXSHADE
     } else {
         *ppDevice = NULL;
     }
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     TRACE("(%p) returning (%p)\n", This, *ppDevice);
     return hr;
 }
@@ -90,9 +92,10 @@ static HRESULT WINAPI IDirect3DVertexShader9Impl_GetFunction(LPDIRECT3DVERTEXSHA
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DVertexShader_GetFunction(This->wineD3DVertexShader, pData, pSizeOfData);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -125,9 +128,11 @@ HRESULT WINAPI IDirect3DDevice9Impl_CreateVertexShader(LPDIRECT3DDEVICE9EX iface
 
     object->ref = 1;
     object->lpVtbl = &Direct3DVertexShader9_Vtbl;
-    EnterCriticalSection(&d3d9_cs);
-    hrc= IWineD3DDevice_CreateVertexShader(This->WineD3DDevice, NULL /* declaration */, pFunction, &object->wineD3DVertexShader, (IUnknown *)object);
-    LeaveCriticalSection(&d3d9_cs);
+
+    wined3d_mutex_lock();
+    hrc= IWineD3DDevice_CreateVertexShader(This->WineD3DDevice, pFunction,
+            NULL /* output signature */, &object->wineD3DVertexShader, (IUnknown *)object);
+    wined3d_mutex_unlock();
 
     if (FAILED(hrc)) {
 
@@ -150,9 +155,10 @@ HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShader(LPDIRECT3DDEVICE9EX iface, I
     HRESULT hrc = D3D_OK;
 
     TRACE("(%p) : Relay\n", This);
-    EnterCriticalSection(&d3d9_cs);
+
+    wined3d_mutex_lock();
     hrc =  IWineD3DDevice_SetVertexShader(This->WineD3DDevice, pShader==NULL?NULL:((IDirect3DVertexShader9Impl *)pShader)->wineD3DVertexShader);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
 
     TRACE("(%p) : returning hr(%u)\n", This, hrc);
     return hrc;
@@ -164,7 +170,8 @@ HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShader(LPDIRECT3DDEVICE9EX iface, I
     HRESULT hrc = D3D_OK;
 
     TRACE("(%p) : Relay  device@%p\n", This, This->WineD3DDevice);
-    EnterCriticalSection(&d3d9_cs);
+
+    wined3d_mutex_lock();
     hrc = IWineD3DDevice_GetVertexShader(This->WineD3DDevice, &pShader);
     if (SUCCEEDED(hrc))
     {
@@ -182,7 +189,8 @@ HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShader(LPDIRECT3DDEVICE9EX iface, I
     {
         WARN("(%p) : Call to IWineD3DDevice_GetVertexShader failed %u (device %p)\n", This, hrc, This->WineD3DDevice);
     }
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     TRACE("(%p) : returning %p\n", This, *ppShader);
     return hrc;
 }
@@ -198,9 +206,10 @@ HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShaderConstantF(LPDIRECT3DDEVICE9EX
         return D3DERR_INVALIDCALL;
     }
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_SetVertexShaderConstantF(This->WineD3DDevice, Register, pConstantData, Vector4fCount);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -215,9 +224,11 @@ HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShaderConstantF(LPDIRECT3DDEVICE9EX
     }
 
     TRACE("(%p) : Relay\n", This);
-    EnterCriticalSection(&d3d9_cs);
+
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_GetVertexShaderConstantF(This->WineD3DDevice, Register, pConstantData, Vector4fCount);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -226,9 +237,10 @@ HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShaderConstantI(LPDIRECT3DDEVICE9EX
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_SetVertexShaderConstantI(This->WineD3DDevice, Register, pConstantData, Vector4iCount);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -237,9 +249,10 @@ HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShaderConstantI(LPDIRECT3DDEVICE9EX
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_GetVertexShaderConstantI(This->WineD3DDevice, Register, pConstantData, Vector4iCount);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -248,9 +261,10 @@ HRESULT WINAPI IDirect3DDevice9Impl_SetVertexShaderConstantB(LPDIRECT3DDEVICE9EX
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_SetVertexShaderConstantB(This->WineD3DDevice, Register, pConstantData, BoolCount);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -259,8 +273,9 @@ HRESULT WINAPI IDirect3DDevice9Impl_GetVertexShaderConstantB(LPDIRECT3DDEVICE9EX
     HRESULT hr;
     TRACE("(%p) : Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DDevice_GetVertexShaderConstantB(This->WineD3DDevice, Register, pConstantData, BoolCount);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
