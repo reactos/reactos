@@ -25,7 +25,7 @@ public:
 //	BOOL SetInputMode(DWORD dwMode);
 	BOOL SetTextAttribute(WORD wAttributes);
 	BOOL GetTextAttribute(WORD& rwAttributes);
-	BOOL SetTitle(TCHAR *p);
+	BOOL SetTitle(const TCHAR *p);
 	BOOL Write(const TCHAR *p, DWORD dwChars = 0);
 	CConsole();
 	virtual ~CConsole();
@@ -38,7 +38,7 @@ private:
 	COORD m_BufferSize;
 	WORD m_wAttributes;
 	SHORT m_Lines;
-	BOOL WriteString(TCHAR *pchString, COORD Position);
+	BOOL WriteString(const TCHAR *pchString, COORD Position);
 	BOOL WriteChar(TCHAR ch);
 	BOOL m_blnInsetMode;	// TRUE - insert, FALSE - overwrite
 	DWORD m_dwInsertModeCursorHeight;

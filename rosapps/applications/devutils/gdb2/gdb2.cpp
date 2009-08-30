@@ -177,6 +177,7 @@ void PrepAndLaunchRedirectedChild(HANDLE hChildStdOut,
 {
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
+    static CHAR Title[] = "debugged program console";
 
 	// Set up the start up info struct.
 	ZeroMemory(&si,sizeof(STARTUPINFO));
@@ -185,7 +186,7 @@ void PrepAndLaunchRedirectedChild(HANDLE hChildStdOut,
 	si.hStdOutput = hChildStdOut;
 	si.hStdInput  = hChildStdIn;
 	si.hStdError  = hChildStdErr;
-	si.lpTitle = "debugged program console";
+	si.lpTitle = Title;
 	// Use this if you want to hide the child:
 	//     si.wShowWindow = SW_HIDE;
 	// Note that dwFlags must include STARTF_USESHOWWINDOW if you want to
