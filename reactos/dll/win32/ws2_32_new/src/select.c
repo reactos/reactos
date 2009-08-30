@@ -52,6 +52,12 @@ select(IN INT s,
     SOCKET Handle;
     DPRINT("select: %lx %p %p %p %p\n", s, readfds, writefds, exceptfds, timeout);
 
+#if defined(__GNUC__) && \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40400)
+    /* Silence incorrect GCC 4.4.0 warning */
+    Handle = 0;
+#endif
+
     /* Check for WSAStartup */
     if ((ErrorCode = WsQuickProlog()) == ERROR_SUCCESS)
     {
