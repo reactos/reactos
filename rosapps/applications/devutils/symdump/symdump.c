@@ -875,7 +875,12 @@ EnumSymbolsProc(
 		}
 		else
 		{
+#if defined(__GNUC__) && \
+	(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ < 40400)
+		    printf("Symbol: %s, TypeIndex=%ld, Flags=%lx, Value=0x%llx\n",
+#else
 		    printf("Symbol: %s, TypeIndex=%ld, Flags=%lx, Value=0x%I64x\n",
+#endif
 		        pSymInfo->Name, pSymInfo->TypeIndex, pSymInfo->Flags, pSymInfo->Value);
 			//if (pSymInfo->Flags & SYMFLAG_FUNCTION)
 			{

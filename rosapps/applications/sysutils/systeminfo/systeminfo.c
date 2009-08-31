@@ -358,8 +358,7 @@ AllSysInfo(VOID)
 int
 main(int argc, char *argv[])
 {
-    char str[] = "/?";
-	if (argc > 1 && !strcmp(argv[1], str))
+	if (argc > 1 && !strcmp(argv[1], "/?"))
 	{
 		Usage();
 		return 0;
