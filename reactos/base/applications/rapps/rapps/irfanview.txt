@@ -3,16 +3,20 @@
 [Section]
 Name = IrfanView
 Version = 4.23
-Licence = Unknown
+Licence = Freeware (for personal use)
 Description = Viewer for all kinds of graphics/audio files/video files.
-Size = Unknown
+Size = 1.3MB
 Category = 3
 URLSite = http://www.irfanview.com
-URLDownload = http://irfanview.tuwien.ac.at/iview423_setup.exe
+URLDownload = http://irfanview.tuwien.ac.at/iview425_setup.exe
 CDPath = none
 
 
 [Section.0407]
-Licence = Unbekannt
-Description = Anzeigeprogramm für alle Arten von Grafik-/Audio- oder Video-Dateien
-Size = Unbekannt
+Licence = Freeware für nichtkommerzielle Nutzung
+Description = Anzeigeprogramm für alle Arten von Grafik-/Audio- oder Video-Dateien.
+
+[Section.0415]
+Licence = Freeware (dla użytku domowego)
+Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz wideo.
+

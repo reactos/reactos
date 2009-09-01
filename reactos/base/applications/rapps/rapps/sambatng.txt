@@ -2,19 +2,18 @@
 
 [Section]
 Name = Samba TNG
-Version = Unknown
-Licence = Unknown
+Version = 0.4.99cvs
+Licence = GPL
 Description = This tool allows you to access your Windows shared folders/printers with ReactOS.
-Size = Unknown
+Size = 1MB
 Category = 5
-URLSite = Unknown
+URLSite = http://samba-tng.org
 URLDownload = http://svn.reactos.org/packages/samba-tng.exe
 CDPath = none
 
 
 [Section.0407]
-Version = Unbekannt
-Licence = Unbekannt
 Description = Dieses Werkzeug erlaubt den Zugriff auf Windows' gemeinsame Verzeichnisse und Drucker aus ReactOS heraus.
-Size = Unbekannt
-URLSite = Unbekannt
+
+[Section.0415]
+Description = Narzêdzie pozwalaj¹ce na dostêp z poziomu ReactOSa do wspó³dzielonych folderów/drukarek Windows.

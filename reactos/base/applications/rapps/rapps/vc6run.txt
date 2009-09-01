@@ -5,14 +5,16 @@ Name = Visual Studio 6 Runtime
 Version = 6.0
 Licence = Unknown
 Description = Visual Studio 6 Runtime.
-Size = Unknown
+Size = 1.7MB
 Category = 14
-URLSite = Unknown
+URLSite = http://support.microsoft.com/kb/259403
 URLDownload = http://download.microsoft.com/download/vc60pro/update/1/w9xnt4/en-us/vc6redistsetup_enu.exe
 CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
 Description = Visual Studio 6 Laufzeitsystem
-Size = Unbekannt
-URLSite = Unbekannt
+
+[Section.0407]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Studio 6

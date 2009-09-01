@@ -2,18 +2,18 @@
 
 [Section]
 Name = OpenTTD
-Version = 0.6.0
-Licence = Unknown
+Version = 0.7.2
+Licence = GPL v2
 Description = Open Source clone of the "Transport Tycoon Deluxe" game engine. You need a copy of Transport Tycoon.
-Size = Unknown
+Size = 2.9MB
 Category = 4
-URLSite = Unknown
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.6.0-win32.exe
+URLSite = http://www.openttd.org
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/openttd/openttd-0.7.2-win32.exe
 CDPath = none
 
 
 [Section.0407]
-Licence = Unbekannt
 Description = Open Source Klon der "Transport Tycoon Deluxe" Spiel-Engine. Sie benötigen eine Kopie von Transport Tycoon.
-Size = Unbekannt
-URLSite = Unbekannt
+
+[Section.0415]
+Description = Otwarty klon silnika gry "Transport Tycoon Deluxe". Do poprawnego działania potrzebna jest kopia gry Transport Tycoon.

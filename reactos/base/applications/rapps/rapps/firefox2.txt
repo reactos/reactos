@@ -29,3 +29,9 @@ Description = Mest populÃ¦re og best ogsÃ¥ gratis nettleserene der ute.
 Size = 5.6M
 URLSite = http://www.mozilla-europe.org/no/
 URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.20/win32/nb-NO/Firefox%20Setup%202.0.0.20.exe
+
+[Section.0415]
+Description = Najpopularniejsza i jedna z najlepszych darmowych przeglД…darek internetowych.
+Size = 6.3M
+URLSite = http://www.mozilla-europe.org/pl/
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.20/win32/pl/Firefox%20Setup%202.0.0.20.exe

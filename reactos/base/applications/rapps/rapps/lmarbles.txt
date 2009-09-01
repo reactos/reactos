@@ -3,17 +3,17 @@
 [Section]
 Name = LMarbles
 Version = 1.0.6
-Licence = Unknown
+Licence = GPL
 Description = Atomix Clone using SDL libs.
-Size = Unknown
+Size = 1.4MB
 Category = 4
-URLSite = Unknown
+URLSite = http://lgames.sourceforge.net/index.php?project=LMarbles
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lmarbles-1.0.6-win32.exe
 CDPath = none
 
 
 [Section.0407]
-Licence = Unbekannt
 Description = Atomix-Klon verwendet SDL Bibliotheken.
-Size = Unbekannt
-URLSite = Unbekannt
+
+[Section.0415]
+Description = Klon gry Atomix, u¿ywaj¹cy biblioteki SDL.

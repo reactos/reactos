@@ -3,17 +3,16 @@
 [Section]
 Name = LGeneral
 Version = 1.1
-Licence = Unknown
+Licence = GPL
 Description = Panzer General Clone using SDL libs.
-Size = Unknown
+Size = 2.0MB
 Category = 4
-URLSite = Unknown
+URLSite = http://lgames.sourceforge.net/index.php?project=LGeneral
 URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lgeneral-1.1-win32.exe
 CDPath = none
 
-
 [Section.0407]
-Licence = Unbekannt
 Description = Panzer-General-Klon verwendet SDL Bibliotheken.
-Size = Unbekannt
-URLSize = Unbekannt
+
+[Section.0415]
+Description = Klon gry Panzer General napisany przy u¿yciu biblioteki SDL.

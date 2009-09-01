@@ -2,18 +2,18 @@
 
 [Section]
 Name = MinGW
-Version = 5.1.3
-Licence = Unknown
+Version = 5.1.4
+Licence = Public domain/GPL
 Description = A Port of the GNU toolchain with GCC, GDB, GNU make, etc.
-Size = Unknown
+Size = 136kb
 Category = 7
-URLSite = Unknown
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.3.exe
+URLSite = http://mingw.org/
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.4.exe
 CDPath = none
 
 
 [Section.0407]
-Licence = Unbekannt
 Description = Eine Portierung der GNU Werkzeugkette mit GCC, GDB, GNU make usw.
-Size = Unbekannt
-URLSite = Unbekannt
+
+[Section.0415]
+Description = Kompilator GCC dla platformy Windows wraz z dodatkowymi narzêdziami (GDB, make, itd.).

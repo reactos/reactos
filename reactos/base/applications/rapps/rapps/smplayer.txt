@@ -2,17 +2,19 @@
 
 [Section]
 Name = SMPlayer
-Version = 0.6.7
-Licence = Unknown
+Version = 0.6.8
+Licence = GPL
 Description = SMPlayer.
-Size = Unknown
+Size = 13.38MB
 Category = 1
-URLSite = Unknown
-URLDownload = http://dfn.dl.sourceforge.net/sourceforge/smplayer/smplayer_0.6.7_setup.exe
+URLSite = http://smplayer.sourceforge.net/
+URLDownload = http://dfn.dl.sourceforge.net/sourceforge/smplayer/smplayer_0.6.8_setup.exe
 CDPath = none
 
 
 [Section.0407]
-Licence = Unbekannt
-Size = Unbekannt
-URLSite = Unbekannt
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=de
+
+[Section.0415]
+URLSite = http://smplayer.sourceforge.net/index.php?tr_lang=pl
+Description = Graficzna nak³adka na MPlayer, otwarty odtwarzacz filmów.

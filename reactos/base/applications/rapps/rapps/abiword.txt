@@ -3,7 +3,7 @@
 [Section]
 Name = AbiWord
 Version = 2.6.4
-Licence = Unknown
+Licence = GPL
 Description = Word processor.
 Size = Unknown
 Category = 6
@@ -12,6 +12,9 @@ URLDownload = http://www.abiword.org/downloads/abiword/2.6.4/Windows/abiword-set
 CDPath = none
 
 [Section.0407]
-Licence = Unbekannt
 Description = Textverarbeitung
 Size = Unbekannt
+
+[Section.0415]
+Description = Edytor tekstu
+Size = Nieznany

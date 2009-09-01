@@ -5,14 +5,16 @@ Name = Visual Basic 5 Runtime
 Version = 5.0
 Licence = Unknown
 Description = Visual Basic 5 Runtime.
-Size = Unknown
+Size = 970kB
 Category = 14
-URLSite = Unknown
+URLSite = http://support.microsoft.com/kb/180071
 URLDownload = http://download.microsoft.com/download/vb50pro/utility/1/win98/en-us/msvbvm50.exe
 CDPath = none
 
 [Section.0407]
 Licence = Unbekannt
 Description = Visual Basic 5 Laufzeitsystem
-Size = Unbekannt
-URLSite = Unbekannt
+
+[Section.0415]
+Licence = Nieznana
+Description = Biblioteki uruchomieniowe Visual Basic 5

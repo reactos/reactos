@@ -2,18 +2,18 @@
 
 [Section]
 Name = Miranda IM
-Version = 0.7.4
-Licence = Unknown
+Version = 0.8.5
+Licence = GPL
 Description = Open source multiprotocol instant messaging application - May not work completely.
-Size = Unknown
+Size = 1.6MB
 Category = 5
-URLSite = Unknown
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/miranda/miranda-im-v0.7.4-unicode.exe
+URLSite = http://www.miranda-im.org/
+URLDownload = http://miranda.googlecode.com/files/miranda-im-v0.8.5-unicode.exe
 CDPath = none
 
 
 [Section.0407]
-Licence = Unbekannt
 Description = Open source Multiprotocol Instant Messaging Anwendung - funktioniert möglicherweise nicht vollständig.
-Size = Unbekannt
-URLSite = Unbekannt
+
+[Section.0415]
+Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.

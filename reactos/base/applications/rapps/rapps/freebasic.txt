@@ -2,17 +2,18 @@
 
 [Section]
 Name = FreeBASIC
-Version = 0.18.4b
-Licence = Unknown
+Version = 0.20.0b
+Licence = GPL/LGPL
 Description = Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.
-Size = Unknown
+Size = 5.5MB
 Category = 7
-URLSite = Unknown
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.18.4b-win32.exe
+URLSite = http://www.freebasic.net/
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.20.0b-win32.exe
 CDPath = none
 
 
 [Section.0407]
-Licence = Unbekannt
 Description = Open Source BASIC Compiler. Die BASIC Syntax ist kompatibel zu QBASIC. 
-Size = Unbekannt
+
+[Section.0415]
+Description = Otwarty kompilator BASIC, ze skЕ‚adniД… kompatybilnД… z QBASIC. 

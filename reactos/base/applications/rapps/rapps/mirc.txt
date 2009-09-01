@@ -14,3 +14,6 @@ CDPath = none
 
 [Section.0407]
 Description = Der populärste Client für Internet Relay Chat (IRC).
+
+[Section.0415]
+Description = Najpopularniejszy klient IRC (Internet Relay Chat).
