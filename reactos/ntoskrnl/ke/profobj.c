@@ -62,6 +62,7 @@ KeStartProfile(PKPROFILE Profile,
     SourceBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                           sizeof(KPROFILE_SOURCE_OBJECT),
                                           'forP');
+    if (!SourceBuffer) return;
     RtlZeroMemory(SourceBuffer, sizeof(KPROFILE_SOURCE_OBJECT));
 
     /* Raise to PROFILE_LEVEL */

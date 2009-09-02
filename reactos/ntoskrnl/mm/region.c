@@ -245,6 +245,8 @@ MmInitializeRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
 
    Region = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_REGION),
                                   TAG_MM_REGION);
+   if (!Region) return;
+
    Region->Type = Type;
    Region->Protect = Protect;
    Region->Length = Length;

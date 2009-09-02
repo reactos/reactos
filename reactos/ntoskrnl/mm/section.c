@@ -2756,6 +2756,10 @@ ExeFmtpReadFile(IN PVOID File,
    Buffer = ExAllocatePoolWithTag(PagedPool,
                                   BufferSize,
                                   'rXmM');
+   if (!Buffer)
+   {
+      KeBugCheck(MEMORY_MANAGEMENT);
+   }
 
    UsedSize = 0;
 

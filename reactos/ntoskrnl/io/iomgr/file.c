@@ -2872,7 +2872,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-
+        /* Ignore exception */
     }
     _SEH2_END;
 

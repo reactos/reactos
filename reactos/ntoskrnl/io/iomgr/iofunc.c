@@ -1015,6 +1015,12 @@ NtFlushBuffersFile(IN HANDLE FileHandle,
     {
         /* Use local event */
         Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        if (!Event)
+        {
+            /* We failed */
+            ObDereferenceObject(FileObject);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
     }
@@ -1548,6 +1554,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         {
             /* Allocate an MDL */
             Mdl = IoAllocateMdl(FileInformation, Length, FALSE, TRUE, Irp);
+            if (!Mdl) ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
             MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1636,6 +1643,7 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     PVOID NormalContext;
     KIRQL OldIrql;
     IO_STATUS_BLOCK KernelIosb;
+    PAGED_CODE();
     IOTRACE(IO_API_DEBUG, "FileHandle: %p\n", FileHandle);
 
     /* Check if we're called from user mode */
@@ -1749,6 +1757,11 @@ NtQueryInformationFile(IN HANDLE FileHandle,
     {
         /* Use local event */
         Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        if (!Event)
+        {
+            ObDereferenceObject(FileObject);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
     }
@@ -2666,6 +2679,11 @@ NtUnlockFile(IN HANDLE FileHandle,
     {
         /* Use local event */
         Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        if (!Event)
+        {
+            ObDereferenceObject(FileObject);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
     }
@@ -3102,6 +3120,11 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
     {
         /* Use local event */
         Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        if (!Event)
+        {
+            ObDereferenceObject(FileObject);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
     }
@@ -3263,6 +3286,11 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
     {
         /* Use local event */
         Event = ExAllocatePoolWithTag(NonPagedPool, sizeof(KEVENT), TAG_IO);
+        if (!Event)
+        {
+            ObDereferenceObject(FileObject);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
         KeInitializeEvent(Event, SynchronizationEvent, FALSE);
         LocalEvent = TRUE;
     }

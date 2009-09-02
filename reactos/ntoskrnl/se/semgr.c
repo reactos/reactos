@@ -86,6 +86,8 @@ BOOLEAN
 NTAPI
 SepInitializationPhase0(VOID)
 {
+    PAGED_CODE();
+
     ExpInitLuid();
     if (!SepInitSecurityIDs()) return FALSE;
     if (!SepInitDACLs()) return FALSE;

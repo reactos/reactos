@@ -1006,7 +1006,9 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
                                            sizeof(MEMORY_AREA),
                                            TAG_MAREA);
     }
-    
+
+    if (!MemoryArea) return STATUS_NO_MEMORY;
+
    RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
    MemoryArea->Type = Type;
    MemoryArea->StartingAddress = *BaseAddress;

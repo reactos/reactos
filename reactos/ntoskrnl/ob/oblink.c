@@ -123,6 +123,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
     PWSTR NewTargetPath;
     ULONG LengthUsed, MaximumLength;
     NTSTATUS Status;
+    PAGED_CODE();
 
     /* Assume failure */
     *NextObject = NULL;
@@ -169,6 +170,7 @@ ObpParseSymbolicLink(IN PVOID ParsedObject,
         NewTargetPath = ExAllocatePoolWithTag(NonPagedPool,
                                               MaximumLength,
                                               TAG_SYMLINK_TTARGET);
+        if (!NewTargetPath) return STATUS_INSUFFICIENT_RESOURCES;
     }
     else
     {
