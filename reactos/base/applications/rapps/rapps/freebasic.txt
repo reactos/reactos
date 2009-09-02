@@ -16,4 +16,4 @@ CDPath = none
 Description = Open Source BASIC Compiler. Die BASIC Syntax ist kompatibel zu QBASIC. 
 
 [Section.0415]
-Description = Otwarty kompilator BASIC, ze skЕ‚adniД… kompatybilnД… z QBASIC. 
+Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC. 
