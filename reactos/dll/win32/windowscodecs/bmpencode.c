@@ -333,8 +333,8 @@ static HRESULT WINAPI BmpFrameEncode_Commit(IWICBitmapFrameEncode *iface)
     bih.bV5BitCount = This->format->bpp;
     bih.bV5Compression = This->format->compression;
     bih.bV5SizeImage = This->stride*This->height;
-    bih.bV5XPelsPerMeter = (This->xres-0.0127) / 0.0254;
-    bih.bV5YPelsPerMeter = (This->yres-0.0127) / 0.0254;
+    bih.bV5XPelsPerMeter = (This->xres+0.0127) / 0.0254;
+    bih.bV5YPelsPerMeter = (This->yres+0.0127) / 0.0254;
     bih.bV5ClrUsed = 0;
     bih.bV5ClrImportant = 0;
 

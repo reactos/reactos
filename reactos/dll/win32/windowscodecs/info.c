@@ -1064,6 +1064,7 @@ HRESULT WINAPI WICConvertBitmapSource(REFWICPixelFormatGUID dstFormat, IWICBitma
     }
     else
     {
+        FIXME("cannot convert %s to %s\n", debugstr_guid(&srcFormat), debugstr_guid(dstFormat));
         *ppIDst = NULL;
         return WINCODEC_ERR_COMPONENTNOTFOUND;
     }

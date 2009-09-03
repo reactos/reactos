@@ -3,6 +3,7 @@
 	<importlibrary definition="windowscodecs.spec" />
 	<include base="windowscodecs">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="ReactOS">include/reactos/libs/libjpeg</include>
 	<define name="__WINESRC__" />
 
 	<redefine name="_WIN32_WINNT">0x600</redefine>
@@ -21,8 +22,10 @@
 	<file>icoformat.c</file>
 	<file>imgfactory.c</file>
 	<file>info.c</file>
+	<file>jpegformat.c</file>
 	<file>main.c</file>
 	<file>palette.c</file>
+	<file>pngformat.c</file>
 	<file>propertybag.c</file>
 	<file>regsvr.c</file>
 	<file>stream.c</file>

@@ -138,7 +138,7 @@ static HRESULT WINAPI StreamOnMemory_Seek(IStream *iface,
 
     if (NewPosition.QuadPart > This->dwMemsize) return E_INVALIDARG;
     if (NewPosition.QuadPart < 0) return E_INVALIDARG;
-    This->dwCurPos = NewPosition.LowPart;
+    This->dwCurPos = NewPosition.u.LowPart;
 
     if(plibNewPosition) plibNewPosition->QuadPart = This->dwCurPos;
     return S_OK;

@@ -735,6 +735,12 @@ static struct regsvr_coclass const coclass_list[] = {
 	"windowscodecs.dll",
 	"Apartment"
     },
+    {   &CLSID_WICPngDecoder,
+	"WIC PNG Decoder",
+	NULL,
+	"windowscodecs.dll",
+	"Apartment"
+    },
     {   &CLSID_WICBmpEncoder,
 	"WIC BMP Encoder",
 	NULL,
@@ -753,6 +759,12 @@ static struct regsvr_coclass const coclass_list[] = {
 	"windowscodecs.dll",
 	"Apartment"
     },
+    {   &CLSID_WICJpegDecoder,
+	"WIC JPEG Decoder",
+	NULL,
+	"windowscodecs.dll",
+	"Apartment"
+    },
     {   &CLSID_WICDefaultFormatConverter,
 	"WIC Default Format Converter",
 	NULL,
@@ -765,7 +777,7 @@ static struct regsvr_coclass const coclass_list[] = {
 /***********************************************************************
  *		decoder list
  */
-static const BYTE mask_all[] = {0xff,0xff,0xff,0xff,0xff,0xff};
+static const BYTE mask_all[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
 
 static const BYTE bmp_magic[] = {0x42,0x4d};
 
@@ -813,6 +825,43 @@ static struct decoder_pattern const ico_patterns[] = {
     {0}
 };
 
+static const BYTE jpeg_magic[] = {0xff, 0xd8, 0xff, 0xe0};
+
+static GUID const * const jpeg_formats[] = {
+    &GUID_WICPixelFormat24bppBGR,
+    &GUID_WICPixelFormat8bppGray,
+    NULL
+};
+
+static struct decoder_pattern const jpeg_patterns[] = {
+    {4,0,jpeg_magic,mask_all,0},
+    {0}
+};
+
+static const BYTE png_magic[] = {137,80,78,71,13,10,26,10};
+
+static GUID const * const png_formats[] = {
+    &GUID_WICPixelFormatBlackWhite,
+    &GUID_WICPixelFormat2bppGray,
+    &GUID_WICPixelFormat4bppGray,
+    &GUID_WICPixelFormat8bppGray,
+    &GUID_WICPixelFormat16bppGray,
+    &GUID_WICPixelFormat32bppBGRA,
+    &GUID_WICPixelFormat64bppRGBA,
+    &GUID_WICPixelFormat1bppIndexed,
+    &GUID_WICPixelFormat2bppIndexed,
+    &GUID_WICPixelFormat4bppIndexed,
+    &GUID_WICPixelFormat8bppIndexed,
+    &GUID_WICPixelFormat24bppBGR,
+    &GUID_WICPixelFormat48bppRGB,
+    NULL
+};
+
+static struct decoder_pattern const png_patterns[] = {
+    {8,0,png_magic,mask_all,0},
+    {0}
+};
+
 static struct regsvr_decoder const decoder_list[] = {
     {   &CLSID_WICBmpDecoder,
 	"The Wine Project",
@@ -844,18 +893,46 @@ static struct regsvr_decoder const decoder_list[] = {
 	ico_formats,
 	ico_patterns
     },
+    {   &CLSID_WICJpegDecoder,
+	"The Wine Project",
+	"JPEG Decoder",
+	"1.0.0.0",
+	&GUID_VendorMicrosoft,
+	"image/jpeg",
+	".jpg;.jpeg;.jfif",
+	jpeg_formats,
+	jpeg_patterns
+    },
+    {   &CLSID_WICPngDecoder,
+	"The Wine Project",
+	"PNG Decoder",
+	"1.0.0.0",
+	&GUID_VendorMicrosoft,
+	"image/png",
+	".png",
+	png_formats,
+	png_patterns
+    },
     { NULL }			/* list terminator */
 };
 
 static GUID const * const converter_formats[] = {
     &GUID_WICPixelFormat1bppIndexed,
+    &GUID_WICPixelFormat2bppIndexed,
     &GUID_WICPixelFormat4bppIndexed,
     &GUID_WICPixelFormat8bppIndexed,
+    &GUID_WICPixelFormatBlackWhite,
+    &GUID_WICPixelFormat2bppGray,
+    &GUID_WICPixelFormat4bppGray,
+    &GUID_WICPixelFormat8bppGray,
+    &GUID_WICPixelFormat16bppGray,
     &GUID_WICPixelFormat16bppBGR555,
     &GUID_WICPixelFormat16bppBGR565,
     &GUID_WICPixelFormat24bppBGR,
     &GUID_WICPixelFormat32bppBGR,
     &GUID_WICPixelFormat32bppBGRA,
+    &GUID_WICPixelFormat48bppRGB,
+    &GUID_WICPixelFormat64bppRGBA,
     NULL
 };
 
