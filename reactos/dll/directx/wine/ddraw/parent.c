@@ -117,8 +117,7 @@ IParentImpl_AddRef(IParent *iface)
  *  The new refcount
  *
  *****************************************************************************/
-static ULONG WINAPI 
-IParentImpl_Release(IParent *iface)
+static ULONG WINAPI IParentImpl_Release(IParent *iface)
 {
     IParentImpl *This = (IParentImpl *)iface;
     ULONG ref = InterlockedDecrement(&This->ref);

@@ -227,14 +227,14 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
                     } else if(lpDevice->Handles[ci->u2.dwArg[0] - 1].type != DDrawHandle_Matrix) {
                         ERR("Handle %d is not a matrix handle\n", ci->u2.dwArg[0]);
                     } else {
-                        if(ci->u1.drstRenderStateType == D3DTRANSFORMSTATE_WORLD)
+                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_WORLD)
                             lpDevice->world = ci->u2.dwArg[0];
-                        if(ci->u1.drstRenderStateType == D3DTRANSFORMSTATE_VIEW)
+                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_VIEW)
                             lpDevice->view = ci->u2.dwArg[0];
-                        if(ci->u1.drstRenderStateType == D3DTRANSFORMSTATE_PROJECTION)
+                        if(ci->u1.dtstTransformStateType == D3DTRANSFORMSTATE_PROJECTION)
                             lpDevice->proj = ci->u2.dwArg[0];
                         IDirect3DDevice7_SetTransform((IDirect3DDevice7 *)lpDevice,
-                                ci->u1.drstRenderStateType, (LPD3DMATRIX)lpDevice->Handles[ci->u2.dwArg[0] - 1].ptr);
+                                ci->u1.dtstTransformStateType, (LPD3DMATRIX)lpDevice->Handles[ci->u2.dwArg[0] - 1].ptr);
                     }
 		    instr += size;
 		}
@@ -249,7 +249,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
 		    TRACE("(%08x,%08x)\n", ci->u1.dlstLightStateType, ci->u2.dwArg[0]);
 
-		    if (!ci->u1.dlstLightStateType && (ci->u1.dlstLightStateType > D3DLIGHTSTATE_COLORVERTEX))
+		    if (!ci->u1.dlstLightStateType || (ci->u1.dlstLightStateType > D3DLIGHTSTATE_COLORVERTEX))
 			ERR("Unexpected Light State Type\n");
 		    else if (ci->u1.dlstLightStateType == D3DLIGHTSTATE_MATERIAL /* 1 */) {
 			DWORD matHandle = ci->u2.dwArg[0];
@@ -317,7 +317,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
 		for (i = 0; i < count; i++) {
 		    LPD3DSTATE ci = (LPD3DSTATE) instr;
-		    
+
                     IDirect3DDevice2_SetRenderState(d3d_device2, ci->u1.drstRenderStateType, ci->u2.dwArg[0]);
 
 		    instr += size;
@@ -369,33 +369,33 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 			    TRACE("UPDATEEXTENTS ");
 			TRACE("\n");
 		    }
-		    
+
 		    /* This is where doing Direct3D on top on OpenGL is quite difficult.
 		       This method transforms a set of vertices using the CURRENT state
 		       (lighting, projection, ...) but does not rasterize them.
 		       They will only be put on screen later (with the POINT / LINE and
 		       TRIANGLE op-codes). The problem is that you can have a triangle
 		       with each point having been transformed using another state...
-		       
+
 		       In this implementation, I will emulate only ONE thing : each
 		       vertex can have its own "WORLD" transformation (this is used in the
 		       TWIST.EXE demo of the 5.2 SDK). I suppose that all vertices of the
 		       execute buffer use the same state.
-		       
+
 		       If I find applications that change other states, I will try to do a
 		       more 'fine-tuned' state emulation (but I may become quite tricky if
 		       it changes a light position in the middle of a triangle).
-		       
+
 		       In this case, a 'direct' approach (i.e. without using OpenGL, but
 		       writing our own 3D rasterizer) would be easier. */
-		    
+
 		    /* The current method (with the hypothesis that only the WORLD matrix
 		       will change between two points) is like this :
 		       - I transform 'manually' all the vertices with the current WORLD
 		         matrix and store them in the vertex buffer
 		       - during the rasterization phase, the WORLD matrix will be set to
 		         the Identity matrix */
-		    
+
 		    /* Enough for the moment */
 		    if (ci->dwFlags == D3DPROCESSVERTICES_TRANSFORMLIGHT) {
 		        unsigned int nb;
@@ -439,7 +439,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
 			    src++;
 			    dst++;
-			    
+
 			}
 		    } else if (ci->dwFlags == D3DPROCESSVERTICES_TRANSFORM) {
 		        unsigned int nb;
@@ -465,7 +465,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 			    dst->u6.specular = src->u5.specular;
 			    dst->u7.tu = src->u6.tu;
 			    dst->u8.tv = src->u7.tv;
-			    
+
 			    /* Now, the matrix multiplication */
 			    dst->u1.sx = (src->u1.x * mat._11) + (src->u2.y * mat._21) + (src->u3.z * mat._31) + (1.0 * mat._41);
 			    dst->u2.sy = (src->u1.x * mat._12) + (src->u2.y * mat._22) + (src->u3.z * mat._32) + (1.0 * mat._42);
@@ -551,7 +551,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 
 		for (i = 0; i < count; i++) {
 		    LPD3DSTATUS ci = (LPD3DSTATUS) instr;
-		    
+
 		    This->data.dsStatus = *ci;
 
 		    instr += size;
@@ -705,7 +705,7 @@ IDirect3DExecuteBufferImpl_Lock(IDirect3DExecuteBuffer *iface,
     dwSize = lpDesc->dwSize;
     memset(lpDesc, 0, dwSize);
     memcpy(lpDesc, &This->desc, dwSize);
-    
+
     if (TRACE_ON(d3d7)) {
         TRACE("  Returning description :\n");
 	_dump_D3DEXECUTEBUFFERDESC(lpDesc);
@@ -756,7 +756,7 @@ IDirect3DExecuteBufferImpl_SetExecuteData(IDirect3DExecuteBuffer *iface,
 
     /* Get the number of vertices in the execute buffer */
     nbvert = This->data.dwVertexCount;
-    
+
     /* Prepares the transformed vertex buffer */
     HeapFree(GetProcessHeap(), 0, This->vertex_data);
     This->vertex_data = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nbvert * sizeof(D3DTLVERTEX));

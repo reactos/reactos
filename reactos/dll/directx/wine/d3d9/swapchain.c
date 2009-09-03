@@ -62,9 +62,10 @@ static ULONG WINAPI IDirect3DSwapChain9Impl_Release(LPDIRECT3DSWAPCHAIN9 iface) 
     if (ref == 0) {
         if (This->parentDevice) IDirect3DDevice9Ex_Release(This->parentDevice);
         if (!This->isImplicit) {
-            EnterCriticalSection(&d3d9_cs);
+            wined3d_mutex_lock();
             IWineD3DSwapChain_Destroy(This->wineD3DSwapChain, D3D9CB_DestroyRenderTarget);
-            LeaveCriticalSection(&d3d9_cs);
+            wined3d_mutex_unlock();
+
             HeapFree(GetProcessHeap(), 0, This);
         }
     }
@@ -78,9 +79,9 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_Present(LPDIRECT3DSWAPCHAIN9 iface
 
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DSwapChain_Present(This->wineD3DSwapChain, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion, dwFlags);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
 
     return hr;
 }
@@ -90,9 +91,10 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetFrontBufferData(LPDIRECT3DSWAPC
     HRESULT hr;
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DSwapChain_GetFrontBufferData(This->wineD3DSwapChain,  ((IDirect3DSurface9Impl *)pDestSurface)->wineD3DSurface);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -103,13 +105,14 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetBackBuffer(LPDIRECT3DSWAPCHAIN9
 
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hrc = IWineD3DSwapChain_GetBackBuffer(This->wineD3DSwapChain, iBackBuffer, (WINED3DBACKBUFFER_TYPE) Type, &mySurface);
     if (hrc == D3D_OK && NULL != mySurface) {
        IWineD3DSurface_GetParent(mySurface, (IUnknown **)ppBackBuffer);
        IWineD3DSurface_Release(mySurface);
     }
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     /* Do not touch the **ppBackBuffer pointer otherwise! (see device test) */
     return hrc;
 }
@@ -119,9 +122,10 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetRasterStatus(LPDIRECT3DSWAPCHAI
     HRESULT hr;
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DSwapChain_GetRasterStatus(This->wineD3DSwapChain, (WINED3DRASTER_STATUS *) pRasterStatus);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hr;
 }
 
@@ -130,9 +134,9 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetDisplayMode(LPDIRECT3DSWAPCHAIN
     HRESULT hr;
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DSwapChain_GetDisplayMode(This->wineD3DSwapChain, (WINED3DDISPLAYMODE *) pMode);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
 
     if (SUCCEEDED(hr)) pMode->Format = d3dformat_from_wined3dformat(pMode->Format);
 
@@ -146,13 +150,14 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetDevice(LPDIRECT3DSWAPCHAIN9 ifa
 
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hrc = IWineD3DSwapChain_GetDevice(This->wineD3DSwapChain, &device);
     if (hrc == D3D_OK && NULL != device) {
        IWineD3DDevice_GetParent(device, (IUnknown **)ppDevice);
        IWineD3DDevice_Release(device);
     }
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hrc;
 }
 
@@ -163,9 +168,9 @@ static HRESULT WINAPI IDirect3DSwapChain9Impl_GetPresentParameters(LPDIRECT3DSWA
 
     TRACE("(%p)->(%p): Relay\n", This, pPresentationParameters);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hr = IWineD3DSwapChain_GetPresentParameters(This->wineD3DSwapChain, &winePresentParameters);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
 
     pPresentationParameters->BackBufferWidth            = winePresentParameters.BackBufferWidth;
     pPresentationParameters->BackBufferHeight           = winePresentParameters.BackBufferHeight;
@@ -240,10 +245,10 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_CreateAdditionalSwapChain(LPDIRECT3DDEVICE
     localParameters.PresentationInterval                = pPresentationParameters->PresentationInterval;
     localParameters.AutoRestoreDisplayMode              = TRUE;
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hrc = IWineD3DDevice_CreateSwapChain(This->WineD3DDevice, &localParameters,
             &object->wineD3DSwapChain, (IUnknown*)object, SURFACE_OPENGL);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
 
     pPresentationParameters->BackBufferWidth            = localParameters.BackBufferWidth;
     pPresentationParameters->BackBufferHeight           = localParameters.BackBufferHeight;
@@ -280,7 +285,7 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9EX iface, UI
 
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     hrc = IWineD3DDevice_GetSwapChain(This->WineD3DDevice, iSwapChain, &swapchain);
     if (hrc == D3D_OK && NULL != swapchain) {
        IWineD3DSwapChain_GetParent(swapchain, (IUnknown **)pSwapChain);
@@ -288,7 +293,8 @@ HRESULT  WINAPI  IDirect3DDevice9Impl_GetSwapChain(LPDIRECT3DDEVICE9EX iface, UI
     } else {
         *pSwapChain = NULL;
     }
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return hrc;
 }
 
@@ -297,8 +303,9 @@ UINT     WINAPI  IDirect3DDevice9Impl_GetNumberOfSwapChains(LPDIRECT3DDEVICE9EX 
     UINT ret;
     TRACE("(%p) Relay\n", This);
 
-    EnterCriticalSection(&d3d9_cs);
+    wined3d_mutex_lock();
     ret = IWineD3DDevice_GetNumberOfSwapChains(This->WineD3DDevice);
-    LeaveCriticalSection(&d3d9_cs);
+    wined3d_mutex_unlock();
+
     return ret;
 }
