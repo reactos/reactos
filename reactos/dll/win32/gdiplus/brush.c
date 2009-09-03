@@ -288,6 +288,17 @@ GpStatus WINGDIPAPI GdipCreateLineBrush(GDIPCONST GpPointF* startpoint,
     (*line)->rect.Width  = fabs(startpoint->X - endpoint->X);
     (*line)->rect.Height = fabs(startpoint->Y - endpoint->Y);
 
+    if ((*line)->rect.Width == 0)
+    {
+        (*line)->rect.X -= (*line)->rect.Height / 2.0f;
+        (*line)->rect.Width = (*line)->rect.Height;
+    }
+    else if ((*line)->rect.Height == 0)
+    {
+        (*line)->rect.Y -= (*line)->rect.Width / 2.0f;
+        (*line)->rect.Height = (*line)->rect.Width;
+    }
+
     (*line)->blendcount = 1;
     (*line)->blendfac = GdipAlloc(sizeof(REAL));
     (*line)->blendpos = GdipAlloc(sizeof(REAL));
@@ -686,9 +697,9 @@ GpStatus WINGDIPAPI GdipCreateTextureIA(GpImage *image,
        n_y + n_height > ((GpBitmap*)image)->height)
         return InvalidParameter;
 
-    IPicture_get_Handle(image->picture, (OLE_HANDLE*)&hbm);
+    hbm = ((GpBitmap*)image)->hbitmap;
     if(!hbm)   return GenericError;
-    IPicture_get_CurDC(image->picture, &hdc);
+    hdc = ((GpBitmap*)image)->hdc;
     bm_is_selected = (hdc != 0);
 
     pbmi = GdipAlloc(sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
@@ -1342,6 +1353,13 @@ GpStatus WINGDIPAPI GdipSetPathGradientBlend(GpPathGradient *brush, GDIPCONST RE
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipSetPathGradientPresetBlend(GpPathGradient *brush,
+    GDIPCONST ARGB *blend, GDIPCONST REAL *pos, INT count)
+{
+    FIXME("(%p,%p,%p,%i): stub\n", brush, blend, pos, count);
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipSetPathGradientCenterColor(GpPathGradient *grad,
     ARGB argb)
 {
@@ -1551,12 +1569,33 @@ GpStatus WINGDIPAPI GdipRotateTextureTransform(GpTexture* brush, REAL angle,
 GpStatus WINGDIPAPI GdipSetLineLinearBlend(GpLineGradient *brush, REAL focus,
     REAL scale)
 {
-    static int calls;
+    REAL factors[3];
+    REAL positions[3];
+    int num_points = 0;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    TRACE("(%p,%.2f,%.2f)\n", brush, focus, scale);
 
-    return NotImplemented;
+    if (!brush) return InvalidParameter;
+
+    if (focus != 0.0)
+    {
+        factors[num_points] = 0.0;
+        positions[num_points] = 0.0;
+        num_points++;
+    }
+
+    factors[num_points] = scale;
+    positions[num_points] = focus;
+    num_points++;
+
+    if (focus != 1.0)
+    {
+        factors[num_points] = 0.0;
+        positions[num_points] = 1.0;
+        num_points++;
+    }
+
+    return GdipSetLineBlend(brush, factors, positions, num_points);
 }
 
 GpStatus WINGDIPAPI GdipSetLinePresetBlend(GpLineGradient *brush,
