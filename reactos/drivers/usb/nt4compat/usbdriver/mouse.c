@@ -40,6 +40,12 @@ mouse_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->driver_desc.dev_protocol = 2;          // Protocol Info.
 
     pdriver->driver_ext = usb_alloc_mem(NonPagedPool, sizeof(MOUSE_DRVR_EXTENSION));
+    if (!pdriver->driver_ext)
+    {
+        usb_dbg_print(DBGLVL_MAXIMUM, ("mouse_driver_init(): memory allocation failed!\n"));
+        return FALSE;
+    }
+
     pdriver->driver_ext_size = sizeof(MOUSE_DRVR_EXTENSION);
 
     RtlZeroMemory(pdriver->driver_ext, sizeof(MOUSE_DRVR_EXTENSION));
