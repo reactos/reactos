@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  28-04-2008
- * LAST CHANGE:  11-02-2009
+ * LAST CHANGE:  26-08-2009
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -239,7 +239,7 @@ BEGIN
     IDS_CPLNAME "Zvuk a zvukovÈ zariadenia"
     IDS_CPLDESCRIPTION "Changes the sound scheme for your computer, or configure the settings for your speakers and recording devices."
     IDS_NO_SOUND "(éiadne)"
-	IDS_NO_DEVICES "No Devices"
+	IDS_NO_DEVICES "éiadne zariadenia"
 
     5825 "Chyba programu"
     5826 "Zavrieù program"
@@ -260,7 +260,7 @@ BEGIN
     5841 "Restore Down"
     5842 "Restore Up"
     5843 "HviezdiËka"
-    5844 "Default sound"
+    5844 "Predvolen˝ zvuk" //Default sound
     5845 "V˝krik"
     5846 "UkonËenie systÈmu ReactOS"
     5847 "KritickÈ zastavenie"

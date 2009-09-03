@@ -1,0 +1,172 @@
+/* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
+ * DATE OF TR.:  29-08-2009
+ * LAST CHANGE:  29-08-2009
+ */
+
+LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+	POPUP "&S˙bor"
+	BEGIN
+		MENUITEM "&Nastavenia",   ID_SETTINGS, GRAYED
+		MENUITEM SEPARATOR
+		MENUITEM "S&konËiù",      ID_EXIT
+	END
+	POPUP "&Programy"
+	BEGIN
+		MENUITEM "&Inötalovaù",   ID_INSTALL
+		MENUITEM "O&dinötalovaù", ID_UNINSTALL
+		MENUITEM "&Zmeniù",       ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Obnoviù",      ID_REFRESH
+	END
+	POPUP "PomocnÌk"
+	BEGIN
+		MENUITEM "PomocnÌk",      ID_HELP, GRAYED
+		MENUITEM "»o je ...",     ID_ABOUT
+	END
+END
+
+IDR_LINKMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&Otvoriù linku v prehliadaËi", ID_OPEN_LINK
+		MENUITEM "&KopÌrovaù linku do schr·nky", ID_COPY_LINK
+	END
+END
+
+IDR_APPLICATIONMENU MENU
+BEGIN
+	POPUP "popup"
+	BEGIN
+		MENUITEM "&Inötalovaù",   ID_INSTALL
+		MENUITEM "O&dinötalovaù", ID_UNINSTALL
+		MENUITEM "&Zmeniù",       ID_MODIFY
+		MENUITEM SEPARATOR
+		MENUITEM "&Obnoviù",      ID_REFRESH
+	END
+END
+
+IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 386, 231
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Nastavenia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	PUSHBUTTON "OK", IDOK, 255, 212, 60, 14
+	PUSHBUTTON "Zruöiù", IDCANCEL, 320, 212, 60, 14
+END
+
+IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 386, 231
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Stiahnuù a nainötalovaù"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	PUSHBUTTON "OK", IDOK, 255, 212, 60, 14
+	PUSHBUTTON "Zruöiù", IDCANCEL, 320, 212, 60, 14
+END
+
+IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
+STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
+CAPTION "Sùahujem ..." // Stiahnuù ???
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
+    LTEXT "", IDC_DOWNLOAD_STATUS, 10, 30, 200, 10, SS_CENTER
+    PUSHBUTTON "Zruöiù", IDCANCEL, 85, 58, 50, 15, WS_GROUP | WS_TABSTOP
+END
+
+IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+CAPTION "»o je ManaûÈr aplik·ciÌ systÈmu ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ManaûÈr aplik·ciÌ systÈmu ReactOS\nAutorskÈ pr·va (C) 2009\nod Dmitry Chapyshev (dmitry@reactos.org)\nPreklad: M·rio KaËm·r (kario@szm.sk)", IDC_STATIC, 48, 7, 130, 39
+	PUSHBUTTON "Zavrieù", IDOK, 133, 46, 50, 14
+	ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_TOOLTIP_INSTALL "Inötalovaù"
+	IDS_TOOLTIP_UNINSTALL "Odinötalovaù"
+	IDS_TOOLTIP_MODIFY "Zmeniù"
+	IDS_TOOLTIP_SETTINGS "Nastavenia"
+	IDS_TOOLTIP_REFRESH "Obnoviù"
+	IDS_TOOLTIP_EXIT "SkonËiù"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APP_NAME "N·zov"
+	IDS_APP_INST_VERSION "Verzia"
+	IDS_APP_DESCRIPTION "Popis"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_INFO_VERSION "\nVerzia: "
+	IDS_INFO_DESCRIPTION "\nPopis: "
+	IDS_INFO_PUBLISHER "\nPublisher: "
+	IDS_INFO_HELPLINK "\nHelp Link: "
+	IDS_INFO_HELPPHONE "\nHelp Telephone: "
+	IDS_INFO_README "\nReadme: "
+	IDS_INFO_REGOWNER "\nRegistered Owner: "
+	IDS_INFO_PRODUCTID "\nProductID: "
+	IDS_INFO_CONTACT "\nKontakt: "
+	IDS_INFO_UPDATEINFO "\nUpdate Information: "
+	IDS_INFO_INFOABOUT "\nInformation About: "
+	IDS_INFO_COMMENTS "\nComments: "
+	IDS_INFO_INSTLOCATION "\nInstall Location: "
+	IDS_INFO_INSTALLSRC "\nInstall Source: "
+	IDS_INFO_UNINSTALLSTR "\nUninstall String: "
+	IDS_INFO_MODIFYPATH "\nModify Path: "
+	IDS_INFO_INSTALLDATE "\nInstall Date: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_AINFO_VERSION "\nVerzia: "
+	IDS_AINFO_DESCRIPTION "\nPopis: "
+	IDS_AINFO_SIZE "\nVeækosù: "
+	IDS_AINFO_URLSITE "\nDomovsk· str·nka: "
+	IDS_AINFO_LICENCE "\nLicencia: "
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_CAT_AUDIO "Audio"
+	IDS_CAT_DEVEL "V˝voj·rske" // Development, v˝voj??
+	IDS_CAT_DRIVERS "Ovl·daËe" // Drivers
+	IDS_CAT_EDU "Vzdel·vacie" // Edutainment
+	IDS_CAT_ENGINEER "Inûinierske" // Engineering, konötrukËnÈ??
+	IDS_CAT_FINANCE "FinanËnÈ" // Finance, peÚaûnÌctvo??
+	IDS_CAT_GAMES "Hry & z·bava" // Games & Fun, z·bavnÈ??
+	IDS_CAT_GRAPHICS "GrafickÈ" // Graphics
+	IDS_CAT_INTERNET "Internet & sieù"
+	IDS_CAT_LIBS "Kniûnice"
+	IDS_CAT_OFFICE "Kancel·rske" // Office
+	IDS_CAT_OTHER "InÈ"
+	IDS_CAT_SCIENCE "VedeckÈ" // Science
+	IDS_CAT_TOOLS "N·stroje" // Tools
+	IDS_CAT_VIDEO "Video"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_APPTITLE "ManaûÈr aplik·ciÌ systÈmu ReactOS"
+	IDS_SEARCH_TEXT "Hæadaù..."
+	IDS_INSTALL "Inötalovaù"
+	IDS_UNINSTALL "Odinötalovaù"
+	IDS_MODIFY "Zmeniù"
+	IDS_APPS_COUNT "PoËet programov: %d"
+	IDS_WELCOME_TITLE "VÌta V·s ManaûÈr aplik·ciÌ systÈmu ReactOS!\n\n" // ReactOS Application Manager
+	IDS_WELCOME_TEXT "Vyberte si kategÛriu na æavej strane, potom vyberte aplik·ciu, ktor˙ chcete nainötalovaù alebo odinötalovaù.\nWebstr·nka projektu ReactOS: "
+	IDS_WELCOME_URL "http://www.reactos.org"
+	IDS_INSTALLED "NainötalovanÈ"
+	IDS_AVAILABLEFORINST "DostupnÈ pre nainötalovanie"
+	IDS_UPDATES "Aktualiz·cie"
+	IDS_APPLICATIONS "Aplik·cie"
+	IDS_DOWNLOAD_FOLDER "Sùahovania" // Downloads
+END
