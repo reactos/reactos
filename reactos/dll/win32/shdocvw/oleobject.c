@@ -152,8 +152,16 @@ static HRESULT activate_inplace(WebBrowser *This, IOleClientSite *active_site)
                  SWP_NOZORDER | SWP_SHOWWINDOW);
 
     if(This->client) {
+        IOleContainer *container;
+
         IOleClientSite_ShowObject(This->client);
-        IOleClientSite_GetContainer(This->client, &This->container);
+
+        hres = IOleClientSite_GetContainer(This->client, &container);
+        if(SUCCEEDED(hres)) {
+            if(This->container)
+                IOleContainer_Release(This->container);
+            This->container = container;
+        }
     }
 
     if(This->doc_host.frame)
@@ -615,7 +623,13 @@ static HRESULT WINAPI OleInPlaceObject_InPlaceDeactivate(IOleInPlaceObject *ifac
 {
     WebBrowser *This = INPLACEOBJ_THIS(iface);
     FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+
+    if(This->inplace) {
+        IOleInPlaceSite_Release(This->inplace);
+        This->inplace = NULL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI OleInPlaceObject_UIDeactivate(IOleInPlaceObject *iface)
