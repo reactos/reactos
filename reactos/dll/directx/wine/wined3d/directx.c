@@ -235,13 +235,13 @@ static void WineD3D_ReleaseFakeGLContext(struct wined3d_fake_gl_ctx *ctx)
     {
         ERR_(d3d_caps)("Failed to disable fake GL context.\n");
     }
-
+#if 0
     if (!pwglDeleteContext(ctx->gl_ctx))
     {
         DWORD err = GetLastError();
         ERR("wglDeleteContext(%p) failed, last error %#x.\n", ctx->gl_ctx, err);
     }
-
+#endif
     ReleaseDC(ctx->wnd, ctx->dc);
     DestroyWindow(ctx->wnd);
 }
@@ -1481,6 +1481,7 @@ static BOOL IWineD3DImpl_FillGLCaps(struct wined3d_gl_info *gl_info)
     TRACE_(d3d_caps)("GL_RENDERER: %s.\n", debugstr_a(gl_string));
     if (!gl_string)
     {
+        LEAVE_GL();
         ERR_(d3d_caps)("Received a NULL GL_RENDERER.\n");
         return FALSE;
     }
@@ -1489,6 +1490,7 @@ static BOOL IWineD3DImpl_FillGLCaps(struct wined3d_gl_info *gl_info)
     gl_renderer = HeapAlloc(GetProcessHeap(), 0, len);
     if (!gl_renderer)
     {
+        LEAVE_GL();
         ERR_(d3d_caps)("Failed to allocate gl_renderer memory.\n");
         return FALSE;
     }
@@ -1498,6 +1500,7 @@ static BOOL IWineD3DImpl_FillGLCaps(struct wined3d_gl_info *gl_info)
     TRACE_(d3d_caps)("GL_VENDOR: %s.\n", debugstr_a(gl_string));
     if (!gl_string)
     {
+        LEAVE_GL();
         ERR_(d3d_caps)("Received a NULL GL_VENDOR.\n");
         HeapFree(GetProcessHeap(), 0, gl_renderer);
         return FALSE;
@@ -1510,6 +1513,7 @@ static BOOL IWineD3DImpl_FillGLCaps(struct wined3d_gl_info *gl_info)
     TRACE_(d3d_caps)("GL_VERSION: %s.\n", debugstr_a(gl_string));
     if (!gl_string)
     {
+        LEAVE_GL();
         ERR_(d3d_caps)("Received a NULL GL_VERSION.\n");
         HeapFree(GetProcessHeap(), 0, gl_renderer);
         return FALSE;
@@ -1560,10 +1564,13 @@ static BOOL IWineD3DImpl_FillGLCaps(struct wined3d_gl_info *gl_info)
     GL_Extensions = (const char *)glGetString(GL_EXTENSIONS);
     if (!GL_Extensions)
     {
+        LEAVE_GL();
         ERR_(d3d_caps)("Received a NULL GL_EXTENSIONS.\n");
         HeapFree(GetProcessHeap(), 0, gl_renderer);
         return FALSE;
     }
+
+    LEAVE_GL();
 
     TRACE_(d3d_caps)("GL_Extensions reported:\n");
 
@@ -1595,8 +1602,6 @@ static BOOL IWineD3DImpl_FillGLCaps(struct wined3d_gl_info *gl_info)
             }
         }
     }
-
-    LEAVE_GL();
 
     /* Now work out what GL support this card really has */
 #define USE_GL_FUNC(type, pfn, ext, replace) \
