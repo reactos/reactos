@@ -977,7 +977,7 @@ static void PropertyStorage_ByteSwapString(LPWSTR str, size_t len)
      * FIXME: alignment?
      */
     for (i = 0; i < len; i++)
-        str[i] = le16toh(str[i]);
+        str[i] = lendian16toh(str[i]);
 }
 #else
 #define PropertyStorage_ByteSwapString(s, l)

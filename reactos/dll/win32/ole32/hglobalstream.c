@@ -397,7 +397,7 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
    */
   if (dlibMove.QuadPart < 0 && newPosition.QuadPart < -dlibMove.QuadPart) return STG_E_INVALIDFUNCTION;
 
-  newPosition.QuadPart = RtlLargeIntegerAdd(newPosition.QuadPart, dlibMove.QuadPart);
+  newPosition.QuadPart += dlibMove.QuadPart;
 
   if (plibNewPosition) *plibNewPosition = newPosition;
   This->currentPosition = newPosition;

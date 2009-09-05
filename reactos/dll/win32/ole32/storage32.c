@@ -3563,7 +3563,7 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
   {
     resRead = SmallBlockChainStream_ReadAt(*ppsbChain,
                                            offset,
-                                           This->smallBlockSize,
+                                           min(This->smallBlockSize, size.u.LowPart - offset.u.LowPart),
                                            buffer,
                                            &cbRead);
     if (FAILED(resRead))
@@ -3582,7 +3582,7 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
         if (FAILED(resWrite))
             break;
 
-        offset.u.LowPart += This->smallBlockSize;
+        offset.u.LowPart += cbRead;
     }
   } while (cbTotalRead.QuadPart < size.QuadPart);
   HeapFree(GetProcessHeap(),0,buffer);
@@ -3663,7 +3663,8 @@ SmallBlockChainStream* Storage32Impl_BigBlocksToSmallBlocks(
     do
     {
         resRead = BlockChainStream_ReadAt(*ppbbChain, offset,
-                This->bigBlockSize, buffer, &cbRead);
+                min(This->bigBlockSize, size.u.LowPart - offset.u.LowPart),
+                buffer, &cbRead);
 
         if(FAILED(resRead))
             break;
@@ -3678,7 +3679,7 @@ SmallBlockChainStream* Storage32Impl_BigBlocksToSmallBlocks(
             if(FAILED(resWrite))
                 break;
 
-            offset.u.LowPart += This->bigBlockSize;
+            offset.u.LowPart += cbRead;
         }
     }while(cbTotalRead.QuadPart < size.QuadPart);
     HeapFree(GetProcessHeap(), 0, buffer);
@@ -5917,7 +5918,7 @@ HRESULT WINAPI StgCreateDocfile(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 end:
   TRACE("<-- %p  r = %08x\n", *ppstgOpen, hr);
@@ -6221,7 +6222,7 @@ HRESULT WINAPI StgOpenStorage(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 
 end:
@@ -6275,7 +6276,7 @@ HRESULT WINAPI StgCreateDocfileOnILockBytes(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 
   return hr;
@@ -6340,7 +6341,7 @@ HRESULT WINAPI StgOpenStorageOnILockBytes(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 
   return hr;
@@ -7192,9 +7193,9 @@ static HRESULT STORAGE_WriteCompObj( LPSTORAGE pstg, CLSID *clsid,
            debugstr_w(lpszUserType), debugstr_w(szClipName),
            debugstr_w(szProgIDName));
 
-    /*  Create a CompObj stream if it doesn't exist */
+    /*  Create a CompObj stream */
     r = IStorage_CreateStream(pstg, szwStreamName,
-        STGM_WRITE  | STGM_SHARE_EXCLUSIVE, 0, 0, &pstm );
+        STGM_CREATE | STGM_WRITE  | STGM_SHARE_EXCLUSIVE, 0, 0, &pstm );
     if( FAILED (r) )
         return r;
 

@@ -522,7 +522,7 @@ static HRESULT WINAPI StgStreamImpl_Seek(
       return STG_E_INVALIDFUNCTION;
   }
 
-  plibNewPosition->QuadPart = RtlLargeIntegerAdd( plibNewPosition->QuadPart, dlibMove.QuadPart );
+  plibNewPosition->QuadPart += dlibMove.QuadPart;
 
   /*
    * tell the caller what we calculated

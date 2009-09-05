@@ -46,28 +46,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef SONAME_LIBJPEG
-/* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
-#define XMD_H
-#define UINT8 JPEG_UINT8
-#define UINT16 JPEG_UINT16
-#define boolean jpeg_boolean
-#undef HAVE_STDLIB_H
-# include <jpeglib.h>
-#undef HAVE_STDLIB_H
-#define HAVE_STDLIB_H 1
-#undef UINT8
-#undef UINT16
-#undef boolean
-#endif
-
-#ifdef HAVE_PNG_H
-#include <png.h>
-#endif
-
-/* Must be before wine includes, the header has things conflicting with
- * WINE headers.
- */
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
@@ -1002,167 +980,6 @@ static HRESULT WINAPI OLEPictureImpl_IsDirty(
   return E_NOTIMPL;
 }
 
-#ifdef SONAME_LIBJPEG
-
-static void *libjpeg_handle;
-#define MAKE_FUNCPTR(f) static typeof(f) * p##f
-MAKE_FUNCPTR(jpeg_std_error);
-MAKE_FUNCPTR(jpeg_CreateDecompress);
-MAKE_FUNCPTR(jpeg_read_header);
-MAKE_FUNCPTR(jpeg_start_decompress);
-MAKE_FUNCPTR(jpeg_read_scanlines);
-MAKE_FUNCPTR(jpeg_finish_decompress);
-MAKE_FUNCPTR(jpeg_destroy_decompress);
-#undef MAKE_FUNCPTR
-
-static void *load_libjpeg(void)
-{
-    if((libjpeg_handle = wine_dlopen(SONAME_LIBJPEG, RTLD_NOW, NULL, 0)) != NULL) {
-
-#define LOAD_FUNCPTR(f) \
-    if((p##f = wine_dlsym(libjpeg_handle, #f, NULL, 0)) == NULL) { \
-        libjpeg_handle = NULL; \
-        return NULL; \
-    }
-
-        LOAD_FUNCPTR(jpeg_std_error);
-        LOAD_FUNCPTR(jpeg_CreateDecompress);
-        LOAD_FUNCPTR(jpeg_read_header);
-        LOAD_FUNCPTR(jpeg_start_decompress);
-        LOAD_FUNCPTR(jpeg_read_scanlines);
-        LOAD_FUNCPTR(jpeg_finish_decompress);
-        LOAD_FUNCPTR(jpeg_destroy_decompress);
-#undef LOAD_FUNCPTR
-    }
-    return libjpeg_handle;
-}
-
-/* for the jpeg decompressor source manager. */
-static void _jpeg_init_source(j_decompress_ptr cinfo) { }
-
-static jpeg_boolean _jpeg_fill_input_buffer(j_decompress_ptr cinfo) {
-    ERR("(), should not get here.\n");
-    return FALSE;
-}
-
-static void _jpeg_skip_input_data(j_decompress_ptr cinfo,long num_bytes) {
-    TRACE("Skipping %ld bytes...\n", num_bytes);
-    cinfo->src->next_input_byte += num_bytes;
-    cinfo->src->bytes_in_buffer -= num_bytes;
-}
-
-static jpeg_boolean _jpeg_resync_to_restart(j_decompress_ptr cinfo, int desired) {
-    ERR("(desired=%d), should not get here.\n",desired);
-    return FALSE;
-}
-static void _jpeg_term_source(j_decompress_ptr cinfo) { }
-#endif /* SONAME_LIBJPEG */
-
-static HRESULT OLEPictureImpl_LoadJpeg(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
-{
-#ifdef SONAME_LIBJPEG
-    struct jpeg_decompress_struct	jd;
-    struct jpeg_error_mgr		jerr;
-    int					ret;
-    JDIMENSION				x;
-    JSAMPROW				samprow,oldsamprow;
-    BITMAPINFOHEADER			bmi;
-    LPBYTE				bits;
-    HDC					hdcref;
-    struct jpeg_source_mgr		xjsm;
-    LPBYTE                              oldbits;
-    unsigned int i;
-
-    if(!libjpeg_handle) {
-        if(!load_libjpeg()) {
-            ERR("Failed reading JPEG because unable to find %s\n", SONAME_LIBJPEG);
-            return E_FAIL;
-        }
-    }
-
-    /* This is basically so we can use in-memory data for jpeg decompression.
-     * We need to have all the functions.
-     */
-    xjsm.next_input_byte	= xbuf;
-    xjsm.bytes_in_buffer	= xread;
-    xjsm.init_source		= _jpeg_init_source;
-    xjsm.fill_input_buffer	= _jpeg_fill_input_buffer;
-    xjsm.skip_input_data	= _jpeg_skip_input_data;
-    xjsm.resync_to_restart	= _jpeg_resync_to_restart;
-    xjsm.term_source		= _jpeg_term_source;
-
-    jd.err = pjpeg_std_error(&jerr);
-    /* jpeg_create_decompress is a macro that expands to jpeg_CreateDecompress - see jpeglib.h
-     * jpeg_create_decompress(&jd); */
-    pjpeg_CreateDecompress(&jd, JPEG_LIB_VERSION, sizeof(struct jpeg_decompress_struct));
-    jd.src = &xjsm;
-    ret=pjpeg_read_header(&jd,TRUE);
-    jd.out_color_space = JCS_RGB;
-    pjpeg_start_decompress(&jd);
-    if (ret != JPEG_HEADER_OK) {
-	ERR("Jpeg image in stream has bad format, read header returned %d.\n",ret);
-	HeapFree(GetProcessHeap(),0,xbuf);
-	return E_FAIL;
-    }
-
-    bits = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,
-                     (jd.output_height+1) * ((jd.output_width*jd.output_components + 3) & ~3) );
-    samprow=HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,jd.output_width*jd.output_components);
-
-    oldbits = bits;
-    oldsamprow = samprow;
-    while ( jd.output_scanline<jd.output_height ) {
-      x = pjpeg_read_scanlines(&jd,&samprow,1);
-      if (x != 1) {
-	ERR("failed to read current scanline?\n");
-	break;
-      }
-      /* We have to convert from RGB to BGR, see MSDN/ BITMAPINFOHEADER */
-      for(i=0;i<jd.output_width;i++,samprow+=jd.output_components) {
-	*(bits++) = *(samprow+2);
-	*(bits++) = *(samprow+1);
-	*(bits++) = *(samprow);
-      }
-      bits = (LPBYTE)(((UINT_PTR)bits + 3) & ~3);
-      samprow = oldsamprow;
-    }
-    bits = oldbits;
-
-    bmi.biSize		= sizeof(bmi);
-    bmi.biWidth		=  jd.output_width;
-    bmi.biHeight	= -jd.output_height;
-    bmi.biPlanes	= 1;
-    bmi.biBitCount	= jd.output_components<<3;
-    bmi.biCompression	= BI_RGB;
-    bmi.biSizeImage	= jd.output_height*jd.output_width*jd.output_components;
-    bmi.biXPelsPerMeter	= 0;
-    bmi.biYPelsPerMeter	= 0;
-    bmi.biClrUsed	= 0;
-    bmi.biClrImportant	= 0;
-
-    HeapFree(GetProcessHeap(),0,samprow);
-    pjpeg_finish_decompress(&jd);
-    pjpeg_destroy_decompress(&jd);
-    hdcref = GetDC(0);
-    This->desc.u.bmp.hbitmap=CreateDIBitmap(
-	    hdcref,
-	    &bmi,
-	    CBM_INIT,
-	    bits,
-	    (BITMAPINFO*)&bmi,
-	    DIB_RGB_COLORS
-    );
-    ReleaseDC(0, hdcref);
-    This->desc.picType = PICTYPE_BITMAP;
-    OLEPictureImpl_SetBitmap(This);
-    HeapFree(GetProcessHeap(),0,bits);
-    return S_OK;
-#else
-    ERR("Trying to load JPEG picture, but JPEG supported not compiled in.\n");
-    return E_FAIL;
-#endif
-}
-
 static HRESULT OLEPictureImpl_LoadDIB(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
 {
     BITMAPFILEHEADER	*bfh = (BITMAPFILEHEADER*)xbuf;
@@ -1319,298 +1136,52 @@ end:
 static HRESULT OLEPictureImpl_LoadWICDecoder(OLEPictureImpl *This, REFCLSID decoder_clsid, BYTE *xbuf, ULONG xread)
 {
     HRESULT hr;
+    IWICImagingFactory *factory;
     IWICBitmapDecoder *decoder;
     IWICBitmapFrameDecode *framedecode;
     HRESULT initresult;
-    HGLOBAL hdata;
-    BYTE *data;
-    IStream *stream;
-
-    hdata = GlobalAlloc(GMEM_MOVEABLE, xread);
-    if (!hdata) return E_OUTOFMEMORY;
-
-    data = GlobalLock(hdata);
-    memcpy(data, xbuf, xread);
-    GlobalUnlock(hdata);
-
-    hr = CreateStreamOnHGlobal(hdata, TRUE, &stream);
-    if (FAILED(hr))
-    {
-        GlobalFree(hdata);
-        return hr;
-    }
+    IWICStream *stream;
 
     initresult = CoInitialize(NULL);
 
-    hr = CoCreateInstance(decoder_clsid, NULL, CLSCTX_INPROC_SERVER,
-        &IID_IWICBitmapDecoder, (void**)&decoder);
-    if (FAILED(hr)) goto end;
-
-    hr = IWICBitmapDecoder_Initialize(decoder, stream, WICDecodeMetadataCacheOnLoad);
-    if (SUCCEEDED(hr))
+    hr = CoCreateInstance(&CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
+        &IID_IWICImagingFactory, (void**)&factory);
+    if (SUCCEEDED(hr)) /* created factory */
     {
-        hr = IWICBitmapDecoder_GetFrame(decoder, 0, &framedecode);
-        if (SUCCEEDED(hr))
-        {
-            hr = OLEPictureImpl_LoadWICSource(This, (IWICBitmapSource*)framedecode);
-            IWICBitmapFrameDecode_Release(framedecode);
-        }
+        hr = IWICImagingFactory_CreateStream(factory, &stream);
+        IWICImagingFactory_Release(factory);
     }
 
-    IWICBitmapDecoder_Release(decoder);
+    if (SUCCEEDED(hr)) /* created stream */
+    {
+        hr = IWICStream_InitializeFromMemory(stream, xbuf, xread);
 
-end:
-    IStream_Release(stream);
+        if (SUCCEEDED(hr)) /* initialized stream */
+        {
+            hr = CoCreateInstance(decoder_clsid, NULL, CLSCTX_INPROC_SERVER,
+                &IID_IWICBitmapDecoder, (void**)&decoder);
+            if (SUCCEEDED(hr)) /* created decoder */
+            {
+                hr = IWICBitmapDecoder_Initialize(decoder, (IStream*)stream, WICDecodeMetadataCacheOnLoad);
+
+                if (SUCCEEDED(hr)) /* initialized decoder */
+                    hr = IWICBitmapDecoder_GetFrame(decoder, 0, &framedecode);
+
+                IWICBitmapDecoder_Release(decoder);
+            }
+        }
+
+        IWICStream_Release(stream);
+    }
+
+    if (SUCCEEDED(hr)) /* got framedecode */
+    {
+        hr = OLEPictureImpl_LoadWICSource(This, (IWICBitmapSource*)framedecode);
+        IWICBitmapFrameDecode_Release(framedecode);
+    }
+
     if (SUCCEEDED(initresult)) CoUninitialize();
     return hr;
-}
-
-/*****************************************************
-*   start of PNG-specific code
-*   currently only supports colortype PNG_COLOR_TYPE_RGB
-*/
-#ifdef SONAME_LIBPNG
-typedef struct{
-    ULONG position;
-    ULONG size;
-    BYTE * buff;
-} png_io;
-
-static void png_stream_read_data(png_structp png_ptr, png_bytep data,
-    png_size_t length)
-{
-    png_io * io_ptr = png_ptr->io_ptr;
-
-    if(length + io_ptr->position > io_ptr->size){
-        length = io_ptr->size - io_ptr->position;
-    }
-
-    memcpy(data, io_ptr->buff + io_ptr->position, length);
-
-    io_ptr->position += length;
-}
-
-static void *libpng_handle;
-#define MAKE_FUNCPTR(f) static typeof(f) * p##f
-MAKE_FUNCPTR(png_create_read_struct);
-MAKE_FUNCPTR(png_create_info_struct);
-MAKE_FUNCPTR(png_set_read_fn);
-MAKE_FUNCPTR(png_read_info);
-MAKE_FUNCPTR(png_read_image);
-MAKE_FUNCPTR(png_get_rowbytes);
-MAKE_FUNCPTR(png_set_bgr);
-MAKE_FUNCPTR(png_destroy_read_struct);
-MAKE_FUNCPTR(png_set_palette_to_rgb);
-MAKE_FUNCPTR(png_read_update_info);
-MAKE_FUNCPTR(png_get_tRNS);
-MAKE_FUNCPTR(png_get_PLTE);
-MAKE_FUNCPTR(png_set_expand);
-#undef MAKE_FUNCPTR
-
-static void *load_libpng(void)
-{
-    if((libpng_handle = wine_dlopen(SONAME_LIBPNG, RTLD_NOW, NULL, 0)) != NULL) {
-
-#define LOAD_FUNCPTR(f) \
-    if((p##f = wine_dlsym(libpng_handle, #f, NULL, 0)) == NULL) { \
-        libpng_handle = NULL; \
-        return NULL; \
-    }
-        LOAD_FUNCPTR(png_create_read_struct);
-        LOAD_FUNCPTR(png_create_info_struct);
-        LOAD_FUNCPTR(png_set_read_fn);
-        LOAD_FUNCPTR(png_read_info);
-        LOAD_FUNCPTR(png_read_image);
-        LOAD_FUNCPTR(png_get_rowbytes);
-        LOAD_FUNCPTR(png_set_bgr);
-        LOAD_FUNCPTR(png_destroy_read_struct);
-        LOAD_FUNCPTR(png_set_palette_to_rgb);
-        LOAD_FUNCPTR(png_read_update_info);
-        LOAD_FUNCPTR(png_get_tRNS);
-        LOAD_FUNCPTR(png_get_PLTE);
-        LOAD_FUNCPTR(png_set_expand);
-
-#undef LOAD_FUNCPTR
-    }
-    return libpng_handle;
-}
-#endif /* SONAME_LIBPNG */
-
-static HRESULT OLEPictureImpl_LoadPNG(OLEPictureImpl *This, BYTE *xbuf, ULONG xread)
-{
-#ifdef SONAME_LIBPNG
-    png_io              io;
-    png_structp         png_ptr = NULL;
-    png_infop           info_ptr = NULL;
-    INT                 row, rowsize, height, width, num_trans, i, j;
-    png_bytep*          row_pointers = NULL;
-    png_bytep           pngdata = NULL;
-    BITMAPINFOHEADER    bmi;
-    HDC                 hdcref = NULL, hdcXor, hdcMask;
-    HRESULT             ret;
-    BOOL                transparency;
-    png_bytep           trans;
-    png_color_16p       trans_values;
-    COLORREF            white = RGB(255, 255, 255), black = RGB(0, 0, 0);
-    HBITMAP             hbmoldXor, hbmoldMask, temp;
-
-    if(!libpng_handle) {
-        if(!load_libpng()) {
-            ERR("Failed reading PNG because unable to find %s\n",SONAME_LIBPNG);
-            return E_FAIL;
-        }
-    }
-
-    io.size     = xread;
-    io.position = 0;
-    io.buff     = xbuf;
-
-    png_ptr = ppng_create_read_struct(PNG_LIBPNG_VER_STRING,
-        NULL, NULL, NULL);
-
-    if(setjmp(png_jmpbuf(png_ptr))){
-        TRACE("Error in libpng\n");
-        ret = E_FAIL;
-        goto end;
-    }
-
-    info_ptr = ppng_create_info_struct(png_ptr);
-    ppng_set_read_fn(png_ptr, &io, png_stream_read_data);
-    ppng_read_info(png_ptr, info_ptr);
-
-    if(!(png_ptr->color_type == PNG_COLOR_TYPE_RGB ||
-         png_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
-         png_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA)){
-        FIXME("Unsupported .PNG type: %d\n", png_ptr->color_type);
-        ret = E_FAIL;
-        goto end;
-    }
-
-    transparency = (ppng_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, &trans_values)
-                       == PNG_INFO_tRNS);
-
-    /* sets format from anything to RGBA */
-    ppng_set_expand(png_ptr);
-    /* sets format to BGRA */
-    ppng_set_bgr(png_ptr);
-
-    ppng_read_update_info(png_ptr, info_ptr);
-
-    rowsize = ppng_get_rowbytes(png_ptr, info_ptr);
-    /* align rowsize to 4-byte boundary */
-    rowsize = (rowsize + 3) & ~3;
-    height = info_ptr->height;
-    width = info_ptr->width;
-
-    pngdata = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, height * rowsize);
-    row_pointers = HeapAlloc(GetProcessHeap(), 0, height * (sizeof(VOID *)));
-
-    if(!pngdata || !row_pointers){
-        ret = E_FAIL;
-        goto end;
-    }
-
-    for (row = 0; row < height; row++){
-        row_pointers[row] = pngdata + row * rowsize;
-    }
-
-    ppng_read_image(png_ptr, row_pointers);
-
-    bmi.biSize          = sizeof(bmi);
-    bmi.biWidth         = width;
-    bmi.biHeight        = -height;
-    bmi.biPlanes        = 1;
-    bmi.biBitCount      = info_ptr->channels * 8;
-    bmi.biCompression   = BI_RGB;
-    bmi.biSizeImage     = height * rowsize;
-    bmi.biXPelsPerMeter = 0;
-    bmi.biYPelsPerMeter = 0;
-    bmi.biClrUsed       = 0;
-    bmi.biClrImportant  = 0;
-
-    hdcref = GetDC(0);
-    This->desc.u.bmp.hbitmap = CreateDIBitmap(
-        hdcref,
-        &bmi,
-        CBM_INIT,
-        pngdata,
-        (BITMAPINFO*)&bmi,
-        DIB_RGB_COLORS
-    );
-
-    /* only fully-transparent alpha is handled */
-    if((info_ptr->channels != 4) || !transparency){
-        ReleaseDC(0, hdcref);
-        goto succ;
-    }
-
-    This->hbmXor = CreateDIBitmap(
-        hdcref,
-        &bmi,
-        CBM_INIT,
-        pngdata,
-        (BITMAPINFO*)&bmi,
-        DIB_RGB_COLORS
-    );
-
-    /* set transparent pixels to black, all others to white */
-    for(i = 0; i < height; i++){
-        for(j = 3; j < rowsize; j += 4){
-            if(row_pointers[i][j] == 0)
-                *((DWORD*)(&row_pointers[i][j - 3])) = black;
-            else
-                *((DWORD*)(&row_pointers[i][j - 3])) = white;
-        }
-    }
-
-    temp = CreateDIBitmap(
-        hdcref,
-        &bmi,
-        CBM_INIT,
-        pngdata,
-        (BITMAPINFO*)&bmi,
-        DIB_RGB_COLORS
-    );
-
-    ReleaseDC(0, hdcref);
-
-    This->hbmMask = CreateBitmap(width,-height,1,1,NULL);
-    hdcXor = CreateCompatibleDC(NULL);
-    hdcMask = CreateCompatibleDC(NULL);
-
-    hbmoldXor = SelectObject(hdcXor,temp);
-    hbmoldMask = SelectObject(hdcMask,This->hbmMask);
-    SetBkColor(hdcXor,black);
-    BitBlt(hdcMask,0,0,width,height,hdcXor,0,0,SRCCOPY);
-
-    SelectObject(hdcXor,This->hbmXor);
-    DeleteObject(temp);
-
-    SetTextColor(hdcXor,white);
-    SetBkColor(hdcXor,black);
-    BitBlt(hdcXor,0,0,width,height,hdcMask,0,0,SRCAND);
-
-    SelectObject(hdcXor,hbmoldXor);
-    SelectObject(hdcMask,hbmoldMask);
-
-    DeleteDC(hdcXor);
-    DeleteDC(hdcMask);
-
-succ:
-    This->desc.picType = PICTYPE_BITMAP;
-    OLEPictureImpl_SetBitmap(This);
-    ret = S_OK;
-
-end:
-    if(png_ptr)
-        ppng_destroy_read_struct(&png_ptr, info_ptr ? &info_ptr : NULL, NULL);
-    HeapFree(GetProcessHeap(), 0, row_pointers);
-    HeapFree(GetProcessHeap(), 0, pngdata);
-    return ret;
-#else /* SONAME_LIBPNG */
-    ERR("Trying to load PNG picture, but PNG supported not compiled in.\n");
-    return E_FAIL;
-#endif
 }
 
 /*****************************************************
@@ -1889,13 +1460,13 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
     hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICGifDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_JPEG: /* JPEG */
-    hr = OLEPictureImpl_LoadJpeg(This, xbuf, xread);
+    hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICJpegDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_BMP: /* Bitmap */
     hr = OLEPictureImpl_LoadDIB(This, xbuf, xread);
     break;
   case BITMAP_FORMAT_PNG: /* PNG */
-    hr = OLEPictureImpl_LoadPNG(This, xbuf, xread);
+    hr = OLEPictureImpl_LoadWICDecoder(This, &CLSID_WICPngDecoder, xbuf, xread);
     break;
   case BITMAP_FORMAT_APM: /* APM */
     hr = OLEPictureImpl_LoadAPM(This, xbuf, xread);
