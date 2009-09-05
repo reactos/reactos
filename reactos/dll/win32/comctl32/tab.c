@@ -2810,8 +2810,16 @@ TAB_GetItemT (TAB_INFO *infoPtr, INT iItem, LPTCITEMW tabItem, BOOL bUnicode)
 
   TRACE("(%p,%d,%p,%s)\n", infoPtr, iItem, tabItem, bUnicode ? "true" : "false");
 
+  if (!tabItem) return FALSE;
+
   if (iItem < 0 || iItem >= infoPtr->uNumItem)
+  {
+    /* init requested fields */
+    if (tabItem->mask & TCIF_IMAGE) tabItem->iImage  = 0;
+    if (tabItem->mask & TCIF_PARAM) tabItem->lParam  = 0;
+    if (tabItem->mask & TCIF_STATE) tabItem->dwState = 0;
     return FALSE;
+  }
 
   wineItem = TAB_GetItem(infoPtr, iItem);
 

@@ -1016,12 +1016,17 @@ STATUSBAR_WMGetText (const STATUS_INFO *infoPtr, INT size, LPWSTR buf)
 
     len = strlenW (infoPtr->parts[0].text);
 
-    if (size > len) {
+    if (!size)
+        return len;
+    else if (size > len) {
         strcpyW (buf, infoPtr->parts[0].text);
 	return len;
     }
-
-    return -1;
+    else {
+        memcpy (buf, infoPtr->parts[0].text, (size - 1) * sizeof(WCHAR));
+        buf[size - 1] = 0;
+        return size - 1;
+    }
 }
 
 

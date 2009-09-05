@@ -9727,7 +9727,7 @@ static LRESULT LISTVIEW_NotifyFormat(LISTVIEW_INFO *infoPtr, HWND hwndFrom, INT 
 
 /***
  * DESCRIPTION:
- * Paints/Repaints the listview control.
+ * Paints/Repaints the listview control. Internal use.
  *
  * PARAMETER(S):
  * [I] infoPtr : valid pointer to the listview structure
@@ -9766,6 +9766,26 @@ static LRESULT LISTVIEW_Paint(LISTVIEW_INFO *infoPtr, HDC hdc)
     return 0;
 }
 
+/***
+ * DESCRIPTION:
+ * Paints/Repaints the listview control, WM_PAINT handler.
+ *
+ * PARAMETER(S):
+ * [I] infoPtr : valid pointer to the listview structure
+ * [I] hdc : device context handle
+ *
+ * RETURN:
+ * Zero
+ */
+static inline LRESULT LISTVIEW_WMPaint(LISTVIEW_INFO *infoPtr, HDC hdc)
+{
+    TRACE("(hdc=%p)\n", hdc);
+
+    if (!is_redrawing(infoPtr))
+        return DefWindowProcW (infoPtr->hwndSelf, WM_PAINT, (WPARAM)hdc, 0);
+
+    return LISTVIEW_Paint(infoPtr, hdc);
+}
 
 /***
  * DESCRIPTION:
@@ -10802,7 +10822,7 @@ LISTVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return LISTVIEW_PrintClient(infoPtr, (HDC)wParam, (DWORD)lParam);
 
   case WM_PAINT:
-    return LISTVIEW_Paint(infoPtr, (HDC)wParam);
+    return LISTVIEW_WMPaint(infoPtr, (HDC)wParam);
 
   case WM_RBUTTONDBLCLK:
     return LISTVIEW_RButtonDblClk(infoPtr, (WORD)wParam, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));

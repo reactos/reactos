@@ -1150,7 +1150,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
     case WM_INITDIALOG:
       {
          FileOpenDlgInfos * fodInfos = (FileOpenDlgInfos *)lParam;
-         RECT rc;
+         RECT rc, rcstc;
          int gripx = GetSystemMetrics( SM_CYHSCROLL);
          int gripy = GetSystemMetrics( SM_CYVSCROLL);
 
@@ -1183,6 +1183,18 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
          if(fodInfos->ofnInfos->Flags & OFN_EXPLORER) {
              SendCustomDlgNotificationMessage(hwnd,CDN_INITDONE);
              SendCustomDlgNotificationMessage(hwnd,CDN_FOLDERCHANGE);
+         }
+
+         /* if the app has changed the position of the invisible listbox,
+          * change that of the listview (browser) as well */
+         GetWindowRect( fodInfos->ShellInfos.hwndView, &rc);
+         GetWindowRect( GetDlgItem( hwnd, IDC_SHELLSTATIC ), &rcstc);
+         if( !EqualRect( &rc, &rcstc))
+         {
+             MapWindowPoints( NULL, hwnd, (LPPOINT) &rcstc, 2);
+             SetWindowPos( fodInfos->ShellInfos.hwndView, NULL,
+                     rcstc.left, rcstc.top, rcstc.right - rcstc.left, rcstc.bottom - rcstc.top,
+                     SWP_NOACTIVATE | SWP_NOZORDER);
          }
 
          if (fodInfos->ofnInfos->Flags & OFN_ENABLESIZING)
