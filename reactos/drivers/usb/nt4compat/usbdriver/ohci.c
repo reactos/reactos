@@ -1177,6 +1177,12 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 }
 
                 ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+                if (!ptimer)
+                {
+                    purb->status = STATUS_NO_MEMORY;
+                    break;
+                }
+
                 ptimer->threshold = 0;  // within [ 50ms, 60ms ], one tick is 10 ms
                 ptimer->context = (ULONG) purb;
                 ptimer->pdev = pdev;
@@ -1202,6 +1208,12 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
         case USB_ENDPOINT_XFER_INT:
         {
             ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+            if (!ptimer)
+            {
+                purb->status = STATUS_NO_MEMORY;
+                break;
+            }
+
             ptimer->threshold = RH_INTERVAL;
             ptimer->context = (ULONG) purb;
             ptimer->pdev = pdev;

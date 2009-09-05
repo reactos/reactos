@@ -142,6 +142,12 @@ gendrv_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->driver_desc.dev_protocol = 0;      // Protocol Info.
 
     pdriver->driver_ext = usb_alloc_mem(NonPagedPool, sizeof(GENDRV_DRVR_EXTENSION));
+    if (!pdriver->driver_ext)
+    {
+        usb_dbg_print(DBGLVL_MAXIMUM, ("gendrv_driver_init(): memory allocation failed!\n"));
+        return FALSE;
+    }
+
     pdriver->driver_ext_size = sizeof(GENDRV_DRVR_EXTENSION);
 
     RtlZeroMemory(pdriver->driver_ext, pdriver->driver_ext_size);
@@ -345,6 +351,12 @@ gendrv_event_select_driver(PUSB_DEV pdev,       //always null. we do not use thi
 
     pdev_ext = (PGENDRV_DEVICE_EXTENSION) pdev_obj->DeviceExtension;
     pdev_ext->desc_buf = usb_alloc_mem(NonPagedPool, 512);
+    if (!pdev_ext->desc_buf)
+    {
+        usb_dbg_print(DBGLVL_MAXIMUM, ("gendrv_event_select_driver(): memory allocation failed!\n"));
+        goto ERROR_OUT;
+    }
+
     RtlCopyMemory(pdev_ext->desc_buf, pconfig_desc, 512);
 
     // insert the device to the dev_list
@@ -440,6 +452,7 @@ gendrv_set_cfg_completion(PURB purb, PVOID context)
     {
         unlock_dev(pdev, TRUE);
         KeReleaseSpinLockFromDpcLevel(&dev_mgr->event_list_lock);
+        return;
     }
 
     pevent->flags = USB_EVENT_FLAG_ACTIVE;
@@ -815,6 +828,12 @@ gendrv_if_connect(PDEV_CONNECT_DATA params, DEV_HANDLE if_handle)
 
     pdev_ext = (PGENDRV_DEVICE_EXTENSION) pdev_obj->DeviceExtension;
     pdev_ext->desc_buf = usb_alloc_mem(NonPagedPool, 512);
+    if (!pdev_ext->desc_buf)
+    {
+        usb_dbg_print(DBGLVL_MAXIMUM, ("gendrv_if_connect(): memory allocation failed!\n"));
+        goto ERROR_OUT;
+    }
+
     RtlCopyMemory(pdev_ext->desc_buf, pconfig_desc, 512);
     pdev_ext->if_ctx.pif_desc =
         (PUSB_INTERFACE_DESC) & pdev_ext->desc_buf[(PBYTE) pif_desc - (PBYTE) pconfig_desc];
@@ -988,6 +1007,8 @@ gendrv_if_driver_init(PUSB_DEV_MANAGER dev_mgr, PUSB_DRIVER pdriver)
     pdriver->disp_tbl.dev_reserved = NULL;
 
     pdriver->driver_ext = usb_alloc_mem(NonPagedPool, sizeof(GENDRV_DRVR_EXTENSION));
+    if (!pdriver->driver_ext) return FALSE;
+
     pdriver->driver_ext_size = sizeof(GENDRV_DRVR_EXTENSION);
 
     RtlZeroMemory(pdriver->driver_ext, pdriver->driver_ext_size);

@@ -432,13 +432,14 @@ hub_start_int_request(PUSB_DEV pdev)
         return STATUS_DEVICE_DOES_NOT_EXIST;
     }
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
-    RtlZeroMemory(purb, sizeof(URB));
 
     if (purb == NULL)
     {
         unlock_dev(pdev, FALSE);
         return STATUS_NO_MEMORY;
     }
+
+    RtlZeroMemory(purb, sizeof(URB));
 
     purb->flags = 0;
     purb->status = STATUS_SUCCESS;
@@ -1242,6 +1243,7 @@ hub_event_dev_stable(PUSB_DEV pdev,
         //Let's start a reset port request
         InsertHeadList(&dev_mgr->event_list, &pevent->event_link);
         purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
+        if (!purb) goto LBL_OUT;
         RtlZeroMemory(purb, sizeof(URB));
 
         purb->data_buffer = NULL;
@@ -1632,6 +1634,15 @@ hub_start_next_reset_port(PUSB_DEV_MANAGER dev_mgr, BOOLEAN from_dpc)
             }
 
             purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
+            if (!purb)
+            {
+                if (from_dpc)
+                    KeReleaseSpinLockFromDpcLevel(&dev_mgr->event_list_lock);
+                else
+                    KeReleaseSpinLock(&dev_mgr->event_list_lock, old_irql);
+                return FALSE;
+            }
+
             RtlZeroMemory(purb, sizeof(URB));
 
             purb->data_buffer = NULL;
@@ -1707,6 +1718,7 @@ hub_post_esq_event(PUSB_DEV pdev, BYTE port_idx, PROCESS_EVENT pe)
     dev_mgr = dev_mgr_from_dev(pdev);
 
     pevent = alloc_event(&dev_mgr->event_pool, 1);
+    if (!pevent) return;
     pevent->event = USB_EVENT_DEFAULT;
     pevent->process_queue = event_list_default_process_queue;
     pevent->process_event = pe;
@@ -2507,13 +2519,14 @@ hub_clear_tt_buffer(PUSB_DEV pdev, URB_HS_PIPE_CONTENT pipe_content, UCHAR port_
         return FALSE;
     }
     purb = usb_alloc_mem(NonPagedPool, sizeof(URB));
-    RtlZeroMemory(purb, sizeof(URB));
 
     if (purb == NULL)
     {
         unlock_dev(pdev, FALSE);
         return FALSE;
     }
+
+    RtlZeroMemory(purb, sizeof(URB));
 
     purb->flags = 0;
     purb->status = STATUS_SUCCESS;
