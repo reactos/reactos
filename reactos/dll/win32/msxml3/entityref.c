@@ -528,7 +528,7 @@ IUnknown* create_doc_entity_ref( xmlNodePtr entity )
     This->lpVtbl = &entityref_vtbl;
     This->ref = 1;
 
-    node = create_basic_node( entity, (IUnknown*)&This->lpVtbl );
+    node = create_basic_node( entity, (IUnknown*)&This->lpVtbl, NULL );
     if(!node)
     {
         HeapFree(GetProcessHeap(), 0, This);

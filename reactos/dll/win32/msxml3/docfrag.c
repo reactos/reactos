@@ -529,7 +529,7 @@ IUnknown* create_doc_fragment( xmlNodePtr fragment )
     This->lpVtbl = &domfrag_vtbl;
     This->ref = 1;
 
-    node = create_basic_node( fragment, (IUnknown*)&This->lpVtbl );
+    node = create_basic_node( fragment, (IUnknown*)&This->lpVtbl, NULL );
     if(!node)
     {
         HeapFree(GetProcessHeap(), 0, This);

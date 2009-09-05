@@ -84,8 +84,10 @@ static ULONG WINAPI OmNavigator_Release(IOmNavigator *iface)
 
     TRACE("(%p) ref=%d\n", This, ref);
 
-    if(!ref)
+    if(!ref) {
+        release_dispex(&This->dispex);
         heap_free(This);
+    }
 
     return ref;
 }
@@ -139,8 +141,19 @@ static HRESULT WINAPI OmNavigator_get_appCodeName(IOmNavigator *iface, BSTR *p)
 static HRESULT WINAPI OmNavigator_get_appName(IOmNavigator *iface, BSTR *p)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+
+    static const WCHAR app_nameW[] =
+        {'M','i','c','r','o','s','o','f','t',' ',
+         'I','n','t','e','r','n','e','t',' ',
+         'E','x','p','l','o','r','e','r',0};
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    *p = SysAllocString(app_nameW);
+    if(!*p)
+        return E_OUTOFMEMORY;
+
+    return S_OK;
 }
 
 static HRESULT WINAPI OmNavigator_get_appVersion(IOmNavigator *iface, BSTR *p)
@@ -166,8 +179,24 @@ static HRESULT WINAPI OmNavigator_get_appVersion(IOmNavigator *iface, BSTR *p)
 static HRESULT WINAPI OmNavigator_get_userAgent(IOmNavigator *iface, BSTR *p)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    char user_agent[512];
+    DWORD size;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    size = sizeof(user_agent);
+    hres = ObtainUserAgentString(0, user_agent, &size);
+    if(FAILED(hres))
+        return hres;
+
+    size = MultiByteToWideChar(CP_ACP, 0, user_agent, -1, NULL, 0);
+    *p = SysAllocStringLen(NULL, size-1);
+    if(!*p)
+        return E_OUTOFMEMORY;
+
+    MultiByteToWideChar(CP_ACP, 0, user_agent, -1, *p, size);
+    return S_OK;
 }
 
 static HRESULT WINAPI OmNavigator_javaEnabled(IOmNavigator *iface, VARIANT_BOOL *enabled)
@@ -215,8 +244,16 @@ static HRESULT WINAPI OmNavigator_get_opsProfile(IOmNavigator *iface, IHTMLOpsPr
 static HRESULT WINAPI OmNavigator_toString(IOmNavigator *iface, BSTR *String)
 {
     OmNavigator *This = OMNAVIGATOR_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, String);
-    return E_NOTIMPL;
+
+    static const WCHAR objectW[] = {'[','o','b','j','e','c','t',']',0};
+
+    TRACE("(%p)->(%p)\n", This, String);
+
+    if(!String)
+        return E_INVALIDARG;
+
+    *String = SysAllocString(objectW);
+    return *String ? S_OK : E_OUTOFMEMORY;
 }
 
 static HRESULT WINAPI OmNavigator_get_cpuClass(IOmNavigator *iface, BSTR *p)

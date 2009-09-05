@@ -39,129 +39,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mshtml);
 
-#define USER_AGENT "User-Agent:"
-#define CONTENT_TYPE "Content-Type:"
-
-static int fix_headers(char *buf, DWORD post_len)
-{
-    char *ptr = buf, *ptr2;
-
-    while(*ptr && (ptr[0] != '\r' || ptr[1] != '\n')) {
-        for(ptr2=ptr+1; *ptr2 && (ptr2[0] != '\r' || ptr2[1] != '\n'); ptr2++);
-
-        if(*ptr2)
-            ptr2 += 2;
-
-        if(!strncasecmp(ptr, USER_AGENT, sizeof(USER_AGENT)-1)) {
-            FIXME("Ignoring User-Agent header\n");
-            memmove(ptr, ptr2, strlen(ptr2)+1);
-        }else if(!post_len && !strncasecmp(ptr, CONTENT_TYPE, sizeof(CONTENT_TYPE)-1)) {
-            TRACE("Ignoring Content-Type header\n");
-            memmove(ptr, ptr2, strlen(ptr2)+1);
-        }else {
-            ptr = ptr2;
-        }
-    }
-
-    *ptr = 0;
-    return ptr-buf;
-}
-
-static nsIInputStream *get_post_data_stream(IBindCtx *bctx)
-{
-    nsIInputStream *ret = NULL;
-    IUnknown *unk;
-    IBindStatusCallback *callback;
-    IServiceProvider *service_provider;
-    BINDINFO bindinfo;
-    DWORD bindf = 0;
-    DWORD post_len = 0, headers_len = 0;
-    LPWSTR headers = NULL;
-    WCHAR emptystr[] = {0};
-    char *data;
-    HRESULT hres;
-
-    static WCHAR _BSCB_Holder_[] =
-        {'_','B','S','C','B','_','H','o','l','d','e','r','_',0};
-
-
-    /* FIXME: This should be done in URLMoniker */
-    if(!bctx)
-        return NULL;
-
-    hres = IBindCtx_GetObjectParam(bctx, _BSCB_Holder_, &unk);
-    if(FAILED(hres))
-        return NULL;
-
-    hres = IUnknown_QueryInterface(unk, &IID_IBindStatusCallback, (void**)&callback);
-    if(FAILED(hres)) {
-        IUnknown_Release(unk);
-        return NULL;
-    }
-
-    hres = IUnknown_QueryInterface(unk, &IID_IServiceProvider, (void**)&service_provider);
-    IUnknown_Release(unk);
-    if(SUCCEEDED(hres)) {
-        IHttpNegotiate *http_negotiate;
-
-        hres = IServiceProvider_QueryService(service_provider, &IID_IHttpNegotiate, &IID_IHttpNegotiate,
-                                             (void**)&http_negotiate);
-        if(SUCCEEDED(hres)) {
-            hres = IHttpNegotiate_BeginningTransaction(http_negotiate, emptystr,
-                                                       emptystr, 0, &headers);
-            IHttpNegotiate_Release(http_negotiate);
-
-            if(SUCCEEDED(hres) && headers)
-                headers_len = WideCharToMultiByte(CP_ACP, 0, headers, -1, NULL, 0, NULL, NULL);
-        }
-
-        IServiceProvider_Release(service_provider);
-    }
-
-    memset(&bindinfo, 0, sizeof(bindinfo));
-    bindinfo.cbSize = sizeof(bindinfo);
-
-    hres = IBindStatusCallback_GetBindInfo(callback, &bindf, &bindinfo);
-
-    if(SUCCEEDED(hres) && bindinfo.dwBindVerb == BINDVERB_POST)
-        post_len = bindinfo.cbstgmedData;
-
-    if(headers_len || post_len) {
-        int len = 0;
-
-        static const char content_length[] = "Content-Length: %u\r\n\r\n";
-
-        data = heap_alloc(headers_len+post_len+sizeof(content_length)+10);
-
-        if(headers_len) {
-            WideCharToMultiByte(CP_ACP, 0, headers, -1, data, headers_len, NULL, NULL);
-            len = fix_headers(data, post_len);
-            if(len >= 2 && (data[len-1] != '\n' || data[len-2] != '\r')) {
-                data[len++] = '\r';
-                data[len++] = '\n';
-            }
-        }
-
-        if(post_len) {
-            sprintf(data+len, content_length, post_len);
-            len += strlen(data+len);
-
-            memcpy(data+len, bindinfo.stgmedData.u.hGlobal, post_len);
-        }
-
-        TRACE("data = %s\n", debugstr_an(data, len+post_len));
-
-        if(len)
-            ret = create_nsstream(data, len+post_len);
-    }
-
-    CoTaskMemFree(headers);
-    ReleaseBindInfo(&bindinfo);
-    IBindStatusCallback_Release(callback);
-
-    return ret;
-}
-
 static BOOL use_gecko_script(LPCWSTR url)
 {
     static const WCHAR fileW[] = {'f','i','l','e',':'};
@@ -304,27 +181,15 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
     push_task(task);
 
     if(This->nscontainer) {
-        nsIInputStream *post_data_stream = get_post_data_stream(pibc);
-
         This->nscontainer->bscallback = bscallback;
         nsres = nsIWebNavigation_LoadURI(This->nscontainer->navigation, url,
-                LOAD_FLAGS_NONE, NULL, post_data_stream, NULL);
+                LOAD_FLAGS_NONE, NULL, NULL, NULL);
         This->nscontainer->bscallback = NULL;
-
-        if(post_data_stream)
-            nsIInputStream_Release(post_data_stream);
-
-        if(NS_SUCCEEDED(nsres)) {
-            /* FIXME: don't return here (URL Moniker needs to be good enough) */
-
+        if(NS_FAILED(nsres)) {
+            WARN("LoadURI failed: %08x\n", nsres);
             IUnknown_Release((IUnknown*)bscallback);
             CoTaskMemFree(url);
-
-            if(bind_complete)
-                *bind_complete = TRUE;
-            return S_OK;
-        }else if(nsres != WINE_NS_LOAD_FROM_MONIKER) {
-            WARN("LoadURI failed: %08x\n", nsres);
+            return E_FAIL;
         }
     }
 
@@ -337,7 +202,7 @@ static HRESULT set_moniker(HTMLDocument *This, IMoniker *mon, IBindCtx *pibc, BO
     return S_OK;
 }
 
-static HRESULT get_doc_string(HTMLDocument *This, char **str, DWORD *len)
+static HRESULT get_doc_string(HTMLDocument *This, char **str)
 {
     nsIDOMNode *nsnode;
     LPCWSTR strw;
@@ -362,9 +227,7 @@ static HRESULT get_doc_string(HTMLDocument *This, char **str, DWORD *len)
     nsAString_GetData(&nsstr, &strw);
     TRACE("%s\n", debugstr_w(strw));
 
-    *len = WideCharToMultiByte(CP_ACP, 0, strw, -1, NULL, 0, NULL, NULL);
-    *str = heap_alloc(*len);
-    WideCharToMultiByte(CP_ACP, 0, strw, -1, *str, *len, NULL, NULL);
+    *str = heap_strdupWtoA(strw);
 
     nsAString_Finish(&nsstr);
 
@@ -583,7 +446,7 @@ static HRESULT WINAPI PersistFile_Save(IPersistFile *iface, LPCOLESTR pszFileNam
 {
     HTMLDocument *This = PERSISTFILE_THIS(iface);
     char *str;
-    DWORD len, written=0;
+    DWORD written=0;
     HANDLE file;
     HRESULT hres;
 
@@ -596,9 +459,9 @@ static HRESULT WINAPI PersistFile_Save(IPersistFile *iface, LPCOLESTR pszFileNam
         return E_FAIL;
     }
 
-    hres = get_doc_string(This, &str, &len);
+    hres = get_doc_string(This, &str);
     if(SUCCEEDED(hres))
-        WriteFile(file, str, len, &written, NULL);
+        WriteFile(file, str, strlen(str), &written, NULL);
 
     CloseHandle(file);
     return hres;
@@ -698,16 +561,16 @@ static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM
 {
     HTMLDocument *This = PERSTRINIT_THIS(iface);
     char *str;
-    DWORD len, written=0;
+    DWORD written=0;
     HRESULT hres;
 
     TRACE("(%p)->(%p %x)\n", This, pStm, fClearDirty);
 
-    hres = get_doc_string(This, &str, &len);
+    hres = get_doc_string(This, &str);
     if(FAILED(hres))
         return hres;
 
-    hres = IStream_Write(pStm, str, len, &written);
+    hres = IStream_Write(pStm, str, strlen(str), &written);
     if(FAILED(hres))
         FIXME("Write failed: %08x\n", hres);
 

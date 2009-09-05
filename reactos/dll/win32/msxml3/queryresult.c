@@ -366,7 +366,7 @@ static const tid_t queryresult_iface_tids[] = {
 };
 static dispex_static_data_t queryresult_dispex = {
     &queryresult_dispex_vtbl,
-    IXMLDOMNodeList_tid,
+    IXMLDOMSelection_tid,
     NULL,
     queryresult_iface_tids
 };

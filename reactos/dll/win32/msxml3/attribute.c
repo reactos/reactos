@@ -556,7 +556,7 @@ IUnknown* create_attribute( xmlNodePtr attribute )
     This->lpVtbl = &domattr_vtbl;
     This->ref = 1;
 
-    node = create_basic_node( attribute, (IUnknown*)&This->lpVtbl );
+    node = create_basic_node( attribute, (IUnknown*)&This->lpVtbl, NULL );
     if(!node)
     {
         HeapFree(GetProcessHeap(), 0, This);

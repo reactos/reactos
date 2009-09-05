@@ -131,7 +131,6 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
 {
     NSContainer *This = NSEVENTLIST_THIS(iface)->This;
     nsIDOMHTMLElement *nsbody = NULL;
-    task_t *task;
 
     TRACE("(%p)\n", This);
 
@@ -148,18 +147,6 @@ static nsresult NSAPI handle_load(nsIDOMEventListener *iface, nsIDOMEvent *event
 
     if(This->doc->usermode == EDITMODE)
         handle_edit_load(This->doc);
-
-    task = heap_alloc(sizeof(task_t));
-
-    task->doc = This->doc;
-    task->task_id = TASK_PARSECOMPLETE;
-    task->next = NULL;
-
-    /*
-     * This should be done in the worker thread that parses HTML,
-     * but we don't have such thread (Gecko parses HTML for us).
-     */
-    push_task(task);
 
     if(!This->doc->nsdoc) {
         ERR("NULL nsdoc\n");

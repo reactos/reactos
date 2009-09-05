@@ -77,9 +77,6 @@ typedef struct _domdoc
 
     /* IObjectSafety */
     DWORD safeopt;
-
-    /* IDispatchEx */
-    DispatchEx dispex;
 } domdoc;
 
 /*
@@ -466,7 +463,7 @@ static HRESULT WINAPI domdoc_QueryInterface( IXMLDOMDocument2 *iface, REFIID rii
     {
         *ppvObject = &This->lpvtblISupportErrorInfo;
     }
-    else if(dispex_query_interface(&This->dispex, riid, ppvObject))
+    else if(dispex_query_interface(&This->node->dispex, riid, ppvObject))
     {
         return *ppvObject ? S_OK : E_NOINTERFACE;
     }
@@ -1043,7 +1040,7 @@ static HRESULT WINAPI domdoc_createElement(
     xmldoc_add_orphan(xmlnode->doc, xmlnode);
 
     TRACE("created xmlptr %p\n", xmlnode);
-    elem_unk = create_element(xmlnode, NULL);
+    elem_unk = create_element(xmlnode);
     HeapFree(GetProcessHeap(), 0, xml_name);
 
     hr = IUnknown_QueryInterface(elem_unk, &IID_IXMLDOMElement, (void **)element);
@@ -2218,14 +2215,12 @@ HRESULT DOMDocument_create_from_xmldoc(xmlDocPtr xmldoc, IXMLDOMDocument2 **docu
     doc->safeopt = 0;
     doc->bsc = NULL;
 
-    doc->node = create_basic_node( (xmlNodePtr)xmldoc, (IUnknown*)&doc->lpVtbl );
+    doc->node = create_basic_node( (xmlNodePtr)xmldoc, (IUnknown*)&doc->lpVtbl, &domdoc_dispex );
     if(!doc->node)
     {
         HeapFree(GetProcessHeap(), 0, doc);
         return E_FAIL;
     }
-
-    init_dispex(&doc->dispex, (IUnknown*)&doc->lpVtbl, &domdoc_dispex);
 
     *document = (IXMLDOMDocument2*)&doc->lpVtbl;
 

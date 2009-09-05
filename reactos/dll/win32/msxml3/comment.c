@@ -777,7 +777,7 @@ IUnknown* create_comment( xmlNodePtr comment )
     This->lpVtbl = &domcomment_vtbl;
     This->ref = 1;
 
-    node = create_basic_node( comment, (IUnknown*)&This->lpVtbl );
+    node = create_basic_node( comment, (IUnknown*)&This->lpVtbl, NULL );
     if(!node)
     {
         HeapFree(GetProcessHeap(), 0, This);

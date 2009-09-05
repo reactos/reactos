@@ -250,6 +250,7 @@ static const tid_t HTMLDOMChildrenCollection_iface_tids[] = {
 };
 
 static const dispex_static_data_vtbl_t HTMLDOMChildrenCollection_dispex_vtbl = {
+    NULL,
     HTMLDOMChildrenCollection_get_dispid,
     HTMLDOMChildrenCollection_invoke
 };
@@ -307,6 +308,7 @@ static ULONG WINAPI HTMLDOMNode_Release(IHTMLDOMNode *iface)
 
     if(!ref) {
         This->vtbl->destructor(This);
+        release_dispex(&This->dispex);
         heap_free(This);
     }
 

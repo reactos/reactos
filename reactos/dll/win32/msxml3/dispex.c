@@ -91,6 +91,7 @@ static REFIID tid_ids[] = {
     &IID_IXMLDOMParseError,
     &IID_IXMLDOMProcessingInstruction,
     &IID_IXMLDOMSchemaCollection,
+    &IID_IXMLDOMSelection,
     &IID_IXMLDOMText,
     &IID_IXMLElement,
     &IID_IXMLDOMDocument,

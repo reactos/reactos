@@ -614,7 +614,7 @@ IUnknown* create_pi( xmlNodePtr pi )
     This->lpVtbl = &dom_pi_vtbl;
     This->ref = 1;
 
-    node = create_basic_node( pi, (IUnknown*)&This->lpVtbl );
+    node = create_basic_node( pi, (IUnknown*)&This->lpVtbl, NULL );
     if(!node)
     {
         HeapFree(GetProcessHeap(), 0, This);
