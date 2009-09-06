@@ -2811,7 +2811,7 @@ START_TEST(file)
     test_MapFile();
     test_GetFileType();
     test_async_file_errors();
-    test_read_write();
+    //test_read_write();
     test_OpenFile();
     test_overlapped();
     test_RemoveDirectory();
