@@ -73,11 +73,6 @@ VOID LoadAndBootLinux(PCSTR OperatingSystemName, PCSTR Description)
 		UiMessageBox("Invalid boot path");
 		goto LinuxBootFailed;
 	}
-	if (!MachDiskGetSystemVolume(LinuxBootPath, NULL, NULL))
-	{
-		UiMessageBox("Failed to get system volume.");
-		goto LinuxBootFailed;
-	}
 
 	// Open the kernel
 	LinuxKernel = FsOpenFile(LinuxKernelName);

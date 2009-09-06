@@ -36,8 +36,6 @@
 #undef MachVideoSync
 #undef MachBeep
 #undef MachPrepareForReactOS
-#undef MachDiskGetBootVolume
-#undef MachDiskGetSystemVolume
 #undef MachDiskGetBootPath
 #undef MachDiskGetBootDevice
 #undef MachDiskBootingFromFloppy
@@ -322,20 +320,6 @@ ArcGetMemoryDescriptor(MEMORY_DESCRIPTOR* Current)
             return NULL;
         }
     }
-}
-
-BOOLEAN
-MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType)
-{
-  return MachVtbl.DiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
-}
-
-BOOLEAN
-MachDiskGetSystemVolume(char *SystemPath,
-                        char *RemainingPath,
-                        PULONG Device)
-{
-  return MachVtbl.DiskGetSystemVolume(SystemPath, RemainingPath, Device);
 }
 
 BOOLEAN
