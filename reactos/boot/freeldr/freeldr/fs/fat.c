@@ -36,8 +36,6 @@ BOOLEAN	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG L
 BOOLEAN	FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
-BOOLEAN gCacheEnabled = FALSE;
-
 ULONG			BytesPerSector;			/* Number of bytes per sector */
 ULONG			SectorsPerCluster;		/* Number of sectors per cluster */
 ULONG			FatVolumeStartSector;		/* Absolute starting sector of the partition */
@@ -350,30 +348,6 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	}
 	MmHeapFree(FatVolumeBootSector);
 
-	if (gCacheEnabled)
-	{
-		//
-		// Initialize the disk cache for this drive
-		//
-		if (!CacheInitializeDrive(DriveNumber))
-		{
-			return FALSE;
-		}
-
-		//
-		// Force the FAT sectors into the cache
-		// as long as it is FAT12 or FAT16. FAT32 can
-		// have a multi-megabyte FAT so we don't want that.
-		//
-		if (FatType != FAT32 && FatType != FATX32)
-		{
-			if (!CacheForceDiskSectorsIntoCache(DriveNumber, ActiveFatSectorStart, SectorsPerFat))
-			{
-				return FALSE;
-			}
-		}
-	}
-	else
 	{
 		GEOMETRY DriveGeometry;
 		ULONG BlockSize;
@@ -1379,24 +1353,17 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
 
 BOOLEAN FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-	if (gCacheEnabled)
+	// Now try to read in the block
+	if (!MachDiskReadLogicalSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER))
 	{
-		return CacheReadDiskSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, Buffer);
+		return FALSE;
 	}
-	else
-	{
-		// Now try to read in the block
-		if (!MachDiskReadLogicalSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER))
-		{
-			return FALSE;
-		}
 
-		// Copy data to the caller
-		RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * BytesPerSector);
+	// Copy data to the caller
+	RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * BytesPerSector);
 
-		// Return success
-		return TRUE;
-	}
+	// Return success
+	return TRUE;
 }
 
 LONG FatClose(ULONG FileId)
