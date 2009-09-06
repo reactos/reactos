@@ -332,6 +332,7 @@ LONG ArcOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
                 if (!FileData[DeviceId].FileFuncTable)
                 {
                     /* Error, unable to detect file system */
+                    pDevice->FuncTable->Close(DeviceId);
                     FileData[DeviceId].FuncTable = NULL;
                     return ENODEV;
                 }
