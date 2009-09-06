@@ -1022,6 +1022,13 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 //   hWnd = Wnd->hSelf;
 //   hWndNewParent = WndNewParent->hSelf;
 
+   /* Some applications try to set a child as a parent */
+   if (IntIsChildWindow(Wnd, WndNewParent))
+   {
+      SetLastWin32Error( ERROR_INVALID_PARAMETER );
+      return 0;
+   }
+
    /*
     * Windows hides the window first, then shows it again
     * including the WM_SHOWWINDOW messages and all
