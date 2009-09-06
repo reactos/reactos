@@ -23,33 +23,34 @@
 #include <debug.h>
 
 ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
-PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
-BOOLEAN	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
-LONG FatLookupFile(PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer);
+PVOID	FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
+BOOLEAN	FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
+LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer);
 void	FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry);
-BOOLEAN	FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer);
-ULONG	FatCountClustersInChain(ULONG StartCluster);
-ULONG*	FatGetClusterChainArray(ULONG StartCluster);
-BOOLEAN	FatReadCluster(ULONG ClusterNumber, PVOID Buffer);
-BOOLEAN	FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
-BOOLEAN	FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
-BOOLEAN	FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
-BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOLEAN	FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPointer);
+ULONG	FatCountClustersInChain(PFAT_VOLUME_INFO Volume, ULONG StartCluster);
+ULONG*	FatGetClusterChainArray(PFAT_VOLUME_INFO Volume, ULONG StartCluster);
+BOOLEAN	FatReadClusterChain(PFAT_VOLUME_INFO Volume, ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer);
+BOOLEAN	FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer);
+BOOLEAN	FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer);
 
-ULONG			BytesPerSector;			/* Number of bytes per sector */
-ULONG			SectorsPerCluster;		/* Number of sectors per cluster */
-ULONG			FatVolumeStartSector;		/* Absolute starting sector of the partition */
-ULONG			FatSectorStart;			/* Starting sector of 1st FAT table */
-ULONG			ActiveFatSectorStart;		/* Starting sector of active FAT table */
-ULONG			NumberOfFats;			/* Number of FAT tables */
-ULONG			SectorsPerFat;			/* Sectors per FAT table */
-ULONG			RootDirSectorStart;		/* Starting sector of the root directory (non-fat32) */
-ULONG			RootDirSectors;			/* Number of sectors of the root directory (non-fat32) */
-ULONG			RootDirStartCluster;		/* Starting cluster number of the root directory (fat32 only) */
-ULONG			DataSectorStart;		/* Starting sector of the data area */
+typedef struct _FAT_VOLUME_INFO
+{
+	ULONG BytesPerSector; /* Number of bytes per sector */
+	ULONG SectorsPerCluster; /* Number of sectors per cluster */
+	ULONG FatSectorStart; /* Starting sector of 1st FAT table */
+	ULONG ActiveFatSectorStart; /* Starting sector of active FAT table */
+	ULONG NumberOfFats; /* Number of FAT tables */
+	ULONG SectorsPerFat; /* Sectors per FAT table */
+	ULONG RootDirSectorStart; /* Starting sector of the root directory (non-fat32) */
+	ULONG RootDirSectors; /* Number of sectors of the root directory (non-fat32) */
+	ULONG RootDirStartCluster; /* Starting cluster number of the root directory (fat32 only) */
+	ULONG DataSectorStart; /* Starting sector of the data area */
+	ULONG FatType; /* FAT12, FAT16, FAT32, FATX16 or FATX32 */
+	ULONG DeviceId;
+} FAT_VOLUME_INFO;
 
-ULONG			FatType = 0;			/* FAT12, FAT16, FAT32, FATX16 or FATX32 */
-ULONG			FatDriveNumber = 0;
+static PFAT_VOLUME_INFO FatVolume = NULL;
 
 VOID FatSwapFatBootSector(PFAT_BOOTSECTOR Obj)
 {
@@ -129,7 +130,7 @@ VOID FatSwapFatXDirEntry(PFATX_DIRENTRY Obj)
 	SW(Obj, LastAccessDate);
 }
 
-BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
+BOOLEAN FatOpenVolume(PFAT_VOLUME_INFO Volume, PFAT_BOOTSECTOR BootSector, ULONGLONG PartitionSectorCount)
 {
 	char ErrMsg[80];
 	ULONG FatSize;
@@ -137,42 +138,21 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	PFAT32_BOOTSECTOR Fat32VolumeBootSector;
 	PFATX_BOOTSECTOR FatXVolumeBootSector;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FatOpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector);
-
-	// Store the drive number
-	FatDriveNumber = DriveNumber;
+	DPRINTM(DPRINT_FILESYSTEM, "FatOpenVolume() DeviceId = %d\n", Volume->DeviceId);
 
 	//
 	// Allocate the memory to hold the boot sector
 	//
-	FatVolumeBootSector = (PFAT_BOOTSECTOR) MmHeapAlloc(512);
-	Fat32VolumeBootSector = (PFAT32_BOOTSECTOR) FatVolumeBootSector;
-	FatXVolumeBootSector = (PFATX_BOOTSECTOR) FatVolumeBootSector;
-
-	//
-	// Make sure we got the memory
-	//
-	if (FatVolumeBootSector == NULL)
-	{
-		FileSystemError("Out of memory.");
-		return FALSE;
-	}
-
-	// Now try to read the boot sector
-	// If this fails then abort
-	if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PVOID)DISKREADBUFFER))
-	{
-		MmHeapFree(FatVolumeBootSector);
-		return FALSE;
-	}
-	RtlCopyMemory(FatVolumeBootSector, (PVOID)DISKREADBUFFER, 512);
+	FatVolumeBootSector = (PFAT_BOOTSECTOR)BootSector;
+	Fat32VolumeBootSector = (PFAT32_BOOTSECTOR)BootSector;
+	FatXVolumeBootSector = (PFATX_BOOTSECTOR)BootSector;
 
 	// Get the FAT type
-	FatType = FatDetermineFatType(FatVolumeBootSector, PartitionSectorCount);
+	Volume->FatType = FatDetermineFatType(FatVolumeBootSector, PartitionSectorCount);
 
 	// Dump boot sector (and swap it for big endian systems)
 	DPRINTM(DPRINT_FILESYSTEM, "Dumping boot sector:\n");
-	if (ISFATX(FatType))
+	if (ISFATX(Volume->FatType))
 	{
 		FatSwapFatXBootSector(FatXVolumeBootSector);
 		DPRINTM(DPRINT_FILESYSTEM, "sizeof(FATX_BOOTSECTOR) = 0x%x.\n", sizeof(FATX_BOOTSECTOR));
@@ -183,10 +163,10 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 		DPRINTM(DPRINT_FILESYSTEM, "NumberOfFats: %d\n", FatXVolumeBootSector->NumberOfFats);
 		DPRINTM(DPRINT_FILESYSTEM, "Unknown: 0x%x\n", FatXVolumeBootSector->Unknown);
 
-		DPRINTM(DPRINT_FILESYSTEM, "FatType %s\n", FatType == FATX16 ? "FATX16" : "FATX32");
+		DPRINTM(DPRINT_FILESYSTEM, "FatType %s\n", Volume->FatType == FATX16 ? "FATX16" : "FATX32");
 
 	}
-	else if (FatType == FAT32)
+	else if (Volume->FatType == FAT32)
 	{
 		FatSwapFat32BootSector(Fat32VolumeBootSector);
 		DPRINTM(DPRINT_FILESYSTEM, "sizeof(FAT32_BOOTSECTOR) = 0x%x.\n", sizeof(FAT32_BOOTSECTOR));
@@ -249,19 +229,13 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	}
 
 	//
-	// Set the correct partition offset
-	//
-	FatVolumeStartSector = VolumeStartSector;
-
-	//
 	// Check the boot sector magic
 	//
-	if (! ISFATX(FatType) && FatVolumeBootSector->BootSectorMagic != 0xaa55)
+	if (! ISFATX(Volume->FatType) && FatVolumeBootSector->BootSectorMagic != 0xaa55)
 	{
-		sprintf(ErrMsg, "Invalid boot sector magic on drive 0x%x (expected 0xaa55 found 0x%x)",
-		        DriveNumber, FatVolumeBootSector->BootSectorMagic);
+		sprintf(ErrMsg, "Invalid boot sector magic (expected 0xaa55 found 0x%x)",
+		        FatVolumeBootSector->BootSectorMagic);
 		FileSystemError(ErrMsg);
-		MmHeapFree(FatVolumeBootSector);
 		return FALSE;
 	}
 
@@ -269,72 +243,60 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 	// Check the FAT cluster size
 	// We do not support clusters bigger than 64k
 	//
-	if ((ISFATX(FatType) && 64 * 1024 < FatXVolumeBootSector->SectorsPerCluster * 512) ||
-	   (! ISFATX(FatType) && 64 * 1024 < FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector))
+	if ((ISFATX(Volume->FatType) && 64 * 1024 < FatXVolumeBootSector->SectorsPerCluster * 512) ||
+	   (! ISFATX(Volume->FatType) && 64 * 1024 < FatVolumeBootSector->SectorsPerCluster * FatVolumeBootSector->BytesPerSector))
 	{
 		FileSystemError("This file system has cluster sizes bigger than 64k.\nFreeLoader does not support this.");
-		MmHeapFree(FatVolumeBootSector);
 		return FALSE;
 	}
-
-	//
-	// Clear our variables
-	//
-	FatSectorStart = 0;
-	ActiveFatSectorStart = 0;
-	NumberOfFats = 0;
-	RootDirSectorStart = 0;
-	DataSectorStart = 0;
-	SectorsPerFat = 0;
-	RootDirSectors = 0;
 
 	//
 	// Get the sectors per FAT,
 	// root directory starting sector,
 	// and data sector start
 	//
-	if (ISFATX(FatType))
+	if (ISFATX(Volume->FatType))
 	{
-		BytesPerSector = 512;
-		SectorsPerCluster = SWAPD(FatXVolumeBootSector->SectorsPerCluster);
-		FatSectorStart = (4096 / BytesPerSector);
-		ActiveFatSectorStart = FatSectorStart;
-		NumberOfFats = 1;
-		FatSize = PartitionSectorCount / SectorsPerCluster *
-		          (FATX16 == FatType ? 2 : 4);
-		SectorsPerFat = (((FatSize + 4095) / 4096) * 4096) / BytesPerSector;
+		Volume->BytesPerSector = 512;
+		Volume->SectorsPerCluster = SWAPD(FatXVolumeBootSector->SectorsPerCluster);
+		Volume->FatSectorStart = (4096 / Volume->BytesPerSector);
+		Volume->ActiveFatSectorStart = Volume->FatSectorStart;
+		Volume->NumberOfFats = 1;
+		FatSize = PartitionSectorCount / Volume->SectorsPerCluster *
+		          (Volume->FatType == FATX16 ? 2 : 4);
+		Volume->SectorsPerFat = (((FatSize + 4095) / 4096) * 4096) / Volume->BytesPerSector;
 
-		RootDirSectorStart = FatSectorStart + NumberOfFats * SectorsPerFat;
-		RootDirSectors = FatXVolumeBootSector->SectorsPerCluster;
+		Volume->RootDirSectorStart = Volume->FatSectorStart + Volume->NumberOfFats * Volume->SectorsPerFat;
+		Volume->RootDirSectors = FatXVolumeBootSector->SectorsPerCluster;
 
-		DataSectorStart = RootDirSectorStart + RootDirSectors;
+		Volume->DataSectorStart = Volume->RootDirSectorStart + Volume->RootDirSectors;
 	}
-	else if (FatType != FAT32)
+	else if (Volume->FatType != FAT32)
 	{
-		BytesPerSector = FatVolumeBootSector->BytesPerSector;
-		SectorsPerCluster = FatVolumeBootSector->SectorsPerCluster;
-		FatSectorStart = FatVolumeBootSector->ReservedSectors;
-		ActiveFatSectorStart = FatSectorStart;
-		NumberOfFats = FatVolumeBootSector->NumberOfFats;
-		SectorsPerFat = FatVolumeBootSector->SectorsPerFat;
+		Volume->BytesPerSector = FatVolumeBootSector->BytesPerSector;
+		Volume->SectorsPerCluster = FatVolumeBootSector->SectorsPerCluster;
+		Volume->FatSectorStart = FatVolumeBootSector->ReservedSectors;
+		Volume->ActiveFatSectorStart = Volume->FatSectorStart;
+		Volume->NumberOfFats = FatVolumeBootSector->NumberOfFats;
+		Volume->SectorsPerFat = FatVolumeBootSector->SectorsPerFat;
 
-		RootDirSectorStart = FatSectorStart + NumberOfFats * SectorsPerFat;
-		RootDirSectors = ((FatVolumeBootSector->RootDirEntries * 32) + (BytesPerSector - 1)) / BytesPerSector;
+		Volume->RootDirSectorStart = Volume->FatSectorStart + Volume->NumberOfFats * Volume->SectorsPerFat;
+		Volume->RootDirSectors = ((FatVolumeBootSector->RootDirEntries * 32) + (Volume->BytesPerSector - 1)) / Volume->BytesPerSector;
 
-		DataSectorStart = RootDirSectorStart + RootDirSectors;
+		Volume->DataSectorStart = Volume->RootDirSectorStart + Volume->RootDirSectors;
 	}
 	else
 	{
-		BytesPerSector = Fat32VolumeBootSector->BytesPerSector;
-		SectorsPerCluster = Fat32VolumeBootSector->SectorsPerCluster;
-		FatSectorStart = Fat32VolumeBootSector->ReservedSectors;
-		ActiveFatSectorStart = FatSectorStart +
-		                       ((Fat32VolumeBootSector->ExtendedFlags & 0x80) ? ((Fat32VolumeBootSector->ExtendedFlags & 0x0f) * Fat32VolumeBootSector->SectorsPerFatBig) : 0);
-		NumberOfFats = Fat32VolumeBootSector->NumberOfFats;
-		SectorsPerFat = Fat32VolumeBootSector->SectorsPerFatBig;
+		Volume->BytesPerSector = Fat32VolumeBootSector->BytesPerSector;
+		Volume->SectorsPerCluster = Fat32VolumeBootSector->SectorsPerCluster;
+		Volume->FatSectorStart = Fat32VolumeBootSector->ReservedSectors;
+		Volume->ActiveFatSectorStart = Volume->FatSectorStart +
+		                               ((Fat32VolumeBootSector->ExtendedFlags & 0x80) ? ((Fat32VolumeBootSector->ExtendedFlags & 0x0f) * Fat32VolumeBootSector->SectorsPerFatBig) : 0);
+		Volume->NumberOfFats = Fat32VolumeBootSector->NumberOfFats;
+		Volume->SectorsPerFat = Fat32VolumeBootSector->SectorsPerFatBig;
 
-		RootDirStartCluster = Fat32VolumeBootSector->RootDirStartCluster;
-		DataSectorStart = FatSectorStart + NumberOfFats * SectorsPerFat;
+		Volume->RootDirStartCluster = Fat32VolumeBootSector->RootDirStartCluster;
+		Volume->DataSectorStart = Volume->FatSectorStart + Volume->NumberOfFats * Volume->SectorsPerFat;
 
 		//
 		// Check version
@@ -345,20 +307,6 @@ BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG 
 			FileSystemError("FreeLoader is too old to work with this FAT32 filesystem.\nPlease update FreeLoader.");
 			return FALSE;
 		}
-	}
-	MmHeapFree(FatVolumeBootSector);
-
-	{
-		GEOMETRY DriveGeometry;
-		ULONG BlockSize;
-
-		// Initialize drive by getting its geometry
-		if (!MachDiskGetDriveGeometry(DriveNumber, &DriveGeometry))
-		{
-			return FALSE;
-		}
-
-		BlockSize = MachDiskGetCacheableBlockCount(DriveNumber);
 	}
 
 	return TRUE;
@@ -419,7 +367,7 @@ ULONG FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCo
 	}
 }
 
-PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOLEAN RootDirectory)
+PVOID FatBufferDirectory(PFAT_VOLUME_INFO Volume, ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOLEAN RootDirectory)
 {
 	PVOID	DirectoryBuffer;
 
@@ -429,9 +377,9 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	 * For FAT32, the root directory is nothing special. We can treat it the same
 	 * as a subdirectory.
 	 */
-	if (RootDirectory && FAT32 == FatType)
+	if (RootDirectory && Volume->FatType == FAT32)
 	{
-		DirectoryStartCluster = RootDirStartCluster;
+		DirectoryStartCluster = Volume->RootDirStartCluster;
 		RootDirectory = FALSE;
 	}
 
@@ -440,11 +388,11 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	//
 	if (RootDirectory)
 	{
-		*DirectorySize = RootDirSectors * BytesPerSector;
+		*DirectorySize = Volume->RootDirSectors * Volume->BytesPerSector;
 	}
 	else
 	{
-		*DirectorySize = FatCountClustersInChain(DirectoryStartCluster) * SectorsPerCluster * BytesPerSector;
+		*DirectorySize = FatCountClustersInChain(Volume, DirectoryStartCluster) * Volume->SectorsPerCluster * Volume->BytesPerSector;
 	}
 
 	//
@@ -463,7 +411,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	//
 	if (RootDirectory)
 	{
-		if (!FatReadVolumeSectors(FatDriveNumber, RootDirSectorStart, RootDirSectors, DirectoryBuffer))
+		if (!FatReadVolumeSectors(Volume, Volume->RootDirSectorStart, Volume->RootDirSectors, DirectoryBuffer))
 		{
 			MmHeapFree(DirectoryBuffer);
 			return NULL;
@@ -471,7 +419,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	}
 	else
 	{
-		if (!FatReadClusterChain(DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer))
+		if (!FatReadClusterChain(Volume, DirectoryStartCluster, 0xFFFFFFFF, DirectoryBuffer))
 		{
 			MmHeapFree(DirectoryBuffer);
 			return NULL;
@@ -481,7 +429,7 @@ PVOID FatBufferDirectory(ULONG DirectoryStartCluster, ULONG *DirectorySize, BOOL
 	return DirectoryBuffer;
 }
 
-BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+BOOLEAN FatSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	ULONG		EntryCount;
 	ULONG		CurrentEntry;
@@ -672,7 +620,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 			//
 			StartCluster = ((ULONG)DirEntry->ClusterHigh << 16) + DirEntry->ClusterLow;
 			DPRINTM(DPRINT_FILESYSTEM, "StartCluster = 0x%x\n", StartCluster);
-			FatFileInfoPointer->FileFatChain = FatGetClusterChainArray(StartCluster);
+			FatFileInfoPointer->FileFatChain = FatGetClusterChainArray(Volume, StartCluster);
 
 			//
 			// See if memory allocation failed
@@ -696,7 +644,7 @@ BOOLEAN FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySi
 	return FALSE;
 }
 
-static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
+static BOOLEAN FatXSearchDirectoryBufferForFile(PFAT_VOLUME_INFO Volume, PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	ULONG		EntryCount;
 	ULONG		CurrentEntry;
@@ -746,7 +694,7 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dir
 			/*
 			 * Get the cluster chain
 			 */
-			FatFileInfoPointer->FileFatChain = FatGetClusterChainArray(DirEntry->StartCluster);
+			FatFileInfoPointer->FileFatChain = FatGetClusterChainArray(Volume, DirEntry->StartCluster);
 
 			/*
 			 * See if memory allocation failed
@@ -769,7 +717,7 @@ static BOOLEAN FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG Dir
  * specified filename and fills in an FAT_FILE_INFO structure
  * with info describing the file, etc. returns ARC error code
  */
-LONG FatLookupFile(PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer)
+LONG FatLookupFile(PFAT_VOLUME_INFO Volume, PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPointer)
 {
 	UINT32		i;
 	ULONG		NumberOfPathParts;
@@ -809,7 +757,7 @@ LONG FatLookupFile(PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPoi
 		//
 		// Buffer the directory contents
 		//
-		DirectoryBuffer = FatBufferDirectory(DirectoryStartCluster, &DirectorySize, (i == 0) );
+		DirectoryBuffer = FatBufferDirectory(Volume, DirectoryStartCluster, &DirectorySize, (i == 0) );
 		if (DirectoryBuffer == NULL)
 		{
 			return ENOMEM;
@@ -818,9 +766,9 @@ LONG FatLookupFile(PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPoi
 		//
 		// Search for file name in directory
 		//
-		if (ISFATX(FatType))
+		if (ISFATX(Volume->FatType))
 		{
-			if (!FatXSearchDirectoryBufferForFile(DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
+			if (!FatXSearchDirectoryBufferForFile(Volume, DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
 				MmHeapFree(DirectoryBuffer);
 				return ENOENT;
@@ -828,7 +776,7 @@ LONG FatLookupFile(PCSTR FileName, ULONG DeviceId, PFAT_FILE_INFO FatFileInfoPoi
 		}
 		else
 		{
-			if (!FatSearchDirectoryBufferForFile(DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
+			if (!FatSearchDirectoryBufferForFile(Volume, DirectoryBuffer, DirectorySize, PathPart, &FatFileInfo))
 			{
 				MmHeapFree(DirectoryBuffer);
 				return ENOENT;
@@ -906,7 +854,7 @@ void FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry)
  * FatGetFatEntry()
  * returns the Fat entry for a given cluster number
  */
-BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
+BOOLEAN FatGetFatEntry(PFAT_VOLUME_INFO Volume, ULONG Cluster, ULONG* ClusterPointer)
 {
 	ULONG		fat = 0;
 	UINT32		FatOffset;
@@ -915,28 +863,28 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 
 	DPRINTM(DPRINT_FILESYSTEM, "FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster);
 
-	switch(FatType)
+	switch(Volume->FatType)
 	{
 	case FAT12:
 
 		FatOffset = Cluster + (Cluster / 2);
-		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
-		ThisFatEntOffset = (FatOffset % BytesPerSector);
+		ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
+		ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
 		DPRINTM(DPRINT_FILESYSTEM, "FatOffset: %d\n", FatOffset);
 		DPRINTM(DPRINT_FILESYSTEM, "ThisFatSecNum: %d\n", ThisFatSecNum);
 		DPRINTM(DPRINT_FILESYSTEM, "ThisFatEntOffset: %d\n", ThisFatEntOffset);
 
-		if (ThisFatEntOffset == (BytesPerSector - 1))
+		if (ThisFatEntOffset == (Volume->BytesPerSector - 1))
 		{
-			if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 2, (PVOID)FILESYSBUFFER))
+			if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 2, (PVOID)FILESYSBUFFER))
 			{
 				return FALSE;
 			}
 		}
 		else
 		{
-			if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
+			if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
 			{
 				return FALSE;
 			}
@@ -955,10 +903,10 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 	case FATX16:
 
 		FatOffset = (Cluster * 2);
-		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
-		ThisFatEntOffset = (FatOffset % BytesPerSector);
+		ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
+		ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
-		if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
+		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
 		{
 			return FALSE;
 		}
@@ -972,10 +920,10 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 	case FATX32:
 
 		FatOffset = (Cluster * 4);
-		ThisFatSecNum = ActiveFatSectorStart + (FatOffset / BytesPerSector);
-		ThisFatEntOffset = (FatOffset % BytesPerSector);
+		ThisFatSecNum = Volume->ActiveFatSectorStart + (FatOffset / Volume->BytesPerSector);
+		ThisFatEntOffset = (FatOffset % Volume->BytesPerSector);
 
-		if (!FatReadVolumeSectors(FatDriveNumber, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
+		if (!FatReadVolumeSectors(Volume, ThisFatSecNum, 1, (PVOID)FILESYSBUFFER))
 		{
 			return FALSE;
 		}
@@ -986,6 +934,10 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 
 		break;
 
+	default:
+		DPRINTM(DPRINT_FILESYSTEM, "Unknown FAT type %d\n", Volume->FatType);
+		return FALSE;
+
 	}
 
 	DPRINTM(DPRINT_FILESYSTEM, "FAT entry is 0x%x.\n", fat);
@@ -995,7 +947,7 @@ BOOLEAN FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 	return TRUE;
 }
 
-ULONG FatCountClustersInChain(ULONG StartCluster)
+ULONG FatCountClustersInChain(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
 {
 	ULONG	ClusterCount = 0;
 
@@ -1006,9 +958,9 @@ ULONG FatCountClustersInChain(ULONG StartCluster)
 		//
 		// If end of chain then break out of our cluster counting loop
 		//
-		if (((FatType == FAT12) && (StartCluster >= 0xff8)) ||
-			((FatType == FAT16 || FatType == FATX16) && (StartCluster >= 0xfff8)) ||
-			((FatType == FAT32 || FatType == FATX32) && (StartCluster >= 0x0ffffff8)))
+		if (((Volume->FatType == FAT12) && (StartCluster >= 0xff8)) ||
+			((Volume->FatType == FAT16 || Volume->FatType == FATX16) && (StartCluster >= 0xfff8)) ||
+			((Volume->FatType == FAT32 || Volume->FatType == FATX32) && (StartCluster >= 0x0ffffff8)))
 		{
 			break;
 		}
@@ -1021,7 +973,7 @@ ULONG FatCountClustersInChain(ULONG StartCluster)
 		//
 		// Get next cluster
 		//
-		if (!FatGetFatEntry(StartCluster, &StartCluster))
+		if (!FatGetFatEntry(Volume, StartCluster, &StartCluster))
 		{
 			return 0;
 		}
@@ -1032,7 +984,7 @@ ULONG FatCountClustersInChain(ULONG StartCluster)
 	return ClusterCount;
 }
 
-ULONG* FatGetClusterChainArray(ULONG StartCluster)
+ULONG* FatGetClusterChainArray(PFAT_VOLUME_INFO Volume, ULONG StartCluster)
 {
 	ULONG	ClusterCount;
 	ULONG		ArraySize;
@@ -1041,7 +993,7 @@ ULONG* FatGetClusterChainArray(ULONG StartCluster)
 
 	DPRINTM(DPRINT_FILESYSTEM, "FatGetClusterChainArray() StartCluster = %d\n", StartCluster);
 
-	ClusterCount = FatCountClustersInChain(StartCluster) + 1; // Lets get the 0x0ffffff8 on the end of the array
+	ClusterCount = FatCountClustersInChain(Volume, StartCluster) + 1; // Lets get the 0x0ffffff8 on the end of the array
 	ArraySize = ClusterCount * sizeof(ULONG);
 
 	//
@@ -1067,9 +1019,9 @@ ULONG* FatGetClusterChainArray(ULONG StartCluster)
 		//
 		// Don't try to get next cluster for last cluster
 		//
-		if (((FatType == FAT12) && (StartCluster >= 0xff8)) ||
-			((FatType == FAT16 || FatType == FATX16) && (StartCluster >= 0xfff8)) ||
-			((FatType == FAT32 || FatType == FATX32) && (StartCluster >= 0x0ffffff8)))
+		if (((Volume->FatType == FAT12) && (StartCluster >= 0xff8)) ||
+			((Volume->FatType == FAT16 || Volume->FatType == FATX16) && (StartCluster >= 0xfff8)) ||
+			((Volume->FatType == FAT32 || Volume->FatType == FATX32) && (StartCluster >= 0x0ffffff8)))
 		{
 			Idx++;
 			break;
@@ -1078,7 +1030,7 @@ ULONG* FatGetClusterChainArray(ULONG StartCluster)
 		//
 		// Get next cluster
 		//
-		if (!FatGetFatEntry(StartCluster, &StartCluster))
+		if (!FatGetFatEntry(Volume, StartCluster, &StartCluster))
 		{
 			MmHeapFree(ArrayPointer);
 			return NULL;
@@ -1089,32 +1041,10 @@ ULONG* FatGetClusterChainArray(ULONG StartCluster)
 }
 
 /*
- * FatReadCluster()
- * Reads the specified cluster into memory
- */
-BOOLEAN FatReadCluster(ULONG ClusterNumber, PVOID Buffer)
-{
-	ULONG		ClusterStartSector;
-
-	ClusterStartSector = ((ClusterNumber - 2) * SectorsPerCluster) + DataSectorStart;
-
-	DPRINTM(DPRINT_FILESYSTEM, "FatReadCluster() ClusterNumber = %d Buffer = 0x%x ClusterStartSector = %d\n", ClusterNumber, Buffer, ClusterStartSector);
-
-	if (!FatReadVolumeSectors(FatDriveNumber, ClusterStartSector, SectorsPerCluster, (PVOID)FILESYSBUFFER))
-	{
-		return FALSE;
-	}
-
-	memcpy(Buffer, (PVOID)FILESYSBUFFER, SectorsPerCluster * BytesPerSector);
-
-	return TRUE;
-}
-
-/*
  * FatReadClusterChain()
  * Reads the specified clusters into memory
  */
-BOOLEAN FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer)
+BOOLEAN FatReadClusterChain(PFAT_VOLUME_INFO Volume, ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID Buffer)
 {
 	ULONG		ClusterStartSector;
 
@@ -1127,17 +1057,17 @@ BOOLEAN FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PV
 		//
 		// Calculate starting sector for cluster
 		//
-		ClusterStartSector = ((StartClusterNumber - 2) * SectorsPerCluster) + DataSectorStart;
+		ClusterStartSector = ((StartClusterNumber - 2) * Volume->SectorsPerCluster) + Volume->DataSectorStart;
 
 		//
 		// Read cluster into memory
 		//
-		if (!FatReadVolumeSectors(FatDriveNumber, ClusterStartSector, SectorsPerCluster, (PVOID)FILESYSBUFFER))
+		if (!FatReadVolumeSectors(Volume, ClusterStartSector, Volume->SectorsPerCluster, (PVOID)FILESYSBUFFER))
 		{
 			return FALSE;
 		}
 
-		memcpy(Buffer, (PVOID)FILESYSBUFFER, SectorsPerCluster * BytesPerSector);
+		memcpy(Buffer, (PVOID)FILESYSBUFFER, Volume->SectorsPerCluster * Volume->BytesPerSector);
 
 		//
 		// Decrement count of clusters left to read
@@ -1147,12 +1077,12 @@ BOOLEAN FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PV
 		//
 		// Increment buffer address by cluster size
 		//
-		Buffer = (PVOID)((ULONG_PTR)Buffer + (SectorsPerCluster * BytesPerSector));
+		Buffer = (PVOID)((ULONG_PTR)Buffer + (Volume->SectorsPerCluster * Volume->BytesPerSector));
 
 		//
 		// Get next cluster
 		//
-		if (!FatGetFatEntry(StartClusterNumber, &StartClusterNumber))
+		if (!FatGetFatEntry(Volume, StartClusterNumber, &StartClusterNumber))
 		{
 			return FALSE;
 		}
@@ -1160,9 +1090,9 @@ BOOLEAN FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PV
 		//
 		// If end of chain then break out of our cluster reading loop
 		//
-		if (((FatType == FAT12) && (StartClusterNumber >= 0xff8)) ||
-			((FatType == FAT16 || FatType == FATX16) && (StartClusterNumber >= 0xfff8)) ||
-			((FatType == FAT32 || FatType == FATX32) && (StartClusterNumber >= 0x0ffffff8)))
+		if (((Volume->FatType == FAT12) && (StartClusterNumber >= 0xff8)) ||
+			((Volume->FatType == FAT16 || Volume->FatType == FATX16) && (StartClusterNumber >= 0xfff8)) ||
+			((Volume->FatType == FAT32 || Volume->FatType == FATX32) && (StartClusterNumber >= 0x0ffffff8)))
 		{
 			break;
 		}
@@ -1175,15 +1105,15 @@ BOOLEAN FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PV
  * FatReadPartialCluster()
  * Reads part of a cluster into memory
  */
-BOOLEAN FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
+BOOLEAN FatReadPartialCluster(PFAT_VOLUME_INFO Volume, ULONG ClusterNumber, ULONG StartingOffset, ULONG Length, PVOID Buffer)
 {
 	ULONG		ClusterStartSector;
 
 	DPRINTM(DPRINT_FILESYSTEM, "FatReadPartialCluster() ClusterNumber = %d StartingOffset = %d Length = %d Buffer = 0x%x\n", ClusterNumber, StartingOffset, Length, Buffer);
 
-	ClusterStartSector = ((ClusterNumber - 2) * SectorsPerCluster) + DataSectorStart;
+	ClusterStartSector = ((ClusterNumber - 2) * Volume->SectorsPerCluster) + Volume->DataSectorStart;
 
-	if (!FatReadVolumeSectors(FatDriveNumber, ClusterStartSector, SectorsPerCluster, (PVOID)FILESYSBUFFER))
+	if (!FatReadVolumeSectors(Volume, ClusterStartSector, Volume->SectorsPerCluster, (PVOID)FILESYSBUFFER))
 	{
 		return FALSE;
 	}
@@ -1200,6 +1130,7 @@ BOOLEAN FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG L
  */
 BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
+	PFAT_VOLUME_INFO Volume = FatFileInfo->Volume;
 	ULONG			ClusterNumber;
 	ULONG			OffsetInCluster;
 	ULONG			LengthInCluster;
@@ -1260,7 +1191,7 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
 	//     the last cluster.
 	//
 
-	BytesPerCluster = SectorsPerCluster * BytesPerSector;
+	BytesPerCluster = Volume->SectorsPerCluster * Volume->BytesPerSector;
 
 	//
 	// Only do the first read if we
@@ -1279,7 +1210,7 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!FatReadPartialCluster(ClusterNumber, OffsetInCluster, LengthInCluster, Buffer))
+		if (!FatReadPartialCluster(Volume, ClusterNumber, OffsetInCluster, LengthInCluster, Buffer))
 		{
 			return FALSE;
 		}
@@ -1310,7 +1241,7 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
 			//
 			// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 			//
-			if (!FatReadClusterChain(ClusterNumber, NumberOfClusters, Buffer))
+			if (!FatReadClusterChain(Volume, ClusterNumber, NumberOfClusters, Buffer))
 			{
 				return FALSE;
 			}
@@ -1335,7 +1266,7 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!FatReadPartialCluster(ClusterNumber, 0, BytesToRead, Buffer))
+		if (!FatReadPartialCluster(Volume, ClusterNumber, 0, BytesToRead, Buffer))
 		{
 			return FALSE;
 		}
@@ -1351,16 +1282,35 @@ BOOLEAN FatReadFile(PFAT_FILE_INFO FatFileInfo, ULONG BytesToRead, ULONG* BytesR
 	return TRUE;
 }
 
-BOOLEAN FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
+BOOLEAN FatReadVolumeSectors(PFAT_VOLUME_INFO Volume, ULONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
-	// Now try to read in the block
-	if (!MachDiskReadLogicalSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER))
+	LARGE_INTEGER Position;
+	ULONG Count;
+	LONG ret;
+
+	DPRINTM(DPRINT_FILESYSTEM, "FatReadVolumeSectors(): SectorNumber %d, SectorCount %d, Buffer %p\n",
+	    SectorNumber, SectorCount, Buffer);
+
+	//
+	// Seek to right position
+	//
+	Position.QuadPart = SectorNumber * 512;
+	ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
+	if (ret != ESUCCESS)
 	{
+		DPRINTM(DPRINT_FILESYSTEM, "FatReadVolumeSectors() Failed to seek\n");
 		return FALSE;
 	}
 
-	// Copy data to the caller
-	RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * BytesPerSector);
+	//
+	// Read data
+	//
+	ret = ArcRead(Volume->DeviceId, Buffer, SectorCount * 512, &Count);
+	if (ret != ESUCCESS || Count != SectorCount * 512)
+	{
+		DPRINTM(DPRINT_FILESYSTEM, "FatReadVolumeSectors() Failed to read\n");
+		return FALSE;
+	}
 
 	// Return success
 	return TRUE;
@@ -1406,7 +1356,7 @@ LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 	DPRINTM(DPRINT_FILESYSTEM, "FatOpen() FileName = %s\n", Path);
 
 	RtlZeroMemory(&TempFileInfo, sizeof(TempFileInfo));
-	ret = FatLookupFile(Path, DeviceId, &TempFileInfo);
+	ret = FatLookupFile(FatVolume, Path, DeviceId, &TempFileInfo);
 	if (ret != ESUCCESS)
 		return ENOENT;
 
@@ -1415,6 +1365,7 @@ LONG FatOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 		return ENOMEM;
 
 	RtlCopyMemory(FileHandle, &TempFileInfo, sizeof(FAT_FILE_INFO));
+	FileHandle->Volume = FatVolume;
 
 	FsSetDeviceSpecific(*FileId, FileHandle);
 	return ESUCCESS;
@@ -1467,13 +1418,24 @@ const DEVVTBL FatFuncTable =
 
 const DEVVTBL* FatMount(ULONG DeviceId)
 {
+	PFAT_VOLUME_INFO Volume;
 	UCHAR Buffer[512];
 	PFAT_BOOTSECTOR BootSector = (PFAT_BOOTSECTOR)Buffer;
 	PFAT32_BOOTSECTOR BootSector32 = (PFAT32_BOOTSECTOR)Buffer;
 	PFATX_BOOTSECTOR BootSectorX = (PFATX_BOOTSECTOR)Buffer;
+	FILEINFORMATION FileInformation;
 	LARGE_INTEGER Position;
 	ULONG Count;
+	ULARGE_INTEGER SectorCount;
 	LONG ret;
+
+	//
+	// Allocate data for volume information
+	//
+	Volume = MmHeapAlloc(sizeof(FAT_VOLUME_INFO));
+	if (!Volume)
+		return NULL;
+	RtlZeroMemory(Volume, sizeof(FAT_VOLUME_INFO));
 
 	//
 	// Read the BootSector
@@ -1482,31 +1444,68 @@ const DEVVTBL* FatMount(ULONG DeviceId)
 	Position.LowPart = 0;
 	ret = ArcSeek(DeviceId, &Position, SeekAbsolute);
 	if (ret != ESUCCESS)
+	{
+		MmHeapFree(Volume);
 		return NULL;
+	}
 	ret = ArcRead(DeviceId, Buffer, sizeof(Buffer), &Count);
 	if (ret != ESUCCESS || Count != sizeof(Buffer))
+	{
+		MmHeapFree(Volume);
 		return NULL;
+	}
 
 	//
-	// Check if BootSector is valid. If yes, return FAT function table
+	// Check if BootSector is valid. If no, return early
 	//
-	if (RtlEqualMemory(BootSector->FileSystemType, "FAT12   ", 8) ||
-	    RtlEqualMemory(BootSector->FileSystemType, "FAT16   ", 8) ||
-	    RtlEqualMemory(BootSector32->FileSystemType, "FAT32   ", 8) ||
-	    RtlEqualMemory(BootSectorX->FileSystemType, "FATX", 4))
+	if (!RtlEqualMemory(BootSector->FileSystemType, "FAT12   ", 8) &&
+	    !RtlEqualMemory(BootSector->FileSystemType, "FAT16   ", 8) &&
+	    !RtlEqualMemory(BootSector32->FileSystemType, "FAT32   ", 8) &&
+	    !RtlEqualMemory(BootSectorX->FileSystemType, "FATX", 4))
 	{
-		//
-		// Compatibility hack as long as FS is not using underlying device DeviceId
-		//
-		ULONG DriveNumber;
-		ULONGLONG StartSector;
-		ULONGLONG SectorCount;
-		int Type;
-		if (!DiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
-			return NULL;
-		FatOpenVolume(DriveNumber, StartSector, SectorCount);
-		return &FatFuncTable;
-	}
-	else
+		MmHeapFree(Volume);
 		return NULL;
+	}
+
+	//
+	// Determine sector count
+	//
+	ret = ArcGetFileInformation(DeviceId, &FileInformation);
+	if (ret != ESUCCESS)
+	{
+		MmHeapFree(Volume);
+		return NULL;
+	}
+	SectorCount.HighPart = FileInformation.EndingAddress.HighPart;
+	SectorCount.LowPart = FileInformation.EndingAddress.LowPart;
+	SectorCount.QuadPart /= SECTOR_SIZE;
+
+	//
+	// Keep device id
+	//
+	Volume->DeviceId = DeviceId;
+
+	//
+	// Really open the volume
+	//
+	if (!FatOpenVolume(Volume, BootSector, SectorCount.QuadPart))
+	{
+		MmHeapFree(Volume);
+		return NULL;
+	}
+
+	//
+	// HACK: for now, only support one FAT volume
+	//
+	if (FatVolume)
+	{
+		MmHeapFree(Volume);
+		return NULL;
+	}
+	FatVolume = Volume;
+
+	//
+	// Return success
+	//
+	return &FatFuncTable;
 }
