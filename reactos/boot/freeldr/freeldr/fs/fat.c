@@ -1535,7 +1535,7 @@ const DEVVTBL* FatMount(ULONG DeviceId)
 		ULONGLONG StartSector;
 		ULONGLONG SectorCount;
 		int Type;
-		if (!MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+		if (!DiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
 			return NULL;
 		FatOpenVolume(DriveNumber, StartSector, SectorCount);
 		return &FatFuncTable;

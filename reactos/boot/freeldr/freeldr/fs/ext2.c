@@ -1290,7 +1290,7 @@ const DEVVTBL* Ext2Mount(ULONG DeviceId)
 		ULONGLONG StartSector;
 		ULONGLONG SectorCount;
 		int Type;
-		if (!MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+		if (!DiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
 			return NULL;
 		Ext2OpenVolume(DriveNumber, StartSector, SectorCount);
 		return &Ext2FuncTable;

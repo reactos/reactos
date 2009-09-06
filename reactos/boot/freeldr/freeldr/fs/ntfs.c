@@ -905,7 +905,7 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
         ULONGLONG StartSector;
         ULONGLONG SectorCount;
         int Type;
-        if (!MachDiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
+        if (!DiskGetBootVolume(&DriveNumber, &StartSector, &SectorCount, &Type))
             return NULL;
         NtfsOpenVolume(DriveNumber, StartSector, SectorCount);
         return &NtfsFuncTable;
