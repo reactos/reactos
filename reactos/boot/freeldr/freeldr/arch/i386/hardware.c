@@ -402,6 +402,7 @@ typedef struct tagDISKCONTEXT
     ULONG DriveNumber;
     ULONG SectorSize;
     ULONGLONG SectorOffset;
+    ULONGLONG SectorCount;
     ULONGLONG SectorNumber;
 } DISKCONTEXT;
 
@@ -415,7 +416,13 @@ static LONG DiskClose(ULONG FileId)
 
 static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
-    return EINVAL;
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+
+    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    Information->EndingAddress.QuadPart = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
+    Information->CurrentAddress.LowPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
+
+    return ESUCCESS;
 }
 
 static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
@@ -423,6 +430,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     DISKCONTEXT* Context;
     ULONG DriveNumber, DrivePartition, SectorSize;
     ULONGLONG SectorOffset = 0;
+    ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     CHAR FileName[1];
 
@@ -434,6 +442,11 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
+        SectorCount = PartitionTableEntry.PartitionSectorCount;
+    }
+    else
+    {
+        SectorCount = 0; /* FIXME */
     }
 
     Context = MmHeapAlloc(sizeof(DISKCONTEXT));
@@ -442,6 +455,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     Context->DriveNumber = DriveNumber;
     Context->SectorSize = SectorSize;
     Context->SectorOffset = SectorOffset;
+    Context->SectorCount = SectorCount;
     Context->SectorNumber = 0;
     FsSetDeviceSpecific(*FileId, Context);
 
