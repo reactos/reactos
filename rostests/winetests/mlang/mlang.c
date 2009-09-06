@@ -282,44 +282,6 @@ static void mylstrcpyW(WCHAR* str1, const WCHAR* str2)
     *str1 = '\0';
 }
 
-#define DEBUGSTR_W_MAXLEN 64
-
-static CHAR * debugstr_w(const WCHAR * strW)
-{
-    static CHAR buffers[DEBUGSTR_W_MAXLEN * 2];
-    static DWORD pos = 0;
-    CHAR * strA;
-    DWORD len = DEBUGSTR_W_MAXLEN - 4;
-
-    strA = &buffers[pos];
-
-    *strA++ = 'L';
-    *strA++ = '"';
-
-    while (*strW && (len > 4)) {
-        if ((*strW < ' ') || (*strW > 126)) {
-            sprintf(strA, "\\%04x", *strW);
-            strA +=5;
-            len -=5;
-        }
-        else
-        {
-            *strA++ = *strW;
-            len--;
-        }
-        strW++;
-    }
-    *strA++ = '"';
-    *strA = '\0';
-
-    strA = &buffers[pos];
-    pos += DEBUGSTR_W_MAXLEN;
-    if (pos >= sizeof(buffers)) pos = 0;
-
-    return strA;
-
-}
-
 static void test_multibyte_to_unicode_translations(IMultiLanguage2 *iML2)
 {
     /* these APIs are broken regarding constness of the input buffer */
@@ -1296,14 +1258,14 @@ static void test_GetRfc1766Info(IMultiLanguage2 *iML2)
                 broken(!mylstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
                 broken(!mylstrcmpW(prfc->wszLocaleName, short_broken_name)),
                 "#%02d: got %s (expected %s)\n", i,
-                debugstr_w(prfc->wszLocaleName), debugstr_w(info_table[i].localename));
+                wine_dbgstr_w(prfc->wszLocaleName), wine_dbgstr_w(info_table[i].localename));
         }
         else
             ok( (!mylstrcmpW(prfc->wszLocaleName, info_table[i].localename)) ||
                 broken(!mylstrcmpW(prfc->wszLocaleName, info_table[i].broken_name)) || /* IE < 6.0 */
                 broken(!mylstrcmpW(prfc->wszLocaleName, short_broken_name)),
                 "#%02d: got %s (expected %s)\n", i,
-                debugstr_w(prfc->wszLocaleName), debugstr_w(info_table[i].localename));
+                wine_dbgstr_w(prfc->wszLocaleName), wine_dbgstr_w(info_table[i].localename));
 
     }
 
