@@ -912,10 +912,7 @@ NtUserCreateDesktop(
    HWINSTA hWindowStation = NULL ;
    PUNICODE_STRING lpszDesktopName = NULL;
    UNICODE_STRING ClassName, WindowName, MenuName;
-   PPROCESSINFO pi = GetW32ProcessInfo();
-   WNDCLASSEXW wc;
-   PCLS Class;
-   PWND pWnd;
+   PWND pWnd = NULL;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
@@ -1112,43 +1109,10 @@ NtUserCreateDesktop(
      Based on wine/server/window.c in get_desktop_window.
    */
 
-   ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(AtomMessage)));
+   ClassName.Buffer = ((PWSTR)((ULONG_PTR)(WORD)(gpsi->atomSysClass[ICLS_HWNDMESSAGE])));
    ClassName.Length = 0;
    RtlZeroMemory(&MenuName, sizeof(MenuName));
    RtlZeroMemory(&WindowName, sizeof(WindowName));
-
-   wc.cbSize = sizeof(wc);
-   wc.style = 0;
-   wc.lpfnWndProc = gpsi->apfnClientW.pfnMessageWindowProc;
-   wc.cbClsExtra = 0;
-   wc.cbWndExtra = 0;
-   wc.hInstance = hModClient;
-   wc.hIcon = NULL;
-   wc.hCursor = NULL;
-   wc.hbrBackground = 0;
-   wc.lpszMenuName = NULL;
-   wc.lpszClassName = ClassName.Buffer;
-   wc.hIconSm = NULL;
-
-   Class = IntCreateClass( &wc,
-                           &ClassName,
-                           &MenuName,
-                           NULL,
-                           FNID_MESSAGEWND,
-                           CSF_SYSTEMCLASS,
-                           NULL,
-                           pi);
-   if (Class != NULL)
-   {
-      ASSERT(Class->System);
-      Class->pclsNext = SystemClassList;
-      (void)InterlockedExchangePointer((PVOID*)&SystemClassList,
-                                             Class);
-   }
-   else
-   {
-      DPRINT1("!!! Registering Message system class failed!\n");
-   }
 
    pWnd = co_IntCreateWindowEx( 0,
                                &ClassName,

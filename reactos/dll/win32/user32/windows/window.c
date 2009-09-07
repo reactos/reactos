@@ -174,6 +174,12 @@ User32CreateWindowEx(DWORD dwExStyle,
     DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
 #endif
 
+    if (!RegisterDefaultClasses)
+    {
+       ERR("User32CreateWindowEx RegisterSystemControls\n");
+       RegisterSystemControls();
+    }
+
     if (IS_ATOM(lpClassName))
     {
         RtlInitUnicodeString(&ClassName, NULL);
@@ -281,6 +287,12 @@ CreateWindowExA(DWORD dwExStyle,
     MDICREATESTRUCTA mdi;
     HWND hwnd;
 
+    if (!RegisterDefaultClasses)
+    {
+       ERR("CreateWindowExA RegisterSystemControls\n");
+       RegisterSystemControls();
+    }
+
     if (dwExStyle & WS_EX_MDICHILD)
     {
         POINT mPos[2];
@@ -386,6 +398,12 @@ CreateWindowExW(DWORD dwExStyle,
 {
     MDICREATESTRUCTW mdi;
     HWND hwnd;
+
+    if (!RegisterDefaultClasses)
+    {
+       ERR("CreateWindowExW RegisterSystemControls\n");
+       RegisterSystemControls();
+    }
 
     if (dwExStyle & WS_EX_MDICHILD)
     {

@@ -65,3 +65,4 @@ User32CreateWindowEx(DWORD dwExStyle,
 		BOOL Unicode);
 
 HWND* WIN_ListChildren (HWND hWndparent);
+ULONG_PTR FASTCALL IntGetWndProc(PWND, BOOL);

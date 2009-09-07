@@ -291,8 +291,7 @@ DllMain(
    {
       case DLL_PROCESS_ATTACH:
          User32Instance = hInstanceDll;
-         if (!RegisterClientPFN() ||
-             !RegisterSystemControls())
+         if (!RegisterClientPFN())
          {
              return FALSE;
          }

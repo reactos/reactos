@@ -167,14 +167,14 @@ typedef struct _REGISTER_SYSCLASS
 {
     /* This is a reactos specific class used to initialize the
        system window classes during user32 initialization */
-    UNICODE_STRING ClassName;
+    PWSTR ClassName;
     UINT Style;
     WNDPROC ProcW;
-    WNDPROC ProcA;
     UINT ExtraBytes;
     HICON hCursor;
     HBRUSH hBrush;
-    UINT ClassId;
+    WORD fiId;
+    WORD iCls;
 } REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
 
 typedef struct _CLSMENUNAME
@@ -201,8 +201,8 @@ typedef struct tagSBINFO
 
 typedef enum _GETCPD
 {
-    UserGetCPDU2A      = 0x01,
-    UserGetCPDA2U      = 0X02,
+    UserGetCPDA2U      = 0x01, // " Unicode "
+    UserGetCPDU2A      = 0X02, // " Ansi "
     UserGetCPDClass    = 0X10,
     UserGetCPDWindow   = 0X20,
     UserGetCPDDialog   = 0X40,
@@ -214,11 +214,7 @@ typedef struct _CALLPROCDATA
     PROCDESKHEAD head;
     struct _CALLPROCDATA *spcpdNext;
     WNDPROC pfnClientPrevious;
-    union
-    {
-       GETCPD wType;
-       UINT Unicode : 1;
-    };
+    GETCPD wType;
 } CALLPROCDATA, *PCALLPROCDATA;
 
 #define CSF_SERVERSIDEPROC      0x0001
@@ -247,11 +243,6 @@ typedef struct _CLS
     ULONG cWndReferenceCount;
     UINT style;
     WNDPROC lpfnWndProc;
-    union
-    {
-        WNDPROC WndProcExtra;
-        PCALLPROCDATA CallProc;
-    };
     INT cbclsExtra;
     INT cbwndExtra;
     HINSTANCE hModule;
@@ -265,12 +256,10 @@ typedef struct _CLS
     HANDLE hIconSm; /* FIXME - Use pointer! */
     //PCURSOR spicnSm;
 
-    UINT Destroying : 1; // CSF_WOWDEFERDESTROY
     UINT Unicode : 1; // !CSF_ANSIPROC
-    UINT System : 1;  // CSF_SYSTEMCLASS
-    UINT Global : 1;  // CS_GLOBALCLASS
+    UINT Global : 1;  // CS_GLOBALCLASS or CSF_SERVERSIDEPROC
     UINT MenuNameIsString : 1;
-    UINT NotUsed : 27;
+    UINT NotUsed : 29;
 } CLS, *PCLS;
 
 
@@ -342,10 +331,12 @@ typedef struct _CLS
 
 /* Non SDK ExStyles */
 #define WS_EX_MAKEVISIBLEWHENUNGHOSTED 0x00000800
+#define WS_EX_FORCELEGACYRESIZENCMETR  0x00800000
 #define WS_EX_UISTATEACTIVE            0x04000000
 #define WS_EX_REDIRECTED               0X20000000
 #define WS_EX_UISTATEKBACCELHIDDEN     0X40000000
 #define WS_EX_UISTATEFOCUSRECTHIDDEN   0X80000000
+#define WS_EX_SETANSICREATOR           0x80000000 // For WNDS_ANSICREATOR
 
 /* Non SDK Styles */
 #define WS_MAXIMIZED  WS_MAXIMIZE
@@ -385,14 +376,6 @@ typedef struct _WND
     RECT rcWindow;
     RECT rcClient;
     WNDPROC lpfnWndProc;
-    union
-    {
-        /* Pointer to a call procedure handle */
-        PCALLPROCDATA CallProc;
-        /* Extra Wnd proc (windows of system classes) */
-        WNDPROC WndProcExtra;
-    };
-
     /* Pointer to the window class. */
     PCLS pcls;
     HRGN hrgnUpdate;
@@ -431,7 +414,6 @@ typedef struct _WND
 
     UINT Unicode : 1; // !(WNDS_ANSICREATOR|WNDS_ANSIWINDOWPROC) ?
     /* Indicates whether the window is derived from a system class */
-    UINT IsSystem : 1; // System class ?
     UINT InternalPosInitialized : 1;
     UINT HideFocus : 1; // WS_EX_UISTATEFOCUSRECTHIDDEN ?
     UINT HideAccel : 1; // WS_EX_UISTATEKBACCELHIDDEN ?
@@ -525,10 +507,21 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define FNID_LAST                   0x02B9
 
 #define FNID_NUM FNID_LAST - FNID_FIRST + 1
+#define FNID_NUMSERVERPROC FNID_SWITCH - FNID_FIRST + 1
 
 #define FNID_DDEML       0x2000 // Registers DDEML
 #define FNID_DESTROY     0x4000 // This is sent when WM_NCDESTROY or in the support routine.
                                 // Seen during WM_CREATE on error exit too.
+#define FNID_FREED       0x8000 // Window being Freed...
+
+#define ICLASS_TO_MASK(iCls) (1 << ((iCls)))
+
+#define GETPFNCLIENTA(fnid)\
+ (WNDPROC)(*(((ULONG_PTR *)&gpsi->apfnClientA) + (fnid - FNID_FIRST)))
+#define GETPFNCLIENTW(fnid)\
+ (WNDPROC)(*(((ULONG_PTR *)&gpsi->apfnClientW) + (fnid - FNID_FIRST)))
+
+#define GETPFNSERVER(fnid) gpsi->aStoCidPfn[fnid - FNID_FIRST]
 
 // ICLS's for NtUserGetClassName FNID to ICLS, NtUserInitializeClientPfnArrays
 #define ICLS_BUTTON       0
@@ -641,7 +634,7 @@ typedef struct tagSERVERINFO
     DWORD           dwSRVIFlags;
     ULONG_PTR       cHandleEntries;
     PFN_FNID        mpFnidPfn[FNID_NUM];
-    WNDPROC         aStoCidPfn[7];
+    WNDPROC         aStoCidPfn[FNID_NUMSERVERPROC];
     USHORT          mpFnid_serverCBWndProc[FNID_NUM];
     PFNCLIENT       apfnClientA;
     PFNCLIENT       apfnClientW;
@@ -1374,7 +1367,7 @@ NtUserCreateWindowEx(
 HWND
 NTAPI
 NtUserCreateWindowEx(
-  DWORD dwExStyle,
+  DWORD dwExStyle, // |= 0x80000000 == Ansi used to set WNDS_ANSICREATOR
   PLARGE_STRING plstrClassName,
   PLARGE_STRING plstrClsVesrion,
   PLARGE_STRING plstrWindowName,
@@ -1387,7 +1380,7 @@ NtUserCreateWindowEx(
   HMENU hMenu,
   HINSTANCE hInstance,
   LPVOID lpParam,
-  DWORD dwFlags, // |= 1 == Ansi
+  DWORD dwFlags,
   PVOID acbiBuffer);
 #endif
 
@@ -3053,7 +3046,6 @@ typedef struct tagKMDDELPARAM
 #define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0xfffd0062
 #define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
 #define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002
-#define TWOPARAM_ROUTINE_ROS_REGSYSCLASSES  0x1003
 #define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 
 DWORD

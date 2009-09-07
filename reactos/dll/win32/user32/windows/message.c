@@ -1221,6 +1221,58 @@ IntCallWindowProcA(BOOL IsAnsiProc,
 }
 
 
+static LRESULT WINAPI
+IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam, IN BOOL Ansi)
+{
+    WNDPROC WndProc;
+    BOOL IsAnsi;
+    PCLS Class;
+    
+    Class = DesktopPtrToUser(Wnd->pcls); 
+    WndProc = NULL;
+  /*
+      This is the message exchange for user32. If there's a need to monitor messages,
+      do it here!
+   */
+    TRACE("HWND 0x%x, MSG %d, WPARAM 0x%x, LPARAM 0x%x, Ansi &d\n",hWnd,Msg,wParam,lParam,Ansi);
+//    if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON )
+    if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_FIRST )
+    {
+       if (Ansi)
+       {
+          if (GETPFNCLIENTW(Class->fnid) == Wnd->lpfnWndProc)
+             WndProc = GETPFNCLIENTA(Class->fnid);
+       }
+       else
+       {
+          if (GETPFNCLIENTA(Class->fnid) == Wnd->lpfnWndProc)
+             WndProc = GETPFNCLIENTW(Class->fnid);
+       }
+
+       IsAnsi = Ansi;
+
+       if (!WndProc)
+       {
+          IsAnsi = !Wnd->Unicode;
+          WndProc = Wnd->lpfnWndProc;
+       }
+    }
+    else
+    {
+       IsAnsi = !Wnd->Unicode;
+       WndProc = Wnd->lpfnWndProc;
+    }
+/*
+   Message caller can be Ansi/Unicode and the receiver can be Unicode/Ansi or
+   the same.
+ */
+    if (!Ansi)
+        return IntCallWindowProcW(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
+    else
+        return IntCallWindowProcA(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
+}
+
+
 /*
  * @implemented
  */
@@ -1246,8 +1298,12 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
         CallProc = ValidateCallProc((HANDLE)lpPrevWndFunc);
         if (CallProc != NULL)
         {
-            return IntCallWindowProcA(!CallProc->Unicode, CallProc->pfnClientPrevious,
-                                      hWnd, Msg, wParam, lParam);
+            return IntCallWindowProcA(!(CallProc->wType & UserGetCPDA2U),
+                                        CallProc->pfnClientPrevious,
+                                        hWnd,
+                                        Msg,
+                                        wParam,
+                                        lParam);
         }
         else
         {
@@ -1284,8 +1340,12 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
         CallProc = ValidateCallProc((HANDLE)lpPrevWndFunc);
         if (CallProc != NULL)
         {
-            return IntCallWindowProcW(!CallProc->Unicode, CallProc->pfnClientPrevious,
-                                      hWnd, Msg, wParam, lParam);
+            return IntCallWindowProcW(!(CallProc->wType & UserGetCPDA2U),
+                                        CallProc->pfnClientPrevious,
+                                        hWnd,
+                                        Msg,
+                                        wParam,
+                                        lParam);
         }
         else
         {
@@ -1293,30 +1353,6 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
             return 0;
         }
     }
-}
-
-
-static LRESULT WINAPI
-IntCallMessageProc(IN PWND Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam, IN BOOL Ansi)
-{
-    WNDPROC WndProc;
-    BOOL IsAnsi;
-
-    if (Wnd->IsSystem)
-    {
-        WndProc = (Ansi ? Wnd->WndProcExtra : Wnd->lpfnWndProc);
-        IsAnsi = Ansi;
-    }
-    else
-    {
-        WndProc = Wnd->lpfnWndProc;
-        IsAnsi = !Wnd->Unicode;
-    }
-
-    if (!Ansi)
-        return IntCallWindowProcW(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
-    else
-        return IntCallWindowProcA(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
 }
 
 
@@ -1353,8 +1389,7 @@ DispatchMessageA(CONST MSG *lpmsg)
     }
     else if (Wnd != NULL)
     {
-       // FIXME Need to test for calling proc inside win32k!
-       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
+       if ( (lpmsg->message != WM_PAINT) && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
        {
            Ret = IntCallMessageProc(Wnd,
                                     lpmsg->hwnd,
@@ -1414,8 +1449,7 @@ DispatchMessageW(CONST MSG *lpmsg)
     }
     else if (Wnd != NULL)
     {
-       // FIXME Need to test for calling proc inside win32k!
-       if ( (lpmsg->message != WM_PAINT) ) // && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
+       if ( (lpmsg->message != WM_PAINT) && !(Wnd->state & WNDS_SERVERSIDEWINDOWPROC) )
        {
            Ret = IntCallMessageProc(Wnd,
                                     lpmsg->hwnd,
@@ -2328,9 +2362,12 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     {
     }
 
-  CallbackArgs->Result = IntCallWindowProcW(CallbackArgs->IsAnsiProc, CallbackArgs->Proc,
-                                            UMMsg.hwnd, UMMsg.message,
-                                            UMMsg.wParam, UMMsg.lParam);
+  CallbackArgs->Result = IntCallWindowProcW( CallbackArgs->IsAnsiProc,
+                                             CallbackArgs->Proc,
+                                             UMMsg.hwnd,
+                                             UMMsg.message,
+                                             UMMsg.wParam,
+                                             UMMsg.lParam);
 
   if (! MsgiKMToUMReply(&KMMsg, &UMMsg, &CallbackArgs->Result))
     {

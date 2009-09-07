@@ -384,7 +384,7 @@ DriverEntry (
     }
 
   hModuleWin = MmPageEntireDriver(DriverEntry);
-
+  DPRINT("Win32k hInstance 0x%x!\n",hModuleWin);
     /*
      * Register Object Manager Callbacks
      */

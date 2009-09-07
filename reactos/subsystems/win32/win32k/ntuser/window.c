@@ -432,6 +432,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    /* from now on no messages can be sent to this window anymore */
    Window->Status |= WINDOWSTATUS_DESTROYED;
    Wnd->state |= WNDS_DESTROYED;
+   Wnd->fnid |= FNID_FREED;
 
    /* don't remove the WINDOWSTATUS_DESTROYING bit */
 
@@ -539,64 +540,148 @@ IntGetWindowBorderMeasures(PWINDOW_OBJECT Window, UINT *cx, UINT *cy)
    }
 }
 
-static WNDPROC
-IntGetWindowProc(IN PWINDOW_OBJECT Window,
-                 IN BOOL Ansi)
+//
+// Same as User32:IntGetWndProc.
+//
+WNDPROC FASTCALL
+IntGetWindowProc(PWND pWnd,
+                 BOOL Ansi)
 {
-    PWND Wnd = Window->Wnd;
+   INT i;
+   PCLS Class;
+   WNDPROC gcpd, Ret = 0;
 
-    ASSERT(UserIsEnteredExclusive() == TRUE);
+   ASSERT(UserIsEnteredExclusive() == TRUE);
 
-    if (Wnd->IsSystem)
-    {
-        return (Ansi ? Wnd->WndProcExtra : Wnd->lpfnWndProc);
-    }
-    else
-    {
-        if (!Ansi == Wnd->Unicode)
-        {
-            return Wnd->lpfnWndProc;
-        }
-        else
-        {
-            if (Wnd->CallProc != NULL)
-            {
-                return GetCallProcHandle(Wnd->CallProc);
-            }
-            /* BUGBOY Comments: Maybe theres something Im not undestanding here, but why would a CallProc be created
-               on a function that I thought is only suppose to return the current Windows Proc? */
+   Class = pWnd->pcls;
+
+   if (pWnd->state & WNDS_SERVERSIDEWINDOWPROC)
+   {
+      for ( i = FNID_FIRST; i <= FNID_SWITCH; i++)
+      {
+         if (GETPFNSERVER(i) == pWnd->lpfnWndProc)
+         {
+            if (Ansi)
+               Ret = GETPFNCLIENTA(i);
             else
-            {
-                PCALLPROCDATA NewCallProc, CallProc;
+               Ret = GETPFNCLIENTW(i);
+         }
+      }
+      return Ret;
+   }
 
-                NewCallProc = UserFindCallProc(Wnd->pcls,
-                                               Wnd->lpfnWndProc,
-                                               Wnd->Unicode);
-                if (NewCallProc == NULL)
-                {
-                    NewCallProc = CreateCallProc(Wnd->head.pti->pDeskInfo,
-                                                 Wnd->lpfnWndProc,
-                                                 Wnd->Unicode,
-                                                 Wnd->head.pti->ppi);
-                    if (NewCallProc == NULL)
-                    {
-                        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                        return NULL;
-                    }
+   if (Class->fnid == FNID_EDIT)
+      Ret = pWnd->lpfnWndProc;
+   else
+   {
+      Ret = pWnd->lpfnWndProc;
 
-                    UserAddCallProcToClass(Wnd->pcls,
-                                           NewCallProc);
-                }
+      if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON)
+      {
+         if (Ansi)
+         {
+            if (GETPFNCLIENTW(Class->fnid) == pWnd->lpfnWndProc)
+               Ret = GETPFNCLIENTA(Class->fnid);
+         }
+         else
+         {
+            if (GETPFNCLIENTA(Class->fnid) == pWnd->lpfnWndProc)
+               Ret = GETPFNCLIENTW(Class->fnid);
+         }
+      }
+      if ( Ret != pWnd->lpfnWndProc)
+         return Ret;
+   }
+   if ( Ansi == !!(pWnd->state & WNDS_ANSIWINDOWPROC) )
+      return Ret;
 
-                CallProc = Wnd->CallProc;
-                Wnd->CallProc = NewCallProc;
+   gcpd = (WNDPROC)UserGetCPD(
+                       pWnd,
+                      (Ansi ? UserGetCPDA2U : UserGetCPDU2A )|UserGetCPDWindow,
+                      (ULONG_PTR)Ret);
 
-                return GetCallProcHandle((CallProc == NULL ? NewCallProc : CallProc));
-            }
-        }
-    }
+   return (gcpd ? gcpd : Ret);
 }
 
+static WNDPROC
+IntSetWindowProc(PWND pWnd,
+                 WNDPROC NewWndProc,
+                 BOOL Ansi)
+{
+   INT i;
+   PCALLPROCDATA CallProc;
+   PCLS Class;
+   WNDPROC Ret, chWndProc = NULL;
+
+   // Retrieve previous window proc.
+   Ret = IntGetWindowProc(pWnd, Ansi);
+
+   Class = pWnd->pcls;
+
+   if (IsCallProcHandle(NewWndProc))
+   {
+      CallProc = UserGetObject(gHandleTable, NewWndProc, otCallProc);
+      if (CallProc)
+      {  // Reset new WndProc.
+         NewWndProc = CallProc->pfnClientPrevious;
+         // Reset Ansi from CallProc handle. This is expected with wine "deftest".
+         Ansi = !!(CallProc->wType & UserGetCPDU2A);
+      }
+   }
+   // Switch from Client Side call to Server Side call if match. Ref: "deftest".
+   for ( i = FNID_FIRST; i <= FNID_SWITCH; i++)
+   {
+       if (GETPFNCLIENTW(i) == NewWndProc)
+       {
+          chWndProc = GETPFNSERVER(i);
+          break;
+       }
+       if (GETPFNCLIENTA(i) == NewWndProc)
+       {
+          chWndProc = GETPFNSERVER(i);
+          break;
+       }
+   }
+   // If match, set/reset to Server Side and clear ansi.
+   if (chWndProc)
+   {
+      pWnd->lpfnWndProc = chWndProc;
+      pWnd->Unicode = TRUE;
+      pWnd->state &= ~WNDS_ANSIWINDOWPROC;
+      pWnd->state |= WNDS_SERVERSIDEWINDOWPROC;
+   }
+   else
+   {
+      pWnd->Unicode = !Ansi;
+      // Handle the state change in here.
+      if (Ansi)
+         pWnd->state |= WNDS_ANSIWINDOWPROC;
+      else
+         pWnd->state &= ~WNDS_ANSIWINDOWPROC;
+
+      if (pWnd->state & WNDS_SERVERSIDEWINDOWPROC)
+         pWnd->state &= ~WNDS_SERVERSIDEWINDOWPROC;
+
+      if (Class->fnid <= FNID_GHOST && Class->fnid >= FNID_BUTTON)
+      {
+         if (Ansi)
+         {
+            if (GETPFNCLIENTW(Class->fnid) == NewWndProc)
+               chWndProc = GETPFNCLIENTA(Class->fnid);
+         }
+         else
+         {
+            if (GETPFNCLIENTA(Class->fnid) == NewWndProc)
+               chWndProc = GETPFNCLIENTW(Class->fnid);
+         }
+      }
+      // Now set the new window proc.
+      pWnd->lpfnWndProc = (chWndProc ? chWndProc : NewWndProc);
+   }
+   return Ret;
+}
+
+// Move this to user space!
 BOOL FASTCALL
 IntGetWindowInfo(PWINDOW_OBJECT Window, PWINDOWINFO pwi)
 {
@@ -1026,7 +1111,7 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
    if (IntIsChildWindow(Wnd, WndNewParent))
    {
       SetLastWin32Error( ERROR_INVALID_PARAMETER );
-      return 0;
+      return NULL;
    }
 
    /*
@@ -1582,7 +1667,15 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        ParentWindowHandle = pti->Desktop->DesktopWindow;
    }
 
+
+   if ( !(pti->ppi->W32PF_flags & W32PF_CLASSESREGISTERED ))
+   {
+      UserRegisterSystemClasses();
+   }
+   
    OwnerWindowHandle = NULL;
+
+   DPRINT("co_IntCreateWindowEx %wZ\n", ClassName);
 
    if (hWndParent == HWND_MESSAGE)
    {
@@ -1633,6 +1726,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    /* Check the class. */
 
+   DPRINT("Class %wZ\n", ClassName);
+
    ClassAtom = IntGetClassAtom(ClassName,
                                hInstance,
                                ti->ppi,
@@ -1653,7 +1748,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       SetLastWin32Error(ERROR_CANNOT_FIND_WND_CLASS);
       RETURN((PWND)0);
    }
-
+   DPRINT("ClassAtom %x\n", ClassAtom);
    Class = IntReferenceClass(Class,
                              ClassLink,
                              pti->Desktop);
@@ -1683,6 +1778,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                      sizeof(WND) + Class->cbwndExtra);
        Window->Wnd->head.h = hWnd;
        Wnd = Window->Wnd;
+       Wnd->fnid = 0;
 
        Wnd->head.pti = ti;
        Wnd->head.rpdesk = pti->Desktop;
@@ -1747,27 +1843,68 @@ AllocErr:
 
    Wnd->dwUserData = 0;
 
-   Wnd->IsSystem = Wnd->pcls->System;
+   if (Wnd->pcls->CSF_flags & CSF_SERVERSIDEPROC)
+      Wnd->state |= WNDS_SERVERSIDEWINDOWPROC;
 
-   /* BugBoy Comments: Comment below say that System classes are always created as UNICODE.
-      In windows, creating a window with the ANSI version of CreateWindow sets the window
-      to ansi as verified by testing with IsUnicodeWindow API.
+ /* BugBoy Comments: Comment below say that System classes are always created
+    as UNICODE. In windows, creating a window with the ANSI version of CreateWindow
+    sets the window to ansi as verified by testing with IsUnicodeWindow API.
 
-      No where can I see in code or through testing does the window change back to ANSI
-      after being created as UNICODE in ROS. I didnt do more testing to see what problems this would cause.*/
-    // See NtUserDefSetText! We convert to Unicode all the time and never use Mix. (jt)
-   if (Wnd->pcls->System)
+    No where can I see in code or through testing does the window change back
+    to ANSI after being created as UNICODE in ROS. I didnt do more testing to
+    see what problems this would cause.*/
+
+   // Set WndProc from Class.
+   Wnd->lpfnWndProc  = Wnd->pcls->lpfnWndProc;
+
+   // GetWindowProc, test for non server side default classes and set WndProc.
+    if ( Wnd->pcls->fnid <= FNID_GHOST && Wnd->pcls->fnid >= FNID_BUTTON )
+    {
+      if (bUnicodeWindow)
+      {
+         if (GETPFNCLIENTA(Wnd->pcls->fnid) == Wnd->lpfnWndProc)
+            Wnd->lpfnWndProc = GETPFNCLIENTW(Wnd->pcls->fnid);  
+      }
+      else
+      {
+         if (GETPFNCLIENTW(Wnd->pcls->fnid) == Wnd->lpfnWndProc)
+            Wnd->lpfnWndProc = GETPFNCLIENTA(Wnd->pcls->fnid);
+      }
+    }
+
+   // If not an Unicode caller, set Ansi creator bit.
+   if (!bUnicodeWindow) Wnd->state |= WNDS_ANSICREATOR;
+
+   // Clone Class Ansi/Unicode proc type.
+   if (Wnd->pcls->CSF_flags & CSF_ANSIPROC)
    {
-       /* NOTE: Always create a unicode window for system classes! */
-       Wnd->Unicode = TRUE;
-       Wnd->lpfnWndProc = Wnd->pcls->lpfnWndProc;
-       Wnd->WndProcExtra = Wnd->pcls->WndProcExtra;
+      Wnd->state |= WNDS_ANSIWINDOWPROC;
+      Wnd->Unicode = FALSE;
    }
    else
-   {
-       Wnd->Unicode = Wnd->pcls->Unicode;
-       Wnd->lpfnWndProc = Wnd->pcls->lpfnWndProc;
-       Wnd->CallProc = NULL;
+   { /*
+       It seems there can be both an Ansi creator and Unicode Class Window
+       WndProc, unless the following overriding conditions occur:
+     */
+      if ( !bUnicodeWindow &&
+          ( ClassAtom == gpsi->atomSysClass[ICLS_BUTTON]    ||
+            ClassAtom == gpsi->atomSysClass[ICLS_COMBOBOX]  ||
+            ClassAtom == gpsi->atomSysClass[ICLS_COMBOLBOX] ||
+            ClassAtom == gpsi->atomSysClass[ICLS_DIALOG]    ||
+            ClassAtom == gpsi->atomSysClass[ICLS_EDIT]      ||
+            ClassAtom == gpsi->atomSysClass[ICLS_IME]       ||
+            ClassAtom == gpsi->atomSysClass[ICLS_LISTBOX]   ||
+            ClassAtom == gpsi->atomSysClass[ICLS_MDICLIENT] ||
+            ClassAtom == gpsi->atomSysClass[ICLS_STATIC] ) )
+      { // Override Class and set the window Ansi WndProc.
+         Wnd->state |= WNDS_ANSIWINDOWPROC;
+         Wnd->Unicode = FALSE;
+      }
+      else
+      { // Set the window Unicode WndProc.
+         Wnd->state &= ~WNDS_ANSIWINDOWPROC;
+         Wnd->Unicode = TRUE;
+      }
    }
 
    Window->OwnerThread = PsGetCurrentThread();
@@ -2270,8 +2407,6 @@ AllocErr:
       else
       {
          UserAddCallProcToClass(Wnd->pcls, CallProc);
-         Wnd->CallProc = CallProc;
-         Wnd->IsSystem = FALSE;
       }
    }
 
@@ -2435,6 +2570,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 
    if (!Wnd) return TRUE; // FIXME: Need to finish object rewrite or lock the thread when killing the window!
 
+   DPRINT("co_UserDestroyWindow \n");
+
    /* Check for owner thread */
    if ((Window->OwnerThread != PsGetCurrentThread()))
    {
@@ -2555,8 +2692,6 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 
    return TRUE;
 }
-
-
 
 
 /*
@@ -2992,8 +3127,6 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
    return WndAncestor;
 }
 
-
-
 /*
  * @implemented
  */
@@ -3222,8 +3355,6 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
    return( hWndOldParent);
 }
 
-
-
 /*
  * NtUserSetParent
  *
@@ -3268,8 +3399,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
-
 
 /*
  * UserGetShellWindow
@@ -3493,9 +3622,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-
-
 HWND FASTCALL
 UserGetWindow(HWND hWnd, UINT Relationship)
 {
@@ -3548,8 +3674,6 @@ UserGetWindow(HWND hWnd, UINT Relationship)
    return hWndResult;
 }
 
-
-
 /*
  * NtUserGetWindow
  *
@@ -3575,9 +3699,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
-
-
 
 /*
  * NtUserGetWindowLong
@@ -3638,8 +3759,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
             break;
 
          case GWL_WNDPROC:
-            Result = (LONG)IntGetWindowProc(Window,
-                                            Ansi);
+            Result = (LONG)IntGetWindowProc(Wnd, Ansi);
             break;
 
          case GWL_HINSTANCE:
@@ -3676,9 +3796,6 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
    return Result;
 }
 
-
-
-
 /*
  * NtUserGetWindowLong
  *
@@ -3706,102 +3823,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-static WNDPROC
-IntSetWindowProc(PWINDOW_OBJECT Window,
-                 WNDPROC NewWndProc,
-                 BOOL Ansi)
-{
-    WNDPROC Ret;
-    PCALLPROCDATA CallProc;
-    PWND Wnd = Window->Wnd;
-
-    /* resolve any callproc handle if possible */
-    if (IsCallProcHandle(NewWndProc))
-    {
-        WNDPROC_INFO wpInfo;
-
-        if (UserGetCallProcInfo((HANDLE)NewWndProc,
-                                &wpInfo))
-        {
-            NewWndProc = wpInfo.WindowProc;
-            /* FIXME - what if wpInfo.IsUnicode doesn't match Ansi? */
-        }
-    }
-
-    /* attempt to get the previous window proc */
-    if (Wnd->IsSystem)
-    {
-        Ret = (Ansi ? Wnd->WndProcExtra : Wnd->lpfnWndProc);
-    }
-    else
-    {
-        if (!Ansi == Wnd->Unicode)
-        {
-            Ret = Wnd->lpfnWndProc;
-        }
-        else
-        {
-            CallProc = UserFindCallProc(Wnd->pcls,
-                                        Wnd->lpfnWndProc,
-                                        Wnd->Unicode);
-            if (CallProc == NULL)
-            {
-                CallProc = CreateCallProc(NULL,
-                                          Wnd->lpfnWndProc,
-                                          Wnd->Unicode,
-                                          Wnd->head.pti->ppi);
-                if (CallProc == NULL)
-                {
-                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                    return NULL;
-                }
-
-                UserAddCallProcToClass(Wnd->pcls,
-                                       CallProc);
-            }
-            /* BugBoy Comments: Added this if else, see below comments */
-            if (!Wnd->CallProc)
-            {
-               Ret = Wnd->lpfnWndProc;
-            }
-            else
-            {
-                Ret = GetCallProcHandle(Wnd->CallProc);
-            }
-
-            Wnd->CallProc = CallProc;
-
-            /* BugBoy Comments: Above sets the current CallProc for the
-               window and below we set the Ret value to it.
-               SetWindowLong for WNDPROC should return the previous proc
-            Ret = GetCallProcHandle(Wnd->CallProc); */
-        }
-    }
-
-    if (Wnd->pcls->System)
-    {
-        /* check if the new procedure matches with the one in the
-           window class. If so, we need to restore both procedures! */
-        Wnd->IsSystem = (NewWndProc == Wnd->pcls->lpfnWndProc ||
-                         NewWndProc == Wnd->pcls->WndProcExtra);
-
-        if (Wnd->IsSystem)
-        {
-            Wnd->lpfnWndProc = Wnd->pcls->lpfnWndProc;
-            Wnd->WndProcExtra = Wnd->pcls->WndProcExtra;
-            Wnd->Unicode = !Ansi;
-            return Ret;
-        }
-    }
-
-    ASSERT(!Wnd->IsSystem);
-
-    /* update the window procedure */
-    Wnd->lpfnWndProc = NewWndProc;
-    Wnd->Unicode = !Ansi;
-
-    return Ret;
-}
 
 
 LONG FASTCALL
@@ -3835,7 +3856,17 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return( 0);
       }
+
       OldValue = *((LONG *)((PCHAR)(Wnd + 1) + Index));
+/*
+      if ( Index == DWLP_DLGPROC && Wnd->state & WNDS_DIALOGWINDOW)
+      {
+         OldValue = (LONG)IntSetWindowProc( Wnd,
+                                           (WNDPROC)NewValue,
+                                            Ansi);
+         if (!OldValue) return 0;
+      }
+*/
       *((LONG *)((PCHAR)(Wnd + 1) + Index)) = NewValue;
    }
    else
@@ -3873,8 +3904,13 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
          case GWL_WNDPROC:
          {
-            /* FIXME: should check if window belongs to current process */
-            OldValue = (LONG)IntSetWindowProc(Window,
+            if ( Wnd->head.pti->ppi != PsGetCurrentProcessWin32Process() ||
+                 Wnd->fnid & FNID_FREED)
+            {
+               SetLastWin32Error(ERROR_ACCESS_DENIED);
+               return( 0);
+            }
+            OldValue = (LONG)IntSetWindowProc(Wnd,
                                               (WNDPROC)NewValue,
                                               Ansi);
             break;
@@ -3913,8 +3949,6 @@ co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
    return( OldValue);
 }
-
-
 
 /*
  * NtUserSetWindowLong

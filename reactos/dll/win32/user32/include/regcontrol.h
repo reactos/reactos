@@ -26,6 +26,7 @@ struct builtin_class_descr
     HBRUSH  brush;   /* brush or system color */
 };
 
+extern DWORD RegisterDefaultClasses;
 BOOL WINAPI RegisterSystemControls(VOID);
 
 extern const struct builtin_class_descr BUTTON_builtin_class;
@@ -41,5 +42,7 @@ extern const struct builtin_class_descr MDICLIENT_builtin_class;
 extern const struct builtin_class_descr MENU_builtin_class;
 extern const struct builtin_class_descr SCROLL_builtin_class;
 extern const struct builtin_class_descr STATIC_builtin_class;
+
+ATOM WINAPI RegisterClassExWOWW(WNDCLASSEXW *,LPDWORD,WORD,DWORD,BOOL);
 
 #endif /* ROS_REGCONTROL_H */

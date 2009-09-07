@@ -368,6 +368,10 @@ NtUserInitializeClientPfnArrays(
       RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
       RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
 
+      //// FIXME! HAX! Temporary until server side is finished.
+      //// Copy the client side procs for now.
+      RtlCopyMemory(&gpsi->aStoCidPfn, pfnClientW, sizeof(gpsi->aStoCidPfn));
+
       hModClient = hmodUser;
       ClientPfnInit = TRUE;
    }

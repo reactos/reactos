@@ -195,7 +195,6 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
       PMONITOR_OBJECT p;
       DPRINT("Additional monitor is beeing attached\n");
       for (p = gMonitorList; p->Next != NULL; p = p->Next)
-         ;
       {
          p->Next = Monitor;
       }

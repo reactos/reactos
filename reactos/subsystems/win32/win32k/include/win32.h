@@ -31,6 +31,37 @@
 #define W32PF_MANUALGUICHECK         (0x02000000)
 #define W32PF_CREATEDWINORDC         (0x04000000)
 
+/* THREADINFO Flags */
+#define TIF_INCLEANUP               0x00000001
+#define TIF_16BIT                   0x00000002
+#define TIF_SYSTEMTHREAD            0x00000004
+#define TIF_CSRSSTHREAD             0x00000008
+#define TIF_TRACKRECTVISIBLE        0x00000010
+#define TIF_ALLOWFOREGROUNDACTIVATE 0x00000020
+#define TIF_DONTATTACHQUEUE         0x00000040
+#define TIF_DONTJOURNALATTACH       0x00000080
+#define TIF_WOW64                   0x00000100
+#define TIF_INACTIVATEAPPMSG        0x00000200
+#define TIF_SPINNING                0x00000400
+#define TIF_PALETTEAWARE            0x00000800
+#define TIF_SHAREDWOW               0x00001000
+#define TIF_FIRSTIDLE               0x00002000
+#define TIF_WAITFORINPUTIDLE        0x00004000
+#define TIF_MOVESIZETRACKING        0x00008000
+#define TIF_VDMAPP                  0x00010000
+#define TIF_DOSEMULATOR             0x00020000
+#define TIF_GLOBALHOOKER            0x00040000
+#define TIF_DELAYEDEVENT            0x00080000
+#define TIF_MSGPOSCHANGED           0x00100000
+#define TIF_SHUTDOWNCOMPLETE        0x00200000
+#define TIF_IGNOREPLAYBACKDELAY     0x00400000
+#define TIF_ALLOWOTHERACCOUNTHOOK   0x00800000
+#define TIF_GUITHREADINITIALIZED    0x02000000
+#define TIF_DISABLEIME              0x04000000
+#define TIF_INGETTEXTLENGTH         0x08000000
+#define TIF_ANSILENGTH              0x10000000
+#define TIF_DISABLEHOOKS            0x20000000
+
 extern BOOL ClientPfnInit;
 extern HINSTANCE hModClient;
 extern HANDLE hModuleWin;    // This Win32k Instance.
@@ -86,7 +117,7 @@ typedef struct _THREADINFO
   /* ReactOS */
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
-  BOOLEAN IsExiting;
+  BOOLEAN IsExiting;          // Use TIF_INCLEANUP
   SINGLE_LIST_ENTRY  ReferencesList;
 } THREADINFO;
 
@@ -135,7 +166,7 @@ typedef struct _PROCESSINFO
   LIST_ENTRY PrivateFontListHead;
   FAST_MUTEX DriverObjListLock;
   LIST_ENTRY DriverObjListHead;
-  struct _KBL* KeyboardLayout;
+  struct _KBL* KeyboardLayout; // THREADINFO only
   W32HEAP_USER_MAPPING HeapMappings;
 } PROCESSINFO;
 

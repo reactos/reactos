@@ -520,34 +520,6 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
          RETURN( (DWORD)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
-
-      case TWOPARAM_ROUTINE_ROS_REGSYSCLASSES:
-      {
-          DWORD Ret = 0;
-          DWORD Count = Param1;
-          PREGISTER_SYSCLASS RegSysClassArray = (PREGISTER_SYSCLASS)Param2;
-
-          if (Count != 0 && RegSysClassArray != NULL)
-          {
-              _SEH2_TRY
-              {
-                  ProbeArrayForRead(RegSysClassArray,
-                                    sizeof(RegSysClassArray[0]),
-                                    Count,
-                                    2);
-
-                  Ret = (DWORD)UserRegisterSystemClasses(Count,
-                                                         RegSysClassArray);
-              }
-              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-              {
-                  SetLastNtError(_SEH2_GetExceptionCode());
-              }
-              _SEH2_END;
-          }
-
-          RETURN( Ret);
-      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);
