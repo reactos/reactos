@@ -56,92 +56,96 @@ extern BOOLEAN KdbpBugCheckRequested;
 /* Array of conditions when to enter KDB */
 static KDB_ENTER_CONDITION KdbEnterConditions[][2] =
 {
-   /* First chance       Last chance */
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* Zero devide */
-   { KdbEnterFromKmode,  KdbDoNotEnter },       /* Debug trap */
-   { KdbDoNotEnter,      KdbEnterAlways },      /* NMI */
-   { KdbEnterFromKmode,  KdbDoNotEnter },       /* INT3 */
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* Overflow */
-   { KdbDoNotEnter,      KdbEnterFromKmode },
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* Invalid opcode */
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* No math coprocessor fault */
-   { KdbEnterAlways,     KdbEnterAlways },
-   { KdbEnterAlways,     KdbEnterAlways },
-   { KdbDoNotEnter,      KdbEnterFromKmode },
-   { KdbDoNotEnter,      KdbEnterFromKmode },
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* Stack fault */
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* General protection fault */
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* Page fault */
-   { KdbEnterAlways,     KdbEnterAlways },      /* Reserved (15) */
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* FPU fault */
-   { KdbDoNotEnter,      KdbEnterFromKmode },
-   { KdbDoNotEnter,      KdbEnterFromKmode },
-   { KdbDoNotEnter,      KdbEnterFromKmode },   /* SIMD fault */
-   { KdbDoNotEnter,      KdbEnterFromKmode }    /* Last entry: used for unknown exceptions */
+    /* First chance       Last chance */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Zero devide */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* Debug trap */
+    { KdbDoNotEnter,      KdbEnterAlways },      /* NMI */
+    { KdbEnterFromKmode,  KdbDoNotEnter },       /* INT3 */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Overflow */
+    { KdbDoNotEnter,      KdbEnterFromKmode },
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Invalid opcode */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* No math coprocessor fault */
+    { KdbEnterAlways,     KdbEnterAlways },
+    { KdbEnterAlways,     KdbEnterAlways },
+    { KdbDoNotEnter,      KdbEnterFromKmode },
+    { KdbDoNotEnter,      KdbEnterFromKmode },
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Stack fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* General protection fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* Page fault */
+    { KdbEnterAlways,     KdbEnterAlways },      /* Reserved (15) */
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* FPU fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode },
+    { KdbDoNotEnter,      KdbEnterFromKmode },
+    { KdbDoNotEnter,      KdbEnterFromKmode },   /* SIMD fault */
+    { KdbDoNotEnter,      KdbEnterFromKmode }    /* Last entry: used for unknown exceptions */
 };
 
 /* Exception descriptions */
 static const CHAR *ExceptionNrToString[] =
 {
-   "Divide Error",
-   "Debug Trap",
-   "NMI",
-   "Breakpoint",
-   "Overflow",
-   "BOUND range exceeded",
-   "Invalid Opcode",
-   "No Math Coprocessor",
-   "Double Fault",
-   "Unknown(9)",
-   "Invalid TSS",
-   "Segment Not Present",
-   "Stack Segment Fault",
-   "General Protection",
-   "Page Fault",
-   "Reserved(15)",
-   "Math Fault",
-   "Alignment Check",
-   "Machine Check",
-   "SIMD Fault"
+    "Divide Error",
+    "Debug Trap",
+    "NMI",
+    "Breakpoint",
+    "Overflow",
+    "BOUND range exceeded",
+    "Invalid Opcode",
+    "No Math Coprocessor",
+    "Double Fault",
+    "Unknown(9)",
+    "Invalid TSS",
+    "Segment Not Present",
+    "Stack Segment Fault",
+    "General Protection",
+    "Page Fault",
+    "Reserved(15)",
+    "Math Fault",
+    "Alignment Check",
+    "Machine Check",
+    "SIMD Fault"
 };
 
 ULONG
 NTAPI
-KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame);
+KiSsFromTrapFrame(
+    IN PKTRAP_FRAME TrapFrame);
 
 ULONG
 NTAPI
-KiEspFromTrapFrame(IN PKTRAP_FRAME TrapFrame);
+KiEspFromTrapFrame(
+    IN PKTRAP_FRAME TrapFrame);
 
 VOID
 NTAPI
-KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
-                IN ULONG Ss);
+KiSsToTrapFrame(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Ss);
 
 VOID
 NTAPI
-KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
-                 IN ULONG Esp);
+KiEspToTrapFrame(
+    IN PKTRAP_FRAME TrapFrame,
+    IN ULONG Esp);
 
 /* ROS Internal. Please deprecate */
 NTHALAPI
 VOID
 NTAPI
-HalReleaseDisplayOwnership(
-    VOID
-);
+HalReleaseDisplayOwnership();
 
 /* FUNCTIONS *****************************************************************/
 
 static VOID
-KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFrame)
+KdbpTrapFrameToKdbTrapFrame(
+    PKTRAP_FRAME TrapFrame,
+    PKDB_KTRAP_FRAME KdbTrapFrame)
 {
-   ULONG TrapCr0, TrapCr2, TrapCr3, TrapCr4;
+    ULONG TrapCr0, TrapCr2, TrapCr3, TrapCr4;
 
-   /* Copy the TrapFrame only up to Eflags and zero the rest*/
-   RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
-   RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
-                 sizeof (KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+    /* Copy the TrapFrame only up to Eflags and zero the rest*/
+    RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+    RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
+                  sizeof(KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
 
 #ifndef _MSC_VER
    asm volatile(
@@ -177,44 +181,47 @@ KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFram
     KdbTrapFrame->Tf.HardwareSegSs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
 
 
-   /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
 
 static VOID
-KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFrame)
+KdbpKdbTrapFrameToTrapFrame(
+    PKDB_KTRAP_FRAME KdbTrapFrame,
+    PKTRAP_FRAME TrapFrame)
 {
-   /* Copy the TrapFrame only up to Eflags and zero the rest*/
-   RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+    /* Copy the TrapFrame only up to Eflags and zero the rest*/
+    RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
 
-   /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
+    /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
 
     KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareSegSs);
     KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareEsp);
 
-   /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
+    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
 
 static VOID
-KdbpKdbTrapFrameFromKernelStack(PVOID KernelStack,
-                                PKDB_KTRAP_FRAME KdbTrapFrame)
+KdbpKdbTrapFrameFromKernelStack(
+    PVOID KernelStack,
+    PKDB_KTRAP_FRAME KdbTrapFrame)
 {
-   ULONG_PTR *StackPtr;
+    ULONG_PTR *StackPtr;
 
-   RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
-   StackPtr = (ULONG_PTR *) KernelStack;
-   KdbTrapFrame->Tf.Ebp = StackPtr[3];
-   KdbTrapFrame->Tf.Edi = StackPtr[4];
-   KdbTrapFrame->Tf.Esi = StackPtr[5];
-   KdbTrapFrame->Tf.Ebx = StackPtr[6];
-   KdbTrapFrame->Tf.Eip = StackPtr[7];
-   KdbTrapFrame->Tf.HardwareEsp = (ULONG) (StackPtr + 8);
-   KdbTrapFrame->Tf.HardwareSegSs = KGDT_R0_DATA;
-   KdbTrapFrame->Tf.SegCs = KGDT_R0_CODE;
-   KdbTrapFrame->Tf.SegDs = KGDT_R0_DATA;
-   KdbTrapFrame->Tf.SegEs = KGDT_R0_DATA;
-   KdbTrapFrame->Tf.SegGs = KGDT_R0_DATA;
+    RtlZeroMemory(KdbTrapFrame, sizeof(KDB_KTRAP_FRAME));
+    StackPtr = (ULONG_PTR *) KernelStack;
+    KdbTrapFrame->Tf.Ebp = StackPtr[3];
+    KdbTrapFrame->Tf.Edi = StackPtr[4];
+    KdbTrapFrame->Tf.Esi = StackPtr[5];
+    KdbTrapFrame->Tf.Ebx = StackPtr[6];
+    KdbTrapFrame->Tf.Eip = StackPtr[7];
+    KdbTrapFrame->Tf.HardwareEsp = (ULONG) (StackPtr + 8);
+    KdbTrapFrame->Tf.HardwareSegSs = KGDT_R0_DATA;
+    KdbTrapFrame->Tf.SegCs = KGDT_R0_CODE;
+    KdbTrapFrame->Tf.SegDs = KGDT_R0_DATA;
+    KdbTrapFrame->Tf.SegEs = KGDT_R0_DATA;
+    KdbTrapFrame->Tf.SegGs = KGDT_R0_DATA;
 
-   /* FIXME: what about the other registers??? */
+    /* FIXME: what about the other registers??? */
 }
 
 /*!\brief Overwrites the instruction at \a Address with \a NewInst and stores
@@ -229,73 +236,75 @@ KdbpKdbTrapFrameFromKernelStack(PVOID KernelStack,
  */
 static NTSTATUS
 KdbpOverwriteInstruction(
-   IN  PEPROCESS Process,
-   IN  ULONG_PTR Address,
-   IN  UCHAR NewInst,
-   OUT PUCHAR OldInst  OPTIONAL)
+    IN  PEPROCESS Process,
+    IN  ULONG_PTR Address,
+    IN  UCHAR NewInst,
+    OUT PUCHAR OldInst  OPTIONAL)
 {
-   NTSTATUS Status;
-   ULONG Protect;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   KAPC_STATE ApcState;
+    NTSTATUS Status;
+    ULONG Protect;
+    PEPROCESS CurrentProcess = PsGetCurrentProcess();
+    KAPC_STATE ApcState;
 
-   /* Get the protection for the address. */
-   Protect = MmGetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address));
+    /* Get the protection for the address. */
+    Protect = MmGetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address));
 
-   /* Return if that page isn't present. */
-   if (Protect & PAGE_NOACCESS)
-   {
-      return STATUS_MEMORY_NOT_ALLOCATED;
-   }
+    /* Return if that page isn't present. */
+    if (Protect & PAGE_NOACCESS)
+    {
+        return STATUS_MEMORY_NOT_ALLOCATED;
+    }
 
-   /* Attach to the process */
-   if (CurrentProcess != Process)
-   {
-      KeStackAttachProcess(&Process->Pcb, &ApcState);
-   }
+    /* Attach to the process */
+    if (CurrentProcess != Process)
+    {
+        KeStackAttachProcess(&Process->Pcb, &ApcState);
+    }
 
-   /* Make the page writeable if it is read only. */
-   if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
-   {
-      MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address),
-	               (Protect & ~(PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ)) | PAGE_READWRITE);
-   }
+    /* Make the page writeable if it is read only. */
+    if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
+    {
+        MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address),
+                         (Protect & ~(PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ)) | PAGE_READWRITE);
+    }
 
-   /* Copy the old instruction back to the caller. */
-   if (OldInst != NULL)
-   {
-      Status = KdbpSafeReadMemory(OldInst, (PUCHAR)Address, 1);
-      if (!NT_SUCCESS(Status))
-      {
-         if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
-         {
-            MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
-         }
-         /* Detach from process */
-         if (CurrentProcess != Process)
-         {
-            KeDetachProcess();
-         }
-	 return Status;
-      }
-   }
+    /* Copy the old instruction back to the caller. */
+    if (OldInst)
+    {
+        Status = KdbpSafeReadMemory(OldInst, (PUCHAR)Address, 1);
+        if (!NT_SUCCESS(Status))
+        {
+            if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
+            {
+                MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
+            }
 
-   /* Copy the new instruction in its place. */
-   Status = KdbpSafeWriteMemory((PUCHAR)Address, &NewInst, 1);
+            /* Detach from process */
+            if (CurrentProcess != Process)
+            {
+                KeDetachProcess();
+            }
 
-   /* Restore the page protection. */
-   if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
-   {
-      MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
-   }
+            return Status;
+        }
+    }
 
-   /* Detach from process */
-   if (CurrentProcess != Process)
-   {
-      KeUnstackDetachProcess(&ApcState);
-   }
+    /* Copy the new instruction in its place. */
+    Status = KdbpSafeWriteMemory((PUCHAR)Address, &NewInst, 1);
 
-   return Status;
+    /* Restore the page protection. */
+    if (Protect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
+    {
+        MmSetPageProtect(Process, (PVOID)PAGE_ROUND_DOWN(Address), Protect);
+    }
+
+    /* Detach from process */
+    if (CurrentProcess != Process)
+    {
+        KeUnstackDetachProcess(&ApcState);
+    }
+
+    return Status;
 }
 
 /*!\brief Checks whether the given instruction can be single stepped or has to be
@@ -305,28 +314,32 @@ KdbpOverwriteInstruction(
  * \retval FALSE  Instruction is not a call.
  */
 BOOLEAN
-KdbpShouldStepOverInstruction(ULONG_PTR Eip)
+KdbpShouldStepOverInstruction(
+    ULONG_PTR Eip)
 {
-   UCHAR Mem[3];
-   ULONG i = 0;
+    UCHAR Mem[3];
+    ULONG i = 0;
 
-   if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
-   {
-      KdbpPrint("Couldn't access memory at 0x%p\n", Eip);
-      return FALSE;
-   }
+    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
+    {
+        KdbpPrint("Couldn't access memory at 0x%p\n", Eip);
+        return FALSE;
+    }
 
-   /* Check if the current instruction is a call. */
-   while ((i < sizeof (Mem)) && (Mem[i] == 0x66 || Mem[i] == 0x67))
-      i++;
-   if (i == sizeof (Mem))
-      return FALSE;
-   if (Mem[i] == 0xE8 || Mem[i] == 0x9A || Mem[i] == 0xF2 || Mem[i] == 0xF3 ||
-       (((i + 1) < sizeof (Mem)) && Mem[i] == 0xFF && (Mem[i+1] & 0x38) == 0x10))
-   {
-      return TRUE;
-   }
-   return FALSE;
+    /* Check if the current instruction is a call. */
+    while ((i < sizeof (Mem)) && (Mem[i] == 0x66 || Mem[i] == 0x67))
+        i++;
+
+    if (i == sizeof (Mem))
+        return FALSE;
+
+    if (Mem[i] == 0xE8 || Mem[i] == 0x9A || Mem[i] == 0xF2 || Mem[i] == 0xF3 ||
+        (((i + 1) < sizeof (Mem)) && Mem[i] == 0xFF && (Mem[i+1] & 0x38) == 0x10))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /*!\brief Steps over an instruction
@@ -339,21 +352,22 @@ KdbpShouldStepOverInstruction(ULONG_PTR Eip)
  * \retval FALSE  No breakpoint was set.
  */
 BOOLEAN
-KdbpStepOverInstruction(ULONG_PTR Eip)
+KdbpStepOverInstruction(
+    ULONG_PTR Eip)
 {
-   LONG InstLen;
+    LONG InstLen;
 
-   if (!KdbpShouldStepOverInstruction(Eip))
-      return FALSE;
+    if (!KdbpShouldStepOverInstruction(Eip))
+        return FALSE;
 
-   InstLen = KdbpGetInstLength(Eip);
-   if (InstLen < 1)
-      return FALSE;
+    InstLen = KdbpGetInstLength(Eip);
+    if (InstLen < 1)
+        return FALSE;
 
-   if (!NT_SUCCESS(KdbpInsertBreakPoint(Eip + InstLen, KdbBreakPointTemporary, 0, 0, NULL, FALSE, NULL)))
-      return FALSE;
+    if (!NT_SUCCESS(KdbpInsertBreakPoint(Eip + InstLen, KdbBreakPointTemporary, 0, 0, NULL, FALSE, NULL)))
+        return FALSE;
 
-   return TRUE;
+    return TRUE;
 }
 
 /*!\brief Steps into an instruction (interrupts)
@@ -366,78 +380,79 @@ KdbpStepOverInstruction(ULONG_PTR Eip)
  * \retval FALSE  No breakpoint was set.
  */
 BOOLEAN
-KdbpStepIntoInstruction(ULONG_PTR Eip)
+KdbpStepIntoInstruction(
+    ULONG_PTR Eip)
 {
     KDESCRIPTOR Idtr = {0};
-   UCHAR Mem[2];
-   INT IntVect;
-   ULONG IntDesc[2];
-   ULONG_PTR TargetEip;
+    UCHAR Mem[2];
+    INT IntVect;
+    ULONG IntDesc[2];
+    ULONG_PTR TargetEip;
 
-   /* Read memory */
-   if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
-   {
-      /*KdbpPrint("Couldn't access memory at 0x%p\n", Eip);*/
-      return FALSE;
-   }
+    /* Read memory */
+    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
+    {
+        /*KdbpPrint("Couldn't access memory at 0x%p\n", Eip);*/
+        return FALSE;
+    }
 
-   /* Check for INT instruction */
-   /* FIXME: Check for iret */
-   if (Mem[0] == 0xcc)
-      IntVect = 3;
-   else if (Mem[0] == 0xcd)
-      IntVect = Mem[1];
-   else if (Mem[0] == 0xce && KdbCurrentTrapFrame->Tf.EFlags & (1<<11)) /* 1 << 11 is the overflow flag */
-      IntVect = 4;
-   else
-      return FALSE;
+    /* Check for INT instruction */
+    /* FIXME: Check for iret */
+    if (Mem[0] == 0xcc)
+        IntVect = 3;
+    else if (Mem[0] == 0xcd)
+        IntVect = Mem[1];
+    else if (Mem[0] == 0xce && KdbCurrentTrapFrame->Tf.EFlags & (1<<11)) /* 1 << 11 is the overflow flag */
+        IntVect = 4;
+    else
+        return FALSE;
 
-   if (IntVect < 32) /* We should be informed about interrupts < 32 by the kernel, no need to breakpoint them */
-   {
-      return FALSE;
-   }
+    if (IntVect < 32) /* We should be informed about interrupts < 32 by the kernel, no need to breakpoint them */
+    {
+        return FALSE;
+    }
 
-   /* Read the interrupt descriptor table register  */
-   Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&Idtr.Limit);
-   if (IntVect >= (Idtr.Limit + 1) / 8)
-   {
-      /*KdbpPrint("IDT does not contain interrupt vector %d\n.", IntVect);*/
-      return TRUE;
-   }
+    /* Read the interrupt descriptor table register  */
+    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&Idtr.Limit);
+    if (IntVect >= (Idtr.Limit + 1) / 8)
+    {
+        /*KdbpPrint("IDT does not contain interrupt vector %d\n.", IntVect);*/
+        return TRUE;
+    }
 
-   /* Get the interrupt descriptor */
-   if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
-   {
-      /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
-      return FALSE;
-   }
+    /* Get the interrupt descriptor */
+    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
+    {
+        /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
+        return FALSE;
+    }
 
-   /* Check descriptor and get target eip (16 bit interrupt/trap gates not supported) */
-   if ((IntDesc[1] & (1 << 15)) == 0) /* not present */
-   {
-      return FALSE;
-   }
-   if ((IntDesc[1] & 0x1f00) == 0x0500) /* Task gate */
-   {
-      /* FIXME: Task gates not supported */
-      return FALSE;
-   }
-   else if (((IntDesc[1] & 0x1fe0) == 0x0e00) || /* 32 bit Interrupt gate */
-            ((IntDesc[1] & 0x1fe0) == 0x0f00))   /* 32 bit Trap gate */
-   {
-      /* FIXME: Should the segment selector of the interrupt gate be checked? */
-      TargetEip = (IntDesc[1] & 0xffff0000) | (IntDesc[0] & 0x0000ffff);
-   }
-   else
-   {
-      return FALSE;
-   }
+    /* Check descriptor and get target eip (16 bit interrupt/trap gates not supported) */
+    if ((IntDesc[1] & (1 << 15)) == 0) /* not present */
+    {
+        return FALSE;
+    }
+    if ((IntDesc[1] & 0x1f00) == 0x0500) /* Task gate */
+    {
+        /* FIXME: Task gates not supported */
+        return FALSE;
+    }
+    else if (((IntDesc[1] & 0x1fe0) == 0x0e00) || /* 32 bit Interrupt gate */
+             ((IntDesc[1] & 0x1fe0) == 0x0f00))   /* 32 bit Trap gate */
+    {
+        /* FIXME: Should the segment selector of the interrupt gate be checked? */
+        TargetEip = (IntDesc[1] & 0xffff0000) | (IntDesc[0] & 0x0000ffff);
+    }
+    else
+    {
+        return FALSE;
+    }
 
-   /* Insert breakpoint */
-   if (!NT_SUCCESS(KdbpInsertBreakPoint(TargetEip, KdbBreakPointTemporary, 0, 0, NULL, FALSE, NULL)))
-      return FALSE;
+    /* Insert breakpoint */
+    if (!NT_SUCCESS(KdbpInsertBreakPoint(TargetEip, KdbBreakPointTemporary, 0, 0, NULL, FALSE, NULL)))
+        return FALSE;
 
-   return TRUE;
+    return TRUE;
 }
 
 /*!\brief Gets the number of the next breakpoint >= Start.
@@ -448,14 +463,15 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
  */
 LONG
 KdbpGetNextBreakPointNr(
-   IN ULONG Start  OPTIONAL)
+    IN ULONG Start  OPTIONAL)
 {
-   for (; Start < RTL_NUMBER_OF(KdbBreakPoints); Start++)
-   {
-      if (KdbBreakPoints[Start].Type != KdbBreakPointNone)
-         return Start;
-   }
-   return -1;
+    for (; Start < RTL_NUMBER_OF(KdbBreakPoints); Start++)
+    {
+        if (KdbBreakPoints[Start].Type != KdbBreakPointNone)
+            return Start;
+    }
+
+    return -1;
 }
 
 /*!\brief Returns information of the specified breakpoint.
@@ -474,49 +490,57 @@ KdbpGetNextBreakPointNr(
  */
 BOOLEAN
 KdbpGetBreakPointInfo(
-   IN  ULONG BreakPointNr,
-   OUT ULONG_PTR *Address  OPTIONAL,
-   OUT KDB_BREAKPOINT_TYPE *Type  OPTIONAL,
-   OUT UCHAR *Size  OPTIONAL,
-   OUT KDB_ACCESS_TYPE *AccessType  OPTIONAL,
-   OUT UCHAR *DebugReg  OPTIONAL,
-   OUT BOOLEAN *Enabled  OPTIONAL,
-   OUT BOOLEAN *Global  OPTIONAL,
-   OUT PEPROCESS *Process  OPTIONAL,
-   OUT PCHAR *ConditionExpression  OPTIONAL)
+    IN  ULONG BreakPointNr,
+    OUT ULONG_PTR *Address  OPTIONAL,
+    OUT KDB_BREAKPOINT_TYPE *Type  OPTIONAL,
+    OUT UCHAR *Size  OPTIONAL,
+    OUT KDB_ACCESS_TYPE *AccessType  OPTIONAL,
+    OUT UCHAR *DebugReg  OPTIONAL,
+    OUT BOOLEAN *Enabled  OPTIONAL,
+    OUT BOOLEAN *Global  OPTIONAL,
+    OUT PEPROCESS *Process  OPTIONAL,
+    OUT PCHAR *ConditionExpression  OPTIONAL)
 {
-   PKDB_BREAKPOINT bp;
+    PKDB_BREAKPOINT bp;
 
-   if (BreakPointNr >= RTL_NUMBER_OF(KdbBreakPoints) ||
-       KdbBreakPoints[BreakPointNr].Type == KdbBreakPointNone)
-   {
-      return FALSE;
-   }
+    if (BreakPointNr >= RTL_NUMBER_OF(KdbBreakPoints) ||
+        KdbBreakPoints[BreakPointNr].Type == KdbBreakPointNone)
+    {
+        return FALSE;
+    }
 
-   bp = KdbBreakPoints + BreakPointNr;
-   if (Address != NULL)
-      *Address = bp->Address;
-   if (Type != NULL)
-      *Type = bp->Type;
-   if (bp->Type == KdbBreakPointHardware)
-   {
-      if (Size != NULL)
-         *Size = bp->Data.Hw.Size;
-      if (AccessType != NULL)
-         *AccessType = bp->Data.Hw.AccessType;
-      if (DebugReg != NULL && bp->Enabled)
-         *DebugReg = bp->Data.Hw.DebugReg;
-   }
-   if (Enabled != NULL)
-      *Enabled = bp->Enabled;
-   if (Global != NULL)
-      *Global = bp->Global;
-   if (Process != NULL)
-      *Process = bp->Process;
-   if (ConditionExpression != NULL)
-      *ConditionExpression = bp->ConditionExpression;
+    bp = KdbBreakPoints + BreakPointNr;
+    if (Address)
+        *Address = bp->Address;
 
-   return TRUE;
+    if (Type)
+        *Type = bp->Type;
+
+    if (bp->Type == KdbBreakPointHardware)
+    {
+        if (Size)
+            *Size = bp->Data.Hw.Size;
+
+        if (AccessType)
+            *AccessType = bp->Data.Hw.AccessType;
+
+        if (DebugReg && bp->Enabled)
+            *DebugReg = bp->Data.Hw.DebugReg;
+    }
+
+    if (Enabled)
+        *Enabled = bp->Enabled;
+
+    if (Global)
+        *Global = bp->Global;
+
+    if (Process)
+        *Process = bp->Process;
+
+    if (ConditionExpression)
+        *ConditionExpression = bp->ConditionExpression;
+
+    return TRUE;
 }
 
 /*!\brief Inserts a breakpoint into the breakpoint array.
@@ -535,112 +559,115 @@ KdbpGetBreakPointInfo(
  */
 NTSTATUS
 KdbpInsertBreakPoint(
-   IN  ULONG_PTR Address,
-   IN  KDB_BREAKPOINT_TYPE Type,
-   IN  UCHAR Size  OPTIONAL,
-   IN  KDB_ACCESS_TYPE AccessType  OPTIONAL,
-   IN  PCHAR ConditionExpression  OPTIONAL,
-   IN  BOOLEAN Global,
-   OUT PLONG BreakPointNr  OPTIONAL)
+    IN  ULONG_PTR Address,
+    IN  KDB_BREAKPOINT_TYPE Type,
+    IN  UCHAR Size  OPTIONAL,
+    IN  KDB_ACCESS_TYPE AccessType  OPTIONAL,
+    IN  PCHAR ConditionExpression  OPTIONAL,
+    IN  BOOLEAN Global,
+    OUT PLONG BreakPointNr  OPTIONAL)
 {
-   LONG i;
-   PVOID Condition;
-   PCHAR ConditionExpressionDup;
-   LONG ErrOffset;
-   CHAR ErrMsg[128];
+    LONG i;
+    PVOID Condition;
+    PCHAR ConditionExpressionDup;
+    LONG ErrOffset;
+    CHAR ErrMsg[128];
 
-   ASSERT(Type != KdbBreakPointNone);
+    ASSERT(Type != KdbBreakPointNone);
 
-   if (Type == KdbBreakPointHardware)
-   {
-      if ((Address % Size) != 0)
-      {
-         KdbpPrint("Address (0x%p) must be aligned to a multiple of the size (%d)\n", Address, Size);
-         return STATUS_UNSUCCESSFUL;
-      }
-      if (AccessType == KdbAccessExec && Size != 1)
-      {
-         KdbpPrint("Size must be 1 for execution breakpoints.\n");
-         return STATUS_UNSUCCESSFUL;
-      }
-   }
+    if (Type == KdbBreakPointHardware)
+    {
+        if ((Address % Size) != 0)
+        {
+            KdbpPrint("Address (0x%p) must be aligned to a multiple of the size (%d)\n", Address, Size);
+            return STATUS_UNSUCCESSFUL;
+        }
 
-   if (KdbBreakPointCount == KDB_MAXIMUM_BREAKPOINT_COUNT)
-   {
-      return STATUS_UNSUCCESSFUL;
-   }
+        if (AccessType == KdbAccessExec && Size != 1)
+        {
+            KdbpPrint("Size must be 1 for execution breakpoints.\n");
+            return STATUS_UNSUCCESSFUL;
+        }
+    }
 
-   /* Parse conditon expression string and duplicate it */
-   if (ConditionExpression != NULL)
-   {
-      Condition = KdbpRpnParseExpression(ConditionExpression, &ErrOffset, ErrMsg);
-      if (Condition == NULL)
-      {
-         if (ErrOffset >= 0)
-            KdbpPrint("Couldn't parse expression: %s at character %d\n", ErrMsg, ErrOffset);
-         else
-            KdbpPrint("Couldn't parse expression: %s", ErrMsg);
-         return STATUS_UNSUCCESSFUL;
-      }
+    if (KdbBreakPointCount == KDB_MAXIMUM_BREAKPOINT_COUNT)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
 
-      i = strlen(ConditionExpression) + 1;
-      ConditionExpressionDup = ExAllocatePoolWithTag(NonPagedPool, i, TAG_KDBG);
-      RtlCopyMemory(ConditionExpressionDup, ConditionExpression, i);
+    /* Parse conditon expression string and duplicate it */
+    if (ConditionExpression)
+    {
+        Condition = KdbpRpnParseExpression(ConditionExpression, &ErrOffset, ErrMsg);
+        if (!Condition)
+        {
+            if (ErrOffset >= 0)
+                KdbpPrint("Couldn't parse expression: %s at character %d\n", ErrMsg, ErrOffset);
+            else
+                KdbpPrint("Couldn't parse expression: %s", ErrMsg);
 
-   }
-   else
-   {
-      Condition = NULL;
-      ConditionExpressionDup = NULL;
-   }
+            return STATUS_UNSUCCESSFUL;
+        }
 
-   /* Find unused breakpoint */
-   if (Type == KdbBreakPointTemporary)
-   {
-      for (i = RTL_NUMBER_OF(KdbBreakPoints) - 1; i >= 0; i--)
-      {
-         if (KdbBreakPoints[i].Type == KdbBreakPointNone)
-            break;
-      }
-   }
-   else
-   {
-      for (i = 0; i < (LONG)RTL_NUMBER_OF(KdbBreakPoints); i++)
-      {
-         if (KdbBreakPoints[i].Type == KdbBreakPointNone)
-            break;
-      }
-   }
-   ASSERT(i < (LONG)RTL_NUMBER_OF(KdbBreakPoints));
+        i = strlen(ConditionExpression) + 1;
+        ConditionExpressionDup = ExAllocatePoolWithTag(NonPagedPool, i, TAG_KDBG);
+        RtlCopyMemory(ConditionExpressionDup, ConditionExpression, i);
+    }
+    else
+    {
+        Condition = NULL;
+        ConditionExpressionDup = NULL;
+    }
 
-   /* Set the breakpoint */
-   ASSERT(KdbCurrentProcess != NULL);
-   KdbBreakPoints[i].Type = Type;
-   KdbBreakPoints[i].Address = Address;
-   KdbBreakPoints[i].Enabled = FALSE;
-   KdbBreakPoints[i].Global = Global;
-   KdbBreakPoints[i].Process = KdbCurrentProcess;
-   KdbBreakPoints[i].ConditionExpression = ConditionExpressionDup;
-   KdbBreakPoints[i].Condition = Condition;
-   if (Type == KdbBreakPointHardware)
-   {
+    /* Find unused breakpoint */
+    if (Type == KdbBreakPointTemporary)
+    {
+        for (i = RTL_NUMBER_OF(KdbBreakPoints) - 1; i >= 0; i--)
+        {
+            if (KdbBreakPoints[i].Type == KdbBreakPointNone)
+                break;
+        }
+    }
+    else
+    {
+        for (i = 0; i < (LONG)RTL_NUMBER_OF(KdbBreakPoints); i++)
+        {
+            if (KdbBreakPoints[i].Type == KdbBreakPointNone)
+                break;
+        }
+    }
 
-      KdbBreakPoints[i].Data.Hw.Size = Size;
-      KdbBreakPoints[i].Data.Hw.AccessType = AccessType;
-   }
-   KdbBreakPointCount++;
+    ASSERT(i < (LONG)RTL_NUMBER_OF(KdbBreakPoints));
 
-   if (Type != KdbBreakPointTemporary)
-      KdbpPrint("Breakpoint %d inserted.\n", i);
+    /* Set the breakpoint */
+    ASSERT(KdbCurrentProcess);
+    KdbBreakPoints[i].Type = Type;
+    KdbBreakPoints[i].Address = Address;
+    KdbBreakPoints[i].Enabled = FALSE;
+    KdbBreakPoints[i].Global = Global;
+    KdbBreakPoints[i].Process = KdbCurrentProcess;
+    KdbBreakPoints[i].ConditionExpression = ConditionExpressionDup;
+    KdbBreakPoints[i].Condition = Condition;
 
-   /* Try to enable the breakpoint */
-   KdbpEnableBreakPoint(i, NULL);
+    if (Type == KdbBreakPointHardware)
+    {
+        KdbBreakPoints[i].Data.Hw.Size = Size;
+        KdbBreakPoints[i].Data.Hw.AccessType = AccessType;
+    }
 
-   /* Return the breakpoint number */
-   if (BreakPointNr != NULL)
-      *BreakPointNr = i;
+    KdbBreakPointCount++;
 
-   return STATUS_SUCCESS;
+    if (Type != KdbBreakPointTemporary)
+        KdbpPrint("Breakpoint %d inserted.\n", i);
+
+    /* Try to enable the breakpoint */
+    KdbpEnableBreakPoint(i, NULL);
+
+    /* Return the breakpoint number */
+    if (BreakPointNr)
+        *BreakPointNr = i;
+
+    return STATUS_SUCCESS;
 }
 
 /*!\brief Deletes a breakpoint
@@ -653,39 +680,42 @@ KdbpInsertBreakPoint(
  */
 BOOLEAN
 KdbpDeleteBreakPoint(
-   IN LONG BreakPointNr  OPTIONAL,
-   IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
+    IN LONG BreakPointNr  OPTIONAL,
+    IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
 {
-   if (BreakPointNr < 0)
-   {
-      ASSERT(BreakPoint != NULL);
-      BreakPointNr = BreakPoint - KdbBreakPoints;
-   }
-   if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
-   {
-      KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
-      return FALSE;
-   }
-   if (BreakPoint == NULL)
-   {
-      BreakPoint = KdbBreakPoints + BreakPointNr;
-   }
-   if (BreakPoint->Type == KdbBreakPointNone)
-   {
-      KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
-      return FALSE;
-   }
+    if (BreakPointNr < 0)
+    {
+        ASSERT(BreakPoint);
+        BreakPointNr = BreakPoint - KdbBreakPoints;
+    }
 
-   if (BreakPoint->Enabled &&
-       !KdbpDisableBreakPoint(-1, BreakPoint))
-      return FALSE;
+    if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
+    {
+        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        return FALSE;
+    }
 
-   if (BreakPoint->Type != KdbBreakPointTemporary)
-      KdbpPrint("Breakpoint %d deleted.\n", BreakPointNr);
-   BreakPoint->Type = KdbBreakPointNone;
-   KdbBreakPointCount--;
+    if (!BreakPoint)
+    {
+        BreakPoint = KdbBreakPoints + BreakPointNr;
+    }
 
-   return TRUE;
+    if (BreakPoint->Type == KdbBreakPointNone)
+    {
+        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        return FALSE;
+    }
+
+    if (BreakPoint->Enabled && !KdbpDisableBreakPoint(-1, BreakPoint))
+        return FALSE;
+
+    if (BreakPoint->Type != KdbBreakPointTemporary)
+        KdbpPrint("Breakpoint %d deleted.\n", BreakPointNr);
+
+    BreakPoint->Type = KdbBreakPointNone;
+    KdbBreakPointCount--;
+
+    return TRUE;
 }
 
 /*!\brief Checks if the breakpoint was set by the debugger
@@ -700,42 +730,45 @@ KdbpDeleteBreakPoint(
  */
 static LONG
 KdbpIsBreakPointOurs(
-   IN NTSTATUS ExceptionCode,
-   IN PKTRAP_FRAME TrapFrame)
+    IN NTSTATUS ExceptionCode,
+    IN PKTRAP_FRAME TrapFrame)
 {
-   ULONG i;
-   ASSERT(ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT);
+    ULONG i;
+    ASSERT(ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT);
 
-   if (ExceptionCode == STATUS_BREAKPOINT) /* Software interrupt */
-   {
-      ULONG_PTR BpEip = (ULONG_PTR)TrapFrame->Eip - 1; /* Get EIP of INT3 instruction */
-      for (i = 0; i < KdbSwBreakPointCount; i++)
-      {
-         ASSERT((KdbSwBreakPoints[i]->Type == KdbBreakPointSoftware ||
-                 KdbSwBreakPoints[i]->Type == KdbBreakPointTemporary));
-         ASSERT(KdbSwBreakPoints[i]->Enabled);
-         if (KdbSwBreakPoints[i]->Address == BpEip)
-         {
-            return KdbSwBreakPoints[i] - KdbBreakPoints;
-         }
-      }
-   }
-   else if (ExceptionCode == STATUS_SINGLE_STEP) /* Hardware interrupt */
-   {
-      UCHAR DebugReg;
-      for (i = 0; i < KdbHwBreakPointCount; i++)
-      {
-         ASSERT(KdbHwBreakPoints[i]->Type == KdbBreakPointHardware &&
-                KdbHwBreakPoints[i]->Enabled);
-         DebugReg = KdbHwBreakPoints[i]->Data.Hw.DebugReg;
-         if ((TrapFrame->Dr6 & (1 << DebugReg)) != 0)
-         {
-            return KdbHwBreakPoints[i] - KdbBreakPoints;
-         }
-      }
-   }
+    if (ExceptionCode == STATUS_BREAKPOINT) /* Software interrupt */
+    {
+        ULONG_PTR BpEip = (ULONG_PTR)TrapFrame->Eip - 1; /* Get EIP of INT3 instruction */
+        for (i = 0; i < KdbSwBreakPointCount; i++)
+        {
+            ASSERT((KdbSwBreakPoints[i]->Type == KdbBreakPointSoftware ||
+                   KdbSwBreakPoints[i]->Type == KdbBreakPointTemporary));
+            ASSERT(KdbSwBreakPoints[i]->Enabled);
 
-   return -1;
+            if (KdbSwBreakPoints[i]->Address == BpEip)
+            {
+                return KdbSwBreakPoints[i] - KdbBreakPoints;
+            }
+        }
+    }
+    else if (ExceptionCode == STATUS_SINGLE_STEP) /* Hardware interrupt */
+    {
+        UCHAR DebugReg;
+
+        for (i = 0; i < KdbHwBreakPointCount; i++)
+        {
+            ASSERT(KdbHwBreakPoints[i]->Type == KdbBreakPointHardware &&
+                   KdbHwBreakPoints[i]->Enabled);
+            DebugReg = KdbHwBreakPoints[i]->Data.Hw.DebugReg;
+
+            if ((TrapFrame->Dr6 & (1 << DebugReg)) != 0)
+            {
+                return KdbHwBreakPoints[i] - KdbBreakPoints;
+            }
+        }
+    }
+
+    return -1;
 }
 
 /*!\brief Enables a breakpoint.
@@ -750,148 +783,159 @@ KdbpIsBreakPointOurs(
  */
 BOOLEAN
 KdbpEnableBreakPoint(
-   IN LONG BreakPointNr  OPTIONAL,
-   IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
+    IN LONG BreakPointNr  OPTIONAL,
+    IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
 {
-   NTSTATUS Status;
-   INT i;
-   ULONG ul;
+    NTSTATUS Status;
+    INT i;
+    ULONG ul;
 
-   if (BreakPointNr < 0)
-   {
-      ASSERT(BreakPoint != NULL);
-      BreakPointNr = BreakPoint - KdbBreakPoints;
-   }
-   if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
-   {
-      KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
-      return FALSE;
-   }
-   if (BreakPoint == NULL)
-   {
-      BreakPoint = KdbBreakPoints + BreakPointNr;
-   }
-   if (BreakPoint->Type == KdbBreakPointNone)
-   {
-      KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
-      return FALSE;
-   }
+    if (BreakPointNr < 0)
+    {
+        ASSERT(BreakPoint);
+        BreakPointNr = BreakPoint - KdbBreakPoints;
+    }
 
-   if (BreakPoint->Enabled == TRUE)
-   {
-      KdbpPrint("Breakpoint %d is already enabled.\n", BreakPointNr);
-      return TRUE;
-   }
+    if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
+    {
+        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        return FALSE;
+    }
 
-   if (BreakPoint->Type == KdbBreakPointSoftware ||
-       BreakPoint->Type == KdbBreakPointTemporary)
-   {
-      if (KdbSwBreakPointCount >= KDB_MAXIMUM_SW_BREAKPOINT_COUNT)
-      {
-         KdbpPrint("Maximum number of SW breakpoints (%d) used. "
-                   "Disable another breakpoint in order to enable this one.\n",
-                   KDB_MAXIMUM_SW_BREAKPOINT_COUNT);
-         return FALSE;
-      }
-      Status = KdbpOverwriteInstruction(BreakPoint->Process, BreakPoint->Address,
-                                        0xCC, &BreakPoint->Data.SavedInstruction);
-      if (!NT_SUCCESS(Status))
-      {
-         KdbpPrint("Couldn't access memory at 0x%p\n", BreakPoint->Address);
-         return FALSE;
-      }
-      KdbSwBreakPoints[KdbSwBreakPointCount++] = BreakPoint;
-   }
-   else
-   {
-      if (BreakPoint->Data.Hw.AccessType == KdbAccessExec)
-         ASSERT(BreakPoint->Data.Hw.Size == 1);
-      ASSERT((BreakPoint->Address % BreakPoint->Data.Hw.Size) == 0);
-      if (KdbHwBreakPointCount >= KDB_MAXIMUM_HW_BREAKPOINT_COUNT)
-      {
-         KdbpPrint("Maximum number of HW breakpoints (%d) already used. "
-                   "Disable another breakpoint in order to enable this one.\n",
-                   KDB_MAXIMUM_HW_BREAKPOINT_COUNT);
-         return FALSE;
-      }
+    if (!BreakPoint)
+    {
+        BreakPoint = KdbBreakPoints + BreakPointNr;
+    }
 
-      /* Find unused hw breakpoint */
-      ASSERT(KDB_MAXIMUM_HW_BREAKPOINT_COUNT == 4);
-      for (i = 0; i < KDB_MAXIMUM_HW_BREAKPOINT_COUNT; i++)
-      {
-         if ((KdbTrapFrame.Tf.Dr7 & (0x3 << (i * 2))) == 0)
-            break;
-      }
-      ASSERT(i < KDB_MAXIMUM_HW_BREAKPOINT_COUNT);
+    if (BreakPoint->Type == KdbBreakPointNone)
+    {
+        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        return FALSE;
+    }
 
-      /* Set the breakpoint address. */
-      switch (i)
-      {
-      case 0:
-         KdbTrapFrame.Tf.Dr0 = BreakPoint->Address;
-         break;
-      case 1:
-         KdbTrapFrame.Tf.Dr1 = BreakPoint->Address;
-         break;
-      case 2:
-         KdbTrapFrame.Tf.Dr2 = BreakPoint->Address;
-         break;
-      case 3:
-         KdbTrapFrame.Tf.Dr3 = BreakPoint->Address;
-         break;
-      }
+    if (BreakPoint->Enabled)
+    {
+        KdbpPrint("Breakpoint %d is already enabled.\n", BreakPointNr);
+        return TRUE;
+    }
 
-      /* Enable the global breakpoint */
-      KdbTrapFrame.Tf.Dr7 |= (0x2 << (i * 2));
+    if (BreakPoint->Type == KdbBreakPointSoftware ||
+        BreakPoint->Type == KdbBreakPointTemporary)
+    {
+        if (KdbSwBreakPointCount >= KDB_MAXIMUM_SW_BREAKPOINT_COUNT)
+        {
+            KdbpPrint("Maximum number of SW breakpoints (%d) used. "
+                      "Disable another breakpoint in order to enable this one.\n",
+                      KDB_MAXIMUM_SW_BREAKPOINT_COUNT);
+            return FALSE;
+        }
 
-      /* Enable the exact match bits. */
-      KdbTrapFrame.Tf.Dr7 |= 0x00000300;
+        Status = KdbpOverwriteInstruction(BreakPoint->Process, BreakPoint->Address,
+                                          0xCC, &BreakPoint->Data.SavedInstruction);
+        if (!NT_SUCCESS(Status))
+        {
+            KdbpPrint("Couldn't access memory at 0x%p\n", BreakPoint->Address);
+            return FALSE;
+        }
 
-      /* Clear existing state. */
-      KdbTrapFrame.Tf.Dr7 &= ~(0xF << (16 + (i * 4)));
+        KdbSwBreakPoints[KdbSwBreakPointCount++] = BreakPoint;
+    }
+    else
+    {
+        if (BreakPoint->Data.Hw.AccessType == KdbAccessExec)
+            ASSERT(BreakPoint->Data.Hw.Size == 1);
 
-      /* Set the breakpoint type. */
-      switch (BreakPoint->Data.Hw.AccessType)
-      {
-      case KdbAccessExec:
-         ul = 0;
-         break;
-      case KdbAccessWrite:
-         ul = 1;
-         break;
-      case KdbAccessRead:
-      case KdbAccessReadWrite:
-         ul = 3;
-         break;
-      default:
-         ASSERT(0);
-         return TRUE;
-         break;
-      }
-      KdbTrapFrame.Tf.Dr7 |= (ul << (16 + (i * 4)));
+        ASSERT((BreakPoint->Address % BreakPoint->Data.Hw.Size) == 0);
 
-      /* Set the breakpoint length. */
-      KdbTrapFrame.Tf.Dr7 |= ((BreakPoint->Data.Hw.Size - 1) << (18 + (i * 4)));
+        if (KdbHwBreakPointCount >= KDB_MAXIMUM_HW_BREAKPOINT_COUNT)
+        {
+            KdbpPrint("Maximum number of HW breakpoints (%d) already used. "
+                      "Disable another breakpoint in order to enable this one.\n",
+                      KDB_MAXIMUM_HW_BREAKPOINT_COUNT);
 
-      /* Update KdbCurrentTrapFrame - values are taken from there by the CLI */
-      if (&KdbTrapFrame != KdbCurrentTrapFrame)
-      {
-         KdbCurrentTrapFrame->Tf.Dr0 = KdbTrapFrame.Tf.Dr0;
-         KdbCurrentTrapFrame->Tf.Dr1 = KdbTrapFrame.Tf.Dr1;
-         KdbCurrentTrapFrame->Tf.Dr2 = KdbTrapFrame.Tf.Dr2;
-         KdbCurrentTrapFrame->Tf.Dr3 = KdbTrapFrame.Tf.Dr3;
-         KdbCurrentTrapFrame->Tf.Dr6 = KdbTrapFrame.Tf.Dr6;
-         KdbCurrentTrapFrame->Tf.Dr7 = KdbTrapFrame.Tf.Dr7;
-      }
+            return FALSE;
+        }
 
-      BreakPoint->Data.Hw.DebugReg = i;
-      KdbHwBreakPoints[KdbHwBreakPointCount++] = BreakPoint;
-   }
+        /* Find unused hw breakpoint */
+        ASSERT(KDB_MAXIMUM_HW_BREAKPOINT_COUNT == 4);
+        for (i = 0; i < KDB_MAXIMUM_HW_BREAKPOINT_COUNT; i++)
+        {
+            if ((KdbTrapFrame.Tf.Dr7 & (0x3 << (i * 2))) == 0)
+                break;
+        }
 
-   BreakPoint->Enabled = TRUE;
-   if (BreakPoint->Type != KdbBreakPointTemporary)
-      KdbpPrint("Breakpoint %d enabled.\n", BreakPointNr);
-   return TRUE;
+        ASSERT(i < KDB_MAXIMUM_HW_BREAKPOINT_COUNT);
+
+        /* Set the breakpoint address. */
+        switch (i)
+        {
+            case 0:
+                KdbTrapFrame.Tf.Dr0 = BreakPoint->Address;
+                break;
+            case 1:
+                KdbTrapFrame.Tf.Dr1 = BreakPoint->Address;
+                break;
+            case 2:
+                KdbTrapFrame.Tf.Dr2 = BreakPoint->Address;
+                break;
+            case 3:
+                KdbTrapFrame.Tf.Dr3 = BreakPoint->Address;
+                break;
+        }
+
+        /* Enable the global breakpoint */
+        KdbTrapFrame.Tf.Dr7 |= (0x2 << (i * 2));
+
+        /* Enable the exact match bits. */
+        KdbTrapFrame.Tf.Dr7 |= 0x00000300;
+
+        /* Clear existing state. */
+        KdbTrapFrame.Tf.Dr7 &= ~(0xF << (16 + (i * 4)));
+
+        /* Set the breakpoint type. */
+        switch (BreakPoint->Data.Hw.AccessType)
+        {
+            case KdbAccessExec:
+                ul = 0;
+                break;
+            case KdbAccessWrite:
+                ul = 1;
+                break;
+            case KdbAccessRead:
+            case KdbAccessReadWrite:
+                ul = 3;
+                break;
+            default:
+                ASSERT(0);
+                return TRUE;
+                break;
+        }
+
+        KdbTrapFrame.Tf.Dr7 |= (ul << (16 + (i * 4)));
+
+        /* Set the breakpoint length. */
+        KdbTrapFrame.Tf.Dr7 |= ((BreakPoint->Data.Hw.Size - 1) << (18 + (i * 4)));
+
+        /* Update KdbCurrentTrapFrame - values are taken from there by the CLI */
+        if (&KdbTrapFrame != KdbCurrentTrapFrame)
+        {
+            KdbCurrentTrapFrame->Tf.Dr0 = KdbTrapFrame.Tf.Dr0;
+            KdbCurrentTrapFrame->Tf.Dr1 = KdbTrapFrame.Tf.Dr1;
+            KdbCurrentTrapFrame->Tf.Dr2 = KdbTrapFrame.Tf.Dr2;
+            KdbCurrentTrapFrame->Tf.Dr3 = KdbTrapFrame.Tf.Dr3;
+            KdbCurrentTrapFrame->Tf.Dr6 = KdbTrapFrame.Tf.Dr6;
+            KdbCurrentTrapFrame->Tf.Dr7 = KdbTrapFrame.Tf.Dr7;
+        }
+
+        BreakPoint->Data.Hw.DebugReg = i;
+        KdbHwBreakPoints[KdbHwBreakPointCount++] = BreakPoint;
+    }
+
+    BreakPoint->Enabled = TRUE;
+    if (BreakPoint->Type != KdbBreakPointTemporary)
+        KdbpPrint("Breakpoint %d enabled.\n", BreakPointNr);
+
+    return TRUE;
 }
 
 /*!\brief Disables a breakpoint.
@@ -906,93 +950,98 @@ KdbpEnableBreakPoint(
  */
 BOOLEAN
 KdbpDisableBreakPoint(
-   IN LONG BreakPointNr  OPTIONAL,
-   IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
+    IN LONG BreakPointNr  OPTIONAL,
+    IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
 {
-   ULONG i;
-   NTSTATUS Status;
+    ULONG i;
+    NTSTATUS Status;
 
-   if (BreakPointNr < 0)
-   {
-      ASSERT(BreakPoint != NULL);
-      BreakPointNr = BreakPoint - KdbBreakPoints;
-   }
-   if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
-   {
-      KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
-      return FALSE;
-   }
-   if (BreakPoint == NULL)
-   {
-      BreakPoint = KdbBreakPoints + BreakPointNr;
-   }
-   if (BreakPoint->Type == KdbBreakPointNone)
-   {
-      KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
-      return FALSE;
-   }
+    if (BreakPointNr < 0)
+    {
+        ASSERT(BreakPoint);
+        BreakPointNr = BreakPoint - KdbBreakPoints;
+    }
 
-   if (BreakPoint->Enabled == FALSE)
-   {
-      KdbpPrint("Breakpoint %d is not enabled.\n", BreakPointNr);
-      return TRUE;
-   }
+    if (BreakPointNr < 0 || BreakPointNr >= KDB_MAXIMUM_BREAKPOINT_COUNT)
+    {
+        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        return FALSE;
+    }
 
-   if (BreakPoint->Type == KdbBreakPointSoftware ||
-       BreakPoint->Type == KdbBreakPointTemporary)
-   {
-      ASSERT(KdbSwBreakPointCount > 0);
-      Status = KdbpOverwriteInstruction(BreakPoint->Process, BreakPoint->Address,
-                                        BreakPoint->Data.SavedInstruction, NULL);
-      if (!NT_SUCCESS(Status))
-      {
-         KdbpPrint("Couldn't restore original instruction.\n");
-         return FALSE;
-      }
+    if (!BreakPoint)
+    {
+        BreakPoint = KdbBreakPoints + BreakPointNr;
+    }
 
-      for (i = 0; i < KdbSwBreakPointCount; i++)
-      {
-         if (KdbSwBreakPoints[i] == BreakPoint)
-         {
-            KdbSwBreakPoints[i] = KdbSwBreakPoints[--KdbSwBreakPointCount];
-            i = -1; /* if the last breakpoint is disabled dont break with i >= KdbSwBreakPointCount */
-            break;
-         }
-      }
-      if (i != (ULONG)-1) /* not found */
-         ASSERT(0);
-   }
-   else
-   {
-      ASSERT(BreakPoint->Type == KdbBreakPointHardware);
+    if (BreakPoint->Type == KdbBreakPointNone)
+    {
+        KdbpPrint("Invalid breakpoint: %d\n", BreakPointNr);
+        return FALSE;
+    }
 
-      /* Clear the breakpoint. */
-      KdbTrapFrame.Tf.Dr7 &= ~(0x3 << (BreakPoint->Data.Hw.DebugReg * 2));
-      if ((KdbTrapFrame.Tf.Dr7 & 0xFF) == 0)
-      {
-         /*
-          * If no breakpoints are enabled then clear the exact match flags.
-          */
-         KdbTrapFrame.Tf.Dr7 &= 0xFFFFFCFF;
-      }
+    if (BreakPoint->Enabled == FALSE)
+    {
+        KdbpPrint("Breakpoint %d is not enabled.\n", BreakPointNr);
+        return TRUE;
+    }
 
-      for (i = 0; i < KdbHwBreakPointCount; i++)
-      {
-         if (KdbHwBreakPoints[i] == BreakPoint)
-         {
-            KdbHwBreakPoints[i] = KdbHwBreakPoints[--KdbHwBreakPointCount];
-            i = -1; /* if the last breakpoint is disabled dont break with i >= KdbHwBreakPointCount */
-            break;
-         }
-      }
-      if (i != (ULONG)-1) /* not found */
-         ASSERT(0);
-   }
+    if (BreakPoint->Type == KdbBreakPointSoftware ||
+        BreakPoint->Type == KdbBreakPointTemporary)
+    {
+        ASSERT(KdbSwBreakPointCount > 0);
+        Status = KdbpOverwriteInstruction(BreakPoint->Process, BreakPoint->Address,
+                                          BreakPoint->Data.SavedInstruction, NULL);
 
-   BreakPoint->Enabled = FALSE;
-   if (BreakPoint->Type != KdbBreakPointTemporary)
-      KdbpPrint("Breakpoint %d disabled.\n", BreakPointNr);
-   return TRUE;
+        if (!NT_SUCCESS(Status))
+        {
+            KdbpPrint("Couldn't restore original instruction.\n");
+            return FALSE;
+        }
+
+        for (i = 0; i < KdbSwBreakPointCount; i++)
+        {
+            if (KdbSwBreakPoints[i] == BreakPoint)
+            {
+                KdbSwBreakPoints[i] = KdbSwBreakPoints[--KdbSwBreakPointCount];
+                i = -1; /* if the last breakpoint is disabled dont break with i >= KdbSwBreakPointCount */
+                break;
+            }
+        }
+
+        if (i != (ULONG)-1) /* not found */
+            ASSERT(0);
+    }
+    else
+    {
+        ASSERT(BreakPoint->Type == KdbBreakPointHardware);
+
+        /* Clear the breakpoint. */
+        KdbTrapFrame.Tf.Dr7 &= ~(0x3 << (BreakPoint->Data.Hw.DebugReg * 2));
+        if ((KdbTrapFrame.Tf.Dr7 & 0xFF) == 0)
+        {
+            /* If no breakpoints are enabled then clear the exact match flags. */
+            KdbTrapFrame.Tf.Dr7 &= 0xFFFFFCFF;
+        }
+
+        for (i = 0; i < KdbHwBreakPointCount; i++)
+        {
+            if (KdbHwBreakPoints[i] == BreakPoint)
+            {
+                KdbHwBreakPoints[i] = KdbHwBreakPoints[--KdbHwBreakPointCount];
+                i = -1; /* if the last breakpoint is disabled dont break with i >= KdbHwBreakPointCount */
+                break;
+            }
+        }
+
+        if (i != (ULONG)-1) /* not found */
+            ASSERT(0);
+    }
+
+    BreakPoint->Enabled = FALSE;
+    if (BreakPoint->Type != KdbBreakPointTemporary)
+        KdbpPrint("Breakpoint %d disabled.\n", BreakPointNr);
+
+    return TRUE;
 }
 
 /*!\brief Gets the first or last chance enter-condition for exception nr. \a ExceptionNr
@@ -1006,15 +1055,15 @@ KdbpDisableBreakPoint(
  */
 BOOLEAN
 KdbpGetEnterCondition(
-   IN LONG ExceptionNr,
-   IN BOOLEAN FirstChance,
-   OUT KDB_ENTER_CONDITION *Condition)
+    IN LONG ExceptionNr,
+    IN BOOLEAN FirstChance,
+    OUT KDB_ENTER_CONDITION *Condition)
 {
-   if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions))
-      return FALSE;
+    if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions))
+        return FALSE;
 
-   *Condition = KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1];
-   return TRUE;
+    *Condition = KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1];
+    return TRUE;
 }
 
 /*!\brief Sets the first or last chance enter-condition for exception nr. \a ExceptionNr
@@ -1028,33 +1077,36 @@ KdbpGetEnterCondition(
  */
 BOOLEAN
 KdbpSetEnterCondition(
-   IN LONG ExceptionNr,
-   IN BOOLEAN FirstChance,
-   IN KDB_ENTER_CONDITION Condition)
+    IN LONG ExceptionNr,
+    IN BOOLEAN FirstChance,
+    IN KDB_ENTER_CONDITION Condition)
 {
-   if (ExceptionNr < 0)
-   {
-      for (ExceptionNr = 0; ExceptionNr < (LONG)RTL_NUMBER_OF(KdbEnterConditions); ExceptionNr++)
-      {
-         if (ExceptionNr == 1 || ExceptionNr == 8 ||
-             ExceptionNr == 9 || ExceptionNr == 15) /* Reserved exceptions */
-         {
-            continue;
-         }
-         KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1] = Condition;
-      }
-   }
-   else
-   {
-      if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions) ||
-          ExceptionNr == 1 || ExceptionNr == 8 || /* Do not allow changing of the debug */
-          ExceptionNr == 9 || ExceptionNr == 15)  /* trap or reserved exceptions */
-      {
-         return FALSE;
-      }
-      KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1] = Condition;
-   }
-   return TRUE;
+    if (ExceptionNr < 0)
+    {
+        for (ExceptionNr = 0; ExceptionNr < (LONG)RTL_NUMBER_OF(KdbEnterConditions); ExceptionNr++)
+        {
+            if (ExceptionNr == 1 || ExceptionNr == 8 ||
+                ExceptionNr == 9 || ExceptionNr == 15) /* Reserved exceptions */
+            {
+                continue;
+            }
+
+            KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1] = Condition;
+        }
+    }
+    else
+    {
+        if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions) ||
+            ExceptionNr == 1 || ExceptionNr == 8 || /* Do not allow changing of the debug */
+            ExceptionNr == 9 || ExceptionNr == 15)  /* trap or reserved exceptions */
+        {
+            return FALSE;
+        }
+
+        KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1] = Condition;
+    }
+
+    return TRUE;
 }
 
 /*!\brief Switches to another thread context
@@ -1066,73 +1118,74 @@ KdbpSetEnterCondition(
  */
 BOOLEAN
 KdbpAttachToThread(
-   PVOID ThreadId)
+    PVOID ThreadId)
 {
-   PETHREAD Thread = NULL;
-   PEPROCESS Process;
+    PETHREAD Thread = NULL;
+    PEPROCESS Process;
 
-   /* Get a pointer to the thread */
-   if (!NT_SUCCESS(PsLookupThreadByThreadId(ThreadId, &Thread)))
-   {
-      KdbpPrint("Invalid thread id: 0x%08x\n", (ULONG)ThreadId);
-      return FALSE;
-   }
-   Process = Thread->ThreadsProcess;
+    /* Get a pointer to the thread */
+    if (!NT_SUCCESS(PsLookupThreadByThreadId(ThreadId, &Thread)))
+    {
+        KdbpPrint("Invalid thread id: 0x%08x\n", (ULONG)ThreadId);
+        return FALSE;
+    }
+    Process = Thread->ThreadsProcess;
 
-   if (KeIsExecutingDpc() && Process != KdbCurrentProcess)
-   {
-      KdbpPrint("Cannot attach to thread within another process while executing a DPC.\n");
-      ObDereferenceObject(Thread);
-      return FALSE;
-   }
+    if (KeIsExecutingDpc() && Process != KdbCurrentProcess)
+    {
+        KdbpPrint("Cannot attach to thread within another process while executing a DPC.\n");
+        ObDereferenceObject(Thread);
+        return FALSE;
+    }
 
-   /* Save the current thread's context (if we previously attached to a thread) */
-   if (KdbCurrentThread != KdbOriginalThread)
-   {
-      ASSERT(KdbCurrentTrapFrame == &KdbThreadTrapFrame);
-      /* Actually, we can't save the context, there's no guarantee that there
-       * was a trap frame */
-   }
-   else
-   {
-      ASSERT(KdbCurrentTrapFrame == &KdbTrapFrame);
-   }
+    /* Save the current thread's context (if we previously attached to a thread) */
+    if (KdbCurrentThread != KdbOriginalThread)
+    {
+        ASSERT(KdbCurrentTrapFrame == &KdbThreadTrapFrame);
+        /* Actually, we can't save the context, there's no guarantee that there was a trap frame */
+    }
+    else
+    {
+        ASSERT(KdbCurrentTrapFrame == &KdbTrapFrame);
+    }
 
-   /* Switch to the thread's context */
-   if (Thread != KdbOriginalThread)
-   {
-      /* The thread we're attaching to isn't the thread on which we entered
-       * kdb and so the thread we're attaching to is not running. There
-       * is no guarantee that it actually has a trap frame. So we have to
-       * peek directly at the registers which were saved on the stack when the
-       * thread was preempted in the scheduler */
-      KdbpKdbTrapFrameFromKernelStack(Thread->Tcb.KernelStack,
-                                      &KdbThreadTrapFrame);
-      KdbCurrentTrapFrame = &KdbThreadTrapFrame;
-   }
-   else /* Switching back to original thread */
-   {
-      KdbCurrentTrapFrame = &KdbTrapFrame;
-   }
-   KdbCurrentThread = Thread;
+    /* Switch to the thread's context */
+    if (Thread != KdbOriginalThread)
+    {
+        /* The thread we're attaching to isn't the thread on which we entered
+         * kdb and so the thread we're attaching to is not running. There
+         * is no guarantee that it actually has a trap frame. So we have to
+         * peek directly at the registers which were saved on the stack when the
+         * thread was preempted in the scheduler */
+        KdbpKdbTrapFrameFromKernelStack(Thread->Tcb.KernelStack,
+                                        &KdbThreadTrapFrame);
+        KdbCurrentTrapFrame = &KdbThreadTrapFrame;
+    }
+    else /* Switching back to original thread */
+    {
+        KdbCurrentTrapFrame = &KdbTrapFrame;
+    }
+    KdbCurrentThread = Thread;
 
-   /* Attach to the thread's process */
-   ASSERT(KdbCurrentProcess == PsGetCurrentProcess());
-   if (KdbCurrentProcess != Process)
-   {
-      if (KdbCurrentProcess != KdbOriginalProcess) /* detach from previously attached process */
-      {
-         KeUnstackDetachProcess(&KdbApcState);
-      }
-      if (KdbOriginalProcess != Process)
-      {
-         KeStackAttachProcess(&Process->Pcb, &KdbApcState);
-      }
-      KdbCurrentProcess = Process;
-   }
+    /* Attach to the thread's process */
+    ASSERT(KdbCurrentProcess == PsGetCurrentProcess());
+    if (KdbCurrentProcess != Process)
+    {
+        if (KdbCurrentProcess != KdbOriginalProcess) /* detach from previously attached process */
+        {
+            KeUnstackDetachProcess(&KdbApcState);
+        }
 
-   ObDereferenceObject(Thread);
-   return TRUE;
+        if (KdbOriginalProcess != Process)
+        {
+            KeStackAttachProcess(&Process->Pcb, &KdbApcState);
+        }
+
+        KdbCurrentProcess = Process;
+    }
+
+    ObDereferenceObject(Thread);
+    return TRUE;
 }
 
 /*!\brief Switches to another process/thread context
@@ -1146,38 +1199,38 @@ KdbpAttachToThread(
  */
 BOOLEAN
 KdbpAttachToProcess(
-   PVOID ProcessId)
+    PVOID ProcessId)
 {
-   PEPROCESS Process = NULL;
-   PETHREAD Thread;
-   PLIST_ENTRY Entry;
+    PEPROCESS Process = NULL;
+    PETHREAD Thread;
+    PLIST_ENTRY Entry;
 
-   /* Get a pointer to the process */
-   if (!NT_SUCCESS(PsLookupProcessByProcessId(ProcessId, &Process)))
-   {
-      KdbpPrint("Invalid process id: 0x%08x\n", (ULONG)ProcessId);
-      return FALSE;
-   }
+    /* Get a pointer to the process */
+    if (!NT_SUCCESS(PsLookupProcessByProcessId(ProcessId, &Process)))
+    {
+        KdbpPrint("Invalid process id: 0x%08x\n", (ULONG)ProcessId);
+        return FALSE;
+    }
 
-   Entry = Process->ThreadListHead.Flink;
-   ObDereferenceObject(Process);
-   if (Entry == &KdbCurrentProcess->ThreadListHead)
-   {
-      KdbpPrint("No threads in process 0x%08x, cannot attach to process!\n", (ULONG)ProcessId);
-      return FALSE;
-   }
+    Entry = Process->ThreadListHead.Flink;
+    ObDereferenceObject(Process);
+    if (Entry == &KdbCurrentProcess->ThreadListHead)
+    {
+        KdbpPrint("No threads in process 0x%08x, cannot attach to process!\n", (ULONG)ProcessId);
+        return FALSE;
+    }
 
-   Thread = CONTAINING_RECORD(Entry, ETHREAD, ThreadListEntry);
+    Thread = CONTAINING_RECORD(Entry, ETHREAD, ThreadListEntry);
 
-   return KdbpAttachToThread(Thread->Cid.UniqueThread);
+    return KdbpAttachToThread(Thread->Cid.UniqueThread);
 }
 
 /*!\brief Calls the main loop ...
  */
 static VOID
-KdbpCallMainLoop(VOID)
+KdbpCallMainLoop()
 {
-   KdbpCliMainLoop(KdbEnteredOnSingleStep);
+    KdbpCliMainLoop(KdbEnteredOnSingleStep);
 }
 
 /*!\brief Internal function to enter KDB.
@@ -1187,39 +1240,40 @@ KdbpCallMainLoop(VOID)
 static VOID
 KdbpInternalEnter()
 {
-   PETHREAD Thread;
-   PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;
-   ULONG SavedStackLimit;
+    PETHREAD Thread;
+    PVOID SavedInitialStack, SavedStackBase, SavedKernelStack;
+    ULONG SavedStackLimit;
 
-   KbdDisableMouse();
-   if (KdpDebugMode.Screen)
-   {
-      InbvAcquireDisplayOwnership();
-   }
+    KbdDisableMouse();
+    if (KdpDebugMode.Screen)
+    {
+        InbvAcquireDisplayOwnership();
+    }
 
-   /* Call the interface's main loop on a different stack */
-   Thread = PsGetCurrentThread();
-   SavedInitialStack = Thread->Tcb.InitialStack;
-   SavedStackBase = Thread->Tcb.StackBase;
-   SavedStackLimit = Thread->Tcb.StackLimit;
-   SavedKernelStack = Thread->Tcb.KernelStack;
-   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)KdbStack + KDB_STACK_SIZE;
-   Thread->Tcb.StackLimit = (ULONG)KdbStack;
-   Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
+    /* Call the interface's main loop on a different stack */
+    Thread = PsGetCurrentThread();
+    SavedInitialStack = Thread->Tcb.InitialStack;
+    SavedStackBase = Thread->Tcb.StackBase;
+    SavedStackLimit = Thread->Tcb.StackLimit;
+    SavedKernelStack = Thread->Tcb.KernelStack;
+    Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)KdbStack + KDB_STACK_SIZE;
+    Thread->Tcb.StackLimit = (ULONG)KdbStack;
+    Thread->Tcb.KernelStack = (char*)KdbStack + KDB_STACK_SIZE;
 
-   /*KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);*/
+    /*KdbpPrint("Switching to KDB stack 0x%08x-0x%08x (Current Stack is 0x%08x)\n", Thread->Tcb.StackLimit, Thread->Tcb.StackBase, Esp);*/
 
-   KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - sizeof(ULONG), KdbpCallMainLoop);
+    KdbpStackSwitchAndCall(KdbStack + KDB_STACK_SIZE - sizeof(ULONG), KdbpCallMainLoop);
 
-   Thread->Tcb.InitialStack = SavedInitialStack;
-   Thread->Tcb.StackBase = SavedStackBase;
-   Thread->Tcb.StackLimit = SavedStackLimit;
-   Thread->Tcb.KernelStack = SavedKernelStack;
-   KbdEnableMouse();
+    Thread->Tcb.InitialStack = SavedInitialStack;
+    Thread->Tcb.StackBase = SavedStackBase;
+    Thread->Tcb.StackLimit = SavedStackLimit;
+    Thread->Tcb.KernelStack = SavedKernelStack;
+    KbdEnableMouse();
 }
 
 static ULONG
-KdbpGetExceptionNumberFromStatus(IN NTSTATUS ExceptionCode)
+KdbpGetExceptionNumberFromStatus(
+    IN NTSTATUS ExceptionCode)
 {
     ULONG Ret;
 
@@ -1282,368 +1336,367 @@ KdbpGetExceptionNumberFromStatus(IN NTSTATUS ExceptionCode)
  */
 KD_CONTINUE_TYPE
 KdbEnterDebuggerException(
-   IN PEXCEPTION_RECORD ExceptionRecord  OPTIONAL,
-   IN KPROCESSOR_MODE PreviousMode,
-   IN PCONTEXT Context,
-   IN OUT PKTRAP_FRAME TrapFrame,
-   IN BOOLEAN FirstChance)
+    IN PEXCEPTION_RECORD ExceptionRecord  OPTIONAL,
+    IN KPROCESSOR_MODE PreviousMode,
+    IN PCONTEXT Context,
+    IN OUT PKTRAP_FRAME TrapFrame,
+    IN BOOLEAN FirstChance)
 {
-   KDB_ENTER_CONDITION EnterCondition;
-   KD_CONTINUE_TYPE ContinueType = kdHandleException;
-   PKDB_BREAKPOINT BreakPoint;
-   ULONG ExpNr;
-   ULONGLONG ull;
-   BOOLEAN Resume = FALSE;
-   BOOLEAN EnterConditionMet = TRUE;
-   ULONG OldEflags;
-   NTSTATUS ExceptionCode;
+    KDB_ENTER_CONDITION EnterCondition;
+    KD_CONTINUE_TYPE ContinueType = kdHandleException;
+    PKDB_BREAKPOINT BreakPoint;
+    ULONG ExpNr;
+    ULONGLONG ull;
+    BOOLEAN Resume = FALSE;
+    BOOLEAN EnterConditionMet = TRUE;
+    ULONG OldEflags;
+    NTSTATUS ExceptionCode;
 
-   ExceptionCode = (ExceptionRecord != NULL ? ExceptionRecord->ExceptionCode : STATUS_BREAKPOINT);
+    ExceptionCode = (ExceptionRecord ? ExceptionRecord->ExceptionCode : STATUS_BREAKPOINT);
 
-   KdbCurrentProcess = PsGetCurrentProcess();
+    KdbCurrentProcess = PsGetCurrentProcess();
 
-   /* Set continue type to kdContinue for single steps and breakpoints */
-   if (ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT)
-      ContinueType = kdContinue;
+    /* Set continue type to kdContinue for single steps and breakpoints */
+    if (ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT)
+        ContinueType = kdContinue;
 
-   /* Check if we should handle the exception. */
-   /* FIXME - won't get all exceptions here :( */
-   ExpNr = KdbpGetExceptionNumberFromStatus(ExceptionCode);
-   EnterCondition = KdbEnterConditions[ExpNr][FirstChance ? 0 : 1];
-   if (EnterCondition == KdbDoNotEnter ||
-       (EnterCondition == KdbEnterFromUmode && PreviousMode == KernelMode) ||
-       (EnterCondition == KdbEnterFromKmode && PreviousMode != KernelMode))
-   {
-      EnterConditionMet = FALSE;
-   }
+    /* Check if we should handle the exception. */
+    /* FIXME - won't get all exceptions here :( */
+    ExpNr = KdbpGetExceptionNumberFromStatus(ExceptionCode);
+    EnterCondition = KdbEnterConditions[ExpNr][FirstChance ? 0 : 1];
+    if (EnterCondition == KdbDoNotEnter ||
+        (EnterCondition == KdbEnterFromUmode && PreviousMode == KernelMode) ||
+        (EnterCondition == KdbEnterFromKmode && PreviousMode != KernelMode))
+    {
+        EnterConditionMet = FALSE;
+    }
 
-   /* If we stopped on one of our breakpoints then let the user know. */
-   KdbLastBreakPointNr = -1;
-   KdbEnteredOnSingleStep = FALSE;
+    /* If we stopped on one of our breakpoints then let the user know. */
+    KdbLastBreakPointNr = -1;
+    KdbEnteredOnSingleStep = FALSE;
 
-   if (FirstChance && (ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT) &&
-       (KdbLastBreakPointNr = KdbpIsBreakPointOurs(ExceptionCode, TrapFrame)) >= 0)
-   {
-      BreakPoint = KdbBreakPoints + KdbLastBreakPointNr;
+    if (FirstChance && (ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT) &&
+        (KdbLastBreakPointNr = KdbpIsBreakPointOurs(ExceptionCode, TrapFrame)) >= 0)
+    {
+        BreakPoint = KdbBreakPoints + KdbLastBreakPointNr;
 
-      if (ExceptionCode == STATUS_BREAKPOINT)
-      {
-         /*
-          * ... and restore the original instruction.
-          */
-         if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address,
-                                                  BreakPoint->Data.SavedInstruction, NULL)))
-         {
-            KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
-            KeBugCheck(0); // FIXME: Proper bugcode!
-         }
-      }
-
-      if ((BreakPoint->Type == KdbBreakPointHardware) &&
-          (BreakPoint->Data.Hw.AccessType == KdbAccessExec))
-      {
-         Resume = TRUE; /* Set the resume flag when continuing execution */
-      }
-
-      /*
-       * When a temporary breakpoint is hit we have to make sure that we are
-       * in the same context in which it was set, otherwise it could happen
-       * that another process/thread hits it before and it gets deleted.
-       */
-      else if (BreakPoint->Type == KdbBreakPointTemporary &&
-               BreakPoint->Process == KdbCurrentProcess)
-      {
-         ASSERT((TrapFrame->EFlags & EFLAGS_TF) == 0);
-
-         /*
-          * Delete the temporary breakpoint which was used to step over or into the instruction.
-          */
-         KdbpDeleteBreakPoint(-1, BreakPoint);
-
-         if (--KdbNumSingleSteps > 0)
-         {
-            if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Eip)) ||
-                (!KdbSingleStepOver && !KdbpStepIntoInstruction(TrapFrame->Eip)))
+        if (ExceptionCode == STATUS_BREAKPOINT)
+        {
+            /* ... and restore the original instruction. */
+            if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address,
+                                                     BreakPoint->Data.SavedInstruction, NULL)))
             {
-               Context->EFlags |= EFLAGS_TF;
+                KdbpPrint("Couldn't restore original instruction after INT3! Cannot continue execution.\n");
+                KeBugCheck(0); // FIXME: Proper bugcode!
             }
-            goto continue_execution; /* return */
-         }
+        }
 
-         KdbEnteredOnSingleStep = TRUE;
-      }
+        if ((BreakPoint->Type == KdbBreakPointHardware) &&
+            (BreakPoint->Data.Hw.AccessType == KdbAccessExec))
+        {
+            Resume = TRUE; /* Set the resume flag when continuing execution */
+        }
 
-      /*
-       * If we hit a breakpoint set by the debugger we set the single step flag,
-       * ignore the next single step and reenable the breakpoint.
-       */
-      else if (BreakPoint->Type == KdbBreakPointSoftware ||
-               BreakPoint->Type == KdbBreakPointTemporary)
-      {
-         ASSERT(ExceptionCode == STATUS_BREAKPOINT);
-         Context->EFlags |= EFLAGS_TF;
-         KdbBreakPointToReenable = BreakPoint;
-      }
+        /*
+         * When a temporary breakpoint is hit we have to make sure that we are
+         * in the same context in which it was set, otherwise it could happen
+         * that another process/thread hits it before and it gets deleted.
+         */
+        else if (BreakPoint->Type == KdbBreakPointTemporary &&
+                 BreakPoint->Process == KdbCurrentProcess)
+        {
+            ASSERT((TrapFrame->EFlags & EFLAGS_TF) == 0);
 
-      /*
-       * Make sure that the breakpoint should be triggered in this context
-       */
-      if (!BreakPoint->Global && BreakPoint->Process != KdbCurrentProcess)
-      {
-            goto continue_execution; /* return */
-      }
+            /* Delete the temporary breakpoint which was used to step over or into the instruction. */
+            KdbpDeleteBreakPoint(-1, BreakPoint);
 
-      /*
-       * Check if the condition for the breakpoint is met.
-       */
-      if (BreakPoint->Condition != NULL)
-      {
-         /* Setup the KDB trap frame */
-         KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
-
-         ull = 0;
-         if (!KdbpRpnEvaluateParsedExpression(BreakPoint->Condition, &KdbTrapFrame, &ull, NULL, NULL))
-         {
-            /* FIXME: Print warning? */
-         }
-         else if (ull == 0) /* condition is not met */
-         {
-            goto continue_execution; /* return */
-         }
-      }
-
-      if (BreakPoint->Type == KdbBreakPointSoftware)
-      {
-         KdbpPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
-                  KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
-      }
-      else if (BreakPoint->Type == KdbBreakPointHardware)
-      {
-         KdbpPrint("Entered debugger on breakpoint #%d: %s 0x%08x\n",
-                  KdbLastBreakPointNr,
-                  (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
-                  ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
-                   ((BreakPoint->Data.Hw.AccessType == KdbAccessReadWrite) ? "RDWR" : "EXEC")
-                  ),
-                  BreakPoint->Address
-                 );
-
-      }
-   }
-   else if (ExceptionCode == STATUS_SINGLE_STEP)
-   {
-      /* Silently ignore a debugger initiated single step. */
-      if ((TrapFrame->Dr6 & 0xf) == 0 && KdbBreakPointToReenable != NULL)
-      {
-         /* FIXME: Make sure that the breakpoint was really hit (check bp->Address vs. tf->Eip) */
-         BreakPoint = KdbBreakPointToReenable;
-         KdbBreakPointToReenable = NULL;
-         ASSERT(BreakPoint->Type == KdbBreakPointSoftware ||
-                BreakPoint->Type == KdbBreakPointTemporary);
-
-         /*
-          * Reenable the breakpoint we disabled to execute the breakpointed
-          * instruction.
-          */
-         if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address, 0xCC,
-                                                  &BreakPoint->Data.SavedInstruction)))
-         {
-            KdbpPrint("Warning: Couldn't reenable breakpoint %d\n",
-                     BreakPoint - KdbBreakPoints);
-         }
-
-         /* Unset TF if we are no longer single stepping. */
-         if (KdbNumSingleSteps == 0)
-            Context->EFlags &= ~EFLAGS_TF;
-         goto continue_execution; /* return */
-      }
-
-      /* Check if we expect a single step */
-      if ((TrapFrame->Dr6 & 0xf) == 0 && KdbNumSingleSteps > 0)
-      {
-         /*ASSERT((Context->Eflags & EFLAGS_TF) != 0);*/
-         if (--KdbNumSingleSteps > 0)
-         {
-            if ((KdbSingleStepOver && KdbpStepOverInstruction(TrapFrame->Eip)) ||
-                (!KdbSingleStepOver && KdbpStepIntoInstruction(TrapFrame->Eip)))
+            if (--KdbNumSingleSteps > 0)
             {
-               Context->EFlags &= ~EFLAGS_TF;
+                if ((KdbSingleStepOver && !KdbpStepOverInstruction(TrapFrame->Eip)) ||
+                    (!KdbSingleStepOver && !KdbpStepIntoInstruction(TrapFrame->Eip)))
+                {
+                    Context->EFlags |= EFLAGS_TF;
+                }
+
+                goto continue_execution; /* return */
+            }
+
+            KdbEnteredOnSingleStep = TRUE;
+        }
+
+        /*
+         * If we hit a breakpoint set by the debugger we set the single step flag,
+         * ignore the next single step and reenable the breakpoint.
+         */
+        else if (BreakPoint->Type == KdbBreakPointSoftware ||
+                 BreakPoint->Type == KdbBreakPointTemporary)
+        {
+            ASSERT(ExceptionCode == STATUS_BREAKPOINT);
+            Context->EFlags |= EFLAGS_TF;
+            KdbBreakPointToReenable = BreakPoint;
+        }
+
+        /* Make sure that the breakpoint should be triggered in this context */
+        if (!BreakPoint->Global && BreakPoint->Process != KdbCurrentProcess)
+        {
+            goto continue_execution; /* return */
+        }
+
+        /* Check if the condition for the breakpoint is met. */
+        if (BreakPoint->Condition)
+        {
+            /* Setup the KDB trap frame */
+            KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
+
+            ull = 0;
+            if (!KdbpRpnEvaluateParsedExpression(BreakPoint->Condition, &KdbTrapFrame, &ull, NULL, NULL))
+            {
+                /* FIXME: Print warning? */
+            }
+            else if (ull == 0) /* condition is not met */
+            {
+                goto continue_execution; /* return */
+            }
+        }
+
+        if (BreakPoint->Type == KdbBreakPointSoftware)
+        {
+            KdbpPrint("Entered debugger on breakpoint #%d: EXEC 0x%04x:0x%08x\n",
+                      KdbLastBreakPointNr, TrapFrame->SegCs & 0xffff, TrapFrame->Eip);
+        }
+        else if (BreakPoint->Type == KdbBreakPointHardware)
+        {
+            KdbpPrint("Entered debugger on breakpoint #%d: %s 0x%08x\n",
+                      KdbLastBreakPointNr,
+                     (BreakPoint->Data.Hw.AccessType == KdbAccessRead) ? "READ" :
+                     ((BreakPoint->Data.Hw.AccessType == KdbAccessWrite) ? "WRITE" :
+                     ((BreakPoint->Data.Hw.AccessType == KdbAccessReadWrite) ? "RDWR" : "EXEC")),
+                     BreakPoint->Address);
+        }
+    }
+    else if (ExceptionCode == STATUS_SINGLE_STEP)
+    {
+        /* Silently ignore a debugger initiated single step. */
+        if ((TrapFrame->Dr6 & 0xf) == 0 && KdbBreakPointToReenable)
+        {
+            /* FIXME: Make sure that the breakpoint was really hit (check bp->Address vs. tf->Eip) */
+            BreakPoint = KdbBreakPointToReenable;
+            KdbBreakPointToReenable = NULL;
+            ASSERT(BreakPoint->Type == KdbBreakPointSoftware ||
+                   BreakPoint->Type == KdbBreakPointTemporary);
+
+            /*
+             * Reenable the breakpoint we disabled to execute the breakpointed
+             * instruction.
+             */
+            if (!NT_SUCCESS(KdbpOverwriteInstruction(KdbCurrentProcess, BreakPoint->Address, 0xCC,
+                                                     &BreakPoint->Data.SavedInstruction)))
+            {
+                KdbpPrint("Warning: Couldn't reenable breakpoint %d\n",
+                          BreakPoint - KdbBreakPoints);
+            }
+
+            /* Unset TF if we are no longer single stepping. */
+            if (KdbNumSingleSteps == 0)
+                Context->EFlags &= ~EFLAGS_TF;
+
+            goto continue_execution; /* return */
+        }
+
+        /* Check if we expect a single step */
+        if ((TrapFrame->Dr6 & 0xf) == 0 && KdbNumSingleSteps > 0)
+        {
+            /*ASSERT((Context->Eflags & EFLAGS_TF) != 0);*/
+            if (--KdbNumSingleSteps > 0)
+            {
+                if ((KdbSingleStepOver && KdbpStepOverInstruction(TrapFrame->Eip)) ||
+                    (!KdbSingleStepOver && KdbpStepIntoInstruction(TrapFrame->Eip)))
+                {
+                    Context->EFlags &= ~EFLAGS_TF;
+                }
+                else
+                {
+                    Context->EFlags |= EFLAGS_TF;
+                }
+
+                goto continue_execution; /* return */
             }
             else
             {
-               Context->EFlags |= EFLAGS_TF;
+                Context->EFlags &= ~EFLAGS_TF;
+                KdbEnteredOnSingleStep = TRUE;
             }
-			goto continue_execution; /* return */
-         }
-		 else 
-		 {
-			 Context->EFlags &= ~EFLAGS_TF;
-			 KdbEnteredOnSingleStep = TRUE;
-		 }
-      }
-      else
-      {
-         if (!EnterConditionMet)
-         {
+        }
+        else
+        {
+            if (!EnterConditionMet)
+            {
+                return kdHandleException;
+            }
+
+            KdbpPrint("Entered debugger on unexpected debug trap!\n");
+        }
+    }
+    else if (ExceptionCode == STATUS_BREAKPOINT)
+    {
+        if (KdbInitFileBuffer)
+        {
+            KdbpCliInterpretInitFile();
+            EnterConditionMet = FALSE;
+        }
+        if (!EnterConditionMet)
+        {
             return kdHandleException;
-         }
-         KdbpPrint("Entered debugger on unexpected debug trap!\n");
-      }
-   }
-   else if (ExceptionCode == STATUS_BREAKPOINT)
-   {
-      if (KdbInitFileBuffer != NULL)
-      {
-         KdbpCliInterpretInitFile();
-         EnterConditionMet = FALSE;
-      }
-      if (!EnterConditionMet)
-      {
-         return kdHandleException;
-      }
+        }
 
-      KdbpPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
-               TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
-   }
-   else
-   {
-      const CHAR *ExceptionString = (ExpNr < RTL_NUMBER_OF(ExceptionNrToString)) ?
-                                    (ExceptionNrToString[ExpNr]) :
-                                    ("Unknown/User defined exception");
+        KdbpPrint("Entered debugger on embedded INT3 at 0x%04x:0x%08x.\n",
+                  TrapFrame->SegCs & 0xffff, TrapFrame->Eip - 1);
+    }
+    else
+    {
+        const CHAR *ExceptionString = (ExpNr < RTL_NUMBER_OF(ExceptionNrToString)) ?
+                                      (ExceptionNrToString[ExpNr]) :
+                                      ("Unknown/User defined exception");
 
-      if (!EnterConditionMet)
-      {
-         return ContinueType;
-      }
+        if (!EnterConditionMet)
+        {
+            return ContinueType;
+        }
 
-      KdbpPrint("Entered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
-               FirstChance ? "first" : "last", ExceptionCode, ExceptionString);
-      if (ExceptionCode == STATUS_ACCESS_VIOLATION &&
-          ExceptionRecord != NULL && ExceptionRecord->NumberParameters != 0)
-      {
-         /* FIXME: Add noexec memory stuff */
-         ULONG_PTR TrapCr2;
-         ULONG Err;
+        KdbpPrint("Entered debugger on %s-chance exception (Exception Code: 0x%x) (%s)\n",
+                  FirstChance ? "first" : "last", ExceptionCode, ExceptionString);
+
+        if (ExceptionCode == STATUS_ACCESS_VIOLATION &&
+            ExceptionRecord && ExceptionRecord->NumberParameters != 0)
+        {
+            /* FIXME: Add noexec memory stuff */
+            ULONG_PTR TrapCr2;
+            ULONG Err;
+
 #ifdef __GNUC__
-         asm volatile("movl %%cr2, %0" : "=r"(TrapCr2));
+            asm volatile("movl %%cr2, %0" : "=r"(TrapCr2));
 #elif _MSC_VER
-         __asm mov eax, cr2;
-         __asm mov TrapCr2, eax;
+            __asm mov eax, cr2;
+            __asm mov TrapCr2, eax;
 #else
 #error Unknown compiler for inline assembler
 #endif
 
-         Err = TrapFrame->ErrCode;
-         KdbpPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
-         if ((Err & (1 << 0)) == 0)
-            KdbpPrint("Page not present.\n");
-         else
-         {
-            if ((Err & (1 << 3)) != 0)
-               KdbpPrint("Reserved bits in page directory set.\n");
+            Err = TrapFrame->ErrCode;
+            KdbpPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
+
+            if ((Err & (1 << 0)) == 0)
+            {
+                KdbpPrint("Page not present.\n");
+            }
             else
-               KdbpPrint("Page protection violation.\n");
-         }
-      }
-   }
+            {
+                if ((Err & (1 << 3)) != 0)
+                    KdbpPrint("Reserved bits in page directory set.\n");
+                else
+                    KdbpPrint("Page protection violation.\n");
+            }
+        }
+    }
 
-   /* Once we enter the debugger we do not expect any more single steps to happen */
-   KdbNumSingleSteps = 0;
+    /* Once we enter the debugger we do not expect any more single steps to happen */
+    KdbNumSingleSteps = 0;
 
-   /* Update the current process pointer */
-   KdbCurrentProcess = KdbOriginalProcess = PsGetCurrentProcess();
-   KdbCurrentThread = KdbOriginalThread = PsGetCurrentThread();
-   KdbCurrentTrapFrame = &KdbTrapFrame;
+    /* Update the current process pointer */
+    KdbCurrentProcess = KdbOriginalProcess = PsGetCurrentProcess();
+    KdbCurrentThread = KdbOriginalThread = PsGetCurrentThread();
+    KdbCurrentTrapFrame = &KdbTrapFrame;
 
-   /* Setup the KDB trap frame */
-   KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
+    /* Setup the KDB trap frame */
+    KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
 
-   /* Enter critical section */
-   Ke386SaveFlags(OldEflags);
-   _disable();
+    /* Enter critical section */
+    Ke386SaveFlags(OldEflags);
+    _disable();
 
-   /* Exception inside the debugger? Game over. */
-   if (InterlockedIncrement(&KdbEntryCount) > 1)
-   {
-      Ke386RestoreFlags(OldEflags);
-      return kdHandleException;
-   }
+    /* Exception inside the debugger? Game over. */
+    if (InterlockedIncrement(&KdbEntryCount) > 1)
+    {
+        Ke386RestoreFlags(OldEflags);
+        return kdHandleException;
+    }
 
-   /* Call the main loop. */
-   KdbpInternalEnter();
+    /* Call the main loop. */
+    KdbpInternalEnter();
 
-   /* Check if we should single step */
-   if (KdbNumSingleSteps > 0)
-   {
-      if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Eip)) ||
-          (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Eip)))
-      {
-         ASSERT((KdbCurrentTrapFrame->Tf.EFlags & EFLAGS_TF) == 0);
-         /*KdbCurrentTrapFrame->Tf.EFlags &= ~EFLAGS_TF;*/
-      }
-      else
-      {
-         Context->EFlags |= EFLAGS_TF;
-      }
-   }
+    /* Check if we should single step */
+    if (KdbNumSingleSteps > 0)
+    {
+        if ((KdbSingleStepOver && KdbpStepOverInstruction(KdbCurrentTrapFrame->Tf.Eip)) ||
+            (!KdbSingleStepOver && KdbpStepIntoInstruction(KdbCurrentTrapFrame->Tf.Eip)))
+        {
+            ASSERT((KdbCurrentTrapFrame->Tf.EFlags & EFLAGS_TF) == 0);
+            /*KdbCurrentTrapFrame->Tf.EFlags &= ~EFLAGS_TF;*/
+        }
+        else
+        {
+            Context->EFlags |= EFLAGS_TF;
+        }
+    }
 
-   /* We can't update the current thread's trapframe 'cause it might not
-      have one */
+    /* We can't update the current thread's trapframe 'cause it might not have one */
 
-   /* Detach from attached process */
-   if (KdbCurrentProcess != KdbOriginalProcess)
-   {
-      KeUnstackDetachProcess(&KdbApcState);
-   }
+    /* Detach from attached process */
+    if (KdbCurrentProcess != KdbOriginalProcess)
+    {
+        KeUnstackDetachProcess(&KdbApcState);
+    }
 
-   /* Update the exception TrapFrame */
-   KdbpKdbTrapFrameToTrapFrame(&KdbTrapFrame, TrapFrame);
+    /* Update the exception TrapFrame */
+    KdbpKdbTrapFrameToTrapFrame(&KdbTrapFrame, TrapFrame);
 
-   /* Decrement the entry count */
-   InterlockedDecrement(&KdbEntryCount);
+    /* Decrement the entry count */
+    InterlockedDecrement(&KdbEntryCount);
 
-   /* Leave critical section */
-   Ke386RestoreFlags(OldEflags);
+    /* Leave critical section */
+    Ke386RestoreFlags(OldEflags);
 
-   /* Check if user requested a bugcheck */
-   if (KdbpBugCheckRequested)
-   {
-       /* Clear the flag and bugcheck the system */
-       KdbpBugCheckRequested = FALSE;
-       KeBugCheck(MANUALLY_INITIATED_CRASH);
-   }
+    /* Check if user requested a bugcheck */
+    if (KdbpBugCheckRequested)
+    {
+        /* Clear the flag and bugcheck the system */
+        KdbpBugCheckRequested = FALSE;
+        KeBugCheck(MANUALLY_INITIATED_CRASH);
+    }
 
 continue_execution:
-   /* Clear debug status */
-   if (ExceptionCode == STATUS_BREAKPOINT) /* FIXME: Why clear DR6 on INT3? */
-   {
-      /* Set the RF flag so we don't trigger the same breakpoint again. */
-      if (Resume)
-      {
-         TrapFrame->EFlags |= EFLAGS_RF;
-      }
+    /* Clear debug status */
+    if (ExceptionCode == STATUS_BREAKPOINT) /* FIXME: Why clear DR6 on INT3? */
+    {
+        /* Set the RF flag so we don't trigger the same breakpoint again. */
+        if (Resume)
+        {
+            TrapFrame->EFlags |= EFLAGS_RF;
+        }
 
-      /* Clear dr6 status flags. */
-      TrapFrame->Dr6 &= ~0x0000e00f;
+        /* Clear dr6 status flags. */
+        TrapFrame->Dr6 &= ~0x0000e00f;
 
-      /* Skip the current instruction */
-      Context->Eip++;
-   }
+        /* Skip the current instruction */
+        Context->Eip++;
+    }
 
-   return ContinueType;
+    return ContinueType;
 }
 
 VOID
-KdbDeleteProcessHook(IN PEPROCESS Process)
+KdbDeleteProcessHook(
+    IN PEPROCESS Process)
 {
-   KdbSymFreeProcessSymbols(Process);
+    KdbSymFreeProcessSymbols(Process);
 
-   /* FIXME: Delete breakpoints for process */
+    /* FIXME: Delete breakpoints for process */
 }
 
 VOID
 NTAPI
-KdbpGetCommandLineSettings(PCHAR p1)
+KdbpGetCommandLineSettings(
+    PCHAR p1)
 {
     PCHAR p2;
 
@@ -1668,49 +1721,54 @@ KdbpGetCommandLineSettings(PCHAR p1)
 }
 
 NTSTATUS
-KdbpSafeReadMemory(OUT PVOID Dest,
-                   IN PVOID Src,
-                   IN ULONG Bytes)
+KdbpSafeReadMemory(
+    OUT PVOID Dest,
+    IN PVOID Src,
+    IN ULONG Bytes)
 {
     BOOLEAN Result = TRUE;
 
     switch (Bytes)
     {
-    case 1:
-    case 2:
-    case 4:
-    case 8:
-        Result = KdpSafeReadMemory((ULONG_PTR)Src, Bytes, Dest);
-        break;
-    default:
-    {
-        ULONG_PTR Start, End, Write;
-        for (Start = (ULONG_PTR)Src, 
-                 End = Start + Bytes, 
-                 Write = (ULONG_PTR)Dest; 
-             Result && (Start < End); 
-             Start++, Write++)
-            if (!KdpSafeReadMemory(Start, 1, (PVOID)Write))
-                Result = FALSE;
-        break;
-    }
+        case 1:
+        case 2:
+        case 4:
+        case 8:
+            Result = KdpSafeReadMemory((ULONG_PTR)Src, Bytes, Dest);
+            break;
+
+        default:
+        {
+            ULONG_PTR Start, End, Write;
+
+            for (Start = (ULONG_PTR)Src,
+                    End = Start + Bytes,
+                    Write = (ULONG_PTR)Dest;
+                 Result && (Start < End);
+                 Start++, Write++)
+                if (!KdpSafeReadMemory(Start, 1, (PVOID)Write))
+                    Result = FALSE;
+
+            break;
+        }
     }
 
     return Result ? STATUS_SUCCESS : STATUS_ACCESS_VIOLATION;
 }
 
 NTSTATUS
-KdbpSafeWriteMemory(OUT PVOID Dest,
-                    IN PVOID Src,
-                    IN ULONG Bytes)
+KdbpSafeWriteMemory(
+    OUT PVOID Dest,
+    IN PVOID Src,
+    IN ULONG Bytes)
 {
     BOOLEAN Result = TRUE;
     ULONG_PTR Start, End, Write;
 
-    for (Start = (ULONG_PTR)Src, 
-             End = Start + Bytes, 
-             Write = (ULONG_PTR)Dest; 
-         Result && (Start < End); 
+    for (Start = (ULONG_PTR)Src,
+            End = Start + Bytes,
+            Write = (ULONG_PTR)Dest;
+         Result && (Start < End);
          Start++, Write++)
         if (!KdpSafeWriteMemory(Write, 1, *((PCHAR)Start)))
             Result = FALSE;
