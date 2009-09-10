@@ -1483,7 +1483,6 @@ MUI_ERROR enUSErrorEntries[] =
     }
 };
 
-
 MUI_PAGE enUSPages[] =
 {
     {
