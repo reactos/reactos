@@ -48,7 +48,7 @@ struct parser
   PINFCACHESECTION cur_section;   /* pointer to the section being parsed*/
   PINFCACHELINE    line;          /* current line */
   unsigned int     line_pos;      /* current line position in file */
-  unsigned int     error;         /* error code */
+  INFSTATUS        error;         /* error code */
   unsigned int     token_len;     /* current token len */
   TCHAR token[MAX_FIELD_LEN+1];   /* current token */
 };
@@ -391,7 +391,17 @@ static int push_token( struct parser *parser, const CHAR *pos )
 
   parser->token_len += len;
   for ( ; len > 0; len--, dst++, src++)
-    *dst = *src ? (TCHAR)*src : L' ';
+  {
+    if (*src)
+    {
+      *dst = *src;
+    }
+    else
+    {
+      *dst = _T(' ');
+    }
+  }
+
   *dst = 0;
   parser->start = pos;
 
@@ -808,7 +818,7 @@ InfpParseBuffer (PINFCACHE file,
     {
       if (error_line)
         *error_line = parser.line_pos;
-      return (INFSTATUS)parser.error;
+      return parser.error;
     }
 
   /* find the [strings] section */

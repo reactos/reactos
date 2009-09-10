@@ -305,7 +305,7 @@ InfpGetIntField(PINFCONTEXT Context,
       Ptr = CacheField->Data;
     }
 
-  *IntegerValue = _tcstol(Ptr, NULL, 0);
+  *IntegerValue = (LONG)_tcstol(Ptr, NULL, 0);
 
   return INF_STATUS_SUCCESS;
 }
@@ -348,7 +348,7 @@ InfpGetMultiSzField(PINFCONTEXT Context,
   Size = 0;
   while (FieldPtr != NULL)
     {
-      Size += (_tcslen (FieldPtr->Data) + 1);
+      Size += ((ULONG)_tcslen (FieldPtr->Data) + 1);
       FieldPtr = FieldPtr->Next;
     }
   Size++;
@@ -366,7 +366,7 @@ InfpGetMultiSzField(PINFCONTEXT Context,
       FieldPtr = CacheField;
       while (FieldPtr != NULL)
         {
-          Size = _tcslen (FieldPtr->Data) + 1;
+          Size = (ULONG)_tcslen (FieldPtr->Data) + 1;
 
           _tcscpy (Ptr, FieldPtr->Data);
 
@@ -420,7 +420,7 @@ InfpGetStringField(PINFCONTEXT Context,
       Ptr = CacheField->Data;
     }
 
-  Size = _tcslen (Ptr) + 1;
+  Size = (ULONG)_tcslen (Ptr) + 1;
 
   if (RequiredSize != NULL)
     *RequiredSize = Size;
