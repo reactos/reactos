@@ -1,4 +1,4 @@
-//Polish translation by Caemyr - Olaf Siejka (caemyr@gmail.com) June, 2007
+// Polish translation by Caemyr - Olaf Siejka (caemyr@gmail.com) June, 2007
 // updated by niski - Maciej Bialas (bjauy@o2.pl), July 2009
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -62,14 +62,14 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Pasek zadañ"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Wygl¹d paska zadañ", IDC_STATIC, 6,6,240,121, WS_DISABLED
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21, WS_DISABLED
-    AUTOCHECKBOX    "&Zablokuj pasek zadañ", IDC_TASKBARPROP_LOCK, 13,45,200,10, WS_DISABLED
-    AUTOCHECKBOX    "A&utomatyczne ukrywanie paska zadañ", IDC_TASKBARPROP_HIDE, 13,58,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Zawsze &na wierzchu", IDC_TASKBARPROP_ONTOP, 13,71,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Grupuj programy w pasku zadañ", IDC_TASKBARPROP_GROUP, 13,84,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Poka¿ pasek &Szybkiego uruchamiania", IDC_TASKBARPROP_SHOWQL, 13,97,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Poka¿ podgl¹d okien (miniaturki)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10, WS_DISABLED
+    GROUPBOX        "Wygl¹d paska zadañ", IDC_STATIC, 6,6,240,121
+    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
+    AUTOCHECKBOX    "&Zablokuj pasek zadañ", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX    "A&utomatyczne ukrywanie paska zadañ", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX    "Zawsze &na wierzchu", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX    "&Grupuj programy w pasku zadañ", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "Poka¿ pasek &Szybkiego uruchamiania", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "&Poka¿ podgl¹d okien (miniaturki)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218

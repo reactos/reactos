@@ -61,14 +61,14 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPT
 CAPTION "Панель задач"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    GROUPBOX        "Свойства панели задач", IDC_STATIC, 6,6,240,121, WS_DISABLED
-    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21, WS_DISABLED
-    AUTOCHECKBOX    "&Закрепить панель задач", IDC_TASKBARPROP_LOCK, 13,45,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Автоматически скрывать панель задач", IDC_TASKBARPROP_HIDE, 13,58,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Поверх других окон", IDC_TASKBARPROP_ONTOP, 13,71,200,10, WS_DISABLED
-    AUTOCHECKBOX    "&Группировать схожие кнопки", IDC_TASKBARPROP_GROUP, 13,84,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Отображать панель &быстрого запуска", IDC_TASKBARPROP_SHOWQL, 13,97,200,10, WS_DISABLED
-    AUTOCHECKBOX    "Отобра&жать образцы окон (эскизы)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10, WS_DISABLED
+    GROUPBOX        "Свойства панели задач", IDC_STATIC, 6,6,240,121
+    CONTROL         "", IDC_TASKBARPROP_TASKBARBITMAP, "Static", SS_BITMAP | SS_SUNKEN, 13,18,224,21
+    AUTOCHECKBOX    "&Закрепить панель задач", IDC_TASKBARPROP_LOCK, 13,45,200,10
+    AUTOCHECKBOX    "&Автоматически скрывать панель задач", IDC_TASKBARPROP_HIDE, 13,58,200,10
+    AUTOCHECKBOX    "&Поверх других окон", IDC_TASKBARPROP_ONTOP, 13,71,200,10
+    AUTOCHECKBOX    "&Группировать схожие кнопки", IDC_TASKBARPROP_GROUP, 13,84,200,10
+    AUTOCHECKBOX    "Отображать панель &быстрого запуска", IDC_TASKBARPROP_SHOWQL, 13,97,200,10
+    AUTOCHECKBOX    "Отобра&жать образцы окон (эскизы)", IDC_TASKBARPROP_WNDPREV, 13,110,200,10
 END
 
 IDD_TASKBARPROP_STARTMENU DIALOGEX 0, 0, 252, 218
@@ -84,7 +84,7 @@ BEGIN
     PUSHBUTTON      "Н&астроить...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
     GROUPBOX        "Конфиденциальность",IDC_STATIC, 7,100,238,50
     AUTOCHECKBOX    "Хранить и отображать список недавно открывавшихся фа&йлов", IDC_TASKBARPROP_RECENTFILES, 14,114,227,10, WS_DISABLED
-    AUTOCHECKBOX    "Хранить и отображать список недавно открывавшихся &программ",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,17, WS_DISABLED | BS_MULTILINE
+    AUTOCHECKBOX    "Хранить и отображать список недавно открывавшихся &программ",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,17, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
