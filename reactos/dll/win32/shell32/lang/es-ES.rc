@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -719,7 +719,7 @@ BEGIN
 	IDS_EMPTY_BITBUCKET         "Vaciar Papelera de reciclaje"
 	IDS_PICK_ICON_TITLE         "Seleccione un icono"
 	IDS_PICK_ICON_FILTER        "Archivos de iconos(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
-	IDS_OPEN_WITH_FILTER        "Executable Files\0*.exe\0"
+	IDS_OPEN_WITH_FILTER        "Programas\0*.exe\0"
 	IDS_DIRECTORY               "Directorio"
 	IDS_VIRTUAL_DRIVER          "Controlador de dispositivo virtual"
 	IDS_BAT_FILE                "Archivo por lotes ReactOS"

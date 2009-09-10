@@ -223,29 +223,29 @@ BEGIN
     IDS_CMT_RDESKTOP    "Ejecutar Escritorio remoto"
     IDS_CMT_EVENTVIEW   "Ejecutar Visor de sucesos"
     IDS_CMT_MSCONFIG    "Ejecutar Utilidad de configuración del sistema"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_PAINT       "Ejecutar Paint"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES			"Juegos"
-    IDS_CMT_SOLITAIRE	"Solitario"
-    IDS_CMT_WINEMINE	"Buscaminas"
+    IDS_GAMES                   "Juegos"
+    IDS_CMT_SOLITAIRE           "Solitario"
+    IDS_CMT_WINEMINE            "Buscaminas"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "Herramientas del sistema"
-	IDS_CMT_CHARMAP      "Mapa de caracteres"
-	IDS_CMT_KBSWITCH     "Keyboard Layout Switcher"
-	IDS_CMT_DXDIAG       "Ejecutar el programa de diagnóstico de ReactX"
+    IDS_SYS_TOOLS               "Herramientas del sistema"
+    IDS_CMT_CHARMAP             "Mapa de caracteres"
+    IDS_CMT_KBSWITCH            "Keyboard Layout Switcher"
+    IDS_CMT_DXDIAG              "Ejecutar el programa de diagnóstico de ReactX"
 END
 
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accesibilidad"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+    IDS_SYS_ACCESSIBILITY       "Accesibilidad"
+    IDS_CMT_MAGNIFY             "Magnify"
 END
 
 STRINGTABLE
@@ -257,14 +257,14 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP			"Instalación de ReactOS"
+    IDS_REACTOS_SETUP           "Instalación de ReactOS"
     IDS_UNKNOWN_ERROR           "Error desconocido"
     IDS_REGISTERING_COMPONENTS  "Registrando componentes..."
-    IDS_LOADLIBRARY_FAILED		"LoadLibrary falló: "
-    IDS_GETPROCADDR_FAILED		"GetProcAddr falló: "
+    IDS_LOADLIBRARY_FAILED      "LoadLibrary falló: "
+    IDS_GETPROCADDR_FAILED      "GetProcAddr falló: "
     IDS_REGSVR_FAILED           "DllRegisterServer falló: "
-    IDS_DLLINSTALL_FAILED		"DllInstall falló: "
-    IDS_TIMEOUT					"Tiempo agotado durante la instalación"
+    IDS_DLLINSTALL_FAILED       "DllInstall falló: "
+    IDS_TIMEOUT                 "Tiempo agotado durante la instalación"
     IDS_REASON_UNKNOWN          ""
 END
 
@@ -296,13 +296,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WZD_NAME         "El proceso de instalación no puede continuar hasta que no escriba su nombre."
-    IDS_WZD_SETCOMPUTERNAME  "El proceso de instalación no pudo configurar el nombre del equipo."
-    IDS_WZD_COMPUTERNAME  "El proceso de instalación no puede continuar hasta que no escriba un nombre para su equipo."
-    IDS_WZD_PASSWORDEMPTY  "¡Debe establecer una contraseña!"
-    IDS_WZD_PASSWORDMATCH  "La verificación no concuerda con la contraseña introducida. Por favor introduzca de nuevo la contraseña deseada."
-    IDS_WZD_PASSWORDCHAR  "La contraseña que ha introducido contiene carácteres inválidos. Por favor, introduzca uno de nuevo."
-    IDS_WZD_LOCALTIME    "El proceso de instalación no pudo configurar la hora del equipo."
+    IDS_WZD_NAME            "El proceso de instalación no puede continuar hasta que no escriba su nombre."
+    IDS_WZD_SETCOMPUTERNAME "El proceso de instalación no pudo configurar el nombre del equipo."
+    IDS_WZD_COMPUTERNAME    "El proceso de instalación no puede continuar hasta que no escriba un nombre para su equipo."
+    IDS_WZD_PASSWORDEMPTY   "¡Debe establecer una contraseña!"
+    IDS_WZD_PASSWORDMATCH   "La verificación no concuerda con la contraseña introducida. Por favor introduzca de nuevo la contraseña deseada."
+    IDS_WZD_PASSWORDCHAR    "La contraseña que ha introducido contiene carácteres inválidos. Por favor, introduzca uno de nuevo."
+    IDS_WZD_LOCALTIME       "El proceso de instalación no pudo configurar la hora del equipo."
 END
 
 STRINGTABLE
