@@ -6,7 +6,7 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-#include "private.h"
+#include "private.hpp"
 
 PVOID
 AllocateItem(
