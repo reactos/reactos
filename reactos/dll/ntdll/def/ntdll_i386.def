@@ -748,7 +748,7 @@ RtlIsGenericTableEmpty@4
 RtlIsGenericTableEmptyAvl@4
 RtlIsNameLegalDOS8Dot3@12
 RtlIsTextUnicode@12
-;RtlIsThreadWithinLoaderCallout
+RtlIsThreadWithinLoaderCallout@0
 RtlIsValidHandle@8
 RtlIsValidIndexHandle@12
 RtlLargeIntegerAdd@16
