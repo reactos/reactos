@@ -494,8 +494,8 @@ KspFreeCreateItems(
         Entry = (PCREATE_ITEM_ENTRY)CONTAINING_RECORD(RemoveHeadList(ListHead), CREATE_ITEM_ENTRY, Entry);
 
         /* caller shouldnt have any references */
-        ASSERT(Entry->ReferenceCount == 0);
-        ASSERT(IsListEmpty(&Entry->ObjectItemList));
+        //ASSERT(Entry->ReferenceCount == 0);
+        //ASSERT(IsListEmpty(&Entry->ObjectItemList));
 
         /* does the creator wish notification */
         if (Entry->ItemFreeCallback)
@@ -687,8 +687,7 @@ KsAllocateObjectHeader(
         }
     }
     /* store the object in the file object */
-    ASSERT(IoStack->FileObject->FsContext == NULL);
-    IoStack->FileObject->FsContext = ObjectHeader;
+    IoStack->FileObject->FsContext2 = ObjectHeader;
 
     /* store parent device */
     ObjectHeader->ParentDeviceObject = IoGetRelatedDeviceObject(IoStack->FileObject);
@@ -719,6 +718,8 @@ KsFreeObjectHeader(
     IN  PVOID Header)
 {
     PKSIOBJECT_HEADER ObjectHeader = (PKSIOBJECT_HEADER) Header;
+
+    DPRINT1("KsFreeObjectHeader Header %p Class %wZ\n", Header, &ObjectHeader->ObjectClass);
 
     if (ObjectHeader->ObjectClass.Buffer)
     {
@@ -825,7 +826,7 @@ KsAddObjectCreateItemToDeviceHeader(
         /* increment create item count */
         InterlockedIncrement(&Header->ItemListCount);
     }
-
+    DPRINT("KsAddObjectCreateItemToDeviceHeader Status %x\n", Status);
     return Status;
 }
 
@@ -898,7 +899,7 @@ KsAllocateObjectCreateItem(
         return STATUS_INVALID_PARAMETER_2;
 
     /* first allocate a create entry */
-    CreateEntry = AllocateItem(NonPagedPool, sizeof(PCREATE_ITEM_ENTRY));
+    CreateEntry = AllocateItem(NonPagedPool, sizeof(CREATE_ITEM_ENTRY));
 
     /* check for allocation success */
     if (!CreateEntry)
@@ -1121,7 +1122,7 @@ KsSynchronousIoControlDevice(
 
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
 
     /* check if there is fast device io function */
     if (ObjectHeader && ObjectHeader->DispatchTable.FastDeviceIoControl)
@@ -1129,7 +1130,7 @@ KsSynchronousIoControlDevice(
         IoStatusBlock.Status = STATUS_UNSUCCESSFUL;
         IoStatusBlock.Information = 0;
 
-        /* it is send the request */
+        /* send the request */
         Status = ObjectHeader->DispatchTable.FastDeviceIoControl(FileObject, TRUE, InBuffer, InSize, OutBuffer, OutSize, IoControl, &IoStatusBlock, DeviceObject);
         /* check if the request was handled */
         //DPRINT("Handled %u Status %x Length %u\n", Status, IoStatusBlock.Status, IoStatusBlock.Information);

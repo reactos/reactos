@@ -147,7 +147,7 @@ CIrpQueue::AddMapping(
     PC_ASSERT(Header);
 
     // dont exceed max frame size
-    PC_ASSERT(m_MaxFrameSize >= Header->DataUsed);
+    //PC_ASSERT(m_MaxFrameSize >= Header->DataUsed);
 
     // increment num mappings
     InterlockedIncrement(&m_NumMappings);
@@ -282,7 +282,7 @@ CIrpQueue::UpdateMapping(
         
         m_Irp->IoStatus.Information = StreamHeader->FrameExtent;
 
-        if (m_Irp->RequestorMode != KernelMode)
+        if (m_Irp->RequestorMode == KernelMode)
         {
             // HACK - WDMAUD should pass PKSSTREAM_HEADERs
             ExFreePool(StreamHeader->Data);

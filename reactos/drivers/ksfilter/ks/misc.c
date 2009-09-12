@@ -151,7 +151,7 @@ KsGetObjectFromFileObject(
     PKSIOBJECT_HEADER ObjectHeader;
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
 
     /* return associated object */
     return ObjectHeader->ObjectType;
@@ -169,7 +169,7 @@ KsGetObjectTypeFromFileObject(
     PKSIOBJECT_HEADER ObjectHeader;
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
     /* return type */
     return ObjectHeader->Type;
 }
@@ -188,7 +188,7 @@ KsGetObjectTypeFromIrp(
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
     /* return type */
     return ObjectHeader->Type;
 }

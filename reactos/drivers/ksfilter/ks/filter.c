@@ -444,7 +444,7 @@ IKsFilter_GetFilterFromIrp(
     /* santiy check */
     ASSERT(IoStack->FileObject != NULL);
 
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
     /* sanity is important */
     ASSERT(ObjectHeader != NULL);
@@ -1529,7 +1529,7 @@ KsGetFilterFromIrp(
     ASSERT(IoStack->FileObject);
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
     if (ObjectHeader->Type == KsObjectTypeFilter)
     {

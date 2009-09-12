@@ -139,7 +139,7 @@ PinPropertyHandler(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     // Get the IrpTarget
-    IrpTarget = (IIrpTarget*)IoStack->FileObject->FsContext2;
+    IrpTarget = (IIrpTarget*)IoStack->FileObject->FsContext;
     // Get the parent
     Status = IrpTarget->QueryInterface(IID_IPort, (PVOID*)&Port);
     if (!NT_SUCCESS(Status))

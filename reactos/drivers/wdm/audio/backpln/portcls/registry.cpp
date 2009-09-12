@@ -168,6 +168,7 @@ CRegistryKey::NewSubKey(
     {
         ZwClose(hKey);
         delete RegistryKey;
+        return Status;
     }
 
     *RegistrySubKey = (PREGISTRYKEY)RegistryKey;

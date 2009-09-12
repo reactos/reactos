@@ -445,7 +445,7 @@ IKsAllocator_DispatchRequest(
     ASSERT(FileObject);
 
     /* get object header */
-    Header = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    Header = (PKSIOBJECT_HEADER)FileObject->FsContext2;
 
     /* get real allocator */
     Status = Header->Unknown->lpVtbl->QueryInterface(Header->Unknown, &IID_IKsAllocator, (PVOID*)&Allocator);

@@ -348,6 +348,14 @@ PcNewResourceList(
         delete NewList;
     }
 
+    if (!TranslatedResourceList)
+    {
+        //
+        // empty resource list
+        //
+        return STATUS_SUCCESS;
+    }
+
     // calculate translated resource list size
     ResourceCount = TranslatedResourceList->List[0].PartialResourceList.Count;
 #ifdef _MSC_VER
@@ -371,7 +379,7 @@ PcNewResourceList(
     NewTranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
     {
-        FreeItem(NewList, TAG_PORTCLASS);
+        delete NewList;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -379,8 +387,7 @@ PcNewResourceList(
     NewUntranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(PoolType, NewUntranslatedSize, TAG_PORTCLASS);
     if (!NewUntranslatedResources)
     {
-        FreeItem(NewList, TAG_PORTCLASS);
-        FreeItem(NewTranslatedResources, TAG_PORTCLASS);
+        delete NewList;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 

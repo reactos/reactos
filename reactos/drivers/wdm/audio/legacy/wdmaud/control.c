@@ -554,6 +554,12 @@ CompareProductName(
     /* read DriverDescName value */
     PartialInformation = ReadKeyValue(hSubKey, &DriverDescName);
 
+    if (!PartialInformation)
+    {
+        /* failed to read driver desc key */
+        return STATUS_UNSUCCESSFUL;
+    }
+
     /* copy key name */
     Length = min(ProductNameSize * sizeof(WCHAR), PartialInformation->DataLength);
     RtlMoveMemory(ProductName, (PVOID)PartialInformation->Data, Length);
@@ -948,16 +954,16 @@ WdmAudWriteCompletion(
     IN PIRP LowerIrp,
     IN PVOID  Context)
 {
-    PIRP Irp;
+    //PIRP Irp;
     ASSERT(LowerIrp->PendingReturned == FALSE);
     /* get original irp */
-    Irp = (PIRP)Context;
+    //Irp = (PIRP)Context;
 
     /* save status */
-    Irp->IoStatus.Status = LowerIrp->IoStatus.Status;
-    Irp->IoStatus.Information = LowerIrp->IoStatus.Information;
+    //Irp->IoStatus.Status = LowerIrp->IoStatus.Status;
+    //Irp->IoStatus.Information = LowerIrp->IoStatus.Information;
     /* complete request */
-    IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
+    //IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
     /* return success to free irp */
     return STATUS_SUCCESS;
 }
@@ -1130,14 +1136,17 @@ WdmAudWrite(
     IoSetCompletionRoutine(LowerIrp, WdmAudWriteCompletion, (PVOID)Irp, TRUE, TRUE, TRUE);
 
     /* mark irp as pending */
-    IoMarkIrpPending(Irp);
-
+    //IoMarkIrpPending(Irp);
+    Irp->IoStatus.Information = DeviceInfo->BufferSize;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    DPRINT1("Wrote %u\n", DeviceInfo->BufferSize);
     /* call the driver */
     Status = IoCallDriver(IoGetRelatedDeviceObject(FileObject), LowerIrp);
 
     /* dereference file object */
     ObDereferenceObject(FileObject);
 
-    return STATUS_PENDING;
+    return STATUS_SUCCESS;
 #endif
 }

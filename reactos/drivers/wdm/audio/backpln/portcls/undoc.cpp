@@ -25,8 +25,8 @@ KsoGetIrpTargetFromFileObject(
 {
     PC_ASSERT(FileObject);
 
-    // IrpTarget is stored in FsContext2
-    return (IIrpTarget*)FileObject->FsContext2;
+    // IrpTarget is stored in FsContext
+    return (IIrpTarget*)FileObject->FsContext;
 }
 
 IIrpTarget *

@@ -180,7 +180,7 @@ IInterruptServiceRoutine(
         while (CurEntry != &This->m_ServiceRoutines)
         {
             Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
-            Status = Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
+            Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
             CurEntry = CurEntry->Flink;
         }
         DPRINT("Returning TRUE with mode InterruptSyncModeAll\n");

@@ -555,7 +555,7 @@ KsStreamIo(
     if (RequestorMode || ExGetPreviousMode() == KernelMode)
     {
         /* requestor is from kernel land */
-        ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+        ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext2;
 
         if (ObjectHeader)
         {
@@ -1348,6 +1348,8 @@ KsRemoveIrpFromCancelableQueue(
     PLIST_ENTRY CurEntry;
     KIRQL OldIrql;
 
+    DPRINT("KsRemoveIrpFromCancelableQueue ListHead %p SpinLock %p ListLocation %x RemovalOperation %x\n", QueueHead, SpinLock, ListLocation, RemovalOperation);
+
     /* check parameters */
     if (!QueueHead || !SpinLock)
         return NULL;
@@ -1572,6 +1574,8 @@ KsRemoveSpecificIrpFromCancelableQueue(
     PKSPIN_LOCK SpinLock;
     KIRQL OldLevel;
 
+    DPRINT("KsRemoveSpecificIrpFromCancelableQueue %p\n", Irp);
+
     /* get internal queue lock */
     SpinLock = KSQUEUE_SPINLOCK_IRP_STORAGE(Irp);
 
@@ -1603,6 +1607,7 @@ KsAddIrpToCancelableQueue(
     PIO_STACK_LOCATION IoStack;
     KIRQL OldLevel;
 
+    DPRINT1("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
     /* check for required parameters */
     if (!QueueHead || !SpinLock || !Irp)
         return;
@@ -1796,7 +1801,7 @@ KspCreate(
     if (IoStack->FileObject->RelatedFileObject != NULL)
     {
         /* request is to instantiate a pin / node / clock / allocator */
-        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext;
+        ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->RelatedFileObject->FsContext2;
 
         /* sanity check */
         ASSERT(ObjectHeader);
@@ -1858,7 +1863,7 @@ KspDispatchIrp(
     ASSERT(IoStack->FileObject);
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER) IoStack->FileObject->FsContext2;
 
     if (!ObjectHeader)
     {
@@ -1931,11 +1936,18 @@ KsSetMajorFunctionHandler(
     IN  PDRIVER_OBJECT DriverObject,
     IN  ULONG MajorFunction)
 {
+    DPRINT("KsSetMajorFunctionHandler Function %x\n", MajorFunction);
+#if 0
+    // HACK
+    // for MS PORTCLS
+    //
+    DriverObject->MajorFunction[IRP_MJ_CREATE] = KspCreate;
+#endif
+
     switch ( MajorFunction )
     {
         case IRP_MJ_CREATE:
             DriverObject->MajorFunction[MajorFunction] = KspCreate;
-            break;
             break;
         case IRP_MJ_DEVICE_CONTROL:
         case IRP_MJ_CLOSE:
@@ -1947,6 +1959,7 @@ KsSetMajorFunctionHandler(
             DriverObject->MajorFunction[MajorFunction] = KspDispatchIrp;
             break;
         default:
+            DPRINT1("NotSupported %x\n", MajorFunction);
             return STATUS_INVALID_PARAMETER;
     };
 
@@ -1966,6 +1979,8 @@ KsDispatchIrp(
     PIO_STACK_LOCATION IoStack;
     PKSIDEVICE_HEADER DeviceHeader;
     PDEVICE_EXTENSION DeviceExtension;
+
+    DPRINT("KsDispatchIrp DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;

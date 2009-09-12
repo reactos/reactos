@@ -160,6 +160,8 @@ KsTopologyPropertyHandler(
     HANDLE hKey;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInfo;
 
+    DPRINT("KsTopologyPropertyHandler Irp %p Property %p Data %p Topology %p\n", Irp, Property, Data, Topology);
+
     if (Property->Flags != KSPROPERTY_TYPE_GET)
     {
         Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;

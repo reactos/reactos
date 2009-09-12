@@ -25,8 +25,8 @@ Pin_fnDeviceIoControl(
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    /* The dispatch context is stored in the FsContext2 member */
-    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+    /* The dispatch context is stored in the FsContext member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     /* Sanity check */
     ASSERT(Context);
@@ -76,8 +76,8 @@ Pin_fnRead(
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    /* The dispatch context is stored in the FsContext2 member */
-    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+    /* The dispatch context is stored in the FsContext member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     /* Sanity check */
     ASSERT(Context);
@@ -136,8 +136,8 @@ Pin_fnWrite(
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    /* The dispatch context is stored in the FsContext2 member */
-    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+    /* The dispatch context is stored in the FsContext member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     /* Sanity check */
     ASSERT(Context);
@@ -210,8 +210,8 @@ Pin_fnFlush(
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    /* The dispatch context is stored in the FsContext2 member */
-    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+    /* The dispatch context is stored in the FsContext member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     /* Sanity check */
     ASSERT(Context);
@@ -282,8 +282,8 @@ Pin_fnClose(
     /* Get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
-    /* The dispatch context is stored in the FsContext2 member */
-    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext2;
+    /* The dispatch context is stored in the FsContext member */
+    Context = (PDISPATCH_CONTEXT)IoStack->FileObject->FsContext;
 
     if (Context->Handle)
     {
@@ -379,7 +379,7 @@ Pin_fnFastWrite(
 
     DPRINT("Pin_fnFastWrite called DeviceObject %p Irp %p\n", DeviceObject);
 
-    Context = (PDISPATCH_CONTEXT)FileObject->FsContext2;
+    Context = (PDISPATCH_CONTEXT)FileObject->FsContext;
 
     if (Context->hMixerPin)
     {
@@ -404,7 +404,7 @@ Pin_fnFastWrite(
 
     Status = KsStreamIo(RealFileObject, NULL, NULL, NULL, NULL, 0, IoStatus, Buffer, Length, KSSTREAM_WRITE, UserMode);
 
-    ObDereferenceObject(RealFileObject);
+    //ObDereferenceObject(RealFileObject);
 
     if (NT_SUCCESS(Status))
         return TRUE;
@@ -636,7 +636,6 @@ DispatchCreateSysAudioPin(
     IN PIRP Irp)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    KSOBJECT_HEADER ObjectHeader;
     PIO_STACK_LOCATION IoStack;
     PKSAUDIO_DEVICE_ENTRY DeviceEntry;
     PKSPIN_CONNECT Connect = NULL;
@@ -650,10 +649,10 @@ DispatchCreateSysAudioPin(
     /* sanity checks */
     ASSERT(IoStack->FileObject);
     ASSERT(IoStack->FileObject->RelatedFileObject);
-    ASSERT(IoStack->FileObject->RelatedFileObject->FsContext2);
+    ASSERT(IoStack->FileObject->RelatedFileObject->FsContext);
 
     /* get current attached virtual device */
-    DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)IoStack->FileObject->RelatedFileObject->FsContext2;
+    DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)IoStack->FileObject->RelatedFileObject->FsContext;
 
     /* now validate pin connect request */
     Status = KsValidateConnectRequest(Irp, DeviceEntry->PinDescriptorsCount, DeviceEntry->PinDescriptors, &Connect);
@@ -681,7 +680,7 @@ DispatchCreateSysAudioPin(
     RtlZeroMemory(DispatchContext, sizeof(DISPATCH_CONTEXT));
 
     /* allocate object header */
-    Status = KsAllocateObjectHeader(&ObjectHeader, 0, NULL, Irp, &PinTable);
+    Status = KsAllocateObjectHeader(&DispatchContext->ObjectHeader, 0, NULL, Irp, &PinTable);
     if (!NT_SUCCESS(Status))
     {
         /* failed */
@@ -696,13 +695,13 @@ DispatchCreateSysAudioPin(
     if (!NT_SUCCESS(Status))
     {
         /* failed */
-        KsFreeObjectHeader(ObjectHeader);
+        KsFreeObjectHeader(DispatchContext->ObjectHeader);
         ExFreePool(DispatchContext);
     }
     else
     {
         /* store dispatch context */
-        IoStack->FileObject->FsContext2 = (PVOID)DispatchContext;
+        IoStack->FileObject->FsContext = (PVOID)DispatchContext;
     }
 
 

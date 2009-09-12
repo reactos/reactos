@@ -17,15 +17,10 @@
 
 #include <dmusicks.h>
 #include <kcom.h>
-#include "stdunk.h"
 #include "interfaces.hpp"
 #include <ks.h>
 #include <ksmedia.h>
-#include <stdio.h>
-#include <math.h>
 #include <intrin.h>
-
-#include <assert.h>
 
 #define TAG_PORTCLASS 'SLCP'
 
