@@ -76,8 +76,8 @@ CUnregisterSubdevice::UnregisterSubdevice(
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
 #if defined(__GNUC__) && \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40400)
-    /* Silence incorrect GCC 4.4.0 warning */
+    (__GNUC__ * 100 + __GNUC_MINOR__ == 404)
+    /* Silence incorrect GCC 4.4.x warning */
     SubDeviceEntry = NULL;
 #endif
 
