@@ -2301,6 +2301,7 @@ NtUserQueryUserCounters(
 #define QUERY_WINDOW_ACTIVE     0x02
 #define QUERY_WINDOW_FOCUS      0x03
 #define QUERY_WINDOW_ISHUNG	0x04
+#define QUERY_WINDOW_REAL_ID	0x05
 DWORD
 NTAPI
 NtUserQueryWindow(

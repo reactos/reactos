@@ -4161,16 +4161,19 @@ DWORD APIENTRY
 NtUserQueryWindow(HWND hWnd, DWORD Index)
 {
    PWINDOW_OBJECT Window;
+   PWND pWnd;
    DWORD Result;
    DECLARE_RETURN(UINT);
 
    DPRINT("Enter NtUserQueryWindow\n");
    UserEnterShared();
 
-   if (!(Window = UserGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
    {
       RETURN( 0);
    }
+
+   pWnd = Window->Wnd;
 
    switch(Index)
    {
@@ -4193,6 +4196,9 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
       case QUERY_WINDOW_ISHUNG:
          Result = (DWORD)MsqIsHung(Window->MessageQueue);
          break;
+
+      case QUERY_WINDOW_REAL_ID:
+         Result = (DWORD)pWnd->head.pti->pEThread->Cid.UniqueProcess;
 
       default:
          Result = (DWORD)NULL;

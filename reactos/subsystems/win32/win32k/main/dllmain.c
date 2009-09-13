@@ -276,6 +276,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       }
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
+      Win32Thread->pEThread = Thread;
     }
   else
     {
