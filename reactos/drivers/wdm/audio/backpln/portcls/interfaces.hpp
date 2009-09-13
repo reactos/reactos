@@ -304,46 +304,46 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
         IN PDEVICE_OBJECT DeviceObject,
         IN ULONG FrameSize,
         IN ULONG Alignment,
-        IN PVOID SilenceBuffer);
+        IN PVOID SilenceBuffer) PURE;
 
     STDMETHOD_(NTSTATUS, AddMapping)(THIS_
         IN PUCHAR Buffer,
         IN ULONG BufferSize,
-        IN PIRP Irp);
+        IN PIRP Irp) PURE;
 
     STDMETHOD_(NTSTATUS, GetMapping)(THIS_
         OUT PUCHAR * Buffer,
-        OUT PULONG BufferSize);
+        OUT PULONG BufferSize) PURE;
 
     STDMETHOD_(VOID, UpdateMapping)(THIS_
-        IN ULONG BytesWritten);
+        IN ULONG BytesWritten) PURE;
 
-    STDMETHOD_(ULONG, NumMappings)(THIS);
+    STDMETHOD_(ULONG, NumMappings)(THIS) PURE;
 
-    STDMETHOD_(ULONG, NumData)(THIS);
+    STDMETHOD_(ULONG, NumData)(THIS) PURE;
 
-    STDMETHOD_(BOOL, MinimumDataAvailable)(THIS);
+    STDMETHOD_(BOOL, MinimumDataAvailable)(THIS) PURE;
 
-    STDMETHOD_(BOOL, CancelBuffers)(THIS);
+    STDMETHOD_(BOOL, CancelBuffers)(THIS) PURE;
 
     STDMETHOD_(VOID, UpdateFormat)(THIS_
-        IN PKSDATAFORMAT DataFormat);
+        IN PKSDATAFORMAT DataFormat) PURE;
 
     STDMETHOD_(NTSTATUS, GetMappingWithTag)(THIS_
         IN PVOID Tag,
         OUT PPHYSICAL_ADDRESS  PhysicalAddress,
         OUT PVOID  *VirtualAddress,
         OUT PULONG  ByteCount,
-        OUT PULONG  Flags);
+        OUT PULONG  Flags) PURE;
 
     STDMETHOD_(NTSTATUS, ReleaseMappingWithTag)(THIS_
-        IN PVOID Tag);
+        IN PVOID Tag) PURE;
 
-    STDMETHOD_(BOOL, HasLastMappingFailed)(THIS);
-    STDMETHOD_(VOID, PrintQueueStatus)(THIS);
+    STDMETHOD_(BOOL, HasLastMappingFailed)(THIS) PURE;
+    STDMETHOD_(VOID, PrintQueueStatus)(THIS) PURE;
     STDMETHOD_(VOID, SetMinimumDataThreshold)(THIS_
-        IN ULONG MinimumDataThreshold);
-    STDMETHOD_(ULONG, GetMinimumDataThreshold)(THIS);
+        IN ULONG MinimumDataThreshold) PURE;
+    STDMETHOD_(ULONG, GetMinimumDataThreshold)(THIS) PURE;
 };
 
 
@@ -633,20 +633,20 @@ DECLARE_INTERFACE_(IPortPinWavePci, IIrpTarget)
         IN KSPIN_DESCRIPTOR * PinDescriptor,
         IN PDEVICE_OBJECT DeviceObject) PURE;
 
-    STDMETHOD_(PVOID, GetIrpStream)(THIS);
-    STDMETHOD_(PMINIPORT, GetMiniport)(THIS);
+    STDMETHOD_(PVOID, GetIrpStream)(THIS) PURE;
+    STDMETHOD_(PMINIPORT, GetMiniport)(THIS) PURE;
 };
 
 #define IMP_IPortPinWavePci                        \
     IMP_IIrpTarget;                                \
     STDMETHODIMP_(NTSTATUS) Init(THIS_             \
         IN PPORTWAVEPCI Port,                      \
-		IN PPORTFILTERWAVEPCI Filter,              \
+        IN PPORTFILTERWAVEPCI Filter,              \
         IN KSPIN_CONNECT * ConnectDetails,         \
         IN KSPIN_DESCRIPTOR * PinDescriptor,       \
         IN PDEVICE_OBJECT DeviceObject);           \
                                                    \
-    STDMETHODIMP_(PVOID) GetIrpStream(THIS);       \
+    STDMETHODIMP_(PVOID) GetIrpStream();           \
     STDMETHODIMP_(PMINIPORT) GetMiniport(THIS)
 
 
@@ -771,11 +771,11 @@ DECLARE_INTERFACE_(IPortPinWaveCyclic, IIrpTarget)
         IN KSPIN_CONNECT * ConnectDetails,
         IN KSPIN_DESCRIPTOR * PinDescriptor) PURE;
 
-    STDMETHOD_(ULONG, GetCompletedPosition)(THIS);
-    STDMETHOD_(ULONG, GetCycleCount)(THIS);
-    STDMETHOD_(ULONG, GetDeviceBufferSize)(THIS);
-    STDMETHOD_(PVOID, GetIrpStream)(THIS);
-    STDMETHOD_(PMINIPORT, GetMiniport)(THIS);
+    STDMETHOD_(ULONG, GetCompletedPosition)(THIS) PURE;
+    STDMETHOD_(ULONG, GetCycleCount)(THIS) PURE;
+    STDMETHOD_(ULONG, GetDeviceBufferSize)(THIS) PURE;
+    STDMETHOD_(PVOID, GetIrpStream)(THIS) PURE;
+    STDMETHOD_(PMINIPORT, GetMiniport)(THIS) PURE;
 };
 
 #define IMP_IPortPinWaveCyclic                           \
@@ -814,7 +814,7 @@ DECLARE_INTERFACE_(IPortFilterDMus, IUnknown)
     STDMETHOD_(NTSTATUS, FreePin)(THIS_
         IN struct IPortPinDMus* Pin)PURE;
 
-    STDMETHOD_(VOID, NotifyPins)(THIS);
+    STDMETHOD_(VOID, NotifyPins)(THIS) PURE;
 };
 
 typedef IPortFilterDMus *PPORTFILTERDMUS;
@@ -848,7 +848,7 @@ DECLARE_INTERFACE_(IPortPinDMus, IIrpTarget)
         IN KSPIN_DESCRIPTOR * PinDescriptor,
         IN PDEVICE_OBJECT DeviceObject) PURE;
 
-    STDMETHOD_(VOID, Notify)(THIS);
+    STDMETHOD_(VOID, Notify)(THIS) PURE;
 };
 
 #define IMP_IPortPinDMus                       \
@@ -868,28 +868,95 @@ typedef IPortPinDMus *PPORTPINDMUS;
  *****************************************************************************
  */
 
+#define IMP_IDmaChannelEx                                                 \
+    STDMETHODIMP_(NTSTATUS) AllocateBuffer(                               \
+        IN  ULONG BufferSize,                                             \
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL);        \
+                                                                          \
+    STDMETHODIMP_(void) FreeBuffer(void);                                 \
+    STDMETHODIMP_(ULONG) TransferCount(void);                             \
+    STDMETHODIMP_(ULONG) MaximumBufferSize(void);                         \
+    STDMETHODIMP_(ULONG) AllocatedBufferSize(void);                       \
+    STDMETHODIMP_(ULONG) BufferSize(void);                                \
+                                                                          \
+    STDMETHODIMP_(void) SetBufferSize(                                    \
+        IN  ULONG BufferSize);                                            \
+                                                                          \
+    STDMETHODIMP_(PVOID) SystemAddress(void);                             \
+    STDMETHODIMP_(PHYSICAL_ADDRESS) PhysicalAddress(                      \
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL);        \
+    STDMETHODIMP_(PADAPTER_OBJECT) GetAdapterObject(void);                \
+                                                                          \
+    STDMETHODIMP_(void) CopyTo(                                           \
+        IN  PVOID Destination,                                            \
+        IN  PVOID Source,                                                 \
+        IN  ULONG ByteCount);                                             \
+                                                                          \
+    STDMETHODIMP_(void) CopyFrom(                                         \
+        IN  PVOID Destination,                                            \
+        IN  PVOID Source,                                                 \
+        IN  ULONG ByteCount)
+
+#define IMP_IDmaChannelSlaveEx                 \
+    IMP_IDmaChannelEx;                         \
+    STDMETHODIMP_(NTSTATUS) Start(             \
+        IN  ULONG MapSize,                     \
+        IN  BOOLEAN WriteToDevice);            \
+                                               \
+    STDMETHODIMP_(NTSTATUS) Stop(void);        \
+    STDMETHODIMP_(ULONG) ReadCounter(void);    \
+                                               \
+    STDMETHODIMP_(NTSTATUS) WaitForTC(         \
+        ULONG Timeout)
+
+#define IMP_IDmaChannelInit\
+    IMP_IDmaChannelSlaveEx;\
+    STDMETHODIMP_(NTSTATUS) Init( \
+        IN  PDEVICE_DESCRIPTION DeviceDescription, \
+        IN  PDEVICE_OBJECT DeviceObject)
+
+#define DEFINE_ABSTRACT_DMACHANNEL_EX() \
+    STDMETHOD_(NTSTATUS, AllocateBuffer)( THIS_ \
+        IN  ULONG BufferSize, \
+        IN  PPHYSICAL_ADDRESS PhysicalAddressConstraint OPTIONAL) PURE; \
+\
+    STDMETHOD_(void, FreeBuffer)( THIS ) PURE; \
+    STDMETHOD_(ULONG, TransferCount)( THIS ) PURE; \
+    STDMETHOD_(ULONG, MaximumBufferSize)( THIS ) PURE; \
+    STDMETHOD_(ULONG, AllocatedBufferSize)( THIS ) PURE; \
+    STDMETHOD_(ULONG, BufferSize)( THIS ) PURE; \
+\
+    STDMETHOD_(void, SetBufferSize)( THIS_ \
+        IN  ULONG BufferSize) PURE; \
+\
+    STDMETHOD_(PVOID, SystemAddress)( THIS ) PURE; \
+    STDMETHOD_(PHYSICAL_ADDRESS, PhysicalAddress)( THIS_       \
+        IN PPHYSICAL_ADDRESS Address) PURE; \
+    STDMETHOD_(PADAPTER_OBJECT, GetAdapterObject)( THIS ) PURE; \
+\
+    STDMETHOD_(void, CopyTo)( THIS_ \
+        IN  PVOID Destination, \
+        IN  PVOID Source, \
+        IN  ULONG ByteCount) PURE; \
+\
+    STDMETHOD_(void, CopyFrom)( THIS_ \
+        IN  PVOID Destination, \
+        IN  PVOID Source, \
+        IN  ULONG ByteCount) PURE;
+
 #undef INTERFACE
 #define INTERFACE IDmaChannelInit
 
 DECLARE_INTERFACE_(IDmaChannelInit, IUnknown)
 {
     DEFINE_ABSTRACT_UNKNOWN()
-    DEFINE_ABSTRACT_DMACHANNEL()
+    DEFINE_ABSTRACT_DMACHANNEL_EX()
     DEFINE_ABSTRACT_DMACHANNELSLAVE()
 
     STDMETHOD_(NTSTATUS, Init)( THIS_
         IN PDEVICE_DESCRIPTION DeviceDescription,
         IN PDEVICE_OBJECT DeviceObject) PURE;
 };
-
-
-
-#define IMP_IDmaChannelInit\
-    IMP_IDmaChannelSlave;\
-    STDMETHODIMP_(NTSTATUS) Init( \
-        IN  PDEVICE_DESCRIPTION DeviceDescription, \
-        IN  PDEVICE_OBJECT DeviceObject)
-
 
 #undef INTERFACE
 
@@ -1020,8 +1087,5 @@ DECLARE_INTERFACE_(IPortWaveRTStreamInit, IUnknown)
         IN      PMDL              MemoryDescriptorList,                   \
         IN      ULONG             Index                                   \
     )
-
-
-
 
 #endif

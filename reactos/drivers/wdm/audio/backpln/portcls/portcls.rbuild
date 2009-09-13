@@ -17,6 +17,10 @@
 		<compilerflag compiler="cxx">-fno-rtti</compilerflag>
 	</group>
 
+	<group compilerset="msc">
+		<compilerflag compiler="cxx">/GR-</compilerflag>
+	</group>
+
 	<file>adapter.cpp</file>
 	<file>api.cpp</file>
 	<file>connection.cpp</file>

@@ -34,7 +34,7 @@ public:
     }
 
     IMP_IResourceList;
-    CResourceList(IUnknown * OuterUnknown) {}
+    CResourceList(IUnknown * OuterUnknown) : m_OuterUnknown(OuterUnknown), m_PoolType(NonPagedPool), m_TranslatedResourceList(0), m_UntranslatedResourceList(0), m_NumberOfEntries(0) {}
     virtual ~CResourceList() {}
 
 public:
@@ -88,7 +88,7 @@ CResourceList::NumberOfEntriesOfType(
     IN  CM_RESOURCE_TYPE Type)
 {
     ULONG Index, Count = 0;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor, UnPartialDescriptor;
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
@@ -97,17 +97,30 @@ CResourceList::NumberOfEntriesOfType(
         // no resource list
         return 0;
     }
-
+     PC_ASSERT(m_TranslatedResourceList->List[0].PartialResourceList.Count == m_UntranslatedResourceList->List[0].PartialResourceList.Count);
     // I guess the translated and untranslated lists will be same length?
     for (Index = 0; Index < m_TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
     {
         PartialDescriptor = &m_TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
-        DPRINT("Descriptor Type %u\n", PartialDescriptor->Type);
+        UnPartialDescriptor = &m_UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
+        DPRINT1("Descriptor Type %u\n", PartialDescriptor->Type);
         if (PartialDescriptor->Type == Type)
         {
             // Yay! Finally found one that matches!
             Count++;
         }
+
+        if (PartialDescriptor->Type == CmResourceTypeInterrupt)
+        {
+            DPRINT1("Index %u TRANS   Interrupt Number Affinity %x Level %u Vector %u\n", Index, PartialDescriptor->u.Interrupt.Affinity, PartialDescriptor->u.Interrupt.Level, PartialDescriptor->u.Interrupt.Vector, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags);
+            DPRINT1("Index %u UNTRANS Interrupt Number Affinity %x Level %u Vector %u\n", Index, UnPartialDescriptor->u.Interrupt.Affinity, UnPartialDescriptor->u.Interrupt.Level, UnPartialDescriptor->u.Interrupt.Vector, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags);
+
+        }
+		else if (PartialDescriptor->Type == CmResourceTypePort)
+		{
+            DPRINT1("Index %u TRANS    Port Length %u Start %u %u Flags %x\n", Index, PartialDescriptor->u.Port.Length, PartialDescriptor->u.Port.Start.HighPart, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags);
+            DPRINT1("Index %u UNTRANS  Port Length %u Start %u %u Flags %x\n", Index, UnPartialDescriptor->u.Port.Length, UnPartialDescriptor->u.Port.Start.HighPart, UnPartialDescriptor->u.Port.Start.LowPart, UnPartialDescriptor->Flags);
+		}
     }
 
     DPRINT("Found %d type %d\n", Count, Type);
@@ -200,9 +213,8 @@ CResourceList::AddEntry(
     NewTranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount+1]);
     TranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
 #else
-    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + (ResourceCount > 0 ? (ResourceCount+1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) : 0);
-    TranslatedSize = sizeof(CM_RESOURCE_LIST) + (ResourceCount > 0 ? (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) : 0);
-
+    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount+1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    TranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 #endif
     NewTranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(m_PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
@@ -216,9 +228,8 @@ CResourceList::AddEntry(
     NewUntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount+1]);
     UntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
 #else
-    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) + (ResourceCount > 0 ? (ResourceCount+1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) : 0);
-    UntranslatedSize = sizeof(CM_RESOURCE_LIST) + (ResourceCount > 0 ? (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) : 0);
-
+    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount+1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    UntranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 #endif
 
 
@@ -361,7 +372,7 @@ PcNewResourceList(
 #ifdef _MSC_VER
     NewTranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
 #else
-    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) + (ResourceCount > 0 ? (ResourceCount-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) : 0);
+    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 #endif
 
     // store resource count
@@ -372,7 +383,7 @@ PcNewResourceList(
 #ifdef _MSC_VER
     NewUntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
 #else
-    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) + (ResourceCount > 0 ? (ResourceCount-1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) : 0);
+    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 #endif
 
     // allocate translated resource list
@@ -454,6 +465,7 @@ PcNewResourceSublist(
     NewList->m_OuterUnknown = OuterUnknown;
     NewList->m_PoolType = PoolType;
     NewList->m_Ref = 1;
+    NewList->m_NumberOfEntries = 0;
 
     *OutResourceList = (IResourceList*)NewList;
 

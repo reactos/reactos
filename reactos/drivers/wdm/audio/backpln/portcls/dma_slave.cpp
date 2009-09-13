@@ -196,11 +196,16 @@ CDmaChannelInit::MaximumBufferSize()
 
 PHYSICAL_ADDRESS
 NTAPI
-CDmaChannelInit::PhysicalAddress()
+CDmaChannelInit::PhysicalAddress(
+    PPHYSICAL_ADDRESS Address)
 {
     DPRINT("CDmaChannelInit_PhysicalAdress: this %p Virtuell %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
 
-    return m_Address;
+    PHYSICAL_ADDRESS Result;
+
+    Address->QuadPart = m_Address.QuadPart;
+    Result.QuadPart = (PtrToUlong(Address));
+    return Result;
 }
 
 VOID
