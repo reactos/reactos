@@ -743,7 +743,7 @@ MingwBackend::DetectCompiler ()
 		const string& TARGET_CCValue = Environment::GetVariable ( "TARGET_CC" );
 		const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
 
-		if ( ROS_PREFIXValue.length () > 0 )
+		if ( TARGET_CCValue.length () > 0 )
 		{
 			compilerPrefix = "";
 			compilerCommand = TARGET_CCValue;
