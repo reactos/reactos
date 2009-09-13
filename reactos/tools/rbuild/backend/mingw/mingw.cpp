@@ -740,12 +740,24 @@ MingwBackend::DetectCompiler ()
 
 	if ( ProjectNode.configuration.Compiler == GnuGcc )
 	{
+		const string& TARGET_CCValue = Environment::GetVariable ( "TARGET_CC" );
 		const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+
 		if ( ROS_PREFIXValue.length () > 0 )
 		{
-			compilerPrefix = ROS_PREFIXValue;
-			compilerCommand = compilerPrefix + "-gcc";
+			compilerPrefix = "";
+			compilerCommand = TARGET_CCValue;
 			detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+		}
+
+		if ( !detectedCompiler )
+		{
+			if ( ROS_PREFIXValue.length () > 0 )
+			{
+				compilerPrefix = ROS_PREFIXValue;
+				compilerCommand = compilerPrefix + "-gcc";
+				detectedCompiler = TryToDetectThisCompiler ( compilerCommand );
+			}
 		}
 #if defined(WIN32)
 		if ( !detectedCompiler )
