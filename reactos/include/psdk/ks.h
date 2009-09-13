@@ -82,7 +82,7 @@ typedef PVOID PKSWORKER;
 
 #if defined(__cplusplus) && _MSC_VER >= 1100
     #define DEFINE_GUIDSTRUCT(guid, name) struct __declspec(uuid(guid)) name
-    #define DEFINE_GUIDNAMED(name) __uidof(struct name)
+    #define DEFINE_GUIDNAMED(name) __uuidof(struct name)
 #else
     #define DEFINE_GUIDSTRUCT(guid, name) DEFINE_GUIDEX(name)
     #define DEFINE_GUIDNAMED(name) name
