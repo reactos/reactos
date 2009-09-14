@@ -210,6 +210,7 @@ VOID ARPReceive(
     /* Check if we know the sender */
 
     AddrInitIPv4(&Address, *((PULONG)SenderProtoAddress));
+
     NCE = NBLocateNeighbor(&Address);
     if (NCE) {
         /* We know the sender. Update the hardware address
@@ -220,7 +221,7 @@ VOID ARPReceive(
            may want to communicate with us soon, so add his address
            to our address cache */
         NCE = NBAddNeighbor(Interface, &Address, SenderHWAddress,
-            Header->HWAddrLen, NUD_REACHABLE);
+            Header->HWAddrLen, NUD_REACHABLE, ARP_TIMEOUT);
     }
 
     if (Header->Opcode != ARP_OPCODE_REQUEST)

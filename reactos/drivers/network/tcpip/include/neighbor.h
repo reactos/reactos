@@ -29,7 +29,6 @@ typedef struct NEIGHBOR_CACHE_TABLE {
 typedef struct NEIGHBOR_CACHE_ENTRY {
     DEFINE_TAG
     struct NEIGHBOR_CACHE_ENTRY *Next;  /* Pointer to next entry */
-    struct NEIGHBOR_CACHE_TABLE *Table; /* Pointer to table */
     UCHAR State;                        /* State of NCE */
     UINT EventTimer;                    /* Ticks since last event */
     UINT EventCount;                    /* Number of events */
@@ -41,28 +40,18 @@ typedef struct NEIGHBOR_CACHE_ENTRY {
 } NEIGHBOR_CACHE_ENTRY, *PNEIGHBOR_CACHE_ENTRY;
 
 /* NCE states */
-#define NUD_NONE       0x00
 #define NUD_INCOMPLETE 0x01
 #define NUD_REACHABLE  0x02
-#define NUD_STALE      0x04
-#define NUD_DELAY      0x08
-#define NUD_PROBE      0x10
-#define NUD_FAILED     0x20
-#define NUD_NOARP      0x40
-#define NUD_PERMANENT  0x80
+#define NUD_PERMANENT  0x04
 
-#define NUD_IN_TIMER  (NUD_INCOMPLETE | NUD_DELAY | NUD_PROBE)
-#define NUD_VALID     (NUD_REACHABLE | NUD_NOARP | NUD_STALE | NUD_DELAY | \
-                       NUD_PROBE | NUD_PERMANENT)
-#define NUD_CONNECTED (NUD_PERMANENT | NUD_NOARP | NUD_REACHABLE)
+#define NUD_BROADCAST (NUD_PERMANENT | NUD_REACHABLE)
+#define NUD_LOCAL (NUD_PERMANENT | NUD_REACHABLE)
 
+/* Number of seconds before the NCE times out */
+#define ARP_TIMEOUT 30
 
-/* Maximum number of retransmissions of multicast solicits */
-#define MAX_MULTICAST_SOLICIT 3 /* 3 transmissions */
-
-/* Number of ticks between address resolution messages */
-#define RETRANS_TIMER IP_TICKS_SECOND /* One second */
-
+/* Number of seconds between ARP transmissions */
+#define ARP_RATE 10
 
 extern NEIGHBOR_CACHE_TABLE NeighborCache[NB_HASHMASK + 1];
 
@@ -84,7 +73,8 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
     PIP_ADDRESS Address,
     PVOID LinkAddress,
     UINT LinkAddressLength,
-    UCHAR Type);
+    UCHAR Type,
+    UINT EventTimer);
 
 VOID NBUpdateNeighbor(
     PNEIGHBOR_CACHE_ENTRY NCE,
