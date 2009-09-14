@@ -12,13 +12,109 @@
 
 #include "appwiz.h"
 
+BOOL
+IsShortcut(HKEY hKey)
+{
+    WCHAR Value[10];
+    DWORD Size;
+    DWORD Type;
+
+    Size = sizeof(Value);
+    if (RegQueryValueExW(hKey, L"IsShortcut", NULL, &Type, (LPBYTE)Value, &Size) != ERROR_SUCCESS)
+        return FALSE;
+
+    if (Type != REG_SZ)
+        return FALSE;
+
+    return (wcsicmp(Value, L"yes") == 0);
+}
+
+BOOL
+IsExtensionAShortcut(LPWSTR lpExtension)
+{
+    HKEY hKey;
+    WCHAR Buffer[100];
+    DWORD Size;
+    DWORD Type;
+
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, lpExtension, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    if (IsShortcut(hKey))
+    {
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+
+    Size = sizeof(Buffer);
+    if (RegQueryValueEx(hKey, NULL, NULL, &Type, (LPBYTE)Buffer, &Size) != ERROR_SUCCESS || Type != REG_SZ)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    RegCloseKey(hKey);
+
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, Buffer, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+
+    if (IsShortcut(hKey))
+    {
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+
+    RegCloseKey(hKey);
+    return FALSE;
+}
 
 BOOL
 CreateShortcut(PCREATE_LINK_CONTEXT pContext)
 {
-    IShellLinkW *pShellLink;
+    IShellLinkW *pShellLink, *pSourceShellLink;
     IPersistFile *pPersistFile;
     HRESULT hr;
+    WCHAR Path[MAX_PATH];
+    LPWSTR lpExtension;
+
+    /* get the extension */
+    lpExtension = wcsrchr(pContext->szTarget, '.');
+
+    if (IsExtensionAShortcut(lpExtension))
+    {
+        hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL, &IID_IShellLink, (void**)&pSourceShellLink);
+
+        if (hr != S_OK)
+            return FALSE;
+
+        hr = pSourceShellLink->lpVtbl->QueryInterface(pSourceShellLink, &IID_IPersistFile, (void**)&pPersistFile);
+        if (hr != S_OK)
+        {
+            pSourceShellLink->lpVtbl->Release(pSourceShellLink);
+            return FALSE;
+        }
+
+        hr = pPersistFile->lpVtbl->Load(pPersistFile, (LPCOLESTR)pContext->szTarget, STGM_READ);
+        pPersistFile->lpVtbl->Release(pPersistFile);
+
+        if (hr != S_OK)
+        {
+            pSourceShellLink->lpVtbl->Release(pSourceShellLink);
+            return FALSE;
+        }
+
+        hr = pSourceShellLink->lpVtbl->GetPath(pSourceShellLink, Path, sizeof(Path) / sizeof(WCHAR), NULL, 0);
+        pSourceShellLink->lpVtbl->Release(pSourceShellLink);
+
+        if (hr != S_OK)
+        {
+            return FALSE;
+        }
+    }
+    else
+    {
+        wcscpy(Path, pContext->szTarget);
+    }
 
     hr = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_ALL,
                    &IID_IShellLink, (void**)&pShellLink);
@@ -27,7 +123,7 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
         return FALSE;
 
 
-    pShellLink->lpVtbl->SetPath(pShellLink, pContext->szTarget);
+    pShellLink->lpVtbl->SetPath(pShellLink, Path);
     pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
     pShellLink->lpVtbl->SetWorkingDirectory(pShellLink, pContext->szWorkingDirectory);
 
