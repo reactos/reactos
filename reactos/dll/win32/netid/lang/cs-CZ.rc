@@ -76,6 +76,7 @@ BEGIN
 	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Poznámka: Identifikaci tohoto poèítaèe mohou zmìnit pouze administrátoøi."
     1022 "Poznámka: Identifikace poèítaèe nemùže být zmìnìna z následujících dùvodù:"
+	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / and ?"
     3210 "&Detaily >>"
     3220 "<< &Detaily"
 	4000 "Information"

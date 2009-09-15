@@ -14,6 +14,12 @@
 #include <prsht.h>
 #include "resource.h"
 
+static INT_PTR CALLBACK
+NetIDPageProc(IN HWND hwndDlg,
+              IN UINT uMsg,
+              IN WPARAM wParam,
+              IN LPARAM lParam);
+
 static HINSTANCE hDllInstance;
 
 
@@ -58,6 +64,28 @@ DisableControls(HWND hDlg)
 }
 
 static
+BOOL
+IsValidComputerName(LPCWSTR s)
+{
+    int i;
+
+    for (i = 0; i <= wcslen(s); i++)
+    {
+        if (s[i] == L'!' || s[i] == L'@' || s[i] == L'#' || s[i] == L'$'
+            || s[i] == L'^' || s[i] == L'&' || s[i] == L'\\' || s[i] == L'|'
+            || s[i] == L')' || s[i] == L'(' || s[i] == L'{' || s[i] == L'"'
+            || s[i] == L'}' || s[i] == L'~' || s[i] == L'/' || s[i] == L'\''
+            || s[i] == L'=' || s[i] == L':' || s[i] == L';' || s[i] == L'+'
+            || s[i] == L'<' || s[i] == L'>' || s[i] == L'?' || s[i] == L'['
+            || s[i] == L']' || s[i] == L'`' || s[i] == L'%' || s[i] == L'_'
+            || s[i] == L'.')
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+static
 INT_PTR CALLBACK
 NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -74,6 +102,8 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 
             if (LoadString(hDllInstance, 25, MsgText, sizeof(MsgText) / sizeof(TCHAR)))
                 SetDlgItemText(hDlg, 1017, MsgText);
+
+            SendMessage(GetDlgItem(hDlg, 1002), EM_SETLIMITTEXT, MAX_COMPUTERNAME_LENGTH, 0);
 
             if (GetComputerName(ComputerName, &Size))
             {
@@ -143,6 +173,16 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
         {
             switch (LOWORD(wParam))
             {
+                case 1002:
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        TCHAR szText[MAX_COMPUTERNAME_LENGTH + 1];
+
+                        GetWindowText(GetDlgItem(hDlg, 1002), szText, MAX_COMPUTERNAME_LENGTH + 1);
+                        SetDlgItemText(hDlg, 1001, szText);
+                    }
+                    break;
+
                 case 1008: /* Domain radio button */
                 case 1004: /* Workgroup radio button */
                     if (SendDlgItemMessage(hDlg, 1008, BM_GETCHECK, 0, 0) == BST_CHECKED)
@@ -172,13 +212,24 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                         {
                             if (_tcscmp(ComputerName, NewComputerName) != 0)
                             {
-                                if (!SetComputerName(NewComputerName))
+                                if (!IsValidComputerName(NewComputerName))
+                                {
+                                    TCHAR szText[MAX_PATH], szMsgText[MAX_PATH];
+
+                                    LoadString(hDllInstance, 1030, szText, sizeof(szText) / sizeof(TCHAR));
+
+                                    swprintf(szMsgText, szText, NewComputerName);
+                                    MessageBox(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
+                                    SetFocus(GetDlgItem(hDlg, 1002));
+                                    break;
+                                }
+                                else if (!SetComputerName(NewComputerName))
                                 {
                                     TCHAR szMsgText[MAX_PATH];
 
                                     LoadString(hDllInstance, 4001, szMsgText, sizeof(szMsgText) / sizeof(TCHAR));
 
-                                    MessageBox(0, szMsgText, NULL, MB_OK | MB_ICONERROR);
+                                    MessageBox(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
                                 }
                                 else
                                 {
@@ -188,6 +239,8 @@ NetworkPropDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                                     LoadString(hDllInstance, 24, szMsgText, sizeof(szMsgText) / sizeof(TCHAR));
 
                                     MessageBox(hDlg, szMsgText, szMsgTitle, MB_OK | MB_ICONINFORMATION);
+
+                                    NetIDPageProc(GetParent(hDlg), WM_INITDIALOG, 0, 0);
                                 }
                             }
                         }

@@ -78,6 +78,7 @@ BEGIN
 	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Uwaga: Tylko Administratorzy mog¹ zmieniaæ identyfikator tego komputera."
     1022 "Uwaga: Identyfikator tego komputera nie zosta³ zmieniony, powód:"
+	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / and ?"
     3210 "&Szczegó³y >>"
     3220 "<< &Szczegó³y"
 	4000 "Information"

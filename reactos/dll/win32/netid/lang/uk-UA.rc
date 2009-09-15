@@ -78,6 +78,7 @@ BEGIN
 	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Примітка: змінити ідентифікацію цього комп'ютера можуть лише адміністратори."
     1022 "Примітка: змінити ідентифікацію цього комп'ютера неможливо, оскільки:"
+	1030 "The new computer name ""%s"" contains characters which are not allowed. Characters which are not allowed include ` ~ ! @ # $ %% ^ & * ( ) = + _ [ ] { } \\ | ; : ' \" , . < > / and ?"
     3210 "&Подробиці >>"
     3220 "<< &Подробиці"
 	4000 "Information"
