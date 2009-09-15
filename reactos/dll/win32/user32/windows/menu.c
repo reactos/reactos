@@ -4234,7 +4234,12 @@ EndMenu(VOID)
 HMENU WINAPI
 GetMenu(HWND hWnd)
 {
-  return NtUserGetMenu(hWnd);
+       PWND Wnd = ValidateHwnd(hWnd);
+
+       if (!Wnd)
+               return NULL;
+
+       return (HMENU)Wnd->IDMenu;
 }
 
 

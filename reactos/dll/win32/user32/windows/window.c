@@ -1129,14 +1129,12 @@ GetWindowModuleFileNameA(HWND hwnd,
                          LPSTR lpszFileName,
                          UINT cchFileNameMax)
 {
-    HINSTANCE hWndInst;
+    PWND Wnd = ValidateHwnd(hwnd);
 
-    if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
-    {
+    if (!Wnd)
         return 0;
-    }
 
-    return GetModuleFileNameA(hWndInst, lpszFileName, cchFileNameMax);
+    return GetModuleFileNameA(Wnd->hModule, lpszFileName, cchFileNameMax);
 }
 
 
@@ -1148,14 +1146,12 @@ GetWindowModuleFileNameW(HWND hwnd,
                          LPWSTR lpszFileName,
                          UINT cchFileNameMax)
 {
-    HINSTANCE hWndInst;
+       PWND Wnd = ValidateHwnd(hwnd);
 
-    if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
-    {
+    if (!Wnd)
         return 0;
-    }
 
-    return GetModuleFileNameW(hWndInst, lpszFileName, cchFileNameMax);
+    return GetModuleFileNameW( Wnd->hModule, lpszFileName, cchFileNameMax );
 }
 
 

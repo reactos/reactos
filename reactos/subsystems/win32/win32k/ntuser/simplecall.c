@@ -178,35 +178,6 @@ NtUserCallOneParam(
              }
          }
 
-      case ONEPARAM_ROUTINE_GETMENU:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD Result;
-
-            if(!(Window = UserGetWindowObject((HWND)Param)))
-            {
-               RETURN( FALSE);
-            }
-
-            Result = (DWORD)Window->Wnd->IDMenu;
-
-            RETURN( Result);
-         }
-
-      case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD Result;
-
-            Window = UserGetWindowObject((HWND)Param);
-            if(!Window)
-            {
-               RETURN( FALSE);
-            }
-            Result = Window->Wnd->Unicode;
-            RETURN( Result);
-         }
-
       case ONEPARAM_ROUTINE_WINDOWFROMDC:
          RETURN( (DWORD)IntWindowFromDC((HDC)Param));
 
@@ -225,20 +196,6 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
          RETURN( (DWORD)IntSetCaretBlinkTime((UINT)Param));
-
-      case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD Result;
-
-            if(!(Window = UserGetWindowObject((HWND)Param)))
-            {
-               RETURN( FALSE);
-            }
-
-            Result = (DWORD)Window->Wnd->hModule;
-            RETURN( Result);
-         }
 
       case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
          RETURN( (DWORD)MsqSetMessageExtraInfo((LPARAM)Param));
@@ -456,25 +413,6 @@ NtUserCallTwoParam(
                Ret = (DWORD)MenuObject->MenuInfo.Height;
             IntReleaseMenuObject(MenuObject);
             RETURN( Ret);
-         }
-      case TWOPARAM_ROUTINE_SETMENUITEMRECT:
-         {
-            BOOL Ret;
-            SETMENUITEMRECT smir;
-            PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
-            if(!MenuObject)
-               RETURN( 0);
-
-            if(!NT_SUCCESS(MmCopyFromCaller(&smir, (PVOID)Param2, sizeof(SETMENUITEMRECT))))
-            {
-               IntReleaseMenuObject(MenuObject);
-               RETURN( 0);
-            }
-
-            Ret = IntSetMenuItemRect(MenuObject, smir.uItem, smir.fByPosition, &smir.rcRect);
-
-            IntReleaseMenuObject(MenuObject);
-            RETURN( (DWORD)Ret);
          }
 
       case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
