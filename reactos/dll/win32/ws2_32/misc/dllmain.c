@@ -39,17 +39,7 @@ INT
 EXPORT
 WSAGetLastError(VOID)
 {
-    PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
-
-    if (p)
-    {
-        return p->LastErrorValue;
-    }
-    else
-    {
-        /* FIXME: What error code should we use here? Can this even happen? */
-        return ERROR_BAD_ENVIRONMENT;
-    }
+    return GetLastError();
 }
 
 
@@ -60,10 +50,7 @@ VOID
 EXPORT
 WSASetLastError(IN INT iError)
 {
-    PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
-
-    if (p)
-        p->LastErrorValue = iError;
+    SetLastError(iError);
 }
 
 
