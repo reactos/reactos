@@ -493,7 +493,7 @@ NtUserRealInternalGetMessage                     6
 NtUserRealWaitMessageEx                          2
 NtUserRedrawWindow                               4
 NtUserRegisterClassExWOW                         7
-NtUserRegisterUserApiHook                        2
+NtUserRegisterUserApiHook                        4
 NtUserRegisterHotKey                             4
 NtUserRegisterRawInputDevices                    3
 NtUserRegisterTasklist                           1

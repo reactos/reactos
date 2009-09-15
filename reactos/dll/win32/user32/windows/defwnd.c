@@ -1879,10 +1879,10 @@ DefWndImmIsUIMessageW(HWND hwndIME, UINT msg, WPARAM wParam, LPARAM lParam)
 
 
 LRESULT WINAPI
-DefWindowProcA(HWND hWnd,
-	       UINT Msg,
-	       WPARAM wParam,
-	       LPARAM lParam)
+RealDefWindowProcA(HWND hWnd,
+                   UINT Msg,
+                   WPARAM wParam,
+                   LPARAM lParam)
 {
     LRESULT Result = 0;
     PWND Wnd;
@@ -2032,10 +2032,10 @@ DefWindowProcA(HWND hWnd,
 
 
 LRESULT WINAPI
-DefWindowProcW(HWND hWnd,
-	       UINT Msg,
-	       WPARAM wParam,
-	       LPARAM lParam)
+RealDefWindowProcW(HWND hWnd,
+                   UINT Msg,
+                   WPARAM wParam,
+                   LPARAM lParam)
 {
     LRESULT Result = 0;
     PWND Wnd;
@@ -2175,3 +2175,68 @@ DefWindowProcW(HWND hWnd,
     return Result;
 }
 
+LRESULT WINAPI
+DefWindowProcA(HWND hWnd,
+	       UINT Msg,
+	       WPARAM wParam,
+	       LPARAM lParam)
+{
+   BOOL Hook, msgOverride;
+   LRESULT Result = 0;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+   if (Hook)
+      msgOverride = IsMsgOverride(Msg, &guah.DefWndProcArray);
+
+   /* Bypass SEH and go direct. */
+   if (!Hook || !msgOverride)
+      return RealDefWindowProcA(hWnd, Msg, wParam, lParam);
+
+   _SEH2_TRY
+   {
+      Result = guah.DefWindowProcA(hWnd, Msg, wParam, lParam);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Result;
+}
+
+LRESULT WINAPI
+DefWindowProcW(HWND hWnd,
+	       UINT Msg,
+	       WPARAM wParam,
+	       LPARAM lParam)
+{
+   BOOL Hook, msgOverride;
+   LRESULT Result = 0;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+   if (Hook)
+      msgOverride = IsMsgOverride(Msg, &guah.DefWndProcArray);
+
+   /* Bypass SEH and go direct. */
+   if (!Hook || !msgOverride)
+      return RealDefWindowProcW(hWnd, Msg, wParam, lParam);
+
+   _SEH2_TRY
+   {
+      Result = guah.DefWindowProcW(hWnd, Msg, wParam, lParam);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Result;
+}

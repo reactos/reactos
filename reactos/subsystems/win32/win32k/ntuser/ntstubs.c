@@ -949,13 +949,17 @@ NtUserRealWaitMessageEx(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRegisterUserApiHook(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    PUNICODE_STRING m_dllname1,
+    PUNICODE_STRING m_funname1,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
 {
+    UserEnterExclusive();
     UNIMPLEMENTED;
+    UserLeave();
     return 0;
 }
 
@@ -1080,7 +1084,7 @@ NtUserPaintMenuBar(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserUnregisterUserApiHook(VOID)
 {

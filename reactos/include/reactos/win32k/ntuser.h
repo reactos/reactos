@@ -560,6 +560,7 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define COLOR_LAST COLOR_MENUBAR
 #define MAX_MB_STRINGS 11
 
+#define SRVINFO_APIHOOK 0x0010
 #define SRVINFO_METRICS 0x0020
 
 typedef struct tagOEMBITMAPINFO
@@ -2359,11 +2360,13 @@ NtUserRegisterRawInputDevices(
     IN UINT uiNumDevices,
     IN UINT cbSize);
 
-DWORD
+BOOL
 NTAPI
 NtUserRegisterUserApiHook(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2);
+    PUNICODE_STRING m_dllname1,
+    PUNICODE_STRING m_funname1,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4);
 
 BOOL
 NTAPI
@@ -2875,7 +2878,7 @@ NTAPI
 NtUserUnregisterHotKey(HWND hWnd,
 		       int id);
 
-DWORD
+BOOL
 NTAPI
 NtUserUnregisterUserApiHook(VOID);
 

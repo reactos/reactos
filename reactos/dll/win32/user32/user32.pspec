@@ -194,7 +194,7 @@
 @ stdcall EditWndProc(long long long long) EditWndProcA
 @ stdcall EmptyClipboard() NtUserEmptyClipboard
 @ stdcall EnableMenuItem(long long long)
-@ stdcall EnableScrollBar(long long long) NtUserEnableScrollBar
+@ stdcall EnableScrollBar(long long long)
 @ stdcall EnableWindow(long long)
 @ stdcall EndDeferWindowPos(long)
 @ stdcall EndDialog(long long)
@@ -557,7 +557,7 @@
 @ stdcall RegisterShellHookWindow(long)
 @ stdcall RegisterSystemThread(long long)
 @ stdcall RegisterTasklist(long) NtUserRegisterTasklist
-@ stub RegisterUserApiHook
+@ stdcall RegisterUserApiHook(ptr)
 @ stdcall RegisterWindowMessageA(str)
 @ stdcall RegisterWindowMessageW(wstr)
 @ stdcall ReleaseCapture()
@@ -711,7 +711,7 @@
 @ stdcall UnregisterDeviceNotification(long)
 @ stdcall UnregisterHotKey(long long) NtUserUnregisterHotKey
 @ stub UnregisterMessagePumpHook
-@ stub UnregisterUserApiHook
+@ stdcall UnregisterUserApiHook() NtUserUnregisterUserApiHook
 @ stdcall UpdateLayeredWindow(long long ptr ptr long ptr long ptr long)
 @ stdcall UpdateLayeredWindowIndirect(long ptr)
 @ stdcall UpdatePerUserSystemParameters(long long)

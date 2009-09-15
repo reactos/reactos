@@ -1875,6 +1875,12 @@ GetFocus(VOID)
     return (HWND)NtUserGetThreadState(THREADSTATE_FOCUSWINDOW);
 }
 
+DWORD WINAPI
+GetRealWindowOwner(HWND hwnd)
+{
+    return NtUserQueryWindow(hwnd, QUERY_WINDOW_REAL_ID);
+}
+
 /*
  * @implemented
  */

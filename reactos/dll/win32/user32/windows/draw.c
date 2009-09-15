@@ -1437,7 +1437,7 @@ cleanup:
  * @implemented
  */
 BOOL WINAPI
-DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
+RealDrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
     if (GetMapMode(hDC) != MM_TEXT)
         return FALSE;
@@ -1459,6 +1459,32 @@ DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
             return UITOOLS95_DrawFrameScroll(hDC, rc, uState);
     }
     return FALSE;
+}
+
+BOOL WINAPI
+DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
+{
+   BOOL Hook, Ret = FALSE;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+   /* Bypass SEH and go direct. */
+   if (!Hook) return RealDrawFrameControl(hDC, rc, uType, uState);
+
+   _SEH2_TRY
+   {
+      Ret = guah.DrawFrameControl(hDC, rc, uType, uState);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
 }
 
 /*
