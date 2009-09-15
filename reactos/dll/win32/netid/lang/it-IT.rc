@@ -68,8 +68,11 @@ BEGIN
     22 "Benvenuto al gruppo di lavoro %1."
     23 "Benvenuto al dominio %1."
     24 "Il computer deve essre riavviato per rendere operative queste modifiche."
+	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Nota: Solo gli Amministratori possono cambiare l'identificazione di questo computer."
     1022 "Nota: L'identificazione di questo computer non può essere cambiata perchè:"
     3210 "&Dettagli >>"
     3220 "<< &Dettagli"
+	4000 "Information"
+	4001 "Can't set new a computer name!"
 END

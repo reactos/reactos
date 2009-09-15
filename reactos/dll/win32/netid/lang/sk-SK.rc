@@ -74,8 +74,11 @@ BEGIN
     22 "Vitajte v pracovnej skupine %1."
     23 "Vitajte v doméne %1."
     24 "Aby sa prejavili vykonané zmeny, musíte reštartova poèítaè."
+	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Poznámka: Iba správcovia môžu zmeni identifikáciu tohto poèítaèa."
     1022 "Poznámka: Identifikácia poèítaèa nemôže by zmenená, lebo:"
     3210 "&Podrobnosti >>"
     3220 "<< &Podrobnosti"
+	4000 "Information"
+	4001 "Can't set new a computer name!"
 END

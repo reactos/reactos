@@ -67,8 +67,11 @@ BEGIN
     22 "Welkom bij de werkgoep %1."
     23 "Welkom bij het domein %1."
     24 "U moet de computer herstarten om de wijzigingen van kracht te laten gaan."
+	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Let op: Alleen Administrators mogen de indentificatie van deze computer aanpassen."
     1022 "Let op: De indentificatie van deze computer kan niet gewijzigd worden omdat:"
     3210 "&Details >>"
     3220 "<< &Details"
+	4000 "Information"
+	4001 "Can't set new a computer name!"
 END

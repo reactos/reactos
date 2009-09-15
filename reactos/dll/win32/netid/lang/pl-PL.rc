@@ -75,8 +75,11 @@ BEGIN
     22 "Witamy w grupie roboczej %1."
     23 "Witamy w domenie %1."
     24 "Musisz zrestartowaæ komputer aby zmiany odnios³y skutek."
+	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Uwaga: Tylko Administratorzy mog¹ zmieniaæ identyfikator tego komputera."
     1022 "Uwaga: Identyfikator tego komputera nie zosta³ zmieniony, powód:"
     3210 "&Szczegó³y >>"
     3220 "<< &Szczegó³y"
+	4000 "Information"
+	4001 "Can't set new a computer name!"
 END

@@ -67,8 +67,11 @@ BEGIN
     22 "Velkommen til %1 arbeidsgruppen."
     23 "Velkommen til %1 domene."
     24 "Du må starte denne datamaskinen på nytt for at endringene skal tre i kraft."
+	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "OBS: Bare administratorer kan endre identifisering for denne datamaskinen."
     1022 "OBS: Identifisering for datamaskinen kunne ikke endres fordi:"
     3210 "&Detaljer >>"
     3220 "<< &Detaljer"
+	4000 "Information"
+	4001 "Can't set new a computer name!"
 END

@@ -73,8 +73,11 @@ BEGIN
     22 "Vítejte v pracovní skupinì %1."
     23 "Vítejte v doménì %1."
     24 "Aby se zmìny mohly projevit, musí být poèítaè restartován."
+	25 "You can change the name and the membership of this computer. Changes may affect access to network resources."
     1021 "Poznámka: Identifikaci tohoto poèítaèe mohou zmìnit pouze administrátoøi."
     1022 "Poznámka: Identifikace poèítaèe nemùže být zmìnìna z následujících dùvodù:"
     3210 "&Detaily >>"
     3220 "<< &Detaily"
+	4000 "Information"
+	4001 "Can't set new a computer name!"
 END
