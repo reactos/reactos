@@ -1284,10 +1284,108 @@ ISF_Desktop_ISFHelper_fnDeleteItems (ISFHelper * iface, UINT cidl, LPCITEMIDLIST
 static HRESULT WINAPI
 ISF_Desktop_ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl, LPCITEMIDLIST * apidl)
 {
+    IPersistFolder2 *ppf2 = NULL;
+    WCHAR szSrcPath[MAX_PATH];
+    WCHAR szTargetPath[MAX_PATH];
+    SHFILEOPSTRUCTW op;
+    LPITEMIDLIST pidl;
+    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList;
+    int res;
+    STRRET strRet;
     IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
     TRACE ("(%p)->(%p,%u,%p)\n", This, pSFFrom, cidl, apidl);
-    return E_NOTIMPL;
+
+    IShellFolder_QueryInterface (pSFFrom, &IID_IPersistFolder2, (LPVOID *) & ppf2);
+    if (ppf2) 
+    {
+        if (FAILED(IPersistFolder2_GetCurFolder (ppf2, &pidl)))
+        {
+            IPersistFolder2_Release(ppf2);
+            return E_FAIL;
+        }
+        IPersistFolder2_Release(ppf2);
+
+        if (FAILED(IShellFolder_GetDisplayNameOf(pSFFrom, pidl, SHGDN_FORPARSING, &strRet)))
+        {
+            SHFree (pidl);
+            return E_FAIL;
+        }
+
+        if (FAILED(StrRetToBufW(&strRet, pidl, szSrcPath, MAX_PATH)))
+        {
+            SHFree (pidl);
+            return E_FAIL;
+        }
+        SHFree (pidl);
+
+        pszSrc = PathAddBackslashW (szSrcPath);
+
+        wcscpy(szTargetPath, This->sPathTarget);
+        pszTarget = PathAddBackslashW (szTargetPath);
+
+        pszSrcList = build_paths_list(szSrcPath, cidl, apidl);
+        pszTargetList = build_paths_list(szTargetPath, cidl, apidl);
+
+        if (!pszSrcList || !pszTargetList)
+        {
+            if (pszSrcList)
+                HeapFree(GetProcessHeap(), 0, pszSrcList);
+
+            if (pszTargetList)
+                HeapFree(GetProcessHeap(), 0, pszTargetList);
+
+            SHFree (pidl);
+            IPersistFolder2_Release (ppf2);
+            return E_OUTOFMEMORY;
+        }
+        ZeroMemory(&op, sizeof(op));
+        if (!pszSrcList[0])
+        {
+            /* remove trailing backslash */
+            pszSrc--;
+            pszSrc[0] = L'\0';
+            op.pFrom = szSrcPath;
+        }
+        else
+        {
+            op.pFrom = pszSrcList;
+        }
+
+        if (!pszTargetList[0])
+        {
+            /* remove trailing backslash */
+            if (pszTarget - szTargetPath > 3)
+            {
+                pszTarget--;
+                pszTarget[0] = L'\0';
+            }
+            else
+            {
+                pszTarget[1] = L'\0';
+            }
+
+            op.pTo = szTargetPath;
+        }
+        else
+        {
+            op.pTo = pszTargetList;
+        }
+        op.hwnd = GetActiveWindow();
+        op.wFunc = FO_COPY;
+        op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
+
+        res = SHFileOperationW(&op);
+
+        HeapFree(GetProcessHeap(), 0, pszSrc);
+        HeapFree(GetProcessHeap(), 0, pszTarget);
+
+        if (res)
+            return E_FAIL;
+        else
+            return S_OK;
+    }
+    return E_FAIL;
 }
 
 static const ISFHelperVtbl vt_FSFldr_ISFHelper =

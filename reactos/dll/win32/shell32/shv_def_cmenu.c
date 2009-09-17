@@ -1083,9 +1083,18 @@ DoPaste(
             IPersistFolder2_Release(ppf2);
             if (SUCCEEDED(hr))
             {
-                hr = IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfTarget);
+                if (_ILIsDesktop(pidl))
+                {
+                    /* use desktop shellfolder */
+                    psfTarget = psfDesktop;
+                }
+                else
+                {
+                    /* retrieve target desktop folder */
+                    hr = IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfTarget);
+                }
+                TRACE("psfTarget %x %p, Desktop %u\n", hr, psfTarget, _ILIsDesktop(pidl));
                 ILFree(pidl);
-                TRACE("psfTarget %p\n", psfTarget);
             }
         }
     }
@@ -1146,7 +1155,7 @@ DoPaste(
     _ILFreeaPidl(apidl, lpcida->cidl);
     ReleaseStgMedium(&medium);
     IDataObject_Release(pda);
-ERR("CP result %x\n",hr);
+    TRACE("CP result %x\n",hr);
     return S_OK;
 }
 
