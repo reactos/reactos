@@ -1152,7 +1152,7 @@ NtUserGetClipboardSequenceNumber(VOID)
 
     WinSta = UserGetProcessWindowStation();
 
-    Status = IntValidateWindowStationHandle(WinSta, UserMode, 0 /*WINSTA_ACCESSCLIPBOARD*/, &WinStaObj);
+    Status = IntValidateWindowStationHandle(WinSta, KernelMode, WINSTA_ACCESSCLIPBOARD, &WinStaObj);
 
     if (!NT_SUCCESS(Status))
     {
