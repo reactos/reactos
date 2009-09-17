@@ -29,6 +29,7 @@
 typedef struct
 {
     ULONG Index;
+    ULONG ProcessId;
 } PROCESS_PAGE_LIST_ITEM, *LPPROCESS_PAGE_LIST_ITEM;
 
 HWND hProcessPage;                        /* Process List Property Page */
@@ -51,6 +52,7 @@ void CommaSeparateNumberString(LPWSTR strNumber, int nMaxCount);
 void ProcessPageShowContextMenu(DWORD dwProcessId);
 BOOL PerfDataGetText(ULONG Index, ULONG ColumnIndex, LPTSTR lpText, int nMaxCount);
 DWORD WINAPI ProcessPageRefreshThread(void *lpParameter);
+int ProcessRunning(ULONG ProcessId);
 
 DWORD GetSelectedProcessId(void)
 {
@@ -411,12 +413,9 @@ DWORD WINAPI ProcessPageRefreshThread(void *lpParameter)
 void UpdateProcesses()
 {
     int i;
-    BOOL found = FALSE;
     ULONG l;
-    ULONG pid;
     LV_ITEM    item;
     LPPROCESS_PAGE_LIST_ITEM pData;
-    PPERFDATA  pPerfData;
 
     /* Remove old processes */
     for (i = 0; i < ListView_GetItemCount(hProcessPageListCtrl); i++)
@@ -426,19 +425,9 @@ void UpdateProcesses()
         item.iItem = i;
         (void)ListView_GetItem(hProcessPageListCtrl, &item);
         pData = (LPPROCESS_PAGE_LIST_ITEM)item.lParam;
-        (void)PerfDataGet(pData->Index, &pPerfData);
-        pid = PerfDataGetProcessId(pData->Index);
-        for (l = 0; l < PerfDataGetProcessCount(); l++)
+        if (!ProcessRunning(pData->ProcessId))
         {
-            if (PerfDataGetProcessId(l) == pid)
-            {
-                found = TRUE;
-                break;
-            }
-        }
-        if (!found)
-        {
-            (void)ListView_DeleteItem(hApplicationPageListCtrl, i);
+            (void)ListView_DeleteItem(hProcessPageListCtrl, i);
             HeapFree(GetProcessHeap(), 0, pData);
         }
     }
@@ -450,6 +439,29 @@ void UpdateProcesses()
     {
         (void)ListView_SortItems(hProcessPageListCtrl, ProcessPageCompareFunc, NULL);
     }
+}
+
+BOOL ProcessRunning(ULONG ProcessId) 
+{
+	HANDLE hProcess;
+	DWORD exitCode;
+
+	if (ProcessId == 0) {
+		return TRUE;
+	}
+	
+	hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ProcessId);
+	if (hProcess == NULL) {
+		return FALSE;
+	}
+
+	if (GetExitCodeProcess(hProcess, &exitCode)) {
+		CloseHandle(hProcess);
+		return (exitCode == STILL_ACTIVE);
+	}
+
+	CloseHandle(hProcess);
+	return FALSE;
 }
 
 void AddProcess(ULONG Index)
@@ -480,7 +492,8 @@ void AddProcess(ULONG Index)
     {
         pData = (LPPROCESS_PAGE_LIST_ITEM)HeapAlloc(GetProcessHeap(), 0, sizeof(PROCESS_PAGE_LIST_ITEM));
         pData->Index = Index;
-
+        pData->ProcessId = pid;
+        
         /* Add the item to the list */
         memset(&item, 0, sizeof(LV_ITEM));
         item.mask = LVIF_TEXT|LVIF_PARAM;
