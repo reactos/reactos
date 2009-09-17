@@ -1072,9 +1072,22 @@ DoPaste(
     }
     else
     {
-        /* target folder is desktop because cidl is zero */
-        psfTarget = psfDesktop;
-        hr = S_OK;
+        IPersistFolder2 *ppf2 = NULL;
+        LPITEMIDLIST pidl;
+
+        /* cidl is zero due to explorer view */
+        hr = IShellFolder_QueryInterface (This->dcm.psf, &IID_IPersistFolder2, (LPVOID *) &ppf2);
+        if (SUCCEEDED(hr))
+        {
+            hr = IPersistFolder2_GetCurFolder (ppf2, &pidl);
+            IPersistFolder2_Release(ppf2);
+            if (SUCCEEDED(hr))
+            {
+                hr = IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfTarget);
+                ILFree(pidl);
+                TRACE("psfTarget %p\n", psfTarget);
+            }
+        }
     }
 
     if (FAILED(hr))
@@ -1133,6 +1146,7 @@ DoPaste(
     _ILFreeaPidl(apidl, lpcida->cidl);
     ReleaseStgMedium(&medium);
     IDataObject_Release(pda);
+ERR("CP result %x\n",hr);
     return S_OK;
 }
 
