@@ -1228,7 +1228,7 @@ KdbpAttachToProcess(
 /*!\brief Calls the main loop ...
  */
 static VOID
-KdbpCallMainLoop()
+KdbpCallMainLoop(VOID)
 {
     KdbpCliMainLoop(KdbEnteredOnSingleStep);
 }
