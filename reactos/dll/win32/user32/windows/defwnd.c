@@ -2181,7 +2181,7 @@ DefWindowProcA(HWND hWnd,
 	       WPARAM wParam,
 	       LPARAM lParam)
 {
-   BOOL Hook, msgOverride;
+   BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
 
    LOADUSERAPIHOOK
@@ -2214,7 +2214,7 @@ DefWindowProcW(HWND hWnd,
 	       WPARAM wParam,
 	       LPARAM lParam)
 {
-   BOOL Hook, msgOverride;
+   BOOL Hook, msgOverride = FALSE;
    LRESULT Result = 0;
 
    LOADUSERAPIHOOK
