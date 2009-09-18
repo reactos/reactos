@@ -168,6 +168,7 @@
 #define IDS_RENAME                  328
 #define IDS_INSERT                  329
 #define IDS_DESCRIPTION             330
+#define IDS_COPY_OF                 331
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

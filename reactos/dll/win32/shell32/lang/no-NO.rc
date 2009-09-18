@@ -751,5 +751,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Installere nye skrifttyper..."
 
         IDS_DEFAULT_CLUSTER_SIZE    "Standard tildelingsstørrelse"
-
+	IDS_COPY_OF                 "Copy of"
 END

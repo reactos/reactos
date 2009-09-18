@@ -751,4 +751,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Instalar Nueva Fuente..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Tamaño asignado por defecto"
+	IDS_COPY_OF                 "Copy of"
 END

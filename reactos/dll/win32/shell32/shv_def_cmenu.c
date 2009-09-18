@@ -1052,7 +1052,12 @@ DoPaste(
         return E_FAIL;
     }
 
-    if (FAILED(IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfFrom)))
+    if (_ILIsDesktop(pidl))
+    {
+        /* use desktop shellfolder */
+        psfFrom = psfDesktop;
+    }
+    else if (FAILED(IShellFolder_BindToObject(psfDesktop, pidl, NULL, &IID_IShellFolder, (LPVOID*)&psfFrom)))
     {
         ERR("no IShellFolder\n");
 

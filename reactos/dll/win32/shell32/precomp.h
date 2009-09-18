@@ -60,6 +60,7 @@
 #include "version.h"
 #include "shellfolder.h"
 #include "xdg.h"
+#include "shellapi.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"

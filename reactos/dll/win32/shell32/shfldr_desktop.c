@@ -1289,8 +1289,8 @@ ISF_Desktop_ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UI
     WCHAR szTargetPath[MAX_PATH];
     SHFILEOPSTRUCTW op;
     LPITEMIDLIST pidl;
-    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList;
-    int res;
+    LPWSTR pszSrc, pszTarget, pszSrcList, pszTargetList, pszFileName;
+    int res, length;
     STRRET strRet;
     IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
@@ -1377,8 +1377,28 @@ ISF_Desktop_ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UI
 
         res = SHFileOperationW(&op);
 
-        HeapFree(GetProcessHeap(), 0, pszSrc);
-        HeapFree(GetProcessHeap(), 0, pszTarget);
+        if (res == DE_SAMEFILE)
+        {
+            length = wcslen(szTargetPath);
+
+
+            pszFileName = wcsrchr(pszSrcList, '\\');
+            pszFileName++;
+
+            if (LoadStringW(shell32_hInstance, IDS_COPY_FROM, pszTarget, MAX_PATH - length))
+            {
+                wcscat(szTargetPath, L" ");
+            }
+
+            wcscat(szTargetPath, pszFileName);
+            op.pTo = szTargetPath;
+
+            res = SHFileOperationW(&op);
+        }
+
+
+        HeapFree(GetProcessHeap(), 0, pszSrcList);
+        HeapFree(GetProcessHeap(), 0, pszTargetList);
 
         if (res)
             return E_FAIL;
