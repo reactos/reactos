@@ -1040,6 +1040,13 @@ UniataFindBusMasterController(
 
     ConfigInfo->AlignmentMask = 0x00000003;
 
+    MasterDev = IsMasterDev(&pciData);
+
+    if(MasterDev) {
+        KdPrint2((PRINT_PREFIX "MasterDev (1)\n"));
+        deviceExtension->NumberChannels = 1;
+    }
+
     found = UniataChipDetect(HwDeviceExtension, &pciData, i, ConfigInfo, &simplexOnly);
     KdPrint2((PRINT_PREFIX "ForceSimplex = %d\n", simplexOnly));
     KdPrint2((PRINT_PREFIX "HwFlags = %x\n (0)", deviceExtension->HwFlags));
@@ -1089,14 +1096,6 @@ UniataFindBusMasterController(
         /* CMD 649, ROSB SWK33, ICH4 */
         KdPrint2((PRINT_PREFIX "UniataFindBusMasterController: UNIATA_NO_DPC (0)\n"));
         deviceExtension->UseDpc = FALSE;
-    }
-
-    MasterDev = IsMasterDev(&pciData);
-
-    if(MasterDev) {
-        KdPrint2((PRINT_PREFIX "MasterDev (1)\n"));
-        deviceExtension->MasterDev = TRUE;
-        deviceExtension->NumberChannels = 1;
     }
 
     if(MasterDev) {
@@ -1242,7 +1241,7 @@ UniataFindBusMasterController(
         deviceExtension->UseDpc = FALSE;
     }
 
-    if(simplexOnly || !MasterDev /*|| (WinVer_Id() > WinVer_NT)*/) {
+    if(simplexOnly && MasterDev /*|| (WinVer_Id() > WinVer_NT)*/) {
         if(deviceExtension->NumberChannels < 2) {
             KdPrint2((PRINT_PREFIX "set NumberChannels = 2\n"));
             deviceExtension->NumberChannels = 2;
