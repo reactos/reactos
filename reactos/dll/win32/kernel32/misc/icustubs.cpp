@@ -65,7 +65,9 @@ int __cdecl _purecall()
 	return 0;
 }
 
+#if defined(__GNUC__)
 __attribute__((alias("_purecall"))) void __cxa_pure_virtual(void);
+#endif
 
 void _assert()
 {

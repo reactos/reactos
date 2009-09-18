@@ -29,8 +29,6 @@
 # if !defined(__MINGW32__) && !defined(__MINGW64__) && !defined(__CYGWIN32__)
 #  define __declspec(x) __attribute__((x))
 # endif
-#else
-# define __attribute__(x) /* nothing */
 #endif
 
 #ifdef _MSC_VER
