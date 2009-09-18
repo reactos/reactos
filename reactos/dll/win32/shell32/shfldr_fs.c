@@ -1357,7 +1357,7 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
             pszFileName = wcsrchr(pszSrcList, '\\');
             pszFileName++;
 
-            if (LoadStringW(shell32_hInstance, IDS_COPY_FROM, pszTarget, MAX_PATH - length))
+            if (LoadStringW(shell32_hInstance, IDS_COPY_OF, pszTarget, MAX_PATH - length))
             {
                 wcscat(szTargetPath, L" ");
             }
