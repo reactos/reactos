@@ -274,8 +274,8 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 	TI_DbgPrint(DEBUG_ROUTER,("This-Route: %s (Sharing %d bits)\n",
 				  A2S(&NCE->Address), Length));
 
-	if(Length >= MaskLength && (Length > BestLength || !BestLength) &&
-           (!(State & NUD_STALE) || !BestState)) {
+	if(Length >= MaskLength && (Length > BestLength || !BestNCE) &&
+           (!(State & NUD_STALE) || !BestNCE)) {
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;
