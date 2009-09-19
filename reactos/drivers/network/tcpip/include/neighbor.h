@@ -41,11 +41,8 @@ typedef struct NEIGHBOR_CACHE_ENTRY {
 
 /* NCE states */
 #define NUD_INCOMPLETE 0x01
-#define NUD_REACHABLE  0x02
-#define NUD_PERMANENT  0x04
-
-#define NUD_BROADCAST (NUD_PERMANENT | NUD_REACHABLE)
-#define NUD_LOCAL (NUD_PERMANENT | NUD_REACHABLE)
+#define NUD_PERMANENT  0x02
+#define NUD_STALE      0x04
 
 /* Number of seconds before the NCE times out */
 #define ARP_TIMEOUT 30

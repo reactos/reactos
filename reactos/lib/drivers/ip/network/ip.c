@@ -212,7 +212,7 @@ VOID IPAddInterfaceRoute( PIP_INTERFACE IF ) {
     /* Add a permanent neighbor for this NTE */
     NCE = NBAddNeighbor(IF, &IF->Unicast,
 			IF->Address, IF->AddressLength,
-			NUD_LOCAL, 0);
+			NUD_PERMANENT, 0);
     if (!NCE) {
 	TI_DbgPrint(MIN_TRACE, ("Could not create NCE.\n"));
         return;
