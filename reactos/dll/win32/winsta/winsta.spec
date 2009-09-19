@@ -103,7 +103,7 @@
 @ stdcall _WinStationBeepOpen(ptr ptr ptr)
 @ stdcall _WinStationBreakPoint(ptr ptr ptr)
 @ stdcall _WinStationCallback(ptr ptr ptr)
-@ stdcall _WinStationCheckForApplicationName(ptr)
+@ stdcall _WinStationCheckForApplicationName(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall _WinStationFUSCanRemoteUserDisconnect(ptr ptr ptr)
 @ stdcall _WinStationGetApplicationInfo(ptr ptr ptr ptr)
 @ stdcall _WinStationNotifyDisconnectPipe()
