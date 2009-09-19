@@ -166,32 +166,32 @@ CsrInsertObject(
         if (ProcessData->HandleTable[i].Object == NULL)
         {
             break;
-	  }
-     }
-   if (i >= ProcessData->HandleTableSize)
-     {
-       Block = RtlAllocateHeap(CsrssApiHeap,
-			       HEAP_ZERO_MEMORY,
-			       (ProcessData->HandleTableSize + 64) * sizeof(CSRSS_HANDLE));
-       if (Block == NULL)
-         {
-           RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-	   return(STATUS_UNSUCCESSFUL);
-         }
-       RtlCopyMemory(Block,
-		     ProcessData->HandleTable,
-		     ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
-       Block = _InterlockedExchangePointer((volatile void*)&ProcessData->HandleTable, Block);
-       RtlFreeHeap( CsrssApiHeap, 0, Block );
-       ProcessData->HandleTableSize += 64;
-     }
-   ProcessData->HandleTable[i].Object = Object;
-   ProcessData->HandleTable[i].Access = Access;
-   ProcessData->HandleTable[i].Inheritable = Inheritable;
-   *Handle = (HANDLE)(ULONG_PTR)((i << 2) | 0x3);
-   _InterlockedIncrement( &Object->ReferenceCount );
-   RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-   return(STATUS_SUCCESS);
+        }
+    }
+    if (i >= ProcessData->HandleTableSize)
+    {
+        Block = RtlAllocateHeap(CsrssApiHeap,
+                                HEAP_ZERO_MEMORY,
+                                (ProcessData->HandleTableSize + 64) * sizeof(CSRSS_HANDLE));
+        if (Block == NULL)
+        {
+            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+            return(STATUS_UNSUCCESSFUL);
+        }
+        RtlCopyMemory(Block,
+                      ProcessData->HandleTable,
+                      ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
+        Block = _InterlockedExchangePointer((void* volatile)&ProcessData->HandleTable, Block);
+        RtlFreeHeap( CsrssApiHeap, 0, Block );
+        ProcessData->HandleTableSize += 64;
+    }
+    ProcessData->HandleTable[i].Object = Object;
+    ProcessData->HandleTable[i].Access = Access;
+    ProcessData->HandleTable[i].Inheritable = Inheritable;
+    *Handle = (HANDLE)((i << 2) | 0x3);
+    _InterlockedIncrement( &Object->ReferenceCount );
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+    return(STATUS_SUCCESS);
 }
 
 NTSTATUS

@@ -51,6 +51,8 @@ static NTSTATUS NTAPI SendComplete
         while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_SEND] ) ) {
 	       NextIrpEntry = RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	       NextIrp = CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
+	       NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	       SendReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 	       NextIrp->IoStatus.Status = STATUS_FILE_CLOSED;
 	       NextIrp->IoStatus.Information = 0;
 	       UnlockBuffers(SendReq->BufferArray, SendReq->BufferCount, FALSE);
@@ -221,8 +223,6 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_SEND;
-
     if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
     {
         PAFD_SEND_INFO_UDP SendReq;
@@ -391,7 +391,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->EventsFired &= ~AFD_EVENT_SEND;
     FCB->PollState &= ~AFD_EVENT_SEND;
 
     PollReeval( FCB->DeviceExt, FCB->FileObject );

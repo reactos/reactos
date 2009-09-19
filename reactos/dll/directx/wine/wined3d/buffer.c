@@ -34,16 +34,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 #define VB_MAXDECLCHANGES     100     /* After that number we stop converting */
 #define VB_RESETDECLCHANGE    1000    /* Reset the changecount after that number of draws */
 
+/* Context activation is done by the caller. */
 static void buffer_create_buffer_object(struct wined3d_buffer *This)
 {
     GLenum error, gl_usage;
-    IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
 
     TRACE("Creating an OpenGL vertex buffer object for IWineD3DVertexBuffer %p Usage(%s)\n",
             This, debug_d3dusage(This->resource.usage));
 
-    /* Make sure that a context is there. Needed in a multithreaded environment. Otherwise this call is a nop */
-    ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
     ENTER_GL();
 
     /* Make sure that the gl error is cleared. Do not use checkGLcall
@@ -200,17 +198,20 @@ static BOOL buffer_process_converted_attribute(struct wined3d_buffer *This,
     return ret;
 }
 
-static BOOL buffer_check_attribute(struct wined3d_buffer *This,
-        const struct wined3d_stream_info_element *attrib, const BOOL check_d3dcolor, const BOOL is_ffp_position,
-        const BOOL is_ffp_color, DWORD *stride_this_run, BOOL *float16_used)
+static BOOL buffer_check_attribute(struct wined3d_buffer *This, const struct wined3d_stream_info *si,
+        UINT attrib_idx, const BOOL check_d3dcolor, const BOOL is_ffp_position, const BOOL is_ffp_color,
+        DWORD *stride_this_run, BOOL *float16_used)
 {
+    const struct wined3d_stream_info_element *attrib = &si->elements[attrib_idx];
     BOOL ret = FALSE;
     WINED3DFORMAT format;
 
     /* Ignore attributes that do not have our vbo. After that check we can be sure that the attribute is
      * there, on nonexistent attribs the vbo is 0.
      */
-    if (attrib->buffer_object != This->buffer_object) return FALSE;
+    if (!(si->use_map & (1 << attrib_idx))
+            || attrib->buffer_object != This->buffer_object)
+        return FALSE;
 
     format = attrib->format_desc->format;
     /* Look for newly appeared conversion */
@@ -257,7 +258,7 @@ static UINT *find_conversion_shift(struct wined3d_buffer *This,
     {
         WINED3DFORMAT format;
 
-        if (strided->elements[i].buffer_object != This->buffer_object) continue;
+        if (!(strided->use_map & (1 << i)) || strided->elements[i].buffer_object != This->buffer_object) continue;
 
         format = strided->elements[i].format_desc->format;
         if (format == WINED3DFMT_R16G16_FLOAT)
@@ -308,6 +309,7 @@ static UINT *find_conversion_shift(struct wined3d_buffer *This,
 static BOOL buffer_find_decl(struct wined3d_buffer *This)
 {
     IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+    const struct wined3d_stream_info *si = &device->strided_streams;
     UINT stride_this_run = 0;
     BOOL float16_used = FALSE;
     BOOL ret = FALSE;
@@ -395,8 +397,7 @@ static BOOL buffer_find_decl(struct wined3d_buffer *This)
         }
         for (i = 0; i < MAX_ATTRIBS; ++i)
         {
-            ret = buffer_check_attribute(This, &device->strided_streams.elements[i],
-                    FALSE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
+            ret = buffer_check_attribute(This, si, i, FALSE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
         }
 
         /* Recalculate the conversion shift map if the declaration has changed,
@@ -405,7 +406,7 @@ static BOOL buffer_find_decl(struct wined3d_buffer *This)
         if (ret && (float16_used || This->conversion_map))
         {
             HeapFree(GetProcessHeap(), 0, This->conversion_shift);
-            This->conversion_shift = find_conversion_shift(This, &device->strided_streams, This->stride);
+            This->conversion_shift = find_conversion_shift(This, si, This->stride);
         }
     }
     else
@@ -415,29 +416,29 @@ static BOOL buffer_find_decl(struct wined3d_buffer *This)
          * the attributes that our current fixed function pipeline implementation cares for.
          */
         BOOL support_d3dcolor = GL_SUPPORT(EXT_VERTEX_ARRAY_BGRA);
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_POSITION],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_POSITION,
                 TRUE, TRUE,  FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_NORMAL],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_NORMAL,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_DIFFUSE],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_DIFFUSE,
                 !support_d3dcolor, FALSE, TRUE,  &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_SPECULAR],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_SPECULAR,
                 !support_d3dcolor, FALSE, TRUE,  &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD0],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD0,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD1],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD1,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD2],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD2,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD3],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD3,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD4],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD4,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD5],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD5,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD6],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD6,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
-        ret = buffer_check_attribute(This, &device->strided_streams.elements[WINED3D_FFP_TEXCOORD7],
+        ret = buffer_check_attribute(This, si, WINED3D_FFP_TEXCOORD7,
                 TRUE, FALSE, FALSE, &stride_this_run, &float16_used) || ret;
 
         if (float16_used) FIXME("Float16 conversion used with fixed function vertex processing\n");
@@ -457,6 +458,7 @@ static BOOL buffer_find_decl(struct wined3d_buffer *This)
     return ret;
 }
 
+/* Context activation is done by the caller. */
 static void buffer_check_buffer_object_size(struct wined3d_buffer *This)
 {
     UINT size = This->conversion_stride ?
@@ -506,29 +508,18 @@ static inline void fixup_d3dcolor(DWORD *dst_color)
 
 static inline void fixup_transformed_pos(float *p)
 {
-    float x, y, z, w;
-
-    /* rhw conversion like in drawStridedSlow */
-    if (p[3] == 1.0 || ((p[3] < eps) && (p[3] > -eps)))
+    /* rhw conversion like in position_float4(). */
+    if (p[3] != 1.0f && p[3] != 0.0f)
     {
-        x = p[0];
-        y = p[1];
-        z = p[2];
-        w = 1.0;
+        float w = 1.0f / p[3];
+        p[0] *= w;
+        p[1] *= w;
+        p[2] *= w;
+        p[3] = w;
     }
-    else
-    {
-        w = 1.0 / p[3];
-        x = p[0] * w;
-        y = p[1] * w;
-        z = p[2] * w;
-    }
-    p[0] = x;
-    p[1] = y;
-    p[2] = z;
-    p[3] = w;
 }
 
+/* Context activation is done by the caller. */
 const BYTE *buffer_get_memory(IWineD3DBuffer *iface, UINT offset, GLuint *buffer_object)
 {
     struct wined3d_buffer *This = (struct wined3d_buffer *)iface;
@@ -588,7 +579,8 @@ static ULONG STDMETHODCALLTYPE buffer_AddRef(IWineD3DBuffer *iface)
     return refcount;
 }
 
-const BYTE *buffer_get_sysmem(struct wined3d_buffer *This)
+/* Context activation is done by the caller. */
+BYTE *buffer_get_sysmem(struct wined3d_buffer *This)
 {
     /* AllocatedMemory exists if the buffer is double buffered or has no buffer object at all */
     if(This->resource.allocatedMemory) return This->resource.allocatedMemory;
@@ -614,7 +606,7 @@ static void STDMETHODCALLTYPE buffer_UnLoad(IWineD3DBuffer *iface)
     {
         IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
 
-        ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+        ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
 
         /* Download the buffer, but don't permanently enable double buffering */
         if(!(This->flags & WINED3D_BUFFER_DOUBLEBUFFER))
@@ -701,6 +693,8 @@ static void STDMETHODCALLTYPE buffer_PreLoad(IWineD3DBuffer *iface)
 
     TRACE("iface %p\n", iface);
 
+    ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
+
     if (!This->buffer_object)
     {
         /* TODO: Make converting independent from VBOs */
@@ -736,7 +730,7 @@ static void STDMETHODCALLTYPE buffer_PreLoad(IWineD3DBuffer *iface)
         if (This->conversion_count > VB_MAXDECLCHANGES)
         {
             FIXME("Too many declaration changes, stopping converting\n");
-            ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+
             ENTER_GL();
             GL_EXTCALL(glDeleteBuffersARB(1, &This->buffer_object));
             checkGLcall("glDeleteBuffersARB");
@@ -809,7 +803,7 @@ static void STDMETHODCALLTYPE buffer_PreLoad(IWineD3DBuffer *iface)
 
         if (!device->isInDraw)
         {
-            ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+            ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
         }
         ENTER_GL();
         GL_EXTCALL(glBindBufferARB(This->buffer_type_hint, This->buffer_object));
@@ -959,7 +953,7 @@ static HRESULT STDMETHODCALLTYPE buffer_Map(IWineD3DBuffer *iface, UINT offset, 
                 IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_INDEXBUFFER);
             }
 
-            ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+            ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
             ENTER_GL();
             GL_EXTCALL(glBindBufferARB(This->buffer_type_hint, This->buffer_object));
             This->resource.allocatedMemory = GL_EXTCALL(glMapBufferARB(This->buffer_type_hint, GL_READ_WRITE_ARB));
@@ -985,6 +979,16 @@ static HRESULT STDMETHODCALLTYPE buffer_Unmap(IWineD3DBuffer *iface)
 
     TRACE("(%p)\n", This);
 
+    /* In the case that the number of Unmap calls > the
+     * number of Map calls, d3d returns always D3D_OK.
+     * This is also needed to prevent Map from returning garbage on
+     * the next call (this will happen if the lock_count is < 0). */
+    if(This->lock_count == 0)
+    {
+        TRACE("Unmap called without a previous Map call!\n");
+        return WINED3D_OK;
+    }
+
     if (InterlockedDecrement(&This->lock_count))
     {
         /* Delay loading the buffer until everything is unlocked */
@@ -1001,7 +1005,7 @@ static HRESULT STDMETHODCALLTYPE buffer_Unmap(IWineD3DBuffer *iface)
             IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_INDEXBUFFER);
         }
 
-        ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+        ActivateContext(device, NULL, CTXUSAGE_RESOURCELOAD);
         ENTER_GL();
         GL_EXTCALL(glBindBufferARB(This->buffer_type_hint, This->buffer_object));
         GL_EXTCALL(glUnmapBufferARB(This->buffer_type_hint));

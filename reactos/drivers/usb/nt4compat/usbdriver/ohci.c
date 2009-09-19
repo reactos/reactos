@@ -72,24 +72,28 @@ extern USB_DEV_MANAGER g_dev_mgr;
  * The erratum (#4) description is incorrect.  AMD's workaround waits
  * till some bits (mostly reserved) are clear; ok for all revs.
  */
-#define read_roothub(hc, register, mask) ({ \
-	ULONG temp = OHCI_READ_PORT_ULONG(&((hc)->regs->roothub.register)); \
-	if (temp == -1) \
-		/*disable (hc)*/; \
-	/*else if (hc->flags & OHCI_QUIRK_AMD756) \
-		while (temp & mask) \
-			temp = ohci_readl (hc, &hc->regs->roothub.register); */ \
-	temp; })
+ULONG
+FORCEINLINE
+read_roothub(POHCI_DEV hc, PULONG reg, ULONG mask)
+{
+	ULONG temp = OHCI_READ_PORT_ULONG(reg);
+	if (temp == -1)
+		/*disable (hc)*/;
+	/*else if (hc->flags & OHCI_QUIRK_AMD756)
+		while (temp & mask)
+			temp = ohci_readl (hc, &hc->regs->roothub.register); */
+	return temp;
+}
 
 static ULONG roothub_a (POHCI_DEV hc)
-	{ return read_roothub (hc, a, 0xfc0fe000); }
+	{ return read_roothub (hc, &hc->regs->roothub.a, 0xfc0fe000); }
 /*
 static inline u32 roothub_b (struct ohci_hcd *hc)
 	{ return ohci_readl (hc, &hc->regs->roothub.b); }
 static inline u32 roothub_status (struct ohci_hcd *hc)
 	{ return ohci_readl (hc, &hc->regs->roothub.status); }
 static u32 roothub_portstatus (struct ohci_hcd *hc, int i)
-	{ return read_roothub (hc, portstatus [i], 0xffe0fce0); }
+	{ return read_roothub (hc, &hc->regs->roothub.portstatus [i], 0xffe0fce0); }
 */
 
 
@@ -1173,6 +1177,12 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 }
 
                 ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+                if (!ptimer)
+                {
+                    purb->status = STATUS_NO_MEMORY;
+                    break;
+                }
+
                 ptimer->threshold = 0;  // within [ 50ms, 60ms ], one tick is 10 ms
                 ptimer->context = (ULONG) purb;
                 ptimer->pdev = pdev;
@@ -1198,6 +1208,12 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
         case USB_ENDPOINT_XFER_INT:
         {
             ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+            if (!ptimer)
+            {
+                purb->status = STATUS_NO_MEMORY;
+                break;
+            }
+
             ptimer->threshold = RH_INTERVAL;
             ptimer->context = (ULONG) purb;
             ptimer->pdev = pdev;

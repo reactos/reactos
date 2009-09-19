@@ -70,7 +70,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
                                              PAGE_SIZE)
 
 /* Signature of free pool blocks */
-#define MM_FREE_POOL_TAG    TAG('F', 'r', 'p', 'l')
+#define MM_FREE_POOL_TAG    'lprF'
 
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
     ((x) / (4*1024*1024))

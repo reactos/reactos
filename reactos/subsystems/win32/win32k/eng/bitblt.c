@@ -67,8 +67,8 @@ BltMask(SURFOBJ* psoDest,
             psoPattern = &psurfPattern->SurfObj;
             PatternWidth = psoPattern->sizlBitmap.cx;
             PatternHeight = psoPattern->sizlBitmap.cy;
+            fnPattern_GetPixel = DibFunctionsForBitmapFormat[psoPattern->iBitmapFormat].DIB_GetPixel;
         }
-        fnPattern_GetPixel = DibFunctionsForBitmapFormat[psoPattern->iBitmapFormat].DIB_GetPixel;
     }
     else
         psurfPattern = NULL;
@@ -188,7 +188,6 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     if (ROP3_TO_ROP4(SRCCOPY) == Rop4)
         return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
-    BltInfo.XlatePatternToDest = NULL;
     BltInfo.Brush = pbo;
     BltInfo.BrushOrigin = *BrushOrigin;
     BltInfo.Rop4 = Rop4;

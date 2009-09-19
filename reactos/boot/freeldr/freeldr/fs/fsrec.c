@@ -83,7 +83,7 @@ BOOLEAN FsRecIsExt2(ULONG DriveNumber, ULONG VolumeStartSector)
 		return FALSE;
 	}
 
-	if (SuperBlock->s_magic == EXT3_SUPER_MAGIC)
+	if (SuperBlock->magic == EXT2_MAGIC)
 	{
 		return TRUE;
 	}

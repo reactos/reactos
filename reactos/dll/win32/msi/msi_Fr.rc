@@ -18,17 +18,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "windef.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
-	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	4 "Le paquet d'installation sp√©cifi√© n'a pu √™tre ouvert. Veuillez v√©rifier le chemin du fichier et r√©essayer."
 	5 "Le chemin %s est introuvable"
-	9 "insÈrez le disque %s"
-	10 "mauvais paramËtres"
+	9 "ins√©rez le disque %s"
+	10 "mauvais param√®tres"
 	11 "saisissez le nom du dossier contenant %s"
-	12 "source d'installation pour la fonctionnalitÈ manquante"
-	13 "lecteur rÈseau pour la fonctionnalitÈ manquant"
-	14 "fonctionnalitÈ depuis:"
-	15 "sÈlectionnez le dossier contenant %s"
+	12 "source d'installation pour la fonctionnalit√© manquante"
+	13 "lecteur r√©seau pour la fonctionnalit√© manquante"
+	14 "fonctionnalit√© depuis :"
+	15 "s√©lectionnez le dossier contenant %s"
 }
+#pragma code_page(default)

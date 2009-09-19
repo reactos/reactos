@@ -13,7 +13,114 @@
 #define NDEBUG
 #include <debug.h>
 
-/** Functions ******************************************************************/
+/** Functions *****************************************************************/
+
+BOOL
+FASTCALL
+GreGetTextExtentW(
+    HDC hDC,
+    LPWSTR lpwsz,
+    INT cwc,
+    LPSIZE psize,
+    UINT flOpts)
+{
+  PDC pdc;
+  PDC_ATTR pdcattr;
+  BOOL Result;
+  PTEXTOBJ TextObj;
+
+  if (!cwc)
+  {
+     psize->cx = 0;
+     psize->cy = 0;
+     return TRUE;
+  }
+
+  pdc = DC_LockDc(hDC);
+  if (!pdc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+
+  pdcattr = pdc->pdcattr;
+
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
+  if ( TextObj )
+  {
+     Result = TextIntGetTextExtentPoint( pdc,
+                                         TextObj,
+                                         lpwsz,
+                                         cwc,
+                                         0,
+                                         NULL,
+                                         0,
+                                         psize);
+     TEXTOBJ_UnlockText(TextObj);
+  }
+  else
+     Result = FALSE;
+
+  DC_UnlockDc(pdc);
+  return Result;
+} 
+
+BOOL
+FASTCALL
+GreGetTextExtentExW(
+    HDC hDC,
+    LPWSTR String,
+    ULONG Count,
+    ULONG MaxExtent,
+    PULONG Fit,
+    PULONG Dx,
+    LPSIZE pSize,
+    FLONG fl)
+{
+  PDC pdc;
+  PDC_ATTR pdcattr;
+  BOOL Result;
+  PTEXTOBJ TextObj;
+
+  if ( (!String && Count ) || !pSize )
+  {
+     SetLastWin32Error(ERROR_INVALID_PARAMETER);
+     return FALSE;
+  }
+
+  if ( !Count )
+  {
+     if ( Fit ) Fit = 0;  
+     return TRUE;
+  }
+      
+  pdc = DC_LockDc(hDC);
+  if (NULL == pdc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+  pdcattr = pdc->pdcattr;
+
+  TextObj = RealizeFontInit(pdcattr->hlfntNew);
+  if ( TextObj )
+  {
+     Result = TextIntGetTextExtentPoint( pdc,
+                                         TextObj,
+                                         String,
+                                         Count,
+                                         MaxExtent,
+                                         (LPINT)Fit,
+                                         (LPINT)Dx,
+                                         pSize);
+     TEXTOBJ_UnlockText(TextObj);
+  }
+  else
+     Result = FALSE;
+
+  DC_UnlockDc(pdc);
+  return Result;
+}
 
 DWORD
 APIENTRY
@@ -214,8 +321,14 @@ NtGdiGetTextExtentExW(
   TextObj = RealizeFontInit(pdcattr->hlfntNew);
   if ( TextObj )
   {
-    Result = TextIntGetTextExtentPoint(dc, TextObj, String, Count, MaxExtent,
-                                     NULL == UnsafeFit ? NULL : &Fit, Dx, &Size);
+    Result = TextIntGetTextExtentPoint( dc,
+                                        TextObj,
+                                        String,
+                                        Count,
+                                        MaxExtent,
+                                        NULL == UnsafeFit ? NULL : &Fit,
+                                        Dx,
+                                       &Size);
     TEXTOBJ_UnlockText(TextObj);
   }
   else

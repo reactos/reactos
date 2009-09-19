@@ -24,21 +24,21 @@
 #include <debug.h>
 
 HWND FASTCALL
-IntGetCaptureWindow()
+IntGetCaptureWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
    return ForegroundQueue != NULL ? ForegroundQueue->CaptureWindow : 0;
 }
 
 HWND FASTCALL
-IntGetFocusWindow()
+IntGetFocusWindow(VOID)
 {
    PUSER_MESSAGE_QUEUE ForegroundQueue = IntGetFocusMessageQueue();
    return ForegroundQueue != NULL ? ForegroundQueue->FocusWindow : 0;
 }
 
 HWND FASTCALL
-IntGetThreadFocusWindow()
+IntGetThreadFocusWindow(VOID)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;
@@ -95,7 +95,11 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          Window->Wnd->hWndLastActive = hWnd;
          if (Window->Wnd->spwndOwner)
             Window->Wnd->spwndOwner->hWndLastActive = hWnd;
+         Window->Wnd->state |= WNDS_ACTIVEFRAME;
       }
+
+      if (WindowPrev && WindowPrev->Wnd)
+         WindowPrev->Wnd->state &= ~WNDS_ACTIVEFRAME;
 
       if (Window && WindowPrev)
       {
@@ -441,7 +445,7 @@ CLEANUP:
 }
 
 
-HWND FASTCALL UserGetActiveWindow()
+HWND FASTCALL UserGetActiveWindow(VOID)
 {
    PTHREADINFO pti;
    PUSER_MESSAGE_QUEUE ThreadQueue;

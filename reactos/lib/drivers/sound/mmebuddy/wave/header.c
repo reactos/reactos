@@ -224,10 +224,10 @@ EnqueueWaveHeader(
     PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
     IN  PVOID Parameter)
 {
+    PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
+
     VALIDATE_MMSYS_PARAMETER( SoundDeviceInstance );
     VALIDATE_MMSYS_PARAMETER( Parameter );
-
-    PWAVEHDR WaveHeader = (PWAVEHDR) Parameter;
 
     /* Initialise */
     WaveHeader->lpNext = NULL;

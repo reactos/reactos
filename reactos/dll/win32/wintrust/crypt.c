@@ -1121,36 +1121,6 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
     TRACE("(%p %p %d %p %p)\n", pSubjectInfo, pdwEncodingType, dwIndex,
           pcbSignedDataMsg, pbSignedDataMsg);
 
-    /*
-     * FIXME: I just noticed that I am memorizing the initial file pointer
-     * offset and restoring it before reading in the rest of the header
-     * information in the cabinet.  Perhaps that's correct -- that is, perhaps
-     * this API is supposed to support "streaming" cabinets which are embedded
-     * in other files, or cabinets which begin at file offsets other than zero.
-     * Otherwise, I should instead go to the absolute beginning of the file.
-     * (Either way, the semantics of wine's FDICopy require me to leave the
-     * file pointer where it is afterwards -- If Windows does not do so, we
-     * ought to duplicate the native behavior in the FDIIsCabinet API, not here.
-     *
-     * So, the answer lies in Windows; will native cabinet.dll recognize a
-     * cabinet "file" embedded in another file?  Note that cabextract.c does
-     * support this, which implies that Microsoft's might.  I haven't tried it
-     * yet so I don't know.  ATM, most of wine's FDI cabinet routines (except
-     * this one) would not work in this way.  To fix it, we could just make the
-     * various references to absolute file positions in the code relative to an
-     * initial "beginning" offset.  Because the FDICopy API doesn't take a
-     * file-handle like this one, we would therein need to search through the
-     * file for the beginning of the cabinet (as we also do in cabextract.c).
-     * Note that this limits us to a maximum of one cabinet per. file: the first.
-     *
-     * So, in summary: either the code below is wrong, or the rest of fdi.c is
-     * wrong... I cannot imagine that both are correct ;)  One of these flaws
-     * should be fixed after determining the behavior on Windows.   We ought
-     * to check both FDIIsCabinet and FDICopy for the right behavior.
-     *
-     * -gmt
-     */
-
     /* get basic offset & size info */
     base_offset = SetFilePointer(pSubjectInfo->hFile, 0L, NULL, SEEK_CUR);
 
@@ -1162,7 +1132,7 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
 
     cabsize = SetFilePointer(pSubjectInfo->hFile, 0L, NULL, SEEK_CUR);
     if ((cabsize == -1) || (base_offset == -1) ||
-     (SetFilePointer(pSubjectInfo->hFile, base_offset, NULL, SEEK_SET) == INVALID_SET_FILE_POINTER))
+     (SetFilePointer(pSubjectInfo->hFile, 0, NULL, SEEK_SET) == INVALID_SET_FILE_POINTER))
     {
         TRACE("seek error\n");
         return FALSE;
@@ -1267,6 +1237,7 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
      NULL) || dwRead != cert_size)
     {
         ERR("couldn't read cert\n");
+        SetFilePointer(pSubjectInfo->hFile, base_offset, NULL, SEEK_SET);
         return FALSE;
     }
     /* The encoding of the files I've seen appears to be in ASN.1
@@ -1274,6 +1245,8 @@ static BOOL WINTRUST_GetSignedMsgFromCabFile(SIP_SUBJECTINFO *pSubjectInfo,
      * always is.
      */
     *pdwEncodingType = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
+    /* Restore base offset */
+    SetFilePointer(pSubjectInfo->hFile, base_offset, NULL, SEEK_SET);
     return TRUE;
 }
 

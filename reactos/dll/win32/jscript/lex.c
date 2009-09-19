@@ -100,7 +100,8 @@ static const struct {
 
 static int lex_error(parser_ctx_t *ctx, HRESULT hres)
 {
-    ctx->hres = hres;
+    ctx->hres = JSCRIPT_ERROR|hres;
+    ctx->lexer_error = TRUE;
     return -1;
 }
 
@@ -342,10 +343,8 @@ static int parse_string_literal(parser_ctx_t *ctx, const WCHAR **ret, WCHAR endc
             ctx->ptr++;
     }
 
-    if(ctx->ptr == ctx->end) {
-        WARN("unexpected end of file\n");
-        return lex_error(ctx, E_FAIL);
-    }
+    if(ctx->ptr == ctx->end)
+        return lex_error(ctx, IDS_UNTERMINATED_STR);
 
     len = ctx->ptr-ptr;
 

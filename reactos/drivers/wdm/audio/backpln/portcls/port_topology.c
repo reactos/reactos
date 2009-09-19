@@ -12,6 +12,7 @@ typedef struct
 {
     IPortTopologyVtbl *lpVtbl;
     ISubdeviceVtbl *lpVtblSubDevice;
+    IPortEventsVtbl *lpVtblPortEvents;
 
     LONG ref;
     BOOL bInitialized;
@@ -66,6 +67,98 @@ KSPROPERTY_SET TopologyPropertySet[] =
     }
 };
 
+//---------------------------------------------------------------
+// IPortEvents
+//
+
+static
+NTSTATUS
+NTAPI
+IPortEvents_fnQueryInterface(
+    IPortEvents* iface,
+    IN  REFIID refiid,
+    OUT PVOID* Output)
+{
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblPortEvents);
+
+    DPRINT("IPortEvents_fnQueryInterface entered\n");
+
+    if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
+        IsEqualGUIDAligned(refiid, &IID_IUnknown))
+    {
+        *Output = &This->lpVtblPortEvents;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+static
+ULONG
+NTAPI
+IPortEvents_fnAddRef(
+    IPortEvents* iface)
+{
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblPortEvents);
+    DPRINT("IPortEvents_fnQueryInterface entered\n");
+    return InterlockedIncrement(&This->ref);
+}
+
+static
+ULONG
+NTAPI
+IPortEvents_fnRelease(
+    IPortEvents* iface)
+{
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblPortEvents);
+
+    DPRINT("IPortEvents_fnRelease entered\n");
+    InterlockedDecrement(&This->ref);
+
+    if (This->ref == 0)
+    {
+        FreeItem(This, TAG_PORTCLASS);
+        return 0;
+    }
+    /* Return new reference count */
+    return This->ref;
+}
+
+static
+void
+NTAPI
+IPortEvents_fnAddEventToEventList(
+    IPortEvents* iface,
+    IN PKSEVENT_ENTRY EventEntry)
+{
+    UNIMPLEMENTED
+}
+
+
+static
+void
+NTAPI
+IPortEvents_fnGenerateEventList(
+    IPortEvents* iface,
+    IN  GUID* Set OPTIONAL,
+    IN  ULONG EventId,
+    IN  BOOL PinEvent,
+    IN  ULONG PinId,
+    IN  BOOL NodeEvent,
+    IN  ULONG NodeId)
+{
+    UNIMPLEMENTED
+}
+
+static IPortEventsVtbl vt_IPortEvents = 
+{
+    IPortEvents_fnQueryInterface,
+    IPortEvents_fnAddRef,
+    IPortEvents_fnRelease,
+    IPortEvents_fnAddEventToEventList,
+    IPortEvents_fnGenerateEventList
+};
+
 
 //---------------------------------------------------------------
 // IUnknown interface functions
@@ -97,6 +190,12 @@ IPortTopology_fnQueryInterface(
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, &IID_IPortEvents))
+    {
+        *Output = &This->lpVtblPortEvents;
+        InterlockedIncrement(&This->ref);
+        return STATUS_SUCCESS;
+    }
     else if (IsEqualGUIDAligned(refiid, &IID_IPortClsVersion))
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
@@ -124,7 +223,6 @@ IPortTopology_fnAddRef(
     IPortTopology* iface)
 {
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
-
     return InterlockedIncrement(&This->ref);
 }
 
@@ -136,6 +234,7 @@ IPortTopology_fnRelease(
     IPortTopologyImpl * This = (IPortTopologyImpl*)iface;
 
     InterlockedDecrement(&This->ref);
+    DPRINT("Reference Count %u\n", This->ref);
 
     if (This->ref == 0)
     {
@@ -208,9 +307,7 @@ IPortTopology_fnInit(
     This->pDeviceObject = DeviceObject;
     This->bInitialized = TRUE;
 
-    /* increment reference on miniport adapter */
-    Miniport->lpVtbl->AddRef(Miniport);
-
+    /* now initialize the miniport driver */
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
     {
@@ -394,10 +491,17 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    //IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
+    IPortTopologyImpl * This = (IPortTopologyImpl*)CONTAINING_RECORD(iface, IPortTopologyImpl, lpVtblSubDevice);
 
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    DPRINT1("ISubDevice_fnReleaseChildren with ref %u\n", This->ref);
+
+    /* release the filter */
+    This->Filter->lpVtbl->Release(This->Filter);
+
+    /* release the miniport */
+    DPRINT("Refs %u %u\n", This->pMiniport->lpVtbl->Release(This->pMiniport), This->ref);
+
+    return STATUS_SUCCESS;
 }
 
 static
@@ -702,6 +806,7 @@ NewPortTopology(
 
     This->lpVtbl = &vt_IPortTopology;
     This->lpVtblSubDevice = &vt_ISubdeviceVtbl;
+    This->lpVtblPortEvents = &vt_IPortEvents;
     This->ref = 1;
     *OutPort = (PPORT)(&This->lpVtbl);
     DPRINT("NewPortTopology result %p\n", *OutPort);

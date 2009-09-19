@@ -182,7 +182,7 @@ WORD wDefColor;           /* default color */
 INT
 ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator)
 {
-	TCHAR temp[32];
+	TCHAR temp[39];   /* maximum length with nNumberGroups == 1 */
 	UINT  n, iTarget;
 
 	if (len <= 1)
@@ -198,15 +198,15 @@ ConvertULargeInteger(ULONGLONG num, LPTSTR des, INT len, BOOL bPutSeperator)
 		if (iTarget == n && bPutSeperator)
 		{
 			iTarget += nNumberGroups + 1;
-			temp[31 - n++] = cThousandSeparator;
+			temp[38 - n++] = cThousandSeparator;
 		}
-		temp[31 - n++] = (TCHAR)(num % 10) + _T('0');
+		temp[38 - n++] = (TCHAR)(num % 10) + _T('0');
 		num /= 10;
 	} while (num > 0);
 	if (n > len-1)
 		n = len-1;
 
-	memcpy(des, temp + 32 - n, n * sizeof(TCHAR));
+	memcpy(des, temp + 39 - n, n * sizeof(TCHAR));
 	des[n] = _T('\0');
 
 	return n;
@@ -484,14 +484,23 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 INT
 DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 {
-	TCHAR com[_tcslen(first) + _tcslen(rest) + 2];  /* full command line */
+	TCHAR *com;
 	TCHAR *cp;
 	LPTSTR param;   /* pointer to command's parameters */
 	INT cl;
 	LPCOMMAND cmdptr;
 	BOOL nointernal = FALSE;
+	INT ret;
 
 	TRACE ("DoCommand: (\'%s\' \'%s\')\n", debugstr_aw(first), debugstr_aw(rest));
+
+	/* full command line */
+	com = cmd_alloc((_tcslen(first) + _tcslen(rest) + 2) * sizeof(TCHAR));
+	if (com == NULL)
+	{
+		error_out_of_memory();
+		return 1;
+	}
 
 	/* If present in the first word, these characters end the name of an
 	 * internal command and become the beginning of its parameters. */
@@ -526,11 +535,15 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 			if (_tcsicmp(cmdptr->name, _T("echo")) != 0)
 				while (_istspace(*param))
 					param++;
-			return cmdptr->func(param);
+			ret = cmdptr->func(param);
+			cmd_free(com);
+			return ret;
 		}
 	}
 
-	return Execute(com, first, rest, Cmd);
+	ret = Execute(com, first, rest, Cmd);
+	cmd_free(com);
+	return ret;
 }
 
 

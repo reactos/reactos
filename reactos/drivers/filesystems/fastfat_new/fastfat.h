@@ -3,24 +3,16 @@
 #include <debug.h>
 #include <pseh/pseh2.h>
 
-#ifndef TAG
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
-
 #include <fat.h>
 #include <fatstruc.h>
 
 #define Add2Ptr(P,I,T) ((T)((PUCHAR)(P) + (I)))
 #define PtrOffset(B,O) ((ULONG)((ULONG_PTR)(O) - (ULONG_PTR)(B)))
 
-#ifndef TAG
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#endif
-
-#define TAG_CCB TAG('V', 'C', 'C', 'B')
-#define TAG_FCB TAG('V', 'F', 'C', 'B')
-#define TAG_IRP TAG('V', 'I', 'R', 'P')
-#define TAG_VFAT TAG('V', 'F', 'A', 'T')
+#define TAG_CCB  'BCCV'
+#define TAG_FCB  'BCFV'
+#define TAG_IRP  'PRIV'
+#define TAG_VFAT 'TAFV'
 /*  ------------------------------------------------------  shutdown.c  */
 
 DRIVER_DISPATCH FatShutdown;

@@ -87,6 +87,7 @@
 
 #define RPC_FC_POINTER			0x36
 
+#define RPC_FC_ALIGNM2			0x37
 #define RPC_FC_ALIGNM4			0x38
 #define RPC_FC_ALIGNM8			0x39
 

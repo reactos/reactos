@@ -58,7 +58,7 @@ typedef struct _EBRUSHOBJ
 //    DWORD       dwUnknown2c;
 //    DWORD       dwUnknown30;
     SURFACE *   psurfTrg;
-//    PALETTE *   ppalSurf;
+    struct _PALETTE *   ppalSurf;
 //    PALETTE *   ppalDC;
 //    PALETTE *   ppal3;
 //    DWORD       dwUnknown44;
@@ -110,7 +110,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, struct _DC *);
 
 VOID
 FASTCALL
-EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor, XLATEOBJ *pxlo);
+EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor);
 
 VOID
 NTAPI

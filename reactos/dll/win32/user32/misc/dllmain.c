@@ -11,7 +11,7 @@ HINSTANCE User32Instance;
 PPROCESSINFO g_ppi = NULL;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
 PUSER_HANDLE_ENTRY gHandleEntries = NULL;
-PSERVERINFO g_psi = NULL;
+PSERVERINFO gpsi = NULL;
 ULONG_PTR g_ulSharedDelta;
 
 WCHAR szAppInit[KEY_LENGTH];
@@ -232,6 +232,8 @@ Init(VOID)
       (PVOID)User32CallEventProcFromKernel;
    NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_LOADMENU] =
       (PVOID)User32CallLoadMenuFromKernel;
+   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_CLIENTTHREADSTARTUP] =
+      (PVOID)User32CallClientThreadSetupFromKernel;
 
    NtUserProcessConnect( NtCurrentProcess(),
                          &UserCon,
@@ -239,7 +241,7 @@ Init(VOID)
 
    g_ppi = GetWin32ClientInfo()->ppi; // Snapshot PI, used as pointer only!
    g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-   g_psi = SharedPtrToUser(UserCon.siClient.psi);
+   gpsi = SharedPtrToUser(UserCon.siClient.psi);
    gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
    gHandleEntries = SharedPtrToUser(gHandleTable->handles);
    //ERR("1 SI 0x%x : HT 0x%x : D 0x%x\n", UserCon.siClient.psi, UserCon.siClient.aheList,  g_ulSharedDelta);
@@ -335,10 +337,10 @@ GetConnected(VOID)
   USERCONNECT UserCon;
 //  ERR("GetConnected\n");
 
-  if ((PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
+  if ((PTHREADINFO)NtCurrentTeb()->Win32ThreadInfo == NULL)
      NtUserGetThreadState(THREADSTATE_GETTHREADINFO);
 
-  if (g_psi && g_ppi) return;
+  if (gpsi && g_ppi) return;
 // FIXME HAX: Due to the "Dll Initialization Bug" we have to call this too.
   GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
@@ -348,8 +350,17 @@ GetConnected(VOID)
 
   g_ppi = GetWin32ClientInfo()->ppi;
   g_ulSharedDelta = UserCon.siClient.ulSharedDelta;
-  g_psi = SharedPtrToUser(UserCon.siClient.psi);
+  gpsi = SharedPtrToUser(UserCon.siClient.psi);
   gHandleTable = SharedPtrToUser(UserCon.siClient.aheList);
   gHandleEntries = SharedPtrToUser(gHandleTable->handles);  
   
 }
+
+NTSTATUS
+WINAPI
+User32CallClientThreadSetupFromKernel(PVOID Arguments, ULONG ArgumentLength)
+{
+  ERR("GetConnected\n");
+  return ZwCallbackReturn(NULL, 0, STATUS_SUCCESS);  
+}
+

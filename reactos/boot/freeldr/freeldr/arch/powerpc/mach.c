@@ -264,11 +264,7 @@ BOOLEAN PpcDiskGetBootVolume( PULONG DriveNumber, PULONGLONG StartSector, PULONG
 
 BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
                              char *RemainingPath,
-                             PULONG Device,
-                             PULONG DriveNumber,
-                             PULONGLONG StartSector,
-                             PULONGLONG SectorCount,
-                             int *FsType ) {
+                             PULONG Device ) {
     char *remain = strchr(SystemPath, '\\');
     if( remain ) {
 	strcpy( RemainingPath, remain+1 );
@@ -278,7 +274,7 @@ BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
     *Device = 0;
     // Hack to be a bit easier on ram
     CacheSizeLimit = 64 * 1024;
-    return MachDiskGetBootVolume(DriveNumber, StartSector, SectorCount, FsType);
+    return TRUE;
 }
 
 BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
@@ -392,13 +388,15 @@ VOID OfwCopyDeviceTree
     /* Create a key for this device */
     FldrCreateComponentKey
         (ParentKey,
-         wide_name,
-         0,
          AdapterClass,
          MultiFunctionAdapter,
+         0,
+         0,
+         (ULONG)-1,
+         NULL,
+         NULL,
+         0,
          &NewKey);
-
-    FldrSetComponentInformation(NewKey, 0, 0, (ULONG)-1);
 
     /* Add properties */
     for (prev_name = ""; ofw_nextprop(node, prev_name, cur_name) == 1; )
@@ -455,8 +453,6 @@ PCONFIGURATION_COMPONENT_DATA PpcHwDetect() {
     int node = ofw_finddevice("/");
 
     FldrCreateSystemKey(&RootKey);
-
-    FldrSetComponentInformation(RootKey, 0, 0, (ULONG)-1);
 
     OfwCopyDeviceTree(RootKey,"/",node,&BusNumber,&DiskController,&DiskNumber);
     return RootKey;

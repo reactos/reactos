@@ -94,7 +94,7 @@ static inline WORD d3d_fpu_setup(void)
 }
 
 /*****************************************************************************
- * IUnknown Methods. Common for Version 1, 2, 3 and 7 
+ * IUnknown Methods. Common for Version 1, 2, 3 and 7
  *****************************************************************************/
 
 /*****************************************************************************
@@ -2558,7 +2558,6 @@ IDirect3DDeviceImpl_3_GetRenderState(IDirect3DDevice3 *iface,
                 BOOL tex_alpha = FALSE;
                 IWineD3DBaseTexture *tex = NULL;
                 WINED3DSURFACE_DESC desc;
-                WINED3DFORMAT fmt;
                 DDPIXELFORMAT ddfmt;
 
                 hr = IWineD3DDevice_GetTexture(This->wineD3DDevice,
@@ -2567,13 +2566,11 @@ IDirect3DDeviceImpl_3_GetRenderState(IDirect3DDevice3 *iface,
 
                 if(hr == WINED3D_OK && tex)
                 {
-                    memset(&desc, 0, sizeof(desc));
-                    desc.Format = &fmt;
                     hr = IWineD3DTexture_GetLevelDesc((IWineD3DTexture*) tex, 0, &desc);
                     if (SUCCEEDED(hr))
                     {
                         ddfmt.dwSize = sizeof(ddfmt);
-                        PixelFormat_WineD3DtoDD(&ddfmt, fmt);
+                        PixelFormat_WineD3DtoDD(&ddfmt, desc.format);
                         if (ddfmt.u5.dwRGBAlphaBitMask) tex_alpha = TRUE;
                     }
 
@@ -2642,7 +2639,7 @@ IDirect3DDeviceImpl_7_SetRenderState(IDirect3DDevice7 *iface,
     {
         case D3DRENDERSTATE_TEXTUREMAG:
         {
-            WINED3DTEXTUREFILTERTYPE tex_mag = WINED3DTEXF_NONE;
+            WINED3DTEXTUREFILTERTYPE tex_mag = WINED3DTEXF_POINT;
 
             switch ((D3DTEXTUREFILTER) Value)
             {
@@ -2666,7 +2663,7 @@ IDirect3DDeviceImpl_7_SetRenderState(IDirect3DDevice7 *iface,
 
         case D3DRENDERSTATE_TEXTUREMIN:
         {
-            WINED3DTEXTUREFILTERTYPE tex_min = WINED3DTEXF_NONE;
+            WINED3DTEXTUREFILTERTYPE tex_min = WINED3DTEXF_POINT;
             WINED3DTEXTUREFILTERTYPE tex_mip = WINED3DTEXF_NONE;
 
             switch ((D3DTEXTUREFILTER) Value)
@@ -2678,11 +2675,11 @@ IDirect3DDeviceImpl_7_SetRenderState(IDirect3DDevice7 *iface,
                     tex_min = WINED3DTEXF_LINEAR;
                     break;
                 case D3DFILTER_MIPNEAREST:
-                    tex_min = WINED3DTEXF_NONE;
+                    tex_min = WINED3DTEXF_POINT;
                     tex_mip = WINED3DTEXF_POINT;
                     break;
                 case D3DFILTER_MIPLINEAR:
-                    tex_min = WINED3DTEXF_NONE;
+                    tex_min = WINED3DTEXF_POINT;
                     tex_mip = WINED3DTEXF_LINEAR;
                     break;
                 case D3DFILTER_LINEARMIPNEAREST:
@@ -2833,7 +2830,6 @@ IDirect3DDeviceImpl_3_SetRenderState(IDirect3DDevice3 *iface,
                     BOOL tex_alpha = FALSE;
                     IWineD3DBaseTexture *tex = NULL;
                     WINED3DSURFACE_DESC desc;
-                    WINED3DFORMAT fmt;
                     DDPIXELFORMAT ddfmt;
 
                     hr = IWineD3DDevice_GetTexture(This->wineD3DDevice,
@@ -2843,12 +2839,11 @@ IDirect3DDeviceImpl_3_SetRenderState(IDirect3DDevice3 *iface,
                     if(hr == WINED3D_OK && tex)
                     {
                         memset(&desc, 0, sizeof(desc));
-                        desc.Format = &fmt;
                         hr = IWineD3DTexture_GetLevelDesc((IWineD3DTexture*) tex, 0, &desc);
                         if (SUCCEEDED(hr))
                         {
                             ddfmt.dwSize = sizeof(ddfmt);
-                            PixelFormat_WineD3DtoDD(&ddfmt, fmt);
+                            PixelFormat_WineD3DtoDD(&ddfmt, desc.format);
                             if (ddfmt.u5.dwRGBAlphaBitMask) tex_alpha = TRUE;
                         }
 
@@ -2961,7 +2956,7 @@ IDirect3DDeviceImpl_3_SetLightState(IDirect3DDevice3 *iface,
 
     TRACE("(%p)->(%08x,%08x)\n", This, LightStateType, Value);
 
-    if (!LightStateType && (LightStateType > D3DLIGHTSTATE_COLORVERTEX))
+    if (!LightStateType || (LightStateType > D3DLIGHTSTATE_COLORVERTEX))
     {
         TRACE("Unexpected Light State Type\n");
         return DDERR_INVALIDPARAMS;
@@ -3094,7 +3089,7 @@ IDirect3DDeviceImpl_3_GetLightState(IDirect3DDevice3 *iface,
 
     TRACE("(%p)->(%08x,%p)\n", This, LightStateType, Value);
 
-    if (!LightStateType && (LightStateType > D3DLIGHTSTATE_COLORVERTEX))
+    if (!LightStateType || (LightStateType > D3DLIGHTSTATE_COLORVERTEX))
     {
         TRACE("Unexpected Light State Type\n");
         return DDERR_INVALIDPARAMS;
@@ -4507,7 +4502,7 @@ IDirect3DDeviceImpl_7_GetTexture(IDirect3DDevice7 *iface,
 
     EnterCriticalSection(&ddraw_cs);
     hr = IWineD3DDevice_GetTexture(This->wineD3DDevice, Stage, &Surf);
-    if( (hr != D3D_OK) || (!Surf) ) 
+    if( (hr != D3D_OK) || (!Surf) )
     {
         *Texture = NULL;
         LeaveCriticalSection(&ddraw_cs);
@@ -4648,7 +4643,6 @@ IDirect3DDeviceImpl_3_SetTexture(IDirect3DDevice3 *iface,
         BOOL tex_alpha = FALSE;
         IWineD3DBaseTexture *tex = NULL;
         WINED3DSURFACE_DESC desc;
-        WINED3DFORMAT fmt;
         DDPIXELFORMAT ddfmt;
         HRESULT result;
 
@@ -4659,12 +4653,11 @@ IDirect3DDeviceImpl_3_SetTexture(IDirect3DDevice3 *iface,
         if(result == WINED3D_OK && tex)
         {
             memset(&desc, 0, sizeof(desc));
-            desc.Format = &fmt;
             result = IWineD3DTexture_GetLevelDesc((IWineD3DTexture*) tex, 0, &desc);
             if (SUCCEEDED(result))
             {
                 ddfmt.dwSize = sizeof(ddfmt);
-                PixelFormat_WineD3DtoDD(&ddfmt, fmt);
+                PixelFormat_WineD3DtoDD(&ddfmt, desc.format);
                 if (ddfmt.u5.dwRGBAlphaBitMask) tex_alpha = TRUE;
             }
 
@@ -5309,7 +5302,7 @@ IDirect3DDeviceImpl_7_GetMaterial(IDirect3DDevice7 *iface,
     TRACE("(%p)->(%p): Relay!\n", This, Mat);
 
     EnterCriticalSection(&ddraw_cs);
-    /* Note: D3DMATERIAL7 is compatible with WINED3DMATERIAL */ 
+    /* Note: D3DMATERIAL7 is compatible with WINED3DMATERIAL */
     hr = IWineD3DDevice_GetMaterial(This->wineD3DDevice,
                                     (WINED3DMATERIAL*) Mat);
     LeaveCriticalSection(&ddraw_cs);
@@ -5944,8 +5937,8 @@ static BOOL is_mip_level_subset(IDirectDrawSurfaceImpl *dest,
 static void copy_mipmap_chain(IDirect3DDeviceImpl *device,
                               IDirectDrawSurfaceImpl *dest,
                               IDirectDrawSurfaceImpl *src,
-                              POINT *DestPoint,
-                              RECT *SrcRect)
+                              const POINT *DestPoint,
+                              const RECT *SrcRect)
 {
     IDirectDrawSurfaceImpl *src_level, *dest_level;
     IDirectDrawSurface7 *temp;

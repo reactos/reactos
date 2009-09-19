@@ -920,9 +920,6 @@ IDirectDrawSurfaceImpl_AddAttachedSurface(IDirectDrawSurfaceImpl *This,
         IDirect3DDeviceImpl_UpdateDepthStencil(This->ddraw->d3ddevice);
     }
 
-    /* MSDN: 
-     * "This method increments the reference count of the surface being attached."
-     */
     IDirectDrawSurface7_AddRef((IDirectDrawSurface7 *)Surf);
     LeaveCriticalSection(&ddraw_cs);
     return DD_OK;
@@ -1033,7 +1030,7 @@ IDirectDrawSurfaceImpl_AddOverlayDirtyRect(IDirectDrawSurface7 *iface,
     IDirectDrawSurfaceImpl *This = (IDirectDrawSurfaceImpl *)iface;
     TRACE("(%p)->(%p)\n",This,Rect);
 
-    /* MSDN says it's not implemented. I could forward it to WineD3D, 
+    /* MSDN says it's not implemented. I could forward it to WineD3D,
      * then we'd implement it, but I don't think that's a good idea
      * (Stefan Dösinger)
      */

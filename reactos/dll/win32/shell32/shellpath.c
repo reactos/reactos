@@ -947,14 +947,14 @@ static HRESULT _SHGetUserShellFolderPath(HKEY rootKey, LPCWSTR userPrefix,
         pShellFolderPath = szSHFolders;
     }
 
-    if (RegCreateKeyExW(rootKey, pShellFolderPath, 0, NULL, 0, KEY_ALL_ACCESS,
+    if (RegCreateKeyExW(rootKey, pShellFolderPath, 0, NULL, 0, KEY_SET_VALUE,
      NULL, &shellFolderKey, &dwDisp))
     {
         TRACE("Failed to create %s\n", debugstr_w(pShellFolderPath));
         return E_FAIL;
     }
     if (RegCreateKeyExW(rootKey, pUserShellFolderPath, 0, NULL, 0,
-     KEY_ALL_ACCESS, NULL, &userShellFolderKey, &dwDisp))
+     KEY_QUERY_VALUE, NULL, &userShellFolderKey, &dwDisp))
     {
         TRACE("Failed to create %s\n",
          debugstr_w(pUserShellFolderPath));

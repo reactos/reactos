@@ -80,6 +80,12 @@ IUnregisterSubdevice_fnUnregisterSubdevice(
 
     ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
+#if defined(__GNUC__) && \
+    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__ == 40400)
+    /* Silence incorrect GCC 4.4.0 warning */
+    SubDeviceEntry = NULL;
+#endif
+
     DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
     ASSERT(DeviceExtension);
 

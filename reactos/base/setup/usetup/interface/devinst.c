@@ -311,7 +311,7 @@ EventThread(IN LPVOID lpParameter)
     hInf = *(HINF *)lpParameter;
 
     InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_CASE_INSENSITIVE, NULL, NULL);
-    Status = NtOpenKey(&hEnum, 0, &ObjectAttributes);
+    Status = NtOpenKey(&hEnum, KEY_QUERY_VALUE, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtOpenKey('%wZ') failed with status 0x%08lx\n", &EnumU, Status);

@@ -349,7 +349,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
 WINED3DFORMAT
 PixelFormat_DD2WineD3D(const DDPIXELFORMAT *DDPixelFormat)
 {
-    TRACE("Convert a DirectDraw Pixelformat to a WineD3D Pixelformat\n");    
+    TRACE("Convert a DirectDraw Pixelformat to a WineD3D Pixelformat\n");
     if(TRACE_ON(ddraw))
     {
         DDRAW_dump_pixelformat(DDPixelFormat);

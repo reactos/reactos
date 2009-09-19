@@ -7,13 +7,9 @@
 	<include base="cryptui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<file>main.c</file>
 	<file>cryptui.rc</file>
-	<file>cryptui_De.rc</file>
-	<file>cryptui_En.rc</file>
-	<file>cryptui_Fr.rc</file>
-	<file>cryptui_Ko.rc</file>
-	<file>cryptui_Nl.rc</file>
 	<library>wine</library>
 	<library>kernel32</library>
 	<library>user32</library>

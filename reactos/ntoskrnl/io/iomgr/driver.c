@@ -29,7 +29,7 @@ UNICODE_STRING IopHardwareDatabaseKey =
 
 POBJECT_TYPE IoDriverObjectType = NULL;
 
-#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
+#define TAG_RTLREGISTRY 'vrqR'
 
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
@@ -1007,6 +1007,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    ObjectName.Length = (wcslen(Start) + 8) * sizeof(WCHAR);
    ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
    ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
+   if (!ObjectName.Buffer) return STATUS_INSUFFICIENT_RESOURCES;
    wcscpy(ObjectName.Buffer, L"\\Driver\\");
    memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = 0;
@@ -1775,10 +1776,24 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
 
        /* Store its DriverSection, so that it could be unloaded */
        DriverObject->DriverSection = ModuleObject;
+
+       /* Initialize and start device */
+       IopInitializeDevice(DeviceNode, DriverObject);
+       Status = IopStartDevice(DeviceNode);
+   }
+   else
+   {
+      DPRINT("DriverObject already exist in ObjectManager\n");
+
+      /* IopGetDriverObject references the DriverObject, so dereference it */
+      ObDereferenceObject(DriverObject);
+
+      /* Free device node since driver loading failed */
+      IopFreeDeviceNode(DeviceNode);
    }
 
-   IopInitializeDevice(DeviceNode, DriverObject);
-   LoadParams->Status = IopStartDevice(DeviceNode);
+   /* Pass status to the caller and signal the event */
+   LoadParams->Status = Status;
    (VOID)KeSetEvent(&LoadParams->Event, 0, FALSE);
 }
 

@@ -519,7 +519,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                    IN PLARGE_INTEGER MaximumSize,
                    IN ULONG Reserved)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
    OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE FileHandle;
    IO_STATUS_BLOCK IoStatus;
@@ -560,14 +560,10 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
       }
       _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
       {
-         Status = _SEH2_GetExceptionCode();
+          /* Return the exception code */
+          _SEH2_YIELD(return _SEH2_GetExceptionCode());
       }
       _SEH2_END;
-
-      if (!NT_SUCCESS(Status))
-      {
-         return Status;
-      }
    }
    else
    {

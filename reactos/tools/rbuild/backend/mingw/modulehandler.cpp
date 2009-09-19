@@ -145,9 +145,23 @@ MingwModuleHandler::GetTargetFilename (
 const FileLocation*
 MingwModuleHandler::GetImportLibraryFilename (
 	const Module& module,
-	string_list* pclean_files )
+	string_list* pclean_files,
+	bool delayimp )
 {
-	FileLocation *target = new FileLocation ( *module.dependency );
+	FileLocation *target;
+
+	if (module.HasImportLibrary())
+	{
+		if (delayimp)
+		{
+			target = new FileLocation ( *module.delayImportLibrary->target );
+		}
+		else
+			target = new FileLocation ( *module.importLibrary->target );
+	}
+	else
+		target = new FileLocation ( *module.dependency );
+
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -218,12 +232,6 @@ MingwModuleHandler::InstanciateHandler (
 			handler = new MingwIsoModuleHandler ( module );
 			break;
 		case LiveIso:
-			handler = new MingwLiveIsoModuleHandler ( module );
-			break;
-		case IsoRegTest:
-			handler = new MingwIsoModuleHandler ( module );
-			break;
-		case LiveIsoRegTest:
 			handler = new MingwLiveIsoModuleHandler ( module );
 			break;
 		case Test:
@@ -322,9 +330,26 @@ MingwModuleHandler::OutputCopyCommand ( const FileLocation& source,
 	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str () );
 }
 
+void
+MingwModuleHandler::OutputCopyCommandSingle ( const FileLocation& source,
+                                              const FileLocation& destination )
+{
+	fprintf ( fMakefile,
+	          "%s : %s\n",
+	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str (),
+	          backend->GetFullName ( source ).c_str () );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_CP)\n" );
+	fprintf ( fMakefile,
+	          "\t${cp} %s %s 1>$(NUL)\n",
+	          backend->GetFullName ( source ).c_str (),
+	          backend->GetFullName ( *PassThruCacheDirectory ( &destination ) ).c_str () );
+}
+
 string
 MingwModuleHandler::GetImportLibraryDependency (
-	const Module& importedModule )
+	const Module& importedModule,
+	bool delayimp )
 {
 	string dep;
 	if ( ReferenceObjects ( importedModule ) )
@@ -346,7 +371,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 	}
 	else
 	{
-		const FileLocation *library_target = GetImportLibraryFilename ( importedModule, NULL );
+		const FileLocation *library_target = GetImportLibraryFilename ( importedModule, NULL, delayimp );
 		dep = backend->GetFullName ( *library_target );
 		delete library_target;
 	}
@@ -358,7 +383,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 		for ( size_t i = 0; i < libraries.size (); ++ i )
 		{
 			dep += " ";
-			dep += GetImportLibraryDependency ( *libraries[i]->importedModule );
+			dep += GetImportLibraryDependency ( *libraries[i]->importedModule, libraries[i]->delayimp );
 		}
 	}
 
@@ -378,7 +403,7 @@ MingwModuleHandler::GetTargets ( const Module& dependencyModule,
 		}
 	}
 	else
-		targets.push_back ( GetImportLibraryDependency ( dependencyModule ) );
+		targets.push_back ( GetImportLibraryDependency ( dependencyModule, false ) );
 }
 
 void
@@ -746,7 +771,7 @@ MingwModuleHandler::GenerateImportLibraryDependenciesFromVector (
 			dependencies += " \\\n\t\t", wrap_count = 0;
 		else if ( dependencies.size () > 0 )
 			dependencies += " ";
-		dependencies += GetImportLibraryDependency ( *libraries[i]->importedModule );
+		dependencies += GetImportLibraryDependency ( *libraries[i]->importedModule, libraries[i]->delayimp );
 	}
 	return dependencies;
 }
@@ -2135,42 +2160,57 @@ MingwModuleHandler::GetDefinitionFilename () const
 }
 
 void
+MingwModuleHandler::GenerateImportLibraryTarget (
+	const FileLocation *defFilename,
+	const FileLocation *library_target,
+	bool delayimp)
+{
+	string empty = "tools" + sSep + "rbuild" + sSep + "empty.def";
+
+	fprintf ( fMakefile, "# IMPORT LIBRARY RULE\n" );
+
+	fprintf ( fMakefile, "%s:",
+	          backend->GetFullName ( *library_target ).c_str () );
+
+	if ( defFilename )
+	{
+		fprintf ( fMakefile, " %s",
+		          backend->GetFullName ( *defFilename ).c_str () );
+	}
+
+	fprintf ( fMakefile, " | %s\n",
+	          backend->GetFullPath ( *library_target ).c_str () );
+
+	fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
+
+	fprintf ( fMakefile,
+	          "\t${dlltool} --dllname %s --def %s %s %s%s%s\n\n",
+	          module.GetDllName ().c_str (),
+	          defFilename ? backend->GetFullName ( *defFilename ).c_str ()
+	                      : empty.c_str (),
+	          delayimp ? "--output-delaylib" : "--output-lib",
+	          backend->GetFullName ( *library_target ).c_str (),
+	          module.mangledSymbols ? "" : " --kill-at",
+	          module.underscoreSymbols ? " --add-underscore" : "" );
+}
+
+void
 MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 {
 	if ( module.importLibrary != NULL )
 	{
-		const FileLocation *library_target = GetImportLibraryFilename ( module, &clean_files );
+		const FileLocation *library_target = GetImportLibraryFilename ( module, &clean_files, false );
+		const FileLocation *delayimp_target = GetImportLibraryFilename ( module, &clean_files, true );
 		const FileLocation *defFilename = GetDefinitionFilename ();
-		string empty = "tools" + sSep + "rbuild" + sSep + "empty.def";
 
-		fprintf ( fMakefile, "# IMPORT LIBRARY RULE\n" );
-
-		fprintf ( fMakefile, "%s:",
-		          backend->GetFullName ( *library_target ).c_str () );
-
-		if ( defFilename )
-		{
-			fprintf ( fMakefile, " %s",
-			          backend->GetFullName ( *defFilename ).c_str () );
-		}
-
-		fprintf ( fMakefile, " | %s\n",
-		          backend->GetFullPath ( *library_target ).c_str () );
-
-		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
-
-		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s%s%s\n\n",
-		          module.GetDllName ().c_str (),
-		          defFilename ? backend->GetFullName ( *defFilename ).c_str ()
-		                      : empty.c_str (),
-		          backend->GetFullName ( *library_target ).c_str (),
-		          module.mangledSymbols ? "" : " --kill-at",
-		          module.underscoreSymbols ? " --add-underscore" : "" );
+		GenerateImportLibraryTarget(defFilename, library_target, false);
+		GenerateImportLibraryTarget(defFilename, delayimp_target, true);
 
 		if ( defFilename )
 			delete defFilename;
 		delete library_target;
+		delete delayimp_target;
+
 	}
 }
 
@@ -2927,7 +2967,8 @@ MingwIsoModuleHandler::Process ()
 
 void
 MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
-	const string& bootcdDirectory )
+	const string& bootcdDirectory,
+	vector<FileLocation>& destinations )
 {
 	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
@@ -2941,14 +2982,16 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 			                                   ? bootcdDirectory + sSep + m.bootstrap->base
 			                                   : bootcdDirectory,
 			                          m.bootstrap->nameoncd );
-			OutputCopyCommand ( *m.output, targetFile );
+			OutputCopyCommandSingle ( *m.output, targetFile );
+			destinations.push_back ( targetFile );
 		}
 	}
 }
 
 void
 MingwIsoModuleHandler::OutputCdfileCopyCommands (
-	const string& bootcdDirectory )
+	const string& bootcdDirectory,
+	std::vector<FileLocation>& destinations )
 {
 	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
 	{
@@ -2958,7 +3001,19 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands (
 		                              ? bootcdDirectory + sSep + cdfile.target->relative_path
 		                              : bootcdDirectory,
 		                          cdfile.target->name );
-		OutputCopyCommand ( *cdfile.source, targetFile );
+		OutputCopyCommandSingle ( *cdfile.source, targetFile );
+		destinations.push_back ( targetFile );
+	}
+	for ( size_t i = 0; i < module.cdfiles.size (); i++ )
+	{
+		const CDFile& cdfile = *module.cdfiles[i];
+		FileLocation targetFile ( OutputDirectory,
+		                          cdfile.target->relative_path.length () > 0
+		                              ? bootcdDirectory + sSep + cdfile.target->relative_path
+		                              : bootcdDirectory,
+		                          cdfile.target->name );
+		OutputCopyCommandSingle ( *cdfile.source, targetFile );
+		destinations.push_back ( targetFile );
 	}
 }
 
@@ -3046,25 +3101,13 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	fprintf ( fMakefile, "# ISO MODULE TARGET\n" );
-	string bootcdDirectory = "cd";
+	string bootcdDirectory = module.name;
 	FileLocation bootcd ( OutputDirectory,
 	                      bootcdDirectory,
 	                      "" );
 	FileLocation bootcdReactos ( OutputDirectory,
 	                             bootcdDirectory + sSep + Environment::GetCdOutputPath (),
 	                             "" );
-	vector<FileLocation> vSourceFiles, vCdFiles;
-	vector<FileLocation> vCdDirectories;
-
-	// unattend.inf
-	FileLocation srcunattend ( SourceDirectory,
-	                           "boot" + sSep + "bootdata" + sSep + "bootcdregtest",
-	                           "unattend.inf" );
-	FileLocation tarunattend ( bootcdReactos.directory,
-	                           bootcdReactos.relative_path,
-	                           "unattend.inf" );
-	if (module.type == IsoRegTest)
-		vSourceFiles.push_back ( srcunattend );
 
 	// bootsector
 	const Module* bootModule = module.bootSector->bootSectorModule;
@@ -3078,7 +3121,6 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	}
 
 	const FileLocation *isoboot = bootModule->output;
-	vSourceFiles.push_back ( *isoboot );
 
 	// prepare reactos.dff and reactos.inf
 	FileLocation reactosDff ( SourceDirectory,
@@ -3088,31 +3130,18 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	                          bootcdReactos.relative_path,
 	                          "reactos.inf" );
 
-	vSourceFiles.push_back ( reactosDff );
-
 	/*
 		We use only the name and not full FileLocation(ouput) because Iso/LiveIso are an exception to the general rule.
 		Iso/LiveIso outputs are generated in code base root
 	*/
 	string IsoName = module.output->name;
 
-	string sourceFiles = v2s ( backend, vSourceFiles, 5 );
-
-	// fill cdrom
-	GetCdDirectories ( vCdDirectories, bootcdDirectory );
-	GetCdFiles ( vCdFiles );
-	string cdDirectories = "";//v2s ( vCdDirectories, 5 );
-	string cdFiles = v2s ( backend, vCdFiles, 5 );
-
-	fprintf ( fMakefile, ".PHONY: %s\n\n",
-	          module.name.c_str ());
-	fprintf ( fMakefile,
-	          "%s: all %s %s %s $(CABMAN_TARGET) $(CDMAKE_TARGET) %s\n",
+	fprintf ( fMakefile, ".PHONY: %s_CABINET\n\n",
+	          module.name.c_str () );
+	fprintf ( fMakefile, "%s_CABINET: all $(CABMAN_TARGET) %s | %s\n",
 	          module.name.c_str (),
-	          backend->GetFullName ( *isoboot ).c_str (),
-	          sourceFiles.c_str (),
-	          cdFiles.c_str (),
-	          cdDirectories.c_str () );
+	          backend->GetFullName ( reactosDff ).c_str (),
+	          backend->GetFullPath ( bootcdReactos ).c_str () );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CABMAN_TARGET) -C %s -L %s -I -P $(OUTPUT)\n",
 	          backend->GetFullName ( reactosDff ).c_str (),
@@ -3123,13 +3152,29 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	          backend->GetFullName ( reactosInf ).c_str (),
 	          backend->GetFullPath ( bootcdReactos ).c_str ());
 	fprintf ( fMakefile,
-	          "\t-@${rm} %s 2>$(NUL)\n",
+	          "\t-@${rm} %s 2>$(NUL)\n\n",
 	          backend->GetFullName ( reactosInf ).c_str () );
-	OutputBootstrapfileCopyCommands ( bootcdDirectory );
-	OutputCdfileCopyCommands ( bootcdDirectory );
 
-	if (module.type == IsoRegTest)
-		OutputCopyCommand ( srcunattend, tarunattend );
+	std::vector<FileLocation> sourceFiles;
+	OutputBootstrapfileCopyCommands ( bootcdDirectory, sourceFiles );
+	OutputCdfileCopyCommands ( bootcdDirectory, sourceFiles );
+
+	fprintf( fMakefile,
+	         "\n%s_OBJS := %s\n\n",
+	         module.name.c_str (),
+	         v2s ( backend, sourceFiles, 5 ).c_str () );
+
+	fprintf ( fMakefile, ".PHONY: %s\n\n",
+	          module.name.c_str ());
+	fprintf ( fMakefile,
+	          "%s: $(%s_OBJS) %s_CABINET %s $(CDMAKE_TARGET) | %s\n",
+	          module.name.c_str (),
+	          module.name.c_str (),
+	          module.name.c_str (),
+	          backend->GetFullName ( *isoboot ).c_str (),
+	          backend->GetFullPath ( FileLocation ( OutputDirectory,
+	                                                bootcdDirectory,
+	                                                "" ) ).c_str () );
 
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
@@ -3166,7 +3211,8 @@ MingwLiveIsoModuleHandler::CreateDirectory ( const string& directory )
 
 void
 MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
-                                                      string& reactosDirectory )
+                                                      string& reactosDirectory,
+                                                      std::vector<FileLocation>& destinations )
 {
 	for ( std::map<std::string, Module*>::const_iterator p = module.project.modules.begin (); p != module.project.modules.end (); ++ p )
 	{
@@ -3181,15 +3227,17 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 			                               ? livecdDirectory + sSep + reactosDirectory + sSep + m.install->relative_path
 			                               : livecdDirectory + sSep + reactosDirectory,
 			                           m.install->name );
-			OutputCopyCommand ( *aliasedModule.output,
-			                    destination);
+			OutputCopyCommandSingle ( *aliasedModule.output,
+			                          destination);
+			destinations.push_back ( destination );
 		}
 	}
 }
 
 void
 MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory,
-                                                         string& reactosDirectory )
+                                                         string& reactosDirectory,
+                                                         std::vector<FileLocation>& destinations )
 {
 	for ( size_t i = 0; i < module.project.installfiles.size (); i++ )
 	{
@@ -3199,12 +3247,14 @@ MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory
 		                          ? livecdDirectory + sSep + reactosDirectory + sSep + installfile.target->relative_path
 		                          : livecdDirectory + sSep + reactosDirectory,
 		                      installfile.target->name );
-		OutputCopyCommand ( *installfile.source, target );
+		OutputCopyCommandSingle ( *installfile.source, target );
+		destinations.push_back ( target );
 	}
 }
 
 void
-MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirectory )
+MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirectory,
+                                                             vector<FileLocation>& destinations )
 {
 	CreateDirectory ( livecdDirectory + sSep + "Profiles" );
 	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "All Users") ;
@@ -3219,12 +3269,14 @@ MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirec
 	FileLocation destination ( OutputDirectory,
 	                           livecdDirectory,
 	                           "freeldr.ini" );
-	OutputCopyCommand ( livecdIni,
-	                    destination );
+	OutputCopyCommandSingle ( livecdIni,
+	                          destination );
+	destinations.push_back ( destination );
 }
 
 void
-MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
+MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory,
+                                                  std::vector<FileLocation>& destinations )
 {
 	FileLocation freeldr ( OutputDirectory,
 	                       "boot" + sSep + "freeldr" + sSep + "freeldr",
@@ -3232,8 +3284,9 @@ MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
 	FileLocation destination ( OutputDirectory,
 	                           livecdDirectory + sSep + "loader",
 	                           "setupldr.sys" );
-	OutputCopyCommand ( freeldr,
-	                    destination );
+	OutputCopyCommandSingle ( freeldr,
+	                          destination );
+	destinations.push_back ( destination );
 }
 
 void
@@ -3286,19 +3339,31 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	                             "" );
 	CLEAN_FILE ( livecdReactos );
 
+	std::vector<FileLocation> sourceFiles;
+	OutputModuleCopyCommands ( livecdDirectory,
+	                           reactosDirectory,
+	                           sourceFiles );
+	OutputNonModuleCopyCommands ( livecdDirectory,
+	                              reactosDirectory,
+	                              sourceFiles );
+	OutputProfilesDirectoryCommands ( livecdDirectory, sourceFiles );
+	OutputLoaderCommands ( livecdDirectory, sourceFiles );
+
+	fprintf( fMakefile,
+	         "\n%s_OBJS := %s\n\n",
+	         module.name.c_str (),
+	         v2s ( backend, sourceFiles, 5 ).c_str () );
+
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 	          module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s: all %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
+	          "%s : $(%s_OBJS) %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
+	          module.name.c_str (),
 	          module.name.c_str (),
 	          backend->GetFullName ( *isoboot) .c_str (),
-	          backend->GetFullPath ( livecdReactos ).c_str () );
-	OutputModuleCopyCommands ( livecdDirectory,
-	                           reactosDirectory );
-	OutputNonModuleCopyCommands ( livecdDirectory,
-	                              reactosDirectory );
-	OutputProfilesDirectoryCommands ( livecdDirectory );
-	OutputLoaderCommands ( livecdDirectory );
+	          backend->GetFullPath ( FileLocation ( OutputDirectory,
+	                                                livecdDirectory,
+	                                                "" ) ).c_str () );
 	OutputRegistryCommands ( livecdDirectory );
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,

@@ -2,6 +2,7 @@
 #define __WIN32K_NTUSER_H
 
 typedef struct _PROCESSINFO *PPROCESSINFO;
+typedef struct _THREADINFO *PTHREADINFO;
 struct _DESKTOP;
 struct _WND;
 
@@ -72,24 +73,21 @@ typedef struct _CLIENTTHREADINFO
     DWORD dwcPumpHook;
 } CLIENTTHREADINFO, *PCLIENTTHREADINFO;
 
-typedef struct _W32THREADINFO
-{
-    PPROCESSINFO ppi; /* [KERNEL] */
-    PDESKTOPINFO pDeskInfo;
-    ULONG fsHooks;
-} W32THREADINFO, *PW32THREADINFO;
-
 typedef struct _HEAD
 {
   HANDLE h;
   DWORD  cLockObj;
 } HEAD, *PHEAD;
 
+typedef struct _THROBJHEAD
+{
+  HEAD;
+  PTHREADINFO pti;
+} THROBJHEAD, *PTHROBJHEAD;
+
 typedef struct _THRDESKHEAD
 {
-  HANDLE h;
-  DWORD  cLockObj;
-  PW32THREADINFO pti;
+  THROBJHEAD;
   struct _DESKTOP *rpdesk;
   PVOID       pSelf;
 } THRDESKHEAD, *PTHRDESKHEAD;
@@ -130,8 +128,8 @@ typedef struct _CALLBACKWND
 
 typedef struct _CLIENTINFO
 {
-    ULONG CI_flags;
-    ULONG cSpins;
+    ULONG_PTR CI_flags;
+    ULONG_PTR cSpins;
     DWORD dwExpWinVer;
     DWORD dwCompatFlags;
     DWORD dwCompatFlags2;
@@ -146,21 +144,22 @@ typedef struct _CLIENTINFO
     PCLIENTTHREADINFO pClientThreadInfo;
     ULONG_PTR dwHookData;
     DWORD dwKeyCache;
-    DWORD afKeyState[2];
+    BYTE afKeyState[8];
     DWORD dwAsyncKeyCache;
-    DWORD afAsyncKeyState[2];
-    DWORD afAsyncKeyStateRecentDow[2];
+    BYTE afAsyncKeyState[8];
+    BYTE afAsyncKeyStateRecentDow[8];
     HKL hKL;
     USHORT CodePage;
-    USHORT achDbcsCF;
+    UCHAR achDbcsCF[2];
     MSG msgDbcsCB;
-    ULONG Win32ClientInfo3[28];
+    LPDWORD lpdwRegisteredClasses;
+    ULONG Win32ClientInfo3[27];
 /* It's just a pointer reference not to be used w the structure in user space. */
     PPROCESSINFO ppi;
 } CLIENTINFO, *PCLIENTINFO;
 
-/* Make sure it fits exactly into the TEB */
-C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
+/* Make sure it fits into the TEB */
+C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
@@ -349,8 +348,8 @@ typedef struct _CLS
 #define WS_EX_UISTATEFOCUSRECTHIDDEN   0X80000000
 
 /* Non SDK Styles */
-#define WS_MAXIMIZED  0X01000000
-#define WS_MINIMIZED  0X20000000
+#define WS_MAXIMIZED  WS_MAXIMIZE
+#define WS_MINIMIZED  WS_MINIMIZE
 
 /* ExStyles2 */
 #define WS_EX2_CLIPBOARDLISTENER        0X00000001
@@ -548,19 +547,19 @@ typedef LONG_PTR (NTAPI *PFN_FNID)(PWND, UINT, WPARAM, LPARAM, ULONG_PTR);
 #define ICLS_DDEMLSERVERA 13
 #define ICLS_DDEMLSERVERW 14
 #define ICLS_IME          15
-#define ICLS_DESKTOP      16
-#define ICLS_DIALOG       17
-#define ICLS_MENU         18
-#define ICLS_SWITCH       19
-#define ICLS_ICONTITLE    20
-#define ICLS_TOOLTIPS     21
+#define ICLS_GHOST        16
+#define ICLS_DESKTOP      17
+#define ICLS_DIALOG       18
+#define ICLS_MENU         19
+#define ICLS_SWITCH       20
+#define ICLS_ICONTITLE    21
+#define ICLS_TOOLTIPS     22
 #if (_WIN32_WINNT <= 0x0501)
 #define ICLS_UNKNOWN      22
 #define ICLS_NOTUSED      23
 #else
-#define ICLS_SYSSHADOW    22
-#define ICLS_HWNDMESSAGE  23
-#define ICLS_UNKNOWN      24
+#define ICLS_SYSSHADOW    23
+#define ICLS_HWNDMESSAGE  24
 #define ICLS_NOTUSED      25
 #endif
 #define ICLS_END          31
@@ -696,7 +695,7 @@ typedef struct _BROADCASTPARM
   LUID  luid;
 } BROADCASTPARM, *PBROADCASTPARM;
 
-PW32THREADINFO GetW32ThreadInfo(VOID);
+PTHREADINFO GetW32ThreadInfo(VOID);
 PPROCESSINFO GetW32ProcessInfo(VOID);
 
 typedef struct _WNDMSG
@@ -3050,9 +3049,7 @@ typedef struct tagKMDDELPARAM
   #define MSQ_STATE_MENUOWNER	0x4
   #define MSQ_STATE_MOVESIZE	0x5
   #define MSQ_STATE_CARET	0x6
-#define TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID 0xfffd0058 // use HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID
 #define TWOPARAM_ROUTINE_SETCARETPOS        0xfffd0060
-#define TWOPARAM_ROUTINE_GETWINDOWINFO      0xfffd0061
 #define TWOPARAM_ROUTINE_REGISTERLOGONPROC  0xfffd0062
 #define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
 #define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002

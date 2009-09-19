@@ -850,6 +850,8 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
         ExAllocatePool(NonPagedPool, sizeof(KEY_BASIC_INFORMATION));
     ULONG KbioLength = sizeof(KEY_BASIC_INFORMATION), ResultLength;
 
+    RtlInitUnicodeString( DeviceDesc, NULL );
+
     if( !Kbio ) return STATUS_INSUFFICIENT_RESOURCES;
 
     RtlInitUnicodeString
@@ -904,8 +906,6 @@ static NTSTATUS FindDeviceDescForAdapter( PUNICODE_STRING Name,
         }
     }
 
-    RtlInitUnicodeString( DeviceDesc, L"" );
-    AppendUnicodeString( DeviceDesc, &TargetKeyName, FALSE );
     NtClose( EnumKey );
     ExFreePool( Kbio );
     return STATUS_UNSUCCESSFUL;

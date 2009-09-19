@@ -48,11 +48,9 @@ VOID TcpipRecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
     RecursiveMutexInit( RecMutex );
 }
 
-UINT TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
-    UINT Ret;
+VOID TcpipRecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
     //TI_DbgPrint(DEBUG_LOCK,("Locking\n"));
-    Ret = RecursiveMutexEnter( RecMutex, ToWrite );
-    return Ret;
+    RecursiveMutexEnter( RecMutex );
 }
 
 VOID TcpipRecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {

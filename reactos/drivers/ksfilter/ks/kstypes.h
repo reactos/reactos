@@ -1,6 +1,26 @@
 #ifndef KSTYPES_H__
 #define KSTYPES_H__
 
+#include <ntddk.h>
+#include <ks.h>
+
+typedef struct
+{
+    KoCreateObjectHandler CreateObjectHandler;
+}KO_DRIVER_EXTENSION, *PKO_DRIVER_EXTENSION;
+
+typedef struct
+{
+    const KSDEVICE_DESCRIPTOR  *Descriptor;
+}KS_DRIVER_EXTENSION, *PKS_DRIVER_EXTENSION;
+
+typedef struct
+{
+    KSOBJECT_HEADER ObjectHeader;
+    KSOBJECT_CREATE_ITEM CreateItem;
+}KO_OBJECT_HEADER, *PKO_OBJECT_HEADER;
+
+
 typedef struct
 {
     KSDISPATCH_TABLE DispatchTable;
@@ -11,6 +31,7 @@ typedef struct
 
     UNICODE_STRING ObjectClass;
     PUNKNOWN Unknown;
+    PVOID ObjectType;
 
     PDEVICE_OBJECT TargetDevice;
     LIST_ENTRY TargetDeviceListEntry;
@@ -38,11 +59,34 @@ typedef struct
 {
     KSOBJECTTYPE Type;
     PKSDEVICE KsDevice;
+    KMUTEX ControlMutex;
+    LIST_ENTRY EventList;
+    KSPIN_LOCK EventListLock;
+    union
+    {
+        PKSDEVICE KsDevice;
+        PKSFILTERFACTORY KsFilterFactory;
+        PKSFILTER KsFilter;
+    }Parent;
+
+    union
+    {
+        PKSFILTERFACTORY FilterFactory;
+        PKSFILTER Filter;
+        PKSPIN Pin;
+    }Next;
+
+    union
+    {
+        PKSFILTERFACTORY FilterFactory;
+        PKSFILTER Filter;
+    }FirstChild;
+
 }KSBASIC_HEADER, *PKSBASIC_HEADER;
 
 typedef struct
 {
-    KSOBJECTTYPE Type;
+    KSBASIC_HEADER BasicHeader;
     KSDEVICE KsDevice;
     IKsDeviceVtbl *lpVtblIKsDevice;
 
@@ -63,9 +107,9 @@ typedef struct
     KSDEVICE_DESCRIPTOR* Descriptor;
 
     LIST_ENTRY PowerDispatchList;
+    LIST_ENTRY ObjectBags;
 
 }KSIDEVICE_HEADER, *PKSIDEVICE_HEADER;
-
 
 typedef struct
 {
@@ -84,6 +128,36 @@ typedef struct
     PKSIDEVICE_HEADER DeviceHeader;
     PIO_WORKITEM WorkItem;
 }PNP_POSTSTART_CONTEXT, *PPNP_POSTSTART_CONTEXT;
+
+typedef struct
+{
+    PIRP Irp;
+    KEVENT Event;
+}KSREMOVE_BUS_INTERFACE_CTX, *PKSREMOVE_BUS_INTERFACE_CTX;
+
+typedef struct
+{
+    PLIST_ENTRY List;
+    PFILE_OBJECT FileObject;
+    PKSEVENT_ENTRY EventEntry;
+    PIRP Irp;
+}KSEVENT_CTX, *PKSEVENT_CTX;
+
+typedef BOOLEAN (NTAPI *PKSEVENT_SYNCHRONIZED_ROUTINE)(PKSEVENT_CTX Context);
+
+typedef struct
+{
+    BOOLEAN Enabled;
+
+    PDEVICE_OBJECT PnpDeviceObject;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT BusDeviceObject;
+
+    UNICODE_STRING ServicePath;
+    UNICODE_STRING SymbolicLinkName;
+
+    WCHAR BusIdentifier[1];
+}BUS_ENUM_DEVICE_EXTENSION, *PBUS_ENUM_DEVICE_EXTENSION;
 
 
 #endif

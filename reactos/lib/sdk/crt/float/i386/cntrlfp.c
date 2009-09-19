@@ -29,12 +29,7 @@
 
 unsigned int CDECL _controlfp(unsigned int newval, unsigned int mask)
 {
-#ifdef __i386__
   return _control87( newval, mask & ~_EM_DENORMAL );
-#else
-  FIXME(":Not Implemented!\n");
-  return 0;
-#endif
 }
 
 /*********************************************************************
@@ -42,14 +37,17 @@ unsigned int CDECL _controlfp(unsigned int newval, unsigned int mask)
  */
 unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
 {
-#if defined(__GNUC__) && defined(__i386__)
   unsigned int fpword = 0;
   unsigned int flags = 0;
 
   TRACE("(%08x, %08x): Called\n", newval, mask);
 
   /* Get fp control word */
+#if defined(__GNUC__)
   __asm__ __volatile__( "fstcw %0" : "=m" (fpword) : );
+#else
+  __asm fstcw [fpword];
+#endif
 
   TRACE("Control word before : %08x\n", fpword);
 
@@ -98,11 +96,11 @@ unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
   TRACE("Control word after  : %08x\n", fpword);
 
   /* Put fp control word */
+#if defined(__GNUC__)
   __asm__ __volatile__( "fldcw %0" : : "m" (fpword) );
+#else
+  __asm fldcw [fpword];
+#endif
 
   return flags;
-#else
-  FIXME(":Not Implemented!\n");
-  return 0;
-#endif
 }

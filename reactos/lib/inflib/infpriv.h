@@ -69,7 +69,7 @@ typedef struct _INFCONTEXT
   PINFCACHELINE Line;
 } INFCONTEXT;
 
-typedef long INFSTATUS;
+typedef int INFSTATUS;
 
 /* FUNCTIONS ****************************************************************/
 

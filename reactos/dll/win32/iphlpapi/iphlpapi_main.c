@@ -102,6 +102,7 @@ DWORD getInterfaceGatewayByIndex(DWORD index)
 {
    DWORD ndx, retVal = 0, numRoutes = getNumRoutes();
    RouteTable *table = getRouteTable();
+   if (!table) return 0;
 
     for (ndx = 0; ndx < numRoutes; ndx++)
     {
@@ -645,9 +646,12 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
               DWORD addrLen = sizeof(ptr->Address), type;
               const char *ifname =
                   getInterfaceNameByIndex(table->indexes[ndx]);
+              if (!ifname) {
+                  ret = ERROR_OUTOFMEMORY;
+                  break;
+              }
 
               /* on Win98 this is left empty, but whatever */
-
               strncpy(ptr->AdapterName,ifname,sizeof(ptr->AdapterName));
               consumeInterfaceName(ifname);
               ptr->AdapterName[MAX_ADAPTER_NAME_LENGTH] = '\0';
@@ -906,8 +910,9 @@ DWORD WINAPI GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numInterfaces = getNumInterfaces();
+    ULONG size;
     TRACE("GetIfTable: numInterfaces = %d\n", (int)numInterfaces);
-    ULONG size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
+    size = sizeof(MIB_IFTABLE) + (numInterfaces - 1) * sizeof(MIB_IFROW);
 
     if (!pIfTable || *pdwSize < size) {
       *pdwSize = size;
@@ -971,8 +976,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
     ret = ERROR_INVALID_PARAMETER;
   else {
     DWORD numNonLoopbackInterfaces = getNumNonLoopbackInterfaces();
+    ULONG size;
     TRACE("numNonLoopbackInterfaces == 0x%x\n", numNonLoopbackInterfaces);
-    ULONG size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
+    size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
      sizeof(IP_ADAPTER_INDEX_MAP);
 
     if (!pIfTable || *dwOutBufLen < size) {
@@ -981,9 +987,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
     }
     else {
       InterfaceIndexTable *table = getNonLoopbackInterfaceIndexTable();
-      TRACE("table->numIndexes == 0x%x\n", table->numIndexes);
 
       if (table) {
+        TRACE("table->numIndexes == 0x%x\n", table->numIndexes);
         size = sizeof(IP_INTERFACE_INFO) + (table->numIndexes) *
          sizeof(IP_ADAPTER_INDEX_MAP);
         if (*dwOutBufLen < size) {

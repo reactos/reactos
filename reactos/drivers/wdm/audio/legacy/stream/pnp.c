@@ -157,6 +157,10 @@ StreamClassStartDevice(
     /* Get driver object extension */
     DriverObjectExtension = IoGetDriverObjectExtension(DeviceObject->DriverObject, (PVOID)StreamClassAddDevice);
 
+    /* sanity checks */
+    ASSERT(DeviceExtension);
+    ASSERT(DriverObjectExtension);
+
     /* Zero request block */
     RtlZeroMemory(RequestBlock, ResultLength);
 

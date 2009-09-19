@@ -49,7 +49,6 @@
 #define PPHYSICAL_PAGE       PMMPFN
 
 PPHYSICAL_PAGE MmPfnDatabase;
-ULONG MmHighestPhysicalPage;
 
 /* List of pages allocated to the MC_USER Consumer */
 static LIST_ENTRY UserPageListHead;

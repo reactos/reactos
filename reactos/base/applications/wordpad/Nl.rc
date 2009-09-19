@@ -180,10 +180,14 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    STRING_RICHTEXT_FILES_RTF,     "Rich text formaat (*.rtf)"
+    STRING_ALL_FILES,              "Alle documenten (*.*)"
     STRING_TEXT_FILES_TXT,         "Tekst documenten (*.txt)"
     STRING_TEXT_FILES_UNICODE_TXT, "Unicode tekst document (*.txt)"
-    STRING_ALL_FILES,              "Alle documenten (*.*)"
+    STRING_RICHTEXT_FILES_RTF,     "Rich text formaat (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "Rich tekst document"
+    STRING_NEWFILE_TXT,            "Tekst document"
+    STRING_NEWFILE_TXT_UNICODE,    "Unicode tekst document"
+    STRING_PRINTER_FILES_PRN,      "Printer bestanden (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE
@@ -191,18 +195,6 @@ BEGIN
     STRING_ALIGN_LEFT,            "Links"
     STRING_ALIGN_RIGHT,           "Rechts"
     STRING_ALIGN_CENTER,          "Gecentreerd"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_NEWFILE_RICHTEXT,     "Rich tekst document"
-    STRING_NEWFILE_TXT,          "Tekst document"
-    STRING_NEWFILE_TXT_UNICODE,  "Unicode tekst document"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_PRINTER_FILES_PRN,        "Printer bestanden (*.PRN)"
 END
 
 STRINGTABLE DISCARDABLE

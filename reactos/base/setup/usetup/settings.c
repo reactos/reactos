@@ -241,7 +241,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                NULL);
 
     Status = NtOpenKey(&BusKey,
-                       KEY_ALL_ACCESS,
+                       KEY_ENUMERATE_SUB_KEYS,
                        &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
@@ -262,7 +262,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                    NULL);
 
         Status = NtOpenKey(&BusInstanceKey,
-                           KEY_ALL_ACCESS,
+                           KEY_ENUMERATE_SUB_KEYS,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
@@ -281,7 +281,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                    NULL);
 
         Status = NtOpenKey(&ControllerKey,
-                           KEY_ALL_ACCESS,
+                           KEY_ENUMERATE_SUB_KEYS,
                            &ObjectAttributes);
         if (NT_SUCCESS(Status))
         {
@@ -300,7 +300,7 @@ GetDisplayIdentifier(PWSTR Identifier,
                                            NULL);
 
                 Status = NtOpenKey(&ControllerInstanceKey,
-                                   KEY_ALL_ACCESS,
+                                   KEY_QUERY_VALUE,
                                    &ObjectAttributes);
                 if (!NT_SUCCESS(Status))
                 {
@@ -648,7 +648,7 @@ ProcessLocaleRegistry(PGENERIC_LIST List)
                                NULL);
 
     Status =  NtOpenKey(&KeyHandle,
-                        KEY_ALL_ACCESS,
+                        KEY_SET_VALUE,
                         &ObjectAttributes);
 
     if (!NT_SUCCESS(Status))
@@ -976,7 +976,7 @@ SetGeoID(PWCHAR Id)
                                NULL);
 
     Status =  NtOpenKey(&KeyHandle,
-                          KEY_ALL_ACCESS,
+                        KEY_SET_VALUE,
 			  &ObjectAttributes);
     if(!NT_SUCCESS(Status))
     {

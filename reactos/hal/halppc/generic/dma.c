@@ -114,7 +114,7 @@ static DMA_OPERATIONS HalpDmaOperations = {
 
 #define MAX_MAP_REGISTERS 64
 
-#define TAG_DMA TAG('D','M','A',' ')
+#define TAG_DMA ' AMD'
 
 /* FUNCTIONS *****************************************************************/
 

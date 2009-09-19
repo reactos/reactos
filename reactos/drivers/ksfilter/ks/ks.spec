@@ -1,3 +1,14 @@
+@ fastcall -i386 ??0CBaseUnknown@@QAE@ABU_GUID@@PAUIUnknown@@@Z(ptr ptr ptr ptr) CBaseUnknown_ConstructorWithGUID
+@ fastcall -i386 ??0CBaseUnknown@@QAE@PAUIUnknown@@@Z(ptr ptr ptr) CBaseUnknown_Constructor
+@ fastcall -i386 ??1CBaseUnknown@@UAE@XZ(ptr ptr) CBaseUnknown_DefaultDestructor
+@ fastcall -i386 ??_FCBaseUnknown@@QAEXXZ(ptr ptr ptr) CBaseUnknown_Destructor
+@ stdcall -i386 ?IndirectedAddRef@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnAddRef
+@ stdcall -i386 ?IndirectedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z(ptr ptr ptr) IIndirectedUnknown_fnQueryInterface
+@ stdcall -i386 ?IndirectedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
+@ stdcall -i386 ?NonDelegatedAddRef@CBaseUnknown@@UAGKXZ(ptr) INonDelegatedUnknown_fnAddRef
+@ stdcall -i386 ?NonDelegatedQueryInterface@CBaseUnknown@@UAGJABU_GUID@@PAPAX@Z(ptr ptr ptr) INonDelegatedUnknown_fnQueryInterface
+@ stdcall ?NonDelegatedRelease@CBaseUnknown@@UAGKXZ(ptr) IIndirectedUnknown_fnRelease
+
 @ stdcall DllInitialize(ptr)
 @ stdcall KoCreateInstance(ptr ptr long ptr ptr)
 @ stdcall KoDeviceInitialize(ptr)

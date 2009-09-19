@@ -151,7 +151,7 @@ void processRequest(LPVOID lpParam);
 char* myGetToken(char*, BYTE);
 void init();
 bool cleanReq(request*);
-bool getSection(char*, char*, BYTE, char*);
+bool getSection(const char*, char*, BYTE, char*);
 bool isIP(char*s);
 char* myLower(char*);
 char* myUpper(char*);

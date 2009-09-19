@@ -197,31 +197,31 @@ LoadTheSpoolerDrv(VOID)
 
      if (hModWinSpoolDrv)
      {
-        fpAbortPrinter = GetProcAddress(hModWinSpoolDrv, "AbortPrinter");
-        fpClosePrinter = GetProcAddress(hModWinSpoolDrv, "ClosePrinter");
-        fpCloseSpoolFileHandle = GetProcAddress(hModWinSpoolDrv, "CloseSpoolFileHandle");
+        fpAbortPrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, "AbortPrinter");
+        fpClosePrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, "ClosePrinter");
+        fpCloseSpoolFileHandle = (PVOID)GetProcAddress(hModWinSpoolDrv, "CloseSpoolFileHandle");
         fpCommitSpoolData = (PVOID)GetProcAddress(hModWinSpoolDrv, "CommitSpoolData");
-       // fpConnectToLd64In32Server = GetProcAddress(hModWinSpoolDrv, (LPCSTR)224);
+       // fpConnectToLd64In32Server = (PVOID)GetProcAddress(hModWinSpoolDrv, (LPCSTR)224);
         fpDocumentEvent = (PVOID)GetProcAddress(hModWinSpoolDrv,"DocumentEvent");
         fpDocumentPropertiesW = (PVOID)GetProcAddress(hModWinSpoolDrv, "DocumentPropertiesW");
-        fpEndDocPrinter = GetProcAddress(hModWinSpoolDrv, "EndDocPrinter");
-        fpEndPagePrinter = GetProcAddress(hModWinSpoolDrv, "EndPagePrinter");
-        fpGetPrinterW = GetProcAddress( hModWinSpoolDrv,"GetPrinterW");
-        fpGetPrinterDriverW = GetProcAddress(hModWinSpoolDrv,"GetPrinterDriverW");
+        fpEndDocPrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, "EndDocPrinter");
+        fpEndPagePrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, "EndPagePrinter");
+        fpGetPrinterW = (PVOID)GetProcAddress( hModWinSpoolDrv,"GetPrinterW");
+        fpGetPrinterDriverW = (PVOID)GetProcAddress(hModWinSpoolDrv,"GetPrinterDriverW");
         fpGetSpoolFileHandle = (PVOID)GetProcAddress(hModWinSpoolDrv, "GetSpoolFileHandle");
-        fpIsValidDevmodeW = GetProcAddress(hModWinSpoolDrv, "IsValidDevmodeW");
-        fpOpenPrinterW = GetProcAddress(hModWinSpoolDrv, "OpenPrinterW");
-        fpQueryColorProfile = GetProcAddress(hModWinSpoolDrv,"QueryColorProfile");
+        fpIsValidDevmodeW = (PVOID)GetProcAddress(hModWinSpoolDrv, "IsValidDevmodeW");
+        fpOpenPrinterW = (PVOID)GetProcAddress(hModWinSpoolDrv, "OpenPrinterW");
+        fpQueryColorProfile = (PVOID)GetProcAddress(hModWinSpoolDrv,"QueryColorProfile");
         fpQueryRemoteFonts = (PVOID)GetProcAddress(hModWinSpoolDrv, "QueryRemoteFonts");
         fpQuerySpoolMode = (PVOID)GetProcAddress(hModWinSpoolDrv, "QuerySpoolMode");
-        fpReadPrinter = GetProcAddress(hModWinSpoolDrv, "ReadPrinter");
-        fpResetPrinterW = GetProcAddress(hModWinSpoolDrv, "ResetPrinterW");
-        fpSeekPrinter = GetProcAddress(hModWinSpoolDrv, "SeekPrinter");
-        fpSplDriverUnloadComplete = GetProcAddress(hModWinSpoolDrv, "SplDriverUnloadComplete");
-        fpSplReadPrinter = GetProcAddress(hModWinSpoolDrv, (LPCSTR)205);
+        fpReadPrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, "ReadPrinter");
+        fpResetPrinterW = (PVOID)GetProcAddress(hModWinSpoolDrv, "ResetPrinterW");
+        fpSeekPrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, "SeekPrinter");
+        fpSplDriverUnloadComplete = (PVOID)GetProcAddress(hModWinSpoolDrv, "SplDriverUnloadComplete");
+        fpSplReadPrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, (LPCSTR)205);
         fpStartDocDlgW = (PVOID)GetProcAddress(hModWinSpoolDrv, "StartDocDlgW");
         fpStartDocPrinterW = (PVOID)GetProcAddress(hModWinSpoolDrv, "StartDocPrinterW");
-        fpStartPagePrinter = GetProcAddress(hModWinSpoolDrv, "StartPagePrinter");
+        fpStartPagePrinter = (PVOID)GetProcAddress(hModWinSpoolDrv, "StartPagePrinter");
 
         if ( !fpAbortPrinter ||
              !fpClosePrinter ||

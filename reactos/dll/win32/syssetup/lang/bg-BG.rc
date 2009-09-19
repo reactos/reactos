@@ -217,7 +217,7 @@ BEGIN
     IDS_CMT_RDESKTOP    "Пускане на отдалечената работна площ"
     IDS_CMT_EVENTVIEW   "Пускане на прегледника на събития"
     IDS_CMT_MSCONFIG    "Пускане на приложението за настройка на уредбата"
-    IDS_CMT_PAINT       "Launch Paint"
+    IDS_CMT_PAINT       "Пускане на приложението за рисуване"
 END
 
 
@@ -266,7 +266,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Команден прозорец.lnk"
     IDS_SHORT_EXPLORER   "Изследователят на РеактОС.lnk"
-    IDS_SHORT_DOWNLOADER "Свали!.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_SERVICE    "Управител на услугите.lnk"
     IDS_SHORT_DEVICE     "Управител на устройствата.lnk"
     IDS_SHORT_MPLAY32    "Мултимедиен възпроизводител.lnk"
@@ -285,7 +285,7 @@ BEGIN
     IDS_SHORT_MSCONFIG   "Настройка на уредбата.lnk"
     IDS_SHORT_SNDVOL32   "Сила на звука.lnk"
     IDS_SHORT_DXDIAG     "Преглеждане на РеактХ.lnk"
-    IDS_SHORT_PAINT      "Paint.lnk"
+    IDS_SHORT_PAINT      "Рисунък.lnk"
 END
 
 

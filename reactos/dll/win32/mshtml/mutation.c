@@ -412,6 +412,11 @@ static void NSAPI nsDocumentObserver_CharacterDataChanged(nsIDocumentObserver *i
 {
 }
 
+static void NSAPI nsDocumentObserver_AttributeWillChange(nsIDocumentObserver *iface, nsIDocument *aDocument,
+        nsIContent *aContent, PRInt32 aNameSpaceID, nsIAtom *aAttribute, PRInt32 aModType)
+{
+}
+
 static void NSAPI nsDocumentObserver_AttributeChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
         nsIContent *aContent, PRInt32 aNameSpaceID, nsIAtom *aAttribute, PRInt32 aModType, PRUint32 aStateMask)
 {
@@ -456,6 +461,22 @@ static void NSAPI nsDocumentObserver_BeginLoad(nsIDocumentObserver *iface, nsIDo
 
 static void NSAPI nsDocumentObserver_EndLoad(nsIDocumentObserver *iface, nsIDocument *aDocument)
 {
+    NSContainer *This = NSDOCOBS_THIS(iface);
+    task_t *task;
+
+    TRACE("\n");
+
+    task = heap_alloc(sizeof(task_t));
+
+    task->doc = This->doc;
+    task->task_id = TASK_PARSECOMPLETE;
+    task->next = NULL;
+
+    /*
+     * This should be done in the worker thread that parses HTML,
+     * but we don't have such thread (Gecko parses HTML for us).
+     */
+    push_task(task);
 }
 
 static void NSAPI nsDocumentObserver_ContentStatesChanged(nsIDocumentObserver *iface, nsIDocument *aDocument,
@@ -563,6 +584,7 @@ static const nsIDocumentObserverVtbl nsDocumentObserverVtbl = {
     nsDocumentObserver_Release,
     nsDocumentObserver_CharacterDataWillChange,
     nsDocumentObserver_CharacterDataChanged,
+    nsDocumentObserver_AttributeWillChange,
     nsDocumentObserver_AttributeChanged,
     nsDocumentObserver_ContentAppended,
     nsDocumentObserver_ContentInserted,

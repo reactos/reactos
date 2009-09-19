@@ -11,8 +11,8 @@
 #include <stdlib.h>
 
 #define WIN32_NO_STATUS
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <ws2spi.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>

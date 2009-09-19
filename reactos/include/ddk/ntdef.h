@@ -85,8 +85,8 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 // We should use the -fms-extensions compiler flag for gcc,
 // and clean up the mess.
 //
-#ifdef __GNUC__
 #ifndef NONAMELESSUNION
+#ifdef __GNUC__
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #define _ANONYMOUS_UNION __extension__
 #define _ANONYMOUS_STRUCT __extension__
@@ -95,11 +95,11 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 #define _ANONYMOUS_UNION __extension__
 #endif /* __cplusplus */
 #endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
-#endif /* NONAMELESSUNION */
 #elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
 #endif /* __GNUC__/__WATCOMC__ */
+#endif /* NONAMELESSUNION */
 
 #ifndef _ANONYMOUS_UNION
 #define _ANONYMOUS_UNION
@@ -193,7 +193,6 @@ typedef unsigned long POINTER_64; // FIXME! HACK!!!
 
 // Done the same way as in windef.h for now
 #define DECLSPEC_IMPORT __declspec(dllimport)
-#define DECLSPEC_EXPORT __declspec(dllexport)
 #define DECLSPEC_NORETURN __declspec(noreturn)
 
 

@@ -3,7 +3,7 @@
  *
  * Copyright 2002-2003 Jason Edmeades
  * Copyright 2002-2003 Raphael Junqueira
- * Copyright 2005 Oliver Stieber 
+ * Copyright 2005 Oliver Stieber
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,6 @@
 extern HRESULT vdecl_convert_fvf(
     DWORD FVF,
     D3DVERTEXELEMENT9** ppVertexElements);
-extern CRITICAL_SECTION d3d9_cs;
 D3DFORMAT d3dformat_from_wined3dformat(WINED3DFORMAT format);
 WINED3DFORMAT wined3dformat_from_d3dformat(D3DFORMAT format);
 
@@ -369,7 +368,6 @@ typedef struct IDirect3DBaseTexture9Impl
 
     /* IDirect3DResource9 fields */
     IWineD3DBaseTexture    *wineD3DBaseTexture;
-    
 } IDirect3DBaseTexture9Impl;
 
 /* --------------------- */

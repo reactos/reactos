@@ -65,6 +65,19 @@ typedef struct tagPreservedKey
     TfClientId      tid;
 } PreservedKey;
 
+typedef struct tagDocumentMgrs
+{
+    struct list     entry;
+    ITfDocumentMgr  *docmgr;
+} DocumentMgrEntry;
+
+typedef struct tagAssociatedWindow
+{
+    struct list     entry;
+    HWND            hwnd;
+    ITfDocumentMgr  *docmgr;
+} AssociatedWindow;
+
 typedef struct tagACLMulti {
     const ITfThreadMgrVtbl *ThreadMgrVtbl;
     const ITfSourceVtbl *SourceVtbl;
@@ -78,6 +91,9 @@ typedef struct tagACLMulti {
     /* const ITfSourceSingleVtbl *SourceSingleVtbl; */
     LONG refCount;
 
+    /* Aggregation */
+    ITfCompartmentMgr  *CompartmentMgr;
+
     const ITfThreadMgrEventSinkVtbl *ThreadMgrEventSinkVtbl; /* internal */
 
     ITfDocumentMgr *focus;
@@ -87,6 +103,10 @@ typedef struct tagACLMulti {
     CLSID forgroundTextService;
 
     struct list CurrentPreservedKeys;
+    struct list CreatedDocumentMgrs;
+
+    struct list AssociatedFocusWindows;
+    HHOOK  focusHook;
 
     /* kept as separate lists to reduce unnecessary iterations */
     struct list     ActiveLanguageProfileNotifySink;
@@ -96,6 +116,17 @@ typedef struct tagACLMulti {
     struct list     ThreadFocusSink;
     struct list     ThreadMgrEventSink;
 } ThreadMgr;
+
+typedef struct tagEnumTfDocumentMgr {
+    const IEnumTfDocumentMgrsVtbl *Vtbl;
+    LONG refCount;
+
+    struct list *index;
+    struct list *head;
+} EnumTfDocumentMgr;
+
+static HRESULT EnumTfDocumentMgr_Constructor(struct list* head, IEnumTfDocumentMgrs **ppOut);
+LRESULT CALLBACK ThreadFocusHookProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 static inline ThreadMgr *impl_from_ITfSourceVtbl(ITfSource *iface)
 {
@@ -122,6 +153,22 @@ static inline ThreadMgr *impl_from_ITfThreadMgrEventSink(ITfThreadMgrEventSink *
     return (ThreadMgr *)((char *)iface - FIELD_OFFSET(ThreadMgr,ThreadMgrEventSinkVtbl));
 }
 
+static HRESULT SetupWindowsHook(ThreadMgr *This)
+{
+    if (!This->focusHook)
+    {
+        This->focusHook = SetWindowsHookExW(WH_CBT, ThreadFocusHookProc, 0,
+                             GetCurrentThreadId());
+        if (!This->focusHook)
+        {
+            ERR("Unable to set focus hook\n");
+            return E_FAIL;
+        }
+        return S_OK;
+    }
+    return S_FALSE;
+}
+
 static void free_sink(ThreadMgrSink *sink)
 {
         IUnknown_Release(sink->interfaces.pIUnknown);
@@ -131,6 +178,10 @@ static void free_sink(ThreadMgrSink *sink)
 static void ThreadMgr_Destructor(ThreadMgr *This)
 {
     struct list *cursor, *cursor2;
+
+    /* unhook right away */
+    if (This->focusHook)
+        UnhookWindowsHookEx(This->focusHook);
 
     TlsSetValue(tlsIndex,NULL);
     TRACE("destroying %p\n", This);
@@ -183,6 +234,23 @@ static void ThreadMgr_Destructor(ThreadMgr *This)
         HeapFree(GetProcessHeap(),0,key);
     }
 
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->CreatedDocumentMgrs)
+    {
+        DocumentMgrEntry *mgr = LIST_ENTRY(cursor,DocumentMgrEntry,entry);
+        list_remove(cursor);
+        FIXME("Left Over ITfDocumentMgr.  Should we do something with it?\n");
+        HeapFree(GetProcessHeap(),0,mgr);
+    }
+
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->AssociatedFocusWindows)
+    {
+        AssociatedWindow *wnd = LIST_ENTRY(cursor,AssociatedWindow,entry);
+        list_remove(cursor);
+        HeapFree(GetProcessHeap(),0,wnd);
+    }
+
+    CompartmentMgr_Destructor(This->CompartmentMgr);
+
     HeapFree(GetProcessHeap(),0,This);
 }
 
@@ -210,6 +278,10 @@ static HRESULT WINAPI ThreadMgr_QueryInterface(ITfThreadMgr *iface, REFIID iid, 
     else if (IsEqualIID(iid, &IID_ITfClientId))
     {
         *ppvOut = &This->ClientIdVtbl;
+    }
+    else if (IsEqualIID(iid, &IID_ITfCompartmentMgr))
+    {
+        *ppvOut = This->CompartmentMgr;
     }
 
     if (*ppvOut)
@@ -294,16 +366,37 @@ static HRESULT WINAPI ThreadMgr_CreateDocumentMgr( ITfThreadMgr* iface, ITfDocum
 **ppdim)
 {
     ThreadMgr *This = (ThreadMgr *)iface;
+    DocumentMgrEntry *mgrentry;
+    HRESULT hr;
+
     TRACE("(%p)\n",iface);
-    return DocumentMgr_Constructor((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, ppdim);
+    mgrentry = HeapAlloc(GetProcessHeap(),0,sizeof(DocumentMgrEntry));
+    if (mgrentry == NULL)
+        return E_OUTOFMEMORY;
+
+    hr = DocumentMgr_Constructor((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, ppdim);
+
+    if (SUCCEEDED(hr))
+    {
+        mgrentry->docmgr = *ppdim;
+        list_add_head(&This->CreatedDocumentMgrs,&mgrentry->entry);
+    }
+    else
+        HeapFree(GetProcessHeap(),0,mgrentry);
+
+    return hr;
 }
 
 static HRESULT WINAPI ThreadMgr_EnumDocumentMgrs( ITfThreadMgr* iface, IEnumTfDocumentMgrs
 **ppEnum)
 {
     ThreadMgr *This = (ThreadMgr *)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    TRACE("(%p) %p\n",This,ppEnum);
+
+    if (!ppEnum)
+        return E_INVALIDARG;
+
+    return EnumTfDocumentMgr_Constructor(&This->CreatedDocumentMgrs, ppEnum);
 }
 
 static HRESULT WINAPI ThreadMgr_GetFocus( ITfThreadMgr* iface, ITfDocumentMgr
@@ -334,7 +427,9 @@ static HRESULT WINAPI ThreadMgr_SetFocus( ITfThreadMgr* iface, ITfDocumentMgr *p
 
     TRACE("(%p) %p\n",This,pdimFocus);
 
-    if (!pdimFocus || FAILED(IUnknown_QueryInterface(pdimFocus,&IID_ITfDocumentMgr,(LPVOID*) &check)))
+    if (!pdimFocus)
+        check = NULL;
+    else if (FAILED(IUnknown_QueryInterface(pdimFocus,&IID_ITfDocumentMgr,(LPVOID*) &check)))
         return E_INVALIDARG;
 
     ITfThreadMgrEventSink_OnSetFocus((ITfThreadMgrEventSink*)&This->ThreadMgrEventSinkVtbl, check, This->focus);
@@ -349,16 +444,53 @@ static HRESULT WINAPI ThreadMgr_SetFocus( ITfThreadMgr* iface, ITfDocumentMgr *p
 static HRESULT WINAPI ThreadMgr_AssociateFocus( ITfThreadMgr* iface, HWND hwnd,
 ITfDocumentMgr *pdimNew, ITfDocumentMgr **ppdimPrev)
 {
+    struct list *cursor, *cursor2;
     ThreadMgr *This = (ThreadMgr *)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    AssociatedWindow *wnd;
+
+    TRACE("(%p) %p %p %p\n",This,hwnd,pdimNew,ppdimPrev);
+
+    if (!ppdimPrev)
+        return E_INVALIDARG;
+
+    *ppdimPrev = NULL;
+
+    LIST_FOR_EACH_SAFE(cursor, cursor2, &This->AssociatedFocusWindows)
+    {
+        wnd = LIST_ENTRY(cursor,AssociatedWindow,entry);
+        if (wnd->hwnd == hwnd)
+        {
+            if (wnd->docmgr)
+                ITfDocumentMgr_AddRef(wnd->docmgr);
+            *ppdimPrev = wnd->docmgr;
+            wnd->docmgr = pdimNew;
+            if (GetFocus() == hwnd)
+                ThreadMgr_SetFocus(iface,pdimNew);
+            return S_OK;
+        }
+    }
+
+    wnd = HeapAlloc(GetProcessHeap(),0,sizeof(AssociatedWindow));
+    wnd->hwnd = hwnd;
+    wnd->docmgr = pdimNew;
+    list_add_head(&This->AssociatedFocusWindows,&wnd->entry);
+
+    if (GetFocus() == hwnd)
+        ThreadMgr_SetFocus(iface,pdimNew);
+
+    SetupWindowsHook(This);
+
+    return S_OK;
 }
 
 static HRESULT WINAPI ThreadMgr_IsThreadFocus( ITfThreadMgr* iface, BOOL *pfThreadFocus)
 {
+    HWND focus;
     ThreadMgr *This = (ThreadMgr *)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    TRACE("(%p) %p\n",This,pfThreadFocus);
+    focus = GetFocus();
+    *pfThreadFocus = (focus == NULL);
+    return S_OK;
 }
 
 static HRESULT WINAPI ThreadMgr_GetFunctionProvider( ITfThreadMgr* iface, REFCLSID clsid,
@@ -381,8 +513,22 @@ static HRESULT WINAPI ThreadMgr_GetGlobalCompartment( ITfThreadMgr* iface,
 ITfCompartmentMgr **ppCompMgr)
 {
     ThreadMgr *This = (ThreadMgr *)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    HRESULT hr;
+    TRACE("(%p) %p\n",This, ppCompMgr);
+
+    if (!ppCompMgr)
+        return E_INVALIDARG;
+
+    if (!globalCompartmentMgr)
+    {
+        hr = CompartmentMgr_Constructor(NULL,&IID_ITfCompartmentMgr,(IUnknown**)&globalCompartmentMgr);
+        if (FAILED(hr))
+            return hr;
+    }
+
+    ITfCompartmentMgr_AddRef(globalCompartmentMgr);
+    *ppCompMgr = globalCompartmentMgr;
+    return S_OK;
 }
 
 static const ITfThreadMgrVtbl ThreadMgr_ThreadMgrVtbl =
@@ -1054,7 +1200,11 @@ HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     This->refCount = 1;
     TlsSetValue(tlsIndex,This);
 
+    CompartmentMgr_Constructor((IUnknown*)This, &IID_IUnknown, (IUnknown**)&This->CompartmentMgr);
+
     list_init(&This->CurrentPreservedKeys);
+    list_init(&This->CreatedDocumentMgrs);
+    list_init(&This->AssociatedFocusWindows);
 
     list_init(&This->ActiveLanguageProfileNotifySink);
     list_init(&This->DisplayAttributeNotifySink);
@@ -1066,4 +1216,201 @@ HRESULT ThreadMgr_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
     TRACE("returning %p\n", This);
     *ppOut = (IUnknown *)This;
     return S_OK;
+}
+
+/**************************************************
+ * IEnumTfDocumentMgrs implementaion
+ **************************************************/
+static void EnumTfDocumentMgr_Destructor(EnumTfDocumentMgr *This)
+{
+    TRACE("destroying %p\n", This);
+    HeapFree(GetProcessHeap(),0,This);
+}
+
+static HRESULT WINAPI EnumTfDocumentMgr_QueryInterface(IEnumTfDocumentMgrs *iface, REFIID iid, LPVOID *ppvOut)
+{
+    EnumTfDocumentMgr *This = (EnumTfDocumentMgr *)iface;
+    *ppvOut = NULL;
+
+    if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IEnumTfDocumentMgrs))
+    {
+        *ppvOut = This;
+    }
+
+    if (*ppvOut)
+    {
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+
+    WARN("unsupported interface: %s\n", debugstr_guid(iid));
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI EnumTfDocumentMgr_AddRef(IEnumTfDocumentMgrs *iface)
+{
+    EnumTfDocumentMgr *This = (EnumTfDocumentMgr*)iface;
+    return InterlockedIncrement(&This->refCount);
+}
+
+static ULONG WINAPI EnumTfDocumentMgr_Release(IEnumTfDocumentMgrs *iface)
+{
+    EnumTfDocumentMgr *This = (EnumTfDocumentMgr *)iface;
+    ULONG ret;
+
+    ret = InterlockedDecrement(&This->refCount);
+    if (ret == 0)
+        EnumTfDocumentMgr_Destructor(This);
+    return ret;
+}
+
+static HRESULT WINAPI EnumTfDocumentMgr_Next(IEnumTfDocumentMgrs *iface,
+    ULONG ulCount, ITfDocumentMgr **rgDocumentMgr, ULONG *pcFetched)
+{
+    EnumTfDocumentMgr *This = (EnumTfDocumentMgr *)iface;
+    ULONG fetched = 0;
+
+    TRACE("(%p)\n",This);
+
+    if (rgDocumentMgr == NULL) return E_POINTER;
+
+    while (fetched < ulCount)
+    {
+        DocumentMgrEntry *mgrentry;
+        if (This->index == NULL)
+            break;
+
+        mgrentry = LIST_ENTRY(This->index,DocumentMgrEntry,entry);
+        if (mgrentry == NULL)
+            break;
+
+        *rgDocumentMgr = mgrentry->docmgr;
+        ITfDocumentMgr_AddRef(*rgDocumentMgr);
+
+        This->index = list_next(This->head, This->index);
+        ++fetched;
+        ++rgDocumentMgr;
+    }
+
+    if (pcFetched) *pcFetched = fetched;
+    return fetched == ulCount ? S_OK : S_FALSE;
+}
+
+static HRESULT WINAPI EnumTfDocumentMgr_Skip( IEnumTfDocumentMgrs* iface, ULONG celt)
+{
+    INT i;
+    EnumTfDocumentMgr *This = (EnumTfDocumentMgr *)iface;
+    TRACE("(%p)\n",This);
+    for(i = 0; i < celt && This->index != NULL; i++)
+        This->index = list_next(This->head, This->index);
+    return S_OK;
+}
+
+static HRESULT WINAPI EnumTfDocumentMgr_Reset( IEnumTfDocumentMgrs* iface)
+{
+    EnumTfDocumentMgr *This = (EnumTfDocumentMgr *)iface;
+    TRACE("(%p)\n",This);
+    This->index = list_head(This->head);
+    return S_OK;
+}
+
+static HRESULT WINAPI EnumTfDocumentMgr_Clone( IEnumTfDocumentMgrs *iface,
+    IEnumTfDocumentMgrs **ppenum)
+{
+    EnumTfDocumentMgr *This = (EnumTfDocumentMgr *)iface;
+    HRESULT res;
+
+    TRACE("(%p)\n",This);
+
+    if (ppenum == NULL) return E_POINTER;
+
+    res = EnumTfDocumentMgr_Constructor(This->head, ppenum);
+    if (SUCCEEDED(res))
+    {
+        EnumTfDocumentMgr *new_This = (EnumTfDocumentMgr *)*ppenum;
+        new_This->index = This->index;
+    }
+    return res;
+}
+
+static const IEnumTfDocumentMgrsVtbl IEnumTfDocumentMgrs_Vtbl ={
+    EnumTfDocumentMgr_QueryInterface,
+    EnumTfDocumentMgr_AddRef,
+    EnumTfDocumentMgr_Release,
+
+    EnumTfDocumentMgr_Clone,
+    EnumTfDocumentMgr_Next,
+    EnumTfDocumentMgr_Reset,
+    EnumTfDocumentMgr_Skip
+};
+
+static HRESULT EnumTfDocumentMgr_Constructor(struct list* head, IEnumTfDocumentMgrs **ppOut)
+{
+    EnumTfDocumentMgr *This;
+
+    This = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(EnumTfDocumentMgr));
+    if (This == NULL)
+        return E_OUTOFMEMORY;
+
+    This->Vtbl= &IEnumTfDocumentMgrs_Vtbl;
+    This->refCount = 1;
+    This->head = head;
+    This->index = list_head(This->head);
+
+    TRACE("returning %p\n", This);
+    *ppOut = (IEnumTfDocumentMgrs*)This;
+    return S_OK;
+}
+
+void ThreadMgr_OnDocumentMgrDestruction(ITfThreadMgr *tm, ITfDocumentMgr *mgr)
+{
+    ThreadMgr *This = (ThreadMgr *)tm;
+    struct list *cursor;
+    LIST_FOR_EACH(cursor, &This->CreatedDocumentMgrs)
+    {
+        DocumentMgrEntry *mgrentry = LIST_ENTRY(cursor,DocumentMgrEntry,entry);
+        if (mgrentry->docmgr == mgr)
+        {
+            list_remove(cursor);
+            HeapFree(GetProcessHeap(),0,mgrentry);
+            return;
+        }
+    }
+    FIXME("ITfDocumenMgr %p not found in this thread\n",mgr);
+}
+
+LRESULT CALLBACK ThreadFocusHookProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    ThreadMgr *This;
+
+    This = TlsGetValue(tlsIndex);
+    if (!This)
+    {
+        ERR("Hook proc but no ThreadMgr for this thread. Serious Error\n");
+        return 0;
+    }
+    if (!This->focusHook)
+    {
+        ERR("Hook proc but no ThreadMgr focus Hook. Serious Error\n");
+        return 0;
+    }
+
+    if (nCode == HCBT_SETFOCUS) /* focus change within our thread */
+    {
+        struct list *cursor;
+
+        LIST_FOR_EACH(cursor, &This->AssociatedFocusWindows)
+        {
+            AssociatedWindow *wnd = LIST_ENTRY(cursor,AssociatedWindow,entry);
+            if (wnd->hwnd == (HWND)wParam)
+            {
+                TRACE("Triggering Associated window focus\n");
+                if (This->focus != wnd->docmgr)
+                    ThreadMgr_SetFocus((ITfThreadMgr*)This, wnd->docmgr);
+                break;
+            }
+        }
+    }
+
+    return CallNextHookEx(This->focusHook, nCode, wParam, lParam);
 }

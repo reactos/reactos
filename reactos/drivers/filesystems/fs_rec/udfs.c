@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "udfs.h"
+
 /* FUNCTIONS ****************************************************************/
 
 BOOLEAN

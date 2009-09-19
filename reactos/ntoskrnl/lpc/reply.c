@@ -160,7 +160,7 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
 {
     PLPCP_PORT_OBJECT Port, ReceivePort, ConnectionPort = NULL;
     KPROCESSOR_MODE PreviousMode = KeGetPreviousMode(), WaitMode = PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     PLPCP_MESSAGE Message;
     PETHREAD Thread = PsGetCurrentThread(), WakeupThread;
     PLPCP_CONNECTION_MESSAGE ConnectMessage;
@@ -200,14 +200,10 @@ NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
         _SEH2_EXCEPT(ExSystemExceptionFilter())
         {
             DPRINT1("SEH crash [1]\n");
-	    DbgBreakPoint();
-            Status = _SEH2_GetExceptionCode();
+            DbgBreakPoint();
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-
-        /* Bail out if pointer was invalid */
-        if (!NT_SUCCESS(Status))
-            return Status;
     }
     else
     {

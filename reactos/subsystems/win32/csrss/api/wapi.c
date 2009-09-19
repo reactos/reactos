@@ -123,7 +123,7 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
                              IN HANDLE hApiListenPort)
 {
     NTSTATUS Status;
-    HANDLE ServerPort = (HANDLE) 0;
+    HANDLE ServerPort = NULL, ServerThread = NULL;
     PCSRSS_PROCESS_DATA ProcessData = NULL;
     REMOTE_PORT_VIEW LpcRead;
     LpcRead.Length = sizeof(LpcRead);
@@ -167,7 +167,6 @@ CsrpHandleConnectionRequest (PPORT_MESSAGE Request,
         return Status;
     }
 
-    HANDLE ServerThread = (HANDLE) 0;
     Status = RtlCreateUserThread(NtCurrentProcess(),
                                  NULL,
                                  FALSE,

@@ -53,6 +53,12 @@
 #define EH_NESTED_CALL      0x10
 
 #ifndef _M_ARM
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4733)
+#endif
+
 static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
 {
 #if defined(__i386__)
@@ -78,6 +84,11 @@ static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTR
 	return frame->Next;
 #endif
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #endif
 
 #define __TRY _SEH2_TRY

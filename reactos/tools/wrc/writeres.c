@@ -52,9 +52,7 @@ void write_resfile(char *outname, resource_t *top)
 
 	fo = fopen(outname, "wb");
 	if(!fo)
-	{
-		error("Could not open %s\n", outname);
-	}
+            fatal_perror("Could not open %s", outname);
 
 	if(win32)
 	{
@@ -102,5 +100,6 @@ void write_resfile(char *outname, resource_t *top)
 			}
 		}
 	}
-	fclose(fo);
+	if (fclose(fo))
+            fatal_perror("Error writing %s", outname);
 }

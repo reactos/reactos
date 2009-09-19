@@ -355,6 +355,14 @@ NtUserCreateCaret(
    }
    else
    {
+      if (nWidth == 0)
+      {
+          nWidth = UserGetSystemMetrics(SM_CXBORDER);
+      }
+      if (nHeight == 0)
+      {
+          nHeight = UserGetSystemMetrics(SM_CYBORDER);
+      }
       ThreadQueue->CaretInfo->Bitmap = (HBITMAP)0;
       ThreadQueue->CaretInfo->Size.cx = nWidth;
       ThreadQueue->CaretInfo->Size.cy = nHeight;

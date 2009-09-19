@@ -666,7 +666,7 @@ VideoPortInitialize(
             ExAllocatePoolWithTag(
                PagedPool,
                DriverExtension->RegistryPath.MaximumLength,
-               TAG('U', 'S', 'T', 'R'));
+               'RTSU');
          if (DriverExtension->RegistryPath.Buffer == NULL)
          {
             RtlInitUnicodeString(&DriverExtension->RegistryPath, NULL);

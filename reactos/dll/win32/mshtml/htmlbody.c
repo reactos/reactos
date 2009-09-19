@@ -44,6 +44,61 @@ typedef struct {
 
 #define HTMLBODY(x)  (&(x)->lpHTMLBodyElementVtbl)
 
+static const WCHAR aquaW[] = {'a','q','u','a',0};
+static const WCHAR blackW[] = {'b','l','a','c','k',0};
+static const WCHAR blueW[] = {'b','l','u','e',0};
+static const WCHAR fuchsiaW[] = {'f','u','s','h','s','i','a',0};
+static const WCHAR grayW[] = {'g','r','a','y',0};
+static const WCHAR greenW[] = {'g','r','e','e','n',0};
+static const WCHAR limeW[] = {'l','i','m','e',0};
+static const WCHAR maroonW[] = {'m','a','r','o','o','n',0};
+static const WCHAR navyW[] = {'n','a','v','y',0};
+static const WCHAR oliveW[] = {'o','l','i','v','e',0};
+static const WCHAR purpleW[] = {'p','u','r','p','l','e',0};
+static const WCHAR redW[] = {'r','e','d',0};
+static const WCHAR silverW[] = {'s','i','l','v','e','r',0};
+static const WCHAR tealW[] = {'t','e','a','l',0};
+static const WCHAR whiteW[] = {'w','h','i','t','e',0};
+static const WCHAR yellowW[] = {'y','e','l','l','o','w',0};
+
+static const struct {
+    LPCWSTR keyword;
+    const WCHAR hexstr[8];
+} keyword_table[] = {
+    {aquaW,     {'#','0','0','f','f','f','f',0}},
+    {blackW,    {'#','0','0','0','0','0','0',0}},
+    {blueW,     {'#','0','0','0','0','f','f',0}},
+    {fuchsiaW,  {'#','f','f','0','0','f','f',0}},
+    {grayW,     {'#','8','0','8','0','8','0',0}},
+    {greenW,    {'#','0','0','8','0','0','0',0}},
+    {limeW,     {'#','0','0','f','f','0','0',0}},
+    {maroonW,   {'#','8','0','0','0','0','0',0}},
+    {navyW,     {'#','0','0','0','0','8','0',0}},
+    {oliveW,    {'#','8','0','8','0','0','0',0}},
+    {purpleW,   {'#','8','0','0','0','8','0',0}},
+    {redW,      {'#','f','f','0','0','0','0',0}},
+    {silverW,   {'#','c','0','c','0','c','0',0}},
+    {tealW,     {'#','0','0','8','0','8','0',0}},
+    {whiteW,    {'#','f','f','f','f','f','f',0}},
+    {yellowW,   {'#','f','f','f','f','0','0',0}}
+};
+
+static BSTR nscolor_to_str(LPCWSTR color)
+{
+    int i;
+
+    if(!color || *color == '#')
+        return SysAllocString(color);
+
+    for(i=0; i < sizeof(keyword_table)/sizeof(keyword_table[0]); i++) {
+        if(!strcmpiW(color, keyword_table[i].keyword))
+            return SysAllocString(keyword_table[i].hexstr);
+    }
+
+    WARN("unknown color %s\n", debugstr_w(color));
+    return SysAllocString(color);
+}
+
 static BOOL variant_to_nscolor(const VARIANT *v, nsAString *nsstr)
 {
     switch(V_VT(v)) {
@@ -305,7 +360,7 @@ static HRESULT WINAPI HTMLBodyElement_get_bgColor(IHTMLBodyElement *iface, VARIA
     nsAString_GetData(&strColor, &color);
 
     V_VT(p) = VT_BSTR;
-    V_BSTR(p) = SysAllocString(color);
+    V_BSTR(p) = nscolor_to_str(color);
 
     nsAString_Finish(&strColor);
 

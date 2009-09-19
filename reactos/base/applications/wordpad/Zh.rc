@@ -471,3 +471,4 @@ BEGIN
     STRING_OPEN_FAILED,               "不能開啟檔案."
     STRING_OPEN_ACCESS_DENIED,        "你沒有開啟檔案的權力."
 END
+#pragma code_page(default)

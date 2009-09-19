@@ -10,20 +10,12 @@ typedef struct _RECURSIVE_MUTEX {
     PVOID CurrentThread;
     /* Notification event which signals that another thread can take over */
     KEVENT StateLockedEvent;
-    /* IRQL from spin lock */
-    KIRQL OldIrql;
-    /* Is Locked */
-    BOOLEAN Locked;
-    /* Is reader or writer phase */
-    BOOLEAN Writer;
-    /* Spin lock needed for */
-    KSPIN_LOCK SpinLock;
 } RECURSIVE_MUTEX, *PRECURSIVE_MUTEX;
 
 extern VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex );
-extern SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToRead );
+extern VOID RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex );
 extern VOID RecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex );
 
-#define ASSERT_LOCKED(x) ASSERT((x)->Locked)
+#define ASSERT_LOCKED(x)
 
 #endif/*_ROSRTL_RECMUTEX_H*/

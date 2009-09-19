@@ -219,7 +219,7 @@ PFIB_ENTRY RouterAddRoute(
         return NULL;
     }
 
-    INIT_TAG(Router, TAG('R','O','U','T'));
+    INIT_TAG(Router, 'TUOR');
 
     RtlCopyMemory( &FIBE->NetworkAddress, NetworkAddress,
 		   sizeof(FIBE->NetworkAddress) );

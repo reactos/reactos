@@ -40,6 +40,7 @@
 #include <include/window.h>
 #include <include/winsta.h>
 #include <include/xformobj.h>
+#include <include/xlateobj.h>
 
 #include <include/region.h>
 #include <include/ntuser.h>

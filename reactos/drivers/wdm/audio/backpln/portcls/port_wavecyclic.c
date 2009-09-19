@@ -13,9 +13,6 @@ extern GUID IID_IDmaChannelSlave;
 typedef struct
 {
     IPortWaveCyclicVtbl *lpVtbl;
-    IPortEventsVtbl *lpVbtlPortEvents;
-    IUnregisterSubdeviceVtbl *lpVtblUnregisterSubdevice;
-    IUnregisterPhysicalConnectionVtbl *lpVtblPhysicalConnection;
     IPortEventsVtbl *lpVtblPortEvents;
     ISubdeviceVtbl *lpVtblSubDevice;
 
@@ -34,7 +31,7 @@ typedef struct
 
 GUID KSPROPERTY_SETID_Topology                = {0x720D4AC0L, 0x7533, 0x11D0, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
-static GUID InterfaceGuids[3] = 
+static GUID InterfaceGuids[4] = 
 {
     {
         /// KSCATEGORY_RENDER
@@ -45,9 +42,14 @@ static GUID InterfaceGuids[3] =
         0x65E8773DL, 0x8F56, 0x11D0, {0xA3, 0xB9, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
     },
     {
-        /// KS_CATEGORY_AUDIO
+         //KS_CATEGORY_AUDIO
         0x6994AD04, 0x93EF, 0x11D0, {0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}
+    },
+    {
+        ///KSCATEGORY_AUDIO_DEVICE
+        0xFBF6F530L, 0x07B9, 0x11D2, {0xA7, 0x1E, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}
     }
+
 };
 
 DEFINE_KSPROPERTY_TOPOLOGYSET(PortFilterWaveCyclicTopologySet, TopologyPropertyHandler);
@@ -111,7 +113,7 @@ IPortEvents_fnQueryInterface(
     if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
-        *Output = &This->lpVbtlPortEvents;
+        *Output = &This->lpVtblPortEvents;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
@@ -266,12 +268,6 @@ IPortWaveCyclic_fnRelease(
 
     if (This->ref == 0)
     {
-        if (This->pPinCount)
-            This->pPinCount->lpVtbl->Release(This->pPinCount);
-
-        if (This->pPowerNotify)
-            This->pPowerNotify->lpVtbl->Release(This->pPowerNotify);
-
         FreeItem(This, TAG_PORTCLASS);
         return 0;
     }
@@ -343,8 +339,12 @@ IPortWaveCyclic_fnInit(
     This->bInitialized = TRUE;
     This->pResourceList = ResourceList;
 
-    /* increment reference on miniport adapter */
-    Miniport->lpVtbl->AddRef(Miniport);
+
+    if (ResourceList)
+    {
+        /* increment reference on resource list */
+        ResourceList->lpVtbl->AddRef(ResourceList);
+    }
 
     Status = Miniport->lpVtbl->Init(Miniport, UnknownAdapter, ResourceList, iface);
     if (!NT_SUCCESS(Status))
@@ -368,7 +368,7 @@ IPortWaveCyclic_fnInit(
 
     /* create the subdevice descriptor */
     Status = PcCreateSubdeviceDescriptor(&This->SubDeviceDescriptor, 
-                                         3,
+                                         4,
                                          InterfaceGuids,
                                          0, 
                                          NULL,
@@ -405,10 +405,6 @@ IPortWaveCyclic_fnInit(
         /* store reference */
         This->pPowerNotify = PowerNotify;
     }
-
-    /* increment reference on resource list */
-    ResourceList->lpVtbl->AddRef(ResourceList);
-
 
     DPRINT("IPortWaveCyclic successfully initialized\n");
     return STATUS_SUCCESS;
@@ -644,10 +640,29 @@ NTAPI
 ISubDevice_fnReleaseChildren(
     IN ISubdevice *iface)
 {
-    //IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
+    IPortWaveCyclicImpl * This = (IPortWaveCyclicImpl*)CONTAINING_RECORD(iface, IPortWaveCyclicImpl, lpVtblSubDevice);
 
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    DPRINT("ISubDevice_fnReleaseChildren ref %u\n", This->ref);
+
+    /* release the filter */
+    This->Filter->lpVtbl->Release(This->Filter);
+
+    if (This->pPinCount)
+    {
+        /* release pincount interface */
+        This->pPinCount->lpVtbl->Release(This->pPinCount);
+    }
+
+    if (This->pPowerNotify)
+    {
+        /* release power notify interface */
+        This->pPowerNotify->lpVtbl->Release(This->pPowerNotify);
+    }
+
+    /* now release the miniport */
+    This->pMiniport->lpVtbl->Release(This->pMiniport);
+
+    return STATUS_SUCCESS;
 }
 
 static

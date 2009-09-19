@@ -15,6 +15,9 @@ extern "C" {
 #pragma warning(disable:4201)
 #endif
 
+#define DRV_SUCCESS		0x0001
+#define DRV_FAILURE		0x0000
+
 #define	WINMMAPI	DECLSPEC_IMPORT
 #define _loadds
 #define _huge
@@ -32,6 +35,10 @@ extern "C" {
 #ifndef mmioFOURCC
 #define mmioFOURCC(c0,c1,c2,c3) MAKEFOURCC(c0,c1,c2,c3)
 #endif
+
+#define MM_MICROSOFT            1       /* Microsoft Corp. */
+#define MM_CREATIVE             2       /* Creative labs   */
+
 #define MM_JOY1MOVE           0x3A0
 #define MM_JOY2MOVE           0x3A1
 #define MM_JOY1ZMOVE          0x3A2
@@ -911,8 +918,6 @@ extern "C" {
 #define MCI_OVLY_WHERE_FRAME              0x80000
 #define MCI_OVLY_WHERE_VIDEO              0x100000
 #ifdef _WINE
-#define MCI_OPEN_DRIVER                   0x0801
-#define MCI_CLOSE_DRIVER                  0x0802
 #define MCI_SOUND                         0x0812
 #define MCI_SOUND_NAME                    0x00000100L
 #endif
@@ -1883,6 +1888,10 @@ BOOL WINAPI mciGetErrorStringW(MCIERROR,LPWSTR,UINT);
 BOOL WINAPI mciSetYieldProc(MCIDEVICEID,YIELDPROC,DWORD);
 HANDLE WINAPI mciGetCreatorTask(MCIDEVICEID);
 YIELDPROC WINAPI mciGetYieldProc(MCIDEVICEID,PDWORD);
+
+#ifdef _WINE
+DWORD WINAPI GetDriverFlags(HDRVR hDriver);
+#endif
 
 typedef struct tagMCI_SEQ_SET_PARMS {
 	DWORD_PTR dwCallback;

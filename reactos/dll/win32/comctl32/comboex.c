@@ -174,7 +174,7 @@ static void COMBOEX_DumpInput (COMBOBOXEXITEMW const *input)
 }
 
 
-static inline CBE_ITEMDATA *get_item_data(COMBOEX_INFO *infoPtr, INT index)
+static inline CBE_ITEMDATA *get_item_data(const COMBOEX_INFO *infoPtr, INT index)
 {
     return (CBE_ITEMDATA *)SendMessageW (infoPtr->hwndCombo, CB_GETITEMDATA,
 		                         (WPARAM)index, 0);
@@ -185,7 +185,7 @@ static inline cmp_func_t get_cmp_func(COMBOEX_INFO const *infoPtr)
     return infoPtr->dwExtStyle & CBES_EX_CASESENSITIVE ? lstrcmpW : lstrcmpiW;
 }
 
-static INT COMBOEX_Notify (COMBOEX_INFO *infoPtr, INT code, NMHDR *hdr)
+static INT COMBOEX_Notify (const COMBOEX_INFO *infoPtr, INT code, NMHDR *hdr)
 {
     hdr->idFrom = GetDlgCtrlID (infoPtr->hwndSelf);
     hdr->hwndFrom = infoPtr->hwndSelf;
@@ -198,7 +198,7 @@ static INT COMBOEX_Notify (COMBOEX_INFO *infoPtr, INT code, NMHDR *hdr)
 
 
 static INT
-COMBOEX_NotifyItem (COMBOEX_INFO *infoPtr, UINT code, NMCOMBOBOXEXW *hdr)
+COMBOEX_NotifyItem (const COMBOEX_INFO *infoPtr, UINT code, NMCOMBOBOXEXW *hdr)
 {
     /* Change the Text item from Unicode to ANSI if necessary for NOTIFY */
     if (infoPtr->NtfUnicode)
@@ -234,7 +234,7 @@ COMBOEX_NotifyItem (COMBOEX_INFO *infoPtr, UINT code, NMCOMBOBOXEXW *hdr)
 }
 
 
-static INT COMBOEX_NotifyEndEdit (COMBOEX_INFO *infoPtr, NMCBEENDEDITW *neew, LPCWSTR wstr)
+static INT COMBOEX_NotifyEndEdit (const COMBOEX_INFO *infoPtr, NMCBEENDEDITW *neew, LPCWSTR wstr)
 {
     /* Change the Text item from Unicode to ANSI if necessary for NOTIFY */
     if (infoPtr->NtfUnicode) {
@@ -254,7 +254,7 @@ static INT COMBOEX_NotifyEndEdit (COMBOEX_INFO *infoPtr, NMCBEENDEDITW *neew, LP
 }
 
 
-static void COMBOEX_NotifyDragBegin(COMBOEX_INFO *infoPtr, LPCWSTR wstr)
+static void COMBOEX_NotifyDragBegin(const COMBOEX_INFO *infoPtr, LPCWSTR wstr)
 {
     /* Change the Text item from Unicode to ANSI if necessary for NOTIFY */
     if (infoPtr->NtfUnicode) {
@@ -303,7 +303,7 @@ static INT COMBOEX_GetIndex(COMBOEX_INFO const *infoPtr, CBE_ITEMDATA const *ite
 }
 
 
-static LPCWSTR COMBOEX_GetText(COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
+static LPCWSTR COMBOEX_GetText(const COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
 {
     NMCOMBOBOXEXW nmce;
     LPWSTR text, buf;
@@ -340,7 +340,7 @@ static LPCWSTR COMBOEX_GetText(COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
 }
 
 
-static void COMBOEX_GetComboFontSize (COMBOEX_INFO *infoPtr, SIZE *size)
+static void COMBOEX_GetComboFontSize (const COMBOEX_INFO *infoPtr, SIZE *size)
 {
     static const WCHAR strA[] = { 'A', 0 };
     HFONT nfont, ofont;
@@ -356,7 +356,7 @@ static void COMBOEX_GetComboFontSize (COMBOEX_INFO *infoPtr, SIZE *size)
 }
 
 
-static void COMBOEX_CopyItem (CBE_ITEMDATA *item, COMBOBOXEXITEMW *cit)
+static void COMBOEX_CopyItem (const CBE_ITEMDATA *item, COMBOBOXEXITEMW *cit)
 {
     if (cit->mask & CBEIF_TEXT) {
         /*
@@ -385,7 +385,7 @@ static void COMBOEX_CopyItem (CBE_ITEMDATA *item, COMBOBOXEXITEMW *cit)
 }
 
 
-static void COMBOEX_AdjustEditPos (COMBOEX_INFO *infoPtr)
+static void COMBOEX_AdjustEditPos (const COMBOEX_INFO *infoPtr)
 {
     SIZE mysize;
     INT x, y, w, h, xioff;
@@ -419,7 +419,7 @@ static void COMBOEX_AdjustEditPos (COMBOEX_INFO *infoPtr)
 }
 
 
-static void COMBOEX_ReSize (COMBOEX_INFO *infoPtr)
+static void COMBOEX_ReSize (const COMBOEX_INFO *infoPtr)
 {
     SIZE mysize;
     LONG cy;
@@ -452,7 +452,7 @@ static void COMBOEX_ReSize (COMBOEX_INFO *infoPtr)
 }
 
 
-static void COMBOEX_SetEditText (COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
+static void COMBOEX_SetEditText (const COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
 {
     if (!infoPtr->hwndEdit) return;
     /* native issues the following messages to the {Edit} control */
@@ -467,7 +467,7 @@ static void COMBOEX_SetEditText (COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
 }
 
 
-static CBE_ITEMDATA * COMBOEX_FindItem(COMBOEX_INFO *infoPtr, INT_PTR index)
+static CBE_ITEMDATA * COMBOEX_FindItem(const COMBOEX_INFO *infoPtr, INT_PTR index)
 {
     CBE_ITEMDATA *item;
     INT i;
@@ -500,7 +500,7 @@ static inline BOOL COMBOEX_HasEdit(COMBOEX_INFO const *infoPtr)
 
 /* ***  CBEM_xxx message support  *** */
 
-static UINT COMBOEX_GetListboxText(COMBOEX_INFO *infoPtr, INT_PTR n, LPWSTR buf)
+static UINT COMBOEX_GetListboxText(const COMBOEX_INFO *infoPtr, INT_PTR n, LPWSTR buf)
 {
     CBE_ITEMDATA *item;
     LPCWSTR str;
@@ -527,7 +527,7 @@ static UINT COMBOEX_GetListboxText(COMBOEX_INFO *infoPtr, INT_PTR n, LPWSTR buf)
 }
 
 
-static INT COMBOEX_DeleteItem (COMBOEX_INFO *infoPtr, INT_PTR index)
+static INT COMBOEX_DeleteItem (const COMBOEX_INFO *infoPtr, INT_PTR index)
 {
     TRACE("(index=%ld)\n", index);
 
@@ -542,7 +542,7 @@ static INT COMBOEX_DeleteItem (COMBOEX_INFO *infoPtr, INT_PTR index)
 }
 
 
-static BOOL COMBOEX_GetItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
+static BOOL COMBOEX_GetItemW (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
 {
     INT_PTR index = cit->iItem;
     CBE_ITEMDATA *item;
@@ -563,7 +563,7 @@ static BOOL COMBOEX_GetItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
 }
 
 
-static BOOL COMBOEX_GetItemA (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA *cit)
+static BOOL COMBOEX_GetItemA (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA *cit)
 {
     COMBOBOXEXITEMW tmpcit;
 
@@ -763,7 +763,7 @@ static HIMAGELIST COMBOEX_SetImageList (COMBOEX_INFO *infoPtr, HIMAGELIST himl)
     return himlTemp;
 }
 
-static BOOL COMBOEX_SetItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
+static BOOL COMBOEX_SetItemW (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
 {
     INT_PTR index = cit->iItem;
     CBE_ITEMDATA *item;
@@ -814,7 +814,7 @@ static BOOL COMBOEX_SetItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     return TRUE;
 }
 
-static BOOL COMBOEX_SetItemA (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA const *cit)
+static BOOL COMBOEX_SetItemA (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA const *cit)
 {
     COMBOBOXEXITEMW citW;
     LPWSTR wstr = NULL;
@@ -851,7 +851,7 @@ static BOOL COMBOEX_SetUnicodeFormat (COMBOEX_INFO *infoPtr, BOOL value)
 /* ***  CB_xxx message support  *** */
 
 static INT
-COMBOEX_FindStringExact (COMBOEX_INFO *infoPtr, INT start, LPCWSTR str)
+COMBOEX_FindStringExact (const COMBOEX_INFO *infoPtr, INT start, LPCWSTR str)
 {
     INT i;
     cmp_func_t cmptext = get_cmp_func(infoPtr);
@@ -860,17 +860,19 @@ COMBOEX_FindStringExact (COMBOEX_INFO *infoPtr, INT start, LPCWSTR str)
     /* now search from after starting loc and wrapping back to start */
     for(i=start+1; i<count; i++) {
 	CBE_ITEMDATA *item = get_item_data(infoPtr, i);
+	if ((LRESULT)item == CB_ERR) continue;
 	if (cmptext(COMBOEX_GetText(infoPtr, item), str) == 0) return i;
     }
     for(i=0; i<=start; i++) {
 	CBE_ITEMDATA *item = get_item_data(infoPtr, i);
+	if ((LRESULT)item == CB_ERR) continue;
 	if (cmptext(COMBOEX_GetText(infoPtr, item), str) == 0) return i;
     }
     return CB_ERR;
 }
 
 
-static DWORD_PTR COMBOEX_GetItemData (COMBOEX_INFO *infoPtr, INT_PTR index)
+static DWORD_PTR COMBOEX_GetItemData (const COMBOEX_INFO *infoPtr, INT_PTR index)
 {
     CBE_ITEMDATA const *item1;
     CBE_ITEMDATA const *item2;
@@ -910,7 +912,7 @@ static INT COMBOEX_SetCursel (COMBOEX_INFO *infoPtr, INT_PTR index)
 }
 
 
-static DWORD_PTR COMBOEX_SetItemData (COMBOEX_INFO *infoPtr, INT_PTR index, DWORD_PTR data)
+static DWORD_PTR COMBOEX_SetItemData (const COMBOEX_INFO *infoPtr, INT_PTR index, DWORD_PTR data)
 {
     CBE_ITEMDATA *item1;
     CBE_ITEMDATA const *item2;
@@ -1332,7 +1334,7 @@ static BOOL COMBOEX_WM_DeleteItem (COMBOEX_INFO *infoPtr, DELETEITEMSTRUCT const
 }
 
 
-static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *dis)
+static LRESULT COMBOEX_DrawItem (const COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *dis)
 {
     static const WCHAR nil[] = { 0 };
     CBE_ITEMDATA *item = 0;
@@ -1669,7 +1671,7 @@ static LRESULT COMBOEX_Size (COMBOEX_INFO *infoPtr, INT width, INT height)
 }
 
 
-static LRESULT COMBOEX_SetRedraw(COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
+static LRESULT COMBOEX_SetRedraw(const COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret = DefWindowProcW( infoPtr->hwndSelf, WM_SETREDRAW, wParam, lParam );
     if (wParam) RedrawWindow( infoPtr->hwndSelf, NULL, 0, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN );
@@ -1677,7 +1679,7 @@ static LRESULT COMBOEX_SetRedraw(COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lP
 }
 
 
-static LRESULT COMBOEX_WindowPosChanging (COMBOEX_INFO *infoPtr, WINDOWPOS *wp)
+static LRESULT COMBOEX_WindowPosChanging (const COMBOEX_INFO *infoPtr, WINDOWPOS *wp)
 {
     RECT cbx_wrect, cbx_crect, cb_wrect;
     INT width, height;

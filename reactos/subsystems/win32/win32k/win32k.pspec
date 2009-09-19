@@ -1,9 +1,9 @@
 #include "include/reactos/msvctarget.h"
 
-@ stdcall -arch=i386 FLOATOBJ_AddFloatObj(ptr ptr)
-@ stdcall -arch=i386 FLOATOBJ_DivFloatObj(ptr ptr)
-@ stdcall -arch=i386 FLOATOBJ_MulFloatObj(ptr ptr)
-@ stdcall -arch=i386 FLOATOBJ_SubFloatObj(ptr ptr)
+@ stdcall -arch=i386 FLOATOBJ_AddFloatObj(ptr ptr) FLOATOBJ_Add
+@ stdcall -arch=i386 FLOATOBJ_DivFloatObj(ptr ptr) FLOATOBJ_Div
+@ stdcall -arch=i386 FLOATOBJ_MulFloatObj(ptr ptr) FLOATOBJ_Mul
+@ stdcall -arch=i386 FLOATOBJ_SubFloatObj(ptr ptr) FLOATOBJ_Sub
 @ stdcall BRUSHOBJ_hGetColorTransform(ptr)
 @ stdcall BRUSHOBJ_pvAllocRbrush(ptr long)
 @ stdcall BRUSHOBJ_pvGetRbrush(ptr)
@@ -66,8 +66,8 @@
 @ stdcall EngFreeSectionMem(ptr ptr)
 @ stdcall EngFreeUserMem(ptr)
 @ stdcall EngGetCurrentCodePage(ptr ptr)
-@ stdcall EngGetCurrentProcessId()
-@ stdcall EngGetCurrentThreadId()
+@ stdcall EngGetCurrentProcessId() NTOSKRNL.PsGetCurrentProcessId
+@ stdcall EngGetCurrentThreadId() NTOSKRNL.PsGetCurrentThreadId
 @ stdcall EngGetDriverName(ptr)
 @ stdcall EngGetFileChangeTime(ptr ptr)
 @ stdcall EngGetFilePath(ptr ptr)

@@ -18,6 +18,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "credui_resources.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDD_CREDDIALOG DIALOG DISCARDABLE  0, 0, 213, 149
@@ -28,23 +33,23 @@ BEGIN
     CONTROL         IDB_BANNER,-1,"Static",SS_BITMAP | SS_CENTERIMAGE,0,
                     0,213,37
     LTEXT           "IDS_MESSAGEFORMAT",IDC_MESSAGE,8,48,199,8,NOT WS_GROUP
-    LTEXT           "По&льзователь:",-1,8,62,72,12,SS_CENTERIMAGE
+    LTEXT           "РџРѕ&Р»СЊР·РѕРІР°С‚РµР»СЊ:",-1,8,62,72,12,SS_CENTERIMAGE
     CONTROL         "",IDC_USERNAME,"ComboBoxEx32",CBS_DROPDOWN |
                     CBS_NOINTEGRALHEIGHT | WS_TABSTOP,80,62,126,87
-    LTEXT           "&Пароль:",-1,8,80,72,12,SS_CENTERIMAGE
+    LTEXT           "&РџР°СЂРѕР»СЊ:",-1,8,80,72,12,SS_CENTERIMAGE
     EDITTEXT        IDC_PASSWORD,80,80,126,12,ES_PASSWORD | ES_AUTOHSCROLL
-    CONTROL         "Со&хранить пароль",IDC_SAVE,"Button",
+    CONTROL         "РЎРѕ&С…СЂР°РЅРёС‚СЊ РїР°СЂРѕР»СЊ",IDC_SAVE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,80,98,126,12
-    DEFPUSHBUTTON   "ОК",IDOK,97,128,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,156,128,50,14
+    DEFPUSHBUTTON   "РћРљ",IDOK,97,128,50,14
+    PUSHBUTTON      "РћС‚РјРµРЅР°",IDCANCEL,156,128,50,14
 END
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_TITLEFORMAT     "Подключение к %s"
-    IDS_MESSAGEFORMAT   "Подключение к %s"
-    IDS_INCORRECTPASSWORDTITLE  "Вход не был произведён"
-    IDS_INCORRECTPASSWORD       "Убедитесь, что имя пользователя\nи пароль верны."
-    IDS_CAPSLOCKONTITLE "Caps Lock включен"
-    IDS_CAPSLOCKON      "Пароль может быть введён неправильно из-за нажатой клавиши Caps Lock.\n\nОтключите Caps Lock перед тем, как вводить пароль."
+    IDS_TITLEFORMAT     "РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє %s"
+    IDS_MESSAGEFORMAT   "РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє %s"
+    IDS_INCORRECTPASSWORDTITLE  "Р’С…РѕРґ РЅРµ Р±С‹Р» РїСЂРѕРёР·РІРµРґС‘РЅ"
+    IDS_INCORRECTPASSWORD       "РЈР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ РёРјСЏ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ\nРё РїР°СЂРѕР»СЊ РІРµСЂРЅС‹."
+    IDS_CAPSLOCKONTITLE "Caps Lock РІРєР»СЋС‡РµРЅ"
+    IDS_CAPSLOCKON      "РџР°СЂРѕР»СЊ РјРѕР¶РµС‚ Р±С‹С‚СЊ РІРІРµРґС‘РЅ РЅРµРїСЂР°РІРёР»СЊРЅРѕ РёР·-Р·Р° РЅР°Р¶Р°С‚РѕР№ РєР»Р°РІРёС€Рё Caps Lock.\n\nРћС‚РєР»СЋС‡РёС‚Рµ Caps Lock РїРµСЂРµРґ С‚РµРј, РєР°Рє РІРІРѕРґРёС‚СЊ РїР°СЂРѕР»СЊ."
 }

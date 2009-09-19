@@ -234,6 +234,7 @@ BEGIN
     IDS_CPLNAME "Dispositivos de sonido y audio"
     IDS_CPLDESCRIPTION "Cambie la combinación de sonidos para el equipo, o configure los parámetros para sus altavoces y dispositivos de grabación."
     IDS_NO_SOUND "(Ninguno)"
+	IDS_NO_DEVICES "No Devices"
 
     5825 "Program error"
     5826 "Cerrar programa"
@@ -264,4 +265,5 @@ BEGIN
     5851 "Menu de Inicio"
     5852 "Cierre de sesión de ReactOS"
     5853 "Inicio de sesión en ReactOS"
+	5854 "ReactOS Explorer"
 END

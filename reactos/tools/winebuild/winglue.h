@@ -33,8 +33,8 @@
 #define IMAGE_NT_OPTIONAL_HDR_MAGIC IMAGE_NT_OPTIONAL_HDR32_MAGIC
 #endif
 
-#ifdef __GNUC__
 #ifndef NONAMELESSUNION
+#ifdef __GNUC__
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95)
 #define _ANONYMOUS_UNION __extension__
 #define _ANONYMOUS_STRUCT __extension__
@@ -43,11 +43,12 @@
 #define _ANONYMOUS_UNION __extension__
 #endif /* __cplusplus */
 #endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
-#endif /* NONAMELESSUNION */
 #elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
 #endif /* __GNUC__/__WATCOMC__ */
+#endif /* NONAMELESSUNION */
+
 #ifndef _ANONYMOUS_UNION
 #define _ANONYMOUS_UNION
 #define _UNION_NAME(x) x

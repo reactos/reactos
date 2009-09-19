@@ -8,13 +8,12 @@
 #include <windows.h>
 #include <winnt.h>
 #include <ndk/ntndk.h>
-#include <helper.h>
 
 /* CSR Header */
 #include <csr/server.h>
 
 /* PSEH for SEH Support */
-#include <pseh/pseh.h>
+#include <pseh/pseh2.h>
 
 /* DEFINES *******************************************************************/
 
@@ -50,6 +49,9 @@
 #define SB_PORT_NAME        L"SbAbiPort"
 #define CSR_PORT_NAME       L"ApiPort"
 #define UNICODE_PATH_SEP    L"\\"
+
+#define ROUND_UP(n, align) ROUND_DOWN(((ULONG)n) + (align) - 1, (align))
+#define ROUND_DOWN(n, align) (((ULONG)n) & ~((align) - 1l))
 
 /* DATA **********************************************************************/
 
@@ -345,7 +347,11 @@ CsrDestroyProcess(
     IN NTSTATUS ExitStatus
 );
 
-_SEH_FILTER(CsrUnhandledExceptionFilter);
+LONG
+NTAPI
+CsrUnhandledExceptionFilter(
+    IN PEXCEPTION_POINTERS ExceptionInfo
+);
 
 VOID
 NTAPI

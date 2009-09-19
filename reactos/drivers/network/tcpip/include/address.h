@@ -15,7 +15,7 @@
  */
 #define AddrInitIPv4(IPAddress, RawAddress)           \
 {                                                     \
-    INIT_TAG((IPAddress), TAG('I','P','V','4'));      \
+    INIT_TAG((IPAddress), '4VPI');      \
     (IPAddress)->Type                = IP_ADDRESS_V4; \
     (IPAddress)->Address.IPv4Address = (RawAddress);  \
 }
@@ -55,8 +55,8 @@ BOOLEAN AddrIsEqualIPv4(
     PIP_ADDRESS Address1,
     IPv4_RAW_ADDRESS Address2);
 
-BOOLEAN AddrLocateADEv4(
-    IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address);
+PIP_INTERFACE AddrLocateInterface(
+    PIP_ADDRESS MatchAddress);
 
 PADDRESS_FILE AddrSearchFirst(
     PIP_ADDRESS Address,

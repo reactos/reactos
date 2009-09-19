@@ -34,9 +34,31 @@ cpp_quote("#define TF_E_DISCONNECTED    MAKE_HRESULT(SEVERITY_ERROR, FACILITY_IT
 cpp_quote("#define TF_E_ALREADY_EXISTS  MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0506)")
 cpp_quote("#define TF_E_NOLOCK          MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x0201)")
 
+cpp_quote("HRESULT WINAPI TF_CreateThreadMgr(ITfThreadMgr **pptim);")
+cpp_quote("HRESULT WINAPI TF_GetThreadMgr(ITfThreadMgr **pptim);")
+cpp_quote("HRESULT WINAPI TF_CreateInputProcessorProfiles(ITfInputProcessorProfiles **ppipr);")
+
+cpp_quote("EXTERN_C const GUID GUID_PROP_TEXTOWNER;")
+cpp_quote("DEFINE_GUID(GUID_PROP_ATTRIBUTE,0x34b45670,0x7526,0x11d2,0xa1,0x47,0x00,0x10,0x5a,0x27,0x99,0xb5);")
+cpp_quote("EXTERN_C const GUID GUID_PROP_LANGID;")
+cpp_quote("EXTERN_C const GUID GUID_PROP_READING;")
+cpp_quote("EXTERN_C const GUID GUID_PROP_COMPOSING;")
+
 cpp_quote("EXTERN_C const CLSID CLSID_TF_ThreadMgr;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_InputProcessorProfiles;")
 cpp_quote("EXTERN_C const CLSID CLSID_TF_CategoryMgr;")
+cpp_quote("DEFINE_GUID(CLSID_TF_DisplayAttributeMgr,0x3ce74de4,0x53d3,0x4d74,0x8b,0x83,0x43,0x1b,0x38,0x28,0xba,0x53);")
+
+/* GUIDs for Compartments */
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_KEYBOARD_DISABLED;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_KEYBOARD_OPENCLOSE;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_HANDWRITING_OPENCLOSE;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_SPEECH_DISABLED;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_SPEECH_OPENCLOSE;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_SPEECH_GLOBALSTATE;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_PERSISTMENUENABLED;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_EMPTYCONTEXT;")
+cpp_quote("EXTERN_C const GUID GUID_COMPARTMENT_TIPUISTATUS;")
 
 /* GUIDs for Categories */
 cpp_quote("EXTERN_C const GUID GUID_TFCAT_TIP_KEYBOARD;")
@@ -140,6 +162,17 @@ interface ITfThreadMgr: IUnknown
         [out] ITfCompartmentMgr **ppCompMgr);
 };
 
+[
+    object,
+    uuid(d7540241-f9a1-4364-befc-dbcd2c4395b7),
+    pointer_default(unique)
+]
+interface ITfCompositionView : IUnknown
+{
+    HRESULT GetOwnerClsid([out] CLSID *pclsid);
+
+    HRESULT GetRange([out] ITfRange **ppRange);
+}
 
 [
     object,
@@ -390,6 +423,109 @@ interface ITfInputProcessorProfiles : IUnknown
         [in] REFGUID guidProfile,
         [in] HKL hKL);
 };
+
+typedef [uuid(c4cc07f1-80cc-4a7b-bc54-98512782cbe3)]
+enum {
+    TF_LS_NONE      = 0,
+    TF_LS_SOLID     = 1,
+    TF_LS_DOT       = 2,
+    TF_LS_DASH      = 3,
+    TF_LS_SQUIGGLE  = 4
+} TF_DA_LINESTYLE;
+
+typedef [uuid(d9b92e21-084a-401b-9c64-1e6dad91a1ab)]
+enum {
+    TF_CT_NONE      = 0,
+    TF_CT_SYSCOLOR  = 1,
+    TF_CT_COLORREF  = 2
+} TF_DA_COLORTYPE;
+
+typedef [uuid(90d0cb5e-6520-4a0f-b47c-c39bd955f0d6)]
+struct TF_DA_COLOR {
+    TF_DA_COLORTYPE type;
+    [switch_type(TF_DA_COLORTYPE), switch_is(type)]
+    union {
+        [case(TF_CT_SYSCOLOR)] int nIndex;
+        [case(TF_CT_COLORREF)] COLORREF cr;
+    };
+} TF_DA_COLOR;
+
+typedef [uuid(33d2fe4b-6c24-4f67-8d75-3bc1819e4126)]
+enum {
+    TF_ATTR_INPUT                = 0,
+    TF_ATTR_TARGET_CONVERTED     = 1,
+    TF_ATTR_CONVERTED            = 2,
+    TF_ATTR_TARGET_NOTCONVERTED  = 3,
+    TF_ATTR_INPUT_ERROR          = 4,
+    TF_ATTR_FIXEDCONVERTED       = 5,
+    TF_ATTR_OTHER                = -1
+} TF_DA_ATTR_INFO;
+
+typedef [uuid(1bf1c305-419b-4182-a4d2-9bfadc3f021f)]
+struct TF_DISPLAYATTRIBUTE {
+    TF_DA_COLOR      crText;
+    TF_DA_COLOR      crBk;
+    TF_DA_LINESTYLE  lsStyle;
+    BOOL             fBoldLine;
+    TF_DA_COLOR      crLine;
+    TF_DA_ATTR_INFO  bAttr;
+} TF_DISPLAYATTRIBUTE;
+
+[
+    object,
+    uuid(70528852-2f26-4aea-8c96-215150578932),
+    pointer_default(unique)
+]
+interface ITfDisplayAttributeInfo : IUnknown
+{
+    HRESULT GetGUID([out] GUID *pguid);
+
+    HRESULT GetDescription([out] BSTR *pbstrDesc);
+
+    HRESULT GetAttributeInfo([out] TF_DISPLAYATTRIBUTE *pda);
+
+    HRESULT SetAttributeInfo([in] const TF_DISPLAYATTRIBUTE *pda);
+
+    HRESULT Reset();
+}
+
+[
+    object,
+    uuid(7cef04d7-cb75-4e80-a7ab-5f5bc7d332de),
+    pointer_default(unique)
+]
+interface IEnumTfDisplayAttributeInfo : IUnknown
+{
+    HRESULT Clone([out] IEnumTfDisplayAttributeInfo **ppEnum);
+
+    HRESULT Next(
+            [in] ULONG ulCount,
+            [out, size_is(ulCount), length_is(*pcFetched)] ITfDisplayAttributeInfo **rgInfo,
+            [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip([in] ULONG ulCount);
+}
+
+[
+    object,
+    local,
+    uuid(8ded7393-5db1-475c-9e71-a39111b0ff67),
+    pointer_default(unique)
+]
+interface ITfDisplayAttributeMgr : IUnknown
+{
+    HRESULT OnUpdateInfo();
+
+    HRESULT EnumDisplayAttributeInfo([out] IEnumTfDisplayAttributeInfo **ppEnum);
+
+    HRESULT GetDisplayAttributeInfo(
+            [in] REFGUID guid,
+            [out] ITfDisplayAttributeInfo **ppInfo,
+            [out] CLSID *pclsidOwner);
+
+}
 
 [
   object,
@@ -872,4 +1008,344 @@ interface ITfRange : IUnknown
 
     HRESULT GetContext(
         [out] ITfContext **ppContext);
+};
+
+[
+    object,
+    uuid(057a6296-029b-4154-b79a-0d461d4ea94c),
+    pointer_default(unique)
+]
+interface ITfRangeACP : ITfRange
+{
+    HRESULT GetExtent([out] LONG *pacpAnchor,
+                      [out] LONG *pcch);
+
+    HRESULT SetExtent([in] LONG acpAnchor,
+                      [in] LONG cch);
+}
+
+[
+    object,
+    uuid(55ce16ba-3014-41c1-9ceb-fade1446ac6c),
+    pointer_default(unique)
+]
+interface ITfInsertAtSelection : IUnknown
+{
+    const DWORD TF_IAS_NOQUERY   = 0x1;
+    const DWORD TF_IAS_QUERYONLY = 0x2;
+    const DWORD TF_IAS_NO_DEFAULT_COMPOSITION = 0x80000000;
+
+    HRESULT InsertTextAtSelection(
+        [in] TfEditCookie ec,
+        [in] DWORD dwFlags,
+        [in, size_is(cch)] const WCHAR *pchText,
+        [in] LONG cch,
+        [out] ITfRange **ppRange);
+
+    HRESULT InsertEmbeddedAtSelection(
+        [in] TfEditCookie ec,
+        [in] DWORD dwFlags,
+        [in] IDataObject *pDataObject,
+        [out] ITfRange **ppRange);
+};
+
+[
+    object,
+    uuid(6834b120-88cb-11d2-bf45-00105a2799b5),
+    pointer_default(unique)
+]
+interface ITfPropertyStore : IUnknown
+{
+    const DWORD TF_TU_CORRECTION = 0x1;
+
+    HRESULT GetType([out] GUID *pguid);
+
+    HRESULT GetDataType([out] DWORD *pdwReserved);
+
+    HRESULT GetData([out] VARIANT *pvarValue);
+
+    HRESULT OnTextUpdated(
+            [in] DWORD dwFlags,
+            [in] ITfRange *pRangeNew,
+            [out] BOOL *pfAccept);
+
+    HRESULT Shrink(
+            [in] ITfRange *pRangeNew,
+            [out] BOOL *pfFree);
+
+    HRESULT Divide(
+            [in] ITfRange *pRangeThis,
+            [in] ITfRange *pRangeNew,
+            [out] ITfPropertyStore **ppPropStore);
+
+    HRESULT Clone(
+            [out] ITfPropertyStore **pPropStore);
+
+    HRESULT GetPropertyRangeCreator(
+            [out] CLSID *pclsid);
+
+    HRESULT Serialize(
+            [in] IStream *pStream,
+            [out] ULONG *pcb);
+}
+
+[
+    object,
+    uuid(f99d3f40-8e32-11d2-bf46-00105a2799b5),
+    pointer_default(unique)
+]
+interface IEnumTfRanges : IUnknown
+{
+    HRESULT Clone([out] IEnumTfRanges **ppEnum);
+
+    HRESULT Next(
+            [in] ULONG ulCount,
+            [out, size_is(ulCount), length_is(*pcFetched)] ITfRange **ppRange,
+            [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(ULONG ulCount);
+}
+
+[
+    object,
+    uuid(5efd22Ba-7838-46cb-88e2-cadb14124f8f),
+    pointer_default(unique)
+]
+interface IEnumITfCompositionView : IUnknown
+{
+    HRESULT Clone([out] IEnumITfCompositionView **ppEnum);
+
+    HRESULT Next(
+            [in] ULONG ulCount,
+            [out, size_is(ulCount), length_is(*pcFetched)] ITfCompositionView **rgCompositionView,
+            [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip([in] ULONG ulCount);
+}
+
+[
+    object,
+    uuid(20168d64-5a8f-4a5a-b7bd-cfa29f4D0fd9),
+    pointer_default(unique)
+]
+interface ITfComposition : IUnknown
+{
+    HRESULT GetRange([out] ITfRange **ppRange);
+
+    HRESULT ShiftStart(
+            [in] TfEditCookie ecWrite,
+            [in] ITfRange *pNewStart);
+
+    HRESULT ShiftEnd(
+            [in] TfEditCookie ecWrite,
+            [in] ITfRange *pNewEnd);
+
+    HRESULT EndComposition([in] TfEditCookie ecWrite);
+}
+
+[
+    object,
+    uuid(a781718c-579a-4b15-a280-32b8577acc5e),
+    pointer_default(unique)
+]
+interface ITfCompositionSink : IUnknown
+{
+    HRESULT OnCompositionTerminated(
+            [in] TfEditCookie ecWrite,
+            [in] ITfComposition *pComposition);
+}
+
+[
+    object,
+    uuid(d40C8aae-aC92-4fc7-9a11-0ee0e23aa39b),
+    pointer_default(unique)
+]
+interface ITfContextComposition : IUnknown
+{
+    HRESULT StartComposition(
+            [in] TfEditCookie ecWrite,
+            [in] ITfRange *pCompositionRange,
+            [in] ITfCompositionSink *pSink,
+            [out] ITfComposition **ppComposition);
+
+    HRESULT EnumCompositions([out] IEnumITfCompositionView **ppEnum);
+
+    HRESULT FindComposition(
+            [in] TfEditCookie ecRead,
+            [in] ITfRange *pTestRange,
+            [out] IEnumITfCompositionView **ppEnum);
+
+    HRESULT TakeOwnership(
+            [in] TfEditCookie ecWrite,
+            [in] ITfCompositionView *pComposition,
+            [in] ITfCompositionSink *pSink,
+            [out] ITfComposition **ppComposition);
+}
+
+[
+    object,
+    uuid(86462810-593b-4916-9764-19c08e9ce110),
+    pointer_default(unique)
+]
+interface ITfContextOwnerCompositionServices : ITfContextComposition
+{
+    HRESULT TerminateComposition([in] ITfCompositionView *pComposition);
+}
+
+[
+    object,
+    uuid(17d49a3d-f8b8-4b2f-b254-52319dd64c53),
+    pointer_default(unique)
+]
+interface ITfReadOnlyProperty : IUnknown
+{
+    HRESULT GetType([out] GUID *pguid);
+
+    HRESULT EnumRanges(
+            [in] TfEditCookie ec,
+            [out] IEnumTfRanges **ppEnum,
+            [in] ITfRange *pTargetRange);
+
+    HRESULT GetValue(
+            [in] TfEditCookie ec,
+            [in] ITfRange *pRange,
+            [out] VARIANT *pvarValue);
+
+    HRESULT GetContext([out] ITfContext **ppContext);
+}
+
+[
+    object,
+    uuid(e2449660-9542-11d2-bf46-00105a2799b5),
+    pointer_default(unique)
+]
+interface ITfProperty : ITfReadOnlyProperty
+{
+    HRESULT FindRange(
+            [in] TfEditCookie ec,
+            [in] ITfRange *pRange,
+            [out] ITfRange **ppRange,
+            [in] TfAnchor aPos);
+
+    HRESULT SetValueStore(
+            [in] TfEditCookie ec,
+            [in] ITfRange *pRange,
+            [in] ITfPropertyStore *pPropStore);
+
+    HRESULT SetValue(
+            [in] TfEditCookie ec,
+            [in] ITfRange *pRange,
+            [in] const VARIANT *pvarValue);
+
+    HRESULT Clear(
+            [in] TfEditCookie ec,
+            [in] ITfRange *pRange);
+}
+
+[
+  object,
+  uuid(bb08f7a9-607a-4384-8623-056892b64371),
+  pointer_default(unique)
+]
+interface ITfCompartment : IUnknown
+{
+    HRESULT SetValue(
+        [in] TfClientId tid,
+        [in] const VARIANT *pvarValue);
+
+    HRESULT GetValue(
+        [out] VARIANT *pvarValue);
+};
+
+[
+  object,
+  uuid(7dcf57ac-18ad-438b-824d-979bffb74b7c),
+  pointer_default(unique)
+]
+interface ITfCompartmentMgr : IUnknown
+{
+    HRESULT GetCompartment(
+        [in] REFGUID rguid,
+        [out] ITfCompartment **ppcomp);
+
+    HRESULT ClearCompartment(
+        [in] TfClientId tid,
+        [in] REFGUID rguid);
+
+    HRESULT EnumCompartments(
+        [out] IEnumGUID **ppEnum);
+};
+
+[
+  object,
+  uuid(743abd5f-f26d-48df-8cc5-238492419b64),
+  pointer_default(unique)
+]
+interface ITfCompartmentEventSink : IUnknown
+{
+    HRESULT OnChange(
+        [in] REFGUID rguid);
+}
+
+[
+  object,
+  uuid(8f1a7ea6-1654-4502-a86e-b2902344d507),
+  pointer_default(unique)
+]
+interface IEnumTfContexts : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfContexts **ppEnum);
+
+    HRESULT Next(
+        [in] ULONG ulCount,
+        [out, size_is(ulCount), length_is(*pcFetched)] ITfContext **rgContext,
+        [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG ulCount);
+};
+
+[
+  object,
+  uuid(aa80e808-2021-11d2-93e0-0060b067b86e),
+  pointer_default(unique)
+]
+interface IEnumTfDocumentMgrs : IUnknown
+{
+    HRESULT Clone(
+        [out] IEnumTfDocumentMgrs **ppEnum);
+
+    HRESULT Next(
+        [in] ULONG ulCount,
+        [out, size_is(ulCount), length_is(*pcFetched)] ITfDocumentMgr **rgDocumentMgr,
+        [out] ULONG *pcFetched);
+
+    HRESULT Reset();
+
+    HRESULT Skip(
+        [in] ULONG ulCount);
+};
+
+[
+  object,
+  uuid(73131f9c-56a9-49dd-b0ee-d046633f7528),
+  pointer_default(unique)
+]
+interface ITfSourceSingle : IUnknown
+{
+    HRESULT AdviseSingleSink(
+        [in] TfClientId tid,
+        [in] REFIID riid,
+        [in, iid_is(riid)] IUnknown *punk);
+
+    HRESULT UnadviseSingleSink(
+        [in] TfClientId tid,
+        [in] REFIID riid);
 };

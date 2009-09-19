@@ -9,6 +9,9 @@
 #include <debug.h>
 #include <ksmedia.h>
 #include <mmsystem.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <wchar.h>
 
 #include "interface.h"
 
@@ -55,15 +58,6 @@ typedef struct
     KSSTREAM_HEADER Header;
     PIRP Irp;
 }CONTEXT_WRITE, *PCONTEXT_WRITE;
-
-
-typedef struct
-{
-    PIRP Irp;
-    IO_STATUS_BLOCK StatusBlock;
-    ULONG Length;
-}WRITE_CONTEXT, *PWRITE_CONTEXT;
-
 
 NTSTATUS
 WdmAudRegisterDeviceInterface(

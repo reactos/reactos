@@ -233,7 +233,7 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
 }
 
 BOOL FASTCALL
-IntPrepareDriverIfNeeded();
+IntPrepareDriverIfNeeded(VOID);
 extern PDEVOBJ PrimarySurface;
 
 #endif /* not __WIN32K_DC_H */

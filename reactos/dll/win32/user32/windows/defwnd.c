@@ -52,7 +52,7 @@ InitStockObjects(void)
              SysColors table - the pens, brushes and stock objects are not affected
              as their handles never change. But it'd be faster to map them, too. */
 
- // Done! g_psi!
+ // Done! gpsi!
 }
 
 /*
@@ -63,7 +63,7 @@ GetSysColor(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
-    return g_psi->argbSystem[nIndex];
+    return gpsi->argbSystem[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -78,7 +78,7 @@ GetSysColorBrush(int nIndex)
 {
   if(nIndex >= 0 && nIndex < NUM_SYSCOLORS)
   {
-    return g_psi->ahbrSystem[nIndex];
+    return gpsi->ahbrSystem[nIndex];
   }
 
   SetLastError(ERROR_INVALID_PARAMETER);
@@ -1148,7 +1148,7 @@ User32DefWindowProc(HWND hWnd,
             else
             {
                 POINT Pt;
-                DWORD Style;
+                LONG_PTR Style;
                 LONG HitCode;
 
                 Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
@@ -1245,7 +1245,14 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SETREDRAW:
         {
-            DefWndSetRedraw(hWnd, wParam);
+            LONG_PTR Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+            if (wParam) SetWindowLongPtr(hWnd, GWL_STYLE, Style | WS_VISIBLE);
+            else
+            {
+                RedrawWindow(hWnd, NULL, 0, RDW_ALLCHILDREN | RDW_VALIDATE);
+                Style &= ~WS_VISIBLE;
+                SetWindowLongPtr(hWnd, GWL_STYLE, Style);
+            }
             return (0);
         }
 
@@ -1345,7 +1352,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_SETCURSOR:
         {
-            ULONG Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
+            LONG_PTR Style = GetWindowLongPtrW(hWnd, GWL_STYLE);
 
             if (Style & WS_CHILD)
             {
@@ -1518,7 +1525,15 @@ User32DefWindowProc(HWND hWnd,
             return ((LRESULT)LoadIconW(0, IDI_APPLICATION));
         }
 
-        /* FIXME: WM_ISACTIVEICON */
+        case WM_ISACTIVEICON:
+        {
+           PWND pWnd;
+           BOOL isai;
+           pWnd = ValidateHwnd(hWnd);
+           if (!pWnd) return 0;
+           isai = (pWnd->state & WNDS_ACTIVEFRAME) != 0;
+           return isai;
+        }
 
         case WM_NOTIFYFORMAT:
         {
@@ -1877,13 +1892,17 @@ DefWindowProcA(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
-            /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
-             * may have child window IDs instead of window name */
-
-             DefSetText(hWnd, (PCWSTR)cs->lpszName, TRUE);
-
-            Result = 1;
+            if (lParam)
+            {
+                LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
+                /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
+                 * may have child window IDs instead of window name */
+                if (HIWORD(cs->lpszName))
+                {
+                    DefSetText(hWnd, (PCWSTR)cs->lpszName, TRUE);
+                }
+                Result = 1;
+            }
             break;
         }
 
@@ -2026,12 +2045,18 @@ DefWindowProcW(HWND hWnd,
     {
         case WM_NCCREATE:
         {
-            LPCREATESTRUCTW cs = (LPCREATESTRUCTW)lParam;
-            /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
-             * may have child window IDs instead of window name */
+            if (lParam)
+            {
+                LPCREATESTRUCTW cs = (LPCREATESTRUCTW)lParam;
+                /* check for string, as static icons, bitmaps (SS_ICON, SS_BITMAP)
+                 * may have child window IDs instead of window name */
 
-            DefSetText(hWnd, cs->lpszName, FALSE);
-            Result = 1;
+                if (HIWORD(cs->lpszName))
+                {
+                    DefSetText(hWnd, cs->lpszName, FALSE);
+                }
+                Result = 1;
+            }
             break;
         }
 

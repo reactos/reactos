@@ -265,7 +265,7 @@ BEGIN
     IDS_SHORT_CHARMAP    "Hartă caractere.lnk"
     IDS_SHORT_CMD        "Linie comandă.lnk"
     IDS_SHORT_DEVICE     "Gestionar dispozitive.lnk"
-    IDS_SHORT_DOWNLOADER "Descarcă !.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
     IDS_SHORT_DXDIAG     "Diagnostic ReactX.lnk"
     IDS_SHORT_EVENTVIEW  "Vizualizator evenimente.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"

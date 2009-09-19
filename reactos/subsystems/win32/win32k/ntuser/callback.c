@@ -1,23 +1,4 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Window classes
@@ -268,7 +249,7 @@ co_IntCallWindowProc(WNDPROC Proc,
 HMENU APIENTRY
 co_IntLoadSysMenuTemplate()
 {
-   LRESULT Result;
+   LRESULT Result = 0;
    NTSTATUS Status;
    PVOID ResultPointer;
    ULONG ResultLength;
@@ -283,23 +264,20 @@ co_IntLoadSysMenuTemplate()
                                0,
                                &ResultPointer,
                                &ResultLength);
-
-   /* Simulate old behaviour: copy into our local buffer */
-   Result = *(LRESULT*)ResultPointer;
+   if (NT_SUCCESS(Status))
+   {
+      /* Simulate old behaviour: copy into our local buffer */
+      Result = *(LRESULT*)ResultPointer;
+   }
 
    UserEnterCo();
 
-   if (!NT_SUCCESS(Status))
-   {
-      return(0);
-   }
    return (HMENU)Result;
 }
 
 BOOL APIENTRY
 co_IntLoadDefaultCursors(VOID)
 {
-   LRESULT Result;
    NTSTATUS Status;
    PVOID ResultPointer;
    ULONG ResultLength;
@@ -315,9 +293,6 @@ co_IntLoadDefaultCursors(VOID)
                                sizeof(BOOL),
                                &ResultPointer,
                                &ResultLength);
-
-   /* Simulate old behaviour: copy into our local buffer */
-   Result = *(LRESULT*)ResultPointer;
 
    UserEnterCo();
 
@@ -694,7 +669,10 @@ co_IntCallLoadMenu( HINSTANCE hModule,
 
 
    Common->hModule = hModule;
-   RtlCopyMemory(&Common->MenuName, pMenuName->Buffer, pMenuName->Length);
+   if (pMenuName->Length)
+      RtlCopyMemory(&Common->MenuName, pMenuName->Buffer, pMenuName->Length);
+   else
+      RtlCopyMemory(&Common->MenuName, &pMenuName->Buffer, sizeof(WCHAR));
 
    ResultPointer = NULL;
    ResultLength = sizeof(LRESULT);
@@ -718,5 +696,30 @@ co_IntCallLoadMenu( HINSTANCE hModule,
 
    return (HMENU)Result;
 }
+
+NTSTATUS
+APIENTRY
+co_IntClientThreadSetup(VOID)
+{
+   NTSTATUS Status;
+   ULONG ArgumentLength, ResultLength;
+   PVOID Argument, ResultPointer;
+
+   ArgumentLength = ResultLength = 0;
+   Argument = ResultPointer = NULL;
+
+   UserLeaveCo();
+
+   Status = KeUserModeCallback(USER32_CALLBACK_CLIENTTHREADSTARTUP,
+                               Argument,
+                               ArgumentLength,
+                               &ResultPointer,
+                               &ResultLength);
+
+   UserEnterCo();
+
+   return Status;
+}
+
 
 /* EOF */

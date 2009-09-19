@@ -158,10 +158,11 @@ typedef struct tagBITMAPV5INFO
 // FIXME: this should go to dibobj.c
 NTSTATUS
 ProbeAndConvertBitmapInfo(
-    OUT PBITMAPV5INFO pbmiDst,
+    OUT BITMAPV5HEADER *pbmhDst,
+    OUT RGBQUAD *pbmiColorsDst,
+    ULONG cColors,
     IN  PBITMAPINFO pbmiUnsafe)
 {
-    BITMAPV5HEADER *pbmhDst = (BITMAPV5HEADER*)&pbmiDst->bmiHeader;
     DWORD dwSize;
     RGBQUAD *pbmiColors;
     ULONG ulWidthBytes;
@@ -280,6 +281,10 @@ ProbeAndConvertBitmapInfo(
         return STATUS_INVALID_PARAMETER;
     }
 
+    /* Copy Colors */
+    cColors = min(cColors, pbmhDst->bV5ClrUsed);
+    memcpy(pbmiColorsDst, pbmiColors, cColors * sizeof(RGBQUAD));
+
     return STATUS_SUCCESS;
 }
 
@@ -320,7 +325,10 @@ UserLoadImage(PCWSTR pwszName)
     /* Create a normalized local BITMAPINFO */
     _SEH2_TRY
     {
-        Status = ProbeAndConvertBitmapInfo(&bmiLocal, pbmi);
+        Status = ProbeAndConvertBitmapInfo(&bmiLocal.bmiHeader,
+                                           bmiLocal.bmiColors,
+                                           256,
+                                           pbmi);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

@@ -56,6 +56,7 @@ typedef struct _parser_ctx_t {
     source_elements_t *source;
     BOOL nl;
     BOOL is_html;
+    BOOL lexer_error;
     HRESULT hres;
 
     jsheap_t heap;

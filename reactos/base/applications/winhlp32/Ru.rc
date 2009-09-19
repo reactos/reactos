@@ -20,99 +20,105 @@
 
 #include "winhelp_res.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
 /* Menu */
 
-MAIN_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+MAIN_MENU MENU
 {
- POPUP "&Файл" {
-  MENUITEM "&Открыть", MNID_FILE_OPEN
+ POPUP "&Р¤Р°Р№Р»" {
+  MENUITEM "&РћС‚РєСЂС‹С‚СЊ", MNID_FILE_OPEN
   MENUITEM SEPARATOR
-  MENUITEM "&Печатать", MNID_FILE_PRINT
-  MENUITEM "Настройка &принтера...", MNID_FILE_SETUP
+  MENUITEM "&РџРµС‡Р°С‚Р°С‚СЊ", MNID_FILE_PRINT
+  MENUITEM "РќР°СЃС‚СЂРѕР№РєР° &РїСЂРёРЅС‚РµСЂР°...", MNID_FILE_SETUP
    MENUITEM SEPARATOR
-  MENUITEM "&Выход", MNID_FILE_EXIT
+  MENUITEM "&Р’С‹С…РѕРґ", MNID_FILE_EXIT
  }
- POPUP "&Правка" {
-   MENUITEM "&Копировать...", MNID_EDIT_COPYDLG
+ POPUP "&РџСЂР°РІРєР°" {
+   MENUITEM "&РљРѕРїРёСЂРѕРІР°С‚СЊ...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Заметки...", MNID_EDIT_ANNOTATE
+   MENUITEM "&Р—Р°РјРµС‚РєРё...", MNID_EDIT_ANNOTATE
  }
- POPUP "&Закладка" {
-   MENUITEM "&Определить...", MNID_BKMK_DEFINE
+ POPUP "&Р—Р°РєР»Р°РґРєР°" {
+   MENUITEM "&РћРїСЂРµРґРµР»РёС‚СЊ...", MNID_BKMK_DEFINE
  }
- POPUP "&Настройки" {
-   POPUP	"Видимость окна справки"
+ POPUP "&РќР°СЃС‚СЂРѕР№РєРё" {
+   POPUP	"Р’РёРґРёРјРѕСЃС‚СЊ РѕРєРЅР° СЃРїСЂР°РІРєРё"
    BEGIN
-     MENUITEM "По умолчанию",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Наверху",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Не наверху",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "РќР°РІРµСЂС…Сѓ",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "РќРµ РЅР°РІРµСЂС…Сѓ",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "История",		MNID_OPTS_HISTORY
-  POPUP    "Шрифт"
+  MENUITEM "РСЃС‚РѕСЂРёСЏ",		MNID_OPTS_HISTORY
+  POPUP    "РЁСЂРёС„С‚"
   BEGIN
-    MENUITEM "Мелкий",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Обычный",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Крупный",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "РњРµР»РєРёР№",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "РћР±С‹С‡РЅС‹Р№",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "РљСЂСѓРїРЅС‹Р№",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Использовать системные цвета",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃРёСЃС‚РµРјРЅС‹Рµ С†РІРµС‚Р°",	MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "&Справка" {
-   MENUITEM "Помощь &по помощи", MNID_HELP_HELPON
-   MENUITEM "Всегда &сверху", MNID_HELP_HELPTOP
+ POPUP "&РЎРїСЂР°РІРєР°" {
+   MENUITEM "РџРѕРјРѕС‰СЊ &РїРѕ РїРѕРјРѕС‰Рё", MNID_HELP_HELPON
+   MENUITEM "Р’СЃРµРіРґР° &СЃРІРµСЂС…Сѓ", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
-   MENUITEM "&Информация...", MNID_HELP_ABOUT
+   MENUITEM "&РРЅС„РѕСЂРјР°С†РёСЏ...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "&О Wine", MNID_HELP_WINE
+   MENUITEM "&Рћ Wine", MNID_HELP_WINE
 #endif
  }
 }
 
-IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
-CAPTION "Указатель"
+CAPTION "РЈРєР°Р·Р°С‚РµР»СЊ"
 {
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
 
 /* Strings */
-STRINGTABLE DISCARDABLE LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
 {
-STID_WINE_HELP, 	"Справка WINE"
-STID_WHERROR, 		"ОШИБКА"
-STID_WARNING,  		"ВНИМАНИЕ"
-STID_INFO,  		"Информация"
-STID_NOT_IMPLEMENTED, 	"Не реализованно"
-STID_HLPFILE_ERROR_s, 	"Ошибка при чтении файла помощи `%s'"
-STID_INDEX, 		"&Содержание"
-STID_CONTENTS,		"Начало"
-STID_BACK, 		"&Назад"
-STID_ALL_FILES, 	"Все файлы (*.*)"
-STID_HELP_FILES_HLP, 	"Файлы справки (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Не могу найти '%s'. Вы хотите найти этот файл самостоятельно?"
-STID_NO_RICHEDIT	"Не могу найти richedit"
-STID_PSH_INDEX,		"Содержание: "
+STID_WINE_HELP, 	"РЎРїСЂР°РІРєР° WINE"
+STID_WHERROR, 		"РћРЁРР‘РљРђ"
+STID_WARNING,  		"Р’РќРРњРђРќРР•"
+STID_INFO,  		"РРЅС„РѕСЂРјР°С†РёСЏ"
+STID_NOT_IMPLEMENTED, 	"РќРµ СЂРµР°Р»РёР·РѕРІР°РЅРЅРѕ"
+STID_HLPFILE_ERROR_s, 	"РћС€РёР±РєР° РїСЂРё С‡С‚РµРЅРёРё С„Р°Р№Р»Р° РїРѕРјРѕС‰Рё `%s'"
+STID_INDEX, 		"&РЎРѕРґРµСЂР¶Р°РЅРёРµ"
+STID_CONTENTS,		"РќР°С‡Р°Р»Рѕ"
+STID_BACK, 		"&РќР°Р·Р°Рґ"
+STID_ALL_FILES, 	"Р’СЃРµ С„Р°Р№Р»С‹ (*.*)"
+STID_HELP_FILES_HLP, 	"Р¤Р°Р№Р»С‹ СЃРїСЂР°РІРєРё (*.hlp)"
+STID_FILE_NOT_FOUND_s	"РќРµ РјРѕРіСѓ РЅР°Р№С‚Рё '%s'. Р’С‹ С…РѕС‚РёС‚Рµ РЅР°Р№С‚Рё СЌС‚РѕС‚ С„Р°Р№Р» СЃР°РјРѕСЃС‚РѕСЏС‚РµР»СЊРЅРѕ?"
+STID_NO_RICHEDIT	"РќРµ РјРѕРіСѓ РЅР°Р№С‚Рё richedit"
+STID_PSH_INDEX,		"РЎРѕРґРµСЂР¶Р°РЅРёРµ: "
 }
 
-CONTEXT_MENU MENU LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+CONTEXT_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN
-		MENUITEM "Заметки...",       MNID_CTXT_ANNOTATE
-		MENUITEM "Копировать",                MNID_CTXT_COPY
-		MENUITEM "Печать...",            MNID_CTXT_PRINT
-		POPUP    "Шрифт"
+		MENUITEM "Р—Р°РјРµС‚РєРё...",       MNID_CTXT_ANNOTATE
+		MENUITEM "РљРѕРїРёСЂРѕРІР°С‚СЊ",                MNID_CTXT_COPY
+		MENUITEM "РџРµС‡Р°С‚СЊ...",            MNID_CTXT_PRINT
+		POPUP    "РЁСЂРёС„С‚"
 		BEGIN
-			MENUITEM "Мелкий",       MNID_CTXT_FONTS_SMALL
-			MENUITEM "Обычный",      MNID_CTXT_FONTS_NORMAL
-			MENUITEM "Крупный",       MNID_CTXT_FONTS_LARGE
+			MENUITEM "РњРµР»РєРёР№",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "РћР±С‹С‡РЅС‹Р№",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "РљСЂСѓРїРЅС‹Р№",       MNID_CTXT_FONTS_LARGE
 		END
-		POPUP   "Видимость окна справки"
+		POPUP   "Р’РёРґРёРјРѕСЃС‚СЊ РѕРєРЅР° СЃРїСЂР°РІРєРё"
 		BEGIN
-			MENUITEM "По умолчанию",     MNID_CTXT_HELP_DEFAULT
-			MENUITEM "Наверху",     MNID_CTXT_HELP_VISIBLE
-			MENUITEM "Не наверху", MNID_CTXT_HELP_NONVISIBLE
+			MENUITEM "РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "РќР°РІРµСЂС…Сѓ",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "РќРµ РЅР°РІРµСЂС…Сѓ", MNID_CTXT_HELP_NONVISIBLE
 		END
-		MENUITEM "Использовать системные цвета",   MNID_CTXT_SYSTEM_COLORS
+		MENUITEM "РСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЃРёСЃС‚РµРјРЅС‹Рµ С†РІРµС‚Р°",   MNID_CTXT_SYSTEM_COLORS
 	END
 END
+#pragma code_page(default)

@@ -285,16 +285,16 @@ CAPTION "Certificate Import Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welcome to the Certificate Import Wizard", IDC_IMPORT_TITLE,
-    115,1,195,40
+    115,7,195,12
   LTEXT "This wizard helps you import certificates, certificate revocation lists, and certificate trust lists from a file to a certificate store.",
-    -1, 115,33,195,16
+    -1, 115,26,195,25
   LTEXT "A certificate can be used to identify you or the computer with which you are communicating.  It can also be used for authentication, and to sign messages.  Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.",
     -1, 115,56,195,40
   LTEXT "To continue, click Next.",
     -1, 115,103,195,8
 END
 
-IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,178
 CAPTION "Certificate Import Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -325,7 +325,7 @@ BEGIN
   PUSHBUTTON "B&rowse...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,178
 CAPTION "Certificate Import Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -381,9 +381,9 @@ CAPTION "Certificate Export Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Welcome to the Certificate Export Wizard", IDC_EXPORT_TITLE,
-    115,1,195,40
+    115,7,195,12
   LTEXT "This wizard helps you export certificates, certificate revocation lists, and certificate trust lists from a certificate store to a file.",
-    -1, 115,33,195,16
+    -1, 115,26,195,25
   LTEXT "A certificate can be used to identify you or the computer with which you are communicating.  It can also be used for authentication, and to sign messages.  Certificate stores are collections of certificates, certificate revocation lists, and certificate trust lists.",
     -1, 115,56,195,40
   LTEXT "To continue, click Next.",
@@ -394,8 +394,8 @@ IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
 CAPTION "Certificate Export Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "If you choose to export the private key, you will be prompted for a password to protect the private key on a later page.", -1, 21,1,195,23
-  LTEXT "Do you wish to export the private key?", -1, 21,24,195,15
+  LTEXT "If you choose to export the private key, you will be prompted for a password to protect the private key on a later page.", -1, 21,1,195,25
+  LTEXT "Do you wish to export the private key?", -1, 21,27,195,10
   AUTORADIOBUTTON "&Yes, export the private key",
     IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "N&o, do not export the private key",
@@ -419,22 +419,22 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "Select the format you want to use:", -1, 21,1,195,10
   AUTORADIOBUTTON "&DER-encoded X.509 (.cer)",
-    IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_EXPORT_FORMAT_DER, 31,18,240,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "Ba&se64-encoded X.509 (.cer):",
-    IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_BASE64, 31,30,240,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "&Cryptographic Message Syntax Standard/PKCS #7 Message (.p7b)",
-    IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_CMS, 31,42,240,12, BS_AUTORADIOBUTTON
   CHECKBOX "&Include all certificates in the certification path if possible",
-    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "&Personal Information Exchange/PKCS #12 (.pfx)",
-    IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
+    IDC_EXPORT_FORMAT_PFX, 31,72,240,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "Incl&ude all certificates in the certification path if possible",
-    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "&Enable strong encryption",
-    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,240,8,
     BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "Delete the private &key if the export is successful",
-    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,200,8,
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,240,8,
     BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
@@ -447,7 +447,7 @@ BEGIN
   PUSHBUTTON "B&rowse...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,178
 CAPTION "Certificate Export Wizard"
 FONT 8, "MS Shell Dlg"
 BEGIN

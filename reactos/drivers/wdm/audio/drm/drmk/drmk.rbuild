@@ -11,6 +11,6 @@
 	<importlibrary definition="drmk.spec" />
 	<library>ntoskrnl</library>
 	<define name="BUILDING_DRMK" />
-	<file>stubs.c</file>
+	<file>stubs.cpp</file>
 	<file>drmk.rc</file>
 </module>

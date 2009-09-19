@@ -45,8 +45,8 @@ GsDriverEntry(IN PVOID Context1,
 * none
 *
 *--*/
-DXAPI
-ULONG PASCAL
+ULONG
+PASCAL
 DxApiGetVersion()
 {
     /* MSDN say this always return Direct Sound version 4.02 */
@@ -98,8 +98,8 @@ DxApiGetVersion()
 *
 *--*/
 
-DXAPI
-DWORD PASCAL
+DWORD
+PASCAL
 DxApi(IN DWORD dwFunctionNum,
       IN LPVOID lpvInBuffer,
       IN DWORD cbInBuffer,

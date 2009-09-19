@@ -946,12 +946,7 @@ IPortPinDMus_fnFastRead(
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
-    {
-        /* some should initiate a state request but didnt do it */
-        DPRINT1("Starting stream with %lu mappings\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue));
-        SetStreamState(This, KSSTATE_RUN);
-    }
+    StatusBlock->Status = STATUS_PENDING;
     return TRUE;
 }
 
@@ -1004,13 +999,7 @@ IPortPinDMus_fnFastWrite(
     if (!NT_SUCCESS(Status))
         return FALSE;
 
-    if (This->IrpQueue->lpVtbl->MinimumDataAvailable(This->IrpQueue) == TRUE && This->State != KSSTATE_RUN)
-    {
-        SetStreamState(This, KSSTATE_RUN);
-        /* some should initiate a state request but didnt do it */
-        DPRINT1("Starting stream with %lu mappings Status %x\n", This->IrpQueue->lpVtbl->NumMappings(This->IrpQueue), Status);
-    }
-
+    StatusBlock->Status = STATUS_PENDING;
     return TRUE;
 }
 
@@ -1135,7 +1124,7 @@ IPortPinDMus_fnInit(
         This->ServiceGroup->lpVtbl->SupportDelayedService(This->ServiceGroup);
     }
 
-    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, 0, 0);
+    Status = This->IrpQueue->lpVtbl->Init(This->IrpQueue, ConnectDetails, This->Format, DeviceObject, 0, 0, NULL /*FIXME*/);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("IrpQueue_Init failed with %x\n", Status);

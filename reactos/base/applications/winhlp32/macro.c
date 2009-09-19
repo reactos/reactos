@@ -446,10 +446,13 @@ static void CALLBACK MACRO_GotoMark(LPCSTR str)
 
 void CALLBACK MACRO_HelpOn(void)
 {
-    LPCSTR      file;
+    WINHELP_WINDOW *win = MACRO_CurrentWindow();
+    LPCSTR      file = NULL;
 
     WINE_TRACE("()\n");
-    file = MACRO_CurrentWindow()->page->file->help_on_file;
+    if (win && win->page && win->page->file)
+        file = win->page->file->help_on_file;
+
     if (!file)
         file = (Globals.wVersion > 4) ? "winhlp32.hlp" : "winhelp.hlp";
 

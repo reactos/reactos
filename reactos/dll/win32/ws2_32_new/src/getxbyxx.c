@@ -8,6 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 #include "ws2_32.h"
+#include <nsp_dns.h>
 
 //#define NDEBUG
 #include <debug.h>

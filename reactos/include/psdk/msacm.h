@@ -245,7 +245,7 @@ typedef HACMOBJ      *PHACMOBJ, *LPHACMOBJ;
  */
 
 typedef BOOL (CALLBACK *ACMDRIVERENUMCB)(
-  HACMDRIVERID hadid, DWORD dwInstance, DWORD fdwSupport
+  HACMDRIVERID hadid, DWORD_PTR dwInstance, DWORD fdwSupport
 );
 
 typedef UINT (CALLBACK *ACMFILTERCHOOSEHOOKPROCA)(
@@ -542,21 +542,29 @@ DECL_WINELIB_TYPE_AW(ACMFORMATTAGDETAILS)
 DECL_WINELIB_TYPE_AW(PACMFORMATTAGDETAILS)
 DECL_WINELIB_TYPE_AW(LPACMFORMATTAGDETAILS)
 
+#ifdef _WIN64
+#  define _ACMSTREAMHEADERRESERVE 15
+#else
+#  define _ACMSTREAMHEADERRESERVE 10
+#endif
+
 typedef struct _ACMSTREAMHEADER
 {
-  DWORD  cbStruct;
-  DWORD  fdwStatus;
-  DWORD_PTR  dwUser;
-  LPBYTE pbSrc;
-  DWORD  cbSrcLength;
-  DWORD  cbSrcLengthUsed;
-  DWORD  dwSrcUser;
-  LPBYTE pbDst;
-  DWORD  cbDstLength;
-  DWORD  cbDstLengthUsed;
-  DWORD  dwDstUser;
-  DWORD  dwReservedDriver[10];
+  DWORD     cbStruct;
+  DWORD     fdwStatus;
+  DWORD_PTR dwUser;
+  LPBYTE    pbSrc;
+  DWORD     cbSrcLength;
+  DWORD     cbSrcLengthUsed;
+  DWORD_PTR dwSrcUser;
+  LPBYTE    pbDst;
+  DWORD     cbDstLength;
+  DWORD     cbDstLengthUsed;
+  DWORD_PTR dwDstUser;
+  DWORD     dwReservedDriver[_ACMSTREAMHEADERRESERVE];
 } ACMSTREAMHEADER, *PACMSTREAMHEADER, *LPACMSTREAMHEADER;
+
+#undef _ACMSTREAMHEADERRESERVE
 
 /***********************************************************************
  * Callbacks 2

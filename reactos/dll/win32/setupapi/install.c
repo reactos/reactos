@@ -96,9 +96,9 @@ struct needs_callback_info
 
 typedef BOOL (*iterate_fields_func)( HINF hinf, PCWSTR field, void *arg );
 static BOOL GetLineText( HINF hinf, PCWSTR section_name, PCWSTR key_name, PWSTR *value);
-typedef HRESULT WINAPI (*COINITIALIZE)(IN LPVOID pvReserved);
-typedef HRESULT WINAPI (*COCREATEINSTANCE)(IN REFCLSID rclsid, IN LPUNKNOWN pUnkOuter, IN DWORD dwClsContext, IN REFIID riid, OUT LPVOID *ppv);
-typedef HRESULT WINAPI (*COUNINITIALIZE)(VOID);
+typedef HRESULT (WINAPI *COINITIALIZE)(IN LPVOID pvReserved);
+typedef HRESULT (WINAPI *COCREATEINSTANCE)(IN REFCLSID rclsid, IN LPUNKNOWN pUnkOuter, IN DWORD dwClsContext, IN REFIID riid, OUT LPVOID *ppv);
+typedef HRESULT (WINAPI *COUNINITIALIZE)(VOID);
 
 /* Unicode constants */
 static const WCHAR AddService[] = {'A','d','d','S','e','r','v','i','c','e',0};

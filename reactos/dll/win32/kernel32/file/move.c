@@ -405,7 +405,7 @@ MoveFileWithProgressW (
 		   }
 
 		   lpExistingFileName2 = (LPWSTR) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,max_size * sizeof(WCHAR));
-		   if (lpNewFileName2 == NULL)
+		   if (lpExistingFileName2 == NULL)
 		   {		
 		     HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);		  	  		    		
 		     HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		

@@ -111,7 +111,7 @@ MirrorRgnByWidth(HRGN hRgn, INT Width, HRGN *phRgn)
               if (phRgn) phRgn = (HRGN *)hRgnex;
               else
               {
-                 CombineRgn(hRgn, hRgnex, *phRgn, RGN_COPY); 
+                 CombineRgn(hRgn, hRgnex, 0, RGN_COPY); 
                  DeleteObject(hRgnex);
               }
               Ret = 1;

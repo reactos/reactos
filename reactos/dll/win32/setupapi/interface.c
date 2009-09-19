@@ -255,6 +255,7 @@ SETUP_CreateInterfaceList(
             rc = RegOpenKeyExW(hReferenceKey, Control, 0, KEY_QUERY_VALUE, &hControlKey);
             if (rc != ERROR_SUCCESS)
             {
+#if 0
                 if (OnlyPresentInterfaces)
                 {
                     DestroyDeviceInterface(interfaceInfo);
@@ -262,11 +263,12 @@ SETUP_CreateInterfaceList(
                 }
                 else
                     interfaceInfo->Flags |= SPINT_REMOVED;
+#endif
             }
             else
             {
                 dwLength = sizeof(DWORD);
-                if (RegQueryValueExW(hControlKey, Linked, NULL, &dwRegType, (LPBYTE)&LinkedValue, &dwLength)
+                if (RegQueryValueExW(hControlKey, Linked, NULL, &dwRegType, (LPBYTE)&LinkedValue, &dwLength) == ERROR_SUCCESS
                     && dwRegType == REG_DWORD && LinkedValue)
                     interfaceInfo->Flags |= SPINT_ACTIVE;
                 RegCloseKey(hControlKey);

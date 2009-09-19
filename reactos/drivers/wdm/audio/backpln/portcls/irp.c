@@ -194,10 +194,39 @@ PortClsShutdown(
     IN  PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
+    PPCLASS_DEVICE_EXTENSION DeviceExtension;
+    PLIST_ENTRY Entry;
+    PPHYSICAL_CONNECTION Connection;
     DPRINT("PortClsShutdown called\n");
-    //DbgBreakPoint();
 
-    /* TODO */
+    /* get device extension */
+    DeviceExtension = (PPCLASS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    while(!IsListEmpty(&DeviceExtension->PhysicalConnectionList))
+    {
+        /* get connection entry */
+        Entry = RemoveHeadList(&DeviceExtension->PhysicalConnectionList);
+        Connection = (PPHYSICAL_CONNECTION)CONTAINING_RECORD(Entry, PHYSICAL_CONNECTION, Entry);
+
+        if (Connection->FromSubDevice)
+        {
+            /* release subdevice */
+            Connection->FromSubDevice->lpVtbl->Release(Connection->FromSubDevice);
+        }
+
+        if (Connection->ToSubDevice)
+        {
+            /* release subdevice */
+            Connection->ToSubDevice->lpVtbl->Release(Connection->ToSubDevice);
+        }
+        FreeItem(Connection, TAG_PORTCLASS);
+    }
+
+    if (DeviceExtension->AdapterPowerManagement)
+    {
+        /* release adapter power management */
+        DPRINT1("Power %u\n", DeviceExtension->AdapterPowerManagement->lpVtbl->Release(DeviceExtension->AdapterPowerManagement));
+    }
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;

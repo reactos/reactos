@@ -1,7 +1,6 @@
 #include "precomp.h"
 
 
-
 /*
  * @implemented
  */
@@ -91,7 +90,6 @@ GetTextCharset(HDC hdc)
 
 
 
-
 /*
  * @implemented
  */
@@ -109,7 +107,8 @@ GetTextMetricsA(
     return FALSE;
   }
 
-  return TextMetricW2A(lptm, &tmwi.TextMetric);
+  FONT_TextMetricWToA(&tmwi.TextMetric, lptm);
+  return TRUE;
 }
 
 
@@ -396,6 +395,10 @@ GetTextFaceA( HDC hdc, INT count, LPSTR name )
 
     res = GetTextFaceW(hdc, 0, NULL);
     nameW = HeapAlloc( GetProcessHeap(), 0, res * 2 );
+    if (nameW == NULL)
+    {
+        return 0;
+    }
     GetTextFaceW( hdc, res, nameW );
 
     if (name)

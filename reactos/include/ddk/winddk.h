@@ -31,9 +31,7 @@ extern "C" {
 #include <ntdef.h>
 #include <ntstatus.h>
 
-#ifdef __GNUC__
 #include "intrin.h"
-#endif
 
 #if !defined(_NTHAL_)
 #define NTHALAPI DECLSPEC_IMPORT
@@ -65,18 +63,6 @@ extern "C" {
 #else
 # define _DDK_DUMMYUNION_MEMBER(name) name
 # define _DDK_DUMMYUNION_N_MEMBER(n, name) name
-#endif
-
-#if !defined(_NTSYSTEM_)
-#define NTSYSAPI     DECLSPEC_IMPORT
-#define NTSYSCALLAPI DECLSPEC_IMPORT
-#else
-#define NTSYSAPI
-#if defined(_NTDLLBUILD_)
-#define NTSYSCALLAPI
-#else
-#define NTSYSCALLAPI DECLSPEC_ADDRSAFE
-#endif
 #endif
 
 /*
@@ -2866,10 +2852,10 @@ typedef struct {
 } HAL_DISPATCH, *PHAL_DISPATCH;
 
 #if defined(_NTDRIVER_) || defined(_NTDDK_) || defined(_NTHAL_)
-extern DECLSPEC_IMPORT PHAL_DISPATCH HalDispatchTable;
+extern NTSYSAPI PHAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #else
-extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
+extern __declspec(dllexport) HAL_DISPATCH HalDispatchTable;
 #define HALDISPATCH (&HalDispatchTable)
 #endif
 
@@ -2890,14 +2876,6 @@ extern DECLSPEC_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
 #define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
 #define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
-
-#ifndef _NTOSKRNL_
-#define HalDeviceControl                HALDISPATCH->HalDeviceControl
-#define HalIoAssignDriveLetters         HALDISPATCH->HalIoAssignDriveLetters
-#define HalIoReadPartitionTable         HALDISPATCH->HalIoReadPartitionTable
-#define HalIoSetPartitionInformation    HALDISPATCH->HalIoSetPartitionInformation
-#define HalIoWritePartitionTable        HALDISPATCH->HalIoWritePartitionTable
-#endif
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
@@ -4962,7 +4940,7 @@ typedef struct _PHYSICAL_MEMORY_RANGE {
 } PHYSICAL_MEMORY_RANGE, *PPHYSICAL_MEMORY_RANGE;
 
 typedef ULONG_PTR
-(*PDRIVER_VERIFIER_THUNK_ROUTINE)(
+(NTAPI *PDRIVER_VERIFIER_THUNK_ROUTINE)(
   IN PVOID  Context);
 
 typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
@@ -5128,9 +5106,8 @@ typedef struct _KFLOATING_SAVE {
   ULONG  Spare1;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
 
-static __inline
+FORCEINLINE
 ULONG
-DDKAPI
 KeGetCurrentProcessorNumber(VOID)
 {
 #if defined(__GNUC__)
@@ -5145,7 +5122,7 @@ KeGetCurrentProcessorNumber(VOID)
 #if _MSC_FULL_VER >= 13012035
   return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 #else
-  __asm { movzx eax, _PCR KPCR.Number }
+  __asm { movzx eax, fs:[0] KPCR.Number }
 #endif
 #else
 #error Unknown compiler
@@ -5608,7 +5585,7 @@ typedef VOID
     IN ULONG Length
 );
 
-#define PCI_DATA_TAG TAG('P', 'C', 'I', ' ')
+#define PCI_DATA_TAG ' ICP'
 #define PCI_DATA_VERSION 1
 
 typedef struct _PCIBUSDATA
@@ -5815,7 +5792,7 @@ KeAcquireSpinLockRaiseToDpc(
 
 #define ASSERT(exp) \
   (VOID)((!(exp)) ? \
-    RtlAssert( #exp, __FILE__, __LINE__, NULL ), FALSE : TRUE)
+    RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ), FALSE : TRUE)
 
 #define ASSERTMSG(msg, exp) \
   (VOID)((!(exp)) ? \
@@ -5945,7 +5922,7 @@ RemoveEntryList(
   OldBlink = Entry->Blink;
   OldFlink->Blink = OldBlink;
   OldBlink->Flink = OldFlink;
-  return (OldFlink == OldBlink);
+  return (BOOLEAN)(OldFlink == OldBlink);
 }
 
 static __inline PLIST_ENTRY
@@ -5992,17 +5969,39 @@ RtlCompareString(
   IN PSTRING  String2,
   BOOLEAN  CaseInSensitive);
 
-NTSYSAPI
+#if !defined(MIDL_PASS)
+
+FORCEINLINE
 LUID
 NTAPI
 RtlConvertLongToLuid(
-  IN LONG  Long);
+    IN LONG Val)
+{
+    LUID Luid;
+    LARGE_INTEGER Temp;
 
-NTSYSAPI
+    Temp.QuadPart = Val;
+    Luid.LowPart = Temp.u.LowPart;
+    Luid.HighPart = Temp.u.HighPart;
+
+    return Luid;
+}
+
+FORCEINLINE
 LUID
 NTAPI
 RtlConvertUlongToLuid(
-  ULONG  Ulong);
+    IN ULONG Val)
+{
+    LUID Luid;
+
+    Luid.LowPart = Val;
+    Luid.HighPart = 0;
+
+    return Luid;
+}
+#endif
+
 
 NTSYSAPI
 VOID
@@ -8285,6 +8284,13 @@ KeEnterCriticalRegion(
 #define ExReleaseSpinLock(Lock, OldIrql) KeReleaseSpinLock((Lock), (OldIrql))
 #define ExAcquireSpinLockAtDpcLevel(Lock) KeAcquireSpinLockAtDpcLevel(Lock)
 #define ExReleaseSpinLockFromDpcLevel(Lock) KeReleaseSpinLockFromDpcLevel(Lock)
+
+NTKERNELAPI
+VOID
+NTAPI
+KeFlushQueuedDpcs(
+    VOID
+);
 
 NTHALAPI
 VOID

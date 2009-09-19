@@ -7,6 +7,7 @@
 	<include base="wininet">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<library>wine</library>
 	<library>mpr</library>
 	<library>shlwapi</library>

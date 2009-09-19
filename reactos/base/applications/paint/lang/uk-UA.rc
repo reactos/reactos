@@ -1,7 +1,9 @@
 /*
- * Ukrainian Language resource file
- * Translated by: Artem Reznikov
- * Last changed:  29-04-2009
+ * PROJECT:     Paint for ReactOS
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/devmgmt/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for Paint
+ * TRANSLATOR:  Artem Reznikov, Sakara Yevhen
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -47,7 +49,7 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "Масштаб"
         BEGIN
-            POPUP "User defined"
+            POPUP "Користувальницький"
             BEGIN
                 MENUITEM "12,5%", IDM_VIEWZOOM125
                 MENUITEM "25%", IDM_VIEWZOOM25
@@ -58,8 +60,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Показати сітку", IDM_VIEWSHOWGRID
+            MENUITEM "Показати в мініатюрі", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "На весь екран\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -176,10 +178,10 @@ BEGIN
     IDS_PROGRAMNAME, "Paint"
     IDS_WINDOWTITLE, "%s - Paint"
     IDS_INFOTITLE, "Paint для ReactOS"
-    IDS_INFOTEXT, "Paint for ReactOS is available under the GNU Lesser General Public License (LGPL) version 3 (see www.gnu.org)"
+    IDS_INFOTEXT, "Paint для ReactOS доступний згідно з GNU Lesser General Public License (LGPL) версії 3 (дивіться www.gnu.org)"
     IDS_SAVEPROMPTTEXT, "Зберегти зміни до %s?"
     IDS_DEFAULTFILENAME, "Без_імені.bmp"
-    IDS_MINIATURETITLE, "Miniature"
+    IDS_MINIATURETITLE, "Мініатюра"
     IDS_TOOLTIP1, "Виділення довільної області"
     IDS_TOOLTIP2, "Виділення"
     IDS_TOOLTIP3, "Ластик"

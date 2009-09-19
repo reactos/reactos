@@ -102,27 +102,6 @@ typedef struct _XFORMGDI {
   /* XFORMOBJ has no public members */
 } XFORMGDI;
 
-typedef struct _XLATEGDI {
-  XLATEOBJ		XlateObj;
-  HPALETTE DestPal;
-  HPALETTE SourcePal;
-  BOOL UseShiftAndMask;
-
-//  union {
-//    struct {            /* For Shift Translations */
-      ULONG RedMask;
-      ULONG GreenMask;
-      ULONG BlueMask;
-      INT RedShift;
-      INT GreenShift;
-      INT BlueShift;
-//    };
-//    struct {            /* For Color -> Mono Translations */
-      ULONG BackgroundColor;
-//    };
-//  };
-} XLATEGDI;
-
 /* as the *OBJ structures are located at the beginning of the *GDI structures
    we can simply typecast the pointer */
 #define ObjToGDI(ClipObj, Type) (Type##GDI *)(ClipObj)

@@ -74,7 +74,7 @@ KspRegisterDeviceInterfaces(
         /* now register device interface */
         Status = IoRegisterDeviceInterface(PhysicalDeviceObject, 
                                            &Categories[Index],
-                                           ReferenceString, /* see damn bug 4566 */
+                                           ReferenceString,
                                            &SymEntry->SymbolicLink);
 
         if (!NT_SUCCESS(Status))

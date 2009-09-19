@@ -659,9 +659,8 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
-      /* Get the exception code */
-      Status = _SEH2_GetExceptionCode();
-      _SEH2_YIELD(return Status);
+      /* Return the exception code */
+      _SEH2_YIELD(return _SEH2_GetExceptionCode());
    }
    _SEH2_END;
 
@@ -949,7 +948,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
  */
 {
    MEMORY_AREA* MemoryArea;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
    PEPROCESS Process;
    PMMSUPPORT AddressSpace;
    PVOID BaseAddress;
@@ -967,7 +966,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         return STATUS_INVALID_PARAMETER_4;
     }
 
-    if(ExGetPreviousMode() != KernelMode)
+    if (ExGetPreviousMode() != KernelMode)
     {
         _SEH2_TRY
         {
@@ -977,11 +976,10 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            /* Get exception code */
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        if (!NT_SUCCESS(Status)) return Status;
     }
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));

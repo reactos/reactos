@@ -70,4 +70,14 @@ typedef enum _NET_IF_CONNECTION_TYPE
    NET_IF_CONNECTION_MAXIMUM = 4
 } NET_IF_CONNECTION_TYPE, *PNET_IF_CONNECTION_TYPE;
 
+typedef enum {
+  IfOperStatusUp = 1,
+  IfOperStatusDown,
+  IfOperStatusTesting,
+  IfOperStatusUnknown,
+  IfOperStatusDormant,
+  IfOperStatusNotPresent,
+  IfOperStatusLowerLayerDown
+} IF_OPER_STATUS;
+
 #endif /* _IFDEF_ */

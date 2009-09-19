@@ -41,11 +41,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
-DEFINE_GUID( CLSID_MsiDatabase, 0x000c1084, 0x0000, 0x0000,
-             0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-DEFINE_GUID( CLSID_MsiPatch, 0x000c1086, 0x0000, 0x0000,
-             0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-
 /*
  *  .MSI  file format
  *
@@ -163,7 +158,8 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     }
 
     if ( !IsEqualGUID( &stat.clsid, &CLSID_MsiDatabase ) &&
-         !IsEqualGUID( &stat.clsid, &CLSID_MsiPatch ) ) 
+         !IsEqualGUID( &stat.clsid, &CLSID_MsiPatch ) &&
+         !IsEqualGUID( &stat.clsid, &CLSID_MsiTransform ) )
     {
         ERR("storage GUID is not a MSI database GUID %s\n",
              debugstr_guid(&stat.clsid) );
@@ -417,10 +413,16 @@ static LPWSTR msi_build_createsql_columns(LPWSTR *columns_data, LPWSTR *types, D
             case 'i':
                 lstrcpyW(extra, type_notnull);
             case 'I':
-                if (len == 2)
+                if (len <= 2)
                     type = type_int;
-                else
+                else if (len == 4)
                     type = type_long;
+                else
+                {
+                    WARN("invalid int width %u\n", len);
+                    msi_free(columns);
+                    return NULL;
+                }
                 break;
             case 'v':
                 lstrcpyW(extra, type_notnull);

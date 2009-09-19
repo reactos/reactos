@@ -246,3 +246,4 @@ BEGIN
     STRING_PRINTING_NOT_IMPLEMENTED,  "Utskriftfunksjonen er ikke laget ennå."
     STRING_MAX_TAB_STOPS,             "Kan ikke legge til mer enn 32 tabulatorstopp."
 END
+#pragma code_page(default)

@@ -402,7 +402,7 @@ BOOL FASTCALL UserDereferenceObject(PVOID obj)
 
 
 
-BOOL FASTCALL UserCreateHandleTable()
+BOOL FASTCALL UserCreateHandleTable(VOID)
 {
 
    PVOID mem;

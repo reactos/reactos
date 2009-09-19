@@ -38,7 +38,7 @@ RasSecurityDialogComplete(SECURITY_MESSAGE* pSecMsg)
 DWORD WINAPI
 RasSecurityDialogBegin(HPORT hPort, PBYTE pSendBuf,
     DWORD SendBufSize, PBYTE pRecvBuf, DWORD RecvBufSize,
-    VOID (WINAPI *RasSecurityDialogComplete)())
+    VOID (WINAPI *RasSecurityDialogComplete)(SECURITY_MESSAGE*))
 {
     FIXME("(%p,%p,0x%08x,%p,0x%08x,%p),stub!\n",hPort,pSendBuf,SendBufSize,
           pRecvBuf,RecvBufSize,*RasSecurityDialogComplete);

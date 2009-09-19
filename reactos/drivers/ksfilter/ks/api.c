@@ -9,9 +9,11 @@
 
 #include "priv.h"
 
+const GUID GUID_NULL              = {0x00000000L, 0x0000, 0x0000, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
+const GUID KSMEDIUMSETID_Standard = {0x4747B320L, 0x62CE, 0x11CF, {0xA5, 0xD6, 0x28, 0xDB, 0x04, 0xC1, 0x00, 0x00}};
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -20,8 +22,40 @@ KsAcquireResetValue(
     IN  PIRP Irp,
     OUT KSRESET* ResetValue)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PIO_STACK_LOCATION IoStack;
+    KSRESET* Value;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* check if there is reset value provided */
+    if (IoStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(KSRESET))
+        return STATUS_INVALID_PARAMETER;
+
+    if (Irp->RequestorMode == UserMode)
+    {
+        /* need to probe the buffer */
+        _SEH2_TRY
+        {
+            ProbeForRead(IoStack->Parameters.DeviceIoControl.Type3InputBuffer, sizeof(KSRESET), sizeof(UCHAR));
+            Value = (KSRESET*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+            *ResetValue = *Value;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Exception, get the error code */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+    }
+    else
+    {
+        Value = (KSRESET*)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
+        *ResetValue = *Value;
+    }
+
+    return Status;
 }
 
 /*
@@ -510,9 +544,16 @@ KsAllocateDeviceHeader(
     InitializeListHead(&Header->TargetDeviceList);
     /* initialize power dispatch list */
     InitializeListHead(&Header->PowerDispatchList);
+    /* initialize object bag lists */
+    InitializeListHead(&Header->ObjectBags);
 
     /* initialize create item list */
     InitializeListHead(&Header->ItemList);
+
+    /* initialize basic header */
+    Header->BasicHeader.Type = KsObjectTypeDevice;
+    Header->BasicHeader.KsDevice = &Header->KsDevice;
+    Header->BasicHeader.Parent.KsDevice = &Header->KsDevice;
 
     /* are there any create items provided */
     if (ItemsCount && ItemsList)
@@ -1107,9 +1148,25 @@ KsSynchronousIoControlDevice(
     /* create the irp */
     Irp =  IoBuildDeviceIoControlRequest(IoControl, DeviceObject, InBuffer, InSize, OutBuffer, OutSize, FALSE, &Event, &IoStatusBlock);
 
-    /* HACK */
+    if (!Irp)
+    {
+        /* no memory to allocate the irp */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+
+    /* Store Fileobject */
     IoStack = IoGetNextIrpStackLocation(Irp);
     IoStack->FileObject = FileObject;
+
+    if (IoControl == IOCTL_KS_WRITE_STREAM)
+    {
+        Irp->AssociatedIrp.SystemBuffer = OutBuffer;
+    }
+    else if (IoControl == IOCTL_KS_READ_STREAM)
+    {
+        Irp->AssociatedIrp.SystemBuffer = InBuffer;
+    }
 
     IoSetCompletionRoutine(Irp, KspSynchronousIoControlDeviceCompletion, (PVOID)&IoStatusBlock, TRUE, TRUE, TRUE);
 
@@ -1125,7 +1182,7 @@ KsSynchronousIoControlDevice(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1141,7 +1198,7 @@ KsUnserializeObjectPropertiesFromRegistry(
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1151,8 +1208,83 @@ KsCacheMedium(
     IN  PKSPIN_MEDIUM Medium,
     IN  ULONG PinDirection)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    HANDLE hKey;
+    UNICODE_STRING Path;
+    UNICODE_STRING BasePath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\MediumCache\\");
+    UNICODE_STRING GuidString;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    BOOLEAN PathAdjusted = FALSE;
+    ULONG Value = 0;
+
+    /* first check if the medium is standard */
+    if (IsEqualGUIDAligned(&KSMEDIUMSETID_Standard, &Medium->Set) ||
+        IsEqualGUIDAligned(&GUID_NULL, &Medium->Set))
+    {
+        /* no need to cache that */
+        return STATUS_SUCCESS;
+    }
+
+    /* convert guid to string */
+    Status = RtlStringFromGUID(&Medium->Set, &GuidString);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* allocate path buffer */
+    Path.Length = 0;
+    Path.MaximumLength = BasePath.MaximumLength + GuidString.MaximumLength + 10 * sizeof(WCHAR);
+    Path.Buffer = AllocateItem(PagedPool, Path.MaximumLength);
+    if (!Path.Buffer)
+    {
+        /* not enough resources */
+        RtlFreeUnicodeString(&GuidString);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&Path, &BasePath);
+    RtlAppendUnicodeStringToString(&Path, &GuidString);
+    RtlAppendUnicodeToString(&Path, L"-");
+    /* FIXME append real instance id */
+    RtlAppendUnicodeToString(&Path, L"0");
+    RtlAppendUnicodeToString(&Path, L"-");
+    /* FIXME append real instance id */
+    RtlAppendUnicodeToString(&Path, L"0");
+
+    /* free guid string */
+    RtlFreeUnicodeString(&GuidString);
+
+    /* initialize object attributes */
+    InitializeObjectAttributes(&ObjectAttributes, &Path, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+    /* create the key */
+    Status = ZwCreateKey(&hKey, GENERIC_WRITE, &ObjectAttributes, 0, NULL, 0, NULL);
+
+    /* free path buffer */
+    FreeItem(Path.Buffer);
+
+    if (NT_SUCCESS(Status))
+    {
+        /* store symbolic link */
+        if (SymbolicLink->Buffer[1] == L'?' && SymbolicLink->Buffer[2] == L'?')
+        {
+            /* replace kernel path with user mode path */
+            SymbolicLink->Buffer[1] = L'\\';
+            PathAdjusted = TRUE;
+        }
+
+        /* store the key */
+        Status = ZwSetValueKey(hKey, SymbolicLink, 0, REG_DWORD, &Value, sizeof(ULONG));
+
+        if (PathAdjusted)
+        {
+            /* restore kernel path */
+            SymbolicLink->Buffer[1] = L'?';
+        }
+
+        ZwClose(hKey);
+    }
+
+    /* done */
+    return Status;
 }
 
 /*
@@ -1167,8 +1299,209 @@ DllInitialize(
 }
 
 
+NTSTATUS
+NTAPI
+KopDispatchClose(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PKO_OBJECT_HEADER Header;
+    PIO_STACK_LOCATION IoStack;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get ko object header */
+    Header = (PKO_OBJECT_HEADER)IoStack->FileObject->FsContext2;
+
+    /* free ks object header */
+    KsFreeObjectHeader(Header->ObjectHeader);
+
+    /* free ko object header */
+    FreeItem(Header);
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    /* release bus object */
+    KsDereferenceBusObject((KSDEVICE_HEADER)DeviceExtension->DeviceHeader);
+
+    /* complete request */
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return STATUS_SUCCESS;
+}
+
+
+
+static KSDISPATCH_TABLE KoDispatchTable =
+{
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KsDispatchInvalidDeviceRequest,
+    KopDispatchClose,
+    KsDispatchQuerySecurity,
+    KsDispatchSetSecurity,
+    KsDispatchFastIoDeviceControlFailure,
+    KsDispatchFastReadFailure,
+    KsDispatchFastReadFailure,
+};
+
+
+NTSTATUS
+NTAPI
+KopDispatchCreate(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PKO_OBJECT_HEADER Header = NULL;
+    PIO_STACK_LOCATION IoStack;
+    PKO_DRIVER_EXTENSION DriverObjectExtension;
+    NTSTATUS Status;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    if (!IoStack->FileObject)
+    {
+        DPRINT1("FileObject not attached!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+
+    /* get driver object extension */
+    DriverObjectExtension = (PKO_DRIVER_EXTENSION)IoGetDriverObjectExtension(DeviceObject->DriverObject, (PVOID)KoDriverInitialize);
+    if (!DriverObjectExtension)
+    {
+        DPRINT1("FileObject not attached!\n");
+        Status = STATUS_UNSUCCESSFUL;
+        goto cleanup;
+    }
+
+    /* allocate ko object header */
+    Header = (PKO_OBJECT_HEADER)AllocateItem(NonPagedPool, sizeof(KO_OBJECT_HEADER));
+    if (!Header)
+    {
+        DPRINT1("failed to allocate KO_OBJECT_HEADER\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto cleanup;
+    }
+
+    /* initialize create item */
+    Header->CreateItem.Create = KopDispatchCreate;
+    RtlInitUnicodeString(&Header->CreateItem.ObjectClass, KOSTRING_CreateObject);
+
+
+    /* now allocate the object header */
+    Status = KsAllocateObjectHeader(&Header->ObjectHeader, 1, &Header->CreateItem, Irp, &KoDispatchTable);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        goto cleanup;
+    }
+
+    /* FIXME
+     * extract clsid and interface id from irp
+     * call the standard create handler
+     */
+
+    UNIMPLEMENTED
+
+    IoStack->FileObject->FsContext2 = (PVOID)Header;
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
+
+cleanup:
+
+    if (Header && Header->ObjectHeader)
+        KsFreeObjectHeader(Header->ObjectHeader);
+
+    if (Header)
+        FreeItem(Header);
+
+    Irp->IoStatus.Status = Status;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
+}
+
+
+
+NTSTATUS
+NTAPI
+KopAddDevice(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    NTSTATUS Status = STATUS_DEVICE_REMOVED;
+    PDEVICE_OBJECT FunctionalDeviceObject= NULL;
+    PDEVICE_OBJECT NextDeviceObject;
+    PDEVICE_EXTENSION DeviceExtension;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+
+    /* create the device object */
+    Status = IoCreateDevice(DriverObject, sizeof(DEVICE_EXTENSION), NULL, FILE_DEVICE_KS, FILE_DEVICE_SECURE_OPEN, FALSE, &FunctionalDeviceObject);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    /* allocate the create item */
+    CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+
+    if (!CreateItem)
+    {
+        /* not enough memory */
+        IoDeleteDevice(FunctionalDeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* initialize create item */
+    CreateItem->Create = KopDispatchCreate;
+    RtlInitUnicodeString(&CreateItem->ObjectClass, KOSTRING_CreateObject);
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)FunctionalDeviceObject->DeviceExtension;
+
+    /* now allocate the device header */
+    Status = KsAllocateDeviceHeader((KSDEVICE_HEADER*)&DeviceExtension->DeviceHeader, 1, CreateItem);
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed */
+        IoDeleteDevice(FunctionalDeviceObject);
+        FreeItem(CreateItem);
+        return Status;
+    }
+
+    /* now attach to device stack */
+    NextDeviceObject = IoAttachDeviceToDeviceStack(FunctionalDeviceObject, PhysicalDeviceObject);
+    if (NextDeviceObject)
+    {
+        /* store pnp base object */
+         KsSetDevicePnpAndBaseObject((KSDEVICE_HEADER)DeviceExtension->DeviceHeader, NextDeviceObject, FunctionalDeviceObject);
+        /* set device flags */
+        FunctionalDeviceObject->Flags |= DO_DIRECT_IO | DO_POWER_PAGABLE;
+        FunctionalDeviceObject->Flags &= ~ DO_DEVICE_INITIALIZING;
+    }
+    else
+    {
+        /* failed */
+        KsFreeDeviceHeader((KSDEVICE_HEADER)DeviceExtension->DeviceHeader);
+        FreeItem(CreateItem);
+        IoDeleteDevice(FunctionalDeviceObject);
+        Status =  STATUS_DEVICE_REMOVED;
+    }
+
+    /* return result */
+    return Status;
+}
+
+
 /*
-    @unimplemented
+    @implemented
 */
 COMDDKAPI
 NTSTATUS
@@ -1176,12 +1509,16 @@ NTAPI
 KoDeviceInitialize(
     IN PDEVICE_OBJECT DeviceObject)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    /* get device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+    return KsAddObjectCreateItemToDeviceHeader((KSDEVICE_HEADER)DeviceExtension->DeviceHeader, KopDispatchCreate, NULL, KOSTRING_CreateObject, NULL);
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 COMDDKAPI
 NTSTATUS
@@ -1191,8 +1528,38 @@ KoDriverInitialize(
     IN PUNICODE_STRING RegistryPathName,
     IN KoCreateObjectHandler CreateObjectHandler)
 {
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    PKO_DRIVER_EXTENSION DriverObjectExtension;
+    NTSTATUS Status;
+
+    /* allocate driver object extension */
+    Status = IoAllocateDriverObjectExtension(DriverObject, (PVOID)KoDriverInitialize, sizeof(KO_DRIVER_EXTENSION), (PVOID*)&DriverObjectExtension);
+
+    /* did it work */
+    if (NT_SUCCESS(Status))
+    {
+        /* store create handler */
+        DriverObjectExtension->CreateObjectHandler = CreateObjectHandler;
+
+         /* Setting our IRP handlers */
+        DriverObject->MajorFunction[IRP_MJ_PNP] = KsDefaultDispatchPnp;
+        DriverObject->MajorFunction[IRP_MJ_POWER] = KsDefaultDispatchPower;
+        DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = KsDefaultForwardIrp;
+
+        /* The driver unload routine */
+        DriverObject->DriverUnload = KsNullDriverUnload;
+
+        /* The driver-supplied AddDevice */
+        DriverObject->DriverExtension->AddDevice = KopAddDevice;
+
+        /* KS handles these */
+        DPRINT1("Setting KS function handlers\n");
+        KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CREATE);
+        KsSetMajorFunctionHandler(DriverObject, IRP_MJ_CLOSE);
+        KsSetMajorFunctionHandler(DriverObject, IRP_MJ_DEVICE_CONTROL);
+
+    }
+
+    return Status;
 }
 
 /*
@@ -1208,7 +1575,7 @@ KoRelease(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1216,8 +1583,32 @@ NTAPI
 KsAcquireControl(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    KeWaitForSingleObject(&BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
+
 }
+
+/*
+    @implemented
+*/
+VOID
+NTAPI
+KsReleaseControl(
+    IN PVOID  Object)
+{
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    KeReleaseMutex(&BasicHeader->ControlMutex, FALSE);
+}
+
+
 
 /*
     @implemented
@@ -1286,10 +1677,8 @@ KsTerminateDevice(
     }
 }
 
-
-
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1297,11 +1686,39 @@ NTAPI
 KsCompletePendingRequest(
     IN PIRP Irp)
 {
+    PIO_STACK_LOCATION IoStack;
+
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(Irp->IoStatus.Status != STATUS_PENDING);
+
+    if (IoStack->MajorFunction != IRP_MJ_CLOSE)
+    {
+        /* can be completed immediately */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return;
+    }
+
+    /* did close operation fail */
+    if (!NT_SUCCESS(Irp->IoStatus.Status))
+    {
+        /* closing failed, complete irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return;
+    }
+
+    /* FIXME 
+     * delete object / device header 
+     * remove dead pin / filter instance
+     */
     UNIMPLEMENTED
+
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -1314,12 +1731,194 @@ KsCreateBusEnumObject(
     IN REFGUID InterfaceGuid OPTIONAL,
     IN PWCHAR ServiceRelativePath OPTIONAL)
 {
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    ULONG Length;
+    NTSTATUS Status = STATUS_SUCCESS;
+    UNICODE_STRING ServiceKeyPath = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\");
+    PBUS_ENUM_DEVICE_EXTENSION BusDeviceExtension;
+    PDEVICE_EXTENSION DeviceExtension;
+
+    /* calculate sizeof bus enum device extension */
+    Length = wcslen(BusIdentifier) * sizeof(WCHAR);
+    Length += sizeof(BUS_ENUM_DEVICE_EXTENSION);
+
+    BusDeviceExtension = ExAllocatePool(NonPagedPool, Length);
+    if (!BusDeviceExtension)
+    {
+        /* not enough memory */
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* zero device extension */
+    RtlZeroMemory(BusDeviceExtension, sizeof(BUS_ENUM_DEVICE_EXTENSION));
+
+    /* initialize bus device extension */
+    wcscpy(BusDeviceExtension->BusIdentifier, BusIdentifier);
+
+    /* allocate service path string */
+    Length = ServiceKeyPath.MaximumLength;
+    Length += BusDeviceObject->DriverObject->DriverExtension->ServiceKeyName.MaximumLength;
+
+    if (ServiceRelativePath)
+    {
+        /* relative path for devices */
+        Length += wcslen(ServiceRelativePath) + 2 * sizeof(WCHAR);
+    }
+
+    BusDeviceExtension->ServicePath.Length = 0;
+    BusDeviceExtension->ServicePath.MaximumLength = Length;
+    BusDeviceExtension->ServicePath.Buffer = ExAllocatePool(NonPagedPool, Length);
+
+    if (!BusDeviceExtension->ServicePath.Buffer)
+    {
+        /* not enough memory */
+        ExFreePool(BusDeviceExtension);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlAppendUnicodeStringToString(&BusDeviceExtension->ServicePath, &ServiceKeyPath);
+    RtlAppendUnicodeStringToString(&BusDeviceExtension->ServicePath, &BusDeviceObject->DriverObject->DriverExtension->ServiceKeyName);
+
+    if (ServiceRelativePath)
+    {
+        RtlAppendUnicodeToString(&BusDeviceExtension->ServicePath, L"\\");
+        RtlAppendUnicodeToString(&BusDeviceExtension->ServicePath, ServiceRelativePath);
+    }
+
+    if (InterfaceGuid)
+    {
+        /* register an device interface */
+        Status = IoRegisterDeviceInterface(PhysicalDeviceObject, InterfaceGuid, NULL, &BusDeviceExtension->SymbolicLinkName);
+
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
+            ExFreePool(BusDeviceExtension);
+            return Status;
+        }
+
+        /* now enable device interface */
+        Status = IoSetDeviceInterfaceState(&BusDeviceExtension->SymbolicLinkName, TRUE);
+
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
+            ExFreePool(BusDeviceExtension);
+            return Status;
+        }
+
+        /* set state enabled */
+        BusDeviceExtension->Enabled = TRUE;
+    }
+
+    /* store device objects */
+    BusDeviceExtension->BusDeviceObject = BusDeviceObject;
+    BusDeviceExtension->PnpDeviceObject = PnpDeviceObject;
+    BusDeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+
+    if (!PnpDeviceObject)
+    {
+        BusDeviceExtension->PnpDeviceObject = IoAttachDeviceToDeviceStack(BusDeviceObject, PhysicalDeviceObject);
+
+        if (!BusDeviceExtension->PnpDeviceObject)
+        {
+            /* failed to attach device */
+            if (BusDeviceExtension->Enabled)
+            {
+                IoSetDeviceInterfaceState(&BusDeviceExtension->SymbolicLinkName, FALSE);
+                RtlFreeUnicodeString(&BusDeviceExtension->SymbolicLinkName);
+            }
+
+            /* free device extension */
+            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
+            ExFreePool(BusDeviceExtension);
+
+            return STATUS_DEVICE_REMOVED;
+        }
+    }
+
+    /* attach device extension */
+    DeviceExtension = (PDEVICE_EXTENSION)BusDeviceObject->DeviceExtension;
+    DeviceExtension->DeviceHeader = (PKSIDEVICE_HEADER)BusDeviceExtension;
+
+    /* FIXME scan bus and invalidate device relations */
+    return Status;
+}
+
+ NTSTATUS
+NTAPI
+KspSetGetBusDataCompletion(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PIRP  Irp,
+    IN PVOID  Context)
+{
+    /* signal completion */
+    KeSetEvent((PRKEVENT)Context, IO_NO_INCREMENT, FALSE);
+
+    /* more work needs be done, so dont free the irp */
+    return STATUS_MORE_PROCESSING_REQUIRED;
+
+}
+
+NTSTATUS
+KspDeviceSetGetBusData(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG DataType,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length,
+    IN BOOL bGet)
+{
+    PIO_STACK_LOCATION IoStack;
+    PIRP Irp;
+    NTSTATUS Status;
+    KEVENT Event;
+
+    /* allocate the irp */
+    Irp = IoAllocateIrp(1, /*FIXME */
+                        FALSE);
+
+    if (!Irp)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* initialize the event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* get next stack location */
+    IoStack = IoGetNextIrpStackLocation(Irp);
+
+    /* setup a completion routine */
+    IoSetCompletionRoutine(Irp, KspSetGetBusDataCompletion, (PVOID)&Event, TRUE, TRUE, TRUE);
+
+    /* setup parameters */
+    IoStack->Parameters.ReadWriteConfig.Buffer = Buffer;
+    IoStack->Parameters.ReadWriteConfig.Length = Length;
+    IoStack->Parameters.ReadWriteConfig.Offset = Offset;
+    IoStack->Parameters.ReadWriteConfig.WhichSpace = DataType;
+    /* setup function code */
+    IoStack->MajorFunction = IRP_MJ_PNP;
+    IoStack->MinorFunction = (bGet ? IRP_MN_READ_CONFIG : IRP_MN_WRITE_CONFIG);
+
+    /* lets call the driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    /* is the request still pending */
+    if (Status == STATUS_PENDING) 
+    {
+        /* have a nap */
+        KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+        /* update status */
+        Status = Irp->IoStatus.Status;
+    }
+
+    /* free the irp */
+    IoFreeIrp(Irp);
+    /* done */
+    return Status;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 ULONG
@@ -1331,13 +1930,13 @@ KsDeviceSetBusData(
     IN ULONG Offset,
     IN ULONG Length)
 {
-    UNIMPLEMENTED
-    return 0;
+    return KspDeviceSetGetBusData(Device->PhysicalDeviceObject, /* is this right? */
+                                  DataType, Buffer, Offset, Length, FALSE);
 }
 
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 ULONG
@@ -1349,8 +1948,9 @@ KsDeviceGetBusData(
     IN ULONG Offset,
     IN ULONG Length)
 {
-    UNIMPLEMENTED
-    return 0;
+    return KspDeviceSetGetBusData(Device->PhysicalDeviceObject, /* is this right? */
+                                  DataType, Buffer, Offset, Length, TRUE);
+
 }
 
 /*
@@ -1366,23 +1966,6 @@ KsDeviceRegisterAdapterObject(
     IN ULONG MappingTableStride)
 {
     UNIMPLEMENTED
-}
-
-/*
-    @unimplemented
-*/
-KSDDKAPI
-NTSTATUS
-NTAPI
-_KsEdit(
-    IN KSOBJECT_BAG ObjectBag,
-    IN OUT PVOID* PointerToPointerToItem,
-    IN ULONG NewSize,
-    IN ULONG OldSize,
-    IN ULONG Tag)
-{
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -1427,7 +2010,7 @@ KsGetBusEnumPnpDeviceObject(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -1435,12 +2018,19 @@ NTAPI
 KsGetFirstChild(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader;
+
+    /* get the basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* type has to be either a device or a filter factory */
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory);
+
+    return (PVOID)BasicHeader->FirstChild.Filter;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -1448,8 +2038,15 @@ NTAPI
 KsGetNextSibling(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader;
+
+    /* get the basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+           BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    return (PVOID)BasicHeader->Next.Pin;
 }
 
 /*
@@ -1479,8 +2076,299 @@ KsIsBusEnumChildDevice(
     return STATUS_UNSUCCESSFUL;
 }
 
+ULONG
+KspCountMethodSets(
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+        return AutomationTableB->MethodSetsCount;
+
+    if (!AutomationTableB)
+        return AutomationTableA->MethodSetsCount;
+
+    /* sanity check */
+    ASSERT(AutomationTableA->MethodItemSize  == AutomationTableB->MethodItemSize);
+
+    /* now iterate all property sets and compare their guids */
+    Count = AutomationTableA->MethodSetsCount;
+
+    for(Index = 0; Index < AutomationTableB->MethodSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->MethodSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->MethodSets[Index].Set, AutomationTableA->MethodSets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+            Count++;
+    }
+
+    return Count;
+}
+
+ULONG
+KspCountEventSets(
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+        return AutomationTableB->EventSetsCount;
+
+    if (!AutomationTableB)
+        return AutomationTableA->EventSetsCount;
+
+    /* sanity check */
+    ASSERT(AutomationTableA->EventItemSize == AutomationTableB->EventItemSize);
+
+    /* now iterate all Event sets and compare their guids */
+    Count = AutomationTableA->EventSetsCount;
+
+    for(Index = 0; Index < AutomationTableB->EventSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->EventSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->EventSets[Index].Set, AutomationTableA->EventSets[SubIndex].Set))
+            {
+                /* same Event set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+            Count++;
+    }
+
+    return Count;
+}
+
+
+ULONG
+KspCountPropertySets(
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+        return AutomationTableB->PropertySetsCount;
+
+    if (!AutomationTableB)
+        return AutomationTableA->PropertySetsCount;
+
+    /* sanity check */
+    ASSERT(AutomationTableA->PropertyItemSize == AutomationTableB->PropertyItemSize);
+
+    /* now iterate all property sets and compare their guids */
+    Count = AutomationTableA->PropertySetsCount;
+
+    for(Index = 0; Index < AutomationTableB->PropertySetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->PropertySetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->PropertySets[Index].Set, AutomationTableA->PropertySets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+            Count++;
+    }
+
+    return Count;
+}
+
+NTSTATUS
+KspCopyMethodSets(
+    OUT PKSAUTOMATION_TABLE  Table,
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableB->MethodSets, Table->MethodItemSize * AutomationTableB->MethodSetsCount);
+        return STATUS_SUCCESS;
+    }
+    else if (!AutomationTableB)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, Table->MethodItemSize * AutomationTableA->MethodSetsCount);
+        return STATUS_SUCCESS;
+    }
+
+    /* first copy all property items from dominant table */
+    RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, Table->MethodItemSize * AutomationTableA->MethodSetsCount);
+    /* set counter */
+    Count = AutomationTableA->MethodSetsCount;
+
+    /* now copy entries which arent available in the dominant table */
+    for(Index = 0; Index < AutomationTableB->MethodSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->MethodSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->MethodSets[Index].Set, AutomationTableA->MethodSets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            /* copy new property item set */
+            RtlMoveMemory((PVOID)&Table->MethodSets[Count], &AutomationTableB->MethodSets[Index], Table->MethodItemSize);
+            Count++;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+KspCopyPropertySets(
+    OUT PKSAUTOMATION_TABLE  Table,
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableB->PropertySets, Table->PropertyItemSize * AutomationTableB->PropertySetsCount);
+        return STATUS_SUCCESS;
+    }
+    else if (!AutomationTableB)
+    {
+        /* copy of property set */
+        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, Table->PropertyItemSize * AutomationTableA->PropertySetsCount);
+        return STATUS_SUCCESS;
+    }
+
+    /* first copy all property items from dominant table */
+    RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, Table->PropertyItemSize * AutomationTableA->PropertySetsCount);
+    /* set counter */
+    Count = AutomationTableA->PropertySetsCount;
+
+    /* now copy entries which arent available in the dominant table */
+    for(Index = 0; Index < AutomationTableB->PropertySetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->PropertySetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->PropertySets[Index].Set, AutomationTableA->PropertySets[SubIndex].Set))
+            {
+                /* same property set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            /* copy new property item set */
+            RtlMoveMemory((PVOID)&Table->PropertySets[Count], &AutomationTableB->PropertySets[Index], Table->PropertyItemSize);
+            Count++;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+KspCopyEventSets(
+    OUT PKSAUTOMATION_TABLE  Table,
+    IN PKSAUTOMATION_TABLE  AutomationTableA OPTIONAL,
+    IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL)
+{
+    ULONG Index, SubIndex, Count;
+    BOOL bFound;
+
+    if (!AutomationTableA)
+    {
+        /* copy of Event set */
+        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableB->EventSets, Table->EventItemSize * AutomationTableB->EventSetsCount);
+        return STATUS_SUCCESS;
+    }
+    else if (!AutomationTableB)
+    {
+        /* copy of Event set */
+        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, Table->EventItemSize * AutomationTableA->EventSetsCount);
+        return STATUS_SUCCESS;
+    }
+
+    /* first copy all Event items from dominant table */
+    RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, Table->EventItemSize * AutomationTableA->EventSetsCount);
+    /* set counter */
+    Count = AutomationTableA->EventSetsCount;
+
+    /* now copy entries which arent available in the dominant table */
+    for(Index = 0; Index < AutomationTableB->EventSetsCount; Index++)
+    {
+        /* set found to false */
+        bFound = FALSE;
+
+        for(SubIndex = 0; SubIndex < AutomationTableA->EventSetsCount; SubIndex++)
+        {
+            if (IsEqualGUIDAligned(AutomationTableB->EventSets[Index].Set, AutomationTableA->EventSets[SubIndex].Set))
+            {
+                /* same Event set found */
+                bFound = TRUE;
+                break;
+            }
+        }
+
+        if (!bFound)
+        {
+            /* copy new Event item set */
+            RtlMoveMemory((PVOID)&Table->EventSets[Count], &AutomationTableB->EventSets[Index], Table->EventItemSize);
+            Count++;
+        }
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
-    @unimplemented
+    @implemented
 */
 NTSTATUS
 NTAPI
@@ -1490,8 +2378,197 @@ KsMergeAutomationTables(
     IN PKSAUTOMATION_TABLE  AutomationTableB OPTIONAL,
     IN KSOBJECT_BAG  Bag OPTIONAL)
 {
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+    PKSAUTOMATION_TABLE Table;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (!AutomationTableA && !AutomationTableB)
+    {
+        /* nothing to merge */
+        return STATUS_SUCCESS;
+    }
+
+    /* allocate an automation table */
+    Table = AllocateItem(NonPagedPool, sizeof(KSAUTOMATION_TABLE));
+    if (!Table)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    if (Bag)
+    {
+        /* add table to object bag */
+        Status = KsAddItemToObjectBag(Bag, Table, NULL);
+        /* check for success */
+        if (!NT_SUCCESS(Status))
+        {
+            /* free table */
+            FreeItem(Table);
+            return Status;
+        }
+    }
+
+    /* count property sets */
+    Table->PropertySetsCount = KspCountPropertySets(AutomationTableA, AutomationTableB);
+
+    if (Table->PropertySetsCount)
+    {
+        if (AutomationTableA)
+        {
+            /* use item size from dominant automation table */
+            Table->PropertyItemSize = AutomationTableA->PropertyItemSize;
+        }
+        else
+        {
+            /* use item size from 2nd automation table */
+            Table->PropertyItemSize = AutomationTableB->PropertyItemSize;
+        }
+
+        /* now allocate the property sets */
+        Table->PropertySets = AllocateItem(NonPagedPool, Table->PropertyItemSize * Table->PropertySetsCount);
+
+        if (!Table->PropertySets)
+        {
+            /* not enough memory */
+            goto cleanup;
+        }
+
+        if (Bag)
+        {
+            /* add set to property bag */
+            Status = KsAddItemToObjectBag(Bag, (PVOID)Table->PropertySets, NULL);
+            /* check for success */
+            if (!NT_SUCCESS(Status))
+            {
+                /* cleanup table */
+                goto cleanup;
+            }
+        }
+        /* now copy the property sets */
+        Status = KspCopyPropertySets(Table, AutomationTableA, AutomationTableB);
+        if(!NT_SUCCESS(Status))
+            goto cleanup;
+
+    }
+
+    /* now count the method sets */
+    Table->MethodSetsCount = KspCountMethodSets(AutomationTableA, AutomationTableB);
+
+    if (Table->MethodSetsCount)
+    {
+        if (AutomationTableA)
+        {
+            /* use item size from dominant automation table */
+            Table->MethodItemSize  = AutomationTableA->MethodItemSize;
+        }
+        else
+        {
+            /* use item size from 2nd automation table */
+            Table->MethodItemSize = AutomationTableB->MethodItemSize;
+        }
+
+        /* now allocate the property sets */
+        Table->MethodSets = AllocateItem(NonPagedPool, Table->MethodItemSize * Table->MethodSetsCount);
+
+        if (!Table->MethodSets)
+        {
+            /* not enough memory */
+            goto cleanup;
+        }
+
+        if (Bag)
+        {
+            /* add set to property bag */
+            Status = KsAddItemToObjectBag(Bag, (PVOID)Table->MethodSets, NULL);
+            /* check for success */
+            if (!NT_SUCCESS(Status))
+            {
+                /* cleanup table */
+                goto cleanup;
+            }
+        }
+        /* now copy the property sets */
+        Status = KspCopyMethodSets(Table, AutomationTableA, AutomationTableB);
+        if(!NT_SUCCESS(Status))
+            goto cleanup;
+    }
+
+
+    /* now count the event sets */
+    Table->EventSetsCount = KspCountEventSets(AutomationTableA, AutomationTableB);
+
+    if (Table->EventSetsCount)
+    {
+        if (AutomationTableA)
+        {
+            /* use item size from dominant automation table */
+            Table->EventItemSize  = AutomationTableA->EventItemSize;
+        }
+        else
+        {
+            /* use item size from 2nd automation table */
+            Table->EventItemSize = AutomationTableB->EventItemSize;
+        }
+
+        /* now allocate the property sets */
+        Table->EventSets = AllocateItem(NonPagedPool, Table->EventItemSize * Table->EventSetsCount);
+
+        if (!Table->EventSets)
+        {
+            /* not enough memory */
+            goto cleanup;
+        }
+
+        if (Bag)
+        {
+            /* add set to property bag */
+            Status = KsAddItemToObjectBag(Bag, (PVOID)Table->EventSets, NULL);
+            /* check for success */
+            if (!NT_SUCCESS(Status))
+            {
+                /* cleanup table */
+                goto cleanup;
+            }
+        }
+        /* now copy the property sets */
+        Status = KspCopyEventSets(Table, AutomationTableA, AutomationTableB);
+        if(!NT_SUCCESS(Status))
+            goto cleanup;
+    }
+
+    /* store result */
+    *AutomationTableAB = Table;
+
+    return Status;
+
+
+cleanup:
+
+    if (Table)
+    {
+        if (Table->PropertySets)
+        {
+            /* clean property sets */
+            if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, (PVOID)Table->PropertySets, TRUE)))
+                FreeItem((PVOID)Table->PropertySets);
+        }
+
+        if (Table->MethodSets)
+        {
+            /* clean property sets */
+            if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, (PVOID)Table->MethodSets, TRUE)))
+                FreeItem((PVOID)Table->MethodSets);
+        }
+
+        if (Table->EventSets)
+        {
+            /* clean property sets */
+            if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, (PVOID)Table->EventSets, TRUE)))
+                FreeItem((PVOID)Table->EventSets);
+        }
+
+        if (!Bag || !NT_SUCCESS(KsRemoveItemFromObjectBag(Bag, Table, TRUE)))
+                FreeItem(Table);
+    }
+
+    return STATUS_INSUFFICIENT_RESOURCES;
 }
 
 /*
@@ -1523,6 +2600,28 @@ KsServiceBusEnumPnpRequest(
     return STATUS_UNSUCCESSFUL;
 }
 
+VOID
+NTAPI
+KspRemoveBusInterface(
+    PVOID Ctx)
+{
+    PKSREMOVE_BUS_INTERFACE_CTX Context =(PKSREMOVE_BUS_INTERFACE_CTX)Ctx;
+
+    /* TODO
+     * get SWENUM_INSTALL_INTERFACE struct
+     * open device key and delete the keys
+     */
+
+    UNIMPLEMENTED
+
+    /* set status */
+    Context->Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+
+
+    /* signal completion */
+    KeSetEvent(&Context->Event, IO_NO_INCREMENT, FALSE);
+}
+
 /*
     @unimplemented
 */
@@ -1532,10 +2631,42 @@ NTAPI
 KsRemoveBusEnumInterface(
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
-}
+    KPROCESSOR_MODE Mode;
+    LUID luid;
+    KSREMOVE_BUS_INTERFACE_CTX Ctx;
+    WORK_QUEUE_ITEM WorkItem;
 
+    /* get previous mode */
+    Mode = ExGetPreviousMode();
+
+    /* convert to luid */
+    luid = RtlConvertUlongToLuid(SE_LOAD_DRIVER_PRIVILEGE);
+
+    /* perform access check */
+    if (!SeSinglePrivilegeCheck(luid, Mode))
+    {
+        /* insufficient privileges */
+        return STATUS_PRIVILEGE_NOT_HELD;
+    }
+    /* initialize event */
+    KeInitializeEvent(&Ctx.Event, NotificationEvent, FALSE);
+
+    /* store irp in ctx */
+    Ctx.Irp = Irp;
+
+    /* initialize work item */
+    ExInitializeWorkItem(&WorkItem, KspRemoveBusInterface, (PVOID)&Ctx);
+
+    /* now queue the work item */
+    ExQueueWorkItem(&WorkItem, DelayedWorkQueue);
+
+    /* wait for completion */
+    KeWaitForSingleObject(&Ctx.Event, Executive, KernelMode, FALSE, NULL);
+
+    /* return result */
+    return Ctx.Irp->IoStatus.Status;
+
+}
 
 
 /*
@@ -1555,17 +2686,6 @@ KsRegisterAggregatedClientUnknown(
 /*
     @unimplemented
 */
-VOID
-NTAPI
-KsReleaseControl(
-    IN PVOID  Object)
-{
-    UNIMPLEMENTED
-}
-
-/*
-    @unimplemented
-*/
 NTSTATUS
 NTAPI
 KsRegisterFilterWithNoKSPins(
@@ -1576,6 +2696,62 @@ KsRegisterFilterWithNoKSPins(
     IN KSPIN_MEDIUM*  MediumList,
     IN GUID*  CategoryList OPTIONAL)
 {
+    ULONG Size, Index;
+    NTSTATUS Status;
+    PWSTR SymbolicLinkList;
+    //PUCHAR Buffer;
+    HANDLE hKey;
+    UNICODE_STRING InterfaceString;
+    //UNICODE_STRING FilterData = RTL_CONSTANT_STRING(L"FilterData");
+
+    if (!InterfaceClassGUID || !PinCount || !PinDirection || !MediumList)
+    {
+        /* all these parameters are required */
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* calculate filter data value size */
+    Size = PinCount * sizeof(KSPIN_MEDIUM);
+    if (CategoryList)
+    {
+        /* add category list */
+        Size += PinCount * sizeof(GUID);
+    }
+
+    /* FIXME generate filter data blob */
     UNIMPLEMENTED
-    return STATUS_UNSUCCESSFUL;
+
+    /* get symbolic link list */
+    Status = IoGetDeviceInterfaces(InterfaceClassGUID, DeviceObject, DEVICE_INTERFACE_INCLUDE_NONACTIVE, &SymbolicLinkList);
+    if (NT_SUCCESS(Status))
+    {
+        /* initialize first symbolic link */
+        RtlInitUnicodeString(&InterfaceString, SymbolicLinkList);
+
+        /* open first device interface registry key */
+        Status = IoOpenDeviceInterfaceRegistryKey(&InterfaceString, GENERIC_WRITE, &hKey);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* write filter data */
+            //Status = ZwSetValueKey(hKey, &FilterData, 0, REG_BINARY, Buffer, Size);
+
+            /* close the key */
+            ZwClose(hKey);
+        }
+
+        if (PinCount)
+        {
+            /* update medium cache */
+            for(Index = 0; Index < PinCount; Index++)
+            {
+                KsCacheMedium(&InterfaceString, &MediumList[Index], PinDirection[Index]);
+            }
+        }
+
+        /* free the symbolic link list */
+        ExFreePool(SymbolicLinkList);
+    }
+
+    return Status;
 }

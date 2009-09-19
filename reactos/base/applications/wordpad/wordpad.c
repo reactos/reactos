@@ -52,7 +52,6 @@
 /* use LoadString */
 static const WCHAR wszAppTitle[] = {'W','i','n','e',' ','W','o','r','d','p','a','d',0};
 
-static const WCHAR wszRichEditClass[] = {'R','I','C','H','E','D','I','T','2','0','W',0};
 static const WCHAR wszMainWndClass[] = {'W','O','R','D','P','A','D','T','O','P',0};
 
 static const WCHAR stringFormat[] = {'%','2','d','\0'};
@@ -1867,7 +1866,7 @@ static LRESULT OnCreate( HWND hWnd )
         PostQuitMessage(1);
     }
 
-    hEditorWnd = CreateWindowExW(WS_EX_CLIENTEDGE, wszRichEditClass, NULL,
+    hEditorWnd = CreateWindowExW(WS_EX_CLIENTEDGE, RICHEDIT_CLASS20W, NULL,
       WS_CHILD|WS_VISIBLE|ES_SELECTIONBAR|ES_MULTILINE|ES_AUTOVSCROLL
       |ES_WANTRETURN|WS_VSCROLL|ES_NOHIDESEL|WS_HSCROLL,
       0, 0, 1000, 100, hWnd, (HMENU)IDC_EDITOR, hInstance, NULL);

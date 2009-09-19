@@ -97,6 +97,8 @@
     _pD3D8Caps->PixelShaderVersion                = _pWineCaps->PixelShaderVersion; \
     _pD3D8Caps->MaxPixelShaderValue               = _pWineCaps->PixelShader1xMaxValue;
 
+void fixup_caps(WINED3DCAPS *pWineCaps);
+
 /* Direct3D8 Interfaces: */
 typedef struct IDirect3DBaseTexture8Impl IDirect3DBaseTexture8Impl;
 typedef struct IDirect3DVolumeTexture8Impl IDirect3DVolumeTexture8Impl;
@@ -119,9 +121,6 @@ typedef struct IDirect3DVertexShaderDeclarationImpl IDirect3DVertexShaderDeclara
 
 /* Advance declaration of structures to satisfy compiler */
 typedef struct IDirect3DVertexShader8Impl IDirect3DVertexShader8Impl;
-
-/* Global critical section */
-extern CRITICAL_SECTION d3d8_cs;
 
 /* ===========================================================================
     The interfaces themselves
@@ -166,10 +165,24 @@ extern const IWineD3DDeviceParentVtbl d3d8_wined3d_device_parent_vtbl;
 #define D3D8_INITIAL_HANDLE_TABLE_SIZE 64
 #define D3D8_INVALID_HANDLE ~0U
 
+enum d3d8_handle_type
+{
+    D3D8_HANDLE_FREE,
+    D3D8_HANDLE_VS,
+    D3D8_HANDLE_PS,
+    D3D8_HANDLE_SB,
+};
+
+struct d3d8_handle_entry
+{
+    void *object;
+    enum d3d8_handle_type type;
+};
+
 struct d3d8_handle_table
 {
-    void **entries;
-    void **free_entries;
+    struct d3d8_handle_entry *entries;
+    struct d3d8_handle_entry *free_entries;
     UINT table_size;
     UINT entry_count;
 };
@@ -455,7 +468,7 @@ struct IDirect3DVolumeTexture8Impl
 
 /* TODO: Generate a valid GUIDs */
 /* {83B073CE-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IDirect3DStateBlock8, 
+DEFINE_GUID(IID_IDirect3DStateBlock8,
 0x83b073ce, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 DEFINE_GUID(IID_IDirect3DVertexDeclaration8,

@@ -14,21 +14,65 @@ const GUID KS_CATEGORY_AUDIO                   = {0x6994AD04L, 0x93EF, 0x11D0, {
 const GUID KS_CATEGORY_TOPOLOGY                = {0xDDA54A40, 0x1E4C, 0x11D1, {0xA0, 0x50, 0x40, 0x57, 0x05, 0xC1, 0x00, 0x00}};
 const GUID DMOCATEGORY_ACOUSTIC_ECHO_CANCEL    = {0xBF963D80L, 0xC559, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 
-#define IOCTL_KS_OBJECT_CLASS CTL_CODE(FILE_DEVICE_KS, 0x7, METHOD_NEITHER, FILE_ANY_ACCESS)
+NTSTATUS
+BuildPinDescriptor(
+    IN PKSAUDIO_DEVICE_ENTRY DeviceEntry,
+    IN ULONG Count)
+{
+    ULONG Index;
+    KSP_PIN PinRequest;
+    KSPIN_DATAFLOW DataFlow;
+    KSPIN_COMMUNICATION Communication;
+    ULONG NumWaveOutPin, NumWaveInPin;
+    NTSTATUS Status;
+    ULONG BytesReturned;
+
+    NumWaveInPin = 0;
+    NumWaveOutPin = 0;
+    for(Index = 0; Index < Count; Index++)
+    {
+        /* retrieve data flow */
+        PinRequest.PinId = Index;
+        PinRequest.Property.Set = KSPROPSETID_Pin;
+        PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
+
+        /* get dataflow direction */
+        PinRequest.Property.Id = KSPROPERTY_PIN_DATAFLOW;
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceEntry->PinDescriptors[Index].DataFlow = DataFlow;
+        }
+
+        /* get irp flow direction */
+        PinRequest.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
+        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
+        if (NT_SUCCESS(Status))
+        {
+            DeviceEntry->PinDescriptors[Index].Communication = Communication;
+        }
+
+        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
+            NumWaveOutPin++;
+
+        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
+            NumWaveInPin++;
+
+        /* FIXME query for interface, dataformat etc */
+    }
+
+    DPRINT("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->PinDescriptorsCount, NumWaveInPin, NumWaveOutPin);
+    return STATUS_SUCCESS;
+}
 
 VOID
 QueryFilterRoutine(
     IN PKSAUDIO_DEVICE_ENTRY DeviceEntry)
 {
     KSPROPERTY PropertyRequest;
-    KSP_PIN PinRequest;
-    KSPIN_DATAFLOW DataFlow;
-    KSPIN_COMMUNICATION Communication;
-    KSPIN_CINSTANCES PinInstances;
-    ULONG Count, Index;
+    ULONG Count;
     NTSTATUS Status;
     ULONG BytesReturned;
-    ULONG NumWaveOutPin, NumWaveInPin;
 
     DPRINT("Querying filter...\n");
 
@@ -50,6 +94,23 @@ QueryFilterRoutine(
         return;
     }
 
+    /* allocate pin descriptor array */
+    DeviceEntry->PinDescriptors = ExAllocatePool(NonPagedPool, Count * sizeof(KSPIN_DESCRIPTOR));
+    if (!DeviceEntry->PinDescriptors)
+    {
+        /* no memory */
+        return;
+    }
+
+    /* zero array pin descriptor array */
+    RtlZeroMemory(DeviceEntry->PinDescriptors, Count * sizeof(KSPIN_DESCRIPTOR));
+
+    /* build the device descriptor */
+    Status = BuildPinDescriptor(DeviceEntry, Count);
+    if (!NT_SUCCESS(Status))
+        return;
+
+
     /* allocate pin array */
     DeviceEntry->Pins = ExAllocatePool(NonPagedPool, Count * sizeof(PIN_INFO));
     if (!DeviceEntry->Pins)
@@ -58,51 +119,11 @@ QueryFilterRoutine(
         DPRINT1("Failed to allocate memory Pins %u Block %x\n", Count, Count * sizeof(PIN_INFO));
         return;
     }
+
     /* clear array */
     RtlZeroMemory(DeviceEntry->Pins, sizeof(PIN_INFO) * Count);
-    DeviceEntry->NumberOfPins = Count;
+    DeviceEntry->PinDescriptorsCount = Count;
 
-    NumWaveInPin = 0;
-    NumWaveOutPin = 0;
-    for(Index = 0; Index < Count; Index++)
-    {
-        /* get max instance count */
-        PinRequest.PinId = Index;
-        PinRequest.Property.Set = KSPROPSETID_Pin;
-        PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
-        PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
-
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->Pins[Index].MaxPinInstanceCount = PinInstances.PossibleCount;
-        }
-
-        /* get dataflow direction */
-        PinRequest.Property.Id = KSPROPERTY_PIN_DATAFLOW;
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->Pins[Index].DataFlow = DataFlow;
-        }
-
-        /* get irp flow direction */
-        PinRequest.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->Pins[Index].Communication = Communication;
-        }
-
-        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
-            NumWaveOutPin++;
-
-        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
-            NumWaveInPin++;
-
-    }
-
-    DPRINT("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->NumberOfPins, NumWaveInPin, NumWaveOutPin);
 }
 
 VOID
@@ -175,8 +196,7 @@ OpenDevice(
 NTSTATUS
 InsertAudioDevice(
     IN PDEVICE_OBJECT DeviceObject,
-    IN PUNICODE_STRING DeviceName,
-    IN LPWSTR ReferenceString)
+    IN PUNICODE_STRING DeviceName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     PFILTER_WORKER_CONTEXT Ctx = NULL;
@@ -217,12 +237,6 @@ InsertAudioDevice(
     DeviceEntry->DeviceName.Length = 0;
     DeviceEntry->DeviceName.MaximumLength = DeviceName->MaximumLength + 10 * sizeof(WCHAR);
 
-    /* hack for bug 4566 */
-    if (ReferenceString)
-    {
-        DeviceEntry->DeviceName.MaximumLength += (wcslen(ReferenceString) + 2) * sizeof(WCHAR);
-    }
-
     DeviceEntry->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);
 
     if (!DeviceEntry->DeviceName.Buffer)
@@ -233,12 +247,6 @@ InsertAudioDevice(
 
     RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\??\\");
     RtlAppendUnicodeStringToString(&DeviceEntry->DeviceName, DeviceName);
-
-    if (ReferenceString)
-    {
-        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, L"\\");
-        RtlAppendUnicodeToString(&DeviceEntry->DeviceName, ReferenceString);
-    }
 
     Status = OpenDevice(&DeviceEntry->DeviceName, &DeviceEntry->Handle, &DeviceEntry->FileObject);
 
@@ -289,13 +297,6 @@ DeviceInterfaceChangeCallback(
     DEVICE_INTERFACE_CHANGE_NOTIFICATION * Event;
     NTSTATUS Status = STATUS_SUCCESS;
     PSYSAUDIODEVEXT DeviceExtension;
-    UNICODE_STRING DeviceName;
-    HANDLE Handle;
-    PFILE_OBJECT FileObject;
-    LPWSTR ReferenceString;
-    ULONG BytesReturned;
-
-
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
 
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
@@ -305,54 +306,7 @@ DeviceInterfaceChangeCallback(
     if (IsEqualGUIDAligned(&Event->Event,
                            &GUID_DEVICE_INTERFACE_ARRIVAL))
     {
-        /*<HACK>
-         * 1) Open the filter w/o reference string
-         * 2) Retrieve reference strings with our private IOCTL_KS_OBJECT_CLASS
-         * 3) Append these reference strings to symbolic link we got
-         * * see bug 4566
-         */
-
-        DeviceName.Length = 0;
-        DeviceName.MaximumLength = Event->SymbolicLinkName->Length + 10 * sizeof(WCHAR);
-
-        DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceName.MaximumLength);
-
-        if (!DeviceName.Buffer)
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-       RtlAppendUnicodeToString(&DeviceName, L"\\??\\");
-       RtlAppendUnicodeStringToString(&DeviceName, Event->SymbolicLinkName);
-
-
-        Status = OpenDevice(&DeviceName, &Handle, &FileObject);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePool(DeviceName.Buffer);
-            return Status;
-        }
-
-        Status = KsSynchronousIoControlDevice(FileObject, KernelMode, IOCTL_KS_OBJECT_CLASS, NULL, 0, &ReferenceString, sizeof(LPWSTR), &BytesReturned);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("failed Status %x\n", Status);
-
-            ExFreePool(DeviceName.Buffer);
-            ObDereferenceObject(FileObject);
-            ZwClose(Handle);
-            return Status;
-       }
-
-        while(*ReferenceString)
-        {
-            Status = InsertAudioDevice(DeviceObject, Event->SymbolicLinkName, ReferenceString);
-            ReferenceString += wcslen(ReferenceString) + 1;
-        }
-        //ExFreePool(ReferenceString);
-        ObDereferenceObject(FileObject);
-        ZwClose(Handle);
-        ExFreePool(DeviceName.Buffer);
+        Status = InsertAudioDevice(DeviceObject, Event->SymbolicLinkName);
         return Status;
     }
     else

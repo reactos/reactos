@@ -1568,7 +1568,7 @@ void mySplit(char *name, char *value, char *source, char splitChar)
     //printf("%s %s\n", name, value);
 }
 
-bool getSection(char *sectionName, char *buffer, BYTE serial, char *fileName)
+bool getSection(const char *sectionName, char *buffer, BYTE serial, char *fileName)
 {
     //printf("%s=%s\n",fileName,sectionName);
     char section[128];
@@ -1598,7 +1598,7 @@ bool getSection(char *sectionName, char *buffer, BYTE serial, char *fileName)
                         if (strstr(buff, "[") == buff)
                             break;
 
-                        if ((*buff) >= '0' && (*buff) <= '9' || (*buff) >= 'A' && (*buff) <= 'Z' || (*buff) >= 'a' && (*buff) <= 'z' || ((*buff) && strchr("/\\?*", (*buff))))
+                        if (((*buff) >= '0' && (*buff) <= '9') || ((*buff) >= 'A' && (*buff) <= 'Z') || ((*buff) >= 'a' && (*buff) <= 'z') || (((*buff) && strchr("/\\?*", (*buff)))))
                         {
                             buffer += sprintf(buffer, "%s", buff);
                             buffer++;

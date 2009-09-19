@@ -265,7 +265,7 @@ DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 * DxEGShDevData_OpenRefs     Retrieve the pdevOpenRefs counter
 * DxEGShDevData_palette      See if the device RC_PALETTE is set
 * DxEGShDevData_ldev         ATM we do not support the Loader Device driver structure
-* DxEGShDevData_GDev         Retrieve the device pGraphicsDev
+* DxEGShDevData_GDev         Retrieve the device pGraphicsDevice
 * DxEGShDevData_clonedev     Retrieve the device PDEV_CLONE_DEVICE flag is set or not
 *
 * @return
@@ -302,15 +302,15 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_DitherFmt:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DitherFmt\n");
-        retVal = (DWORD_PTR) PDev->DevInfo.iDitherFormat;
+        retVal = (DWORD_PTR) PDev->devinfo.iDitherFormat;
         break;
       case DxEGShDevData_FxCaps:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_FxCaps\n");
-        retVal = (DWORD_PTR) PDev->DevInfo.flGraphicsCaps;
+        retVal = (DWORD_PTR) PDev->devinfo.flGraphicsCaps;
         break;
       case DxEGShDevData_FxCaps2:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_FxCaps2\n");
-        retVal = (DWORD_PTR) PDev->DevInfo.flGraphicsCaps2;
+        retVal = (DWORD_PTR) PDev->devinfo.flGraphicsCaps2;
         break;
       case DxEGShDevData_DrvFuncs:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_DrvFuncs\n");
@@ -318,7 +318,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_dhpdev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_dhpdev\n");
-        retVal = (DWORD_PTR) PDev->hPDev; // DHPDEV
+        retVal = (DWORD_PTR) PDev->dhpdev; // DHPDEV
         break;
       case DxEGShDevData_eddg:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_eddg\n");
@@ -354,7 +354,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_palette:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_palette\n");
-        retVal = (DWORD_PTR) PDev->GDIInfo.flRaster & RC_PALETTE;
+        retVal = (DWORD_PTR) PDev->gdiinfo.flRaster & RC_PALETTE;
         break;
       case DxEGShDevData_ldev:
           DPRINT1("DxEGShDevData_ldev not supported yet\n");
@@ -363,7 +363,7 @@ DxEngGetHdevData(HDEV hDev,
         break;
       case DxEGShDevData_GDev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_GDev\n");
-        retVal = (DWORD_PTR) PDev->pGraphicsDev; // P"GRAPHICS_DEVICE"
+        retVal = (DWORD_PTR) PDev->pGraphicsDevice; // P"GRAPHICS_DEVICE"
         break;
       case DxEGShDevData_clonedev:
         DPRINT1("requested DXEGSHDEVDATA DxEGShDevData_clonedev\n");

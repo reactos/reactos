@@ -7,6 +7,7 @@
  */
 
 #include <assert.h>
+#include <stdlib.h>
 #include <audiosrv/audiosrv.h>
 #include "audiosrv.h"
 

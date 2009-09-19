@@ -23,6 +23,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     PWSTR Buf = NULL;
     XFORM xformTemplate;
     PBRUSH pbrush;
+    HSURF hsurf;
 
     if (Driver != NULL)
     {
@@ -128,6 +129,9 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
     NewDC->dclevel.lSaveDepth = 1;
 
+    hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
+    NewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
+
     return NewDC;
 }
 
@@ -223,7 +227,6 @@ IntGdiCreateDC(
     HRGN     hVisRgn;
     UNICODE_STRING StdDriver;
     BOOL calledFromUser;
-    HSURF hsurf;
 
     RtlInitUnicodeString(&StdDriver, L"DISPLAY");
 
@@ -293,35 +296,33 @@ IntGdiCreateDC(
 
     pdc->dctype = DC_TYPE_DIRECT;
 
-    pdc->dhpdev = PrimarySurface.hPDev;
+    pdc->dhpdev = PrimarySurface.dhpdev;
     if (pUMdhpdev) pUMdhpdev = pdc->dhpdev; // set DHPDEV for device.
     pdc->ppdev = (PVOID)&PrimarySurface;
-    hsurf = (HBITMAP)PrimarySurface.pSurface; // <- what kind of haxx0ry is that?
-    pdc->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
 
     // ATM we only have one display.
     pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
-    pdc->rosdc.bitsPerPixel = pdc->ppdev->GDIInfo.cBitsPixel *
-                              pdc->ppdev->GDIInfo.cPlanes;
+    pdc->rosdc.bitsPerPixel = pdc->ppdev->gdiinfo.cBitsPixel *
+                              pdc->ppdev->gdiinfo.cPlanes;
     DPRINT("Bits per pel: %u\n", pdc->rosdc.bitsPerPixel);
 
-    pdc->flGraphicsCaps  = PrimarySurface.DevInfo.flGraphicsCaps;
-    pdc->flGraphicsCaps2 = PrimarySurface.DevInfo.flGraphicsCaps2;
+    pdc->flGraphicsCaps  = PrimarySurface.devinfo.flGraphicsCaps;
+    pdc->flGraphicsCaps2 = PrimarySurface.devinfo.flGraphicsCaps2;
 
     pdc->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
 
     pdcattr->jROP2 = R2_COPYPEN;
 
     pdc->erclWindow.top = pdc->erclWindow.left = 0;
-    pdc->erclWindow.right  = pdc->ppdev->GDIInfo.ulHorzRes;
-    pdc->erclWindow.bottom = pdc->ppdev->GDIInfo.ulVertRes;
+    pdc->erclWindow.right  = pdc->ppdev->gdiinfo.ulHorzRes;
+    pdc->erclWindow.bottom = pdc->ppdev->gdiinfo.ulVertRes;
     pdc->dclevel.flPath &= ~DCPATH_CLOCKWISE; // Default is CCW.
 
     pdcattr->iCS_CP = ftGdiGetTextCharsetInfo(pdc,NULL,0);
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->ppdev->GDIInfo.ulHorzRes,
-                                 pdc->ppdev->GDIInfo.ulVertRes);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, pdc->ppdev->gdiinfo.ulHorzRes,
+                                 pdc->ppdev->gdiinfo.ulVertRes);
 
     if (!CreateAsIC)
     {
@@ -344,7 +345,7 @@ IntGdiCreateDC(
          */
         pdc->dctype = DC_TYPE_INFO;
 //    pdc->pSurfInfo =
-        DC_vSelectSurface(pdc, NULL);
+//        DC_vSelectSurface(pdc, NULL);
         pdcattr->crBackgroundClr = pdcattr->ulBackgroundClr = RGB(255, 255, 255);
         pdcattr->crForegroundClr = RGB(0, 0, 0);
         DC_UnlockDc(pdc);
@@ -451,6 +452,7 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
     if (hDC && !defaultDCstate) // Ultra HAX! Dedicated to GvG!
     { // This is a cheesy way to do this.
         PDC dc = DC_LockDc(hDC);
+        HSURF hsurf;
         defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
         if (!defaultDCstate)
         {
@@ -459,6 +461,8 @@ IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC)
         }
         RtlZeroMemory(defaultDCstate, sizeof(DC));
         defaultDCstate->pdcattr = &defaultDCstate->dcattr;
+        hsurf = (HSURF)PrimarySurface.pSurface; // HAX²
+        defaultDCstate->dclevel.pSurface = SURFACE_ShareLockSurface(hsurf);
         DC_vCopyState(dc, defaultDCstate);
         DC_UnlockDc(dc);
     }
@@ -658,7 +662,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
     pdcattrNew->ulDirty_        = pdcattrOld->ulDirty_;
     pdcattrNew->iCS_CP          = pdcattrOld->iCS_CP;
 
-    pdcNew->erclWindow = (RECTL){0, 0, 1, 1};
+    pdcNew->erclWindow.left = pdcNew->erclWindow.top = 0;
+    pdcNew->erclWindow.right = pdcNew->erclWindow.bottom = 1;
 
     DC_UnlockDc(pdcNew);
     DC_UnlockDc(pdcOld);

@@ -325,7 +325,7 @@
 @ stdcall SetupDiGetDeviceInstallParamsW(ptr ptr ptr)
 @ stdcall SetupDiGetDeviceInstanceIdA(ptr ptr str long ptr)
 @ stdcall SetupDiGetDeviceInstanceIdW(ptr ptr wstr long ptr)
-@ stub SetupDiGetDeviceInterfaceAlias
+@ stdcall SetupDiGetDeviceInterfaceAlias(ptr ptr ptr ptr)
 @ stdcall SetupDiGetDeviceInterfaceDetailA(long ptr ptr long ptr ptr)
 @ stdcall SetupDiGetDeviceInterfaceDetailW(long ptr ptr long ptr ptr)
 @ stdcall SetupDiGetDeviceRegistryPropertyA(long ptr long ptr ptr long ptr)
@@ -363,7 +363,7 @@
 @ stdcall SetupDiOpenDeviceInfoA(ptr str long long ptr)
 @ stdcall SetupDiOpenDeviceInfoW(ptr wstr long long ptr)
 @ stdcall SetupDiOpenDeviceInterfaceA(ptr str long ptr)
-@ stub SetupDiOpenDeviceInterfaceRegKey
+@ stdcall SetupDiOpenDeviceInterfaceRegKey(ptr ptr long long)
 @ stdcall SetupDiOpenDeviceInterfaceW(ptr wstr long ptr)
 @ stdcall SetupDiRegisterCoDeviceInstallers(ptr ptr)
 @ stdcall SetupDiRegisterDeviceInfo(ptr ptr long ptr ptr ptr)

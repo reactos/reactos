@@ -36,6 +36,7 @@
 #include "shlwapi_It.rc"
 #include "shlwapi_Ja.rc"
 #include "shlwapi_Ko.rc"
+#include "shlwapi_Lt.rc"
 #include "shlwapi_Nl.rc"
 #include "shlwapi_No.rc"
 #include "shlwapi_Pl.rc"

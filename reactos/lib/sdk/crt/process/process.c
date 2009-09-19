@@ -521,7 +521,7 @@ intptr_t _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 
    if (args)
    {
-      ret = do_spawnT(P_OVERLAY, cmdname, args, NULL);
+      ret = do_spawnT(_P_OVERLAY, cmdname, args, NULL);
       free(args);
    }
    return ret;
@@ -533,7 +533,7 @@ intptr_t _texecl(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 intptr_t _texecv(const _TCHAR* cmdname, const _TCHAR* const* argv)
 {
    TRACE(MK_STR(_texecv)"('%"sT"')\n", cmdname);
-   return _tspawnv(P_OVERLAY, cmdname, argv);
+   return _tspawnv(_P_OVERLAY, cmdname, argv);
 }
 
 /*
@@ -560,7 +560,7 @@ intptr_t _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char*
    envs = argvtosT(ptr, 0);
    if (args)
    {
-      ret = do_spawnT(P_OVERLAY, cmdname, args, envs);
+      ret = do_spawnT(_P_OVERLAY, cmdname, args, envs);
       free(args);
    }
    if (envs)
@@ -576,7 +576,7 @@ intptr_t _texecle(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char*
 intptr_t _texecve(const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
 {
    TRACE(MK_STR(_texecve)"('%"sT"')\n", cmdname);
-   return _tspawnve(P_OVERLAY, cmdname, argv, envp);
+   return _tspawnve(_P_OVERLAY, cmdname, argv, envp);
 }
 
 /*
@@ -596,7 +596,7 @@ intptr_t _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 
    if (args)
    {
-      ret = do_spawnT(P_OVERLAY, find_execT(cmdname, pathname), args, NULL);
+      ret = do_spawnT(_P_OVERLAY, find_execT(cmdname, pathname), args, NULL);
       free(args);
    }
    return ret;
@@ -608,7 +608,7 @@ intptr_t _texeclp(const _TCHAR* cmdname, const _TCHAR* arg0, ...)
 intptr_t _texecvp(const _TCHAR* cmdname, const _TCHAR* const* argv)
 {
    TRACE(MK_STR(_texecvp)"('%"sT"')\n", cmdname);
-   return _tspawnvp(P_OVERLAY, cmdname, argv);
+   return _tspawnvp(_P_OVERLAY, cmdname, argv);
 }
 
 /*
@@ -636,7 +636,7 @@ intptr_t _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char
    envs = argvtosT(ptr, 0);
    if (args)
    {
-      ret = do_spawnT(P_OVERLAY, find_execT(cmdname, pathname), args, envs);
+      ret = do_spawnT(_P_OVERLAY, find_execT(cmdname, pathname), args, envs);
       free(args);
    }
    if (envs)
@@ -652,7 +652,7 @@ intptr_t _texeclpe(const _TCHAR* cmdname, const _TCHAR* arg0, ... /*, NULL, char
 intptr_t _texecvpe(const _TCHAR* cmdname, const _TCHAR* const* argv, const _TCHAR* const* envp)
 {
    TRACE(MK_STR(_texecvpe)"('%"sT"')\n", cmdname);
-   return _tspawnvpe(P_OVERLAY, cmdname, argv, envp);
+   return _tspawnvpe(_P_OVERLAY, cmdname, argv, envp);
 }
 
 

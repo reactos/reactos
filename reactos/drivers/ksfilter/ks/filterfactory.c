@@ -21,16 +21,7 @@ typedef struct
     PFNKSFILTERFACTORYPOWER WakeCallback;
 
     LIST_ENTRY SymbolicLinkList;
-    LIST_ENTRY FilterInstanceList;
 }IKsFilterFactoryImpl;
-
-typedef struct
-{
-    LIST_ENTRY Entry;
-    IKsFilter *FilterInstance;
-}FILTER_INSTANCE_ENTRY, *PFILTER_INSTANCE_ENTRY;
-
-
 
 VOID
 NTAPI
@@ -155,6 +146,47 @@ IKsFilterFactory_fnSetDeviceClassesState(
     return KspSetDeviceInterfacesState(&This->SymbolicLinkList, Enable);
 }
 
+VOID
+IKsFilterFactory_AttachFilterFactoryToDeviceHeader(
+    IKsFilterFactoryImpl * This,
+    PKSIDEVICE_HEADER DeviceHeader)
+{
+    PKSBASIC_HEADER BasicHeader;
+    PKSFILTERFACTORY FilterFactory;
+
+    if (DeviceHeader->BasicHeader.FirstChild.FilterFactory == NULL)
+    {
+        /* first attached filter factory */
+        DeviceHeader->BasicHeader.FirstChild.FilterFactory = &This->FilterFactory;
+        return;
+    }
+
+    /* set to first entry */
+    FilterFactory = DeviceHeader->BasicHeader.FirstChild.FilterFactory;
+
+    do
+    {
+        /* get basic header */
+        BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)FilterFactory - sizeof(KSBASIC_HEADER));
+        /* sanity check */
+        ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory);
+
+        if (BasicHeader->Next.FilterFactory)
+        {
+            /* iterate to next filter factory */
+            FilterFactory = BasicHeader->Next.FilterFactory;
+        }
+        else
+        {
+            /* found last entry */
+            break;
+        }
+    }while(FilterFactory);
+
+    /* attach filter factory */
+    BasicHeader->Next.FilterFactory = &This->FilterFactory;
+}
+
 NTSTATUS
 NTAPI
 IKsFilterFactory_fnInitialize(
@@ -173,6 +205,7 @@ IKsFilterFactory_fnInitialize(
     PDEVICE_EXTENSION DeviceExtension;
     KSOBJECT_CREATE_ITEM CreateItem;
     BOOL FreeString = FALSE;
+    IKsDevice * KsDevice;
 
     IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
 
@@ -185,10 +218,19 @@ IKsFilterFactory_fnInitialize(
     This->FilterFactory.FilterDescriptor = Descriptor;
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->Header.Type = KsObjectTypeFilterFactory;
+    This->Header.Parent.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
     This->DeviceHeader = DeviceExtension->DeviceHeader;
 
+    /* unused fields */
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
+    InitializeListHead(&This->Header.EventList);
+    KeInitializeSpinLock(&This->Header.EventListLock);
+
+
     InitializeListHead(&This->SymbolicLinkList);
-    InitializeListHead(&This->FilterInstanceList);
+
+    /* initialize filter factory control mutex */
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
 
     /* does the device use a reference string */
     if (RefString || !Descriptor->ReferenceGuid)
@@ -252,63 +294,21 @@ IKsFilterFactory_fnInitialize(
         /* return filterfactory */
         *FilterFactory = &This->FilterFactory;
 
-        /*FIXME create object bag */
-    }
-
-
-    /* return result */
-    return Status;
-}
-
-NTSTATUS
-NTAPI
-IKsFilterFactory_fnAddFilterInstance(
-    IKsFilterFactory * iface,
-    IN IKsFilter *FilterInstance)
-{
-    PFILTER_INSTANCE_ENTRY Entry;
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
-
-    /* allocate filter instance entry */
-    Entry = AllocateItem(NonPagedPool, sizeof(FILTER_INSTANCE_ENTRY));
-    if (!Entry)
-        return STATUS_INSUFFICIENT_RESOURCES;
-
-    /* initialize filter instance entry */
-    Entry->FilterInstance = FilterInstance;
-
-    /* insert entry */
-    InsertTailList(&This->FilterInstanceList, &Entry->Entry);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-IKsFilterFactory_fnRemoveFilterInstance(
-    IKsFilterFactory * iface,
-    IN IKsFilter *FilterInstance)
-{
-    PFILTER_INSTANCE_ENTRY InstanceEntry;
-    PLIST_ENTRY Entry;
-    IKsFilterFactoryImpl * This = (IKsFilterFactoryImpl*)CONTAINING_RECORD(iface, IKsFilterFactoryImpl, lpVtbl);
-
-    /* point to first entry */
-    Entry = This->FilterInstanceList.Flink;
-
-    while(Entry != &This->FilterInstanceList)
-    {
-        InstanceEntry = (PFILTER_INSTANCE_ENTRY)CONTAINING_RECORD(Entry, FILTER_INSTANCE_ENTRY, Entry);
-        if (InstanceEntry->FilterInstance == FilterInstance)
+        /* create a object bag for the filter factory */
+        This->FilterFactory.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
+        if (This->FilterFactory.Bag)
         {
-            /* found entry */
-            RemoveEntryList(&InstanceEntry->Entry);
-            FreeItem(InstanceEntry);
-            return STATUS_SUCCESS;
+            /* initialize object bag */
+            KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+            KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->FilterFactory.Bag, NULL);
         }
     }
 
-    /* entry not in list! */
-    return STATUS_NOT_FOUND;
+    /* attach filterfactory to device header */
+    IKsFilterFactory_AttachFilterFactoryToDeviceHeader(This, DeviceExtension->DeviceHeader);
+
+    /* return result */
+    return Status;
 }
 
 static IKsFilterFactoryVtbl vt_IKsFilterFactoryVtbl =
@@ -318,9 +318,7 @@ static IKsFilterFactoryVtbl vt_IKsFilterFactoryVtbl =
     IKsFilterFactory_fnRelease,
     IKsFilterFactory_fnGetStruct,
     IKsFilterFactory_fnSetDeviceClassesState,
-    IKsFilterFactory_fnInitialize,
-    IKsFilterFactory_fnAddFilterInstance,
-    IKsFilterFactory_fnRemoveFilterInstance
+    IKsFilterFactory_fnInitialize
 };
 
 

@@ -277,6 +277,38 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount)
                 MemoryMapPageAllocated = LoaderFree;
                 break;
             }
+            case MemoryFirmwarePermanent:
+            {
+                //
+                // Firmware permanent memory
+                //
+                MemoryMapPageAllocated = LoaderFirmwarePermanent;
+                break;
+            }
+            case MemoryFirmwareTemporary:
+            {
+                //
+                // Firmware temporary memory
+                //
+                MemoryMapPageAllocated = LoaderFirmwareTemporary;
+                break;
+            }
+            case MemoryLoadedProgram:
+            {
+                //
+                // Bootloader code
+                //
+                MemoryMapPageAllocated = LoaderLoadedProgram;
+                break;
+            }
+            case MemorySpecialMemory:
+            {
+                //
+                // Special reserved memory
+                //
+                MemoryMapPageAllocated = LoaderSpecialMemory;
+                break;
+            }
             default:
             {
                 //

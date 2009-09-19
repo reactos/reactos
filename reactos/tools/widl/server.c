@@ -40,6 +40,7 @@ static FILE* server;
 static int indent = 0;
 
 
+static void print_server(const char *format, ...) __attribute__((format (printf, 1, 2)));
 static void print_server(const char *format, ...)
 {
     va_list va;
@@ -78,6 +79,9 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
 
         indent++;
         write_remoting_arguments(server, indent, func, "__frame->", PASS_OUT, PHASE_FREE);
+
+        if (!is_void(type_function_get_rettype(func->type)))
+            write_remoting_arguments(server, indent, func, "__frame->", PASS_RETURN, PHASE_FREE);
 
         if (has_full_pointer)
             write_full_pointer_free(server, indent, func);
@@ -155,11 +159,9 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
         assign_stub_out_args(server, indent, func, "__frame->");
 
         /* Call the real server function */
-        if (!is_void(type_function_get_rettype(func->type)))
-            print_server("__frame->_RetVal = ");
-        else
-            print_server("");
-        fprintf(server, "%s%s", prefix_server, get_name(func));
+        print_server("%s%s%s",
+                     is_void(type_function_get_rettype(func->type)) ? "" : "__frame->_RetVal = ",
+                     prefix_server, get_name(func));
 
         if (type_get_function_args(func->type))
         {
@@ -186,7 +188,7 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
                 }
                 else
                 {
-                    print_server("%s__frame->%s", var->type->declarray ? "*" : "", var->name);
+                    print_server("%s__frame->%s", is_array(var->type) && !type_array_is_decl_as_ptr(var->type) ? "*" : "", var->name);
                 }
             }
             fprintf(server, ");\n");
@@ -248,8 +250,8 @@ static void write_function_stubs(type_t *iface, unsigned int *proc_offset)
 
 static void write_dispatchtable(type_t *iface)
 {
-    unsigned long ver = get_attrv(iface->attrs, ATTR_VERSION);
-    unsigned long method_count = 0;
+    unsigned int ver = get_attrv(iface->attrs, ATTR_VERSION);
+    unsigned int method_count = 0;
     const statement_t *stmt;
 
     print_server("static RPC_DISPATCH_FUNCTION %s_table[] =\n", iface->name);
@@ -323,7 +325,7 @@ static void write_stubdescriptor(type_t *iface, int expr_eval_routines)
 
 static void write_serverinterfacedecl(type_t *iface)
 {
-    unsigned long ver = get_attrv(iface->attrs, ATTR_VERSION);
+    unsigned int ver = get_attrv(iface->attrs, ATTR_VERSION);
     UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
     const str_list_t *endpoints = get_attrp(iface->attrs, ATTR_ENDPOINT);
 
@@ -335,7 +337,7 @@ static void write_serverinterfacedecl(type_t *iface)
     print_server("{\n");
     indent++;
     print_server("sizeof(RPC_SERVER_INTERFACE),\n");
-    print_server("{{0x%08lx,0x%04x,0x%04x,{0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x}},{%d,%d}},\n",
+    print_server("{{0x%08x,0x%04x,0x%04x,{0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x}},{%d,%d}},\n",
                  uuid->Data1, uuid->Data2, uuid->Data3, uuid->Data4[0], uuid->Data4[1],
                  uuid->Data4[2], uuid->Data4[3], uuid->Data4[4], uuid->Data4[5], uuid->Data4[6],
                  uuid->Data4[7], MAJORVERSION(ver), MINORVERSION(ver));
@@ -390,12 +392,13 @@ static void init_server(void)
     print_server("    MIDL_STUB_MESSAGE _StubMsg;\n");
     print_server("};\n");
     print_server("\n");
-    print_server("#ifndef USE_COMPILER_EXCEPTIONS\n");
     print_server("static int __server_filter( struct __server_frame *__frame )\n");
     print_server( "{\n");
-    print_server( "    return RPC_BAD_STUB_DATA_EXCEPTION_FILTER;\n");
+    print_server( "    return (__frame->code == STATUS_ACCESS_VIOLATION) ||\n");
+    print_server( "           (__frame->code == STATUS_DATATYPE_MISALIGNMENT) ||\n");
+    print_server( "           (__frame->code == RPC_X_BAD_STUB_DATA) ||\n");
+    print_server( "           (__frame->code == RPC_S_INVALID_BOUND);\n");
     print_server( "}\n");
-    print_server("#endif /* USE_COMPILER_EXCEPTIONS */\n");
     print_server( "\n");
 }
 
@@ -407,7 +410,7 @@ static void write_server_stmts(const statement_list_t *stmts, int expr_eval_rout
     {
         if (stmt->type == STMT_LIBRARY)
             write_server_stmts(stmt->u.lib->stmts, expr_eval_routines, proc_offset);
-        else if (stmt->type == STMT_TYPE && stmt->u.type->type == RPC_FC_IP)
+        else if (stmt->type == STMT_TYPE && type_get_type(stmt->u.type) == TYPE_INTERFACE)
         {
             type_t *iface = stmt->u.type;
             if (!need_stub(iface))

@@ -27,6 +27,7 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>kernel32</library>
+	<library>windowscodecs</library>
 	<library>ntdll</library>
 	<if property="ARCH" value="amd64">
 		<library>crt</library>

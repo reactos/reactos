@@ -260,6 +260,7 @@ Module::Module ( const Project& project,
 	: project (project),
 	  node (moduleNode),
 	  importLibrary (NULL),
+	  delayImportLibrary (NULL),
 	  metadata (NULL),
 	  bootSector (NULL),
 	  bootstrap (NULL),
@@ -524,6 +525,8 @@ Module::~Module ()
 		delete linkerFlags[i];
 	for ( i = 0; i < stubbedComponents.size(); i++ )
 		delete stubbedComponents[i];
+	for ( i = 0; i < cdfiles.size (); i++ )
+		delete cdfiles[i];
 	if ( linkerScript )
 		delete linkerScript;
 	if ( pch )
@@ -715,7 +718,10 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
+		const XMLAttribute* att = e.GetAttribute ( "delayimport", false );
 		Library* pLibrary = new Library ( e, *this, e.value );
+		if ( att && !stricmp ( att->value.c_str(), "true" ) )
+			pLibrary->delayimp = true;
 		non_if_data.libraries.push_back ( pLibrary );
 		subs_invalid = true;
 	}
@@ -780,7 +786,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				e.location,
 				"Only one <importlibrary> is valid per module" );
 		}
-		SetImportLibrary ( new ImportLibrary ( project, e, this ) );
+		SetImportLibrary ( new ImportLibrary ( project, e, this, false ) );
+		SetDelayImportLibrary ( new ImportLibrary ( project, e, this, true ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "if" || e.name == "ifnot" )
@@ -912,6 +919,12 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		autoRegister = new AutoRegister ( project, this, e );
 		subs_invalid = true;
 	}
+	else if ( e.name == "cdfile" )
+	{
+		CDFile* cdfile = new CDFile ( project, e, subpath );
+		cdfiles.push_back ( cdfile );
+		subs_invalid = true;
+	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 	{
 		throw XMLInvalidBuildFileException (
@@ -919,6 +932,8 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			"<%s> cannot have sub-elements",
 			e.name.c_str() );
 	}
+	for ( size_t i = 0; i < cdfiles.size (); i++ )
+		cdfiles[i]->ProcessXML ();
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXMLSubElement ( *e.subElements[i], subdirectory, subpath, parseContext );
 	parseContext.compilationUnit = pOldCompilationUnit;
@@ -967,10 +982,6 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Iso;
 	if ( attribute.value == "liveiso" )
 		return LiveIso;
-	if ( attribute.value == "isoregtest" )
-		return IsoRegTest;
-	if ( attribute.value == "liveisoregtest" )
-		return LiveIsoRegTest;
 	if ( attribute.value == "test" )
 		return Test;
 	if ( attribute.value == "rpcserver" )
@@ -1021,8 +1032,6 @@ Module::GetTargetDirectoryTree () const
 		case BootProgram:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case ElfExecutable:
 		case Cabinet:
 			return OutputDirectory;
@@ -1084,8 +1093,6 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 			return ".iso";
 		case Test:
 			return ".exe";
@@ -1144,8 +1151,6 @@ Module::GetDefaultModuleEntrypoint () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1197,8 +1202,6 @@ Module::GetDefaultModuleBaseaddress () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1254,8 +1257,6 @@ Module::GetDefaultModuleCRT () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1312,8 +1313,6 @@ Module::IsDLL () const
 		case BootProgram:
 		case Iso:
 		case LiveIso:
-		case IsoRegTest:
-		case LiveIsoRegTest:
 		case RpcServer:
 		case RpcClient:
 		case RpcProxy:
@@ -1420,6 +1419,12 @@ Module::SetImportLibrary ( ImportLibrary* importLibrary )
 	                                HasImportLibrary () ? "lib" + name + ".a" : output->name );
 }
 
+void
+Module::SetDelayImportLibrary ( ImportLibrary* importLibrary )
+{
+	this->delayImportLibrary = importLibrary;
+}
+
 std::string
 Module::GetDllName () const
 {
@@ -1482,7 +1487,8 @@ Library::Library ( const XMLElement& _node,
 	: node(&_node),
 	  module(_module),
 	  name(_name),
-	  importedModule(_module.project.LocateModule(_name))
+	  importedModule(_module.project.LocateModule(_name)),
+	  delayimp(false)
 {
 	if ( module.name == name )
 	{
@@ -1506,7 +1512,8 @@ Library::Library ( const Module& _module,
 	: node(NULL),
 	  module(_module),
 	  name(_name),
-	  importedModule(_module.project.LocateModule(_name))
+	  importedModule(_module.project.LocateModule(_name)),
+	  delayimp(false)
 {
 	if ( !importedModule )
 	{
@@ -1749,9 +1756,7 @@ bool
 Bootsector::IsSupportedModuleType ( ModuleType type )
 {
 	if ( type == Iso ||
-	     type == LiveIso ||
- 	     type == IsoRegTest ||
-		 type == LiveIsoRegTest )
+	     type == LiveIso )
 	{
 		return true;
 	}
@@ -1817,12 +1822,14 @@ Metadata::Metadata ( const XMLElement& _node,
 ImportLibrary::~ImportLibrary ()
 {
 	delete source;
+	delete target;
 }
 
 
 ImportLibrary::ImportLibrary ( const Project& project,
                                const XMLElement& node,
-                               const Module* module )
+                               const Module* module,
+                               bool delayimp )
 	: XmlNode ( project, node ),
 	  module (module)
 {
@@ -1889,6 +1896,11 @@ ImportLibrary::ImportLibrary ( const Project& project,
 		                            name,
 		                            &node );
 	}
+
+	target = new FileLocation ( IntermediateDirectory,
+	                            base->output->relative_path,
+	                            "lib" + module->name + (delayimp ? ".delayimp.a" :  ".a" ));
+
 }
 
 

@@ -713,7 +713,7 @@ DceFreeClassDCE(HDC hDC)
 }
 
 VOID FASTCALL
-DceEmptyCache()
+DceEmptyCache(VOID)
 {
    PDCE pDCE = FirstDce;
    KeEnterCriticalRegion();
@@ -869,7 +869,7 @@ UserGetWindowDC(PWINDOW_OBJECT Wnd)
 HWND FASTCALL
 UserGethWnd( HDC hdc, PWNDOBJ *pwndo)
 {
-  PWNDGDI pWndgdi;
+  PWNDGDI pWndgdi = NULL;
   PWINDOW_OBJECT Wnd = NULL;
   HWND hWnd;
   BOOL Hit = FALSE;

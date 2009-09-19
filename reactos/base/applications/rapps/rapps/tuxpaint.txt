@@ -1,0 +1,18 @@
+; UTF-8
+
+[Section]
+Name = TuxPaint
+Version = 0.9.21
+Licence = GPL
+Description = An Open Source bitmap graphics editor geared towards young children.
+Size = 10MB
+Category = 3
+URLSite = http://tuxpaint.org
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.21-win32-installer.exe
+CDPath = none
+
+[Section.0407]
+Description = Ein Open Source Bitmap Zeichenprogramm für kleine Kinder.
+
+[Section.0415]
+Description = Otwarty program graficzny przeznaczony głównie dla dzieci.

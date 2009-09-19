@@ -98,9 +98,9 @@ extern reactos_mem_data_t reactos_mem_data;
 VOID FASTCALL FrLdrSetupPae(ULONG Magic);
 VOID FASTCALL FrLdrSetupPageDirectory(VOID);
 VOID FASTCALL FrLdrGetPaeMode(VOID);
-BOOLEAN NTAPI FrLdrMapKernel(FILE *KernelImage);
+BOOLEAN NTAPI FrLdrMapKernel(PFILE KernelImage);
 ULONG_PTR NTAPI FrLdrCreateModule(LPCSTR ModuleName);
-ULONG_PTR NTAPI FrLdrLoadModule(FILE *ModuleImage, LPCSTR ModuleName, PULONG ModuleSize);
+ULONG_PTR NTAPI FrLdrLoadModule(PFILE ModuleImage, LPCSTR ModuleName, PULONG ModuleSize);
 BOOLEAN NTAPI FrLdrCloseModule(ULONG_PTR ModuleBase, ULONG dwModuleSize);
 VOID NTAPI FrLdrStartup(ULONG Magic);
 typedef VOID (FASTCALL *ROS_KERNEL_ENTRY_POINT)(ULONG Magic, PROS_LOADER_PARAMETER_BLOCK LoaderBlock);
@@ -108,7 +108,7 @@ typedef VOID (FASTCALL *ROS_KERNEL_ENTRY_POINT)(ULONG Magic, PROS_LOADER_PARAMET
 PVOID
 NTAPI
 FrLdrMapImage(
-    IN FILE *Image,
+    IN PFILE Image,
     IN PCHAR ShortName,
     IN ULONG ImageType
 );
@@ -116,7 +116,7 @@ FrLdrMapImage(
 PVOID
 NTAPI
 FrLdrReadAndMapImage(
-    IN FILE *Image,
+    IN PFILE Image,
     IN PCHAR ShortName,
     IN ULONG ImageType
 );

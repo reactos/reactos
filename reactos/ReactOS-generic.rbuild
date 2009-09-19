@@ -91,10 +91,12 @@
 		<compilerflag compiler="cxx">-Wno-non-virtual-dtor</compilerflag>
 		<compilerflag compiler="cc,cxx">-gstabs+</compilerflag>
 		<compilerflag compiler="as">-gstabs+</compilerflag>
+		<compilerflag compiler="midl">-m32 --win32</compilerflag>
 	</group>
 
 	<group compilerset="msc">
 		<define name="inline" compiler="cc">__inline</define>
+		<define name="__STDC__" compiler="cc">1</define>
 		<compilerflag>/Zl</compilerflag>
 		<compilerflag>/Zi</compilerflag>
 		<compilerflag>/W1</compilerflag>

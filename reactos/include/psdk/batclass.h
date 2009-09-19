@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 #if defined(_BATTERYCLASS_)
-  #define BCLASSAPI DECLSPEC_EXPORT
+  #define BCLASSAPI
 #else
   #define BCLASSAPI DECLSPEC_IMPORT
 #endif

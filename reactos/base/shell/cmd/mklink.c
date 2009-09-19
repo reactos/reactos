@@ -39,9 +39,9 @@ static BOOL CreateJunction(LPCTSTR LinkName, LPCTSTR TargetName)
 
 	HMODULE hNTDLL = GetModuleHandle(_T("NTDLL"));
 	BOOLEAN (WINAPI *RtlDosPathNameToNtPathName_U)(PCWSTR, PUNICODE_STRING, PCWSTR *, CURDIR *)
-		= (BOOLEAN (WINAPI *)())GetProcAddress(hNTDLL, "RtlDosPathNameToNtPathName_U");
+		= (BOOLEAN (WINAPI *)(PCWSTR, PUNICODE_STRING, PCWSTR *, CURDIR *))GetProcAddress(hNTDLL, "RtlDosPathNameToNtPathName_U");
 	VOID (WINAPI *RtlFreeUnicodeString)(PUNICODE_STRING)
-		= (VOID (WINAPI *)())GetProcAddress(hNTDLL, "RtlFreeUnicodeString");
+		= (VOID (WINAPI *)(PUNICODE_STRING))GetProcAddress(hNTDLL, "RtlFreeUnicodeString");
 
 	TCHAR TargetFullPath[MAX_PATH];
 #ifdef UNICODE
@@ -177,9 +177,9 @@ cmd_mklink(LPTSTR param)
 		 * so load dynamically */
 		BOOL (WINAPI *CreateSymbolicLink)(LPCTSTR, LPCTSTR, DWORD)
 #ifdef UNICODE
-			= (BOOL (WINAPI *)())GetProcAddress(hKernel32, "CreateSymbolicLinkW");
+			= (BOOL (WINAPI *)(LPCTSTR, LPCTSTR, DWORD))GetProcAddress(hKernel32, "CreateSymbolicLinkW");
 #else
-			= (BOOL (WINAPI *)())GetProcAddress(hKernel32, "CreateSymbolicLinkA");
+			= (BOOL (WINAPI *)(LPCTSTR, LPCTSTR, DWORD))GetProcAddress(hKernel32, "CreateSymbolicLinkA");
 #endif
 		if (CreateSymbolicLink && CreateSymbolicLink(Name[0], Name[1], Flags))
 		{
@@ -193,9 +193,9 @@ cmd_mklink(LPTSTR param)
 		 * so load dynamically */
 		BOOL (WINAPI *CreateHardLink)(LPCTSTR, LPCTSTR, LPSECURITY_ATTRIBUTES)
 #ifdef UNICODE
-			= (BOOL (WINAPI *)())GetProcAddress(hKernel32, "CreateHardLinkW");
+			= (BOOL (WINAPI *)(LPCTSTR, LPCTSTR, LPSECURITY_ATTRIBUTES))GetProcAddress(hKernel32, "CreateHardLinkW");
 #else
-			= (BOOL (WINAPI *)())GetProcAddress(hKernel32, "CreateHardLinkA");
+			= (BOOL (WINAPI *)(LPCTSTR, LPCTSTR, LPSECURITY_ATTRIBUTES))GetProcAddress(hKernel32, "CreateHardLinkA");
 #endif
 		if (CreateHardLink && CreateHardLink(Name[0], Name[1], NULL))
 		{

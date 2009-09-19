@@ -582,6 +582,8 @@ const char *getInterfaceNameByIndex(DWORD index)
 
             interfaceName = HeapAlloc( GetProcessHeap(), 0,
                                        strlen(adapter_name) + 1 );
+            if (!interfaceName) return NULL;
+
             strcpy( interfaceName, adapter_name );
         }
 
@@ -847,15 +849,14 @@ DWORD getInterfaceEntryByIndex(DWORD index, PMIB_IFROW entry)
 
 char *toIPAddressString(unsigned int addr, char string[16])
 {
-  if (string) {
     struct in_addr iAddr;
 
     iAddr.s_addr = addr;
-    /* extra-anal, just to make auditors happy */
-    strncpy(string, inet_ntoa(iAddr), 16);
-    string[16] = '\0';
-  }
-  return string;
+
+    if (string)
+        strncpy(string, inet_ntoa(iAddr), 16);
+  
+    return inet_ntoa(iAddr);
 }
 
 NTSTATUS addIPAddress( IPAddr Address, IPMask Mask, DWORD IfIndex,

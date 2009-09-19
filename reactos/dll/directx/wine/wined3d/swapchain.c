@@ -45,26 +45,36 @@ static void WINAPI IWineD3DSwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
 
     IWineD3DSwapChain_SetGammaRamp(iface, 0, &This->orig_gamma);
 
-    /* release the ref to the front and back buffer parents */
-    if(This->frontBuffer) {
+    /* Release the swapchain's draw buffers. Make sure This->backBuffer[0] is
+     * the last buffer to be destroyed, FindContext() depends on that. */
+    if (This->frontBuffer)
+    {
         IWineD3DSurface_SetContainer(This->frontBuffer, 0);
-        if(D3DCB_DestroyRenderTarget(This->frontBuffer) > 0) {
-            FIXME("(%p) Something's still holding the front buffer\n",This);
+        if (D3DCB_DestroyRenderTarget(This->frontBuffer))
+        {
+            FIXME("(%p) Something's still holding the front buffer (%p).\n",
+                    This, This->frontBuffer);
         }
+        This->frontBuffer = NULL;
     }
 
-    if(This->backBuffer) {
-        UINT i;
-        for(i = 0; i < This->presentParms.BackBufferCount; i++) {
+    if (This->backBuffer)
+    {
+        UINT i = This->presentParms.BackBufferCount;
+
+        while (i--)
+        {
             IWineD3DSurface_SetContainer(This->backBuffer[i], 0);
-            if(D3DCB_DestroyRenderTarget(This->backBuffer[i]) > 0) {
-                FIXME("(%p) Something's still holding the back buffer\n",This);
-            }
+            if (D3DCB_DestroyRenderTarget(This->backBuffer[i]))
+                FIXME("(%p) Something's still holding back buffer %u (%p).\n",
+                        This, i, This->backBuffer[i]);
         }
         HeapFree(GetProcessHeap(), 0, This->backBuffer);
+        This->backBuffer = NULL;
     }
 
-    for(i = 0; i < This->num_contexts; i++) {
+    for (i = 0; i < This->num_contexts; ++i)
+    {
         DestroyContext(This->wineD3DDevice, This->context[i]);
     }
     /* Restore the screen resolution if we rendered in fullscreen
@@ -111,9 +121,9 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
         cursor.resource.pool = WINED3DPOOL_SCRATCH;
         cursor.resource.format_desc = getFormatDescEntry(WINED3DFMT_A8R8G8B8, &This->wineD3DDevice->adapter->gl_info);
         cursor.resource.resourceType = WINED3DRTYPE_SURFACE;
-        cursor.glDescription.textureName = This->wineD3DDevice->cursorTexture;
-        cursor.glDescription.target = GL_TEXTURE_2D;
-        cursor.glDescription.level = 0;
+        cursor.texture_name = This->wineD3DDevice->cursorTexture;
+        cursor.texture_target = GL_TEXTURE_2D;
+        cursor.texture_level = 0;
         cursor.currentDesc.Width = This->wineD3DDevice->cursorWidth;
         cursor.currentDesc.Height = This->wineD3DDevice->cursorHeight;
         cursor.glRect.left = 0;
@@ -131,7 +141,8 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
         if (This->presentParms.Windowed) {
             MapWindowPoints(NULL, This->win_handle, (LPPOINT)&destRect, 2);
         }
-        IWineD3DSurface_Blt(This->backBuffer[0], &destRect, (IWineD3DSurface *) &cursor, NULL, WINEDDBLT_KEYSRC, NULL, WINED3DTEXF_NONE);
+        IWineD3DSurface_Blt(This->backBuffer[0], &destRect, (IWineD3DSurface *)&cursor,
+                NULL, WINEDDBLT_KEYSRC, NULL, WINED3DTEXF_POINT);
     }
     if(This->wineD3DDevice->logo_surface) {
         /* Blit the logo into the upper left corner of the drawable */
@@ -223,7 +234,7 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
         TRACE("Clearing the color buffer with cyan color\n");
 
         IWineD3DDevice_Clear((IWineD3DDevice*)This->wineD3DDevice, 0, NULL,
-                              WINED3DCLEAR_TARGET, 0xff00ffff, 1.0, 0);
+                WINED3DCLEAR_TARGET, 0xff00ffff, 1.0f, 0);
     }
 
     if(((IWineD3DSurfaceImpl *) This->frontBuffer)->Flags   & SFLAG_INSYSMEM ||
@@ -371,10 +382,11 @@ const IWineD3DSwapChainVtbl IWineD3DSwapChain_Vtbl =
     IWineD3DBaseSwapChainImpl_GetGammaRamp
 };
 
-WineD3DContext *IWineD3DSwapChainImpl_CreateContextForThread(IWineD3DSwapChain *iface) {
-    WineD3DContext *ctx;
+struct wined3d_context *IWineD3DSwapChainImpl_CreateContextForThread(IWineD3DSwapChain *iface)
+{
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *) iface;
-    WineD3DContext **newArray;
+    struct wined3d_context **newArray;
+    struct wined3d_context *ctx;
 
     TRACE("Creating a new context for swapchain %p, thread %d\n", This, GetCurrentThreadId());
 
@@ -401,10 +413,11 @@ WineD3DContext *IWineD3DSwapChainImpl_CreateContextForThread(IWineD3DSwapChain *
     return ctx;
 }
 
-void get_drawable_size_swapchain(IWineD3DSurfaceImpl *This, UINT *width, UINT *height) {
+void get_drawable_size_swapchain(struct wined3d_context *context, UINT *width, UINT *height)
+{
+    IWineD3DSurfaceImpl *surface = (IWineD3DSurfaceImpl *)context->current_rt;
     /* The drawable size of an onscreen drawable is the surface size.
-     * (Actually: The window size, but the surface is created in window size)
-     */
-    *width = This->currentDesc.Width;
-    *height = This->currentDesc.Height;
+     * (Actually: The window size, but the surface is created in window size) */
+    *width = surface->currentDesc.Width;
+    *height = surface->currentDesc.Height;
 }

@@ -142,7 +142,7 @@ static ISR_TABLE IsrTable[NR_TRAPS][MAXIMUM_PROCESSORS];
 static ISR_TABLE IsrTable[NR_TRAPS][1];
 #endif
 
-#define TAG_ISR_LOCK     TAG('I', 'S', 'R', 'L')
+#define TAG_ISR_LOCK     'LRSI'
 
 /* FUNCTIONS ****************************************************************/
 

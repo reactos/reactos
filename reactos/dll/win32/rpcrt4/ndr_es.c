@@ -105,7 +105,7 @@ RPC_STATUS WINAPI MesIncrementalHandleReset(
     handle_t Handle, void *UserState, MIDL_ES_ALLOC AllocFn,
     MIDL_ES_WRITE WriteFn, MIDL_ES_READ ReadFn, MIDL_ES_CODE Operation)
 {
-    MIDL_ES_MESSAGE *pEsMsg = (MIDL_ES_MESSAGE *)Handle;
+    MIDL_ES_MESSAGE *pEsMsg = Handle;
 
     TRACE("(%p, %p, %p, %p, %p, %d)\n", Handle, UserState, AllocFn,
         WriteFn, ReadFn, Operation);
@@ -324,7 +324,7 @@ void WINAPIV NdrMesProcEncodeDecode(handle_t Handle, const MIDL_STUB_DESC * pStu
 {
     /* pointer to start of stack where arguments start */
     RPC_MESSAGE rpcMsg;
-    MIDL_ES_MESSAGE *pEsMsg = (MIDL_ES_MESSAGE *)Handle;
+    MIDL_ES_MESSAGE *pEsMsg = Handle;
     /* size of stack */
     unsigned short stack_size;
     /* header for procedure string */

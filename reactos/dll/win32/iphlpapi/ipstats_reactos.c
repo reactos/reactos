@@ -459,6 +459,10 @@ RouteTable *getRouteTable(void)
     out_route_table = HeapAlloc( GetProcessHeap(), 0,
                                  sizeof(RouteTable) +
                                  (sizeof(RouteEntry) * (numRoutes - 1)) );
+    if (!out_route_table) {
+        closeTcpFile(tcpFile);
+        return NULL;
+    }
 
     out_route_table->numRoutes = numRoutes;
 
@@ -586,6 +590,10 @@ PMIB_IPNETTABLE getArpTable(void)
     IpArpTable = HeapAlloc
 	( GetProcessHeap(), 0,
 	  sizeof(DWORD) + (sizeof(MIB_IPNETROW) * totalNumber) );
+    if (!IpArpTable) {
+        closeTcpFile(tcpFile);
+        return NULL;
+    }
 
     status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
 

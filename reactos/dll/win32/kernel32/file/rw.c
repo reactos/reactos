@@ -148,11 +148,22 @@ ReadFile(IN HANDLE hFile,
 
    if (IsConsoleHandle(hFile))
      {
-	return ReadConsoleA(hFile,
+        if (ReadConsoleA(hFile,
                             lpBuffer,
                             nNumberOfBytesToRead,
                             lpNumberOfBytesRead,
-                            NULL);
+                            NULL))
+          {
+             DWORD dwMode;
+             GetConsoleMode(hFile, &dwMode);
+             if ((dwMode & ENABLE_PROCESSED_INPUT) && *(char *)lpBuffer == 0x1a)
+               {
+                  /* EOF character entered; simulate end-of-file */
+                  *lpNumberOfBytesRead = 0;
+               }
+             return TRUE;
+          }
+        return FALSE;
      }
 
    if (lpOverlapped != NULL)

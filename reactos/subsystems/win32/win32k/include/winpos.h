@@ -5,8 +5,6 @@
 #define SWP_NOCLIENTMOVE          0x0800
 #define SWP_NOCLIENTSIZE          0x1000
 
-#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000140)
-
 #define IntPtInWindow(WndObject,x,y) \
   ((x) >= (WndObject)->Wnd->rcWindow.left && \
    (x) < (WndObject)->Wnd->rcWindow.right && \

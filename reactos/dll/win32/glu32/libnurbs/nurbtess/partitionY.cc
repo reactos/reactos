@@ -113,8 +113,8 @@ Int isCusp(directedLine *v)
   else if(A[1] > B[1] && C[1] > B[1])
     return 1;
 
-  if(isAbove(v, v) && isAbove(v, v->getPrev()) ||
-     isBelow(v, v) && isBelow(v, v->getPrev()))
+  if((isAbove(v, v) && isAbove(v, v->getPrev())) ||
+     (isBelow(v, v) && isBelow(v, v->getPrev())))
     return 1;
   else
     return 0;

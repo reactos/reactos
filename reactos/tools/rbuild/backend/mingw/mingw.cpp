@@ -59,8 +59,6 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "" }, // Win32SCR
 	{ HostFalse, "", "", "" }, // IdlHeader
 	{ HostFalse, "", "", "" }, // IdlInterface
-	{ HostFalse, "", "", "" }, // IsoRegTest
-	{ HostFalse, "", "", "" }, // LiveIsoRegTest
 	{ HostFalse, "", "", "" }, // EmbeddedTypeLib
 	{ HostFalse, "", "", "" }, // ElfExecutable
 	{ HostFalse, "", "", "" }, // RpcProxy
@@ -164,7 +162,10 @@ v2s ( const Backend* backend, const vector<FileLocation>& files, int wrap_at )
 	{
 		const FileLocation& file = files[i];
 		if ( wrap_at > 0 && wrap_count++ == wrap_at )
+		{
 			s += " \\\n\t\t";
+			wrap_count = 1;
+		}
 		else if ( s.size() )
 			s += " ";
 		s += backend->GetFullName ( file );
@@ -185,7 +186,10 @@ v2s ( const string_list& v, int wrap_at )
 		if ( !v[i].size() )
 			continue;
 		if ( wrap_at > 0 && wrap_count++ == wrap_at )
+		{
 			s += " \\\n\t\t";
+			wrap_count = 1;
+		}
 		else if ( s.size() )
 			s += " ";
 		s += v[i];
@@ -537,10 +541,6 @@ MingwBackend::IncludeInAllTarget ( const Module& module ) const
 	if ( module.type == Iso )
 		return false;
 	if ( module.type == LiveIso )
-		return false;
-	if ( module.type == IsoRegTest )
-		return false;
-	if ( module.type == LiveIsoRegTest )
 		return false;
 	if ( module.type == Test )
 		return false;

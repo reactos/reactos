@@ -65,6 +65,7 @@ CALLBACK
 ExitThreadApc(ULONG_PTR Context)
 {
     PWAH_HELPER_CONTEXT HelperContext = (PWAH_HELPER_CONTEXT)Context;
+    HMODULE DllHandle = HelperContext->DllHandle;
 
     /* Close the file handle */
     CloseHandle(HelperContext->FileHandle);
@@ -73,7 +74,7 @@ ExitThreadApc(ULONG_PTR Context)
     HeapFree(GlobalHeap, 0, HelperContext);
 
     /* Exit the thread and library */
-    FreeLibraryAndExitThread(HelperContext->DllHandle, ERROR_SUCCESS);
+    FreeLibraryAndExitThread(DllHandle, ERROR_SUCCESS);
 }
 
 DWORD

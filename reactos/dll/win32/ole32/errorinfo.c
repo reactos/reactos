@@ -191,7 +191,7 @@ static HRESULT WINAPI IErrorInfoImpl_QueryInterface(
 	VOID**     ppvoid)
 {
 	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
-	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvoid);
+	TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppvoid);
 
 	*ppvoid = NULL;
 

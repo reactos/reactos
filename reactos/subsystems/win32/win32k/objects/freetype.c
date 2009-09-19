@@ -566,6 +566,18 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
 }
 
 
+static BOOL face_has_symbol_charmap(FT_Face ft_face)
+{
+    int i;
+
+    for(i = 0; i < ft_face->num_charmaps; i++)
+    {
+        if(ft_face->charmaps[i]->encoding == FT_ENCODING_MS_SYMBOL)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 static void FASTCALL
 FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT_WinFNT_HeaderRec *pWin)
 {
@@ -644,10 +656,36 @@ FillTM(TEXTMETRICW *TM, PFONTGDI FontGDI, TT_OS2 *pOS2, TT_HoriHeader *pHori, FT
     TM->tmOverhang = 0;
     TM->tmDigitizedAspectX = 96;
     TM->tmDigitizedAspectY = 96;
-    TM->tmFirstChar = pOS2->usFirstCharIndex;
-    TM->tmDefaultChar = pOS2->usDefaultChar ? pOS2->usDefaultChar : 0xffff;
-    TM->tmLastChar = pOS2->usLastCharIndex;
-    TM->tmBreakChar = L'\0' != pOS2->usBreakChar ? pOS2->usBreakChar : ' ';
+    if (face_has_symbol_charmap(Face) || (pOS2->usFirstCharIndex >= 0xf000 && pOS2->usFirstCharIndex < 0xf100))
+    {
+        USHORT cpOEM, cpAnsi;
+
+        EngGetCurrentCodePage(&cpOEM, &cpAnsi);
+        TM->tmFirstChar = 0;
+        switch(cpAnsi)
+        {
+        case 1257: /* Baltic */
+            TM->tmLastChar = 0xf8fd;
+            break;
+        default:
+            TM->tmLastChar = 0xf0ff;
+        }
+        TM->tmBreakChar = 0x20;
+        TM->tmDefaultChar = 0x1f;
+    }
+    else
+    {
+        TM->tmFirstChar = pOS2->usFirstCharIndex; /* Should be the first char in the cmap */
+        TM->tmLastChar = pOS2->usLastCharIndex;   /* Should be min(cmap_last, os2_last) */
+
+        if(pOS2->usFirstCharIndex <= 1)
+            TM->tmBreakChar = pOS2->usFirstCharIndex + 2;
+        else if (pOS2->usFirstCharIndex > 0xff)
+            TM->tmBreakChar = 0x20;
+        else
+            TM->tmBreakChar = pOS2->usFirstCharIndex;
+        TM->tmDefaultChar = TM->tmBreakChar - 1;
+    }
     TM->tmItalic = (Face->style_flags & FT_STYLE_FLAG_ITALIC) ? 255 : 0;
     TM->tmUnderlined = FontGDI->Underline;
     TM->tmStruckOut  = FontGDI->StrikeOut;
@@ -3110,12 +3148,13 @@ GreExtTextOutW(
     FONTOBJ *FontObj;
     PFONTGDI FontGDI;
     PTEXTOBJ TextObj = NULL;
-    XLATEOBJ *XlateObj=NULL, *XlateObj2=NULL;
+    EXLATEOBJ exloRGB2Dst, exloDst2RGB;
     FT_Render_Mode RenderMode;
     BOOLEAN Render;
     POINT Start;
     BOOL DoBreak = FALSE;
     HPALETTE hDestPalette;
+    PPALETTE ppalDst;
     USHORT DxShift;
 
     // TODO: Write test-cases to exactly match real Windows in different
@@ -3184,20 +3223,6 @@ GreExtTextOutW(
 
     RealXStart = (Start.x + dc->ptlDCOrig.x) << 6;
     YStart = Start.y + dc->ptlDCOrig.y;
-
-    /* Create the brushes */
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->DevInfo.hpalDefault;
-    XlateObj = (XLATEOBJ*)IntEngCreateXlate(0, PAL_RGB, hDestPalette, NULL);
-    if ( !XlateObj )
-    {
-        goto fail;
-    }
-    XlateObj2 = (XLATEOBJ*)IntEngCreateXlate(PAL_RGB, 0, NULL, hDestPalette);
-    if ( !XlateObj2 )
-    {
-        goto fail;
-    }
 
     SourcePoint.x = 0;
     SourcePoint.y = 0;
@@ -3397,6 +3422,15 @@ GreExtTextOutW(
     TextTop = YStart;
     BackgroundLeft = (RealXStart + 32) >> 6;
 
+    /* Create the xlateobj */
+    hDestPalette = psurf->hDIBPalette;
+    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
+    ppalDst = PALETTE_LockPalette(hDestPalette);
+    EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
+    PALETTE_UnlockPalette(ppalDst);
+
+
     /*
      * The main rendering loop.
      */
@@ -3416,7 +3450,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to load and render glyph! [index: %u]\n", glyph_index);
                 IntUnLockFreeType;
-                goto fail;
+                goto fail2;
             }
             glyph = face->glyph;
             realglyph = ftGdiGlyphCacheSet(face,
@@ -3428,7 +3462,7 @@ GreExtTextOutW(
             {
                 DPRINT1("Failed to render glyph! [index: %u]\n", glyph_index);
                 IntUnLockFreeType;
-                goto fail;
+                goto fail2;
             }
         }
 
@@ -3450,7 +3484,7 @@ GreExtTextOutW(
             if (error)
             {
                 DPRINT1("WARNING: Failed to render glyph!\n");
-                goto fail;
+                goto fail2;
             }
         }
         realglyph2 = (FT_BitmapGlyph)realglyph;
@@ -3508,7 +3542,7 @@ GreExtTextOutW(
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             // FT_Done_Glyph(realglyph);
             IntUnLockFreeType;
-            goto fail;
+            goto fail2;
         }
         SourceGlyphSurf = EngLockSurface((HSURF)HSourceGlyph);
         if ( !SourceGlyphSurf )
@@ -3516,7 +3550,7 @@ GreExtTextOutW(
             EngDeleteSurface((HSURF)HSourceGlyph);
             DPRINT1("WARNING: EngLockSurface() failed!\n");
             IntUnLockFreeType;
-            goto fail;
+            goto fail2;
         }
 
         /*
@@ -3539,8 +3573,8 @@ GreExtTextOutW(
             SurfObj,
             SourceGlyphSurf,
             dc->rosdc.CombinedClip,
-            XlateObj,
-            XlateObj2,
+            &exloRGB2Dst.xlo,
+            &exloDst2RGB.xlo,
             &DestRect,
             (PPOINTL)&MaskRect,
             &dc->eboText.BrushObject,
@@ -3577,8 +3611,8 @@ GreExtTextOutW(
 
     IntUnLockFreeType;
 
-    EngDeleteXlate(XlateObj);
-    EngDeleteXlate(XlateObj2);
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
 good:
@@ -3586,11 +3620,10 @@ good:
 
     return TRUE;
 
+fail2:
+    EXLATEOBJ_vCleanup(&exloRGB2Dst);
+    EXLATEOBJ_vCleanup(&exloDst2RGB);
 fail:
-    if ( XlateObj2 != NULL )
-        EngDeleteXlate(XlateObj2);
-    if ( XlateObj != NULL )
-        EngDeleteXlate(XlateObj);
     if (TextObj != NULL)
         TEXTOBJ_UnlockText(TextObj);
     DC_UnlockDc(dc);
@@ -3763,6 +3796,12 @@ NtGdiGetCharABCWidthsW(
     if (!NT_SUCCESS(Status))
     {
         SetLastWin32Error(Status);
+        return FALSE;
+    }
+
+    if (!Buffer)
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
 

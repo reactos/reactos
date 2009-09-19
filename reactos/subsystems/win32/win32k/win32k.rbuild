@@ -10,6 +10,7 @@
 	<include base="ReactOS">include/reactos/subsys</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<compilerflag compilerset="gcc">-fms-extensions</compilerflag>
+	<compilerflag compilerset="msc">/wd4276</compilerflag>
 	<define name="LANGPACK" />
 	<define name="_WIN32K_" />
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38269
@@ -29,8 +30,9 @@
 		<file>dib16bpp.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
-		<file>dibXXbpp.c</file>
 		<file>dib.c</file>
+		<file>floodfill.c</file>
+		<file>stretchblt.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -63,6 +65,7 @@
 		</if>
 		<file>gradient.c</file>
 		<file>lineto.c</file>
+		<file>mapping.c</file>
 		<file>mem.c</file>
 		<file>engmisc.c</file>
 		<file>mouse.c</file>
@@ -193,6 +196,7 @@
 	</directory>
 	<directory name="stubs">
 		<file>stubs.c</file>
+		<file>umpdstubs.c</file>
 	</directory>
 
 	<!-- See http://gcc.gnu.org/bugzilla/show_bug.cgi?id=38054#c7 -->

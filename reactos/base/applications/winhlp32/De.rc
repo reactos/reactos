@@ -97,13 +97,13 @@ STID_INFO,  		"Information"
 STID_NOT_IMPLEMENTED, 	"Nicht implementiert"
 STID_HLPFILE_ERROR_s, 	"Fehler beim Lesen der Hilfe-Datei `%s'"
 STID_INDEX, 		"&Inhalt"
-STID_CONTENTS,		"Summary"
+STID_CONTENTS,		"Zusammenfassung"
 STID_BACK, 		"&Zurück"
 STID_ALL_FILES, 	"Alle Dateien (*.*)"
 STID_HELP_FILES_HLP, 	"Hilfe-Dateien (*.hlp)"
 STID_FILE_NOT_FOUND_s	"'%s' konnte nicht gefunden werden. Wollen Sie selber nach dieser Datei suchen?"
 STID_NO_RICHEDIT	"Die Richedit Implementation konnte nicht gefunden werden... Breche ab."
-STID_PSH_INDEX,		"Help topics: "
+STID_PSH_INDEX,		"Hilfethemen: "
 }
 
 CONTEXT_MENU MENU LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
@@ -128,3 +128,4 @@ END
 MENUITEM "Systemfarben verwenden",   MNID_CTXT_SYSTEM_COLORS
 END
 END
+#pragma code_page(default)

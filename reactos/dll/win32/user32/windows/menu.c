@@ -998,6 +998,13 @@ PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
         return 0;
       }
 
+    case WM_PRINTCLIENT:
+      {
+        MenuDrawPopupMenu( Wnd, (HDC)wParam,
+                                (HMENU)GetWindowLongPtrW( Wnd, 0 ) );
+        return 0;
+      }
+
     case WM_ERASEBKGND:
       return 1;
 
@@ -1060,6 +1067,13 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
         MenuDrawPopupMenu(Wnd, ps.hdc, (HMENU)GetWindowLongPtrW(Wnd, 0));
         EndPaint(Wnd, &ps);
         return 0;
+      }
+
+    case WM_PRINTCLIENT:
+      {
+         MenuDrawPopupMenu( Wnd, (HDC)wParam,
+                                (HMENU)GetWindowLongPtrW( Wnd, 0 ) );
+         return 0;
       }
 
     case WM_ERASEBKGND:
@@ -1234,9 +1248,10 @@ User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   HMENU hmenu = LoadMenuW(User32Instance, L"SYSMENU");
   LRESULT Result = (LRESULT)hmenu;
+  MENUINFO menuinfo = {0};
+  MENUITEMINFOW info = {0};
 
   // removing space for checkboxes from menu
-  MENUINFO menuinfo = {0};
   menuinfo.cbSize = sizeof(menuinfo);
   menuinfo.fMask = MIM_STYLE;
   GetMenuInfo(hmenu, &menuinfo);
@@ -1244,7 +1259,6 @@ User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength)
   SetMenuInfo(hmenu, &menuinfo);
 
   // adding bitmaps to menu items
-  MENUITEMINFOW info = {0};
   info.cbSize = sizeof(info);
   info.fMask |= MIIM_BITMAP;
   info.hbmpItem = HBMMENU_POPUP_MINIMIZE;
@@ -4979,8 +4993,12 @@ SetMenuInfo(
 {
   ROSMENUINFO mi;
   BOOL res = FALSE;
-  if(lpcmi->cbSize != sizeof(MENUINFO))
+
+  if (!lpcmi || (lpcmi->cbSize != sizeof(MENUINFO)))
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
     return res;
+  }
 
   memcpy(&mi, lpcmi, sizeof(MENUINFO));
   return NtUserMenuInfo(hmenu, &mi, TRUE);

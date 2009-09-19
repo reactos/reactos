@@ -20,9 +20,13 @@
 
 #include "resources.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_FAILED, "Не удалось запустить Wordpad"
+    IDS_FAILED, "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РїСѓСЃС‚РёС‚СЊ Wordpad"
 }
+#pragma code_page(default)

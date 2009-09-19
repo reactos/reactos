@@ -59,7 +59,7 @@ EngCreateDriverObj(
     pedo->drvobj.pvObj = pvObj;
     pedo->drvobj.pFreeProc = pFreeObjProc;
     pedo->drvobj.hdev = hdev;
-    pedo->drvobj.dhpdev = ppdev->hPDev;
+    pedo->drvobj.dhpdev = ppdev->dhpdev;
 
     /* Unlock the object */
     DRIVEROBJ_UnlockObject(pedo);

@@ -34,7 +34,7 @@ PlayLogonSoundThread(
 	DWORD dwSize = sizeof(szBuffer);
 	HMODULE hLibrary;
 	SERVICE_STATUS_PROCESS Info;
-	typedef BOOL WINAPI (*PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
+	typedef BOOL (WINAPI *PLAYSOUNDW)(LPCWSTR,HMODULE,DWORD);
 	PLAYSOUNDW Play;
 	ULONG Index = 0;
 
@@ -65,7 +65,7 @@ PlayLogonSoundThread(
 		if (!hSCManager)
 			ExitThread(0);;
 
-		hService = OpenServiceW(hSCManager, L"sysaudio", GENERIC_READ);
+		hService = OpenServiceW(hSCManager, L"wdmaud", GENERIC_READ);
 		if (!hService)
 		{
 			CloseServiceHandle(hSCManager);

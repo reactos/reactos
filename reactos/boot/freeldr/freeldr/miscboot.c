@@ -51,14 +51,14 @@ VOID LoadAndBootBootSector(PCSTR OperatingSystemName)
 		return;
 	}
 
-	if (!FsOpenSystemVolume(FileName, FileName, NULL))
+	if (!MachDiskGetSystemVolume(FileName, FileName, NULL))
 	{
-		UiMessageBox("Failed to open boot drive.");
+		UiMessageBox("Failed to get system volume.");
 		return;
 	}
 
 	FilePointer = FsOpenFile(FileName);
-	if (FilePointer == NULL)
+	if (!FilePointer)
 	{
 		strcat(FileName, " not found.");
 		UiMessageBox(FileName);

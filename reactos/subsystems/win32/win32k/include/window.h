@@ -26,7 +26,7 @@ typedef struct _WINDOW_OBJECT
   PWND Wnd;
 
   /* Pointer to the thread information */
-  PW32THREADINFO ti;
+  PTHREADINFO ti;
   /* Pointer to the desktop */
   PDESKTOPINFO Desktop;
   /* system menu handle. */

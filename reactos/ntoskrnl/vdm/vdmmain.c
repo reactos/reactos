@@ -120,25 +120,21 @@ VdmpInitialize(PVOID ControlData)
         return Status;
     }
 
-    /* Now, copy the first physical page into the first virtual page */
+    /* Enter SEH */
     _SEH2_TRY
     {
+        /* Copy the first physical page into the first virtual page */
         RtlMoveMemory(NullAddress, BaseAddress, ViewSize);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Get the status */
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
+        /* Fail */
         DPRINT1("Couldn't copy first page (%x)\n", Status);
         ZwClose(PhysMemHandle);
         ZwUnmapViewOfSection(NtCurrentProcess(), BaseAddress);
-        return Status;
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
+    _SEH2_END;
 
     /* Close physical memory section handle */
     ZwClose(PhysMemHandle);

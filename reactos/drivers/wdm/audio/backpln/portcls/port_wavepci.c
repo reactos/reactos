@@ -93,7 +93,7 @@ IPortEvents_fnQueryInterface(
     if (IsEqualGUIDAligned(refiid, &IID_IPortEvents) ||
         IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
-        *Output = &This->lpVtblServiceSink;
+        *Output = &This->lpVtblPortEvents;
         InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }

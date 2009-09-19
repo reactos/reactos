@@ -41,7 +41,7 @@
   (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_VALIDATERGN)
 
 #define NtUserSetWindowContextHelpId(hWnd, dwContextHelpId) \
-  (BOOL)NtUserCallTwoParam((DWORD_PTR)hwnd, dwContextHelpId, TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID)
+  (BOOL)NtUserCallHwndParam(hWnd, dwContextHelpId, HWNDPARAM_ROUTINE_SETWNDCONTEXTHLPID)
 
 #define NtUserSetCaretPos(X, Y) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)X, (DWORD_PTR)Y, TWOPARAM_ROUTINE_SETCARETPOS)
@@ -54,9 +54,6 @@
 
 #define NtUserSetMenuBarHeight(menu, height) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)menu, (DWORD_PTR)height, TWOPARAM_ROUTINE_SETMENUBARHEIGHT)
-
-#define NtUserGetWindowInfo(hwnd, pwi) \
-  (BOOL)NtUserCallTwoParam((DWORD_PTR)hwnd, (DWORD_PTR)pwi, TWOPARAM_ROUTINE_GETWINDOWINFO)
 
 #define NtUserRegisterLogonProcess(hproc, x) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)hproc, (DWORD_PTR)x, TWOPARAM_ROUTINE_REGISTERLOGONPROC)
@@ -202,7 +199,7 @@ typedef struct _USER_HANDLE_ENTRY
     union
     {
         PVOID pi;
-        PW32THREADINFO pti;          // pointer to Win32ThreadInfo
+        PTHREADINFO pti;          // pointer to Win32ThreadInfo
         PPROCESSINFO ppi;         // pointer to W32ProcessInfo
     };
     unsigned short type;         /* object type (0 if free) */

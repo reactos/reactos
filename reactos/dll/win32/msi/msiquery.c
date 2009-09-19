@@ -716,8 +716,6 @@ MSIHANDLE WINAPI MsiGetLastErrorRecord( void )
     return 0;
 }
 
-DEFINE_GUID( CLSID_MsiTransform, 0x000c1082, 0x0000, 0x0000, 0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
-
 UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db,
                  LPCWSTR szTransformFile, int iErrorCond )
 {

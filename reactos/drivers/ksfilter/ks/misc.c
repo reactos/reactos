@@ -140,7 +140,7 @@ KspCopyCreateRequest(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -148,12 +148,17 @@ NTAPI
 KsGetObjectFromFileObject(
     IN PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+
+    /* return associated object */
+    return ObjectHeader->ObjectType;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 KSOBJECTTYPE
@@ -161,20 +166,31 @@ NTAPI
 KsGetObjectTypeFromFileObject(
     IN PFILE_OBJECT FileObject)
 {
-    UNIMPLEMENTED
-    return (KSOBJECTTYPE)-1;
+    PKSIOBJECT_HEADER ObjectHeader;
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)FileObject->FsContext;
+    /* return type */
+    return ObjectHeader->Type;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSOBJECTTYPE
 NTAPI
 KsGetObjectTypeFromIrp(
     IN PIRP  Irp)
 {
-    UNIMPLEMENTED
-    return (KSOBJECTTYPE)-1;
+    PKSIOBJECT_HEADER ObjectHeader;
+    PIO_STACK_LOCATION IoStack;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    /* return type */
+    return ObjectHeader->Type;
 }
 
 /*
@@ -191,7 +207,7 @@ KsGetOuterUnknown(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PVOID
@@ -199,8 +215,11 @@ NTAPI
 KsGetParent(
     IN PVOID Object)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+    /* sanity check */
+    ASSERT(BasicHeader->Parent.KsDevice != NULL);
+    /* return object type */
+    return (PVOID)BasicHeader->Parent.KsDevice;
 }
 
 

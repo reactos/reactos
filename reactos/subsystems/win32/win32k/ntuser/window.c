@@ -103,7 +103,7 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 /* temp hack */
 PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
 {
-   PW32THREADINFO ti;
+   PTHREADINFO ti;
    PWINDOW_OBJECT Window;
 
    if (PsGetCurrentProcess() != PsInitialSystemProcess)
@@ -314,11 +314,13 @@ static void IntSendDestroyMsg(HWND hWnd)
 }
 
 static VOID
-UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
+UserFreeWindowInfo(PTHREADINFO ti, PWINDOW_OBJECT WindowObject)
 {
     PCLIENTINFO ClientInfo = GetWin32ClientInfo();
     PWND Wnd = WindowObject->Wnd;
 
+    if (!Wnd) return;
+    
     if (ClientInfo->CallbackWnd.pvWnd == DesktopHeapAddressToUser(WindowObject->Wnd))
     {
         ClientInfo->CallbackWnd.hWnd = NULL;
@@ -1549,7 +1551,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    HWND hWnd;
    POINT Pos;
    SIZE Size;
-   PW32THREADINFO ti = NULL;
+   PTHREADINFO ti = NULL;
 #if 0
 
    POINT MaxSize, MaxPos, MinTrack, MaxTrack;
@@ -1678,6 +1680,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
        Wnd->head.pti = ti;
        Wnd->head.rpdesk = pti->Desktop;
        Wnd->hWndLastActive = hWnd;
+       Wnd->state2 |= WNDS2_WIN40COMPAT;
    }
 
    DPRINT("Created object with handle %X\n", hWnd);
@@ -1836,12 +1839,19 @@ AllocErr:
    {
       if (hMenu)
          IntSetMenu(Window, hMenu, &MenuChanged);
-      else // Take it from the parent.
+      else if (Wnd->pcls->lpszMenuName) // Take it from the parent.
       {
           UNICODE_STRING MenuName;
-
-          RtlInitUnicodeString( &MenuName, Wnd->pcls->lpszMenuName);
-
+          if (IS_INTRESOURCE(Wnd->pcls->lpszMenuName))
+          {
+             MenuName.Length = 0;
+             MenuName.MaximumLength = 0;
+             MenuName.Buffer = Wnd->pcls->lpszMenuName;
+          }
+          else
+          {
+             RtlInitUnicodeString( &MenuName, Wnd->pcls->lpszMenuName);
+          }
           hMenu = co_IntCallLoadMenu( Wnd->pcls->hModule, &MenuName);
           if (hMenu) IntSetMenu(Window, hMenu, &MenuChanged);
       }
@@ -3262,7 +3272,7 @@ CLEANUP:
  * Status
  *    @implemented
  */
-HWND FASTCALL UserGetShellWindow()
+HWND FASTCALL UserGetShellWindow(VOID)
 {
    PWINSTATION_OBJECT WinStaObject;
    HWND Ret;
@@ -3301,7 +3311,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status;
-   PW32THREADINFO ti;
+   PTHREADINFO ti;
 
    DPRINT("Enter NtUserSetShellWindowEx\n");
    UserEnterExclusive();
@@ -4964,7 +4974,7 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
 
       if (fShow)
       {
-         if (pWnd->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP)
+         if (pWnd->Wnd->state & WNDS_HIDDENPOPUP)
          {
             /* In Windows, ShowOwnedPopups(TRUE) generates
              * WM_SHOWWINDOW messages with SW_PARENTOPENING,

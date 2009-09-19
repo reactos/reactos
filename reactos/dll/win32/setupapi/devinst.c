@@ -1409,6 +1409,17 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     HKEY key = INVALID_HANDLE_VALUE;
+    LPWSTR lpGuidString = NULL;
+    LPWSTR DriverKey = NULL; /* {GUID}\Index */
+    LPWSTR pDeviceInstance; /* Points into DriverKey, on the Index field */
+    DWORD Index; /* Index used in the DriverKey name */
+    DWORD rc;
+    HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
+    HKEY hEnumKey = NULL;
+    HKEY hClassKey = NULL;
+    HKEY hDeviceKey = INVALID_HANDLE_VALUE;
+    HKEY hKey = NULL;
+    HKEY RootKey;
 
     TRACE("%p %p %lu %lu %lu %p %s\n", DeviceInfoSet, DeviceInfoData, Scope,
             HwProfile, KeyType, InfHandle, debugstr_w(InfSectionName));
@@ -1449,18 +1460,6 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
         SetLastError(ERROR_INVALID_PARAMETER);
         return INVALID_HANDLE_VALUE;
     }
-
-        LPWSTR lpGuidString = NULL;
-        LPWSTR DriverKey = NULL; /* {GUID}\Index */
-        LPWSTR pDeviceInstance; /* Points into DriverKey, on the Index field */
-        DWORD Index; /* Index used in the DriverKey name */
-        DWORD rc;
-        HKEY hHWProfileKey = INVALID_HANDLE_VALUE;
-        HKEY hEnumKey = NULL;
-        HKEY hClassKey = NULL;
-        HKEY hDeviceKey = INVALID_HANDLE_VALUE;
-        HKEY hKey = NULL;
-        HKEY RootKey;
 
         if (Scope == DICS_FLAG_GLOBAL)
             RootKey = set->HKLM;
@@ -1670,6 +1669,7 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
 {
     struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
     BOOL ret = FALSE;
+    SP_DEVINFO_DATA DevInfo;
 
     TRACE("%p %s %s %s %p %x %p\n", DeviceInfoSet, debugstr_w(DeviceName),
         debugstr_guid(ClassGuid), debugstr_w(DeviceDescription),
@@ -1707,8 +1707,6 @@ BOOL WINAPI SetupDiCreateDeviceInfoW(
         SetLastError(ERROR_INVALID_FLAGS);
         return FALSE;
     }
-
-        SP_DEVINFO_DATA DevInfo;
 
         if (CreationFlags & DICD_GENERATE_ID)
         {

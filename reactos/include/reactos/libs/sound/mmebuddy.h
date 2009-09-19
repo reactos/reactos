@@ -184,6 +184,10 @@ typedef struct _SOUND_OVERLAPPED
     struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance;
     PWAVEHDR Header;
     BOOL PerformCompletion;
+
+    DWORD OriginalBufferSize;
+    LPOVERLAPPED_COMPLETION_ROUTINE OriginalCompletionRoutine;
+
 } SOUND_OVERLAPPED, *PSOUND_OVERLAPPED;
 
 typedef MMRESULT (*WAVE_COMMIT_FUNC)(
@@ -329,6 +333,7 @@ typedef struct _SOUND_DEVICE_INSTANCE
     DWORD LoopsRemaining;
     DWORD FrameSize;
     DWORD BufferCount;
+    WAVEFORMATEX WaveFormatEx;
 } SOUND_DEVICE_INSTANCE, *PSOUND_DEVICE_INSTANCE;
 
 /* This lives in WAVEHDR.reserved */
@@ -365,27 +370,27 @@ ReleaseEntrypointMutex(
 VOID
 NotifyMmeClient(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  UINT Message,
-    IN  DWORD_PTR Parameter);
+    IN  DWORD Message,
+    IN  DWORD Parameter);
 
 MMRESULT
 MmeGetSoundDeviceCapabilities(
     IN  MMDEVICE_TYPE DeviceType,
     IN  DWORD DeviceId,
-    IN  DWORD_PTR Capabilities,
+    IN  PVOID Capabilities,
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
 MmeOpenWaveDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  UINT DeviceId,
+    IN  DWORD DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
     IN  DWORD Flags,
-    OUT SIZE_T* PrivateHandle);
+    OUT DWORD* PrivateHandle);
 
 MMRESULT
 MmeCloseDevice(
-    IN  DWORD_PTR PrivateHandle);
+    IN  DWORD PrivateHandle);
 
 MMRESULT
 MmeGetPosition(
@@ -407,7 +412,7 @@ MmeGetPosition(
 
 MMRESULT
 MmeResetWavePlayback(
-    IN  SIZE_T PrivateHandle);
+    IN  DWORD PrivateHandle);
 
 
 /*

@@ -397,7 +397,7 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
     ULONG OwnerSize = 0, GroupSize = 0;
     ULONG SaclSize = 0, DaclSize = 0;
     ULONG DescriptorSize = 0;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     if(OriginalSecurityDescriptor != NULL)
     {
@@ -417,8 +417,7 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                 
                 if(OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
                 {
-                    Status = STATUS_UNKNOWN_REVISION;
-                    _SEH2_LEAVE;
+                    _SEH2_YIELD(return STATUS_UNKNOWN_REVISION);
                 }
                 
                 /* make a copy on the stack */
@@ -452,14 +451,10 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH2_GetExceptionCode();
+                /* Return the exception code */
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
-            
-            if(!NT_SUCCESS(Status))
-            {
-                return Status;
-            }
         }
         else if(!CaptureIfKernel)
         {
@@ -547,14 +542,10 @@ sizeof(ULONG));                                         \
 }                                                                      \
 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)                                                            \
 {                                                                      \
-Status = _SEH2_GetExceptionCode();                                    \
+_SEH2_YIELD(return _SEH2_GetExceptionCode());                          \
 }                                                                      \
 _SEH2_END;                                                              \
 \
-if(!NT_SUCCESS(Status))                                                \
-{                                                                      \
-return Status;                                                       \
-}                                                                      \
 }                                                                        \
 else                                                                     \
 {                                                                        \
@@ -591,14 +582,10 @@ sizeof(ULONG));                                         \
 }                                                                      \
 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)                                                            \
 {                                                                      \
-Status = _SEH2_GetExceptionCode();                                    \
+_SEH2_YIELD(return _SEH2_GetExceptionCode());                          \
 }                                                                      \
 _SEH2_END;                                                              \
 \
-if(!NT_SUCCESS(Status))                                                \
-{                                                                      \
-return Status;                                                       \
-}                                                                      \
 }                                                                        \
 else                                                                     \
 {                                                                        \
@@ -686,22 +673,17 @@ Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                Status = _SEH2_GetExceptionCode();
+                /* we failed to copy the data to the new descriptor */
+                ExFreePool(NewDescriptor);
+                _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
             
-            if(NT_SUCCESS(Status))
-            {
-                /* we're finally done! copy the pointer to the captured descriptor to
-                 to the caller */
-                *CapturedSecurityDescriptor = NewDescriptor;
-                return STATUS_SUCCESS;
-            }
-            else
-            {
-                /* we failed to copy the data to the new descriptor */
-                ExFreePool(NewDescriptor);
-            }
+            /* we're finally done! copy the pointer to the captured descriptor to
+             to the caller */
+            *CapturedSecurityDescriptor = NewDescriptor;
+            return STATUS_SUCCESS;
+
         }
         else
         {

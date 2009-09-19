@@ -37,7 +37,7 @@ typedef struct _SERVICE
 /*  BOOLEAN ServiceRunning;*/	// needed ??
 } SERVICE, *PSERVICE;
 
-#define TAG_RTLREGISTRY TAG('R', 'q', 'r', 'v')
+#define TAG_RTLREGISTRY 'vrqR'
 
 /* GLOBALS ********************************************************************/
 

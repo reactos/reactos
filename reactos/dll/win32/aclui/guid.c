@@ -24,8 +24,4 @@
 #include <aclui.h>
 #include <objsel.h>
 
-#ifdef _MSC_VER
-#include <precomp.h>
-#endif
-
 /* NO CODE HERE, THIS IS JUST REQUIRED FOR THE GUID DEFINITIONS */

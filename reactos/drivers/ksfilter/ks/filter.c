@@ -25,9 +25,16 @@ typedef struct
     ULONG PinDescriptorCount;
     PKSFILTERFACTORY Factory;
     PFILE_OBJECT FileObject;
+    KMUTEX ProcessingMutex;
 
+
+    PFNKSFILTERPOWER Sleep;
+    PFNKSFILTERPOWER Wake;
 
     ULONG *PinInstanceCount;
+    PKSPIN * FirstPin;
+    KSPROCESSPIN_INDEXENTRY ProcessPinIndex;
+
 }IKsFilterImpl;
 
 const GUID IID_IKsControl = {0x28F54685L, 0x06FD, 0x11D2, {0xB2, 0x7A, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96}};
@@ -280,8 +287,43 @@ IKsFilter_fnAddProcessPin(
     IKsFilter * iface,
     IN PKSPROCESSPIN ProcessPin)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    PKSPROCESSPIN *Pins;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtbl);
+
+    /* first acquire processing mutex */
+    KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
+
+    /* allocate new pins array */
+    Pins = AllocateItem(NonPagedPool, sizeof(PKSPROCESSPIN) * (This->ProcessPinIndex.Count + 1));
+
+    /* check if allocation succeeded */
+    if (Pins)
+    {
+        if (This->ProcessPinIndex.Count)
+        {
+            /* copy old pin index */
+            RtlMoveMemory(Pins, This->ProcessPinIndex.Pins, sizeof(PKSPROCESSPIN) * This->ProcessPinIndex.Count);
+        }
+
+        /* add new process pin */
+        Pins[This->ProcessPinIndex.Count] = ProcessPin;
+
+        /* free old process pin */
+        FreeItem(This->ProcessPinIndex.Pins);
+
+        /* store new process pin index */
+        This->ProcessPinIndex.Pins = Pins;
+        This->ProcessPinIndex.Count++;
+    }
+
+    /* release process mutex */
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
+
+    if (Pins)
+        return STATUS_SUCCESS;
+    else
+        return STATUS_INSUFFICIENT_RESOURCES;
+
 }
 
 NTSTATUS
@@ -290,8 +332,33 @@ IKsFilter_fnRemoveProcessPin(
     IKsFilter * iface,
     IN PKSPROCESSPIN ProcessPin)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Index;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(iface, IKsFilterImpl, lpVtbl);
+
+    /* first acquire processing mutex */
+    KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
+
+    /* iterate through process pin index array and search for the process pin to be removed */
+    for(Index = 0; Index < This->ProcessPinIndex.Count; Index++)
+    {
+        if (This->ProcessPinIndex.Pins[Index] == ProcessPin)
+        {
+            /* found process pin */
+            if (Index + 1 < This->ProcessPinIndex.Count)
+            {
+                /* erase entry */
+                RtlMoveMemory(&This->ProcessPinIndex.Pins[Index], &This->ProcessPinIndex.Pins[Index+1], This->ProcessPinIndex.Count - Index - 1);
+            }
+            /* decrement process pin count */
+            This->ProcessPinIndex.Count--;
+        }
+    }
+
+    /* release process mutex */
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
+
+    /* done */
+    return STATUS_SUCCESS;
 }
 
 BOOL
@@ -426,21 +493,25 @@ IKsFilter_DispatchClose(
         Status = This->Factory->FilterDescriptor->Dispatch->Close(&This->Filter, Irp);
     }
 
-    if (Status != STATUS_PENDING)
+    if (NT_SUCCESS(Status) && Status != STATUS_PENDING)
     {
         /* save the result */
         Irp->IoStatus.Status = Status;
         /* complete irp */
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-        /* remove our instance from the filter factory */
-        This->FilterFactory->lpVtbl->RemoveFilterInstance(This->FilterFactory, Filter);
-
-        /* now release the acquired interface */
-        Filter->lpVtbl->Release(Filter);
+        /* FIXME remove our instance from the filter factory */
+        ASSERT(0);
 
         /* free object header */
         KsFreeObjectHeader(This->ObjectHeader);
+    }
+    else
+    {
+        /* complete and forget */
+        Irp->IoStatus.Status = Status;
+        /* complete irp */
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 
     /* done */
@@ -629,67 +700,16 @@ KspPinPropertyHandler(
 }
 
 NTSTATUS
-FindPropertyHandler(
-    IN PIO_STATUS_BLOCK IoStatus,
-    IN KSPROPERTY_SET * FilterPropertySet,
-    IN ULONG FilterPropertySetCount,
-    IN PKSPROPERTY Property,
-    IN ULONG InputBufferLength,
-    IN ULONG OutputBufferLength,
-    OUT PFNKSHANDLER *PropertyHandler)
-{
-    ULONG Index, ItemIndex;
-
-    for(Index = 0; Index < FilterPropertySetCount; Index++)
-    {
-        if (IsEqualGUIDAligned(&Property->Set, FilterPropertySet[Index].Set))
-        {
-            for(ItemIndex = 0; ItemIndex < FilterPropertySet[Index].PropertiesCount; ItemIndex++)
-            {
-                if (FilterPropertySet[Index].PropertyItem[ItemIndex].PropertyId == Property->Id)
-                {
-                    if (Property->Flags & KSPROPERTY_TYPE_SET)
-                        *PropertyHandler = FilterPropertySet[Index].PropertyItem[ItemIndex].SetPropertyHandler;
-
-                    if (Property->Flags & KSPROPERTY_TYPE_GET)
-                        *PropertyHandler = FilterPropertySet[Index].PropertyItem[ItemIndex].GetPropertyHandler;
-
-                    if (FilterPropertySet[Index].PropertyItem[ItemIndex].MinProperty > InputBufferLength)
-                    {
-                        /* too small input buffer */
-                        IoStatus->Information = FilterPropertySet[Index].PropertyItem[ItemIndex].MinProperty;
-                        IoStatus->Status = STATUS_BUFFER_TOO_SMALL;
-                        return STATUS_BUFFER_TOO_SMALL;
-                    }
-
-                    if (FilterPropertySet[Index].PropertyItem[ItemIndex].MinData > OutputBufferLength)
-                    {
-                        /* too small output buffer */
-                        IoStatus->Information = FilterPropertySet[Index].PropertyItem[ItemIndex].MinData;
-                        IoStatus->Status = STATUS_BUFFER_TOO_SMALL;
-                        return STATUS_BUFFER_TOO_SMALL;
-                    }
-                    return STATUS_SUCCESS;
-                }
-            }
-        }
-    }
-    return STATUS_UNSUCCESSFUL;
-}
-
-
-
-NTSTATUS
 NTAPI
 IKsFilter_DispatchDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp)
 {
     PIO_STACK_LOCATION IoStack;
-    PFNKSHANDLER PropertyHandler = NULL;
     IKsFilter * Filter;
     IKsFilterImpl * This;
     NTSTATUS Status;
+    PKSFILTER FilterInstance;
 
     /* obtain filter from object header */
     Status = IKsFilter_GetFilterFromIrp(Irp, &Filter);
@@ -715,19 +735,24 @@ IKsFilter_DispatchDeviceIoControl(
         return STATUS_NOT_IMPLEMENTED;
     }
 
-    /* find a supported property handler */
-    Status = FindPropertyHandler(&Irp->IoStatus, FilterPropertySet, 2, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, &PropertyHandler);
-    if (NT_SUCCESS(Status))
+    /* call property handler supported by ks */
+    Status = KspPropertyHandler(Irp, 2, FilterPropertySet, NULL, sizeof(KSPROPERTY_ITEM));
+
+    if (Status == STATUS_NOT_FOUND)
     {
-        KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PVOID)This;
-        DPRINT("Calling property handler %p\n", PropertyHandler);
-        Status = PropertyHandler(Irp, IoStack->Parameters.DeviceIoControl.Type3InputBuffer, Irp->UserBuffer);
-    }
-    else
-    {
-        /* call driver's property handler */
-        UNIMPLEMENTED
-        Status = STATUS_NOT_IMPLEMENTED;
+        /* get filter instance */
+        FilterInstance = Filter->lpVtbl->GetStruct(Filter);
+
+        /* check if the driver supports property sets */
+        if (FilterInstance->Descriptor->AutomationTable && FilterInstance->Descriptor->AutomationTable->PropertySetsCount)
+        {
+            /* call driver's filter property handler */
+            Status = KspPropertyHandler(Irp, 
+                                        FilterInstance->Descriptor->AutomationTable->PropertySetsCount,
+                                        FilterInstance->Descriptor->AutomationTable->PropertySets, 
+                                        NULL,
+                                        FilterInstance->Descriptor->AutomationTable->PropertyItemSize);
+        }
     }
 
     Irp->IoStatus.Status = Status;
@@ -766,6 +791,14 @@ IKsFilter_CreateDescriptors(
         This->PinInstanceCount = AllocateItem(NonPagedPool, sizeof(ULONG) * FilterDescriptor->PinDescriptorsCount);
         if(!This->PinDescriptors)
         {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* allocate first pin array */
+        This->FirstPin = AllocateItem(NonPagedPool, sizeof(PKSPIN) * FilterDescriptor->PinDescriptorsCount);
+        if(!This->FirstPin)
+        {
+            FreeItem(This->PinDescriptors);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -824,6 +857,240 @@ IKsFilter_CreateDescriptors(
 }
 
 NTSTATUS
+IKsFilter_CopyFilterDescriptor(
+    IKsFilterImpl * This,
+    const KSFILTER_DESCRIPTOR* FilterDescriptor)
+{
+    This->Filter.Descriptor = (const KSFILTER_DESCRIPTOR*)AllocateItem(NonPagedPool, sizeof(KSFILTER_DESCRIPTOR));
+    if (!This->Filter.Descriptor)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* copy all fields */
+    RtlMoveMemory((PVOID)This->Filter.Descriptor, FilterDescriptor, sizeof(KSFILTER_DESCRIPTOR));
+
+
+    /* perform deep copy of pin descriptors */
+    if (FilterDescriptor->PinDescriptorsCount)
+    {
+        KSPIN_DESCRIPTOR_EX * PinDescriptors = (KSPIN_DESCRIPTOR_EX *)AllocateItem(NonPagedPool, FilterDescriptor->PinDescriptorSize * FilterDescriptor->PinDescriptorsCount);
+
+
+        if (!PinDescriptors)
+        {
+            FreeItem((PVOID)This->Filter.Descriptor);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlMoveMemory((PVOID)PinDescriptors, FilterDescriptor->PinDescriptors, FilterDescriptor->PinDescriptorSize * FilterDescriptor->PinDescriptorsCount);
+
+        /* brain-dead gcc hack */
+        RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptors, PinDescriptors, sizeof(PKSPIN_DESCRIPTOR_EX));
+
+    }
+
+    /* perform deep copy of node descriptors */
+    if (FilterDescriptor->NodeDescriptorsCount)
+    {
+        KSNODE_DESCRIPTOR* NodeDescriptor = AllocateItem(NonPagedPool, FilterDescriptor->NodeDescriptorsCount * FilterDescriptor->NodeDescriptorSize);
+        if (!NodeDescriptor)
+        {
+            if (This->Filter.Descriptor->PinDescriptors)
+                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+            FreeItem((PVOID)This->Filter.Descriptor);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlMoveMemory((PVOID)NodeDescriptor, FilterDescriptor->NodeDescriptors, FilterDescriptor->NodeDescriptorsCount * FilterDescriptor->NodeDescriptorSize);
+
+        /* brain-dead gcc hack */
+        RtlMoveMemory((PVOID)&This->Filter.Descriptor->NodeDescriptors, NodeDescriptor, sizeof(PKSNODE_DESCRIPTOR));
+    }
+
+    /* perform deep copy of connections descriptors */
+    if (FilterDescriptor->NodeDescriptorsCount)
+    {
+        KSTOPOLOGY_CONNECTION* Connections = AllocateItem(NonPagedPool, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescriptor->ConnectionsCount);
+        if (!Connections)
+        {
+            if (This->Filter.Descriptor->PinDescriptors)
+                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+
+            if (This->Filter.Descriptor->NodeDescriptors)
+                FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+
+            FreeItem((PVOID)This->Filter.Descriptor);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        RtlMoveMemory((PVOID)Connections, FilterDescriptor->Connections, sizeof(KSTOPOLOGY_CONNECTION) * FilterDescriptor->ConnectionsCount);
+
+        /* brain-dead gcc hack */
+        RtlMoveMemory((PVOID)&This->Filter.Descriptor->Connections, Connections, sizeof(PKSTOPOLOGY_CONNECTION));
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+IKsFilter_AddPin(
+    IKsFilter * Filter,
+    PKSPIN Pin)
+{
+    PKSPIN NextPin, CurPin;
+    PKSBASIC_HEADER BasicHeader;
+    IKsFilterImpl * This = (IKsFilterImpl*)Filter;
+
+    /* sanity check */
+    ASSERT(Pin->Id < This->PinDescriptorCount);
+
+    if (This->FirstPin[Pin->Id] == NULL)
+    {
+        /* welcome first pin */
+        This->FirstPin[Pin->Id] = Pin;
+        return STATUS_SUCCESS;
+    }
+
+    /* get first pin */
+    CurPin = This->FirstPin[Pin->Id];
+
+    do
+    {
+        /* get next instantiated pin */
+        NextPin = KsPinGetNextSiblingPin(CurPin);
+        if (!NextPin)
+            break;
+
+        NextPin = CurPin;
+
+    }while(NextPin != NULL);
+
+    /* get basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)CurPin - sizeof(KSBASIC_HEADER));
+
+    /* store pin */
+    BasicHeader->Next.Pin = Pin;
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+NTAPI
+IKsFilter_DispatchCreatePin(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    IKsFilterImpl * This;
+    PKSOBJECT_CREATE_ITEM CreateItem;
+    PKSPIN_CONNECT Connect;
+    NTSTATUS Status;
+
+    /* get the create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
+
+    /* get the filter object */
+    This = (IKsFilterImpl*)CreateItem->Context;
+
+    /* acquire control mutex */
+    KeWaitForSingleObject(&This->Header.ControlMutex, Executive, KernelMode, FALSE, NULL);
+
+    /* now validate the connect request */
+    Status = KsValidateConnectRequest(Irp, This->PinDescriptorCount, This->PinDescriptors, &Connect);
+
+    if (NT_SUCCESS(Status))
+    {
+        if (This->PinInstanceCount[Connect->PinId] < This->Filter.Descriptor->PinDescriptors[Connect->PinId].InstancesPossible)
+        {
+            /* create the pin */
+            Status = KspCreatePin(DeviceObject, Irp, This->Header.KsDevice, This->FilterFactory, (IKsFilter*)&This->lpVtbl, Connect, (KSPIN_DESCRIPTOR_EX*)&This->Filter.Descriptor->PinDescriptors[Connect->PinId]);
+
+            if (NT_SUCCESS(Status))
+            {
+                /* successfully created pin, increment pin instance count */
+                This->PinInstanceCount[Connect->PinId]++;
+            }
+        }
+        else
+        {
+            /* maximum instance count reached, bye-bye */
+            Status = STATUS_UNSUCCESSFUL;
+        }
+    }
+
+    /* release control mutex */
+    KeReleaseMutex(&This->Header.ControlMutex, FALSE);
+
+    if (Status != STATUS_PENDING)
+    {
+        /* complete request */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    /* done */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+IKsFilter_DispatchCreateNode(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    UNIMPLEMENTED
+    Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return STATUS_UNSUCCESSFUL;
+}
+
+
+VOID
+IKsFilter_AttachFilterToFilterFactory(
+    IKsFilterImpl * This,
+    PKSFILTERFACTORY FilterFactory)
+{
+    PKSBASIC_HEADER BasicHeader;
+    PKSFILTER Filter;
+
+
+    /* get filter factory basic header */
+    BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)FilterFactory - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory);
+
+    if (BasicHeader->FirstChild.FilterFactory == NULL)
+    {
+        /* welcome first instantiated filter */
+        BasicHeader->FirstChild.Filter = &This->Filter;
+        return;
+    }
+
+    /* set to first entry */
+    Filter = BasicHeader->FirstChild.Filter;
+
+    do
+    {
+        /* get basic header */
+        BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Filter - sizeof(KSBASIC_HEADER));
+        /* sanity check */
+        ASSERT(BasicHeader->Type == KsObjectTypeFilter);
+
+        if (BasicHeader->Next.Filter)
+        {
+            /* iterate to next filter factory */
+            Filter = BasicHeader->Next.Filter;
+        }
+        else
+        {
+            /* found last entry */
+            break;
+        }
+    }while(FilterFactory);
+
+    /* attach filter factory */
+    BasicHeader->Next.Filter = &This->Filter;
+}
+
+NTSTATUS
 NTAPI
 KspCreateFilter(
     IN PDEVICE_OBJECT DeviceObject,
@@ -831,10 +1098,12 @@ KspCreateFilter(
     IN IKsFilterFactory *iface)
 {
     IKsFilterImpl * This;
+    IKsDevice *KsDevice;
     PKSFILTERFACTORY Factory;
     PIO_STACK_LOCATION IoStack;
     PDEVICE_EXTENSION DeviceExtension;
     NTSTATUS Status;
+    PKSOBJECT_CREATE_ITEM CreateItem;
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -853,19 +1122,68 @@ KspCreateFilter(
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    /* copy filter descriptor */
+    Status = IKsFilter_CopyFilterDescriptor(This, Factory->FilterDescriptor);
+    if (!NT_SUCCESS(Status))
+    {
+        /* not enough memory */
+        FreeItem(This);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
     /* get current irp stack */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* initialize object bag */
+    This->Filter.Bag = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_BAG));
+    if (!This->Filter.Bag)
+    {
+        /* no memory */
+        FreeItem(This);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate create items */
+    CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM) * 2);
+    if (!CreateItem)
+    {
+        /* no memory */
+        FreeItem(This);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* initialize pin create item */
+    CreateItem[0].Create = IKsFilter_DispatchCreatePin;
+    CreateItem[0].Context = (PVOID)This;
+    CreateItem[0].Flags = KSCREATE_ITEM_FREEONSTOP;
+    RtlInitUnicodeString(&CreateItem[0].ObjectClass, KSSTRING_Pin);
+    /* initialize node create item */
+    CreateItem[1].Create = IKsFilter_DispatchCreateNode;
+    CreateItem[1].Context = (PVOID)This;
+    CreateItem[1].Flags = KSCREATE_ITEM_FREEONSTOP;
+    RtlInitUnicodeString(&CreateItem[1].ObjectClass, KSSTRING_TopologyNode);
+
+
+    KsDevice = (IKsDevice*)&DeviceExtension->DeviceHeader->lpVtblIKsDevice;
+    KsDevice->lpVtbl->InitializeObjectBag(KsDevice, (PKSIOBJECT_BAG)This->Filter.Bag, NULL);
 
     /* initialize filter instance */
     This->ref = 1;
     This->lpVtbl = &vt_IKsFilter;
     This->lpVtblKsControl = &vt_IKsControl;
+
     This->Filter.Descriptor = Factory->FilterDescriptor;
     This->Factory = Factory;
     This->FilterFactory = iface;
     This->FileObject = IoStack->FileObject;
+    KeInitializeMutex(&This->ProcessingMutex, 0);
+    /* initialize basic header */
     This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
+    This->Header.Parent.KsFilterFactory = iface->lpVtbl->GetStruct(iface);
     This->Header.Type = KsObjectTypeFilter;
+    KeInitializeMutex(&This->Header.ControlMutex, 0);
+    InitializeListHead(&This->Header.EventList);
+    KeInitializeSpinLock(&This->Header.EventListLock);
 
     /* allocate the stream descriptors */
     Status = IKsFilter_CreateDescriptors(This, (PKSFILTER_DESCRIPTOR)Factory->FilterDescriptor);
@@ -873,39 +1191,34 @@ KspCreateFilter(
     {
         /* what can go wrong, goes wrong */
         FreeItem(This);
+        FreeItem(CreateItem);
         return Status;
     }
 
-    /* now add the filter instance to the filter factory */
-    Status = iface->lpVtbl->AddFilterInstance(iface, (IKsFilter*)&This->lpVtbl);
-
-    if (!NT_SUCCESS(Status))
+    /* does the filter have a filter dispatch */
+    if (Factory->FilterDescriptor->Dispatch)
     {
-        /* failed to add filter */
-        FreeItem(This);
+        /* does it have a create routine */
+        if (Factory->FilterDescriptor->Dispatch->Create)
+        {
+            /* now let driver initialize the filter instance */
+            Status = Factory->FilterDescriptor->Dispatch->Create(&This->Filter, Irp);
 
-        return Status;
-    }
+            if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
+            {
+                /* driver failed to initialize */
+                DPRINT1("Driver: Status %x\n", Status);
 
-    /* now let driver initialize the filter instance */
-    Status = Factory->FilterDescriptor->Dispatch->Create(&This->Filter, Irp);
-
-    if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
-    {
-        /* driver failed to initialize */
-        DPRINT1("Driver: Status %x\n", Status);
-
-        /* remove filter instance from filter factory */
-        iface->lpVtbl->RemoveFilterInstance(iface, (IKsFilter*)&This->lpVtbl);
-
-        /* free filter instance */
-        FreeItem(This);
-
-        return Status;
+                /* free filter instance */
+                FreeItem(This);
+                FreeItem(CreateItem);
+                return Status;
+            }
+        }
     }
 
     /* now allocate the object header */
-    Status = KsAllocateObjectHeader((PVOID*)&This->ObjectHeader, 0, NULL, Irp, &DispatchTable);
+    Status = KsAllocateObjectHeader((PVOID*)&This->ObjectHeader, 2, CreateItem, Irp, &DispatchTable);
     if (!NT_SUCCESS(Status))
     {
         /* failed to allocate object header */
@@ -914,19 +1227,20 @@ KspCreateFilter(
         return Status;
     }
 
-    /* initialize object header */
-    This->Header.Type = KsObjectTypeFilter;
-    This->Header.KsDevice = &DeviceExtension->DeviceHeader->KsDevice;
+    /* initialize object header extra fields */
     This->ObjectHeader->Type = KsObjectTypeFilter;
     This->ObjectHeader->Unknown = (PUNKNOWN)&This->lpVtbl;
+    This->ObjectHeader->ObjectType = (PVOID)&This->Filter;
 
+    /* attach filter to filter factory */
+    IKsFilter_AttachFilterToFilterFactory(This, This->Header.Parent.KsFilterFactory);
 
     /* completed initialization */
     return Status;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -934,11 +1248,13 @@ NTAPI
 KsFilterAcquireProcessingMutex(
     IN PKSFILTER Filter)
 {
-    UNIMPLEMENTED
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    KeWaitForSingleObject(&This->ProcessingMutex, Executive, KernelMode, FALSE, NULL);
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -946,11 +1262,13 @@ NTAPI
 KsFilterReleaseProcessingMutex(
     IN PKSFILTER Filter)
 {
-    UNIMPLEMENTED
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    KeReleaseMutex(&This->ProcessingMutex, FALSE);
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
@@ -960,8 +1278,41 @@ KsFilterAddTopologyConnections (
     IN ULONG NewConnectionsCount,
     IN const KSTOPOLOGY_CONNECTION *const NewTopologyConnections)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Count;
+    KSTOPOLOGY_CONNECTION * Connections;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    Count = This->Filter.Descriptor->ConnectionsCount + NewConnectionsCount;
+
+    /* allocate array */
+    Connections = AllocateItem(NonPagedPool, Count * sizeof(KSTOPOLOGY_CONNECTION));
+    if (!Connections)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* FIXME verify connections */
+
+    if (This->Filter.Descriptor->ConnectionsCount)
+    {
+        /* copy old connections */
+        RtlMoveMemory(Connections, This->Filter.Descriptor->Connections, sizeof(KSTOPOLOGY_CONNECTION) * This->Filter.Descriptor->ConnectionsCount);
+    }
+
+    /* add new connections */
+    RtlMoveMemory((PVOID)(Connections + This->Filter.Descriptor->ConnectionsCount), NewTopologyConnections, NewConnectionsCount);
+
+    /* add the new connections */
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->ConnectionsCount, &Count, sizeof(ULONG)); /* brain-dead gcc hack */
+
+    /* free old connections array */
+    if (This->Filter.Descriptor->ConnectionsCount)
+    {
+        FreeItem((PVOID)This->Filter.Descriptor->Connections);
+    }
+
+    /* brain-dead gcc hack */
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->Connections, Connections, sizeof(KSTOPOLOGY_CONNECTION*));
+
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -993,18 +1344,97 @@ KsFilterCreateNode (
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsFilterCreatePinFactory (
     IN PKSFILTER Filter,
-    IN const KSPIN_DESCRIPTOR_EX *const PinDescriptor,
+    IN const KSPIN_DESCRIPTOR_EX *const InPinDescriptor,
     OUT PULONG PinID)
 {
-    UNIMPLEMENTED
-    return STATUS_NOT_IMPLEMENTED;
+    ULONG Count;
+    ULONG *PinInstanceCount;
+    KSPIN_DESCRIPTOR_EX * PinDescriptorsEx;
+    KSPIN_DESCRIPTOR * PinDescriptors;
+    PKSPIN *FirstPin;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    /* calculate existing count */
+    Count = This->PinDescriptorCount + 1;
+
+    /* allocate pin descriptors array */
+    PinDescriptorsEx = AllocateItem(NonPagedPool, max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * Count);
+    if (!PinDescriptorsEx)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* allocate pin instance count array */
+    PinInstanceCount = AllocateItem(NonPagedPool, sizeof(ULONG) * Count);
+    if (!PinInstanceCount)
+    {
+        /* not enough memory */
+        FreeItem(PinDescriptorsEx);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate pin descriptor array for pin property handling */
+    PinDescriptors = AllocateItem(NonPagedPool, sizeof(KSPIN_DESCRIPTOR) * Count);
+    if (!PinDescriptors)
+    {
+        /* not enough memory */
+        FreeItem(PinDescriptorsEx);
+        FreeItem(PinInstanceCount);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* allocate first pin array */
+    FirstPin = AllocateItem(NonPagedPool, sizeof(PKSPIN) * Count);
+    if (!FirstPin)
+    {
+        /* not enough memory */
+        FreeItem(PinDescriptorsEx);
+        FreeItem(PinInstanceCount);
+        FreeItem(PinDescriptors);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* now copy all fields */
+    if (Count > 1)
+    {
+        /* copy old descriptors */
+        RtlMoveMemory(PinDescriptorsEx, This->Filter.Descriptor->PinDescriptors, max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * This->PinDescriptorCount);
+        RtlMoveMemory(PinInstanceCount, This->PinInstanceCount, This->PinDescriptorCount * sizeof(ULONG));
+        RtlMoveMemory(PinDescriptors, This->PinDescriptors, sizeof(KSPIN_DESCRIPTOR) * This->PinDescriptorCount);
+        RtlMoveMemory(FirstPin, This->FirstPin, sizeof(PKSPIN) * This->PinDescriptorCount);
+
+        /* now free old descriptors */
+        FreeItem(This->PinInstanceCount);
+        FreeItem((PVOID)This->Filter.Descriptor->PinDescriptors);
+        FreeItem(This->PinDescriptors);
+        FreeItem(This->FirstPin);
+    }
+
+    /* add new pin factory */
+    RtlMoveMemory((PVOID)((ULONG_PTR)PinDescriptorsEx + max(This->Filter.Descriptor->PinDescriptorSize, sizeof(KSPIN_DESCRIPTOR_EX)) * This->PinDescriptorCount), InPinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+    RtlMoveMemory((PVOID)(PinDescriptors + This->PinDescriptorCount), &InPinDescriptor->PinDescriptor, sizeof(KSPIN_DESCRIPTOR));
+
+    /* replace old descriptor by using a gcc-compliant hack */
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptors, PinDescriptorsEx, sizeof(KSPIN_DESCRIPTOR_EX*));
+    RtlMoveMemory((PVOID)&This->Filter.Descriptor->PinDescriptorsCount, &Count, sizeof(ULONG));
+
+    This->PinDescriptors = PinDescriptors;
+    This->PinInstanceCount = PinInstanceCount;
+    This->FirstPin = FirstPin;
+
+    /* store new pin id */
+    *PinID = This->PinDescriptorCount;
+
+    /* increment pin descriptor count */
+    This->PinDescriptorCount++;
+
+    return STATUS_SUCCESS;
+
 }
 
 /*
@@ -1021,7 +1451,7 @@ KsFilterGetAndGate(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 ULONG
@@ -1030,12 +1460,19 @@ KsFilterGetChildPinCount(
     IN PKSFILTER Filter,
     IN ULONG PinId)
 {
-    UNIMPLEMENTED
-    return 0;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    if (PinId >= This->PinDescriptorCount)
+    {
+        /* index is out of bounds */
+        return 0;
+    }
+    /* return pin instance count */
+    return This->PinInstanceCount[PinId];
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PKSPIN
@@ -1044,12 +1481,20 @@ KsFilterGetFirstChildPin(
     IN PKSFILTER Filter,
     IN ULONG PinId)
 {
-    UNIMPLEMENTED
-    return NULL;
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    if (PinId >= This->PinDescriptorCount)
+    {
+        /* index is out of bounds */
+        return NULL;
+    }
+
+    /* return first pin index */
+    return This->FirstPin[PinId];
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 VOID
@@ -1059,11 +1504,14 @@ KsFilterRegisterPowerCallbacks(
     IN PFNKSFILTERPOWER Sleep OPTIONAL,
     IN PFNKSFILTERPOWER Wake OPTIONAL)
 {
-    UNIMPLEMENTED
+    IKsFilterImpl * This = (IKsFilterImpl*)CONTAINING_RECORD(Filter, IKsFilterImpl, Filter);
+
+    This->Sleep = Sleep;
+    This->Wake = Wake;
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 PKSFILTER
@@ -1071,7 +1519,31 @@ NTAPI
 KsGetFilterFromIrp(
     IN PIRP Irp)
 {
-    UNIMPLEMENTED
-    return NULL;
-}
+    PIO_STACK_LOCATION IoStack;
+    PKSIOBJECT_HEADER ObjectHeader;
 
+    /* get current irp stack location */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* sanity check */
+    ASSERT(IoStack->FileObject);
+
+    /* get object header */
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+
+    if (ObjectHeader->Type == KsObjectTypeFilter)
+    {
+        /* irp is targeted at the filter */
+        return (PKSFILTER)ObjectHeader->ObjectType;
+    }
+    else if (ObjectHeader->Type == KsObjectTypePin)
+    {
+        /* irp is for a pin */
+        return KsPinGetParentFilter((PKSPIN)ObjectHeader->ObjectType);
+    }
+    else
+    {
+        /* irp is unappropiate to retrieve a filter */
+        return NULL;
+    }
+}

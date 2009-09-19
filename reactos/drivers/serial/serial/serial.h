@@ -13,8 +13,6 @@
 #include <stdio.h>
 #include <debug.h>
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
 /* See winbase.h */
 #define PST_RS232 1
 #define COMMPROP_INITIALIZED 0xE73CF52E
@@ -108,7 +106,7 @@ typedef struct _WORKITEM_DATA
 	BOOLEAN ReadAtLeastOneByte;
 } WORKITEM_DATA, *PWORKITEM_DATA;
 
-#define SERIAL_TAG TAG('S', 'e', 'r', 'l')
+#define SERIAL_TAG 'lreS'
 
 #define INFINITE ((ULONG)-1)
 

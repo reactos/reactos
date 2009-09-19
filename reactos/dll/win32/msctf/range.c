@@ -201,8 +201,21 @@ static HRESULT WINAPI Range_Collapse(ITfRange *iface, TfEditCookie ec,
         TfAnchor aPos)
 {
     Range *This = (Range *)iface;
-    FIXME("STUB:(%p)\n",This);
-    return E_NOTIMPL;
+    TRACE("(%p) %i %i\n",This,ec,aPos);
+
+    switch (aPos)
+    {
+        case TF_ANCHOR_START:
+            This->anchorEnd = This->anchorStart;
+            break;
+        case TF_ANCHOR_END:
+            This->anchorStart = This->anchorEnd;
+            break;
+        default:
+            return E_INVALIDARG;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI Range_IsEqualStart(ITfRange *iface, TfEditCookie ec,
@@ -329,5 +342,23 @@ HRESULT Range_Constructor(ITfContext *context, ITextStoreACP *textstore, DWORD l
     *ppOut = (ITfRange*)This;
     TRACE("returning %p\n", This);
 
+    return S_OK;
+}
+
+/* Internal conversion functions */
+
+HRESULT TF_SELECTION_to_TS_SELECTION_ACP(const TF_SELECTION *tf, TS_SELECTION_ACP *tsAcp)
+{
+    Range *This;
+
+    if (!tf || !tsAcp || !tf->range)
+        return E_INVALIDARG;
+
+    This = (Range *)tf->range;
+
+    tsAcp->acpStart = This->anchorStart;
+    tsAcp->acpEnd = This->anchorEnd;
+    tsAcp->style.ase = tf->style.ase;
+    tsAcp->style.fInterimChar = tf->style.fInterimChar;
     return S_OK;
 }

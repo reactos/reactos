@@ -1850,6 +1850,12 @@ NdisIPnPStartDevice(
    */
 
   NdisOpenConfiguration(&NdisStatus, &ConfigHandle, (NDIS_HANDLE)&WrapperContext);
+  if (NdisStatus != NDIS_STATUS_SUCCESS)
+  {
+      NDIS_DbgPrint(MIN_TRACE, ("Failed to open configuration key\n"));
+      ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      return NdisStatus;
+  }
 
   Size = sizeof(ULONG);
   Status = IoGetDeviceProperty(Adapter->NdisMiniportBlock.PhysicalDeviceObject,
@@ -2232,7 +2238,7 @@ NdisIAddDevice(
    * Gain the access to the miniport data structure first.
    */
 
-  MiniportPtr = IoGetDriverObjectExtension(DriverObject, (PVOID)TAG('D','I','M','N'));
+  MiniportPtr = IoGetDriverObjectExtension(DriverObject, (PVOID)'NMID');
   if (MiniportPtr == NULL)
     {
       NDIS_DbgPrint(MIN_TRACE, ("Can't get driver object extension.\n"));
@@ -2483,7 +2489,7 @@ NdisMRegisterMiniport(
    * structure in the driver extension or what?
    */
 
-  Status = IoAllocateDriverObjectExtension(Miniport->DriverObject, (PVOID)TAG('D','I','M','N'),
+  Status = IoAllocateDriverObjectExtension(Miniport->DriverObject, (PVOID)'NMID',
                                            sizeof(PNDIS_M_DRIVER_BLOCK), (PVOID*)&MiniportPtr);
   if (!NT_SUCCESS(Status))
     {

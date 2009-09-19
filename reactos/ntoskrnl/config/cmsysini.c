@@ -63,7 +63,7 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     CmpLockRegistry();
 
     /* Make sure this is a valid key body */
-    if (KeyBody->Type == TAG('k', 'y', '0', '2'))
+    if (KeyBody->Type == '20yk')
     {
         /* Get the KCB */
         Kcb = KeyBody->KeyControlBlock;
@@ -100,7 +100,7 @@ CmpCloseKeyObject(IN PEPROCESS Process OPTIONAL,
     if (SystemHandleCount > 1) return;
 
     /* Make sure we're a valid key body */
-    if (KeyBody->Type == TAG('k', 'y', '0', '2'))
+    if (KeyBody->Type == '20yk')
     {
         /* Don't do anything if we don't have a notify block */
         if (!KeyBody->NotifyBlock) return;
@@ -964,7 +964,7 @@ CmpCreateRegistryRoot(VOID)
 
     /* Initialize the object */
     RootKey->KeyControlBlock = Kcb;
-    RootKey->Type = TAG('k', 'y', '0', '2');
+    RootKey->Type = '20yk';
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
 

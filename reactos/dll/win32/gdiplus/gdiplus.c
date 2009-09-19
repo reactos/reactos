@@ -399,6 +399,25 @@ BOOL lengthen_path(GpPath *path, INT len)
     return TRUE;
 }
 
+void convert_32bppARGB_to_32bppPARGB(UINT width, UINT height,
+    BYTE *dst_bits, INT dst_stride, const BYTE *src_bits, INT src_stride)
+{
+    UINT x, y;
+    for (y=0; y<height; y++)
+    {
+        const BYTE *src=src_bits+y*src_stride;
+        BYTE *dst=dst_bits+y*dst_stride;
+        for (x=0; x<width; x++)
+        {
+            BYTE alpha=src[3];
+            *dst++ = *src++ * alpha / 255;
+            *dst++ = *src++ * alpha / 255;
+            *dst++ = *src++ * alpha / 255;
+            *dst++ = *src++;
+        }
+    }
+}
+
 /* recursive deletion of GpRegion nodes */
 inline void delete_element(region_element* element)
 {

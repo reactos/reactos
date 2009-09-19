@@ -96,9 +96,7 @@ VReportBackend::GenerateReport ( FILE* OUT )
 	{
 		Module& module = *p->second;
 		if ((module.type != Iso) &&
-			(module.type != LiveIso) &&
-			(module.type != IsoRegTest) &&
-			(module.type != LiveIsoRegTest))
+			(module.type != LiveIso))
 		{
 			Module& module = *p->second;
 

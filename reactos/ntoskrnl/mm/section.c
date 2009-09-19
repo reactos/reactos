@@ -125,7 +125,7 @@ MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
     /* Allocate memory for our structure */
     ObjectNameInfo = ExAllocatePoolWithTag(PagedPool,
                                            1024,
-                                           TAG('M', 'm', ' ', ' '));
+                                           '  mM');
     if (!ObjectNameInfo) return STATUS_NO_MEMORY;
 
     /* Query the name */
@@ -136,7 +136,7 @@ MmGetFileNameForSection(IN PROS_SECTION_OBJECT Section,
     if (!NT_SUCCESS(Status))
     {
         /* Failed, free memory */
-        ExFreePoolWithTag(ObjectNameInfo, TAG('M', 'm', ' ', ' '));
+        ExFreePoolWithTag(ObjectNameInfo, '  mM');
         return Status;
     }
 
@@ -191,7 +191,7 @@ MmGetFileNameForAddress(IN PVOID Address,
                                 ModuleNameInformation->Name.Buffer);
 
          /* Free temp taged buffer from MmGetFileNameForSection() */
-         ExFreePoolWithTag(ModuleNameInformation, TAG('M', 'm', ' ', ' '));
+         ExFreePoolWithTag(ModuleNameInformation, '  mM');
          DPRINT("Found ModuleName %S by address %p\n",
                 ModuleName->Buffer,Address);
       }
@@ -2328,6 +2328,8 @@ MmInitSectionImplementation(VOID)
    ObjectTypeInitializer.CloseProcedure = MmpCloseSection;
    ObjectTypeInitializer.ValidAccessMask = SECTION_ALL_ACCESS;
    ObCreateObjectType(&Name, &ObjectTypeInitializer, NULL, &MmSectionObjectType);
+    
+   MmCreatePhysicalMemorySection();
 
    return(STATUS_SUCCESS);
 }
@@ -2755,7 +2757,11 @@ ExeFmtpReadFile(IN PVOID File,
     */
    Buffer = ExAllocatePoolWithTag(PagedPool,
                                   BufferSize,
-                                  TAG('M', 'm', 'X', 'r'));
+                                  'rXmM');
+   if (!Buffer)
+   {
+      KeBugCheck(MEMORY_MANAGEMENT);
+   }
 
    UsedSize = 0;
 
@@ -2806,7 +2812,7 @@ ExeFmtpReadFile(IN PVOID File,
    }
    else
    {
-      ExFreePoolWithTag(Buffer, TAG('M', 'm', 'X', 'r'));
+      ExFreePoolWithTag(Buffer, 'rXmM');
    }
 
    return Status;
@@ -3215,7 +3221,7 @@ ExeFmtpCreateImageSection(HANDLE FileHandle,
          break;
    }
 
-   ExFreePoolWithTag(FileHeaderBuffer, TAG('M', 'm', 'X', 'r'));
+   ExFreePoolWithTag(FileHeaderBuffer, 'rXmM');
 
    /*
     * No loader handled the format
@@ -3496,7 +3502,7 @@ NtCreateSection (OUT PHANDLE SectionHandle,
    LARGE_INTEGER SafeMaximumSize;
    PVOID SectionObject;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
 
    PreviousMode = ExGetPreviousMode();
 
@@ -3514,14 +3520,10 @@ NtCreateSection (OUT PHANDLE SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+         /* Return the exception code */
+         _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
 
    Status = MmCreateSection(&SectionObject,
@@ -3570,7 +3572,7 @@ NtOpenSection(PHANDLE   SectionHandle,
 {
    HANDLE hSection;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
 
    PreviousMode = ExGetPreviousMode();
 
@@ -3582,14 +3584,10 @@ NtOpenSection(PHANDLE   SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
 
    Status = ObOpenObjectByName(ObjectAttributes,
@@ -3729,7 +3727,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
    PEPROCESS Process;
    KPROCESSOR_MODE PreviousMode;
    PMMSUPPORT AddressSpace;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
    ULONG tmpProtect;
    ACCESS_MASK DesiredAccess;
 
@@ -3779,14 +3777,10 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+         /* Return the exception code */
+         _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
    else
    {
@@ -4263,7 +4257,7 @@ NtQuerySection(IN HANDLE SectionHandle,
 {
    PROS_SECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
    PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
@@ -4393,7 +4387,7 @@ NtExtendSection(IN HANDLE SectionHandle,
    LARGE_INTEGER SafeNewMaximumSize;
    PROS_SECTION_OBJECT Section;
    KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+   NTSTATUS Status;
 
    PreviousMode = ExGetPreviousMode();
 
@@ -4407,14 +4401,10 @@ NtExtendSection(IN HANDLE SectionHandle,
      }
      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
      {
-       Status = _SEH2_GetExceptionCode();
+        /* Return the exception code */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
      }
      _SEH2_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
    }
 
    Status = ObReferenceObjectByHandle(SectionHandle,

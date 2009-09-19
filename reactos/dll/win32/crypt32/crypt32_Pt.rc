@@ -20,7 +20,9 @@
 
 #include "cryptres.h"
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE DISCARDABLE
 {
@@ -108,11 +110,11 @@ STRINGTABLE DISCARDABLE
     IDS_CMC_ATTRIBUTES "Atributos CMC"
     IDS_PKCS_7_DATA "Dados PKCS 7"
     IDS_PKCS_7_SIGNED "Assinado PKCS 7"
-    IDS_PKCS_7_ENVELOPED "PKCS 7 Enveloped"
-    IDS_PKCS_7_SIGNED_ENVELOPED "PKCS 7 Signed Enveloped"
+    IDS_PKCS_7_ENVELOPED "PKCS 7 Envolvido"
+    IDS_PKCS_7_SIGNED_ENVELOPED "PKCS 7 Assinado Envolvido"
     IDS_PKCS_7_DIGESTED "PKCS 7 Resumido"
     IDS_PKCS_7_ENCRYPTED "PKCS 7 Cifrado"
-    IDS_PREVIOUS_CA_CERT_HASH "Hash Certificado CA prévio"
+    IDS_PREVIOUS_CA_CERT_HASH "Hash anterior de Certificado CA"
     IDS_CRL_VIRTUAL_BASE "Número CRL de Base Virtual"
     IDS_CRL_NEXT_PUBLISH "Próxima Publicação CRL"
     IDS_CA_EXCHANGE "Certificado de Cifra CA"
@@ -173,6 +175,8 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_MY "Pessoal"
     IDS_LOCALIZEDNAME_CA "Autoridades de Certificação Intermédias"
     IDS_LOCALIZEDNAME_ADDRESSBOOK "Outras pessoas"
+    IDS_LOCALIZEDNAME_TRUSTEDPUBLISHER "Publicadores Confiáveis"
+    IDS_LOCALIZEDNAME_DISALLOWED "Certificados Desconfiáveis"
 }
 
 STRINGTABLE DISCARDABLE
@@ -219,4 +223,21 @@ STRINGTABLE DISCARDABLE
     IDS_FINANCIAL_CRITERIA_MEETS_CRITERIA "Conforme os Critérios="
     IDS_YES "Sim"
     IDS_NO "Não"
+    IDS_DIGITAL_SIGNATURE "Assinatura Digital"
+    IDS_NON_REPUDIATION "Não-Repudiação"
+    IDS_KEY_ENCIPHERMENT "Ciframento de Chaves"
+    IDS_DATA_ENCIPHERMENT "Ciframento de Dados"
+    IDS_KEY_AGREEMENT "Acordo de Chaves"
+    IDS_CERT_SIGN "Assinatura de Certificados"
+    IDS_OFFLINE_CRL_SIGN "Assinatura CRL Off-line"
+    IDS_CRL_SIGN "Assinatura CRL"
+    IDS_ENCIPHER_ONLY "Cifrar apenas"
+    IDS_DECIPHER_ONLY "Decifrar apenas"
+    IDS_NETSCAPE_SSL_CLIENT "Autenticação de Cliente SSL"
+    IDS_NETSCAPE_SSL_SERVER "Autenticação de Servidor SSL"
+    IDS_NETSCAPE_SMIME "S/MIME"
+    IDS_NETSCAPE_SIGN "Assinatura"
+    IDS_NETSCAPE_SSL_CA "SSL CA"
+    IDS_NETSCAPE_SMIME_CA "S/MIME CA"
+    IDS_NETSCAPE_SIGN_CA "CA de Assinatura"
 }

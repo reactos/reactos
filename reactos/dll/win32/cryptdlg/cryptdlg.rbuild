@@ -15,11 +15,5 @@
 	<library>wintrust</library>
 	<library>ntdll</library>
 	<file>main.c</file>
-	<file>cryptdlg_De.rc</file>
-	<file>cryptdlg_En.rc</file>
-	<file>cryptdlg_Fr.rc</file>
-	<file>cryptdlg_Ko.rc</file>
-	<file>cryptdlg_Lt.rc</file>
-	<file>cryptdlg_Nl.rc</file>
-	<file>cryptdlg_Ro.rc</file>
+	<file>cryptdlg.rc</file>
 </module>

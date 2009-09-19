@@ -313,8 +313,9 @@ LRESULT CALLBACK WindowProcedure (HWND hwnd, UINT message, WPARAM wParam, LPARAM
             if (hwnd==hwndMiniature)
             {
                 long mclient[4];
+                HDC hdc;
                 GetClientRect(hwndMiniature, (LPRECT)&mclient);
-                HDC hdc = GetDC(hwndMiniature);
+                hdc = GetDC(hwndMiniature);
                 BitBlt(hdc, -min(imgXRes*GetScrollPos(hScrollbox, SB_HORZ)/10000, imgXRes-mclient[2]), 
                     -min(imgYRes*GetScrollPos(hScrollbox, SB_VERT)/10000, imgYRes-mclient[3]), imgXRes, imgYRes, hDrawingDC, 0, 0, SRCCOPY);
                 ReleaseDC(hwndMiniature, hdc);

@@ -9,6 +9,7 @@
 	<define name="__WINESRC__" />
 	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>categorymgr.c</file>
+	<file>compartmentmgr.c</file>
 	<file>context.c</file>
 	<file>documentmgr.c</file>
 	<file>inputprocessor.c</file>
@@ -20,12 +21,18 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
+	<library>oleaut32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>kernel32</library>
+	<library>msctf_local_interface</library>
+	<library>textstor_local_interface</library>
 	<library>ntdll</library>
 </module>
 <module name="msctf_local_interface" type="idlinterface">
 	<file>msctf_local.idl</file>
+</module>
+<module name="textstor_local_interface" type="idlinterface">
+	<file>textstor_local.idl</file>
 </module>
 </group>

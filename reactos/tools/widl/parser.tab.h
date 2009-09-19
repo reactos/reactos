@@ -1,27 +1,37 @@
-/* A Bison parser, made by GNU Bison 2.1.  */
 
-/* Skeleton parser for Yacc-like parsing with Bison,
-   Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005 Free Software Foundation, Inc.
+/* A Bison parser, made by GNU Bison 2.4.1.  */
 
-   This program is free software; you can redistribute it and/or modify
+/* Skeleton interface for Bison's Yacc-like parsers in C
+   
+      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
+   Free Software Foundation, Inc.
+   
+   This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2, or (at your option)
-   any later version.
-
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+   
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-
+   
    You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor,
-   Boston, MA 02110-1301, USA.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
-/* As a special exception, when this file is copied by Bison into a
-   Bison output file, you may use that output file without restriction.
-   This special exception was added by the Free Software Foundation
-   in version 1.24 of Bison.  */
+/* As a special exception, you may create a larger work that contains
+   part or all of the Bison parser skeleton and distribute that work
+   under terms of your choice, so long as that work isn't itself a
+   parser generator using the skeleton or a modified version thereof
+   as a parser skeleton.  Alternatively, if you modify or redistribute
+   the parser skeleton itself, you may (at your option) remove this
+   special exception, which will cause the skeleton and the resulting
+   Bison output files to be licensed under the GNU General Public
+   License without this special exception.
+   
+   This special exception was added by the Free Software Foundation in
+   version 2.2 of Bison.  */
+
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -147,196 +157,48 @@
      tSAFEARRAY = 373,
      tSHORT = 374,
      tSIGNED = 375,
-     tSINGLE = 376,
-     tSIZEIS = 377,
-     tSIZEOF = 378,
-     tSMALL = 379,
-     tSOURCE = 380,
-     tSTATIC = 381,
-     tSTDCALL = 382,
-     tSTRICTCONTEXTHANDLE = 383,
-     tSTRING = 384,
-     tSTRUCT = 385,
-     tSWITCH = 386,
-     tSWITCHIS = 387,
-     tSWITCHTYPE = 388,
-     tTRANSMITAS = 389,
-     tTRUE = 390,
-     tTYPEDEF = 391,
-     tUNION = 392,
-     tUNIQUE = 393,
-     tUNSIGNED = 394,
-     tUUID = 395,
-     tV1ENUM = 396,
-     tVARARG = 397,
-     tVERSION = 398,
-     tVOID = 399,
-     tWCHAR = 400,
-     tWIREMARSHAL = 401,
-     ADDRESSOF = 402,
-     NEG = 403,
-     POS = 404,
-     PPTR = 405,
-     CAST = 406
+     tSIZEIS = 376,
+     tSIZEOF = 377,
+     tSMALL = 378,
+     tSOURCE = 379,
+     tSTATIC = 380,
+     tSTDCALL = 381,
+     tSTRICTCONTEXTHANDLE = 382,
+     tSTRING = 383,
+     tSTRUCT = 384,
+     tSWITCH = 385,
+     tSWITCHIS = 386,
+     tSWITCHTYPE = 387,
+     tTRANSMITAS = 388,
+     tTRUE = 389,
+     tTYPEDEF = 390,
+     tUNION = 391,
+     tUNIQUE = 392,
+     tUNSIGNED = 393,
+     tUUID = 394,
+     tV1ENUM = 395,
+     tVARARG = 396,
+     tVERSION = 397,
+     tVOID = 398,
+     tWCHAR = 399,
+     tWIREMARSHAL = 400,
+     ADDRESSOF = 401,
+     NEG = 402,
+     POS = 403,
+     PPTR = 404,
+     CAST = 405
    };
 #endif
-/* Tokens.  */
-#define aIDENTIFIER 258
-#define aKNOWNTYPE 259
-#define aNUM 260
-#define aHEXNUM 261
-#define aDOUBLE 262
-#define aSTRING 263
-#define aWSTRING 264
-#define aUUID 265
-#define aEOF 266
-#define SHL 267
-#define SHR 268
-#define MEMBERPTR 269
-#define EQUALITY 270
-#define INEQUALITY 271
-#define GREATEREQUAL 272
-#define LESSEQUAL 273
-#define LOGICALOR 274
-#define LOGICALAND 275
-#define tAGGREGATABLE 276
-#define tALLOCATE 277
-#define tAPPOBJECT 278
-#define tASYNC 279
-#define tASYNCUUID 280
-#define tAUTOHANDLE 281
-#define tBINDABLE 282
-#define tBOOLEAN 283
-#define tBROADCAST 284
-#define tBYTE 285
-#define tBYTECOUNT 286
-#define tCALLAS 287
-#define tCALLBACK 288
-#define tCASE 289
-#define tCDECL 290
-#define tCHAR 291
-#define tCOCLASS 292
-#define tCODE 293
-#define tCOMMSTATUS 294
-#define tCONST 295
-#define tCONTEXTHANDLE 296
-#define tCONTEXTHANDLENOSERIALIZE 297
-#define tCONTEXTHANDLESERIALIZE 298
-#define tCONTROL 299
-#define tCPPQUOTE 300
-#define tDEFAULT 301
-#define tDEFAULTCOLLELEM 302
-#define tDEFAULTVALUE 303
-#define tDEFAULTVTABLE 304
-#define tDISPLAYBIND 305
-#define tDISPINTERFACE 306
-#define tDLLNAME 307
-#define tDOUBLE 308
-#define tDUAL 309
-#define tENDPOINT 310
-#define tENTRY 311
-#define tENUM 312
-#define tERRORSTATUST 313
-#define tEXPLICITHANDLE 314
-#define tEXTERN 315
-#define tFALSE 316
-#define tFASTCALL 317
-#define tFLOAT 318
-#define tHANDLE 319
-#define tHANDLET 320
-#define tHELPCONTEXT 321
-#define tHELPFILE 322
-#define tHELPSTRING 323
-#define tHELPSTRINGCONTEXT 324
-#define tHELPSTRINGDLL 325
-#define tHIDDEN 326
-#define tHYPER 327
-#define tID 328
-#define tIDEMPOTENT 329
-#define tIIDIS 330
-#define tIMMEDIATEBIND 331
-#define tIMPLICITHANDLE 332
-#define tIMPORT 333
-#define tIMPORTLIB 334
-#define tIN 335
-#define tIN_LINE 336
-#define tINLINE 337
-#define tINPUTSYNC 338
-#define tINT 339
-#define tINT64 340
-#define tINTERFACE 341
-#define tLCID 342
-#define tLENGTHIS 343
-#define tLIBRARY 344
-#define tLOCAL 345
-#define tLONG 346
-#define tMETHODS 347
-#define tMODULE 348
-#define tNONBROWSABLE 349
-#define tNONCREATABLE 350
-#define tNONEXTENSIBLE 351
-#define tNULL 352
-#define tOBJECT 353
-#define tODL 354
-#define tOLEAUTOMATION 355
-#define tOPTIONAL 356
-#define tOUT 357
-#define tPASCAL 358
-#define tPOINTERDEFAULT 359
-#define tPROPERTIES 360
-#define tPROPGET 361
-#define tPROPPUT 362
-#define tPROPPUTREF 363
-#define tPTR 364
-#define tPUBLIC 365
-#define tRANGE 366
-#define tREADONLY 367
-#define tREF 368
-#define tREGISTER 369
-#define tREQUESTEDIT 370
-#define tRESTRICTED 371
-#define tRETVAL 372
-#define tSAFEARRAY 373
-#define tSHORT 374
-#define tSIGNED 375
-#define tSINGLE 376
-#define tSIZEIS 377
-#define tSIZEOF 378
-#define tSMALL 379
-#define tSOURCE 380
-#define tSTATIC 381
-#define tSTDCALL 382
-#define tSTRICTCONTEXTHANDLE 383
-#define tSTRING 384
-#define tSTRUCT 385
-#define tSWITCH 386
-#define tSWITCHIS 387
-#define tSWITCHTYPE 388
-#define tTRANSMITAS 389
-#define tTRUE 390
-#define tTYPEDEF 391
-#define tUNION 392
-#define tUNIQUE 393
-#define tUNSIGNED 394
-#define tUUID 395
-#define tV1ENUM 396
-#define tVARARG 397
-#define tVERSION 398
-#define tVOID 399
-#define tWCHAR 400
-#define tWIREMARSHAL 401
-#define ADDRESSOF 402
-#define NEG 403
-#define POS 404
-#define PPTR 405
-#define CAST 406
 
 
 
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+typedef union YYSTYPE
+{
 
-#if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 176 "parser.y"
-typedef union YYSTYPE {
+/* Line 1676 of yacc.c  */
+#line 156 "parser.y"
+
 	attr_t *attr;
 	attr_list_t *attr_list;
 	str_list_t *str_list;
@@ -363,15 +225,17 @@ typedef union YYSTYPE {
 	struct _import_t *import;
 	struct _decl_spec_t *declspec;
 	enum storage_class stgclass;
+
+
+
+/* Line 1676 of yacc.c  */
+#line 233 "parser.tab.h"
 } YYSTYPE;
-/* Line 1447 of yacc.c.  */
-#line 369 "parser.tab.h"
+# define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
-# define YYSTYPE_IS_TRIVIAL 1
 #endif
 
 extern YYSTYPE parser_lval;
-
 
 

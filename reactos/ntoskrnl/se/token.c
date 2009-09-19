@@ -287,7 +287,7 @@ SepDuplicateToken(PTOKEN Token,
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uLength,
-                                               TAG('T', 'O', 'K', 'u'));
+                                               'uKOT');
     
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
     
@@ -314,7 +314,7 @@ SepDuplicateToken(PTOKEN Token,
         AccessToken->Privileges =
         (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
-                                                    TAG('T', 'O', 'K', 'p'));
+                                                    'pKOT');
         
         for (i = 0; i < AccessToken->PrivilegeCount; i++)
         {
@@ -329,7 +329,7 @@ SepDuplicateToken(PTOKEN Token,
             AccessToken->DefaultDacl =
             (PACL) ExAllocatePoolWithTag(PagedPool,
                                          Token->DefaultDacl->AclSize,
-                                         TAG('T', 'O', 'K', 'd'));
+                                         'kDOT');
             memcpy(AccessToken->DefaultDacl,
                    Token->DefaultDacl,
                    Token->DefaultDacl->AclSize);
@@ -589,7 +589,7 @@ SepCreateSystemProcessToken(VOID)
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uSize,
-                                               TAG('T', 'O', 'K', 'u'));
+                                               'uKOT');
     SidArea = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
     
     i = 0;
@@ -621,7 +621,7 @@ SepCreateSystemProcessToken(VOID)
     AccessToken->Privileges =
     (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                 uSize,
-                                                TAG('T', 'O', 'K', 'p'));
+                                                'pKOT');
     
     i = 0;
     AccessToken->Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
@@ -700,7 +700,7 @@ SepCreateSystemProcessToken(VOID)
     AccessToken->DefaultDacl =
     (PACL) ExAllocatePoolWithTag(PagedPool,
                                  uSize,
-                                 TAG('T', 'O', 'K', 'd'));
+                                 'kDOT');
     Status = RtlCreateAcl(AccessToken->DefaultDacl, uSize, ACL_REVISION);
     if ( NT_SUCCESS(Status) )
     {
@@ -1414,7 +1414,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
     PTOKEN Token;
     KPROCESSOR_MODE PreviousMode;
     ULONG NeededAccess = TOKEN_ADJUST_DEFAULT;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
@@ -1454,7 +1454,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 if(TokenInformationLength >= sizeof(TOKEN_OWNER))
                 {
                     PTOKEN_OWNER to = (PTOKEN_OWNER)TokenInformation;
-                    PSID InputSid = NULL;
+                    PSID InputSid = NULL, CapturedSid;
                     
                     _SEH2_TRY
                     {
@@ -1462,28 +1462,23 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        Status = _SEH2_GetExceptionCode();
+                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
                     }
                     _SEH2_END;
                     
+                    Status = SepCaptureSid(InputSid,
+                                           PreviousMode,
+                                           PagedPool,
+                                           FALSE,
+                                           &CapturedSid);
                     if(NT_SUCCESS(Status))
                     {
-                        PSID CapturedSid;
-                        
-                        Status = SepCaptureSid(InputSid,
-                                               PreviousMode,
-                                               PagedPool,
-                                               FALSE,
-                                               &CapturedSid);
-                        if(NT_SUCCESS(Status))
-                        {
-                            RtlCopySid(RtlLengthSid(CapturedSid),
-                                       Token->UserAndGroups[Token->DefaultOwnerIndex].Sid,
-                                       CapturedSid);
-                            SepReleaseSid(CapturedSid,
-                                          PreviousMode,
-                                          FALSE);
-                        }
+                        RtlCopySid(RtlLengthSid(CapturedSid),
+                                   Token->UserAndGroups[Token->DefaultOwnerIndex].Sid,
+                                   CapturedSid);
+                        SepReleaseSid(CapturedSid,
+                                      PreviousMode,
+                                      FALSE);
                     }
                 }
                 else
@@ -1498,7 +1493,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 if(TokenInformationLength >= sizeof(TOKEN_PRIMARY_GROUP))
                 {
                     PTOKEN_PRIMARY_GROUP tpg = (PTOKEN_PRIMARY_GROUP)TokenInformation;
-                    PSID InputSid = NULL;
+                    PSID InputSid = NULL, CapturedSid;
                     
                     _SEH2_TRY
                     {
@@ -1506,28 +1501,23 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        Status = _SEH2_GetExceptionCode();
+                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
                     }
                     _SEH2_END;
                     
+                    Status = SepCaptureSid(InputSid,
+                                           PreviousMode,
+                                           PagedPool,
+                                           FALSE,
+                                           &CapturedSid);
                     if(NT_SUCCESS(Status))
                     {
-                        PSID CapturedSid;
-                        
-                        Status = SepCaptureSid(InputSid,
-                                               PreviousMode,
-                                               PagedPool,
-                                               FALSE,
-                                               &CapturedSid);
-                        if(NT_SUCCESS(Status))
-                        {
-                            RtlCopySid(RtlLengthSid(CapturedSid),
-                                       Token->PrimaryGroup,
-                                       CapturedSid);
-                            SepReleaseSid(CapturedSid,
-                                          PreviousMode,
-                                          FALSE);
-                        }
+                        RtlCopySid(RtlLengthSid(CapturedSid),
+                                   Token->PrimaryGroup,
+                                   CapturedSid);
+                        SepReleaseSid(CapturedSid,
+                                      PreviousMode,
+                                      FALSE);
                     }
                 }
                 else
@@ -1550,42 +1540,39 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     }
                     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                     {
-                        Status = _SEH2_GetExceptionCode();
+                        _SEH2_YIELD(return _SEH2_GetExceptionCode());
                     }
                     _SEH2_END;
-                    
-                    if(NT_SUCCESS(Status))
+
+                    if(InputAcl != NULL)
                     {
-                        if(InputAcl != NULL)
+                        PACL CapturedAcl;
+
+                        /* capture and copy the dacl */
+                        Status = SepCaptureAcl(InputAcl,
+                                               PreviousMode,
+                                               PagedPool,
+                                               TRUE,
+                                               &CapturedAcl);
+                        if(NT_SUCCESS(Status))
                         {
-                            PACL CapturedAcl;
-                            
-                            /* capture and copy the dacl */
-                            Status = SepCaptureAcl(InputAcl,
-                                                   PreviousMode,
-                                                   PagedPool,
-                                                   TRUE,
-                                                   &CapturedAcl);
-                            if(NT_SUCCESS(Status))
-                            {
-                                /* free the previous dacl if present */
-                                if(Token->DefaultDacl != NULL)
-                                {
-                                    ExFreePool(Token->DefaultDacl);
-                                }
-                                
-                                /* set the new dacl */
-                                Token->DefaultDacl = CapturedAcl;
-                            }
-                        }
-                        else
-                        {
-                            /* clear and free the default dacl if present */
+                            /* free the previous dacl if present */
                             if(Token->DefaultDacl != NULL)
                             {
                                 ExFreePool(Token->DefaultDacl);
-                                Token->DefaultDacl = NULL;
                             }
+
+                            /* set the new dacl */
+                            Token->DefaultDacl = CapturedAcl;
+                        }
+                    }
+                    else
+                    {
+                        /* clear and free the default dacl if present */
+                        if(Token->DefaultDacl != NULL)
+                        {
+                            ExFreePool(Token->DefaultDacl);
+                            Token->DefaultDacl = NULL;
                         }
                     }
                 }
@@ -1607,21 +1594,18 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    Status = _SEH2_GetExceptionCode();
+                    _SEH2_YIELD(return _SEH2_GetExceptionCode());
                 }
                 _SEH2_END;
                 
-                if(NT_SUCCESS(Status))
+                if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
+                                           PreviousMode))
                 {
-                    if(!SeSinglePrivilegeCheck(SeTcbPrivilege,
-                                               PreviousMode))
-                    {
-                        Status = STATUS_PRIVILEGE_NOT_HELD;
-                        break;
-                    }
-                    
-                    Token->SessionId = SessionId;
+                    Status = STATUS_PRIVILEGE_NOT_HELD;
+                    break;
                 }
+
+                Token->SessionId = SessionId;
                 break;
             }
                 
@@ -1661,13 +1645,13 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
     PTOKEN NewToken;
     PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService;
     BOOLEAN QoSPresent;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
     PreviousMode = KeGetPreviousMode();
     
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -1675,14 +1659,10 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
-        if(!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
     
     Status = SepCaptureSecurityQualityOfService(ObjectAttributes,
@@ -1965,7 +1945,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
     KPROCESSOR_MODE PreviousMode;
     ULONG nTokenPrivileges = 0;
     LARGE_INTEGER LocalExpirationTime = {{0, 0}};
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
@@ -2005,14 +1985,10 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
-        if(!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
     else
     {
@@ -2080,7 +2056,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
     AccessToken->UserAndGroups =
     (PSID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                uLength,
-                                               TAG('T', 'O', 'K', 'u'));
+                                               'uKOT');
     
     EndMem = &AccessToken->UserAndGroups[AccessToken->UserAndGroupCount];
     
@@ -2116,7 +2092,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         AccessToken->Privileges =
         (PLUID_AND_ATTRIBUTES)ExAllocatePoolWithTag(PagedPool,
                                                     uLength,
-                                                    TAG('T', 'O', 'K', 'p'));
+                                                    'pKOT');
         
         if (PreviousMode != KernelMode)
         {
@@ -2145,7 +2121,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
         AccessToken->DefaultDacl =
         (PACL) ExAllocatePoolWithTag(PagedPool,
                                      TokenDefaultDacl->DefaultDacl->AclSize,
-                                     TAG('T', 'O', 'K', 'd'));
+                                     'kDOT');
         memcpy(AccessToken->DefaultDacl,
                TokenDefaultDacl->DefaultDacl,
                TokenDefaultDacl->DefaultDacl->AclSize);
@@ -2199,13 +2175,13 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
     SECURITY_DESCRIPTOR SecurityDescriptor;
     PACL Dacl = NULL;
     KPROCESSOR_MODE PreviousMode;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
     PreviousMode = ExGetPreviousMode();
     
-    if(PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
     {
         _SEH2_TRY
         {
@@ -2213,14 +2189,10 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
-        if(!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
     }
     
     /*
@@ -2374,7 +2346,7 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
     KPROCESSOR_MODE PreviousMode;
     PTOKEN FirstToken, SecondToken;
     BOOLEAN IsEqual;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status;
     
     PAGED_CODE();
     
@@ -2388,12 +2360,10 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
-            Status = _SEH2_GetExceptionCode();
+            /* Return the exception code */
+            _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
-        if (!NT_SUCCESS(Status))
-            return Status;
     }
     
     Status = ObReferenceObjectByHandle(FirstTokenHandle,

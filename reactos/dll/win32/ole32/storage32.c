@@ -104,6 +104,7 @@ static ULARGE_INTEGER BlockChainStream_GetSize(BlockChainStream* This);
 static ULONG BlockChainStream_GetCount(BlockChainStream* This);
 
 static ULARGE_INTEGER SmallBlockChainStream_GetSize(SmallBlockChainStream* This);
+static ULONG SmallBlockChainStream_GetHeadOfChain(SmallBlockChainStream* This);
 static BOOL StorageImpl_WriteDWordToBigBlock( StorageImpl* This,
     ULONG blockIndex, ULONG offset, DWORD value);
 static BOOL StorageImpl_ReadDWordFromBigBlock( StorageImpl*  This,
@@ -979,6 +980,10 @@ static HRESULT WINAPI StorageBaseImpl_CreateStream(
       (grfMode & STGM_TRANSACTED))
     return STG_E_INVALIDFUNCTION;
 
+  /* Can't create a stream on read-only storage */
+  if ( STGM_ACCESS_MODE( This->openFlags ) == STGM_READ )
+    return STG_E_ACCESSDENIED;
+
   /*
    * Check that we're compatible with the parent's storage mode
    * if not in transacted mode
@@ -987,6 +992,9 @@ static HRESULT WINAPI StorageBaseImpl_CreateStream(
     if ( STGM_ACCESS_MODE( grfMode ) > STGM_ACCESS_MODE( This->openFlags ) )
       return STG_E_ACCESSDENIED;
   }
+
+  if(This->ancestorStorage->base.openFlags & STGM_SIMPLE)
+    if(grfMode & STGM_CREATE) return STG_E_INVALIDFLAG;
 
   /*
    * Initialize the out parameter
@@ -1226,8 +1234,13 @@ static HRESULT WINAPI StorageImpl_CreateStorage(
     /*
      * An element with this name already exists
      */
-    if (STGM_CREATE_MODE(grfMode) == STGM_CREATE)
-      IStorage_DestroyElement(iface, pwcsName);
+    if (STGM_CREATE_MODE(grfMode) == STGM_CREATE &&
+        STGM_ACCESS_MODE(This->base.openFlags) != STGM_READ)
+    {
+      hr = IStorage_DestroyElement(iface, pwcsName);
+      if (FAILED(hr))
+        return hr;
+    }
     else
     {
       WARN("file already exists\n");
@@ -1791,6 +1804,9 @@ static HRESULT WINAPI StorageImpl_DestroyElement(
    */
   if (pwcsName==NULL)
     return STG_E_INVALIDPOINTER;
+
+  if ( STGM_ACCESS_MODE( This->base.openFlags ) == STGM_READ )
+    return STG_E_ACCESSDENIED;
 
   /*
    * Create a property enumeration to search the property with the given name
@@ -2383,7 +2399,7 @@ static HRESULT StorageImpl_Construct(
   ILockBytes*  pLkbyt,
   DWORD        openFlags,
   BOOL         fileBased,
-  BOOL         fileCreate)
+  BOOL         create)
 {
   HRESULT     hr = S_OK;
   StgProperty currentProperty;
@@ -2395,19 +2411,13 @@ static HRESULT StorageImpl_Construct(
 
   memset(This, 0, sizeof(StorageImpl));
 
-  /*
-   * Initialize stream list
-   */
-
   list_init(&This->base.strmHead);
 
-  /*
-   * Initialize the virtual function table.
-   */
   This->base.lpVtbl = &Storage32Impl_Vtbl;
   This->base.pssVtbl = &IPropertySetStorage_Vtbl;
   This->base.v_destructor = StorageImpl_Destroy;
   This->base.openFlags = (openFlags & ~STGM_CREATE);
+  This->create = create;
 
   /*
    * This is the top-level storage so initialize the ancestor pointer
@@ -2415,14 +2425,8 @@ static HRESULT StorageImpl_Construct(
    */
   This->base.ancestorStorage = This;
 
-  /*
-   * Initialize the physical support of the storage.
-   */
   This->hFile = hFile;
 
-  /*
-   * Store copy of file path.
-   */
   if(pwcsName) {
       This->pwcsName = HeapAlloc(GetProcessHeap(), 0,
                                 (lstrlenW(pwcsName)+1)*sizeof(WCHAR));
@@ -2445,7 +2449,7 @@ static HRESULT StorageImpl_Construct(
   if (This->bigBlockFile == 0)
     return E_FAIL;
 
-  if (fileCreate)
+  if (create)
   {
     ULARGE_INTEGER size;
     BYTE bigBlockBuffer[BIG_BLOCK_SIZE];
@@ -2526,7 +2530,7 @@ static HRESULT StorageImpl_Construct(
   /*
    * Write the root property (memory only)
    */
-  if (fileCreate)
+  if (create)
   {
     StgProperty rootProp;
     /*
@@ -3559,7 +3563,7 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
   {
     resRead = SmallBlockChainStream_ReadAt(*ppsbChain,
                                            offset,
-                                           This->smallBlockSize,
+                                           min(This->smallBlockSize, size.u.LowPart - offset.u.LowPart),
                                            buffer,
                                            &cbRead);
     if (FAILED(resRead))
@@ -3578,14 +3582,18 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
         if (FAILED(resWrite))
             break;
 
-        offset.u.LowPart += This->smallBlockSize;
+        offset.u.LowPart += cbRead;
     }
   } while (cbTotalRead.QuadPart < size.QuadPart);
   HeapFree(GetProcessHeap(),0,buffer);
 
+  size.u.HighPart = 0;
+  size.u.LowPart  = 0;
+
   if (FAILED(resRead) || FAILED(resWrite))
   {
     ERR("conversion failed: resRead = 0x%08x, resWrite = 0x%08x\n", resRead, resWrite);
+    BlockChainStream_SetSize(bbTempChain, size);
     BlockChainStream_Destroy(bbTempChain);
     return NULL;
   }
@@ -3594,8 +3602,6 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
    * Destroy the small block chain.
    */
   propertyIndex = (*ppsbChain)->ownerPropertyIndex;
-  size.u.HighPart = 0;
-  size.u.LowPart  = 0;
   SmallBlockChainStream_SetSize(*ppsbChain, size);
   SmallBlockChainStream_Destroy(*ppsbChain);
   *ppsbChain = 0;
@@ -3620,6 +3626,87 @@ BlockChainStream* Storage32Impl_SmallBlocksToBigBlocks(
                                              propertyIndex);
 
   return bigBlockChain;
+}
+
+/******************************************************************************
+ *              Storage32Impl_BigBlocksToSmallBlocks
+ *
+ * This method will convert a big block chain to a small block chain.
+ * The big block chain will be destroyed on success.
+ */
+SmallBlockChainStream* Storage32Impl_BigBlocksToSmallBlocks(
+                           StorageImpl* This,
+                           BlockChainStream** ppbbChain)
+{
+    ULARGE_INTEGER size, offset, cbTotalRead;
+    ULONG cbRead, cbWritten, propertyIndex, sbHeadOfChain = BLOCK_END_OF_CHAIN;
+    HRESULT resWrite = S_OK, resRead;
+    StgProperty chainProperty;
+    BYTE* buffer;
+    SmallBlockChainStream* sbTempChain;
+
+    TRACE("%p %p\n", This, ppbbChain);
+
+    sbTempChain = SmallBlockChainStream_Construct(This, &sbHeadOfChain,
+            PROPERTY_NULL);
+
+    if(!sbTempChain)
+        return NULL;
+
+    size = BlockChainStream_GetSize(*ppbbChain);
+    SmallBlockChainStream_SetSize(sbTempChain, size);
+
+    offset.u.HighPart = 0;
+    offset.u.LowPart = 0;
+    cbTotalRead.QuadPart = 0;
+    buffer = HeapAlloc(GetProcessHeap(), 0, This->bigBlockSize);
+    do
+    {
+        resRead = BlockChainStream_ReadAt(*ppbbChain, offset,
+                min(This->bigBlockSize, size.u.LowPart - offset.u.LowPart),
+                buffer, &cbRead);
+
+        if(FAILED(resRead))
+            break;
+
+        if(cbRead > 0)
+        {
+            cbTotalRead.QuadPart += cbRead;
+
+            resWrite = SmallBlockChainStream_WriteAt(sbTempChain, offset,
+                    cbRead, buffer, &cbWritten);
+
+            if(FAILED(resWrite))
+                break;
+
+            offset.u.LowPart += cbRead;
+        }
+    }while(cbTotalRead.QuadPart < size.QuadPart);
+    HeapFree(GetProcessHeap(), 0, buffer);
+
+    size.u.HighPart = 0;
+    size.u.LowPart = 0;
+
+    if(FAILED(resRead) || FAILED(resWrite))
+    {
+        ERR("conversion failed: resRead = 0x%08x, resWrite = 0x%08x\n", resRead, resWrite);
+        SmallBlockChainStream_SetSize(sbTempChain, size);
+        SmallBlockChainStream_Destroy(sbTempChain);
+        return NULL;
+    }
+
+    /* destroy the original big block chain */
+    propertyIndex = (*ppbbChain)->ownerPropertyIndex;
+    BlockChainStream_SetSize(*ppbbChain, size);
+    BlockChainStream_Destroy(*ppbbChain);
+    *ppbbChain = NULL;
+
+    StorageImpl_ReadProperty(This, propertyIndex, &chainProperty);
+    chainProperty.startingBlock = sbHeadOfChain;
+    StorageImpl_WriteProperty(This, propertyIndex, &chainProperty);
+
+    SmallBlockChainStream_Destroy(sbTempChain);
+    return SmallBlockChainStream_Construct(This, NULL, propertyIndex);
 }
 
 static void StorageInternalImpl_Destroy( StorageBaseImpl *iface)
@@ -4574,7 +4661,6 @@ HRESULT BlockChainStream_ReadAt(BlockChainStream* This,
  *      BlockChainStream_WriteAt
  *
  * Writes the specified number of bytes to this chain at the specified offset.
- * bytesWritten may be NULL.
  * Will fail if not all specified number of bytes have been written.
  */
 HRESULT BlockChainStream_WriteAt(BlockChainStream* This,
@@ -4926,6 +5012,7 @@ static ULARGE_INTEGER BlockChainStream_GetSize(BlockChainStream* This)
 
 SmallBlockChainStream* SmallBlockChainStream_Construct(
   StorageImpl* parentStorage,
+  ULONG*         headOfStreamPlaceHolder,
   ULONG          propertyIndex)
 {
   SmallBlockChainStream* newStream;
@@ -4933,6 +5020,7 @@ SmallBlockChainStream* SmallBlockChainStream_Construct(
   newStream = HeapAlloc(GetProcessHeap(), 0, sizeof(SmallBlockChainStream));
 
   newStream->parentStorage      = parentStorage;
+  newStream->headOfStreamPlaceHolder = headOfStreamPlaceHolder;
   newStream->ownerPropertyIndex = propertyIndex;
 
   return newStream;
@@ -4954,6 +5042,9 @@ static ULONG SmallBlockChainStream_GetHeadOfChain(
 {
   StgProperty chainProperty;
   BOOL      readSuccessful;
+
+  if (This->headOfStreamPlaceHolder != NULL)
+    return *(This->headOfStreamPlaceHolder);
 
   if (This->ownerPropertyIndex)
   {
@@ -5317,7 +5408,6 @@ HRESULT SmallBlockChainStream_ReadAt(
  *       SmallBlockChainStream_WriteAt
  *
  * Writes the specified number of bytes to this chain at the specified offset.
- * bytesWritten may be NULL.
  * Will fail if not all specified number of bytes have been written.
  */
 HRESULT SmallBlockChainStream_WriteAt(
@@ -5357,9 +5447,6 @@ HRESULT SmallBlockChainStream_WriteAt(
 
   /*
    * Start writing the buffer.
-   *
-   * Here, I'm casting away the constness on the buffer variable
-   * This is OK since we don't intend to modify that buffer.
    */
   *bytesWritten   = 0;
   bufferWalker = buffer;
@@ -5506,26 +5593,32 @@ static BOOL SmallBlockChainStream_Enlarge(
   blockIndex = SmallBlockChainStream_GetHeadOfChain(This);
 
   /*
-   * Empty chain
+   * Empty chain. Create the head.
    */
   if (blockIndex == BLOCK_END_OF_CHAIN)
   {
-
-    StgProperty chainProp;
-
-    StorageImpl_ReadProperty(This->parentStorage, This->ownerPropertyIndex,
-                               &chainProp);
-
-    chainProp.startingBlock = SmallBlockChainStream_GetNextFreeBlock(This);
-
-    StorageImpl_WriteProperty(This->parentStorage, This->ownerPropertyIndex,
-                                &chainProp);
-
-    blockIndex = chainProp.startingBlock;
+    blockIndex = SmallBlockChainStream_GetNextFreeBlock(This);
     SmallBlockChainStream_SetNextBlockInChain(
-      This,
-      blockIndex,
-      BLOCK_END_OF_CHAIN);
+        This,
+        blockIndex,
+        BLOCK_END_OF_CHAIN);
+
+    if (This->headOfStreamPlaceHolder != NULL)
+    {
+      *(This->headOfStreamPlaceHolder) = blockIndex;
+    }
+    else
+    {
+      StgProperty chainProp;
+
+      StorageImpl_ReadProperty(This->parentStorage, This->ownerPropertyIndex,
+                                   &chainProp);
+
+      chainProp.startingBlock = blockIndex;
+
+      StorageImpl_WriteProperty(This->parentStorage, This->ownerPropertyIndex,
+                                  &chainProp);
+    }
   }
 
   currentBlock = blockIndex;
@@ -5601,6 +5694,32 @@ BOOL SmallBlockChainStream_SetSize(
 }
 
 /******************************************************************************
+ *       SmallBlockChainStream_GetCount
+ *
+ * Returns the number of small blocks that comprises this chain.
+ * This is not the size of the stream as the last block may not be full!
+ *
+ */
+static ULONG SmallBlockChainStream_GetCount(SmallBlockChainStream* This)
+{
+    ULONG blockIndex;
+    ULONG count = 0;
+
+    blockIndex = SmallBlockChainStream_GetHeadOfChain(This);
+
+    while(blockIndex != BLOCK_END_OF_CHAIN)
+    {
+        count++;
+
+        if(FAILED(SmallBlockChainStream_GetNextBlockInChain(This,
+                        blockIndex, &blockIndex)))
+            return 0;
+    }
+
+    return count;
+}
+
+/******************************************************************************
  *      SmallBlockChainStream_GetSize
  *
  * Returns the size of this chain.
@@ -5608,6 +5727,17 @@ BOOL SmallBlockChainStream_SetSize(
 static ULARGE_INTEGER SmallBlockChainStream_GetSize(SmallBlockChainStream* This)
 {
   StgProperty chainProperty;
+
+  if(This->headOfStreamPlaceHolder != NULL)
+  {
+    ULARGE_INTEGER result;
+    result.u.HighPart = 0;
+
+    result.u.LowPart = SmallBlockChainStream_GetCount(This) *
+        This->parentStorage->smallBlockSize;
+
+    return result;
+  }
 
   StorageImpl_ReadProperty(
     This->parentStorage,
@@ -5788,7 +5918,7 @@ HRESULT WINAPI StgCreateDocfile(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 end:
   TRACE("<-- %p  r = %08x\n", *ppstgOpen, hr);
@@ -6092,7 +6222,7 @@ HRESULT WINAPI StgOpenStorage(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 
 end:
@@ -6146,7 +6276,7 @@ HRESULT WINAPI StgCreateDocfileOnILockBytes(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 
   return hr;
@@ -6211,7 +6341,7 @@ HRESULT WINAPI StgOpenStorageOnILockBytes(
    */
   hr = StorageBaseImpl_QueryInterface(
          (IStorage*)newStorage,
-         (REFIID)&IID_IStorage,
+         &IID_IStorage,
          (void**)ppstgOpen);
 
   return hr;
@@ -7063,9 +7193,9 @@ static HRESULT STORAGE_WriteCompObj( LPSTORAGE pstg, CLSID *clsid,
            debugstr_w(lpszUserType), debugstr_w(szClipName),
            debugstr_w(szProgIDName));
 
-    /*  Create a CompObj stream if it doesn't exist */
+    /*  Create a CompObj stream */
     r = IStorage_CreateStream(pstg, szwStreamName,
-        STGM_WRITE  | STGM_SHARE_EXCLUSIVE, 0, 0, &pstm );
+        STGM_CREATE | STGM_WRITE  | STGM_SHARE_EXCLUSIVE, 0, 0, &pstm );
     if( FAILED (r) )
         return r;
 

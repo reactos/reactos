@@ -431,7 +431,7 @@ static HRESULT WINAPI Proxy_MarshalInterface(
 
         if (SUCCEEDED(hr))
         {
-            TRACE("writing stdobjref:\n\tflags = %04x\n\tcPublicRefs = %d\n\toxid = %s\n\toid = %s\n\tipid = %s\n",
+            TRACE("writing stdobjref: flags = %04x cPublicRefs = %d oxid = %s oid = %s ipid = %s\n",
                 stdobjref.flags, stdobjref.cPublicRefs,
                 wine_dbgstr_longlong(stdobjref.oxid),
                 wine_dbgstr_longlong(stdobjref.oid),
@@ -1239,7 +1239,7 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt,
 
     assert(apt);
 
-    TRACE("stdobjref:\n\tflags = %04x\n\tcPublicRefs = %d\n\toxid = %s\n\toid = %s\n\tipid = %s\n",
+    TRACE("stdobjref: flags = %04x cPublicRefs = %d oxid = %s oid = %s ipid = %s\n",
         stdobjref->flags, stdobjref->cPublicRefs,
         wine_dbgstr_longlong(stdobjref->oxid),
         wine_dbgstr_longlong(stdobjref->oid),

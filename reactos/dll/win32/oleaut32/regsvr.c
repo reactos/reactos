@@ -32,6 +32,7 @@
 #include "oleauto.h"
 #include "initguid.h"
 #include "typelib.h"
+#include "wincodec.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"

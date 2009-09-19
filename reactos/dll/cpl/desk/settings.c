@@ -626,10 +626,9 @@ INT_PTR CALLBACK
 SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lParam)
 {
 	PGLOBAL_DATA pGlobalData;
+	TCHAR Message[1024], Title[256];
 
 	pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
-
-	TCHAR Message[1024], Title[256];
 
 	switch(uMsg)
 	{

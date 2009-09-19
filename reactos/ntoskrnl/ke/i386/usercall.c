@@ -135,7 +135,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
 {
     ULONG_PTR NewStack, OldStack;
     PULONG UserEsp;
-    NTSTATUS CallbackStatus = STATUS_SUCCESS;
+    NTSTATUS CallbackStatus;
     PEXCEPTION_REGISTRATION_RECORD ExceptionList;
     PTEB Teb;
     ULONG GdiBatchCount = 0;
@@ -192,10 +192,9 @@ KeUserModeCallback(IN ULONG RoutineIndex,
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
         /* Get the SEH exception */
-        CallbackStatus = _SEH2_GetExceptionCode();
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
     }
     _SEH2_END;
-    if (!NT_SUCCESS(CallbackStatus)) return CallbackStatus;
 
     /* Check if we have GDI Batch operations */
     if (GdiBatchCount)

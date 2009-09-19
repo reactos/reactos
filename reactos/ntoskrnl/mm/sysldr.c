@@ -13,6 +13,7 @@
 #include <debug.h>
 
 /* GCC's incompetence strikes again */
+__inline
 VOID
 sprintf_nt(IN PCHAR Buffer,
            IN PCHAR Format,

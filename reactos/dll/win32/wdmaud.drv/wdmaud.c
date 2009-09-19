@@ -32,6 +32,15 @@ PWSTR UnknownMidiOut = L"Midi Output";
 HANDLE KernelHandle = INVALID_HANDLE_VALUE;
 DWORD OpenCount = 0;
 
+MMRESULT
+WriteFileEx_Remixer(
+    IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
+    IN  PVOID OffsetPtr,
+    IN  DWORD Length,
+    IN  PSOUND_OVERLAPPED Overlap,
+    IN  LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine);
+
+
 
 MMRESULT
 GetNumWdmDevs(
@@ -111,6 +120,7 @@ GetWdmDeviceCapabilities(
         return TranslateInternalMmResult(Result);
     }
 
+    SND_TRACE(L"WDMAUD Name %S\n", DeviceInfo.u.WaveOutCaps.szPname);
 
     /* This is pretty much a big hack right now */
     switch ( DeviceType )
@@ -122,7 +132,7 @@ GetWdmDeviceCapabilities(
             WaveOutCaps->wPid = DeviceInfo.u.WaveOutCaps.wPid;
 
             WaveOutCaps->vDriverVersion = 0x0001;
-            CopyWideString(WaveOutCaps->szPname, UnknownWaveOut);
+            CopyWideString(WaveOutCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
 
             WaveOutCaps->dwFormats = DeviceInfo.u.WaveOutCaps.dwFormats;
             WaveOutCaps->wChannels = DeviceInfo.u.WaveOutCaps.wChannels;
@@ -132,7 +142,7 @@ GetWdmDeviceCapabilities(
         case WAVE_IN_DEVICE_TYPE :
         {
             LPWAVEINCAPS WaveInCaps = (LPWAVEINCAPS) Capabilities;
-            CopyWideString(WaveInCaps->szPname, UnknownWaveIn);
+            CopyWideString(WaveInCaps->szPname, DeviceInfo.u.WaveOutCaps.szPname);
             /* TODO... other fields */
             break;
         }
@@ -204,6 +214,16 @@ CloseWdmSoundDevice(
 
         DeviceInfo.DeviceType = DeviceType;
         DeviceInfo.hDevice = SoundDeviceInstance->Handle;
+
+         /* First stop the stream */
+         DeviceInfo.u.State = KSSTATE_STOP;
+         SyncOverlappedDeviceIoControl(KernelHandle,
+                                       IOCTL_SETDEVICE_STATE,
+                                       (LPVOID) &DeviceInfo,
+                                       sizeof(WDMAUD_DEVICE_INFO),
+                                       (LPVOID) &DeviceInfo,
+                                       sizeof(WDMAUD_DEVICE_INFO),
+                                       NULL);
 
         SyncOverlappedDeviceIoControl(KernelHandle,
                                       IOCTL_CLOSE_WDMAUD,
@@ -278,11 +298,19 @@ SetWdmWaveDeviceFormat(
     DeviceInfo.DeviceIndex = DeviceId;
     DeviceInfo.u.WaveFormatEx.cbSize = WaveFormat->cbSize;
     DeviceInfo.u.WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
+#ifdef USERMODE_MIXER
+    DeviceInfo.u.WaveFormatEx.nChannels = 2;
+    DeviceInfo.u.WaveFormatEx.nSamplesPerSec = 44100;
+    DeviceInfo.u.WaveFormatEx.nBlockAlign = 4;
+    DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = 176400;
+    DeviceInfo.u.WaveFormatEx.wBitsPerSample = 16;
+#else
     DeviceInfo.u.WaveFormatEx.nChannels = WaveFormat->nChannels;
     DeviceInfo.u.WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
     DeviceInfo.u.WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
     DeviceInfo.u.WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
     DeviceInfo.u.WaveFormatEx.wBitsPerSample = WaveFormat->wBitsPerSample;
+#endif
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
                                            IOCTL_OPEN_WDMAUD,
@@ -297,6 +325,16 @@ SetWdmWaveDeviceFormat(
         return TranslateInternalMmResult(Result);
     }
 
+    /* Store format */
+    Instance->WaveFormatEx.cbSize = WaveFormat->cbSize;
+    Instance->WaveFormatEx.wFormatTag = WaveFormat->wFormatTag;
+    Instance->WaveFormatEx.nChannels = WaveFormat->nChannels;
+    Instance->WaveFormatEx.nSamplesPerSec = WaveFormat->nSamplesPerSec;
+    Instance->WaveFormatEx.nBlockAlign = WaveFormat->nBlockAlign;
+    Instance->WaveFormatEx.nAvgBytesPerSec = WaveFormat->nAvgBytesPerSec;
+    Instance->WaveFormatEx.wBitsPerSample = WaveFormat->wBitsPerSample;
+
+    /* Store sound device handle instance handle */
     Instance->Handle = (PVOID)DeviceInfo.hDevice;
 
     /* Now determine framing requirements */
@@ -318,6 +356,15 @@ SetWdmWaveDeviceFormat(
         }
     }
 
+    /* Now start the stream */
+    DeviceInfo.u.State = KSSTATE_RUN;
+    SyncOverlappedDeviceIoControl(KernelHandle,
+                                  IOCTL_SETDEVICE_STATE,
+                                  (LPVOID) &DeviceInfo,
+                                  sizeof(WDMAUD_DEVICE_INFO),
+                                  (LPVOID) &DeviceInfo,
+                                  sizeof(WDMAUD_DEVICE_INFO),
+                                  NULL);
 
     return MMSYSERR_NOERROR;
 }
@@ -454,7 +501,11 @@ PopulateWdmDeviceList(
         FuncTable.SetWaveFormat = SetWdmWaveDeviceFormat;
         FuncTable.Open = OpenWdmSoundDevice;
         FuncTable.Close = CloseWdmSoundDevice;
+#ifndef USERMODE_MIXER
         FuncTable.CommitWaveBuffer = WriteFileEx_Committer2;
+#else
+        FuncTable.CommitWaveBuffer = WriteFileEx_Remixer;
+#endif
         FuncTable.GetPos = GetWdmPosition;
 
         SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
@@ -465,7 +516,8 @@ PopulateWdmDeviceList(
 
 
 
-APIENTRY LONG
+LONG
+APIENTRY
 DriverProc(
     DWORD DriverId,
     HANDLE DriverHandle,

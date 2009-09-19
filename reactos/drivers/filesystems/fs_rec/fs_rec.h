@@ -14,13 +14,10 @@
 #include <ntdddisk.h>
 #include <ntddcdrm.h>
 
-#include "udfs.h"
-
 //
 // Tag for memory allocations
 //
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define FSREC_TAG TAG('F', 's', 'R', 'c')
+#define FSREC_TAG 'cRsF'
 
 //
 // UDFS Offsets

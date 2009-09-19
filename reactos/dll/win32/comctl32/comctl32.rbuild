@@ -7,6 +7,7 @@
 	<include base="comctl32">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="_WINE" />
 	<file>animate.c</file>
 	<file>comboex.c</file>
 	<file>comctl32undoc.c</file>

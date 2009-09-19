@@ -1171,7 +1171,6 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN DWORD dwFlags)
 {
     PTHREADINFO pti;
-    PW32THREADINFO ti;
     PPROCESSINFO pi;
     PCLS Class;
     RTL_ATOM ClassAtom;
@@ -1179,15 +1178,14 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
 
     /* NOTE: Accessing the buffers in ClassName and MenuName may raise exceptions! */
 
-    pti = PsGetCurrentThreadWin32Thread();
-    ti = GetW32ThreadInfo();
-    if (ti == NULL || !RegisteredSysClasses)
+    pti = GetW32ThreadInfo();
+    if (pti == NULL || !RegisteredSysClasses)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return (RTL_ATOM)0;
     }
 
-    pi = ti->ppi;
+    pi = pti->ppi;
 
     /* try to find a previously registered class */
     ClassAtom = IntGetClassAtom(ClassName,

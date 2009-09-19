@@ -222,18 +222,20 @@ InterfaceConnected(MIB_IFROW IfEntry)
         IfEntry.dwOperStatus == IF_OPER_STATUS_OPERATIONAL)
         return 1;
 
+    DH_DbgPrint(MID_TRACE,("Interface %d is down\n", IfEntry.dwIndex));
     return 0;
 }
 
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
-void AdapterDiscover() {
+BOOLEAN AdapterDiscover() {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size = sizeof(MIB_IFTABLE);
     PDHCP_ADAPTER Adapter = NULL;
     struct interface_info *ifi = NULL;
     int i;
+    BOOLEAN ret = TRUE;
 
     DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
 
@@ -244,7 +246,10 @@ void AdapterDiscover() {
         Table = (PMIB_IFTABLE) malloc( Size );
     }
 
-    if( Error != NO_ERROR ) goto term;
+    if( Error != NO_ERROR ) {
+        ret = FALSE;
+        goto term;
+    }
 
     DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
@@ -294,13 +299,18 @@ void AdapterDiscover() {
                     Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc =
                     socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
-                Adapter->ListenAddr.sin_family = AF_INET;
-                Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
-                Adapter->BindStatus =
-                    (bind( Adapter->DhclientInfo.rfdesc,
-                           (struct sockaddr *)&Adapter->ListenAddr,
-                           sizeof(Adapter->ListenAddr) ) == 0) ?
-                    0 : WSAGetLastError();
+
+                if (DhcpSocket != INVALID_SOCKET) {
+                    Adapter->ListenAddr.sin_family = AF_INET;
+                    Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
+                    Adapter->BindStatus =
+                        (bind( Adapter->DhclientInfo.rfdesc,
+                               (struct sockaddr *)&Adapter->ListenAddr,
+                               sizeof(Adapter->ListenAddr) ) == 0) ?
+                        0 : WSAGetLastError();
+                } else {
+                    error("socket() failed: %d\n", WSAGetLastError());
+                }
             } else {
                 Adapter->DhclientInfo.rfdesc =
                     Adapter->DhclientInfo.wfdesc = DhcpSocket;
@@ -334,6 +344,7 @@ void AdapterDiscover() {
 
 term:
     if( Table ) free( Table );
+    return ret;
 }
 
 void AdapterStop() {

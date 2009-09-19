@@ -18,28 +18,5 @@
 	<file>string.c</file>
 	<file>winhelp.c</file>
 	<file>lex.yy.c</file>
-	<file>Bg.rc</file>
-	<file>Cs.rc</file>
-	<file>Da.rc</file>
-	<file>De.rc</file>
-	<file>En.rc</file>
-	<file>Es.rc</file>
-	<file>Fi.rc</file>
-	<file>Fr.rc</file>
-	<file>Hu.rc</file>
-	<file>It.rc</file>
-	<file>Ja.rc</file>
-	<file>Ko.rc</file>
-	<file>Lt.rc</file>
-	<file>Nl.rc</file>
-	<file>No.rc</file>
-	<file>Pl.rc</file>
-	<file>Pt.rc</file>
-	<file>Rm.rc</file>
-	<file>Ru.rc</file>
-	<file>Si.rc</file>
-	<file>Sk.rc</file>
-	<file>Sv.rc</file>
-	<file>Tr.rc</file>
 	<file>rsrc.rc</file>
 </module>

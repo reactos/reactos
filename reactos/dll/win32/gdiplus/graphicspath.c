@@ -775,7 +775,7 @@ GpStatus WINGDIPAPI GdipAddPathPieI(GpPath *path, INT x, INT y, INT width, INT h
     TRACE("(%p, %d, %d, %d, %d, %.2f, %.2f)\n",
           path, x, y, width, height, startAngle, sweepAngle);
 
-    return GdipAddPathPieI(path, (REAL)x, (REAL)y, (REAL)width, (REAL)height, startAngle, sweepAngle);
+    return GdipAddPathPie(path, (REAL)x, (REAL)y, (REAL)width, (REAL)height, startAngle, sweepAngle);
 }
 
 GpStatus WINGDIPAPI GdipAddPathPolygon(GpPath *path, GDIPCONST GpPointF *points, INT count)

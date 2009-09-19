@@ -42,16 +42,10 @@ Signature = "$ReactOS$"
 ;base\applications\cmdutils\more\more.exe                1
 ;base\applications\cmdutils\xcopy\xcopy.exe              1
 ;base\applications\control\control.exe                   1
-;base\applications\downloader\downloader.exe             1
-;base\applications\downloader\downloader.xml             1
 ;base\applications\dxdiag\dxdiag.exe                     1
-;base\applications\mscutils\devmgmt\devmgmt.exe          1
 ;base\applications\mscutils\eventvwr\eventvwr.exe        1
-;base\applications\games\solitaire\sol.exe               1
 ;base\applications\games\winemine\winemine.exe           1
-;base\applications\hh\hh.exe                             4
 ;base\applications\kbswitch\kbswitch.exe                 1
-;base\applications\kbswitch\kbsdll\kbsdll.dll            1
 ;base\applications\logoff\logoff.exe                     1
 ;base\applications\mplay32\mplay32.exe                   1
 ;base\applications\msconfig\msconfig.exe                 1
@@ -68,6 +62,8 @@ Signature = "$ReactOS$"
 ;base\applications\network\tracert\tracert.exe           1
 ;base\applications\network\whois\whois.exe               1
 ;base\applications\notepad\notepad.exe                   1
+;base\applications\paint\paint.exe                       1
+;base\applications\rapps\rapps.exe                       1
 ;base\applications\regedit\regedit.exe                   4
 ;base\applications\regedit\clb\clb.dll                   1
 ;base\applications\regedt32\regedt32.exe                 1
@@ -79,6 +75,7 @@ Signature = "$ReactOS$"
 ;base\applications\sndvol32\sndvol32.exe                 1
 ;base\applications\taskmgr\taskmgr.exe                   1
 ;base\applications\winhlp32\winhlp32.exe                 4
+;base\applications\winver\winver.exe                     1
 ;base\applications\wordpad\wordpad.exe                   1
 ;base\applications\write\write.exe                       1
 
@@ -251,7 +248,9 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\actxprxy\actxprxy.dll                     1
 ;dll\win32\atl\atl.dll                               1
 ;dll\win32\authz\authz.dll                           1
+;dll\win32\avicap32\avicap32.dll                     1
 ;dll\win32\avifil32\avifil32.dll                     1
+;dll\win32\bcrypt\bcrypt.dll                         1
 ;dll\win32\beepmidi\beepmidi.dll                     1
 ;dll\win32\browseui\browseui.dll                     1
 ;dll\win32\cabinet\cabinet.dll                       1
@@ -284,6 +283,7 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\hhctrl.ocx\hhctrl.ocx                     1
 ;dll\win32\hid\hid.dll                               1
 ;dll\win32\hlink\hlink.dll                           1
+;dll\win32\hnetcfg\hnetcfg.dll                       1
 ;dll\win32\httpapi\httpapi.dll                       1
 ;dll\win32\iccvid\iccvid.dll                         1
 ;dll\win32\icmp\icmp.dll                             1
@@ -316,6 +316,7 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\mpr\mpr.dll                               1
 ;dll\win32\mprapi\mprapi.dll                         1
 ;dll\win32\msacm32\msacm32.dll                       1
+;dll\win32\msacm32\msacm32.drv\msacm32.drv           1
 ;dll\win32\msadp32.acm\msadp32.acm                   1
 ;dll\win32\msafd\msafd.dll                           1
 ;dll\win32\mscat32\mscat32.dll                       1
@@ -325,6 +326,7 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\msftedit\msftedit.dll                     1
 ;dll\win32\msg711.acm\msg711.acm                     1
 ;dll\win32\msgina\msgina.dll                         1
+;dll\win32\msgsm32.acm\msgsm32.acm                   1
 ;dll\win32\mshtml\mshtml.dll                         1
 ;dll\win32\mshtml.tlb\mshtml.tlb                     1
 ;dll\win32\msi\msi.dll                               1
@@ -351,6 +353,7 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\netshell\netshell.dll                     1
 ;dll\win32\newdev\newdev.dll                         1
 ;dll\win32\ntdsapi\ntdsapi.dll                       1
+;dll\win32\ntlanman\ntlanman.dll                     1
 ;dll\win32\ntmarta\ntmarta.dll                       1
 ;dll\win32\ntprint\ntprint.dll                       1
 ;dll\win32\objsel\objsel.dll                         1
@@ -411,6 +414,7 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\sti\sti.dll                               1
 ;dll\win32\sxs\sxs.dll                               1
 ;dll\win32\syssetup\syssetup.dll                     1
+;dll\win32\t2embed\t2embed.dll                       1
 ;dll\win32\tapi32\tapi32.dll                         1
 ;dll\win32\tapiui\tapiui.dll                         1
 ;dll\win32\traffic\traffic.dll                       1
@@ -428,6 +432,7 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\uxtheme\uxtheme.dll                       1
 ;dll\win32\vdmdbg\vdmdbg.dll                         1
 ;dll\win32\version\version.dll                       1
+;dll\win32\windowscodecs\windowscodecs.dll           1
 ;dll\win32\winemp3.acm\winemp3.acm                   1
 ;dll\win32\winfax\winfax.dll                         1
 ;dll\win32\winhttp\winhttp.dll                       1
@@ -435,7 +440,6 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\winmm\winmm.dll                           1
 ;dll\win32\winspool\winspool.drv                     1
 ;dll\win32\winsta\winsta.dll                         1
-;dll\win32\wintab32\wintab32.dll                     1
 ;dll\win32\wlanapi\wlanapi.dll                       1
 ;dll\win32\wintrust\wintrust.dll                     1
 ;dll\win32\wldap32\wldap32.dll                       1
@@ -447,8 +451,12 @@ base\services\svchost\svchost.exe                   1
 ;dll\win32\wsock32\wsock32.dll                       1
 ;dll\win32\wtsapi32\wtsapi32.dll                     1
 ;dll\win32\wuapi\wuapi.dll                           1
+;dll\win32\xinput1_1\xinput1_1.dll                   1
+;dll\win32\xinput1_2\xinput1_2.dll                   1
+;dll\win32\xinput1_3\xinput1_3.dll                   1
+;dll\win32\xinput9_1_0\xinput9_1_0.dll               1
+;dll\win32\xmllite\xmllite.dll                       1
 ;dll\win32\winmm\midimap\midimap.dll                 1
-;dll\win32\winmm\wavemap\msacm32.drv                 1   optional
 ;dll\win32\wdmaud.drv\wdmaud.drv                     1
 
 ; Shell Extensions
@@ -648,15 +656,19 @@ modules\optional\kvmnet.inf                         6  optional
 modules\optional\kvmnet.sys                         2  optional
 modules\optional\mfc42.dll                          1  optional
 modules\optional\mfc42u.dll                         1  optional
+modules\optional\mfc71.dll                          1  optional
+modules\optional\mfc71u.dll                         1  optional
 modules\optional\msvbvm50.dll                       1  optional
 modules\optional\msvbvm60.dll                       1  optional
 modules\optional\msvcirt.dll                        1  optional
+modules\optional\msvcp71.dll                        1  optional
+modules\optional\msvcr71.dll                        1  optional
 modules\optional\Systema.ttf                        3  optional
 modules\optional\vmx_fb.dll                         1  optional
 modules\optional\vmx_mode.dll                       1  optional
 modules\optional\vmx_svga.inf                       6  optional
 modules\optional\vmx_svga.sys                       2  optional
-modules\optional\wine_gecko-0.9.1.cab               4  optional
+modules\optional\wine_gecko-1.0.0-x86.cab           4  optional
 
 ; Rosapps
 modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr              1   optional

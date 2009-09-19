@@ -1329,10 +1329,8 @@ static LRESULT SYSLINK_SetFocus (SYSLINK_INFO *infoPtr)
     if(Focus != NULL)
     {
         SYSLINK_SetFocusLink(infoPtr, Focus);
+        SYSLINK_RepaintLink(infoPtr, Focus);
     }
-    
-    SYSLINK_RepaintLink(infoPtr, Focus);
-    
     return 0;
 }
 
@@ -1476,7 +1474,7 @@ static BOOL SYSKEY_SelectNextPrevLink (const SYSLINK_INFO *infoPtr, BOOL Prev)
             {
                 OldFocus = SYSLINK_SetFocusLink(infoPtr, NewFocus);
 
-                if(OldFocus != NewFocus)
+                if(OldFocus && OldFocus != NewFocus)
                 {
                     SYSLINK_RepaintLink(infoPtr, OldFocus);
                 }

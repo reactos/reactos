@@ -282,13 +282,13 @@ IDD_IMPORT_WELCOME DIALOG DISCARDABLE 0,0,317,143
 CAPTION "인증서 가져오기 마법사"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "인증서 가져오기 마법사에 온 것을 환영합니다", IDC_IMPORT_TITLE,115,1,195,40
-	LTEXT "이 마법사는 당신이 파일로부터 인증서,인증서 파기 목록,인증서 신뢰 목록을 인증서 보관소에 가져오는 것을 도와줍니다.",-1, 115,33,195,16
+	LTEXT "인증서 가져오기 마법사에 온 것을 환영합니다", IDC_IMPORT_TITLE,115,7,195,12
+	LTEXT "이 마법사는 당신이 파일로부터 인증서,인증서 파기 목록,인증서 신뢰 목록을 인증서 보관소에 가져오는 것을 도와줍니다.",-1, 115,26,195,25
 	LTEXT "이 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다.  또한  메세지에 사인하고 인증하는 데도 사용됩니다. 인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의 저장소입니다.",-1, 115,56,195,40
 	LTEXT "계속하려면, 다음을 클릭하십시오.",-1, 115,103,195,8
 END
 
-IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,143
+IDD_IMPORT_FILE DIALOG DISCARDABLE 0,0,317,178
 CAPTION "인증서 가져오기 마법사"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -312,7 +312,7 @@ BEGIN
 	PUSHBUTTON "찾기(&R)...", IDC_IMPORT_BROWSE_STORE, 236,49,60,14
 END
 
-IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+IDD_IMPORT_FINISH DIALOG DISCARDABLE 0,0,317,178
 CAPTION "인증서 가져오기 마법사"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -366,9 +366,9 @@ CAPTION "인증서 내보내기 마법사"
 FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "인증서 내보내기 마법사에 오신 것을 환영합니다", IDC_EXPORT_TITLE,
-    115,1,195,40
+    115,7,195,12
   LTEXT "이 마법사는 인증서,인증서 폐기 목록,인증서 신뢰 목록을 인증서 저장소로부터 파일로 내보내는 것을 도와줄겁니다.",
-    -1, 115,33,195,16
+    -1, 115,26,195,25
   LTEXT " 인증서는 당신이나 당신이 통신에 사용하는 컴퓨터를 신원보증하는 데 사용됩니다.  또한  메세지에 사인하고 인증하는 데도 사용됩니다. 인증서 보관소는 인증서, 인증서 파기 목록, 인증서 신뢰 목록의 저장소입니다..",
     -1, 115,56,195,40
   LTEXT "계속 하실려면, <다음>을 클릭하십시오.",
@@ -379,8 +379,8 @@ IDD_EXPORT_PRIVATE_KEY DIALOG DISCARDABLE 0,0,317,143
 CAPTION "인증서 내보내기 마법사"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "당신이  개인 키를 내보내기를 선택하면, 당신은 다음 페이지에서 개인 키를 보호할 암호를 입력하게 될 것입니다.", -1, 21,1,195,23
-	LTEXT "개인 키를 내보내기를 원합니까?", -1, 21,24,195,15
+	LTEXT "당신이  개인 키를 내보내기를 선택하면, 당신은 다음 페이지에서 개인 키를 보호할 암호를 입력하게 될 것입니다.", -1, 21,1,195,25
+	LTEXT "개인 키를 내보내기를 원합니까?", -1, 21,27,195,10
 	AUTORADIOBUTTON "예(&Y), 개인 키 내보내기",
 	IDC_EXPORT_PRIVATE_KEY_YES, 31,36,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
 	AUTORADIOBUTTON "아니오(&O), 개인 키 안 내보내기",
@@ -404,22 +404,22 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   LTEXT "사용할 파일 형식 선택:", -1, 21,1,195,10
   AUTORADIOBUTTON "&DER-암호화된 X.509 (.cer)",
-    IDC_EXPORT_FORMAT_DER, 31,18,200,12, BS_AUTORADIOBUTTON|WS_TABSTOP
+    IDC_EXPORT_FORMAT_DER, 31,18,240,12, BS_AUTORADIOBUTTON|WS_TABSTOP
   AUTORADIOBUTTON "Ba&se64-암호화된 X.509 (.cer):",
-    IDC_EXPORT_FORMAT_BASE64, 31,30,200,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_BASE64, 31,30,240,12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "암호 메시지 문법 표준/PKCS #7 메시지(&C) (.p7b)",
-    IDC_EXPORT_FORMAT_CMS, 31,42,200,12, BS_AUTORADIOBUTTON
+    IDC_EXPORT_FORMAT_CMS, 31,42,240,12, BS_AUTORADIOBUTTON
   CHECKBOX "가능한 인증서 경로에 있는 모든 인증서 포함(&I)",
-    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_CMS_INCLUDE_CHAIN, 44,57,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   AUTORADIOBUTTON "개인 정보 교환(&P)/PKCS #12 (.pfx)",
-    IDC_EXPORT_FORMAT_PFX, 31,72,200,12, BS_AUTORADIOBUTTON|WS_DISABLED
+    IDC_EXPORT_FORMAT_PFX, 31,72,240,12, BS_AUTORADIOBUTTON|WS_DISABLED
   CHECKBOX "가능한 인증서 경로에 있는 모든 인증서 포함(&U)",
-    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,200,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
+    IDC_EXPORT_PFX_INCLUDE_CHAIN, 44,87,240,8, BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "강한 암호화 가능(&E)",
-    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,200,8,
+    IDC_EXPORT_PFX_STRONG_ENCRYPTION, 44,102,240,8,
     BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
   CHECKBOX "내보내기가 성공하면 개인 키 지우기(&K)",
-    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,200,8,
+    IDC_EXPORT_PFX_DELETE_PRIVATE_KEY, 44,117,240,8,
     BS_AUTOCHECKBOX|WS_TABSTOP|WS_DISABLED
 END
 
@@ -432,7 +432,7 @@ BEGIN
   PUSHBUTTON "찾기(&R)...", IDC_EXPORT_BROWSE_FILE, 236,11,60,14
 END
 
-IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,143
+IDD_EXPORT_FINISH DIALOG DISCARDABLE 0,0,317,178
 CAPTION "인증서 내보내기 마법사"
 FONT 8, "MS Shell Dlg"
 BEGIN

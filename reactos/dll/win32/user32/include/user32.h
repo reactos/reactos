@@ -48,7 +48,7 @@ BOOL FASTCALL IsMetaFile(HDC);
 
 extern PPROCESSINFO g_ppi;
 extern ULONG_PTR g_ulSharedDelta;
-extern PSERVERINFO g_psi;
+extern PSERVERINFO gpsi;
 
 static __inline PVOID
 SharedPtrToUser(PVOID Ptr)
@@ -61,9 +61,11 @@ SharedPtrToUser(PVOID Ptr)
 static __inline PVOID
 DesktopPtrToUser(PVOID Ptr)
 {
+    PCLIENTINFO pci;
+    PDESKTOPINFO pdi;
     GetW32ThreadInfo();
-    PCLIENTINFO pci = GetWin32ClientInfo();
-    PDESKTOPINFO pdi = pci->pDeskInfo;
+    pci = GetWin32ClientInfo();
+    pdi = pci->pDeskInfo;
 
     ASSERT(Ptr != NULL);
     ASSERT(pdi != NULL);
@@ -98,7 +100,7 @@ IsThreadHooked(PCLIENTINFO pci)
 static __inline PDESKTOPINFO
 GetThreadDesktopInfo(VOID)
 {
-    PW32THREADINFO ti;
+    PTHREADINFO ti;
     PDESKTOPINFO di = NULL;
 
     ti = GetW32ThreadInfo();
@@ -117,3 +119,4 @@ PWND FASTCALL ValidateHwndNoErr(HWND hwnd);
 VOID FASTCALL GetConnected(VOID);
 BOOL FASTCALL DefSetText(HWND hWnd, PCWSTR String, BOOL Ansi);
 BOOL FASTCALL TestWindowProcess(PWND);
+VOID UserGetWindowBorders(DWORD, DWORD, SIZE *, BOOL);

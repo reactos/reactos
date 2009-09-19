@@ -45,11 +45,10 @@ MemType[] =
     "LoaderXIPRom      "
 };
 
-PVOID MiNonPagedPoolStart;
-ULONG MiNonPagedPoolLength;
 PBOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
 MM_STATS MmStats;
+PMMPTE MmSharedUserDataPte;
 PMMSUPPORT MmKernelAddressSpace;
 extern KMUTANT MmSystemLoadLock;
 extern ULONG MmBootImageSize;
@@ -160,18 +159,10 @@ MmInit1(VOID)
     // Initialize ARM³ in phase 1
     //
     MmArmInitSystem(1, KeLoaderBlock);
-                                                                  // DEPRECATED
-    /* Put nonpaged pool after the loaded modules */              // DEPRECATED
-    MiNonPagedPoolStart = (PVOID)((ULONG_PTR)MmSystemRangeStart + // DEPRECATED
-                                  MmBootImageSize);               // DEPRECATED
-    MiNonPagedPoolLength = MM_NONPAGED_POOL_SIZE;                 // DEPRECATED
-                                                                  // DEPRECATED
-    /* Initialize nonpaged pool */                                // DEPRECATED
-    MiInitializeNonPagedPool();                                   // DEPRECATED
-                                                                  // DEPRECATED
-    /* Put the paged pool after nonpaged pool */
-    MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MiNonPagedPoolStart +
-                                           MiNonPagedPoolLength);
+
+    /* Put the paged pool after the loaded modules */
+    MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
+                                           MmBootImageSize);
     MmPagedPoolSize = MM_PAGED_POOL_SIZE;
 
     //
@@ -191,6 +182,11 @@ NTAPI
 MmInitSystem(IN ULONG Phase,
              IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    extern MMPTE HyperTemplatePte;
+    PMMPTE PointerPte;
+    MMPTE TempPte = HyperTemplatePte;
+    PFN_NUMBER PageFrameNumber;
+    
     if (Phase == 0)
     {
         /* Initialize Mm bootstrap */
@@ -205,8 +201,13 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
 
-        /* We're done, for now */
-        DPRINT("Mm0: COMPLETE\n");
+        /* Setup shared user data settings that NT does as well */
+        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
+        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
+        SharedUserData->LargePageMinimum = 0;
+        
+        /* For now, we assume that we're always Server */
+        SharedUserData->NtProductType = NtProductServer;
     }
     else if (Phase == 1)
     {
@@ -214,32 +215,48 @@ MmInitSystem(IN ULONG Phase,
         MmInitializePageOp();
         MmInitSectionImplementation();
         MmInitPagingFile();
-        MmCreatePhysicalMemorySection();
-
-        /* Setup shared user data settings that NT does as well */
-        ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
-        SharedUserData->NumberOfPhysicalPages = MmStats.NrTotalPages;
-        SharedUserData->LargePageMinimum = 0;
-
-        /* For now, we assume that we're always Workstation */
-        SharedUserData->NtProductType = NtProductWinNt;
+        
+        //
+        // Create a PTE to double-map the shared data section. We allocate it
+        // from paged pool so that we can't fault when trying to touch the PTE
+        // itself (to map it), since paged pool addresses will already be mapped
+        // by the fault handler.
+        //
+        MmSharedUserDataPte = ExAllocatePoolWithTag(PagedPool,
+                                                    sizeof(MMPTE),
+                                                    '  mM');
+        if (!MmSharedUserDataPte) return FALSE;
+        
+        //
+        // Now get the PTE for shared data, and read the PFN that holds it
+        //
+        PointerPte = MiAddressToPte(KI_USER_SHARED_DATA);
+        ASSERT(PointerPte->u.Hard.Valid == 1);
+        PageFrameNumber = PFN_FROM_PTE(PointerPte);
+        
+        //
+        // Now write a copy of it
+        //
+        TempPte.u.Hard.Owner = 1;
+        TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+        *MmSharedUserDataPte = TempPte;
+        
+        /*
+         * Unmap low memory
+         */
+        MiInitBalancerThread();
+        
+        /*
+         * Initialise the modified page writer.
+         */
+        MmInitMpwThread();
+        
+        /* Initialize the balance set manager */
+        MmInitBsmThread();
     }
     else if (Phase == 2)
     {
-        /*
-        * Unmap low memory
-        */
-        MiInitBalancerThread();
 
-        /*
-        * Initialise the modified page writer.
-        */
-        MmInitMpwThread();
-
-        /* Initialize the balance set manager */
-        MmInitBsmThread();
-
-        /* FIXME: Read parameters from memory */
     }
 
     return TRUE;

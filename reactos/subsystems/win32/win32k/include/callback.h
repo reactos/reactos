@@ -56,4 +56,6 @@ IntCbFreeMemory(PVOID Data);
 
 HMENU APIENTRY co_IntCallLoadMenu(HINSTANCE,PUNICODE_STRING);
 
+NTSTATUS APIENTRY co_IntClientThreadSetup(VOID);
+
 #endif /* _WIN32K_CALLBACK_H */

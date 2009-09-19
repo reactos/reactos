@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS system libraries
- * FILE:        lib/msvcrt/time/strtime.c
+ * PROJECT:     ReactOS CRT library
+ * FILE:        lib/sdk/crt/time/strtime.c
  * PURPOSE:     Fills a buffer with a formatted date representation
  * PROGRAMER:   Ariadne
  * UPDATE HISTORY:

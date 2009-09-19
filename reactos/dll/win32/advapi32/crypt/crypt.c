@@ -1192,9 +1192,6 @@ BOOL WINAPI CryptEnumProvidersA (DWORD dwIndex, DWORD *pdwReserved,
 	TRACE("(%ld, %p, %08ld, %p, %p, %p)\n", dwIndex, pdwReserved, dwFlags,
 			pdwProvType, pszProvName, pcbProvName);
 
-	if (*pcbProvName > INT_MAX)
-		*pcbProvName = INT_MAX;
-
     if(!CryptEnumProvidersW(dwIndex, pdwReserved, dwFlags, pdwProvType, NULL, &bufsize))
         return FALSE;
 	if ( pszProvName && !(str = CRYPT_Alloc(bufsize)) )
@@ -1316,9 +1313,6 @@ BOOL WINAPI CryptEnumProviderTypesA (DWORD dwIndex, DWORD *pdwReserved,
 
 	TRACE("(%ld, %p, %08ld, %p, %p, %p)\n", dwIndex, pdwReserved, dwFlags,
 			pdwProvType, pszTypeName, pcbTypeName);
-
-	if (*pcbTypeName > INT_MAX)
-		*pcbTypeName = INT_MAX;
 
 	if(!CryptEnumProviderTypesW(dwIndex, pdwReserved, dwFlags, pdwProvType, NULL, &bufsize))
 		return FALSE;
@@ -1518,9 +1512,6 @@ BOOL WINAPI CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
 	BOOL ret = FALSE;
 
 	TRACE("(%d, %p, %08x, %p, %p)\n", dwProvType, pdwReserved, dwFlags, pszProvName, pcbProvName);
-
-	if (*pcbProvName > INT_MAX)
-		*pcbProvName = INT_MAX;
 
 	CryptGetDefaultProviderW(dwProvType, pdwReserved, dwFlags, NULL, &bufsize);
 	if ( pszProvName && !(str = CRYPT_Alloc(bufsize)) )

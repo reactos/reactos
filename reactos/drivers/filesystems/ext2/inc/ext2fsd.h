@@ -115,9 +115,8 @@ extern Ext2Data				Ext2GlobalData;
 }
 
 #ifdef EXT2_POOL_WITH_TAG
-	#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
-		ExAllocatePoolWithTag( PoolType, NumberOfBytes, TAG ( 'E','x','t','2' ) ) 
+		ExAllocatePoolWithTag( PoolType, NumberOfBytes, '2txE' ) 
 #else
 	#define Ext2AllocatePool(PoolType,NumberOfBytes)	\
 		ExAllocatePool( PoolType, NumberOfBytes ) 

@@ -18,7 +18,7 @@
 
 #include <winsta.h>
 
-#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl(TAG('R', 'o', 's', 'D'), (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
+#define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 HBITMAP NTAPI UserLoadImage(PCWSTR);
 BOOL NTAPI W32kDosPathNameToNtPathName(PCWSTR, PUNICODE_STRING);
 

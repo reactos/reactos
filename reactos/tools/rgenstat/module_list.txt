@@ -127,9 +127,11 @@ wintrust dll\win32\wintrust
 ws2_32 dll\win32\ws2_32
 ws2_32_new dll\win32\ws2_32_new
 ws2help dll\win32\ws2help
-ws2help_new dll\win32\ws2help_new
 wshirda dll\win32\wshirda
 wsock32 dll\win32\wsock32
 wshtcpip dll\win32\wshtcpip
+bda drivers\multimedia\bdasup
 framebuf drivers\video\displays\framebuf
+ks drivers\ksfilter\ks
+portcls drivers\wdm\audio\backpln\portcls
 vgaddi drivers\video\displays\vga

@@ -91,7 +91,7 @@ typedef struct {
 #define DRV_QUERYSTRINGID		(DRV_RESERVED + 14)
 #define DRV_QUERYSTRINGIDSIZE		(DRV_RESERVED + 15)
 #define DRV_QUERYIDFROMSTRINGID		(DRV_RESERVED + 16)
-#ifdef __WINESRC__
+#ifdef _WINE
 #define DRV_QUERYDSOUNDIFACE		(DRV_RESERVED + 20)
 #define DRV_QUERYDSOUNDDESC		(DRV_RESERVED + 21)
 #define DRV_QUERYDSOUNDGUID		(DRV_RESERVED + 22)
@@ -329,6 +329,9 @@ typedef JOYDEVMSGPROC *LPJOYDEVMSGPROC;
 #define JDD_GETPOSEX            (DRV_RESERVED + 0x0104)
 
 #define MCI_MAX_DEVICE_TYPE_LENGTH 80
+
+#define MCI_OPEN_DRIVER                 0x0801
+#define MCI_CLOSE_DRIVER                0x0802
 
 #define MCI_FALSE                       (MCI_STRING_OFFSET + 19)
 #define MCI_TRUE                        (MCI_STRING_OFFSET + 20)

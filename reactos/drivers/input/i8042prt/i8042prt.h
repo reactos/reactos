@@ -14,8 +14,7 @@
  * Structures
  * --------------------------------------------------*/
 
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define I8042PRT_TAG TAG('8', '0', '4', '2')
+#define I8042PRT_TAG '2408'
 
 typedef enum
 {

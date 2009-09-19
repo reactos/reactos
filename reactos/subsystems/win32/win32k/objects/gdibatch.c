@@ -25,14 +25,17 @@ DoDeviceSync( SURFOBJ *Surface, PRECTL Rect, FLONG fl)
   if (!(Device->flFlags & PDEV_DRIVER_PUNTED_CALL) && (Surface->dhsurf))
   {
      if (Device->DriverFunctions.SynchronizeSurface)
-        return Device->DriverFunctions.SynchronizeSurface(Surface, Rect, fl);
+     {
+       Device->DriverFunctions.SynchronizeSurface(Surface, Rect, fl);
+     }
      else
      {
        if (Device->DriverFunctions.Synchronize)
-          return Device->DriverFunctions.Synchronize(Surface->dhpdev, Rect);
+       {
+         Device->DriverFunctions.Synchronize(Surface->dhpdev, Rect);
+       }
      }
   }
-  return;  
 }
 
 VOID

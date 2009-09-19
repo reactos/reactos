@@ -26,6 +26,7 @@
 #include "msacm_Cs.rc"
 #include "msacm_Da.rc"
 #include "msacm_De.rc"
+#include "msacm_El.rc"
 #include "msacm_En.rc"
 #include "msacm_Es.rc"
 #include "msacm_Fr.rc"

@@ -56,45 +56,45 @@
 #define WNNC_START                 0x0000000c
 #define WNNC_WAIT_FOR_START        0x00000001
 
-typedef DWORD APIENTRY (*PF_NPGetCaps)(DWORD ndex);
+typedef DWORD (APIENTRY *PF_NPGetCaps)(DWORD ndex);
 
 /* get user */
-typedef DWORD APIENTRY (*PF_NPGetUser)(LPWSTR lpName, LPWSTR lpUserName,
+typedef DWORD (APIENTRY *PF_NPGetUser)(LPWSTR lpName, LPWSTR lpUserName,
  LPDWORD lpnBufferLen);
 
 /* enumeration-related */
-typedef DWORD APIENTRY (*PF_NPOpenEnum)(DWORD dwScope, DWORD dwType, DWORD dwUsage,
+typedef DWORD (APIENTRY *PF_NPOpenEnum)(DWORD dwScope, DWORD dwType, DWORD dwUsage,
  LPNETRESOURCEW lpNetResource, LPHANDLE lphEnum);
-typedef DWORD APIENTRY (*PF_NPEnumResource)(HANDLE hEnum, LPDWORD lpcCount,
+typedef DWORD (APIENTRY *PF_NPEnumResource)(HANDLE hEnum, LPDWORD lpcCount,
  LPVOID lpBuffer, LPDWORD lpBufferSize);
-typedef DWORD APIENTRY (*PF_NPCloseEnum)(HANDLE hEnum);
+typedef DWORD (APIENTRY *PF_NPCloseEnum)(HANDLE hEnum);
 typedef DWORD (APIENTRY *PF_NPGetResourceInformation)(LPNETRESOURCEW lpNetResource,
  LPVOID lpBuffer, LPDWORD lpcbBuffer, LPWSTR* lplpSystem);
 
 /* connection-related */
-typedef DWORD APIENTRY (*PF_NPAddConnection)(LPNETRESOURCEW lpNetResource,
+typedef DWORD (APIENTRY *PF_NPAddConnection)(LPNETRESOURCEW lpNetResource,
  LPWSTR lpPassword, LPWSTR lpUserName);
-typedef DWORD APIENTRY (*PF_NPAddConnection3)(HWND hwndOwner,
+typedef DWORD (APIENTRY *PF_NPAddConnection3)(HWND hwndOwner,
  LPNETRESOURCEW lpNetResource, LPWSTR lpPassword, LPWSTR lpUserName,
  DWORD dwFlags);
-typedef DWORD APIENTRY (*PF_NPCancelConnection)(LPWSTR lpName, BOOL fForce);
-typedef DWORD APIENTRY (*PF_NPGetConnection)(LPWSTR lpLocalName,
+typedef DWORD (APIENTRY *PF_NPCancelConnection)(LPWSTR lpName, BOOL fForce);
+typedef DWORD (APIENTRY *PF_NPGetConnection)(LPWSTR lpLocalName,
  LPWSTR lpRemoteName, LPDWORD lpnBufferLen);
 
 /* network name manipulation */
-typedef DWORD APIENTRY (*PF_NPGetUniversalName)(LPWSTR lpLocalPath,
+typedef DWORD (APIENTRY *PF_NPGetUniversalName)(LPWSTR lpLocalPath,
  DWORD dwInfoLevel, LPVOID lpBuffer, LPDWORD lpnBufferSize);
-typedef DWORD APIENTRY (*PF_NPFormatNetworkName)(LPWSTR lpRemoteName,
+typedef DWORD (APIENTRY *PF_NPFormatNetworkName)(LPWSTR lpRemoteName,
  LPWSTR lpFormattedName, LPDWORD lpnLength, DWORD dwFlags,
  DWORD dwAveCharPerLine);
 
 /* dialogs */
-typedef DWORD APIENTRY (*PF_NPDeviceMode)(HWND hParent);
+typedef DWORD (APIENTRY *PF_NPDeviceMode)(HWND hParent);
 
 /* search dialog */
 #define WNSRCH_REFRESH_FIRST_LEVEL 0x00000001
 
-typedef DWORD APIENTRY (*PF_NPSearchDialog)(HWND hwndParent,
+typedef DWORD (APIENTRY *PF_NPSearchDialog)(HWND hwndParent,
  LPNETRESOURCEW lpNetResource, LPVOID lpBuffer, DWORD cbBuffer,
  LPDWORD lpnFlags);
 
@@ -109,10 +109,10 @@ typedef DWORD APIENTRY (*PF_NPSearchDialog)(HWND hwndParent,
 #define WNPS_DIR  1
 #define WNPS_MULT 2
 
-typedef DWORD APIENTRY (*PF_NPGetPropertyText)(DWORD iButton, DWORD nPropSel,
+typedef DWORD (APIENTRY *PF_NPGetPropertyText)(DWORD iButton, DWORD nPropSel,
  LPWSTR lpName, LPWSTR lpButtonName, DWORD nButtonNameLen, DWORD nType);
 
-typedef DWORD APIENTRY (*PF_NPPropertyDialog)(HWND hwndParent, DWORD iButtonDlg,
+typedef DWORD (APIENTRY *PF_NPPropertyDialog)(HWND hwndParent, DWORD iButtonDlg,
  DWORD nPropSel, LPWSTR lpFileName, DWORD nType);
 
 /* admin */
@@ -123,9 +123,9 @@ typedef DWORD APIENTRY (*PF_NPPropertyDialog)(HWND hwndParent, DWORD iButtonDlg,
 #define WNDN_RMDIR 2
 #define WNDN_MVDIR 3
 
-typedef DWORD APIENTRY (*PF_NPGetDirectoryType)(LPWSTR lpName, LPINT lpType,
+typedef DWORD (APIENTRY *PF_NPGetDirectoryType)(LPWSTR lpName, LPINT lpType,
  BOOL bFlushCache);
-typedef DWORD APIENTRY (*PF_NPDirectoryNotify)(HWND hwnd, LPWSTR lpDir,
+typedef DWORD (APIENTRY *PF_NPDirectoryNotify)(HWND hwnd, LPWSTR lpDir,
  DWORD dwOper);
 
 /* permission editor dialogs */
@@ -133,16 +133,16 @@ typedef DWORD APIENTRY (*PF_NPDirectoryNotify)(HWND hwnd, LPWSTR lpDir,
 #define WNPERMC_AUDIT 0x00000002
 #define WNPERMC_OWNER 0x00000004
 
-typedef DWORD APIENTRY (*PF_NPFMXGetPermCaps)(LPWSTR lpDriveName);
+typedef DWORD (APIENTRY *PF_NPFMXGetPermCaps)(LPWSTR lpDriveName);
 
 #define WNPERM_DLG_PERM  0
 #define WNPERM_DLG_AUDIT 1
 #define WNPERM_DLG_OWNER 2
 
-typedef DWORD APIENTRY (*PF_NPFMXEditPerm)(LPWSTR lpDriveName, HWND hwndFMX,
+typedef DWORD (APIENTRY *PF_NPFMXEditPerm)(LPWSTR lpDriveName, HWND hwndFMX,
  DWORD nDialogType);
 
-typedef DWORD APIENTRY (*PF_NPFMXGetPermHelp)(LPWSTR lpDriveName,
+typedef DWORD (APIENTRY *PF_NPFMXGetPermHelp)(LPWSTR lpDriveName,
  DWORD nDialogType, BOOL fDirectory, LPVOID lpFileNameBuffer,
  LPDWORD lpBufferSize, LPDWORD lpnHelpContext);
 
@@ -160,11 +160,11 @@ VOID WINAPI WNetSetLastErrorW(DWORD err, LPWSTR lpError, LPWSTR lpProviders);
 #define WN_NT_PASSWORD_CHANGED   0x00000002
 
 /* notifications */
-typedef DWORD APIENTRY (*PF_NPLogonNotify)(PLUID lpLogonId,
+typedef DWORD (APIENTRY *PF_NPLogonNotify)(PLUID lpLogonId,
  LPCWSTR lpAuthentInfoType, LPVOID lpAuthentInfo,
  LPCWSTR lpPreviousAuthentInfoType, LPVOID lpPreviousAuthentInfo,
  LPWSTR lpStationName, LPVOID StationHandle, LPWSTR *lpLogonScript);
-typedef DWORD APIENTRY (*PF_NPPasswordChangeNotify)(LPCWSTR lpAuthentInfoType,
+typedef DWORD (APIENTRY *PF_NPPasswordChangeNotify)(LPCWSTR lpAuthentInfoType,
  LPVOID lpAuthentInfo, LPCWSTR lpPreviousAuthentInfoType,
  LPVOID lpPreviousAuthentInfo, LPWSTR lpStationName, LPVOID StationHandle,
  DWORD dwChangeInfo);
@@ -201,9 +201,9 @@ typedef struct _NOTIFYCANCEL
     BOOL   fForce;
 } NOTIFYCANCEL, *LPNOTIFYCANCEL;
 
-typedef DWORD APIENTRY (*PF_AddConnectNotify)(LPNOTIFYINFO lpNotifyInfo,
+typedef DWORD (APIENTRY *PF_AddConnectNotify)(LPNOTIFYINFO lpNotifyInfo,
  LPNOTIFYADD lpAddInfo);
-typedef DWORD APIENTRY (*PF_CancelConnectNotify)(LPNOTIFYINFO lpNotifyInfo,
+typedef DWORD (APIENTRY *PF_CancelConnectNotify)(LPNOTIFYINFO lpNotifyInfo,
  LPNOTIFYADD lpAddInfo);
 
 #endif /* ndef __WINE_NPAPI_H__ */

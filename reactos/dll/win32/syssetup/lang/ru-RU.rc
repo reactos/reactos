@@ -244,7 +244,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Командная строка.lnk"
     IDS_SHORT_EXPLORER   "Проводник ReactOS.lnk"
-    IDS_SHORT_DOWNLOADER "Скачать !.lnk"
+    IDS_SHORT_DOWNLOADER "Менеджер приложений ReactOS.lnk"
     IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
     IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
     IDS_SHORT_MPLAY32    "Проигрыватель.lnk"

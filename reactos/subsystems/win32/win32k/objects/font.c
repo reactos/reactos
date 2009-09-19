@@ -15,6 +15,27 @@
 
 /** Internal ******************************************************************/
 
+DWORD
+FASTCALL
+GreGetCharacterPlacementW(
+    HDC hdc,
+    LPWSTR pwsz,
+    INT nCount,
+    INT nMaxExtent,
+    LPGCP_RESULTSW pgcpw,
+    DWORD dwFlags)
+{
+  SIZE Size = {0,0};
+
+  if (!pgcpw)
+  {
+     if (GreGetTextExtentW( hdc, pwsz, nCount, &Size, 1))
+        return MAKELONG(Size.cx, Size.cy);
+  }
+  UNIMPLEMENTED;
+  return 0;
+}
+
 INT
 FASTCALL
 FontGetObject(PTEXTOBJ TFont, INT Count, PVOID Buffer)
@@ -215,6 +236,23 @@ NtGdiAddFontResourceW(
 
   ExFreePoolWithTag(SafeFileName.Buffer, TAG_STRING);
   return Ret;
+}
+
+ /*
+ * @unimplemented
+ */
+DWORD
+APIENTRY
+NtGdiGetCharacterPlacementW(
+    IN HDC hdc,
+    IN LPWSTR pwsz,
+    IN INT nCount,
+    IN INT nMaxExtent,
+    IN OUT LPGCP_RESULTSW pgcpw,
+    IN DWORD dwFlags)
+{
+    UNIMPLEMENTED;
+    return 0;
 }
 
 DWORD
@@ -618,7 +656,7 @@ NtGdiGetFontResourceInfoInternalW(
     SafeFileNames.MaximumLength = SafeFileNames.Length = cbStringSize - sizeof(WCHAR);
     SafeFileNames.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                  cbStringSize,
-                                                 TAG('R','T','S','U'));
+                                                 'RTSU');
     if (!SafeFileNames.Buffer)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -644,7 +682,7 @@ NtGdiGetFontResourceInfoInternalW(
     {
         SetLastNtError(Status);
         /* Free the string buffer for the safe filename */
-        ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
+        ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
         return FALSE;
     }
 
@@ -675,7 +713,7 @@ NtGdiGetFontResourceInfoInternalW(
     }
 
     /* Free the string for the safe filenames */
-    ExFreePoolWithTag(SafeFileNames.Buffer,TAG('R','T','S','U'));
+    ExFreePoolWithTag(SafeFileNames.Buffer,'RTSU');
 
     return bRet;
 }

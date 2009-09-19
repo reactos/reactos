@@ -176,22 +176,16 @@ typedef struct _DirSwitchesFlags
 	{
 		DWORD dwAttribVal;	/* The desired state of attribute */
 		DWORD dwAttribMask;	/* Which attributes to check */
-		BOOL bUnSet;		/* A helper flag if "-" was given with the switch */
-		BOOL bParSetted;	/* A helper flag if parameters of switch were given */
 	} stAttribs;		/* Displays files with this attributes only */
 	struct
 	{
 		enum EOrderBy eCriteria[3];	/* Criterias used to order by */
 		BOOL bCriteriaRev[3];		/* If the criteria is in reversed order */
 		short sCriteriaCount;		/* The quantity of criterias */
-		BOOL bUnSet;				/* A helper flag if "-" was given with the switch */
-		BOOL bParSetted;			/* A helper flag if parameters of switch were given */
 	} stOrderBy;		/* Ordered by criterias */
 	struct
 	{
 		enum ETimeField eTimeField;	/* The time field that will be used for */
-		BOOL bUnSet;				/* A helper flag if "-" was given with the switch */
-		BOOL bParSetted;			/* A helper flag if parameters of switch were given */
 	} stTimeField;		/* The time field to display or use for sorting */
 } DIRSWITCHFLAGS, *LPDIRSWITCHFLAGS;
 
@@ -247,6 +241,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	BOOL bIntoQuotes;	/* A flag showing if we are in quotes (") */
 	LPTSTR ptrStart;	/* A pointer to the first character of a parameter */
 	LPTSTR ptrEnd;		/* A pointer to the last character of a parameter */
+	BOOL bOrderByNoPar;	/* A flag to indicate /O with no switch parameter */
 	LPTSTR temp;
 
 	/* Initialize parameter array */
@@ -261,10 +256,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	/* We suppose that switch parameters
 	   were given to avoid setting them to default
 	   if the switch was not given */
-	lpFlags->stAttribs.bParSetted = TRUE;
-	lpFlags->stOrderBy.bParSetted = TRUE;
-	lpFlags->stTimeField.bParSetted = TRUE;
-
+	bOrderByNoPar = FALSE;
 
 	/* Main Loop (see README_DIR.txt) */
 	/* scan the command line char per char, and we process its char */
@@ -278,23 +270,45 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 		/* When a switch is expecting */
 		if (cCurSwitch == _T('/'))
 		{
+			while (*Line == _T(' '))
+				Line++;
+
+			bNegative = (*Line == _T('-'));
+			Line += bNegative;
+
+			cCurChar = *Line;
+			cCurUChar = _totupper(*Line);
+
 			if ((cCurUChar == _T('A')) ||(cCurUChar == _T('T')) || (cCurUChar == _T('O')))
 			{
-				cCurSwitch = cCurUChar;
+				/* If positive, prepare for parameters... if negative, reset to defaults */
 				switch (cCurUChar)
 				{
 				case _T('A'):
-					lpFlags->stAttribs.bUnSet = bNegative;
-					lpFlags->stAttribs.bParSetted = FALSE;
+					lpFlags->stAttribs.dwAttribVal = 0L;
+					lpFlags->stAttribs.dwAttribMask = 0L;
+					if (bNegative)
+						lpFlags->stAttribs.dwAttribMask = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
 					break;
 				case _T('T'):
-					lpFlags->stTimeField.bUnSet = bNegative;
-					lpFlags->stTimeField.bParSetted = FALSE;
+					if (bNegative)
+						lpFlags->stTimeField.eTimeField = TF_MODIFIEDDATE;
 					break;
 				case _T('O'):
-					lpFlags->stOrderBy.bUnSet = bNegative;
-					lpFlags->stOrderBy.bParSetted = FALSE;
+					bOrderByNoPar = !bNegative;
+					lpFlags->stOrderBy.sCriteriaCount = 0;
 					break;
+				}
+
+				if (!bNegative)
+				{
+					/* Positive switch, so it can take parameters. */
+					cCurSwitch = cCurUChar;
+					Line++;
+					/* Skip optional leading colon */
+					if (*Line == _T(':'))
+						Line++;
+					continue;
 				}
 			}
 			else if (cCurUChar == _T('L'))
@@ -324,24 +338,20 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				DirHelp();
 				return FALSE;
 			}
-			else if (cCurChar ==  _T('-'))
-			{
-				bNegative = TRUE;
-			}
 			else
 			{
 				error_invalid_switch ((TCHAR)_totupper (*Line));
 				return FALSE;
 			}
 
-			/* We check if we calculated the negative value and realese the flag */
-			if ((cCurChar != _T('-')) && bNegative)
-				bNegative = FALSE;
+			/* Make sure there's no extra characters at the end of the switch */
+			if (Line[1] && Line[1] != _T('/') && Line[1] != _T(' '))
+			{
+				error_parameter_format(Line[1]);
+				return FALSE;
+			}
 
-			/* if not a,o,t or - option then next parameter is not a switch */
-			if ((cCurSwitch == _T('/')) && (!bNegative))
-				cCurSwitch = _T(' ');
-
+			cCurSwitch = _T(' ');
 		}
 		else if (cCurSwitch == _T(' '))
 		{
@@ -393,20 +403,14 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 			if ((cCurChar == _T('/')) || ( cCurChar == _T(' ')))
 			{
 				/* Wrong desicion path, reprocess current character */
-				cCurSwitch = cCurChar;
+				cCurSwitch = _T(' ');
 				continue;
 			}
 			/* Process parameter switch */
 			switch(cCurSwitch)
 			{
 			case _T('A'):	/* Switch parameters for /A (attributes filter) */
-				/* Ok a switch parameter was given */
-				lpFlags->stAttribs.bParSetted = TRUE;
-
-				if (cCurChar == _T(':'))
-					/* =V= dead command, used to make the "if" work */
-					cCurChar = cCurChar;
-				else if(cCurChar == _T('-'))
+				if(cCurChar == _T('-'))
 					bPNegative = TRUE;
 				else if(cCurUChar == _T('D'))
 				{
@@ -455,14 +459,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				}
 				break;
 			case _T('T'):	/* Switch parameters for /T (time field) */
-
-				/* Ok a switch parameter was given */
-				lpFlags->stTimeField.bParSetted = TRUE;
-
-				if (cCurChar == _T(':'))
-					/* =V= dead command, used to make the "if" work */
-					cCurChar = cCurChar;
-				else if(cCurUChar == _T('C'))
+				if(cCurUChar == _T('C'))
 					lpFlags->stTimeField.eTimeField= TF_CREATIONDATE ;
 				else if(cCurUChar == _T('A'))
 					lpFlags->stTimeField.eTimeField= TF_LASTACCESSEDDATE ;
@@ -476,12 +473,9 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				break;
 			case _T('O'):	/* Switch parameters for /O (order) */
 				/* Ok a switch parameter was given */
-				lpFlags->stOrderBy.bParSetted = TRUE;
+				bOrderByNoPar = FALSE;
 
-				if (cCurChar == _T(':'))
-					/* <== dead command, used to make the "if" work */
-					cCurChar = cCurChar;
-				else if(cCurChar == _T('-'))
+				if(cCurChar == _T('-'))
 					bPNegative = TRUE;
 				else if(cCurUChar == _T('N'))
 				{
@@ -530,38 +524,16 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 		Line++;
 	}
 
-	/* Calculate the switches with no switch paramater  */
-	if (!(lpFlags->stAttribs.bParSetted))
+	/* /O with no switch parameters acts like /O:GN */
+	if (bOrderByNoPar)
 	{
-		lpFlags->stAttribs.dwAttribVal = 0L;
-		lpFlags->stAttribs.dwAttribMask = lpFlags->stAttribs.dwAttribVal;
-	}
-	if (!(lpFlags->stOrderBy.bParSetted))
-	{
-		lpFlags->stOrderBy.sCriteriaCount = 1;
-		lpFlags->stOrderBy.eCriteria[0] = ORDER_NAME;
+		lpFlags->stOrderBy.sCriteriaCount = 2;
+		lpFlags->stOrderBy.eCriteria[0] = ORDER_DIRECTORY;
 		lpFlags->stOrderBy.bCriteriaRev[0] = FALSE;
+		lpFlags->stOrderBy.eCriteria[1] = ORDER_NAME;
+		lpFlags->stOrderBy.bCriteriaRev[1] = FALSE;
 	}
-	if (!(lpFlags->stTimeField.bParSetted))
-		lpFlags->stTimeField.eTimeField = TF_MODIFIEDDATE ;
 
-	/* Calculate the unsetted switches (the "-" prefixed)*/
-	if (lpFlags->stAttribs.bUnSet)
-	{
-		lpFlags->stAttribs.bUnSet = FALSE;
-		lpFlags->stAttribs.dwAttribVal = 0L;
-		lpFlags->stAttribs.dwAttribMask = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
-	}
-	if (lpFlags->stOrderBy.bUnSet)
-	{
-		lpFlags->stOrderBy.bUnSet = FALSE;
-		lpFlags->stOrderBy.sCriteriaCount = 0;
-	}
-	if (lpFlags->stTimeField.bUnSet )
-	{
-		lpFlags->stTimeField.bUnSet = FALSE;
-		lpFlags->stTimeField.eTimeField = TF_MODIFIEDDATE;
-	}
 	return TRUE;
 }
 
@@ -1600,12 +1572,9 @@ CommandDir(LPTSTR rest)
 	stFlags.bWideList = FALSE;
 	stFlags.bWideListColSort = FALSE;
 	stFlags.stTimeField.eTimeField = TF_MODIFIEDDATE;
-	stFlags.stTimeField.bUnSet = FALSE;
 	stFlags.stAttribs.dwAttribMask = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
 	stFlags.stAttribs.dwAttribVal = 0L;
-	stFlags.stAttribs.bUnSet = FALSE;
 	stFlags.stOrderBy.sCriteriaCount = 0;
-	stFlags.stOrderBy.bUnSet = FALSE;
 
 	nErrorLevel = 0;
 

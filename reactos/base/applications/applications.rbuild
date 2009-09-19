@@ -97,4 +97,7 @@
 	<directory name="write">
 		<xi:include href="write/write.rbuild" />
 	</directory>
+	<directory name="rapps">
+		<xi:include href="rapps/rapps.rbuild" />
+	</directory>
 </group>

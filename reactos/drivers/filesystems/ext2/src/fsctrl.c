@@ -368,6 +368,14 @@ Ext2MountVolume (
 			PtrVCB->NoOfGroups = ( SuperBlock->s_blocks_count - SuperBlock->s_first_data_block 
 								+ SuperBlock->s_blocks_per_group - 1 ) 
 								/ SuperBlock->s_blocks_per_group;
+			if( SuperBlock->s_rev_level )
+			{
+				PtrVCB->InodeSize = SuperBlock->s_inode_size;
+			}
+			else
+			{
+				PtrVCB->InodeSize = sizeof( EXT2_INODE );
+			}
 
 			PtrVCB->PtrGroupDescriptors = Ext2AllocatePool( NonPagedPool, sizeof( Ext2GroupDescriptors ) * PtrVCB->NoOfGroups  );
 			
@@ -465,9 +473,9 @@ Ext2MountVolume (
 				ZeroSize.QuadPart = 0;
 				if ( !NT_SUCCESS( Ext2CreateNewFCB( 
 						&PtrVCB->PtrRootDirectoryFCB,	//	Root FCB
-						ZeroSize,						//	AllocationSize,
-						ZeroSize,						//	EndOfFile,
-						PtrRootFileObject,				//	The Root Dircetory File Object
+						ZeroSize,			//	AllocationSize,
+						ZeroSize,			//	EndOfFile,
+						PtrRootFileObject,		//	The Root Dircetory File Object
 						PtrVCB,
 						PtrObjectName  )  )  )
 				{

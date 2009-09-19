@@ -15,6 +15,7 @@ FindPropertyHandler(
     IN PKSPROPERTY Property,
     IN ULONG InputBufferLength,
     IN ULONG OutputBufferLength,
+    OUT PVOID OutputBuffer,
     OUT PFNKSHANDLER *PropertyHandler);
 
 NTSTATUS
@@ -237,7 +238,7 @@ FastPropertyHandler(
     }
 
     /* property handler is used to verify input parameters */
-    Status = FindPropertyHandler(IoStatus, Descriptor, Property, PropertyLength, DataLength, &PropertyHandler);
+    Status = FindPropertyHandler(IoStatus, Descriptor, Property, PropertyLength, DataLength, Data, &PropertyHandler);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("FindPropertyHandler failed with %x\n", Status);
@@ -368,9 +369,12 @@ FindPropertyHandler(
     IN PKSPROPERTY Property,
     IN ULONG InputBufferLength,
     IN ULONG OutputBufferLength,
+    OUT PVOID OutputBuffer,
     OUT PFNKSHANDLER *PropertyHandler)
 {
     ULONG Index, ItemIndex;
+    PULONG Flags;
+    PKSPROPERTY_DESCRIPTION Description;
 
     for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
     {
@@ -385,6 +389,48 @@ FindPropertyHandler(
 
                     if (Property->Flags & KSPROPERTY_TYPE_GET)
                         *PropertyHandler = Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].GetPropertyHandler;
+
+                    if (Property->Flags & KSPROPERTY_TYPE_BASICSUPPORT)
+                    {
+                        if (sizeof(ULONG) > OutputBufferLength)
+                        {
+                            /* too small buffer */
+                            return STATUS_INVALID_PARAMETER;
+                        }
+
+                        /* get output buffer */
+                        Flags = (PULONG)OutputBuffer;
+
+                        /* clear flags */
+                        *Flags = KSPROPERTY_TYPE_BASICSUPPORT;
+
+                        if (Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].GetSupported)
+                            *Flags |= KSPROPERTY_TYPE_GET;
+
+                        if (Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].SetSupported)
+                            *Flags |= KSPROPERTY_TYPE_SET;
+
+                        IoStatus->Information = sizeof(ULONG);
+
+                        if (OutputBufferLength >= sizeof(KSPROPERTY_DESCRIPTION))
+                        {
+                            /* get output buffer */
+                            Description = (PKSPROPERTY_DESCRIPTION)OutputBuffer;
+
+                            /* store result */
+                            Description->DescriptionSize = sizeof(KSPROPERTY_DESCRIPTION);
+                            Description->PropTypeSet.Set = KSPROPTYPESETID_General;
+                            Description->PropTypeSet.Id = 0;
+                            Description->PropTypeSet.Flags = 0;
+                            Description->MembersListCount = 0;
+                            Description->Reserved = 0;
+
+                            IoStatus->Information = sizeof(KSPROPERTY_DESCRIPTION);
+                        }
+
+                        return STATUS_SUCCESS;
+                    }
+
 
                     if (Descriptor->FilterPropertySet.Properties[Index].PropertyItem[ItemIndex].MinProperty > InputBufferLength)
                     {
@@ -409,6 +455,68 @@ FindPropertyHandler(
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+PcCountProperties(
+    IN PIRP Irp,
+    IN PSUBDEVICE_DESCRIPTOR Descriptor)
+{
+    ULONG Properties;
+    ULONG Index, Offset;
+    PIO_STACK_LOCATION IoStack;
+    LPGUID Guid;
+
+    /* count property items */
+    Properties = Descriptor->FilterPropertySet.FreeKsPropertySetOffset;
+
+    if (Descriptor->DeviceDescriptor->AutomationTable)
+    {
+        Properties = Descriptor->DeviceDescriptor->AutomationTable->PropertyCount;
+    }
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* store output size */
+    Irp->IoStatus.Information = sizeof(GUID) * Properties;
+
+    if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(GUID) * Properties)
+    {
+        /* buffer too small */
+        Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* get output buffer */
+    Guid = Irp->UserBuffer;
+
+
+    /* copy property guids from filter */
+    Offset = 0;
+    for(Index = 0; Index < Descriptor->FilterPropertySet.FreeKsPropertySetOffset; Index++)
+    {
+        RtlMoveMemory(&Guid[Offset], Descriptor->FilterPropertySet.Properties[Index].Set, sizeof(GUID));
+        Offset++;
+    }
+
+    if (Descriptor->DeviceDescriptor->AutomationTable)
+    {
+        /* copy property guids from driver */
+        for(Index = 0; Index < Descriptor->DeviceDescriptor->AutomationTable->PropertyCount; Index++)
+        {
+            RtlMoveMemory(&Guid[Offset], Descriptor->DeviceDescriptor->AutomationTable->Properties[Index].Set, sizeof(GUID));
+            Offset++;
+        }
+    }
+
+     /* done */
+     Irp->IoStatus.Status = STATUS_SUCCESS;
+     IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+     return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 NTAPI
@@ -428,6 +536,12 @@ PcPropertyHandler(
 
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
     ASSERT(Property);
+
+    if (IsEqualGUIDAligned(&Property->Set, &GUID_NULL) && Property->Id == 0 && Property->Flags == KSPROPERTY_TYPE_SETSUPPORT)
+    {
+        return PcCountProperties(Irp, Descriptor);
+    }
+
 
     /* check properties provided by the driver */
     if (Descriptor->DeviceDescriptor->AutomationTable)
@@ -468,17 +582,17 @@ PcPropertyHandler(
         }
     }
 
-    Status = FindPropertyHandler(&Irp->IoStatus, Descriptor, Property, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, &PropertyHandler);
-    if (PropertyHandler)
+    Status = FindPropertyHandler(&Irp->IoStatus, Descriptor, Property, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength, Irp->UserBuffer, &PropertyHandler);
+    if (NT_SUCCESS(Status) && PropertyHandler)
     {
         KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PVOID)Descriptor;
         DPRINT("Calling property handler %p\n", PropertyHandler);
         Status = PropertyHandler(Irp, Property, Irp->UserBuffer);
     }
-    else
+    else if (!NT_SUCCESS(Status))
     {
         RtlStringFromGUID(&Property->Set, &GuidString);
-        DPRINT1("Unhandeled property: Set %S Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        DPRINT1("Unhandeled property: Set %S Id %u Flags %x InputLength %u OutputLength %u\n", GuidString.Buffer, Property->Id, Property->Flags, IoStack->Parameters.DeviceIoControl.InputBufferLength, IoStack->Parameters.DeviceIoControl.OutputBufferLength);
         RtlFreeUnicodeString(&GuidString);
     }
 

@@ -368,7 +368,7 @@ void __RPC_USER IrotContextHandle_rundown(IrotContextHandle ctxt_handle)
     rot_entry_release(rot_entry);
 }
 
-void * __RPC_USER MIDL_user_allocate(size_t size)
+void * __RPC_USER MIDL_user_allocate(SIZE_T size)
 {
     return HeapAlloc(GetProcessHeap(), 0, size);
 }

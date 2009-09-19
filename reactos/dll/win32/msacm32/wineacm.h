@@ -20,6 +20,9 @@
 #ifndef __WINE_WINEACM_H
 #define __WINE_WINEACM_H
 
+#include <windef.h>
+#include <winuser.h>
+
 /***********************************************************************
  * Wine specific - Win32
  */

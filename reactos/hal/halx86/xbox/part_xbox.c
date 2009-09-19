@@ -304,7 +304,10 @@ HalpXboxIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     return STATUS_ACCESS_DENIED;
 }
 
-#define HalExamineMBR HALDISPATCH->HalExamineMBR
+#define HalExamineMBR                   HALDISPATCH->HalExamineMBR
+#define HalIoReadPartitionTable         HALDISPATCH->HalIoReadPartitionTable
+#define HalIoSetPartitionInformation    HALDISPATCH->HalIoSetPartitionInformation
+#define HalIoWritePartitionTable        HALDISPATCH->HalIoWritePartitionTable
 
 void
 HalpXboxInitPartIo(void)

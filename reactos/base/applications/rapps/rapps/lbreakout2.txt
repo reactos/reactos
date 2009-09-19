@@ -1,0 +1,19 @@
+; UTF-8
+
+[Section]
+Name = LBreakout2
+Version = 2.4.1
+Licence = GPL
+Description = Breakout Clone using SDL libs.
+Size = 3.1MB
+Category = 4
+URLSite = http://lgames.sourceforge.net/index.php?project=LBreakout2
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/lgames/lbreakout2-2.4.1-win32.exe
+CDPath = none
+
+
+[Section.0407]
+Description = Breakout-Klon verwendet SDL Bibliothek.
+
+[Section.0415]
+Description = Klon Breakouta/Arkanoida napisany przy u¿yciu biblioteki SDL.

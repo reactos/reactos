@@ -129,9 +129,6 @@
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
-#ifdef HAVE_ALLOCA_H
-#include <alloca.h>
-#endif
 
 #include "wrc.h"
 #include "utils.h"
@@ -172,12 +169,12 @@
 
 int want_nl = 0;	/* Signal flex that we need the next newline */
 int want_id = 0;	/* Signal flex that we need the next identifier */
-stringtable_t *tagstt;	/* Stringtable tag.
+static stringtable_t *tagstt;	/* Stringtable tag.
 			 * It is set while parsing a stringtable to one of
 			 * the stringtables in the sttres list or a new one
 			 * if the language was not parsed before.
 			 */
-stringtable_t *sttres;	/* Stringtable resources. This holds the list of
+static stringtable_t *sttres;	/* Stringtable resources. This holds the list of
 			 * stringtables with different lanuages
 			 */
 static int dont_want_id = 0;	/* See language parsing for details */
@@ -361,7 +358,7 @@ static int rsrcid_to_token(int lookahead);
 
 resource_file
 	: resources {
-		resource_t *rsc;
+		resource_t *rsc, *head;
 		/* First add stringtables to the resource-list */
 		rsc = build_stt_resources(sttres);
 		/* 'build_stt_resources' returns a head and $1 is a tail */
@@ -387,8 +384,20 @@ resource_file
 		}
 		else
 			$1 = rsc;
-		/* Final statement before were done */
-		resource_top = get_resource_head($1);
+
+		/* Final statements before were done */
+                if ((head = get_resource_head($1)) != NULL)
+                {
+                    if (resource_top)  /* append to existing resources */
+                    {
+                        resource_t *tail = resource_top;
+                        while (tail->next) tail = tail->next;
+                        tail->next = head;
+                        head->prev = tail;
+                    }
+                    else resource_top = head;
+                }
+                sttres = NULL;
 		}
 	;
 

@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libjpeg" type="win32dll" entrypoint="0" installbase="system32" installname="libjpeg.dll" allowwarnings="true" crt="msvcrt">
-	<define name="HAVE_CONFIG_H" />
 	<define name="WIN32" />
 	<define name="_WINDOWS" />
 	<define name="_MBCS" />

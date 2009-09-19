@@ -12,7 +12,6 @@
 #define NDEBUG
 #include <sndblst.h>
 
-#define TAG(A, B, C, D) (IN ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 /*
     IRP DISPATCH ROUTINES
@@ -207,8 +206,8 @@ AllocateRegistryPathInfo(
     ExFreePool(ptr)
 
 
-#define TAG_REG_INFO TAG('I','g','e','R')
-#define TAG_REG_NAME TAG('N','g','e','R')
+#define TAG_REG_INFO 'RegI'
+#define TAG_REG_NAME 'RegN'
 
 NTSTATUS NTAPI
 EnumerateSubkey(

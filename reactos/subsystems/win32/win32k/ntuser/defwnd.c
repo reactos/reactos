@@ -134,11 +134,11 @@ IntDefWindowProc(
          {
             if (wParam)
             {
-               if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP)) break;
-               Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
+               if (!(Wnd->state & WNDS_HIDDENPOPUP)) break;
+               Wnd->state &= ~WNDS_HIDDENPOPUP;
             }
             else
-                Window->Flags |= WIN_NEEDS_SHOW_OWNEDPOPUP;
+                Wnd->state |= WNDS_HIDDENPOPUP;
 
             co_WinPosShowWindow(Window, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
          }

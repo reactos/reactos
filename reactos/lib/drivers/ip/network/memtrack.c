@@ -3,7 +3,7 @@
 
 
 #if DBG
-#define TRACK_TAG TAG('T','r','C','K')
+#define TRACK_TAG 'KCrT'
 
 static LIST_ENTRY AllocatedObjectsList;
 static KSPIN_LOCK AllocatedObjectsLock;

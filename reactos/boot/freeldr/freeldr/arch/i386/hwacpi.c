@@ -67,20 +67,6 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         AcpiPresent = TRUE;
         LoaderBlock.Flags |= MB_FLAGS_ACPI_TABLE;
 
-        /* Create new bus key */
-        FldrCreateComponentKey(SystemKey,
-                               L"MultifunctionAdapter",
-                               *BusNumber,
-                               AdapterClass,
-                               MultiFunctionAdapter,
-                               &BiosKey);
-
-        /* Set 'Component Information' */
-        FldrSetComponentInformation(BiosKey,
-                                    0x0,
-                                    0x0,
-                                    0xFFFFFFFF);
-
         /* Get BIOS memory map */
         RtlZeroMemory(BiosMemoryMap, sizeof(BIOS_MEMORY_MAP) * 32);
         BiosMemoryMapEntryCount = PcMemGetMemoryMap(BiosMemoryMap,
@@ -113,16 +99,21 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         DPRINTM(DPRINT_HWDETECT, "RSDT %p, data size %x\n", Rsdp->rsdt_physical_address,
             TableSize);
 
-        FldrSetConfigurationData(BiosKey,
-                                 PartialResourceList,
-                                 sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize
-                                 );
+        /* Create new bus key */
+        FldrCreateComponentKey(SystemKey,
+                               AdapterClass,
+                               MultiFunctionAdapter,
+                               0x0,
+                               0x0,
+                               0xFFFFFFFF,
+                               "ACPI BIOS",
+                               PartialResourceList,
+                               sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize,
+                               &BiosKey);
 
         /* Increment bus number */
         (*BusNumber)++;
 
-        /* Set 'Identifier' value */
-        FldrSetIdentifier(BiosKey, "ACPI BIOS");
         MmHeapFree(PartialResourceList);
     }
 }

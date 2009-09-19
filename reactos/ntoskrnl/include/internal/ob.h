@@ -142,7 +142,7 @@ typedef union
 //
 // Private Temporary Buffer for Lookup Routines
 //
-#define TAG_OB_TEMP_STORAGE TAG('O', 'b', 'S', 't')
+#define TAG_OB_TEMP_STORAGE 'tSbO'
 typedef struct _OB_TEMP_BUFFER
 {
     ACCESS_STATE LocalAccessState;

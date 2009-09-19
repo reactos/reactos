@@ -10,7 +10,7 @@ SetLastWin32Error(
   DWORD Status);
 
 NTSTATUS FASTCALL
-GetLastNtError();
+GetLastNtError(VOID);
 
 #endif /* _WIN32K_ERROR_H */
 

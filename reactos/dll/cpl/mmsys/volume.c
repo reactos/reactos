@@ -234,6 +234,7 @@ InitVolumeControls(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_SET_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_SPEAKER_VOL_BTN), FALSE);
         EnableWindow(GetDlgItem(hwndDlg, IDC_ADVANCED2_BTN),   FALSE);
+        SendDlgItemMessage(hwndDlg, IDC_MUTE_ICON, STM_SETIMAGE, IMAGE_ICON, (LPARAM)pGlobalData->hIconMuted);
         return;
     }
 
@@ -292,9 +293,9 @@ VolumeDlgProc(HWND hwndDlg,
               LPARAM lParam)
 {
     static IMGINFO ImgInfo;
+    PGLOBAL_DATA pGlobalData;
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
-    PGLOBAL_DATA pGlobalData;
 
     pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 

@@ -632,8 +632,9 @@ struct hostent defined in w32api/include/winsock2.h
 
 void free_servent(struct servent* s)
 {
+    char* next;
     HFREE(s->s_name);
-    char* next = s->s_aliases[0];
+    next = s->s_aliases[0];
     while(next) { HFREE(next); next++; }
     s->s_port = 0;
     HFREE(s->s_proto);
@@ -660,10 +661,11 @@ gethostbyname(IN  CONST CHAR FAR* name)
     DNS_STATUS dns_status = {0};
     /* include/WinDNS.h -- look up DNS_RECORD on MSDN */
     PDNS_RECORD dp = 0;
+    PWINSOCK_THREAD_BLOCK p;
 
     addr = GH_INVALID;
 
-    PWINSOCK_THREAD_BLOCK p = NtCurrentTeb()->WinSockData;
+    p = NtCurrentTeb()->WinSockData;
 
     if( !p )
     {

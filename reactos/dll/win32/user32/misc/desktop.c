@@ -97,9 +97,9 @@ int WINAPI
 GetSystemMetrics(int nIndex)
 {
   GetConnected();
-//  FIXME("Global Sever Data -> %x\n",g_psi);
+//  FIXME("Global Sever Data -> %x\n",gpsi);
   if (nIndex < 0 || nIndex >= SM_CMETRICS) return 0;
-  return g_psi->aiSysMet[nIndex];
+  return gpsi->aiSysMet[nIndex];
 }
 
 

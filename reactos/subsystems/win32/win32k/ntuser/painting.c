@@ -168,7 +168,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
    if (Window->UpdateRegion != NULL &&
        Window->UpdateRegion != (HRGN)1)
    {
-      hRgnNonClient = NtGdiCreateRectRgn(0, 0, 0, 0);
+      hRgnNonClient = IntCalcWindowRgn(Window, FALSE);
 
       /*
        * If region creation fails it's safe to fallback to whole
@@ -186,7 +186,7 @@ IntGetNCUpdateRgn(PWINDOW_OBJECT Window, BOOL Validate)
          return (HRGN)1;
       }
 
-      RgnType = NtGdiCombineRgn(hRgnNonClient, Window->UpdateRegion,
+      RgnType = NtGdiCombineRgn(hRgnNonClient, hRgnNonClient,
                                 hRgnWindow, RGN_DIFF);
       if (RgnType == ERROR)
       {

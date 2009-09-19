@@ -50,28 +50,12 @@ KdpServiceDispatcher(ULONG Service,
             break;
 
 #if DBG
-        case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
+        case ' soR': /* ROS-INTERNAL */
         {
             switch ((ULONG_PTR)Buffer1)
             {
-                case DumpNonPagedPool:
-                    MiDebugDumpNonPagedPool(FALSE);
-                    break;
-
                 case ManualBugCheck:
                     KeBugCheck(MANUALLY_INITIATED_CRASH);
-                    break;
-
-                case DumpNonPagedPoolStats:
-                    MiDebugDumpNonPagedPoolStats(FALSE);
-                    break;
-
-                case DumpNewNonPagedPool:
-                    MiDebugDumpNonPagedPool(TRUE);
-                    break;
-
-                case DumpNewNonPagedPoolStats:
-                    MiDebugDumpNonPagedPoolStats(TRUE);
                     break;
 
                 case DumpAllThreads:
@@ -97,7 +81,7 @@ KdpServiceDispatcher(ULONG Service,
         }
 
         /* Special  case for stack frame dumps */
-        case TAG('R', 'o', 's', 'D'):
+        case 'DsoR':
         {
             KeRosDumpStackFrames((PULONG)Buffer1, Buffer1Length);
             break;

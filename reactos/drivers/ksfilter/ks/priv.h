@@ -18,10 +18,7 @@
 #include "ksiface.h"
 
 
-#define TAG_DEVICE_HEADER TAG('H','D','S','K')
-
-#define IOCTL_KS_OBJECT_CLASS CTL_CODE(FILE_DEVICE_KS, 0x7, METHOD_NEITHER, FILE_ANY_ACCESS)
-
+#define TAG_DEVICE_HEADER 'KSDH'
 
 #define DEFINE_KSPROPERTY_PINPROPOSEDATAFORMAT(PinSet,\
     PropGeneral, PropInstances, PropIntersection)\

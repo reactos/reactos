@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <math.h>
+
 #include "jscript.h"
 
 #include "wine/debug.h"
@@ -40,12 +42,7 @@ static const WCHAR sortW[] = {'s','o','r','t',0};
 static const WCHAR spliceW[] = {'s','p','l','i','c','e',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
-static const WCHAR valueOfW[] = {'v','a','l','u','e','O','f',0};
 static const WCHAR unshiftW[] = {'u','n','s','h','i','f','t',0};
-static const WCHAR hasOwnPropertyW[] = {'h','a','s','O','w','n','P','r','o','p','e','r','t','y',0};
-static const WCHAR propertyIsEnumerableW[] =
-    {'p','r','o','p','e','r','t','y','I','s','E','n','u','m','e','r','a','b','l','e',0};
-static const WCHAR isPrototypeOfW[] = {'i','s','P','r','o','t','o','t','y','p','e','O','f',0};
 
 static const WCHAR default_separatorW[] = {',',0};
 
@@ -61,6 +58,30 @@ static HRESULT Array_length(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAM
         V_VT(retv) = VT_I4;
         V_I4(retv) = This->length;
         break;
+    case DISPATCH_PROPERTYPUT: {
+        VARIANT num;
+        DOUBLE len = -1;
+        DWORD i;
+        HRESULT hres;
+
+        hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &num);
+        if(V_VT(&num) == VT_I4)
+            len = V_I4(&num);
+        else
+            len = floor(V_R8(&num));
+
+        if(len!=(DWORD)len)
+            return throw_range_error(dispex->ctx, ei, IDS_INVALID_LENGTH, NULL);
+
+        for(i=len; i<This->length; i++) {
+            hres = jsdisp_delete_idx(dispex, i);
+            if(FAILED(hres))
+                return hres;
+        }
+
+        This->length = len;
+        break;
+    }
     default:
         FIXME("unimplemented flags %x\n", flags);
         return E_NOTIMPL;
@@ -394,8 +415,81 @@ static HRESULT Array_shift(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS
 static HRESULT Array_slice(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
-    FIXME("\n");
-    return E_NOTIMPL;
+    DispatchEx *arr;
+    VARIANT v;
+    DOUBLE range;
+    DWORD length, start, end, idx;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    if(is_class(dispex, JSCLASS_ARRAY)) {
+        length = ((ArrayInstance*)dispex)->length;
+    }else {
+        FIXME("not Array this\n");
+        return E_NOTIMPL;
+    }
+
+    if(arg_cnt(dp)) {
+        hres = to_number(dispex->ctx, get_arg(dp, 0), ei, &v);
+        if(FAILED(hres))
+            return hres;
+
+        if(V_VT(&v) == VT_I4)
+            range = V_I4(&v);
+        else
+            range = floor(V_R8(&v));
+
+        if(-range>length || isnan(range)) start = 0;
+        else if(range < 0) start = range+length;
+        else if(range <= length) start = range;
+        else start = length;
+    }
+    else start = 0;
+
+    if(arg_cnt(dp)>1) {
+        hres = to_number(dispex->ctx, get_arg(dp, 1), ei, &v);
+        if(FAILED(hres))
+            return hres;
+
+        if(V_VT(&v) == VT_I4)
+            range = V_I4(&v);
+        else
+            range = floor(V_R8(&v));
+
+        if(-range>length) end = 0;
+        else if(range < 0) end = range+length;
+        else if(range <= length) end = range;
+        else end = length;
+    }
+    else end = length;
+
+    hres = create_array(dispex->ctx, (end>start)?end-start:0, &arr);
+    if(FAILED(hres))
+        return hres;
+
+    for(idx=start; idx<end; idx++) {
+        hres = jsdisp_propget_idx(dispex, idx, lcid, &v, ei, sp);
+        if(hres == DISP_E_UNKNOWNNAME)
+            continue;
+
+        if(SUCCEEDED(hres))
+            hres = jsdisp_propput_idx(arr, idx-start, lcid, &v, ei, sp);
+
+        if(FAILED(hres)) {
+            jsdisp_release(arr);
+            return hres;
+        }
+    }
+
+    if(retv) {
+        V_VT(retv) = VT_DISPATCH;
+        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(arr);
+    }
+    else
+        jsdisp_release(arr);
+
+    return S_OK;
 }
 
 static HRESULT sort_cmp(script_ctx_t *ctx, DispatchEx *cmp_func, VARIANT *v1, VARIANT *v2, jsexcept_t *ei,
@@ -638,35 +732,7 @@ static HRESULT Array_toLocaleString(DispatchEx *dispex, LCID lcid, WORD flags, D
     return E_NOTIMPL;
 }
 
-static HRESULT Array_valueOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
 static HRESULT Array_unshift(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_hasOwnProperty(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_propertyIsEnumerable(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
-{
-    FIXME("\n");
-    return E_NOTIMPL;
-}
-
-static HRESULT Array_isPrototypeOf(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     FIXME("\n");
@@ -679,6 +745,8 @@ static HRESULT Array_value(DispatchEx *dispex, LCID lcid, WORD flags, DISPPARAMS
     TRACE("\n");
 
     switch(flags) {
+    case INVOKE_FUNC:
+        return throw_type_error(dispex->ctx, ei, IDS_NOT_FUNC, NULL);
     case INVOKE_PROPERTYGET:
         return array_join(dispex, lcid, ((ArrayInstance*)dispex)->length, default_separatorW, retv, ei, sp);
     default:
@@ -716,23 +784,19 @@ static void Array_on_put(DispatchEx *dispex, const WCHAR *name)
 }
 
 static const builtin_prop_t Array_props[] = {
-    {concatW,                Array_concat,               PROPF_METHOD},
-    {hasOwnPropertyW,        Array_hasOwnProperty,       PROPF_METHOD},
-    {isPrototypeOfW,         Array_isPrototypeOf,        PROPF_METHOD},
-    {joinW,                  Array_join,                 PROPF_METHOD},
+    {concatW,                Array_concat,               PROPF_METHOD|1},
+    {joinW,                  Array_join,                 PROPF_METHOD|1},
     {lengthW,                Array_length,               0},
     {popW,                   Array_pop,                  PROPF_METHOD},
-    {propertyIsEnumerableW,  Array_propertyIsEnumerable, PROPF_METHOD},
-    {pushW,                  Array_push,                 PROPF_METHOD},
+    {pushW,                  Array_push,                 PROPF_METHOD|1},
     {reverseW,               Array_reverse,              PROPF_METHOD},
     {shiftW,                 Array_shift,                PROPF_METHOD},
-    {sliceW,                 Array_slice,                PROPF_METHOD},
-    {sortW,                  Array_sort,                 PROPF_METHOD},
-    {spliceW,                Array_splice,               PROPF_METHOD},
+    {sliceW,                 Array_slice,                PROPF_METHOD|2},
+    {sortW,                  Array_sort,                 PROPF_METHOD|1},
+    {spliceW,                Array_splice,               PROPF_METHOD|2},
     {toLocaleStringW,        Array_toLocaleString,       PROPF_METHOD},
     {toStringW,              Array_toString,             PROPF_METHOD},
-    {unshiftW,               Array_unshift,              PROPF_METHOD},
-    {valueOfW,               Array_valueOf,              PROPF_METHOD}
+    {unshiftW,               Array_unshift,              PROPF_METHOD|1},
 };
 
 static const builtin_info_t Array_info = {
@@ -755,12 +819,11 @@ static HRESULT ArrayConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISP
     TRACE("\n");
 
     switch(flags) {
+    case DISPATCH_METHOD:
     case DISPATCH_CONSTRUCT: {
         if(arg_cnt(dp) == 1 && V_VT((arg_var = get_arg(dp, 0))) == VT_I4) {
-            if(V_I4(arg_var) < 0) {
-                FIXME("throw RangeError\n");
-                return E_FAIL;
-            }
+            if(V_I4(arg_var) < 0)
+                return throw_range_error(dispex->ctx, ei, IDS_INVALID_LENGTH, NULL);
 
             hres = create_array(dispex->ctx, V_I4(arg_var), &obj);
             if(FAILED(hres))
@@ -797,7 +860,7 @@ static HRESULT ArrayConstr_value(DispatchEx *dispex, LCID lcid, WORD flags, DISP
     return S_OK;
 }
 
-static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **ret)
+static HRESULT alloc_array(script_ctx_t *ctx, DispatchEx *object_prototype, ArrayInstance **ret)
 {
     ArrayInstance *array;
     HRESULT hres;
@@ -806,10 +869,10 @@ static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **r
     if(!array)
         return E_OUTOFMEMORY;
 
-    if(use_constr)
-        hres = init_dispex_from_constr(&array->dispex, ctx, &Array_info, ctx->array_constr);
+    if(object_prototype)
+        hres = init_dispex(&array->dispex, ctx, &Array_info, object_prototype);
     else
-        hres = init_dispex(&array->dispex, ctx, &Array_info, NULL);
+        hres = init_dispex_from_constr(&array->dispex, ctx, &Array_info, ctx->object_constr);
 
     if(FAILED(hres)) {
         heap_free(array);
@@ -820,12 +883,12 @@ static HRESULT alloc_array(script_ctx_t *ctx, BOOL use_constr, ArrayInstance **r
     return S_OK;
 }
 
-HRESULT create_array_constr(script_ctx_t *ctx, DispatchEx **ret)
+HRESULT create_array_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
     ArrayInstance *array;
     HRESULT hres;
 
-    hres = alloc_array(ctx, FALSE, &array);
+    hres = alloc_array(ctx, object_prototype, &array);
     if(FAILED(hres))
         return hres;
 
@@ -840,7 +903,7 @@ HRESULT create_array(script_ctx_t *ctx, DWORD length, DispatchEx **ret)
     ArrayInstance *array;
     HRESULT hres;
 
-    hres = alloc_array(ctx, TRUE, &array);
+    hres = alloc_array(ctx, NULL, &array);
     if(FAILED(hres))
         return hres;
 
