@@ -1,4 +1,7 @@
+<group>
 <module name="rapps" type="win32gui" installbase="system32" installname="rapps.exe" unicode="yes">
+	<include base="ReactOS">include/reactos</include>
+	<include base="rapps" root="intermediate">.</include>
 	<include base="rapps">.</include>
 
 	<library>advapi32</library>
@@ -11,6 +14,8 @@
 	<library>shell32</library>
 	<library>shlwapi</library>
 	<library>ntdll</library>
+
+	<dependency>rappsmsg</dependency>
 
 	<file>aboutdlg.c</file>
 	<file>available.c</file>
@@ -29,3 +34,7 @@
 	<file>winmain.c</file>
 	<file>rapps.rc</file>
 </module>
+<module name="rappsmsg" type="messageheader">
+	<file>rappsmsg.mc</file>
+</module>
+</group>

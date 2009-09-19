@@ -36,6 +36,16 @@
 #define IDC_STATUSBAR            1000
 #define IDC_DOWNLOAD_PROGRESS    1001
 #define IDC_DOWNLOAD_STATUS      1002
+#define IDC_SAVE_WINDOW_POS      1003
+#define IDC_UPDATE_AVLIST        1004
+#define IDC_DOWNLOAD_DIR_EDIT    1005
+#define IDC_DEL_AFTER_INSTALL    1006
+#define IDC_LOG_ENABLED          1007
+#define IDC_CHOOSE               1008
+#define IDC_DEFAULT_SETTINGS     1009
+#define IDC_INSTALL_TEXT         1010
+#define IDC_CD_INSTALL           1011
+#define IDC_DOWNLOAD_INSTALL     1012
 
 /* Dialogs */
 #define IDD_SETTINGS_DIALOG      300
@@ -74,7 +84,9 @@
 #define IDS_AVAILABLEFORINST     110
 #define IDS_UPDATES              111
 #define IDS_APPLICATIONS         112
-#define IDS_DOWNLOAD_FOLDER      113
+#define IDS_CHOOSE_FOLDER_TEXT   113
+#define IDS_CHOOSE_FOLDER_ERROR  114
+#define IDS_USER_NOT_ADMIN       115
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200

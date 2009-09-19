@@ -84,6 +84,7 @@ UninstallApplication(INT Index, BOOL bModify)
     WCHAR szModify[] = L"ModifyPath";
     WCHAR szUninstall[] = L"UninstallString";
     WCHAR szPath[MAX_PATH];
+    WCHAR szAppName[MAX_STR_LEN];
     DWORD dwType, dwSize;
     INT ItemIndex;
     LVITEM Item;
@@ -102,6 +103,9 @@ UninstallApplication(INT Index, BOOL bModify)
     {
         ItemIndex = Index;
     }
+
+    ListView_GetItemText(hListView, ItemIndex, 0, szAppName, sizeof(szAppName) / sizeof(WCHAR));
+    WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szAppName);
 
     ZeroMemory(&Item, sizeof(LVITEM));
 

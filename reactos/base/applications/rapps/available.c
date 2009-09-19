@@ -38,6 +38,76 @@ ShowAvailableAppInfo(INT Index)
     return TRUE;
 }
 
+static BOOL
+DeleteCurrentAppsDB(VOID)
+{
+    HANDLE hFind = INVALID_HANDLE_VALUE;
+    WIN32_FIND_DATAW FindFileData;
+    WCHAR szCabPath[MAX_PATH];
+    WCHAR szSearchPath[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
+    WCHAR szTmp[MAX_PATH];
+
+    if (!GetCurrentDirectoryW(MAX_PATH, szPath))
+        return FALSE;
+
+    swprintf(szCabPath, L"%s\\rappmgr.cab", szPath);
+
+    if (GetFileAttributesW(szCabPath) != INVALID_FILE_ATTRIBUTES)
+    {
+        if (!DeleteFileW(szCabPath))
+            return FALSE;
+    }
+
+    wcscat(szPath, L"\\rapps\\");
+    swprintf(szSearchPath, L"%s*.txt", szPath);
+
+    hFind = FindFirstFileW(szSearchPath, &FindFileData);
+    if (hFind == INVALID_HANDLE_VALUE)
+        return TRUE;
+
+    do
+    {
+        swprintf(szTmp, L"%s%s", szPath, FindFileData.cFileName);
+        if (!DeleteFileW(szTmp))
+        {
+            FindClose(hFind);
+            return FALSE;
+        }
+    }
+    while (FindNextFileW(hFind, &FindFileData) != 0);
+
+    FindClose(hFind);
+
+    return TRUE;
+}
+
+
+BOOL
+UpdateAppsDB(VOID)
+{
+    WCHAR szPath[MAX_PATH];
+    WCHAR szAppsPath[MAX_PATH];
+    WCHAR szCabPath[MAX_PATH];
+
+    if (!DeleteCurrentAppsDB())
+        return FALSE;
+
+    DownloadApplicationsDB(APPLICATION_DATEBASE_URL);
+
+    if (!GetCurrentDirectoryW(MAX_PATH, szPath))
+        return FALSE;
+
+    swprintf(szCabPath, L"%s\\rappmgr.cab", szPath);
+
+    wcscat(szPath, L"\\rapps\\");
+    wcscpy(szAppsPath, szPath);
+
+    ExtractFilesFromCab(szCabPath, szAppsPath);
+
+    return TRUE;
+}
+
 
 BOOL
 EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
@@ -75,10 +145,10 @@ EnumAvailableApplications(INT EnumType, AVAILENUMPROC lpEnumProc)
     hFind = FindFirstFileW(szPath, &FindFileData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
-		if (GetFileAttributesW(szCabPath) == 0xFFFFFFFF)
-			DownloadApplicationsDB(APPLICATION_DATEBASE_URL);
+        if (GetFileAttributesW(szCabPath) == INVALID_FILE_ATTRIBUTES)
+            DownloadApplicationsDB(APPLICATION_DATEBASE_URL);
 
-		ExtractFilesFromCab(szCabPath, szAppsPath);
+        ExtractFilesFromCab(szCabPath, szAppsPath);
         hFind = FindFirstFileW(szPath, &FindFileData);
         if (hFind == INVALID_HANDLE_VALUE)
             return FALSE;

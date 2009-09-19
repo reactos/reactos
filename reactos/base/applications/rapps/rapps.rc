@@ -37,4 +37,6 @@ IDI_CAT_VIDEO ICON DISCARDABLE "res/cats/video.ico"
 
 1 24 DISCARDABLE "manifest.xml"
 
+#include <rappsmsg.rc>
+
 #include "rsrc.rc"

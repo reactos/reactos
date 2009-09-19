@@ -13,7 +13,70 @@ HINSTANCE hInst;
 HIMAGELIST hImageListView = NULL;
 HIMAGELIST hImageTreeView = NULL;
 INT SelectedEnumType = ENUM_ALL_COMPONENTS;
+SETTINGS_INFO SettingsInfo;
 
+VOID
+FillDafaultSettings(PSETTINGS_INFO pSettingsInfo)
+{
+    pSettingsInfo->bSaveWndPos = TRUE;
+    pSettingsInfo->bUpdateAtStart = FALSE;
+    pSettingsInfo->bLogEnabled = TRUE;
+    wcscpy(pSettingsInfo->szDownloadDir, L"C:\\Downloads");
+    pSettingsInfo->bDelInstaller = FALSE;
+
+    pSettingsInfo->Maximized = FALSE;
+    pSettingsInfo->Left = 0;
+    pSettingsInfo->Top = 0;
+    pSettingsInfo->Right = 680;
+    pSettingsInfo->Bottom = 450;
+}
+
+static BOOL
+LoadSettings(VOID)
+{
+    HKEY hKey;
+    DWORD dwSize;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        dwSize = sizeof(SETTINGS_INFO);
+        if (RegQueryValueExW(hKey, L"Settings", NULL, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
+        {
+            RegCloseKey(hKey);
+            return TRUE;
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    return FALSE;
+}
+
+VOID
+SaveSettings(HWND hwnd)
+{
+    WINDOWPLACEMENT wp;
+    HKEY hKey;
+
+    if (SettingsInfo.bSaveWndPos)
+    {
+        wp.length = sizeof(WINDOWPLACEMENT);
+        GetWindowPlacement(hwnd, &wp);
+
+        SettingsInfo.Left = wp.rcNormalPosition.left;
+        SettingsInfo.Top  = wp.rcNormalPosition.top;
+        SettingsInfo.Right  = wp.rcNormalPosition.right;
+        SettingsInfo.Bottom = wp.rcNormalPosition.bottom;
+        SettingsInfo.Maximized = (IsZoomed(hwnd) || (wp.flags & WPF_RESTORETOMAXIMIZED));
+    }
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", 0, NULL,
+        REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS)
+    {
+        RegSetValueEx(hKey, L"Settings", 0, REG_BINARY, (LPBYTE)&SettingsInfo, sizeof(SETTINGS_INFO));
+        RegCloseKey(hKey);
+    }
+}
 
 VOID
 FreeInstalledAppList(VOID)
@@ -226,6 +289,15 @@ InitCategoriesList(VOID)
 BOOL
 InitControls(HWND hwnd)
 {
+    if (SettingsInfo.bSaveWndPos)
+    {
+        MoveWindow(hwnd, SettingsInfo.Left, SettingsInfo.Top,
+                   SettingsInfo.Right - SettingsInfo.Left,
+                   SettingsInfo.Bottom - SettingsInfo.Top, TRUE);
+
+        if (SettingsInfo.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
+    }
+
     if (CreateStatusBar(hwnd) &&
         CreateToolBar(hwnd) &&
         CreateListView(hwnd) &&
@@ -347,7 +419,7 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     HDWP hdwp = BeginDeferWindowPos(5);
     INT SearchBarWidth = GetWindowWidth(hSearchBar);
     INT RichPos = GetWindowHeight(hRichEdit);
-    INT NewPos = GetClientWindowHeight(hMainWnd) - (RichPos + SPLIT_WIDTH + GetWindowHeight(hStatusBar));
+    INT NewPos = HIWORD(lParam) - (RichPos + SPLIT_WIDTH + GetWindowHeight(hStatusBar));
     INT VSplitterPos;
 
     /* Size status bar */
@@ -387,7 +459,7 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     while (NewPos < SPLIT_WIDTH + GetWindowHeight(hToolBar))
     {
         RichPos--;
-        NewPos = GetClientWindowHeight(hMainWnd) - (RichPos +
+        NewPos = HIWORD(lParam) - (RichPos +
                  SPLIT_WIDTH + GetWindowHeight(hStatusBar));
     }
     SetHSplitterPos(NewPos);
@@ -408,7 +480,7 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
                    0,
                    VSplitterPos + SPLIT_WIDTH,
                    GetHSplitterPos() + SPLIT_WIDTH,
-                   GetClientWindowWidth(hMainWnd) - (VSplitterPos + SPLIT_WIDTH),
+                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
                    RichPos,
                    SWP_NOZORDER|SWP_NOACTIVATE);
 
@@ -418,7 +490,7 @@ MainWndOnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
                    0,
                    VSplitterPos + SPLIT_WIDTH,
                    GetHSplitterPos(),
-                   GetClientWindowWidth(hMainWnd) - (VSplitterPos + SPLIT_WIDTH),
+                   LOWORD(lParam) - (VSplitterPos + SPLIT_WIDTH),
                    SPLIT_WIDTH,
                    SWP_NOZORDER|SWP_NOACTIVATE);
 
@@ -433,6 +505,9 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
         case WM_CREATE:
             if (!InitControls(hwnd))
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
+
+            if (SettingsInfo.bUpdateAtStart)
+                UpdateAppsDB();
             break;
 
         case WM_COMMAND:
@@ -624,12 +699,18 @@ MainWindowProc(HWND hwnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
         {
+            ShowWindow(hwnd, SW_HIDE);
+            SaveSettings(hwnd);
+
+            FreeLogs();
+
             if (IS_AVAILABLE_ENUM(SelectedEnumType))
                 FreeAvailableAppList();
             if (IS_INSTALLED_ENUM(SelectedEnumType))
                 FreeInstalledAppList();
             if (hImageListView) ImageList_Destroy(hImageListView);
             if (hImageTreeView) ImageList_Destroy(hImageTreeView);
+
             PostQuitMessage(0);
             return 0;
         }
@@ -645,8 +726,18 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
     WNDCLASSEXW WndClass = {0};
     WCHAR szWindowClass[] = L"ROSAPPMGR";
     WCHAR szWindowName[MAX_STR_LEN];
+    WCHAR szErrorText[MAX_STR_LEN];
     HANDLE hMutex = NULL;
     MSG Msg;
+
+    hInst = hInstance;
+
+    if (!IsUserAnAdmin())
+    {
+        LoadStringW(hInst, IDS_USER_NOT_ADMIN, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+        MessageBox(0, szErrorText, NULL, MB_OK | MB_ICONWARNING);
+        return 1;
+    }
 
     hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
     if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
@@ -660,7 +751,12 @@ wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nSh
         return 1;
     }
 
-    hInst = hInstance;
+    if (!LoadSettings())
+    {
+        FillDafaultSettings(&SettingsInfo);
+    }
+
+    InitLogs();
 
     InitCommonControls();
 
