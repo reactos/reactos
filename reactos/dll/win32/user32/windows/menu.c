@@ -3967,7 +3967,7 @@ User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
   Common = (PLOADMENU_CALLBACK_ARGUMENTS) Arguments;
   
-  Result = (LRESULT)LoadMenuW(Common->hModule, (LPCWSTR)&Common->MenuName);
+  Result = (LRESULT)LoadMenuW(Common->hModule, IS_INTRESOURCE(Common->MenuName) ? Common->MenuName : (LPCWSTR)&Common->MenuName);
 
   return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
 }
