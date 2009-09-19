@@ -12,96 +12,71 @@
 #define NDEBUG
 
 #define FOURCC(w,x,y,z) (((w) << 24) | ((x) << 16) | ((y) << 8) | (z))
+#define CHEW_TAG FOURCC('C','H','E','W')
 
 PDEVICE_OBJECT WorkQueueDevice;
 LIST_ENTRY     WorkQueue;
 KSPIN_LOCK     WorkQueueLock;
+KEVENT         WorkQueueClear;
 
 typedef struct _WORK_ITEM {
     LIST_ENTRY Entry;
     PIO_WORKITEM WorkItem;
-    VOID (*Worker)( PVOID Data );
-    CHAR UserSpace[1];
+    VOID (*Worker)( PVOID WorkerContext );
+    PVOID WorkerContext;
 } WORK_ITEM, *PWORK_ITEM;
 
 VOID ChewInit( PDEVICE_OBJECT DeviceObject ) {
     WorkQueueDevice = DeviceObject;
     InitializeListHead( &WorkQueue );
     KeInitializeSpinLock( &WorkQueueLock );
+    KeInitializeEvent(&WorkQueueClear, NotificationEvent, TRUE);
 }
 
 VOID ChewShutdown() {
-    KIRQL OldIrql;
-    PLIST_ENTRY Entry;
-    PWORK_ITEM WorkItem;
-
-    KeAcquireSpinLock( &WorkQueueLock, &OldIrql );
-    
-    while( !IsListEmpty( &WorkQueue ) ) {
-	Entry = RemoveHeadList( &WorkQueue );
-	WorkItem = CONTAINING_RECORD( Entry, WORK_ITEM, Entry );
-	IoFreeWorkItem( WorkItem->WorkItem );
-	ExFreePool( WorkItem );
-    }
-
-    KeReleaseSpinLock( &WorkQueueLock, OldIrql );
+    KeWaitForSingleObject(&WorkQueueClear, Executive, KernelMode, FALSE, NULL);
 }
 
 VOID NTAPI ChewWorkItem( PDEVICE_OBJECT DeviceObject, PVOID ChewItem ) {
     PWORK_ITEM WorkItem = ChewItem;
+    KIRQL OldIrql;
 
-    RemoveEntryList( &WorkItem->Entry );
-
-    if( WorkItem->Worker ) 
-	WorkItem->Worker( WorkItem->UserSpace );
+    WorkItem->Worker( WorkItem->WorkerContext );
 
     IoFreeWorkItem( WorkItem->WorkItem );
-    ExFreePool( WorkItem );
+
+    KeAcquireSpinLock(&WorkQueueLock, &OldIrql);
+    RemoveEntryList(&WorkItem->Entry);
+
+    if (IsListEmpty(&WorkQueue))
+        KeSetEvent(&WorkQueueClear, 0, FALSE);
+    KeReleaseSpinLock(&WorkQueueLock, OldIrql);
+
+    ExFreePoolWithTag(WorkItem, CHEW_TAG);
 }
     
 BOOLEAN ChewCreate
-( PVOID *ItemPtr, SIZE_T Bytes, VOID (*Worker)( PVOID ), PVOID UserSpace ) {
+( VOID (*Worker)( PVOID ), PVOID WorkerContext ) {
     PWORK_ITEM Item;
-    
-    if( KeGetCurrentIrql() == PASSIVE_LEVEL ) {
-	if( ItemPtr )
-	    *ItemPtr = NULL;
-	Worker(UserSpace);
-	return TRUE;
-    } else {
-	Item = ExAllocatePoolWithTag
+    Item = ExAllocatePoolWithTag
 	    ( NonPagedPool, 
-	      sizeof( WORK_ITEM ) + Bytes - 1, 
-	      FOURCC('C','H','E','W') );
+	      sizeof( WORK_ITEM ), 
+	      CHEW_TAG );
 	
-	if( Item ) {
-	    Item->WorkItem = IoAllocateWorkItem( WorkQueueDevice );
-	    if( !Item->WorkItem ) {
-		ExFreePool( Item );
-		return FALSE;
-	    }
-	    Item->Worker = Worker;
-	    if( Bytes && UserSpace )
-		RtlCopyMemory( Item->UserSpace, UserSpace, Bytes );
-	    
-	    ExInterlockedInsertTailList
-		( &WorkQueue, &Item->Entry, &WorkQueueLock );
-	    IoQueueWorkItem
-		( Item->WorkItem, ChewWorkItem, DelayedWorkQueue, Item );
-	    
-	    if( ItemPtr ) 
-		*ItemPtr = Item;
-
-	    return TRUE;
-	} else {
+    if( Item ) {
+	Item->WorkItem = IoAllocateWorkItem( WorkQueueDevice );
+	if( !Item->WorkItem ) {
+	    ExFreePool( Item );
 	    return FALSE;
 	}
-    }
-}
+	Item->Worker = Worker;
+	Item->WorkerContext = WorkerContext;
+	ExInterlockedInsertTailList( &WorkQueue, &Item->Entry, &WorkQueueLock );
+	KeResetEvent(&WorkQueueClear);
+	IoQueueWorkItem( Item->WorkItem, ChewWorkItem, DelayedWorkQueue, Item );
 
-VOID ChewRemove( PVOID Item ) {
-    PWORK_ITEM WorkItem = Item;
-    RemoveEntryList( &WorkItem->Entry );
-    IoFreeWorkItem( WorkItem->WorkItem );
-    ExFreePool( WorkItem );
+	return TRUE;
+    } else {
+	return FALSE;
+    }
 }

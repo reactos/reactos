@@ -254,6 +254,8 @@ VOID LanReceiveWorker( PVOID Context ) {
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
 
+    exFreePool(WorkItem);
+
     IPInitializePacket(&IPPacket, 0);
 
     IPPacket.NdisPacket = Packet;
@@ -303,18 +305,19 @@ VOID LanSubmitReceiveWork(
     PNDIS_PACKET Packet,
     NDIS_STATUS Status,
     UINT BytesTransferred) {
-    LAN_WQ_ITEM WQItem;
+    PLAN_WQ_ITEM WQItem = exAllocatePool(NonPagedPool, sizeof(LAN_WQ_ITEM));
     PLAN_ADAPTER Adapter = (PLAN_ADAPTER)BindingContext;
 
     TI_DbgPrint(DEBUG_DATALINK,("called\n"));
 
-    WQItem.Packet = Packet;
-    WQItem.Adapter = Adapter;
-    WQItem.BytesTransferred = BytesTransferred;
+    if (!WQItem) return;
 
-    if( !ChewCreate
-	( NULL, sizeof(LAN_WQ_ITEM),  LanReceiveWorker, &WQItem ) )
-	ASSERT(0);
+    WQItem->Packet = Packet;
+    WQItem->Adapter = Adapter;
+    WQItem->BytesTransferred = BytesTransferred;
+
+    if (!ChewCreate( LanReceiveWorker, WQItem ))
+        exFreePool(WQItem);
 }
 
 VOID NTAPI ProtocolTransferDataComplete(
