@@ -490,7 +490,8 @@ ULONG NBCopyNeighbors
       for( CurNCE = NeighborCache[i].Cache;
 	   CurNCE;
 	   CurNCE = CurNCE->Next ) {
-	  if( CurNCE->Interface == Interface ) {
+	  if( CurNCE->Interface == Interface &&
+              !AddrIsEqual( &CurNCE->Address, &CurNCE->Interface->Unicast ) ) {
 	      if( ArpTable ) {
 		  ArpTable[Size].Index = Interface->Index;
 		  ArpTable[Size].AddrSize = CurNCE->LinkAddressLength;

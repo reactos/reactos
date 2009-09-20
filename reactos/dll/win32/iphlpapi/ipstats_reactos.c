@@ -539,7 +539,8 @@ DWORD getNumArpEntries(void)
 
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
-	    hasArp( tcpFile, &entitySet[i] ) ) {
+	    hasArp( tcpFile, &entitySet[i] ) &&
+	    !isLoopback( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
 					INFO_CLASS_PROTOCOL,
@@ -571,7 +572,7 @@ PMIB_IPNETTABLE getArpTable(void)
     DWORD numEntities, returnSize;
     TDIEntityID *entitySet;
     HANDLE tcpFile;
-    int i, row = 0, totalNumber;
+    int i, totalNumber, TmpIdx, CurrIdx = 0;
     NTSTATUS status;
     PMIB_IPNETTABLE IpArpTable = NULL;
     PMIB_IPNETROW AdapterArpTable = NULL;
@@ -598,8 +599,9 @@ PMIB_IPNETTABLE getArpTable(void)
     status = tdiGetEntityIDSet( tcpFile, &entitySet, &numEntities );
 
     for( i = 0; i < numEntities; i++ ) {
-        if( isIpEntity( tcpFile, &entitySet[i] ) &&
-	    hasArp( tcpFile, &entitySet[i] ) ) {
+        if( isInterface( &entitySet[i] ) &&
+	    hasArp( tcpFile, &entitySet[i] ) &&
+	    !isLoopback( tcpFile, &entitySet[i] ) ) {
 
 	    status = tdiGetSetOfThings( tcpFile,
 					INFO_CLASS_PROTOCOL,
@@ -613,8 +615,8 @@ PMIB_IPNETTABLE getArpTable(void)
 					&returnSize );
 
 	    if( status == STATUS_SUCCESS ) {
-		for( row = 0; row < returnSize; row++ )
-		    IpArpTable->table[row] = AdapterArpTable[row];
+		for( TmpIdx = 0; TmpIdx < returnSize; TmpIdx++, CurrIdx++ )
+		    IpArpTable->table[CurrIdx] = AdapterArpTable[TmpIdx];
 	    }
 
 	    if( AdapterArpTable ) tdiFreeThingSet( AdapterArpTable );
@@ -624,7 +626,7 @@ PMIB_IPNETTABLE getArpTable(void)
     closeTcpFile( tcpFile );
 
     tdiFreeThingSet( entitySet );
-    IpArpTable->dwNumEntries = row;
+    IpArpTable->dwNumEntries = CurrIdx;
 
     return IpArpTable;
 }
