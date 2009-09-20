@@ -333,7 +333,7 @@ static HRESULT WINAPI ISF_Printers_fnQueryInterface(
         IsEqualIID (riid, &IID_IShellFolder) ||
         IsEqualIID (riid, &IID_IShellFolder2))
     {
-        *ppvObj = This;
+        *ppvObj = _IShellFolder_(This);
     }
 
     else if (IsEqualIID (riid, &IID_IPersist) ||
@@ -609,12 +609,20 @@ static HRESULT WINAPI ISF_Printers_fnCreateViewObject (IShellFolder2 * iface,
 static HRESULT WINAPI ISF_Printers_fnGetAttributesOf (IShellFolder2 * iface,
                 UINT cidl, LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
+    static const DWORD dwPrintersAttributes =
+        SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_CANRENAME | SFGAO_CANDELETE;
+    HRESULT hr = S_OK;
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
 
     FIXME ("(%p)->(cidl=%d apidl=%p mask=0x%08lx): stub\n",
            This, cidl, apidl, *rgfInOut);
 
-    return E_NOTIMPL;
+    *rgfInOut &= dwPrintersAttributes;
+
+    *rgfInOut &= ~SFGAO_VALIDATE;
+
+    TRACE ("-- result=0x%08x\n", *rgfInOut);
+    return hr;
 }
 
 /**************************************************************************
@@ -669,6 +677,7 @@ static HRESULT WINAPI ISF_Printers_fnGetUIObjectOf (IShellFolder2 * iface,
 static HRESULT WINAPI ISF_Printers_fnGetDisplayNameOf (IShellFolder2 * iface,
                 LPCITEMIDLIST pidl, DWORD dwFlags, LPSTRRET strRet)
 {
+    LPWSTR pszName;
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     PIDLPrinterStruct * p;
 
@@ -676,12 +685,34 @@ static HRESULT WINAPI ISF_Printers_fnGetDisplayNameOf (IShellFolder2 * iface,
     pdump (pidl);
 
     if (!strRet)
+    {
+        WARN("no strRet\n");
         return E_INVALIDARG;
+    }
+
+    if (_ILIsPrinter(pidl))
+    {
+        pszName = CoTaskMemAlloc(MAX_PATH * sizeof(WCHAR));
+        if (!pszName)
+            return E_OUTOFMEMORY;
+
+        if (LoadStringW(shell32_hInstance, IDS_PRINTERS, pszName, MAX_PATH))
+        {
+            pszName[MAX_PATH-1] = L'\0';
+            strRet->uType = STRRET_WSTR;
+            strRet->u.pOleStr = pszName;
+            return S_OK;
+        }
+        CoTaskMemFree(pszName);
+        return E_FAIL;
+    }
 
     p = _ILGetPrinterStruct(pidl);
     if (!p)
+    {
+        WARN("no printer struct\n");
         return E_INVALIDARG;
-
+    }
     strRet->u.pOleStr = SHAlloc(p->offsServer * sizeof(WCHAR));
     if (!strRet->u.pOleStr)
         return E_OUTOFMEMORY;
