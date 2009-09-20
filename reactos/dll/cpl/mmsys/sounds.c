@@ -66,6 +66,8 @@ PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
 
     while(pMap)
     {
+        ASSERT(pMap);
+        ASSERT(pMap->szName);
         if (!_tcscmp(pMap->szName, szName))
             return pMap;
 
@@ -77,6 +79,8 @@ PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
 
     while(pMap)
     {
+        ASSERT(pMap);
+        ASSERT(pMap->szName);
         if (!_tcscmp(pMap->szName, szName))
             return pMap;
 
@@ -84,8 +88,21 @@ PLABEL_MAP FindLabel(PAPP_MAP pAppMap, TCHAR * szName)
 
     }
 
+    pMap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LABEL_MAP));
+    if (!pMap)
+        return NULL;
 
-    return NULL;
+    pMap->szName = pMap->szDesc = _tcsdup(szName);
+    if (!pMap->szName)
+    {
+        HeapFree(GetProcessHeap(), 0, pMap);
+        return NULL;
+    }
+    pMap->AppMap = pAppMap;
+    pMap->Next = s_Map;
+    s_Map = pMap;
+
+    return pMap;
 }
 
 VOID RemoveLabel(PLABEL_MAP pMap)
@@ -206,7 +223,7 @@ LoadEventLabel(HKEY hKey, TCHAR * szSubKey)
         return FALSE;
     }
 
-    pMap = HeapAlloc(GetProcessHeap(), 0, sizeof(LABEL_MAP));
+    pMap = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(LABEL_MAP));
     if (!pMap)
     {
         return FALSE;
@@ -492,10 +509,9 @@ ImportSoundEntry(HWND hwndDlg, HKEY hKey, TCHAR * szLabelName, TCHAR * szAppName
     {
         return FALSE;
     }
+    pLabel = FindLabel(pAppMap, szLabelName);
 
-    //MessageBox(hwndDlg, szLabelName, szAppName, MB_OK);
-
-    pLabel = FindLabel(NULL, szLabelName);
+    ASSERT(pLabel);
     RemoveLabel(pLabel);
 
     pLabel->AppMap = pAppMap;
