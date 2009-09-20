@@ -114,8 +114,6 @@ VOID NBTimeout(VOID)
                 if (NCE->EventCount % ARP_RATE == 0)
                     NBSendSolicit(NCE);
                 if (NCE->EventTimer - NCE->EventCount == 0) {
-                    DbgPrint("Marking NCE stale: %s\n", A2S(&NCE->Address));
-
                     NCE->State |= NUD_STALE;
 
                     NCE->EventCount = 0;
