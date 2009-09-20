@@ -169,10 +169,9 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
         Adapter->DhclientState.state = S_STATIC;
 
         Netmask = RegReadString( AdapterKey, NULL, "Subnetmask" );
-        if( !Netmask ) Netmask = "255.255.255.0";
 
         Status = AddIPAddress( inet_addr( IPAddress ),
-                               inet_addr( Netmask ),
+                               inet_addr( Netmask ? Netmask : "255.255.255.0" ),
                                Adapter->IfMib.dwIndex,
                                &Adapter->NteContext,
                                &Adapter->NteInstance );
@@ -257,7 +256,7 @@ BOOLEAN AdapterDiscover() {
         DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
                                Table->table[i].dwIndex));
 
-        if (AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen))
+        if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
         {
             /* This is an existing adapter */
             if (InterfaceConnected(Table->table[i])) {

@@ -1576,8 +1576,10 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 
 	if (!leaseFile) {	/* XXX */
 		leaseFile = fopen(path_dhclient_db, "w");
-		if (!leaseFile)
+		if (!leaseFile) {
 			error("can't create %s", path_dhclient_db);
+                        return;
+                }
 	}
 
 	fprintf(leaseFile, "lease {\n");
@@ -1600,17 +1602,20 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 			    lease->options[i].len, 1, 1));
 
 	t = gmtime(&lease->renewal);
-	fprintf(leaseFile, "  renew %d %d/%d/%d %02d:%02d:%02d;\n",
-	    t->tm_wday, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-	    t->tm_hour, t->tm_min, t->tm_sec);
+        if (t)
+	    fprintf(leaseFile, "  renew %d %d/%d/%d %02d:%02d:%02d;\n",
+	        t->tm_wday, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+	        t->tm_hour, t->tm_min, t->tm_sec);
 	t = gmtime(&lease->rebind);
-	fprintf(leaseFile, "  rebind %d %d/%d/%d %02d:%02d:%02d;\n",
-	    t->tm_wday, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-	    t->tm_hour, t->tm_min, t->tm_sec);
+        if (t)
+	    fprintf(leaseFile, "  rebind %d %d/%d/%d %02d:%02d:%02d;\n",
+	         t->tm_wday, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+	         t->tm_hour, t->tm_min, t->tm_sec);
 	t = gmtime(&lease->expiry);
-	fprintf(leaseFile, "  expire %d %d/%d/%d %02d:%02d:%02d;\n",
-	    t->tm_wday, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-	    t->tm_hour, t->tm_min, t->tm_sec);
+        if (t)
+	    fprintf(leaseFile, "  expire %d %d/%d/%d %02d:%02d:%02d;\n",
+	        t->tm_wday, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+	        t->tm_hour, t->tm_min, t->tm_sec);
 	fprintf(leaseFile, "}\n");
 	fflush(leaseFile);
 }
@@ -1765,7 +1770,7 @@ supersede:
 						config->defaults[i].data,
 						ip->client->
 						config->defaults[i].len);
-					dp[len] = '\0';
+					dp[len-1] = '\0';
 				}
 			} else {
 				dp = ip->client->

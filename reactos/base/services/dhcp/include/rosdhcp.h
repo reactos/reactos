@@ -10,7 +10,6 @@
 #include <dhcpcsdk.h>
 #include <stdio.h>
 #include <io.h>
-#include <setjmp.h>
 #include "stdint.h"
 #include "predec.h"
 #include <dhcp/rosdhcp_public.h>
