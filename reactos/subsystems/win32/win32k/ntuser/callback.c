@@ -689,6 +689,8 @@ co_IntCallLoadMenu( HINSTANCE hModule,
 
    UserEnterCo();
 
+   Result = *(LRESULT*)ResultPointer;
+
    IntCbFreeMemory(Argument);
   
    if (!NT_SUCCESS(Status))
