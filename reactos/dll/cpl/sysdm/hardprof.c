@@ -56,6 +56,9 @@ HardProfDlgProc(HWND hwndDlg,
             SendMessage(GetDlgItem(hwndDlg, IDC_HRDPROFDWN),
                         BM_SETIMAGE,(WPARAM)IMAGE_ICON,
                         (LPARAM)(HANDLE)LoadIcon(hApplet, MAKEINTRESOURCE(IDI_DOWN)));
+
+            SendDlgItemMessageW(hwndDlg, IDC_HRDPROFUPDWN, UDM_SETRANGE, (WPARAM) 0, (LPARAM) MAKELONG((short) 500, 0));
+            //SendDlgItemMessageW(hwndDlg, IDC_HRDPROFUPDWN, UDM_SETPOS, (WPARAM) 0, (LPARAM) MAKELONG((short) 30, 0));
         }
         break;
 
