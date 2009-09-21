@@ -151,7 +151,7 @@ CcCopyWrite(IN PFILE_OBJECT FileObject,
 			(FileObject,
 			 &CacheOffset,
 			 WriteLen,
-			 (CacheOffset.QuadPart == Bcb->FileOffset.QuadPart && 
+			 (!(CacheOffset.QuadPart & (CACHE_STRIPE - 1)) &&
 			  WriteLen == CACHE_STRIPE),
 			 Wait ? PIN_WAIT : PIN_IF_BCB,
 			 (PVOID*)&Bcb,
