@@ -27,11 +27,11 @@ BOOLEAN
 NTAPI
 KeDisableInterrupts(VOID)
 {
-    ULONG Flags = 0;
+    ULONG Flags;
     BOOLEAN Return;
 
     /* Get EFLAGS and check if the interrupt bit is set */
-    Ke386SaveFlags(Flags);
+    Flags = __readeflags();
     Return = (Flags & EFLAGS_INTERRUPT_MASK) ? TRUE: FALSE;
 
     /* Disable interrupts */

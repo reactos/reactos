@@ -19,6 +19,19 @@
 
 #include <freeldr.h>
 
+FORCEINLINE
+VOID
+ClearCarryFlag(VOID)
+{
+#if defined(__GNUC__)
+    __asm__ ("clc");
+#elif defined(_MSC_VER)
+    __asm clc;
+#else
+#error
+#endif
+}
+
 #define BCD_INT(bcd) (((bcd & 0xf0) >> 4) * 10 + (bcd &0x0f))
 
 TIMEINFO*
@@ -31,7 +44,7 @@ PcGetTime(VOID)
      * in the Compaq Deskpro EP/SB, leave CF unchanged
      * if successful, so CF should be cleared before
      * calling this function. */
-    __asm__ ("clc");
+    ClearCarryFlag();
 
     /* Int 1Ah AH=04h
      * TIME - GET REAL-TIME CLOCK DATE (AT,XT286,PS)
@@ -55,7 +68,7 @@ PcGetTime(VOID)
 
     /* Some BIOSes leave CF unchanged if successful,
      * so CF should be cleared before calling this function. */
-    __asm__ ("clc");
+    ClearCarryFlag();
 
     /* Int 1Ah AH=02h
      * TIME - GET REAL-TIME CLOCK TIME (AT,XT286,PS)

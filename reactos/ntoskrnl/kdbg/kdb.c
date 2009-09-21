@@ -413,7 +413,7 @@ KdbpStepIntoInstruction(
     }
 
     /* Read the interrupt descriptor table register  */
-    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&Idtr.Limit);
+    __sidt(&Idtr.Limit);
     if (IntVect >= (Idtr.Limit + 1) / 8)
     {
         /*KdbpPrint("IDT does not contain interrupt vector %d\n.", IntVect);*/
@@ -1573,14 +1573,7 @@ KdbEnterDebuggerException(
             ULONG_PTR TrapCr2;
             ULONG Err;
 
-#ifdef __GNUC__
-            asm volatile("movl %%cr2, %0" : "=r"(TrapCr2));
-#elif _MSC_VER
-            __asm mov eax, cr2;
-            __asm mov TrapCr2, eax;
-#else
-#error Unknown compiler for inline assembler
-#endif
+            TrapCr2 = __readcr2();
 
             Err = TrapFrame->ErrCode;
             KdbpPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
@@ -1611,13 +1604,13 @@ KdbEnterDebuggerException(
     KdbpTrapFrameToKdbTrapFrame(TrapFrame, &KdbTrapFrame);
 
     /* Enter critical section */
-    Ke386SaveFlags(OldEflags);
+    OldEflags = __readeflags();
     _disable();
 
     /* Exception inside the debugger? Game over. */
     if (InterlockedIncrement(&KdbEntryCount) > 1)
     {
-        Ke386RestoreFlags(OldEflags);
+        __writeeflags(OldEflags);
         return kdHandleException;
     }
 
@@ -1654,7 +1647,7 @@ KdbEnterDebuggerException(
     InterlockedDecrement(&KdbEntryCount);
 
     /* Leave critical section */
-    Ke386RestoreFlags(OldEflags);
+    __writeeflags(OldEflags);
 
     /* Check if user requested a bugcheck */
     if (KdbpBugCheckRequested)

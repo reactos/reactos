@@ -1269,16 +1269,16 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #if defined(_M_IX86)
     PKTSS Tss;
     PKGDTENTRY TssEntry;
-    KDESCRIPTOR IdtDescriptor = { 0, 0, 0 };
+    KDESCRIPTOR IdtDescriptor;
 
-    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
     RtlCopyMemory(KiHackIdt, (PVOID)IdtDescriptor.Base, IdtDescriptor.Limit + 1);
     IdtDescriptor.Base = (ULONG)&KiHackIdt;
     IdtDescriptor.Limit = sizeof(KiHackIdt) - 1;
 
     /* Load the GDT and IDT */
-    Ke386SetGlobalDescriptorTable(*(PKDESCRIPTOR)&KiGdtDescriptor.Limit);
-    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
+    Ke386SetGlobalDescriptorTable(&KiGdtDescriptor.Limit);
+    __lidt(&IdtDescriptor.Limit);
 
     /* Initialize the boot TSS */
     Tss = &KiBootTss;

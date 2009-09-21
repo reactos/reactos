@@ -90,24 +90,25 @@ NTAPI
 CPUID(OUT ULONG CpuInfo[4],
       IN ULONG InfoType)
 {
-    Ki386Cpuid(InfoType, &CpuInfo[0], &CpuInfo[1], &CpuInfo[2], &CpuInfo[3]);
+    /* Perform the CPUID Operation */
+    __cpuid((int*)CpuInfo, InfoType);
 }
 
 VOID
+NTAPI
 WRMSR(IN ULONG Register,
       IN LONGLONG Value)
 {
-    LARGE_INTEGER LargeVal;
-    LargeVal.QuadPart = Value;
-    Ke386Wrmsr(Register, LargeVal.HighPart, LargeVal.LowPart);
+   /* Write to the MSR */
+    __writemsr(Register, Value);
 }
 
 LONGLONG
+NTAPI
 RDMSR(IN ULONG Register)
 {
-    LARGE_INTEGER LargeVal = {{0, 0}};
-    Ke386Rdmsr(Register, LargeVal.HighPart, LargeVal.LowPart);
-    return LargeVal.QuadPart;
+    /* Read from the MSR */
+    return __readmsr(Register);
 }
 
 /* FUNCTIONS *****************************************************************/
@@ -116,7 +117,7 @@ VOID
 NTAPI
 KiSetProcessorType(VOID)
 {
-    ULONG EFlags = 0, NewEFlags;
+    ULONG EFlags, NewEFlags;
     ULONG Reg[4];
     ULONG Stepping, Type;
 
@@ -124,19 +125,19 @@ KiSetProcessorType(VOID)
     KeGetCurrentPrcb()->CpuID = 0;
 
     /* Save EFlags */
-    Ke386SaveFlags(EFlags);
+    EFlags = __readeflags();
 
     /* XOR out the ID bit and update EFlags */
     NewEFlags = EFlags ^ EFLAGS_ID;
-    Ke386RestoreFlags(NewEFlags);
+    __writeeflags(NewEFlags);
 
     /* Get them back and see if they were modified */
-    Ke386SaveFlags(NewEFlags);
+    NewEFlags = __readeflags();
     if (NewEFlags != EFlags)
     {
         /* The modification worked, so CPUID exists. Set the ID Bit again. */
         EFlags |= EFLAGS_ID;
-        Ke386RestoreFlags(EFlags);
+        __writeeflags(EFlags);
 
         /* Peform CPUID 0 to see if CPUID 1 is supported */
         CPUID(Reg, 0);
@@ -175,7 +176,7 @@ KiSetProcessorType(VOID)
     }
 
     /* Restore EFLAGS */
-    Ke386RestoreFlags(EFlags);
+    __writeeflags(EFlags);
 }
 
 ULONG
@@ -720,18 +721,18 @@ KiRestoreProcessorControlState(PKPROCESSOR_STATE ProcessorState)
     //
     // Restore the DR registers
     //
-    Ke386SetDr0(ProcessorState->SpecialRegisters.KernelDr0);
-    Ke386SetDr1(ProcessorState->SpecialRegisters.KernelDr1);
-    Ke386SetDr2(ProcessorState->SpecialRegisters.KernelDr2);
-    Ke386SetDr3(ProcessorState->SpecialRegisters.KernelDr3);
-    Ke386SetDr6(ProcessorState->SpecialRegisters.KernelDr6);
-    Ke386SetDr7(ProcessorState->SpecialRegisters.KernelDr7);
+    __writedr(0, ProcessorState->SpecialRegisters.KernelDr0);
+    __writedr(1, ProcessorState->SpecialRegisters.KernelDr1);
+    __writedr(2, ProcessorState->SpecialRegisters.KernelDr2);
+    __writedr(3, ProcessorState->SpecialRegisters.KernelDr3);
+    __writedr(6, ProcessorState->SpecialRegisters.KernelDr6);
+    __writedr(7, ProcessorState->SpecialRegisters.KernelDr7);
 
     //
     // Restore GDT, IDT, LDT and TSS
     //
-    Ke386SetGlobalDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Gdtr.Limit);
-    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Idtr.Limit);
+    Ke386SetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
+    __lidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
     Ke386SetTr(ProcessorState->SpecialRegisters.Tr);
     Ke386SetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
 }
@@ -748,19 +749,19 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState)
                                            __readcr4() : 0;
 
     /* Save the DR registers */
-    ProcessorState->SpecialRegisters.KernelDr0 = Ke386GetDr0();
-    ProcessorState->SpecialRegisters.KernelDr1 = Ke386GetDr1();
-    ProcessorState->SpecialRegisters.KernelDr2 = Ke386GetDr2();
-    ProcessorState->SpecialRegisters.KernelDr3 = Ke386GetDr3();
-    ProcessorState->SpecialRegisters.KernelDr6 = Ke386GetDr6();
-    ProcessorState->SpecialRegisters.KernelDr7 = Ke386GetDr7();
-    Ke386SetDr7(0);
+    ProcessorState->SpecialRegisters.KernelDr0 = __readdr(0);
+    ProcessorState->SpecialRegisters.KernelDr1 = __readdr(1);
+    ProcessorState->SpecialRegisters.KernelDr2 = __readdr(2);
+    ProcessorState->SpecialRegisters.KernelDr3 = __readdr(3);
+    ProcessorState->SpecialRegisters.KernelDr6 = __readdr(6);
+    ProcessorState->SpecialRegisters.KernelDr7 = __readdr(7);
+    __writedr(7, 0);
 
     /* Save GDT, IDT, LDT and TSS */
-    Ke386GetGlobalDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Gdtr.Limit);
-    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&ProcessorState->SpecialRegisters.Idtr.Limit);
-    Ke386GetTr(ProcessorState->SpecialRegisters.Tr);
-    Ke386GetLocalDescriptorTable(ProcessorState->SpecialRegisters.Ldtr);
+    Ke386GetGlobalDescriptorTable(&ProcessorState->SpecialRegisters.Gdtr.Limit);
+    __sidt(&ProcessorState->SpecialRegisters.Idtr.Limit);
+    Ke386GetTr(&ProcessorState->SpecialRegisters.Tr);
+    Ke386GetLocalDescriptorTable(&ProcessorState->SpecialRegisters.Ldtr);
 }
 
 VOID
@@ -776,11 +777,11 @@ NTAPI
 KiLoadFastSyscallMachineSpecificRegisters(IN ULONG_PTR Context)
 {
     /* Set CS and ESP */
-    Ke386Wrmsr(0x174, KGDT_R0_CODE, 0);
-    Ke386Wrmsr(0x175, (ULONG)KeGetCurrentPrcb()->DpcStack, 0);
+    WRMSR(0x174, KGDT_R0_CODE);
+    WRMSR(0x175, (ULONG_PTR)KeGetCurrentPrcb()->DpcStack);
 
     /* Set LSTAR */
-    Ke386Wrmsr(0x176, (ULONG)KiFastCallEntry, 0);
+    WRMSR(0x176, (ULONG_PTR)KiFastCallEntry);
     return 0;
 }
 
@@ -842,7 +843,7 @@ VOID
 NTAPI
 KiI386PentiumLockErrataFixup(VOID)
 {
-    KDESCRIPTOR IdtDescriptor = { 0, 0, 0 };
+    KDESCRIPTOR IdtDescriptor;
     PKIDTENTRY NewIdt, NewIdt2;
 
     /* Allocate memory for a new IDT */
@@ -855,14 +856,14 @@ KiI386PentiumLockErrataFixup(VOID)
     _disable();
 
     /* Get the current IDT and copy it */
-    Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
+    __sidt(&IdtDescriptor.Limit);
     RtlCopyMemory(NewIdt2,
                   (PVOID)IdtDescriptor.Base,
                   IdtDescriptor.Limit + 1);
     IdtDescriptor.Base = (ULONG)NewIdt2;
 
     /* Set the new IDT */
-    Ke386SetInterruptDescriptorTable(*(PKDESCRIPTOR)&IdtDescriptor.Limit);
+    __lidt(&IdtDescriptor.Limit);
     ((PKIPCR)KeGetPcr())->IDT = NewIdt2;
 
     /* Restore interrupts */
@@ -877,10 +878,10 @@ NTAPI
 KeFreezeExecution(IN PKTRAP_FRAME TrapFrame,
                   IN PKEXCEPTION_FRAME ExceptionFrame)
 {
-    ULONG Flags = 0;
+    ULONG Flags;
 
     /* Disable interrupts and get previous state */
-    Ke386SaveFlags(Flags);
+    Flags = __readeflags();
     //Flags = __getcallerseflags();
     _disable();
 

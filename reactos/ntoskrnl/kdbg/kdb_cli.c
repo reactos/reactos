@@ -648,8 +648,8 @@ KdbpCmdRegs(
     else if (Argv[0][0] == 'c') /* cregs */
     {
         ULONG Cr0, Cr2, Cr3, Cr4;
-        KDESCRIPTOR Gdtr = {0}, Ldtr = {0}, Idtr = {0};
-        ULONG Tr = 0;
+        KDESCRIPTOR Gdtr, Ldtr, Idtr;
+        ULONG Tr;
         static const PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                                            " WP", NULL, " AM", NULL, NULL, NULL, NULL, NULL,
@@ -665,12 +665,12 @@ KdbpCmdRegs(
         Cr4 = KdbCurrentTrapFrame->Cr4;
 
         /* Get descriptor table regs */
-        Ke386GetGlobalDescriptorTable(*(PKDESCRIPTOR)&Gdtr.Limit);
-        Ke386GetLocalDescriptorTable(Ldtr.Limit);
-        Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&Idtr.Limit);
+        Ke386GetGlobalDescriptorTable(&Gdtr.Limit);
+        Ke386GetLocalDescriptorTable(&Ldtr.Limit);
+        __sidt(&Idtr.Limit);
 
         /* Get the task register */
-        Ke386GetTr(Tr);
+        Ke386GetTr((PUSHORT)&Tr);
 
         /* Display the control registers */
         KdbpPrint("CR0  0x%08x ", Cr0);
@@ -1541,7 +1541,7 @@ KdbpCmdGdtLdtIdt(
     ULONG Argc,
     PCHAR Argv[])
 {
-    KDESCRIPTOR Reg = {0};
+    KDESCRIPTOR Reg;
     ULONG SegDesc[2];
     ULONG SegBase;
     ULONG SegLimit;
@@ -1554,7 +1554,7 @@ KdbpCmdGdtLdtIdt(
     if (Argv[0][0] == 'i')
     {
         /* Read IDTR */
-        Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&Reg.Limit);
+        __sidt(&Reg.Limit);
 
         if (Reg.Limit < 7)
         {
@@ -1614,7 +1614,7 @@ KdbpCmdGdtLdtIdt(
         if (Argv[0][0] == 'g')
         {
             /* Read GDTR */
-            Ke386GetGlobalDescriptorTable(*(PKDESCRIPTOR)&Reg.Limit);
+            Ke386GetGlobalDescriptorTable(&Reg.Limit);
             i = 8;
         }
         else
@@ -1622,7 +1622,7 @@ KdbpCmdGdtLdtIdt(
             ASSERT(Argv[0][0] == 'l');
 
             /* Read LDTR */
-            Ke386GetLocalDescriptorTable(Reg.Limit);
+            Ke386GetLocalDescriptorTable(&Reg.Limit);
             i = 0;
             ul = 1 << 2;
         }
@@ -2742,7 +2742,7 @@ KdbpCliInit()
     HANDLE hFile = NULL;
     INT FileSize;
     PCHAR FileBuffer;
-    ULONG OldEflags = 0;
+    ULONG OldEflags;
 
     /* Initialize the object attributes */
     RtlInitUnicodeString(&FileName, L"\\SystemRoot\\system32\\drivers\\etc\\KDBinit");
@@ -2793,7 +2793,7 @@ KdbpCliInit()
     FileBuffer[FileSize] = '\0';
 
     /* Enter critical section */
-    Ke386SaveFlags(OldEflags);
+    OldEflags = __readeflags();
     _disable();
 
     /* Interpret the init file... */
@@ -2802,7 +2802,7 @@ KdbpCliInit()
     KdbInitFileBuffer = NULL;
 
     /* Leave critical section */
-    Ke386RestoreFlags(OldEflags);
+    __writeeflags(OldEflags);
 
     ExFreePool(FileBuffer);
 }
