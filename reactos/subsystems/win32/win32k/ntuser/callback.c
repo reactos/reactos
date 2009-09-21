@@ -662,11 +662,13 @@ co_IntCallLoadMenu( HINSTANCE hModule,
    Argument = IntCbAllocateMemory(ArgumentLength);
    if (NULL == Argument)
    {
-      DPRINT1("EventProc callback failed: out of memory\n");
+      DPRINT1("LoadMenu callback failed: out of memory\n");
       return 0;
    }
    Common = (PLOADMENU_CALLBACK_ARGUMENTS) Argument;
 
+   // Help Intersource check and MenuName is now 4 bytes + so zero it.
+   RtlZeroMemory(Common, ArgumentLength); 
 
    Common->hModule = hModule;
    if (pMenuName->Length)
