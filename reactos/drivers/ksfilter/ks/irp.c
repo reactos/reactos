@@ -772,7 +772,7 @@ ProbeMdl:
 
         /* check all stream headers */
         StreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-
+        ASSERT(StreamHeader);
         _SEH2_TRY
         {
             do
@@ -880,7 +880,10 @@ ProbeMdl:
 
         /* now probe the allocated mdl's */
         if (!NT_SUCCESS(Status))
+		{
+            DPRINT("Status %x\n", Status);
             return Status;
+		}
         else
             goto ProbeMdl;
     }
@@ -1607,7 +1610,7 @@ KsAddIrpToCancelableQueue(
     PIO_STACK_LOCATION IoStack;
     KIRQL OldLevel;
 
-    DPRINT1("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
+    DPRINT("KsAddIrpToCancelableQueue QueueHead %p SpinLock %p Irp %p ListLocation %x DriverCancel %p\n", QueueHead, SpinLock, Irp, ListLocation, DriverCancel);
     /* check for required parameters */
     if (!QueueHead || !SpinLock || !Irp)
         return;
