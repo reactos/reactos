@@ -315,7 +315,7 @@ IKsAllocator_fnAllocateFrame(
     if (Frame)
     {
         *OutFrame = Frame;
-        InterlockedIncrement((PLONG)This->Status.AllocatedFrames);
+        InterlockedIncrement((PLONG)&This->Status.AllocatedFrames);
         return STATUS_SUCCESS;
     }
 
