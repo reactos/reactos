@@ -61,6 +61,7 @@ static const struct {
 	{&CLSID_OpenWith,       &SHEOW_Constructor},
 	{&dummy1,               &INewItem_Constructor},
 	{&CLSID_StartMenu,      &StartMenu_Constructor},
+	{&CLSID_MenuBandSite,   &MenuBandSite_Constructor},
 	{NULL,NULL}
 };
 
