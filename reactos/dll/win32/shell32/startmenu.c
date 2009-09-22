@@ -20,12 +20,13 @@
 
 #include <precomp.h>
 
-WINE_DEFAULT_DEBUG_CHANNEL(shell);
+WINE_DEFAULT_DEBUG_CHANNEL(shell32start);
 
 typedef struct _tagStartMenu {
     const IMenuPopupVtbl *vtbl;
     const IObjectWithSiteVtbl *objectSiteVtbl;
     const IInitializeObjectVtbl *initObjectVtbl;
+    const IBandSiteVtbl *bandSiteVtbl;
     IUnknown *pUnkSite;
     LONG refCount;
 } StartMenu, *LPStartMenu;
@@ -33,6 +34,7 @@ typedef struct _tagStartMenu {
 static const IMenuPopupVtbl StartMenuVtbl;
 static const IObjectWithSiteVtbl StartMenu_ObjectWithSiteVtbl;
 static const IInitializeObjectVtbl StartMenu_InitializeObjectVtbl;
+static const IBandSiteVtbl StartMenu_BandSiteVtbl;
 
 static LPStartMenu __inline impl_from_IMenuPopup(IMenuPopup *iface)
 {
@@ -53,7 +55,7 @@ HRESULT WINAPI StartMenu_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *p
 {
     StartMenu *This;
 
-    TRACE("(%p, %s, %p)\n", pUnkOuter, debugstr_guid(riid), ppv);
+    TRACE("StartMenu_Constructor(%p, %s, %p)\n", pUnkOuter, debugstr_guid(riid), ppv);
 
     if (pUnkOuter)
         return E_POINTER;
@@ -65,9 +67,10 @@ HRESULT WINAPI StartMenu_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *p
     This->vtbl = &StartMenuVtbl;
     This->objectSiteVtbl = &StartMenu_ObjectWithSiteVtbl;
     This->initObjectVtbl = &StartMenu_InitializeObjectVtbl;
+    This->bandSiteVtbl = &StartMenu_BandSiteVtbl;
     This->refCount = 1;
 
-    TRACE("returning %p\n", This);
+    TRACE("StartMenu_Constructor returning %p\n", This);
     *ppv = (IUnknown *)This;
     return S_OK;
 }
@@ -84,7 +87,7 @@ static HRESULT WINAPI StartMenu_QueryInterface(IMenuPopup *iface, REFIID iid, LP
     StartMenu *This = impl_from_IMenuPopup(iface);
     *ppvOut = NULL;
 
-    TRACE("(%p, %s, %p)\n", iface, debugstr_guid(iid), ppvOut);
+    TRACE("StartMenu_Constructor (%p, %s, %p)\n", iface, debugstr_guid(iid), ppvOut);
 
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IOleWindow)
      || IsEqualIID(iid, &IID_IDeskBar) || IsEqualIID(iid, &IID_IMenuPopup))
@@ -99,6 +102,11 @@ static HRESULT WINAPI StartMenu_QueryInterface(IMenuPopup *iface, REFIID iid, LP
     {
         *ppvOut = &This->initObjectVtbl;
     }
+    else if (IsEqualIID(iid, &IID_IBandSite))
+    {
+        *ppvOut = &This->bandSiteVtbl;
+    }
+
 
     if (*ppvOut)
     {
@@ -113,7 +121,7 @@ static HRESULT WINAPI StartMenu_QueryInterface(IMenuPopup *iface, REFIID iid, LP
 static ULONG WINAPI StartMenu_AddRef(IMenuPopup *iface)
 {
     StartMenu *This = impl_from_IMenuPopup(iface);
-    TRACE("(%p)\n", iface);
+    TRACE("StartMenu_AddRef(%p)\n", iface);
     return InterlockedIncrement(&This->refCount);
 }
 
@@ -122,7 +130,7 @@ static ULONG WINAPI StartMenu_Release(IMenuPopup *iface)
     StartMenu *This = impl_from_IMenuPopup(iface);
     ULONG ret;
 
-    TRACE("(%p)\n", iface);
+    TRACE("StartMenu_Release(%p)\n", iface);
 
     ret = InterlockedDecrement(&This->refCount);
     if (ret == 0)
@@ -150,8 +158,11 @@ static HRESULT WINAPI StartMenu_SetClient(IMenuPopup *iface, IUnknown *punkClien
 
 static HRESULT WINAPI StartMenu_GetClient(IMenuPopup *iface, IUnknown **ppunkClient)
 {
-    FIXME("(%p, %p)\n", iface, ppunkClient);
-    return E_NOTIMPL;
+    StartMenu * This = (StartMenu*)iface;
+    TRACE("StartMenu_GetClient (%p, %p)\n", iface, ppunkClient);
+    *ppunkClient = (IUnknown*)&This->bandSiteVtbl;
+    IUnknown_AddRef(*ppunkClient);
+    return S_OK;
 }
 
 static HRESULT WINAPI StartMenu_OnPosRectChangeDB(IMenuPopup *iface, LPRECT prc)
@@ -180,17 +191,21 @@ static HRESULT WINAPI StartMenu_SetSubMenu(IMenuPopup *iface, IMenuPopup *pmp, B
 
 static const IMenuPopupVtbl StartMenuVtbl =
 {
+    /* IUnknown */
     StartMenu_QueryInterface,
     StartMenu_AddRef,
     StartMenu_Release,
 
+    /* IOleWindow */
     StartMenu_GetWindow,
     StartMenu_ContextSensitiveHelp,
 
+    /* IDeskBar */
     StartMenu_SetClient,
     StartMenu_GetClient,
     StartMenu_OnPosRectChangeDB,
 
+    /* IMenuPopup */
     StartMenu_Popup,
     StartMenu_OnSelect,
     StartMenu_SetSubMenu,
@@ -213,7 +228,7 @@ static ULONG WINAPI StartMenu_IObjectWithSite_AddRef(IObjectWithSite *iface)
 static ULONG WINAPI StartMenu_IObjectWithSite_Release(IObjectWithSite *iface)
 {
     StartMenu *This = impl_from_IObjectWithSite(iface);
-    TRACE("(%p)\n", iface);
+    TRACE("StartMenu_IObjectWithSite_Release (%p)\n", iface);
     return StartMenu_Release((IMenuPopup *)This);
 }
 
@@ -221,7 +236,7 @@ static HRESULT WINAPI StartMenu_IObjectWithSite_SetSite(IObjectWithSite *iface, 
 {
     StartMenu *This = impl_from_IObjectWithSite(iface);
 
-    TRACE("(%p, %p)\n", iface, pUnkSite);
+    TRACE("StartMenu_IObjectWithSite_SetSite(%p, %p)\n", iface, pUnkSite);
 
     if (This->pUnkSite)
         IUnknown_Release(This->pUnkSite);
@@ -263,20 +278,20 @@ static HRESULT WINAPI StartMenu_IInitializeObject_QueryInterface(IInitializeObje
 static ULONG WINAPI StartMenu_IInitializeObject_AddRef(IInitializeObject *iface)
 {
     StartMenu *This = impl_from_IInitializeObject(iface);
-    TRACE("(%p)\n", iface);
+    TRACE("StartMenu_IInitializeObject_AddRef(%p)\n", iface);
     return StartMenu_AddRef((IMenuPopup *)This);
 }
 
 static ULONG WINAPI StartMenu_IInitializeObject_Release(IInitializeObject *iface)
 {
     StartMenu *This = impl_from_IInitializeObject(iface);
-    TRACE("(%p)\n", iface);
+    TRACE("StartMenu_IInitializeObject_Release (%p)\n", iface);
     return StartMenu_Release((IMenuPopup *)This);
 }
 
 static HRESULT WINAPI StartMenu_IInitializeObject_Initialize(IInitializeObject *iface)
 {
-    FIXME("Stub\n");
+    FIXME("StartMenu_IInitializeObject_Initialize Stub\n");
     return S_OK;
 }
 
@@ -288,3 +303,89 @@ static const IInitializeObjectVtbl StartMenu_InitializeObjectVtbl =
 
     StartMenu_IInitializeObject_Initialize,
 };
+
+//---------------------------------------------------------------------------------------------------------
+// IBandSite interface
+
+static HRESULT WINAPI StartMenu_IBandSite_QueryInterface(IBandSite *iface, REFIID iid, LPVOID *ppvOut)
+{
+    StartMenu *This = (StartMenu*)CONTAINING_RECORD(iface, StartMenu, bandSiteVtbl);
+    TRACE("StartMenu_IBandSite_QueryInterface(%p, %s, %p)\n", iface, debugstr_guid(iid), ppvOut);
+    return StartMenu_QueryInterface((IMenuPopup *)This, iid, ppvOut);
+}
+
+static ULONG WINAPI StartMenu_IBandSite_AddRef(IBandSite *iface)
+{
+    StartMenu *This = (StartMenu*)CONTAINING_RECORD(iface, StartMenu, bandSiteVtbl);
+    TRACE("StartMenu_IBandSite_AddRef(%p)\n", iface);
+    return StartMenu_AddRef((IMenuPopup *)This);
+}
+
+static ULONG WINAPI StartMenu_IBandSite_Release(IBandSite *iface)
+{
+    StartMenu *This = (StartMenu*)CONTAINING_RECORD(iface, StartMenu, bandSiteVtbl);
+    TRACE("StartMenu_IBandSite_Release (%p)\n", iface);
+    return StartMenu_Release((IMenuPopup *)This);
+}
+
+
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_AddBand(IBandSite *iface, IUnknown *punk)
+{
+    FIXME("StartMenu_IBandSite_AddBand Stub punk %p\n", punk);
+    return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_EnumBands(IBandSite *iface, UINT uBand, DWORD *pdwBandID)
+{
+    FIXME("StartMenu_IBandSite_EnumBands Stub uBand %uu pdwBandID %p\n", uBand, pdwBandID);
+    return E_FAIL;
+}
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_QueryBand(IBandSite *iface, DWORD dwBandID, IDeskBand **ppstb, DWORD *pdwState, LPWSTR pszName, int cchName)
+{
+    FIXME("StartMenu_IBandSite_QueryBand Stub dwBandID %u IDeskBand %p pdwState %p Name %p cchName %u\n", dwBandID, ppstb, pdwState, pszName, cchName);
+    return E_FAIL;
+}
+
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_SetBandState(IBandSite *iface, DWORD dwBandID, DWORD dwMask, DWORD dwState)
+{
+    FIXME("StartMenu_IBandSite_SetBandState Stub dwBandID %u dwMask %x dwState %u\n", dwBandID, dwMask, dwState);
+    return E_FAIL;
+}
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_RemoveBand(IBandSite *iface, DWORD dwBandID)
+{
+    FIXME("StartMenu_IBandSite_RemoveBand Stub dwBandID %p\n", dwBandID);
+    return E_FAIL;
+}
+
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_GetBandObject(IBandSite *iface, DWORD dwBandID, REFIID riid, void **ppv)
+{
+    FIXME("StartMenu_IBandSite_GetBandObject Stub dwBandID %u riid %p ppv %p\n", dwBandID, riid, ppv);
+    return E_FAIL;
+}
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_SetBandSiteInfo(IBandSite *iface, const BANDSITEINFO *pbsinfo)
+{
+    FIXME("StartMenu_IBandSite_SetBandSiteInfo Stub pbsinfo %p\n", pbsinfo);
+    return E_FAIL;
+
+}
+static HRESULT STDMETHODCALLTYPE StartMenu_IBandSite_GetBandSiteInfo(IBandSite *iface, BANDSITEINFO *pbsinfo)
+{
+    FIXME("StartMenu_IBandSite_GetBandSiteInfo Stub pbsinfo %p\n", pbsinfo);
+    return E_FAIL;
+}
+
+static const IBandSiteVtbl StartMenu_BandSiteVtbl =
+{
+    StartMenu_IBandSite_QueryInterface,
+    StartMenu_IBandSite_AddRef,
+    StartMenu_IBandSite_Release,
+    StartMenu_IBandSite_AddBand,
+    StartMenu_IBandSite_EnumBands,
+    StartMenu_IBandSite_QueryBand,
+    StartMenu_IBandSite_SetBandState,
+    StartMenu_IBandSite_RemoveBand,
+    StartMenu_IBandSite_GetBandObject,
+    StartMenu_IBandSite_SetBandSiteInfo,
+    StartMenu_IBandSite_GetBandSiteInfo
+};
+
