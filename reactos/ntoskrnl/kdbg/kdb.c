@@ -1678,15 +1678,6 @@ continue_execution:
 }
 
 VOID
-KdbDeleteProcessHook(
-    IN PEPROCESS Process)
-{
-    KdbSymFreeProcessSymbols(Process);
-
-    /* FIXME: Delete breakpoints for process */
-}
-
-VOID
 NTAPI
 KdbpGetCommandLineSettings(
     PCHAR p1)
