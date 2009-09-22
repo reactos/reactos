@@ -57,4 +57,6 @@ VOID	FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer);
 ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
 
+#define MAX_FDS 60
+
 #endif // #defined __FS_H

@@ -163,7 +163,7 @@ ULONG FsGetNumPathParts(PCSTR Path)
 	}
 	num++;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FatGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
+	DPRINTM(DPRINT_FILESYSTEM, "FsGetNumPathParts() Path = %s NumPathParts = %d\n", Path, num);
 
 	return num;
 }
@@ -195,10 +195,9 @@ VOID FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path)
 
 	Buffer[i] = 0;
 
-	DPRINTM(DPRINT_FILESYSTEM, "FatGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
+	DPRINTM(DPRINT_FILESYSTEM, "FsGetFirstNameFromPath() Path = %s FirstName = %s\n", Path, Buffer);
 }
 
-#define MAX_FDS 60
 typedef struct tagFILEDATA
 {
     ULONG DeviceId;
@@ -397,6 +396,8 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
 {
     DEVICE* pNewEntry;
     ULONG dwLength;
+
+    DPRINTM(DPRINT_FILESYSTEM, "FsRegisterDevice() Prefix = %s\n", Prefix);
 
     dwLength = strlen(Prefix) + 1;
     pNewEntry = MmHeapAlloc(sizeof(DEVICE) + dwLength);
