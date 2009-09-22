@@ -2,6 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 2003, 2004  Eric Kohl
+ *  Copyright (C) 2009  Hervé Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -466,15 +467,16 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
-    ULONG i;
+    ULONG i, Length;
     BOOLEAN ret;
 
     *Count = 0;
-    if (N & (Context->SectorSize - 1))
-        return EINVAL;
-
-    for (i = 0; i < N / Context->SectorSize; i++)
+    i = 0;
+    while (N > 0)
     {
+        Length = N;
+        if (Length > Context->SectorSize)
+            Length = Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
             Context->DriveNumber,
             Context->SectorNumber + Context->SectorOffset + i,
@@ -482,11 +484,13 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
             (PVOID)DISKREADBUFFER);
         if (!ret)
             return EIO;
-        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Context->SectorSize);
-        Ptr += Context->SectorSize;
+        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Length);
+        Ptr += Length;
+        *Count += Length;
+        N -= Length;
+        i++;
     }
 
-    *Count = N;
     return ESUCCESS;
 }
 
