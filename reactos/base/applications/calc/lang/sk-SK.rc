@@ -1,6 +1,6 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR.:  30-01-2008
- * LAST CHANGE:  29-08-2009
+ * LAST CHANGE:  04-09-2009
  * ---------------------------------------
  * TODO:
  * 1. treba usporiadaù jednotky podæa abecedy
@@ -445,30 +445,30 @@ BEGIN
     IDS_QUICKHELP           "R˝chla pomoc"
 END
 
-// types of conversion
+// Types of conversion
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CONV_TIME           "»as"
-    IDS_CONV_LENGTH         "DÂûka"
-    IDS_CONV_ENERGY         "Energia"
-    IDS_CONV_WEIGHT         "Hmotnosù"
-    IDS_CONV_CURRENCY       "Mena"
-    IDS_CONV_VOLUME         "Objem"
-    IDS_CONV_AREA           "Plocha"
-    IDS_CONV_VELOCITY       "R˝chlosù"
-    IDS_CONV_CONSUMPTION    "Spotreba motorov" //Spotreba (motory)
-    IDS_CONV_TEMPERATURE    "Teplota"
-    IDS_CONV_PRESSURE       "Tlak"
     IDS_CONV_ANGLE          "Uhol"
+    IDS_CONV_AREA           "Plocha"
+    IDS_CONV_CONSUMPTION    "Spotreba motorov" //Spotreba (motory)
+    IDS_CONV_CURRENCY       "Mena"
+    IDS_CONV_ENERGY         "Energia"
+    IDS_CONV_LENGTH         "DÂûka"
     IDS_CONV_POWER          "V˝kon"
+    IDS_CONV_PRESSURE       "Tlak"
+    IDS_CONV_TEMPERATURE    "Teplota"
+    IDS_CONV_TIME           "»as"
+    IDS_CONV_VELOCITY       "R˝chlosù"
+    IDS_CONV_VOLUME         "Objem"
+    IDS_CONV_WEIGHT         "Hmotnosù"
 END
 
 // TYPES OF ANGLES
 STRINGTABLE DISCARDABLE
 BEGIN
+    IDS_ANGLE_DEGREES  "Stupne"
     IDS_ANGLE_GRADIANS "Grady"
     IDS_ANGLE_RADIANS  "Radi·ny"
-    IDS_ANGLE_DEGREES  "Stupne"
 END
 
 // TYPES OF AREAS
@@ -522,21 +522,21 @@ END
 // TYPES OF CURRENCIES
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_CURRENCY_AUSTRIAN_SCHILLING "Rak˙zsky öiling"
+    IDS_CURRENCY_AUSTRIAN_SCHILLING "Rak˙sky öiling"
     IDS_CURRENCY_BELGIAN_FRANC      "Belgick˝ frank"
     IDS_CURRENCY_CYPRIOT_POUND      "Cypersk· libra"
     IDS_CURRENCY_CZECH_KORUNA       "»esk· koruna"
     IDS_CURRENCY_DEUTSCHE_MARK      "Nemeck· marka"
     IDS_CURRENCY_DUTCH_GUILDER      "Holandsk˝ gulden"
     IDS_CURRENCY_EURO               "Euro"
-    IDS_CURRENCY_FINNISH_MARKKA     "Finsk· marka"
+    IDS_CURRENCY_FINNISH_MARKKA     "FÌnska marka"
     IDS_CURRENCY_FRENCH_FRANC       "Franc˙zsky frank"
     IDS_CURRENCY_GREEK_DRACHMA      "GrÈcka drachma"
-    IDS_CURRENCY_IRISH_POUND        "Irish pound"
-    IDS_CURRENCY_ITALIAN_LIRA       "Italian lira"
-    IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembourg franc"
-    IDS_CURRENCY_MALTESE_LIRA       "Maltese lira"
-    IDS_CURRENCY_PORTOGUESE_ESCUDO  "Portoguese escudo"
+    IDS_CURRENCY_IRISH_POUND        "Õrska libra"
+    IDS_CURRENCY_ITALIAN_LIRA       "Taliansk· lÌra"
+    IDS_CURRENCY_LUXEMBOURG_FRANC   "Luxembursk˝ frank"
+    IDS_CURRENCY_MALTESE_LIRA       "Maltsk· lÌra"
+    IDS_CURRENCY_PORTOGUESE_ESCUDO  "PortugalskÈ escudo"
     IDS_CURRENCY_SLOVAK_KORUNA      "Slovensk· koruna"
     IDS_CURRENCY_SLOVENIAN_TOLAR    "Slovinsk˝ toliar"
     IDS_CURRENCY_SPANISH_PESETA     "äpanielska peseta"
@@ -652,8 +652,8 @@ BEGIN
     IDS_TIME_MILLISECONDS "Milisekundy"
     IDS_TIME_MINUTES      "Min˙ty"
     IDS_TIME_SECONDS      "Sekundy"
-    IDS_TIME_YEARS        "Roky"
     IDS_TIME_WEEKS        "T˝ûdne"
+    IDS_TIME_YEARS        "Roky"
 END
 
 // TYPES OF VELOCITIES

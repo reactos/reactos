@@ -10,7 +10,7 @@
 #define _ATTRIBUTES shared
 #endif
 
-#if 0
+#if defined(_MSC_VER)
 /* Reference list of existing section for msvcrt.  */
 #pragma section(".CRTMP$XCA",long,_ATTRIBUTES)
 #pragma section(".CRTMP$XCZ",long,_ATTRIBUTES)
@@ -55,6 +55,14 @@
 #pragma section(".rtc$IZZ",long,read)
 #pragma section(".rtc$TAA",long,read)
 #pragma section(".rtc$TZZ",long,read)
+#pragma section(".tls",long,read,write)
+#pragma section(".tls$ZZZ",long,read,write)
 #endif
 
+#if defined(_MSC_VER)
+#define _CRTALLOC(x) __declspec(allocate(x))
+#elif defined(__GNUC__)
 #define _CRTALLOC(x) __attribute__ ((section (x) ))
+#else
+#error
+#endif

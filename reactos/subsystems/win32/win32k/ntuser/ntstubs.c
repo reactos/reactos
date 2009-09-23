@@ -368,6 +368,10 @@ NtUserInitializeClientPfnArrays(
       RtlCopyMemory(&gpsi->apfnClientW, pfnClientW, sizeof(PFNCLIENT));
       RtlCopyMemory(&gpsi->apfnClientWorker, pfnClientWorker, sizeof(PFNCLIENTWORKER));
 
+      //// FIXME! HAX! Temporary until server side is finished.
+      //// Copy the client side procs for now.
+      RtlCopyMemory(&gpsi->aStoCidPfn, pfnClientW, sizeof(gpsi->aStoCidPfn));
+
       hModClient = hmodUser;
       ClientPfnInit = TRUE;
    }
@@ -945,13 +949,17 @@ NtUserRealWaitMessageEx(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserRegisterUserApiHook(
-    DWORD dwUnknown1,
-    DWORD dwUnknown2)
+    PUNICODE_STRING m_dllname1,
+    PUNICODE_STRING m_funname1,
+    DWORD dwUnknown3,
+    DWORD dwUnknown4)
 {
+    UserEnterExclusive();
     UNIMPLEMENTED;
+    UserLeave();
     return 0;
 }
 
@@ -1076,7 +1084,7 @@ NtUserPaintMenuBar(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserUnregisterUserApiHook(VOID)
 {

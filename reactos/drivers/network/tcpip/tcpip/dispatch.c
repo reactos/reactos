@@ -118,6 +118,8 @@ VOID DispDoDisconnect( PVOID Data ) {
     TI_DbgPrint(DEBUG_IRP, ("PostCancel: DoDisconnect done\n"));
 
     DispDataRequestComplete(DisType->Irp, STATUS_CANCELLED, 0);
+
+    exFreePool(DisType);
 }
 
 VOID NTAPI DispCancelRequest(
@@ -134,9 +136,7 @@ VOID NTAPI DispCancelRequest(
     PTRANSPORT_CONTEXT TranContext;
     PFILE_OBJECT FileObject;
     UCHAR MinorFunction;
-    DISCONNECT_TYPE DisType;
-    PVOID WorkItem;
-    /*NTSTATUS Status = STATUS_SUCCESS;*/
+    PDISCONNECT_TYPE DisType;
 
     TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
 
@@ -159,19 +159,21 @@ VOID NTAPI DispCancelRequest(
     switch(MinorFunction) {
     case TDI_SEND:
     case TDI_RECEIVE:
-	DisType.Type = TDI_DISCONNECT_RELEASE |
-	    ((MinorFunction == TDI_RECEIVE) ? TDI_DISCONNECT_ABORT : 0);
-	DisType.Context = TranContext->Handle.ConnectionContext;
-	DisType.Irp = Irp;
-	DisType.FileObject = FileObject;
+        DisType = exAllocatePool(NonPagedPool, sizeof(DISCONNECT_TYPE));
+        if (DisType)
+        {
+	    DisType->Type = TDI_DISCONNECT_RELEASE |
+	       ((MinorFunction == TDI_RECEIVE) ? TDI_DISCONNECT_ABORT : 0);
+	    DisType->Context = TranContext->Handle.ConnectionContext;
+	    DisType->Irp = Irp;
 
-	TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
+	    TCPRemoveIRP( TranContext->Handle.ConnectionContext, Irp );
+
+            if (!ChewCreate(DispDoDisconnect, DisType))
+                exFreePool(DisType);
+        }
 
 	IoReleaseCancelSpinLock(Irp->CancelIrql);
-
-	if( !ChewCreate( &WorkItem, sizeof(DISCONNECT_TYPE),
-			 DispDoDisconnect, &DisType ) )
-	    ASSERT(0);
         return;
 
     case TDI_SEND_DATAGRAM:

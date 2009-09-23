@@ -178,35 +178,6 @@ NtUserCallOneParam(
              }
          }
 
-      case ONEPARAM_ROUTINE_GETMENU:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD_PTR Result;
-
-            if(!(Window = UserGetWindowObject((HWND)Param)))
-            {
-               RETURN( FALSE);
-            }
-
-            Result = Window->Wnd->IDMenu;
-
-            RETURN( Result);
-         }
-
-      case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD_PTR Result;
-
-            Window = UserGetWindowObject((HWND)Param);
-            if(!Window)
-            {
-               RETURN( FALSE);
-            }
-            Result = Window->Wnd->Unicode;
-            RETURN( Result);
-         }
-
       case ONEPARAM_ROUTINE_WINDOWFROMDC:
          RETURN( (DWORD_PTR)IntWindowFromDC((HDC)Param));
 
@@ -225,20 +196,6 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
          RETURN( (DWORD_PTR)IntSetCaretBlinkTime((UINT)Param));
-
-      case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
-         {
-            PWINDOW_OBJECT Window;
-            DWORD Result;
-
-            if(!(Window = UserGetWindowObject((HWND)Param)))
-            {
-               RETURN( FALSE);
-            }
-
-            Result = (DWORD_PTR)Window->Wnd->hModule;
-            RETURN( Result);
-         }
 
       case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
          RETURN( (DWORD_PTR)MsqSetMessageExtraInfo((LPARAM)Param));
@@ -457,25 +414,6 @@ NtUserCallTwoParam(
             IntReleaseMenuObject(MenuObject);
             RETURN( Ret);
          }
-      case TWOPARAM_ROUTINE_SETMENUITEMRECT:
-         {
-            BOOL Ret;
-            SETMENUITEMRECT smir;
-            PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
-            if(!MenuObject)
-               RETURN( 0);
-
-            if(!NT_SUCCESS(MmCopyFromCaller(&smir, (PVOID)Param2, sizeof(SETMENUITEMRECT))))
-            {
-               IntReleaseMenuObject(MenuObject);
-               RETURN( 0);
-            }
-
-            Ret = IntSetMenuItemRect(MenuObject, smir.uItem, smir.fByPosition, &smir.rcRect);
-
-            IntReleaseMenuObject(MenuObject);
-            RETURN( (DWORD_PTR)Ret);
-         }
 
       case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
          {
@@ -520,34 +458,6 @@ NtUserCallTwoParam(
 
       case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
          RETURN( (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
-
-      case TWOPARAM_ROUTINE_ROS_REGSYSCLASSES:
-      {
-          DWORD_PTR Ret = 0;
-          DWORD Count = Param1;
-          PREGISTER_SYSCLASS RegSysClassArray = (PREGISTER_SYSCLASS)Param2;
-
-          if (Count != 0 && RegSysClassArray != NULL)
-          {
-              _SEH2_TRY
-              {
-                  ProbeArrayForRead(RegSysClassArray,
-                                    sizeof(RegSysClassArray[0]),
-                                    Count,
-                                    2);
-
-                  Ret = (DWORD_PTR)UserRegisterSystemClasses(Count,
-                                                         RegSysClassArray);
-              }
-              _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-              {
-                  SetLastNtError(_SEH2_GetExceptionCode());
-              }
-              _SEH2_END;
-          }
-
-          RETURN( Ret);
-      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);

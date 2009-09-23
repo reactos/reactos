@@ -79,10 +79,10 @@ SysAudioOpenVirtualDevice(
     Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, DeviceNumber);
     ASSERT(Entry != NULL);
 
-    /* store device entry in FsContext2
+    /* store device entry in FsContext
      * see pin.c DispatchCreateSysAudioPin for details
      */
-    IoStack->FileObject->FsContext2 = (PVOID)Entry;
+    IoStack->FileObject->FsContext = (PVOID)Entry;
 
     return SetIrpIoStatus(Irp, STATUS_SUCCESS, 0);
 }

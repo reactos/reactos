@@ -1,9 +1,8 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
  * PURPOSE:          Built-in control registration
- * FILE:             lib/user32/controls/regcontrol.c
+ * FILE:             dll/win32/user32/controls/regcontrol.c
  * PROGRAMER:        Ge van Geldorp (ge@gse.nl)
  * REVISION HISTORY: 2003/06/16 GvG Created
  * NOTES:            Adapted from Wine
@@ -12,57 +11,76 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
+DWORD RegisterDefaultClasses = FALSE;
 
 static PFNCLIENT pfnClientA;
 static PFNCLIENT pfnClientW;
 static PFNCLIENTWORKER pfnClientWorker;
 
+//
+// FIXME!
+// These are not "System Classes" but Global Classes that are registered
+// every time a process is created, so these can be unregistered as the msdn
+// documents states.
+//
 static const struct
 {
     const struct builtin_class_descr *desc;
-    UINT ClsId;
+    WORD fnid;
+    WORD ClsId;
 } g_SysClasses[] =
 {
-    { &DIALOG_builtin_class,    FNID_DIALOG },
-    { &POPUPMENU_builtin_class, FNID_MENU },
-    { &COMBO_builtin_class,     FNID_COMBOBOX },
-    { &COMBOLBOX_builtin_class, FNID_COMBOLBOX },
-    { &MDICLIENT_builtin_class, FNID_MDICLIENT },
+    { &DIALOG_builtin_class,    FNID_DIALOG,    ICLS_DIALOG},
+/*    { &POPUPMENU_builtin_class, FNID_MENU,      ICLS_MENU},     // moved to win32k */
+    { &COMBO_builtin_class,     FNID_COMBOBOX,  ICLS_COMBOBOX},
+    { &COMBOLBOX_builtin_class, FNID_COMBOLBOX, ICLS_COMBOLBOX},
+    { &MDICLIENT_builtin_class, FNID_MDICLIENT, ICLS_MDICLIENT},
 #if 0
-    { &MENU_builtin_class,      FNID_MENU },
+    { &MENU_builtin_class,      FNID_MENU,      ICLS_MENU},
 #endif
-    { &SCROLL_builtin_class,    FNID_SCROLLBAR },
-    { &BUTTON_builtin_class,    FNID_BUTTON },
-    { &LISTBOX_builtin_class,   FNID_LISTBOX },
-    { &EDIT_builtin_class,      FNID_EDIT },
-    { &ICONTITLE_builtin_class, FNID_ICONTITLE },
-    { &STATIC_builtin_class,    FNID_STATIC },
+/*    { &SCROLL_builtin_class,    FNID_SCROLLBAR, ICLS_SCROLLBAR}, // moved to win32k */
+    { &BUTTON_builtin_class,    FNID_BUTTON,    ICLS_BUTTON},
+    { &LISTBOX_builtin_class,   FNID_LISTBOX,   ICLS_LISTBOX},
+    { &EDIT_builtin_class,      FNID_EDIT,      ICLS_EDIT},
+/*    { &ICONTITLE_builtin_class, FNID_ICONTITLE, ICLS_ICONTITLE}, // moved to win32k */
+    { &STATIC_builtin_class,    FNID_STATIC,    ICLS_STATIC},
 };
 
 BOOL WINAPI RegisterSystemControls(VOID)
 {
-    REGISTER_SYSCLASS cls[sizeof(g_SysClasses) / sizeof(g_SysClasses[0])];
+    WNDCLASSEXW WndClass;
     UINT i;
+    ATOM atom;
 
-    ZeroMemory(cls, sizeof(cls));
+    if (RegisterDefaultClasses) return TRUE;
 
-    for (i = 0; i != sizeof(cls) / sizeof(cls[0]); i++)
+    ZeroMemory(&WndClass, sizeof(WndClass));
+
+    WndClass.cbSize = sizeof(WndClass);
+
+    for (i = 0; i != sizeof(g_SysClasses) / sizeof(g_SysClasses[0]); i++)
     {
-        if (IS_ATOM(g_SysClasses[i].desc->name))
-            cls[i].ClassName.Buffer = (PWSTR)((ULONG_PTR)g_SysClasses[i].desc->name);
-        else
-            RtlInitUnicodeString(&cls[i].ClassName, g_SysClasses[i].desc->name);
+        WndClass.lpszClassName = g_SysClasses[i].desc->name;
 
-        cls[i].Style = g_SysClasses[i].desc->style;
-        cls[i].ProcW = g_SysClasses[i].desc->procW;
-        cls[i].ProcA = g_SysClasses[i].desc->procA;
-        cls[i].ExtraBytes = g_SysClasses[i].desc->extra;
-        cls[i].hCursor = LoadCursorW(NULL, g_SysClasses[i].desc->cursor);
-        cls[i].hBrush = g_SysClasses[i].desc->brush;
-        cls[i].ClassId = g_SysClasses[i].ClsId;
+        // Set Global bit!
+        WndClass.style = g_SysClasses[i].desc->style|CS_GLOBALCLASS;
+        WndClass.lpfnWndProc = g_SysClasses[i].desc->procW;
+        WndClass.cbWndExtra = g_SysClasses[i].desc->extra;
+        WndClass.hCursor = LoadCursorW(NULL, g_SysClasses[i].desc->cursor);
+        WndClass.hbrBackground= g_SysClasses[i].desc->brush;
+
+        atom = RegisterClassExWOWW( &WndClass,
+                                     0,
+                                     g_SysClasses[i].fnid,
+                                     0,
+                                     FALSE);
+        if (atom)
+           RegisterDefaultClasses |= ICLASS_TO_MASK(g_SysClasses[i].ClsId);
     }
 
-    return NtUserRegisterSystemClasses(sizeof(cls) / sizeof(cls[0]), cls);
+    return TRUE;
 }
 
 LRESULT

@@ -994,6 +994,7 @@ NTAPI
 KiI386PentiumLockErrataFixup(VOID);
 
 VOID
+NTAPI
 WRMSR(
     IN ULONG Register,
     IN LONGLONG Value

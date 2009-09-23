@@ -49,9 +49,6 @@
 #define NtUserSetGUIThreadHandle(field, hwnd) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)field, (DWORD_PTR)hwnd, TWOPARAM_ROUTINE_SETGUITHRDHANDLE)
 
-#define NtUserSetMenuItemRect(menu, mir) \
-  (BOOL)NtUserCallTwoParam((DWORD_PTR)menu, (DWORD_PTR)mir, TWOPARAM_ROUTINE_SETMENUITEMRECT)
-
 #define NtUserSetMenuBarHeight(menu, height) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)menu, (DWORD_PTR)height, TWOPARAM_ROUTINE_SETMENUBARHEIGHT)
 
@@ -81,20 +78,11 @@
 #define NtUserSwapMouseButton(fSwap) \
   (BOOL)NtUserCallOneParam((DWORD_PTR)fSwap, ONEPARAM_ROUTINE_SWAPMOUSEBUTTON)
 
-#define NtUserGetMenu(hWnd) \
-  (HMENU)NtUserCallOneParam((DWORD_PTR)hWnd, ONEPARAM_ROUTINE_GETMENU)
-
 #define NtUserSetMessageExtraInfo(lParam) \
   (LPARAM)NtUserCallOneParam((DWORD_PTR)lParam, ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO)
 
-#define NtUserIsWindowUnicode(hWnd) \
-  (BOOL)NtUserCallOneParam((DWORD_PTR)hWnd, ONEPARAM_ROUTINE_ISWINDOWUNICODE)
-
 #define NtUserGetWindowContextHelpId(hwnd) \
   NtUserCallOneParam((DWORD_PTR)hwnd, ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID)
-
-#define NtUserGetWindowInstance(hwnd) \
-  (HINSTANCE)NtUserCallOneParam((DWORD_PTR)hwnd, ONEPARAM_ROUTINE_GETWINDOWINSTANCE)
 
 #define NtUserGetCursorPos(lpPoint) \
   (BOOL)NtUserCallOneParam((DWORD_PTR)lpPoint, ONEPARAM_ROUTINE_GETCURSORPOSITION)
@@ -116,9 +104,6 @@
 
 #define HideCaret(hwnd) \
   NtUserHideCaret(hwnd)
-
-#define NtUserRegisterSystemClasses(Count,SysClasses) \
-    (BOOL)NtUserCallTwoParam(Count, (DWORD_PTR)SysClasses, TWOPARAM_ROUTINE_ROS_REGSYSCLASSES)
 
 /* Internal Thread Data */
 extern HINSTANCE User32Instance;

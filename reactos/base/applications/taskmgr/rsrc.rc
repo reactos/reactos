@@ -12,9 +12,7 @@
 #include "lang/hu-HU.rc"
 #include "lang/id-ID.rc"
 #include "lang/it-IT.rc"
-#ifdef __GCC__
 #include "lang/ja-JP.rc"
-#endif
 #include "lang/ko-KR.rc"
 #include "lang/no-NO.rc"
 #include "lang/nl-NL.rc"

@@ -28,9 +28,9 @@ KIRQL NTAPI KeGetCurrentIrql (VOID)
  */
 {
   KIRQL irql;
-  ULONG Flags = 0;
+  ULONG Flags;
 
-  Ke386SaveFlags(Flags);
+  Flags = __readeflags();
   _disable();
 
   irql = __readfsbyte(FIELD_OFFSET(KPCR, Irql));
@@ -53,13 +53,13 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
  * PURPOSE: Sets the current irq level without taking any action
  */
 {
-  ULONG Flags = 0;
+  ULONG Flags;
   if (NewIrql > HIGH_LEVEL)
   {
     DPRINT1 ("NewIrql %x\n", NewIrql);
     ASSERT(FALSE);
   }
-  Ke386SaveFlags(Flags);
+  Flags = __readeflags();
   _disable();
   __writefsbyte(FIELD_OFFSET(KPCR, Irql), NewIrql);
   if (Flags & EFLAGS_INTERRUPT_MASK)
@@ -71,7 +71,7 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
 VOID 
 HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
 {
-  ULONG Flags = 0;
+  ULONG Flags;
   UCHAR DpcRequested;
   if (NewIrql >= DISPATCH_LEVEL)
     {
@@ -79,7 +79,7 @@ HalpLowerIrql(KIRQL NewIrql, BOOLEAN FromHalEndSystemInterrupt)
       APICWrite(APIC_TPR, IRQL2TPR (NewIrql) & APIC_TPR_PRI);
       return;
     }
-  Ke386SaveFlags(Flags);
+  Flags = __readeflags();
   if (KeGetCurrentIrql() > APC_LEVEL)
     {
       KeSetCurrentIrql (DISPATCH_LEVEL);
@@ -188,9 +188,9 @@ KIRQL FASTCALL
 KfRaiseIrql (KIRQL	NewIrql)
 {
   KIRQL OldIrql;
-  ULONG Flags = 0;
+  ULONG Flags;
  
-  Ke386SaveFlags(Flags);
+  Flags = __readeflags();
   _disable();
 
   OldIrql = KeGetCurrentIrql ();
@@ -295,7 +295,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
 			 ULONG Vector,
 			 PKIRQL OldIrql)
 {
-  ULONG Flags = 0;
+  ULONG Flags;
   DPRINT("Vector (0x%X)  Irql (0x%X)\n", Vector, Irql);
   
   if (KeGetCurrentIrql () >= Irql)
@@ -304,7 +304,7 @@ HalBeginSystemInterrupt (KIRQL Irql,
     ASSERT(FALSE);
   }
 
-  Ke386SaveFlags(Flags);
+  Flags = __readeflags();
   if (Flags & EFLAGS_INTERRUPT_MASK)
   {
      DPRINT1("HalBeginSystemInterrupt was called with interrupt's enabled\n");
@@ -324,8 +324,8 @@ HalEndSystemInterrupt (KIRQL Irql,
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
 {
-  ULONG Flags = 0;
-  Ke386SaveFlags(Flags);
+  ULONG Flags;
+  Flags = __readeflags();
 
   if (Flags & EFLAGS_INTERRUPT_MASK)
   {

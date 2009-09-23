@@ -58,7 +58,7 @@ FrLdrStartup(ULONG Magic)
     _disable();
 
     /* Re-initalize EFLAGS */
-    Ke386EraseFlags();
+    __writeeflags(0);
 
     /* Initialize the page directory */
     FrLdrSetupPageDirectory();

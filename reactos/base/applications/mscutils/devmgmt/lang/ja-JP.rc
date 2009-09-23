@@ -1,0 +1,82 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "ファイル(&F)"
+  BEGIN
+    MENUITEM "終了(&X)",                IDC_EXIT
+  END
+  POPUP "操作"
+  BEGIN
+    MENUITEM "印刷",                    IDC_PRINT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "プロパティ",              IDC_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ヘルプ",                  IDC_PROGHELP, GRAYED
+  END
+  POPUP "表\示"
+  BEGIN
+    MENUITEM "デバイス (種類別)",       IDC_DEVBYTYPE, CHECKED
+    MENUITEM "デバイス (接続別)",       IDC_STATIC, GRAYED
+    MENUITEM "リソ\ース (種類別)",      IDC_STATIC, GRAYED
+    MENUITEM "リソ\ース (接続別)",      IDC_STATIC, GRAYED
+  END
+  POPUP "ヘルプ"
+  BEGIN
+    MENUITEM "ヘルプ",                  IDC_PROGHELP
+    MENUITEM "バージョン情報",          IDC_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "プロパティ",              IDC_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "ヘルプ",                  IDC_PROGHELP
+  END
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "デバイス マネージャについて"
+FONT 9, "MS UI Gothic",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "デバイス マネージャ v0.1\nCopyright (C) 2006\nby Ged Murphy (gedmurphy@gmail.com)", IDC_STATIC, 48, 7, 130, 30
+  PUSHBUTTON "閉じる", IDOK, 75, 162, 44, 15
+  ICON IDI_MAIN_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_LICENSE "このプログラムはフリーソ\フトウェアです。あなたはこれを、フリーソ\フトウェア財団によって発行された GNU一般公衆利用許諾契約書(バージョン2か、希望によってはそれ以降のバージョンのうちどれか)の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って配布されますが、*全くの無保証* です。*商業可能\性の保証*や*特定の目的への適合性*は、言外に示されたものも含め全く存在しません。詳しくはGNU一般公衆利用許諾契約書をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU一般公衆利用許諾契約書の複製を一部受け取ったはずです。もし受け取っていなければ、フリーソ\フトウェア財団まで請求してください(宛先は the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA)。"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP      "プロパティ"
+  IDS_TOOLTIP_REFRESH   "更新"
+  IDS_TOOLTIP_HELP      "ヘルプ"
+  IDS_TOOLTIP_EXIT      "終了"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "ReactOS デバイス マネージャ"
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXIT         " このプログラムを終了します。"
+  IDS_HINT_REFRESH      " サービスのリストを更新します。"
+  IDS_HINT_PROP         " 現在選択されているシートのプロパティを開きます。"
+  IDS_HINT_HELP         " ヘルプ ウィンドウを表\示します。"
+  IDS_HINT_ABOUT        " ReactOS デバイス マネージャについて表\示します。"
+
+  IDS_HINT_SYS_RESTORE  " このウィンドウを通常の大きさに復元します。"
+  IDS_HINT_SYS_MOVE     " このウィンドウを移動します。"
+  IDS_HINT_SYS_SIZE     " このウィンドウの大きさを変更します。"
+  IDS_HINT_SYS_MINIMIZE " このウィンドウをアイコンに折りたたみます。"
+  IDS_HINT_SYS_MAXIMIZE " このウィンドウを画面いっぱいに開きます。"
+  IDS_HINT_SYS_CLOSE    " このウィンドウを閉じます。"
+END

@@ -174,6 +174,12 @@ User32CreateWindowEx(DWORD dwExStyle,
     DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
 #endif
 
+    if (!RegisterDefaultClasses)
+    {
+       ERR("User32CreateWindowEx RegisterSystemControls\n");
+       RegisterSystemControls();
+    }
+
     if (IS_ATOM(lpClassName))
     {
         RtlInitUnicodeString(&ClassName, NULL);
@@ -281,6 +287,12 @@ CreateWindowExA(DWORD dwExStyle,
     MDICREATESTRUCTA mdi;
     HWND hwnd;
 
+    if (!RegisterDefaultClasses)
+    {
+       ERR("CreateWindowExA RegisterSystemControls\n");
+       RegisterSystemControls();
+    }
+
     if (dwExStyle & WS_EX_MDICHILD)
     {
         POINT mPos[2];
@@ -386,6 +398,12 @@ CreateWindowExW(DWORD dwExStyle,
 {
     MDICREATESTRUCTW mdi;
     HWND hwnd;
+
+    if (!RegisterDefaultClasses)
+    {
+       ERR("CreateWindowExW RegisterSystemControls\n");
+       RegisterSystemControls();
+    }
 
     if (dwExStyle & WS_EX_MDICHILD)
     {
@@ -1111,14 +1129,12 @@ GetWindowModuleFileNameA(HWND hwnd,
                          LPSTR lpszFileName,
                          UINT cchFileNameMax)
 {
-    HINSTANCE hWndInst;
+    PWND Wnd = ValidateHwnd(hwnd);
 
-    if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
-    {
+    if (!Wnd)
         return 0;
-    }
 
-    return GetModuleFileNameA(hWndInst, lpszFileName, cchFileNameMax);
+    return GetModuleFileNameA(Wnd->hModule, lpszFileName, cchFileNameMax);
 }
 
 
@@ -1130,14 +1146,12 @@ GetWindowModuleFileNameW(HWND hwnd,
                          LPWSTR lpszFileName,
                          UINT cchFileNameMax)
 {
-    HINSTANCE hWndInst;
+       PWND Wnd = ValidateHwnd(hwnd);
 
-    if(!(hWndInst = NtUserGetWindowInstance(hwnd)))
-    {
+    if (!Wnd)
         return 0;
-    }
 
-    return GetModuleFileNameW(hWndInst, lpszFileName, cchFileNameMax);
+    return GetModuleFileNameW( Wnd->hModule, lpszFileName, cchFileNameMax );
 }
 
 
@@ -1855,6 +1869,12 @@ HWND WINAPI
 GetFocus(VOID)
 {
     return (HWND)NtUserGetThreadState(THREADSTATE_FOCUSWINDOW);
+}
+
+DWORD WINAPI
+GetRealWindowOwner(HWND hwnd)
+{
+    return NtUserQueryWindow(hwnd, QUERY_WINDOW_REAL_ID);
 }
 
 /*

@@ -485,25 +485,6 @@ BOOL WINAPI IsServerSideWindow(HWND wnd)
   return FALSE;
 }
 
-typedef BOOL (CALLBACK *THEME_HOOK_FUNC) (DWORD state,PVOID arg2); //return type and 2nd parameter unknown
-/*
- * @unimplemented
- */
-BOOL WINAPI RegisterUserApiHook(HINSTANCE instance,THEME_HOOK_FUNC proc)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL WINAPI UnregisterUserApiHook(VOID)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
 /*
  * @unimplemented
  */

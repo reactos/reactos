@@ -754,4 +754,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "&Nainötalovaù novÈ pÌsmo..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Predvolen· alokaËn· veækosù" //Default allocation size
+	IDS_COPY_OF                 "Copy of"
 END

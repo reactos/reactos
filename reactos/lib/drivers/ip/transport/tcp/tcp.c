@@ -41,39 +41,41 @@ static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection ) {
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ReceiveRequest,
                                                      &Connection->Lock )) != NULL)
         {
-           DISCONNECT_TYPE DisType;
-           PIO_STACK_LOCATION IrpSp;
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
-           IrpSp = IoGetCurrentIrpStackLocation((PIRP)Bucket->Request.RequestContext);
 
            /* We have to notify oskittcp of the abortion */
-           DisType.Type = TDI_DISCONNECT_RELEASE | TDI_DISCONNECT_ABORT;
-       DisType.Context = Connection;
-       DisType.Irp = (PIRP)Bucket->Request.RequestContext;
-       DisType.FileObject = IrpSp->FileObject;
+           TCPDisconnect
+	     ( Connection,
+	       TDI_DISCONNECT_RELEASE | TDI_DISCONNECT_ABORT,
+	       NULL,
+	       NULL,
+	       Bucket->Request.RequestNotifyObject,
+	       (PIRP)Bucket->Request.RequestContext );
 
-           ChewCreate(NULL, sizeof(DISCONNECT_TYPE),
-                      DispDoDisconnect, &DisType);
+           Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+
+           exFreePool(Bucket);
         }
 
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->SendRequest,
                                                      &Connection->Lock )) != NULL)
         {
-           DISCONNECT_TYPE DisType;
-           PIO_STACK_LOCATION IrpSp;
            Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
            Complete = Bucket->Request.RequestNotifyObject;
-           IrpSp = IoGetCurrentIrpStackLocation((PIRP)Bucket->Request.RequestContext);
 
            /* We have to notify oskittcp of the abortion */
-           DisType.Type = TDI_DISCONNECT_RELEASE;
-       DisType.Context = Connection;
-       DisType.Irp = (PIRP)Bucket->Request.RequestContext;
-       DisType.FileObject = IrpSp->FileObject;
+           TCPDisconnect
+	     ( Connection,
+	       TDI_DISCONNECT_RELEASE,
+	       NULL,
+	       NULL,
+	       Bucket->Request.RequestNotifyObject,
+	       (PIRP)Bucket->Request.RequestContext );
 
-           ChewCreate(NULL, sizeof(DISCONNECT_TYPE),
-                      DispDoDisconnect, &DisType);
+           Complete( Bucket->Request.RequestContext, STATUS_CANCELLED, 0 );
+
+           exFreePool(Bucket);
         }
 
         while ((Entry = ExInterlockedRemoveHeadList( &Connection->ListenRequest,

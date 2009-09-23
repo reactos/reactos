@@ -30,7 +30,7 @@ BEGIN
     LTEXT "Una combinación de sonidos es un conjunto de sonidos asociados a sucesos en ReactOS y en los programas. Puede seleccionar una combinación existente o guardar una que haya modificado.",-1,8,7,230,40
     LTEXT "&Combinación de sonidos:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "G&uardar como...", IDC_SAVEAS_BTN, 130,70,54,15
+    PUSHBUTTON "G&uardar como...", IDC_SAVEAS_BTN, 125,70,59,15
     PUSHBUTTON "&Eliminar", IDC_DELETE_BTN, 188,70,50,15
     LTEXT "Para cambiar los sonidos, haga clic en un suceso de la siguiente lista y elija un sonido que desea utilizar. Puede guardar los cambios como una combinación nueva de sonidos.",-1,8,90,230,40
     LTEXT "&Sucesos de programa:",-1,8,118,150,17
@@ -168,11 +168,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "ReactOS Audio ", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "Este equipo no puede reproducir sonidos porque el servicio ReactOS Audio service no esta permitido.", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "&Permitir ReactOS Audio", 10253, 60, 68, 150, 9
+    LTEXT "Este equipo no puede reproducir sonidos porque el servicio ReactOS Audio service no esta habilitado.", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "&Habilitar ReactOS Audio", 10253, 60, 68, 150, 9
     LTEXT "Notas", 10246, 58, 87, 150, 11
-    LTEXT "1. Debe tener privilegios de administrador para permitir este servicio. Si no está anotado como administrador, you will be prompted for an administrator name and password.", 10247, 60, 100, 150, 40
-    LTEXT "2. Despues de permitir ReactOS Audio necesita reiniciar su equipo.", 10248, 60, 140, 150, 40
+    LTEXT "1. Debe tener privilegios de administrador para habilitar este servicio. Si no está registrado como administrador, se le pedirá un nombre de usuario y contraseña de administrador.", 10247, 60, 100, 150, 40
+    LTEXT "2. Despues de habilitar ReactOS Audio necesitará reiniciar su equipo.", 10248, 60, 140, 150, 40
 END
 
 IDD_MULTICHANNEL DIALOG 0, 0, 227, 218
@@ -236,7 +236,7 @@ BEGIN
     IDS_NO_SOUND "(Ninguno)"
 	IDS_NO_DEVICES "No Devices"
 
-    5825 "Program error"
+    5825 "Error del programa"
     5826 "Cerrar programa"
     5827 "Alarma de nivel crítico de carga de batería"
     5828 "Conectar dispositivo"

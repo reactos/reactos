@@ -351,7 +351,8 @@ VOID APICDump(VOID)
 BOOLEAN VerifyLocalAPIC(VOID)
 {
    SIZE_T reg0, reg1;
-   ULONG l = 0, h = 0;
+   LARGE_INTEGER MsrValue;
+
    /* The version register is read-only in a real APIC */
    reg0 = APICRead(APIC_VER);
    DPRINT1("Getting VERSION: %x\n", reg0);
@@ -398,14 +399,14 @@ BOOLEAN VerifyLocalAPIC(VOID)
       return FALSE;
    }
 
-   Ke386Rdmsr(0x1b /*MSR_IA32_APICBASE*/, l, h);
+   MsrValue.QuadPart = __readmsr(0x1B /*MSR_IA32_APICBASE*/);
 
-   if (!(l & /*MSR_IA32_APICBASE_ENABLE*/(1<<11))) 
+   if (!(MsrValue.LowPart & /*MSR_IA32_APICBASE_ENABLE*/(1<<11))) 
    {
       DPRINT1("Local APIC disabled by BIOS -- reenabling.\n");
-      l &= ~/*MSR_IA32_APICBASE_BASE*/(1<<11);
-      l |= /*MSR_IA32_APICBASE_ENABLE | APIC_DEFAULT_PHYS_BASE*/(1<<11)|0xfee00000;
-      Ke386Wrmsr(0x1b/*MSR_IA32_APICBASE*/, l, h);
+      MsrValue.LowPart &= ~/*MSR_IA32_APICBASE_BASE*/(1<<11);
+      MsrValue.LowPart |= /*MSR_IA32_APICBASE_ENABLE | APIC_DEFAULT_PHYS_BASE*/(1<<11)|0xfee00000;
+      __writemsr(0x1B /*MSR_IA32_APICBASE*/, MsrValue.HighPart);
    }
 
     
@@ -416,10 +417,10 @@ BOOLEAN VerifyLocalAPIC(VOID)
 #ifdef CONFIG_SMP
 VOID APICSendIPI(ULONG Target, ULONG Mode)
 {
-   ULONG tmp, i, flags = 0;
+   ULONG tmp, i, flags;
 
    /* save flags and disable interrupts */
-   Ke386SaveFlags(flags);
+   flags = __readeflags();
    _disable();
 
    /* Wait up to 100ms for the APIC to become ready */
@@ -475,7 +476,7 @@ VOID APICSendIPI(ULONG Target, ULONG Mode)
    {
       DPRINT1("CPU(%d) Current IPI was not delivered after 100ms.\n", ThisCPU());
    }
-   Ke386RestoreFlags(flags);
+   __writeeflags(flags);
 }
 #endif
 

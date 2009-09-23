@@ -386,7 +386,7 @@ Win32CsrHardError(IN PCSRSS_PROCESS_DATA ProcessData,
 
             CaptionText = (LPSTR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, CaptionSize);
             RtlCopyMemory(CaptionText, MessageA.Buffer+1, CaptionSize-1);
-            CaptionSize += 3; // "}\r\n" - 3
+            CaptionSize += 2; // "}\r\n" - 3
 
             szxCaptionText = (LPWSTR)RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(wchar_t)*CaptionSize+ClientFileNameU.MaximumLength+128);
             if( ClientFileNameU.Buffer ) {

@@ -23,6 +23,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include <pshpack1.h>
+
 typedef struct _ROUTING_SLOT
 {
   UCHAR  BusNumber;
@@ -37,7 +39,7 @@ typedef struct _ROUTING_SLOT
   USHORT BitmapD;
   UCHAR  SlotNumber;
   UCHAR  Reserved;
-} __attribute__((packed)) ROUTING_SLOT, *PROUTING_SLOT;
+} ROUTING_SLOT, *PROUTING_SLOT;
 
 typedef struct _PCI_IRQ_ROUTING_TABLE
 {
@@ -52,7 +54,9 @@ typedef struct _PCI_IRQ_ROUTING_TABLE
   UCHAR  Reserved[11];
   UCHAR  Checksum;
   ROUTING_SLOT Slot[1];
-} __attribute__((packed)) PCI_IRQ_ROUTING_TABLE, *PPCI_IRQ_ROUTING_TABLE;
+} PCI_IRQ_ROUTING_TABLE, *PPCI_IRQ_ROUTING_TABLE;
+
+#include <poppack.h>
 
 typedef struct _PCI_REGISTRY_INFO
 {

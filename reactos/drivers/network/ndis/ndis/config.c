@@ -139,14 +139,43 @@ NdisCloseConfiguration(
 {
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext = (PMINIPORT_CONFIGURATION_CONTEXT)ConfigurationHandle;
     PMINIPORT_RESOURCE Resource;
+    PNDIS_CONFIGURATION_PARAMETER ParameterValue;
+    PLIST_ENTRY CurrentEntry;
 
-    while(!IsListEmpty(&ConfigurationContext->ResourceListHead))
+    while((CurrentEntry = ExInterlockedRemoveHeadList(&ConfigurationContext->ResourceListHead,
+                                                      &ConfigurationContext->ResourceLock)) != NULL)
     {
-        Resource = (PMINIPORT_RESOURCE)ExInterlockedRemoveHeadList(&ConfigurationContext->ResourceListHead, &ConfigurationContext->ResourceLock);
-        if(Resource->ResourceType == MINIPORT_RESOURCE_TYPE_MEMORY)
+        Resource = CONTAINING_RECORD(CurrentEntry, MINIPORT_RESOURCE, ListEntry);
+        switch(Resource->ResourceType)
         {
+          case MINIPORT_RESOURCE_TYPE_REGISTRY_DATA:
+            ParameterValue = Resource->Resource;
+
+            switch (ParameterValue->ParameterType)
+            {
+               case NdisParameterBinary:
+                 ExFreePool(ParameterValue->ParameterData.BinaryData.Buffer);
+                 break;
+
+               case NdisParameterString:
+               case NdisParameterMultiString:
+                 ExFreePool(ParameterValue->ParameterData.StringData.Buffer);
+                 break;
+
+               default:
+                 break;
+            }
+
+          /* Fall through to free NDIS_CONFIGURATION_PARAMETER struct */
+
+          case MINIPORT_RESOURCE_TYPE_MEMORY:
             NDIS_DbgPrint(MAX_TRACE,("freeing 0x%x\n", Resource->Resource));
             ExFreePool(Resource->Resource);
+            break;
+
+          default:
+            NDIS_DbgPrint(MIN_TRACE,("Unknown resource type: %d\n", Resource->ResourceType));
+            break;
         }
 
         ExFreePool(Resource);
@@ -359,7 +388,7 @@ NdisReadConfiguration(
             return;
         }
 
-        MiniportResource->ResourceType = 0;
+        MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
         MiniportResource->Resource = *ParameterValue;
 
         NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n",
@@ -398,7 +427,7 @@ NdisReadConfiguration(
             return;
         }
 
-        MiniportResource->ResourceType = 0;
+        MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
         MiniportResource->Resource = *ParameterValue;
         NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
         ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
@@ -434,7 +463,7 @@ NdisReadConfiguration(
             return;
         }
 
-        MiniportResource->ResourceType = 0;
+        MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
         MiniportResource->Resource = *ParameterValue;
         NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
         ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead,
@@ -578,7 +607,7 @@ NdisReadConfiguration(
          }
     }
 
-    MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_MEMORY;
+    MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_REGISTRY_DATA;
     MiniportResource->Resource = *ParameterValue;
 
     ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
@@ -731,7 +760,7 @@ NdisReadNetworkAddress(
         return;
     }
 
-    MiniportResource->ResourceType = 0;
+    MiniportResource->ResourceType = MINIPORT_RESOURCE_TYPE_MEMORY;
     MiniportResource->Resource = IntArray;
     NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
     ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);

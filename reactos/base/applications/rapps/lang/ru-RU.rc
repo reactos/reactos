@@ -4,7 +4,7 @@ IDR_MAINMENU MENU
 BEGIN
 	POPUP "&Файл"
 	BEGIN
-		MENUITEM "&Параметры",   ID_SETTINGS, GRAYED
+		MENUITEM "&Параметры",   ID_SETTINGS
 		MENUITEM SEPARATOR
 		MENUITEM "&Выход",       ID_EXIT
 	END
@@ -44,22 +44,39 @@ BEGIN
 	END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 386, 231
+IDD_SETTINGS_DIALOG DIALOGEX DISCARDABLE  0, 0, 250, 144
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Параметры"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	PUSHBUTTON "OK", IDOK, 255, 212, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 320, 212, 60, 14
+	GROUPBOX "Общие", -1, 4, 2, 240, 61
+	AUTOCHECKBOX "&Сохранять положение окна", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
+	AUTOCHECKBOX "&Обновлять список доступных программ при запуске", IDC_UPDATE_AVLIST, 15, 29, 219, 12
+	AUTOCHECKBOX "&Вести лог установки/удаления программ", IDC_LOG_ENABLED, 15, 46, 219, 12
+
+	GROUPBOX "Загрузка", -1, 4, 65, 240, 51
+	LTEXT "Папка для загрузок:", -1, 16, 75, 77, 9
+	EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP
+	PUSHBUTTON "В&ыбрать", IDC_CHOOSE, 187, 85, 50, 14
+	AUTOCHECKBOX "&Удалять инсталляторы программ после установки", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
+
+	PUSHBUTTON "По умолчанию", IDC_DEFAULT_SETTINGS, 8, 124, 60, 14
+	PUSHBUTTON "OK", IDOK, 116, 124, 60, 14
+	PUSHBUTTON "Отмена", IDCANCEL, 181, 124, 60, 14
 END
 
-IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 386, 231
+IDD_INSTALL_DIALOG DIALOGEX DISCARDABLE  0, 0, 216, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Скачать и установить"
+CAPTION "Установка программы"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	PUSHBUTTON "OK", IDOK, 255, 212, 60, 14
-	PUSHBUTTON "Отмена", IDCANCEL, 320, 212, 60, 14
+	LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+
+	AUTORADIOBUTTON "&Установить с диска", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+	AUTORADIOBUTTON "&Скачать и установить", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
+
+	PUSHBUTTON "OK", IDOK, 86, 78, 60, 14
+	PUSHBUTTON "Отмена", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE  0, 0, 220, 76
@@ -113,7 +130,7 @@ BEGIN
 	IDS_INFO_UPDATEINFO "\nИнформация об обновлениях: "
 	IDS_INFO_INFOABOUT "\nИнформация о программе: "
 	IDS_INFO_COMMENTS "\nКомментарии: "
-	IDS_INFO_INSTLOCATION "\nУстановлено из: "
+	IDS_INFO_INSTLOCATION "\nУстановлено в: "
 	IDS_INFO_INSTALLSRC "\nИсточник установки: "
 	IDS_INFO_UNINSTALLSTR "\nСтрока для удаления: "
 	IDS_INFO_MODIFYPATH "\nСтрока для изменения: "
@@ -163,5 +180,7 @@ BEGIN
 	IDS_AVAILABLEFORINST "Доступно для установки"
 	IDS_UPDATES "Обновления"
 	IDS_APPLICATIONS "Приложения"
-	IDS_DOWNLOAD_FOLDER "Downloads"
+	IDS_CHOOSE_FOLDER_TEXT "Выберите папку, которая будет использоваться для загрузки программ:"
+	IDS_CHOOSE_FOLDER_ERROR "Вы указали несуществующую папку!"
+	IDS_USER_NOT_ADMIN "Вы должны быть администратором для запуска ""Менеджера приложений ReactOS""!"
 END

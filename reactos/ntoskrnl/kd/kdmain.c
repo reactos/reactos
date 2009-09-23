@@ -135,9 +135,13 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
         }
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
+#ifdef KDBG
+            PLDR_DATA_TABLE_ENTRY LdrEntry;
+
             /* Load symbols. Currently implemented only for KDBG! */
-            KDB_SYMBOLFILE_HOOK((PANSI_STRING)ExceptionRecord->ExceptionInformation[1],
-                (PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2]);
+            if(KdbpSymFindModule(((PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2])->BaseOfDll, NULL, -1, &LdrEntry))
+                KdbSymProcessSymbols(LdrEntry);
+#endif
         }
 
         /* This we can handle: simply bump EIP */

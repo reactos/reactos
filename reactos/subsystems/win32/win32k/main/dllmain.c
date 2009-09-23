@@ -276,6 +276,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       }
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
+      Win32Thread->pEThread = Thread;
     }
   else
     {
@@ -384,7 +385,7 @@ DriverEntry (
     }
 
   hModuleWin = MmPageEntireDriver(DriverEntry);
-
+  DPRINT("Win32k hInstance 0x%x!\n",hModuleWin);
     /*
      * Register Object Manager Callbacks
      */

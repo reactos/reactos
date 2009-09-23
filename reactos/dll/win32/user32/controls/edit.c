@@ -68,6 +68,8 @@ WINE_DECLARE_DEBUG_CHANNEL(relay);
 #define EF_USE_SOFTBRK		0x0100	/* Enable soft breaks in text. */
 #define EF_APP_HAS_HANDLE       0x0200  /* Set when an app sends EM_[G|S]ETHANDLE.  We are in sole control of
                                            the text buffer if this is clear. */
+#define EF_DIALOGMODE           0x0400  /* Indicates that we are inside a dialog window */
+
 typedef enum
 {
 	END_0 = 0,			/* line ends with terminating '\0' character */
@@ -3201,29 +3203,7 @@ static BOOL EDIT_EM_Undo(EDITSTATE *es)
  */
 static BOOL EDIT_IsInsideDialog(EDITSTATE *es)
 {
-#ifdef __REACTOS__
-    if (es->hwndParent && es->hwndParent != GetDesktopWindow())
-    {
-        if (GetClassLongPtrW (es->hwndParent, GCW_ATOM) == (DWORD)MAKEINTATOM(32770))
-            return TRUE;
-    }
-    return FALSE;
-#else
-    WND *pParent;
-    BOOL r = FALSE;
-
-    if (es->hwndParent)
-    {
-        pParent = WIN_GetPtr(es->hwndParent);
-        if (pParent && pParent != WND_OTHER_PROCESS && pParent != WND_DESKTOP)
-        {
-            if (pParent->flags & WIN_ISDIALOG)
-                r = TRUE;
-            WIN_ReleasePtr(pParent);
-        }
-    }
-    return r;
-#endif
+    return (es->flags & EF_DIALOGMODE);
 }
 
 
@@ -3679,32 +3659,32 @@ static LRESULT EDIT_WM_KeyDown(EDITSTATE *es, INT key)
 	    /* If the edit doesn't want the return send a message to the default object */
 	    if(!(es->style & ES_MULTILINE) || !(es->style & ES_WANTRETURN))
 	    {
-		HWND hwndParent;
 		DWORD dw;
 
-                if (!EDIT_IsInsideDialog(es)) return 1;
+                if (!EDIT_IsInsideDialog(es)) break;
                 if (control) break;
-                hwndParent = GetParent(es->hwndSelf);
-                dw = SendMessageW( hwndParent, DM_GETDEFID, 0, 0 );
-		if (HIWORD(dw) == DC_HASDEFID)
-		{
-		    SendMessageW( hwndParent, WM_COMMAND,
-				  MAKEWPARAM( LOWORD(dw), BN_CLICKED ),
- 			      (LPARAM)GetDlgItem( hwndParent, LOWORD(dw) ) );
-		}
-                else
-                    SendMessageW( hwndParent, WM_COMMAND, IDOK, (LPARAM)GetDlgItem( hwndParent, IDOK ) );
+                dw = SendMessageW( es->hwndParent, DM_GETDEFID, 0, 0 );
+                if (HIWORD(dw) == DC_HASDEFID)
+                {
+                    HWND hwDefCtrl = GetDlgItem(es->hwndParent, LOWORD(dw));
+                    if (hwDefCtrl)
+                    {
+                        SendMessageW(es->hwndParent, WM_NEXTDLGCTL, (WPARAM)hwDefCtrl, (LPARAM)TRUE);
+                        PostMessageW(hwDefCtrl, WM_KEYDOWN, VK_RETURN, 0);
+                    }
+                }
 	    }
 	    break;
         case VK_ESCAPE:
-	    if (!(es->style & ES_MULTILINE))
-                SendMessageW(GetParent(es->hwndSelf), WM_COMMAND, IDCANCEL, (LPARAM)GetDlgItem( GetParent(es->hwndSelf), IDCANCEL ) );
+	    if (!(es->style & ES_MULTILINE) && EDIT_IsInsideDialog(es))
+	        PostMessageW(es->hwndParent, WM_CLOSE, 0, 0);
             break;
         case VK_TAB:
-            SendMessageW(es->hwndParent, WM_NEXTDLGCTL, shift, 0);
+            if ((es->style & ES_MULTILINE) && EDIT_IsInsideDialog(es))
+                SendMessageW(es->hwndParent, WM_NEXTDLGCTL, shift, 0);
             break;
 	}
-	return 0;
+	return TRUE;
 }
 
 
@@ -5232,27 +5212,21 @@ LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		if (es->style & ES_MULTILINE)
 		   result |= DLGC_WANTALLKEYS;
 
-		if (lParam && (((LPMSG)lParam)->message == WM_KEYDOWN))
-		{
-		   int vk = (int)((LPMSG)lParam)->wParam;
+                if (lParam)
+                {
+                    es->flags|=EF_DIALOGMODE;
 
-                   if (es->hwndListBox)
-                   {
-                       if (vk == VK_RETURN || vk == VK_ESCAPE)
-                           if (SendMessageW(GetParent(hwnd), CB_GETDROPPEDSTATE, 0, 0))
-                               result |= DLGC_WANTMESSAGE;
-                   }
-                   else
-                   {
-                       switch (vk)
-                       {
-                           case VK_ESCAPE:
-                               SendMessageW(GetParent(hwnd), WM_CLOSE, 0, 0);
-                               break;
-                           default:
-                               break;
-                       }
-                   }
+                    if (((LPMSG)lParam)->message == WM_KEYDOWN)
+                    {
+                        int vk = (int)((LPMSG)lParam)->wParam;
+
+                        if (es->hwndListBox)
+                        {
+                            if (vk == VK_RETURN || vk == VK_ESCAPE)
+                                if (SendMessageW(GetParent(hwnd), CB_GETDROPPEDSTATE, 0, 0))
+                                    result |= DLGC_WANTMESSAGE;
+                        }
+                  }
                 }
 		break;
 

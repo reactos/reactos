@@ -43,6 +43,7 @@
 		<file>rtlstr.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
+		<file>usrapihk.c</file>
 		<file>winhelp.c</file>
 		<file>winsta.c</file>
 		<file>wsprintf.c</file>

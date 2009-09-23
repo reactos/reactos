@@ -630,14 +630,14 @@ NtUserOpenWindowStation(
    InitializeObjectAttributes(
       &ObjectAttributes,
       &WindowStationName,
-      0,
+      OBJ_CASE_INSENSITIVE,
       NULL,
       NULL);
 
    Status = ObOpenObjectByName(
                &ObjectAttributes,
                ExWindowStationObjectType,
-               UserMode,
+               KernelMode,
                NULL,
                dwDesiredAccess,
                NULL,
@@ -686,6 +686,11 @@ NtUserCloseWindowStation(
    NTSTATUS Status;
 
    DPRINT("About to close window station handle (0x%X)\n", hWinSta);
+
+	if (hWinSta == UserGetProcessWindowStation())
+	{
+		return FALSE;
+	}
 
    Status = IntValidateWindowStationHandle(
                hWinSta,

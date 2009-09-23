@@ -752,4 +752,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Neue Schriftart installieren..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Standardgröße"
+	IDS_COPY_OF                 "Kopie von"
 END

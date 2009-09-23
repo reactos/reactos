@@ -228,11 +228,7 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
     PTHREADINFO W32Thread;
     PHOOKTABLE Table = IntGetTable(Hook);
 
-    ASSERT(NULL != Table);
-    if (NULL == Table)
-    {
-        return;
-    }
+    ASSERT(NULL != Table); // At this point this should not be null!
 
     W32Thread = ((PTHREADINFO)Hook->Thread->Tcb.Win32Thread);
     ASSERT(W32Thread != NULL);

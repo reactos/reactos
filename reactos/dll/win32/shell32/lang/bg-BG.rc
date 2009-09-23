@@ -749,6 +749,7 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Слагане на нов шрифт..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Подразбиран разпределителен размер"
+	IDS_COPY_OF                 "Copy of"
 END
 
 

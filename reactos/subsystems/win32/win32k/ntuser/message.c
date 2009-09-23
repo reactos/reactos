@@ -303,6 +303,7 @@ IntCallWndProc
       co_HOOK_CallHooks( WH_CALLWNDPROC, HC_ACTION, SameThread, (LPARAM)&CWP );
    }
 }
+
 static
 VOID
 FASTCALL
@@ -1535,9 +1536,13 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
           RETURN( FALSE);
       }
 
-      Result = (ULONG_PTR)co_IntCallWindowProc(Window->Wnd->lpfnWndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
-               lParamPacked,lParamBufferSize);
-
+      Result = (ULONG_PTR)co_IntCallWindowProc( Window->Wnd->lpfnWndProc,
+                                               !Window->Wnd->Unicode,
+                                                hWnd,
+                                                Msg,
+                                                wParam,
+                                                lParamPacked,
+                                                lParamBufferSize);
       if(uResult)
       {
          *uResult = Result;
@@ -1744,18 +1749,10 @@ co_IntDoSendMessage(HWND hWnd,
 
       IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
 
-      if (Window->Wnd->IsSystem)
-      {
-          Info.Proc = (!Info.Ansi ? Window->Wnd->lpfnWndProc : Window->Wnd->WndProcExtra);
-      }
-      else
-      {
-          Info.Ansi = !Window->Wnd->Unicode;
-          Info.Proc = Window->Wnd->lpfnWndProc;
-      }
+      Info.Ansi = !Window->Wnd->Unicode;
+      Info.Proc = Window->Wnd->lpfnWndProc;
 
       IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, &Result);
-
    }
    else
    {

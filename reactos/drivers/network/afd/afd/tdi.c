@@ -112,7 +112,8 @@ static NTSTATUS TdiOpenDevice(
 
     InitializeObjectAttributes(&Attr,                   /* Attribute buffer */
                                DeviceName,              /* Device name */
-                               OBJ_CASE_INSENSITIVE,    /* Attributes */
+                               OBJ_CASE_INSENSITIVE |   /* Attributes */
+                               OBJ_KERNEL_HANDLE,
                                NULL,                    /* Root directory */
                                NULL);                   /* Security descriptor */
 
@@ -122,7 +123,7 @@ static NTSTATUS TdiOpenDevice(
                           &Iosb,                                /* IO status */
                           0,                                    /* Initial allocation size */
                           FILE_ATTRIBUTE_NORMAL,                /* File attributes */
-                          FILE_SHARE_READ | FILE_SHARE_WRITE,   /* Share access */
+                          0,                                    /* Share access */
                           FILE_OPEN_IF,                         /* Create disposition */
                           0,                                    /* Create options */
                           EaInfo,                               /* EA buffer */

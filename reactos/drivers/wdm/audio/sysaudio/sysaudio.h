@@ -22,8 +22,8 @@ typedef struct
     LIST_ENTRY Entry;                                  // device entry for KsAudioDeviceList
     UNICODE_STRING DeviceName;                         // symbolic link of audio device
 
-    HANDLE Handle;                          // handle to audio sub device
-    PFILE_OBJECT FileObject;                // file objecto to audio sub device
+    HANDLE Handle;                          // handle to audio device
+    PFILE_OBJECT FileObject;                // file objecto to audio device
 
     PIN_INFO * Pins;                        // array of PIN_INFO
     ULONG PinDescriptorsCount;              // number of pin descriptors
@@ -55,6 +55,7 @@ typedef struct
 
 typedef struct
 {
+    KSOBJECT_HEADER ObjectHeader;                        // pin object header
     HANDLE Handle;                                       // audio irp pin handle
     ULONG PinId;                                         // pin id of device
     PKSAUDIO_DEVICE_ENTRY AudioEntry;                 // pointer to audio device entry

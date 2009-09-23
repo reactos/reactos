@@ -14,6 +14,7 @@
 #include <debug.h>
 
 SIZE_T RtlpAllocDeallocQueryBufferSize = PAGE_SIZE;
+PTEB LdrpTopLevelDllBeingLoadedTeb = NULL;
 #define IMAGE_DOS_MAGIC 0x5a4d
 #define IMAGE_PE_MAGIC 0x00004550
 
@@ -220,6 +221,13 @@ RtlpGetStackLimits(
     return;
 }
 #endif
+
+BOOLEAN
+NTAPI
+RtlIsThreadWithinLoaderCallout(VOID)
+{
+    return LdrpTopLevelDllBeingLoadedTeb == NtCurrentTeb();
+}
 
 /* RTL Atom Tables ************************************************************/
 

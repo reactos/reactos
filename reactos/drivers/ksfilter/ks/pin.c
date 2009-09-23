@@ -548,7 +548,7 @@ KsGetPinFromIrp(
     PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* get object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
     /* return object type */
     return (PKSPIN)ObjectHeader->ObjectType;
 
@@ -904,10 +904,10 @@ IKsPin_DispatchDeviceIoControl(
 
     /* sanity check */
     ASSERT(IoStack->FileObject);
-    ASSERT(IoStack->FileObject->FsContext);
+    ASSERT(IoStack->FileObject->FsContext2);
 
     /* get the object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
     /* locate ks pin implemention fro KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);
@@ -961,10 +961,10 @@ IKsPin_Close(
 
     /* sanity check */
     ASSERT(IoStack->FileObject);
-    ASSERT(IoStack->FileObject->FsContext);
+    ASSERT(IoStack->FileObject->FsContext2);
 
     /* get the object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
     /* locate ks pin implemention fro KSPIN offset */
     This = (IKsPinImpl*)CONTAINING_RECORD(ObjectHeader->ObjectType, IKsPinImpl, Pin);

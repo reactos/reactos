@@ -131,7 +131,6 @@ ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
       lprcUpdate);
 }
 
-
 /*
  * @implemented
  */
@@ -142,9 +141,29 @@ SetWindowRgn(
   HRGN hRgn,
   BOOL bRedraw)
 {
-  return (int)NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
-}
+   BOOL Hook;
+   int Ret = 0;
 
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+   /* Bypass SEH and go direct. */
+   if (!Hook) return (int)NtUserSetWindowRgn(hWnd, hRgn, bRedraw);
+
+   _SEH2_TRY
+   {
+      Ret = guah.SetWindowRgn(hWnd, hRgn, bRedraw);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+}
 
 /*
  * @implemented

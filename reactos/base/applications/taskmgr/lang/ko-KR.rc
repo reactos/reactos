@@ -1,12 +1,13 @@
 /////////////////////////////////////////////////////////////////////////////
 // Korean translation
 /*
- *Korean translation by Seungju Kim(www.manatails007.org)
+ * Korean translation by Seungju Kim (www.manatails007.org)
  */
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+#pragma code_page(949)
 #endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
@@ -246,10 +247,8 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "CPU 사용 기록",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "메모리 사용 기록",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "CPU 사용 표시",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "메모리 사용 표시",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "CPU 사용 표시",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "메모리 사용 표시",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "CPU 사용 기록",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "메모리 사용 기록",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -644,7 +643,6 @@ BEGIN
     IDS_MSG_WARNINGDEBUG          "경고: 이 프로세스를 디버그하면 데이터 손실이 발생할 수 있습니다.\n그래도 디버거를 부착하시겠습니까?"
     IDS_MSG_TASKMGRWARNING        "작업 관리자 경고"
     IDS_MSG_WARNINGTERMINATING    "경고: 프로세스를 종료하면 데이터 손실 및 시스템 불안정과\n같은 바람직하지 않은 결과를 가져올 수 있습니다. 프로세스를\n종료하기 전에 프로세스 상태나 데이터를 저장할 기회가\n없습니다.\n프로세스를 종료하시겠습니까?"
-
     IDS_MSG_UNABLETERMINATEPRO    "프로세스를 제거할 수 없음"
     IDS_MSG_UNABLECHANGEPRIORITY  "우선 순위를 바꿀 수 없음"
     IDS_MSG_WARNINGCHANGEPRIORITY "경고: 이 프로세스의 우선 순위 클래스를 변경하면 시스템 불안정을 포함하여\n예기치 않은 결과를 초래할 수도 있습니다.\n우선 순위 클래스를 변경하시겠습니까?"

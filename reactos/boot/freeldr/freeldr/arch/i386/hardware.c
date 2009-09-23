@@ -2,6 +2,7 @@
  *  FreeLoader
  *
  *  Copyright (C) 2003, 2004  Eric Kohl
+ *  Copyright (C) 2009  Hervé Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -402,6 +403,7 @@ typedef struct tagDISKCONTEXT
     ULONG DriveNumber;
     ULONG SectorSize;
     ULONGLONG SectorOffset;
+    ULONGLONG SectorCount;
     ULONGLONG SectorNumber;
 } DISKCONTEXT;
 
@@ -415,7 +417,13 @@ static LONG DiskClose(ULONG FileId)
 
 static LONG DiskGetFileInformation(ULONG FileId, FILEINFORMATION* Information)
 {
-    return EINVAL;
+    DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
+
+    RtlZeroMemory(Information, sizeof(FILEINFORMATION));
+    Information->EndingAddress.QuadPart = (Context->SectorOffset + Context->SectorCount) * Context->SectorSize;
+    Information->CurrentAddress.LowPart = (Context->SectorOffset + Context->SectorNumber) * Context->SectorSize;
+
+    return ESUCCESS;
 }
 
 static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
@@ -423,6 +431,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     DISKCONTEXT* Context;
     ULONG DriveNumber, DrivePartition, SectorSize;
     ULONGLONG SectorOffset = 0;
+    ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
     CHAR FileName[1];
 
@@ -434,6 +443,11 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         if (!MachDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))
             return EINVAL;
         SectorOffset = PartitionTableEntry.SectorCountBeforePartition;
+        SectorCount = PartitionTableEntry.PartitionSectorCount;
+    }
+    else
+    {
+        SectorCount = 0; /* FIXME */
     }
 
     Context = MmHeapAlloc(sizeof(DISKCONTEXT));
@@ -442,6 +456,7 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     Context->DriveNumber = DriveNumber;
     Context->SectorSize = SectorSize;
     Context->SectorOffset = SectorOffset;
+    Context->SectorCount = SectorCount;
     Context->SectorNumber = 0;
     FsSetDeviceSpecific(*FileId, Context);
 
@@ -452,15 +467,16 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
 {
     DISKCONTEXT* Context = FsGetDeviceSpecific(FileId);
     UCHAR* Ptr = (UCHAR*)Buffer;
-    ULONG i;
+    ULONG i, Length;
     BOOLEAN ret;
 
     *Count = 0;
-    if (N & (Context->SectorSize - 1))
-        return EINVAL;
-
-    for (i = 0; i < N / Context->SectorSize; i++)
+    i = 0;
+    while (N > 0)
     {
+        Length = N;
+        if (Length > Context->SectorSize)
+            Length = Context->SectorSize;
         ret = MachDiskReadLogicalSectors(
             Context->DriveNumber,
             Context->SectorNumber + Context->SectorOffset + i,
@@ -468,11 +484,13 @@ static LONG DiskRead(ULONG FileId, VOID* Buffer, ULONG N, ULONG* Count)
             (PVOID)DISKREADBUFFER);
         if (!ret)
             return EIO;
-        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Context->SectorSize);
-        Ptr += Context->SectorSize;
+        RtlCopyMemory(Ptr, (PVOID)DISKREADBUFFER, Length);
+        Ptr += Length;
+        *Count += Length;
+        N -= Length;
+        i++;
     }
 
-    *Count = N;
     return ESUCCESS;
 }
 
@@ -545,7 +563,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   FsRegisterDevice(ArcName, &DiskVtbl);
 
   /* Add partitions */
-  i = 0;
+  i = 1;
   DiskReportError(FALSE);
   while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
   {

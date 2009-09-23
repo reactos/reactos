@@ -19,7 +19,7 @@
 
 HANDLE WsSockHeap;
 HINSTANCE WsDllHandle;
-DWORD GlobalTlsIndex;
+DWORD GlobalTlsIndex = TLS_OUT_OF_INDEXES;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -35,7 +35,6 @@ DllMain(HANDLE hModule,
     switch (dwReason) 
     {
         case DLL_PROCESS_ATTACH:
-
             /* Save DLL Handle */
             WsDllHandle = hModule;
 
@@ -43,8 +42,14 @@ DllMain(HANDLE hModule,
             WsSockHeap = GetProcessHeap();
 
             /* TLS Allocation */
-            GlobalTlsIndex = TlsAlloc();
-            if (GlobalTlsIndex == TLS_OUT_OF_INDEXES) return FALSE;
+            if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
+			{
+				GlobalTlsIndex = TlsAlloc();
+				if (GlobalTlsIndex == TLS_OUT_OF_INDEXES)
+				{
+					return FALSE;
+				}
+			}
 
             /* Initialize some critical sections */
             WsCreateStartupSynchronization();
@@ -61,7 +66,6 @@ DllMain(HANDLE hModule,
             break;
 
         case DLL_PROCESS_DETACH:
-
             /* Make sure we were initialized */
             if (!WsDllHandle) break;
 

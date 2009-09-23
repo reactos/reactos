@@ -729,6 +729,36 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
       {
          MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                             (ULONG_PTR)MemoryArea->StartingAddress;
+
+         if (((ULONG)BaseAddress + RegionSize) > (ULONG)MemoryArea->EndingAddress)
+         {
+            DPRINT("BaseAddress + RegionSize %x is larger than MemoryArea's EndingAddress %x\n",
+                  (ULONG)BaseAddress + RegionSize, MemoryArea->EndingAddress);
+
+            MmUnlockAddressSpace(AddressSpace);
+            ObDereferenceObject(Process);
+
+            return STATUS_MEMORY_NOT_ALLOCATED;
+         }
+
+         if (AllocationType == MEM_RESET)
+         {
+            if (MmIsPagePresent(Process, BaseAddress))
+            {
+               /* FIXME: mark pages as not modified */
+            }
+            else
+            {
+               /* FIXME: if pages are in paging file discard them and bring in pages of zeros */
+            }
+
+            MmUnlockAddressSpace(AddressSpace);
+            ObDereferenceObject(Process);
+
+            /* MEM_RESET does not modify any attributes of region */
+            return STATUS_SUCCESS;
+         }
+
          if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY &&
              MemoryAreaLength >= RegionSize)
          {

@@ -534,11 +534,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Windo
                                             UserMode, FALSE, NULL, NULL);
 
       UserEnterCo();
-
-      while (co_MsqDispatchOneSentMessage(MessageQueue))
-      {
-         ;
-      }
    }
    while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 

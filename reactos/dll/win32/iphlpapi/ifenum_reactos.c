@@ -315,7 +315,7 @@ BOOL isInterface( TDIEntityID *if_maybe ) {
         if_maybe->tei_entity == IF_ENTITY;
 }
 
-static BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
+BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
     IFEntrySafelySized entryInfo;
     NTSTATUS status;
 

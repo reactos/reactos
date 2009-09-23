@@ -236,7 +236,7 @@ inline void __cdecl operator delete
 
 #if defined(_SYS_GUID_OPERATOR_EQ_)
 #define _GUID_OPERATORS_
-#pragma message("WARNING: Using system operator==/!= for GUIDs")
+//#pragma message("WARNING: Using system operator==/!= for GUIDs")
 #endif
 
 #ifndef _GUID_OPERATORS_

@@ -749,4 +749,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Installazione nuovi Font..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Dimensione predefinita di allocazione"
+	IDS_COPY_OF                 "Copy of"
 END

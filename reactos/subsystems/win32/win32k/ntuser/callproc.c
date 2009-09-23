@@ -50,7 +50,7 @@ CloneCallProc(IN PDESKTOPINFO Desktop,
     {
         NewCallProc->head.h = Handle;
         NewCallProc->pfnClientPrevious = CallProc->pfnClientPrevious;
-        NewCallProc->Unicode = CallProc->Unicode;
+        NewCallProc->wType = CallProc->wType;
         NewCallProc->spcpdNext = NULL;
     }
 
@@ -75,7 +75,7 @@ CreateCallProc(IN PDESKTOPINFO Desktop,
     {
         NewCallProc->head.h = Handle;
         NewCallProc->pfnClientPrevious = WndProc;
-        NewCallProc->Unicode = Unicode;
+        NewCallProc->wType |= Unicode ? UserGetCPDA2U : UserGetCPDU2A ;
         NewCallProc->spcpdNext = NULL;
     }
 
@@ -106,7 +106,7 @@ UserGetCallProcInfo(IN HANDLE hCallProc,
     }*/
 
     wpInfo->WindowProc = CallProc->pfnClientPrevious;
-    wpInfo->IsUnicode = CallProc->Unicode;
+    wpInfo->IsUnicode = !!(CallProc->wType & UserGetCPDA2U);
 
     return TRUE;
 }
@@ -164,7 +164,7 @@ UserGetCPD(
    {
       CallProc = CreateCallProc( NULL,
                                  (WNDPROC)ProcIn,
-                                 (Flags & UserGetCPDU2A),
+                                 !!(Flags & UserGetCPDA2U),
                                  pti->ppi);
       if (CallProc)
       {

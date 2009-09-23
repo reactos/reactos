@@ -46,6 +46,9 @@ WorkItemRoutine(
 
     do
     {
+        /* sanity check */
+        ASSERT(!IsListEmpty(&KsWorker->QueuedWorkItems));
+
         /* remove first entry */
         Entry = RemoveHeadList(&KsWorker->QueuedWorkItems);
         /* get offset to work item */
@@ -95,7 +98,7 @@ KsRegisterWorker(
     }
 
     /* allocate worker context */
-    KsWorker = ExAllocatePool(NonPagedPool, sizeof(KSIWORKER));
+    KsWorker = AllocateItem(NonPagedPool, sizeof(KSIWORKER));
     if (!KsWorker)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -103,8 +106,6 @@ KsRegisterWorker(
     ExInitializeWorkItem(&KsWorker->WorkItem, WorkItemRoutine, (PVOID)KsWorker);
     /* setup type */
     KsWorker->Type = WorkQueueType;
-    /* set counter to zero */
-    KsWorker->Counter = 0;
     /* Initialize work item queue */
     InitializeListHead(&KsWorker->QueuedWorkItems);
     /* initialize work item lock */

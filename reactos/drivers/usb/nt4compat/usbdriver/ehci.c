@@ -1573,6 +1573,7 @@ ehci_internal_submit_bulk(PEHCI_DEV ehci, PURB purb)
     PEHCI_QTD_CONTENT ptdc;
     PEHCI_QH_CONTENT pqhc;
     PEHCI_ELEM_LINKS pelnk;
+    PEHCI_ELEM_LINKS plnk;
 
     if (ehci == NULL || purb == NULL)
         return STATUS_INVALID_PARAMETER;
@@ -1685,7 +1686,17 @@ ehci_internal_submit_bulk(PEHCI_DEV ehci, PURB purb)
     RemoveEntryList(&td_list);
 
     elem_pool_lock(qh_pool, TRUE);
-    pqh = (PEHCI_QH) ((ULONG) elem_pool_alloc_elem(qh_pool)->phys_part & PHYS_PART_ADDR_MASK);
+
+    plnk = elem_pool_alloc_elem(qh_pool);
+    if (plnk == NULL)
+    {
+        // free the qtds
+        elem_safe_free(pthis, TRUE);
+        if (qh_pool) elem_pool_unlock(qh_pool, TRUE);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    pqh = (PEHCI_QH) ((ULONG) plnk->phys_part & PHYS_PART_ADDR_MASK);
     elem_pool_unlock(qh_pool, TRUE);
 
     if (pqh == NULL)

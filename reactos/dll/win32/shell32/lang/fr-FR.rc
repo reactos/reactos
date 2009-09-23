@@ -752,4 +752,5 @@ BEGIN
 	IDS_INSTALLNEWFONT          "Installer une nouvelle police..."
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Taille d'allocation par défaut"
+	IDS_COPY_OF                 "Copy of"
 END

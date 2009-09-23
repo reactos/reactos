@@ -30,8 +30,7 @@ VOID NBSendPackets( PNEIGHBOR_CACHE_ENTRY NCE ) {
     PNEIGHBOR_PACKET Packet;
     UINT HashValue;
 
-    if(!(NCE->State & NUD_CONNECTED))
-       return;
+    ASSERT(!(NCE->State & NUD_INCOMPLETE));
 
     HashValue  = *(PULONG)(&NCE->Address.Address);
     HashValue ^= HashValue >> 16;
@@ -89,58 +88,6 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
     }
 }
 
-VOID NCETimeout(
-  PNEIGHBOR_CACHE_ENTRY NCE)
-/*
- * FUNCTION: Neighbor cache entry timeout handler
- * NOTES:
- *   The neighbor cache lock must be held
- */
-{
-    TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
-    TI_DbgPrint(DEBUG_NCACHE, ("NCE->State is (0x%X).\n", NCE->State));
-
-    switch (NCE->State)
-    {
-    case NUD_INCOMPLETE:
-        /* Retransmission timer expired */
-        if (NCE->EventCount++ > MAX_MULTICAST_SOLICIT)
-	{
-            /* We have retransmitted too many times */
-
-            /* Calling IPSendComplete with cache lock held is not
-	       a great thing to do. We don't get here very often
-	       so maybe it's not that big a problem */
-
-            /* Flush packet queue */
-	    NBFlushPacketQueue( NCE, NDIS_STATUS_REQUEST_ABORTED );
-            NCE->EventCount = 0;
-	}
-        else
-	{
-            /* Retransmit request */
-            NBSendSolicit(NCE);
-	}
-        break;
-
-    case NUD_DELAY:
-        /* FIXME: Delayed state */
-        TI_DbgPrint(DEBUG_NCACHE, ("NCE delay state.\n"));
-        break;
-
-    case NUD_PROBE:
-        /* FIXME: Probe state */
-        TI_DbgPrint(DEBUG_NCACHE, ("NCE probe state.\n"));
-        break;
-
-    default:
-        /* Should not happen since the event timer is not used in the other states */
-        TI_DbgPrint(MIN_TRACE, ("Invalid NCE state (%d).\n", NCE->State));
-        break;
-    }
-}
-
-
 VOID NBTimeout(VOID)
 /*
  * FUNCTION: Neighbor address cache timeout handler
@@ -151,19 +98,25 @@ VOID NBTimeout(VOID)
 {
     UINT i;
     KIRQL OldIrql;
+    PNEIGHBOR_CACHE_ENTRY *PrevNCE;
     PNEIGHBOR_CACHE_ENTRY NCE;
 
     for (i = 0; i <= NB_HASHMASK; i++) {
         TcpipAcquireSpinLock(&NeighborCache[i].Lock, &OldIrql);
 
-        for (NCE = NeighborCache[i].Cache;
-            NCE != NULL; NCE = NCE->Next) {
+        for (PrevNCE = &NeighborCache[i].Cache;
+             (NCE = *PrevNCE) != NULL;
+             PrevNCE = &NCE->Next) {
             /* Check if event timer is running */
             if (NCE->EventTimer > 0)  {
-                NCE->EventTimer--;
-                if (NCE->EventTimer == 0) {
-                    /* Call timeout handler for NCE */
-                    NCETimeout(NCE);
+                ASSERT(!(NCE->State & NUD_PERMANENT));
+                NCE->EventCount++;
+                if (NCE->EventCount % ARP_RATE == 0)
+                    NBSendSolicit(NCE);
+                if (NCE->EventTimer - NCE->EventCount == 0) {
+                    NCE->State |= NUD_STALE;
+
+                    NCE->EventCount = 0;
                 }
             }
         }
@@ -211,6 +164,8 @@ VOID NBShutdown(VOID)
           /* Flush wait queue */
 	  NBFlushPacketQueue( CurNCE, NDIS_STATUS_NOT_ACCEPTED );
 
+          exFreePool(CurNCE);
+
 	  CurNCE = NextNCE;
       }
 
@@ -233,18 +188,7 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
 {
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
 
-    if (NCE->State & NUD_INCOMPLETE)
-    {
-	/* This is the first solicitation of this neighbor. Broadcast
-	   a request for the neighbor */
-
-	TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
-
-	ARPTransmit(&NCE->Address, NCE->Interface);
-    } else {
-	/* FIXME: Unicast solicitation since we have a cached address */
-	TI_DbgPrint(MIN_TRACE, ("Uninplemented unicast solicitation.\n"));
-    }
+    ARPTransmit(&NCE->Address, NCE->Interface);
 }
 
 PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
@@ -252,7 +196,8 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   PIP_ADDRESS Address,
   PVOID LinkAddress,
   UINT LinkAddressLength,
-  UCHAR State)
+  UCHAR State,
+  UINT EventTimer)
 /*
  * FUNCTION: Adds a neighbor to the neighbor cache
  * ARGUMENTS:
@@ -298,7 +243,8 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   else
       memset(NCE->LinkAddress, 0xff, LinkAddressLength);
   NCE->State = State;
-  NCE->EventTimer = 0; /* Not in use */
+  NCE->EventTimer = EventTimer;
+  NCE->EventCount = 0;
   InitializeListHead( &NCE->PacketQueue );
 
   TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
@@ -308,8 +254,6 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   HashValue ^= HashValue >> 8;
   HashValue ^= HashValue >> 4;
   HashValue &= NB_HASHMASK;
-
-  NCE->Table = &NeighborCache[HashValue];
 
   TcpipAcquireSpinLock(&NeighborCache[HashValue].Lock, &OldIrql);
 
@@ -350,10 +294,11 @@ VOID NBUpdateNeighbor(
 
     RtlCopyMemory(NCE->LinkAddress, LinkAddress, NCE->LinkAddressLength);
     NCE->State = State;
+    NCE->EventCount = 0;
 
     TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
-    if( NCE->State & NUD_CONNECTED )
+    if( !(NCE->State & NUD_INCOMPLETE) )
 	NBSendPackets( NCE );
 }
 
@@ -425,16 +370,12 @@ PNEIGHBOR_CACHE_ENTRY NBFindOrCreateNeighbor(
             AddrIsUnspecified(Address) ) {
             TI_DbgPrint(MID_TRACE,("Packet targeted at broadcast addr\n"));
             NCE = NBAddNeighbor(Interface, Address, NULL,
-                                Interface->AddressLength, NUD_CONNECTED);
-            if (!NCE) return NULL;
-            NCE->EventTimer = 0;
-            NCE->EventCount = 0;
+                                Interface->AddressLength, NUD_PERMANENT, 0);
         } else {
             NCE = NBAddNeighbor(Interface, Address, NULL,
-                                Interface->AddressLength, NUD_INCOMPLETE);
+                                Interface->AddressLength, NUD_INCOMPLETE, ARP_TIMEOUT);
             if (!NCE) return NULL;
-            NCE->EventTimer = 1;
-            NCE->EventCount = 0;
+            NBSendSolicit(NCE);
         }
     }
 
@@ -483,12 +424,11 @@ BOOLEAN NBQueuePacket(
 
   TcpipReleaseSpinLock(&NeighborCache[HashValue].Lock, OldIrql);
 
-  if( NCE->State & NUD_CONNECTED )
+  if( !(NCE->State & NUD_INCOMPLETE) )
       NBSendPackets( NCE );
 
   return TRUE;
 }
-
 
 VOID NBRemoveNeighbor(
   PNEIGHBOR_CACHE_ENTRY NCE)
@@ -548,7 +488,8 @@ ULONG NBCopyNeighbors
       for( CurNCE = NeighborCache[i].Cache;
 	   CurNCE;
 	   CurNCE = CurNCE->Next ) {
-	  if( CurNCE->Interface == Interface ) {
+	  if( CurNCE->Interface == Interface &&
+              !AddrIsEqual( &CurNCE->Address, &CurNCE->Interface->Unicast ) ) {
 	      if( ArpTable ) {
 		  ArpTable[Size].Index = Interface->Index;
 		  ArpTable[Size].AddrSize = CurNCE->LinkAddressLength;
@@ -559,12 +500,10 @@ ULONG NBCopyNeighbors
 		  ArpTable[Size].LogAddr = CurNCE->Address.Address.IPv4Address;
 		  if( CurNCE->State & NUD_PERMANENT )
 		      ArpTable[Size].Type = ARP_ENTRY_STATIC;
-		  else if( CurNCE->State & NUD_CONNECTED )
-		      ArpTable[Size].Type = ARP_ENTRY_DYNAMIC;
-		  else if( !(CurNCE->State & NUD_VALID) )
+		  else if( CurNCE->State & NUD_INCOMPLETE )
 		      ArpTable[Size].Type = ARP_ENTRY_INVALID;
 		  else
-		      ArpTable[Size].Type = ARP_ENTRY_OTHER;
+		      ArpTable[Size].Type = ARP_ENTRY_DYNAMIC;
 	      }
 	      Size++;
 	  }

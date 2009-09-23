@@ -101,6 +101,7 @@ ObpCreateDosDevicesDirectory(VOID)
     ObSystemDeviceMap = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(*ObSystemDeviceMap),
                                               'mDbO');
+    if (!ObSystemDeviceMap) return STATUS_INSUFFICIENT_RESOURCES;
     RtlZeroMemory(ObSystemDeviceMap, sizeof(*ObSystemDeviceMap));
 
     /* Return status */

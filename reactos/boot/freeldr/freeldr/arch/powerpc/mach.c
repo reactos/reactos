@@ -247,36 +247,6 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     return slots;
 }
 
-/* Strategy:
- *
- * For now, it'll be easy enough to use the boot command line as our boot path.
- * Treat it as the path of a disk partition.  We might even be able to get
- * away with grabbing a partition image by tftp in this scenario.
- */
-
-BOOLEAN PpcDiskGetBootVolume( PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType ) {
-    *DriveNumber = 0;
-    *StartSector = 0;
-    *SectorCount = 0;
-    *FsType = FS_FAT;
-    return TRUE;
-}
-
-BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
-                             char *RemainingPath,
-                             PULONG Device ) {
-    char *remain = strchr(SystemPath, '\\');
-    if( remain ) {
-	strcpy( RemainingPath, remain+1 );
-    } else {
-	RemainingPath[0] = 0;
-    }
-    *Device = 0;
-    // Hack to be a bit easier on ram
-    CacheSizeLimit = 64 * 1024;
-    return TRUE;
-}
-
 BOOLEAN PpcDiskGetBootPath( char *OutBootPath, unsigned Size ) {
     strncpy( OutBootPath, BootPath, Size );
     return TRUE;
@@ -523,8 +493,6 @@ void PpcDefaultMachVtbl()
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
     MachVtbl.DiskNormalizeSystemPath = PpcDiskNormalizeSystemPath;
-    MachVtbl.DiskGetBootVolume = PpcDiskGetBootVolume;
-    MachVtbl.DiskGetSystemVolume = PpcDiskGetSystemVolume;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
     MachVtbl.DiskGetBootDevice = PpcDiskGetBootDevice;
     MachVtbl.DiskBootingFromFloppy = PpcDiskBootingFromFloppy;
@@ -566,6 +534,8 @@ void PpcOfwInit()
 }
 
 void PpcInit( of_proxy the_ofproxy ) {
+    // Hack to be a bit easier on ram
+    CacheSizeLimit = 64 * 1024;
     ofproxy = the_ofproxy;
     PpcDefaultMachVtbl();
     if(ofproxy) PpcOfwInit();

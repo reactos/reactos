@@ -22,6 +22,8 @@
 
 #include <notepad.h>
 
+LRESULT CALLBACK EDIT_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 static const TCHAR helpfile[]     = _T("notepad.hlp");
 static const TCHAR empty_str[]    = _T("");
 static const TCHAR szDefaultExt[] = _T("txt");
@@ -695,6 +697,7 @@ VOID DIALOG_EditWrap(VOID)
     RECT rc, rcstatus;
     DWORD size;
     LPTSTR pTemp;
+    TCHAR buff[MAX_PATH];
 
     Globals.bWrapLongLines = !Globals.bWrapLongLines;
 
@@ -725,10 +728,13 @@ VOID DIALOG_EditWrap(VOID)
     Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, edit, NULL, dwStyle,
                          0, 0, rc.right, rc.bottom, Globals.hMainWnd,
                          NULL, Globals.hInstance, NULL);
-    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)FALSE);
+    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, FALSE);
     SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
     SetWindowText(Globals.hEdit, pTemp);
     SetFocus(Globals.hEdit);
+    Globals.EditProc = (WNDPROC) SetWindowLongPtr(Globals.hEdit, GWLP_WNDPROC, (LONG_PTR)EDIT_WndProc);
+    _stprintf(buff, Globals.szStatusBarLineCol, 1, 1);
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, SB_SIMPLEID, (LPARAM)buff);
     HeapFree(GetProcessHeap(), 0, pTemp);
     DrawMenuBar(Globals.hMainWnd);
 }
@@ -879,7 +885,7 @@ VOID DIALOG_StatusBarUpdateCaretPos(VOID)
     col  = dwStart - SendMessage(Globals.hEdit, EM_LINEINDEX, (WPARAM)line, 0);
 
     _stprintf(buff, Globals.szStatusBarLineCol, line+1, col+1);
-    SendMessage(Globals.hStatusBar, SB_SETTEXT, (WPARAM) SB_SIMPLEID, (LPARAM)buff);
+    SendMessage(Globals.hStatusBar, SB_SETTEXT, SB_SIMPLEID, (LPARAM)buff);
 }
 
 VOID DIALOG_ViewStatusBar(VOID)

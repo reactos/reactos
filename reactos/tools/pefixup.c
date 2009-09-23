@@ -39,6 +39,7 @@ typedef unsigned char BYTE, *PBYTE;
 typedef unsigned short WORD;
 typedef unsigned int DWORD;
 typedef int LONG;
+typedef long LONG_PTR;
 
 #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
 #define IMAGE_SIZEOF_SHORT_NAME 8
@@ -46,7 +47,7 @@ typedef int LONG;
 #define IMAGE_NT_SIGNATURE 0x00004550
 #define IMAGE_SCN_MEM_DISCARDABLE 0x2000000
 #define IMAGE_SCN_MEM_NOT_PAGED 0x8000000
-#define FIELD_OFFSET(t,f) ((LONG)&(((t*)0)->f))
+#define FIELD_OFFSET(t,f) ((LONG)(LONG_PTR)&(((t*)0)->f))
 #define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((unsigned long)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
 #define IMAGE_DIRECTORY_ENTRY_EXPORT 0
 

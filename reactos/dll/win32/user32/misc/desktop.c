@@ -90,18 +90,49 @@ LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
 #undef COPYS
 }
 
+int WINAPI
+RealGetSystemMetrics(int nIndex)
+{
+  GetConnected();
+//  FIXME("Global Server Data -> %x\n",gpsi);
+  if (nIndex < 0 || nIndex >= SM_CMETRICS) return 0;
+  return gpsi->aiSysMet[nIndex];
+}
+
 /*
  * @implemented
  */
 int WINAPI
 GetSystemMetrics(int nIndex)
 {
-  GetConnected();
-//  FIXME("Global Sever Data -> %x\n",gpsi);
-  if (nIndex < 0 || nIndex >= SM_CMETRICS) return 0;
-  return gpsi->aiSysMet[nIndex];
-}
+   BOOL Hook;
+   int Ret = 0;
 
+   if (!gpsi) // Fixme! Hax! Need Timos delay load support?
+   {
+      return RealGetSystemMetrics(nIndex);
+   }
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+   /* Bypass SEH and go direct. */
+   if (!Hook) return RealGetSystemMetrics(nIndex);
+
+   _SEH2_TRY
+   {
+      Ret = guah.GetSystemMetrics(nIndex);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+}
 
 /*
  * @unimplemented
@@ -110,11 +141,9 @@ BOOL WINAPI SetDeskWallpaper(LPCSTR filename)
 {
 	return SystemParametersInfoA(SPI_SETDESKWALLPAPER,0,(PVOID)filename,TRUE);
 }
-/*
- * @implemented
- */
+
 BOOL WINAPI
-SystemParametersInfoA(UINT uiAction,
+RealSystemParametersInfoA(UINT uiAction,
 		      UINT uiParam,
 		      PVOID pvParam,
 		      UINT fWinIni)
@@ -275,12 +304,8 @@ SystemParametersInfoA(UINT uiAction,
     return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 }
 
-
-/*
- * @implemented
- */
 BOOL WINAPI
-SystemParametersInfoW(UINT uiAction,
+RealSystemParametersInfoW(UINT uiAction,
 		      UINT uiParam,
 		      PVOID pvParam,
 		      UINT fWinIni)
@@ -299,6 +324,70 @@ SystemParametersInfoW(UINT uiAction,
   return NtUserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
 }
 
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+SystemParametersInfoA(UINT uiAction,
+		      UINT uiParam,
+		      PVOID pvParam,
+		      UINT fWinIni)
+{
+   BOOL Hook, Ret = FALSE;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+   /* Bypass SEH and go direct. */
+   if (!Hook) return RealSystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
+
+   _SEH2_TRY
+   {
+      Ret = guah.SystemParametersInfoA(uiAction, uiParam, pvParam, fWinIni);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+SystemParametersInfoW(UINT uiAction,
+		      UINT uiParam,
+		      PVOID pvParam,
+		      UINT fWinIni)
+{
+   BOOL Hook, Ret = FALSE;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+   /* Bypass SEH and go direct. */
+   if (!Hook) return RealSystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
+
+   _SEH2_TRY
+   {
+      Ret = guah.SystemParametersInfoW(uiAction, uiParam, pvParam, fWinIni);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+}
 
 /*
  * @implemented

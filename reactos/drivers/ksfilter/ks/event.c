@@ -87,7 +87,7 @@ KsEnableEvent(
     IN  PVOID EventsLock OPTIONAL)
 {
     UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -218,7 +218,7 @@ NTAPI
 KsDiscardEvent(
     IN  PKSEVENT_ENTRY EventEntry)
 {
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
 }
 
 
@@ -232,6 +232,9 @@ KspFreeEventList(
 
     /* check valid input */
     if (!Ctx || !Ctx->List)
+        return FALSE;
+
+    if (IsListEmpty(Ctx->List))
         return FALSE;
 
     /* remove first entry */
@@ -358,7 +361,7 @@ KsDefaultAddEventHandler(
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* now get the object header */
-    ObjectHeader =(PKSIOBJECT_HEADER)IoStack->FileObject->FsContext;
+    ObjectHeader =(PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
 
     /* sanity check */
     ASSERT(ObjectHeader->ObjectType);

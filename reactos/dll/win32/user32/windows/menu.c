@@ -3967,7 +3967,10 @@ User32CallLoadMenuFromKernel(PVOID Arguments, ULONG ArgumentLength)
 
   Common = (PLOADMENU_CALLBACK_ARGUMENTS) Arguments;
   
-  Result = (LRESULT)LoadMenuW(Common->hModule, (LPCWSTR)&Common->MenuName);
+  Result = (LRESULT)LoadMenuW( Common->hModule,
+                               IS_INTRESOURCE(Common->MenuName) ?
+                                  MAKEINTRESOURCE(Common->MenuName[0]) :
+                                        (LPCWSTR)&Common->MenuName);
 
   return ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS);
 }
@@ -4234,7 +4237,12 @@ EndMenu(VOID)
 HMENU WINAPI
 GetMenu(HWND hWnd)
 {
-  return NtUserGetMenu(hWnd);
+       PWND Wnd = ValidateHwnd(hWnd);
+
+       if (!Wnd)
+               return NULL;
+
+       return (HMENU)Wnd->IDMenu;
 }
 
 

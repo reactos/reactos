@@ -1475,8 +1475,33 @@ ScrollBarWndProcA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 /*
  * @implemented
  */
+BOOL WINAPI EnableScrollBar( HWND hwnd, UINT nBar, UINT flags )
+{
+   BOOL Hook, Ret = FALSE;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+     /* Bypass SEH and go direct. */
+   if (!Hook) return NtUserEnableScrollBar(hwnd, nBar, flags);
+
+   _SEH2_TRY
+   {
+      Ret = guah.EnableScrollBar(hwnd, nBar, flags);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+}
+
 BOOL WINAPI
-GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
+RealGetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
 {
   if (SB_CTL == SBType)
     {
@@ -1486,6 +1511,35 @@ GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
     {
       return NtUserGetScrollInfo(Wnd, SBType, Info);
     }
+}
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+GetScrollInfo(HWND Wnd, INT SBType, LPSCROLLINFO Info)
+{
+   BOOL Hook, Ret = FALSE;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+     /* Bypass SEH and go direct. */
+   if (!Hook) return RealGetScrollInfo(Wnd, SBType, Info);
+
+   _SEH2_TRY
+   {
+      Ret = guah.GetScrollInfo(Wnd, SBType, Info);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
 }
 
 /*
@@ -1526,11 +1580,8 @@ GetScrollRange(HWND Wnd, int Bar, LPINT MinPos, LPINT MaxPos)
     }
 }
 
-/*
- * @implemented
- */
 INT WINAPI
-SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
+RealSetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
 {
   if (SB_CTL == SBType)
     {
@@ -1540,6 +1591,37 @@ SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
     {
       return NtUserSetScrollInfo(Wnd, SBType, Info, bRedraw);
     }
+}
+
+/*
+ * @implemented
+ */
+INT WINAPI
+SetScrollInfo(HWND Wnd, int SBType, LPCSCROLLINFO Info, BOOL bRedraw)
+{
+   BOOL Hook;
+   INT Ret = 0;
+
+   LOADUSERAPIHOOK
+
+   Hook = BeginIfHookedUserApiHook();
+
+     /* Bypass SEH and go direct. */
+   if (!Hook) return RealSetScrollInfo(Wnd, SBType, Info, bRedraw);
+
+   _SEH2_TRY
+   {
+      Ret = guah.SetScrollInfo(Wnd, SBType, Info, bRedraw);
+   }
+   _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+   {
+   }
+   _SEH2_END;
+
+   EndUserApiHook();
+
+   return Ret;
+
 }
 
 /*

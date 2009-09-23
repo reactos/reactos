@@ -19,6 +19,7 @@ VOID LdrpInitLoader(VOID);
 VOID NTAPI RtlpInitDeferedCriticalSection(VOID);
 NTSTATUS LdrpAttachThread(VOID);
 VOID RtlpInitializeVectoredExceptionHandling(VOID);
+extern PTEB LdrpTopLevelDllBeingLoadedTeb;
 
 /* GLOBALS *******************************************************************/
 
@@ -469,6 +470,8 @@ LdrpInit2(PCONTEXT Context,
     NTHeaders = RtlImageNtHeader(ExeModule->DllBase);
     ExeModule->SizeOfImage = LdrpGetResidentSize(NTHeaders);
     ExeModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
+
+    LdrpTopLevelDllBeingLoadedTeb = NtCurrentTeb();
 
     InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,
                    &ExeModule->InLoadOrderLinks);
