@@ -18,7 +18,7 @@
 
 #include "rsym.h"
 
-#define LOG2LINES_VERSION   "0.8"
+#define LOG2LINES_VERSION   "1.1"
 
 #define INVALID_BASE    0xFFFFFFFFL
 
@@ -77,11 +77,24 @@ struct cache_struct
     CACHE_ENTRY *ptail;
 };
 
+struct summ_struct
+{
+    int     translated;
+    int     undo;
+    int     redo;
+    int     skipped;
+    int     diff;
+    int     offset_errors;
+    int     total;
+};
+
 typedef struct cache_struct CACHE;
+typedef struct summ_struct  SUMM;
 
-static CACHE cache;
+static CACHE    cache;
+static SUMM     summ;
 
-static char *optchars  = "bcd:fFhl:mMrvz:";
+static char *optchars  = "bcd:fFhl:mMrstTuUvz:";
 static int opt_buffered= 0;         // -b
 static int opt_help    = 0;         // -h
 static int opt_force   = 0;         // -f
@@ -91,9 +104,15 @@ static int opt_console = 0;         // -c
 static int opt_mark    = 0;         // -m
 static int opt_Mark    = 0;         // -M
 static int opt_raw     = 0;         // -r
+static int opt_stats   = 0;         // -s
+static int opt_twice   = 0;         // -t
+static int opt_Twice   = 0;         // -T
+static int opt_undo    = 0;         // -u
+static int opt_redo    = 0;         // -U
 static char opt_dir[MAX_PATH];      // -d
 static char opt_logFile[MAX_PATH];  // -l
 static char opt_7z[MAX_PATH];       // -z
+static char opt_scanned[LINESIZE]; // all scanned options
 static FILE *logFile   = NULL;
 
 static char *cache_name;
@@ -132,42 +151,99 @@ find_rossym_section(PIMAGE_FILE_HEADER PEFileHeader, PIMAGE_SECTION_HEADER PESec
     return NULL;
 }
 
-static int
-find_and_print_offset(void *data, size_t offset, char *toString)
+static PROSSYM_ENTRY
+find_offset(void *data, size_t offset, char *toString)
 {
     PSYMBOLFILE_HEADER RosSymHeader = (PSYMBOLFILE_HEADER) data;
     PROSSYM_ENTRY Entries = (PROSSYM_ENTRY) ((char *)data + RosSymHeader->SymbolsOffset);
-    char *Strings = (char *)data + RosSymHeader->StringsOffset;
     size_t symbols = RosSymHeader->SymbolsLength / sizeof (ROSSYM_ENTRY);
     size_t i;
-
-    //if (RosSymHeader->SymbolsOffset)
 
     for (i = 0; i < symbols; i++)
     {
         if (Entries[i].Address > offset)
         {
             if (!i--)
-                return 1;
+                return NULL;
             else
             {
-                PROSSYM_ENTRY e = &Entries[i];
-                if (toString)
-                {  // put in toString if provided
-                    snprintf(toString, LINESIZE, "%s:%u (%s)",
-                             &Strings[e->FileOffset],
-                             (unsigned int)e->SourceLine,
-                             &Strings[e->FunctionOffset]);
-                    return 0;
-                }
-                else
-                {  // to stdout
-                    printf("%s:%u (%s)\n", &Strings[e->FileOffset],
-                           (unsigned int)e->SourceLine,
-                           &Strings[e->FunctionOffset]);
-                    return 0;
-                }
+                return &Entries[i];
             }
+        }
+    }
+    return NULL;
+}
+
+static int
+print_offset(void *data, size_t offset, char *toString)
+{
+    PSYMBOLFILE_HEADER RosSymHeader = (PSYMBOLFILE_HEADER) data;
+    PROSSYM_ENTRY e = NULL;
+    PROSSYM_ENTRY e2 = NULL;
+    char *Strings = (char *)data + RosSymHeader->StringsOffset;
+
+    
+    e = find_offset(data, offset, toString);
+    if (opt_twice)
+    {
+        e2 = find_offset(data, offset-1, toString);
+        
+        if (  e == e2 )
+            e2 = NULL;
+
+        if ( opt_Twice &&  e2 )
+        {
+            e = e2;
+            e2 = NULL;
+            /* replaced (transparantly), but update stats: */
+            summ.diff ++;
+        }
+    }
+    if ( e || e2 )
+    {
+        if (toString)
+        {  // put in toString if provided
+            if ( e2 )
+            {
+                snprintf(toString, LINESIZE, "%s:%u (%s) [%s:%u (%s)]",
+                         &Strings[e->FileOffset],
+                         (unsigned int)e->SourceLine,
+                         &Strings[e->FunctionOffset],
+                         &Strings[e2->FileOffset],
+                         (unsigned int)e2->SourceLine,
+                         &Strings[e2->FunctionOffset]);
+                summ.diff ++;
+            }
+            else
+            {
+                snprintf(toString, LINESIZE, "%s:%u (%s)",
+                         &Strings[e->FileOffset],
+                         (unsigned int)e->SourceLine,
+                         &Strings[e->FunctionOffset]);
+            }
+            return 0;
+        }
+        else
+        {  // to stdout
+            if ( e2 )
+            {
+                printf("%s:%u (%s) [%s:%u (%s)]\n",
+                       &Strings[e->FileOffset],
+                       (unsigned int)e->SourceLine,
+                       &Strings[e->FunctionOffset],
+                       &Strings[e2->FileOffset],
+                       (unsigned int)e2->SourceLine,
+                       &Strings[e2->FunctionOffset]);
+                summ.diff ++;
+            }
+            else
+            {
+                printf("%s:%u (%s)\n",
+                        &Strings[e->FileOffset],
+                       (unsigned int)e->SourceLine,
+                       &Strings[e->FunctionOffset]);
+            }
+            return 0;
         }
     }
     return 1;
@@ -188,7 +264,8 @@ process_data(const void *FileData, size_t FileSize, size_t offset, char *toStrin
     PEDosHeader = (PIMAGE_DOS_HEADER) FileData;
     if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || PEDosHeader->e_lfanew == 0L)
     {
-        perror("Input file is not a PE image.\n");
+        fprintf(stderr, "Input file is not a PE image.\n");
+        summ.offset_errors ++;
         return 1;
     }
 
@@ -211,9 +288,10 @@ process_data(const void *FileData, size_t FileSize, size_t offset, char *toStrin
     if (!PERosSymSectionHeader)
     {
         fprintf(stderr, "Couldn't find rossym section in executable\n");
+        summ.offset_errors ++;
         return 1;
     }
-    res = find_and_print_offset((char *)FileData + PERosSymSectionHeader->PointerToRawData, offset, toString);
+    res = print_offset((char *)FileData + PERosSymSectionHeader->PointerToRawData, offset, toString);
     if (res)
     {
         if (toString)
@@ -224,6 +302,8 @@ process_data(const void *FileData, size_t FileSize, size_t offset, char *toStrin
         {
             printf("??:0\n");
         }
+        fprintf(stderr, "Offset not found.\n");
+        summ.offset_errors ++;
     }
 
     return res;
@@ -358,6 +438,7 @@ get_ImageBase(char *fname, size_t *ImageBase)
     {
         if (opt_verbose)
             fprintf(stderr, "get_ImageBase %s, read error IMAGE_FILE_HEADER (%s)\n", fname, strerror(errno));
+        fclose(fr);
         return 4;
     }
 
@@ -408,21 +489,6 @@ entry_insert(CACHE_ENTRY *pentry)
         cache.ptail = pentry;
     return pentry;
 }
-
-#if 0
-static CACHE_ENTRY *
-entry_append(CACHE_ENTRY *pentry)
-{
-    if (!pentry)
-        return NULL;
-    if (!cache.ptail)
-        return entry_insert(pentry);
-    cache.ptail->pnext = pentry;
-    pentry->pnext = NULL;
-    cache.ptail = pentry;
-    return pentry;
-}
-#endif
 
 static CACHE_ENTRY *
 entry_create(char *Line)
@@ -512,7 +578,6 @@ read_cache(void)
     char *Line = NULL;
     int result = 0;
 
-    //fprintf(stderr, "Reading cache ...\n");
     Line = malloc(LINESIZE + 1);
     if (!Line)
     {
@@ -702,47 +767,120 @@ translate_char(int c, FILE *outFile)
         fputc(c, logFile);
 }
 
+static char *
+remove_mark(char *Line)
+{
+    if( Line[1] == ' ' && Line[2] == '<' )
+        if ( Line[0] == '*' || Line[0] == '?' )
+            return Line+2;
+    return Line;
+}
+
 static void
 translate_line(FILE *outFile, char *Line, char *path, char *LineOut)
 {
     size_t offset;
     int cnt, res;
-    char *sep, *tail, *mark;
+    char *sep, *tail, *mark, *s;
     unsigned char ch;
 
     if (!*Line)
         return;
     res = 1;
     mark = "";
-    sep = strchr(Line, ':');
+    s = remove_mark(Line);
+    sep = strchr(s, ':');
     if (sep)
     {
         *sep = ' ';
-        cnt = sscanf(Line, "<%s %x%c", path, &offset, &ch);
-        if (cnt == 3 && ch == '>')
+        cnt = sscanf(s, "<%s %x%c", path, &offset, &ch);
+        if (opt_undo)
         {
-            tail = strchr(Line, '>') + 1;
-            if (!(res = translate_file(path, offset, LineOut)))
+            if (cnt == 3 && ch == ' ')
             {
-                mark = opt_mark ? "* " : "";
-                fprintf(outFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
-                if (logFile)
-                    fprintf(logFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
+                tail = strchr(s, '>');
+                tail = tail ? tail-1 : tail;
+                if (tail && (tail[0] == ')') && (tail[1] == '>') )
+                {
+                    res = 0;
+                    tail += 2;
+                    mark = opt_mark ? "* " : "";
+                    if (opt_redo && !(res = translate_file(path, offset, LineOut)))
+                    {
+                        fprintf(outFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
+                        if (logFile)
+                            fprintf(logFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
+                        summ.redo ++;
+                    }
+                    else
+                    {
+                        fprintf(outFile, "%s<%s:%x>%s", mark, path, offset, tail);
+                        if (logFile)
+                            fprintf(logFile, "%s<%s:%x>%s", mark, path, offset, tail);
+                        summ.undo ++;
+                    }
+                }
+                else
+                {
+                    mark = opt_Mark ? "? " : "";
+                    summ.skipped ++;
+                }
+                summ.total ++;
             }
-            else
+        }
+
+        if (!opt_undo || opt_redo)
+        {
+            if (cnt == 3 && ch == '>')
             {
-                *sep = ':';  // restore because not translated
-                mark = opt_Mark ? "? " : "";
+                tail = strchr(s, '>') + 1;
+                if (!(res = translate_file(path, offset, LineOut)))
+                {
+                    mark = opt_mark ? "* " : "";
+                    fprintf(outFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
+                    if (logFile)
+                        fprintf(logFile, "%s<%s:%x (%s)>%s", mark, path, offset, LineOut, tail);
+                    summ.translated ++;
+                }
+                else
+                {
+                    mark = opt_Mark ? "? " : "";
+                    summ.skipped ++;
+                }
+                summ.total ++;
             }
         }
     }
     if (res)
     {
-        fprintf(outFile, "%s%s", mark, Line);  // just copy
+        if (sep)
+            *sep = ':';  // restore because not translated
+        fprintf(outFile, "%s%s", mark, s);  // just copy
         if (logFile)
-            fprintf(logFile, "%s%s", mark, Line);  // just copy
+            fprintf(logFile, "%s%s", mark, s);  // just copy
     }
     memset(Line, '\0', LINESIZE);  // flushed
+}
+
+static void
+print_summary(FILE * outFile)
+{
+    if (outFile)
+    {
+        fprintf(outFile, "\n*** LOG2LINES SUMMARY ***\n");
+        fprintf(outFile, "Translated:   %d\n", summ.translated);
+        fprintf(outFile, "Reverted:     %d\n", summ.undo);
+        fprintf(outFile, "Retranslated: %d\n", summ.redo);
+        fprintf(outFile, "Skipped:      %d\n", summ.skipped);
+        fprintf(outFile, "Differ:       %d\n", summ.diff);
+        fprintf(outFile, "Offset error: %d\n", summ.offset_errors);
+        fprintf(outFile, "Total:        %d\n", summ.total);
+        fprintf(outFile, "-------------------------------\n");
+        fprintf(outFile, "Log2lines version: " LOG2LINES_VERSION "\n");
+        fprintf(outFile, "Directory:         %s\n",opt_dir);
+        fprintf(outFile, "Passed options:    %s\n",opt_scanned);
+        fprintf(outFile, "-------------------------------\n");
+    }
 }
 
 static int
@@ -840,6 +978,12 @@ translate_files(FILE * inFile, FILE * outFile)
             }
         }
     }
+    if (opt_stats)
+    {
+        print_summary(outFile);
+        if (logFile)
+            print_summary(logFile);
+    }
     free(LineOut);
     free(Line);
     free(path);
@@ -880,17 +1024,37 @@ static char *verboseUsage =
 "  -M   Prefix (mark) each NOT translated line with '? '.\n"
 "       ( Only for lines of the form: <IMAGENAME:ADDRESS> )\n\n"
 "  -r   Raw output without translation.\n\n"
+"  -s   Statistics. A summary with the following info is printed after EOF:\n"
+"       *** LOG2LINES SUMMARY ***\n"
+"       - Translated:   Translated lines.\n"
+"       - Reverted:     Lines translated back. See -u option\n"
+"       - Retranslated: Lines retranslated. See -U option\n"
+"       - Skipped:      Lines not translated.\n"
+"       - Differ:       Lines where (addr-1) info differs. See -tT options\n"
+"       - Offset error: Image exists, but error retrieving offset info.\n"
+"       - Total:        Total number of lines attempted to translate.\n"
+"       Also some version info is displayed.\n\n"
+"  -t   Translate twice. The address itself and for (address - 1)\n"
+"       Display extra filename and linenumber between [..] if they differ\n\n"
+"  -T   As -t, but the original filename+linenumber gets replaced\n\n"
+"  -u   Undo translations.\n"
+"       Lines are translated back (reverted) to the form <IMAGENAME:ADDRESS>\n"
+"       Overrides console mode -c.\n\n"
+"  -U   Undo and reprocess.\n"
+"       Reverted to the form <IMAGENAME:ADDRESS>, and then retranslated\n"
+"       Overrides console mode -c, implies -u.\n\n"
 "  -v   Show detailed errors and tracing.\n"
 "       Repeating this option adds more verbosity.\n"
-"       Default: only (major) errors\n" "\n"
+"       Default: only (major) errors\n" "\n\n"
 "  -z <path to 7z>\n"
-"       Specify path to 7z.\n"
+"       Specify path to 7z. See also option -d.\n"
 "       Default: '7z'\n"
 "\n"
 "Examples:\n"
 "  Setup is a VMware machine with its serial port set to: '\\\\.\\pipe\\kdbg'.\n\n"
 "  Just recreate cache after a svn update or a new module has been added:\n"
-"       log2lines -F\n\n" "  Use kdbg debugger via console (interactive):\n"
+"       log2lines -F\n\n" 
+"  Use kdbg debugger via console (interactive):\n"
 "       log2lines -c < \\\\.\\pipe\\kdbg\n\n"
 "  Use kdbg debugger via console, and append copy to logFile:\n"
 "       log2lines -c -l dbg.log < \\\\.\\pipe\\kdbg\n\n"
@@ -1020,10 +1184,20 @@ main(int argc, const char **argv)
     int res = 0;
     int opt;
     int optCount = 0;
+    int i;
 
+    strcpy(opt_scanned, "");
+    for (i=1; i<argc; i++)
+    {
+        strcat(opt_scanned, argv[i]);
+        strcat(opt_scanned, " ");
+    }
     strcpy(opt_dir, DEF_OPT_DIR);
     strcpy(opt_logFile, "");
     strcpy(opt_7z, CMD_7Z);
+
+    memset(&summ, 0, sizeof(SUMM));
+
     while (-1 != (opt = getopt(argc, (char **const)argv, optchars)))
     {
         switch (opt)
@@ -1063,6 +1237,23 @@ main(int argc, const char **argv)
         case 'r':
             opt_raw++;
             break;
+        case 's':
+            opt_stats++;
+            break;
+        case 't':
+            opt_twice++;
+            break;
+        case 'T':
+            opt_twice++;
+            opt_Twice++;
+            break;
+        case 'u':
+            opt_undo++;
+            break;
+        case 'U':
+            opt_undo++;
+            opt_redo++;
+            break;
         case 'v':
             opt_verbose++;
             break;
@@ -1077,6 +1268,8 @@ main(int argc, const char **argv)
         }
         optCount++;
     }
+    if (opt_undo)
+        opt_console = 0;
 
     argc -= optCount;
     if (argc != 1 && argc != 3)
