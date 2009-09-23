@@ -563,7 +563,7 @@ GetHarddiskIdentifier(PCHAR Identifier,
   FsRegisterDevice(ArcName, &DiskVtbl);
 
   /* Add partitions */
-  i = 0;
+  i = 1;
   DiskReportError(FALSE);
   while (MachDiskGetPartitionEntry(DriveNumber, i, &PartitionTableEntry))
   {
