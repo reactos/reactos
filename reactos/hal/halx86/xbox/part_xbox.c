@@ -199,10 +199,11 @@ HalpXboxIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                                             ReturnRecognizedPartitions, PartitionBuffer);
     }
 
-    *PartitionBuffer = (PDRIVE_LAYOUT_INFORMATION)
-                       ExAllocatePool(PagedPool,
-                                      sizeof(DRIVE_LAYOUT_INFORMATION) +
-                                      XBOX_PARTITION_COUNT * sizeof(PARTITION_INFORMATION));
+    *PartitionBuffer = (PDRIVE_LAYOUT_INFORMATION)ExAllocatePoolWithTag(
+                        PagedPool,
+                        sizeof(DRIVE_LAYOUT_INFORMATION) +
+                        XBOX_PARTITION_COUNT * sizeof(PARTITION_INFORMATION),
+                        'SYSF');
     if (NULL == *PartitionBuffer)
     {
         return STATUS_NO_MEMORY;
