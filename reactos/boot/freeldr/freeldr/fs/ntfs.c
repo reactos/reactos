@@ -836,6 +836,7 @@ const DEVVTBL NtfsFuncTable =
     NtfsOpen,
     NtfsRead,
     NtfsSeek,
+    L"ntfs",
 };
 
 const DEVVTBL* NtfsMount(ULONG DeviceId)

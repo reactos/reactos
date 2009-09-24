@@ -411,6 +411,13 @@ VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable)
     InsertHeadList(&DeviceListHead, &pNewEntry->ListEntry);
 }
 
+LPCWSTR FsGetServiceName(ULONG FileId)
+{
+    if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)
+        return NULL;
+    return FileData[FileId].FuncTable->ServiceName;
+}
+
 VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific)
 {
     if (FileId >= MAX_FDS || !FileData[FileId].FuncTable)

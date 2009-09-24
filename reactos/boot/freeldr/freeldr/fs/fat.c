@@ -1463,6 +1463,7 @@ const DEVVTBL FatFuncTable =
 	FatOpen,
 	FatRead,
 	FatSeek,
+	L"fastfat",
 };
 
 const DEVVTBL* FatMount(ULONG DeviceId)

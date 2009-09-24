@@ -479,6 +479,7 @@ const DEVVTBL Iso9660FuncTable =
 	IsoOpen,
 	IsoRead,
 	IsoSeek,
+	L"cdfs",
 };
 
 const DEVVTBL* IsoMount(ULONG DeviceId)

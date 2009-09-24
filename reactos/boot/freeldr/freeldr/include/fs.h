@@ -27,6 +27,7 @@ typedef struct tagDEVVTBL
   ARC_OPEN Open;
   ARC_READ Read;
   ARC_SEEK Seek;
+  LPCWSTR ServiceName;
 } DEVVTBL;
 
 #define	FS_FAT			1
@@ -37,6 +38,7 @@ typedef struct tagDEVVTBL
 #define PFILE			ULONG
 
 VOID FsRegisterDevice(CHAR* Prefix, const DEVVTBL* FuncTable);
+LPCWSTR FsGetServiceName(ULONG FileId);
 VOID FsSetDeviceSpecific(ULONG FileId, VOID* Specific);
 VOID* FsGetDeviceSpecific(ULONG FileId);
 ULONG FsGetDeviceId(ULONG FileId);
