@@ -288,7 +288,7 @@ static ULONG WINAPI Source_Release(ITfSource *iface)
 /*****************************************************
  * ITfSource functions
  *****************************************************/
-static WINAPI HRESULT DocumentMgrSource_AdviseSink(ITfSource *iface,
+static HRESULT WINAPI DocumentMgrSource_AdviseSink(ITfSource *iface,
         REFIID riid, IUnknown *punk, DWORD *pdwCookie)
 {
     DocumentMgr *This = impl_from_ITfSourceVtbl(iface);
@@ -296,7 +296,7 @@ static WINAPI HRESULT DocumentMgrSource_AdviseSink(ITfSource *iface,
     return E_NOTIMPL;
 }
 
-static WINAPI HRESULT DocumentMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
+static HRESULT WINAPI DocumentMgrSource_UnadviseSink(ITfSource *iface, DWORD pdwCookie)
 {
     DocumentMgr *This = impl_from_ITfSourceVtbl(iface);
     FIXME("STUB:(%p)\n",This);
