@@ -1195,9 +1195,15 @@ BOOL
 APIENTRY
 rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
-    UNIMPLEMENTED;
-    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
-    return FALSE;
+    BOOL ret = FALSE;
+
+    if(fuPlanes & WGL_SWAP_MAIN_PLANE)
+        ret = rosglSwapBuffers(hdc);
+
+    if(fuPlanes &~WGL_SWAP_MAIN_PLANE)
+        DBGTRACE("wglSwapLayerBuffers is not fully implemented\n");
+
+    return ret;
 }
 
 
