@@ -103,4 +103,9 @@ SetIrpIoStatus(
     IN NTSTATUS Status,
     IN ULONG Length);
 
+NTSTATUS
+WdmAudOpenSysAudioDevice(
+    IN LPWSTR DeviceName,
+    OUT PHANDLE Handle);
+
 #endif
